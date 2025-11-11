@@ -60,7 +60,8 @@ app.post("/signup", (req, res) => {
   users.push({ grade, name, phone, id, pw });
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 
-  res.send('회원가입 완료! <a href="/login">로그인하러 가기</a>');
+  res.redirect('/login');
+
 });
 
 // 5) 로그인 처리
