@@ -109,7 +109,7 @@
       font-size: 10px;
     }
 
-    /* ✅ 여기부터 추가: 상태 뱃지 */
+    /* ✅ 상태 뱃지 */
     .status-badge {
       display: inline-block;
       border-radius: 8px;
@@ -446,7 +446,17 @@
         "세계 여러 나라의 위치와 특징",
         "우리나라의 지리적 특성 이해하기",
         "자연재해와 인간의 대응",
-        "환경 문제와 지속 가능한 발전"
+        "환경 문제와 지속 가능한 발전",
+        "도시와 농촌의 차이",
+        "교통과 통신의 발달",
+        "세계화와 지역화의 관계",
+        "인구 분포와 이동",
+        "문화권의 다양성 이해하기",
+        "지리 정보 기술의 활용",
+        "세계의 주요 산업",
+        "에너지 자원의 이용",
+        "지구촌의 환경 문제",
+        "미래의 지구를 그리다"
       ],
       law: [
         "법이 필요한 이유",
@@ -785,6 +795,7 @@
       for (let i = 1; i <= subObj.count; i++) {
         const num = String(i).padStart(2, "0");
         const title = titles[i - 1] || `${subObj.label} ${num} 학습하기`;
+        // 🔑 여기 path가 학습페이지에서 PAGE_KEY로 쓰는 값이랑 같아야 함
         currentUnits.push({
           label: `${subObj.label} ${num} ${title}`.trim(),
           num,
@@ -795,13 +806,12 @@
       renderUnitList(currentUnits);
     }
 
-    /* 9. 단원 리스트 출력 (여기서 상태 뱃지 넣는 부분 변경) */
+    /* 9. 단원 리스트 출력 */
     function renderUnitList(units) {
       unitList.innerHTML = "";
       units.forEach(u => {
         const li = document.createElement("li");
         li.className = "unit-item";
-        // 이 경로를 나중에 상태 갱신용 key로 쓸 거라 data-page에 넣어둠
         li.dataset.page = u.path;
         li.innerHTML = `
           <span>${u.label}</span>
@@ -859,9 +869,34 @@
       }
     }
 
-    // ✅ localStorage에 저장해둔 완료된 단원들을 메뉴에 반영
+    /* 🔐 학생 정보 가져오기 */
+    function getCurrentStudent() {
+      const saved = localStorage.getItem('currentStudent');
+      if (!saved) return null;
+      try { return JSON.parse(saved); }
+      catch(e) { return null; }
+    }
+
+    /* 🔐 학생키 만들기 (로그인 페이지랑 같은 규칙) */
+    function buildStudentKey(stu) {
+      const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+      const cleanName = (stu.name || '').trim();
+      const cleanGrade = (stu.grade || '').trim();
+      return `${cleanGrade}_${cleanName}_${cleanPhone}`;
+    }
+
+    /* ✅ 현재 로그인한 학생의 완료 리스트 불러오기 */
+    function getStudentProgressList() {
+      const stu = getCurrentStudent();
+      if (!stu) return [];  // 로그인 안 되어 있으면 빈배열
+      const stuKey = buildStudentKey(stu);
+      const progressKey = `dan-progress:${stuKey}`;
+      return JSON.parse(localStorage.getItem(progressKey) || '[]');
+    }
+
+    // ✅ localStorage에 저장해둔 완료된 단원들을 메뉴에 반영 (학생별)
     function restoreProgressOnRenderedList() {
-      const saved = JSON.parse(localStorage.getItem('dan-progress') || '[]'); // ["./sejong/...html", ...]
+      const saved = getStudentProgressList(); // ["./jeongjo/social/geo_01.html", ...] 이런 식이어야 함
       saved.forEach(pageKey => {
         updateLessonStatus(pageKey, 'done');
       });
@@ -870,16 +905,21 @@
     // 시작은 세종
     renderDomains("sejong");
 
-    // 🔻 여기서 학년/이름 받아서 표시
-    const params = new URLSearchParams(location.search);
-    const name = params.get("name");
-    const grade = params.get("grade");
-    const infoTarget = document.getElementById("user-info");
-    if (infoTarget && name) {
-      infoTarget.textContent = grade
-        ? `${grade} ${name}님 환영합니다!`
-        : `${name}님 환영합니다!`;
-    }
+    // 🔻 상단 사용자 표시: localStorage가 우선, 없으면 URL 파라미터
+    (function showUserInfo() {
+      const infoTarget = document.getElementById("user-info");
+      const stu = getCurrentStudent();
+      if (stu) {
+        infoTarget.textContent = `${stu.grade || ''} ${stu.name || ''}님 환영합니다!`.trim();
+        return;
+      }
+      const params = new URLSearchParams(location.search);
+      const name = params.get("name");
+      const grade = params.get("grade");
+      if (name) {
+        infoTarget.textContent = grade ? `${grade} ${name}님 환영합니다!` : `${name}님 환영합니다!`;
+      }
+    })();
 
     // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
     restoreProgressOnRenderedList();

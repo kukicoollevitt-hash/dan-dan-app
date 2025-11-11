@@ -4,6 +4,47 @@
   <meta charset="UTF-8" />
   <title>단단국어 | study_voca</title>
 
+  <!-- ✅ 공통: 로그인에서 못 넣었을 때 한 번 더 잡아주기 + 학생키 생성 -->
+  <script>
+    // 🔁 공통 키 만드는 함수
+    function buildStudentKey(stu) {
+      const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+      const cleanName = (stu.name || '').trim();
+      const cleanGrade = (stu.grade || '').trim();
+      return `${cleanGrade}_${cleanName}_${cleanPhone}`;
+    }
+
+    // 🔁 현재 학생 가져오기 (로그인에서 저장해둔 거)
+    function getCurrentStudent() {
+      const saved = localStorage.getItem('currentStudent');
+      if (!saved) return null;
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // 🔁 이 페이지의 학습 id (menu에서 쓴 거랑 반드시 똑같이!)
+    const PAGE_KEY = 'jeongjo_social_geo_01';
+
+    // 페이지 들어올 때 로그인 정보 있으면 학년/이름 자동 채우기
+    document.addEventListener('DOMContentLoaded', () => {
+      const stu = getCurrentStudent();
+      const gradeInput = document.querySelector('#student-grade');
+      const nameInput = document.querySelector('#student-name');
+      const phoneWrap = document.querySelector('#student-phone-wrap'); // 있으면 숨김
+
+      if (stu) {
+        if (gradeInput) gradeInput.value = stu.grade || '';
+        if (nameInput) nameInput.value = stu.name || '';
+        if (phoneWrap) phoneWrap.style.display = 'none';
+      } else {
+        if (phoneWrap) phoneWrap.style.display = 'none';
+      }
+    });
+  </script>
+
   <script>
     // 탭 이름 고정
     document.title = "정조편 | 지리 01 지도를통해세상을이해하다";
@@ -1203,7 +1244,7 @@
   <div class="report-wrap" id="capture-report">
     <h2 class="report-title">분석리포트</h2>
     <p class="report-desc">
-      본문학습 객관식 + 빈칸 + 서술형 + 어휘학습으로 아래 5가지 문해역량을 진단합니다.
+      본문학습 객관식 + 빈 칸 + 서술형 + 어휘학습으로 아래 5가지 문해역량을 진단합니다.
     </p>
 
     <!-- 레이더 차트 -->
@@ -1700,13 +1741,13 @@
         fullMsgs.push("⑤ 서술형: 미작성 ❌ " + explain.q5);
       } else if (hit >= 1) {
         q5Num.classList.add('correct'); q5Mark.textContent="⭕";
-        shortMsgs.push("⑤ 서술형: 관련 표현 감지 ✅");
-        fullMsgs.push("⑤ 서술형: 관련 표현 감지 ✅ " + explain.q5);
+        shortMsgs.push("⑤ 서술형: 핵심어 표현 감지 ✅");
+        fullMsgs.push("⑤ 서술형: 핵심어 표현 감지 ✅ " + explain.q5);
         q5ok = true;
       } else {
         q5Num.classList.add('wrong'); q5Mark.textContent="✖";
-        shortMsgs.push("⑤ 서술형: 관련 표현 부족 ❌");
-        fullMsgs.push("⑤ 서술형: 관련 표현 부족 ❌ " + explain.q5);
+        shortMsgs.push("⑤ 서술형: 핵심어 표현 부족 ❌");
+        fullMsgs.push("⑤ 서술형: 핵심어 표현 부족 ❌ " + explain.q5);
       }
 
       const box = document.getElementById("grade-result");
@@ -1744,7 +1785,7 @@
           return [
             "① 핵심 이해력(객관식): " + (reportState.q1ok ? "핵심 이해력이 좋아요! ✅" : "보완 필요해요 ❗"),
             "② 구조 파악력(객관식): " + (reportState.q2ok ? "구조 파악력이 좋아요! ✅" : "보완 필요해요 ❗"),
-            "③ 어휘 맥락력(빈칸): " + (lexicalOk ? "어휘 맥락력이 좋아요! ✅" : "보완 필요해요 ❗"),
+            "③ 어휘 맥락력(빈칸): " + (lexicalOk ? "어휘 맥락력이 좋아요! ✅" : "어휘 복습 필요해요 ❗"),
             "④ 추론·통합력(빈칸): " + (reportState.q4ok ? "추론·통합력이 좋아요! ✅" : "보완 필요해요 ❗"),
             "⑤ 비판·적용력(서술형): " + (reportState.q5ok ? "비판·적용력이 좋아요! ✅" : "보완 필요해요 ❗")
           ];
@@ -2029,26 +2070,78 @@
       inferential: 0,
       critical: 0
     });
-   async function submitReport() {
-  if (!ensureStudentInfo()) {
-    showSubmitOverlay('학년과 이름을 입력해주세요');
-    return;
+
+   // ✅ 분석리포트 제출 시: 메뉴가 쓸 법한 키 전부에 저장해 두기
+async function submitReport() {
+    // 0) 로그인 정보 필수
+    const stu = getCurrentStudent();
+    if (!stu) {
+      alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
+      return;
+    }
+
+    // 1) PDF 저장
+    await captureElementToPDF(
+      'capture-report',
+      '단단국어_분석리포트.pdf',
+      { withStudentInfo: true }
+    );
+
+    // 2) 학생키 + 이 단원에서 메뉴가 실제로 쓰고 있던 모든 id
+    const studentKey = buildStudentKey(stu); // "3학년_테스트_01033334444"
+
+    // ✅ 메뉴에서 실제로 봤던 값 4개 전부
+    const pageIds = [
+      './jeongjo/social/geo_01.html',  // <-- 이게 빠져 있어서 안 바뀌었던 거
+      'jeongjo_social_geo_01',
+      'jeongjo_geo_01',
+      'jeongjo_social_geo01'
+    ];
+
+    console.log('[study page] studentKey =', studentKey);
+    console.log('[study page] PAGE_IDs =', pageIds);
+
+    // 3) 우리가 무조건 만들어줄 후보 키들 (콜론/하이픈/공백)
+    const explicitKeys = [
+      `dan-progress-${studentKey}`,
+      `dan-progress:${studentKey}`,
+      `dan-progress-${studentKey.replace(/_/g, ' ')}`,
+      `dan-progress:${studentKey.replace(/_/g, ' ')}`
+    ];
+
+    // 4) 이미 localStorage 안에 있는 dan-progress* 도 다 같이 갱신
+    const allKeys = Object.keys(localStorage);
+    const progressKeys = new Set();
+
+    allKeys.forEach(k => {
+      if (k.startsWith('dan-progress')) {
+        progressKeys.add(k);
+      }
+    });
+    explicitKeys.forEach(k => progressKeys.add(k));
+
+    // 5) 전부에 이 4개 id를 꽂아넣기
+    progressKeys.forEach(pk => {
+      let saved;
+      try {
+        saved = JSON.parse(localStorage.getItem(pk) || '[]');
+      } catch (e) {
+        saved = [];
+      }
+
+      pageIds.forEach(id => {
+        if (!saved.includes(id)) {
+          saved.push(id);
+        }
+      });
+
+      localStorage.setItem(pk, JSON.stringify(saved));
+      console.log('[study page] wrote to', pk, '=>', saved);
+    });
+
+    // 6) 완료 알림
+    showSubmitSuccess('분석리포트');
   }
-
-  // 1) 리포트 PDF 저장
-  await captureElementToPDF('capture-report', '단단국어_분석리포트.pdf', { withStudentInfo: true });
-
-  // 2) 🔐 이 페이지 학습 완료 처리해서 메뉴에서 🏆로 보이게
-  const key = './jeongjo/social/geo_01.html'; // 너 메뉴에서 체크하는 실제 경로/키로 맞춰!
-  const doneList = JSON.parse(localStorage.getItem('dan-progress') || '[]');
-  if (!doneList.includes(key)) {
-    doneList.push(key);
-    localStorage.setItem('dan-progress', JSON.stringify(doneList));
-  }
-
-  // 3) 완료 알림
-  showSubmitSuccess('분석리포트');
-}
 
   </script>
 
@@ -2066,3 +2159,4 @@
   </div>
   
 </body>
+</html>
