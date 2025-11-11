@@ -6,793 +6,377 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #f2ede5;
-      --panel: #fffaf3;
+      --bg: #e9d5c7;
+      --panel: #f7f0eb;
+      --line: #cc9e71;
       --accent: #8b2f2f;
-      --line: #e5d4c1;
-      --text: #3b2a1a;
+      --text: #2e2e2e;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       background: var(--bg);
-      font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-      color: var(--text);
+      font-family: "Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+      min-height: 100vh;
     }
     header {
-      background: #f7f1e5;
-      border-bottom: 3px solid #c58a45;
-      padding: 12px 20px 10px;
+      background: #fff;
+      padding: 14px 22px 10px;
+      border-bottom: 1px solid rgba(0,0,0,.05);
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      gap: 12px;
     }
-    .brand-title { font-size: 19px; font-weight: 700; color: #7f2b2b; }
-    .brand-sub { font-size: 12px; color: #a57145; }
+    .page-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    #user-info {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
     .layout {
       display: grid;
-      grid-template-columns: 180px 210px 220px 1fr;
-      min-height: calc(100vh - 65px);
+      grid-template-columns: 210px 200px 230px 1fr;
+      gap: 0;
+      height: calc(100vh - 58px);
     }
     .col {
-      border-right: 1px solid #e1d3c0;
-      background: #fefbf6;
+      background: #fff;
+      border-right: 1px solid rgba(0,0,0,0.04);
       overflow-y: auto;
     }
     .col-title {
-      padding: 12px 14px 6px;
-      font-weight: 700;
-      font-size: 13px;
-      color: #5b3a22;
+      padding: 14px 14px 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #5d4732;
     }
-    .series-list, .domain-list, .subject-list, .unit-list {
+    .col-sub {
+      padding: 0 14px 10px;
+      font-size: 12px;
+      color: #9a8066;
+    }
+    .list {
       list-style: none;
       margin: 0;
-      padding: 4px 8px 16px;
+      padding: 0 8px 16px;
     }
-    .series-item,
-    .domain-item,
-    .subject-item,
-    .unit-item {
+    .list-item {
       padding: 8px 10px;
-      margin-bottom: 6px;
-      background: #fff;
-      border: 1px solid transparent;
       border-radius: 10px;
-      font-size: 13px;
+      margin: 4px 6px;
       cursor: pointer;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-      transition: 0.1s;
+      background: transparent;
     }
-    .series-item:hover,
-    .domain-item:hover,
-    .subject-item:hover,
-    .unit-item:hover {
-      border-color: rgba(139,47,47,0.3);
+    .list-item small {
+      font-size: 11px;
+      color: #a69485;
+      margin-left: 8px;
     }
-    .series-item.active,
-    .domain-item.active,
-    .subject-item.active,
-    .unit-item.active {
-      background: #8b2f2f;
-      color: #fff;
-      border-color: #8b2f2f;
+    .list-item.active {
+      background: rgba(139,47,47,0.08);
+      color: var(--accent);
+      font-weight: 600;
     }
-    .meta { font-size: 11px; opacity: 0.6; }
-    .detail-panel {
-      padding: 14px 18px 40px;
-      background: #fffdf8;
-      overflow-y: auto;
+    .empty {
+      font-size: 13px;
+      color: #a08b78;
+      padding: 16px 14px;
     }
-    .detail-title { font-weight: 700; margin-bottom: 2px; }
-    .detail-desc { font-size: 12px; color: #9b7a54; margin-bottom: 10px; }
-    .unit-list .unit-item { border-radius: 7px; font-size: 12.5px; }
-    .badge {
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.4);
-      border-radius: 999px;
-      padding: 1px 8px 2px;
-      font-size: 10px;
+    .unit-search {
+      padding: 8px 12px 0;
     }
-    /* 모달 */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.35);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      backdrop-filter: blur(2px);
+    .unit-search input {
+      width: 100%;
+      border: 1px solid rgba(0,0,0,.08);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 13px;
+      outline: none;
     }
-    .overlay.show { display: flex; }
-    .modal-box {
-      background: #fffaf3;
-      border: 1px solid rgba(139,47,47,0.08);
-      border-radius: 18px;
-      padding: 22px 24px 20px;
-      width: 330px;
-      text-align: center;
-      box-shadow: 0 15px 45px rgba(0,0,0,0.12);
-      animation: pop 0.25s ease;
+    .detail-pane {
+      background: #fff6f1;
+      padding: 16px 18px;
     }
-    @keyframes pop {
-      from { transform: translateY(10px) scale(0.97); opacity: 0; }
-      to { transform: translateY(0) scale(1); opacity: 1; }
+    .detail-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #5c3f33;
     }
-    .modal-emoji { font-size: 34px; margin-bottom: 6px; }
-    .modal-title { font-weight: 700; margin-bottom: 6px; color: #6f2e2e; }
-    .modal-msg { font-size: 12.5px; color: #8d6f51; line-height: 1.5; margin-bottom: 14px; }
-    .modal-btn { background: #8b2f2f; color: #fff; border: none; border-radius: 999px; padding: 7px 16px 8px; font-size: 12.5px; cursor: pointer; }
-    .modal-btn:hover { opacity: 0.9; }
+    .detail-body {
+      font-size: 13px;
+      color: #7b5b4a;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
   <header>
-    <div>
-      <div class="brand-title">단단국어 문해력 시리즈</div>
-      <div class="brand-sub">세종 · 정조 · 영조 · 문종 · 성균관 · 국자감 → 분야 → 세부 과목 → 단원</div>
-    </div>
-    <div style="font-size: 12px; color:#8d6f51;">
-      오늘도 힘내서 문해력을 올려보아요!
-    </div>
+    <div class="page-title">단단국어 문해력 시리즈</div>
+    <div id="user-info">로그인한 학생 표시 영역</div>
   </header>
 
   <div class="layout">
     <!-- ① 시리즈 -->
-    <div class="col" id="colSeries">
+    <div class="col" id="series-col">
       <div class="col-title">① 시리즈 선택</div>
-      <ul class="series-list" id="seriesList">
-        <li class="series-item active" data-series="sejong"><span>🟠 세종편</span><span class="meta">개념이해</span></li>
-        <li class="series-item" data-series="jeongjo"><span>🔵 정조편</span><span class="meta">응용적용</span></li>
-        <li class="series-item" data-series="yeongjo"><span>🟣 영조편</span><span class="meta">논리연결</span></li>
-        <li class="series-item" data-series="munjong"><span>🟤 문종편</span><span class="meta">심화추론</span></li>
-        <li class="series-item" data-series="seonggyungwan"><span>🟠 성균관</span><span class="meta">중등교과</span></li>
-        <li class="series-item" data-series="gukjagam"><span>🟤 국자감</span><span class="meta">고등교과</span></li>
-      </ul>
+      <div class="col-sub">세종 · 정조 · 영조 · 문종 · 성균관 · 국자감</div>
+      <ul class="list" id="series-list"></ul>
     </div>
 
     <!-- ② 분야 -->
-    <div class="col" id="colDomain">
+    <div class="col" id="domain-col">
       <div class="col-title">② 분야 선택</div>
-      <ul class="domain-list" id="domainList"></ul>
+      <div class="col-sub">과목을 선택하면 오른쪽에 세부 과목이 나옵니다.</div>
+      <ul class="list" id="domain-list"></ul>
     </div>
 
     <!-- ③ 세부 과목 -->
-    <div class="col" id="colSubject">
+    <div class="col" id="unit-col">
       <div class="col-title">③ 세부 과목</div>
-      <ul class="subject-list" id="subjectList"></ul>
-    </div>
-
-    <!-- ④ 단원 + 검색 -->
-    <div class="detail-panel" id="detailPanel">
-      <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
-        <div>
-          <div class="detail-title" id="unitTitle">단원 선택</div>
-          <div class="detail-desc" id="unitDesc">좌측에서 시리즈 → 분야 → 과목을 선택하면 01~ 번호가 여기에 나옵니다.</div>
-        </div>
-        <input
-          type="text"
-          id="unitSearch"
-          placeholder="단원 검색"
-          style="padding:5px 8px; border:1px solid #e2d5c3; border-radius:6px; font-size:12px; min-width:140px; background:#fff;">
+      <div class="unit-search">
+        <input type="text" id="unit-search" placeholder="단원명/번호 검색" />
       </div>
-      <ul class="unit-list" id="unitList"></ul>
+      <ul class="list" id="unit-list"></ul>
     </div>
-  </div>
 
-  <!-- 모달 -->
-  <div class="overlay" id="pendingModal">
-    <div class="modal-box">
-      <div class="modal-emoji">📚✨</div>
-      <div class="modal-title">아직 준비 중입니다.</div>
-      <div class="modal-msg">곧 지문이 오픈됩니다. 기대해주세요!</div>
-      <button class="modal-btn" id="closeModalBtn">확인</button>
+    <!-- ④ 단원 선택 -->
+    <div class="col detail-pane" id="lesson-col">
+      <div class="detail-title">단원 선택</div>
+      <div class="detail-body" id="lesson-body">
+        좌측에서 시리즈 → 분야 → 과목을 선택하면 이곳에 단원이 나옵니다.
+      </div>
     </div>
   </div>
 
   <script>
-    /* 0. 시리즈 정보 */
-    const seriesInfo = {
-      sejong: { name: "세종편", desc: "개념 이해" },
-      jeongjo: { name: "정조편", desc: "응용 적용" },
-      yeongjo: { name: "영조편", desc: "논리 연결" },
-      munjong: { name: "문종편", desc: "심화 추론" },
-      seonggyungwan: { name: "성균관", desc: "중등 교과" },
-      gukjagam: { name: "국자감", desc: "고등 교과" }
-    };
-
-    /* 1. 시리즈별 분야/과목 */
-    const domainsBySeries = {
-      sejong: [
-        {
-          id: "science",
-          label: "과학분야",
-          subs: [
-            { id: "bio", label: "생물", count: 20 },
-            { id: "earth", label: "지구과학", count: 20 },
-            { id: "physics", label: "물리", count: 20 },
-            { id: "chem", label: "화학", count: 20 }
-          ]
-        },
-        {
-          id: "social",
-          label: "사회분야",
-          subs: [
-            { id: "society", label: "사회문화", count: 20 },
-            { id: "geo", label: "지리", count: 20 },
-            { id: "law", label: "법", count: 20 },
-            { id: "econ", label: "정치경제", count: 20 }
-          ]
-        },
-        {
-          id: "korlit",
-          label: "한국문학분야",
-          subs: [
-            { id: "modern", label: "현대문학", count: 40 },
-            { id: "classic", label: "고전문학", count: 40 }
-          ]
-        },
-        {
-          id: "worldlit",
-          label: "세계문학분야",
-          subs: [
-            { id: "world", label: "세계문학", count: 80 }
-          ]
-        },
-        {
-          id: "person",
-          label: "인물분야",
-          subs: [
-            { id: "people", label: "인물", count: 80 }
-          ]
-        }
-      ],
-      // 나머지 3개는 세종 구조 재사용
-      jeongjo: null,
-      yeongjo: null,
-      munjong: null,
-      // 성균관
-      seonggyungwan: [
-        {
-          id: "nonfiction",
-          label: "비문학분야",
-          subs: [
-            { id: "naesin", label: "내신교과", count: 20 },
-            { id: "suneung", label: "수능모고", count: 20 }
-          ]
-        },
-        {
-          id: "modernlit",
-          label: "현대문학분야",
-          subs: [
-            { id: "poem", label: "현대시", count: 20 },
-            { id: "novel", label: "현대소설", count: 20 },
-            { id: "etc", label: "극·수필·희곡", count: 20 }
-          ]
-        },
-        {
-          id: "classiclit",
-          label: "고전문학분야",
-          subs: [
-            { id: "gosi", label: "고전시가", count: 20 },
-            { id: "gonovel", label: "고전소설", count: 20 },
-            { id: "goessay", label: "고전수필", count: 20 }
-          ]
-        },
-        {
-          id: "grammar",
-          label: "문법분야",
-          subs: [
-            { id: "modern", label: "현대", count: 12 },
-            { id: "middle", label: "중세", count: 12 }
-          ]
-        }
-      ],
-      // 국자감
-      gukjagam: [
-        {
-          id: "nonfiction",
-          label: "비문학분야",
-          subs: [
-            { id: "naesin", label: "내신교과", count: 24 },
-            { id: "suneung", label: "수능모고", count: 24 }
-          ]
-        },
-        {
-          id: "modernlit",
-          label: "현대문학분야",
-          subs: [
-            { id: "poem", label: "현대시", count: 20 },
-            { id: "novel", label: "현대소설", count: 20 },
-            { id: "etc", label: "극·수필·희곡", count: 15 }
-          ]
-        },
-        {
-          id: "classiclit",
-          label: "고전문학분야",
-          subs: [
-            { id: "gosi", label: "고전시가", count: 20 },
-            { id: "gonovel", label: "고전소설", count: 20 },
-            { id: "goessay", label: "고전수필", count: 15 }
-          ]
-        },
-        {
-          id: "grammar",
-          label: "문법분야",
-          subs: [
-            { id: "modern", label: "현대", count: 12 },
-            { id: "middle", label: "중세", count: 12 }
-          ]
-        }
-      ]
-    };
-
-    /* 2. 과목별 테마(내가 임의로 만든 문장들) */
-    const titleThemes = {
-      bio: [
-        "생명의 기본 원리를 이해하기",
-        "세포에서부터 시작되는 생명",
-        "다양한 생물의 구조와 기능",
-        "유전과 번식의 비밀",
-        "환경과 생물의 상호작용",
-        "적응과 진화의 과정",
-        "생태계의 구성과 순환",
-        "인간과 생태계의 조화",
-        "질병과 면역의 이해",
-        "생명공학의 기초 살펴보기"
-      ],
-      earth: [
-        "지구의 구성과 변화",
-        "대기와 날씨를 읽다",
-        "지질 구조의 원리",
-        "해양의 흐름과 생태",
-        "기상 재해와 대비",
-        "기후 변화의 이해",
-        "별과 우주의 관찰",
-        "지구 내부의 비밀",
-        "자연자원의 형성과 이용",
-        "지구 환경의 보전"
-      ],
-      physics: [
-        "힘과 운동의 기본 개념",
-        "에너지의 형태와 전환",
-        "파동과 소리의 세계",
-        "빛과 전자기 현상",
-        "열과 온도의 원리",
-        "일과 능률을 계산하다",
-        "전기회로의 기초",
-        "과학적 사고로 문제 해결",
-        "물리 법칙의 실제 적용",
-        "현대 물리의 간단한 이해"
-      ],
-      chem: [
-        "물질의 성질과 상태",
-        "원자와 분자의 구조",
-        "화학 반응의 기본",
-        "용액과 농도 계산",
-        "산과 염기의 성질",
-        "주기율표로 보는 규칙성",
-        "에너지와 화학 변화",
-        "생활 속 화학 알아보기",
-        "환경과 화학 물질",
-        "실험으로 확인하는 화학"
-      ],
-      society: [
-        "사회문화를 바라보는 시각",
-        "사회의 구조와 집단",
-        "문화의 다양성과 이해",
-        "사회 변동과 현대사회",
-        "미디어와 대중문화 읽기",
-        "가치관과 규범의 형성",
-        "청소년과 사회 참여",
-        "인권과 평등의 확장",
-        "갈등과 해결의 방법",
-        "세계화 시대의 사회문화"
-      ],
-      geo: [
-        "지도를 통해 세상을 이해하다",
-        "대륙과 대양을 살펴보다",
-        "지형이 사람들의 생활에 미치는 영향",
-        "기후에 따라 달라지는 생활 모습",
-        "자연과 인간의 조화로운 관계",
-        "지도를 보고 길을 찾아가다",
-        "세계 여러 나라의 위치와 특징",
-        "우리나라의 지리적 특성 이해하기",
-        "자연재해와 인간의 대응",
-        "환경 문제와 지속 가능한 발전"
-      ],
-      law: [
-        "법이 필요한 이유",
-        "헌법과 기본권 이해",
-        "민법으로 보는 권리 관계",
-        "형법과 범죄의 구성",
-        "노동과 사회 보장 제도",
-        "생활 속 계약과 분쟁",
-        "국가와 시민의 책임",
-        "법적 절차와 재판",
-        "국제 사회와 법",
-        "공정한 사회를 위한 규범"
-      ],
-      econ: [
-        "경제 활동의 기본 원리",
-        "시장과 수요·공급",
-        "가격이 결정되는 과정",
-        "금융과 화폐의 역할",
-        "국가 경제의 순환",
-        "무역과 세계 경제",
-        "소비자와 합리적 선택",
-        "기업의 역할과 경영",
-        "경제 문제와 정책",
-        "미래 산업과 경제 변화"
-      ],
-      modern: [
-        "현대문학의 흐름 읽기",
-        "시대를 담은 현대시",
-        "현대소설의 인물과 갈등",
-        "서정과 서사 구분하기",
-        "현대문학의 주제 의식",
-        "작가의 시선과 표현 기법",
-        "시어와 이미지 해석",
-        "시대 배경과 작품 이해",
-        "현대 수필의 맛",
-        "감상문 쓰기 실습"
-      ],
-      classic: [
-        "고전문학의 장르 이해",
-        "고전시가의 정서 읽기",
-        "고전소설의 구조와 인물",
-        "시대상을 반영한 이야기",
-        "전기문과 설화의 특징",
-        "우리말의 옛 표현 익히기",
-        "주제와 교훈 파악하기",
-        "구비문학과 기록문학",
-        "고전과 현대의 연결",
-        "고전 감상법 정리"
-      ],
-      world: [
-        "세계 여러 지역의 문학",
-        "서양 고전의 전개",
-        "동양 문학의 정서",
-        "민족문학과 정체성",
-        "신화와 전설의 변주",
-        "현대 세계문학의 흐름",
-        "전쟁과 평화를 노래하다",
-        "사랑과 인간 내면의 표현",
-        "사회 비판적 시각의 문학",
-        "여성과 문학의 목소리"
-      ],
-      people: [
-        "역사를 바꾼 인물들",
-        "사상가들의 생각 따라가기",
-        "과학 발전에 기여한 사람들",
-        "문화예술을 빛낸 인물",
-        "독립과 평화를 위한 지도자",
-        "교육과 복지를 이끈 이들",
-        "세계 무대의 리더십",
-        "도전과 혁신의 사례",
-        "인물비교로 보는 시대",
-        "인물 이야기로 읽는 역사"
-      ],
-      // 성균관/국자감 공통으로 재사용할 테마
-      naesin: [
-        "교과 개념을 정리하다",
-        "지문 구조를 파악하다",
-        "문단 전개를 이해하다",
-        "중요 어휘를 익히다",
-        "자료와 표를 해석하다",
-        "출제 포인트를 정리하다",
-        "서술형 답안을 연습하다",
-        "비판적 읽기로 확장하다",
-        "유형별 문제에 적응하다",
-        "학습한 내용을 마무리하다"
-      ],
-      suneung: [
-        "수능 지문의 전개 방식",
-        "사설·평론 지문 독해",
-        "정보 확인 문제 공략",
-        "추론형 문제 접근법",
-        "간접 연계 지문 연습",
-        "시간 관리 전략 세우기",
-        "보기 자료와 함께 읽기",
-        "오답 유형 분석하기",
-        "수능 어휘 보충하기",
-        "실전처럼 풀어보기"
-      ],
-      poem: [
-        "시적 화자와 정서 파악",
-        "이미지와 상징 읽기",
-        "리듬과 운율 느끼기",
-        "비유법의 효과 이해",
-        "현대시의 주제 정리",
-        "화자의 태도 변화 보기",
-        "대상과 시선의 거리",
-        "제목과 내용의 관계",
-        "유형별 문제 접근",
-        "감상문으로 옮겨보기"
-      ],
-      novel: [
-        "인물과 갈등 구조",
-        "시점과 서술 방식",
-        "배경과 주제의 연결",
-        "대화와 행동의 의미",
-        "현대소설의 표현 기법",
-        "결말을 통한 주제 확인",
-        "반전과 복선 파악",
-        "인물의 심리 읽기",
-        "상징적 장면 해석",
-        "서사 구조 정리하기"
-      ],
-      etc: [
-        "극의 구조 이해하기",
-        "희곡 인물의 대사 분석",
-        "수필의 화자와 태도",
-        "희곡 무대지시 읽기",
-        "수필의 중심 생각 찾기",
-        "극의 갈등과 해결",
-        "희곡 장르의 특징",
-        "삶을 담은 수필 읽기",
-        "표현상의 특징 정리",
-        "내용을 바탕으로 쓰기"
-      ],
-      gosi: [
-        "시조의 형식과 정서",
-        "향가와 고려가요의 미",
-        "고전시가의 화자 이해",
-        "표현법과 부사어 해석",
-        "시대별 시가의 특징",
-        "자연과 인간의 교감",
-        "연군·연군가의 의미",
-        "여성 화자의 목소리",
-        "운율과 어조 파악",
-        "현대어 풀이 연습"
-      ],
-      gonovel: [
-        "고전소설의 구조",
-        "영웅소설의 전개",
-        "애정소설의 갈등",
-        "가정소설과 교훈",
-        "우화적 표현 읽기",
-        "여성 인물의 형상화",
-        "권선징악 구조 이해",
-        "서사 단위로 나누기",
-        "고전소설의 배경",
-        "현대적 의미로 확장"
-      ],
-      goessay: [
-        "고전 수필의 어조",
-        "자연과 은일의 정서",
-        "인물 평가와 교훈",
-        "역사적 일화 읽기",
-        "자기 성찰의 글",
-        "간결한 표현의 미",
-        "비유와 한자어 해석",
-        "글쓴이의 삶과 태도",
-        "문장 고쳐 쓰기",
-        "감상 정리하기"
-      ],
-      modernGrammar: [
-        "현대 국어의 음운",
-        "품사와 형태소 분석",
-        "단어의 형성 방식",
-        "문장의 성분 이해",
-        "문장 호응과 어순",
-        "높임법과 공손 표현",
-        "어휘의 의미 관계",
-        "표준어와 맞춤법",
-        "띄어쓰기 규칙",
-        "담화와 담화 표지"
-      ],
-      middleGrammar: [
-        "중세국어의 문자와 소리",
-        "훈민정음 창제 배경",
-        "중세국어의 문법 요소",
-        "옛말 어미와 선어말어미",
-        "중세국어 어휘 살펴보기",
-        "시대별 문헌 읽기",
-        "중세국어 문장 분석",
-        "현대국어와의 차이",
-        "의미 변천 이해",
-        "고어 해석 연습"
-      ]
-    };
-
-    /* 3. 전체 과목 임시 제목 자동 생성 */
-    function buildUnitTitleOverrides() {
-      const overrides = {};
-
-      for (const [seriesKey, domains] of Object.entries(domainsBySeries)) {
-        const realDomains = domains || domainsBySeries["sejong"];
-
-        realDomains.forEach(domainObj => {
-          domainObj.subs.forEach(subObj => {
-            const key = `${seriesKey}.${domainObj.id}.${subObj.id}`;
-            const count = subObj.count;
-
-            // 과목 id로 테마 찾기 (없으면 generic)
-            const theme =
-              titleThemes[subObj.id] ||
-              titleThemes[subObj.label] || // label로도 한 번 더
-              ["내용을 이해하고 정리하기", "핵심어를 중심으로 읽기", "문단 전개 파악하기", "자료와 함께 생각하기"];
-
-            const arr = [];
-            for (let i = 1; i <= count; i++) {
-              const num = String(i).padStart(2, "0");
-              // 테마를 돌려서 제목 만들기
-              const picked = theme[(i - 1) % theme.length];
-              arr.push(`${picked}`);
-            }
-            overrides[key] = arr;
-          });
-        });
-      }
-
-      // 여기 아래는 "진짜 알고 있는 제목" 덮어쓰기 할 곳
-      // (지금은 예시로 정조/사회/지리만 실제 제목으로 넣어둠)
-      overrides["jeongjo.social.geo"] = [
-        "지도를 통해 세상을 이해하다",
-        "세계의 대륙과 대양을 살펴보다",
-        "지형이 사람들의 생활에 미치는 영향",
-        "기후에 따라 달라지는 생활 모습",
-        "자연과 인간의 조화로운 관계",
-        "지도를 보고 길을 찾아가다",
-        "세계 여러 나라의 위치와 특징",
-        "우리나라의 지리적 특성 이해하기",
-        "자연재해와 인간의 대응",
-        "환경 문제와 지속 가능한 발전",
-        "도시와 농촌의 차이",
-        "교통과 통신의 발달",
-        "세계화와 지역화의 관계",
-        "인구 분포와 이동",
-        "문화권의 다양성 이해하기",
-        "지리 정보 기술의 활용",
-        "세계의 주요 산업",
-        "에너지 자원의 이용",
-        "지구촌의 환경 문제",
-        "미래의 지구를 그리다"
-      ];
-
-      return overrides;
+    // -----------------------------
+    // 0. 로그인한 학생 정보 표시
+    // -----------------------------
+    const params = new URLSearchParams(location.search);
+    const studentName = params.get("name");
+    const studentGrade = params.get("grade");
+    const userInfoEl = document.getElementById("user-info");
+    if (studentName) {
+      userInfoEl.textContent = `${studentGrade || ""} ${studentName}님 환영합니다!`.trim();
+    } else {
+      userInfoEl.textContent = "로그인한 학생 정보 없음";
     }
 
-    const unitTitleOverrides = buildUnitTitleOverrides();
+    // -----------------------------
+    // 1. 데이터 정의
+    // -----------------------------
+    const DATA = {
+      sejong: {
+        label: "세종편",
+        desc: "개념이해",
+        domains: {
+          science: {
+            label: "과학분야",
+            units: [
+              { label: "1과: 과학 글의 구조", num: "세-과-01" },
+              { label: "2과: 실험 설명하기", num: "세-과-02" },
+              { label: "3과: 비교하는 글", num: "세-과-03" },
+              { label: "4과: 도표 읽기", num: "세-과-04" }
+            ]
+          },
+          society: {
+            label: "사회분야",
+            units: [
+              { label: "1과: 인물 탐구", num: "세-사-01" },
+              { label: "2과: 사건 정리", num: "세-사-02" },
+              { label: "3과: 설명문 요약", num: "세-사-03" },
+              { label: "4과: 관점 비교", num: "세-사-04" }
+            ]
+          },
+          korean: {
+            label: "한국문학분야",
+            units: [
+              { label: "1과: 고전 읽기", num: "세-한-01" },
+              { label: "2과: 시 감상", num: "세-한-02" }
+            ]
+          },
+          world: {
+            label: "세계문학분야",
+            units: [
+              { label: "1과: 전래 이야기", num: "세-세-01" }
+            ]
+          },
+          human: {
+            label: "인물분야",
+            units: [
+              { label: "1과: 세종대왕", num: "세-인-01" }
+            ]
+          }
+        }
+      },
+      jeongjo: {
+        label: "정조편",
+        desc: "응용적용",
+        domains: {
+          science: {
+            label: "과학분야",
+            units: [
+              { label: "1과: 과학 기사 읽기", num: "정-과-01" },
+              { label: "2과: 과정 설명", num: "정-과-02" },
+              { label: "3과: 문제 해결", num: "정-과-03" },
+              { label: "4과: 실험 결과 해석", num: "정-과-04" }
+            ]
+          },
+          society: {
+            label: "사회분야",
+            units: [
+              { label: "1과: 인물 비교", num: "정-사-01" },
+              { label: "2과: 사건 카드 만들기", num: "정-사-02" },
+              { label: "3과: 의견 제시", num: "정-사-03" },
+              { label: "4과: 문화유산", num: "정-사-04" }
+            ]
+          }
+        }
+      },
+      yeongjo: {
+        label: "영조편",
+        desc: "논리연결",
+        domains: {}
+      },
+      munjong: {
+        label: "문종편",
+        desc: "심화추론",
+        domains: {}
+      },
+      seonggyungwan: {
+        label: "성균관",
+        desc: "중등교과",
+        domains: {}
+      },
+      gukjagam: {
+        label: "국자감",
+        desc: "고등교과",
+        domains: {}
+      }
+    };
 
-    /* 4. DOM 캐싱 */
-    const domainList = document.getElementById("domainList");
-    const subjectList = document.getElementById("subjectList");
-    const unitList = document.getElementById("unitList");
-    const modal = document.getElementById("pendingModal");
-    const closeModalBtn = document.getElementById("closeModalBtn");
-    const unitSearch = document.getElementById("unitSearch");
-    let currentUnits = [];
+    // -----------------------------
+    // 2. DOM 참조
+    // -----------------------------
+    const seriesListEl = document.getElementById("series-list");
+    const domainListEl = document.getElementById("domain-list");
+    const unitListEl = document.getElementById("unit-list");
+    const lessonBodyEl = document.getElementById("lesson-body");
+    const unitSearchEl = document.getElementById("unit-search");
 
-    function showPendingModal() { modal.classList.add("show"); }
-    function hidePendingModal() { modal.classList.remove("show"); }
-    closeModalBtn.addEventListener("click", hidePendingModal);
-    modal.addEventListener("click", e => { if (e.target === modal) hidePendingModal(); });
+    let currentUnits = []; // 검색을 위해 저장
 
-    /* 5. 시리즈 클릭 */
-    document.querySelectorAll("#seriesList .series-item").forEach(li => {
-      li.addEventListener("click", () => {
-        document.querySelectorAll("#seriesList .series-item").forEach(x => x.classList.remove("active"));
-        li.classList.add("active");
-        const series = li.dataset.series;
-        renderDomains(series);
-        subjectList.innerHTML = "";
-        unitList.innerHTML = "";
-        document.getElementById("unitTitle").textContent = "단원 선택";
-        document.getElementById("unitDesc").textContent =
-          seriesInfo[series].desc + " · 분야와 과목을 선택하세요.";
-        unitSearch.value = "";
+    // -----------------------------
+    // 3. 시리즈 렌더
+    // -----------------------------
+    function renderSeries() {
+      seriesListEl.innerHTML = "";
+      Object.keys(DATA).forEach(key => {
+        const li = document.createElement("li");
+        li.className = "list-item";
+        li.dataset.series = key;
+        li.innerHTML = `
+          <span>${DATA[key].label}</span>
+          <small>${DATA[key].desc || ""}</small>
+        `;
+        li.addEventListener("click", () => {
+          // active처리
+          Array.from(seriesListEl.children).forEach(c => c.classList.remove("active"));
+          li.classList.add("active");
+          renderDomains(key);
+        });
+        seriesListEl.appendChild(li);
       });
-    });
+    }
 
-    /* 6. 분야 표시 */
+    // -----------------------------
+    // 4. 분야 렌더
+    // -----------------------------
     function renderDomains(seriesKey) {
-      domainList.innerHTML = "";
-      const domainData = domainsBySeries[seriesKey] || domainsBySeries["sejong"];
+      const series = DATA[seriesKey];
+      domainListEl.innerHTML = "";
+      unitListEl.innerHTML = "";
+      lessonBodyEl.textContent = "과목을 선택하면 단원이 나옵니다.";
 
-      domainData.forEach(dom => {
-        const li = document.createElement("li");
-        li.className = "domain-item";
-        li.dataset.domain = dom.id;
-        li.innerHTML = `<span>${dom.label}</span><span class="meta">${dom.subs.length}과목</span>`;
-        li.addEventListener("click", () => {
-          document.querySelectorAll(".domain-item").forEach(x => x.classList.remove("active"));
-          li.classList.add("active");
-          renderSubjects(seriesKey, dom);
-          unitList.innerHTML = "";
-          document.getElementById("unitTitle").textContent = dom.label;
-          document.getElementById("unitDesc").textContent = "세부 과목을 선택하면 01~번호가 표시됩니다.";
-          unitSearch.value = "";
-        });
-        domainList.appendChild(li);
-      });
-    }
-
-    /* 7. 세부 과목 표시 */
-    function renderSubjects(seriesKey, domainObj) {
-      subjectList.innerHTML = "";
-      domainObj.subs.forEach(sub => {
-        const li = document.createElement("li");
-        li.className = "subject-item";
-        li.dataset.sub = sub.id;
-        li.innerHTML = `<span>${sub.label}</span><span class="meta">${sub.count}개</span>`;
-        li.addEventListener("click", () => {
-          document.querySelectorAll(".subject-item").forEach(x => x.classList.remove("active"));
-          li.classList.add("active");
-          renderUnits(seriesKey, domainObj, sub);
-        });
-        subjectList.appendChild(li);
-      });
-    }
-
-    /* 8. 단원 표시 */
-    function renderUnits(seriesKey, domainObj, subObj) {
-      unitList.innerHTML = "";
-      document.getElementById("unitTitle").textContent =
-        `${seriesInfo[seriesKey].name} / ${domainObj.label} / ${subObj.label}`;
-      document.getElementById("unitDesc").textContent =
-        `${subObj.label} ${subObj.count}개 단원입니다.`;
-
-      unitSearch.value = "";
-      currentUnits = [];
-
-      const key = `${seriesKey}.${domainObj.id}.${subObj.id}`;
-      const titles = unitTitleOverrides[key] || [];
-
-      for (let i = 1; i <= subObj.count; i++) {
-        const num = String(i).padStart(2, "0");
-        const title = titles[i - 1] || `${subObj.label} ${num} 학습하기`;
-        currentUnits.push({
-          label: `${subObj.label} ${num} ${title}`.trim(),
-          num,
-          path: `./${seriesKey}/${domainObj.id}/${subObj.id}_${num}.html`
-        });
+      if (!series || !series.domains || Object.keys(series.domains).length === 0) {
+        domainListEl.innerHTML = `<li class="empty">등록된 분야가 없습니다.</li>`;
+        currentUnits = [];
+        return;
       }
 
-      renderUnitList(currentUnits);
+      Object.keys(series.domains).forEach(dKey => {
+        const dom = series.domains[dKey];
+        const li = document.createElement("li");
+        li.className = "list-item";
+        li.textContent = `${dom.label} ${dom.units ? dom.units.length + "과목" : ""}`;
+        li.addEventListener("click", () => {
+          Array.from(domainListEl.children).forEach(c => c.classList.remove("active"));
+          li.classList.add("active");
+          renderUnitList(dom.units || []);
+        });
+        domainListEl.appendChild(li);
+      });
     }
 
-    /* 9. 단원 리스트 출력 */
+    // -----------------------------
+    // 5. 단원 리스트 렌더
+    // -----------------------------
     function renderUnitList(units) {
-      unitList.innerHTML = "";
+      currentUnits = units || [];
+      unitListEl.innerHTML = "";
+
+      if (!units || units.length === 0) {
+        unitListEl.innerHTML = `<li class="empty">단원이 없습니다.</li>`;
+        return;
+      }
+
       units.forEach(u => {
         const li = document.createElement("li");
-        li.className = "unit-item";
-        li.innerHTML = `<span>${u.label}</span><span class="badge">${u.num}</span>`;
+        li.className = "list-item";
+        li.textContent = `${u.label}`;
         li.addEventListener("click", () => {
-          fetch(u.path, { method: "HEAD" })
-            .then(res => {
-              if (res.ok) {
-                window.location.href = u.path;
-              } else {
-                showPendingModal();
-              }
-            })
-            .catch(() => showPendingModal());
+          Array.from(unitListEl.children).forEach(c => c.classList.remove("active"));
+          li.classList.add("active");
+          lessonBodyEl.innerHTML = `
+            <div class="detail-title">${u.label}</div>
+            <div class="detail-body">
+              단원 번호: ${u.num}<br/>
+              이 단원에 대한 설명을 여기에 적어 주세요.
+            </div>
+          `;
         });
-        unitList.appendChild(li);
+        unitListEl.appendChild(li);
       });
     }
 
-    /* 10. 검색 */
-    unitSearch.addEventListener("input", (e) => {
+    // -----------------------------
+    // 6. 단원 검색
+    // -----------------------------
+    unitSearchEl.addEventListener("input", (e) => {
       const q = e.target.value.trim();
-      if (!q) {
+      if (q === "") {
         renderUnitList(currentUnits);
         return;
       }
       const filtered = currentUnits.filter(u =>
-        u.label.includes(q) || u.num.includes(q)
+        (u.label && u.label.includes(q)) ||
+        (u.num && u.num.includes(q))
       );
       renderUnitList(filtered);
     });
 
-    // 시작은 세종
+    // 시작은 세종편으로
+    renderSeries();
+    // 첫 번째 시리즈를 자동 active
+    const firstSeries = seriesListEl.querySelector(".list-item");
+    if (firstSeries) firstSeries.classList.add("active");
     renderDomains("sejong");
   </script>
 </body>

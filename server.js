@@ -65,20 +65,27 @@ app.post("/signup", (req, res) => {
 
 // 5) 로그인 처리
 app.post("/login", (req, res) => {
-  const { id, pw } = req.body;
+  // 프런트에서 오는 이름들 맞춰서 받기
+  const { name, grade, password } = req.body;
+
+  // 사용자 목록 읽기
   const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
 
-  const user = users.find((u) => u.id === id && u.pw === pw);
+  // 이름 + 학년 + 비밀번호가 모두 맞는 학생 찾기
+  const user = users.find(
+    (u) => u.name === name && u.grade === grade && u.pw === password
+  );
+
   if (!user) {
-    return res.send('아이디 또는 비밀번호가 올바르지 않습니다. <a href="/login">다시 시도</a>');
+    return res.send('로그인 정보가 올바르지 않습니다. <a href="/login">다시 로그인</a>');
   }
 
-  const name = encodeURIComponent(user.name);
-  const grade = encodeURIComponent(user.grade);
-
-  // 로그인 성공하면 메뉴로
-  res.redirect(`/menu.html?name=${name}&grade=${grade}`);
+  // 성공하면 학습실로 보내기
+  const encName = encodeURIComponent(user.name);
+  const encGrade = encodeURIComponent(user.grade);
+  res.redirect(`/menu.html?name=${encName}&grade=${encGrade}`);
 });
+
 
 // ✅ 여기만 바꾼 거!
 app.listen(PORT, () => {
