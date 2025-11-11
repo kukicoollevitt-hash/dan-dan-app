@@ -91,7 +91,16 @@
     }
     .detail-title { font-weight: 700; margin-bottom: 2px; }
     .detail-desc { font-size: 12px; color: #9b7a54; margin-bottom: 10px; }
+
+    /* 단원 오른쪽 묶음(번호 + 상태) */
+    .unit-right {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
     .unit-list .unit-item { border-radius: 7px; font-size: 12.5px; }
+
     .badge {
       background: rgba(255,255,255,0.2);
       border: 1px solid rgba(255,255,255,0.4);
@@ -99,6 +108,27 @@
       padding: 1px 8px 2px;
       font-size: 10px;
     }
+
+    /* ✅ 여기부터 추가: 상태 뱃지 */
+    .status-badge {
+      display: inline-block;
+      border-radius: 8px;
+      padding: 3px 8px 4px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    /* ✏️ 미완료 */
+    .status-default {
+      background: #fbe4e4;
+      color: #8b2f2f;
+    }
+    /* 🏆 학습완료 */
+    .status-done {
+      background: #d9f7d9;
+      color: #2f8b4b;
+    }
+
     /* 모달 */
     .overlay {
       position: fixed;
@@ -631,7 +661,6 @@
 
             const arr = [];
             for (let i = 1; i <= count; i++) {
-              const num = String(i).padStart(2, "0");
               const picked = theme[(i - 1) % theme.length];
               arr.push(`${picked}`);
             }
@@ -766,13 +795,21 @@
       renderUnitList(currentUnits);
     }
 
-    /* 9. 단원 리스트 출력 */
+    /* 9. 단원 리스트 출력 (여기서 상태 뱃지 넣는 부분 변경) */
     function renderUnitList(units) {
       unitList.innerHTML = "";
       units.forEach(u => {
         const li = document.createElement("li");
         li.className = "unit-item";
-        li.innerHTML = `<span>${u.label}</span><span class="badge">${u.num}</span>`;
+        // 이 경로를 나중에 상태 갱신용 key로 쓸 거라 data-page에 넣어둠
+        li.dataset.page = u.path;
+        li.innerHTML = `
+          <span>${u.label}</span>
+          <span class="unit-right">
+            <span class="badge">${u.num}</span>
+            <span class="status-badge status-default">✏️ 미완료</span>
+          </span>
+        `;
         li.addEventListener("click", () => {
           fetch(u.path, { method: "HEAD" })
             .then(res => {
@@ -786,6 +823,9 @@
         });
         unitList.appendChild(li);
       });
+
+      // 목록 그릴 때마다 저장된 완료 상태 다시 반영
+      restoreProgressOnRenderedList();
     }
 
     /* 10. 검색 */
@@ -801,6 +841,32 @@
       renderUnitList(filtered);
     });
 
+    // ✅ 상태를 바꾸는 공용 함수
+    function updateLessonStatus(pageKey, status) {
+      const li = document.querySelector(`.unit-item[data-page="${pageKey}"]`);
+      if (!li) return;
+      const badge = li.querySelector('.status-badge');
+      if (!badge) return;
+
+      badge.classList.remove('status-default', 'status-done');
+
+      if (status === 'done') {
+        badge.classList.add('status-done');
+        badge.textContent = '🏆 학습완료';
+      } else {
+        badge.classList.add('status-default');
+        badge.textContent = '✏️ 미완료';
+      }
+    }
+
+    // ✅ localStorage에 저장해둔 완료된 단원들을 메뉴에 반영
+    function restoreProgressOnRenderedList() {
+      const saved = JSON.parse(localStorage.getItem('dan-progress') || '[]'); // ["./sejong/...html", ...]
+      saved.forEach(pageKey => {
+        updateLessonStatus(pageKey, 'done');
+      });
+    }
+
     // 시작은 세종
     renderDomains("sejong");
 
@@ -810,11 +876,13 @@
     const grade = params.get("grade");
     const infoTarget = document.getElementById("user-info");
     if (infoTarget && name) {
-      // grade가 있으면 앞에, 없으면 이름만
       infoTarget.textContent = grade
         ? `${grade} ${name}님 환영합니다!`
         : `${name}님 환영합니다!`;
     }
+
+    // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
+    restoreProgressOnRenderedList();
   </script>
 </body>
 </html>

@@ -16,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 
+// users.json 없으면 만들기
 if (!fs.existsSync(USERS_FILE)) {
   fs.writeFileSync(USERS_FILE, "[]");
 }
@@ -27,6 +28,7 @@ const userSchema = new mongoose.Schema({
   phone: String,
   id: String,
   pw: String,
+  lastLogin: Date,   // ✅ 마지막 로그인 시간 필드 추가
 });
 const User = mongoose.model("User", userSchema);
 
@@ -63,6 +65,7 @@ app.post("/signup", async (req, res) => {
   const name = req.body.name || "";
   const phone = req.body.phone || "";
 
+  // 지금은 편의상 id/pw를 전화번호로
   const id = phone;
   const pw = phone;
 
@@ -83,12 +86,13 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// ✅ 로그인 처리
+// ✅ 로그인 처리 (여기에 lastLogin 찍기)
 app.post("/login", async (req, res) => {
   console.log("📥 [POST] /login 에서 받은 값:", req.body);
   const { name, grade, password } = req.body;
 
   try {
+    // 1) 사용자 찾기
     const user = await User.findOne({ name, grade, pw: password });
 
     if (!user) {
@@ -96,7 +100,28 @@ app.post("/login", async (req, res) => {
       return res.send('로그인 정보가 올바르지 않습니다. <a href="/login">다시 로그인</a>');
     }
 
-    console.log("✅ [POST] /login 성공:", user.name);
+    // 2) 마지막 로그인 시간 업데이트
+    const now = new Date();
+    user.lastLogin = now;
+    await user.save();  // ✅ MongoDB에 반영
+
+    // (선택) JSON 백업에도 반영해두기
+    try {
+      const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+      const idx = users.findIndex(
+        (u) => u.name === user.name && u.grade === user.grade && u.phone === user.phone
+      );
+      if (idx !== -1) {
+        users[idx].lastLogin = now;
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+      }
+    } catch (jsonErr) {
+      console.error("⚠ users.json 업데이트 중 에러(무시 가능):", jsonErr.message);
+    }
+
+    console.log("✅ [POST] /login 성공:", user.name, "lastLogin:", now.toISOString());
+
+    // 3) 기존처럼 menu.html로 넘기기
     const encName = encodeURIComponent(user.name);
     const encGrade = encodeURIComponent(user.grade);
     res.redirect(`/menu.html?name=${encName}&grade=${encGrade}`);
@@ -118,6 +143,7 @@ app.get("/dbtest", async (req, res) => {
   }
 });
 
+// ===== 서버 시작 =====
 mongoose
   .connect(MONGO_URI)
   .then(() => {
