@@ -129,7 +129,7 @@
       color: #2f8b4b;
     }
 
-    /* 모달 */
+    /* 모달 (준비중) */
     .overlay {
       position: fixed;
       inset: 0;
@@ -171,7 +171,68 @@
       border: 1px solid rgba(197,138,69,0.15);
       white-space: nowrap;
     }
-    
+
+    /* 🔋 로딩 오버레이 (새로 추가) */
+    .overlay-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+    .overlay-loading.show {
+      display: flex;
+    }
+    .loading-box {
+      background: #fffaf3;
+      border: 1px solid rgba(139,47,47,0.12);
+      border-radius: 18px;
+      width: 320px;
+      text-align: center;
+      padding: 28px 30px 26px;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.12);
+    }
+    .loading-emoji {
+      font-size: 56px;
+      margin-bottom: 8px;
+    }
+    .loading-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #6f2e2e;
+    }
+    .loading-msg {
+      font-size: 13px;
+      color: #8d6f51;
+      margin-bottom: 14px;
+    }
+    .loading-progress {
+      width: 100%;
+      height: 10px;
+      background: #e0d2c1;
+      border-radius: 999px;
+      position: relative;
+      overflow: hidden;
+    }
+    .loading-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: #8b2f2f;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+    .loading-percent {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #8b2f2f;
+    }
   </style>
 </head>
 <body>
@@ -227,13 +288,26 @@
     </div>
   </div>
 
-  <!-- 모달 -->
+  <!-- 준비중 모달 -->
   <div class="overlay" id="pendingModal">
     <div class="modal-box">
       <div class="modal-emoji">📚✨</div>
       <div class="modal-title">아직 준비 중입니다.</div>
       <div class="modal-msg">곧 지문이 오픈됩니다. 기대해주세요!</div>
       <button class="modal-btn" id="closeModalBtn">확인</button>
+    </div>
+  </div>
+
+  <!-- 🔋 로딩 오버레이 추가 -->
+  <div class="overlay-loading" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="loading-emoji">🔋</div>
+      <div class="loading-title">로딩 중...</div>
+      <div class="loading-msg">학습 자료를 준비하고 있어요.</div>
+      <div class="loading-progress">
+        <div class="loading-bar" id="loadingBar"></div>
+      </div>
+      <div class="loading-percent" id="loadingPercent">0%</div>
     </div>
   </div>
 
@@ -821,10 +895,12 @@
           </span>
         `;
         li.addEventListener("click", () => {
+          // 여기서 HEAD로 존재 여부 확인
           fetch(u.path, { method: "HEAD" })
             .then(res => {
               if (res.ok) {
-                window.location.href = u.path;
+                // ✅ 존재하니까 로딩 띄우고 이동
+                showLoadingScreen(u.path);
               } else {
                 showPendingModal();
               }
@@ -896,11 +972,60 @@
 
     // ✅ localStorage에 저장해둔 완료된 단원들을 메뉴에 반영 (학생별)
     function restoreProgressOnRenderedList() {
-      const saved = getStudentProgressList(); // ["./jeongjo/social/geo_01.html", ...] 이런 식이어야 함
+      const saved = getStudentProgressList(); // ["./jeongjo/social/geo_01.html", ...]
       saved.forEach(pageKey => {
         updateLessonStatus(pageKey, 'done');
       });
     }
+
+  // 로딩 화면 숨기는 함수
+function hideLoadingScreen() {
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  loadingOverlay.classList.remove('show');
+}
+
+// 🔋 로딩 띄우는 함수
+function showLoadingScreen(targetUrl) {
+  const overlay = document.getElementById('loadingOverlay');
+  const bar = document.getElementById('loadingBar');
+  const percent = document.getElementById('loadingPercent');
+  overlay.classList.add('show');
+
+  let p = 0;
+  const timer = setInterval(() => {
+    p += 5;
+    if (p > 100) p = 100;
+    bar.style.width = p + '%';
+    percent.textContent = p + '%';
+
+    if (p === 100) {
+      clearInterval(timer);
+      // 페이지 이동
+      setTimeout(() => {
+        window.location.href = targetUrl; // 페이지 이동
+      }, 500); // 로딩이 완료된 후 0.5초 뒤에 페이지 이동
+    }
+  }, 80); // 로딩 속도 조절
+}
+
+// 뒤로 가기 시 로딩 화면 숨기기
+window.onbeforeunload = () => {
+  hideLoadingScreen(); // 페이지 이동하기 전에 로딩 화면 숨기기
+};
+
+// 페이지 이동 시 로딩 화면 숨기기
+document.querySelectorAll('.unit-item').forEach((item) => {
+  item.addEventListener('click', function() {
+    const targetUrl = this.dataset.page;
+    showLoadingScreen(targetUrl);  // 로딩 화면 띄운 후
+
+    // 페이지 이동 후 로딩 화면을 숨기기
+    setTimeout(() => {
+      hideLoadingScreen();  // 로딩 화면을 숨기고 페이지 이동
+    }, 500); // 페이지 이동 후 타이밍 맞춰서 숨기기
+  });
+});
+    
 
     // 시작은 세종
     renderDomains("sejong");
