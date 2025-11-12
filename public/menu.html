@@ -512,8 +512,8 @@
       ],
       geo: [
         "지도를 통해 세상을 이해하다",
-        "대륙과 대양을 살펴보다",
-        "지형이 사람들의 생활에 미치는 영향",
+        "지도에 담긴 약속과 표현",
+        "우리 고장의 상징과 유래",
         "기후에 따라 달라지는 생활 모습",
         "자연과 인간의 조화로운 관계",
         "지도를 보고 길을 찾아가다",
@@ -756,8 +756,8 @@
       // 실제 알고 있는 제목 덮어쓰기
       overrides["jeongjo.social.geo"] = [
         "지도를 통해 세상을 이해하다",
-        "세계의 대륙과 대양을 살펴보다",
-        "지형이 사람들의 생활에 미치는 영향",
+        "지도에 담긴 약속과 표현",
+        "우리 고장의 상징과 유래",
         "기후에 따라 달라지는 생활 모습",
         "자연과 인간의 조화로운 관계",
         "지도를 보고 길을 찾아가다",
@@ -1049,5 +1049,99 @@ document.querySelectorAll('.unit-item').forEach((item) => {
     // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
     restoreProgressOnRenderedList();
   </script>
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('currentStudent');
+  if (!saved) return; // 로그인 전이면 패스
+
+  let stu;
+  try { stu = JSON.parse(saved); } catch { return; }
+
+  const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+  const studentKey = `${(stu.grade || '').trim()}_${(stu.name || '').trim()}_${cleanPhone}`;
+  const doneKey = `dan-progress:${studentKey}`; // ✅ 백틱으로 수정
+  const doneList = JSON.parse(localStorage.getItem(doneKey) || '[]'); // ✅ 반드시 JSON.parse!
+
+  document.querySelectorAll('[data-unit-id]').forEach(row => {
+    const id = (row.getAttribute('data-unit-id') || '').toLowerCase();
+    const badge = row.querySelector('.status-badge');
+    const done = doneList.includes(id);
+    if (badge) {
+      badge.textContent = done ? '학습완료' : '미완료';
+      badge.classList.toggle('done', done);
+    }
+  });
+});
+</script>
+
+<script>
+(function () {
+  const saved = localStorage.getItem('currentStudent');
+  if (!saved) return;
+  let stu; try { stu = JSON.parse(saved); } catch { return; }
+
+  const cleanPhone = (stu.phone || '').replace(/\D/g,'');
+  const doneKey = `dan-progress:${(stu.grade||'').trim()}_${(stu.name||'').trim()}_${cleanPhone}`;
+  const rawList = JSON.parse(localStorage.getItem(doneKey) || '[]');
+
+  // 🔧 경로형/확장자/대소문자/공백 모두 통일
+  const norm = s => (s||'')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/,'')   // .html 제거
+    .replace(/[./]/g,'_');        // ./jeongjo/social/geo_02 → jeongjo_social_geo_02
+
+  const doneSet = new Set(rawList.map(norm));
+
+  function applyBadges() {
+    document.querySelectorAll('[data-unit-id]').forEach(row => {
+      const id = norm(row.getAttribute('data-unit-id'));
+      const badge = row.querySelector('.status-badge');
+      const done = doneSet.has(id);
+      if (badge) {
+        badge.textContent = done ? '학습완료' : '미완료';
+        badge.classList.toggle('done', done);
+      }
+    });
+  }
+
+  window.addEventListener('load', applyBadges);
+  setTimeout(applyBadges, 0); // 혹시 다른 스크립트가 덮어쓸 경우 대비
+})();
+</script>
+<script>
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('currentStudent');
+  if (!saved) return;
+  let stu; try { stu = JSON.parse(saved); } catch { return; }
+
+  const cleanPhone = (stu.phone || '').replace(/\D/g,'');
+  const doneKey = `dan-progress:${(stu.grade||'').trim()}_${(stu.name||'').trim()}_${cleanPhone}`;
+  const rawList = JSON.parse(localStorage.getItem(doneKey) || '[]');
+
+  // ✅ 어떤 형태로 저장돼 있든 "표준 ID"로 변환
+  // ex) "./jeongjo/social/geo_02.html", "jeongjo_geo_2", "jeongjo_social_geo02" → "jeongjo_social_geo_02"
+  const toStdId = (s) => {
+    const str = (s||'').toLowerCase();
+    const m = str.match(/geo[_-]?(\d{1,2})/);                  // geo02 / geo_2 / geo-02 다 인식
+    if (!m) return null;
+    const n = m[1].padStart(2,'0');
+    return `jeongjo_social_geo_${n}`;                           // 표준화 규칙 고정
+  };
+
+  const doneSet = new Set(rawList.map(toStdId).filter(Boolean));
+
+  document.querySelectorAll('[data-unit-id]').forEach(row => {
+    const cur = toStdId(row.getAttribute('data-unit-id'));
+    const badge = row.querySelector('.status-badge');
+    const done = cur ? doneSet.has(cur) : false;
+    if (badge) {
+      badge.textContent = done ? '학습완료' : '미완료';
+      badge.classList.toggle('done', done);
+    }
+  });
+});
+</script>
 </body>
 </html>
