@@ -1,8 +1,3 @@
-/* ============================================
-   ✅ 어휘 상태 버전 (로컬스토리지 키 버전 관리)
-============================================ */
-const VOCAB_STATE_VER = 'v1';
-
 /**
  * ✅ 단원 자동 인식 (강화)
  * 우선순위: ?unit=geo_XX → 파일명 geo_XX.html → 제목 숫자
@@ -68,7 +63,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '어떤 지도는 날씨를 보여 주기 위해 (      )를 사용하고,', answer: '기후도', initials: 'ㄱㅎㄷ', aliases: ['기후도'] },
         { no: 6, text: '어떤 지도는 사람들의 분포를 보여 주기 위해 (          )를 사용해요.', answer: '인구 분포도', initials: 'ㅇㄱ ㅂㅍㄷ', aliases: ['인구분포도'] },
         { no: 7, text: '요즘에는 스마트폰으로 보는 (          )와', answer: '디지털 지도', initials: 'ㄷㅈㅌ ㅈㄷ', aliases: ['디지털지도'] },
-        { no: 8, text: '목적지까지 안내해 주는 (        )을 사용하면', answer: '내비게이션', initials: 'ㄴㅂㄱㅇㅅ', aliases: ['네비게이션','내비게이숀'] },
+        { no: 8, text: '목적지까지 안내해 주는 (        )을 사용하면', answer: '내비게이션', initials: 'ㄴㅂㄱㅅ', aliases: ['네비게이션','내비게이숀'] },
         { no: 9, text: '(      )으로 길 안내를 받을 수 있어요.', answer: '실시간', initials: 'ㅅㅅㄱ', aliases: ['실시간'] }
       ]
     }, 
@@ -120,6 +115,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['등고선(contour line)','같은 높이를 잇는 선'],
       ['방위표(compass rose)','지도의 방향을 알려주는 기준']
     ],
+    /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '[지도 약속과 표현 어휘].',
       items: [
@@ -187,6 +183,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['지명의 유래', '이름이 생긴 이유나 배경'],
       ['정체성', '지역이 가진 고유한 특성']
     ],
+    /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '[지역 상징·유래 관련 어휘]',
       items: [
@@ -242,6 +239,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['본초 자오선', '경도 0°로 약속된 기준 경선'],
       ['격자(grid)', '지도를 일정 간격으로 나눈 선들의 모음']
     ],
+    /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '[좌표·경위도 관련 어휘]',
       items: [
@@ -323,6 +321,7 @@ window.renderVocabFill = function () {
     const st = document.createElement('style');
     st.id = 'vocab-inline-style';
     st.textContent = `
+      /* vocab 영역에서만 줄글 처리 */
       .vocab-box .vocab-inline > p { display:inline !important; margin:0 !important; }
       .vocab-box .vocab-inline > p + p::before { content:" "; }
 
@@ -331,6 +330,7 @@ window.renderVocabFill = function () {
       #vocab-fill .vocab-inline > p + p::before,
       .vocab-fill-text .vocab-inline > p + p::before { content:" "; }
 
+      /* 🔶 줄 간격 조정 */
       .vocab-inline { line-height: 5.0 !important; }
     `;
     document.head.appendChild(st);
@@ -338,54 +338,14 @@ window.renderVocabFill = function () {
 
   window.reportState = window.reportState || {};
   window.reportState.vocabTotal = pack.vocabFill.items.length;
-
-  try {
-    if (typeof loadVocabState === 'function') {
-      loadVocabState();
-    }
-
-    if (wasVocabGraded() && typeof window.gradeVocab === 'function') {
-      setTimeout(() => {
-        try { window.gradeVocab(); } catch (e) {
-          console.warn('auto re-grade vocab error', e);
-        }
-      }, 0);
-    }
-  } catch (e) {
-    console.warn('vocab restore error', e);
-  }
 };
 
-<<<<<<< HEAD
-
-function _bindTabEvents() {
-  document.addEventListener('click', (e) => {
-=======
 function _bindTabEvents() {
   document.addEventListener('click', (e)=>{
->>>>>>> 8c67b95 (update)
     const btn = e.target.closest('[data-tab]');
     if (!btn) return;
-
     const tab = btn.getAttribute('data-tab');
-
-    /* ============================
-       📌 어휘학습 탭 클릭 시 처리
-       render → 복원 → 자동 재채점
-       ============================ */
-    if (tab === 'vocab') {
-      // 1) 어휘 학습 UI 생성
-      renderVocabFill();
-
-      // 2) 저장된 입력값 복원
-      loadVocabState();
-
-      // 3) 동그라미/엑스 & 하단 채점 결과 자동 복원
-      if (typeof window.gradeVocab === 'function') {
-        // 렌더링 직후 DOM이 안정되도록 약간 지연
-        setTimeout(() => gradeVocab(), 10);
-      }
-    }
+    if (tab === 'vocab') renderVocabFill();
   });
 }
 
@@ -453,121 +413,6 @@ function applyContentPack(unitKey) {
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
   }
 }
-
-/* ==== 어휘학습 상태 저장/복원 ==== */
-function saveVocabState() {
-  try {
-    const unit = window.CUR_UNIT || 'geo_01';
-    const key  = `dan-vocab-state:${VOCAB_STATE_VER}:${unit}`;
-    const inputs = document.querySelectorAll(
-      '#tab-vocab .blank-input, #vocab-fill .blank-input, .vocab-fill-text .blank-input'
-    );
-    const state = Array.from(inputs).map(input => input.value || '');
-
-    localStorage.setItem(key, JSON.stringify(state));
-  } catch (e) {
-    console.warn('saveVocabState error', e);
-  }
-}
-
-function loadVocabState() {
-  try {
-    const unit = window.CUR_UNIT || 'geo_01';
-    const key  = `dan-vocab-state:${VOCAB_STATE_VER}:${unit}`;
-    const raw  = localStorage.getItem(key);
-    if (!raw) return;
-
-    const state = JSON.parse(raw);
-    if (!state) return;
-
-    const inputs = document.querySelectorAll(
-      '#tab-vocab .blank-input, #vocab-fill .blank-input, .vocab-fill-text .blank-input'
-    );
-    inputs.forEach((input, idx) => {
-      if (state[idx] !== undefined) {
-        input.value = state[idx];
-      }
-    });
-  } catch (e) {
-    console.warn('loadVocabState error', e);
-  }
-}
-
-function wasVocabGraded() {
-  try {
-    const unit = window.CUR_UNIT || 'geo_01';
-    const key  = `dan-vocab-graded:${VOCAB_STATE_VER}:${unit}`;
-    return localStorage.getItem(key) === '1';
-  } catch (e) {
-    console.warn('wasVocabGraded error', e);
-    return false;
-  }
-}
-
-/* ✅ 어휘 채점 함수 패치: 채점 시 상태 저장 + 채점 플래그 */
-window.gradeVocab = function () {
-  const unit = window.CUR_UNIT || 'geo_01';
-  const pack = window.CONTENTS?.[unit];
-  if (!pack || !pack.vocabFill || !pack.vocabFill.items) {
-    console.warn('gradeVocab: vocabFill 없음', unit);
-    return;
-  }
-
-  const wraps = document.querySelectorAll(
-    '#tab-vocab .blank-wrap, #vocab-fill .blank-wrap, .vocab-fill-text .blank-wrap'
-  );
-
-  const items = pack.vocabFill.items;
-  const norm = s => (s || '').toString().replace(/\s+/g, '').toLowerCase();
-
-  let correct = 0;
-
-  wraps.forEach((wrap, idx) => {
-    const input = wrap.querySelector('.blank-input');
-    const mark  = wrap.querySelector('.blank-mark');
-    const item  = items[idx];
-    if (!input || !mark || !item) return;
-
-    const val = (input.value || '').trim();
-    const answers = [item.answer, ...(item.aliases || [])];
-
-    const ok = answers.some(a => norm(a) === norm(val));
-
-    wrap.classList.remove('correct', 'wrong');
-    if (ok) {
-      wrap.classList.add('correct');
-      mark.textContent = '⭕';
-      correct++;
-    } else {
-      wrap.classList.add('wrong');
-      mark.textContent = '✖';
-    }
-  });
-
-  const total = items.length;
-
-  window.reportState = window.reportState || {};
-  window.reportState.vocabTotal       = total;
-  window.reportState.vocabCorrect     = correct;
-  window.reportState.vocabScoreRatio  = total ? correct / total : 0;
-
-  if (typeof saveVocabState === 'function') {
-    try { saveVocabState(); } catch (e) { console.warn('saveVocabState error', e); }
-  }
-
-  try {
-    const key = `dan-vocab-graded:${VOCAB_STATE_VER}:${unit}`;
-    localStorage.setItem(key, '1');
-  } catch (e) {
-    console.warn('set vocab graded flag error', e);
-  }
-
-  const box = document.getElementById('vocab-grade-result');
-  if (box) {
-    box.style.display = 'block';
-    box.innerHTML = `<p><strong>어휘 점수: ${correct} / ${total}</strong></p>`;
-  }
-};
 
 /* ==== 본문학습 상태 저장/복원 ==== */
 function saveReadingState() {
@@ -644,155 +489,6 @@ function loadReadingState() {
 }
 
 /* ===== 통합 채점기 ===== */
-// ✅ 읽기 탭 상태 저장 (새로고침해도 유지)
-function saveReadingState() {
-  try {
-    const key = `dan-reading-state:${CUR_UNIT}`;
-    const state = {
-      graded: true,
-      answers: {}
-    };
-
-    const blocks = document.querySelectorAll('#tab-reading .quiz-block');
-    blocks.forEach((block, index) => {
-      const checked = block.querySelector('input[type="radio"]:checked');
-      state.answers[index] = checked ? checked.value : null;
-    });
-
-    localStorage.setItem(key, JSON.stringify(state));
-  } catch (e) {
-    console.warn('saveReadingState error', e);
-  }
-}
-
-// ✅ 읽기 탭 상태 불러오기 (새로고침 후 복원)
-function loadReadingState() {
-  try {
-    const key = `dan-reading-state:${CUR_UNIT}`;
-    const raw = localStorage.getItem(key);
-    if (!raw) return;
-
-    const state = JSON.parse(raw);
-    if (!state || !state.answers) return;
-
-    const blocks = document.querySelectorAll('#tab-reading .quiz-block');
-    blocks.forEach((block, index) => {
-      const value = state.answers[index];
-      if (!value) return;
-      const input = block.querySelector(
-        `input[type="radio"][value="${value}"]`
-      );
-      if (input) input.checked = true;
-    });
-
-    if (state.graded) {
-      gradeQuiz();
-    }
-  } catch (e) {
-    console.warn('loadReadingState error', e);
-  }
-}
-
-// ===============================
-// 📌 읽기 탭: 입력값(객관식 + 빈칸) 저장/복원
-// ===============================
-function saveReadingInputState() {
-  const wrap = document.getElementById('tab-reading');
-  if (!wrap) return;
-
-  const state = {
-    radios: {},   // name별로 어떤 value가 체크됐는지
-    texts: {}     // input/textarea에 쓴 글자
-  };
-
-  wrap.querySelectorAll('input[type="radio"]').forEach(el => {
-    if (el.checked) {
-      state.radios[el.name] = el.value;
-    }
-  });
-
-  const textInputs = wrap.querySelectorAll('input[type="text"], textarea');
-  textInputs.forEach((el, idx) => {
-    const key = el.name || el.id || `idx_${idx}`;
-    state.texts[key] = el.value;
-  });
-
-  localStorage.setItem(`readingInputs:${window.CUR_UNIT}`, JSON.stringify(state));
-}
-
-function loadReadingInputState() {
-  const raw = localStorage.getItem(`readingInputs:${window.CUR_UNIT}`);
-  if (!raw) return;
-
-  const wrap = document.getElementById('tab-reading');
-  if (!wrap) return;
-
-  let state;
-  try {
-    state = JSON.parse(raw);
-  } catch (e) {
-    return;
-  }
-
-  if (state.radios) {
-    Object.keys(state.radios).forEach(name => {
-      const value = state.radios[name];
-      const el = wrap.querySelector(
-        `input[type="radio"][name="${name}"][value="${value}"]`
-      );
-      if (el) el.checked = true;
-    });
-  }
-
-  const textInputs = wrap.querySelectorAll('input[type="text"], textarea');
-  textInputs.forEach((el, idx) => {
-    const key = el.name || el.id || `idx_${idx}`;
-    if (state.texts && state.texts[key] != null) {
-      el.value = state.texts[key];
-    }
-  });
-}
-
-
-/* ✅ 어휘 탭 상태 저장 */
-function saveVocabState() {
-  try {
-    const key = `dan-vocab-state:${CUR_UNIT}`;
-    const inputs = document.querySelectorAll(
-      '#tab-vocab .blank-input, #vocab-fill .blank-input, .vocab-fill-text .blank-input'
-    );
-    const state = {};
-    inputs.forEach((input, idx) => {
-      state[idx] = input.value || "";
-    });
-    localStorage.setItem(key, JSON.stringify(state));
-  } catch (e) {
-    console.warn('saveVocabState error', e);
-  }
-}
-
-/* ✅ 어휘 탭 상태 불러오기 */
-function loadVocabState() {
-  try {
-    const key = `dan-vocab-state:${CUR_UNIT}`;
-    const raw = localStorage.getItem(key);
-    if (!raw) return;
-    const state = JSON.parse(raw);
-    if (!state) return;
-
-    const inputs = document.querySelectorAll(
-      '#tab-vocab .blank-input, #vocab-fill .blank-input, .vocab-fill-text .blank-input'
-    );
-    inputs.forEach((input, idx) => {
-      if (state[idx] !== undefined) {
-        input.value = state[idx];
-      }
-    });
-  } catch (e) {
-    console.warn('loadVocabState error', e);
-  }
-}
-
 window.gradeQuiz = function () {
   const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_01;
   const A = pack.answerKey;
@@ -804,10 +500,10 @@ window.gradeQuiz = function () {
     const numEl = block.querySelector('.quiz-num');
     if (!numEl) return;
     let markEl = numEl.querySelector('.mark');
-    if (!markEl) { 
-      markEl = document.createElement('div'); 
-      markEl.className = 'mark'; 
-      numEl.appendChild(markEl); 
+    if (!markEl) {
+      markEl = document.createElement('div');
+      markEl.className = 'mark';
+      numEl.appendChild(markEl);
     }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
@@ -825,27 +521,30 @@ window.gradeQuiz = function () {
     const num = quizBlocks[idx]?.querySelector('.quiz-num');
     const markEl = num?.querySelector('.mark');
     if (ok) {
-      score++; 
-      num?.classList.add('correct'); 
+      score++;
+      num?.classList.add('correct');
       if(markEl) markEl.textContent='⭕';
-      shortMsgs.push(`${label} 정답 ✅`); 
+      shortMsgs.push(`${label} 정답 ✅`);
       fullMsgs.push(`${label} 정답 ✅ ${ex||''}`);
     } else {
-      num?.classList.add('wrong'); 
+      num?.classList.add('wrong');
       if(markEl) markEl.textContent='✖';
-      shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`); 
+      shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
     }
   }
 
+  // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
   const q1ok = (q1 && q1.value === A.q1);
   mark(0, q1ok, '①', EX.q1);
 
+  // 2
   const q2 = document.querySelector('input[name="q2"]:checked');
   const q2ok = (q2 && q2.value === A.q2);
   mark(1, q2ok, '②', EX.q2);
 
+  // 3
   const q3New = document.getElementById('q3');
   const q3Old1 = document.getElementById('q3-1');
   const q3Old2 = document.getElementById('q3-2');
@@ -856,6 +555,7 @@ window.gradeQuiz = function () {
   const q3ok = ok3_1 && ok3_2;
   mark(2, q3ok, '③', EX.q3);
 
+  // 4
   const q4New = document.getElementById('q4');
   const q4Old1 = document.getElementById('q4-1');
   const q4Old2 = document.getElementById('q4-2');
@@ -866,38 +566,39 @@ window.gradeQuiz = function () {
   const q4ok = ok4_1 && ok4_2;
   mark(3, q4ok, '④', EX.q4);
 
+  // 5 (서술형)
   const essay = (document.getElementById('q5')?.value || '').trim().toLowerCase();
   const keys = (pack.essayKeywords && Array.isArray(pack.essayKeywords) && pack.essayKeywords.length)
     ? pack.essayKeywords
     : ["등고선","간격","좁","넓","급경사","완만","경사"];
-  let hit = 0; 
+  let hit = 0;
   keys.forEach(k => { if (essay.includes(k)) hit++; });
   const q5ok = essay.length && hit >= 2;
   mark(4, q5ok, '⑤', EX.q5, true);
 
   const box = document.getElementById('grade-result');
-  box.style.display = 'block';
-  box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` 
-    + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` 
-    + fullMsgs.map(m => `<p>${m}</p>`).join('');
+  if (box) {
+    box.style.display = 'block';
+    box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
+  }
+  window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
-  const g=document.getElementById('grade-btn'), 
-        r=document.getElementById('reset-btn'), 
-        s=document.getElementById('submit-btn');
+  const g=document.getElementById('grade-btn');
+  const r=document.getElementById('reset-btn');
+  const s=document.getElementById('submit-btn');
   if (g) g.style.display='inline-block';
   if (r) r.style.display='inline-block';
   if (s) s.style.display='inline-block';
 
   window.reportState = window.reportState || {};
-  reportState.q1ok=q1ok; 
-  reportState.q2ok=q2ok; 
-  reportState.q3ok=q3ok; 
-  reportState.q4ok=q4ok; 
-  reportState.q5ok=q5ok;
+  window.reportState.q1ok=q1ok;
+  window.reportState.q2ok=q2ok;
+  window.reportState.q3ok=q3ok;
+  window.reportState.q4ok=q4ok;
+  window.reportState.q5ok=q5ok;
 
   if (typeof updateReportPanel==='function') {
-    const lexicalRatio = (typeof reportState.vocabScoreRatio==='number') ? reportState.vocabScoreRatio : 0;
+    const lexicalRatio = (typeof window.reportState.vocabScoreRatio==='number') ? window.reportState.vocabScoreRatio : 0;
     const lexicalOk = lexicalRatio >= 0.7;
     updateReportPanel({
       q1ok,q2ok,q3ok,q4ok,q5ok,
@@ -920,17 +621,10 @@ window.gradeQuiz = function () {
       critical:    q5ok?10:6
     });
   }
-<<<<<<< HEAD
-
-   // ✅ 채점 끝난 후 상태 저장 + 입력값 저장
-  saveReadingInputState();  // ★ 새로 추가
-  saveReadingState();
-=======
   
   if (typeof saveReadingState === 'function') {
     saveReadingState();
   }
->>>>>>> 8c67b95 (update)
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -1021,6 +715,7 @@ window.DanDan = window.DanDan || {};
     const list = JSON.parse(localStorage.getItem(skey) || '[]');
     return { key: skey, list };
   }
+
   function writeDoneList(list) {
     const stu = getCurrentStudent();
     if (!stu) return false;
@@ -1074,54 +769,26 @@ window.DanDan = window.DanDan || {};
       }
     };
   })();
-
 })();
 
 /* ===== 로드 시 실행 + 버튼 타입 안전패치 ===== */
 document.addEventListener('DOMContentLoaded', () => {
-<<<<<<< HEAD
-  // 1) 본문/문제 자동 주입
-  applyContentPack(window.CUR_UNIT);
-
-  // 2) 탭 클릭 이벤트(본문/어휘 등)
-=======
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
 
   // 2) 탭 이벤트 + 어휘 자동 렌더
->>>>>>> 8c67b95 (update)
   _bindTabEvents();
-
-  // 3) 페이지 처음 열릴 때부터 어휘 탭이라면
-  //    - 어휘 화면 렌더
-  //    - 저장된 값 복원
-  //    - 채점 결과(⭕✖, 하단 박스)까지 자동 복원
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-    if (typeof window.loadVocabState === 'function') {
-      loadVocabState();
-    }
-    if (typeof window.gradeVocab === 'function') {
-      setTimeout(() => gradeVocab(), 10);
-    }
   }
 
-<<<<<<< HEAD
-  // 4) 버튼 type=button으로 통일 (폼 submit 방지)
-=======
   // 3) 버튼 type=button 통일
->>>>>>> 8c67b95 (update)
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.type = 'button';
   });
 
-<<<<<<< HEAD
-  // 마지막에 읽기 탭 상태 복원
-   loadReadingInputState();  // ★ 먼저 텍스트/빈칸 복원
-  loadReadingState();   
-=======
-  // 4) ✅ 제출하기 = 채점 + 해설 표시
+  // 4) 제출하기 = 채점 + 해설 표시 (한 번만 등록)
   const submitBtn = document.getElementById('submit-btn');
   if (submitBtn) {
     submitBtn.addEventListener('click', () => {
@@ -1137,9 +804,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 5) ✅ 페이지 로드 시, 지난번 채점 상태 복원
+  // 5) 지난번 채점/입력 상태 복원
   if (typeof loadReadingState === 'function') {
     loadReadingState();
   }
->>>>>>> 8c67b95 (update)
 });
