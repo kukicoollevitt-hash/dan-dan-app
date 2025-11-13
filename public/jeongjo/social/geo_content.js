@@ -1,3 +1,8 @@
+/* ============================================
+   ✅ 어휘 상태 버전 (로컬스토리지 키 버전 관리)
+============================================ */
+const VOCAB_STATE_VER = 'v1';
+
 /**
  * ✅ 단원 자동 인식 (강화)
  * 우선순위: ?unit=geo_XX → 파일명 geo_XX.html → 제목 숫자
@@ -115,7 +120,6 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['등고선(contour line)','같은 높이를 잇는 선'],
       ['방위표(compass rose)','지도의 방향을 알려주는 기준']
     ],
-    /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '[지도 약속과 표현 어휘].',
       items: [
@@ -183,7 +187,6 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['지명의 유래', '이름이 생긴 이유나 배경'],
       ['정체성', '지역이 가진 고유한 특성']
     ],
-    /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '[지역 상징·유래 관련 어휘]',
       items: [
@@ -239,7 +242,6 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['본초 자오선', '경도 0°로 약속된 기준 경선'],
       ['격자(grid)', '지도를 일정 간격으로 나눈 선들의 모음']
     ],
-    /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '[좌표·경위도 관련 어휘]',
       items: [
@@ -336,11 +338,32 @@ window.renderVocabFill = function () {
 
   window.reportState = window.reportState || {};
   window.reportState.vocabTotal = pack.vocabFill.items.length;
+
+  try {
+    if (typeof loadVocabState === 'function') {
+      loadVocabState();
+    }
+
+    if (wasVocabGraded() && typeof window.gradeVocab === 'function') {
+      setTimeout(() => {
+        try { window.gradeVocab(); } catch (e) {
+          console.warn('auto re-grade vocab error', e);
+        }
+      }, 0);
+    }
+  } catch (e) {
+    console.warn('vocab restore error', e);
+  }
 };
 
+<<<<<<< HEAD
 
 function _bindTabEvents() {
   document.addEventListener('click', (e) => {
+=======
+function _bindTabEvents() {
+  document.addEventListener('click', (e)=>{
+>>>>>>> 8c67b95 (update)
     const btn = e.target.closest('[data-tab]');
     if (!btn) return;
 
@@ -428,6 +451,195 @@ function applyContentPack(unitKey) {
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
+  }
+}
+
+/* ==== 어휘학습 상태 저장/복원 ==== */
+function saveVocabState() {
+  try {
+    const unit = window.CUR_UNIT || 'geo_01';
+    const key  = `dan-vocab-state:${VOCAB_STATE_VER}:${unit}`;
+    const inputs = document.querySelectorAll(
+      '#tab-vocab .blank-input, #vocab-fill .blank-input, .vocab-fill-text .blank-input'
+    );
+    const state = Array.from(inputs).map(input => input.value || '');
+
+    localStorage.setItem(key, JSON.stringify(state));
+  } catch (e) {
+    console.warn('saveVocabState error', e);
+  }
+}
+
+function loadVocabState() {
+  try {
+    const unit = window.CUR_UNIT || 'geo_01';
+    const key  = `dan-vocab-state:${VOCAB_STATE_VER}:${unit}`;
+    const raw  = localStorage.getItem(key);
+    if (!raw) return;
+
+    const state = JSON.parse(raw);
+    if (!state) return;
+
+    const inputs = document.querySelectorAll(
+      '#tab-vocab .blank-input, #vocab-fill .blank-input, .vocab-fill-text .blank-input'
+    );
+    inputs.forEach((input, idx) => {
+      if (state[idx] !== undefined) {
+        input.value = state[idx];
+      }
+    });
+  } catch (e) {
+    console.warn('loadVocabState error', e);
+  }
+}
+
+function wasVocabGraded() {
+  try {
+    const unit = window.CUR_UNIT || 'geo_01';
+    const key  = `dan-vocab-graded:${VOCAB_STATE_VER}:${unit}`;
+    return localStorage.getItem(key) === '1';
+  } catch (e) {
+    console.warn('wasVocabGraded error', e);
+    return false;
+  }
+}
+
+/* ✅ 어휘 채점 함수 패치: 채점 시 상태 저장 + 채점 플래그 */
+window.gradeVocab = function () {
+  const unit = window.CUR_UNIT || 'geo_01';
+  const pack = window.CONTENTS?.[unit];
+  if (!pack || !pack.vocabFill || !pack.vocabFill.items) {
+    console.warn('gradeVocab: vocabFill 없음', unit);
+    return;
+  }
+
+  const wraps = document.querySelectorAll(
+    '#tab-vocab .blank-wrap, #vocab-fill .blank-wrap, .vocab-fill-text .blank-wrap'
+  );
+
+  const items = pack.vocabFill.items;
+  const norm = s => (s || '').toString().replace(/\s+/g, '').toLowerCase();
+
+  let correct = 0;
+
+  wraps.forEach((wrap, idx) => {
+    const input = wrap.querySelector('.blank-input');
+    const mark  = wrap.querySelector('.blank-mark');
+    const item  = items[idx];
+    if (!input || !mark || !item) return;
+
+    const val = (input.value || '').trim();
+    const answers = [item.answer, ...(item.aliases || [])];
+
+    const ok = answers.some(a => norm(a) === norm(val));
+
+    wrap.classList.remove('correct', 'wrong');
+    if (ok) {
+      wrap.classList.add('correct');
+      mark.textContent = '⭕';
+      correct++;
+    } else {
+      wrap.classList.add('wrong');
+      mark.textContent = '✖';
+    }
+  });
+
+  const total = items.length;
+
+  window.reportState = window.reportState || {};
+  window.reportState.vocabTotal       = total;
+  window.reportState.vocabCorrect     = correct;
+  window.reportState.vocabScoreRatio  = total ? correct / total : 0;
+
+  if (typeof saveVocabState === 'function') {
+    try { saveVocabState(); } catch (e) { console.warn('saveVocabState error', e); }
+  }
+
+  try {
+    const key = `dan-vocab-graded:${VOCAB_STATE_VER}:${unit}`;
+    localStorage.setItem(key, '1');
+  } catch (e) {
+    console.warn('set vocab graded flag error', e);
+  }
+
+  const box = document.getElementById('vocab-grade-result');
+  if (box) {
+    box.style.display = 'block';
+    box.innerHTML = `<p><strong>어휘 점수: ${correct} / ${total}</strong></p>`;
+  }
+};
+
+/* ==== 본문학습 상태 저장/복원 ==== */
+function saveReadingState() {
+  try {
+    const unit = window.CUR_UNIT || 'geo_01';
+    const key  = `dan-reading-state:${unit}`;
+
+    const q1   = document.querySelector('input[name="q1"]:checked');
+    const q2   = document.querySelector('input[name="q2"]:checked');
+    const q3_1 = document.getElementById('q3-1');
+    const q3_2 = document.getElementById('q3-2');
+    const q4_1 = document.getElementById('q4-1');
+    const q4_2 = document.getElementById('q4-2');
+    const q5   = document.getElementById('q5');
+
+    const state = {
+      graded: true,
+      q1:   q1   ? q1.value   : '',
+      q2:   q2   ? q2.value   : '',
+      q3_1: q3_1 ? q3_1.value : '',
+      q3_2: q3_2 ? q3_2.value : '',
+      q4_1: q4_1 ? q4_1.value : '',
+      q4_2: q4_2 ? q4_2.value : '',
+      q5:   q5   ? q5.value   : ''
+    };
+
+    localStorage.setItem(key, JSON.stringify(state));
+  } catch (e) {
+    console.warn('saveReadingState error', e);
+  }
+}
+
+function loadReadingState() {
+  try {
+    const unit = window.CUR_UNIT || 'geo_01';
+    const key  = `dan-reading-state:${unit}`;
+    const raw  = localStorage.getItem(key);
+    if (!raw) return;
+
+    const state = JSON.parse(raw);
+    if (!state) return;
+
+    if (state.q1) {
+      const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
+      if (r1) r1.checked = true;
+    }
+    if (state.q2) {
+      const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
+      if (r2) r2.checked = true;
+    }
+
+    const q3_1 = document.getElementById('q3-1');
+    const q3_2 = document.getElementById('q3-2');
+    const q4_1 = document.getElementById('q4-1');
+    const q4_2 = document.getElementById('q4-2');
+    const q5   = document.getElementById('q5');
+
+    if (q3_1 && state.q3_1 !== undefined) q3_1.value = state.q3_1;
+    if (q3_2 && state.q3_2 !== undefined) q3_2.value = state.q3_2;
+    if (q4_1 && state.q4_1 !== undefined) q4_1.value = state.q4_1;
+    if (q4_2 && state.q4_2 !== undefined) q4_2.value = state.q4_2;
+    if (q5   && state.q5   !== undefined) q5.value   = state.q5;
+
+    if (state.graded && typeof window.gradeQuiz === 'function') {
+      setTimeout(() => {
+        try { window.gradeQuiz(); } catch (e) {
+          console.warn('auto re-grade reading error', e);
+        }
+      }, 0);
+    }
+  } catch (e) {
+    console.warn('loadReadingState error', e);
   }
 }
 
@@ -626,18 +838,15 @@ window.gradeQuiz = function () {
     }
   }
 
-  // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
   const q1ok = (q1 && q1.value === A.q1);
   mark(0, q1ok, '①', EX.q1);
 
-  // 2
   const q2 = document.querySelector('input[name="q2"]:checked');
   const q2ok = (q2 && q2.value === A.q2);
   mark(1, q2ok, '②', EX.q2);
 
-  // 3
-  const q3New = document.getElementById('q3'); // (구형 호환)
+  const q3New = document.getElementById('q3');
   const q3Old1 = document.getElementById('q3-1');
   const q3Old2 = document.getElementById('q3-2');
   const q3Text1 = q3New ? q3New.value.trim() : (q3Old1?.value || '').trim();
@@ -647,7 +856,6 @@ window.gradeQuiz = function () {
   const q3ok = ok3_1 && ok3_2;
   mark(2, q3ok, '③', EX.q3);
 
-  // 4
   const q4New = document.getElementById('q4');
   const q4Old1 = document.getElementById('q4-1');
   const q4Old2 = document.getElementById('q4-2');
@@ -658,7 +866,6 @@ window.gradeQuiz = function () {
   const q4ok = ok4_1 && ok4_2;
   mark(3, q4ok, '④', EX.q4);
 
-  // 5 (서술형)
   const essay = (document.getElementById('q5')?.value || '').trim().toLowerCase();
   const keys = (pack.essayKeywords && Array.isArray(pack.essayKeywords) && pack.essayKeywords.length)
     ? pack.essayKeywords
@@ -713,10 +920,17 @@ window.gradeQuiz = function () {
       critical:    q5ok?10:6
     });
   }
+<<<<<<< HEAD
 
    // ✅ 채점 끝난 후 상태 저장 + 입력값 저장
   saveReadingInputState();  // ★ 새로 추가
   saveReadingState();
+=======
+  
+  if (typeof saveReadingState === 'function') {
+    saveReadingState();
+  }
+>>>>>>> 8c67b95 (update)
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -865,10 +1079,17 @@ window.DanDan = window.DanDan || {};
 
 /* ===== 로드 시 실행 + 버튼 타입 안전패치 ===== */
 document.addEventListener('DOMContentLoaded', () => {
+<<<<<<< HEAD
   // 1) 본문/문제 자동 주입
   applyContentPack(window.CUR_UNIT);
 
   // 2) 탭 클릭 이벤트(본문/어휘 등)
+=======
+  // 1) 본문 내용 채우기
+  applyContentPack(window.CUR_UNIT);
+
+  // 2) 탭 이벤트 + 어휘 자동 렌더
+>>>>>>> 8c67b95 (update)
   _bindTabEvents();
 
   // 3) 페이지 처음 열릴 때부터 어휘 탭이라면
@@ -885,13 +1106,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+<<<<<<< HEAD
   // 4) 버튼 type=button으로 통일 (폼 submit 방지)
+=======
+  // 3) 버튼 type=button 통일
+>>>>>>> 8c67b95 (update)
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.type = 'button';
   });
 
+<<<<<<< HEAD
   // 마지막에 읽기 탭 상태 복원
    loadReadingInputState();  // ★ 먼저 텍스트/빈칸 복원
   loadReadingState();   
+=======
+  // 4) ✅ 제출하기 = 채점 + 해설 표시
+  const submitBtn = document.getElementById('submit-btn');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => {
+      try {
+        if (typeof window.gradeQuiz === 'function') {
+          gradeQuiz();
+        }
+        const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_01;
+        renderSolutions(pack);
+      } catch (e) {
+        console.warn('submit-btn handler error', e);
+      }
+    });
+  }
+
+  // 5) ✅ 페이지 로드 시, 지난번 채점 상태 복원
+  if (typeof loadReadingState === 'function') {
+    loadReadingState();
+  }
+>>>>>>> 8c67b95 (update)
 });
