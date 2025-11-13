@@ -21,7 +21,7 @@
     if (m3) unit = `geo_${m3[1].padStart(2, '0')}`;
   }
 
-  window.CUR_UNIT = unit || 'geo_20';
+  window.CUR_UNIT = unit || 'geo_01';
 })();
 
 /* ===============================
@@ -280,61 +280,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     }
   },
 
-   /* ===== geo_04 : “지도의 좌표와 경위도” ===== */
-  geo_20: {
-  labelNo: '',
-  title: '',
-  passage: [
-    ''
-  ],
-  vocab: [
   
-  ],
-  vocabFill: {
-    instructions: '',
-    items: [
-      { no: 1, text: '', answer: '좌표', initials: 'ㅈㅍ', aliases: ['좌표'] },
-      { no: 2, text: '', answer: '적도', initials: 'ㅈㄷ', aliases: ['적도'] },
-      { no: 3, text: '', answer: '본초 자오선', initials: 'ㅂㅊ ㅈㅇㅅ', aliases: ['본초자오선'] },
-      { no: 4, text: '', answer: 'N/E', initials: 'ㅂ/ㄷ', aliases: ['N,E','북/동','북위/동경','N / E'] },
-      { no: 5, text: '', answer: '격자', initials: 'ㄱㅈ', aliases: ['격자','grid'] },
-      { no: 6, text: '', answer: '한 점', initials: 'ㅎ ㅈ', aliases: ['한점','한 지점','점'] },
-      { no: 7, text: '', answer: '본초 자오선/적도', initials: 'ㅂㅊ ㅈㅇㅅ ', aliases: ['본초자오선'] }
-    ]
-  },
-
-  quiz: {
-    q1_text: '',
-    q1_opts: ['', '', '', ''],
-    q2_text: '',
-    q2_opts: ['', '', '', ''],
-    q3_html: ` <input class="inline-input" id="q3-1" type="text" placeholder=""> 
-                <input class="inline-input" id="q3-2" type="text" placeholder="">`,
-    q4_html: ` <input class="inline-input" id="q4-1" type="text" placeholder=""> 
-                <input class="inline-input" id="q4-2" type="text" placeholder="">`,
-    q3_1_ph: '', q3_2_ph: '', q4_1_ph: '', q4_2_ph: '',
-    q5_text: ''
-  },
-
-  answerKey: { 
-    q1:'', 
-    q2:'', 
-    q3_1:[''], 
-    q3_2:[''], 
-    q4_1:[''], 
-    q4_2:[''] 
-  },
-
-  essayKeywords: [''],
-
-  explain: {
-    q1:'',
-    q2:'',
-    q3:'',
-    q4:'',
-    q5:''
-  }
-  },
 
   
 });
@@ -343,11 +289,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
    ★ 어휘 빈칸 렌더러 & 탭 이벤트
 =================================*/
 function getCurrentUnit() {
-  return (window.CUR_UNIT || 'geo_20');
+  return (window.CUR_UNIT || 'geo_01');
 }
 
 window.renderVocabFill = function () {
-  const unit = window.CUR_UNIT || 'geo_20';
+  const unit = window.CUR_UNIT || 'geo_01';
   const pack = window.CONTENTS?.[unit];
   const root = document.getElementById('vocab-fill') 
             || document.querySelector('.vocab-fill-text');
@@ -475,7 +421,7 @@ function applyContentPack(unitKey) {
 /* ==== 본문학습 상태 저장/복원 ==== */
 function saveReadingState() {
   try {
-    const unit = window.CUR_UNIT || 'geo_20';
+    const unit = window.CUR_UNIT || 'geo_01';
     const key  = `dan-reading-state:${unit}`;
 
     const q1   = document.querySelector('input[name="q1"]:checked');
@@ -505,7 +451,7 @@ function saveReadingState() {
 
 function loadReadingState() {
   try {
-    const unit = window.CUR_UNIT || 'geo_20';
+    const unit = window.CUR_UNIT || 'geo_01';
     const key  = `dan-reading-state:${unit}`;
     const raw  = localStorage.getItem(key);
     if (!raw) return;
@@ -548,7 +494,7 @@ function loadReadingState() {
 
 /* ===== 통합 채점기 ===== */
 window.gradeQuiz = function () {
-  const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_20;
+  const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_01;
   const A = pack.answerKey;
   const EX = pack.explain;
 
@@ -744,7 +690,7 @@ window.DanDan = window.DanDan || {};
       const m = location.pathname.match(/geo_(\d+)\.html/i);
       if (m) unitParam = `geo_${m[1].padStart(2, '0')}`;
     }
-    return (unitParam || (window.CUR_UNIT || 'geo_20')).toLowerCase();
+    return (unitParam || (window.CUR_UNIT || 'geo_01')).toLowerCase();
   }
 
   function buildPageKey() {
@@ -854,7 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
         }
-        const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_20;
+        const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
