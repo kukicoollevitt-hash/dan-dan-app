@@ -21,7 +21,7 @@
     if (m3) unit = `geo_${m3[1].padStart(2, '0')}`;
   }
 
-  window.CUR_UNIT = unit || 'geo_01';
+  window.CUR_UNIT = unit || 'geo_20';
 })();
 
 /* ===============================
@@ -475,7 +475,7 @@ function applyContentPack(unitKey) {
 /* ==== 본문학습 상태 저장/복원 ==== */
 function saveReadingState() {
   try {
-    const unit = window.CUR_UNIT || 'geo_01';
+    const unit = window.CUR_UNIT || 'geo_20';
     const key  = `dan-reading-state:${unit}`;
 
     const q1   = document.querySelector('input[name="q1"]:checked');
@@ -505,7 +505,7 @@ function saveReadingState() {
 
 function loadReadingState() {
   try {
-    const unit = window.CUR_UNIT || 'geo_01';
+    const unit = window.CUR_UNIT || 'geo_20';
     const key  = `dan-reading-state:${unit}`;
     const raw  = localStorage.getItem(key);
     if (!raw) return;
@@ -548,7 +548,7 @@ function loadReadingState() {
 
 /* ===== 통합 채점기 ===== */
 window.gradeQuiz = function () {
-  const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_01;
+  const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_20;
   const A = pack.answerKey;
   const EX = pack.explain;
 
@@ -744,7 +744,7 @@ window.DanDan = window.DanDan || {};
       const m = location.pathname.match(/geo_(\d+)\.html/i);
       if (m) unitParam = `geo_${m[1].padStart(2, '0')}`;
     }
-    return (unitParam || (window.CUR_UNIT || 'geo_01')).toLowerCase();
+    return (unitParam || (window.CUR_UNIT || 'geo_20')).toLowerCase();
   }
 
   function buildPageKey() {
@@ -854,7 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
         }
-        const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_01;
+        const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_20;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
