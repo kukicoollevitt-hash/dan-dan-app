@@ -68,7 +68,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '어떤 지도는 날씨를 보여 주기 위해 (      )를 사용하고,', answer: '기후도', initials: 'ㄱㅎㄷ', aliases: ['기후도'] },
         { no: 6, text: '어떤 지도는 사람들의 분포를 보여 주기 위해 (          )를 사용해요.', answer: '인구 분포도', initials: 'ㅇㄱ ㅂㅍㄷ', aliases: ['인구분포도'] },
         { no: 7, text: '요즘에는 스마트폰으로 보는 (          )와', answer: '디지털 지도', initials: 'ㄷㅈㅌ ㅈㄷ', aliases: ['디지털지도'] },
-        { no: 8, text: '목적지까지 안내해 주는 (        )을 사용하면', answer: '내비게이션', initials: 'ㄴㅂㄱㅅ', aliases: ['네비게이션','내비게이숀'] },
+        { no: 8, text: '목적지까지 안내해 주는 (        )을 사용하면', answer: '내비게이션', initials: 'ㄴㅂㄱㅇㅅ', aliases: ['네비게이션','내비게이숀'] },
         { no: 9, text: '(      )으로 길 안내를 받을 수 있어요.', answer: '실시간', initials: 'ㅅㅅㄱ', aliases: ['실시간'] }
       ]
     }, 
