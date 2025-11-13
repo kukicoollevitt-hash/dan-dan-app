@@ -279,17 +279,75 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q5:'예시: 위도와 경도는 서로 수직인 기준이어서 두 값이 교차하는 “한 점”이 정확한 위치를 지정.'
     }
   },
+
+   /* ===== geo_04 : “지도의 좌표와 경위도” ===== */
+  geo_20: {
+  labelNo: '',
+  title: '',
+  passage: [
+    ''
+  ],
+  vocab: [
+  
+  ],
+  vocabFill: {
+    instructions: '',
+    items: [
+      { no: 1, text: '', answer: '좌표', initials: 'ㅈㅍ', aliases: ['좌표'] },
+      { no: 2, text: '', answer: '적도', initials: 'ㅈㄷ', aliases: ['적도'] },
+      { no: 3, text: '', answer: '본초 자오선', initials: 'ㅂㅊ ㅈㅇㅅ', aliases: ['본초자오선'] },
+      { no: 4, text: '', answer: 'N/E', initials: 'ㅂ/ㄷ', aliases: ['N,E','북/동','북위/동경','N / E'] },
+      { no: 5, text: '', answer: '격자', initials: 'ㄱㅈ', aliases: ['격자','grid'] },
+      { no: 6, text: '', answer: '한 점', initials: 'ㅎ ㅈ', aliases: ['한점','한 지점','점'] },
+      { no: 7, text: '', answer: '본초 자오선/적도', initials: 'ㅂㅊ ㅈㅇㅅ ', aliases: ['본초자오선'] }
+    ]
+  },
+
+  quiz: {
+    q1_text: '',
+    q1_opts: ['', '', '', ''],
+    q2_text: '',
+    q2_opts: ['', '', '', ''],
+    q3_html: ` <input class="inline-input" id="q3-1" type="text" placeholder=""> 
+                <input class="inline-input" id="q3-2" type="text" placeholder="">`,
+    q4_html: ` <input class="inline-input" id="q4-1" type="text" placeholder=""> 
+                <input class="inline-input" id="q4-2" type="text" placeholder="">`,
+    q3_1_ph: '', q3_2_ph: '', q4_1_ph: '', q4_2_ph: '',
+    q5_text: ''
+  },
+
+  answerKey: { 
+    q1:'', 
+    q2:'', 
+    q3_1:[''], 
+    q3_2:[''], 
+    q4_1:[''], 
+    q4_2:[''] 
+  },
+
+  essayKeywords: [''],
+
+  explain: {
+    q1:'',
+    q2:'',
+    q3:'',
+    q4:'',
+    q5:''
+  }
+  },
+
+  
 });
 
 /* ===============================
    ★ 어휘 빈칸 렌더러 & 탭 이벤트
 =================================*/
 function getCurrentUnit() {
-  return (window.CUR_UNIT || 'geo_01');
+  return (window.CUR_UNIT || 'geo_20');
 }
 
 window.renderVocabFill = function () {
-  const unit = window.CUR_UNIT || 'geo_01';
+  const unit = window.CUR_UNIT || 'geo_20';
   const pack = window.CONTENTS?.[unit];
   const root = document.getElementById('vocab-fill') 
             || document.querySelector('.vocab-fill-text');
