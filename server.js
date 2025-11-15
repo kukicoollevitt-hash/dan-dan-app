@@ -12,9 +12,19 @@ const MONGO_URI =
   process.env.MONGODB_URI ||
   "mongodb+srv://kukicoollevitt_db_user:Dandan1234!@dandanapp.m20fsfr.mongodb.net/dandanapp?retryWrites=true&w=majority&appName=dandanapp";
 
+// ===== 미들웨어 =====
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static("public"));
+
+// ✅ 1) 메인(/) = 로그인 페이지
+//   - static(public) 보다 "위"에 있어야 함!
+app.get("/", (req, res) => {
+  console.log("✅ [GET] /  -> login.html 보내기");
+  res.sendFile(path.join(__dirname, "login.html")); // 루트에 있는 login.html
+});
+
+// ✅ 2) 정적 파일 제공 (CSS, JS, menu.html 등)
+app.use(express.static(path.join(__dirname, "public")));
 
 // users.json 없으면 만들기
 if (!fs.existsSync(USERS_FILE)) {
@@ -28,7 +38,7 @@ const userSchema = new mongoose.Schema({
   phone: String,
   id: String,
   pw: String,
-  lastLogin: Date,   // ✅ 마지막 로그인 시간 필드 추가
+  lastLogin: Date,   // ✅ 마지막 로그인 시간
 });
 const User = mongoose.model("User", userSchema);
 
@@ -46,18 +56,13 @@ app.get("/signup", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "signup.html"));
 });
 
-// 로그인 페이지
+// ✅ GET /login 도 / 와 같은 화면으로
 app.get("/login", (req, res) => {
-  console.log("✅ [GET] /login 페이지 요청");
-  res.sendFile(path.join(__dirname, "login.html"));
+  console.log("✅ [GET] /login -> / 로 리다이렉트");
+  res.redirect("/");
 });
 
-// 메인
-app.get("/", (req, res) => {
-  res.send('메인입니다. <a href="/ping">ping</a> / <a href="/signup">회원가입</a>');
-});
-
-// ✅ 회원가입 처리 (진짜 저장되는 부분)
+// ✅ 회원가입 처리
 app.post("/signup", async (req, res) => {
   console.log("📥 [POST] /signup 에서 받은 값:", req.body);
 
@@ -86,7 +91,7 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// ✅ 로그인 처리 (여기에 lastLogin 찍기)
+// ✅ 로그인 처리 (lastLogin 기록)
 app.post("/login", async (req, res) => {
   console.log("📥 [POST] /login 에서 받은 값:", req.body);
   const { name, grade, password } = req.body;
@@ -105,7 +110,7 @@ app.post("/login", async (req, res) => {
     user.lastLogin = now;
     await user.save();  // ✅ MongoDB에 반영
 
-    // (선택) JSON 백업에도 반영해두기
+    // (선택) JSON 백업에도 반영
     try {
       const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
       const idx = users.findIndex(
@@ -121,7 +126,7 @@ app.post("/login", async (req, res) => {
 
     console.log("✅ [POST] /login 성공:", user.name, "lastLogin:", now.toISOString());
 
-    // 3) 기존처럼 menu.html로 넘기기
+    // 3) menu.html 로 넘기기
     const encName = encodeURIComponent(user.name);
     const encGrade = encodeURIComponent(user.grade);
     res.redirect(`/menu.html?name=${encName}&grade=${encGrade}`);
