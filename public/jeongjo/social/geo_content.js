@@ -639,16 +639,24 @@ window.gradeQuiz = function () {
     });
   }
 
-  if (typeof drawRadarChart==='function') {
-    drawRadarChart({
-      literal:     q1ok?10:6,
-      structural:  q2ok?10:6,
-      lexical:     q3ok?10:6,
-      inferential: q4ok?10:6,
-      critical:    q5ok?10:6
-    });
+  // ✅ 레이더 점수 객체로 빼두기
+  const radarScores = {
+    literal:     q1ok ? 10 : 6,
+    structural:  q2ok ? 10 : 6,
+    lexical:     q3ok ? 10 : 6,
+    inferential: q4ok ? 10 : 6,
+    critical:    q5ok ? 10 : 6
+  };
+
+  // ✅ 화면 레이더 차트 그리기
+  if (typeof drawRadarChart === 'function') {
+    drawRadarChart(radarScores);
   }
-  
+
+  // ✅ 서버 로그용으로 보관
+  window.reportState = window.reportState || {};
+  window.reportState.radarScores = radarScores;
+
   if (typeof saveReadingState === 'function') {
     saveReadingState();
   }
@@ -751,7 +759,7 @@ window.DanDan = window.DanDan || {};
     return true;
   }
 
-  const ProgressManager = {
+ const ProgressManager = {
     getPageKey: buildPageKey,
     markComplete() {
       const pageKey = buildPageKey();
@@ -773,30 +781,104 @@ window.DanDan = window.DanDan || {};
 
   window.DanDan.ProgressManager = ProgressManager;
 
+  // 🔽 여기 부분만 잘 봐줘
   (function hookSubmitReport() {
     const original = window.submitReport;
+
     window.submitReport = async function (...args) {
       const stu = getCurrentStudent();
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
       }
+
+      // 1) 원래 submitReport 로직 실행 (PDF 생성 등)
       if (typeof original === 'function') {
         await original.apply(this, args);
-      } else {
-        if (typeof window.captureElementToPDF === 'function') {
-          await captureElementToPDF('capture-report', '단단국어_분석리포트.pdf', { withStudentInfo: true });
-        }
+      } else if (typeof window.captureElementToPDF === 'function') {
+        await captureElementToPDF(
+          'capture-report',
+          '단단국어_분석리포트.pdf',
+          { withStudentInfo: true }
+        );
       }
+
+      // 2) 학습완료 플래그 저장
       const key = ProgressManager.markComplete();
       if (typeof window.showSubmitSuccess === 'function') {
         showSubmitSuccess('분석리포트');
       } else {
         alert(`학습완료 처리됨: ${key}`);
       }
+
+      // 3) ✅ 여기서만 학습 이력 로그 전송
+      if (typeof window.sendLearningLog === 'function') {
+        try {
+          await window.sendLearningLog();
+        } catch (e) {
+          console.warn('[submitReport] sendLearningLog 실패', e);
+        }
+      }
     };
   })();
 })();
+
+/* ===========================
+ * ✅ 학습 이력 서버로 보내기 (테스트 버전)
+ * =========================== */
+window.sendLearningLog = async function () {
+  try {
+    const unit = window.CUR_UNIT || 'geo_02';
+
+    // 1) localStorage 에서 현재 로그인 학생 가져오기
+    let stu = null;
+    try {
+      const raw = localStorage.getItem('currentStudent');
+      if (raw) stu = JSON.parse(raw);
+    } catch (e) {
+      console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
+    }
+
+    if (!stu) {
+      console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
+      return;
+    }
+
+    // ✅ gradeQuiz 에서 저장해 둔 레이더 점수 꺼내기
+    const radar =
+      (window.reportState && window.reportState.radarScores)
+      ? window.reportState.radarScores
+      : null;
+
+    const payload = {
+      grade:  stu.grade  || '',
+      name:   stu.name   || '',
+      school: stu.school || '',
+      series: 'BRAIN업',      // 필요하면 '정조편' 등으로 바꿔도 됨
+      unit:   unit,
+      radar:  radar        // ✅ 여기 추가!
+    };
+
+    console.log('[sendLearningLog] payload =', payload);
+
+    const res = await fetch('/api/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (_) {
+      data = {};
+    }
+    console.log('[sendLearningLog] result =', data);
+  } catch (e) {
+    console.warn('sendLearningLog outer error', e);
+  }
+};
+
 
 /* ===== 로드 시 실행 + 버튼 타입 안전패치 ===== */
 document.addEventListener('DOMContentLoaded', () => {
@@ -835,4 +917,5 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof loadReadingState === 'function') {
     loadReadingState();
   }
+
 });
