@@ -279,10 +279,6 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q5:'예시: 위도와 경도는 서로 수직인 기준이어서 두 값이 교차하는 “한 점”이 정확한 위치를 지정.'
     }
   },
-
-  
-
-  
 });
 
 /* ===============================
@@ -418,11 +414,38 @@ function applyContentPack(unitKey) {
   }
 }
 
-/* ==== 본문학습 상태 저장/복원 ==== */
+/* ==== 본문학습 상태 저장/복원 (✅ 학생별 분리 저장) ==== */
+
+/* 🔐 현재 로그인 학생 정보 가져오기 */
+function getCurrentStudentForReading() {
+  const saved = localStorage.getItem('currentStudent');
+  if (!saved) return null;
+  try { return JSON.parse(saved); } catch (e) { return null; }
+}
+
+/* 🔐 학생키 만들기: 학년_이름_전화숫자 */
+function buildStudentKeyForReading(stu) {
+  const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+  const cleanName  = (stu.name  || '').trim();
+  const cleanGrade = (stu.grade || '').trim();
+  return `${cleanGrade}_${cleanName}_${cleanPhone}`;
+}
+
+/* 🔐 단원별 + 학생별 로컬스토리지 키 */
+function getReadingStateKey(unit) {
+  const stu = getCurrentStudentForReading();
+  if (!stu) {
+    // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
+    return `dan-reading-state:${unit}`;
+  }
+  const studentKey = buildStudentKeyForReading(stu);
+  return `dan-reading-state:${studentKey}:${unit}`;
+}
+
 function saveReadingState() {
   try {
     const unit = window.CUR_UNIT || 'geo_01';
-    const key  = `dan-reading-state:${unit}`;
+    const key  = getReadingStateKey(unit);   // ✅ 학생별 + 단원별 키
 
     const q1   = document.querySelector('input[name="q1"]:checked');
     const q2   = document.querySelector('input[name="q2"]:checked');
@@ -452,7 +475,7 @@ function saveReadingState() {
 function loadReadingState() {
   try {
     const unit = window.CUR_UNIT || 'geo_01';
-    const key  = `dan-reading-state:${unit}`;
+    const key  = getReadingStateKey(unit);   // ✅ 학생별 + 단원별 키
     const raw  = localStorage.getItem(key);
     if (!raw) return;
 
@@ -808,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 5) 지난번 채점/입력 상태 복원
+  // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
   }
