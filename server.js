@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
+const session = require("express-session");
 
 const app = express();
 const ADMIN_KEY = process.env.ADMIN_KEY;
@@ -18,11 +19,32 @@ const MONGO_URI = process.env.MONGODB_URI;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
+// ✅ 세션 미들웨어 추가
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "dandan-secret", // env에 넣어두면 더 안전
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 2, // 2시간
+    },
+  })
+);
+
 // ✅ 1) 메인(/) = 로그인 페이지
 //   - static(public) 보다 "위"에 있어야 함!
 app.get("/", (req, res) => {
   console.log("✅ [GET] /  -> login.html 보내기");
   res.sendFile(path.join(__dirname, "login.html")); // 루트에 있는 login.html
+});
+
+// ✅ 1-2) /login 도 같은 로그인 페이지를 직접 보여주기
+//  -> POST /login 실패 시 /login?loginError=... 로 리다이렉트해도
+//     쿼리 파라미터가 그대로 유지됨
+app.get("/login", (req, res) => {
+  console.log("✅ [GET] /login  -> login.html 보내기 (쿼리 유지)");
+  res.sendFile(path.join(__dirname, "login.html"));
 });
 
 // ✅ 2) 정적 파일 제공 (CSS, JS, menu.html 등)
@@ -43,7 +65,7 @@ const userSchema = new mongoose.Schema({
   lastLogin: Date,
   school: String,
   deleted: { type: Boolean, default: false }, // ✅ 휴지 여부
-  deletedAt: Date                              // ✅ 휴지로 보낸 시각
+  deletedAt: Date, // ✅ 휴지로 보낸 시각
 });
 
 const User = mongoose.model("User", userSchema);
@@ -51,24 +73,42 @@ const User = mongoose.model("User", userSchema);
 // ===== 학습 이력 로그 스키마 =====
 const learningLogSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }, // 날짜/시간 자동
-  grade: String,   // 학년
-  name: String,    // 이름
-  school: String,  // 학교명
-  series: String,  // 시리즈 (세종편/정조편 등)
-  unit: String,    // 단원 코드 (geo_02)
+  grade: String, // 학년
+  name: String, // 이름
+  school: String, // 학교명
+  series: String, // 시리즈 (세종편/정조편 등)
+  unit: String, // 단원 코드 (geo_02)
   radar: {
-    literal: { type: Number, default: null },      // 핵심 이해력
-    structural: { type: Number, default: null },   // 구조 파악력
-    lexical: { type: Number, default: null },      // 어휘 맥락력
-    inferential: { type: Number, default: null },  // 추론·통합력
-    critical: { type: Number, default: null },     // 비판·적용력
+    literal: { type: Number, default: null }, // 핵심 이해력
+    structural: { type: Number, default: null }, // 구조 파악력
+    lexical: { type: Number, default: null }, // 어휘 맥락력
+    inferential: { type: Number, default: null }, // 추론·통합력
+    critical: { type: Number, default: null }, // 비판·적용력
   },
 });
 
 const LearningLog = mongoose.model("LearningLog", learningLogSchema);
 
-
 // ===== 라우트 =====
+
+app.get("/logout", (req, res) => {
+  // 세션 파기
+  req.session.destroy((err) => {
+    if (err) {
+      console.log("❗ 세션 종료 오류:", err);
+    }
+
+    // 세션 쿠키 제거
+    res.clearCookie("connect.sid", {
+      path: "/",
+      httpOnly: true,
+      secure: false,
+    });
+
+    // 🔄 로그아웃 애니메이션 페이지로 이동
+    res.redirect("/logout.html");
+  });
+});
 
 // ping
 app.get("/ping", (req, res) => {
@@ -82,20 +122,14 @@ app.get("/signup", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "signup.html"));
 });
 
-// ✅ GET /login 도 / 와 같은 화면으로
-app.get("/login", (req, res) => {
-  console.log("✅ [GET] /login -> / 로 리다이렉트");
-  res.redirect("/");
-});
-
 // ✅ 회원가입 처리
 app.post("/signup", async (req, res) => {
   console.log("📥 [POST] /signup 에서 받은 값:", req.body);
 
   const grade = req.body.grade || "";
-  const name  = req.body.name || "";
+  const name = req.body.name || "";
   const phone = req.body.phone || "";
-  const school = req.body.school || "";   // ✅ 새로 추가
+  const school = req.body.school || ""; // ✅ 새로 추가
 
   const id = phone;
   const pw = phone;
@@ -113,9 +147,7 @@ app.post("/signup", async (req, res) => {
     res.redirect("/login");
   } catch (err) {
     console.error("❌ [POST] 회원가입 에러:", err);
-    res
-      .status(500)
-      .send("회원 가입 중 오류 발생: " + err.message);
+    res.status(500).send("회원 가입 중 오류 발생: " + err.message);
   }
 });
 
@@ -123,7 +155,7 @@ app.post("/signup", async (req, res) => {
 app.post("/admin/user-edit", async (req, res) => {
   const { originalId, key, grade, school, name, phone } = req.body;
 
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
 
@@ -136,7 +168,7 @@ app.post("/admin/user-edit", async (req, res) => {
 
     const user = await User.findOne({
       $or: [{ id: targetId }, { phone: targetId }],
-      deleted: { $ne: true }
+      deleted: { $ne: true },
     });
 
     if (!user) {
@@ -148,8 +180,8 @@ app.post("/admin/user-edit", async (req, res) => {
     user.school = school || "";
     user.name = name || "";
     user.phone = phone || "";
-    user.id = phone || "";    // ID = 전화번호
-    user.pw = phone || "";    // PW = 전화번호 (회원가입과 동일 룰)
+    user.id = phone || ""; // ID = 전화번호
+    user.pw = phone || ""; // PW = 전화번호 (회원가입과 동일 룰)
 
     await user.save();
 
@@ -163,12 +195,11 @@ app.post("/admin/user-edit", async (req, res) => {
   }
 });
 
-
 // ===== 회원 삭제 (브라우저 URL 호출용) =====
 app.get("/delete-user", async (req, res) => {
   const { id, pw, key } = req.query;
 
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
 
@@ -195,7 +226,7 @@ app.get("/delete-user", async (req, res) => {
 app.get("/trash-user", async (req, res) => {
   const { id: rawId, key } = req.query;
 
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
 
@@ -206,25 +237,16 @@ app.get("/trash-user", async (req, res) => {
 
   try {
     // 1️⃣ 먼저 '휴지 아님' 회원만 찾기
-    let user = await User.findOne({
+    const user = await User.findOne({
       $or: [{ id }, { phone: id }],
-      deleted: { $ne: true }       // ✅ 중요!
+      deleted: { $ne: true }, // ✅ active 회원만
     });
 
-    // 2️⃣ active 회원이 없으면, 혹시 이미 휴지인지 한 번 더 확인
+    // 2️⃣ active 회원이 없으면, 이미 휴지 상태이거나 없는 회원
     if (!user) {
-      const trashed = await User.findOne({
-        $or: [{ id }, { phone: id }],
-        deleted: true
-      });
-
-      if (trashed) {
-        return res.send(
-          `이미 휴지 상태입니다: ${trashed.name} (${trashed.id || trashed.phone})`
-        );
-      }
-
-      return res.status(404).send("존재하지 않는 사용자입니다.");
+      return res
+        .status(404)
+        .send("이미 휴지 상태이거나 존재하지 않는 사용자입니다.");
     }
 
     // 3️⃣ 여기까지 왔으면 active 회원 → 휴지로 보내기
@@ -241,15 +263,12 @@ app.get("/trash-user", async (req, res) => {
   }
 });
 
-
-// ⭐⭐⭐ 여기서부터 새로 추가 ⭐⭐⭐
-// ===== 회원 조회 페이지 (관리자 전용) =====
 // ⭐⭐⭐ 회원 조회 페이지 (관리자 전용) ⭐⭐⭐
 app.get("/admin/users", async (req, res) => {
-  const { key, q, sort } = req.query;  // ✅ sort 포함
+  const { key, q, sort } = req.query; // ✅ sort 포함
 
   // 관리자 키 체크
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
 
@@ -337,22 +356,34 @@ app.get("/admin/users", async (req, res) => {
             name="sort"
             style="padding:6px 8px; font-size:14px; margin-left:4px;"
           >
-            <option value="lastLoginDesc" ${!sort || sort === "lastLoginDesc" ? "selected" : ""}>
+            <option value="lastLoginDesc" ${
+              !sort || sort === "lastLoginDesc" ? "selected" : ""
+            }>
               최근 로그인순(내림차순)
             </option>
-            <option value="lastLoginAsc" ${sort === "lastLoginAsc" ? "selected" : ""}>
+            <option value="lastLoginAsc" ${
+              sort === "lastLoginAsc" ? "selected" : ""
+            }>
               최근 로그인순(오름차순)
             </option>
-            <option value="gradeAsc" ${sort === "gradeAsc" ? "selected" : ""}>
+            <option value="gradeAsc" ${
+              sort === "gradeAsc" ? "selected" : ""
+            }>
               학년 오름차순
             </option>
-            <option value="gradeDesc" ${sort === "gradeDesc" ? "selected" : ""}>
+            <option value="gradeDesc" ${
+              sort === "gradeDesc" ? "selected" : ""
+            }>
               학년 내림차순
             </option>
-            <option value="nameAsc" ${sort === "nameAsc" ? "selected" : ""}>
+            <option value="nameAsc" ${
+              sort === "nameAsc" ? "selected" : ""
+            }>
               이름 가나다순
             </option>
-            <option value="nameDesc" ${sort === "nameDesc" ? "selected" : ""}>
+            <option value="nameDesc" ${
+              sort === "nameDesc" ? "selected" : ""
+            }>
               이름 역순
             </option>
           </select>
@@ -372,14 +403,29 @@ app.get("/admin/users", async (req, res) => {
         </form>
 
         <!-- ✅ 엑셀(CSV) 다운로드 버튼 -->
-  <form method="GET" action="/admin/users-export" style="display:inline-block; margin-left:8px;">
-    <input type="hidden" name="key" value="${key || ""}" />
-    <input type="hidden" name="q" value="${q ? q : ""}" />
-    <input type="hidden" name="sort" value="${sort || ""}" />
-    <button type="submit" style="padding:6px 12px; font-size:14px;">
-      엑셀 다운로드
-    </button>
-     </form>
+        <form method="GET" action="/admin/users-export" style="display:inline-block; margin-left:8px;">
+          <input type="hidden" name="key" value="${key || ""}" />
+          <input type="hidden" name="q" value="${q ? q : ""}" />
+          <input type="hidden" name="sort" value="${sort || ""}" />
+          <button type="submit" style="padding:6px 12px; font-size:14px;">
+            엑셀 다운로드
+          </button>
+        </form>
+
+        <a
+          href="/admin/trash?key=${encodeURIComponent(key)}"
+          style="
+            display:inline-block;
+            padding:6px 12px;
+            font-size:14px;
+            margin-left:8px;
+            border:1px solid #b00020;
+            color:#b00020;
+            text-decoration:none;
+            border-radius:4px;
+            background:#fff5f5;
+          "
+        >휴지통 보기</a>
       </div>
 
       <p class="small">※ 링크 클릭 시 회원이 휴지통으로 이동합니다. (로그인 불가)</p>
@@ -393,7 +439,7 @@ app.get("/admin/users", async (req, res) => {
             <th>이름</th>
             <th>전화번호(ID)</th>
             <th>마지막 로그인</th>
-            <th>학습이력</th> 
+            <th>학습이력</th>
             <th>수정</th>
             <th>휴지통</th>
           </tr>
@@ -403,7 +449,9 @@ app.get("/admin/users", async (req, res) => {
 
     users.forEach((u, idx) => {
       const last = u.lastLogin
-        ? new Date(u.lastLogin).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+        ? new Date(u.lastLogin).toLocaleString("ko-KR", {
+            timeZone: "Asia/Seoul",
+          })
         : "-";
       const idOrPhone = u.id || u.phone || "";
 
@@ -415,28 +463,31 @@ app.get("/admin/users", async (req, res) => {
           <td>${u.name || ""}</td>
           <td>${idOrPhone}</td>
           <td>${last}</td>
-               <!-- ✅ 학습이력 보기 버튼 -->
           <td>
             <a class="btn-log"
-               href="/admin/logs?key=${encodeURIComponent(key)}&grade=${encodeURIComponent(
-                 u.grade || ""
-               )}&name=${encodeURIComponent(u.name || "")}">
+               href="/admin/logs?key=${encodeURIComponent(
+                 key
+               )}&grade=${encodeURIComponent(u.grade || "")}&name=${encodeURIComponent(
+        u.name || ""
+      )}">
               보기
             </a>
           </td>
           <td>
             <a class="btn-edit"
-               href="/admin/user-edit?id=${encodeURIComponent(idOrPhone)}&key=${encodeURIComponent(
-                 key
-               )}">
+               href="/admin/user-edit?id=${encodeURIComponent(
+                 idOrPhone
+               )}&key=${encodeURIComponent(key)}">
               수정
             </a>
           </td>
           <td>
             <a class="btn-delete"
-               href="/trash-user?id=${encodeURIComponent(idOrPhone)}&key=${encodeURIComponent(
-                 key
-               )}"
+               href="/trash-user?id=${encodeURIComponent(
+                 idOrPhone
+               )}&key=${encodeURIComponent(
+        key
+      )}"
                onclick="return confirm('이 회원을 휴지통으로 보낼까요? [${u.name} / ${idOrPhone}]');">
               휴지통
             </a>
@@ -463,7 +514,7 @@ app.get("/admin/users", async (req, res) => {
 app.get("/admin/users-export", async (req, res) => {
   const { key, q, sort } = req.query;
 
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
 
@@ -471,7 +522,7 @@ app.get("/admin/users-export", async (req, res) => {
     // 🔍 기본 필터: 휴지 상태가 아닌 회원만
     const filter = { deleted: { $ne: true } };
 
-    // 🔍 검색어 필터 (지금 /admin/users랑 동일)
+    // 🔍 검색어 필터
     if (q && q.trim() !== "") {
       const keyword = q.trim();
       const regex = new RegExp(keyword, "i");
@@ -484,7 +535,7 @@ app.get("/admin/users-export", async (req, res) => {
       ];
     }
 
-    // 🔽 정렬 옵션 (지금 /admin/users switch(sort) 그대로 복붙해도 됨)
+    // 🔽 정렬 옵션
     let sortOption = { lastLogin: -1, name: 1 };
     switch (sort) {
       case "lastLoginAsc":
@@ -509,26 +560,22 @@ app.get("/admin/users-export", async (req, res) => {
     const users = await User.find(filter).sort(sortOption).lean();
 
     // 🔧 CSV 만들기
-    const escape = (v = "") =>
-      `"${String(v).replace(/"/g, '""')}"`; // " -> "" 로 이스케이프
+    const escape = (v = "") => `"${String(v).replace(/"/g, '""')}"`; // " -> "" 로 이스케이프
 
     const lines = [];
     // 헤더
     lines.push(
-      [
-        "번호",
-        "학년",
-        "학교/학원명",
-        "이름",
-        "전화번호(ID)",
-        "마지막 로그인",
-      ].map(escape).join(",")
+      ["번호", "학년", "학교/학원명", "이름", "전화번호(ID)", "마지막 로그인"]
+        .map(escape)
+        .join(",")
     );
 
     // 데이터
     users.forEach((u, idx) => {
       const last = u.lastLogin
-        ? new Date(u.lastLogin).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+        ? new Date(u.lastLogin).toLocaleString("ko-KR", {
+            timeZone: "Asia/Seoul",
+          })
         : "";
       const idOrPhone = u.id || u.phone || "";
 
@@ -540,18 +587,16 @@ app.get("/admin/users-export", async (req, res) => {
           u.name || "",
           idOrPhone,
           last,
-        ].map(escape).join(",")
+        ]
+          .map(escape)
+          .join(",")
       );
     });
 
     const csvBody = lines.join("\r\n");
     const bom = "\uFEFF"; // ✅ 한글 깨짐 방지용 BOM
 
-    // 헤더 설정 후 전송
-    res.setHeader(
-      "Content-Type",
-      "text/csv; charset=utf-8"
-    );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="dandan_users_${new Date()
@@ -565,8 +610,6 @@ app.get("/admin/users-export", async (req, res) => {
     res.status(500).send("엑셀 다운로드 중 오류가 발생했습니다.");
   }
 });
-
-
 
 // ===== 학습 이력 로그 저장 API =====
 app.post("/api/log", async (req, res) => {
@@ -583,7 +626,7 @@ app.post("/api/log", async (req, res) => {
       school: school || "",
       series: series || "",
       unit,
-      radar: radar || undefined,   // ✅ 있으면 저장
+      radar: radar || undefined, // ✅ 있으면 저장
     });
 
     return res.json({ ok: true });
@@ -597,7 +640,7 @@ app.post("/api/log", async (req, res) => {
 app.get("/admin/user-edit", async (req, res) => {
   const { key, id: rawId } = req.query;
 
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
 
@@ -608,7 +651,7 @@ app.get("/admin/user-edit", async (req, res) => {
   try {
     const user = await User.findOne({
       $or: [{ id }, { phone: id }],
-      deleted: { $ne: true }
+      deleted: { $ne: true },
     }).lean();
 
     if (!user) {
@@ -641,7 +684,9 @@ app.get("/admin/user-edit", async (req, res) => {
       )}">← 회원 목록으로 돌아가기</a></p>
 
       <form method="POST" action="/admin/user-edit">
-        <input type="hidden" name="originalId" value="${user.id || user.phone || ""}" />
+        <input type="hidden" name="originalId" value="${
+          user.id || user.phone || ""
+        }" />
         <input type="hidden" name="key" value="${key}" />
 
         <div class="row">
@@ -661,7 +706,9 @@ app.get("/admin/user-edit", async (req, res) => {
 
         <div class="row">
           <label>전화번호 (ID, 비밀번호도 이 번호로 설정됩니다)</label>
-          <input type="text" name="phone" value="${user.phone || user.id || ""}" />
+          <input type="text" name="phone" value="${
+            user.phone || user.id || ""
+          }" />
         </div>
 
         <div class="actions">
@@ -690,8 +737,7 @@ app.get("/admin/user-edit", async (req, res) => {
 app.get("/admin/logs", async (req, res) => {
   const { key, grade, name } = req.query;
 
-  // 관리자 키 체크
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
 
@@ -720,7 +766,6 @@ app.get("/admin/logs", async (req, res) => {
         tr:nth-child(even) { background: #faf7f0; }
         .btn-back { font-size: 13px; margin-right: 8px; }
 
-        /* 레이더 카드용 간단 스타일 */
         #radar-wrap {
           display: flex;
           flex-wrap: wrap;
@@ -747,8 +792,12 @@ app.get("/admin/logs", async (req, res) => {
     <body>
       <h1>학습 이력 — ${grade} ${name}</h1>
       <p class="small">
-        <a class="btn-back" href="/admin/users?key=${encodeURIComponent(key)}">← 회원 목록으로 돌아가기</a>
-        <a href="/admin/logs-export?key=${encodeURIComponent(key)}&grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}">
+        <a class="btn-back" href="/admin/users?key=${encodeURIComponent(
+          key
+        )}">← 회원 목록으로 돌아가기</a>
+        <a href="/admin/logs-export?key=${encodeURIComponent(
+          key
+        )}&grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}">
           학습 이력 CSV 다운로드
         </a>
       </p>
@@ -769,7 +818,9 @@ app.get("/admin/logs", async (req, res) => {
 
     logs.forEach((log, idx) => {
       const ts = log.timestamp
-        ? new Date(log.timestamp).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+        ? new Date(log.timestamp).toLocaleString("ko-KR", {
+            timeZone: "Asia/Seoul",
+          })
         : "-";
 
       html += `
@@ -782,7 +833,6 @@ app.get("/admin/logs", async (req, res) => {
       `;
     });
 
-    // 🔽 여기서부터: 표 닫고, 레이더 섹션 + 스크립트 추가
     html += `
         </tbody>
       </table>
@@ -797,24 +847,18 @@ app.get("/admin/logs", async (req, res) => {
 
       <div id="radar-wrap"></div>
 
-      <!-- Chart.js 로드 -->
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       <script>
-        // 서버에서 온 logs를 JS로 넘기기
         const logsForChart = ${JSON.stringify(logs)};
 
-        // 레이더 카드 컨테이너
         const wrap = document.getElementById('radar-wrap');
 
         logsForChart.forEach(function(log, idx) {
-          // ✅ radar 데이터가 없는 로그는 스킵
           if (!log.radar) return;
 
-          // 카드 박스 만들기
           const card = document.createElement('div');
           card.className = 'radar-card';
 
-          // 헤더(단원 + 시간)
           const header = document.createElement('div');
           header.className = 'radar-card-header';
 
@@ -828,17 +872,14 @@ app.get("/admin/logs", async (req, res) => {
           header.appendChild(time);
           card.appendChild(header);
 
-          // 캔버스 생성
           const canvas = document.createElement('canvas');
           canvas.id = 'radar-' + idx;
           canvas.width = 260;
           canvas.height = 260;
           card.appendChild(canvas);
 
-          // wrap에 카드 추가
           wrap.appendChild(card);
 
-          // 실제 레이더 그리기
           const r = log.radar || {};
 
           new Chart(canvas.getContext('2d'), {
@@ -897,7 +938,7 @@ app.get("/admin/logs", async (req, res) => {
 app.get("/admin/logs-export", async (req, res) => {
   const { key, grade, name } = req.query;
 
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
   if (!grade || !name) {
@@ -912,15 +953,30 @@ app.get("/admin/logs-export", async (req, res) => {
     const escape = (v = "") => `"${String(v).replace(/"/g, '""')}"`;
 
     const lines = [];
-    // 헤더
     lines.push(
-      ["번호", "날짜시간", "시리즈", "단원코드"].map(escape).join(",")
+      [
+        "번호",
+        "날짜시간",
+        "시리즈",
+        "단원코드",
+        "핵심이해력",
+        "구조파악력",
+        "어휘맥락력",
+        "추론·통합력",
+        "비판·적용력",
+      ]
+        .map(escape)
+        .join(",")
     );
 
     logs.forEach((log, idx) => {
       const ts = log.timestamp
-        ? new Date(log.timestamp).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+        ? new Date(log.timestamp).toLocaleString("ko-KR", {
+            timeZone: "Asia/Seoul",
+          })
         : "";
+
+      const r = log.radar || {};
 
       lines.push(
         [
@@ -928,17 +984,21 @@ app.get("/admin/logs-export", async (req, res) => {
           ts,
           log.series || "",
           log.unit || "",
-        ].map(escape).join(",")
+          r.literal ?? "",
+          r.structural ?? "",
+          r.lexical ?? "",
+          r.inferential ?? "",
+          r.critical ?? "",
+        ]
+          .map(escape)
+          .join(",")
       );
     });
 
     const csvBody = lines.join("\r\n");
     const bom = "\uFEFF";
 
-    res.setHeader(
-      "Content-Type",
-      "text/csv; charset=utf-8"
-    );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="dandan_logs_${encodeURIComponent(
@@ -957,7 +1017,7 @@ app.get("/admin/logs-export", async (req, res) => {
 app.get("/admin/trash", async (req, res) => {
   const { key } = req.query;
 
-  if (key !== process.env.ADMIN_KEY) {
+  if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
 
@@ -974,20 +1034,27 @@ app.get("/admin/trash", async (req, res) => {
       <title>휴지통 회원 목록</title>
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif; padding: 20px; }
-        h1 { margin-bottom: 16px; }
+        h1 { margin-bottom: 8px; }
+        .small { font-size: 12px; color: #666; margin-bottom: 16px; }
         table { border-collapse: collapse; width: 100%; max-width: 960px; }
         th, td { border: 1px solid #ddd; padding: 8px 10px; font-size: 14px; }
         th { background: #f5f2eb; text-align: left; }
         tr:nth-child(even) { background: #faf7f0; }
-        .small { font-size: 12px; color: #666; }
-        a { text-decoration:none; }
-        a:hover { text-decoration:underline; }
+        a.btn-restore { color: #1565c0; text-decoration: none; font-size: 12px; }
+        a.btn-restore:hover { text-decoration: underline; }
+        a.btn-delete { color: #b00020; text-decoration: none; font-size: 12px; }
+        a.btn-delete:hover { text-decoration: underline; }
       </style>
     </head>
     <body>
-      <h1>휴지통 회원 목록 (${users.length}명)</h1>
+      <h1>휴지통 (${users.length}명)</h1>
       <p class="small">
-        <a href="/admin/users?key=${encodeURIComponent(key)}">← 회원 목록으로 돌아가기</a>
+        <a href="/admin/users?key=${encodeURIComponent(
+          key
+        )}">← 회원 목록으로 돌아가기</a>
+      </p>
+      <p class="small">
+        ※ 휴지 상태 회원은 로그인할 수 없습니다. 필요할 때만 <b>복구</b> 또는 <b>완전 삭제</b>를 사용하세요.
       </p>
 
       <table>
@@ -999,6 +1066,8 @@ app.get("/admin/trash", async (req, res) => {
             <th>이름</th>
             <th>전화번호(ID)</th>
             <th>휴지로 보낸 시각</th>
+            <th>복구</th>
+            <th>완전 삭제</th>
           </tr>
         </thead>
         <tbody>
@@ -1007,7 +1076,9 @@ app.get("/admin/trash", async (req, res) => {
     users.forEach((u, idx) => {
       const idOrPhone = u.id || u.phone || "";
       const deletedAt = u.deletedAt
-        ? new Date(u.deletedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+        ? new Date(u.deletedAt).toLocaleString("ko-KR", {
+            timeZone: "Asia/Seoul",
+          })
         : "-";
 
       html += `
@@ -1018,6 +1089,25 @@ app.get("/admin/trash", async (req, res) => {
           <td>${u.name || ""}</td>
           <td>${idOrPhone}</td>
           <td>${deletedAt}</td>
+          <td>
+            <a class="btn-restore"
+               href="/admin/trash-restore?id=${encodeURIComponent(
+                 idOrPhone
+               )}&key=${encodeURIComponent(key)}">
+              복구
+            </a>
+          </td>
+          <td>
+            <a class="btn-delete"
+               href="/admin/trash-delete?id=${encodeURIComponent(
+                 idOrPhone
+               )}&key=${encodeURIComponent(
+        key
+      )}"
+               onclick="return confirm('정말 완전 삭제할까요? [${u.name} / ${idOrPhone}]\\n복구할 수 없습니다.');">
+              완전 삭제
+            </a>
+          </td>
         </tr>
       `;
     });
@@ -1036,8 +1126,88 @@ app.get("/admin/trash", async (req, res) => {
   }
 });
 
+// ===== 휴지통 회원 복구 =====
+app.get("/admin/trash-restore", async (req, res) => {
+  const { id: rawId, key } = req.query;
 
+  if (key !== ADMIN_KEY) {
+    return res.status(403).send("관리자 인증 실패 (key 불일치)");
+  }
+  if (!rawId) return res.status(400).send("id 파라미터가 필요합니다.");
 
+  const id = String(rawId).trim();
+
+  try {
+    const user = await User.findOne({
+      $or: [{ id }, { phone: id }],
+      deleted: true,
+    });
+
+    if (!user) {
+      return res.status(404).send("휴지통에서 찾을 수 없는 사용자입니다.");
+    }
+
+    user.deleted = false;
+    user.deletedAt = null;
+    await user.save();
+
+    console.log("✅ 휴지 복구 완료:", user.name, user.id || user.phone);
+    res.redirect(`/admin/trash?key=${encodeURIComponent(key)}`);
+  } catch (err) {
+    console.error("❌ /admin/trash-restore 에러:", err);
+    res.status(500).send("휴지 복구 중 오류 발생");
+  }
+});
+
+// ===== 휴지통 회원 완전 삭제 =====
+app.get("/admin/trash-delete", async (req, res) => {
+  const { id: rawId, key } = req.query;
+
+  if (key !== ADMIN_KEY) {
+    return res.status(403).send("관리자 인증 실패 (key 불일치)");
+  }
+  if (!rawId) return res.status(400).send("id 파라미터가 필요합니다.");
+
+  const id = String(rawId).trim();
+
+  try {
+    const user = await User.findOne({
+      $or: [{ id }, { phone: id }],
+      deleted: true,
+    });
+
+    if (!user) {
+      return res.status(404).send("휴지통에서 찾을 수 없는 사용자입니다.");
+    }
+
+    await User.deleteOne({ _id: user._id });
+
+    console.log("🗑 완전 삭제 완료:", user.name, user.id || user.phone);
+    res.redirect(`/admin/trash?key=${encodeURIComponent(key)}`);
+  } catch (err) {
+    console.error("❌ /admin/trash-delete 에러:", err);
+    res.status(500).send("완전 삭제 중 오류 발생");
+  }
+});
+
+// ✅ 로그아웃 처리 (AJAX용)
+app.post("/logout", (req, res) => {
+  console.log("📤 [POST] /logout 호출");
+
+  if (!req.session) {
+    return res.json({ ok: true });
+  }
+
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("❌ 세션 삭제 오류:", err);
+      return res.status(500).json({ ok: false, message: "세션 삭제 실패" });
+    }
+
+    res.clearCookie("connect.sid");
+    return res.json({ ok: true });
+  });
+});
 
 // ✅ 로그인 처리 (lastLogin 기록 + 휴지 상태 차단)
 app.post("/login", async (req, res) => {
@@ -1045,47 +1215,46 @@ app.post("/login", async (req, res) => {
   const { name, grade, password } = req.body;
 
   try {
-    // 🔍 1) 정상 회원 찾기 (휴지 상태가 아닌 사람만)
+    // 1) 정상 회원 찾기 (휴지 상태가 아닌 사람만)
     const user = await User.findOne({
       name,
       grade,
       pw: password,
-      deleted: { $ne: true }   // ✅ deleted === true 이면 로그인 불가
+      deleted: { $ne: true }, // deleted === true 이면 로그인 불가
     });
 
-    // ❗ user가 없으면 — 혹시 휴지통인지 다시 체크
+    // 2) user가 없으면 — 혹시 휴지통인지 다시 체크
     if (!user) {
-      // 🔍 휴지 상태인지 확인
       const trashed = await User.findOne({
         name,
         grade,
         pw: password,
-        deleted: true
+        deleted: true,
       });
 
       if (trashed) {
         console.log("⛔ 휴지 상태 회원 로그인 시도:", trashed.name);
-        return res.send(
-          '현재 휴지 상태 회원입니다. 관리자에게 문의하세요. <a href="/login">돌아가기</a>'
-        );
+        // 휴지 상태: login.html 에서 팝업으로 처리
+        return res.redirect("/login?loginError=trashed");
       }
 
       console.log("❌ 로그인 실패: 사용자 없음 / 비밀번호 불일치");
-      return res.send(
-        '로그인 정보가 올바르지 않습니다. <a href="/login">다시 로그인</a>'
-      );
+      return res.redirect("/login?loginError=1");
     }
 
-    // 2) 마지막 로그인 시간 업데이트
+    // 3) 마지막 로그인 시간 업데이트
     const now = new Date();
     user.lastLogin = now;
     await user.save();
 
-    // 3) JSON 파일에도 lastLogin 반영(선택)
+    // 4) JSON 파일에도 lastLogin 반영(선택)
     try {
       const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
       const idx = users.findIndex(
-        (u) => u.name === user.name && u.grade === user.grade && u.phone === user.phone
+        (u) =>
+          u.name === user.name &&
+          u.grade === user.grade &&
+          u.phone === user.phone
       );
       if (idx !== -1) {
         users[idx].lastLogin = now;
@@ -1097,17 +1266,25 @@ app.post("/login", async (req, res) => {
 
     console.log("✅ 로그인 성공:", user.name, "lastLogin:", now.toISOString());
 
-    // 4) 메뉴 페이지로 리다이렉트 (네 코드 그대로 유지)
+    // 5) 세션에 사용자 정보 저장
+    req.session.user = {
+      id: user.id,
+      grade: user.grade,
+      name: user.name,
+      school: user.school,
+      phone: user.phone,
+      lastLogin: user.lastLogin,
+    };
+
+    // 6) 메뉴 페이지로 리다이렉트
     const encName = encodeURIComponent(user.name);
     const encGrade = encodeURIComponent(user.grade);
     res.redirect(`/menu.html?name=${encName}&grade=${encGrade}`);
-
   } catch (err) {
     console.error("❌ [POST] /login 에러:", err);
     res.status(500).send("서버 오류: 로그인 실패");
   }
 });
-
 
 // ✅ DB 테스트
 app.get("/dbtest", async (req, res) => {

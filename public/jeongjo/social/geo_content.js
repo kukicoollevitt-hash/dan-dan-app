@@ -431,6 +431,13 @@ function buildStudentKeyForReading(stu) {
   return `${cleanGrade}_${cleanName}_${cleanPhone}`;
 }
 
+// ✅ 현재 로그인한 학생 키를 공용으로 쓰는 함수 (메뉴/단원 페이지 공유)
+window.getStudentKey = function () {
+  const stu = getCurrentStudent();
+  if (!stu) return '';
+  return buildStudentKey(stu);   // "학년_이름_전화번호" 형태
+};
+
 /* 🔐 단원별 + 학생별 로컬스토리지 키 */
 function getReadingStateKey(unit) {
   const stu = getCurrentStudentForReading();
@@ -648,12 +655,18 @@ window.gradeQuiz = function () {
     critical:    q5ok ? 10 : 6
   };
 
+  // ✅ 서버로 보낼 마지막 레이더 점수 기억해 두기 (전역)
+  window._lastRadar = radarScores;
+
   // ✅ 화면 레이더 차트 그리기
+  if (typeof updateRadarChart === 'function') {
+    updateRadarChart(radarScores);
+  }
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
   }
 
-  // ✅ 서버 로그용으로 보관
+  // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
   window.reportState.radarScores = radarScores;
 
@@ -713,8 +726,10 @@ function renderSolutions(pack) {
 window.DanDan = window.DanDan || {};
 
 (function () {
+  // 이미 정의돼 있으면 다시 만들지 않기
   if (window.DanDan.ProgressManager) return;
 
+  /* ✅ 단원 감지: geo_01, geo_02 ... */
   function detectUnit() {
     let unitParam = new URLSearchParams(location.search).get('unit');
     if (!unitParam) {
@@ -724,12 +739,7 @@ window.DanDan = window.DanDan || {};
     return (unitParam || (window.CUR_UNIT || 'geo_01')).toLowerCase();
   }
 
-  function buildPageKey() {
-    const PAGE_GROUP = 'jeongjo_social';
-    const CUR_UNIT   = detectUnit();
-    return `${PAGE_GROUP}_${CUR_UNIT}`;
-  }
-
+  /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
     const cleanPhone = (stu.phone || '').replace(/\D/g, '');
     const cleanName  = (stu.name  || '').trim();
@@ -737,51 +747,73 @@ window.DanDan = window.DanDan || {};
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
   }
 
+  /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
   }
 
+  /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
+     → dan-progress:학년_이름_전화:geo_04 */
+  function buildProgressKey(stu, unit) {
+    const studentKey = buildStudentKey(stu);
+    return `dan-progress:${studentKey}:${unit}`;
+  }
+
+  /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
     const stu = getCurrentStudent();
-    if (!stu) return { key: null, list: [] };
-    const skey = `dan-progress:${buildStudentKey(stu)}`;
-    const list = JSON.parse(localStorage.getItem(skey) || '[]');
-    return { key: skey, list };
+    if (!stu) return { keyPrefix: null, list: [] };
+
+    const unitList = [];
+    const studentKey = buildStudentKey(stu);
+    const prefix = `dan-progress:${studentKey}:`; // 단원별 prefix
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(prefix)) continue;
+      const unit = k.slice(prefix.length);  // geo_01, geo_02 ...
+      const val  = localStorage.getItem(k);
+      if (val) unitList.push(unit);
+    }
+    return { keyPrefix: prefix, list: unitList };
   }
 
-  function writeDoneList(list) {
-    const stu = getCurrentStudent();
-    if (!stu) return false;
-    const skey = `dan-progress:${buildStudentKey(stu)}`;
-    localStorage.setItem(skey, JSON.stringify(list));
-    return true;
-  }
+  const ProgressManager = {
+    /* 현재 단원 unit (geo_01 등) */
+    getUnit: detectUnit,
 
- const ProgressManager = {
-    getPageKey: buildPageKey,
+    /* ✅ 이 단원을 "학습완료"로 표시 */
     markComplete() {
-      const pageKey = buildPageKey();
-      const { list } = readDoneList();
-      if (!list.includes(pageKey)) {
-        list.push(pageKey);
-        writeDoneList(list);
-      }
-      return pageKey;
+      const stu  = getCurrentStudent();
+      if (!stu) return null;
+
+      const unit = detectUnit();                  // geo_04
+      const key  = buildProgressKey(stu, unit);   // dan-progress:학생키:geo_04
+
+      localStorage.setItem(key, '1');             // 값은 그냥 '1'로 저장
+      return key;
     },
-    isCompleted(pageKey) {
-      const { list } = readDoneList();
-      return list.includes(pageKey || buildPageKey());
+
+    /* ✅ 이 단원이 완료됐는지 확인 */
+    isCompleted(unitOptional) {
+      const stu = getCurrentStudent();
+      if (!stu) return false;
+      const unit = (unitOptional || detectUnit());
+      const key  = buildProgressKey(stu, unit);
+      return !!localStorage.getItem(key);
     },
+
+    /* ✅ 현재 학생의 완료 단원 리스트 얻기 (geo_01, geo_03 ...) */
     getStudentProgress() {
-      return readDoneList();
+      return readDoneList();   // { keyPrefix, list }
     }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
 
-  // 🔽 여기 부분만 잘 봐줘
+  /* ✅ 제출하기 훅: 완료처리 + 로그 전송 */
   (function hookSubmitReport() {
     const original = window.submitReport;
 
@@ -792,7 +824,7 @@ window.DanDan = window.DanDan || {};
         return;
       }
 
-      // 1) 원래 submitReport 로직 실행 (PDF 생성 등)
+      // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
         await original.apply(this, args);
       } else if (typeof window.captureElementToPDF === 'function') {
@@ -803,15 +835,16 @@ window.DanDan = window.DanDan || {};
         );
       }
 
-      // 2) 학습완료 플래그 저장
+      // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
+
       if (typeof window.showSubmitSuccess === 'function') {
         showSubmitSuccess('분석리포트');
       } else {
-        alert(`학습완료 처리됨: ${key}`);
+        console.log(`학습완료 처리됨: ${key}`);
       }
 
-      // 3) ✅ 여기서만 학습 이력 로그 전송
+      // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
         try {
           await window.sendLearningLog();
@@ -878,6 +911,8 @@ window.sendLearningLog = async function () {
     console.warn('sendLearningLog outer error', e);
   }
 };
+
+
 
 
 /* ===== 로드 시 실행 + 버튼 타입 안전패치 ===== */
