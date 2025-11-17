@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>단단국어학원 학생 목록</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --panel: #fffaf3;
+      --accent: #8b2f2f;
+      --line: #e5d4c1;
+      --text: #3b2a1a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1080px;
+      margin: 24px auto 40px;
+      padding: 0 16px;
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+    .desc {
+      font-size: 13px;
+      color: #7a6655;
+      margin-bottom: 14px;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .btn-back {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #b58a5c;
+      background: #fff;
+      color: #5a3a24;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-back:hover {
+      background: #f7ecdf;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .left-info {
+      font-size: 13px;
+      color: #7a6655;
+    }
+    .right-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    input[type="text"] {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #d1c2af;
+      font-size: 13px;
+      min-width: 170px;
+    }
+    button, .btn {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: #f1e4d7;
+      color: #5a4330;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-outline {
+      background: #fff;
+      border-color: #b58a5c;
+      color: #5a3a24;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 10px 12px 12px;
+      overflow-x: auto;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 760px;
+    }
+    th, td {
+      border: 1px solid #e2d4c2;
+      padding: 6px 8px;
+      font-size: 13px;
+      text-align: left;
+    }
+    th {
+      background: #f4ebdd;
+    }
+    tr:nth-child(even) td {
+      background: #fdf8f0;
+    }
+    tr.empty-row td {
+      text-align: center;
+      color: #b54a3a;
+    }
+    .num-col { width: 36px; text-align: center; }
+    .center { text-align: center; }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 7px 2px;
+      border-radius: 999px;
+      font-size: 11px;
+      vertical-align: middle;
+    }
+    .badge-approved {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    .badge-pending {
+      background: #fff3e0;
+      color: #ef6c00;
+    }
+
+    .link-text {
+      color: #673ab7;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .link-text:hover {
+      text-decoration: underline;
+    }
+
+    .error-msg {
+      font-size: 13px;
+      color: #b00020;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ✅ 버튼을 제목 위로 이동 -->
+
+    <h1 id="page-title">단단국어학원 학생 목록</h1>
+    <p class="desc" id="page-desc">
+      이 화면에는 <b>단단국어학원</b>에 소속된 승인 학생만 표시됩니다.
+    </p>
+
+      <div class="top-row">
+      <a class="btn-back" href="/admin/dashboard">← 대시보드로 돌아가기</a>
+    </div>
+
+    <div class="toolbar">
+      <div class="left-info">
+        총 <span id="total-count">0</span>명의 학생이 있습니다.
+      </div>
+      <div class="right-actions">
+        <input type="text" id="search-input" placeholder="이름 / 학년 검색" />
+        <button id="search-btn">검색</button>
+        <button id="refresh-btn">새로고침</button>
+        <a id="btn-export" class="btn btn-outline" href="#">엑셀 다운로드</a>
+        <a id="btn-trash" class="btn btn-outline" href="#">휴지통 보기</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th class="num-col">#</th>
+            <th>학년</th>
+            <th>이름</th>
+            <th>학원명</th>
+            <th>전화번호(ID)</th>
+            <th>상태</th>
+            <th>학습 이력</th>
+            <th>수정</th>
+            <th>휴지통</th>
+          </tr>
+        </thead>
+        <tbody id="student-tbody">
+          <tr class="empty-row">
+            <td colspan="9">학생 목록을 불러오는 중입니다…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="error-box" class="error-msg" style="display:none;"></div>
+  </div>
+
+  <script>
+    const ADMIN_KEY = "DandanAdminKey!";
+    let currentAcademyName = "";
+
+    async function fetchBranchStudents(q = "") {
+      const tbody = document.getElementById("student-tbody");
+      const errorBox = document.getElementById("error-box");
+      errorBox.style.display = "none";
+
+      tbody.innerHTML = `
+        <tr class="empty-row">
+          <td colspan="9">학생 목록을 불러오는 중입니다…</td>
+        </tr>
+      `;
+
+      try {
+        const params = q ? "?q=" + encodeURIComponent(q) : "";
+        const res = await fetch("/api/branch/users" + params, {
+          credentials: "include",
+        });
+
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        const data = await res.json();
+        const list = data.students || data.users || [];
+
+        renderTable(list);
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr class="empty-row">
+            <td colspan="9">❌ 학생 목록을 불러오는 중 오류가 발생했습니다.</td>
+          </tr>
+        `;
+        errorBox.textContent = "오류: " + err.message;
+        errorBox.style.display = "block";
+      }
+    }
+
+    function renderTable(list) {
+      const tbody = document.getElementById("student-tbody");
+      const totalEl = document.getElementById("total-count");
+
+      if (!Array.isArray(list) || list.length === 0) {
+        totalEl.textContent = "0";
+        tbody.innerHTML = `
+          <tr class="empty-row"><td colspan="9">표시할 학생이 없습니다.</td></tr>
+        `;
+        return;
+      }
+
+      totalEl.textContent = list.length;
+
+      const firstSchool = list[0].school || "";
+      if (firstSchool) {
+        currentAcademyName = firstSchool;
+        document.getElementById("page-title").textContent =
+          firstSchool + " 학생 목록";
+        document.getElementById("page-desc").innerHTML =
+          "이 화면에는 <b>" + firstSchool + "</b>에 소속된 승인 학생만 표시됩니다.";
+      }
+
+      updateTopLinks();
+
+      tbody.innerHTML = "";
+      list.forEach((u, idx) => {
+        const tr = document.createElement("tr");
+        const phone = u.phone || u.id || "";
+        const status = u.status || "approved";
+        const statusLabel = status === "approved" ? "승인" : "대기";
+        const statusClass =
+          status === "approved" ? "badge-approved" : "badge-pending";
+
+        const toggleStatus = status === "approved" ? "pending" : "approved";
+        const toggleText = status === "approved" ? "대기 전환" : "승인하기";
+
+        const statusHref =
+          "/admin/status?id=" +
+          encodeURIComponent(phone) +
+          "&status=" +
+          encodeURIComponent(toggleStatus) +
+          "&key=" +
+          encodeURIComponent(ADMIN_KEY) +
+          "&return=" +
+          encodeURIComponent("/admin/branch/users");
+
+        const logsHref =
+          "/admin/branch/logs?grade=" +
+          encodeURIComponent(u.grade || "") +
+          "&name=" +
+          encodeURIComponent(u.name || "");
+
+        const editHref =
+          "/admin/user-edit?id=" +
+          encodeURIComponent(phone) +
+          "&key=" +
+          encodeURIComponent(ADMIN_KEY) +
+          "&view=branch";
+
+        const trashHref =
+          "/trash-user?id=" +
+          encodeURIComponent(phone) +
+          "&key=" +
+          encodeURIComponent(ADMIN_KEY) +
+          "&return=" +
+          encodeURIComponent("/admin/branch/users") +
+          "&view=branch";
+
+        tr.innerHTML = `
+          <td class="num-col center">${idx + 1}</td>
+          <td class="center">${u.grade || ""}</td>
+          <td class="center">${u.name || ""}</td>
+          <td>${u.school || ""}</td>
+          <td>${phone}</td>
+          <td>
+            <span class="badge ${statusClass}">${statusLabel}</span>
+            <a class="link-text"
+               href="${statusHref}"
+               onclick="return confirm('이 회원의 상태를 ${toggleText} 상태로 변경할까요?');">
+              ${toggleText}
+            </a>
+          </td>
+          <td class="center">
+            <a class="link-text" href="${logsHref}">학습 이력 보기</a>
+          </td>
+          <td class="center">
+            <a class="link-text" href="${editHref}">수정</a>
+          </td>
+          <td class="center">
+            <a class="link-text"
+               href="${trashHref}"
+               onclick="return confirm('이 회원을 휴지통으로 보낼까요? [${u.name || ""} / ${phone}]');">
+              휴지통
+            </a>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateTopLinks() {
+      const btnExport = document.getElementById("btn-export");
+      const btnTrash = document.getElementById("btn-trash");
+
+      const q = currentAcademyName || "";
+      btnExport.href =
+        "/admin/users-export?key=" +
+        encodeURIComponent(ADMIN_KEY) +
+        (q ? "&q=" + encodeURIComponent(q) : "");
+
+      btnTrash.href =
+        "/admin/trash?key=" +
+        encodeURIComponent(ADMIN_KEY) +
+        "&view=branch";
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const input = document.getElementById("search-input");
+      const btnSearch = document.getElementById("search-btn");
+      const btnRefresh = document.getElementById("refresh-btn");
+
+      btnSearch.addEventListener("click", () => {
+        fetchBranchStudents(input.value.trim());
+      });
+
+      input.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") fetchBranchStudents(input.value.trim());
+      });
+
+      btnRefresh.addEventListener("click", () => {
+        input.value = "";
+        fetchBranchStudents("");
+      });
+
+      fetchBranchStudents("");
+    });
+  </script>
+</body>
+</html>

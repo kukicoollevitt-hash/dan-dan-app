@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>단단국어 BRAIN 문해원 | 메인</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --btn-bg: #ffb400;
+      --btn-text: #2f2f2f;
+    }
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", -apple-system,
+        BlinkMacSystemFont, system-ui, sans-serif;
+      background: #000;
+    }
+
+    /* ✅ 메인 히어로 이미지 전체 배경 */
+    .hero-root {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      background: url("/images/brain-main-hero.png") center center / cover no-repeat;
+      display: flex;
+      align-items: flex-end;      /* 하단 정렬 */
+      justify-content: center;    /* 가로 중앙 */
+      padding: 40px 16px 64px;
+    }
+
+    /* ✅ 중앙 하단 로그인 버튼 */
+    .hero-login-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 999px;
+      border: none;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-size: 30px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      margin-bottom: 3vh;  /* 화면 맨 아래에서 살짝 위로 띄움 */
+    }
+    .hero-login-btn .whale {
+      font-size: 20px;
+    }
+    .hero-login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+    }
+    .hero-login-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+    }
+
+    /* ===== 로그인 모달 (따뜻한 오렌지톤) ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(
+        circle at top,
+        rgba(255, 215, 180, 0.65) 0,
+        rgba(0, 0, 0, 0.55) 55%
+      );
+      z-index: 50;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(420px, 92vw);
+      background: linear-gradient(145deg, #fff7ea 0%, #ffe7cc 45%, #ffe0c0 100%);
+      border-radius: 22px;
+      padding: 20px 22px 24px;
+      box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(255, 196, 150, 0.7);
+      position: relative;
+      color: #4b3123;
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", -apple-system,
+        BlinkMacSystemFont, system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .modal-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.9) 0, transparent 45%),
+        radial-gradient(circle at bottom right, rgba(255, 202, 150, 0.6) 0, transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .modal-header-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 78, 44, 0.25);
+      background: #fbe6d2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      color: #8b5a3a;
+    }
+    .modal-close:hover {
+      background: #f7d8bf;
+    }
+
+    .modal-title-wrap {
+      flex: 1;
+    }
+    .modal-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #4b3123;
+    }
+    .modal-subtitle {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: #7b5b45;
+    }
+
+    .admin-pill {
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 11px;
+      border: 1px solid rgba(133, 88, 57, 0.3);
+      background: #fff5e6;
+      color: #75452a;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .admin-pill:hover {
+      background: #ffe8c9;
+    }
+
+    .modal-form {
+      margin-top: 14px;
+    }
+    .modal-form label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 10px 0 4px;
+      color: #5a3a25;
+    }
+    .modal-input {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid #f0c8a9;
+      font-size: 14px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.95);
+    }
+    .modal-input::placeholder {
+      color: #c0a08a;
+    }
+    .modal-input:focus {
+      border-color: #f29b5a;
+      box-shadow: 0 0 0 1px rgba(242, 155, 90, 0.3);
+    }
+
+    .modal-btn {
+      margin-top: 18px;
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 0;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #e67645 0%, #d45a35 45%, #b7462a 100%);
+      color: #fffaf5;
+      box-shadow: 0 10px 20px rgba(178, 72, 45, 0.5);
+    }
+    .modal-btn:hover {
+      filter: brightness(1.03);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(178, 72, 45, 0.55);
+    }
+
+    .modal-footer {
+      margin-top: 10px;
+      font-size: 12px;
+      text-align: center;
+      color: #7b5b45;
+    }
+    .modal-footer a,
+    .modal-footer button {
+      color: #c45c3a;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0 4px;
+      font-size: 12px;
+    }
+    .modal-footer a:hover,
+    .modal-footer button:hover {
+      text-decoration: underline;
+    }
+
+    /* ✅ 로그인/회원가입 패널 토글 공통 */
+    .panel {
+      display: none;
+    }
+    .panel.active {
+      display: block;
+    }
+
+    /* ===== 로그인 오류/승인 대기 모달 ===== */
+    .login-error-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(3px);
+      z-index: 60; /* 로그인 모달보다 위 */
+    }
+    .login-error-overlay.active {
+      display: flex;
+    }
+
+    .login-error-card {
+      width: min(420px, 90vw);
+      background: #fff5e6;
+      border-radius: 24px;
+      padding: 26px 26px 22px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      color: #5a3a25;
+    }
+
+    .login-error-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fbe1d4;
+      color: #c54632;
+      font-size: 26px;
+    }
+
+    .login-error-title {
+      margin: 0 0 6px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .login-error-msg {
+      margin: 0 0 18px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #7b5b45;
+    }
+
+    .login-error-btn-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .login-error-btn {
+      flex: 1;
+      border-radius: 999px;
+      padding: 9px 0;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .login-error-btn.cancel {
+      background: #f4e2cf;
+      color: #7b5b45;
+    }
+    .login-error-btn.cancel:hover {
+      background: #ecd4bd;
+    }
+    .login-error-btn.retry {
+      background: #b7462a;
+      color: #fffaf5;
+    }
+    .login-error-btn.retry:hover {
+      filter: brightness(1.05);
+    }
+    .login-error-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+.login-error-overlay.show {
+  display: flex;
+}
+.login-error-modal {
+  background: #fffaf3;
+  border-radius: 18px;
+  padding: 24px 26px 22px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 15px 45px rgba(0,0,0,0.16);
+  border: 1px solid rgba(139,47,47,0.1);
+}
+.login-error-icon {
+  font-size: 42px;
+  margin-bottom: 8px;
+}
+.login-error-title {
+  font-weight: 700;
+  font-size: 17px;
+  margin-bottom: 6px;
+  color: #6f2e2e;
+}
+.login-error-msg {
+  font-size: 13px;
+  color: #8d6f51;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.login-error-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.login-error-btn {
+  min-width: 90px;
+  border-radius: 999px;
+  border: none;
+  padding: 7px 14px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.login-error-btn.primary {
+  background: #8b2f2f;
+  color: #fff;
+}
+
+  </style>
+</head>
+<body>
+  <!-- ✅ 메인 히어로 화면 -->
+  <main class="hero-root">
+    <button type="button" class="hero-login-btn" id="openLoginBtn">
+      <span>시작하기</span>
+    </button>
+  </main>
+
+  <!-- ✅ 로그인 / 회원가입 모달 -->
+  <div class="modal-overlay" id="loginOverlay">
+    <div class="modal-card">
+      <div class="modal-header-row">
+        <button type="button" class="modal-close" id="closeLoginBtn">✕</button>
+
+        <div class="modal-title-wrap">
+          <h1 class="modal-title" id="modalTitle">브레인 문해원 시리즈 로그인</h1>
+          <p class="modal-subtitle" id="modalSubtitle">
+            가입했던 이름·학년·전화번호로 로그인해 주세요.
+          </p>
+        </div>
+
+        <a href="/admin-login" class="admin-pill">관리자모드</a>
+      </div>
+
+      <!-- 🔹 로그인 패널 -->
+      <div id="login-panel" class="panel active">
+        <!-- 서버: POST /login -->
+        <form action="/login" method="post" class="modal-form" id="login-form">
+          <label>
+            학년
+            <input
+              type="text"
+              name="grade"
+              class="modal-input"
+              placeholder="예) 3학년"
+              required
+            />
+          </label>
+
+          <label>
+            이름
+            <input
+              type="text"
+              name="name"
+              class="modal-input"
+              placeholder="예) 홍길동"
+              required
+            />
+          </label>
+
+          <label>
+            비밀번호(전화번호)
+            <input
+              type="tel"
+              name="phone"
+              class="modal-input"
+              placeholder="전화번호 입력"
+              required
+            />
+          </label>
+
+          <button type="submit" class="modal-btn">로그인</button>
+        </form>
+
+        <div class="modal-footer">
+          처음이신가요?
+          <button type="button" id="open-register">회원가입</button>
+        </div>
+      </div>
+
+      <!-- 🔹 회원가입 패널 -->
+      <div id="register-panel" class="panel">
+        <form action="/register" method="post" class="modal-form" id="register-form">
+          <label>
+            학년
+            <input
+              type="text"
+              name="grade"
+              class="modal-input"
+              placeholder="예) 3학년"
+              required
+            />
+          </label>
+
+          <label>
+            이름
+            <input
+              type="text"
+              name="name"
+              class="modal-input"
+              placeholder="예) 홍길동"
+              required
+            />
+          </label>
+
+          <label>
+            전화번호(비밀번호로 사용)
+            <input
+              type="tel"
+              name="phone"
+              class="modal-input"
+              placeholder="예) 01012345678"
+              required
+            />
+          </label>
+
+          <label>
+            학교명 / 학원명
+            <input
+              type="text"
+              name="academyName"
+              class="modal-input"
+              placeholder="예) 단단국어 대치점"
+              required
+            />
+          </label>
+
+          <button type="submit" class="modal-btn">회원가입 완료</button>
+        </form>
+
+        <div class="modal-footer">
+          이미 가입하셨나요?
+          <button type="button" id="back-to-login">로그인으로 돌아가기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 로그인 오류 / 승인 대기 모달 -->
+  <div id="loginErrorOverlay" class="login-error-overlay">
+    <div class="login-error-card">
+      <div class="login-error-icon">🚫</div>
+      <h2 class="login-error-title" id="loginErrorTitle">로그인 오류입니다</h2>
+      <p class="login-error-msg" id="loginErrorMsg">
+        아이디 또는 비밀번호를 다시 한 번 확인해 주세요.
+      </p>
+      <div class="login-error-btn-row">
+        <button type="button" class="login-error-btn cancel" id="loginErrorCloseBtn">
+          닫기
+        </button>
+        <button type="button" class="login-error-btn retry" id="loginErrorRetryBtn">
+          다시 입력하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🔧 학생 key 생성 (로그인 시 localStorage용)
+    function buildStudentKey(stu) {
+      const cleanPhone = (stu.phone || "").replace(/\D/g, "");
+      const cleanName  = (stu.name  || "").trim();
+      const cleanGrade = (stu.grade || "").trim();
+      return `${cleanGrade}_${cleanName}_${cleanPhone}`;
+    }
+
+    // 🔧 로그인/회원가입 패널 토글
+    function showPanel(which) {
+      const loginPanel    = document.getElementById("login-panel");
+      const registerPanel = document.getElementById("register-panel");
+      const titleEl       = document.getElementById("modalTitle");
+      const subtitleEl    = document.getElementById("modalSubtitle");
+
+      if (!loginPanel || !registerPanel) return;
+
+      if (which === "register") {
+        registerPanel.classList.add("active");
+        loginPanel.classList.remove("active");
+        if (titleEl)    titleEl.textContent    = "브레인 문해원 시리즈 회원가입";
+        if (subtitleEl) subtitleEl.textContent = "학년·이름·전화번호·학원명을 정확히 입력해 주세요.";
+      } else {
+        loginPanel.classList.add("active");
+        registerPanel.classList.remove("active");
+        if (titleEl)    titleEl.textContent    = "브레인 문해원 시리즈 로그인";
+        if (subtitleEl) subtitleEl.textContent = "가입했던 이름·학년·전화번호로 로그인해 주세요.";
+      }
+    }
+
+    // 🔧 URL 쿼리에서 loginError 타입 가져오기
+    function getLoginErrorType() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("loginError"); // 'pending' | 'trashed' | '1' | null
+    }
+
+    // 🔧 오류 모달 열기
+    function openLoginErrorModal(type) {
+      const overlay = document.getElementById("loginErrorOverlay");
+      const titleEl = document.getElementById("loginErrorTitle");
+      const msgEl   = document.getElementById("loginErrorMsg");
+      if (!overlay || !titleEl || !msgEl) return;
+
+      if (type === "pending") {
+        titleEl.textContent = "승인 대기 중인 계정입니다";
+        msgEl.innerHTML =
+          "아직 관리자 승인 전이라 로그인할 수 없어요.<br>" +
+          "담당 선생님께 회원 승인 요청을 해 주세요 🙂";
+      } else if (type === "trashed") {
+        titleEl.textContent = "휴지 상태 계정입니다";
+        msgEl.innerHTML =
+          "현재 사용 중지된 계정이에요.<br>" +
+          "담당 선생님께 다시 복구가 가능한지 문의해 주세요.";
+      } else if (type === "1") {
+        titleEl.textContent = "로그인 정보가 올바르지 않습니다";
+        msgEl.innerHTML =
+          "학년·이름·전화번호를 다시 한 번 확인해 주세요.";
+      } else {
+        // 기본 메시지
+        titleEl.textContent = "로그인 오류입니다";
+        msgEl.textContent = "다시 한 번 입력해 주세요.";
+      }
+
+      overlay.classList.add("active");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const openBtn      = document.getElementById("openLoginBtn");
+      const overlay      = document.getElementById("loginOverlay");
+      const closeBtn     = document.getElementById("closeLoginBtn");
+      const openRegBtn   = document.getElementById("open-register");
+      const backLoginBtn = document.getElementById("back-to-login");
+      const loginForm    = document.getElementById("login-form");
+
+      const errOverlay   = document.getElementById("loginErrorOverlay");
+      const errCloseBtn  = document.getElementById("loginErrorCloseBtn");
+      const errRetryBtn  = document.getElementById("loginErrorRetryBtn");
+
+      // ✅ 기본 로그인 모달 열기/닫기
+      if (openBtn && overlay && closeBtn) {
+        overlay.classList.remove("active");
+
+        openBtn.addEventListener("click", () => {
+          overlay.classList.add("active");
+          showPanel("login");
+        });
+
+        closeBtn.addEventListener("click", () => {
+          overlay.classList.remove("active");
+        });
+
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) {
+            overlay.classList.remove("active");
+          }
+        });
+      }
+
+      // ✅ "회원가입" 클릭 → 같은 모달 안에서 회원가입 패널로 전환
+      if (openRegBtn && overlay) {
+        openRegBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          overlay.classList.add("active");
+          showPanel("register");
+        });
+      }
+
+      // ✅ "로그인으로 돌아가기"
+      if (backLoginBtn) {
+        backLoginBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          showPanel("login");
+        });
+      }
+
+      // ✅ 로그인 시 localStorage에 학생 정보 저장
+      if (loginForm) {
+        loginForm.addEventListener("submit", () => {
+          const formData = new FormData(loginForm);
+          const student = {
+            grade: formData.get("grade") || "",
+            name:  formData.get("name")  || "",
+            phone: formData.get("phone") || ""
+          };
+          localStorage.setItem("currentStudent", JSON.stringify(student));
+          localStorage.setItem("currentStudentKey", buildStudentKey(student));
+        });
+      }
+
+      // ✅ 로그인 오류 / 승인 대기 쿼리 처리
+      const errType = getLoginErrorType();
+      if (errType) {
+        openLoginErrorModal(errType);
+
+        // 한 번 보여준 뒤엔 URL에서 쿼리 제거 (새로고침 시 재노출 방지)
+        const url = new URL(window.location.href);
+        url.searchParams.delete("loginError");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      }
+
+      // ✅ 오류 모달 버튼 동작
+      if (errOverlay && errCloseBtn) {
+        errCloseBtn.addEventListener("click", () => {
+          errOverlay.classList.remove("active");
+        });
+      }
+      if (errOverlay && errRetryBtn && overlay) {
+        errRetryBtn.addEventListener("click", () => {
+          errOverlay.classList.remove("active");
+          overlay.classList.add("active");
+          showPanel("login");
+        });
+      }
+    });
+  </script>
+  <!-- 승인 대기 안내 모달 -->
+<div class="login-error-overlay" id="signupPendingOverlay">
+  <div class="login-error-modal">
+    <div class="login-error-icon">🚫</div>
+    <div class="login-error-title">승인 대기 중인 계정입니다</div>
+    <div class="login-error-msg">
+      현재 회원님은 ‘승인 대기’ 상태입니다.<br />
+      담당 선생님께 회원 승인 요청을 해 주세요 🙂
+    </div>
+    <div class="login-error-actions">
+      <button type="button" class="login-error-btn primary" id="signupPendingCloseBtn">
+        확인
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+  function getSignupStatus() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("signup");
+  }
+
+  function openSignupPendingModal() {
+    const overlay = document.getElementById("signupPendingOverlay");
+    if (!overlay) return;
+    overlay.classList.add("show");
+
+    // URL에서 ?signup=pending 제거 (새로고침 시 재등장 방지)
+    if (window.history && window.history.replaceState) {
+      const clean = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, clean);
+    }
+  }
+
+  function closeSignupPendingModal() {
+    const overlay = document.getElementById("signupPendingOverlay");
+    if (overlay) overlay.classList.remove("show");
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const status = getSignupStatus();
+
+    if (status === "pending") {
+      openSignupPendingModal();
+    }
+
+    const closeBtn = document.getElementById("signupPendingCloseBtn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeSignupPendingModal);
+    }
+
+    const overlay = document.getElementById("signupPendingOverlay");
+    if (overlay) {
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) closeSignupPendingModal();
+      });
+    }
+  });
+</script>
+
+
+</body>
+</html>

@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <title>단단국어 로그인</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poor+Story&display=swap"
+    rel="stylesheet"
+  />
   <style>
     :root {
       --bg: #f2ded5;
@@ -12,15 +18,16 @@
       --text: #2f2f2f;
     }
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       background: var(--bg);
-      font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      /* ✅ 동화풍 기본 폰트 + 기존 폰트들 백업 */
+      font-family: "Poor Story", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      font-size: 18px;
+      color: var(--text);
     }
+
     .login-wrap {
       background: var(--card);
       width: min(420px, 95vw);
@@ -28,6 +35,7 @@
       padding: 28px 28px 32px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.08);
       border: 1px solid rgba(139,47,47,0.05);
+      position: relative; /* 모드 전환 버튼 기준점 */
     }
     .title {
       font-size: 22px;
@@ -59,6 +67,7 @@
       box-shadow: 0 0 0 3px rgba(139,47,47,0.08);
     }
     .field { margin-bottom: 16px; }
+
     .btn {
       width: 100%;
       margin-top: 8px;
@@ -75,6 +84,7 @@
     .btn:hover {
       filter: brightness(1.03);
     }
+
     .link-line {
       text-align: center;
       margin-top: 16px;
@@ -85,6 +95,17 @@
       color: var(--primary);
       text-decoration: none;
       font-weight: 500;
+    }
+
+    /* 회원가입/로그인 전환용 버튼 */
+    .link-btn {
+      border: none;
+      background: none;
+      padding: 0 4px;
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
     }
 
     /* 🎄 크리스마스 배경 GIF */
@@ -162,57 +183,152 @@
     .login-error-btn:hover {
       opacity: 0.92;
     }
+
+    /* ✅ 모드 전환 버튼 (학생 로그인 화면용) */
+    .mode-switch {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(0,0,0,0.15);
+      color: var(--primary);
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .mode-switch:hover {
+      background: #f7ece5;
+    }
+
+    /* ✅ 로그인/회원가입 패널 토글 */
+    .panel {
+      display: none;
+    }
+    .panel.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <div class="bg-gif"></div>
 
   <div class="login-wrap">
-    <div class="title">단단국어 [브레인 문해원] 로그인</div>
-    <div class="subtitle">가입했던 이름/학년/전화번호로 로그인하세요.</div>
+    <a href="/admin-login" class="mode-switch">관리자모드</a>
 
-    <!-- ✅ 로그인 폼 -->
-    <form id="login-form" action="/login" method="POST" autocomplete="on">
-      <div class="field">
-        <label for="grade">학년</label>
-        <input
-          id="grade"
-          name="grade"
-          type="text"
-          placeholder="예) 0학년"
-          required
-        />
+    <div class="title" id="loginTitle">브레인 문해원 시리즈 로그인</div>
+    <div class="subtitle" id="loginSubtitle">
+      가입했던 이름/학년/전화번호로 로그인하세요.
+    </div>
+
+    <!-- ✅ 로그인 패널 -->
+    <div id="login-panel" class="panel active">
+      <form id="login-form" action="/login" method="POST" autocomplete="on">
+        <div class="field">
+          <label for="grade">학년</label>
+          <input
+            id="grade"
+            name="grade"
+            type="text"
+            placeholder="예) 고3"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="name">이름</label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            placeholder="예) 홍길동"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="password">비밀번호(전화번호)</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="전화번호 입력"
+            inputmode="numeric"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button class="btn" type="submit">로그인</button>
+      </form>
+
+      <div class="link-line">
+        처음이신가요?
+        <button type="button" id="open-register" class="link-btn">
+          회원가입
+        </button>
       </div>
+    </div> <!-- 🔹 로그인 패널 닫는 div -->
 
-      <div class="field">
-        <label for="name">이름</label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          placeholder="예) 홍길동"
-          required
-        />
+    <!-- ✅ 회원가입 패널 -->
+    <div id="register-panel" class="panel">
+      <form id="register-form" action="/register" method="POST" autocomplete="on">
+        <div class="field">
+          <label for="reg-grade">학년</label>
+          <input
+            id="reg-grade"
+            name="grade"
+            type="text"
+            placeholder="예) 고3"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="reg-name">이름</label>
+          <input
+            id="reg-name"
+            name="name"
+            type="text"
+            placeholder="예) 홍길동"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="reg-phone">전화번호(비밀번호로 사용)</label>
+          <input
+            id="reg-phone"
+            name="phone"
+            type="text"
+            placeholder="예) 01012345678"
+            inputmode="numeric"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="reg-academy">학교명 / 학원명</label>
+          <input
+            id="reg-academy"
+            name="academyName"
+            type="text"
+            placeholder="예) 단단국어 대치점"
+            required
+          />
+        </div>
+
+        <button class="btn" type="submit">회원가입 완료</button>
+      </form>
+
+      <div class="link-line">
+        이미 가입하셨나요?
+        <button type="button" id="back-to-login" class="link-btn">
+          로그인으로 돌아가기
+        </button>
       </div>
-
-      <div class="field">
-        <label for="password">비밀번호(전화번호)</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="전화번호 입력"
-          inputmode="numeric"
-          autocomplete="current-password"
-          required
-        />
-      </div>
-
-      <button class="btn" type="submit">로그인</button>
-    </form>
-
-    <div class="link-line">
-      처음이신가요? <a href="/signup">회원가입</a>
     </div>
   </div>
 
@@ -244,7 +360,7 @@
     </div>
   </div>
 
-  <!-- ✅ 학생 정보 localStorage 저장 -->
+  <!-- ✅ 학생 정보 localStorage 저장 + 패널 토글 -->
   <script>
     function buildStudentKey(stu) {
       const cleanPhone = (stu.phone || "").replace(/\D/g, ""); // 숫자만
@@ -253,44 +369,120 @@
       return `${cleanGrade}_${cleanName}_${cleanPhone}`;
     }
 
+    function showPanel(which) {
+      const loginPanel = document.getElementById("login-panel");
+      const registerPanel = document.getElementById("register-panel");
+      const titleEl = document.getElementById("loginTitle");
+      const subtitleEl = document.getElementById("loginSubtitle");
+
+      if (!loginPanel || !registerPanel) return;
+
+      if (which === "login") {
+        loginPanel.classList.add("active");
+        registerPanel.classList.remove("active");
+        if (titleEl) titleEl.textContent = "브레인 문해원 시리즈 로그인";
+        if (subtitleEl)
+          subtitleEl.textContent = "가입했던 이름/학년/전화번호로 로그인하세요.";
+      } else if (which === "register") {
+        registerPanel.classList.add("active");
+        loginPanel.classList.remove("active");
+        if (titleEl) titleEl.textContent = "브레인 문해원 시리즈 회원가입";
+        if (subtitleEl)
+          subtitleEl.textContent = "학년·이름·전화번호·학원명을 정확히 입력해 주세요.";
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
+      // 🔥 1) 쿼리 + 경로 둘 다 보고 모드 결정
+      const params = new URLSearchParams(window.location.search);
+      let mode = params.get("mode");
+
+      // 👉 /signup 경로로 들어온 경우 자동 회원가입 모드
+      const path = window.location.pathname;
+      if (!mode && path === "/signup") {
+        mode = "register";
+      }
+
+      if (mode === "register") {
+        showPanel("register");
+      } else {
+        showPanel("login");
+      }
+
+      // 🔹 로그인 시 학생 정보 저장
       const form = document.getElementById("login-form");
-      if (!form) return;
+      if (form) {
+        form.addEventListener("submit", function () {
+          const name = document.getElementById("name").value;
+          const grade = document.getElementById("grade").value;
+          const phone = document.getElementById("password").value; // 비번=전화번호
 
-      form.addEventListener("submit", function () {
-        const name = document.getElementById("name").value;
-        const grade = document.getElementById("grade").value;
-        const phone = document.getElementById("password").value; // 비번=전화번호
+          const student = { name, grade, phone };
+          localStorage.setItem("currentStudent", JSON.stringify(student));
 
-        const student = { name, grade, phone };
-        localStorage.setItem("currentStudent", JSON.stringify(student));
+          const studentKey = buildStudentKey(student);
+          localStorage.setItem("currentStudentKey", studentKey);
+        });
+      }
 
-        const studentKey = buildStudentKey(student);
-        localStorage.setItem("currentStudentKey", studentKey);
-        // submit은 막지 않고 그대로 서버로 보냄
-      });
+      // 🔁 패널 전환 버튼
+      const openRegister = document.getElementById("open-register");
+      const backToLogin = document.getElementById("back-to-login");
+
+      if (openRegister) {
+        openRegister.addEventListener("click", function (e) {
+          e.preventDefault();
+          showPanel("register");
+        });
+      }
+      if (backToLogin) {
+        backToLogin.addEventListener("click", function (e) {
+          e.preventDefault();
+          showPanel("login");
+        });
+      }
     });
   </script>
 
   <!-- ✅ loginError 쿼리 → 예쁜 팝업 -->
   <script>
+    /* ------------------------------
+       1) 로그인 에러 타입 가져오기
+    ------------------------------ */
     function getLoginErrorType() {
       const params = new URLSearchParams(window.location.search);
-      return params.get("loginError"); // '1', 'trashed' 또는 null
+      const v = params.get("loginError");
+
+      if (!v) return null;            // null 이면 null
+      if (v === "1") return "wrong";  // 서버가 숫자 1로 보낸 경우 문자열 "1"
+      if (v === "pending" || v === "trashed") return v; // 특수 상태
+
+      return "wrong"; // 예외/알 수 없는 값
     }
 
+    /* ------------------------------
+       2) 팝업 열기
+    ------------------------------ */
     function openLoginErrorModal(type) {
       const overlay = document.getElementById("loginErrorOverlay");
       const titleEl = document.getElementById("loginErrorTitle");
       const msgEl = document.getElementById("loginErrorMsg");
-      if (!overlay || !titleEl || !msgEl) return;
 
-      if (type === "trashed") {
+      if (!overlay) return;
+
+      if (type === "pending") {
+        titleEl.textContent = "승인 대기 중인 계정입니다";
+        msgEl.innerHTML =
+          "아직 관리자 승인 전이라 로그인할 수 없어요.<br>" +
+          "담당 선생님께 회원 승인 요청을 해 주세요 🙂";
+      }
+      else if (type === "trashed") {
         titleEl.textContent = "휴지 상태 계정입니다";
         msgEl.innerHTML =
           "현재 휴지 상태 회원이라 로그인할 수 없어요.<br>" +
           "관리자(단딘쌤)에게 문의해 주세요.";
-      } else {
+      }
+      else {
         titleEl.textContent = "로그인에 실패했어요";
         msgEl.innerHTML =
           "로그인 정보가 올바르지 않습니다.<br>" +
@@ -300,60 +492,65 @@
       overlay.classList.add("show");
     }
 
+    /* ------------------------------
+       3) 팝업 닫기
+    ------------------------------ */
     function closeLoginErrorModal() {
       const overlay = document.getElementById("loginErrorOverlay");
       if (overlay) overlay.classList.remove("show");
     }
 
+    /* ------------------------------
+       4) 페이지 로드시 처리
+    ------------------------------ */
     document.addEventListener("DOMContentLoaded", function () {
       const overlay = document.getElementById("loginErrorOverlay");
       const closeBtn = document.getElementById("loginErrorCloseBtn");
       const retryBtn = document.getElementById("loginErrorRetryBtn");
 
-      // 1) 쿼리 읽어서 에러 있으면 모달 열기
+      // ⬅️ URL에서 loginError 읽기
       const errType = getLoginErrorType();
+
       if (errType) {
         openLoginErrorModal(errType);
 
-        // 2) 한 번 띄운 뒤에는 주소창에서 ?loginError=... 제거
+        // 팝업 뜨고 난 후 URL의 쿼리 제거
         if (window.history && window.history.replaceState) {
-          const cleanUrl =
-            window.location.origin + window.location.pathname;
-          window.history.replaceState({}, document.title, cleanUrl);
+          const clean = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, clean);
         }
       }
 
-      // 3) 버튼 이벤트
+      // 닫기 버튼
       if (closeBtn) {
-        closeBtn.addEventListener("click", function () {
-          closeLoginErrorModal();
-        });
+        closeBtn.addEventListener("click", closeLoginErrorModal);
       }
 
+      // 다시 입력 버튼 (입력창 선택)
       if (retryBtn) {
         retryBtn.addEventListener("click", function () {
           closeLoginErrorModal();
-          const nameInput = document.querySelector('input[name="name"]');
-          if (nameInput) nameInput.focus();
-        });
-      }
-
-      // 4) 검은 배경 클릭 시 닫기
-      if (overlay) {
-        overlay.addEventListener("click", function (e) {
-          if (e.target === overlay) {
-            closeLoginErrorModal();
+          const firstInput = document.querySelector('input[name="name"]');
+          if (firstInput) {
+            firstInput.focus();
+            firstInput.select();
           }
         });
       }
 
-      // 5) ESC 키로 닫기
+      // 검은 배경 클릭 시 닫기
+      if (overlay) {
+        overlay.addEventListener("click", function (e) {
+          if (e.target === overlay) closeLoginErrorModal();
+        });
+      }
+
+      // ESC로 닫기
       document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-          closeLoginErrorModal();
-        }
+        if (e.key === "Escape") closeLoginErrorModal();
       });
     });
   </script>
+
 </body>
 </html>
