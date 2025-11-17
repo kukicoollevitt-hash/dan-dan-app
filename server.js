@@ -3305,19 +3305,28 @@ app.post("/login", async (req, res) => {
     }
 
     // ✅ 여기까지 왔으면 정상 로그인
-    req.session.user = {
-      _id: user._id,
-      name: user.name,
-      grade: user.grade,
-      school: user.school || user.academyName || "",
-      role: "student",
-    };
+req.session.user = {
+  _id: user._id,
+  name: user.name,
+  grade: user.grade,
+  school: user.school || user.academyName || "",
+  role: "student",
+};
 
-    // 마지막 로그인 시간 갱신(선택)
-    await User.updateOne(
-      { _id: user._id },
-      { $set: { lastLogin: new Date() } }
-    );
+await User.updateOne(
+  { _id: user._id },
+  { $set: { lastLogin: new Date() } }
+);
+
+// ❗ 실제로 들어갈 메인/목차 페이지 경로
+const NEXT_URL = "/menu.html"; 
+// 만약 네가 바로 geo_01로 보내고 싶으면 "/geo_01.html" 처럼 수정
+
+// 🔥 로딩 페이지로 먼저 이동 → 로딩이 끝나면 JS가 NEXT_URL로 보내줌
+return res.redirect(
+  "/loading.html?to=" + encodeURIComponent(NEXT_URL)
+);
+
 
     console.log("✅ 로그인 성공:", user.name, user.grade, user.school);
 
