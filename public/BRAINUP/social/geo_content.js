@@ -956,13 +956,23 @@ window.loadCompletionStatus = async function () {
     }
 
     const data = await res.json();
+    console.log('[loadCompletionStatus] 서버 응답:', data);
+
     if (data.ok && Array.isArray(data.completedUnits)) {
-      // 서버에서 받은 완료된 단원들을 localStorage에 동기화
-      const keyPrefix = buildProgressKey(stu, '');  // "dan-progress:학생키:"
+      // 학생 키 생성 (buildProgressKey 함수와 동일한 로직)
+      const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+      const cleanName  = (stu.name  || '').trim();
+      const cleanGrade = (stu.grade || '').trim();
+      const studentKey = `${cleanGrade}_${cleanName}_${cleanPhone}`;
+      const keyPrefix = `dan-progress:${studentKey}:`;
+
+      console.log('[loadCompletionStatus] studentKey:', studentKey);
+      console.log('[loadCompletionStatus] keyPrefix:', keyPrefix);
 
       data.completedUnits.forEach(unit => {
         const key = keyPrefix + unit;  // "dan-progress:학생키:geo_01"
         localStorage.setItem(key, '1');
+        console.log('[loadCompletionStatus] 저장:', key);
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
