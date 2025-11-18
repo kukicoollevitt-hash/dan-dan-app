@@ -923,6 +923,55 @@ window.submitCreative = async function () {
 /* ===========================
  * ✅ 학습 이력 서버로 보내기 (테스트 버전)
  * =========================== */
+/* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
+window.loadCompletionStatus = async function () {
+  try {
+    let stu = null;
+    try {
+      const raw = localStorage.getItem('currentStudent');
+      if (raw) stu = JSON.parse(raw);
+    } catch (e) {
+      console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
+    }
+
+    if (!stu) {
+      console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
+      return;
+    }
+
+    const params = new URLSearchParams({
+      grade: stu.grade || '',
+      name: stu.name || '',
+      series: 'BRAIN업'
+    });
+
+    const res = await fetch(`/api/completion-status?${params}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!res.ok) {
+      console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
+      return;
+    }
+
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.completedUnits)) {
+      // 서버에서 받은 완료된 단원들을 localStorage에 동기화
+      const keyPrefix = buildProgressKey(stu, '');  // "dan-progress:학생키:"
+
+      data.completedUnits.forEach(unit => {
+        const key = keyPrefix + unit;  // "dan-progress:학생키:geo_01"
+        localStorage.setItem(key, '1');
+      });
+
+      console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
+    }
+  } catch (e) {
+    console.warn('[loadCompletionStatus] 오류', e);
+  }
+};
+
 window.sendLearningLog = async function () {
   try {
     const unit = window.CUR_UNIT || 'geo_02';
@@ -953,7 +1002,8 @@ window.sendLearningLog = async function () {
       school: stu.school || '',
       series: 'BRAIN업',      // 필요하면 '정조편' 등으로 바꿔도 됨
       unit:   unit,
-      radar:  radar        // ✅ 여기 추가!
+      radar:  radar,       // ✅ 여기 추가!
+      completed: true      // ✅ 학습 완료 표시
     };
 
     console.log('[sendLearningLog] payload =', payload);
@@ -980,7 +1030,12 @@ window.sendLearningLog = async function () {
 
 
 /* ===== 로드 시 실행 + 버튼 타입 안전패치 ===== */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // 0) 🔄 서버에서 학습 완료 상태 동기화
+  if (typeof window.loadCompletionStatus === 'function') {
+    await loadCompletionStatus();
+  }
+
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
 

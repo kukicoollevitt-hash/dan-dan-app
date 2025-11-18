@@ -18,6 +18,8 @@ const LearningLogSchema = new mongoose.Schema({
     critical: { type: Number, default: 0 }      // ⑤ 비판 적용력
   },
 
+  completed: { type: Boolean, default: false }, // 학습 완료 여부
+
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -2757,7 +2757,7 @@ app.get("/admin/users-export", async (req, res) => {
 // ===== 학습 이력 로그 저장 API =====
 app.post("/api/log", async (req, res) => {
   try {
-    const { grade, name, school, series, unit, radar } = req.body;
+    const { grade, name, school, series, unit, radar, completed } = req.body;
 
     if (!grade || !name || !unit) {
       return res.status(400).json({ ok: false, message: "필수 정보 부족" });
@@ -2770,12 +2770,40 @@ app.post("/api/log", async (req, res) => {
       series: series || "",
       unit,
       radar: radar || undefined,
+      completed: completed || false,
     });
 
     return res.json({ ok: true });
   } catch (err) {
     console.error("[/api/log] error:", err);
     res.status(500).json({ ok: false });
+  }
+});
+
+// ===== 학습 완료 상태 조회 API =====
+app.get("/api/completion-status", async (req, res) => {
+  try {
+    const { grade, name, series } = req.query;
+
+    if (!grade || !name || !series) {
+      return res.status(400).json({ ok: false, message: "필수 파라미터 부족 (grade, name, series)" });
+    }
+
+    // 해당 학생의 완료된 단원 목록 조회
+    const completedLogs = await LearningLog.find({
+      grade,
+      name,
+      series,
+      completed: true
+    }).select('unit').lean();
+
+    // 완료된 단원 코드 배열
+    const completedUnits = completedLogs.map(log => log.unit);
+
+    return res.json({ ok: true, completedUnits });
+  } catch (err) {
+    console.error("[/api/completion-status] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류" });
   }
 });
 
