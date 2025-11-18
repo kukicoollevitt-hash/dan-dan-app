@@ -814,7 +814,7 @@ window.DanDan = window.DanDan || {};
   window.DanDan.ProgressManager = ProgressManager;
 
   /* ✅ 제출하기 훅: 완료처리 + 로그 전송 */
-  (function hookSubmitReport() {
+    (function hookSubmitReport() {
     const original = window.submitReport;
 
     window.submitReport = async function (...args) {
@@ -835,8 +835,20 @@ window.DanDan = window.DanDan || {};
         );
       }
 
-      // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
+      // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장 (로컬)
       const key = ProgressManager.markComplete();
+
+      // 2-1) ✅ 서버에도 진행도 저장 (아이패드/PC 동기화)
+      try {
+        const unitKey    = ProgressManager.getUnit();   // geo_01, geo_02 ...
+        const studentKey = buildStudentKey(stu);        // "학년_이름_전화"
+        const pageKey    = unitKey;                     // 단원 단위로 저장
+        const kind       = "reading";                   // 본문/분석리포트 기준
+
+        await sendProgressToServer(studentKey, unitKey, pageKey, kind);
+      } catch (e) {
+        console.warn('[submitReport] sendProgressToServer error', e);
+      }
 
       if (typeof window.showSubmitSuccess === 'function') {
         showSubmitSuccess('분석리포트');
@@ -844,7 +856,7 @@ window.DanDan = window.DanDan || {};
         console.log(`학습완료 처리됨: ${key}`);
       }
 
-      // 3) 서버 학습 이력 로그
+      // 3) 서버 학습 이력 로그 (기존 그대로)
       if (typeof window.sendLearningLog === 'function') {
         try {
           await window.sendLearningLog();
@@ -854,7 +866,7 @@ window.DanDan = window.DanDan || {};
       }
     };
   })();
-})();
+
 
 /* ===========================
  * ✅ 창의활동 제출 → PDF 내보내기
@@ -976,6 +988,20 @@ window.sendLearningLog = async function () {
   }
 };
 
+/* ===========================
+ * ✅ 학습 완료 서버 저장 (기기 간 진행도 동기화)
+ * =========================== */
+async function sendProgressToServer(studentKey, unitKey, pageKey, kind) {
+  try {
+    await fetch("/save-progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentKey, unitKey, pageKey, kind }),
+    });
+  } catch (e) {
+    console.warn("[sendProgressToServer] server progress save error:", e);
+  }
+}
 
 
 
@@ -1026,5 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof loadReadingState === 'function') {
     loadReadingState();
   }
+
+
 
 });
