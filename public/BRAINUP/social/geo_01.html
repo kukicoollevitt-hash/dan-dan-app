@@ -718,9 +718,6 @@
           <div class="passage-label"><span>BRAIN업ㅣ지리</span><strong>02</strong></div>
           <h1 class="passage-title"></h1>
           <div class="passage-text">
-         <p></p>
-            <p></p>
-            <p></p>
           </div>
           <div class="passage-vocab">
             <ol>
@@ -853,7 +850,7 @@
         <div class="vocab-badge">어휘<br>학습</div>
         <div class="vocab-message">본문학습 지문에 해당하는 어휘를 채워 봅시다.</div>
         <div class="vocab-char-box">
-          <img src="/images/BRAINON.png" alt="세종 캐릭터" class="vocab-char-img" data-html2canvas-ignore="true">
+          <img src="/images/sejong.png" alt="세종 캐릭터" class="vocab-char-img" data-html2canvas-ignore="true">
         </div>
       </div>
 
@@ -1327,6 +1324,76 @@
       resultBox.innerHTML = fullResultHTML;
     }
 
+    /* ===== 어휘학습 상태 저장/복원 ===== */
+    function saveVocabState() {
+      const stu = getCurrentStudent();
+      if (!stu) return;
+      const stuKey = buildStudentKey(stu);
+      const unit = window.CUR_UNIT || 'geo_01';
+      const stateKey = `vocab-state:${stuKey}:${unit}`;
+
+      const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+      const vocabData = [];
+      blanks.forEach(bw => {
+        const input = bw.querySelector('.blank-input');
+        const mark = bw.querySelector('.blank-mark');
+        vocabData.push({
+          value: input.value,
+          isCorrect: bw.classList.contains('correct'),
+          isWrong: bw.classList.contains('wrong'),
+          markText: mark ? mark.textContent : ''
+        });
+      });
+
+      localStorage.setItem(stateKey, JSON.stringify({
+        vocabData: vocabData,
+        resultHTML: vocabResultBox.innerHTML,
+        isGraded: vocabGradeBtn.style.display === "none"
+      }));
+      console.log('[saveVocabState] 저장 완료:', stateKey);
+    }
+
+    function loadVocabState() {
+      const stu = getCurrentStudent();
+      if (!stu) return;
+      const stuKey = buildStudentKey(stu);
+      const unit = window.CUR_UNIT || 'geo_01';
+      const stateKey = `vocab-state:${stuKey}:${unit}`;
+
+      const saved = localStorage.getItem(stateKey);
+      if (!saved) return;
+
+      try {
+        const state = JSON.parse(saved);
+        const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+
+        blanks.forEach((bw, idx) => {
+          if (state.vocabData[idx]) {
+            const data = state.vocabData[idx];
+            const input = bw.querySelector('.blank-input');
+            const mark = bw.querySelector('.blank-mark');
+
+            input.value = data.value;
+            if (data.isCorrect) bw.classList.add('correct');
+            if (data.isWrong) bw.classList.add('wrong');
+            if (mark) mark.textContent = data.markText;
+          }
+        });
+
+        if (state.isGraded) {
+          vocabResultBox.innerHTML = state.resultHTML;
+          vocabResultBox.style.display = "block";
+          vocabGradeBtn.style.display = "none";
+          vocabResetBtn.style.display = "inline-block";
+          vocabSubmitBtn.style.display = "inline-block";
+        }
+
+        console.log('[loadVocabState] 복원 완료:', stateKey);
+      } catch (e) {
+        console.warn('[loadVocabState] 복원 실패:', e);
+      }
+    }
+
     /* ===== 어휘학습 채점 & 제출 ===== */
     const vocabGradeBtn = document.getElementById('vocab-grade');
     const vocabResetBtn = document.getElementById('vocab-reset');
@@ -1423,6 +1490,9 @@
       vocabGradeBtn.style.display = "none";
       vocabResetBtn.style.display = "inline-block";
       vocabSubmitBtn.style.display = "inline-block";
+
+      // ✅ 어휘학습 상태 저장
+      saveVocabState();
     });
 
     vocabResetBtn.addEventListener('click', () => {
@@ -1433,6 +1503,16 @@
         if (mark) mark.textContent = "";
       });
       vocabResultBox.style.display = "none";
+
+      // ✅ 어휘학습 상태 삭제
+      const stu = getCurrentStudent();
+      if (stu) {
+        const stuKey = buildStudentKey(stu);
+        const unit = window.CUR_UNIT || 'geo_01';
+        const stateKey = `vocab-state:${stuKey}:${unit}`;
+        localStorage.removeItem(stateKey);
+        console.log('[vocabReset] 저장 삭제:', stateKey);
+      }
 
       const baseCorrect = reportState.q3ok ? 1 : 0;
       reportState.vocabScoreRatio = baseCorrect / 1;
@@ -1459,41 +1539,71 @@
       vocabResultBox.innerHTML = vocabFullResultHTML;
     });
 
+    /* ===== 창의활동 저장/복원 함수 ===== */
+    function saveCreativeState() {
+      const stu = getCurrentStudent();
+      if (!stu) return;
+      const stuKey = buildStudentKey(stu);
+      const unit = window.CUR_UNIT || 'geo_01';
+      const stateKey = `creative-state:${stuKey}:${unit}`;
+
+      const textarea = document.getElementById('creative-input');
+      if (!textarea) return;
+
+      localStorage.setItem(stateKey, textarea.value);
+      console.log('[saveCreativeState] 저장 완료:', stateKey);
+    }
+
+    function loadCreativeState() {
+      const stu = getCurrentStudent();
+      if (!stu) return;
+      const stuKey = buildStudentKey(stu);
+      const unit = window.CUR_UNIT || 'geo_01';
+      const stateKey = `creative-state:${stuKey}:${unit}`;
+
+      const saved = localStorage.getItem(stateKey);
+      if (!saved) return;
+
+      const textarea = document.getElementById('creative-input');
+      if (textarea) {
+        textarea.value = saved;
+        console.log('[loadCreativeState] 복원 완료:', stateKey);
+      }
+    }
+
     /* ===== 창의활동 제출 ===== */
-    const creativeBtn = document.getElementById('creative-submit');
-    const creativeResult = document.getElementById('creative-result');
-    creativeBtn.addEventListener('click', async () => {
-      if (!ensureStudentInfo()) { showSubmitOverlay('학년과 이름을 입력해주세요'); return; }
+    const creativeBtn = document.getElementById('creative-submit-btn');
+    const creativeTextarea = document.getElementById('creative-input');
 
-      const text = document.getElementById('creative-writing').value;
-      const rules = [
-        { wrong: "자주가", correct: "자주 가" },
-        { wrong: "우리집", correct: "우리 집" },
-        { wrong: "갈때", correct: "갈 때" },
-        { wrong: "올때", correct: "올 때" }
-      ];
-
-      let highlighted = text, corrected = text;
-      rules.forEach(rule => {
-        const reg = new RegExp(rule.wrong, "g");
-        highlighted = highlighted.replace(reg, `<span class="highlight-wrong">${rule.wrong}</span>`);
-        corrected = corrected.replace(reg, rule.correct);
+    // 입력할 때마다 자동 저장
+    if (creativeTextarea) {
+      creativeTextarea.addEventListener('input', () => {
+        saveCreativeState();
       });
+    }
 
-      creativeResult.style.display = "none";
-creativeResult.innerHTML = "";
-        `<p><strong>맞춤법 체크 결과</strong></p>
-         <p>${highlighted || "작성 내용이 없습니다."}</p>
-         <div class="correct-block">
-           <strong>교정 예시</strong><br>${corrected || "작성 내용이 없습니다."}
-         </div>`;
+    if (creativeBtn) {
+      creativeBtn.addEventListener('click', async () => {
+        if (!ensureStudentInfo()) { showSubmitOverlay('학년과 이름을 입력해주세요'); return; }
 
-      await captureElementToPDF('capture-creative', '단단국어_창의활동.pdf', { withStudentInfo: true });
-      showSubmitSuccess('창의활동');
-    });
+        const text = creativeTextarea ? creativeTextarea.value : '';
+
+        // 저장
+        saveCreativeState();
+
+        await captureElementToPDF('capture-creative', '단단국어_창의활동.pdf', { withStudentInfo: true });
+        showSubmitSuccess('창의활동');
+      });
+    }
 
     // 시작: 빈 레이더
     drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
+
+    // ✅ 어휘학습 상태 복원
+    loadVocabState();
+
+    // ✅ 창의활동 상태 복원
+    loadCreativeState();
 
     /* ===== ✅ 최종본 submitReport()만 남김 (중복/전역 병합 블록 삭제) ===== */
     async function submitReport() {
@@ -1747,27 +1857,5 @@ function _bindTabEvents() {
 <!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
 <script src="./geo_content.js?v=20251113" defer></script>
 
-<!-- 초기 렌더 & 탭 바인딩 -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  if (typeof window._bindTabEvents === 'function') {
-    window._bindTabEvents();
-  }
-
-  // 첫 진입이 어휘 탭이거나 어휘 영역이 있으면 즉시 렌더
-  var needVocab =
-    (location.hash && location.hash.indexOf('어휘') !== -1) ||
-    !!document.querySelector('.vocab-fill-text');
-
-  if (needVocab) {
-    if (typeof window.renderVocabFromContent === 'function') {
-      window.renderVocabFromContent();
-    } else if (typeof window.renderVocabFill === 'function') {
-      window.renderVocabFill();
-    }
-  }
-});
-</script>
-<script src="./geo_content.js?v=20251113" defer></script>
 </body>
 </html>

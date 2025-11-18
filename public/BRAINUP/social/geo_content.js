@@ -338,9 +338,23 @@ window.renderVocabFill = function () {
 
   window.reportState = window.reportState || {};
   window.reportState.vocabTotal = pack.vocabFill.items.length;
+
+  // ✅ 어휘 렌더링 직후 상태 복원 (각 HTML 파일의 loadVocabState 호출)
+  setTimeout(() => {
+    if (typeof window.loadVocabState === 'function') {
+      window.loadVocabState();
+    }
+  }, 100);
 };
 
+// ✅ 이벤트 리스너 중복 방지를 위한 플래그
+let _tabEventsInitialized = false;
+
 function _bindTabEvents() {
+  // 이미 초기화되었으면 건너뛰기
+  if (_tabEventsInitialized) return;
+  _tabEventsInitialized = true;
+
   document.addEventListener('click', (e)=>{
     const btn = e.target.closest('[data-tab]');
     if (!btn) return;
@@ -351,8 +365,12 @@ function _bindTabEvents() {
 
 /* ===== 텍스트 주입 (HTML 구조/ids 유지) ===== */
 function applyContentPack(unitKey) {
+  console.log('[applyContentPack] 호출됨, unitKey:', unitKey);
   const pack = window.CONTENTS[unitKey];
-  if (!pack) return;
+  if (!pack) {
+    console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
+    return;
+  }
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -360,7 +378,13 @@ function applyContentPack(unitKey) {
   if (titleEl)   titleEl.innerHTML = pack.title;
 
   const passageBox = document.querySelector('.passage-text');
-  if (passageBox) passageBox.innerHTML = pack.passage.map(p => `<p>${p}</p>`).join('');
+  console.log('[applyContentPack] passageBox:', passageBox, 'pack.passage:', pack.passage);
+  if (passageBox) {
+    const html = pack.passage.map(p => `<p>${p}</p>`).join('');
+    console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
+    passageBox.innerHTML = html;
+    console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
+  }
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
