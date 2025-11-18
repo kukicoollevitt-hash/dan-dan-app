@@ -436,6 +436,15 @@ function applyContentPack(unitKey) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
   }
+
+  // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
+  setTimeout(() => {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+      loadingOverlay.classList.remove('show');
+      console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
+    }
+  }, 50);
 }
 
 /* ==== 본문학습 상태 저장/복원 (✅ 학생별 분리 저장) ==== */
