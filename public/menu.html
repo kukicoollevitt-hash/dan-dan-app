@@ -1222,9 +1222,36 @@ if (logoutConfirmBtn) {
 
     // ✅ localStorage에 저장해둔 완료된 단원들을 메뉴에 반영 (학생별)
     function restoreProgressOnRenderedList() {
+      const stu = getCurrentStudent();
+      if (!stu) return;
+
+      // 1️⃣ 기존 방식: 배열로 저장된 완료 목록 (하위 호환)
       const saved = getStudentProgressList(); // ["./BRAINUP/social/geo_01.html", ...]
       saved.forEach(pageKey => {
         updateLessonStatus(pageKey, 'done');
+      });
+
+      // 2️⃣ 새 방식: 개별 키로 저장된 완료 상태 (dan-progress:학생키:geo_01 = "1")
+      const stuKey = buildStudentKey(stu);
+      const keyPrefix = `dan-progress:${stuKey}:`;
+
+      // 현재 화면에 표시된 모든 단원 li 순회
+      document.querySelectorAll('.unit-item').forEach(li => {
+        const pageKey = li.dataset.page; // "./BRAINUP/social/geo_01.html"
+        if (!pageKey) return;
+
+        // 경로에서 단원 코드 추출 (geo_01, geo_02 등)
+        const match = pageKey.match(/\/([^\/]+)\.html$/);
+        if (!match) return;
+        const unitCode = match[1]; // "geo_01"
+
+        // localStorage에서 완료 상태 확인
+        const storageKey = keyPrefix + unitCode;
+        const isDone = localStorage.getItem(storageKey) === '1';
+
+        if (isDone) {
+          updateLessonStatus(pageKey, 'done');
+        }
       });
     }
 
