@@ -1220,6 +1220,48 @@ if (logoutConfirmBtn) {
       return JSON.parse(localStorage.getItem(progressKey) || '[]');
     }
 
+    // 🔄 서버에서 최신 완료 상태 가져와서 localStorage에 저장
+    async function syncCompletionStatusFromServer() {
+      try {
+        const stu = getCurrentStudent();
+        if (!stu) return;
+
+        const params = new URLSearchParams({
+          grade: stu.grade || '',
+          name: stu.name || '',
+          series: 'BRAIN업'
+        });
+
+        const res = await fetch(`/api/completion-status?${params}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!res.ok) {
+          console.warn('[syncCompletionStatus] 서버 응답 오류:', res.status);
+          return;
+        }
+
+        const data = await res.json();
+        console.log('[syncCompletionStatus] 서버 응답:', data);
+
+        if (data.ok && Array.isArray(data.completedUnits)) {
+          const stuKey = buildStudentKey(stu);
+          const keyPrefix = `dan-progress:${stuKey}:`;
+
+          data.completedUnits.forEach(unit => {
+            const key = keyPrefix + unit;
+            localStorage.setItem(key, '1');
+            console.log('[syncCompletionStatus] 저장:', key);
+          });
+
+          console.log('[syncCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
+        }
+      } catch (e) {
+        console.warn('[syncCompletionStatus] 오류', e);
+      }
+    }
+
     // ✅ localStorage에 저장해둔 완료된 단원들을 메뉴에 반영 (학생별)
     function restoreProgressOnRenderedList() {
       const stu = getCurrentStudent();
@@ -1555,7 +1597,7 @@ async function performLogout() {
     // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
     restoreProgressOnRenderedList();
 
-    window.addEventListener("pageshow", function (event) {
+    window.addEventListener("pageshow", async function (event) {
       // 뒤로가기 캐시에서 돌아올 때 로딩 가리기
       document.getElementById("loadingOverlay")?.classList.remove("show");
 
@@ -1569,6 +1611,10 @@ async function performLogout() {
 
       // 학생 정보가 있으면 헤더 문구 다시 갱신
       showUserInfo();
+
+      // 🔄 서버에서 최신 완료 상태 다시 가져오기 (새로 완료된 단원 반영)
+      await syncCompletionStatusFromServer();
+      restoreProgressOnRenderedList();
     });
   </script>
 </body>
