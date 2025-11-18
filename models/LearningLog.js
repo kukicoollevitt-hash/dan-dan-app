@@ -2,12 +2,11 @@
 const mongoose = require("mongoose");
 
 const LearningLogSchema = new mongoose.Schema({
-  studentKey: { type: String, required: true, index: true }, // 예: "중3_박중삼_01077777777"
   grade: { type: String }, // 학년
   name: { type: String }, // 이름
-  phone: { type: String }, // 전화번호
+  school: { type: String }, // 학원명
   series: { type: String }, // 시리즈 (예: "BRAIN업")
-  unitCode: { type: String }, // 단원 코드 (예: "geo_01")
+  unit: { type: String }, // 단원 코드 (예: "geo_01")
 
   // 레이더 차트 데이터 (5가지 영역 점수)
   radar: {
@@ -20,10 +19,10 @@ const LearningLogSchema = new mongoose.Schema({
 
   completed: { type: Boolean, default: false }, // 학습 완료 여부
 
-  createdAt: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now }
 });
 
-// studentKey와 createdAt으로 인덱스 생성
-LearningLogSchema.index({ studentKey: 1, createdAt: -1 });
+// grade, name, timestamp으로 인덱스 생성
+LearningLogSchema.index({ grade: 1, name: 1, timestamp: -1 });
 
 module.exports = mongoose.model("LearningLog", LearningLogSchema);
