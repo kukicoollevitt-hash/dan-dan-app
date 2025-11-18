@@ -182,25 +182,6 @@ const adminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model("Admin", adminSchema);
 
-
-// ===== 학습 이력 로그 스키마 =====
-const learningLogSchema = new mongoose.Schema({
-  grade: { type: String, required: true },
-  name: { type: String, required: true },
-  school: { type: String, default: "" },
-  series: { type: String, default: "" }, // 예: '정조편_지리'
-  unit: { type: String, required: true }, // 예: 'geo_01'
-  radar: {
-    literal: { type: Number, default: 0 }, // 핵심 이해력
-    structural: { type: Number, default: 0 }, // 구조 파악력
-    lexical: { type: Number, default: 0 }, // 어휘 맥락력
-    inferential: { type: Number, default: 0 }, // 추론·통합력
-    critical: { type: Number, default: 0 }, // 비판·적용력
-  },
-  timestamp: { type: Date, default: Date.now }, // 기록 시각
-});
-const LearningLog = mongoose.model("LearningLog", learningLogSchema);
-
 /* ====================================
  * ✅ 브랜치 관리자용 미들웨어
  * ==================================== */
