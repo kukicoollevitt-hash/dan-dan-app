@@ -857,6 +857,70 @@ window.DanDan = window.DanDan || {};
 })();
 
 /* ===========================
+ * ✅ 창의활동 제출 → PDF 내보내기
+ *   textarea 전체 내용을 div로 복사해서 캡처
+ * =========================== */
+window.submitCreative = async function () {
+  const textarea   = document.getElementById('creative-input');
+  const renderBox  = document.getElementById('creative-render');
+  const captureBox = document.getElementById('capture-creative');
+
+  if (!textarea || !renderBox || !captureBox) {
+    console.warn('[submitCreative] 요소를 찾을 수 없음', {
+      textarea: !!textarea,
+      renderBox: !!renderBox,
+      captureBox: !!captureBox,
+    });
+    alert('창의활동 영역을 찾을 수 없습니다.');
+    return;
+  }
+
+  try {
+    // 1) textarea 내용 → 렌더 박스로 복사
+    renderBox.textContent = textarea.value || '';
+
+    // 2) 캡처할 동안 textarea 숨기고 렌더 박스만 보이게
+    textarea.style.display  = 'none';
+    renderBox.style.display = 'block';
+
+    // 3) 공통 함수가 있으면 그걸 사용 (captureElementToPDF)
+    if (typeof window.captureElementToPDF === 'function') {
+      await window.captureElementToPDF(
+        'capture-creative',
+        '단단국어_창의활동.pdf',
+        { withStudentInfo: true }
+      );
+    }
+    // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
+    else if (window.html2canvas && window.jsPDF) {
+      const canvas = await html2canvas(captureBox);
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = (canvas.height * pageW) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pageW, pageH);
+      pdf.save('단단국어_창의활동.pdf');
+    } else {
+      alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
+    }
+
+    // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
+    if (typeof window.showSubmitSuccess === 'function') {
+      window.showSubmitSuccess('창의활동');
+    }
+  } catch (e) {
+    console.warn('submitCreative error', e);
+    alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
+  } finally {
+    // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
+    if (textarea)   textarea.style.display  = 'block';
+    if (renderBox)  renderBox.style.display = 'none';
+  }
+};
+
+/* ===========================
  * ✅ 학습 이력 서버로 보내기 (테스트 버전)
  * =========================== */
 window.sendLearningLog = async function () {
@@ -947,6 +1011,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+    // 🔶 창의활동 제출 버튼 → submitCreative 연결
+  const creativeBtn = document.getElementById('creative-submit-btn');
+  if (creativeBtn && typeof window.submitCreative === 'function') {
+    creativeBtn.type = 'button';
+    creativeBtn.addEventListener('click', () => {
+      submitCreative();
+    });
+  }
+
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
