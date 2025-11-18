@@ -6,8 +6,6 @@ const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 const session = require("express-session");
-const StudyProgress = require("./models/StudyProgress");
-
 
 const app = express();
 const ADMIN_KEY = process.env.ADMIN_KEY;
@@ -180,39 +178,6 @@ const adminSchema = new mongoose.Schema({
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
-
-// ----------------------------
-// 🔥 학습 완료 진행도 저장 API
-// ----------------------------
-app.post("/save-progress", async (req, res) => {
-  try {
-    const { studentKey, unitKey, pageKey, kind } = req.body;
-
-    if (!studentKey || !unitKey || !pageKey || !kind) {
-      return res.status(400).json({ success: false, message: "필수값 부족" });
-    }
-
-    // 동일 기록 중복 저장 방지 (unique 처리)
-    const exists = await StudyProgress.findOne({
-      studentKey, unitKey, pageKey, kind
-    });
-
-    if (!exists) {
-      await StudyProgress.create({
-        studentKey,
-        unitKey,
-        pageKey,
-        kind,
-        completed: true,
-      });
-    }
-
-    return res.json({ success: true });
-  } catch (e) {
-    console.error("🔥 save-progress 오류:", e);
-    return res.status(500).json({ success: false });
-  }
-});
 
 
 // ===== 학습 이력 로그 스키마 =====
