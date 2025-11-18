@@ -136,13 +136,10 @@
           <th>단원 코드</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- 서버에서 logs 배열로 렌더링 예정 (예시 더미) -->
+      <tbody id="logs-tbody">
+        <!-- 서버에서 logs 배열로 렌더링 예정 -->
         <tr>
-          <td>1</td>
-          <td>2025-11-16 18:20</td>
-          <td>정조편 지리</td>
-          <td>geo_02</td>
+          <td colspan="4" style="text-align:center;">학습 이력을 불러오는 중...</td>
         </tr>
       </tbody>
     </table>
@@ -151,22 +148,174 @@
 
     <h3 style="margin:0 0 10px; font-size:16px;">🧠 단원별 문해력 레이더 차트</h3>
     <p class="small">
-      각 기록에 포함된 <code>radar</code> 데이터(핵심 이해력·구조 파악력·어휘 맥락력·추론·통합력·비판·적용력)를<br>
-      차트로 시각화해 지도처럼 한눈에 비교할 수 있도록 만들 예정입니다.
+      가장 최근 기록이 위에 오도록 정렬되어 있어요.<br>
+      (※ 아직 radar 데이터가 없는 기록은 그래프가 표시되지 않습니다.)
     </p>
 
     <div id="radar-wrap">
-      <!-- 서버에서 레이더 카드 여러 개 렌더링 / 혹은 Chart.js 로 동적 생성 -->
-      <div class="radar-card">
-        <div class="radar-card-header">
-          <strong>geo_02 분석 리포트</strong>
-          <span>2025-11-16 18:20</span>
-        </div>
-        <div style="font-size:12px; color:#777;">
-          실제 서비스에서는 여기 캔버스에 Chart.js 레이더 차트가 그려질 예정입니다.
-        </div>
-      </div>
+      <!-- Chart.js로 레이더 차트 동적 생성 -->
     </div>
   </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // URL에서 grade, name 파라미터 가져오기
+    const params = new URLSearchParams(window.location.search);
+    const grade = params.get('grade');
+    const name = params.get('name');
+
+    if (!grade || !name) {
+      document.getElementById('logs-tbody').innerHTML =
+        '<tr><td colspan="4" style="text-align:center; color:red;">grade와 name 파라미터가 필요합니다.</td></tr>';
+    } else {
+      // 페이지 제목 업데이트
+      document.querySelector('h1').textContent = `학생 학습 이력 — ${grade} ${name}`;
+
+      // 서버에서 데이터 가져오기
+      fetchLogs(grade, name);
+    }
+
+    async function fetchLogs(grade, name) {
+      try {
+        const response = await fetch(`/api/branch/logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`, {
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+
+        const data = await response.json();
+
+        if (!data.ok) {
+          throw new Error(data.message || '데이터 로드 실패');
+        }
+
+        const logs = data.logs || [];
+
+        // 테이블 렌더링
+        renderTable(logs);
+
+        // 레이더 차트 렌더링
+        renderRadarCharts(logs);
+
+      } catch (err) {
+        console.error('학습 이력 로드 오류:', err);
+        document.getElementById('logs-tbody').innerHTML =
+          `<tr><td colspan="4" style="text-align:center; color:red;">❌ 학습 이력을 불러오는 중 오류가 발생했습니다: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderTable(logs) {
+      const tbody = document.getElementById('logs-tbody');
+
+      if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">학습 이력이 없습니다.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = logs.map((log, idx) => {
+        const timestamp = log.timestamp ?
+          new Date(log.timestamp).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
+
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${timestamp}</td>
+            <td>${log.series || ''}</td>
+            <td>${log.unit || ''}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderRadarCharts(logs) {
+      const wrap = document.getElementById('radar-wrap');
+      wrap.innerHTML = ''; // 초기화
+
+      logs.forEach((log, idx) => {
+        // radar 데이터가 없으면 건너뛰기
+        if (!log.radar) return;
+
+        // 카드 생성
+        const card = document.createElement('div');
+        card.className = 'radar-card';
+
+        // 헤더
+        const header = document.createElement('div');
+        header.className = 'radar-card-header';
+
+        const title = document.createElement('strong');
+        title.textContent = (log.unit || '단원 미지정') + ' 분석 리포트';
+
+        const time = document.createElement('span');
+        time.style.display = 'block';
+        time.textContent = log.timestamp ?
+          new Date(log.timestamp).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
+
+        header.appendChild(title);
+        header.appendChild(time);
+        card.appendChild(header);
+
+        // 캔버스
+        const canvas = document.createElement('canvas');
+        canvas.id = 'radar-' + idx;
+        canvas.width = 260;
+        canvas.height = 260;
+        card.appendChild(canvas);
+
+        wrap.appendChild(card);
+
+        // Chart.js로 레이더 차트 그리기
+        const r = log.radar || {};
+
+        new Chart(canvas.getContext('2d'), {
+          type: 'radar',
+          data: {
+            labels: ['핵심 이해력', '구조 파악력', '어휘 맥락력', '추론·통합력', '비판·적용력'],
+            datasets: [{
+              label: (log.unit || '단원') + ' 분석리포트',
+              data: [
+                r.literal || 0,
+                r.structural || 0,
+                r.lexical || 0,
+                r.inferential || 0,
+                r.critical || 0
+              ],
+              backgroundColor: 'rgba(139,47,47,0.18)',
+              borderColor: '#8b2f2f',
+              borderWidth: 2,
+              pointBackgroundColor: '#8b2f2f'
+            }]
+          },
+          options: {
+            responsive: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              r: {
+                suggestedMin: 0,
+                suggestedMax: 10,
+                ticks: {
+                  stepSize: 2,
+                  backdropColor: 'transparent'
+                },
+                grid: { color: '#e5d4c1' },
+                angleLines: { color: '#e5d4c1' }
+              }
+            }
+          }
+        });
+      });
+
+      // radar 데이터가 있는 카드가 하나도 없으면 안내 메시지
+      if (wrap.children.length === 0) {
+        wrap.innerHTML = '<p style="color:#777; font-size:13px;">아직 분석 리포트가 있는 학습 기록이 없습니다.</p>';
+      }
+    }
+  </script>
 </body>
 </html>

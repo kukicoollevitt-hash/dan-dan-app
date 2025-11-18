@@ -7,6 +7,9 @@ const path = require("path");
 const mongoose = require("mongoose");
 const session = require("express-session");
 
+// ===== MongoDB 모델 =====
+const LearningLog = require("./models/LearningLog");
+
 const app = express();
 const ADMIN_KEY = process.env.ADMIN_KEY;
 
@@ -310,6 +313,32 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
   }
 });
 
+// 브랜치 관리자용 학습 이력 데이터 API
+app.get("/api/branch/logs", requireAdminLogin, async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.status(400).json({
+        ok: false,
+        message: "grade, name 파라미터가 필요합니다."
+      });
+    }
+
+    const logs = await LearningLog.find({ grade, name })
+      .sort({ timestamp: -1 })
+      .lean();
+
+    return res.json({
+      ok: true,
+      count: logs.length,
+      logs
+    });
+  } catch (err) {
+    console.error("❌ /api/branch/logs 에러:", err);
+    res.status(500).json({ ok: false, message: "서버 오류" });
+  }
+});
 
 // 관리자 회원가입 페이지 (GET)
 app.get("/admin-signup", (req, res) => {
@@ -600,6 +629,11 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
           padding: 8px 10px;
           text-align: left;
           white-space: nowrap;
+          font-weight: 700;
+          color: #000;
+          font-size: 15px;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
         th {
           background: #f7efe2;
@@ -2418,6 +2452,11 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
           padding: 8px 10px;
           text-align: left;
           white-space: nowrap;
+          font-weight: 700;
+          color: #000;
+          font-size: 15px;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
         th {
           background: #f7efe2;

@@ -7,13 +7,13 @@ const BASE = path.join(__dirname, 'public');
 
 // 폴더 구조 정의
 const structure = {
-  seonggyungwan: {
+  BRAINM: {
     nonfiction: ['naesin', 'suneung'],         // 비문학: 내신교과 / 수능모고
     modernlit: ['poem', 'novel', 'etc'],       // 현대문학: 시 / 소설 / 극·수필·희곡
     classiclit: ['gosi', 'gonovel', 'goessay'],// 고전문학: 시가 / 소설 / 수필
     grammar: ['modern', 'middle']              // 문법: 현대 / 중세
   },
-  gukjagam: {
+  BRAINH: {
     nonfiction: ['naesin', 'suneung'],
     modernlit: ['poem', 'novel', 'etc'],
     classiclit: ['gosi', 'gonovel', 'goessay'],
