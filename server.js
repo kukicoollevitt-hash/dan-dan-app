@@ -2759,19 +2759,26 @@ app.post("/api/log", async (req, res) => {
   try {
     const { grade, name, school, series, unit, radar, completed } = req.body;
 
+    console.log("[/api/log] 받은 데이터:", { grade, name, school, series, unit, completed });
+
     if (!grade || !name || !unit) {
       return res.status(400).json({ ok: false, message: "필수 정보 부족" });
     }
 
-    await LearningLog.create({
+    const logData = {
       grade,
       name,
       school: school || "",
       series: series || "",
       unit,
       radar: radar || undefined,
-      completed: completed || false,
-    });
+      completed: completed === true,  // 명시적으로 true인지 확인
+    };
+
+    console.log("[/api/log] 저장할 데이터:", logData);
+
+    const savedLog = await LearningLog.create(logData);
+    console.log("[/api/log] 저장 완료:", savedLog._id, "completed:", savedLog.completed);
 
     return res.json({ ok: true });
   } catch (err) {
@@ -2785,6 +2792,8 @@ app.get("/api/completion-status", async (req, res) => {
   try {
     const { grade, name, series } = req.query;
 
+    console.log("[/api/completion-status] 조회 요청:", { grade, name, series });
+
     if (!grade || !name || !series) {
       return res.status(400).json({ ok: false, message: "필수 파라미터 부족 (grade, name, series)" });
     }
@@ -2797,8 +2806,12 @@ app.get("/api/completion-status", async (req, res) => {
       completed: true
     }).select('unit').lean();
 
+    console.log("[/api/completion-status] 조회 결과:", completedLogs.length, "개 완료 기록");
+
     // 완료된 단원 코드 배열
     const completedUnits = completedLogs.map(log => log.unit);
+
+    console.log("[/api/completion-status] 완료 단원:", completedUnits);
 
     return res.json({ ok: true, completedUnits });
   } catch (err) {
