@@ -2926,6 +2926,16 @@ app.get("/admin/logs", async (req, res) => {
 
       <hr style="margin:40px 0; border:none; border-top:1px solid #e5d4c1;">
 
+      <h3>📊 단원별 종합 레이더 차트</h3>
+      <p class="small">
+        과목별로 모든 학습 데이터의 평균을 보여줍니다.<br/>
+        (※ radar 데이터가 있는 기록들만 평균에 포함됩니다.)
+      </p>
+
+      <div id="summary-radar-wrap" style="display:flex; gap:30px; flex-wrap:wrap; justify-content:center; margin-bottom:60px;"></div>
+
+      <hr style="margin:40px 0; border:none; border-top:1px solid #e5d4c1;">
+
       <h3>🧠 단원별 문해력 레이더 차트</h3>
       <p class="small">
         가장 최근 기록이 위에 오도록 정렬되어 있어요.<br/>
@@ -2938,6 +2948,117 @@ app.get("/admin/logs", async (req, res) => {
       <script>
         const logsForChart = ${JSON.stringify(logs)};
 
+        // ===== 종합 레이더 차트 생성 =====
+        const summaryWrap = document.getElementById('summary-radar-wrap');
+
+        // 시리즈별로 그룹화
+        const seriesGroups = {};
+        logsForChart.forEach(log => {
+          if (!log.radar) return;
+          const series = log.series || '미분류';
+          if (!seriesGroups[series]) {
+            seriesGroups[series] = [];
+          }
+          seriesGroups[series].push(log);
+        });
+
+        // 각 시리즈별로 평균 계산 및 차트 생성
+        Object.keys(seriesGroups).forEach(series => {
+          const seriesLogs = seriesGroups[series];
+
+          // 평균 계산
+          let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
+          let totalInferential = 0, totalCritical = 0;
+          let count = 0;
+
+          seriesLogs.forEach(log => {
+            if (log.radar) {
+              totalLiteral += log.radar.literal || 0;
+              totalStructural += log.radar.structural || 0;
+              totalLexical += log.radar.lexical || 0;
+              totalInferential += log.radar.inferential || 0;
+              totalCritical += log.radar.critical || 0;
+              count++;
+            }
+          });
+
+          if (count === 0) return;
+
+          const avgLiteral = Math.round((totalLiteral / count) * 10) / 10;
+          const avgStructural = Math.round((totalStructural / count) * 10) / 10;
+          const avgLexical = Math.round((totalLexical / count) * 10) / 10;
+          const avgInferential = Math.round((totalInferential / count) * 10) / 10;
+          const avgCritical = Math.round((totalCritical / count) * 10) / 10;
+
+          // 차트 카드 생성
+          const card = document.createElement('div');
+          card.style.cssText = 'border:2px solid #e5d4c1; border-radius:16px; padding:24px; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.08);';
+
+          const header = document.createElement('div');
+          header.style.cssText = 'text-align:center; margin-bottom:16px;';
+
+          const title = document.createElement('strong');
+          title.style.cssText = 'font-size:20px; color:#4d392b;';
+          title.textContent = series + ' 종합';
+
+          const subtitle = document.createElement('div');
+          subtitle.style.cssText = 'font-size:13px; color:#8b7355; margin-top:6px;';
+          subtitle.textContent = '총 ' + count + '회 학습';
+
+          header.appendChild(title);
+          header.appendChild(subtitle);
+          card.appendChild(header);
+
+          const canvas = document.createElement('canvas');
+          canvas.width = 350;
+          canvas.height = 350;
+          card.appendChild(canvas);
+
+          summaryWrap.appendChild(card);
+
+          // 차트 생성
+          new Chart(canvas.getContext('2d'), {
+            type: 'radar',
+            data: {
+              labels: ['핵심 이해력', '구조 파악력', '어휘 맥락력', '추론·통합력', '비판·적용력'],
+              datasets: [{
+                label: series + ' 평균',
+                data: [avgLiteral, avgStructural, avgLexical, avgInferential, avgCritical],
+                backgroundColor: 'rgba(139,47,47,0.2)',
+                borderColor: '#8b2f2f',
+                borderWidth: 3,
+                pointBackgroundColor: '#8b2f2f',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5
+              }]
+            },
+            options: {
+              responsive: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                r: {
+                  suggestedMin: 0,
+                  suggestedMax: 10,
+                  ticks: {
+                    stepSize: 2,
+                    backdropColor: 'transparent',
+                    font: { size: 12 }
+                  },
+                  pointLabels: {
+                    font: { size: 13, weight: 'bold' }
+                  },
+                  grid: { color: '#e5d4c1' },
+                  angleLines: { color: '#e5d4c1' }
+                }
+              }
+            }
+          });
+        });
+
+        // ===== 개별 레이더 차트 생성 =====
         const wrap = document.getElementById('radar-wrap');
 
         logsForChart.forEach(function(log, idx) {
