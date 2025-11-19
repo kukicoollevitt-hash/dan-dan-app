@@ -107,6 +107,13 @@ body {
       color: #fff;
       border-color: #8b2f2f;
     }
+    /* 비활성화된 시리즈 */
+    .series-item.disabled {
+      opacity: 0.4;
+      filter: grayscale(1);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
     .meta { font-size: 11px; opacity: 0.6; }
     .detail-panel {
       padding: 14px 18px 40px;
@@ -1718,6 +1725,56 @@ async function performLogout() {
     // 시작은 세종 시리즈
     renderDomains("BRAINON");
 
+    // ===== 시리즈 활성화/비활성화 처리 =====
+    function applySeriesRestrictions() {
+      try {
+        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+        const assignedSeries = user.assignedSeries || [];
+
+        console.log('🔒 Applying series restrictions:', assignedSeries);
+
+        // 시리즈 이름 매핑 (모달에서 사용하는 이름 -> HTML data-series 값)
+        const seriesMapping = {
+          'BRAIN은': 'BRAINON',
+          'BRAIN암': 'BRAINUP',
+          'BRAIN빛': 'BRAINFIT',
+          'BRAIN답': 'BRAINDEEP',
+          'BRAIN중등': 'BRAINM',
+          'BRAIN고등': 'BRAINH',
+          // 역방향 매핑도 추가 (이미 영문 ID인 경우 대응)
+          'BRAINON': 'BRAINON',
+          'BRAINUP': 'BRAINUP',
+          'BRAINFIT': 'BRAINFIT',
+          'BRAINDEEP': 'BRAINDEEP',
+          'BRAINM': 'BRAINM',
+          'BRAINH': 'BRAINH'
+        };
+
+        // assignedSeries를 data-series 형식으로 변환
+        const allowedSeriesIds = assignedSeries.map(name => seriesMapping[name]).filter(Boolean);
+
+        console.log('✅ Allowed series IDs:', allowedSeriesIds);
+
+        // 모든 시리즈 아이템 확인
+        document.querySelectorAll("#seriesList .series-item").forEach(li => {
+          const seriesId = li.dataset.series;
+
+          if (allowedSeriesIds.includes(seriesId)) {
+            // 활성화
+            li.classList.remove("disabled");
+          } else {
+            // 비활성화
+            li.classList.add("disabled");
+          }
+        });
+      } catch (err) {
+        console.error('❌ Error applying series restrictions:', err);
+      }
+    }
+
+    // 시리즈 제한 적용
+    applySeriesRestrictions();
+
     // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
     restoreProgressOnRenderedList();
 
@@ -1731,6 +1788,26 @@ async function performLogout() {
       if (!stu) {
         window.location.href = "/";
         return;
+      }
+
+      // 🔄 서버에서 최신 사용자 정보 가져오기 (시리즈 부여 업데이트 반영)
+      if (stu && stu.grade && stu.name) {
+        try {
+          const res = await fetch(`/api/user-info?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+          if (res.ok) {
+            const userData = await res.json();
+            if (userData) {
+              // sessionStorage 업데이트
+              sessionStorage.setItem('user', JSON.stringify(userData));
+              console.log('✅ User info updated from server:', userData);
+
+              // 시리즈 제한 다시 적용
+              applySeriesRestrictions();
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch updated user info:', err);
+        }
       }
 
       // 학생 정보가 있으면 헤더 문구 다시 갱신

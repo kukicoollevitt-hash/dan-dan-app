@@ -142,7 +142,12 @@ const userSchema = new mongoose.Schema({
   deleted: { type: Boolean, default: false },
   deletedAt: Date,
   // 🔹 지점 삭제(브랜치 휴지)로 인해 같이 휴지로 간 계정인지 표시
-  branchDeleted: { type: Boolean, default: false }
+  branchDeleted: { type: Boolean, default: false },
+  // 🔹 학생에게 부여된 시리즈 목록
+  assignedSeries: {
+    type: [String],
+    default: []
+  }
 });
 const User = mongoose.model("User", userSchema);
 
@@ -2121,6 +2126,45 @@ app.post("/admin/user-edit", async (req, res) => {
   }
 });
 
+// ===== 시리즈 부여 API (POST) =====
+app.post("/admin/assign-series", async (req, res) => {
+  const { key, userId, series } = req.body;
+
+  if (key !== ADMIN_KEY) {
+    return res.status(403).json({ success: false, message: "관리자 인증 실패" });
+  }
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: "userId가 필요합니다" });
+  }
+
+  if (!Array.isArray(series)) {
+    return res.status(400).json({ success: false, message: "series는 배열이어야 합니다" });
+  }
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "사용자를 찾을 수 없습니다" });
+    }
+
+    user.assignedSeries = series;
+    await user.save();
+
+    console.log(`✅ 시리즈 부여 완료: ${user.name} (${user.id}) -> [${series.join(", ")}]`);
+
+    return res.json({
+      success: true,
+      message: "시리즈 부여 완료",
+      assignedSeries: series
+    });
+  } catch (err) {
+    console.error("❌ /admin/assign-series 에러:", err);
+    return res.status(500).json({ success: false, message: "시리즈 부여 중 오류 발생" });
+  }
+});
+
 
 // ===== 회원 삭제 (hard delete) =====
 app.get("/delete-user", async (req, res) => {
@@ -2479,6 +2523,107 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
           h1 { font-size: 22px; }
           .table-wrap { padding: 10px; }
         }
+
+        /* 시리즈 부여 모달 스타일 */
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 999;
+          align-items: center;
+          justify-content: center;
+        }
+        .modal-overlay.active {
+          display: flex;
+        }
+        .modal-box {
+          background: var(--panel);
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 400px;
+          width: 90%;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .modal-title {
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 16px;
+          color: var(--accent);
+        }
+        .modal-body {
+          margin-bottom: 20px;
+        }
+        .checkbox-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+        }
+        .checkbox-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          margin-bottom: 12px;
+          padding: 10px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+          transition: all 0.2s ease;
+        }
+        .checkbox-item:hover {
+          background: #f0f0f0;
+          border-color: var(--accent);
+        }
+        .checkbox-item input[type="checkbox"] {
+          margin-top: 3px;
+          flex-shrink: 0;
+        }
+        .checkbox-item label {
+          flex: 1;
+          margin: 0;
+          cursor: pointer;
+        }
+        .series-name {
+          font-weight: 600;
+          color: var(--accent);
+          display: block;
+          margin-bottom: 2px;
+        }
+        .series-desc {
+          font-size: 12px;
+          color: #666;
+          display: block;
+        }
+        .modal-footer {
+          display: flex;
+          gap: 8px;
+          justify-content: flex-end;
+        }
+        .btn {
+          padding: 8px 16px;
+          font-size: 14px;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+          font-weight: 500;
+        }
+        .btn-ghost {
+          background: #e0e0e0;
+          color: #333;
+        }
+        .btn-ghost:hover {
+          background: #d0d0d0;
+        }
+        .btn-main {
+          background: var(--accent);
+          color: #fff;
+        }
+        .btn-main:hover {
+          opacity: 0.9;
+        }
       </style>
     </head>
     <body>
@@ -2550,6 +2695,7 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
                 <th>학원명</th>
                 <th>전화번호(ID)</th>
                 <th>상태</th>
+                <th>시리즈 부여</th>
                 <th>마지막 로그인</th>
                 <th>학습 이력</th>
                 <th>수정</th>
@@ -2585,6 +2731,12 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
               key
             )}" onclick="return confirm('이 회원을 승인하시겠습니까?');">승인하기</a>`;
 
+      // 안전하게 JSON 데이터 전달
+      const escapedName = (u.name || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+      const assignedSeriesJson = JSON.stringify(u.assignedSeries || [])
+        .replace(/'/g, "\\'")
+        .replace(/"/g, "&quot;");
+
       html += `
         <tr>
           <td>${idx + 1}</td>
@@ -2595,6 +2747,13 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
           <td>
             <span class="badge ${statusClass}">${statusLabel}</span>
             ${approveLink}
+          </td>
+          <td>
+            <a class="link"
+               href="#"
+               onclick="openSeriesModal('${u._id}', '${escapedName}', '${assignedSeriesJson}'); return false;">
+              시리즈 부여
+            </a>
           </td>
           <td>${last}</td>
           <td>
@@ -2635,6 +2794,134 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
           </table>
         </div>
       </div>
+
+      <!-- 시리즈 부여 모달 -->
+      <div id="seriesModal" class="modal-overlay">
+        <div class="modal-box">
+          <div class="modal-title">시리즈 부여</div>
+          <div class="modal-body">
+            <p style="margin-bottom: 12px; font-size: 14px; color: #555;">
+              <strong id="modalUserName"></strong> 학생에게 접근 가능한 시리즈를 선택하세요:
+            </p>
+            <div class="checkbox-group">
+              <div class="checkbox-item">
+                <input type="checkbox" id="series-brainun" value="BRAIN은" />
+                <label for="series-brainun">
+                  <span class="series-name">BRAIN ON</span>
+                  <span class="series-desc">개념이해 (4~5학년 추천)</span>
+                </label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="series-brainam" value="BRAIN암" />
+                <label for="series-brainam">
+                  <span class="series-name">BRAIN UP</span>
+                  <span class="series-desc">응용적용 (5~6학년 추천)</span>
+                </label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="series-brainbit" value="BRAIN빛" />
+                <label for="series-brainbit">
+                  <span class="series-name">BRAIN FIT</span>
+                  <span class="series-desc">사고연결 (6학년 ~중1 추천)</span>
+                </label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="series-braindap" value="BRAIN답" />
+                <label for="series-braindap">
+                  <span class="series-name">BRAIN DEEP</span>
+                  <span class="series-desc">심화추론 (중1 ~ 중3 추천)</span>
+                </label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="series-brainjung" value="BRAIN중등" />
+                <label for="series-brainjung">
+                  <span class="series-name">BRAIN 중등</span>
+                  <span class="series-desc">중등교과 (중등 선행 ~ 중등 전체)</span>
+                </label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="series-braingo" value="BRAIN고등" />
+                <label for="series-braingo">
+                  <span class="series-name">BRAIN 고등</span>
+                  <span class="series-desc">고등교과 (고등 선행 ~ 고등 전체)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeSeriesModal()">취소</button>
+            <button class="btn btn-main" onclick="submitSeries()">저장</button>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        let currentUserId = null;
+
+        function openSeriesModal(userId, userName, assignedSeriesStr) {
+          currentUserId = userId;
+          document.getElementById('modalUserName').textContent = userName;
+
+          // 문자열을 배열로 파싱
+          let assignedSeries = [];
+          try {
+            assignedSeries = JSON.parse(assignedSeriesStr);
+          } catch (e) {
+            console.error('Failed to parse assignedSeries:', e);
+          }
+
+          const checkboxes = document.querySelectorAll('#seriesModal input[type="checkbox"]');
+          checkboxes.forEach(cb => {
+            cb.checked = assignedSeries.includes(cb.value);
+          });
+
+          document.getElementById('seriesModal').classList.add('active');
+        }
+
+        function closeSeriesModal() {
+          document.getElementById('seriesModal').classList.remove('active');
+          currentUserId = null;
+        }
+
+        async function submitSeries() {
+          if (!currentUserId) return;
+
+          const checkboxes = document.querySelectorAll('#seriesModal input[type="checkbox"]');
+          const selectedSeries = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
+          try {
+            const res = await fetch('/admin/assign-series', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                key: '${key}',
+                userId: currentUserId,
+                series: selectedSeries
+              })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+              alert('시리즈 부여 완료!');
+              closeSeriesModal();
+            } else {
+              alert('오류: ' + (data.message || '알 수 없는 오류'));
+            }
+          } catch (err) {
+            console.error(err);
+            alert('저장 중 오류가 발생했습니다.');
+          }
+        }
+
+        // 모달 외부 클릭시 닫기
+        document.getElementById('seriesModal').addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeSeriesModal();
+          }
+        });
+      </script>
     </body>
     </html>
     `;
@@ -2784,6 +3071,35 @@ app.post("/api/log", async (req, res) => {
   } catch (err) {
     console.error("[/api/log] error:", err);
     res.status(500).json({ ok: false });
+  }
+});
+
+// ===== 사용자 정보 조회 API (시리즈 부여 정보 업데이트용) =====
+app.get("/api/user-info", async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.status(400).json({ error: "grade and name are required" });
+    }
+
+    const user = await User.findOne({ grade, name, deleted: { $ne: true } });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // 필요한 정보만 반환
+    res.json({
+      _id: user._id,
+      grade: user.grade,
+      name: user.name,
+      school: user.school,
+      assignedSeries: user.assignedSeries || []
+    });
+  } catch (err) {
+    console.error("Error fetching user info:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -4871,6 +5187,7 @@ req.session.user = {
   grade: user.grade,
   school: user.school || user.academyName || "",
   role: "student",
+  assignedSeries: user.assignedSeries || [],
 };
 
 await User.updateOne(
