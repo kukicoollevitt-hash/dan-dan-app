@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>고래의 세계 여행 - 지리 학습</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+      overflow: hidden;
+      background: #f0f0f0;
+    }
+
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 세계지도 배경 */
+    .world-map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url('/images/world-map.png') center/cover no-repeat;
+      background-size: cover;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 15px 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #2c5aa0;
+    }
+
+    .progress-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .progress-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .progress-bar {
+      width: 200px;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    /* 깃발 */
+    .flag {
+      position: absolute;
+      cursor: pointer;
+      z-index: 10;
+      transition: transform 0.3s ease;
+      width: 80px;
+      height: 80px;
+    }
+
+    .flag:hover {
+      transform: scale(1.2);
+    }
+
+    .flag-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      animation: wave 2s ease-in-out infinite;
+    }
+
+    .flag.completed .flag-image {
+      animation: none;
+    }
+
+    .flag-number {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 900;
+      font-size: 18px;
+      color: #2c1810;
+      text-shadow: 0 0 2px rgba(255,255,255,0.8);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .flag.locked {
+      opacity: 0.7;
+    }
+
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-3deg); }
+      75% { transform: rotate(3deg); }
+    }
+
+    /* 고래 */
+    .whale {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      transition: all 2s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    }
+
+    .whale img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* 이동 경로 */
+    .path {
+      position: absolute;
+      stroke: #4caf50;
+      stroke-width: 3;
+      stroke-dasharray: 5, 5;
+      fill: none;
+      opacity: 0.6;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* 깃발 위치 (20개) */
+    #flag1 { top: 35%; left: 10%; }
+    #flag2 { top: 30%; left: 18%; }
+    #flag3 { top: 38%; left: 25%; }
+    #flag4 { top: 52%; left: 15%; }
+    #flag5 { top: 68%; left: 22%; }
+    #flag6 { top: 22%; left: 35%; }
+    #flag7 { top: 30%; left: 38%; }
+    #flag8 { top: 38%; left: 40%; }
+    #flag9 { top: 45%; left: 42%; }
+    #flag10 { top: 58%; left: 38%; }
+    #flag11 { top: 70%; left: 43%; }
+    #flag12 { top: 25%; left: 48%; }
+    #flag13 { top: 35%; left: 52%; }
+    #flag14 { top: 38%; left: 58%; }
+    #flag15 { top: 48%; left: 62%; }
+    #flag16 { top: 32%; left: 70%; }
+    #flag17 { top: 48%; left: 73%; }
+    #flag18 { top: 25%; left: 80%; }
+    #flag19 { top: 65%; left: 82%; }
+    #flag20 { top: 52%; left: 78%; }
+
+    /* 모달 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: modalSlide 0.3s ease;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2c5aa0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 32px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .modal-emoji {
+      font-size: 80px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .modal-text {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .modal-question {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .modal-question h3 {
+      font-size: 18px;
+      color: #2c5aa0;
+      margin-bottom: 15px;
+    }
+
+    .answer-btn {
+      display: block;
+      width: 100%;
+      padding: 12px 20px;
+      margin-bottom: 10px;
+      border: 2px solid #ddd;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .answer-btn:hover {
+      border-color: #2c5aa0;
+      background: #f0f7ff;
+    }
+
+    .answer-btn.correct {
+      background: #4caf50;
+      color: #fff;
+      border-color: #4caf50;
+    }
+
+    .answer-btn.wrong {
+      background: #f44336;
+      color: #fff;
+      border-color: #f44336;
+    }
+
+    .answer-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .complete-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #2c5aa0, #4a7bc8);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .complete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(44, 90, 160, 0.3);
+    }
+
+    .complete-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 폭죽 효과 */
+    .fireworks {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 3000;
+      pointer-events: none;
+    }
+
+    .fireworks.show {
+      display: block;
+    }
+
+    .firework {
+      position: absolute;
+      font-size: 60px;
+      animation: explode 1.5s ease-out forwards;
+      filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+    }
+
+    @keyframes explode {
+      0% {
+        transform: translate(0, 0) scale(0);
+        opacity: 1;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    /* 최종 완료 */
+    .celebration {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 4000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .celebration.show {
+      display: flex;
+    }
+
+    .celebration-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 60px;
+      border-radius: 20px;
+      text-align: center;
+      animation: celebPop 0.5s ease;
+    }
+
+    @keyframes celebPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .celebration-content h2 {
+      font-size: 42px;
+      margin-bottom: 20px;
+    }
+
+    .celebration-content p {
+      font-size: 20px;
+      margin-bottom: 30px;
+    }
+
+    .celebration-btn {
+      background: #fff;
+      color: #667eea;
+      border: none;
+      padding: 14px 35px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="header-title">🐋 고래의 세계 여행 - 지리 탐험</div>
+    <div class="progress-info">
+      <span class="progress-text" id="progressText">0/20 완료</span>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- 세계지도 -->
+    <div class="world-map" id="worldMap">
+      <!-- SVG 경로 -->
+      <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
+        <path class="path" id="travelPath" d=""></path>
+      </svg>
+
+      <!-- 고래 -->
+      <div class="whale" id="whale">
+        <img src="/images/wh.png" alt="고래">
+      </div>
+
+      <!-- 20개 깃발 -->
+      <div class="flag" id="flag1" data-location="1">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">01</div>
+      </div>
+      <div class="flag locked" id="flag2" data-location="2">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">02</div>
+      </div>
+      <div class="flag locked" id="flag3" data-location="3">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">03</div>
+      </div>
+      <div class="flag locked" id="flag4" data-location="4">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">04</div>
+      </div>
+      <div class="flag locked" id="flag5" data-location="5">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">05</div>
+      </div>
+      <div class="flag locked" id="flag6" data-location="6">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">06</div>
+      </div>
+      <div class="flag locked" id="flag7" data-location="7">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">07</div>
+      </div>
+      <div class="flag locked" id="flag8" data-location="8">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">08</div>
+      </div>
+      <div class="flag locked" id="flag9" data-location="9">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">09</div>
+      </div>
+      <div class="flag locked" id="flag10" data-location="10">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">10</div>
+      </div>
+      <div class="flag locked" id="flag11" data-location="11">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">11</div>
+      </div>
+      <div class="flag locked" id="flag12" data-location="12">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">12</div>
+      </div>
+      <div class="flag locked" id="flag13" data-location="13">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">13</div>
+      </div>
+      <div class="flag locked" id="flag14" data-location="14">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">14</div>
+      </div>
+      <div class="flag locked" id="flag15" data-location="15">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">15</div>
+      </div>
+      <div class="flag locked" id="flag16" data-location="16">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">16</div>
+      </div>
+      <div class="flag locked" id="flag17" data-location="17">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">17</div>
+      </div>
+      <div class="flag locked" id="flag18" data-location="18">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">18</div>
+      </div>
+      <div class="flag locked" id="flag19" data-location="19">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">19</div>
+      </div>
+      <div class="flag locked" id="flag20" data-location="20">
+        <img class="flag-image" src="/images/gi1.png" alt="깃발">
+        <div class="flag-number">20</div>
+      </div>
+    </div>
+
+    <!-- 학습 모달 -->
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modalTitle">지리 01</h2>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-emoji" id="modalEmoji">🏔️</div>
+        <div class="modal-text" id="modalText"></div>
+        <div class="modal-question">
+          <h3 id="questionText"></h3>
+          <div id="answerOptions"></div>
+        </div>
+        <button class="complete-btn" id="completeBtn" disabled onclick="completeLocation()">
+          완료하고 다음으로 →
+        </button>
+      </div>
+    </div>
+
+    <!-- 폭죽 -->
+    <div class="fireworks" id="fireworks"></div>
+
+    <!-- 최종 완료 -->
+    <div class="celebration" id="celebration">
+      <div class="celebration-content">
+        <h2>🎉 축하합니다! 🎉</h2>
+        <p>세계 지리 20개 지역을 모두 탐험했습니다!</p>
+        <p>고래와 함께한 멋진 여행이었어요!</p>
+        <button class="celebration-btn" onclick="location.reload()">다시 시작</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const geoData = {
+      1: { title: '지리 01 - 북미 서부', emoji: '🏔️', text: '로키 산맥은 북아메리카 서부에 위치한 거대한 산맥입니다.', question: '로키 산맥의 위치는?', answers: [{ text: '북미 서부', correct: true }, { text: '남미 중부', correct: false }, { text: '유럽 동부', correct: false }, { text: '아시아 남부', correct: false }] },
+      2: { title: '지리 02 - 북미 중부', emoji: '🌾', text: '미국 중서부는 광활한 대평원으로 세계 최대 곡창지대입니다.', question: '미국 중서부의 특징은?', answers: [{ text: '광활한 대평원', correct: true }, { text: '높은 산맥', correct: false }, { text: '열대우림', correct: false }, { text: '사막', correct: false }] },
+      3: { title: '지리 03 - 북미 동부', emoji: '🏙️', text: '북미 동부는 뉴욕 등 대도시가 밀집된 경제 중심지입니다.', question: '북미 동부의 특징은?', answers: [{ text: '대도시 밀집', correct: true }, { text: '농업 중심', correct: false }, { text: '사막', correct: false }, { text: '툰드라', correct: false }] },
+      4: { title: '지리 04 - 중미', emoji: '🌴', text: '중앙아메리카는 열대기후로 커피, 바나나가 재배됩니다.', question: '중미의 기후는?', answers: [{ text: '열대기후', correct: true }, { text: '온대기후', correct: false }, { text: '한대기후', correct: false }, { text: '건조기후', correct: false }] },
+      5: { title: '지리 05 - 남미', emoji: '🦜', text: '아마존 열대우림은 지구의 허파로 불립니다.', question: '아마존의 별명은?', answers: [{ text: '지구의 허파', correct: true }, { text: '지구의 심장', correct: false }, { text: '지구의 신장', correct: false }, { text: '지구의 간', correct: false }] },
+      6: { title: '지리 06 - 북유럽', emoji: '🌊', text: '북유럽은 피오르 지형이 발달했습니다.', question: '북유럽의 지형은?', answers: [{ text: '피오르', correct: true }, { text: '카르스트', correct: false }, { text: '사구', correct: false }, { text: '삼각주', correct: false }] },
+      7: { title: '지리 07 - 서유럽', emoji: '🗼', text: '서유럽은 산업혁명의 발상지입니다.', question: '산업혁명 발상지는?', answers: [{ text: '서유럽', correct: true }, { text: '동아시아', correct: false }, { text: '남미', correct: false }, { text: '아프리카', correct: false }] },
+      8: { title: '지리 08 - 남유럽', emoji: '🏛️', text: '남유럽은 지중해성 기후로 올리브가 재배됩니다.', question: '남유럽의 기후는?', answers: [{ text: '지중해성', correct: true }, { text: '열대', correct: false }, { text: '사막', correct: false }, { text: '한대', correct: false }] },
+      9: { title: '지리 09 - 북아프리카', emoji: '🏜️', text: '사하라 사막은 세계 최대 열사막입니다.', question: '사하라 사막 위치는?', answers: [{ text: '북아프리카', correct: true }, { text: '남아시아', correct: false }, { text: '중앙아시아', correct: false }, { text: '오세아니아', correct: false }] },
+      10: { title: '지리 10 - 서아프리카', emoji: '🦁', text: '서아프리카는 열대 사바나 기후입니다.', question: '서아프리카 기후는?', answers: [{ text: '열대 사바나', correct: true }, { text: '툰드라', correct: false }, { text: '지중해성', correct: false }, { text: '냉대', correct: false }] },
+      11: { title: '지리 11 - 남아프리카', emoji: '💎', text: '남아프리카는 금, 다이아몬드가 풍부합니다.', question: '남아프리카 자원은?', answers: [{ text: '금, 다이아몬드', correct: true }, { text: '석유', correct: false }, { text: '천연가스', correct: false }, { text: '구리', correct: false }] },
+      12: { title: '지리 12 - 동유럽', emoji: '🏰', text: '동유럽은 냉대기후가 나타납니다.', question: '동유럽의 기후는?', answers: [{ text: '냉대기후', correct: true }, { text: '열대', correct: false }, { text: '건조', correct: false }, { text: '지중해성', correct: false }] },
+      13: { title: '지리 13 - 서아시아', emoji: '🕌', text: '서아시아는 석유 자원이 풍부합니다.', question: '서아시아 주요 자원은?', answers: [{ text: '석유', correct: true }, { text: '석탄', correct: false }, { text: '철광석', correct: false }, { text: '우라늄', correct: false }] },
+      14: { title: '지리 14 - 중앙아시아', emoji: '🐫', text: '중앙아시아는 건조한 대륙성 기후입니다.', question: '중앙아시아 기후는?', answers: [{ text: '건조 대륙성', correct: true }, { text: '해양성', correct: false }, { text: '열대', correct: false }, { text: '툰드라', correct: false }] },
+      15: { title: '지리 15 - 남아시아', emoji: '🏔️', text: '히말라야는 세계에서 가장 높은 산맥입니다.', question: '가장 높은 산맥은?', answers: [{ text: '히말라야', correct: true }, { text: '알프스', correct: false }, { text: '안데스', correct: false }, { text: '로키', correct: false }] },
+      16: { title: '지리 16 - 동아시아', emoji: '🏯', text: '동아시아는 계절풍 기후입니다.', question: '동아시아 기후는?', answers: [{ text: '계절풍(몬순)', correct: true }, { text: '사막', correct: false }, { text: '툰드라', correct: false }, { text: '지중해성', correct: false }] },
+      17: { title: '지리 17 - 동남아시아', emoji: '🌺', text: '동남아시아는 연중 고온다습한 열대기후입니다.', question: '동남아시아 기후는?', answers: [{ text: '열대', correct: true }, { text: '온대', correct: false }, { text: '한대', correct: false }, { text: '건조', correct: false }] },
+      18: { title: '지리 18 - 동북아시아', emoji: '❄️', text: '시베리아는 타이가가 분포합니다.', question: '시베리아의 식생은?', answers: [{ text: '타이가(침엽수림)', correct: true }, { text: '열대우림', correct: false }, { text: '사바나', correct: false }, { text: '초원', correct: false }] },
+      19: { title: '지리 19 - 오세아니아', emoji: '🏝️', text: '오세아니아는 수많은 섬으로 이루어져 있습니다.', question: '오세아니아 특징은?', answers: [{ text: '수많은 섬', correct: true }, { text: '거대 대륙', correct: false }, { text: '사막', correct: false }, { text: '고산', correct: false }] },
+      20: { title: '지리 20 - 호주', emoji: '🦘', text: '호주는 세계에서 가장 건조한 대륙 중 하나입니다.', question: '호주 대륙 특징은?', answers: [{ text: '건조한 기후', correct: true }, { text: '열대우림', correct: false }, { text: '빙하', correct: false }, { text: '높은 산맥', correct: false }] }
+    };
+
+    let currentLocation = 1;
+    let completedLocations = new Set();
+    let travelPath = [];
+
+    // 고래 초기 위치
+    const whale = document.getElementById('whale');
+    positionWhaleAtFlag(1);
+
+    function positionWhaleAtFlag(num) {
+      const flag = document.getElementById(`flag${num}`);
+      const rect = flag.getBoundingClientRect();
+      const mapRect = document.getElementById('worldMap').getBoundingClientRect();
+      whale.style.left = (rect.left - mapRect.left - 20) + 'px';
+      whale.style.top = (rect.top - mapRect.top - 20) + 'px';
+    }
+
+    // 깃발 클릭
+    document.querySelectorAll('.flag').forEach(flag => {
+      flag.addEventListener('click', function() {
+        if (this.classList.contains('locked')) {
+          alert('이전 지역을 먼저 완료해주세요!');
+          return;
+        }
+        const locationId = parseInt(this.dataset.location);
+        openModal(locationId);
+      });
+    });
+
+    function openModal(id) {
+      currentLocation = id;
+      const data = geoData[id];
+      document.getElementById('modalTitle').textContent = data.title;
+      document.getElementById('modalEmoji').textContent = data.emoji;
+      document.getElementById('modalText').textContent = data.text;
+      document.getElementById('questionText').textContent = data.question;
+
+      const optionsContainer = document.getElementById('answerOptions');
+      optionsContainer.innerHTML = '';
+      data.answers.forEach((answer, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = answer.text;
+        btn.onclick = () => checkAnswer(index);
+        optionsContainer.appendChild(btn);
+      });
+
+      document.getElementById('completeBtn').disabled = true;
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+    }
+
+    function checkAnswer(index) {
+      const data = geoData[currentLocation];
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (data.answers[i].correct) {
+          btn.classList.add('correct');
+        } else if (i === index && !data.answers[i].correct) {
+          btn.classList.add('wrong');
+        }
+      });
+
+      if (data.answers[index].correct) {
+        document.getElementById('completeBtn').disabled = false;
+      } else {
+        setTimeout(() => {
+          buttons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('wrong');
+          });
+        }, 1500);
+      }
+    }
+
+    function completeLocation() {
+      completedLocations.add(currentLocation);
+
+      // 깃발 완료 표시
+      const flag = document.getElementById(`flag${currentLocation}`);
+      flag.classList.add('completed');
+      // 깃발 이미지를 완료 이미지로 변경
+      const flagImage = flag.querySelector('.flag-image');
+      flagImage.src = '/images/gi2.png';
+
+      // 모달 닫기
+      closeModal();
+
+      // 폭죽 효과
+      showFireworks();
+
+      // 다음 깃발 잠금 해제
+      const nextLocation = currentLocation + 1;
+      if (nextLocation <= 20) {
+        setTimeout(() => {
+          const nextFlag = document.getElementById(`flag${nextLocation}`);
+          nextFlag.classList.remove('locked');
+
+          // 고래 이동
+          moveWhaleToFlag(nextLocation);
+        }, 1500);
+      } else {
+        // 모든 완료
+        setTimeout(() => {
+          document.getElementById('celebration').classList.add('show');
+        }, 2000);
+      }
+
+      // 진행도 업데이트
+      updateProgress();
+    }
+
+    function moveWhaleToFlag(num) {
+      const flag = document.getElementById(`flag${num}`);
+      const rect = flag.getBoundingClientRect();
+      const mapRect = document.getElementById('worldMap').getBoundingClientRect();
+      whale.style.left = (rect.left - mapRect.left - 20) + 'px';
+      whale.style.top = (rect.top - mapRect.top - 20) + 'px';
+    }
+
+    function updateProgress() {
+      const completed = completedLocations.size;
+      const percentage = (completed / 20) * 100;
+      document.getElementById('progressText').textContent = `${completed}/20 완료`;
+      document.getElementById('progressFill').style.width = `${percentage}%`;
+    }
+
+    function showFireworks() {
+      const container = document.getElementById('fireworks');
+      container.classList.add('show');
+      container.innerHTML = '';
+
+      const emojis = ['🎉', '✨', '🎊', '⭐', '💫', '🌟', '💥'];
+      for (let i = 0; i < 40; i++) {
+        const firework = document.createElement('div');
+        firework.className = 'firework';
+        firework.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        firework.style.left = '50%';
+        firework.style.top = '50%';
+        firework.style.setProperty('--tx', `${(Math.random() - 0.5) * 600}px`);
+        firework.style.setProperty('--ty', `${(Math.random() - 0.5) * 600}px`);
+        container.appendChild(firework);
+      }
+
+      setTimeout(() => {
+        container.classList.remove('show');
+      }, 1500);
+    }
+
+    // 깃발 위치 설정 (세계 문화유산 건물에 배치)
+    function setFlagPositions() {
+      const flagPositions = {
+        1: { left: '10%', top: '28%' },   // 북미 - 자유의 여신상
+        2: { left: '16%', top: '46%' },   // 중미 - 마야 피라미드
+        3: { left: '24%', top: '70%' },   // 남미 - 마추픽추
+        4: { left: '22%', top: '60%' },   // 남미 - 그리스도상
+        5: { left: '32%', top: '68%' },   // 남미 - 이과수 폭포
+        6: { left: '8%', top: '14%' },    // 북미 - 토템폴
+        7: { left: '34%', top: '18%' },   // 유럽 - 빅벤
+        8: { left: '38%', top: '22%' },   // 유럽 - 에펠탑
+        9: { left: '44%', top: '38%' },   // 유럽 - 콜로세움
+        10: { left: '30%', top: '62%' },  // 아프리카 - 피라미드
+        11: { left: '36%', top: '72%' },  // 아프리카 - 사파리
+        12: { left: '50%', top: '28%' },  // 러시아 - 성 바실리 성당
+        13: { left: '54%', top: '42%' },  // 중동 - 페트라
+        14: { left: '62%', top: '48%' },  // 인도 - 타지마할
+        15: { left: '70%', top: '54%' },  // 동남아 - 앙코르와트
+        16: { left: '78%', top: '28%' },  // 중국 - 만리장성
+        17: { left: '74%', top: '32%' },  // 중국 - 자금성
+        18: { left: '82%', top: '34%' },  // 일본 - 후지산/신사
+        19: { left: '86%', top: '78%' },  // 호주 - 시드니 오페라하우스
+        20: { left: '78%', top: '68%' }   // 동남아 - 불교 사원
+      };
+
+      Object.keys(flagPositions).forEach(num => {
+        const flag = document.getElementById(`flag${num}`);
+        if (flag) {
+          flag.style.left = flagPositions[num].left;
+          flag.style.top = flagPositions[num].top;
+        }
+      });
+    }
+
+    // 페이지 로드 시 깃발 위치 설정
+    setFlagPositions();
+
+    // 깃발 드래그 기능 추가
+    let isDragging = false;
+    let currentFlag = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // 모든 깃발에 드래그 이벤트 추가
+    document.querySelectorAll('.flag').forEach(flag => {
+      flag.addEventListener('mousedown', function(e) {
+        // 모달이 열려있으면 드래그 안함
+        if (document.getElementById('modal').style.display === 'flex') return;
+
+        isDragging = true;
+        currentFlag = this;
+
+        const rect = currentFlag.getBoundingClientRect();
+        const parentRect = document.getElementById('worldMap').getBoundingClientRect();
+
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+
+        currentFlag.style.cursor = 'grabbing';
+        e.preventDefault();
+      });
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!isDragging || !currentFlag) return;
+
+      const parentRect = document.getElementById('worldMap').getBoundingClientRect();
+
+      let newLeft = ((e.clientX - parentRect.left - offsetX) / parentRect.width) * 100;
+      let newTop = ((e.clientY - parentRect.top - offsetY) / parentRect.height) * 100;
+
+      // 화면 밖으로 나가지 않도록 제한
+      newLeft = Math.max(0, Math.min(95, newLeft));
+      newTop = Math.max(0, Math.min(95, newTop));
+
+      currentFlag.style.left = newLeft + '%';
+      currentFlag.style.top = newTop + '%';
+    });
+
+    document.addEventListener('mouseup', function(e) {
+      if (isDragging && currentFlag) {
+        currentFlag.style.cursor = 'pointer';
+
+        // 콘솔에 최종 위치 출력
+        const flagNum = currentFlag.id.replace('flag', '');
+        console.log(`Flag ${flagNum}: { left: '${currentFlag.style.left}', top: '${currentFlag.style.top}' }`);
+
+        isDragging = false;
+        currentFlag = null;
+      }
+    });
+  </script>
+</body>
+</html>

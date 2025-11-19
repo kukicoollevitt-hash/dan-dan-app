@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 국어 학습 챗봇 데모 - Dan Dan Korean</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            max-height: 700px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .scenario-selector {
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .scenario-btn {
+            padding: 8px 16px;
+            border: 2px solid #43e97b;
+            background: white;
+            color: #43e97b;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .scenario-btn:hover {
+            background: #43e97b;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .scenario-btn.active {
+            background: #43e97b;
+            color: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.ai {
+            justify-content: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            margin-right: 12px;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            margin-left: 12px;
+            order: 2;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 18px;
+            border-radius: 18px;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .feedback {
+            margin-top: 12px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .feedback.correction {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            color: #e65100;
+        }
+
+        .feedback.praise {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            color: #1b5e20;
+        }
+
+        .feedback.grammar {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            color: #0d47a1;
+        }
+
+        .feedback.vocabulary {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            color: #4a148c;
+        }
+
+        .feedback-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quick-replies {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-reply-btn {
+            padding: 8px 14px;
+            background: white;
+            border: 2px solid #43e97b;
+            color: #43e97b;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .quick-reply-btn:hover {
+            background: #43e97b;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .input-area {
+            padding: 20px 25px;
+            background: white;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #43e97b;
+        }
+
+        .send-btn, .voice-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover, .voice-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 233, 123, 0.4);
+        }
+
+        .voice-btn {
+            width: 50px;
+            padding: 12px;
+            font-size: 18px;
+        }
+
+        .voice-btn.recording {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .typing-indicator.show {
+            display: flex;
+            gap: 5px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #43e97b;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .stats {
+            padding: 15px 25px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-around;
+            border-top: 2px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #43e97b;
+            display: block;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .example-box {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #495057;
+            border-left: 3px solid #43e97b;
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #43e97b;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .scenario-selector {
+                padding: 10px 15px;
+            }
+
+            .scenario-btn {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 AI 국어 학습 챗봇</h1>
+            <p>선생님 AI와 함께 재미있게 국어 공부해요!</p>
+        </div>
+
+        <div class="scenario-selector">
+            <button class="scenario-btn active" data-scenario="grammar">✏️ 문법 학습</button>
+            <button class="scenario-btn" data-scenario="writing">📝 글쓰기</button>
+            <button class="scenario-btn" data-scenario="reading">📖 독해</button>
+            <button class="scenario-btn" data-scenario="vocabulary">📚 어휘</button>
+            <button class="scenario-btn" data-scenario="conversation">💬 대화</button>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    안녕하세요! 저는 국어 학습을 도와주는 AI 선생님이에요. 오늘은 맞춤법과 문법에 대해 배워볼까요?<br><br>
+                    예를 들어, "안녕하세요"와 "안녕하십니까"의 차이를 알고 계신가요?
+                    <div class="quick-replies">
+                        <button class="quick-reply-btn">차이가 뭐예요?</button>
+                        <button class="quick-reply-btn">맞춤법 공부하고 싶어요</button>
+                        <button class="quick-reply-btn">문장 첨삭해 주세요</button>
+                    </div>
+                </div>
+            </div>
+            <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-value" id="messageCount">0</span>
+                <span class="stat-label">대화 수</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="correctCount">0</span>
+                <span class="stat-label">올바른 표현</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="learningPoints">0</span>
+                <span class="stat-label">학습 포인트</span>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="메시지를 입력하세요..." />
+                <button class="voice-btn" id="voiceBtn">🎤</button>
+                <button class="send-btn" id="sendBtn">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scenarios = {
+            grammar: {
+                intro: "안녕하세요! 저는 국어 학습을 도와주는 AI 선생님이에요. 오늘은 맞춤법과 문법에 대해 배워볼까요?<br><br>예를 들어, \"안녕하세요\"와 \"안녕하십니까\"의 차이를 알고 계신가요?",
+                quickReplies: [
+                    "차이가 뭐예요?",
+                    "맞춤법 공부하고 싶어요",
+                    "문장 첨삭해 주세요"
+                ],
+                responses: {
+                    차이: "좋은 질문이에요! \"안녕하세요\"는 일반적인 존댓말이고, \"안녕하십니까\"는 더 높임의 격식체예요. 상황에 따라 적절히 사용하면 좋아요.",
+                    맞춤법: "맞춤법을 공부하고 싶으시군요! 자주 틀리는 맞춤법을 알려드릴게요. 예를 들어 \"되\"와 \"돼\"의 차이를 아시나요?",
+                    문장: "물론이죠! 첨삭받고 싶은 문장을 입력해 주세요. 문법, 맞춤법, 표현을 모두 점검해 드릴게요.",
+                    되: "\"되\"는 동사 \"되다\"의 어간이고, \"돼\"는 \"되어\"의 줄임말이에요. \"안 돼\"처럼 쓰이죠!",
+                    default: "좋은 질문이에요! 더 자세히 설명해 드릴게요."
+                }
+            },
+            writing: {
+                intro: "글쓰기 연습을 해볼까요? 일기, 편지, 또는 짧은 이야기를 써보세요. 제가 친절하게 첨삭해 드릴게요!",
+                quickReplies: [
+                    "일기 쓰기 도와주세요",
+                    "감사 편지 쓰고 싶어요",
+                    "이야기를 만들고 싶어요"
+                ],
+                responses: {
+                    일기: "좋아요! 오늘 있었던 일 중 기억에 남는 것을 자유롭게 써보세요. 문장 구성과 표현을 함께 봐드릴게요.",
+                    편지: "감사 편지는 마음을 전하는 좋은 방법이에요. 누구에게 쓰고 싶으신가요? 선생님, 부모님, 친구?",
+                    이야기: "멋져요! 어떤 이야기를 만들고 싶으세요? 주제나 인물을 먼저 정해볼까요?",
+                    선생님: "선생님께 감사 편지를 쓰시는군요! \"선생님, 항상 감사합니다\" 같은 표현으로 시작하면 좋아요.",
+                    default: "정말 좋은 생각이에요! 자유롭게 써보세요."
+                }
+            },
+            reading: {
+                intro: "독해력을 키워볼까요? 짧은 글을 읽고 내용을 이해하는 연습을 해봐요!",
+                quickReplies: [
+                    "글 읽고 질문 받기",
+                    "요약하는 법 배우기",
+                    "주제 찾는 법 알려주세요"
+                ],
+                responses: {
+                    글: "좋아요! 이 글을 읽어보세요: \"봄이 되자 꽃들이 피어났다. 따뜻한 햇살 아래 나비들이 날아다녔다.\" 이 글의 배경은 언제일까요?",
+                    요약: "요약할 때는 가장 중요한 내용을 간추려야 해요. '누가, 무엇을, 언제, 어디서, 왜, 어떻게'를 생각하면 좋아요!",
+                    주제: "글의 주제는 글쓴이가 가장 말하고 싶은 것이에요. 반복되는 단어나 문장에 주목하면 찾기 쉬워요!",
+                    봄: "정답이에요! '꽃들이 피어났다', '따뜻한 햇살' 같은 표현에서 봄이라는 것을 알 수 있죠!",
+                    default: "잘 생각해봤어요! 함께 더 알아볼까요?"
+                }
+            },
+            vocabulary: {
+                intro: "어휘력을 키워볼까요? 새로운 단어를 배우고 문장에서 어떻게 쓰는지 연습해봐요!",
+                quickReplies: [
+                    "새로운 단어 배우기",
+                    "속담 알려주세요",
+                    "비슷한 말 찾기"
+                ],
+                responses: {
+                    단어: "오늘의 단어는 '배려'예요! 다른 사람을 생각하고 도와주는 마음을 뜻해요. \"친구를 배려하다\"처럼 쓰이죠.",
+                    속담: "좋아요! \"티끌 모아 태산\"이라는 속담을 아시나요? 작은 것도 모으면 큰 것이 된다는 뜻이에요!",
+                    비슷한: "'기쁘다'와 비슷한 말에는 '즐겁다', '행복하다', '신나다' 등이 있어요. 상황에 맞게 써보세요!",
+                    배려: "잘하셨어요! \"동생을 배려했다\"처럼 문장을 만들 수 있어요.",
+                    default: "훌륭해요! 어휘력이 점점 늘고 있어요!"
+                }
+            },
+            conversation: {
+                intro: "자유롭게 대화하며 국어 실력을 키워봐요! 궁금한 것이나 오늘 있었던 일을 이야기해 주세요.",
+                quickReplies: [
+                    "오늘 학교에서 재미있었어요",
+                    "국어 공부가 어려워요",
+                    "책 추천해 주세요"
+                ],
+                responses: {
+                    학교: "오! 무슨 일이 있었나요? 자세히 이야기해 주세요. 문장으로 잘 표현하는 것도 연습이에요!",
+                    어려워: "괜찮아요! 어려운 부분이 있으면 제가 도와드릴게요. 어떤 부분이 가장 어렵나요?",
+                    책: "좋은 책들이 많아요! 나이와 관심사에 따라 추천해 드릴게요. 어떤 종류의 책을 좋아하세요?",
+                    친구: "친구와 있었던 일이군요! 그 일에 대한 느낌을 표현해 보세요. 기뻤나요, 슬펐나요?",
+                    default: "그렇군요! 더 자세히 말씀해 주시겠어요?"
+                }
+            }
+        };
+
+        let currentScenario = 'grammar';
+        let messageCount = 0;
+        let correctCount = 0;
+        let learningPoints = 0;
+        let conversationHistory = [];
+
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const typingIndicator = document.querySelector('.typing-indicator');
+
+        // 시나리오 선택
+        document.querySelectorAll('.scenario-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentScenario = btn.dataset.scenario;
+                resetChat();
+            });
+        });
+
+        function resetChat() {
+            chatContainer.innerHTML = '';
+            conversationHistory = [];
+            const scenario = scenarios[currentScenario];
+            addAIMessage(scenario.intro, scenario.quickReplies);
+            messageCount = 0;
+            updateStats();
+        }
+
+        function addAIMessage(text, quickReplies = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+
+            let quickReplyHTML = '';
+            if (quickReplies && quickReplies.length > 0) {
+                quickReplyHTML = '<div class="quick-replies">';
+                quickReplies.forEach(reply => {
+                    quickReplyHTML += `<button class="quick-reply-btn">${reply}</button>`;
+                });
+                quickReplyHTML += '</div>';
+            }
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    ${text}
+                    ${quickReplyHTML}
+                </div>
+            `;
+
+            chatContainer.insertBefore(messageDiv, typingIndicator);
+
+            // Quick reply 버튼 이벤트
+            messageDiv.querySelectorAll('.quick-reply-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sendMessage(btn.textContent);
+                });
+            });
+
+            scrollToBottom();
+        }
+
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `
+                <div class="message-content">${text}</div>
+                <div class="message-avatar">👤</div>
+            `;
+            chatContainer.insertBefore(messageDiv, typingIndicator);
+            messageCount++;
+            updateStats();
+            scrollToBottom();
+        }
+
+        function addFeedback(message, type = 'feedback', title = '') {
+            const lastAIMessage = chatContainer.querySelector('.message.ai:last-of-type .message-content');
+            if (lastAIMessage) {
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = `feedback ${type}`;
+
+                let titleHTML = title ? `<div class="feedback-title">${title}</div>` : '';
+                feedbackDiv.innerHTML = titleHTML + message;
+
+                lastAIMessage.appendChild(feedbackDiv);
+            }
+        }
+
+        function analyzeKoreanText(userText) {
+            const feedbacks = [];
+
+            // 맞춤법 검사
+            if (userText.includes('됬어') || userText.includes('됬다')) {
+                feedbacks.push({
+                    type: 'correction',
+                    title: '❌ 맞춤법 오류',
+                    message: '"됬어"는 잘못된 표현이에요. "됐어" 또는 "되었어"가 맞아요!<div class="example-box"><div class="example-title">올바른 예문</div>"오늘 날씨가 좋아졌어요" ✓</div>'
+                });
+            }
+
+            if (userText.includes('않되') || userText.includes('안되')) {
+                feedbacks.push({
+                    type: 'correction',
+                    title: '❌ 띄어쓰기 오류',
+                    message: '"안되"는 "안 돼" 또는 "안 되어"로 띄어 써야 해요!<div class="example-box"><div class="example-title">올바른 예문</div>"이건 안 돼요" ✓</div>'
+                });
+            }
+
+            if (userText.includes('웬지') && userText.includes('이유')) {
+                feedbacks.push({
+                    type: 'grammar',
+                    title: '💡 어휘 팁',
+                    message: '"웬지"와 "왠지"는 다른 뜻이에요. "웬지 모를 이유"는 "왠지 모르게"가 더 자연스러워요!'
+                });
+            }
+
+            // 긍정적 피드백
+            if (userText.length > 15 && userText.includes('.') || userText.includes('!') || userText.includes('?')) {
+                correctCount++;
+                learningPoints += 10;
+                feedbacks.push({
+                    type: 'praise',
+                    title: '🌟 훌륭해요!',
+                    message: '완전한 문장을 문장부호와 함께 잘 작성했어요! 이렇게 정확하게 쓰는 습관이 중요해요.'
+                });
+            }
+
+            // 존댓말 사용
+            if ((userText.includes('요') || userText.includes('습니다')) && userText.length > 5) {
+                correctCount++;
+                learningPoints += 5;
+                feedbacks.push({
+                    type: 'praise',
+                    title: '👍 예의바른 표현',
+                    message: '존댓말을 정확하게 사용했어요! 상황에 맞는 언어 사용이 정말 좋아요.'
+                });
+            }
+
+            // 어휘 풍부성
+            const richWords = ['아름답', '환상적', '멋진', '훌륭', '감사', '배려', '존중', '노력'];
+            if (richWords.some(word => userText.includes(word))) {
+                learningPoints += 15;
+                feedbacks.push({
+                    type: 'vocabulary',
+                    title: '📚 풍부한 어휘',
+                    message: '수준 높은 어휘를 사용했어요! 다양한 표현을 아는 것이 국어 실력의 핵심이에요.'
+                });
+            }
+
+            // 문장 구조
+            if (userText.includes('때문에') || userText.includes('그래서') || userText.includes('하지만')) {
+                learningPoints += 8;
+                feedbacks.push({
+                    type: 'grammar',
+                    title: '✏️ 좋은 문장 구조',
+                    message: '접속어를 사용해서 논리적으로 문장을 연결했어요! 글의 흐름이 자연스러워요.'
+                });
+            }
+
+            return feedbacks;
+        }
+
+        function getAIResponse(userText) {
+            const scenario = scenarios[currentScenario];
+            const lowerText = userText;
+
+            // 키워드 기반 응답
+            for (let key in scenario.responses) {
+                if (lowerText.includes(key)) {
+                    return scenario.responses[key];
+                }
+            }
+
+            // 시나리오별 특별 응답
+            if (currentScenario === 'grammar') {
+                if (lowerText.includes('어떻게') || lowerText.includes('방법')) {
+                    return "좋은 질문이에요! 맞춤법을 잘 쓰려면 자주 책을 읽고, 모르는 표현은 사전을 찾아보는 습관을 들이면 좋아요.";
+                }
+            }
+
+            if (currentScenario === 'writing') {
+                if (userText.length > 20) {
+                    return "와! 문장을 정말 잘 썼어요. 표현력이 좋네요. 이런 식으로 계속 연습하면 글쓰기 실력이 많이 늘 거예요!";
+                }
+            }
+
+            // 기본 응답
+            return scenario.responses.default || "좋아요! 계속 이야기해 주세요.";
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.classList.add('show');
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.classList.remove('show');
+        }
+
+        async function sendMessage(text = null) {
+            const message = text || userInput.value.trim();
+            if (!message) return;
+
+            addUserMessage(message);
+            userInput.value = '';
+
+            conversationHistory.push({ role: 'user', content: message });
+
+            // AI 응답 받기
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/api/ai-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        scenario: currentScenario,
+                        conversationHistory: conversationHistory.slice(-10) // 최근 10개만 전송
+                    })
+                });
+
+                const data = await response.json();
+
+                hideTypingIndicator();
+
+                if (data.success) {
+                    addAIMessage(data.response);
+
+                    // 서버에서 받은 피드백 표시
+                    if (data.feedbacks && data.feedbacks.length > 0) {
+                        data.feedbacks.forEach((feedback, index) => {
+                            setTimeout(() => {
+                                addFeedback(feedback.message, feedback.type, feedback.title);
+                                if (feedback.type === 'praise') {
+                                    correctCount++;
+                                    learningPoints += 10;
+                                    updateStats();
+                                }
+                            }, 300 * (index + 1));
+                        });
+                    }
+
+                    conversationHistory.push({ role: 'assistant', content: data.response });
+                } else {
+                    // 오류 발생 시 기본 응답
+                    addAIMessage('죄송해요, 응답을 생성하는 중 문제가 발생했습니다. 다시 시도해 주세요.');
+                    console.error('AI 응답 오류:', data.error);
+                }
+
+            } catch (error) {
+                hideTypingIndicator();
+                console.error('API 호출 오류:', error);
+                addAIMessage('죄송해요, 서버와의 연결에 문제가 발생했습니다. 다시 시도해 주세요.');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('messageCount').textContent = messageCount;
+            document.getElementById('correctCount').textContent = correctCount;
+            document.getElementById('learningPoints').textContent = learningPoints;
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 음성 입력 시뮬레이션
+        let isRecording = false;
+        voiceBtn.addEventListener('click', () => {
+            isRecording = !isRecording;
+            voiceBtn.classList.toggle('recording', isRecording);
+
+            if (isRecording) {
+                voiceBtn.textContent = '⏸️';
+                setTimeout(() => {
+                    isRecording = false;
+                    voiceBtn.classList.remove('recording');
+                    voiceBtn.textContent = '🎤';
+                    userInput.value = "선생님, 맞춤법이 어려워요. 도와주세요!";
+                }, 2000);
+            } else {
+                voiceBtn.textContent = '🎤';
+            }
+        });
+
+        sendBtn.addEventListener('click', () => sendMessage());
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 초기화
+        scrollToBottom();
+    </script>
+</body>
+</html>

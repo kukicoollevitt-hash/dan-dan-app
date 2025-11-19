@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>단단 어휘력 퀴즈쇼</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 배경 애니메이션 */
+    .bg-animation {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* 메인 컨테이너 */
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      animation: logoGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes logoGlow {
+      0%, 100% { text-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.3); }
+      50% { text-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 40px rgba(255,255,255,0.6); }
+    }
+
+    .score-board {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .score-item {
+      text-align: center;
+      background: rgba(255,255,255,0.2);
+      padding: 10px 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .score-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4px;
+    }
+
+    .score-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* 퀴즈 카드 */
+    .quiz-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 50px;
+      max-width: 900px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      margin-bottom: 30px;
+      animation: cardSlideIn 0.5s ease;
+    }
+
+    @keyframes cardSlideIn {
+      from {
+        transform: translateY(50px) scale(0.9);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .question-number {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .difficulty-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .difficulty-easy {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .difficulty-medium {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .difficulty-hard {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .timer {
+      margin-left: auto;
+      font-size: 24px;
+      font-weight: 900;
+      color: #ff6b6b;
+      animation: timerPulse 1s infinite;
+    }
+
+    @keyframes timerPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .question-text {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.6;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .word-highlight {
+      color: #667eea;
+      background: linear-gradient(transparent 60%, #ffd93d 60%);
+      padding: 0 8px;
+      font-size: 36px;
+      font-weight: 900;
+    }
+
+    .question-hint {
+      font-size: 16px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+
+    /* 선택지 */
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .choice-btn {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border: 3px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 25px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .choice-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .choice-btn:hover::before {
+      left: 100%;
+    }
+
+    .choice-btn:hover {
+      transform: translateY(-5px) scale(1.02);
+      border-color: #667eea;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .choice-btn.selected {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-color: #667eea;
+      animation: choiceSelect 0.3s ease;
+    }
+
+    @keyframes choiceSelect {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .choice-btn.correct {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: #fff;
+      border-color: #11998e;
+      animation: correctBounce 0.6s ease;
+    }
+
+    @keyframes correctBounce {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.1); }
+      50% { transform: scale(0.95); }
+      75% { transform: scale(1.05); }
+    }
+
+    .choice-btn.wrong {
+      background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+      color: #fff;
+      border-color: #ee0979;
+      animation: wrongShake 0.5s ease;
+    }
+
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .choice-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    .choice-number {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 50%;
+      text-align: center;
+      line-height: 32px;
+      font-weight: 900;
+      margin-right: 12px;
+    }
+
+    /* 설명 패널 */
+    .explanation {
+      display: none;
+      margin-top: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+    }
+
+    .explanation.show {
+      display: block;
+      animation: slideDown 0.5s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .explanation-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .explanation-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .example-sentence {
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      font-style: italic;
+      color: #666;
+    }
+
+    /* 다음 버튼 */
+    .next-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 18px 60px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+      transition: all 0.3s ease;
+      display: none;
+    }
+
+    .next-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(245, 87, 108, 0.5);
+    }
+
+    .next-btn.show {
+      display: inline-block;
+      animation: btnAppear 0.5s ease;
+    }
+
+    @keyframes btnAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* 결과 화면 */
+    .result-screen {
+      display: none;
+      background: #fff;
+      border-radius: 24px;
+      padding: 60px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+      animation: resultAppear 0.8s ease;
+    }
+
+    .result-screen.show {
+      display: block;
+    }
+
+    @keyframes resultAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.8) rotate(-5deg);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+      }
+    }
+
+    .result-emoji {
+      font-size: 120px;
+      margin-bottom: 20px;
+      animation: emojiFloat 2s ease-in-out infinite;
+    }
+
+    @keyframes emojiFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .result-title {
+      font-size: 42px;
+      font-weight: 900;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .result-score {
+      font-size: 32px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .result-message {
+      font-size: 18px;
+      color: #666;
+      line-height: 1.8;
+      margin-bottom: 40px;
+    }
+
+    .result-stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 900;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .restart-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 18px 60px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .restart-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+    }
+
+    /* 폭죽 효과 */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: #f0f;
+      position: absolute;
+      animation: confettiFall 3s linear forwards;
+    }
+
+    @keyframes confettiFall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* 정답/오답 피드백 */
+    .feedback {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 120px;
+      font-weight: 900;
+      z-index: 1000;
+      animation: feedbackPop 0.6s ease;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    @keyframes feedbackPop {
+      0% { transform: translate(-50%, -50%) scale(0); }
+      50% { transform: translate(-50%, -50%) scale(1.2); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .feedback.correct {
+      color: #38ef7d;
+      text-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
+    }
+
+    .feedback.wrong {
+      color: #ff6a00;
+      text-shadow: 0 0 20px rgba(255, 106, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <!-- 배경 애니메이션 -->
+  <div class="bg-animation" id="bgAnimation"></div>
+
+  <!-- 메인 컨테이너 -->
+  <div class="container">
+    <!-- 헤더 -->
+    <div class="header">
+      <div class="logo">어휘력 퀴즈쇼 📚</div>
+      <div class="score-board">
+        <div class="score-item">
+          <div class="score-label">문제</div>
+          <div class="score-value"><span id="currentQuestion">1</span>/15</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">점수</div>
+          <div class="score-value" id="score">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 퀴즈 카드 -->
+    <div class="quiz-card" id="quizCard">
+      <div class="question-number">
+        <span id="questionLabel">Question 1</span>
+        <span class="difficulty-badge difficulty-easy" id="difficultyBadge">쉬움</span>
+        <div class="timer" id="timer">20</div>
+      </div>
+      <div class="question-text" id="questionText">
+        <span class="word-highlight">단어</span>의 뜻은?
+      </div>
+      <div class="question-hint" id="questionHint">힌트가 여기 표시됩니다</div>
+      <div class="choices" id="choices"></div>
+
+      <div class="explanation" id="explanation">
+        <div class="explanation-title">해설</div>
+        <div class="explanation-text" id="explanationText"></div>
+        <div class="example-sentence" id="exampleSentence"></div>
+      </div>
+    </div>
+
+    <!-- 다음 버튼 -->
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">다음 문제</button>
+
+    <!-- 결과 화면 -->
+    <div class="result-screen" id="resultScreen">
+      <div class="result-emoji" id="resultEmoji">🏆</div>
+      <div class="result-title" id="resultTitle">어휘력 테스트 완료!</div>
+      <div class="result-score">
+        최종 점수: <span id="finalScore">0</span>점 / 150점
+      </div>
+      <div class="result-stats">
+        <div class="stat-item">
+          <div class="stat-value" id="correctCount">0</div>
+          <div class="stat-label">정답</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="wrongCount">0</div>
+          <div class="stat-label">오답</div>
+        </div>
+      </div>
+      <div class="result-message" id="resultMessage">
+        어휘력이 뛰어납니다!
+      </div>
+      <button class="restart-btn" onclick="restartQuiz()">다시 도전하기</button>
+    </div>
+  </div>
+
+  <!-- 피드백 -->
+  <div class="feedback" id="feedback">O</div>
+
+  <script>
+    // 어휘 퀴즈 데이터
+    const quizData = [
+      {
+        word: '낙관적',
+        question: '<span class="word-highlight">낙관적</span>의 뜻은?',
+        hint: '반댓말: 비관적',
+        choices: [
+          '앞일을 좋게 보는',
+          '앞일을 나쁘게 보는',
+          '과거를 회상하는',
+          '현재에 충실한'
+        ],
+        correct: 0,
+        difficulty: 'easy',
+        explanation: '"낙관적"은 앞일을 밝고 희망적으로 보는 태도를 말합니다.',
+        example: '예문: 그는 어려운 상황에서도 항상 낙관적인 태도를 유지했다.'
+      },
+      {
+        word: '관대하다',
+        question: '<span class="word-highlight">관대하다</span>의 뜻은?',
+        hint: '남의 잘못을 대하는 태도',
+        choices: [
+          '엄격하게 대하다',
+          '너그럽게 대하다',
+          '무관심하게 대하다',
+          '비난하다'
+        ],
+        correct: 1,
+        difficulty: 'easy',
+        explanation: '"관대하다"는 남의 잘못이나 허물을 너그럽게 받아들이고 용서하는 태도를 의미합니다.',
+        example: '예문: 선생님은 학생들의 실수에 관대한 편이시다.'
+      },
+      {
+        word: '섬세하다',
+        question: '<span class="word-highlight">섬세하다</span>의 뜻은?',
+        hint: '작업이나 표현의 정도',
+        choices: [
+          '대충 만들어진',
+          '크고 강한',
+          '가늘고 정교한',
+          '단순하고 투박한'
+        ],
+        correct: 2,
+        difficulty: 'easy',
+        explanation: '"섬세하다"는 가늘고 정교하며 세밀한 것을 의미합니다.',
+        example: '예문: 그녀의 손놀림은 매우 섬세하여 아름다운 자수를 만들어냈다.'
+      },
+      {
+        word: '망설이다',
+        question: '<span class="word-highlight">망설이다</span>의 뜻은?',
+        hint: '결정을 내리기 어려울 때',
+        choices: [
+          '빨리 결정하다',
+          '단호하게 행동하다',
+          '결정을 못 내리다',
+          '계획을 세우다'
+        ],
+        correct: 2,
+        difficulty: 'easy',
+        explanation: '"망설이다"는 어떻게 할지 결정하지 못하고 주저하는 것을 의미합니다.',
+        example: '예문: 그는 갈림길 앞에서 어느 길로 갈지 망설였다.'
+      },
+      {
+        word: '부지런하다',
+        question: '<span class="word-highlight">부지런하다</span>의 뜻은?',
+        hint: '일하는 태도',
+        choices: [
+          '게으르다',
+          '느리게 일하다',
+          '열심히 일하다',
+          '쉬지 않다'
+        ],
+        correct: 2,
+        difficulty: 'easy',
+        explanation: '"부지런하다"는 일을 열심히 하고 게으르지 않은 태도를 의미합니다.',
+        example: '예문: 부지런한 농부는 새벽부터 밭일을 시작했다.'
+      },
+      {
+        word: '겸손하다',
+        question: '<span class="word-highlight">겸손하다</span>의 뜻은?',
+        hint: '자신을 낮추는 태도',
+        choices: [
+          '자랑하다',
+          '자신을 낮추다',
+          '뽐내다',
+          '무시하다'
+        ],
+        correct: 1,
+        difficulty: 'medium',
+        explanation: '"겸손하다"는 자기 자신을 내세우지 않고 겸허한 태도를 의미합니다.',
+        example: '예문: 뛰어난 실력을 가졌음에도 그는 항상 겸손한 태도를 보였다.'
+      },
+      {
+        word: '모호하다',
+        question: '<span class="word-highlight">모호하다</span>의 뜻은?',
+        hint: '분명하지 않은',
+        choices: [
+          '명확하다',
+          '불분명하다',
+          '확실하다',
+          '정확하다'
+        ],
+        correct: 1,
+        difficulty: 'medium',
+        explanation: '"모호하다"는 분명하지 않고 애매한 것을 의미합니다.',
+        example: '예문: 그의 대답은 너무 모호해서 무슨 뜻인지 알 수 없었다.'
+      },
+      {
+        word: '절실하다',
+        question: '<span class="word-highlight">절실하다</span>의 뜻은?',
+        hint: '필요의 정도',
+        choices: [
+          '별로 필요 없다',
+          '매우 필요하다',
+          '가끔 필요하다',
+          '전혀 필요 없다'
+        ],
+        correct: 1,
+        difficulty: 'medium',
+        explanation: '"절실하다"는 매우 간절하고 필요함이 큰 것을 의미합니다.',
+        example: '예문: 가뭄이 계속되자 농부들은 비의 필요성을 절실히 느꼈다.'
+      },
+      {
+        word: '심각하다',
+        question: '<span class="word-highlight">심각하다</span>의 뜻은?',
+        hint: '상황의 정도',
+        choices: [
+          '가볍다',
+          '중대하다',
+          '평범하다',
+          '재미있다'
+        ],
+        correct: 1,
+        difficulty: 'medium',
+        explanation: '"심각하다"는 상황이나 문제가 중대하고 깊이 생각해야 할 정도로 중요한 것을 의미합니다.',
+        example: '예문: 환경 오염 문제는 매우 심각한 수준에 이르렀다.'
+      },
+      {
+        word: '엄격하다',
+        question: '<span class="word-highlight">엄격하다</span>의 뜻은?',
+        hint: '규칙을 대하는 태도',
+        choices: [
+          '느슨하다',
+          '엄하고 까다롭다',
+          '자유롭다',
+          '편안하다'
+        ],
+        correct: 1,
+        difficulty: 'medium',
+        explanation: '"엄격하다"는 규칙이나 기준이 엄하고 엄밀한 것을 의미합니다.',
+        example: '예문: 우리 학교는 복장 규정이 매우 엄격하다.'
+      },
+      {
+        word: '빈번하다',
+        question: '<span class="word-highlight">빈번하다</span>의 뜻은?',
+        hint: '일어나는 횟수',
+        choices: [
+          '드물다',
+          '자주 일어나다',
+          '한 번도 없다',
+          '가끔 일어나다'
+        ],
+        correct: 1,
+        difficulty: 'hard',
+        explanation: '"빈번하다"는 어떤 일이 자주 일어나는 것을 의미합니다.',
+        example: '예문: 이 지역은 지진이 빈번하게 발생한다.'
+      },
+      {
+        word: '명료하다',
+        question: '<span class="word-highlight">명료하다</span>의 뜻은?',
+        hint: '말이나 글의 특징',
+        choices: [
+          '애매하다',
+          '복잡하다',
+          '분명하다',
+          '어렵다'
+        ],
+        correct: 2,
+        difficulty: 'hard',
+        explanation: '"명료하다"는 말이나 뜻이 분명하고 똑똑한 것을 의미합니다.',
+        example: '예문: 그의 설명은 명료해서 누구나 쉽게 이해할 수 있었다.'
+      },
+      {
+        word: '순수하다',
+        question: '<span class="word-highlight">순수하다</span>의 뜻은?',
+        hint: '마음의 상태',
+        choices: [
+          '복잡하다',
+          '깨끗하고 꾸밈없다',
+          '계산적이다',
+          '의심이 많다'
+        ],
+        correct: 1,
+        difficulty: 'hard',
+        explanation: '"순수하다"는 섞이지 않고 깨끗하며 꾸밈없이 진실한 것을 의미합니다.',
+        example: '예문: 아이들의 순수한 미소는 보는 이의 마음을 따뜻하게 한다.'
+      },
+      {
+        word: '소극적',
+        question: '<span class="word-highlight">소극적</span>의 뜻은?',
+        hint: '반댓말: 적극적',
+        choices: [
+          '적극적이다',
+          '활발하다',
+          '주저하고 물러서다',
+          '과감하다'
+        ],
+        correct: 2,
+        difficulty: 'hard',
+        explanation: '"소극적"은 일에 적극적으로 나서지 않고 물러서는 태도를 의미합니다.',
+        example: '예문: 그는 회의 시간에 항상 소극적인 태도를 보였다.'
+      },
+      {
+        word: '신중하다',
+        question: '<span class="word-highlight">신중하다</span>의 뜻은?',
+        hint: '행동할 때의 태도',
+        choices: [
+          '경솔하다',
+          '조심스럽다',
+          '충동적이다',
+          '대충하다'
+        ],
+        correct: 1,
+        difficulty: 'hard',
+        explanation: '"신중하다"는 말이나 행동을 조심스럽고 깊이 생각하며 하는 것을 의미합니다.',
+        example: '예문: 중요한 결정을 내릴 때는 신중하게 판단해야 한다.'
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let correctAnswers = 0;
+    let wrongAnswers = 0;
+    let selectedAnswer = null;
+    let timerInterval = null;
+    let timeLeft = 20;
+
+    // 배경 별 생성
+    function createStars() {
+      const bgAnimation = document.getElementById('bgAnimation');
+      for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.width = Math.random() * 3 + 'px';
+        star.style.height = star.style.width;
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        bgAnimation.appendChild(star);
+      }
+    }
+
+    // 타이머 시작
+    function startTimer() {
+      timeLeft = 20;
+      document.getElementById('timer').textContent = timeLeft;
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          showFeedback(false);
+          disableChoices();
+          wrongAnswers++;
+          showExplanation();
+          setTimeout(() => {
+            nextQuestion();
+          }, 3000);
+        }
+      }, 1000);
+    }
+
+    // 문제 로드
+    function loadQuestion() {
+      const quiz = quizData[currentQuestionIndex];
+
+      document.getElementById('questionLabel').textContent = `Question ${currentQuestionIndex + 1}`;
+      document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+      document.getElementById('questionText').innerHTML = quiz.question;
+      document.getElementById('questionHint').textContent = quiz.hint;
+
+      // 난이도 배지
+      const badge = document.getElementById('difficultyBadge');
+      badge.className = 'difficulty-badge';
+      if (quiz.difficulty === 'easy') {
+        badge.className += ' difficulty-easy';
+        badge.textContent = '쉬움';
+      } else if (quiz.difficulty === 'medium') {
+        badge.className += ' difficulty-medium';
+        badge.textContent = '보통';
+      } else {
+        badge.className += ' difficulty-hard';
+        badge.textContent = '어려움';
+      }
+
+      const choicesContainer = document.getElementById('choices');
+      choicesContainer.innerHTML = '';
+
+      quiz.choices.forEach((choice, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.onclick = () => selectChoice(index);
+        btn.innerHTML = `
+          <span class="choice-number">${index + 1}</span>
+          ${choice}
+        `;
+        choicesContainer.appendChild(btn);
+      });
+
+      document.getElementById('nextBtn').classList.remove('show');
+      document.getElementById('explanation').classList.remove('show');
+      selectedAnswer = null;
+
+      startTimer();
+    }
+
+    // 선택지 선택
+    function selectChoice(index) {
+      if (selectedAnswer !== null) return;
+
+      clearInterval(timerInterval);
+      selectedAnswer = index;
+
+      const buttons = document.querySelectorAll('.choice-btn');
+      const quiz = quizData[currentQuestionIndex];
+
+      buttons[index].classList.add('selected');
+
+      setTimeout(() => {
+        if (index === quiz.correct) {
+          buttons[index].classList.remove('selected');
+          buttons[index].classList.add('correct');
+
+          // 난이도별 점수
+          let points = 10;
+          if (quiz.difficulty === 'medium') points = 12;
+          if (quiz.difficulty === 'hard') points = 15;
+
+          score += points;
+          correctAnswers++;
+          document.getElementById('score').textContent = score;
+          showFeedback(true);
+          createConfetti();
+        } else {
+          buttons[index].classList.remove('selected');
+          buttons[index].classList.add('wrong');
+          buttons[quiz.correct].classList.add('correct');
+          wrongAnswers++;
+          showFeedback(false);
+        }
+
+        disableChoices();
+        showExplanation();
+        document.getElementById('nextBtn').classList.add('show');
+      }, 300);
+    }
+
+    // 설명 표시
+    function showExplanation() {
+      const quiz = quizData[currentQuestionIndex];
+      document.getElementById('explanationText').textContent = quiz.explanation;
+      document.getElementById('exampleSentence').textContent = quiz.example;
+      document.getElementById('explanation').classList.add('show');
+    }
+
+    // 선택지 비활성화
+    function disableChoices() {
+      document.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.disabled = true;
+      });
+    }
+
+    // 피드백 표시
+    function showFeedback(isCorrect) {
+      const feedback = document.getElementById('feedback');
+      feedback.textContent = isCorrect ? '정답!' : '아쉬워요!';
+      feedback.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+
+      setTimeout(() => {
+        feedback.classList.remove('show');
+      }, 1500);
+    }
+
+    // 폭죽 효과
+    function createConfetti() {
+      const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f093fb', '#ffd93d', '#6bcf7f'];
+
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = '-10px';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 0.3 + 's';
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+
+    // 다음 문제
+    function nextQuestion() {
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < quizData.length) {
+        document.getElementById('quizCard').style.animation = 'none';
+        setTimeout(() => {
+          document.getElementById('quizCard').style.animation = 'cardSlideIn 0.5s ease';
+          loadQuestion();
+        }, 10);
+      } else {
+        showResult();
+      }
+    }
+
+    // 결과 표시
+    function showResult() {
+      clearInterval(timerInterval);
+      document.getElementById('quizCard').style.display = 'none';
+      document.getElementById('nextBtn').style.display = 'none';
+
+      const resultScreen = document.getElementById('resultScreen');
+      const resultEmoji = document.getElementById('resultEmoji');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultMessage = document.getElementById('resultMessage');
+
+      document.getElementById('finalScore').textContent = score;
+      document.getElementById('correctCount').textContent = correctAnswers;
+      document.getElementById('wrongCount').textContent = wrongAnswers;
+
+      const percentage = (score / 150) * 100;
+
+      if (percentage >= 90) {
+        resultEmoji.textContent = '🏆';
+        resultTitle.textContent = '어휘력 천재!';
+        resultMessage.textContent = '완벽합니다! 당신의 어휘력은 최고 수준입니다!';
+      } else if (percentage >= 70) {
+        resultEmoji.textContent = '🎉';
+        resultTitle.textContent = '뛰어난 어휘력!';
+        resultMessage.textContent = '훌륭해요! 풍부한 어휘 실력을 가지고 있습니다!';
+      } else if (percentage >= 50) {
+        resultEmoji.textContent = '👍';
+        resultTitle.textContent = '좋은 어휘력!';
+        resultMessage.textContent = '잘했어요! 꾸준히 공부하면 더 좋아질 거예요!';
+      } else {
+        resultEmoji.textContent = '📚';
+        resultTitle.textContent = '더 공부해요!';
+        resultMessage.textContent = '어휘 공부를 더 하고 다시 도전해보세요!';
+      }
+
+      resultScreen.classList.add('show');
+
+      if (percentage >= 70) {
+        createConfetti();
+      }
+    }
+
+    // 퀴즈 재시작
+    function restartQuiz() {
+      currentQuestionIndex = 0;
+      score = 0;
+      correctAnswers = 0;
+      wrongAnswers = 0;
+      selectedAnswer = null;
+
+      document.getElementById('score').textContent = score;
+      document.getElementById('resultScreen').classList.remove('show');
+      document.getElementById('quizCard').style.display = 'block';
+
+      loadQuestion();
+    }
+
+    // 초기화
+    createStars();
+    loadQuestion();
+  </script>
+</body>
+</html>

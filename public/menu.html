@@ -459,6 +459,69 @@ body {
   height: 100%;
 }
 
+/* 단원 학습 모달 */
+.unit-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  backdrop-filter: blur(3px);
+}
+
+.unit-modal.show {
+  display: flex;
+}
+
+.unit-modal-content {
+  background: #fff;
+  width: 95vw;
+  height: 95vh;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease;
+}
+
+.unit-modal-header {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.unit-modal-close {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.unit-modal-close:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.unit-modal-iframe {
+  flex: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
   </style>
 </head>
 <body>
@@ -1281,7 +1344,7 @@ if (logoutConfirmBtn) {
           fetch(u.path, { method: "HEAD" })
             .then(res => {
               if (res.ok) {
-                showLoadingScreen(u.path);
+                openUnitModal(u.path);
               } else {
                 showPendingModal();
               }
@@ -1818,6 +1881,48 @@ async function performLogout() {
       restoreProgressOnRenderedList();
     });
 
+    // === 단원 학습 모달 관련 ===
+    function openUnitModal(unitPath) {
+      const unitModal = document.getElementById('unitModal');
+      const unitIframe = document.getElementById('unitIframe');
+
+      if (unitModal && unitIframe) {
+        unitIframe.src = unitPath;
+        unitModal.classList.add('show');
+      }
+    }
+
+    function closeUnitModal() {
+      const unitModal = document.getElementById('unitModal');
+      const unitIframe = document.getElementById('unitIframe');
+
+      if (unitModal) {
+        unitModal.classList.remove('show');
+        if (unitIframe) {
+          unitIframe.src = ''; // iframe 초기화
+        }
+      }
+    }
+
+    // 단원 모달 닫기 버튼 이벤트
+    window.addEventListener('DOMContentLoaded', function() {
+      const closeUnitBtn = document.getElementById('closeUnitModal');
+      const unitModal = document.getElementById('unitModal');
+
+      if (closeUnitBtn) {
+        closeUnitBtn.addEventListener('click', closeUnitModal);
+      }
+
+      // 배경 클릭 시 모달 닫기
+      if (unitModal) {
+        unitModal.addEventListener('click', function(e) {
+          if (e.target === unitModal) {
+            closeUnitModal();
+          }
+        });
+      }
+    });
+
     // === 레이더 차트 아이콘 클릭 이벤트 (모달로 표시) ===
     window.addEventListener('DOMContentLoaded', function() {
       const radarIcon = document.getElementById('radarChartIcon');
@@ -1874,6 +1979,16 @@ async function performLogout() {
         <button class="learning-modal-close" id="closeLearningModal">&times;</button>
       </div>
       <iframe class="learning-modal-iframe" id="learningIframe"></iframe>
+    </div>
+  </div>
+
+  <!-- 단원 학습 모달 -->
+  <div class="unit-modal" id="unitModal">
+    <div class="unit-modal-content">
+      <div class="unit-modal-header">
+        <button class="unit-modal-close" id="closeUnitModal">&times;</button>
+      </div>
+      <iframe class="unit-modal-iframe" id="unitIframe"></iframe>
     </div>
   </div>
 

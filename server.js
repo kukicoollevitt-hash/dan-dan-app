@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const OpenAI = require("openai");
 
 // ===== MongoDB 모델 =====
 const LearningLog = require("./models/LearningLog");
@@ -16,6 +17,11 @@ const ADMIN_KEY = process.env.ADMIN_KEY;
 const PORT = process.env.PORT || 3000;
 const USERS_FILE = "users.json";
 const MONGO_URI = process.env.MONGODB_URI;
+
+// OpenAI 설정
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // ===== 미들웨어 =====
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -3140,6 +3146,8 @@ app.get("/api/completion-status", async (req, res) => {
 app.get("/admin/logs", async (req, res) => {
   const { key, grade, name } = req.query;
 
+  console.log("[/admin/logs] 요청 파라미터:", { grade, name });
+
   if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
   }
@@ -3152,6 +3160,8 @@ app.get("/admin/logs", async (req, res) => {
     const logs = await LearningLog.find({ grade, name, deleted: { $ne: true } })
       .sort({ timestamp: -1 })
       .lean();
+
+    console.log("[/admin/logs] 조회 결과:", logs.length, "개 기록 찾음");
 
     let html = `
     <!DOCTYPE html>
@@ -3779,7 +3789,7 @@ app.get("/admin/logs", async (req, res) => {
 
           const title = document.createElement('div');
           title.className = 'radar-card-title';
-          title.textContent = series;
+          title.textContent = displayTitle;
 
           const subtitle = document.createElement('div');
           subtitle.className = 'radar-card-time';
@@ -5607,6 +5617,231 @@ app.delete("/admin/log/permanent-delete/:id", async (req, res) => {
   } catch (err) {
     console.error("완전 삭제 오류:", err);
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ===== AI 챗봇 API =====
+app.post("/api/ai-chat", async (req, res) => {
+  try {
+    const { message, scenario, conversationHistory } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ success: false, error: "메시지가 필요합니다" });
+    }
+
+    // 시나리오별 시스템 프롬프트
+    const systemPrompts = {
+      grammar: `당신은 친절한 국어 선생님입니다. 학생들의 맞춤법, 문법, 띄어쓰기를 교정하고 올바른 표현을 가르쳐주세요.
+- 잘못된 표현을 발견하면 친절하게 지적하고 올바른 표현을 알려주세요
+- "되"와 "돼", "안되"와 "안 돼" 같은 자주 틀리는 맞춤법을 교정해주세요
+- 존댓말 사용을 칭찬해주세요
+- 완전한 문장 작성을 격려해주세요`,
+
+      writing: `당신은 글쓰기를 지도하는 선생님입니다. 학생들이 일기, 편지, 이야기를 쓸 수 있도록 도와주세요.
+- 학생의 글을 읽고 구체적인 피드백을 주세요
+- 문장 구조와 표현을 개선하는 방법을 알려주세요
+- 창의적인 글쓰기를 격려해주세요`,
+
+      reading: `당신은 독해력을 키워주는 선생님입니다. 학생들이 글을 읽고 이해하도록 도와주세요.
+- 짧은 글을 제시하고 내용 이해 질문을 해주세요
+- 요약하는 방법을 가르쳐주세요
+- 글의 주제와 핵심을 찾는 법을 알려주세요`,
+
+      vocabulary: `당신은 어휘력을 키워주는 선생님입니다. 학생들에게 새로운 단어와 표현을 가르쳐주세요.
+- 새로운 단어를 소개하고 예문과 함께 설명해주세요
+- 속담과 관용구를 알려주세요
+- 유의어와 반의어를 함께 가르쳐주세요`,
+
+      conversation: `당신은 학생들과 자유롭게 대화하며 국어 실력을 키워주는 선생님입니다.
+- 학생의 이야기를 경청하고 공감해주세요
+- 자연스러운 대화를 통해 표현력을 키워주세요
+- 적절한 어휘와 표현을 사용하도록 격려해주세요`
+    };
+
+    const systemPrompt = systemPrompts[scenario] || systemPrompts.conversation;
+
+    // 대화 히스토리 구성
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...(conversationHistory || []),
+      { role: "user", content: message }
+    ];
+
+    // OpenAI API 호출
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    const aiResponse = completion.choices[0].message.content;
+
+    // 피드백 분석 (간단한 버전)
+    const feedbacks = [];
+
+    // 맞춤법 검사
+    if (message.includes('됬어') || message.includes('됬다')) {
+      feedbacks.push({
+        type: 'correction',
+        title: '❌ 맞춤법 오류',
+        message: '"됬어"는 잘못된 표현이에요. "됐어" 또는 "되었어"가 맞아요!'
+      });
+    }
+
+    if (message.includes('않되') || message.includes('안되')) {
+      feedbacks.push({
+        type: 'correction',
+        title: '❌ 띄어쓰기 오류',
+        message: '"안되"는 "안 돼" 또는 "안 되어"로 띄어 써야 해요!'
+      });
+    }
+
+    // 긍정적 피드백
+    if (message.length > 15 && (message.includes('.') || message.includes('!') || message.includes('?'))) {
+      feedbacks.push({
+        type: 'praise',
+        title: '🌟 훌륭해요!',
+        message: '완전한 문장을 문장부호와 함께 잘 작성했어요!'
+      });
+    }
+
+    if ((message.includes('요') || message.includes('습니다')) && message.length > 5) {
+      feedbacks.push({
+        type: 'praise',
+        title: '👍 예의바른 표현',
+        message: '존댓말을 정확하게 사용했어요!'
+      });
+    }
+
+    res.json({
+      success: true,
+      response: aiResponse,
+      feedbacks: feedbacks
+    });
+
+  } catch (error) {
+    console.error("AI 챗봇 오류:", error);
+    res.status(500).json({
+      success: false,
+      error: "AI 응답 생성 중 오류가 발생했습니다",
+      details: error.message
+    });
+  }
+});
+
+// 영어 챗봇 API
+app.post("/api/ai-english-chat", async (req, res) => {
+  try {
+    const { message, scenario, conversationHistory } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ success: false, error: "메시지가 필요합니다" });
+    }
+
+    // 시나리오별 시스템 프롬프트
+    const systemPrompts = {
+      cafe: `You are a friendly barista at a coffee shop. Help students practice ordering coffee in English.
+- Keep responses natural and conversational
+- Gently correct grammar mistakes
+- Encourage polite expressions like "I'd like" instead of "I want"
+- Ask follow-up questions about size, temperature, etc.`,
+
+      shopping: `You are a helpful store employee. Help students practice shopping in English.
+- Be friendly and helpful
+- Teach vocabulary related to shopping (colors, sizes, prices)
+- Encourage polite requests
+- Offer to show products or help with fitting`,
+
+      airport: `You are an airport staff member. Help students practice airport-related English.
+- Use professional but friendly language
+- Teach airport vocabulary (gate, boarding, check-in, etc.)
+- Keep responses clear and simple
+- Help with common airport situations`,
+
+      friend: `You are a friendly peer having a casual conversation. Help students practice everyday English.
+- Use casual, natural language
+- Talk about everyday topics (hobbies, school, plans, etc.)
+- Encourage natural conversation flow
+- Be supportive and encouraging`,
+
+      free: `You are an English tutor having a conversation with students. Adapt to their interests and needs.
+- Be flexible and responsive to their topics
+- Provide gentle corrections when needed
+- Encourage them to express themselves
+- Make learning fun and engaging`
+    };
+
+    const systemPrompt = systemPrompts[scenario] || systemPrompts.free;
+
+    // 대화 히스토리 구성
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...(conversationHistory || []),
+      { role: "user", content: message }
+    ];
+
+    // OpenAI API 호출
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    const aiResponse = completion.choices[0].message.content;
+
+    // 피드백 분석
+    const feedbacks = [];
+
+    // 정중한 표현 체크
+    if (message.toLowerCase().includes("i'd like") || message.toLowerCase().includes("could you") || message.toLowerCase().includes("would you")) {
+      feedbacks.push({
+        type: 'praise',
+        title: '👍 Perfect!',
+        message: 'Great use of polite expressions!'
+      });
+    }
+
+    // 문법 제안
+    if (message.toLowerCase().includes("i want") && scenario !== 'friend') {
+      feedbacks.push({
+        type: 'correction',
+        title: '💡 Tip',
+        message: 'Try using "I\'d like" instead of "I want" for a more polite request.'
+      });
+    }
+
+    if (!message.toLowerCase().includes("please") && (message.toLowerCase().includes("give me") || message.toLowerCase().includes("show me"))) {
+      feedbacks.push({
+        type: 'correction',
+        title: '💡 Tip',
+        message: 'Adding "please" makes your request more polite!'
+      });
+    }
+
+    // 완전한 문장 칭찬
+    if (message.split(' ').length > 5) {
+      feedbacks.push({
+        type: 'praise',
+        title: '🌟 Excellent!',
+        message: 'You used a complete sentence!'
+      });
+    }
+
+    res.json({
+      success: true,
+      response: aiResponse,
+      feedbacks: feedbacks
+    });
+
+  } catch (error) {
+    console.error("AI English 챗봇 오류:", error);
+    res.status(500).json({
+      success: false,
+      error: "AI 응답 생성 중 오류가 발생했습니다",
+      details: error.message
+    });
   }
 });
 

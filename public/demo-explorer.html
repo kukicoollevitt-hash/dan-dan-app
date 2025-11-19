@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>탐험형 학습 - 조선시대 한양 탐방</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 지도 영역 */
+    .map-area {
+      position: relative;
+      width: 90vw;
+      max-width: 1200px;
+      height: 80vh;
+      background: linear-gradient(to bottom, #e8d5b7 0%, #d4c4a8 50%, #c9b89a 100%);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      border: 8px solid #8b6f47;
+    }
+
+    /* 배경 텍스처 */
+    .map-area::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        repeating-linear-gradient(90deg, rgba(139, 111, 71, 0.03) 0px, transparent 1px, transparent 40px),
+        repeating-linear-gradient(0deg, rgba(139, 111, 71, 0.03) 0px, transparent 1px, transparent 40px);
+      pointer-events: none;
+    }
+
+    /* 제목 */
+    .map-title {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(139, 69, 19, 0.9);
+      color: #fff;
+      padding: 12px 30px;
+      border-radius: 30px;
+      font-size: 24px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      border: 2px solid #d4af37;
+    }
+
+    /* 진행도 표시 */
+    .progress-bar {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 20px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .progress-bar span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .progress-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ddd;
+      transition: all 0.3s ease;
+    }
+
+    .progress-dot.completed {
+      background: #4caf50;
+      transform: scale(1.2);
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+    }
+
+    /* 장소 마커 */
+    .location {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .location:hover {
+      transform: scale(1.2);
+      z-index: 20;
+    }
+
+    .location-pin {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .location-icon {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      border-radius: 50% 50% 50% 0;
+      transform: translateX(-50%) rotate(-45deg);
+      border: 3px solid #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      animation: bounce 2s infinite;
+    }
+
+    .location.completed .location-icon {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      animation: none;
+    }
+
+    .location.locked .location-icon {
+      background: linear-gradient(135deg, #999 0%, #777 100%);
+      animation: none;
+      cursor: not-allowed;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) rotate(-45deg) translateY(0); }
+      50% { transform: translateX(-50%) rotate(-45deg) translateY(-10px); }
+    }
+
+    .location-label {
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* 장소별 위치 */
+    #loc1 { top: 35%; left: 50%; }
+    #loc2 { top: 25%; left: 30%; }
+    #loc3 { top: 45%; left: 25%; }
+    #loc4 { top: 55%; left: 45%; }
+    #loc5 { top: 35%; left: 70%; }
+    #loc6 { top: 60%; left: 65%; }
+
+    /* 모달 */
+    .modal {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: modalSlideUp 0.3s ease;
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #8b4513;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 32px;
+      color: #999;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .modal-image {
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+
+    .modal-text {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .modal-question {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .modal-question h3 {
+      font-size: 18px;
+      color: #8b4513;
+      margin-bottom: 15px;
+    }
+
+    .answer-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .answer-btn {
+      padding: 12px 20px;
+      border: 2px solid #ddd;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .answer-btn:hover {
+      border-color: #8b4513;
+      background: #fef9f5;
+    }
+
+    .answer-btn.correct {
+      background: #4caf50;
+      color: #fff;
+      border-color: #4caf50;
+    }
+
+    .answer-btn.wrong {
+      background: #f44336;
+      color: #fff;
+      border-color: #f44336;
+    }
+
+    .answer-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .modal-footer {
+      text-align: center;
+      padding-top: 20px;
+    }
+
+    .complete-btn {
+      background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+      color: #fff;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .complete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(139, 69, 19, 0.4);
+    }
+
+    .complete-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 완료 축하 모달 */
+    .celebration {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .celebration.show {
+      display: flex;
+    }
+
+    .celebration-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 50px;
+      border-radius: 20px;
+      text-align: center;
+      animation: celebrationPop 0.5s ease;
+    }
+
+    @keyframes celebrationPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .celebration-content h2 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    .celebration-content p {
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .celebration-btn {
+      background: #fff;
+      color: #667eea;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="map-area">
+      <div class="map-title">조선시대 한양 탐방 🏛️</div>
+
+      <div class="progress-bar">
+        <span>진행도:</span>
+        <div class="progress-dots" id="progressDots">
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+        </div>
+        <span id="progressText">0/6</span>
+      </div>
+
+      <!-- 장소 마커들 -->
+      <div class="location" id="loc1" data-location="1">
+        <div class="location-pin">
+          <div class="location-icon"></div>
+          <div class="location-label">경복궁</div>
+        </div>
+      </div>
+
+      <div class="location locked" id="loc2" data-location="2">
+        <div class="location-pin">
+          <div class="location-icon"></div>
+          <div class="location-label">종묘</div>
+        </div>
+      </div>
+
+      <div class="location locked" id="loc3" data-location="3">
+        <div class="location-pin">
+          <div class="location-icon"></div>
+          <div class="location-label">광화문</div>
+        </div>
+      </div>
+
+      <div class="location locked" id="loc4" data-location="4">
+        <div class="location-pin">
+          <div class="location-icon"></div>
+          <div class="location-label">창덕궁</div>
+        </div>
+      </div>
+
+      <div class="location locked" id="loc5" data-location="5">
+        <div class="location-pin">
+          <div class="location-icon"></div>
+          <div class="location-label">성균관</div>
+        </div>
+      </div>
+
+      <div class="location locked" id="loc6" data-location="6">
+        <div class="location-pin">
+          <div class="location-icon"></div>
+          <div class="location-label">남대문</div>
+        </div>
+      </div>
+
+      <!-- 모달 -->
+      <div class="modal" id="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">장소명</h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+          </div>
+
+          <div class="modal-image" id="modalImage">🏛️</div>
+
+          <div class="modal-text" id="modalText">
+            설명 텍스트가 여기 들어갑니다.
+          </div>
+
+          <div class="modal-question">
+            <h3 id="questionText">문제가 여기 표시됩니다.</h3>
+            <div class="answer-options" id="answerOptions">
+              <!-- 답변 버튼들이 동적으로 생성됨 -->
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="complete-btn" id="completeBtn" disabled onclick="completeLocation()">
+              완료하고 다음 장소로 →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 완료 축하 모달 -->
+      <div class="celebration" id="celebration">
+        <div class="celebration-content">
+          <h2>🎉 축하합니다! 🎉</h2>
+          <p>조선시대 한양 탐방을 모두 완료했습니다!</p>
+          <p>6개의 역사적 장소를 모두 학습했어요.</p>
+          <button class="celebration-btn" onclick="closeCelebration()">확인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 장소 데이터
+    const locations = {
+      1: {
+        title: '경복궁',
+        emoji: '🏛️',
+        text: '경복궁은 조선시대 첫 번째 왕궁으로, 1395년 태조 이성계가 창건했습니다. "경복(景福)"은 "큰 복을 누리다"라는 뜻으로, 조선 왕조의 번영을 기원하는 의미가 담겨 있습니다. 경복궁은 조선시대 5대 궁궐 중 가장 크고 중심이 되는 궁궐이었습니다.',
+        question: '경복궁을 창건한 왕은 누구일까요?',
+        answers: [
+          { text: '① 태조 이성계', correct: true },
+          { text: '② 세종대왕', correct: false },
+          { text: '③ 정조', correct: false },
+          { text: '④ 영조', correct: false }
+        ]
+      },
+      2: {
+        title: '종묘',
+        emoji: '⛩️',
+        text: '종묘는 조선시대 역대 왕과 왕비의 신주(위패)를 모신 사당입니다. 유교 국가였던 조선에서 가장 신성한 공간으로 여겨졌으며, 매년 종묘제례라는 제사를 지냈습니다. 종묘제례악은 유네스코 무형문화유산으로 지정되어 있습니다.',
+        question: '종묘에서 모시는 것은 무엇일까요?',
+        answers: [
+          { text: '① 역대 왕과 왕비의 신주', correct: true },
+          { text: '② 불상과 경전', correct: false },
+          { text: '③ 정부 문서', correct: false },
+          { text: '④ 왕실 보물', correct: false }
+        ]
+      },
+      3: {
+        title: '광화문',
+        emoji: '🚪',
+        text: '광화문은 경복궁의 정문으로, "빛나는 덕화가 온 나라에 퍼진다"는 뜻을 담고 있습니다. 세종대왕 시대에 집현전 학자들이 이곳에서 한글 창제에 힘썼으며, 현재는 서울의 상징적인 랜드마크가 되었습니다.',
+        question: '광화문의 의미는 무엇일까요?',
+        answers: [
+          { text: '① 빛나는 덕화가 퍼진다', correct: true },
+          { text: '② 큰 문이 열린다', correct: false },
+          { text: '③ 왕의 권위를 상징한다', correct: false },
+          { text: '④ 백성을 맞이한다', correct: false }
+        ]
+      },
+      4: {
+        title: '창덕궁',
+        emoji: '🏯',
+        text: '창덕궁은 1405년 태종 때 경복궁의 이궁(별궁)으로 지어졌습니다. "창덕(昌德)"은 "덕을 펼친다"는 뜻입니다. 자연과 조화를 이룬 아름다운 정원 "후원(비원)"으로 유명하며, 유네스코 세계문화유산으로 등재되어 있습니다.',
+        question: '창덕궁이 세계문화유산으로 인정받은 이유는?',
+        answers: [
+          { text: '① 자연과 조화를 이룬 건축', correct: true },
+          { text: '② 가장 큰 궁궐', correct: false },
+          { text: '③ 왕이 가장 오래 거주', correct: false },
+          { text: '④ 최초의 궁궐', correct: false }
+        ]
+      },
+      5: {
+        title: '성균관',
+        emoji: '📚',
+        text: '성균관은 조선시대 최고 교육기관으로, 유학을 가르치고 인재를 양성했던 곳입니다. 오늘날의 국립대학교에 해당하며, 과거시험을 준비하는 양반 자제들이 이곳에서 공부했습니다. 현재는 성균관대학교의 전신이 되었습니다.',
+        question: '성균관의 역할은 무엇이었나요?',
+        answers: [
+          { text: '① 유학 교육과 인재 양성', correct: true },
+          { text: '② 왕실 제사', correct: false },
+          { text: '③ 군사 훈련', correct: false },
+          { text: '④ 상업 거래', correct: false }
+        ]
+      },
+      6: {
+        title: '남대문',
+        emoji: '🏰',
+        text: '남대문(숭례문)은 한양 도성의 4대문 중 남쪽 정문으로, 1398년에 완성되었습니다. 대한민국 국보 제1호로 지정되어 있으며, "예(禮)를 숭상한다"는 뜻의 숭례문이 정식 명칭입니다. 600년이 넘는 역사를 지닌 서울의 상징입니다.',
+        question: '남대문의 정식 명칭은 무엇일까요?',
+        answers: [
+          { text: '① 숭례문', correct: true },
+          { text: '② 흥인지문', correct: false },
+          { text: '③ 돈의문', correct: false },
+          { text: '④ 숙정문', correct: false }
+        ]
+      }
+    };
+
+    let currentLocation = null;
+    let completedLocations = new Set();
+
+    // 장소 클릭 이벤트
+    document.querySelectorAll('.location').forEach(loc => {
+      loc.addEventListener('click', function() {
+        if (this.classList.contains('locked')) {
+          alert('이전 장소를 먼저 완료해주세요!');
+          return;
+        }
+
+        const locationId = parseInt(this.dataset.location);
+        openModal(locationId);
+      });
+    });
+
+    function openModal(locationId) {
+      currentLocation = locationId;
+      const data = locations[locationId];
+
+      document.getElementById('modalTitle').textContent = data.title;
+      document.getElementById('modalImage').textContent = data.emoji;
+      document.getElementById('modalText').textContent = data.text;
+      document.getElementById('questionText').textContent = data.question;
+
+      // 답변 버튼 생성
+      const optionsContainer = document.getElementById('answerOptions');
+      optionsContainer.innerHTML = '';
+
+      data.answers.forEach((answer, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = answer.text;
+        btn.onclick = () => checkAnswer(index);
+        optionsContainer.appendChild(btn);
+      });
+
+      document.getElementById('completeBtn').disabled = true;
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+      currentLocation = null;
+    }
+
+    function checkAnswer(index) {
+      const data = locations[currentLocation];
+      const buttons = document.querySelectorAll('.answer-btn');
+
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (data.answers[i].correct) {
+          btn.classList.add('correct');
+        } else if (i === index && !data.answers[i].correct) {
+          btn.classList.add('wrong');
+        }
+      });
+
+      if (data.answers[index].correct) {
+        document.getElementById('completeBtn').disabled = false;
+      } else {
+        setTimeout(() => {
+          buttons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('wrong');
+          });
+        }, 1500);
+      }
+    }
+
+    function completeLocation() {
+      completedLocations.add(currentLocation);
+
+      // 현재 장소를 완료로 표시
+      const locationEl = document.getElementById(`loc${currentLocation}`);
+      locationEl.classList.add('completed');
+
+      // 다음 장소 잠금 해제
+      const nextLocation = currentLocation + 1;
+      if (nextLocation <= 6) {
+        const nextEl = document.getElementById(`loc${nextLocation}`);
+        nextEl.classList.remove('locked');
+      }
+
+      // 진행도 업데이트
+      updateProgress();
+
+      // 모달 닫기
+      closeModal();
+
+      // 모든 장소 완료 시 축하 모달
+      if (completedLocations.size === 6) {
+        setTimeout(() => {
+          document.getElementById('celebration').classList.add('show');
+        }, 500);
+      }
+    }
+
+    function updateProgress() {
+      const dots = document.querySelectorAll('.progress-dot');
+      dots.forEach((dot, index) => {
+        if (completedLocations.has(index + 1)) {
+          dot.classList.add('completed');
+        }
+      });
+
+      document.getElementById('progressText').textContent =
+        `${completedLocations.size}/6`;
+    }
+
+    function closeCelebration() {
+      document.getElementById('celebration').classList.remove('show');
+    }
+  </script>
+</body>
+</html>
