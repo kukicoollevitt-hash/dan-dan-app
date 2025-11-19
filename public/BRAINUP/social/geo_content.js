@@ -397,7 +397,7 @@ function applyContentPack(unitKey) {
     const q1Lis  = blocks[0].querySelectorAll('.quiz-options li');
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
-      q1Lis.forEach((li,i)=> li.innerHTML = `<input type="radio" name="q1" value="${i+1}"> ${pack.quiz.q1_opts[i]}`);
+      q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
     }
   }
 
@@ -407,7 +407,7 @@ function applyContentPack(unitKey) {
     const q2Lis  = blocks[1].querySelectorAll('.quiz-options li');
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
-      q2Lis.forEach((li,i)=> li.innerHTML = `<input type="radio" name="q2" value="${i+1}"> ${pack.quiz.q2_opts[i]}`);
+      q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
     }
   }
 

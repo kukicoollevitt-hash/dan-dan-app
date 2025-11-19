@@ -3401,6 +3401,125 @@ return res.redirect(
 });
 
 
+// ✅ 맞춤법 검사 API
+app.post("/api/spell-check", async (req, res) => {
+  console.log("✅ [POST] /api/spell-check 호출");
+
+  const { text } = req.body;
+
+  if (!text || text.trim().length === 0) {
+    return res.status(400).json({ error: "텍스트를 입력해주세요." });
+  }
+
+  try {
+    const OpenAI = require('openai');
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
+    console.log("🤖 OpenAI API로 맞춤법 검사 시작...");
+
+    // OpenAI API 호출
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "당신은 한국어 맞춤법 및 띄어쓰기 전문가입니다. 주어진 텍스트의 맞춤법과 띄어쓰기 오류를 찾아 수정해주세요."
+        },
+        {
+          role: "user",
+          content: `다음 텍스트의 맞춤법과 띄어쓰기 오류를 찾아주세요. 오류가 있다면 JSON 형식으로 응답하고, 없다면 "오류 없음"이라고만 답해주세요.
+
+텍스트: "${text}"
+
+JSON 형식:
+{
+  "has_errors": true,
+  "errors": [
+    {"wrong": "잘못된부분", "correct": "올바른부분", "type": "띄어쓰기" or "맞춤법"}
+  ],
+  "corrected_text": "전체 수정된 텍스트"
+}`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    });
+
+    const aiResponse = response.choices[0].message.content;
+    console.log("🤖 OpenAI 응답:", aiResponse.substring(0, 200));
+
+    // "오류 없음" 응답 처리
+    if (aiResponse.includes("오류 없음") || aiResponse.includes("오류가 없")) {
+      console.log("✅ 맞춤법 검사 완료: 오류 없음");
+      return res.json({
+        errata_count: 0,
+        origin_html: text,
+        html: text,
+        notag_html: text
+      });
+    }
+
+    // JSON 응답 파싱
+    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const result = JSON.parse(jsonMatch[0]);
+
+      if (result.has_errors && result.errors && result.errors.length > 0) {
+        let htmlText = text;
+        let correctedHtml = result.corrected_text || text;
+
+        // 오류 부분에 빨간 밑줄 추가
+        result.errors.forEach(error => {
+          const wrongText = error.wrong;
+          htmlText = htmlText.replace(
+            new RegExp(wrongText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+            `<span class="highlight-wrong">${wrongText}</span>`
+          );
+
+          // 수정된 텍스트에 녹색 하이라이트 추가
+          const correctText = error.correct;
+          correctedHtml = correctedHtml.replace(
+            new RegExp(correctText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+            `<span class="highlight-correct">${correctText}</span>`
+          );
+        });
+
+        console.log(`✅ 맞춤법 검사 완료: ${result.errors.length}개 오류 발견`);
+
+        return res.json({
+          errata_count: result.errors.length,
+          origin_html: text,
+          html: htmlText,
+          notag_html: result.corrected_text || text,
+          corrected_html: correctedHtml,
+          errors: result.errors
+        });
+      }
+    }
+
+    // JSON 파싱 실패 또는 오류 없음
+    console.log("✅ 맞춤법 검사 완료: 오류 없음");
+    res.json({
+      errata_count: 0,
+      origin_html: text,
+      html: text,
+      notag_html: text
+    });
+
+  } catch (err) {
+    console.error("❌ /api/spell-check 에러:", err.message);
+    // 에러 시에도 원본 텍스트 반환
+    res.json({
+      errata_count: 0,
+      origin_html: text,
+      html: text,
+      notag_html: text
+    });
+  }
+});
+
 // ✅ DB 테스트
 app.get("/dbtest", async (req, res) => {
   console.log("✅ [GET] /dbtest 호출");

@@ -127,13 +127,180 @@
       } else {
         if (phoneWrap) phoneWrap.style.display = 'none';
       }
+
+      // 현재 날짜로 월/일 자동 채우기
+      const today = new Date();
+      const monthInput = document.querySelector('#month-input');
+      const dayInput = document.querySelector('#day-input');
+
+      if (monthInput) monthInput.value = today.getMonth() + 1; // 월은 0부터 시작하므로 +1
+      if (dayInput) dayInput.value = today.getDate();
     });
   </script>
 
   <script>
     // 탭 이름 고정
     document.title = "BRAIN업 | 지리 01 지도를 통해 세상을 이해하다";
-  
+
+    // ===== 타이머 기능 =====
+    var timerInterval = null;
+    var totalSeconds = 0;
+    var isTimerRunning = false;
+
+    function toggleTimer() {
+      const timerIcon = document.getElementById('timer-icon');
+      if (!timerIcon) return;
+
+      if (isTimerRunning) {
+        // 타이머 중지
+        isTimerRunning = false;
+        clearInterval(timerInterval);
+        timerIcon.classList.remove('running');
+        updateTimerDisplay();
+      } else {
+        // 타이머 시작
+        isTimerRunning = true;
+        timerIcon.classList.add('running');
+        timerInterval = setInterval(function() {
+          totalSeconds++;
+          updateTimerDisplay();
+        }, 1000);
+      }
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const minuteInput = document.getElementById('minute-input');
+      const secondInput = document.getElementById('second-input');
+
+      if (minuteInput) minuteInput.value = String(minutes).padStart(2, '0');
+      if (secondInput) secondInput.value = String(seconds).padStart(2, '0');
+    }
+
+    // ===== 달력 팝업 관련 함수들 =====
+    var currentCalendarYear = new Date().getFullYear();
+    var currentCalendarMonth = new Date().getMonth();
+    var selectedDate = null;
+
+    function toggleCalendar() {
+      const popup = document.getElementById('calendar-popup');
+      const overlay = document.getElementById('calendar-overlay');
+
+      if (popup.classList.contains('show')) {
+        closeCalendar();
+      } else {
+        currentCalendarYear = new Date().getFullYear();
+        currentCalendarMonth = new Date().getMonth();
+        renderCalendar();
+        popup.classList.add('show');
+        overlay.classList.add('show');
+      }
+    }
+
+    function closeCalendar() {
+      const popup = document.getElementById('calendar-popup');
+      const overlay = document.getElementById('calendar-overlay');
+      popup.classList.remove('show');
+      overlay.classList.remove('show');
+    }
+
+    function changeMonth(direction) {
+      currentCalendarMonth += direction;
+      if (currentCalendarMonth < 0) {
+        currentCalendarMonth = 11;
+        currentCalendarYear--;
+      } else if (currentCalendarMonth > 11) {
+        currentCalendarMonth = 0;
+        currentCalendarYear++;
+      }
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const title = document.getElementById('calendar-title');
+
+      // 제목 업데이트
+      title.textContent = currentCalendarYear + '년 ' + (currentCalendarMonth + 1) + '월';
+
+      // 기존 날짜 제거 (요일 헤더는 유지)
+      const dayElements = grid.querySelectorAll('.calendar-day');
+      dayElements.forEach(function(el) { el.remove(); });
+
+      // 해당 월의 첫날과 마지막날
+      const firstDay = new Date(currentCalendarYear, currentCalendarMonth, 1);
+      const lastDay = new Date(currentCalendarYear, currentCalendarMonth + 1, 0);
+      const prevLastDay = new Date(currentCalendarYear, currentCalendarMonth, 0);
+
+      const firstDayOfWeek = firstDay.getDay();
+      const lastDate = lastDay.getDate();
+      const prevLastDate = prevLastDay.getDate();
+
+      const today = new Date();
+      const isCurrentMonth = today.getFullYear() === currentCalendarYear && today.getMonth() === currentCalendarMonth;
+      const todayDate = today.getDate();
+
+      // 이전 달 날짜들
+      for (var i = firstDayOfWeek - 1; i >= 0; i--) {
+        var day = document.createElement('div');
+        day.className = 'calendar-day other-month';
+        day.textContent = prevLastDate - i;
+        grid.appendChild(day);
+      }
+
+      // 현재 달 날짜들
+      for (var date = 1; date <= lastDate; date++) {
+        var day = document.createElement('div');
+        day.className = 'calendar-day';
+        day.textContent = date;
+
+        if (isCurrentMonth && date === todayDate) {
+          day.classList.add('today');
+        }
+
+        if (selectedDate && selectedDate.year === currentCalendarYear &&
+            selectedDate.month === currentCalendarMonth && selectedDate.date === date) {
+          day.classList.add('selected');
+        }
+
+        (function(d) {
+          day.onclick = function() { selectDate(d); };
+        })(date);
+
+        grid.appendChild(day);
+      }
+
+      // 다음 달 날짜들 (7의 배수가 되도록)
+      const totalCells = firstDayOfWeek + lastDate;
+      const remainingCells = 7 - (totalCells % 7);
+      if (remainingCells < 7) {
+        for (var i = 1; i <= remainingCells; i++) {
+          var day = document.createElement('div');
+          day.className = 'calendar-day other-month';
+          day.textContent = i;
+          grid.appendChild(day);
+        }
+      }
+    }
+
+    function selectDate(date) {
+      selectedDate = {
+        year: currentCalendarYear,
+        month: currentCalendarMonth,
+        date: date
+      };
+
+      // 월/일 입력 필드 업데이트
+      const monthInput = document.getElementById('month-input');
+      const dayInput = document.getElementById('day-input');
+
+      if (monthInput) monthInput.value = currentCalendarMonth + 1;
+      if (dayInput) dayInput.value = date;
+
+      closeCalendar();
+    }
+
     // ===== 자동 피드백 생성 함수 =====
     function generateFeedback(scores) {
       const feedback = [];
@@ -291,60 +458,169 @@
   <style>
     body {
       margin: 0;
-      background: #f2ede5;
+      background: linear-gradient(to bottom, #f7f3eb 0%, #f2ede5 100%);
       font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      min-height: 100vh;
     }
     /* ===== 상단 탭 ===== */
     .top-tabs {
-      background: #f7f1e5;
+      background: linear-gradient(to bottom, #faf6ee 0%, #f7f1e5 100%);
       border-bottom: 3px solid #c58a45;
       display: flex;
       gap: 6px;
       padding: 10px 24px 0;
       align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
     .tab-btn {
-      background: #8b2f2f;
-      color: #fff8e8;
-      padding: 9px 18px 11px;
+      position: relative;
+      background: #f8f5f0;
+      color: #5a4a3a;
+      padding: 12px 24px 14px;
+      border: 2px solid #e0d5c7;
+      border-bottom: none;
       border-radius: 8px 8px 0 0;
       font-weight: 600;
       cursor: pointer;
-      opacity: 0.55;
-      font-size: 15px;
-      transition: 0.2s;
+      opacity: 0.75;
+      font-size: 16px;
+      transition: all 0.25s ease;
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.05);
+      clip-path: polygon(
+        8px 0, calc(100% - 8px) 0,
+        100% 8px, 100% 100%,
+        0 100%, 0 8px
+      );
     }
-    .tab-btn.active {
-      background: #c04a3b;
-      color: #fffdf4;
+
+    /* 책갈피 접힌 모서리 효과 */
+    .tab-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 16px 16px 0;
+      border-color: transparent #fff9f3 transparent transparent;
+      transition: all 0.25s ease;
+    }
+
+    /* 노트 줄무늬 효과 */
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2px;
+      height: 60%;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(192, 74, 59, 0.15) 3px,
+        rgba(192, 74, 59, 0.15) 4px
+      );
+    }
+
+    .tab-btn:hover {
       opacity: 1;
-      box-shadow: 0 -2px 6px rgba(0,0,0,0.04);
+      transform: translateY(-6px) scale(1.05);
+      box-shadow:
+        inset 0 -4px 0 rgba(0, 0, 0, 0.15),
+        0 12px 24px rgba(0, 0, 0, 0.25);
+      border-color: #c0a890;
     }
-    .tab-btn.tab-report {
-      background: #b57f60;
-      clip-path: polygon(10% 0, 90% 0, 100% 55%, 90% 100%, 10% 100%, 0 55%);
-      padding-inline: 20px;
+
+    .tab-btn.active {
+      opacity: 1;
+      transform: translateY(-2px);
+      box-shadow:
+        inset 0 -3px 0 rgba(192, 74, 59, 0.2),
+        0 6px 12px rgba(0, 0, 0, 0.12);
+      border-color: #d0c5b7;
     }
-    .tab-btn.tab-report.active { background: #c58a67; }
+
+    /* 본문학습 - 연한 베이지 */
+    .tab-btn[data-tab="reading"] {
+      background: linear-gradient(to bottom, #faf7f2 0%, #f5f0e8 100%);
+      border-left-color: #c04a3b;
+      border-left-width: 4px;
+    }
+    .tab-btn[data-tab="reading"].active {
+      background: linear-gradient(to bottom, #fff 0%, #faf7f2 100%);
+    }
+
+    /* 어휘학습 - 연한 노란 */
+    .tab-btn[data-tab="vocab"] {
+      background: linear-gradient(to bottom, #fffdf5 0%, #fff9e8 100%);
+      border-left-color: #e8a060;
+      border-left-width: 4px;
+    }
+    .tab-btn[data-tab="vocab"].active {
+      background: linear-gradient(to bottom, #fffefc 0%, #fffdf5 100%);
+    }
+
+    /* 창의활동 - 연한 민트 */
+    .tab-btn[data-tab="creative"] {
+      background: linear-gradient(to bottom, #f5faf8 0%, #f0f5f3 100%);
+      border-left-color: #6fb399;
+      border-left-width: 4px;
+    }
+    .tab-btn[data-tab="creative"].active {
+      background: linear-gradient(to bottom, #fafffd 0%, #f5faf8 100%);
+    }
+
+    /* 분석리포트 - 연한 라벤더 */
+    .tab-btn[data-tab="report"] {
+      background: linear-gradient(to bottom, #f8f7fb 0%, #f3f0f8 100%);
+      border-left-color: #9b8eb8;
+      border-left-width: 4px;
+    }
+    .tab-btn[data-tab="report"].active {
+      background: linear-gradient(to bottom, #fcfbff 0%, #f8f7fb 100%);
+    }
 
     /* 오른쪽 고정 학생정보 */
     .student-info {
       margin-left: auto;
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
       font-size: 13px;
       color: #5b4334;
+      background: linear-gradient(135deg, #fff9f2 0%, #fef5eb 100%);
+      border: 1px solid #e6d4c1;
+      border-radius: 12px;
+      padding: 10px 16px;
+      box-shadow: 0 2px 6px rgba(139, 47, 47, 0.08);
     }
-    .student-info label { white-space: nowrap; }
+    .student-info label {
+      white-space: nowrap;
+      font-weight: 600;
+      color: #8b2f2f;
+    }
     .student-info input {
       width: 90px;
-      border: 1px solid #d9b99a;
-      border-radius: 6px;
-      padding: 3px 6px 4px;
-      background: #fff;
+      border: none;
+      border-bottom: 2px solid #d9b99a;
+      border-radius: 0;
+      padding: 6px 10px;
+      background: transparent;
       font-size: 13px;
       outline: none;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .student-info input:focus {
+      border-bottom-color: #c04a3b;
+      background: rgba(255, 255, 255, 0.5);
+    }
+    .student-info input::placeholder {
+      color: #b8a89a;
+      text-align: center;
     }
 
     .tab-panel { display: none; }
@@ -362,32 +638,95 @@
     .left-passage { flex: 0 0 58%; }
     .right-quiz {
       flex: 0 0 42%;
-      background: #fff;
-      border: 1px solid #f4dcd1;
-      border-radius: 16px;
-      padding: 16px 18px 70px;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 39px,
+          rgba(200, 200, 200, 0.15) 39px,
+          rgba(200, 200, 200, 0.15) 40px
+        ),
+        #ffffff;
+      border: 2px solid #d0d0d0;
+      border-top: 4px double #999;
+      border-radius: 4px;
+      padding: 20px 20px 70px;
       position: relative;
       box-sizing: border-box;
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.1),
+        0 4px 12px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+    .right-quiz::after {
+      content: '답안지';
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 11px;
+      color: #999;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.5);
     }
 
     /* ===== 본문 지문 ===== */
     .passage-wrap {
-      background: #fffdf8;
-      border: 1px solid #f1dcc4;
-      border-radius: 14px;
-      padding: 28px 32px 32px;
-      color: #373737;
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-left: 6px solid #c04a3b;
+      border-radius: 0 8px 8px 0;
+      padding: 32px 40px 32px 36px;
+      color: #2d2d2d;
+      box-shadow:
+        -3px 0 12px rgba(192, 74, 59, 0.08),
+        0 4px 16px rgba(0, 0, 0, 0.06),
+        inset 1px 0 0 rgba(255, 255, 255, 0.5);
+      position: relative;
+    }
+    /* 책등 그림자 효과 */
+    .passage-wrap::before {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.15) 0%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+    /* 오른쪽 상단 책갈피 */
+    .passage-wrap::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      right: 40px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 12px 20px 12px;
+      border-color: transparent transparent #c04a3b transparent;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
     }
     .passage-label {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #fef0de;
+      background: linear-gradient(135deg, #fff5e8 0%, #fef0de 100%);
       border: 1px solid #f2c59a;
       border-radius: 999px;
-      padding: 4px 14px;
+      padding: 5px 16px;
       font-size: 14px;
       margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(242, 197, 154, 0.2);
+      font-weight: 600;
     }
     .passage-title { font-size: 30px; font-weight: 700; margin: 0 0 18px; }
     .passage-text { line-height: 1.7; font-size: 16px; }
@@ -396,34 +735,214 @@
 
     .passage-vocab {
       margin-top: 22px;
-      background: #fff;
-      border-radius: 12px;
+      background: linear-gradient(to bottom, #ffffff 0%, #fffefb 100%);
+      border-radius: 14px;
       border: 1px solid #f3e5d4;
-      padding: 16px 20px;
+      padding: 18px 22px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
     }
     .passage-vocab ol { margin: 0; padding-left: 20px; }
     .passage-vocab li { margin-bottom: 6px; font-size: 14px; }
 
     /* ===== 본문학습 타이머 ===== */
     .quiz-header {
-      position: relative;
-      background: #fde7d6;
-      border-radius: 16px;
-      padding: 12px 16px 54px;
+      display: flex;
+      gap: 10px;
       margin-bottom: 18px;
+      justify-content: center;
     }
-    .time-input-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    .time-group { display: flex; flex-direction: row-reverse; align-items: center; gap: 6px; }
-    .time-group label { font-size: 13px; color: #7a5647; }
+    /* 날짜 박스 (월/일) */
+    .date-box {
+      position: relative;
+      display: flex;
+      gap: 8px;
+      background: linear-gradient(135deg, #fef0e0 0%, #fde7d6 100%);
+      border-radius: 12px;
+      padding: 8px 14px 8px 42px;
+      box-shadow: 0 2px 6px rgba(192, 74, 59, 0.08);
+      border: 1px solid rgba(242, 197, 154, 0.4);
+    }
+    /* 달력 아이콘 */
+    .calendar-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      user-select: none;
+    }
+    .calendar-icon:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
+    /* 타이머 박스 (분/초) */
+    .timer-box {
+      position: relative;
+      display: flex;
+      gap: 8px;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      border-radius: 12px;
+      padding: 8px 14px 8px 42px;
+      box-shadow: 0 2px 6px rgba(76, 175, 80, 0.15);
+      border: 1px solid rgba(129, 199, 132, 0.4);
+    }
+    /* 탁상 시계 아이콘 */
+    .timer-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      user-select: none;
+    }
+    .timer-icon:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
+    .timer-icon.running {
+      animation: bump 0.8s ease-in-out infinite;
+    }
+    @keyframes bump {
+      0%, 100% {
+        transform: translateY(-50%) scale(1);
+      }
+      50% {
+        transform: translateY(-50%) scale(1.3);
+      }
+    }
+    /* 달력 팝업 */
+    .calendar-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      padding: 20px;
+      z-index: 1000;
+      min-width: 320px;
+    }
+    .calendar-popup.show {
+      display: block;
+      animation: popupFadeIn 0.2s ease;
+    }
+    @keyframes popupFadeIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+    .calendar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 999;
+    }
+    .calendar-overlay.show {
+      display: block;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #c04a3b;
+      font-size: 16px;
+    }
+    .calendar-nav {
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    .calendar-nav:hover {
+      background: #fef0e0;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .calendar-day-header {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      padding: 8px 0;
+      font-weight: 500;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+    .calendar-day:hover:not(.empty):not(.other-month) {
+      background: #fef0e0;
+      transform: scale(1.05);
+    }
+    .calendar-day.today {
+      background: linear-gradient(135deg, #c04a3b 0%, #d46b5a 100%);
+      color: white;
+      font-weight: 600;
+    }
+    .calendar-day.selected {
+      background: linear-gradient(135deg, #fef0e0 0%, #fde7d6 100%);
+      border: 2px solid #c04a3b;
+      font-weight: 600;
+    }
+    .calendar-day.other-month {
+      color: #ccc;
+    }
+    .calendar-day.empty {
+      cursor: default;
+    }
+    .time-group { display: flex; flex-direction: row-reverse; align-items: center; gap: 4px; }
+    .time-group label { font-size: 13px; color: #7a5647; font-weight: 500; }
     .time-group input {
-      width: 56px;
+      width: 42px;
       border: 1px solid #f4bfa2;
-      border-radius: 999px;
+      border-radius: 8px;
       padding: 4px 6px;
       font-size: 13px;
       text-align: center;
       background: #fff;
       outline: none;
+    }
+    /* 월/일 자동 입력 (날짜) - 읽기 전용 스타일 */
+    .time-group.date-group input {
+      background: #fff;
+      color: #7a5647;
+      border-color: #f4bfa2;
+      cursor: default;
+    }
+    /* 분/초 실제 독서 시간 - 강조 스타일 */
+    .time-group.timer-group input {
+      background: #fff;
+      border: 1.5px solid #66bb6a;
+      color: #2e7d32;
+      font-weight: 600;
+    }
+    .time-group.timer-group label {
+      color: #2e7d32;
+      font-weight: 600;
     }
 
     /* === 새 원형 타이머 === */
@@ -459,26 +978,35 @@
     .quiz-timer-badge.paused .progress { stroke: #b99b88; }
     .quiz-timer-badge.reset .progress { stroke: #c04a3b; stroke-dashoffset: 283; }
 
-    .timer-controls { position: absolute; right: 12px; bottom: 8px; display: flex; gap: 6px; }
-    .timer-btn { font-size: 11px; background: #c04a3b; color: #fff; border: none; border-radius: 6px; padding: 3px 8px 4px; cursor: pointer; }
-
     /* ===== 본문 문제 ===== */
     .quiz-section { display: flex; flex-direction: column; gap: 14px; }
     .quiz-block { display: flex; gap: 10px; align-items: flex-start; }
-    .quiz-block.small .quiz-q { font-size: 14px; }
+    .quiz-block.small .quiz-q {
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .quiz-q {
+      max-width: 650px;
+      width: auto;
+    }
 
     .quiz-num {
       position: relative;
-      width: 34px;
-      min-width: 34px;
-      height: 34px;
-      background: #08775b;
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, #0a9068 0%, #08775b 100%);
       color: #fff;
       border-radius: 10px;
       text-align: center;
-      line-height: 34px;
+      line-height: 30px;
       font-weight: 700;
-      transition: 0.2s;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      box-shadow: 3px 3px 8px rgba(8, 119, 91, 0.4);
+      flex-shrink: 0;
+      margin-top: 2px;
     }
     .quiz-num .mark {
       position: absolute;
@@ -498,18 +1026,81 @@
     .quiz-num.correct .mark { display: flex; color: #1e8a42; border: 2px solid #1e8a42; }
     .quiz-num.wrong .mark { display: flex; color: #d52424; border: 2px solid #d52424; }
 
-    .quiz-options, .quiz-options li { list-style: none; padding-left: 0; margin-left: 0; }
-    .quiz-options li { font-size: 14px; line-height: 1.7; }
+    /* ===== 문제 유형 라벨 ===== */
+    .quiz-subtitle {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(to bottom, #fff9f5 0%, #fff3eb 100%);
+      border: 1.5px solid #e8d5c0;
+      border-radius: 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #8b4513;
+      margin-top: 8px;
+      margin-bottom: 1px;
+      box-shadow: 0 2px 6px rgba(139, 69, 19, 0.1);
+      width: fit-content;
+    }
+
+    ul.quiz-options {
+      list-style: none !important;
+      padding-left: 0 !important;
+      margin: 12px 0 0 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+    }
+    ul.quiz-options li {
+      list-style: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    ul.quiz-options li label {
+      display: block !important;
+      padding: 6px 18px !important;
+      background: linear-gradient(to bottom, #ffffff 0%, #fffefb 100%) !important;
+      border: 1.5px solid #e8d5c0 !important;
+      border-radius: 14px !important;
+      font-size: 14px !important;
+      line-height: 1.4 !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+      color: #4a3228 !important;
+    }
+    ul.quiz-options li label:hover {
+      border-color: rgba(192, 74, 59, 0.5) !important;
+      background: rgba(255, 248, 240, 0.8) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 12px rgba(192, 74, 59, 0.15) !important;
+    }
+    ul.quiz-options li input[type="radio"] {
+      display: none !important;
+    }
+    ul.quiz-options li label:has(input:checked) {
+      background: linear-gradient(135deg, #ffeee0 0%, #ffd9bf 100%) !important;
+      border-color: #c04a3b !important;
+      box-shadow: 0 4px 14px rgba(192, 74, 59, 0.25) !important;
+      font-weight: 600 !important;
+      color: #8b2f2f !important;
+    }
 
     .inline-input {
       display: inline-block;
       width: 140px;
       border: 1px solid #f2c4aa;
       background: #fffdfa;
-      border-radius: 6px;
-      padding: 3px 6px;
+      border-radius: 8px;
+      padding: 4px 8px;
       font-size: 14px;
-      margin: 0 4px;
+      margin: 0 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .inline-input:focus {
+      outline: none;
+      border-color: #c04a3b;
+      box-shadow: 0 2px 6px rgba(192, 74, 59, 0.15);
     }
 
     .answer-box textarea {
@@ -517,12 +1108,19 @@
       height: 130px;
       border: 1px solid #f6d0c1;
       background: #fffefb;
-      border-radius: 10px;
-      padding: 8px;
+      border-radius: 12px;
+      padding: 10px;
       resize: vertical;
       font-family: inherit;
       font-size: 14px;
       box-sizing: border-box;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .answer-box textarea:focus {
+      outline: none;
+      border-color: #c04a3b;
+      box-shadow: 0 2px 6px rgba(192, 74, 59, 0.15);
     }
 
     .grade-area {
@@ -537,16 +1135,81 @@
       align-items: center;
     }
     .grade-btn, .reset-btn, .submit-btn {
-      background: #c04a3b;
+      background: linear-gradient(135deg, #d35a48 0%, #c04a3b 100%);
       color: #fff;
       border: none;
-      border-radius: 8px;
-      padding: 7px 14px;
+      border-radius: 12px;
+      padding: 10px 20px;
       cursor: pointer;
       font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:
+        0 2px 8px rgba(192, 74, 59, 0.25),
+        0 1px 3px rgba(192, 74, 59, 0.15);
+      position: relative;
+      overflow: hidden;
     }
-    .reset-btn { background: #888; }
-    .submit-btn { background: #8b2f2f; }
+    .grade-btn::before, .reset-btn::before, .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    .grade-btn:hover::before, .reset-btn:hover::before, .submit-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    .grade-btn:hover, .reset-btn:hover, .submit-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow:
+        0 6px 16px rgba(192, 74, 59, 0.3),
+        0 3px 8px rgba(192, 74, 59, 0.2);
+    }
+    .grade-btn:active, .reset-btn:active, .submit-btn:active {
+      transform: translateY(0) scale(0.98);
+      box-shadow:
+        0 2px 6px rgba(192, 74, 59, 0.2),
+        0 1px 3px rgba(192, 74, 59, 0.1);
+    }
+    .reset-btn {
+      background: linear-gradient(135deg, #999 0%, #888 100%);
+      box-shadow:
+        0 2px 8px rgba(136, 136, 136, 0.25),
+        0 1px 3px rgba(136, 136, 136, 0.15);
+    }
+    .reset-btn:hover {
+      box-shadow:
+        0 6px 16px rgba(136, 136, 136, 0.3),
+        0 3px 8px rgba(136, 136, 136, 0.2);
+    }
+    .reset-btn:active {
+      box-shadow:
+        0 2px 6px rgba(136, 136, 136, 0.2),
+        0 1px 3px rgba(136, 136, 136, 0.1);
+    }
+    .submit-btn {
+      background: linear-gradient(135deg, #9d3838 0%, #8b2f2f 100%);
+      box-shadow:
+        0 2px 8px rgba(139, 47, 47, 0.25),
+        0 1px 3px rgba(139, 47, 47, 0.15);
+    }
+    .submit-btn:hover {
+      box-shadow:
+        0 6px 16px rgba(139, 47, 47, 0.3),
+        0 3px 8px rgba(139, 47, 47, 0.2);
+    }
+    .submit-btn:active {
+      box-shadow:
+        0 2px 6px rgba(139, 47, 47, 0.2),
+        0 1px 3px rgba(139, 47, 47, 0.1);
+    }
 
     .grade-result {
       position: absolute;
@@ -608,17 +1271,57 @@
     /* ===== 창의활동 ===== */
     #tab-creative { max-width: 900px; margin: 20px auto 50px; }
     .creative-box { background:#fff; border:1px solid #f1dcc4; border-radius:14px; padding:22px 24px 60px; position: relative; }
-    .creative-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; color:#3b2f27; }
-    .creative-desc { font-size: 14px; color:#6c5a50; margin-bottom: 16px; background:#fff7ef; border:1px solid #f5d7ba; border-radius:12px; padding:10px 14px; }
+    .creative-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; color:#3b2f27; }
+    .creative-desc { font-size: 16px; color:#6c5a50; margin-bottom: 16px; background:#fff7ef; border:1px solid #f5d7ba; border-radius:12px; padding:12px 16px; line-height: 1.6; }
     .creative-textarea {
       width: 100%; min-height: 180px; border: 1px solid #f3d2c3; border-radius: 10px;
-      padding: 10px; font-family: inherit; font-size: 14px; resize: vertical; box-sizing: border-box; background:#fffefb;
+      padding: 10px; font-family: inherit; font-size: 16px; resize: vertical; box-sizing: border-box; background:#fffefb; line-height: 1.5;
     }
     .creative-actions { position: absolute; right: 20px; bottom: 18px; display: flex; gap: 8px; }
     .creative-btn { background:#c04a3b; color:#fff; border:none; border-radius:7px; padding:6px 14px; cursor:pointer; font-weight:600; }
-    .creative-result { margin-top: 18px; background:#fff4ee; border:1px solid #f3c8b4; border-radius:10px; padding:10px 12px; font-size:13px; display:none; }
-    .highlight-wrong { color:#d52424; text-decoration: underline wavy #d52424; text-underline-offset: 3px; }
+    .creative-result { margin-top: 18px; background:#fff4ee; border:1px solid #f3c8b4; border-radius:10px; padding:12px 14px; font-size:15px; line-height: 1.7; display:none; }
+    .highlight-wrong { color:#d52424; text-decoration: underline wavy #d52424; text-underline-offset: 3px; font-size: 17px; font-weight: 600; }
+    .highlight-correct { color:#3a8755; text-decoration: underline solid #3a8755; text-underline-offset: 3px; font-weight: 700; font-size: 17px; }
     .correct-block { background:#fff; border:1px solid #f1d2bf; border-radius:8px; padding:8px 10px; margin-top:10px; }
+
+    /* ===== 맞춤법 검사 로딩 팝업 ===== */
+    .spell-check-loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    .spell-check-loading-content {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 50px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    .spell-check-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3e5d8;
+      border-top: 4px solid #c04a3b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spell-check-loading-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #3b2f27;
+    }
 
     /* ===== 분석리포트 탭 ===== */
     #tab-report { max-width: 900px; margin: 20px auto 50px; }
@@ -740,10 +1443,10 @@
 
   <!-- 상단 탭 -->
   <div class="top-tabs">
-    <div class="tab-btn active" data-tab="reading">본문학습</div>
-    <div class="tab-btn" data-tab="vocab">어휘학습</div>
-    <div class="tab-btn" data-tab="creative">창의활동</div>
-    <div class="tab-btn tab-report" data-tab="report">분석리포트</div>
+    <div class="tab-btn active" data-tab="reading">✏️ 본문학습</div>
+    <div class="tab-btn" data-tab="vocab">📖 어휘학습</div>
+    <div class="tab-btn" data-tab="creative">💡 창의활동</div>
+    <div class="tab-btn tab-report" data-tab="report">🔍 분석리포트</div>
 
     <!-- 오른쪽 고정 학생정보 -->
     <div class="student-info">
@@ -783,41 +1486,34 @@
 
       <!-- 오른쪽 문제 -->
       <div class="right-quiz">
-        <!-- 시간/타이머 -->
+        <!-- 시간 입력 -->
         <div class="quiz-header">
-          <div class="time-input-row">
-            <div class="time-group"><label>월</label><input type="number" placeholder="11"></div>
-            <div class="time-group"><label>일</label><input type="number" placeholder="10"></div>
-            <div class="time-group"><label>분</label><input id="minute-input" type="number" placeholder="05"></div>
-            <div class="time-group"><label>초</label><input id="second-input" type="number" placeholder="00"></div>
+          <div class="date-box">
+            <span class="calendar-icon" id="calendar-icon" onclick="toggleCalendar()">📅</span>
+            <div class="time-group date-group"><label>월</label><input id="month-input" type="number" placeholder="11"></div>
+            <div class="time-group date-group"><label>일</label><input id="day-input" type="number" placeholder="10"></div>
           </div>
-          <!-- 새 원형 타이머 -->
-          <div class="quiz-timer-badge reset" id="timer-display">
-            <svg class="timer-ring" viewBox="0 0 100 100">
-              <circle class="bg" cx="50" cy="50" r="45"></circle>
-              <circle class="progress" cx="50" cy="50" r="45"></circle>
-            </svg>
-            <span id="timer-text">00:00</span>
-          </div>
-          <div class="timer-controls">
-            <button class="timer-btn" onclick="startTimer()">시작</button>
-            <button class="timer-btn" onclick="pauseTimer()">일시정지</button>
-            <button class="timer-btn" onclick="resetTimer()">정지</button>
+          <div class="timer-box">
+            <span class="timer-icon" id="timer-icon" onclick="toggleTimer()">⏰</span>
+            <div class="time-group timer-group"><label>분</label><input id="minute-input" type="number" placeholder="05"></div>
+            <div class="time-group timer-group"><label>초</label><input id="second-input" type="number" placeholder="00"></div>
           </div>
         </div>
 
         <!-- 문제들 -->
         <div class="quiz-section">
+          <div class="quiz-subtitle">객관식 문제</div>
+
           <!-- 1 -->
           <div class="quiz-block">
             <div class="quiz-num">01<div class="mark"></div></div>
             <div class="quiz-content">
               <p class="quiz-q">글쓴이가 지도를 ‘세상을 이해하는 도구’라고 표현한 이유로 가장 알맞은 것은 무엇인가요?</p>
               <ul class="quiz-options">
-                <li><input type="radio" name="q1" value="1"> ① 지도는 우리가 가야 할 길을 빠르게 안내해 주기 때문이다.</li>
-                <li><input type="radio" name="q1" value="2"> ② 지도에는 지역의 위치와 거리뿐 아니라 사람들의 생활 모습과 자연의 특징이 담겨 있기 때문이다.</li>
-                <li><input type="radio" name="q1" value="3"> ③ 지도는 기술의 발전으로 스마트폰에서 쉽게 사용할 수 있기 때문이다.</li>
-                <li><input type="radio" name="q1" value="4"> ④ 지도는 여행지의 관광 명소를 자세히 알려 주기 때문이다.</li>
+                <li><label><input type="radio" name="q1" value="1"><span>① 지도는 우리가 가야 할 길을 빠르게 안내해 주기 때문이다.</span></label></li>
+                <li><label><input type="radio" name="q1" value="2"><span>② 지도에는 지역의 위치와 거리뿐 아니라 사람들의 생활 모습과 자연의 특징이 담겨 있기 때문이다.</span></label></li>
+                <li><label><input type="radio" name="q1" value="3"><span>③ 지도는 기술의 발전으로 스마트폰에서 쉽게 사용할 수 있기 때문이다.</span></label></li>
+                <li><label><input type="radio" name="q1" value="4"><span>④ 지도는 여행지의 관광 명소를 자세히 알려 주기 때문이다.</span></label></li>
               </ul>
             </div>
           </div>
@@ -828,15 +1524,15 @@
             <div class="quiz-content">
               <p class="quiz-q">다음 중 ‘주제도’의 특징을 바르게 설명한 것은 무엇인가요?</p>
               <ul class="quiz-options">
-                <li><input type="radio" name="q2" value="1"> ① 자연환경을 중심으로 만든 지도이다.</li>
-                <li><input type="radio" name="q2" value="2"> ② 모든 지역의 정보를 한눈에 볼 수 있게 만든 지도이다.</li>
-                <li><input type="radio" name="q2" value="3"> ③ 교통, 인구, 기후 등 특정한 주제를 중심으로 제작된 지도이다.</li>
-                <li><input type="radio" name="q2" value="4"> ④ 지도 중 가장 오래된 형태로 나라의 경계를 표시한다.</li>
+                <li><label><input type="radio" name="q2" value="1"><span>① 자연환경을 중심으로 만든 지도이다.</span></label></li>
+                <li><label><input type="radio" name="q2" value="2"><span>② 모든 지역의 정보를 한눈에 볼 수 있게 만든 지도이다.</span></label></li>
+                <li><label><input type="radio" name="q2" value="3"><span>③ 교통, 인구, 기후 등 특정한 주제를 중심으로 제작된 지도이다.</span></label></li>
+                <li><label><input type="radio" name="q2" value="4"><span>④ 지도 중 가장 오래된 형태로 나라의 경계를 표시한다.</span></label></li>
               </ul>
             </div>
           </div>
 
-          <div class="quiz-subtitle qa" style="margin-top:8px;">[빈칸 채우기]</div>
+          <div class="quiz-subtitle">빈칸 채우기</div>
 
           <!-- 3 (2칸) -->
           <div class="quiz-block small">
@@ -862,10 +1558,10 @@
             </div>
           </div>
 
-          <div class="quiz-subtitle" style="margin-top:8px;">[서술형 문제]</div>
+          <div class="quiz-subtitle">서술형 문제</div>
           <!-- 5 -->
           <div class="quiz-block">
-            <div class="quiz-num" style="background:#c04a3b;">05<div class="mark"></div></div>
+            <div class="quiz-num">05<div class="mark"></div></div>
             <div class="quiz-content">
               <p class="quiz-q">
                 “지도를 잘 읽는 사람은 길을 아는 사람을 넘어, 세상을 이해하는 사람이다.”라는 말의 뜻을
@@ -940,12 +1636,31 @@
         <div id="creative-render"
              style="display:none; white-space:pre-wrap; font-size:16px; line-height:1.8;"></div>
 
-        <!-- 🔸 제출 버튼 -->
+        <!-- 🔸 맞춤법 검사 결과 영역 -->
+        <div id="spelling-result" class="creative-result">
+          <div id="spelling-errors"></div>
+        </div>
+
+        <!-- 🔸 올바른 맞춤법 영역 -->
+        <div id="spelling-correct" class="creative-result">
+          <div id="spelling-corrected"></div>
+        </div>
+
+        <!-- 🔸 채점하기 & 제출 버튼 -->
         <div class="creative-actions">
+          <button type="button" id="creative-check-btn" class="creative-btn" style="background:#3a8755;">채점하기</button>
           <button type="button" id="creative-submit-btn" class="creative-btn">제출하기</button>
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- 맞춤법 검사 로딩 팝업 -->
+  <div id="spell-check-loading" class="spell-check-loading">
+    <div class="spell-check-loading-content">
+      <div class="spell-check-spinner"></div>
+      <div class="spell-check-loading-text">맞춤법 검사 중입니다...</div>
     </div>
   </div>
 
@@ -1348,7 +2063,17 @@
         markEl.textContent = "";
       });
 
-      document.getElementById("grade-result").style.display = "none";
+      const resultBox = document.getElementById("grade-result");
+      resultBox.style.display = "none";
+      resultBox.innerHTML = "";
+      fullResultHTML = "";
+
+      // solutions-box 제거 (제출하기에서 생성된 해설 박스)
+      const solutionsBox = document.getElementById("solutions-box");
+      if (solutionsBox) {
+        solutionsBox.remove();
+      }
+
       document.getElementById("grade-btn").style.display = "inline-block";
       document.getElementById("reset-btn").style.display = "none";
       document.getElementById("submit-btn").style.display = "none";
@@ -1617,14 +2342,108 @@
       }
     }
 
+    /* ===== 한글 맞춤법 검사 함수 ===== */
+    async function checkSpelling(text) {
+      try {
+        // 서버의 맞춤법 검사 API 호출
+        const response = await fetch('/api/spell-check', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: text })
+        });
+
+        if (!response.ok) {
+          throw new Error('서버 응답 오류');
+        }
+
+        const data = await response.json();
+        return data;
+
+      } catch (error) {
+        console.error('맞춤법 검사 오류:', error);
+        // API 실패 시 간단한 폴백: 원본 텍스트 반환
+        return { errata_count: 0, origin_html: text, html: text, notag_html: text };
+      }
+    }
+
     /* ===== 창의활동 제출 ===== */
     const creativeBtn = document.getElementById('creative-submit-btn');
+    const creativeCheckBtn = document.getElementById('creative-check-btn');
     const creativeTextarea = document.getElementById('creative-input');
 
     // 입력할 때마다 자동 저장
     if (creativeTextarea) {
       creativeTextarea.addEventListener('input', () => {
         saveCreativeState();
+      });
+    }
+
+    // 채점하기 버튼 클릭 시
+    if (creativeCheckBtn) {
+      creativeCheckBtn.addEventListener('click', async () => {
+        const text = creativeTextarea ? creativeTextarea.value.trim() : '';
+
+        if (!text) {
+          alert('먼저 글을 작성해주세요.');
+          return;
+        }
+
+        // 로딩 팝업 표시
+        const loadingPopup = document.getElementById('spell-check-loading');
+        loadingPopup.style.display = 'flex';
+        creativeCheckBtn.disabled = true;
+
+        try {
+          const result = await checkSpelling(text);
+
+          // 결과 영역 표시
+          const spellingResult = document.getElementById('spelling-result');
+          const spellingCorrect = document.getElementById('spelling-correct');
+          const spellingErrors = document.getElementById('spelling-errors');
+          const spellingCorrected = document.getElementById('spelling-corrected');
+
+          if (result.errata_count > 0) {
+            // 오류가 있는 경우
+            spellingErrors.innerHTML = `
+              <div style="margin-bottom:8px; font-weight:600; color:#c04a3b;">
+                맞춤법/띄어쓰기 오류 ${result.errata_count}개 발견
+              </div>
+              <div style="line-height:1.8; white-space:pre-wrap;">${result.html}</div>
+            `;
+
+            spellingCorrected.innerHTML = `
+              <div class="correct-block">
+                <div style="margin-bottom:6px; font-weight:600; color:#3a8755;">
+                  ✓ 올바른 맞춤법
+                </div>
+                <div style="line-height:1.8; white-space:pre-wrap;">${result.corrected_html || result.notag_html}</div>
+              </div>
+            `;
+
+            spellingResult.style.display = 'block';
+            spellingCorrect.style.display = 'block';
+          } else {
+            // 오류가 없는 경우
+            spellingErrors.innerHTML = `
+              <div style="font-weight:600; color:#3a8755;">
+                ✓ 맞춤법과 띄어쓰기가 정확합니다!
+              </div>
+            `;
+
+            spellingResult.style.display = 'block';
+            spellingCorrect.style.display = 'none';
+          }
+        } catch (error) {
+          alert('맞춤법 검사 중 오류가 발생했습니다. 다시 시도해주세요.');
+          console.error('맞춤법 검사 오류:', error);
+        } finally {
+          // 로딩 팝업 숨기기
+          loadingPopup.style.display = 'none';
+          // 버튼 복원
+          creativeCheckBtn.disabled = false;
+        }
       });
     }
 
@@ -1902,6 +2721,27 @@ function _bindTabEvents() {
 
 <!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
 <script src="./geo_content.js?v=20251113" defer></script>
+
+<!-- 달력 팝업 -->
+<div class="calendar-overlay" id="calendar-overlay" onclick="closeCalendar()"></div>
+<div class="calendar-popup" id="calendar-popup">
+  <div class="calendar-header">
+    <span class="calendar-nav" onclick="changeMonth(-1)">◀</span>
+    <span id="calendar-title">2024년 11월</span>
+    <span class="calendar-nav" onclick="changeMonth(1)">▶</span>
+  </div>
+  <div class="calendar-grid" id="calendar-grid">
+    <!-- 요일 헤더 -->
+    <div class="calendar-day-header">일</div>
+    <div class="calendar-day-header">월</div>
+    <div class="calendar-day-header">화</div>
+    <div class="calendar-day-header">수</div>
+    <div class="calendar-day-header">목</div>
+    <div class="calendar-day-header">금</div>
+    <div class="calendar-day-header">토</div>
+    <!-- 날짜들은 JavaScript로 동적 생성 -->
+  </div>
+</div>
 
 </body>
 </html>
