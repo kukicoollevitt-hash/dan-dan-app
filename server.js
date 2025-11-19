@@ -4530,7 +4530,7 @@ app.get("/my-learning", async (req, res) => {
             if (unitCode) {
               // 단원 코드로 페이지 URL 생성
               const unitUrl = '/BRAINUP/social/' + unitCode + '.html';
-              window.location.href = unitUrl;
+              window.open(unitUrl, '_blank');
             }
           });
 
