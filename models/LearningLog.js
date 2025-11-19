@@ -18,6 +18,7 @@ const LearningLogSchema = new mongoose.Schema({
   },
 
   completed: { type: Boolean, default: false }, // 학습 완료 여부
+  deleted: { type: Boolean, default: false }, // 소프트 삭제 여부
 
   timestamp: { type: Date, default: Date.now }
 });

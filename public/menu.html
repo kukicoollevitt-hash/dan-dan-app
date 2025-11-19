@@ -350,6 +350,107 @@ body {
   background: none;
 }
 
+/* 레이더 차트 아이콘 */
+.radar-chart-icon {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  width: 120px;
+  height: 120px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+}
+
+.radar-chart-icon:hover {
+  transform: scale(1.1) translateY(-5px);
+  filter: drop-shadow(0 8px 20px rgba(139, 47, 47, 0.4));
+}
+
+.radar-chart-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 학습 분석 모달 */
+.learning-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(3px);
+}
+
+.learning-modal.show {
+  display: flex;
+}
+
+.learning-modal-content {
+  background: #fff;
+  width: 90vw;
+  height: 90vh;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.learning-modal-header {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.learning-modal-title {
+  display: none;
+}
+
+.learning-modal-close {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.learning-modal-close:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.learning-modal-iframe {
+  flex: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+}
 
   </style>
 </head>
@@ -460,6 +561,26 @@ body {
         if (logoutCallback) logoutCallback(true);
       });
     }
+  </script>
+
+  <!-- 🔥 세션 정보를 sessionStorage에 저장 -->
+  <script>
+    (async function() {
+      try {
+        const response = await fetch('/api/session');
+        const data = await response.json();
+
+        if (data.ok && data.user) {
+          // 서버 세션 정보를 sessionStorage에 저장
+          sessionStorage.setItem('user', JSON.stringify(data.user));
+          console.log('✅ Session data saved to sessionStorage:', data.user);
+        } else {
+          console.log('❌ No session data available');
+        }
+      } catch (error) {
+        console.error('❌ Error fetching session:', error);
+      }
+    })();
   </script>
 
   <!-- 로그아웃 확인 모달 -->
@@ -1619,6 +1740,65 @@ async function performLogout() {
       await syncCompletionStatusFromServer();
       restoreProgressOnRenderedList();
     });
+
+    // === 레이더 차트 아이콘 클릭 이벤트 (모달로 표시) ===
+    window.addEventListener('DOMContentLoaded', function() {
+      const radarIcon = document.getElementById('radarChartIcon');
+      const learningModal = document.getElementById('learningModal');
+      const learningIframe = document.getElementById('learningIframe');
+      const closeModalBtn = document.getElementById('closeLearningModal');
+
+      if (radarIcon && learningModal && learningIframe) {
+        // 아이콘 클릭 시 모달 열기
+        radarIcon.addEventListener('click', function() {
+          const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+          console.log('🔍 sessionStorage user:', user);
+          const grade = user.grade || '학년미지정';
+          const name = user.name || '이름미지정';
+          console.log('📊 Opening learning page:', { grade, name });
+
+          const url = `/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
+          console.log('🔗 URL:', url);
+
+          // iframe에 URL 설정하고 모달 열기
+          learningIframe.src = url;
+          learningModal.classList.add('show');
+        });
+
+        // 닫기 버튼 클릭 시 모달 닫기
+        if (closeModalBtn) {
+          closeModalBtn.addEventListener('click', function() {
+            learningModal.classList.remove('show');
+            learningIframe.src = ''; // iframe 초기화
+          });
+        }
+
+        // 배경 클릭 시 모달 닫기
+        learningModal.addEventListener('click', function(e) {
+          if (e.target === learningModal) {
+            learningModal.classList.remove('show');
+            learningIframe.src = ''; // iframe 초기화
+          }
+        });
+      }
+    });
   </script>
+
+  <!-- 레이더 차트 아이콘 -->
+  <div class="radar-chart-icon" id="radarChartIcon" title="나의 학습 분석 보기">
+    <img src="/images/total-radar-chart.png" alt="학습 분석 레이더 차트">
+  </div>
+
+  <!-- 학습 분석 모달 -->
+  <div class="learning-modal" id="learningModal">
+    <div class="learning-modal-content">
+      <div class="learning-modal-header">
+        <div class="learning-modal-title">나의 학습 분석</div>
+        <button class="learning-modal-close" id="closeLearningModal">&times;</button>
+      </div>
+      <iframe class="learning-modal-iframe" id="learningIframe"></iframe>
+    </div>
+  </div>
+
 </body>
 </html>
