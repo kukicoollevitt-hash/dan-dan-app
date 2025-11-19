@@ -54,7 +54,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['실시간','지연 없이 즉시.']
     ],
     vocabFill: {
-      instructions: '[사회·지도 관련 어휘]',
+      instructions: '',
       items: [
         { no: 1, text: '지도는 땅 위의 여러 장소의 위치와 모습을 그림이나 기호로 나타낸 (      ) 예요.', answer: '지도', initials: 'ㅈㄷ', aliases: ['지도'] },
         { no: 2, text: '지도만 잘 봐도 한 지역의 (           )과 생활 모습을 짐작할 수 있어요.', answer: '지리적 특징', initials: 'ㅈㄹㅈ ㅌㅈ', aliases: ['지리적특징'] },
