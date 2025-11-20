@@ -4352,23 +4352,27 @@ app.get("/my-learning", async (req, res) => {
         }
 
         .badge-excellent {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
           color: white;
+          box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
         }
 
         .badge-good {
-          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-          color: white;
+          background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+          color: #333;
+          box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
         }
 
         .badge-normal {
-          background: linear-gradient(135deg, #ffa500 0%, #ff6347 100%);
+          background: linear-gradient(135deg, #ff9a56 0%, #ff6a00 100%);
           color: white;
+          box-shadow: 0 4px 15px rgba(255, 154, 86, 0.4);
         }
 
         .badge-encourage {
-          background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+          background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
           color: white;
+          box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
         }
 
         .radar-card-stats {
@@ -4399,25 +4403,25 @@ app.get("/my-learning", async (req, res) => {
         }
 
         .stat-value.excellent {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .stat-value.good {
           background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
 
+        .stat-value.good {
+          background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
         .stat-value.normal {
-          background: linear-gradient(135deg, #ffa500 0%, #ff6347 100%);
+          background: linear-gradient(135deg, #ff9a56 0%, #ff6a00 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
 
         .stat-value.encourage {
-          background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+          background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
@@ -4426,7 +4430,22 @@ app.get("/my-learning", async (req, res) => {
           font-size: 11px;
           font-weight: 600;
           margin-top: 4px;
-          color: #667eea;
+        }
+
+        .stat-item .stat-grade.excellent {
+          color: #4facfe;
+        }
+
+        .stat-item .stat-grade.good {
+          color: #ffd700;
+        }
+
+        .stat-item .stat-grade.normal {
+          color: #ff9a56;
+        }
+
+        .stat-item .stat-grade.encourage {
+          color: #ff6b6b;
         }
 
         canvas {
@@ -4752,7 +4771,7 @@ app.get("/my-learning", async (req, res) => {
             '<div class="stat-item">' +
               '<div class="stat-label">평균</div>' +
               '<div class="stat-value ' + gradeClass + '">' + avgScore + '</div>' +
-              '<div class="stat-grade">' + badgeText + '</div>' +
+              '<div class="stat-grade ' + gradeClass + '">' + badgeText + '</div>' +
             '</div>' +
             '<div class="stat-item">' +
               '<div class="stat-label">최고</div>' +
@@ -4917,7 +4936,7 @@ app.get("/my-learning", async (req, res) => {
             '<div class="stat-item">' +
               '<div class="stat-label">평균</div>' +
               '<div class="stat-value ' + gradeClass + '">' + avgScore + '</div>' +
-              '<div class="stat-grade">' + badgeText + '</div>' +
+              '<div class="stat-grade ' + gradeClass + '">' + badgeText + '</div>' +
             '</div>' +
             '<div class="stat-item">' +
               '<div class="stat-label">최고</div>' +
