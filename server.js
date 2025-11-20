@@ -3771,12 +3771,18 @@ app.get("/admin/logs", async (req, res) => {
           // 뱃지 등급 결정
           let badgeClass = 'badge-normal';
           let badgeText = '보통';
-          if (avgScore >= 8) {
+          if (avgScore >= 9) {
             badgeClass = 'badge-excellent';
-            badgeText = '우수';
-          } else if (avgScore >= 6) {
+            badgeText = '매우 양호';
+          } else if (avgScore >= 8) {
             badgeClass = 'badge-good';
             badgeText = '양호';
+          } else if (avgScore >= 7) {
+            badgeClass = 'badge-normal';
+            badgeText = '보통';
+          } else {
+            badgeClass = 'badge-encourage';
+            badgeText = '격려';
           }
 
           // 차트 카드 생성
@@ -3895,12 +3901,18 @@ app.get("/admin/logs", async (req, res) => {
           // 뱃지 등급 결정
           let badgeClass = 'badge-normal';
           let badgeText = '보통';
-          if (avgScore >= 8) {
+          if (avgScore >= 9) {
             badgeClass = 'badge-excellent';
-            badgeText = '우수';
-          } else if (avgScore >= 6) {
+            badgeText = '매우 양호';
+          } else if (avgScore >= 8) {
             badgeClass = 'badge-good';
             badgeText = '양호';
+          } else if (avgScore >= 7) {
+            badgeClass = 'badge-normal';
+            badgeText = '보통';
+          } else {
+            badgeClass = 'badge-encourage';
+            badgeText = '격려';
           }
 
           const card = document.createElement('div');
@@ -4340,7 +4352,7 @@ app.get("/my-learning", async (req, res) => {
         }
 
         .badge-excellent {
-          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
         }
 
@@ -4350,8 +4362,13 @@ app.get("/my-learning", async (req, res) => {
         }
 
         .badge-normal {
-          background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-          color: #333;
+          background: linear-gradient(135deg, #ffa500 0%, #ff6347 100%);
+          color: white;
+        }
+
+        .badge-encourage {
+          background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+          color: white;
         }
 
         .radar-card-stats {
@@ -4379,6 +4396,36 @@ app.get("/my-learning", async (req, res) => {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value.excellent {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value.good {
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value.normal {
+          background: linear-gradient(135deg, #ffa500 0%, #ff6347 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value.encourage {
+          background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .stat-grade {
+          font-size: 11px;
+          font-weight: 600;
+          margin-top: 4px;
         }
 
         canvas {
@@ -4434,12 +4481,18 @@ app.get("/my-learning", async (req, res) => {
       // 등급 결정
       let badgeClass = 'badge-normal';
       let badgeText = '보통';
-      if (avgScore >= 8) {
+      if (avgScore >= 9) {
         badgeClass = 'badge-excellent';
-        badgeText = '우수';
-      } else if (avgScore >= 6) {
+        badgeText = '매우 양호';
+      } else if (avgScore >= 8) {
         badgeClass = 'badge-good';
         badgeText = '양호';
+      } else if (avgScore >= 7) {
+        badgeClass = 'badge-normal';
+        badgeText = '보통';
+      } else {
+        badgeClass = 'badge-encourage';
+        badgeText = '격려';
       }
 
       // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01)
@@ -4648,12 +4701,18 @@ app.get("/my-learning", async (req, res) => {
           // 뱃지 등급 결정
           let badgeClass = 'badge-normal';
           let badgeText = '보통';
-          if (avgScore >= 8) {
+          if (avgScore >= 9) {
             badgeClass = 'badge-excellent';
-            badgeText = '우수';
-          } else if (avgScore >= 6) {
+            badgeText = '매우 양호';
+          } else if (avgScore >= 8) {
             badgeClass = 'badge-good';
             badgeText = '양호';
+          } else if (avgScore >= 7) {
+            badgeClass = 'badge-normal';
+            badgeText = '보통';
+          } else {
+            badgeClass = 'badge-encourage';
+            badgeText = '격려';
           }
 
           // 차트 카드 생성
@@ -4679,13 +4738,20 @@ app.get("/my-learning", async (req, res) => {
           const canvas = document.createElement('canvas');
           card.appendChild(canvas);
 
+          // 등급 클래스 결정
+          let gradeClass = 'encourage';
+          if (avgScore >= 9) gradeClass = 'excellent';
+          else if (avgScore >= 8) gradeClass = 'good';
+          else if (avgScore >= 7) gradeClass = 'normal';
+
           // 통계 정보 추가
           const stats = document.createElement('div');
           stats.className = 'radar-card-stats';
           stats.innerHTML =
             '<div class="stat-item">' +
               '<div class="stat-label">평균</div>' +
-              '<div class="stat-value">' + avgScore + '</div>' +
+              '<div class="stat-value ' + gradeClass + '">' + avgScore + '</div>' +
+              '<div class="stat-grade">' + badgeText + '</div>' +
             '</div>' +
             '<div class="stat-item">' +
               '<div class="stat-label">최고</div>' +
@@ -4774,12 +4840,18 @@ app.get("/my-learning", async (req, res) => {
           // 뱃지 등급 결정
           let badgeClass = 'badge-normal';
           let badgeText = '보통';
-          if (avgScore >= 8) {
+          if (avgScore >= 9) {
             badgeClass = 'badge-excellent';
-            badgeText = '우수';
-          } else if (avgScore >= 6) {
+            badgeText = '매우 양호';
+          } else if (avgScore >= 8) {
             badgeClass = 'badge-good';
             badgeText = '양호';
+          } else if (avgScore >= 7) {
+            badgeClass = 'badge-normal';
+            badgeText = '보통';
+          } else {
+            badgeClass = 'badge-encourage';
+            badgeText = '격려';
           }
 
           // 카드 생성
@@ -4831,13 +4903,20 @@ app.get("/my-learning", async (req, res) => {
           const canvas = document.createElement('canvas');
           card.appendChild(canvas);
 
+          // 등급 클래스 결정
+          let gradeClass = 'encourage';
+          if (avgScore >= 9) gradeClass = 'excellent';
+          else if (avgScore >= 8) gradeClass = 'good';
+          else if (avgScore >= 7) gradeClass = 'normal';
+
           // 통계 정보 추가
           const stats = document.createElement('div');
           stats.className = 'radar-card-stats';
           stats.innerHTML =
             '<div class="stat-item">' +
               '<div class="stat-label">평균</div>' +
-              '<div class="stat-value">' + avgScore + '</div>' +
+              '<div class="stat-value ' + gradeClass + '">' + avgScore + '</div>' +
+              '<div class="stat-grade">' + badgeText + '</div>' +
             '</div>' +
             '<div class="stat-item">' +
               '<div class="stat-label">최고</div>' +
