@@ -3773,7 +3773,7 @@ app.get("/admin/logs", async (req, res) => {
           let badgeText = '보통';
           if (avgScore >= 9) {
             badgeClass = 'badge-excellent';
-            badgeText = '매우 양호';
+            badgeText = '우수';
           } else if (avgScore >= 8) {
             badgeClass = 'badge-good';
             badgeText = '양호';
@@ -3903,7 +3903,7 @@ app.get("/admin/logs", async (req, res) => {
           let badgeText = '보통';
           if (avgScore >= 9) {
             badgeClass = 'badge-excellent';
-            badgeText = '매우 양호';
+            badgeText = '우수';
           } else if (avgScore >= 8) {
             badgeClass = 'badge-good';
             badgeText = '양호';
@@ -4426,6 +4426,7 @@ app.get("/my-learning", async (req, res) => {
           font-size: 11px;
           font-weight: 600;
           margin-top: 4px;
+          color: #667eea;
         }
 
         canvas {
@@ -4703,7 +4704,7 @@ app.get("/my-learning", async (req, res) => {
           let badgeText = '보통';
           if (avgScore >= 9) {
             badgeClass = 'badge-excellent';
-            badgeText = '매우 양호';
+            badgeText = '우수';
           } else if (avgScore >= 8) {
             badgeClass = 'badge-good';
             badgeText = '양호';
@@ -4842,7 +4843,7 @@ app.get("/my-learning", async (req, res) => {
           let badgeText = '보통';
           if (avgScore >= 9) {
             badgeClass = 'badge-excellent';
-            badgeText = '매우 양호';
+            badgeText = '우수';
           } else if (avgScore >= 8) {
             badgeClass = 'badge-good';
             badgeText = '양호';
