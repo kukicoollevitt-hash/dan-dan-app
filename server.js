@@ -12,7 +12,7 @@ const OpenAI = require("openai");
 const LearningLog = require("./models/LearningLog");
 
 const app = express();
-const ADMIN_KEY = process.env.ADMIN_KEY;
+const ADMIN_KEY = process.env.ADMIN_KEY ? process.env.ADMIN_KEY.trim() : "";
 
 const PORT = process.env.PORT || 3000;
 const USERS_FILE = "users.json";

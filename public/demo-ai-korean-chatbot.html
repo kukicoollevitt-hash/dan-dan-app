@@ -554,17 +554,35 @@
         let usedCoins = 0; // 사용한 고래 Coin (대화 1회당 -1)
         let conversationHistory = [];
 
+        // 사용자별 localStorage 키 생성
+        function getUserKey(baseKey) {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    return `${baseKey}_${user.grade}_${user.name}`;
+                } catch(e) {
+                    console.error('User parse error:', e);
+                }
+            }
+            return baseKey; // fallback
+        }
+
         // 로컬 스토리지에서 코인 정보 불러오기
         function loadCoins() {
-            const savedTotalCoins = localStorage.getItem('whaleTotalCoins');
-            const savedUsedCoins = localStorage.getItem('whaleUsedCoins');
-            const isFirstVisit = localStorage.getItem('whaleFirstVisit');
+            const totalCoinsKey = getUserKey('whaleTotalCoins');
+            const usedCoinsKey = getUserKey('whaleUsedCoins');
+            const firstVisitKey = getUserKey('whaleFirstVisit');
+
+            const savedTotalCoins = localStorage.getItem(totalCoinsKey);
+            const savedUsedCoins = localStorage.getItem(usedCoinsKey);
+            const isFirstVisit = localStorage.getItem(firstVisitKey);
 
             // 최초 방문 시 10 coin 지급
             if (!isFirstVisit) {
                 totalCoins = 10;
                 usedCoins = 0;
-                localStorage.setItem('whaleFirstVisit', 'true');
+                localStorage.setItem(firstVisitKey, 'true');
                 saveCoins();
             } else {
                 if (savedTotalCoins) totalCoins = parseInt(savedTotalCoins);
@@ -576,8 +594,11 @@
 
         // 로컬 스토리지에 코인 정보 저장
         function saveCoins() {
-            localStorage.setItem('whaleTotalCoins', totalCoins.toString());
-            localStorage.setItem('whaleUsedCoins', usedCoins.toString());
+            const totalCoinsKey = getUserKey('whaleTotalCoins');
+            const usedCoinsKey = getUserKey('whaleUsedCoins');
+
+            localStorage.setItem(totalCoinsKey, totalCoins.toString());
+            localStorage.setItem(usedCoinsKey, usedCoins.toString());
         }
 
         const chatContainer = document.getElementById('chatContainer');
@@ -937,7 +958,8 @@
 
             if (event.data && event.data.type === 'WHALE_COIN_UPDATE') {
                 // localStorage에서 최신 코인 정보 다시 불러오기
-                const savedTotalCoins = localStorage.getItem('whaleTotalCoins');
+                const totalCoinsKey = getUserKey('whaleTotalCoins');
+                const savedTotalCoins = localStorage.getItem(totalCoinsKey);
                 if (savedTotalCoins) {
                     totalCoins = parseInt(savedTotalCoins);
                     updateStats();
@@ -947,7 +969,8 @@
 
         // localStorage 변경 감지 - 같은 페이지 내에서 실시간 업데이트
         window.addEventListener('storage', function(event) {
-            if (event.key === 'whaleTotalCoins' && event.newValue) {
+            const totalCoinsKey = getUserKey('whaleTotalCoins');
+            if (event.key === totalCoinsKey && event.newValue) {
                 totalCoins = parseInt(event.newValue);
                 updateStats();
             }
@@ -955,7 +978,8 @@
 
         // 같은 window 내 코인 변경 감지 (페이지 새로고침 없이)
         setInterval(function() {
-            const savedTotalCoins = localStorage.getItem('whaleTotalCoins');
+            const totalCoinsKey = getUserKey('whaleTotalCoins');
+            const savedTotalCoins = localStorage.getItem(totalCoinsKey);
             if (savedTotalCoins && parseInt(savedTotalCoins) !== totalCoins) {
                 console.log('[챗봇] 코인 변경 감지:', {
                     이전코인: totalCoins,
