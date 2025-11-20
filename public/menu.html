@@ -400,7 +400,7 @@ body {
   left: 140px;
   width: 120px;
   height: 120px;
-  cursor: move;
+  cursor: pointer;
   z-index: 1000;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
   user-select: none;
@@ -409,6 +409,7 @@ body {
 
 .note-icon:hover {
   animation-play-state: paused;
+  transform: scale(1.1);
   filter: drop-shadow(0 8px 20px rgba(139, 47, 47, 0.4));
 }
 
@@ -416,7 +417,33 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  pointer-events: none;
+}
+
+/* 학습실 아이콘 */
+.study-room-icon {
+  position: fixed;
+  bottom: 30px;
+  left: 250px;
+  width: 120px;
+  height: 120px;
+  cursor: pointer;
+  z-index: 1000;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+  user-select: none;
+  animation: float-icon 3s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.study-room-icon:hover {
+  animation-play-state: paused;
+  transform: scale(1.1);
+  filter: drop-shadow(0 8px 20px rgba(139, 47, 47, 0.4));
+}
+
+.study-room-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* 아이콘 둥둥 떠다니는 애니메이션 */
@@ -535,8 +562,8 @@ body {
 
 .unit-modal-content {
   background: #fff;
-  width: 95vw;
-  height: 95vh;
+  width: 90vw;
+  height: 90vh;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -708,6 +735,90 @@ body {
   .ai-chatbot-modal {
     right: 20px;
     bottom: 140px;
+  }
+}
+
+/* 어휘력 퀴즈쇼 모달 - 중앙 팝업 */
+.vocab-quiz-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10005;
+}
+
+.vocab-quiz-modal.show {
+  display: flex;
+  animation: fadeIn 0.3s ease;
+}
+
+.vocab-quiz-modal-content {
+  background: #fff;
+  width: 1000px;
+  height: 750px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.vocab-quiz-modal-header {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
+.vocab-quiz-modal-close {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.vocab-quiz-modal-close:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.vocab-quiz-modal-iframe {
+  flex: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 반응형 */
+@media (max-width: 900px) {
+  .vocab-quiz-modal-content {
+    width: 90%;
+    height: 80%;
   }
 }
 
@@ -2322,69 +2433,42 @@ async function performLogout() {
       }
     });
 
-    // 노트 아이콘 드래그 및 크기 조절 기능
-    const noteIcon = document.getElementById('noteIcon');
-    let isDragging = false;
-    let currentX;
-    let currentY;
-    let initialX;
-    let initialY;
-    let xOffset = 0;
-    let yOffset = 0;
-    let currentScale = 1;
+    // 노트 아이콘 클릭 기능 - 어휘력 퀴즈쇼 모달
+    document.addEventListener('DOMContentLoaded', () => {
+      const noteIcon = document.getElementById('noteIcon');
+      const vocabModal = document.getElementById('vocabQuizModal');
+      const vocabIframe = document.getElementById('vocabQuizIframe');
+      const closeVocabModal = document.getElementById('closeVocabModal');
 
-    noteIcon.addEventListener('mousedown', dragStart);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', dragEnd);
+      if (noteIcon) {
+        noteIcon.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
 
-    // 마우스 휠로 크기 조절
-    noteIcon.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      currentScale = Math.max(0.3, Math.min(3, currentScale + delta));
-      updateTransform();
-    });
-
-    // 더블클릭으로 원래 크기로 리셋
-    noteIcon.addEventListener('dblclick', (e) => {
-      e.preventDefault();
-      currentScale = 1;
-      updateTransform();
-    });
-
-    function dragStart(e) {
-      initialX = e.clientX - xOffset;
-      initialY = e.clientY - yOffset;
-
-      if (e.target === noteIcon || e.target.parentElement === noteIcon) {
-        isDragging = true;
+          // 모달 열기
+          vocabIframe.src = '/demo-vocabulary-quiz.html';
+          vocabModal.classList.add('show');
+        });
       }
-    }
 
-    function drag(e) {
-      if (isDragging) {
-        e.preventDefault();
-
-        currentX = e.clientX - initialX;
-        currentY = e.clientY - initialY;
-
-        xOffset = currentX;
-        yOffset = currentY;
-
-        updateTransform();
+      // 닫기 버튼
+      if (closeVocabModal) {
+        closeVocabModal.addEventListener('click', () => {
+          vocabModal.classList.remove('show');
+          vocabIframe.src = '';
+        });
       }
-    }
 
-    function dragEnd(e) {
-      initialX = currentX;
-      initialY = currentY;
-
-      isDragging = false;
-    }
-
-    function updateTransform() {
-      noteIcon.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0) scale(${currentScale})`;
-    }
+      // 배경 클릭으로 닫기
+      if (vocabModal) {
+        vocabModal.addEventListener('click', (e) => {
+          if (e.target === vocabModal) {
+            vocabModal.classList.remove('show');
+            vocabIframe.src = '';
+          }
+        });
+      }
+    });
   </script>
 
   <!-- 레이더 차트 아이콘 -->
@@ -2395,6 +2479,11 @@ async function performLogout() {
   <!-- 노트 아이콘 -->
   <div class="note-icon" id="noteIcon" title="학습 노트">
     <img src="/images/note-icon.png" alt="학습 노트">
+  </div>
+
+  <!-- 학습실 아이콘 -->
+  <div class="study-room-icon" id="studyRoomIcon" title="학습실">
+    <img src="/images/study-room.png" alt="학습실">
   </div>
 
   <!-- 학습 분석 모달 -->
@@ -2430,6 +2519,16 @@ async function performLogout() {
         <button class="ai-chatbot-modal-close" id="closeAiChatbotModal">&times;</button>
       </div>
       <iframe class="ai-chatbot-modal-iframe" id="aiChatbotIframe"></iframe>
+    </div>
+  </div>
+
+  <!-- 어휘력 퀴즈쇼 모달 -->
+  <div class="vocab-quiz-modal" id="vocabQuizModal">
+    <div class="vocab-quiz-modal-content">
+      <div class="vocab-quiz-modal-header">
+        <button class="vocab-quiz-modal-close" id="closeVocabModal">&times;</button>
+      </div>
+      <iframe class="vocab-quiz-modal-iframe" id="vocabQuizIframe"></iframe>
     </div>
   </div>
 

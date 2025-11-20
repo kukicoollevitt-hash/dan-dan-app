@@ -97,7 +97,7 @@ return res.redirect("/?loginError=pending");
       name,
       phone: cleanPhone,
       pw: cleanPhone,        // 🔥 로그인에서 쓰는 비밀번호 필드
-      academyName,
+      school: academyName,   // 🔹 academyName을 school 필드에 저장
       approved: false,       // 기본값: 승인 전
       deleted: false,
       createdAt: new Date(),
