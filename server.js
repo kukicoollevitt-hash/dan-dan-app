@@ -5186,15 +5186,36 @@ app.get("/my-learning", async (req, res) => {
               const filename = \`학습분석_${grade}_${name}_\${new Date().toISOString().split('T')[0]}.pdf\`;
               console.log('📁 파일명:', filename);
 
-              // html2canvas로 캡처 (용량 최적화)
-              console.log('🎨 캔버스 생성 중...');
+              // 캡처 전에 스크롤 영역 높이 자동 조정
+              const body = document.body;
+              const html = document.documentElement;
+              const originalBodyHeight = body.style.height;
+              const originalHtmlHeight = html.style.height;
+              const originalBodyOverflow = body.style.overflow;
+              const originalHtmlOverflow = html.style.overflow;
+
+              // 전체 내용이 보이도록 높이 조정
+              body.style.height = 'auto';
+              html.style.height = 'auto';
+              body.style.overflow = 'visible';
+              html.style.overflow = 'visible';
+
+              console.log('🎨 캔버스 생성 중... (스크롤 없음 모드)');
               const canvas = await html2canvas(target, {
-                scale: 1.5, // 2 → 1.5로 낮춤 (용량 감소)
+                scale: 1.5,
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#ffffff',
-                logging: false
+                logging: false,
+                windowHeight: target.scrollHeight,
+                height: target.scrollHeight
               });
+
+              // 원래대로 복구
+              body.style.height = originalBodyHeight;
+              html.style.height = originalHtmlHeight;
+              body.style.overflow = originalBodyOverflow;
+              html.style.overflow = originalHtmlOverflow;
 
               console.log('✅ 캔버스 생성 완료:', canvas.width, 'x', canvas.height);
 
