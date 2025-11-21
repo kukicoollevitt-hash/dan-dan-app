@@ -4435,16 +4435,16 @@ app.get("/my-learning", async (req, res) => {
         #radar-wrap, #summary-radar-wrap {
           display: flex;
           flex-wrap: wrap;
-          gap: 30px;
+          gap: 15px;
           justify-content: center;
-          margin: 30px 0;
+          margin: 20px 0;
         }
 
         .radar-card {
           flex: 0 0 320px;
           border: 2px solid #e5d4c1;
           border-radius: 20px;
-          padding: 24px;
+          padding: 16px;
           background: linear-gradient(135deg, #ffffff 0%, #fffaf3 100%);
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
           transition: all 0.3s ease;
@@ -4485,7 +4485,7 @@ app.get("/my-learning", async (req, res) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 16px;
+          margin-bottom: 10px;
         }
 
         .radar-card-title {
@@ -4528,8 +4528,8 @@ app.get("/my-learning", async (req, res) => {
         .radar-card-stats {
           display: flex;
           justify-content: space-around;
-          margin-top: 16px;
-          padding-top: 16px;
+          margin-top: 10px;
+          padding-top: 10px;
           border-top: 1px solid #e5d4c1;
         }
 
