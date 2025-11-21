@@ -3679,15 +3679,6 @@ app.get("/admin/logs", async (req, res) => {
           </table>
         </div>
 
-        <div class="action-buttons">
-          <button class="btn-send" onclick="alert('전송하기 기능이 곧 추가될 예정입니다.')">
-            📤 전송하기
-          </button>
-          <a class="btn-download-action" href="/admin/logs-export?key=${encodeURIComponent(key)}&grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}">
-            📥 다운로드
-          </a>
-        </div>
-
         ${logs.length > 6 ? '<button class="toggle-btn" id="toggleBtn" onclick="toggleRows()">더보기 ▼</button>' : ''}
 
         <hr>
@@ -4110,7 +4101,63 @@ app.get("/admin/logs", async (req, res) => {
         if (radarIndex > 6) {
           document.getElementById('toggleRadarBtn').style.display = 'block';
         }
+
+        // ===== PDF 다운로드 함수 =====
+        async function downloadPDF() {
+          const container = document.querySelector('.container');
+          const { jsPDF } = window.jspdf;
+
+          try {
+            const canvas = await html2canvas(container, {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL('image/jpeg', 0.7);
+            const pdf = new jsPDF({
+              orientation: 'portrait',
+              unit: 'mm',
+              format: 'a4'
+            });
+
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft > 0) {
+              position = heightLeft - imgHeight;
+              pdf.addPage();
+              pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+              heightLeft -= pageHeight;
+            }
+
+            const fileName = \`학습이력_${grade}_${name}_\${new Date().toISOString().slice(0, 10)}.pdf\`;
+            pdf.save(fileName);
+          } catch (error) {
+            console.error('PDF 생성 오류:', error);
+            alert('PDF 생성 중 오류가 발생했습니다.');
+          }
+        }
       </script>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+      <div class="action-buttons">
+        <button class="btn-send" onclick="alert('전송하기 기능이 곧 추가될 예정입니다.')">
+          📤 전송하기
+        </button>
+        <button class="btn-download-action" onclick="downloadPDF()">
+          📥 다운로드
+        </button>
+      </div>
 
     </body>
     </html>
