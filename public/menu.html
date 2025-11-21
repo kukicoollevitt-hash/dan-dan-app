@@ -516,6 +516,56 @@ body {
   display: none;
 }
 
+.learning-modal-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.learning-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+.learning-action-btn svg {
+  flex-shrink: 0;
+}
+
+.send-btn {
+  background: linear-gradient(135deg, #4A90E2 0%, #5CB3FF 100%);
+  color: white;
+}
+
+.send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(74, 144, 226, 0.4);
+}
+
+.download-btn {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  color: white;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(86, 171, 47, 0.4);
+}
+
 .learning-modal-close {
   background: rgba(0, 0, 0, 0.5);
   border: none;
@@ -2486,6 +2536,66 @@ async function performLogout() {
             learningIframe.src = ''; // iframe 초기화
           }
         });
+
+        // 전송하기 버튼 클릭 시 이메일 열기
+        const sendBtn = document.getElementById('sendLearningBtn');
+        if (sendBtn) {
+          console.log('✅ 전송하기 버튼 찾음:', sendBtn);
+          sendBtn.addEventListener('click', function() {
+            console.log('📧 전송하기 버튼 클릭됨');
+
+            // iframe에서 학생 정보 가져오기
+            const iframeSrc = learningIframe.src;
+            const urlParams = new URLSearchParams(iframeSrc.split('?')[1]);
+            const grade = urlParams.get('grade') || '';
+            const name = urlParams.get('name') || '';
+
+            // 이메일 제목과 본문 설정
+            const subject = `[단단국어] ${grade} ${name} 학생 학습 분석 리포트`;
+            const body = `안녕하세요,
+
+${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
+
+📊 학습 분석 내용:
+- 학습 기록 및 점수
+- 단원별 문해력 레이더 차트
+- 종합 분석 결과
+
+자세한 내용은 첨부된 PDF 파일을 확인해주세요.
+
+※ PDF 파일은 '다운로드' 버튼을 클릭하여 먼저 저장한 후 이메일에 첨부해주세요.
+
+감사합니다.`;
+
+            // mailto 링크 생성
+            const mailtoLink = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+            console.log('📧 이메일 앱 열기:', mailtoLink);
+            window.location.href = mailtoLink;
+          });
+        } else {
+          console.error('❌ 전송하기 버튼을 찾을 수 없습니다');
+        }
+
+        // 다운로드 버튼 클릭 시 PDF 생성
+        const downloadBtn = document.getElementById('downloadLearningBtn');
+        if (downloadBtn) {
+          console.log('✅ 다운로드 버튼 찾음:', downloadBtn);
+          downloadBtn.addEventListener('click', function() {
+            console.log('📥 다운로드 버튼 클릭됨');
+            console.log('iframe:', learningIframe);
+            console.log('iframe.contentWindow:', learningIframe.contentWindow);
+            if (learningIframe && learningIframe.contentWindow) {
+              console.log('💬 iframe에 메시지 전송 중...');
+              learningIframe.contentWindow.postMessage({ action: 'downloadPDF' }, '*');
+            } else {
+              console.error('❌ iframe.contentWindow를 찾을 수 없습니다');
+              alert('페이지를 먼저 로드해주세요.');
+            }
+          });
+        } else {
+          console.error('❌ 다운로드 버튼을 찾을 수 없습니다');
+        }
       }
     });
 
@@ -2550,6 +2660,20 @@ async function performLogout() {
         <button class="learning-modal-close" id="closeLearningModal">&times;</button>
       </div>
       <iframe class="learning-modal-iframe" id="learningIframe"></iframe>
+      <div class="learning-modal-footer">
+        <button class="learning-action-btn send-btn" id="sendLearningBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+          전송하기
+        </button>
+        <button class="learning-action-btn download-btn" id="downloadLearningBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          다운로드
+        </button>
+      </div>
     </div>
   </div>
 

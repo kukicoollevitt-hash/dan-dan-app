@@ -4126,6 +4126,9 @@ app.get("/my-learning", async (req, res) => {
     <head>
       <meta charset="UTF-8" />
       <title>나의 학습 분석 - ${grade} ${name}</title>
+      <!-- html2canvas & jsPDF 라이브러리 -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -4525,7 +4528,7 @@ app.get("/my-learning", async (req, res) => {
         unitName = subject + ' ' + number;
       }
 
-      const hiddenClass = idx >= 4 ? ' class="hidden-row"' : '';
+      const hiddenClass = idx >= 10 ? ' class="hidden-row"' : '';
       html += `
         <tr${hiddenClass}>
           <td>${idx + 1}</td>
@@ -4541,7 +4544,7 @@ app.get("/my-learning", async (req, res) => {
             </tbody>
           </table>
         </div>
-        ${logs.length > 4 ? '<button class="toggle-btn" id="toggleBtn" onclick="toggleRows()">더보기 ▼</button>' : ''}
+        ${logs.length > 10 ? '<button class="toggle-btn" id="toggleBtn" onclick="toggleRows()">더보기 ▼</button>' : ''}
 
         <hr>
 
@@ -5011,6 +5014,90 @@ app.get("/my-learning", async (req, res) => {
         if (radarIndex > 6) {
           document.getElementById('toggleRadarBtn').style.display = 'block';
         }
+
+        // PDF 다운로드 기능 (html2canvas + jsPDF 방식)
+        console.log('📄 PDF 다운로드 리스너 등록됨');
+
+        window.addEventListener('message', async function(event) {
+          console.log('📨 메시지 수신:', event.data);
+
+          if (event.data && event.data.action === 'downloadPDF') {
+            console.log('✅ PDF 다운로드 시작');
+
+            try {
+              window.scrollTo(0, 0);
+              const target = document.querySelector('.container');
+
+              if (!target) {
+                console.error('❌ 컨테이너 요소를 찾을 수 없습니다');
+                alert('PDF 생성 실패: 컨텐츠를 찾을 수 없습니다.');
+                return;
+              }
+
+              console.log('📦 컨테이너 요소 찾음:', target);
+
+              const filename = \`학습분석_${grade}_${name}_\${new Date().toISOString().split('T')[0]}.pdf\`;
+              console.log('📁 파일명:', filename);
+
+              // html2canvas로 캡처 (용량 최적화)
+              console.log('🎨 캔버스 생성 중...');
+              const canvas = await html2canvas(target, {
+                scale: 1.5, // 2 → 1.5로 낮춤 (용량 감소)
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false
+              });
+
+              console.log('✅ 캔버스 생성 완료:', canvas.width, 'x', canvas.height);
+
+              // PNG 대신 JPEG 사용 (품질 0.7, 용량 대폭 감소)
+              const imgData = canvas.toDataURL('image/jpeg', 0.7);
+              console.log('📸 이미지 데이터 생성 완료 (JPEG, 품질 0.7)');
+
+              // jsPDF로 PDF 생성
+              const { jsPDF } = window.jspdf;
+              const pdf = new jsPDF('p', 'mm', 'a4');
+              const pdfW = pdf.internal.pageSize.getWidth();
+              const pdfH = pdf.internal.pageSize.getHeight();
+
+              const imgW = pdfW;
+              const imgH = canvas.height * imgW / canvas.width;
+
+              let heightLeft = imgH;
+              let position = 0;
+
+              console.log('📄 PDF 생성 중... (페이지 높이:', imgH, 'mm)');
+
+              // 첫 페이지 (JPEG 형식 사용)
+              pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH);
+              heightLeft -= pdfH;
+
+              // 추가 페이지
+              while (heightLeft > 0) {
+                position = heightLeft - imgH;
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH);
+                heightLeft -= pdfH;
+              }
+
+              // PDF 저장
+              pdf.save(filename);
+              console.log('✅ PDF 다운로드 완료!');
+
+            } catch (error) {
+              console.error('❌ PDF 생성 오류:', error);
+              alert('PDF 생성 중 오류가 발생했습니다: ' + error.message);
+            }
+          }
+        });
+
+        // 라이브러리 로드 확인
+        window.addEventListener('load', function() {
+          console.log('📚 페이지 로드 완료');
+          console.log('📚 html2canvas:', typeof html2canvas);
+          console.log('📚 jsPDF:', typeof window.jspdf);
+        });
       </script>
 
     </body>
