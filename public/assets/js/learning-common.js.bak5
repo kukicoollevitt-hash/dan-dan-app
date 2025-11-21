@@ -411,14 +411,9 @@
     // 분석리포트 새로고침 함수
     function refreshReportTab() {
       try {
-        const unit = window.CUR_UNIT || 'geo_01';
-        const storageKey = `dan-geo-report-state:${unit}`;
-        const saved = localStorage.getItem(storageKey);
-        console.log(`[refreshReportTab] unit=${unit}, localStorage 데이터:`, saved);
-
+        const saved = localStorage.getItem('dan-geo-report-state');
         if (saved) {
           const reportState = JSON.parse(saved);
-          console.log('[refreshReportTab] 파싱된 데이터:', reportState);
 
           // 리포트 패널 업데이트
           updateReportPanel({
@@ -437,10 +432,6 @@
             inferential: reportState.inferential || 0,
             critical: reportState.critical || 0
           });
-
-          console.log('[refreshReportTab] 분석리포트 업데이트 완료');
-        } else {
-          console.log('[refreshReportTab] localStorage에 저장된 데이터 없음');
         }
       } catch(e) {
         console.error('Failed to refresh report:', e);
@@ -449,8 +440,6 @@
 
     // 탭 활성화 함수
     function activateTab(tabName) {
-      console.log('[activateTab] 탭 전환:', tabName);
-
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
 
@@ -463,7 +452,6 @@
 
         // 분석리포트 탭인 경우 데이터 새로고침
         if (tabName === 'report') {
-          console.log('[activateTab] 분석리포트 탭 감지 - refreshReportTab() 호출');
           refreshReportTab();
         }
 
@@ -497,10 +485,7 @@
 
     // 어휘학습 버튼 초기화
     initVocabButtons();
-  
-    // 창의활동 버튼 초기화
-    initCreativeButtons();
-});
+  });
 
     /* ===== 뒤로 가기 확인 팝업 ===== */
     function showBackConfirm() {
@@ -973,10 +958,7 @@
       });
 
       // ★ localStorage에 분석리포트 상태 저장 (분석리포트 탭 즉시 반영용)
-      const unit = window.CUR_UNIT || 'geo_01';
-      const storageKey = `dan-geo-report-state:${unit}`;
-      console.log(`[gradeQuiz] unit=${unit}로 localStorage에 저장`);
-      localStorage.setItem(storageKey, JSON.stringify({
+      localStorage.setItem('dan-geo-report-state', JSON.stringify({
         q1ok: reportState.q1ok,
         q2ok: reportState.q2ok,
         q3ok: reportState.q3ok,
@@ -1038,30 +1020,6 @@
     // 본문 제출
     async function submitQuiz() {
       if (!ensureStudentInfo()) { showSubmitOverlay('학년과 이름을 입력해주세요'); return; }
-
-      // ★ 제출 전에 localStorage에 리포트 상태 저장
-      const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
-      const lexicalFromRatio = Math.round(lexicalRatio * 10);
-
-      const unit = window.CUR_UNIT || 'geo_01';
-      const storageKey = `dan-geo-report-state:${unit}`;
-      console.log(`[submitQuiz] unit=${unit}로 localStorage에 저장`);
-      localStorage.setItem(storageKey, JSON.stringify({
-        q1ok: reportState.q1ok,
-        q2ok: reportState.q2ok,
-        q3ok: reportState.q3ok,
-        q4ok: reportState.q4ok,
-        q5ok: reportState.q5ok,
-        vocabScoreRatio: reportState.vocabScoreRatio,
-        literal: reportState.q1ok ? 10 : 6,
-        structural: reportState.q2ok ? 10 : 6,
-        lexical: lexicalFromRatio,
-        inferential: reportState.q4ok ? 10 : 6,
-        critical: reportState.q5ok ? 10 : 6
-      }));
-
-      console.log('[submitQuiz] localStorage에 리포트 상태 저장 완료');
-
       await captureElementToPDF('capture-reading', '단단국어_본문학습.pdf', { withStudentInfo: true });
       showSubmitSuccess('본문학습');
       const resultBox = document.getElementById("grade-result");
@@ -1139,22 +1097,14 @@
       }
     }
 
-  /* ===== 어휘학습 채점 & 제출 ===== */
-  let vocabGradeBtn, vocabResetBtn, vocabSubmitBtn, vocabResultBox;
-  let vocabFullResultHTML = "";
+    /* ===== 어휘학습 채점 & 제출 ===== */
+    const vocabGradeBtn = document.getElementById('vocab-grade');
+    const vocabResetBtn = document.getElementById('vocab-reset');
+    const vocabSubmitBtn = document.getElementById('vocab-submit');
+    const vocabResultBox = document.getElementById('vocab-result');
+    let vocabFullResultHTML = "";
 
-  function initVocabButtons() {
-    vocabGradeBtn = document.getElementById('vocab-grade');
-    vocabResetBtn = document.getElementById('vocab-reset');
-    vocabSubmitBtn = document.getElementById('vocab-submit');
-    vocabResultBox = document.getElementById('vocab-result');
-
-    if (!vocabGradeBtn || !vocabResetBtn || !vocabSubmitBtn || !vocabResultBox) {
-      console.log('[initVocabButtons] 어휘학습 버튼을 찾을 수 없습니다');
-      return;
-    }
-
-  vocabGradeBtn.addEventListener('click', () => {
+    vocabGradeBtn.addEventListener('click', () => {
       const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
       let basicMsgs = [];
       let fullMsgs = [];
@@ -1291,7 +1241,6 @@
       vocabResultBox.style.display = "block";
       vocabResultBox.innerHTML = vocabFullResultHTML;
     });
-  }
 
     /* ===== 창의활동 저장/복원 함수 ===== */
     function saveCreativeState() {
@@ -1351,13 +1300,10 @@
       }
     }
 
-  /* ===== 창의활동 제출 ===== */
-  let creativeBtn, creativeCheckBtn, creativeTextarea;
-
-  function initCreativeButtons() {
-    creativeBtn = document.getElementById('creative-submit-btn');
-    creativeCheckBtn = document.getElementById('creative-check-btn');
-    creativeTextarea = document.getElementById('creative-input');
+    /* ===== 창의활동 제출 ===== */
+    const creativeBtn = document.getElementById('creative-submit-btn');
+    const creativeCheckBtn = document.getElementById('creative-check-btn');
+    const creativeTextarea = document.getElementById('creative-input');
 
     // 입력할 때마다 자동 저장
     if (creativeTextarea) {
@@ -1446,7 +1392,6 @@
         showSubmitSuccess('창의활동');
       });
     }
-  }
 
     // 시작: 빈 레이더
     drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });

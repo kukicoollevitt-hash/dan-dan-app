@@ -7,6 +7,16 @@ const path = require("path");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const OpenAI = require("openai");
+const nodemailer = require("nodemailer");
+
+// ===== Nodemailer 설정 =====
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
 
 // ===== MongoDB 모델 =====
 const LearningLog = require("./models/LearningLog");
@@ -24,8 +34,8 @@ const openai = new OpenAI({
 });
 
 // ===== 미들웨어 =====
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
 
 // ✅ 세션 미들웨어
 app.use(
@@ -317,7 +327,7 @@ app.get("/api/branch/logs", requireAdminLogin, async (req, res) => {
       });
     }
 
-    const logs = await LearningLog.find({ grade, name })
+    const logs = await LearningLog.find({ grade, name, deleted: { $ne: true } })
       .sort({ timestamp: -1 })
       .lean();
 
@@ -358,7 +368,7 @@ app.post("/admin-signup", async (req, res) => {
 
     // 🔥 어드민(슈퍼관리자) 계정인지 확인
     let isSuper = false;
-    let status = ""; // 기본값: 관리자 계정은 일단 승인
+    let status = "approved"; // 기본값: 관리자 계정은 일단 승인
 
     if (
       academyName === "어드민" &&
@@ -379,61 +389,6 @@ app.post("/admin-signup", async (req, res) => {
       birth,
       phone,
       isSuper, // ✅ 여기서 true/false 저장
-      status,
-    });
-
-    console.log(
-      "✅ 관리자 회원가입 완료:",
-      academyName,
-      name,
-      isSuper ? "(슈퍼관리자)" : ""
-    );
-    return res.redirect("/admin-login");
-  } catch (err) {
-    console.error("❌ /admin-signup 에러:", err);
-    res.status(500).send("관리자 회원가입 중 오류가 발생했습니다.");
-  }
-});
-
-
-// 관리자 회원가입 처리 (POST)
-app.post("/admin-signup", async (req, res) => {
-  try {
-    const { academyName, role, name, birth, phone } = req.body;
-    console.log("📥 [POST] /admin-signup:", req.body);
-
-    if (!academyName || !role || !name || !birth || !phone) {
-      return res.status(400).send("필수 정보가 부족합니다.");
-    }
-
-    // 간단 중복 체크: 같은 학원명 + 이름 + 전화번호
-    const exists = await Admin.findOne({ academyName, name, phone });
-    if (exists) {
-      console.log("⛔ 이미 존재하는 관리자:", academyName, name, phone);
-      return res.redirect("/admin-login");
-    }
-
-    // 🔥 슈퍼관리자 기준값 체크
-    let isSuper = false;
-    let status = "approved"; // 지금은 관리자 계정은 기본 승인
-
-    if (
-      academyName === "어드민" &&
-      name === "어드민" &&
-      birth === "830911" &&
-      phone === "01012341234"
-    ) {
-      isSuper = true;
-      status = "approved"; // 슈퍼관리자는 무조건 승인
-    }
-
-    await Admin.create({
-      academyName,
-      role,
-      name,
-      birth,
-      phone,
-      isSuper,
       status,
     });
 
@@ -4115,7 +4070,7 @@ app.get("/admin/logs", async (req, res) => {
               backgroundColor: '#ffffff'
             });
 
-            const imgData = canvas.toDataURL('image/jpeg', 0.7);
+            const imgData = canvas.toDataURL('image/jpeg', 0.5);
             const pdf = new jsPDF({
               orientation: 'portrait',
               unit: 'mm',
@@ -4150,8 +4105,21 @@ app.get("/admin/logs", async (req, res) => {
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+      <script>
+        // 학습이력 전송 (mailto 방식)
+        function openSendModal() {
+          const subject = \`[단단교실] ${grade} ${name} 학생 학습이력\`;
+          const body = \`안녕하세요,\\n\\n${grade} ${name} 학생의 학습이력 리포트를 전송합니다.\\n\\n📊 학습 분석 내용:\\n- 학습 기록 및 점수\\n- 단원별 문제별 레이더 차트\\n- 종합 분석 결과\\n\\n자세한 내용은 첨부된 PDF 파일을 확인해주세요.\\n\\n※ PDF 파일은 '다운로드' 버튼을 클릭하여 먼저 저장한 후 이메일에 첨부해주세요.\\n\\n감사합니다.\`;
+
+          const mailtoLink = \`mailto:?subject=\${encodeURIComponent(subject)}&body=\${encodeURIComponent(body)}\`;
+
+          console.log('📧 이메일 앱 열기:', mailtoLink);
+          window.location.href = mailtoLink;
+        }
+      </script>
+
       <div class="action-buttons">
-        <button class="btn-send" onclick="alert('전송하기 기능이 곧 추가될 예정입니다.')">
+        <button class="btn-send" onclick="openSendModal()">
           📤 전송하기
         </button>
         <button class="btn-download-action" onclick="downloadPDF()">
@@ -5219,9 +5187,9 @@ app.get("/my-learning", async (req, res) => {
 
               console.log('✅ 캔버스 생성 완료:', canvas.width, 'x', canvas.height);
 
-              // PNG 대신 JPEG 사용 (품질 0.7, 용량 대폭 감소)
-              const imgData = canvas.toDataURL('image/jpeg', 0.7);
-              console.log('📸 이미지 데이터 생성 완료 (JPEG, 품질 0.7)');
+              // PNG 대신 JPEG 사용 (품질 0.5, 용량 대폭 감소)
+              const imgData = canvas.toDataURL('image/jpeg', 0.5);
+              console.log('📸 이미지 데이터 생성 완료 (JPEG, 품질 0.5)');
 
               // jsPDF로 PDF 생성
               const { jsPDF } = window.jspdf;
@@ -5725,7 +5693,11 @@ app.post("/admin/log/delete/:id", async (req, res) => {
   const { key } = req.query;
   const { id } = req.params;
 
-  if (key !== ADMIN_KEY) {
+  // 슈퍼관리자 key 또는 브랜치 관리자 세션 체크
+  const isSuperAdmin = key === ADMIN_KEY;
+  const isBranchAdmin = req.session && req.session.admin;
+
+  if (!isSuperAdmin && !isBranchAdmin) {
     return res.status(403).json({ success: false, message: "관리자 인증 실패" });
   }
 
@@ -5744,6 +5716,96 @@ app.post("/admin/log/delete/:id", async (req, res) => {
   } catch (err) {
     console.error("삭제 오류:", err);
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ===== 학습이력 전송 API =====
+app.post("/admin/send-learning-history", async (req, res) => {
+  const { key, grade, name, email, phone, pdfData } = req.body;
+
+  // 슈퍼관리자 key 또는 브랜치 관리자 세션 체크
+  const isSuperAdmin = key === ADMIN_KEY;
+  const isBranchAdmin = req.session && req.session.admin;
+
+  if (!isSuperAdmin && !isBranchAdmin) {
+    return res.status(403).json({
+      success: false,
+      message: "관리자 인증 실패"
+    });
+  }
+
+  if (!email || !pdfData) {
+    return res.status(400).json({
+      success: false,
+      message: "이메일과 PDF 데이터가 필요합니다"
+    });
+  }
+
+  try {
+    // Base64 PDF 데이터를 Buffer로 변환
+    const pdfBuffer = Buffer.from(pdfData.split(',')[1], 'base64');
+
+    // 이메일 옵션 설정
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: `[단단교실] ${grade} ${name} 학생 학습이력`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2c3e50; margin-bottom: 10px;">📚 단단교실 학습이력</h1>
+            <p style="color: #7f8c8d; font-size: 16px;">학생의 학습 성과를 확인해보세요</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; color: white; margin-bottom: 20px;">
+            <h2 style="margin: 0 0 15px; font-size: 24px;">학생 정보</h2>
+            <p style="margin: 5px 0; font-size: 18px;"><strong>학년:</strong> ${grade}</p>
+            <p style="margin: 5px 0; font-size: 18px;"><strong>이름:</strong> ${name}</p>
+            ${phone ? `<p style="margin: 5px 0; font-size: 16px;"><strong>연락처:</strong> ${phone}</p>` : ''}
+          </div>
+
+          <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: #2c3e50; font-size: 15px; line-height: 1.6; margin: 0;">
+              첨부된 PDF 파일에서 ${name} 학생의 상세한 학습이력과 성취도를 확인하실 수 있습니다.
+              각 과목별 레이더 차트와 통계 데이터를 통해 학습 현황을 파악해보세요.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e9ecef;">
+            <p style="color: #7f8c8d; font-size: 13px; margin: 0;">
+              이 메일은 단단교실 관리자 시스템에서 자동으로 발송되었습니다.
+            </p>
+            <p style="color: #7f8c8d; font-size: 13px; margin: 5px 0 0;">
+              문의사항이 있으시면 관리자에게 연락해주세요.
+            </p>
+          </div>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: `${grade}_${name}_학습이력.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ]
+    };
+
+    // 이메일 발송
+    await transporter.sendMail(mailOptions);
+
+    console.log(`✅ 학습이력 전송 성공: ${email} (${grade} ${name})`);
+
+    res.json({
+      success: true,
+      message: "학습이력이 성공적으로 전송되었습니다"
+    });
+
+  } catch (err) {
+    console.error("❌ 학습이력 전송 오류:", err);
+    res.status(500).json({
+      success: false,
+      message: `전송 실패: ${err.message}`
+    });
   }
 });
 
