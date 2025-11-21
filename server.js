@@ -3025,7 +3025,16 @@ app.post("/api/log", async (req, res) => {
 
     console.log("[/api/log] 저장할 데이터:", logData);
 
-    const savedLog = await LearningLog.create(logData);
+    // 중복 방지: 같은 학생+단원이 이미 있으면 업데이트, 없으면 생성
+    const savedLog = await LearningLog.findOneAndUpdate(
+      { grade, name, unit },  // 검색 조건
+      logData,                // 업데이트할 데이터
+      {
+        new: true,            // 업데이트된 문서 반환
+        upsert: true,         // 없으면 생성
+        setDefaultsOnInsert: true
+      }
+    );
     console.log("[/api/log] 저장 완료:", savedLog._id, "completed:", savedLog.completed);
 
     return res.json({ ok: true });

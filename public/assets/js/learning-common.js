@@ -417,25 +417,25 @@
         console.log(`[refreshReportTab] unit=${unit}, localStorage 데이터:`, saved);
 
         if (saved) {
-          const reportState = JSON.parse(saved);
-          console.log('[refreshReportTab] 파싱된 데이터:', reportState);
+          const savedReportState = JSON.parse(saved);
+          console.log('[refreshReportTab] 파싱된 데이터:', savedReportState);
 
           // 리포트 패널 업데이트
           updateReportPanel({
-            q1ok: reportState.q1ok || false,
-            q2ok: reportState.q2ok || false,
-            q3ok: reportState.q3ok || false,
-            q4ok: reportState.q4ok || false,
-            q5ok: reportState.q5ok || false
+            q1ok: savedReportState.q1ok || false,
+            q2ok: savedReportState.q2ok || false,
+            q3ok: savedReportState.q3ok || false,
+            q4ok: savedReportState.q4ok || false,
+            q5ok: savedReportState.q5ok || false
           });
 
           // 레이더 차트 업데이트
           drawRadarChart({
-            literal: reportState.literal || 0,
-            structural: reportState.structural || 0,
-            lexical: reportState.lexical || 0,
-            inferential: reportState.inferential || 0,
-            critical: reportState.critical || 0
+            literal: savedReportState.literal || 0,
+            structural: savedReportState.structural || 0,
+            lexical: savedReportState.lexical || 0,
+            inferential: savedReportState.inferential || 0,
+            critical: savedReportState.critical || 0
           });
 
           console.log('[refreshReportTab] 분석리포트 업데이트 완료');
@@ -1488,27 +1488,32 @@
       ];
       console.log('[study page] PAGE_IDs =', pageIds);
 
-      // 5) localStorage 내 dan-progress* 전부 병합 저장
-      const allKeys = Object.keys(localStorage);
-      const progressKeys = new Set([
-        `dan-progress:${studentKey}`,
-        `dan-progress-${studentKey}`
-      ]);
-      allKeys.forEach(k => { if (k.startsWith('dan-progress')) progressKeys.add(k); });
+      // 5) 현재 단원에 해당하는 키에만 저장
+      const currentUnitKey = `dan-progress:${studentKey}:${cur}`;
+      let saved;
+      try {
+        saved = JSON.parse(localStorage.getItem(currentUnitKey) || '[]');
+        if (!Array.isArray(saved)) saved = [];
+      } catch(e) {
+        saved = [];
+      }
 
-      progressKeys.forEach(storeKey => {
-        let saved;
-        try {
-          saved = JSON.parse(localStorage.getItem(storeKey) || '[]');
-          // 배열이 아니면 빈 배열로 초기화
-          if (!Array.isArray(saved)) saved = [];
-        }
-        catch(e) { saved = []; }
-        pageIds.forEach(id => { if (!saved.includes(id)) saved.push(id); });
-        localStorage.setItem(storeKey, JSON.stringify(saved));
-        console.log('[study page] wrote to', storeKey, '=>', saved);
+      // pageIds를 saved에 추가 (중복 제거)
+      pageIds.forEach(id => {
+        if (!saved.includes(id)) saved.push(id);
       });
 
-      // 6) 완료 표시
+      localStorage.setItem(currentUnitKey, JSON.stringify(saved));
+      console.log('[study page] Saved completion to', currentUnitKey, '=>', saved);
+
+      // 6) 부모 창에 완료 메시지 전송 (코인 지급 및 UI 업데이트)
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'UNIT_COMPLETED'
+        }, window.location.origin);
+        console.log('[study page] Sent UNIT_COMPLETED to parent');
+      }
+
+      // 7) 완료 표시
       showSubmitSuccess('분석리포트');
     }
