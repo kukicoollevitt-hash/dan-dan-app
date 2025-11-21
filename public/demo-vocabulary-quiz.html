@@ -172,11 +172,43 @@
       text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
     }
 
+    .rank-value-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .rank-value {
       font-size: 24px;
       color: #8B4513;
       font-weight: 900;
       text-shadow: 0 2px 3px rgba(255, 255, 255, 0.5);
+    }
+
+    .rank-change {
+      font-size: 16px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .rank-change.up {
+      color: #2E7D32;
+      animation: rankUp 0.5s ease;
+    }
+
+    .rank-change.down {
+      color: #D32F2F;
+      animation: rankDown 0.5s ease;
+    }
+
+    @keyframes rankUp {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes rankDown {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(5px); }
     }
 
     /* 학사모 고래 이미지 */
@@ -1121,7 +1153,10 @@
       </div>
       <div class="my-rank-display" id="myRankBox" onclick="showRankModal()">
         <span class="rank-label">나의 순위</span>
-        <span class="rank-value" id="myRankValue">0위</span>
+        <div class="rank-value-container">
+          <span class="rank-value" id="myRankValue">0위</span>
+          <span class="rank-change" id="rankChange"></span>
+        </div>
       </div>
       <img src="/images/trophy-whale.png" alt="학사모 고래" class="rank-whale-image">
       <div class="coin-display">
@@ -5007,6 +5042,76 @@
       document.getElementById('ratingScore').textContent = rating;
     }
 
+    // 순위 변동 표시 함수
+    function updateRankChange(rankDiff) {
+      const rankChangeElement = document.getElementById('rankChange');
+
+      if (rankDiff > 0) {
+        // 순위가 올랐을 때 (숫자가 작아짐 = 상승)
+        rankChangeElement.textContent = `▲${rankDiff}`;
+        rankChangeElement.className = 'rank-change up';
+      } else if (rankDiff < 0) {
+        // 순위가 내려갔을 때 (숫자가 커짐 = 하락)
+        rankChangeElement.textContent = `▼${Math.abs(rankDiff)}`;
+        rankChangeElement.className = 'rank-change down';
+      } else {
+        // 순위 변동 없음
+        rankChangeElement.textContent = '';
+        rankChangeElement.className = 'rank-change';
+      }
+    }
+
+    // 12시간마다 순위 재계산 (랜덤 변동)
+    function scheduleRankUpdate() {
+      const userKey = getUserKey();
+      const lastUpdateKey = `${userKey}_lastRankUpdate`;
+      const lastUpdate = parseInt(localStorage.getItem(lastUpdateKey)) || 0;
+      const now = Date.now();
+      const twelveHours = 12 * 60 * 60 * 1000; // 12시간 (밀리초)
+
+      // 12시간이 지났으면 순위 업데이트
+      if (now - lastUpdate >= twelveHours) {
+        // 랜덤하게 순위를 약간 변동 (다른 사용자들의 활동을 시뮬레이션)
+        const myRating = parseFloat(calculateRating());
+        const rankings = generateRankingData();
+
+        // 현재 사용자 정보
+        const userStr = sessionStorage.getItem('user');
+        let myGrade = '초4';
+        let myName = '나';
+
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            myGrade = user.grade || '초4';
+            myName = user.name || '나';
+          } catch(e) {}
+        }
+
+        const myData = { name: myName, grade: myGrade, rating: myRating };
+        rankings.push(myData);
+        rankings.sort((a, b) => b.rating - a.rating);
+
+        const myRank = rankings.findIndex(r => r.name === myName && r.grade === myGrade && r.rating === myRating) + 1;
+
+        // 순위 변동 계산 및 표시
+        const prevRankKey = `${userKey}_prevRank`;
+        const prevRank = parseInt(localStorage.getItem(prevRankKey)) || myRank;
+        const rankDiff = prevRank - myRank;
+
+        if (rankDiff !== 0) {
+          updateRankChange(rankDiff);
+          localStorage.setItem(prevRankKey, myRank);
+        }
+
+        // 마지막 업데이트 시간 저장
+        localStorage.setItem(lastUpdateKey, now);
+      }
+
+      // 다음 체크를 위해 1분마다 확인
+      setTimeout(scheduleRankUpdate, 60 * 1000);
+    }
+
     // 순위 모달 표시
     function showRankModal() {
       const myRating = parseFloat(calculateRating());
@@ -5042,8 +5147,20 @@
       // 내 순위 찾기
       const myRank = rankings.findIndex(r => r.name === myName && r.grade === myGrade && r.rating === myRating) + 1;
 
+      // 이전 순위 가져오기 및 순위 변동 계산
+      const userKey = getUserKey();
+      const prevRankKey = `${userKey}_prevRank`;
+      const prevRank = parseInt(localStorage.getItem(prevRankKey)) || myRank;
+      const rankDiff = prevRank - myRank;
+
       // 우측 상단 "나의 순위" 박스 업데이트
       document.getElementById('myRankValue').textContent = `${myRank}위`;
+
+      // 순위 변동 표시
+      updateRankChange(rankDiff);
+
+      // 현재 순위를 localStorage에 저장
+      localStorage.setItem(prevRankKey, myRank);
 
       // 나의 순위 카드 업데이트
       const myRankItem = document.getElementById('myRankItem');
@@ -5093,6 +5210,9 @@
         closeRankModal();
       }
     });
+
+    // 페이지 로드 시 순위 업데이트 스케줄러 시작
+    scheduleRankUpdate();
   </script>
 </body>
 </html>
