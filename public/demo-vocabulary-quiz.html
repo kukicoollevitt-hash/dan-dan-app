@@ -120,6 +120,164 @@
       50% { box-shadow: 0 4px 25px rgba(86, 197, 150, 0.7); }
     }
 
+    .rating-rank-item {
+      text-align: center;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      padding: 10px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+      animation: ratingShine 2s ease-in-out infinite;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .rating-rank-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+    }
+
+    @keyframes ratingShine {
+      0%, 100% { box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4); }
+      50% { box-shadow: 0 4px 25px rgba(245, 87, 108, 0.7); }
+    }
+
+    /* 순위 리스트 팝업 */
+    .rank-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rank-modal.show {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .rank-modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .rank-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .rank-modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #f5576c;
+    }
+
+    .rank-modal-close {
+      font-size: 28px;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.2s;
+      background: none;
+      border: none;
+      line-height: 1;
+    }
+
+    .rank-modal-close:hover {
+      color: #333;
+    }
+
+    .my-rank-card {
+      background: linear-gradient(135deg, #fff5f7 0%, #ffe5e9 100%);
+      border: 2px solid #f5576c;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.2);
+    }
+
+    .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rank-item {
+      display: grid;
+      grid-template-columns: 60px 80px 100px 1fr;
+      gap: 15px;
+      padding: 12px 15px;
+      background: #fafafa;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .rank-item:hover {
+      background: #f0f0f0;
+      transform: translateX(5px);
+    }
+
+    .rank-item.top3 {
+      background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+      border: 1px solid #ffd700;
+    }
+
+    .rank-item-rank {
+      font-weight: 700;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .rank-item.top3 .rank-item-rank {
+      color: #ff6b00;
+    }
+
+    .rank-item-rating {
+      font-weight: 600;
+      color: #f5576c;
+    }
+
+    .rank-item-grade {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .rank-item-name {
+      font-size: 14px;
+      color: #444;
+      text-align: left;
+    }
+
     .coin-display {
       display: flex;
       align-items: center;
@@ -894,6 +1052,10 @@
         <div class="avg-score-item">
           <div class="score-label">평균 점수</div>
           <div class="score-value" id="avgScore">0</div>
+        </div>
+        <div class="rating-rank-item" id="ratingRankBox" onclick="showRankModal()">
+          <div class="score-label">평점/순위</div>
+          <div class="score-value" id="ratingScore">0.0</div>
         </div>
       </div>
       <div class="coin-display">
@@ -4595,6 +4757,9 @@
       const count = getQuizCount();
       const avg = count > 0 ? Math.round(total / count) : 0;
       document.getElementById('avgScore').textContent = avg;
+
+      // 평점도 함께 업데이트
+      updateRating();
     }
 
     function addCoins(amount) {
@@ -4698,6 +4863,165 @@
       document.getElementById('questionCountScreen').classList.add('show');
       document.getElementById('quizCard').style.display = 'none';
     }
+  </script>
+
+  <!-- 순위 모달 -->
+  <div class="rank-modal" id="rankModal">
+    <div class="rank-modal-content">
+      <div class="rank-modal-header">
+        <div class="rank-modal-title">🏆 전체 순위</div>
+        <button class="rank-modal-close" onclick="closeRankModal()">×</button>
+      </div>
+
+      <!-- 나의 순위 (맨 위 고정) -->
+      <div class="my-rank-card">
+        <div class="rank-item" id="myRankItem">
+          <div class="rank-item-rank">-</div>
+          <div class="rank-item-rating">0.0</div>
+          <div class="rank-item-grade">-</div>
+          <div class="rank-item-name">나</div>
+        </div>
+      </div>
+
+      <!-- 전체 순위 리스트 -->
+      <div class="rank-list" id="rankList">
+        <!-- JavaScript로 동적 생성 -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ 평점/순위 시스템 ============
+
+    // 랜덤 이름 생성용 성/이름 배열
+    const lastNames = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '류', '전'];
+    const firstNames = ['민준', '서준', '예준', '도윤', '시우', '주원', '하준', '지호', '지우', '준서',
+                        '서연', '서윤', '지우', '서현', '민서', '하은', '하윤', '윤서', '지유', '채원'];
+
+    const grades = ['초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+
+    // 100명의 랜덤 사용자 데이터 생성
+    function generateRankingData() {
+      const rankings = [];
+
+      for (let i = 0; i < 100; i++) {
+        const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const grade = grades[Math.floor(Math.random() * grades.length)];
+        const rating = (Math.random() * (9.9 - 3.0) + 3.0).toFixed(1);
+
+        rankings.push({
+          name: lastName + firstName,
+          grade: grade,
+          rating: parseFloat(rating)
+        });
+      }
+
+      // 평점 기준으로 내림차순 정렬
+      rankings.sort((a, b) => b.rating - a.rating);
+
+      return rankings;
+    }
+
+    // 평점 계산 함수
+    function calculateRating() {
+      const total = getTotalScore();
+      const avg = getQuizCount() > 0 ? Math.round(total / getQuizCount()) : 0;
+
+      // 평점 = (총 누적 점수 / 100) × 평균 점수
+      const rating = (total / 100) * avg;
+      return rating.toFixed(1);
+    }
+
+    // 평점 업데이트
+    function updateRating() {
+      const rating = calculateRating();
+      document.getElementById('ratingScore').textContent = rating;
+    }
+
+    // 순위 모달 표시
+    function showRankModal() {
+      const myRating = parseFloat(calculateRating());
+      const rankings = generateRankingData();
+
+      // 현재 사용자 정보 가져오기
+      const userStr = sessionStorage.getItem('user');
+      let myGrade = '초4';
+      let myName = '나';
+
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          myGrade = user.grade || '초4';
+          myName = user.name || '나';
+        } catch(e) {
+          console.error('User parse error:', e);
+        }
+      }
+
+      // 나의 데이터를 랭킹에 추가
+      const myData = {
+        name: myName,
+        grade: myGrade,
+        rating: myRating
+      };
+
+      rankings.push(myData);
+
+      // 다시 정렬
+      rankings.sort((a, b) => b.rating - a.rating);
+
+      // 내 순위 찾기
+      const myRank = rankings.findIndex(r => r.name === myName && r.grade === myGrade && r.rating === myRating) + 1;
+
+      // 나의 순위 카드 업데이트
+      const myRankItem = document.getElementById('myRankItem');
+      myRankItem.innerHTML = `
+        <div class="rank-item-rank">${myRank}위</div>
+        <div class="rank-item-rating">${myRating}</div>
+        <div class="rank-item-grade">${myGrade}</div>
+        <div class="rank-item-name">${myName}</div>
+      `;
+
+      // 전체 순위 리스트 생성
+      const rankList = document.getElementById('rankList');
+      rankList.innerHTML = '';
+
+      rankings.forEach((user, index) => {
+        const rank = index + 1;
+        const isTop3 = rank <= 3;
+        const isMe = user.name === myName && user.grade === myGrade && user.rating === myRating;
+
+        // 자기 자신은 리스트에 표시하지 않음 (위에 고정되어 있음)
+        if (isMe) return;
+
+        const rankItem = document.createElement('div');
+        rankItem.className = `rank-item ${isTop3 ? 'top3' : ''}`;
+        rankItem.innerHTML = `
+          <div class="rank-item-rank">${rank}위</div>
+          <div class="rank-item-rating">${user.rating}</div>
+          <div class="rank-item-grade">${user.grade}</div>
+          <div class="rank-item-name">${user.name}</div>
+        `;
+
+        rankList.appendChild(rankItem);
+      });
+
+      // 모달 표시
+      document.getElementById('rankModal').classList.add('show');
+    }
+
+    // 순위 모달 닫기
+    function closeRankModal() {
+      document.getElementById('rankModal').classList.remove('show');
+    }
+
+    // 모달 배경 클릭 시 닫기
+    document.getElementById('rankModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeRankModal();
+      }
+    });
   </script>
 </body>
 </html>
