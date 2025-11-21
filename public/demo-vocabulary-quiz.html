@@ -106,6 +106,20 @@
       50% { box-shadow: 0 4px 25px rgba(245, 87, 108, 0.7); }
     }
 
+    .avg-score-item {
+      text-align: center;
+      background: linear-gradient(135deg, #a8e6cf 0%, #56c596 100%);
+      padding: 10px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(86, 197, 150, 0.4);
+      animation: avgScoreShine 2s ease-in-out infinite;
+    }
+
+    @keyframes avgScoreShine {
+      0%, 100% { box-shadow: 0 4px 15px rgba(86, 197, 150, 0.4); }
+      50% { box-shadow: 0 4px 25px rgba(86, 197, 150, 0.7); }
+    }
+
     .coin-display {
       display: flex;
       align-items: center;
@@ -876,6 +890,10 @@
         <div class="total-score-item">
           <div class="score-label">총 누적 점수</div>
           <div class="score-value" id="totalScore">0</div>
+        </div>
+        <div class="avg-score-item">
+          <div class="score-label">평균 점수</div>
+          <div class="score-value" id="avgScore">0</div>
         </div>
       </div>
       <div class="coin-display">
@@ -4192,6 +4210,7 @@
     let currentQuestionIndex = 0;
     let score = 0;
     let totalScore = 0; // 총 누적 점수
+    let quizCount = 0; // 총 퀴즈 횟수
     let correctAnswers = 0;
     let wrongAnswers = 0;
     let selectedAnswer = null;
@@ -4441,6 +4460,11 @@
         document.getElementById('coinRewardDisplay').style.display = 'none';
       }
 
+      // 퀴즈 횟수 증가 및 평균 점수 업데이트
+      quizCount = getQuizCount() + 1;
+      setQuizCount(quizCount);
+      updateAvgScore();
+
       resultScreen.classList.add('show');
 
       if (percentage >= 70) {
@@ -4473,8 +4497,9 @@
       document.getElementById('score').textContent = score;
       document.getElementById('currentQuestion').textContent = '1';
       document.getElementById('totalQuestionDisplay').textContent = totalQuestions;
-      // totalScore는 이미 localStorage에 저장되어 있으므로 표시만 업데이트
+      // totalScore와 avgScore는 이미 localStorage에 저장되어 있으므로 표시만 업데이트
       document.getElementById('totalScore').textContent = totalScore;
+      updateAvgScore();
       document.getElementById('resultScreen').classList.remove('show');
       document.getElementById('coinRewardDisplay').style.display = 'none';
 
@@ -4550,6 +4575,26 @@
       document.getElementById('totalScore').textContent = score;
     }
 
+    // 퀴즈 횟수 관련 함수
+    function getQuizCount() {
+      const key = getUserKey('vocabQuizCount');
+      const count = localStorage.getItem(key);
+      return count ? parseInt(count) : 0;
+    }
+
+    function setQuizCount(count) {
+      const key = getUserKey('vocabQuizCount');
+      localStorage.setItem(key, count.toString());
+    }
+
+    // 평균 점수 계산 및 업데이트
+    function updateAvgScore() {
+      const total = getTotalScore();
+      const count = getQuizCount();
+      const avg = count > 0 ? Math.round(total / count) : 0;
+      document.getElementById('avgScore').textContent = avg;
+    }
+
     function addCoins(amount) {
       const currentCoins = getCoins();
       const newTotal = currentCoins + amount;
@@ -4622,9 +4667,11 @@
     createStars();
     updateCoinDisplay();
 
-    // localStorage에서 총 누적 점수 불러오기
+    // localStorage에서 총 누적 점수 및 평균 점수 불러오기
     totalScore = getTotalScore();
+    quizCount = getQuizCount();
     document.getElementById('totalScore').textContent = totalScore;
+    updateAvgScore();
 
     // localStorage 변경 감지 - 챗봇에서 코인 사용 시 실시간 업데이트
     window.addEventListener('storage', function(event) {
