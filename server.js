@@ -3518,6 +3518,39 @@ app.get("/admin/logs", async (req, res) => {
           -webkit-text-fill-color: transparent !important;
           background-clip: text !important;
         }
+
+        /* 더보기 기능 스타일 */
+        .hidden-row {
+          display: none;
+        }
+
+        .hidden-card {
+          display: none !important;
+        }
+
+        .toggle-btn {
+          display: block;
+          margin: 20px auto;
+          padding: 12px 32px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          border-radius: 25px;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .toggle-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .toggle-btn:active {
+          transform: translateY(0);
+        }
       </style>
     </head>
     <body>
@@ -3573,8 +3606,9 @@ app.get("/admin/logs", async (req, res) => {
           })
         : "-";
 
+      const hiddenClass = idx >= 6 ? ' class="hidden-row"' : '';
       html += `
-        <tr>
+        <tr${hiddenClass}>
           <td>${idx + 1}</td>
           <td>${ts}</td>
           <td>${log.series || ""}</td>
@@ -3592,6 +3626,7 @@ app.get("/admin/logs", async (req, res) => {
             </tbody>
           </table>
         </div>
+        ${logs.length > 6 ? '<button class="toggle-btn" id="toggleBtn" onclick="toggleRows()">더보기 ▼</button>' : ''}
 
         <hr>
 
@@ -3880,6 +3915,7 @@ app.get("/admin/logs", async (req, res) => {
 
         // ===== 개별 레이더 차트 생성 =====
         const wrap = document.getElementById('radar-wrap');
+        let radarIndex = 0;
 
         logsForChart.forEach(function(log, idx) {
           if (!log.radar) return;
@@ -3916,7 +3952,7 @@ app.get("/admin/logs", async (req, res) => {
           }
 
           const card = document.createElement('div');
-          card.className = 'radar-card';
+          card.className = 'radar-card' + (radarIndex >= 6 ? ' hidden-card' : '');
 
           const header = document.createElement('div');
           header.className = 'radar-card-header';
@@ -4004,6 +4040,8 @@ app.get("/admin/logs", async (req, res) => {
               }
             }
           });
+
+          radarIndex++;
         });
 
         // 개별 레이더 차트 더보기 버튼 표시
