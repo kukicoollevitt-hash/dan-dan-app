@@ -3551,6 +3551,58 @@ app.get("/admin/logs", async (req, res) => {
         .toggle-btn:active {
           transform: translateY(0);
         }
+
+        /* 중앙 액션 버튼 */
+        .action-buttons {
+          display: flex;
+          gap: 15px;
+          justify-content: center;
+          margin: 40px 0 30px 0;
+        }
+
+        .btn-send {
+          padding: 14px 32px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          border-radius: 50px;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+          transition: all 0.3s ease;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .btn-send:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-download-action {
+          padding: 14px 32px;
+          background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+          color: white;
+          border: none;
+          border-radius: 50px;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+          transition: all 0.3s ease;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .btn-download-action:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        }
       </style>
     </head>
     <body>
@@ -3626,6 +3678,16 @@ app.get("/admin/logs", async (req, res) => {
             </tbody>
           </table>
         </div>
+
+        <div class="action-buttons">
+          <button class="btn-send" onclick="alert('전송하기 기능이 곧 추가될 예정입니다.')">
+            📤 전송하기
+          </button>
+          <a class="btn-download-action" href="/admin/logs-export?key=${encodeURIComponent(key)}&grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}">
+            📥 다운로드
+          </a>
+        </div>
+
         ${logs.length > 6 ? '<button class="toggle-btn" id="toggleBtn" onclick="toggleRows()">더보기 ▼</button>' : ''}
 
         <hr>
