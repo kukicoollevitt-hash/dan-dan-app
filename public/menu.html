@@ -419,6 +419,27 @@ body {
   object-fit: contain;
 }
 
+/* 어휘퀴즈 평균점수 뱃지 */
+.vocab-avg-badge {
+  position: absolute;
+  top: -5px;
+  left: 25px;
+  background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%);
+  color: white;
+  border-radius: 999px;
+  min-width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(255, 20, 147, 0.5);
+  border: 2px solid white;
+  animation: badge-pulse 2s ease-in-out infinite;
+  padding: 0 6px;
+}
+
 /* 학습실 아이콘 */
 .study-room-icon {
   position: fixed;
@@ -3062,6 +3083,26 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       }
     }
 
+    // 어휘퀴즈 평균점수 뱃지 업데이트
+    function updateVocabAvgBadge() {
+      const badge = document.getElementById('vocabAvgBadge');
+      if (badge) {
+        const userStr = sessionStorage.getItem('user');
+        let userKey = 'guest';
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            userKey = `${user.grade}_${user.name}`;
+          } catch(e) {
+            console.error('User parse error:', e);
+          }
+        }
+
+        const avgScore = localStorage.getItem(`${userKey}_vocabAvgScore`);
+        badge.textContent = avgScore ? avgScore : '0';
+      }
+    }
+
     // 학습실 모달 열기
     async function openStudyRoomModal() {
       const modal = document.getElementById('studyRoomModal');
@@ -3455,6 +3496,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
       // 초기 뱃지 업데이트
       updateStudyRoomBadge();
+      updateVocabAvgBadge();
 
       // storage 이벤트로 실시간 동기화
       window.addEventListener('storage', (e) => {
@@ -3484,6 +3526,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
   <!-- 노트 아이콘 -->
   <div class="note-icon" id="noteIcon" title="학습 노트">
     <img src="/images/note-icon-v2.png" alt="학습 노트">
+    <div class="vocab-avg-badge" id="vocabAvgBadge">0</div>
   </div>
 
   <!-- 학습 분석 모달 -->
