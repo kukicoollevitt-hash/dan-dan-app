@@ -6430,6 +6430,9 @@
       // 평균 점수가 변경되었으므로 순위도 즉시 재계산
       updateMyRankDisplay();
 
+      // 서버에 데이터 저장
+      saveDataToServer();
+
       resultScreen.classList.add('show');
 
       if (percentage >= 70) {
@@ -6498,6 +6501,88 @@
         }
       }
       return baseKey; // fallback
+    }
+
+    // ============ 서버 동기화 함수 ============
+
+    // 서버에서 데이터 불러오기
+    async function loadDataFromServer() {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+        const response = await fetch(`/api/user-progress?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+        const result = await response.json();
+
+        if (result.ok && result.data) {
+          const data = result.data;
+
+          // 어휘퀴즈 데이터 복원
+          if (data.vocabularyQuiz) {
+            const vq = data.vocabularyQuiz;
+            localStorage.setItem(getUserKey('vocabTotalScore'), vq.totalScore.toString());
+            localStorage.setItem(getUserKey('vocabQuizCount'), vq.quizCount.toString());
+            localStorage.setItem(getUserKey('vocabAvgScore'), vq.avgScore.toString());
+            localStorage.setItem(getUserKey('whaleTotalCoins'), vq.totalCoins.toString());
+            localStorage.setItem(getUserKey('whaleUsedCoins'), vq.usedCoins.toString());
+
+            if (vq.currentRank) {
+              localStorage.setItem(getUserKey('vocabCurrentRank'), vq.currentRank.toString());
+            }
+            if (vq.previousRank) {
+              localStorage.setItem(getUserKey('_prevRank'), vq.previousRank.toString());
+            }
+            if (vq.lastRankUpdate) {
+              localStorage.setItem(getUserKey('_lastRankUpdate'), new Date(vq.lastRankUpdate).getTime().toString());
+            }
+
+            console.log('✅ 서버에서 어휘퀴즈 데이터 불러옴:', vq);
+          }
+        }
+      } catch (error) {
+        console.error('서버 데이터 로드 오류:', error);
+      }
+    }
+
+    // 서버에 데이터 저장하기
+    async function saveDataToServer() {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+
+        const vocabularyData = {
+          totalScore: getTotalScore(),
+          quizCount: getQuizCount(),
+          avgScore: parseInt(localStorage.getItem(getUserKey('vocabAvgScore')) || '0'),
+          totalCoins: getCoins(),
+          usedCoins: getUsedCoins(),
+          currentRank: parseInt(localStorage.getItem(getUserKey('vocabCurrentRank')) || '0'),
+          previousRank: parseInt(localStorage.getItem(getUserKey('_prevRank')) || '0'),
+          lastRankUpdate: new Date(parseInt(localStorage.getItem(getUserKey('_lastRankUpdate')) || Date.now()))
+        };
+
+        const response = await fetch('/api/user-progress/vocabulary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            grade: user.grade,
+            name: user.name,
+            vocabularyData
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          console.log('✅ 서버에 어휘퀴즈 데이터 저장 완료');
+        }
+      } catch (error) {
+        console.error('서버 데이터 저장 오류:', error);
+      }
     }
 
     // 코인 관련 함수
@@ -6967,8 +7052,18 @@
       }
     });
 
-    // 페이지 로드 시 즉시 순위 표시
-    updateMyRankDisplay();
+    // 페이지 로드 시 서버에서 데이터 불러오기
+    (async () => {
+      await loadDataFromServer();
+
+      // 데이터 로드 후 화면 업데이트
+      totalScore = getTotalScore();
+      quizCount = getQuizCount();
+      document.getElementById('totalScore').textContent = totalScore;
+      updateAvgScore();
+      updateCoinDisplay();
+      updateMyRankDisplay();
+    })();
 
     // 페이지 로드 시 순위 업데이트 스케줄러 시작
     scheduleRankUpdate();

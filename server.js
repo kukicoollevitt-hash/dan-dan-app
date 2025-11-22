@@ -20,6 +20,7 @@ const transporter = nodemailer.createTransport({
 
 // ===== MongoDB 모델 =====
 const LearningLog = require("./models/LearningLog");
+const UserProgress = require("./models/UserProgress");
 
 const app = express();
 const ADMIN_KEY = process.env.ADMIN_KEY ? process.env.ADMIN_KEY.trim() : "";
@@ -6348,6 +6349,177 @@ app.post("/api/ai-english-chat", async (req, res) => {
       success: false,
       error: "AI 응답 생성 중 오류가 발생했습니다",
       details: error.message
+    });
+  }
+});
+
+// ==========================================
+// 사용자 진행 데이터 API
+// ==========================================
+
+// 사용자 데이터 조회
+app.get('/api/user-progress', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade와 name 파라미터가 필요합니다'
+      });
+    }
+
+    let progress = await UserProgress.findOne({ grade, name });
+
+    // 데이터가 없으면 초기 데이터 생성
+    if (!progress) {
+      progress = new UserProgress({
+        grade,
+        name,
+        vocabularyQuiz: {
+          totalScore: 0,
+          quizCount: 0,
+          avgScore: 0,
+          totalCoins: 0,
+          usedCoins: 0,
+          currentRank: 0,
+          previousRank: 0
+        },
+        studyRoom: {
+          assignedTasks: []
+        }
+      });
+      await progress.save();
+    }
+
+    res.json({
+      ok: true,
+      data: progress
+    });
+  } catch (error) {
+    console.error('사용자 데이터 조회 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
+      error: error.message
+    });
+  }
+});
+
+// 어휘퀴즈 데이터 저장
+app.post('/api/user-progress/vocabulary', async (req, res) => {
+  try {
+    const { grade, name, vocabularyData } = req.body;
+
+    if (!grade || !name || !vocabularyData) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade, name, vocabularyData가 필요합니다'
+      });
+    }
+
+    let progress = await UserProgress.findOne({ grade, name });
+
+    if (!progress) {
+      progress = new UserProgress({ grade, name });
+    }
+
+    // 어휘퀴즈 데이터 업데이트
+    progress.vocabularyQuiz = {
+      ...progress.vocabularyQuiz.toObject(),
+      ...vocabularyData,
+      lastRankUpdate: vocabularyData.lastRankUpdate || progress.vocabularyQuiz.lastRankUpdate
+    };
+
+    await progress.save();
+
+    res.json({
+      ok: true,
+      message: '어휘퀴즈 데이터가 저장되었습니다',
+      data: progress
+    });
+  } catch (error) {
+    console.error('어휘퀴즈 데이터 저장 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
+      error: error.message
+    });
+  }
+});
+
+// 학습실 과제 데이터 저장
+app.post('/api/user-progress/study-room', async (req, res) => {
+  try {
+    const { grade, name, studyRoomData } = req.body;
+
+    if (!grade || !name || !studyRoomData) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade, name, studyRoomData가 필요합니다'
+      });
+    }
+
+    let progress = await UserProgress.findOne({ grade, name });
+
+    if (!progress) {
+      progress = new UserProgress({ grade, name });
+    }
+
+    // 학습실 데이터 업데이트
+    progress.studyRoom = studyRoomData;
+
+    await progress.save();
+
+    res.json({
+      ok: true,
+      message: '학습실 데이터가 저장되었습니다',
+      data: progress
+    });
+  } catch (error) {
+    console.error('학습실 데이터 저장 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
+      error: error.message
+    });
+  }
+});
+
+// 메뉴 완료 상태 저장
+app.post('/api/user-progress/menu-completion', async (req, res) => {
+  try {
+    const { grade, name, completionData } = req.body;
+
+    if (!grade || !name || !completionData) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade, name, completionData가 필요합니다'
+      });
+    }
+
+    let progress = await UserProgress.findOne({ grade, name });
+
+    if (!progress) {
+      progress = new UserProgress({ grade, name });
+    }
+
+    // 메뉴 완료 상태 업데이트
+    progress.menuCompletion = new Map(Object.entries(completionData));
+
+    await progress.save();
+
+    res.json({
+      ok: true,
+      message: '메뉴 완료 상태가 저장되었습니다',
+      data: progress
+    });
+  } catch (error) {
+    console.error('메뉴 완료 상태 저장 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
+      error: error.message
     });
   }
 });
