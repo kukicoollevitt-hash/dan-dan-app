@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const LearningLogSchema = new mongoose.Schema({
   grade: { type: String }, // 학년
   name: { type: String }, // 이름
+  phone: { type: String }, // 전화번호 (고유 식별용)
   school: { type: String }, // 학원명
   series: { type: String }, // 시리즈 (예: "BRAIN업")
   unit: { type: String }, // 단원 코드 (예: "geo_01")
@@ -23,7 +24,7 @@ const LearningLogSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 });
 
-// grade, name, timestamp으로 인덱스 생성
-LearningLogSchema.index({ grade: 1, name: 1, timestamp: -1 });
+// grade, name, phone, timestamp으로 인덱스 생성
+LearningLogSchema.index({ grade: 1, name: 1, phone: 1, timestamp: -1 });
 
 module.exports = mongoose.model("LearningLog", LearningLogSchema);

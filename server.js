@@ -4229,16 +4229,22 @@ app.get("/admin/logs-export", async (req, res) => {
 
 // ===== 학습 기록 조회 API (뱃지용) =====
 app.get("/api/learning-logs", async (req, res) => {
-  const { grade, name } = req.query;
+  const { grade, name, phone } = req.query;
 
-  console.log("📊 [/api/learning-logs] 요청:", { grade, name });
+  console.log("📊 [/api/learning-logs] 요청:", { grade, name, phone });
 
   if (!grade || !name) {
     return res.status(400).json({ error: "grade, name 파라미터가 필요합니다." });
   }
 
   try {
-    const logs = await LearningLog.find({ grade, name })
+    // phone이 있으면 phone으로도 필터링 (새로운 학습 기록용)
+    // phone이 없으면 grade, name만으로 필터링 (기존 학습 기록 호환)
+    const query = phone
+      ? { grade, name, phone }
+      : { grade, name };
+
+    const logs = await LearningLog.find(query)
       .sort({ timestamp: -1 })
       .lean();
 

@@ -478,7 +478,7 @@
     }
 
   // 페이지 로드 시 탭 이벤트 등록 및 저장된 탭 복원
-  window.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('DOMContentLoaded', async () => {
     // 탭 버튼 클릭 이벤트
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -490,14 +490,44 @@
       });
     });
 
-    // 저장된 탭 복원 (없으면 본문학습으로 시작)
+    // 학생 정보 가져오기
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    const grade = user.grade || '';
+    const name = user.name || '';
+    const phone = user.phone || '';
     const unit = window.CUR_UNIT || 'geo_01';
-    const savedTab = localStorage.getItem(`current-geo-tab:${unit}`) || 'reading';
+
+    let hasLearningRecord = false;
+
+    // 학습 기록이 있는지 확인
+    if (grade && name) {
+      try {
+        const url = phone
+          ? `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`
+          : `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
+
+        const response = await fetch(url);
+        const logs = await response.json();
+
+        // 현재 단원의 학습 기록이 있는지 확인
+        hasLearningRecord = logs.some(log => log.unit === unit && log.completed);
+        console.log(`[learning-common] 학습 기록 확인: unit=${unit}, hasRecord=${hasLearningRecord}`);
+      } catch (err) {
+        console.error('[learning-common] 학습 기록 조회 오류:', err);
+      }
+    }
+
+    // 학습 기록이 있으면 저장된 탭 복원, 없으면 무조건 본문학습(reading)으로 시작
+    const savedTab = hasLearningRecord
+      ? (localStorage.getItem(`current-geo-tab:${unit}`) || 'reading')
+      : 'reading';
+
+    console.log(`[learning-common] 탭 선택: savedTab=${savedTab}, hasRecord=${hasLearningRecord}`);
     activateTab(savedTab);
 
     // 어휘학습 버튼 초기화
     initVocabButtons();
-  
+
     // 창의활동 버튼 초기화
     initCreativeButtons();
 });
