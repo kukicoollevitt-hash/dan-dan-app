@@ -4410,7 +4410,7 @@ app.get("/my-learning", async (req, res) => {
           transform: translateY(0);
         }
 
-        #radar-wrap, #summary-radar-wrap {
+        #radar-wrap, #summary-radar-wrap, #series-radar-wrap, #field-radar-wrap {
           display: flex;
           flex-wrap: wrap;
           gap: 15px;
@@ -4457,6 +4457,46 @@ app.get("/my-learning", async (req, res) => {
           background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
           -webkit-background-clip: text !important;
           -webkit-text-fill-color: transparent !important;
+        }
+
+        /* 시리즈 카드 - 파란색 */
+        .radar-card.series-card {
+          border-color: rgba(54, 162, 235, 0.5);
+        }
+
+        .radar-card.series-card::before {
+          background: linear-gradient(90deg, #36a2eb 0%, #1e88e5 50%, #1565c0 100%) !important;
+        }
+
+        .radar-card.series-card .radar-card-title {
+          color: #1565c0;
+        }
+
+        .radar-card.series-card .stat-value {
+          color: #36a2eb !important;
+          background: none !important;
+          -webkit-background-clip: unset !important;
+          -webkit-text-fill-color: unset !important;
+        }
+
+        /* 분야별 카드 - 보라색 */
+        .radar-card.field-card {
+          border-color: rgba(153, 102, 255, 0.5);
+        }
+
+        .radar-card.field-card::before {
+          background: linear-gradient(90deg, #9966ff 0%, #7e57c2 50%, #5e35b1 100%) !important;
+        }
+
+        .radar-card.field-card .radar-card-title {
+          color: #5e35b1;
+        }
+
+        .radar-card.field-card .stat-value {
+          color: #9966ff !important;
+          background: none !important;
+          -webkit-background-clip: unset !important;
+          -webkit-text-fill-color: unset !important;
         }
 
         .radar-card-header {
@@ -4670,6 +4710,30 @@ app.get("/my-learning", async (req, res) => {
           </table>
         </div>
         ${logs.length > 10 ? '<button class="toggle-btn" id="toggleBtn" onclick="toggleRows()">더보기 ▼</button>' : ''}
+
+        <hr>
+
+        <div class="section-title">
+          🏆 시리즈 종합 레이더
+        </div>
+        <p class="section-description">
+          전체 시리즈의 모든 학습 데이터를 통합한 최종 레이더입니다.<br/>
+          (※ radar 데이터가 있는 기록들만 평균에 포함됩니다.)
+        </p>
+
+        <div id="series-radar-wrap"></div>
+
+        <hr>
+
+        <div class="section-title">
+          📚 분야별 종합 레이더
+        </div>
+        <p class="section-description">
+          분야별로 모든 학습 데이터의 평균을 보여줍니다.<br/>
+          (※ radar 데이터가 있는 기록들만 평균에 포함됩니다.)
+        </p>
+
+        <div id="field-radar-wrap"></div>
 
         <hr>
 
@@ -5238,11 +5302,353 @@ app.get("/my-learning", async (req, res) => {
           }
         });
 
+        // ===== 시리즈 종합 레이더 =====
+        function renderSeriesRadar(logs) {
+          console.log('🎯 renderSeriesRadar 실행, 총 로그:', logs.length);
+          const seriesWrap = document.getElementById('series-radar-wrap');
+
+          // 모든 radar 데이터가 있는 로그 수집
+          const validLogs = logs.filter(log => log.radar);
+          console.log('📊 radar 데이터가 있는 로그:', validLogs.length);
+
+          if (validLogs.length === 0) {
+            console.log('⚠️ 유효한 로그가 없음');
+            seriesWrap.innerHTML = '<p style="color:#777; font-size:13px;">아직 분석 리포트가 있는 학습 기록이 없습니다.</p>';
+            return;
+          }
+          console.log('✅ 시리즈 레이더 차트 생성 시작');
+
+          // 전체 평균 계산
+          let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
+          let totalInferential = 0, totalCritical = 0;
+          let count = 0;
+
+          validLogs.forEach(log => {
+            totalLiteral += log.radar.literal || 0;
+            totalStructural += log.radar.structural || 0;
+            totalLexical += log.radar.lexical || 0;
+            totalInferential += log.radar.inferential || 0;
+            totalCritical += log.radar.critical || 0;
+            count++;
+          });
+
+          const avgLiteral = Math.round((totalLiteral / count) * 10) / 10;
+          const avgStructural = Math.round((totalStructural / count) * 10) / 10;
+          const avgLexical = Math.round((totalLexical / count) * 10) / 10;
+          const avgInferential = Math.round((totalInferential / count) * 10) / 10;
+          const avgCritical = Math.round((totalCritical / count) * 10) / 10;
+
+          const scores = [avgLiteral, avgStructural, avgLexical, avgInferential, avgCritical];
+          const avgScore = (scores.reduce((a, b) => a + b, 0) / 5).toFixed(1);
+          const maxScore = Math.max(...scores).toFixed(1);
+          const minScore = Math.min(...scores).toFixed(1);
+
+          // 뱃지 등급 결정
+          let badgeClass = 'badge-normal';
+          let badgeText = '보통';
+          let gradeClass = 'normal';
+          if (avgScore >= 9) {
+            badgeClass = 'badge-excellent';
+            badgeText = '우수';
+            gradeClass = 'excellent';
+          } else if (avgScore >= 8) {
+            badgeClass = 'badge-good';
+            badgeText = '양호';
+            gradeClass = 'good';
+          } else if (avgScore >= 7) {
+            badgeClass = 'badge-normal';
+            badgeText = '보통';
+            gradeClass = 'normal';
+          }
+
+          // 시리즈 이름 (첫 번째 로그의 series 사용, 없으면 'BRAIN업')
+          const seriesName = validLogs[0].series || 'BRAIN업';
+
+          // 차트 카드 생성
+          const card = document.createElement('div');
+          card.className = 'radar-card summary-card series-card';
+
+          const header = document.createElement('div');
+          header.className = 'radar-card-header';
+
+          const title = document.createElement('div');
+          title.className = 'radar-card-title';
+          title.textContent = seriesName;
+
+          const badge = document.createElement('div');
+          badge.className = 'badge ' + badgeClass;
+          badge.textContent = badgeText;
+
+          header.appendChild(title);
+          header.appendChild(badge);
+          card.appendChild(header);
+
+          const canvas = document.createElement('canvas');
+          canvas.width = 280;
+          canvas.height = 280;
+          card.appendChild(canvas);
+
+          // 통계 정보
+          const stats = document.createElement('div');
+          stats.className = 'radar-card-stats';
+          stats.innerHTML =
+            '<div class="stat-item">' +
+              '<div class="stat-label">평균</div>' +
+              '<div class="stat-value">' + avgScore + '</div>' +
+              '<div class="stat-grade ' + gradeClass + '">' + badgeText + '</div>' +
+            '</div>' +
+            '<div class="stat-item">' +
+              '<div class="stat-label">최고</div>' +
+              '<div class="stat-value">' + maxScore + '</div>' +
+            '</div>' +
+            '<div class="stat-item">' +
+              '<div class="stat-label">최저</div>' +
+              '<div class="stat-value">' + minScore + '</div>' +
+            '</div>';
+          card.appendChild(stats);
+
+          seriesWrap.appendChild(card);
+
+          // 차트 생성
+          new Chart(canvas.getContext('2d'), {
+            type: 'radar',
+            data: {
+              labels: ['핵심 이해력', '구조 파악력', '어휘 맥락력', '추론·통합력', '비판·적용력'],
+              datasets: [{
+                label: seriesName + ' 전체',
+                data: scores,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 3,
+                pointBackgroundColor: 'rgb(54, 162, 235)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
+              }]
+            },
+            options: {
+              responsive: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                r: {
+                  suggestedMin: 0,
+                  suggestedMax: 10,
+                  ticks: {
+                    stepSize: 2,
+                    backdropColor: 'transparent',
+                    font: { size: 11 }
+                  },
+                  pointLabels: {
+                    font: { size: 12, weight: 'bold' }
+                  },
+                  grid: { color: '#e5d4c1' },
+                  angleLines: { color: '#e5d4c1' }
+                }
+              }
+            }
+          });
+        }
+
+        // ===== 분야별 종합 레이더 =====
+        function renderFieldRadar(logs) {
+          console.log('🎯 renderFieldRadar 실행, 총 로그:', logs.length);
+          const fieldWrap = document.getElementById('field-radar-wrap');
+
+          // 과목 코드 → 분야 매핑
+          const subjectToField = {
+            'geo': '사회분야',
+            'soc': '사회분야',
+            'law': '사회분야',
+            'pol': '사회분야',
+            // 추후 다른 분야 추가 가능
+            // 'sci': '과학분야',
+            // 'korean_culture': '한국문학분야',
+            // 'world_culture': '세계문학분야',
+            // 'person': '인물분야'
+          };
+
+          // 분야별로 그룹화
+          const fieldGroups = {};
+          logs.forEach(log => {
+            if (!log.radar || !log.unit) return;
+
+            // unit 코드에서 과목 추출
+            const subjectCode = log.unit.split('_')[0];
+            const fieldName = subjectToField[subjectCode];
+
+            if (!fieldName) return; // 매핑되지 않은 과목은 제외
+
+            if (!fieldGroups[fieldName]) {
+              fieldGroups[fieldName] = [];
+            }
+            fieldGroups[fieldName].push(log);
+          });
+
+          // 각 분야별로 평균 계산 및 차트 생성
+          let fieldIndex = 0;
+          Object.keys(fieldGroups).forEach(fieldName => {
+            const fieldLogs = fieldGroups[fieldName];
+
+            // 평균 계산
+            let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
+            let totalInferential = 0, totalCritical = 0;
+            let count = 0;
+
+            fieldLogs.forEach(log => {
+              if (log.radar) {
+                totalLiteral += log.radar.literal || 0;
+                totalStructural += log.radar.structural || 0;
+                totalLexical += log.radar.lexical || 0;
+                totalInferential += log.radar.inferential || 0;
+                totalCritical += log.radar.critical || 0;
+                count++;
+              }
+            });
+
+            if (count === 0) return;
+
+            const avgLiteral = Math.round((totalLiteral / count) * 10) / 10;
+            const avgStructural = Math.round((totalStructural / count) * 10) / 10;
+            const avgLexical = Math.round((totalLexical / count) * 10) / 10;
+            const avgInferential = Math.round((totalInferential / count) * 10) / 10;
+            const avgCritical = Math.round((totalCritical / count) * 10) / 10;
+
+            const scores = [avgLiteral, avgStructural, avgLexical, avgInferential, avgCritical];
+            const avgScore = (scores.reduce((a, b) => a + b, 0) / 5).toFixed(1);
+            const maxScore = Math.max(...scores).toFixed(1);
+            const minScore = Math.min(...scores).toFixed(1);
+
+            // 뱃지 등급 결정
+            let badgeClass = 'badge-normal';
+            let badgeText = '보통';
+            let gradeClass = 'normal';
+            if (avgScore >= 9) {
+              badgeClass = 'badge-excellent';
+              badgeText = '우수';
+              gradeClass = 'excellent';
+            } else if (avgScore >= 8) {
+              badgeClass = 'badge-good';
+              badgeText = '양호';
+              gradeClass = 'good';
+            } else if (avgScore >= 7) {
+              badgeClass = 'badge-normal';
+              badgeText = '보통';
+              gradeClass = 'normal';
+            }
+
+            // 차트 카드 생성
+            const card = document.createElement('div');
+            card.className = 'radar-card summary-card field-card' + (fieldIndex >= 3 ? ' hidden-card' : '');
+            fieldIndex++;
+
+            const header = document.createElement('div');
+            header.className = 'radar-card-header';
+
+            // 시리즈 이름 가져오기
+            const seriesName = fieldLogs[0].series || 'BRAIN업';
+
+            const title = document.createElement('div');
+            title.className = 'radar-card-title';
+            title.textContent = seriesName + ' ' + fieldName;
+
+            const badge = document.createElement('div');
+            badge.className = 'badge ' + badgeClass;
+            badge.textContent = badgeText;
+
+            header.appendChild(title);
+            header.appendChild(badge);
+            card.appendChild(header);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 280;
+            canvas.height = 280;
+            card.appendChild(canvas);
+
+            // 통계 정보
+            const stats = document.createElement('div');
+            stats.className = 'radar-card-stats';
+            stats.innerHTML =
+              '<div class="stat-item">' +
+                '<div class="stat-label">평균</div>' +
+                '<div class="stat-value">' + avgScore + '</div>' +
+                '<div class="stat-grade ' + gradeClass + '">' + badgeText + '</div>' +
+              '</div>' +
+              '<div class="stat-item">' +
+                '<div class="stat-label">최고</div>' +
+                '<div class="stat-value">' + maxScore + '</div>' +
+              '</div>' +
+              '<div class="stat-item">' +
+                '<div class="stat-label">최저</div>' +
+                '<div class="stat-value">' + minScore + '</div>' +
+              '</div>';
+            card.appendChild(stats);
+
+            fieldWrap.appendChild(card);
+
+            // 차트 생성
+            new Chart(canvas.getContext('2d'), {
+              type: 'radar',
+              data: {
+                labels: ['핵심 이해력', '구조 파악력', '어휘 맥락력', '추론·통합력', '비판·적용력'],
+                datasets: [{
+                  label: fieldName,
+                  data: scores,
+                  backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                  borderColor: 'rgb(153, 102, 255)',
+                  borderWidth: 3,
+                  pointBackgroundColor: 'rgb(153, 102, 255)',
+                  pointBorderColor: '#fff',
+                  pointBorderWidth: 2,
+                  pointRadius: 5,
+                  pointHoverRadius: 7
+                }]
+              },
+              options: {
+                responsive: false,
+                plugins: {
+                  legend: { display: false }
+                },
+                scales: {
+                  r: {
+                    suggestedMin: 0,
+                    suggestedMax: 10,
+                    ticks: {
+                      stepSize: 2,
+                      backdropColor: 'transparent',
+                      font: { size: 11 }
+                    },
+                    pointLabels: {
+                      font: { size: 12, weight: 'bold' }
+                    },
+                    grid: { color: '#e5d4c1' },
+                    angleLines: { color: '#e5d4c1' }
+                  }
+                }
+              }
+            });
+          });
+
+          // 분야별 레이더가 없으면 안내 메시지
+          if (fieldIndex === 0) {
+            console.log('⚠️ 분야별 레이더 데이터 없음');
+            fieldWrap.innerHTML = '<p style="color:#777; font-size:13px;">아직 분석 리포트가 있는 학습 기록이 없습니다.</p>';
+          } else {
+            console.log('✅ 분야별 레이더 차트 생성 완료, 총:', fieldIndex);
+          }
+        }
+
         // 라이브러리 로드 확인
         window.addEventListener('load', function() {
           console.log('📚 페이지 로드 완료');
           console.log('📚 html2canvas:', typeof html2canvas);
           console.log('📚 jsPDF:', typeof window.jspdf);
+
+          // 레이더 차트 렌더링
+          renderSeriesRadar(logsForChart);
+          renderFieldRadar(logsForChart);
         });
       </script>
 
