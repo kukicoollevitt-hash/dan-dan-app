@@ -4410,6 +4410,240 @@ app.get("/my-learning", async (req, res) => {
           transform: translateY(0);
         }
 
+        /* Progress Section Styles */
+        .progress-section {
+          margin: 40px 0;
+        }
+
+        .total-progress-card {
+          background: white;
+          border-radius: 16px;
+          padding: 30px;
+          margin-bottom: 30px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          text-align: center;
+        }
+
+        .total-progress-title {
+          font-size: 24px;
+          font-weight: 700;
+          margin-bottom: 20px;
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .total-progress-bar-container {
+          width: 100%;
+          height: 40px;
+          background: #f0f0f0;
+          border-radius: 20px;
+          overflow: hidden;
+          position: relative;
+          margin-bottom: 15px;
+        }
+
+        .total-progress-bar {
+          height: 100%;
+          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          transition: width 0.5s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: 700;
+          font-size: 16px;
+        }
+
+        .total-progress-text {
+          font-size: 18px;
+          color: #666;
+          font-weight: 600;
+        }
+
+        .field-progress-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-bottom: 20px;
+        }
+
+        .field-progress-card {
+          background: white;
+          border-radius: 16px;
+          padding: 25px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .field-progress-card.science {
+          border: 2px solid #4facfe;
+        }
+
+        .field-progress-card.society {
+          border: 2px solid #43e97b;
+        }
+
+        .field-progress-card.korean-lit {
+          border: 2px solid #fa709a;
+        }
+
+        .field-progress-card.world-lit {
+          border: 2px solid #30cfd0;
+        }
+
+        .field-progress-card.person {
+          border: 2px solid #a8edea;
+        }
+
+        .field-title {
+          font-size: 16px;
+          font-weight: 700;
+          margin-bottom: 15px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .field-title-text {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .field-percent {
+          font-size: 24px;
+          font-weight: 700;
+        }
+
+        .field-percent.science {
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .field-percent.society {
+          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .field-percent.korean-lit {
+          background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .field-percent.world-lit {
+          background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .field-percent.person {
+          background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .field-progress-bar-container {
+          width: 100%;
+          height: 12px;
+          background: #f0f0f0;
+          border-radius: 6px;
+          overflow: hidden;
+          margin-bottom: 10px;
+        }
+
+        .field-progress-bar {
+          height: 100%;
+          transition: width 0.5s ease;
+        }
+
+        .field-progress-bar.science {
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .field-progress-bar.society {
+          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .field-progress-bar.korean-lit {
+          background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .field-progress-bar.world-lit {
+          background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .field-progress-bar.person {
+          background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .field-progress-text {
+          font-size: 14px;
+          color: #666;
+          margin-bottom: 15px;
+        }
+
+        .subject-list {
+          border-left: 2px solid #e0e0e0;
+          padding-left: 15px;
+          margin-left: 5px;
+        }
+
+        .subject-item {
+          margin-bottom: 12px;
+        }
+
+        .subject-title {
+          font-size: 13px;
+          color: #555;
+          margin-bottom: 5px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .subject-progress-bar-container {
+          width: 100%;
+          height: 6px;
+          background: #f0f0f0;
+          border-radius: 3px;
+          overflow: hidden;
+        }
+
+        .subject-progress-bar {
+          height: 100%;
+          transition: width 0.5s ease;
+          opacity: 0.7;
+        }
+
+        .subject-progress-bar.science {
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .subject-progress-bar.society {
+          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .subject-progress-bar.korean-lit {
+          background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .subject-progress-bar.world-lit {
+          background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .subject-progress-bar.person {
+          background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
         #radar-wrap, #summary-radar-wrap, #series-radar-wrap, #field-radar-wrap {
           display: flex;
           flex-wrap: wrap;
@@ -4620,10 +4854,192 @@ app.get("/my-learning", async (req, res) => {
           max-width: 100%;
           height: auto;
         }
+
+        /* 시리즈 선택 드롭다운 */
+        .series-selector {
+          position: absolute;
+          top: 30px;
+          left: 30px;
+          z-index: 100;
+        }
+
+        .series-dropdown {
+          position: relative;
+        }
+
+        .series-button {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+          transition: all 0.3s ease;
+        }
+
+        .series-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .series-button .arrow {
+          transition: transform 0.3s ease;
+        }
+
+        .series-button.active .arrow {
+          transform: rotate(180deg);
+        }
+
+        .series-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          left: 0;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+          min-width: 200px;
+          overflow: hidden;
+          display: none;
+        }
+
+        .series-menu.show {
+          display: block;
+          animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .series-item {
+          padding: 14px 20px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border-bottom: 1px solid #f0f0f0;
+          font-size: 14px;
+          font-weight: 500;
+          color: #2c3e50;
+        }
+
+        .series-item:last-child {
+          border-bottom: none;
+        }
+
+        .series-item:hover {
+          background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+        }
+
+        .series-item.active {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          font-weight: 700;
+        }
+
+        /* 시리즈 요약 박스 */
+        .series-summary {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin: 30px 0 40px;
+        }
+
+        .summary-card {
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+          border-radius: 20px;
+          padding: 30px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+          border: 2px solid transparent;
+          transition: all 0.3s ease;
+        }
+
+        .summary-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .summary-card.average {
+          border-color: #4facfe;
+        }
+
+        .summary-card.progress {
+          border-color: #43e97b;
+        }
+
+        .summary-label {
+          font-size: 14px;
+          color: #7f8c8d;
+          font-weight: 600;
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .summary-value {
+          font-size: 36px;
+          font-weight: 800;
+          margin-bottom: 8px;
+        }
+
+        .summary-card.average .summary-value {
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .summary-card.progress .summary-value {
+          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .summary-subtext {
+          font-size: 13px;
+          color: #95a5a6;
+        }
+
+        .total-progress-title {
+          font-size: 24px;
+          font-weight: 700;
+          margin-bottom: 20px;
+          color: #2c3e50;
+        }
       </style>
     </head>
     <body>
       <div class="container">
+        <!-- 시리즈 선택 드롭다운 -->
+        <div class="series-selector">
+          <div class="series-dropdown">
+            <button class="series-button" id="seriesButton">
+              <span id="currentSeries">전체 시리즈</span>
+              <span class="arrow">▼</span>
+            </button>
+            <div class="series-menu" id="seriesMenu">
+              <div class="series-item active" data-series="all">전체 시리즈</div>
+              <div class="series-item" data-series="BRAIN온">BRAIN온</div>
+              <div class="series-item" data-series="BRAIN업">BRAIN업</div>
+              <div class="series-item" data-series="BRAIN핏">BRAIN핏</div>
+              <div class="series-item" data-series="BRAIN딥">BRAIN딥</div>
+              <div class="series-item" data-series="BRAIN중등">BRAIN중등</div>
+              <div class="series-item" data-series="BRAIN고등">BRAIN고등</div>
+            </div>
+          </div>
+        </div>
+
         <div class="header">
           <h1>나의 학습 분석</h1>
           <div class="subtitle">${grade} ${name} 학생</div>
@@ -4710,6 +5126,230 @@ app.get("/my-learning", async (req, res) => {
           </table>
         </div>
         ${logs.length > 10 ? '<button class="toggle-btn" id="toggleBtn" onclick="toggleRows()">더보기 ▼</button>' : ''}
+
+        <hr>
+
+        <div class="section-title">
+          📊 진도율
+        </div>
+        <p class="section-description">
+          시리즈 전체 진도율과 분야별/과목별 진도율을 확인할 수 있습니다.
+        </p>
+
+        <div class="progress-section">
+          <!-- Total Series Progress -->
+          <div class="total-progress-card">
+            <div class="total-progress-title" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📚 전체 시리즈 진도율</div>
+            <div class="total-progress-bar-container">
+              <div class="total-progress-bar" id="totalProgressBar" style="width: 0%;">
+                <span id="totalProgressPercent">0%</span>
+              </div>
+            </div>
+            <div class="total-progress-text" id="totalProgressText">
+              <span id="totalProgressTextCount">0 / 400</span>
+              <span style="margin-left: 12px; color: #3b82f6; font-weight: 700;" id="totalProgressTextPercent">(0%)</span>
+            </div>
+          </div>
+
+          <!-- Field Progress Grid -->
+          <div class="field-progress-grid">
+            <!-- Science Field -->
+            <div class="field-progress-card science">
+              <div class="field-title">
+                <div class="field-title-text">🔬 과학분야</div>
+                <div class="field-percent science" id="scienceFieldPercent">0%</div>
+              </div>
+              <div class="field-progress-bar-container">
+                <div class="field-progress-bar science" id="scienceFieldBar" style="width: 0%;"></div>
+              </div>
+              <div class="field-progress-text" id="scienceFieldText">0 / 80</div>
+              <div class="subject-list">
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>생물</span>
+                    <span id="bioPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar science" id="bioBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>지구과학</span>
+                    <span id="earthPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar science" id="earthBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>물리</span>
+                    <span id="physicsPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar science" id="physicsBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>화학</span>
+                    <span id="chemPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar science" id="chemBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Society Field -->
+            <div class="field-progress-card society">
+              <div class="field-title">
+                <div class="field-title-text">🌍 사회분야</div>
+                <div class="field-percent society" id="societyFieldPercent">0%</div>
+              </div>
+              <div class="field-progress-bar-container">
+                <div class="field-progress-bar society" id="societyFieldBar" style="width: 0%;"></div>
+              </div>
+              <div class="field-progress-text" id="societyFieldText">0 / 80</div>
+              <div class="subject-list">
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>사회문화</span>
+                    <span id="socPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar society" id="socBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>지리</span>
+                    <span id="geoPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar society" id="geoBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>법</span>
+                    <span id="lawPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar society" id="lawBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>정치경제</span>
+                    <span id="polPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar society" id="polBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Korean Literature Field -->
+            <div class="field-progress-card korean-lit">
+              <div class="field-title">
+                <div class="field-title-text">📚 한국문학분야</div>
+                <div class="field-percent korean-lit" id="koreanLitFieldPercent">0%</div>
+              </div>
+              <div class="field-progress-bar-container">
+                <div class="field-progress-bar korean-lit" id="koreanLitFieldBar" style="width: 0%;"></div>
+              </div>
+              <div class="field-progress-text" id="koreanLitFieldText">0 / 80</div>
+              <div class="subject-list">
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>현대문학</span>
+                    <span id="modernPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar korean-lit" id="modernBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>고전문학</span>
+                    <span id="classicPercent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar korean-lit" id="classicBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- World Literature Field -->
+            <div class="field-progress-card world-lit">
+              <div class="field-title">
+                <div class="field-title-text">🌏 세계문학분야</div>
+                <div class="field-percent world-lit" id="worldLitFieldPercent">0%</div>
+              </div>
+              <div class="field-progress-bar-container">
+                <div class="field-progress-bar world-lit" id="worldLitFieldBar" style="width: 0%;"></div>
+              </div>
+              <div class="field-progress-text" id="worldLitFieldText">0 / 80</div>
+              <div class="subject-list">
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>세계문학(1)</span>
+                    <span id="world1Percent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar world-lit" id="world1Bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>세계문학(2)</span>
+                    <span id="world2Percent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar world-lit" id="world2Bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Person Field -->
+            <div class="field-progress-card person">
+              <div class="field-title">
+                <div class="field-title-text">👤 인물분야</div>
+                <div class="field-percent person" id="personFieldPercent">0%</div>
+              </div>
+              <div class="field-progress-bar-container">
+                <div class="field-progress-bar person" id="personFieldBar" style="width: 0%;"></div>
+              </div>
+              <div class="field-progress-text" id="personFieldText">0 / 80</div>
+              <div class="subject-list">
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>인물(1)</span>
+                    <span id="person1Percent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar person" id="person1Bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="subject-item">
+                  <div class="subject-title">
+                    <span>인물(2)</span>
+                    <span id="person2Percent">0%</span>
+                  </div>
+                  <div class="subject-progress-bar-container">
+                    <div class="subject-progress-bar person" id="person2Bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <hr>
 
@@ -5640,6 +6280,54 @@ app.get("/my-learning", async (req, res) => {
           }
         }
 
+        // ===== 시리즈 선택 기능 =====
+        let currentSelectedSeries = 'all';
+        const allLogs = logsForChart;
+
+        // 드롭다운 토글
+        document.getElementById('seriesButton').addEventListener('click', function() {
+          const menu = document.getElementById('seriesMenu');
+          const button = this;
+          menu.classList.toggle('show');
+          button.classList.toggle('active');
+        });
+
+        // 시리즈 선택
+        document.querySelectorAll('.series-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const series = this.dataset.series;
+            currentSelectedSeries = series;
+
+            // 메뉴 업데이트
+            document.querySelectorAll('.series-item').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('currentSeries').textContent = this.textContent;
+            document.getElementById('seriesMenu').classList.remove('show');
+            document.getElementById('seriesButton').classList.remove('active');
+
+            // 데이터 필터링
+            const filteredLogs = series === 'all'
+              ? allLogs
+              : allLogs.filter(log => log.series === series);
+
+            console.log('선택된 시리즈:', series, '필터링된 로그:', filteredLogs.length);
+
+            // 차트 및 진도율 업데이트
+            renderSeriesRadar(filteredLogs);
+            renderFieldRadar(filteredLogs);
+            calculateProgress(filteredLogs);
+          });
+        });
+
+        // 외부 클릭 시 메뉴 닫기
+        document.addEventListener('click', function(e) {
+          const selector = document.querySelector('.series-selector');
+          if (!selector.contains(e.target)) {
+            document.getElementById('seriesMenu').classList.remove('show');
+            document.getElementById('seriesButton').classList.remove('active');
+          }
+        });
+
         // 라이브러리 로드 확인
         window.addEventListener('load', function() {
           console.log('📚 페이지 로드 완료');
@@ -5649,7 +6337,138 @@ app.get("/my-learning", async (req, res) => {
           // 레이더 차트 렌더링
           renderSeriesRadar(logsForChart);
           renderFieldRadar(logsForChart);
+
+          // 진도율 계산 및 표시
+          calculateProgress(logsForChart);
         });
+
+        // ===== 진도율 계산 함수 =====
+        function calculateProgress(logs) {
+          // 과목 코드 매핑
+          const subjectMapping = {
+            bio: 'science',
+            earth: 'science',
+            physics: 'science',
+            chem: 'science',
+            soc: 'society',
+            geo: 'society',
+            law: 'society',
+            pol: 'society',
+            modern: 'korean-lit',
+            classic: 'korean-lit',
+            world1: 'world-lit',
+            world2: 'world-lit',
+            person1: 'person',
+            person2: 'person'
+          };
+
+          // 진도 카운트 초기화
+          const progress = {
+            total: 0,
+            science: { total: 0, bio: 0, earth: 0, physics: 0, chem: 0 },
+            society: { total: 0, soc: 0, geo: 0, law: 0, pol: 0 },
+            'korean-lit': { total: 0, modern: 0, classic: 0 },
+            'world-lit': { total: 0, world1: 0, world2: 0 },
+            person: { total: 0, person1: 0, person2: 0 }
+          };
+
+          // 완료된 단원 집합 (중복 제거)
+          const completedUnits = new Set();
+
+          logs.forEach(log => {
+            const unit = log.unit;
+            if (!unit || completedUnits.has(unit)) return;
+
+            completedUnits.add(unit);
+            progress.total++;
+
+            // 과목 코드 추출 (예: "bio01" -> "bio")
+            const subjectCode = unit.match(/^[a-z]+/)?.[0];
+            if (!subjectCode) return;
+
+            const field = subjectMapping[subjectCode];
+            if (field && progress[field]) {
+              progress[field].total++;
+              if (progress[field][subjectCode] !== undefined) {
+                progress[field][subjectCode]++;
+              }
+            }
+          });
+
+          // 진도율 업데이트 함수
+          function updateProgress(barId, textId, completed, total) {
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const bar = document.getElementById(barId);
+            const text = document.getElementById(textId);
+
+            if (bar) {
+              bar.style.width = percent + '%';
+              if (barId.includes('total')) {
+                bar.querySelector('span').textContent = percent + '%';
+              }
+            }
+            if (text) {
+              text.textContent = completed + ' / ' + total;
+            }
+            return percent;
+          }
+
+          function updateSubjectProgress(barId, percentId, completed, total) {
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const bar = document.getElementById(barId);
+            const percentEl = document.getElementById(percentId);
+
+            if (bar) {
+              bar.style.width = percent + '%';
+            }
+            if (percentEl) {
+              percentEl.textContent = percent + '%';
+            }
+          }
+
+          // 전체 시리즈 진도율
+          const totalPercent = updateProgress('totalProgressBar', 'totalProgressTextCount', progress.total, 400);
+          const totalPercentEl = document.getElementById('totalProgressTextPercent');
+          if (totalPercentEl) {
+            totalPercentEl.textContent = '(' + totalPercent + '%)';
+          }
+
+          // 과학분야
+          const sciencePercent = updateProgress('scienceFieldBar', 'scienceFieldText', progress.science.total, 80);
+          document.getElementById('scienceFieldPercent').textContent = sciencePercent + '%';
+          updateSubjectProgress('bioBar', 'bioPercent', progress.science.bio, 20);
+          updateSubjectProgress('earthBar', 'earthPercent', progress.science.earth, 20);
+          updateSubjectProgress('physicsBar', 'physicsPercent', progress.science.physics, 20);
+          updateSubjectProgress('chemBar', 'chemPercent', progress.science.chem, 20);
+
+          // 사회분야
+          const societyPercent = updateProgress('societyFieldBar', 'societyFieldText', progress.society.total, 80);
+          document.getElementById('societyFieldPercent').textContent = societyPercent + '%';
+          updateSubjectProgress('socBar', 'socPercent', progress.society.soc, 20);
+          updateSubjectProgress('geoBar', 'geoPercent', progress.society.geo, 20);
+          updateSubjectProgress('lawBar', 'lawPercent', progress.society.law, 20);
+          updateSubjectProgress('polBar', 'polPercent', progress.society.pol, 20);
+
+          // 한국문학분야
+          const koreanLitPercent = updateProgress('koreanLitFieldBar', 'koreanLitFieldText', progress['korean-lit'].total, 80);
+          document.getElementById('koreanLitFieldPercent').textContent = koreanLitPercent + '%';
+          updateSubjectProgress('modernBar', 'modernPercent', progress['korean-lit'].modern, 20);
+          updateSubjectProgress('classicBar', 'classicPercent', progress['korean-lit'].classic, 20);
+
+          // 세계문학분야
+          const worldLitPercent = updateProgress('worldLitFieldBar', 'worldLitFieldText', progress['world-lit'].total, 80);
+          document.getElementById('worldLitFieldPercent').textContent = worldLitPercent + '%';
+          updateSubjectProgress('world1Bar', 'world1Percent', progress['world-lit'].world1, 20);
+          updateSubjectProgress('world2Bar', 'world2Percent', progress['world-lit'].world2, 20);
+
+          // 인물분야
+          const personPercent = updateProgress('personFieldBar', 'personFieldText', progress.person.total, 80);
+          document.getElementById('personFieldPercent').textContent = personPercent + '%';
+          updateSubjectProgress('person1Bar', 'person1Percent', progress.person.person1, 20);
+          updateSubjectProgress('person2Bar', 'person2Percent', progress.person.person2, 20);
+
+          console.log('진도율 계산 완료:', progress);
+        }
       </script>
 
     </body>
