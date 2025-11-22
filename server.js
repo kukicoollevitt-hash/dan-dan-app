@@ -2631,6 +2631,15 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
             <button type="submit" class="btn btn-ghost">엑셀 다운로드</button>
           </form>
 
+          <button
+            id="btn-delete-all"
+            class="btn"
+            style="background: #dc2626; color: #fff; border-color: #dc2626;"
+            onclick="deleteAllData()"
+          >
+            전체 데이터 삭제
+          </button>
+
           <a
             href="/admin/trash?key=${encodeURIComponent(key || "")}"
             class="btn btn-danger"
@@ -2883,6 +2892,50 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
             closeSeriesModal();
           }
         });
+
+        // 전체 데이터 삭제
+        async function deleteAllData() {
+          const confirmMsg = "⚠️ 경고: 모든 회원 정보와 학습 기록이 영구 삭제됩니다.\\n\\n정말로 전체 데이터를 삭제하시겠습니까?\\n\\n이 작업은 되돌릴 수 없습니다!";
+
+          if (!confirm(confirmMsg)) {
+            return;
+          }
+
+          // 2차 확인
+          const doubleConfirm = prompt("정말로 삭제하시려면 '삭제합니다'를 입력하세요:");
+          if (doubleConfirm !== "삭제합니다") {
+            alert("삭제가 취소되었습니다.");
+            return;
+          }
+
+          try {
+            const btn = document.getElementById("btn-delete-all");
+            btn.disabled = true;
+            btn.textContent = "삭제 중...";
+
+            const res = await fetch("/api/delete-all-data", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ key: "${key}" })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+              alert(\`✅ 전체 데이터 삭제 완료!\\n\\n삭제된 회원: \${data.deletedUsers}명\\n삭제된 학습 기록: \${data.deletedRecords}개\`);
+              window.location.reload();
+            } else {
+              alert("❌ 삭제 실패: " + (data.message || "알 수 없는 오류"));
+            }
+          } catch (err) {
+            console.error("삭제 에러:", err);
+            alert("❌ 삭제 중 오류가 발생했습니다.");
+          } finally {
+            const btn = document.getElementById("btn-delete-all");
+            btn.disabled = false;
+            btn.textContent = "전체 데이터 삭제";
+          }
+        }
       </script>
     </body>
     </html>
@@ -7736,6 +7789,91 @@ app.post('/api/user-progress/study-room', async (req, res) => {
       ok: false,
       message: '서버 오류가 발생했습니다',
       error: error.message
+    });
+  }
+});
+
+// 데이터 개수 확인 API (관리자 전용)
+app.get('/api/check-data-count', async (req, res) => {
+  try {
+    const { key } = req.query;
+
+    // 관리자 키 확인
+    if (key !== ADMIN_KEY) {
+      return res.status(403).json({
+        success: false,
+        message: '관리자 권한이 없습니다'
+      });
+    }
+
+    const usersCount = await User.countDocuments({});
+    const logsCount = await LearningLog.countDocuments({});
+
+    let progressCount = 0;
+    try {
+      progressCount = await UserProgress.countDocuments({});
+    } catch (e) {
+      console.log('UserProgress 조회 중 오류:', e.message);
+    }
+
+    res.json({
+      success: true,
+      users: usersCount,
+      learningLogs: logsCount,
+      userProgress: progressCount,
+      total: usersCount + logsCount + progressCount
+    });
+
+  } catch (err) {
+    console.error('데이터 개수 확인 에러:', err);
+    res.status(500).json({
+      success: false,
+      message: '데이터 확인 중 오류가 발생했습니다: ' + err.message
+    });
+  }
+});
+
+// 전체 데이터 삭제 API (관리자 전용)
+app.post('/api/delete-all-data', async (req, res) => {
+  try {
+    const { key } = req.body;
+
+    // 관리자 키 확인
+    if (key !== ADMIN_KEY) {
+      return res.status(403).json({
+        success: false,
+        message: '관리자 권한이 없습니다'
+      });
+    }
+
+    // 모든 회원 삭제
+    const usersResult = await User.deleteMany({});
+
+    // 모든 학습 기록 삭제
+    const logsResult = await LearningLog.deleteMany({});
+
+    // UserProgress 컬렉션도 삭제 (있다면)
+    let progressResult = { deletedCount: 0 };
+    try {
+      progressResult = await UserProgress.deleteMany({});
+    } catch (e) {
+      console.log('UserProgress 삭제 중 오류 (컬렉션이 없을 수 있음):', e.message);
+    }
+
+    console.log(`🗑️ 전체 데이터 삭제 완료: 회원 ${usersResult.deletedCount}명, 학습기록 ${logsResult.deletedCount}개, 진도 ${progressResult.deletedCount}개`);
+
+    res.json({
+      success: true,
+      deletedUsers: usersResult.deletedCount,
+      deletedRecords: logsResult.deletedCount,
+      deletedProgress: progressResult.deletedCount
+    });
+
+  } catch (err) {
+    console.error('전체 데이터 삭제 에러:', err);
+    res.status(500).json({
+      success: false,
+      message: '데이터 삭제 중 오류가 발생했습니다: ' + err.message
     });
   }
 });
