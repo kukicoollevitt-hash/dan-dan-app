@@ -3014,7 +3014,7 @@ async function performLogout() {
       }
     });
 
-    // === 레이더 등급 뱃지 업데이트 ===
+    // === 레이더 등급 뱃지 업데이트 (실시간 계산) ===
     async function updateRadarGradeBadge() {
       // ✅ localStorage의 currentStudent를 우선 사용 (가장 최신 로그인 정보)
       let user = JSON.parse(localStorage.getItem('currentStudent') || '{}');
@@ -3037,53 +3037,10 @@ async function performLogout() {
       }
 
       try {
-        // ✅ 서버에서 저장된 뱃지 데이터 불러오기
-        console.log('📡 API 호출:', `/api/user-progress?grade=${grade}&name=${name}`);
-        const progressResponse = await fetch(`/api/user-progress?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`);
+        // ✅ 학습 기록 조회 (phone 제외 - 기존 저장 데이터 호환)
+        const url = `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
 
-        if (progressResponse.ok) {
-          const progressData = await progressResponse.json();
-          console.log('📦 API 응답 데이터:', progressData);
-
-          if (progressData.ok && progressData.data && progressData.data.reportBadge) {
-            const { radarAvg, totalProgress } = progressData.data.reportBadge;
-            console.log('📊 저장된 뱃지 데이터:', { radarAvg, totalProgress });
-
-            // radarAvg와 totalProgress가 0이 아닐 때만 사용
-            if (radarAvg > 0 || totalProgress > 0) {
-              // 등급 클래스 결정
-              let gradeClass = 'encourage';
-              if (radarAvg >= 9) {
-                gradeClass = 'excellent';
-              } else if (radarAvg >= 8) {
-                gradeClass = 'good';
-              } else if (radarAvg >= 7) {
-                gradeClass = 'average';
-              }
-
-              // 뱃지 업데이트 (레이더 평균 / 진도율)
-              const badge = document.getElementById('radarGradeBadge');
-              badge.textContent = radarAvg.toFixed(1) + ' / ' + Math.round(totalProgress);
-              badge.className = 'radar-grade-badge ' + gradeClass;
-
-              console.log('✅ 레이더 뱃지 업데이트 (저장된 데이터):', radarAvg, '/', totalProgress);
-              return;
-            } else {
-              console.log('⚠️ 저장된 뱃지 데이터가 0이므로 실시간 계산으로 전환');
-            }
-          } else {
-            console.log('⚠️ 저장된 뱃지 데이터 없음');
-          }
-        }
-
-        // 저장된 데이터가 없으면 기존 방식으로 계산
-        console.log('⚠️ 저장된 뱃지 데이터 없음, 기존 방식으로 계산');
-
-        // 학습 기록 조회 (phone 포함 - 동명이인 구분용)
-        const url = phone
-          ? `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`
-          : `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
-
+        console.log('📡 학습 기록 API 호출:', url);
         const response = await fetch(url);
         const logs = await response.json();
 
@@ -3093,37 +3050,7 @@ async function performLogout() {
           return;
         }
 
-        // radar 데이터가 있는 로그만 필터링
-        const validLogs = logs.filter(log => log.radar);
-
-        if (validLogs.length === 0) {
-          console.log('⚠️ radar 데이터가 있는 학습 기록 없음');
-          document.getElementById('radarGradeBadge').textContent = '-';
-          return;
-        }
-
-        // 시리즈 종합 레이더와 동일한 평균 계산 (5개 영역 평균)
-        let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
-        let totalInferential = 0, totalCritical = 0;
-        let count = 0;
-
-        validLogs.forEach(log => {
-          totalLiteral += log.radar.literal || 0;
-          totalStructural += log.radar.structural || 0;
-          totalLexical += log.radar.lexical || 0;
-          totalInferential += log.radar.inferential || 0;
-          totalCritical += log.radar.critical || 0;
-          count++;
-        });
-
-        const avgLiteral = Math.round((totalLiteral / count) * 10) / 10;
-        const avgStructural = Math.round((totalStructural / count) * 10) / 10;
-        const avgLexical = Math.round((totalLexical / count) * 10) / 10;
-        const avgInferential = Math.round((totalInferential / count) * 10) / 10;
-        const avgCritical = Math.round((totalCritical / count) * 10) / 10;
-
-        const scores = [avgLiteral, avgStructural, avgLexical, avgInferential, avgCritical];
-        const avgScore = parseFloat((scores.reduce((a, b) => a + b, 0) / 5).toFixed(1));
+        console.log('📚 총 학습 기록:', logs.length, '개');
 
         // 진도율 계산 (전체 시리즈 기준 400개 단원)
         const completedUnits = new Set();
@@ -3134,25 +3061,61 @@ async function performLogout() {
         });
         const progressPercent = Math.round((completedUnits.size / 400) * 100);
 
-        // 등급 계산 (색상 결정용) - 시리즈 레이더와 동일한 기준
-        let gradeClass = 'average';
+        // radar 데이터가 있는 로그만 필터링
+        const validLogs = logs.filter(log => log.radar);
+        console.log('📊 radar 데이터가 있는 기록:', validLogs.length, '개');
 
-        if (avgScore >= 9) {
-          gradeClass = 'excellent';
-        } else if (avgScore >= 8) {
-          gradeClass = 'good';
-        } else if (avgScore >= 7) {
-          gradeClass = 'average';
-        } else {
-          gradeClass = 'encourage';
+        let avgScore = 0;
+        let gradeClass = 'encourage';
+
+        if (validLogs.length > 0) {
+          // 시리즈 종합 레이더와 동일한 평균 계산 (5개 영역 평균)
+          let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
+          let totalInferential = 0, totalCritical = 0;
+          let count = 0;
+
+          validLogs.forEach(log => {
+            totalLiteral += log.radar.literal || 0;
+            totalStructural += log.radar.structural || 0;
+            totalLexical += log.radar.lexical || 0;
+            totalInferential += log.radar.inferential || 0;
+            totalCritical += log.radar.critical || 0;
+            count++;
+          });
+
+          const avgLiteral = Math.round((totalLiteral / count) * 10) / 10;
+          const avgStructural = Math.round((totalStructural / count) * 10) / 10;
+          const avgLexical = Math.round((totalLexical / count) * 10) / 10;
+          const avgInferential = Math.round((totalInferential / count) * 10) / 10;
+          const avgCritical = Math.round((totalCritical / count) * 10) / 10;
+
+          const scores = [avgLiteral, avgStructural, avgLexical, avgInferential, avgCritical];
+          avgScore = parseFloat((scores.reduce((a, b) => a + b, 0) / 5).toFixed(1));
+
+          // 등급 계산 (색상 결정용)
+          if (avgScore >= 9) {
+            gradeClass = 'excellent';
+          } else if (avgScore >= 8) {
+            gradeClass = 'good';
+          } else if (avgScore >= 7) {
+            gradeClass = 'average';
+          } else {
+            gradeClass = 'encourage';
+          }
         }
 
         // 뱃지 업데이트 (평점 / 진도율 표시)
         const badge = document.getElementById('radarGradeBadge');
-        badge.textContent = avgScore + ' / ' + progressPercent;
+        if (validLogs.length > 0) {
+          // radar 데이터가 있으면: 평점 / 진도율
+          badge.textContent = avgScore + ' / ' + progressPercent;
+        } else {
+          // radar 데이터가 없으면: 진도율만 표시
+          badge.textContent = '- / ' + progressPercent;
+        }
         badge.className = 'radar-grade-badge ' + gradeClass;
 
-        console.log('✅ 레이더 평점 뱃지 업데이트:', avgScore, '점 / 진도율:', progressPercent);
+        console.log('✅ 레이더 뱃지 업데이트:', avgScore || '-', '점 / 진도율:', progressPercent, '%');
       } catch (error) {
         console.error('❌ 레이더 등급 조회 실패:', error);
       }
@@ -3165,8 +3128,24 @@ async function performLogout() {
       const learningIframe = document.getElementById('learningIframe');
       const closeModalBtn = document.getElementById('closeLearningModal');
 
-      // 레이더 등급 뱃지 업데이트
+      // 레이더 등급 뱃지 업데이트 (초기 로드)
       updateRadarGradeBadge();
+
+      // 페이지가 보일 때마다 뱃지 업데이트 (학습 완료 후 돌아왔을 때)
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+          console.log('🔄 페이지 활성화 - 뱃지 업데이트');
+          updateRadarGradeBadge();
+        }
+      });
+
+      // 모달 닫을 때도 뱃지 업데이트
+      if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function() {
+          console.log('🔄 모달 닫기 - 뱃지 업데이트');
+          updateRadarGradeBadge();
+        });
+      }
 
       if (radarIcon && learningModal && learningIframe) {
         // 아이콘 클릭 시 모달 열기

@@ -6065,9 +6065,6 @@ app.get("/my-learning", async (req, res) => {
           const maxScore = Math.max(...scores).toFixed(1);
           const minScore = Math.min(...scores).toFixed(1);
 
-          // ✅ 전역 변수에 레이더 평균 저장 (menu.html 뱃지용)
-          window.currentRadarAvg = parseFloat(avgScore);
-
           // 뱃지 등급 결정
           let badgeClass = 'badge-normal';
           let badgeText = '보통';
@@ -6518,9 +6515,6 @@ app.get("/my-learning", async (req, res) => {
             totalPercentEl.textContent = '(' + totalPercent + '%)';
           }
 
-          // ✅ 전역 변수에 진도율 저장 (menu.html 뱃지용)
-          window.currentTotalProgress = parseInt(totalPercent);
-
           // 과학분야
           const sciencePercent = updateProgress('scienceFieldBar', 'scienceFieldText', progress.science.total, 80);
           document.getElementById('scienceFieldPercent').textContent = sciencePercent + '%';
@@ -6558,38 +6552,8 @@ app.get("/my-learning", async (req, res) => {
           console.log('진도율 계산 완료:', progress);
         }
 
-        // ===== 뱃지 데이터 서버로 전송 =====
-        async function saveReportBadgeData() {
-          const urlParams = new URLSearchParams(window.location.search);
-          const grade = urlParams.get('grade');
-          const name = urlParams.get('name');
-
-          // 레이더 평균과 진도율이 모두 있을 때만 전송
-          if (window.currentRadarAvg !== undefined && window.currentTotalProgress !== undefined) {
-            try {
-              const res = await fetch('/api/user-progress/report-badge', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  grade,
-                  name,
-                  radarAvg: window.currentRadarAvg,
-                  totalProgress: window.currentTotalProgress
-                })
-              });
-
-              const data = await res.json();
-              console.log('✅ 뱃지 데이터 저장 완료:', data);
-            } catch (error) {
-              console.error('❌ 뱃지 데이터 저장 실패:', error);
-            }
-          }
-        }
-
-        // 페이지 로드 완료 후 3초 뒤에 데이터 전송 (렌더링 완료 대기)
-        window.addEventListener('load', function() {
-          setTimeout(saveReportBadgeData, 3000);
-        });
+        // ===== 뱃지 데이터는 menu.html에서 실시간 계산 =====
+        // DB 저장 로직 제거: 항상 최신 학습 기록 기반으로 계산
       </script>
 
     </body>
