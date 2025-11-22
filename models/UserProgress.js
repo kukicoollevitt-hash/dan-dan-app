@@ -66,8 +66,19 @@ const userProgressSchema = new mongoose.Schema({
   // 학습실 과제 데이터
   studyRoom: {
     assignedTasks: [{
-      taskId: String,
+      id: String,           // 단원 ID (예: "geo_01") - AI 과제용
+      unitId: String,       // 단원 ID (관리자 과제용)
+      taskId: String,       // 과제 ID (기존 호환성)
       title: String,
+      series: String,       // 시리즈 (예: "BRAIN업")
+      field: String,        // 분야 (예: "사회분야")
+      domain: String,       // 분야 (기존 호환성)
+      subject: String,      // 과목 (예: "지리")
+      isAI: {              // AI 자동 부여 여부
+        type: Boolean,
+        default: false
+      },
+      assignedAt: Date,     // 과제 부여 시간
       dueDate: Date,
       status: {
         type: String,
@@ -81,7 +92,8 @@ const userProgressSchema = new mongoose.Schema({
         min: 0,
         max: 100
       }
-    }]
+    }],
+    lastAIAssignedAt: Date  // 마지막 AI 과제 부여 시간
   },
 
   // 메뉴 완료 상태

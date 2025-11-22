@@ -7758,15 +7758,54 @@ app.post('/api/user-progress/vocabulary', async (req, res) => {
   }
 });
 
+// 학습실 과제 데이터 조회
+app.get('/api/user-progress/study-room', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade와 name이 필요합니다'
+      });
+    }
+
+    const progress = await UserProgress.findOne({ grade, name });
+
+    if (!progress) {
+      return res.json({
+        ok: true,
+        data: {
+          studyRoom: {
+            assignedTasks: []
+          }
+        }
+      });
+    }
+
+    res.json({
+      ok: true,
+      data: progress
+    });
+  } catch (error) {
+    console.error('학습실 데이터 조회 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
+      error: error.message
+    });
+  }
+});
+
 // 학습실 과제 데이터 저장
 app.post('/api/user-progress/study-room', async (req, res) => {
   try {
-    const { grade, name, studyRoomData } = req.body;
+    const { grade, name, assignedTasks, studyRoomData } = req.body;
 
-    if (!grade || !name || !studyRoomData) {
+    if (!grade || !name) {
       return res.status(400).json({
         ok: false,
-        message: 'grade, name, studyRoomData가 필요합니다'
+        message: 'grade, name이 필요합니다'
       });
     }
 
@@ -7776,8 +7815,14 @@ app.post('/api/user-progress/study-room', async (req, res) => {
       progress = new UserProgress({ grade, name });
     }
 
-    // 학습실 데이터 업데이트
-    progress.studyRoom = studyRoomData;
+    // 학습실 데이터 업데이트 (assignedTasks 또는 studyRoomData 지원)
+    if (assignedTasks) {
+      progress.studyRoom = {
+        assignedTasks: assignedTasks
+      };
+    } else if (studyRoomData) {
+      progress.studyRoom = studyRoomData;
+    }
 
     await progress.save();
 
@@ -7881,6 +7926,47 @@ app.post('/api/delete-all-data', async (req, res) => {
   }
 });
 
+// 학습실 데이터 삭제 API
+app.post('/api/user-progress/clear-study-room', async (req, res) => {
+  try {
+    const { grade, name } = req.body;
+
+    if (!grade || !name) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade, name이 필요합니다'
+      });
+    }
+
+    const progress = await UserProgress.findOne({ grade, name });
+
+    if (!progress) {
+      return res.json({
+        ok: true,
+        message: '해당 학생의 데이터가 없습니다'
+      });
+    }
+
+    // 학습실 데이터 초기화
+    progress.studyRoom = {
+      assignedTasks: []
+    };
+
+    await progress.save();
+
+    res.json({
+      ok: true,
+      message: '학습실 데이터가 삭제되었습니다'
+    });
+  } catch (error) {
+    console.error('학습실 데이터 삭제 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
 // 종합리포트 뱃지 데이터 저장
 app.post('/api/user-progress/report-badge', async (req, res) => {
   try {
@@ -7956,6 +8042,374 @@ app.post('/api/user-progress/menu-completion', async (req, res) => {
       ok: false,
       message: '서버 오류가 발생했습니다',
       error: error.message
+    });
+  }
+});
+
+/* ====================================
+ * ✅ AI 자동 과제 부여 시스템
+ * ==================================== */
+
+// AI 과제 스케줄 스키마
+const aiTaskScheduleSchema = new mongoose.Schema({
+  studentGrade: { type: String, required: true },
+  studentName: { type: String, required: true },
+  unitId: { type: String, required: true },
+  unitTitle: { type: String, required: true },
+  seriesName: { type: String, required: true },
+  fieldName: { type: String, required: true },
+  subjectName: { type: String, required: true },
+  grade: { type: String, required: true }, // 등급: excellent, good, average, encourage
+  gradeText: { type: String, required: true }, // 등급 텍스트: 우수, 양호, 보통, 격려
+  avgScore: { type: Number, required: true }, // 평균 점수
+  completedAt: { type: Date, required: true }, // 학습 완료 날짜
+  scheduledDate: { type: Date, required: true }, // 부여 예정 날짜
+  assignedAt: { type: Date }, // 실제 부여된 날짜
+  status: {
+    type: String,
+    enum: ['pending', 'assigned', 'completed'],
+    default: 'pending'
+  },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const AITaskSchedule = mongoose.model('AITaskSchedule', aiTaskScheduleSchema);
+
+// 등급 판정 함수 (menu.html과 동일한 로직)
+function getGradeInfo(avgScore) {
+  if (avgScore >= 9) {
+    return { grade: 'excellent', text: '우수', days: 0 }; // 우수는 부여 안 함
+  } else if (avgScore >= 8) {
+    return { grade: 'good', text: '양호', days: 7 };
+  } else if (avgScore >= 7) {
+    return { grade: 'average', text: '보통', days: 5 };
+  } else {
+    return { grade: 'encourage', text: '격려', days: 3 };
+  }
+}
+
+// AI 과제 스케줄 생성/업데이트 API
+app.post('/api/ai-task/create-schedule', async (req, res) => {
+  try {
+    const {
+      studentGrade,
+      studentName,
+      unitId,
+      unitTitle,
+      seriesName,
+      fieldName,
+      subjectName,
+      avgScore,
+      completedAt
+    } = req.body;
+
+    // 등급 판정
+    const gradeInfo = getGradeInfo(avgScore);
+
+    // 우수 등급은 스케줄 생성 안 함
+    if (gradeInfo.grade === 'excellent') {
+      return res.json({
+        ok: true,
+        message: '우수 등급은 재학습이 필요하지 않습니다',
+        schedule: null
+      });
+    }
+
+    // 부여 예정 날짜 계산
+    const completed = new Date(completedAt);
+    const scheduledDate = new Date(completed);
+    // 등급별 일정 적용: 격려 3일, 보통 5일, 양호 7일
+    scheduledDate.setDate(scheduledDate.getDate() + gradeInfo.days);
+
+    // 기존 스케줄 확인 (같은 학생, 같은 단원)
+    let schedule = await AITaskSchedule.findOne({
+      studentGrade,
+      studentName,
+      unitId,
+      status: { $in: ['pending', 'assigned'] }
+    });
+
+    if (schedule) {
+      // 기존 스케줄 업데이트
+      schedule.grade = gradeInfo.grade;
+      schedule.gradeText = gradeInfo.text;
+      schedule.avgScore = avgScore;
+      schedule.completedAt = completed;
+      schedule.scheduledDate = scheduledDate;
+      schedule.status = 'pending';
+      schedule.assignedAt = null;
+      await schedule.save();
+    } else {
+      // 새 스케줄 생성
+      schedule = await AITaskSchedule.create({
+        studentGrade,
+        studentName,
+        unitId,
+        unitTitle,
+        seriesName,
+        fieldName,
+        subjectName,
+        grade: gradeInfo.grade,
+        gradeText: gradeInfo.text,
+        avgScore,
+        completedAt: completed,
+        scheduledDate
+      });
+    }
+
+    res.json({
+      ok: true,
+      message: 'AI 과제 스케줄이 생성되었습니다',
+      schedule
+    });
+
+  } catch (error) {
+    console.error('AI 과제 스케줄 생성 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
+      error: error.message
+    });
+  }
+});
+
+// 매일 자정 실행: AI 과제 자동 부여
+async function assignAITasksDaily() {
+  try {
+    console.log('🤖 AI 자동 과제 부여 시작:', new Date().toISOString());
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 오늘 부여해야 할 스케줄 조회
+    const schedules = await AITaskSchedule.find({
+      status: 'pending',
+      scheduledDate: { $lte: today }
+    });
+
+    console.log(`📋 부여 대상 스케줄: ${schedules.length}개`);
+
+    if (schedules.length === 0) {
+      return;
+    }
+
+    // 학생별로 그룹화
+    const studentGroups = {};
+    schedules.forEach(schedule => {
+      const key = `${schedule.studentGrade}_${schedule.studentName}`;
+      if (!studentGroups[key]) {
+        studentGroups[key] = {
+          grade: schedule.studentGrade,
+          name: schedule.studentName,
+          encourage: [],
+          average: [],
+          good: []
+        };
+      }
+      studentGroups[key][schedule.grade].push(schedule);
+    });
+
+    // 각 학생별로 처리
+    for (const key in studentGroups) {
+      const group = studentGroups[key];
+      const { grade, name, encourage, average, good } = group;
+
+      console.log(`👤 ${name} 학생 처리 중 - 격려:${encourage.length}, 보통:${average.length}, 양호:${good.length}`);
+
+      // UserProgress 조회
+      let progress = await UserProgress.findOne({ grade, name });
+      if (!progress) {
+        progress = new UserProgress({
+          grade,
+          name,
+          studyRoom: { assignedTasks: [] }
+        });
+      }
+
+      // 기존 학습실 과제 목록
+      const existingTasks = progress.studyRoom?.assignedTasks || [];
+      const existingUnitIds = new Set(existingTasks.map(t => t.id));
+
+      // 등급별로 최대 2개씩 랜덤 선택
+      const selectedSchedules = [];
+
+      // 격려 등급 (최대 2개)
+      if (encourage.length > 0) {
+        const shuffled = encourage.sort(() => Math.random() - 0.5);
+        selectedSchedules.push(...shuffled.slice(0, 2));
+      }
+
+      // 보통 등급 (최대 2개)
+      if (average.length > 0) {
+        const shuffled = average.sort(() => Math.random() - 0.5);
+        selectedSchedules.push(...shuffled.slice(0, 2));
+      }
+
+      // 양호 등급 (최대 2개)
+      if (good.length > 0) {
+        const shuffled = good.sort(() => Math.random() - 0.5);
+        selectedSchedules.push(...shuffled.slice(0, 2));
+      }
+
+      let assignedCount = 0;
+
+      // 선택된 스케줄을 학습실에 추가
+      for (const schedule of selectedSchedules) {
+        // 중복 체크
+        if (existingUnitIds.has(schedule.unitId)) {
+          console.log(`⚠️  중복: ${schedule.unitTitle} - 이미 학습실에 있음`);
+          // 중복이면 스케줄 상태만 completed로 변경
+          schedule.status = 'completed';
+          await schedule.save();
+          continue;
+        }
+
+        // 학습실에 추가
+        existingTasks.push({
+          id: schedule.unitId,
+          title: schedule.unitTitle,
+          series: schedule.seriesName,
+          field: schedule.fieldName,
+          subject: schedule.subjectName,
+          isAI: true, // AI 부여 표시
+          assignedAt: new Date()
+        });
+
+        // 스케줄 상태 업데이트
+        schedule.status = 'assigned';
+        schedule.assignedAt = new Date();
+        await schedule.save();
+
+        assignedCount++;
+        console.log(`✅ 부여: ${schedule.unitTitle} (${schedule.gradeText})`);
+      }
+
+      if (assignedCount > 0) {
+        // UserProgress 저장
+        progress.studyRoom = {
+          assignedTasks: existingTasks,
+          lastAIAssignedAt: new Date() // 마지막 AI 부여 시간
+        };
+        await progress.save();
+
+        console.log(`🎉 ${name} 학생에게 ${assignedCount}개 과제 부여 완료`);
+      }
+    }
+
+    console.log('🤖 AI 자동 과제 부여 완료:', new Date().toISOString());
+
+  } catch (error) {
+    console.error('❌ AI 자동 과제 부여 오류:', error);
+  }
+}
+
+// cron 스케줄러 설정 (매일 자정 실행)
+const cron = require('node-cron');
+
+// 매일 00:00에 실행
+cron.schedule('0 0 * * *', () => {
+  console.log('⏰ Cron 실행: 매일 자정 AI 과제 부여');
+  assignAITasksDaily();
+});
+
+// 서버 시작 시 한 번 실행 (테스트용 - 프로덕션에서는 주석 처리)
+// assignAITasksDaily();
+
+// AI 과제 스케줄 조회 API (관리자용)
+app.get('/api/ai-task/schedules', async (req, res) => {
+  try {
+    const { studentGrade, studentName, status } = req.query;
+
+    const filter = {};
+    if (studentGrade) filter.studentGrade = studentGrade;
+    if (studentName) filter.studentName = studentName;
+    if (status) filter.status = status;
+
+    const schedules = await AITaskSchedule.find(filter).sort({ scheduledDate: 1 });
+
+    res.json({
+      ok: true,
+      schedules
+    });
+  } catch (error) {
+    console.error('AI 스케줄 조회 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// 학생의 마지막 AI 과제 부여 시간 조회
+app.get('/api/ai-task/last-assigned', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade와 name이 필요합니다'
+      });
+    }
+
+    const progress = await UserProgress.findOne({ grade, name });
+
+    res.json({
+      ok: true,
+      lastAIAssignedAt: progress?.studyRoom?.lastAIAssignedAt || null
+    });
+
+  } catch (error) {
+    console.error('마지막 AI 부여 시간 조회 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// AI 과제 수동 부여 API (테스트용)
+app.post('/api/ai-task/manual-assign', async (req, res) => {
+  try {
+    await assignAITasksDaily();
+    res.json({
+      ok: true,
+      message: 'AI 과제 부여가 완료되었습니다'
+    });
+  } catch (error) {
+    console.error('수동 AI 과제 부여 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// AI 스케줄 초기화 API (테스트용 - assigned를 pending으로 변경)
+app.post('/api/ai-task/reset-schedules', async (req, res) => {
+  try {
+    const { studentGrade, studentName } = req.body;
+
+    const filter = {};
+    if (studentGrade) filter.studentGrade = studentGrade;
+    if (studentName) filter.studentName = studentName;
+    filter.status = 'assigned';
+
+    const result = await AITaskSchedule.updateMany(filter, {
+      status: 'pending',
+      assignedAt: null
+    });
+
+    res.json({
+      ok: true,
+      message: `${result.modifiedCount}개 스케줄이 pending으로 변경되었습니다`,
+      count: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('스케줄 초기화 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다'
     });
   }
 });

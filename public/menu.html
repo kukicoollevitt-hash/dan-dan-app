@@ -2500,7 +2500,50 @@ if (logoutConfirmBtn) {
       if (window.history && window.history.pushState) {
         history.pushState({ page: 'menu' }, '', location.href);
       }
+
+      // ✅ AI 과제 알림 체크 (당일 첫 로그인만)
+      checkAITaskNotification();
     });
+
+    // === AI 과제 알림 체크 (당일 첫 로그인만) ===
+    async function checkAITaskNotification() {
+      try {
+        const user = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        if (!user.grade || !user.name) return;
+
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const lastNotificationDate = localStorage.getItem('lastAINotificationDate');
+
+        // 오늘 이미 알림을 받았으면 표시 안 함
+        if (lastNotificationDate === today) {
+          console.log('🔔 AI 과제 알림: 이미 오늘 확인함');
+          return;
+        }
+
+        // 마지막 AI 부여 시간 조회
+        const response = await fetch(`/api/ai-task/last-assigned?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+        const data = await response.json();
+
+        if (data.ok && data.lastAIAssignedAt) {
+          const lastAssigned = new Date(data.lastAIAssignedAt).toISOString().split('T')[0];
+
+          // 오늘 AI가 과제를 부여했으면 알림 표시
+          if (lastAssigned === today) {
+            showMessage(
+              '🤖',
+              'AI고래쌤이 새 과제를 추천했어요!',
+              '학습실을 확인해보세요. 맞춤형 복습 과제가 준비되어 있습니다.'
+            );
+
+            // 오늘 알림 표시했음을 기록
+            localStorage.setItem('lastAINotificationDate', today);
+            console.log('🔔 AI 과제 알림: 새 과제 알림 표시');
+          }
+        }
+      } catch (error) {
+        console.error('❌ AI 과제 알림 체크 오류:', error);
+      }
+    }
 
     // ✅ 실제 로그아웃 처리 공용 함수 (헤더 버튼/뒤로가기 공용 사용)
     async function doLogoutWithAnimation() {
@@ -2849,8 +2892,33 @@ async function performLogout() {
       }
     }
 
+    // === 단원 ID를 파일 경로로 변환 ===
+    function getUnitPath(unitId) {
+      // unitId가 이미 경로인 경우 그대로 반환
+      if (unitId && unitId.startsWith('./')) {
+        return unitId;
+      }
+
+      // unitId를 파일 경로로 변환 (예: "geo_01" -> "./BRAINUP/social/geo_01.html")
+      // TODO: 시리즈/분야별로 경로 매핑 필요 (현재는 BRAINUP/social만 지원)
+      if (unitId && unitId.match(/^[a-z]+_\d+$/)) {
+        return `./BRAINUP/social/${unitId}.html`;
+      }
+
+      return null;
+    }
+
     // === 단원 학습 모달 관련 ===
-    function openUnitModal(unitPath) {
+    function openUnitModal(unitIdOrPath) {
+      // 단원 ID를 파일 경로로 변환
+      const unitPath = getUnitPath(unitIdOrPath);
+
+      if (!unitPath) {
+        console.log('⚠️ 잘못된 단원 ID:', unitIdOrPath);
+        showComingSoonPopup();
+        return;
+      }
+
       // 파일 존재 여부 확인
       if (!availableUnits[unitPath]) {
         console.log('⚠️ 준비되지 않은 단원:', unitPath);
@@ -3014,6 +3082,109 @@ async function performLogout() {
       }
     });
 
+    // === AI 자동 과제 스케줄 생성 함수 ===
+    async function createAISchedulesForLogs(logs, studentGrade, studentName) {
+      try {
+        console.log('🤖 AI 스케줄 생성 시작 - 학생:', studentName, '기록 수:', logs.length);
+
+        // 각 단원별로 최신 기록만 처리 (중복 제거)
+        const latestLogs = {};
+        logs.forEach(log => {
+          const key = log.unit;
+          if (!latestLogs[key] || new Date(log.timestamp) > new Date(latestLogs[key].timestamp)) {
+            latestLogs[key] = log;
+          }
+        });
+
+        // 각 단원별로 AI 스케줄 생성
+        for (const unitId in latestLogs) {
+          const log = latestLogs[unitId];
+
+          // radar 데이터가 있는 경우만 처리
+          if (!log.radar) continue;
+
+          // 5개 영역 평균 계산
+          const scores = [
+            log.radar.literal || 0,
+            log.radar.structural || 0,
+            log.radar.lexical || 0,
+            log.radar.inferential || 0,
+            log.radar.critical || 0
+          ];
+          const avgScore = parseFloat((scores.reduce((a, b) => a + b, 0) / 5).toFixed(1));
+
+          // 등급 판정
+          let grade = 'encourage';
+          let gradeText = '격려';
+          if (avgScore >= 9) {
+            grade = 'excellent';
+            gradeText = '우수';
+          } else if (avgScore >= 8) {
+            grade = 'good';
+            gradeText = '양호';
+          } else if (avgScore >= 7) {
+            grade = 'average';
+            gradeText = '보통';
+          }
+
+          // 우수 등급은 스케줄 생성 안 함
+          if (grade === 'excellent') continue;
+
+          // 시리즈, 분야, 과목 정보 파싱
+          const seriesName = log.series || 'BRAIN온';
+          const parts = (log.unit || '').split('_');
+          let fieldName = '사회분야';
+          let subjectName = '지리';
+          let unitTitle = log.unit;
+
+          // 단원 ID로 분야/과목 판별 (간단한 예시)
+          if (parts[0] === 'geo') {
+            fieldName = '사회분야';
+            subjectName = '지리';
+            unitTitle = `지리 ${parts[1]}단원`;
+          } else if (parts[0] === 'his') {
+            fieldName = '사회분야';
+            subjectName = '역사';
+            unitTitle = `역사 ${parts[1]}단원`;
+          } else if (parts[0] === 'phy') {
+            fieldName = '과학분야';
+            subjectName = '물리';
+            unitTitle = `물리 ${parts[1]}단원`;
+          } else if (parts[0] === 'bio') {
+            fieldName = '과학분야';
+            subjectName = '생물';
+            unitTitle = `생물 ${parts[1]}단원`;
+          }
+
+          // AI 스케줄 생성 API 호출
+          const response = await fetch('/api/ai-task/create-schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              studentGrade,
+              studentName,
+              unitId: log.unit,
+              unitTitle,
+              seriesName,
+              fieldName,
+              subjectName,
+              avgScore,
+              completedAt: log.timestamp || new Date()
+            })
+          });
+
+          const result = await response.json();
+          if (result.ok && result.schedule) {
+            console.log(`✅ AI 스케줄 생성: ${unitTitle} (${gradeText}, ${avgScore}점)`);
+          }
+        }
+
+        console.log('🤖 AI 스케줄 생성 완료');
+      } catch (error) {
+        console.error('❌ AI 스케줄 생성 오류:', error);
+      }
+    }
+
     // === 레이더 등급 뱃지 업데이트 (실시간 계산) ===
     async function updateRadarGradeBadge() {
       // ✅ localStorage의 currentStudent를 우선 사용 (가장 최신 로그인 정보)
@@ -3102,6 +3273,9 @@ async function performLogout() {
           } else {
             gradeClass = 'encourage';
           }
+
+          // ✅ AI 자동 과제 스케줄 생성 (우수 제외)
+          await createAISchedulesForLogs(validLogs, grade, name);
         }
 
         // 뱃지 업데이트 (평점 / 진도율 표시)
@@ -3296,25 +3470,89 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       return `studyRoom_${getCurrentStudentKey()}`;
     }
 
-    // 학습실 과제 목록 불러오기
-    function getStudyRoomTasks() {
-      const key = getStudyRoomKey();
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : [];
+    // 학습실 과제 목록 불러오기 (서버 DB에서)
+    async function getStudyRoomTasks() {
+      try {
+        const user = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        if (!user.grade || !user.name) {
+          console.log('⚠️ 사용자 정보 없음 - localStorage 사용');
+          const key = getStudyRoomKey();
+          const data = localStorage.getItem(key);
+          return data ? JSON.parse(data) : [];
+        }
+
+        // 서버에서 학습실 데이터 조회
+        const response = await fetch(`/api/user-progress/study-room?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+        const result = await response.json();
+
+        if (result.ok && result.data?.studyRoom?.assignedTasks) {
+          console.log('✅ 서버에서 학습실 데이터 로드:', result.data.studyRoom.assignedTasks.length, '개');
+          return result.data.studyRoom.assignedTasks;
+        }
+
+        // 서버에 데이터 없으면 localStorage fallback
+        console.log('⚠️ 서버 데이터 없음 - localStorage 사용');
+        const key = getStudyRoomKey();
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+      } catch (error) {
+        console.error('❌ 학습실 데이터 로드 오류:', error);
+        // 오류 시 localStorage fallback
+        const key = getStudyRoomKey();
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+      }
     }
 
-    // 학습실 과제 목록 저장하기
-    function saveStudyRoomTasks(tasks) {
-      const key = getStudyRoomKey();
-      localStorage.setItem(key, JSON.stringify(tasks));
+    // 학습실 과제 목록 저장하기 (서버 DB에)
+    async function saveStudyRoomTasks(tasks) {
+      try {
+        const user = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        if (!user.grade || !user.name) {
+          console.log('⚠️ 사용자 정보 없음 - localStorage에만 저장');
+          const key = getStudyRoomKey();
+          localStorage.setItem(key, JSON.stringify(tasks));
+          updateStudyRoomBadge();
+          return;
+        }
+
+        // 서버에 저장
+        const response = await fetch('/api/user-progress/study-room', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            grade: user.grade,
+            name: user.name,
+            assignedTasks: tasks
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          console.log('✅ 학습실 데이터 서버 저장 완료');
+        } else {
+          console.error('❌ 서버 저장 실패:', result.message);
+          // fallback to localStorage
+          const key = getStudyRoomKey();
+          localStorage.setItem(key, JSON.stringify(tasks));
+        }
+      } catch (error) {
+        console.error('❌ 학습실 데이터 저장 오류:', error);
+        // fallback to localStorage
+        const key = getStudyRoomKey();
+        localStorage.setItem(key, JSON.stringify(tasks));
+      }
+
       updateStudyRoomBadge();
     }
 
     // 뱃지 업데이트
-    function updateStudyRoomBadge() {
+    async function updateStudyRoomBadge() {
       const badge = document.getElementById('studyRoomBadge');
       if (badge) {
-        const tasks = getStudyRoomTasks();
+        const tasks = await getStudyRoomTasks();
         badge.textContent = `${tasks.length}/10`;
       }
     }
@@ -3356,7 +3594,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         // 서버에서 최신 완료 상태 가져오기
         await syncCompletionStatusFromServer();
         // 완료 상태 동기화 후 렌더링
-        renderStudyRoomList();
+        await renderStudyRoomList();
       }
     }
 
@@ -3369,30 +3607,56 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
     }
 
     // 학습실 목록 렌더링
-    function renderStudyRoomList() {
+    async function renderStudyRoomList() {
       const list = document.getElementById('studyRoomList');
       if (!list) return;
 
-      const tasks = getStudyRoomTasks();
+      const allTasks = await getStudyRoomTasks();
+
+      // AI 과제와 일반 과제 분리 및 정렬
+      const aiTasks = allTasks.filter(t => t.isAI);
+      const normalTasks = allTasks.filter(t => !t.isAI);
+
+      // AI 과제를 먼저, 일반 과제를 나중에 배치
+      const tasks = [...aiTasks, ...normalTasks];
+
       list.innerHTML = '';
 
       // 10개 슬롯 생성
       for (let i = 0; i < 10; i++) {
+        // AI 과제와 일반 과제 사이에 구분선 추가
+        if (i === aiTasks.length && aiTasks.length > 0 && normalTasks.length > 0) {
+          const divider = document.createElement('li');
+          divider.className = 'study-room-divider';
+          divider.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0;">
+              <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #e5e7eb, transparent);"></div>
+              <span style="color: #9ca3af; font-size: 13px; font-weight: 500; white-space: nowrap;">일반 과제</span>
+              <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #e5e7eb, transparent);"></div>
+            </div>
+          `;
+          list.appendChild(divider);
+        }
+
         const li = document.createElement('li');
         li.className = 'study-room-item';
 
         if (i < tasks.length) {
           // 과제가 있는 경우
           const task = tasks[i];
-          const isCompleted = isUnitCompleted(task.unitId);
+          // AI 과제는 id, 관리자 과제는 unitId 사용
+          const unitId = task.id || task.unitId;
+          const isCompleted = isUnitCompleted(unitId);
 
-          li.dataset.unitId = task.unitId;
+          li.dataset.unitId = unitId;
           li.style.cursor = 'pointer';
 
           li.innerHTML = `
             <div class="study-room-item-left">
-              <div class="study-room-item-title">${task.title}</div>
-              <div class="study-room-item-meta">${task.series} > ${task.domain} > ${task.subject}</div>
+              <div class="study-room-item-title">
+                ${task.isAI ? '🤖 ' : ''}${task.title}${task.isAI ? ' <span style="color: #667eea; font-size: 12px;">(AI 추천)</span>' : ''}
+              </div>
+              <div class="study-room-item-meta">${task.series} > ${task.field || task.domain} > ${task.subject}</div>
             </div>
             <div class="study-room-item-right">
               <span class="status-badge ${isCompleted ? 'status-done' : 'status-default'}">
@@ -3412,7 +3676,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
             closeStudyRoomModal();
             // 약간의 딜레이 후 학습 페이지 열기
             setTimeout(() => {
-              openUnitModal(task.unitId);
+              openUnitModal(unitId);
             }, 200);
           });
         } else {
@@ -3435,8 +3699,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
     }
 
     // 과제 추가
-    function addTaskToStudyRoom(taskData) {
-      const tasks = getStudyRoomTasks();
+    async function addTaskToStudyRoom(taskData) {
+      const tasks = await getStudyRoomTasks();
 
       // 10개 제한 체크
       if (tasks.length >= 10) {
@@ -3444,8 +3708,11 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         return false;
       }
 
-      // 중복 체크
-      const isDuplicate = tasks.some(t => t.unitId === taskData.unitId);
+      // 중복 체크 (AI 과제는 id, 관리자 과제는 unitId 사용)
+      const isDuplicate = tasks.some(t =>
+        (t.id && t.id === taskData.unitId) ||
+        (t.unitId && t.unitId === taskData.unitId)
+      );
       if (isDuplicate) {
         showMessage('⚠️', '중복된 과제입니다', '이미 학습실에 추가된 과제입니다.');
         return false;
@@ -3453,7 +3720,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
       // 과제 추가
       tasks.push(taskData);
-      saveStudyRoomTasks(tasks);
+      await saveStudyRoomTasks(tasks);
 
       // 학습실 모달이 열려있으면 목록 갱신
       const modal = document.getElementById('studyRoomModal');
@@ -3466,11 +3733,11 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
     }
 
     // 과제 삭제
-    function removeTaskFromStudyRoom(index) {
-      const tasks = getStudyRoomTasks();
+    async function removeTaskFromStudyRoom(index) {
+      const tasks = await getStudyRoomTasks();
       if (index >= 0 && index < tasks.length) {
         const removedTask = tasks.splice(index, 1)[0];
-        saveStudyRoomTasks(tasks);
+        await saveStudyRoomTasks(tasks);
         renderStudyRoomList();
         showMessage('✅', '과제가 삭제되었습니다', `"${removedTask.title}"이(가) 학습실에서 삭제되었습니다.`);
       }
@@ -3560,6 +3827,9 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
     // 단원 완료 상태 확인
     function isUnitCompleted(unitId) {
+      // unitId가 없으면 false 반환
+      if (!unitId) return false;
+
       // 학생 정보 가져오기
       const stu = getCurrentStudent();
       if (!stu) return false;
