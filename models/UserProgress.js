@@ -91,6 +91,26 @@ const userProgressSchema = new mongoose.Schema({
     default: new Map()
   },
 
+  // 종합리포트 뱃지 데이터
+  reportBadge: {
+    radarAvg: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 10
+    },
+    totalProgress: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+    lastUpdated: {
+      type: Date,
+      default: Date.now
+    }
+  },
+
   // 마지막 업데이트 시간
   lastUpdated: {
     type: Date,

@@ -6065,6 +6065,9 @@ app.get("/my-learning", async (req, res) => {
           const maxScore = Math.max(...scores).toFixed(1);
           const minScore = Math.min(...scores).toFixed(1);
 
+          // ✅ 전역 변수에 레이더 평균 저장 (menu.html 뱃지용)
+          window.currentRadarAvg = parseFloat(avgScore);
+
           // 뱃지 등급 결정
           let badgeClass = 'badge-normal';
           let badgeText = '보통';
@@ -6515,6 +6518,9 @@ app.get("/my-learning", async (req, res) => {
             totalPercentEl.textContent = '(' + totalPercent + '%)';
           }
 
+          // ✅ 전역 변수에 진도율 저장 (menu.html 뱃지용)
+          window.currentTotalProgress = parseInt(totalPercent);
+
           // 과학분야
           const sciencePercent = updateProgress('scienceFieldBar', 'scienceFieldText', progress.science.total, 80);
           document.getElementById('scienceFieldPercent').textContent = sciencePercent + '%';
@@ -6551,6 +6557,39 @@ app.get("/my-learning", async (req, res) => {
 
           console.log('진도율 계산 완료:', progress);
         }
+
+        // ===== 뱃지 데이터 서버로 전송 =====
+        async function saveReportBadgeData() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const grade = urlParams.get('grade');
+          const name = urlParams.get('name');
+
+          // 레이더 평균과 진도율이 모두 있을 때만 전송
+          if (window.currentRadarAvg !== undefined && window.currentTotalProgress !== undefined) {
+            try {
+              const res = await fetch('/api/user-progress/report-badge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  grade,
+                  name,
+                  radarAvg: window.currentRadarAvg,
+                  totalProgress: window.currentTotalProgress
+                })
+              });
+
+              const data = await res.json();
+              console.log('✅ 뱃지 데이터 저장 완료:', data);
+            } catch (error) {
+              console.error('❌ 뱃지 데이터 저장 실패:', error);
+            }
+          }
+        }
+
+        // 페이지 로드 완료 후 3초 뒤에 데이터 전송 (렌더링 완료 대기)
+        window.addEventListener('load', function() {
+          setTimeout(saveReportBadgeData, 3000);
+        });
       </script>
 
     </body>
@@ -7874,6 +7913,47 @@ app.post('/api/delete-all-data', async (req, res) => {
     res.status(500).json({
       success: false,
       message: '데이터 삭제 중 오류가 발생했습니다: ' + err.message
+    });
+  }
+});
+
+// 종합리포트 뱃지 데이터 저장
+app.post('/api/user-progress/report-badge', async (req, res) => {
+  try {
+    const { grade, name, radarAvg, totalProgress } = req.body;
+
+    if (!grade || !name || radarAvg === undefined || totalProgress === undefined) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade, name, radarAvg, totalProgress가 필요합니다'
+      });
+    }
+
+    let progress = await UserProgress.findOne({ grade, name });
+
+    if (!progress) {
+      progress = new UserProgress({ grade, name });
+    }
+
+    // 종합리포트 뱃지 데이터 업데이트
+    progress.reportBadge = {
+      radarAvg: Number(radarAvg),
+      totalProgress: Number(totalProgress),
+      lastUpdated: new Date()
+    };
+
+    await progress.save();
+
+    res.json({
+      ok: true,
+      message: '종합리포트 뱃지 데이터가 저장되었습니다',
+      data: progress.reportBadge
+    });
+  } catch (error) {
+    console.error('종합리포트 뱃지 저장 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다'
     });
   }
 });

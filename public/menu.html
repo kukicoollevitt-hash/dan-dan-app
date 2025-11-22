@@ -420,12 +420,22 @@ body {
 }
 
 /* 레이더 등급 뱃지 */
+/* 펀핑 애니메이션 */
+@keyframes badgePump {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1);
+  }
+}
+
 .radar-grade-badge {
   position: absolute;
   top: -15px;
   left: 50%;
   transform: translateX(-50%);
-  background: #5dade2;
+  background: #ff8c42;
   color: white;
   border-radius: 999px;
   padding: 8px 15px;
@@ -439,6 +449,7 @@ body {
   z-index: 10;
   min-width: 70px;
   white-space: nowrap;
+  animation: badgePump 2s ease-in-out infinite;
 }
 
 .radar-grade-badge.excellent {
@@ -1377,6 +1388,32 @@ body {
           // 서버 세션 정보를 sessionStorage에 저장
           sessionStorage.setItem('user', JSON.stringify(data.user));
           console.log('✅ Session data saved to sessionStorage:', data.user);
+
+          // ✅ 현재 학생이 아닌 localStorage 데이터 삭제 (이전 학생 어휘퀴즈 뱃지 등)
+          const currentStudent = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          const currentGrade = currentStudent.grade || data.user.grade;
+          const currentName = currentStudent.name || data.user.name;
+
+          // localStorage의 모든 키를 확인하여 다른 학생 데이터 삭제
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+
+            // vocabAvgScore_, studyRoomBadge_ 등 학생별 데이터 키 패턴
+            if (key && (key.startsWith('vocabAvgScore_') || key.startsWith('studyRoomBadge_') || key.startsWith('학생_'))) {
+              // 현재 학생의 키가 아니면 삭제 대상
+              if (!key.includes(`${currentGrade}_${currentName}`)) {
+                keysToRemove.push(key);
+              }
+            }
+          }
+
+          // 삭제 실행
+          keysToRemove.forEach(key => {
+            console.log('🗑️ 이전 학생 데이터 삭제:', key);
+            localStorage.removeItem(key);
+          });
+
         } else {
           console.log('❌ No session data available');
         }
@@ -2979,17 +3016,69 @@ async function performLogout() {
 
     // === 레이더 등급 뱃지 업데이트 ===
     async function updateRadarGradeBadge() {
-      const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+      // ✅ localStorage의 currentStudent를 우선 사용 (가장 최신 로그인 정보)
+      let user = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+
+      // localStorage에 없으면 sessionStorage 사용
+      if (!user.grade || !user.name) {
+        user = JSON.parse(sessionStorage.getItem('user') || '{}');
+      }
+
       const grade = user.grade || '';
       const name = user.name || '';
       const phone = user.phone || '';
 
+      console.log('🔍 뱃지 업데이트 - 사용자 정보:', { grade, name, phone });
+
       if (!grade || !name) {
         console.log('⚠️ 사용자 정보 없음');
+        document.getElementById('radarGradeBadge').textContent = '-';
         return;
       }
 
       try {
+        // ✅ 서버에서 저장된 뱃지 데이터 불러오기
+        console.log('📡 API 호출:', `/api/user-progress?grade=${grade}&name=${name}`);
+        const progressResponse = await fetch(`/api/user-progress?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`);
+
+        if (progressResponse.ok) {
+          const progressData = await progressResponse.json();
+          console.log('📦 API 응답 데이터:', progressData);
+
+          if (progressData.ok && progressData.data && progressData.data.reportBadge) {
+            const { radarAvg, totalProgress } = progressData.data.reportBadge;
+            console.log('📊 저장된 뱃지 데이터:', { radarAvg, totalProgress });
+
+            // radarAvg와 totalProgress가 0이 아닐 때만 사용
+            if (radarAvg > 0 || totalProgress > 0) {
+              // 등급 클래스 결정
+              let gradeClass = 'encourage';
+              if (radarAvg >= 9) {
+                gradeClass = 'excellent';
+              } else if (radarAvg >= 8) {
+                gradeClass = 'good';
+              } else if (radarAvg >= 7) {
+                gradeClass = 'average';
+              }
+
+              // 뱃지 업데이트 (레이더 평균 / 진도율)
+              const badge = document.getElementById('radarGradeBadge');
+              badge.textContent = radarAvg.toFixed(1) + ' / ' + Math.round(totalProgress);
+              badge.className = 'radar-grade-badge ' + gradeClass;
+
+              console.log('✅ 레이더 뱃지 업데이트 (저장된 데이터):', radarAvg, '/', totalProgress);
+              return;
+            } else {
+              console.log('⚠️ 저장된 뱃지 데이터가 0이므로 실시간 계산으로 전환');
+            }
+          } else {
+            console.log('⚠️ 저장된 뱃지 데이터 없음');
+          }
+        }
+
+        // 저장된 데이터가 없으면 기존 방식으로 계산
+        console.log('⚠️ 저장된 뱃지 데이터 없음, 기존 방식으로 계산');
+
         // 학습 기록 조회 (phone 포함 - 동명이인 구분용)
         const url = phone
           ? `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`
