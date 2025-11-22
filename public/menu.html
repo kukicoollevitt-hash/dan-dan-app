@@ -2746,8 +2746,39 @@ async function performLogout() {
       restoreProgressOnRenderedList();
     });
 
+    // === 준비된 단원 목록 (파일 존재 여부 확인용) ===
+    const availableUnits = {
+      './BRAINUP/social/geo_01.html': true,
+      './BRAINUP/social/geo_02.html': true,
+      './BRAINUP/social/geo_03.html': true,
+      './BRAINUP/social/geo_04.html': true
+      // geo_05, geo_06, geo_07 등은 준비되지 않음
+    };
+
+    // === 준비 중 팝업 열기/닫기 ===
+    function showComingSoonPopup() {
+      const overlay = document.getElementById('comingSoonOverlay');
+      if (overlay) {
+        overlay.classList.add('show');
+      }
+    }
+
+    function closeComingSoonPopup() {
+      const overlay = document.getElementById('comingSoonOverlay');
+      if (overlay) {
+        overlay.classList.remove('show');
+      }
+    }
+
     // === 단원 학습 모달 관련 ===
     function openUnitModal(unitPath) {
+      // 파일 존재 여부 확인
+      if (!availableUnits[unitPath]) {
+        console.log('⚠️ 준비되지 않은 단원:', unitPath);
+        showComingSoonPopup();
+        return;
+      }
+
       const unitModal = document.getElementById('unitModal');
       const unitIframe = document.getElementById('unitIframe');
 
@@ -3487,6 +3518,22 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         confirmDeleteBtn.addEventListener('click', confirmDeleteTask);
       }
 
+      // 준비 중 팝업 닫기 버튼
+      const closeComingSoonBtn = document.getElementById('closeComingSoonBtn');
+      if (closeComingSoonBtn) {
+        closeComingSoonBtn.addEventListener('click', closeComingSoonPopup);
+      }
+
+      // 준비 중 팝업 배경 클릭으로 닫기
+      const comingSoonOverlay = document.getElementById('comingSoonOverlay');
+      if (comingSoonOverlay) {
+        comingSoonOverlay.addEventListener('click', (e) => {
+          if (e.target === comingSoonOverlay) {
+            closeComingSoonPopup();
+          }
+        });
+      }
+
       // 오류 메시지 모달 닫기 버튼
       const closeErrorBtn = document.getElementById('closeErrorBtn');
       if (closeErrorBtn) {
@@ -3664,6 +3711,21 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       <div class="assign-modal-footer">
         <button class="btn-cancel" id="cancelDeleteBtn">취소</button>
         <button class="btn-confirm" id="confirmDeleteBtn">삭제하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 준비 중 팝업 -->
+  <div class="overlay" id="comingSoonOverlay">
+    <div class="assign-modal">
+      <div class="assign-modal-header">
+        <h3>📚✨ 아직 준비 중입니다</h3>
+      </div>
+      <div class="assign-modal-body">
+        <p>곧 지문이 오픈됩니다. 기대해주세요!</p>
+      </div>
+      <div class="assign-modal-footer">
+        <button class="btn-confirm" id="closeComingSoonBtn">확인</button>
       </div>
     </div>
   </div>
