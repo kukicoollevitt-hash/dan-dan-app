@@ -354,16 +354,94 @@
     // 주 시작일 설정
     currentWeekStart = setToMonday(new Date());
 
+    // ============ 서버 동기화 함수 ============
+
+    // 서버에서 학습실 데이터 불러오기
+    async function loadStudyRoomDataFromServer() {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+        const response = await fetch(`/api/user-progress?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+        const result = await response.json();
+
+        if (result.ok && result.data && result.data.studyRoom) {
+          const studyRoom = result.data.studyRoom;
+
+          // 서버의 과제 데이터를 localStorage에 동기화
+          if (studyRoom.assignedTasks && studyRoom.assignedTasks.length > 0) {
+            const tasksKey = `studyRoom_tasks_${user.grade}_${user.name}`;
+            localStorage.setItem(tasksKey, JSON.stringify(studyRoom.assignedTasks));
+            console.log('✅ 서버에서 학습실 데이터 불러옴:', studyRoom.assignedTasks.length, '개 과제');
+          }
+        }
+      } catch (error) {
+        console.error('서버 학습실 데이터 로드 오류:', error);
+      }
+    }
+
+    // 서버에 학습실 데이터 저장하기
+    async function saveStudyRoomDataToServer() {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+        const tasksKey = `studyRoom_tasks_${user.grade}_${user.name}`;
+        const tasksStr = localStorage.getItem(tasksKey);
+
+        let assignedTasks = [];
+        if (tasksStr) {
+          try {
+            assignedTasks = JSON.parse(tasksStr);
+          } catch(e) {
+            console.error('과제 데이터 파싱 오류:', e);
+          }
+        }
+
+        const studyRoomData = { assignedTasks };
+
+        const response = await fetch('/api/user-progress/study-room', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: user.grade,
+            name: user.name,
+            studyRoomData
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          console.log('✅ 서버에 학습실 데이터 저장 완료');
+        }
+      } catch (error) {
+        console.error('서버 학습실 데이터 저장 오류:', error);
+      }
+    }
+
     // 학생 정보 로드
     function loadStudentInfo() {
-      // localStorage 또는 session에서 학생 정보 가져오기
-      const grade = localStorage.getItem('studentGrade') || '초4';
-      const name = localStorage.getItem('studentName') || '학생';
+      // sessionStorage에서 먼저 확인
+      const userStr = sessionStorage.getItem('user');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          studentGrade = user.grade || '초4';
+          studentName = user.name || '학생';
+        } catch(e) {
+          // 파싱 실패시 localStorage 사용
+          studentGrade = localStorage.getItem('studentGrade') || '초4';
+          studentName = localStorage.getItem('studentName') || '학생';
+        }
+      } else {
+        // localStorage 또는 session에서 학생 정보 가져오기
+        studentGrade = localStorage.getItem('studentGrade') || '초4';
+        studentName = localStorage.getItem('studentName') || '학생';
+      }
 
-      studentGrade = grade;
-      studentName = name;
-
-      document.getElementById('studentInfo').textContent = `${grade} ${name}`;
+      document.getElementById('studentInfo').textContent = `${studentGrade} ${studentName}`;
     }
 
     // 주간 달력 렌더링
@@ -575,9 +653,37 @@
       renderWeekCalendar();
     });
 
+    // 단원 완료 메시지 수신 처리
+    window.addEventListener('message', async (event) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data.type === 'UNIT_COMPLETED') {
+        console.log('📚 단원 완료 메시지 수신됨');
+
+        // 완료 정보를 localStorage와 서버에 저장
+        // (실제 완료 처리는 학습 페이지에서 이미 처리되므로, 여기서는 서버 동기화만 수행)
+        await saveStudyRoomDataToServer();
+
+        // 과제 목록 새로고침
+        await loadAssignments();
+        if (selectedDate) {
+          renderTasks();
+        }
+        renderWeekCalendar();
+      }
+    });
+
     // 초기화
-    loadStudentInfo();
-    loadAssignments();
+    (async () => {
+      // 1. 학생 정보 로드
+      loadStudentInfo();
+
+      // 2. 서버에서 학습실 데이터 불러오기
+      await loadStudyRoomDataFromServer();
+
+      // 3. 과제 목록 로드 및 렌더링
+      await loadAssignments();
+    })();
   </script>
 </body>
 </html>
