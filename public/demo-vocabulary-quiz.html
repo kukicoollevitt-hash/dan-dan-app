@@ -1261,7 +1261,7 @@
           <div class="score-value" id="ratingScore">0.0</div>
         </div>
       </div>
-      <div class="my-rank-display" id="myRankBox" onclick="showRankModal()">
+      <div class="my-rank-display" id="myRankBox">
         <span class="rank-label">나의 순위</span>
         <div class="rank-value-container">
           <span class="rank-value" id="myRankValue">0위</span>
@@ -6427,6 +6427,9 @@
       setQuizCount(quizCount);
       updateAvgScore();
 
+      // 평균 점수가 변경되었으므로 순위도 즉시 재계산
+      updateMyRankDisplay();
+
       resultScreen.classList.add('show');
 
       if (percentage >= 70) {
@@ -6724,7 +6727,9 @@
         const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
         const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
         const grade = grades[Math.floor(Math.random() * grades.length)];
-        const rating = (Math.random() * (9.9 - 3.0) + 3.0).toFixed(1);
+
+        // 평점: 10점~100점 범위로 랜덤 생성
+        const rating = (Math.random() * 90 + 10).toFixed(1); // 10.0~100.0
 
         rankings.push({
           name: lastName + firstName,
@@ -6774,48 +6779,69 @@
       }
     }
 
-    // 12시간마다 순위 재계산 (랜덤 변동)
+    // 나의 순위 업데이트 (우측 상단 박스)
+    function updateMyRankDisplay() {
+      const myRating = parseFloat(calculateRating());
+      const rankings = generateRankingData();
+
+      // 현재 사용자 정보 가져오기
+      const userStr = sessionStorage.getItem('user');
+      let myGrade = '초4';
+      let myName = '나';
+
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          myGrade = user.grade || '초4';
+          myName = user.name || '나';
+        } catch(e) {
+          console.error('User parse error:', e);
+        }
+      }
+
+      // 나의 데이터를 랭킹에 추가
+      const myData = {
+        name: myName,
+        grade: myGrade,
+        rating: myRating
+      };
+
+      rankings.push(myData);
+
+      // 다시 정렬
+      rankings.sort((a, b) => b.rating - a.rating);
+
+      // 내 순위 찾기
+      const myRank = rankings.findIndex(r => r.name === myName && r.grade === myGrade && r.rating === myRating) + 1;
+
+      // 이전 순위 가져오기 및 순위 변동 계산
+      const userKey = getUserKey();
+      const prevRankKey = `${userKey}_prevRank`;
+      const prevRank = parseInt(localStorage.getItem(prevRankKey)) || myRank;
+      const rankDiff = prevRank - myRank;
+
+      // 우측 상단 "나의 순위" 박스 업데이트
+      document.getElementById('myRankValue').textContent = `${myRank}위`;
+
+      // 순위 변동 표시
+      updateRankChange(rankDiff);
+
+      // 현재 순위를 localStorage에 저장
+      localStorage.setItem(prevRankKey, myRank);
+    }
+
+    // 10분마다 순위 재계산 (랜덤 변동)
     function scheduleRankUpdate() {
       const userKey = getUserKey();
       const lastUpdateKey = `${userKey}_lastRankUpdate`;
       const lastUpdate = parseInt(localStorage.getItem(lastUpdateKey)) || 0;
       const now = Date.now();
-      const twelveHours = 12 * 60 * 60 * 1000; // 12시간 (밀리초)
+      const tenMinutes = 10 * 60 * 1000; // 10분 (밀리초)
 
-      // 12시간이 지났으면 순위 업데이트
-      if (now - lastUpdate >= twelveHours) {
-        // 랜덤하게 순위를 약간 변동 (다른 사용자들의 활동을 시뮬레이션)
-        const myRating = parseFloat(calculateRating());
-        const rankings = generateRankingData();
-
-        // 현재 사용자 정보
-        const userStr = sessionStorage.getItem('user');
-        let myGrade = '초4';
-        let myName = '나';
-
-        if (userStr) {
-          try {
-            const user = JSON.parse(userStr);
-            myGrade = user.grade || '초4';
-            myName = user.name || '나';
-          } catch(e) {}
-        }
-
-        const myData = { name: myName, grade: myGrade, rating: myRating };
-        rankings.push(myData);
-        rankings.sort((a, b) => b.rating - a.rating);
-
-        const myRank = rankings.findIndex(r => r.name === myName && r.grade === myGrade && r.rating === myRating) + 1;
-
-        // 순위 변동 계산 및 표시
-        const prevRankKey = `${userKey}_prevRank`;
-        const prevRank = parseInt(localStorage.getItem(prevRankKey)) || myRank;
-        const rankDiff = prevRank - myRank;
-
-        if (rankDiff !== 0) {
-          updateRankChange(rankDiff);
-          localStorage.setItem(prevRankKey, myRank);
-        }
+      // 10분이 지났으면 순위 업데이트
+      if (now - lastUpdate >= tenMinutes) {
+        // 순위 업데이트 (다른 사용자들의 활동을 시뮬레이션)
+        updateMyRankDisplay();
 
         // 마지막 업데이트 시간 저장
         localStorage.setItem(lastUpdateKey, now);
@@ -6940,6 +6966,9 @@
         closeMartPopup();
       }
     });
+
+    // 페이지 로드 시 즉시 순위 표시
+    updateMyRankDisplay();
 
     // 페이지 로드 시 순위 업데이트 스케줄러 시작
     scheduleRankUpdate();
