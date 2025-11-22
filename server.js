@@ -4227,6 +4227,29 @@ app.get("/admin/logs-export", async (req, res) => {
   }
 });
 
+// ===== 학습 기록 조회 API (뱃지용) =====
+app.get("/api/learning-logs", async (req, res) => {
+  const { grade, name } = req.query;
+
+  console.log("📊 [/api/learning-logs] 요청:", { grade, name });
+
+  if (!grade || !name) {
+    return res.status(400).json({ error: "grade, name 파라미터가 필요합니다." });
+  }
+
+  try {
+    const logs = await LearningLog.find({ grade, name })
+      .sort({ timestamp: -1 })
+      .lean();
+
+    console.log("✅ [/api/learning-logs] 조회 결과:", logs.length, "개 기록");
+    res.json(logs);
+  } catch (err) {
+    console.error("❌ /api/learning-logs 에러:", err);
+    res.status(500).json({ error: "학습 기록 조회 중 오류가 발생했습니다." });
+  }
+});
+
 // ===== 학생용 학습 이력 보기 (인증 불필요) =====
 app.get("/my-learning", async (req, res) => {
   const { grade, name } = req.query;
