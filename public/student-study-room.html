@@ -301,6 +301,80 @@
     .back-btn:hover {
       background: #e0e0e0;
     }
+
+    /* 준비 중 팝업 */
+    .coming-soon-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .coming-soon-modal.show {
+      display: flex;
+    }
+
+    .coming-soon-content {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .coming-soon-icon {
+      font-size: 60px;
+      margin-bottom: 20px;
+    }
+
+    .coming-soon-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .coming-soon-message {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .coming-soon-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 40px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .coming-soon-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -331,6 +405,16 @@
       <div id="tasksList">
         <!-- 동적으로 채워짐 -->
       </div>
+    </div>
+  </div>
+
+  <!-- 준비 중 팝업 -->
+  <div class="coming-soon-modal" id="comingSoonModal">
+    <div class="coming-soon-content">
+      <div class="coming-soon-icon">📚✨</div>
+      <div class="coming-soon-title">아직 준비 중입니다</div>
+      <div class="coming-soon-message">곧 지문이 오픈됩니다. 기대해주세요!</div>
+      <button class="coming-soon-btn" onclick="closeComingSoonModal()">확인</button>
     </div>
   </div>
 
@@ -619,8 +703,57 @@
       return names[subject] || subject;
     }
 
+    // 준비 중 팝업 열기
+    function showComingSoonModal() {
+      const modal = document.getElementById('comingSoonModal');
+      modal.classList.add('show');
+    }
+
+    // 준비 중 팝업 닫기
+    function closeComingSoonModal() {
+      const modal = document.getElementById('comingSoonModal');
+      modal.classList.remove('show');
+    }
+
+    // 배경 클릭 시 팝업 닫기
+    document.addEventListener('DOMContentLoaded', function() {
+      const modal = document.getElementById('comingSoonModal');
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            closeComingSoonModal();
+          }
+        });
+      }
+    });
+
+    // 단원 파일 존재 여부 확인 (준비된 단원 목록)
+    const availableUnits = {
+      'BRAINUP': {
+        'social': {
+          'geo': [1, 2, 3, 4], // 지리 01~04만 준비됨
+          'soc': [],
+          'law': [],
+          'pol': []
+        }
+      }
+    };
+
     // 단원으로 이동
     function goToUnit(series, category, subject, unit) {
+      // 해당 단원이 준비되어 있는지 확인
+      const isAvailable = availableUnits[series] &&
+                         availableUnits[series][category] &&
+                         availableUnits[series][category][subject] &&
+                         availableUnits[series][category][subject].includes(unit);
+
+      if (!isAvailable) {
+        // 준비되지 않은 단원 → 팝업 표시
+        showComingSoonModal();
+        return;
+      }
+
+      // 준비된 단원 → 페이지 이동
       const unitStr = unit < 10 ? `0${unit}` : unit;
       const path = `/${series}/${category}/${subject}_${unitStr}.html`;
       window.location.href = path;
