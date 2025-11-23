@@ -1544,6 +1544,16 @@
         console.log('[study page] Sent UNIT_COMPLETED to parent');
       }
 
-      // 7) 완료 표시
+      // 7) AI 추천 과제 복습 완료 처리
+      try {
+        if (typeof window.markAITaskAsCompleted === 'function') {
+          const unitId = cur; // 예: 'geo_03'
+          await window.markAITaskAsCompleted(stu.grade, stu.name, unitId);
+        }
+      } catch (error) {
+        console.error('[AI 과제 복습 완료 처리 오류]', error);
+      }
+
+      // 8) 완료 표시
       showSubmitSuccess('분석리포트');
     }

@@ -7548,6 +7548,46 @@ app.post("/api/ai-chat", async (req, res) => {
   }
 });
 
+// ===== 학습 기록 삭제 API (테스트용) =====
+app.post('/api/learning-log/delete-units', async (req, res) => {
+  try {
+    const { grade, name, units } = req.body;
+
+    if (!grade || !name || !units || !Array.isArray(units)) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade, name, units(배열)이 필요합니다'
+      });
+    }
+
+    // 특정 단원들의 학습 기록을 소프트 삭제
+    const result = await LearningLog.updateMany(
+      {
+        grade,
+        name,
+        unit: { $in: units },
+        deleted: false
+      },
+      {
+        $set: { deleted: true }
+      }
+    );
+
+    res.json({
+      ok: true,
+      message: `${result.modifiedCount}개의 학습 기록이 삭제되었습니다`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('학습 기록 삭제 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
+      error: error.message
+    });
+  }
+});
+
 // 영어 챗봇 API
 app.post("/api/ai-english-chat", async (req, res) => {
   try {
@@ -7833,6 +7873,65 @@ app.post('/api/user-progress/study-room', async (req, res) => {
     });
   } catch (error) {
     console.error('학습실 데이터 저장 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
+      error: error.message
+    });
+  }
+});
+
+// AI 추천 과제 복습 완료 처리 API
+app.post('/api/user-progress/ai-task/complete', async (req, res) => {
+  try {
+    const { grade, name, unitId } = req.body;
+
+    if (!grade || !name || !unitId) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade, name, unitId가 필요합니다'
+      });
+    }
+
+    const progress = await UserProgress.findOne({ grade, name });
+
+    if (!progress) {
+      return res.json({
+        ok: true,
+        message: '사용자 데이터가 없습니다'
+      });
+    }
+
+    // 학습실 과제 중에서 해당 단원의 AI 추천 과제 찾기
+    const tasks = progress.studyRoom?.assignedTasks || [];
+    let updated = false;
+
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+      // AI 과제이면서 해당 단원인 경우
+      if (task.isAI && task.id === unitId) {
+        task.status = 'completed';
+        task.completedAt = new Date();
+        updated = true;
+        console.log(`✅ AI 과제 복습 완료: ${grade} ${name} - ${unitId}`);
+      }
+    }
+
+    if (updated) {
+      await progress.save();
+      res.json({
+        ok: true,
+        message: 'AI 추천 과제 복습이 완료되었습니다'
+      });
+    } else {
+      res.json({
+        ok: true,
+        message: '해당 단원의 AI 추천 과제가 없습니다'
+      });
+    }
+
+  } catch (error) {
+    console.error('AI 과제 복습 완료 처리 오류:', error);
     res.status(500).json({
       ok: false,
       message: '서버 오류가 발생했습니다',

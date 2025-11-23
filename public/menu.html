@@ -150,15 +150,25 @@ body {
       font-weight: 500;
       white-space: nowrap;
     }
-    /* ✏️ 미완료 */
+    /* 일반 과제 - ✏️ 미완료 */
     .status-default {
       background: #f8d4d4;
       color: #7f2525;
     }
-    /* 🏆 학습완료 */
+    /* 일반 과제 - 🏆 학습완료 */
     .status-done {
       background: #aef3ae;
       color: #18622e;
+    }
+    /* AI 과제 - 🔄 학습필요 */
+    .status-ai-pending {
+      background: #e9d5ff;
+      color: #6b21a8;
+    }
+    /* AI 과제 - 🏆 학습완료 */
+    .status-ai-done {
+      background: #d1fae5;
+      color: #065f46;
     }
 
     /* 모달 (준비중) */
@@ -3649,7 +3659,32 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
           const isCompleted = isUnitCompleted(unitId);
 
           li.dataset.unitId = unitId;
+          li.dataset.taskIndex = i; // 과제 인덱스 저장 (복습 완료 처리용)
           li.style.cursor = 'pointer';
+
+          // AI 과제와 일반 과제의 배지 구분
+          let badgeClass = '';
+          let badgeText = '';
+
+          if (task.isAI) {
+            // AI 추천 과제 - task.status로 복습 완료 여부 확인
+            if (task.status === 'completed') {
+              badgeClass = 'status-ai-done';
+              badgeText = '✅ 복습완료';
+            } else {
+              badgeClass = 'status-ai-pending';
+              badgeText = '🔄 복습필요';
+            }
+          } else {
+            // 일반 과제 - LearningLog로 학습 완료 여부 확인
+            if (isCompleted) {
+              badgeClass = 'status-done';
+              badgeText = '🏆 학습완료';
+            } else {
+              badgeClass = 'status-default';
+              badgeText = '✏️ 미완료';
+            }
+          }
 
           li.innerHTML = `
             <div class="study-room-item-left">
@@ -3659,8 +3694,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
               <div class="study-room-item-meta">${task.series} > ${task.field || task.domain} > ${task.subject}</div>
             </div>
             <div class="study-room-item-right">
-              <span class="status-badge ${isCompleted ? 'status-done' : 'status-default'}">
-                ${isCompleted ? '🏆 학습완료' : '✏️ 미완료'}
+              <span class="status-badge ${badgeClass}">
+                ${badgeText}
               </span>
               <button class="trash-btn" data-index="${i}" title="삭제">🗑️</button>
             </div>
