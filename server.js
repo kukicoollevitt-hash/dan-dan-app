@@ -4327,6 +4327,60 @@ app.get("/api/learning-logs", async (req, res) => {
   }
 });
 
+// ===== 단원별 최신 등급 조회 API =====
+app.get("/api/unit-grades", async (req, res) => {
+  const { grade, name } = req.query;
+
+  console.log("⭐ [/api/unit-grades] 요청:", { grade, name });
+
+  if (!grade || !name) {
+    return res.status(400).json({ error: "grade, name 파라미터가 필요합니다." });
+  }
+
+  try {
+    // 학생의 모든 학습 기록 조회
+    const logs = await LearningLog.find({ grade, name, deleted: false })
+      .sort({ timestamp: -1 })
+      .lean();
+
+    // 단원별로 가장 최신 학습 기록의 등급 추출
+    const unitGradesMap = {};
+
+    logs.forEach(log => {
+      const unitId = log.unit;
+
+      // 이미 등록된 단원이 아니면 추가 (최신 순으로 정렬되어 있으므로 첫 번째가 최신)
+      if (!unitGradesMap[unitId] && log.radar) {
+        // 레이더 평균 계산
+        const radarValues = Object.values(log.radar);
+        const radarAvg = radarValues.reduce((sum, val) => sum + val, 0) / radarValues.length;
+
+        // 등급 결정
+        let grade = '격려';
+        if (radarAvg >= 8) {
+          grade = '우수';
+        } else if (radarAvg >= 6.5) {
+          grade = '양호';
+        } else if (radarAvg >= 5) {
+          grade = '보통';
+        }
+
+        unitGradesMap[unitId] = {
+          grade: grade,
+          radarAvg: radarAvg.toFixed(2),
+          timestamp: log.timestamp
+        };
+      }
+    });
+
+    console.log("✅ [/api/unit-grades] 조회 완료:", Object.keys(unitGradesMap).length, "개 단원");
+    res.json(unitGradesMap);
+  } catch (err) {
+    console.error("❌ /api/unit-grades 에러:", err);
+    res.status(500).json({ error: "단원 등급 조회 중 오류가 발생했습니다." });
+  }
+});
+
 // ===== 학생용 학습 이력 보기 (인증 불필요) =====
 app.get("/my-learning", async (req, res) => {
   const { grade, name } = req.query;

@@ -165,6 +165,15 @@ body {
       background: #e9d5ff;
       color: #6b21a8;
     }
+    /* 별점 표시 */
+    .unit-stars {
+      display: inline-block;
+      margin-right: 8px;
+      font-size: 14px;
+      color: #fbbf24;
+      text-shadow: 0 0 2px rgba(251, 191, 36, 0.3);
+    }
+
     /* AI 과제 - 🏆 학습완료 */
     .status-ai-done {
       background: #d1fae5;
@@ -1966,6 +1975,9 @@ body {
 
     const unitTitleOverrides = buildUnitTitleOverrides();
 
+    // 단원별 등급 데이터 저장 객체
+    let unitGradesData = {};
+
     /* 4. DOM 캐싱 */
     const domainList = document.getElementById("domainList");
     const subjectList = document.getElementById("subjectList");
@@ -2150,7 +2162,9 @@ if (logoutConfirmBtn) {
     }
 
     /* 9. 단원 리스트 출력 */
-    function renderUnitList(units) {
+    async function renderUnitList(units) {
+      // 단원 등급 데이터 로드
+      unitGradesData = await fetchUnitGrades();
       unitList.innerHTML = "";
       units.forEach(u => {
         const li = document.createElement("li");
@@ -2166,10 +2180,17 @@ if (logoutConfirmBtn) {
           subject: currentSelectedSubject ? currentSelectedSubject.label : ''
         });
 
+        // 단원 ID 추출 (예: "BRAINUP/social/geo_01.html" → "geo_01")
+        const unitId = u.path.split('/').pop().replace('.html', '');
+
+        // 해당 단원의 등급 정보 가져오기
+        const gradeInfo = unitGradesData[unitId];
+        const stars = gradeInfo ? getStarsForGrade(gradeInfo.grade) : '';
+
         li.innerHTML = `
           <span>${u.label}</span>
           <span class="unit-right">
-            <span class="badge">${u.num}</span>
+            ${stars ? `<span class="unit-stars">${stars}</span>` : ''}
             <span class="status-badge status-default" draggable="true">✏️ 미완료</span>
           </span>
         `;
@@ -2266,6 +2287,46 @@ if (logoutConfirmBtn) {
       const cleanName = (stu.name || '').trim();
       const cleanGrade = (stu.grade || '').trim();
       return `${cleanGrade}_${cleanName}_${cleanPhone}`;
+    }
+
+    /* ⭐ 단원별 등급 데이터 가져오기 */
+    async function fetchUnitGrades() {
+      try {
+        const stu = getCurrentStudent();
+        if (!stu) {
+          console.log('⭐ 로그인된 학생 정보 없음');
+          return {};
+        }
+
+        const params = new URLSearchParams({
+          grade: stu.grade || '',
+          name: stu.name || ''
+        });
+
+        const response = await fetch(`/api/unit-grades?${params}`);
+        if (!response.ok) {
+          console.error('⭐ 단원 등급 조회 실패:', response.status);
+          return {};
+        }
+
+        const data = await response.json();
+        console.log('⭐ 단원 등급 데이터 로드:', Object.keys(data).length, '개');
+        return data;
+      } catch (error) {
+        console.error('⭐ 단원 등급 조회 오류:', error);
+        return {};
+      }
+    }
+
+    /* ⭐ 등급별 별 개수 반환 */
+    function getStarsForGrade(grade) {
+      const starsMap = {
+        '우수': '⭐⭐⭐⭐⭐',
+        '양호': '⭐⭐⭐⭐',
+        '보통': '⭐⭐⭐',
+        '격려': '⭐⭐'
+      };
+      return starsMap[grade] || '';
     }
 
     /* ✅ 현재 로그인한 학생의 완료 리스트 불러오기 */
@@ -3628,6 +3689,9 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const list = document.getElementById('studyRoomList');
       if (!list) return;
 
+      // 단원별 등급 데이터 로드
+      unitGradesData = await fetchUnitGrades();
+
       const allTasks = await getStudyRoomTasks();
 
       // AI 과제와 일반 과제 분리 후 각각 시간순 정렬
@@ -3688,6 +3752,13 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         li.dataset.taskIndex = i; // 과제 인덱스 저장 (복습 완료 처리용)
         li.style.cursor = 'pointer';
 
+        // unitId에서 단원 코드 추출 (./BRAINUP/social/geo_03.html -> geo_03)
+        let unitCode = unitId;
+        const match = unitId.match(/\/([^\/]+)\.html$/);
+        if (match) {
+          unitCode = match[1];
+        }
+
         // AI 과제와 일반 과제의 배지 구분
         let badgeClass = '';
         let badgeText = '';
@@ -3712,6 +3783,25 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
           }
         }
 
+        // 학습이 완료된 과제는 별점 추가 (unitCode 사용)
+        const gradeInfo = unitGradesData[unitCode];
+        const stars = (task.status === 'completed' || isCompleted) && gradeInfo
+          ? getStarsForGrade(gradeInfo.grade)
+          : '';
+
+        // 디버깅: 별이 안 나오는 이유 확인
+        if ((task.status === 'completed' || isCompleted) && !stars) {
+          console.log(`⭐ [디버깅] 별이 없는 완료 과제:`, {
+            title: task.title,
+            unitId: unitId,
+            unitCode: unitCode,
+            isCompleted: isCompleted,
+            taskStatus: task.status,
+            hasGradeInfo: !!gradeInfo,
+            gradeInfo: gradeInfo
+          });
+        }
+
         li.innerHTML = `
           <div class="study-room-item-left">
             <div class="study-room-item-title">
@@ -3720,6 +3810,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
             <div class="study-room-item-meta">${task.series} > ${task.field || task.domain} > ${task.subject}</div>
           </div>
           <div class="study-room-item-right">
+            ${stars ? `<span class="unit-stars">${stars}</span>` : ''}
             <span class="status-badge ${badgeClass}">
               ${badgeText}
             </span>
