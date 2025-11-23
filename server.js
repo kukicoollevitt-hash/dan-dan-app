@@ -22,6 +22,42 @@ const transporter = nodemailer.createTransport({
 const LearningLog = require("./models/LearningLog");
 const UserProgress = require("./models/UserProgress");
 
+// ===== 간단한 메모리 캐시 =====
+const cache = new Map();
+const CACHE_TTL = 30000; // 30초
+
+function getCacheKey(prefix, params) {
+  return `${prefix}:${JSON.stringify(params)}`;
+}
+
+function getCache(key) {
+  const cached = cache.get(key);
+  if (!cached) return null;
+
+  const now = Date.now();
+  if (now > cached.expiry) {
+    cache.delete(key);
+    return null;
+  }
+
+  return cached.data;
+}
+
+function setCache(key, data, ttl = CACHE_TTL) {
+  cache.set(key, {
+    data,
+    expiry: Date.now() + ttl
+  });
+}
+
+function clearCacheByPrefix(prefix) {
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) {
+      cache.delete(key);
+    }
+  }
+}
+
 const app = express();
 const ADMIN_KEY = process.env.ADMIN_KEY ? process.env.ADMIN_KEY.trim() : "";
 
@@ -4290,6 +4326,14 @@ app.get("/api/learning-logs", async (req, res) => {
     return res.status(400).json({ error: "grade, name 파라미터가 필요합니다." });
   }
 
+  // 캐시 키 생성
+  const cacheKey = getCacheKey('learning-logs', { grade, name, phone });
+  const cached = getCache(cacheKey);
+  if (cached) {
+    console.log("💾 [/api/learning-logs] 캐시 사용");
+    return res.json(cached);
+  }
+
   try {
     // phone이 있으면 phone으로도 필터링 (새로운 학습 기록용)
     // phone이 없으면 grade, name만으로 필터링 (기존 학습 기록 호환)
@@ -4319,6 +4363,9 @@ app.get("/api/learning-logs", async (req, res) => {
       aiReviewCompletedAt: aiTaskMap.get(log.unit) || null
     }));
 
+    // 캐시에 저장
+    setCache(cacheKey, logsWithAIReview);
+
     console.log("✅ [/api/learning-logs] 조회 결과:", logsWithAIReview.length, "개 기록");
     res.json(logsWithAIReview);
   } catch (err) {
@@ -4335,6 +4382,14 @@ app.get("/api/unit-grades", async (req, res) => {
 
   if (!grade || !name) {
     return res.status(400).json({ error: "grade, name 파라미터가 필요합니다." });
+  }
+
+  // 캐시 키 생성
+  const cacheKey = getCacheKey('unit-grades', { grade, name });
+  const cached = getCache(cacheKey);
+  if (cached) {
+    console.log("💾 [/api/unit-grades] 캐시 사용");
+    return res.json(cached);
   }
 
   try {
@@ -4372,6 +4427,9 @@ app.get("/api/unit-grades", async (req, res) => {
         };
       }
     });
+
+    // 캐시에 저장
+    setCache(cacheKey, unitGradesMap);
 
     console.log("✅ [/api/unit-grades] 조회 완료:", Object.keys(unitGradesMap).length, "개 단원");
     res.json(unitGradesMap);
