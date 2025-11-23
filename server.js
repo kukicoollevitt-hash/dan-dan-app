@@ -5237,7 +5237,11 @@ app.get("/my-learning", async (req, res) => {
         </div>
 
         <div style="text-align: center;">
-          <span class="stats-badge" id="logCountBadge">📚 총 ${logs.length}건의 학습 기록</span>
+          <span class="stats-badge" id="logCountBadge" style="font-size: 20px; padding: 16px 36px;">📚 총 ${logs.length}건의 학습 기록</span>
+          <div style="margin-top: 5px; display: flex; justify-content: center; gap: 20px;">
+            <span class="stats-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%); color: white;" id="normalLearningCount">📖 일반학습 0건</span>
+            <span class="stats-badge" style="background: linear-gradient(135deg, #a855f7 0%, #6b21a8 100%); color: white;" id="aiLearningCount">🤖 AI추천학습 0건</span>
+          </div>
         </div>
 
         <div class="section-title">
@@ -6435,9 +6439,28 @@ app.get("/my-learning", async (req, res) => {
           const tbody = document.getElementById('logTableBody');
           const toggleBtn = document.getElementById('toggleBtn');
           const logCountBadge = document.getElementById('logCountBadge');
+          const normalLearningCount = document.getElementById('normalLearningCount');
+          const aiLearningCount = document.getElementById('aiLearningCount');
+
+          // 일반학습과 AI추천학습 건수 계산
+          let normalCount = 0;
+          let aiCount = 0;
+
+          logs.forEach(log => {
+            // 일반학습: LearningLog에 기록된 모든 학습
+            normalCount++;
+
+            // AI추천학습: aiReviewCompletedAt이 있는 경우 (복습 완료)
+            if (log.aiReviewCompletedAt) {
+              aiCount++;
+            }
+          });
 
           // 배지 업데이트
-          logCountBadge.textContent = \`📚 총 \${logs.length}건의 학습 기록\`;
+          const totalCount = normalCount;
+          logCountBadge.textContent = \`📚 총 \${totalCount}건의 학습 기록\`;
+          normalLearningCount.textContent = \`📖 일반학습 \${normalCount}건\`;
+          aiLearningCount.textContent = \`🤖 AI추천학습 \${aiCount}건\`;
 
           // 테이블 초기화
           tbody.innerHTML = '';
