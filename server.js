@@ -4301,8 +4301,26 @@ app.get("/api/learning-logs", async (req, res) => {
       .sort({ timestamp: -1 })
       .lean();
 
-    console.log("✅ [/api/learning-logs] 조회 결과:", logs.length, "개 기록");
-    res.json(logs);
+    // UserProgress에서 AI 과제 복습 완료 시간 가져오기
+    const userProgress = await UserProgress.findOne({ grade, name });
+    const aiTaskMap = new Map();
+
+    if (userProgress && userProgress.studyRoom && userProgress.studyRoom.assignedTasks) {
+      userProgress.studyRoom.assignedTasks.forEach(task => {
+        if (task.isAI && task.completedAt) {
+          aiTaskMap.set(task.id, task.completedAt);
+        }
+      });
+    }
+
+    // 각 학습 기록에 AI 복습 완료 시간 추가
+    const logsWithAIReview = logs.map(log => ({
+      ...log,
+      aiReviewCompletedAt: aiTaskMap.get(log.unit) || null
+    }));
+
+    console.log("✅ [/api/learning-logs] 조회 결과:", logsWithAIReview.length, "개 기록");
+    res.json(logsWithAIReview);
   } catch (err) {
     console.error("❌ /api/learning-logs 에러:", err);
     res.status(500).json({ error: "학습 기록 조회 중 오류가 발생했습니다." });
@@ -4326,6 +4344,23 @@ app.get("/my-learning", async (req, res) => {
       .lean();
 
     console.log("✅ [/my-learning] 조회 결과:", logs.length, "개 기록");
+
+    // UserProgress에서 AI 과제 복습 완료 시간 가져오기
+    const userProgress = await UserProgress.findOne({ grade, name });
+    const aiTaskMap = new Map();
+
+    if (userProgress && userProgress.studyRoom && userProgress.studyRoom.assignedTasks) {
+      userProgress.studyRoom.assignedTasks.forEach(task => {
+        if (task.isAI && task.completedAt) {
+          aiTaskMap.set(task.id, task.completedAt);
+        }
+      });
+    }
+
+    // 각 학습 기록에 AI 복습 완료 시간 추가
+    logs.forEach(log => {
+      log.aiReviewCompletedAt = aiTaskMap.get(log.unit) || null;
+    });
 
     let html = `
     <!DOCTYPE html>
@@ -4498,50 +4533,124 @@ app.get("/my-learning", async (req, res) => {
         }
 
         .total-progress-card {
-          background: white;
-          border-radius: 16px;
-          padding: 30px;
-          margin-bottom: 30px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 24px;
+          padding: 50px 40px;
+          margin-bottom: 40px;
+          box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
           text-align: center;
+          position: relative;
+          overflow: hidden;
+          border: 3px solid rgba(255, 255, 255, 0.3);
+          animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .total-progress-card::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: linear-gradient(
+            45deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent
+          );
+          transform: rotate(45deg);
+          animation: shimmer 3s infinite;
+        }
+
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+          }
+          50% {
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6), 0 0 30px rgba(102, 126, 234, 0.3);
+          }
+        }
+
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+          }
+          100% {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
+          }
         }
 
         .total-progress-title {
-          font-size: 24px;
-          font-weight: 700;
-          margin-bottom: 20px;
-          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          font-size: 40px;
+          font-weight: 800;
+          margin-bottom: 30px;
+          color: white;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          letter-spacing: -0.5px;
+          position: relative;
+          z-index: 1;
         }
 
         .total-progress-bar-container {
           width: 100%;
-          height: 40px;
-          background: #f0f0f0;
-          border-radius: 20px;
+          height: 60px;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 30px;
           overflow: hidden;
           position: relative;
-          margin-bottom: 15px;
+          margin-bottom: 25px;
+          box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          z-index: 1;
         }
 
         .total-progress-bar {
           height: 100%;
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-          transition: width 0.5s ease;
+          background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+          transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
-          font-weight: 700;
-          font-size: 16px;
+          color: #1e3a8a;
+          font-weight: 900;
+          font-size: 22px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .total-progress-bar::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.6),
+            transparent
+          );
+          animation: progress-shimmer 2s infinite;
+        }
+
+        @keyframes progress-shimmer {
+          0% {
+            left: -100%;
+          }
+          100% {
+            left: 100%;
+          }
         }
 
         .total-progress-text {
-          font-size: 18px;
-          color: #666;
-          font-weight: 600;
+          font-size: 24px;
+          color: white;
+          font-weight: 700;
+          position: relative;
+          z-index: 1;
+          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .field-progress-grid {
@@ -5128,7 +5237,7 @@ app.get("/my-learning", async (req, res) => {
         </div>
 
         <div style="text-align: center;">
-          <span class="stats-badge">📚 총 ${logs.length}건의 학습 기록</span>
+          <span class="stats-badge" id="logCountBadge">📚 총 ${logs.length}건의 학습 기록</span>
         </div>
 
         <div class="section-title">
@@ -5143,71 +5252,18 @@ app.get("/my-learning", async (req, res) => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>날짜/시간</th>
+                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(일반)</small></th>
+                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(AI복습)</small></th>
                 <th>등급</th>
                 <th>시리즈</th>
                 <th>단원명</th>
               </tr>
             </thead>
-            <tbody>
-    `;
-
-    logs.forEach((log, idx) => {
-      const ts = log.timestamp
-        ? new Date(log.timestamp).toLocaleString("ko-KR", {
-            timeZone: "Asia/Seoul",
-          })
-        : "-";
-
-      // 평균 점수 계산
-      const r = log.radar || {};
-      const scores = [r.literal, r.structural, r.lexical, r.inferential, r.critical].filter(s => s != null);
-      const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
-
-      // 등급 결정
-      let badgeClass = 'badge-normal';
-      let badgeText = '보통';
-      if (avgScore >= 9) {
-        badgeClass = 'badge-excellent';
-        badgeText = '우수';
-      } else if (avgScore >= 8) {
-        badgeClass = 'badge-good';
-        badgeText = '양호';
-      } else if (avgScore >= 7) {
-        badgeClass = 'badge-normal';
-        badgeText = '보통';
-      } else {
-        badgeClass = 'badge-encourage';
-        badgeText = '격려';
-      }
-
-      // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01)
-      let unitName = log.unit || "";
-      if (unitName && unitName.includes('_')) {
-        const parts = unitName.split('_');
-        const subjectMap = { 'geo': '지리' };
-        const subject = subjectMap[parts[0]] || parts[0];
-        const number = parts[1] ? parts[1].replace(/^0+/, '') : ''; // 01 → 1
-        unitName = subject + ' ' + number;
-      }
-
-      const hiddenClass = idx >= 10 ? ' class="hidden-row"' : '';
-      html += `
-        <tr${hiddenClass}>
-          <td>${idx + 1}</td>
-          <td>${ts}</td>
-          <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-          <td>${log.series || ""}</td>
-          <td>${unitName}</td>
-        </tr>
-      `;
-    });
-
-    html += `
+            <tbody id="logTableBody">
             </tbody>
           </table>
         </div>
-        ${logs.length > 10 ? '<button class="toggle-btn" id="toggleBtn" onclick="toggleRows()">더보기 ▼</button>' : ''}
+        <button class="toggle-btn" id="toggleBtn" onclick="toggleRows()" style="display:none;">더보기 ▼</button>
 
         <hr>
 
@@ -5221,7 +5277,7 @@ app.get("/my-learning", async (req, res) => {
         <div class="progress-section">
           <!-- Total Series Progress -->
           <div class="total-progress-card">
-            <div class="total-progress-title" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📚 전체 시리즈 진도율</div>
+            <div class="total-progress-title" style="color: white !important; font-size: 40px !important;">🎯 전체 시리즈 진도율</div>
             <div class="total-progress-bar-container">
               <div class="total-progress-bar" id="totalProgressBar" style="width: 0%;">
                 <span id="totalProgressPercent">0%</span>
@@ -5229,7 +5285,7 @@ app.get("/my-learning", async (req, res) => {
             </div>
             <div class="total-progress-text" id="totalProgressText">
               <span id="totalProgressTextCount">0 / 400</span>
-              <span style="margin-left: 12px; color: #3b82f6; font-weight: 700;" id="totalProgressTextPercent">(0%)</span>
+              <span style="margin-left: 12px; font-weight: 900;" id="totalProgressTextPercent">(0%)</span>
             </div>
           </div>
 
@@ -6374,6 +6430,86 @@ app.get("/my-learning", async (req, res) => {
           button.classList.toggle('active');
         });
 
+        // ===== 학습 기록 테이블 렌더링 함수 =====
+        function renderLogTable(logs) {
+          const tbody = document.getElementById('logTableBody');
+          const toggleBtn = document.getElementById('toggleBtn');
+          const logCountBadge = document.getElementById('logCountBadge');
+
+          // 배지 업데이트
+          logCountBadge.textContent = \`📚 총 \${logs.length}건의 학습 기록\`;
+
+          // 테이블 초기화
+          tbody.innerHTML = '';
+
+          // 과목 매핑
+          const subjectMap = { 'geo': '지리' };
+
+          logs.forEach((log, idx) => {
+            const ts = log.timestamp
+              ? new Date(log.timestamp).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+              : "-";
+
+            // 평균 점수 계산
+            const r = log.radar || {};
+            const scores = [r.literal, r.structural, r.lexical, r.inferential, r.critical].filter(s => s != null);
+            const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+
+            // 등급 결정
+            let badgeClass = 'badge-normal';
+            let badgeText = '보통';
+            if (avgScore >= 9) {
+              badgeClass = 'badge-excellent';
+              badgeText = '우수';
+            } else if (avgScore >= 8) {
+              badgeClass = 'badge-good';
+              badgeText = '양호';
+            } else if (avgScore >= 7) {
+              badgeClass = 'badge-normal';
+              badgeText = '보통';
+            } else {
+              badgeClass = 'badge-encourage';
+              badgeText = '격려';
+            }
+
+            // 단원 코드 → 단원명 변환
+            let unitName = log.unit || "";
+            if (unitName && unitName.includes('_')) {
+              const parts = unitName.split('_');
+              const subject = subjectMap[parts[0]] || parts[0];
+              const number = parts[1] ? parts[1].replace(/^0+/, '') : '';
+              unitName = subject + ' ' + number;
+            }
+
+            const hiddenClass = idx >= 10 ? 'hidden-row' : '';
+
+            // AI 복습 완료 시간 포맷팅
+            const aiReviewTimestamp = log.aiReviewCompletedAt ?
+              new Date(log.aiReviewCompletedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
+            const aiReviewStyle = log.aiReviewCompletedAt ? 'color: #6b21a8; font-weight: 600;' : 'color: #999;';
+
+            const row = document.createElement('tr');
+            if (hiddenClass) row.className = hiddenClass;
+            row.innerHTML = \`
+              <td>\${idx + 1}</td>
+              <td>\${ts}</td>
+              <td style="\${aiReviewStyle}">\${aiReviewTimestamp}</td>
+              <td><span class="badge \${badgeClass}">\${badgeText}</span></td>
+              <td>\${log.series || ""}</td>
+              <td>\${unitName}</td>
+            \`;
+            tbody.appendChild(row);
+          });
+
+          // 더보기 버튼 표시/숨김
+          if (logs.length > 10) {
+            toggleBtn.style.display = 'inline-block';
+            toggleBtn.textContent = '더보기 ▼';
+          } else {
+            toggleBtn.style.display = 'none';
+          }
+        }
+
         // 시리즈 선택
         document.querySelectorAll('.series-item').forEach(item => {
           item.addEventListener('click', function() {
@@ -6394,10 +6530,11 @@ app.get("/my-learning", async (req, res) => {
 
             console.log('선택된 시리즈:', series, '필터링된 로그:', filteredLogs.length);
 
-            // 차트 및 진도율 업데이트
+            // 차트, 진도율 및 학습 기록 테이블 업데이트
             renderSeriesRadar(filteredLogs);
             renderFieldRadar(filteredLogs);
             calculateProgress(filteredLogs);
+            renderLogTable(filteredLogs);
           });
         });
 
@@ -6416,12 +6553,41 @@ app.get("/my-learning", async (req, res) => {
           console.log('📚 html2canvas:', typeof html2canvas);
           console.log('📚 jsPDF:', typeof window.jspdf);
 
+          // 가장 최근 학습한 시리즈 찾기
+          let defaultSeries = 'all';
+          if (logsForChart.length > 0) {
+            // 가장 최근 로그의 시리즈 (이미 timestamp 내림차순 정렬되어 있음)
+            const recentSeries = logsForChart[0].series;
+            if (recentSeries) {
+              defaultSeries = recentSeries;
+              currentSelectedSeries = recentSeries;
+
+              // UI 업데이트
+              document.querySelectorAll('.series-item').forEach(item => {
+                if (item.dataset.series === recentSeries) {
+                  item.classList.add('active');
+                  document.getElementById('currentSeries').textContent = item.textContent;
+                } else {
+                  item.classList.remove('active');
+                }
+              });
+            }
+          }
+
+          // 선택된 시리즈에 맞게 필터링
+          const initialLogs = defaultSeries === 'all'
+            ? logsForChart
+            : logsForChart.filter(log => log.series === defaultSeries);
+
           // 레이더 차트 렌더링
-          renderSeriesRadar(logsForChart);
-          renderFieldRadar(logsForChart);
+          renderSeriesRadar(initialLogs);
+          renderFieldRadar(initialLogs);
 
           // 진도율 계산 및 표시
-          calculateProgress(logsForChart);
+          calculateProgress(initialLogs);
+
+          // 학습 기록 테이블 렌더링
+          renderLogTable(initialLogs);
         });
 
         // ===== 진도율 계산 함수 =====
