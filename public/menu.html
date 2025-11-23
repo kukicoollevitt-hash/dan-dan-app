@@ -3563,7 +3563,14 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const badge = document.getElementById('studyRoomBadge');
       if (badge) {
         const tasks = await getStudyRoomTasks();
-        badge.textContent = `${tasks.length}/10`;
+
+        // 완료된 과제 개수 = status가 'completed'인 과제
+        const completedCount = tasks.filter(task => task.status === 'completed').length;
+
+        // 전체 과제 개수
+        const totalCount = tasks.length;
+
+        badge.textContent = `${completedCount}/${totalCount}`;
       }
     }
 
@@ -3623,17 +3630,40 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
       const allTasks = await getStudyRoomTasks();
 
-      // AI 과제와 일반 과제 분리 및 정렬
-      const aiTasks = allTasks.filter(t => t.isAI);
-      const normalTasks = allTasks.filter(t => !t.isAI);
+      // AI 과제와 일반 과제 분리 후 각각 시간순 정렬
+      const aiTasks = allTasks.filter(t => t.isAI).sort((a, b) => {
+        const dateA = new Date(a.assignedAt || 0);
+        const dateB = new Date(b.assignedAt || 0);
+        return dateB - dateA; // 내림차순 (최신 순)
+      });
 
-      // AI 과제를 먼저, 일반 과제를 나중에 배치
+      const normalTasks = allTasks.filter(t => !t.isAI).sort((a, b) => {
+        const dateA = new Date(a.assignedAt || 0);
+        const dateB = new Date(b.assignedAt || 0);
+        return dateB - dateA; // 내림차순 (최신 순)
+      });
+
+      // AI 과제를 먼저, 일반 과제를 나중에
       const tasks = [...aiTasks, ...normalTasks];
 
       list.innerHTML = '';
 
-      // 10개 슬롯 생성
-      for (let i = 0; i < 10; i++) {
+      // AI 추천 과제 헤더 추가 (AI 과제가 있을 때만)
+      if (aiTasks.length > 0) {
+        const aiHeader = document.createElement('li');
+        aiHeader.className = 'study-room-divider';
+        aiHeader.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0;">
+            <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #a855f7, transparent);"></div>
+            <span style="color: #a855f7; font-size: 13px; font-weight: 600; white-space: nowrap;">🤖 AI 추천 과제</span>
+            <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #a855f7, transparent);"></div>
+          </div>
+        `;
+        list.appendChild(aiHeader);
+      }
+
+      // 모든 과제를 순회하며 렌더링 (제한 없음)
+      tasks.forEach((task, i) => {
         // AI 과제와 일반 과제 사이에 구분선 추가
         if (i === aiTasks.length && aiTasks.length > 0 && normalTasks.length > 0) {
           const divider = document.createElement('li');
@@ -3641,87 +3671,78 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
           divider.innerHTML = `
             <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0;">
               <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #e5e7eb, transparent);"></div>
-              <span style="color: #9ca3af; font-size: 13px; font-weight: 500; white-space: nowrap;">일반 과제</span>
+              <span style="color: #9ca3af; font-size: 13px; font-weight: 500; white-space: nowrap;">📚 일반 과제</span>
               <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #e5e7eb, transparent);"></div>
             </div>
           `;
           list.appendChild(divider);
         }
-
         const li = document.createElement('li');
         li.className = 'study-room-item';
 
-        if (i < tasks.length) {
-          // 과제가 있는 경우
-          const task = tasks[i];
-          // AI 과제는 id, 관리자 과제는 unitId 사용
-          const unitId = task.id || task.unitId;
-          const isCompleted = isUnitCompleted(unitId);
+        // AI 과제는 id, 관리자 과제는 unitId 사용
+        const unitId = task.id || task.unitId;
+        const isCompleted = isUnitCompleted(unitId);
 
-          li.dataset.unitId = unitId;
-          li.dataset.taskIndex = i; // 과제 인덱스 저장 (복습 완료 처리용)
-          li.style.cursor = 'pointer';
+        li.dataset.unitId = unitId;
+        li.dataset.taskIndex = i; // 과제 인덱스 저장 (복습 완료 처리용)
+        li.style.cursor = 'pointer';
 
-          // AI 과제와 일반 과제의 배지 구분
-          let badgeClass = '';
-          let badgeText = '';
+        // AI 과제와 일반 과제의 배지 구분
+        let badgeClass = '';
+        let badgeText = '';
 
-          if (task.isAI) {
-            // AI 추천 과제 - task.status로 복습 완료 여부 확인
-            if (task.status === 'completed') {
-              badgeClass = 'status-ai-done';
-              badgeText = '✅ 복습완료';
-            } else {
-              badgeClass = 'status-ai-pending';
-              badgeText = '🔄 복습필요';
-            }
+        if (task.isAI) {
+          // AI 추천 과제 - task.status로 복습 완료 여부 확인
+          if (task.status === 'completed') {
+            badgeClass = 'status-ai-done';
+            badgeText = '✅ 복습완료';
           } else {
-            // 일반 과제 - LearningLog로 학습 완료 여부 확인
-            if (isCompleted) {
-              badgeClass = 'status-done';
-              badgeText = '🏆 학습완료';
-            } else {
-              badgeClass = 'status-default';
-              badgeText = '✏️ 미완료';
-            }
+            badgeClass = 'status-ai-pending';
+            badgeText = '🔄 복습필요';
           }
-
-          li.innerHTML = `
-            <div class="study-room-item-left">
-              <div class="study-room-item-title">
-                ${task.isAI ? '🤖 ' : ''}${task.title}${task.isAI ? ' <span style="color: #667eea; font-size: 12px;">(AI 추천)</span>' : ''}
-              </div>
-              <div class="study-room-item-meta">${task.series} > ${task.field || task.domain} > ${task.subject}</div>
-            </div>
-            <div class="study-room-item-right">
-              <span class="status-badge ${badgeClass}">
-                ${badgeText}
-              </span>
-              <button class="trash-btn" data-index="${i}" title="삭제">🗑️</button>
-            </div>
-          `;
-
-          // 과제 클릭 시 학습 페이지 열기
-          li.addEventListener('click', (e) => {
-            // 휴지통 버튼 클릭 시에는 열리지 않도록
-            if (e.target.classList.contains('trash-btn') || e.target.closest('.trash-btn')) {
-              return;
-            }
-            // 학습실 모달 먼저 닫기
-            closeStudyRoomModal();
-            // 약간의 딜레이 후 학습 페이지 열기
-            setTimeout(() => {
-              openUnitModal(unitId);
-            }, 200);
-          });
         } else {
-          // 빈 슬롯
-          li.classList.add('empty');
-          li.innerHTML = '<div class="empty-text">과제를 올려주세요</div>';
+          // 일반 과제 - LearningLog로 학습 완료 여부 확인
+          if (isCompleted) {
+            badgeClass = 'status-done';
+            badgeText = '🏆 학습완료';
+          } else {
+            badgeClass = 'status-default';
+            badgeText = '✏️ 미완료';
+          }
         }
 
+        li.innerHTML = `
+          <div class="study-room-item-left">
+            <div class="study-room-item-title">
+              ${task.isAI ? '🤖 ' : ''}${task.title}${task.isAI ? ' <span style="color: #667eea; font-size: 12px;">(AI 추천)</span>' : ''}
+            </div>
+            <div class="study-room-item-meta">${task.series} > ${task.field || task.domain} > ${task.subject}</div>
+          </div>
+          <div class="study-room-item-right">
+            <span class="status-badge ${badgeClass}">
+              ${badgeText}
+            </span>
+            <button class="trash-btn" data-index="${i}" title="삭제">🗑️</button>
+          </div>
+        `;
+
+        // 과제 클릭 시 학습 페이지 열기
+        li.addEventListener('click', (e) => {
+          // 휴지통 버튼 클릭 시에는 열리지 않도록
+          if (e.target.classList.contains('trash-btn') || e.target.closest('.trash-btn')) {
+            return;
+          }
+          // 학습실 모달 먼저 닫기
+          closeStudyRoomModal();
+          // 약간의 딜레이 후 학습 페이지 열기
+          setTimeout(() => {
+            openUnitModal(unitId);
+          }, 200);
+        });
+
         list.appendChild(li);
-      }
+      });
 
       // 휴지통 버튼 이벤트 리스너 추가
       list.querySelectorAll('.trash-btn').forEach(btn => {
