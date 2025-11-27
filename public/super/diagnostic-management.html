@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>진단테스트 및 수강신청 관리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #667eea;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #7f8c8d;
+      font-size: 16px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-bottom: 30px;
+    }
+
+    .back-btn:hover {
+      background: #764ba2;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .section {
+      margin-bottom: 50px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ecf0f1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .count-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #ecf0f1;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 40px;
+      color: #95a5a6;
+      font-size: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #667eea;
+    }
+
+    .grade-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .grade-S { background: #ffd700; color: #333; }
+    .grade-A { background: #ff6b6b; color: white; }
+    .grade-B { background: #4ecdc4; color: white; }
+    .grade-C { background: #95e1d3; color: #333; }
+    .grade-D { background: #e0e0e0; color: #666; }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .section-title {
+        font-size: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 10px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/super/dashboard" class="back-btn">← 대시보드로 돌아가기</a>
+
+    <div class="header">
+      <h1>📊 진단테스트 및 수강신청 관리</h1>
+      <p>전체 학원·학생·관리자 계정을 한 곳에서 관리합니다.</p>
+    </div>
+
+    <!-- 진단테스트 회원 목록 -->
+    <div class="section">
+      <div class="section-title">
+        <span>📝 진단테스트 회원 목록</span>
+        <span class="count-badge" id="testCount">0명</span>
+      </div>
+      <div class="table-container">
+        <div id="diagnosticTestsLoading" class="loading">데이터를 불러오는 중...</div>
+        <table id="diagnosticTestsTable" style="display: none;">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>학년</th>
+              <th>학생 이름</th>
+              <th>학생 연락처</th>
+              <th>학부모 성함</th>
+              <th>학부모 연락처</th>
+              <th>등록 시간</th>
+            </tr>
+          </thead>
+          <tbody id="diagnosticTestsBody">
+          </tbody>
+        </table>
+        <div id="diagnosticTestsEmpty" class="empty-message" style="display: none;">
+          등록된 진단테스트 신청이 없습니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- 수강신청(상담) 목록 -->
+    <div class="section">
+      <div class="section-title">
+        <span>🎓 수강신청(상담) 목록</span>
+        <span class="count-badge" id="applicationCount">0명</span>
+      </div>
+      <div class="table-container">
+        <div id="applicationsLoading" class="loading">데이터를 불러오는 중...</div>
+        <table id="applicationsTable" style="display: none;">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>학년</th>
+              <th>학생 이름</th>
+              <th>학생 연락처</th>
+              <th>학부모 연락처</th>
+              <th>등급</th>
+              <th>시리즈</th>
+              <th>등록 시간</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsBody">
+          </tbody>
+        </table>
+        <div id="applicationsEmpty" class="empty-message" style="display: none;">
+          등록된 수강신청이 없습니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 진단테스트 목록 불러오기
+    async function loadDiagnosticTests() {
+      try {
+        const response = await fetch('/api/diagnostic-tests');
+        const result = await response.json();
+
+        const loading = document.getElementById('diagnosticTestsLoading');
+        const table = document.getElementById('diagnosticTestsTable');
+        const empty = document.getElementById('diagnosticTestsEmpty');
+        const body = document.getElementById('diagnosticTestsBody');
+        const countBadge = document.getElementById('testCount');
+
+        loading.style.display = 'none';
+
+        if (result.success && result.data.length > 0) {
+          table.style.display = 'table';
+          countBadge.textContent = `${result.data.length}명`;
+
+          body.innerHTML = result.data.map((test, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${test.studentGrade}</td>
+              <td>${test.studentName}</td>
+              <td>${test.studentPhone}</td>
+              <td>${test.parentName}</td>
+              <td>${test.parentPhone}</td>
+              <td>${new Date(test.createdAt).toLocaleString('ko-KR')}</td>
+            </tr>
+          `).join('');
+        } else {
+          empty.style.display = 'block';
+          countBadge.textContent = '0명';
+        }
+      } catch (error) {
+        console.error('진단테스트 목록 로드 오류:', error);
+        document.getElementById('diagnosticTestsLoading').textContent = '데이터 로드 중 오류가 발생했습니다.';
+      }
+    }
+
+    // 수강신청 목록 불러오기
+    async function loadCourseApplications() {
+      try {
+        const response = await fetch('/api/course-applications');
+        const result = await response.json();
+
+        const loading = document.getElementById('applicationsLoading');
+        const table = document.getElementById('applicationsTable');
+        const empty = document.getElementById('applicationsEmpty');
+        const body = document.getElementById('applicationsBody');
+        const countBadge = document.getElementById('applicationCount');
+
+        loading.style.display = 'none';
+
+        if (result.success && result.data.length > 0) {
+          table.style.display = 'table';
+          countBadge.textContent = `${result.data.length}명`;
+
+          body.innerHTML = result.data.map((app, index) => {
+            const gradeClass = `grade-${app.grade}`;
+            return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${app.studentGrade}</td>
+                <td>${app.studentName}</td>
+                <td>${app.studentPhone}</td>
+                <td>${app.parentPhone}</td>
+                <td><span class="grade-badge ${gradeClass}">${app.grade}</span></td>
+                <td>${app.series}</td>
+                <td>${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          empty.style.display = 'block';
+          countBadge.textContent = '0명';
+        }
+      } catch (error) {
+        console.error('수강신청 목록 로드 오류:', error);
+        document.getElementById('applicationsLoading').textContent = '데이터 로드 중 오류가 발생했습니다.';
+      }
+    }
+
+    // 페이지 로드 시 데이터 불러오기
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDiagnosticTests();
+      loadCourseApplications();
+    });
+  </script>
+</body>
+</html>

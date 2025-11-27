@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐱 미지의 고양이 섬 표류기 — 시즌 1</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-island-story/cat_part1_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF8FAB 0%, #FFB347 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .story-card p {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #34495e;
+      margin-bottom: 15px;
+      font-weight: 400;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: transparent;
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #ffffff;
+      margin-bottom: 40px;
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 네비게이션 바 */
+    .nav-bar {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      padding: 15px 30px;
+      border-radius: 50px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-bar .title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-right: 10px;
+    }
+
+    .nav-bar .progress {
+      font-size: 14px;
+      color: #7f8c8d;
+      font-weight: 500;
+    }
+
+    .nav-bar .home-btn {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF8FAB 0%, #FFB347 100%);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-bar .home-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 143, 171, 0.4);
+    }
+
+    /* 프로그레스 바 */
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: 101;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #FF8FAB 0%, #FFB347 100%);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 24px;
+      }
+
+      .story-card p {
+        font-size: 16px;
+      }
+
+      .nav-bar {
+        padding: 12px 20px;
+        gap: 10px;
+      }
+
+      .nav-bar .title {
+        font-size: 14px;
+      }
+
+      .nav-bar .progress {
+        display: none;
+      }
+    }
+
+    /* 마지막 섹션 여유 공간 */
+    .story-section:last-child {
+      margin-bottom: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <!-- 프로그레스 바 -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- 네비게이션 바 -->
+  <div class="nav-bar">
+    <span class="title">🐱 미지의 고양이 섬 표류기</span>
+    <span class="progress" id="navProgress">PART 1 / 10</span>
+    <button class="home-btn" onclick="goHome()">← 메인으로</button>
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐱 미지의 고양이 섬 표류기</h1>
+        <p class="subtitle">
+          시즌 1 - 바람이 데려온 섬<br>
+          신비로운 고양이들과의 첫 만남
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-bg="cat_part1_01.jpg">
+      <div class="story-card">
+        <span class="chapter">🌊 PART 1</span>
+        <h2>바다 안개 속에서 길을 잃다</h2>
+        <p>하늘과 세나는 작은 노 젓는 배를 타고 바다로 나갔다.</p>
+        <p>처음엔 잔잔했지만 갑자기 뿌연 안개가 밀려와 시야를 가렸다.</p>
+        <p>바람은 점점 세지고 배는 방향을 잃었다.</p>
+        <p>두 눈을 질끈 감았다가 다시 뜬 순간—</p>
+        <p>배는 어느 모래사장에 걸려 있었다.</p>
+        <p>주변에는 사람 발자국이 아닌, <strong>고양이 발자국만 가득했다.</strong></p>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-bg="cat_part1_02.jpg">
+      <div class="story-card">
+        <span class="chapter">🐈 PART 2</span>
+        <h2>말하는 고양이, 루모의 등장</h2>
+        <p>풀숲에서 조그만 고양이 한 마리가 나타났다.</p>
+        <p>회색 줄무늬에 초록 눈을 가진 고양이였다.</p>
+        <p>놀랍게도, 고양이는 또렷한 목소리로 말했다.</p>
+        <p><em>"여긴 인간이 잘 안 오는 곳인데… 너희, 누구야?"</em></p>
+        <p>하늘과 세나는 입을 다물지 못했다.</p>
+        <p>고양이는 자기 이름이 루모라고 소개했다.</p>
+        <p>그리고 이곳이 <strong>'미지의 고양이 섬'</strong>이라고 말했다.</p>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-bg="cat_part1_03.jpg">
+      <div class="story-card">
+        <span class="chapter">🌳 PART 3</span>
+        <h2>고양이 나무마을</h2>
+        <p>루모는 두 사람을 데리고 숲속 나무마을로 안내했다.</p>
+        <p>거기엔 나무 위에 연결된 집들이 줄줄이 이어져 있었고,</p>
+        <p>고양이들이 줄을 타고 왔다 갔다 하며 생활하고 있었다.</p>
+        <p>나무집 안에서는 책 대신 <strong>물음표 모양의 빛이 둥둥 떠다니고 있었고,</strong></p>
+        <p>고양이들은 그 빛을 만지며 공부를 했다.</p>
+        <p><em>"우린 손가락이 없어서 책 넘기기가 어렵거든!"</em></p>
+        <p>루모가 웃으며 말했다.</p>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-bg="cat_part1_04.jpg">
+      <div class="story-card">
+        <span class="chapter">⚠️ PART 4</span>
+        <h2>섬의 첫 번째 규칙</h2>
+        <p>루모는 조심스러운 표정으로 말했다.</p>
+        <p><em>"인간이 이 섬에 들어오면… 해가 세 번 지기 전에 돌아가야 해."</em></p>
+        <p>하늘이 묻는다. "왜?"</p>
+        <p>루모는 대답했다.</p>
+        <p><em>"이 섬은 고양이의 꿈과 인간의 마음이 합쳐진 섬이야.</em></p>
+        <p><em>너무 오래 머무르면 너희 마음도 이곳에 붙잡혀 버릴 수 있어."</em></p>
+        <p>하늘과 세나는 <strong>서둘러 돌아가는 방법을 찾아야 한다는 걸 깨달았다.</strong></p>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-bg="cat_part1_05.jpg">
+      <div class="story-card">
+        <span class="chapter">😴 PART 5</span>
+        <h2>졸림고양이 모래언덕</h2>
+        <p>루모는 섬을 둘러보며 단서를 찾기로 한다.</p>
+        <p>첫 번째로 향한 곳은 모래언덕.</p>
+        <p>이곳은 항상 따뜻한 햇살이 내려오며</p>
+        <p>고양이들이 낮잠을 자기에 최적의 장소였다.</p>
+        <p>한껏 느긋한 태도의 졸림고양이 일족은</p>
+        <p>말을 하다가도 꾸벅꾸벅 졸았고,</p>
+        <p>걸어가다 모래 위에 쓰러져 잠드는 고양이도 있었다.</p>
+        <p>이곳에서 하늘은 <strong>"섬의 중심으로 가려면 빛의 규칙을 따라가라"</strong></p>
+        <p>라는 단서를 듣는다.</p>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-bg="cat_part1_06.jpg">
+      <div class="story-card">
+        <span class="chapter">🌪️ PART 6</span>
+        <h2>바람고양이 절벽과 날개 바위</h2>
+        <p>빛의 규칙을 따라 절벽으로 향한 세 사람(사람 둘 + 고양이 하나).</p>
+        <p>절벽에는 바람처럼 빠르게 움직이는 바람고양이들이 있었다.</p>
+        <p>절벽 위쪽에는 날개 바위가 떠 있었다.</p>
+        <p>루모는 말했다.</p>
+        <p><em>"저 바위를 건너면 섬의 중심부로 갈 수 있어.</em></p>
+        <p><em>하지만 바람의 길을 제대로 읽지 못하면 떨어질 수도 있지."</em></p>
+        <p>하늘과 세나는 서로 손을 꼭 잡고</p>
+        <p>바람이 부는 타이밍을 맞춰 <strong>날개 바위를 하나씩 건너갔다.</strong></p>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-bg="cat_part1_07.jpg">
+      <div class="story-card">
+        <span class="chapter">✨ PART 7</span>
+        <h2>고양이 마법사의 도서관</h2>
+        <p>날개 바위를 지나자, 반짝이는 유리 마을이 나타났다.</p>
+        <p>그 중심에는 고양이 마법사가 지은 도서관이 있었다.</p>
+        <p>도서관에는 책 대신 <strong>빛나는 조약돌들이 선반에 놓였으며,</strong></p>
+        <p>각 조약돌을 만지면 고양이 마법사가 담아둔 지식이 보이는 구조였다.</p>
+        <p>마법사는 두 사람을 유심히 바라보며 말했다.</p>
+        <p><em>"돌아가려면 섬의 '달빛의 문'을 열어야 한다.</em></p>
+        <p><em>그 문은 마음이 흔들리면 열리지 않아."</em></p>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-bg="cat_part1_08.jpg">
+      <div class="story-card">
+        <span class="chapter">🌙 PART 8</span>
+        <h2>달빛 시험을 통과하라</h2>
+        <p>마법사는 달빛이 가득한 방으로 아이들을 안내했다.</p>
+        <p>세나에게는 <strong>'두려움의 그림자'</strong>가,</p>
+        <p>하늘에게는 <strong>'놓치고 싶은 것 없는 욕심'</strong>이 나타났다.</p>
+        <p>두 사람은 서로에게 의지하며 자기 마음속 그림자를 마주했다.</p>
+        <p>루모가 뒤에서 속삭인다.</p>
+        <p><em>"섬은 마음을 비추는 거울이야. 정직한 마음으로 걸어가면 돼."</em></p>
+        <p>둘은 결국 서로 손을 잡고 그림자를 똑바로 바라보았다.</p>
+        <p>순간, <strong>그림자들은 조용히 사라졌다.</strong></p>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-bg="cat_part1_09.jpg">
+      <div class="story-card">
+        <span class="chapter">🚪 PART 9</span>
+        <h2>달빛의 문을 열다</h2>
+        <p>시험을 통과한 순간, 달빛은 하늘 위에서 은색 길을 만들어 냈다.</p>
+        <p>그 길 끝에는 <strong>반투명한 달빛의 문이 떠 있었다.</strong></p>
+        <p>하늘과 세나는 마지막으로 섬을 둘러보았다.</p>
+        <p>나무마을, 모래언덕, 날개 바위…</p>
+        <p>그리고 자신들을 끝까지 도와준 루모.</p>
+        <p><em>"정말 가는 거야?"</em> 루모가 작게 물었다.</p>
+        <p>하늘은 말한다. <em>"꼭 다시 올게!"</em></p>
+        <p>세나는 고양이를 꼭 안아 주었다.</p>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-bg="cat_part1_10.jpg">
+      <div class="story-card">
+        <span class="chapter">☀️ PART 10</span>
+        <h2>바다 위로 돌아온 아침</h2>
+        <p>두 사람은 달빛의 문을 통과했다.</p>
+        <p>눈을 뜨자, 밤바다와 안개는 사라지고</p>
+        <p>고요한 아침 햇살만 가득했다.</p>
+        <p>배는 원래 있던 부두 근처에 떠 있었고,</p>
+        <p>멀리서 엄마의 목소리가 들렸다.</p>
+        <p>세나는 작은 속삭임을 들었다.</p>
+        <p><em>"…다시 만나자, 인간 친구들아."</em></p>
+        <p>바람 사이로 <strong>루모의 목소리가 들린 듯했다.</strong></p>
+        <p style="text-align: center; margin-top: 30px; font-size: 20px; color: #FF8FAB;">
+          <strong>— 시즌 1 끝 —</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progressBar');
+    const navProgress = document.getElementById('navProgress');
+    const totalSections = sections.length;
+
+    // 스크롤 이벤트로 배경 이미지 및 카드 애니메이션
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // 프로그레스 바 업데이트
+      const scrollPercent = (scrollY / (documentHeight - windowHeight)) * 100;
+      progressBar.style.width = scrollPercent + '%';
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top;
+        const sectionHeight = rect.height;
+
+        // 카드 애니메이션
+        const card = section.querySelector('.story-card');
+        if (sectionTop < windowHeight * 0.75 && sectionTop > -sectionHeight * 0.5) {
+          card.classList.add('active');
+        }
+
+        // 배경 이미지 전환
+        if (sectionTop < windowHeight * 0.5 && sectionTop > -sectionHeight * 0.5) {
+          const bgImage = section.getAttribute('data-bg');
+          if (bgImage) {
+            mapContainer.style.backgroundImage = `url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-island-story/${bgImage})`;
+          }
+
+          // 네비게이션 업데이트
+          navProgress.textContent = `PART ${index + 1} / ${totalSections}`;
+        }
+      });
+    });
+
+    // 페이지 로드 시 첫 섹션 활성화
+    window.addEventListener('load', () => {
+      const firstCard = sections[0].querySelector('.story-card');
+      firstCard.classList.add('active');
+    });
+
+    // 홈 버튼
+    function goHome() {
+      window.location.href = '/menu.html';
+    }
+
+    // 키보드 네비게이션 (ESC로 나가기)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        goHome();
+      }
+    });
+  </script>
+</body>
+</html>

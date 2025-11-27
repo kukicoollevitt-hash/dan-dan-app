@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐳 푸른 고래섬의 비밀 모험단 - 시즌2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #c54a90 0%, #7e2c7e 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 40px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #c54a90;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 24px;
+      color: #ffffff;
+      font-weight: 700;
+      text-shadow:
+        0 0 10px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(0, 0, 0, 0.6),
+        2px 2px 4px rgba(0, 0, 0, 0.9);
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #c54a90 0%, #7e2c7e 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌟 시즌2 시작
+  </div>
+
+  <!-- 고정 지도 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐳 푸른 고래섬의 비밀 모험단</h1>
+        <p class="subtitle">
+          시즌2 - 파도 골짜기의 비밀<br>
+          새로운 모험이 시작됩니다
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 다시 빛난 구슬">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">💎</span>
+          다시 빛난 구슬
+        </h2>
+        <div class="story-text">푸른 고래섬에서 돌아온 지우의 일상은 겉으로 보기엔 예전과 다를 게 없었다.
+학교에 가고, 수업을 듣고, 점심시간에는 친구들과 떠들고, 방과 후에는 도서관에 들렀다가 집으로 돌아왔다.
+하지만 지우는 알고 있었다. 자기 책상 서랍 안에, 아직 끝나지 않은 모험이 조용히 잠들어 있다는 것을.
+
+어느 늦은 밤, 숙제를 마치고 하품을 하다가 지우는 이상한 기척을 느꼈다.
+책상 서랍 틈 사이로 희미한 푸른빛이 새어 나오고 있었다.
+지우는 가슴이 철렁 내려앉는 것 같으면서도, 동시에 심장이 두근두근 빨리 뛰는 걸 느꼈다.
+
+서랍을 조심스럽게 열자, 그곳에는 푸른 고래섬에서 가져온 파란 구슬이 있었다.
+구슬은 혼자 공중에 떠올라 천천히 회전하고 있었고, 방 안 벽과 천장에는 물결처럼 흔들리는 빛이 퍼져 나가고 있었다.
+지우가 아무 말도 못 하고 바라보는 사이, 구슬은 살짝 떨리더니 바닥으로 내려와 둥근 빛을 그리기 시작했다.
+
+빛은 한 줄, 두 줄, 점점 선을 이어가더니 하나의 모양이 되었다.
+섬 모양이었다.
+가운데를 깊게 가르는 골짜기와, 그 양옆에 줄지어 있는 파도 모양의 바위들.
+그리고 가장 아래에는 희미하게, 손글씨 같은 글씨가 번져 있었다.
+
+'파도 골짜기'
+
+고래섬과는 전혀 다른 새로운 섬이었다.
+지우는 속으로 중얼거렸다.
+
+"역시… 끝난 게 아니었어."</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 옥상에서 열린 두 번째 작전 회의">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">🏫</span>
+          옥상에서 열린 두 번째 작전 회의
+        </h2>
+        <div class="story-text">다음 날, 지우는 수업이 끝나자마자 민호와 나래를 불렀다.
+학교 옥상 문을 열자 바람이 휙 불어왔고, 세 아이는 자주 앉던 모서리 쪽으로 모여 앉았다.
+지우는 어젯밤 촬영해 둔 구슬의 빛 그림 사진과, 서랍에서 다시 꺼낸 구슬을 동시에 꺼내 보였다.
+
+"봐. 고래섬 말고 다른 섬이 또 있는 거야. 이름은 '파도 골짜기'래."
+지우가 말을 꺼내자 민호는 눈을 동그랗게 뜨고 사진을 낚아채 갔다.
+나래는 조금 믿기지 않는다는 표정으로 사진을 들여다보았다.
+
+사진 속에는 거칠게 그려진 섬의 윤곽과, '골짜기'처럼 깊게 파인 부분이 선명하게 보였다.
+민호는 손가락으로 그 골짜기를 따라가며 중얼거렸다.
+
+"섬 중앙이 이렇게 쪼개져 있으면… 파도가 들어오는 길이 생기겠지. 그래서 파도 골짜기인가?"
+나래는 옆에서 조용히 나침반을 꺼내 들고 방향을 맞춰 보더니 말했다.
+
+"지도 모양만 보면, 지난번 고래섬에서 더 동쪽 바다 쪽이야.
+배로 가면 더 오래 걸릴 텐데, 괜찮겠어?"
+
+지우는 잠시 침묵하다가, 구슬을 손에 꼭 쥐며 고개를 끄덕였다.
+"고래가 또 우리를 부르는 거야.
+이번엔… 고래 왕국에 대해 더 많이 알 수 있을지도 몰라."
+
+민호는 약간 떨리는 목소리로 웃었다.
+"그래, 뭐… 지난번에도 살아 돌아왔으니까. 이번에도 어떻게든 되겠지."
+나래는 깊게 숨을 들이마시더니, 결심한 듯 말했다.
+
+"좋아. 그럼 이번에도 준비 철저히 하자.
+파도 골짜기면… 지난번보다 위험할 수도 있어."</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 더 먼 바다로, 두 번째 출항">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">⛵</span>
+          더 먼 바다로, 두 번째 출항
+        </h2>
+        <div class="story-text">모험 출발일로 정한 일요일, 바닷가는 아직 새벽 안개가 내려앉아 조용했다.
+하늘은 검푸른색과 보라색이 섞인 느낌이었고, 수평선 너머로 아주 옅은 주황빛이 서서히 번지고 있었다.
+세 아이는 서로 약속한 것처럼 같은 시간에 모였다.
+
+민호는 지난번보다 조금 더 튼튼해 보이는 구명조끼를 가져왔다.
+나래는 방수되는 작은 가방에 간식을, 물, 응급약, 나침반 그리고 방수 비닐에 싸 둔 수첩까지 챙겨왔다.
+지우는 그 모든 준비물 위에 파란 구슬이 든 작은 주머니를 조심스레 올려놓았다.
+
+"이번엔 고래섬보다 더 먼 곳이라고 했지?"
+민호가 노를 잡으며 말하자, 지우가 고개를 끄덕였다.
+
+"응. 대신 이번엔 구슬이 방향을 알려줄 거야."
+지우가 구슬을 꺼내자, 구슬은 은은하게 빛을 내며 한쪽 바다 방향으로 살짝 기울어졌다.
+마치 저쪽이 맞는 길이라고 알려주는 것 같았다.
+
+보트가 서서히 바다로 나아가자, 모래사장은 점점 멀어지고 대신 파도가 가까워졌다.
+처음엔 잔잔하던 물결이 점점 높아졌다가 낮아졌다가, 아이들은 몸을 균형 맞추듯 움직여야 했다.
+하지만 세 사람의 눈빛은 불안보다는 기대와 긴장으로 더 꽉 차 있었다.
+
+"지금 돌아가자고 해도, 너희 안 돌아갈 거지?"
+지우가 농담처럼 묻자 민호가 웃었다.
+
+"돌아가기엔, 이미 너무 재밌어졌어."
+나래는 작게 웃으며 덧붙였다.
+"그리고… 누가 알아? 이번엔 우리밖에 모르는 진짜 비밀을 찾을지도."</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 파도 골짜기 섬과 울리는 돌고래 소리">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🏝️</span>
+          파도 골짜기 섬과 울리는 돌고래 소리
+        </h2>
+        <div class="story-text">몇 시간 동안 바다를 가르며 나아가던 중, 갑자기 바다가 이상하게 조용해졌다.
+바람도 한순간 멈춰버린 듯했고, 물결은 마치 누군가 유리를 깔아놓은 것처럼 매끈해 보였다.
+아이들은 서로의 얼굴을 바라보았다.
+
+"이거… 평범한 바다가 아닌 것 같은데."
+민호가 말하자, 구슬이 갑자기 더 강하게 빛나며 앞쪽을 향해 흔들렸다.
+
+그때, 수평선 쪽에서 뭔가 거대한 그림자가 서서히 모습을 드러냈다.
+가까이 다가갈수록 그것은 하나의 섬이라는 게 분명해졌다.
+하지만 그 모습은 지우가 아는 어떤 섬과도 달랐다.
+
+섬 전체가 거대한 파도처럼 휘어진 바위들로 둘러싸여 있었다.
+멀리서 보는 섬의 옆모습은, 마치 바닷물이 그대로 굳어버린 것처럼 보였다.
+바람이 조금만 불어도 골짜기 사이에서 '위이잉—' 하는 낮고 긴 울림이 들려왔다.
+
+나래가 귀를 기울였다.
+"이 소리… 돌고래 소리 같아. 아니, 고래 소리랑 섞인 것 같기도 하고."
+민호도 바위 가까이 귀를 대고 들어보더니 눈을 동그랗게 떴다.
+
+"진짜야. 바위에서 소리가 나.
+마치 바위가 고래 노래를 기억하고 있는 것처럼."
+
+보트가 조심스럽게 파도 골짜기 섬의 모래사장에 닿자,
+세 아이는 동시에 숨을 길게 내쉬고 발을 디뎠다.
+
+"여기가… 파도 골짜기."
+지우가 작은 목소리로 중얼거렸다.
+발밑 모래에서도 약한 진동이 느껴지는 것 같았다.
+섬 전체가 무언가를 기다리고 있는 듯한 공기였다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 섬의 수호자, 라오를 만나다">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">👦</span>
+          섬의 수호자, 라오를 만나다
+        </h2>
+        <div class="story-text">섬 안쪽으로 조금씩 걸어 들어가자, 바위 사이로 이어지는 좁은 길이 나타났다.
+그 길은 마치 누군가 일부러 만들어 놓은 것처럼 곡선으로 이어져 있었고,
+아이들이 지나갈 때마다 바위가 아주 작게 울리는 소리가 들려왔다.
+
+골짜기를 따라 걷던 중, 바위 위에서 누군가 휙 내려오는 소리가 났다.
+세 아이는 깜짝 놀라 멈춰 섰다.
+그리고 그들 앞에 파란빛이 섞인 옷을 입은 한 소년이 서 있었다.
+
+소년은 또래처럼 보였지만, 눈빛은 이상하게 깊고 조용했다.
+까무잡잡한 피부와 바람에 익숙한 몸짓,
+그리고 귀 끝에 달린 작은 고래 모양 장식이 눈에 띄었다.
+
+"너희들, 바다를 건너 여기까지 온 아이들이구나."
+소년이 조용히 말했다.
+"나는 라오. 이 섬을 지키고 있어."
+
+민호가 먼저 입을 열었다.
+"섬을… 지키고 있다고? 누구랑? 그리고 왜?"
+
+라오는 아이들을 잠시 바라보더니, 지우의 주머니에서 희미하게 빛나는 것에 시선을 멈췄다.
+"너, 파란 구슬을 가지고 있지?
+그렇다면… 너희에게 말해줘도 되겠네."
+
+라오는 바위 위에 걸터앉아, 파도 골짜기 섬의 오래된 이야기를 꺼내기 시작했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 고래 왕국과 조각난 기억들">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">📜</span>
+          고래 왕국과 조각난 기억들
+        </h2>
+        <div class="story-text">"아주 오래전, 바다에는 고래들이 만든 왕국이 있었어."
+라오의 목소리는 파도 소리와 섞여 묘하게 울렸다.
+
+"그 왕국에서는 고래들이 서로 빛과 소리로 이야기하고,
+바다를 지나는 모든 생명을 지켜 줬지.
+바닷길을 잃은 배, 폭풍을 만난 물고기 떼, 얼음에 갇힌 바다표범까지."
+
+나래는 숨을 죽이고 들었다.
+고래들이 바다의 왕이었다니, 상상만으로도 가슴이 뛰었다.
+
+"하지만 어느 날, 바다 저 깊은 밑바닥에서 어둠이 올라오기 시작했어.
+그 어둠은 빛을 싫어했고, 소리를 싫어했지.
+그래서 가장 먼저 고래들이 내는 노래를 없애려고 했어."
+
+라오는 바위 벽을 손으로 쓸어내렸다.
+그곳에는 희미하게 지워진 고래 그림과 물결 무늬가 남아 있었다.
+
+"고래 왕국은 마지막으로 결심했어.
+그들의 기억과 힘을 한곳에 모았다가,
+세 개의 빛으로 나누어 바다 곳곳에 숨기기로 한 거야."
+
+민호가 조심스럽게 물었다.
+"그 세 개의 빛 중 하나가… 우리가 가진 이 구슬이라는 거야?"
+
+라오는 살짝 미소 지으며 고개를 끄덕였다.
+"맞아. 그래서 너희는 고래섬으로 갈 수 있었고,
+지금은 이 파도 골짜기까지 온 거야."
+
+그리고 그는 낮은 목소리로 덧붙였다.
+
+"하지만 빛을 숨기는 걸 가만히 지켜보기만 한 존재가 있어.
+바다의 어둠.
+그 녀석도 지금, 깨어나고 있어."</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 어둠의 그림자가 모습을 드러내다">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">👹</span>
+          어둠의 그림자가 모습을 드러내다
+        </h2>
+        <div class="story-text">라오의 말이 끝나기가 무섭게, 섬 전체가 아주 작은 진동과 함께 흔들리기 시작했다.
+발밑 모래가 사삭거렸고, 바위 틈에서 바닷물이 튀어 올랐다.
+그리고 골짜기 가장 깊은 곳에서 붉은빛이 서서히 올라오기 시작했다.
+
+"온다…"
+라오가 이를 악물고 중얼거렸다.
+
+붉은빛은 처음엔 작은 점처럼 보였지만,
+곧 사람 키보다 더 높이 치솟아 붉은 그림자의 형태가 되었다.
+그 그림자는 분명한 모습이 없었고,
+검은 연기와 붉은 불꽃이 섞인 것처럼 흐릿하게 일렁였다.
+
+그런데도 아이들은 알 수 있었다.
+그것이 자신들을 노려보고 있다는 걸.
+
+붉은 그림자는 소리를 내지 않았지만,
+주변 공기가 쭉 빨려 들어가는 소리가 있었고,
+바위에 남아 있던 고래들의 노래는 순식간에 사라져 버렸다.
+
+나래는 본능적으로 한 발 물러섰다.
+"저, 저게… 어둠이야?"
+
+라오는 구슬을 쥔 지우 쪽으로 재빨리 다가와 말했다.
+"맞아. 저건 고래들의 힘을 빼앗으려는 어둠이야.
+구슬을 빼앗기면… 바다의 기억은 완전히 사라져 버려."
+
+붉은 그림자는 마치 냄새를 맡듯 허공을 스윽 훑더니,
+갑자기 번개처럼 아이들을 향해 뻗어 왔다.
+지우는 반사적으로 구슬을 들어 올렸다.
+
+순간, 구슬이 눈부시게 빛났고,
+푸른 파도가 폭발하듯 튀어나와 붉은 그림자와 부딪쳤다.
+
+"지우야! 힘줘!"
+민호가 뒤에서 지우의 어깨를 꽉 붙잡았다.
+나래도 옆에서 두 손을 모으며 속으로 간절히 빌었다.
+
+푸른빛과 붉은빛이 부딪히며 공중에서 소용돌이쳤다.
+잠시 후, 붉은 그림자는 뒤로 밀려나더니
+골짜기 깊은 곳으로 다시 가라앉았다.
+
+하지만 완전히 사라진 건 아니었다.
+골짜기 아래쪽에서 여전히 약하게 붉은 기운이 피어오르고 있었다.
+
+라오는 숨을 고르며 말했다.
+"시간이 많지 않아.
+저 어둠은 다시 올라올 거야.
+우린 그 전에, 마지막 기억이 있는 곳으로 가야 해."</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 빛의 해협으로 가는 항해">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">🚢</span>
+          빛의 해협으로 가는 항해
+        </h2>
+        <div class="story-text">파도 골짜기 섬에서 잠시 숨을 고른 뒤,
+라오는 아이들을 섬 반대편 작은 만으로 데려갔다.
+그곳에는 오래된 나무로 만들어진, 하지만 단단해 보이는 작은 배 한 척이 있었다.
+
+"이건 원래 고래를 돌보던 사람들이 쓰던 배야.
+빛의 해협까지 우리를 데려다 줄 거야."
+라오가 말하자, 민호는 배 옆을 두드리며 감탄했다.
+
+"와, 이거 진짜 튼튼한데?
+우리 고무보트랑은 비교도 안 되는데?"
+
+나래는 바닷물을 손으로 떠서 보았다.
+물은 밤인데도 이상하리만큼 밝았고,
+손바닥 위에서 작은 별가루가 반짝이는 것처럼 빛났다.
+
+배가 해협을 향해 움직이기 시작하자,
+사방의 바다는 점점 색이 달라졌다.
+평범한 남색이 아니라, 파란빛과 보랏빛이 섞여 있었다.
+어디선가 낮게 깔린 고래 울음이 또 들려오는 듯했다.
+
+"저기 보이지?"
+라오가 앞을 가리켰다.
+
+멀리서 바다가 갈라진 것처럼,
+양쪽으로 빛기둥이 세워진 좁은 길이 나타났다.
+마치 누군가 바닷속에 거대한 문을 세워 놓은 것 같았다.
+
+"저기가, 빛의 해협이야.
+고래 왕국의 마지막 기억이 잠든 곳."</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 기억 속 고래와 마주하다">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🐋</span>
+          기억 속 고래와 마주하다
+        </h2>
+        <div class="story-text">배가 빛의 해협 한가운데에 멈추자,
+파란 구슬이 지우의 손에서 저절로 떠올랐다.
+구슬은 마치 하늘에 걸린 별처럼 반짝이며 천천히 위로 올라갔다가,
+갑자기 아래로 곤두박질치듯 바다 속으로 떨어졌다.
+
+"어, 어어—!"
+지우가 손을 뻗었지만 이미 늦었다.
+
+그런데 구슬이 바닷물에 닿는 순간,
+해협 전체가 푸른빛으로 폭발하듯 물들었다.
+물은 투명한 유리처럼 변했고, 배 밑으로 바닷속이 훤히 내려다보였다.
+
+아이들은 동시에 숨을 멈췄다.
+바닷속 깊은 곳에서, 거대한 무언가가 천천히 떠오르고 있었다.
+
+그건 고래였다.
+하지만 몸이 살이 아닌 빛으로 이루어져 있었다.
+수천 개의 작은 별조각이 모여 고래의 형체를 만들고,
+고래가 숨을 쉴 때마다 빛의 파동이 해협 전체로 퍼져 나갔다.
+
+고래의 입이 열리는 것과 동시에,
+아이들의 머릿속에 직접 목소리가 들려왔다.
+
+"아이들아, 먼 길을 건너왔구나."
+
+지우는 심장이 쿵 내려앉는 느낌이 들었다.
+말이 나오지는 않았지만, 마음속에서는 수백 가지 질문이 동시에 떠올랐다.
+'정말… 당신이 고래 왕국의 마지막 기억이야?'
+
+빛의 고래는 고개를 끄덕였다.
+
+"우리는 오래전, 어둠을 피해 기억을 조각내어 숨겼다.
+너희가 가진 구슬은 그 조각들 중 하나였지.
+하지만 이제, 빛은 다시 모여야 한다."
+
+그 말과 함께, 빛의 고래 몸에서 세 갈래의 빛이 갈라져 나왔다.
+그 빛은 지우, 민호, 나래 그리고 라오의 가슴 쪽으로 날아와
+각자의 몸 안으로 스며들었다.
+
+아이들은 동시에 가슴이 뜨거워지는 느낌을 받았다.
+하지만 그 열기는 아프지 않았고, 오히려 든든함과 용기를 주는 것 같았다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 새로운 사명, 끝나지 않은 모험">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🌅</span>
+          새로운 사명, 끝나지 않은 모험
+        </h2>
+        <div class="story-text">빛의 고래는 마지막으로 해협 위를 한 바퀴 크게 돌았다.
+그가 지나간 자리마다 바다가 빛났고,
+잠시 동안 밤이 아닌 낮처럼 밝아졌다.
+
+"어둠은 완전히 사라지지 않았다.
+하지만 너희가 있는 한, 바다는 완전히 혼자가 아니다.
+너희는 이제 '기억의 수호자'가 되었다."
+
+그 말을 남기고, 빛의 고래는 점점 투명해지더니
+수많은 빛 알갱이로 흩어져 바다 속으로 스며들었다.
+구슬은 더 이상 하나의 물건이 아니라,
+아이들 마음속 깊은 곳에 남아 있는 느낌이었다.
+
+해협의 빛은 천천히 사라졌지만,
+아이들은 알 수 있었다.
+이제부터 바다 어딘가에서,
+고래들의 기억이 계속 이어지고 있다는 것을.
+
+배가 천천히 다시 파도 골짜기 섬 쪽으로 향하기 시작했다.
+멀리 수평선 위로 새벽빛이 하늘을 물들이고 있었다.
+
+민호가 먼저 입을 열었다.
+"우리, 진짜 큰일을 해낸 거 맞지?"
+나래가 웃었다.
+"응. 근데 아직 다 끝난 것 같진 않아.
+저 어둠, 완전히 사라진 건 아니잖아."
+
+라오는 조용히 바다를 바라보며 말했다.
+"그래서 앞으로도 바다에는, 고래의 편에 서 줄 아이들이 필요해.
+적어도… 지금은 우리가 그런 역할을 맡은 거고."
+
+지우는 가슴 한가운데에서 아직도 따뜻하게 남아 있는 빛의 느낌을 손으로 눌러 보았다.
+그리고 수평선을 가리키며 말했다.
+
+"시즌1이 고래섬의 시작이었다면,
+지금은 진짜 바다 이야기가 시작되는 시즌2인 거야.
+언젠가… 시즌3에서는 이 모든 걸 끝까지 밝혀낼 수 있겠지."
+
+네 아이의 웃음소리가 파도 위로 흩어졌다.
+멀리서, 아주 희미하지만 분명히,
+어딘가에서 또 다른 고래 울음소리가 들려오는 것 같았다.
+
+마치 이렇게 말하는 것처럼.
+
+"다음 모험에서, 다시 만나자."</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎉 시즌2 완료!</h1>
+        <p class="subtitle">
+          고래 왕국의 기억을 되찾았습니다.<br>
+          이제 시즌3의 관문이 열립니다...
+        </p>
+        <button class="back-btn" onclick="goToSeason3Quiz()" style="position: static; margin-top: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          🚪 시즌3 관문으로 이동
+        </button>
+        <button class="back-btn" onclick="goToMain()" style="position: static; margin-top: 10px;">
+          🏠 메인으로 돌아가기
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    console.log('🚀 시즌2 스크립트 시작');
+
+    // 캔버스 설정
+    const canvas = document.getElementById('map-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 섬 위치 정의 (10개 챕터)
+    const islands = [
+      { x: 0.15, y: 0.3, name: '빛난 구슬', emoji: '💎', color: '#E74C3C' },
+      { x: 0.25, y: 0.55, name: '옥상 회의', emoji: '🏫', color: '#3498DB' },
+      { x: 0.35, y: 0.35, name: '두번째 출항', emoji: '⛵', color: '#9B59B6' },
+      { x: 0.45, y: 0.6, name: '파도 골짜기', emoji: '🏝️', color: '#F39C12' },
+      { x: 0.55, y: 0.4, name: '수호자 라오', emoji: '👦', color: '#27AE60' },
+      { x: 0.65, y: 0.55, name: '고래 왕국', emoji: '📜', color: '#E67E22' },
+      { x: 0.72, y: 0.35, name: '어둠의 그림자', emoji: '👹', color: '#C0392B' },
+      { x: 0.8, y: 0.5, name: '빛의 해협', emoji: '🚢', color: '#3498DB' },
+      { x: 0.87, y: 0.35, name: '빛의 고래', emoji: '🐋', color: '#1ABC9C' },
+      { x: 0.93, y: 0.5, name: '새로운 사명', emoji: '🌅', color: '#E74C3C' }
+    ];
+
+    // 고래 초기 위치
+    const whale = { x: 0.1, y: 0.2 };
+
+    // 현재 진행 상태
+    let currentStep = -1;
+    let pathProgress = 0;
+
+    // 지도 그리기
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 별 그리기 (밤하늘 느낌)
+      drawStars();
+
+      // 파도 그리기
+      drawWaves();
+
+      // 섬들 그리기
+      islands.forEach((island, index) => {
+        drawIsland(island, index <= currentStep);
+      });
+
+      // 경로 그리기
+      if (currentStep >= 0) {
+        drawPath();
+      }
+
+      // 고래 그리기
+      drawWhale();
+    }
+
+    // 별 그리기
+    function drawStars() {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      for (let i = 0; i < 50; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height * 0.5;
+        const size = Math.random() * 2;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 파도 그리기
+    function drawWaves() {
+      ctx.fillStyle = 'rgba(192, 192, 192, 0.3)';
+
+      for (let i = 0; i < 4; i++) {
+        const time = Date.now() / 1000;
+        const offset = Math.sin(time + i) * 15;
+        ctx.beginPath();
+        ctx.ellipse(
+          canvas.width * (0.15 + i * 0.25) + offset,
+          canvas.height * (0.6 + i * 0.08),
+          70, 18, 0, 0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+
+    // 섬 그리기
+    function drawIsland(island, isActive) {
+      const x = canvas.width * island.x;
+      const y = canvas.height * island.y;
+
+      // 섬 그림자
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 25, 85, 32, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 섬 베이스
+      ctx.fillStyle = isActive ? '#7d8c9c' : '#666';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 20, 80, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#4d5d6c';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 섬 풀밭
+      ctx.fillStyle = isActive ? '#a3b8c8' : '#888';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 10, 75, 28, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = isActive ? '#7d8c9c' : '#666';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 보석 (사각형)
+      ctx.fillStyle = isActive ? island.color : '#999';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 5;
+      ctx.fillRect(x - 20, y - 30, 40, 35);
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // 보석 내부
+      ctx.fillStyle = isActive ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+      ctx.fillRect(x - 18, y - 28, 36, 31);
+
+      // 보석 라인
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 15, y - 20);
+      ctx.lineTo(x + 15, y - 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - 15, y - 12);
+      ctx.lineTo(x + 15, y - 12);
+      ctx.stroke();
+
+      // 섬 이름 배경
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.fillRect(x - 50, y + 42, 100, 28);
+
+      // 섬 이름
+      ctx.fillStyle = isActive ? '#2c3e50' : '#666';
+      ctx.font = 'bold 15px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${island.emoji} ${island.name}`, x, y + 56);
+    }
+
+    // 경로 그리기
+    function drawPath() {
+      if (currentStep < 0) return;
+
+      ctx.strokeStyle = '#C0C0C0';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.setLineDash([12, 8]);
+      ctx.shadowColor = 'rgba(192, 192, 192, 0.5)';
+      ctx.shadowBlur = 10;
+
+      ctx.beginPath();
+      ctx.moveTo(canvas.width * whale.x, canvas.height * whale.y);
+
+      for (let i = 0; i <= currentStep; i++) {
+        const island = islands[i];
+        const targetX = canvas.width * island.x;
+        const targetY = canvas.height * island.y;
+
+        if (i === currentStep) {
+          const progressX = canvas.width * whale.x + (targetX - canvas.width * whale.x) * pathProgress;
+          const progressY = canvas.height * whale.y + (targetY - canvas.height * whale.y) * pathProgress;
+          ctx.lineTo(progressX, progressY);
+        } else {
+          ctx.lineTo(targetX, targetY);
+        }
+      }
+
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
+    }
+
+    // 고래 그리기
+    function drawWhale() {
+      let x = canvas.width * whale.x;
+      let y = canvas.height * whale.y;
+
+      if (currentStep >= 0 && currentStep < islands.length) {
+        const target = islands[currentStep];
+        x = canvas.width * whale.x + (canvas.width * target.x - canvas.width * whale.x) * pathProgress;
+        y = canvas.height * whale.y + (canvas.height * target.y - canvas.height * whale.y) * pathProgress;
+      }
+
+      const floatOffset = Math.sin(Date.now() / 500) * 8;
+      y += floatOffset;
+
+      // 그림자
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 35, 40, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 고래 몸
+      ctx.fillStyle = '#9A4AE2';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetY = 5;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 40, 25, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // 고래 눈
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(x - 12, y - 6, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      ctx.arc(x - 14, y - 7, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 가방
+      ctx.fillStyle = '#8B4513';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 3;
+      ctx.fillRect(x - 14, y - 25, 25, 22);
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      ctx.fillStyle = '#D2691E';
+      ctx.fillRect(x - 12, y - 23, 21, 18);
+
+      // 가방 스트랩
+      ctx.strokeStyle = '#654321';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 25);
+      ctx.quadraticCurveTo(x - 18, y - 18, x - 18, y);
+      ctx.stroke();
+
+      // 버클
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(x - 4, y - 17, 7, 5);
+    }
+
+    // 스크롤 이벤트
+    let isAnimating = false;
+
+    function handleScroll() {
+      if (isAnimating) return;
+
+      const scrollPercent = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      document.getElementById('progress-bar').style.width = (scrollPercent * 100) + '%';
+
+      // 인트로 섹션 체크
+      const introSection = document.querySelector('.intro-section');
+      const introRect = introSection.getBoundingClientRect();
+
+      // 인트로 섹션이 화면에 있으면 part2-main.jpg 유지
+      if (introRect.bottom > window.innerHeight * 0.3) {
+        const mapContainer = document.getElementById('map-container');
+        const mainBg = 'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-main.jpg)';
+        if (mapContainer.style.backgroundImage !== mainBg) {
+          mapContainer.style.backgroundImage = mainBg;
+        }
+        document.getElementById('chapter-indicator').textContent = '🌟 시즌2 시작';
+        return;
+      }
+
+      const sections = document.querySelectorAll('.story-section');
+      const backgroundImages = [
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-1.jpg)',   // Part 1
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-2.jpg)',   // Part 2
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-3.jpg)',   // Part 3
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-4.jpg)',   // Part 4
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-5.jpg)',   // Part 5
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-6.jpg)',   // Part 6
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-7.jpg)',   // Part 7
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-8.jpg)',   // Part 8
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-9.jpg)',   // Part 9
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part2-10.jpg)'   // Part 10
+      ];
+
+      // 화면 중앙에 가장 가까운 섹션 찾기
+      let closestSection = null;
+      let closestDistance = Infinity;
+      let closestIndex = -1;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 화면 중앙까지의 거리 계산
+        const sectionCenter = rect.top + rect.height / 2;
+        const screenCenter = window.innerHeight / 2;
+        const distance = Math.abs(sectionCenter - screenCenter);
+
+        // 가장 가까운 섹션 찾기
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = section;
+          closestIndex = index;
+        }
+
+        // 활성화 상태 업데이트
+        if (rect.top < window.innerHeight * 0.6 && rect.bottom > window.innerHeight * 0.4) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+
+      // 가장 가까운 섹션의 배경 이미지 적용
+      if (closestSection && closestIndex >= 0) {
+        const chapterName = closestSection.dataset.chapter;
+        document.getElementById('chapter-indicator').textContent = `🌟 ${chapterName}`;
+
+        const currentBg = backgroundImages[closestIndex];
+        const mapContainer = document.getElementById('map-container');
+
+        // 현재 배경과 다르면 변경
+        if (mapContainer.style.backgroundImage !== currentBg) {
+          mapContainer.style.backgroundImage = currentBg;
+        }
+
+        if (currentStep !== closestIndex) {
+          currentStep = closestIndex;
+          animatePath();
+        }
+      }
+
+      drawMap();
+    }
+
+    // 경로 애니메이션
+    function animatePath() {
+      isAnimating = true;
+      pathProgress = 0;
+
+      const animate = () => {
+        pathProgress += 0.02;
+        if (pathProgress <= 1) {
+          drawMap();
+          requestAnimationFrame(animate);
+        } else {
+          pathProgress = 1;
+          isAnimating = false;
+          drawMap();
+        }
+      };
+
+      animate();
+    }
+
+    // 캔버스 크기 설정
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      console.log(`Canvas 크기: ${canvas.width} x ${canvas.height}`);
+      drawMap();
+    }
+
+    // 연속 애니메이션
+    function continuousAnimation() {
+      drawMap();
+      requestAnimationFrame(continuousAnimation);
+    }
+
+    // 초기화
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    continuousAnimation();
+
+    // 맨위로 스크롤 (부드럽게)
+    function scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    // 메인으로 돌아가기
+    function goToMain() {
+      window.location.href = '/whale_island_journey.html';
+    }
+
+    // 시즌3 관문으로 이동
+    function goToSeason3Quiz() {
+      window.location.href = '/whale_island_season3_quiz.html';
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') scrollToTop();
+    });
+
+    console.log('✅ 시즌2 스크립트 초기화 완료');
+  </script>
+</body>
+</html>

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌴 깊은 정글의 잊힌 도시를 찾아서</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 40px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #27ae60;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 24px;
+      color: #ffffff;
+      font-weight: 700;
+      text-shadow:
+        0 0 10px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(0, 0, 0, 0.6),
+        2px 2px 4px rgba(0, 0, 0, 0.9);
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #27ae60 0%, #1e8449 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌴 시작하기
+  </div>
+
+  <!-- 고정 지도 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌴 깊은 정글의 잊힌 도시를 찾아서</h1>
+        <p class="subtitle">
+          시즌1 - 정글 속 신비한 모험<br>
+          라온과 친구들의 모험이 시작됩니다
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 정글 속에서 들려온 이상한 바람 소리">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🌿</span>
+          정글 속에서 들려온 이상한 바람 소리
+        </h2>
+        <div class="story-text">꼬마 탐험가 라온은 학교 뒤편의 숲을 걷다가 이상한 소리를 들었다.
+"휘이이—… 으으—…"
+마치 누군가가 숨을 내쉬며 부르는 소리 같았다.
+라온은 바람 사이로 희미하게 빛나는 초록색 문양을 보았다.
+"저건… 책에서만 보던 '잊힌 도시'의 표식이잖아?"
+라온의 가슴이 두근거리기 시작했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 탐험 멤버 모집하기">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">👥</span>
+          탐험 멤버 모집하기
+        </h2>
+        <div class="story-text">라온은 두 친구 하리와 준오에게 급히 달려가 이야기를 전했다.
+"정말 그 문양을 봤다고? 그건 전설 속 도시로 가는 길표야!"
+준오가 흥분해 외쳤다.
+하지만 하리는 살짝 걱정스러운 표정을 지었다.
+"정글 안쪽은 위험한 동물도 많고 길도 험해… 준비는 제대로 해야 해."
+세 친구는 정글 지도를 펼쳐놓고 작은 탐험 모임을 만들었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 정글 입구에서 만난 첫 수수께끼">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">🗿</span>
+          정글 입구에서 만난 첫 수수께끼
+        </h2>
+        <div class="story-text">다음 날, 친구들은 도시 근처 숲 입구에서 다시 만났다.
+입구 근처에 오래된 바위문이 있었고, 그 위에는 이런 글이 새겨져 있었다.
+"스스로 여는 자만이 길을 얻는다."
+라온은 바위에 손을 대보았다.
+순간, 문양이 은은하게 빛나더니 바위문이 천천히 열렸다.
+"우리가… 문을 연 거야!"
+정글 속 신비한 냄새가 바람에 섞여 친구들의 얼굴을 스쳤다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 살아 움직이는 식물의 길">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🌺</span>
+          살아 움직이는 식물의 길
+        </h2>
+        <div class="story-text">정글 안쪽으로 들어가자 주변은 금방 어두워졌다.
+나뭇잎들이 서로 엉켜 마치 살아 있는 벽처럼 친구들을 둘러싸고 있었다.
+하리가 손전등을 켜고 말했다.
+"이 길… 누가 일부러 숨겨둔 것처럼 느껴지지 않아?"
+갑자기 발밑에서 작은 덩굴이 파르르 떨렸다.
+그 순간, 길이 양쪽으로 갈라지는 듯 흔들렸다.
+"우리를 어디론가 안내하려는 것 같아…" 라온이 속삭였다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 정글의 수호자 '그로아'와의 만남">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">🌳</span>
+          정글의 수호자 '그로아'와의 만남
+        </h2>
+        <div class="story-text">숲이 조금 밝아지는 지점에 도착했을 때,
+커다란 나무 한 그루가 갑자기 눈을 뜬 듯한 표정을 지었다.
+"누… 누구냐. 이곳은 사람의 발길이 닿아서는 안 되는 길이다."
+정글의 수호자 그로아였다.
+라온이 용기를 내어 말했다.
+"우리는 도시를 파괴하려는 게 아니에요. 단지 진실을 알고 싶어요!"
+그로아는 아이들의 눈빛을 한참 바라보더니 천천히 고개를 끄덕였다.
+"그렇다면… 너희에게 첫 시험을 주겠다."</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 첫 번째 시험: 정글의 균형 맞추기">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">⚖️</span>
+          첫 번째 시험: 정글의 균형 맞추기
+        </h2>
+        <div class="story-text">그로아는 아이들을 작은 숲터로 안내했다.
+그곳에는 물이 넘쳐 흐르는 쪽과 완전히 마른 쪽이 있었다.
+"정글은 항상 균형을 찾아야 한다.
+이 두 지역을 알맞게 조절해 봐라."
+아이들은 돌을 옮겨 물길을 바꾸고, 마른 땅에는 물이 스며들게 했다.
+잠시 후, 두 지역이 고르게 촉촉해졌다.
+그로아는 만족한 듯 미소를 지었다.
+"첫 시험은 통과다."</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 숨겨진 길을 여는 빛의 열쇠">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🔑</span>
+          숨겨진 길을 여는 빛의 열쇠
+        </h2>
+        <div class="story-text">그로아는 아이들에게 작은 초록빛 구슬을 건넸다.
+"잊힌 도시로 들어가려면 이 열쇠가 필요하다."
+라온이 구슬을 손에 들자, 구슬 안에서 미세한 지도가 나타났다.
+"정글 안쪽에 또 다른 문이 있나 봐!"
+세 친구는 지도를 따라 깊은 곳으로 걸음을 옮겼다.
+그러자 바위벽의 틈 사이로 구슬과 똑같은 색의 빛이 새어 나왔다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 두 번째 시험: 어둠의 미로">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">🌀</span>
+          두 번째 시험: 어둠의 미로
+        </h2>
+        <div class="story-text">바위틈을 지나자 사방이 어두운 미로가 나타났다.
+벽에는 비슷한 문양이 여러 개 그려져 있었고,
+그중 하나만이 구슬과 같은 빛을 냈다.
+"정답을 찾아야 해!"
+친구들은 나눠서 문양들을 살펴보았다.
+라온이 조심스럽게 손을 올려놓자,
+미로 전체가 흔들리며 하나의 길로 다시 이어졌다.
+"성공이야!"</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 잊힌 도시의 문 앞에서">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🚪</span>
+          잊힌 도시의 문 앞에서
+        </h2>
+        <div class="story-text">미로를 빠져나오자 거대한 나무문이 눈앞에 나타났다.
+문 한가운데에는 오랜 시간 동안 빛을 잃은 듯한 둥근 홈이 있었다.
+라온은 구슬을 그곳에 넣었다.
+촤아악—!
+문이 천천히 열리고, 안쪽에서 따뜻한 빛이 흘러나왔다.
+"여기가… 잊힌 도시…?"
+세 친구는 숨을 삼켰다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 빛으로 깨어나는 잊힌 도시">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">✨</span>
+          빛으로 깨어나는 잊힌 도시
+        </h2>
+        <div class="story-text">안으로 들어가자,
+고대 정글 문명처럼 보이는 건물들이 식물에 뒤덮인 채 잠들어 있었다.
+그 순간, 구슬이 하늘로 떠오르며 도시 전체를 환하게 비추었다.
+잠들어 있던 건물들 사이에서 작은 소리들이 들려왔다.
+"…누가 우리를 깨웠는가…"
+숲의 영혼들이 하나둘 모습을 드러냈다.
+라온과 친구들은 서로를 바라보며 속삭였다.
+"이제부터가 진짜 모험의 시작이야."</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎉 시즌1 모험 완료!</h1>
+        <p class="subtitle">
+          라온과 친구들의 정글 모험 시즌 1이 끝났어요.<br>
+          다음 시즌2 이야기가 궁금하신가요?
+        </p>
+        <button class="back-btn" onclick="goToSeason2Quiz()" style="position: static; margin-top: 20px;">
+          🚪 시즌2 관문으로 이동
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    console.log('🚀 정글 스토리 스크립트 시작');
+
+    // 스크롤 이벤트
+    function handleScroll() {
+      const scrollPercent = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      document.getElementById('progress-bar').style.width = (scrollPercent * 100) + '%';
+
+      // 인트로 섹션 체크
+      const introSection = document.querySelector('.intro-section');
+      const introRect = introSection.getBoundingClientRect();
+
+      // 인트로 섹션이 화면에 있으면 main 이미지 유지
+      if (introRect.bottom > window.innerHeight * 0.3) {
+        const mapContainer = document.getElementById('map-container');
+        const mainBg = 'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_main.jpg)';
+        if (mapContainer.style.backgroundImage !== mainBg) {
+          mapContainer.style.backgroundImage = mainBg;
+        }
+        document.getElementById('chapter-indicator').textContent = '🌴 시작하기';
+        return;
+      }
+
+      const sections = document.querySelectorAll('.story-section');
+      const backgroundImages = [
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part1.jpg)',   // Part 1
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part2.jpg)',   // Part 2
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part3.jpg)',   // Part 3
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part4.jpg)',   // Part 4
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part5.jpg)',   // Part 5
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part6.jpg)',   // Part 6
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part7.jpg)',   // Part 7
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part8.jpg)',   // Part 8
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part9.jpg)',   // Part 9
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/jungle-story/jungle_s1_part10.jpg)'   // Part 10
+      ];
+
+      // 화면 중앙에 가장 가까운 섹션 찾기
+      let closestSection = null;
+      let closestDistance = Infinity;
+      let closestIndex = -1;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 화면 중앙까지의 거리 계산
+        const sectionCenter = rect.top + rect.height / 2;
+        const screenCenter = window.innerHeight / 2;
+        const distance = Math.abs(sectionCenter - screenCenter);
+
+        // 가장 가까운 섹션 찾기
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = section;
+          closestIndex = index;
+        }
+
+        // 활성화 상태 업데이트
+        if (rect.top < window.innerHeight * 0.6 && rect.bottom > window.innerHeight * 0.4) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+
+      // 가장 가까운 섹션의 배경 이미지 적용
+      if (closestSection && closestIndex >= 0) {
+        const chapterName = closestSection.dataset.chapter;
+        document.getElementById('chapter-indicator').textContent = `🌴 ${chapterName}`;
+
+        const currentBg = backgroundImages[closestIndex];
+        const mapContainer = document.getElementById('map-container');
+
+        // 현재 배경과 다르면 변경
+        if (mapContainer.style.backgroundImage !== currentBg) {
+          mapContainer.style.backgroundImage = currentBg;
+        }
+      }
+    }
+
+    // 초기화
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+
+    // 맨위로 스크롤 (부드럽게)
+    function scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    // 시즌2 관문으로 이동
+    function goToSeason2Quiz() {
+      window.location.href = '/jungle_season2_quiz.html';
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') scrollToTop();
+    });
+
+    console.log('✅ 정글 스토리 스크립트 초기화 완료');
+  </script>
+</body>
+</html>
