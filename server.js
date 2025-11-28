@@ -8213,6 +8213,40 @@ app.get("/my-learning", async (req, res) => {
           // 카드 생성
           const card = document.createElement('div');
           card.className = 'radar-card' + (radarIndex >= 6 ? ' hidden-card' : '');
+          card.style.cursor = 'pointer';
+
+          // 단원 클릭 시 해당 단원으로 이동
+          const unitCode = log.unit || '';
+          // series 값 정규화 (BRAIN업 → BRAINUP, BRAINFIT 등)
+          let seriesCode = log.series || 'BRAINUP';
+          if (seriesCode === 'BRAIN업') seriesCode = 'BRAINUP';
+          if (unitCode) {
+            // unit 코드에서 과목과 번호 추출 (예: bio_01, geo_01)
+            const parts = unitCode.split('_');
+            const subject = parts[0] || '';
+            const num = parts[1] || '01';
+
+            // 과목별 폴더 매핑
+            const folderMap = {
+              'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
+              'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
+              'modern': 'korlit', 'classic': 'korlit',
+              'world1': 'worldlit', 'world2': 'worldlit',
+              'person1': 'person', 'person2': 'person'
+            };
+            const folder = folderMap[subject] || 'social';
+
+            // 디버그 로그
+            console.log('[단원 이동] unitCode:', unitCode, 'subject:', subject, 'folder:', folder);
+
+            const unitPath = '/' + seriesCode + '/' + folder + '/' + unitCode + '.html';
+
+            card.onclick = function() {
+              console.log('[클릭] 이동 경로:', unitPath);
+              window.location.href = unitPath;
+            };
+            card.title = '클릭하여 단원으로 이동';
+          }
           radarIndex++;
 
           const header = document.createElement('div');
@@ -8287,10 +8321,27 @@ app.get("/my-learning", async (req, res) => {
           // 카드 클릭 시 해당 단원 페이지로 이동
           card.style.cursor = 'pointer';
           card.addEventListener('click', function() {
-            const unitCode = log.unit; // 예: geo_01
+            const unitCode = log.unit; // 예: geo_01, bio_01
             if (unitCode) {
-              // 단원 코드로 페이지 URL 생성
-              const unitUrl = '/BRAINUP/social/' + unitCode + '.html';
+              // 단원 코드에서 과목 추출
+              const parts = unitCode.split('_');
+              const subject = parts[0] || '';
+
+              // 과목별 폴더 매핑
+              const folderMap = {
+                'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
+                'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
+                'modern': 'korlit', 'classic': 'korlit',
+                'world1': 'worldlit', 'world2': 'worldlit',
+                'person1': 'person', 'person2': 'person'
+              };
+              const folder = folderMap[subject] || 'social';
+
+              // series 정규화
+              let seriesCode = log.series || 'BRAINUP';
+              if (seriesCode === 'BRAIN업') seriesCode = 'BRAINUP';
+
+              const unitUrl = '/' + seriesCode + '/' + folder + '/' + unitCode + '.html';
               window.open(unitUrl, '_blank');
             }
           });
