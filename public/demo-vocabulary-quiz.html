@@ -1315,34 +1315,79 @@
       box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
     }
 
-    .coin-reward-display {
-      margin-top: 30px;
-      padding: 25px;
+    /* 코인 획득 팝업 */
+    .coin-popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .coin-popup-overlay.show {
+      display: flex;
+    }
+
+    .coin-popup {
       background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-      border-radius: 20px;
-      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
-      animation: coinBounce 0.6s ease;
-      max-width: 100%;
-      box-sizing: border-box;
+      border-radius: 25px;
+      padding: 40px 50px;
+      text-align: center;
+      box-shadow: 0 15px 50px rgba(255, 215, 0, 0.5);
+      animation: coinPopupBounce 0.5s ease;
     }
 
-    @keyframes coinBounce {
-      0%, 100% { transform: scale(1); }
+    @keyframes coinPopupBounce {
+      0% { transform: scale(0.5); opacity: 0; }
       50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
     }
 
-    .coin-reward-text {
-      font-size: 28px;
+    .coin-popup-icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+      animation: coinSpin 1s ease-in-out;
+    }
+
+    @keyframes coinSpin {
+      0% { transform: rotateY(0deg); }
+      100% { transform: rotateY(360deg); }
+    }
+
+    .coin-popup-amount {
+      font-size: 32px;
       font-weight: 900;
       color: #8b4513;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
+      margin-bottom: 10px;
     }
 
-    .coin-reward-text .coin-icon {
-      font-size: 36px;
+    .coin-popup-message {
+      font-size: 18px;
+      color: #a0522d;
+      margin-bottom: 25px;
+    }
+
+    .coin-popup-close {
+      background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 15px 50px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(139, 69, 19, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .coin-popup-close:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(139, 69, 19, 0.5);
     }
 
     /* 폭죽 효과 */
@@ -1540,14 +1585,18 @@
       <div class="result-message" id="resultMessage">
         어휘력이 뛰어납니다!
       </div>
-      <div class="coin-reward-display" id="coinRewardDisplay" style="display: none;">
-        <div class="coin-reward-text">
-          <span class="coin-icon">🐋</span>
-          <span id="earnedCoins">0</span> 코인 획득!
-        </div>
-      </div>
       <button class="restart-btn" onclick="completeQuizAndSaveHistory()">학습완료</button>
       <div class="complete-notice">학습완료 버튼을 눌러야<br>학습이력 저장과<br>학습완료가 됩니다</div>
+    </div>
+  </div>
+
+  <!-- 코인 획득 팝업 -->
+  <div class="coin-popup-overlay" id="coinPopupOverlay">
+    <div class="coin-popup">
+      <div class="coin-popup-icon">🐋</div>
+      <div class="coin-popup-amount"><span id="earnedCoins">0</span> 코인 획득!</div>
+      <div class="coin-popup-message">축하합니다!</div>
+      <button class="coin-popup-close" onclick="closeCoinPopup()">확인</button>
     </div>
   </div>
 
@@ -6608,9 +6657,10 @@
       if (earnedCoins > 0) {
         addCoins(earnedCoins);
         document.getElementById('earnedCoins').textContent = earnedCoins;
-        document.getElementById('coinRewardDisplay').style.display = 'block';
-      } else {
-        document.getElementById('coinRewardDisplay').style.display = 'none';
+        // 결과 화면 표시 후 잠시 후에 코인 팝업 표시
+        setTimeout(() => {
+          showCoinPopup();
+        }, 800);
       }
 
       // 퀴즈 횟수 증가 및 평균 점수 업데이트
@@ -6746,6 +6796,16 @@
     // 이력 팝업 닫기
     function closeHistoryPopup() {
       document.getElementById('historyPopup').classList.remove('show');
+    }
+
+    // 코인 획득 팝업 열기
+    function showCoinPopup() {
+      document.getElementById('coinPopupOverlay').classList.add('show');
+    }
+
+    // 코인 획득 팝업 닫기
+    function closeCoinPopup() {
+      document.getElementById('coinPopupOverlay').classList.remove('show');
     }
 
     // 이력 데이터 로드
