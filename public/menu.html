@@ -3664,7 +3664,9 @@ if (logoutConfirmBtn) {
         const li = document.createElement("li");
         li.className = "subject-item";
         li.dataset.sub = sub.id;
-        li.innerHTML = `<span>${sub.label}</span><span class="meta">${sub.count}개</span>`;
+        // 완료 개수 계산 (BRAINUP 시리즈만 해당)
+        const completedCount = (seriesKey === 'BRAINUP') ? getCompletedCountForSubject(sub.id, sub.count) : 0;
+        li.innerHTML = `<span>${sub.label}</span><span class="meta">${completedCount}/${sub.count}개</span>`;
         li.addEventListener("click", () => {
           document.querySelectorAll(".subject-item").forEach(x => x.classList.remove("active"));
           li.classList.add("active");
@@ -3909,6 +3911,35 @@ if (logoutConfirmBtn) {
       const stuKey = buildStudentKey(stu);
       const progressKey = `dan-progress:${stuKey}`;
       return JSON.parse(localStorage.getItem(progressKey) || '[]');
+    }
+
+    // ⭐ 세부 과목별 완료된 단원 개수 계산
+    function getCompletedCountForSubject(subjectId, totalCount) {
+      const stu = getCurrentStudent();
+      if (!stu) return 0;
+
+      const stuKey = buildStudentKey(stu);
+      const keyPrefix = `dan-progress:${stuKey}:`;
+
+      let completedCount = 0;
+      for (let i = 1; i <= totalCount; i++) {
+        const num = String(i).padStart(2, "0");
+        const unitCode = `${subjectId}_${num}`; // bio_01, bio_02, ...
+        const storageKey = keyPrefix + unitCode;
+
+        try {
+          const data = localStorage.getItem(storageKey);
+          if (data) {
+            const saved = JSON.parse(data);
+            if (Array.isArray(saved) && saved.length > 0) {
+              completedCount++;
+            }
+          }
+        } catch(e) {
+          // ignore
+        }
+      }
+      return completedCount;
     }
 
     // 🔄 서버에서 최신 완료 상태 가져와서 localStorage에 저장
