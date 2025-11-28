@@ -5203,48 +5203,48 @@ app.get("/admin/logs-old-inline", async (req, res) => {
 
         /* 과목별 종합 레이더: 한 줄에 4개 */
         #summary-radar-wrap .radar-card {
-          flex: 0 0 280px;
-          padding: 14px;
-        }
-
-        #summary-radar-wrap .radar-card canvas {
-          width: 180px !important;
-          height: 180px !important;
-        }
-
-        #summary-radar-wrap .radar-card-title {
-          font-size: 13px;
-        }
-
-        #summary-radar-wrap .radar-stats {
-          font-size: 11px;
-        }
-
-        #summary-radar-wrap .radar-card-header {
-          margin-bottom: 12px;
-        }
-
-        /* 단원별 문해력 레이더: 한 줄에 5개 */
-        #radar-wrap .radar-card {
-          flex: 0 0 220px;
+          flex: 0 0 195px;
           padding: 10px;
         }
 
-        #radar-wrap .radar-card canvas {
+        #summary-radar-wrap .radar-card canvas {
           width: 140px !important;
           height: 140px !important;
         }
 
-        #radar-wrap .radar-card-title {
+        #summary-radar-wrap .radar-card-title {
           font-size: 12px;
         }
 
-        #radar-wrap .radar-stats {
+        #summary-radar-wrap .radar-stats {
           font-size: 10px;
         }
 
-        #radar-wrap .radar-card-header {
+        #summary-radar-wrap .radar-card-header {
           margin-bottom: 8px;
+        }
+
+        /* 단원별 문해력 레이더: 한 줄에 5개 */
+        #radar-wrap .radar-card {
+          flex: 0 0 155px;
+          padding: 8px;
+        }
+
+        #radar-wrap .radar-card canvas {
+          width: 110px !important;
+          height: 110px !important;
+        }
+
+        #radar-wrap .radar-card-title {
+          font-size: 11px;
+        }
+
+        #radar-wrap .radar-stats {
+          font-size: 9px;
+        }
+
+        #radar-wrap .radar-card-header {
+          margin-bottom: 6px;
         }
 
         .radar-card::before {
@@ -5655,48 +5655,116 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         function searchSubjectRadar(query) {
           const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
           const clearBtn = document.getElementById('subjectSearchClear');
+          const toggleBtn = document.getElementById('toggleSummaryBtn');
 
           clearBtn.classList.toggle('show', query.length > 0);
 
-          cards.forEach(card => {
-            const title = card.querySelector('.radar-card-title');
-            if (title) {
-              const text = title.textContent.toLowerCase();
-              const match = text.includes(query.toLowerCase());
-              card.style.display = match ? 'block' : 'none';
+          if (query.length > 0) {
+            // 검색 시 모든 카드 펼치기 (hidden-card 제거)
+            cards.forEach(card => {
+              card.classList.remove('hidden-card');
+              const title = card.querySelector('.radar-card-title');
+              if (title) {
+                const text = title.textContent.toLowerCase();
+                const match = text.includes(query.toLowerCase());
+                card.style.display = match ? 'block' : 'none';
+              }
+            });
+            // 더보기 버튼 숨기기
+            if (toggleBtn) toggleBtn.style.display = 'none';
+          } else {
+            // 검색어 없으면 원래대로 복원
+            cards.forEach((card, index) => {
+              card.style.display = 'block';
+              if (index >= 6) {
+                card.classList.add('hidden-card');
+              }
+            });
+            // 더보기 버튼 표시
+            if (toggleBtn && cards.length > 6) {
+              toggleBtn.style.display = 'block';
+              toggleBtn.textContent = '더보기 ▼';
             }
-          });
+          }
         }
 
         function clearSubjectSearch() {
           document.getElementById('subjectSearch').value = '';
           document.getElementById('subjectSearchClear').classList.remove('show');
           const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
-          cards.forEach(card => card.style.display = 'block');
+          const toggleBtn = document.getElementById('toggleSummaryBtn');
+
+          cards.forEach((card, index) => {
+            card.style.display = 'block';
+            if (index >= 6) {
+              card.classList.add('hidden-card');
+            } else {
+              card.classList.remove('hidden-card');
+            }
+          });
+
+          if (toggleBtn && cards.length > 6) {
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = '더보기 ▼';
+          }
         }
 
         // 단원별 레이더 검색
         function searchUnitRadar(query) {
           const cards = document.querySelectorAll('#radar-wrap .radar-card');
           const clearBtn = document.getElementById('unitSearchClear');
+          const toggleBtn = document.getElementById('toggleRadarBtn');
 
           clearBtn.classList.toggle('show', query.length > 0);
 
-          cards.forEach(card => {
-            const title = card.querySelector('.radar-card-title');
-            if (title) {
-              const text = title.textContent.toLowerCase();
-              const match = text.includes(query.toLowerCase());
-              card.style.display = match ? 'block' : 'none';
+          if (query.length > 0) {
+            // 검색 시 모든 카드 펼치기 (hidden-card 제거)
+            cards.forEach(card => {
+              card.classList.remove('hidden-card');
+              const title = card.querySelector('.radar-card-title');
+              if (title) {
+                const text = title.textContent.toLowerCase();
+                const match = text.includes(query.toLowerCase());
+                card.style.display = match ? 'block' : 'none';
+              }
+            });
+            // 더보기 버튼 숨기기
+            if (toggleBtn) toggleBtn.style.display = 'none';
+          } else {
+            // 검색어 없으면 원래대로 복원
+            cards.forEach((card, index) => {
+              card.style.display = 'block';
+              if (index >= 6) {
+                card.classList.add('hidden-card');
+              }
+            });
+            // 더보기 버튼 표시
+            if (toggleBtn && cards.length > 6) {
+              toggleBtn.style.display = 'block';
+              toggleBtn.textContent = '더보기 ▼';
             }
-          });
+          }
         }
 
         function clearUnitSearch() {
           document.getElementById('unitSearch').value = '';
           document.getElementById('unitSearchClear').classList.remove('show');
           const cards = document.querySelectorAll('#radar-wrap .radar-card');
-          cards.forEach(card => card.style.display = 'block');
+          const toggleBtn = document.getElementById('toggleRadarBtn');
+
+          cards.forEach((card, index) => {
+            card.style.display = 'block';
+            if (index >= 6) {
+              card.classList.add('hidden-card');
+            } else {
+              card.classList.remove('hidden-card');
+            }
+          });
+
+          if (toggleBtn && cards.length > 6) {
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = '더보기 ▼';
+          }
         }
 
         // ===== 학습 기록 더보기/접기 기능 =====
@@ -8006,48 +8074,116 @@ app.get("/my-learning", async (req, res) => {
         function searchSubjectRadar(query) {
           const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
           const clearBtn = document.getElementById('subjectSearchClear');
+          const toggleBtn = document.getElementById('toggleSummaryBtn');
 
           clearBtn.classList.toggle('show', query.length > 0);
 
-          cards.forEach(card => {
-            const title = card.querySelector('.radar-card-title');
-            if (title) {
-              const text = title.textContent.toLowerCase();
-              const match = text.includes(query.toLowerCase());
-              card.style.display = match ? 'block' : 'none';
+          if (query.length > 0) {
+            // 검색 시 모든 카드 펼치기 (hidden-card 제거)
+            cards.forEach(card => {
+              card.classList.remove('hidden-card');
+              const title = card.querySelector('.radar-card-title');
+              if (title) {
+                const text = title.textContent.toLowerCase();
+                const match = text.includes(query.toLowerCase());
+                card.style.display = match ? 'block' : 'none';
+              }
+            });
+            // 더보기 버튼 숨기기
+            if (toggleBtn) toggleBtn.style.display = 'none';
+          } else {
+            // 검색어 없으면 원래대로 복원
+            cards.forEach((card, index) => {
+              card.style.display = 'block';
+              if (index >= 6) {
+                card.classList.add('hidden-card');
+              }
+            });
+            // 더보기 버튼 표시
+            if (toggleBtn && cards.length > 6) {
+              toggleBtn.style.display = 'block';
+              toggleBtn.textContent = '더보기 ▼';
             }
-          });
+          }
         }
 
         function clearSubjectSearch() {
           document.getElementById('subjectSearch').value = '';
           document.getElementById('subjectSearchClear').classList.remove('show');
           const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
-          cards.forEach(card => card.style.display = 'block');
+          const toggleBtn = document.getElementById('toggleSummaryBtn');
+
+          cards.forEach((card, index) => {
+            card.style.display = 'block';
+            if (index >= 6) {
+              card.classList.add('hidden-card');
+            } else {
+              card.classList.remove('hidden-card');
+            }
+          });
+
+          if (toggleBtn && cards.length > 6) {
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = '더보기 ▼';
+          }
         }
 
         // 단원별 레이더 검색
         function searchUnitRadar(query) {
           const cards = document.querySelectorAll('#radar-wrap .radar-card');
           const clearBtn = document.getElementById('unitSearchClear');
+          const toggleBtn = document.getElementById('toggleRadarBtn');
 
           clearBtn.classList.toggle('show', query.length > 0);
 
-          cards.forEach(card => {
-            const title = card.querySelector('.radar-card-title');
-            if (title) {
-              const text = title.textContent.toLowerCase();
-              const match = text.includes(query.toLowerCase());
-              card.style.display = match ? 'block' : 'none';
+          if (query.length > 0) {
+            // 검색 시 모든 카드 펼치기 (hidden-card 제거)
+            cards.forEach(card => {
+              card.classList.remove('hidden-card');
+              const title = card.querySelector('.radar-card-title');
+              if (title) {
+                const text = title.textContent.toLowerCase();
+                const match = text.includes(query.toLowerCase());
+                card.style.display = match ? 'block' : 'none';
+              }
+            });
+            // 더보기 버튼 숨기기
+            if (toggleBtn) toggleBtn.style.display = 'none';
+          } else {
+            // 검색어 없으면 원래대로 복원
+            cards.forEach((card, index) => {
+              card.style.display = 'block';
+              if (index >= 6) {
+                card.classList.add('hidden-card');
+              }
+            });
+            // 더보기 버튼 표시
+            if (toggleBtn && cards.length > 6) {
+              toggleBtn.style.display = 'block';
+              toggleBtn.textContent = '더보기 ▼';
             }
-          });
+          }
         }
 
         function clearUnitSearch() {
           document.getElementById('unitSearch').value = '';
           document.getElementById('unitSearchClear').classList.remove('show');
           const cards = document.querySelectorAll('#radar-wrap .radar-card');
-          cards.forEach(card => card.style.display = 'block');
+          const toggleBtn = document.getElementById('toggleRadarBtn');
+
+          cards.forEach((card, index) => {
+            card.style.display = 'block';
+            if (index >= 6) {
+              card.classList.add('hidden-card');
+            } else {
+              card.classList.remove('hidden-card');
+            }
+          });
+
+          if (toggleBtn && cards.length > 6) {
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = '더보기 ▼';
+          }
         }
 
         // ===== 학습 기록 더보기/접기 기능 =====
@@ -9277,8 +9413,10 @@ app.get("/my-learning", async (req, res) => {
             pol: 'society',
             modern: 'korean-lit',
             classic: 'korean-lit',
+            world: 'world-lit',  // world_01 ~ world_80
             world1: 'world-lit',
             world2: 'world-lit',
+            people: 'person',  // people_01 ~ people_80
             person1: 'person',
             person2: 'person'
           };
@@ -9303,14 +9441,28 @@ app.get("/my-learning", async (req, res) => {
             completedUnits.add(unit);
             progress.total++;
 
-            // 과목 코드 추출 (예: "bio01" -> "bio")
+            // 과목 코드 추출 (예: "bio_01" -> "bio", "world_01" -> "world")
             const subjectCode = unit.match(/^[a-z]+/)?.[0];
             if (!subjectCode) return;
 
             const field = subjectMapping[subjectCode];
             if (field && progress[field]) {
               progress[field].total++;
-              if (progress[field][subjectCode] !== undefined) {
+
+              // world와 people은 번호에 따라 1/2로 분류
+              if (subjectCode === 'world' || subjectCode === 'people') {
+                const numMatch = unit.match(/_(\d+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                let subKey;
+                if (subjectCode === 'world') {
+                  subKey = num <= 40 ? 'world1' : 'world2';
+                } else {
+                  subKey = num <= 40 ? 'person1' : 'person2';
+                }
+                if (progress[field][subKey] !== undefined) {
+                  progress[field][subKey]++;
+                }
+              } else if (progress[field][subjectCode] !== undefined) {
                 progress[field][subjectCode]++;
               }
             }
@@ -9376,17 +9528,17 @@ app.get("/my-learning", async (req, res) => {
           updateSubjectProgress('modernBar', 'modernPercent', progress['korean-lit'].modern, 20);
           updateSubjectProgress('classicBar', 'classicPercent', progress['korean-lit'].classic, 20);
 
-          // 세계문학분야
+          // 세계문학분야 (각 40개씩, 총 80개)
           const worldLitPercent = updateProgress('worldLitFieldBar', 'worldLitFieldText', progress['world-lit'].total, 80);
           document.getElementById('worldLitFieldPercent').textContent = worldLitPercent + '%';
-          updateSubjectProgress('world1Bar', 'world1Percent', progress['world-lit'].world1, 20);
-          updateSubjectProgress('world2Bar', 'world2Percent', progress['world-lit'].world2, 20);
+          updateSubjectProgress('world1Bar', 'world1Percent', progress['world-lit'].world1, 40);
+          updateSubjectProgress('world2Bar', 'world2Percent', progress['world-lit'].world2, 40);
 
-          // 인물분야
+          // 인물분야 (각 40개씩, 총 80개)
           const personPercent = updateProgress('personFieldBar', 'personFieldText', progress.person.total, 80);
           document.getElementById('personFieldPercent').textContent = personPercent + '%';
-          updateSubjectProgress('person1Bar', 'person1Percent', progress.person.person1, 20);
-          updateSubjectProgress('person2Bar', 'person2Percent', progress.person.person2, 20);
+          updateSubjectProgress('person1Bar', 'person1Percent', progress.person.person1, 40);
+          updateSubjectProgress('person2Bar', 'person2Percent', progress.person.person2, 40);
 
           console.log('진도율 계산 완료:', progress);
         }
