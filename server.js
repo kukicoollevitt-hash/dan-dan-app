@@ -5173,11 +5173,18 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           border-top: 2px solid #e5d4c1;
         }
 
-        #summary-radar-wrap,
+        #summary-radar-wrap {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+          margin-top: 30px;
+          justify-content: center;
+        }
+
         #radar-wrap {
           display: flex;
           flex-wrap: wrap;
-          gap: 30px;
+          gap: 15px;
           margin-top: 30px;
           justify-content: center;
         }
@@ -5192,6 +5199,52 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           transition: all 0.3s ease;
           position: relative;
           overflow: hidden;
+        }
+
+        /* 과목별 종합 레이더: 한 줄에 4개 */
+        #summary-radar-wrap .radar-card {
+          flex: 0 0 280px;
+          padding: 14px;
+        }
+
+        #summary-radar-wrap .radar-card canvas {
+          width: 180px !important;
+          height: 180px !important;
+        }
+
+        #summary-radar-wrap .radar-card-title {
+          font-size: 13px;
+        }
+
+        #summary-radar-wrap .radar-stats {
+          font-size: 11px;
+        }
+
+        #summary-radar-wrap .radar-card-header {
+          margin-bottom: 12px;
+        }
+
+        /* 단원별 문해력 레이더: 한 줄에 5개 */
+        #radar-wrap .radar-card {
+          flex: 0 0 220px;
+          padding: 10px;
+        }
+
+        #radar-wrap .radar-card canvas {
+          width: 140px !important;
+          height: 140px !important;
+        }
+
+        #radar-wrap .radar-card-title {
+          font-size: 12px;
+        }
+
+        #radar-wrap .radar-stats {
+          font-size: 10px;
+        }
+
+        #radar-wrap .radar-card-header {
+          margin-bottom: 8px;
         }
 
         .radar-card::before {
@@ -5749,8 +5802,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             '과학분야': ['bio', 'earth', 'physics', 'chem'],
             '사회분야': ['geo', 'soc', 'law', 'pol'],
             '한국문학분야': ['modern', 'classic'],
-            '세계문학분야': ['world1', 'world2'],
-            '인물분야': ['person1', 'person2']
+            '세계문학분야': ['world'],
+            '인물분야': ['people']
           };
           const subjects = fieldSubjects[fieldName] || [];
           let total = 0;
@@ -5780,8 +5833,10 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           'pol': '정치경제',
           'modern': '현대문학',
           'classic': '고전문학',
+          'world': '세계문학',
           'world1': '세계문학1',
           'world2': '세계문학2',
+          'people': '인물',
           'person1': '인물1',
           'person2': '인물2'
         };
@@ -5798,8 +5853,10 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           'pol': 'society',
           'modern': 'korean-lit',
           'classic': 'korean-lit',
+          'world': 'world-lit',
           'world1': 'world-lit',
           'world2': 'world-lit',
+          'people': 'person',
           'person1': 'person',
           'person2': 'person'
         };
@@ -8096,8 +8153,8 @@ app.get("/my-learning", async (req, res) => {
             '과학분야': ['bio', 'earth', 'physics', 'chem'],
             '사회분야': ['geo', 'soc', 'law', 'pol'],
             '한국문학분야': ['modern', 'classic'],
-            '세계문학분야': ['world1', 'world2'],
-            '인물분야': ['person1', 'person2']
+            '세계문학분야': ['world'],
+            '인물분야': ['people']
           };
           const subjects = fieldSubjects[fieldName] || [];
           let total = 0;
@@ -8127,8 +8184,10 @@ app.get("/my-learning", async (req, res) => {
           'pol': '정치경제',
           'modern': '현대문학',
           'classic': '고전문학',
+          'world': '세계문학',
           'world1': '세계문학1',
           'world2': '세계문학2',
+          'people': '인물',
           'person1': '인물1',
           'person2': '인물2'
         };
@@ -8145,8 +8204,10 @@ app.get("/my-learning", async (req, res) => {
           'pol': 'society',
           'modern': 'korean-lit',
           'classic': 'korean-lit',
+          'world': 'world-lit',
           'world1': 'world-lit',
           'world2': 'world-lit',
+          'people': 'person',
           'person1': 'person',
           'person2': 'person'
         };
@@ -8422,7 +8483,7 @@ app.get("/my-learning", async (req, res) => {
           let unitName = log.unit || '단원';
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
-            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world1': '세계문학1', 'world2': '세계문학2', 'person1': '인물1', 'person2': '인물2' };
+            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '인물', 'person1': '인물1', 'person2': '인물2' };
             const subject = subjectMap[parts[0]] || parts[0];
             const number = parts[1] ? parts[1].replace(/^0+/, '') : ''; // 01 → 1
             unitName = subject + ' ' + number;
@@ -8821,8 +8882,10 @@ app.get("/my-learning", async (req, res) => {
             'chem': '과학분야',
             'modern': '한국문학분야',
             'classic': '한국문학분야',
+            'world': '세계문학분야',
             'world1': '세계문학분야',
             'world2': '세계문학분야',
+            'people': '인물분야',
             'person1': '인물분야',
             'person2': '인물분야'
           };
@@ -8908,7 +8971,7 @@ app.get("/my-learning", async (req, res) => {
             // 차트 카드 생성
             const fieldCssClass = fieldToClass[fieldName] || '';
             const card = document.createElement('div');
-            card.className = 'radar-card summary-card field-card ' + fieldCssClass + (fieldIndex >= 3 ? ' hidden-card' : '');
+            card.className = 'radar-card summary-card field-card ' + fieldCssClass + (fieldIndex >= 5 ? ' hidden-card' : '');
             fieldIndex++;
 
             const header = document.createElement('div');
@@ -9053,7 +9116,7 @@ app.get("/my-learning", async (req, res) => {
           tbody.innerHTML = '';
 
           // 과목 매핑
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world1': '세계문학1', 'world2': '세계문학2', 'person1': '인물1', 'person2': '인물2' };
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '인물', 'person1': '인물1', 'person2': '인물2' };
 
           logs.forEach((log, idx) => {
             const ts = log.timestamp
@@ -12152,15 +12215,15 @@ cron.schedule('0 0 * * *', () => {
 
 console.log('✅ 자동 과제 부여 스케줄러 등록 완료 (매일 0시 실행)');
 
-// TODO: 테스트용 - AI 추천과제 스케줄러 (1분마다 체크, 나중에 매일 0시로 변경)
-cron.schedule('* * * * *', () => {
-  console.log('⏰ AI 추천과제 스케줄러 트리거');
+// AI 추천과제 스케줄러 (매시 정각 실행 - 등급별 시간 체크)
+cron.schedule('0 * * * *', () => {
+  console.log('⏰ AI 추천과제 스케줄러 트리거 (매시 정각)');
   assignAITasksDaily();
 }, {
   timezone: "Asia/Seoul"
 });
 
-console.log('✅ AI 추천과제 스케줄러 등록 완료 (1분마다 실행 - 테스트용)');
+console.log('✅ AI 추천과제 스케줄러 등록 완료 (매시 정각 실행)');
 
 // ========== 독서 감상문 월간 리셋 ==========
 // 매월 1일 0시 0분에 실행 (월간 과제 리셋)
