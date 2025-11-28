@@ -4053,6 +4053,32 @@ if (logoutConfirmBtn) {
       hideLoadingScreen();
     };
 
+    // 🐋 로그인 시 챗봇 뱃지 초기화 (매일 자정 10개 리셋)
+    function initChatbotBadgeOnLogin() {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+        const chatbotBadgeKey = `chatbotBadge_${user.grade}_${user.name}`;
+        const chatbotBadgeDateKey = `chatbotBadgeDate_${user.grade}_${user.name}`;
+
+        const today = new Date().toISOString().split('T')[0];
+        const savedDate = localStorage.getItem(chatbotBadgeDateKey);
+
+        // 날짜가 다르면 10개로 리셋
+        if (savedDate !== today) {
+          localStorage.setItem(chatbotBadgeKey, '10');
+          localStorage.setItem(chatbotBadgeDateKey, today);
+          console.log('🐋 [로그인] 챗봇 뱃지 10개로 초기화');
+        } else {
+          console.log('🐋 [로그인] 오늘 이미 초기화됨, 기존 뱃지 유지');
+        }
+      } catch(e) {
+        console.error('챗봇 뱃지 초기화 오류:', e);
+      }
+    }
+
     // 🔻 상단 사용자 표시: localStorage가 우선, 없으면 URL 파라미터
     function showUserInfo() {
       const infoTarget = document.getElementById("user-info");
@@ -4135,6 +4161,9 @@ if (logoutConfirmBtn) {
         // 플래그 제거 (무한 루프 방지)
         sessionStorage.removeItem('justLoggedIn');
         sessionStorage.setItem('aiRecognitionDone', 'true');
+
+        // 🐋 로그인 시 챗봇 뱃지 10개 초기화 (매일 자정 리셋)
+        initChatbotBadgeOnLogin();
 
         // AI 로딩 오버레이 표시
         const aiOverlay = document.getElementById('aiLoadingOverlay');

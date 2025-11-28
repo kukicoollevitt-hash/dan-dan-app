@@ -6798,14 +6798,66 @@
       document.getElementById('historyPopup').classList.remove('show');
     }
 
-    // 코인 획득 팝업 열기
+    // 뱃지 획득 팝업 열기
     function showCoinPopup() {
       document.getElementById('coinPopupOverlay').classList.add('show');
     }
 
-    // 코인 획득 팝업 닫기
+    // 뱃지 획득 팝업 닫기 - 확인 버튼 클릭 시 챗봇 뱃지에도 추가
     function closeCoinPopup() {
       document.getElementById('coinPopupOverlay').classList.remove('show');
+
+      // 획득한 뱃지를 챗봇 뱃지에도 추가
+      const earnedBadges = parseInt(document.getElementById('earnedCoins').textContent) || 0;
+      if (earnedBadges > 0) {
+        addToChatbotBadge(earnedBadges);
+      }
+    }
+
+    // 챗봇 뱃지에 추가
+    function addToChatbotBadge(amount) {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+        const chatbotBadgeKey = `chatbotBadge_${user.grade}_${user.name}`;
+        const chatbotBadgeDateKey = `chatbotBadgeDate_${user.grade}_${user.name}`;
+
+        // 오늘 날짜 확인
+        const today = new Date().toISOString().split('T')[0];
+        const savedDate = localStorage.getItem(chatbotBadgeDateKey);
+
+        let currentBadge = 10; // 기본값
+        if (savedDate === today) {
+          // 같은 날이면 기존 값에 추가
+          const savedBadge = localStorage.getItem(chatbotBadgeKey);
+          currentBadge = savedBadge ? parseInt(savedBadge) : 10;
+        } else {
+          // 날짜가 다르면 10개로 리셋 후 추가
+          localStorage.setItem(chatbotBadgeDateKey, today);
+        }
+
+        const newBadge = currentBadge + amount;
+        localStorage.setItem(chatbotBadgeKey, newBadge.toString());
+
+        console.log('[어휘퀴즈] 챗봇 뱃지 추가:', {
+          추가량: amount,
+          이전뱃지: currentBadge,
+          새로운뱃지: newBadge
+        });
+
+        // storage 이벤트 발생 (챗봇이 감지할 수 있도록)
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: chatbotBadgeKey,
+          oldValue: currentBadge.toString(),
+          newValue: newBadge.toString(),
+          url: window.location.href,
+          storageArea: localStorage
+        }));
+      } catch(e) {
+        console.error('챗봇 뱃지 추가 오류:', e);
+      }
     }
 
     // 이력 데이터 로드
