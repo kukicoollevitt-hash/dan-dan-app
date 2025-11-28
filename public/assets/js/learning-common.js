@@ -1,19 +1,24 @@
   /* =========================================================
-     단원 자동 인식 (강화)
-     우선순위: ?unit=geo_XX → 파일명 geo_XX.html → 제목 숫자
+     단원 자동 인식 (강화) - 다양한 과목 지원
+     지원 과목: 사회분야(geo, soc, law, pol), 과학분야(bio, physics, chem, earth),
+               한국문학(modern, classic), 세계문학(world1, world2), 인물(people1, people2)
+     우선순위: ?unit=XXX_NN → 파일명 XXX_NN.html → 제목 숫자
   ========================================================= */
   (function () {
     const qs = new URLSearchParams(location.search).get('unit');
     let unit = null;
 
+    // 지원하는 과목 코드들 (사회, 과학, 문학, 인물 등 모두 포함)
+    const subjectPattern = /(geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2)[_-]?(\d{1,2})/;
+
     if (qs) {
-      const m = qs.toLowerCase().match(/geo[_-]?(\d{1,2})/);
-      if (m) unit = `geo_${m[1].padStart(2,'0')}`;
+      const m = qs.toLowerCase().match(subjectPattern);
+      if (m) unit = `${m[1]}_${m[2].padStart(2,'0')}`;
     }
 
     if (!unit) {
-      const m2 = location.pathname.toLowerCase().match(/geo[_-]?(\d{1,2})\.html/);
-      if (m2) unit = `geo_${m2[1].padStart(2,'0')}`;
+      const m2 = location.pathname.toLowerCase().match(new RegExp(subjectPattern.source + '\\.html'));
+      if (m2) unit = `${m2[1]}_${m2[2].padStart(2,'0')}`;
     }
 
     if (!unit && document.title) {
@@ -26,14 +31,27 @@
   })();
 
   /* =========================================================
-     PAGE_KEY 자동 생성 (단원 번호 기반)  ← 이 블록만 남김
+     PAGE_KEY 자동 생성 (단원 번호 기반) - 다양한 과목/분야 지원
   ========================================================= */
   (function () {
     const cur = (window.CUR_UNIT || 'geo_01');
-    const m = cur.match(/geo_(\d{1,2})/);
-    const no = m ? m[1].padStart(2,'0') : '01';
+    const m = cur.match(/([a-z0-9]+)_(\d{1,2})/);
+    const subject = m ? m[1] : 'geo';
+    const no = m ? m[2].padStart(2,'0') : '01';
 
-    window.PAGE_KEY = `BRAINUP_social_geo_${no}`;
+    // 과목에 따라 분야(area) 결정
+    let area = 'social'; // 기본값
+    if (['bio', 'physics', 'chem', 'earth'].includes(subject)) {
+      area = 'science';
+    } else if (['modern', 'classic'].includes(subject)) {
+      area = 'korlit';
+    } else if (['world1', 'world2'].includes(subject)) {
+      area = 'worldlit';
+    } else if (['people1', 'people2'].includes(subject)) {
+      area = 'person';
+    }
+
+    window.PAGE_KEY = `BRAINUP_${area}_${subject}_${no}`;
     console.log('[study page] PAGE_KEY =', window.PAGE_KEY);
   })();
 
@@ -46,8 +64,23 @@
     }
 
     // 🔁 현재 학생 가져오기 (로그인에서 저장해둔 거)
+    // iframe 내부에서도 부모 창의 localStorage에 접근 시도
     function getCurrentStudent() {
-      const saved = localStorage.getItem('currentStudent');
+      let saved = null;
+
+      // 1) 먼저 현재 창의 localStorage 확인
+      saved = localStorage.getItem('currentStudent');
+
+      // 2) 없으면 부모 창의 localStorage 시도 (iframe인 경우)
+      if (!saved && window.parent && window.parent !== window) {
+        try {
+          saved = window.parent.localStorage.getItem('currentStudent');
+          console.log('[getCurrentStudent] 부모 창에서 학생 정보 가져옴');
+        } catch (e) {
+          console.log('[getCurrentStudent] 부모 창 localStorage 접근 실패:', e.message);
+        }
+      }
+
       if (!saved) return null;
       try {
         return JSON.parse(saved);
@@ -687,17 +720,19 @@
       const who = (grade || name) ? `${grade ? grade + ' ' : ''}${name ? name + ' ' : ''}`.trim() + ' ' : '';
       showSubmitOverlay(`${who}${kind} 제출되었습니다 ✅`);
 
-      // 오버레이 닫힌 후 팝업 닫기 및 새로고침
-      setTimeout(() => {
-        if (window.parent) {
-          // 팝업 닫기
-          if (window.parent.closeUnitModal) {
-            window.parent.closeUnitModal();
+      // 분석리포트 제출 시에만 팝업 닫기 및 새로고침
+      if (kind === '분석리포트') {
+        setTimeout(() => {
+          if (window.parent) {
+            // 팝업 닫기
+            if (window.parent.closeUnitModal) {
+              window.parent.closeUnitModal();
+            }
+            // 새로고침
+            window.parent.location.reload();
           }
-          // 새로고침
-          window.parent.location.reload();
-        }
-      }, 2800);
+        }, 2800);
+      }
     }
 
     /* ===== 분석리포트 갱신 ===== */
@@ -883,7 +918,12 @@
     /* ===== 본문 채점 ===== */
     let fullResultHTML = "";
     function gradeQuiz() {
-      const answerKey = {
+      // 콘텐츠에서 정답과 해설 가져오기
+      const unit = window.CUR_UNIT || 'geo_01';
+      const pack = window.CONTENTS && window.CONTENTS[unit];
+
+      // 콘텐츠에서 answerKey 가져오기 (없으면 기본값 사용)
+      const answerKey = (pack && pack.answerKey) ? pack.answerKey : {
         q1: "2",
         q2: "3",
         q3_1: ["경계"],
@@ -891,7 +931,9 @@
         q4_1: ["디지털", "디지털지도", "디지털 지도"],
         q4_2: ["실시간"]
       };
-      const explain = {
+
+      // 콘텐츠에서 explain 가져오기 (없으면 기본값 사용)
+      const explain = (pack && pack.explain) ? pack.explain : {
         q1: "해설: 지도에는 단순 길 안내를 넘어 지역의 생활 모습과 자연환경 정보가 들어 있어 세상을 이해하는 창이 됨.",
         q2: "해설: 주제도는 교통·관광·기후처럼 한 주제에 집중해 정보를 표현하는 지도.",
         q3: "해설: 산과 강, 도시와 나라의 경계를 보여 주는 지도는 '일반도'라고 합니다.",
@@ -957,7 +999,8 @@
       const essay = document.getElementById("q5").value.trim().toLowerCase();
       const q5Num = quizBlocks[4].querySelector('.quiz-num');
       const q5Mark = q5Num.querySelector('.mark');
-      const essayKeywords = ["지도의 정보를 통해","생활","자연환경","구조","공간","세상","다양성","이해","지역","특징","주제도","일반도"];
+      // 콘텐츠에서 essayKeywords 가져오기 (없으면 기본값 사용)
+      const essayKeywords = (pack && pack.essayKeywords) ? pack.essayKeywords : ["지도의 정보를 통해","생활","자연환경","구조","공간","세상","다양성","이해","지역","특징","주제도","일반도"];
       let hit = 0;
       essayKeywords.forEach(kw => { if (essay.includes(kw.replace(/\s+/g,""))) hit++; });
       let q5ok = false;
@@ -1034,7 +1077,7 @@
       });
 
       // ★ localStorage에 분석리포트 상태 저장 (분석리포트 탭 즉시 반영용)
-      const unit = window.CUR_UNIT || 'geo_01';
+      // unit 변수는 위에서 이미 선언됨
       const storageKey = `dan-geo-report-state:${unit}`;
       console.log(`[gradeQuiz] unit=${unit}로 localStorage에 저장`);
       localStorage.setItem(storageKey, JSON.stringify({

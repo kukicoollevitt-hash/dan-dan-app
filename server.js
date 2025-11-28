@@ -4826,6 +4826,32 @@ app.post("/api/log", async (req, res) => {
     cache.delete(logsCacheKey);
     console.log("🗑️ [/api/log] learning-logs 캐시 삭제:", logsCacheKey);
 
+    // 🔥 AI 추천 과제의 status를 'completed'로 업데이트 (복습완료 처리)
+    if (completed === true && unit) {
+      try {
+        const userProgress = await UserProgress.findOne({ grade, name });
+        if (userProgress && userProgress.studyRoom && userProgress.studyRoom.assignedTasks) {
+          let taskUpdated = false;
+          userProgress.studyRoom.assignedTasks.forEach(task => {
+            // AI 과제이고, id 또는 unitId가 일치하면 완료 처리
+            if (task.isAI && (task.id === unit || task.unitId === unit)) {
+              task.status = 'completed';
+              task.completedAt = new Date();
+              taskUpdated = true;
+              console.log(`✅ [/api/log] AI 과제 완료 처리: ${unit}`);
+            }
+          });
+          if (taskUpdated) {
+            await userProgress.save();
+            console.log(`💾 [/api/log] UserProgress 저장 완료`);
+          }
+        }
+      } catch (aiTaskErr) {
+        console.warn("⚠️ [/api/log] AI 과제 상태 업데이트 실패:", aiTaskErr.message);
+        // AI 과제 업데이트 실패해도 학습 로그는 정상 저장됨
+      }
+    }
+
     return res.json({ ok: true });
   } catch (err) {
     console.error("[/api/log] error:", err);
@@ -5676,6 +5702,69 @@ app.get("/admin/logs-old-inline", async (req, res) => {
 
         const logsForChart = ${JSON.stringify(logs)};
 
+        // ===== 진행률 표시를 위한 헬퍼 함수 및 데이터 =====
+        // 과목 코드 → 총 단원 수 매핑
+        const subjectUnitCounts = {
+          'bio': 20, 'earth': 20, 'physics': 20, 'chem': 20,
+          'geo': 20, 'soc': 20, 'law': 20, 'pol': 20,
+          'modern': 40, 'classic': 40,
+          'world1': 40, 'world2': 40,
+          'person1': 40, 'person2': 40
+        };
+
+        // 분야별 총 단원 수
+        const fieldUnitCounts = {
+          '과학분야': 80,
+          '사회분야': 80,
+          '한국문학분야': 80,
+          '세계문학분야': 80,
+          '인물분야': 80
+        };
+
+        // 시리즈 총 단원 수
+        const seriesTotalUnits = 400;
+
+        // logsForChart에서 완료된 고유 단원 수집
+        const completedUnitsSet = new Set();
+        logsForChart.forEach(log => {
+          if (log.unit) {
+            completedUnitsSet.add(log.unit);
+          }
+        });
+
+        // 과목별 완료 개수 계산 (logsForChart 기반)
+        function getCompletedCount(subjectCode) {
+          let count = 0;
+          completedUnitsSet.forEach(unit => {
+            if (unit.startsWith(subjectCode + '_')) {
+              count++;
+            }
+          });
+          return count;
+        }
+
+        // 분야별 완료 개수 계산
+        function getFieldCompletedCount(fieldName) {
+          const fieldSubjects = {
+            '과학분야': ['bio', 'earth', 'physics', 'chem'],
+            '사회분야': ['geo', 'soc', 'law', 'pol'],
+            '한국문학분야': ['modern', 'classic'],
+            '세계문학분야': ['world1', 'world2'],
+            '인물분야': ['person1', 'person2']
+          };
+          const subjects = fieldSubjects[fieldName] || [];
+          let total = 0;
+          subjects.forEach(subjectCode => {
+            total += getCompletedCount(subjectCode);
+          });
+          return total;
+        }
+
+        // 시리즈 전체 완료 개수 계산
+        function getSeriesCompletedCount() {
+          return completedUnitsSet.size;
+        }
+
         // ===== 종합 레이더 차트 생성 =====
         const summaryWrap = document.getElementById('summary-radar-wrap');
 
@@ -5740,7 +5829,9 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           const group = subjectGroups[key];
           const seriesLogs = group.logs;
           const subjectName = subjectNames[group.subjectCode] || group.subjectCode;
-          const displayTitle = group.series + ' ' + subjectName;
+          const subjectTotal = subjectUnitCounts[group.subjectCode] || 20;
+          const subjectCompleted = getCompletedCount(group.subjectCode);
+          const displayTitle = group.series + ' ' + subjectName + ' (' + subjectCompleted + '/' + subjectTotal + ')';
 
           // 평균 계산
           let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
@@ -7958,6 +8049,69 @@ app.get("/my-learning", async (req, res) => {
 
         const logsForChart = ${JSON.stringify(logs)};
 
+        // ===== 진행률 표시를 위한 헬퍼 함수 및 데이터 =====
+        // 과목 코드 → 총 단원 수 매핑
+        const subjectUnitCounts = {
+          'bio': 20, 'earth': 20, 'physics': 20, 'chem': 20,
+          'geo': 20, 'soc': 20, 'law': 20, 'pol': 20,
+          'modern': 40, 'classic': 40,
+          'world1': 40, 'world2': 40,
+          'person1': 40, 'person2': 40
+        };
+
+        // 분야별 총 단원 수
+        const fieldUnitCounts = {
+          '과학분야': 80,
+          '사회분야': 80,
+          '한국문학분야': 80,
+          '세계문학분야': 80,
+          '인물분야': 80
+        };
+
+        // 시리즈 총 단원 수
+        const seriesTotalUnits = 400;
+
+        // logsForChart에서 완료된 고유 단원 수집
+        const completedUnitsSet = new Set();
+        logsForChart.forEach(log => {
+          if (log.unit) {
+            completedUnitsSet.add(log.unit);
+          }
+        });
+
+        // 과목별 완료 개수 계산 (logsForChart 기반)
+        function getCompletedCount(subjectCode) {
+          let count = 0;
+          completedUnitsSet.forEach(unit => {
+            if (unit.startsWith(subjectCode + '_')) {
+              count++;
+            }
+          });
+          return count;
+        }
+
+        // 분야별 완료 개수 계산
+        function getFieldCompletedCount(fieldName) {
+          const fieldSubjects = {
+            '과학분야': ['bio', 'earth', 'physics', 'chem'],
+            '사회분야': ['geo', 'soc', 'law', 'pol'],
+            '한국문학분야': ['modern', 'classic'],
+            '세계문학분야': ['world1', 'world2'],
+            '인물분야': ['person1', 'person2']
+          };
+          const subjects = fieldSubjects[fieldName] || [];
+          let total = 0;
+          subjects.forEach(subjectCode => {
+            total += getCompletedCount(subjectCode);
+          });
+          return total;
+        }
+
+        // 시리즈 전체 완료 개수 계산
+        function getSeriesCompletedCount() {
+          return completedUnitsSet.size;
+        }
+
         // ===== 종합 레이더 차트 생성 =====
         const summaryWrap = document.getElementById('summary-radar-wrap');
 
@@ -8022,7 +8176,9 @@ app.get("/my-learning", async (req, res) => {
           const group = subjectGroups[key];
           const seriesLogs = group.logs;
           const subjectName = subjectNames[group.subjectCode] || group.subjectCode;
-          const displayTitle = group.series + ' ' + subjectName;
+          const subjectTotal = subjectUnitCounts[group.subjectCode] || 20;
+          const subjectCompleted = getCompletedCount(group.subjectCode);
+          const displayTitle = group.series + ' ' + subjectName + ' (' + subjectCompleted + '/' + subjectTotal + ')';
 
           // 평균 계산
           let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
@@ -8558,6 +8714,7 @@ app.get("/my-learning", async (req, res) => {
 
           // 시리즈 이름 (첫 번째 로그의 series 사용, 없으면 'BRAIN업')
           const seriesName = validLogs[0].series || 'BRAIN업';
+          const seriesCompleted = getSeriesCompletedCount();
 
           // 차트 카드 생성
           const card = document.createElement('div');
@@ -8568,7 +8725,7 @@ app.get("/my-learning", async (req, res) => {
 
           const title = document.createElement('div');
           title.className = 'radar-card-title';
-          title.textContent = seriesName;
+          title.textContent = seriesName + ' (' + seriesCompleted + '/' + seriesTotalUnits + ')';
 
           const badge = document.createElement('div');
           badge.className = 'badge ' + badgeClass;
@@ -8759,10 +8916,12 @@ app.get("/my-learning", async (req, res) => {
 
             // 시리즈 이름 가져오기
             const seriesName = fieldLogs[0].series || 'BRAIN업';
+            const fieldTotal = fieldUnitCounts[fieldName] || 80;
+            const fieldCompleted = getFieldCompletedCount(fieldName);
 
             const title = document.createElement('div');
             title.className = 'radar-card-title';
-            title.textContent = seriesName + ' ' + fieldName;
+            title.textContent = seriesName + ' ' + fieldName + ' (' + fieldCompleted + '/' + fieldTotal + ')';
 
             const badge = document.createElement('div');
             badge.className = 'badge ' + badgeClass;
