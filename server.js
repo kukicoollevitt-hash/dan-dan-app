@@ -5547,6 +5547,79 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           });
         }
 
+        // ===== 검색 기능 =====
+        // 학습 기록 검색
+        function searchLogs(query) {
+          const rows = document.querySelectorAll('#logTableBody tr');
+          const clearBtn = document.getElementById('logSearchClear');
+
+          clearBtn.classList.toggle('show', query.length > 0);
+
+          rows.forEach(row => {
+            const unitCell = row.querySelector('td:last-child');
+            if (unitCell) {
+              const text = unitCell.textContent.toLowerCase();
+              const match = text.includes(query.toLowerCase());
+              row.style.display = match ? 'table-row' : 'none';
+            }
+          });
+        }
+
+        function clearLogSearch() {
+          document.getElementById('logSearch').value = '';
+          document.getElementById('logSearchClear').classList.remove('show');
+          const rows = document.querySelectorAll('#logTableBody tr');
+          rows.forEach(row => row.style.display = 'table-row');
+        }
+
+        // 과목별 레이더 검색
+        function searchSubjectRadar(query) {
+          const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
+          const clearBtn = document.getElementById('subjectSearchClear');
+
+          clearBtn.classList.toggle('show', query.length > 0);
+
+          cards.forEach(card => {
+            const title = card.querySelector('.radar-card-title');
+            if (title) {
+              const text = title.textContent.toLowerCase();
+              const match = text.includes(query.toLowerCase());
+              card.style.display = match ? 'block' : 'none';
+            }
+          });
+        }
+
+        function clearSubjectSearch() {
+          document.getElementById('subjectSearch').value = '';
+          document.getElementById('subjectSearchClear').classList.remove('show');
+          const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
+          cards.forEach(card => card.style.display = 'block');
+        }
+
+        // 단원별 레이더 검색
+        function searchUnitRadar(query) {
+          const cards = document.querySelectorAll('#radar-wrap .radar-card');
+          const clearBtn = document.getElementById('unitSearchClear');
+
+          clearBtn.classList.toggle('show', query.length > 0);
+
+          cards.forEach(card => {
+            const title = card.querySelector('.radar-card-title');
+            if (title) {
+              const text = title.textContent.toLowerCase();
+              const match = text.includes(query.toLowerCase());
+              card.style.display = match ? 'block' : 'none';
+            }
+          });
+        }
+
+        function clearUnitSearch() {
+          document.getElementById('unitSearch').value = '';
+          document.getElementById('unitSearchClear').classList.remove('show');
+          const cards = document.querySelectorAll('#radar-wrap .radar-card');
+          cards.forEach(card => card.style.display = 'block');
+        }
+
         // ===== 학습 기록 더보기/접기 기능 =====
         function toggleRows() {
           const hiddenRows = document.querySelectorAll('.hidden-row');
@@ -5608,7 +5681,38 @@ app.get("/admin/logs-old-inline", async (req, res) => {
 
         // 과목 코드 → 과목명 매핑
         const subjectNames = {
-          'geo': '지리'
+          'geo': '지리',
+          'bio': '생물',
+          'earth': '지구과학',
+          'physics': '물리',
+          'chem': '화학',
+          'soc': '사회문화',
+          'law': '법',
+          'pol': '정치경제',
+          'modern': '현대문학',
+          'classic': '고전문학',
+          'world1': '세계문학1',
+          'world2': '세계문학2',
+          'person1': '인물1',
+          'person2': '인물2'
+        };
+
+        // 과목 코드 → 분야 클래스 매핑
+        const subjectToFieldClass = {
+          'bio': 'science',
+          'earth': 'science',
+          'physics': 'science',
+          'chem': 'science',
+          'geo': 'society',
+          'soc': 'society',
+          'law': 'society',
+          'pol': 'society',
+          'modern': 'korean-lit',
+          'classic': 'korean-lit',
+          'world1': 'world-lit',
+          'world2': 'world-lit',
+          'person1': 'person',
+          'person2': 'person'
         };
 
         // 과목별로 그룹화 (unit 코드에서 과목 추출: geo, history 등)
@@ -5685,8 +5789,9 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           }
 
           // 차트 카드 생성
+          const fieldClass = subjectToFieldClass[group.subjectCode] || '';
           const card = document.createElement('div');
-          card.className = 'radar-card summary-card' + (summaryIndex >= 6 ? ' hidden-card' : '');
+          card.className = 'radar-card summary-card subject-card ' + fieldClass + (summaryIndex >= 6 ? ' hidden-card' : '');
           summaryIndex++;
 
           const header = document.createElement('div');
@@ -6357,6 +6462,66 @@ app.get("/my-learning", async (req, res) => {
           line-height: 1.6;
         }
 
+        .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+
+        .search-box {
+          display: flex;
+          align-items: center;
+          background: white;
+          border: 2px solid #e0e0e0;
+          border-radius: 25px;
+          padding: 8px 16px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+          border-color: #667eea;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-box input {
+          border: none;
+          outline: none;
+          font-size: 14px;
+          width: 150px;
+          background: transparent;
+        }
+
+        .search-box input::placeholder {
+          color: #aaa;
+        }
+
+        .search-box .search-icon {
+          color: #667eea;
+          margin-right: 8px;
+        }
+
+        .search-box .clear-btn {
+          background: none;
+          border: none;
+          color: #999;
+          cursor: pointer;
+          font-size: 16px;
+          padding: 0 4px;
+          display: none;
+        }
+
+        .search-box .clear-btn.show {
+          display: inline;
+        }
+
+        .search-box .clear-btn:hover {
+          color: #e74c3c;
+        }
+
         hr {
           border: none;
           border-top: 2px solid #e5d4c1;
@@ -6840,6 +7005,153 @@ app.get("/my-learning", async (req, res) => {
           -webkit-text-fill-color: unset !important;
         }
 
+        /* 분야별 카드 - 각 분야 색상 적용 */
+        .radar-card.field-card.science {
+          border: 2px solid #4facfe;
+        }
+        .radar-card.field-card.science::before {
+          background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%) !important;
+        }
+        .radar-card.field-card.science .radar-card-title {
+          color: #4facfe;
+        }
+        .radar-card.field-card.science .stat-value {
+          color: #4facfe !important;
+        }
+
+        .radar-card.field-card.society {
+          border: 2px solid #43e97b;
+        }
+        .radar-card.field-card.society::before {
+          background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%) !important;
+        }
+        .radar-card.field-card.society .radar-card-title {
+          color: #38b060;
+        }
+        .radar-card.field-card.society .stat-value {
+          color: #43e97b !important;
+        }
+
+        .radar-card.field-card.korean-lit {
+          border: 2px solid #fa709a;
+        }
+        .radar-card.field-card.korean-lit::before {
+          background: linear-gradient(90deg, #fa709a 0%, #fee140 100%) !important;
+        }
+        .radar-card.field-card.korean-lit .radar-card-title {
+          color: #e05780;
+        }
+        .radar-card.field-card.korean-lit .stat-value {
+          color: #fa709a !important;
+        }
+
+        .radar-card.field-card.world-lit {
+          border: 2px solid #30cfd0;
+        }
+        .radar-card.field-card.world-lit::before {
+          background: linear-gradient(90deg, #30cfd0 0%, #330867 100%) !important;
+        }
+        .radar-card.field-card.world-lit .radar-card-title {
+          color: #2ab0b1;
+        }
+        .radar-card.field-card.world-lit .stat-value {
+          color: #30cfd0 !important;
+        }
+
+        .radar-card.field-card.person {
+          border: 2px solid #a8edea;
+        }
+        .radar-card.field-card.person::before {
+          background: linear-gradient(90deg, #a8edea 0%, #fed6e3 100%) !important;
+        }
+        .radar-card.field-card.person .radar-card-title {
+          color: #70c9c6;
+        }
+        .radar-card.field-card.person .stat-value {
+          color: #70c9c6 !important;
+        }
+
+        /* 과목별 카드 - 분야별 색상 적용 */
+        .radar-card.subject-card.science {
+          border: 2px solid #4facfe;
+        }
+        .radar-card.subject-card.science::before {
+          background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%) !important;
+        }
+        .radar-card.subject-card.science .radar-card-title {
+          color: #4facfe;
+        }
+        .radar-card.subject-card.science .stat-value {
+          color: #4facfe !important;
+          background: none !important;
+          -webkit-background-clip: unset !important;
+          -webkit-text-fill-color: unset !important;
+        }
+
+        .radar-card.subject-card.society {
+          border: 2px solid #43e97b;
+        }
+        .radar-card.subject-card.society::before {
+          background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%) !important;
+        }
+        .radar-card.subject-card.society .radar-card-title {
+          color: #38b060;
+        }
+        .radar-card.subject-card.society .stat-value {
+          color: #43e97b !important;
+          background: none !important;
+          -webkit-background-clip: unset !important;
+          -webkit-text-fill-color: unset !important;
+        }
+
+        .radar-card.subject-card.korean-lit {
+          border: 2px solid #fa709a;
+        }
+        .radar-card.subject-card.korean-lit::before {
+          background: linear-gradient(90deg, #fa709a 0%, #fee140 100%) !important;
+        }
+        .radar-card.subject-card.korean-lit .radar-card-title {
+          color: #e05780;
+        }
+        .radar-card.subject-card.korean-lit .stat-value {
+          color: #fa709a !important;
+          background: none !important;
+          -webkit-background-clip: unset !important;
+          -webkit-text-fill-color: unset !important;
+        }
+
+        .radar-card.subject-card.world-lit {
+          border: 2px solid #30cfd0;
+        }
+        .radar-card.subject-card.world-lit::before {
+          background: linear-gradient(90deg, #30cfd0 0%, #330867 100%) !important;
+        }
+        .radar-card.subject-card.world-lit .radar-card-title {
+          color: #2ab0b1;
+        }
+        .radar-card.subject-card.world-lit .stat-value {
+          color: #30cfd0 !important;
+          background: none !important;
+          -webkit-background-clip: unset !important;
+          -webkit-text-fill-color: unset !important;
+        }
+
+        .radar-card.subject-card.person {
+          border: 2px solid #a8edea;
+        }
+        .radar-card.subject-card.person::before {
+          background: linear-gradient(90deg, #a8edea 0%, #fed6e3 100%) !important;
+        }
+        .radar-card.subject-card.person .radar-card-title {
+          color: #70c9c6;
+        }
+        .radar-card.subject-card.person .stat-value {
+          color: #70c9c6 !important;
+          background: none !important;
+          -webkit-background-clip: unset !important;
+          -webkit-text-fill-color: unset !important;
+        }
+
         .radar-card-header {
           display: flex;
           justify-content: space-between;
@@ -7168,8 +7480,15 @@ app.get("/my-learning", async (req, res) => {
           </div>
         </div>
 
-        <div class="section-title">
-          📝 학습 기록 목록
+        <div class="section-header">
+          <div class="section-title" style="margin: 0;">
+            📝 학습 기록 목록
+          </div>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="logSearch" placeholder="단원명 검색..." oninput="searchLogs(this.value)">
+            <button class="clear-btn" id="logSearchClear" onclick="clearLogSearch()">✕</button>
+          </div>
         </div>
         <p class="section-description">
           모든 학습 활동이 시간 순서대로 기록되어 있습니다.
@@ -7443,8 +7762,15 @@ app.get("/my-learning", async (req, res) => {
 
         <hr>
 
-        <div class="section-title">
-          📊 과목별 종합 레이더
+        <div class="section-header">
+          <div class="section-title" style="margin: 0;">
+            📊 과목별 종합 레이더
+          </div>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="subjectSearch" placeholder="과목명 검색..." oninput="searchSubjectRadar(this.value)">
+            <button class="clear-btn" id="subjectSearchClear" onclick="clearSubjectSearch()">✕</button>
+          </div>
         </div>
         <p class="section-description">
           과목별로 모든 학습 데이터의 평균을 보여줍니다.<br/>
@@ -7456,8 +7782,15 @@ app.get("/my-learning", async (req, res) => {
 
         <hr>
 
-        <div class="section-title">
-          🧠 단원별 문해력 레이더 차트
+        <div class="section-header">
+          <div class="section-title" style="margin: 0;">
+            🧠 단원별 문해력 레이더 차트
+          </div>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="unitSearch" placeholder="단원명 검색..." oninput="searchUnitRadar(this.value)">
+            <button class="clear-btn" id="unitSearchClear" onclick="clearUnitSearch()">✕</button>
+          </div>
         </div>
         <p class="section-description">
           가장 최근 기록이 위에 오도록 정렬되어 있어요.<br/>
@@ -7494,6 +7827,79 @@ app.get("/my-learning", async (req, res) => {
           .catch(err => {
             alert('삭제 중 오류가 발생했습니다: ' + err.message);
           });
+        }
+
+        // ===== 검색 기능 =====
+        // 학습 기록 검색
+        function searchLogs(query) {
+          const rows = document.querySelectorAll('#logTableBody tr');
+          const clearBtn = document.getElementById('logSearchClear');
+
+          clearBtn.classList.toggle('show', query.length > 0);
+
+          rows.forEach(row => {
+            const unitCell = row.querySelector('td:last-child');
+            if (unitCell) {
+              const text = unitCell.textContent.toLowerCase();
+              const match = text.includes(query.toLowerCase());
+              row.style.display = match ? 'table-row' : 'none';
+            }
+          });
+        }
+
+        function clearLogSearch() {
+          document.getElementById('logSearch').value = '';
+          document.getElementById('logSearchClear').classList.remove('show');
+          const rows = document.querySelectorAll('#logTableBody tr');
+          rows.forEach(row => row.style.display = 'table-row');
+        }
+
+        // 과목별 레이더 검색
+        function searchSubjectRadar(query) {
+          const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
+          const clearBtn = document.getElementById('subjectSearchClear');
+
+          clearBtn.classList.toggle('show', query.length > 0);
+
+          cards.forEach(card => {
+            const title = card.querySelector('.radar-card-title');
+            if (title) {
+              const text = title.textContent.toLowerCase();
+              const match = text.includes(query.toLowerCase());
+              card.style.display = match ? 'block' : 'none';
+            }
+          });
+        }
+
+        function clearSubjectSearch() {
+          document.getElementById('subjectSearch').value = '';
+          document.getElementById('subjectSearchClear').classList.remove('show');
+          const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
+          cards.forEach(card => card.style.display = 'block');
+        }
+
+        // 단원별 레이더 검색
+        function searchUnitRadar(query) {
+          const cards = document.querySelectorAll('#radar-wrap .radar-card');
+          const clearBtn = document.getElementById('unitSearchClear');
+
+          clearBtn.classList.toggle('show', query.length > 0);
+
+          cards.forEach(card => {
+            const title = card.querySelector('.radar-card-title');
+            if (title) {
+              const text = title.textContent.toLowerCase();
+              const match = text.includes(query.toLowerCase());
+              card.style.display = match ? 'block' : 'none';
+            }
+          });
+        }
+
+        function clearUnitSearch() {
+          document.getElementById('unitSearch').value = '';
+          document.getElementById('unitSearchClear').classList.remove('show');
+          const cards = document.querySelectorAll('#radar-wrap .radar-card');
+          cards.forEach(card => card.style.display = 'block');
         }
 
         // ===== 학습 기록 더보기/접기 기능 =====
@@ -7557,7 +7963,38 @@ app.get("/my-learning", async (req, res) => {
 
         // 과목 코드 → 과목명 매핑
         const subjectNames = {
-          'geo': '지리'
+          'geo': '지리',
+          'bio': '생물',
+          'earth': '지구과학',
+          'physics': '물리',
+          'chem': '화학',
+          'soc': '사회문화',
+          'law': '법',
+          'pol': '정치경제',
+          'modern': '현대문학',
+          'classic': '고전문학',
+          'world1': '세계문학1',
+          'world2': '세계문학2',
+          'person1': '인물1',
+          'person2': '인물2'
+        };
+
+        // 과목 코드 → 분야 클래스 매핑
+        const subjectToFieldClass = {
+          'bio': 'science',
+          'earth': 'science',
+          'physics': 'science',
+          'chem': 'science',
+          'geo': 'society',
+          'soc': 'society',
+          'law': 'society',
+          'pol': 'society',
+          'modern': 'korean-lit',
+          'classic': 'korean-lit',
+          'world1': 'world-lit',
+          'world2': 'world-lit',
+          'person1': 'person',
+          'person2': 'person'
         };
 
         // 과목별로 그룹화 (unit 코드에서 과목 추출: geo, history 등)
@@ -7634,8 +8071,9 @@ app.get("/my-learning", async (req, res) => {
           }
 
           // 차트 카드 생성
+          const fieldClass = subjectToFieldClass[group.subjectCode] || '';
           const card = document.createElement('div');
-          card.className = 'radar-card summary-card' + (summaryIndex >= 6 ? ' hidden-card' : '');
+          card.className = 'radar-card summary-card subject-card ' + fieldClass + (summaryIndex >= 6 ? ' hidden-card' : '');
           summaryIndex++;
 
           const header = document.createElement('div');
@@ -7794,7 +8232,7 @@ app.get("/my-learning", async (req, res) => {
           let unitName = log.unit || '단원';
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
-            const subjectMap = { 'geo': '지리' };
+            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world1': '세계문학1', 'world2': '세계문학2', 'person1': '인물1', 'person2': '인물2' };
             const subject = subjectMap[parts[0]] || parts[0];
             const number = parts[1] ? parts[1].replace(/^0+/, '') : ''; // 01 → 1
             unitName = subject + ' ' + number;
@@ -8169,11 +8607,25 @@ app.get("/my-learning", async (req, res) => {
             'soc': '사회분야',
             'law': '사회분야',
             'pol': '사회분야',
-            // 추후 다른 분야 추가 가능
-            // 'sci': '과학분야',
-            // 'korean_culture': '한국문학분야',
-            // 'world_culture': '세계문학분야',
-            // 'person': '인물분야'
+            'bio': '과학분야',
+            'earth': '과학분야',
+            'physics': '과학분야',
+            'chem': '과학분야',
+            'modern': '한국문학분야',
+            'classic': '한국문학분야',
+            'world1': '세계문학분야',
+            'world2': '세계문학분야',
+            'person1': '인물분야',
+            'person2': '인물분야'
+          };
+
+          // 분야명 → CSS 클래스 매핑
+          const fieldToClass = {
+            '과학분야': 'science',
+            '사회분야': 'society',
+            '한국문학분야': 'korean-lit',
+            '세계문학분야': 'world-lit',
+            '인물분야': 'person'
           };
 
           // 분야별로 그룹화
@@ -8246,8 +8698,9 @@ app.get("/my-learning", async (req, res) => {
             }
 
             // 차트 카드 생성
+            const fieldCssClass = fieldToClass[fieldName] || '';
             const card = document.createElement('div');
-            card.className = 'radar-card summary-card field-card' + (fieldIndex >= 3 ? ' hidden-card' : '');
+            card.className = 'radar-card summary-card field-card ' + fieldCssClass + (fieldIndex >= 3 ? ' hidden-card' : '');
             fieldIndex++;
 
             const header = document.createElement('div');
@@ -8390,7 +8843,7 @@ app.get("/my-learning", async (req, res) => {
           tbody.innerHTML = '';
 
           // 과목 매핑
-          const subjectMap = { 'geo': '지리' };
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world1': '세계문학1', 'world2': '세계문학2', 'person1': '인물1', 'person2': '인물2' };
 
           logs.forEach((log, idx) => {
             const ts = log.timestamp
