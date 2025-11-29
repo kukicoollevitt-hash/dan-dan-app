@@ -11947,10 +11947,10 @@ app.post('/api/ai-task/create-schedule', async (req, res) => {
       });
     }
 
-    // 부여 예정 날짜 계산
-    const completed = new Date(completedAt);
-    const scheduledDate = new Date(completed);
-    // TODO: 테스트용 시간 단위 - 등급별 일정 적용: 격려 1시간, 보통 5시간, 양호 7시간 (원래: 3일, 5일, 7일)
+    // 부여 예정 날짜 계산 - 현재 시간 기준으로 계산 (복습 완료 시점 = 지금)
+    const now = new Date();
+    const scheduledDate = new Date(now);
+    // TODO: 테스트용 시간 단위 - 등급별 일정 적용: 격려 30분, 보통 1시간, 양호 3시간 (원래: 3일, 5일, 7일)
     scheduledDate.setHours(scheduledDate.getHours() + gradeInfo.hours);
 
     // 기존 스케줄 확인 (같은 학생, 같은 단원)
@@ -11966,7 +11966,7 @@ app.post('/api/ai-task/create-schedule', async (req, res) => {
       schedule.grade = gradeInfo.grade;
       schedule.gradeText = gradeInfo.text;
       schedule.avgScore = avgScore;
-      schedule.completedAt = completed;
+      schedule.completedAt = now;  // 현재 시간 (복습 완료 시점)
       schedule.scheduledDate = scheduledDate;
       schedule.status = 'pending';
       schedule.assignedAt = null;
@@ -11984,7 +11984,7 @@ app.post('/api/ai-task/create-schedule', async (req, res) => {
         grade: gradeInfo.grade,
         gradeText: gradeInfo.text,
         avgScore,
-        completedAt: completed,
+        completedAt: now,  // 현재 시간 (복습 완료 시점)
         scheduledDate
       });
     }
