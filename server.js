@@ -11992,7 +11992,7 @@ async function assignAITasksDaily() {
           continue;
         }
 
-        // 학습실에 추가 (등급별 예정 시간 사용)
+        // 학습실에 추가 (실제 부여 시간 사용)
         existingTasks.push({
           id: schedule.unitId,
           title: schedule.unitTitle,
@@ -12000,7 +12000,7 @@ async function assignAITasksDaily() {
           field: schedule.fieldName,
           subject: schedule.subjectName,
           isAI: true, // AI 부여 표시
-          assignedAt: schedule.scheduledDate // 등급에 따른 예정 부여 시간
+          assignedAt: new Date() // 실제 부여된 시간 (실시간 반영)
         });
 
         // 스케줄 상태 업데이트
