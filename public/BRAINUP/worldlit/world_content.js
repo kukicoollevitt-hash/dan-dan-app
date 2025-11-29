@@ -1,27 +1,47 @@
 /**
  * ✅ 단원 자동 인식 (강화)
  * 우선순위: ?unit=world_XX → 파일명 world_XX.html → 제목 숫자
+ * 세계문학(2): world_41~world_80 → world2_01~world2_40 으로 매핑
  */
 (function () {
   const qs = new URLSearchParams(location.search).get('unit');
-  let unit = null;
+  let unitNum = null;
 
   if (qs) {
     const m = qs.toLowerCase().match(/world[_-]?(\d{1,2})/);
-    if (m) unit = `world_${m[1].padStart(2, '0')}`;
+    if (m) unitNum = parseInt(m[1], 10);
   }
 
-  if (!unit) {
+  if (!unitNum) {
     const m2 = location.pathname.toLowerCase().match(/world[_-]?(\d{1,2})\.html/);
-    if (m2) unit = `world_${m2[1].padStart(2, '0')}`;
+    if (m2) unitNum = parseInt(m2[1], 10);
   }
 
-  if (!unit && document.title) {
+  if (!unitNum && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
-    if (m3) unit = `world_${m3[1].padStart(2, '0')}`;
+    if (m3) unitNum = parseInt(m3[1], 10);
   }
 
-  window.CUR_UNIT = unit || 'world_01';
+  // 세계문학(2): 41~80번 → world2_01~world2_40으로 매핑
+  if (unitNum && unitNum >= 41 && unitNum <= 80) {
+    const world2Num = unitNum - 40;
+    window.CUR_UNIT = `world2_${String(world2Num).padStart(2, '0')}`;
+    window.ORIGINAL_UNIT = `world_${String(unitNum).padStart(2, '0')}`;
+    window.IS_WORLD2 = true;
+    window.WORLD2_CONTENT_LOADED = false; // 로드 상태 플래그
+
+    // world2_content.js 동적 로드
+    // 이벤트는 world2_content.js 내부에서 CONTENTS 등록 후 발생시킴
+    const script = document.createElement('script');
+    script.src = './world2_content.js?v=20251129c';
+    script.onload = function() {
+      console.log('[world_content.js] world2_content.js 파일 로드됨');
+    };
+    document.head.appendChild(script);
+  } else {
+    window.CUR_UNIT = unitNum ? `world_${String(unitNum).padStart(2, '0')}` : 'world_01';
+    window.IS_WORLD2 = false;
+  }
 })();
 
 /* ===============================
@@ -1631,7 +1651,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // 1) 본문 내용 채우기
-  applyContentPack(window.CUR_UNIT);
+  // 세계문학(2)인 경우 world2_content.js 로드 완료를 기다림
+  if (window.IS_WORLD2) {
+    if (window.WORLD2_CONTENT_LOADED) {
+      // 이미 로드됨
+      applyContentPack(window.CUR_UNIT);
+    } else {
+      // 로드 완료 이벤트 대기
+      window.addEventListener('world2ContentLoaded', () => {
+        console.log('[world_content.js] world2ContentLoaded 이벤트 수신, applyContentPack 호출');
+        applyContentPack(window.CUR_UNIT);
+      }, { once: true });
+    }
+  } else {
+    applyContentPack(window.CUR_UNIT);
+  }
 
   // 2) 탭 이벤트 + 어휘 자동 렌더
   _bindTabEvents();

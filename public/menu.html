@@ -3496,7 +3496,9 @@ canvas[id^="confetti-canvas"] {
 
         realDomains.forEach(domainObj => {
           domainObj.subs.forEach(subObj => {
-            const key = `${seriesKey}.${domainObj.id}.${subObj.id}`;
+            // offset이 있는 경우 (예: 세계문학(2), 인물(2)) 별도 키 사용
+            const keyId = subObj.offset ? `${subObj.id}_part2` : subObj.id;
+            const key = `${seriesKey}.${domainObj.id}.${keyId}`;
             const count = subObj.count;
 
             const theme =
@@ -3706,14 +3708,18 @@ if (logoutConfirmBtn) {
       unitSearch.value = "";
       currentUnits = [];
 
-      const key = `${seriesKey}.${domainObj.id}.${subObj.id}`;
+      // offset이 있는 경우 (예: 세계문학(2), 인물(2)) 별도 키 사용
+      const keyId = subObj.offset ? `${subObj.id}_part2` : subObj.id;
+      const key = `${seriesKey}.${domainObj.id}.${keyId}`;
       const titles = unitTitleOverrides[key] || [];
       const startNum = (subObj.offset || 0) + 1; // offset이 있으면 시작 번호 조정
 
       for (let i = 1; i <= subObj.count; i++) {
         const actualNum = startNum + i - 1; // 실제 파일 번호
         const num = String(actualNum).padStart(2, "0");
-        const title = titles[actualNum - 1] || `${subObj.label} ${num} 학습하기`;
+        // offset이 있는 경우 i-1 인덱스 사용 (1~40 → 0~39)
+        const titleIndex = subObj.offset ? (i - 1) : (actualNum - 1);
+        const title = titles[titleIndex] || `${subObj.label} ${num} 학습하기`;
 
         // 파일명 변환: soc→soc_, geo→geo_, law→law_, pol→pol_, bio→bio_, earth→earth_, physics→physics_, chem→chem_, modern→modern_, classic→classic_, world→world_, people→people_
         let filename = `${subObj.id}_${num}.html`;
