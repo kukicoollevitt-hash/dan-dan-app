@@ -9541,14 +9541,9 @@ app.get("/my-learning", async (req, res) => {
               timeA = a.aiTaskAssignedAt ? new Date(a.aiTaskAssignedAt).getTime() : 0;
               timeB = b.aiTaskAssignedAt ? new Date(b.aiTaskAssignedAt).getTime() : 0;
             } else {
-              // 최종 시간 (최초와 AI과제부여 중 더 최근)
-              const firstA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-              const aiA = a.aiTaskAssignedAt ? new Date(a.aiTaskAssignedAt).getTime() : 0;
-              timeA = Math.max(firstA, aiA);
-
-              const firstB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-              const aiB = b.aiTaskAssignedAt ? new Date(b.aiTaskAssignedAt).getTime() : 0;
-              timeB = Math.max(firstB, aiB);
+              // 최종 시간 = 학습 완료 시점 (timestamp)
+              timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
             }
 
             return timeB - timeA; // 내림차순 (최신이 맨 위)
@@ -9644,13 +9639,10 @@ app.get("/my-learning", async (req, res) => {
               new Date(log.aiTaskAssignedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
             const aiTaskStyle = log.aiTaskAssignedAt ? 'color: #6b21a8; font-weight: 600;' : 'color: #999;';
 
-            // 최종완료 시간 계산 (일반학습과 AI과제부여 중 더 최근 시간)
-            const normalTime = log.timestamp ? new Date(log.timestamp).getTime() : 0;
-            const aiTime = log.aiTaskAssignedAt ? new Date(log.aiTaskAssignedAt).getTime() : 0;
-            const finalTime = Math.max(normalTime, aiTime);
-            const finalTimestamp = finalTime > 0 ?
-              new Date(finalTime).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
-            const finalTimeStyle = aiTime > normalTime ? 'color: #6b21a8; font-weight: 600;' : 'color: #059669; font-weight: 600;';
+            // 최종완료 시간 = 학습 완료 시점 (timestamp) - AI과제부여와 무관
+            const finalTimestamp = log.timestamp ?
+              new Date(log.timestamp).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
+            const finalTimeStyle = 'color: #059669; font-weight: 600;';
 
             const row = document.createElement('tr');
             if (hiddenClass) row.className = hiddenClass;
@@ -12163,6 +12155,9 @@ async function assignAITasksDaily() {
 
       let assignedCount = 0;
 
+      // 디버그: 기존 학습실 과제 ID 출력
+      console.log(`🔍 [${name}] 기존 학습실 과제 IDs:`, Array.from(existingUnitIds));
+
       // 각 단원의 최종등급과 최종완료 시간 확인
       for (const unitId in unitLatestLogs) {
         const unitInfo = unitLatestLogs[unitId];
@@ -12173,11 +12168,13 @@ async function assignAITasksDaily() {
 
         // 우수 등급은 AI 과제 부여 안 함
         if (gradeInfo.grade === 'excellent') {
+          console.log(`⏭️ [${name}] ${unitId}: 우수 등급 → 스킵`);
           continue;
         }
 
         // 이미 학습실에 있으면 스킵
         if (existingUnitIds.has(unitId)) {
+          console.log(`⏭️ [${name}] ${unitId}: 이미 학습실에 있음 → 스킵`);
           continue;
         }
 
@@ -12186,6 +12183,7 @@ async function assignAITasksDaily() {
         const assignableAt = new Date(finalCompletedAt.getTime() + waitHours * 60 * 60 * 1000);
 
         // 현재 시간이 부여 가능 시간을 지났는지 확인
+        console.log(`🕐 [${name}] ${unitId}: 등급=${gradeInfo.text}, 대기=${waitHours}시간, 부여가능시간=${assignableAt.toISOString()}, 현재=${now.toISOString()}`);
         if (now >= assignableAt) {
           // 단원 정보 추출 (unitId에서 파싱)
           const parts = unitId.split('_');
