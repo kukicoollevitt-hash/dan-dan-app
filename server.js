@@ -5626,29 +5626,75 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           });
         }
 
-        // ===== 검색 기능 =====
-        // 학습 기록 검색
+        // ===== 검색 및 등급 필터 기능 =====
+        // 검색과 등급 필터를 함께 적용
         function searchLogs(query) {
           const rows = document.querySelectorAll('#logTableBody tr');
           const clearBtn = document.getElementById('logSearchClear');
+          const gradeFilterEl = document.getElementById('logGradeFilter');
+          const gradeFilter = gradeFilterEl ? gradeFilterEl.value : 'all';
 
           clearBtn.classList.toggle('show', query.length > 0);
 
           rows.forEach(row => {
+            const gradeCell = row.querySelector('td:nth-child(4)');
             const unitCell = row.querySelector('td:last-child');
-            if (unitCell) {
-              const text = unitCell.textContent.toLowerCase();
-              const match = text.includes(query.toLowerCase());
-              row.style.display = match ? 'table-row' : 'none';
+
+            if (unitCell && gradeCell) {
+              const unitText = unitCell.textContent.toLowerCase();
+              const rowGrade = gradeCell.textContent.trim();
+
+              const searchMatch = unitText.includes(query.toLowerCase());
+              const gradeMatch = gradeFilter === 'all' || rowGrade.includes(gradeFilter);
+
+              row.style.display = (searchMatch && gradeMatch) ? 'table-row' : 'none';
             }
           });
+
+          updateLogCount();
         }
 
         function clearLogSearch() {
           document.getElementById('logSearch').value = '';
           document.getElementById('logSearchClear').classList.remove('show');
+          const gradeFilterEl = document.getElementById('logGradeFilter');
+          if (gradeFilterEl) gradeFilterEl.value = 'all';
           const rows = document.querySelectorAll('#logTableBody tr');
           rows.forEach(row => row.style.display = 'table-row');
+          updateLogCount();
+        }
+
+        // 학습 기록 등급 필터
+        function filterLogsByGrade(grade) {
+          const rows = document.querySelectorAll('#logTableBody tr');
+          const searchInput = document.getElementById('logSearch');
+          const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+
+          rows.forEach(row => {
+            const gradeCell = row.querySelector('td:nth-child(4)');
+            const unitCell = row.querySelector('td:last-child');
+
+            if (gradeCell && unitCell) {
+              const rowGrade = gradeCell.textContent.trim();
+              const unitText = unitCell.textContent.toLowerCase();
+
+              const gradeMatch = grade === 'all' || rowGrade.includes(grade);
+              const searchMatch = searchQuery === '' || unitText.includes(searchQuery);
+
+              row.style.display = (gradeMatch && searchMatch) ? 'table-row' : 'none';
+            }
+          });
+
+          updateLogCount();
+        }
+
+        // 표시된 로그 개수 업데이트
+        function updateLogCount() {
+          const visibleRows = document.querySelectorAll('#logTableBody tr:not([style*="display: none"])');
+          const badge = document.getElementById('logCountBadge');
+          if (badge) {
+            badge.textContent = '📚 총 ' + visibleRows.length + '건의 학습 기록';
+          }
         }
 
         // 과목별 레이더 검색
@@ -5656,41 +5702,51 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
           const clearBtn = document.getElementById('subjectSearchClear');
           const toggleBtn = document.getElementById('toggleSummaryBtn');
+          const gradeFilterEl = document.getElementById('subjectGradeFilter');
+          const gradeFilter = gradeFilterEl ? gradeFilterEl.value : 'all';
 
           clearBtn.classList.toggle('show', query.length > 0);
 
-          if (query.length > 0) {
-            // 검색 시 모든 카드 펼치기 (hidden-card 제거)
-            cards.forEach(card => {
-              card.classList.remove('hidden-card');
-              const title = card.querySelector('.radar-card-title');
-              if (title) {
-                const text = title.textContent.toLowerCase();
-                const match = text.includes(query.toLowerCase());
-                card.style.display = match ? 'block' : 'none';
-              }
-            });
-            // 더보기 버튼 숨기기
-            if (toggleBtn) toggleBtn.style.display = 'none';
-          } else {
-            // 검색어 없으면 원래대로 복원
-            cards.forEach((card, index) => {
+          cards.forEach((card, index) => {
+            const title = card.querySelector('.radar-card-title');
+            const gradeEl = card.querySelector('.stat-grade');
+            const titleText = title ? title.textContent.toLowerCase() : '';
+            const cardGrade = gradeEl ? gradeEl.textContent.trim() : '';
+
+            const searchMatch = query === '' || titleText.includes(query.toLowerCase());
+            const gradeMatch = gradeFilter === 'all' || cardGrade.includes(gradeFilter);
+
+            if (searchMatch && gradeMatch) {
               card.style.display = 'block';
-              if (index >= 6) {
+              if (query.length > 0 || gradeFilter !== 'all') {
+                card.classList.remove('hidden-card');
+              } else if (index >= 6) {
                 card.classList.add('hidden-card');
               }
-            });
-            // 더보기 버튼 표시
-            if (toggleBtn && cards.length > 6) {
-              toggleBtn.style.display = 'block';
-              toggleBtn.textContent = '더보기 ▼';
+            } else {
+              card.style.display = 'none';
             }
+          });
+
+          // 검색/필터 중이면 더보기 버튼 숨기기
+          if (query.length > 0 || gradeFilter !== 'all') {
+            if (toggleBtn) toggleBtn.style.display = 'none';
+          } else if (toggleBtn && cards.length > 6) {
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = '더보기 ▼';
           }
+        }
+
+        function filterSubjectRadarByGrade(grade) {
+          const searchInput = document.getElementById('subjectSearch');
+          const query = searchInput ? searchInput.value : '';
+          searchSubjectRadar(query);
         }
 
         function clearSubjectSearch() {
           document.getElementById('subjectSearch').value = '';
           document.getElementById('subjectSearchClear').classList.remove('show');
+          document.getElementById('subjectGradeFilter').value = 'all';
           const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
           const toggleBtn = document.getElementById('toggleSummaryBtn');
 
@@ -5714,41 +5770,51 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           const cards = document.querySelectorAll('#radar-wrap .radar-card');
           const clearBtn = document.getElementById('unitSearchClear');
           const toggleBtn = document.getElementById('toggleRadarBtn');
+          const gradeFilterEl = document.getElementById('unitGradeFilter');
+          const gradeFilter = gradeFilterEl ? gradeFilterEl.value : 'all';
 
           clearBtn.classList.toggle('show', query.length > 0);
 
-          if (query.length > 0) {
-            // 검색 시 모든 카드 펼치기 (hidden-card 제거)
-            cards.forEach(card => {
-              card.classList.remove('hidden-card');
-              const title = card.querySelector('.radar-card-title');
-              if (title) {
-                const text = title.textContent.toLowerCase();
-                const match = text.includes(query.toLowerCase());
-                card.style.display = match ? 'block' : 'none';
-              }
-            });
-            // 더보기 버튼 숨기기
-            if (toggleBtn) toggleBtn.style.display = 'none';
-          } else {
-            // 검색어 없으면 원래대로 복원
-            cards.forEach((card, index) => {
+          cards.forEach((card, index) => {
+            const title = card.querySelector('.radar-card-title');
+            const gradeEl = card.querySelector('.stat-grade');
+            const titleText = title ? title.textContent.toLowerCase() : '';
+            const cardGrade = gradeEl ? gradeEl.textContent.trim() : '';
+
+            const searchMatch = query === '' || titleText.includes(query.toLowerCase());
+            const gradeMatch = gradeFilter === 'all' || cardGrade.includes(gradeFilter);
+
+            if (searchMatch && gradeMatch) {
               card.style.display = 'block';
-              if (index >= 6) {
+              if (query.length > 0 || gradeFilter !== 'all') {
+                card.classList.remove('hidden-card');
+              } else if (index >= 6) {
                 card.classList.add('hidden-card');
               }
-            });
-            // 더보기 버튼 표시
-            if (toggleBtn && cards.length > 6) {
-              toggleBtn.style.display = 'block';
-              toggleBtn.textContent = '더보기 ▼';
+            } else {
+              card.style.display = 'none';
             }
+          });
+
+          // 검색/필터 중이면 더보기 버튼 숨기기
+          if (query.length > 0 || gradeFilter !== 'all') {
+            if (toggleBtn) toggleBtn.style.display = 'none';
+          } else if (toggleBtn && cards.length > 6) {
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = '더보기 ▼';
           }
+        }
+
+        function filterUnitRadarByGrade(grade) {
+          const searchInput = document.getElementById('unitSearch');
+          const query = searchInput ? searchInput.value : '';
+          searchUnitRadar(query);
         }
 
         function clearUnitSearch() {
           document.getElementById('unitSearch').value = '';
           document.getElementById('unitSearchClear').classList.remove('show');
+          document.getElementById('unitGradeFilter').value = 'all';
           const cards = document.querySelectorAll('#radar-wrap .radar-card');
           const toggleBtn = document.getElementById('toggleRadarBtn');
 
@@ -6738,6 +6804,37 @@ app.get("/my-learning", async (req, res) => {
           color: #e74c3c;
         }
 
+        .grade-filter {
+          display: flex;
+          align-items: center;
+          background: white;
+          border: 2px solid #e0e0e0;
+          border-radius: 25px;
+          padding: 8px 16px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          transition: all 0.3s ease;
+        }
+
+        .grade-filter:focus-within {
+          border-color: #667eea;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .grade-filter select {
+          border: none;
+          outline: none;
+          font-size: 14px;
+          background: transparent;
+          cursor: pointer;
+          color: #333;
+          padding-right: 8px;
+        }
+
+        .grade-filter .filter-icon {
+          color: #667eea;
+          margin-right: 8px;
+        }
+
         hr {
           border: none;
           border-top: 2px solid #e5d4c1;
@@ -7700,10 +7797,22 @@ app.get("/my-learning", async (req, res) => {
           <div class="section-title" style="margin: 0;">
             📝 학습 기록 목록
           </div>
-          <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="logSearch" placeholder="단원명 검색..." oninput="searchLogs(this.value)">
-            <button class="clear-btn" id="logSearchClear" onclick="clearLogSearch()">✕</button>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="grade-filter">
+              <span class="filter-icon">🏷️</span>
+              <select id="logGradeFilter" onchange="filterLogsByGrade(this.value)">
+                <option value="all">전체 등급</option>
+                <option value="격려">격려</option>
+                <option value="보통">보통</option>
+                <option value="양호">양호</option>
+                <option value="우수">우수</option>
+              </select>
+            </div>
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="logSearch" placeholder="단원명 검색..." oninput="searchLogs(this.value)">
+              <button class="clear-btn" id="logSearchClear" onclick="clearLogSearch()">✕</button>
+            </div>
           </div>
         </div>
         <p class="section-description">
@@ -7982,10 +8091,22 @@ app.get("/my-learning", async (req, res) => {
           <div class="section-title" style="margin: 0;">
             📊 과목별 종합 레이더
           </div>
-          <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="subjectSearch" placeholder="과목명 검색..." oninput="searchSubjectRadar(this.value)">
-            <button class="clear-btn" id="subjectSearchClear" onclick="clearSubjectSearch()">✕</button>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="grade-filter">
+              <span class="filter-icon">🏷️</span>
+              <select id="subjectGradeFilter" onchange="filterSubjectRadarByGrade(this.value)">
+                <option value="all">전체 등급</option>
+                <option value="격려">격려</option>
+                <option value="보통">보통</option>
+                <option value="양호">양호</option>
+                <option value="우수">우수</option>
+              </select>
+            </div>
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="subjectSearch" placeholder="과목명 검색..." oninput="searchSubjectRadar(this.value)">
+              <button class="clear-btn" id="subjectSearchClear" onclick="clearSubjectSearch()">✕</button>
+            </div>
           </div>
         </div>
         <p class="section-description">
@@ -8002,10 +8123,22 @@ app.get("/my-learning", async (req, res) => {
           <div class="section-title" style="margin: 0;">
             🧠 단원별 문해력 레이더 차트
           </div>
-          <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="unitSearch" placeholder="단원명 검색..." oninput="searchUnitRadar(this.value)">
-            <button class="clear-btn" id="unitSearchClear" onclick="clearUnitSearch()">✕</button>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="grade-filter">
+              <span class="filter-icon">🏷️</span>
+              <select id="unitGradeFilter" onchange="filterUnitRadarByGrade(this.value)">
+                <option value="all">전체 등급</option>
+                <option value="격려">격려</option>
+                <option value="보통">보통</option>
+                <option value="양호">양호</option>
+                <option value="우수">우수</option>
+              </select>
+            </div>
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="unitSearch" placeholder="단원명 검색..." oninput="searchUnitRadar(this.value)">
+              <button class="clear-btn" id="unitSearchClear" onclick="clearUnitSearch()">✕</button>
+            </div>
           </div>
         </div>
         <p class="section-description">
@@ -8045,29 +8178,75 @@ app.get("/my-learning", async (req, res) => {
           });
         }
 
-        // ===== 검색 기능 =====
-        // 학습 기록 검색
+        // ===== 검색 및 등급 필터 기능 =====
+        // 검색과 등급 필터를 함께 적용
         function searchLogs(query) {
           const rows = document.querySelectorAll('#logTableBody tr');
           const clearBtn = document.getElementById('logSearchClear');
+          const gradeFilterEl = document.getElementById('logGradeFilter');
+          const gradeFilter = gradeFilterEl ? gradeFilterEl.value : 'all';
 
           clearBtn.classList.toggle('show', query.length > 0);
 
           rows.forEach(row => {
+            const gradeCell = row.querySelector('td:nth-child(4)');
             const unitCell = row.querySelector('td:last-child');
-            if (unitCell) {
-              const text = unitCell.textContent.toLowerCase();
-              const match = text.includes(query.toLowerCase());
-              row.style.display = match ? 'table-row' : 'none';
+
+            if (unitCell && gradeCell) {
+              const unitText = unitCell.textContent.toLowerCase();
+              const rowGrade = gradeCell.textContent.trim();
+
+              const searchMatch = unitText.includes(query.toLowerCase());
+              const gradeMatch = gradeFilter === 'all' || rowGrade.includes(gradeFilter);
+
+              row.style.display = (searchMatch && gradeMatch) ? 'table-row' : 'none';
             }
           });
+
+          updateLogCount();
         }
 
         function clearLogSearch() {
           document.getElementById('logSearch').value = '';
           document.getElementById('logSearchClear').classList.remove('show');
+          const gradeFilterEl = document.getElementById('logGradeFilter');
+          if (gradeFilterEl) gradeFilterEl.value = 'all';
           const rows = document.querySelectorAll('#logTableBody tr');
           rows.forEach(row => row.style.display = 'table-row');
+          updateLogCount();
+        }
+
+        // 학습 기록 등급 필터
+        function filterLogsByGrade(grade) {
+          const rows = document.querySelectorAll('#logTableBody tr');
+          const searchInput = document.getElementById('logSearch');
+          const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+
+          rows.forEach(row => {
+            const gradeCell = row.querySelector('td:nth-child(4)');
+            const unitCell = row.querySelector('td:last-child');
+
+            if (gradeCell && unitCell) {
+              const rowGrade = gradeCell.textContent.trim();
+              const unitText = unitCell.textContent.toLowerCase();
+
+              const gradeMatch = grade === 'all' || rowGrade.includes(grade);
+              const searchMatch = searchQuery === '' || unitText.includes(searchQuery);
+
+              row.style.display = (gradeMatch && searchMatch) ? 'table-row' : 'none';
+            }
+          });
+
+          updateLogCount();
+        }
+
+        // 표시된 로그 개수 업데이트
+        function updateLogCount() {
+          const visibleRows = document.querySelectorAll('#logTableBody tr:not([style*="display: none"])');
+          const badge = document.getElementById('logCountBadge');
+          if (badge) {
+            badge.textContent = '📚 총 ' + visibleRows.length + '건의 학습 기록';
+          }
         }
 
         // 과목별 레이더 검색
@@ -8075,41 +8254,51 @@ app.get("/my-learning", async (req, res) => {
           const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
           const clearBtn = document.getElementById('subjectSearchClear');
           const toggleBtn = document.getElementById('toggleSummaryBtn');
+          const gradeFilterEl = document.getElementById('subjectGradeFilter');
+          const gradeFilter = gradeFilterEl ? gradeFilterEl.value : 'all';
 
           clearBtn.classList.toggle('show', query.length > 0);
 
-          if (query.length > 0) {
-            // 검색 시 모든 카드 펼치기 (hidden-card 제거)
-            cards.forEach(card => {
-              card.classList.remove('hidden-card');
-              const title = card.querySelector('.radar-card-title');
-              if (title) {
-                const text = title.textContent.toLowerCase();
-                const match = text.includes(query.toLowerCase());
-                card.style.display = match ? 'block' : 'none';
-              }
-            });
-            // 더보기 버튼 숨기기
-            if (toggleBtn) toggleBtn.style.display = 'none';
-          } else {
-            // 검색어 없으면 원래대로 복원
-            cards.forEach((card, index) => {
+          cards.forEach((card, index) => {
+            const title = card.querySelector('.radar-card-title');
+            const gradeEl = card.querySelector('.stat-grade');
+            const titleText = title ? title.textContent.toLowerCase() : '';
+            const cardGrade = gradeEl ? gradeEl.textContent.trim() : '';
+
+            const searchMatch = query === '' || titleText.includes(query.toLowerCase());
+            const gradeMatch = gradeFilter === 'all' || cardGrade.includes(gradeFilter);
+
+            if (searchMatch && gradeMatch) {
               card.style.display = 'block';
-              if (index >= 6) {
+              if (query.length > 0 || gradeFilter !== 'all') {
+                card.classList.remove('hidden-card');
+              } else if (index >= 6) {
                 card.classList.add('hidden-card');
               }
-            });
-            // 더보기 버튼 표시
-            if (toggleBtn && cards.length > 6) {
-              toggleBtn.style.display = 'block';
-              toggleBtn.textContent = '더보기 ▼';
+            } else {
+              card.style.display = 'none';
             }
+          });
+
+          // 검색/필터 중이면 더보기 버튼 숨기기
+          if (query.length > 0 || gradeFilter !== 'all') {
+            if (toggleBtn) toggleBtn.style.display = 'none';
+          } else if (toggleBtn && cards.length > 6) {
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = '더보기 ▼';
           }
+        }
+
+        function filterSubjectRadarByGrade(grade) {
+          const searchInput = document.getElementById('subjectSearch');
+          const query = searchInput ? searchInput.value : '';
+          searchSubjectRadar(query);
         }
 
         function clearSubjectSearch() {
           document.getElementById('subjectSearch').value = '';
           document.getElementById('subjectSearchClear').classList.remove('show');
+          document.getElementById('subjectGradeFilter').value = 'all';
           const cards = document.querySelectorAll('#summary-radar-wrap .radar-card');
           const toggleBtn = document.getElementById('toggleSummaryBtn');
 
@@ -8133,41 +8322,51 @@ app.get("/my-learning", async (req, res) => {
           const cards = document.querySelectorAll('#radar-wrap .radar-card');
           const clearBtn = document.getElementById('unitSearchClear');
           const toggleBtn = document.getElementById('toggleRadarBtn');
+          const gradeFilterEl = document.getElementById('unitGradeFilter');
+          const gradeFilter = gradeFilterEl ? gradeFilterEl.value : 'all';
 
           clearBtn.classList.toggle('show', query.length > 0);
 
-          if (query.length > 0) {
-            // 검색 시 모든 카드 펼치기 (hidden-card 제거)
-            cards.forEach(card => {
-              card.classList.remove('hidden-card');
-              const title = card.querySelector('.radar-card-title');
-              if (title) {
-                const text = title.textContent.toLowerCase();
-                const match = text.includes(query.toLowerCase());
-                card.style.display = match ? 'block' : 'none';
-              }
-            });
-            // 더보기 버튼 숨기기
-            if (toggleBtn) toggleBtn.style.display = 'none';
-          } else {
-            // 검색어 없으면 원래대로 복원
-            cards.forEach((card, index) => {
+          cards.forEach((card, index) => {
+            const title = card.querySelector('.radar-card-title');
+            const gradeEl = card.querySelector('.stat-grade');
+            const titleText = title ? title.textContent.toLowerCase() : '';
+            const cardGrade = gradeEl ? gradeEl.textContent.trim() : '';
+
+            const searchMatch = query === '' || titleText.includes(query.toLowerCase());
+            const gradeMatch = gradeFilter === 'all' || cardGrade.includes(gradeFilter);
+
+            if (searchMatch && gradeMatch) {
               card.style.display = 'block';
-              if (index >= 6) {
+              if (query.length > 0 || gradeFilter !== 'all') {
+                card.classList.remove('hidden-card');
+              } else if (index >= 6) {
                 card.classList.add('hidden-card');
               }
-            });
-            // 더보기 버튼 표시
-            if (toggleBtn && cards.length > 6) {
-              toggleBtn.style.display = 'block';
-              toggleBtn.textContent = '더보기 ▼';
+            } else {
+              card.style.display = 'none';
             }
+          });
+
+          // 검색/필터 중이면 더보기 버튼 숨기기
+          if (query.length > 0 || gradeFilter !== 'all') {
+            if (toggleBtn) toggleBtn.style.display = 'none';
+          } else if (toggleBtn && cards.length > 6) {
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = '더보기 ▼';
           }
+        }
+
+        function filterUnitRadarByGrade(grade) {
+          const searchInput = document.getElementById('unitSearch');
+          const query = searchInput ? searchInput.value : '';
+          searchUnitRadar(query);
         }
 
         function clearUnitSearch() {
           document.getElementById('unitSearch').value = '';
           document.getElementById('unitSearchClear').classList.remove('show');
+          document.getElementById('unitGradeFilter').value = 'all';
           const cards = document.querySelectorAll('#radar-wrap .radar-card');
           const toggleBtn = document.getElementById('toggleRadarBtn');
 
@@ -11609,11 +11808,11 @@ function getGradeInfo(avgScore) {
   if (avgScore >= 9) {
     return { grade: 'excellent', text: '우수', hours: 0 }; // 우수는 부여 안 함
   } else if (avgScore >= 8) {
-    return { grade: 'good', text: '양호', hours: 5 }; // 원래: 7일
+    return { grade: 'good', text: '양호', hours: 3 }; // 양호: 3시간 후
   } else if (avgScore >= 7) {
-    return { grade: 'average', text: '보통', hours: 3 }; // 원래: 5일
+    return { grade: 'average', text: '보통', hours: 1 }; // 보통: 1시간 후
   } else {
-    return { grade: 'encourage', text: '격려', hours: 1 }; // 원래: 3일
+    return { grade: 'encourage', text: '격려', hours: 0.5 }; // 격려: 30분 후
   }
 }
 
@@ -11793,7 +11992,7 @@ async function assignAITasksDaily() {
           continue;
         }
 
-        // 학습실에 추가
+        // 학습실에 추가 (등급별 예정 시간 사용)
         existingTasks.push({
           id: schedule.unitId,
           title: schedule.unitTitle,
@@ -11801,7 +12000,7 @@ async function assignAITasksDaily() {
           field: schedule.fieldName,
           subject: schedule.subjectName,
           isAI: true, // AI 부여 표시
-          assignedAt: new Date()
+          assignedAt: schedule.scheduledDate // 등급에 따른 예정 부여 시간
         });
 
         // 스케줄 상태 업데이트

@@ -3,6 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <title>단단국어 | study_voca</title>
+  <!-- 공통 CSS -->
+  <link rel="stylesheet" href="/assets/css/learning-common.css">
+
+  <!-- 파비콘 404 방지 -->
+  <link rel="icon" href="data:,">
+
+  <!-- 공통 JavaScript -->
+  <script src="/assets/js/learning-common.js?v=20251128"></script>
+
+  <!-- AI 과제 복습 완료 처리 -->
+  <script src="./ai-task-common.js"></script>
    <!-- ✅ 이 아래에 스타일 넣기 -->
  <style>
         #vocab-fill p {
@@ -2155,7 +2166,7 @@
     // 분석리포트 새로고침 함수
     function refreshReportTab() {
       try {
-        const saved = localStorage.getItem('dan-geo-report-state');
+        const saved = localStorage.getItem(`dan-people2-report-state:${window.CUR_UNIT || 'people2_01'}`);
         if (saved) {
           const reportState = JSON.parse(saved);
 
@@ -2216,14 +2227,14 @@
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
         const unit = window.CUR_UNIT || 'people2_01';
-        localStorage.setItem(`current-geo-tab:${unit}`, target);
+        localStorage.setItem(`current-people2-tab:${unit}`, target);
       });
     });
 
     // 페이지 로드 시 저장된 탭 복원 (없으면 본문학습으로 시작)
     window.addEventListener('DOMContentLoaded', () => {
       const unit = window.CUR_UNIT || 'people2_01';
-      const savedTab = localStorage.getItem(`current-geo-tab:${unit}`) || 'reading';
+      const savedTab = localStorage.getItem(`current-people2-tab:${unit}`) || 'reading';
       activateTab(savedTab);
     });
 
@@ -2657,6 +2668,15 @@
       reportState.q4ok = q4ok;
       reportState.q5ok = q5ok;
 
+      // ★ 레이더 점수 저장 (sendLearningLog에서 사용)
+      reportState.radarScores = {
+        literal:     q1ok ? 10 : 6,
+        structural:  q2ok ? 10 : 6,
+        lexical:     q3ok ? 10 : 6,
+        inferential: q4ok ? 10 : 6,
+        critical:    q5ok ? 10 : 6
+      };
+
       // ★ 분석리포트 텍스트/박스 동기화
       updateReportPanel({
         q1ok: reportState.q1ok,
@@ -2698,7 +2718,7 @@
       });
 
       // ★ localStorage에 분석리포트 상태 저장 (분석리포트 탭 즉시 반영용)
-      localStorage.setItem('dan-geo-report-state', JSON.stringify({
+      const reportKey = `dan-people2-report-state:${window.CUR_UNIT || 'people2_01'}`; localStorage.setItem(reportKey, JSON.stringify({
         q1ok: reportState.q1ok,
         q2ok: reportState.q2ok,
         q3ok: reportState.q3ok,
