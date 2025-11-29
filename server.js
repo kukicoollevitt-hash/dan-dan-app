@@ -8877,8 +8877,8 @@ app.get("/my-learning", async (req, res) => {
               'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
               'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
               'modern': 'korlit', 'classic': 'korlit',
-              'world1': 'worldlit', 'world2': 'worldlit',
-              'person1': 'person', 'person2': 'person'
+              'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
+              'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
             };
             const folder = folderMap[subject] || 'social';
 
@@ -8982,8 +8982,8 @@ app.get("/my-learning", async (req, res) => {
                 'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
                 'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
                 'modern': 'korlit', 'classic': 'korlit',
-                'world1': 'worldlit', 'world2': 'worldlit',
-                'person1': 'person', 'person2': 'person'
+                'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
+                'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
               };
               const folder = folderMap[subject] || 'social';
 
