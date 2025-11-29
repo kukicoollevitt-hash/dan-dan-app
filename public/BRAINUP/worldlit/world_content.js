@@ -33,7 +33,7 @@
     // world2_content.js 동적 로드
     // 이벤트는 world2_content.js 내부에서 CONTENTS 등록 후 발생시킴
     const script = document.createElement('script');
-    script.src = './world2_content.js?v=20251129d';
+    script.src = './world2_content.js?v=20251129g';
     script.onload = function() {
       console.log('[world_content.js] world2_content.js 파일 로드됨');
     };
@@ -1393,10 +1393,19 @@ window.DanDan = window.DanDan || {};
       const stu  = getCurrentStudent();
       if (!stu) return null;
 
-      const unit = detectUnit();                  // world_04
-      const key  = buildProgressKey(stu, unit);   // dan-progress:학생키:world_04
+      const unit = detectUnit();                  // world_41
+      const key  = buildProgressKey(stu, unit);   // dan-progress:학생키:world_41
 
-      localStorage.setItem(key, '1');             // 값은 그냥 '1'로 저장
+      // ✅ menu.html과 호환되게 배열 형식으로 저장
+      const pageKey = `BRAINUP_worldlit_${unit}`;
+      let saved = [];
+      try {
+        const existing = localStorage.getItem(key);
+        if (existing) saved = JSON.parse(existing);
+        if (!Array.isArray(saved)) saved = [];
+      } catch(e) { saved = []; }
+      if (!saved.includes(pageKey)) saved.push(pageKey);
+      localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
 
@@ -1588,7 +1597,8 @@ window.loadCompletionStatus = async function () {
 
 window.sendLearningLog = async function () {
   try {
-    const unit = window.CUR_UNIT || 'world_02';
+    // ✅ 세계문학(2)는 ORIGINAL_UNIT (world_41) 사용 → menu.html과 매칭
+    const unit = window.ORIGINAL_UNIT || window.CUR_UNIT || 'world_02';
 
     // 1) localStorage 에서 현재 로그인 학생 가져오기
     let stu = null;

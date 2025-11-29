@@ -5895,8 +5895,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           'bio': 20, 'earth': 20, 'physics': 20, 'chem': 20,
           'geo': 20, 'soc': 20, 'law': 20, 'pol': 20,
           'modern': 40, 'classic': 40,
-          'world1': 40, 'world2': 40,
-          'person1': 40, 'person2': 40
+          'world': 40, 'world1': 40, 'world2': 40,
+          'people': 40, 'person1': 40, 'person2': 40
         };
 
         // 분야별 총 단원 수
@@ -5923,7 +5923,36 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         function getCompletedCount(subjectCode) {
           let count = 0;
           completedUnitsSet.forEach(unit => {
-            if (unit.startsWith(subjectCode + '_')) {
+            // world1/world2, people1/people2 특별 처리
+            if (subjectCode === 'world1') {
+              if (unit.startsWith('world_')) {
+                const numMatch = unit.match(/_([0-9]+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                if (num >= 1 && num <= 40) count++;
+              }
+            } else if (subjectCode === 'world2') {
+              if (unit.startsWith('world_')) {
+                const numMatch = unit.match(/_([0-9]+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                if (num >= 41 && num <= 80) count++;
+              } else if (unit.startsWith('world2_')) {
+                count++;
+              }
+            } else if (subjectCode === 'people1') {
+              if (unit.startsWith('people_')) {
+                const numMatch = unit.match(/_([0-9]+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                if (num >= 1 && num <= 40) count++;
+              }
+            } else if (subjectCode === 'people2') {
+              if (unit.startsWith('people_')) {
+                const numMatch = unit.match(/_([0-9]+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                if (num >= 41 && num <= 80) count++;
+              } else if (unit.startsWith('people2_')) {
+                count++;
+              }
+            } else if (unit.startsWith(subjectCode + '_')) {
               count++;
             }
           });
@@ -5936,8 +5965,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             '과학분야': ['bio', 'earth', 'physics', 'chem'],
             '사회분야': ['geo', 'soc', 'law', 'pol'],
             '한국문학분야': ['modern', 'classic'],
-            '세계문학분야': ['world'],
-            '인물분야': ['people']
+            '세계문학분야': ['world', 'world2'],
+            '인물분야': ['people', 'people2']
           };
           const subjects = fieldSubjects[fieldName] || [];
           let total = 0;
@@ -5967,10 +5996,12 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           'pol': '정치경제',
           'modern': '현대문학',
           'classic': '고전문학',
-          'world': '세계문학',
+          'world': '세계문학1',
           'world1': '세계문학1',
           'world2': '세계문학2',
-          'people': '인물',
+          'people': '인물1',
+          'people1': '인물1',
+          'people2': '인물2',
           'person1': '인물1',
           'person2': '인물2'
         };
@@ -5991,6 +6022,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           'world1': 'world-lit',
           'world2': 'world-lit',
           'people': 'person',
+          'people1': 'person',
+          'people2': 'person',
           'person1': 'person',
           'person2': 'person'
         };
@@ -6001,7 +6034,19 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           if (!log.radar || !log.unit) return;
 
           // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
-          const subjectCode = log.unit.split('_')[0];
+          let subjectCode = log.unit.split('_')[0];
+
+          // world_01~40 -> world1, world_41~80 -> world2 (people도 동일)
+          if (subjectCode === 'world' || subjectCode === 'people') {
+            const numMatch = log.unit.match(/_([0-9]+)$/);
+            const num = numMatch ? parseInt(numMatch[1]) : 0;
+            if (subjectCode === 'world') {
+              subjectCode = num <= 40 ? 'world1' : 'world2';
+            } else {
+              subjectCode = num <= 40 ? 'people1' : 'people2';
+            }
+          }
+
           const subjectKey = (log.series || 'BRAIN업') + '_' + subjectCode;
 
           if (!subjectGroups[subjectKey]) {
@@ -7372,16 +7417,16 @@ app.get("/my-learning", async (req, res) => {
         }
 
         .radar-card.field-card.person {
-          border: 2px solid #a8edea;
+          border: 2px solid #b388ff;
         }
         .radar-card.field-card.person::before {
-          background: linear-gradient(90deg, #a8edea 0%, #fed6e3 100%) !important;
+          background: linear-gradient(90deg, #b388ff 0%, #7c4dff 100%) !important;
         }
         .radar-card.field-card.person .radar-card-title {
-          color: #70c9c6;
+          color: #9575cd;
         }
         .radar-card.field-card.person .stat-value {
-          color: #70c9c6 !important;
+          color: #b388ff !important;
         }
 
         /* 과목별 카드 - 분야별 색상 적용 */
@@ -7450,16 +7495,16 @@ app.get("/my-learning", async (req, res) => {
         }
 
         .radar-card.subject-card.person {
-          border: 2px solid #a8edea;
+          border: 2px solid #b388ff;
         }
         .radar-card.subject-card.person::before {
-          background: linear-gradient(90deg, #a8edea 0%, #fed6e3 100%) !important;
+          background: linear-gradient(90deg, #b388ff 0%, #7c4dff 100%) !important;
         }
         .radar-card.subject-card.person .radar-card-title {
-          color: #70c9c6;
+          color: #9575cd;
         }
         .radar-card.subject-card.person .stat-value {
-          color: #70c9c6 !important;
+          color: #b388ff !important;
           background: none !important;
           -webkit-background-clip: unset !important;
           -webkit-text-fill-color: unset !important;
@@ -8447,8 +8492,8 @@ app.get("/my-learning", async (req, res) => {
           'bio': 20, 'earth': 20, 'physics': 20, 'chem': 20,
           'geo': 20, 'soc': 20, 'law': 20, 'pol': 20,
           'modern': 40, 'classic': 40,
-          'world1': 40, 'world2': 40,
-          'person1': 40, 'person2': 40
+          'world': 40, 'world1': 40, 'world2': 40,
+          'people': 40, 'person1': 40, 'person2': 40
         };
 
         // 분야별 총 단원 수
@@ -8475,7 +8520,36 @@ app.get("/my-learning", async (req, res) => {
         function getCompletedCount(subjectCode) {
           let count = 0;
           completedUnitsSet.forEach(unit => {
-            if (unit.startsWith(subjectCode + '_')) {
+            // world1/world2, people1/people2 특별 처리
+            if (subjectCode === 'world1') {
+              if (unit.startsWith('world_')) {
+                const numMatch = unit.match(/_([0-9]+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                if (num >= 1 && num <= 40) count++;
+              }
+            } else if (subjectCode === 'world2') {
+              if (unit.startsWith('world_')) {
+                const numMatch = unit.match(/_([0-9]+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                if (num >= 41 && num <= 80) count++;
+              } else if (unit.startsWith('world2_')) {
+                count++;
+              }
+            } else if (subjectCode === 'people1') {
+              if (unit.startsWith('people_')) {
+                const numMatch = unit.match(/_([0-9]+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                if (num >= 1 && num <= 40) count++;
+              }
+            } else if (subjectCode === 'people2') {
+              if (unit.startsWith('people_')) {
+                const numMatch = unit.match(/_([0-9]+)$/);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
+                if (num >= 41 && num <= 80) count++;
+              } else if (unit.startsWith('people2_')) {
+                count++;
+              }
+            } else if (unit.startsWith(subjectCode + '_')) {
               count++;
             }
           });
@@ -8488,8 +8562,8 @@ app.get("/my-learning", async (req, res) => {
             '과학분야': ['bio', 'earth', 'physics', 'chem'],
             '사회분야': ['geo', 'soc', 'law', 'pol'],
             '한국문학분야': ['modern', 'classic'],
-            '세계문학분야': ['world'],
-            '인물분야': ['people']
+            '세계문학분야': ['world', 'world2'],
+            '인물분야': ['people', 'people2']
           };
           const subjects = fieldSubjects[fieldName] || [];
           let total = 0;
@@ -8519,10 +8593,12 @@ app.get("/my-learning", async (req, res) => {
           'pol': '정치경제',
           'modern': '현대문학',
           'classic': '고전문학',
-          'world': '세계문학',
+          'world': '세계문학1',
           'world1': '세계문학1',
           'world2': '세계문학2',
-          'people': '인물',
+          'people': '인물1',
+          'people1': '인물1',
+          'people2': '인물2',
           'person1': '인물1',
           'person2': '인물2'
         };
@@ -8543,6 +8619,8 @@ app.get("/my-learning", async (req, res) => {
           'world1': 'world-lit',
           'world2': 'world-lit',
           'people': 'person',
+          'people1': 'person',
+          'people2': 'person',
           'person1': 'person',
           'person2': 'person'
         };
@@ -8553,7 +8631,19 @@ app.get("/my-learning", async (req, res) => {
           if (!log.radar || !log.unit) return;
 
           // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
-          const subjectCode = log.unit.split('_')[0];
+          let subjectCode = log.unit.split('_')[0];
+
+          // world_01~40 -> world1, world_41~80 -> world2 (people도 동일)
+          if (subjectCode === 'world' || subjectCode === 'people') {
+            const numMatch = log.unit.match(/_([0-9]+)$/);
+            const num = numMatch ? parseInt(numMatch[1]) : 0;
+            if (subjectCode === 'world') {
+              subjectCode = num <= 40 ? 'world1' : 'world2';
+            } else {
+              subjectCode = num <= 40 ? 'people1' : 'people2';
+            }
+          }
+
           const subjectKey = (log.series || 'BRAIN업') + '_' + subjectCode;
 
           if (!subjectGroups[subjectKey]) {
@@ -8814,13 +8904,17 @@ app.get("/my-learning", async (req, res) => {
           const title = document.createElement('div');
           title.className = 'radar-card-title';
 
-          // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01)
+          // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01, world2_01 → 세계문학 41)
           let unitName = log.unit || '단원';
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
-            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '인물', 'person1': '인물1', 'person2': '인물2' };
+            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학', 'people': '인물', 'person1': '인물', 'person2': '인물' };
             const subject = subjectMap[parts[0]] || parts[0];
-            const number = parts[1] ? parts[1].replace(/^0+/, '') : ''; // 01 → 1
+            let number = parts[1] ? parseInt(parts[1], 10) : 0;
+            // world2, people2는 번호에 40을 더함 (world2_01 → 세계문학 41)
+            if (parts[0] === 'world2' || parts[0] === 'person2') {
+              number += 40;
+            }
             unitName = subject + ' ' + number;
           }
           title.textContent = unitName + ' 분석';
@@ -9450,8 +9544,8 @@ app.get("/my-learning", async (req, res) => {
           // 테이블 초기화
           tbody.innerHTML = '';
 
-          // 과목 매핑
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '인물', 'person1': '인물1', 'person2': '인물2' };
+          // 과목 매핑 (world2, person2는 세계문학, 인물로 통합 - 번호에 40을 더함)
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학', 'people': '인물', 'person1': '인물', 'person2': '인물' };
 
           logs.forEach((log, idx) => {
             const ts = log.timestamp
@@ -9480,12 +9574,16 @@ app.get("/my-learning", async (req, res) => {
               badgeText = '격려';
             }
 
-            // 단원 코드 → 단원명 변환
+            // 단원 코드 → 단원명 변환 (예: world2_01 → 세계문학 41)
             let unitName = log.unit || "";
             if (unitName && unitName.includes('_')) {
               const parts = unitName.split('_');
               const subject = subjectMap[parts[0]] || parts[0];
-              const number = parts[1] ? parts[1].replace(/^0+/, '') : '';
+              let number = parts[1] ? parseInt(parts[1], 10) : 0;
+              // world2, person2는 번호에 40을 더함 (world2_01 → 세계문학 41)
+              if (parts[0] === 'world2' || parts[0] === 'person2') {
+                number += 40;
+              }
               unitName = subject + ' ' + number;
             }
 
@@ -9640,8 +9738,8 @@ app.get("/my-learning", async (req, res) => {
             completedUnits.add(unit);
             progress.total++;
 
-            // 과목 코드 추출 (예: "bio_01" -> "bio", "world_01" -> "world")
-            const subjectCode = unit.match(/^[a-z]+/)?.[0];
+            // 과목 코드 추출 (예: "bio_01" -> "bio", "world2_01" -> "world2")
+            const subjectCode = unit.match(/^[a-z]+[0-9]*/)?.[0];
             if (!subjectCode) return;
 
             const field = subjectMapping[subjectCode];
@@ -9650,7 +9748,7 @@ app.get("/my-learning", async (req, res) => {
 
               // world와 people은 번호에 따라 1/2로 분류
               if (subjectCode === 'world' || subjectCode === 'people') {
-                const numMatch = unit.match(/_(\d+)$/);
+                const numMatch = unit.match(/_([0-9]+)$/);
                 const num = numMatch ? parseInt(numMatch[1]) : 0;
                 let subKey;
                 if (subjectCode === 'world') {
@@ -9660,6 +9758,12 @@ app.get("/my-learning", async (req, res) => {
                 }
                 if (progress[field][subKey] !== undefined) {
                   progress[field][subKey]++;
+                }
+              } else if (subjectCode === 'world2' || subjectCode === 'person2') {
+                // world2_XX, person2_XX 형태 직접 처리
+                console.log('[진도율] world2/person2 처리:', unit, subjectCode, field);
+                if (progress[field][subjectCode] !== undefined) {
+                  progress[field][subjectCode]++;
                 }
               } else if (progress[field][subjectCode] !== undefined) {
                 progress[field][subjectCode]++;
