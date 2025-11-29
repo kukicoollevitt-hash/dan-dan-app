@@ -4832,11 +4832,12 @@ app.post("/api/log", async (req, res) => {
         const userProgress = await UserProgress.findOne({ grade, name });
         if (userProgress && userProgress.studyRoom && userProgress.studyRoom.assignedTasks) {
           let taskUpdated = false;
+          const aiReviewTime = new Date();
           userProgress.studyRoom.assignedTasks.forEach(task => {
             // AI 과제이고, id 또는 unitId가 일치하면 완료 처리
             if (task.isAI && (task.id === unit || task.unitId === unit)) {
               task.status = 'completed';
-              task.completedAt = new Date();
+              task.completedAt = aiReviewTime;
               taskUpdated = true;
               console.log(`✅ [/api/log] AI 과제 완료 처리: ${unit}`);
             }
@@ -4844,6 +4845,13 @@ app.post("/api/log", async (req, res) => {
           if (taskUpdated) {
             await userProgress.save();
             console.log(`💾 [/api/log] UserProgress 저장 완료`);
+
+            // 🔥 LearningLog에도 aiReviewCompletedAt 저장 (과제 삭제해도 유지됨)
+            await LearningLog.updateOne(
+              { grade, name, unit },
+              { $set: { aiReviewCompletedAt: aiReviewTime } }
+            );
+            console.log(`💾 [/api/log] LearningLog에 aiReviewCompletedAt 저장: ${unit}`);
           }
         }
       } catch (aiTaskErr) {
@@ -6646,22 +6654,8 @@ app.get("/my-learning", async (req, res) => {
 
     console.log("✅ [/my-learning] 조회 결과:", logs.length, "개 기록");
 
-    // UserProgress에서 AI 과제 복습 완료 시간 가져오기
-    const userProgress = await UserProgress.findOne({ grade, name });
-    const aiTaskMap = new Map();
-
-    if (userProgress && userProgress.studyRoom && userProgress.studyRoom.assignedTasks) {
-      userProgress.studyRoom.assignedTasks.forEach(task => {
-        if (task.isAI && task.completedAt) {
-          aiTaskMap.set(task.id, task.completedAt);
-        }
-      });
-    }
-
-    // 각 학습 기록에 AI 복습 완료 시간 추가
-    logs.forEach(log => {
-      log.aiReviewCompletedAt = aiTaskMap.get(log.unit) || null;
-    });
+    // 🔥 LearningLog에 저장된 aiReviewCompletedAt 직접 사용 (과제 삭제해도 유지됨)
+    // logs에는 이미 aiReviewCompletedAt 필드가 포함되어 있음
 
     let html = `
     <!DOCTYPE html>
