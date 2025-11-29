@@ -3238,7 +3238,7 @@ canvas[id^="confetti-canvas"] {
     const titleThemes = {
       bio: [
         "🧬 생물과 무생물의 구분과 관계",
-        "세포에서부터 시작되는 생명",
+        "🦁 동물의 몸과 생활 방식은 왜 다를까?",
         "다양한 생물의 구조와 기능",
         "유전과 번식의 비밀",
         "환경과 생물의 상호작용",
@@ -6733,109 +6733,6 @@ async function performLogout() {
       }
     });
 
-    // === AI 자동 과제 스케줄 생성 함수 ===
-    async function createAISchedulesForLogs(logs, studentGrade, studentName) {
-      try {
-        console.log('🤖 AI 스케줄 생성 시작 - 학생:', studentName, '기록 수:', logs.length);
-
-        // 각 단원별로 최신 기록만 처리 (중복 제거)
-        const latestLogs = {};
-        logs.forEach(log => {
-          const key = log.unit;
-          if (!latestLogs[key] || new Date(log.timestamp) > new Date(latestLogs[key].timestamp)) {
-            latestLogs[key] = log;
-          }
-        });
-
-        // 각 단원별로 AI 스케줄 생성
-        for (const unitId in latestLogs) {
-          const log = latestLogs[unitId];
-
-          // radar 데이터가 있는 경우만 처리
-          if (!log.radar) continue;
-
-          // 5개 영역 평균 계산
-          const scores = [
-            log.radar.literal || 0,
-            log.radar.structural || 0,
-            log.radar.lexical || 0,
-            log.radar.inferential || 0,
-            log.radar.critical || 0
-          ];
-          const avgScore = parseFloat((scores.reduce((a, b) => a + b, 0) / 5).toFixed(1));
-
-          // 등급 판정
-          let grade = 'encourage';
-          let gradeText = '격려';
-          if (avgScore >= 9) {
-            grade = 'excellent';
-            gradeText = '우수';
-          } else if (avgScore >= 8) {
-            grade = 'good';
-            gradeText = '양호';
-          } else if (avgScore >= 7) {
-            grade = 'average';
-            gradeText = '보통';
-          }
-
-          // 우수 등급은 스케줄 생성 안 함
-          if (grade === 'excellent') continue;
-
-          // 시리즈, 분야, 과목 정보 파싱
-          const seriesName = log.series || 'BRAIN온';
-          const parts = (log.unit || '').split('_');
-          let fieldName = '사회분야';
-          let subjectName = '지리';
-          let unitTitle = log.unit;
-
-          // 단원 ID로 분야/과목 판별 (간단한 예시)
-          if (parts[0] === 'geo') {
-            fieldName = '사회분야';
-            subjectName = '지리';
-            unitTitle = `지리 ${parts[1]}단원`;
-          } else if (parts[0] === 'his') {
-            fieldName = '사회분야';
-            subjectName = '역사';
-            unitTitle = `역사 ${parts[1]}단원`;
-          } else if (parts[0] === 'phy') {
-            fieldName = '과학분야';
-            subjectName = '물리';
-            unitTitle = `물리 ${parts[1]}단원`;
-          } else if (parts[0] === 'bio') {
-            fieldName = '과학분야';
-            subjectName = '생물';
-            unitTitle = `생물 ${parts[1]}단원`;
-          }
-
-          // AI 스케줄 생성 API 호출
-          const response = await fetch('/api/ai-task/create-schedule', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentGrade,
-              studentName,
-              unitId: log.unit,
-              unitTitle,
-              seriesName,
-              fieldName,
-              subjectName,
-              avgScore,
-              completedAt: log.timestamp || new Date()
-            })
-          });
-
-          const result = await response.json();
-          if (result.ok && result.schedule) {
-            console.log(`✅ AI 스케줄 생성: ${unitTitle} (${gradeText}, ${avgScore}점)`);
-          }
-        }
-
-        console.log('🤖 AI 스케줄 생성 완료');
-      } catch (error) {
-        console.error('❌ AI 스케줄 생성 오류:', error);
-      }
-    }
-
     // === 레이더 등급 뱃지 업데이트 (실시간 계산) ===
     async function updateRadarGradeBadge() {
       // ✅ localStorage의 currentStudent를 우선 사용 (가장 최신 로그인 정보)
@@ -6925,8 +6822,8 @@ async function performLogout() {
             gradeClass = 'encourage';
           }
 
-          // ✅ AI 자동 과제 스케줄 생성 (우수 제외)
-          await createAISchedulesForLogs(validLogs, grade, name);
+          // ✅ AI 자동 과제 스케줄 생성은 이제 서버의 assignAITasksDaily()에서 LearningLog 기반으로 처리됨
+          // (기존 AITaskSchedule 기반 로직 제거됨)
         }
 
         // 뱃지 업데이트 (평점 / 진도율 표시)
@@ -7843,8 +7740,11 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         }
 
         // 학습이 완료된 과제는 별점 추가 (unitCode 사용)
+        // AI 추천 과제: task.status === 'completed' (복습완료)일 때만 별점 표시
+        // 일반 과제: isCompleted (학습완료)일 때 별점 표시
         const gradeInfo = unitGradesData[unitCode];
-        const stars = (task.status === 'completed' || isCompleted) && gradeInfo
+        const showStars = task.isAI ? (task.status === 'completed') : isCompleted;
+        const stars = showStars && gradeInfo
           ? getStarsForGrade(gradeInfo.grade)
           : '';
 

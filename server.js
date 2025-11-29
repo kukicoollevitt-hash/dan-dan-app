@@ -4800,6 +4800,7 @@ app.post("/api/log", async (req, res) => {
       unit,
       radar: radar || undefined,
       completed: completed === true,  // 명시적으로 true인지 확인
+      timestamp: new Date(),  // 학습할 때마다 시간 갱신 (최종 학습 시간)
     };
 
     console.log("[/api/log] 저장할 데이터:", logData);
@@ -7838,6 +7839,14 @@ app.get("/my-learning", async (req, res) => {
           </div>
           <div style="display: flex; gap: 10px; align-items: center;">
             <div class="grade-filter">
+              <span class="filter-icon">📅</span>
+              <select id="logSortFilter" onchange="sortLogsByTime(this.value)">
+                <option value="final" selected>최종</option>
+                <option value="first">최초</option>
+                <option value="aiTask">AI과제부여</option>
+              </select>
+            </div>
+            <div class="grade-filter">
               <span class="filter-icon">🏷️</span>
               <select id="logGradeFilter" onchange="filterLogsByGrade(this.value)">
                 <option value="all">전체 등급</option>
@@ -7863,8 +7872,9 @@ app.get("/my-learning", async (req, res) => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(일반)</small></th>
-                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(AI복습)</small></th>
+                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(최초)</small></th>
+                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(AI과제부여)</small></th>
+                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(최종)</small></th>
                 <th>등급</th>
                 <th>시리즈</th>
                 <th>단원명</th>
@@ -9507,6 +9517,52 @@ app.get("/my-learning", async (req, res) => {
           button.classList.toggle('active');
         });
 
+        // ===== 정렬 기준 변수 =====
+        let currentSortBy = 'final'; // 기본값: 최종
+
+        // ===== 정렬 함수 =====
+        function sortLogsByTime(sortBy) {
+          currentSortBy = sortBy;
+          const filteredLogs = getFilteredLogs();
+          const sortedLogs = sortLogs(filteredLogs, sortBy);
+          renderLogTable(sortedLogs);
+        }
+
+        function sortLogs(logs, sortBy) {
+          return [...logs].sort((a, b) => {
+            let timeA, timeB;
+
+            if (sortBy === 'first') {
+              // 최초 시간 (timestamp)
+              timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            } else if (sortBy === 'aiTask') {
+              // AI과제부여 시간
+              timeA = a.aiTaskAssignedAt ? new Date(a.aiTaskAssignedAt).getTime() : 0;
+              timeB = b.aiTaskAssignedAt ? new Date(b.aiTaskAssignedAt).getTime() : 0;
+            } else {
+              // 최종 시간 (최초와 AI과제부여 중 더 최근)
+              const firstA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              const aiA = a.aiTaskAssignedAt ? new Date(a.aiTaskAssignedAt).getTime() : 0;
+              timeA = Math.max(firstA, aiA);
+
+              const firstB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              const aiB = b.aiTaskAssignedAt ? new Date(b.aiTaskAssignedAt).getTime() : 0;
+              timeB = Math.max(firstB, aiB);
+            }
+
+            return timeB - timeA; // 내림차순 (최신이 맨 위)
+          });
+        }
+
+        function getFilteredLogs() {
+          // 현재 시리즈 필터 적용
+          if (currentSelectedSeries === 'all') {
+            return allLogs;
+          }
+          return allLogs.filter(log => log.series === currentSelectedSeries);
+        }
+
         // ===== 학습 기록 테이블 렌더링 함수 =====
         function renderLogTable(logs) {
           const tbody = document.getElementById('logTableBody');
@@ -9523,8 +9579,8 @@ app.get("/my-learning", async (req, res) => {
             // 일반학습: LearningLog에 기록된 모든 학습
             normalCount++;
 
-            // AI추천학습: aiReviewCompletedAt이 있는 경우 (복습 완료)
-            if (log.aiReviewCompletedAt) {
+            // AI추천학습: aiTaskAssignedAt이 있는 경우 (과제 부여됨)
+            if (log.aiTaskAssignedAt) {
               aiCount++;
             }
           });
@@ -9583,17 +9639,26 @@ app.get("/my-learning", async (req, res) => {
 
             const hiddenClass = idx >= 10 ? 'hidden-row' : '';
 
-            // AI 복습 완료 시간 포맷팅
-            const aiReviewTimestamp = log.aiReviewCompletedAt ?
-              new Date(log.aiReviewCompletedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
-            const aiReviewStyle = log.aiReviewCompletedAt ? 'color: #6b21a8; font-weight: 600;' : 'color: #999;';
+            // AI과제부여 시간 포맷팅
+            const aiTaskTimestamp = log.aiTaskAssignedAt ?
+              new Date(log.aiTaskAssignedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
+            const aiTaskStyle = log.aiTaskAssignedAt ? 'color: #6b21a8; font-weight: 600;' : 'color: #999;';
+
+            // 최종완료 시간 계산 (일반학습과 AI과제부여 중 더 최근 시간)
+            const normalTime = log.timestamp ? new Date(log.timestamp).getTime() : 0;
+            const aiTime = log.aiTaskAssignedAt ? new Date(log.aiTaskAssignedAt).getTime() : 0;
+            const finalTime = Math.max(normalTime, aiTime);
+            const finalTimestamp = finalTime > 0 ?
+              new Date(finalTime).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
+            const finalTimeStyle = aiTime > normalTime ? 'color: #6b21a8; font-weight: 600;' : 'color: #059669; font-weight: 600;';
 
             const row = document.createElement('tr');
             if (hiddenClass) row.className = hiddenClass;
             row.innerHTML = \`
               <td>\${idx + 1}</td>
               <td>\${ts}</td>
-              <td style="\${aiReviewStyle}">\${aiReviewTimestamp}</td>
+              <td style="\${aiTaskStyle}">\${aiTaskTimestamp}</td>
+              <td style="\${finalTimeStyle}">\${finalTimestamp}</td>
               <td><span class="badge \${badgeClass}">\${badgeText}</span></td>
               <td>\${log.series || ""}</td>
               <td>\${unitName}</td>
@@ -9686,8 +9751,9 @@ app.get("/my-learning", async (req, res) => {
           // 진도율 계산 및 표시
           calculateProgress(initialLogs);
 
-          // 학습 기록 테이블 렌더링
-          renderLogTable(initialLogs);
+          // 학습 기록 테이블 렌더링 (기본값: 최종 시간 기준 정렬)
+          const sortedInitialLogs = sortLogs(initialLogs, 'final');
+          renderLogTable(sortedInitialLogs);
         });
 
         // ===== 진도율 계산 함수 =====
@@ -11914,7 +11980,9 @@ function getGradeInfo(avgScore) {
   }
 }
 
-// AI 과제 스케줄 생성/업데이트 API
+// [DEPRECATED] AI 과제 스케줄 생성/업데이트 API
+// 이제 assignAITasksDaily()가 LearningLog 테이블에서 직접 데이터를 읽어 과제를 부여함
+// 클라이언트에서 더 이상 이 API를 호출하지 않음
 app.post('/api/ai-task/create-schedule', async (req, res) => {
   try {
     const {
@@ -11999,48 +12067,59 @@ app.post('/api/ai-task/create-schedule', async (req, res) => {
   }
 });
 
-// 매일 자정 실행: AI 과제 자동 부여
+// 매일 자정 실행: AI 과제 자동 부여 (LearningLog 테이블 기준)
+// - 최종완료 시간과 최종등급을 기준으로 AI 추천과제 부여
+// - 격려: 30분 후, 보통: 1시간 후, 양호: 3시간 후, 우수: 부여 안 함
 async function assignAITasksDaily() {
   try {
-    console.log('🤖 AI 자동 과제 부여 시작:', new Date().toISOString());
+    console.log('🤖 [NEW] AI 자동 과제 부여 시작 (LearningLog 기준):', new Date().toISOString());
 
     const now = new Date();
 
-    // TODO: 테스트용 - 현재 시간 기준으로 체크 (원래는 00:00:00으로 설정)
-    // 부여해야 할 스케줄 조회 (scheduledDate가 현재 시간보다 이전)
-    const schedules = await AITaskSchedule.find({
-      status: 'pending',
-      scheduledDate: { $lte: now }
-    });
+    // 모든 학생의 LearningLog 조회
+    const allStudentLogs = await LearningLog.find({});
+    console.log(`📚 조회된 학생 수: ${allStudentLogs.length}명`);
 
-    console.log(`📋 부여 대상 스케줄: ${schedules.length}개`);
+    for (const studentLog of allStudentLogs) {
+      const { grade, name, logs } = studentLog;
 
-    if (schedules.length === 0) {
-      return;
-    }
+      if (!logs || logs.length === 0) continue;
 
-    // 학생별로 그룹화
-    const studentGroups = {};
-    schedules.forEach(schedule => {
-      const key = `${schedule.studentGrade}_${schedule.studentName}`;
-      if (!studentGroups[key]) {
-        studentGroups[key] = {
-          grade: schedule.studentGrade,
-          name: schedule.studentName,
-          encourage: [],
-          average: [],
-          good: []
-        };
+      // 단원별로 최신 기록만 추출 (최종완료 시간 = timestamp or aiReviewCompletedAt 중 최신)
+      const unitLatestLogs = {};
+
+      for (const log of logs) {
+        const unitId = log.unit;
+        if (!unitId || !log.radar) continue;
+
+        // 최종완료 시간 계산 (일반학습과 AI복습 중 더 최근)
+        const normalTime = log.timestamp ? new Date(log.timestamp).getTime() : 0;
+        const aiTime = log.aiReviewCompletedAt ? new Date(log.aiReviewCompletedAt).getTime() : 0;
+        const finalCompletedAt = new Date(Math.max(normalTime, aiTime));
+
+        // 평균 점수 계산
+        const scores = [
+          log.radar.literal || 0,
+          log.radar.structural || 0,
+          log.radar.lexical || 0,
+          log.radar.inferential || 0,
+          log.radar.critical || 0
+        ];
+        const avgScore = scores.reduce((a, b) => a + b, 0) / 5;
+
+        // 단원별 최신 기록만 유지
+        const existingEntry = unitLatestLogs[unitId];
+        if (!existingEntry || finalCompletedAt.getTime() > existingEntry.finalCompletedAt.getTime()) {
+          unitLatestLogs[unitId] = {
+            unitId,
+            avgScore,
+            finalCompletedAt,
+            series: log.series,
+            timestamp: log.timestamp,
+            aiReviewCompletedAt: log.aiReviewCompletedAt
+          };
+        }
       }
-      studentGroups[key][schedule.grade].push(schedule);
-    });
-
-    // 각 학생별로 처리
-    for (const key in studentGroups) {
-      const group = studentGroups[key];
-      const { grade, name, encourage, average, good } = group;
-
-      console.log(`👤 ${name} 학생 처리 중 - 격려:${encourage.length}, 보통:${average.length}, 양호:${good.length}`);
 
       // UserProgress 조회
       let progress = await UserProgress.findOne({ grade, name });
@@ -12056,73 +12135,112 @@ async function assignAITasksDaily() {
       const existingTasks = progress.studyRoom?.assignedTasks || [];
       const existingUnitIds = new Set(existingTasks.map(t => t.id));
 
-      // 등급별로 최대 2개씩 랜덤 선택
-      const selectedSchedules = [];
-
-      // 격려 등급 (최대 2개)
-      if (encourage.length > 0) {
-        const shuffled = encourage.sort(() => Math.random() - 0.5);
-        selectedSchedules.push(...shuffled.slice(0, 2));
-      }
-
-      // 보통 등급 (최대 2개)
-      if (average.length > 0) {
-        const shuffled = average.sort(() => Math.random() - 0.5);
-        selectedSchedules.push(...shuffled.slice(0, 2));
-      }
-
-      // 양호 등급 (최대 2개)
-      if (good.length > 0) {
-        const shuffled = good.sort(() => Math.random() - 0.5);
-        selectedSchedules.push(...shuffled.slice(0, 2));
-      }
+      // AI 추천과제로 이미 부여된 적 있는 단원 체크 (중복 부여 방지)
+      const aiAssignedUnits = new Set(
+        existingTasks.filter(t => t.isAI).map(t => t.id)
+      );
 
       let assignedCount = 0;
 
-      // 선택된 스케줄을 학습실에 추가
-      for (const schedule of selectedSchedules) {
-        // 중복 체크
-        if (existingUnitIds.has(schedule.unitId)) {
-          console.log(`⚠️  중복: ${schedule.unitTitle} - 이미 학습실에 있음`);
-          // 중복이면 스케줄 상태만 completed로 변경
-          schedule.status = 'completed';
-          await schedule.save();
+      // 각 단원의 최종등급과 최종완료 시간 확인
+      for (const unitId in unitLatestLogs) {
+        const unitInfo = unitLatestLogs[unitId];
+        const { avgScore, finalCompletedAt, series } = unitInfo;
+
+        // 등급 판정
+        const gradeInfo = getGradeInfo(avgScore);
+
+        // 우수 등급은 AI 과제 부여 안 함
+        if (gradeInfo.grade === 'excellent') {
           continue;
         }
 
-        // 학습실에 추가 (실제 부여 시간 사용)
-        existingTasks.push({
-          id: schedule.unitId,
-          title: schedule.unitTitle,
-          series: schedule.seriesName,
-          field: schedule.fieldName,
-          subject: schedule.subjectName,
-          isAI: true, // AI 부여 표시
-          assignedAt: new Date() // 실제 부여된 시간 (실시간 반영)
-        });
+        // 이미 학습실에 있으면 스킵
+        if (existingUnitIds.has(unitId)) {
+          continue;
+        }
 
-        // 스케줄 상태 업데이트
-        schedule.status = 'assigned';
-        schedule.assignedAt = new Date();
-        await schedule.save();
+        // 이미 AI 과제로 부여된 적 있으면 스킵
+        if (aiAssignedUnits.has(unitId)) {
+          continue;
+        }
 
-        assignedCount++;
-        console.log(`✅ 부여: ${schedule.unitTitle} (${schedule.gradeText})`);
+        // 등급별 대기 시간 계산
+        const waitHours = gradeInfo.hours;
+        const assignableAt = new Date(finalCompletedAt.getTime() + waitHours * 60 * 60 * 1000);
+
+        // 현재 시간이 부여 가능 시간을 지났는지 확인
+        if (now >= assignableAt) {
+          // 단원 정보 추출 (unitId에서 파싱)
+          const parts = unitId.split('_');
+          const subjectCode = parts[0];
+          const unitNumber = parts[1] ? parseInt(parts[1], 10) : 1;
+
+          // 과목명 매핑
+          const subjectMap = {
+            'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학',
+            'soc': '사회문화', 'law': '법', 'pol': '정치경제',
+            'modern': '현대문학', 'classic': '고전문학',
+            'world1': '세계문학', 'world2': '세계문학', 'world': '세계문학',
+            'person1': '인물', 'person2': '인물', 'people': '인물'
+          };
+          const subjectName = subjectMap[subjectCode] || subjectCode;
+
+          // 분야명 매핑
+          const fieldMap = {
+            'geo': '사회', 'soc': '사회', 'law': '사회', 'pol': '사회',
+            'bio': '과학', 'earth': '과학', 'physics': '과학', 'chem': '과학',
+            'modern': '한국문학', 'classic': '한국문학',
+            'world1': '세계문학', 'world2': '세계문학', 'world': '세계문학',
+            'person1': '인물', 'person2': '인물', 'people': '인물'
+          };
+          const fieldName = fieldMap[subjectCode] || '기타';
+
+          // 단원명 생성
+          let displayNumber = unitNumber;
+          if (subjectCode === 'world2' || subjectCode === 'person2') {
+            displayNumber += 40;
+          }
+          const unitTitle = `${subjectName} ${displayNumber}`;
+
+          // 학습실에 추가
+          existingTasks.push({
+            id: unitId,
+            title: unitTitle,
+            series: series || 'BRAINUP',
+            field: fieldName,
+            subject: subjectName,
+            isAI: true,
+            assignedAt: now,
+            originalGrade: gradeInfo.text // 원래 등급 기록
+          });
+
+          existingUnitIds.add(unitId);
+          assignedCount++;
+
+          // 🔥 LearningLog에도 aiTaskAssignedAt 저장 (학습 기록 테이블에 표시)
+          await LearningLog.updateOne(
+            { grade, name, unit: unitId },
+            { $set: { aiTaskAssignedAt: now } }
+          );
+
+          console.log(`✅ [${name}] AI 과제 부여: ${unitTitle} (${gradeInfo.text}, 최종완료: ${finalCompletedAt.toLocaleString('ko-KR')})`);
+        }
       }
 
       if (assignedCount > 0) {
         // UserProgress 저장
         progress.studyRoom = {
           assignedTasks: existingTasks,
-          lastAIAssignedAt: new Date() // 마지막 AI 부여 시간
+          lastAIAssignedAt: now
         };
         await progress.save();
 
-        console.log(`🎉 ${name} 학생에게 ${assignedCount}개 과제 부여 완료`);
+        console.log(`🎉 ${name} 학생에게 ${assignedCount}개 AI 과제 부여 완료`);
       }
     }
 
-    console.log('🤖 AI 자동 과제 부여 완료:', new Date().toISOString());
+    console.log('🤖 [NEW] AI 자동 과제 부여 완료:', new Date().toISOString());
 
   } catch (error) {
     console.error('❌ AI 자동 과제 부여 오류:', error);

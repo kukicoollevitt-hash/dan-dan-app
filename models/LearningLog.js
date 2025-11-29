@@ -21,7 +21,9 @@ const LearningLogSchema = new mongoose.Schema({
   completed: { type: Boolean, default: false }, // 학습 완료 여부
   deleted: { type: Boolean, default: false }, // 소프트 삭제 여부
 
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
+  aiReviewCompletedAt: { type: Date, default: null }, // AI 복습 완료 시간
+  aiTaskAssignedAt: { type: Date, default: null } // AI 추천과제 부여 시간
 });
 
 // grade, name, phone, timestamp으로 인덱스 생성
