@@ -33,7 +33,7 @@
     // world2_content.js 동적 로드
     // 이벤트는 world2_content.js 내부에서 CONTENTS 등록 후 발생시킴
     const script = document.createElement('script');
-    script.src = './world2_content.js?v=20251129c';
+    script.src = './world2_content.js?v=20251129d';
     script.onload = function() {
       console.log('[world_content.js] world2_content.js 파일 로드됨');
     };
