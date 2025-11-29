@@ -4010,8 +4010,20 @@ if (logoutConfirmBtn) {
             }
 
             // 기본 페이지 ID 추가 (비어있으면)
+            // ✅ 단원 코드에 따라 올바른 폴더 설정
             if (saved.length === 0) {
-              saved.push(`BRAINUP_social_${unit}`);
+              let folder = 'social';  // 기본값
+              if (unit.startsWith('bio_') || unit.startsWith('chem_') ||
+                  unit.startsWith('physics_') || unit.startsWith('earth_')) {
+                folder = 'science';
+              } else if (unit.startsWith('classic_') || unit.startsWith('modern_')) {
+                folder = 'korlit';
+              } else if (unit.startsWith('world1_') || unit.startsWith('world2_') || unit.startsWith('world_')) {
+                folder = 'worldlit';
+              } else if (unit.startsWith('people1_') || unit.startsWith('people2_') || unit.startsWith('people_')) {
+                folder = 'person';
+              }
+              saved.push(`BRAINUP_${folder}_${unit}`);
             }
 
             localStorage.setItem(key, JSON.stringify(saved));
@@ -7996,10 +8008,6 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       }
       if (!stu || !stu.grade || !stu.name) return false;
 
-      // grade에서 "학년" 제거 후 키 생성 (학습 페이지와 동일한 형식)
-      const gradeNum = String(stu.grade).replace('학년', '');
-      const stuKey = `${gradeNum}학년_${stu.name}`;
-
       // unitId에서 단원 코드 추출 (./BRAINUP/social/geo_02.html -> geo_02)
       let unitCode = unitId;
       const match = unitId.match(/\/([^\/]+)\.html$/);
@@ -8007,23 +8015,76 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         unitCode = match[1];
       }
 
-      // 학습 페이지와 동일한 방식으로 체크
-      const storageKey = `dan-progress:${stuKey}:${unitCode}`;
-      let saved = [];
-      try {
-        const data = localStorage.getItem(storageKey);
-        if (data) {
-          saved = JSON.parse(data);
-          if (!Array.isArray(saved)) saved = [];
-        }
-      } catch(e) {
-        saved = [];
+      // ✅ 두 가지 키 형식 모두 확인 (하위 호환)
+      // 1. buildStudentKey 형식 (전화번호 포함): 1학년_홍길동_11
+      // 2. 기존 형식 (전화번호 없음): 1학년_홍길동
+      const stuKeyWithPhone = buildStudentKey(stu);
+      const gradeNum = String(stu.grade).replace('학년', '');
+      const stuKeyWithoutPhone = `${gradeNum}학년_${stu.name}`;
+
+      // 두 키 모두 확인
+      for (const stuKey of [stuKeyWithPhone, stuKeyWithoutPhone]) {
+        const storageKey = `dan-progress:${stuKey}:${unitCode}`;
+        try {
+          const data = localStorage.getItem(storageKey);
+          if (data) {
+            // ✅ 여러 형식 지원: 배열, 문자열 '1', 기타 truthy 값
+            let saved;
+            try {
+              saved = JSON.parse(data);
+            } catch(parseErr) {
+              // JSON 파싱 실패 → 단순 문자열로 처리
+              saved = data;
+            }
+
+            // 배열인 경우
+            if (Array.isArray(saved) && saved.length > 0) {
+              console.log(`[isUnitCompleted] ✅ 완료(배열)! unitCode=${unitCode}, stuKey=${stuKey}`);
+              return true;
+            }
+            // 문자열 '1' 또는 다른 truthy 값인 경우 (과학 분야 등)
+            if (saved && saved !== 'false' && saved !== '0') {
+              console.log(`[isUnitCompleted] ✅ 완료(단순값)! unitCode=${unitCode}, stuKey=${stuKey}, value=${data}`);
+              return true;
+            }
+          }
+        } catch(e) {}
       }
 
-      console.log(`[isUnitCompleted] unitCode=${unitCode}, stuKey=${stuKey}, storageKey=${storageKey}, saved.length=${saved.length}`);
+      // ✅ Fallback: localStorage에서 학생 이름과 unitCode가 모두 포함된 키 검색
+      // (키 형식이 다른 경우에도 완료 상태를 찾을 수 있도록)
+      const studentName = stu.name;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('dan-progress:') && key.includes(studentName) && key.endsWith(`:${unitCode}`)) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              // ✅ 여러 형식 지원
+              let saved;
+              try {
+                saved = JSON.parse(data);
+              } catch(parseErr) {
+                saved = data;
+              }
 
-      // 배열에 데이터가 있으면 완료된 것
-      return saved.length > 0;
+              // 배열인 경우
+              if (Array.isArray(saved) && saved.length > 0) {
+                console.log(`[isUnitCompleted] ✅ Fallback 완료(배열)! unitCode=${unitCode}, key=${key}`);
+                return true;
+              }
+              // 단순값인 경우
+              if (saved && saved !== 'false' && saved !== '0') {
+                console.log(`[isUnitCompleted] ✅ Fallback 완료(단순값)! unitCode=${unitCode}, key=${key}, value=${data}`);
+                return true;
+              }
+            }
+          } catch(e) {}
+        }
+      }
+
+      console.log(`[isUnitCompleted] ❌ 미완료 unitCode=${unitCode}`);
+      return false;
     }
 
     // 과제부여 모달 표시 (모바일용)
