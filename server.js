@@ -12076,12 +12076,30 @@ async function assignAITasksDaily() {
 
     const now = new Date();
 
-    // 모든 학생의 LearningLog 조회
-    const allStudentLogs = await LearningLog.find({});
-    console.log(`📚 조회된 학생 수: ${allStudentLogs.length}명`);
+    // 모든 LearningLog 조회 (completed된 것만)
+    const allLogs = await LearningLog.find({ completed: true, deleted: { $ne: true } });
+    console.log(`📚 조회된 학습 로그 수: ${allLogs.length}개`);
 
-    for (const studentLog of allStudentLogs) {
-      const { grade, name, logs } = studentLog;
+    // 학생별로 그룹화 (grade + name 조합)
+    const studentLogsMap = {};
+    for (const log of allLogs) {
+      const studentKey = `${log.grade}::${log.name}`;
+      if (!studentLogsMap[studentKey]) {
+        studentLogsMap[studentKey] = {
+          grade: log.grade,
+          name: log.name,
+          logs: []
+        };
+      }
+      studentLogsMap[studentKey].logs.push(log);
+    }
+
+    const studentKeys = Object.keys(studentLogsMap);
+    console.log(`👥 처리할 학생 수: ${studentKeys.length}명`);
+
+    for (const studentKey of studentKeys) {
+      const studentData = studentLogsMap[studentKey];
+      const { grade, name, logs } = studentData;
 
       if (!logs || logs.length === 0) continue;
 
@@ -12133,7 +12151,15 @@ async function assignAITasksDaily() {
 
       // 기존 학습실 과제 목록
       const existingTasks = progress.studyRoom?.assignedTasks || [];
-      const existingUnitIds = new Set(existingTasks.map(t => t.id));
+      // 기존 과제의 unitId 추출 (./BRAINUP/science/bio_02.html -> bio_02, 또는 bio_02 그대로)
+      const existingUnitIds = new Set(existingTasks.map(t => {
+        const taskId = t.unitId || t.id;
+        // ./BRAINUP/xxx/yyy.html 형식에서 unit 코드 추출
+        const match = taskId.match(/([a-z]+\d*_\d+)\.html$/i);
+        if (match) return match[1];
+        // 이미 unit 코드 형식이면 그대로 반환
+        return taskId;
+      }));
 
       let assignedCount = 0;
 
