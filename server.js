@@ -11276,21 +11276,15 @@ app.get('/api/user-progress/vocabulary-history/today', async (req, res) => {
       });
     }
 
-    // 한국 시간(KST) 기준 오늘 날짜 범위 계산 (00:00:00 ~ 23:59:59)
-    // KST = UTC + 9시간
+    // 오늘 날짜 범위 계산 (00:00:00 ~ 23:59:59)
     const now = new Date();
-    const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
-    const kstNow = new Date(now.getTime() + kstOffset);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-    // KST 기준 오늘 00:00:00 (UTC 시간으로 변환)
-    const kstTodayStart = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 0, 0, 0) - kstOffset);
-    // KST 기준 오늘 23:59:59 (UTC 시간으로 변환)
-    const kstTodayEnd = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 23, 59, 59) - kstOffset);
-
-    // 오늘 날짜에 학습이력이 있는지 확인 (KST 기준)
+    // 오늘 날짜에 학습이력이 있는지 확인
     const todayHistory = progress.vocabularyQuizHistory.find(history => {
       const historyDate = new Date(history.date);
-      return historyDate >= kstTodayStart && historyDate <= kstTodayEnd;
+      return historyDate >= todayStart && historyDate <= todayEnd;
     });
 
     res.json({
@@ -11306,6 +11300,7 @@ app.get('/api/user-progress/vocabulary-history/today', async (req, res) => {
       error: error.message
     });
   }
+});
 });
 
 // ========== 독서 감상문 API ==========
@@ -12104,8 +12099,17 @@ async function assignAITasksDaily() {
       const unitLatestLogs = {};
 
       for (const log of logs) {
-        const unitId = log.unit;
+        let unitId = log.unit;
         if (!unitId || !log.radar) continue;
+
+        // 🔧 unit 코드 정규화: world2_XX → world_4X
+        // LearningLog에 world2_01 같은 코드가 저장되어 있지만, 실제 파일은 world_41.html
+        // (인물은 people2_XX.html 파일이 실제로 존재하므로 변환하지 않음)
+        if (unitId.startsWith('world2_')) {
+          const num = parseInt(unitId.replace('world2_', ''), 10);
+          unitId = `world_${num + 40}`;
+          console.log(`🔄 [${name}] 코드 변환: ${log.unit} → ${unitId}`);
+        }
 
         // 최종완료 시간 계산 (일반학습과 AI복습 중 더 최근)
         const normalTime = log.timestamp ? new Date(log.timestamp).getTime() : 0;
