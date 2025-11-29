@@ -12135,11 +12135,6 @@ async function assignAITasksDaily() {
       const existingTasks = progress.studyRoom?.assignedTasks || [];
       const existingUnitIds = new Set(existingTasks.map(t => t.id));
 
-      // AI 추천과제로 이미 부여된 적 있는 단원 체크 (중복 부여 방지)
-      const aiAssignedUnits = new Set(
-        existingTasks.filter(t => t.isAI).map(t => t.id)
-      );
-
       let assignedCount = 0;
 
       // 각 단원의 최종등급과 최종완료 시간 확인
@@ -12157,11 +12152,6 @@ async function assignAITasksDaily() {
 
         // 이미 학습실에 있으면 스킵
         if (existingUnitIds.has(unitId)) {
-          continue;
-        }
-
-        // 이미 AI 과제로 부여된 적 있으면 스킵
-        if (aiAssignedUnits.has(unitId)) {
           continue;
         }
 
