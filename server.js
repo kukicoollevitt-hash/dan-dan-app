@@ -4781,6 +4781,64 @@ app.get("/admin/users-export", async (req, res) => {
   }
 });
 
+// ===== world2_XX → world_4X 마이그레이션 API =====
+// 기존 world2_01~40 레코드를 world_41~80으로 변환 (중복 제거)
+app.post("/api/migrate-world2", async (req, res) => {
+  try {
+    console.log("🔄 world2_XX → world_4X 마이그레이션 시작...");
+
+    // 1. world2_XX 형식의 모든 레코드 찾기
+    const world2Logs = await LearningLog.find({ unit: /^world2_/ });
+    console.log(`📋 world2_XX 레코드 ${world2Logs.length}개 발견`);
+
+    let converted = 0;
+    let deleted = 0;
+    let skipped = 0;
+
+    for (const log of world2Logs) {
+      const match = log.unit.match(/^world2_(\d+)$/);
+      if (!match) {
+        skipped++;
+        continue;
+      }
+
+      const num = parseInt(match[1], 10);
+      const newUnit = `world_${num + 40}`;  // world2_01 → world_41
+
+      // 같은 사용자, 같은 단원(변환된)의 기존 레코드 확인
+      const existingLog = await LearningLog.findOne({
+        grade: log.grade,
+        name: log.name,
+        unit: newUnit
+      });
+
+      if (existingLog) {
+        // 이미 world_4X 레코드가 있으면 world2_XX 레코드 삭제
+        await LearningLog.deleteOne({ _id: log._id });
+        deleted++;
+        console.log(`🗑️ 삭제: ${log.name} - ${log.unit} (이미 ${newUnit} 존재)`);
+      } else {
+        // world_4X 레코드가 없으면 변환
+        log.unit = newUnit;
+        await log.save();
+        converted++;
+        console.log(`✅ 변환: ${log.name} - world2_${String(num).padStart(2, '0')} → ${newUnit}`);
+      }
+    }
+
+    console.log(`🎉 마이그레이션 완료: 변환 ${converted}개, 삭제 ${deleted}개, 스킵 ${skipped}개`);
+
+    res.json({
+      ok: true,
+      message: `마이그레이션 완료`,
+      stats: { found: world2Logs.length, converted, deleted, skipped }
+    });
+  } catch (err) {
+    console.error("❌ 마이그레이션 에러:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 // ===== 학습 이력 로그 저장 API =====
 app.post("/api/log", async (req, res) => {
   try {
