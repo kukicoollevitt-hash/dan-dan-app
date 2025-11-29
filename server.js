@@ -4781,7 +4781,82 @@ app.get("/admin/users-export", async (req, res) => {
   }
 });
 
-// ===== world2_XX → world_4X 마이그레이션 API =====
+// ===== world2_XX/people2_XX → world_4X/people_4X 마이그레이션 API =====
+// 기존 world2_01~40, people2_01~40 레코드를 world_41~80, people_41~80으로 변환 (중복 제거)
+app.post("/api/migrate-legacy-units", async (req, res) => {
+  try {
+    console.log("🔄 world2_XX/people2_XX 마이그레이션 시작...");
+
+    let totalConverted = 0;
+    let totalDeleted = 0;
+    let totalSkipped = 0;
+    const results = { world2: { found: 0, converted: 0, deleted: 0 }, people2: { found: 0, converted: 0, deleted: 0 } };
+
+    // 1. world2_XX 처리
+    const world2Logs = await LearningLog.find({ unit: /^world2_/ });
+    results.world2.found = world2Logs.length;
+    console.log(`📋 world2_XX 레코드 ${world2Logs.length}개 발견`);
+
+    for (const log of world2Logs) {
+      const match = log.unit.match(/^world2_(\d+)$/);
+      if (!match) continue;
+
+      const num = parseInt(match[1], 10);
+      const newUnit = `world_${num + 40}`;
+
+      const existingLog = await LearningLog.findOne({
+        grade: log.grade, name: log.name, unit: newUnit
+      });
+
+      if (existingLog) {
+        await LearningLog.deleteOne({ _id: log._id });
+        results.world2.deleted++;
+        totalDeleted++;
+      } else {
+        log.unit = newUnit;
+        await log.save();
+        results.world2.converted++;
+        totalConverted++;
+      }
+    }
+
+    // 2. people2_XX 처리
+    const people2Logs = await LearningLog.find({ unit: /^people2_/ });
+    results.people2.found = people2Logs.length;
+    console.log(`📋 people2_XX 레코드 ${people2Logs.length}개 발견`);
+
+    for (const log of people2Logs) {
+      const match = log.unit.match(/^people2_(\d+)$/);
+      if (!match) continue;
+
+      const num = parseInt(match[1], 10);
+      const newUnit = `people_${num + 40}`;
+
+      const existingLog = await LearningLog.findOne({
+        grade: log.grade, name: log.name, unit: newUnit
+      });
+
+      if (existingLog) {
+        await LearningLog.deleteOne({ _id: log._id });
+        results.people2.deleted++;
+        totalDeleted++;
+      } else {
+        log.unit = newUnit;
+        await log.save();
+        results.people2.converted++;
+        totalConverted++;
+      }
+    }
+
+    console.log(`🎉 마이그레이션 완료: 변환 ${totalConverted}개, 삭제 ${totalDeleted}개`);
+    res.json({ ok: true, message: "마이그레이션 완료", results });
+  } catch (err) {
+    console.error("❌ 마이그레이션 에러:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ===== world2_XX → world_4X 마이그레이션 API (레거시) =====
 // 기존 world2_01~40 레코드를 world_41~80으로 변환 (중복 제거)
 app.post("/api/migrate-world2", async (req, res) => {
   try {
