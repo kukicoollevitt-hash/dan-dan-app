@@ -6032,8 +6032,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             '과학분야': ['bio', 'earth', 'physics', 'chem'],
             '사회분야': ['geo', 'soc', 'law', 'pol'],
             '한국문학분야': ['modern', 'classic'],
-            '세계문학분야': ['world', 'world2'],
-            '인물분야': ['people', 'people2']
+            '세계문학분야': ['world1', 'world2'],
+            '인물분야': ['people1', 'people2']
           };
           const subjects = fieldSubjects[fieldName] || [];
           let total = 0;
@@ -8624,8 +8624,8 @@ app.get("/my-learning", async (req, res) => {
             '과학분야': ['bio', 'earth', 'physics', 'chem'],
             '사회분야': ['geo', 'soc', 'law', 'pol'],
             '한국문학분야': ['modern', 'classic'],
-            '세계문학분야': ['world', 'world2'],
-            '인물분야': ['people', 'people2']
+            '세계문학분야': ['world1', 'world2'],
+            '인물분야': ['people1', 'people2']
           };
           const subjects = fieldSubjects[fieldName] || [];
           let total = 0;
