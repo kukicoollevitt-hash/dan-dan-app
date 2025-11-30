@@ -4271,8 +4271,38 @@ if (logoutConfirmBtn) {
     }
 
 
+    // ✅ 잘못된 localStorage 키 자동 정리 (world2_XX, people2_XX 형식의 과거 데이터 삭제)
+    function cleanupWrongUnitKeys() {
+      const wrongPatterns = ['world2_', 'people2_', 'world1_', 'people1_'];
+      const keysToRemove = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.includes('dan-progress:')) {
+          for (const pattern of wrongPatterns) {
+            if (key.includes(pattern)) {
+              keysToRemove.push(key);
+              break;
+            }
+          }
+        }
+      }
+
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log('[cleanupWrongUnitKeys] 삭제:', key);
+      });
+
+      if (keysToRemove.length > 0) {
+        console.log('[cleanupWrongUnitKeys] 총', keysToRemove.length, '개의 잘못된 키 삭제 완료');
+      }
+    }
+
     // ✅ 페이지 로드 시: 유저정보 반영 + 뒤로가기용 히스토리 1단계 쌓기
     document.addEventListener('DOMContentLoaded', () => {
+      // 🧹 잘못된 localStorage 키 정리 (world2_XX, people2_XX 등)
+      cleanupWrongUnitKeys();
+
       // 🤖 로그인 직후 AI 학습 인식 화면 표시 + 새로고침
       const justLoggedIn = sessionStorage.getItem('justLoggedIn');
       const aiRecognitionDone = sessionStorage.getItem('aiRecognitionDone');

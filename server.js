@@ -6053,11 +6053,32 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         // 시리즈 총 단원 수
         const seriesTotalUnits = 400;
 
-        // logsForChart에서 완료된 고유 단원 수집
+        // 단원 코드 정규화 함수 (world2_01 -> world_41, people2_01 -> people_41)
+        function normalizeUnitCode(unit) {
+          // world2_XX -> world_(XX+40)
+          if (unit.startsWith('world2_')) {
+            const numMatch = unit.match(/world2_([0-9]+)$/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1]);
+              return 'world_' + (num + 40);
+            }
+          }
+          // people2_XX -> people_(XX+40)
+          if (unit.startsWith('people2_')) {
+            const numMatch = unit.match(/people2_([0-9]+)$/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1]);
+              return 'people_' + (num + 40);
+            }
+          }
+          return unit;
+        }
+
+        // logsForChart에서 완료된 고유 단원 수집 (정규화된 코드 사용)
         const completedUnitsSet = new Set();
         logsForChart.forEach(log => {
           if (log.unit) {
-            completedUnitsSet.add(log.unit);
+            completedUnitsSet.add(normalizeUnitCode(log.unit));
           }
         });
 
@@ -6077,9 +6098,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
                 const numMatch = unit.match(/_([0-9]+)$/);
                 const num = numMatch ? parseInt(numMatch[1]) : 0;
                 if (num >= 41 && num <= 80) count++;
-              } else if (unit.startsWith('world2_')) {
-                count++;
               }
+              // world2_ fallback 제거됨 - completedUnitsSet은 이미 정규화됨
             } else if (subjectCode === 'people1') {
               if (unit.startsWith('people_')) {
                 const numMatch = unit.match(/_([0-9]+)$/);
@@ -6091,9 +6111,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
                 const numMatch = unit.match(/_([0-9]+)$/);
                 const num = numMatch ? parseInt(numMatch[1]) : 0;
                 if (num >= 41 && num <= 80) count++;
-              } else if (unit.startsWith('people2_')) {
-                count++;
               }
+              // people2_ fallback 제거됨 - completedUnitsSet은 이미 정규화됨
             } else if (unit.startsWith(subjectCode + '_')) {
               count++;
             }
@@ -6782,7 +6801,7 @@ app.get("/my-learning", async (req, res) => {
   }
 
   try {
-    const logs = await LearningLog.find({ grade, name })
+    const logs = await LearningLog.find({ grade, name, deleted: { $ne: true } })
       .sort({ timestamp: -1 })
       .lean();
 
@@ -8645,11 +8664,32 @@ app.get("/my-learning", async (req, res) => {
         // 시리즈 총 단원 수
         const seriesTotalUnits = 400;
 
-        // logsForChart에서 완료된 고유 단원 수집
+        // 단원 코드 정규화 함수 (world2_01 -> world_41, people2_01 -> people_41)
+        function normalizeUnitCode(unit) {
+          // world2_XX -> world_(XX+40)
+          if (unit.startsWith('world2_')) {
+            const numMatch = unit.match(/world2_([0-9]+)$/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1]);
+              return 'world_' + (num + 40);
+            }
+          }
+          // people2_XX -> people_(XX+40)
+          if (unit.startsWith('people2_')) {
+            const numMatch = unit.match(/people2_([0-9]+)$/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1]);
+              return 'people_' + (num + 40);
+            }
+          }
+          return unit;
+        }
+
+        // logsForChart에서 완료된 고유 단원 수집 (정규화된 코드 사용)
         const completedUnitsSet = new Set();
         logsForChart.forEach(log => {
           if (log.unit) {
-            completedUnitsSet.add(log.unit);
+            completedUnitsSet.add(normalizeUnitCode(log.unit));
           }
         });
 
@@ -8669,9 +8709,8 @@ app.get("/my-learning", async (req, res) => {
                 const numMatch = unit.match(/_([0-9]+)$/);
                 const num = numMatch ? parseInt(numMatch[1]) : 0;
                 if (num >= 41 && num <= 80) count++;
-              } else if (unit.startsWith('world2_')) {
-                count++;
               }
+              // world2_ fallback 제거됨 - completedUnitsSet은 이미 정규화됨
             } else if (subjectCode === 'people1') {
               if (unit.startsWith('people_')) {
                 const numMatch = unit.match(/_([0-9]+)$/);
@@ -8683,9 +8722,8 @@ app.get("/my-learning", async (req, res) => {
                 const numMatch = unit.match(/_([0-9]+)$/);
                 const num = numMatch ? parseInt(numMatch[1]) : 0;
                 if (num >= 41 && num <= 80) count++;
-              } else if (unit.startsWith('people2_')) {
-                count++;
               }
+              // people2_ fallback 제거됨 - completedUnitsSet은 이미 정규화됨
             } else if (unit.startsWith(subjectCode + '_')) {
               count++;
             }
@@ -9465,13 +9503,22 @@ app.get("/my-learning", async (req, res) => {
             '인물분야': 'person'
           };
 
-          // 분야별로 그룹화
+          // 정규화된 단원 코드로 중복 제거 후 분야별로 그룹화
           const fieldGroups = {};
+          const processedUnits = new Set(); // 이미 처리된 정규화된 단원 코드 추적
+
           logs.forEach(log => {
             if (!log.radar || !log.unit) return;
 
-            // unit 코드에서 과목 추출
-            const subjectCode = log.unit.split('_')[0];
+            // 정규화된 단원 코드 생성
+            const normalizedUnit = normalizeUnitCode(log.unit);
+
+            // 이미 처리된 단원이면 건너뛰기 (중복 방지)
+            if (processedUnits.has(normalizedUnit)) return;
+            processedUnits.add(normalizedUnit);
+
+            // 정규화된 unit 코드에서 과목 추출
+            const subjectCode = normalizedUnit.split('_')[0];
             const fieldName = subjectToField[subjectCode];
 
             if (!fieldName) return; // 매핑되지 않은 과목은 제외
@@ -9484,8 +9531,10 @@ app.get("/my-learning", async (req, res) => {
 
           // 각 분야별로 평균 계산 및 차트 생성
           let fieldIndex = 0;
+          console.log('📊 분야별 그룹화 결과:', Object.keys(fieldGroups).map(f => f + ': ' + fieldGroups[f].length + '개'));
           Object.keys(fieldGroups).forEach(fieldName => {
             const fieldLogs = fieldGroups[fieldName];
+            console.log('🎯 분야:', fieldName, '로그 수:', fieldLogs.length, '단원:', fieldLogs.map(l => l.unit));
 
             // 평균 계산
             let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
@@ -9546,7 +9595,8 @@ app.get("/my-learning", async (req, res) => {
             // 시리즈 이름 가져오기
             const seriesName = fieldLogs[0].series || 'BRAIN업';
             const fieldTotal = fieldUnitCounts[fieldName] || 80;
-            const fieldCompleted = getFieldCompletedCount(fieldName);
+            // fieldLogs.length가 이미 해당 분야의 고유 단원 수 (processedUnits에서 중복 제거됨)
+            const fieldCompleted = fieldLogs.length;
 
             const title = document.createElement('div');
             title.className = 'radar-card-title';
