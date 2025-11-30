@@ -4,6 +4,12 @@
  * 세계문학(2): world_41~world_80 → world2_01~world2_40 으로 매핑
  */
 (function () {
+  // 이미 설정된 CUR_UNIT이 있고, world_로 시작하면 덮어쓰지 않음
+  if (window.CUR_UNIT && window.CUR_UNIT.startsWith('world_')) {
+    console.log('[world_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
+    return;
+  }
+
   const qs = new URLSearchParams(location.search).get('unit');
   let unitNum = null;
 

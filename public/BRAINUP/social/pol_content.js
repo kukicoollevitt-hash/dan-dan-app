@@ -4,7 +4,8 @@
  * ⚠️ HTML에서 이미 CUR_UNIT 설정했으면 덮어쓰지 않음
  */
 (function () {
-  if (window.CUR_UNIT) {
+  // 이미 설정된 CUR_UNIT이 있고, pol_로 시작하면 덮어쓰지 않음
+  if (window.CUR_UNIT && window.CUR_UNIT.startsWith('pol_')) {
     console.log('[pol_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
   }

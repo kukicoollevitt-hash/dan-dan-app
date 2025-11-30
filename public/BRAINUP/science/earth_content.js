@@ -3,8 +3,8 @@
  * 우선순위: ?unit=earth_XX → 파일명 earth_XX.html → 제목 숫자
  */
 (function () {
-  // 이미 설정된 CUR_UNIT이 있으면 덮어쓰지 않음
-  if (window.CUR_UNIT) {
+  // 이미 설정된 CUR_UNIT이 있고, earth_로 시작하면 덮어쓰지 않음
+  if (window.CUR_UNIT && window.CUR_UNIT.startsWith('earth_')) {
     console.log('[earth_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
   }

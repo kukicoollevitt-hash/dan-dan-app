@@ -3,8 +3,11 @@
  * 우선순위: HTML에서 미리 설정된 CUR_UNIT → ?unit=modern_XX → 파일명 modern_XX.html → 제목 숫자
  */
 (function () {
-  // ✅ HTML에서 이미 CUR_UNIT을 설정했다면 덮어쓰지 않음
-  if (window.CUR_UNIT) return;
+  // 이미 설정된 CUR_UNIT이 있고, modern_로 시작하면 덮어쓰지 않음
+  if (window.CUR_UNIT && window.CUR_UNIT.startsWith('modern_')) {
+    console.log('[modern_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
+    return;
+  }
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;

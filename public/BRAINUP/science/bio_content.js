@@ -3,6 +3,12 @@
  * 우선순위: ?unit=bio_XX → 파일명 bio_XX.html → 제목 숫자
  */
 (function () {
+  // 이미 설정된 CUR_UNIT이 있고, bio_로 시작하면 덮어쓰지 않음
+  if (window.CUR_UNIT && window.CUR_UNIT.startsWith('bio_')) {
+    console.log('[bio_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
+    return;
+  }
+
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
 
