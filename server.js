@@ -6752,7 +6752,21 @@ app.get("/api/unit-grades", async (req, res) => {
     const unitGradesMap = {};
 
     logs.forEach(log => {
-      const unitId = log.unit;
+      let unitId = log.unit;
+
+      // people2_XX → people_4X 형식으로 정규화 (인물(2)는 offset:40 사용)
+      const people2Match = unitId.match(/^people2_(\d{2})$/);
+      if (people2Match) {
+        const num = parseInt(people2Match[1], 10);
+        unitId = `people_${(num + 40).toString().padStart(2, '0')}`;
+      }
+
+      // world2_XX → world_4X 형식으로 정규화 (세계문학(2)는 offset:40 사용)
+      const world2Match = unitId.match(/^world2_(\d{2})$/);
+      if (world2Match) {
+        const num = parseInt(world2Match[1], 10);
+        unitId = `world_${(num + 40).toString().padStart(2, '0')}`;
+      }
 
       // 이미 등록된 단원이 아니면 추가 (최신 순으로 정렬되어 있으므로 첫 번째가 최신)
       if (!unitGradesMap[unitId] && log.radar) {

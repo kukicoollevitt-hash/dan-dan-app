@@ -55,14 +55,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '',
       items: [
-        { no: 1, text: '김유신의 어머니는 아들의 잘못된 행동을 단호하게 (       )었어요.', answer: '꾸짖', initials: 'ㄲㅈ', aliases: ['꾸짖다','꾸짖었','꾸짖'] },
-        { no: 2, text: '김유신은 활쏘기, 검술 같은 (      )를 열심히 연습했어요.', answer: '무예', initials: 'ㅁㅇ', aliases: ['무예'] },
-        { no: 3, text: '해야 할 일에 집중하지 못하고 다른 곳에 마음을 빼앗기는 것을 (         )라고 해요.', answer: '한눈팔다', initials: 'ㅎㄴㅍㄷ', aliases: ['한눈팔다','한눈을 팔다'] },
+        { no: 1, text: '김유신은 열다섯 살에 (      )이 되어 큰 기대를 받았어요.', answer: '화랑', initials: 'ㅎㄹ', aliases: ['화랑'] },
+        { no: 2, text: '김유신의 어머니는 아들의 잘못된 행동을 단호하게 (       )었어요.', answer: '꾸짖', initials: 'ㄲㅈ', aliases: ['꾸짖다','꾸짖었','꾸짖'] },
+        { no: 3, text: '김유신은 활쏘기, 검술 같은 (      )를 열심히 연습했어요.', answer: '무예', initials: 'ㅁㅇ', aliases: ['무예'] },
         { no: 4, text: '김유신은 다시는 (      )을 어기지 않겠다고 결심했어요.', answer: '약속', initials: 'ㅇㅅ', aliases: ['약속'] },
-        { no: 5, text: '자신의 잘못을 깨닫고 후회하는 것을 (         )라고 해요.', answer: '뉘우치다', initials: 'ㄴㅇㅊㄷ', aliases: ['뉘우치다','뉘우침'] },
-        { no: 6, text: '정해진 일을 책임감 있게 꾸준히 하는 태도를 (      )이라고 해요.', answer: '성실', initials: 'ㅅㅅ', aliases: ['성실'] },
-        { no: 7, text: '책임감 있고 당당한 남자를 옛날에는 (      )라고 불렀어요.', answer: '장부', initials: 'ㅈㅂ', aliases: ['장부'] },
-        { no: 8, text: '상황을 판단하고 해결하는 뛰어난 생각이나 꾀를 (      )이라고 해요.', answer: '지략', initials: 'ㅈㄹ', aliases: ['지략'] }
+        { no: 5, text: '김유신은 더 이상 (         ) 않기 위해 힘든 선택까지 감수했어요.', answer: '한눈팔지', initials: 'ㅎㄴㅍㅈ', aliases: ['한눈팔다','한눈팔지'] },
+        { no: 6, text: '김유신은 (      )하게 자신을 단련하며 노력했어요.', answer: '성실', initials: 'ㅅㅅ', aliases: ['성실'] },
+        { no: 7, text: '김유신은 신라의 삼국 통일에 큰 공을 세운 (      )으로 성장했어요.', answer: '장군', initials: 'ㅈㄱ', aliases: ['장군'] },
+        { no: 8, text: '김유신은 마음을 고쳐먹고 무예와 (      )을 다시 다지기로 결심했어요.', answer: '학문', initials: 'ㅎㅁ', aliases: ['학문'] }
       ]
     },
     quiz: {

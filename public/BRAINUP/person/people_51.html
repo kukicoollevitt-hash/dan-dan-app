@@ -69,41 +69,30 @@
 
   <script>
   /* =========================================================
-     단원 자동 인식 (강화)
-     우선순위: ?unit=geo_XX → 파일명 geo_XX.html → 제목 숫자
+     인물(2) 단원 자동 인식
+     people_41.html → people2_01, people_42.html → people2_02, ...
+     파일 번호 - 40 = 콘텐츠 번호
   ========================================================= */
   (function () {
-    const qs = new URLSearchParams(location.search).get('unit');
-    let unit = null;
+    // 파일명에서 번호 추출 (people_41.html → 41)
+    const m = location.pathname.toLowerCase().match(/people[_-]?(\d{1,2})\.html/);
+    let fileNum = m ? parseInt(m[1], 10) : 41;
 
-    if (qs) {
-      const m = qs.toLowerCase().match(/people[_-]?(\d{1,2})/);
-      if (m) unit = `people_${m[1].padStart(2,'0')}`;
-    }
-
-    if (!unit) {
-      const m2 = location.pathname.toLowerCase().match(/people[_-]?(\d{1,2})\.html/);
-      if (m2) unit = `people_${m2[1].padStart(2,'0')}`;
-    }
-
-    if (!unit && document.title) {
-      const m3 = document.title.match(/(\d{1,2})/);
-      if (m3) unit = `people_${m3[1].padStart(2,'0')}`;
-    }
-
-    window.CUR_UNIT = unit || 'people_51';
-    console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
+    // 인물(2)는 41~80 파일이 people2_01~40 콘텐츠에 대응
+    const contentNum = fileNum - 40;
+    window.CUR_UNIT = `people2_${String(contentNum).padStart(2,'0')}`;
+    console.log('[study page] CUR_UNIT =', window.CUR_UNIT, '(파일:', fileNum, ')');
   })();
 
   /* =========================================================
-     PAGE_KEY 자동 생성 (단원 번호 기반)  ← 이 블록만 남김
+     PAGE_KEY 자동 생성 (파일 번호 기반) - 메뉴 완료 상태와 일치
   ========================================================= */
   (function () {
-    const cur = (window.CUR_UNIT || 'people_51');
-    const m = cur.match(/people_(\d{1,2})/);
-    const no = m ? m[1].padStart(2,'0') : '01';
+    // 파일명에서 번호 추출
+    const m = location.pathname.toLowerCase().match(/people[_-]?(\d{1,2})\.html/);
+    const fileNum = m ? m[1].padStart(2,'0') : '41';
 
-    window.PAGE_KEY = `BRAINUP_person_people_${no}`;
+    window.PAGE_KEY = `BRAINUP_person_people_${fileNum}`;
     console.log('[study page] PAGE_KEY =', window.PAGE_KEY);
   })();
   </script>
@@ -1944,9 +1933,9 @@
             <div class="quiz-num">03<div class="mark"></div></div>
             <div class="quiz-content">
               <p class="quiz-q">
-                글쓴이는 새로운 사람을 만나면 무슨 말을 해야 할지 몰라
-                <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅅㅇㄷ"> 결국 민호에게 용기를 내어
-                <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅂㅎㄷ"> 마음먹었습니다.
+                김유신은 새벽마다
+                <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅇ">를 연습하고 밤에는 학문을 익히며
+                <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅅ">하게 자신을 단련했습니다.
               </p>
             </div>
           </div>
@@ -1956,9 +1945,9 @@
             <div class="quiz-num">04<div class="mark"></div></div>
             <div class="quiz-content">
               <p class="quiz-q">
-                글쓴이는
-                <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇㅎ"> 도서관에서 데미안을 발견하고, 두려움을 조금씩
-                <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅂㅎㄷ"> 시작했습니다.
+                김유신은 자신의 잘못을 깨닫고
+                <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅅ">을 굳혔으며, 꾸준한
+                <input class="inline-input" id="q4-2" type="text" placeholder="ㄴㄹ">으로 변화했습니다.
               </p>
             </div>
           </div>
@@ -2154,7 +2143,7 @@
     // 분석리포트 새로고침 함수
     function refreshReportTab() {
       try {
-        const reportKey = `dan-people-report-state:${window.CUR_UNIT || 'people_51'}`;
+        const reportKey = `dan-people-report-state:${window.CUR_UNIT || 'people_41'}`;
         const saved = localStorage.getItem(reportKey);
         if (saved) {
           const reportState = JSON.parse(saved);
@@ -2215,14 +2204,14 @@
         const target = btn.dataset.tab;
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
-        const unit = window.CUR_UNIT || 'people_51';
+        const unit = window.CUR_UNIT || 'people_41';
         localStorage.setItem(`current-people-tab:${unit}`, target);
       });
     });
 
     // 페이지 로드 시 저장된 탭 복원 (없으면 본문학습으로 시작)
     window.addEventListener('DOMContentLoaded', () => {
-      const unit = window.CUR_UNIT || 'people_51';
+      const unit = window.CUR_UNIT || 'people_41';
       const savedTab = localStorage.getItem(`current-people-tab:${unit}`) || 'reading';
       activateTab(savedTab);
     });
@@ -2707,7 +2696,7 @@
       });
 
       // ★ localStorage에 분석리포트 상태 저장 (분석리포트 탭 즉시 반영용)
-      const reportKey = `dan-people-report-state:${window.CUR_UNIT || 'people_51'}`;
+      const reportKey = `dan-people-report-state:${window.CUR_UNIT || 'people_41'}`;
       localStorage.setItem(reportKey, JSON.stringify({
         q1ok: reportState.q1ok,
         q2ok: reportState.q2ok,
@@ -3248,7 +3237,7 @@ function _getStudentKey() {
   } catch(e){}
   return 'dan-vfill:guest';
 }
-function _storeKey(unit){ return `${_getStudentKey()}::${unit||window.CUR_UNIT||'people_51'}`; }
+function _storeKey(unit){ return `${_getStudentKey()}::${unit||window.CUR_UNIT||'people_41'}`; }
 
 // ✅ 비교용 정규화 (대소문/공백/기호 제거)
 function _norm(s){
@@ -3411,7 +3400,7 @@ function _bindTabEvents() {
 
 
 <!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
-<script src="./people_content.js?v=20251113" defer></script>
+<script src="./people2_content.js?v=20251201" defer></script>
 
 <!-- 달력 팝업 -->
 <div class="calendar-overlay" id="calendar-overlay"></div>
