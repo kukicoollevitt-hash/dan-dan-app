@@ -2768,8 +2768,8 @@ app.get("/admin/users", async (req, res) => {
         'worldlit/modern': '세계문학(1)',
         'worldlit/essay': '세계문학(2)',
         'worldlit/nonfiction': '세계문학(2)',
-        'person/korea': '인물(1)',
-        'person/world': '인물(2)'
+        'person/korea': '한국인물',
+        'person/world': '세계인물'
       };
 
       const html = schedules.map(schedule => {
@@ -4078,8 +4078,8 @@ app.get("/admin/users", async (req, res) => {
                   </label>
                 </div>
                 <div class="subject-group level-2">
-                  <label><input type="checkbox" class="subject-checkbox" data-field="person" data-subject="1" value="person/korea" onchange="handleSubjectChange()"> 인물(1)</label>
-                  <label><input type="checkbox" class="subject-checkbox" data-field="person" data-subject="2" value="person/world" onchange="handleSubjectChange()"> 인물(2)</label>
+                  <label><input type="checkbox" class="subject-checkbox" data-field="person" data-subject="1" value="person/korea" onchange="handleSubjectChange()"> 한국인물</label>
+                  <label><input type="checkbox" class="subject-checkbox" data-field="person" data-subject="2" value="person/world" onchange="handleSubjectChange()"> 세계인물</label>
                 </div>
               </div>
             </div>
@@ -4852,6 +4852,25 @@ app.post("/api/migrate-legacy-units", async (req, res) => {
     res.json({ ok: true, message: "마이그레이션 완료", results });
   } catch (err) {
     console.error("❌ 마이그레이션 에러:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ===== people 관련 데이터 전체 삭제 API =====
+// people_XX, people2_XX, person_XX 등 인물 관련 모든 레코드 삭제
+app.post("/api/delete-all-people-data", async (req, res) => {
+  try {
+    console.log("🗑️ people 관련 데이터 전체 삭제 시작...");
+
+    // people로 시작하는 모든 unit 삭제 (people_, people2_, person_, person2_ 등)
+    const result = await LearningLog.deleteMany({
+      unit: { $regex: /^(people|person)/ }
+    });
+
+    console.log(`✅ people 관련 데이터 ${result.deletedCount}개 삭제 완료`);
+    res.json({ ok: true, message: `${result.deletedCount}개 삭제 완료`, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error("❌ 삭제 에러:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
@@ -6053,14 +6072,30 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         // 시리즈 총 단원 수
         const seriesTotalUnits = 400;
 
-        // 단원 코드 정규화 함수 (world2_01 -> world_41, people2_01 -> people_41)
+        // 단원 코드 정규화 함수 (world1_XX -> world_XX, world2_XX -> world_(XX+40), people1_XX -> people_XX, people2_XX -> people_(XX+40))
         function normalizeUnitCode(unit) {
+          // world1_XX -> world_XX (번호 그대로 유지)
+          if (unit.startsWith('world1_')) {
+            const numMatch = unit.match(/world1_([0-9]+)$/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1]);
+              return 'world_' + num;
+            }
+          }
           // world2_XX -> world_(XX+40)
           if (unit.startsWith('world2_')) {
             const numMatch = unit.match(/world2_([0-9]+)$/);
             if (numMatch) {
               const num = parseInt(numMatch[1]);
               return 'world_' + (num + 40);
+            }
+          }
+          // people1_XX -> people_XX (번호 그대로 유지)
+          if (unit.startsWith('people1_')) {
+            const numMatch = unit.match(/people1_([0-9]+)$/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1]);
+              return 'people_' + num;
             }
           }
           // people2_XX -> people_(XX+40)
@@ -6160,11 +6195,11 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           'world': '세계문학1',
           'world1': '세계문학1',
           'world2': '세계문학2',
-          'people': '인물1',
-          'people1': '인물1',
-          'people2': '인물2',
-          'person1': '인물1',
-          'person2': '인물2'
+          'people': '한국인물',
+          'people1': '한국인물',
+          'people2': '세계인물',
+          'person1': '한국인물',
+          'person2': '세계인물'
         };
 
         // 과목 코드 → 분야 클래스 매핑
@@ -6198,6 +6233,7 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           let subjectCode = log.unit.split('_')[0];
 
           // world_01~40 -> world1, world_41~80 -> world2 (people도 동일)
+          // world2_XX, people2_XX는 직접 world2, people2로 매핑
           if (subjectCode === 'world' || subjectCode === 'people') {
             const numMatch = log.unit.match(/_([0-9]+)$/);
             const num = numMatch ? parseInt(numMatch[1]) : 0;
@@ -6206,6 +6242,11 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             } else {
               subjectCode = num <= 40 ? 'people1' : 'people2';
             }
+          } else if (subjectCode === 'world1' || subjectCode === 'world2' || subjectCode === 'people1' || subjectCode === 'people2' || subjectCode === 'person1' || subjectCode === 'person2') {
+            // world1, world2, people1, people2, person1, person2는 그대로 유지
+            // person1 -> people1, person2 -> people2로 통합
+            if (subjectCode === 'person1') subjectCode = 'people1';
+            if (subjectCode === 'person2') subjectCode = 'people2';
           }
 
           const subjectKey = (log.series || 'BRAIN업') + '_' + subjectCode;
@@ -6754,12 +6795,7 @@ app.get("/api/unit-grades", async (req, res) => {
     logs.forEach(log => {
       let unitId = log.unit;
 
-      // people2_XX → people_4X 형식으로 정규화 (인물(2)는 offset:40 사용)
-      const people2Match = unitId.match(/^people2_(\d{2})$/);
-      if (people2Match) {
-        const num = parseInt(people2Match[1], 10);
-        unitId = `people_${(num + 40).toString().padStart(2, '0')}`;
-      }
+      // people2_XX, people1_XX 형식 그대로 유지 (더 이상 변환하지 않음)
 
       // world2_XX → world_4X 형식으로 정규화 (세계문학(2)는 offset:40 사용)
       const world2Match = unitId.match(/^world2_(\d{2})$/);
@@ -8255,7 +8291,7 @@ app.get("/my-learning", async (req, res) => {
               <div class="subject-list">
                 <div class="subject-item">
                   <div class="subject-title">
-                    <span>인물(1)</span>
+                    <span>한국인물</span>
                     <span id="person1Percent">0%</span>
                   </div>
                   <div class="subject-progress-bar-container">
@@ -8264,7 +8300,7 @@ app.get("/my-learning", async (req, res) => {
                 </div>
                 <div class="subject-item">
                   <div class="subject-title">
-                    <span>인물(2)</span>
+                    <span>세계인물</span>
                     <span id="person2Percent">0%</span>
                   </div>
                   <div class="subject-progress-bar-container">
@@ -8678,14 +8714,30 @@ app.get("/my-learning", async (req, res) => {
         // 시리즈 총 단원 수
         const seriesTotalUnits = 400;
 
-        // 단원 코드 정규화 함수 (world2_01 -> world_41, people2_01 -> people_41)
+        // 단원 코드 정규화 함수 (world1_XX -> world_XX, world2_XX -> world_(XX+40), people1_XX -> people_XX, people2_XX -> people_(XX+40))
         function normalizeUnitCode(unit) {
+          // world1_XX -> world_XX (번호 그대로 유지)
+          if (unit.startsWith('world1_')) {
+            const numMatch = unit.match(/world1_([0-9]+)$/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1]);
+              return 'world_' + num;
+            }
+          }
           // world2_XX -> world_(XX+40)
           if (unit.startsWith('world2_')) {
             const numMatch = unit.match(/world2_([0-9]+)$/);
             if (numMatch) {
               const num = parseInt(numMatch[1]);
               return 'world_' + (num + 40);
+            }
+          }
+          // people1_XX -> people_XX (번호 그대로 유지)
+          if (unit.startsWith('people1_')) {
+            const numMatch = unit.match(/people1_([0-9]+)$/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1]);
+              return 'people_' + num;
             }
           }
           // people2_XX -> people_(XX+40)
@@ -8785,11 +8837,11 @@ app.get("/my-learning", async (req, res) => {
           'world': '세계문학1',
           'world1': '세계문학1',
           'world2': '세계문학2',
-          'people': '인물1',
-          'people1': '인물1',
-          'people2': '인물2',
-          'person1': '인물1',
-          'person2': '인물2'
+          'people': '한국인물',
+          'people1': '한국인물',
+          'people2': '세계인물',
+          'person1': '한국인물',
+          'person2': '세계인물'
         };
 
         // 과목 코드 → 분야 클래스 매핑
@@ -8823,6 +8875,7 @@ app.get("/my-learning", async (req, res) => {
           let subjectCode = log.unit.split('_')[0];
 
           // world_01~40 -> world1, world_41~80 -> world2 (people도 동일)
+          // world2_XX, people2_XX는 직접 world2, people2로 매핑
           if (subjectCode === 'world' || subjectCode === 'people') {
             const numMatch = log.unit.match(/_([0-9]+)$/);
             const num = numMatch ? parseInt(numMatch[1]) : 0;
@@ -8831,6 +8884,11 @@ app.get("/my-learning", async (req, res) => {
             } else {
               subjectCode = num <= 40 ? 'people1' : 'people2';
             }
+          } else if (subjectCode === 'world1' || subjectCode === 'world2' || subjectCode === 'people1' || subjectCode === 'people2' || subjectCode === 'person1' || subjectCode === 'person2') {
+            // world1, world2, people1, people2, person1, person2는 그대로 유지
+            // person1 -> people1, person2 -> people2로 통합
+            if (subjectCode === 'person1') subjectCode = 'people1';
+            if (subjectCode === 'person2') subjectCode = 'people2';
           }
 
           const subjectKey = (log.series || 'BRAIN업') + '_' + subjectCode;
@@ -9097,11 +9155,11 @@ app.get("/my-learning", async (req, res) => {
           let unitName = log.unit || '단원';
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
-            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학', 'people': '인물', 'person1': '인물', 'person2': '인물' };
+            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물' };
             const subject = subjectMap[parts[0]] || parts[0];
             let number = parts[1] ? parseInt(parts[1], 10) : 0;
-            // world2, people2는 번호에 40을 더함 (world2_01 → 세계문학 41)
-            if (parts[0] === 'world2' || parts[0] === 'person2') {
+            // world2는 번호에 40을 더함 (world2_01 → 세계문학 41), people2는 그대로 (people2_01 → 세계인물 1)
+            if (parts[0] === 'world2') {
               number += 40;
             }
             unitName = subject + ' ' + number;
@@ -9786,8 +9844,8 @@ app.get("/my-learning", async (req, res) => {
           // 테이블 초기화
           tbody.innerHTML = '';
 
-          // 과목 매핑 (world2, person2는 세계문학, 인물로 통합 - 번호에 40을 더함)
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학', 'people': '인물', 'person1': '인물', 'person2': '인물' };
+          // 과목 매핑 (world2는 세계문학, people1/people2는 한국인물/세계인물로 분리)
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
 
           logs.forEach((log, idx) => {
             const ts = log.timestamp
@@ -9822,8 +9880,8 @@ app.get("/my-learning", async (req, res) => {
               const parts = unitName.split('_');
               const subject = subjectMap[parts[0]] || parts[0];
               let number = parts[1] ? parseInt(parts[1], 10) : 0;
-              // world2, person2는 번호에 40을 더함 (world2_01 → 세계문학 41)
-              if (parts[0] === 'world2' || parts[0] === 'person2') {
+              // world2만 번호에 40을 더함 (world2_01 → 세계문학 41), people2는 그대로 (people2_01 → 세계인물 1)
+              if (parts[0] === 'world2') {
                 number += 40;
               }
               unitName = subject + ' ' + number;
@@ -9963,6 +10021,8 @@ app.get("/my-learning", async (req, res) => {
             world1: 'world-lit',
             world2: 'world-lit',
             people: 'person',  // people_01 ~ people_80
+            people1: 'person',  // people1_01 ~ people1_40 (한국인물)
+            people2: 'person',  // people2_01 ~ people2_40 (세계인물)
             person1: 'person',
             person2: 'person'
           };
@@ -10008,9 +10068,23 @@ app.get("/my-learning", async (req, res) => {
                 if (progress[field][subKey] !== undefined) {
                   progress[field][subKey]++;
                 }
-              } else if (subjectCode === 'world2' || subjectCode === 'person2') {
-                // world2_XX, person2_XX 형태 직접 처리
-                console.log('[진도율] world2/person2 처리:', unit, subjectCode, field);
+              } else if (subjectCode === 'world1' || subjectCode === 'world2') {
+                // world1_XX, world2_XX 형태 직접 처리
+                if (progress[field][subjectCode] !== undefined) {
+                  progress[field][subjectCode]++;
+                }
+              } else if (subjectCode === 'people1') {
+                // people1_XX -> person1로 처리 (한국인물)
+                if (progress[field].person1 !== undefined) {
+                  progress[field].person1++;
+                }
+              } else if (subjectCode === 'people2') {
+                // people2_XX -> person2로 처리 (세계인물)
+                if (progress[field].person2 !== undefined) {
+                  progress[field].person2++;
+                }
+              } else if (subjectCode === 'person2') {
+                // person2_XX 형태 직접 처리
                 if (progress[field][subjectCode] !== undefined) {
                   progress[field][subjectCode]++;
                 }
@@ -10077,8 +10151,8 @@ app.get("/my-learning", async (req, res) => {
           // 한국문학분야
           const koreanLitPercent = updateProgress('koreanLitFieldBar', 'koreanLitFieldText', progress['korean-lit'].total, 80);
           document.getElementById('koreanLitFieldPercent').textContent = koreanLitPercent + '%';
-          updateSubjectProgress('modernBar', 'modernPercent', progress['korean-lit'].modern, 20);
-          updateSubjectProgress('classicBar', 'classicPercent', progress['korean-lit'].classic, 20);
+          updateSubjectProgress('modernBar', 'modernPercent', progress['korean-lit'].modern, 40);
+          updateSubjectProgress('classicBar', 'classicPercent', progress['korean-lit'].classic, 40);
 
           // 세계문학분야 (각 40개씩, 총 80개)
           const worldLitPercent = updateProgress('worldLitFieldBar', 'worldLitFieldText', progress['world-lit'].total, 80);

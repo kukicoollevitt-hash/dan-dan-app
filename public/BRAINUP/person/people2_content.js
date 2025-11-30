@@ -60,9 +60,21 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 문제 제기 → 해결 방법 제시 → 결론',
         '④ 시간 순서와 관계없이 주제별로 나열'
       ],
+      q3_html: `레오나르도는 어릴 때부터 자연을 유심히 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅊ">하고 모든 것을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅌㄱ">의 대상으로 삼았습니다.`,
+      q4_html: `레오나르도는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㄱㅅ">과 <input class="inline-input" id="q4-2" type="text" placeholder="ㄲㄱ">로 세상을 탐구했습니다.`,
       q3_1_ph: 'ㄱㅊ', q3_2_ph: 'ㅌㄱ',
       q4_1_ph: 'ㅎㄱㅅ', q4_2_ph: 'ㄲㄱ',
       q5_text: '레오나르도 다빈치의 삶에서 배울 수 있는 점을 자신의 말로 써 보세요.'
+    },
+    creative: {
+      title: '🎨 관찰하고 탐구하고 싶은 것',
+      topic: '"레오나르도처럼 내가 깊이 관찰하고 탐구하고 싶은 것은 무엇인지 써 보세요."',
+      hint: '💡 힌트) 레오나르도는 호기심과 끈기로 세상을 탐구했어요. 나도 궁금한 것, 알고 싶은 것을 떠올려 보세요.',
+      examples: [
+        '예시 1) 나는 별과 우주에 대해 깊이 관찰하고 싶다. 밤하늘을 보며 별자리를 찾고 우주의 신비를 탐구하고 싶다.',
+        '예시 2) 나는 곤충의 생태를 관찰하고 싶다. 개미가 어떻게 협력하는지 호기심이 생긴다.',
+        '예시 3) 나는 그림 그리기를 좋아해서 레오나르도처럼 사물을 자세히 관찰하며 그리고 싶다.'
+      ]
     },
     answerKey: { q1:'3', q2:'1', q3_1:['관찰'], q3_2:['탐구'], q4_1:['호기심'], q4_2:['끈기'] },
     essayKeywords: ['관찰','탐구','호기심','끈기','노력','배움','발견','연구'],
@@ -123,6 +135,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 작품의 의미 → 미켈란젤로의 죽음 → 어린 시절 회상',
         '④ 다른 예술가들의 소개 → 미켈란젤로의 비교 → 결론'
       ],
+      q3_html: `미켈란젤로는 시스티나 성당의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅊㅈㅎ">를 그리며 목과 등이 아플 정도로 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㄴ">을 겪었습니다.`,
+      q4_html: `미켈란젤로는 자신의 모든 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅈ">을 쏟아 이 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅈ">을 완성했습니다.`,
       q3_1_ph: 'ㅊㅈㅎ', q3_2_ph: 'ㄱㄴ',
       q4_1_ph: 'ㅇㅈ', q4_2_ph: 'ㄱㅈ',
       q5_text: '미켈란젤로가 4년 동안 힘든 고난을 겪으면서도 천장화를 완성할 수 있었던 이유는 무엇이라고 생각하나요? 본문 내용을 바탕으로 자신의 생각을 써 보세요.'
@@ -969,6 +983,31 @@ function applyContentPack(unitKey) {
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
+  }
+
+  // ✅ 창의활동 동적 로드
+  if (pack.creative) {
+    const topicEl = document.getElementById('creative-topic');
+    const hintEl = document.getElementById('creative-hint');
+    const examplesBox = document.getElementById('creative-examples-box');
+
+    if (topicEl && pack.creative.topic) {
+      topicEl.textContent = pack.creative.topic;
+    }
+    if (hintEl && pack.creative.hint) {
+      hintEl.textContent = pack.creative.hint;
+    }
+    if (examplesBox && pack.creative.examples) {
+      // 기존 예시 제거 (example-title 유지)
+      const existingExamples = examplesBox.querySelectorAll('div:not(.example-title)');
+      existingExamples.forEach(el => el.remove());
+      // 새 예시 추가
+      pack.creative.examples.forEach(ex => {
+        const div = document.createElement('div');
+        div.textContent = ex;
+        examplesBox.appendChild(div);
+      });
+    }
   }
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
