@@ -1375,40 +1375,53 @@
       const studentKey = buildStudentKey(stu); // 예: "4학년_사사사_01044444444"
 
       // 3) 현재 단원 번호와 PAGE_KEY
-      const cur = (window.CUR_UNIT || 'soc_02');                  // 예: 'geo_02'
-      const m = cur.match(/geo_(\d{1,2})/);
-      const no = m ? m[1].padStart(2, '0') : '01';
+      const cur = (window.CUR_UNIT || 'soc_02');                  // 예: 'soc_02'
+      const m = cur.match(/soc_(\d{1,2})/);
+      const no = m ? m[1].padStart(2, '0') : '02';
       const pk = window.PAGE_KEY || `BRAINUP_social_soc_${no}`;   // 예: 'BRAINUP_social_soc_02'
 
       // 4) 과거/변형 키까지 한 번에 흡수
-      const legacyPath = `./BRAINUP/social/geo_${no}.html`;
+      const legacyPath = `./BRAINUP/social/soc_${no}.html`;
       const pageIds = [
         pk,
         legacyPath,
-        `BRAINUP_geo_${no}`,
-        `BRAINUP_social_geo${no}`
+        `BRAINUP_soc_${no}`,
+        `BRAINUP_social_soc${no}`
       ];
       console.log('[study page] PAGE_IDs =', pageIds);
 
-      // 5) localStorage 내 dan-progress* 전부 병합 저장
-      const allKeys = Object.keys(localStorage);
-      const progressKeys = new Set([
-        `dan-progress:${studentKey}`,
-        `dan-progress-${studentKey}`
-      ]);
-      allKeys.forEach(k => { if (k.startsWith('dan-progress')) progressKeys.add(k); });
+      // 5) localStorage에 학습완료 저장 (menu.html과 동일한 형식)
+      // menu.html에서 체크하는 키 형식: dan-progress:${stuKey}:${unitCode}
+      const unitCode = cur; // 예: 'soc_02'
+      const mainKey = `dan-progress:${studentKey}:${unitCode}`;
 
-      progressKeys.forEach(storeKey => {
-        let saved;
-        try {
-          saved = JSON.parse(localStorage.getItem(storeKey) || '[]');
-          // 배열이 아니면 빈 배열로 초기화
+      // 메인 키에 저장 (배열 형식)
+      let saved = [];
+      try {
+        const existing = localStorage.getItem(mainKey);
+        if (existing) {
+          saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
         }
-        catch(e) { saved = []; }
-        pageIds.forEach(id => { if (!saved.includes(id)) saved.push(id); });
-        localStorage.setItem(storeKey, JSON.stringify(saved));
-        console.log('[study page] wrote to', storeKey, '=>', saved);
+      } catch(e) { saved = []; }
+
+      pageIds.forEach(id => { if (!saved.includes(id)) saved.push(id); });
+      localStorage.setItem(mainKey, JSON.stringify(saved));
+      console.log('[study page] wrote to', mainKey, '=>', saved);
+
+      // 하위 호환: 기존 키에도 저장
+      const legacyKeys = [
+        `dan-progress:${studentKey}`,
+        `dan-progress-${studentKey}`
+      ];
+      legacyKeys.forEach(storeKey => {
+        let legacySaved = [];
+        try {
+          legacySaved = JSON.parse(localStorage.getItem(storeKey) || '[]');
+          if (!Array.isArray(legacySaved)) legacySaved = [];
+        } catch(e) { legacySaved = []; }
+        pageIds.forEach(id => { if (!legacySaved.includes(id)) legacySaved.push(id); });
+        localStorage.setItem(storeKey, JSON.stringify(legacySaved));
       });
 
       // 6) 부모 창에 완료 메시지 전송 (코인 지급 및 UI 업데이트)
