@@ -3,16 +3,22 @@
  * 우선순위: ?unit=earth_XX → 파일명 earth_XX.html → 제목 숫자
  */
 (function () {
+  // 이미 설정된 CUR_UNIT이 있으면 덮어쓰지 않음
+  if (window.CUR_UNIT) {
+    console.log('[earth_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
+    return;
+  }
+
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
 
   if (qs) {
-    const m = qs.toLowerCase().match(/geo[_-]?(\d{1,2})/);
+    const m = qs.toLowerCase().match(/earth[_-]?(\d{1,2})/);
     if (m) unit = `earth_${m[1].padStart(2, '0')}`;
   }
 
   if (!unit) {
-    const m2 = location.pathname.toLowerCase().match(/geo[_-]?(\d{1,2})\.html/);
+    const m2 = location.pathname.toLowerCase().match(/earth[_-]?(\d{1,2})\.html/);
     if (m2) unit = `earth_${m2[1].padStart(2, '0')}`;
   }
 
@@ -22,6 +28,7 @@
   }
 
   window.CUR_UNIT = unit || 'earth_01';
+  console.log('[earth_content.js] CUR_UNIT 설정됨:', window.CUR_UNIT);
 })();
 
 /* ===============================
@@ -144,6 +151,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 지구의 탄생 → 마그마의 소멸 → 새로운 행성의 등장',
         '④ 제주도 소개 → 하와이 소개 → 온천 이용법'
       ],
+      q3_html: `지하 깊은 곳에서 녹은 암석인
+                <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㄱㅁ"> 가 한곳에 모이면
+                <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㄹ"> 이 높아집니다.`,
+      q4_html: `압력이 너무 세지면
+                <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㄱ"> 의 약한 틈을 뚫고 올라와
+                <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅇ"> 이 되어 분출합니다.`,
       q3_1_ph: 'ㅁㄱㅁ', q3_2_ph: 'ㅇㄹ',
       q4_1_ph: 'ㅈㄱ', q4_2_ph: 'ㅇㅇ',
       q5_text: '화산은 위험하지만 동시에 인간에게 도움을 주기도 합니다. 본문을 바탕으로 화산이 주는 긍정적인 면을 두 가지 이상 써 보세요.'
