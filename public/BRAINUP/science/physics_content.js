@@ -1,18 +1,24 @@
 /**
  * ✅ 단원 자동 인식 (강화)
  * 우선순위: ?unit=physics_XX → 파일명 physics_XX.html → 제목 숫자
+ * ⚠️ HTML에서 이미 CUR_UNIT 설정했으면 덮어쓰지 않음
  */
 (function () {
+  if (window.CUR_UNIT) {
+    console.log('[physics_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
+    return;
+  }
+
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
 
   if (qs) {
-    const m = qs.toLowerCase().match(/geo[_-]?(\d{1,2})/);
+    const m = qs.toLowerCase().match(/physics[_-]?(\d{1,2})/);
     if (m) unit = `physics_${m[1].padStart(2, '0')}`;
   }
 
   if (!unit) {
-    const m2 = location.pathname.toLowerCase().match(/geo[_-]?(\d{1,2})\.html/);
+    const m2 = location.pathname.toLowerCase().match(/physics[_-]?(\d{1,2})\.html/);
     if (m2) unit = `physics_${m2[1].padStart(2, '0')}`;
   }
 
