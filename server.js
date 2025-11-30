@@ -12142,16 +12142,16 @@ const aiTaskScheduleSchema = new mongoose.Schema({
 const AITaskSchedule = mongoose.model('AITaskSchedule', aiTaskScheduleSchema);
 
 // 등급 판정 함수 (menu.html과 동일한 로직)
-// TODO: 테스트용 시간 단위 - 나중에 다시 일 단위로 변경 필요
+// AI 추천과제 부여 시간 설정
 function getGradeInfo(avgScore) {
   if (avgScore >= 9) {
     return { grade: 'excellent', text: '우수', hours: 0 }; // 우수는 부여 안 함
   } else if (avgScore >= 8) {
-    return { grade: 'good', text: '양호', hours: 3 }; // 양호: 3시간 후
+    return { grade: 'good', text: '양호', hours: 12 }; // 양호: 12시간 후
   } else if (avgScore >= 7) {
-    return { grade: 'average', text: '보통', hours: 1 }; // 보통: 1시간 후
+    return { grade: 'average', text: '보통', hours: 6 }; // 보통: 6시간 후
   } else {
-    return { grade: 'encourage', text: '격려', hours: 0.5 }; // 격려: 30분 후
+    return { grade: 'encourage', text: '격려', hours: 3 }; // 격려: 3시간 후
   }
 }
 
@@ -12187,7 +12187,7 @@ app.post('/api/ai-task/create-schedule', async (req, res) => {
     // 부여 예정 날짜 계산 - 현재 시간 기준으로 계산 (복습 완료 시점 = 지금)
     const now = new Date();
     const scheduledDate = new Date(now);
-    // TODO: 테스트용 시간 단위 - 등급별 일정 적용: 격려 30분, 보통 1시간, 양호 3시간 (원래: 3일, 5일, 7일)
+    // 등급별 일정 적용: 격려 3시간, 보통 6시간, 양호 12시간
     scheduledDate.setHours(scheduledDate.getHours() + gradeInfo.hours);
 
     // 기존 스케줄 확인 (같은 학생, 같은 단원)
@@ -12244,7 +12244,7 @@ app.post('/api/ai-task/create-schedule', async (req, res) => {
 
 // 매일 자정 실행: AI 과제 자동 부여 (LearningLog 테이블 기준)
 // - 최종완료 시간과 최종등급을 기준으로 AI 추천과제 부여
-// - 격려: 30분 후, 보통: 1시간 후, 양호: 3시간 후, 우수: 부여 안 함
+// - 격려: 3시간 후, 보통: 6시간 후, 양호: 12시간 후, 우수: 부여 안 함
 async function assignAITasksDaily() {
   try {
     console.log('🤖 [NEW] AI 자동 과제 부여 시작 (LearningLog 기준):', new Date().toISOString());
