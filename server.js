@@ -9873,10 +9873,22 @@ app.get("/my-learning", async (req, res) => {
 
             const hiddenClass = idx >= 10 ? 'hidden-row' : '';
 
-            // AI과제부여 시간 포맷팅
-            const aiTaskTimestamp = log.aiTaskAssignedAt ?
-              new Date(log.aiTaskAssignedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
-            const aiTaskStyle = log.aiTaskAssignedAt ? 'color: #6b21a8; font-weight: 600;' : 'color: #999;';
+            // AI과제부여 예정 시간 계산 (학습 완료 시간 + 등급별 대기 시간)
+            // 우수: 부여 안 함, 양호: 12시간, 보통: 6시간, 격려: 3시간
+            let aiTaskTimestamp = '-';
+            let aiTaskStyle = 'color: #999;';
+            if (log.timestamp && avgScore < 9) { // 우수 등급이 아닌 경우만
+              const completedAt = new Date(log.timestamp);
+              let waitHours = 6; // 기본: 보통 6시간
+              if (avgScore >= 8) {
+                waitHours = 12; // 양호: 12시간
+              } else if (avgScore < 7) {
+                waitHours = 3; // 격려: 3시간
+              }
+              const scheduledAt = new Date(completedAt.getTime() + waitHours * 60 * 60 * 1000);
+              aiTaskTimestamp = scheduledAt.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+              aiTaskStyle = 'color: #6b21a8; font-weight: 600;';
+            }
 
             // 최종완료 시간 = 학습 완료 시점 (timestamp) - AI과제부여와 무관
             const finalTimestamp = log.timestamp ?
