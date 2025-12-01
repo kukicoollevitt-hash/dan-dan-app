@@ -4975,9 +4975,14 @@ app.post("/api/log", async (req, res) => {
     console.log("🗑️ [/api/log] unit-grades 캐시 삭제:", cacheKey);
 
     // 🔥 학습 기록 캐시도 삭제 (학습 완료 시 기록 갱신 필요)
-    const logsCacheKey = getCacheKey('learning-logs', { grade, name });
-    cache.delete(logsCacheKey);
-    console.log("🗑️ [/api/log] learning-logs 캐시 삭제:", logsCacheKey);
+    // phone 파라미터 유무에 따라 캐시 키가 다를 수 있으므로 해당 사용자의 모든 learning-logs 캐시 삭제
+    const logsCachePrefix = `learning-logs:{"grade":"${grade}","name":"${name}"`;
+    for (const key of cache.keys()) {
+      if (key.startsWith(logsCachePrefix)) {
+        cache.delete(key);
+        console.log("🗑️ [/api/log] learning-logs 캐시 삭제:", key);
+      }
+    }
 
     // 🔥 AI 추천 과제의 status를 'completed'로 업데이트 (복습완료 처리)
     if (completed === true && unit) {
@@ -8063,7 +8068,7 @@ app.get("/my-learning", async (req, res) => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(최초)</small></th>
+                <th>과목</th>
                 <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(AI과제부여)</small></th>
                 <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(최종)</small></th>
                 <th>등급</th>
@@ -9755,9 +9760,9 @@ app.get("/my-learning", async (req, res) => {
             let timeA, timeB;
 
             if (sortBy === 'first') {
-              // 최초 시간 (timestamp)
-              timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-              timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              // 최초 시간 (createdAt)
+              timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
             } else if (sortBy === 'aiTask') {
               // AI과제부여 시간
               timeA = a.aiTaskAssignedAt ? new Date(a.aiTaskAssignedAt).getTime() : 0;
@@ -9815,9 +9820,19 @@ app.get("/my-learning", async (req, res) => {
           const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
 
           logs.forEach((log, idx) => {
-            const ts = log.timestamp
-              ? new Date(log.timestamp).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
-              : "-";
+            // 과목명 추출 (unit 코드에서)
+            let subjectName = '-';
+            const unitCode = log.unit || '';
+            if (unitCode && unitCode.includes('_')) {
+              const parts = unitCode.split('_');
+              let number = parts[1] ? parseInt(parts[1], 10) : 0;
+              // world_41~80은 세계문학2
+              if (parts[0] === 'world' && number > 40) {
+                subjectName = '세계문학2';
+              } else {
+                subjectName = subjectMap[parts[0]] || parts[0];
+              }
+            }
 
             // 평균 점수 계산
             const r = log.radar || {};
@@ -9872,7 +9887,7 @@ app.get("/my-learning", async (req, res) => {
             if (hiddenClass) row.className = hiddenClass;
             row.innerHTML = \`
               <td>\${idx + 1}</td>
-              <td>\${ts}</td>
+              <td>\${subjectName}</td>
               <td style="\${aiTaskStyle}">\${aiTaskTimestamp}</td>
               <td style="\${finalTimeStyle}">\${finalTimestamp}</td>
               <td><span class="badge \${badgeClass}">\${badgeText}</span></td>
