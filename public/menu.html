@@ -6609,6 +6609,18 @@ async function performLogout() {
         return unitId;
       }
 
+      // 구 형식 ID를 새 형식으로 변환 (기존 데이터 호환성)
+      // world_XX -> world1_XX, people_XX -> people1_XX
+      if (unitId) {
+        const legacyMatch = unitId.match(/^(world|people)_(\d+)$/i);
+        if (legacyMatch) {
+          const oldPrefix = legacyMatch[1].toLowerCase();
+          const num = legacyMatch[2];
+          unitId = `${oldPrefix}1_${num}`;
+          console.log(`🔄 Converting legacy unitId: ${legacyMatch[0]} -> ${unitId}`);
+        }
+      }
+
       // unitId를 파일 경로로 변환 (예: "geo_01" -> "./BRAINUP/social/geo_01.html")
       if (unitId && unitId.match(/^[a-z]+\d?_\d+$/i)) {
         // 과목 코드 추출 (예: chem_01 -> chem, physics_01 -> physics)
@@ -7580,6 +7592,18 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       }
     }
 
+    // 구 형식 unitId를 새 형식으로 정규화 (world_02 -> world1_02, people_02 -> people1_02)
+    function normalizeUnitId(unitId) {
+      if (!unitId) return unitId;
+      const legacyMatch = unitId.match(/^(world|people)_(\d+)$/i);
+      if (legacyMatch) {
+        const oldPrefix = legacyMatch[1].toLowerCase();
+        const num = legacyMatch[2];
+        return `${oldPrefix}1_${num}`;
+      }
+      return unitId;
+    }
+
     // 부여 시간 포맷 함수 (11월 25일 14:30 형태)
     function formatAssignedTime(dateString) {
       if (!dateString) return '';
@@ -7814,10 +7838,12 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         li.className = 'study-room-item';
 
         // AI 과제는 id, 관리자 과제는 unitId 사용
-        const unitId = task.id || task.unitId;
+        const rawUnitId = task.id || task.unitId;
+        // 구 형식 ID를 새 형식으로 정규화 (world_02 -> world1_02)
+        const unitId = normalizeUnitId(rawUnitId);
         const isCompleted = isUnitCompleted(unitId);
 
-        li.dataset.unitId = unitId;
+        li.dataset.unitId = unitId;  // 정규화된 ID 저장
         li.dataset.taskIndex = i; // 과제 인덱스 저장 (복습 완료 처리용)
         li.style.cursor = 'pointer';
 
@@ -7827,6 +7853,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         if (match) {
           unitCode = match[1];
         }
+        // unitCode도 정규화 (world_02 -> world1_02)
+        unitCode = normalizeUnitId(unitCode);
 
         // AI 과제와 일반 과제의 배지 구분
         let badgeClass = '';
@@ -8591,8 +8619,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         story.seasons.forEach(season => {
           const option = document.createElement('option');
           option.value = season.id;
-          option.textContent = `${story.title.replace(/🐋|🌿|🐱|🐈/g, '').trim()} 시즌 ${season.season}: ${season.subtitle}`;
-          option.setAttribute('data-title', `${story.title.replace(/🐋|🌿|🐱|🐈/g, '').trim()} 시즌 ${season.season}: ${season.subtitle}`);
+          option.textContent = `${story.title} 시즌 ${season.season}: ${season.subtitle}`;
+          option.setAttribute('data-title', `${story.title} 시즌 ${season.season}: ${season.subtitle}`);
           storySelect.appendChild(option);
         });
       });
@@ -8853,6 +8881,17 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const storySelect = document.getElementById('reportStory');
       const title = document.getElementById('reportTitle').value.trim();
       const content = document.getElementById('reportContent').value.trim();
+
+      // 유효성 검사
+      if (!storySelect.value) {
+        alert('이야기를 선택해주세요.');
+        return;
+      }
+
+      if (!title || !content) {
+        alert('제목과 내용을 모두 입력해주세요.');
+        return;
+      }
 
       const selectedOption = storySelect.options[storySelect.selectedIndex];
       const storyId = storySelect.value;
@@ -9194,8 +9233,15 @@ ${content}
       }
     }
 
-    // 맞춤법 검사 함수
-    async function checkSpelling(text) {
+    // 맞춤법 검사 버튼용 함수 (자동 제출 없이 결과만 표시)
+    async function checkSpellingOnly() {
+      const content = document.getElementById('reportContent').value.trim();
+
+      if (!content) {
+        alert('내용을 입력해주세요.');
+        return;
+      }
+
       const loadingDiv = document.getElementById('spellCheckLoading');
       const inlineContainer = document.getElementById('spellCheckInline');
 
@@ -9211,7 +9257,7 @@ ${content}
         const response = await fetch('/api/spell-check', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
+          body: JSON.stringify({ text: content })
         });
 
         const result = await response.json();
@@ -9220,22 +9266,20 @@ ${content}
         // 로딩 숨기기
         loadingDiv.style.display = 'none';
 
-        // 결과 인라인 표시
-        showSpellCheckResult(result);
+        // 결과 인라인 표시 (자동 제출 없이)
+        showSpellCheckResultOnly(result);
       } catch (error) {
         console.error('❌ 맞춤법 검사 오류:', error);
 
         // 로딩 숨기기
         loadingDiv.style.display = 'none';
 
-        alert('맞춤법 검사 중 오류가 발생했습니다. 그래도 제출하시겠습니까?');
-        // 오류 발생 시에도 제출 가능하도록
-        submitFinal();
+        alert('맞춤법 검사 중 오류가 발생했습니다.');
       }
     }
 
-    // 맞춤법 검사 결과 인라인 표시 및 자동 제출
-    function showSpellCheckResult(result) {
+    // 맞춤법 검사 결과 표시 (자동 제출 없음)
+    function showSpellCheckResultOnly(result) {
       const inlineContainer = document.getElementById('spellCheckInline');
 
       inlineContainer.innerHTML = '';
@@ -9244,8 +9288,7 @@ ${content}
         // 오류 없음
         inlineContainer.innerHTML = `
           <div class="no-error-message">
-            ✅ 맞춤법 및 띄어쓰기 오류가 발견되지 않았습니다!<br>
-            PDF 제출을 진행합니다...
+            ✅ 맞춤법 및 띄어쓰기 오류가 발견되지 않았습니다!
           </div>
         `;
       } else {
@@ -9284,11 +9327,6 @@ ${content}
       setTimeout(() => {
         inlineContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 100);
-
-      // 2초 후 자동으로 PDF 제출
-      setTimeout(() => {
-        submitFinal();
-      }, 2000);
     }
 
     // 맞춤법 검사 인라인 닫기
@@ -9789,9 +9827,10 @@ ${content}
             <input type="text" id="reportTitle" placeholder="감상문 제목을 입력하세요" required>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="position: relative;">
             <label for="reportContent">내용</label>
             <textarea id="reportContent" placeholder="고래도서관 이야기를 읽고 느낀 점을 자유롭게 작성해보세요..." required></textarea>
+            <button type="button" onclick="checkSpellingOnly()" style="position: absolute; right: 8px; bottom: 8px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; opacity: 0.9;">🔍 맞춤법 검사</button>
           </div>
 
           <!-- 맞춤법 검사 로딩 -->
@@ -9808,7 +9847,7 @@ ${content}
           <div class="auto-save-indicator" id="autoSaveIndicator"></div>
 
           <div class="form-actions">
-            <button type="button" class="btn-submit" onclick="downloadPDF()">📄 제출하기</button>
+            <button type="button" class="btn-submit" onclick="submitFinal()">📄 제출하기</button>
             <button type="button" class="btn-kakao" onclick="shareKakao()">💬 카카오톡 공유</button>
             <button type="button" class="btn-new" onclick="clearForm()">🔄 새로 작성</button>
           </div>

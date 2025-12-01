@@ -4986,13 +4986,28 @@ app.post("/api/log", async (req, res) => {
         if (userProgress && userProgress.studyRoom && userProgress.studyRoom.assignedTasks) {
           let taskUpdated = false;
           const aiReviewTime = new Date();
+
+          // 구 형식 ID를 새 형식으로 정규화하는 헬퍼 함수
+          const normalizeUnitId = (id) => {
+            if (!id) return id;
+            const legacyMatch = id.match(/^(world|people)_(\d+)$/i);
+            if (legacyMatch) {
+              return `${legacyMatch[1].toLowerCase()}1_${legacyMatch[2]}`;
+            }
+            return id;
+          };
+
+          const normalizedUnit = normalizeUnitId(unit);
+
           userProgress.studyRoom.assignedTasks.forEach(task => {
-            // AI 과제이고, id 또는 unitId가 일치하면 완료 처리
-            if (task.isAI && (task.id === unit || task.unitId === unit)) {
+            // AI 과제이고, id 또는 unitId가 일치하면 완료 처리 (정규화 후 비교)
+            const normalizedTaskId = normalizeUnitId(task.id);
+            const normalizedTaskUnitId = normalizeUnitId(task.unitId);
+            if (task.isAI && (normalizedTaskId === normalizedUnit || normalizedTaskUnitId === normalizedUnit)) {
               task.status = 'completed';
               task.completedAt = aiReviewTime;
               taskUpdated = true;
-              console.log(`✅ [/api/log] AI 과제 완료 처리: ${unit}`);
+              console.log(`✅ [/api/log] AI 과제 완료 처리: ${unit} (원본 task.id: ${task.id})`);
             }
           });
           if (taskUpdated) {
@@ -11526,15 +11541,21 @@ app.get('/api/user-progress/vocabulary-history/today', async (req, res) => {
       });
     }
 
-    // 오늘 날짜 범위 계산 (00:00:00 ~ 23:59:59)
+    // 오늘 날짜 범위 계산 (KST 기준 00:00:00 ~ 23:59:59)
+    // 서버가 UTC로 실행되는 경우 한국 시간과 9시간 차이가 발생하므로 KST 기준으로 계산
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const kstOffset = 9 * 60 * 60 * 1000; // KST = UTC + 9시간
+    const kstNow = new Date(now.getTime() + kstOffset);
 
-    // 오늘 날짜에 학습이력이 있는지 확인
+    // KST 기준 오늘 00:00:00 (UTC 기준으로 변환하면 전날 15:00:00)
+    const kstTodayStart = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 0, 0, 0) - kstOffset);
+    // KST 기준 오늘 23:59:59 (UTC 기준으로 변환하면 당일 14:59:59)
+    const kstTodayEnd = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 23, 59, 59) - kstOffset);
+
+    // 오늘 날짜에 학습이력이 있는지 확인 (KST 기준)
     const todayHistory = progress.vocabularyQuizHistory.find(history => {
       const historyDate = new Date(history.date);
-      return historyDate >= todayStart && historyDate <= todayEnd;
+      return historyDate >= kstTodayStart && historyDate <= kstTodayEnd;
     });
 
     res.json({
