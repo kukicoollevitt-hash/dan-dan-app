@@ -5069,11 +5069,22 @@ app.post("/api/log", async (req, res) => {
           const aiReviewTime = new Date();
 
           // 구 형식 ID를 새 형식으로 정규화하는 헬퍼 함수
+          // world_41~80 → world2_01~40, world_1~40 → world1_01~40
+          // people_41~80 → people2_01~40, people_1~40 → people1_01~40
           const normalizeUnitId = (id) => {
             if (!id) return id;
             const legacyMatch = id.match(/^(world|people)_(\d+)$/i);
             if (legacyMatch) {
-              return `${legacyMatch[1].toLowerCase()}1_${legacyMatch[2]}`;
+              const oldPrefix = legacyMatch[1].toLowerCase();
+              const num = parseInt(legacyMatch[2], 10);
+              // 41~80은 world2/people2의 01~40으로 변환
+              if (num >= 41 && num <= 80) {
+                const newNum = (num - 40).toString().padStart(2, '0');
+                return `${oldPrefix}2_${newNum}`;
+              }
+              // 1~40은 world1/people1의 01~40으로 변환
+              const paddedNum = num.toString().padStart(2, '0');
+              return `${oldPrefix}1_${paddedNum}`;
             }
             return id;
           };
@@ -6839,14 +6850,8 @@ app.get("/api/unit-grades", async (req, res) => {
     logs.forEach(log => {
       let unitId = log.unit;
 
-      // people2_XX, people1_XX 형식 그대로 유지 (더 이상 변환하지 않음)
-
-      // world2_XX → world_4X 형식으로 정규화 (세계문학(2)는 offset:40 사용)
-      const world2Match = unitId.match(/^world2_(\d{2})$/);
-      if (world2Match) {
-        const num = parseInt(world2Match[1], 10);
-        unitId = `world_${(num + 40).toString().padStart(2, '0')}`;
-      }
+      // people2_XX, people1_XX, world2_XX 형식 그대로 유지 (변환하지 않음)
+      // 클라이언트에서 normalizeUnitId로 동일하게 변환하므로 그대로 사용
 
       // 이미 등록된 단원이 아니면 추가 (최신 순으로 정렬되어 있으므로 첫 번째가 최신)
       if (!unitGradesMap[unitId] && log.radar) {
@@ -12445,10 +12450,9 @@ async function assignAITasksDaily() {
           console.log(`🔄 [${name}] 코드 변환: ${log.unit} → ${unitId}`);
         }
 
-        // 최종완료 시간 계산 (일반학습과 AI복습 중 더 최근)
-        const normalTime = log.timestamp ? new Date(log.timestamp).getTime() : 0;
-        const aiTime = log.aiReviewCompletedAt ? new Date(log.aiReviewCompletedAt).getTime() : 0;
-        const finalCompletedAt = new Date(Math.max(normalTime, aiTime));
+        // 최종완료 시간 = 학습 완료 시간 (timestamp) 기준으로만 계산
+        // 학습 기록 목록에서 보여주는 예정 시간과 동일하게 적용
+        const finalCompletedAt = log.timestamp ? new Date(log.timestamp) : new Date(0);
 
         // 평균 점수 계산
         const scores = [
@@ -12460,16 +12464,15 @@ async function assignAITasksDaily() {
         ];
         const avgScore = scores.reduce((a, b) => a + b, 0) / 5;
 
-        // 단원별 최신 기록만 유지
+        // 단원별 최신 기록만 유지 (timestamp 기준)
         const existingEntry = unitLatestLogs[unitId];
         if (!existingEntry || finalCompletedAt.getTime() > existingEntry.finalCompletedAt.getTime()) {
           unitLatestLogs[unitId] = {
             unitId,
+            originalUnit: log.unit, // 원본 unit 코드 보존 (title 생성용)
             avgScore,
             finalCompletedAt,
-            series: log.series,
-            timestamp: log.timestamp,
-            aiReviewCompletedAt: log.aiReviewCompletedAt
+            series: log.series
           };
         }
       }
@@ -12528,18 +12531,19 @@ async function assignAITasksDaily() {
         // 현재 시간이 부여 가능 시간을 지났는지 확인
         console.log(`🕐 [${name}] ${unitId}: 등급=${gradeInfo.text}, 대기=${waitHours}시간, 부여가능시간=${assignableAt.toISOString()}, 현재=${now.toISOString()}`);
         if (now >= assignableAt) {
-          // 단원 정보 추출 (unitId에서 파싱)
-          const parts = unitId.split('_');
+          // 단원 정보 추출 (원본 unit 코드에서 파싱 - title 생성용)
+          const originalUnit = unitInfo.originalUnit || unitId;
+          const parts = originalUnit.split('_');
           const subjectCode = parts[0];
           const unitNumber = parts[1] ? parseInt(parts[1], 10) : 1;
 
-          // 과목명 매핑
+          // 과목명 매핑 (world1, world2를 구분하여 세계문학1, 세계문학2로 표시)
           const subjectMap = {
             'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학',
             'soc': '사회문화', 'law': '법', 'pol': '정치경제',
             'modern': '현대문학', 'classic': '고전문학',
-            'world1': '세계문학', 'world2': '세계문학', 'world': '세계문학',
-            'person1': '인물', 'person2': '인물', 'people': '인물'
+            'world1': '세계문학1', 'world2': '세계문학2', 'world': '세계문학1',
+            'person1': '한국인물', 'person2': '세계인물', 'people': '한국인물'
           };
           const subjectName = subjectMap[subjectCode] || subjectCode;
 
@@ -12553,12 +12557,8 @@ async function assignAITasksDaily() {
           };
           const fieldName = fieldMap[subjectCode] || '기타';
 
-          // 단원명 생성
-          let displayNumber = unitNumber;
-          if (subjectCode === 'world2' || subjectCode === 'person2') {
-            displayNumber += 40;
-          }
-          const unitTitle = `${subjectName} ${displayNumber}`;
+          // 단원명 생성 (원본 단원번호 그대로 사용, +40 변환 제거)
+          const unitTitle = `${subjectName} ${unitNumber}`;
 
           // 학습실에 추가
           existingTasks.push({
@@ -12608,6 +12608,130 @@ async function assignAITasksDaily() {
 
 // 서버 시작 시 한 번 실행 (테스트용 - 프로덕션에서는 주석 처리)
 // assignAITasksDaily();
+
+// AI 과제 title 조회 API (디버그용)
+app.get('/api/debug-ai-task-titles', async (req, res) => {
+  try {
+    const allProgress = await UserProgress.find({ 'studyRoom.assignedTasks': { $exists: true, $ne: [] } });
+    const titles = [];
+    for (const progress of allProgress) {
+      const tasks = progress.studyRoom?.assignedTasks || [];
+      for (const task of tasks) {
+        if (task.isAI) {
+          titles.push({ userId: progress.userId, title: task.title, taskId: task.taskId });
+        }
+      }
+    }
+    res.json({ ok: true, count: titles.length, titles });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+// AI 추천과제 title 일괄 수정 API (마이그레이션용)
+app.post('/api/migrate-ai-task-titles', async (req, res) => {
+  try {
+    const allProgress = await UserProgress.find({ 'studyRoom.assignedTasks': { $exists: true, $ne: [] } });
+
+    let updatedCount = 0;
+    let taskCount = 0;
+
+    for (const progress of allProgress) {
+      const tasks = progress.studyRoom?.assignedTasks || [];
+      let modified = false;
+
+      for (const task of tasks) {
+        if (!task.isAI) continue;
+
+        const oldTitle = task.title || '';
+        let newTitle = oldTitle;
+
+        // "세계문학1 01" → "세계문학1 1" (앞에 0 제거)
+        // "세계문학 01" → "세계문학1 1"
+        const worldMatch1 = oldTitle.match(/^세계문학1?\s+0*(\d+)$/);
+        if (worldMatch1) {
+          const num = parseInt(worldMatch1[1], 10);
+          if (num >= 1 && num <= 40) {
+            newTitle = `세계문학1 ${num}`;
+          } else if (num >= 41 && num <= 80) {
+            newTitle = `세계문학2 ${num - 40}`;
+          }
+        }
+
+        // "세계문학2 01" → "세계문학2 1"
+        const worldMatch2 = oldTitle.match(/^세계문학2\s+0*(\d+)$/);
+        if (worldMatch2) {
+          const num = parseInt(worldMatch2[1], 10);
+          newTitle = `세계문학2 ${num}`;
+        }
+
+        // "한국인물 01" → "한국인물 1"
+        const personMatch1 = oldTitle.match(/^한국인물\s+0*(\d+)$/);
+        if (personMatch1) {
+          const num = parseInt(personMatch1[1], 10);
+          newTitle = `한국인물 ${num}`;
+        }
+
+        // "세계인물 01" → "세계인물 1"
+        const personMatch2 = oldTitle.match(/^세계인물\s+0*(\d+)$/);
+        if (personMatch2) {
+          const num = parseInt(personMatch2[1], 10);
+          newTitle = `세계인물 ${num}`;
+        }
+
+        // "인물 41" → "세계인물 1" (people_41 형식)
+        const personMatch3 = oldTitle.match(/^인물\s+(\d+)$/);
+        if (personMatch3) {
+          const num = parseInt(personMatch3[1], 10);
+          if (num >= 41) {
+            newTitle = `세계인물 ${num - 40}`;
+          } else {
+            newTitle = `한국인물 ${num}`;
+          }
+        }
+
+        // "지리 01단원" → "지리 1" (단원 제거 + 0 제거)
+        const unitMatch = oldTitle.match(/^(.+?)\s+0*(\d+)단원$/);
+        if (unitMatch) {
+          const subject = unitMatch[1];
+          const num = parseInt(unitMatch[2], 10);
+          newTitle = `${subject} ${num}`;
+        }
+
+        // "people1 1" → "한국인물 1"
+        const people1Match = oldTitle.match(/^people1\s+(\d+)$/);
+        if (people1Match) {
+          const num = parseInt(people1Match[1], 10);
+          newTitle = `한국인물 ${num}`;
+        }
+
+        // "people2 1" → "세계인물 1"
+        const people2Match = oldTitle.match(/^people2\s+(\d+)$/);
+        if (people2Match) {
+          const num = parseInt(people2Match[1], 10);
+          newTitle = `세계인물 ${num}`;
+        }
+
+        if (newTitle !== oldTitle) {
+          console.log(`🔄 title 변환: "${oldTitle}" → "${newTitle}"`);
+          task.title = newTitle;
+          modified = true;
+          taskCount++;
+        }
+      }
+
+      if (modified) {
+        await progress.save();
+        updatedCount++;
+      }
+    }
+
+    res.json({ ok: true, message: `${updatedCount}명의 ${taskCount}개 AI 과제 title이 업데이트되었습니다.` });
+  } catch (error) {
+    console.error('AI 과제 title 마이그레이션 오류:', error);
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
 
 // AI 과제 스케줄 조회 API (관리자용)
 app.get('/api/ai-task/schedules', async (req, res) => {

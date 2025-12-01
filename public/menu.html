@@ -6658,13 +6658,22 @@ async function performLogout() {
       }
 
       // 구 형식 ID를 새 형식으로 변환 (기존 데이터 호환성)
-      // world_XX -> world1_XX, people_XX -> people1_XX
+      // world_XX -> world1_XX 또는 world2_XX (41~80은 world2_01~40)
+      // people_XX -> people1_XX 또는 people2_XX (41~80은 people2_01~40)
       if (unitId) {
         const legacyMatch = unitId.match(/^(world|people)_(\d+)$/i);
         if (legacyMatch) {
           const oldPrefix = legacyMatch[1].toLowerCase();
-          const num = legacyMatch[2];
-          unitId = `${oldPrefix}1_${num}`;
+          const num = parseInt(legacyMatch[2], 10);
+
+          // 41~80은 세계문학2/세계인물의 1~40
+          if (num >= 41 && num <= 80) {
+            const newNum = (num - 40).toString().padStart(2, '0');
+            unitId = `${oldPrefix}2_${newNum}`;
+          } else {
+            const paddedNum = num.toString().padStart(2, '0');
+            unitId = `${oldPrefix}1_${paddedNum}`;
+          }
           console.log(`🔄 Converting legacy unitId: ${legacyMatch[0]} -> ${unitId}`);
         }
       }
@@ -7646,8 +7655,15 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const legacyMatch = unitId.match(/^(world|people)_(\d+)$/i);
       if (legacyMatch) {
         const oldPrefix = legacyMatch[1].toLowerCase();
-        const num = legacyMatch[2];
-        return `${oldPrefix}1_${num}`;
+        const num = parseInt(legacyMatch[2], 10);
+        // 41~80은 world2/people2의 01~40으로 변환
+        if (num >= 41 && num <= 80) {
+          const newNum = (num - 40).toString().padStart(2, '0');
+          return `${oldPrefix}2_${newNum}`;
+        }
+        // 1~40은 world1/people1의 01~40으로 변환
+        const paddedNum = num.toString().padStart(2, '0');
+        return `${oldPrefix}1_${paddedNum}`;
       }
       return unitId;
     }
@@ -7959,7 +7975,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         if (task.isAI) {
           const unitInfo = getUnitInfoFromId(unitId);
           if (unitInfo.subjectLabel) {
-            displayTitle = unitInfo.displayTitle;  // "화학 01" 형식
+            // DB에 저장된 task.title 사용 (세계문학2 1 형식), 없으면 생성된 타이틀 사용
+            displayTitle = task.title || unitInfo.displayTitle;
             displayMeta = `${task.series || 'BRAIN업'} > ${unitInfo.fieldLabel} > ${unitInfo.subjectLabel}`;
           }
         }
@@ -7974,9 +7991,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
           </div>
           <div class="study-room-item-right">
             ${stars ? `<span class="unit-stars">${stars}</span>` : ''}
-            <span class="status-badge ${badgeClass}">
-              ${badgeText}
-            </span>
+            <span class="status-badge ${badgeClass}">${badgeText}</span>
             <button class="trash-btn" data-task-id="${task.id || task.unitId || task.taskId}" title="삭제">🗑️</button>
           </div>
         `;
