@@ -5883,13 +5883,10 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           });
         }
 
-        // ===== 검색 및 등급 필터 기능 =====
-        // 검색과 등급 필터를 함께 적용
+        // ===== 검색 기능 (단원명 + 등급 통합 검색) =====
         function searchLogs(query) {
           const rows = document.querySelectorAll('#logTableBody tr');
           const clearBtn = document.getElementById('logSearchClear');
-          const gradeFilterEl = document.getElementById('logGradeFilter');
-          const gradeFilter = gradeFilterEl ? gradeFilterEl.value : 'all';
 
           clearBtn.classList.toggle('show', query.length > 0);
 
@@ -5900,11 +5897,13 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             if (unitCell && gradeCell) {
               const unitText = unitCell.textContent.toLowerCase();
               const rowGrade = gradeCell.textContent.trim();
+              const queryLower = query.toLowerCase();
 
-              const searchMatch = unitText.includes(query.toLowerCase());
-              const gradeMatch = gradeFilter === 'all' || rowGrade.includes(gradeFilter);
+              // 단원명 또는 등급에 검색어가 포함되면 표시
+              const unitMatch = unitText.includes(queryLower);
+              const gradeMatch = rowGrade.includes(query);
 
-              row.style.display = (searchMatch && gradeMatch) ? 'table-row' : 'none';
+              row.style.display = (unitMatch || gradeMatch) ? 'table-row' : 'none';
             }
           });
 
@@ -5914,34 +5913,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         function clearLogSearch() {
           document.getElementById('logSearch').value = '';
           document.getElementById('logSearchClear').classList.remove('show');
-          const gradeFilterEl = document.getElementById('logGradeFilter');
-          if (gradeFilterEl) gradeFilterEl.value = 'all';
           const rows = document.querySelectorAll('#logTableBody tr');
           rows.forEach(row => row.style.display = 'table-row');
-          updateLogCount();
-        }
-
-        // 학습 기록 등급 필터
-        function filterLogsByGrade(grade) {
-          const rows = document.querySelectorAll('#logTableBody tr');
-          const searchInput = document.getElementById('logSearch');
-          const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
-
-          rows.forEach(row => {
-            const gradeCell = row.querySelector('td:nth-child(4)');
-            const unitCell = row.querySelector('td:last-child');
-
-            if (gradeCell && unitCell) {
-              const rowGrade = gradeCell.textContent.trim();
-              const unitText = unitCell.textContent.toLowerCase();
-
-              const gradeMatch = grade === 'all' || rowGrade.includes(grade);
-              const searchMatch = searchQuery === '' || unitText.includes(searchQuery);
-
-              row.style.display = (gradeMatch && searchMatch) ? 'table-row' : 'none';
-            }
-          });
-
           updateLogCount();
         }
 
@@ -8130,7 +8103,7 @@ app.get("/my-learning", async (req, res) => {
             </div>
             <div class="search-box">
               <span class="search-icon">🔍</span>
-              <input type="text" id="logSearch" placeholder="단원명 검색..." oninput="searchLogs(this.value)">
+              <input type="text" id="logSearch" placeholder="단원명 또는 등급 검색..." oninput="searchLogs(this.value)">
               <button class="clear-btn" id="logSearchClear" onclick="clearLogSearch()">✕</button>
             </div>
           </div>
@@ -8157,6 +8130,21 @@ app.get("/my-learning", async (req, res) => {
           </table>
         </div>
         <button class="toggle-btn" id="toggleBtn" onclick="toggleRows()" style="display:none;">더보기 ▼</button>
+
+        <!-- 새로운 정렬/필터 버튼 -->
+        <div id="newSortFilterControls" style="margin: 20px 0; padding: 15px; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); border-radius: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <span style="color: white; font-weight: bold; margin-right: 10px;">정렬:</span>
+          <button id="sortFinalBtn" onclick="newSortTable('final')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: bold;">최종</button>
+          <button id="sortFirstBtn" onclick="newSortTable('first')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #64748b; color: white; cursor: pointer;">최초</button>
+          <button id="sortAiTaskBtn" onclick="newSortTable('aiTask')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #64748b; color: white; cursor: pointer;">AI과제부여</button>
+
+          <span style="color: white; font-weight: bold; margin-left: 20px; margin-right: 10px;">등급:</span>
+          <button id="gradeAllBtn" onclick="newFilterGrade('all')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: bold;">전체</button>
+          <button id="gradeEncourageBtn" onclick="newFilterGrade('격려')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #64748b; color: white; cursor: pointer;">격려</button>
+          <button id="gradeNormalBtn" onclick="newFilterGrade('보통')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #64748b; color: white; cursor: pointer;">보통</button>
+          <button id="gradeGoodBtn" onclick="newFilterGrade('양호')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #64748b; color: white; cursor: pointer;">양호</button>
+          <button id="gradeExcellentBtn" onclick="newFilterGrade('우수')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #64748b; color: white; cursor: pointer;">우수</button>
+        </div>
 
         <hr>
 
@@ -8499,13 +8487,10 @@ app.get("/my-learning", async (req, res) => {
           });
         }
 
-        // ===== 검색 및 등급 필터 기능 =====
-        // 검색과 등급 필터를 함께 적용
+        // ===== 검색 기능 (단원명 + 등급 통합 검색) =====
         function searchLogs(query) {
           const rows = document.querySelectorAll('#logTableBody tr');
           const clearBtn = document.getElementById('logSearchClear');
-          const gradeFilterEl = document.getElementById('logGradeFilter');
-          const gradeFilter = gradeFilterEl ? gradeFilterEl.value : 'all';
 
           clearBtn.classList.toggle('show', query.length > 0);
 
@@ -8516,11 +8501,13 @@ app.get("/my-learning", async (req, res) => {
             if (unitCell && gradeCell) {
               const unitText = unitCell.textContent.toLowerCase();
               const rowGrade = gradeCell.textContent.trim();
+              const queryLower = query.toLowerCase();
 
-              const searchMatch = unitText.includes(query.toLowerCase());
-              const gradeMatch = gradeFilter === 'all' || rowGrade.includes(gradeFilter);
+              // 단원명 또는 등급에 검색어가 포함되면 표시
+              const unitMatch = unitText.includes(queryLower);
+              const gradeMatch = rowGrade.includes(query);
 
-              row.style.display = (searchMatch && gradeMatch) ? 'table-row' : 'none';
+              row.style.display = (unitMatch || gradeMatch) ? 'table-row' : 'none';
             }
           });
 
@@ -8530,34 +8517,8 @@ app.get("/my-learning", async (req, res) => {
         function clearLogSearch() {
           document.getElementById('logSearch').value = '';
           document.getElementById('logSearchClear').classList.remove('show');
-          const gradeFilterEl = document.getElementById('logGradeFilter');
-          if (gradeFilterEl) gradeFilterEl.value = 'all';
           const rows = document.querySelectorAll('#logTableBody tr');
           rows.forEach(row => row.style.display = 'table-row');
-          updateLogCount();
-        }
-
-        // 학습 기록 등급 필터
-        function filterLogsByGrade(grade) {
-          const rows = document.querySelectorAll('#logTableBody tr');
-          const searchInput = document.getElementById('logSearch');
-          const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
-
-          rows.forEach(row => {
-            const gradeCell = row.querySelector('td:nth-child(4)');
-            const unitCell = row.querySelector('td:last-child');
-
-            if (gradeCell && unitCell) {
-              const rowGrade = gradeCell.textContent.trim();
-              const unitText = unitCell.textContent.toLowerCase();
-
-              const gradeMatch = grade === 'all' || rowGrade.includes(grade);
-              const searchMatch = searchQuery === '' || unitText.includes(searchQuery);
-
-              row.style.display = (gradeMatch && searchMatch) ? 'table-row' : 'none';
-            }
-          });
-
           updateLogCount();
         }
 
@@ -9836,20 +9797,34 @@ app.get("/my-learning", async (req, res) => {
             let timeA, timeB;
 
             if (sortBy === 'first') {
-              // 최초 시간 (createdAt)
-              timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-              timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-            } else if (sortBy === 'aiTask') {
-              // AI과제부여 시간
-              timeA = a.aiTaskAssignedAt ? new Date(a.aiTaskAssignedAt).getTime() : 0;
-              timeB = b.aiTaskAssignedAt ? new Date(b.aiTaskAssignedAt).getTime() : 0;
-            } else {
-              // 최종 시간 = 학습 완료 시점 (timestamp)
+              // 최초 시간 (timestamp) - 오름차순 (가장 오래된 기록이 맨 위)
               timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
               timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              return timeA - timeB; // 오름차순 (오래된 것이 맨 위)
+            } else if (sortBy === 'aiTask') {
+              // AI과제부여 시간 - 내림차순 (최신이 맨 위)
+              // AI과제부여가 있는 항목이 먼저, 없는 항목은 뒤로
+              const hasAiA = a.aiTaskAssignedAt ? 1 : 0;
+              const hasAiB = b.aiTaskAssignedAt ? 1 : 0;
+              if (hasAiA !== hasAiB) {
+                return hasAiB - hasAiA; // AI과제부여 있는 것이 먼저
+              }
+              // 둘 다 AI과제부여가 있으면 시간순 내림차순
+              if (hasAiA && hasAiB) {
+                timeA = new Date(a.aiTaskAssignedAt).getTime();
+                timeB = new Date(b.aiTaskAssignedAt).getTime();
+                return timeB - timeA;
+              }
+              // 둘 다 AI과제부여가 없으면 최종 시간 기준 내림차순
+              timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              return timeB - timeA;
+            } else {
+              // 최종 시간 = 학습 완료 시점 (timestamp) - 내림차순 (최신이 맨 위)
+              timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              return timeB - timeA; // 내림차순 (최신이 맨 위)
             }
-
-            return timeB - timeA; // 내림차순 (최신이 맨 위)
           });
         }
 
@@ -9860,6 +9835,87 @@ app.get("/my-learning", async (req, res) => {
           }
           return allLogs.filter(log => log.series === currentSelectedSeries);
         }
+
+        // ===== 새로운 정렬/필터 시스템 (완전 독립) =====
+        let newCurrentSort = 'final';
+        let newCurrentGrade = 'all';
+
+        window.newSortTable = function(sortBy) {
+          const aiTaskCount = allLogs.filter(l => l.aiTaskAssignedAt).length;
+          console.log('[newSortTable] 정렬:', sortBy, 'AI과제부여 있는 로그:', aiTaskCount);
+          newCurrentSort = sortBy;
+          // 버튼 스타일 업데이트
+          document.getElementById('sortFinalBtn').style.background = sortBy === 'final' ? '#3b82f6' : '#64748b';
+          document.getElementById('sortFinalBtn').style.fontWeight = sortBy === 'final' ? 'bold' : 'normal';
+          document.getElementById('sortFirstBtn').style.background = sortBy === 'first' ? '#3b82f6' : '#64748b';
+          document.getElementById('sortFirstBtn').style.fontWeight = sortBy === 'first' ? 'bold' : 'normal';
+          document.getElementById('sortAiTaskBtn').style.background = sortBy === 'aiTask' ? '#3b82f6' : '#64748b';
+          document.getElementById('sortAiTaskBtn').style.fontWeight = sortBy === 'aiTask' ? 'bold' : 'normal';
+          window.newApplyFilters();
+        };
+
+        window.newFilterGrade = function(grade) {
+          console.log('[newFilterGrade] 호출됨, grade:', grade);
+          newCurrentGrade = grade;
+          // 버튼 스타일 업데이트
+          document.getElementById('gradeAllBtn').style.background = grade === 'all' ? '#3b82f6' : '#64748b';
+          document.getElementById('gradeAllBtn').style.fontWeight = grade === 'all' ? 'bold' : 'normal';
+          document.getElementById('gradeEncourageBtn').style.background = grade === '격려' ? '#3b82f6' : '#64748b';
+          document.getElementById('gradeEncourageBtn').style.fontWeight = grade === '격려' ? 'bold' : 'normal';
+          document.getElementById('gradeNormalBtn').style.background = grade === '보통' ? '#3b82f6' : '#64748b';
+          document.getElementById('gradeNormalBtn').style.fontWeight = grade === '보통' ? 'bold' : 'normal';
+          document.getElementById('gradeGoodBtn').style.background = grade === '양호' ? '#3b82f6' : '#64748b';
+          document.getElementById('gradeGoodBtn').style.fontWeight = grade === '양호' ? 'bold' : 'normal';
+          document.getElementById('gradeExcellentBtn').style.background = grade === '우수' ? '#3b82f6' : '#64748b';
+          document.getElementById('gradeExcellentBtn').style.fontWeight = grade === '우수' ? 'bold' : 'normal';
+          window.newApplyFilters();
+        };
+
+        window.newApplyFilters = function() {
+          // 1. 시리즈 필터 적용
+          let filteredLogs = currentSelectedSeries === 'all' ? [...allLogs] : allLogs.filter(log => log.series === currentSelectedSeries);
+
+          // 2. 등급 필터 적용
+          if (newCurrentGrade !== 'all') {
+            filteredLogs = filteredLogs.filter(log => {
+              const radar = log.radar || {};
+              const values = [radar.literal || 0, radar.structural || 0, radar.lexical || 0, radar.inferential || 0, radar.critical || 0];
+              const avg = values.reduce((a, b) => a + b, 0) / values.length;
+              let grade = '격려';
+              if (avg >= 80) grade = '우수';
+              else if (avg >= 60) grade = '양호';
+              else if (avg >= 40) grade = '보통';
+              return grade === newCurrentGrade;
+            });
+          }
+
+          // 3. 정렬 적용
+          filteredLogs.sort((a, b) => {
+            if (newCurrentSort === 'first') {
+              const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              return timeA - timeB;
+            } else if (newCurrentSort === 'aiTask') {
+              const hasAiA = a.aiTaskAssignedAt ? 1 : 0;
+              const hasAiB = b.aiTaskAssignedAt ? 1 : 0;
+              if (hasAiA !== hasAiB) return hasAiB - hasAiA;
+              if (hasAiA && hasAiB) {
+                return new Date(b.aiTaskAssignedAt).getTime() - new Date(a.aiTaskAssignedAt).getTime();
+              }
+              const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              return timeB - timeA;
+            } else {
+              const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              return timeB - timeA;
+            }
+          });
+
+          // 4. 테이블 렌더링
+          console.log('[newApplyFilters] 정렬:', newCurrentSort, '등급:', newCurrentGrade, '총:', filteredLogs.length);
+          renderLogTable(filteredLogs);
+        };
 
         // ===== 학습 기록 테이블 렌더링 함수 =====
         function renderLogTable(logs) {
