@@ -838,3 +838,595 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
 console.log('[world2_content.js] CONTENTS 등록 완료, world2_01 존재:', !!window.CONTENTS.world2_01);
 window.WORLD2_CONTENT_LOADED = true;
 window.dispatchEvent(new CustomEvent('world2ContentLoaded'));
+
+/* ===============================
+   ★ 어휘 빈칸 렌더러 & 탭 이벤트
+=================================*/
+function getCurrentUnit() {
+  return (window.CUR_UNIT || 'world2_01');
+}
+
+window.renderVocabFill = function () {
+  const unit = window.CUR_UNIT || 'world2_01';
+  const pack = window.CONTENTS?.[unit];
+  const root = document.getElementById('vocab-fill')
+            || document.querySelector('.vocab-fill-text');
+
+  if (!root || !pack?.vocabFill?.items?.length) {
+    console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
+    return;
+  }
+
+  const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
+    const slot = `
+      <span class="blank-wrap" data-answer="${answer}">
+        <span class="blank-icon">${no}</span>
+        <span class="blank-mark"></span>
+        <input type="text" class="blank-input" placeholder="${initials || ''}">
+      </span>
+    `;
+    const p = text.replace(/\(\s*[-＿—\u00A0]*\s*\)/, slot);
+    return `<p>${p}</p>`;
+  }).join('');
+
+  root.innerHTML = `
+    <div class="vocab-instruction">${pack.vocabFill.instructions || ''}</div>
+    <div class="vocab-inline">${html}</div>
+  `;
+
+  (function ensureVocabInlineStyle(){
+    if (document.getElementById('vocab-inline-style')) return;
+    const st = document.createElement('style');
+    st.id = 'vocab-inline-style';
+    st.textContent = `
+      .vocab-box .vocab-inline > p { display:inline !important; margin:0 !important; }
+      .vocab-box .vocab-inline > p + p::before { content:" "; }
+      #vocab-fill .vocab-inline > p,
+      .vocab-fill-text .vocab-inline > p { display:inline !important; margin:0 !important; }
+      #vocab-fill .vocab-inline > p + p::before,
+      .vocab-fill-text .vocab-inline > p + p::before { content:" "; }
+      .vocab-inline { line-height: 5.0 !important; }
+    `;
+    document.head.appendChild(st);
+  })();
+
+  window.reportState = window.reportState || {};
+  window.reportState.vocabTotal = pack.vocabFill.items.length;
+
+  setTimeout(() => {
+    if (typeof window.loadVocabState === 'function') {
+      window.loadVocabState();
+    }
+  }, 100);
+};
+
+let _tabEventsInitialized = false;
+function _bindTabEvents() {
+  if (_tabEventsInitialized) return;
+  _tabEventsInitialized = true;
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-tab]');
+    if (!btn) return;
+    const tab = btn.getAttribute('data-tab');
+    if (tab === 'vocab') renderVocabFill();
+  });
+}
+
+/* ===== 텍스트 주입 ===== */
+function applyContentPack(unitKey) {
+  console.log('[applyContentPack] 호출됨, unitKey:', unitKey);
+  const pack = window.CONTENTS[unitKey];
+  if (!pack) {
+    console.error('[applyContentPack] pack이 없음! unitKey:', unitKey);
+    return;
+  }
+
+  const labelNoEl = document.querySelector('.passage-label strong');
+  const titleEl   = document.querySelector('.passage-title');
+  if (labelNoEl) labelNoEl.textContent = pack.labelNo;
+  if (titleEl)   titleEl.innerHTML = pack.title;
+
+  const passageBox = document.querySelector('.passage-text');
+  if (passageBox) {
+    passageBox.innerHTML = pack.passage.map(p => `<p>${p}</p>`).join('');
+  }
+
+  const vocabBox = document.querySelector('.passage-vocab ol');
+  if (vocabBox) vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
+
+  const blocks = Array.from(document.querySelectorAll('#tab-reading .quiz-block'));
+
+  if (blocks[0]) {
+    const q1Text = blocks[0].querySelector('.quiz-q');
+    const q1Lis  = blocks[0].querySelectorAll('.quiz-options li');
+    if (q1Text) q1Text.textContent = pack.quiz.q1_text;
+    if (q1Lis.length === 4) {
+      q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
+    }
+  }
+
+  if (blocks[1]) {
+    const q2Text = blocks[1].querySelector('.quiz-q');
+    const q2Lis  = blocks[1].querySelectorAll('.quiz-options li');
+    if (q2Text) q2Text.textContent = pack.quiz.q2_text;
+    if (q2Lis.length === 4) {
+      q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
+    }
+  }
+
+  if (blocks[2]) {
+    const q3P = blocks[2].querySelector('.quiz-q');
+    if (q3P && pack.quiz.q3_html) q3P.innerHTML = pack.quiz.q3_html;
+    const q3_1 = document.getElementById('q3-1');
+    const q3_2 = document.getElementById('q3-2');
+    if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
+    if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
+  }
+
+  if (blocks[3]) {
+    const q4P = blocks[3].querySelector('.quiz-q');
+    if (q4P && pack.quiz.q4_html) q4P.innerHTML = pack.quiz.q4_html;
+    const q4_1 = document.getElementById('q4-1');
+    const q4_2 = document.getElementById('q4-2');
+    if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
+    if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
+  }
+
+  if (blocks[4]) {
+    const q5Text = blocks[4].querySelector('.quiz-q');
+    if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
+  }
+
+  // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
+  requestAnimationFrame(() => {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+      loadingOverlay.classList.remove('show');
+      console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
+    }
+  });
+}
+
+/* ==== 본문학습 상태 저장/복원 ==== */
+function getCurrentStudentForReading() {
+  const saved = localStorage.getItem('currentStudent');
+  if (!saved) return null;
+  try { return JSON.parse(saved); } catch (e) { return null; }
+}
+
+function buildStudentKeyForReading(stu) {
+  const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+  const cleanName  = (stu.name  || '').trim();
+  const cleanGrade = (stu.grade || '').trim();
+  return `${cleanGrade}_${cleanName}_${cleanPhone}`;
+}
+
+window.getStudentKey = function () {
+  const stu = getCurrentStudentForReading();
+  if (!stu) return '';
+  return buildStudentKeyForReading(stu);
+};
+
+function getReadingStateKey(unit) {
+  const stu = getCurrentStudentForReading();
+  if (!stu) return `dan-reading-state:${unit}`;
+  const studentKey = buildStudentKeyForReading(stu);
+  return `dan-reading-state:${studentKey}:${unit}`;
+}
+
+function saveReadingState() {
+  try {
+    const unit = window.CUR_UNIT || 'world2_01';
+    const key  = getReadingStateKey(unit);
+    const q1   = document.querySelector('input[name="q1"]:checked');
+    const q2   = document.querySelector('input[name="q2"]:checked');
+    const q3_1 = document.getElementById('q3-1');
+    const q3_2 = document.getElementById('q3-2');
+    const q4_1 = document.getElementById('q4-1');
+    const q4_2 = document.getElementById('q4-2');
+    const q5   = document.getElementById('q5');
+    const state = {
+      graded: true,
+      q1: q1 ? q1.value : '',
+      q2: q2 ? q2.value : '',
+      q3_1: q3_1 ? q3_1.value : '',
+      q3_2: q3_2 ? q3_2.value : '',
+      q4_1: q4_1 ? q4_1.value : '',
+      q4_2: q4_2 ? q4_2.value : '',
+      q5: q5 ? q5.value : ''
+    };
+    localStorage.setItem(key, JSON.stringify(state));
+  } catch (e) { console.warn('saveReadingState error', e); }
+}
+
+function loadReadingState() {
+  try {
+    const unit = window.CUR_UNIT || 'world2_01';
+    const key  = getReadingStateKey(unit);
+    const raw  = localStorage.getItem(key);
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    if (!state) return;
+    if (state.q1) {
+      const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
+      if (r1) r1.checked = true;
+    }
+    if (state.q2) {
+      const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
+      if (r2) r2.checked = true;
+    }
+    const q3_1 = document.getElementById('q3-1');
+    const q3_2 = document.getElementById('q3-2');
+    const q4_1 = document.getElementById('q4-1');
+    const q4_2 = document.getElementById('q4-2');
+    const q5   = document.getElementById('q5');
+    if (q3_1 && state.q3_1 !== undefined) q3_1.value = state.q3_1;
+    if (q3_2 && state.q3_2 !== undefined) q3_2.value = state.q3_2;
+    if (q4_1 && state.q4_1 !== undefined) q4_1.value = state.q4_1;
+    if (q4_2 && state.q4_2 !== undefined) q4_2.value = state.q4_2;
+    if (q5 && state.q5 !== undefined) q5.value = state.q5;
+    if (state.graded && typeof window.gradeQuiz === 'function') {
+      setTimeout(() => { try { window.gradeQuiz(); } catch (e) { console.warn('auto re-grade error', e); } }, 0);
+    }
+  } catch (e) { console.warn('loadReadingState error', e); }
+}
+
+/* ===== 통합 채점기 ===== */
+window.gradeQuiz = function () {
+  const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.world2_01;
+  const A = pack.answerKey;
+  const EX = pack.explain;
+
+  const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
+  const numLabels = ["01","02","03","04","05"];
+  quizBlocks.forEach((block, idx) => {
+    const numEl = block.querySelector('.quiz-num');
+    if (!numEl) return;
+    let markEl = numEl.querySelector('.mark');
+    if (!markEl) {
+      markEl = document.createElement('div');
+      markEl.className = 'mark';
+      numEl.appendChild(markEl);
+    }
+    numEl.textContent = numLabels[idx];
+    numEl.appendChild(markEl);
+    numEl.classList.remove('correct','wrong');
+    markEl.textContent = '';
+  });
+
+  let score = 0;
+  const totalAuto = 4;
+  const shortMsgs = [];
+  const fullMsgs = [];
+
+  function norm(s){ return (s||'').toString().replace(/\s+/g,'').toLowerCase(); }
+  function mark(idx, ok, label, ex, isEssay=false){
+    const num = quizBlocks[idx]?.querySelector('.quiz-num');
+    const markEl = num?.querySelector('.mark');
+    if (ok) {
+      score++;
+      num?.classList.add('correct');
+      if(markEl) markEl.textContent='⭕';
+      shortMsgs.push(`${label} 정답 ✅`);
+      fullMsgs.push(`${label} 정답 ✅ ${ex||''}`);
+    } else {
+      num?.classList.add('wrong');
+      if(markEl) markEl.textContent='✖';
+      shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
+      fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
+    }
+  }
+
+  const q1 = document.querySelector('input[name="q1"]:checked');
+  const q1ok = (q1 && q1.value === A.q1);
+  mark(0, q1ok, '①', EX.q1);
+
+  const q2 = document.querySelector('input[name="q2"]:checked');
+  const q2ok = (q2 && q2.value === A.q2);
+  mark(1, q2ok, '②', EX.q2);
+
+  const q3New = document.getElementById('q3');
+  const q3Old1 = document.getElementById('q3-1');
+  const q3Old2 = document.getElementById('q3-2');
+  const q3Text1 = q3New ? q3New.value.trim() : (q3Old1?.value || '').trim();
+  const q3Text2 = q3New ? '' : (q3Old2?.value || '').trim();
+  const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
+  const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
+  const q3ok = ok3_1 && ok3_2;
+  mark(2, q3ok, '③', EX.q3);
+
+  const q4New = document.getElementById('q4');
+  const q4Old1 = document.getElementById('q4-1');
+  const q4Old2 = document.getElementById('q4-2');
+  const q4Text1 = q4New ? q4New.value.trim() : (q4Old1?.value || '').trim();
+  const q4Text2 = q4New ? '' : (q4Old2?.value || '').trim();
+  const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
+  const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
+  const q4ok = ok4_1 && ok4_2;
+  mark(3, q4ok, '④', EX.q4);
+
+  const essay = (document.getElementById('q5')?.value || '').trim().toLowerCase();
+  const keys = (pack.essayKeywords && Array.isArray(pack.essayKeywords) && pack.essayKeywords.length)
+    ? pack.essayKeywords : ["등고선","간격","좁","넓","급경사","완만","경사"];
+  let hit = 0;
+  keys.forEach(k => { if (essay.includes(k)) hit++; });
+  const q5ok = essay.length && hit >= 2;
+  mark(4, q5ok, '⑤', EX.q5, true);
+
+  const box = document.getElementById('grade-result');
+  if (box) {
+    box.style.display = 'block';
+    box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
+  }
+  window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
+
+  ['grade-btn','reset-btn','submit-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display='inline-block';
+  });
+
+  window.reportState = window.reportState || {};
+  window.reportState.q1ok=q1ok;
+  window.reportState.q2ok=q2ok;
+  window.reportState.q3ok=q3ok;
+  window.reportState.q4ok=q4ok;
+  window.reportState.q5ok=q5ok;
+
+  if (typeof updateReportPanel==='function') {
+    const lexicalRatio = (typeof window.reportState.vocabScoreRatio==='number') ? window.reportState.vocabScoreRatio : 0;
+    const lexicalOk = lexicalRatio >= 0.7;
+    updateReportPanel({
+      q1ok,q2ok,q3ok,q4ok,q5ok,
+      messages:[
+        "① 핵심 이해력: " + (q1ok?"좋아요! ✅":"보완 필요 ❗"),
+        "② 구조 파악력: " + (q2ok?"좋아요! ✅":"보완 필요 ❗"),
+        "③ 어휘 맥락력: " + (lexicalOk?"좋아요! ✅":"어휘 복습 필요 ❗"),
+        "④ 추론·통합력: " + (q4ok?"좋아요! ✅":"보완 필요 ❗"),
+        "⑤ 비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
+      ]
+    });
+  }
+
+  const radarScores = {
+    literal: q1ok ? 10 : 6,
+    structural: q2ok ? 10 : 6,
+    lexical: q3ok ? 10 : 6,
+    inferential: q4ok ? 10 : 6,
+    critical: q5ok ? 10 : 6
+  };
+  window._lastRadar = radarScores;
+  if (typeof updateRadarChart === 'function') updateRadarChart(radarScores);
+  if (typeof drawRadarChart === 'function') drawRadarChart(radarScores);
+  window.reportState.radarScores = radarScores;
+  if (typeof saveReadingState === 'function') saveReadingState();
+};
+
+/* === 정답·해설 패널 렌더러 === */
+function renderSolutions(pack) {
+  const A = pack.answerKey, EX = pack.explain;
+  const q1Text = pack.quiz.q1_opts[Number(A.q1) - 1] || '';
+  const q2Text = pack.quiz.q2_opts[Number(A.q2) - 1] || '';
+  const anchor = document.getElementById('grade-result') || document.body;
+  let box = document.getElementById('solutions-box');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'solutions-box';
+    box.style.cssText = 'margin-top:16px;background:#fffaf3;border:1px solid #e5d4c1;border-radius:12px;padding:16px;line-height:1.6';
+    anchor.insertAdjacentElement('afterend', box);
+  }
+  box.innerHTML = `
+    <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
+    <ol style="margin:0; padding-left:18px;">
+      <li style="margin-bottom:8px;"><b>① 정답:</b> ${A.q1} — ${q1Text}<br><span style="color:#6b5a48;">${EX.q1 || ''}</span></li>
+      <li style="margin-bottom:8px;"><b>② 정답:</b> ${A.q2} — ${q2Text}<br><span style="color:#6b5a48;">${EX.q2 || ''}</span></li>
+      <li style="margin-bottom:8px;"><b>③ 정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}<br><span style="color:#6b5a48;">${EX.q3 || ''}</span></li>
+      <li style="margin-bottom:8px;"><b>④ 정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}<br><span style="color:#6b5a48;">${EX.q4 || ''}</span></li>
+      <li><b>⑤ 서술형 예시:</b> <span style="color:#6b5a48;">${EX.q5 || '핵심어 2개 이상 포함 시 정답 처리'}</span></li>
+    </ol>
+  `;
+  box.style.display = 'block';
+}
+
+/* ========== 공통 진행도 매니저 ========== */
+window.DanDan = window.DanDan || {};
+(function () {
+  if (window.DanDan.ProgressManager) return;
+
+  function detectUnit() {
+    let unitParam = new URLSearchParams(location.search).get('unit');
+    if (!unitParam) {
+      const m = location.pathname.match(/world2_(\d+)\.html/i);
+      if (m) unitParam = `world2_${m[1].padStart(2, '0')}`;
+    }
+    return (unitParam || (window.CUR_UNIT || 'world2_01')).toLowerCase();
+  }
+
+  function buildStudentKey(stu) {
+    const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+    const cleanName  = (stu.name  || '').trim();
+    const cleanGrade = (stu.grade || '').trim();
+    return `${cleanGrade}_${cleanName}_${cleanPhone}`;
+  }
+
+  function getCurrentStudent() {
+    const saved = localStorage.getItem('currentStudent');
+    if (!saved) return null;
+    try { return JSON.parse(saved); } catch { return null; }
+  }
+
+  function buildProgressKey(stu, unit) {
+    return `dan-progress:${buildStudentKey(stu)}:${unit}`;
+  }
+
+  function readDoneList() {
+    const stu = getCurrentStudent();
+    if (!stu) return { keyPrefix: null, list: [] };
+    const unitList = [];
+    const studentKey = buildStudentKey(stu);
+    const prefix = `dan-progress:${studentKey}:`;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(prefix)) continue;
+      const unit = k.slice(prefix.length);
+      const val  = localStorage.getItem(k);
+      if (val) unitList.push(unit);
+    }
+    return { keyPrefix: prefix, list: unitList };
+  }
+
+  const ProgressManager = {
+    getUnit: detectUnit,
+    markComplete() {
+      const stu = getCurrentStudent();
+      if (!stu) return null;
+      const unit = detectUnit();
+      const key  = buildProgressKey(stu, unit);
+      const pageKey = `BRAINUP_worldlit_${unit}`;
+      let saved = [];
+      try {
+        const existing = localStorage.getItem(key);
+        if (existing) saved = JSON.parse(existing);
+        if (!Array.isArray(saved)) saved = [];
+      } catch(e) { saved = []; }
+      if (!saved.includes(pageKey)) saved.push(pageKey);
+      localStorage.setItem(key, JSON.stringify(saved));
+      return key;
+    },
+    isCompleted(unitOptional) {
+      const stu = getCurrentStudent();
+      if (!stu) return false;
+      const unit = (unitOptional || detectUnit());
+      const key  = buildProgressKey(stu, unit);
+      return !!localStorage.getItem(key);
+    },
+    getStudentProgress() { return readDoneList(); }
+  };
+  window.DanDan.ProgressManager = ProgressManager;
+
+  (function hookSubmitReport() {
+    const original = window.submitReport;
+    window.submitReport = async function (...args) {
+      const stu = getCurrentStudent();
+      if (!stu) { alert('로그인한 학생 정보가 없습니다.'); return; }
+      if (typeof original === 'function') {
+        await original.apply(this, args);
+      } else if (typeof window.captureElementToPDF === 'function') {
+        await captureElementToPDF('capture-report', '단단국어_분석리포트.pdf', { withStudentInfo: true });
+      }
+      const key = ProgressManager.markComplete();
+      if (typeof window.showSubmitSuccess === 'function') showSubmitSuccess('분석리포트');
+      else console.log(`학습완료 처리됨: ${key}`);
+      if (typeof window.sendLearningLog === 'function') {
+        try { await window.sendLearningLog(); } catch (e) { console.warn('[submitReport] sendLearningLog 실패', e); }
+      }
+    };
+  })();
+})();
+
+/* ===== 창의활동 제출 ===== */
+window.submitCreative = async function () {
+  const textarea   = document.getElementById('creative-input');
+  const renderBox  = document.getElementById('creative-render');
+  const captureBox = document.getElementById('capture-creative');
+  if (!textarea || !renderBox || !captureBox) {
+    alert('창의활동 영역을 찾을 수 없습니다.');
+    return;
+  }
+  try {
+    renderBox.textContent = textarea.value || '';
+    textarea.style.display  = 'none';
+    renderBox.style.display = 'block';
+    if (typeof window.captureElementToPDF === 'function') {
+      await window.captureElementToPDF('capture-creative', '단단국어_창의활동.pdf', { withStudentInfo: true });
+    } else if (window.html2canvas && window.jsPDF) {
+      const canvas = await html2canvas(captureBox);
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = (canvas.height * pageW) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pageW, pageH);
+      pdf.save('단단국어_창의활동.pdf');
+    } else {
+      alert('PDF 모듈을 찾을 수 없습니다.');
+    }
+    if (typeof window.showSubmitSuccess === 'function') window.showSubmitSuccess('창의활동');
+  } catch (e) {
+    console.warn('submitCreative error', e);
+    alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
+  } finally {
+    if (textarea)   textarea.style.display  = 'block';
+    if (renderBox)  renderBox.style.display = 'none';
+  }
+};
+
+/* ===== 서버 완료 상태 동기화 ===== */
+window.loadCompletionStatus = async function () {
+  try {
+    let stu = null;
+    try {
+      const raw = localStorage.getItem('currentStudent');
+      if (raw) stu = JSON.parse(raw);
+    } catch (e) { return; }
+    if (!stu) return;
+    const params = new URLSearchParams({ grade: stu.grade || '', name: stu.name || '', series: 'BRAIN업' });
+    const res = await fetch(`/api/completion-status?${params}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.completedUnits)) {
+      const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+      const cleanName  = (stu.name  || '').trim();
+      const cleanGrade = (stu.grade || '').trim();
+      const studentKey = `${cleanGrade}_${cleanName}_${cleanPhone}`;
+      const keyPrefix = `dan-progress:${studentKey}:`;
+      data.completedUnits.forEach(unit => {
+        localStorage.setItem(keyPrefix + unit, '1');
+      });
+    }
+  } catch (e) { console.warn('[loadCompletionStatus] 오류', e); }
+};
+
+window.sendLearningLog = async function () {
+  try {
+    const unit = window.ORIGINAL_UNIT || window.CUR_UNIT || 'world2_01';
+    let stu = null;
+    try {
+      const raw = localStorage.getItem('currentStudent');
+      if (raw) stu = JSON.parse(raw);
+    } catch (e) { return; }
+    if (!stu) return;
+    const radar = (window.reportState && window.reportState.radarScores) ? window.reportState.radarScores : null;
+    const payload = { grade: stu.grade || '', name: stu.name || '', school: stu.school || '', series: 'BRAIN업', unit, radar, completed: true };
+    const res = await fetch('/api/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    console.log('[sendLearningLog] result =', data);
+  } catch (e) { console.warn('sendLearningLog error', e); }
+};
+
+/* ===== DOMContentLoaded ===== */
+document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof window.loadCompletionStatus === 'function') await loadCompletionStatus();
+  applyContentPack(window.CUR_UNIT);
+  _bindTabEvents();
+  if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) renderVocabFill();
+  ['grade-btn','reset-btn','submit-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.type = 'button';
+  });
+  const submitBtn = document.getElementById('submit-btn');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => {
+      try {
+        if (typeof window.gradeQuiz === 'function') gradeQuiz();
+        const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.world2_01;
+        renderSolutions(pack);
+      } catch (e) { console.warn('submit-btn handler error', e); }
+    });
+  }
+  const creativeBtn = document.getElementById('creative-submit-btn');
+  if (creativeBtn && typeof window.submitCreative === 'function') {
+    creativeBtn.type = 'button';
+    creativeBtn.addEventListener('click', () => submitCreative());
+  }
+  if (typeof loadReadingState === 'function') loadReadingState();
+});

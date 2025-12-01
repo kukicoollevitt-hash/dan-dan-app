@@ -6072,38 +6072,38 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         // 시리즈 총 단원 수
         const seriesTotalUnits = 400;
 
-        // 단원 코드 정규화 함수 (world1_XX -> world_XX, world2_XX -> world_(XX+40), people1_XX -> people_XX, people2_XX -> people_(XX+40))
+        // 단원 코드 정규화 함수 (world1_XX, world2_XX, people1_XX, people2_XX가 표준 형식)
         function normalizeUnitCode(unit) {
-          // world1_XX -> world_XX (번호 그대로 유지)
-          if (unit.startsWith('world1_')) {
-            const numMatch = unit.match(/world1_([0-9]+)$/);
+          // world1_XX, world2_XX는 이미 표준 형식
+          if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
+            return unit;
+          }
+          // people1_XX, people2_XX는 이미 표준 형식
+          if (unit.startsWith('people1_') || unit.startsWith('people2_')) {
+            return unit;
+          }
+          // 레거시: world_01~40 -> world1_XX, world_41~80 -> world2_XX
+          if (unit.startsWith('world_')) {
+            const numMatch = unit.match(/world_([0-9]+)$/);
             if (numMatch) {
               const num = parseInt(numMatch[1]);
-              return 'world_' + num;
+              if (num >= 1 && num <= 40) {
+                return 'world1_' + String(num).padStart(2, '0');
+              } else if (num >= 41 && num <= 80) {
+                return 'world2_' + String(num - 40).padStart(2, '0');
+              }
             }
           }
-          // world2_XX -> world_(XX+40)
-          if (unit.startsWith('world2_')) {
-            const numMatch = unit.match(/world2_([0-9]+)$/);
+          // 레거시: people_01~40 -> people1_XX, people_41~80 -> people2_XX
+          if (unit.startsWith('people_')) {
+            const numMatch = unit.match(/people_([0-9]+)$/);
             if (numMatch) {
               const num = parseInt(numMatch[1]);
-              return 'world_' + (num + 40);
-            }
-          }
-          // people1_XX -> people_XX (번호 그대로 유지)
-          if (unit.startsWith('people1_')) {
-            const numMatch = unit.match(/people1_([0-9]+)$/);
-            if (numMatch) {
-              const num = parseInt(numMatch[1]);
-              return 'people_' + num;
-            }
-          }
-          // people2_XX -> people_(XX+40)
-          if (unit.startsWith('people2_')) {
-            const numMatch = unit.match(/people2_([0-9]+)$/);
-            if (numMatch) {
-              const num = parseInt(numMatch[1]);
-              return 'people_' + (num + 40);
+              if (num >= 1 && num <= 40) {
+                return 'people1_' + String(num).padStart(2, '0');
+              } else if (num >= 41 && num <= 80) {
+                return 'people2_' + String(num - 40).padStart(2, '0');
+              }
             }
           }
           return unit;
@@ -6121,34 +6121,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         function getCompletedCount(subjectCode) {
           let count = 0;
           completedUnitsSet.forEach(unit => {
-            // world1/world2, people1/people2 특별 처리
-            if (subjectCode === 'world1') {
-              if (unit.startsWith('world_')) {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                if (num >= 1 && num <= 40) count++;
-              }
-            } else if (subjectCode === 'world2') {
-              if (unit.startsWith('world_')) {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                if (num >= 41 && num <= 80) count++;
-              }
-              // world2_ fallback 제거됨 - completedUnitsSet은 이미 정규화됨
-            } else if (subjectCode === 'people1') {
-              if (unit.startsWith('people_')) {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                if (num >= 1 && num <= 40) count++;
-              }
-            } else if (subjectCode === 'people2') {
-              if (unit.startsWith('people_')) {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                if (num >= 41 && num <= 80) count++;
-              }
-              // people2_ fallback 제거됨 - completedUnitsSet은 이미 정규화됨
-            } else if (unit.startsWith(subjectCode + '_')) {
+            // world1, world2, people1, people2는 이제 표준 형식으로 직접 매칭
+            if (unit.startsWith(subjectCode + '_')) {
               count++;
             }
           });
@@ -8714,38 +8688,38 @@ app.get("/my-learning", async (req, res) => {
         // 시리즈 총 단원 수
         const seriesTotalUnits = 400;
 
-        // 단원 코드 정규화 함수 (world1_XX -> world_XX, world2_XX -> world_(XX+40), people1_XX -> people_XX, people2_XX -> people_(XX+40))
+        // 단원 코드 정규화 함수 (world1_XX, world2_XX, people1_XX, people2_XX가 표준 형식)
         function normalizeUnitCode(unit) {
-          // world1_XX -> world_XX (번호 그대로 유지)
-          if (unit.startsWith('world1_')) {
-            const numMatch = unit.match(/world1_([0-9]+)$/);
+          // world1_XX, world2_XX는 이미 표준 형식
+          if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
+            return unit;
+          }
+          // people1_XX, people2_XX는 이미 표준 형식
+          if (unit.startsWith('people1_') || unit.startsWith('people2_')) {
+            return unit;
+          }
+          // 레거시: world_01~40 -> world1_XX, world_41~80 -> world2_XX
+          if (unit.startsWith('world_')) {
+            const numMatch = unit.match(/world_([0-9]+)$/);
             if (numMatch) {
               const num = parseInt(numMatch[1]);
-              return 'world_' + num;
+              if (num >= 1 && num <= 40) {
+                return 'world1_' + String(num).padStart(2, '0');
+              } else if (num >= 41 && num <= 80) {
+                return 'world2_' + String(num - 40).padStart(2, '0');
+              }
             }
           }
-          // world2_XX -> world_(XX+40)
-          if (unit.startsWith('world2_')) {
-            const numMatch = unit.match(/world2_([0-9]+)$/);
+          // 레거시: people_01~40 -> people1_XX, people_41~80 -> people2_XX
+          if (unit.startsWith('people_')) {
+            const numMatch = unit.match(/people_([0-9]+)$/);
             if (numMatch) {
               const num = parseInt(numMatch[1]);
-              return 'world_' + (num + 40);
-            }
-          }
-          // people1_XX -> people_XX (번호 그대로 유지)
-          if (unit.startsWith('people1_')) {
-            const numMatch = unit.match(/people1_([0-9]+)$/);
-            if (numMatch) {
-              const num = parseInt(numMatch[1]);
-              return 'people_' + num;
-            }
-          }
-          // people2_XX -> people_(XX+40)
-          if (unit.startsWith('people2_')) {
-            const numMatch = unit.match(/people2_([0-9]+)$/);
-            if (numMatch) {
-              const num = parseInt(numMatch[1]);
-              return 'people_' + (num + 40);
+              if (num >= 1 && num <= 40) {
+                return 'people1_' + String(num).padStart(2, '0');
+              } else if (num >= 41 && num <= 80) {
+                return 'people2_' + String(num - 40).padStart(2, '0');
+              }
             }
           }
           return unit;
@@ -8763,34 +8737,8 @@ app.get("/my-learning", async (req, res) => {
         function getCompletedCount(subjectCode) {
           let count = 0;
           completedUnitsSet.forEach(unit => {
-            // world1/world2, people1/people2 특별 처리
-            if (subjectCode === 'world1') {
-              if (unit.startsWith('world_')) {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                if (num >= 1 && num <= 40) count++;
-              }
-            } else if (subjectCode === 'world2') {
-              if (unit.startsWith('world_')) {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                if (num >= 41 && num <= 80) count++;
-              }
-              // world2_ fallback 제거됨 - completedUnitsSet은 이미 정규화됨
-            } else if (subjectCode === 'people1') {
-              if (unit.startsWith('people_')) {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                if (num >= 1 && num <= 40) count++;
-              }
-            } else if (subjectCode === 'people2') {
-              if (unit.startsWith('people_')) {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                if (num >= 41 && num <= 80) count++;
-              }
-              // people2_ fallback 제거됨 - completedUnitsSet은 이미 정규화됨
-            } else if (unit.startsWith(subjectCode + '_')) {
+            // world1, world2, people1, people2는 이제 표준 형식으로 직접 매칭
+            if (unit.startsWith(subjectCode + '_')) {
               count++;
             }
           });
