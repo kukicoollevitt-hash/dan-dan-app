@@ -4917,6 +4917,21 @@ app.post("/api/migrate-world1-to-world2", async (req, res) => {
   }
 });
 
+// ===== world_41~80 / world1_41~80 완전 삭제 API =====
+app.post("/api/delete-world-41-80", async (req, res) => {
+  try {
+    console.log("🗑️ world_41~80 / world1_41~80 삭제 시작...");
+    const result = await LearningLog.deleteMany({
+      unit: { $regex: /^world1?_(4[1-9]|[5-7][0-9]|80)$/ }
+    });
+    console.log(`✅ world_41~80 레코드 ${result.deletedCount}개 삭제 완료`);
+    res.json({ ok: true, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error("❌ 삭제 에러:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 // ===== people 관련 데이터 전체 삭제 API =====
 // people_XX, people2_XX, person_XX 등 인물 관련 모든 레코드 삭제
 app.post("/api/delete-all-people-data", async (req, res) => {
