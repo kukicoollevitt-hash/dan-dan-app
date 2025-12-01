@@ -7139,8 +7139,8 @@ async function performLogout() {
       }
 
       if (radarIcon && learningModal && learningIframe) {
-        // 아이콘 클릭 시 모달 열기
-        radarIcon.addEventListener('click', function() {
+        // ✅ 학습 분석 모달 열기 함수
+        function openLearningModal() {
           const user = JSON.parse(sessionStorage.getItem('user') || '{}');
           console.log('🔍 sessionStorage user:', user);
           const grade = user.grade || '학년미지정';
@@ -7153,23 +7153,40 @@ async function performLogout() {
           // iframe에 URL 설정하고 모달 열기
           learningIframe.src = url;
           learningModal.classList.add('show');
-        });
+
+          // ✅ 모달 열림 상태 저장 (새로고침 후 복원용)
+          sessionStorage.setItem('learningModalOpen', 'true');
+        }
+
+        // ✅ 학습 분석 모달 닫기 함수
+        function closeLearningModal() {
+          learningModal.classList.remove('show');
+          learningIframe.src = ''; // iframe 초기화
+
+          // ✅ 모달 열림 상태 제거
+          sessionStorage.removeItem('learningModalOpen');
+        }
+
+        // 아이콘 클릭 시 모달 열기
+        radarIcon.addEventListener('click', openLearningModal);
 
         // 닫기 버튼 클릭 시 모달 닫기
         if (closeModalBtn) {
-          closeModalBtn.addEventListener('click', function() {
-            learningModal.classList.remove('show');
-            learningIframe.src = ''; // iframe 초기화
-          });
+          closeModalBtn.addEventListener('click', closeLearningModal);
         }
 
         // 배경 클릭 시 모달 닫기
         learningModal.addEventListener('click', function(e) {
           if (e.target === learningModal) {
-            learningModal.classList.remove('show');
-            learningIframe.src = ''; // iframe 초기화
+            closeLearningModal();
           }
         });
+
+        // ✅ 페이지 로드 시 모달 상태 복원
+        if (sessionStorage.getItem('learningModalOpen') === 'true') {
+          console.log('🔄 학습 분석 모달 상태 복원');
+          openLearningModal();
+        }
 
         // 전송하기 버튼 클릭 시 이메일 열기
         const sendBtn = document.getElementById('sendLearningBtn');
@@ -7509,6 +7526,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         modal.classList.add('show');
         // 과제 목록 렌더링
         await renderStudyRoomList();
+        // ✅ 모달 열림 상태 저장 (새로고침 후 복원용)
+        sessionStorage.setItem('studyRoomModalOpen', 'true');
       }
     }
 
@@ -7518,12 +7537,22 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const modal = document.getElementById('studyRoomModal');
       if (modal) {
         modal.classList.remove('show');
+        // ✅ 모달 열림 상태 제거
+        sessionStorage.removeItem('studyRoomModalOpen');
         console.log('✅ 모달 숨김 완료, 학습 완료 상태 업데이트 시작');
         // 메인 메뉴의 학습 완료 상태 업데이트
         await updateAllLessonStatus();
         console.log('✅ 학습실 모달 닫기 완료');
       } else {
         console.error('❌ studyRoomModal 요소를 찾을 수 없습니다');
+      }
+    }
+
+    // ✅ 페이지 로드 시 학습실 모달 상태 복원
+    function restoreStudyRoomModal() {
+      if (sessionStorage.getItem('studyRoomModalOpen') === 'true') {
+        console.log('🔄 학습실 모달 상태 복원');
+        openStudyRoomModal();
       }
     }
 
@@ -8367,6 +8396,9 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
     // 학습실 모달 이벤트 리스너
     document.addEventListener('DOMContentLoaded', () => {
+      // ✅ 페이지 로드 시 학습실 모달 상태 복원
+      restoreStudyRoomModal();
+
       // 학습실 아이콘 클릭
       const studyRoomIcon = document.getElementById('studyRoomIcon');
       if (studyRoomIcon) {

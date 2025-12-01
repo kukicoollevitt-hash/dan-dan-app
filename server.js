@@ -7159,6 +7159,16 @@ app.get("/my-learning", async (req, res) => {
           letter-spacing: 0.5px;
         }
 
+        th[onclick] {
+          cursor: pointer;
+          user-select: none;
+          transition: background 0.2s ease;
+        }
+
+        th[onclick]:hover {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
         td {
           padding: 16px;
           text-align: center;
@@ -8106,9 +8116,18 @@ app.get("/my-learning", async (req, res) => {
               <tr>
                 <th>#</th>
                 <th>과목</th>
-                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(AI과제부여)</small></th>
-                <th>날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(최종)</small></th>
-                <th>등급</th>
+                <th style="cursor: pointer;" onclick="sortByAIAssignDate()" id="aiDateHeader">
+                  날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(AI과제부여)</small>
+                  <span id="aiSortIcon" style="margin-left: 4px;">⇅</span>
+                </th>
+                <th style="cursor: pointer;" onclick="sortByFinalDate()" id="finalDateHeader">
+                  날짜/시간<br/><small style="font-weight: normal; color: rgba(255,255,255,0.8);">(최종)</small>
+                  <span id="finalSortIcon" style="margin-left: 4px;">⇅</span>
+                </th>
+                <th style="cursor: pointer;" onclick="sortByGrade()" id="gradeHeader">
+                  등급
+                  <span id="gradeSortIcon" style="margin-left: 4px;">⇅</span>
+                </th>
                 <th>시리즈</th>
                 <th>단원명</th>
               </tr>
@@ -9757,6 +9776,7 @@ app.get("/my-learning", async (req, res) => {
 
         // ===== 정렬 기준 변수 =====
         let currentSortBy = 'final'; // 기본값: 최종
+        let aiSortDirection = 'desc'; // AI과제부여 정렬 방향: desc(내림차순), asc(오름차순)
 
         // ===== 정렬 함수 =====
         function sortLogsByTime(sortBy) {
@@ -9764,6 +9784,149 @@ app.get("/my-learning", async (req, res) => {
           const filteredLogs = getFilteredLogs();
           const sortedLogs = sortLogs(filteredLogs, sortBy);
           renderLogTable(sortedLogs);
+        }
+
+        // ===== AI과제부여 날짜 정렬 함수 (클릭 가능한 헤더용) =====
+        function sortByAIAssignDate() {
+          // 토글: 현재 aiTask 정렬이면 방향 전환, 아니면 aiTask 정렬로 변경
+          if (currentSortBy === 'aiTask') {
+            aiSortDirection = aiSortDirection === 'desc' ? 'asc' : 'desc';
+          } else {
+            currentSortBy = 'aiTask';
+            aiSortDirection = 'desc'; // 기본값: 최신순
+          }
+
+          const filteredLogs = getFilteredLogs();
+          const sortedLogs = sortLogsWithAIDirection(filteredLogs, aiSortDirection);
+          renderLogTable(sortedLogs);
+
+          // 아이콘 업데이트
+          const sortIcon = document.getElementById('aiSortIcon');
+          if (sortIcon) {
+            sortIcon.textContent = aiSortDirection === 'desc' ? '↓' : '↑';
+          }
+
+          console.log('📊 AI과제부여 정렬:', aiSortDirection === 'desc' ? '최신순' : '오래된순');
+
+          // 다른 정렬 아이콘 초기화
+          const finalIcon = document.getElementById('finalSortIcon');
+          if (finalIcon) finalIcon.textContent = '⇅';
+          const gradeIcon = document.getElementById('gradeSortIcon');
+          if (gradeIcon) gradeIcon.textContent = '⇅';
+        }
+
+        // ===== 최종 날짜 정렬 함수 (클릭 가능한 헤더용) =====
+        let finalSortDirection = 'desc'; // 최종 날짜 정렬 방향
+
+        function sortByFinalDate() {
+          // 토글: 현재 final 정렬이면 방향 전환, 아니면 final 정렬로 변경
+          if (currentSortBy === 'final') {
+            finalSortDirection = finalSortDirection === 'desc' ? 'asc' : 'desc';
+          } else {
+            currentSortBy = 'final';
+            finalSortDirection = 'desc'; // 기본값: 최신순
+          }
+
+          const filteredLogs = getFilteredLogs();
+          const sortedLogs = sortLogsWithFinalDirection(filteredLogs, finalSortDirection);
+          renderLogTable(sortedLogs);
+
+          // 아이콘 업데이트
+          const sortIcon = document.getElementById('finalSortIcon');
+          if (sortIcon) {
+            sortIcon.textContent = finalSortDirection === 'desc' ? '↓' : '↑';
+          }
+
+          // 다른 정렬 아이콘 초기화
+          const aiIcon = document.getElementById('aiSortIcon');
+          if (aiIcon) aiIcon.textContent = '⇅';
+
+          console.log('📊 최종 날짜 정렬:', finalSortDirection === 'desc' ? '최신순' : '오래된순');
+
+          // 다른 정렬 아이콘 초기화
+          const gradeIcon = document.getElementById('gradeSortIcon');
+          if (gradeIcon) gradeIcon.textContent = '⇅';
+        }
+
+        // ===== 등급 정렬 함수 (클릭 가능한 헤더용) =====
+        let gradeSortDirection = 'desc'; // 등급 정렬 방향: desc(높은순), asc(낮은순)
+
+        function sortByGrade() {
+          // 토글: 현재 grade 정렬이면 방향 전환, 아니면 grade 정렬로 변경
+          if (currentSortBy === 'grade') {
+            gradeSortDirection = gradeSortDirection === 'desc' ? 'asc' : 'desc';
+          } else {
+            currentSortBy = 'grade';
+            gradeSortDirection = 'desc'; // 기본값: 높은순 (우수→격려)
+          }
+
+          const filteredLogs = getFilteredLogs();
+          const sortedLogs = sortLogsWithGradeDirection(filteredLogs, gradeSortDirection);
+          renderLogTable(sortedLogs);
+
+          // 아이콘 업데이트
+          const sortIcon = document.getElementById('gradeSortIcon');
+          if (sortIcon) {
+            sortIcon.textContent = gradeSortDirection === 'desc' ? '↓' : '↑';
+          }
+
+          // 다른 정렬 아이콘 초기화
+          const aiIcon = document.getElementById('aiSortIcon');
+          if (aiIcon) aiIcon.textContent = '⇅';
+          const finalIcon = document.getElementById('finalSortIcon');
+          if (finalIcon) finalIcon.textContent = '⇅';
+
+          console.log('📊 등급 정렬:', gradeSortDirection === 'desc' ? '높은순' : '낮은순');
+        }
+
+        // ===== 등급 정렬 (방향 지정 가능) =====
+        function sortLogsWithGradeDirection(logs, direction) {
+          // 등급 점수 매핑: 우수(9+) > 양호(8+) > 보통(7+) > 격려(7미만)
+          function getGradeScore(log) {
+            const r = log.radar || {};
+            const scores = [r.literal, r.structural, r.lexical, r.inferential, r.critical].filter(s => s != null);
+            if (scores.length === 0) return 0;
+            return scores.reduce((a, b) => a + b, 0) / scores.length;
+          }
+
+          return [...logs].sort((a, b) => {
+            const scoreA = getGradeScore(a);
+            const scoreB = getGradeScore(b);
+            return direction === 'desc' ? (scoreB - scoreA) : (scoreA - scoreB);
+          });
+        }
+
+        // ===== 최종 날짜 정렬 (방향 지정 가능) =====
+        function sortLogsWithFinalDirection(logs, direction) {
+          return [...logs].sort((a, b) => {
+            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return direction === 'desc' ? (timeB - timeA) : (timeA - timeB);
+          });
+        }
+
+        // ===== AI과제부여 정렬 (방향 지정 가능) =====
+        function sortLogsWithAIDirection(logs, direction) {
+          return [...logs].sort((a, b) => {
+            // AI과제부여가 없는 항목(-)은 항상 맨 아래
+            const hasAiA = a.aiTaskAssignedAt ? 1 : 0;
+            const hasAiB = b.aiTaskAssignedAt ? 1 : 0;
+            if (hasAiA !== hasAiB) {
+              return hasAiB - hasAiA; // AI과제부여 있는 것이 먼저
+            }
+
+            // 둘 다 AI과제부여가 있으면 시간순 정렬
+            if (hasAiA && hasAiB) {
+              const timeA = new Date(a.aiTaskAssignedAt).getTime();
+              const timeB = new Date(b.aiTaskAssignedAt).getTime();
+              return direction === 'desc' ? (timeB - timeA) : (timeA - timeB);
+            }
+
+            // 둘 다 AI과제부여가 없으면 최종 시간 기준 내림차순
+            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return timeB - timeA;
+          });
         }
 
         function sortLogs(logs, sortBy) {
