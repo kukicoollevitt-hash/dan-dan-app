@@ -12706,7 +12706,8 @@ async function assignAITasksDaily() {
             'soc': '사회문화', 'law': '법', 'pol': '정치경제',
             'modern': '현대문학', 'classic': '고전문학',
             'world1': '세계문학1', 'world2': '세계문학2', 'world': '세계문학1',
-            'person1': '한국인물', 'person2': '세계인물', 'people': '한국인물'
+            'person1': '한국인물', 'person2': '세계인물', 'people': '한국인물',
+            'people1': '한국인물', 'people2': '세계인물'
           };
           const subjectName = subjectMap[subjectCode] || subjectCode;
 
@@ -12716,7 +12717,8 @@ async function assignAITasksDaily() {
             'bio': '과학', 'earth': '과학', 'physics': '과학', 'chem': '과학',
             'modern': '한국문학', 'classic': '한국문학',
             'world1': '세계문학', 'world2': '세계문학', 'world': '세계문학',
-            'person1': '인물', 'person2': '인물', 'people': '인물'
+            'person1': '인물', 'person2': '인물', 'people': '인물',
+            'people1': '인물', 'people2': '인물'
           };
           const fieldName = fieldMap[subjectCode] || '기타';
 
