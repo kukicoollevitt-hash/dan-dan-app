@@ -11433,6 +11433,7 @@ app.post('/api/user-progress/vocabulary', async (req, res) => {
       error: error.message
     });
   }
+});
 
 // 어휘학습 이력 저장 API
 app.post('/api/user-progress/vocabulary-history/add', async (req, res) => {
@@ -11586,7 +11587,6 @@ app.get('/api/user-progress/vocabulary-history/today', async (req, res) => {
       error: error.message
     });
   }
-});
 });
 
 // ========== 독서 감상문 API ==========
