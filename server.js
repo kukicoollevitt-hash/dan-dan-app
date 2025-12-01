@@ -9099,18 +9099,20 @@ app.get("/my-learning", async (req, res) => {
           const title = document.createElement('div');
           title.className = 'radar-card-title';
 
-          // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01, world2_01 → 세계문학 41)
+          // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01, world2_01 → 세계문학2 1)
           let unitName = log.unit || '단원';
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
-            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물' };
+            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물' };
             const subject = subjectMap[parts[0]] || parts[0];
             let number = parts[1] ? parseInt(parts[1], 10) : 0;
-            // world2는 번호에 40을 더함 (world2_01 → 세계문학 41), people2는 그대로 (people2_01 → 세계인물 1)
-            if (parts[0] === 'world2') {
-              number += 40;
+            // world_41~80은 세계문학2로 표시 (world_41 → 세계문학2 1)
+            if (parts[0] === 'world' && number > 40) {
+              number = number - 40;
+              unitName = '세계문학2 ' + number;
+            } else {
+              unitName = subject + ' ' + number;
             }
-            unitName = subject + ' ' + number;
           }
           title.textContent = unitName + ' 분석';
 
@@ -9510,6 +9512,8 @@ app.get("/my-learning", async (req, res) => {
             'world1': '세계문학분야',
             'world2': '세계문학분야',
             'people': '인물분야',
+            'people1': '인물분야',
+            'people2': '인물분야',
             'person1': '인물분야',
             'person2': '인물분야'
           };
@@ -9792,8 +9796,8 @@ app.get("/my-learning", async (req, res) => {
           // 테이블 초기화
           tbody.innerHTML = '';
 
-          // 과목 매핑 (world2는 세계문학, people1/people2는 한국인물/세계인물로 분리)
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
+          // 과목 매핑 (world1/world2는 세계문학1/세계문학2, people1/people2는 한국인물/세계인물로 분리)
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
 
           logs.forEach((log, idx) => {
             const ts = log.timestamp
@@ -9822,17 +9826,19 @@ app.get("/my-learning", async (req, res) => {
               badgeText = '격려';
             }
 
-            // 단원 코드 → 단원명 변환 (예: world2_01 → 세계문학 41)
+            // 단원 코드 → 단원명 변환 (예: world2_01 → 세계문학2 1)
             let unitName = log.unit || "";
             if (unitName && unitName.includes('_')) {
               const parts = unitName.split('_');
               const subject = subjectMap[parts[0]] || parts[0];
               let number = parts[1] ? parseInt(parts[1], 10) : 0;
-              // world2만 번호에 40을 더함 (world2_01 → 세계문학 41), people2는 그대로 (people2_01 → 세계인물 1)
-              if (parts[0] === 'world2') {
-                number += 40;
+              // world_41~80은 세계문학2로 표시 (world_41 → 세계문학2 1)
+              if (parts[0] === 'world' && number > 40) {
+                number = number - 40;
+                unitName = '세계문학2 ' + number;
+              } else {
+                unitName = subject + ' ' + number;
               }
-              unitName = subject + ' ' + number;
             }
 
             const hiddenClass = idx >= 10 ? 'hidden-row' : '';
@@ -9985,39 +9991,59 @@ app.get("/my-learning", async (req, res) => {
             person: { total: 0, person1: 0, person2: 0 }
           };
 
-          // 완료된 단원 집합 (중복 제거)
+          // 완료된 단원 집합 (중복 제거 - 정규화된 코드 사용)
           const completedUnits = new Set();
+
+          // 단원 코드 정규화 함수 (진도율용)
+          function normalizeForProgress(unit) {
+            // world_41~80 -> world2_01~40
+            if (unit.startsWith('world_')) {
+              const numMatch = unit.match(/world_([0-9]+)$/);
+              if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                if (num >= 41 && num <= 80) {
+                  return 'world2_' + String(num - 40).padStart(2, '0');
+                } else if (num >= 1 && num <= 40) {
+                  return 'world1_' + String(num).padStart(2, '0');
+                }
+              }
+            }
+            // people_41~80 -> people2_01~40
+            if (unit.startsWith('people_')) {
+              const numMatch = unit.match(/people_([0-9]+)$/);
+              if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                if (num >= 41 && num <= 80) {
+                  return 'people2_' + String(num - 40).padStart(2, '0');
+                } else if (num >= 1 && num <= 40) {
+                  return 'people1_' + String(num).padStart(2, '0');
+                }
+              }
+            }
+            return unit;
+          }
 
           logs.forEach(log => {
             const unit = log.unit;
-            if (!unit || completedUnits.has(unit)) return;
+            if (!unit) return;
 
-            completedUnits.add(unit);
+            // 정규화된 단원 코드로 중복 체크
+            const normalizedUnit = normalizeForProgress(unit);
+            if (completedUnits.has(normalizedUnit)) return;
+
+            completedUnits.add(normalizedUnit);
             progress.total++;
 
-            // 과목 코드 추출 (예: "bio_01" -> "bio", "world2_01" -> "world2")
-            const subjectCode = unit.match(/^[a-z]+[0-9]*/)?.[0];
+            // 정규화된 코드에서 과목 코드 추출 (예: "bio_01" -> "bio", "world2_01" -> "world2")
+            const subjectCode = normalizedUnit.match(/^[a-z]+[0-9]*/)?.[0];
             if (!subjectCode) return;
 
             const field = subjectMapping[subjectCode];
             if (field && progress[field]) {
               progress[field].total++;
 
-              // world와 people은 번호에 따라 1/2로 분류
-              if (subjectCode === 'world' || subjectCode === 'people') {
-                const numMatch = unit.match(/_([0-9]+)$/);
-                const num = numMatch ? parseInt(numMatch[1]) : 0;
-                let subKey;
-                if (subjectCode === 'world') {
-                  subKey = num <= 40 ? 'world1' : 'world2';
-                } else {
-                  subKey = num <= 40 ? 'person1' : 'person2';
-                }
-                if (progress[field][subKey] !== undefined) {
-                  progress[field][subKey]++;
-                }
-              } else if (subjectCode === 'world1' || subjectCode === 'world2') {
-                // world1_XX, world2_XX 형태 직접 처리
+              // world1, world2는 직접 처리
+              if (subjectCode === 'world1' || subjectCode === 'world2') {
                 if (progress[field][subjectCode] !== undefined) {
                   progress[field][subjectCode]++;
                 }
@@ -10030,6 +10056,11 @@ app.get("/my-learning", async (req, res) => {
                 // people2_XX -> person2로 처리 (세계인물)
                 if (progress[field].person2 !== undefined) {
                   progress[field].person2++;
+                }
+              } else if (subjectCode === 'person1') {
+                // person1_XX 형태 직접 처리
+                if (progress[field][subjectCode] !== undefined) {
+                  progress[field][subjectCode]++;
                 }
               } else if (subjectCode === 'person2') {
                 // person2_XX 형태 직접 처리
