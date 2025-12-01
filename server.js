@@ -4856,6 +4856,67 @@ app.post("/api/migrate-legacy-units", async (req, res) => {
   }
 });
 
+// ===== world1_41~80 → world2_01~40 마이그레이션 API =====
+// 기존 world1_41~80 레코드를 world2_01~40으로 변환 또는 삭제
+app.post("/api/migrate-world1-to-world2", async (req, res) => {
+  try {
+    console.log("🔄 world1_41~80 → world2_01~40 마이그레이션 시작...");
+
+    let converted = 0;
+    let deleted = 0;
+    let skipped = 0;
+
+    // world1_41 ~ world1_80 찾기
+    const world1Logs = await LearningLog.find({
+      unit: { $regex: /^world1_(4[1-9]|[5-7][0-9]|80)$/ }
+    });
+
+    console.log(`📋 world1_41~80 레코드 ${world1Logs.length}개 발견`);
+
+    for (const log of world1Logs) {
+      const match = log.unit.match(/^world1_(\d+)$/);
+      if (!match) continue;
+
+      const num = parseInt(match[1], 10);
+      if (num < 41 || num > 80) continue;
+
+      // world1_41 → world2_01, world1_42 → world2_02, ...
+      const newNum = num - 40;
+      const newUnit = `world2_${String(newNum).padStart(2, '0')}`;
+
+      // 이미 world2_XX로 같은 사용자 레코드가 있는지 확인
+      const existingLog = await LearningLog.findOne({
+        grade: log.grade, name: log.name, unit: newUnit
+      });
+
+      if (existingLog) {
+        // 중복이면 삭제
+        await LearningLog.deleteOne({ _id: log._id });
+        deleted++;
+        console.log(`  🗑️ 삭제 (중복): ${log.unit} → ${newUnit} (${log.name})`);
+      } else {
+        // 변환
+        log.unit = newUnit;
+        await log.save();
+        converted++;
+        console.log(`  ✅ 변환: world1_${num} → ${newUnit} (${log.name})`);
+      }
+    }
+
+    console.log(`🎉 마이그레이션 완료: 변환 ${converted}개, 삭제 ${deleted}개`);
+    res.json({
+      ok: true,
+      message: `world1_41~80 마이그레이션 완료`,
+      found: world1Logs.length,
+      converted,
+      deleted
+    });
+  } catch (err) {
+    console.error("❌ 마이그레이션 에러:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 // ===== people 관련 데이터 전체 삭제 API =====
 // people_XX, people2_XX, person_XX 등 인물 관련 모든 레코드 삭제
 app.post("/api/delete-all-people-data", async (req, res) => {
