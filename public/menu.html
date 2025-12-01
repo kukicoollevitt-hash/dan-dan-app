@@ -3807,6 +3807,93 @@ if (logoutConfirmBtn) {
       });
     });
 
+    /* ✅ 저장된 메뉴 상태 복원 */
+    function restoreMenuState() {
+      const savedState = sessionStorage.getItem('menuState');
+
+      if (savedState) {
+        try {
+          const state = JSON.parse(savedState);
+          console.log('🔄 메뉴 상태 복원 시도:', state);
+
+          // 메뉴 상태 사용 후 삭제 (한 번만 복원)
+          sessionStorage.removeItem('menuState');
+
+          const seriesKey = state.series || 'BRAINUP';
+          currentSelectedSeries = seriesKey;
+
+          // 1. 시리즈 렌더링 및 활성화
+          renderDomains(seriesKey);
+          document.querySelectorAll("#seriesList .series-item").forEach(li => {
+            li.classList.remove("active");
+            if (li.dataset.series === seriesKey) {
+              li.classList.add("active");
+            }
+          });
+
+          // 2. 분야(도메인) 복원
+          if (state.domainId) {
+            const domainData = domainsBySeries[seriesKey] || domainsBySeries["BRAINON"];
+            const targetDomain = domainData.find(d => d.id === state.domainId);
+
+            if (targetDomain) {
+              currentSelectedDomain = targetDomain;
+
+              // 분야 활성화
+              document.querySelectorAll(".domain-item").forEach(li => {
+                li.classList.remove("active");
+                if (li.dataset.domain === state.domainId) {
+                  li.classList.add("active");
+                }
+              });
+
+              // 세부 과목 렌더링
+              renderSubjects(seriesKey, targetDomain);
+
+              // 3. 세부 과목 복원
+              if (state.subjectId) {
+                const targetSubject = targetDomain.subs.find(s =>
+                  s.id === state.subjectId &&
+                  (s.offset || null) === (state.subjectOffset || null)
+                );
+
+                if (targetSubject) {
+                  currentSelectedSubject = targetSubject;
+
+                  // 세부 과목 활성화
+                  setTimeout(() => {
+                    document.querySelectorAll(".subject-item").forEach(li => {
+                      li.classList.remove("active");
+                      // offset도 함께 확인하여 정확한 과목 선택 (세계문학(1) vs 세계문학(2) 구분)
+                      const liOffset = li.dataset.offset ? parseInt(li.dataset.offset) : null;
+                      const stateOffset = state.subjectOffset || null;
+                      if (li.dataset.sub === state.subjectId && liOffset === stateOffset) {
+                        li.classList.add("active");
+                      }
+                    });
+
+                    // 배경 이미지 변경 및 단원 목록 렌더링
+                    changeBackgroundImage(targetSubject);
+                    renderUnits(seriesKey, targetDomain, targetSubject);
+
+                    console.log('✅ 메뉴 상태 복원 완료:', state);
+                  }, 100);
+                }
+              }
+            }
+          }
+
+          return; // 복원 성공
+        } catch (e) {
+          console.error('❌ 메뉴 상태 복원 실패:', e);
+        }
+      }
+
+      // 저장된 상태 없으면 기본값으로 시작
+      currentSelectedSeries = "BRAINUP";
+      renderDomains("BRAINUP");
+    }
+
     /* 6. 분야 표시 */
     function renderDomains(seriesKey) {
       domainList.innerHTML = "";
@@ -3839,6 +3926,7 @@ if (logoutConfirmBtn) {
         const li = document.createElement("li");
         li.className = "subject-item";
         li.dataset.sub = sub.id;
+        li.dataset.offset = sub.offset || ''; // ✅ offset 정보 추가
         // 완료 개수 계산 (BRAINUP 시리즈만 해당) - offset 지원 (세계문학(2), 인물(2) 등)
         const completedCount = (seriesKey === 'BRAINUP') ? getCompletedCountForSubject(sub.id, sub.count, sub.offset || 0) : 0;
         li.innerHTML = `<span>${sub.label}</span><span class="meta">${completedCount}/${sub.count}개</span>`;
@@ -4809,9 +4897,8 @@ async function performLogout() {
       }
     });
 
-    // 시작은 BRAINUP 시리즈
-    currentSelectedSeries = "BRAINUP";
-    renderDomains("BRAINUP");
+    // ✅ 저장된 메뉴 상태 복원 또는 기본값으로 시작
+    restoreMenuState();
 
     // === 헤더 클릭 시 폭죽 효과 ===
     let jsConfetti = null;
@@ -6749,6 +6836,16 @@ async function performLogout() {
         unitModal.classList.add('show');
         // sessionStorage에 현재 열린 단원 경로 저장
         sessionStorage.setItem('currentOpenUnit', unitPath);
+
+        // ✅ 현재 메뉴 상태 저장 (새로고침 후 복원용)
+        const menuState = {
+          series: currentSelectedSeries,
+          domainId: currentSelectedDomain ? currentSelectedDomain.id : null,
+          subjectId: currentSelectedSubject ? currentSelectedSubject.id : null,
+          subjectOffset: currentSelectedSubject ? currentSelectedSubject.offset : null
+        };
+        sessionStorage.setItem('menuState', JSON.stringify(menuState));
+        console.log('💾 메뉴 상태 저장:', menuState);
       }
     }
 
