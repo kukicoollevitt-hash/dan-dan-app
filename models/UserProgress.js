@@ -36,8 +36,8 @@ const userProgressSchema = new mongoose.Schema({
     avgScore: {
       type: Number,
       default: 0,
-      min: 0,
-      max: 100
+      min: 0
+      // max 제한 제거 - 보너스 점수로 100점 초과 가능
     },
     totalCoins: {
       type: Number,
@@ -87,8 +87,8 @@ const userProgressSchema = new mongoose.Schema({
     score: {
       type: Number,
       required: true,
-      min: 0,
-      max: 100
+      min: 0
+      // max 제한 제거 - 보너스 점수로 100점 초과 가능
     }
   }],
 
