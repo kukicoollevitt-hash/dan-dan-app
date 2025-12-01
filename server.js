@@ -4856,31 +4856,31 @@ app.post("/api/migrate-legacy-units", async (req, res) => {
   }
 });
 
-// ===== world1_41~80 → world2_01~40 마이그레이션 API =====
-// 기존 world1_41~80 레코드를 world2_01~40으로 변환 또는 삭제
+// ===== world_41~80 및 world1_41~80 → world2_01~40 마이그레이션 API =====
+// 기존 world_41~80 또는 world1_41~80 레코드를 world2_01~40으로 변환 또는 삭제
 app.post("/api/migrate-world1-to-world2", async (req, res) => {
   try {
-    console.log("🔄 world1_41~80 → world2_01~40 마이그레이션 시작...");
+    console.log("🔄 world_41~80 / world1_41~80 → world2_01~40 마이그레이션 시작...");
 
     let converted = 0;
     let deleted = 0;
-    let skipped = 0;
 
-    // world1_41 ~ world1_80 찾기
-    const world1Logs = await LearningLog.find({
-      unit: { $regex: /^world1_(4[1-9]|[5-7][0-9]|80)$/ }
+    // world_41~80 또는 world1_41~80 찾기 (world_XX 또는 world1_XX 형식 모두 처리)
+    const worldLogs = await LearningLog.find({
+      unit: { $regex: /^world1?_(4[1-9]|[5-7][0-9]|80)$/ }
     });
 
-    console.log(`📋 world1_41~80 레코드 ${world1Logs.length}개 발견`);
+    console.log(`📋 world_41~80 / world1_41~80 레코드 ${worldLogs.length}개 발견`);
 
-    for (const log of world1Logs) {
-      const match = log.unit.match(/^world1_(\d+)$/);
+    for (const log of worldLogs) {
+      // world_41 또는 world1_41 형식 모두 매칭
+      const match = log.unit.match(/^world1?_(\d+)$/);
       if (!match) continue;
 
       const num = parseInt(match[1], 10);
       if (num < 41 || num > 80) continue;
 
-      // world1_41 → world2_01, world1_42 → world2_02, ...
+      // world_41 → world2_01, world1_42 → world2_02, ...
       const newNum = num - 40;
       const newUnit = `world2_${String(newNum).padStart(2, '0')}`;
 
@@ -4899,15 +4899,15 @@ app.post("/api/migrate-world1-to-world2", async (req, res) => {
         log.unit = newUnit;
         await log.save();
         converted++;
-        console.log(`  ✅ 변환: world1_${num} → ${newUnit} (${log.name})`);
+        console.log(`  ✅ 변환: ${log.unit} → ${newUnit} (${log.name})`);
       }
     }
 
     console.log(`🎉 마이그레이션 완료: 변환 ${converted}개, 삭제 ${deleted}개`);
     res.json({
       ok: true,
-      message: `world1_41~80 마이그레이션 완료`,
-      found: world1Logs.length,
+      message: `world_41~80 / world1_41~80 마이그레이션 완료`,
+      found: worldLogs.length,
       converted,
       deleted
     });
