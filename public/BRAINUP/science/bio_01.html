@@ -82,25 +82,25 @@
   <script>
   /* =========================================================
      단원 자동 인식 (강화)
-     우선순위: ?unit=geo_XX → 파일명 geo_XX.html → 제목 숫자
+     우선순위: ?unit=bio_XX → 파일명 bio_XX.html → 제목 숫자
   ========================================================= */
   (function () {
     const qs = new URLSearchParams(location.search).get('unit');
     let unit = null;
 
     if (qs) {
-      const m = qs.toLowerCase().match(/geo[_-]?(\d{1,2})/);
-      if (m) unit = `geo_${m[1].padStart(2,'0')}`;
+      const m = qs.toLowerCase().match(/bio[_-]?(\d{1,2})/);
+      if (m) unit = `bio_${m[1].padStart(2,'0')}`;
     }
 
     if (!unit) {
-      const m2 = location.pathname.toLowerCase().match(/geo[_-]?(\d{1,2})\.html/);
-      if (m2) unit = `geo_${m2[1].padStart(2,'0')}`;
+      const m2 = location.pathname.toLowerCase().match(/bio[_-]?(\d{1,2})\.html/);
+      if (m2) unit = `bio_${m2[1].padStart(2,'0')}`;
     }
 
     if (!unit && document.title) {
       const m3 = document.title.match(/(\d{1,2})/);
-      if (m3) unit = `geo_${m3[1].padStart(2,'0')}`;
+      if (m3) unit = `bio_${m3[1].padStart(2,'0')}`;
     }
 
     window.CUR_UNIT = unit || 'bio_01';
@@ -2144,7 +2144,10 @@
           document.querySelectorAll('#tab-vocab .blank-wrap').forEach(bw => {
             bw.classList.remove('correct', 'wrong');
             const input = bw.querySelector('.blank-input');
-            if (input) input.value = '';
+            if (input) {
+              input.value = '';
+              input.disabled = false;  // 입력창 다시 활성화
+            }
             const mark = bw.querySelector('.blank-mark');
             if (mark) mark.textContent = '';
           });
@@ -2155,6 +2158,8 @@
           }
           const vocabResetBtn = document.getElementById('vocab-reset');
           if (vocabResetBtn) vocabResetBtn.style.display = 'none';
+          const vocabGradeBtn = document.getElementById('vocab-grade');
+          if (vocabGradeBtn) vocabGradeBtn.style.display = 'inline-block';
           console.log('[vocabReset] 다시풀기 완료');
         };
       </script>
@@ -2210,9 +2215,9 @@
           <div id="spelling-corrected"></div>
         </div>
 
-        <!-- 🔸 채점하기 & 제출 버튼 -->
+        <!-- 🔸 맞춤법 검사 & 제출 버튼 -->
         <div class="creative-actions">
-          <button type="button" id="creative-check-btn" class="creative-btn">채점하기</button>
+          <button type="button" id="creative-check-btn" class="creative-btn">맞춤법 검사</button>
           <button type="button" id="creative-submit-btn" class="creative-btn">제출하기</button>
         </div>
       </div>
@@ -2258,7 +2263,7 @@
 
       <!-- ✅ 제출하기 버튼 -->
       <div class="report-actions">
-        <button class="report-btn-remedial" onclick="openRemedial && openRemedial()">
+        <button class="report-btn-remedial" onclick="openRemedial && openRemedial()" style="display:none;">
           보완학습 하기
         </button>
         <button class="report-btn-submit" onclick="submitReport()">
@@ -2504,10 +2509,6 @@
       const who = (grade || name) ? `${grade ? grade + ' ' : ''}${name ? name + ' ' : ''}`.trim() + ' ' : '';
       showSubmitOverlay(`${who}${kind} 제출되었습니다 ✅`);
     }
-
-    /* ===== 분석리포트 갱신 ===== */
-    // feedbackMessages, getRandomMessage, updateReportPanel, drawRadarChart는
-    // learning-common.js에서 전역으로 제공됨
 
     /* ===== 본문 채점 ===== */
     let readingResultHTML = "";  // 본문학습용 (learning-common.js의 readingResultHTML과 충돌 방지)
@@ -3101,7 +3102,7 @@ async function saveReadingProgress() {
       const content = window.CONTENTS[unit];
       if (content) renderSolutions(content);
     }
-    showSubmitSuccess('본문학습');
+    // showSubmitSuccess는 제거 - 채점 결과 팝업이 대신 표시됨
     document.getElementById('save-progress-btn').style.display = 'none';
     document.getElementById('reset-btn').style.display = 'inline-block';
   } catch (err) {

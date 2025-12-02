@@ -979,8 +979,8 @@
       console.log('[learning-common] ★ 서버 데이터 키 목록:', serverData ? Object.keys(serverData) : 'null');
       if (serverData) {
         // 본문학습 상태 복원 (DOM이 이미 있으므로 즉시 복원)
-        // reportState 또는 readingState 둘 다 지원 (하위 호환성)
-        const readingData = serverData.reportState || serverData.readingState;
+        // readingState 사용 (reportState는 분석리포트 전용이므로 제외)
+        const readingData = serverData.readingState;
         if (readingData) {
           console.log('[learning-common] 서버 데이터 복원 시작:', readingData);
           restoreReadingStateFromServer(readingData);
@@ -1001,6 +1001,13 @@
           }
         } else {
           console.log('[learning-common] ★ vocabState 없음');
+        }
+        // ★ 창의활동 상태 복원
+        if (serverData.creativeState) {
+          console.log('[learning-common] ★★★ 창의활동 서버 데이터:', serverData.creativeState);
+          restoreCreativeStateFromServer(serverData.creativeState);
+        } else {
+          console.log('[learning-common] ★ creativeState 없음');
         }
       } else {
         console.log('[learning-common] ★ 서버에서 데이터 없음 (null)');
@@ -1869,7 +1876,11 @@
     vocabResetBtn.addEventListener('click', () => {
       document.querySelectorAll('#tab-vocab .blank-wrap').forEach(bw => {
         bw.classList.remove('correct','wrong');
-        bw.querySelector('.blank-input').value = "";
+        const input = bw.querySelector('.blank-input');
+        if (input) {
+          input.value = "";
+          input.disabled = false;  // 입력창 다시 활성화
+        }
         const mark = bw.querySelector('.blank-mark');
         if (mark) mark.textContent = "";
       });
@@ -1941,6 +1952,42 @@
         textarea.value = saved;
         console.log('[loadCreativeState] 복원 완료:', stateKey);
       }
+    }
+
+    // ★ 서버 데이터로 창의활동 상태 복원
+    function restoreCreativeStateFromServer(creativeState) {
+      if (!creativeState) {
+        console.log('[restoreCreativeStateFromServer] 복원할 데이터 없음');
+        return;
+      }
+      console.log('[restoreCreativeStateFromServer] 복원 시작:', creativeState);
+
+      // 1. 텍스트 복원
+      const textarea = document.getElementById('creative-input');
+      if (textarea && creativeState.text) {
+        textarea.value = creativeState.text;
+        console.log('[restoreCreativeStateFromServer] 텍스트 복원 완료');
+      }
+
+      // 2. 맞춤법 검사 결과 복원
+      if (creativeState.resultHTML) {
+        const spellingResult = document.getElementById('spelling-result');
+        if (spellingResult) {
+          spellingResult.innerHTML = creativeState.resultHTML;
+          spellingResult.style.display = 'block';
+        }
+      }
+
+      // 3. 올바른 맞춤법 결과 복원
+      if (creativeState.correctHTML) {
+        const spellingCorrect = document.getElementById('spelling-correct');
+        if (spellingCorrect) {
+          spellingCorrect.innerHTML = creativeState.correctHTML;
+          spellingCorrect.style.display = 'block';
+        }
+      }
+
+      console.log('[restoreCreativeStateFromServer] 복원 완료');
     }
 
     /* ===== 한글 맞춤법 검사 함수 ===== */
@@ -2057,10 +2104,31 @@
 
         const text = creativeTextarea ? creativeTextarea.value : '';
 
-        // 저장
+        // localStorage 저장
         saveCreativeState();
 
+        // PDF 다운로드
         await captureElementToPDF('capture-creative', '단단국어_창의활동.pdf', { withStudentInfo: true });
+
+        // ★ 서버 저장
+        const saveFn = window.saveUnitProgressToServer;
+        if (typeof saveFn === 'function') {
+          // 맞춤법 검사 결과도 함께 저장
+          const spellingResult = document.getElementById('spelling-result');
+          const spellingCorrect = document.getElementById('spelling-correct');
+
+          const dataToSave = {
+            creativeState: {
+              text: text,
+              resultHTML: spellingResult ? spellingResult.innerHTML : '',
+              correctHTML: spellingCorrect ? spellingCorrect.innerHTML : '',
+              isSubmitted: true
+            }
+          };
+          await saveFn(dataToSave);
+          console.log('[creative-submit] 서버 저장 완료!');
+        }
+
         showSubmitSuccess('창의활동');
       });
     }
@@ -2142,6 +2210,31 @@
         console.error('[AI 과제 복습 완료 처리 오류]', error);
       }
 
-      // 8) 완료 표시
+      // 8) ★ 분석리포트 상태 서버 저장
+      const saveFn = window.saveUnitProgressToServer;
+      if (typeof saveFn === 'function') {
+        // reportState가 있으면 저장 (window.reportState 또는 전역 reportState)
+        const rs = window.reportState || (typeof reportState !== 'undefined' ? reportState : null);
+        if (rs) {
+          const reportLogEl = document.getElementById('report-log');
+          const dataToSave = {
+            reportState: {
+              q1ok: rs.q1ok || false,
+              q2ok: rs.q2ok || false,
+              q3ok: rs.q3ok || false,
+              q4ok: rs.q4ok || false,
+              q5ok: rs.q5ok || false,
+              vocabScoreRatio: rs.vocabScoreRatio || 0,
+              radarScores: rs.radarScores || {},
+              reportLogHTML: reportLogEl ? reportLogEl.innerHTML : '',
+              isSubmitted: true
+            }
+          };
+          await saveFn(dataToSave);
+          console.log('[submitReport] 분석리포트 서버 저장 완료!');
+        }
+      }
+
+      // 9) 완료 표시
       showSubmitSuccess('분석리포트');
     }
