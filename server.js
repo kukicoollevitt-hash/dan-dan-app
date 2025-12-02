@@ -13543,6 +13543,173 @@ app.get("/api/course-applications", async (req, res) => {
   }
 });
 
+// ===== 학습 진행 데이터 API (localStorage 대체) =====
+
+// 단원별 학습 진행 데이터 저장
+app.post("/api/unit-progress/save", async (req, res) => {
+  try {
+    const { grade, name, unit, data } = req.body;
+    console.log('[unit-progress/save] 요청:', { grade, name, unit, data });
+
+    if (!grade || !name || !unit) {
+      return res.status(400).json({ success: false, message: "grade, name, unit은 필수입니다." });
+    }
+
+    let userProgress = await UserProgress.findOne({ grade, name });
+    console.log('[unit-progress/save] 기존 문서:', userProgress ? '있음' : '없음');
+
+    if (!userProgress) {
+      userProgress = new UserProgress({ grade, name });
+    }
+
+    // unitProgress Map에 데이터 저장
+    if (!userProgress.unitProgress) {
+      userProgress.unitProgress = new Map();
+    }
+
+    // Map이 아닌 경우 Map으로 변환
+    if (!(userProgress.unitProgress instanceof Map)) {
+      console.log('[unit-progress/save] unitProgress를 Map으로 변환');
+      userProgress.unitProgress = new Map(Object.entries(userProgress.unitProgress || {}));
+    }
+
+    let existingData = userProgress.unitProgress.get(unit) || {};
+    // Mongoose subdocument를 일반 객체로 변환
+    if (existingData && typeof existingData.toObject === 'function') {
+      existingData = existingData.toObject();
+    }
+    console.log('[unit-progress/save] 기존 데이터:', existingData);
+
+    const updatedData = {
+      ...existingData,
+      ...data,
+      lastUpdated: new Date()
+    };
+    console.log('[unit-progress/save] 업데이트된 데이터:', updatedData);
+
+    userProgress.unitProgress.set(unit, updatedData);
+
+    // 완료 페이지 목록 업데이트
+    if (data.completedPages && Array.isArray(data.completedPages)) {
+      if (!userProgress.completedPages) {
+        userProgress.completedPages = [];
+      }
+      data.completedPages.forEach(pageId => {
+        if (!userProgress.completedPages.includes(pageId)) {
+          userProgress.completedPages.push(pageId);
+        }
+      });
+    }
+
+    await userProgress.save();
+    console.log('[unit-progress/save] 저장 완료');
+
+    res.json({ success: true, message: "학습 진행 데이터 저장 완료" });
+  } catch (error) {
+    console.error("학습 진행 데이터 저장 오류:", error);
+    res.status(500).json({ success: false, message: "저장 중 오류가 발생했습니다." });
+  }
+});
+
+// 단원별 학습 진행 데이터 불러오기
+app.get("/api/unit-progress/load", async (req, res) => {
+  try {
+    const { grade, name, unit } = req.query;
+    console.log('[unit-progress/load] 요청:', { grade, name, unit });
+
+    if (!grade || !name) {
+      return res.status(400).json({ success: false, message: "grade, name은 필수입니다." });
+    }
+
+    const userProgress = await UserProgress.findOne({ grade, name });
+    console.log('[unit-progress/load] 문서:', userProgress ? '있음' : '없음');
+
+    if (!userProgress) {
+      return res.json({ success: true, data: null, completedPages: [] });
+    }
+
+    console.log('[unit-progress/load] unitProgress 타입:', typeof userProgress.unitProgress);
+    console.log('[unit-progress/load] unitProgress:', userProgress.unitProgress);
+
+    // 특정 단원 데이터 반환
+    if (unit) {
+      let unitData = null;
+      if (userProgress.unitProgress) {
+        // Map인 경우
+        if (userProgress.unitProgress instanceof Map) {
+          unitData = userProgress.unitProgress.get(unit);
+        } else {
+          // Object인 경우
+          unitData = userProgress.unitProgress[unit];
+        }
+      }
+      console.log('[unit-progress/load] 단원 데이터:', unitData);
+      return res.json({
+        success: true,
+        data: unitData || null,
+        completedPages: userProgress.completedPages || []
+      });
+    }
+
+    // 전체 데이터 반환 (unit 미지정 시)
+    const allUnitProgress = {};
+    if (userProgress.unitProgress) {
+      if (userProgress.unitProgress instanceof Map) {
+        userProgress.unitProgress.forEach((value, key) => {
+          allUnitProgress[key] = value;
+        });
+      } else {
+        Object.assign(allUnitProgress, userProgress.unitProgress);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: allUnitProgress,
+      completedPages: userProgress.completedPages || []
+    });
+  } catch (error) {
+    console.error("학습 진행 데이터 불러오기 오류:", error);
+    res.status(500).json({ success: false, message: "불러오기 중 오류가 발생했습니다." });
+  }
+});
+
+// 단원별 학습 진행 데이터 삭제 (리셋)
+app.post("/api/unit-progress/reset", async (req, res) => {
+  try {
+    const { grade, name, unit } = req.body;
+
+    if (!grade || !name || !unit) {
+      return res.status(400).json({ success: false, message: "grade, name, unit은 필수입니다." });
+    }
+
+    const userProgress = await UserProgress.findOne({ grade, name });
+
+    if (!userProgress) {
+      return res.json({ success: true, message: "삭제할 데이터가 없습니다." });
+    }
+
+    // 해당 단원 데이터 삭제
+    if (userProgress.unitProgress) {
+      userProgress.unitProgress.delete(unit);
+    }
+
+    // completedPages에서 해당 단원 관련 페이지 제거
+    if (userProgress.completedPages) {
+      userProgress.completedPages = userProgress.completedPages.filter(
+        pageId => !pageId.startsWith(unit)
+      );
+    }
+
+    await userProgress.save();
+
+    res.json({ success: true, message: "학습 진행 데이터 삭제 완료" });
+  } catch (error) {
+    console.error("학습 진행 데이터 삭제 오류:", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
 // ===== 서버 시작 =====
 mongoose
   .connect(MONGO_URI)

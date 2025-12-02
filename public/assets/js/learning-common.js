@@ -89,6 +89,110 @@
       }
     }
 
+    // ★ 서버에 단원별 학습 진행 저장
+    async function saveUnitProgressToServer(data) {
+      const stu = getCurrentStudent();
+      if (!stu) {
+        console.log('[saveUnitProgressToServer] 학생 정보 없음, 저장 건너뜀');
+        return;
+      }
+      const unit = window.CUR_UNIT || 'geo_01';
+      try {
+        const res = await fetch('/api/unit-progress/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: stu.grade,
+            name: stu.name,
+            unit: unit,
+            data: data
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+          console.log(`[saveUnitProgressToServer] ${unit} 서버 저장 완료`);
+        } else {
+          console.error('[saveUnitProgressToServer] 저장 실패:', result.message);
+        }
+      } catch (err) {
+        console.error('[saveUnitProgressToServer] 네트워크 오류:', err);
+      }
+    }
+
+    // ★ 서버에서 단원별 학습 진행 불러오기
+    async function loadUnitProgressFromServer() {
+      const stu = getCurrentStudent();
+      if (!stu) {
+        console.log('[loadUnitProgressFromServer] 학생 정보 없음');
+        return null;
+      }
+      const unit = window.CUR_UNIT || 'geo_01';
+      try {
+        const res = await fetch(`/api/unit-progress/load?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}&unit=${encodeURIComponent(unit)}`);
+        const result = await res.json();
+        if (result.success && result.data) {
+          console.log(`[loadUnitProgressFromServer] ${unit} 서버 데이터 로드 완료`);
+          return result.data;
+        }
+        return null;
+      } catch (err) {
+        console.error('[loadUnitProgressFromServer] 네트워크 오류:', err);
+        return null;
+      }
+    }
+
+    // ★ 서버 데이터로 본문학습 상태 복원
+    function restoreReadingStateFromServer(data) {
+      if (!data || !data.inputs) {
+        console.log('[restoreReadingStateFromServer] 복원할 입력 데이터 없음');
+        return;
+      }
+
+      const inputs = data.inputs;
+      console.log('[restoreReadingStateFromServer] 입력값 복원 시작:', inputs);
+
+      // 1번, 2번 - 라디오 버튼 복원
+      if (inputs.q1) {
+        const q1Radio = document.querySelector(`input[name="q1"][value="${inputs.q1}"]`);
+        if (q1Radio) q1Radio.checked = true;
+      }
+      if (inputs.q2) {
+        const q2Radio = document.querySelector(`input[name="q2"][value="${inputs.q2}"]`);
+        if (q2Radio) q2Radio.checked = true;
+      }
+
+      // 3번, 4번 - 텍스트 입력 복원
+      const q3_1 = document.getElementById("q3-1");
+      const q3_2 = document.getElementById("q3-2");
+      const q4_1 = document.getElementById("q4-1");
+      const q4_2 = document.getElementById("q4-2");
+      const q5 = document.getElementById("q5");
+
+      if (q3_1 && inputs.q3_1) q3_1.value = inputs.q3_1;
+      if (q3_2 && inputs.q3_2) q3_2.value = inputs.q3_2;
+      if (q4_1 && inputs.q4_1) q4_1.value = inputs.q4_1;
+      if (q4_2 && inputs.q4_2) q4_2.value = inputs.q4_2;
+      if (q5 && inputs.q5) q5.value = inputs.q5;
+
+      // 채점 결과 HTML 복원 (있는 경우)
+      if (data.resultHTML) {
+        const resultBox = document.getElementById("grade-result");
+        if (resultBox) {
+          resultBox.style.display = "block";
+          resultBox.innerHTML = data.resultHTML;
+        }
+        // 채점 완료 상태로 버튼 표시
+        const gradeBtn = document.getElementById("grade-btn");
+        const resetBtn = document.getElementById("reset-btn");
+        const submitBtn = document.getElementById("submit-btn");
+        if (gradeBtn) gradeBtn.style.display = "inline-block";
+        if (resetBtn) resetBtn.style.display = "inline-block";
+        if (submitBtn) submitBtn.style.display = "inline-block";
+      }
+
+      console.log('[restoreReadingStateFromServer] 복원 완료');
+    }
+
     // 페이지 들어올 때 로그인 정보 있으면 학년/이름 자동 채우기(전화 입력칸 숨김)
     document.addEventListener('DOMContentLoaded', () => {
       const stu = getCurrentStudent();
@@ -655,6 +759,17 @@
     console.log(`[learning-common] 탭 선택: savedTab=${savedTab}, hasRecord=${hasLearningRecord}`);
     activateTab(savedTab);
 
+    // ★ 서버에서 학습 진행 데이터 복원
+    try {
+      const serverData = await loadUnitProgressFromServer();
+      if (serverData && serverData.reportState) {
+        console.log('[learning-common] 서버 데이터 복원 시작:', serverData.reportState);
+        restoreReadingStateFromServer(serverData.reportState);
+      }
+    } catch (err) {
+      console.error('[learning-common] 서버 데이터 복원 오류:', err);
+    }
+
     // 어휘학습 버튼 초기화
     initVocabButtons();
 
@@ -1158,7 +1273,7 @@
       // unit 변수는 위에서 이미 선언됨
       const storageKey = `dan-geo-report-state:${unit}`;
       console.log(`[gradeQuiz] unit=${unit}로 localStorage에 저장`);
-      localStorage.setItem(storageKey, JSON.stringify({
+      const reportDataToSave = {
         q1ok: reportState.q1ok,
         q2ok: reportState.q2ok,
         q3ok: reportState.q3ok,
@@ -1169,8 +1284,25 @@
         structural: reportState.q2ok ? 10 : 6,
         lexical: lexicalFromRatio,
         inferential: reportState.q4ok ? 10 : 6,
-        critical: reportState.q5ok ? 10 : 6
-      }));
+        critical: reportState.q5ok ? 10 : 6,
+        // 본문학습 입력값도 저장
+        inputs: {
+          q1: q1 ? q1.value : '',
+          q2: q2 ? q2.value : '',
+          q3_1: document.getElementById("q3-1").value,
+          q3_2: document.getElementById("q3-2").value,
+          q4_1: document.getElementById("q4-1").value,
+          q4_2: document.getElementById("q4-2").value,
+          q5: document.getElementById("q5").value
+        },
+        resultHTML: fullResultHTML
+      };
+      localStorage.setItem(storageKey, JSON.stringify(reportDataToSave));
+
+      // ★ 서버에도 저장
+      saveUnitProgressToServer({
+        reportState: reportDataToSave
+      });
 
       // ★ 분석리포트 탭 즉시 업데이트
       refreshReportTab();
