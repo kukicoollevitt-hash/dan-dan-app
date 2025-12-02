@@ -152,12 +152,18 @@
         console.log('[restoreReadingStateFromServer] reportState 구조 감지, 내부 데이터 사용:', data);
       }
 
-      if (!data || !data.inputs) {
-        console.log('[restoreReadingStateFromServer] 복원할 입력 데이터 없음');
-        return;
+      // inputs 객체가 있으면 사용, 없으면 data 자체를 inputs로 사용 (readingState의 flat 구조 지원)
+      let inputs = data.inputs;
+      if (!inputs && data && (data.q1 !== undefined || data.q3_1 !== undefined)) {
+        // readingState가 flat 구조인 경우 (q1, q2, q3_1 등이 직접 있음)
+        inputs = data;
+        console.log('[restoreReadingStateFromServer] flat 구조 감지, data를 inputs로 사용');
       }
 
-      const inputs = data.inputs;
+      if (!inputs) {
+        console.log('[restoreReadingStateFromServer] 복원할 입력 데이터 없음, data:', data);
+        return;
+      }
       console.log('[restoreReadingStateFromServer] 입력값 복원 시작:', inputs);
 
       // 1번, 2번 - 라디오 버튼 복원
@@ -170,17 +176,17 @@
         if (q2Radio) q2Radio.checked = true;
       }
 
-      // 3번, 4번 - 텍스트 입력 복원
+      // 3번, 4번 - 텍스트 입력 복원 (q3_1 또는 q3-1 형식 모두 지원)
       const q3_1 = document.getElementById("q3-1");
       const q3_2 = document.getElementById("q3-2");
       const q4_1 = document.getElementById("q4-1");
       const q4_2 = document.getElementById("q4-2");
       const q5 = document.getElementById("q5");
 
-      if (q3_1 && inputs.q3_1) q3_1.value = inputs.q3_1;
-      if (q3_2 && inputs.q3_2) q3_2.value = inputs.q3_2;
-      if (q4_1 && inputs.q4_1) q4_1.value = inputs.q4_1;
-      if (q4_2 && inputs.q4_2) q4_2.value = inputs.q4_2;
+      if (q3_1 && (inputs.q3_1 || inputs['q3-1'])) q3_1.value = inputs.q3_1 || inputs['q3-1'];
+      if (q3_2 && (inputs.q3_2 || inputs['q3-2'])) q3_2.value = inputs.q3_2 || inputs['q3-2'];
+      if (q4_1 && (inputs.q4_1 || inputs['q4-1'])) q4_1.value = inputs.q4_1 || inputs['q4-1'];
+      if (q4_2 && (inputs.q4_2 || inputs['q4-2'])) q4_2.value = inputs.q4_2 || inputs['q4-2'];
       if (q5 && inputs.q5) q5.value = inputs.q5;
 
       // 채점 결과 HTML 복원 (있는 경우)
@@ -190,43 +196,101 @@
           resultBox.style.display = "block";
           resultBox.innerHTML = data.resultHTML;
         }
-        // 채점 완료 상태로 버튼 표시
+        // 채점 완료 상태로 버튼 표시 (3-버튼, 2-버튼 구조 모두 지원)
         const gradeBtn = document.getElementById("grade-btn");
         const resetBtn = document.getElementById("reset-btn");
         const submitBtn = document.getElementById("submit-btn");
+        const saveProgressBtn = document.getElementById("save-progress-btn");
+
+        // 3-버튼 구조
         if (gradeBtn) gradeBtn.style.display = "inline-block";
-        if (resetBtn) resetBtn.style.display = "inline-block";
         if (submitBtn) submitBtn.style.display = "inline-block";
+
+        // 2-버튼 구조: 채점 완료 시 save-progress-btn 숨기고 reset-btn 표시
+        if (saveProgressBtn) saveProgressBtn.style.display = "none";
+        if (resetBtn) resetBtn.style.display = "inline-block";
       }
 
       // ★ 채점 표시 (⭕✖) 복원
-      const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
-      const numLabels = ["01","02","03","04","05"];
-      const qokList = [data.q1ok, data.q2ok, data.q3ok, data.q4ok, data.q5ok];
+      // q1ok 등이 있으면 직접 표시, results 배열이 있으면 그것으로 표시, 없고 graded가 true면 자동 재채점
+      const hasGradingData = data.q1ok !== undefined || data.q2ok !== undefined;
+      const hasResultsArray = data.results && Array.isArray(data.results) && data.results.length > 0;
 
-      quizBlocks.forEach((block, idx) => {
-        const numEl = block.querySelector('.quiz-num');
-        if (!numEl) return;
+      if (hasGradingData) {
+        // 채점 결과가 있는 경우 직접 표시 (q1ok, q2ok 형식)
+        const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
+        const qokList = [data.q1ok, data.q2ok, data.q3ok, data.q4ok, data.q5ok];
 
-        let markEl = numEl.querySelector('.mark');
-        if (!markEl) {
-          markEl = document.createElement('span');
-          markEl.className = 'mark';
-          numEl.appendChild(markEl);
-        }
+        quizBlocks.forEach((block, idx) => {
+          const numEl = block.querySelector('.quiz-num');
+          if (!numEl) return;
 
-        numEl.classList.remove('correct', 'wrong');
+          let markEl = numEl.querySelector('.mark');
+          if (!markEl) {
+            markEl = document.createElement('span');
+            markEl.className = 'mark';
+            numEl.appendChild(markEl);
+          }
 
-        if (qokList[idx] === true) {
-          numEl.classList.add('correct');
-          markEl.textContent = "⭕";
-        } else if (qokList[idx] === false) {
-          numEl.classList.add('wrong');
-          markEl.textContent = "✖";
-        } else {
-          markEl.textContent = "";
-        }
-      });
+          numEl.classList.remove('correct', 'wrong');
+
+          if (qokList[idx] === true) {
+            numEl.classList.add('correct');
+            markEl.textContent = "⭕";
+          } else if (qokList[idx] === false) {
+            numEl.classList.add('wrong');
+            markEl.textContent = "✖";
+          } else {
+            markEl.textContent = "";
+          }
+        });
+        console.log('[restoreReadingStateFromServer] 채점 결과 직접 복원 완료 (q1ok 형식)');
+      } else if (hasResultsArray) {
+        // results 배열 형식으로 저장된 경우 (pol_01.html 등 새 형식)
+        const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
+        console.log('[restoreReadingStateFromServer] results 배열로 복원 시도:', data.results);
+
+        quizBlocks.forEach((block, idx) => {
+          const numEl = block.querySelector('.quiz-num');
+          if (!numEl) return;
+
+          let markEl = numEl.querySelector('.mark');
+          if (!markEl) {
+            markEl = document.createElement('span');
+            markEl.className = 'mark';
+            numEl.appendChild(markEl);
+          }
+
+          numEl.classList.remove('correct', 'wrong');
+
+          const result = data.results[idx];
+          if (result) {
+            if (result.isCorrect === true) {
+              numEl.classList.add('correct');
+              markEl.textContent = "⭕";
+            } else if (result.isWrong === true) {
+              numEl.classList.add('wrong');
+              markEl.textContent = "✖";
+            } else {
+              markEl.textContent = "";
+            }
+          }
+        });
+        console.log('[restoreReadingStateFromServer] 채점 결과 직접 복원 완료 (results 배열)');
+      } else if (data.graded || data.isGraded || inputs.graded || inputs.isGraded) {
+        // 채점 결과가 없지만 graded=true 또는 isGraded=true인 경우 자동 재채점
+        console.log('[restoreReadingStateFromServer] graded/isGraded=true, 자동 재채점 시도');
+        setTimeout(() => {
+          if (typeof window.gradeQuiz === 'function') {
+            try {
+              window.gradeQuiz();
+              console.log('[restoreReadingStateFromServer] 자동 재채점 완료');
+            } catch (e) {
+              console.warn('[restoreReadingStateFromServer] 자동 재채점 오류:', e);
+            }
+          }
+        }, 100);
+      }
 
       console.log('[restoreReadingStateFromServer] 복원 완료');
     }
@@ -271,9 +335,18 @@
           const vocabGradeBtn = document.getElementById('vocab-grade');
           const vocabResetBtn = document.getElementById('vocab-reset');
           const vocabSubmitBtn = document.getElementById('vocab-submit');
+          const vocabSaveBtn = document.getElementById('vocab-save'); // 새 버튼 구조 (채점 및 제출하기)
           if (vocabGradeBtn) vocabGradeBtn.style.display = 'inline-block';
           if (vocabResetBtn) vocabResetBtn.style.display = 'inline-block';
           if (vocabSubmitBtn) vocabSubmitBtn.style.display = 'inline-block';
+          // 새 버튼 구조: 채점 완료 시 vocab-save 숨기고 vocab-reset 보이기
+          if (vocabSaveBtn) vocabSaveBtn.style.display = 'none';
+          // 입력 비활성화
+          const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+          blanks.forEach(bw => {
+            const input = bw.querySelector('.blank-input');
+            if (input) input.disabled = true;
+          });
         }
 
         console.log('[restoreVocabStateFromServer] 어휘학습 복원 완료');
@@ -894,11 +967,16 @@
       console.log('[learning-common] ★ 서버 데이터 로딩 시작...');
       const serverData = await loadUnitProgressFromServer();
       console.log('[learning-common] ★ 서버 데이터 로드 결과:', serverData);
+      console.log('[learning-common] ★ 서버 데이터 키 목록:', serverData ? Object.keys(serverData) : 'null');
       if (serverData) {
         // 본문학습 상태 복원 (DOM이 이미 있으므로 즉시 복원)
-        if (serverData.reportState) {
-          console.log('[learning-common] 서버 데이터 복원 시작:', serverData.reportState);
-          restoreReadingStateFromServer(serverData.reportState);
+        // reportState 또는 readingState 둘 다 지원 (하위 호환성)
+        const readingData = serverData.reportState || serverData.readingState;
+        if (readingData) {
+          console.log('[learning-common] 서버 데이터 복원 시작:', readingData);
+          restoreReadingStateFromServer(readingData);
+        } else {
+          console.log('[learning-common] ★ reportState/readingState 없음 - 본문학습 복원 건너뜀');
         }
         // 어휘학습 상태 복원
         if (serverData.vocabState) {
@@ -1584,12 +1662,27 @@
         });
       });
 
-      localStorage.setItem(stateKey, JSON.stringify({
+      // 채점 완료 여부 (correct 또는 wrong 클래스가 하나라도 있으면 채점됨)
+      const isGraded = blanks.length > 0 && Array.from(blanks).some(bw =>
+        bw.classList.contains('correct') || bw.classList.contains('wrong')
+      );
+
+      const vocabStateData = {
         vocabData: vocabData,
-        resultHTML: vocabResultBox.innerHTML,
-        isGraded: vocabGradeBtn.style.display === "none"
-      }));
-      console.log('[saveVocabState] 저장 완료:', stateKey);
+        resultHTML: vocabResultBox ? vocabResultBox.innerHTML : '',
+        isGraded: isGraded
+      };
+
+      localStorage.setItem(stateKey, JSON.stringify(vocabStateData));
+      console.log('[saveVocabState] localStorage 저장 완료:', stateKey);
+
+      // ★ 서버에도 저장
+      if (typeof saveUnitProgressToServer === 'function') {
+        saveUnitProgressToServer({
+          vocabState: vocabStateData
+        });
+        console.log('[saveVocabState] 서버 저장 호출');
+      }
     }
 
     function loadVocabState() {
@@ -1620,11 +1713,23 @@
         });
 
         if (state.isGraded) {
-          vocabResultBox.innerHTML = state.resultHTML;
-          vocabResultBox.style.display = "block";
-          vocabGradeBtn.style.display = "inline-block";
-          vocabResetBtn.style.display = "inline-block";
-          vocabSubmitBtn.style.display = "inline-block";
+          // vocabResultBox가 있으면 결과 표시
+          const resultBox = vocabResultBox || document.getElementById('vocab-result');
+          if (resultBox) {
+            resultBox.innerHTML = state.resultHTML;
+            resultBox.style.display = "block";
+          }
+
+          // 3버튼 구조 (vocab-grade, vocab-reset, vocab-submit)
+          if (vocabGradeBtn) vocabGradeBtn.style.display = "inline-block";
+          if (vocabResetBtn) vocabResetBtn.style.display = "inline-block";
+          if (vocabSubmitBtn) vocabSubmitBtn.style.display = "inline-block";
+
+          // 2버튼 구조 (vocab-save, vocab-reset)
+          const vocabSaveBtn = document.getElementById('vocab-save');
+          const vocabResetBtn2 = document.getElementById('vocab-reset');
+          if (vocabSaveBtn) vocabSaveBtn.style.display = "none";
+          if (vocabResetBtn2) vocabResetBtn2.style.display = "inline-block";
         }
 
         console.log('[loadVocabState] 복원 완료:', stateKey);
@@ -1643,8 +1748,9 @@
     vocabSubmitBtn = document.getElementById('vocab-submit');
     vocabResultBox = document.getElementById('vocab-result');
 
+    // 3버튼 구조가 아닌 경우 (2버튼 구조 - vocab-save, vocab-reset)는 개별 HTML에서 처리
     if (!vocabGradeBtn || !vocabResetBtn || !vocabSubmitBtn || !vocabResultBox) {
-      console.log('[initVocabButtons] 어휘학습 버튼을 찾을 수 없습니다');
+      console.log('[initVocabButtons] 3버튼 구조 없음 - 개별 HTML에서 처리됨');
       return;
     }
 

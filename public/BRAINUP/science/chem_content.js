@@ -924,10 +924,15 @@ window.renderVocabFill = function () {
   window.reportState = window.reportState || {};
   window.reportState.vocabTotal = pack.vocabFill.items.length;
 
-  // ✅ 어휘 렌더링 직후 상태 복원 (각 HTML 파일의 loadVocabState 호출)
+  // ✅ 어휘 렌더링 직후 상태 복원
   setTimeout(() => {
+    // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
+    }
+    // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
+    if (typeof window.restoreVocabFromServerData === 'function') {
+      window.restoreVocabFromServerData();
     }
   }, 100);
 };
@@ -1299,7 +1304,8 @@ function renderSolutions(pack) {
   const q1Text = pack.quiz.q1_opts[Number(A.q1) - 1] || '';
   const q2Text = pack.quiz.q2_opts[Number(A.q2) - 1] || '';
 
-  const anchor = document.getElementById('grade-result') || document.body;
+  // grade-result(점수 박스) 내부에 solutions-box를 추가 (점수 정보 하단에 표시)
+  const gradeResult = document.getElementById('grade-result');
   let box = document.getElementById('solutions-box');
   if (!box) {
     box = document.createElement('div');
@@ -1310,7 +1316,11 @@ function renderSolutions(pack) {
     box.style.borderRadius = '12px';
     box.style.padding = '16px';
     box.style.lineHeight = '1.6';
-    anchor.insertAdjacentElement('afterend', box);
+  }
+  if (gradeResult) {
+    gradeResult.appendChild(box);
+  } else {
+    document.body.appendChild(box);
   }
 
   box.innerHTML = `

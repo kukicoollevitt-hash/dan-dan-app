@@ -103,7 +103,7 @@
       if (m3) unit = `geo_${m3[1].padStart(2,'0')}`;
     }
 
-    window.CUR_UNIT = unit || 'physics_01';
+    window.CUR_UNIT = unit || 'physics_04';
     console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
   })();
 
@@ -111,7 +111,7 @@
      PAGE_KEY 자동 생성 (단원 번호 기반)  ← 이 블록만 남김
   ========================================================= */
   (function () {
-    const cur = (window.CUR_UNIT || 'physics_01');
+    const cur = (window.CUR_UNIT || 'physics_04');
     const m = cur.match(/geo_(\d{1,2})/);
     const no = m ? m[1].padStart(2,'0') : '01';
 
@@ -1994,9 +1994,8 @@
         <!-- 우측 하단 채점 -->
         <div id="grade-result" class="grade-result"></div>
         <div class="grade-area">
-          <button id="grade-btn" class="grade-btn" onclick="gradeQuiz()">채점하기</button>
           <button id="reset-btn" class="reset-btn" style="display:none;" onclick="resetQuiz()">다시풀기</button>
-          <button id="submit-btn" class="submit-btn" style="display:none;" onclick="submitQuiz()">제출하기</button>
+          <button id="save-progress-btn" class="grade-btn" style="background:#d32f2f;" onclick="saveReadingProgress()">📋 채점 및 제출하기</button>
         </div>
       </div>
     </div>
@@ -2024,11 +2023,141 @@
 
       <div id="vocab-result" class="vocab-result"></div>
 
-      <div class="vocab-actions">
-        <button id="vocab-grade" class="vocab-btn">채점하기</button>
-        <button id="vocab-reset" class="vocab-btn secondary" style="display:none;">다시풀기</button>
-        <button id="vocab-submit" class="vocab-btn" style="display:none; background:#8b2f2f;">제출하기</button>
+      <script>
+        // 어휘학습 채점 및 제출하기 함수
+        window.vocabSaveToServer = async function() {
+          console.log('[vocabSaveToServer] 버튼 클릭됨');
+
+          // 1. 학생 정보 확인
+          if (typeof ensureStudentInfo === 'function' && !ensureStudentInfo()) {
+            if (typeof showSubmitOverlay === 'function') {
+              showSubmitOverlay('학년과 이름을 입력해주세요');
+            } else {
+              alert('학년과 이름을 입력해주세요');
+            }
+            return;
+          }
+
+          try {
+            const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+            const vocabResultBox = document.getElementById('vocab-result');
+            let correctCnt = 0;
+            const total = blanks.length;
+            let fullMsgs = [];
+
+            // 2. 채점하기 로직 - 채점 즉시 정답(해설) 표시
+            blanks.forEach((bw, idx) => {
+              const ans = bw.dataset.answer ? bw.dataset.answer.trim() : '';
+              const inputEl = bw.querySelector('.blank-input');
+              const input = inputEl ? inputEl.value.trim() : '';
+              const mark = bw.querySelector('.blank-mark');
+
+              const normIn = input.replace(/\s+/g,"").toLowerCase();
+              const normAns = ans.replace(/\s+/g,"").toLowerCase();
+
+              let ok = (normIn === normAns);
+
+              bw.classList.remove('correct','wrong');
+              if (ok) {
+                bw.classList.add('correct');
+                if (mark) mark.textContent = "⭕";
+                correctCnt++;
+                fullMsgs.push(`<span style="color:#2e7d32">${idx+1}번: 정답 ✅</span> <span style="color:#666">(${ans})</span>`);
+              } else {
+                bw.classList.add('wrong');
+                if (mark) mark.textContent = "✖";
+                fullMsgs.push(`<span style="color:#c62828">${idx+1}번: 오답 ❌</span> <span style="color:#1565c0; font-weight:bold">(정답: ${ans})</span>`);
+              }
+            });
+
+            // 결과 + 정답(해설) 바로 표시
+            if (vocabResultBox) {
+              vocabResultBox.style.display = "block";
+              const scorePercent = Math.round((correctCnt / total) * 100);
+              vocabResultBox.innerHTML =
+                `<div style="background:#f5f5f5; padding:12px; border-radius:8px; margin-bottom:10px;">
+                  <p style="font-size:18px; margin:0;"><strong>📊 채점 결과: ${correctCnt} / ${total} (${scorePercent}점)</strong></p>
+                </div>
+                <div style="background:#fff; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                  <p style="font-weight:bold; margin:0 0 8px; color:#333;">📝 정답 해설</p>
+                  ${fullMsgs.map(m => `<p style="margin:4px 0;">${m}</p>`).join("")}
+                </div>`;
+            }
+
+            // 3. PDF 다운로드
+            if (typeof captureElementToPDF === 'function') {
+              await captureElementToPDF('capture-vocab', '단단국어_어휘학습.pdf', { withStudentInfo: true });
+            }
+
+            // 4. 서버 저장
+            const saveFn = window.saveUnitProgressToServer;
+            if (typeof saveFn === 'function') {
+              const vocabDataArr = [];
+              blanks.forEach(bw => {
+                const input = bw.querySelector('.blank-input');
+                const mark = bw.querySelector('.blank-mark');
+                vocabDataArr.push({
+                  value: input ? input.value : '',
+                  isCorrect: bw.classList.contains('correct'),
+                  isWrong: bw.classList.contains('wrong'),
+                  markText: mark ? mark.textContent : ''
+                });
+              });
+
+              const dataToSave = {
+                vocabState: {
+                  vocabData: vocabDataArr,
+                  resultHTML: vocabResultBox ? vocabResultBox.innerHTML : '',
+                  isGraded: true
+                }
+              };
+
+              await saveFn(dataToSave);
+              console.log('[vocabSaveToServer] 서버 저장 완료!');
+            }
+
+            // 5. 다시풀기 버튼 표시
+            const vocabResetBtn = document.getElementById('vocab-reset');
+            if (vocabResetBtn) vocabResetBtn.style.display = 'inline-block';
+
+            // 6. 완료 알림
+            if (typeof showSubmitSuccess === 'function') {
+              showSubmitSuccess('어휘학습');
+            } else {
+              alert('채점 및 저장 완료!');
+            }
+
+          } catch (err) {
+            console.error('[vocabSaveToServer] 실패:', err);
+            alert('처리 실패: ' + err.message);
+          }
+        };
+      </script>
+
+      <div class="vocab-actions" style="justify-content: flex-end;">
+        <button id="vocab-reset" class="vocab-btn secondary" style="display:none;" onclick="vocabReset()">다시풀기</button>
+        <button id="vocab-save-server" class="vocab-btn" style="background:#8b2f2f;" onclick="vocabSaveToServer()">채점 및 제출하기</button>
       </div>
+      <script>
+        // 다시풀기 함수
+        window.vocabReset = function() {
+          document.querySelectorAll('#tab-vocab .blank-wrap').forEach(bw => {
+            bw.classList.remove('correct', 'wrong');
+            const input = bw.querySelector('.blank-input');
+            if (input) input.value = '';
+            const mark = bw.querySelector('.blank-mark');
+            if (mark) mark.textContent = '';
+          });
+          const vocabResultBox = document.getElementById('vocab-result');
+          if (vocabResultBox) {
+            vocabResultBox.style.display = 'none';
+            vocabResultBox.innerHTML = '';
+          }
+          const vocabResetBtn = document.getElementById('vocab-reset');
+          if (vocabResetBtn) vocabResetBtn.style.display = 'none';
+          console.log('[vocabReset] 다시풀기 완료');
+        };
+      </script>
     </div>
   </div>
 
@@ -2236,14 +2365,14 @@
         const target = btn.dataset.tab;
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
-        const unit = window.CUR_UNIT || 'physics_01';
+        const unit = window.CUR_UNIT || 'physics_04';
         localStorage.setItem(`current-geo-tab:${unit}`, target);
       });
     });
 
     // 페이지 로드 시 저장된 탭 복원 (없으면 본문학습으로 시작)
     window.addEventListener('DOMContentLoaded', () => {
-      const unit = window.CUR_UNIT || 'physics_01';
+      const unit = window.CUR_UNIT || 'physics_04';
       const savedTab = localStorage.getItem(`current-geo-tab:${unit}`) || 'reading';
       activateTab(savedTab);
     });
@@ -2656,9 +2785,6 @@
       box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join("");
       fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join("");
 
-      document.getElementById("grade-btn").style.display = "inline-block";
-      document.getElementById("reset-btn").style.display = "inline-block";
-      document.getElementById("submit-btn").style.display = "inline-block";
 
       // ★ 전역 상태에 저장
       reportState.q1ok = q1ok;
@@ -2763,9 +2889,9 @@
         solutionsBox.remove();
       }
 
-      document.getElementById("grade-btn").style.display = "inline-block";
+      document.getElementById("save-progress-btn").style.display = "inline-block";
       document.getElementById("reset-btn").style.display = "none";
-      document.getElementById("submit-btn").style.display = "none";
+      enableQuizInputs();
 
       reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
 
@@ -2789,7 +2915,7 @@
       const stu = getCurrentStudent();
       if (!stu) return;
       const stuKey = buildStudentKey(stu);
-      const unit = window.CUR_UNIT || 'physics_01';
+      const unit = window.CUR_UNIT || 'physics_04';
       const stateKey = `vocab-state:${stuKey}:${unit}`;
 
       const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
@@ -2817,7 +2943,7 @@
       const stu = getCurrentStudent();
       if (!stu) return;
       const stuKey = buildStudentKey(stu);
-      const unit = window.CUR_UNIT || 'physics_01';
+      const unit = window.CUR_UNIT || 'physics_04';
       const stateKey = `vocab-state:${stuKey}:${unit}`;
 
       const saved = localStorage.getItem(stateKey);
@@ -2968,7 +3094,7 @@
       const stu = getCurrentStudent();
       if (stu) {
         const stuKey = buildStudentKey(stu);
-        const unit = window.CUR_UNIT || 'physics_01';
+        const unit = window.CUR_UNIT || 'physics_04';
         const stateKey = `vocab-state:${stuKey}:${unit}`;
         localStorage.removeItem(stateKey);
         console.log('[vocabReset] 저장 삭제:', stateKey);
@@ -3004,7 +3130,7 @@
       const stu = getCurrentStudent();
       if (!stu) return;
       const stuKey = buildStudentKey(stu);
-      const unit = window.CUR_UNIT || 'physics_01';
+      const unit = window.CUR_UNIT || 'physics_04';
       const stateKey = `creative-state:${stuKey}:${unit}`;
 
       const textarea = document.getElementById('creative-input');
@@ -3018,7 +3144,7 @@
       const stu = getCurrentStudent();
       if (!stu) return;
       const stuKey = buildStudentKey(stu);
-      const unit = window.CUR_UNIT || 'physics_01';
+      const unit = window.CUR_UNIT || 'physics_04';
       const stateKey = `creative-state:${stuKey}:${unit}`;
 
       const saved = localStorage.getItem(stateKey);
@@ -3175,7 +3301,7 @@
       const studentKey = buildStudentKey(stu); // 예: "4학년_사사사_01044444444"
 
       // 3) 현재 단원 번호와 PAGE_KEY
-      const cur = (window.CUR_UNIT || 'physics_01');                  // 예: 'physics_02'
+      const cur = (window.CUR_UNIT || 'physics_04');                  // 예: 'physics_02'
       const m = cur.match(/geo_(\d{1,2})/);
       const no = m ? m[1].padStart(2, '0') : '01';
       const pk = window.PAGE_KEY || `BRAINUP_social_physics_${no}`;   // 예: 'BRAINUP_social_physics_02'
@@ -3256,7 +3382,7 @@ function _getStudentKey() {
   } catch(e){}
   return 'dan-vfill:guest';
 }
-function _storeKey(unit){ return `${_getStudentKey()}::${unit||window.CUR_UNIT||'physics_01'}`; }
+function _storeKey(unit){ return `${_getStudentKey()}::${unit||window.CUR_UNIT||'physics_04'}`; }
 
 // ✅ 비교용 정규화 (대소문/공백/기호 제거)
 function _norm(s){
@@ -3414,6 +3540,84 @@ function _bindTabEvents() {
       if (typeof fn === 'function') fn();
     }
   });
+}
+
+function disableQuizInputs() {
+  document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.disabled = true);
+  ['q3-1', 'q3-2', 'q4-1', 'q4-2', 'q5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = true;
+  });
+}
+
+function enableQuizInputs() {
+  document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.disabled = false);
+  ['q3-1', 'q3-2', 'q4-1', 'q4-2', 'q5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = false;
+  });
+}
+
+async function saveReadingProgress() {
+  gradeQuiz();
+
+  const stu = window.getStudentInfo ? window.getStudentInfo() : null;
+  if (!stu || !stu.grade || !stu.name) {
+    showSubmitOverlay('학년과 이름을 입력해주세요');
+    return;
+  }
+
+  const unit = window.CUR_UNIT || 'physics_04';
+  const q1 = document.querySelector('input[name="q1"]:checked');
+  const q2 = document.querySelector('input[name="q2"]:checked');
+  const inputs = {
+    q1: q1 ? q1.value : '',
+    q2: q2 ? q2.value : '',
+    q3_1: document.getElementById('q3-1')?.value || '',
+    q3_2: document.getElementById('q3-2')?.value || '',
+    q4_1: document.getElementById('q4-1')?.value || '',
+    q4_2: document.getElementById('q4-2')?.value || '',
+    q5: document.getElementById('q5')?.value || ''
+  };
+
+  const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
+  const results = [];
+  quizBlocks.forEach((block, idx) => {
+    const numEl = block.querySelector('.quiz-num');
+    results.push({
+      index: idx + 1,
+      isCorrect: numEl.classList.contains('correct'),
+      isWrong: numEl.classList.contains('wrong')
+    });
+  });
+
+  const gradeResultBox = document.getElementById('grade-result');
+  const dataToSave = {
+    readingState: {
+      inputs: inputs,
+      results: results,
+      resultHTML: gradeResultBox ? gradeResultBox.innerHTML : '',
+      isGraded: true
+    }
+  };
+
+  try {
+    if (typeof window.saveUnitProgressToServer === 'function') {
+      await window.saveUnitProgressToServer(dataToSave);
+    }
+    disableQuizInputs();
+    await captureElementToPDF('capture-reading', '단단국어_본문학습.pdf', { withStudentInfo: true });
+    if (typeof renderSolutions === 'function') {
+      const content = window.CONTENTS[unit];
+      if (content) renderSolutions(content);
+    }
+    showSubmitSuccess('본문학습');
+    document.getElementById('save-progress-btn').style.display = 'none';
+    document.getElementById('reset-btn').style.display = 'inline-block';
+  } catch (err) {
+    console.error('[saveReadingProgress] 실패:', err);
+    alert('저장 실패: ' + err.message);
+  }
 }
 </script>
 

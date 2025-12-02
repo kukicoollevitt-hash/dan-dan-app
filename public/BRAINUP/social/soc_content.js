@@ -912,6 +912,10 @@ window.renderVocabFill = function () {
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
     }
+    // ✅ 서버 데이터에서 어휘 상태 복원
+    if (typeof window.restoreVocabFromServerData === 'function') {
+      window.restoreVocabFromServerData();
+    }
   }, 100);
 };
 
@@ -1282,7 +1286,7 @@ function renderSolutions(pack) {
   const q1Text = pack.quiz.q1_opts[Number(A.q1) - 1] || '';
   const q2Text = pack.quiz.q2_opts[Number(A.q2) - 1] || '';
 
-  const anchor = document.getElementById('grade-result') || document.body;
+  const gradeResult = document.getElementById('grade-result');
   let box = document.getElementById('solutions-box');
   if (!box) {
     box = document.createElement('div');
@@ -1293,7 +1297,10 @@ function renderSolutions(pack) {
     box.style.borderRadius = '12px';
     box.style.padding = '16px';
     box.style.lineHeight = '1.6';
-    anchor.insertAdjacentElement('afterend', box);
+  }
+  // ✅ grade-result 내부에 추가 (점수 박스 아래)
+  if (gradeResult) {
+    gradeResult.appendChild(box);
   }
 
   box.innerHTML = `
