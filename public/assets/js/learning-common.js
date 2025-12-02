@@ -545,35 +545,79 @@
     let reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
 
     /* ===== 탭 전환 ===== */
-    // 분석리포트 새로고침 함수
-    function refreshReportTab() {
+    // 분석리포트 새로고침 함수 (서버에서 최신 데이터 가져오기)
+    async function refreshReportTab() {
       try {
         const unit = window.CUR_UNIT || 'geo_01';
 
         // 학생 정보 가져오기
-        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-        const grade = user.grade || '';
-        const name = user.name || '';
+        const stu = getCurrentStudent();
+        if (!stu) {
+          console.log('[refreshReportTab] 학생 정보 없음');
+          return;
+        }
 
-        // 학생별 키 생성
-        const stuKey = `${grade}학년_${name}`;
+        console.log(`[refreshReportTab] unit=${unit}, grade=${stu.grade}, name=${stu.name}`);
+
+        // 서버에서 해당 단원의 최신 학습 기록 가져오기
+        const res = await fetch(`/api/unit-grades?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+        const result = await res.json();
+
+        if (result.success && result.grades) {
+          // 현재 단원의 데이터 찾기
+          const unitData = result.grades.find(g => g.unit === unit);
+
+          if (unitData && unitData.radar) {
+            console.log('[refreshReportTab] 서버에서 가져온 데이터:', unitData);
+
+            // 레이더 차트 업데이트
+            drawRadarChart({
+              literal: unitData.radar.literal || 0,
+              structural: unitData.radar.structural || 0,
+              lexical: unitData.radar.lexical || 0,
+              inferential: unitData.radar.inferential || 0,
+              critical: unitData.radar.critical || 0
+            });
+
+            // 리포트 패널 업데이트 (10점이면 ok)
+            updateReportPanel({
+              q1ok: unitData.radar.literal >= 10,
+              q2ok: unitData.radar.structural >= 10,
+              q3ok: unitData.radar.lexical >= 7,
+              q4ok: unitData.radar.inferential >= 10,
+              q5ok: unitData.radar.critical >= 10
+            });
+
+            console.log('[refreshReportTab] 서버 데이터로 분석리포트 업데이트 완료');
+          } else {
+            console.log('[refreshReportTab] 서버에 해당 단원 데이터 없음, localStorage 확인');
+            refreshReportTabFromLocalStorage(unit, stu);
+          }
+        } else {
+          console.log('[refreshReportTab] 서버 응답 실패, localStorage 확인');
+          refreshReportTabFromLocalStorage(unit, stu);
+        }
+      } catch(e) {
+        console.error('[refreshReportTab] 서버 요청 오류:', e);
+        // 서버 오류 시 localStorage에서 읽기
+        const unit = window.CUR_UNIT || 'geo_01';
+        const stu = getCurrentStudent();
+        if (stu) refreshReportTabFromLocalStorage(unit, stu);
+      }
+    }
+
+    // localStorage에서 분석리포트 데이터 읽기 (fallback)
+    function refreshReportTabFromLocalStorage(unit, stu) {
+      try {
+        const stuKey = `${stu.grade}_${stu.name}`;
         const progressKey = `dan-progress:${stuKey}:${unit}`;
 
-        console.log(`[refreshReportTab] unit=${unit}, stuKey=${stuKey}`);
-
-        // 학습 완료 데이터 읽기
         const progressData = localStorage.getItem(progressKey);
-        console.log(`[refreshReportTab] progressKey=${progressKey}, 데이터:`, progressData);
-
         if (progressData) {
           const saved = JSON.parse(progressData);
-          console.log('[refreshReportTab] 파싱된 학습 데이터:', saved);
-
           if (saved.length > 0) {
-            const latest = saved[saved.length - 1]; // 가장 최근 기록
-            console.log('[refreshReportTab] 최신 기록:', latest);
+            const latest = saved[saved.length - 1];
 
-            // 리포트 패널 업데이트
             updateReportPanel({
               q1ok: latest.q1ok || false,
               q2ok: latest.q2ok || false,
@@ -582,7 +626,6 @@
               q5ok: latest.q5ok || false
             });
 
-            // 레이더 차트 업데이트
             drawRadarChart({
               literal: latest.literal || 0,
               structural: latest.structural || 0,
@@ -591,15 +634,11 @@
               critical: latest.critical || 0
             });
 
-            console.log('[refreshReportTab] 분석리포트 업데이트 완료');
-          } else {
-            console.log('[refreshReportTab] 학습 기록 배열이 비어있음');
+            console.log('[refreshReportTabFromLocalStorage] localStorage 데이터로 업데이트 완료');
           }
-        } else {
-          console.log('[refreshReportTab] localStorage에 학습 완료 데이터 없음');
         }
       } catch(e) {
-        console.error('[refreshReportTab] 오류 발생:', e);
+        console.error('[refreshReportTabFromLocalStorage] 오류:', e);
       }
     }
 
