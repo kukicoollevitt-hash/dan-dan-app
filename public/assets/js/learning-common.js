@@ -499,6 +499,77 @@
       }
     }
 
+    // AI 로딩 오버레이 생성 (한 번만)
+    function createAILoadingOverlay() {
+      if (document.getElementById('ai-loading-overlay')) return;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'ai-loading-overlay';
+      overlay.innerHTML = `
+        <div class="ai-loading-content">
+          <div class="ai-spinner"></div>
+          <p class="ai-loading-text">AI 학습 인식 중...</p>
+        </div>
+      `;
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        flex-direction: column;
+      `;
+
+      const style = document.createElement('style');
+      style.textContent = `
+        #ai-loading-overlay .ai-loading-content {
+          text-align: center;
+        }
+        #ai-loading-overlay .ai-spinner {
+          width: 60px;
+          height: 60px;
+          border: 4px solid #f3d3b4;
+          border-top: 4px solid #c04a3b;
+          border-radius: 50%;
+          animation: ai-spin 1s linear infinite;
+          margin: 0 auto 20px;
+        }
+        #ai-loading-overlay .ai-loading-text {
+          font-size: 18px;
+          color: #5b4334;
+          font-weight: 600;
+        }
+        @keyframes ai-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+      document.body.appendChild(overlay);
+    }
+
+    // AI 로딩 표시
+    function showAILoading() {
+      createAILoadingOverlay();
+      const overlay = document.getElementById('ai-loading-overlay');
+      if (overlay) {
+        overlay.style.display = 'flex';
+      }
+    }
+
+    // AI 로딩 숨기기
+    function hideAILoading() {
+      const overlay = document.getElementById('ai-loading-overlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+      }
+    }
+
     // 탭 활성화 함수
     function activateTab(tabName) {
       console.log('[activateTab] 탭 전환:', tabName);
@@ -513,10 +584,17 @@
         targetBtn.classList.add('active');
         targetPanel.classList.add('active');
 
-        // 분석리포트 탭인 경우 데이터 새로고침
+        // 분석리포트 탭인 경우: AI 로딩 표시 후 데이터 새로고침
         if (tabName === 'report') {
-          console.log('[activateTab] 분석리포트 탭 감지 - refreshReportTab() 호출');
-          refreshReportTab();
+          console.log('[activateTab] 분석리포트 탭 감지 - AI 로딩 시작');
+          showAILoading();
+
+          // 1.5초 후 로딩 숨기고 레이더 차트 표시
+          setTimeout(() => {
+            hideAILoading();
+            refreshReportTab();
+            console.log('[activateTab] AI 로딩 완료 - 분석리포트 표시');
+          }, 1500);
         }
 
         // 어휘학습 탭인 경우 지문 렌더링
