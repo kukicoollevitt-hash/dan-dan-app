@@ -907,7 +907,18 @@ function _bindTabEvents() {
     const btn = e.target.closest('[data-tab]');
     if (!btn) return;
     const tab = btn.getAttribute('data-tab');
-    if (tab === 'vocab') renderVocabFill();
+    if (tab === 'vocab') {
+      renderVocabFill();
+      // ✅ 어휘 렌더링 직후 상태 복원
+      setTimeout(() => {
+        if (typeof window.loadVocabState === 'function') {
+          window.loadVocabState();
+        }
+        if (typeof window.restoreVocabFromServerData === 'function') {
+          window.restoreVocabFromServerData();
+        }
+      }, 100);
+    }
   });
 }
 
@@ -1659,6 +1670,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
+    // ✅ 어휘 렌더링 직후 상태 복원
+    setTimeout(() => {
+      if (typeof window.loadVocabState === 'function') {
+        window.loadVocabState();
+      }
+      if (typeof window.restoreVocabFromServerData === 'function') {
+        window.restoreVocabFromServerData();
+      }
+    }, 100);
   }
 
   // 3) 버튼 type=button 통일

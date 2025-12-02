@@ -1684,6 +1684,8 @@
         console.log('[saveVocabState] 서버 저장 호출');
       }
     }
+    // ★ window에 노출
+    window.saveVocabState = saveVocabState;
 
     function loadVocabState() {
       const stu = getCurrentStudent();
@@ -1737,6 +1739,8 @@
         console.warn('[loadVocabState] 복원 실패:', e);
       }
     }
+    // ★ window에 노출
+    window.loadVocabState = loadVocabState;
 
   /* ===== 어휘학습 채점 & 제출 ===== */
   let vocabGradeBtn, vocabResetBtn, vocabSubmitBtn, vocabResultBox;

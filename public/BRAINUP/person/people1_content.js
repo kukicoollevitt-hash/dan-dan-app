@@ -934,10 +934,15 @@ window.renderVocabFill = function () {
   window.reportState = window.reportState || {};
   window.reportState.vocabTotal = pack.vocabFill.items.length;
 
-  // ✅ 어휘 렌더링 직후 상태 복원 (각 HTML 파일의 loadVocabState 호출)
+  // ✅ 어휘 렌더링 직후 상태 복원
   setTimeout(() => {
+    // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
+    }
+    // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
+    if (typeof window.restoreVocabFromServerData === 'function') {
+      window.restoreVocabFromServerData();
     }
   }, 100);
 };
