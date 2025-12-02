@@ -1308,45 +1308,42 @@ function renderSolutions(pack) {
   const q1Text = pack.quiz.q1_opts[Number(A.q1) - 1] || '';
   const q2Text = pack.quiz.q2_opts[Number(A.q2) - 1] || '';
 
-  const anchor = document.getElementById('grade-result') || document.body;
-  let box = document.getElementById('solutions-box');
-  if (!box) {
-    box = document.createElement('div');
-    box.id = 'solutions-box';
-    box.style.marginTop = '16px';
-    box.style.background = '#fffaf3';
-    box.style.border = '1px solid #e5d4c1';
-    box.style.borderRadius = '12px';
-    box.style.padding = '16px';
-    box.style.lineHeight = '1.6';
-    anchor.insertAdjacentElement('afterend', box);
-  }
+  const gradeResultBox = document.getElementById('grade-result');
+  if (!gradeResultBox) return;
 
-  box.innerHTML = `
-    <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
-    <ol style="margin:0; padding-left:18px;">
-      <li style="margin-bottom:8px;">
-        <b>① 정답:</b> ${A.q1} — ${q1Text}<br>
-        <span style="color:#6b5a48;">${EX.q1 || ''}</span>
-      </li>
-      <li style="margin-bottom:8px;">
-        <b>② 정답:</b> ${A.q2} — ${q2Text}<br>
-        <span style="color:#6b5a48;">${EX.q2 || ''}</span>
-      </li>
-      <li style="margin-bottom:8px;">
-        <b>③ 정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}<br>
-        <span style="color:#6b5a48;">${EX.q3 || ''}</span>
-      </li>
-      <li style="margin-bottom:8px;">
-        <b>④ 정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}<br>
-        <span style="color:#6b5a48;">${EX.q4 || ''}</span>
-      </li>
-      <li>
-        <b>⑤ 서술형 예시:</b> <span style="color:#6b5a48;">${EX.q5 || '핵심어 2개 이상 포함 시 정답 처리'}</span>
-      </li>
-    </ol>
+  // 기존 solutions-box가 있으면 제거
+  const existingBox = document.getElementById('solutions-box');
+  if (existingBox) existingBox.remove();
+
+  // grade-result 박스 안에 정답·해설 추가
+  const solutionsHTML = `
+    <div id="solutions-box" style="margin-top:16px; padding-top:16px; border-top:1px dashed #e5d4c1;">
+      <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
+      <ol style="margin:0; padding-left:18px;">
+        <li style="margin-bottom:8px;">
+          <b>① 정답:</b> ${A.q1} — ${q1Text}<br>
+          <span style="color:#6b5a48;">${EX.q1 || ''}</span>
+        </li>
+        <li style="margin-bottom:8px;">
+          <b>② 정답:</b> ${A.q2} — ${q2Text}<br>
+          <span style="color:#6b5a48;">${EX.q2 || ''}</span>
+        </li>
+        <li style="margin-bottom:8px;">
+          <b>③ 정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}<br>
+          <span style="color:#6b5a48;">${EX.q3 || ''}</span>
+        </li>
+        <li style="margin-bottom:8px;">
+          <b>④ 정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}<br>
+          <span style="color:#6b5a48;">${EX.q4 || ''}</span>
+        </li>
+        <li>
+          <b>⑤ 서술형 예시:</b> <span style="color:#6b5a48;">${EX.q5 || '핵심어 2개 이상 포함 시 정답 처리'}</span>
+        </li>
+      </ol>
+    </div>
   `;
-  box.style.display = 'block';
+
+  gradeResultBox.insertAdjacentHTML('beforeend', solutionsHTML);
 }
 
 /* ========== 공통 진행도 매니저 (단일화 호환) ========== */

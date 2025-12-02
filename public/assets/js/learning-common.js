@@ -319,7 +319,16 @@
             bw.classList.remove('correct', 'wrong');
             if (data.isCorrect) bw.classList.add('correct');
             if (data.isWrong) bw.classList.add('wrong');
-            if (mark) mark.textContent = data.markText || '';
+            // markText가 없으면 isCorrect/isWrong으로 생성 (하위호환)
+            if (mark) {
+              if (data.markText) {
+                mark.textContent = data.markText;
+              } else if (data.isCorrect) {
+                mark.textContent = '✔';
+              } else if (data.isWrong) {
+                mark.textContent = '✖';
+              }
+            }
           }
         });
 
