@@ -217,6 +217,18 @@ const userProgressSchema = new mongoose.Schema({
     }
   },
 
+  // 단원별 학습 진행 데이터 (본문학습 채점 결과 등)
+  unitProgress: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed,
+    default: new Map()
+  },
+
+  // 완료된 페이지 목록
+  completedPages: [{
+    type: String
+  }],
+
   // 마지막 업데이트 시간
   lastUpdated: {
     type: Date,

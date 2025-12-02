@@ -873,10 +873,18 @@ function getCurrentUnit() {
   return (window.CUR_UNIT || 'physics_01');
 }
 
+let _vocabFillRendered = false;
+
 window.renderVocabFill = function () {
+  // 이미 렌더링되었으면 다시 렌더링하지 않음 (탭 전환 시 상태 유지)
+  if (_vocabFillRendered) {
+    console.log('[renderVocabFill] 이미 렌더링됨, 건너뛰기');
+    return;
+  }
+
   const unit = window.CUR_UNIT || 'physics_01';
   const pack = window.CONTENTS?.[unit];
-  const root = document.getElementById('vocab-fill') 
+  const root = document.getElementById('vocab-fill')
             || document.querySelector('.vocab-fill-text');
 
   if (!root || !pack?.vocabFill?.items?.length) {
@@ -901,6 +909,9 @@ window.renderVocabFill = function () {
     <div class="vocab-inline">${html}</div>
   `;
 
+  // 렌더링 완료 표시
+  _vocabFillRendered = true;
+
   (function ensureVocabInlineStyle(){
     if (document.getElementById('vocab-inline-style')) return;
     const st = document.createElement('style');
@@ -924,10 +935,15 @@ window.renderVocabFill = function () {
   window.reportState = window.reportState || {};
   window.reportState.vocabTotal = pack.vocabFill.items.length;
 
-  // ✅ 어휘 렌더링 직후 상태 복원 (각 HTML 파일의 loadVocabState 호출)
+  // ✅ 어휘 렌더링 직후 상태 복원
   setTimeout(() => {
+    // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
+    }
+    // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
+    if (typeof window.restoreVocabFromServerData === 'function') {
+      window.restoreVocabFromServerData();
     }
   }, 100);
 };
@@ -1305,11 +1321,13 @@ function renderSolutions(pack) {
     box = document.createElement('div');
     box.id = 'solutions-box';
     box.style.marginTop = '16px';
+    box.style.marginBottom = '20px';
     box.style.background = '#fffaf3';
     box.style.border = '1px solid #e5d4c1';
     box.style.borderRadius = '12px';
     box.style.padding = '16px';
     box.style.lineHeight = '1.6';
+    // grade-result 바로 다음에 추가
     anchor.insertAdjacentElement('afterend', box);
   }
 

@@ -119,6 +119,9 @@
       }
     }
 
+    // ★ 전역으로 노출 (HTML 페이지에서 접근 가능하도록)
+    window.saveUnitProgressToServer = saveUnitProgressToServer;
+
     // ★ 서버에서 단원별 학습 진행 불러오기
     async function loadUnitProgressFromServer() {
       const stu = getCurrentStudent();
@@ -143,6 +146,12 @@
 
     // ★ 서버 데이터로 본문학습 상태 복원
     function restoreReadingStateFromServer(data) {
+      // reportState 구조인 경우 내부 데이터 추출
+      if (data && data.reportState) {
+        data = data.reportState;
+        console.log('[restoreReadingStateFromServer] reportState 구조 감지, 내부 데이터 사용:', data);
+      }
+
       if (!data || !data.inputs) {
         console.log('[restoreReadingStateFromServer] 복원할 입력 데이터 없음');
         return;
@@ -190,7 +199,87 @@
         if (submitBtn) submitBtn.style.display = "inline-block";
       }
 
+      // ★ 채점 표시 (⭕✖) 복원
+      const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
+      const numLabels = ["01","02","03","04","05"];
+      const qokList = [data.q1ok, data.q2ok, data.q3ok, data.q4ok, data.q5ok];
+
+      quizBlocks.forEach((block, idx) => {
+        const numEl = block.querySelector('.quiz-num');
+        if (!numEl) return;
+
+        let markEl = numEl.querySelector('.mark');
+        if (!markEl) {
+          markEl = document.createElement('span');
+          markEl.className = 'mark';
+          numEl.appendChild(markEl);
+        }
+
+        numEl.classList.remove('correct', 'wrong');
+
+        if (qokList[idx] === true) {
+          numEl.classList.add('correct');
+          markEl.textContent = "⭕";
+        } else if (qokList[idx] === false) {
+          numEl.classList.add('wrong');
+          markEl.textContent = "✖";
+        } else {
+          markEl.textContent = "";
+        }
+      });
+
       console.log('[restoreReadingStateFromServer] 복원 완료');
+    }
+
+    // ★ 서버 데이터로 어휘학습 상태 복원
+    function restoreVocabStateFromServer(vocabState) {
+      if (!vocabState || !vocabState.vocabData) {
+        console.log('[restoreVocabStateFromServer] 복원할 어휘 데이터 없음');
+        return;
+      }
+
+      try {
+        const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+        const vocabData = vocabState.vocabData;
+
+        console.log('[restoreVocabStateFromServer] blanks 개수:', blanks.length);
+        console.log('[restoreVocabStateFromServer] vocabData 개수:', vocabData.length);
+
+        blanks.forEach((bw, idx) => {
+          if (vocabData[idx]) {
+            const data = vocabData[idx];
+            const input = bw.querySelector('.blank-input');
+            const mark = bw.querySelector('.blank-mark');
+
+            if (input) input.value = data.value || '';
+            bw.classList.remove('correct', 'wrong');
+            if (data.isCorrect) bw.classList.add('correct');
+            if (data.isWrong) bw.classList.add('wrong');
+            if (mark) mark.textContent = data.markText || '';
+          }
+        });
+
+        // 결과 박스 복원
+        const vocabResultBox = document.getElementById('vocab-result');
+        if (vocabResultBox && vocabState.resultHTML) {
+          vocabResultBox.style.display = 'block';
+          vocabResultBox.innerHTML = vocabState.resultHTML;
+        }
+
+        // 채점 완료 상태면 버튼 표시
+        if (vocabState.isGraded) {
+          const vocabGradeBtn = document.getElementById('vocab-grade');
+          const vocabResetBtn = document.getElementById('vocab-reset');
+          const vocabSubmitBtn = document.getElementById('vocab-submit');
+          if (vocabGradeBtn) vocabGradeBtn.style.display = 'inline-block';
+          if (vocabResetBtn) vocabResetBtn.style.display = 'inline-block';
+          if (vocabSubmitBtn) vocabSubmitBtn.style.display = 'inline-block';
+        }
+
+        console.log('[restoreVocabStateFromServer] 어휘학습 복원 완료');
+      } catch (e) {
+        console.error('[restoreVocabStateFromServer] 복원 실패:', e);
+      }
     }
 
     // 페이지 들어올 때 로그인 정보 있으면 학년/이름 자동 채우기(전화 입력칸 숨김)
@@ -429,7 +518,8 @@
 
     /* ======= (임시 alert 버전 openRemedial 삭제) ======= */
     // ===== 보완학습 문제 뱅크 (객관식 2문제씩) =====
-    const REMEDIAL_BANK = {
+    // window 객체로 선언하여 개별 페이지에서 덮어쓸 수 있도록 함
+    window.REMEDIAL_BANK = window.REMEDIAL_BANK || {
       literal: {
         title: "보완학습 | 핵심 이해력",
         problems: [
@@ -471,11 +561,11 @@
     function openRemedial() {
       const needKeys = [];
       if (typeof reportState !== "undefined") {
-        if (!reportState.q1ok) needKeys.push('literal');
-        if (!reportState.q2ok) needKeys.push('structural');
-        if (!reportState.q3ok) needKeys.push('lexical');
-        if (!reportState.q4ok) needKeys.push('inferential');
-        if (!reportState.q5ok) needKeys.push('critical');
+        if (!window.reportState.q1ok) needKeys.push('literal');
+        if (!window.reportState.q2ok) needKeys.push('structural');
+        if (!window.reportState.q3ok) needKeys.push('lexical');
+        if (!window.reportState.q4ok) needKeys.push('inferential');
+        if (!window.reportState.q5ok) needKeys.push('critical');
       }
 
       const panel = document.getElementById('remedial-panel');
@@ -490,7 +580,7 @@
 
       let html = "";
       needKeys.forEach(key => {
-        const data = REMEDIAL_BANK[key];
+        const data = window.REMEDIAL_BANK[key];
         if (!data) return;
         html += `<div style="margin-bottom:16px;">
           <h4 style="margin:4px 0 6px; color:#8b2f2f;">${data.title}</h4>
@@ -514,7 +604,7 @@
       const body = document.getElementById('remedial-panel-body');
       if (!body) return;
       for (const key in REMEDIAL_BANK) {
-        const data = REMEDIAL_BANK[key];
+        const data = window.REMEDIAL_BANK[key];
         if (!data) continue;
         (data.problems || []).forEach((p, idx) => {
           const name = key + '-q' + idx;
@@ -542,7 +632,8 @@
       body.querySelectorAll('.remed-result').forEach(el => el.remove());
     }
     /* ===== 전역 리포트 상태 ===== */
-    let reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
+    // window 객체로 선언하여 개별 페이지에서 덮어쓸 수 있도록 함
+    window.reportState = window.reportState || { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
 
     /* ===== 탭 전환 ===== */
     // 분석리포트 새로고침 함수 (서버에서 최신 데이터 가져오기)
@@ -800,14 +891,45 @@
 
     // ★ 서버에서 학습 진행 데이터 복원
     try {
+      console.log('[learning-common] ★ 서버 데이터 로딩 시작...');
       const serverData = await loadUnitProgressFromServer();
-      if (serverData && serverData.reportState) {
-        console.log('[learning-common] 서버 데이터 복원 시작:', serverData.reportState);
-        restoreReadingStateFromServer(serverData.reportState);
+      console.log('[learning-common] ★ 서버 데이터 로드 결과:', serverData);
+      if (serverData) {
+        // 본문학습 상태 복원 (DOM이 이미 있으므로 즉시 복원)
+        if (serverData.reportState) {
+          console.log('[learning-common] 서버 데이터 복원 시작:', serverData.reportState);
+          restoreReadingStateFromServer(serverData.reportState);
+        }
+        // 어휘학습 상태 복원
+        if (serverData.vocabState) {
+          console.log('[learning-common] ★★★ 어휘학습 서버 데이터:', serverData.vocabState);
+          // blank-wrap이 이미 있으면 즉시 복원, 없으면 나중에 복원하도록 저장
+          const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+          if (blanks.length > 0) {
+            console.log('[learning-common] blank-wrap 이미 있음, 즉시 복원');
+            restoreVocabStateFromServer(serverData.vocabState);
+          } else {
+            console.log('[learning-common] blank-wrap 아직 없음, 나중에 복원');
+            window._pendingVocabServerData = serverData.vocabState;
+          }
+        } else {
+          console.log('[learning-common] ★ vocabState 없음');
+        }
+      } else {
+        console.log('[learning-common] ★ 서버에서 데이터 없음 (null)');
       }
     } catch (err) {
       console.error('[learning-common] 서버 데이터 복원 오류:', err);
     }
+
+    // ★ 나중에 content.js에서 호출할 서버 데이터 복원 함수
+    window.restoreVocabFromServerData = function() {
+      if (window._pendingVocabServerData) {
+        console.log('[restoreVocabFromServerData] 서버 데이터로 어휘학습 복원 시작');
+        restoreVocabStateFromServer(window._pendingVocabServerData);
+        delete window._pendingVocabServerData;
+      }
+    };
 
     // 어휘학습 버튼 초기화
     initVocabButtons();
@@ -863,16 +985,19 @@
     });
 
     /* ===== 원형 스탑워치 ===== */
-    let timer, seconds = 0, isRunning = false;
-    const RADIUS = 45;
-    const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-    const TOTAL_SECONDS = 600; // 10분
-    function formatTime(sec){ const m=String(Math.floor(sec/60)).padStart(2,'0'); const s=String(sec%60).padStart(2,'0'); return `${m}:${s}`; }
-    function updateDisplay(){ const t=document.getElementById("timer-text"); if (t) t.textContent = formatTime(seconds); updateRing(); }
-    function updateRing(){ const c=document.querySelector(".timer-ring .progress"); if(!c) return; const r=(seconds%TOTAL_SECONDS)/TOTAL_SECONDS; c.style.strokeDashoffset = CIRCUMFERENCE - r*CIRCUMFERENCE; }
-    function startTimer(){ if(!isRunning){ isRunning=true; const b=document.getElementById("timer-display"); b.classList.remove("paused","reset"); b.classList.add("active"); timer=setInterval(()=>{ seconds++; updateDisplay(); },1000);} }
-    function pauseTimer(){ clearInterval(timer); isRunning=false; const b=document.getElementById("timer-display"); b.classList.remove("active"); b.classList.add("paused"); }
-    function resetTimer(){ clearInterval(timer); isRunning=false; const m=document.getElementById("minute-input"), s=document.getElementById("second-input"); if(m) m.value=Math.floor(seconds/60); if(s) s.value=seconds%60; seconds=0; updateDisplay(); const b=document.getElementById("timer-display"); b.classList.remove("active","paused"); b.classList.add("reset"); }
+    // window 객체로 선언하여 개별 페이지에서 덮어쓸 수 있도록 함
+    window.timer = window.timer || null;
+    window.seconds = window.seconds || 0;
+    window.isRunning = window.isRunning || false;
+    window.RADIUS = 45;
+    window.CIRCUMFERENCE = 2 * Math.PI * window.RADIUS;
+    window.TOTAL_SECONDS = 600; // 10분
+    window.formatTime = function(sec){ const m=String(Math.floor(sec/60)).padStart(2,'0'); const s=String(sec%60).padStart(2,'0'); return `${m}:${s}`; };
+    window.updateDisplay = function(){ const t=document.getElementById("timer-text"); if (t) t.textContent = window.formatTime(window.seconds); window.updateRing(); };
+    window.updateRing = function(){ const c=document.querySelector(".timer-ring .progress"); if(!c) return; const r=(window.seconds%window.TOTAL_SECONDS)/window.TOTAL_SECONDS; c.style.strokeDashoffset = window.CIRCUMFERENCE - r*window.CIRCUMFERENCE; };
+    window.startTimer = function(){ if(!window.isRunning){ window.isRunning=true; const b=document.getElementById("timer-display"); b.classList.remove("paused","reset"); b.classList.add("active"); window.timer=setInterval(()=>{ window.seconds++; window.updateDisplay(); },1000);} };
+    window.pauseTimer = function(){ clearInterval(window.timer); window.isRunning=false; const b=document.getElementById("timer-display"); b.classList.remove("active"); b.classList.add("paused"); };
+    window.resetTimer = function(){ clearInterval(window.timer); window.isRunning=false; const m=document.getElementById("minute-input"), s=document.getElementById("second-input"); if(m) m.value=Math.floor(window.seconds/60); if(s) s.value=window.seconds%60; window.seconds=0; window.updateDisplay(); const b=document.getElementById("timer-display"); b.classList.remove("active","paused"); b.classList.add("reset"); };
 
     /* ===== 공통: 학생정보/파일명 ===== */
     function getStudentInfo(){ const grade=document.getElementById('student-grade')?.value.trim()||''; const name=document.getElementById('student-name')?.value.trim()||''; return {grade,name}; }
@@ -1262,50 +1387,50 @@
       document.getElementById("submit-btn").style.display = "inline-block";
 
       // ★ 전역 상태에 저장
-      reportState.q1ok = q1ok;
-      reportState.q2ok = q2ok;
-      reportState.q3ok = q3ok;
-      reportState.q4ok = q4ok;
-      reportState.q5ok = q5ok;
+      window.reportState.q1ok = q1ok;
+      window.reportState.q2ok = q2ok;
+      window.reportState.q3ok = q3ok;
+      window.reportState.q4ok = q4ok;
+      window.reportState.q5ok = q5ok;
 
       // ★ 분석리포트 텍스트/박스 동기화
       updateReportPanel({
-        q1ok: reportState.q1ok,
-        q2ok: reportState.q2ok,
-        q3ok: reportState.q3ok,
-        q4ok: reportState.q4ok,
-        q5ok: reportState.q5ok,
+        q1ok: window.reportState.q1ok,
+        q2ok: window.reportState.q2ok,
+        q3ok: window.reportState.q3ok,
+        q4ok: window.reportState.q4ok,
+        q5ok: window.reportState.q5ok,
         messages: (function(){
-          const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
+          const lexicalRatio = (typeof window.reportState.vocabScoreRatio === "number") ? window.reportState.vocabScoreRatio : 0;
           const lexicalOk = lexicalRatio >= 0.7;
           return [
-            "① 핵심 이해력(객관식): " + (reportState.q1ok ? "핵심 이해력이 좋아요! ✅" : "보완 필요해요 ❗"),
-            "② 구조 파악력(객관식): " + (reportState.q2ok ? "구조 파악력이 좋아요! ✅" : "보완 필요해요 ❗"),
+            "① 핵심 이해력(객관식): " + (window.reportState.q1ok ? "핵심 이해력이 좋아요! ✅" : "보완 필요해요 ❗"),
+            "② 구조 파악력(객관식): " + (window.reportState.q2ok ? "구조 파악력이 좋아요! ✅" : "보완 필요해요 ❗"),
             "③ 어휘 맥락력(빈칸): " + (lexicalOk ? "어휘 맥락력이 좋아요! ✅" : "어휘 복습이 필요해요 ❗"),
-            "④ 추론·통합력(빈칸): " + (reportState.q4ok ? "추론·통합력이 좋아요! ✅" : "보완 필요해요 ❗"),
-            "⑤ 비판·적용력(서술형): " + (reportState.q5ok ? "비판·적용력이 좋아요! ✅" : "보완 필요해요 ❗")
+            "④ 추론·통합력(빈칸): " + (window.reportState.q4ok ? "추론·통합력이 좋아요! ✅" : "보완 필요해요 ❗"),
+            "⑤ 비판·적용력(서술형): " + (window.reportState.q5ok ? "비판·적용력이 좋아요! ✅" : "보완 필요해요 ❗")
           ];
         })()
       });
 
       // 레이더 차트
       drawRadarChart({
-        literal:     reportState.q1ok ? 10 : 6,
-        structural:  reportState.q2ok ? 10 : 6,
-        lexical:     reportState.q3ok ? 10 : 6,
-        inferential: reportState.q4ok ? 10 : 6,
-        critical:    reportState.q5ok ? 10 : 6
+        literal:     window.reportState.q1ok ? 10 : 6,
+        structural:  window.reportState.q2ok ? 10 : 6,
+        lexical:     window.reportState.q3ok ? 10 : 6,
+        inferential: window.reportState.q4ok ? 10 : 6,
+        critical:    window.reportState.q5ok ? 10 : 6
       });
 
       // 어휘 피드백 반영
-      const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
+      const lexicalRatio = (typeof window.reportState.vocabScoreRatio === "number") ? window.reportState.vocabScoreRatio : 0;
       const lexicalFromRatio = Math.round(lexicalRatio * 10);
       renderFeedback({
-        literal:    reportState.q1ok ? 10 : 6,
-        structural: reportState.q2ok ? 10 : 6,
+        literal:    window.reportState.q1ok ? 10 : 6,
+        structural: window.reportState.q2ok ? 10 : 6,
         lexical:    lexicalFromRatio,
-        inferential:reportState.q4ok ? 10 : 6,
-        critical:   reportState.q5ok ? 10 : 6
+        inferential:window.reportState.q4ok ? 10 : 6,
+        critical:   window.reportState.q5ok ? 10 : 6
       });
 
       // ★ localStorage에 분석리포트 상태 저장 (분석리포트 탭 즉시 반영용)
@@ -1313,17 +1438,17 @@
       const storageKey = `dan-geo-report-state:${unit}`;
       console.log(`[gradeQuiz] unit=${unit}로 localStorage에 저장`);
       const reportDataToSave = {
-        q1ok: reportState.q1ok,
-        q2ok: reportState.q2ok,
-        q3ok: reportState.q3ok,
-        q4ok: reportState.q4ok,
-        q5ok: reportState.q5ok,
-        vocabScoreRatio: reportState.vocabScoreRatio,
-        literal: reportState.q1ok ? 10 : 6,
-        structural: reportState.q2ok ? 10 : 6,
+        q1ok: window.reportState.q1ok,
+        q2ok: window.reportState.q2ok,
+        q3ok: window.reportState.q3ok,
+        q4ok: window.reportState.q4ok,
+        q5ok: window.reportState.q5ok,
+        vocabScoreRatio: window.reportState.vocabScoreRatio,
+        literal: window.reportState.q1ok ? 10 : 6,
+        structural: window.reportState.q2ok ? 10 : 6,
         lexical: lexicalFromRatio,
-        inferential: reportState.q4ok ? 10 : 6,
-        critical: reportState.q5ok ? 10 : 6,
+        inferential: window.reportState.q4ok ? 10 : 6,
+        critical: window.reportState.q5ok ? 10 : 6,
         // 본문학습 입력값도 저장
         inputs: {
           q1: q1 ? q1.value : '',
@@ -1348,27 +1473,36 @@
     }
 
     function resetQuiz() {
+      // 페이지별 커스텀 resetQuiz가 있으면 그것을 호출
+      if (window._customResetQuiz) {
+        window._customResetQuiz();
+        return;
+      }
+
       document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.checked = false);
-      document.getElementById("q3-1").value = "";
-      document.getElementById("q3-2").value = "";
-      document.getElementById("q4-1").value = "";
-      document.getElementById("q4-2").value = "";
-      document.getElementById("q5").value = "";
+      const q31 = document.getElementById("q3-1"); if (q31) q31.value = "";
+      const q32 = document.getElementById("q3-2"); if (q32) q32.value = "";
+      const q41 = document.getElementById("q4-1"); if (q41) q41.value = "";
+      const q42 = document.getElementById("q4-2"); if (q42) q42.value = "";
+      const q5 = document.getElementById("q5"); if (q5) q5.value = "";
 
       const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
       const numLabels = ["01","02","03","04","05"];
       quizBlocks.forEach((block, idx) => {
         const numEl = block.querySelector('.quiz-num');
+        if (!numEl) return;
         const markEl = numEl.querySelector('.mark');
         numEl.textContent = numLabels[idx];
-        numEl.appendChild(markEl);
+        if (markEl) numEl.appendChild(markEl);
         numEl.classList.remove('correct','wrong');
-        markEl.textContent = "";
+        if (markEl) markEl.textContent = "";
       });
 
       const resultBox = document.getElementById("grade-result");
-      resultBox.style.display = "none";
-      resultBox.innerHTML = "";
+      if (resultBox) {
+        resultBox.style.display = "none";
+        resultBox.innerHTML = "";
+      }
       fullResultHTML = "";
 
       // solutions-box 제거 (제출하기에서 생성된 해설 박스)
@@ -1377,9 +1511,16 @@
         solutionsBox.remove();
       }
 
-      document.getElementById("grade-btn").style.display = "inline-block";
-      document.getElementById("reset-btn").style.display = "none";
-      document.getElementById("submit-btn").style.display = "none";
+      // 버튼 처리 - 페이지에 따라 다른 버튼이 있을 수 있음
+      const gradeBtn = document.getElementById("grade-btn");
+      const resetBtn = document.getElementById("reset-btn");
+      const submitBtn = document.getElementById("submit-btn");
+      const saveProgressBtn = document.getElementById("save-progress-btn");
+
+      if (gradeBtn) gradeBtn.style.display = "inline-block";
+      if (resetBtn) resetBtn.style.display = "none";
+      if (submitBtn) submitBtn.style.display = "none";
+      if (saveProgressBtn) saveProgressBtn.style.display = "inline-block";
 
       reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
 
@@ -1393,24 +1534,24 @@
       if (!ensureStudentInfo()) { showSubmitOverlay('학년과 이름을 입력해주세요'); return; }
 
       // ★ 제출 전에 localStorage에 리포트 상태 저장
-      const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
+      const lexicalRatio = (typeof window.reportState.vocabScoreRatio === "number") ? window.reportState.vocabScoreRatio : 0;
       const lexicalFromRatio = Math.round(lexicalRatio * 10);
 
       const unit = window.CUR_UNIT || 'geo_01';
       const storageKey = `dan-geo-report-state:${unit}`;
       console.log(`[submitQuiz] unit=${unit}로 localStorage에 저장`);
       localStorage.setItem(storageKey, JSON.stringify({
-        q1ok: reportState.q1ok,
-        q2ok: reportState.q2ok,
-        q3ok: reportState.q3ok,
-        q4ok: reportState.q4ok,
-        q5ok: reportState.q5ok,
-        vocabScoreRatio: reportState.vocabScoreRatio,
-        literal: reportState.q1ok ? 10 : 6,
-        structural: reportState.q2ok ? 10 : 6,
+        q1ok: window.reportState.q1ok,
+        q2ok: window.reportState.q2ok,
+        q3ok: window.reportState.q3ok,
+        q4ok: window.reportState.q4ok,
+        q5ok: window.reportState.q5ok,
+        vocabScoreRatio: window.reportState.vocabScoreRatio,
+        literal: window.reportState.q1ok ? 10 : 6,
+        structural: window.reportState.q2ok ? 10 : 6,
         lexical: lexicalFromRatio,
-        inferential: reportState.q4ok ? 10 : 6,
-        critical: reportState.q5ok ? 10 : 6
+        inferential: window.reportState.q4ok ? 10 : 6,
+        critical: window.reportState.q5ok ? 10 : 6
       }));
 
       console.log('[submitQuiz] localStorage에 리포트 상태 저장 완료');
@@ -1553,43 +1694,48 @@
         }
       });
 
+      // 채점 즉시 정답(해설) 표시
+      const scorePercent = Math.round((correctCnt / total) * 100);
       vocabResultBox.style.display = "block";
       vocabResultBox.innerHTML =
-        `<p><strong>맞은 개수: ${correctCnt} / ${total}</strong></p>` +
-        basicMsgs.map(m => `<p>${m}</p>`).join("");
+        `<div style="background:#f5f5f5; padding:12px; border-radius:8px; margin-bottom:10px;">
+          <p style="font-size:18px; margin:0;"><strong>📊 채점 결과: ${correctCnt} / ${total} (${scorePercent}점)</strong></p>
+        </div>
+        <div style="background:#fff; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          <p style="font-weight:bold; margin:0 0 8px; color:#333;">📝 정답 해설</p>
+          ${fullMsgs.map(m => `<p style="margin:4px 0;">${m.replace('정답 ✅', '<span style="color:#2e7d32">정답 ✅</span>').replace('오답 ❌', '<span style="color:#c62828">오답 ❌</span>').replace(/\(정답: ([^)]+)\)/, '<span style="color:#1565c0; font-weight:bold">(정답: $1)</span>')}</p>`).join("")}
+        </div>`;
 
-      vocabFullResultHTML =
-        `<p><strong>맞은 개수: ${correctCnt} / ${total}</strong></p>` +
-        fullMsgs.map(m => `<p>${m}</p>`).join("");
+      vocabFullResultHTML = vocabResultBox.innerHTML;
 
       // ★ 본문 3번(어휘) 1문항까지 합산한 비율
-      const mainQ3Correct = reportState.q3ok ? 1 : 0;
+      const mainQ3Correct = window.reportState.q3ok ? 1 : 0;
       const totalCorrect = correctCnt + mainQ3Correct;
       const totalQuestions = total + 1;
-      reportState.vocabScoreRatio = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
+      window.reportState.vocabScoreRatio = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
 
-      const lexicalScore = Math.round((reportState.vocabScoreRatio || 0) * 10);
+      const lexicalScore = Math.round((window.reportState.vocabScoreRatio || 0) * 10);
 
       drawRadarChart({
-        literal:     reportState.q1ok ? 10 : 6,
-        structural:  reportState.q2ok ? 10 : 6,
+        literal:     window.reportState.q1ok ? 10 : 6,
+        structural:  window.reportState.q2ok ? 10 : 6,
         lexical:     lexicalScore,
-        inferential: reportState.q4ok ? 10 : 6,
-        critical:    reportState.q5ok ? 10 : 6
+        inferential: window.reportState.q4ok ? 10 : 6,
+        critical:    window.reportState.q5ok ? 10 : 6
       });
 
       updateReportPanel({
-        q1ok: reportState.q1ok,
-        q2ok: reportState.q2ok,
+        q1ok: window.reportState.q1ok,
+        q2ok: window.reportState.q2ok,
         q3ok: true,
-        q4ok: reportState.q4ok,
-        q5ok: reportState.q5ok,
+        q4ok: window.reportState.q4ok,
+        q5ok: window.reportState.q5ok,
         messages: [
-          "① 핵심 이해력(객관식): " + (reportState.q1ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
-          "② 구조 파악력(객관식): " + (reportState.q2ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
-          "③ 어휘 맥락력(어휘학습): " + ((reportState.vocabScoreRatio || 0) >= 0.7 ? "어휘 맥락력이 좋아요! ✅" : "어휘 복습이 해요 ❗") + " (정답 " + (totalCorrect) + " / " + (total + 1) + ")",
-          "④ 추론·통합력(빈칸): " + (reportState.q4ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
-          "⑤ 비판·적용력(서술형): " + (reportState.q5ok ? "좋아요 ✅" : "보완 필요해요 ❗")
+          "① 핵심 이해력(객관식): " + (window.reportState.q1ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
+          "② 구조 파악력(객관식): " + (window.reportState.q2ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
+          "③ 어휘 맥락력(어휘학습): " + ((window.reportState.vocabScoreRatio || 0) >= 0.7 ? "어휘 맥락력이 좋아요! ✅" : "어휘 복습이 해요 ❗") + " (정답 " + (totalCorrect) + " / " + (total + 1) + ")",
+          "④ 추론·통합력(빈칸): " + (window.reportState.q4ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
+          "⑤ 비판·적용력(서술형): " + (window.reportState.q5ok ? "좋아요 ✅" : "보완 필요해요 ❗")
         ]
       });
 
@@ -1620,15 +1766,15 @@
         console.log('[vocabReset] 저장 삭제:', stateKey);
       }
 
-      const baseCorrect = reportState.q3ok ? 1 : 0;
-      reportState.vocabScoreRatio = baseCorrect / 1;
-      const lexicalScore = Math.round(reportState.vocabScoreRatio * 10);
+      const baseCorrect = window.reportState.q3ok ? 1 : 0;
+      window.reportState.vocabScoreRatio = baseCorrect / 1;
+      const lexicalScore = Math.round(window.reportState.vocabScoreRatio * 10);
       drawRadarChart({
-        literal:     reportState.q1ok ? 10 : 6,
-        structural:  reportState.q2ok ? 10 : 6,
+        literal:     window.reportState.q1ok ? 10 : 6,
+        structural:  window.reportState.q2ok ? 10 : 6,
         lexical:     lexicalScore,
-        inferential: reportState.q4ok ? 10 : 6,
-        critical:    reportState.q5ok ? 10 : 6
+        inferential: window.reportState.q4ok ? 10 : 6,
+        critical:    window.reportState.q5ok ? 10 : 6
       });
 
       vocabGradeBtn.style.display = "inline-block";
