@@ -999,8 +999,15 @@ function applyContentPack(unitKey) {
   requestAnimationFrame(() => {
     const loadingOverlay = document.getElementById('loadingOverlay');
     if (loadingOverlay) {
-      loadingOverlay.classList.remove('show');
-      console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
+      // 분석리포트 탭일 경우 1.3초 후에 숨기기
+      const unit = window.CUR_UNIT || 'classic_01';
+      const savedTab = localStorage.getItem(`current-geo-tab:${unit}`);
+      const delay = (savedTab === 'report') ? 1300 : 0;
+
+      setTimeout(() => {
+        loadingOverlay.classList.remove('show');
+        console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
+      }, delay);
     }
   });
 }
