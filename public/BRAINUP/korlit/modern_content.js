@@ -1269,19 +1269,21 @@ function renderSolutions(pack) {
   const q1Text = pack.quiz.q1_opts[Number(A.q1) - 1] || '';
   const q2Text = pack.quiz.q2_opts[Number(A.q2) - 1] || '';
 
-  const anchor = document.getElementById('grade-result') || document.body;
+  // grade-result (점수 박스) 안의 하단에 해설 추가
+  const gradeResult = document.getElementById('grade-result');
+  if (!gradeResult) return;
+
+  // 기존 solutions-box가 있으면 제거
   let box = document.getElementById('solutions-box');
-  if (!box) {
-    box = document.createElement('div');
-    box.id = 'solutions-box';
-    box.style.marginTop = '16px';
-    box.style.background = '#fffaf3';
-    box.style.border = '1px solid #e5d4c1';
-    box.style.borderRadius = '12px';
-    box.style.padding = '16px';
-    box.style.lineHeight = '1.6';
-    anchor.insertAdjacentElement('afterend', box);
-  }
+  if (box) box.remove();
+
+  // 새로운 solutions-box를 grade-result 내부 하단에 추가
+  box = document.createElement('div');
+  box.id = 'solutions-box';
+  box.style.marginTop = '16px';
+  box.style.paddingTop = '12px';
+  box.style.borderTop = '1px dashed #e5d4c1';
+  box.style.lineHeight = '1.6';
 
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
@@ -1307,7 +1309,9 @@ function renderSolutions(pack) {
       </li>
     </ol>
   `;
-  box.style.display = 'block';
+
+  // grade-result 내부 하단에 추가
+  gradeResult.appendChild(box);
 }
 
 /* ========== 공통 진행도 매니저 (단일화 호환) ========== */
