@@ -105,6 +105,15 @@
 
     window.CUR_UNIT = unit || 'bio_01';
     console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
+
+    // 분석리포트 탭으로 새로고침된 경우 로딩 텍스트 변경
+    const savedTab = localStorage.getItem(`current-geo-tab:${window.CUR_UNIT}`);
+    if (savedTab === 'report') {
+      document.addEventListener('DOMContentLoaded', () => {
+        const loadingText = document.querySelector('.loading-text');
+        if (loadingText) loadingText.textContent = 'AI 학습 분석 중...';
+      });
+    }
   })();
 
   /* =========================================================
@@ -2298,33 +2307,81 @@
     let reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
 
     /* ===== 탭 전환 ===== */
-    // 분석리포트 새로고침 함수
-    function refreshReportTab() {
-      try {
-        const saved = localStorage.getItem('dan-geo-report-state');
-        if (saved) {
-          const savedReportState = JSON.parse(saved);
+    // 분석리포트 새로고침 함수 (서버에서 최신 데이터 가져오기)
+    async function refreshReportTab() {
+      const reportPanel = document.getElementById('tab-report');
+      if (!reportPanel) return;
 
-          // 리포트 패널 업데이트
-          updateReportPanel({
-            q1ok: savedReportState.q1ok || false,
-            q2ok: savedReportState.q2ok || false,
-            q3ok: savedReportState.q3ok || false,
-            q4ok: savedReportState.q4ok || false,
-            q5ok: savedReportState.q5ok || false
-          });
+      // 스피너 표시
+      let spinner = document.getElementById('report-loading-spinner');
+      if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.id = 'report-loading-spinner';
+        spinner.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
+        spinner.innerHTML = `
+          <div style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid #8b5a2b;border-radius:50%;animation:spin 1s linear infinite;"></div>
+          <p style="margin-top:16px;font-size:16px;color:#5a4a3a;font-weight:600;">AI 학습 인식 중...</p>
+          <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+        `;
+        document.body.appendChild(spinner);
+      }
+      spinner.style.display = 'flex';
+
+      try {
+        const unit = window.CUR_UNIT || 'bio_01';
+        const stu = typeof getCurrentStudent === 'function' ? getCurrentStudent() : null;
+
+        if (!stu) {
+          console.log('[refreshReportTab] 학생 정보 없음');
+          spinner.style.display = 'none';
+          return;
+        }
+
+        console.log(`[refreshReportTab] unit=${unit}, grade=${stu.grade}, name=${stu.name}`);
+
+        // 서버에서 해당 단원의 최신 학습 기록 가져오기
+        const res = await fetch(`/api/unit-grades?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+        const unitGradesMap = await res.json();
+
+        console.log('[refreshReportTab] 서버 응답:', unitGradesMap);
+
+        // unitGradesMap은 { bio_01: { grade: '양호', radar: {...} }, ... } 형태
+        const unitData = unitGradesMap[unit];
+
+        if (unitData && unitData.radar) {
+          console.log('[refreshReportTab] 서버에서 가져온 데이터:', unitData);
 
           // 레이더 차트 업데이트
-          drawRadarChart({
-            literal: savedReportState.literal || 0,
-            structural: savedReportState.structural || 0,
-            lexical: savedReportState.lexical || 0,
-            inferential: savedReportState.inferential || 0,
-            critical: savedReportState.critical || 0
-          });
+          if (typeof drawRadarChart === 'function') {
+            drawRadarChart({
+              literal: unitData.radar.literal || 0,
+              structural: unitData.radar.structural || 0,
+              lexical: unitData.radar.lexical || 0,
+              inferential: unitData.radar.inferential || 0,
+              critical: unitData.radar.critical || 0
+            });
+          }
+
+          // 리포트 패널 업데이트
+          if (typeof updateReportPanel === 'function') {
+            updateReportPanel({
+              q1ok: unitData.radar.literal >= 10,
+              q2ok: unitData.radar.structural >= 10,
+              q3ok: unitData.radar.lexical >= 7,
+              q4ok: unitData.radar.inferential >= 10,
+              q5ok: unitData.radar.critical >= 10
+            });
+          }
+
+          console.log('[refreshReportTab] 서버 데이터로 분석리포트 업데이트 완료');
+        } else {
+          console.log('[refreshReportTab] 서버에 해당 단원 데이터 없음');
         }
       } catch(e) {
-        console.error('Failed to refresh report:', e);
+        console.error('[refreshReportTab] 서버 요청 오류:', e);
+      } finally {
+        // 스피너 숨기기
+        spinner.style.display = 'none';
       }
     }
 
@@ -2340,7 +2397,7 @@
         targetBtn.classList.add('active');
         targetPanel.classList.add('active');
 
-        // 분석리포트 탭인 경우 데이터 새로고침
+        // 분석리포트 탭인 경우 서버에서 최신 데이터 가져오기
         if (tabName === 'report') {
           refreshReportTab();
         }
@@ -2359,9 +2416,17 @@
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.tab;
+        const unit = window.CUR_UNIT || 'bio_01';
+
+        // 분석리포트 탭 클릭 시 페이지 새로고침하여 최신 데이터 가져오기
+        if (target === 'report') {
+          localStorage.setItem(`current-geo-tab:${unit}`, target);
+          location.reload();
+          return;
+        }
+
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
-        const unit = window.CUR_UNIT || 'bio_01';
         localStorage.setItem(`current-geo-tab:${unit}`, target);
       });
     });

@@ -720,6 +720,21 @@
     /* ===== 탭 전환 ===== */
     // 분석리포트 새로고침 함수 (서버에서 최신 데이터 가져오기)
     async function refreshReportTab() {
+      // 스피너 표시
+      let spinner = document.getElementById('report-loading-spinner');
+      if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.id = 'report-loading-spinner';
+        spinner.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
+        spinner.innerHTML = `
+          <div style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid #8b5a2b;border-radius:50%;animation:spin 1s linear infinite;"></div>
+          <p style="margin-top:16px;font-size:16px;color:#5a4a3a;font-weight:600;">AI 학습 인식 중...</p>
+          <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+        `;
+        document.body.appendChild(spinner);
+      }
+      spinner.style.display = 'flex';
+
       try {
         const unit = window.CUR_UNIT || 'geo_01';
 
@@ -727,6 +742,7 @@
         const stu = getCurrentStudent();
         if (!stu) {
           console.log('[refreshReportTab] 학생 정보 없음');
+          spinner.style.display = 'none';
           return;
         }
 
@@ -734,16 +750,18 @@
 
         // 서버에서 해당 단원의 최신 학습 기록 가져오기
         const res = await fetch(`/api/unit-grades?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
-        const result = await res.json();
+        const unitGradesMap = await res.json();
 
-        if (result.success && result.grades) {
-          // 현재 단원의 데이터 찾기
-          const unitData = result.grades.find(g => g.unit === unit);
+        console.log('[refreshReportTab] 서버 응답:', unitGradesMap);
 
-          if (unitData && unitData.radar) {
-            console.log('[refreshReportTab] 서버에서 가져온 데이터:', unitData);
+        // unitGradesMap은 { bio_01: { grade: '양호', radar: {...} }, ... } 형태
+        const unitData = unitGradesMap[unit];
 
-            // 레이더 차트 업데이트
+        if (unitData && unitData.radar) {
+          console.log('[refreshReportTab] 서버에서 가져온 데이터:', unitData);
+
+          // 레이더 차트 업데이트
+          if (typeof drawRadarChart === 'function') {
             drawRadarChart({
               literal: unitData.radar.literal || 0,
               structural: unitData.radar.structural || 0,
@@ -751,8 +769,10 @@
               inferential: unitData.radar.inferential || 0,
               critical: unitData.radar.critical || 0
             });
+          }
 
-            // 리포트 패널 업데이트 (10점이면 ok)
+          // 리포트 패널 업데이트 (10점이면 ok)
+          if (typeof updateReportPanel === 'function') {
             updateReportPanel({
               q1ok: unitData.radar.literal >= 10,
               q2ok: unitData.radar.structural >= 10,
@@ -760,14 +780,11 @@
               q4ok: unitData.radar.inferential >= 10,
               q5ok: unitData.radar.critical >= 10
             });
-
-            console.log('[refreshReportTab] 서버 데이터로 분석리포트 업데이트 완료');
-          } else {
-            console.log('[refreshReportTab] 서버에 해당 단원 데이터 없음, localStorage 확인');
-            refreshReportTabFromLocalStorage(unit, stu);
           }
+
+          console.log('[refreshReportTab] 서버 데이터로 분석리포트 업데이트 완료');
         } else {
-          console.log('[refreshReportTab] 서버 응답 실패, localStorage 확인');
+          console.log('[refreshReportTab] 서버에 해당 단원 데이터 없음, localStorage 확인');
           refreshReportTabFromLocalStorage(unit, stu);
         }
       } catch(e) {
@@ -776,6 +793,11 @@
         const unit = window.CUR_UNIT || 'geo_01';
         const stu = getCurrentStudent();
         if (stu) refreshReportTabFromLocalStorage(unit, stu);
+      } finally {
+        // 스피너 숨기기 (최소 2초 표시)
+        setTimeout(() => {
+          if (spinner) spinner.style.display = 'none';
+        }, 2000);
       }
     }
 
