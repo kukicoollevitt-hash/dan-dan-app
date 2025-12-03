@@ -985,12 +985,16 @@
       }
     }
 
-    // 학습 기록이 있으면 저장된 탭 복원, 없으면 무조건 본문학습(reading)으로 시작
-    const savedTab = hasLearningRecord
-      ? (localStorage.getItem(`current-geo-tab:${unit}`) || 'reading')
-      : 'reading';
+    // 저장된 탭 확인
+    const storedTab = localStorage.getItem(`current-geo-tab:${unit}`);
 
-    console.log(`[learning-common] 탭 선택: savedTab=${savedTab}, hasRecord=${hasLearningRecord}`);
+    // 분석리포트 탭은 학습 기록과 상관없이 항상 복원 (새로고침으로 진입한 경우)
+    // 그 외 탭은 학습 기록이 있을 때만 복원, 없으면 본문학습으로 시작
+    const savedTab = (storedTab === 'report')
+      ? 'report'
+      : (hasLearningRecord ? (storedTab || 'reading') : 'reading');
+
+    console.log(`[learning-common] 탭 선택: savedTab=${savedTab}, storedTab=${storedTab}, hasRecord=${hasLearningRecord}`);
     activateTab(savedTab);
 
     // ★ 서버에서 학습 진행 데이터 복원
