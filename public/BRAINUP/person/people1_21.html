@@ -2169,123 +2169,14 @@
     let reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
 
     /* ===== 탭 전환 ===== */
-    // 분석리포트 새로고침 함수 (서버에서 최신 데이터 가져오기)
-    async function refreshReportTab() {
-      // 스피너 표시
-      let spinner = document.getElementById('report-loading-spinner');
-      if (!spinner) {
-        spinner = document.createElement('div');
-        spinner.id = 'report-loading-spinner';
-        spinner.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
-        spinner.innerHTML = `
-          <div style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid #8b5a2b;border-radius:50%;animation:spin 1s linear infinite;"></div>
-          <p style="margin-top:16px;font-size:16px;color:#5a4a3a;font-weight:600;">AI 학습 인식 중...</p>
-          <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
-        `;
-        document.body.appendChild(spinner);
-      }
-      spinner.style.display = 'flex';
-
+    // 분석리포트 새로고침 함수
+    function refreshReportTab() {
       try {
-        const unit = window.CUR_UNIT || 'people1_01';
+        const saved = localStorage.getItem(`dan-people1-report-state:${window.CUR_UNIT || 'people1_01'}`);
+        if (saved) {
+          const reportState = JSON.parse(saved);
 
-        // 학생 정보 가져오기
-        const stu = typeof getCurrentStudent === 'function' ? getCurrentStudent() : null;
-        if (!stu) {
-          console.log('[refreshReportTab] 학생 정보 없음');
-          spinner.style.display = 'none';
-          return;
-        }
-
-        console.log(`[refreshReportTab] unit=${unit}, grade=${stu.grade}, name=${stu.name}`);
-
-        // 서버에서 해당 단원의 최신 학습 기록 가져오기
-        const res = await fetch(`/api/unit-grades?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
-        const unitGradesMap = await res.json();
-
-        console.log('[refreshReportTab] 서버 응답:', unitGradesMap);
-
-        // unitGradesMap은 { people1_01: { grade: '양호', radar: {...} }, ... } 형태
-        const unitData = unitGradesMap[unit];
-
-        if (unitData && unitData.radar) {
-          console.log('[refreshReportTab] 서버에서 가져온 데이터:', unitData);
-
-          // 레이더 차트 업데이트
-          if (typeof drawRadarChart === 'function') {
-            drawRadarChart({
-              literal: unitData.radar.literal || 0,
-              structural: unitData.radar.structural || 0,
-              lexical: unitData.radar.lexical || 0,
-              inferential: unitData.radar.inferential || 0,
-              critical: unitData.radar.critical || 0
-            });
-          }
-
-          // 리포트 패널 업데이트 (10점이면 ok)
-          if (typeof updateReportPanel === 'function') {
-            updateReportPanel({
-              q1ok: unitData.radar.literal >= 10,
-              q2ok: unitData.radar.structural >= 10,
-              q3ok: unitData.radar.lexical >= 7,
-              q4ok: unitData.radar.inferential >= 10,
-              q5ok: unitData.radar.critical >= 10
-            });
-          }
-
-          console.log('[refreshReportTab] 서버 데이터로 분석리포트 업데이트 완료');
-        } else {
-          console.log('[refreshReportTab] 서버에 해당 단원 데이터 없음, localStorage 확인');
-          refreshReportTabFromLocalStorage(unit, stu);
-        }
-      } catch(e) {
-        console.error('[refreshReportTab] 서버 요청 오류:', e);
-        // 서버 오류 시 localStorage에서 읽기
-        const unit = window.CUR_UNIT || 'people1_01';
-        const stu = typeof getCurrentStudent === 'function' ? getCurrentStudent() : null;
-        if (stu) refreshReportTabFromLocalStorage(unit, stu);
-      } finally {
-        // 스피너 숨기기 (최소 2초 표시)
-        setTimeout(() => {
-          if (spinner) spinner.style.display = 'none';
-        }, 2000);
-      }
-    }
-
-    // localStorage 또는 서버 데이터에서 분석리포트 데이터 읽기 (fallback)
-    function refreshReportTabFromLocalStorage(unit, stu) {
-      try {
-        // 1. 먼저 dan-people1-report-state 키 확인 (채점 시 저장됨)
-        const reportStateKey = 'dan-people1-report-state';
-        const reportStateData = localStorage.getItem(reportStateKey);
-        if (reportStateData) {
-          const rs = JSON.parse(reportStateData);
-          console.log('[refreshReportTabFromLocalStorage] dan-people1-report-state 데이터:', rs);
-
-          updateReportPanel({
-            q1ok: rs.q1ok || false,
-            q2ok: rs.q2ok || false,
-            q3ok: rs.q3ok || false,
-            q4ok: rs.q4ok || false,
-            q5ok: rs.q5ok || false
-          });
-
-          drawRadarChart({
-            literal: rs.literal || (rs.q1ok ? 10 : 6),
-            structural: rs.structural || (rs.q2ok ? 10 : 6),
-            lexical: rs.lexical || (rs.q3ok ? 10 : 6),
-            inferential: rs.inferential || (rs.q4ok ? 10 : 6),
-            critical: rs.critical || (rs.q5ok ? 10 : 6)
-          });
-
-          console.log('[refreshReportTabFromLocalStorage] dan-people1-report-state 데이터로 업데이트 완료');
-          return;
-        }
-
-        // 2. 전역 reportState 확인
-        if (typeof reportState !== 'undefined' && (reportState.q1ok || reportState.q2ok || reportState.q3ok || reportState.q4ok || reportState.q5ok)) {
-          console.log('[refreshReportTabFromLocalStorage] 전역 reportState 사용:', reportState);
-
+          // 리포트 패널 업데이트
           updateReportPanel({
             q1ok: reportState.q1ok || false,
             q2ok: reportState.q2ok || false,
@@ -2294,52 +2185,17 @@
             q5ok: reportState.q5ok || false
           });
 
-          const radarScores = reportState.radarScores || {};
+          // 레이더 차트 업데이트
           drawRadarChart({
-            literal: radarScores.literal || (reportState.q1ok ? 10 : 6),
-            structural: radarScores.structural || (reportState.q2ok ? 10 : 6),
-            lexical: radarScores.lexical || (reportState.q3ok ? 10 : 6),
-            inferential: radarScores.inferential || (reportState.q4ok ? 10 : 6),
-            critical: radarScores.critical || (reportState.q5ok ? 10 : 6)
+            literal: reportState.literal || 0,
+            structural: reportState.structural || 0,
+            lexical: reportState.lexical || 0,
+            inferential: reportState.inferential || 0,
+            critical: reportState.critical || 0
           });
-
-          console.log('[refreshReportTabFromLocalStorage] 전역 reportState로 업데이트 완료');
-          return;
         }
-
-        // 3. dan-progress 키 확인 (이전 방식)
-        const stuKey = `${stu.grade}_${stu.name}`;
-        const progressKey = `dan-progress:${stuKey}:${unit}`;
-        const progressData = localStorage.getItem(progressKey);
-        if (progressData) {
-          const saved = JSON.parse(progressData);
-          if (Array.isArray(saved) && saved.length > 0) {
-            const latest = saved[saved.length - 1];
-
-            updateReportPanel({
-              q1ok: latest.q1ok || false,
-              q2ok: latest.q2ok || false,
-              q3ok: latest.q3ok || false,
-              q4ok: latest.q4ok || false,
-              q5ok: latest.q5ok || false
-            });
-
-            drawRadarChart({
-              literal: latest.literal || 0,
-              structural: latest.structural || 0,
-              lexical: latest.lexical || 0,
-              inferential: latest.inferential || 0,
-              critical: latest.critical || 0
-            });
-
-            console.log('[refreshReportTabFromLocalStorage] dan-progress 데이터로 업데이트 완료');
-            return;
-          }
-        }
-
-        console.log('[refreshReportTabFromLocalStorage] 복원할 데이터 없음');
       } catch(e) {
-        console.error('[refreshReportTabFromLocalStorage] 오류:', e);
+        console.error('Failed to refresh report:', e);
       }
     }
 
@@ -2755,7 +2611,7 @@
       });
 
       // ★ localStorage에 분석리포트 상태 저장 (분석리포트 탭 즉시 반영용)
-      localStorage.setItem('dan-people1-report-state', JSON.stringify({
+      localStorage.setItem(`dan-people1-report-state:${window.CUR_UNIT || 'people1_01'}`, JSON.stringify({
         q1ok: reportState.q1ok,
         q2ok: reportState.q2ok,
         q3ok: reportState.q3ok,
