@@ -4173,3 +4173,49 @@ window.sendLearningLog = async function () {
     console.warn('sendLearningLog outer error', e);
   }
 };
+
+/* ✅ 제출하기 훅: 완료처리 + 로그 전송 */
+(function hookSubmitReport() {
+  const original = window.submitReport;
+
+  window.submitReport = async function (...args) {
+    const stu = typeof getCurrentStudent === 'function' ? getCurrentStudent() : null;
+    if (!stu) {
+      try {
+        const raw = localStorage.getItem('currentStudent');
+        if (raw) stu = JSON.parse(raw);
+      } catch (e) {}
+    }
+    if (!stu) {
+      alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
+      return;
+    }
+
+    // 1) 기존 제출 로직(PDF 등) 실행
+    if (typeof original === 'function') {
+      await original.apply(this, args);
+    } else if (typeof window.captureElementToPDF === 'function') {
+      await captureElementToPDF(
+        'capture-report',
+        '단단국어_분석리포트.pdf',
+        { withStudentInfo: true }
+      );
+    }
+
+    // 2) 완료 메시지
+    if (typeof window.showSubmitSuccess === 'function') {
+      showSubmitSuccess('분석리포트');
+    } else {
+      console.log('학습완료 처리됨');
+    }
+
+    // 3) 서버 학습 이력 로그 (레이더 점수 전송)
+    if (typeof window.sendLearningLog === 'function') {
+      try {
+        await window.sendLearningLog();
+      } catch (e) {
+        console.warn('[submitReport] sendLearningLog 실패', e);
+      }
+    }
+  };
+})();
