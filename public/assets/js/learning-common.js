@@ -1054,9 +1054,97 @@
     // 어휘학습 버튼 초기화
     initVocabButtons();
 
+    // 창의활동 내용 동적 로드 (content.js에서)
+    loadCreativeContent();
+
     // 창의활동 버튼 초기화
     initCreativeButtons();
 });
+
+  /* =========================================================
+     창의활동 내용 동적 로드 (content.js에서 가져오기)
+  ========================================================= */
+  function loadCreativeContent() {
+    const unit = window.CUR_UNIT || 'geo_01';
+    const pack = window.CONTENTS && window.CONTENTS[unit];
+
+    if (!pack || !pack.creative) {
+      console.log('[loadCreativeContent] 창의활동 데이터 없음:', unit);
+      return;
+    }
+
+    const creative = pack.creative;
+    console.log('[loadCreativeContent] 창의활동 로드:', unit, creative.title);
+
+    // 창의활동 제목 업데이트
+    const titleEl = document.querySelector('.creative-title');
+    if (titleEl && creative.title) {
+      titleEl.textContent = 'Ai고래쌤과 함께하는 창의활동 — ' + creative.title;
+    }
+
+    // 주제 업데이트
+    const topicBox = document.querySelector('.creative-topic-box');
+    if (topicBox) {
+      const topicText = creative.topic || creative.description || creative.subtitle || '';
+      const topicDiv = topicBox.querySelector('div:first-child');
+      if (topicDiv && topicText) {
+        topicDiv.innerHTML = '<strong>주제:</strong> <strong>"' + topicText + '"</strong>';
+      }
+
+      // 힌트 업데이트 (있으면)
+      const hintDiv = topicBox.querySelector('.creative-hint');
+      if (hintDiv) {
+        if (creative.hint) {
+          hintDiv.textContent = '💡 힌트) ' + creative.hint;
+          hintDiv.style.display = 'block';
+        } else {
+          // 힌트가 없으면 숨김
+          hintDiv.style.display = 'none';
+        }
+      }
+    }
+
+    // 예시 업데이트
+    const examplesBox = document.querySelector('.creative-examples-box');
+    if (examplesBox && creative.examples && creative.examples.length > 0) {
+      // 기존 예시 div들 제거 (제목 제외)
+      const existingExamples = examplesBox.querySelectorAll('div:not(.example-title)');
+      existingExamples.forEach(el => el.remove());
+
+      // 새 예시 추가 (예시 1), 예시 2) 번호 붙이기)
+      creative.examples.forEach((ex, i) => {
+        const div = document.createElement('div');
+        // 이미 "예시"로 시작하면 그대로, 아니면 번호 붙임
+        if (ex.startsWith('예시')) {
+          div.textContent = ex;
+        } else {
+          div.textContent = '예시 ' + (i + 1) + ') ' + ex;
+        }
+        examplesBox.appendChild(div);
+      });
+    } else if (examplesBox && (creative.example1 || creative.example2 || creative.example3)) {
+      // 기존 예시 div들 제거 (제목 제외)
+      const existingExamples = examplesBox.querySelectorAll('div:not(.example-title)');
+      existingExamples.forEach(el => el.remove());
+
+      // example1, example2, example3 형식 처리
+      if (creative.example1) {
+        const div1 = document.createElement('div');
+        div1.textContent = '예시 1) ' + creative.example1;
+        examplesBox.appendChild(div1);
+      }
+      if (creative.example2) {
+        const div2 = document.createElement('div');
+        div2.textContent = '예시 2) ' + creative.example2;
+        examplesBox.appendChild(div2);
+      }
+      if (creative.example3) {
+        const div3 = document.createElement('div');
+        div3.textContent = '예시 3) ' + creative.example3;
+        examplesBox.appendChild(div3);
+      }
+    }
+  }
 
     /* ===== 뒤로 가기 확인 팝업 ===== */
     function showBackConfirm() {
