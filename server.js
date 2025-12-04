@@ -6872,7 +6872,8 @@ app.get("/api/unit-grades", async (req, res) => {
         unitGradesMap[unitId] = {
           grade: grade,
           radarAvg: radarAvg.toFixed(2),
-          timestamp: log.timestamp
+          timestamp: log.timestamp,
+          radar: log.radar  // ✅ 레이더 점수 데이터 포함
         };
       }
     });
