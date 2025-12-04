@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoStore = require("connect-mongo").default || require("connect-mongo");
 const OpenAI = require("openai");
 const nodemailer = require("nodemailer");
 const cron = require("node-cron");
@@ -78,12 +79,17 @@ const openai = new OpenAI({
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
 
-// ✅ 세션 미들웨어
+// ✅ 세션 미들웨어 (MongoDB 저장소 사용)
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "dandan-secret",
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: MONGO_URI,
+      ttl: 60 * 60 * 2, // 2시간 (초 단위)
+      autoRemove: 'native'
+    }),
     cookie: {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 2, // 2시간
