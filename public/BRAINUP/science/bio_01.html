@@ -2307,81 +2307,33 @@
     let reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
 
     /* ===== 탭 전환 ===== */
-    // 분석리포트 새로고침 함수 (서버에서 최신 데이터 가져오기)
-    async function refreshReportTab() {
-      const reportPanel = document.getElementById('tab-report');
-      if (!reportPanel) return;
-
-      // 스피너 표시
-      let spinner = document.getElementById('report-loading-spinner');
-      if (!spinner) {
-        spinner = document.createElement('div');
-        spinner.id = 'report-loading-spinner';
-        spinner.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
-        spinner.innerHTML = `
-          <div style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid #8b5a2b;border-radius:50%;animation:spin 1s linear infinite;"></div>
-          <p style="margin-top:16px;font-size:16px;color:#5a4a3a;font-weight:600;">AI 학습 인식 중...</p>
-          <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
-        `;
-        document.body.appendChild(spinner);
-      }
-      spinner.style.display = 'flex';
-
+    // 분석리포트 새로고침 함수
+    function refreshReportTab() {
       try {
-        const unit = window.CUR_UNIT || 'bio_01';
-        const stu = typeof getCurrentStudent === 'function' ? getCurrentStudent() : null;
-
-        if (!stu) {
-          console.log('[refreshReportTab] 학생 정보 없음');
-          spinner.style.display = 'none';
-          return;
-        }
-
-        console.log(`[refreshReportTab] unit=${unit}, grade=${stu.grade}, name=${stu.name}`);
-
-        // 서버에서 해당 단원의 최신 학습 기록 가져오기
-        const res = await fetch(`/api/unit-grades?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
-        const unitGradesMap = await res.json();
-
-        console.log('[refreshReportTab] 서버 응답:', unitGradesMap);
-
-        // unitGradesMap은 { bio_01: { grade: '양호', radar: {...} }, ... } 형태
-        const unitData = unitGradesMap[unit];
-
-        if (unitData && unitData.radar) {
-          console.log('[refreshReportTab] 서버에서 가져온 데이터:', unitData);
-
-          // 레이더 차트 업데이트
-          if (typeof drawRadarChart === 'function') {
-            drawRadarChart({
-              literal: unitData.radar.literal || 0,
-              structural: unitData.radar.structural || 0,
-              lexical: unitData.radar.lexical || 0,
-              inferential: unitData.radar.inferential || 0,
-              critical: unitData.radar.critical || 0
-            });
-          }
+        const saved = localStorage.getItem(`dan-geo-report-state:${window.CUR_UNIT}`);
+        if (saved) {
+          const savedReportState = JSON.parse(saved);
 
           // 리포트 패널 업데이트
-          if (typeof updateReportPanel === 'function') {
-            updateReportPanel({
-              q1ok: unitData.radar.literal >= 10,
-              q2ok: unitData.radar.structural >= 10,
-              q3ok: unitData.radar.lexical >= 7,
-              q4ok: unitData.radar.inferential >= 10,
-              q5ok: unitData.radar.critical >= 10
-            });
-          }
+          updateReportPanel({
+            q1ok: savedReportState.q1ok || false,
+            q2ok: savedReportState.q2ok || false,
+            q3ok: savedReportState.q3ok || false,
+            q4ok: savedReportState.q4ok || false,
+            q5ok: savedReportState.q5ok || false
+          });
 
-          console.log('[refreshReportTab] 서버 데이터로 분석리포트 업데이트 완료');
-        } else {
-          console.log('[refreshReportTab] 서버에 해당 단원 데이터 없음');
+          // 레이더 차트 업데이트
+          drawRadarChart({
+            literal: savedReportState.literal || 0,
+            structural: savedReportState.structural || 0,
+            lexical: savedReportState.lexical || 0,
+            inferential: savedReportState.inferential || 0,
+            critical: savedReportState.critical || 0
+          });
         }
       } catch(e) {
-        console.error('[refreshReportTab] 서버 요청 오류:', e);
-      } finally {
-        // 스피너 숨기기
-        spinner.style.display = 'none';
+        console.error('Failed to refresh report:', e);
       }
     }
 
@@ -2397,7 +2349,7 @@
         targetBtn.classList.add('active');
         targetPanel.classList.add('active');
 
-        // 분석리포트 탭인 경우 서버에서 최신 데이터 가져오기
+        // 분석리포트 탭인 경우 데이터 새로고침
         if (tabName === 'report') {
           refreshReportTab();
         }
@@ -2416,7 +2368,7 @@
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.tab;
-        const unit = window.CUR_UNIT || 'bio_01';
+        const unit = window.CUR_UNIT || 'bio_01';;
 
         // 분석리포트 탭 클릭 시 페이지 새로고침하여 최신 데이터 가져오기
         if (target === 'report') {
@@ -2577,7 +2529,7 @@
 
     /* ===== 본문 채점 ===== */
     let readingResultHTML = "";  // 본문학습용 (learning-common.js의 readingResultHTML과 충돌 방지)
-    async function gradeQuiz() {
+    function gradeQuiz() {
       // content.js에서 동적으로 answerKey, explain, essayKeywords 읽어오기
       const content = window.CONTENTS[window.CUR_UNIT];
       const answerKey = content.answerKey;
@@ -2735,7 +2687,10 @@
         critical: reportState.q5ok ? 10 : 6
       }));
 
-      // ★ 서버에 본문학습 채점 결과 저장 (저장 완료 후 분석리포트 탭 업데이트)
+      // ★ 분석리포트 탭 즉시 업데이트
+      refreshReportTab();
+
+      // ★ 서버에 본문학습 채점 결과 저장
       console.log('[gradeQuiz] saveUnitProgressToServer 타입:', typeof saveUnitProgressToServer);
       console.log('[gradeQuiz] window.saveUnitProgressToServer 타입:', typeof window.saveUnitProgressToServer);
 
@@ -2755,30 +2710,23 @@
           q5: document.getElementById("q5")?.value || ''
         };
 
-        // 서버 저장 후 분석리포트 탭 업데이트
-        try {
-          await saveFn({
-            reportState: {
-              q1ok: reportState.q1ok,
-              q2ok: reportState.q2ok,
-              q3ok: reportState.q3ok,
-              q4ok: reportState.q4ok,
-              q5ok: reportState.q5ok,
-              vocabScoreRatio: reportState.vocabScoreRatio || 0,
-              literal: reportState.q1ok ? 10 : 6,
-              structural: reportState.q2ok ? 10 : 6,
-              lexical: lexicalFromRatio,
-              inferential: reportState.q4ok ? 10 : 6,
-              critical: reportState.q5ok ? 10 : 6,
-              inputs: currentInputs,
-              resultHTML: readingResultHTML
-            }
-          });
-          console.log('[gradeQuiz] 서버 저장 완료, 분석리포트 탭 업데이트');
-          refreshReportTab();
-        } catch (err) {
-          console.error('[gradeQuiz] 서버 저장 실패:', err);
-        }
+        saveFn({
+          reportState: {
+            q1ok: reportState.q1ok,
+            q2ok: reportState.q2ok,
+            q3ok: reportState.q3ok,
+            q4ok: reportState.q4ok,
+            q5ok: reportState.q5ok,
+            vocabScoreRatio: reportState.vocabScoreRatio || 0,
+            literal: reportState.q1ok ? 10 : 6,
+            structural: reportState.q2ok ? 10 : 6,
+            lexical: lexicalFromRatio,
+            inferential: reportState.q4ok ? 10 : 6,
+            critical: reportState.q5ok ? 10 : 6,
+            inputs: currentInputs,
+            resultHTML: readingResultHTML
+          }
+        });
         console.log('[gradeQuiz] 서버에 본문학습 채점 결과 저장 요청 완료');
       } else {
         console.error('[gradeQuiz] saveUnitProgressToServer 함수를 찾을 수 없음!');
@@ -2861,10 +2809,10 @@
       const studentKey = buildStudentKey(stu); // 예: "4학년_사사사_01044444444"
 
       // 3) 현재 단원 번호와 PAGE_KEY
-      const cur = (window.CUR_UNIT || 'bio_01');                  // 예: 'bio_02'
+      const cur = (window.CUR_UNIT || 'bio_01');                  // 예: 'bio_01'
       const m = cur.match(/bio_(\d{1,2})/);
       const no = m ? m[1].padStart(2, '0') : '01';
-      const pk = window.PAGE_KEY || `BRAINUP_science_bio_${no}`;   // 예: 'BRAINUP_science_bio_02'
+      const pk = window.PAGE_KEY || `BRAINUP_science_bio_${no}`;   // 예: 'BRAINUP_science_bio_01'
 
       // 4) 과거/변형 키까지 한 번에 흡수
       const legacyPath = `./BRAINUP/science/bio_${no}.html`;
@@ -2995,10 +2943,10 @@ function _initialsFromKorean(word){
 /* =========================================================
    📘 렌더링
 ========================================================= */
-window.renderVocabFill = function renderVocabFill() {
+function renderVocabFill() {
   const unit = window.CUR_UNIT;
   const data = (window.CONTENTS && window.CONTENTS[unit] && window.CONTENTS[unit].vocabFill) || null;
-  const container = document.getElementById('vocab-fill') || document.querySelector('.vocab-fill-text');
+  const container = document.getElementById('vocab-fill');
   if (!data || !container) return;
 
   container.innerHTML = '';
@@ -3183,7 +3131,7 @@ async function saveReadingProgress() {
 
 
 <!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
-<script src="./bio_content.js?v=20251206" defer></script>
+<script src="./bio_content.js?v=20251113" defer></script>
 
 <!-- 달력 팝업 -->
 <div class="calendar-overlay" id="calendar-overlay"></div>

@@ -2582,7 +2582,7 @@
 
     /* ===== 본문 채점 ===== */
     let readingResultHTML = "";
-    async function gradeQuiz() {
+    function gradeQuiz() {
       // content.js에서 동적으로 answerKey, explain, essayKeywords 읽어오기
       const content = window.CONTENTS[window.CUR_UNIT];
       const answerKey = content.answerKey;
@@ -2744,7 +2744,10 @@
         critical: reportState.q5ok ? 10 : 6
       }));
 
-            // ★ 서버에 본문학습 채점 결과 저장
+      // ★ 분석리포트 탭 즉시 업데이트
+      refreshReportTab();
+
+      // ★ 서버에 본문학습 채점 결과 저장
       const saveFn = typeof saveUnitProgressToServer === 'function' ? saveUnitProgressToServer : window.saveUnitProgressToServer;
 
       if (typeof saveFn === 'function') {
@@ -2764,8 +2767,7 @@
         const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
         const lexicalFromRatio = Math.round(lexicalRatio * 10);
 
-        try {
-          await saveFn({
+        saveFn({
           reportState: {
             q1ok: reportState.q1ok,
             q2ok: reportState.q2ok,
@@ -2782,11 +2784,7 @@
             resultHTML: readingResultHTML
           }
         });
-          console.log('[gradeQuiz] 서버 저장 완료, 분석리포트 탭 업데이트');
-          refreshReportTab();
-        } catch (err) {
-          console.error('[gradeQuiz] 서버 저장 실패:', err);
-        }
+        console.log('[gradeQuiz] 서버에 본문학습 채점 결과 저장 요청 완료');
       }
     }
 
