@@ -3865,6 +3865,159 @@ function _bindTabEvents() {
   });
 }
 
+/* ===== 통합 채점기 ===== */
+window.gradeQuiz = function () {
+  const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.people1_01;
+  const A = pack.answerKey;
+  const EX = pack.explain;
+
+  const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
+  const numLabels = ["01","02","03","04","05"];
+  quizBlocks.forEach((block, idx) => {
+    const numEl = block.querySelector('.quiz-num');
+    if (!numEl) return;
+    let markEl = numEl.querySelector('.mark');
+    if (!markEl) {
+      markEl = document.createElement('div');
+      markEl.className = 'mark';
+      numEl.appendChild(markEl);
+    }
+    numEl.textContent = numLabels[idx];
+    numEl.appendChild(markEl);
+    numEl.classList.remove('correct','wrong');
+    markEl.textContent = '';
+  });
+
+  let score = 0;
+  const totalAuto = 4;
+  const shortMsgs = [];
+  const fullMsgs = [];
+
+  function norm(s){ return (s||'').toString().replace(/\s+/g,'').toLowerCase(); }
+  function mark(idx, ok, label, ex, isEssay=false){
+    const num = quizBlocks[idx]?.querySelector('.quiz-num');
+    const markEl = num?.querySelector('.mark');
+    if (ok) {
+      score++;
+      num?.classList.add('correct');
+      if(markEl) markEl.textContent='⭕';
+      shortMsgs.push(`${label} 정답 ✅`);
+      fullMsgs.push(`${label} 정답 ✅ ${ex||''}`);
+    } else {
+      num?.classList.add('wrong');
+      if(markEl) markEl.textContent='✖';
+      shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
+      fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
+    }
+  }
+
+  // 1
+  const q1 = document.querySelector('input[name="q1"]:checked');
+  const q1ok = (q1 && q1.value === A.q1);
+  mark(0, q1ok, '①', EX.q1);
+
+  // 2
+  const q2 = document.querySelector('input[name="q2"]:checked');
+  const q2ok = (q2 && q2.value === A.q2);
+  mark(1, q2ok, '②', EX.q2);
+
+  // 3
+  const q3New = document.getElementById('q3');
+  const q3Old1 = document.getElementById('q3-1');
+  const q3Old2 = document.getElementById('q3-2');
+  const q3Text1 = q3New ? q3New.value.trim() : (q3Old1?.value || '').trim();
+  const q3Text2 = q3New ? '' : (q3Old2?.value || '').trim();
+  const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
+  const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
+  const q3ok = ok3_1 && ok3_2;
+  mark(2, q3ok, '③', EX.q3);
+
+  // 4
+  const q4New = document.getElementById('q4');
+  const q4Old1 = document.getElementById('q4-1');
+  const q4Old2 = document.getElementById('q4-2');
+  const q4Text1 = q4New ? q4New.value.trim() : (q4Old1?.value || '').trim();
+  const q4Text2 = q4New ? '' : (q4Old2?.value || '').trim();
+  const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
+  const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
+  const q4ok = ok4_1 && ok4_2;
+  mark(3, q4ok, '④', EX.q4);
+
+  // 5 (서술형)
+  const essay = (document.getElementById('q5')?.value || '').trim().toLowerCase();
+  const keys = (pack.essayKeywords && Array.isArray(pack.essayKeywords) && pack.essayKeywords.length)
+    ? pack.essayKeywords
+    : ["인물","업적","영향","역사"];
+  let hit = 0;
+  keys.forEach(k => { if (essay.includes(k)) hit++; });
+  const q5ok = essay.length && hit >= 2;
+  mark(4, q5ok, '⑤', EX.q5, true);
+
+  const box = document.getElementById('grade-result');
+  if (box) {
+    box.style.display = 'block';
+    box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
+  }
+  window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
+
+  const g=document.getElementById('grade-btn');
+  const r=document.getElementById('reset-btn');
+  const s=document.getElementById('submit-btn');
+  if (g) g.style.display='inline-block';
+  if (r) r.style.display='inline-block';
+  if (s) s.style.display='inline-block';
+
+  window.reportState = window.reportState || {};
+  window.reportState.q1ok=q1ok;
+  window.reportState.q2ok=q2ok;
+  window.reportState.q3ok=q3ok;
+  window.reportState.q4ok=q4ok;
+  window.reportState.q5ok=q5ok;
+
+  if (typeof updateReportPanel==='function') {
+    const lexicalRatio = (typeof window.reportState.vocabScoreRatio==='number') ? window.reportState.vocabScoreRatio : 0;
+    const lexicalOk = lexicalRatio >= 0.7;
+    updateReportPanel({
+      q1ok,q2ok,q3ok,q4ok,q5ok,
+      messages:[
+        "① 핵심 이해력: " + (q1ok?"좋아요! ✅":"보완 필요 ❗"),
+        "② 구조 파악력: " + (q2ok?"좋아요! ✅":"보완 필요 ❗"),
+        "③ 어휘 맥락력: " + (lexicalOk?"좋아요! ✅":"어휘 복습 필요 ❗"),
+        "④ 추론·통합력: " + (q4ok?"좋아요! ✅":"보완 필요 ❗"),
+        "⑤ 비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
+      ]
+    });
+  }
+
+  // ✅ 레이더 점수 객체로 빼두기
+  const radarScores = {
+    literal:     q1ok ? 10 : 6,
+    structural:  q2ok ? 10 : 6,
+    lexical:     q3ok ? 10 : 6,
+    inferential: q4ok ? 10 : 6,
+    critical:    q5ok ? 10 : 6
+  };
+
+  // ✅ 서버로 보낼 마지막 레이더 점수 기억해 두기 (전역)
+  window._lastRadar = radarScores;
+
+  // ✅ 화면 레이더 차트 그리기
+  if (typeof updateRadarChart === 'function') {
+    updateRadarChart(radarScores);
+  }
+  if (typeof drawRadarChart === 'function') {
+    drawRadarChart(radarScores);
+  }
+
+  // ✅ 서버 로그용으로도 보관 (옵션)
+  window.reportState = window.reportState || {};
+  window.reportState.radarScores = radarScores;
+
+  if (typeof saveReadingState === 'function') {
+    saveReadingState();
+  }
+};
+
 /* ===== 텍스트 주입 (HTML 구조/ids 유지) ===== */
 function applyContentPack(unitKey) {
   console.log('[applyContentPack] 호출됨, unitKey:', unitKey);
