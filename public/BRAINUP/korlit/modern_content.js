@@ -161,8 +161,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 여러 인물의 시점이 번갈아 나타나는 다시점 구조이다.',
         '④ 결말을 먼저 제시하고 원인을 설명하는 역순행 구조이다.'
       ],
-      q3_1_ph: 'ㅅㄴㄱ', q3_2_ph: 'ㅅㅈ',
-      q4_1_ph: 'ㅂㅎㅅ', q4_2_ph: 'ㅊㅇ',
+      q3_html: '두 사람은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄴㄱ">를 맞으며 더 가까워졌고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅈ"> 조각은 첫 만남의 장면이다.',
+      q4_html: '<input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅎㅅ"> 스웨터는 소나기를 맞던 그날의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅇ">을 상징한다.',
       q5_text: '소녀가 죽기 전 분홍색 스웨터를 입혀서 묻어 달라고 한 이유를 본문 내용을 바탕으로 추측하여 써 보세요.'
     },
     answerKey: { q1:'2', q2:'2', q3_1:['소나기','소나기를'], q3_2:['송진'], q4_1:['분홍색','분홍색 스웨터'], q4_2:['추억'] },
@@ -173,6 +173,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q3:'해설: 두 사람은 소나기를 맞으며 더 가까워졌고, 송진 조각은 첫 만남의 장면이다.',
       q4:'해설: 분홍색 스웨터는 소나기를 맞던 그날의 추억을 상징한다.',
       q5:'예시: 소녀는 소나기를 맞던 그날 소년이 자신을 업어 주었던 추억을 간직하고 싶었기 때문이다. 그 순간이 소녀에게 가장 소중한 기억이었을 것이다.'
+    },
+    creative: {
+      title: '🌧️ 소년의 마음 표현하기',
+      topic: '소녀가 세상을 떠났다는 소식을 들은 소년의 마음을 일기 형식으로 써 보세요.',
+      hint: '💡 힌트) 소나기를 맞던 날의 추억, 분홍색 스웨터의 의미, 소녀를 다시 만나지 못한 안타까움 등을 담아 보세요.',
+      examples: [
+        '예시 1) 오늘 소녀가 떠났다는 말을 들었다. 믿을 수가 없다. 소나기를 맞던 그날, 내 등에 업혔던 소녀의 온기가 아직도 느껴지는 것 같다.',
+        '예시 2) 분홍색 스웨터를 입혀 달라고 했다니... 소녀도 그날을 기억하고 있었구나. 조약돌을 건네던 내 마음을 알았을까.',
+        '예시 3) 개울가에 가면 아직도 소녀가 있을 것 같다. 송진 조각을 바라보던 소녀의 모습이 눈에 선하다.'
+      ]
     }
   },
 
@@ -223,8 +233,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 전지적 작가 시점으로 모든 인물의 심리를 서술하고 있다.',
         '④ 다중 시점으로 여러 인물의 관점이 교차하고 있다.'
       ],
-      q3_1_ph: 'ㄷㄹㅅㅇ', q3_2_ph: 'ㅁㄹ',
-      q4_1_ph: 'ㅂㅊㄱ', q4_2_ph: 'ㄱㅁㅎ',
+      q3_html: '"나"는 처가에서 일하는 <input class="inline-input" id="q3-1" type="text" placeholder="ㄷㄹㅅㅇ">이고, 장인은 마을의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㄹ">이다.',
+      q4_html: '점순이의 행동은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅊㄱ">이자 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅁㅎ">한 계략이었다.',
       q5_text: '점순이가 "나"를 때린 뒤 장인에게 거짓말을 한 이유를 본문 내용을 바탕으로 추론해 보세요.'
     },
     answerKey: { q1:'3', q2:'2', q3_1:['데릴사위'], q3_2:['마름'], q4_1:['부추김'], q4_2:['교묘함'] },
@@ -235,6 +245,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q3:'해설: "나"는 처가에서 일하는 데릴사위이고, 장인은 마을의 마름이다.',
       q4:'해설: 점순이의 행동은 부추김이자 교묘한 계략이었다.',
       q5:'예시: 점순이는 "나"가 떠나지 못하게 하려고 일부러 장인과 싸움을 붙인 것이다. 장인에게 맞서면 "나"는 오히려 처가에 더 얽매이게 되기 때문이다.'
+    },
+    creative: {
+      title: '📖 점순이의 속마음 상상하기',
+      topic: '점순이가 "나"를 때리고 장인에게 거짓말을 한 진짜 이유를 점순이의 입장에서 써 보세요.',
+      hint: '💡 힌트) 점순이가 "나"에게 가진 마음, 아버지 앞에서의 처지, "나"가 떠나면 안 되는 이유 등을 생각해 보세요.',
+      examples: [
+        '예시 1) 저 바보 같은 사람! 내가 눈짓으로 불러도 왜 내 마음을 모르는 걸까. 이번엔 아버지와 싸우게 해서라도 붙잡아야겠어.',
+        '예시 2) 아버지한테 맞으면 불쌍해서라도 못 떠날 거야. 킬킬 웃긴 했지만 사실 마음이 조마조마했어.',
+        '예시 3) 떠나겠다고? 안 돼! 3년이나 기다렸는데. 장인 이겼다고 소리치는 거 보니까 이제 우리 집 사람 다 됐네.'
+      ]
     }
   },
 
@@ -285,8 +305,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 여러 인물의 시점이 번갈아 나타나는 다시점 구조이다.',
         '④ 행복한 결말을 향해 점점 상승하는 상승 구조이다.'
       ],
-      q3_1_ph: 'ㅇㄹㄱ', q3_2_ph: 'ㅇㅅ',
-      q4_1_ph: 'ㅅㅅㅈ', q4_2_ph: 'ㅆㄴㅎㄱ',
+      q3_html: '김 첨지는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄹㄱ">를 끄는 인력거꾼이었고, 그날 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅ">가 좋아 돈을 많이 벌었다.',
+      q4_html: '김 첨지는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅅㅈ">에서 막걸리를 마셨고, 집에 돌아오니 아내가 <input class="inline-input" id="q4-2" type="text" placeholder="ㅆㄴㅎㄱ"> 식어 있었다.',
       q5_text: '김 첨지가 "운수 좋은 날"이라고 생각했던 날이 왜 가장 비극적인 날이 되었는지 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'2', q2:'2', q3_1:['인력거'], q3_2:['운수'], q4_1:['선술집'], q4_2:['싸늘하게','싸늘'] },
@@ -357,8 +377,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 여러 인물의 시점이 번갈아 나타나는 다시점 구조이다.',
         '④ 갈등이 명확히 해결되지 않고 여운을 남기는 열린 결말 구조이다.'
       ],
-      q3_1_ph: 'ㅅㅂㅎㄷ', q3_2_ph: 'ㅎㄷㄱ',
-      q4_1_ph: 'ㅁㄹ', q4_2_ph: 'ㅅㅈ',
+      q3_html: '소년은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅂㅎㄷ"> 성격이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㄷㄱ">는 풀잎으로 만든 피리이다.',
+      q4_html: '점순이 아버지는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㄹ">이고, 소년은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅈ">농의 아들이다.',
       q5_text: '점순이가 닭싸움을 시키고, 소년을 괴롭히는 행동을 한 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'4', q3_1:['순박하다','순박'], q3_2:['호드기'], q4_1:['마름'], q4_2:['소작'] },
@@ -429,8 +449,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 3인칭 관찰자 시점으로 객관적 사실만 전달하고 있다.',
         '④ 여러 인물의 시점이 번갈아 나타나는 다시점 구조이다.'
       ],
-      q3_1_ph: 'ㅅㄹㅂ', q3_2_ph: 'ㅅ',
-      q4_1_ph: 'ㄱㅂ', q4_2_ph: 'ㅊㅁ',
+      q3_html: '사랑손님은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄹㅂ">에 머물렀고, 옥희에게 심부름 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅ">을 주었다.',
+      q4_html: '어머니는 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅂ">로서 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅁ"> 때문에 사랑손님과의 관계를 드러낼 수 없었다.',
       q5_text: '어머니가 사랑손님을 피하고, 닭을 돌려보낸 이유를 본문 내용과 당시 사회적 분위기를 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'2', q3_1:['사랑방'], q3_2:['삯'], q4_1:['과부'], q4_2:['체면'] },
@@ -459,7 +479,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     labelNo: '07',
     title: '🥔 감자',
     passage: [
-      '복녀는 가난한 농가에서 태어나 <b>순박하다</b> 시골 처녀였다. 열다섯 살에 칠성문 밖 <b>빈민굴</b>로 시집을 가게 되었는데, 남편은 게으르고 아무 일도 하지 않는 사람이었다. 복녀는 남편 대신 삯바느질, 삯빨래를 하며 생계를 꾸려 나갔다. 하지만 남편은 복녀가 번 돈을 가져다가 술과 노름에 <b>탕진하다</b>. 복녀는 이를 악물고 일했지만, 아무리 일해도 가난에서 벗어날 수 없었다. 그러던 중 남편이 복녀에게 돈벌이를 시키기 시작했는데, 그것은 중국인 왕 서방에게 몸을 파는 일이었다. 복녀는 처음에는 강하게 거부했으나, 결국 굶주림과 남편의 협박에 굴복하고 말았다.',
+      '복녀는 가난한 농가에서 태어난 <b>순박한</b> 시골 처녀였다. 열다섯 살에 칠성문 밖 <b>빈민굴</b>로 시집을 가게 되었는데, 남편은 게으르고 아무 일도 하지 않는 사람이었다. 복녀는 남편 대신 삯바느질, 삯빨래를 하며 생계를 꾸려 나갔다. 하지만 남편은 복녀가 번 돈을 가져다가 술과 노름에 <b>탕진하다</b>. 복녀는 이를 악물고 일했지만, 아무리 일해도 가난에서 벗어날 수 없었다. 그러던 중 남편이 복녀에게 돈벌이를 시키기 시작했는데, 그것은 중국인 왕 서방에게 몸을 파는 일이었다. 복녀는 처음에는 강하게 거부했으나, 결국 굶주림과 남편의 협박에 굴복하고 말았다.',
       '왕 서방의 감자밭에서 일하게 된 복녀는 점점 <b>변하다</b>. 처음에는 부끄러워 고개를 들지 못하던 복녀가 이제는 당당하게 왕 서방 앞에 나타났다. 왕 서방에게서 돈과 음식을 받아오면서 복녀의 생활은 조금씩 나아졌다. 복녀는 이전의 순박한 시골 처녀가 아니었다. 얼굴에는 <b>화장</b>을 하고, 걸음걸이도 달라졌다. 빈민굴 사람들은 복녀를 손가락질했지만, 복녀는 아랑곳하지 않았다. 오히려 "굶어 죽느니 이게 낫지"라며 자신의 처지를 <b>합리화하다</b>. 복녀에게 도덕이나 윤리는 이미 사치스러운 것이 되어 버렸다.',
       '그러던 어느 날, 복녀는 왕 서방의 감자밭에서 감자를 훔치다가 <b>들키다</b>. 복녀는 왕 서방에게 따지며 "내가 당신에게 해 준 게 얼마인데!"라고 소리쳤다. 두 사람은 크게 다투었다. 그때 복녀의 남편이 나타났다. 남편은 왕 서방에게 덤비는 척하더니, 오히려 복녀의 머리를 낫으로 내리쳤다. 복녀는 그 자리에서 쓰러져 죽고 말았다. 남편은 왕 서방에게 돈을 받고 그 자리를 떠났다. 복녀의 시신 옆에는 훔치려던 <b>감자</b> 몇 알이 떨어져 있었다. 가난이 한 인간을 어떻게 <b>파멸시키다</b> 수 있는지를 보여주는 비극적 결말이었다.'
     ],
@@ -501,17 +521,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 여러 인물의 시점이 번갈아 나타나는 다시점 구조이다.',
         '④ 행복한 결말을 향해 점점 상승하는 상승 구조이다.'
       ],
-      q3_1_ph: 'ㅅㅂㅎㄷ', q3_2_ph: 'ㅂㅁㄱ',
-      q4_1_ph: 'ㅌㅈ', q4_2_ph: 'ㅍㅁ',
+      q3_html: '복녀는 원래 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅂㅎ"> 처녀였고, 칠성문 밖 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㅁㄱ">로 시집갔다.',
+      q4_html: '남편이 번 돈을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅌㅈ">했고, 가난이 복녀를 <input class="inline-input" id="q4-2" type="text" placeholder="ㅍㅁ">시켰다.',
       q5_text: '복녀가 순박한 시골 처녀에서 변하게 된 원인을 본문 내용을 바탕으로 설명해 보세요.'
     },
-    answerKey: { q1:'3', q2:'2', q3_1:['순박하다','순박'], q3_2:['빈민굴'], q4_1:['탕진','탕진하다'], q4_2:['파멸','파멸시키다'] },
+    answerKey: { q1:'3', q2:'2', q3_1:['순박한','순박'], q3_2:['빈민굴'], q4_1:['탕진','탕진하다'], q4_2:['파멸','파멸시키다'] },
     essayKeywords: ['가난','환경','남편','왕서방','변하다','타락','파멸','굶주림'],
     explain: {
       q1:'해설: 복녀는 처음에는 순박한 시골 처녀였으나 가난과 남편의 협박으로 점점 변해갔다.',
       q2:'해설: 순박한 인물이 가난과 환경에 의해 타락하고 결국 파멸하는 하강 구조이다.',
-      q3:'해설: 복녀는 원래 순박한 처녀였고, 칠성문 밖 빈민굴로 시집갔다.',
-      q4:'해설: 남편이 번 돈을 탕진했고, 가난이 복녀를 파멸시켰다.',
+      q3_1:'해설: 본문에서 복녀는 "순박한" 시골 처녀였다고 했습니다.',
+      q3_2:'해설: 본문에서 복녀는 칠성문 밖 "빈민굴"로 시집갔다고 했습니다.',
+      q4_1:'해설: 본문에서 남편은 복녀가 번 돈을 "탕진"했다고 했습니다.',
+      q4_2:'해설: 본문에서 가난이 복녀를 "파멸"시켰다고 했습니다.',
       q5:'예시: 복녀는 게으른 남편이 번 돈을 탕진하고 굶주림에 시달리면서 왕 서방에게 몸을 팔게 되었고, 그 과정에서 자신의 처지를 합리화하며 순박함을 잃고 변해갔다.'
     },
     creative: {
@@ -573,8 +595,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 여러 인물의 시점이 번갈아 나타나는 다시점 구조이다.',
         '④ 결말을 먼저 제시하고 원인을 설명하는 역순행 구조이다.'
       ],
-      q3_1_ph: 'ㅅㄱ', q3_2_ph: 'ㅇㅂ',
-      q4_1_ph: 'ㅇㅅ', q4_2_ph: 'ㅈㅊㄱ',
+      q3_html: '나는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄱ">에게서 이야기를 들었고, 형은 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂ">였다.',
+      q4_html: '형은 아우를 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅅ">했고, 아우를 죽인 후 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅊㄱ">에 시달렸다.',
       q5_text: '형이 아우를 죽인 후 미쳐 버린 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'2', q2:'1', q3_1:['사공'], q3_2:['어부'], q4_1:['의심','의심하다'], q4_2:['죄책감'] },
@@ -645,8 +667,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 3인칭 관찰자 시점으로 객관적 사실만 전달하고 있다.',
         '④ 여러 인물의 시점이 번갈아 나타나는 다시점 구조이다.'
       ],
-      q3_1_ph: 'ㅌㄱ', q3_2_ph: 'ㅅㅂ',
-      q4_1_ph: 'ㅂㄴ', q4_2_ph: 'ㅅㅊ',
+      q3_html: '나는 신문사에 <input class="inline-input" id="q3-1" type="text" placeholder="ㅌㄱ">도 해 보았고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅂ">에서 살고 있다.',
+      q4_html: '아내가 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㄴ">를 주었고, 아내의 얼굴은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅊ">해졌다.',
       q5_text: '아내가 비녀를 남편에게 준 행동이 갖는 의미를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'2', q3_1:['투고'], q3_2:['셋방'], q4_1:['비녀'], q4_2:['수척','수척해지다'] },
@@ -717,8 +739,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 인력거꾼의 힘든 노동을 사실적으로 묘사하고 있다.',
         '④ 일본 유학의 필요성을 강조하고 있다.'
       ],
-      q3_1_ph: 'ㅇㅌㄹ', q3_2_ph: 'ㅈㅇㅅㄱㅅ',
-      q4_1_ph: 'ㅈㅈㅅ', q4_2_ph: 'ㅈㅈ',
+      q3_html: 'P는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅌㄹ">였고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇㅅㄱㅅ">를 찾아다녔다.',
+      q4_html: 'P는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅈㅅ">이 상했지만 결국 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅈ">하며 인력거를 끌었다.',
       q5_text: 'P가 자신을 "레디메이드 인생"이라고 표현한 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'2', q2:'1', q3_1:['인텔리'], q3_2:['직업소개소'], q4_1:['자존심'], q4_2:['자조'] },
@@ -789,8 +811,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 현재와 과거를 자유롭게 오가며 의식의 흐름을 표현한다.',
         '④ 서술자가 직접 등장하여 독자에게 교훈을 전달한다.'
       ],
-      q3_1_ph: 'ㅌㄹ', q3_2_ph: 'ㅁㄹ',
-      q4_1_ph: 'ㅈㄱ', q4_2_ph: 'ㅅㅎ',
+      q3_html: '작품 제목은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅌㄹ">이고, 가족의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㄹ">이 주요 내용이다.',
+      q4_html: '<input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅈ">하게 살려 해도 살 수 없는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅎ"> 구조를 비판한다.',
       q5_text: '작품 제목 "탁류"가 상징하는 의미를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['탁류'], q3_2:['몰락'], q4_1:['정직'], q4_2:['사회'] },
@@ -861,8 +883,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 과거와 현재를 교차하며 추리 형식으로 전개한다.',
         '④ 서술자가 직접 등장하여 독자에게 교훈을 설파한다.'
       ],
-      q3_1_ph: 'ㅅㄷ', q3_2_ph: 'ㅊㄷ',
-      q4_1_ph: 'ㅂㄱ', q4_2_ph: 'ㄱㄷ',
+      q3_html: '작품 제목은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄷ">이고, 전통과 근대의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㄷ">을 다루고 있다.',
+      q4_html: '<input class="inline-input" id="q4-1" type="text" placeholder="ㅂㄱ">적 가치관과 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄷ">적 사고방식의 대립을 그렸다.',
       q5_text: '작가가 삼대의 이야기를 통해 전달하고자 한 메시지를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['삼대'], q3_2:['충돌'], q4_1:['봉건'], q4_2:['근대'] },
@@ -933,8 +955,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 과학적 관찰을 통해 객관적 사실만을 전달한다.',
         '④ 신화와 상징을 사용하여 보편적 진리를 탐구한다.'
       ],
-      q3_1_ph: 'ㅍㅈ', q3_2_ph: 'ㅊㅇㅍ',
-      q4_1_ph: 'ㅎㅇㅇㅅ', q4_2_ph: 'ㅇㄱㅈ',
+      q3_html: '작가는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅍㅈ"> 기법을 사용했고, 윤직원은 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㅇㅍ">였다.',
+      q4_html: '"태평천하"는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅇㅇㅅ">이고, 윤직원은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄱㅈ">인 인물이다.',
       q5_text: '작품 제목 "태평천하"가 풍자적으로 사용된 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['풍자'], q3_2:['친일파'], q4_1:['허위의식'], q4_2:['이기적'] },
@@ -1005,8 +1027,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 추리와 반전을 통해 긴장감을 유지하는 추리소설이다.',
         '④ 서술자가 직접 개입하여 독자에게 교훈을 전달한다.'
       ],
-      q3_1_ph: 'ㅅㅌㅅㅅ', q3_2_ph: 'ㄱㅅ',
-      q4_1_ph: 'ㅇㅅ', q4_2_ph: 'ㄱㄱㅈ',
+      q3_html: '이 작품은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅌㅅㅅ">이고, 다양한 인물이 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅅ">을 이룬다.',
+      q4_html: '평범한 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅅ">을 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄱㅈ">으로 묘사했다.',
       q5_text: '「천변풍경」이 세태소설의 대표작으로 평가받는 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['세태소설'], q3_2:['군상'], q4_1:['일상'], q4_2:['객관적'] },
@@ -1077,8 +1099,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 개인의 사랑이 사회적 책임보다 중요하다고 말한다.',
         '④ 신분 차별이 정당하다는 것을 보여준다.'
       ],
-      q3_1_ph: 'ㄱㄷ ㅈㅍㅅㅅ', q3_2_ph: 'ㄱㅁ',
-      q4_1_ph: 'ㅅㅇㅅ', q4_2_ph: 'ㅊㅅ',
+      q3_html: '이 작품은 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄷ ㅈㅍㅅㅅ">이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅁ">의 중요성을 강조했다.',
+      q4_html: '김선형은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅇㅅ">이고, 형식은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅅ">를 위해 결혼을 생각했다.',
       q5_text: '「무정」이 한국 최초의 근대 장편소설로 평가받는 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['근대 장편소설','근대장편소설'], q3_2:['계몽'], q4_1:['신여성'], q4_2:['출세'] },
@@ -1149,8 +1171,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 낭만적 사랑 이야기를 통해 독자에게 감동을 주는 작품이다.',
         '④ 유머와 해학으로 독자를 즐겁게 하는 작품이다.'
       ],
-      q3_1_ph: 'ㅅㅅㅈㅇ ㅁㅎ', q3_2_ph: 'ㅎㅁ',
-      q4_1_ph: 'ㅁㅈ', q4_2_ph: 'ㅇㅎ',
+      q3_html: '이 작품은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅅㅈㅇ ㅁㅎ">이고, 인화는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅁ">을 느꼈다.',
+      q4_html: '인화는 조선을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㅈ"> 같다고 했고, <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅎ"> 같은 상태라고 했다.',
       q5_text: '소설 제목 "만세전"이 암시하는 시대적 배경과 그 의미를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['사실주의 문학','사실주의문학'], q3_2:['환멸'], q4_1:['묘지'], q4_2:['암흑'] },
@@ -1221,8 +1243,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 농촌의 풍경과 인정을 따뜻하게 그린 향토소설이다.',
         '④ 권선징악의 교훈을 전달하는 고전소설이다.'
       ],
-      q3_1_ph: 'ㅁㄷㄴㅈㅁ', q3_2_ph: 'ㅇㅅㅇ ㅎㄹ',
-      q4_1_ph: 'ㅅㅁ', q4_2_ph: 'ㅈㅇ',
+      q3_html: '이 작품은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㄷㄴㅈ"> 문학이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅㅇ ㅎㄹ"> 기법을 사용했다.',
+      q4_html: '"나"는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅁ">처럼 살았고, 날개는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅇ">를 상징한다.',
       q5_text: '"날개야 다시 돋아라"라는 외침이 상징하는 의미를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['모더니즘'], q3_2:['의식의 흐름','의식의흐름'], q4_1:['식물'], q4_2:['자유'] },
@@ -1293,8 +1315,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 농촌의 평화로운 풍경을 유머러스하게 묘사했다.',
         '④ 추리와 반전을 통해 독자의 흥미를 유발했다.'
       ],
-      q3_1_ph: 'ㅂㅎ', q3_2_ph: 'ㅇㅈ',
-      q4_1_ph: 'ㄱㅌ', q4_2_ph: 'ㅇㅂ',
+      q3_html: '봉별기는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅎ">을 보내는 기록이고, 두 사람은 서로 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅈ">했다.',
+      q4_html: '두 사람 사이에 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅌ">가 찾아왔고, 결국 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅂ">하게 되었다.',
       q5_text: '제목 "봉별기"의 의미와 작품의 주제를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['봉황'], q3_2:['의존'], q4_1:['권태'], q4_2:['이별'] },
@@ -1365,8 +1387,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 농촌의 평화로운 풍경과 전통 문화를 예찬하는 작품이다.',
         '④ 도시 생활의 편리함과 장점을 강조하는 작품이다.'
       ],
-      q3_1_ph: 'ㅅㅇㅎ', q3_2_ph: 'ㄱㅂ',
-      q4_1_ph: 'ㅅㅇ', q4_2_ph: 'ㅅㅅ',
+      q3_html: '이 작품은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅇㅎ"> 시대를 배경으로 하고, 고향은 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅂ">로 변했다.',
+      q4_html: '떠도는 사람들의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅇ">와 고향 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅ">을 다룬다.',
       q5_text: '영달이 삼포에 도착했을 때 느꼈을 감정과 그 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['산업화'], q3_2:['개발'], q4_1:['소외'], q4_2:['상실'] },
@@ -1437,8 +1459,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 농사에 필요한 물을 공급하는 축복의 비.',
         '④ 앞으로 닥칠 재앙을 예고하는 불길한 징조.'
       ],
-      q3_1_ph: 'ㅇㄴ ㄷㄹ', q3_2_ph: 'ㅎㅎ',
-      q4_1_ph: 'ㄱㄹㅇ', q4_2_ph: 'ㅊㅇ',
+      q3_html: '이 작품은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄴ ㄷㄹ">으로 인한 갈등과 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅎ">를 다룬다.',
+      q4_html: '<input class="inline-input" id="q4-1" type="text" placeholder="ㄱㄹㅇ">가 매개가 되어 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅇ">와 화해가 이루어졌다.',
       q5_text: '구렁이가 두 할머니의 화해에 어떤 역할을 했는지 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['이념 대립','이념대립'], q3_2:['화해'], q4_1:['구렁이'], q4_2:['치유'] },
@@ -1482,51 +1504,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['자결', '스스로 목숨을 끊음']
     ],
     vocabFill: {
-      word_bank: ['이념', '허위', '통제', '공적', '사적', '조화', '중립국', '자결'],
+      instructions: '',
       items: [
-        { sentence: '그는 기존 사회의 (   )와 위선에 환멸을 느꼈다.', answer: '허위' },
-        { sentence: '남과 북의 (   ) 대립은 많은 비극을 낳았다.', answer: '이념' },
-        { sentence: '북한 사회는 개인에 대한 (   )가 심했다.', answer: '통제' },
-        { sentence: '광장은 사람들이 소통하는 (   ) 공간이다.', answer: '공적' },
-        { sentence: '밀실은 개인의 (   ) 영역을 상징한다.', answer: '사적' },
-        { sentence: '진정한 삶은 광장과 밀실의 (   )가 필요하다.', answer: '조화' },
-        { sentence: '이명준은 남도 북도 아닌 (   )행을 택했다.', answer: '중립국' },
-        { sentence: '그는 깊은 절망 속에서 결국 (   )을 선택했다.', answer: '자결' }
+        { no: 1, text: '그는 기존 사회의 (      )와 위선에 환멸을 느꼈다.', answer: '허위', initials: 'ㅎㅇ', aliases: ['허위'] },
+        { no: 2, text: '남과 북의 (      ) 대립은 많은 비극을 낳았다.', answer: '이념', initials: 'ㅇㄴ', aliases: ['이념'] },
+        { no: 3, text: '북한 사회는 개인에 대한 (      )가 심했다.', answer: '통제', initials: 'ㅌㅈ', aliases: ['통제'] },
+        { no: 4, text: '광장은 사람들이 소통하는 (      ) 공간이다.', answer: '공적', initials: 'ㄱㅈ', aliases: ['공적'] },
+        { no: 5, text: '밀실은 개인의 (      ) 영역을 상징한다.', answer: '사적', initials: 'ㅅㅈ', aliases: ['사적'] },
+        { no: 6, text: '진정한 삶은 광장과 밀실의 (      )가 필요하다.', answer: '조화', initials: 'ㅈㅎ', aliases: ['조화'] },
+        { no: 7, text: '이명준은 남도 북도 아닌 (      )행을 택했다.', answer: '중립국', initials: 'ㅈㄹㄱ', aliases: ['중립국'] },
+        { no: 8, text: '그는 깊은 절망 속에서 결국 (      )을 선택했다.', answer: '자결', initials: 'ㅈㄱ', aliases: ['자결'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '이명준은 남한 사회에서 진정한 광장을 발견했다.',
-        '이명준은 포로 교환 때 중립국행을 선택했다.',
-        '이명준은 북한에서 은혜와 함께 행복하게 살았다.',
-        '광장은 개인의 내면과 사랑을 의미하는 공간이다.'
+        '① 이명준은 남한 사회에서 진정한 광장을 발견했다.',
+        '② 이명준은 포로 교환 때 중립국행을 선택했다.',
+        '③ 이명준은 북한에서 은혜와 함께 행복하게 살았다.',
+        '④ 광장은 개인의 내면과 사랑을 의미하는 공간이다.'
       ],
       q2_text: '이 글의 전개 방식으로 가장 적절한 것은?',
       q2_opts: [
-        '인물의 행적을 따라가며 이념적 갈등과 비극을 서술하고 있다.',
-        '시대 순서를 뒤바꾸어 독자의 흥미를 유발하고 있다.',
-        '여러 인물의 시점을 교차하며 사건을 다각도로 조명한다.',
-        '객관적 자료를 제시하여 분단의 원인을 분석하고 있다.'
+        '① 인물의 행적을 따라가며 이념적 갈등과 비극을 서술하고 있다.',
+        '② 시대 순서를 뒤바꾸어 독자의 흥미를 유발하고 있다.',
+        '③ 여러 인물의 시점을 교차하며 사건을 다각도로 조명한다.',
+        '④ 객관적 자료를 제시하여 분단의 원인을 분석하고 있다.'
       ],
-      q3_text: '이명준이 남한에서 느낀 감정을 두 글자로 쓰시오.',
-      q4_text: '"광장"이 상징하는 것을 네 글자로 쓰시오.',
-      q5_text: '이명준이 최종적으로 선택한 곳을 세 글자로 쓰시오.'
+      q3_html: '이명준은 남한 사회의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅇ">와 위선에 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅁ">을 느꼈다.',
+      q4_html: '"광장"은 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅈ"> 공간을 의미하며, "<input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅅ">"은 사적 공간을 의미한다.',
+      q5_text: '이명준이 남도 북도 아닌 제3의 선택을 한 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '환멸',
-      q4: '공적공간',
+      q1: '2',
+      q2: '1',
+      q3_1: ['허위'],
+      q3_2: ['환멸'],
+      q4_1: ['공적'],
+      q4_2: ['밀실'],
       q5: '중립국'
     },
     essayKeywords: ['이념', '광장', '밀실', '분단', '자유', '중립국'],
     explain: {
       q1: '본문에서 이명준은 포로 교환 때 남도 북도 아닌 중립국행을 선택했다고 했습니다.',
       q2: '이 글은 이명준이라는 인물의 삶의 행적을 따라가며 분단과 이념 갈등의 비극을 서술하고 있습니다.',
-      q3: '본문에서 이명준은 남한 사회의 허위와 위선에 "환멸"을 느꼈다고 했습니다.',
-      q4: '본문에서 광장은 "공적" 공간을 의미하며 사회와 소통하는 장소라고 했습니다.',
-      q5: '본문에서 이명준은 포로 교환 때 남도 북도 아닌 "중립국"행을 선택했다고 했습니다.'
+      q3: '해설: 이명준은 남한 사회의 허위와 위선에 환멸을 느꼈다.',
+      q4: '해설: "광장"은 공적 공간을, "밀실"은 사적 공간을 의미한다.',
+      q5: '예시: 이명준은 남한에서 밀실만 있고 광장이 없는 사회를, 북한에서는 광장만 있고 밀실이 없는 사회를 경험했다. 어디에서도 진정한 자유와 인간적 가치를 찾지 못해 제3의 길인 중립국을 선택했다.'
     },
     creative: {
       title: '나의 광장과 밀실',
@@ -1560,42 +1584,44 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['허탈', '기운이 빠지고 맥이 풀림']
     ],
     vocabFill: {
-      word_bank: ['해방촌', '생활고', '난산', '허무', '양공주', '폐허', '희생양', '허탈'],
+      instructions: '',
       items: [
-        { sentence: '전쟁 후 서울의 (   )에는 피난민들이 모여 살았다.', answer: '해방촌' },
-        { sentence: '철호 가족은 극심한 (   )에 시달렸다.', answer: '생활고' },
-        { sentence: '아내는 (   ) 끝에 아이를 잃었다.', answer: '난산' },
-        { sentence: '영호는 깊은 (   ) 속에서 범죄를 저질렀다.', answer: '허무' },
-        { sentence: '명숙은 생활을 위해 (   )로 전락했다.', answer: '양공주' },
-        { sentence: '전쟁은 도시를 (   )로 만들었다.', answer: '폐허' },
-        { sentence: '철호 가족은 시대의 (   )이 되었다.', answer: '희생양' },
-        { sentence: '철호는 (   )한 심정으로 택시에 올랐다.', answer: '허탈' }
+        { no: 1, text: '전쟁 후 서울의 (      )에는 피난민들이 모여 살았다.', answer: '해방촌', initials: 'ㅎㅂㅊ', aliases: ['해방촌'] },
+        { no: 2, text: '철호 가족은 극심한 (      )에 시달렸다.', answer: '생활고', initials: 'ㅅㅎㄱ', aliases: ['생활고'] },
+        { no: 3, text: '아내는 (      ) 끝에 아이를 잃었다.', answer: '난산', initials: 'ㄴㅅ', aliases: ['난산'] },
+        { no: 4, text: '영호는 깊은 (      ) 속에서 범죄를 저질렀다.', answer: '허무', initials: 'ㅎㅁ', aliases: ['허무'] },
+        { no: 5, text: '명숙은 생활을 위해 (      )로 전락했다.', answer: '양공주', initials: 'ㅇㄱㅈ', aliases: ['양공주'] },
+        { no: 6, text: '전쟁은 도시를 (      )로 만들었다.', answer: '폐허', initials: 'ㅍㅎ', aliases: ['폐허'] },
+        { no: 7, text: '철호 가족은 시대의 (      )이 되었다.', answer: '희생양', initials: 'ㅎㅅㅇ', aliases: ['희생양'] },
+        { no: 8, text: '철호는 (      )한 심정으로 택시에 올랐다.', answer: '허탈', initials: 'ㅎㅌ', aliases: ['허탈'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '철호는 계리사로 취직하여 가족을 부양했다.',
-        '철호의 어머니는 전쟁 충격으로 정신이상이 되었다.',
-        '영호는 전쟁에서 팔을 잃고 돌아왔다.',
-        '명숙은 간호사로 일하며 가계를 도왔다.'
+        '① 철호는 계리사로 취직하여 가족을 부양했다.',
+        '② 철호의 어머니는 전쟁 충격으로 정신이상이 되었다.',
+        '③ 영호는 전쟁에서 팔을 잃고 돌아왔다.',
+        '④ 명숙은 간호사로 일하며 가계를 도왔다.'
       ],
       q2_text: '이 글의 서술 방식으로 가장 적절한 것은?',
       q2_opts: [
-        '한 가족 구성원들의 비극적 상황을 병렬적으로 제시하고 있다.',
-        '역순행적 구성으로 과거와 현재를 교차하며 서술하고 있다.',
-        '서술자가 자신의 체험을 고백적으로 서술하고 있다.',
-        '풍자와 해학을 통해 사회 현실을 비판하고 있다.'
+        '① 한 가족 구성원들의 비극적 상황을 병렬적으로 제시하고 있다.',
+        '② 역순행적 구성으로 과거와 현재를 교차하며 서술하고 있다.',
+        '③ 서술자가 자신의 체험을 고백적으로 서술하고 있다.',
+        '④ 풍자와 해학을 통해 사회 현실을 비판하고 있다.'
       ],
-      q3_text: '소설의 제목 "오발탄"이 상징하는 존재를 두 글자로 쓰시오.',
-      q4_text: '영호가 저지른 범죄를 네 글자로 쓰시오.',
-      q5_text: '철호의 어머니가 계속 되뇌는 말을 두 글자로 쓰시오.'
+      q3_html: '소설의 제목 "오발탄"은 전쟁과 분단의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅅㅇ">이 된 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅁㄷ">을 상징한다.',
+      q4_html: '영호는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅁ">와 분노 속에서 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅎㄱㄷ"> 행각을 벌였다.',
+      q5_text: '철호의 어머니가 계속 되뇌는 말과 그 의미를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '희생양',
-      q4: '은행강도',
+      q1: '2',
+      q2: '1',
+      q3_1: ['희생양'],
+      q3_2: ['인물들'],
+      q4_1: ['허무'],
+      q4_2: ['은행강도', '은행 강도'],
       q5: '가자'
     },
     essayKeywords: ['전쟁', '피난민', '희생양', '허무', '방황', '폐허'],
@@ -1603,8 +1629,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1: '본문에서 철호의 어머니는 전쟁의 충격으로 정신이 나가 "가자, 가자"만 되뇌인다고 했습니다.',
       q2: '이 글은 철호 가족 구성원 각각의 비극적 상황(어머니, 아내, 영호, 명숙)을 병렬적으로 제시하고 있습니다.',
       q3: '본문에서 "오발탄"은 전쟁과 분단이라는 시대의 "희생양"이 된 인물들을 상징한다고 했습니다.',
-      q4: '본문에서 영호는 "은행 강도" 행각을 벌이다 잡혀갔다고 했습니다.',
-      q5: '본문에서 어머니는 "가자, 가자"만 되뇌인다고 했습니다.'
+      q4: '본문에서 영호는 "허무"와 분노 속에서 "은행 강도" 행각을 벌이다 잡혀갔다고 했습니다.',
+      q5: '본문에서 어머니는 "가자, 가자"만 되뇌이며, 이는 어디로 가야 할지 모르는 전후 세대의 방황을 상징합니다.'
     },
     creative: {
       title: '시대의 희생양',
@@ -1638,51 +1664,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['반복', '같은 일이 되풀이됨']
     ],
     vocabFill: {
-      word_bank: ['수난', '징용', '불행', '절름발이', '업고', '의지', '세대', '반복'],
+      instructions: '',
       items: [
-        { sentence: '두 (   )에 걸쳐 비극이 이어졌다.', answer: '세대' },
-        { sentence: '아버지는 일제 시대 (   )으로 팔을 잃었다.', answer: '징용' },
-        { sentence: '나라의 (   )이 개인에게 전가되었다.', answer: '불행' },
-        { sentence: '아들은 전쟁에서 (   )가 되어 돌아왔다.', answer: '절름발이' },
-        { sentence: '아버지가 아들을 (   ) 고개를 넘었다.', answer: '업고' },
-        { sentence: '부자는 서로를 (   )하며 걸어갔다.', answer: '의지' },
-        { sentence: '역사의 비극이 (   )되는 아픔이 있다.', answer: '반복' },
-        { sentence: '제목 "수난이대"는 두 세대의 (   )을 뜻한다.', answer: '수난' }
+        { no: 1, text: '두 (      )에 걸쳐 비극이 이어졌다.', answer: '세대', initials: 'ㅅㄷ', aliases: ['세대'] },
+        { no: 2, text: '아버지는 일제 시대 (      )으로 팔을 잃었다.', answer: '징용', initials: 'ㅈㅇ', aliases: ['징용'] },
+        { no: 3, text: '나라의 (      )이 개인에게 전가되었다.', answer: '불행', initials: 'ㅂㅎ', aliases: ['불행'] },
+        { no: 4, text: '아들은 전쟁에서 (      )가 되어 돌아왔다.', answer: '절름발이', initials: 'ㅈㄹㅂㅇ', aliases: ['절름발이'] },
+        { no: 5, text: '아버지가 아들을 (      ) 고개를 넘었다.', answer: '업고', initials: 'ㅇㄱ', aliases: ['업고'] },
+        { no: 6, text: '부자는 서로를 (      )하며 걸어갔다.', answer: '의지', initials: 'ㅇㅈ', aliases: ['의지'] },
+        { no: 7, text: '역사의 비극이 (      )되는 아픔이 있다.', answer: '반복', initials: 'ㅂㅂ', aliases: ['반복'] },
+        { no: 8, text: '제목 "수난이대"는 두 세대의 (      )을 뜻한다.', answer: '수난', initials: 'ㅅㄴ', aliases: ['수난'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '아버지 만도는 한국전쟁에서 팔을 잃었다.',
-        '아들 진수는 한국전쟁에서 다리를 잃고 귀향했다.',
-        '아들이 아버지를 업고 고개를 넘었다.',
-        '수난이 고개는 아들 진수가 지은 이름이다.'
+        '① 아버지 만도는 한국전쟁에서 팔을 잃었다.',
+        '② 아들 진수는 한국전쟁에서 다리를 잃고 귀향했다.',
+        '③ 아들이 아버지를 업고 고개를 넘었다.',
+        '④ 수난이 고개는 아들 진수가 지은 이름이다.'
       ],
       q2_text: '이 글의 전개상 특징으로 가장 적절한 것은?',
       q2_opts: [
-        '두 세대의 경험을 대비하여 역사의 반복적 비극을 보여주고 있다.',
-        '과거 회상을 통해 인물의 내면 심리를 분석하고 있다.',
-        '여러 인물의 시점을 교차하여 사건을 입체적으로 서술한다.',
-        '시간의 흐름을 역전시켜 결말의 긴장감을 높이고 있다.'
+        '① 두 세대의 경험을 대비하여 역사의 반복적 비극을 보여주고 있다.',
+        '② 과거 회상을 통해 인물의 내면 심리를 분석하고 있다.',
+        '③ 여러 인물의 시점을 교차하여 사건을 입체적으로 서술한다.',
+        '④ 시간의 흐름을 역전시켜 결말의 긴장감을 높이고 있다.'
       ],
-      q3_text: '아버지 만도가 잃은 신체 부위를 한 글자로 쓰시오.',
-      q4_text: '부자가 함께 넘은 고개의 이름을 세 글자로 쓰시오.',
-      q5_text: '"수난이대"에서 "이대"가 의미하는 것을 네 글자로 쓰시오.'
+      q3_html: '아버지 만도는 일제 시대 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅇ">으로 끌려가 <input class="inline-input" id="q3-2" type="text" placeholder="ㅍ"> 한쪽을 잃었다.',
+      q4_html: '아들 진수는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㄱㅈㅈ">에 참전했다가 <input class="inline-input" id="q4-2" type="text" placeholder="ㄷㄹ"> 하나를 잃고 돌아왔다.',
+      q5_text: '"수난이대"의 뜻과 부자가 고개를 넘는 장면의 의미를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '팔',
-      q4: '수난이',
+      q1: '2',
+      q2: '1',
+      q3_1: ['징용'],
+      q3_2: ['팔'],
+      q4_1: ['한국전쟁'],
+      q4_2: ['다리'],
       q5: '두세대'
     },
     essayKeywords: ['수난', '세대', '역사', '극복', '부자', '의지'],
     explain: {
       q1: '본문에서 아들 진수는 한국전쟁에 참전했다가 다리 하나를 잃고 돌아온다고 했습니다.',
       q2: '이 글은 아버지(일제 징용)와 아들(한국전쟁) 두 세대의 경험을 대비하여 역사적 비극이 반복됨을 보여주고 있습니다.',
-      q3: '본문에서 아버지 만도는 일제 시대 때 징용으로 "팔" 한쪽을 잃었다고 했습니다.',
-      q4: '본문에서 만도는 "이 고개 이름이 수난이 고개다"라고 말했습니다.',
-      q5: '수난이대(受難二代)는 "고난을 받은 두 세대"라는 뜻입니다.'
+      q3: '본문에서 아버지 만도는 일제 시대 때 "징용"으로 끌려가 "팔" 한쪽을 잃었다고 했습니다.',
+      q4: '본문에서 아들 진수는 "한국전쟁"에 참전했다가 "다리" 하나를 잃고 돌아온다고 했습니다.',
+      q5: '수난이대(受難二代)는 "고난을 받은 두 세대"라는 뜻이며, 부자가 서로 의지하며 고개를 넘는 장면은 역사의 비극을 극복하려는 의지를 보여줍니다.'
     },
     creative: {
       title: '세대를 잇는 극복',
@@ -1716,51 +1744,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['월남', '북에서 남으로 내려옴']
     ],
     vocabFill: {
-      word_bank: ['토지개혁', '지주', '소작인', '인민위원', '머슴', '전복', '후손', '월남'],
+      instructions: '',
       items: [
-        { sentence: '북한 정권은 (   )을 실시해 땅을 재분배했다.', answer: '토지개혁' },
-        { sentence: '박훈은 마을에서 존경받던 (   ) 집안 출신이다.', answer: '지주' },
-        { sentence: '과거 (   )이었던 사람들이 권력을 잡았다.', answer: '소작인' },
-        { sentence: '갑돌이는 (   )으로서 옛 주인을 핍박했다.', answer: '인민위원' },
-        { sentence: '과거 박훈 가문의 (   )이었던 자가 앞장섰다.', answer: '머슴' },
-        { sentence: '체제 변화로 인간관계가 (   )되었다.', answer: '전복' },
-        { sentence: '"카인의 (   )"는 형제를 해친 자들을 의미한다.', answer: '후손' },
-        { sentence: '박훈은 결국 (   )을 결심한다.', answer: '월남' }
+        { no: 1, text: '북한 정권은 (      )을 실시해 땅을 재분배했다.', answer: '토지개혁', initials: 'ㅌㅈㄱㅎ', aliases: ['토지개혁'] },
+        { no: 2, text: '박훈은 마을에서 존경받던 (      ) 집안 출신이다.', answer: '지주', initials: 'ㅈㅈ', aliases: ['지주'] },
+        { no: 3, text: '과거 (      )이었던 사람들이 권력을 잡았다.', answer: '소작인', initials: 'ㅅㅈㅇ', aliases: ['소작인'] },
+        { no: 4, text: '갑돌이는 (      )으로서 옛 주인을 핍박했다.', answer: '인민위원', initials: 'ㅇㅁㅇㅇ', aliases: ['인민위원'] },
+        { no: 5, text: '과거 박훈 가문의 (      )이었던 자가 앞장섰다.', answer: '머슴', initials: 'ㅁㅅ', aliases: ['머슴'] },
+        { no: 6, text: '체제 변화로 인간관계가 (      )되었다.', answer: '전복', initials: 'ㅈㅂ', aliases: ['전복'] },
+        { no: 7, text: '"카인의 (      )"는 형제를 해친 자들을 의미한다.', answer: '후손', initials: 'ㅎㅅ', aliases: ['후손'] },
+        { no: 8, text: '박훈은 결국 (      )을 결심한다.', answer: '월남', initials: 'ㅇㄴ', aliases: ['월남'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '박훈은 토지개혁으로 땅을 분배받았다.',
-        '갑돌이는 과거 박훈 가문의 머슴이었다.',
-        '박훈은 인민위원이 되어 권력을 잡았다.',
-        '토지개혁은 지주들에게 더 많은 땅을 주었다.'
+        '① 박훈은 토지개혁으로 땅을 분배받았다.',
+        '② 갑돌이는 과거 박훈 가문의 머슴이었다.',
+        '③ 박훈은 인민위원이 되어 권력을 잡았다.',
+        '④ 토지개혁은 지주들에게 더 많은 땅을 주었다.'
       ],
       q2_text: '이 글의 서술 방식으로 가장 적절한 것은?',
       q2_opts: [
-        '시대 변화에 따른 인물의 몰락 과정을 서술하고 있다.',
-        '다양한 인물들의 내면 독백을 병렬적으로 제시한다.',
-        '과거와 현재를 자유롭게 오가며 사건을 서술한다.',
-        '서술자가 사건에 직접 개입하여 의견을 표명한다.'
+        '① 시대 변화에 따른 인물의 몰락 과정을 서술하고 있다.',
+        '② 다양한 인물들의 내면 독백을 병렬적으로 제시한다.',
+        '③ 과거와 현재를 자유롭게 오가며 사건을 서술한다.',
+        '④ 서술자가 사건에 직접 개입하여 의견을 표명한다.'
       ],
-      q3_text: '박훈 가문이 땅을 잃게 된 원인을 네 글자로 쓰시오.',
-      q4_text: '제목에서 "카인"이 상징하는 행위를 네 글자로 쓰시오.',
-      q5_text: '박훈이 최종적으로 결심한 것을 두 글자로 쓰시오.'
+      q3_html: '북한 정권이 <input class="inline-input" id="q3-1" type="text" placeholder="ㅌㅈㄱㅎ">을 실시하면서 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅈ">들의 땅은 몰수되었다.',
+      q4_html: '박훈은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㄴ">의 폭력을 피해 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄴ">을 결심하게 되었다.',
+      q5_text: '제목 "카인의 후예"가 상징하는 분단 시대의 비극에 대해 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '토지개혁',
-      q4: '형제살해',
-      q5: '월남'
+      q1: '2',
+      q2: '1',
+      q3_1: ['토지개혁'],
+      q3_2: ['지주'],
+      q4_1: ['이념'],
+      q4_2: ['월남'],
+      q5: '형제살해'
     },
     essayKeywords: ['토지개혁', '몰락', '이념', '비극', '분단', '월남'],
     explain: {
       q1: '본문에서 과거 박훈 가문의 머슴이었던 갑돌이가 가장 앞장서서 옛 주인을 핍박한다고 했습니다.',
       q2: '이 글은 토지개혁이라는 시대 변화에 따라 박훈 가문이 몰락하는 과정을 서술하고 있습니다.',
-      q3: '본문에서 토지개혁이 실시되어 지주들의 땅이 몰수되었다고 했습니다.',
-      q4: '성경의 카인은 형제인 아벨을 죽인 인물로, "형제살해"를 상징합니다.',
-      q5: '본문에서 박훈은 이념의 폭력을 피해 "월남"을 결심했다고 했습니다.'
+      q3: '본문에서 북한 정권이 "토지개혁"을 실시하면서 "지주"들의 땅이 몰수되었다고 했습니다.',
+      q4: '본문에서 박훈은 "이념"의 폭력을 피해 "월남"을 결심했다고 했습니다.',
+      q5: '성경의 카인은 형제인 아벨을 죽인 인물로, 같은 민족끼리 서로를 적대하고 박해하는 분단 시대의 비극을 상징합니다.'
     },
     creative: {
       title: '체제 변화와 개인',
@@ -1794,51 +1824,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['표상', '어떤 것을 대표하여 나타냄']
     ],
     vocabFill: {
-      word_bank: ['운명론', '주막', '역마살', '방랑', '끊임없이', '천민', '거스를', '표상'],
+      instructions: '',
       items: [
-        { sentence: '이 작품은 (   )적 세계관을 바탕으로 한다.', answer: '운명론' },
-        { sentence: '옥화는 (   )을 운영하며 아들을 키웠다.', answer: '주막' },
-        { sentence: '점쟁이는 성기에게 (   )이 있다고 했다.', answer: '역마살' },
-        { sentence: '성기는 여러 차례 (   )을 했다.', answer: '방랑' },
-        { sentence: '"역마"는 (   ) 이동해야 하는 말을 뜻한다.', answer: '끊임없이' },
-        { sentence: '유랑민이나 (   )들의 삶을 반영한다.', answer: '천민' },
-        { sentence: '운명을 (   ) 수 없다는 것이 주제이다.', answer: '거스를' },
-        { sentence: '역마는 자유로운 영혼의 (   )일 수 있다.', answer: '표상' }
+        { no: 1, text: '이 작품은 (      )적 세계관을 바탕으로 한다.', answer: '운명론', initials: 'ㅇㅁㄹ', aliases: ['운명론'] },
+        { no: 2, text: '옥화는 (      )을 운영하며 아들을 키웠다.', answer: '주막', initials: 'ㅈㅁ', aliases: ['주막'] },
+        { no: 3, text: '점쟁이는 성기에게 (      )이 있다고 했다.', answer: '역마살', initials: 'ㅇㅁㅅ', aliases: ['역마살'] },
+        { no: 4, text: '성기는 여러 차례 (      )을 했다.', answer: '방랑', initials: 'ㅂㄹ', aliases: ['방랑'] },
+        { no: 5, text: '"역마"는 (      ) 이동해야 하는 말을 뜻한다.', answer: '끊임없이', initials: 'ㄲㅇㅇㅇ', aliases: ['끊임없이'] },
+        { no: 6, text: '유랑민이나 (      )들의 삶을 반영한다.', answer: '천민', initials: 'ㅊㅁ', aliases: ['천민'] },
+        { no: 7, text: '운명을 (      ) 수 없다는 것이 주제이다.', answer: '거스를', initials: 'ㄱㅅㄹ', aliases: ['거스를'] },
+        { no: 8, text: '역마는 자유로운 영혼의 (      )일 수 있다.', answer: '표상', initials: 'ㅍㅅ', aliases: ['표상'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '성기는 아버지와 함께 주막을 운영했다.',
-        '점쟁이는 성기에게 역마살이 있다고 말했다.',
-        '옥화는 아들의 방랑을 적극 권장했다.',
-        '성기는 결말에서 한곳에 정착하여 살았다.'
+        '① 성기는 아버지와 함께 주막을 운영했다.',
+        '② 점쟁이는 성기에게 역마살이 있다고 말했다.',
+        '③ 옥화는 아들의 방랑을 적극 권장했다.',
+        '④ 성기는 결말에서 한곳에 정착하여 살았다.'
       ],
       q2_text: '이 글의 서술상 특징으로 가장 적절한 것은?',
       q2_opts: [
-        '운명론적 세계관을 바탕으로 인물의 숙명을 그리고 있다.',
-        '여러 인물의 시점을 교차하여 사건을 다각도로 조명한다.',
-        '구체적인 시대적 배경 묘사로 역사 의식을 드러내고 있다.',
-        '대화 중심의 서술로 인물 간 갈등을 극대화하고 있다.'
+        '① 운명론적 세계관을 바탕으로 인물의 숙명을 그리고 있다.',
+        '② 여러 인물의 시점을 교차하여 사건을 다각도로 조명한다.',
+        '③ 구체적인 시대적 배경 묘사로 역사 의식을 드러내고 있다.',
+        '④ 대화 중심의 서술로 인물 간 갈등을 극대화하고 있다.'
       ],
-      q3_text: '"역마살"이 의미하는 운명을 두 글자로 쓰시오.',
-      q4_text: '옥화가 운영하던 곳을 두 글자로 쓰시오.',
-      q5_text: '성기가 결말에서 선택한 행동을 두 글자로 쓰시오.'
+      q3_html: '점쟁이는 성기에게 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅁㅅ">이 끼어 있어 한곳에 머무르지 못하고 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄹ">해야 하는 운명이라고 했다.',
+      q4_html: '옥화는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅁ">을 운영하며 아들을 키웠고, 결말에서 성기는 결국 또다시 집을 <input class="inline-input" id="q4-2" type="text" placeholder="ㄸㄴ">다.',
+      q5_text: '작품에서 "역마"가 상징하는 것이 부정적인 운명인지 자유로운 영혼인지 자신의 생각을 써 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '방랑',
-      q4: '주막',
+      q1: '2',
+      q2: '1',
+      q3_1: ['역마살'],
+      q3_2: ['방랑'],
+      q4_1: ['주막'],
+      q4_2: ['떠난', '떠나'],
       q5: '떠남'
     },
     essayKeywords: ['역마살', '운명', '방랑', '숙명', '자유', '토속'],
     explain: {
       q1: '본문에서 점쟁이에게 아들에게 역마살이 끼어 있다는 말을 듣는다고 했습니다.',
       q2: '이 글은 운명론적 세계관을 바탕으로 성기라는 인물의 숙명적 방랑을 그리고 있습니다.',
-      q3: '본문에서 역마살은 한곳에 머무르지 못하고 떠돌아다녀야 하는 운명, 즉 "방랑"을 의미합니다.',
-      q4: '본문에서 옥화는 "주막"을 운영하며 아들을 키웠다고 했습니다.',
-      q5: '본문 결말에서 성기는 결국 또다시 집을 "떠난다"고 했습니다.'
+      q3: '본문에서 점쟁이는 성기에게 "역마살"이 끼어 있어 한곳에 머무르지 못하고 "방랑"해야 하는 운명이라고 했습니다.',
+      q4: '본문에서 옥화는 "주막"을 운영하며 아들을 키웠고, 결말에서 성기는 결국 또다시 집을 "떠난다"고 했습니다.',
+      q5: '역마는 부정적인 운명일 수도 있지만, 자유로운 영혼의 표상으로 해석될 수도 있습니다.'
     },
     creative: {
       title: '운명과 자유의지',
@@ -1872,51 +1904,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['봉건', '옛날식의 신분 제도와 토지 제도']
     ],
     vocabFill: {
-      word_bank: ['사찰', '토지', '소작료', '착취', '불구', '자비', '위선', '봉건'],
+      instructions: '',
       items: [
-        { sentence: '사하촌은 (   ) 땅에 붙어 있는 마을이다.', answer: '사찰' },
-        { sentence: '소작인들은 절의 (   )를 빌려 농사지었다.', answer: '토지' },
-        { sentence: '농민들은 높은 (   )를 바쳐야 했다.', answer: '소작료' },
-        { sentence: '절은 소작인들을 (   )하는 주체로 그려진다.', answer: '착취' },
-        { sentence: '손자는 일하다 다쳐서 (   )가 되었다.', answer: '불구' },
-        { sentence: '종교가 가르치는 (   )는 실천되지 않았다.', answer: '자비' },
-        { sentence: '작가는 종교의 (   )을 비판한다.', answer: '위선' },
-        { sentence: '이 작품은 (   )적 토지 제도를 비판한다.', answer: '봉건' }
+        { no: 1, text: '사하촌은 (      ) 땅에 붙어 있는 마을이다.', answer: '사찰', initials: 'ㅅㅊ', aliases: ['사찰'] },
+        { no: 2, text: '소작인들은 절의 (      )를 빌려 농사지었다.', answer: '토지', initials: 'ㅌㅈ', aliases: ['토지'] },
+        { no: 3, text: '농민들은 높은 (      )를 바쳐야 했다.', answer: '소작료', initials: 'ㅅㅈㄹ', aliases: ['소작료'] },
+        { no: 4, text: '절은 소작인들을 (      )하는 주체로 그려진다.', answer: '착취', initials: 'ㅊㅊ', aliases: ['착취'] },
+        { no: 5, text: '손자는 일하다 다쳐서 (      )가 되었다.', answer: '불구', initials: 'ㅂㄱ', aliases: ['불구'] },
+        { no: 6, text: '종교가 가르치는 (      )는 실천되지 않았다.', answer: '자비', initials: 'ㅈㅂ', aliases: ['자비'] },
+        { no: 7, text: '작가는 종교의 (      )을 비판한다.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
+        { no: 8, text: '이 작품은 (      )적 토지 제도를 비판한다.', answer: '봉건', initials: 'ㅂㄱ', aliases: ['봉건'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '절은 소작인들에게 낮은 소작료를 받았다.',
-        '한 노인의 손자는 절에서 다쳐 불구가 되었다.',
-        '스님들은 다친 손자에게 보상을 해 주었다.',
-        '한 노인은 결말에서 자기 땅을 얻게 되었다.'
+        '① 절은 소작인들에게 낮은 소작료를 받았다.',
+        '② 한 노인의 손자는 절에서 다쳐 불구가 되었다.',
+        '③ 스님들은 다친 손자에게 보상을 해 주었다.',
+        '④ 한 노인은 결말에서 자기 땅을 얻게 되었다.'
       ],
       q2_text: '이 글의 비판 대상으로 가장 적절한 것은?',
       q2_opts: [
-        '종교 기관의 착취와 위선',
-        '소작인들의 나태함과 무지',
-        '일제의 직접적인 수탈 정책',
-        '농민들 사이의 내부 갈등'
+        '① 종교 기관의 착취와 위선',
+        '② 소작인들의 나태함과 무지',
+        '③ 일제의 직접적인 수탈 정책',
+        '④ 농민들 사이의 내부 갈등'
       ],
-      q3_text: '"사하촌"이 뜻하는 것을 네 글자로 쓰시오.',
-      q4_text: '절이 소작인들에게 하는 행위를 두 글자로 쓰시오.',
-      q5_text: '작가가 비판하는 종교의 태도를 두 글자로 쓰시오.'
+      q3_html: '절은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅂ">와 구원의 공간이 아니라 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㅊ">의 주체로 그려진다.',
+      q4_html: '한 노인의 손자는 절에서 일하다가 다쳐서 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㄱ">가 되었지만, 절에서는 아무런 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅅ">도 해 주지 않는다.',
+      q5_text: '"사하촌"의 뜻과 작품이 비판하는 내용을 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '절아래마을',
-      q4: '착취',
-      q5: '위선'
+      q1: '2',
+      q2: '1',
+      q3_1: ['자비'],
+      q3_2: ['착취'],
+      q4_1: ['불구'],
+      q4_2: ['보상'],
+      q5: '절아래마을'
     },
     essayKeywords: ['사하촌', '착취', '위선', '소작', '종교', '비판'],
     explain: {
       q1: '본문에서 한 노인의 손자는 절에서 일하다가 다쳐서 불구가 되었다고 했습니다.',
       q2: '이 글은 종교가 가르치는 자비와 실제 종교 기관의 착취적 행태의 괴리를 비판하고 있습니다.',
-      q3: '"사하촌"이란 절 아래에 있는 마을이라는 뜻입니다.',
-      q4: '본문에서 절은 소작인들의 고혈을 "착취"하는 주체로 그려진다고 했습니다.',
-      q5: '본문에서 작가는 종교의 "위선"을 날카롭게 비판한다고 했습니다.'
+      q3: '본문에서 절은 "자비"와 구원의 공간이 아니라 "착취"의 주체로 그려진다고 했습니다.',
+      q4: '본문에서 한 노인의 손자는 절에서 일하다가 다쳐서 "불구"가 되었지만, 절에서는 아무런 "보상"도 해 주지 않는다고 했습니다.',
+      q5: '"사하촌"이란 절 아래에 있는 마을이라는 뜻이며, 작품은 종교 기관의 착취와 위선을 비판하고 있습니다.'
     },
     creative: {
       title: '종교와 사회적 책임',
@@ -1950,51 +1984,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['사살', '쏘아서 죽임']
     ],
     vocabFill: {
-      word_bank: ['유대', '포로', '황새', '표', '상징', '도망', '인간애', '사살'],
+      instructions: '',
       items: [
-        { sentence: '"나"는 (   )를 감시하는 임무를 맡았다.', answer: '포로' },
-        { sentence: '두 사람은 어린 시절 함께 (   ) 떼를 따라다녔다.', answer: '황새' },
-        { sentence: '학의 날개에 (   )를 달아 놓아 준 적이 있다.', answer: '표' },
-        { sentence: '학은 순수했던 시절의 (   )이다.', answer: '상징' },
-        { sentence: '"나"는 덕재에게 (   )칠 기회를 주었다.', answer: '도망' },
-        { sentence: '"나"는 "(   )했다"고 보고할 것을 암시했다.', answer: '사살' },
-        { sentence: '이 작품은 이념을 넘어선 (   )를 보여준다.', answer: '인간애' },
-        { sentence: '두 사람의 (   )는 전쟁에도 끊어지지 않았다.', answer: '유대' }
+        { no: 1, text: '"나"는 (      )를 감시하는 임무를 맡았다.', answer: '포로', initials: 'ㅍㄹ', aliases: ['포로'] },
+        { no: 2, text: '두 사람은 어린 시절 함께 (      ) 떼를 따라다녔다.', answer: '황새', initials: 'ㅎㅅ', aliases: ['황새'] },
+        { no: 3, text: '학의 날개에 (      )를 달아 놓아 준 적이 있다.', answer: '표', initials: 'ㅍ', aliases: ['표'] },
+        { no: 4, text: '학은 순수했던 시절의 (      )이다.', answer: '상징', initials: 'ㅅㅈ', aliases: ['상징'] },
+        { no: 5, text: '"나"는 덕재에게 (      )칠 기회를 주었다.', answer: '도망', initials: 'ㄷㅁ', aliases: ['도망'] },
+        { no: 6, text: '"나"는 "(      )했다"고 보고할 것을 암시했다.', answer: '사살', initials: 'ㅅㅅ', aliases: ['사살'] },
+        { no: 7, text: '이 작품은 이념을 넘어선 (      )를 보여준다.', answer: '인간애', initials: 'ㅇㄱㅇ', aliases: ['인간애'] },
+        { no: 8, text: '두 사람의 (      )는 전쟁에도 끊어지지 않았다.', answer: '유대', initials: 'ㅇㄷ', aliases: ['유대'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '"나"와 덕재는 전쟁에서 처음 만났다.',
-        '덕재는 "나"의 어린 시절 친구였다.',
-        '"나"는 덕재를 사살하고 보고했다.',
-        '학은 전쟁의 비극을 상징한다.'
+        '① "나"와 덕재는 전쟁에서 처음 만났다.',
+        '② 덕재는 "나"의 어린 시절 친구였다.',
+        '③ "나"는 덕재를 사살하고 보고했다.',
+        '④ 학은 전쟁의 비극을 상징한다.'
       ],
       q2_text: '이 글의 주제의식으로 가장 적절한 것은?',
       q2_opts: [
-        '이념과 전쟁을 넘어선 인간애와 우정의 가치',
-        '전쟁의 비참함과 폭력성에 대한 고발',
-        '분단 상황에서 개인의 정치적 선택의 중요성',
-        '고향에 대한 그리움과 향수의 정서'
+        '① 이념과 전쟁을 넘어선 인간애와 우정의 가치',
+        '② 전쟁의 비참함과 폭력성에 대한 고발',
+        '③ 분단 상황에서 개인의 정치적 선택의 중요성',
+        '④ 고향에 대한 그리움과 향수의 정서'
       ],
-      q3_text: '작품에서 "학"이 상징하는 것을 네 글자로 쓰시오.',
-      q4_text: '덕재의 신분을 두 글자로 쓰시오.',
-      q5_text: '"나"가 덕재에게 준 것을 세 글자로 쓰시오.'
+      q3_html: '두 사람에게 학은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅅ">했던 어린 시절과 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅈ">의 상징이다.',
+      q4_html: '덕재는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㄹ"> 신분으로 "나"의 감시를 받았고, "나"는 덕재에게 <input class="inline-input" id="q4-2" type="text" placeholder="ㄷㅁ">칠 기회를 주었다.',
+      q5_text: '"나"가 적이 된 친구를 도망치게 해 준 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '순수한우정',
-      q4: '포로',
-      q5: '도망기회'
+      q1: '2',
+      q2: '1',
+      q3_1: ['순수'],
+      q3_2: ['우정'],
+      q4_1: ['포로'],
+      q4_2: ['도망'],
+      q5: '인간애'
     },
     essayKeywords: ['학', '분단', '우정', '인간애', '포로', '이념'],
     explain: {
       q1: '본문에서 그 포로가 어릴 적 같은 마을에서 함께 학을 잡으러 다니던 친구 덕재임을 알게 된다고 했습니다.',
       q2: '이 작품은 이념과 전쟁을 넘어선 인간애와 우정의 가치를 감동적으로 보여주고 있습니다.',
-      q3: '본문에서 학은 순수했던 어린 시절과 우정의 상징이라고 했습니다.',
-      q4: '본문에서 덕재는 "포로" 신분으로 "나"의 감시를 받아야 하는 처지가 되었다고 했습니다.',
-      q5: '본문에서 "나"는 덕재에게 "도망"칠 기회를 주었다고 했습니다.'
+      q3: '본문에서 학은 "순수"했던 어린 시절과 "우정"의 상징이라고 했습니다.',
+      q4: '본문에서 덕재는 "포로" 신분으로 "나"의 감시를 받았고, "나"는 덕재에게 "도망"칠 기회를 주었다고 했습니다.',
+      q5: '"나"는 이념과 전쟁을 넘어 어린 시절 함께했던 우정과 인간애를 지키고자 친구를 도망치게 해 주었습니다.'
     },
     creative: {
       title: '이념을 넘어선 우정',
@@ -2028,51 +2064,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['명언', '뜻 깊은 유명한 말']
     ],
     vocabFill: {
-      word_bank: ['농부', '야망', '어리숙', '에피소드', '논', '담담', '노동', '명언'],
+      instructions: '',
       items: [
-        { sentence: '황만근은 평생을 (   )로 살았다.', answer: '농부' },
-        { sentence: '그는 특별한 (   ) 없이 땅을 일구었다.', answer: '야망' },
-        { sentence: '마을 사람들은 그를 (   )하다고 여겼다.', answer: '어리숙' },
-        { sentence: '작품은 여러 (   )로 그의 삶을 풀어낸다.', answer: '에피소드' },
-        { sentence: '처가에서 (   )을 물려받았지만 잃었다.', answer: '논' },
-        { sentence: '그는 삶을 (   )하게 받아들인다.', answer: '담담' },
-        { sentence: '가장 중요한 것은 가족과 땅과 (   )이다.', answer: '노동' },
-        { sentence: '평범한 농부의 말도 (   )처럼 가치 있다.', answer: '명언' }
+        { no: 1, text: '황만근은 평생을 (      )로 살았다.', answer: '농부', initials: 'ㄴㅂ', aliases: ['농부'] },
+        { no: 2, text: '그는 특별한 (      ) 없이 땅을 일구었다.', answer: '야망', initials: 'ㅇㅁ', aliases: ['야망'] },
+        { no: 3, text: '마을 사람들은 그를 (      )하다고 여겼다.', answer: '어리숙', initials: 'ㅇㄹㅅ', aliases: ['어리숙'] },
+        { no: 4, text: '작품은 여러 (      )로 그의 삶을 풀어낸다.', answer: '에피소드', initials: 'ㅇㅍㅅㄷ', aliases: ['에피소드'] },
+        { no: 5, text: '처가에서 (      )을 물려받았지만 잃었다.', answer: '논', initials: 'ㄴ', aliases: ['논'] },
+        { no: 6, text: '그는 삶을 (      )하게 받아들인다.', answer: '담담', initials: 'ㄷㄷ', aliases: ['담담'] },
+        { no: 7, text: '가장 중요한 것은 가족과 땅과 (      )이다.', answer: '노동', initials: 'ㄴㄷ', aliases: ['노동'] },
+        { no: 8, text: '평범한 농부의 말도 (      )처럼 가치 있다.', answer: '명언', initials: 'ㅁㅇ', aliases: ['명언'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '황만근은 도시에서 성공한 사업가였다.',
-        '황만근은 처가에서 물려받은 논을 잃었다.',
-        '황만근은 세상 물정에 밝아 이익을 많이 보았다.',
-        '마을 사람들은 황만근을 영리한 사람으로 여겼다.'
+        '① 황만근은 도시에서 성공한 사업가였다.',
+        '② 황만근은 처가에서 물려받은 논을 잃었다.',
+        '③ 황만근은 세상 물정에 밝아 이익을 많이 보았다.',
+        '④ 마을 사람들은 황만근을 영리한 사람으로 여겼다.'
       ],
       q2_text: '이 글의 서술 방식으로 가장 적절한 것은?',
       q2_opts: [
-        '여러 일화를 통해 한 인물의 삶을 조명하고 있다.',
-        '시간 순서를 뒤바꾸어 긴장감을 조성하고 있다.',
-        '인물 간의 대립과 갈등을 중심으로 서술하고 있다.',
-        '서술자가 직접 개입하여 인물을 비판하고 있다.'
+        '① 여러 일화를 통해 한 인물의 삶을 조명하고 있다.',
+        '② 시간 순서를 뒤바꾸어 긴장감을 조성하고 있다.',
+        '③ 인물 간의 대립과 갈등을 중심으로 서술하고 있다.',
+        '④ 서술자가 직접 개입하여 인물을 비판하고 있다.'
       ],
-      q3_text: '작품 제목이 역설적으로 보여주는 것은 무엇인지 네 글자로 쓰시오.',
-      q4_text: '황만근이 삶에서 가장 중요하게 여긴 것 중 하나를 두 글자로 쓰시오.',
-      q5_text: '황만근이 삶을 받아들이는 태도를 두 글자로 쓰시오.'
+      q3_html: '황만근은 특별한 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅁ"> 없이 땅을 일구며 사는 것을 당연하게 여기는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅂ">한 인물이다.',
+      q4_html: '황만근은 불평하지 않고 주어진 삶을 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㄷ">하게 받아들이며, 가장 중요한 것은 가족과 땅, 그리고 <input class="inline-input" id="q4-2" type="text" placeholder="ㄴㄷ">이다.',
+      q5_text: '작품 제목이 평범한 농부의 말도 철학자의 명언처럼 가치 있다는 것을 역설적으로 보여주는 이유를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '삶의가치',
-      q4: '노동',
-      q5: '담담'
+      q1: '2',
+      q2: '1',
+      q3_1: ['야망'],
+      q3_2: ['순박'],
+      q4_1: ['담담'],
+      q4_2: ['노동'],
+      q5: '삶의가치'
     },
     essayKeywords: ['농부', '노동', '담담', '소박', '농촌', '가치'],
     explain: {
       q1: '본문에서 처가에서 논을 물려받았지만 다리가 놓이면서 보상금만 받고 땅을 잃었다고 했습니다.',
       q2: '이 작품은 황만근이 살아온 이야기를 여러 에피소드로 풀어내며 한 인물의 삶을 조명하고 있습니다.',
-      q3: '본문에서 평범한 농부의 말도 철학자의 명언처럼 가치 있다는 것을 역설적으로 보여준다고 했습니다.',
-      q4: '본문에서 그의 삶에서 가장 중요한 것은 가족과 땅, 그리고 자신의 "노동"이라고 했습니다.',
-      q5: '본문에서 황만근은 불평하지 않고 주어진 삶을 "담담"하게 받아들인다고 했습니다.'
+      q3: '본문에서 황만근은 특별한 "야망" 없이 땅을 일구며 사는 것을 당연하게 여기는 "순박"한 인물이라고 했습니다.',
+      q4: '본문에서 황만근은 삶을 "담담"하게 받아들이며, 가장 중요한 것은 가족과 땅, 그리고 "노동"이라고 했습니다.',
+      q5: '작품 제목은 이름 없이 살다 간 평범한 농부의 말도 철학자의 명언처럼 가치 있다는 것을 역설적으로 보여줍니다.'
     },
     creative: {
       title: '소박한 삶의 가치',
@@ -2106,51 +2144,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['성실', '정성스럽고 참됨']
     ],
     vocabFill: {
-      word_bank: ['도시 빈민', '판잣집', '궁핍', '유래', '산업화', '굴레', '헌신', '성실'],
+      instructions: '',
       items: [
-        { sentence: '1970년대 (   )들의 고단한 삶을 그리고 있다.', answer: '도시 빈민' },
-        { sentence: '그들은 무허가 (   )에서 살았다.', answer: '판잣집' },
-        { sentence: '권씨의 삶은 (   )하기 그지없다.', answer: '궁핍' },
-        { sentence: '아홉 켤레의 구두가 작품 제목의 (   )이다.', answer: '유래' },
-        { sentence: '급격한 (   ) 과정에서 소외된 사람들이 있었다.', answer: '산업화' },
-        { sentence: '그들은 가난의 (   )에서 벗어나지 못한다.', answer: '굴레' },
-        { sentence: '구두는 권씨의 (   )과 사랑을 상징한다.', answer: '헌신' },
-        { sentence: '(   )하게 살아가는 서민들의 삶을 그린다.', answer: '성실' }
+        { no: 1, text: '1970년대 (      )들의 고단한 삶을 그리고 있다.', answer: '도시 빈민', initials: 'ㄷㅅ ㅂㅁ', aliases: ['도시 빈민','도시빈민'] },
+        { no: 2, text: '그들은 무허가 (      )에서 살았다.', answer: '판잣집', initials: 'ㅍㅈㅈ', aliases: ['판잣집'] },
+        { no: 3, text: '권씨의 삶은 (      )하기 그지없다.', answer: '궁핍', initials: 'ㄱㅍ', aliases: ['궁핍'] },
+        { no: 4, text: '아홉 켤레의 구두가 작품 제목의 (      )이다.', answer: '유래', initials: 'ㅇㄹ', aliases: ['유래'] },
+        { no: 5, text: '급격한 (      ) 과정에서 소외된 사람들이 있었다.', answer: '산업화', initials: 'ㅅㅇㅎ', aliases: ['산업화'] },
+        { no: 6, text: '그들은 가난의 (      )에서 벗어나지 못한다.', answer: '굴레', initials: 'ㄱㄹ', aliases: ['굴레'] },
+        { no: 7, text: '구두는 권씨의 (      )과 사랑을 상징한다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] },
+        { no: 8, text: '(      )하게 살아가는 서민들의 삶을 그린다.', answer: '성실', initials: 'ㅅㅅ', aliases: ['성실'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '권씨는 구두 가게를 운영하며 부자가 되었다.',
-        '권씨는 가족을 위해 직접 구두를 만들어 신겼다.',
-        '작품의 배경은 농촌 마을이다.',
-        '"나"와 권씨는 넉넉한 형편에서 살았다.'
+        '① 권씨는 구두 가게를 운영하며 부자가 되었다.',
+        '② 권씨는 가족을 위해 직접 구두를 만들어 신겼다.',
+        '③ 작품의 배경은 농촌 마을이다.',
+        '④ "나"와 권씨는 넉넉한 형편에서 살았다.'
       ],
       q2_text: '이 글의 서술 특징으로 가장 적절한 것은?',
       q2_opts: [
-        '도시 빈민의 궁핍한 삶을 사실적으로 묘사하고 있다.',
-        '환상적 기법을 사용하여 현실을 비판하고 있다.',
-        '인물의 내면 독백 중심으로 서술하고 있다.',
-        '과거 회상을 통해 인물의 성장을 보여주고 있다.'
+        '① 도시 빈민의 궁핍한 삶을 사실적으로 묘사하고 있다.',
+        '② 환상적 기법을 사용하여 현실을 비판하고 있다.',
+        '③ 인물의 내면 독백 중심으로 서술하고 있다.',
+        '④ 과거 회상을 통해 인물의 성장을 보여주고 있다.'
       ],
-      q3_text: '"아홉 켤레의 구두"가 상징하는 것을 두 글자로 쓰시오.',
-      q4_text: '작품이 비판하는 시대적 배경을 세 글자로 쓰시오.',
-      q5_text: '권씨가 결말에서 맞이한 일을 두 글자로 쓰시오.'
+      q3_html: '1970년대 급격한 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅇㅎ"> 과정에서 소외된 <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅅㅂㅁ">들의 삶을 그리고 있다.',
+      q4_html: '권씨가 남긴 아홉 켤레의 구두는 그의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅅ">과 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄹ">을 상징한다.',
+      q5_text: '가난한 가장이 가족을 위해 할 수 있는 것이 보잘것없는 현실에 대해 자신의 생각을 써 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '헌신',
-      q4: '산업화',
+      q1: '2',
+      q2: '1',
+      q3_1: ['산업화'],
+      q3_2: ['도시빈민', '도시 빈민'],
+      q4_1: ['헌신'],
+      q4_2: ['사랑'],
       q5: '죽음'
     },
     essayKeywords: ['빈민', '가난', '헌신', '산업화', '구두', '가장'],
     explain: {
       q1: '본문에서 권씨는 아이들에게 구두를 사 줄 형편이 안 되어 집에서 직접 구두를 만들어 신겼다고 했습니다.',
       q2: '이 작품은 1970년대 산업화 시대 도시 빈민들의 궁핍한 삶을 사실적으로 묘사하고 있습니다.',
-      q3: '본문에서 구두는 권씨의 "헌신"과 사랑을 상징한다고 했습니다.',
-      q4: '본문에서 급격한 "산업화" 과정에서 소외된 도시 빈민들의 고통을 묘사한다고 했습니다.',
-      q5: '본문에서 권씨는 병에 걸려 세상을 떠난다, 즉 "죽음"을 맞이한다고 했습니다.'
+      q3: '본문에서 1970년대 급격한 "산업화" 과정에서 소외된 "도시 빈민"들의 삶을 그리고 있다고 했습니다.',
+      q4: '본문에서 권씨가 남긴 아홉 켤레의 구두는 그의 "헌신"과 "사랑"을 상징한다고 했습니다.',
+      q5: '가난하지만 성실하게 살아가는 가장이 가족을 위해 할 수 있는 것은 보잘것없지만, 그 헌신은 사랑의 표현입니다.'
     },
     creative: {
       title: '가족을 위한 헌신',
@@ -2184,51 +2224,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['강인함', '굳세고 강한 성질']
     ],
     vocabFill: {
-      word_bank: ['여성', '홀로', '판잣집', '생존', '출세', '소용돌이', '버티며', '강인함'],
+      instructions: '',
       items: [
-        { sentence: '이 작품은 한 (   )의 강인한 삶을 그리고 있다.', answer: '여성' },
-        { sentence: '엄마는 남편을 잃고 (   ) 가족을 부양했다.', answer: '홀로' },
-        { sentence: '서울 번두리에 (   )을 짓고 터를 잡았다.', answer: '판잣집' },
-        { sentence: '"말뚝"은 (   )을 위해 뿌리내린 터전을 상징한다.', answer: '생존' },
-        { sentence: '엄마는 아들의 (   )를 위해 희생했다.', answer: '출세' },
-        { sentence: '역사의 (   ) 속에서 가족을 지켰다.', answer: '소용돌이' },
-        { sentence: '어떤 상황에서도 (   ) 살아남겠다는 의지가 있다.', answer: '버티며' },
-        { sentence: '작품은 어머니 세대의 (   )을 그렸다.', answer: '강인함' }
+        { no: 1, text: '이 작품은 한 (      )의 강인한 삶을 그리고 있다.', answer: '여성', initials: 'ㅇㅅ', aliases: ['여성'] },
+        { no: 2, text: '엄마는 남편을 잃고 (      ) 가족을 부양했다.', answer: '홀로', initials: 'ㅎㄹ', aliases: ['홀로'] },
+        { no: 3, text: '서울 번두리에 (      )을 짓고 터를 잡았다.', answer: '판잣집', initials: 'ㅍㅈㅈ', aliases: ['판잣집'] },
+        { no: 4, text: '"말뚝"은 (      )을 위해 뿌리내린 터전을 상징한다.', answer: '생존', initials: 'ㅅㅈ', aliases: ['생존'] },
+        { no: 5, text: '엄마는 아들의 (      )를 위해 희생했다.', answer: '출세', initials: 'ㅊㅅ', aliases: ['출세'] },
+        { no: 6, text: '역사의 (      ) 속에서 가족을 지켰다.', answer: '소용돌이', initials: 'ㅅㅇㄷㅇ', aliases: ['소용돌이'] },
+        { no: 7, text: '어떤 상황에서도 (      ) 살아남겠다는 의지가 있다.', answer: '버티며', initials: 'ㅂㅌㅁ', aliases: ['버티며'] },
+        { no: 8, text: '작품은 어머니 세대의 (      )을 그렸다.', answer: '강인함', initials: 'ㄱㅇㅎ', aliases: ['강인함'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '엄마는 남편과 함께 자식들을 키웠다.',
-        '한국전쟁 중 아들이 전사하여 엄마의 희망이 무너졌다.',
-        '엄마는 아들의 죽음 후 삶을 포기했다.',
-        '"말뚝"은 엄마가 농사짓는 도구를 의미한다.'
+        '① 엄마는 남편과 함께 자식들을 키웠다.',
+        '② 한국전쟁 중 아들이 전사하여 엄마의 희망이 무너졌다.',
+        '③ 엄마는 아들의 죽음 후 삶을 포기했다.',
+        '④ "말뚝"은 엄마가 농사짓는 도구를 의미한다.'
       ],
       q2_text: '이 글의 서술 방식으로 가장 적절한 것은?',
       q2_opts: [
-        '딸의 시점에서 어머니의 삶을 회상하며 서술하고 있다.',
-        '전지적 작가 시점에서 여러 인물의 내면을 서술한다.',
-        '역순행적 구성으로 긴장감을 높이고 있다.',
-        '대화 중심의 서술로 인물 간 갈등을 부각한다.'
+        '① 딸의 시점에서 어머니의 삶을 회상하며 서술하고 있다.',
+        '② 전지적 작가 시점에서 여러 인물의 내면을 서술한다.',
+        '③ 역순행적 구성으로 긴장감을 높이고 있다.',
+        '④ 대화 중심의 서술로 인물 간 갈등을 부각한다.'
       ],
-      q3_text: '"말뚝"이 상징하는 것을 네 글자로 쓰시오.',
-      q4_text: '엄마가 아들에게 바란 것을 두 글자로 쓰시오.',
-      q5_text: '아들이 죽게 된 원인인 역사적 사건을 네 글자로 쓰시오.'
+      q3_html: '"말뚝"은 엄마가 험난한 세상에서 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅈ">을 위해 뿌리내린 삶의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅌㅈ">을 상징한다.',
+      q4_html: '엄마는 아들을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅊㅅ">시키기 위해 모든 것을 희생했지만, <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㄱㅈㅈ"> 중 아들이 전사했다.',
+      q5_text: '엄마가 박은 "말뚝"이 어떤 상황에서도 버티며 살아남겠다는 의지의 상징인 이유를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '삶의터전',
-      q4: '출세',
-      q5: '한국전쟁'
+      q1: '2',
+      q2: '1',
+      q3_1: ['생존'],
+      q3_2: ['터전'],
+      q4_1: ['출세'],
+      q4_2: ['한국전쟁'],
+      q5: '삶의터전'
     },
     essayKeywords: ['말뚝', '생존', '강인함', '어머니', '전쟁', '희생'],
     explain: {
       q1: '본문에서 한국전쟁 중 기대를 걸었던 아들 오빠가 전사하면서 엄마의 희망은 무너진다고 했습니다.',
       q2: '본문에서 딸인 "나"의 눈을 통해 서술된다고 했으므로, 딸의 시점에서 어머니의 삶을 회상하며 서술하고 있습니다.',
-      q3: '본문에서 "말뚝"은 험난한 세상에서 생존을 위해 뿌리내린 삶의 터전을 상징한다고 했습니다.',
-      q4: '본문에서 엄마는 아들을 "출세"시키기 위해 모든 것을 희생한다고 했습니다.',
-      q5: '본문에서 "한국전쟁" 중 아들이 전사했다고 했습니다.'
+      q3: '본문에서 "말뚝"은 험난한 세상에서 "생존"을 위해 뿌리내린 삶의 "터전"을 상징한다고 했습니다.',
+      q4: '본문에서 엄마는 아들을 "출세"시키기 위해 모든 것을 희생했지만, "한국전쟁" 중 아들이 전사했다고 했습니다.',
+      q5: '엄마가 박은 "말뚝"은 단순한 집터가 아니라, 어떤 상황에서도 버티며 살아남겠다는 의지의 상징입니다.'
     },
     creative: {
       title: '어머니의 강인함',
@@ -2262,51 +2304,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['성찰', '깊이 되돌아보고 살핌']
     ],
     vocabFill: {
-      word_bank: ['소외', '난장이', '달동네', '입주권', '브로커', '불평등', '희망', '성찰'],
+      instructions: '',
       items: [
-        { sentence: '산업화 시대에 (   )된 도시 빈민들의 삶을 그린다.', answer: '소외' },
-        { sentence: '아버지는 키가 작아 (   )라고 불렸다.', answer: '난장이' },
-        { sentence: '그들이 사는 (   )는 재개발로 철거될 위기에 처했다.', answer: '달동네' },
-        { sentence: '주민들은 아파트 (   )을 받았지만 돈이 없었다.', answer: '입주권' },
-        { sentence: '입주권을 (   )에게 헐값에 팔아야 했다.', answer: '브로커' },
-        { sentence: '작품은 (   )한 사회 구조를 비판한다.', answer: '불평등' },
-        { sentence: '"작은 공"은 소외된 사람들의 (   )을 상징한다.', answer: '희망' },
-        { sentence: '이 작품은 사회 구조적 모순에 대한 (   )을 담고 있다.', answer: '성찰' }
+        { no: 1, text: '산업화 시대에 (      )된 도시 빈민들의 삶을 그린다.', answer: '소외', initials: 'ㅅㅇ', aliases: ['소외'] },
+        { no: 2, text: '아버지는 키가 작아 (      )라고 불렸다.', answer: '난장이', initials: 'ㄴㅈㅇ', aliases: ['난장이'] },
+        { no: 3, text: '그들이 사는 (      )는 재개발로 철거될 위기에 처했다.', answer: '달동네', initials: 'ㄷㄷㄴ', aliases: ['달동네'] },
+        { no: 4, text: '주민들은 아파트 (      )을 받았지만 돈이 없었다.', answer: '입주권', initials: 'ㅇㅈㄱ', aliases: ['입주권'] },
+        { no: 5, text: '입주권을 (      )에게 헐값에 팔아야 했다.', answer: '브로커', initials: 'ㅂㄹㅋ', aliases: ['브로커'] },
+        { no: 6, text: '작품은 (      )한 사회 구조를 비판한다.', answer: '불평등', initials: 'ㅂㅍㄷ', aliases: ['불평등'] },
+        { no: 7, text: '"작은 공"은 소외된 사람들의 (      )을 상징한다.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
+        { no: 8, text: '이 작품은 사회 구조적 모순에 대한 (      )을 담고 있다.', answer: '성찰', initials: 'ㅅㅊ', aliases: ['성찰'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '난장이 가족은 재개발로 아파트에 입주했다.',
-        '난장이 아버지는 공장 굴뚝에서 투신하여 죽었다.',
-        '달동네 주민들은 입주권을 비싸게 팔았다.',
-        '재개발의 이익은 가난한 사람들에게 돌아갔다.'
+        '① 난장이 가족은 재개발로 아파트에 입주했다.',
+        '② 난장이 아버지는 공장 굴뚝에서 투신하여 죽었다.',
+        '③ 달동네 주민들은 입주권을 비싸게 팔았다.',
+        '④ 재개발의 이익은 가난한 사람들에게 돌아갔다.'
       ],
       q2_text: '이 글의 서술 특징으로 가장 적절한 것은?',
       q2_opts: [
-        '산업화 시대 소외 계층의 비극을 사실적으로 묘사하고 있다.',
-        '환상적 기법으로 현실의 문제를 우회적으로 비판한다.',
-        '과거 회상을 중심으로 인물의 성장을 서술하고 있다.',
-        '다양한 인물의 시점을 교차하여 사건을 입체화한다.'
+        '① 산업화 시대 소외 계층의 비극을 사실적으로 묘사하고 있다.',
+        '② 환상적 기법으로 현실의 문제를 우회적으로 비판한다.',
+        '③ 과거 회상을 중심으로 인물의 성장을 서술하고 있다.',
+        '④ 다양한 인물의 시점을 교차하여 사건을 입체화한다.'
       ],
-      q3_text: '제목에서 "작은 공"이 상징하는 것을 두 글자로 쓰시오.',
-      q4_text: '난장이 가족이 살던 곳을 세 글자로 쓰시오.',
-      q5_text: '작품이 비판하는 사회 문제를 세 글자로 쓰시오.'
+      q3_html: '"작은 공"은 가난하고 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅇ">된 사람들의 작은 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅁ">과 꿈을 상징한다.',
+      q4_html: '작품은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅍㄷ">한 사회 구조를 비판하며, 난장이 아버지는 결국 공장 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄸ">에서 투신하여 죽는다.',
+      q5_text: '난장이 아버지가 품었던 달나라에 가고 싶다는 꿈이 "작은 공"으로 표현된 의미를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '희망',
-      q4: '달동네',
-      q5: '불평등'
+      q1: '2',
+      q2: '1',
+      q3_1: ['소외'],
+      q3_2: ['희망'],
+      q4_1: ['불평등'],
+      q4_2: ['굴뚝'],
+      q5: '희망'
     },
     essayKeywords: ['난장이', '소외', '불평등', '산업화', '희망', '재개발'],
     explain: {
       q1: '본문에서 난장이 아버지는 결국 공장 굴뚝에 올라가 투신하여 목숨을 끊는다고 했습니다.',
       q2: '이 작품은 1970년대 산업화 시대에 소외된 도시 빈민들의 비극을 사실적으로 묘사하고 있습니다.',
-      q3: '본문에서 "작은 공"은 가난하고 소외된 사람들의 작은 "희망"과 꿈을 상징한다고 했습니다.',
-      q4: '본문에서 난장이 가족이 사는 "달동네" 판잣집이라고 했습니다.',
-      q5: '본문에서 작품은 "불평등"한 구조를 날카롭게 비판한다고 했습니다.'
+      q3: '본문에서 "작은 공"은 가난하고 "소외"된 사람들의 작은 "희망"과 꿈을 상징한다고 했습니다.',
+      q4: '본문에서 작품은 "불평등"한 구조를 비판하며, 난장이 아버지는 결국 공장 "굴뚝"에서 투신하여 죽는다고 했습니다.',
+      q5: '난장이 아버지가 품었던 달나라에 가고 싶다는 꿈, 더 나은 삶을 향한 소망이 "작은 공"으로 표현되었지만, 그 공은 하늘 높이 올라가지 못하고 떨어지고 맙니다.'
     },
     creative: {
       title: '소외된 이웃에 대한 관심',
@@ -2340,51 +2384,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['허무', '덧없고 보람 없음']
     ],
     vocabFill: {
-      word_bank: ['권력', '엄석대', '지배', '저항', '굴복', '순응', '비리', '허무'],
+      instructions: '',
       items: [
-        { sentence: '이 작품은 (   )의 본질을 탐구한다.', answer: '권력' },
-        { sentence: '급장 (   )는 반을 완전히 장악했다.', answer: '엄석대' },
-        { sentence: '엄석대는 반 아이들을 완전히 (   )하고 있었다.', answer: '지배' },
-        { sentence: '병태는 처음에 부당한 권력에 (   )하려 했다.', answer: '저항' },
-        { sentence: '결국 병태는 엄석대에게 (   )했다.', answer: '굴복' },
-        { sentence: '권력 앞에서 개인은 결국 (   )하게 된다.', answer: '순응' },
-        { sentence: '새 담임은 엄석대의 (   )를 밝혀냈다.', answer: '비리' },
-        { sentence: '작품은 권력의 (   )함을 보여준다.', answer: '허무' }
+        { no: 1, text: '이 작품은 (      )의 본질을 탐구한다.', answer: '권력', initials: 'ㄱㄹ', aliases: ['권력'] },
+        { no: 2, text: '급장 (      )는 반을 완전히 장악했다.', answer: '엄석대', initials: 'ㅇㅅㄷ', aliases: ['엄석대'] },
+        { no: 3, text: '엄석대는 반 아이들을 완전히 (      )하고 있었다.', answer: '지배', initials: 'ㅈㅂ', aliases: ['지배'] },
+        { no: 4, text: '병태는 처음에 부당한 권력에 (      )하려 했다.', answer: '저항', initials: 'ㅈㅎ', aliases: ['저항'] },
+        { no: 5, text: '결국 병태는 엄석대에게 (      )했다.', answer: '굴복', initials: 'ㄱㅂ', aliases: ['굴복'] },
+        { no: 6, text: '권력 앞에서 개인은 결국 (      )하게 된다.', answer: '순응', initials: 'ㅅㅇ', aliases: ['순응'] },
+        { no: 7, text: '새 담임은 엄석대의 (      )를 밝혀냈다.', answer: '비리', initials: 'ㅂㄹ', aliases: ['비리'] },
+        { no: 8, text: '작품은 권력의 (      )함을 보여준다.', answer: '허무', initials: 'ㅎㅁ', aliases: ['허무'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '병태는 끝까지 엄석대에게 저항했다.',
-        '병태는 결국 엄석대의 권력에 굴복했다.',
-        '반 아이들은 병태의 편을 들어주었다.',
-        '엄석대는 끝까지 권력을 유지했다.'
+        '① 병태는 끝까지 엄석대에게 저항했다.',
+        '② 병태는 결국 엄석대의 권력에 굴복했다.',
+        '③ 반 아이들은 병태의 편을 들어주었다.',
+        '④ 엄석대는 끝까지 권력을 유지했다.'
       ],
       q2_text: '이 글의 주제의식으로 가장 적절한 것은?',
       q2_opts: [
-        '권력의 본질과 그에 순응하는 대중의 기회주의 비판',
-        '학교 폭력의 실태와 해결 방안 제시',
-        '시골과 도시의 문화적 차이와 갈등',
-        '우정의 소중함과 진정한 친구의 의미'
+        '① 권력의 본질과 그에 순응하는 대중의 기회주의 비판',
+        '② 학교 폭력의 실태와 해결 방안 제시',
+        '③ 시골과 도시의 문화적 차이와 갈등',
+        '④ 우정의 소중함과 진정한 친구의 의미'
       ],
-      q3_text: '병태가 엄석대에게 한 행동을 두 글자로 쓰시오.',
-      q4_text: '엄석대가 상징하는 것을 두 글자로 쓰시오.',
-      q5_text: '새 담임이 밝혀낸 것을 두 글자로 쓰시오.'
+      q3_html: '병태는 처음에 엄석대의 부당한 권력에 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅎ">하려 했으나, 결국 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅂ">했다.',
+      q4_html: '엄석대는 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈ"> 권력을 상징하며, 새 담임은 그의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㄹ">를 밝혀냈다.',
+      q5_text: '권력 앞에서 개인이 무력해지고 순응하게 되는 현상에 대해 자신의 생각을 써 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '굴복',
-      q4: '독재',
-      q5: '비리'
+      q1: '2',
+      q2: '1',
+      q3_1: ['저항'],
+      q3_2: ['굴복'],
+      q4_1: ['독재'],
+      q4_2: ['비리'],
+      q5: '순응'
     },
     essayKeywords: ['권력', '순응', '저항', '독재', '기회주의', '비판'],
     explain: {
       q1: '본문에서 결국 고립된 병태는 저항을 포기하고 엄석대의 권력에 굴복한다고 했습니다.',
       q2: '이 작품은 권력의 허무함과 그에 순응하는 대중의 기회주의적 태도를 날카롭게 비판하고 있습니다.',
-      q3: '본문에서 병태는 저항을 포기하고 엄석대에게 "굴복"했다고 했습니다.',
-      q4: '본문에서 엄석대는 "독재" 권력을 상징하는 것으로 해석된다고 했습니다.',
-      q5: '본문에서 새 담임은 엄석대의 "비리"를 밝혀냈다고 했습니다.'
+      q3: '본문에서 병태는 처음에 부당한 권력에 "저항"하려 했으나, 결국 "굴복"했다고 했습니다.',
+      q4: '본문에서 엄석대는 "독재" 권력을 상징하며, 새 담임은 그의 "비리"를 밝혀냈다고 했습니다.',
+      q5: '권력 앞에서 개인은 무력해지고, 결국 순응하게 된다는 것이 작품의 주제입니다.'
     },
     creative: {
       title: '부당한 권력에 대한 태도',
@@ -2418,51 +2464,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['애도', '슬퍼하며 추모함']
     ],
     vocabFill: {
-      word_bank: ['산업화', '노동자', '지치게', '노동 환경', '결승선', '들고', '비애', '애도'],
+      instructions: '',
       items: [
-        { sentence: '이 작품은 1970년대 (   ) 시대를 배경으로 한다.', answer: '산업화' },
-        { sentence: '길남은 봉제공장에서 일하는 (   )이다.', answer: '노동자' },
-        { sentence: '고된 노동은 그의 몸과 마음을 (   ) 한다.', answer: '지치게' },
-        { sentence: '공장의 열악한 (   )에서도 꿈을 포기하지 않았다.', answer: '노동 환경' },
-        { sentence: '길남은 (   )을 앞두고 쓰러졌다.', answer: '결승선' },
-        { sentence: '길남이 (   ) 달려야 할 깃발은 없었다.', answer: '들고' },
-        { sentence: '제목은 노동자들의 (   )를 상징한다.', answer: '비애' },
-        { sentence: '작품은 희생되는 노동자들의 삶을 (   )한다.', answer: '애도' }
+        { no: 1, text: '이 작품은 1970년대 (      ) 시대를 배경으로 한다.', answer: '산업화', initials: 'ㅅㅇㅎ', aliases: ['산업화'] },
+        { no: 2, text: '길남은 봉제공장에서 일하는 (      )이다.', answer: '노동자', initials: 'ㄴㄷㅈ', aliases: ['노동자'] },
+        { no: 3, text: '고된 노동은 그의 몸과 마음을 (      ) 한다.', answer: '지치게', initials: 'ㅈㅊㄱ', aliases: ['지치게'] },
+        { no: 4, text: '공장의 열악한 (      )에서도 꿈을 포기하지 않았다.', answer: '노동 환경', initials: 'ㄴㄷ ㅎㄱ', aliases: ['노동 환경','노동환경'] },
+        { no: 5, text: '길남은 (      )을 앞두고 쓰러졌다.', answer: '결승선', initials: 'ㄱㅅㅅ', aliases: ['결승선'] },
+        { no: 6, text: '길남이 (      ) 달려야 할 깃발은 없었다.', answer: '들고', initials: 'ㄷㄱ', aliases: ['들고'] },
+        { no: 7, text: '제목은 노동자들의 (      )를 상징한다.', answer: '비애', initials: 'ㅂㅇ', aliases: ['비애'] },
+        { no: 8, text: '작품은 희생되는 노동자들의 삶을 (      )한다.', answer: '애도', initials: 'ㅇㄷ', aliases: ['애도'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '길남은 마라톤 대회에서 우승했다.',
-        '길남은 결승선을 앞두고 쓰러졌다.',
-        '길남은 공장에서 좋은 대우를 받았다.',
-        '길남의 꿈은 축구 선수가 되는 것이었다.'
+        '① 길남은 마라톤 대회에서 우승했다.',
+        '② 길남은 결승선을 앞두고 쓰러졌다.',
+        '③ 길남은 공장에서 좋은 대우를 받았다.',
+        '④ 길남의 꿈은 축구 선수가 되는 것이었다.'
       ],
       q2_text: '이 글의 제목이 의미하는 것으로 가장 적절한 것은?',
       q2_opts: [
-        '사회를 위해 희생하지만 인정받지 못하는 노동자들',
-        '국가를 위해 헌신하는 마라톤 선수들의 영광',
-        '꿈을 포기하지 않는 젊은이들의 도전 정신',
-        '산업화 시대의 급격한 경제 성장'
+        '① 사회를 위해 희생하지만 인정받지 못하는 노동자들',
+        '② 국가를 위해 헌신하는 마라톤 선수들의 영광',
+        '③ 꿈을 포기하지 않는 젊은이들의 도전 정신',
+        '④ 산업화 시대의 급격한 경제 성장'
       ],
-      q3_text: '길남의 직업을 세 글자로 쓰시오.',
-      q4_text: '길남이 쓰러진 원인을 두 글자로 쓰시오.',
-      q5_text: '제목에서 "깃발"이 상징하는 것을 두 글자로 쓰시오.'
+      q3_html: '길남은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅈㄱㅈ">에서 일하는 젊은 <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㄷㅈ">이다.',
+      q4_html: '길남은 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㄹ">와 영양 부족으로 지쳐 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅅㅅ">을 앞두고 쓰러졌다.',
+      q5_text: '제목 "깃발 없는 기수"가 노동자들의 비애를 상징하는 이유를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '노동자',
-      q4: '과로',
+      q1: '2',
+      q2: '1',
+      q3_1: ['봉제공장'],
+      q3_2: ['노동자'],
+      q4_1: ['과로'],
+      q4_2: ['결승선'],
       q5: '영광'
     },
     essayKeywords: ['노동자', '산업화', '꿈', '희생', '비애', '현실'],
     explain: {
       q1: '본문에서 과로와 영양 부족으로 지친 그의 몸은 결승선을 앞두고 쓰러지고 만다고 했습니다.',
       q2: '본문에서 노동자들은 사회를 위해 달리지만 아무런 인정도 받지 못하는 "깃발 없는 기수"라고 했습니다.',
-      q3: '본문에서 길남은 봉제공장에서 일하는 "노동자"라고 했습니다.',
-      q4: '본문에서 "과로"와 영양 부족으로 쓰러졌다고 했습니다.',
-      q5: '본문에서 마라톤 우승자는 국기를 들고 세레머니를 하므로, "깃발"은 "영광"을 상징합니다.'
+      q3: '본문에서 길남은 "봉제공장"에서 일하는 젊은 "노동자"라고 했습니다.',
+      q4: '본문에서 길남은 "과로"와 영양 부족으로 지쳐 "결승선"을 앞두고 쓰러졌다고 했습니다.',
+      q5: '마라톤 우승자는 국기를 들고 세레머니를 하지만, 노동자들에게는 그런 영광의 기회가 주어지지 않아 "깃발 없는 기수"인 것입니다.'
     },
     creative: {
       title: '꿈과 현실 사이',
@@ -2496,51 +2544,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['실상', '실제 모습']
     ],
     vocabFill: {
-      word_bank: ['건설 현장', '떠돌이', '육체노동', '연고', '합숙소', '연대', '불안정', '실상'],
+      instructions: '',
       items: [
-        { sentence: '1970년대 (   )의 노동자들을 그리고 있다.', answer: '건설 현장' },
-        { sentence: '주인공은 고향을 떠난 (   ) 노동자이다.', answer: '떠돌이' },
-        { sentence: '그들은 위험하고 힘든 (   )을 한다.', answer: '육체노동' },
-        { sentence: '아무 (   )도 없이 떠도는 사람도 있다.', answer: '연고' },
-        { sentence: '노동자들은 (   )에서 함께 생활한다.', answer: '합숙소' },
-        { sentence: '노동자들 사이에는 거친 우정과 (   )가 있다.', answer: '연대' },
-        { sentence: '그들의 삶은 (   )하고 위태롭다.', answer: '불안정' },
-        { sentence: '작품은 노동자들의 (   )을 고발한다.', answer: '실상' }
+        { no: 1, text: '1970년대 (      )의 노동자들을 그리고 있다.', answer: '건설 현장', initials: 'ㄱㅅ ㅎㅈ', aliases: ['건설 현장','건설현장'] },
+        { no: 2, text: '주인공은 고향을 떠난 (      ) 노동자이다.', answer: '떠돌이', initials: 'ㄸㄷㅇ', aliases: ['떠돌이'] },
+        { no: 3, text: '그들은 위험하고 힘든 (      )을 한다.', answer: '육체노동', initials: 'ㅇㅊㄴㄷ', aliases: ['육체노동'] },
+        { no: 4, text: '아무 (      )도 없이 떠도는 사람도 있다.', answer: '연고', initials: 'ㅇㄱ', aliases: ['연고'] },
+        { no: 5, text: '노동자들은 (      )에서 함께 생활한다.', answer: '합숙소', initials: 'ㅎㅅㅅ', aliases: ['합숙소'] },
+        { no: 6, text: '노동자들 사이에는 거친 우정과 (      )가 있다.', answer: '연대', initials: 'ㅇㄷ', aliases: ['연대'] },
+        { no: 7, text: '그들의 삶은 (      )하고 위태롭다.', answer: '불안정', initials: 'ㅂㅇㅈ', aliases: ['불안정'] },
+        { no: 8, text: '작품은 노동자들의 (      )을 고발한다.', answer: '실상', initials: 'ㅅㅅ', aliases: ['실상'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '노동자들은 안정적인 일자리에서 일했다.',
-        '노동자들은 합숙소에서 함께 생활했다.',
-        '주인공은 고향에서 가족과 함께 살았다.',
-        '건설 현장의 노동 환경은 안전했다.'
+        '① 노동자들은 안정적인 일자리에서 일했다.',
+        '② 노동자들은 합숙소에서 함께 생활했다.',
+        '③ 주인공은 고향에서 가족과 함께 살았다.',
+        '④ 건설 현장의 노동 환경은 안전했다.'
       ],
       q2_text: '이 글의 서술 특징으로 가장 적절한 것은?',
       q2_opts: [
-        '건설 현장 노동자들의 일상을 사실적으로 묘사하고 있다.',
-        '환상적 기법으로 노동의 고단함을 상징화하고 있다.',
-        '역순행적 구성으로 인물의 과거를 밝혀가고 있다.',
-        '서술자가 직접 개입하여 사회를 비판하고 있다.'
+        '① 건설 현장 노동자들의 일상을 사실적으로 묘사하고 있다.',
+        '② 환상적 기법으로 노동의 고단함을 상징화하고 있다.',
+        '③ 역순행적 구성으로 인물의 과거를 밝혀가고 있다.',
+        '④ 서술자가 직접 개입하여 사회를 비판하고 있다.'
       ],
-      q3_text: '"객지"가 뜻하는 것을 두 글자로 쓰시오.',
-      q4_text: '노동자들이 고단함을 달래는 방법 중 하나를 한 글자로 쓰시오.',
-      q5_text: '작품이 고발하는 대상을 세 글자로 쓰시오.'
+      q3_html: '"객지"란 <input class="inline-input" id="q3-1" type="text" placeholder="ㅌㅎ">, 고향이 아닌 낯선 땅을 뜻하며, 고향을 떠나 떠도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㄷㅈ">들의 처지를 상징한다.',
+      q4_html: '노동자들의 삶은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅇㅈ">하고 위태로우며, 언제 잘릴지 모르는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅇ">이 있다.',
+      q5_text: '작품이 산업화의 역군이지만 제대로 대우받지 못하는 노동자들의 실상을 고발하는 이유를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '타향',
-      q4: '술',
-      q5: '노동자'
+      q1: '2',
+      q2: '1',
+      q3_1: ['타향'],
+      q3_2: ['노동자'],
+      q4_1: ['불안정'],
+      q4_2: ['불안'],
+      q5: '실상'
     },
     essayKeywords: ['객지', '노동자', '건설', '떠돌이', '연대', '불안정'],
     explain: {
       q1: '본문에서 노동자들은 합숙소에서 함께 생활한다고 했습니다.',
       q2: '이 작품은 건설 현장 노동자들의 일상을 담담하게 사실적으로 묘사하고 있습니다.',
-      q3: '본문에서 "객지"란 타향, 고향이 아닌 낯선 땅을 뜻한다고 했습니다.',
-      q4: '본문에서 노동자들은 "술"과 도박으로 고단함을 달랜다고 했습니다.',
-      q5: '본문에서 제대로 대우받지 못하는 "노동자"들의 실상을 고발한다고 했습니다.'
+      q3: '본문에서 "객지"란 "타향", 고향이 아닌 낯선 땅을 뜻하며, 고향을 떠나 떠도는 "노동자"들의 처지를 상징한다고 했습니다.',
+      q4: '본문에서 노동자들의 삶은 "불안정"하고 위태로우며, 언제 잘릴지 모르는 "불안"이 있다고 했습니다.',
+      q5: '작품은 산업화의 역군으로 불리지만 정작 제대로 대우받지 못하는 노동자들의 실상을 고발하고 있습니다.'
     },
     creative: {
       title: '노동의 가치',
@@ -2574,51 +2624,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['정서', '마음에서 일어나는 감정']
     ],
     vocabFill: {
-      word_bank: ['예술', '판소리', '한', '애절', '떠돌며', '슬픔', '잔혹', '정서'],
+      instructions: '',
       items: [
-        { sentence: '이 작품은 (   )의 본질을 탐구한다.', answer: '예술' },
-        { sentence: '유봉은 (   ) 명창이다.', answer: '판소리' },
-        { sentence: '앞이 보이지 않아야 더 깊은 (   )을 품을 수 있다.', answer: '한' },
-        { sentence: '서편제는 슬프고 (   )한 가락이 특징이다.', answer: '애절' },
-        { sentence: '송화는 홀로 (   ) 소리를 이어갔다.', answer: '떠돌며' },
-        { sentence: '송화의 소리에는 고통과 (   )이 녹아 있다.', answer: '슬픔' },
-        { sentence: '유봉의 행위는 (   )하지만 결과를 낳았다.', answer: '잔혹' },
-        { sentence: '작품은 한국적 (   )인 한을 탐구한다.', answer: '정서' }
+        { no: 1, text: '이 작품은 (      )의 본질을 탐구한다.', answer: '예술', initials: 'ㅇㅅ', aliases: ['예술'] },
+        { no: 2, text: '유봉은 (      ) 명창이다.', answer: '판소리', initials: 'ㅍㅅㄹ', aliases: ['판소리'] },
+        { no: 3, text: '앞이 보이지 않아야 더 깊은 (      )을 품을 수 있다.', answer: '한', initials: 'ㅎ', aliases: ['한'] },
+        { no: 4, text: '서편제는 슬프고 (      )한 가락이 특징이다.', answer: '애절', initials: 'ㅇㅈ', aliases: ['애절'] },
+        { no: 5, text: '송화는 홀로 (      ) 소리를 이어갔다.', answer: '떠돌며', initials: 'ㄸㄷㅁ', aliases: ['떠돌며'] },
+        { no: 6, text: '송화의 소리에는 고통과 (      )이 녹아 있다.', answer: '슬픔', initials: 'ㅅㅍ', aliases: ['슬픔'] },
+        { no: 7, text: '유봉의 행위는 (      )하지만 결과를 낳았다.', answer: '잔혹', initials: 'ㅈㅎ', aliases: ['잔혹'] },
+        { no: 8, text: '작품은 한국적 (      )인 한을 탐구한다.', answer: '정서', initials: 'ㅈㅅ', aliases: ['정서'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '유봉은 송화의 눈을 치료해 주었다.',
-        '유봉은 더 깊은 한을 위해 딸의 눈을 멀게 했다.',
-        '동호는 송화를 끝내 찾지 못했다.',
-        '서편제는 밝고 경쾌한 가락이 특징이다.'
+        '① 유봉은 송화의 눈을 치료해 주었다.',
+        '② 유봉은 더 깊은 한을 위해 딸의 눈을 멀게 했다.',
+        '③ 동호는 송화를 끝내 찾지 못했다.',
+        '④ 서편제는 밝고 경쾌한 가락이 특징이다.'
       ],
       q2_text: '이 글의 주제의식으로 가장 적절한 것은?',
       q2_opts: [
-        '예술을 위한 희생과 한의 미학에 대한 탐구',
-        '가족 간의 갈등과 화해의 중요성',
-        '전통문화의 현대적 계승 방안',
-        '장애를 극복한 인물의 성공담'
+        '① 예술을 위한 희생과 한의 미학에 대한 탐구',
+        '② 가족 간의 갈등과 화해의 중요성',
+        '③ 전통문화의 현대적 계승 방안',
+        '④ 장애를 극복한 인물의 성공담'
       ],
-      q3_text: '유봉이 송화에게 물려주고자 한 것을 세 글자로 쓰시오.',
-      q4_text: '서편제의 특징적인 정서를 한 글자로 쓰시오.',
-      q5_text: '유봉이 딸의 눈을 멀게 한 목적을 두 글자로 쓰시오.'
+      q3_html: '유봉은 송화에게 슬프고 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅈ">한 가락이 특징인 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅍㅈ">를 물려주고자 했다.',
+      q4_html: '유봉은 앞이 보이지 않아야 더 깊은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎ">을 품고 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄹ">할 수 있다고 믿었다.',
+      q5_text: '예술을 위해 인간적인 것을 희생해야 하는가라는 질문에 대해 자신의 생각을 써 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '서편제',
-      q4: '한',
-      q5: '소리'
+      q1: '2',
+      q2: '1',
+      q3_1: ['애절'],
+      q3_2: ['서편제'],
+      q4_1: ['한'],
+      q4_2: ['소리'],
+      q5: '희생'
     },
     essayKeywords: ['서편제', '한', '예술', '판소리', '희생', '슬픔'],
     explain: {
       q1: '본문에서 유봉은 딸의 눈을 멀게 했는데, 더 깊은 한을 품고 소리할 수 있다고 믿었기 때문이라고 했습니다.',
       q2: '이 작품은 예술을 위해 인간적인 것을 희생해야 하는가라는 질문을 던지며 한의 미학을 탐구합니다.',
-      q3: '본문에서 유봉은 송화에게 "서편제"의 소리를 물려주고자 한다고 했습니다.',
-      q4: '본문에서 서편제는 슬프고 애절한 가락으로, "한"의 정서가 특징이라고 했습니다.',
-      q5: '본문에서 더 깊은 한을 품고 "소리"할 수 있게 하기 위해 눈을 멀게 했다고 했습니다.'
+      q3: '본문에서 유봉은 송화에게 슬프고 "애절"한 가락이 특징인 "서편제"를 물려주고자 한다고 했습니다.',
+      q4: '본문에서 유봉은 앞이 보이지 않아야 더 깊은 "한"을 품고 "소리"할 수 있다고 믿었다고 했습니다.',
+      q5: '예술을 위해 인간적인 것을 희생해야 하는가는 작품의 핵심 질문이며, 유봉의 행위는 잔혹하지만 송화는 최고의 소리꾼이 되었습니다.'
     },
     creative: {
       title: '예술과 희생',
@@ -2652,51 +2704,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['생명력', '살아 있는 힘']
     ],
     vocabFill: {
-      word_bank: ['조망', '평사리', '여성', '양반', '헌신', '민중', '정체성', '생명력'],
+      instructions: '',
       items: [
-        { sentence: '이 작품은 한국 근현대사를 (   )하고 있다.', answer: '조망' },
-        { sentence: '작품은 경상남도 하동의 (   )를 배경으로 한다.', answer: '평사리' },
-        { sentence: '서희는 강인하게 성장하는 (   )이다.', answer: '여성' },
-        { sentence: '(   )과 상민 등 다양한 계층이 등장한다.', answer: '양반' },
-        { sentence: '독립운동에 뛰어든 청년들의 (   )이 그려진다.', answer: '헌신' },
-        { sentence: '"토지"는 (   )의 삶 전체를 상징한다.', answer: '민중' },
-        { sentence: '작품은 한국인의 (   )을 탐구한다.', answer: '정체성' },
-        { sentence: '고통 속에서도 삶을 이어가는 민중의 (   )을 그렸다.', answer: '생명력' }
+        { no: 1, text: '이 작품은 한국 근현대사를 (      )하고 있다.', answer: '조망', initials: 'ㅈㅁ', aliases: ['조망'] },
+        { no: 2, text: '작품은 경상남도 하동의 (      )를 배경으로 한다.', answer: '평사리', initials: 'ㅍㅅㄹ', aliases: ['평사리'] },
+        { no: 3, text: '서희는 강인하게 성장하는 (      )이다.', answer: '여성', initials: 'ㅇㅅ', aliases: ['여성'] },
+        { no: 4, text: '(      )과 상민 등 다양한 계층이 등장한다.', answer: '양반', initials: 'ㅇㅂ', aliases: ['양반'] },
+        { no: 5, text: '독립운동에 뛰어든 청년들의 (      )이 그려진다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] },
+        { no: 6, text: '"토지"는 (      )의 삶 전체를 상징한다.', answer: '민중', initials: 'ㅁㅈ', aliases: ['민중'] },
+        { no: 7, text: '작품은 한국인의 (      )을 탐구한다.', answer: '정체성', initials: 'ㅈㅊㅅ', aliases: ['정체성'] },
+        { no: 8, text: '고통 속에서도 삶을 이어가는 민중의 (      )을 그렸다.', answer: '생명력', initials: 'ㅅㅁㄹ', aliases: ['생명력'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '토지는 5년에 걸쳐 집필되었다.',
-        '서희는 최참판댁의 마지막 후손이다.',
-        '작품의 배경은 서울이다.',
-        '서희는 일제에 협력하는 인물이다.'
+        '① 토지는 5년에 걸쳐 집필되었다.',
+        '② 서희는 최참판댁의 마지막 후손이다.',
+        '③ 작품의 배경은 서울이다.',
+        '④ 서희는 일제에 협력하는 인물이다.'
       ],
       q2_text: '이 글의 서술 특징으로 가장 적절한 것은?',
       q2_opts: [
-        '한 가문의 역사를 통해 한국 근현대사를 조망하고 있다.',
-        '환상적 기법으로 역사적 사건을 재해석하고 있다.',
-        '1인칭 시점으로 개인의 내면을 집중 묘사하고 있다.',
-        '대화 중심으로 인물 간의 갈등을 부각하고 있다.'
+        '① 한 가문의 역사를 통해 한국 근현대사를 조망하고 있다.',
+        '② 환상적 기법으로 역사적 사건을 재해석하고 있다.',
+        '③ 1인칭 시점으로 개인의 내면을 집중 묘사하고 있다.',
+        '④ 대화 중심으로 인물 간의 갈등을 부각하고 있다.'
       ],
-      q3_text: '소설의 중심 무대가 되는 지역을 세 글자로 쓰시오.',
-      q4_text: '작품 제목 "토지"가 상징하는 것을 두 글자로 쓰시오.',
-      q5_text: '서희가 일제에 빼앗긴 것을 한 글자로 쓰시오.'
+      q3_html: '작품은 경상남도 하동의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅍㅅㄹ">를 중심 무대로, <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㅊㅍㄷ"> 가문의 이야기를 그린다.',
+      q4_html: '"토지"는 단순히 땅이 아니라 그 땅에서 살아가는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㅈ">의 삶 전체와 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅁㄹ">을 상징한다.',
+      q5_text: '작품이 한국인의 정체성과 역사 의식을 탐구하며 민중의 생명력을 그리는 이유를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '평사리',
-      q4: '민중',
+      q1: '2',
+      q2: '1',
+      q3_1: ['평사리'],
+      q3_2: ['최참판댁'],
+      q4_1: ['민중'],
+      q4_2: ['생명력'],
       q5: '땅'
     },
     essayKeywords: ['토지', '민중', '역사', '서희', '정체성', '생명력'],
     explain: {
       q1: '본문에서 주인공 서희는 최참판댁의 마지막 후손이라고 했습니다.',
       q2: '이 작품은 약 5대에 걸친 한 가문의 역사를 통해 한국 근현대사를 조망하고 있습니다.',
-      q3: '본문에서 작품은 경상남도 하동의 "평사리"를 중심 무대로 한다고 했습니다.',
-      q4: '본문에서 "토지"는 땅에서 살아가는 "민중"의 삶 전체를 상징한다고 했습니다.',
-      q5: '본문에서 일제강점기에 빼앗긴 "땅"을 되찾기 위한 서희의 투쟁이라고 했습니다.'
+      q3: '본문에서 작품은 경상남도 하동의 "평사리"를 중심 무대로, "최참판댁" 가문의 이야기를 그린다고 했습니다.',
+      q4: '본문에서 "토지"는 단순히 땅이 아니라 그 땅에서 살아가는 "민중"의 삶 전체와 "생명력"을 상징한다고 했습니다.',
+      q5: '박경리는 이 작품에서 한국인의 정체성과 역사 의식을 탐구하며, 고통 속에서도 삶을 이어가는 민중의 생명력을 그렸습니다.'
     },
     creative: {
       title: '역사와 개인의 삶',
@@ -2730,51 +2784,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['보고', '귀중한 것이 많이 들어 있는 곳']
     ],
     vocabFill: {
-      word_bank: ['남원', '영혼', '음식', '며느리', '계승', '정수', '문체', '보고'],
+      instructions: '',
       items: [
-        { sentence: '작품은 전라북도 (   )을 배경으로 한다.', answer: '남원' },
-        { sentence: '"혼불"은 죽은 사람의 (   )을 태우는 불꽃이다.', answer: '영혼' },
-        { sentence: '세시풍속, (   ), 언어 등이 상세히 기록되어 있다.', answer: '음식' },
-        { sentence: '종가의 (   )로서 가문을 이어간다.', answer: '며느리' },
-        { sentence: '여성들은 가문의 전통을 (   )하는 역할을 맡는다.', answer: '계승' },
-        { sentence: '작품은 민족 문화의 (   )를 담고 있다.', answer: '정수' },
-        { sentence: '아름다운 (   )와 깊은 서정성이 특징이다.', answer: '문체' },
-        { sentence: '혼불은 한국 전통문화의 (   )로 평가받는다.', answer: '보고' }
+        { no: 1, text: '작품은 전라북도 (      )을 배경으로 한다.', answer: '남원', initials: 'ㄴㅇ', aliases: ['남원'] },
+        { no: 2, text: '"혼불"은 죽은 사람의 (      )을 태우는 불꽃이다.', answer: '영혼', initials: 'ㅇㅎ', aliases: ['영혼'] },
+        { no: 3, text: '세시풍속, (      ), 언어 등이 상세히 기록되어 있다.', answer: '음식', initials: 'ㅇㅅ', aliases: ['음식'] },
+        { no: 4, text: '종가의 (      )로서 가문을 이어간다.', answer: '며느리', initials: 'ㅁㄴㄹ', aliases: ['며느리'] },
+        { no: 5, text: '여성들은 가문의 전통을 (      )하는 역할을 맡는다.', answer: '계승', initials: 'ㄱㅅ', aliases: ['계승'] },
+        { no: 6, text: '작품은 민족 문화의 (      )를 담고 있다.', answer: '정수', initials: 'ㅈㅅ', aliases: ['정수'] },
+        { no: 7, text: '아름다운 (      )와 깊은 서정성이 특징이다.', answer: '문체', initials: 'ㅁㅊ', aliases: ['문체'] },
+        { no: 8, text: '혼불은 한국 전통문화의 (      )로 평가받는다.', answer: '보고', initials: 'ㅂㄱ', aliases: ['보고'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '혼불은 5년에 걸쳐 집필되었다.',
-        '작품은 한국 전통문화를 상세히 기록하고 있다.',
-        '작품의 배경은 서울의 양반가이다.',
-        '"혼불"은 불꽃놀이를 의미한다.'
+        '① 혼불은 5년에 걸쳐 집필되었다.',
+        '② 작품은 한국 전통문화를 상세히 기록하고 있다.',
+        '③ 작품의 배경은 서울의 양반가이다.',
+        '④ "혼불"은 불꽃놀이를 의미한다.'
       ],
       q2_text: '이 글의 특징으로 가장 적절한 것은?',
       q2_opts: [
-        '전통문화의 다양한 면모를 백과사전적으로 담고 있다.',
-        '역순행적 구성으로 과거와 현재를 교차한다.',
-        '풍자와 해학으로 사회를 비판하고 있다.',
-        '1인칭 시점으로 개인의 심리를 집중 탐구한다.'
+        '① 전통문화의 다양한 면모를 백과사전적으로 담고 있다.',
+        '② 역순행적 구성으로 과거와 현재를 교차한다.',
+        '③ 풍자와 해학으로 사회를 비판하고 있다.',
+        '④ 1인칭 시점으로 개인의 심리를 집중 탐구한다.'
       ],
-      q3_text: '"혼불"이 상징하는 것을 네 글자로 쓰시오.',
-      q4_text: '작품의 배경이 되는 지역을 두 글자로 쓰시오.',
-      q5_text: '작품이 문화적으로 평가받는 이유를 두 글자로 쓰시오.'
+      q3_html: '"혼불"은 죽은 사람의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅎ">을 태우는 불꽃으로, 사라져가는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅌㅁㅎ">를 상징한다.',
+      q4_html: '작품은 전라북도 <input class="inline-input" id="q4-1" type="text" placeholder="ㄴㅇ">의 양반가를 배경으로, 여성들이 가문의 전통을 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅅ">하는 역할을 그린다.',
+      q5_text: '혼불이 한국 전통문화의 보고로서 문학적·문화적 가치를 인정받는 이유를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '전통문화',
-      q4: '남원',
+      q1: '2',
+      q2: '1',
+      q3_1: ['영혼'],
+      q3_2: ['전통문화'],
+      q4_1: ['남원'],
+      q4_2: ['계승'],
       q5: '보고'
     },
     essayKeywords: ['혼불', '전통', '문화', '여성', '계승', '정수'],
     explain: {
       q1: '본문에서 소설은 세시풍속, 음식, 언어 등 한국 전통문화의 다양한 면모를 상세히 기록하고 있다고 했습니다.',
       q2: '작품은 민족 문화의 정수를 담은 백과사전적 소설로 평가받는다고 했습니다.',
-      q3: '본문에서 "혼불"은 사라져가는 "전통문화"와 그것을 지키려는 혼을 상징한다고 했습니다.',
-      q4: '본문에서 작품은 전라북도 "남원"의 양반가를 배경으로 한다고 했습니다.',
-      q5: '본문에서 혼불은 한국 전통문화의 "보고"로서 가치를 인정받는다고 했습니다.'
+      q3: '본문에서 "혼불"은 죽은 사람의 "영혼"을 태우는 불꽃으로, 사라져가는 "전통문화"를 상징한다고 했습니다.',
+      q4: '본문에서 작품은 전라북도 "남원"의 양반가를 배경으로, 여성들이 가문의 전통을 "계승"하는 역할을 그린다고 했습니다.',
+      q5: '혼불은 민족 문화의 정수를 담은 백과사전적 소설로, 한국 전통문화의 보고로서 문학적·문화적 가치를 인정받습니다.'
     },
     creative: {
       title: '전통문화의 계승',
@@ -2808,51 +2864,53 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['화해', '다툼을 풀고 사이좋게 지냄']
     ],
     vocabFill: {
-      word_bank: ['좌우 이념', '벌교', '지도자', '원수', '피해자', '민족', '논란', '화해'],
+      instructions: '',
       items: [
-        { sentence: '이 작품은 (   ) 갈등을 그리고 있다.', answer: '좌우 이념' },
-        { sentence: '소설은 전라남도 (   )를 중심 무대로 한다.', answer: '벌교' },
-        { sentence: '빨치산 (   )부터 다양한 인물이 등장한다.', answer: '지도자' },
-        { sentence: '이념 대립으로 이웃이 (   )가 되었다.', answer: '원수' },
-        { sentence: '좌우 어느 쪽이든 결국 (   )는 민중이다.', answer: '피해자' },
-        { sentence: '제목은 분단이 (   )을 가로지름을 상징한다.', answer: '민족' },
-        { sentence: '발표 당시 좌익 미화 (   )이 있었다.', answer: '논란' },
-        { sentence: '작품은 (   )와 통일의 길을 모색한다.', answer: '화해' }
+        { no: 1, text: '이 작품은 (      ) 갈등을 그리고 있다.', answer: '좌우 이념', initials: 'ㅈㅇ ㅇㄴ', aliases: ['좌우 이념','좌우이념'] },
+        { no: 2, text: '소설은 전라남도 (      )를 중심 무대로 한다.', answer: '벌교', initials: 'ㅂㄱ', aliases: ['벌교'] },
+        { no: 3, text: '빨치산 (      )부터 다양한 인물이 등장한다.', answer: '지도자', initials: 'ㅈㄷㅈ', aliases: ['지도자'] },
+        { no: 4, text: '이념 대립으로 이웃이 (      )가 되었다.', answer: '원수', initials: 'ㅇㅅ', aliases: ['원수'] },
+        { no: 5, text: '좌우 어느 쪽이든 결국 (      )는 민중이다.', answer: '피해자', initials: 'ㅍㅎㅈ', aliases: ['피해자'] },
+        { no: 6, text: '제목은 분단이 (      )을 가로지름을 상징한다.', answer: '민족', initials: 'ㅁㅈ', aliases: ['민족'] },
+        { no: 7, text: '발표 당시 좌익 미화 (      )이 있었다.', answer: '논란', initials: 'ㄴㄹ', aliases: ['논란'] },
+        { no: 8, text: '작품은 (      )와 통일의 길을 모색한다.', answer: '화해', initials: 'ㅎㅎ', aliases: ['화해'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '태백산맥은 한국전쟁 이후를 배경으로 한다.',
-        '작품은 이념 갈등으로 고통받는 민중을 그린다.',
-        '소설은 우익만을 옹호하고 있다.',
-        '제목은 특정 산의 이름에서 따왔다.'
+        '① 태백산맥은 한국전쟁 이후를 배경으로 한다.',
+        '② 작품은 이념 갈등으로 고통받는 민중을 그린다.',
+        '③ 소설은 우익만을 옹호하고 있다.',
+        '④ 제목은 특정 산의 이름에서 따왔다.'
       ],
       q2_text: '이 글의 주제의식으로 가장 적절한 것은?',
       q2_opts: [
-        '이념 대립으로 고통받는 민중의 비극과 화해의 모색',
-        '특정 이념의 정당성과 역사적 승리',
-        '전쟁 영웅들의 활약과 업적',
-        '농촌 공동체의 아름다운 전통'
+        '① 이념 대립으로 고통받는 민중의 비극과 화해의 모색',
+        '② 특정 이념의 정당성과 역사적 승리',
+        '③ 전쟁 영웅들의 활약과 업적',
+        '④ 농촌 공동체의 아름다운 전통'
       ],
-      q3_text: '작품의 배경이 되는 지역을 두 글자로 쓰시오.',
-      q4_text: '이념 갈등의 피해자가 되는 집단을 두 글자로 쓰시오.',
-      q5_text: '작가가 작품을 통해 모색하고자 한 것을 두 글자로 쓰시오.'
+      q3_html: '작품은 전라남도 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㄱ">를 배경으로, <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇㅇㄴ"> 갈등을 그린다.',
+      q4_html: '이념 대립 속에서 결국 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㅎㅈ">는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅈ">이라는 점을 부각한다.',
+      q5_text: '조정래가 작품을 통해 역사의 상처를 치유하고 화해와 통일의 길을 모색하고자 한 이유를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '벌교',
-      q4: '민중',
+      q1: '2',
+      q2: '1',
+      q3_1: ['벌교'],
+      q3_2: ['좌우이념', '좌우 이념'],
+      q4_1: ['피해자'],
+      q4_2: ['민중'],
       q5: '화해'
     },
     essayKeywords: ['이념', '민중', '분단', '갈등', '화해', '비극'],
     explain: {
       q1: '본문에서 작품은 어느 한쪽을 옹호하기보다 이념 갈등으로 고통받는 민중의 입장에서 역사를 바라본다고 했습니다.',
       q2: '작품은 이념 대립으로 고통받는 민중의 비극을 그리며 화해와 통일의 길을 모색하고 있습니다.',
-      q3: '본문에서 전라남도 "벌교"를 중심 무대로 한다고 했습니다.',
-      q4: '본문에서 좌우 어느 쪽이든 결국 피해자는 "민중"이라고 했습니다.',
-      q5: '본문에서 조정래는 "화해"와 통일의 길을 모색하고자 했다고 했습니다.'
+      q3: '본문에서 작품은 전라남도 "벌교"를 배경으로, "좌우 이념" 갈등을 그린다고 했습니다.',
+      q4: '본문에서 이념 대립 속에서 결국 "피해자"는 "민중"이라는 점을 부각한다고 했습니다.',
+      q5: '조정래는 이 작품을 통해 역사의 상처를 치유하고 화해와 통일의 길을 모색하고자 했습니다.'
     },
     creative: {
       title: '분단과 화해',
@@ -2886,42 +2944,44 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['상징', '어떤 뜻을 나타내는 것']
     ],
     vocabFill: {
-      word_bank: ['무속', '무당', '신성', '기독교', '저항', '신당', '충돌', '상징'],
+      instructions: '',
       items: [
-        { sentence: '이 작품은 전통적인 (   ) 신앙을 다룬다.', answer: '무속' },
-        { sentence: '모화는 마을에서 (   )으로 살아간다.', answer: '무당' },
-        { sentence: '무속은 신과 인간을 잇는 (   )한 행위이다.', answer: '신성' },
-        { sentence: '욱이가 (   )에 입교하면서 갈등이 시작된다.', answer: '기독교' },
-        { sentence: '모화는 자신의 신앙을 버릴 수 없다며 (   )한다.', answer: '저항' },
-        { sentence: '욱이는 어머니의 (   )에 불을 질렀다.', answer: '신당' },
-        { sentence: '작품은 전통과 근대의 (   )을 그린다.', answer: '충돌' },
-        { sentence: '모화의 죽음은 전통 문화의 죽음을 (   )한다.', answer: '상징' }
+        { no: 1, text: '이 작품은 전통적인 (      ) 신앙을 다룬다.', answer: '무속', initials: 'ㅁㅅ', aliases: ['무속'] },
+        { no: 2, text: '모화는 마을에서 (      )으로 살아간다.', answer: '무당', initials: 'ㅁㄷ', aliases: ['무당'] },
+        { no: 3, text: '무속은 신과 인간을 잇는 (      )한 행위이다.', answer: '신성', initials: 'ㅅㅅ', aliases: ['신성'] },
+        { no: 4, text: '욱이가 (      )에 입교하면서 갈등이 시작된다.', answer: '기독교', initials: 'ㄱㄷㄱ', aliases: ['기독교'] },
+        { no: 5, text: '모화는 자신의 신앙을 버릴 수 없다며 (      )한다.', answer: '저항', initials: 'ㅈㅎ', aliases: ['저항'] },
+        { no: 6, text: '욱이는 어머니의 (      )에 불을 질렀다.', answer: '신당', initials: 'ㅅㄷ', aliases: ['신당'] },
+        { no: 7, text: '작품은 전통과 근대의 (      )을 그린다.', answer: '충돌', initials: 'ㅊㄷ', aliases: ['충돌'] },
+        { no: 8, text: '모화의 죽음은 전통 문화의 죽음을 (      )한다.', answer: '상징', initials: 'ㅅㅈ', aliases: ['상징'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '모화는 기독교로 개종했다.',
-        '욱이는 어머니의 신당에 불을 질렀다.',
-        '모화와 욱이는 갈등 없이 화해했다.',
-        '작품은 기독교의 승리를 그리고 있다.'
+        '① 모화는 기독교로 개종했다.',
+        '② 욱이는 어머니의 신당에 불을 질렀다.',
+        '③ 모화와 욱이는 갈등 없이 화해했다.',
+        '④ 작품은 기독교의 승리를 그리고 있다.'
       ],
       q2_text: '이 글의 주제의식으로 가장 적절한 것은?',
       q2_opts: [
-        '전통 문화와 외래 종교의 충돌로 인한 전통의 비극적 소멸',
-        '근대화와 종교의 조화로운 공존',
-        '무속 신앙의 미신적 요소 비판',
-        '모자 간 화해와 가족의 소중함'
+        '① 전통 문화와 외래 종교의 충돌로 인한 전통의 비극적 소멸',
+        '② 근대화와 종교의 조화로운 공존',
+        '③ 무속 신앙의 미신적 요소 비판',
+        '④ 모자 간 화해와 가족의 소중함'
       ],
-      q3_text: '모화가 모시던 것을 한 글자로 쓰시오.',
-      q4_text: '욱이가 믿게 된 종교를 세 글자로 쓰시오.',
-      q5_text: '모화의 죽음이 상징하는 것을 두 글자로 쓰시오.'
+      q3_html: '모화는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅ">을 모시고 굿을 하는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㄷ">으로 살아간다.',
+      q4_html: '욱이가 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㄷㄱ">에 입교하면서 갈등이 시작되고, 결국 어머니의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄷ">에 불을 지른다.',
+      q5_text: '모화의 죽음이 전통 문화의 죽음을 상징하는 이유를 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '신',
-      q4: '기독교',
+      q1: '2',
+      q2: '1',
+      q3_1: ['신'],
+      q3_2: ['무당'],
+      q4_1: ['기독교'],
+      q4_2: ['신당'],
       q5: '전통'
     },
     essayKeywords: ['무속', '전통', '기독교', '충돌', '비극', '상징'],
@@ -2964,51 +3024,55 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['명작', '뛰어난 작품']
     ],
     vocabFill: {
-      word_bank: ['소년', '점순이', '감자', '골탕', '동백꽃', '설렘', '토속', '명작'],
+      instructions: '',
       items: [
-        { sentence: '주인공은 순진한 (   )이다.', answer: '소년' },
-        { sentence: '(   )는 적극적이고 당찬 소녀이다.', answer: '점순이' },
-        { sentence: '점순이는 "나"에게 (   )를 건네주었다.', answer: '감자' },
-        { sentence: '점순이는 "나"네 수탉에게 (   )을 먹였다.', answer: '골탕' },
-        { sentence: '점순이는 "나"를 (   ) 밭으로 밀어 넘어뜨렸다.', answer: '동백꽃' },
-        { sentence: '소설은 사춘기의 (   )을 표현했다.', answer: '설렘' },
-        { sentence: '김유정 특유의 (   )적인 분위기가 드러난다.', answer: '토속' },
-        { sentence: '이 작품은 한국 단편소설의 (   )이다.', answer: '명작' }
+        { no: 1, text: '주인공은 순진한 (      )이다.', answer: '소년', initials: 'ㅅㄴ', aliases: ['소년'] },
+        { no: 2, text: '(      )는 적극적이고 당찬 소녀이다.', answer: '점순이', initials: 'ㅈㅅㅇ', aliases: ['점순이'] },
+        { no: 3, text: '점순이는 "나"에게 (      )를 건네주었다.', answer: '감자', initials: 'ㄱㅈ', aliases: ['감자'] },
+        { no: 4, text: '점순이는 "나"네 수탉에게 (      )을 먹였다.', answer: '골탕', initials: 'ㄱㅌ', aliases: ['골탕'] },
+        { no: 5, text: '점순이는 "나"를 (      ) 밭으로 밀어 넘어뜨렸다.', answer: '동백꽃', initials: 'ㄷㅂㄲ', aliases: ['동백꽃'] },
+        { no: 6, text: '소설은 사춘기의 (      )을 표현했다.', answer: '설렘', initials: 'ㅅㄹ', aliases: ['설렘'] },
+        { no: 7, text: '김유정 특유의 (      )적인 분위기가 드러난다.', answer: '토속', initials: 'ㅌㅅ', aliases: ['토속'] },
+        { no: 8, text: '이 작품은 한국 단편소설의 (      )이다.', answer: '명작', initials: 'ㅁㅈ', aliases: ['명작'] }
       ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: [
-        '"나"는 점순이의 마음을 처음부터 알았다.',
-        '점순이는 "나"에게 감자를 건네주었다.',
-        '"나"는 점순이에게 먼저 다가갔다.',
-        '두 사람은 처음부터 사이가 좋았다.'
+        '① "나"는 점순이의 마음을 처음부터 알았다.',
+        '② 점순이는 "나"에게 감자를 건네주었다.',
+        '③ "나"는 점순이에게 먼저 다가갔다.',
+        '④ 두 사람은 처음부터 사이가 좋았다.'
       ],
       q2_text: '이 글의 서술상 특징으로 가장 적절한 것은?',
       q2_opts: [
-        '토속적 분위기와 유머러스한 문체로 풋풋한 사랑을 그리고 있다.',
-        '비극적 결말을 통해 사회 문제를 고발하고 있다.',
-        '역순행적 구성으로 과거를 회상하고 있다.',
-        '전지적 시점에서 여러 인물의 심리를 분석하고 있다.'
+        '① 토속적 분위기와 유머러스한 문체로 풋풋한 사랑을 그리고 있다.',
+        '② 비극적 결말을 통해 사회 문제를 고발하고 있다.',
+        '③ 역순행적 구성으로 과거를 회상하고 있다.',
+        '④ 전지적 시점에서 여러 인물의 심리를 분석하고 있다.'
       ],
-      q3_text: '점순이가 "나"에게 관심을 표현한 방법 중 하나를 두 글자로 쓰시오.',
-      q4_text: '소설 마지막에 언급된 꽃을 세 글자로 쓰시오.',
-      q5_text: '점순이의 성격을 나타내는 말을 두 글자로 쓰시오.'
+      q3_html: '점순이는 "나"에게 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅈ">를 건네주며 호의를 표현하고, 거절당하자 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅌ">을 먹인다.',
+      q4_html: '이 소설은 김유정 특유의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅌㅅ">적 분위기와 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅁ"> 있는 문체가 잘 드러난다.',
+      q5_text: '"나"가 동백꽃 밭에서 어렴풋이 깨닫게 된 점순이의 감정은 무엇인지 본문을 바탕으로 설명해 보세요.'
     },
     answerKey: {
-      q1: '②',
-      q2: '①',
-      q3: '감자',
-      q4: '동백꽃',
-      q5: '적극'
+      q1: '2',
+      q2: '1',
+      q3_1: ['감자'],
+      q3_2: ['골탕'],
+      q4_1: ['토속'],
+      q4_2: ['유머'],
+      q5: '마음'
     },
     essayKeywords: ['동백꽃', '점순이', '설렘', '토속', '유머', '사랑'],
     explain: {
       q1: '본문에서 점순이는 "나"에게 감자를 건네주며 호의를 표시한다고 했습니다.',
       q2: '이 작품은 김유정 특유의 토속적 분위기와 유머러스한 문체로 사춘기의 풋풋한 사랑을 그리고 있습니다.',
-      q3: '본문에서 점순이는 "나"에게 "감자"를 건네주며 호의를 표시했다고 했습니다.',
-      q4: '본문에서 "노란 동백꽃 냄새가 알싸하게 코를 찌른다"며 "동백꽃"이 언급됩니다.',
-      q5: '본문에서 점순이는 "적극"적이고 당찬 소녀라고 했습니다.'
+      q3_1: '본문에서 점순이는 "나"에게 "감자"를 건네주며 호의를 표시했다고 했습니다.',
+      q3_2: '본문에서 화가 난 점순이는 "나"네 집 수탉에게 "골탕"을 먹인다고 했습니다.',
+      q4_1: '본문에서 김유정 특유의 "토속"적인 분위기가 잘 드러난다고 했습니다.',
+      q4_2: '본문에서 김유정 특유의 "유머"러스한 문체가 잘 드러난다고 했습니다.',
+      q5: '본문에서 동백꽃 밭에 나뒹굴며 "나"는 점순이의 마음을 어렴풋이 깨닫게 된다고 했습니다.'
     },
     creative: {
       title: '풋풋한 감정 표현',
@@ -3164,6 +3228,9 @@ function applyContentPack(unitKey) {
     if (q3P) {
       if (pack.quiz.q3_html) {
         q3P.innerHTML = pack.quiz.q3_html;
+      } else if (pack.quiz.q3_text) {
+        // 단답형 문제 (modern_21~40)
+        q3P.innerHTML = `${pack.quiz.q3_text}<br><input class="inline-input" id="q3-1" type="text" placeholder="정답 입력">`;
       } else if (pack.quiz.q3_1_ph && pack.quiz.q3_2_ph) {
         // q3_html이 없으면 자동 생성
         q3P.innerHTML = `<input class="inline-input" id="q3-1" type="text" placeholder="${pack.quiz.q3_1_ph}"> / <input class="inline-input" id="q3-2" type="text" placeholder="${pack.quiz.q3_2_ph}">`;
@@ -3177,6 +3244,9 @@ function applyContentPack(unitKey) {
     if (q4P) {
       if (pack.quiz.q4_html) {
         q4P.innerHTML = pack.quiz.q4_html;
+      } else if (pack.quiz.q4_text) {
+        // 단답형 문제 (modern_21~40)
+        q4P.innerHTML = `${pack.quiz.q4_text}<br><input class="inline-input" id="q4-1" type="text" placeholder="정답 입력">`;
       } else if (pack.quiz.q4_1_ph && pack.quiz.q4_2_ph) {
         // q4_html이 없으면 자동 생성
         q4P.innerHTML = `<input class="inline-input" id="q4-1" type="text" placeholder="${pack.quiz.q4_1_ph}"> / <input class="inline-input" id="q4-2" type="text" placeholder="${pack.quiz.q4_2_ph}">`;
