@@ -3161,21 +3161,27 @@ function applyContentPack(unitKey) {
   // Q3
   if (blocks[2]) {
     const q3P = blocks[2].querySelector('.quiz-q');
-    if (q3P && pack.quiz.q3_html) q3P.innerHTML = pack.quiz.q3_html;
-    const q3_1 = document.getElementById('q3-1');
-    const q3_2 = document.getElementById('q3-2');
-    if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
-    if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
+    if (q3P) {
+      if (pack.quiz.q3_html) {
+        q3P.innerHTML = pack.quiz.q3_html;
+      } else if (pack.quiz.q3_1_ph && pack.quiz.q3_2_ph) {
+        // q3_html이 없으면 자동 생성
+        q3P.innerHTML = `<input class="inline-input" id="q3-1" type="text" placeholder="${pack.quiz.q3_1_ph}"> / <input class="inline-input" id="q3-2" type="text" placeholder="${pack.quiz.q3_2_ph}">`;
+      }
+    }
   }
 
   // Q4
   if (blocks[3]) {
     const q4P = blocks[3].querySelector('.quiz-q');
-    if (q4P && pack.quiz.q4_html) q4P.innerHTML = pack.quiz.q4_html;
-    const q4_1 = document.getElementById('q4-1');
-    const q4_2 = document.getElementById('q4-2');
-    if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
-    if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
+    if (q4P) {
+      if (pack.quiz.q4_html) {
+        q4P.innerHTML = pack.quiz.q4_html;
+      } else if (pack.quiz.q4_1_ph && pack.quiz.q4_2_ph) {
+        // q4_html이 없으면 자동 생성
+        q4P.innerHTML = `<input class="inline-input" id="q4-1" type="text" placeholder="${pack.quiz.q4_1_ph}"> / <input class="inline-input" id="q4-2" type="text" placeholder="${pack.quiz.q4_2_ph}">`;
+      }
+    }
   }
 
   // Q5
