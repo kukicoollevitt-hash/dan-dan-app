@@ -56,7 +56,7 @@ const CURRICULUM = {
         }
       }
     },
-    '한국문학분야': {
+    '한국문학': {
       id: 'korlit',
       subjects: {
         '고전문학': {
@@ -71,7 +71,7 @@ const CURRICULUM = {
         }
       }
     },
-    '세계문학분야': {
+    '세계문학': {
       id: 'worldlit',
       subjects: {
         '세계문학(1)': {

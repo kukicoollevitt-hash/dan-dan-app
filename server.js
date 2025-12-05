@@ -6151,8 +6151,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         const fieldUnitCounts = {
           '과학분야': 80,
           '사회분야': 80,
-          '한국문학분야': 80,
-          '세계문학분야': 80,
+          '한국문학': 80,
+          '세계문학': 80,
           '인물분야': 80
         };
 
@@ -6221,8 +6221,8 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           const fieldSubjects = {
             '과학분야': ['bio', 'earth', 'physics', 'chem'],
             '사회분야': ['geo', 'soc', 'law', 'pol'],
-            '한국문학분야': ['modern', 'classic'],
-            '세계문학분야': ['world1', 'world2'],
+            '한국문학': ['modern', 'classic'],
+            '세계문학': ['world1', 'world2'],
             '인물분야': ['people1', 'people2']
           };
           const subjects = fieldSubjects[fieldName] || [];
@@ -8274,7 +8274,7 @@ app.get("/my-learning", async (req, res) => {
             <!-- Korean Literature Field -->
             <div class="field-progress-card korean-lit">
               <div class="field-title">
-                <div class="field-title-text">📚 한국문학분야</div>
+                <div class="field-title-text">📚 한국문학</div>
                 <div class="field-percent korean-lit" id="koreanLitFieldPercent">0%</div>
               </div>
               <div class="field-progress-bar-container">
@@ -8306,7 +8306,7 @@ app.get("/my-learning", async (req, res) => {
             <!-- World Literature Field -->
             <div class="field-progress-card world-lit">
               <div class="field-title">
-                <div class="field-title-text">🌏 세계문학분야</div>
+                <div class="field-title-text">🌏 세계문학</div>
                 <div class="field-percent world-lit" id="worldLitFieldPercent">0%</div>
               </div>
               <div class="field-progress-bar-container">
@@ -8737,8 +8737,8 @@ app.get("/my-learning", async (req, res) => {
         const fieldUnitCounts = {
           '과학분야': 80,
           '사회분야': 80,
-          '한국문학분야': 80,
-          '세계문학분야': 80,
+          '한국문학': 80,
+          '세계문학': 80,
           '인물분야': 80
         };
 
@@ -8807,8 +8807,8 @@ app.get("/my-learning", async (req, res) => {
           const fieldSubjects = {
             '과학분야': ['bio', 'earth', 'physics', 'chem'],
             '사회분야': ['geo', 'soc', 'law', 'pol'],
-            '한국문학분야': ['modern', 'classic'],
-            '세계문학분야': ['world1', 'world2'],
+            '한국문학': ['modern', 'classic'],
+            '세계문학': ['world1', 'world2'],
             '인물분야': ['people1', 'people2']
           };
           const subjects = fieldSubjects[fieldName] || [];
@@ -9563,11 +9563,11 @@ app.get("/my-learning", async (req, res) => {
             'earth': '과학분야',
             'physics': '과학분야',
             'chem': '과학분야',
-            'modern': '한국문학분야',
-            'classic': '한국문학분야',
-            'world': '세계문학분야',
-            'world1': '세계문학분야',
-            'world2': '세계문학분야',
+            'modern': '한국문학',
+            'classic': '한국문학',
+            'world': '세계문학',
+            'world1': '세계문학',
+            'world2': '세계문학',
             'people': '인물분야',
             'people1': '인물분야',
             'people2': '인물분야',
@@ -9579,8 +9579,8 @@ app.get("/my-learning", async (req, res) => {
           const fieldToClass = {
             '과학분야': 'science',
             '사회분야': 'society',
-            '한국문학분야': 'korean-lit',
-            '세계문학분야': 'world-lit',
+            '한국문학': 'korean-lit',
+            '세계문학': 'world-lit',
             '인물분야': 'person'
           };
 
@@ -10380,13 +10380,13 @@ app.get("/my-learning", async (req, res) => {
           updateSubjectProgress('lawBar', 'lawPercent', progress.society.law, 20);
           updateSubjectProgress('polBar', 'polPercent', progress.society.pol, 20);
 
-          // 한국문학분야
+          // 한국문학
           const koreanLitPercent = updateProgress('koreanLitFieldBar', 'koreanLitFieldText', progress['korean-lit'].total, 80);
           document.getElementById('koreanLitFieldPercent').textContent = koreanLitPercent + '%';
           updateSubjectProgress('modernBar', 'modernPercent', progress['korean-lit'].modern, 40);
           updateSubjectProgress('classicBar', 'classicPercent', progress['korean-lit'].classic, 40);
 
-          // 세계문학분야 (각 40개씩, 총 80개)
+          // 세계문학 (각 40개씩, 총 80개)
           const worldLitPercent = updateProgress('worldLitFieldBar', 'worldLitFieldText', progress['world-lit'].total, 80);
           document.getElementById('worldLitFieldPercent').textContent = worldLitPercent + '%';
           updateSubjectProgress('world1Bar', 'world1Percent', progress['world-lit'].world1, 40);
