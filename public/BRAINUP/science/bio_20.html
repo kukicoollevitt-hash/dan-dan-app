@@ -2529,7 +2529,7 @@
 
     /* ===== 본문 채점 ===== */
     let readingResultHTML = "";  // 본문학습용 (learning-common.js의 readingResultHTML과 충돌 방지)
-    function gradeQuiz() {
+    async function gradeQuiz() {
       // content.js에서 동적으로 answerKey, explain, essayKeywords 읽어오기
       const content = window.CONTENTS[window.CUR_UNIT];
       const answerKey = content.answerKey;
@@ -2687,10 +2687,7 @@
         critical: reportState.q5ok ? 10 : 6
       }));
 
-      // ★ 분석리포트 탭 즉시 업데이트
-      refreshReportTab();
-
-      // ★ 서버에 본문학습 채점 결과 저장
+            // ★ 서버에 본문학습 채점 결과 저장
       console.log('[gradeQuiz] saveUnitProgressToServer 타입:', typeof saveUnitProgressToServer);
       console.log('[gradeQuiz] window.saveUnitProgressToServer 타입:', typeof window.saveUnitProgressToServer);
 
@@ -2710,7 +2707,8 @@
           q5: document.getElementById("q5")?.value || ''
         };
 
-        saveFn({
+        try {
+          await saveFn({
           reportState: {
             q1ok: reportState.q1ok,
             q2ok: reportState.q2ok,
@@ -2727,7 +2725,11 @@
             resultHTML: readingResultHTML
           }
         });
-        console.log('[gradeQuiz] 서버에 본문학습 채점 결과 저장 요청 완료');
+          console.log('[gradeQuiz] 서버 저장 완료, 분석리포트 탭 업데이트');
+          refreshReportTab();
+        } catch (err) {
+          console.error('[gradeQuiz] 서버 저장 실패:', err);
+        }
       } else {
         console.error('[gradeQuiz] saveUnitProgressToServer 함수를 찾을 수 없음!');
       }
