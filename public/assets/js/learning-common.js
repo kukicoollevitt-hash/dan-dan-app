@@ -1085,7 +1085,7 @@
     // 주제 업데이트
     const topicBox = document.querySelector('.creative-topic-box');
     if (topicBox) {
-      const topicText = creative.topic || creative.description || creative.subtitle || '';
+      const topicText = creative.topic || creative.title || creative.description || creative.subtitle || '';
       const topicDiv = topicBox.querySelector('div:first-child');
       if (topicDiv && topicText) {
         topicDiv.innerHTML = '<strong>주제:</strong> <strong>"' + topicText + '"</strong>';

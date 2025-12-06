@@ -11269,6 +11269,32 @@ ${content}
     let gateSelectedAnswer = null;
     let gateCurrentLevel = 1;
 
+    // ===== 보기 섞기 함수 (Fisher-Yates 알고리즘) =====
+    function shuffleQuizOptions(quizzes) {
+      return quizzes.map(quiz => {
+        // 원본 정답 인덱스 (1-based → 0-based)
+        const correctIdx = (quiz.correct || quiz.answer) - 1;
+        const correctOption = quiz.options[correctIdx];
+
+        // 보기 배열 복사 후 섞기
+        const shuffledOptions = [...quiz.options];
+        for (let i = shuffledOptions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+        }
+
+        // 섞인 배열에서 정답의 새로운 위치 찾기 (1-based로 저장)
+        const newCorrectIdx = shuffledOptions.indexOf(correctOption) + 1;
+
+        return {
+          ...quiz,
+          options: shuffledOptions,
+          correct: newCorrectIdx,
+          answer: newCorrectIdx
+        };
+      });
+    }
+
     // 관문 시험 시작 (모달 열기)
     function startGateQuiz() {
       const gateLevel = document.getElementById('gateLevel').textContent;
@@ -11324,6 +11350,8 @@ ${content}
         }
 
         gateQuizData = data.quizzes || data.questions;
+        // 각 문제의 보기를 랜덤으로 섞기
+        gateQuizData = shuffleQuizOptions(gateQuizData);
         renderGateQuiz();
       } catch (err) {
         console.error('[Gate Quiz Error]', err);
@@ -11493,16 +11521,21 @@ ${content}
           confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         }
 
+        // 마지막 관문(40) 통과 시 특별 메시지
+        const isFinalGate = gateCurrentLevel === 40;
+        const resultMsg = isFinalGate
+          ? `🎊 축하합니다! 모든 400개 단원을 완료하셨습니다!<br>대단한 성취입니다!`
+          : `축하합니다! 10문제를 모두 맞추셨습니다.<br>새로운 단원의 학습이 해금되었습니다.`;
+        const resultIcon = isFinalGate ? '🏆' : '🎉';
+        const buttonText = isFinalGate ? '완료' : '학습 계속하기';
+
         container.innerHTML = `
           <button class="gate-quiz-close-btn" onclick="closeGateQuizModalForce()" title="닫기">✕</button>
           <div class="gate-result">
-            <div class="gate-result-icon">🎉</div>
+            <div class="gate-result-icon">${resultIcon}</div>
             <h2 class="gate-result-title success">관문 ${gateCurrentLevel} 통과!</h2>
-            <p class="gate-result-msg">
-              축하합니다! 10문제를 모두 맞추셨습니다.<br>
-              새로운 단원의 학습이 해금되었습니다.
-            </p>
-            <button class="gate-result-btn primary" onclick="closeGateQuizModalForce()">학습 계속하기</button>
+            <p class="gate-result-msg">${resultMsg}</p>
+            <button class="gate-result-btn primary" onclick="closeGateQuizModalForce()">${buttonText}</button>
           </div>
         `;
       } catch (err) {

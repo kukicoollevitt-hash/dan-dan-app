@@ -10159,16 +10159,16 @@ app.get("/my-learning", async (req, res) => {
             const hiddenClass = idx >= 10 ? 'hidden-row' : '';
 
             // AI과제부여 예정 시간 계산 (학습 완료 시간 + 등급별 대기 시간)
-            // 우수: 부여 안 함, 양호: 12시간, 보통: 6시간, 격려: 3시간
+            // 우수: 부여 안 함, 양호: 48시간, 보통: 24시간, 격려: 12시간
             let aiTaskTimestamp = '-';
             let aiTaskStyle = 'color: #999;';
             if (log.timestamp && avgScore < 9) { // 우수 등급이 아닌 경우만
               const completedAt = new Date(log.timestamp);
-              let waitHours = 6; // 기본: 보통 6시간
+              let waitHours = 24; // 기본: 보통 24시간
               if (avgScore >= 8) {
-                waitHours = 12; // 양호: 12시간
+                waitHours = 48; // 양호: 48시간
               } else if (avgScore < 7) {
-                waitHours = 3; // 격려: 3시간
+                waitHours = 12; // 격려: 12시간
               }
               const scheduledAt = new Date(completedAt.getTime() + waitHours * 60 * 60 * 1000);
               aiTaskTimestamp = scheduledAt.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
@@ -12555,11 +12555,11 @@ function getGradeInfo(avgScore) {
   if (avgScore >= 9) {
     return { grade: 'excellent', text: '우수', hours: 0 }; // 우수는 부여 안 함
   } else if (avgScore >= 8) {
-    return { grade: 'good', text: '양호', hours: 12 }; // 양호: 12시간 후
+    return { grade: 'good', text: '양호', hours: 48 }; // 양호: 48시간 후
   } else if (avgScore >= 7) {
-    return { grade: 'average', text: '보통', hours: 6 }; // 보통: 6시간 후
+    return { grade: 'average', text: '보통', hours: 24 }; // 보통: 24시간 후
   } else {
-    return { grade: 'encourage', text: '격려', hours: 3 }; // 격려: 3시간 후
+    return { grade: 'encourage', text: '격려', hours: 12 }; // 격려: 12시간 후
   }
 }
 
