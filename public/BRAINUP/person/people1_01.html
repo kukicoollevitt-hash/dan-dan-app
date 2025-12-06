@@ -2962,11 +2962,11 @@ function _norm(s){
     .replace(/[~!@#$%^&*()\-\=_+[\]{};:'",.<>/?\\|·`]/g,'');
 }
 
-// ✅ 입력값 저장/복원
+// ✅ 입력값 저장/복원 (채점 결과 포함)
 function _saveVocabInputs(unit){
   const key = _storeKey(unit);
   const inputs = [...document.querySelectorAll('#vocab-fill .vocab-input')].map(inp => ({
-    id: inp.id, v: inp.value
+    id: inp.id, v: inp.value, bg: inp.style.background || ''
   }));
   localStorage.setItem(key, JSON.stringify(inputs));
 }
@@ -2974,9 +2974,12 @@ function _loadVocabInputs(unit){
   const key = _storeKey(unit);
   try {
     const saved = JSON.parse(localStorage.getItem(key) || '[]');
-    saved.forEach(({id,v})=>{
+    saved.forEach(({id,v,bg})=>{
       const el = document.getElementById(id);
-      if (el) el.value = v || '';
+      if (el) {
+        el.value = v || '';
+        if (bg) el.style.background = bg;
+      }
     });
   } catch(e){}
 }
@@ -3090,6 +3093,9 @@ function checkVocabFill() {
     input.style.background = correct ? '#d9f7be' : '#ffd6d6';
     if (correct) score++;
   });
+
+  // 채점 결과(배경색) 저장
+  _saveVocabInputs(unit);
 
   alert(`정답 ${score}개 / 총 ${data.length}개`);
 }
