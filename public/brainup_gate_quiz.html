@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>BRAIN UP 형성평가 관문</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* 배경 효과 */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(139, 47, 47, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 47, 47, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+      animation: slideIn 0.5s ease-out;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 닫기 버튼 */
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: #f5f0eb;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #8b2f2f;
+      transition: all 0.2s ease;
+      z-index: 10;
+    }
+    .close-btn:hover {
+      background: #8b2f2f;
+      color: #fff;
+      transform: scale(1.1);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .quiz-header h1 {
+      font-size: 28px;
+      color: #8b2f2f;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .quiz-header .gate-number {
+      font-size: 18px;
+      color: #555;
+      font-weight: 600;
+    }
+
+    .quiz-header .gate-info {
+      font-size: 14px;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 10px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #8b2f2f 0%, #c0392b 100%);
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .unit-info {
+      background: #f8f4f0;
+      padding: 12px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .unit-info strong {
+      color: #8b2f2f;
+    }
+
+    /* 아코디언 본문 보기 */
+    .unit-title-btn {
+      background: #fff8f0;
+      border: 2px solid #e8d4c4;
+      padding: 14px 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+    .unit-title-btn:hover {
+      background: #fff0e0;
+      border-color: #d4b8a0;
+    }
+    .unit-title-btn .title-text {
+      font-size: 15px;
+      color: #8b2f2f;
+      font-weight: 600;
+    }
+    .unit-title-btn .title-hint {
+      font-size: 12px;
+      color: #999;
+      margin-left: 8px;
+    }
+    .unit-title-btn .arrow {
+      font-size: 14px;
+      color: #8b2f2f;
+      transition: transform 0.3s ease;
+    }
+    .unit-title-btn.open .arrow {
+      transform: rotate(180deg);
+    }
+
+    /* 본문 내용 영역 */
+    .passage-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s ease;
+      background: #fffaf5;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+    .passage-content.open {
+      max-height: 600px;
+      padding: 20px;
+      border: 1px solid #f0e0d0;
+    }
+    .passage-content p {
+      font-size: 14px;
+      color: #4a3728;
+      line-height: 1.8;
+      margin-bottom: 12px;
+      text-align: justify;
+    }
+    .passage-content p:last-child {
+      margin-bottom: 0;
+    }
+    .passage-content b {
+      color: #8b2f2f;
+      font-weight: 600;
+    }
+
+    .question-box {
+      background: #faf8f6;
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+      border-left: 5px solid #8b2f2f;
+    }
+
+    .question-text {
+      font-size: 18px;
+      color: #333;
+      font-weight: 600;
+      line-height: 1.7;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .option-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .option-btn:hover {
+      border-color: #8b2f2f;
+      background: #fef5f5;
+      transform: translateX(5px);
+    }
+
+    .option-btn.selected {
+      border-color: #8b2f2f;
+      background: linear-gradient(135deg, #8b2f2f 0%, #c0392b 100%);
+      color: white;
+    }
+
+    .option-btn.correct {
+      border-color: #27ae60;
+      background: #27ae60;
+      color: white;
+    }
+
+    .option-btn.wrong {
+      border-color: #e74c3c;
+      background: #e74c3c;
+      color: white;
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #8b2f2f 0%, #c0392b 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(139, 47, 47, 0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      font-weight: 600;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .result-message.correct {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #28a745;
+    }
+
+    .result-message.wrong {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #dc3545;
+    }
+
+    .congrats-container {
+      text-align: center;
+      animation: scaleIn 0.6s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .congrats-container h2 {
+      font-size: 42px;
+      margin-bottom: 20px;
+    }
+
+    .congrats-container p {
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+
+    .back-btn {
+      background: white;
+      border: 2px solid #8b2f2f;
+      color: #8b2f2f;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: #8b2f2f;
+      color: white;
+    }
+
+    /* 로딩 상태 */
+    .loading-container {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f0f0f0;
+      border-top-color: #8b2f2f;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #666;
+      font-size: 16px;
+    }
+
+    /* 잠금 상태 */
+    .locked-container {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .locked-container .lock-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .locked-container h2 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .locked-container p {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.7;
+      margin-bottom: 25px;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .quiz-container {
+        padding: 25px 20px;
+        border-radius: 20px;
+      }
+      .quiz-header h1 {
+        font-size: 22px;
+      }
+      .question-text {
+        font-size: 16px;
+      }
+      .option-btn {
+        font-size: 15px;
+        padding: 14px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container" id="quizContainer">
+    <!-- 닫기 버튼 -->
+    <button class="close-btn" onclick="closeQuiz()" title="닫기">✕</button>
+
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">형성평가 문제를 불러오는 중...</p>
+    </div>
+  </div>
+
+  <script>
+    // ===== 전역 변수 =====
+    let quizData = [];        // 10개 문제 배열
+    let currentGate = 0;      // 현재 문제 번호 (0~9)
+    let selectedAnswer = null;
+    let gateLevel = 1;        // 관문 레벨 (1, 2, 3, ...)
+    let completedUnits = [];  // 완료된 단원 목록
+
+    // ===== 닫기 버튼 =====
+    function closeQuiz() {
+      if (confirm('형성평가를 종료하시겠습니까?\n통과하지 못하면 다음 단원 학습이 제한됩니다.')) {
+        window.location.href = 'menu.html';
+      }
+    }
+
+    // ===== 학생 정보 가져오기 =====
+    function getCurrentStudent() {
+      const saved = localStorage.getItem('currentStudent');
+      if (!saved) return null;
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // ===== URL 파라미터 가져오기 =====
+    function getUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        gate: parseInt(params.get('gate')) || 1,
+        units: params.get('units') ? params.get('units').split(',') : []
+      };
+    }
+
+    // ===== 서버에서 관문 문제 가져오기 =====
+    async function fetchGateQuizData() {
+      const student = getCurrentStudent();
+      const params = getUrlParams();
+      gateLevel = params.gate;
+
+      if (!student) {
+        showLockedState('로그인이 필요합니다', '학습을 진행하려면 먼저 로그인해주세요.');
+        return;
+      }
+
+      try {
+        // 서버에서 완료된 단원과 문제 데이터 가져오기
+        const response = await fetch(`/api/gate-quiz/generate?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}&gate=${gateLevel}`);
+        const result = await response.json();
+
+        if (!result.ok) {
+          showLockedState('관문 시험 준비 중', result.message || '아직 관문 시험을 볼 수 없습니다.');
+          return;
+        }
+
+        quizData = result.quizzes;
+        completedUnits = result.units;
+
+        if (quizData.length < 10) {
+          showLockedState('문제 부족', `10개 단원을 완료해야 관문 시험을 볼 수 있습니다. (현재: ${quizData.length}개)`);
+          return;
+        }
+
+        renderQuiz();
+      } catch (err) {
+        console.error('관문 문제 로드 실패:', err);
+        showLockedState('오류 발생', '문제를 불러오는 중 오류가 발생했습니다.');
+      }
+    }
+
+    // ===== 잠금 상태 표시 =====
+    function showLockedState(title, message) {
+      const container = document.getElementById('quizContainer');
+      container.innerHTML = `
+        <div class="locked-container">
+          <div class="lock-icon">🔒</div>
+          <h2>${title}</h2>
+          <p>${message}</p>
+          <button class="back-btn" onclick="goBack()">← 메뉴로 돌아가기</button>
+        </div>
+      `;
+    }
+
+    // ===== 퀴즈 렌더링 =====
+    function renderQuiz() {
+      const container = document.getElementById('quizContainer');
+      const quiz = quizData[currentGate];
+      const gateNum = currentGate + 1;
+
+      // 본문 HTML 생성
+      const passageHTML = quiz.passage && quiz.passage.length > 0
+        ? quiz.passage.map(p => `<p>${p}</p>`).join('')
+        : '<p>본문을 불러올 수 없습니다.</p>';
+
+      container.innerHTML = `
+        <div class="quiz-header">
+          <h1>📝 형성평가 관문 ${gateLevel}</h1>
+          <p class="gate-number">10개 문제 중 ${gateNum}번째</p>
+          <p class="gate-info">모든 문제를 연속으로 맞춰야 통과합니다</p>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: ${(gateNum / 10) * 100}%"></div>
+        </div>
+
+        <div class="unit-title-btn" onclick="togglePassage()">
+          <div>
+            <span class="title-text">📖 ${quiz.unitTitle}</span>
+            <span class="title-hint">에서 출제 (클릭하여 본문 보기)</span>
+          </div>
+          <span class="arrow">▼</span>
+        </div>
+
+        <div class="passage-content" id="passageContent">
+          ${passageHTML}
+        </div>
+
+        <div class="question-box">
+          <p class="question-text">${quiz.question}</p>
+        </div>
+
+        <div class="options-container">
+          ${quiz.options.map((option, index) => `
+            <button class="option-btn" onclick="selectAnswer(${index})">
+              ${['①', '②', '③', '④'][index]} ${option}
+            </button>
+          `).join('')}
+        </div>
+
+        <button class="submit-btn" onclick="submitAnswer()" disabled>
+          답안 제출
+        </button>
+      `;
+    }
+
+    // ===== 본문 아코디언 토글 =====
+    function togglePassage() {
+      const btn = document.querySelector('.unit-title-btn');
+      const content = document.getElementById('passageContent');
+
+      btn.classList.toggle('open');
+      content.classList.toggle('open');
+    }
+
+    // ===== 답안 선택 =====
+    function selectAnswer(index) {
+      selectedAnswer = index;
+
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => btn.classList.remove('selected'));
+      buttons[index].classList.add('selected');
+
+      document.querySelector('.submit-btn').disabled = false;
+    }
+
+    // ===== 답안 제출 =====
+    function submitAnswer() {
+      const quiz = quizData[currentGate];
+      const buttons = document.querySelectorAll('.option-btn');
+      const submitBtn = document.querySelector('.submit-btn');
+
+      buttons.forEach(btn => btn.disabled = true);
+      submitBtn.disabled = true;
+
+      // 정답 인덱스 (1~4 -> 0~3으로 변환)
+      const correctIndex = quiz.correct - 1;
+
+      if (selectedAnswer === correctIndex) {
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('correct');
+        showResult(true);
+      } else {
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('wrong');
+        buttons[correctIndex].classList.add('correct');
+        showResult(false);
+      }
+    }
+
+    // ===== 결과 표시 =====
+    function showResult(isCorrect) {
+      const container = document.getElementById('quizContainer');
+
+      if (isCorrect) {
+        const resultMsg = document.createElement('div');
+        resultMsg.className = 'result-message correct';
+        resultMsg.innerHTML = '🎉 정답입니다! 다음 문제로 이동합니다...';
+        container.insertBefore(resultMsg, container.firstChild);
+
+        setTimeout(() => {
+          currentGate++;
+          selectedAnswer = null;
+
+          if (currentGate >= quizData.length) {
+            showCongratulations();
+            saveGatePass();
+          } else {
+            renderQuiz();
+          }
+        }, 1500);
+      } else {
+        const resultMsg = document.createElement('div');
+        resultMsg.className = 'result-message wrong';
+        resultMsg.innerHTML = '❌ 틀렸습니다! 1번 문제로 돌아갑니다...';
+        container.insertBefore(resultMsg, container.firstChild);
+
+        setTimeout(() => {
+          currentGate = 0;
+          selectedAnswer = null;
+          renderQuiz();
+        }, 2000);
+      }
+    }
+
+    // ===== 관문 통과 저장 =====
+    async function saveGatePass() {
+      const student = getCurrentStudent();
+      if (!student) return;
+
+      try {
+        await fetch('/api/gate-quiz/pass', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: student.grade,
+            name: student.name,
+            gate: gateLevel,
+            units: completedUnits
+          })
+        });
+        console.log(`관문 ${gateLevel} 통과 저장 완료`);
+      } catch (err) {
+        console.error('관문 통과 저장 실패:', err);
+      }
+    }
+
+    // ===== 축하 화면 =====
+    function showCongratulations() {
+      const container = document.getElementById('quizContainer');
+      const nextGate = gateLevel + 1;
+
+      container.innerHTML = `
+        <div class="congrats-container">
+          <h2>🎊 축하합니다! 🎊</h2>
+          <p>
+            형성평가 관문 ${gateLevel}을 통과했습니다!<br>
+            10개 문제를 모두 맞추셨네요.<br><br>
+            <strong>이제 ${gateLevel * 10 + 1}~${(gateLevel + 1) * 10}번 단원을<br>학습할 수 있습니다!</strong>
+          </p>
+          <button class="back-btn" onclick="goBack()">
+            📚 학습 계속하기
+          </button>
+        </div>
+      `;
+    }
+
+    // ===== 뒤로가기 =====
+    function goBack() {
+      const student = getCurrentStudent();
+      if (student) {
+        window.location.href = `/menu?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`;
+      } else {
+        window.location.href = '/';
+      }
+    }
+
+    // ===== 페이지 로드 =====
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchGateQuizData();
+    });
+
+    // ESC 키로 뒤로가기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (confirm('관문 시험을 종료하고 메뉴로 돌아가시겠습니까?')) {
+          goBack();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

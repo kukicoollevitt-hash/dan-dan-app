@@ -7186,15 +7186,30 @@ app.get("/my-learning", async (req, res) => {
 
         tbody tr {
           transition: all 0.2s ease;
+          cursor: pointer;
         }
 
         tbody tr:hover {
-          background: linear-gradient(135deg, #f8f9ff 0%, #fff5f8 100%);
+          background: linear-gradient(135deg, #e8f4fd 0%, #d4edfc 100%);
           transform: scale(1.01);
+        }
+
+        tbody tr:active {
+          background: linear-gradient(135deg, #cce5ff 0%, #b3d9ff 100%);
         }
 
         tbody tr:last-child td {
           border-bottom: none;
+        }
+
+        /* 단원명 클릭 가능 표시 */
+        .unit-link {
+          color: #1e3a8a;
+          font-weight: 600;
+        }
+
+        .unit-link::after {
+          content: ' 📖';
         }
 
         .hidden-row {
@@ -9996,6 +10011,65 @@ app.get("/my-learning", async (req, res) => {
           renderLogTable(filteredLogs);
         };
 
+        // ===== 단원 코드로 학습 페이지 경로 생성 =====
+        function getUnitPath(unitCode, series) {
+          if (!unitCode) return null;
+
+          // 시리즈별 폴더 매핑
+          const seriesFolders = {
+            'BRAIN업': 'BRAINUP',
+            'BRAIN온': 'BRAINON',
+            'BRAIN핏': 'BRAINFIT',
+            'BRAIN딥': 'BRAINDEEP',
+            'BRAIN중등': 'BRAINMID',
+            'BRAIN고등': 'BRAINHIGH'
+          };
+
+          // 과목 코드 → 폴더 매핑
+          const subjectFolders = {
+            'geo': 'social',
+            'soc': 'social',
+            'law': 'social',
+            'pol': 'social',
+            'bio': 'science',
+            'chem': 'science',
+            'physics': 'science',
+            'earth': 'science',
+            'classic': 'korlit',
+            'modern': 'korlit',
+            'world': 'worldlit',
+            'world1': 'worldlit',
+            'world2': 'worldlit',
+            'people': 'person',
+            'people1': 'person',
+            'people2': 'person',
+            'person1': 'person',
+            'person2': 'person'
+          };
+
+          const parts = unitCode.split('_');
+          if (parts.length < 2) return null;
+
+          const subjectCode = parts[0];
+          const seriesFolder = seriesFolders[series] || 'BRAINUP';
+          const subjectFolder = subjectFolders[subjectCode];
+
+          if (!subjectFolder) return null;
+
+          // 경로 생성: /BRAINUP/social/geo_01.html
+          return '/' + seriesFolder + '/' + subjectFolder + '/' + unitCode + '.html';
+        }
+
+        // ===== 단원 페이지로 이동 =====
+        function goToUnit(unitCode, series) {
+          const path = getUnitPath(unitCode, series);
+          if (path) {
+            window.open(path, '_blank');
+          } else {
+            alert('해당 단원 페이지를 찾을 수 없습니다.');
+          }
+        }
+
         // ===== 학습 기록 테이블 렌더링 함수 =====
         function renderLogTable(logs) {
           const tbody = document.getElementById('logTableBody');
@@ -10106,8 +10180,16 @@ app.get("/my-learning", async (req, res) => {
               new Date(log.timestamp).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
             const finalTimeStyle = 'color: #059669; font-weight: 600;';
 
+            const unitCodeForClick = log.unit || '';
+            const seriesForClick = log.series || 'BRAIN업';
+
             const row = document.createElement('tr');
             if (hiddenClass) row.className = hiddenClass;
+            row.title = '클릭하여 단원으로 이동';
+            row.style.cursor = 'pointer';
+            row.onclick = (function(uc, sr) {
+              return function() { goToUnit(uc, sr); };
+            })(unitCodeForClick, seriesForClick);
             row.innerHTML = \`
               <td>\${idx + 1}</td>
               <td>\${subjectName}</td>
@@ -10115,7 +10197,7 @@ app.get("/my-learning", async (req, res) => {
               <td style="\${finalTimeStyle}">\${finalTimestamp}</td>
               <td><span class="badge \${badgeClass}">\${badgeText}</span></td>
               <td>\${log.series || ""}</td>
-              <td>\${unitName}</td>
+              <td class="unit-link">\${unitName}</td>
             \`;
             tbody.appendChild(row);
           });
@@ -13714,6 +13796,301 @@ app.post("/api/unit-progress/reset", async (req, res) => {
   } catch (error) {
     console.error("학습 진행 데이터 삭제 오류:", error);
     res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
+// ===== 형성평가 관문 시스템 API =====
+
+// 관문 통과 기록 스키마
+const gatePassSchema = new mongoose.Schema({
+  grade: String,
+  name: String,
+  gate: Number,           // 관문 레벨 (1, 2, 3, ...)
+  passedAt: { type: Date, default: Date.now },
+  units: [String]         // 해당 관문에 포함된 단원들
+});
+const GatePass = mongoose.model("GatePass", gatePassSchema);
+
+// 관문 문제 생성 API
+app.get("/api/gate-quiz/generate", async (req, res) => {
+  try {
+    const { grade, name, gate } = req.query;
+    const gateLevel = parseInt(gate) || 1;
+
+    console.log(`[gate-quiz/generate] grade=${grade}, name=${name}, gate=${gateLevel}`);
+
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    // 1) 해당 학생의 완료된 단원 조회 (완료 시간순 정렬)
+    const completedLogs = await LearningLog.find({
+      grade,
+      name,
+      completed: true,
+      deleted: { $ne: true }
+    }).select('unit timestamp').sort({ timestamp: 1 }).lean();
+
+    // 중복 제거 (첫 번째 완료 기록만 유지, 완료 순서 보존)
+    const seen = new Set();
+    const allCompletedUnits = [];
+    for (const log of completedLogs) {
+      if (!seen.has(log.unit)) {
+        seen.add(log.unit);
+        allCompletedUnits.push(log.unit);
+      }
+    }
+    console.log(`[gate-quiz/generate] 전체 완료 단원 (순서대로): ${allCompletedUnits.length}개`);
+
+    // 2) 이미 통과한 관문 확인
+    const passedGates = await GatePass.find({ grade, name }).select('gate').lean();
+    const passedGateNums = passedGates.map(g => g.gate);
+    console.log(`[gate-quiz/generate] 통과한 관문: ${passedGateNums}`);
+
+    // 3) 해당 관문에 해당하는 단원 범위 계산 (완료 순서 기준)
+    // 관문 1: 1~10번째 완료, 관문 2: 11~20번째 완료, ...
+    const startIdx = (gateLevel - 1) * 10;  // 관문 1: 0, 관문 2: 10, 관문 3: 20
+    const endIdx = gateLevel * 10;          // 관문 1: 10, 관문 2: 20, 관문 3: 30
+
+    // 완료 순서대로 해당 범위의 단원들
+    const gateUnits = allCompletedUnits.slice(startIdx, endIdx);
+    console.log(`[gate-quiz/generate] 관문 ${gateLevel} 범위 단원 (${startIdx + 1}~${endIdx}번째 완료): ${gateUnits.length}개`, gateUnits);
+
+    if (gateUnits.length < 10) {
+      return res.json({
+        ok: false,
+        message: `관문 ${gateLevel} 시험을 보려면 ${endIdx}개 단원 완료가 필요합니다. (현재: ${allCompletedUnits.length}개)`
+      });
+    }
+
+    // 4) 각 단원에서 q1 또는 q2 문제 추출 (서버에서 콘텐츠 파일 읽기)
+    const quizzes = [];
+
+    for (const unitCode of gateUnits.slice(0, 10)) {
+      // unitCode 예: "geo_01", "bio_05", "classic_12"
+      const match = unitCode.match(/([a-z]+\d?)_(\d{1,2})/);
+      if (!match) continue;
+
+      const subject = match[1];
+      const num = match[2].padStart(2, '0');
+
+      // 과목에 따른 폴더 경로 결정
+      let folder = 'social';
+      if (['bio', 'physics', 'chem', 'earth'].includes(subject)) folder = 'science';
+      else if (['modern', 'classic'].includes(subject)) folder = 'korlit';
+      else if (['world1', 'world2'].includes(subject)) folder = 'worldlit';
+      else if (['people1', 'people2'].includes(subject)) folder = 'person';
+
+      const contentPath = path.join(__dirname, 'public', 'BRAINUP', folder, `${subject}_content.js`);
+
+      try {
+        if (fs.existsSync(contentPath)) {
+          const content = fs.readFileSync(contentPath, 'utf8');
+
+          // 해당 단원의 quiz 객체 찾기
+          const unitKey = `${subject}_${num}`;
+          const labelNoMatch = content.match(new RegExp(`labelNo:\\s*["']${num}["']`));
+
+          if (labelNoMatch) {
+            // 해당 단원 블록에서 quiz 추출
+            const unitIndex = content.indexOf(labelNoMatch[0]);
+            const nextUnitMatch = content.slice(unitIndex + 100).match(/labelNo:\s*["']\d{2}["']/);
+            const endIndex = nextUnitMatch ? unitIndex + 100 + content.slice(unitIndex + 100).indexOf(nextUnitMatch[0]) : content.length;
+            const unitBlock = content.slice(unitIndex, endIndex);
+
+            // title 추출
+            const titleMatch = unitBlock.match(/title:\s*["'](.+?)["']/);
+            const unitTitle = titleMatch ? titleMatch[1] : `${subject} ${num}`;
+
+            // answerKey에서 정답 찾기 (q1: '1' 또는 q1: 1 형태)
+            const answerKeyMatch = unitBlock.match(/answerKey:\s*\{([^}]+)\}/);
+            let q1Answer = 1;
+            let q2Answer = 1;
+            if (answerKeyMatch) {
+              const answerKeyBlock = answerKeyMatch[1];
+              const q1AnsMatch = answerKeyBlock.match(/q1:\s*['"]?(\d)['"]?/);
+              const q2AnsMatch = answerKeyBlock.match(/q2:\s*['"]?(\d)['"]?/);
+              if (q1AnsMatch) q1Answer = parseInt(q1AnsMatch[1]);
+              if (q2AnsMatch) q2Answer = parseInt(q2AnsMatch[1]);
+            }
+
+            // passage 추출 (본문 3문단)
+            const passageMatch = unitBlock.match(/passage:\s*\[([\s\S]*?)\]/);
+            let passages = [];
+            if (passageMatch) {
+              // 각 문단 추출
+              const passageRaw = passageMatch[1];
+              passages = passageRaw.match(/'([^']+)'/g)?.map(s => s.replace(/'/g, '')) || [];
+            }
+
+            // q1_text와 q1_opts 추출 (실제 콘텐츠 구조)
+            // 이스케이프된 따옴표(\\' 또는 \\")를 포함한 문자열 매칭
+            const q1TextMatch = unitBlock.match(/q1_text:\s*['"]((\\['"]|[^'"])+?)['"]/s);
+            const q1OptsMatch = unitBlock.match(/q1_opts:\s*\[([\s\S]*?)\]/);
+
+            if (q1TextMatch && q1OptsMatch) {
+              // 이스케이프 문자 제거 (\' → ', \" → ")
+              const q1Question = q1TextMatch[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+
+              // 옵션 파싱 - ① ② ③ ④ 제거, 이스케이프 문자 처리
+              const optionsRaw = q1OptsMatch[1];
+              let options = optionsRaw.match(/['"]((\\['"]|[^'"])+?)['"]/g)?.map(s => {
+                let opt = s.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
+                // ① ② ③ ④ 제거
+                opt = opt.replace(/^[①②③④]\s*/, '');
+                return opt;
+              }) || [];
+
+              if (options.length === 4) {
+                quizzes.push({
+                  unit: unitKey,
+                  unitTitle: unitTitle,
+                  passage: passages,
+                  question: q1Question,
+                  options: options,
+                  correct: q1Answer
+                });
+                console.log(`[gate-quiz] ${unitKey} q1 추출 성공 (passage: ${passages.length}문단)`);
+                continue;
+              }
+            }
+
+            // q1 실패 시 q2 시도
+            const q2TextMatch = unitBlock.match(/q2_text:\s*['"]((\\['"]|[^'"])+?)['"]/s);
+            const q2OptsMatch = unitBlock.match(/q2_opts:\s*\[([\s\S]*?)\]/);
+
+            if (q2TextMatch && q2OptsMatch) {
+              // 이스케이프 문자 제거
+              const q2Question = q2TextMatch[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+              const optionsRaw = q2OptsMatch[1];
+              let options = optionsRaw.match(/['"]((\\['"]|[^'"])+?)['"]/g)?.map(s => {
+                let opt = s.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
+                opt = opt.replace(/^[①②③④]\s*/, '');
+                return opt;
+              }) || [];
+
+              if (options.length === 4) {
+                quizzes.push({
+                  unit: unitKey,
+                  unitTitle: unitTitle,
+                  passage: passages,
+                  question: q2Question,
+                  options: options,
+                  correct: q2Answer
+                });
+                console.log(`[gate-quiz] ${unitKey} q2 추출 성공 (passage: ${passages.length}문단)`);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`[gate-quiz] ${unitCode} 문제 추출 실패:`, err.message);
+      }
+    }
+
+    console.log(`[gate-quiz/generate] 생성된 문제: ${quizzes.length}개`);
+
+    if (quizzes.length < 10) {
+      return res.json({
+        ok: false,
+        message: `문제 생성에 실패했습니다. (생성: ${quizzes.length}/10)`
+      });
+    }
+
+    res.json({
+      ok: true,
+      gate: gateLevel,
+      quizzes: quizzes.slice(0, 10),
+      units: gateUnits.slice(0, 10)
+    });
+
+  } catch (err) {
+    console.error("[gate-quiz/generate] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 관문 통과 저장 API
+app.post("/api/gate-quiz/pass", async (req, res) => {
+  try {
+    const { grade, name, gate, units } = req.body;
+
+    console.log(`[gate-quiz/pass] grade=${grade}, name=${name}, gate=${gate}`);
+
+    if (!grade || !name || !gate) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    // 이미 통과했는지 확인
+    const existing = await GatePass.findOne({ grade, name, gate });
+    if (existing) {
+      return res.json({ ok: true, message: "이미 통과한 관문입니다." });
+    }
+
+    // 새 관문 통과 기록 저장
+    const gatePass = new GatePass({
+      grade,
+      name,
+      gate,
+      units: units || []
+    });
+    await gatePass.save();
+
+    console.log(`[gate-quiz/pass] 관문 ${gate} 통과 저장 완료`);
+    res.json({ ok: true, message: "관문 통과가 저장되었습니다." });
+
+  } catch (err) {
+    console.error("[gate-quiz/pass] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 관문 상태 확인 API
+app.get("/api/gate-quiz/status", async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    // 완료된 단원 목록
+    const completedLogs = await LearningLog.find({
+      grade,
+      name,
+      completed: true,
+      deleted: { $ne: true }
+    }).select('unit').lean();
+    const completedUnitIds = [...new Set(completedLogs.map(log => log.unit))];
+    const completedCount = completedUnitIds.length;
+
+    // 통과한 관문들
+    const passedGates = await GatePass.find({ grade, name }).select('gate passedAt').lean();
+
+    // 다음 관문 레벨 계산
+    const highestPassedGate = passedGates.length > 0
+      ? Math.max(...passedGates.map(g => g.gate))
+      : 0;
+    const nextGate = highestPassedGate + 1;
+
+    // 다음 관문을 볼 수 있는지 (10개 단원마다)
+    const requiredUnits = nextGate * 10;
+    const canTakeGate = completedCount >= requiredUnits;
+
+    res.json({
+      ok: true,
+      completedUnits: completedCount,
+      completedUnitIds,  // 완료된 단원 ID 목록 추가
+      passedGates: passedGates.map(g => g.gate),
+      highestPassedGate,  // 가장 높은 통과 관문 추가
+      nextGate,
+      canTakeGate,
+      requiredUnits
+    });
+
+  } catch (err) {
+    console.error("[gate-quiz/status] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
   }
 });
 

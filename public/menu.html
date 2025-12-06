@@ -2963,6 +2963,58 @@ canvas[id^="confetti-canvas"] {
 
   <script>
 
+    /* 🔒 관문 시스템 전역 변수 및 함수 */
+    let passedGates = 0;  // 통과한 관문 수 (페이지 로드 시 API에서 가져옴)
+    let completedUnitsCount = 0;  // 완료한 단원 수
+    let completedUnitIds = [];  // 완료한 단원 ID 목록
+
+    // 단원 접근 가능 여부 확인 (완료 단원 수 기준)
+    function canAccessUnit(unitId) {
+      // 이미 완료한 단원은 항상 접근 가능 (복습)
+      if (completedUnitIds.includes(unitId)) {
+        console.log(`[canAccessUnit] ${unitId} - 이미 완료한 단원, 접근 허용`);
+        return true;
+      }
+
+      // 완료 단원 수가 관문 기준에 도달했는지 확인
+      // 10개 완료 + 관문 1 미통과 → 새 단원 잠금
+      // 20개 완료 + 관문 2 미통과 → 새 단원 잠금
+      const requiredGate = Math.floor(completedUnitsCount / 10);
+
+      const canAccess = passedGates >= requiredGate;
+      console.log(`[canAccessUnit] ${unitId} - 완료:${completedUnitsCount}, 통과관문:${passedGates}, 필요관문:${requiredGate}, 접근:${canAccess}`);
+
+      // 필요한 관문을 모두 통과했으면 접근 가능
+      return canAccess;
+    }
+
+    // 필요한 관문 번호 계산 (완료 단원 수 기준)
+    function getRequiredGate() {
+      // 완료 10개 → 관문 1 필요
+      // 완료 20개 → 관문 2 필요
+      return Math.floor(completedUnitsCount / 10);
+    }
+
+    // 잠금 모달 표시
+    function showLockModal(requiredGate) {
+      document.getElementById('lockGateLevel').textContent = requiredGate;
+      document.getElementById('lockModal').classList.add('active');
+    }
+
+    // 잠금 모달 닫기
+    function closeLockModal() {
+      const modal = document.getElementById('lockModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    // 잠금 모달에서 관문 시험으로 이동 (모달 형태)
+    function goToGateFromLock() {
+      const gateLevel = parseInt(document.getElementById('lockGateLevel').textContent);
+      closeLockModal();
+      // 약간의 딜레이 후 형성평가 모달 열기
+      setTimeout(() => openGateQuizModal(gateLevel), 300);
+    }
+
     /* 0. 시리즈 정보 */
     const seriesInfo = {
       BRAINON: { name: "BRAIN온", desc: "개념 이해" },
@@ -4240,10 +4292,11 @@ if (logoutConfirmBtn) {
       // 단원 등급 데이터 로드
       unitGradesData = await fetchUnitGrades();
       unitList.innerHTML = "";
-      units.forEach(u => {
+      units.forEach((u, unitIndex) => {
         const li = document.createElement("li");
         li.className = "unit-item";
         li.dataset.page = u.path;
+        li.dataset.unitIndex = unitIndex;  // 단원 인덱스 저장
 
         // 과제 데이터 저장 (드래그/모바일 추가용)
         li.dataset.taskData = JSON.stringify({
@@ -4256,6 +4309,7 @@ if (logoutConfirmBtn) {
 
         // 단원 ID 추출 (예: "BRAINUP/social/geo_01.html" → "geo_01")
         let unitId = u.path.split('/').pop().replace('.html', '');
+        li.dataset.unitId = unitId;  // 단원 ID 저장
 
         // ✅ world2_XX, people2_XX 형식 그대로 사용 (서버 API와 동일하게)
         // 서버에서 world2_XX 형식 그대로 저장하므로 변환하지 않음
@@ -4264,6 +4318,7 @@ if (logoutConfirmBtn) {
         const gradeInfo = unitGradesData[unitId];
         const stars = gradeInfo ? getStarsForGrade(gradeInfo.grade) : '';
 
+        // 단원 렌더링 (잠금 표시는 클릭 시 체크)
         li.innerHTML = `
           <span>${u.label}</span>
           <span class="unit-right">
@@ -4273,10 +4328,38 @@ if (logoutConfirmBtn) {
         `;
 
         // 단원 클릭 이벤트
-        li.addEventListener("click", (e) => {
+        li.addEventListener("click", async (e) => {
           // 상태 뱃지 클릭 시에는 단원 열기 방지
           if (e.target.classList.contains('status-badge')) {
             return;
+          }
+
+          // 🔒 실시간 잠금 체크 (API 호출)
+          const saved = localStorage.getItem('currentStudent');
+          if (saved) {
+            try {
+              const student = JSON.parse(saved);
+              const res = await fetch(`/api/gate-quiz/status?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
+              const data = await res.json();
+
+              if (data.ok) {
+                // 전역 변수 업데이트
+                passedGates = data.highestPassedGate || 0;
+                completedUnitsCount = data.completedUnits || 0;
+                completedUnitIds = data.completedUnitIds || [];
+
+                console.log(`[Lock Check] API 응답 - 통과관문:${passedGates}, 완료단원:${completedUnitsCount}, 클릭단원:${unitId}`);
+
+                // 잠금 체크
+                if (!canAccessUnit(unitId)) {
+                  const requiredGate = getRequiredGate();
+                  showLockModal(requiredGate);
+                  return;
+                }
+              }
+            } catch (err) {
+              console.error('[Lock Check Error]', err);
+            }
           }
 
           // 단원 파일 존재 여부 확인
@@ -10592,6 +10675,953 @@ ${content}
       }
     `;
     document.head.appendChild(styleSheet);
+  </script>
+
+  <!-- 📝 형성평가 관문 시스템 스타일 -->
+  <style>
+    /* 관문 팝업 오버레이 */
+    .gate-popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 100000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .gate-popup-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 관문 팝업 카드 */
+    .gate-popup-card {
+      background: linear-gradient(135deg, #fff 0%, #faf8f6 100%);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      animation: gatePopIn 0.4s ease-out;
+      text-align: center;
+    }
+    @keyframes gatePopIn {
+      from {
+        opacity: 0;
+        transform: scale(0.85) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* 관문 팝업 헤더 */
+    .gate-popup-header {
+      background: linear-gradient(135deg, #8b2f2f 0%, #c0392b 100%);
+      padding: 24px;
+      color: #fff;
+    }
+    .gate-popup-header .trophy-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 12px;
+      animation: bounce 1s ease infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .gate-popup-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+    .gate-popup-header p {
+      font-size: 14px;
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    /* 관문 팝업 바디 */
+    .gate-popup-body {
+      padding: 24px;
+    }
+    .gate-popup-body .gate-message {
+      font-size: 16px;
+      color: #4a3728;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .gate-popup-body .gate-message strong {
+      color: #8b2f2f;
+    }
+    .gate-completed-count {
+      background: #fef5f5;
+      border: 2px solid #8b2f2f;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .gate-completed-count .count-num {
+      font-size: 36px;
+      font-weight: 700;
+      color: #8b2f2f;
+    }
+    .gate-completed-count .count-label {
+      font-size: 14px;
+      color: #666;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* 관문 팝업 버튼 */
+    .gate-popup-footer {
+      padding: 0 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .gate-start-btn {
+      width: 100%;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #8b2f2f 0%, #c0392b 100%);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(139, 47, 47, 0.4);
+      transition: all 0.2s ease;
+    }
+    .gate-start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(139, 47, 47, 0.5);
+    }
+    .gate-skip-btn {
+      background: transparent;
+      border: 2px solid #ddd;
+      color: #888;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .gate-skip-btn:hover {
+      border-color: #aaa;
+      color: #666;
+    }
+  </style>
+
+  <!-- 📝 형성평가 관문 팝업 HTML -->
+  <div class="gate-popup-overlay" id="gatePopup">
+    <div class="gate-popup-card">
+      <div class="gate-popup-header">
+        <span class="trophy-icon">🏆</span>
+        <h2>형성평가 관문 <span id="gateLevel">1</span></h2>
+        <p>10개 단원 학습 완료!</p>
+      </div>
+      <div class="gate-popup-body">
+        <div class="gate-completed-count">
+          <span class="count-num" id="gateCompletedCount">10</span>
+          <span class="count-label">완료 단원</span>
+        </div>
+        <p class="gate-message">
+          축하합니다! <strong id="gateRequiredCount">10</strong>개 단원을 모두 완료했습니다.<br><br>
+          다음 단원을 학습하려면<br>
+          <strong>형성평가 관문 시험</strong>을 통과해야 합니다.
+        </p>
+      </div>
+      <div class="gate-popup-footer">
+        <button class="gate-start-btn" onclick="startGateQuiz()">
+          📝 형성평가 시작하기
+        </button>
+        <button class="gate-skip-btn" onclick="closeGatePopup()">
+          나중에 하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔒 학습 잠금 모달 -->
+  <style>
+    .lock-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 100001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .lock-modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .lock-modal-card {
+      background: linear-gradient(135deg, #fff 0%, #faf8f6 100%);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 380px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      animation: lockPopIn 0.4s ease-out;
+      text-align: center;
+    }
+    @keyframes lockPopIn {
+      from { opacity: 0; transform: scale(0.85) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .lock-modal-header {
+      background: linear-gradient(135deg, #5a5a5a 0%, #3d3d3d 100%);
+      padding: 24px;
+      color: #fff;
+    }
+    .lock-modal-header .lock-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 12px;
+    }
+    .lock-modal-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .lock-modal-body {
+      padding: 24px;
+    }
+    .lock-modal-body p {
+      font-size: 15px;
+      color: #4a3728;
+      line-height: 1.7;
+      margin: 0 0 20px 0;
+    }
+    .lock-modal-body .gate-link {
+      color: #8b2f2f;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .lock-modal-footer {
+      padding: 0 24px 24px;
+    }
+    .lock-modal-footer button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .lock-go-gate-btn {
+      background: linear-gradient(135deg, #8b2f2f 0%, #c0392b 100%);
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .lock-go-gate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(139, 47, 47, 0.3);
+    }
+    .lock-close-btn {
+      background: #f0ebe5;
+      color: #4a3728;
+    }
+    .lock-close-btn:hover {
+      background: #e5ded6;
+    }
+
+    /* ===== 형성평가 관문 모달 ===== */
+    .gate-quiz-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100001;
+      padding: 20px;
+    }
+    .gate-quiz-modal.active {
+      display: flex;
+    }
+    .gate-quiz-container {
+      background: linear-gradient(145deg, #fffaf5, #fff5eb);
+      border-radius: 24px;
+      padding: 30px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+      animation: gateSlideIn 0.4s ease-out;
+      position: relative;
+    }
+    @keyframes gateSlideIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .gate-quiz-close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: #f5f0eb;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #8b2f2f;
+      transition: all 0.2s ease;
+      z-index: 10;
+    }
+    .gate-quiz-close-btn:hover {
+      background: #8b2f2f;
+      color: #fff;
+      transform: scale(1.1);
+    }
+    .gate-quiz-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .gate-quiz-header h1 {
+      font-size: 24px;
+      color: #8b2f2f;
+      margin: 0 0 8px 0;
+    }
+    .gate-quiz-header .gate-number {
+      font-size: 16px;
+      color: #666;
+    }
+    .gate-quiz-header .gate-info {
+      font-size: 13px;
+      color: #999;
+      margin-top: 5px;
+    }
+    .gate-progress-bar {
+      height: 8px;
+      background: #e8e0d8;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .gate-progress-bar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b2f2f, #c0392b);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    .gate-unit-btn {
+      background: #fff8f0;
+      border: 2px solid #e8d4c4;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+    .gate-unit-btn:hover {
+      background: #fff0e0;
+      border-color: #d4b8a0;
+    }
+    .gate-unit-btn .title-text {
+      font-size: 14px;
+      color: #8b2f2f;
+      font-weight: 600;
+    }
+    .gate-unit-btn .title-hint {
+      font-size: 11px;
+      color: #999;
+      margin-left: 6px;
+    }
+    .gate-unit-btn .arrow {
+      font-size: 12px;
+      color: #8b2f2f;
+      transition: transform 0.3s ease;
+    }
+    .gate-unit-btn.open .arrow {
+      transform: rotate(180deg);
+    }
+    .gate-passage {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s ease;
+      background: #fffaf5;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .gate-passage.open {
+      max-height: 500px;
+      padding: 16px;
+      border: 1px solid #f0e0d0;
+    }
+    .gate-passage p {
+      font-size: 13px;
+      color: #4a3728;
+      line-height: 1.7;
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+    .gate-passage p:last-child { margin-bottom: 0; }
+    .gate-passage b { color: #8b2f2f; font-weight: 600; }
+    .gate-question-box {
+      background: #faf8f6;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      border-left: 4px solid #8b2f2f;
+    }
+    .gate-question-box .question-text {
+      font-size: 15px;
+      color: #3b2a1a;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    .gate-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .gate-option-btn {
+      background: #fff;
+      border: 2px solid #e8d4c4;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      color: #3b2a1a;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .gate-option-btn:hover {
+      border-color: #d4b8a0;
+      background: #fffaf5;
+    }
+    .gate-option-btn.selected {
+      border-color: #8b2f2f;
+      background: linear-gradient(135deg, #fff5f0, #fff0e8);
+      color: #8b2f2f;
+      font-weight: 600;
+    }
+    .gate-option-btn.correct {
+      border-color: #27ae60;
+      background: linear-gradient(135deg, #e8f8f0, #d5f5e3);
+      color: #27ae60;
+    }
+    .gate-option-btn.wrong {
+      border-color: #e74c3c;
+      background: linear-gradient(135deg, #fdf2f2, #fdeaea);
+      color: #e74c3c;
+    }
+    .gate-submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #8b2f2f 0%, #c0392b 100%);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .gate-submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139, 47, 47, 0.3);
+    }
+    .gate-submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .gate-loading {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .gate-loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e8d4c4;
+      border-top: 4px solid #8b2f2f;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    .gate-loading-text {
+      color: #8b2f2f;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .gate-result {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .gate-result-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    .gate-result-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .gate-result-title.success { color: #27ae60; }
+    .gate-result-title.fail { color: #e74c3c; }
+    .gate-result-msg {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .gate-result-btn {
+      padding: 14px 40px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .gate-result-btn.primary {
+      background: linear-gradient(135deg, #8b2f2f 0%, #c0392b 100%);
+      color: #fff;
+    }
+    .gate-result-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(139, 47, 47, 0.3);
+    }
+    .gate-result-btn.secondary {
+      background: #f0ebe5;
+      color: #4a3728;
+      margin-left: 10px;
+    }
+    .gate-result-btn.secondary:hover {
+      background: #e5ded6;
+    }
+    @media (max-width: 600px) {
+      .gate-quiz-container {
+        padding: 20px;
+        border-radius: 18px;
+      }
+      .gate-quiz-header h1 { font-size: 20px; }
+      .gate-option-btn { padding: 12px 14px; font-size: 13px; }
+    }
+  </style>
+
+  <!-- 📝 형성평가 관문 모달 -->
+  <div id="gateQuizModal" class="gate-quiz-modal">
+    <div class="gate-quiz-container" id="gateQuizContainer">
+      <button class="gate-quiz-close-btn" onclick="closeGateQuizModal()" title="닫기">✕</button>
+      <div class="gate-loading">
+        <div class="gate-loading-spinner"></div>
+        <p class="gate-loading-text">형성평가 문제를 불러오는 중...</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="lockModal" class="lock-modal-overlay">
+    <div class="lock-modal-card">
+      <div class="lock-modal-header">
+        <span class="lock-icon">🔒</span>
+        <h2>학습 잠금</h2>
+      </div>
+      <div class="lock-modal-body">
+        <p>
+          이 단원은 <strong>형성평가 관문 <span id="lockGateLevel">1</span></strong>을<br>
+          통과해야 학습할 수 있습니다.<br><br>
+          관문 시험에 도전해보세요!
+        </p>
+      </div>
+      <div class="lock-modal-footer">
+        <button class="lock-go-gate-btn" onclick="goToGateFromLock()">
+          📝 형성평가 시험 보러 가기
+        </button>
+        <button class="lock-close-btn" onclick="closeLockModal()">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📝 형성평가 관문 시스템 스크립트 -->
+  <script>
+    // ===== 형성평가 모달 전역 변수 =====
+    let gateQuizData = [];
+    let gateCurrentIndex = 0;
+    let gateSelectedAnswer = null;
+    let gateCurrentLevel = 1;
+
+    // 관문 시험 시작 (모달 열기)
+    function startGateQuiz() {
+      const gateLevel = document.getElementById('gateLevel').textContent;
+      // 관문 안내 팝업 닫기
+      closeGatePopup();
+      // 형성평가 모달 열기
+      openGateQuizModal(parseInt(gateLevel));
+    }
+
+    // 형성평가 모달 열기
+    async function openGateQuizModal(level) {
+      gateCurrentLevel = level;
+      gateQuizData = [];
+      gateCurrentIndex = 0;
+      gateSelectedAnswer = null;
+
+      const modal = document.getElementById('gateQuizModal');
+      const container = document.getElementById('gateQuizContainer');
+
+      // 모달 표시 (로딩 상태)
+      container.innerHTML = `
+        <button class="gate-quiz-close-btn" onclick="closeGateQuizModal()" title="닫기">✕</button>
+        <div class="gate-loading">
+          <div class="gate-loading-spinner"></div>
+          <p class="gate-loading-text">형성평가 문제를 불러오는 중...</p>
+        </div>
+      `;
+      modal.classList.add('active');
+
+      // API 호출하여 문제 가져오기
+      try {
+        const saved = localStorage.getItem('currentStudent');
+        if (!saved) {
+          alert('로그인이 필요합니다.');
+          closeGateQuizModal();
+          return;
+        }
+        const student = JSON.parse(saved);
+        const res = await fetch(`/api/gate-quiz/generate?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}&gate=${level}`);
+        const data = await res.json();
+
+        if (!data.ok) {
+          container.innerHTML = `
+            <button class="gate-quiz-close-btn" onclick="closeGateQuizModal()" title="닫기">✕</button>
+            <div class="gate-result">
+              <div class="gate-result-icon">❌</div>
+              <h2 class="gate-result-title fail">문제 생성 실패</h2>
+              <p class="gate-result-msg">${data.error || '문제를 불러올 수 없습니다.'}</p>
+              <button class="gate-result-btn secondary" onclick="closeGateQuizModal()">닫기</button>
+            </div>
+          `;
+          return;
+        }
+
+        gateQuizData = data.quizzes || data.questions;
+        renderGateQuiz();
+      } catch (err) {
+        console.error('[Gate Quiz Error]', err);
+        container.innerHTML = `
+          <button class="gate-quiz-close-btn" onclick="closeGateQuizModal()" title="닫기">✕</button>
+          <div class="gate-result">
+            <div class="gate-result-icon">❌</div>
+            <h2 class="gate-result-title fail">오류 발생</h2>
+            <p class="gate-result-msg">서버 연결에 실패했습니다.</p>
+            <button class="gate-result-btn secondary" onclick="closeGateQuizModal()">닫기</button>
+          </div>
+        `;
+      }
+    }
+
+    // 형성평가 모달 닫기
+    function closeGateQuizModal() {
+      if (gateQuizData.length > 0 && gateCurrentIndex < gateQuizData.length) {
+        if (!confirm('형성평가를 종료하시겠습니까?\n통과하지 못하면 다음 단원 학습이 제한됩니다.')) {
+          return;
+        }
+      }
+      document.getElementById('gateQuizModal').classList.remove('active');
+      gateQuizData = [];
+      gateCurrentIndex = 0;
+    }
+
+    // 형성평가 문제 렌더링
+    function renderGateQuiz() {
+      const container = document.getElementById('gateQuizContainer');
+      const quiz = gateQuizData[gateCurrentIndex];
+      const qNum = gateCurrentIndex + 1;
+
+      const passageHTML = quiz.passage && quiz.passage.length > 0
+        ? quiz.passage.map(p => `<p>${p}</p>`).join('')
+        : '<p>본문을 불러올 수 없습니다.</p>';
+
+      container.innerHTML = `
+        <button class="gate-quiz-close-btn" onclick="closeGateQuizModal()" title="닫기">✕</button>
+        <div class="gate-quiz-header">
+          <h1>📝 형성평가 관문 ${gateCurrentLevel}</h1>
+          <p class="gate-number">10개 문제 중 ${qNum}번째</p>
+          <p class="gate-info">모든 문제를 연속으로 맞춰야 통과합니다</p>
+        </div>
+
+        <div class="gate-progress-bar">
+          <div class="fill" style="width: ${(qNum / 10) * 100}%"></div>
+        </div>
+
+        <div class="gate-unit-btn" onclick="toggleGatePassage()">
+          <div>
+            <span class="title-text">📖 ${quiz.unitTitle}</span>
+            <span class="title-hint">에서 출제 (클릭하여 본문 보기)</span>
+          </div>
+          <span class="arrow">▼</span>
+        </div>
+
+        <div class="gate-passage" id="gatePassageContent">
+          ${passageHTML}
+        </div>
+
+        <div class="gate-question-box">
+          <p class="question-text">${quiz.question}</p>
+        </div>
+
+        <div class="gate-options">
+          ${quiz.options.map((opt, idx) => `
+            <button class="gate-option-btn" onclick="selectGateAnswer(${idx})">
+              ${['①', '②', '③', '④'][idx]} ${opt}
+            </button>
+          `).join('')}
+        </div>
+
+        <button class="gate-submit-btn" onclick="submitGateAnswer()" disabled>
+          답안 제출
+        </button>
+      `;
+      gateSelectedAnswer = null;
+    }
+
+    // 본문 토글
+    function toggleGatePassage() {
+      const btn = document.querySelector('.gate-unit-btn');
+      const content = document.getElementById('gatePassageContent');
+      btn.classList.toggle('open');
+      content.classList.toggle('open');
+    }
+
+    // 답안 선택
+    function selectGateAnswer(index) {
+      gateSelectedAnswer = index;
+      const buttons = document.querySelectorAll('.gate-option-btn');
+      buttons.forEach(btn => btn.classList.remove('selected'));
+      buttons[index].classList.add('selected');
+      document.querySelector('.gate-submit-btn').disabled = false;
+    }
+
+    // 답안 제출
+    async function submitGateAnswer() {
+      if (gateSelectedAnswer === null) return;
+
+      const quiz = gateQuizData[gateCurrentIndex];
+      // API에서 correct는 1-4 기반, 화면에서는 0-3 기반 인덱스 사용
+      const correctIndex = (quiz.correct || quiz.answer) - 1;
+      const isCorrect = gateSelectedAnswer === correctIndex;
+
+      const buttons = document.querySelectorAll('.gate-option-btn');
+      buttons.forEach((btn, idx) => {
+        btn.onclick = null;
+        if (idx === correctIndex) btn.classList.add('correct');
+        if (idx === gateSelectedAnswer && !isCorrect) btn.classList.add('wrong');
+      });
+      document.querySelector('.gate-submit-btn').disabled = true;
+
+      if (isCorrect) {
+        // 정답
+        if (gateCurrentIndex < gateQuizData.length - 1) {
+          // 다음 문제로
+          setTimeout(() => {
+            gateCurrentIndex++;
+            gateSelectedAnswer = null;
+            renderGateQuiz();
+          }, 1000);
+        } else {
+          // 모두 통과!
+          setTimeout(() => saveGatePass(), 1000);
+        }
+      } else {
+        // 오답 - 실패
+        setTimeout(() => showGateFail(), 1500);
+      }
+    }
+
+    // 관문 통과 저장
+    async function saveGatePass() {
+      const container = document.getElementById('gateQuizContainer');
+      try {
+        const saved = localStorage.getItem('currentStudent');
+        const student = JSON.parse(saved);
+
+        console.log('[Gate Pass] 저장 요청:', { grade: student.grade, name: student.name, gateLevel: gateCurrentLevel });
+
+        const res = await fetch('/api/gate-quiz/pass', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: student.grade,
+            name: student.name,
+            gate: gateCurrentLevel  // 서버에서 'gate'를 기대함
+          })
+        });
+        const data = await res.json();
+        console.log('[Gate Pass] 응답:', data);
+
+        if (!data.ok) {
+          throw new Error(data.error || '저장 실패');
+        }
+
+        // 전역 변수 업데이트
+        passedGates = gateCurrentLevel;
+
+        // 통과한 관문은 dismissed에서 제거 (다음 관문 팝업이 뜨도록)
+        sessionStorage.removeItem('gatePopupDismissed');
+
+        // 폭죽 효과
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        }
+
+        container.innerHTML = `
+          <button class="gate-quiz-close-btn" onclick="closeGateQuizModalForce()" title="닫기">✕</button>
+          <div class="gate-result">
+            <div class="gate-result-icon">🎉</div>
+            <h2 class="gate-result-title success">관문 ${gateCurrentLevel} 통과!</h2>
+            <p class="gate-result-msg">
+              축하합니다! 10문제를 모두 맞추셨습니다.<br>
+              새로운 단원의 학습이 해금되었습니다.
+            </p>
+            <button class="gate-result-btn primary" onclick="closeGateQuizModalForce()">학습 계속하기</button>
+          </div>
+        `;
+      } catch (err) {
+        console.error('[Gate Pass Error]', err);
+        container.innerHTML = `
+          <button class="gate-quiz-close-btn" onclick="closeGateQuizModalForce()" title="닫기">✕</button>
+          <div class="gate-result">
+            <div class="gate-result-icon">⚠️</div>
+            <h2 class="gate-result-title">저장 오류</h2>
+            <p class="gate-result-msg">관문 통과 기록 저장에 실패했습니다.</p>
+            <button class="gate-result-btn secondary" onclick="closeGateQuizModalForce()">닫기</button>
+          </div>
+        `;
+      }
+    }
+
+    // 실패 화면
+    function showGateFail() {
+      const container = document.getElementById('gateQuizContainer');
+      container.innerHTML = `
+        <button class="gate-quiz-close-btn" onclick="closeGateQuizModalForce()" title="닫기">✕</button>
+        <div class="gate-result">
+          <div class="gate-result-icon">😢</div>
+          <h2 class="gate-result-title fail">아쉽게도 통과하지 못했습니다</h2>
+          <p class="gate-result-msg">
+            ${gateCurrentIndex + 1}번째 문제에서 오답이 발생했습니다.<br>
+            복습 후 다시 도전해주세요!
+          </p>
+          <div>
+            <button class="gate-result-btn primary" onclick="openGateQuizModal(${gateCurrentLevel})">다시 도전하기</button>
+            <button class="gate-result-btn secondary" onclick="closeGateQuizModalForce()">나중에 하기</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 강제 닫기 (확인 없이)
+    function closeGateQuizModalForce() {
+      document.getElementById('gateQuizModal').classList.remove('active');
+      gateQuizData = [];
+      gateCurrentIndex = 0;
+      // 관문 상태 새로고침
+      checkGateStatus();
+    }
+
+    // 관문 팝업 닫기 (나중에 하기)
+    function closeGatePopup() {
+      const popup = document.getElementById('gatePopup');
+      if (popup) popup.classList.remove('active');
+      // 세션 동안 해당 관문 팝업 안 뜨게
+      const gateLevel = document.getElementById('gateLevel').textContent;
+      sessionStorage.setItem('gatePopupDismissed', gateLevel);
+    }
+
+    // 관문 상태 확인 및 팝업 표시
+    async function checkGateStatus() {
+      const saved = localStorage.getItem('currentStudent');
+      if (!saved) return;
+
+      try {
+        const student = JSON.parse(saved);
+        const res = await fetch(`/api/gate-quiz/status?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
+        const data = await res.json();
+
+        if (!data.ok) return;
+
+        console.log('[Gate Status]', data);
+
+        // 🔒 전역 변수 설정 (잠금 체크용)
+        passedGates = data.highestPassedGate || 0;
+        completedUnitsCount = data.completedUnits || 0;
+        completedUnitIds = data.completedUnitIds || [];
+
+        // 관문 시험을 볼 수 있는 상태인지 확인
+        if (data.canTakeGate) {
+          // "나중에 하기"를 눌렀던 관문인지 확인
+          const dismissedGate = sessionStorage.getItem('gatePopupDismissed');
+          if (dismissedGate === String(data.nextGate)) {
+            console.log('[Gate] 팝업 dismissed:', data.nextGate);
+            return; // 이미 "나중에 하기"를 누른 관문이면 팝업 안 띄움
+          }
+
+          // 팝업 표시
+          document.getElementById('gateLevel').textContent = data.nextGate;
+          document.getElementById('gateCompletedCount').textContent = data.completedUnits;
+          document.getElementById('gateRequiredCount').textContent = data.requiredUnits;
+
+          // 공지사항 팝업 후에 표시 (2초 딜레이)
+          setTimeout(() => {
+            const gatePopup = document.getElementById('gatePopup');
+            const noticePopup = document.getElementById('noticePopup');
+
+            // 공지사항 팝업이 활성화되어 있지 않으면 관문 팝업 표시
+            if (!noticePopup || !noticePopup.classList.contains('active')) {
+              gatePopup.classList.add('active');
+            } else {
+              // 공지사항 팝업이 닫힐 때까지 기다림
+              const observer = new MutationObserver((mutations) => {
+                if (!noticePopup.classList.contains('active')) {
+                  setTimeout(() => gatePopup.classList.add('active'), 500);
+                  observer.disconnect();
+                }
+              });
+              observer.observe(noticePopup, { attributes: true });
+            }
+          }, 1500);
+        }
+      } catch (err) {
+        console.error('[Gate Status Error]', err);
+      }
+    }
+
+    // 페이지 로드 시 관문 상태 확인
+    document.addEventListener('DOMContentLoaded', function() {
+      // 즉시 관문 상태 확인 (잠금 상태 설정)
+      checkGateStatus();
+      // 3초 후에 다시 확인 (팝업 표시용)
+      setTimeout(checkGateStatus, 3000);
+    });
   </script>
 
   <!-- 🔄 로딩 스피너 제어 스크립트 -->

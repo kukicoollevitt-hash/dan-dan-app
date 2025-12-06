@@ -161,6 +161,20 @@
       background: #f8f9fa;
     }
 
+    /* 클릭 가능한 행 스타일 */
+    tr.clickable-row {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    tr.clickable-row:hover td {
+      background: linear-gradient(135deg, #e8f4fd 0%, #d4edfc 100%);
+    }
+
+    tr.clickable-row:active td {
+      background: linear-gradient(135deg, #cce5ff 0%, #b3d9ff 100%);
+    }
+
     tr:last-child td {
       border-bottom: none;
     }
@@ -843,6 +857,62 @@
       return unitCode;
     }
 
+    // ===== 단원 코드로 학습 페이지 경로 생성 =====
+    function getUnitPath(unitCode, series) {
+      if (!unitCode) return null;
+
+      // 시리즈별 폴더 매핑
+      const seriesFolders = {
+        'BRAIN업': 'BRAINUP',
+        'BRAIN온': 'BRAINON',
+        'BRAIN핏': 'BRAINFIT',
+        'BRAIN딥': 'BRAINDEEP',
+        'BRAIN중등': 'BRAINMID',
+        'BRAIN고등': 'BRAINHIGH'
+      };
+
+      // 과목 코드 → 폴더 매핑
+      const subjectFolders = {
+        'geo': 'social',
+        'soc': 'social',
+        'law': 'social',
+        'pol': 'social',
+        'bio': 'science',
+        'chem': 'science',
+        'physics': 'science',
+        'earth': 'science',
+        'classic': 'korlit',
+        'modern': 'korlit',
+        'world': 'worldlit',
+        'people': 'person',
+        'people1': 'person'
+      };
+
+      const parts = unitCode.split('_');
+      if (parts.length < 2) return null;
+
+      const subjectCode = parts[0];
+      const unitNum = parts[1];
+
+      const seriesFolder = seriesFolders[series] || 'BRAINUP';
+      const subjectFolder = subjectFolders[subjectCode];
+
+      if (!subjectFolder) return null;
+
+      // 경로 생성: /BRAINUP/social/geo_01.html
+      return `/${seriesFolder}/${subjectFolder}/${unitCode}.html`;
+    }
+
+    // ===== 단원 페이지로 이동 =====
+    function goToUnit(unitCode, series) {
+      const path = getUnitPath(unitCode, series);
+      if (path) {
+        window.open(path, '_blank');
+      } else {
+        alert('해당 단원 페이지를 찾을 수 없습니다.');
+      }
+    }
+
     // ===== 학습 건수 업데이트 =====
     function updateLearningCounts(logs) {
       const totalCount = logs.length;
@@ -950,16 +1020,19 @@
         const aiReviewTimestamp = log.aiReviewCompletedAt ?
           new Date(log.aiReviewCompletedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
 
-        const hiddenClass = idx >= 6 ? ' class="hidden-row"' : '';
+        const hiddenClass = idx >= 6 ? 'hidden-row' : '';
+        const unitCode = log.unit || '';
+        const series = log.series || 'BRAIN업';
+
         return `
-          <tr${hiddenClass}>
+          <tr class="clickable-row ${hiddenClass}" onclick="goToUnit('${unitCode}', '${series}')" title="클릭하여 단원으로 이동">
             <td>${idx + 1}</td>
             <td>${timestamp}</td>
             <td style="${log.aiReviewCompletedAt ? 'color: #6b21a8; font-weight: 600;' : 'color: #999;'}">${aiReviewTimestamp}</td>
             <td>${log.series || ''}</td>
-            <td>${getUnitName(log.unit || '')}</td>
+            <td style="color: #667eea; font-weight: 600;">${getUnitName(unitCode)} 📖</td>
             <td>
-              <button class="table-delete-btn" onclick="deleteLog('${log._id}')">
+              <button class="table-delete-btn" onclick="event.stopPropagation(); deleteLog('${log._id}')">
                 🗑️ 삭제
               </button>
             </td>
