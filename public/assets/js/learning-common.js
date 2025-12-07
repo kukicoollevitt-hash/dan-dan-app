@@ -945,6 +945,152 @@
       }
     }
 
+  /* ===== ✅ playSubmitCelebration - DOMContentLoaded 외부에서 전역 접근 가능 ===== */
+  function playSubmitCelebration() {
+    // 1. 화려한 팡파레 효과음
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const fanfare = [
+        { freq: 523.25, start: 0, duration: 0.2, type: 'sawtooth', gain: 0.15 },
+        { freq: 659.25, start: 0, duration: 0.2, type: 'sawtooth', gain: 0.12 },
+        { freq: 783.99, start: 0, duration: 0.2, type: 'sawtooth', gain: 0.12 },
+        { freq: 659.25, start: 0.25, duration: 0.1, type: 'sawtooth', gain: 0.15 },
+        { freq: 783.99, start: 0.38, duration: 0.1, type: 'sawtooth', gain: 0.15 },
+        { freq: 880.00, start: 0.50, duration: 0.1, type: 'sawtooth', gain: 0.15 },
+        { freq: 1046.50, start: 0.65, duration: 0.5, type: 'sawtooth', gain: 0.18 },
+        { freq: 1318.51, start: 0.65, duration: 0.5, type: 'sawtooth', gain: 0.14 },
+        { freq: 1567.98, start: 0.65, duration: 0.5, type: 'sawtooth', gain: 0.12 },
+      ];
+      fanfare.forEach(note => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass'; filter.frequency.value = 3000;
+        osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = note.type; osc.frequency.value = note.freq;
+        gain.gain.setValueAtTime(0, audioCtx.currentTime + note.start);
+        gain.gain.linearRampToValueAtTime(note.gain, audioCtx.currentTime + note.start + 0.02);
+        gain.gain.setValueAtTime(note.gain, audioCtx.currentTime + note.start + note.duration - 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.start + note.duration);
+        osc.start(audioCtx.currentTime + note.start);
+        osc.stop(audioCtx.currentTime + note.start + note.duration);
+      });
+      // 심벌즈
+      const crashTime = 0.65;
+      const bufferSize = audioCtx.sampleRate * 0.8;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+      const noise = audioCtx.createBufferSource();
+      const noiseGain = audioCtx.createGain();
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noise.buffer = noiseBuffer;
+      noiseFilter.type = 'highpass'; noiseFilter.frequency.value = 5000;
+      noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+      noiseGain.gain.setValueAtTime(0.25, audioCtx.currentTime + crashTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + crashTime + 0.8);
+      noise.start(audioCtx.currentTime + crashTime);
+      noise.stop(audioCtx.currentTime + crashTime + 0.8);
+    } catch (e) { console.log('Audio not supported'); }
+
+    // 2. 폭죽 효과
+    const confettiZIndex = 999999;
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 100, spread: 70, origin: { x: 0.5, y: 0.6 }, colors: ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0099ff', '#6633ff'], zIndex: confettiZIndex });
+      setTimeout(() => { confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0, y: 0.6 }, colors: ['#ff69b4', '#ffd700', '#00ffff'], zIndex: confettiZIndex }); }, 200);
+      setTimeout(() => { confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1, y: 0.6 }, colors: ['#ff69b4', '#ffd700', '#00ffff'], zIndex: confettiZIndex }); }, 200);
+      setTimeout(() => { confetti({ particleCount: 80, spread: 100, origin: { x: 0.5, y: 0.5 }, shapes: ['star'], colors: ['#ffd700', '#ffec8b', '#fff8dc'], zIndex: confettiZIndex }); }, 500);
+    }
+  }
+  // 전역으로 노출
+  window.playSubmitCelebration = playSubmitCelebration;
+
+  /* ===== ✅ showSubmitSuccess - DOMContentLoaded 외부에서 전역 접근 가능 ===== */
+  function showSubmitSuccess(kind) {
+    const { grade, name } = getStudentInfo();
+    const who = (grade || name) ? `${grade ? grade + ' ' : ''}${name ? name + ' ' : ''}`.trim() + ' ' : '';
+    showSubmitOverlay(`${who}${kind} 제출되었습니다 ✅`);
+  }
+  // 전역으로 노출
+  window.showSubmitSuccess = showSubmitSuccess;
+
+  /* ===== ✅ submitReport - DOMContentLoaded 외부에서 전역 접근 가능 ===== */
+  async function submitReport() {
+    // 0) 로그인 정보 확인
+    const stu = getCurrentStudent();
+    if (!stu) {
+      alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
+      return;
+    }
+
+    // 1) 리포트 PDF 저장
+    await captureElementToPDF('capture-report', '단단국어_분석리포트.pdf', { withStudentInfo: true });
+
+    // 2) 학생 고유키
+    const studentKey = buildStudentKey(stu);
+
+    // 3) 현재 단원 번호와 PAGE_KEY
+    const cur = (window.CUR_UNIT || 'geo_01');
+    const m = cur.match(/geo_(\d{1,2})/);
+    const no = m ? m[1].padStart(2, '0') : '01';
+    const pk = window.PAGE_KEY || `BRAINUP_social_geo_${no}`;
+
+    // 4) 과거/변형 키까지 한 번에 흡수
+    const legacyPath = `./BRAINUP/social/geo_${no}.html`;
+    const pageIds = [pk, legacyPath, `BRAINUP_geo_${no}`, `BRAINUP_social_geo${no}`];
+    console.log('[study page] PAGE_IDs =', pageIds);
+
+    // 5) 현재 단원에 해당하는 키에만 저장
+    const currentUnitKey = `dan-progress:${studentKey}:${cur}`;
+    let saved;
+    try {
+      saved = JSON.parse(localStorage.getItem(currentUnitKey) || '[]');
+      if (!Array.isArray(saved)) saved = [];
+    } catch(e) { saved = []; }
+
+    pageIds.forEach(id => { if (!saved.includes(id)) saved.push(id); });
+    localStorage.setItem(currentUnitKey, JSON.stringify(saved));
+    console.log('[study page] Saved completion to', currentUnitKey, '=>', saved);
+
+    // 6) 부모 창에 완료 메시지 전송
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'UNIT_COMPLETED' }, window.location.origin);
+      console.log('[study page] Sent UNIT_COMPLETED to parent');
+    }
+
+    // 7) AI 추천 과제 복습 완료 처리
+    try {
+      if (typeof window.markAITaskAsCompleted === 'function') {
+        await window.markAITaskAsCompleted(stu.grade, stu.name, cur);
+      }
+    } catch (error) { console.error('[AI 과제 복습 완료 처리 오류]', error); }
+
+    // 8) 분석리포트 상태 서버 저장
+    const saveFn = window.saveUnitProgressToServer;
+    if (typeof saveFn === 'function') {
+      const rs = window.reportState || (typeof reportState !== 'undefined' ? reportState : null);
+      if (rs) {
+        const reportLogEl = document.getElementById('report-log');
+        const dataToSave = {
+          reportState: {
+            q1ok: rs.q1ok || false, q2ok: rs.q2ok || false, q3ok: rs.q3ok || false,
+            q4ok: rs.q4ok || false, q5ok: rs.q5ok || false,
+            vocabScoreRatio: rs.vocabScoreRatio || 0, radarScores: rs.radarScores || {},
+            reportLogHTML: reportLogEl ? reportLogEl.innerHTML : '', isSubmitted: true
+          }
+        };
+        await saveFn(dataToSave);
+        console.log('[submitReport] 분석리포트 서버 저장 완료!');
+      }
+    }
+
+    // 9) 완료 표시 + 축하 효과
+    playSubmitCelebration();
+    window.showSubmitSuccess('분석리포트');
+  }
+  // 전역으로 노출
+  window.submitReport = submitReport;
+
   // 페이지 로드 시 탭 이벤트 등록 및 저장된 탭 복원
   window.addEventListener('DOMContentLoaded', async () => {
     // 탭 버튼 클릭 이벤트
@@ -1280,24 +1426,11 @@
       overlay.classList.add("show");
       setTimeout(() => { overlay.classList.remove("show"); overlay.style.display = "none"; }, 2600);
     }
-    function showSubmitSuccess(kind) {
-      const { grade, name } = getStudentInfo();
-      const who = (grade || name) ? `${grade ? grade + ' ' : ''}${name ? name + ' ' : ''}`.trim() + ' ' : '';
-      showSubmitOverlay(`${who}${kind} 제출되었습니다 ✅`);
-
-      // 분석리포트 제출 시에만 팝업 닫기 및 새로고침
-      if (kind === '분석리포트') {
-        setTimeout(() => {
-          if (window.parent) {
-            // 팝업 닫기
-            if (window.parent.closeUnitModal) {
-              window.parent.closeUnitModal();
-            }
-            // 새로고침
-            window.parent.location.reload();
-          }
-        }, 2800);
-      }
+    // confetti 라이브러리 동적 로드
+    if (typeof confetti === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+      document.head.appendChild(script);
     }
 
     /* ===== 분석리포트 갱신 ===== */
@@ -2257,98 +2390,4 @@
     // ✅ 창의활동 상태 복원
     loadCreativeState();
 
-    /* ===== ✅ 최종본 submitReport()만 남김 (중복/전역 병합 블록 삭제) ===== */
-    async function submitReport() {
-      // 0) 로그인 정보 확인
-      const stu = getCurrentStudent();
-      if (!stu) {
-        alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
-        return;
-      }
-
-      // 1) 리포트 PDF 저장
-      await captureElementToPDF('capture-report', '단단국어_분석리포트.pdf', { withStudentInfo: true });
-
-      // 2) 학생 고유키
-      const studentKey = buildStudentKey(stu); // 예: "4학년_사사사_01044444444"
-
-      // 3) 현재 단원 번호와 PAGE_KEY
-      const cur = (window.CUR_UNIT || 'geo_01');                  // 예: 'geo_02'
-      const m = cur.match(/geo_(\d{1,2})/);
-      const no = m ? m[1].padStart(2, '0') : '01';
-      const pk = window.PAGE_KEY || `BRAINUP_social_geo_${no}`;   // 예: 'BRAINUP_social_geo_02'
-
-      // 4) 과거/변형 키까지 한 번에 흡수
-      const legacyPath = `./BRAINUP/social/geo_${no}.html`;
-      const pageIds = [
-        pk,
-        legacyPath,
-        `BRAINUP_geo_${no}`,
-        `BRAINUP_social_geo${no}`
-      ];
-      console.log('[study page] PAGE_IDs =', pageIds);
-
-      // 5) 현재 단원에 해당하는 키에만 저장
-      const currentUnitKey = `dan-progress:${studentKey}:${cur}`;
-      let saved;
-      try {
-        saved = JSON.parse(localStorage.getItem(currentUnitKey) || '[]');
-        if (!Array.isArray(saved)) saved = [];
-      } catch(e) {
-        saved = [];
-      }
-
-      // pageIds를 saved에 추가 (중복 제거)
-      pageIds.forEach(id => {
-        if (!saved.includes(id)) saved.push(id);
-      });
-
-      localStorage.setItem(currentUnitKey, JSON.stringify(saved));
-      console.log('[study page] Saved completion to', currentUnitKey, '=>', saved);
-
-      // 6) 부모 창에 완료 메시지 전송 (코인 지급 및 UI 업데이트)
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({
-          type: 'UNIT_COMPLETED'
-        }, window.location.origin);
-        console.log('[study page] Sent UNIT_COMPLETED to parent');
-      }
-
-      // 7) AI 추천 과제 복습 완료 처리
-      try {
-        if (typeof window.markAITaskAsCompleted === 'function') {
-          const unitId = cur; // 예: 'geo_03'
-          await window.markAITaskAsCompleted(stu.grade, stu.name, unitId);
-        }
-      } catch (error) {
-        console.error('[AI 과제 복습 완료 처리 오류]', error);
-      }
-
-      // 8) ★ 분석리포트 상태 서버 저장
-      const saveFn = window.saveUnitProgressToServer;
-      if (typeof saveFn === 'function') {
-        // reportState가 있으면 저장 (window.reportState 또는 전역 reportState)
-        const rs = window.reportState || (typeof reportState !== 'undefined' ? reportState : null);
-        if (rs) {
-          const reportLogEl = document.getElementById('report-log');
-          const dataToSave = {
-            reportState: {
-              q1ok: rs.q1ok || false,
-              q2ok: rs.q2ok || false,
-              q3ok: rs.q3ok || false,
-              q4ok: rs.q4ok || false,
-              q5ok: rs.q5ok || false,
-              vocabScoreRatio: rs.vocabScoreRatio || 0,
-              radarScores: rs.radarScores || {},
-              reportLogHTML: reportLogEl ? reportLogEl.innerHTML : '',
-              isSubmitted: true
-            }
-          };
-          await saveFn(dataToSave);
-          console.log('[submitReport] 분석리포트 서버 저장 완료!');
-        }
-      }
-
-      // 9) 완료 표시
-      showSubmitSuccess('분석리포트');
-    }
+    // submitReport 함수는 DOMContentLoaded 외부로 이동됨 (전역 접근 가능)
