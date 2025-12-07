@@ -183,7 +183,18 @@ return res.redirect("/student-main.html?signup=pending");
 
 
 // ✅ 2) 정적 파일 제공 (CSS, JS, menu.html, admin_*.html 등)
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res, path) => {
+    // HTML 파일은 캐시 방지
+    if (path.endsWith('.html')) {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+    }
+  }
+}));
 
 // users.json 없으면 만들기
 if (!fs.existsSync(USERS_FILE)) {
@@ -6948,6 +6959,11 @@ app.get("/api/unit-grades", async (req, res) => {
 
 // ===== 학생용 학습 이력 보기 (인증 불필요) =====
 app.get("/my-learning", async (req, res) => {
+  // 캐시 방지 헤더 설정
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+
   const { grade, name } = req.query;
 
   console.log("📊 [/my-learning] 요청:", { grade, name });
@@ -10389,6 +10405,76 @@ app.get("/my-learning", async (req, res) => {
             renderIndividualRadar(filteredLogs);
             calculateProgress(filteredLogs);
             renderLogTable(filteredLogs);
+
+            // 부모 창(menu.html)에 시리즈 변경 알림 - 뱃지 업데이트용
+            // iframe 내부에서 실행 중이거나, 직접 열린 경우에도 동작하도록 try-catch 사용
+            try {
+              // 시리즈별 총 단원 수
+              const seriesTotals = {
+                'BRAIN온': 400,
+                'BRAIN업': 400,
+                'BRAIN핏': 400,
+                'BRAIN딥': 400,
+                'BRAIN중등': 400,
+                'BRAIN고등': 400
+              };
+              const totalUnits = series === 'all' ? 400 : (seriesTotals[series] || 400);
+
+              // 평균 점수 및 진도율 계산
+              const validLogs = filteredLogs.filter(log => log.radar);
+              let avgScore = 0;
+              if (validLogs.length > 0) {
+                let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
+                let totalInferential = 0, totalCritical = 0;
+                validLogs.forEach(log => {
+                  totalLiteral += log.radar.literal || 0;
+                  totalStructural += log.radar.structural || 0;
+                  totalLexical += log.radar.lexical || 0;
+                  totalInferential += log.radar.inferential || 0;
+                  totalCritical += log.radar.critical || 0;
+                });
+                const count = validLogs.length;
+                const scores = [
+                  totalLiteral / count,
+                  totalStructural / count,
+                  totalLexical / count,
+                  totalInferential / count,
+                  totalCritical / count
+                ];
+                avgScore = parseFloat((scores.reduce((a, b) => a + b, 0) / 5).toFixed(1));
+              }
+
+              // 고유 단원 수 계산
+              const completedUnits = new Set();
+              filteredLogs.forEach(log => {
+                if (log.unit) completedUnits.add(log.unit);
+              });
+              const progressPercent = Math.round((completedUnits.size / totalUnits) * 100);
+
+              // 부모 창에 메시지 전송 (iframe 내부인 경우)
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                  type: 'seriesChanged',
+                  series: series,
+                  avgScore: avgScore,
+                  progressPercent: progressPercent,
+                  completedCount: completedUnits.size,
+                  totalUnits: totalUnits
+                }, '*');
+                console.log('📤 부모 창에 시리즈 변경 알림:', series, avgScore, progressPercent + '%');
+              } else {
+                console.log('📤 직접 열린 페이지 - postMessage 건너뜀');
+              }
+
+              // localStorage에도 저장 (모달 닫을 때 복원용)
+              localStorage.setItem('selectedSeriesBadge', JSON.stringify({
+                series: series,
+                avgScore: avgScore,
+                progressPercent: progressPercent
+              }));
+            } catch (e) {
+              console.log('postMessage 오류:', e);
+            }
           });
         });
 
