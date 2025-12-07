@@ -947,53 +947,7 @@
 
   /* ===== ✅ playSubmitCelebration - DOMContentLoaded 외부에서 전역 접근 가능 ===== */
   function playSubmitCelebration() {
-    // 1. 화려한 팡파레 효과음
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const fanfare = [
-        { freq: 523.25, start: 0, duration: 0.2, type: 'sawtooth', gain: 0.15 },
-        { freq: 659.25, start: 0, duration: 0.2, type: 'sawtooth', gain: 0.12 },
-        { freq: 783.99, start: 0, duration: 0.2, type: 'sawtooth', gain: 0.12 },
-        { freq: 659.25, start: 0.25, duration: 0.1, type: 'sawtooth', gain: 0.15 },
-        { freq: 783.99, start: 0.38, duration: 0.1, type: 'sawtooth', gain: 0.15 },
-        { freq: 880.00, start: 0.50, duration: 0.1, type: 'sawtooth', gain: 0.15 },
-        { freq: 1046.50, start: 0.65, duration: 0.5, type: 'sawtooth', gain: 0.18 },
-        { freq: 1318.51, start: 0.65, duration: 0.5, type: 'sawtooth', gain: 0.14 },
-        { freq: 1567.98, start: 0.65, duration: 0.5, type: 'sawtooth', gain: 0.12 },
-      ];
-      fanfare.forEach(note => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass'; filter.frequency.value = 3000;
-        osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-        osc.type = note.type; osc.frequency.value = note.freq;
-        gain.gain.setValueAtTime(0, audioCtx.currentTime + note.start);
-        gain.gain.linearRampToValueAtTime(note.gain, audioCtx.currentTime + note.start + 0.02);
-        gain.gain.setValueAtTime(note.gain, audioCtx.currentTime + note.start + note.duration - 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.start + note.duration);
-        osc.start(audioCtx.currentTime + note.start);
-        osc.stop(audioCtx.currentTime + note.start + note.duration);
-      });
-      // 심벌즈
-      const crashTime = 0.65;
-      const bufferSize = audioCtx.sampleRate * 0.8;
-      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-      const noise = audioCtx.createBufferSource();
-      const noiseGain = audioCtx.createGain();
-      const noiseFilter = audioCtx.createBiquadFilter();
-      noise.buffer = noiseBuffer;
-      noiseFilter.type = 'highpass'; noiseFilter.frequency.value = 5000;
-      noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
-      noiseGain.gain.setValueAtTime(0.25, audioCtx.currentTime + crashTime);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + crashTime + 0.8);
-      noise.start(audioCtx.currentTime + crashTime);
-      noise.stop(audioCtx.currentTime + crashTime + 0.8);
-    } catch (e) { console.log('Audio not supported'); }
-
-    // 2. 폭죽 효과
+    // 폭죽 효과만 (효과음 비활성화)
     const confettiZIndex = 999999;
     if (typeof confetti === 'function') {
       confetti({ particleCount: 100, spread: 70, origin: { x: 0.5, y: 0.6 }, colors: ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0099ff', '#6633ff'], zIndex: confettiZIndex });

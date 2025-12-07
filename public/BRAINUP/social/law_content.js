@@ -151,6 +151,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '③ 전쟁의 비극 → 신분제 사회 → 국제 연합 설립',
         '④ 현대 사회의 정책 → 과거 귀족의 특권 → 평등 사상의 등장'
       ],
+      q3_html: '과거에는 사람의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅂ">에 따라 삶이 달랐고, 귀족은 <input class="inline-input" id="q3-2" type="text" placeholder="ㅌㄱ">을 누렸다.',
+      q4_html: '전쟁으로 인간의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅇㅅ">이 훼손되었고, 이를 막기 위해 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱ ㅇㄱ ㅅㅇ">이 발표되었다.',
       q3_1_ph: 'ㅅㅂ', q3_2_ph: 'ㅌㄱ',
       q4_1_ph: 'ㅈㅇㅅ', q4_2_ph: 'ㅅㄱ ㅇㄱ ㅅㅇ',
       q5_text: '세계 인권 선언에 "모든 사람은 태어날 때부터 자유롭고 존엄하며 평등하다"라는 내용이 담긴 이유를 본문 내용을 바탕으로 설명해 보세요.'
