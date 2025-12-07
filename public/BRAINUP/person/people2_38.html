@@ -106,7 +106,6 @@
     console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
 
     // 분석리포트 탭으로 새로고침된 경우 로딩 텍스트 변경
-    const savedTab = localStorage.getItem(`current-geo-tab:${window.CUR_UNIT}`);
     if (savedTab === 'report') {
       document.addEventListener('DOMContentLoaded', () => {
         const loadingText = document.querySelector('.loading-text');
@@ -2230,7 +2229,6 @@
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.tab;
-        const unit = window.CUR_UNIT || 'people2_38';;
 
         // 분석리포트 탭 클릭 시 페이지 새로고침하여 최신 데이터 가져오기
         if (target === 'report') {
@@ -2245,11 +2243,15 @@
       });
     });
 
-    // 페이지 로드 시 저장된 탭 복원 (없으면 본문학습으로 시작)
+    // 페이지 로드 시 항상 본문학습 탭으로 시작
     window.addEventListener('DOMContentLoaded', () => {
       const unit = window.CUR_UNIT || 'people2_38';
-      const savedTab = localStorage.getItem(`current-people2-tab:${unit}`) || 'reading';
-      activateTab(savedTab);
+      const savedTab = localStorage.getItem(`current-geo-tab:${unit}`);
+      if (savedTab === 'report') {
+        activateTab('report');
+      } else {
+        activateTab('reading');
+      }
     });
 
     /* ===== 뒤로 가기 확인 팝업 ===== */
@@ -2682,7 +2684,6 @@
     async function saveReadingProgress() {
       if (!ensureStudentInfo()) { showSubmitOverlay('학년과 이름을 입력해주세요'); return; }
 
-      const unit = window.CUR_UNIT || 'people2_38';
 
       // 1) 채점
       gradeQuiz();
@@ -2730,7 +2731,7 @@
 
         // 5) 정답·해설 표시
         if (typeof renderSolutions === 'function') {
-          const content = window.CONTENTS[unit];
+          const content = window.CONTENTS[window.CUR_UNIT];
           if (content) renderSolutions(content);
         }
 
@@ -2890,7 +2891,6 @@
       const stu = typeof getCurrentStudent === 'function' ? getCurrentStudent() : null;
       if (stu && typeof buildStudentKey === 'function') {
         const stuKey = buildStudentKey(stu);
-        const unit = window.CUR_UNIT || 'people2_38';
         const stateKey = `vocab-state:${stuKey}:${unit}`;
         localStorage.removeItem(stateKey);
         console.log('[vocabReset] 저장 삭제:', stateKey);
@@ -3071,8 +3071,7 @@ function _initialsFromKorean(word){
    📘 렌더링
 ========================================================= */
 function renderVocabFill() {
-  const unit = window.CUR_UNIT;
-  const data = (window.CONTENTS && window.CONTENTS[unit] && window.CONTENTS[unit].vocabFill) || null;
+  const data = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT] && window.CONTENTS[window.CUR_UNIT].vocabFill) || null;
   const container = document.getElementById('vocab-fill');
   if (!data || !container) return;
 
@@ -3142,8 +3141,7 @@ function renderVocabFill() {
    🧮 채점
 ========================================================= */
 function checkVocabFill() {
-  const unit = window.CUR_UNIT;
-  const data = (window.CONTENTS && window.CONTENTS[unit] && window.CONTENTS[unit].vocabFill && window.CONTENTS[unit].vocabFill.items) || [];
+  const data = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT] && window.CONTENTS[window.CUR_UNIT].vocabFill && window.CONTENTS[window.CUR_UNIT].vocabFill.items) || [];
   let score = 0;
 
   data.forEach((item) => {

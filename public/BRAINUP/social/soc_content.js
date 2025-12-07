@@ -2348,13 +2348,25 @@ window.sendLearningLog = async function () {
 
 /* ===== 로드 시 실행 + 버튼 타입 안전패치 ===== */
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('[soc_content.js] DOMContentLoaded 시작!');
+
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
   }
 
   // 1) 본문 내용 채우기
+  console.log('[soc_content.js] applyContentPack 호출 전, CUR_UNIT:', window.CUR_UNIT);
   applyContentPack(window.CUR_UNIT);
+
+  // 스피너 강제 숨김 (백업)
+  setTimeout(() => {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay && overlay.classList.contains('show')) {
+      overlay.classList.remove('show');
+      console.log('[soc_content.js] 백업 스피너 숨김');
+    }
+  }, 2000);
 
   // 2) 탭 이벤트 + 어휘 자동 렌더
   _bindTabEvents();

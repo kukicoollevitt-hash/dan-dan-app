@@ -107,7 +107,6 @@
     console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
 
     // 분석리포트 탭으로 새로고침된 경우 로딩 텍스트 변경
-    const savedTab = localStorage.getItem(`current-modern-tab:${window.CUR_UNIT}`);
     if (savedTab === 'report') {
       document.addEventListener('DOMContentLoaded', () => {
         const loadingText = document.querySelector('.loading-text');
@@ -2300,7 +2299,6 @@
       const reportPanel = document.getElementById('tab-report');
       if (!reportPanel) return;
 
-      const unit = window.CUR_UNIT || 'modern_01';
 
       // ★ 1순위: 현재 세션의 채점 결과 (window.reportState.radarScores)
       if (window.reportState && window.reportState.radarScores) {
@@ -2360,10 +2358,10 @@
       }
 
       try {
-        console.log(`[refreshReportTab] 서버 요청: unit=${unit}, grade=${stu.grade}, name=${stu.name}`);
+        console.log(`[refreshReportTab] 서버 요청: unit=${window.CUR_UNIT}, grade=${stu.grade}, name=${stu.name}`);
         const res = await fetch(`/api/unit-grades?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
         const unitGradesMap = await res.json();
-        const unitData = unitGradesMap[unit];
+        const unitData = unitGradesMap[window.CUR_UNIT];
 
         if (unitData && unitData.radar) {
           console.log('[refreshReportTab] 서버 데이터 사용:', unitData);
@@ -2425,7 +2423,6 @@
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.tab;
-        const unit = window.CUR_UNIT || 'modern_01';
 
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
@@ -2433,11 +2430,9 @@
       });
     });
 
-    // 페이지 로드 시 저장된 탭 복원 (없으면 본문학습으로 시작)
+    // 페이지 로드 시 항상 본문학습 탭으로 시작
     window.addEventListener('DOMContentLoaded', () => {
-      const unit = window.CUR_UNIT || 'modern_01';
-      const savedTab = localStorage.getItem(`current-modern-tab:${unit}`) || 'reading';
-      activateTab(savedTab);
+      activateTab('reading');
     });
 
     /* ===== 뒤로 가기 확인 팝업 ===== */
@@ -3050,8 +3045,7 @@ function _initialsFromKorean(word){
    📘 렌더링
 ========================================================= */
 function renderVocabFill() {
-  const unit = window.CUR_UNIT;
-  const data = (window.CONTENTS && window.CONTENTS[unit] && window.CONTENTS[unit].vocabFill) || null;
+  const data = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT] && window.CONTENTS[window.CUR_UNIT].vocabFill) || null;
   const container = document.getElementById('vocab-fill');
   if (!data || !container) return;
 
@@ -3121,8 +3115,7 @@ function renderVocabFill() {
    🧮 채점
 ========================================================= */
 function checkVocabFill() {
-  const unit = window.CUR_UNIT;
-  const data = (window.CONTENTS && window.CONTENTS[unit] && window.CONTENTS[unit].vocabFill && window.CONTENTS[unit].vocabFill.items) || [];
+  const data = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT] && window.CONTENTS[window.CUR_UNIT].vocabFill && window.CONTENTS[window.CUR_UNIT].vocabFill.items) || [];
   let score = 0;
 
   data.forEach((item) => {
@@ -3181,7 +3174,6 @@ async function saveReadingProgress() {
     return;
   }
 
-  const unit = window.CUR_UNIT || 'modern_01';
   const q1 = document.querySelector('input[name="q1"]:checked');
   const q2 = document.querySelector('input[name="q2"]:checked');
   const inputs = {
@@ -3222,7 +3214,7 @@ async function saveReadingProgress() {
     disableQuizInputs();
     await captureElementToPDF('capture-reading', '단단국어_본문학습.pdf', { withStudentInfo: true });
     if (typeof renderSolutions === 'function') {
-      const content = window.CONTENTS[unit];
+      const content = window.CONTENTS[window.CUR_UNIT];
       if (content) renderSolutions(content);
     }
     // showSubmitSuccess는 제거 - 채점 결과 팝업이 대신 표시됨
