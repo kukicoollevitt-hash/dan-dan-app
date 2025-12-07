@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏛️ 삼대</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/three/three01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #8b7355 0%, #6b5344 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #8b7355;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #6b5344;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #8b7355 0%, #6b5344 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🏛️ 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏛️ 삼대</h1>
+        <p class="subtitle">
+          염상섭 원작<br>
+          세 세대의 갈등과 근대화의 물결
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 거대한 조의관 집안과 세대의 균열">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🏛️</span>
+          거대한 조의관 집안과 세대의 균열
+        </h2>
+        <div class="story-text">조의관 집안은 한때 부유하고 권력이 있었지만, 근대화의 흐름 속에서 집안의 위세는 점점 흔들려 가고 있었다.
+
+집안 어른인 조의관(조상식)은 여전히 구한말적 사고방식에 사로잡혀 전통과 체면을 지키려 한다.
+
+둘째 아들 조덕기는 상업적 감각과 근대적 사고를 가졌지만, 아버지의 권위 아래에서 늘 억눌린다.
+
+손자 조희재는 신교육을 받고 새로운 가치관을 가진 세대로서 전통적 터전과 근대적 변화 사이에서 갈등한다.
+
+이렇게 서로 다른 성격과 가치관을 지닌 '삼대'는 이미 작은 균열을 품고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 재산 문제로 흔들리는 가족들">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">💰</span>
+          재산 문제로 흔들리는 가족들
+        </h2>
+        <div class="story-text">조의관 집안은 서서히 몰락하고 있었고, 재산을 둘러싼 갈등이 점점 심해졌다.
+
+조의관은 여전히 집안 재산을 자신 마음대로 관리하고자 했고, 며느리들과 아들들은 각자 생계를 걱정하며 불만을 품는다.
+
+조덕기는 아버지의 독단적 결정에 반발하고, 그의 아내 또한 시댁의 구식 생활에 불편을 느낀다.
+
+조희재는 집안의 갈등을 지켜보며 '가족이란 무엇인가'를 처음으로 고민하게 된다.
+
+누구도 솔직하게 말하지 않지만, 이들의 싸움은 이미 깊은 골로 빠지고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 희재의 연애와 개인적 고민">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">💕</span>
+          희재의 연애와 개인적 고민
+        </h2>
+        <div class="story-text">손자 조희재는 동경하는 신여성 윤희에게 마음이 끌린다. 윤희는 새로운 시대를 살아가는 독립적 여성으로, 희재에게 큰 영향을 준다.
+
+하지만 집안은 여전히 구식이며 혼사에 대해 보수적이었다. 희재는 사랑과 가족의 기대 사이에서 고민한다.
+
+그는 윤희와의 대화를 통해 여성 해방, 개인의 자유, 근대적 가치에 눈뜨며 집안의 낡은 관습을 더욱 비판하게 된다.
+
+그러나 그의 마음속에는 여전히 가족에 대한 책임과 전통적 가치에 대한 애매한 미련도 남아 있었다.
+
+희재는 혼란스러운 감정의 소용돌이에 빠진다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 조덕기의 사업과 실패의 그림자">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">📉</span>
+          조덕기의 사업과 실패의 그림자
+        </h2>
+        <div class="story-text">중간 세대인 조덕기는 근대적 경제 감각을 앞세워 사업을 벌이지만, 시대의 흐름을 온전히 읽지 못한 채 여러 난관에 부딪힌다.
+
+그는 사업 확장을 위해 아내의 반대를 무릅쓰고 돈을 투자하지만, 번번이 실패하거나 손해를 본다.
+
+조덕기는 자신의 욕망과 무능력이 동시에 드러나면서 가족 간의 갈등을 더욱 심화시킨다.
+
+그는 아버지의 전통적 태도도 답답하지만, 자신 역시 새로운 시대를 제대로 헤쳐 나가지 못한다는 사실에 자괴감을 느낀다.
+
+결국 그는 가족에게도, 자신에게도 확신을 주지 못하는 중간자의 모습을 보인다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 조의관의 완고함과 시대의 단절">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">👴</span>
+          조의관의 완고함과 시대의 단절
+        </h2>
+        <div class="story-text">집안의 중심인 조의관은 여전히 과거 권세가 있던 시절의 사고방식을 버리지 못한다.
+
+그는 손자·며느리·자식들의 의견을 거의 무시하며, 집안 문제를 제멋대로 처리한다.
+
+특히 재산을 정리하거나 재투자하는 문제에서도 고집을 꺾지 않아 갈등은 극에 달한다.
+
+가족들은 그를 설득하려 하지만 매번 실패하고, 조의관은 오히려 자신이 배신당했다고 느낀다.
+
+그의 완고함은 결국 '삼대' 사이의 단절을 더 깊게 만든다. 변화하는 근대 사회 속에서 조의관은 점점 시대와 멀어지고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 윤희와 희재의 갈등">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">💔</span>
+          윤희와 희재의 갈등
+        </h2>
+        <div class="story-text">희재는 근대적 가치관을 추구하는 윤희에게 점점 끌리지만, 두 사람 사이에도 갈등이 있다.
+
+윤희는 스스로의 생각과 자유를 중요시했고, 희재 역시 새로운 삶을 갈망하지만 여전히 전통적 가족 의무에서 벗어나지 못했다.
+
+윤희는 희재에게 더 큰 결단을 요구하지만, 희재는 쉽게 선택하지 못한다.
+
+두 사람의 관계는 점점 흔들린다. 희재는 윤희에게서 '새로운 시대의 여성'을 보고, 동시에 그녀를 통해 스스로의 연약함도 깨닫게 된다.
+
+두 사람의 갈등은 희재의 성장 과정에서 중요한 분기점이 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 집안의 몰락이 가속화되는 사건들">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">📜</span>
+          집안의 몰락이 가속화되는 사건들
+        </h2>
+        <div class="story-text">조의관 집안은 재산 문제, 사업 실패, 상속 다툼, 권위 붕괴 등 여러 문제들이 한꺼번에 터지며 위기에 처한다.
+
+조덕기는 계속된 투자 실패로 큰 빚을 지게 되고, 가족들은 생계마저 위협받는다.
+
+조의관은 상황을 통제하지 못하고 점점 불안해진다.
+
+며느리들은 서로 눈치를 보며 책임을 떠넘기고, 손자 희재도 집안이 흔들리는 원인을 곰곰이 고민한다.
+
+이들의 몰락은 단순한 경제적 문제를 넘어서, 조선 후기 전통 가문이 근대 사회에서 어떻게 해체되는지를 상징적으로 보여준다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 조의관의 병과 가족의 균열">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">🏥</span>
+          조의관의 병과 가족의 균열
+        </h2>
+        <div class="story-text">가장 큰 사건은 조의관의 병세 악화다. 권위적으로 집안을 통솔하던 조의관이 쓰러지자, 가족들은 책임을 둘러싸고 더욱 심하게 다툰다.
+
+조덕기와 며느리들은 재산 상속 문제로 갈라서고, 희재는 가족의 추악한 모습을 보며 깊은 환멸을 느낀다.
+
+조의관은 자신이 평생 지켜 온 권위와 명예가 한순간에 무너지는 것을 느끼며 고통스러워한다.
+
+그의 병은 가족 몰락의 상징처럼 보였다.
+
+가족 모두가 서로에게 실망하며 점점 멀어져 갔다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 희재의 결심과 새로운 시선">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🌅</span>
+          희재의 결심과 새로운 시선
+        </h2>
+        <div class="story-text">가족이 붕괴되는 모습을 지켜본 희재는 더 이상 과거와 타협할 수 없다는 것을 깨닫는다.
+
+그는 윤희를 떠올리며 자신이 어떤 삶을 살아야 하는지 진지하게 고민한다.
+
+전통적 가정의 틀 속에서 억눌리며 살 것인지, 아니면 근대적 개인으로서 새 길을 선택할 것인지 갈림길에서 고민한다.
+
+희재는 조의관 집안의 붕괴 속에서 한 가지 결론을 얻는다.
+
+"과거를 붙잡는다고 미래가 열리지는 않는다."
+
+그는 조의관과 아버지 세대의 한계를 인정하고, 자신만의 삶을 향해 조심스레 한 걸음을 내딛는다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 삼대의 몰락과 새로운 시대의 시작">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🌄</span>
+          삼대의 몰락과 새로운 시대의 시작
+        </h2>
+        <div class="story-text">조의관의 죽음은 집안 몰락의 결정적 상징이었다. 그의 죽음과 동시에 집안 사람들은 각자 흩어지고, 조덕기도 더 이상 가장의 자리를 제대로 지키지 못한다.
+
+전통적 가치가 무너지고, 가족의 체계도 해체되었다.
+
+그러나 이 몰락 속에서 희재는 새로운 가능성을 본다. 과거의 무거운 굴레가 사라진 자리에는 새로운 시대의 빛이 서서히 비치고 있었다.
+
+그는 윤희와의 관계도 다시 생각하며, 개인의 자유·선택·책임을 중심으로 한 새로운 삶을 살기로 결심한다.
+
+이렇게 조의관 집안의 '삼대'는 몰락하지만, 희재의 미래는 근대적 개인으로서 새롭게 열려 간다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏛️ 삼대</h1>
+        <p class="subtitle">
+          염상섭 원작<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/three/three01.jpg',
+      '/three/three02.jpg',
+      '/three/three03.jpg',
+      '/three/three04.jpg',
+      '/three/three05.jpg',
+      '/three/three06.jpg',
+      '/three/three07.jpg',
+      '/three/three08.jpg',
+      '/three/three09.jpg',
+      '/three/three10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🏛️ ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>
