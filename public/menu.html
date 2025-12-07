@@ -4022,12 +4022,19 @@ if (logoutConfirmBtn) {
         document.getElementById("unitDesc").textContent =
           seriesInfo[series].desc + " · 분야와 과목을 선택하세요.";
         unitSearch.value = "";
+
+        // ✅ 시리즈 선택을 localStorage에 저장 (새로고침 후 복원용)
+        localStorage.setItem('selectedMenuSeries', series);
+        console.log('✅ 시리즈 선택 저장:', series);
       });
     });
 
     /* ✅ 저장된 메뉴 상태 복원 */
     function restoreMenuState() {
       const savedState = sessionStorage.getItem('menuState');
+
+      // ✅ localStorage에서 저장된 시리즈 확인 (새로고침 후 복원용)
+      const savedSeries = localStorage.getItem('selectedMenuSeries');
 
       if (savedState) {
         try {
@@ -4105,6 +4112,27 @@ if (logoutConfirmBtn) {
         } catch (e) {
           console.error('❌ 메뉴 상태 복원 실패:', e);
         }
+      }
+
+      // ✅ sessionStorage 상태가 없으면 localStorage의 시리즈 선택 복원
+      if (savedSeries && openedSeries.includes(savedSeries)) {
+        console.log('🔄 저장된 시리즈 복원:', savedSeries);
+        currentSelectedSeries = savedSeries;
+        renderDomains(savedSeries);
+
+        // 시리즈 UI 활성화
+        document.querySelectorAll("#seriesList .series-item").forEach(li => {
+          li.classList.remove("active");
+          if (li.dataset.series === savedSeries) {
+            li.classList.add("active");
+          }
+        });
+
+        // 설명 텍스트 업데이트
+        document.getElementById("unitTitle").textContent = "단원 선택";
+        document.getElementById("unitDesc").textContent =
+          seriesInfo[savedSeries].desc + " · 분야와 과목을 선택하세요.";
+        return;
       }
 
       // 저장된 상태 없으면 기본값으로 시작
@@ -7501,14 +7529,74 @@ async function performLogout() {
       const learningIframe = document.getElementById('learningIframe');
       const closeModalBtn = document.getElementById('closeLearningModal');
 
-      // 레이더 등급 뱃지 업데이트 (초기 로드)
-      updateRadarGradeBadge();
+      // 레이더 등급 뱃지 업데이트 (초기 로드) - 저장된 시리즈 뱃지 우선 복원
+      const savedBadge = localStorage.getItem('selectedSeriesBadge');
+      if (savedBadge) {
+        try {
+          const data = JSON.parse(savedBadge);
+          const badge = document.getElementById('radarGradeBadge');
+          if (badge && data.series && data.series !== 'all') {
+            // 등급 클래스 결정
+            let gradeClass = 'encourage';
+            if (data.avgScore >= 9) gradeClass = 'excellent';
+            else if (data.avgScore >= 8) gradeClass = 'good';
+            else if (data.avgScore >= 7) gradeClass = 'average';
+
+            // 뱃지 업데이트
+            if (data.avgScore > 0) {
+              badge.textContent = data.avgScore + ' / ' + data.progressPercent;
+            } else {
+              badge.textContent = '- / ' + data.progressPercent;
+            }
+            badge.className = 'radar-grade-badge ' + gradeClass;
+            console.log('✅ 페이지 로드 시 저장된 시리즈 뱃지 복원:', data.series, badge.textContent);
+          } else {
+            // 전체 시리즈이거나 데이터가 없으면 기본 업데이트
+            updateRadarGradeBadge();
+          }
+        } catch (e) {
+          console.log('저장된 뱃지 데이터 파싱 오류:', e);
+          updateRadarGradeBadge();
+        }
+      } else {
+        // 저장된 데이터가 없으면 기본 업데이트
+        updateRadarGradeBadge();
+      }
 
       // 페이지가 보일 때마다 뱃지 업데이트 (학습 완료 후 돌아왔을 때)
       document.addEventListener('visibilitychange', async function() {
         if (!document.hidden) {
           console.log('🔄 페이지 활성화 - 뱃지 및 학습 완료 상태 업데이트');
-          updateRadarGradeBadge();
+
+          // 저장된 시리즈 뱃지가 있으면 그것을 사용, 없으면 전체 데이터로 업데이트
+          const savedBadgeData = localStorage.getItem('selectedSeriesBadge');
+          if (savedBadgeData) {
+            try {
+              const data = JSON.parse(savedBadgeData);
+              const badge = document.getElementById('radarGradeBadge');
+              if (badge && data.series && data.series !== 'all') {
+                let gradeClass = 'encourage';
+                if (data.avgScore >= 9) gradeClass = 'excellent';
+                else if (data.avgScore >= 8) gradeClass = 'good';
+                else if (data.avgScore >= 7) gradeClass = 'average';
+
+                if (data.avgScore > 0) {
+                  badge.textContent = data.avgScore + ' / ' + data.progressPercent;
+                } else {
+                  badge.textContent = '- / ' + data.progressPercent;
+                }
+                badge.className = 'radar-grade-badge ' + gradeClass;
+                console.log('✅ 저장된 시리즈 뱃지 유지:', data.series, badge.textContent);
+              } else {
+                updateRadarGradeBadge();
+              }
+            } catch (e) {
+              updateRadarGradeBadge();
+            }
+          } else {
+            updateRadarGradeBadge();
+          }
+
           // 메인 메뉴의 학습 완료 상태 및 별점 업데이트
           await updateAllLessonStatus();
         }
