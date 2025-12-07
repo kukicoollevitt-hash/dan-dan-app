@@ -12782,6 +12782,66 @@ app.post('/api/user-progress/menu-completion', async (req, res) => {
 });
 
 /* ====================================
+ * ✅ 자동과제부여 설정 API
+ * ==================================== */
+
+// 자동과제부여 설정 스키마
+const autoTaskSettingsSchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  series: [{ type: String }],        // 선택된 시리즈 ('up', 'fit')
+  days: [{ type: String }],          // 선택된 요일 (0~6, 'everyday')
+  taskCount: { type: Number, default: 3 }, // 과제 개수
+  status: { type: String, enum: ['running', 'paused', 'stopped'], default: 'stopped' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+autoTaskSettingsSchema.index({ grade: 1, name: 1 }, { unique: true });
+const AutoTaskSettings = mongoose.model('AutoTaskSettings', autoTaskSettingsSchema);
+
+// 자동과제부여 설정 조회
+app.get('/api/auto-task-settings', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) {
+      return res.status(400).json({ ok: false, message: 'grade, name이 필요합니다' });
+    }
+
+    const settings = await AutoTaskSettings.findOne({ grade, name });
+    res.json({ ok: true, settings: settings || null });
+  } catch (error) {
+    console.error('자동과제부여 설정 조회 오류:', error);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다' });
+  }
+});
+
+// 자동과제부여 설정 저장
+app.post('/api/auto-task-settings', async (req, res) => {
+  try {
+    const { grade, name, settings } = req.body;
+    if (!grade || !name || !settings) {
+      return res.status(400).json({ ok: false, message: 'grade, name, settings가 필요합니다' });
+    }
+
+    const updatedSettings = await AutoTaskSettings.findOneAndUpdate(
+      { grade, name },
+      {
+        ...settings,
+        grade,
+        name,
+        updatedAt: new Date()
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({ ok: true, settings: updatedSettings });
+  } catch (error) {
+    console.error('자동과제부여 설정 저장 오류:', error);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다' });
+  }
+});
+
+/* ====================================
  * ✅ AI 자동 과제 부여 시스템
  * ==================================== */
 
@@ -13821,6 +13881,213 @@ cron.schedule('0 0 1 * *', async () => {
 });
 
 console.log('✅ 독서 감상문 월간 리셋 스케줄러 등록 완료 (매월 1일 0시 실행)');
+
+// ========== 자동과제부여 시스템 (학생별 설정 기반) ==========
+
+// 과목 우선순위 순서
+const AUTO_TASK_SUBJECT_PRIORITY = ['bio', 'chem', 'physics', 'earth', 'geo', 'soc', 'law', 'pol', 'econ', 'classic', 'modern', 'world1', 'world2', 'people1', 'people2'];
+
+// 각 과목별 최대 단원 수
+const SUBJECT_MAX_UNITS = {
+  bio: 20, chem: 20, physics: 20, earth: 20,
+  geo: 20, soc: 20, law: 20, pol: 20, econ: 20,
+  classic: 30, modern: 30, world1: 20, world2: 20, people1: 20, people2: 20
+};
+
+// 과목 정보 매핑
+const SUBJECT_INFO = {
+  bio: { field: 'science', label: '생명과학' },
+  chem: { field: 'science', label: '화학' },
+  physics: { field: 'science', label: '물리' },
+  earth: { field: 'science', label: '지구과학' },
+  geo: { field: 'social', label: '지리' },
+  soc: { field: 'social', label: '사회문화' },
+  law: { field: 'social', label: '법과정치' },
+  pol: { field: 'social', label: '정치' },
+  econ: { field: 'social', label: '경제' },
+  classic: { field: 'korlit', label: '고전문학' },
+  modern: { field: 'korlit', label: '현대문학' },
+  world1: { field: 'worldlit', label: '세계문학1' },
+  world2: { field: 'worldlit', label: '세계문학2' },
+  people1: { field: 'person', label: '인물1' },
+  people2: { field: 'person', label: '인물2' }
+};
+
+// 자동과제부여 실행 함수
+async function executeAutoTaskAssignment() {
+  try {
+    console.log('🎯 자동과제부여 시작:', new Date().toISOString());
+
+    const now = new Date();
+    const today = now.getDay(); // 0=일, 1=월, ..., 6=토
+
+    // running 상태인 모든 설정 조회
+    const activeSettings = await AutoTaskSettings.find({ status: 'running' });
+    console.log(`📋 활성화된 자동과제부여 설정: ${activeSettings.length}개`);
+
+    for (const setting of activeSettings) {
+      try {
+        // 요일 체크
+        const shouldAssignToday = setting.days.includes('everyday') ||
+                                   setting.days.includes(String(today));
+
+        if (!shouldAssignToday) {
+          console.log(`⏭️ [${setting.grade} ${setting.name}] 오늘(${today})은 부여 요일이 아닙니다`);
+          continue;
+        }
+
+        console.log(`🔄 [${setting.grade} ${setting.name}] 자동과제 부여 시작 (${setting.taskCount}개)`);
+
+        // 해당 학생의 완료된 학습 기록 조회
+        const completedLogs = await LearningLog.find({
+          grade: setting.grade,
+          name: setting.name,
+          completed: true,
+          deleted: { $ne: true }
+        });
+
+        // 완료된 단원 목록 추출
+        const completedUnits = new Set();
+        for (const log of completedLogs) {
+          // unitId에서 과목코드_번호 형식 추출
+          const match = log.unitId.match(/([a-z]+\d?)_(\d+)/i);
+          if (match) {
+            completedUnits.add(`${match[1].toLowerCase()}_${match[2]}`);
+          }
+        }
+
+        // 현재 학습실에 있는 과제 조회
+        const userProgress = await UserProgress.findOne({
+          grade: setting.grade,
+          name: setting.name
+        });
+
+        const existingTasks = new Set();
+        if (userProgress?.studyRoom?.assignedTasks) {
+          for (const task of userProgress.studyRoom.assignedTasks) {
+            const match = task.unitId?.match(/([a-z]+\d?)_(\d+)/i);
+            if (match) {
+              existingTasks.add(`${match[1].toLowerCase()}_${match[2]}`);
+            }
+          }
+        }
+
+        // 부여할 과제 목록 생성
+        const tasksToAssign = [];
+
+        // 시리즈별로 각각 taskCount개씩 부여
+        for (const series of setting.series) {
+          let seriesTaskCount = 0;  // 이 시리즈에서 부여한 개수
+
+          // 과목 우선순위 순서대로 미완료 단원 찾기
+          for (const subject of AUTO_TASK_SUBJECT_PRIORITY) {
+            if (seriesTaskCount >= setting.taskCount) break;
+
+            const maxUnits = SUBJECT_MAX_UNITS[subject] || 20;
+
+            // 단원 번호 낮은 순으로
+            for (let unitNum = 1; unitNum <= maxUnits; unitNum++) {
+              if (seriesTaskCount >= setting.taskCount) break;
+
+              const unitNo = String(unitNum).padStart(2, '0');
+              const unitKey = `${subject}_${unitNo}`;
+
+              // 이미 완료했거나 학습실에 있는 경우 스킵
+              if (completedUnits.has(unitKey) || existingTasks.has(unitKey)) {
+                continue;
+              }
+
+              // 중복 체크 (이번에 추가할 목록에서 - 같은 시리즈)
+              if (tasksToAssign.some(t => t.unitKey === unitKey && t.series === series)) {
+                continue;
+              }
+
+              // 시리즈에 따른 경로 설정
+              const prefix = series === 'fit' ? 'fit_' : '';
+              const subjectInfo = SUBJECT_INFO[subject];
+              let unitPath;
+
+              if (['bio', 'chem', 'physics', 'earth'].includes(subject)) {
+                unitPath = `./BRAINUP/science/${prefix}${subject}_${unitNo}.html`;
+              } else if (['geo', 'soc', 'law', 'pol', 'econ'].includes(subject)) {
+                unitPath = `./BRAINUP/social/${prefix}${subject}_${unitNo}.html`;
+              } else if (['classic', 'modern'].includes(subject)) {
+                unitPath = `./BRAINUP/korlit/${prefix}${subject}_${unitNo}.html`;
+              } else if (['world1', 'world2'].includes(subject)) {
+                unitPath = `./BRAINUP/worldlit/${prefix}${subject}_${unitNo}.html`;
+              } else if (['people1', 'people2'].includes(subject)) {
+                unitPath = `./BRAINUP/person/${prefix}${subject}_${unitNo}.html`;
+              }
+
+              tasksToAssign.push({
+                unitKey,
+                unitId: unitPath,
+                unitTitle: `${subjectInfo.label} ${unitNo}`,
+                series: series,
+                seriesName: series === 'up' ? 'BRIAN업' : 'BRIAN핏',
+                fieldName: subjectInfo.field,
+                subjectName: subjectInfo.label,
+                assignedAt: new Date(),
+                isAutoAssigned: true  // 자동부여 표시
+              });
+              seriesTaskCount++;
+            }
+          }
+        }
+
+        // 과제 부여
+        if (tasksToAssign.length > 0) {
+          let progress = userProgress;
+          if (!progress) {
+            progress = new UserProgress({
+              grade: setting.grade,
+              name: setting.name,
+              studyRoom: { assignedTasks: [] }
+            });
+          }
+
+          if (!progress.studyRoom) {
+            progress.studyRoom = { assignedTasks: [] };
+          }
+
+          // 새 과제 추가
+          for (const task of tasksToAssign) {
+            progress.studyRoom.assignedTasks.push({
+              unitId: task.unitId,
+              unitTitle: task.unitTitle,
+              assignedAt: task.assignedAt,
+              isAutoAssigned: true
+            });
+          }
+
+          await progress.save();
+          console.log(`✅ [${setting.grade} ${setting.name}] ${tasksToAssign.length}개 과제 부여 완료`);
+          tasksToAssign.forEach(t => console.log(`   - ${t.seriesName} > ${t.unitTitle}`));
+        } else {
+          console.log(`ℹ️ [${setting.grade} ${setting.name}] 부여할 미완료 과제가 없습니다`);
+        }
+
+      } catch (studentError) {
+        console.error(`❌ [${setting.grade} ${setting.name}] 과제 부여 오류:`, studentError);
+      }
+    }
+
+    console.log('🎯 자동과제부여 완료:', new Date().toISOString());
+
+  } catch (error) {
+    console.error('❌ 자동과제부여 전체 오류:', error);
+  }
+}
+
+// 자동과제부여 스케줄러 (매일 0시 실행)
+cron.schedule('0 0 * * *', () => {
+  console.log('⏰ 매일 0시 - 자동과제부여 스케줄러 트리거');
+  executeAutoTaskAssignment();
+}, {
+  timezone: "Asia/Seoul"
+});
+
+console.log('✅ 자동과제부여 스케줄러 등록 완료 (매일 0시 실행)');
 
 // ========================================
 // 📝 진단테스트 및 수강신청 API
