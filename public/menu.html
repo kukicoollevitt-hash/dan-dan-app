@@ -4026,6 +4026,9 @@ if (logoutConfirmBtn) {
         // ✅ 시리즈 선택을 localStorage에 저장 (새로고침 후 복원용)
         localStorage.setItem('selectedMenuSeries', series);
         console.log('✅ 시리즈 선택 저장:', series);
+
+        // ✅ 시리즈 선택 시 종합리포트 뱃지도 해당 시리즈로 업데이트
+        updateRadarGradeBadgeForSeries(series);
       });
     });
 
@@ -7412,6 +7415,114 @@ async function performLogout() {
       }
     });
 
+    // === 시리즈별 레이더 등급 뱃지 업데이트 ===
+    async function updateRadarGradeBadgeForSeries(seriesKey) {
+      // ✅ localStorage의 currentStudent를 우선 사용
+      let user = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+      if (!user.grade || !user.name) {
+        user = JSON.parse(sessionStorage.getItem('user') || '{}');
+      }
+
+      const grade = user.grade || '';
+      const name = user.name || '';
+
+      if (!grade || !name) {
+        console.log('⚠️ 사용자 정보 없음');
+        return;
+      }
+
+      try {
+        const url = `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
+        const response = await fetch(url);
+        const logs = await response.json();
+
+        if (!logs || logs.length === 0) {
+          document.getElementById('radarGradeBadge').textContent = '-';
+          // localStorage에도 저장
+          localStorage.setItem('selectedSeriesBadge', JSON.stringify({
+            series: seriesKey,
+            avgScore: 0,
+            progressPercent: 0
+          }));
+          return;
+        }
+
+        // 시리즈별 단원 필터링
+        const seriesPrefix = seriesKey === 'BRAINFIT' ? 'fit_' : '';
+        const filteredLogs = logs.filter(log => {
+          if (!log.unit) return false;
+          if (seriesKey === 'BRAINFIT') {
+            return log.unit.includes('fit_');
+          } else if (seriesKey === 'BRAINUP') {
+            return !log.unit.includes('fit_');
+          }
+          return true;
+        });
+
+        // 진도율 계산 (시리즈별 200개 단원 기준)
+        const completedUnits = new Set();
+        filteredLogs.forEach(log => {
+          if (log.unit) completedUnits.add(log.unit);
+        });
+        const totalUnits = 400; // 각 시리즈 400개 단원
+        const progressPercent = Math.round((completedUnits.size / totalUnits) * 100);
+
+        // radar 데이터가 있는 로그만 필터링
+        const validLogs = filteredLogs.filter(log => log.radar);
+
+        let avgScore = 0;
+        let gradeClass = 'encourage';
+
+        if (validLogs.length > 0) {
+          let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
+          let totalInferential = 0, totalCritical = 0;
+          let count = 0;
+
+          validLogs.forEach(log => {
+            totalLiteral += log.radar.literal || 0;
+            totalStructural += log.radar.structural || 0;
+            totalLexical += log.radar.lexical || 0;
+            totalInferential += log.radar.inferential || 0;
+            totalCritical += log.radar.critical || 0;
+            count++;
+          });
+
+          const avgLiteral = Math.round((totalLiteral / count) * 10) / 10;
+          const avgStructural = Math.round((totalStructural / count) * 10) / 10;
+          const avgLexical = Math.round((totalLexical / count) * 10) / 10;
+          const avgInferential = Math.round((totalInferential / count) * 10) / 10;
+          const avgCritical = Math.round((totalCritical / count) * 10) / 10;
+
+          const scores = [avgLiteral, avgStructural, avgLexical, avgInferential, avgCritical];
+          avgScore = parseFloat((scores.reduce((a, b) => a + b, 0) / 5).toFixed(1));
+
+          if (avgScore >= 9) gradeClass = 'excellent';
+          else if (avgScore >= 8) gradeClass = 'good';
+          else if (avgScore >= 7) gradeClass = 'average';
+        }
+
+        // 뱃지 업데이트
+        const badge = document.getElementById('radarGradeBadge');
+        if (validLogs.length > 0) {
+          badge.textContent = avgScore + ' / ' + progressPercent;
+        } else {
+          badge.textContent = '- / ' + progressPercent;
+        }
+        badge.className = 'radar-grade-badge ' + gradeClass;
+
+        // localStorage에 저장 (새로고침 후 복원용)
+        localStorage.setItem('selectedSeriesBadge', JSON.stringify({
+          series: seriesKey,
+          avgScore: avgScore,
+          progressPercent: progressPercent
+        }));
+
+        console.log('✅ 시리즈별 뱃지 업데이트:', seriesKey, avgScore || '-', '점 / 진도율:', progressPercent, '%');
+      } catch (error) {
+        console.error('❌ 시리즈별 뱃지 업데이트 실패:', error);
+      }
+    }
+
     // === 레이더 등급 뱃지 업데이트 (실시간 계산) ===
     async function updateRadarGradeBadge() {
       // ✅ localStorage의 currentStudent를 우선 사용 (가장 최신 로그인 정보)
@@ -7529,37 +7640,14 @@ async function performLogout() {
       const learningIframe = document.getElementById('learningIframe');
       const closeModalBtn = document.getElementById('closeLearningModal');
 
-      // 레이더 등급 뱃지 업데이트 (초기 로드) - 저장된 시리즈 뱃지 우선 복원
-      const savedBadge = localStorage.getItem('selectedSeriesBadge');
-      if (savedBadge) {
-        try {
-          const data = JSON.parse(savedBadge);
-          const badge = document.getElementById('radarGradeBadge');
-          if (badge && data.series && data.series !== 'all') {
-            // 등급 클래스 결정
-            let gradeClass = 'encourage';
-            if (data.avgScore >= 9) gradeClass = 'excellent';
-            else if (data.avgScore >= 8) gradeClass = 'good';
-            else if (data.avgScore >= 7) gradeClass = 'average';
-
-            // 뱃지 업데이트
-            if (data.avgScore > 0) {
-              badge.textContent = data.avgScore + ' / ' + data.progressPercent;
-            } else {
-              badge.textContent = '- / ' + data.progressPercent;
-            }
-            badge.className = 'radar-grade-badge ' + gradeClass;
-            console.log('✅ 페이지 로드 시 저장된 시리즈 뱃지 복원:', data.series, badge.textContent);
-          } else {
-            // 전체 시리즈이거나 데이터가 없으면 기본 업데이트
-            updateRadarGradeBadge();
-          }
-        } catch (e) {
-          console.log('저장된 뱃지 데이터 파싱 오류:', e);
-          updateRadarGradeBadge();
-        }
+      // 레이더 등급 뱃지 업데이트 (초기 로드) - 저장된 시리즈가 있으면 해당 시리즈로 새로 계산
+      const savedMenuSeries = localStorage.getItem('selectedMenuSeries');
+      if (savedMenuSeries && (savedMenuSeries === 'BRAINUP' || savedMenuSeries === 'BRAINFIT')) {
+        // 저장된 시리즈로 새로 계산 (항상 최신 데이터 사용)
+        updateRadarGradeBadgeForSeries(savedMenuSeries);
+        console.log('✅ 페이지 로드 시 시리즈별 뱃지 새로 계산:', savedMenuSeries);
       } else {
-        // 저장된 데이터가 없으면 기본 업데이트
+        // 저장된 시리즈가 없으면 기본 업데이트
         updateRadarGradeBadge();
       }
 
@@ -7568,29 +7656,13 @@ async function performLogout() {
         if (!document.hidden) {
           console.log('🔄 페이지 활성화 - 뱃지 및 학습 완료 상태 업데이트');
 
-          // 저장된 시리즈 뱃지가 있으면 그것을 사용, 없으면 전체 데이터로 업데이트
-          const savedBadgeData = localStorage.getItem('selectedSeriesBadge');
-          if (savedBadgeData) {
-            try {
-              const data = JSON.parse(savedBadgeData);
-              const badge = document.getElementById('radarGradeBadge');
-              if (badge && data.series && data.series !== 'all') {
-                let gradeClass = 'encourage';
-                if (data.avgScore >= 9) gradeClass = 'excellent';
-                else if (data.avgScore >= 8) gradeClass = 'good';
-                else if (data.avgScore >= 7) gradeClass = 'average';
-
-                if (data.avgScore > 0) {
-                  badge.textContent = data.avgScore + ' / ' + data.progressPercent;
-                } else {
-                  badge.textContent = '- / ' + data.progressPercent;
-                }
-                badge.className = 'radar-grade-badge ' + gradeClass;
-                console.log('✅ 저장된 시리즈 뱃지 유지:', data.series, badge.textContent);
-              } else {
-                updateRadarGradeBadge();
-              }
-            } catch (e) {
+          // 현재 활성화된 시리즈로 뱃지 새로 계산
+          const activeSeriesItem = document.querySelector('#seriesList .series-item.active');
+          if (activeSeriesItem) {
+            const activeSeries = activeSeriesItem.dataset.series;
+            if (activeSeries === 'BRAINUP' || activeSeries === 'BRAINFIT') {
+              updateRadarGradeBadgeForSeries(activeSeries);
+            } else {
               updateRadarGradeBadge();
             }
           } else {
@@ -7679,8 +7751,16 @@ async function performLogout() {
           const name = user.name || '이름미지정';
           console.log('📊 Opening learning page:', { grade, name });
 
-          const url = `/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
-          console.log('🔗 URL:', url);
+          // ✅ 현재 선택된 시리즈 가져오기 (실시간으로 활성화된 시리즈 확인)
+          let selectedSeries = 'BRAINUP';
+          const activeSeriesItem = document.querySelector('#seriesList .series-item.active');
+          if (activeSeriesItem) {
+            selectedSeries = activeSeriesItem.dataset.series || 'BRAINUP';
+          }
+          const seriesParam = selectedSeries === 'BRAINFIT' ? 'fit' : 'up';
+
+          const url = `/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&series=${seriesParam}`;
+          console.log('🔗 URL:', url, '(시리즈:', selectedSeries, ')');
 
           // iframe에 URL 설정하고 모달 열기
           learningIframe.src = url;

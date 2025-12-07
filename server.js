@@ -6964,9 +6964,9 @@ app.get("/my-learning", async (req, res) => {
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
 
-  const { grade, name } = req.query;
+  const { grade, name, series } = req.query;
 
-  console.log("📊 [/my-learning] 요청:", { grade, name });
+  console.log("📊 [/my-learning] 요청:", { grade, name, series });
 
   if (!grade || !name) {
     console.log("❌ [/my-learning] 파라미터 부족");
@@ -9938,7 +9938,18 @@ app.get("/my-learning", async (req, res) => {
         }
 
         // ===== 시리즈 선택 기능 =====
+        // URL 파라미터에서 초기 시리즈 설정
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialSeries = urlParams.get('series');
         let currentSelectedSeries = 'all';
+
+        // series 파라미터에 따라 초기 시리즈 설정
+        if (initialSeries === 'fit') {
+          currentSelectedSeries = 'BRAIN핏';
+        } else if (initialSeries === 'up') {
+          currentSelectedSeries = 'BRAIN업';
+        }
+
         const allLogs = logsForChart;
 
         // 드롭다운 토글
@@ -10493,25 +10504,30 @@ app.get("/my-learning", async (req, res) => {
           console.log('📚 html2canvas:', typeof html2canvas);
           console.log('📚 jsPDF:', typeof window.jspdf);
 
-          // 가장 최근 학습한 시리즈 찾기
-          let defaultSeries = 'all';
-          if (logsForChart.length > 0) {
+          // ✅ URL 파라미터로 전달된 시리즈가 있으면 우선 사용
+          let defaultSeries = currentSelectedSeries; // 이미 URL 파라미터에서 설정됨
+
+          // URL 파라미터가 없으면 가장 최근 학습한 시리즈 찾기
+          if (defaultSeries === 'all' && logsForChart.length > 0) {
             // 가장 최근 로그의 시리즈 (이미 timestamp 내림차순 정렬되어 있음)
             const recentSeries = logsForChart[0].series;
             if (recentSeries) {
               defaultSeries = recentSeries;
               currentSelectedSeries = recentSeries;
-
-              // UI 업데이트
-              document.querySelectorAll('.series-item').forEach(item => {
-                if (item.dataset.series === recentSeries) {
-                  item.classList.add('active');
-                  document.getElementById('currentSeries').textContent = item.textContent;
-                } else {
-                  item.classList.remove('active');
-                }
-              });
             }
+          }
+
+          // UI 업데이트 (URL 파라미터 또는 최근 시리즈)
+          if (defaultSeries !== 'all') {
+            document.querySelectorAll('.series-item').forEach(item => {
+              if (item.dataset.series === defaultSeries) {
+                item.classList.add('active');
+                document.getElementById('currentSeries').textContent = item.textContent;
+              } else {
+                item.classList.remove('active');
+              }
+            });
+            console.log('📊 초기 시리즈 설정:', defaultSeries);
           }
 
           // 선택된 시리즈에 맞게 필터링
