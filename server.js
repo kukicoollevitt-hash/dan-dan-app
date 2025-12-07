@@ -2477,15 +2477,37 @@ app.post("/admin/user-edit", async (req, res) => {
       return res.status(404).send("수정 대상 사용자를 찾을 수 없습니다.");
     }
 
+    // 🔹 기존 학년/이름 저장 (학습 기록 업데이트용)
+    const oldGrade = user.grade || "";
+    const oldName = user.name || "";
+    const newGrade = grade || "";
+    const newName = name || "";
+
     // 필드 업데이트
-    user.grade = grade || "";
+    user.grade = newGrade;
     user.school = school || "";
-    user.name = name || "";
+    user.name = newName;
     user.phone = phone || "";
     user.id = phone || "";
     user.pw = phone || "";
 
     await user.save();
+
+    // 🔹 학년 또는 이름이 변경된 경우, 기존 학습 기록도 함께 업데이트
+    if (oldGrade !== newGrade || oldName !== newName) {
+      const logUpdateResult = await LearningLog.updateMany(
+        { grade: oldGrade, name: oldName },
+        { $set: { grade: newGrade, name: newName } }
+      );
+      console.log(`📝 학습 기록 업데이트: ${oldGrade}/${oldName} → ${newGrade}/${newName} (${logUpdateResult.modifiedCount}건)`);
+
+      // UserProgress도 함께 업데이트
+      const progressUpdateResult = await UserProgress.updateMany(
+        { grade: oldGrade, name: oldName },
+        { $set: { grade: newGrade, name: newName } }
+      );
+      console.log(`📊 진행도 업데이트: ${oldGrade}/${oldName} → ${newGrade}/${newName} (${progressUpdateResult.modifiedCount}건)`);
+    }
 
     console.log("✅ 회원 정보 수정 완료:", user.name, user.id);
 
