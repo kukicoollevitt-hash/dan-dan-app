@@ -6166,7 +6166,7 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           'geo': 20, 'soc': 20, 'law': 20, 'pol': 20,
           'modern': 40, 'classic': 40,
           'world': 40, 'world1': 40, 'world2': 40,
-          'people': 40, 'person1': 40, 'person2': 40
+          'people': 40, 'people1': 40, 'people2': 40, 'person1': 40, 'person2': 40
         };
 
         // 분야별 총 단원 수
@@ -6183,6 +6183,10 @@ app.get("/admin/logs-old-inline", async (req, res) => {
 
         // 단원 코드 정규화 함수 (world1_XX, world2_XX, people1_XX, people2_XX가 표준 형식)
         function normalizeUnitCode(unit) {
+          // fit_ 접두어 제거: fit_bio_01 -> bio_01
+          if (unit.startsWith('fit_')) {
+            unit = unit.substring(4);
+          }
           // world1_XX, world2_XX는 이미 표준 형식
           if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
             return unit;
@@ -6307,18 +6311,43 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           'person2': 'person'
         };
 
-        // 과목별로 그룹화 (unit 코드에서 과목 추출: geo, history 등)
-        const subjectGroups = {};
-        logsForChart.forEach(log => {
-          if (!log.radar || !log.unit) return;
+        // ===== 과목별 종합 레이더 함수 =====
+        function renderSubjectRadar(logs) {
+          // 기존 카드 제거
+          summaryWrap.innerHTML = '';
 
-          // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
-          let subjectCode = log.unit.split('_')[0];
+          // 필터링된 로그에서 완료된 과목별 단원 수 계산
+          function getFilteredCompletedCount(subjectCode, filteredLogs) {
+            const unitSet = new Set();
+            filteredLogs.forEach(log => {
+              if (log.unit) {
+                let unitCode = log.unit;
+                if (unitCode.startsWith('fit_')) unitCode = unitCode.substring(4);
+                if (unitCode.startsWith(subjectCode + '_')) {
+                  unitSet.add(unitCode);
+                }
+              }
+            });
+            return unitSet.size;
+          }
+
+          // 과목별로 그룹화 (unit 코드에서 과목 추출: geo, history 등)
+          const subjectGroups = {};
+          logs.forEach(log => {
+            if (!log.radar || !log.unit) return;
+
+            // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
+            // fit_ 접두어 제거: fit_bio_01 -> bio_01
+            let unitForSubject = log.unit;
+            if (unitForSubject.startsWith('fit_')) {
+              unitForSubject = unitForSubject.substring(4);
+            }
+            let subjectCode = unitForSubject.split('_')[0];
 
           // world_01~40 -> world1, world_41~80 -> world2 (people도 동일)
           // world2_XX, people2_XX는 직접 world2, people2로 매핑
           if (subjectCode === 'world' || subjectCode === 'people') {
-            const numMatch = log.unit.match(/_([0-9]+)$/);
+            const numMatch = unitForSubject.match(/_([0-9]+)$/);
             const num = numMatch ? parseInt(numMatch[1]) : 0;
             if (subjectCode === 'world') {
               subjectCode = num <= 40 ? 'world1' : 'world2';
@@ -6351,7 +6380,7 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           const seriesLogs = group.logs;
           const subjectName = subjectNames[group.subjectCode] || group.subjectCode;
           const subjectTotal = subjectUnitCounts[group.subjectCode] || 20;
-          const subjectCompleted = getCompletedCount(group.subjectCode);
+          const subjectCompleted = getFilteredCompletedCount(group.subjectCode, logs);
           const displayTitle = group.series + ' ' + subjectName + ' (' + subjectCompleted + '/' + subjectTotal + ')';
 
           // 평균 계산
@@ -8767,7 +8796,7 @@ app.get("/my-learning", async (req, res) => {
           'geo': 20, 'soc': 20, 'law': 20, 'pol': 20,
           'modern': 40, 'classic': 40,
           'world': 40, 'world1': 40, 'world2': 40,
-          'people': 40, 'person1': 40, 'person2': 40
+          'people': 40, 'people1': 40, 'people2': 40, 'person1': 40, 'person2': 40
         };
 
         // 분야별 총 단원 수
@@ -8784,6 +8813,10 @@ app.get("/my-learning", async (req, res) => {
 
         // 단원 코드 정규화 함수 (world1_XX, world2_XX, people1_XX, people2_XX가 표준 형식)
         function normalizeUnitCode(unit) {
+          // fit_ 접두어 제거: fit_bio_01 -> bio_01
+          if (unit.startsWith('fit_')) {
+            unit = unit.substring(4);
+          }
           // world1_XX, world2_XX는 이미 표준 형식
           if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
             return unit;
@@ -8908,18 +8941,43 @@ app.get("/my-learning", async (req, res) => {
           'person2': 'person'
         };
 
-        // 과목별로 그룹화 (unit 코드에서 과목 추출: geo, history 등)
-        const subjectGroups = {};
-        logsForChart.forEach(log => {
-          if (!log.radar || !log.unit) return;
+        // ===== 과목별 종합 레이더 함수 =====
+        function renderSubjectRadar(logs) {
+          // 기존 카드 제거
+          summaryWrap.innerHTML = '';
 
-          // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
-          let subjectCode = log.unit.split('_')[0];
+          // 필터링된 로그에서 완료된 과목별 단원 수 계산
+          function getFilteredCompletedCount(subjectCode, filteredLogs) {
+            const unitSet = new Set();
+            filteredLogs.forEach(log => {
+              if (log.unit) {
+                let unitCode = log.unit;
+                if (unitCode.startsWith('fit_')) unitCode = unitCode.substring(4);
+                if (unitCode.startsWith(subjectCode + '_')) {
+                  unitSet.add(unitCode);
+                }
+              }
+            });
+            return unitSet.size;
+          }
+
+          // 과목별로 그룹화 (unit 코드에서 과목 추출: geo, history 등)
+          const subjectGroups = {};
+          logs.forEach(log => {
+            if (!log.radar || !log.unit) return;
+
+            // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
+            // fit_ 접두어 제거: fit_bio_01 -> bio_01
+            let unitForSubject = log.unit;
+            if (unitForSubject.startsWith('fit_')) {
+              unitForSubject = unitForSubject.substring(4);
+            }
+            let subjectCode = unitForSubject.split('_')[0];
 
           // world_01~40 -> world1, world_41~80 -> world2 (people도 동일)
           // world2_XX, people2_XX는 직접 world2, people2로 매핑
           if (subjectCode === 'world' || subjectCode === 'people') {
-            const numMatch = log.unit.match(/_([0-9]+)$/);
+            const numMatch = unitForSubject.match(/_([0-9]+)$/);
             const num = numMatch ? parseInt(numMatch[1]) : 0;
             if (subjectCode === 'world') {
               subjectCode = num <= 40 ? 'world1' : 'world2';
@@ -8952,7 +9010,7 @@ app.get("/my-learning", async (req, res) => {
           const seriesLogs = group.logs;
           const subjectName = subjectNames[group.subjectCode] || group.subjectCode;
           const subjectTotal = subjectUnitCounts[group.subjectCode] || 20;
-          const subjectCompleted = getCompletedCount(group.subjectCode);
+          const subjectCompleted = getFilteredCompletedCount(group.subjectCode, logs);
           const displayTitle = group.series + ' ' + subjectName + ' (' + subjectCompleted + '/' + subjectTotal + ')';
 
           // 평균 계산
@@ -9098,17 +9156,25 @@ app.get("/my-learning", async (req, res) => {
           });
         });
 
-        // 종합 레이더 차트 더보기 버튼 표시
-        if (summaryIndex > 6) {
-          document.getElementById('toggleSummaryBtn').style.display = 'block';
+          // 종합 레이더 차트 더보기 버튼 표시
+          if (summaryIndex > 6) {
+            document.getElementById('toggleSummaryBtn').style.display = 'block';
+          } else {
+            document.getElementById('toggleSummaryBtn').style.display = 'none';
+          }
         }
+        // renderSubjectRadar 함수 끝
 
-        // ===== 개별 레이더 차트 생성 =====
+        // ===== 개별 레이더 차트 함수 =====
         const radarWrap = document.getElementById('radar-wrap');
-        let radarIndex = 0;
 
-        logsForChart.forEach(function(log, idx) {
-          if (!log.radar) return;
+        function renderIndividualRadar(logs) {
+          // 기존 카드 제거
+          radarWrap.innerHTML = '';
+          let radarIndex = 0;
+
+          logs.forEach(function(log, idx) {
+            if (!log.radar) return;
 
           const r = log.radar || {};
 
@@ -9193,15 +9259,22 @@ app.get("/my-learning", async (req, res) => {
           const title = document.createElement('div');
           title.className = 'radar-card-title';
 
-          // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01, world2_01 → 세계문학2 1)
+          // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01, world2_01 → 세계문학2 1, fit_bio_01 → 생물 1)
           let unitName = log.unit || '단원';
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
             const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물' };
-            const subject = subjectMap[parts[0]] || parts[0];
-            let number = parts[1] ? parseInt(parts[1], 10) : 0;
+            // fit_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01']
+            let subjectKey = parts[0];
+            let numStr = parts[1];
+            if (parts[0] === 'fit' && parts.length >= 3) {
+              subjectKey = parts[1];
+              numStr = parts[2];
+            }
+            const subject = subjectMap[subjectKey] || subjectKey;
+            let number = numStr ? parseInt(numStr, 10) : 0;
             // world_41~80은 세계문학2로 표시 (world_41 → 세계문학2 1)
-            if (parts[0] === 'world' && number > 40) {
+            if (subjectKey === 'world' && number > 40) {
               number = number - 40;
               unitName = '세계문학2 ' + number;
             } else {
@@ -9331,10 +9404,14 @@ app.get("/my-learning", async (req, res) => {
           });
         });
 
-        // 개별 레이더 차트 더보기 버튼 표시
-        if (radarIndex > 6) {
-          document.getElementById('toggleRadarBtn').style.display = 'block';
+          // 개별 레이더 차트 더보기 버튼 표시
+          if (radarIndex > 6) {
+            document.getElementById('toggleRadarBtn').style.display = 'block';
+          } else {
+            document.getElementById('toggleRadarBtn').style.display = 'none';
+          }
         }
+        // renderIndividualRadar 함수 끝
 
         // PDF 다운로드 기능 (html2canvas + jsPDF 방식)
         console.log('📄 PDF 다운로드 리스너 등록됨');
@@ -9439,6 +9516,9 @@ app.get("/my-learning", async (req, res) => {
           console.log('🎯 renderSeriesRadar 실행, 총 로그:', logs.length);
           const seriesWrap = document.getElementById('series-radar-wrap');
 
+          // 기존 카드 제거
+          seriesWrap.innerHTML = '';
+
           // 모든 radar 데이터가 있는 로그 수집
           const validLogs = logs.filter(log => log.radar);
           console.log('📊 radar 데이터가 있는 로그:', validLogs.length);
@@ -9450,138 +9530,162 @@ app.get("/my-learning", async (req, res) => {
           }
           console.log('✅ 시리즈 레이더 차트 생성 시작');
 
-          // 전체 평균 계산
-          let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
-          let totalInferential = 0, totalCritical = 0;
-          let count = 0;
-
+          // 시리즈별로 그룹화
+          const seriesGroups = {};
           validLogs.forEach(log => {
-            totalLiteral += log.radar.literal || 0;
-            totalStructural += log.radar.structural || 0;
-            totalLexical += log.radar.lexical || 0;
-            totalInferential += log.radar.inferential || 0;
-            totalCritical += log.radar.critical || 0;
-            count++;
+            const series = log.series || 'BRAIN업';
+            if (!seriesGroups[series]) {
+              seriesGroups[series] = [];
+            }
+            seriesGroups[series].push(log);
           });
 
-          const avgLiteral = Math.round((totalLiteral / count) * 10) / 10;
-          const avgStructural = Math.round((totalStructural / count) * 10) / 10;
-          const avgLexical = Math.round((totalLexical / count) * 10) / 10;
-          const avgInferential = Math.round((totalInferential / count) * 10) / 10;
-          const avgCritical = Math.round((totalCritical / count) * 10) / 10;
+          // 각 시리즈별로 카드 생성
+          Object.keys(seriesGroups).forEach(seriesName => {
+            const seriesLogs = seriesGroups[seriesName];
 
-          const scores = [avgLiteral, avgStructural, avgLexical, avgInferential, avgCritical];
-          const avgScore = (scores.reduce((a, b) => a + b, 0) / 5).toFixed(1);
-          const maxScore = Math.max(...scores).toFixed(1);
-          const minScore = Math.min(...scores).toFixed(1);
+            // 평균 계산
+            let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
+            let totalInferential = 0, totalCritical = 0;
+            let count = 0;
 
-          // 뱃지 등급 결정
-          let badgeClass = 'badge-normal';
-          let badgeText = '보통';
-          let gradeClass = 'normal';
-          if (avgScore >= 9) {
-            badgeClass = 'badge-excellent';
-            badgeText = '우수';
-            gradeClass = 'excellent';
-          } else if (avgScore >= 8) {
-            badgeClass = 'badge-good';
-            badgeText = '양호';
-            gradeClass = 'good';
-          } else if (avgScore >= 7) {
-            badgeClass = 'badge-normal';
-            badgeText = '보통';
-            gradeClass = 'normal';
-          }
+            seriesLogs.forEach(log => {
+              totalLiteral += log.radar.literal || 0;
+              totalStructural += log.radar.structural || 0;
+              totalLexical += log.radar.lexical || 0;
+              totalInferential += log.radar.inferential || 0;
+              totalCritical += log.radar.critical || 0;
+              count++;
+            });
 
-          // 시리즈 이름 (첫 번째 로그의 series 사용, 없으면 'BRAIN업')
-          const seriesName = validLogs[0].series || 'BRAIN업';
-          const seriesCompleted = getSeriesCompletedCount();
+            const avgLiteral = Math.round((totalLiteral / count) * 10) / 10;
+            const avgStructural = Math.round((totalStructural / count) * 10) / 10;
+            const avgLexical = Math.round((totalLexical / count) * 10) / 10;
+            const avgInferential = Math.round((totalInferential / count) * 10) / 10;
+            const avgCritical = Math.round((totalCritical / count) * 10) / 10;
 
-          // 차트 카드 생성
-          const card = document.createElement('div');
-          card.className = 'radar-card summary-card series-card';
+            const scores = [avgLiteral, avgStructural, avgLexical, avgInferential, avgCritical];
+            const avgScore = (scores.reduce((a, b) => a + b, 0) / 5).toFixed(1);
+            const maxScore = Math.max(...scores).toFixed(1);
+            const minScore = Math.min(...scores).toFixed(1);
 
-          const header = document.createElement('div');
-          header.className = 'radar-card-header';
+            // 뱃지 등급 결정
+            let badgeClass = 'badge-normal';
+            let badgeText = '보통';
+            let gradeClass = 'normal';
+            if (avgScore >= 9) {
+              badgeClass = 'badge-excellent';
+              badgeText = '우수';
+              gradeClass = 'excellent';
+            } else if (avgScore >= 8) {
+              badgeClass = 'badge-good';
+              badgeText = '양호';
+              gradeClass = 'good';
+            } else if (avgScore >= 7) {
+              badgeClass = 'badge-normal';
+              badgeText = '보통';
+              gradeClass = 'normal';
+            } else {
+              badgeClass = 'badge-encourage';
+              badgeText = '격려';
+              gradeClass = 'encourage';
+            }
 
-          const title = document.createElement('div');
-          title.className = 'radar-card-title';
-          title.textContent = seriesName + ' (' + seriesCompleted + '/' + seriesTotalUnits + ')';
+            // 해당 시리즈의 고유 단원 수 계산
+            const seriesUnitsSet = new Set();
+            seriesLogs.forEach(log => {
+              if (log.unit) {
+                seriesUnitsSet.add(normalizeUnitCode(log.unit));
+              }
+            });
+            const seriesCompleted = seriesUnitsSet.size;
 
-          const badge = document.createElement('div');
-          badge.className = 'badge ' + badgeClass;
-          badge.textContent = badgeText;
+            // 차트 카드 생성
+            const card = document.createElement('div');
+            card.className = 'radar-card summary-card series-card';
 
-          header.appendChild(title);
-          header.appendChild(badge);
-          card.appendChild(header);
+            const header = document.createElement('div');
+            header.className = 'radar-card-header';
 
-          const canvas = document.createElement('canvas');
-          canvas.width = 280;
-          canvas.height = 280;
-          card.appendChild(canvas);
+            const title = document.createElement('div');
+            title.className = 'radar-card-title';
+            title.textContent = seriesName + ' (' + seriesCompleted + '/' + seriesTotalUnits + ')';
 
-          // 통계 정보
-          const stats = document.createElement('div');
-          stats.className = 'radar-card-stats';
-          stats.innerHTML =
-            '<div class="stat-item">' +
-              '<div class="stat-label">평균</div>' +
-              '<div class="stat-value">' + avgScore + '</div>' +
-              '<div class="stat-grade ' + gradeClass + '">' + badgeText + '</div>' +
-            '</div>' +
-            '<div class="stat-item">' +
-              '<div class="stat-label">최고</div>' +
-              '<div class="stat-value">' + maxScore + '</div>' +
-            '</div>' +
-            '<div class="stat-item">' +
-              '<div class="stat-label">최저</div>' +
-              '<div class="stat-value">' + minScore + '</div>' +
-            '</div>';
-          card.appendChild(stats);
+            const badge = document.createElement('div');
+            badge.className = 'badge ' + badgeClass;
+            badge.textContent = badgeText;
 
-          seriesWrap.appendChild(card);
+            header.appendChild(title);
+            header.appendChild(badge);
+            card.appendChild(header);
 
-          // 차트 생성
-          new Chart(canvas.getContext('2d'), {
-            type: 'radar',
-            data: {
-              labels: ['핵심 이해력', '구조 파악력', '어휘 맥락력', '추론·통합력', '비판·적용력'],
-              datasets: [{
-                label: seriesName + ' 전체',
-                data: scores,
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgb(54, 162, 235)',
-                borderWidth: 3,
-                pointBackgroundColor: 'rgb(54, 162, 235)',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 5,
-                pointHoverRadius: 7
-              }]
-            },
-            options: {
-              responsive: false,
-              plugins: {
-                legend: { display: false }
+            const canvas = document.createElement('canvas');
+            canvas.width = 280;
+            canvas.height = 280;
+            card.appendChild(canvas);
+
+            // 통계 정보
+            const stats = document.createElement('div');
+            stats.className = 'radar-card-stats';
+            stats.innerHTML =
+              '<div class="stat-item">' +
+                '<div class="stat-label">평균</div>' +
+                '<div class="stat-value">' + avgScore + '</div>' +
+                '<div class="stat-grade ' + gradeClass + '">' + badgeText + '</div>' +
+              '</div>' +
+              '<div class="stat-item">' +
+                '<div class="stat-label">최고</div>' +
+                '<div class="stat-value">' + maxScore + '</div>' +
+              '</div>' +
+              '<div class="stat-item">' +
+                '<div class="stat-label">최저</div>' +
+                '<div class="stat-value">' + minScore + '</div>' +
+              '</div>';
+            card.appendChild(stats);
+
+            seriesWrap.appendChild(card);
+
+            // 차트 생성
+            new Chart(canvas.getContext('2d'), {
+              type: 'radar',
+              data: {
+                labels: ['핵심 이해력', '구조 파악력', '어휘 맥락력', '추론·통합력', '비판·적용력'],
+                datasets: [{
+                  label: seriesName + ' 전체',
+                  data: scores,
+                  backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                  borderColor: 'rgb(54, 162, 235)',
+                  borderWidth: 3,
+                  pointBackgroundColor: 'rgb(54, 162, 235)',
+                  pointBorderColor: '#fff',
+                  pointBorderWidth: 2,
+                  pointRadius: 5,
+                  pointHoverRadius: 7
+                }]
               },
-              scales: {
-                r: {
-                  suggestedMin: 0,
-                  suggestedMax: 10,
-                  ticks: {
-                    stepSize: 2,
-                    backdropColor: 'transparent',
-                    font: { size: 11 }
-                  },
-                  pointLabels: {
-                    font: { size: 12, weight: 'bold' }
-                  },
-                  grid: { color: '#e5d4c1' },
-                  angleLines: { color: '#e5d4c1' }
+              options: {
+                responsive: false,
+                plugins: {
+                  legend: { display: false }
+                },
+                scales: {
+                  r: {
+                    suggestedMin: 0,
+                    suggestedMax: 10,
+                    ticks: {
+                      stepSize: 2,
+                      backdropColor: 'transparent',
+                      font: { size: 11 }
+                    },
+                    pointLabels: {
+                      font: { size: 12, weight: 'bold' }
+                    },
+                    grid: { color: '#e5d4c1' },
+                    angleLines: { color: '#e5d4c1' }
+                  }
                 }
               }
-            }
+            });
           });
         }
 
@@ -9589,6 +9693,7 @@ app.get("/my-learning", async (req, res) => {
         function renderFieldRadar(logs) {
           console.log('🎯 renderFieldRadar 실행, 총 로그:', logs.length);
           const fieldWrap = document.getElementById('field-radar-wrap');
+          fieldWrap.innerHTML = '';  // 기존 카드 제거
 
           // 과목 코드 → 분야 매핑
           const subjectToField = {
@@ -9621,19 +9726,21 @@ app.get("/my-learning", async (req, res) => {
             '인물분야': 'person'
           };
 
-          // 정규화된 단원 코드로 중복 제거 후 분야별로 그룹화
+          // 정규화된 단원 코드로 중복 제거 후 시리즈+분야별로 그룹화
           const fieldGroups = {};
-          const processedUnits = new Set(); // 이미 처리된 정규화된 단원 코드 추적
+          const processedUnits = new Set(); // 이미 처리된 시리즈_정규화단원코드 추적
 
           logs.forEach(log => {
             if (!log.radar || !log.unit) return;
 
             // 정규화된 단원 코드 생성
             const normalizedUnit = normalizeUnitCode(log.unit);
+            const seriesName = log.series || 'BRAIN업';
 
-            // 이미 처리된 단원이면 건너뛰기 (중복 방지)
-            if (processedUnits.has(normalizedUnit)) return;
-            processedUnits.add(normalizedUnit);
+            // 시리즈+단원 조합으로 중복 체크
+            const uniqueKey = seriesName + '_' + normalizedUnit;
+            if (processedUnits.has(uniqueKey)) return;
+            processedUnits.add(uniqueKey);
 
             // 정규화된 unit 코드에서 과목 추출
             const subjectCode = normalizedUnit.split('_')[0];
@@ -9641,18 +9748,27 @@ app.get("/my-learning", async (req, res) => {
 
             if (!fieldName) return; // 매핑되지 않은 과목은 제외
 
-            if (!fieldGroups[fieldName]) {
-              fieldGroups[fieldName] = [];
+            // 시리즈+분야를 키로 사용
+            const groupKey = seriesName + '_' + fieldName;
+            if (!fieldGroups[groupKey]) {
+              fieldGroups[groupKey] = {
+                series: seriesName,
+                field: fieldName,
+                logs: []
+              };
             }
-            fieldGroups[fieldName].push(log);
+            fieldGroups[groupKey].logs.push(log);
           });
 
-          // 각 분야별로 평균 계산 및 차트 생성
+          // 각 시리즈+분야별로 평균 계산 및 차트 생성
           let fieldIndex = 0;
-          console.log('📊 분야별 그룹화 결과:', Object.keys(fieldGroups).map(f => f + ': ' + fieldGroups[f].length + '개'));
-          Object.keys(fieldGroups).forEach(fieldName => {
-            const fieldLogs = fieldGroups[fieldName];
-            console.log('🎯 분야:', fieldName, '로그 수:', fieldLogs.length, '단원:', fieldLogs.map(l => l.unit));
+          console.log('📊 분야별 그룹화 결과:', Object.keys(fieldGroups).map(f => f + ': ' + fieldGroups[f].logs.length + '개'));
+          Object.keys(fieldGroups).forEach(groupKey => {
+            const group = fieldGroups[groupKey];
+            const seriesName = group.series;
+            const fieldName = group.field;
+            const fieldLogs = group.logs;
+            console.log('🎯 시리즈+분야:', groupKey, '로그 수:', fieldLogs.length, '단원:', fieldLogs.map(l => l.unit));
 
             // 평균 계산
             let totalLiteral = 0, totalStructural = 0, totalLexical = 0;
@@ -9710,8 +9826,7 @@ app.get("/my-learning", async (req, res) => {
             const header = document.createElement('div');
             header.className = 'radar-card-header';
 
-            // 시리즈 이름 가져오기
-            const seriesName = fieldLogs[0].series || 'BRAIN업';
+            // 분야별 총 단원 수
             const fieldTotal = fieldUnitCounts[fieldName] || 80;
             // fieldLogs.length가 이미 해당 분야의 고유 단원 수 (processedUnits에서 중복 제거됨)
             const fieldCompleted = fieldLogs.length;
@@ -10132,12 +10247,19 @@ app.get("/my-learning", async (req, res) => {
             const unitCode = log.unit || '';
             if (unitCode && unitCode.includes('_')) {
               const parts = unitCode.split('_');
-              let number = parts[1] ? parseInt(parts[1], 10) : 0;
+              // fit_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01']
+              let subjectKey = parts[0];
+              let numStr = parts[1];
+              if (parts[0] === 'fit' && parts.length >= 3) {
+                subjectKey = parts[1];
+                numStr = parts[2];
+              }
+              let number = numStr ? parseInt(numStr, 10) : 0;
               // world_41~80은 세계문학2
-              if (parts[0] === 'world' && number > 40) {
+              if (subjectKey === 'world' && number > 40) {
                 subjectName = '세계문학2';
               } else {
-                subjectName = subjectMap[parts[0]] || parts[0];
+                subjectName = subjectMap[subjectKey] || subjectKey;
               }
             }
 
@@ -10163,14 +10285,21 @@ app.get("/my-learning", async (req, res) => {
               badgeText = '격려';
             }
 
-            // 단원 코드 → 단원명 변환 (예: world2_01 → 세계문학2 1)
+            // 단원 코드 → 단원명 변환 (예: world2_01 → 세계문학2 1, fit_bio_01 → 생물 1)
             let unitName = log.unit || "";
             if (unitName && unitName.includes('_')) {
               const parts = unitName.split('_');
-              const subject = subjectMap[parts[0]] || parts[0];
-              let number = parts[1] ? parseInt(parts[1], 10) : 0;
+              // fit_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01']
+              let subjectKey = parts[0];
+              let numStr = parts[1];
+              if (parts[0] === 'fit' && parts.length >= 3) {
+                subjectKey = parts[1];
+                numStr = parts[2];
+              }
+              const subject = subjectMap[subjectKey] || subjectKey;
+              let number = numStr ? parseInt(numStr, 10) : 0;
               // world_41~80은 세계문학2로 표시 (world_41 → 세계문학2 1)
-              if (parts[0] === 'world' && number > 40) {
+              if (subjectKey === 'world' && number > 40) {
                 number = number - 40;
                 unitName = '세계문학2 ' + number;
               } else {
@@ -10256,6 +10385,8 @@ app.get("/my-learning", async (req, res) => {
             // 차트, 진도율 및 학습 기록 테이블 업데이트
             renderSeriesRadar(filteredLogs);
             renderFieldRadar(filteredLogs);
+            renderSubjectRadar(filteredLogs);
+            renderIndividualRadar(filteredLogs);
             calculateProgress(filteredLogs);
             renderLogTable(filteredLogs);
           });
@@ -10305,6 +10436,8 @@ app.get("/my-learning", async (req, res) => {
           // 레이더 차트 렌더링
           renderSeriesRadar(initialLogs);
           renderFieldRadar(initialLogs);
+          renderSubjectRadar(initialLogs);
+          renderIndividualRadar(initialLogs);
 
           // 진도율 계산 및 표시
           calculateProgress(initialLogs);
@@ -10353,6 +10486,10 @@ app.get("/my-learning", async (req, res) => {
 
           // 단원 코드 정규화 함수 (진도율용)
           function normalizeForProgress(unit) {
+            // fit_ 접두어 제거: fit_bio_01 -> bio_01
+            if (unit.startsWith('fit_')) {
+              unit = unit.substring(4); // 'fit_' 제거
+            }
             // world_41~80 -> world2_01~40
             if (unit.startsWith('world_')) {
               const numMatch = unit.match(/world_([0-9]+)$/);

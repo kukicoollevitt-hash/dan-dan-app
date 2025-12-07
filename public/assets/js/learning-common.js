@@ -130,6 +130,7 @@
         return null;
       }
       const unit = window.CUR_UNIT || 'geo_01';
+      console.log('[loadUnitProgressFromServer] 요청 unit:', unit);  // ✅ 디버그 로그 추가
       try {
         const res = await fetch(`/api/unit-progress/load?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}&unit=${encodeURIComponent(unit)}`);
         const result = await res.json();
