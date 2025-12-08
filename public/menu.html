@@ -3105,6 +3105,100 @@ canvas[id^="confetti-canvas"] {
     })();
   </script>
 
+  <!-- 🚀 API 캐싱 레이어 (중복 호출 방지 & 병렬 로딩 최적화) -->
+  <script>
+    window.ApiCache = (function() {
+      const cache = {};
+      const pending = {};
+      const CACHE_TTL = 30000; // 30초 캐시
+
+      return {
+        // 캐시된 데이터 가져오기 (없으면 fetch)
+        async fetch(url, options = {}) {
+          const cacheKey = url;
+          const now = Date.now();
+
+          // 캐시에 유효한 데이터가 있으면 반환
+          if (cache[cacheKey] && (now - cache[cacheKey].time) < CACHE_TTL) {
+            console.log('⚡ [Cache Hit]', cacheKey);
+            return cache[cacheKey].data;
+          }
+
+          // 이미 동일한 요청이 진행 중이면 그 Promise 반환 (중복 호출 방지)
+          if (pending[cacheKey]) {
+            console.log('⏳ [Pending]', cacheKey);
+            return pending[cacheKey];
+          }
+
+          // 새 요청 시작
+          console.log('🌐 [Fetch]', cacheKey);
+          pending[cacheKey] = fetch(url, options)
+            .then(res => res.json())
+            .then(data => {
+              cache[cacheKey] = { data, time: Date.now() };
+              delete pending[cacheKey];
+              return data;
+            })
+            .catch(err => {
+              delete pending[cacheKey];
+              throw err;
+            });
+
+          return pending[cacheKey];
+        },
+
+        // 캐시 무효화
+        invalidate(urlPattern) {
+          Object.keys(cache).forEach(key => {
+            if (key.includes(urlPattern)) {
+              delete cache[key];
+              console.log('🗑️ [Cache Invalidated]', key);
+            }
+          });
+        },
+
+        // 전체 캐시 클리어
+        clear() {
+          Object.keys(cache).forEach(key => delete cache[key]);
+          console.log('🗑️ [Cache Cleared]');
+        }
+      };
+    })();
+
+    // 🚀 페이지 로드 시 필요한 API들을 병렬로 미리 로드
+    window.preloadUserData = async function() {
+      const saved = localStorage.getItem('currentStudent');
+      if (!saved) return;
+
+      try {
+        const user = JSON.parse(saved);
+        if (!user.grade || !user.name) return;
+
+        const grade = encodeURIComponent(user.grade);
+        const name = encodeURIComponent(user.name);
+
+        console.log('🚀 [Preload] 사용자 데이터 병렬 로딩 시작...');
+        const startTime = Date.now();
+
+        // 모든 API를 병렬로 호출
+        await Promise.all([
+          ApiCache.fetch(`/api/gate-quiz/status?grade=${grade}&name=${name}`),
+          ApiCache.fetch(`/api/unit-grades?grade=${grade}&name=${name}`),
+          ApiCache.fetch(`/api/ai-task/last-assigned?grade=${grade}&name=${name}`),
+          ApiCache.fetch(`/api/user-progress/study-room?grade=${grade}&name=${name}`),
+          ApiCache.fetch(`/api/completion-status?grade=${grade}&name=${name}&series=BRAIN업`)
+        ]);
+
+        console.log('✅ [Preload] 완료! 소요시간:', Date.now() - startTime, 'ms');
+      } catch (err) {
+        console.error('❌ [Preload] 실패:', err);
+      }
+    };
+
+    // 페이지 로드 즉시 preload 시작
+    window.preloadUserData();
+  </script>
+
   <!-- 로그아웃 확인 모달 -->
   <div class="overlay" id="logoutConfirm">
     <div class="modal-box">
@@ -4576,15 +4670,14 @@ if (logoutConfirmBtn) {
             return;
           }
 
-          // 🔒 실시간 잠금 체크 (API 호출)
+          // 🔒 실시간 잠금 체크 (캐시 사용)
           const saved = localStorage.getItem('currentStudent');
           if (saved) {
             try {
               const student = JSON.parse(saved);
-              const res = await fetch(`/api/gate-quiz/status?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
-              const data = await res.json();
+              const data = await ApiCache.fetch(`/api/gate-quiz/status?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
 
-              if (data.ok) {
+              if (data && data.ok) {
                 // 전역 변수 업데이트
                 passedGates = data.highestPassedGate || 0;
                 completedUnitsCount = data.completedUnits || 0;
@@ -4691,7 +4784,7 @@ if (logoutConfirmBtn) {
       return `${cleanGrade}_${cleanName}_${cleanPhone}`;
     }
 
-    /* ⭐ 단원별 등급 데이터 가져오기 */
+    /* ⭐ 단원별 등급 데이터 가져오기 (캐시 사용) */
     async function fetchUnitGrades() {
       try {
         const stu = getCurrentStudent();
@@ -4700,18 +4793,8 @@ if (logoutConfirmBtn) {
           return {};
         }
 
-        const params = new URLSearchParams({
-          grade: stu.grade || '',
-          name: stu.name || ''
-        });
-
-        const response = await fetch(`/api/unit-grades?${params}`);
-        if (!response.ok) {
-          console.error('⭐ 단원 등급 조회 실패:', response.status);
-          return {};
-        }
-
-        const data = await response.json();
+        const url = `/api/unit-grades?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}`;
+        const data = await ApiCache.fetch(url);
         console.log('⭐ 단원 등급 데이터 로드:', Object.keys(data).length, '개');
         return data;
       } catch (error) {
@@ -4776,24 +4859,15 @@ if (logoutConfirmBtn) {
         const stu = getCurrentStudent();
         if (!stu) return;
 
-        const params = new URLSearchParams({
-          grade: stu.grade || '',
-          name: stu.name || '',
-          series: 'BRAIN업'
-        });
+        // 캐시 사용
+        const url = `/api/completion-status?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}&series=BRAIN업`;
+        const data = await ApiCache.fetch(url);
+        console.log('[syncCompletionStatus] 서버 응답:', data);
 
-        const res = await fetch(`/api/completion-status?${params}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (!res.ok) {
-          console.warn('[syncCompletionStatus] 서버 응답 오류:', res.status);
+        if (!data) {
+          console.warn('[syncCompletionStatus] 데이터 없음');
           return;
         }
-
-        const data = await res.json();
-        console.log('[syncCompletionStatus] 서버 응답:', data);
 
         if (data.ok && Array.isArray(data.completedUnits)) {
           const stuKey = buildStudentKey(stu);
@@ -5166,9 +5240,8 @@ if (logoutConfirmBtn) {
           return;
         }
 
-        // 마지막 AI 부여 시간 조회
-        const response = await fetch(`/api/ai-task/last-assigned?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
-        const data = await response.json();
+        // 마지막 AI 부여 시간 조회 (캐시 사용)
+        const data = await ApiCache.fetch(`/api/ai-task/last-assigned?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
 
         if (data.ok && data.lastAIAssignedAt) {
           const lastAssigned = new Date(data.lastAIAssignedAt).toISOString().split('T')[0];
@@ -5206,9 +5279,8 @@ if (logoutConfirmBtn) {
           return;
         }
 
-        // 과제 목록 조회
-        const response = await fetch(`/api/user-progress/study-room?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
-        const data = await response.json();
+        // 과제 목록 조회 (캐시 사용)
+        const data = await ApiCache.fetch(`/api/user-progress/study-room?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
 
         if (data.ok && data.assignedTasks && data.assignedTasks.length > 0) {
           const pendingTasks = data.assignedTasks.filter(t => t.status === 'pending');
@@ -8266,9 +8338,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
           return data ? JSON.parse(data) : [];
         }
 
-        // 서버에서 학습실 데이터 조회
-        const response = await fetch(`/api/user-progress/study-room?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
-        const result = await response.json();
+        // 서버에서 학습실 데이터 조회 (캐시 사용)
+        const result = await ApiCache.fetch(`/api/user-progress/study-room?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
 
         if (result.ok && result.data?.studyRoom?.assignedTasks) {
           console.log('✅ 서버에서 학습실 데이터 로드:', result.data.studyRoom.assignedTasks.length, '개');
@@ -12778,17 +12849,16 @@ ${content}
       sessionStorage.setItem('gatePopupDismissed', gateLevel);
     }
 
-    // 관문 상태 확인 및 팝업 표시
+    // 관문 상태 확인 및 팝업 표시 (캐시 사용)
     async function checkGateStatus() {
       const saved = localStorage.getItem('currentStudent');
       if (!saved) return;
 
       try {
         const student = JSON.parse(saved);
-        const res = await fetch(`/api/gate-quiz/status?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
-        const data = await res.json();
+        const data = await ApiCache.fetch(`/api/gate-quiz/status?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
 
-        if (!data.ok) return;
+        if (!data || !data.ok) return;
 
         console.log('[Gate Status]', data);
 
