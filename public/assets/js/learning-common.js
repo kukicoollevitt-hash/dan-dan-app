@@ -177,6 +177,16 @@
         if (q2Radio) q2Radio.checked = true;
       }
 
+      // 3번, 4번 - 라디오 버튼 복원 (fit_ 시리즈 객관식)
+      if (inputs.q3 && !inputs.q3_1) {
+        const q3Radio = document.querySelector(`input[name="q3"][value="${inputs.q3}"]`);
+        if (q3Radio) q3Radio.checked = true;
+      }
+      if (inputs.q4 && !inputs.q4_1) {
+        const q4Radio = document.querySelector(`input[name="q4"][value="${inputs.q4}"]`);
+        if (q4Radio) q4Radio.checked = true;
+      }
+
       // 3번, 4번 - 텍스트 입력 복원 (q3_1 또는 q3-1 형식 모두 지원)
       const q3_1 = document.getElementById("q3-1");
       const q3_2 = document.getElementById("q3-2");
@@ -266,6 +276,18 @@
         window.reportState.q3ok = data.q3ok;
         window.reportState.q4ok = data.q4ok;
         window.reportState.q5ok = data.q5ok;
+
+        // ✅ 분석리포트 해설 업데이트 (q1ok 형식)
+        if (typeof updateReportPanel === 'function') {
+          updateReportPanel({
+            q1ok: data.q1ok,
+            q2ok: data.q2ok,
+            q3ok: data.q3ok,
+            q4ok: data.q4ok,
+            q5ok: data.q5ok
+          });
+          console.log('[restoreReadingStateFromServer] 분석리포트 해설 업데이트 완료 (q1ok 형식)');
+        }
       } else if (hasResultsArray) {
         // results 배열 형식으로 저장된 경우 (pol_01.html 등 새 형식)
         const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
@@ -324,6 +346,18 @@
         window.reportState.q3ok = q3ok;
         window.reportState.q4ok = q4ok;
         window.reportState.q5ok = q5ok;
+
+        // ✅ 분석리포트 해설 업데이트 (results 배열 형식)
+        if (typeof updateReportPanel === 'function') {
+          updateReportPanel({
+            q1ok: q1ok,
+            q2ok: q2ok,
+            q3ok: q3ok,
+            q4ok: q4ok,
+            q5ok: q5ok
+          });
+          console.log('[restoreReadingStateFromServer] 분석리포트 해설 업데이트 완료 (results 배열)');
+        }
       } else if (data.graded || data.isGraded || inputs.graded || inputs.isGraded) {
         // 채점 결과가 없지만 graded=true 또는 isGraded=true인 경우 자동 재채점
         console.log('[restoreReadingStateFromServer] graded/isGraded=true, 자동 재채점 시도');
