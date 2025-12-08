@@ -122,6 +122,60 @@
     // ★ 전역으로 노출 (HTML 페이지에서 접근 가능하도록)
     window.saveUnitProgressToServer = saveUnitProgressToServer;
 
+    // ★ 서버에 학습 로그 전송 (별표 표시용 - /api/log)
+    async function sendLearningLog() {
+      const stu = getCurrentStudent();
+      if (!stu) {
+        console.log('[sendLearningLog] 학생 정보 없음, 전송 건너뜀');
+        return;
+      }
+      const unit = window.CUR_UNIT || 'geo_01';
+      const rs = window.reportState || (typeof reportState !== 'undefined' ? reportState : null);
+
+      if (!rs) {
+        console.log('[sendLearningLog] reportState 없음, 전송 건너뜀');
+        return;
+      }
+
+      // 레이더 점수 계산
+      const lexicalRatio = (typeof rs.vocabScoreRatio === 'number') ? rs.vocabScoreRatio : 0;
+      const lexicalScore = Math.round(lexicalRatio * 10);
+
+      const radar = {
+        literal: rs.q1ok ? 10 : 6,
+        structural: rs.q2ok ? 10 : 6,
+        lexical: rs.q3ok ? 10 : lexicalScore,
+        inferential: rs.q4ok ? 10 : 6,
+        critical: rs.q5ok ? 10 : 6
+      };
+
+      try {
+        const res = await fetch('/api/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: stu.grade,
+            name: stu.name,
+            phone: stu.phone || '',
+            unit: unit,
+            radar: radar,
+            completed: true
+          })
+        });
+        const result = await res.json();
+        if (result.success || result._id) {
+          console.log(`[sendLearningLog] ${unit} 학습 로그 전송 완료`, radar);
+        } else {
+          console.error('[sendLearningLog] 전송 실패:', result);
+        }
+      } catch (err) {
+        console.error('[sendLearningLog] 네트워크 오류:', err);
+      }
+    }
+
+    // ★ 전역으로 노출
+    window.sendLearningLog = sendLearningLog;
+
     // ★ 서버에서 단원별 학습 진행 불러오기
     async function loadUnitProgressFromServer() {
       const stu = getCurrentStudent();
