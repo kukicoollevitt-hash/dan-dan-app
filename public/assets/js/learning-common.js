@@ -246,6 +246,26 @@
           }
         });
         console.log('[restoreReadingStateFromServer] 채점 결과 직접 복원 완료 (q1ok 형식)');
+
+        // ✅ 레이더 차트 업데이트 (q1ok 형식 기반)
+        if (typeof drawRadarChart === 'function') {
+          drawRadarChart({
+            literal: data.q1ok ? 10 : 6,
+            structural: data.q2ok ? 10 : 6,
+            lexical: data.q3ok ? 10 : 6,
+            inferential: data.q4ok ? 10 : 6,
+            critical: data.q5ok ? 10 : 6
+          });
+          console.log('[restoreReadingStateFromServer] 레이더 차트 업데이트 완료 (q1ok 형식)');
+        }
+
+        // reportState 업데이트
+        window.reportState = window.reportState || {};
+        window.reportState.q1ok = data.q1ok;
+        window.reportState.q2ok = data.q2ok;
+        window.reportState.q3ok = data.q3ok;
+        window.reportState.q4ok = data.q4ok;
+        window.reportState.q5ok = data.q5ok;
       } else if (hasResultsArray) {
         // results 배열 형식으로 저장된 경우 (pol_01.html 등 새 형식)
         const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
@@ -278,6 +298,32 @@
           }
         });
         console.log('[restoreReadingStateFromServer] 채점 결과 직접 복원 완료 (results 배열)');
+
+        // ✅ 레이더 차트 업데이트 (results 배열 기반)
+        const q1ok = data.results[0]?.isCorrect === true;
+        const q2ok = data.results[1]?.isCorrect === true;
+        const q3ok = data.results[2]?.isCorrect === true;
+        const q4ok = data.results[3]?.isCorrect === true;
+        const q5ok = data.results[4]?.isCorrect === true;
+
+        if (typeof drawRadarChart === 'function') {
+          drawRadarChart({
+            literal: q1ok ? 10 : 6,
+            structural: q2ok ? 10 : 6,
+            lexical: q3ok ? 10 : 6,
+            inferential: q4ok ? 10 : 6,
+            critical: q5ok ? 10 : 6
+          });
+          console.log('[restoreReadingStateFromServer] 레이더 차트 업데이트 완료');
+        }
+
+        // reportState 업데이트
+        window.reportState = window.reportState || {};
+        window.reportState.q1ok = q1ok;
+        window.reportState.q2ok = q2ok;
+        window.reportState.q3ok = q3ok;
+        window.reportState.q4ok = q4ok;
+        window.reportState.q5ok = q5ok;
       } else if (data.graded || data.isGraded || inputs.graded || inputs.isGraded) {
         // 채점 결과가 없지만 graded=true 또는 isGraded=true인 경우 자동 재채점
         console.log('[restoreReadingStateFromServer] graded/isGraded=true, 자동 재채점 시도');
