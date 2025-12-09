@@ -3115,22 +3115,54 @@ function disableQuizInputs() {
    🔓 퀴즈 입력 활성화 (다시풀기)
 ========================================================= */
 function enableQuizInputs() {
-  // 1번, 2번 - 라디오 버튼 활성화
-  document.querySelectorAll('input[name="q1"], input[name="q2"]').forEach(el => {
-    el.disabled = false;
-  });
-
-  // 3번, 4번 - 빈칸 입력 활성화
-  ['q3-1', 'q3-2', 'q4-1', 'q4-2'].forEach(id => {
+  document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.disabled = false);
+  // q3, q4 라디오버튼 활성화
+  document.querySelectorAll('input[name="q3"]').forEach(r => r.disabled = false);
+  document.querySelectorAll('input[name="q4"]').forEach(r => r.disabled = false);
+  ['q5'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = false;
   });
+}
 
-  // 5번 - 서술형 텍스트 활성화
-  const q5 = document.getElementById('q5');
-  if (q5) q5.disabled = false;
+function resetQuiz() {
+  document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.checked = false);
+  // q3, q4 라디오버튼 초기화 (객관식)
+  document.querySelectorAll('input[name="q3"]').forEach(r => { r.checked = false; r.disabled = false; });
+  document.querySelectorAll('input[name="q4"]').forEach(r => { r.checked = false; r.disabled = false; });
+  document.getElementById("q5").value = "";
 
-  console.log('[enableQuizInputs] 모든 입력 필드 활성화 완료');
+  const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
+  const numLabels = ["01","02","03","04","05"];
+  quizBlocks.forEach((block, idx) => {
+    const numEl = block.querySelector('.quiz-num');
+    const markEl = numEl.querySelector('.mark');
+    numEl.textContent = numLabels[idx];
+    numEl.appendChild(markEl);
+    numEl.classList.remove('correct','wrong');
+    markEl.textContent = "";
+  });
+
+  const resultBox = document.getElementById("grade-result");
+  resultBox.style.display = "none";
+  resultBox.innerHTML = "";
+  readingResultHTML = "";
+
+  // solutions-box 제거 (제출하기에서 생성된 해설 박스)
+  const solutionsBox = document.getElementById("solutions-box");
+  if (solutionsBox) {
+    solutionsBox.remove();
+  }
+
+  document.getElementById("save-progress-btn").style.display = "inline-block";
+  document.getElementById("reset-btn").style.display = "none";
+  enableQuizInputs();
+
+  reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
+
+  updateReportPanel({ q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, messages: ["채점 결과가 초기화되었습니다. 다시 풀고 채점해 주세요."] });
+
+  drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
 }
 
 /* =========================================================
