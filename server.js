@@ -9230,14 +9230,17 @@ app.get("/my-learning", async (req, res) => {
 
           // 단원 클릭 시 해당 단원으로 이동
           const unitCode = log.unit || '';
-          // series 값 정규화 (BRAIN업 → BRAINUP, BRAINFIT 등)
-          let seriesCode = log.series || 'BRAINUP';
-          if (seriesCode === 'BRAIN업') seriesCode = 'BRAINUP';
+          // FIT 시리즈는 항상 BRAINUP 폴더에 저장됨
+          let seriesCode = 'BRAINUP';
           if (unitCode) {
-            // unit 코드에서 과목과 번호 추출 (예: bio_01, geo_01)
+            // unit 코드에서 과목과 번호 추출 (예: bio_01, geo_01, fit_bio_01)
             const parts = unitCode.split('_');
-            const subject = parts[0] || '';
-            const num = parts[1] || '01';
+            let subject = parts[0] || '';
+
+            // fit_ 접두어인 경우 실제 과목명은 parts[1]
+            if (subject === 'fit' && parts.length >= 3) {
+              subject = parts[1]; // fit_bio_01 → bio
+            }
 
             // 과목별 폴더 매핑
             const folderMap = {
@@ -9347,11 +9350,16 @@ app.get("/my-learning", async (req, res) => {
           // 카드 클릭 시 해당 단원 페이지로 이동
           card.style.cursor = 'pointer';
           card.addEventListener('click', function() {
-            const unitCode = log.unit; // 예: geo_01, bio_01
+            const unitCode = log.unit; // 예: geo_01, bio_01, fit_bio_01
             if (unitCode) {
-              // 단원 코드에서 과목 추출
+              // 단원 코드에서 과목 추출 (fit_ 접두어 처리)
               const parts = unitCode.split('_');
-              const subject = parts[0] || '';
+              let subject = parts[0] || '';
+
+              // fit_ 접두어인 경우 실제 과목명은 parts[1]
+              if (subject === 'fit' && parts.length >= 3) {
+                subject = parts[1]; // fit_bio_01 → bio
+              }
 
               // 과목별 폴더 매핑
               const folderMap = {
@@ -9363,11 +9371,12 @@ app.get("/my-learning", async (req, res) => {
               };
               const folder = folderMap[subject] || 'social';
 
-              // series 정규화
-              let seriesCode = log.series || 'BRAINUP';
-              if (seriesCode === 'BRAIN업') seriesCode = 'BRAINUP';
+              // series 정규화 - FIT 시리즈는 BRAINUP 폴더에 저장됨
+              let seriesCode = 'BRAINUP'; // FIT 시리즈 파일은 모두 BRAINUP에 있음
+              if (log.series === 'BRAIN업') seriesCode = 'BRAINUP';
 
               const unitUrl = '/' + seriesCode + '/' + folder + '/' + unitCode + '.html';
+              console.log('[레이더 클릭] unitCode:', unitCode, 'subject:', subject, 'folder:', folder, 'url:', unitUrl);
               window.open(unitUrl, '_blank');
             }
           });
