@@ -137,6 +137,10 @@
         return;
       }
 
+      // 🔥 디버깅: reportState 전체 값 출력
+      console.log('[sendLearningLog] 🔍 reportState 전체:', JSON.stringify(rs));
+      console.log('[sendLearningLog] 🔍 q1ok:', rs.q1ok, 'q2ok:', rs.q2ok, 'q3ok:', rs.q3ok, 'q4ok:', rs.q4ok, 'q5ok:', rs.q5ok);
+
       // 레이더 점수 계산
       const lexicalRatio = (typeof rs.vocabScoreRatio === 'number') ? rs.vocabScoreRatio : 0;
       const lexicalScore = Math.round(lexicalRatio * 10);
@@ -148,6 +152,9 @@
         inferential: rs.q4ok ? 10 : 6,
         critical: rs.q5ok ? 10 : 6
       };
+
+      // 🔥 디버깅: 전송할 radar 값 출력
+      console.log('[sendLearningLog] 🔍 전송할 radar:', JSON.stringify(radar));
 
       try {
         const res = await fetch('/api/log', {

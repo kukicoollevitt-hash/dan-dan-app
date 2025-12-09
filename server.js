@@ -14395,12 +14395,24 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
     const quizzes = [];
 
     for (const unitCode of gateUnits.slice(0, 10)) {
-      // unitCode 예: "geo_01", "bio_05", "classic_12"
-      const match = unitCode.match(/([a-z]+\d?)_(\d{1,2})/);
-      if (!match) continue;
+      // unitCode 예: "geo_01", "bio_05", "classic_12", "fit_physics_01", "fit_bio_02"
+      // FIT 시리즈: fit_physics_01, fit_bio_02 등
+      const isFit = unitCode.startsWith('fit_');
+      let subject, num;
 
-      const subject = match[1];
-      const num = match[2].padStart(2, '0');
+      if (isFit) {
+        // fit_physics_01 → subject: physics, num: 01
+        const fitMatch = unitCode.match(/fit_([a-z]+\d?)_(\d{1,2})/);
+        if (!fitMatch) continue;
+        subject = fitMatch[1];
+        num = fitMatch[2].padStart(2, '0');
+      } else {
+        // geo_01, bio_05 → subject: geo, num: 01
+        const match = unitCode.match(/([a-z]+\d?)_(\d{1,2})/);
+        if (!match) continue;
+        subject = match[1];
+        num = match[2].padStart(2, '0');
+      }
 
       // 과목에 따른 폴더 경로 결정
       let folder = 'social';
@@ -14409,14 +14421,17 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
       else if (['world1', 'world2'].includes(subject)) folder = 'worldlit';
       else if (['people1', 'people2'].includes(subject)) folder = 'person';
 
-      const contentPath = path.join(__dirname, 'public', 'BRAINUP', folder, `${subject}_content.js`);
+      // FIT 시리즈는 fit_xxx_content.js 파일 사용
+      const contentFileName = isFit ? `fit_${subject}_content.js` : `${subject}_content.js`;
+      const contentPath = path.join(__dirname, 'public', 'BRAINUP', folder, contentFileName);
 
       try {
         if (fs.existsSync(contentPath)) {
           const content = fs.readFileSync(contentPath, 'utf8');
 
           // 해당 단원의 quiz 객체 찾기
-          const unitKey = `${subject}_${num}`;
+          // FIT 시리즈는 fit_physics_01 형식, 일반 시리즈는 physics_01 형식
+          const unitKey = isFit ? `fit_${subject}_${num}` : `${subject}_${num}`;
           const labelNoMatch = content.match(new RegExp(`labelNo:\\s*["']${num}["']`));
 
           if (labelNoMatch) {

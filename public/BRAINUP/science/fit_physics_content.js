@@ -2629,11 +2629,20 @@ window.sendLearningLog = async function () {
       return;
     }
 
-    // ✅ gradeQuiz 에서 저장해 둔 레이더 점수 꺼내기
-    const radar =
-      (window.reportState && window.reportState.radarScores)
-      ? window.reportState.radarScores
-      : null;
+    // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
+    const rs = window.reportState || {};
+    console.log('[sendLearningLog] 🔍 window.reportState:', JSON.stringify(rs));
+    console.log('[sendLearningLog] 🔍 q1ok:', rs.q1ok, 'q2ok:', rs.q2ok, 'q3ok:', rs.q3ok, 'q4ok:', rs.q4ok, 'q5ok:', rs.q5ok);
+
+    // q1ok~q5ok 값을 직접 사용하여 radar 계산 (radarScores가 오래된 값일 수 있음)
+    const radar = {
+      literal: rs.q1ok ? 10 : 6,
+      structural: rs.q2ok ? 10 : 6,
+      lexical: rs.q3ok ? 10 : 6,
+      inferential: rs.q4ok ? 10 : 6,
+      critical: rs.q5ok ? 10 : 6
+    };
+    console.log('[sendLearningLog] 🔍 계산된 radar:', JSON.stringify(radar));
 
     const payload = {
       grade:  stu.grade  || '',

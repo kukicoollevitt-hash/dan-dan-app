@@ -3018,7 +3018,11 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) { return; }
     if (!stu) return;
-    const radar = (window.reportState && window.reportState.radarScores) ? window.reportState.radarScores : null;
+    // ✅ q1ok~q5ok로 레이더 점수 계산
+    const rs = window.reportState || {};
+    console.log('[sendLearningLog] 🔍 q1ok:', rs.q1ok, 'q2ok:', rs.q2ok, 'q3ok:', rs.q3ok, 'q4ok:', rs.q4ok, 'q5ok:', rs.q5ok);
+    const radar = { literal: rs.q1ok ? 10 : 6, structural: rs.q2ok ? 10 : 6, lexical: rs.q3ok ? 10 : 6, inferential: rs.q4ok ? 10 : 6, critical: rs.q5ok ? 10 : 6 };
+    console.log('[sendLearningLog] 🔍 계산된 radar:', JSON.stringify(radar));
     const payload = { grade: stu.grade || '', name: stu.name || '', school: stu.school || '', series: 'BRAIN핏', unit, radar, completed: true };
     const res = await fetch('/api/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     let data = {};
