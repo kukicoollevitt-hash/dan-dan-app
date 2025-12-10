@@ -1800,11 +1800,7 @@
       .report-chart-box { width: 100%; }
     }
 
-    /* ✅ 03, 04번 빈칸 입력칸/placeholder 가운데 정렬 */
-    #q3-1, #q3-2, #q4-1, #q4-2 { text-align: center !important; }
-    #q3-1::placeholder, #q3-2::placeholder, #q4-1::placeholder, #q4-2::placeholder,
-    #q3-1::-webkit-input-placeholder, #q3-2::-webkit-input-placeholder, #q4-1::-webkit-input-placeholder, #q4-2::-webkit-input-placeholder,
-    #q3-1::-moz-placeholder, #q3-2::-moz-placeholder, #q4-1::-moz-placeholder, #q4-2::-moz-placeholder { text-align: center !important; }
+    /* 03, 04번 객관식 */
 
     /* ===== 자동 피드백 박스 ===== */
     .feedback-section { margin-top: 18px; background: #fffaf1; border: 1px solid #e6c9a4; border-radius: 10px; padding: 14px 16px; line-height: 1.5; }
@@ -1958,23 +1954,25 @@
 
           <div class="quiz-subtitle">빈칸 채우기</div>
 
-          <!-- 3 (2칸) -->
-          <div class="quiz-block small">
+          <!-- 3 (객관식) -->
+          <div class="quiz-block">
             <div class="quiz-num">03<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">
-                로빈슨은 폭풍우 속에서 표류하다 혼자 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅇㄷ">에 도착했고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅㅊ">를 만들어 몸을 숨겼습니다.
-              </p>
+              <p class="quiz-q" id="quiz-q3-text"></p>
+              <ul class="quiz-options" id="quiz-q3-opts">
+                <li></li><li></li><li></li><li></li>
+              </ul>
             </div>
           </div>
 
-          <!-- 4 (2칸) -->
-          <div class="quiz-block small">
+          <!-- 4 (객관식) -->
+          <div class="quiz-block">
             <div class="quiz-num">04<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">
-                로빈슨은 살아남기 위해 새로운 삶을 시작할 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅅ">을 하고, 배에서 물건들을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂ">마다 날랐습니다.
-              </p>
+              <p class="quiz-q" id="quiz-q4-text"></p>
+              <ul class="quiz-options" id="quiz-q4-opts">
+                <li></li><li></li><li></li><li></li>
+              </ul>
             </div>
           </div>
 
@@ -1984,7 +1982,7 @@
             <div class="quiz-num">05<div class="mark"></div></div>
             <div class="quiz-content">
               <p class="quiz-q">
-                데미안이 싱클레어에게 "새는 알에서 나오려고 투쟁한다"라고 말한 이유를 본문 내용과 연결하여 설명해 보세요.
+                브리앙이 드니팬 일행과 사이가 좋지 않았음에도 그들을 데리러 가기로 결심한 이유를 본문 내용을 바탕으로 설명해 보세요.
               </p>
               <div class="answer-box">
                 <textarea id="q5"></textarea>
@@ -2044,19 +2042,19 @@
       <div class="creative-topic-box">
         <div>
           <strong>주제:</strong>
-          <strong>"만약 로빈슨 크루소처럼 무인도에 혼자 남게 된다면 어떻게 생존할지 계획을 세워 보세요."</strong>
+          <strong>"만약 브리앙처럼 사이가 좋지 않은 친구가 위험에 처했다면 어떻게 할지 생각해 보세요."</strong>
         </div>
         <div class="creative-hint">
-          💡 힌트) 물, 음식, 잠자리, 구조 신호 등 생존에 필요한 것들을 생각해 보세요.
+          💡 힌트) 개인적인 감정과 전체의 안전 중 무엇이 더 중요한지 생각해 보세요.
         </div>
       </div>
 
       <!-- 예시 박스 -->
       <div class="creative-examples-box">
         <div class="example-title">📝 작성 예시</div>
-        <div>예시 1) 가장 먼저 물과 음식을 구한다.</div>
-        <div>예시 2) 나뭇가지로 잠잘 곳을 만든다.</div>
-        <div>예시 3) 연기나 불로 구조 신호를 보낸다.</div>
+        <div>예시 1) 사이가 좋지 않아도 위험에 처하면 도와주어야 한다.</div>
+        <div>예시 2) 함께 협력해야 모두가 살아남을 수 있다.</div>
+        <div>예시 3) 개인적인 감정보다 전체의 안전이 더 중요하다.</div>
       </div>
 
       </div>
@@ -2244,6 +2242,33 @@
     // 페이지 로드 시 항상 본문학습 탭으로 시작
     window.addEventListener('DOMContentLoaded', () => {
       activateTab('reading');
+
+      // Q3, Q4 객관식 렌더링
+      const pack = window.CONTENTS && window.CONTENTS[window.CUR_UNIT];
+      if (pack && pack.quiz) {
+        // Q3 렌더링
+        if (pack.quiz.q3_text && pack.quiz.q3_opts) {
+          const q3TextEl = document.getElementById('quiz-q3-text');
+          const q3OptsEl = document.getElementById('quiz-q3-opts');
+          if (q3TextEl) q3TextEl.textContent = pack.quiz.q3_text;
+          if (q3OptsEl) {
+            q3OptsEl.innerHTML = pack.quiz.q3_opts.map((opt, i) =>
+              `<li><label><input type="radio" name="q3" value="${i+1}"><span>${opt}</span></label></li>`
+            ).join('');
+          }
+        }
+        // Q4 렌더링
+        if (pack.quiz.q4_text && pack.quiz.q4_opts) {
+          const q4TextEl = document.getElementById('quiz-q4-text');
+          const q4OptsEl = document.getElementById('quiz-q4-opts');
+          if (q4TextEl) q4TextEl.textContent = pack.quiz.q4_text;
+          if (q4OptsEl) {
+            q4OptsEl.innerHTML = pack.quiz.q4_opts.map((opt, i) =>
+              `<li><label><input type="radio" name="q4" value="${i+1}"><span>${opt}</span></label></li>`
+            ).join('');
+          }
+        }
+      }
     });
 
     /* ===== 뒤로 가기 확인 팝업 ===== */
@@ -2437,25 +2462,19 @@
       if (q2ok) { score++; q2Num.classList.add('correct'); q2Mark.textContent="⭕"; shortMsgs.push("② 정답 ✅"); fullMsgs.push("② 정답 ✅ " + explain.q2); }
       else { q2Num.classList.add('wrong'); q2Mark.textContent="✖"; shortMsgs.push("② 오답 ❌"); fullMsgs.push("② 오답 ❌ " + explain.q2); }
 
-      // 3번
-      const q3_1 = document.getElementById("q3-1").value.trim();
-      const q3_2 = document.getElementById("q3-2").value.trim();
+      // 3번 (객관식)
+      const q3Radio = document.querySelector('input[name="q3"]:checked');
       const q3Num = quizBlocks[2].querySelector('.quiz-num');
       const q3Mark = q3Num.querySelector('.mark');
-      const ok3_1 = answerKey.q3_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_1.replace(/\s+/g,"").toLowerCase());
-      const ok3_2 = answerKey.q3_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_2.replace(/\s+/g,"").toLowerCase());
-      const q3ok = (ok3_1 && ok3_2);
+      const q3ok = (q3Radio && q3Radio.value === answerKey.q3);
       if (q3ok) { score++; q3Num.classList.add('correct'); q3Mark.textContent="⭕"; shortMsgs.push("③ 정답 ✅"); fullMsgs.push("③ 정답 ✅ " + explain.q3); }
       else { q3Num.classList.add('wrong'); q3Mark.textContent="✖"; shortMsgs.push("③ 오답 ❌"); fullMsgs.push("③ 오답 ❌ " + explain.q3); }
 
-      // 4번
-      const q4_1 = document.getElementById("q4-1").value.trim();
-      const q4_2 = document.getElementById("q4-2").value.trim();
+      // 4번 (객관식)
+      const q4Radio = document.querySelector('input[name="q4"]:checked');
       const q4Num = quizBlocks[3].querySelector('.quiz-num');
       const q4Mark = q4Num.querySelector('.mark');
-      const ok4_1 = answerKey.q4_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_1.replace(/\s+/g,"").toLowerCase());
-      const ok4_2 = answerKey.q4_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_2.replace(/\s+/g,"").toLowerCase());
-      const q4ok = (ok4_1 && ok4_2);
+      const q4ok = (q4Radio && q4Radio.value === answerKey.q4);
       if (q4ok) { score++; q4Num.classList.add('correct'); q4Mark.textContent="⭕"; shortMsgs.push("④ 정답 ✅"); fullMsgs.push("④ 정답 ✅ " + explain.q4); }
       else { q4Num.classList.add('wrong'); q4Mark.textContent="✖"; shortMsgs.push("④ 오답 ❌"); fullMsgs.push("④ 오답 ❌ " + explain.q4); }
 
@@ -2581,17 +2600,10 @@
         r.checked = false;
         r.disabled = false;  // 라디오 버튼 활성화
       });
-      document.getElementById("q3-1").value = "";
-      document.getElementById("q3-2").value = "";
-      document.getElementById("q4-1").value = "";
-      document.getElementById("q4-2").value = "";
+      
       document.getElementById("q5").value = "";
 
       // 입력창 활성화
-      document.getElementById("q3-1").disabled = false;
-      document.getElementById("q3-2").disabled = false;
-      document.getElementById("q4-1").disabled = false;
-      document.getElementById("q4-2").disabled = false;
       document.getElementById("q5").disabled = false;
 
       const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
