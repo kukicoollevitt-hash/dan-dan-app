@@ -98,25 +98,24 @@
     let unit = null;
 
     if (qs) {
-      const m = qs.toLowerCase().match(/classic[_-]?(\d{1,2})/);
-      if (m) unit = `classic_${m[1].padStart(2,'0')}`;
+      const m = qs.toLowerCase().match(/fit_classic[_-]?(\d{1,2})/);
+      if (m) unit = `fit_classic_${m[1].padStart(2,'0')}`;
     }
 
     if (!unit) {
-      const m2 = location.pathname.toLowerCase().match(/classic[_-]?(\d{1,2})\.html/);
-      if (m2) unit = `classic_${m2[1].padStart(2,'0')}`;
+      const m2 = location.pathname.toLowerCase().match(/fit_classic[_-]?(\d{1,2})\.html/);
+      if (m2) unit = `fit_classic_${m2[1].padStart(2,'0')}`;
     }
 
     if (!unit && document.title) {
       const m3 = document.title.match(/(\d{1,2})/);
-      if (m3) unit = `classic_${m3[1].padStart(2,'0')}`;
+      if (m3) unit = `fit_classic_${m3[1].padStart(2,'0')}`;
     }
 
     window.CUR_UNIT = unit || 'fit_classic_30';
     console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
 
     // 분석리포트 탭으로 새로고침된 경우 로딩 텍스트 변경
-    const savedTab = localStorage.getItem(`current-geo-tab:${window.CUR_UNIT}`);
     if (savedTab === 'report') {
       document.addEventListener('DOMContentLoaded', () => {
         const loadingText = document.querySelector('.loading-text');
@@ -133,7 +132,7 @@
     const m = cur.match(/classic_(\d{1,2})/);
     const no = m ? m[1].padStart(2,'0') : '01';
 
-    window.PAGE_KEY = `BRAINFIT_korlit_fit_classic_${no}`;
+    window.PAGE_KEY = `BRAINUP_korlit_fit_classic_${no}`;
     console.log('[study page] PAGE_KEY =', window.PAGE_KEY);
   })();
   </script>
@@ -1967,29 +1966,31 @@
             </div>
           </div>
 
-          <div class="quiz-subtitle">빈칸 채우기</div>
-
-          <!-- 3 (2칸) -->
-          <div class="quiz-block small">
+                    <!-- 3 (객관식) -->
+          <div class="quiz-block">
             <div class="quiz-num">03<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">
-                장끼는
-                <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅅ"> 때문에
-                <input class="inline-input" id="q3-2" type="text" placeholder="ㄷ">에 걸렸습니다.
-              </p>
+              <p class="quiz-q" id="quiz-q3-text"></p>
+              <ul class="quiz-options" id="quiz-q3-opts">
+                <li><label><input type="radio" name="q3" value="1"><span></span></label></li>
+                <li><label><input type="radio" name="q3" value="2"><span></span></label></li>
+                <li><label><input type="radio" name="q3" value="3"><span></span></label></li>
+                <li><label><input type="radio" name="q3" value="4"><span></span></label></li>
+              </ul>
             </div>
           </div>
 
-          <!-- 4 (2칸) -->
-          <div class="quiz-block small">
+          <!-- 4 (객관식) -->
+          <div class="quiz-block">
             <div class="quiz-num">04<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">
-                장끼는 까투리의
-                <input class="inline-input" id="q4-1" type="text" placeholder="ㅊㄱ">를 듣지 않아
-                <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄹㅅ">은 최후를 맞았습니다.
-              </p>
+              <p class="quiz-q" id="quiz-q4-text"></p>
+              <ul class="quiz-options" id="quiz-q4-opts">
+                <li><label><input type="radio" name="q4" value="1"><span></span></label></li>
+                <li><label><input type="radio" name="q4" value="2"><span></span></label></li>
+                <li><label><input type="radio" name="q4" value="3"><span></span></label></li>
+                <li><label><input type="radio" name="q4" value="4"><span></span></label></li>
+              </ul>
             </div>
           </div>
 
@@ -2244,14 +2245,14 @@
 
         // 분석리포트 탭 클릭 시 페이지 새로고침하여 최신 데이터 가져오기
         if (target === 'report') {
-          localStorage.setItem(`current-geo-tab:${window.CUR_UNIT}`, target);
+          localStorage.setItem(`current-geo-tab:${unit}`, target);
           location.reload();
           return;
         }
 
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
-        localStorage.setItem(`current-geo-tab:${window.CUR_UNIT}`, target);
+        localStorage.setItem(`current-geo-tab:${unit}`, target);
       });
     });
 
@@ -2573,6 +2574,15 @@
         critical:    q5ok ? 10 : 6
       };
 
+      // ★ window.reportState에도 저장 (sendLearningLog에서 사용)
+      window.reportState = window.reportState || {};
+      window.reportState.q1ok = q1ok;
+      window.reportState.q2ok = q2ok;
+      window.reportState.q3ok = q3ok;
+      window.reportState.q4ok = q4ok;
+      window.reportState.q5ok = q5ok;
+      window.reportState.radarScores = reportState.radarScores;
+
       // ★ 분석리포트 텍스트/박스 동기화
       updateReportPanel({
         q1ok: reportState.q1ok,
@@ -2634,11 +2644,8 @@
 
     function resetQuiz() {
       document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.checked = false);
-      document.getElementById("q3-1").value = "";
-      document.getElementById("q3-2").value = "";
-      document.getElementById("q4-1").value = "";
-      document.getElementById("q4-2").value = "";
-      document.getElementById("q5").value = "";
+      const q5El = document.getElementById("q5");
+      if (q5El) q5El.value = "";
 
       const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
       const numLabels = ["01","02","03","04","05"];
@@ -3083,15 +3090,15 @@
       const cur = (window.CUR_UNIT || 'fit_classic_30');                  // 예: 'fit_classic_02'
       const m = cur.match(/classic_(\d{1,2})/);
       const no = m ? m[1].padStart(2, '0') : '01';
-      const pk = window.PAGE_KEY || `BRAINFIT_korlit_fit_classic_${no}`;   // 예: 'BRAINFIT_korlit_classic_02'
+      const pk = window.PAGE_KEY || `BRAINUP_korlit_fit_classic_${no}`;   // 예: 'BRAINUP_korlit_classic_02'
 
       // 4) 과거/변형 키까지 한 번에 흡수
-      const legacyPath = `./BRAINFIT/korlit/fit_classic_${no}.html`;
+      const legacyPath = `./BRAINUP/korlit/fit_classic_${no}.html`;
       const pageIds = [
         pk,
         legacyPath,
-        `BRAINFIT_fit_classic_${no}`,
-        `BRAINFIT_korlit_classic${no}`
+        `BRAINUP_fit_classic_${no}`,
+        `BRAINUP_korlit_classic${no}`
       ];
       console.log('[study page] PAGE_IDs =', pageIds);
 
@@ -3322,7 +3329,7 @@ function _bindTabEvents() {
 
 
 <!-- 외부 JS: 단원 콘텐츠 로드 (classic_30.html과 같은 폴더) -->
-<script src="./classic_content.js?v=20251202j" defer></script>
+<script src="./fit_classic_content.js?v=20251202j" defer></script>
 
 <!-- 달력 팝업 -->
 <div class="calendar-overlay" id="calendar-overlay"></div>
