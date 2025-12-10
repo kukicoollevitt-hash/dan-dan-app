@@ -89,25 +89,24 @@
     let unit = null;
 
     if (qs) {
-      const m = qs.toLowerCase().match(/pol[_-]?(\d{1,2})/);
-      if (m) unit = `pol_${m[1].padStart(2,'0')}`;
+      const m = qs.toLowerCase().match(/fit_pol[_-]?(\d{1,2})/);
+      if (m) unit = `fit_pol_${m[1].padStart(2,'0')}`;
     }
 
     if (!unit) {
-      const m2 = location.pathname.toLowerCase().match(/pol[_-]?(\d{1,2})\.html/);
-      if (m2) unit = `pol_${m2[1].padStart(2,'0')}`;
+      const m2 = location.pathname.toLowerCase().match(/fit_pol[_-]?(\d{1,2})\.html/);
+      if (m2) unit = `fit_pol_${m2[1].padStart(2,'0')}`;
     }
 
     if (!unit && document.title) {
       const m3 = document.title.match(/(\d{1,2})/);
-      if (m3) unit = `pol_${m3[1].padStart(2,'0')}`;
+      if (m3) unit = `fit_pol_${m3[1].padStart(2,'0')}`;
     }
 
     window.CUR_UNIT = unit || 'fit_pol_13';
     console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
 
     // 분석리포트 탭으로 새로고침된 경우 로딩 텍스트 변경
-    const savedTab = localStorage.getItem(`current-geo-tab:${window.CUR_UNIT}`);
     if (savedTab === 'report') {
       document.addEventListener('DOMContentLoaded', () => {
         const loadingText = document.querySelector('.loading-text');
@@ -124,7 +123,7 @@
     const m = cur.match(/pol_(\d{1,2})/);
     const no = m ? m[1].padStart(2,'0') : '01';
 
-    window.PAGE_KEY = `BRAINFIT_science_fit_pol_${no}`;
+    window.PAGE_KEY = `BRAINUP_science_fit_pol_${no}`;
     console.log('[study page] PAGE_KEY =', window.PAGE_KEY);
   })();
   </script>
@@ -1960,27 +1959,31 @@
 
           <div class="quiz-subtitle">빈칸 채우기</div>
 
-          <!-- 3 (2칸) -->
-          <div class="quiz-block small">
+          <!-- 3 (객관식) -->
+          <div class="quiz-block">
             <div class="quiz-num">03<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">
-                산과 강, 도시와 나라의
-                <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는
-                <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.
-              </p>
+              <p class="quiz-q" id="q3-question-text"></p>
+              <ul class="quiz-options" id="q3-options">
+                <li><label><input type="radio" name="q3" value="1"><span id="q3-opt1"></span></label></li>
+                <li><label><input type="radio" name="q3" value="2"><span id="q3-opt2"></span></label></li>
+                <li><label><input type="radio" name="q3" value="3"><span id="q3-opt3"></span></label></li>
+                <li><label><input type="radio" name="q3" value="4"><span id="q3-opt4"></span></label></li>
+              </ul>
             </div>
           </div>
 
-          <!-- 4 (2칸) -->
-          <div class="quiz-block small">
+          <!-- 4 (객관식) -->
+          <div class="quiz-block">
             <div class="quiz-num">04<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">
-                요즘은 기술의 발달로
-                <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여
-                <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.
-              </p>
+              <p class="quiz-q" id="q4-question-text"></p>
+              <ul class="quiz-options" id="q4-options">
+                <li><label><input type="radio" name="q4" value="1"><span id="q4-opt1"></span></label></li>
+                <li><label><input type="radio" name="q4" value="2"><span id="q4-opt2"></span></label></li>
+                <li><label><input type="radio" name="q4" value="3"><span id="q4-opt3"></span></label></li>
+                <li><label><input type="radio" name="q4" value="4"><span id="q4-opt4"></span></label></li>
+              </ul>
             </div>
           </div>
 
@@ -2371,20 +2374,47 @@
 
         // 분석리포트 탭 클릭 시 페이지 새로고침하여 최신 데이터 가져오기
         if (target === 'report') {
-          localStorage.setItem(`current-geo-tab:${window.CUR_UNIT}`, target);
+          localStorage.setItem(`current-geo-tab:${unit}`, target);
           location.reload();
           return;
         }
 
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
-        localStorage.setItem(`current-geo-tab:${window.CUR_UNIT}`, target);
+        localStorage.setItem(`current-geo-tab:${unit}`, target);
       });
     });
 
     // 페이지 로드 시 항상 본문학습 탭으로 시작
     window.addEventListener('DOMContentLoaded', () => {
       activateTab('reading');
+    // Q3, Q4 객관식 문제 동적 로드
+    setTimeout(function() {
+      const unit = window.CUR_UNIT;
+      const data = window.CONTENTS && window.CONTENTS[unit];
+      if (data && data.quiz) {
+        const quiz = data.quiz;
+        // Q3
+        if (quiz.q3_text && quiz.q3_opts) {
+          const q3TextEl = document.getElementById('q3-question-text');
+          if (q3TextEl) q3TextEl.textContent = quiz.q3_text;
+          for (let i = 0; i < 4; i++) {
+            const optEl = document.getElementById('q3-opt' + (i+1));
+            if (optEl && quiz.q3_opts[i]) optEl.textContent = quiz.q3_opts[i];
+          }
+        }
+        // Q4
+        if (quiz.q4_text && quiz.q4_opts) {
+          const q4TextEl = document.getElementById('q4-question-text');
+          if (q4TextEl) q4TextEl.textContent = quiz.q4_text;
+          for (let i = 0; i < 4; i++) {
+            const optEl = document.getElementById('q4-opt' + (i+1));
+            if (optEl && quiz.q4_opts[i]) optEl.textContent = quiz.q4_opts[i];
+          }
+        }
+      }
+    }, 100);
+
     });
 
     /* ===== 뒤로 가기 확인 팝업 ===== */
@@ -2564,25 +2594,19 @@
       if (q2ok) { score++; q2Num.classList.add('correct'); q2Mark.textContent="⭕"; shortMsgs.push("② 정답 ✅"); fullMsgs.push("② 정답 ✅ " + explain.q2); }
       else { q2Num.classList.add('wrong'); q2Mark.textContent="✖"; shortMsgs.push("② 오답 ❌"); fullMsgs.push("② 오답 ❌ " + explain.q2); }
 
-      // 3번
-      const q3_1 = document.getElementById("q3-1").value.trim();
-      const q3_2 = document.getElementById("q3-2").value.trim();
+      // 3번 (객관식)
+      const q3 = document.querySelector('input[name="q3"]:checked');
       const q3Num = quizBlocks[2].querySelector('.quiz-num');
       const q3Mark = q3Num.querySelector('.mark');
-      const ok3_1 = answerKey.q3_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_1.replace(/\s+/g,"").toLowerCase());
-      const ok3_2 = answerKey.q3_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_2.replace(/\s+/g,"").toLowerCase());
-      const q3ok = (ok3_1 && ok3_2);
+      const q3ok = (q3 && q3.value === answerKey.q3);
       if (q3ok) { score++; q3Num.classList.add('correct'); q3Mark.textContent="⭕"; shortMsgs.push("③ 정답 ✅"); fullMsgs.push("③ 정답 ✅ " + explain.q3); }
       else { q3Num.classList.add('wrong'); q3Mark.textContent="✖"; shortMsgs.push("③ 오답 ❌"); fullMsgs.push("③ 오답 ❌ " + explain.q3); }
 
-      // 4번
-      const q4_1 = document.getElementById("q4-1").value.trim();
-      const q4_2 = document.getElementById("q4-2").value.trim();
+      // 4번 (객관식)
+      const q4 = document.querySelector('input[name="q4"]:checked');
       const q4Num = quizBlocks[3].querySelector('.quiz-num');
       const q4Mark = q4Num.querySelector('.mark');
-      const ok4_1 = answerKey.q4_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_1.replace(/\s+/g,"").toLowerCase());
-      const ok4_2 = answerKey.q4_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_2.replace(/\s+/g,"").toLowerCase());
-      const q4ok = (ok4_1 && ok4_2);
+      const q4ok = (q4 && q4.value === answerKey.q4);
       if (q4ok) { score++; q4Num.classList.add('correct'); q4Mark.textContent="⭕"; shortMsgs.push("④ 정답 ✅"); fullMsgs.push("④ 정답 ✅ " + explain.q4); }
       else { q4Num.classList.add('wrong'); q4Mark.textContent="✖"; shortMsgs.push("④ 오답 ❌"); fullMsgs.push("④ 오답 ❌ " + explain.q4); }
 
@@ -2628,6 +2652,15 @@
         inferential: q4ok ? 10 : 6,
         critical:    q5ok ? 10 : 6
       };
+
+      // ★ window.reportState에도 저장 (sendLearningLog에서 사용)
+      window.reportState = window.reportState || {};
+      window.reportState.q1ok = q1ok;
+      window.reportState.q2ok = q2ok;
+      window.reportState.q3ok = q3ok;
+      window.reportState.q4ok = q4ok;
+      window.reportState.q5ok = q5ok;
+      window.reportState.radarScores = reportState.radarScores;
 
       // ★ 분석리포트 텍스트/박스 동기화
       updateReportPanel({
@@ -2700,10 +2733,8 @@
         const currentInputs = {
           q1: q1Radio ? q1Radio.value : '',
           q2: q2Radio ? q2Radio.value : '',
-          q3_1: document.getElementById("q3-1")?.value || '',
-          q3_2: document.getElementById("q3-2")?.value || '',
-          q4_1: document.getElementById("q4-1")?.value || '',
-          q4_2: document.getElementById("q4-2")?.value || '',
+          q3: document.querySelector('input[name="q3"]:checked')?.value || '',
+          q4: document.querySelector('input[name="q4"]:checked')?.value || '',
           q5: document.getElementById("q5")?.value || ''
         };
 
@@ -2732,10 +2763,9 @@
 
     function resetQuiz() {
       document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.checked = false);
-      document.getElementById("q3-1").value = "";
-      document.getElementById("q3-2").value = "";
-      document.getElementById("q4-1").value = "";
-      document.getElementById("q4-2").value = "";
+      // q3, q4 라디오버튼 초기화 (객관식)
+      document.querySelectorAll('input[name="q3"]').forEach(r => { r.checked = false; r.disabled = false; });
+      document.querySelectorAll('input[name="q4"]').forEach(r => { r.checked = false; r.disabled = false; });
       document.getElementById("q5").value = "";
 
       const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
@@ -2809,15 +2839,15 @@
       const cur = (window.CUR_UNIT || 'fit_pol_13');                  // 예: 'fit_pol_02'
       const m = cur.match(/pol_(\d{1,2})/);
       const no = m ? m[1].padStart(2, '0') : '01';
-      const pk = window.PAGE_KEY || `BRAINFIT_science_fit_pol_${no}`;   // 예: 'BRAINFIT_science_pol_02'
+      const pk = window.PAGE_KEY || `BRAINUP_science_fit_pol_${no}`;   // 예: 'BRAINUP_science_pol_02'
 
       // 4) 과거/변형 키까지 한 번에 흡수
-      const legacyPath = `./BRAINFIT/science/fit_pol_${no}.html`;
+      const legacyPath = `./BRAINUP/science/fit_pol_${no}.html`;
       const pageIds = [
         pk,
         legacyPath,
-        `BRAINFIT_fit_pol_${no}`,
-        `BRAINFIT_science_bio${no}`
+        `BRAINUP_fit_pol_${no}`,
+        `BRAINUP_science_bio${no}`
       ];
       console.log('[study page] PAGE_IDs =', pageIds);
 
@@ -3047,18 +3077,20 @@ function _bindTabEvents() {
 
 function disableQuizInputs() {
   document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.disabled = true);
-  ['q3-1', 'q3-2', 'q4-1', 'q4-2', 'q5'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = true;
-  });
+  // q3, q4 라디오버튼 비활성화 (객관식)
+  document.querySelectorAll('input[name="q3"]').forEach(r => r.disabled = true);
+  document.querySelectorAll('input[name="q4"]').forEach(r => r.disabled = true);
+  const q5 = document.getElementById('q5');
+  if (q5) q5.disabled = true;
 }
 
 function enableQuizInputs() {
   document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.disabled = false);
-  ['q3-1', 'q3-2', 'q4-1', 'q4-2', 'q5'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = false;
-  });
+  // q3, q4 라디오버튼 활성화 (객관식)
+  document.querySelectorAll('input[name="q3"]').forEach(r => r.disabled = false);
+  document.querySelectorAll('input[name="q4"]').forEach(r => r.disabled = false);
+  const q5 = document.getElementById('q5');
+  if (q5) q5.disabled = false;
 }
 
 async function saveReadingProgress() {
@@ -3075,10 +3107,8 @@ async function saveReadingProgress() {
   const inputs = {
     q1: q1 ? q1.value : '',
     q2: q2 ? q2.value : '',
-    q3_1: document.getElementById('q3-1')?.value || '',
-    q3_2: document.getElementById('q3-2')?.value || '',
-    q4_1: document.getElementById('q4-1')?.value || '',
-    q4_2: document.getElementById('q4-2')?.value || '',
+    q3: document.querySelector('input[name="q3"]:checked')?.value || '',
+    q4: document.querySelector('input[name="q4"]:checked')?.value || '',
     q5: document.getElementById('q5')?.value || ''
   };
 
@@ -3125,7 +3155,7 @@ async function saveReadingProgress() {
 
 
 <!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
-<script src="./pol_content.js?v=20251113" defer></script>
+<script src="./fit_pol_content.js?v=20251113" defer></script>
 
 <!-- 달력 팝업 -->
 <div class="calendar-overlay" id="calendar-overlay"></div>

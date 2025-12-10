@@ -1953,47 +1953,21 @@ function applyContentPack(unitKey) {
   // Q3
   if (blocks[2]) {
     const q3P = blocks[2].querySelector('.quiz-q');
-    // 객관식 형태 (q3_text, q3_opts)
-    if (pack.quiz.q3_text && pack.quiz.q3_opts) {
-      if (q3P) q3P.textContent = pack.quiz.q3_text;
-      const q3Lis = blocks[2].querySelectorAll('.quiz-options li');
-      if (q3Lis.length === 4) {
-        q3Lis.forEach((li, i) => {
-          li.innerHTML = `<label><input type="radio" name="q3" value="${i+1}"><span>${pack.quiz.q3_opts[i]}</span></label>`;
-        });
-      }
-    }
-    // 빈칸 채우기 형태 (q3_html)
-    else if (q3P && pack.quiz.q3_html) {
-      q3P.innerHTML = pack.quiz.q3_html;
-      const q3_1 = document.getElementById('q3-1');
-      const q3_2 = document.getElementById('q3-2');
-      if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
-      if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-    }
+    if (q3P && pack.quiz.q3_html) q3P.innerHTML = pack.quiz.q3_html;
+    const q3_1 = document.getElementById('q3-1');
+    const q3_2 = document.getElementById('q3-2');
+    if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
+    if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
   }
 
   // Q4
   if (blocks[3]) {
     const q4P = blocks[3].querySelector('.quiz-q');
-    // 객관식 형태 (q4_text, q4_opts)
-    if (pack.quiz.q4_text && pack.quiz.q4_opts) {
-      if (q4P) q4P.textContent = pack.quiz.q4_text;
-      const q4Lis = blocks[3].querySelectorAll('.quiz-options li');
-      if (q4Lis.length === 4) {
-        q4Lis.forEach((li, i) => {
-          li.innerHTML = `<label><input type="radio" name="q4" value="${i+1}"><span>${pack.quiz.q4_opts[i]}</span></label>`;
-        });
-      }
-    }
-    // 빈칸 채우기 형태 (q4_html)
-    else if (q4P && pack.quiz.q4_html) {
-      q4P.innerHTML = pack.quiz.q4_html;
-      const q4_1 = document.getElementById('q4-1');
-      const q4_2 = document.getElementById('q4-2');
-      if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
-      if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-    }
+    if (q4P && pack.quiz.q4_html) q4P.innerHTML = pack.quiz.q4_html;
+    const q4_1 = document.getElementById('q4-1');
+    const q4_2 = document.getElementById('q4-2');
+    if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
+    if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
   }
 
   // Q5
@@ -2183,42 +2157,26 @@ window.gradeQuiz = function () {
   const q2ok = (q2 && q2.value === A.q2);
   mark(1, q2ok, '②', EX.q2);
 
-  // 3 (객관식 또는 빈칸 채우기)
-  let q3ok = false;
-  if (A.q3) {
-    // 객관식
-    const q3Radio = document.querySelector('input[name="q3"]:checked');
-    q3ok = (q3Radio && q3Radio.value === A.q3);
-  } else if (A.q3_1) {
-    // 빈칸 채우기
-    const q3New = document.getElementById('q3');
-    const q3Old1 = document.getElementById('q3-1');
-    const q3Old2 = document.getElementById('q3-2');
-    const q3Text1 = q3New ? q3New.value.trim() : (q3Old1?.value || '').trim();
-    const q3Text2 = q3New ? '' : (q3Old2?.value || '').trim();
-    const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
-    const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
-    q3ok = ok3_1 && ok3_2;
-  }
+  // 3
+  const q3New = document.getElementById('q3');
+  const q3Old1 = document.getElementById('q3-1');
+  const q3Old2 = document.getElementById('q3-2');
+  const q3Text1 = q3New ? q3New.value.trim() : (q3Old1?.value || '').trim();
+  const q3Text2 = q3New ? '' : (q3Old2?.value || '').trim();
+  const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
+  const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
+  const q3ok = ok3_1 && ok3_2;
   mark(2, q3ok, '③', EX.q3);
 
-  // 4 (객관식 또는 빈칸 채우기)
-  let q4ok = false;
-  if (A.q4) {
-    // 객관식
-    const q4Radio = document.querySelector('input[name="q4"]:checked');
-    q4ok = (q4Radio && q4Radio.value === A.q4);
-  } else if (A.q4_1) {
-    // 빈칸 채우기
-    const q4New = document.getElementById('q4');
-    const q4Old1 = document.getElementById('q4-1');
-    const q4Old2 = document.getElementById('q4-2');
-    const q4Text1 = q4New ? q4New.value.trim() : (q4Old1?.value || '').trim();
-    const q4Text2 = q4New ? '' : (q4Old2?.value || '').trim();
-    const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
-    const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
-    q4ok = ok4_1 && ok4_2;
-  }
+  // 4
+  const q4New = document.getElementById('q4');
+  const q4Old1 = document.getElementById('q4-1');
+  const q4Old2 = document.getElementById('q4-2');
+  const q4Text1 = q4New ? q4New.value.trim() : (q4Old1?.value || '').trim();
+  const q4Text2 = q4New ? '' : (q4Old2?.value || '').trim();
+  const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
+  const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
+  const q4ok = ok4_1 && ok4_2;
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
