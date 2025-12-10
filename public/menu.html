@@ -5019,9 +5019,14 @@ if (logoutConfirmBtn) {
         try {
           const data = localStorage.getItem(storageKey);
           if (data) {
-            const saved = JSON.parse(data);
-            if (Array.isArray(saved) && saved.length > 0) {
+            // '1' 형식(레거시)과 배열 형식 모두 지원
+            if (data === '1' || data === '"1"') {
               completedCount++;
+            } else {
+              const saved = JSON.parse(data);
+              if (Array.isArray(saved) && saved.length > 0) {
+                completedCount++;
+              }
             }
           }
         } catch(e) {
@@ -5154,21 +5159,28 @@ if (logoutConfirmBtn) {
         if (!match) return;
         const unitCode = match[1]; // "geo_01"
 
-        // localStorage에서 완료 상태 확인 (배열 방식)
+        // localStorage에서 완료 상태 확인 (배열 방식 + 레거시 '1' 형식)
         const storageKey = keyPrefix + unitCode;
-        let saved = [];
+        let isCompleted = false;
         try {
           const data = localStorage.getItem(storageKey);
           if (data) {
-            saved = JSON.parse(data);
-            if (!Array.isArray(saved)) saved = [];
+            // '1' 형식(레거시)과 배열 형식 모두 지원
+            if (data === '1' || data === '"1"') {
+              isCompleted = true;
+            } else {
+              const saved = JSON.parse(data);
+              if (Array.isArray(saved) && saved.length > 0) {
+                isCompleted = true;
+              }
+            }
           }
         } catch(e) {
-          saved = [];
+          // ignore
         }
 
-        // 배열에 데이터가 있으면 완료
-        if (saved.length > 0) {
+        // 완료 상태면 표시
+        if (isCompleted) {
           updateLessonStatus(pageKey, 'done');
         }
       });

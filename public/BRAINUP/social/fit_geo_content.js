@@ -2330,7 +2330,19 @@ window.DanDan = window.DanDan || {};
       const unit = detectUnit();                  // geo_04
       const key  = buildProgressKey(stu, unit);   // dan-progress:학생키:geo_04
 
-      localStorage.setItem(key, '1');             // 값은 그냥 '1'로 저장
+      // 배열 형식으로 저장 (menu.html과 호환)
+      let saved = [];
+      try {
+        const existing = localStorage.getItem(key);
+        if (existing) {
+          saved = JSON.parse(existing);
+          if (!Array.isArray(saved)) saved = [];
+        }
+      } catch(e) { saved = []; }
+      if (saved.length === 0) {
+        saved.push(window.PAGE_KEY || key);
+      }
+      localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
 
@@ -2508,8 +2520,20 @@ window.loadCompletionStatus = async function () {
       console.log('[loadCompletionStatus] keyPrefix:', keyPrefix);
 
       data.completedUnits.forEach(unit => {
-        const key = keyPrefix + unit;  // "dan-progress:학생키:geo_01"
-        localStorage.setItem(key, '1');
+        const key = keyPrefix + unit;
+        // 배열 형식으로 저장 (menu.html과 호환)
+        let saved = [];
+        try {
+          const existing = localStorage.getItem(key);
+          if (existing) {
+            saved = JSON.parse(existing);
+            if (!Array.isArray(saved)) saved = [];
+          }
+        } catch(e) { saved = []; }
+        if (saved.length === 0) {
+          saved.push('BRAINUP_' + unit);
+        }
+        localStorage.setItem(key, JSON.stringify(saved));
         console.log('[loadCompletionStatus] 저장:', key);
       });
 

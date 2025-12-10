@@ -3247,7 +3247,20 @@ window.loadCompletionStatus = async function () {
       const studentKey = `${cleanGrade}_${cleanName}_${cleanPhone}`;
       const keyPrefix = `dan-progress:${studentKey}:`;
       data.completedUnits.forEach(unit => {
-        localStorage.setItem(keyPrefix + unit, '1');
+        const key = keyPrefix + unit;
+        // 배열 형식으로 저장 (menu.html과 호환)
+        let saved = [];
+        try {
+          const existing = localStorage.getItem(key);
+          if (existing) {
+            saved = JSON.parse(existing);
+            if (!Array.isArray(saved)) saved = [];
+          }
+        } catch(e) { saved = []; }
+        if (saved.length === 0) {
+          saved.push('BRAINUP_worldlit_' + unit);
+        }
+        localStorage.setItem(key, JSON.stringify(saved));
       });
     }
   } catch (e) { console.warn('[loadCompletionStatus] 오류', e); }

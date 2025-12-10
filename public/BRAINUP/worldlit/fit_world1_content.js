@@ -4041,8 +4041,20 @@ window.loadCompletionStatus = async function () {
       console.log('[loadCompletionStatus] keyPrefix:', keyPrefix);
 
       data.completedUnits.forEach(unit => {
-        const key = keyPrefix + unit;  // "dan-progress:학생키:world1_01"
-        localStorage.setItem(key, '1');
+        const key = keyPrefix + unit;
+        // 배열 형식으로 저장 (menu.html과 호환)
+        let saved = [];
+        try {
+          const existing = localStorage.getItem(key);
+          if (existing) {
+            saved = JSON.parse(existing);
+            if (!Array.isArray(saved)) saved = [];
+          }
+        } catch(e) { saved = []; }
+        if (saved.length === 0) {
+          saved.push('BRAINUP_' + unit);
+        }
+        localStorage.setItem(key, JSON.stringify(saved));
         console.log('[loadCompletionStatus] 저장:', key);
       });
 
