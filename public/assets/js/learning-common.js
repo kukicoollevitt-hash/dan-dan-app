@@ -213,6 +213,12 @@
         const result = await res.json();
         if (result.success || result._id) {
           console.log(`[sendLearningLog] ${unit} 학습 로그 전송 완료`, radar);
+
+          // 🔥 부모 창(menu.html)에 캐시 무효화 메시지 전송
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'INVALIDATE_CACHE' }, window.location.origin);
+            console.log('[sendLearningLog] 부모 창에 캐시 무효화 메시지 전송');
+          }
         } else {
           console.error('[sendLearningLog] 전송 실패:', result);
         }

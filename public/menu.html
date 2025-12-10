@@ -5837,6 +5837,17 @@ async function performLogout() {
       // 보안: 같은 origin에서 온 메시지만 처리
       if (event.origin !== window.location.origin) return;
 
+      // 🔥 캐시 무효화 메시지 처리 (학습 로그 전송 완료 후)
+      if (event.data && event.data.type === 'INVALIDATE_CACHE') {
+        console.log('🗑️ [INVALIDATE_CACHE] 캐시 무효화 메시지 수신');
+        if (window.ApiCache) {
+          ApiCache.invalidate('unit-grades');
+          ApiCache.invalidate('completion-status');
+          ApiCache.invalidate('learning-logs');
+        }
+        return;
+      }
+
       // 어휘퀴즈 완료 메시지 처리
       if (event.data && event.data.type === 'vocabularyQuizCompleted') {
         console.log('✅ 어휘퀴즈 완료 메시지 수신');
@@ -5900,6 +5911,27 @@ async function performLogout() {
 
         // UI 업데이트 (학습완료 배지 표시)
         updateLessonStatus(currentUnitPath, 'done');
+
+        // 🔥 API 캐시 무효화 (별표/학습완료 즉시 반영)
+        if (window.ApiCache) {
+          ApiCache.invalidate('unit-grades');
+          ApiCache.invalidate('completion-status');
+          ApiCache.invalidate('learning-logs');
+          console.log('🗑️ [UNIT_COMPLETED] API 캐시 무효화 완료');
+        }
+
+        // 🔥 별표 데이터 다시 로드 및 단원 목록 업데이트
+        setTimeout(async () => {
+          try {
+            // 현재 표시된 단원 목록 다시 렌더링 (최신 별표 데이터 반영)
+            if (typeof currentUnits !== 'undefined' && currentUnits && currentUnits.length > 0) {
+              await renderUnitList(currentUnits);
+              console.log('⭐ [UNIT_COMPLETED] 단원 목록 다시 렌더링 (별표 반영)');
+            }
+          } catch (e) {
+            console.warn('[UNIT_COMPLETED] 단원 목록 업데이트 오류:', e);
+          }
+        }, 800);
 
         // 학습실 모달이 열려있다면 리스트 다시 렌더링
         const studyRoomModal = document.getElementById('studyRoomModal');
