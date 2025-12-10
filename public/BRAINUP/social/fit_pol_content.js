@@ -2051,6 +2051,24 @@ function renderSolutions(pack) {
   box.style.borderTop = '1px dashed #e5d4c1';
   box.style.lineHeight = '1.6';
 
+  // 3번: 객관식(q3) 또는 빈칸(q3_1, q3_2) 형식 처리
+  let q3Answer = '';
+  if (A.q3 && pack.quiz.q3_opts) {
+    const q3Text = pack.quiz.q3_opts[Number(A.q3) - 1] || '';
+    q3Answer = `<b>③ 정답:</b> ${A.q3} — ${q3Text}`;
+  } else if (A.q3_1) {
+    q3Answer = `<b>③ 정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
+  }
+
+  // 4번: 객관식(q4) 또는 빈칸(q4_1, q4_2) 형식 처리
+  let q4Answer = '';
+  if (A.q4 && pack.quiz.q4_opts) {
+    const q4Text = pack.quiz.q4_opts[Number(A.q4) - 1] || '';
+    q4Answer = `<b>④ 정답:</b> ${A.q4} — ${q4Text}`;
+  } else if (A.q4_1) {
+    q4Answer = `<b>④ 정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
+  }
+
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
     <ol style="margin:0; padding-left:18px;">
@@ -2063,11 +2081,11 @@ function renderSolutions(pack) {
         <span style="color:#6b5a48;">${EX.q2 || ''}</span>
       </li>
       <li style="margin-bottom:8px;">
-        <b>③ 정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}<br>
+        ${q3Answer}<br>
         <span style="color:#6b5a48;">${EX.q3 || ''}</span>
       </li>
       <li style="margin-bottom:8px;">
-        <b>④ 정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}<br>
+        ${q4Answer}<br>
         <span style="color:#6b5a48;">${EX.q4 || ''}</span>
       </li>
       <li>
