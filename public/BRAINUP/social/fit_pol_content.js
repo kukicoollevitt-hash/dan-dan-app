@@ -2625,21 +2625,26 @@ window.loadCompletionStatus = async function () {
       console.log('[loadCompletionStatus] keyPrefix:', keyPrefix);
 
       data.completedUnits.forEach(unit => {
-        const key = keyPrefix + unit;
-        // 배열 형식으로 저장 (menu.html과 호환)
-        let saved = [];
         try {
-          const existing = localStorage.getItem(key);
-          if (existing) {
-            saved = JSON.parse(existing);
-            if (!Array.isArray(saved)) saved = [];
+          const key = keyPrefix + unit;
+          // 배열 형식으로 저장 (menu.html과 호환)
+          let saved = [];
+          try {
+            const existing = localStorage.getItem(key);
+            if (existing) {
+              saved = JSON.parse(existing);
+              if (!Array.isArray(saved)) saved = [];
+            }
+          } catch(e) { saved = []; }
+          if (saved.length === 0) {
+            saved.push('BRAINUP_' + unit);
           }
-        } catch(e) { saved = []; }
-        if (saved.length === 0) {
-          saved.push('BRAINUP_' + unit);
+          localStorage.setItem(key, JSON.stringify(saved));
+          console.log('[loadCompletionStatus] 저장:', key);
+        } catch(e) {
+          // QuotaExceededError 등 무시하고 계속 진행
+          console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
         }
-        localStorage.setItem(key, JSON.stringify(saved));
-        console.log('[loadCompletionStatus] 저장:', key);
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);

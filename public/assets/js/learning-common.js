@@ -1,4 +1,45 @@
   /* =========================================================
+     localStorage 용량 관리 - 자동 정리 (QuotaExceededError 방지)
+  ========================================================= */
+  (function cleanupLocalStorage() {
+    try {
+      // 전체 사용량 계산
+      let total = 0;
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          total += localStorage[key].length * 2;
+        }
+      }
+      const totalMB = total / 1024 / 1024;
+
+      // 3MB 이상이면 dan-progress 중 큰 항목 정리
+      if (totalMB > 3) {
+        console.log('[localStorage] 용량 초과 감지:', totalMB.toFixed(2), 'MB - 자동 정리 시작');
+        const keys = Object.keys(localStorage);
+        let cleaned = 0;
+
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          if (key.startsWith('dan-progress:')) {
+            const size = localStorage[key].length * 2;
+            // 5KB 이상인 dan-progress 항목 삭제 (서버에서 다시 불러옴)
+            if (size > 5000) {
+              localStorage.removeItem(key);
+              cleaned++;
+            }
+          }
+        }
+
+        if (cleaned > 0) {
+          console.log('[localStorage] 자동 정리 완료:', cleaned, '개 삭제');
+        }
+      }
+    } catch (e) {
+      console.warn('[localStorage] 정리 중 오류:', e.message);
+    }
+  })();
+
+  /* =========================================================
      단원 자동 인식 (강화) - 다양한 과목 지원
      지원 과목: 사회분야(geo, soc, law, pol), 과학분야(bio, physics, chem, earth),
                한국문학(modern, classic), 세계문학(world1, world2), 인물(people1, people2)
