@@ -10223,13 +10223,18 @@ app.get("/my-learning", async (req, res) => {
           const parts = unitCode.split('_');
           if (parts.length < 2) return null;
 
-          const subjectCode = parts[0];
+          // fit_ 접두어 처리: fit_geo_13 → subjectCode = 'geo'
+          let subjectCode = parts[0];
+          if (subjectCode === 'fit' && parts.length >= 3) {
+            subjectCode = parts[1];
+          }
+
           const seriesFolder = seriesFolders[series] || 'BRAINUP';
           const subjectFolder = subjectFolders[subjectCode];
 
           if (!subjectFolder) return null;
 
-          // 경로 생성: /BRAINUP/social/geo_01.html
+          // 경로 생성: /BRAINUP/social/geo_01.html 또는 /BRAINFIT/social/fit_geo_01.html
           return '/' + seriesFolder + '/' + subjectFolder + '/' + unitCode + '.html';
         }
 
