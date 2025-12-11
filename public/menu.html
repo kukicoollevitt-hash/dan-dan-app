@@ -3096,24 +3096,41 @@ canvas[id^="confetti-canvas"] {
             localStorage.removeItem(key);
           });
 
-          // ✅ 세션 저장 완료 플래그 설정 + 뱃지 직접 업데이트
+          // ✅ 세션 저장 완료 플래그 설정 + 서버에서 어휘지수 불러와서 뱃지 업데이트
           window.sessionReady = true;
 
-          // 어휘지수 뱃지 직접 업데이트 (DOM 로드 완료 시)
-          const updateVocabBadgeNow = () => {
-            const badge = document.getElementById('vocabAvgBadge');
-            if (badge) {
-              const ratingKey = `vocabRatingScore_${data.user.grade}_${data.user.name}`;
-              const ratingScore = localStorage.getItem(ratingKey);
-              badge.textContent = ratingScore || '0';
-              console.log('✅ 어휘지수 뱃지 업데이트:', ratingKey, '→', badge.textContent);
+          // 서버에서 어휘퀴즈 데이터 불러와서 뱃지 업데이트
+          const updateVocabBadgeFromServer = async () => {
+            try {
+              const res = await fetch(`/api/user-progress?grade=${encodeURIComponent(data.user.grade)}&name=${encodeURIComponent(data.user.name)}`);
+              const result = await res.json();
+
+              if (result.ok && result.data?.vocabularyQuiz) {
+                const vq = result.data.vocabularyQuiz;
+                // 어휘력 지수 계산: (총점 / 100) * (평균점수 / 10)
+                const rating = (vq.totalScore / 100) * (vq.avgScore / 10);
+                const ratingStr = rating.toFixed(1);
+
+                // localStorage에도 저장 (다른 곳에서 사용)
+                const ratingKey = `vocabRatingScore_${data.user.grade}_${data.user.name}`;
+                localStorage.setItem(ratingKey, ratingStr);
+
+                // 뱃지 업데이트
+                const badge = document.getElementById('vocabAvgBadge');
+                if (badge) {
+                  badge.textContent = ratingStr;
+                  console.log('✅ 어휘지수 뱃지 업데이트 (서버):', ratingStr);
+                }
+              }
+            } catch (e) {
+              console.error('어휘지수 로드 오류:', e);
             }
           };
 
           if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            updateVocabBadgeNow();
+            updateVocabBadgeFromServer();
           } else {
-            document.addEventListener('DOMContentLoaded', updateVocabBadgeNow);
+            document.addEventListener('DOMContentLoaded', updateVocabBadgeFromServer);
           }
 
         } else {
