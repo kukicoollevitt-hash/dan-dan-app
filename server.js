@@ -6195,6 +6195,10 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           if (unit.startsWith('fit_')) {
             unit = unit.substring(4);
           }
+          // deep_ 접두어 제거: deep_bio_01 -> bio_01
+          if (unit.startsWith('deep_')) {
+            unit = unit.substring(5);
+          }
           // world1_XX, world2_XX는 이미 표준 형식
           if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
             return unit;
@@ -8830,6 +8834,10 @@ app.get("/my-learning", async (req, res) => {
           if (unit.startsWith('fit_')) {
             unit = unit.substring(4);
           }
+          // deep_ 접두어 제거: deep_bio_01 -> bio_01
+          if (unit.startsWith('deep_')) {
+            unit = unit.substring(5);
+          }
           // world1_XX, world2_XX는 이미 표준 형식
           if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
             return unit;
@@ -9280,10 +9288,10 @@ app.get("/my-learning", async (req, res) => {
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
             const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물' };
-            // fit_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01']
+            // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
             let subjectKey = parts[0];
             let numStr = parts[1];
-            if (parts[0] === 'fit' && parts.length >= 3) {
+            if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
               subjectKey = parts[1];
               numStr = parts[2];
             }
@@ -10285,10 +10293,10 @@ app.get("/my-learning", async (req, res) => {
             const unitCode = log.unit || '';
             if (unitCode && unitCode.includes('_')) {
               const parts = unitCode.split('_');
-              // fit_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01']
+              // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
               let subjectKey = parts[0];
               let numStr = parts[1];
-              if (parts[0] === 'fit' && parts.length >= 3) {
+              if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
                 subjectKey = parts[1];
                 numStr = parts[2];
               }
@@ -10323,14 +10331,14 @@ app.get("/my-learning", async (req, res) => {
               badgeText = '격려';
             }
 
-            // 단원 코드 → 단원명 변환 (예: world2_01 → 세계문학2 1, fit_bio_01 → 생물 1)
+            // 단원 코드 → 단원명 변환 (예: world2_01 → 세계문학2 1, fit_bio_01 → 생물 1, deep_bio_01 → 생물 1)
             let unitName = log.unit || "";
             if (unitName && unitName.includes('_')) {
               const parts = unitName.split('_');
-              // fit_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01']
+              // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
               let subjectKey = parts[0];
               let numStr = parts[1];
-              if (parts[0] === 'fit' && parts.length >= 3) {
+              if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
                 subjectKey = parts[1];
                 numStr = parts[2];
               }
@@ -10602,6 +10610,10 @@ app.get("/my-learning", async (req, res) => {
             // fit_ 접두어 제거: fit_bio_01 -> bio_01
             if (unit.startsWith('fit_')) {
               unit = unit.substring(4); // 'fit_' 제거
+            }
+            // deep_ 접두어 제거: deep_bio_01 -> bio_01
+            if (unit.startsWith('deep_')) {
+              unit = unit.substring(5); // 'deep_' 제거
             }
             // world_41~80 -> world2_01~40
             if (unit.startsWith('world_')) {
