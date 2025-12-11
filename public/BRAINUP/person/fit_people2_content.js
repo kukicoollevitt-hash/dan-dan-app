@@ -3589,26 +3589,14 @@ window.gradeQuiz = function () {
   const q2ok = (q2 && q2.value === A.q2);
   mark(1, q2ok, '②', EX.q2);
 
-  // 3
-  const q3New = document.getElementById('q3');
-  const q3Old1 = document.getElementById('q3-1');
-  const q3Old2 = document.getElementById('q3-2');
-  const q3Text1 = q3New ? q3New.value.trim() : (q3Old1?.value || '').trim();
-  const q3Text2 = q3New ? '' : (q3Old2?.value || '').trim();
-  const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
-  const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
-  const q3ok = ok3_1 && ok3_2;
+  // 3 (객관식)
+  const q3 = document.querySelector('input[name="q3"]:checked');
+  const q3ok = (q3 && q3.value === A.q3);
   mark(2, q3ok, '③', EX.q3);
 
-  // 4
-  const q4New = document.getElementById('q4');
-  const q4Old1 = document.getElementById('q4-1');
-  const q4Old2 = document.getElementById('q4-2');
-  const q4Text1 = q4New ? q4New.value.trim() : (q4Old1?.value || '').trim();
-  const q4Text2 = q4New ? '' : (q4Old2?.value || '').trim();
-  const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
-  const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
-  const q4ok = ok4_1 && ok4_2;
+  // 4 (객관식)
+  const q4 = document.querySelector('input[name="q4"]:checked');
+  const q4ok = (q4 && q4.value === A.q4);
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
