@@ -7782,6 +7782,34 @@ async function performLogout() {
         }
       }
 
+      // fit_ 접두어 처리 (예: fit_bio_01 -> bio_01 과목코드 추출, fit_bio_01.html 경로 생성)
+      if (unitId && unitId.match(/^fit_[a-z]+\d?_\d+$/i)) {
+        // fit_과목코드_번호 형식 (예: fit_bio_01, fit_people2_03)
+        const fitMatch = unitId.match(/^fit_([a-z]+\d?)_(\d+)$/i);
+        if (fitMatch) {
+          const subjectCode = fitMatch[1].toLowerCase();
+
+          // 과목 코드 -> 폴더 매핑
+          const subjectToFolder = {
+            // 과학 분야
+            'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
+            // 사회 분야
+            'soc': 'social', 'geo': 'social', 'law': 'social', 'pol': 'social',
+            // 국어 분야
+            'classic': 'korlit', 'modern': 'korlit',
+            // 세계문학 분야
+            'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
+            // 인물 분야
+            'people': 'person', 'people1': 'person', 'people2': 'person'
+          };
+
+          const folder = subjectToFolder[subjectCode] || 'social';
+          const path = `./BRAINUP/${folder}/${unitId}.html`;
+          console.log(`✅ Converting fit_ unitId to BRAINUP/${folder} path:`, path);
+          return path;
+        }
+      }
+
       // unitId를 파일 경로로 변환 (예: "geo_01" -> "./BRAINUP/social/geo_01.html")
       if (unitId && unitId.match(/^[a-z]+\d?_\d+$/i)) {
         // 과목 코드 추출 (예: chem_01 -> chem, physics_01 -> physics)
@@ -9491,21 +9519,35 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         'people': 'person', 'people1': 'person', 'people2': 'person'
       };
 
-      // unitId에서 과목코드와 번호 추출 (예: "chem_01", "physics_12", "./BRAINUP/science/chem_01.html")
+      // unitId에서 과목코드와 번호 추출 (예: "chem_01", "physics_12", "./BRAINUP/science/chem_01.html", "fit_bio_01")
       let subjectCode = '';
       let unitNo = '';
 
-      // 파일 경로 형식인 경우 (./BRAINUP/science/chem_01.html)
-      const pathMatch = unitId.match(/\/([a-z]+\d?)_(\d+)\.html$/i);
-      if (pathMatch) {
-        subjectCode = pathMatch[1].toLowerCase();
-        unitNo = pathMatch[2];
+      // fit_ 접두어 경로 형식인 경우 (./BRAINUP/science/fit_chem_01.html)
+      const fitPathMatch = unitId.match(/\/fit_([a-z]+\d?)_(\d+)\.html$/i);
+      if (fitPathMatch) {
+        subjectCode = fitPathMatch[1].toLowerCase();
+        unitNo = fitPathMatch[2];
       } else {
-        // 단순 코드 형식인 경우 (chem_01)
-        const codeMatch = unitId.match(/^([a-z]+\d?)_(\d+)$/i);
-        if (codeMatch) {
-          subjectCode = codeMatch[1].toLowerCase();
-          unitNo = codeMatch[2];
+        // fit_ 접두어 단순 코드 형식인 경우 (fit_chem_01, fit_people2_03)
+        const fitCodeMatch = unitId.match(/^fit_([a-z]+\d?)_(\d+)$/i);
+        if (fitCodeMatch) {
+          subjectCode = fitCodeMatch[1].toLowerCase();
+          unitNo = fitCodeMatch[2];
+        } else {
+          // 파일 경로 형식인 경우 (./BRAINUP/science/chem_01.html)
+          const pathMatch = unitId.match(/\/([a-z]+\d?)_(\d+)\.html$/i);
+          if (pathMatch) {
+            subjectCode = pathMatch[1].toLowerCase();
+            unitNo = pathMatch[2];
+          } else {
+            // 단순 코드 형식인 경우 (chem_01)
+            const codeMatch = unitId.match(/^([a-z]+\d?)_(\d+)$/i);
+            if (codeMatch) {
+              subjectCode = codeMatch[1].toLowerCase();
+              unitNo = codeMatch[2];
+            }
+          }
         }
       }
 
@@ -9513,13 +9555,16 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const fieldCode = subjectToField[subjectCode] || 'social';
       const fieldLabel = fieldMap[fieldCode] || '분야';
 
+      // unitNo에서 앞의 0 제거 (01 -> 1)
+      const displayNo = unitNo ? parseInt(unitNo, 10).toString() : '';
+
       return {
         subjectCode: subjectCode,
         subjectLabel: subjectLabel,
         fieldCode: fieldCode,
         fieldLabel: fieldLabel,
         unitNo: unitNo,
-        displayTitle: unitNo ? `${subjectLabel} ${unitNo}` : subjectLabel
+        displayTitle: displayNo ? `${subjectLabel} ${displayNo}` : subjectLabel
       };
     }
 
@@ -9760,23 +9805,24 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
         if (task.isAI) {
           const unitInfo = getUnitInfoFromId(unitId);
-          if (unitInfo.subjectLabel) {
+          if (unitInfo.subjectLabel && unitInfo.unitNo) {
+            // unitInfo에서 직접 제목 생성 (fit NaN 문제 해결)
+            displayTitle = unitInfo.displayTitle;
+            displayMeta = `${task.series || 'BRAIN핏'} > ${unitInfo.fieldLabel} > ${unitInfo.subjectLabel}`;
+          } else if (task.title && !task.title.includes('NaN')) {
             // DB에 저장된 task.title 변환 (people1 1 -> 한국인물 1, people2 1 -> 세계인물 1)
             let convertedTitle = task.title;
-            if (convertedTitle) {
-              // people1 X -> 한국인물 X
-              const people1Match = convertedTitle.match(/^people1\s+(\d+)$/);
-              if (people1Match) {
-                convertedTitle = `한국인물 ${people1Match[1]}`;
-              }
-              // people2 X -> 세계인물 X
-              const people2Match = convertedTitle.match(/^people2\s+(\d+)$/);
-              if (people2Match) {
-                convertedTitle = `세계인물 ${people2Match[1]}`;
-              }
+            // people1 X -> 한국인물 X
+            const people1Match = convertedTitle.match(/^people1\s+(\d+)$/);
+            if (people1Match) {
+              convertedTitle = `한국인물 ${people1Match[1]}`;
             }
-            displayTitle = convertedTitle || unitInfo.displayTitle;
-            displayMeta = `${task.series || 'BRAIN업'} > ${unitInfo.fieldLabel} > ${unitInfo.subjectLabel}`;
+            // people2 X -> 세계인물 X
+            const people2Match = convertedTitle.match(/^people2\s+(\d+)$/);
+            if (people2Match) {
+              convertedTitle = `세계인물 ${people2Match[1]}`;
+            }
+            displayTitle = convertedTitle;
           }
         }
 
