@@ -1474,6 +1474,10 @@
           <div class="score-label">어휘학습이력</div>
           <div class="score-value">📋</div>
         </div>
+        <div class="score-item" style="background: linear-gradient(135deg, #ff9a56 0%, #ff6b35 100%); box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);">
+          <div class="score-label">오늘의 분야</div>
+          <div class="score-value" id="todayFieldLabel">-</div>
+        </div>
       </div>
       <div class="my-rank-display" id="myRankBox">
         <span class="rank-label">나의 순위</span>
@@ -1547,7 +1551,7 @@
     <div class="quiz-card" id="quizCard">
       <div class="question-number">
         <span id="questionLabel">Question 1</span>
-        <span class="difficulty-badge difficulty-easy" id="difficultyBadge">쉬움</span>
+        <span class="difficulty-badge" id="fieldBadge" style="background: linear-gradient(135deg, #ff9a56 0%, #ff6b35 100%); color: white;">오늘의 분야</span>
         <div class="timer" id="timer">20</div>
       </div>
       <div class="question-text" id="questionText">
@@ -1624,9 +1628,12 @@
   <!-- 피드백 -->
   <div class="feedback" id="feedback">O</div>
 
+  <!-- BRAIN핏 어휘 데이터 로드 -->
+  <script src="/brainfit-vocab-data.js"></script>
+
   <script>
-    // 어휘 퀴즈 데이터
-    const quizData = [
+    // 기존 일반 어휘 퀴즈 데이터 (월요일용)
+    const generalQuizData = [
       // === 4급 어휘 (5문항) ===
       {
         word: '겸손하다',
@@ -6391,9 +6398,83 @@
       }
     ];
 
+    // 요일별 분야 매핑
+    // 0=일(전체), 1=월(일반), 2=화(과학), 3=수(사회), 4=목(한국문학), 5=금(세계문학), 6=토(인물)
+    const DAY_LABELS = {
+      0: '전체',
+      1: '일반 어휘',
+      2: '과학',
+      3: '사회',
+      4: '한국문학',
+      5: '세계문학',
+      6: '인물'
+    };
+
+    // 오늘 요일에 맞는 분야 데이터 가져오기
+    function getTodayQuizData() {
+      const dayOfWeek = new Date().getDay(); // 0=일, 1=월, ..., 6=토
+
+      console.log('오늘 요일:', dayOfWeek, '(' + DAY_LABELS[dayOfWeek] + ')');
+
+      switch(dayOfWeek) {
+        case 1: // 월요일: 기존 일반 어휘
+          return { data: generalQuizData, field: 'general', label: '일반 어휘' };
+        case 2: // 화요일: 과학
+          return { data: BRAINFIT_VOCAB_DATA?.science || [], field: 'science', label: '과학' };
+        case 3: // 수요일: 사회
+          return { data: BRAINFIT_VOCAB_DATA?.social || [], field: 'social', label: '사회' };
+        case 4: // 목요일: 한국문학
+          return { data: BRAINFIT_VOCAB_DATA?.korlit || [], field: 'korlit', label: '한국문학' };
+        case 5: // 금요일: 세계문학
+          return { data: BRAINFIT_VOCAB_DATA?.worldlit || [], field: 'worldlit', label: '세계문학' };
+        case 6: // 토요일: 인물
+          return { data: BRAINFIT_VOCAB_DATA?.person || [], field: 'person', label: '인물' };
+        case 0: // 일요일: 전체
+        default:
+          const allData = [
+            ...generalQuizData,
+            ...(ALL_BRAINFIT_VOCAB || [])
+          ];
+          return { data: allData, field: 'all', label: '전체' };
+      }
+    }
+
+    // BRAIN핏 어휘에서 선택지(오답) 생성
+    function generateChoicesForBrainfitVocab(vocabItem, allVocabData) {
+      const correctMeaning = vocabItem.meaning;
+
+      // 같은 분야에서 오답 후보 추출 (정답 제외)
+      const wrongCandidates = allVocabData
+        .filter(v => v.meaning !== correctMeaning)
+        .map(v => v.meaning);
+
+      // 셔플 후 3개 선택
+      const shuffled = [...wrongCandidates].sort(() => Math.random() - 0.5);
+      const wrongAnswers = shuffled.slice(0, 3);
+
+      // 정답 + 오답 섞기
+      const choices = [correctMeaning, ...wrongAnswers];
+      const shuffledChoices = choices.sort(() => Math.random() - 0.5);
+
+      // 정답 인덱스 찾기
+      const correctIndex = shuffledChoices.indexOf(correctMeaning);
+
+      return {
+        choices: shuffledChoices,
+        correct: correctIndex
+      };
+    }
+
     // 랜덤으로 문제 선택하는 함수 (총 문제 수를 파라미터로 받음)
     function selectRandomQuestions(totalCount = 15) {
-      // 모든 문제를 섞어서 필요한 개수만큼 선택
+      const { data, field, label } = getTodayQuizData();
+
+      // 오늘의 분야 표시
+      console.log(`📚 오늘의 어휘 분야: ${label} (${data.length}개 중 ${totalCount}개 출제)`);
+      const todayFieldEl = document.getElementById('todayFieldLabel');
+      if (todayFieldEl) todayFieldEl.textContent = label;
+
+      // 셔플 함수
       const shuffleArray = (array) => {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -6403,8 +6484,33 @@
         return shuffled;
       };
 
-      // 전체 문제를 섞어서 totalCount개 선택
-      return shuffleArray(quizData).slice(0, totalCount);
+      // 문제 선택
+      const selectedItems = shuffleArray(data).slice(0, totalCount);
+
+      // BRAIN핏 어휘는 choices가 없으므로 동적 생성 필요
+      const processedQuestions = selectedItems.map(item => {
+        // 이미 choices가 있는 경우 (기존 일반 어휘)
+        if (item.choices && item.choices.length > 0) {
+          return item;
+        }
+
+        // BRAIN핏 어휘: choices 동적 생성
+        const { choices, correct } = generateChoicesForBrainfitVocab(item, data);
+
+        return {
+          ...item,
+          question: item.question || `<span class="word-highlight">${item.word}</span>의 뜻은?`,
+          hint: item.hint || item.meaning.substring(0, 15) + (item.meaning.length > 15 ? '...' : ''),
+          choices: choices,
+          correct: correct,
+          difficulty: 'medium',
+          koreanLevel: item.koreanLevel || 5,
+          explanation: item.explanation || `"${item.word}"은(는) ${item.meaning}을(를) 의미합니다.`,
+          example: item.example || ''
+        };
+      });
+
+      return processedQuestions;
     }
 
     // 선택된 문제들
@@ -6466,18 +6572,11 @@
       document.getElementById('totalQuestionDisplay').textContent = totalQuestions;
       document.getElementById('questionText').innerHTML = quiz.question;
 
-      // 난이도 배지
-      const badge = document.getElementById('difficultyBadge');
-      badge.className = 'difficulty-badge';
-      if (quiz.difficulty === 'easy') {
-        badge.className += ' difficulty-easy';
-        badge.textContent = '쉬움';
-      } else if (quiz.difficulty === 'medium') {
-        badge.className += ' difficulty-medium';
-        badge.textContent = '보통';
-      } else {
-        badge.className += ' difficulty-hard';
-        badge.textContent = '어려움';
+      // 오늘의 분야 배지
+      const fieldBadge = document.getElementById('fieldBadge');
+      if (fieldBadge) {
+        const todayData = getTodayQuizData();
+        fieldBadge.textContent = todayData.label;
       }
 
       const choicesContainer = document.getElementById('choices');
@@ -7199,6 +7298,10 @@
     // 초기화
     createStars();
     updateCoinDisplay();
+
+    // 오늘의 분야 라벨 초기화
+    const { label: todayLabel } = getTodayQuizData();
+    document.getElementById('todayFieldLabel').textContent = todayLabel;
 
     // localStorage에서 총 누적 점수 및 평균 점수 불러오기
     totalScore = getTotalScore();
