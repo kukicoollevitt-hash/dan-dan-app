@@ -10188,11 +10188,11 @@ app.get("/my-learning", async (req, res) => {
         function getUnitPath(unitCode, series) {
           if (!unitCode) return null;
 
-          // 시리즈별 폴더 매핑
+          // 시리즈별 폴더 매핑 (BRAIN핏도 BRAINUP 폴더 사용)
           const seriesFolders = {
             'BRAIN업': 'BRAINUP',
             'BRAIN온': 'BRAINON',
-            'BRAIN핏': 'BRAINFIT',
+            'BRAIN핏': 'BRAINUP',
             'BRAIN딥': 'BRAINDEEP',
             'BRAIN중등': 'BRAINMID',
             'BRAIN고등': 'BRAINHIGH'
