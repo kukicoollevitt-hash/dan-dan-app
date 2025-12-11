@@ -3096,9 +3096,25 @@ canvas[id^="confetti-canvas"] {
             localStorage.removeItem(key);
           });
 
-          // ✅ 세션 저장 완료 플래그 설정 + 이벤트 트리거
+          // ✅ 세션 저장 완료 플래그 설정 + 뱃지 직접 업데이트
           window.sessionReady = true;
-          window.dispatchEvent(new CustomEvent('sessionReady'));
+
+          // 어휘지수 뱃지 직접 업데이트 (DOM 로드 완료 시)
+          const updateVocabBadgeNow = () => {
+            const badge = document.getElementById('vocabAvgBadge');
+            if (badge) {
+              const ratingKey = `vocabRatingScore_${data.user.grade}_${data.user.name}`;
+              const ratingScore = localStorage.getItem(ratingKey);
+              badge.textContent = ratingScore || '0';
+              console.log('✅ 어휘지수 뱃지 업데이트:', ratingKey, '→', badge.textContent);
+            }
+          };
+
+          if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            updateVocabBadgeNow();
+          } else {
+            document.addEventListener('DOMContentLoaded', updateVocabBadgeNow);
+          }
 
         } else {
           console.log('❌ No session data available');
