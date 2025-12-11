@@ -2746,25 +2746,25 @@ app.get("/admin/users", async (req, res) => {
         sortOption = { lastLogin: -1, name: 1 };
     }
 
-    let users = await User.find(filter).sort(sortOption).lean();
+    // 두 쿼리를 병렬로 실행 + 필요한 필드만 조회
+    const [usersResult, allProgress] = await Promise.all([
+      User.find(filter).sort(sortOption).lean(),
+      UserProgress.find({}, { grade: 1, name: 1, 'studyRoom.autoTaskSchedules': 1 }).lean()
+    ]);
+    let users = usersResult;
 
-    // 각 user에 대해 UserProgress 데이터 병합
+    // UserProgress를 Map으로 변환
+    const progressMap = new Map();
+    for (const p of allProgress) {
+      progressMap.set(`${p.grade}|${p.name}`, p);
+    }
+
+    // 각 user에 대해 UserProgress 데이터 병합 (메모리에서 매핑)
     for (let i = 0; i < users.length; i++) {
       const user = users[i];
-      const progress = await UserProgress.findOne({
-        grade: user.grade,
-        name: user.name
-      }).lean();
-
+      const progress = progressMap.get(`${user.grade}|${user.name}`);
       if (progress && progress.studyRoom) {
         users[i].studyRoom = progress.studyRoom;
-        // 디버깅: 스케줄 확인
-        if (progress.studyRoom.autoTaskSchedules && progress.studyRoom.autoTaskSchedules.length > 0) {
-          console.log(`✅ ${user.name} - 스케줄 ${progress.studyRoom.autoTaskSchedules.length}개 발견`);
-          console.log('   스케줄 상세:', JSON.stringify(progress.studyRoom.autoTaskSchedules, null, 2));
-        }
-      } else {
-        console.log(`⚠️  ${user.name} - UserProgress 없음 또는 studyRoom 없음`);
       }
     }
 
@@ -2779,10 +2779,7 @@ app.get("/admin/users", async (req, res) => {
 
     // 스케줄 렌더링 함수
     function renderSchedules(schedules, grade, name) {
-      console.log(`🔍 renderSchedules 호출: grade=${grade}, name=${name}, schedules=${schedules ? schedules.length : 0}개`);
-
       if (!schedules || schedules.length === 0) {
-        console.log(`   → 스케줄 없음, "-" 반환`);
         return '<span class="no-schedule">-</span>';
       }
 
