@@ -6465,12 +6465,71 @@
       };
     }
 
+    // 오늘 날짜 키 생성
+    function getTodayKey() {
+      const today = new Date();
+      return `vocab_${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    }
+
+    // 오늘 푼 어휘 목록 가져오기
+    function getTodayUsedWords() {
+      const key = getTodayKey();
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : [];
+    }
+
+    // 오늘 푼 어휘 저장하기
+    function saveTodayUsedWords(words) {
+      const key = getTodayKey();
+      const existing = getTodayUsedWords();
+      const updated = [...new Set([...existing, ...words])];
+      localStorage.setItem(key, JSON.stringify(updated));
+
+      // 오래된 데이터 정리 (7일 이상 지난 것)
+      cleanupOldVocabData();
+    }
+
+    // 오래된 어휘 데이터 정리
+    function cleanupOldVocabData() {
+      const today = new Date();
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('vocab_')) {
+          const dateStr = key.replace('vocab_', '');
+          const keyDate = new Date(dateStr);
+          const diffDays = (today - keyDate) / (1000 * 60 * 60 * 24);
+          if (diffDays > 7) {
+            localStorage.removeItem(key);
+          }
+        }
+      }
+    }
+
     // 랜덤으로 문제 선택하는 함수 (총 문제 수를 파라미터로 받음)
     function selectRandomQuestions(totalCount = 15) {
       const { data, field, label } = getTodayQuizData();
 
+      // 오늘 이미 푼 어휘 제외
+      const usedWords = getTodayUsedWords();
+      const availableData = data.filter(item => !usedWords.includes(item.word));
+
+      // 남은 어휘가 부족한 경우 안내
+      let actualCount = totalCount;
+      let isAllCompleted = false;
+      if (availableData.length === 0) {
+        // 모든 어휘를 다 푼 경우 - 리셋하고 처음부터
+        console.log(`🎉 오늘의 ${label} 어휘를 모두 학습했습니다! 처음부터 다시 시작합니다.`);
+        localStorage.removeItem(getTodayKey());
+        isAllCompleted = true;
+      } else if (availableData.length < totalCount) {
+        actualCount = availableData.length;
+        console.log(`📢 남은 어휘: ${actualCount}개 (전체 ${data.length}개 중 ${usedWords.length}개 완료)`);
+      }
+
+      const dataToUse = isAllCompleted ? data : availableData;
+
       // 오늘의 분야 표시
-      console.log(`📚 오늘의 어휘 분야: ${label} (${data.length}개 중 ${totalCount}개 출제)`);
+      console.log(`📚 오늘의 어휘 분야: ${label} (${dataToUse.length}개 중 ${actualCount}개 출제)`);
       const todayFieldEl = document.getElementById('todayFieldLabel');
       if (todayFieldEl) todayFieldEl.textContent = label;
 
@@ -6485,7 +6544,7 @@
       };
 
       // 문제 선택
-      const selectedItems = shuffleArray(data).slice(0, totalCount);
+      const selectedItems = shuffleArray(dataToUse).slice(0, actualCount);
 
       // BRAIN핏 어휘는 choices가 없으므로 동적 생성 필요
       const processedQuestions = selectedItems.map(item => {
@@ -6721,6 +6780,10 @@
       clearInterval(timerInterval);
       document.getElementById('quizCard').style.display = 'none';
       document.getElementById('nextBtn').style.display = 'none';
+
+      // 오늘 푼 어휘 저장 (중복 방지용)
+      const usedWords = selectedQuizData.map(q => q.word);
+      saveTodayUsedWords(usedWords);
 
       const resultScreen = document.getElementById('resultScreen');
       const resultEmoji = document.getElementById('resultEmoji');
