@@ -3096,7 +3096,8 @@ canvas[id^="confetti-canvas"] {
             localStorage.removeItem(key);
           });
 
-          // ✅ 세션 저장 완료 후 어휘지수 뱃지 업데이트 트리거
+          // ✅ 세션 저장 완료 플래그 설정 + 이벤트 트리거
+          window.sessionReady = true;
           window.dispatchEvent(new CustomEvent('sessionReady'));
 
         } else {
@@ -10267,13 +10268,18 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
       // 초기 뱃지 업데이트
       updateStudyRoomBadge();
-      updateVocabAvgBadge();
 
-      // ✅ 세션 준비 완료 시 어휘지수 뱃지 다시 업데이트
-      window.addEventListener('sessionReady', () => {
-        console.log('🔄 세션 준비 완료 - 어휘지수 뱃지 재업데이트');
+      // ✅ 세션이 이미 준비됐으면 바로 업데이트, 아니면 이벤트 대기
+      if (window.sessionReady) {
+        console.log('🔄 세션 이미 준비됨 - 어휘지수 뱃지 업데이트');
         updateVocabAvgBadge();
-      });
+      } else {
+        updateVocabAvgBadge(); // 일단 시도
+        window.addEventListener('sessionReady', () => {
+          console.log('🔄 세션 준비 완료 - 어휘지수 뱃지 재업데이트');
+          updateVocabAvgBadge();
+        });
+      }
 
       // storage 이벤트로 실시간 동기화
       window.addEventListener('storage', (e) => {
