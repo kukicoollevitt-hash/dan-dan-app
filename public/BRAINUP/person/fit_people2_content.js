@@ -3680,6 +3680,28 @@ function renderSolutions(pack) {
   const q1Text = pack.quiz.q1_opts[Number(A.q1) - 1] || '';
   const q2Text = pack.quiz.q2_opts[Number(A.q2) - 1] || '';
 
+  // Q3, Q4가 객관식인지 빈칸 채우기인지 판단
+  const isQ3MultipleChoice = A.q3 && !A.q3_1;
+  const isQ4MultipleChoice = A.q4 && !A.q4_1;
+
+  // Q3 정답 텍스트
+  let q3Answer;
+  if (isQ3MultipleChoice) {
+    const q3Text = pack.quiz.q3_opts ? pack.quiz.q3_opts[Number(A.q3) - 1] || '' : '';
+    q3Answer = `<b>③ 정답:</b> ${A.q3} — ${q3Text}`;
+  } else {
+    q3Answer = `<b>③ 정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
+  }
+
+  // Q4 정답 텍스트
+  let q4Answer;
+  if (isQ4MultipleChoice) {
+    const q4Text = pack.quiz.q4_opts ? pack.quiz.q4_opts[Number(A.q4) - 1] || '' : '';
+    q4Answer = `<b>④ 정답:</b> ${A.q4} — ${q4Text}`;
+  } else {
+    q4Answer = `<b>④ 정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
+  }
+
   // grade-result (점수 박스) 안의 하단에 해설 추가
   const gradeResult = document.getElementById('grade-result');
   if (!gradeResult) return;
@@ -3708,11 +3730,11 @@ function renderSolutions(pack) {
         <span style="color:#6b5a48;">${EX.q2 || ''}</span>
       </li>
       <li style="margin-bottom:8px;">
-        <b>③ 정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}<br>
+        ${q3Answer}<br>
         <span style="color:#6b5a48;">${EX.q3 || ''}</span>
       </li>
       <li style="margin-bottom:8px;">
-        <b>④ 정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}<br>
+        ${q4Answer}<br>
         <span style="color:#6b5a48;">${EX.q4 || ''}</span>
       </li>
       <li>
