@@ -622,8 +622,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '2',
-      q3_1: ['훈민정음'], q3_2: ['반포'],
-      q4_1: ['백성'], q4_2: ['성군']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['세종대왕', '훈민정음', '한글', '백성', '사랑', '창제', '신념', '포기'],
     explain: {
@@ -702,8 +702,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['동의보감'], q3_2: ['향약'],
-      q4_1: ['서얼'], q4_2: ['인정']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['허준', '동의보감', '의원', '서얼', '신분', '노력', '백성', '향약'],
     explain: {
@@ -782,8 +782,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '4',
-      q3_1: ['초충도'], q3_2: ['율곡'],
-      q4_1: ['학문'], q4_2: ['업적']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['신사임당', '초충도', '율곡', '이이', '여성', '예술', '교육', '현모양처'],
     explain: {
@@ -865,8 +865,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '1',
-      q3_1: ['성리학'], q3_2: ['도산서원'],
-      q4_1: ['학문'], q4_2: ['주자']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['이황', '퇴계', '성리학', '도산서원', '유학', '학문', '제자', '일본'],
     explain: {
@@ -947,8 +947,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '3',
       q2: '2',
-      q3_1: ['장원'], q3_2: ['양병'],
-      q4_1: ['학자'], q4_2: ['정치']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['이이', '율곡', '신사임당', '10만양병설', '장원', '학자', '실천', '정치'],
     explain: {
@@ -1029,8 +1029,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['거중기'], q3_2: ['실학'],
-      q4_1: ['유배'], q4_2: ['포기']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['정약용', '다산', '실학', '거중기', '화성', '목민심서', '유배', '연구'],
     explain: {
@@ -1111,8 +1111,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '4',
-      q3_1: ['정복'], q3_2: ['영토'],
-      q4_1: ['위업'], q4_2: ['영웅']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['광개토대왕', '고구려', '정복', '영토', '광개토대왕릉비', '장수왕', '신라', '왜구'],
     explain: {
@@ -1192,8 +1192,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '1',
-      q3_1: ['전략', '지략'], q3_2: ['유인'],
-      q4_1: ['둑'], q4_2: ['영웅']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['을지문덕', '살수대첩', '수나라', '유인', '전략', '지략', '고구려', '영웅'],
     explain: {
@@ -1273,8 +1273,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '2',
-      q3_1: ['수공'], q3_2: ['후퇴'],
-      q4_1: ['지략'], q4_2: ['호국']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['강감찬', '귀주대첩', '거란', '수공', '지략', '고려', '호국', '영웅'],
     explain: {
@@ -1354,8 +1354,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['화약'], q3_2: ['염초'],
-      q4_1: ['실험'], q4_2: ['선구자']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['최무선', '화약', '진포대첩', '왜구', '화통도감', '연구', '포기', '선구자'],
     explain: {
@@ -1435,8 +1435,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '4',
-      q3_1: ['충절'], q3_2: ['단심가'],
-      q4_1: ['충성'], q4_2: ['추모']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['정몽주', '충절', '단심가', '고려', '이방원', '선죽교', '의리', '충성'],
     explain: {
@@ -1516,8 +1516,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '1',
-      q3_1: ['청렴'], q3_2: ['검소'],
-      q4_1: ['이해'], q4_2: ['포용']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['황희', '청렴', '영의정', '세종', '검소', '공정', '재상', '포용'],
     explain: {
@@ -1597,8 +1597,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '2',
-      q3_1: ['지혜'], q3_2: ['사자'],
-      q4_1: ['영토'], q4_2: ['업적']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['이사부', '우산국', '독도', '울릉도', '사자', '지혜', '영토', '신라'],
     explain: {
@@ -1678,8 +1678,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['답사'], q3_2: ['측량'],
-      q4_1: ['정확성'], q4_2: ['목판']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['김정호', '대동여지도', '지리', '측량', '답사', '정확성', '지도', '헌신'],
     explain: {
@@ -1759,8 +1759,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '4',
-      q3_1: ['의병'], q3_2: ['정의'],
-      q4_1: ['순국'], q4_2: ['애국심']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['안중근', '이토 히로부미', '독립', '하얼빈', '동양평화론', '순국', '애국심', '의병'],
     explain: {
@@ -1844,8 +1844,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '1',
-      q3_1: ['설득'], q3_2: ['만세운동'],
-      q4_1: ['희생'], q4_2: ['용기']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['유관순', '3·1 운동', '아우내', '만세', '천안', '독립', '형무소', '순국'],
     explain: {
@@ -1926,8 +1926,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '2',
-      q3_1: ['결의'], q3_2: ['상하이 의거', '상하이의거'],
-      q4_1: ['순국'], q4_2: ['희생']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['윤봉길', '상하이', '의거', '홍커우', '폭탄', '김구', '임시정부', '순국'],
     explain: {
@@ -2008,8 +2008,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['항일'], q3_2: ['광복'],
-      q4_1: ['통일'], q4_2: ['문화']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['김구', '임시정부', '백범일지', '한인애국단', '독립', '통일', '광복', '문화'],
     explain: {
@@ -2089,8 +2089,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '4',
-      q3_1: ['희생'], q3_2: ['정진'],
-      q4_1: ['명필'], q4_2: ['인내']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['한석봉', '명필', '어머니', '떡', '서예', '석봉체', '정진', '인내'],
     explain: {
@@ -2171,8 +2171,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '1',
-      q3_1: ['풍속화'], q3_2: ['역동적'],
-      q4_1: ['관심'], q4_2: ['예술가']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['김홍도', '단원', '풍속화', '씨름', '서당', '무동', '서민', '조선'],
     explain: {
@@ -2252,8 +2252,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '2',
-      q3_1: ['섬세'], q3_2: ['낭만적'],
-      q4_1: ['화가'], q4_2: ['감성']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['신윤복', '혜원', '미인도', '월하정인', '단오풍정', '풍속화', '김홍도', '양반'],
     explain: {
@@ -2334,8 +2334,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['열하일기'], q3_2: ['개혁'],
-      q4_1: ['비판'], q4_2: ['작가']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['박지원', '연암', '열하일기', '허생전', '양반전', '실학', '개혁', '비판'],
     explain: {
@@ -2416,8 +2416,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '4',
-      q3_1: ['박해'], q3_2: ['선교', '순교'],
-      q4_1: ['거부'], q4_2: ['성인']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['김대건', '신부', '가톨릭', '순교', '새남터', '성인', '신앙', '천주교'],
     explain: {
@@ -2497,8 +2497,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '1',
-      q3_1: ['문법'], q3_2: ['보급'],
-      q4_1: ['민족'], q4_2: ['헌신']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['주시경', '한글', '국어', '문법', '민족', '정체성', '제자', '보급'],
     explain: {
@@ -2580,8 +2580,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '2',
-      q3_1: ['어린이'], q3_2: ['동화'],
-      q4_1: ['권리'], q4_2: ['사랑']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['방정환', '어린이', '어린이날', '동화', '권리', '사랑', '인권', '존중'],
     explain: {
@@ -2666,8 +2666,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['노예'], q3_2: ['무역'],
-      q4_1: ['해상왕'], q4_2: ['선구자']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['장보고', '청해진', '해상왕', '무역', '신라', '해적', '완도', '동아시아'],
     explain: {
@@ -2753,8 +2753,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '4',
-      q3_1: ['첨성대'], q3_2: ['목탑'],
-      q4_1: ['여왕'], q4_2: ['지도자']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['선덕여왕', '첨성대', '여왕', '신라', '김유신', '김춘추', '황룡사', '통일'],
     explain: {
@@ -2839,8 +2839,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '1',
-      q3_1: ['침략'], q3_2: ['안시성'],
-      q4_1: ['리더십'], q4_2: ['멸망']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['연개소문', '안시성', '고구려', '당나라', '대막리지', '리더십', '멸망', '침략'],
     explain: {
@@ -2925,8 +2925,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '2',
-      q3_1: ['결사대'], q3_2: ['의지'],
-      q4_1: ['전사'], q4_2: ['충절']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['계백', '황산벌', '백제', '결사대', '충절', '전사', '신라', '관창'],
     explain: {
@@ -3010,8 +3010,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['뇌물'], q3_2: ['충성'],
-      q4_1: ['회군'], q4_2: ['귀감']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['최영', '고려', '충성', '청렴', '황금', '위화도', '이성계', '충신'],
     explain: {
@@ -3096,8 +3096,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '4',
-      q3_1: ['의병'], q3_2: ['격퇴'],
-      q4_1: ['전략'], q4_2: ['용기']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['권율', '행주대첩', '임진왜란', '행주산성', '의병', '전략', '승리', '용기'],
     explain: {
@@ -3182,8 +3182,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '1',
-      q3_1: ['의병'], q3_2: ['저항'],
-      q4_1: ['사기'], q4_2: ['상징']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['곽재우', '홍의장군', '의병', '임진왜란', '게릴라', '정암진', '의령', '저항'],
     explain: {
@@ -3269,8 +3269,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '2',
-      q3_1: ['목화씨'], q3_2: ['보급'],
-      q4_1: ['솜'], q4_2: ['혜택']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['문익점', '목화', '목화씨', '솜', '무명', '의생활', '붓대', '보급'],
     explain: {
@@ -3356,8 +3356,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {
       q1: '2',
       q2: '3',
-      q3_1: ['슬픔'], q3_2: ['한시'],
-      q4_1: ['시집'], q4_2: ['문학가']
+      q3: '2',
+      q4: '2'
     },
     essayKeywords: ['허난설헌', '여류시인', '허균', '한시', '조선', '문학', '시', '슬픔'],
     explain: {
