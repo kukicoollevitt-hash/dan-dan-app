@@ -1812,25 +1812,41 @@
       if (q2ok) { score++; q2Num.classList.add('correct'); q2Mark.textContent="⭕"; shortMsgs.push("② 정답 ✅"); fullMsgs.push("② 정답 ✅ " + explain.q2); }
       else { q2Num.classList.add('wrong'); q2Mark.textContent="✖"; shortMsgs.push("② 오답 ❌"); fullMsgs.push("② 오답 ❌ " + explain.q2); }
 
-      // 3번
-      const q3_1 = document.getElementById("q3-1").value.trim();
-      const q3_2 = document.getElementById("q3-2").value.trim();
+      // 3번 (객관식 또는 빈칸)
       const q3Num = quizBlocks[2].querySelector('.quiz-num');
       const q3Mark = q3Num.querySelector('.mark');
-      const ok3_1 = answerKey.q3_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_1.replace(/\s+/g,"").toLowerCase());
-      const ok3_2 = answerKey.q3_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_2.replace(/\s+/g,"").toLowerCase());
-      const q3ok = (ok3_1 && ok3_2);
+      let q3ok = false;
+      if (answerKey.q3 && typeof answerKey.q3 === 'string') {
+        // 객관식: answerKey.q3 = '2' 형태
+        const q3Radio = document.querySelector('input[name="q3"]:checked');
+        q3ok = (q3Radio && q3Radio.value === answerKey.q3);
+      } else if (answerKey.q3_1) {
+        // 빈칸: answerKey.q3_1 = ['답'] 형태
+        const q3_1 = document.getElementById("q3-1")?.value.trim() || '';
+        const q3_2 = document.getElementById("q3-2")?.value.trim() || '';
+        const ok3_1 = answerKey.q3_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_1.replace(/\s+/g,"").toLowerCase());
+        const ok3_2 = answerKey.q3_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_2.replace(/\s+/g,"").toLowerCase());
+        q3ok = (ok3_1 && ok3_2);
+      }
       if (q3ok) { score++; q3Num.classList.add('correct'); q3Mark.textContent="⭕"; shortMsgs.push("③ 정답 ✅"); fullMsgs.push("③ 정답 ✅ " + explain.q3); }
       else { q3Num.classList.add('wrong'); q3Mark.textContent="✖"; shortMsgs.push("③ 오답 ❌"); fullMsgs.push("③ 오답 ❌ " + explain.q3); }
 
-      // 4번
-      const q4_1 = document.getElementById("q4-1").value.trim();
-      const q4_2 = document.getElementById("q4-2").value.trim();
+      // 4번 (객관식 또는 빈칸)
       const q4Num = quizBlocks[3].querySelector('.quiz-num');
       const q4Mark = q4Num.querySelector('.mark');
-      const ok4_1 = answerKey.q4_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_1.replace(/\s+/g,"").toLowerCase());
-      const ok4_2 = answerKey.q4_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_2.replace(/\s+/g,"").toLowerCase());
-      const q4ok = (ok4_1 && ok4_2);
+      let q4ok = false;
+      if (answerKey.q4 && typeof answerKey.q4 === 'string') {
+        // 객관식: answerKey.q4 = '3' 형태
+        const q4Radio = document.querySelector('input[name="q4"]:checked');
+        q4ok = (q4Radio && q4Radio.value === answerKey.q4);
+      } else if (answerKey.q4_1) {
+        // 빈칸: answerKey.q4_1 = ['답'] 형태
+        const q4_1 = document.getElementById("q4-1")?.value.trim() || '';
+        const q4_2 = document.getElementById("q4-2")?.value.trim() || '';
+        const ok4_1 = answerKey.q4_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_1.replace(/\s+/g,"").toLowerCase());
+        const ok4_2 = answerKey.q4_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_2.replace(/\s+/g,"").toLowerCase());
+        q4ok = (ok4_1 && ok4_2);
+      }
       if (q4ok) { score++; q4Num.classList.add('correct'); q4Mark.textContent="⭕"; shortMsgs.push("④ 정답 ✅"); fullMsgs.push("④ 정답 ✅ " + explain.q4); }
       else { q4Num.classList.add('wrong'); q4Mark.textContent="✖"; shortMsgs.push("④ 오답 ❌"); fullMsgs.push("④ 오답 ❌ " + explain.q4); }
 

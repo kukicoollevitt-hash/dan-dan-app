@@ -106,6 +106,7 @@
     console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
 
     // 분석리포트 탭으로 새로고침된 경우 로딩 텍스트 변경
+    const savedTab = localStorage.getItem(`current-geo-tab:${window.CUR_UNIT}`);
     if (savedTab === 'report') {
       document.addEventListener('DOMContentLoaded', () => {
         const loadingText = document.querySelector('.loading-text');
@@ -175,7 +176,7 @@
 
   <script>
     // 탭 이름 고정
-    document.title = "BRAIN업 | 세계문학 01 두려움을 넘어선 새로운 시작";
+    document.title = "BRAIN핏 | 세계문학 38 ⚖️ 정의를 위한 변호";
 
     // ===== 타이머 기능 =====
     var timerInterval = null;
@@ -1888,7 +1889,7 @@
       <div class="left-passage">
         <div class="passage-wrap">
           <!-- ✅ 라벨 번호 01로 수정 -->
-          <div class="passage-label"><span>BRAIN업ㅣ세계문학</span><strong>01</strong></div>
+          <div class="passage-label"><span>BRAIN핏ㅣ세계문학</span><strong>01</strong></div>
           <h1 class="passage-title"></h1>
           <div class="passage-text">
           </div>
@@ -1956,27 +1957,27 @@
             </div>
           </div>
 
-          <div class="quiz-subtitle">빈칸 채우기</div>
+          
 
-          <!-- 3 (2칸) -->
-          <div class="quiz-block small">
+          <!-- 3 -->
+          <div class="quiz-block">
             <div class="quiz-num">03<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">
-                <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅌㅋㅅ">는 편견에 맞서
-                <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇ">를 위해 싸웠습니다.
-              </p>
+              <p class="quiz-q" id="quiz-q3-text"></p>
+              <ul class="quiz-options" id="quiz-q3-opts">
+                <li></li><li></li><li></li><li></li>
+              </ul>
             </div>
           </div>
 
-          <!-- 4 (2칸) -->
-          <div class="quiz-block small">
+          <!-- 4 -->
+          <div class="quiz-block">
             <div class="quiz-num">04<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">
-                <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅁㅅ">를 죽이는 것은
-                <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㄱㅎ"> 존재를 해치는 것입니다.
-              </p>
+              <p class="quiz-q" id="quiz-q4-text"></p>
+              <ul class="quiz-options" id="quiz-q4-opts">
+                <li></li><li></li><li></li><li></li>
+              </ul>
             </div>
           </div>
 
@@ -2244,6 +2245,30 @@
     // 페이지 로드 시 항상 본문학습 탭으로 시작
     window.addEventListener('DOMContentLoaded', () => {
       activateTab('reading');
+      // Q3, Q4 객관식 렌더링
+      const pack = window.CONTENTS && window.CONTENTS[window.CUR_UNIT];
+      if (pack && pack.quiz) {
+        if (pack.quiz.q3_text && pack.quiz.q3_opts) {
+          const q3TextEl = document.getElementById('quiz-q3-text');
+          const q3OptsEl = document.getElementById('quiz-q3-opts');
+          if (q3TextEl) q3TextEl.textContent = pack.quiz.q3_text;
+          if (q3OptsEl) {
+            q3OptsEl.innerHTML = pack.quiz.q3_opts.map((opt, i) =>
+              `<li><label><input type="radio" name="q3" value="${i+1}"><span>${opt}</span></label></li>`
+            ).join('');
+          }
+        }
+        if (pack.quiz.q4_text && pack.quiz.q4_opts) {
+          const q4TextEl = document.getElementById('quiz-q4-text');
+          const q4OptsEl = document.getElementById('quiz-q4-opts');
+          if (q4TextEl) q4TextEl.textContent = pack.quiz.q4_text;
+          if (q4OptsEl) {
+            q4OptsEl.innerHTML = pack.quiz.q4_opts.map((opt, i) =>
+              `<li><label><input type="radio" name="q4" value="${i+1}"><span>${opt}</span></label></li>`
+            ).join('');
+          }
+        }
+      }
     });
 
     /* ===== 뒤로 가기 확인 팝업 ===== */
@@ -2479,20 +2504,14 @@
     /* ===== 본문 채점 ===== */
     let readingResultHTML = "";
     function gradeQuiz() {
-      const answerKey = {
-        q1: "2",
-        q2: "2",
-        q3_1: ["묘안"],
-        q3_2: ["배짱"],
-        q4_1: ["아들"],
-        q4_2: ["총독"]
-      };
-      const explain = {
-        q1: "해설: 텔은 아들 머리 위의 사과를 맞히면서 용기와 지혜를 보여주었습니다.",
-        q2: "해설: 글은 '총독의 무례한 명령 → 텔의 묘안과 용기 → 위기 극복'의 순서로 전개됩니다.",
-        q3: "해설: 텔은 총독의 제안을 듣고 곧 묘안을 떠올렸고, 겁내지 않고 맞서는 배짱을 보여주었습니다.",
-        q4: "해설: 텔은 아들을 다치게 하면 총독을 쏘겠다고 경고했습니다.",
-        q5: "서술형 예시: 텔은 아들이 다칠 경우를 대비해 두 번째 화살로 총독을 쏘려 했는데, 이는 소중한 가족을 지키려는 사랑과 불의에 맞서는 용기를 보여줍니다."
+      const pack = window.CONTENTS && window.CONTENTS[window.CUR_UNIT];
+      const answerKey = (pack && pack.answerKey) || { q1:'1', q2:'1', q3:'1', q4:'1' };
+      const explain = (pack && pack.explain) || {
+        q1:'해설을 확인해주세요.',
+        q2:'해설을 확인해주세요.',
+        q3:'해설을 확인해주세요.',
+        q4:'해설을 확인해주세요.',
+        q5:'예시 답안을 확인해주세요.'
       };
 
       const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
@@ -2528,24 +2547,18 @@
       else { q2Num.classList.add('wrong'); q2Mark.textContent="✖"; shortMsgs.push("② 오답 ❌"); fullMsgs.push("② 오답 ❌ " + explain.q2); }
 
       // 3번
-      const q3_1 = document.getElementById("q3-1").value.trim();
-      const q3_2 = document.getElementById("q3-2").value.trim();
+      const q3 = document.querySelector('input[name="q3"]:checked');
       const q3Num = quizBlocks[2].querySelector('.quiz-num');
       const q3Mark = q3Num.querySelector('.mark');
-      const ok3_1 = answerKey.q3_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_1.replace(/\s+/g,"").toLowerCase());
-      const ok3_2 = answerKey.q3_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q3_2.replace(/\s+/g,"").toLowerCase());
-      const q3ok = (ok3_1 && ok3_2);
+      const q3ok = (q3 && q3.value === answerKey.q3);
       if (q3ok) { score++; q3Num.classList.add('correct'); q3Mark.textContent="⭕"; shortMsgs.push("③ 정답 ✅"); fullMsgs.push("③ 정답 ✅ " + explain.q3); }
       else { q3Num.classList.add('wrong'); q3Mark.textContent="✖"; shortMsgs.push("③ 오답 ❌"); fullMsgs.push("③ 오답 ❌ " + explain.q3); }
 
       // 4번
-      const q4_1 = document.getElementById("q4-1").value.trim();
-      const q4_2 = document.getElementById("q4-2").value.trim();
+      const q4 = document.querySelector('input[name="q4"]:checked');
       const q4Num = quizBlocks[3].querySelector('.quiz-num');
       const q4Mark = q4Num.querySelector('.mark');
-      const ok4_1 = answerKey.q4_1.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_1.replace(/\s+/g,"").toLowerCase());
-      const ok4_2 = answerKey.q4_2.some(a => a.replace(/\s+/g,"").toLowerCase() === q4_2.replace(/\s+/g,"").toLowerCase());
-      const q4ok = (ok4_1 && ok4_2);
+      const q4ok = (q4 && q4.value === answerKey.q4);
       if (q4ok) { score++; q4Num.classList.add('correct'); q4Mark.textContent="⭕"; shortMsgs.push("④ 정답 ✅"); fullMsgs.push("④ 정답 ✅ " + explain.q4); }
       else { q4Num.classList.add('wrong'); q4Mark.textContent="✖"; shortMsgs.push("④ 오답 ❌"); fullMsgs.push("④ 오답 ❌ " + explain.q4); }
 
@@ -2667,11 +2680,17 @@
 
     function resetQuiz() {
       document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.checked = false);
-      document.getElementById("q3-1").value = "";
-      document.getElementById("q3-2").value = "";
-      document.getElementById("q4-1").value = "";
-      document.getElementById("q4-2").value = "";
-      document.getElementById("q5").value = "";
+      // 서술형 필드가 있는 경우에만 초기화
+      const q3_1 = document.getElementById("q3-1");
+      const q3_2 = document.getElementById("q3-2");
+      const q4_1 = document.getElementById("q4-1");
+      const q4_2 = document.getElementById("q4-2");
+      const q5 = document.getElementById("q5");
+      if (q3_1) q3_1.value = "";
+      if (q3_2) q3_2.value = "";
+      if (q4_1) q4_1.value = "";
+      if (q4_2) q4_2.value = "";
+      if (q5) q5.value = "";
 
       const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
       const numLabels = ["01","02","03","04","05"];
