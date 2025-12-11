@@ -9962,6 +9962,8 @@ app.get("/my-learning", async (req, res) => {
           currentSelectedSeries = 'BRAIN핏';
         } else if (initialSeries === 'up') {
           currentSelectedSeries = 'BRAIN업';
+        } else if (initialSeries === 'deep') {
+          currentSelectedSeries = 'BRAIN딥';
         }
 
         const allLogs = logsForChart;

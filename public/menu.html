@@ -8503,7 +8503,7 @@ async function performLogout() {
 
       // 레이더 등급 뱃지 업데이트 (초기 로드) - 저장된 시리즈가 있으면 해당 시리즈로 새로 계산
       const savedMenuSeries = localStorage.getItem('selectedMenuSeries');
-      if (savedMenuSeries && (savedMenuSeries === 'BRAINUP' || savedMenuSeries === 'BRAINFIT')) {
+      if (savedMenuSeries && (savedMenuSeries === 'BRAINUP' || savedMenuSeries === 'BRAINFIT' || savedMenuSeries === 'BRAINDEEP')) {
         // 저장된 시리즈로 새로 계산 (항상 최신 데이터 사용)
         updateRadarGradeBadgeForSeries(savedMenuSeries);
         console.log('✅ 페이지 로드 시 시리즈별 뱃지 새로 계산:', savedMenuSeries);
@@ -8527,7 +8527,7 @@ async function performLogout() {
           const activeSeriesItem = document.querySelector('#seriesList .series-item.active');
           if (activeSeriesItem) {
             const activeSeries = activeSeriesItem.dataset.series;
-            if (activeSeries === 'BRAINUP' || activeSeries === 'BRAINFIT') {
+            if (activeSeries === 'BRAINUP' || activeSeries === 'BRAINFIT' || activeSeries === 'BRAINDEEP') {
               updateRadarGradeBadgeForSeries(activeSeries);
             } else {
               updateRadarGradeBadge();
@@ -8546,6 +8546,10 @@ async function performLogout() {
         if (event.data && event.data.type === 'seriesChanged') {
           const { series, avgScore, progressPercent, completedCount, totalUnits } = event.data;
           console.log('📥 시리즈 변경 메시지 수신:', series, avgScore, progressPercent + '%');
+
+          // ✅ 시리즈 선택을 localStorage에 저장 (새로고침 후 복원용)
+          localStorage.setItem('selectedMenuSeries', series);
+          console.log('✅ 시리즈 선택 저장 (종합리포트에서):', series);
 
           const badge = document.getElementById('radarGradeBadge');
           if (badge) {
@@ -8624,7 +8628,13 @@ async function performLogout() {
           if (activeSeriesItem) {
             selectedSeries = activeSeriesItem.dataset.series || 'BRAINUP';
           }
-          const seriesParam = selectedSeries === 'BRAINFIT' ? 'fit' : 'up';
+          // 시리즈별 파라미터 설정 (up, fit, deep)
+          let seriesParam = 'up';
+          if (selectedSeries === 'BRAINFIT') {
+            seriesParam = 'fit';
+          } else if (selectedSeries === 'BRAINDEEP') {
+            seriesParam = 'deep';
+          }
 
           const url = `/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&series=${seriesParam}`;
           console.log('🔗 URL:', url, '(시리즈:', selectedSeries, ')');
