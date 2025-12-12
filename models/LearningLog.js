@@ -26,7 +26,10 @@ const LearningLogSchema = new mongoose.Schema({
   aiTaskAssignedAt: { type: Date, default: null } // AI 추천과제 부여 시간
 });
 
-// grade, name, phone, timestamp으로 인덱스 생성
+// 인덱스 생성 (성능 최적화)
 LearningLogSchema.index({ grade: 1, name: 1, phone: 1, timestamp: -1 });
+LearningLogSchema.index({ grade: 1, name: 1, deleted: 1, timestamp: -1 }); // learning-logs API용
+LearningLogSchema.index({ grade: 1, name: 1, series: 1, completed: 1 }); // completion-status API용
+LearningLogSchema.index({ grade: 1, name: 1, unit: 1 }); // unit-grades API용
 
 module.exports = mongoose.model("LearningLog", LearningLogSchema);

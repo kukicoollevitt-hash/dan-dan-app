@@ -5211,12 +5211,8 @@ app.get("/api/completion-status", async (req, res) => {
       completed: true
     }).select('unit').lean();
 
-    console.log("[/api/completion-status] 조회 결과:", completedLogs.length, "개 완료 기록");
-
     // 완료된 단원 코드 배열
     const completedUnits = completedLogs.map(log => log.unit);
-
-    console.log("[/api/completion-status] 완료 단원:", completedUnits);
 
     return res.json({ ok: true, completedUnits });
   } catch (err) {
@@ -6881,7 +6877,6 @@ app.get("/api/learning-logs", async (req, res) => {
     // 캐시에 저장
     setCache(cacheKey, logsWithAIReview);
 
-    console.log("✅ [/api/learning-logs] 조회 결과:", logsWithAIReview.length, "개 기록");
     res.json(logsWithAIReview);
   } catch (err) {
     console.error("❌ /api/learning-logs 에러:", err);
@@ -6950,7 +6945,6 @@ app.get("/api/unit-grades", async (req, res) => {
     // 캐시에 저장
     setCache(cacheKey, unitGradesMap);
 
-    console.log("✅ [/api/unit-grades] 조회 완료:", Object.keys(unitGradesMap).length, "개 단원");
     res.json(unitGradesMap);
   } catch (err) {
     console.error("❌ /api/unit-grades 에러:", err);
@@ -11947,11 +11941,15 @@ app.get('/api/user-progress', async (req, res) => {
       });
     }
 
-    let progress = await UserProgress.findOne({ grade, name });
+    // unitProgress 제외하고 필요한 필드만 조회 (성능 최적화 - 1.3MB → 수KB)
+    let progress = await UserProgress.findOne(
+      { grade, name },
+      { unitProgress: 0 }  // unitProgress 제외
+    ).lean();
 
     // 데이터가 없으면 초기 데이터 생성
     if (!progress) {
-      progress = new UserProgress({
+      const newProgress = new UserProgress({
         grade,
         name,
         vocabularyQuiz: {
@@ -11967,7 +11965,9 @@ app.get('/api/user-progress', async (req, res) => {
           assignedTasks: []
         }
       });
-      await progress.save();
+      await newProgress.save();
+      progress = newProgress.toObject();
+      delete progress.unitProgress;
     }
 
     res.json({
@@ -12406,7 +12406,11 @@ app.get('/api/user-progress/study-room', async (req, res) => {
       });
     }
 
-    const progress = await UserProgress.findOne({ grade, name });
+    // unitProgress 제외하고 필요한 필드만 조회 (성능 최적화)
+    const progress = await UserProgress.findOne(
+      { grade, name },
+      { studyRoom: 1, completedPages: 1, grade: 1, name: 1 }
+    ).lean();
 
     if (!progress) {
       return res.json({
@@ -14270,8 +14274,7 @@ app.get("/api/unit-progress/load", async (req, res) => {
       return res.json({ success: true, data: null, completedPages: [] });
     }
 
-    console.log('[unit-progress/load] unitProgress 타입:', typeof userProgress.unitProgress);
-    console.log('[unit-progress/load] unitProgress:', userProgress.unitProgress);
+    // 디버그 로그 제거 (성능 향상)
 
     // 특정 단원 데이터 반환
     if (unit) {
@@ -14285,7 +14288,6 @@ app.get("/api/unit-progress/load", async (req, res) => {
           unitData = userProgress.unitProgress[unit];
         }
       }
-      console.log('[unit-progress/load] 단원 데이터:', unitData);
       return res.json({
         success: true,
         data: unitData || null,
