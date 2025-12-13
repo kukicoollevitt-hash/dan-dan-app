@@ -3502,12 +3502,12 @@ canvas[id^="confetti-canvas"] {
 
     /* 1.5 과목별 배경 이미지 매핑 (PC용) */
     const subjectBackgrounds = {
-      'bio': './images/생물배경.jpg',
-      'earth': './images/지구과학배경.jpg',
-      'physics': './images/물리배경.jpg',
-      'chem': './images/과학실 배경.jpg',
-      'soc': './images/사회문화배경.jpg',
-      'geo': './images/지리배경.jpg',
+      'bio': './images/생물.mp4',  // 비디오로 변경
+      'earth': './images/지구과학.mp4',  // 비디오로 변경
+      'physics': './images/물리.mp4',  // 비디오로 변경
+      'chem': './images/화학.mp4',  // 비디오로 변경
+      'soc': './images/사회문화.mp4',  // 비디오로 변경
+      'geo': './images/지리.mp4',  // 비디오로 변경
       'law': './images/법배경.jpg',
       'pol': './images/정치경제배경.jpg',
       'modern': './images/현대문학배경.jpg',
@@ -3520,14 +3520,24 @@ canvas[id^="confetti-canvas"] {
       'people2': './images/인물2배경.jpg'
     };
 
+    /* 과목별 배경 비디오 매핑 (태블릿용) */
+    const subjectBackgroundVideos = {
+      'bio': './images/생물.mp4',
+      'earth': './images/지구과학.mp4',
+      'physics': './images/물리.mp4',
+      'chem': './images/화학.mp4',
+      'soc': './images/사회문화.mp4',
+      'geo': './images/지리.mp4'
+    };
+
     /* 과목별 배경 이미지 매핑 (태블릿용) */
     const subjectBackgroundsTablet = {
-      'bio': './images/생물배경_tablet.jpg',
-      'earth': './images/지구과학배경_tablet.jpg',
-      'physics': './images/물리배경_tablet.jpg',
-      'chem': './images/과학실 배경_tablet.jpg',
-      'soc': './images/사회문화배경_tablet.jpg',
-      'geo': './images/지리배경_tablet.jpg',
+      'bio': './images/생물.mp4',  // 비디오로 변경
+      'earth': './images/지구과학.mp4',  // 비디오로 변경
+      'physics': './images/물리.mp4',  // 비디오로 변경
+      'chem': './images/화학.mp4',  // 비디오로 변경
+      'soc': './images/사회문화.mp4',  // 비디오로 변경
+      'geo': './images/지리.mp4',  // 비디오로 변경
       'law': './images/법배경_tablet.jpg',
       'pol': './images/정치경제배경_tablet.jpg',
       'modern': './images/현대문학배경_tablet.jpg',
@@ -3582,38 +3592,99 @@ canvas[id^="confetti-canvas"] {
         }
       }
 
-      console.log('🖼️ 이미지 URL:', imageUrl);
+      console.log('🖼️ 이미지/비디오 URL:', imageUrl);
       if (imageUrl) {
-        // 이미지 프리로드
-        const img = new Image();
-        img.onload = function() {
-          // 태블릿에서는 고정 배경 div에 이미지 설정
+        // 비디오인지 이미지인지 확인
+        const isVideo = imageUrl.endsWith('.mp4') || imageUrl.endsWith('.webm');
+
+        if (isVideo) {
+          // 비디오 배경 처리
+          console.log('🎬 비디오 배경 적용:', imageUrl);
+
+          // 기존 배경 이미지 숨기기
           if (isTablet) {
             const tabletBg = document.getElementById('tablet-fixed-bg');
             if (tabletBg) {
-              tabletBg.style.backgroundImage = `url('${imageUrl}')`;
+              tabletBg.style.backgroundImage = 'none';
             }
-            // body 배경은 투명하게 (CSS에서 처리)
           } else {
-            // PC에서는 body에 배경 설정
-            document.body.style.backgroundImage = `url('${imageUrl}')`;
-            document.body.style.backgroundSize = '110%';
-            document.body.style.backgroundPosition = 'center bottom';
-            document.body.style.backgroundAttachment = 'fixed';
+            document.body.style.backgroundImage = 'none';
           }
 
-          // 배경 동영상 숨기기
+          // 기존 subject-bg-video가 있으면 제거
+          let existingSubjectVideo = document.getElementById('subject-bg-video');
+          if (existingSubjectVideo) {
+            existingSubjectVideo.remove();
+          }
+
+          // 새 비디오 요소 생성
+          const video = document.createElement('video');
+          video.id = 'subject-bg-video';
+          video.autoplay = true;
+          video.loop = true;
+          video.muted = true;
+          video.playsInline = true;
+          video.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            pointer-events: none;
+          `;
+
+          // body 배경 투명하게
+          document.body.style.background = 'transparent';
+          video.src = imageUrl;
+          document.body.insertBefore(video, document.body.firstChild);
+
+          // 기존 메뉴 배경 동영상 숨기기
           const bgVideo = document.querySelector('.menu-bg-video');
           if (bgVideo) {
             bgVideo.style.display = 'none';
           }
-          console.log('✅ 배경 변경 완료:', document.body.style.backgroundImage);
 
-        };
-        img.onerror = function() {
-          console.warn('❌ 이미지 로드 실패:', imageUrl);
-        };
-        img.src = imageUrl;
+          console.log('✅ 비디오 배경 변경 완료');
+        } else {
+          // 이미지 배경 처리 (기존 로직)
+          // 기존 subject-bg-video가 있으면 제거
+          let existingSubjectVideo = document.getElementById('subject-bg-video');
+          if (existingSubjectVideo) {
+            existingSubjectVideo.remove();
+          }
+
+          const img = new Image();
+          img.onload = function() {
+            // 태블릿에서는 고정 배경 div에 이미지 설정
+            if (isTablet) {
+              const tabletBg = document.getElementById('tablet-fixed-bg');
+              if (tabletBg) {
+                tabletBg.style.backgroundImage = `url('${imageUrl}')`;
+              }
+              // body 배경은 투명하게 (CSS에서 처리)
+            } else {
+              // PC에서는 body에 배경 설정
+              document.body.style.backgroundImage = `url('${imageUrl}')`;
+              document.body.style.backgroundSize = '110%';
+              document.body.style.backgroundPosition = 'center bottom';
+              document.body.style.backgroundAttachment = 'fixed';
+            }
+
+            // 배경 동영상 숨기기
+            const bgVideo = document.querySelector('.menu-bg-video');
+            if (bgVideo) {
+              bgVideo.style.display = 'none';
+            }
+            console.log('✅ 배경 변경 완료:', document.body.style.backgroundImage);
+
+          };
+          img.onerror = function() {
+            console.warn('❌ 이미지 로드 실패:', imageUrl);
+          };
+          img.src = imageUrl;
+        }
       } else {
         console.warn('❌ 해당 과목의 배경 이미지를 찾을 수 없습니다:', subjectId);
       }
