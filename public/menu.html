@@ -3601,17 +3601,6 @@ canvas[id^="confetti-canvas"] {
           // 비디오 배경 처리
           console.log('🎬 비디오 배경 적용:', imageUrl);
 
-          // 기존 배경 이미지 숨기기
-          if (isTablet) {
-            const tabletBg = document.getElementById('tablet-fixed-bg');
-            if (tabletBg) {
-              tabletBg.style.backgroundImage = 'none';
-              tabletBg.style.display = 'none';  // 태블릿 배경 완전히 숨기기
-            }
-          } else {
-            document.body.style.backgroundImage = 'none';
-          }
-
           // 기존 subject-bg-video가 있으면 제거
           let existingSubjectVideo = document.getElementById('subject-bg-video');
           if (existingSubjectVideo) {
@@ -3627,21 +3616,37 @@ canvas[id^="confetti-canvas"] {
           video.playsInline = true;
           video.setAttribute('webkit-playsinline', 'true');  // iOS Safari 지원
           video.setAttribute('playsinline', 'true');  // iOS Safari 지원
-          video.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 0;
-            pointer-events: none;
-          `;
-
-          // body 배경 투명하게
-          document.body.style.background = 'transparent';
           video.src = imageUrl;
-          document.body.insertBefore(video, document.body.firstChild);
+
+          if (isTablet) {
+            // 아이패드: tablet-fixed-bg 안에 비디오 삽입
+            const tabletBg = document.getElementById('tablet-fixed-bg');
+            if (tabletBg) {
+              tabletBg.style.backgroundImage = 'none';
+              tabletBg.innerHTML = '';  // 기존 내용 제거
+              video.style.cssText = `
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+              `;
+              tabletBg.appendChild(video);
+            }
+          } else {
+            // PC: body에 비디오 삽입
+            video.style.cssText = `
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              z-index: 0;
+              pointer-events: none;
+            `;
+            document.body.style.background = 'transparent';
+            document.body.style.backgroundImage = 'none';
+            document.body.insertBefore(video, document.body.firstChild);
+          }
 
           // iOS에서 자동재생 시도
           video.play().catch(function(error) {
