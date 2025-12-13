@@ -1697,7 +1697,7 @@
     }
 
     /* ===== 레이더 차트 ===== */
-    function drawRadarChart(scores) {
+    window.drawRadarChart = function drawRadarChart(scores) {
       const canvas = document.getElementById('report-radar');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
