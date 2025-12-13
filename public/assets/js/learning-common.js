@@ -1342,6 +1342,15 @@
 
     // 창의활동 버튼 초기화
     initCreativeButtons();
+
+    // 시작: 빈 레이더
+    drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
+
+    // ✅ 어휘학습 상태 복원
+    loadVocabState();
+
+    // ✅ 창의활동 상태 복원
+    loadCreativeState();
 });
 
   /* =========================================================
@@ -2533,14 +2542,3 @@
       });
     }
   }
-
-    // 시작: 빈 레이더
-    drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
-
-    // ✅ 어휘학습 상태 복원
-    loadVocabState();
-
-    // ✅ 창의활동 상태 복원
-    loadCreativeState();
-
-    // submitReport 함수는 DOMContentLoaded 외부로 이동됨 (전역 접근 가능)
