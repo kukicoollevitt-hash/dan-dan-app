@@ -14498,8 +14498,9 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
             }
 
             // q1_text와 q1_opts 추출 (실제 콘텐츠 구조)
-            // 이스케이프된 따옴표(\\' 또는 \\")를 포함한 문자열 매칭
-            const q1TextMatch = unitBlock.match(/q1_text:\s*['"]((\\['"]|[^'"])+?)['"]/s);
+            // 작은따옴표로 시작하면 작은따옴표로만 종료 (내부 쌍따옴표 허용)
+            const q1TextMatch = unitBlock.match(/q1_text:\s*'((?:\\'|[^'])+?)'/) ||
+                                unitBlock.match(/q1_text:\s*"((?:\\"|[^"])+?)"/);
             const q1OptsMatch = unitBlock.match(/q1_opts:\s*\[([\s\S]*?)\]/);
 
             if (q1TextMatch && q1OptsMatch) {
@@ -14530,7 +14531,8 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
             }
 
             // q1 실패 시 q2 시도
-            const q2TextMatch = unitBlock.match(/q2_text:\s*['"]((\\['"]|[^'"])+?)['"]/s);
+            const q2TextMatch = unitBlock.match(/q2_text:\s*'((?:\\'|[^'])+?)'/) ||
+                                unitBlock.match(/q2_text:\s*"((?:\\"|[^"])+?)"/);
             const q2OptsMatch = unitBlock.match(/q2_opts:\s*\[([\s\S]*?)\]/);
 
             if (q2TextMatch && q2OptsMatch) {
