@@ -14484,13 +14484,17 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
               if (q2AnsMatch) q2Answer = parseInt(q2AnsMatch[1]);
             }
 
-            // passage 추출 (본문 3문단)
-            const passageMatch = unitBlock.match(/passage:\s*\[([\s\S]*?)\]/);
+            // passage 추출 (본문 4문단 - 이스케이프된 따옴표 처리)
+            const passageMatch = unitBlock.match(/passage:\s*\[([\s\S]*?)\],?\s*\n\s*vocab:/);
             let passages = [];
             if (passageMatch) {
-              // 각 문단 추출
+              // 각 문단 추출 - 이스케이프된 따옴표(\')를 포함한 패턴 사용
               const passageRaw = passageMatch[1];
-              passages = passageRaw.match(/'([^']+)'/g)?.map(s => s.replace(/'/g, '')) || [];
+              // '...' 패턴에서 내부의 \' 를 허용 (역슬래시+따옴표는 종료로 간주하지 않음)
+              passages = passageRaw.match(/'((?:\\'|[^'])+)'/g)?.map(s => {
+                // 양쪽 따옴표 제거 후 이스케이프된 따옴표를 일반 따옴표로 변환
+                return s.slice(1, -1).replace(/\\'/g, "'");
+              }) || [];
             }
 
             // q1_text와 q1_opts 추출 (실제 콘텐츠 구조)
