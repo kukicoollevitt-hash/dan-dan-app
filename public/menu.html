@@ -9807,33 +9807,50 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         'people': 'person', 'people1': 'person', 'people2': 'person'
       };
 
-      // unitId에서 과목코드와 번호 추출 (예: "chem_01", "physics_12", "./BRAINUP/science/chem_01.html", "fit_bio_01")
+      // unitId에서 과목코드와 번호 추출 (예: "chem_01", "physics_12", "./BRAINUP/science/chem_01.html", "fit_bio_01", "deep_bio_01")
       let subjectCode = '';
       let unitNo = '';
+      let isDeep = false;
 
-      // fit_ 접두어 경로 형식인 경우 (./BRAINUP/science/fit_chem_01.html)
-      const fitPathMatch = unitId.match(/\/fit_([a-z]+\d?)_(\d+)\.html$/i);
-      if (fitPathMatch) {
-        subjectCode = fitPathMatch[1].toLowerCase();
-        unitNo = fitPathMatch[2];
+      // deep_ 접두어 경로 형식인 경우 (./BRAINUP/science/deep_bio_01.html)
+      const deepPathMatch = unitId.match(/\/deep_([a-z]+\d?)_(\d+)\.html$/i);
+      if (deepPathMatch) {
+        subjectCode = deepPathMatch[1].toLowerCase();
+        unitNo = deepPathMatch[2];
+        isDeep = true;
       } else {
-        // fit_ 접두어 단순 코드 형식인 경우 (fit_chem_01, fit_people2_03)
-        const fitCodeMatch = unitId.match(/^fit_([a-z]+\d?)_(\d+)$/i);
-        if (fitCodeMatch) {
-          subjectCode = fitCodeMatch[1].toLowerCase();
-          unitNo = fitCodeMatch[2];
+        // deep_ 접두어 단순 코드 형식인 경우 (deep_bio_01)
+        const deepCodeMatch = unitId.match(/^deep_([a-z]+\d?)_(\d+)$/i);
+        if (deepCodeMatch) {
+          subjectCode = deepCodeMatch[1].toLowerCase();
+          unitNo = deepCodeMatch[2];
+          isDeep = true;
         } else {
-          // 파일 경로 형식인 경우 (./BRAINUP/science/chem_01.html)
-          const pathMatch = unitId.match(/\/([a-z]+\d?)_(\d+)\.html$/i);
-          if (pathMatch) {
-            subjectCode = pathMatch[1].toLowerCase();
-            unitNo = pathMatch[2];
+          // fit_ 접두어 경로 형식인 경우 (./BRAINUP/science/fit_chem_01.html)
+          const fitPathMatch = unitId.match(/\/fit_([a-z]+\d?)_(\d+)\.html$/i);
+          if (fitPathMatch) {
+            subjectCode = fitPathMatch[1].toLowerCase();
+            unitNo = fitPathMatch[2];
           } else {
-            // 단순 코드 형식인 경우 (chem_01)
-            const codeMatch = unitId.match(/^([a-z]+\d?)_(\d+)$/i);
-            if (codeMatch) {
-              subjectCode = codeMatch[1].toLowerCase();
-              unitNo = codeMatch[2];
+            // fit_ 접두어 단순 코드 형식인 경우 (fit_chem_01, fit_people2_03)
+            const fitCodeMatch = unitId.match(/^fit_([a-z]+\d?)_(\d+)$/i);
+            if (fitCodeMatch) {
+              subjectCode = fitCodeMatch[1].toLowerCase();
+              unitNo = fitCodeMatch[2];
+            } else {
+              // 파일 경로 형식인 경우 (./BRAINUP/science/chem_01.html)
+              const pathMatch = unitId.match(/\/([a-z]+\d?)_(\d+)\.html$/i);
+              if (pathMatch) {
+                subjectCode = pathMatch[1].toLowerCase();
+                unitNo = pathMatch[2];
+              } else {
+                // 단순 코드 형식인 경우 (chem_01)
+                const codeMatch = unitId.match(/^([a-z]+\d?)_(\d+)$/i);
+                if (codeMatch) {
+                  subjectCode = codeMatch[1].toLowerCase();
+                  unitNo = codeMatch[2];
+                }
+              }
             }
           }
         }
@@ -9846,13 +9863,23 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       // unitNo에서 앞의 0 제거 (01 -> 1)
       const displayNo = unitNo ? parseInt(unitNo, 10).toString() : '';
 
+      // ✅ BRAINDEEP (deep_bio 등)인 경우 CONTENTS에서 실제 제목 가져오기
+      let displayTitle = displayNo ? `${subjectLabel} ${displayNo}` : subjectLabel;
+
+      if (isDeep && window.CONTENTS) {
+        const contentKey = `deep_${subjectCode}_${unitNo}`;
+        if (window.CONTENTS[contentKey] && window.CONTENTS[contentKey].title) {
+          displayTitle = window.CONTENTS[contentKey].title;
+        }
+      }
+
       return {
         subjectCode: subjectCode,
         subjectLabel: subjectLabel,
         fieldCode: fieldCode,
         fieldLabel: fieldLabel,
         unitNo: unitNo,
-        displayTitle: displayNo ? `${subjectLabel} ${displayNo}` : subjectLabel
+        displayTitle: displayTitle
       };
     }
 
