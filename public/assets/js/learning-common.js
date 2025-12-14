@@ -366,8 +366,8 @@
         console.log('[restoreReadingStateFromServer] 채점 결과 직접 복원 완료 (q1ok 형식)');
 
         // ✅ 레이더 차트 업데이트 (q1ok 형식 기반)
-        if (typeof drawRadarChart === 'function') {
-          drawRadarChart({
+        if (typeof window.drawRadarChart === 'function') {
+          window.drawRadarChart({
             literal: data.q1ok ? 10 : 6,
             structural: data.q2ok ? 10 : 6,
             lexical: data.q3ok ? 10 : 6,
@@ -436,8 +436,8 @@
         const q4ok = data.results[3]?.isCorrect === true;
         const q5ok = data.results[4]?.isCorrect === true;
 
-        if (typeof drawRadarChart === 'function') {
-          drawRadarChart({
+        if (typeof window.drawRadarChart === 'function') {
+          window.drawRadarChart({
             literal: q1ok ? 10 : 6,
             structural: q2ok ? 10 : 6,
             lexical: q3ok ? 10 : 6,
@@ -950,8 +950,8 @@
           console.log('[refreshReportTab] 서버에서 가져온 데이터:', unitData);
 
           // 레이더 차트 업데이트
-          if (typeof drawRadarChart === 'function') {
-            drawRadarChart({
+          if (typeof window.drawRadarChart === 'function') {
+            window.drawRadarChart({
               literal: unitData.radar.literal || 0,
               structural: unitData.radar.structural || 0,
               lexical: unitData.radar.lexical || 0,
