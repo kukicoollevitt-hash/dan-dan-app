@@ -10222,30 +10222,42 @@ app.get("/my-learning", async (req, res) => {
           };
 
           const parts = unitCode.split('_');
-          if (parts.length < 2) return null;
+          console.log('🔍 getUnitPath - parts:', parts, 'series:', series);
+          if (parts.length < 2) {
+            console.log('❌ parts.length < 2');
+            return null;
+          }
 
           // fit_ / deep_ 접두어 처리: fit_geo_13 → subjectCode = 'geo', deep_bio_01 → subjectCode = 'bio'
           let subjectCode = parts[0];
           if ((subjectCode === 'fit' || subjectCode === 'deep') && parts.length >= 3) {
             subjectCode = parts[1];
           }
+          console.log('🔍 getUnitPath - subjectCode:', subjectCode);
 
           const seriesFolder = seriesFolders[series] || 'BRAINUP';
           const subjectFolder = subjectFolders[subjectCode];
+          console.log('🔍 getUnitPath - seriesFolder:', seriesFolder, 'subjectFolder:', subjectFolder);
 
-          if (!subjectFolder) return null;
+          if (!subjectFolder) {
+            console.log('❌ subjectFolder not found for subjectCode:', subjectCode);
+            return null;
+          }
 
           // 경로 생성: /BRAINUP/social/geo_01.html, /BRAINUP/social/fit_geo_01.html, /BRAINUP/science/deep_bio_01.html
-          return '/' + seriesFolder + '/' + subjectFolder + '/' + unitCode + '.html';
+          const finalPath = '/' + seriesFolder + '/' + subjectFolder + '/' + unitCode + '.html';
+          console.log('✅ getUnitPath - finalPath:', finalPath);
+          return finalPath;
         }
 
         // ===== 단원 페이지로 이동 =====
         function goToUnit(unitCode, series) {
           const path = getUnitPath(unitCode, series);
+          console.log('🔍 goToUnit 호출:', { unitCode, series, path });
           if (path) {
             window.open(path, '_blank');
           } else {
-            alert('해당 단원 페이지를 찾을 수 없습니다.');
+            alert('해당 단원 페이지를 찾을 수 없습니다.\\n\\nunitCode: ' + unitCode + '\\nseries: ' + series);
           }
         }
 
