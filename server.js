@@ -10194,7 +10194,7 @@ app.get("/my-learning", async (req, res) => {
             'BRAIN업': 'BRAINUP',
             'BRAIN온': 'BRAINON',
             'BRAIN핏': 'BRAINUP',
-            'BRAIN딥': 'BRAINDEEP',
+            'BRAIN딥': 'BRAINUP',
             'BRAIN중등': 'BRAINMID',
             'BRAIN고등': 'BRAINHIGH'
           };
@@ -10224,9 +10224,9 @@ app.get("/my-learning", async (req, res) => {
           const parts = unitCode.split('_');
           if (parts.length < 2) return null;
 
-          // fit_ 접두어 처리: fit_geo_13 → subjectCode = 'geo'
+          // fit_ / deep_ 접두어 처리: fit_geo_13 → subjectCode = 'geo', deep_bio_01 → subjectCode = 'bio'
           let subjectCode = parts[0];
-          if (subjectCode === 'fit' && parts.length >= 3) {
+          if ((subjectCode === 'fit' || subjectCode === 'deep') && parts.length >= 3) {
             subjectCode = parts[1];
           }
 
@@ -10235,7 +10235,7 @@ app.get("/my-learning", async (req, res) => {
 
           if (!subjectFolder) return null;
 
-          // 경로 생성: /BRAINUP/social/geo_01.html 또는 /BRAINFIT/social/fit_geo_01.html
+          // 경로 생성: /BRAINUP/social/geo_01.html, /BRAINUP/social/fit_geo_01.html, /BRAINUP/science/deep_bio_01.html
           return '/' + seriesFolder + '/' + subjectFolder + '/' + unitCode + '.html';
         }
 
