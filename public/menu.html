@@ -5763,6 +5763,9 @@ if (logoutConfirmBtn) {
       checkAssignedTasks();
 
       // 🎉 배경 빈 공간 클릭 시 폭죽 효과 + 학습 진도 갱신
+      // Debounce timer to prevent duplicate sync calls
+      let syncDebounceTimer = null;
+
       document.body.addEventListener('click', function(e) {
         // 클릭한 요소가 버튼, 링크, 입력 필드 등이 아닌 경우에만 폭죽 실행
         const clickedElement = e.target;
@@ -5780,14 +5783,20 @@ if (logoutConfirmBtn) {
             colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#ffd700', '#ff6b6b']
           });
 
+          // Clear existing sync timer
+          if (syncDebounceTimer) {
+            clearTimeout(syncDebounceTimer);
+          }
+
           // 🔄 폭죽 효과 후 학습 완료 상태 갱신 (페이지 새로고침 없이)
-          setTimeout(async () => {
+          syncDebounceTimer = setTimeout(async () => {
             console.log('🔄 서버에서 최신 데이터 가져오는 중...');
             await syncCompletionStatusFromServer(); // 서버에서 최신 완료 상태 가져오기
             console.log('🔄 UI 업데이트 중...');
             restoreProgressOnRenderedList(); // UI에 반영
             updateSubjectCompletionCounts(); // ✅ 세부과목 완료 개수 업데이트
             console.log('✅ 학습 진도 갱신 완료!');
+            syncDebounceTimer = null;
           }, 800); // 폭죽 효과 감상 후 업데이트
         }
       });
@@ -6327,8 +6336,8 @@ async function performLogout() {
       // 학생 정보가 있으면 헤더 문구 다시 갱신
       showUserInfo();
 
-      // 🔄 서버에서 최신 완료 상태 다시 가져오기 (새로 완료된 단원 반영)
-      await syncCompletionStatusFromServer();
+      // ✅ 완료 상태는 이미 6099번 줄에서 로드되었으므로 중복 호출 제거
+      // UI만 업데이트
       restoreProgressOnRenderedList();
       updateSubjectCompletionCounts(); // ✅ 세부과목 완료 개수 업데이트
     });
@@ -8627,31 +8636,44 @@ async function performLogout() {
       }
 
       // 페이지가 보일 때마다 뱃지 업데이트 (학습 완료 후 돌아왔을 때)
+      // Debounce timer to prevent duplicate calls
+      let visibilityDebounceTimer = null;
+
       document.addEventListener('visibilitychange', async function() {
         if (!document.hidden) {
-          console.log('🔄 페이지 활성화 - 뱃지 및 학습 완료 상태 업데이트');
-
-          // 🔥 unit-grades 캐시 무효화 (학습 페이지에서 돌아올 때 최신 별표 데이터 가져오기)
-          if (window.ApiCache && typeof window.ApiCache.invalidate === 'function') {
-            ApiCache.invalidate('unit-grades');
-            console.log('🗑️ [Menu] unit-grades 캐시 무효화 완료');
+          // Clear existing timer
+          if (visibilityDebounceTimer) {
+            clearTimeout(visibilityDebounceTimer);
           }
 
-          // 현재 활성화된 시리즈로 뱃지 새로 계산
-          const activeSeriesItem = document.querySelector('#seriesList .series-item.active');
-          if (activeSeriesItem) {
-            const activeSeries = activeSeriesItem.dataset.series;
-            if (activeSeries === 'BRAINUP' || activeSeries === 'BRAINFIT' || activeSeries === 'BRAINDEEP') {
-              updateRadarGradeBadgeForSeries(activeSeries);
+          // Set new timer - only execute after 500ms of no new events
+          visibilityDebounceTimer = setTimeout(async () => {
+            console.log('🔄 페이지 활성화 - 뱃지 및 학습 완료 상태 업데이트');
+
+            // 🔥 unit-grades 캐시 무효화 (학습 페이지에서 돌아올 때 최신 별표 데이터 가져오기)
+            if (window.ApiCache && typeof window.ApiCache.invalidate === 'function') {
+              ApiCache.invalidate('unit-grades');
+              console.log('🗑️ [Menu] unit-grades 캐시 무효화 완료');
+            }
+
+            // 현재 활성화된 시리즈로 뱃지 새로 계산
+            const activeSeriesItem = document.querySelector('#seriesList .series-item.active');
+            if (activeSeriesItem) {
+              const activeSeries = activeSeriesItem.dataset.series;
+              if (activeSeries === 'BRAINUP' || activeSeries === 'BRAINFIT' || activeSeries === 'BRAINDEEP') {
+                updateRadarGradeBadgeForSeries(activeSeries);
+              } else {
+                updateRadarGradeBadge();
+              }
             } else {
               updateRadarGradeBadge();
             }
-          } else {
-            updateRadarGradeBadge();
-          }
 
-          // 메인 메뉴의 학습 완료 상태 및 별점 업데이트
-          await updateAllLessonStatus();
+            // 메인 메뉴의 학습 완료 상태 및 별점 업데이트
+            await updateAllLessonStatus();
+
+            visibilityDebounceTimer = null;
+          }, 500);
         }
       });
 
