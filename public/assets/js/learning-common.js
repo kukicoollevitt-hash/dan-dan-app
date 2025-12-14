@@ -1281,6 +1281,7 @@
     localStorage.removeItem(`current-geo-tab:${unit}`);
 
     // ★ 서버에서 학습 진행 데이터 복원
+    let hasServerReadingData = false;  // 서버에서 본문학습 데이터 복원 여부
     try {
       console.log('[learning-common] ★ 서버 데이터 로딩 시작...');
       const serverData = await loadUnitProgressFromServer();
@@ -1293,6 +1294,7 @@
         if (readingData) {
           console.log('[learning-common] 서버 데이터 복원 시작:', readingData);
           restoreReadingStateFromServer(readingData);
+          hasServerReadingData = true;  // 서버에서 복원 완료
         } else {
           console.log('[learning-common] ★ reportState/readingState 없음 - 본문학습 복원 건너뜀');
         }
@@ -1343,8 +1345,10 @@
     // 창의활동 버튼 초기화
     initCreativeButtons();
 
-    // 시작: 빈 레이더
-    drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
+    // 시작: 빈 레이더 (서버에서 복원한 경우 건너뜀)
+    if (!hasServerReadingData) {
+      drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
+    }
 
     // ✅ 어휘학습 상태 복원
     loadVocabState();
