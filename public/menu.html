@@ -1177,12 +1177,14 @@ body {
 .study-room-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: linear-gradient(135deg, rgb(46, 49, 65), rgb(27, 30, 43));
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 10002;
-  backdrop-filter: blur(3px);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .study-room-modal.show {
@@ -9493,6 +9495,12 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
     async function openStudyRoomModal() {
       const modal = document.getElementById('studyRoomModal');
       if (modal) {
+        // 🎬 뒷배경 비디오 일시정지 (성능 최적화)
+        const bgVideo = document.querySelector('#tablet-fixed-bg video, .background-video video');
+        if (bgVideo) {
+          bgVideo.pause();
+        }
+
         modal.classList.add('show');
         // 과제 목록 렌더링
         await renderStudyRoomList();
@@ -9510,6 +9518,13 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         // ✅ 모달 열림 상태 제거
         sessionStorage.removeItem('studyRoomModalOpen');
         console.log('✅ 모달 숨김 완료, 학습 완료 상태 업데이트 시작');
+
+        // 🎬 뒷배경 비디오 다시 재생
+        const bgVideo = document.querySelector('#tablet-fixed-bg video, .background-video video');
+        if (bgVideo) {
+          bgVideo.play().catch(e => console.log('비디오 재생 실패:', e));
+        }
+
         // 메인 메뉴의 학습 완료 상태 업데이트
         await updateAllLessonStatus();
         console.log('✅ 학습실 모달 닫기 완료');
