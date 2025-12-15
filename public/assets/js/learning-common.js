@@ -2546,3 +2546,38 @@
       });
     }
   }
+
+// ===== 뒤로가기 버튼 (나의 학습분석으로 돌아가기) =====
+function initBackToAnalysisButton() {
+  // 버튼이 이미 존재하면 제거
+  const existingBtn = document.getElementById('backToAnalysisBtn');
+  if (existingBtn) {
+    existingBtn.remove();
+  }
+
+  // document.referrer를 확인해서 /my-learning에서 온 경우에만 버튼 표시
+  const isFromAnalysis = document.referrer.includes('/my-learning');
+
+  if (isFromAnalysis) {
+    const backBtn = document.createElement('button');
+    backBtn.id = 'backToAnalysisBtn';
+    backBtn.innerHTML = '←';
+    backBtn.title = '나의 학습분석으로 돌아가기';
+    backBtn.style.display = 'flex';
+
+    backBtn.addEventListener('click', function() {
+      // history.back()으로 이전 페이지로 이동
+      window.history.back();
+    });
+
+    document.body.appendChild(backBtn);
+    console.log('✅ 뒤로가기 버튼 추가됨');
+  }
+}
+
+// 페이지 로드 시 버튼 초기화
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initBackToAnalysisButton);
+} else {
+  initBackToAnalysisButton();
+}
