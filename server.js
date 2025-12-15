@@ -9357,13 +9357,13 @@ app.get("/my-learning", async (req, res) => {
           card.addEventListener('click', function() {
             const unitCode = log.unit; // 예: geo_01, bio_01, fit_bio_01
             if (unitCode) {
-              // 단원 코드에서 과목 추출 (fit_ 접두어 처리)
+              // 단원 코드에서 과목 추출 (fit_ / deep_ 접두어 처리)
               const parts = unitCode.split('_');
               let subject = parts[0] || '';
 
-              // fit_ 접두어인 경우 실제 과목명은 parts[1]
-              if (subject === 'fit' && parts.length >= 3) {
-                subject = parts[1]; // fit_bio_01 → bio
+              // fit_ / deep_ 접두어인 경우 실제 과목명은 parts[1]
+              if ((subject === 'fit' || subject === 'deep') && parts.length >= 3) {
+                subject = parts[1]; // fit_bio_01 → bio, deep_bio_01 → bio
               }
 
               // 과목별 폴더 매핑
@@ -9382,7 +9382,7 @@ app.get("/my-learning", async (req, res) => {
 
               const unitUrl = '/' + seriesCode + '/' + folder + '/' + unitCode + '.html';
               console.log('[레이더 클릭] unitCode:', unitCode, 'subject:', subject, 'folder:', folder, 'url:', unitUrl);
-              window.open(unitUrl, '_blank');
+              window.location.href = unitUrl;
             }
           });
 
