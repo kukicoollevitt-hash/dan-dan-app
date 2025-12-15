@@ -6345,10 +6345,12 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             if (!log.radar || !log.unit) return;
 
             // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
-            // fit_ 접두어 제거: fit_bio_01 -> bio_01
+            // fit_ / deep_ 접두어 제거: fit_bio_01 -> bio_01, deep_bio_01 -> bio_01
             let unitForSubject = log.unit;
             if (unitForSubject.startsWith('fit_')) {
               unitForSubject = unitForSubject.substring(4);
+            } else if (unitForSubject.startsWith('deep_')) {
+              unitForSubject = unitForSubject.substring(5);
             }
             let subjectCode = unitForSubject.split('_')[0];
 
@@ -8982,10 +8984,12 @@ app.get("/my-learning", async (req, res) => {
             if (!log.radar || !log.unit) return;
 
             // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
-            // fit_ 접두어 제거: fit_bio_01 -> bio_01
+            // fit_ / deep_ 접두어 제거: fit_bio_01 -> bio_01, deep_bio_01 -> bio_01
             let unitForSubject = log.unit;
             if (unitForSubject.startsWith('fit_')) {
               unitForSubject = unitForSubject.substring(4);
+            } else if (unitForSubject.startsWith('deep_')) {
+              unitForSubject = unitForSubject.substring(5);
             }
             let subjectCode = unitForSubject.split('_')[0];
 
