@@ -2567,9 +2567,25 @@ function initBackToAnalysisButton() {
 
     backBtn.addEventListener('click', function() {
       // referrer URL로 이동 (나의 학습분석 모달 재오픈)
-      const referrerUrl = document.referrer;
+      let referrerUrl = document.referrer;
+
       if (referrerUrl) {
-        window.location.href = referrerUrl;
+        // 현재 페이지의 단원 코드에서 시리즈 판단
+        const currentUnit = window.CUR_UNIT || '';
+        let targetSeries = 'up'; // 기본값
+
+        if (currentUnit.startsWith('fit_')) {
+          targetSeries = 'fit';
+        } else if (currentUnit.startsWith('deep_')) {
+          targetSeries = 'deep';
+        }
+
+        // referrer URL의 series 파라미터를 현재 시리즈로 변경
+        const url = new URL(referrerUrl);
+        url.searchParams.set('series', targetSeries);
+
+        console.log('🔙 뒤로가기:', { currentUnit, targetSeries, finalUrl: url.toString() });
+        window.location.href = url.toString();
       } else {
         // referrer가 없으면 메뉴 페이지로
         window.location.href = '/menu.html';
