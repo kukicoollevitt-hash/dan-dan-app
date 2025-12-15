@@ -707,6 +707,11 @@ body {
   justify-content: center;
   z-index: 10000;
   backdrop-filter: blur(3px);
+  /* GPU 가속 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform, opacity;
 }
 
 .learning-modal.show {
@@ -823,6 +828,10 @@ body {
   border: none;
   width: 100%;
   height: 100%;
+  /* GPU 가속 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 /* 단원 학습 모달 */
@@ -9254,6 +9263,13 @@ async function performLogout() {
           learningIframe.src = url;
           learningModal.classList.add('show');
 
+          // ✅ 배경 비디오 일시정지 (깜박임 방지)
+          const bgVideo = document.querySelector('#tablet-fixed-bg video, .background-video video, .menu-bg-video');
+          if (bgVideo) {
+            bgVideo.pause();
+            console.log('🎬 배경 비디오 일시정지');
+          }
+
           // ✅ 모달 열림 상태 저장 (새로고침 후 복원용)
           sessionStorage.setItem('learningModalOpen', 'true');
         }
@@ -9262,6 +9278,13 @@ async function performLogout() {
         function closeLearningModal() {
           learningModal.classList.remove('show');
           learningIframe.src = ''; // iframe 초기화
+
+          // ✅ 배경 비디오 재생
+          const bgVideo = document.querySelector('#tablet-fixed-bg video, .background-video video, .menu-bg-video');
+          if (bgVideo) {
+            bgVideo.play().catch(e => console.log('비디오 재생 실패:', e));
+            console.log('▶️ 배경 비디오 재생');
+          }
 
           // ✅ 모달 열림 상태 제거
           sessionStorage.removeItem('learningModalOpen');
