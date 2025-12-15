@@ -2566,8 +2566,14 @@ function initBackToAnalysisButton() {
     backBtn.style.display = 'flex';
 
     backBtn.addEventListener('click', function() {
-      // history.back()으로 이전 페이지로 이동
-      window.history.back();
+      // referrer URL로 이동 (나의 학습분석 모달 재오픈)
+      const referrerUrl = document.referrer;
+      if (referrerUrl) {
+        window.location.href = referrerUrl;
+      } else {
+        // referrer가 없으면 메뉴 페이지로
+        window.location.href = '/menu.html';
+      }
     });
 
     document.body.appendChild(backBtn);
