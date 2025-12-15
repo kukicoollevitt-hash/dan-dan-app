@@ -3520,6 +3520,13 @@ window.renderVocabFill = function () {
     return;
   }
 
+  // ✅ 이미 렌더링된 경우 다시 렌더링하지 않음 (탭 전환 시 채점 결과 유지)
+  const existingBlanks = root.querySelectorAll('.blank-wrap');
+  if (existingBlanks.length > 0) {
+    console.log('[renderVocabFill] 이미 렌더링됨 - 스킵 (채점 결과 유지)');
+    return;
+  }
+
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
       <span class="blank-wrap" data-answer="${answer}">
