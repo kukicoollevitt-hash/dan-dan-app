@@ -9971,9 +9971,12 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
           bgVideo.pause();
         }
 
+        // ⚡ 모달 먼저 표시 (로딩 인디케이터 포함)
         modal.classList.add('show');
+
         // 과제 목록 렌더링
         await renderStudyRoomList();
+
         // ✅ 모달 열림 상태 저장 (새로고침 후 복원용)
         sessionStorage.setItem('studyRoomModalOpen', 'true');
       }
@@ -10358,10 +10361,14 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const list = document.getElementById('studyRoomList');
       if (!list) return;
 
-      // 단원별 등급 데이터 로드
-      unitGradesData = await fetchUnitGrades();
+      // ⚡ 병렬 처리로 속도 개선: 모든 데이터를 동시에 로드
+      const [unitGrades, allTasks, vocabCompletedToday] = await Promise.all([
+        fetchUnitGrades(),
+        getStudyRoomTasks(),
+        checkVocabularyCompletedToday()
+      ]);
 
-      const allTasks = await getStudyRoomTasks();
+      unitGradesData = unitGrades;
 
       // AI 과제와 일반 과제 분리 후 각각 시간순 정렬
       const aiTasks = allTasks.filter(t => t.isAI).sort((a, b) => {
@@ -10392,9 +10399,6 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         </div>
       `;
       list.appendChild(vocabDailyHeader);
-
-      // 오늘 어휘퀴즈 완료 여부 체크
-      const vocabCompletedToday = await checkVocabularyCompletedToday();
 
       // 어휘력 향상 퀴즈 항목
       const vocabItem = document.createElement('li');
