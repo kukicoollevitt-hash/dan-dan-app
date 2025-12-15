@@ -2039,12 +2039,6 @@ function getCurrentUnit() {
 let _vocabFillRendered = false;
 
 window.renderVocabFill = function () {
-  // 이미 렌더링되었으면 다시 렌더링하지 않음 (탭 전환 시 상태 유지)
-  if (_vocabFillRendered) {
-    console.log('[renderVocabFill] 이미 렌더링됨, 건너뛰기');
-    return;
-  }
-
   const unit = window.CUR_UNIT || 'physics_01';
   const pack = window.CONTENTS?.[unit];
   const root = document.getElementById('vocab-fill')
@@ -2052,6 +2046,13 @@ window.renderVocabFill = function () {
 
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
+    return;
+  }
+
+  // ✅ 이미 렌더링된 경우 다시 렌더링하지 않음 (탭 전환 시 채점 결과 유지)
+  const existingBlanks = root.querySelectorAll('.blank-wrap');
+  if (existingBlanks.length > 0) {
+    console.log('[renderVocabFill] 이미 렌더링됨 - 스킵 (채점 결과 유지)');
     return;
   }
 
