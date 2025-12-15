@@ -6331,6 +6331,7 @@ app.get("/admin/logs-old-inline", async (req, res) => {
               if (log.unit) {
                 let unitCode = log.unit;
                 if (unitCode.startsWith('fit_')) unitCode = unitCode.substring(4);
+                else if (unitCode.startsWith('deep_')) unitCode = unitCode.substring(5);
                 if (unitCode.startsWith(subjectCode + '_')) {
                   unitSet.add(unitCode);
                 }
@@ -8970,6 +8971,7 @@ app.get("/my-learning", async (req, res) => {
               if (log.unit) {
                 let unitCode = log.unit;
                 if (unitCode.startsWith('fit_')) unitCode = unitCode.substring(4);
+                else if (unitCode.startsWith('deep_')) unitCode = unitCode.substring(5);
                 if (unitCode.startsWith(subjectCode + '_')) {
                   unitSet.add(unitCode);
                 }
