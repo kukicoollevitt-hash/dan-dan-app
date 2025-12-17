@@ -15187,6 +15187,190 @@ app.get("/api/gate-quiz/status", async (req, res) => {
   }
 });
 
+// ===== 메뉴 초기화 통합 API (성능 최적화) =====
+// 여러 API를 한 번에 호출하여 네트워크 왕복 횟수를 줄임
+app.get("/api/menu-init", async (req, res) => {
+  const startTime = Date.now();
+  console.log("🚀 [/api/menu-init] 통합 API 호출 시작");
+
+  try {
+    const { grade, name, series, phone } = req.query;
+
+    if (!grade || !name) {
+      return res.status(400).json({
+        ok: false,
+        message: "grade, name 파라미터가 필요합니다."
+      });
+    }
+
+    // 세션 정보
+    const session = req.session && req.session.user
+      ? { ok: true, user: req.session.user }
+      : { ok: false, user: null };
+
+    // 병렬로 모든 데이터 조회
+    const [
+      userInfo,
+      userProgress,
+      completedLogs,
+      allLogs,
+      unitGradesData
+    ] = await Promise.all([
+      // 1. user-info: 사용자 정보
+      User.findOne({ grade, name, deleted: { $ne: true } }).lean(),
+
+      // 2. UserProgress: study-room, today, last-assigned 모두 포함
+      UserProgress.findOne({ grade, name }).lean(),
+
+      // 3. completion-status: 완료된 단원 목록 (series가 있을 때만)
+      series
+        ? LearningLog.find({ grade, name, series, completed: true }).select('unit').lean()
+        : Promise.resolve([]),
+
+      // 4. learning-logs: 학습 기록
+      LearningLog.find(phone ? { grade, name, phone } : { grade, name })
+        .sort({ timestamp: -1 })
+        .lean(),
+
+      // 5. unit-grades: 단원별 등급
+      LearningLog.find({ grade, name, deleted: false })
+        .sort({ timestamp: -1 })
+        .lean()
+    ]);
+
+    // user-info 가공
+    const userInfoResult = userInfo
+      ? {
+          _id: userInfo._id,
+          grade: userInfo.grade,
+          name: userInfo.name,
+          school: userInfo.school,
+          assignedSeries: userInfo.assignedSeries || []
+        }
+      : null;
+
+    // study-room 가공
+    const studyRoom = {
+      ok: true,
+      data: userProgress
+        ? {
+            studyRoom: userProgress.studyRoom || { assignedTasks: [] },
+            completedPages: userProgress.completedPages || [],
+            grade: userProgress.grade,
+            name: userProgress.name
+          }
+        : {
+            studyRoom: { assignedTasks: [] }
+          }
+    };
+
+    // today (어휘퀴즈 완료 여부)
+    let todayResult = { ok: true, completedToday: false };
+    if (userProgress && userProgress.vocabularyQuizHistory && userProgress.vocabularyQuizHistory.length > 0) {
+      const now = new Date();
+      const kstOffset = 9 * 60 * 60 * 1000;
+      const kstNow = new Date(now.getTime() + kstOffset);
+      const kstTodayStart = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 0, 0, 0) - kstOffset);
+      const kstTodayEnd = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 23, 59, 59) - kstOffset);
+
+      const todayHistory = userProgress.vocabularyQuizHistory.find(history => {
+        const historyDate = new Date(history.date);
+        return historyDate >= kstTodayStart && historyDate <= kstTodayEnd;
+      });
+
+      todayResult = {
+        ok: true,
+        completedToday: !!todayHistory,
+        latestHistory: todayHistory || null
+      };
+    }
+
+    // last-assigned
+    const lastAssigned = {
+      ok: true,
+      lastAIAssignedAt: userProgress?.studyRoom?.lastAIAssignedAt || null
+    };
+
+    // completion-status
+    const completionStatus = {
+      ok: true,
+      completedUnits: completedLogs.map(log => log.unit)
+    };
+
+    // learning-logs 가공 (AI 복습 완료 시간 추가)
+    const aiTaskMap = new Map();
+    if (userProgress && userProgress.studyRoom && userProgress.studyRoom.assignedTasks) {
+      userProgress.studyRoom.assignedTasks.forEach(task => {
+        if (task.isAI && task.completedAt) {
+          aiTaskMap.set(task.id, task.completedAt);
+        }
+      });
+    }
+    const learningLogs = allLogs.map(log => ({
+      ...log,
+      aiReviewCompletedAt: aiTaskMap.get(log.unit) || null
+    }));
+
+    // unit-grades 가공
+    const unitGradesMap = {};
+    unitGradesData.forEach(log => {
+      const unitId = log.unit;
+      if (!unitGradesMap[unitId] && log.radar) {
+        const radarValues = Object.values(log.radar);
+        const radarAvg = radarValues.reduce((sum, val) => sum + val, 0) / radarValues.length;
+
+        let gradeLabel = '격려';
+        if (radarAvg >= 9) {
+          gradeLabel = '우수';
+        } else if (radarAvg >= 8) {
+          gradeLabel = '보통';
+        } else if (radarAvg >= 7) {
+          gradeLabel = '노력';
+        }
+
+        unitGradesMap[unitId] = {
+          unit: unitId,
+          grade: gradeLabel,
+          radarAvg: Math.round(radarAvg * 10) / 10,
+          radar: log.radar,
+          timestamp: log.timestamp
+        };
+      }
+    });
+
+    const elapsed = Date.now() - startTime;
+    console.log(`✅ [/api/menu-init] 완료 (${elapsed}ms)`);
+
+    // 모든 결과를 한 번에 반환
+    res.json({
+      ok: true,
+      session,
+      userInfo: userInfoResult,
+      studyRoom,
+      today: todayResult,
+      lastAssigned,
+      completionStatus,
+      learningLogs,
+      unitGrades: {
+        ok: true,
+        data: Object.values(unitGradesMap)
+      },
+      _meta: {
+        elapsed: elapsed,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+  } catch (err) {
+    console.error("❌ [/api/menu-init] 오류:", err);
+    res.status(500).json({
+      ok: false,
+      message: "통합 API 처리 중 오류가 발생했습니다.",
+      error: err.message
+    });
+  }
+});
+
 // ===== 서버 시작 =====
 mongoose
   .connect(MONGO_URI)
