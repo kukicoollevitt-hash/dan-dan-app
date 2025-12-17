@@ -919,6 +919,7 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
                 <th>이름</th>
                 <th>직책</th>
                 <th>전화번호(ID)</th>
+                <th>생년월일</th>
                 <th>권한</th>
                 <th>상태</th>
                 <th>가입일</th>
@@ -1173,6 +1174,7 @@ app.post("/super/admin-edit", requireSuperAdmin, async (req, res) => {
           <td>${a.name || ""}</td>
           <td>${a.role || ""}</td>
           <td>${a.phone || ""}</td>
+          <td>${a.birth || "-"}</td>
           <td>
             ${a.isSuper ? '<span class="badge badge-super">슈퍼관리자</span>' : '브랜치 관리자'}
           </td>
@@ -3581,20 +3583,20 @@ app.get("/admin/users", async (req, res) => {
         </div>
 
         <div class="toolbar">
-          <!-- AI 추천과제 목록 버튼 -->
+          <!-- AI 추천과제 목록 버튼 (숨김) -->
           <button
             class="btn btn-main"
             onclick="openAITasksModal()"
-            style="font-size: 16px; padding: 12px 24px; font-weight: 600; margin-right: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);"
+            style="display: none; font-size: 16px; padding: 12px 24px; font-weight: 600; margin-right: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);"
           >
             🤖 AI 추천과제 목록
           </button>
 
-          <!-- 자동 과제 부여 버튼 - 항상 표시 -->
+          <!-- 자동 과제 부여 버튼 (숨김) -->
           <button
             class="btn btn-main"
             onclick="openAutoTaskModal()"
-            style="font-size: 16px; padding: 12px 24px; font-weight: 600; margin-right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);"
+            style="display: none; font-size: 16px; padding: 12px 24px; font-weight: 600; margin-right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);"
           >
             📚 자동 과제 부여
           </button>

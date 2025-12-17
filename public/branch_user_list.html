@@ -518,6 +518,8 @@
       color: var(--accent);
     }
   </style>
+  <!-- 카카오 SDK -->
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -550,8 +552,8 @@
         </select>
         <button id="search-btn">검색</button>
         <button id="refresh-btn">새로고침</button>
-        <button id="btn-ai-tasks" class="btn btn-outline" style="background: #667eea; color: #fff; border-color: #667eea;">🤖 AI 추천과제 목록</button>
-        <button id="btn-auto-task" class="btn btn-primary" style="background: #667eea; color: #fff; border-color: #667eea;">📚 자동 과제 부여</button>
+        <button id="btn-ai-tasks" class="btn btn-outline" style="display: none; background: #667eea; color: #fff; border-color: #667eea;">🤖 AI 추천과제 목록</button>
+        <button id="btn-auto-task" class="btn btn-primary" style="display: none; background: #667eea; color: #fff; border-color: #667eea;">📚 자동 과제 부여</button>
         <button id="btn-delete-all" style="background: #dc2626; color: #fff; border-color: #dc2626;">전체 데이터 삭제</button>
         <a id="btn-export" class="btn btn-outline" href="#">엑셀 다운로드</a>
         <a id="btn-trash" class="btn btn-outline" href="#">휴지통 보기</a>
@@ -568,9 +570,12 @@
             <th>이름</th>
             <th>학원명</th>
             <th>전화번호(ID)</th>
+            <th style="cursor: pointer;" onclick="sortByPendingTasks()" title="클릭하면 미완료 과제순으로 정렬">
+              학습실 상태 <span id="studyRoomSortIcon" style="font-size: 12px;">↕</span>
+            </th>
             <th>상태</th>
             <th>시리즈 부여</th>
-            <th>자동과제 스케줄</th>
+            <th>카카오 알림</th>
             <th>학습 이력</th>
             <th>수정</th>
             <th>휴지통</th>
@@ -578,7 +583,7 @@
         </thead>
         <tbody id="student-tbody">
           <tr class="empty-row">
-            <td colspan="12">학생 목록을 불러오는 중입니다…</td>
+            <td colspan="13">학생 목록을 불러오는 중입니다…</td>
           </tr>
         </tbody>
       </table>
@@ -808,7 +813,7 @@
       if (!Array.isArray(list) || list.length === 0) {
         totalEl.textContent = "0";
         tbody.innerHTML = `
-          <tr class="empty-row"><td colspan="12">표시할 학생이 없습니다.</td></tr>
+          <tr class="empty-row"><td colspan="13">표시할 학생이 없습니다.</td></tr>
         `;
         return;
       }
@@ -876,38 +881,31 @@
           .replace(/'/g, "\\'")
           .replace(/"/g, "&quot;");
 
-        // 자동과제 스케줄 렌더링
-        let scheduleHtml = '<span class="no-schedule">-</span>';
-        if (u.studyRoom && u.studyRoom.autoTaskSchedules && u.studyRoom.autoTaskSchedules.length > 0) {
-          scheduleHtml = '<div class="auto-schedule-cell">';
-          u.studyRoom.autoTaskSchedules.forEach(schedule => {
-            const isPaused = schedule.status === 'paused';
-            const statusText = isPaused ? '일시정지' : '활성';
-            const pauseClass = isPaused ? 'paused' : '';
-            const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
-            const days = schedule.days.map(d => dayLabels[d]).join(',');
-            const subjectName = schedule.subject || '전체';
-
-            scheduleHtml += `
-              <div class="schedule-item ${pauseClass}">
-                <div class="schedule-info">
-                  <div class="schedule-subject">${subjectName}</div>
-                  <div class="schedule-details">${days} • ${schedule.count}개</div>
-                  <div class="schedule-status">${statusText}</div>
-                </div>
-                <div class="schedule-actions">
-                  <button class="btn-icon" onclick="toggleSchedule('${schedule._id}', '${u.grade}', '${u.name}')" title="${isPaused ? '재개' : '일시정지'}">
-                    ${isPaused ? '▶' : '⏸'}
-                  </button>
-                  <button class="btn-icon btn-delete" onclick="deleteSchedule('${schedule._id}', '${u.grade}', '${u.name}')" title="삭제">
-                    🗑
-                  </button>
-                </div>
-              </div>
-            `;
-          });
-          scheduleHtml += '</div>';
+        // 학습실 상태 계산 (슈퍼관리자와 동일)
+        let totalTasks = 0;
+        let completedTasks = 0;
+        if (u.studyRoom && u.studyRoom.assignedTasks) {
+          totalTasks = u.studyRoom.assignedTasks.length;
+          completedTasks = u.studyRoom.assignedTasks.filter(t => t.status === 'completed').length;
         }
+        const pendingTasks = totalTasks - completedTasks;
+
+        // 학습실 상태 표시 (완료/전체)
+        let studyRoomStatusHtml = '<span style="color: #9ca3af;">-</span>';
+        if (totalTasks > 0) {
+          const statusColor = pendingTasks > 0 ? '#dc2626' : '#10b981';
+          studyRoomStatusHtml = `
+            <a href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openStudyRoom=true"
+               target="_blank"
+               style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 8px; text-decoration: none; font-weight: 600; color: ${statusColor}; border: 1px solid ${statusColor}20; transition: all 0.2s;"
+               title="클릭하면 학습실로 이동">
+              📚 ${completedTasks}/${totalTasks}
+            </a>
+          `;
+        }
+
+        // data-pending 속성 추가 (정렬용)
+        tr.setAttribute('data-pending', pendingTasks);
 
         tr.innerHTML = `
           <td class="checkbox-col center">
@@ -917,14 +915,17 @@
           <td class="center">${u.grade || ""}</td>
           <td class="center">
             <a class="btn-student"
-               href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}"
+               href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openStudyRoom=true"
                target="_blank"
-               title="학생 화면으로 이동 (새 탭)">
+               title="학생 화면으로 이동 (학습실 자동 열기)">
               👤 ${u.name || ""}
             </a>
           </td>
           <td>${u.school || ""}</td>
           <td>${phone}</td>
+          <td class="center">
+            ${studyRoomStatusHtml}
+          </td>
           <td>
             <span class="badge ${statusClass}">${statusLabel}</span>
             <a class="link-text"
@@ -939,8 +940,13 @@
               시리즈 부여
             </a>
           </td>
-          <td>
-            ${scheduleHtml}
+          <td class="center">
+            <button class="btn-kakao-alert"
+               onclick="sendKakaoTaskAlert('${encodeURIComponent(u.grade || '')}', '${encodeURIComponent(u.name || '')}')"
+               style="padding: 6px 12px; background: #FEE500; color: #3C1E1E; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s;"
+               title="카카오톡으로 과제 알림 전송">
+              💬 알림
+            </button>
           </td>
           <td class="center">
             <a class="link-text" href="${logsHref}">학습 이력 보기</a>
@@ -1465,6 +1471,95 @@
       const currentSearch = document.getElementById('search-input').value.trim();
       fetchBranchStudents(currentSearch, this.value);
     });
+
+    // ===== 학습실 상태 정렬 기능 (슈퍼관리자와 동일) =====
+    let pendingSortOrder = 'desc'; // 기본: 미완료 과제 많은 순
+
+    function sortByPendingTasks() {
+      const tbody = document.getElementById('student-tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr:not(.empty-row)'));
+      const sortIcon = document.getElementById('studyRoomSortIcon');
+
+      if (rows.length === 0) return;
+
+      // 정렬 방향 토글
+      pendingSortOrder = pendingSortOrder === 'desc' ? 'asc' : 'desc';
+      sortIcon.textContent = pendingSortOrder === 'desc' ? '↓' : '↑';
+
+      // data-pending 속성 기준으로 정렬
+      rows.sort((a, b) => {
+        const pendingA = parseInt(a.getAttribute('data-pending') || '0');
+        const pendingB = parseInt(b.getAttribute('data-pending') || '0');
+
+        if (pendingSortOrder === 'desc') {
+          return pendingB - pendingA; // 미완료 많은 순
+        } else {
+          return pendingA - pendingB; // 미완료 적은 순
+        }
+      });
+
+      // 정렬된 순서로 다시 추가
+      rows.forEach(row => tbody.appendChild(row));
+
+      // 번호 재정렬
+      rows.forEach((row, idx) => {
+        const numCell = row.querySelector('.num-col');
+        if (numCell) {
+          numCell.textContent = idx + 1;
+        }
+      });
+    }
+
+    // ===== 카카오 SDK 초기화 (슈퍼관리자와 동일) =====
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+      Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
+    }
+
+    // ===== 카카오 알림 전송 기능 (슈퍼관리자와 동일) =====
+    function sendKakaoTaskAlert(grade, name) {
+      grade = decodeURIComponent(grade);
+      name = decodeURIComponent(name);
+
+      if (!grade || !name) {
+        alert('학생 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+        alert('카카오톡 공유 기능을 사용할 수 없습니다.\n페이지를 새로고침 후 다시 시도해주세요.');
+        return;
+      }
+
+      try {
+        const baseUrl = 'https://dan-dan-app.onrender.com';
+        const studyRoomUrl = baseUrl + '/menu.html?openStudyRoom=true&grade=' + encodeURIComponent(grade) + '&name=' + encodeURIComponent(name);
+
+        Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: '📚 ' + name + ' 학생 과제 알림',
+            description: grade + ' ' + name + ' 학생, 학습실의 과제를 꼭 확인해 주세요!',
+            imageUrl: 'https://dan-dan-app.onrender.com/images/dandan_logo.png',
+            link: {
+              mobileWebUrl: studyRoomUrl,
+              webUrl: studyRoomUrl
+            }
+          },
+          buttons: [
+            {
+              title: '나의 학습실 열기',
+              link: {
+                mobileWebUrl: studyRoomUrl,
+                webUrl: studyRoomUrl
+              }
+            }
+          ]
+        });
+      } catch (error) {
+        console.error('카카오톡 공유 오류:', error);
+        alert('카카오톡 공유 중 오류가 발생했습니다.');
+      }
+    }
   </script>
 </body>
 </html>
