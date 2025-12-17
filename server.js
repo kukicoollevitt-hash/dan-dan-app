@@ -3201,6 +3201,19 @@ app.get("/admin/users", async (req, res) => {
           box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
+        /* 카카오톡 과제 알림 버튼 (노란색) */
+        .btn-kakao-alert {
+          background: linear-gradient(135deg, #FEE500 0%, #FFCD00 100%);
+          color: #3C1E1E;
+          border: none;
+          cursor: pointer;
+        }
+        .btn-kakao-alert:hover {
+          background: linear-gradient(135deg, #FFCD00 0%, #F5C000 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(255, 205, 0, 0.4);
+        }
+
         /* 학습 이력 버튼 (초록색) */
         .btn-history {
           background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -3485,6 +3498,8 @@ app.get("/admin/users", async (req, res) => {
           opacity: 0.9;
         }
       </style>
+      <!-- 카카오 SDK -->
+      <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
     </head>
     <body>
       <div class="wrap">
@@ -3634,6 +3649,7 @@ app.get("/admin/users", async (req, res) => {
                 <th>전화번호(ID)</th>
                 <th>상태</th>
                 <th>시리즈 부여</th>
+                <th>과제 알림</th>
                 <th>자동과제 스케줄</th>
                 <th>학습 이력</th>
                 <th>수정</th>
@@ -3701,6 +3717,12 @@ app.get("/admin/users", async (req, res) => {
                onclick="openSeriesModal('${u._id}', '${escapedName}', '${assignedSeriesJson}'); return false;">
               ${seriesButtonText}
             </a>
+          </td>
+          <td>
+            <button class="btn-action btn-kakao-alert"
+               onclick="sendKakaoTaskAlert('${encodeURIComponent(u.grade || '')}', '${encodeURIComponent(u.name || '')}')">
+              💬 알림
+            </button>
           </td>
           <td>
             <div id="schedule-${idOrPhone}" class="auto-schedule-cell">
@@ -3796,6 +3818,57 @@ app.get("/admin/users", async (req, res) => {
       </div>
 
       <script>
+        // 카카오 SDK 초기화
+        if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+          Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
+        }
+
+        // 카카오톡 과제 알림 전송
+        function sendKakaoTaskAlert(grade, name) {
+          grade = decodeURIComponent(grade);
+          name = decodeURIComponent(name);
+
+          if (!grade || !name) {
+            alert('학생 정보를 찾을 수 없습니다.');
+            return;
+          }
+
+          if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+            alert('카카오톡 공유 기능을 사용할 수 없습니다.\\n페이지를 새로고침 후 다시 시도해주세요.');
+            return;
+          }
+
+          try {
+            const baseUrl = 'https://dan-dan-app.onrender.com';
+            const studyRoomUrl = baseUrl + '/menu.html?openStudyRoom=true&grade=' + encodeURIComponent(grade) + '&name=' + encodeURIComponent(name);
+
+            Kakao.Share.sendDefault({
+              objectType: 'feed',
+              content: {
+                title: '📚 ' + name + ' 학생 과제 알림',
+                description: grade + ' ' + name + ' 학생, 학습실의 과제를 꼭 확인해 주세요!',
+                imageUrl: 'https://dan-dan-app.onrender.com/images/dandan_logo.png',
+                link: {
+                  mobileWebUrl: studyRoomUrl,
+                  webUrl: studyRoomUrl
+                }
+              },
+              buttons: [
+                {
+                  title: '나의 학습실 열기',
+                  link: {
+                    mobileWebUrl: studyRoomUrl,
+                    webUrl: studyRoomUrl
+                  }
+                }
+              ]
+            });
+          } catch (error) {
+            console.error('카카오톡 공유 오류:', error);
+            alert('카카오톡 공유 중 오류가 발생했습니다.');
+          }
+        }
+
         let currentUserId = null;
 
         function openSeriesModal(userId, userName, assignedSeriesStr) {
