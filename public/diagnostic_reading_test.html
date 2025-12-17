@@ -1463,6 +1463,7 @@
     let currentQuestion = 0;
     let score = 0;
     let selectedAnswer = null;
+    let userAnswers = []; // 학생이 선택한 답안 저장 (각 문제별)
     let skillScores = {
       "핵심 이해력": 0,
       "구조 파악력": 0,
@@ -1692,6 +1693,9 @@
 
     function nextQuestion() {
       const q = quizData[currentQuestion];
+
+      // 학생이 선택한 답 저장 (선택 안한 경우 -1)
+      userAnswers.push(selectedAnswer !== null ? selectedAnswer : -1);
 
       // 정답 확인
       if (selectedAnswer === q.correct) {
@@ -1980,25 +1984,38 @@
 
     async function saveCourseApplication() {
       try {
+        // 디버깅: 저장 전 데이터 확인
+        console.log('=== 수강신청 저장 디버그 ===');
+        console.log('userAnswers:', userAnswers);
+        console.log('userAnswers.length:', userAnswers.length);
+        console.log('score:', score);
+        console.log('testResult:', testResult);
+        console.log('courseInfo:', courseInfo);
+
+        const requestBody = {
+          branchName: courseInfo.branchName,
+          studentGrade: courseInfo.grade,
+          studentName: courseInfo.name,
+          studentPhone: courseInfo.studentPhone,
+          parentPhone: courseInfo.parentPhone,
+          grade: testResult.grade,
+          series: testResult.series,
+          answers: userAnswers,
+          score: score
+        };
+        console.log('전송할 데이터:', JSON.stringify(requestBody, null, 2));
+
         const response = await fetch('/api/course-application', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            branchName: courseInfo.branchName,
-            studentGrade: courseInfo.grade,
-            studentName: courseInfo.name,
-            studentPhone: courseInfo.studentPhone,
-            parentPhone: courseInfo.parentPhone,
-            grade: testResult.grade,
-            series: testResult.series
-          })
+          body: JSON.stringify(requestBody)
         });
 
         const result = await response.json();
         if (result.success) {
-          console.log('수강신청 정보 저장 완료:', result.data);
+          console.log('수강신청 정보 저장 완료:', result.applicationId);
         } else {
           console.error('수강신청 정보 저장 실패:', result.message);
         }
@@ -2016,19 +2033,37 @@
 
       quizData.forEach((q, index) => {
         const answerItem = document.createElement('div');
-        answerItem.className = 'answer-item';
+        const userAnswer = userAnswers[index];
+        const isCorrect = userAnswer === q.correct;
+
+        answerItem.className = 'answer-item ' + (isCorrect ? 'answer-correct-item' : 'answer-wrong-item');
 
         const correctAnswerText = q.options[q.correct];
+        const userAnswerText = userAnswer >= 0 && userAnswer < q.options.length ? q.options[userAnswer] : '선택 안함';
+
+        // 채점 결과 표시
+        const resultIcon = isCorrect ? '<span style="color: #27ae60; font-size: 24px;">&#10004;</span>' : '<span style="color: #e74c3c; font-size: 24px;">&#10008;</span>';
+        const resultText = isCorrect ? '정답' : '오답';
+        const resultClass = isCorrect ? 'result-correct' : 'result-wrong';
 
         answerItem.innerHTML = `
           <div class="answer-item-header">
-            <span class="answer-item-number">문제 ${index + 1}</span>
+            <span class="answer-item-number">문제 ${index + 1} ${resultIcon}</span>
             <span class="answer-item-category">${q.category} | ${q.skill}</span>
           </div>
           <div class="answer-passage">${q.passage}</div>
           <div class="answer-question">${q.question}</div>
-          <div class="answer-correct">정답: ${q.correct + 1}. ${correctAnswerText}</div>
-          <div class="answer-explanation">${q.explanation}</div>
+          <div class="answer-result ${resultClass}">
+            <div class="user-answer" style="padding: 8px 12px; margin: 8px 0; border-radius: 8px; ${isCorrect ? 'background: #d4edda; border-left: 4px solid #27ae60;' : 'background: #f8d7da; border-left: 4px solid #e74c3c;'}">
+              <strong>내가 선택한 답:</strong> ${userAnswer >= 0 ? (userAnswer + 1) + '. ' + userAnswerText : '선택 안함'}
+            </div>
+            ${!isCorrect ? `<div class="correct-answer" style="padding: 8px 12px; margin: 8px 0; border-radius: 8px; background: #d4edda; border-left: 4px solid #27ae60;">
+              <strong>정답:</strong> ${q.correct + 1}. ${correctAnswerText}
+            </div>` : ''}
+          </div>
+          <div class="answer-explanation" style="${!isCorrect ? 'background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; border-radius: 8px;' : ''}">
+            <strong>해설:</strong> ${q.explanation}
+          </div>
         `;
 
         answerList.appendChild(answerItem);

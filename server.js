@@ -14500,7 +14500,7 @@ app.post("/api/diagnostic-test", async (req, res) => {
 // 수강신청(상담) 정보 저장 (상담신청 팝업에서 제출 시)
 app.post("/api/course-application", async (req, res) => {
   try {
-    const { branchName, studentGrade, studentName, studentPhone, parentPhone, grade, series } = req.body;
+    const { branchName, studentGrade, studentName, studentPhone, parentPhone, grade, series, answers, score } = req.body;
 
     const courseApplication = new CourseApplication({
       branchName,
@@ -14509,12 +14509,14 @@ app.post("/api/course-application", async (req, res) => {
       studentPhone,
       parentPhone,
       grade,
-      series
+      series,
+      answers: answers || [],
+      score: score || 0
     });
 
     await courseApplication.save();
 
-    res.json({ success: true, message: "수강신청 정보가 저장되었습니다." });
+    res.json({ success: true, message: "수강신청 정보가 저장되었습니다.", applicationId: courseApplication._id });
   } catch (error) {
     console.error("수강신청 저장 오류:", error);
     res.status(500).json({ success: false, message: "저장 중 오류가 발생했습니다." });
@@ -14539,6 +14541,20 @@ app.get("/api/course-applications", async (req, res) => {
     res.json({ success: true, data: applications });
   } catch (error) {
     console.error("수강신청 조회 오류:", error);
+    res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// 개별 수강신청 시험지 조회 (관리자용 - ID로 조회)
+app.get("/api/course-application/:id", async (req, res) => {
+  try {
+    const application = await CourseApplication.findById(req.params.id);
+    if (!application) {
+      return res.status(404).json({ success: false, message: "해당 수강신청 정보를 찾을 수 없습니다." });
+    }
+    res.json({ success: true, data: application });
+  } catch (error) {
+    console.error("수강신청 개별 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
   }
 });
