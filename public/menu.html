@@ -2636,6 +2636,107 @@ body {
   appearance: none;
 }
 
+/* 검색 가능한 드롭다운 스타일 */
+.searchable-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-search {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background-color: white;
+  cursor: pointer;
+}
+
+.dropdown-search:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 2px solid #667eea;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: none;
+}
+
+.dropdown-list.show {
+  display: block;
+}
+
+.dropdown-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: #f0f4ff;
+}
+
+.dropdown-item.selected {
+  background: #667eea;
+  color: white;
+}
+
+.dropdown-item.completed {
+  background: #f0fff4;
+  border-left: 4px solid #38a169;
+}
+
+.dropdown-item.completed:hover {
+  background: #e6ffed;
+}
+
+.dropdown-separator {
+  padding: 8px 15px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #667eea;
+  background: #f8f9ff;
+  cursor: default;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.dropdown-item .completed-badge {
+  display: inline-block;
+  background: #38a169;
+  color: white;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+}
+
+.dropdown-no-result {
+  padding: 15px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
@@ -11844,26 +11945,166 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       }
     };
 
-    // 스토리 드롭다운 초기화
-    function initStoryDropdown() {
-      const storySelect = document.getElementById('reportStory');
-      if (!storySelect) return;
+    // 전역 변수: 스토리 목록 저장
+    let allStories = [];
 
-      // 기존 옵션 제거 (첫 번째 placeholder 제외)
-      while (storySelect.options.length > 1) {
-        storySelect.remove(1);
-      }
+    // 스토리 드롭다운 초기화 (검색 가능한 커스텀 드롭다운)
+    async function initStoryDropdown() {
+      const searchInput = document.getElementById('storySearchInput');
+      const dropdownList = document.getElementById('storyDropdownList');
+      const hiddenInput = document.getElementById('reportStory');
 
-      // 스토리 데이터로부터 옵션 생성
+      if (!searchInput || !dropdownList) return;
+
+      // 완료된 스토리 ID 목록 가져오기
+      const completedStoryIds = await getCompletedStoryIds();
+
+      // 완료된 스토리와 미완료 스토리 분리
+      const completedStories = [];
+      const uncompletedStories = [];
+
       Object.values(STORY_DATA).forEach(story => {
         story.seasons.forEach(season => {
-          const option = document.createElement('option');
-          option.value = season.id;
-          option.textContent = `${story.title} 시즌 ${season.season}: ${season.subtitle}`;
-          option.setAttribute('data-title', `${story.title} 시즌 ${season.season}: ${season.subtitle}`);
-          storySelect.appendChild(option);
+          const baseTitle = `${story.title} 시즌 ${season.season}: ${season.subtitle}`;
+          const isCompleted = completedStoryIds.includes(season.id);
+          const storyInfo = { id: season.id, title: baseTitle, isCompleted };
+
+          if (isCompleted) {
+            completedStories.push(storyInfo);
+          } else {
+            uncompletedStories.push(storyInfo);
+          }
         });
       });
+
+      // 전역 스토리 목록 저장 (완료된 것 먼저)
+      allStories = [...completedStories, ...uncompletedStories];
+
+      // 드롭다운 리스트 렌더링
+      renderStoryDropdown('', completedStories, uncompletedStories);
+
+      // 검색 입력 이벤트
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        renderStoryDropdown(query, completedStories, uncompletedStories);
+        dropdownList.classList.add('show');
+      });
+
+      // 포커스 시 드롭다운 열기
+      searchInput.addEventListener('focus', () => {
+        dropdownList.classList.add('show');
+      });
+
+      // 클릭 이벤트로 드롭다운 닫기
+      document.addEventListener('click', (e) => {
+        const container = document.getElementById('storyDropdownContainer');
+        if (container && !container.contains(e.target)) {
+          dropdownList.classList.remove('show');
+        }
+      });
+    }
+
+    // 스토리 드롭다운 렌더링 (검색 필터링 포함)
+    function renderStoryDropdown(query, completedStories, uncompletedStories) {
+      const dropdownList = document.getElementById('storyDropdownList');
+      const searchInput = document.getElementById('storySearchInput');
+      const hiddenInput = document.getElementById('reportStory');
+
+      dropdownList.innerHTML = '';
+
+      // 필터링
+      const filteredCompleted = completedStories.filter(s =>
+        s.title.toLowerCase().includes(query)
+      );
+      const filteredUncompleted = uncompletedStories.filter(s =>
+        s.title.toLowerCase().includes(query)
+      );
+
+      // 결과 없음
+      if (filteredCompleted.length === 0 && filteredUncompleted.length === 0) {
+        dropdownList.innerHTML = '<div class="dropdown-no-result">검색 결과가 없습니다</div>';
+        return;
+      }
+
+      // 완료된 스토리 섹션
+      if (filteredCompleted.length > 0) {
+        const separator = document.createElement('div');
+        separator.className = 'dropdown-separator';
+        separator.textContent = '✅ 완료한 이야기';
+        dropdownList.appendChild(separator);
+
+        filteredCompleted.forEach(story => {
+          const item = document.createElement('div');
+          item.className = 'dropdown-item completed';
+          item.innerHTML = `${story.title}<span class="completed-badge">완료</span>`;
+          item.dataset.value = story.id;
+          item.dataset.title = story.title;
+          item.addEventListener('click', () => selectStory(story.id, story.title, true));
+          dropdownList.appendChild(item);
+        });
+      }
+
+      // 미완료 스토리 섹션
+      if (filteredUncompleted.length > 0) {
+        const separator = document.createElement('div');
+        separator.className = 'dropdown-separator';
+        separator.textContent = '📚 아직 안 읽은 이야기';
+        dropdownList.appendChild(separator);
+
+        filteredUncompleted.forEach(story => {
+          const item = document.createElement('div');
+          item.className = 'dropdown-item';
+          item.textContent = story.title;
+          item.dataset.value = story.id;
+          item.dataset.title = story.title;
+          item.addEventListener('click', () => selectStory(story.id, story.title, false));
+          dropdownList.appendChild(item);
+        });
+      }
+    }
+
+    // 스토리 선택
+    function selectStory(id, title, isCompleted) {
+      const searchInput = document.getElementById('storySearchInput');
+      const hiddenInput = document.getElementById('reportStory');
+      const dropdownList = document.getElementById('storyDropdownList');
+
+      hiddenInput.value = id;
+      searchInput.value = isCompleted ? `${title} (완료)` : title;
+      dropdownList.classList.remove('show');
+    }
+
+    // 스토리 값 설정 (외부에서 호출용)
+    function setStoryValue(storyId) {
+      const story = allStories.find(s => s.id === storyId);
+      if (story) {
+        selectStory(story.id, story.title, story.isCompleted);
+      }
+    }
+
+    // 완료된 스토리 ID 목록 가져오기
+    async function getCompletedStoryIds() {
+      try {
+        const userStr = sessionStorage.getItem('user');
+        if (!userStr) return [];
+
+        const user = JSON.parse(userStr);
+        const response = await fetch(
+          `/api/user-progress/reading-reports/history?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`
+        );
+
+        const result = await response.json();
+        if (!result.ok) return [];
+
+        // 제출된 리포트의 storyId 목록 추출 (중복 제거)
+        const storyIds = result.reports
+          .map(report => report.storyId)
+          .filter(id => id); // null/undefined 제거
+        return [...new Set(storyIds)];
+      } catch (error) {
+        console.error('완료된 스토리 조회 오류:', error);
+        return [];
+      }
     }
 
     // 독서 감상문 모달 열기
@@ -11871,8 +12112,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const modal = document.getElementById('readingReportModal');
       modal.classList.add('show');
 
-      // 스토리 드롭다운 초기화
-      initStoryDropdown();
+      // 스토리 드롭다운 초기화 (완료 표시 포함)
+      await initStoryDropdown();
 
       // 사용자 정보로 학년/이름 자동 입력
       const userStr = sessionStorage.getItem('user');
@@ -11899,6 +12140,12 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
       // 자동 저장 중지
       stopAutoSave();
+
+      // 검색 입력 필드 초기화
+      const searchInput = document.getElementById('storySearchInput');
+      const hiddenInput = document.getElementById('reportStory');
+      if (searchInput) searchInput.value = '';
+      if (hiddenInput) hiddenInput.value = '';
     }
 
     // 독서 감상문 모달 열기 (이야기별 바로가기 버튼용)
@@ -11907,8 +12154,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       await openReadingReportModal();
 
       // 스토리 드롭다운에서 해당 이야기 선택
-      const storyDropdown = document.getElementById('reportStory');
-      if (storyDropdown && storyType) {
+      if (storyType) {
         // 스토리 타입에 따른 value 매칭
         const storyMap = {
           'whale': 'whale_season1',
@@ -11923,7 +12169,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         if (selectedValue) {
           // 약간의 딜레이 후 선택 (드롭다운 초기화 완료 대기)
           setTimeout(() => {
-            storyDropdown.value = selectedValue;
+            setStoryValue(selectedValue);
           }, 100);
         }
       }
@@ -12012,7 +12258,8 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
 
     // 리포트 로드 (편집/재공유용)
     function loadReport(report) {
-      document.getElementById('reportStory').value = report.storyId || 'whale_island';
+      // 검색 가능한 드롭다운에 스토리 설정
+      setStoryValue(report.storyId || 'whale_island');
       document.getElementById('reportTitle').value = report.title;
       document.getElementById('reportContent').value = report.content;
       currentEditingReport = report._id;
@@ -12461,6 +12708,9 @@ ${content}
           const key = `readingReportDraft_${data.grade}_${data.name}`;
           localStorage.removeItem(key);
           console.log('🗑️ localStorage 임시 저장 삭제:', key);
+
+          // 드롭다운 새로고침 (완료 표시 업데이트)
+          await initStoryDropdown();
 
           return true;
         } else {
@@ -13255,9 +13505,12 @@ ${content}
 
           <div class="form-group">
             <label for="reportStory">📚 이야기 선택</label>
-            <select id="reportStory" required>
-              <option value="">읽은 이야기를 선택하세요</option>
-            </select>
+            <!-- 검색 가능한 커스텀 드롭다운 -->
+            <div class="searchable-dropdown" id="storyDropdownContainer">
+              <input type="text" class="dropdown-search" id="storySearchInput" placeholder="🔍 이야기 검색 또는 선택..." autocomplete="off">
+              <input type="hidden" id="reportStory" required>
+              <div class="dropdown-list" id="storyDropdownList"></div>
+            </div>
           </div>
 
           <div class="form-group">
