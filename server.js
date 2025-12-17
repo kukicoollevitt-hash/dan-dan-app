@@ -15161,8 +15161,17 @@ app.get("/api/gate-quiz/status", async (req, res) => {
 // ===== 서버 시작 =====
 mongoose
   .connect(MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log("✅ MongoDB Atlas 연결 성공");
+
+    // 인덱스 동기화 (성능 최적화)
+    try {
+      await LearningLog.syncIndexes();
+      console.log("✅ LearningLog 인덱스 동기화 완료");
+    } catch (indexErr) {
+      console.error("⚠️ 인덱스 동기화 오류:", indexErr.message);
+    }
+
     app.listen(PORT, () => {
       console.log(`✅ 서버 실행 중: ${PORT}`);
     });
