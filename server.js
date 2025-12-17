@@ -14559,6 +14559,63 @@ app.get("/api/course-application/:id", async (req, res) => {
   }
 });
 
+// 진단테스트 정보 수정 (슈퍼 관리자용)
+app.put("/api/diagnostic-tests/:id", async (req, res) => {
+  try {
+    const { branchName, studentGrade, studentName, studentPhone, parentName, parentPhone } = req.body;
+
+    const updatedTest = await DiagnosticTest.findByIdAndUpdate(
+      req.params.id,
+      {
+        branchName,
+        studentGrade,
+        studentName,
+        studentPhone,
+        parentName,
+        parentPhone
+      },
+      { new: true }
+    );
+
+    if (!updatedTest) {
+      return res.status(404).json({ success: false, message: "해당 진단테스트 정보를 찾을 수 없습니다." });
+    }
+
+    res.json({ success: true, data: updatedTest });
+  } catch (error) {
+    console.error("진단테스트 수정 오류:", error);
+    res.status(500).json({ success: false, message: "수정 중 오류가 발생했습니다." });
+  }
+});
+
+// 수강신청 정보 수정 (슈퍼 관리자용)
+app.put("/api/course-applications/:id", async (req, res) => {
+  try {
+    const { branchName, studentGrade, studentName, studentPhone, parentPhone } = req.body;
+
+    const updatedApplication = await CourseApplication.findByIdAndUpdate(
+      req.params.id,
+      {
+        branchName,
+        studentGrade,
+        studentName,
+        studentPhone,
+        parentPhone
+      },
+      { new: true }
+    );
+
+    if (!updatedApplication) {
+      return res.status(404).json({ success: false, message: "해당 수강신청 정보를 찾을 수 없습니다." });
+    }
+
+    res.json({ success: true, data: updatedApplication });
+  } catch (error) {
+    console.error("수강신청 수정 오류:", error);
+    res.status(500).json({ success: false, message: "수정 중 오류가 발생했습니다." });
+  }
+});
+
 // 관리자 정보 조회 (브랜치 관리자용)
 app.get("/api/admin/info", async (req, res) => {
   try {

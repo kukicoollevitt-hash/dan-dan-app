@@ -887,6 +887,11 @@
       text-align: center;
     }
   </style>
+  <!-- PDF 생성을 위한 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- 카카오 SDK -->
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -1019,7 +1024,7 @@
       <!-- 레이더 그래프 -->
       <div class="radar-chart-container">
         <h3>📊 5가지 문해력 지수 분석</h3>
-        <canvas id="radarChart" width="400" height="400"></canvas>
+        <canvas id="radarChart" width="500" height="500"></canvas>
       </div>
 
       <div class="recommendation-box">
@@ -1039,7 +1044,7 @@
         </div>
       </div>
 
-      <button class="submit-btn" onclick="showCourseModal()">정답과 해설 확인하기</button>
+      <button class="submit-btn" onclick="showCourseModal()">결과 분석 상담 신청하기</button>
 
       <div class="action-buttons">
         <button class="pdf-btn" onclick="downloadPDF()">
@@ -1055,14 +1060,24 @@
     <div class="answer-screen" id="answerScreen">
       <h2>📝 정답과 해설</h2>
       <div id="answerList"></div>
+
+      <!-- 정답과 해설 화면 하단 버튼 -->
+      <div class="action-buttons" style="margin-top: 30px;">
+        <button class="pdf-btn" onclick="downloadAnswerPDF()">
+          📄 PDF 다운로드
+        </button>
+        <button class="kakao-btn" onclick="sendAnswerKakao()">
+          💬 카카오톡 전송하기
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- 수강신청 팝업 모달 -->
   <div class="modal-overlay" id="courseModal">
     <div class="modal-content">
-      <h3>📚 수강신청 정보 입력</h3>
-      <p class="modal-subtitle">정답과 해설을 확인하기 위해 정보를 입력해주세요</p>
+      <h3>📚 결과 분석 상담 신청하기</h3>
+      <p class="modal-subtitle">상담 신청을 위해 정보를 입력해주세요</p>
 
       <div class="modal-form-group">
         <label>지점명<span style="color: red;">*</span></label>
@@ -1093,6 +1108,28 @@
         <button class="modal-cancel-btn" onclick="closeCourseModal()">취소</button>
         <button class="modal-submit-btn" onclick="submitCourseInfo()">확인</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 상담 신청 완료 팝업 모달 -->
+  <div class="modal-overlay" id="completeModal">
+    <div class="modal-content" style="text-align: center; padding: 50px 40px;">
+      <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
+      <h3 style="font-size: 24px; color: #2c3e50; margin-bottom: 15px;">결과 분석 상담 신청이<br>완료되었습니다</h3>
+      <p style="font-size: 16px; color: #666; line-height: 1.8; margin-bottom: 30px;">
+        순차적으로 상담이 진행될 예정이니<br>조금만 기다려주세요 😊
+      </p>
+      <button onclick="closeCompleteModal()" style="
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 50px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      ">확인</button>
     </div>
   </div>
 
@@ -1789,7 +1826,7 @@
       const ctx = canvas.getContext('2d');
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
-      const radius = 140;
+      const radius = 150;
 
       // 캔버스 초기화
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1835,15 +1872,12 @@
 
       skills.forEach((skill, i) => {
         const angle = angles[i];
-        const labelRadius = radius + 40;
+        const labelRadius = radius + 50;
         const x = centerX + Math.cos(angle) * labelRadius;
         const y = centerY + Math.sin(angle) * labelRadius;
 
-        // 텍스트 위치 조정
-        ctx.textAlign = angle > -Math.PI/2 && angle < Math.PI/2 ? 'left' : 'right';
-        if (Math.abs(angle - Math.PI/2) < 0.1 || Math.abs(angle + Math.PI/2) < 0.1) {
-          ctx.textAlign = 'center';
-        }
+        // 텍스트 위치 조정 - 모든 라벨 중앙 정렬
+        ctx.textAlign = 'center';
 
         ctx.fillText(skill, x, y);
       });
@@ -1977,9 +2011,19 @@
       // 수강신청 정보 DB 저장
       saveCourseApplication();
 
-      // 모달 닫고 정답 화면으로 이동
+      // 모달 닫고 완료 팝업 표시
       closeCourseModal();
-      showAnswers();
+      showCompleteModal();
+    }
+
+    // 완료 팝업 열기
+    function showCompleteModal() {
+      document.getElementById('completeModal').classList.add('active');
+    }
+
+    // 완료 팝업 닫기
+    function closeCompleteModal() {
+      document.getElementById('completeModal').classList.remove('active');
     }
 
     async function saveCourseApplication() {
@@ -2016,6 +2060,8 @@
         const result = await response.json();
         if (result.success) {
           console.log('수강신청 정보 저장 완료:', result.applicationId);
+          // applicationId 저장 (카카오 공유 시 사용)
+          window.savedApplicationId = result.applicationId;
         } else {
           console.error('수강신청 정보 저장 실패:', result.message);
         }
@@ -2073,39 +2119,140 @@
       window.scrollTo(0, 0);
     }
 
-    // PDF 다운로드 기능
-    function downloadPDF() {
-      alert('PDF 다운로드 기능이 곧 제공됩니다.\n\n결과 정보:\n학년: ' + userInfo.studentGrade + '\n이름: ' + userInfo.studentName + '\n점수: ' + totalScore + '점');
-
-      // TODO: 실제 PDF 생성 로직 구현
-      // 예시: jsPDF 또는 서버 API를 사용하여 PDF 생성
+    // 카카오 SDK 초기화
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+      Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
     }
 
-    // 카카오톡 전송 기능
-    function sendKakao() {
-      if (!window.Kakao || !window.Kakao.isInitialized()) {
-        alert('카카오톡 연동이 필요합니다.\n잠시 후 다시 시도해주세요.');
+    // PDF 다운로드 기능 (결과 화면)
+    function downloadPDF() {
+      generatePDF('resultScreen', '문해력진단_결과');
+    }
+
+    // PDF 다운로드 기능 (정답과 해설 화면)
+    function downloadAnswerPDF() {
+      generatePDF('answerScreen', '문해력진단_정답해설');
+    }
+
+    // PDF 생성 공통 함수
+    async function generatePDF(elementId, filename) {
+      const element = document.getElementById(elementId);
+      if (!element) {
+        alert('PDF 생성에 실패했습니다.');
         return;
       }
 
-      // 카카오톡 공유하기
-      Kakao.Share.sendDefault({
+      // 로딩 표시
+      const loadingDiv = document.createElement('div');
+      loadingDiv.id = 'pdfLoading';
+      loadingDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 9999; color: white; font-size: 18px;';
+      loadingDiv.innerHTML = '<div style="text-align: center;"><div style="margin-bottom: 10px;">PDF 생성 중...</div><div style="font-size: 14px;">잠시만 기다려주세요</div></div>';
+      document.body.appendChild(loadingDiv);
+
+      try {
+        const { jsPDF } = window.jspdf;
+
+        // html2canvas로 화면 캡처 (품질 낮춤으로 용량 감소)
+        const canvas = await html2canvas(element, {
+          scale: 1.5, // 품질 낮춤 (기본 2)
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG로 변환하여 용량 감소
+        const imgWidth = 210; // A4 가로
+        const pageHeight = 297; // A4 세로
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+
+        const pdf = new jsPDF('p', 'mm', 'a4');
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // 첫 페이지
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+
+        // 다음 페이지들
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+          heightLeft -= pageHeight;
+        }
+
+        // 학생 정보 기반 파일명
+        const studentName = courseInfo?.name || '학생';
+        const studentGrade = courseInfo?.grade || '';
+        const dateStr = new Date().toLocaleDateString('ko-KR').replace(/\./g, '').replace(/ /g, '');
+
+        pdf.save(`${filename}_${studentGrade}_${studentName}_${dateStr}.pdf`);
+      } catch (error) {
+        console.error('PDF 생성 오류:', error);
+        alert('PDF 생성 중 오류가 발생했습니다.');
+      } finally {
+        // 로딩 제거
+        document.getElementById('pdfLoading')?.remove();
+      }
+    }
+
+    // 카카오톡 전송 기능 (결과 화면)
+    function sendKakao() {
+      shareKakao('result');
+    }
+
+    // 카카오톡 전송 기능 (정답과 해설 화면)
+    function sendAnswerKakao() {
+      shareKakao('answer');
+    }
+
+    // 카카오톡 공유 공통 함수
+    function shareKakao(type) {
+      if (typeof Kakao === 'undefined') {
+        alert('카카오톡 SDK를 불러오는 중입니다.\n잠시 후 다시 시도해주세요.');
+        return;
+      }
+
+      if (!Kakao.isInitialized()) {
+        Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
+      }
+
+      const studentName = courseInfo?.name || '학생';
+      const studentGrade = courseInfo?.grade || '';
+      const gradeResult = testResult?.grade || '';
+      const correctCount = userAnswers.filter((ans, idx) => ans === quizData[idx].correct).length;
+
+      const title = type === 'result'
+        ? '📚 단단국어 문해력 진단 결과'
+        : '📝 단단국어 문해력 진단 정답과 해설';
+
+      const description = type === 'result'
+        ? `${studentGrade} ${studentName} 학생\n등급: ${gradeResult}\n점수: ${score}/25점`
+        : `${studentGrade} ${studentName} 학생\n정답: ${correctCount}/25개\n전체 문제 정답 및 해설 확인하기`;
+
+      // 결과지 URL 생성 (applicationId가 있으면 결과 페이지로, 없으면 진단 페이지로)
+      const resultUrl = window.savedApplicationId
+        ? `https://dan-dan-app.web.app/test-result-viewer.html?id=${window.savedApplicationId}`
+        : 'https://dan-dan-app.web.app/diagnostic_reading_test.html';
+
+      Kakao.Link.sendDefault({
         objectType: 'feed',
         content: {
-          title: '📚 문해력 진단 결과',
-          description: `${userInfo.studentGrade} ${userInfo.studentName} 학생의 진단 결과\n총점: ${totalScore}점 (${getGrade(totalScore)})`,
-          imageUrl: 'https://your-domain.com/images/result-share.png', // 실제 이미지 URL로 변경 필요
+          title: title,
+          description: description,
+          imageUrl: 'https://dan-dan-app.web.app/images/kakao_share.png',
           link: {
-            mobileWebUrl: window.location.href,
-            webUrl: window.location.href
+            mobileWebUrl: resultUrl,
+            webUrl: resultUrl
           }
         },
         buttons: [
           {
-            title: '결과 확인하기',
+            title: '진단결과보기',
             link: {
-              mobileWebUrl: window.location.href,
-              webUrl: window.location.href
+              mobileWebUrl: resultUrl,
+              webUrl: resultUrl
             }
           }
         ]

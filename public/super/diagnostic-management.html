@@ -142,6 +142,153 @@
       color: #667eea;
     }
 
+    .edit-btn {
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .edit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+    }
+
+    /* 수정 모달 스타일 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .modal-header h2 {
+      font-size: 24px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .modal-header p {
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-cancel {
+      background: #ecf0f1;
+      color: #7f8c8d;
+    }
+
+    .btn-cancel:hover {
+      background: #bdc3c7;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    /* 더보기 버튼 스타일 */
+    .show-more-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+      background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+      color: #2c3e50;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .show-more-btn:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .hidden-row {
+      display: none;
+    }
+
     .grade-badge {
       display: inline-block;
       padding: 4px 12px;
@@ -210,6 +357,7 @@
               <th>학부모 성함</th>
               <th>학부모 연락처</th>
               <th>등록 시간</th>
+              <th>수정</th>
             </tr>
           </thead>
           <tbody id="diagnosticTestsBody">
@@ -218,6 +366,9 @@
         <div id="diagnosticTestsEmpty" class="empty-message" style="display: none;">
           등록된 진단테스트 신청이 없습니다.
         </div>
+        <button id="diagnosticShowMoreBtn" class="show-more-btn" style="display: none;" onclick="toggleDiagnosticRows()">
+          더보기 (<span id="diagnosticHiddenCount">0</span>명 더)
+        </button>
       </div>
     </div>
 
@@ -243,6 +394,7 @@
               <th>시리즈</th>
               <th>등록 시간</th>
               <th>시험지</th>
+              <th>수정</th>
             </tr>
           </thead>
           <tbody id="applicationsBody">
@@ -251,11 +403,60 @@
         <div id="applicationsEmpty" class="empty-message" style="display: none;">
           등록된 수강신청이 없습니다.
         </div>
+        <button id="applicationShowMoreBtn" class="show-more-btn" style="display: none;" onclick="toggleApplicationRows()">
+          더보기 (<span id="applicationHiddenCount">0</span>명 더)
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- 수정 모달 -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✏️ 정보 수정</h2>
+        <p>학생 정보를 수정할 수 있습니다</p>
+      </div>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        <input type="hidden" id="editType">
+        <div class="form-group">
+          <label>지점명</label>
+          <input type="text" id="editBranchName" placeholder="지점명을 입력하세요">
+        </div>
+        <div class="form-group">
+          <label>학년</label>
+          <input type="text" id="editStudentGrade" placeholder="예: 중1, 고2">
+        </div>
+        <div class="form-group">
+          <label>학생 이름</label>
+          <input type="text" id="editStudentName" placeholder="학생 이름을 입력하세요">
+        </div>
+        <div class="form-group">
+          <label>학생 연락처</label>
+          <input type="text" id="editStudentPhone" placeholder="010-0000-0000">
+        </div>
+        <div class="form-group" id="parentNameGroup">
+          <label>학부모 성함</label>
+          <input type="text" id="editParentName" placeholder="학부모 성함을 입력하세요">
+        </div>
+        <div class="form-group">
+          <label>학부모 연락처</label>
+          <input type="text" id="editParentPhone" placeholder="010-0000-0000">
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="closeEditModal()">취소</button>
+          <button type="submit" class="btn-save">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
+    const DISPLAY_LIMIT = 10; // 기본 표시 개수
+    let diagnosticExpanded = false;
+    let applicationExpanded = false;
+
     // 진단테스트 목록 불러오기
     async function loadDiagnosticTests() {
       try {
@@ -267,6 +468,8 @@
         const empty = document.getElementById('diagnosticTestsEmpty');
         const body = document.getElementById('diagnosticTestsBody');
         const countBadge = document.getElementById('testCount');
+        const showMoreBtn = document.getElementById('diagnosticShowMoreBtn');
+        const hiddenCountSpan = document.getElementById('diagnosticHiddenCount');
 
         loading.style.display = 'none';
 
@@ -275,7 +478,7 @@
           countBadge.textContent = `${result.data.length}명`;
 
           body.innerHTML = result.data.map((test, index) => `
-            <tr>
+            <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row diagnostic-hidden' : ''}">
               <td>${index + 1}</td>
               <td>${test.branchName || '-'}</td>
               <td>${test.studentGrade}</td>
@@ -284,8 +487,17 @@
               <td>${test.parentName}</td>
               <td>${test.parentPhone}</td>
               <td>${new Date(test.createdAt).toLocaleString('ko-KR')}</td>
+              <td><button class="edit-btn" onclick="openEditModal('diagnostic', '${test._id}', '${test.branchName || ''}', '${test.studentGrade}', '${test.studentName}', '${test.studentPhone}', '${test.parentName}', '${test.parentPhone}')">수정</button></td>
             </tr>
           `).join('');
+
+          // 10명 초과 시 더보기 버튼 표시
+          if (result.data.length > DISPLAY_LIMIT) {
+            showMoreBtn.style.display = 'block';
+            hiddenCountSpan.textContent = result.data.length - DISPLAY_LIMIT;
+          } else {
+            showMoreBtn.style.display = 'none';
+          }
         } else {
           empty.style.display = 'block';
           countBadge.textContent = '0명';
@@ -293,6 +505,25 @@
       } catch (error) {
         console.error('진단테스트 목록 로드 오류:', error);
         document.getElementById('diagnosticTestsLoading').textContent = '데이터 로드 중 오류가 발생했습니다.';
+      }
+    }
+
+    // 진단테스트 더보기/접기 토글
+    function toggleDiagnosticRows() {
+      const hiddenRows = document.querySelectorAll('.diagnostic-hidden');
+      const btn = document.getElementById('diagnosticShowMoreBtn');
+      const hiddenCountSpan = document.getElementById('diagnosticHiddenCount');
+
+      diagnosticExpanded = !diagnosticExpanded;
+
+      hiddenRows.forEach(row => {
+        row.classList.toggle('hidden-row', !diagnosticExpanded);
+      });
+
+      if (diagnosticExpanded) {
+        btn.textContent = '접기';
+      } else {
+        btn.innerHTML = `더보기 (<span id="diagnosticHiddenCount">${hiddenRows.length}</span>명 더)`;
       }
     }
 
@@ -307,6 +538,8 @@
         const empty = document.getElementById('applicationsEmpty');
         const body = document.getElementById('applicationsBody');
         const countBadge = document.getElementById('applicationCount');
+        const showMoreBtn = document.getElementById('applicationShowMoreBtn');
+        const hiddenCountSpan = document.getElementById('applicationHiddenCount');
 
         loading.style.display = 'none';
 
@@ -318,7 +551,7 @@
             const gradeClass = `grade-${app.grade}`;
             const hasAnswers = app.answers && app.answers.length > 0;
             return `
-              <tr>
+              <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row application-hidden' : ''}">
                 <td>${index + 1}</td>
                 <td>${app.branchName || '-'}</td>
                 <td>${app.studentGrade}</td>
@@ -330,9 +563,18 @@
                 <td>${app.series}</td>
                 <td>${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
                 <td>${hasAnswers ? `<button onclick="viewTestPaper('${app._id}')" style="padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">시험지 보기</button>` : '<span style="color: #999;">-</span>'}</td>
+                <td><button class="edit-btn" onclick="openEditModal('application', '${app._id}', '${app.branchName || ''}', '${app.studentGrade}', '${app.studentName}', '${app.studentPhone}', '', '${app.parentPhone}')">수정</button></td>
               </tr>
             `;
           }).join('');
+
+          // 10명 초과 시 더보기 버튼 표시
+          if (result.data.length > DISPLAY_LIMIT) {
+            showMoreBtn.style.display = 'block';
+            hiddenCountSpan.textContent = result.data.length - DISPLAY_LIMIT;
+          } else {
+            showMoreBtn.style.display = 'none';
+          }
         } else {
           empty.style.display = 'block';
           countBadge.textContent = '0명';
@@ -343,10 +585,115 @@
       }
     }
 
+    // 수강신청 더보기/접기 토글
+    function toggleApplicationRows() {
+      const hiddenRows = document.querySelectorAll('.application-hidden');
+      const btn = document.getElementById('applicationShowMoreBtn');
+      const hiddenCountSpan = document.getElementById('applicationHiddenCount');
+
+      applicationExpanded = !applicationExpanded;
+
+      hiddenRows.forEach(row => {
+        row.classList.toggle('hidden-row', !applicationExpanded);
+      });
+
+      if (applicationExpanded) {
+        btn.textContent = '접기';
+      } else {
+        btn.innerHTML = `더보기 (<span id="applicationHiddenCount">${hiddenRows.length}</span>명 더)`;
+      }
+    }
+
     // 시험지 보기 함수
     function viewTestPaper(applicationId) {
       window.open(`/test-result-viewer.html?id=${applicationId}`, '_blank', 'width=900,height=800');
     }
+
+    // 수정 모달 열기
+    function openEditModal(type, id, branchName, studentGrade, studentName, studentPhone, parentName, parentPhone) {
+      document.getElementById('editId').value = id;
+      document.getElementById('editType').value = type;
+      document.getElementById('editBranchName').value = branchName;
+      document.getElementById('editStudentGrade').value = studentGrade;
+      document.getElementById('editStudentName').value = studentName;
+      document.getElementById('editStudentPhone').value = studentPhone;
+      document.getElementById('editParentName').value = parentName;
+      document.getElementById('editParentPhone').value = parentPhone;
+
+      // 수강신청(application)의 경우 학부모 성함 필드 숨기기
+      const parentNameGroup = document.getElementById('parentNameGroup');
+      if (type === 'application') {
+        parentNameGroup.style.display = 'none';
+      } else {
+        parentNameGroup.style.display = 'block';
+      }
+
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    // 수정 모달 닫기
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    // 수정 폼 제출
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('editId').value;
+      const type = document.getElementById('editType').value;
+      const data = {
+        branchName: document.getElementById('editBranchName').value,
+        studentGrade: document.getElementById('editStudentGrade').value,
+        studentName: document.getElementById('editStudentName').value,
+        studentPhone: document.getElementById('editStudentPhone').value,
+        parentPhone: document.getElementById('editParentPhone').value
+      };
+
+      // 진단테스트의 경우 학부모 성함도 포함
+      if (type === 'diagnostic') {
+        data.parentName = document.getElementById('editParentName').value;
+      }
+
+      try {
+        const endpoint = type === 'diagnostic'
+          ? `/api/diagnostic-tests/${id}`
+          : `/api/course-applications/${id}`;
+
+        const response = await fetch(endpoint, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert('정보가 성공적으로 수정되었습니다.');
+          closeEditModal();
+          // 데이터 새로고침
+          if (type === 'diagnostic') {
+            loadDiagnosticTests();
+          } else {
+            loadCourseApplications();
+          }
+        } else {
+          alert('수정 중 오류가 발생했습니다: ' + (result.message || '알 수 없는 오류'));
+        }
+      } catch (error) {
+        console.error('수정 오류:', error);
+        alert('수정 중 오류가 발생했습니다.');
+      }
+    });
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditModal();
+      }
+    });
 
     // 페이지 로드 시 데이터 불러오기
     window.addEventListener('DOMContentLoaded', () => {
