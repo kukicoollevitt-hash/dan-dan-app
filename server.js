@@ -5362,6 +5362,15 @@ app.post("/api/log", async (req, res) => {
       }
     }
 
+    // 🔥 completion-status 캐시 삭제 (학습 완료 시 완료 상태 갱신 필요)
+    const completionCachePrefix = `completion-status:{"grade":"${grade}","name":"${name}"`;
+    for (const key of cache.keys()) {
+      if (key.startsWith(completionCachePrefix)) {
+        cache.delete(key);
+        console.log("🗑️ [/api/log] completion-status 캐시 삭제:", key);
+      }
+    }
+
     // 🔥 AI 추천 과제의 status를 'completed'로 업데이트 (복습완료 처리)
     if (completed === true && unit) {
       try {
@@ -5469,6 +5478,14 @@ app.get("/api/completion-status", async (req, res) => {
       return res.status(400).json({ ok: false, message: "필수 파라미터 부족 (grade, name, series)" });
     }
 
+    // 캐시 키 생성 및 확인
+    const cacheKey = getCacheKey('completion-status', { grade, name, series });
+    const cached = getCache(cacheKey);
+    if (cached) {
+      console.log("💾 [/api/completion-status] 캐시 사용");
+      return res.json(cached);
+    }
+
     // 해당 학생의 완료된 단원 목록 조회
     const completedLogs = await LearningLog.find({
       grade,
@@ -5480,7 +5497,12 @@ app.get("/api/completion-status", async (req, res) => {
     // 완료된 단원 코드 배열
     const completedUnits = completedLogs.map(log => log.unit);
 
-    return res.json({ ok: true, completedUnits });
+    const result = { ok: true, completedUnits };
+
+    // 캐시에 저장
+    setCache(cacheKey, result);
+
+    return res.json(result);
   } catch (err) {
     console.error("[/api/completion-status] error:", err);
     res.status(500).json({ ok: false, message: "서버 오류" });

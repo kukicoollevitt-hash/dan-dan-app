@@ -30,6 +30,7 @@ const LearningLogSchema = new mongoose.Schema({
 LearningLogSchema.index({ grade: 1, name: 1, phone: 1, timestamp: -1 });
 LearningLogSchema.index({ grade: 1, name: 1, deleted: 1, timestamp: -1 }); // learning-logs API용
 LearningLogSchema.index({ grade: 1, name: 1, series: 1, completed: 1 }); // completion-status API용
-LearningLogSchema.index({ grade: 1, name: 1, unit: 1 }); // unit-grades API용
+LearningLogSchema.index({ grade: 1, name: 1, unit: 1 }); // unit-grades API용 (단원별 조회)
+LearningLogSchema.index({ grade: 1, name: 1, deleted: 1 }); // unit-grades API용 (전체 단원 등급 조회)
 
 module.exports = mongoose.model("LearningLog", LearningLogSchema);
