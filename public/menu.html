@@ -3823,26 +3823,56 @@ canvas[id^="confetti-canvas"] {
             existingSubjectVideo.remove();
           }
 
-          // 태블릿에서는 고정 배경 div에 이미지 설정
-          if (isTablet) {
-            const tabletBg = document.getElementById('tablet-fixed-bg');
-            if (tabletBg) {
-              tabletBg.style.backgroundImage = `url('${imageUrl}')`;
-            }
-          } else {
-            // PC에서는 body에 배경 설정
-            document.body.style.backgroundImage = `url('${imageUrl}')`;
-            document.body.style.backgroundSize = '110%';
-            document.body.style.backgroundPosition = 'center bottom';
-            document.body.style.backgroundAttachment = 'fixed';
+          // 이미지 로딩 중 스피너 표시
+          const loadingOverlay = document.getElementById('loading-overlay');
+          if (loadingOverlay) {
+            loadingOverlay.classList.remove('fade-out');
+            loadingOverlay.style.display = 'flex';
           }
 
-          // 배경 동영상 숨기기
-          const bgVideo = document.querySelector('.menu-bg-video');
-          if (bgVideo) {
-            bgVideo.style.display = 'none';
-          }
-          console.log('✅ 배경 변경 완료:', document.body.style.backgroundImage);
+          // 이미지 프리로드 후 배경 설정 (캐시 활용으로 1번만 요청)
+          const img = new Image();
+          img.onload = function() {
+            // 태블릿에서는 고정 배경 div에 이미지 설정
+            if (isTablet) {
+              const tabletBg = document.getElementById('tablet-fixed-bg');
+              if (tabletBg) {
+                tabletBg.style.backgroundImage = `url('${imageUrl}')`;
+              }
+            } else {
+              // PC에서는 body에 배경 설정
+              document.body.style.backgroundImage = `url('${imageUrl}')`;
+              document.body.style.backgroundSize = '110%';
+              document.body.style.backgroundPosition = 'center bottom';
+              document.body.style.backgroundAttachment = 'fixed';
+            }
+
+            // 배경 동영상 숨기기
+            const bgVideo = document.querySelector('.menu-bg-video');
+            if (bgVideo) {
+              bgVideo.style.display = 'none';
+            }
+            console.log('✅ 배경 변경 완료:', document.body.style.backgroundImage);
+
+            // 이미지 로드 완료 후 스피너 숨기기
+            if (loadingOverlay) {
+              loadingOverlay.classList.add('fade-out');
+              setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+              }, 300);
+            }
+          };
+          img.onerror = function() {
+            console.warn('❌ 이미지 로드 실패:', imageUrl);
+            // 에러 시에도 스피너 숨기기
+            if (loadingOverlay) {
+              loadingOverlay.classList.add('fade-out');
+              setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+              }, 300);
+            }
+          };
+          img.src = imageUrl;
         }
       } else {
         console.warn('❌ 해당 과목의 배경 이미지를 찾을 수 없습니다:', subjectId);
