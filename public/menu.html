@@ -3632,6 +3632,9 @@ canvas[id^="confetti-canvas"] {
       'people2': './images/세계인물.mp4'  // 비디오로 변경
     };
 
+    /* 현재 로드 중인 배경 URL 추적 (중복 요청 방지) */
+    let currentBackgroundUrl = null;
+
     /* 배경 이미지 변경 함수 */
     function changeBackgroundImage(subjectObj) {
       console.log('🎨 배경 변경 요청:', subjectObj);
@@ -3675,6 +3678,14 @@ canvas[id^="confetti-canvas"] {
       }
 
       console.log('🖼️ 이미지/비디오 URL:', imageUrl);
+
+      // 같은 URL이면 중복 요청 방지
+      if (imageUrl === currentBackgroundUrl) {
+        console.log('⏭️ 같은 배경 URL - 중복 요청 스킵');
+        return;
+      }
+      currentBackgroundUrl = imageUrl;
+
       if (imageUrl) {
         // 비디오인지 이미지인지 확인
         const isVideo = imageUrl.endsWith('.mp4') || imageUrl.endsWith('.webm');
@@ -3686,6 +3697,9 @@ canvas[id^="confetti-canvas"] {
           // 기존 subject-bg-video가 있으면 제거
           let existingSubjectVideo = document.getElementById('subject-bg-video');
           if (existingSubjectVideo) {
+            // 네트워크 요청 취소를 위해 src 초기화
+            existingSubjectVideo.src = '';
+            existingSubjectVideo.load();
             existingSubjectVideo.remove();
           }
 
