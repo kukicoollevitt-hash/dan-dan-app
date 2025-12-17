@@ -13165,6 +13165,35 @@ app.post('/api/auto-task-settings', async (req, res) => {
       return res.status(400).json({ ok: false, message: 'grade, name, settings가 필요합니다' });
     }
 
+    // 기존 설정 조회 (설정 변경 여부 확인용)
+    const existingSettings = await AutoTaskSettings.findOne({ grade, name });
+
+    // 설정이 변경되었는지 확인 (시리즈, 요일, 개수 변경 시)
+    const settingsChanged = existingSettings && (
+      JSON.stringify(existingSettings.series?.sort()) !== JSON.stringify(settings.series?.sort()) ||
+      JSON.stringify(existingSettings.days?.sort()) !== JSON.stringify(settings.days?.sort()) ||
+      existingSettings.taskCount !== settings.taskCount
+    );
+
+    // 설정이 변경되었으면 기존 자동부여 과제 삭제
+    if (settingsChanged || settings.status === 'running') {
+      console.log(`🗑️ [${grade} ${name}] 자동과제부여 설정 변경 - 기존 자동부여 과제 삭제`);
+
+      // 학습실에서 isAutoAssigned === true인 과제만 삭제 (일반 과제는 유지)
+      const userProgress = await UserProgress.findOne({ grade, name });
+      if (userProgress?.studyRoom?.assignedTasks) {
+        const manualTasks = userProgress.studyRoom.assignedTasks.filter(task => !task.isAutoAssigned);
+        const deletedCount = userProgress.studyRoom.assignedTasks.length - manualTasks.length;
+
+        await UserProgress.updateOne(
+          { grade, name },
+          { $set: { 'studyRoom.assignedTasks': manualTasks } }
+        );
+
+        console.log(`  ✅ ${deletedCount}개 자동부여 과제 삭제 완료`);
+      }
+    }
+
     const updatedSettings = await AutoTaskSettings.findOneAndUpdate(
       { grade, name },
       {
@@ -13175,6 +13204,15 @@ app.post('/api/auto-task-settings', async (req, res) => {
       },
       { upsert: true, new: true }
     );
+
+    // "시작" 상태이면 바로 자동과제부여 실행
+    if (settings.status === 'running') {
+      console.log(`▶️ [${grade} ${name}] 자동과제부여 즉시 실행`);
+      // 비동기로 자동과제 부여 실행 (응답은 먼저 보냄)
+      executeAutoTaskForStudent(grade, name, updatedSettings).catch(err => {
+        console.error(`❌ [${grade} ${name}] 자동과제부여 실행 오류:`, err);
+      });
+    }
 
     res.json({ ok: true, settings: updatedSettings });
   } catch (error) {
@@ -14255,6 +14293,172 @@ const SUBJECT_INFO = {
   people1: { field: '인물분야', label: '한국인물' },
   people2: { field: '인물분야', label: '세계인물' }
 };
+
+// 개별 학생용 자동과제부여 실행 함수 (설정 변경 시 즉시 실행용)
+async function executeAutoTaskForStudent(grade, name, setting) {
+  try {
+    console.log(`🎯 [${grade} ${name}] 개별 자동과제부여 시작`);
+
+    // 해당 학생의 완료된 학습 기록 조회
+    const completedLogs = await LearningLog.find({
+      grade,
+      name,
+      completed: true,
+      deleted: { $ne: true }
+    });
+
+    // 완료된 단원 목록 추출
+    const completedUnits = new Set();
+    for (const log of completedLogs) {
+      const unitValue = log.unit || log.unitId;
+      if (unitValue && unitValue !== 'undefined') {
+        const match = unitValue.match(/((?:fit_|deep_|on_)?[a-z]+\d?)_(\d+)/i);
+        if (match) {
+          completedUnits.add(`${match[1].toLowerCase()}_${match[2]}`);
+        }
+      }
+    }
+    console.log(`  📊 완료된 단원: ${completedUnits.size}개`);
+
+    // 현재 학습실에 있는 과제 조회 (일반 과제만 - 자동부여 과제는 이미 삭제됨)
+    const userProgress = await UserProgress.findOne({ grade, name });
+
+    const existingTasks = new Set();
+    if (userProgress?.studyRoom?.assignedTasks) {
+      for (const task of userProgress.studyRoom.assignedTasks) {
+        const match = task.unitId?.match(/((?:fit_|deep_|on_)?[a-z]+\d?)_(\d+)/i);
+        if (match) {
+          existingTasks.add(`${match[1].toLowerCase()}_${match[2]}`);
+        }
+      }
+    }
+
+    // 부여할 과제 목록 생성
+    const tasksToAssign = [];
+
+    // 시리즈별로 각각 taskCount개씩 부여
+    for (const series of setting.series) {
+      if (series === 'on') {
+        console.log(`  ⏭️ 시리즈: ${series} (콘텐츠 없음 - 스킵)`);
+        continue;
+      }
+      console.log(`  🔹 시리즈: ${series}`);
+      let seriesTaskCount = 0;
+
+      let prefix = '';
+      let seriesName = 'BRAIN업';
+      if (series === 'fit') {
+        prefix = 'fit_';
+        seriesName = 'BRAIN핏';
+      } else if (series === 'deep') {
+        prefix = 'deep_';
+        seriesName = 'BRAIN딥';
+      } else if (series === 'on') {
+        prefix = 'on_';
+        seriesName = 'BRAIN온';
+      } else if (series === 'up') {
+        prefix = '';
+        seriesName = 'BRAIN업';
+      }
+
+      const maxUnitNum = 30;
+
+      outerLoop:
+      for (let unitNum = 1; unitNum <= maxUnitNum; unitNum++) {
+        if (seriesTaskCount >= setting.taskCount) break;
+
+        const unitNo = String(unitNum).padStart(2, '0');
+
+        for (const subject of AUTO_TASK_SUBJECT_PRIORITY) {
+          if (seriesTaskCount >= setting.taskCount) break outerLoop;
+
+          const maxUnits = SUBJECT_MAX_UNITS[subject] || 20;
+          if (unitNum > maxUnits) continue;
+
+          const subjectInfo = SUBJECT_INFO[subject];
+          const unitKey = `${prefix}${subject}_${unitNo}`;
+
+          if (completedUnits.has(unitKey) || existingTasks.has(unitKey)) {
+            continue;
+          }
+
+          if (tasksToAssign.some(t => t.unitKey === unitKey && t.series === series)) {
+            continue;
+          }
+
+          let unitPath;
+          if (['bio', 'chem', 'physics', 'earth'].includes(subject)) {
+            unitPath = `./BRAINUP/science/${prefix}${subject}_${unitNo}.html`;
+          } else if (['geo', 'soc', 'law', 'pol', 'econ'].includes(subject)) {
+            unitPath = `./BRAINUP/social/${prefix}${subject}_${unitNo}.html`;
+          } else if (['classic', 'modern'].includes(subject)) {
+            unitPath = `./BRAINUP/korlit/${prefix}${subject}_${unitNo}.html`;
+          } else if (['world1', 'world2'].includes(subject)) {
+            unitPath = `./BRAINUP/worldlit/${prefix}${subject}_${unitNo}.html`;
+          } else if (['people1', 'people2'].includes(subject)) {
+            unitPath = `./BRAINUP/person/${prefix}${subject}_${unitNo}.html`;
+          }
+
+          const contentTitle = getContentTitle(unitKey, unitPath);
+          const fullTitle = contentTitle
+            ? `${subjectInfo.label} ${unitNo} ${contentTitle}`
+            : `${subjectInfo.label} ${unitNo}`;
+
+          tasksToAssign.push({
+            unitKey,
+            unitId: unitPath,
+            unitTitle: fullTitle,
+            series: series,
+            seriesName: seriesName,
+            fieldName: subjectInfo.field,
+            subjectName: subjectInfo.label,
+            assignedAt: new Date(),
+            isAutoAssigned: true
+          });
+          seriesTaskCount++;
+        }
+      }
+    }
+
+    // 과제 부여
+    if (tasksToAssign.length > 0) {
+      let progress = userProgress;
+      if (!progress) {
+        progress = new UserProgress({
+          grade,
+          name,
+          studyRoom: { assignedTasks: [] }
+        });
+      }
+
+      if (!progress.studyRoom) {
+        progress.studyRoom = { assignedTasks: [] };
+      }
+
+      for (const task of tasksToAssign) {
+        progress.studyRoom.assignedTasks.push({
+          unitId: task.unitId,
+          unitTitle: task.unitTitle,
+          seriesName: task.seriesName,
+          fieldName: task.fieldName,
+          subjectName: task.subjectName,
+          assignedAt: task.assignedAt,
+          isAutoAssigned: true
+        });
+      }
+
+      await progress.save();
+      console.log(`✅ [${grade} ${name}] ${tasksToAssign.length}개 과제 부여 완료`);
+      tasksToAssign.forEach(t => console.log(`   - ${t.seriesName} > ${t.subjectName} ${t.unitTitle.split(' ')[1]}`));
+    } else {
+      console.log(`ℹ️ [${grade} ${name}] 부여할 미완료 과제가 없습니다`);
+    }
+
+  } catch (error) {
+    console.error(`❌ [${grade} ${name}] 개별 자동과제부여 오류:`, error);
+    throw error;
+  }
+}
 
 // 자동과제부여 실행 함수
 async function executeAutoTaskAssignment() {
