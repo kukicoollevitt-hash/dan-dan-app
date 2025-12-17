@@ -2785,10 +2785,11 @@ app.get("/admin/users", async (req, res) => {
         sortOption = { lastLogin: -1, name: 1 };
     }
 
-    // 두 쿼리를 병렬로 실행 + 필요한 필드만 조회
-    const [usersResult, allProgress] = await Promise.all([
+    // 세 쿼리를 병렬로 실행 + 필요한 필드만 조회
+    const [usersResult, allProgress, allLearningLogs] = await Promise.all([
       User.find(filter).sort(sortOption).lean(),
-      UserProgress.find({}, { grade: 1, name: 1, 'studyRoom.autoTaskSchedules': 1 }).lean()
+      UserProgress.find({}, { grade: 1, name: 1, 'studyRoom.autoTaskSchedules': 1, 'studyRoom.assignedTasks': 1 }).lean(),
+      LearningLog.find({ completed: true, deleted: { $ne: true } }, { grade: 1, name: 1, unit: 1 }).lean()
     ]);
     let users = usersResult;
 
@@ -2798,6 +2799,16 @@ app.get("/admin/users", async (req, res) => {
       progressMap.set(`${p.grade}|${p.name}`, p);
     }
 
+    // LearningLog를 Map<학생키, Set<완료된 단원>>으로 변환
+    const completedUnitsMap = new Map();
+    for (const log of allLearningLogs) {
+      const key = `${log.grade}|${log.name}`;
+      if (!completedUnitsMap.has(key)) {
+        completedUnitsMap.set(key, new Set());
+      }
+      completedUnitsMap.get(key).add(log.unit);
+    }
+
     // 각 user에 대해 UserProgress 데이터 병합 (메모리에서 매핑)
     for (let i = 0; i < users.length; i++) {
       const user = users[i];
@@ -2805,6 +2816,8 @@ app.get("/admin/users", async (req, res) => {
       if (progress && progress.studyRoom) {
         users[i].studyRoom = progress.studyRoom;
       }
+      // 완료된 단원 Set 추가
+      users[i].completedUnits = completedUnitsMap.get(`${user.grade}|${user.name}`) || new Set();
     }
 
     // 승인대기 학생을 항상 맨 위로 정렬
@@ -3199,6 +3212,34 @@ app.get("/admin/users", async (req, res) => {
           background: linear-gradient(135deg, #059669 0%, #047857 100%);
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* 학습실 상태 뱃지 */
+        .study-room-badge {
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .study-room-badge:hover {
+          transform: scale(1.05);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .study-room-empty {
+          background: #f3f4f6;
+          color: #6b7280;
+        }
+        .study-room-complete {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+        }
+        .study-room-pending {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          color: white;
         }
 
         /* 카카오톡 과제 알림 버튼 (노란색) */
@@ -3649,6 +3690,7 @@ app.get("/admin/users", async (req, res) => {
                 <th>전화번호(ID)</th>
                 <th>상태</th>
                 <th>시리즈 부여</th>
+                <th>학습실 상태</th>
                 <th>과제 알림</th>
                 <th>자동과제 스케줄</th>
                 <th>학습 이력</th>
@@ -3687,6 +3729,29 @@ app.get("/admin/users", async (req, res) => {
       const seriesButtonText = hasAssignedSeries ? '📚 부여완료' : '📚 미부여';
       const seriesButtonClass = hasAssignedSeries ? 'btn-action btn-series-done' : 'btn-action btn-series-none';
 
+      // 학습실 과제 상태 계산 (LearningLog 기반)
+      const assignedTasks = u.studyRoom?.assignedTasks || [];
+      const totalTasks = assignedTasks.length;
+      const completedUnits = u.completedUnits || new Set();
+
+      // 완료 개수 계산: AI 과제는 status, 일반 과제는 LearningLog 확인
+      const completedTasks = assignedTasks.filter(t => {
+        if (t.isAI) {
+          // AI 과제는 status가 'completed'인 경우
+          return t.status === 'completed';
+        } else {
+          // 일반 과제는 LearningLog에서 확인
+          // unitId에서 단원 코드 추출: ./BRAINUP/science/bio_01.html → bio_01
+          const unitId = t.unitId || t.id || '';
+          const match = unitId.match(/([a-z_]+_\d+)\.html$/i) || unitId.match(/([a-z_]+_\d+)$/i);
+          const unitCode = match ? match[1] : unitId;
+          return completedUnits.has(unitCode);
+        }
+      }).length;
+
+      const studyRoomStatusText = totalTasks > 0 ? `${completedTasks}/${totalTasks}` : '-';
+      const studyRoomStatusClass = totalTasks === 0 ? 'study-room-empty' : (completedTasks === totalTasks ? 'study-room-complete' : 'study-room-pending');
+
       html += `
         <tr>
           <td class="checkbox-col">
@@ -3717,6 +3782,12 @@ app.get("/admin/users", async (req, res) => {
                onclick="openSeriesModal('${u._id}', '${escapedName}', '${assignedSeriesJson}'); return false;">
               ${seriesButtonText}
             </a>
+          </td>
+          <td>
+            <a href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openStudyRoom=true"
+               target="_blank"
+               class="study-room-badge ${studyRoomStatusClass}"
+               title="학습실 열기 (새 탭)">${studyRoomStatusText}</a>
           </td>
           <td>
             <button class="btn-action btn-kakao-alert"

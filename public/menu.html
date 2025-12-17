@@ -10962,13 +10962,6 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       // unitId가 없으면 false 반환
       if (!unitId) return false;
 
-      // 학생 정보 가져오기 (sessionStorage 우선, localStorage fallback)
-      let stu = JSON.parse(sessionStorage.getItem('user') || '{}');
-      if (!stu.grade || !stu.name) {
-        stu = getCurrentStudent();
-      }
-      if (!stu || !stu.grade || !stu.name) return false;
-
       // unitId에서 단원 코드 추출 (./BRAINUP/social/geo_02.html -> geo_02)
       let unitCode = unitId;
       const match = unitId.match(/\/([^\/]+)\.html$/);
@@ -10976,10 +10969,26 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         unitCode = match[1];
       }
 
+      // ✅ 1. 서버에서 가져온 unitGradesData 먼저 확인 (가장 신뢰할 수 있는 데이터)
+      if (unitGradesData && Object.keys(unitGradesData).length > 0) {
+        // unitGradesData에 해당 unitCode가 있으면 완료 (등급이 있다 = 학습 완료)
+        if (unitGradesData[unitCode]) {
+          console.log(`[isUnitCompleted] ✅ 서버 데이터 완료! unitCode=${unitCode}`);
+          return true;
+        }
+      }
+
+      // 학생 정보 가져오기 (sessionStorage 우선, localStorage fallback)
+      let stu = JSON.parse(sessionStorage.getItem('user') || '{}');
+      if (!stu.grade || !stu.name) {
+        stu = getCurrentStudent();
+      }
+      if (!stu || !stu.grade || !stu.name) return false;
+
       // ✅ world2_XX, people2_XX 형식 그대로 사용 (서버 API와 동일하게)
       // 서버에서 world2_XX 형식 그대로 저장하므로 변환하지 않음
 
-      // ✅ 두 가지 키 형식 모두 확인 (하위 호환)
+      // ✅ 2. localStorage 확인 (fallback - 두 가지 키 형식 모두 확인)
       // 1. buildStudentKey 형식 (전화번호 포함): 1학년_홍길동_11
       // 2. 기존 형식 (전화번호 없음): 1학년_홍길동
       const stuKeyWithPhone = buildStudentKey(stu);
