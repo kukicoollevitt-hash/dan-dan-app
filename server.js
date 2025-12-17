@@ -4108,14 +4108,14 @@ app.get("/admin/users", async (req, res) => {
             return;
           }
 
-          const userList = Array.from(checkboxes).map(cb => cb.dataset.userName).join(', ');
+          const userList = Array.from(checkboxes).map(cb => cb.dataset.name).join(', ');
           const confirmMsg = \`선택한 \${checkboxes.length}명의 학생을 휴지통으로 보내시겠습니까?\\n\\n학생 목록: \${userList}\`;
 
           if (!confirm(confirmMsg)) {
             return;
           }
 
-          const userIds = Array.from(checkboxes).map(cb => cb.dataset.userId);
+          const userIds = Array.from(checkboxes).map(cb => cb.value);
 
           try {
             const promises = userIds.map(userId =>
