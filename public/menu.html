@@ -10876,19 +10876,76 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       list.appendChild(vocabItem);
 
       // ========== 독서 감상문 월간 과제 섹션 ==========
+      // 이번 달 제출 개수 확인 및 완료된 스토리 ID 가져오기
+      const [monthlyReportCount, completedStoryIds] = await Promise.all([
+        getMonthlyReportCount(),
+        getCompletedStoryIds()
+      ]);
+
+      // 완료되지 않은 이야기 중 추천 가능한 것만 선택 (시즌 순서 고려)
+      const availableStories = [];
+      Object.values(STORY_DATA).forEach(story => {
+        // 각 시리즈별로 다음에 읽을 시즌 찾기
+        for (let i = 0; i < story.seasons.length; i++) {
+          const season = story.seasons[i];
+          const isCompleted = completedStoryIds.includes(season.id);
+
+          if (!isCompleted) {
+            // 시즌 1이거나, 이전 시즌을 완료한 경우에만 추천
+            if (season.season === 1 || (i > 0 && completedStoryIds.includes(story.seasons[i - 1].id))) {
+              availableStories.push({
+                id: season.id,
+                title: `${story.title} 시즌 ${season.season}`,
+                subtitle: season.subtitle
+              });
+            }
+            break; // 해당 시리즈에서 다음 읽을 시즌 하나만 추가
+          }
+        }
+      });
+
+      // 월 단위 시드 기반 랜덤 선택 (매월 1일 00:00에만 변경)
+      const now = new Date();
+      const monthlySeed = now.getFullYear() * 100 + (now.getMonth() + 1); // 예: 202512
+
+      // 시드 기반 랜덤 함수 (간단한 선형 합동 생성기)
+      function seededRandom(seed) {
+        let s = seed;
+        return function() {
+          s = (s * 1103515245 + 12345) & 0x7fffffff;
+          return s / 0x7fffffff;
+        };
+      }
+
+      const random = seededRandom(monthlySeed);
+      const shuffled = availableStories.sort(() => random() - 0.5);
+      const recommendedStories = shuffled.slice(0, 2);
+
+      // 섹션 헤더 (추천 이야기 포함)
       const readingReportHeader = document.createElement('li');
       readingReportHeader.className = 'study-room-divider';
+
+      // 추천 이야기 한 줄 텍스트 생성 (완료된 건 취소선 적용)
+      const recommendedText = recommendedStories.length > 0
+        ? `이번 달 추천 도서: ${recommendedStories.map(s => {
+            const isCompleted = completedStoryIds.includes(s.id);
+            return isCompleted
+              ? `<span style="text-decoration: line-through; color: #9ca3af;">${s.title}</span>`
+              : s.title;
+          }).join(', ')}`
+        : '';
+
       readingReportHeader.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0;">
-          <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
-          <span style="color: #f59e0b; font-size: 13px; font-weight: 600; white-space: nowrap;">📝 독서 감상문 월간 과제</span>
-          <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
+        <div style="display: flex; flex-direction: column; padding: 16px 0 8px 0;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
+            <span style="color: #f59e0b; font-size: 13px; font-weight: 600; white-space: nowrap;">📝 독서 감상문 월간 과제</span>
+            <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
+          </div>
+          ${recommendedText ? `<div style="text-align: center; font-size: 12px; color: #92400e; margin-top: 6px;">${recommendedText}</div>` : ''}
         </div>
       `;
       list.appendChild(readingReportHeader);
-
-      // 이번 달 제출 개수 확인
-      const monthlyReportCount = await getMonthlyReportCount();
 
       // 독서 감상문 항목
       const reportItem = document.createElement('li');
@@ -10900,7 +10957,7 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       const reportBadgeText = monthlyReportCount > 0 ? `🏆 이번 달 ${monthlyReportCount}개 제출완료` : '✏️ 미제출';
 
       reportItem.innerHTML = `
-        <div class="task-info">
+        <div class="task-info" style="flex: 1;">
           <div class="task-title" style="font-weight: 600;">고래 도서관 독서 감상문</div>
           <div class="task-meta" style="font-size: 12px; color: #6b7280; margin-top: 4px;">
             신나는 고래도서관 이야기를 읽고 감상문을 제출해보세요!
@@ -12380,9 +12437,10 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         return;
       }
 
-      const selectedOption = storySelect.options[storySelect.selectedIndex];
       const storyId = storySelect.value;
-      const storyTitle = selectedOption.getAttribute('data-title');
+      // allStories 배열에서 선택된 스토리 찾기
+      const selectedStory = allStories.find(s => s.id === storyId);
+      const storyTitle = selectedStory ? selectedStory.title : storyId;
 
       const userStr = sessionStorage.getItem('user');
       if (!userStr) {
@@ -12522,9 +12580,10 @@ ${content}
         return;
       }
 
-      const selectedOption = storySelect.options[storySelect.selectedIndex];
       const storyId = storySelect.value;
-      const storyTitle = selectedOption.getAttribute('data-title');
+      // allStories 배열에서 선택된 스토리 찾기
+      const selectedStory = allStories.find(s => s.id === storyId);
+      const storyTitle = selectedStory ? selectedStory.title : storyId;
 
       const userStr = sessionStorage.getItem('user');
       if (!userStr) {
