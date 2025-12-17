@@ -2028,6 +2028,74 @@ body {
   transform: rotate(90deg);
 }
 
+/* 고래 이야기 검색 */
+.whale-story-search {
+  position: absolute;
+  top: 20px;
+  right: 80px;
+  z-index: 100;
+}
+
+.whale-story-search-input {
+  width: 200px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.whale-story-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.whale-story-search-input:focus {
+  background: rgba(255, 255, 255, 0.3);
+  width: 250px;
+}
+
+.whale-story-search-dropdown {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+}
+
+.whale-story-search-dropdown.active {
+  display: block;
+}
+
+.whale-story-search-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.whale-story-search-item:last-child {
+  border-bottom: none;
+}
+
+.whale-story-search-item:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.whale-story-search-item .story-emoji {
+  margin-right: 8px;
+}
+
 .whale-story-header {
   text-align: center;
   margin-bottom: 40px;
@@ -11467,6 +11535,84 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       updateCarousel();
     }
 
+    // 고래 이야기 검색 기능
+    const whaleStoryTitles = [
+      { index: 0, emoji: '🐋', title: '푸른 고래섬의 비밀 모험단' },
+      { index: 1, emoji: '🌿', title: '깊은 정글의 잊힌 도시' },
+      { index: 2, emoji: '📚', title: '살아 있는 신비의 도서관' },
+      { index: 3, emoji: '⏰', title: '시간도서관' },
+      { index: 4, emoji: '🐱', title: '미지의 고양이 섬 표류기' },
+      { index: 5, emoji: '🐈', title: '고양이가 되어버린 날' },
+      { index: 6, emoji: '🌧️', title: '소나기' },
+      { index: 7, emoji: '🌧️', title: '운수 좋은 날' },
+      { index: 8, emoji: '🌸', title: '동백꽃' },
+      { index: 9, emoji: '🏛️', title: '삼대' },
+      { index: 10, emoji: '🌸', title: '춘향전' }
+    ];
+
+    function showSearchDropdown() {
+      const dropdown = document.getElementById('whaleStorySearchDropdown');
+      const input = document.getElementById('whaleStorySearchInput');
+      if (input.value.trim() === '') {
+        renderSearchResults(whaleStoryTitles);
+      }
+      dropdown.classList.add('active');
+    }
+
+    function hideSearchDropdown() {
+      setTimeout(() => {
+        document.getElementById('whaleStorySearchDropdown').classList.remove('active');
+      }, 200);
+    }
+
+    function searchWhaleStory(query) {
+      const dropdown = document.getElementById('whaleStorySearchDropdown');
+      const normalizedQuery = query.trim().toLowerCase();
+
+      if (normalizedQuery === '') {
+        renderSearchResults(whaleStoryTitles);
+        return;
+      }
+
+      const filtered = whaleStoryTitles.filter(story =>
+        story.title.toLowerCase().includes(normalizedQuery)
+      );
+
+      renderSearchResults(filtered);
+      dropdown.classList.add('active');
+    }
+
+    function renderSearchResults(results) {
+      const dropdown = document.getElementById('whaleStorySearchDropdown');
+
+      if (results.length === 0) {
+        dropdown.innerHTML = '<div class="whale-story-search-item" style="color: #999; cursor: default;">검색 결과가 없습니다</div>';
+        return;
+      }
+
+      dropdown.innerHTML = results.map(story => `
+        <div class="whale-story-search-item" onclick="goToSlide(${story.index})">
+          <span class="story-emoji">${story.emoji}</span>${story.title}
+        </div>
+      `).join('');
+    }
+
+    function goToSlide(slideIndex) {
+      currentSlide = slideIndex;
+      updateCarousel();
+      document.getElementById('whaleStorySearchDropdown').classList.remove('active');
+      document.getElementById('whaleStorySearchInput').value = '';
+      document.getElementById('whaleStorySearchInput').blur();
+    }
+
+    // 검색창 외부 클릭 시 드롭다운 닫기
+    document.addEventListener('click', function(e) {
+      const searchContainer = document.querySelector('.whale-story-search');
+      if (searchContainer && !searchContainer.contains(e.target)) {
+        document.getElementById('whaleStorySearchDropdown').classList.remove('active');
+      }
+    });
+
     function goToSeason(storyType, season) {
       const urls = {
         whale: {
@@ -12685,6 +12831,12 @@ ${content}
   <div class="whale-story-modal" id="whaleStoryModal">
     <div class="whale-story-modal-content">
       <button class="whale-story-modal-close" id="closeWhaleStoryModal" onclick="closeWhaleStoryModal()" type="button">&times;</button>
+
+      <!-- 검색 기능 -->
+      <div class="whale-story-search">
+        <input type="text" class="whale-story-search-input" id="whaleStorySearchInput" placeholder="🔍 이야기 검색..." oninput="searchWhaleStory(this.value)" onfocus="showSearchDropdown()" autocomplete="off">
+        <div class="whale-story-search-dropdown" id="whaleStorySearchDropdown"></div>
+      </div>
 
       <!-- Carousel Navigation Arrows -->
       <button class="carousel-nav prev" id="carouselPrev" onclick="moveCarousel(-1)" type="button">‹</button>
