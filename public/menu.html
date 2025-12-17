@@ -11094,17 +11094,37 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
       // ✅ 페이지 로드 시 학습실 모달 상태 복원 (비활성화 - 자동 열림 방지)
       // restoreStudyRoomModal();
 
-      // ✅ URL 파라미터로 학습실 자동 열기 (카카오톡 알림 링크용)
+      // ✅ URL 파라미터로 학습실 자동 열기 (카카오톡 알림 링크용 및 슈퍼관리자 링크용)
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('openStudyRoom') === 'true') {
+      const shouldOpenStudyRoom = urlParams.get('openStudyRoom') === 'true';
+      const shouldOpenAutoTask = urlParams.get('openAutoTask') === 'true';
+
+      if (shouldOpenStudyRoom) {
         // URL에서 파라미터 제거 (새로고침 시 다시 열리지 않도록)
         const cleanUrl = window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
 
         // 약간의 딜레이 후 학습실 모달 열기 (페이지 로드 완료 후)
         setTimeout(() => {
-          console.log('📱 카카오톡 링크로 학습실 모달 자동 열기');
+          console.log('📱 링크로 학습실 모달 자동 열기');
           openStudyRoomModal();
+
+          // 자동과제부여 드롭다운도 열어야 하는 경우 (슈퍼관리자 링크)
+          if (shouldOpenAutoTask) {
+            setTimeout(() => {
+              console.log('⚙️ 자동과제부여 드롭다운 자동 열기');
+              const dropdown = document.getElementById('autoTaskDropdown');
+              const btn = document.getElementById('autoTaskBtn');
+              if (dropdown && btn) {
+                dropdown.classList.add('show');
+                btn.classList.add('active');
+                // 드롭다운 위치 계산
+                const rect = btn.getBoundingClientRect();
+                dropdown.style.top = (rect.bottom + 8) + 'px';
+                dropdown.style.left = Math.max(10, rect.left - 100) + 'px';
+              }
+            }, 300);
+          }
         }, 500);
       }
 

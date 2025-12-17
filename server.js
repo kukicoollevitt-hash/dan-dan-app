@@ -2832,7 +2832,7 @@ app.get("/admin/users", async (req, res) => {
     // 스케줄 렌더링 함수
     function renderSchedules(schedules, grade, name) {
       if (!schedules || schedules.length === 0) {
-        return '<span class="no-schedule">-</span>';
+        return '';
       }
 
       const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
@@ -3217,13 +3217,17 @@ app.get("/admin/users", async (req, res) => {
         /* 학습실 상태 뱃지 */
         .study-room-badge {
           display: inline-block;
-          padding: 4px 10px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 600;
+          padding: 6px 14px;
+          border-radius: 14px;
+          font-size: 14px;
+          font-weight: 700;
           text-decoration: none;
           cursor: pointer;
           transition: all 0.2s ease;
+        }
+        /* 학습실 상태 셀 가운데 정렬 */
+        td:has(.study-room-badge) {
+          text-align: center;
         }
         .study-room-badge:hover {
           transform: scale(1.05);
@@ -3429,6 +3433,25 @@ app.get("/admin/users", async (req, res) => {
         .btn-icon.btn-delete:hover {
           background: #fee2e2;
           color: #dc2626;
+        }
+
+        /* 자동과제부여 링크 스타일 (슈퍼관리자용) */
+        .admin-auto-task-link {
+          display: inline-block;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 8px 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 600;
+          text-decoration: none;
+          transition: all 0.2s ease;
+          margin-bottom: 8px;
+        }
+        .admin-auto-task-link:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+          color: white;
         }
 
         /* 시리즈 부여 모달 스타일 */
@@ -3690,8 +3713,11 @@ app.get("/admin/users", async (req, res) => {
                 <th>전화번호(ID)</th>
                 <th>상태</th>
                 <th>시리즈 부여</th>
-                <th>학습실 상태</th>
-                <th>과제 알림</th>
+                <th style="cursor: pointer;" onclick="sortByPendingTasks()" title="클릭하면 미완료 과제순으로 정렬">
+                  학습실 상태<br><span style="font-size: 10px; color: #888; font-weight: normal;">(어휘학습 제외)</span>
+                  <span id="studyRoomSortIcon" style="margin-left: 4px;">⇅</span>
+                </th>
+                <th>과제 알림<br><span style="font-size: 10px; color: #888; font-weight: normal;">(개인별 발송)</span></th>
                 <th>자동과제 스케줄</th>
                 <th>학습 이력</th>
                 <th>수정</th>
@@ -3751,9 +3777,10 @@ app.get("/admin/users", async (req, res) => {
 
       const studyRoomStatusText = totalTasks > 0 ? `${completedTasks}/${totalTasks}` : '-';
       const studyRoomStatusClass = totalTasks === 0 ? 'study-room-empty' : (completedTasks === totalTasks ? 'study-room-complete' : 'study-room-pending');
+      const pendingTasks = totalTasks - completedTasks;  // 미완료 과제 수
 
       html += `
-        <tr>
+        <tr data-user-grade="${u.grade || ''}" data-user-name="${u.name || ''}" data-pending="${pendingTasks}">
           <td class="checkbox-col">
             <input type="checkbox" class="user-checkbox" value="${idOrPhone}" data-grade="${u.grade || ''}" data-name="${u.name || ''}" onchange="updateSelectedCount()" />
           </td>
@@ -3796,18 +3823,24 @@ app.get("/admin/users", async (req, res) => {
             </button>
           </td>
           <td>
+            <a class="admin-auto-task-link"
+               href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openStudyRoom=true&openAutoTask=true"
+               target="_blank"
+               title="학습실에서 자동과제부여 설정">
+              ⚙️ 자동과제부여
+            </a>
             <div id="schedule-${idOrPhone}" class="auto-schedule-cell">
               ${renderSchedules(u.studyRoom?.autoTaskSchedules || [], u.grade || '', u.name || '')}
             </div>
           </td>
           <td>
             <a class="btn-action btn-history"
-               href="/admin/logs?key=${encodeURIComponent(
-                 key
-               )}&grade=${encodeURIComponent(
+               href="/my-learning?grade=${encodeURIComponent(
         u.grade || ""
-      )}&name=${encodeURIComponent(u.name || "")}">
-              📊 학습 이력
+      )}&name=${encodeURIComponent(u.name || "")}&series=up"
+               target="_blank"
+               title="종합리포트 (나의 학습분석)">
+              📊 종합리포트
             </a>
           </td>
           <td>
@@ -4005,6 +4038,44 @@ app.get("/admin/users", async (req, res) => {
             closeSeriesModal();
           }
         });
+
+        // 학습실 상태 정렬 관련 변수 및 함수
+        let pendingSortOrder = 'desc';  // 기본: 내림차순 (미완료 많은 순)
+
+        function sortByPendingTasks() {
+          const tbody = document.querySelector('table tbody');
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+
+          // 정렬
+          rows.sort((a, b) => {
+            const pendingA = parseInt(a.dataset.pending) || 0;
+            const pendingB = parseInt(b.dataset.pending) || 0;
+
+            if (pendingSortOrder === 'desc') {
+              return pendingB - pendingA;  // 미완료 많은 순
+            } else {
+              return pendingA - pendingB;  // 미완료 적은 순
+            }
+          });
+
+          // DOM 재배치
+          rows.forEach(row => tbody.appendChild(row));
+
+          // 번호 재정렬
+          rows.forEach((row, idx) => {
+            const numCell = row.querySelector('td:nth-child(2)');
+            if (numCell) numCell.textContent = idx + 1;
+          });
+
+          // 아이콘 업데이트
+          const icon = document.getElementById('studyRoomSortIcon');
+          if (icon) {
+            icon.textContent = pendingSortOrder === 'desc' ? '↓' : '↑';
+          }
+
+          // 다음 클릭시 반대 정렬
+          pendingSortOrder = pendingSortOrder === 'desc' ? 'asc' : 'desc';
+        }
 
         // 체크박스 관련 함수들
         function toggleSelectAll() {
