@@ -2,6 +2,12 @@
 const mongoose = require("mongoose");
 
 const DiagnosticTestSchema = new mongoose.Schema({
+  // 지점 정보
+  branchName: {
+    type: String,
+    required: true
+  }, // 지점명(학원명)
+
   // 학생 정보
   studentGrade: {
     type: String,

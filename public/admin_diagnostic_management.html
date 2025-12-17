@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>진단테스트 및 수강신청 관리</title>
+  <title>진단테스트 신청 관리</title>
   <style>
     * {
       margin: 0;
@@ -19,7 +19,7 @@
     }
 
     .container {
-      max-width: 1400px;
+      max-width: 1200px;
       margin: 0 auto;
       background: white;
       border-radius: 20px;
@@ -35,7 +35,7 @@
     }
 
     .header h1 {
-      font-size: 32px;
+      font-size: 28px;
       color: #2c3e50;
       margin-bottom: 10px;
     }
@@ -43,6 +43,16 @@
     .header p {
       color: #7f8c8d;
       font-size: 16px;
+    }
+
+    .academy-name {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-top: 10px;
     }
 
     .back-btn {
@@ -68,7 +78,7 @@
     }
 
     .section-title {
-      font-size: 24px;
+      font-size: 22px;
       color: #2c3e50;
       margin-bottom: 20px;
       padding-bottom: 10px;
@@ -148,6 +158,16 @@
       border-radius: 12px;
       font-size: 12px;
       font-weight: 600;
+      background: #e8f4fd;
+      color: #3498db;
+    }
+
+    .result-grade-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
     }
 
     .grade-S { background: #ffd700; color: #333; }
@@ -155,46 +175,22 @@
     .grade-B { background: #4ecdc4; color: white; }
     .grade-C { background: #95e1d3; color: #333; }
     .grade-D { background: #e0e0e0; color: #666; }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 20px;
-      }
-
-      .header h1 {
-        font-size: 24px;
-      }
-
-      .section-title {
-        font-size: 20px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-
-      table {
-        font-size: 12px;
-      }
-
-      th, td {
-        padding: 10px 8px;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="/super/dashboard" class="back-btn">← 대시보드로 돌아가기</a>
+    <a href="/admin/dashboard" class="back-btn">← 대시보드로 돌아가기</a>
 
     <div class="header">
-      <h1>📊 진단테스트 및 수강신청 관리</h1>
-      <p>전체 학원·학생·관리자 계정을 한 곳에서 관리합니다.</p>
+      <h1>📝 진단테스트 신청 관리</h1>
+      <p>내 학원에서 문해력 진단테스트를 신청한 학생 목록입니다.</p>
+      <div class="academy-name" id="academyName">학원명 로딩 중...</div>
     </div>
 
-    <!-- 진단테스트 회원 목록 -->
+    <!-- 진단테스트 신청 목록 -->
     <div class="section">
       <div class="section-title">
-        <span>📝 진단테스트 회원 목록</span>
+        <span>📋 진단테스트 신청 목록</span>
         <span class="count-badge" id="testCount">0명</span>
       </div>
       <div class="table-container">
@@ -257,7 +253,7 @@
     // 진단테스트 목록 불러오기
     async function loadDiagnosticTests() {
       try {
-        const response = await fetch('/api/diagnostic-tests');
+        const response = await fetch('/api/admin/diagnostic-tests');
         const result = await response.json();
 
         const loading = document.getElementById('diagnosticTestsLoading');
@@ -265,8 +261,14 @@
         const empty = document.getElementById('diagnosticTestsEmpty');
         const body = document.getElementById('diagnosticTestsBody');
         const countBadge = document.getElementById('testCount');
+        const academyNameEl = document.getElementById('academyName');
 
         loading.style.display = 'none';
+
+        // 학원명 표시
+        if (result.academyName) {
+          academyNameEl.textContent = result.academyName;
+        }
 
         if (result.success && result.data.length > 0) {
           table.style.display = 'table';
@@ -276,7 +278,7 @@
             <tr>
               <td>${index + 1}</td>
               <td>${test.branchName || '-'}</td>
-              <td>${test.studentGrade}</td>
+              <td><span class="grade-badge">${test.studentGrade}</span></td>
               <td>${test.studentName}</td>
               <td>${test.studentPhone}</td>
               <td>${test.parentName}</td>
@@ -297,7 +299,7 @@
     // 수강신청 목록 불러오기
     async function loadCourseApplications() {
       try {
-        const response = await fetch('/api/course-applications');
+        const response = await fetch('/api/admin/course-applications');
         const result = await response.json();
 
         const loading = document.getElementById('applicationsLoading');
@@ -318,11 +320,11 @@
               <tr>
                 <td>${index + 1}</td>
                 <td>${app.branchName || '-'}</td>
-                <td>${app.studentGrade}</td>
+                <td><span class="grade-badge">${app.studentGrade}</span></td>
                 <td>${app.studentName}</td>
                 <td>${app.studentPhone}</td>
                 <td>${app.parentPhone}</td>
-                <td><span class="grade-badge ${gradeClass}">${app.grade}</span></td>
+                <td><span class="result-grade-badge ${gradeClass}">${app.grade}</span></td>
                 <td>${app.series}</td>
                 <td>${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
               </tr>
@@ -339,10 +341,10 @@
     }
 
     // 페이지 로드 시 데이터 불러오기
-    window.addEventListener('DOMContentLoaded', () => {
+    window.onload = function() {
       loadDiagnosticTests();
       loadCourseApplications();
-    });
+    };
   </script>
 </body>
 </html>

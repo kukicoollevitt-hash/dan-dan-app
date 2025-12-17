@@ -2319,6 +2319,16 @@ app.get("/admin/branch/users", requireAdminLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "branch_user_list.html"));
 });
 
+// 브랜치 관리자 진단테스트 관리 페이지
+app.get("/admin/diagnostic-management", requireAdminLogin, (req, res) => {
+  console.log(
+    "✅ [GET] /admin/diagnostic-management -> public/admin_diagnostic_management.html",
+    "academyName:",
+    req.session.admin && req.session.admin.academyName
+  );
+  res.sendFile(path.join(__dirname, "public", "admin_diagnostic_management.html"));
+});
+
 // 학생 한 명 학습 이력 보기 (브랜치 관리자용 화면 템플릿)
 app.get("/admin/branch/logs", requireAdminLogin, (req, res) => {
   console.log(
@@ -14467,9 +14477,10 @@ app.post('/api/test/auto-task-trigger', async (req, res) => {
 // 진단테스트 정보 저장 (진단 시작하기 버튼 클릭 시)
 app.post("/api/diagnostic-test", async (req, res) => {
   try {
-    const { studentGrade, studentName, studentPhone, parentName, parentPhone } = req.body;
+    const { branchName, studentGrade, studentName, studentPhone, parentName, parentPhone } = req.body;
 
     const diagnosticTest = new DiagnosticTest({
+      branchName,
       studentGrade,
       studentName,
       studentPhone,
@@ -14489,9 +14500,10 @@ app.post("/api/diagnostic-test", async (req, res) => {
 // 수강신청(상담) 정보 저장 (상담신청 팝업에서 제출 시)
 app.post("/api/course-application", async (req, res) => {
   try {
-    const { studentGrade, studentName, studentPhone, parentPhone, grade, series } = req.body;
+    const { branchName, studentGrade, studentName, studentPhone, parentPhone, grade, series } = req.body;
 
     const courseApplication = new CourseApplication({
+      branchName,
       studentGrade,
       studentName,
       studentPhone,
@@ -14527,6 +14539,67 @@ app.get("/api/course-applications", async (req, res) => {
     res.json({ success: true, data: applications });
   } catch (error) {
     console.error("수강신청 조회 오류:", error);
+    res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// 관리자 정보 조회 (브랜치 관리자용)
+app.get("/api/admin/info", async (req, res) => {
+  try {
+    if (!req.session || !req.session.admin) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+    res.json({
+      success: true,
+      academyName: req.session.admin.academyName || "",
+      adminId: req.session.admin.adminId || ""
+    });
+  } catch (error) {
+    console.error("관리자 정보 조회 오류:", error);
+    res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// 진단테스트 목록 조회 (브랜치 관리자용 - 지점명 필터링)
+app.get("/api/admin/diagnostic-tests", async (req, res) => {
+  try {
+    // 세션에서 관리자 정보 확인
+    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+
+    const academyName = req.session.admin.academyName;
+
+    // 지점명으로 필터링하여 조회 (지점명에 academyName이 포함된 경우 매칭)
+    const tests = await DiagnosticTest.find({
+      branchName: { $regex: academyName, $options: 'i' }
+    }).sort({ createdAt: -1 });
+
+    res.json({ success: true, data: tests, academyName: academyName });
+  } catch (error) {
+    console.error("브랜치 관리자 진단테스트 조회 오류:", error);
+    res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// 수강신청 목록 조회 (브랜치 관리자용 - 지점명 필터링)
+app.get("/api/admin/course-applications", async (req, res) => {
+  try {
+    // 세션에서 관리자 정보 확인
+    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+
+    const academyName = req.session.admin.academyName;
+
+    // 지점명으로 필터링하여 조회 (지점명에 academyName이 포함된 경우 매칭)
+    const applications = await CourseApplication.find({
+      branchName: { $regex: academyName, $options: 'i' }
+    }).sort({ createdAt: -1 });
+
+    res.json({ success: true, data: applications, academyName: academyName });
+  } catch (error) {
+    console.error("브랜치 관리자 수강신청 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
   }
 });
