@@ -223,14 +223,21 @@ return res.redirect("/student-main.html?signup=pending");
 
 // ✅ 2) 정적 파일 제공 (CSS, JS, menu.html, admin_*.html 등)
 app.use(express.static(path.join(__dirname, "public"), {
-  etag: false,
-  maxAge: 0,
-  setHeaders: (res, path) => {
+  etag: true,
+  setHeaders: (res, filePath) => {
     // HTML 파일은 캐시 방지
-    if (path.endsWith('.html')) {
+    if (filePath.endsWith('.html')) {
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
+    }
+    // 비디오/이미지 파일은 1일 캐시
+    else if (filePath.match(/\.(mp4|webm|jpg|jpeg|png|gif|svg|webp)$/i)) {
+      res.set('Cache-Control', 'public, max-age=86400'); // 24시간
+    }
+    // JS/CSS 파일은 1시간 캐시
+    else if (filePath.match(/\.(js|css)$/i)) {
+      res.set('Cache-Control', 'public, max-age=3600'); // 1시간
     }
   }
 }));
