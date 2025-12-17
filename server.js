@@ -27,6 +27,45 @@ const UserProgress = require("./models/UserProgress");
 const DiagnosticTest = require("./models/DiagnosticTest");
 const CourseApplication = require("./models/CourseApplication");
 
+// ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
+const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
+
+function getContentTitle(unitKey, unitPath) {
+  // 캐시 확인
+  if (contentTitleCache.has(unitKey)) {
+    return contentTitleCache.get(unitKey);
+  }
+
+  try {
+    // unitPath에서 content 파일 경로 추출
+    // ./BRAINUP/science/deep_bio_01.html -> ./public/BRAINUP/science/deep_bio_content.js
+    const match = unitPath.match(/\.\/BRAINUP\/([^\/]+)\/([^_]+(?:_[^_]+)?)_(\d+)\.html/);
+    if (!match) return null;
+
+    const [, folder, prefix, unitNo] = match;
+    // prefix: bio, fit_bio, deep_bio 등
+    const contentFile = path.join(__dirname, 'public', 'BRAINUP', folder, `${prefix}_content.js`);
+
+    if (!fs.existsSync(contentFile)) return null;
+
+    const content = fs.readFileSync(contentFile, 'utf8');
+
+    // unitKey의 title 찾기 (예: deep_bio_01: { ... title: '...' })
+    const titleRegex = new RegExp(`${unitKey}:\\s*\\{[^}]*title:\\s*['"]([^'"]+)['"]`, 's');
+    const titleMatch = content.match(titleRegex);
+
+    if (titleMatch && titleMatch[1]) {
+      contentTitleCache.set(unitKey, titleMatch[1]);
+      return titleMatch[1];
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`콘텐츠 제목 가져오기 오류 (${unitKey}):`, error.message);
+    return null;
+  }
+}
+
 // ===== 간단한 메모리 캐시 =====
 const cache = new Map();
 const CACHE_TTL = 30000; // 30초
@@ -13942,23 +13981,23 @@ const SUBJECT_MAX_UNITS = {
   classic: 30, modern: 30, world1: 20, world2: 20, people1: 20, people2: 20
 };
 
-// 과목 정보 매핑
+// 과목 정보 매핑 (field는 한글로 표시)
 const SUBJECT_INFO = {
-  bio: { field: 'science', label: '생물' },
-  chem: { field: 'science', label: '화학' },
-  physics: { field: 'science', label: '물리' },
-  earth: { field: 'science', label: '지구과학' },
-  geo: { field: 'social', label: '지리' },
-  soc: { field: 'social', label: '사회문화' },
-  law: { field: 'social', label: '법과정치' },
-  pol: { field: 'social', label: '정치' },
-  econ: { field: 'social', label: '경제' },
-  classic: { field: 'korlit', label: '고전문학' },
-  modern: { field: 'korlit', label: '현대문학' },
-  world1: { field: 'worldlit', label: '세계문학1' },
-  world2: { field: 'worldlit', label: '세계문학2' },
-  people1: { field: 'person', label: '인물1' },
-  people2: { field: 'person', label: '인물2' }
+  bio: { field: '과학분야', label: '생물' },
+  chem: { field: '과학분야', label: '화학' },
+  physics: { field: '과학분야', label: '물리' },
+  earth: { field: '과학분야', label: '지구과학' },
+  geo: { field: '사회분야', label: '지리' },
+  soc: { field: '사회분야', label: '사회문화' },
+  law: { field: '사회분야', label: '법과정치' },
+  pol: { field: '사회분야', label: '정치' },
+  econ: { field: '사회분야', label: '경제' },
+  classic: { field: '국어분야', label: '고전문학' },
+  modern: { field: '국어분야', label: '현대문학' },
+  world1: { field: '국어분야', label: '세계문학1' },
+  world2: { field: '국어분야', label: '세계문학2' },
+  people1: { field: '인물분야', label: '한국인물' },
+  people2: { field: '인물분야', label: '세계인물' }
 };
 
 // 자동과제부여 실행 함수
@@ -14100,10 +14139,16 @@ async function executeAutoTaskAssignment() {
                 unitPath = `./BRAINUP/person/${prefix}${subject}_${unitNo}.html`;
               }
 
+              // 콘텐츠 파일에서 전체 제목 가져오기
+              const contentTitle = getContentTitle(unitKey, unitPath);
+              const fullTitle = contentTitle
+                ? `${subjectInfo.label} ${unitNo} ${contentTitle}`
+                : `${subjectInfo.label} ${unitNo}`;
+
               tasksToAssign.push({
                 unitKey,
                 unitId: unitPath,
-                unitTitle: `${subjectInfo.label} ${unitNo}`,
+                unitTitle: fullTitle,
                 series: series,
                 seriesName: seriesName,
                 fieldName: subjectInfo.field,
