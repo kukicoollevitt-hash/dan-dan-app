@@ -13931,8 +13931,9 @@ console.log('✅ 독서 감상문 월간 리셋 스케줄러 등록 완료 (매�
 
 // ========== 자동과제부여 시스템 (학생별 설정 기반) ==========
 
-// 과목 우선순위 순서
-const AUTO_TASK_SUBJECT_PRIORITY = ['bio', 'chem', 'physics', 'earth', 'geo', 'soc', 'law', 'pol', 'econ', 'classic', 'modern', 'world1', 'world2', 'people1', 'people2'];
+// 과목 우선순위 순서 (사용자 지정)
+// 생물 > 지구과학 > 물리 > 화학 > 사회문화 > 지리 > 법 > 정치경제 > 현대문학 > 고전문학 > 세계문학1 > 세계문학2 > 한국인물 > 세계인물
+const AUTO_TASK_SUBJECT_PRIORITY = ['bio', 'earth', 'physics', 'chem', 'soc', 'geo', 'law', 'pol', 'modern', 'classic', 'world1', 'world2', 'people1', 'people2'];
 
 // 각 과목별 최대 단원 수
 const SUBJECT_MAX_UNITS = {
@@ -13943,7 +13944,7 @@ const SUBJECT_MAX_UNITS = {
 
 // 과목 정보 매핑
 const SUBJECT_INFO = {
-  bio: { field: 'science', label: '생명과학' },
+  bio: { field: 'science', label: '생물' },
   chem: { field: 'science', label: '화학' },
   physics: { field: 'science', label: '물리' },
   earth: { field: 'science', label: '지구과학' },
@@ -13993,15 +13994,20 @@ async function executeAutoTaskAssignment() {
           deleted: { $ne: true }
         });
 
-        // 완료된 단원 목록 추출
+        // 완료된 단원 목록 추출 (시리즈 prefix 포함: deep_bio_06, fit_bio_06, bio_06)
         const completedUnits = new Set();
         for (const log of completedLogs) {
-          // unitId에서 과목코드_번호 형식 추출
-          const match = log.unitId.match(/([a-z]+\d?)_(\d+)/i);
-          if (match) {
-            completedUnits.add(`${match[1].toLowerCase()}_${match[2]}`);
+          // LearningLog에서는 'unit' 필드 사용 (예: deep_bio_06, fit_physics_02)
+          const unitValue = log.unit || log.unitId;
+          if (unitValue && unitValue !== 'undefined') {
+            // 시리즈 prefix 포함 패턴: (fit_|deep_|on_)?(과목코드\d?)_(번호)
+            const match = unitValue.match(/((?:fit_|deep_|on_)?[a-z]+\d?)_(\d+)/i);
+            if (match) {
+              completedUnits.add(`${match[1].toLowerCase()}_${match[2]}`);
+            }
           }
         }
+        console.log(`  📊 완료된 단원: ${completedUnits.size}개`);
 
         // 현재 학습실에 있는 과제 조회
         const userProgress = await UserProgress.findOne({
@@ -14012,7 +14018,8 @@ async function executeAutoTaskAssignment() {
         const existingTasks = new Set();
         if (userProgress?.studyRoom?.assignedTasks) {
           for (const task of userProgress.studyRoom.assignedTasks) {
-            const match = task.unitId?.match(/([a-z]+\d?)_(\d+)/i);
+            // 시리즈 prefix 포함 패턴
+            const match = task.unitId?.match(/((?:fit_|deep_|on_)?[a-z]+\d?)_(\d+)/i);
             if (match) {
               existingTasks.add(`${match[1].toLowerCase()}_${match[2]}`);
             }
@@ -14024,36 +14031,63 @@ async function executeAutoTaskAssignment() {
 
         // 시리즈별로 각각 taskCount개씩 부여
         for (const series of setting.series) {
+          // BRAIN온은 아직 콘텐츠가 없으므로 스킵
+          if (series === 'on') {
+            console.log(`  ⏭️ 시리즈: ${series} (콘텐츠 없음 - 스킵)`);
+            continue;
+          }
+          console.log(`  🔹 시리즈: ${series}`);
           let seriesTaskCount = 0;  // 이 시리즈에서 부여한 개수
 
-          // 과목 우선순위 순서대로 미완료 단원 찾기
-          for (const subject of AUTO_TASK_SUBJECT_PRIORITY) {
+          // 시리즈별 prefix와 이름 설정
+          let prefix = '';
+          let seriesName = 'BRAIN업';
+          if (series === 'fit') {
+            prefix = 'fit_';
+            seriesName = 'BRAIN핏';
+          } else if (series === 'deep') {
+            prefix = 'deep_';
+            seriesName = 'BRAIN딥';
+          } else if (series === 'on') {
+            prefix = 'on_';
+            seriesName = 'BRAIN온';
+          } else if (series === 'up') {
+            prefix = '';
+            seriesName = 'BRAIN업';
+          }
+
+          // 우선순위: 1. 미완료 단원 2. 단원번호 낮은 순 3. 과목 우선순위
+          // 단원 번호 01부터 시작하여, 각 번호에서 과목 우선순위대로 검색
+          const maxUnitNum = 30;  // 가장 큰 단원 수 (현대/고전문학)
+
+          outerLoop:
+          for (let unitNum = 1; unitNum <= maxUnitNum; unitNum++) {
             if (seriesTaskCount >= setting.taskCount) break;
 
-            const maxUnits = SUBJECT_MAX_UNITS[subject] || 20;
+            const unitNo = String(unitNum).padStart(2, '0');
 
-            // 단원 번호 낮은 순으로
-            for (let unitNum = 1; unitNum <= maxUnits; unitNum++) {
-              if (seriesTaskCount >= setting.taskCount) break;
+            // 같은 단원번호 내에서 과목 우선순위대로
+            for (const subject of AUTO_TASK_SUBJECT_PRIORITY) {
+              if (seriesTaskCount >= setting.taskCount) break outerLoop;
 
-              const unitNo = String(unitNum).padStart(2, '0');
-              const unitKey = `${subject}_${unitNo}`;
+              const maxUnits = SUBJECT_MAX_UNITS[subject] || 20;
+              if (unitNum > maxUnits) continue;  // 해당 과목의 최대 단원 수 초과하면 스킵
+
+              const subjectInfo = SUBJECT_INFO[subject];
+              const unitKey = `${prefix}${subject}_${unitNo}`;
 
               // 이미 완료했거나 학습실에 있는 경우 스킵
               if (completedUnits.has(unitKey) || existingTasks.has(unitKey)) {
                 continue;
               }
 
-              // 중복 체크 (이번에 추가할 목록에서 - 같은 시리즈)
+              // 중복 체크 (이번에 추가할 목록에서)
               if (tasksToAssign.some(t => t.unitKey === unitKey && t.series === series)) {
                 continue;
               }
 
-              // 시리즈에 따른 경로 설정
-              const prefix = series === 'fit' ? 'fit_' : '';
-              const subjectInfo = SUBJECT_INFO[subject];
+              // 경로 설정
               let unitPath;
-
               if (['bio', 'chem', 'physics', 'earth'].includes(subject)) {
                 unitPath = `./BRAINUP/science/${prefix}${subject}_${unitNo}.html`;
               } else if (['geo', 'soc', 'law', 'pol', 'econ'].includes(subject)) {
@@ -14071,11 +14105,11 @@ async function executeAutoTaskAssignment() {
                 unitId: unitPath,
                 unitTitle: `${subjectInfo.label} ${unitNo}`,
                 series: series,
-                seriesName: series === 'up' ? 'BRIAN업' : 'BRIAN핏',
+                seriesName: seriesName,
                 fieldName: subjectInfo.field,
                 subjectName: subjectInfo.label,
                 assignedAt: new Date(),
-                isAutoAssigned: true  // 자동부여 표시
+                isAutoAssigned: true
               });
               seriesTaskCount++;
             }
@@ -14099,17 +14133,22 @@ async function executeAutoTaskAssignment() {
 
           // 새 과제 추가
           for (const task of tasksToAssign) {
-            progress.studyRoom.assignedTasks.push({
+            const newTask = {
               unitId: task.unitId,
               unitTitle: task.unitTitle,
+              seriesName: task.seriesName,
+              fieldName: task.fieldName,
+              subjectName: task.subjectName,
               assignedAt: task.assignedAt,
               isAutoAssigned: true
-            });
+            };
+            console.log(`    📦 저장할 과제: ${JSON.stringify(newTask)}`);
+            progress.studyRoom.assignedTasks.push(newTask);
           }
 
           await progress.save();
           console.log(`✅ [${setting.grade} ${setting.name}] ${tasksToAssign.length}개 과제 부여 완료`);
-          tasksToAssign.forEach(t => console.log(`   - ${t.seriesName} > ${t.unitTitle}`));
+          tasksToAssign.forEach(t => console.log(`   - ${t.seriesName} > ${t.subjectName} ${t.unitTitle.split(' ')[1]}`));
         } else {
           console.log(`ℹ️ [${setting.grade} ${setting.name}] 부여할 미완료 과제가 없습니다`);
         }
@@ -14135,6 +14174,29 @@ cron.schedule('0 0 * * *', () => {
 });
 
 console.log('✅ 자동과제부여 스케줄러 등록 완료 (매일 0시 실행)');
+
+// 🧪 테스트용 엔드포인트: 자동과제부여 수동 트리거
+app.post('/api/test/auto-task-trigger', async (req, res) => {
+  try {
+    console.log('🧪 [테스트] 자동과제부여 수동 트리거 시작');
+
+    // 자동과제부여 함수 실행
+    await executeAutoTaskAssignment();
+
+    res.json({
+      ok: true,
+      message: '자동과제부여가 수동으로 실행되었습니다. 서버 로그를 확인하세요.',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ [테스트] 자동과제부여 실행 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '자동과제부여 실행 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
+});
 
 // ========================================
 // 📝 진단테스트 및 수강신청 API

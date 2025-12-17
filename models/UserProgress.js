@@ -132,11 +132,19 @@ const userProgressSchema = new mongoose.Schema({
       unitId: String,       // 단원 ID (관리자 과제용)
       taskId: String,       // 과제 ID (기존 호환성)
       title: String,
+      unitTitle: String,    // 단원 제목 (예: "생명과학 01") - 자동과제부여용
       series: String,       // 시리즈 (예: "BRAIN업")
+      seriesName: String,   // 시리즈 이름 (예: "BRAIN업") - 자동과제부여용
       field: String,        // 분야 (예: "사회분야")
+      fieldName: String,    // 분야 이름 - 자동과제부여용
       domain: String,       // 분야 (기존 호환성)
       subject: String,      // 과목 (예: "지리")
+      subjectName: String,  // 과목 이름 - 자동과제부여용
       isAI: {              // AI 자동 부여 여부
+        type: Boolean,
+        default: false
+      },
+      isAutoAssigned: {    // 자동과제부여 여부
         type: Boolean,
         default: false
       },
