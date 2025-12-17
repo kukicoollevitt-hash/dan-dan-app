@@ -3745,6 +3745,13 @@ canvas[id^="confetti-canvas"] {
             }
           } else {
             // PC: body에 비디오 삽입
+            // PC에서도 로딩 스피너 표시
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+              loadingOverlay.classList.remove('fade-out');
+              loadingOverlay.style.display = 'flex';
+            }
+
             video.style.cssText = `
               position: fixed;
               top: 0;
@@ -3755,6 +3762,17 @@ canvas[id^="confetti-canvas"] {
               z-index: 0;
               pointer-events: none;
             `;
+
+            // 비디오가 재생 가능해지면 스피너 숨기기
+            video.oncanplay = function() {
+              if (loadingOverlay) {
+                loadingOverlay.classList.add('fade-out');
+                setTimeout(() => {
+                  loadingOverlay.style.display = 'none';
+                }, 500);
+              }
+            };
+
             document.body.style.background = 'transparent';
             document.body.style.backgroundImage = 'none';
             document.body.insertBefore(video, document.body.firstChild);
@@ -3778,6 +3796,13 @@ canvas[id^="confetti-canvas"] {
           let existingSubjectVideo = document.getElementById('subject-bg-video');
           if (existingSubjectVideo) {
             existingSubjectVideo.remove();
+          }
+
+          // 이미지 로딩 중 스피너 표시
+          const loadingOverlay = document.getElementById('loading-overlay');
+          if (loadingOverlay) {
+            loadingOverlay.classList.remove('fade-out');
+            loadingOverlay.style.display = 'flex';
           }
 
           const img = new Image();
@@ -3804,9 +3829,23 @@ canvas[id^="confetti-canvas"] {
             }
             console.log('✅ 배경 변경 완료:', document.body.style.backgroundImage);
 
+            // 이미지 로드 완료 후 스피너 숨기기
+            if (loadingOverlay) {
+              loadingOverlay.classList.add('fade-out');
+              setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+              }, 500);
+            }
           };
           img.onerror = function() {
             console.warn('❌ 이미지 로드 실패:', imageUrl);
+            // 에러 시에도 스피너 숨기기
+            if (loadingOverlay) {
+              loadingOverlay.classList.add('fade-out');
+              setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+              }, 500);
+            }
           };
           img.src = imageUrl;
         }
