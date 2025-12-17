@@ -3471,13 +3471,28 @@ canvas[id^="confetti-canvas"] {
           window.menuInitData = data;
 
           // 기존 ApiCache에도 개별 데이터 저장 (기존 코드 호환성 유지)
-          ApiCache.set(`/api/unit-grades?grade=${grade}&name=${name}`, data.unitGrades);
+          // ✅ unitGrades: 배열 형식을 객체 형식으로 변환 ({ "unit_id": { grade, radarAvg, ... } })
+          const unitGradesMap = {};
+          if (data.unitGrades && data.unitGrades.ok && Array.isArray(data.unitGrades.data)) {
+            data.unitGrades.data.forEach(item => {
+              if (item.unit) {
+                unitGradesMap[item.unit] = {
+                  grade: item.grade,
+                  radarAvg: item.radarAvg,
+                  radar: item.radar,
+                  timestamp: item.timestamp
+                };
+              }
+            });
+          }
+          ApiCache.set(`/api/unit-grades?grade=${grade}&name=${name}`, unitGradesMap);
           ApiCache.set(`/api/ai-task/last-assigned?grade=${grade}&name=${name}`, data.lastAssigned);
           ApiCache.set(`/api/user-progress/study-room?grade=${grade}&name=${name}`, data.studyRoom);
           ApiCache.set(`/api/completion-status?grade=${grade}&name=${name}&series=BRAIN업`, data.completionStatus);
 
           console.log('✅ [Preload] 통합 API 완료! 소요시간:', Date.now() - startTime, 'ms');
           console.log('📊 서버 처리시간:', data._meta?.elapsed, 'ms');
+          console.log('⭐ [Preload] unitGrades 캐시:', Object.keys(unitGradesMap).length, '개 단원');
         } else {
           console.error('❌ [Preload] 통합 API 실패:', data.message);
         }
