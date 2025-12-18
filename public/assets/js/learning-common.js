@@ -43,6 +43,8 @@
      단원 자동 인식 (강화) - 다양한 과목 지원
      지원 과목: 사회분야(geo, soc, law, pol), 과학분야(bio, physics, chem, earth),
                한국문학(modern, classic), 세계문학(world1, world2), 인물(people1, people2)
+     ✅ on_ 접두사 지원: BRAINON 시리즈 (on_bio, on_earth 등)
+     ✅ deep_ 접두사 지원: BRAINDEEP 시리즈 (deep_bio, deep_earth 등)
      우선순위: ?unit=XXX_NN → 파일명 XXX_NN.html → 제목 숫자
   ========================================================= */
   (function () {
@@ -50,16 +52,23 @@
     let unit = null;
 
     // 지원하는 과목 코드들 (사회, 과학, 문학, 인물 등 모두 포함)
-    const subjectPattern = /(geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2)[_-]?(\d{1,2})/;
+    // ✅ on_ 및 deep_ 접두사도 지원
+    const subjectPattern = /(on_|deep_)?(geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2)[_-]?(\d{1,2})/;
 
     if (qs) {
       const m = qs.toLowerCase().match(subjectPattern);
-      if (m) unit = `${m[1]}_${m[2].padStart(2,'0')}`;
+      if (m) {
+        const prefix = m[1] || '';  // 'on_' 또는 'deep_' 또는 빈 문자열
+        unit = `${prefix}${m[2]}_${m[3].padStart(2,'0')}`;
+      }
     }
 
     if (!unit) {
       const m2 = location.pathname.toLowerCase().match(new RegExp(subjectPattern.source + '\\.html'));
-      if (m2) unit = `${m2[1]}_${m2[2].padStart(2,'0')}`;
+      if (m2) {
+        const prefix = m2[1] || '';  // 'on_' 또는 'deep_' 또는 빈 문자열
+        unit = `${prefix}${m2[2]}_${m2[3].padStart(2,'0')}`;
+      }
     }
 
     if (!unit && document.title) {
@@ -73,12 +82,15 @@
 
   /* =========================================================
      PAGE_KEY 자동 생성 (단원 번호 기반) - 다양한 과목/분야 지원
+     ✅ on_ 접두사: BRAINON, deep_ 접두사: BRAINDEEP
   ========================================================= */
   (function () {
     const cur = (window.CUR_UNIT || 'geo_01');
-    const m = cur.match(/([a-z0-9]+)_(\d{1,2})/);
-    const subject = m ? m[1] : 'geo';
-    const no = m ? m[2].padStart(2,'0') : '01';
+    // ✅ on_ 또는 deep_ 접두사 지원
+    const m = cur.match(/(on_|deep_)?([a-z0-9]+)_(\d{1,2})/);
+    const prefix = m ? (m[1] || '') : '';
+    const subject = m ? m[2] : 'geo';
+    const no = m ? m[3].padStart(2,'0') : '01';
 
     // 과목에 따라 분야(area) 결정
     let area = 'social'; // 기본값
@@ -92,7 +104,15 @@
       area = 'person';
     }
 
-    window.PAGE_KEY = `BRAINUP_${area}_${subject}_${no}`;
+    // ✅ 시리즈 결정: on_ → BRAINON, deep_ → BRAINDEEP, 그 외 → BRAINUP
+    let series = 'BRAINUP';
+    if (prefix === 'on_') {
+      series = 'BRAINON';
+    } else if (prefix === 'deep_') {
+      series = 'BRAINDEEP';
+    }
+
+    window.PAGE_KEY = `${series}_${area}_${prefix}${subject}_${no}`;
     console.log('[study page] PAGE_KEY =', window.PAGE_KEY);
   })();
 
