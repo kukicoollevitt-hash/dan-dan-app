@@ -6490,6 +6490,10 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           if (unit.startsWith('deep_')) {
             unit = unit.substring(5);
           }
+          // on_ 접두어 제거: on_bio_01 -> bio_01
+          if (unit.startsWith('on_')) {
+            unit = unit.substring(3);
+          }
           // world1_XX, world2_XX는 이미 표준 형식
           if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
             return unit;
@@ -6627,6 +6631,7 @@ app.get("/admin/logs-old-inline", async (req, res) => {
                 let unitCode = log.unit;
                 if (unitCode.startsWith('fit_')) unitCode = unitCode.substring(4);
                 else if (unitCode.startsWith('deep_')) unitCode = unitCode.substring(5);
+                else if (unitCode.startsWith('on_')) unitCode = unitCode.substring(3);
                 if (unitCode.startsWith(subjectCode + '_')) {
                   unitSet.add(unitCode);
                 }
@@ -6641,12 +6646,14 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             if (!log.radar || !log.unit) return;
 
             // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
-            // fit_ / deep_ 접두어 제거: fit_bio_01 -> bio_01, deep_bio_01 -> bio_01
+            // fit_ / deep_ / on_ 접두어 제거: fit_bio_01 -> bio_01, deep_bio_01 -> bio_01, on_bio_01 -> bio_01
             let unitForSubject = log.unit;
             if (unitForSubject.startsWith('fit_')) {
               unitForSubject = unitForSubject.substring(4);
             } else if (unitForSubject.startsWith('deep_')) {
               unitForSubject = unitForSubject.substring(5);
+            } else if (unitForSubject.startsWith('on_')) {
+              unitForSubject = unitForSubject.substring(3);
             }
             let subjectCode = unitForSubject.split('_')[0];
 
@@ -6667,11 +6674,19 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             if (subjectCode === 'person2') subjectCode = 'people2';
           }
 
-          const subjectKey = (log.series || 'BRAIN업') + '_' + subjectCode;
+          // unit 코드에서 시리즈명 추출
+          const seriesFromUnit = (function(unit) {
+            if (!unit) return 'BRAIN업';
+            if (unit.includes('on_')) return 'BRAIN온';
+            if (unit.includes('fit_')) return 'BRAIN핏';
+            if (unit.includes('deep_')) return 'BRAIN딥';
+            return 'BRAIN업';
+          })(log.unit);
+          const subjectKey = seriesFromUnit + '_' + subjectCode;
 
           if (!subjectGroups[subjectKey]) {
             subjectGroups[subjectKey] = {
-              series: log.series || 'BRAIN업',
+              series: seriesFromUnit,
               subjectCode: subjectCode,
               logs: []
             };
@@ -9130,6 +9145,10 @@ app.get("/my-learning", async (req, res) => {
           if (unit.startsWith('deep_')) {
             unit = unit.substring(5);
           }
+          // on_ 접두어 제거: on_bio_01 -> bio_01
+          if (unit.startsWith('on_')) {
+            unit = unit.substring(3);
+          }
           // world1_XX, world2_XX는 이미 표준 형식
           if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
             return unit;
@@ -9267,6 +9286,7 @@ app.get("/my-learning", async (req, res) => {
                 let unitCode = log.unit;
                 if (unitCode.startsWith('fit_')) unitCode = unitCode.substring(4);
                 else if (unitCode.startsWith('deep_')) unitCode = unitCode.substring(5);
+                else if (unitCode.startsWith('on_')) unitCode = unitCode.substring(3);
                 if (unitCode.startsWith(subjectCode + '_')) {
                   unitSet.add(unitCode);
                 }
@@ -9281,12 +9301,14 @@ app.get("/my-learning", async (req, res) => {
             if (!log.radar || !log.unit) return;
 
             // unit 코드에서 과목 추출 (geo_01 -> geo, history_01 -> history)
-            // fit_ / deep_ 접두어 제거: fit_bio_01 -> bio_01, deep_bio_01 -> bio_01
+            // fit_ / deep_ / on_ 접두어 제거: fit_bio_01 -> bio_01, deep_bio_01 -> bio_01, on_bio_01 -> bio_01
             let unitForSubject = log.unit;
             if (unitForSubject.startsWith('fit_')) {
               unitForSubject = unitForSubject.substring(4);
             } else if (unitForSubject.startsWith('deep_')) {
               unitForSubject = unitForSubject.substring(5);
+            } else if (unitForSubject.startsWith('on_')) {
+              unitForSubject = unitForSubject.substring(3);
             }
             let subjectCode = unitForSubject.split('_')[0];
 
@@ -9307,11 +9329,19 @@ app.get("/my-learning", async (req, res) => {
             if (subjectCode === 'person2') subjectCode = 'people2';
           }
 
-          const subjectKey = (log.series || 'BRAIN업') + '_' + subjectCode;
+          // unit 코드에서 시리즈명 추출
+          const seriesFromUnit = (function(unit) {
+            if (!unit) return 'BRAIN업';
+            if (unit.includes('on_')) return 'BRAIN온';
+            if (unit.includes('fit_')) return 'BRAIN핏';
+            if (unit.includes('deep_')) return 'BRAIN딥';
+            return 'BRAIN업';
+          })(log.unit);
+          const subjectKey = seriesFromUnit + '_' + subjectCode;
 
           if (!subjectGroups[subjectKey]) {
             subjectGroups[subjectKey] = {
-              series: log.series || 'BRAIN업',
+              series: seriesFromUnit,
               subjectCode: subjectCode,
               logs: []
             };
@@ -9573,20 +9603,28 @@ app.get("/my-learning", async (req, res) => {
 
           const seriesLabel = document.createElement('div');
           seriesLabel.style.cssText = 'font-size: 11px; color: #95a5a6; margin-bottom: 4px;';
-          seriesLabel.textContent = '📚 ' + (log.series || 'BRAIN업');
+          // unit 코드에서 시리즈명 추출
+          const seriesFromUnitForLabel = (function(unit) {
+            if (!unit) return 'BRAIN업';
+            if (unit.includes('on_')) return 'BRAIN온';
+            if (unit.includes('fit_')) return 'BRAIN핏';
+            if (unit.includes('deep_')) return 'BRAIN딥';
+            return 'BRAIN업';
+          })(log.unit);
+          seriesLabel.textContent = '📚 ' + seriesFromUnitForLabel;
 
           const title = document.createElement('div');
           title.className = 'radar-card-title';
 
-          // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01, world2_01 → 세계문학2 1, fit_bio_01 → 생물 1)
+          // 단원 코드 → 단원명 변환 (예: geo_01 → 지리 01, world2_01 → 세계문학2 1, fit_bio_01 → 생물 1, on_bio_01 → 생물 1)
           let unitName = log.unit || '단원';
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
             const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물' };
-            // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
+            // fit_/deep_/on_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01'], on_bio_01 → ['on', 'bio', '01']
             let subjectKey = parts[0];
             let numStr = parts[1];
-            if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
+            if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
               subjectKey = parts[1];
               numStr = parts[2];
             }
@@ -9656,9 +9694,9 @@ app.get("/my-learning", async (req, res) => {
               const parts = unitCode.split('_');
               let subject = parts[0] || '';
 
-              // fit_ / deep_ 접두어인 경우 실제 과목명은 parts[1]
-              if ((subject === 'fit' || subject === 'deep') && parts.length >= 3) {
-                subject = parts[1]; // fit_bio_01 → bio, deep_bio_01 → bio
+              // fit_ / deep_ / on_ 접두어인 경우 실제 과목명은 parts[1]
+              if ((subject === 'fit' || subject === 'deep' || subject === 'on') && parts.length >= 3) {
+                subject = parts[1]; // fit_bio_01 → bio, deep_bio_01 → bio, on_bio_01 → bio
               }
 
               // 과목별 폴더 매핑
@@ -9671,9 +9709,11 @@ app.get("/my-learning", async (req, res) => {
               };
               const folder = folderMap[subject] || 'social';
 
-              // series 정규화 - FIT 시리즈는 BRAINUP 폴더에 저장됨
-              let seriesCode = 'BRAINUP'; // FIT 시리즈 파일은 모두 BRAINUP에 있음
-              if (log.series === 'BRAIN업') seriesCode = 'BRAINUP';
+              // series 코드를 unit에서 추출
+              let seriesCode = 'BRAINUP';
+              if (unitCode.includes('on_')) seriesCode = 'BRAINUP'; // on_ 파일은 BRAINUP 폴더에 있음
+              else if (unitCode.includes('fit_')) seriesCode = 'BRAINUP';
+              else if (unitCode.includes('deep_')) seriesCode = 'BRAINUP';
 
               const unitUrl = '/' + seriesCode + '/' + folder + '/' + unitCode + '.html';
               console.log('[레이더 클릭] unitCode:', unitCode, 'subject:', subject, 'folder:', folder, 'url:', unitUrl);
@@ -9855,10 +9895,16 @@ app.get("/my-learning", async (req, res) => {
           }
           console.log('✅ 시리즈 레이더 차트 생성 시작');
 
-          // 시리즈별로 그룹화
+          // 시리즈별로 그룹화 (unit 코드에서 시리즈 추출)
           const seriesGroups = {};
           validLogs.forEach(log => {
-            const series = log.series || 'BRAIN업';
+            // unit 코드에서 시리즈명 추출
+            let series = 'BRAIN업';
+            if (log.unit) {
+              if (log.unit.includes('on_')) series = 'BRAIN온';
+              else if (log.unit.includes('fit_')) series = 'BRAIN핏';
+              else if (log.unit.includes('deep_')) series = 'BRAIN딥';
+            }
             if (!seriesGroups[series]) {
               seriesGroups[series] = [];
             }
@@ -10060,7 +10106,11 @@ app.get("/my-learning", async (req, res) => {
 
             // 정규화된 단원 코드 생성
             const normalizedUnit = normalizeUnitCode(log.unit);
-            const seriesName = log.series || 'BRAIN업';
+            // unit 코드에서 시리즈명 추출
+            let seriesName = 'BRAIN업';
+            if (log.unit.includes('on_')) seriesName = 'BRAIN온';
+            else if (log.unit.includes('fit_')) seriesName = 'BRAIN핏';
+            else if (log.unit.includes('deep_')) seriesName = 'BRAIN딥';
 
             // 시리즈+단원 조합으로 중복 체크
             const uniqueKey = seriesName + '_' + normalizedUnit;
@@ -10259,6 +10309,8 @@ app.get("/my-learning", async (req, res) => {
           currentSelectedSeries = 'BRAIN업';
         } else if (initialSeries === 'deep') {
           currentSelectedSeries = 'BRAIN딥';
+        } else if (initialSeries === 'on') {
+          currentSelectedSeries = 'BRAIN온';
         }
 
         const allLogs = logsForChart;
@@ -10462,18 +10514,28 @@ app.get("/my-learning", async (req, res) => {
           });
         }
 
+        // 시리즈별 로그 필터링 헬퍼 함수 (unit prefix 기반)
+        function filterLogsBySeries(logs, series) {
+          if (series === 'all') return logs;
+          return logs.filter(log => {
+            if (!log.unit) return false;
+            if (series === 'BRAIN온') return log.unit.includes('on_');
+            if (series === 'BRAIN핏') return log.unit.includes('fit_');
+            if (series === 'BRAIN딥') return log.unit.includes('deep_');
+            if (series === 'BRAIN업') return !log.unit.includes('fit_') && !log.unit.includes('deep_') && !log.unit.includes('on_');
+            return log.series === series;
+          });
+        }
+
         function getFilteredLogs() {
           // 현재 시리즈 필터 적용
-          if (currentSelectedSeries === 'all') {
-            return allLogs;
-          }
-          return allLogs.filter(log => log.series === currentSelectedSeries);
+          return filterLogsBySeries(allLogs, currentSelectedSeries);
         }
 
         // ===== 필터 적용 함수 =====
         window.newApplyFilters = function() {
-          // 1. 시리즈 필터 적용
-          let filteredLogs = currentSelectedSeries === 'all' ? [...allLogs] : allLogs.filter(log => log.series === currentSelectedSeries);
+          // 1. 시리즈 필터 적용 (unit prefix 기반)
+          let filteredLogs = filterLogsBySeries([...allLogs], currentSelectedSeries);
 
           // 2. 최종순 정렬 (기본)
           filteredLogs.sort((a, b) => {
@@ -10490,10 +10552,10 @@ app.get("/my-learning", async (req, res) => {
         function getUnitPath(unitCode, series) {
           if (!unitCode) return null;
 
-          // 시리즈별 폴더 매핑 (BRAIN핏도 BRAINUP 폴더 사용)
+          // 시리즈별 폴더 매핑 (BRAIN핏, BRAIN온, BRAIN딥 모두 BRAINUP 폴더 사용)
           const seriesFolders = {
             'BRAIN업': 'BRAINUP',
-            'BRAIN온': 'BRAINON',
+            'BRAIN온': 'BRAINUP',  // on_ 파일들도 BRAINUP 폴더에 있음
             'BRAIN핏': 'BRAINUP',
             'BRAIN딥': 'BRAINUP',
             'BRAIN중등': 'BRAINMID',
@@ -10529,9 +10591,9 @@ app.get("/my-learning", async (req, res) => {
             return null;
           }
 
-          // fit_ / deep_ 접두어 처리: fit_geo_13 → subjectCode = 'geo', deep_bio_01 → subjectCode = 'bio'
+          // fit_ / deep_ / on_ 접두어 처리: fit_geo_13 → subjectCode = 'geo', deep_bio_01 → subjectCode = 'bio', on_bio_01 → subjectCode = 'bio'
           let subjectCode = parts[0];
-          if ((subjectCode === 'fit' || subjectCode === 'deep') && parts.length >= 3) {
+          if ((subjectCode === 'fit' || subjectCode === 'deep' || subjectCode === 'on') && parts.length >= 3) {
             subjectCode = parts[1];
           }
           console.log('🔍 getUnitPath - subjectCode:', subjectCode);
@@ -10602,10 +10664,10 @@ app.get("/my-learning", async (req, res) => {
             const unitCode = log.unit || '';
             if (unitCode && unitCode.includes('_')) {
               const parts = unitCode.split('_');
-              // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
+              // fit_/deep_/on_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01'], on_bio_01 → ['on', 'bio', '01']
               let subjectKey = parts[0];
               let numStr = parts[1];
-              if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
+              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
                 subjectKey = parts[1];
                 numStr = parts[2];
               }
@@ -10644,10 +10706,10 @@ app.get("/my-learning", async (req, res) => {
             let unitName = log.unit || "";
             if (unitName && unitName.includes('_')) {
               const parts = unitName.split('_');
-              // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
+              // fit_/deep_/on_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01'], on_bio_01 → ['on', 'bio', '01']
               let subjectKey = parts[0];
               let numStr = parts[1];
-              if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
+              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
                 subjectKey = parts[1];
                 numStr = parts[2];
               }
@@ -10687,7 +10749,13 @@ app.get("/my-learning", async (req, res) => {
             const finalTimeStyle = 'color: #059669; font-weight: 600;';
 
             const unitCodeForClick = log.unit || '';
-            const seriesForClick = log.series || 'BRAIN업';
+            // unit 코드에서 시리즈명 추출
+            let seriesForClick = 'BRAIN업';
+            if (log.unit) {
+              if (log.unit.includes('on_')) seriesForClick = 'BRAIN온';
+              else if (log.unit.includes('fit_')) seriesForClick = 'BRAIN핏';
+              else if (log.unit.includes('deep_')) seriesForClick = 'BRAIN딥';
+            }
 
             const row = document.createElement('tr');
             if (hiddenClass) row.className = hiddenClass;
@@ -10702,7 +10770,13 @@ app.get("/my-learning", async (req, res) => {
               <td style="\${aiTaskStyle}">\${aiTaskTimestamp}</td>
               <td style="\${finalTimeStyle}">\${finalTimestamp}</td>
               <td><span class="badge \${badgeClass}">\${badgeText}</span></td>
-              <td>\${log.series || ""}</td>
+              <td>\${(function(unit) {
+                if (!unit) return log.series || '';
+                if (unit.includes('on_')) return 'BRAIN온';
+                if (unit.includes('fit_')) return 'BRAIN핏';
+                if (unit.includes('deep_')) return 'BRAIN딥';
+                return 'BRAIN업';
+              })(log.unit)}</td>
               <td class="unit-link">\${unitName}</td>
             \`;
             tbody.appendChild(row);
@@ -10730,10 +10804,8 @@ app.get("/my-learning", async (req, res) => {
             document.getElementById('seriesMenu').classList.remove('show');
             document.getElementById('seriesButton').classList.remove('active');
 
-            // 데이터 필터링
-            const filteredLogs = series === 'all'
-              ? allLogs
-              : allLogs.filter(log => log.series === series);
+            // 데이터 필터링 (unit prefix 기반으로 시리즈 판단)
+            const filteredLogs = filterLogsBySeries(allLogs, series);
 
             console.log('선택된 시리즈:', series, '필터링된 로그:', filteredLogs.length);
 
@@ -10858,10 +10930,8 @@ app.get("/my-learning", async (req, res) => {
             console.log('📊 초기 시리즈 설정:', defaultSeries);
           }
 
-          // 선택된 시리즈에 맞게 필터링
-          const initialLogs = defaultSeries === 'all'
-            ? logsForChart
-            : logsForChart.filter(log => log.series === defaultSeries);
+          // 선택된 시리즈에 맞게 필터링 (unit prefix 기반)
+          const initialLogs = filterLogsBySeries(logsForChart, defaultSeries);
 
           // 레이더 차트 렌더링
           renderSeriesRadar(initialLogs);
@@ -10923,6 +10993,10 @@ app.get("/my-learning", async (req, res) => {
             // deep_ 접두어 제거: deep_bio_01 -> bio_01
             if (unit.startsWith('deep_')) {
               unit = unit.substring(5); // 'deep_' 제거
+            }
+            // on_ 접두어 제거: on_bio_01 -> bio_01
+            if (unit.startsWith('on_')) {
+              unit = unit.substring(3); // 'on_' 제거
             }
             // world_41~80 -> world2_01~40
             if (unit.startsWith('world_')) {
