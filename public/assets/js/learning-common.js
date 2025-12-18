@@ -74,22 +74,26 @@
 
   /* =========================================================
      PAGE_KEY 자동 생성 (단원 번호 기반) - 다양한 과목/분야 지원
+     fit_, on_, deep_ 접두사 지원
   ========================================================= */
   (function () {
     const cur = (window.CUR_UNIT || 'geo_01');
-    const m = cur.match(/([a-z0-9]+)_(\d{1,2})/);
-    const subject = m ? m[1] : 'geo';
-    const no = m ? m[2].padStart(2,'0') : '01';
+    // fit_chem_01, on_bio_02, deep_physics_03 등 접두사 포함 패턴 지원
+    const m = cur.match(/((?:fit_|on_|deep_)?)(bio|physics|chem|earth|geo|soc|law|pol|eco|hist|ethics|modern|classic|world1|world2|people1|people2)_(\d{1,2})/);
+    const prefix = m ? m[1] : '';
+    const baseSubject = m ? m[2] : 'geo';
+    const no = m ? m[3].padStart(2,'0') : '01';
+    const subject = prefix + baseSubject; // fit_chem, on_bio 등
 
-    // 과목에 따라 분야(area) 결정
+    // 기본 과목에 따라 분야(area) 결정
     let area = 'social'; // 기본값
-    if (['bio', 'physics', 'chem', 'earth'].includes(subject)) {
+    if (['bio', 'physics', 'chem', 'earth'].includes(baseSubject)) {
       area = 'science';
-    } else if (['modern', 'classic'].includes(subject)) {
+    } else if (['modern', 'classic'].includes(baseSubject)) {
       area = 'korlit';
-    } else if (['world1', 'world2'].includes(subject)) {
+    } else if (['world1', 'world2'].includes(baseSubject)) {
       area = 'worldlit';
-    } else if (['people1', 'people2'].includes(subject)) {
+    } else if (['people1', 'people2'].includes(baseSubject)) {
       area = 'person';
     }
 
@@ -367,15 +371,17 @@
         console.log('[restoreReadingStateFromServer] 채점 결과 직접 복원 완료 (q1ok 형식)');
 
         // ✅ 레이더 차트 업데이트 (q1ok 형식 기반)
+        // lexical은 서버에 저장된 값이 있으면 우선 사용 (어휘 빈칸 채우기 점수)
         if (typeof window.drawRadarChart === 'function') {
+          const lexicalValue = (typeof data.lexical === 'number') ? data.lexical : (data.q3ok ? 10 : 6);
           window.drawRadarChart({
             literal: data.q1ok ? 10 : 6,
             structural: data.q2ok ? 10 : 6,
-            lexical: data.q3ok ? 10 : 6,
+            lexical: lexicalValue,
             inferential: data.q4ok ? 10 : 6,
             critical: data.q5ok ? 10 : 6
           });
-          console.log('[restoreReadingStateFromServer] 레이더 차트 업데이트 완료 (q1ok 형식)');
+          console.log('[restoreReadingStateFromServer] 레이더 차트 업데이트 완료 (q1ok 형식), lexical:', lexicalValue);
         }
 
         // reportState 업데이트
