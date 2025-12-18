@@ -49,8 +49,9 @@
     const qs = new URLSearchParams(location.search).get('unit');
     let unit = null;
 
-    // 지원하는 과목 코드들 (사회, 과학, 문학, 인물 등 모두 포함)
-    const subjectPattern = /(geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2)[_-]?(\d{1,2})/;
+    // 지원하는 과목 코드들 (fit_ 시리즈, on_ 시리즈, deep_ 시리즈, 기본 시리즈 모두 포함)
+    // fit_, on_, deep_ 접두사가 있으면 먼저 매칭
+    const subjectPattern = /((?:fit_|on_|deep_)?(?:geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2))[_-]?(\d{1,2})/;
 
     if (qs) {
       const m = qs.toLowerCase().match(subjectPattern);
