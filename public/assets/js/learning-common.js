@@ -1321,6 +1321,8 @@
         // 어휘학습 상태 복원
         if (serverData.vocabState) {
           console.log('[learning-common] ★★★ 어휘학습 서버 데이터:', serverData.vocabState);
+          // ★ 서버 데이터를 영구적으로 저장 (탭 전환 시에도 사용)
+          window._persistedVocabServerData = serverData.vocabState;
           // blank-wrap이 이미 있으면 즉시 복원, 없으면 나중에 복원하도록 저장
           const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
           if (blanks.length > 0) {
@@ -1348,11 +1350,21 @@
     }
 
     // ★ 나중에 content.js에서 호출할 서버 데이터 복원 함수
+    // ★ 탭 전환 시에도 호출 가능 (영구 저장된 데이터 사용)
     window.restoreVocabFromServerData = function() {
+      console.log('[restoreVocabFromServerData] 호출됨, pending:', !!window._pendingVocabServerData, ', persisted:', !!window._persistedVocabServerData);
+      // 우선 pending 데이터 처리
       if (window._pendingVocabServerData) {
-        console.log('[restoreVocabFromServerData] 서버 데이터로 어휘학습 복원 시작');
+        console.log('[restoreVocabFromServerData] pending 서버 데이터로 어휘학습 복원 시작');
         restoreVocabStateFromServer(window._pendingVocabServerData);
         delete window._pendingVocabServerData;
+      }
+      // 탭 전환 시: 영구 저장된 데이터로 복원
+      else if (window._persistedVocabServerData) {
+        console.log('[restoreVocabFromServerData] 영구 저장된 서버 데이터로 어휘학습 복원, isGraded:', window._persistedVocabServerData.isGraded);
+        restoreVocabStateFromServer(window._persistedVocabServerData);
+      } else {
+        console.log('[restoreVocabFromServerData] 복원할 데이터 없음');
       }
     };
 
@@ -2124,6 +2136,10 @@
 
       localStorage.setItem(stateKey, JSON.stringify(vocabStateData));
       console.log('[saveVocabState] localStorage 저장 완료:', stateKey);
+
+      // ★ 영구 저장 데이터도 업데이트 (탭 전환 시 복원용)
+      window._persistedVocabServerData = vocabStateData;
+      console.log('[saveVocabState] _persistedVocabServerData 업데이트 완료');
 
       // ★ 서버에도 저장
       if (typeof saveUnitProgressToServer === 'function') {

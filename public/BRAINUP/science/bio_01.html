@@ -30,7 +30,7 @@
   #tab-vocab .vocab-fill-text .blank-wrap {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 10px 16px;
-    background: url('https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/vocab-box-bg.jpg') center center / cover no-repeat;
+    background: #fde8d0;
     border: none;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -2121,6 +2121,11 @@
               console.log('[vocabSaveToServer] 서버 저장 완료!');
             }
 
+            // 4-1. localStorage에도 채점 결과 저장 (탭 전환/새로고침 시 복원용)
+            if (typeof _saveVocabGradeResult === 'function') {
+              _saveVocabGradeResult(window.CUR_UNIT);
+            }
+
             // 5. 다시풀기 버튼 표시
             const vocabResetBtn = document.getElementById('vocab-reset');
             if (vocabResetBtn) vocabResetBtn.style.display = 'inline-block';
@@ -2165,6 +2170,9 @@
           if (vocabResetBtn) vocabResetBtn.style.display = 'none';
           const vocabGradeBtn = document.getElementById('vocab-grade');
           if (vocabGradeBtn) vocabGradeBtn.style.display = 'inline-block';
+          // localStorage 채점 결과 삭제
+          const gradeKey = (typeof _storeKey === 'function' ? _storeKey(window.CUR_UNIT) : 'dan-vfill:' + window.CUR_UNIT) + '_grade';
+          localStorage.removeItem(gradeKey);
           console.log('[vocabReset] 다시풀기 완료');
         };
       </script>
@@ -2356,6 +2364,12 @@
           if (typeof fn === 'function') {
             fn();
           }
+          // 채점 결과 복원 (탭 전환 시)
+          setTimeout(() => {
+            if (typeof _loadVocabGradeResult === 'function') {
+              _loadVocabGradeResult(window.CUR_UNIT);
+            }
+          }, 100);
         }
       }
     }
@@ -2904,6 +2918,58 @@ function _loadVocabInputs(unit){
       if (el) el.value = v || '';
     });
   } catch(e){}
+}
+
+// ✅ 어휘학습 채점 결과 저장/복원
+function _saveVocabGradeResult(unit){
+  const key = _storeKey(unit) + '_grade';
+  const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+  const vocabResultBox = document.getElementById('vocab-result');
+  const gradeData = [];
+  blanks.forEach((bw, idx) => {
+    const mark = bw.querySelector('.blank-mark');
+    gradeData.push({
+      idx: idx,
+      isCorrect: bw.classList.contains('correct'),
+      isWrong: bw.classList.contains('wrong'),
+      markText: mark ? mark.textContent : ''
+    });
+  });
+  const resultData = {
+    gradeData: gradeData,
+    resultHTML: vocabResultBox ? vocabResultBox.innerHTML : '',
+    isGraded: gradeData.some(d => d.isCorrect || d.isWrong)
+  };
+  localStorage.setItem(key, JSON.stringify(resultData));
+}
+
+function _loadVocabGradeResult(unit){
+  const key = _storeKey(unit) + '_grade';
+  try {
+    const saved = JSON.parse(localStorage.getItem(key) || 'null');
+    if (!saved || !saved.isGraded) return;
+
+    const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+    saved.gradeData.forEach((data, idx) => {
+      const bw = blanks[idx];
+      if (!bw) return;
+      bw.classList.remove('correct', 'wrong');
+      if (data.isCorrect) bw.classList.add('correct');
+      if (data.isWrong) bw.classList.add('wrong');
+      const mark = bw.querySelector('.blank-mark');
+      if (mark && data.markText) mark.textContent = data.markText;
+    });
+
+    const vocabResultBox = document.getElementById('vocab-result');
+    if (vocabResultBox && saved.resultHTML) {
+      vocabResultBox.style.display = 'block';
+      vocabResultBox.innerHTML = saved.resultHTML;
+    }
+
+    // 다시풀기 버튼 표시
+    const vocabResetBtn = document.getElementById('vocab-reset');
+    if (vocabResetBtn) vocabResetBtn.style.display = 'inline-block';
+  } catch(e){ console.error('채점 결과 복원 실패:', e); }
 }
 
 // ✅ 초성 자동 생성
