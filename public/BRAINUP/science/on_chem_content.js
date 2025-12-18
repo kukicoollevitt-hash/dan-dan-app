@@ -2073,7 +2073,7 @@ window.loadCompletionStatus = async function () {
     const params = new URLSearchParams({
       grade: stu.grade || '',
       name: stu.name || '',
-      series: 'BRAIN업'
+      series: 'BRAIN온'
     });
 
     const res = await fetch(`/api/completion-status?${params}`, {
@@ -2141,7 +2141,7 @@ window.sendLearningLog = async function () {
       grade:  stu.grade  || '',
       name:   stu.name   || '',
       school: stu.school || '',
-      series: 'BRAIN업',      // 필요하면 '정조편' 등으로 바꿔도 됨
+      series: 'BRAIN온',      // 필요하면 '정조편' 등으로 바꿔도 됨
       unit:   unit,
       radar:  radar,       // ✅ 여기 추가!
       completed: true      // ✅ 학습 완료 표시

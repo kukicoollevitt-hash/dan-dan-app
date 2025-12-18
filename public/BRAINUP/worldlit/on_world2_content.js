@@ -2992,7 +2992,7 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) { return; }
     if (!stu) return;
-    const params = new URLSearchParams({ grade: stu.grade || '', name: stu.name || '', series: 'BRAIN업' });
+    const params = new URLSearchParams({ grade: stu.grade || '', name: stu.name || '', series: 'BRAIN온' });
     const res = await fetch(`/api/completion-status?${params}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
     if (!res.ok) return;
     const data = await res.json();
@@ -3019,7 +3019,7 @@ window.sendLearningLog = async function () {
     } catch (e) { return; }
     if (!stu) return;
     const radar = (window.reportState && window.reportState.radarScores) ? window.reportState.radarScores : null;
-    const payload = { grade: stu.grade || '', name: stu.name || '', school: stu.school || '', series: 'BRAIN업', unit, radar, completed: true };
+    const payload = { grade: stu.grade || '', name: stu.name || '', school: stu.school || '', series: 'BRAIN온', unit, radar, completed: true };
     const res = await fetch('/api/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     let data = {};
     try { data = await res.json(); } catch (_) {}

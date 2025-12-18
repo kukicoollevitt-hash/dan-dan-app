@@ -10273,6 +10273,8 @@ app.get("/my-learning", async (req, res) => {
           currentSelectedSeries = 'BRAIN업';
         } else if (initialSeries === 'deep') {
           currentSelectedSeries = 'BRAIN딥';
+        } else if (initialSeries === 'on') {
+          currentSelectedSeries = 'BRAIN온';
         }
 
         const allLogs = logsForChart;
@@ -15590,6 +15592,63 @@ app.get("/api/menu-init", async (req, res) => {
       message: "통합 API 처리 중 오류가 발생했습니다.",
       error: err.message
     });
+  }
+});
+
+// ===== LearningLog series 마이그레이션 API =====
+// on_, deep_, fit_ 접두사에 따라 series를 올바르게 설정
+app.get("/api/migrate-series", async (req, res) => {
+  try {
+    console.log("🔄 [migrate-series] series 마이그레이션 시작...");
+
+    // 1. on_ 접두사 → BRAIN온
+    const onResult = await LearningLog.updateMany(
+      { unit: /^on_/, series: { $ne: 'BRAIN온' } },
+      { $set: { series: 'BRAIN온' } }
+    );
+    console.log(`✅ on_ → BRAIN온: ${onResult.modifiedCount}개 업데이트`);
+
+    // 2. deep_ 접두사 → BRAIN딥
+    const deepResult = await LearningLog.updateMany(
+      { unit: /^deep_/, series: { $ne: 'BRAIN딥' } },
+      { $set: { series: 'BRAIN딥' } }
+    );
+    console.log(`✅ deep_ → BRAIN딥: ${deepResult.modifiedCount}개 업데이트`);
+
+    // 3. fit_ 접두사 → BRAIN핏
+    const fitResult = await LearningLog.updateMany(
+      { unit: /^fit_/, series: { $ne: 'BRAIN핏' } },
+      { $set: { series: 'BRAIN핏' } }
+    );
+    console.log(`✅ fit_ → BRAIN핏: ${fitResult.modifiedCount}개 업데이트`);
+
+    // 4. 접두사 없는 일반 단원 (bio_01, geo_01 등) → BRAIN업
+    const upResult = await LearningLog.updateMany(
+      {
+        unit: /^(?!on_|deep_|fit_)[a-z]+_\d+$/,
+        series: { $nin: ['BRAIN업', 'BRAIN온', 'BRAIN딥', 'BRAIN핏'] }
+      },
+      { $set: { series: 'BRAIN업' } }
+    );
+    console.log(`✅ 일반 단원 → BRAIN업: ${upResult.modifiedCount}개 업데이트`);
+
+    const totalUpdated = onResult.modifiedCount + deepResult.modifiedCount + fitResult.modifiedCount + upResult.modifiedCount;
+    console.log(`🎉 [migrate-series] 마이그레이션 완료! 총 ${totalUpdated}개 업데이트`);
+
+    res.json({
+      ok: true,
+      message: "series 마이그레이션 완료",
+      stats: {
+        on_to_BRAIN온: onResult.modifiedCount,
+        deep_to_BRAIN딥: deepResult.modifiedCount,
+        fit_to_BRAIN핏: fitResult.modifiedCount,
+        up_to_BRAIN업: upResult.modifiedCount,
+        total: totalUpdated
+      }
+    });
+  } catch (err) {
+    console.error("❌ [migrate-series] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
   }
 });
 

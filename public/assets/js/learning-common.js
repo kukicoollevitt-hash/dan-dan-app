@@ -52,8 +52,8 @@
     let unit = null;
 
     // 지원하는 과목 코드들 (사회, 과학, 문학, 인물 등 모두 포함)
-    // ✅ on_ 및 deep_ 접두사도 지원
-    const subjectPattern = /(on_|deep_)?(geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2)[_-]?(\d{1,2})/;
+    // ✅ on_, deep_, fit_ 접두사 지원
+    const subjectPattern = /(on_|deep_|fit_)?(geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2)[_-]?(\d{1,2})/;
 
     if (qs) {
       const m = qs.toLowerCase().match(subjectPattern);
@@ -86,8 +86,8 @@
   ========================================================= */
   (function () {
     const cur = (window.CUR_UNIT || 'geo_01');
-    // ✅ on_ 또는 deep_ 접두사 지원
-    const m = cur.match(/(on_|deep_)?([a-z0-9]+)_(\d{1,2})/);
+    // ✅ on_, deep_, fit_ 접두사 지원
+    const m = cur.match(/(on_|deep_|fit_)?([a-z0-9]+)_(\d{1,2})/);
     const prefix = m ? (m[1] || '') : '';
     const subject = m ? m[2] : 'geo';
     const no = m ? m[3].padStart(2,'0') : '01';
@@ -104,16 +104,21 @@
       area = 'person';
     }
 
-    // ✅ 시리즈 결정: on_ → BRAINON, deep_ → BRAINDEEP, 그 외 → BRAINUP
-    let series = 'BRAINUP';
+    // ✅ 시리즈 결정: on_ → BRAIN온, deep_ → BRAIN딥, fit_ → BRAIN핏, 그 외 → BRAIN업
+    let series = 'BRAIN업';
     if (prefix === 'on_') {
-      series = 'BRAINON';
+      series = 'BRAIN온';
     } else if (prefix === 'deep_') {
-      series = 'BRAINDEEP';
+      series = 'BRAIN딥';
+    } else if (prefix === 'fit_') {
+      series = 'BRAIN핏';
     }
 
+    // 전역으로 series 노출 (sendLearningLog 등에서 사용)
+    window.CUR_SERIES = series;
+
     window.PAGE_KEY = `${series}_${area}_${prefix}${subject}_${no}`;
-    console.log('[study page] PAGE_KEY =', window.PAGE_KEY);
+    console.log('[study page] PAGE_KEY =', window.PAGE_KEY, 'CUR_SERIES =', series);
   })();
 
     // 🔁 공통 키 만드는 함수
@@ -217,6 +222,17 @@
       // 🔥 디버깅: 전송할 radar 값 출력
       console.log('[sendLearningLog] 🔍 전송할 radar:', JSON.stringify(radar));
 
+      // ✅ 시리즈 정보: unit에서 직접 판단 (IIFE보다 늦게 실행되므로 unit이 정확함)
+      let series = 'BRAIN업';
+      if (unit.startsWith('on_')) {
+        series = 'BRAIN온';
+      } else if (unit.startsWith('deep_')) {
+        series = 'BRAIN딥';
+      } else if (unit.startsWith('fit_')) {
+        series = 'BRAIN핏';
+      }
+      console.log('[sendLearningLog] 🔍 전송할 series:', series, '(unit:', unit, ')');
+
       try {
         const res = await fetch('/api/log', {
           method: 'POST',
@@ -225,6 +241,7 @@
             grade: stu.grade,
             name: stu.name,
             phone: stu.phone || '',
+            series: series,
             unit: unit,
             radar: radar,
             completed: true
