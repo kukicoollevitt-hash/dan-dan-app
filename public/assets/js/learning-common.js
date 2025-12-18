@@ -43,8 +43,6 @@
      단원 자동 인식 (강화) - 다양한 과목 지원
      지원 과목: 사회분야(geo, soc, law, pol), 과학분야(bio, physics, chem, earth),
                한국문학(modern, classic), 세계문학(world1, world2), 인물(people1, people2)
-     ✅ on_ 접두사 지원: BRAINON 시리즈 (on_bio, on_earth 등)
-     ✅ deep_ 접두사 지원: BRAINDEEP 시리즈 (deep_bio, deep_earth 등)
      우선순위: ?unit=XXX_NN → 파일명 XXX_NN.html → 제목 숫자
   ========================================================= */
   (function () {
@@ -52,23 +50,16 @@
     let unit = null;
 
     // 지원하는 과목 코드들 (사회, 과학, 문학, 인물 등 모두 포함)
-    // ✅ on_, deep_, fit_ 접두사 지원
-    const subjectPattern = /(on_|deep_|fit_)?(geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2)[_-]?(\d{1,2})/;
+    const subjectPattern = /(geo|soc|law|pol|bio|physics|chem|earth|eco|hist|ethics|modern|classic|world1|world2|people1|people2)[_-]?(\d{1,2})/;
 
     if (qs) {
       const m = qs.toLowerCase().match(subjectPattern);
-      if (m) {
-        const prefix = m[1] || '';  // 'on_' 또는 'deep_' 또는 빈 문자열
-        unit = `${prefix}${m[2]}_${m[3].padStart(2,'0')}`;
-      }
+      if (m) unit = `${m[1]}_${m[2].padStart(2,'0')}`;
     }
 
     if (!unit) {
       const m2 = location.pathname.toLowerCase().match(new RegExp(subjectPattern.source + '\\.html'));
-      if (m2) {
-        const prefix = m2[1] || '';  // 'on_' 또는 'deep_' 또는 빈 문자열
-        unit = `${prefix}${m2[2]}_${m2[3].padStart(2,'0')}`;
-      }
+      if (m2) unit = `${m2[1]}_${m2[2].padStart(2,'0')}`;
     }
 
     if (!unit && document.title) {
@@ -82,15 +73,12 @@
 
   /* =========================================================
      PAGE_KEY 자동 생성 (단원 번호 기반) - 다양한 과목/분야 지원
-     ✅ on_ 접두사: BRAINON, deep_ 접두사: BRAINDEEP
   ========================================================= */
   (function () {
     const cur = (window.CUR_UNIT || 'geo_01');
-    // ✅ on_, deep_, fit_ 접두사 지원
-    const m = cur.match(/(on_|deep_|fit_)?([a-z0-9]+)_(\d{1,2})/);
-    const prefix = m ? (m[1] || '') : '';
-    const subject = m ? m[2] : 'geo';
-    const no = m ? m[3].padStart(2,'0') : '01';
+    const m = cur.match(/([a-z0-9]+)_(\d{1,2})/);
+    const subject = m ? m[1] : 'geo';
+    const no = m ? m[2].padStart(2,'0') : '01';
 
     // 과목에 따라 분야(area) 결정
     let area = 'social'; // 기본값
@@ -104,21 +92,8 @@
       area = 'person';
     }
 
-    // ✅ 시리즈 결정: on_ → BRAIN온, deep_ → BRAIN딥, fit_ → BRAIN핏, 그 외 → BRAIN업
-    let series = 'BRAIN업';
-    if (prefix === 'on_') {
-      series = 'BRAIN온';
-    } else if (prefix === 'deep_') {
-      series = 'BRAIN딥';
-    } else if (prefix === 'fit_') {
-      series = 'BRAIN핏';
-    }
-
-    // 전역으로 series 노출 (sendLearningLog 등에서 사용)
-    window.CUR_SERIES = series;
-
-    window.PAGE_KEY = `${series}_${area}_${prefix}${subject}_${no}`;
-    console.log('[study page] PAGE_KEY =', window.PAGE_KEY, 'CUR_SERIES =', series);
+    window.PAGE_KEY = `BRAINUP_${area}_${subject}_${no}`;
+    console.log('[study page] PAGE_KEY =', window.PAGE_KEY);
   })();
 
     // 🔁 공통 키 만드는 함수
@@ -222,17 +197,6 @@
       // 🔥 디버깅: 전송할 radar 값 출력
       console.log('[sendLearningLog] 🔍 전송할 radar:', JSON.stringify(radar));
 
-      // ✅ 시리즈 정보: unit에서 직접 판단 (IIFE보다 늦게 실행되므로 unit이 정확함)
-      let series = 'BRAIN업';
-      if (unit.startsWith('on_')) {
-        series = 'BRAIN온';
-      } else if (unit.startsWith('deep_')) {
-        series = 'BRAIN딥';
-      } else if (unit.startsWith('fit_')) {
-        series = 'BRAIN핏';
-      }
-      console.log('[sendLearningLog] 🔍 전송할 series:', series, '(unit:', unit, ')');
-
       try {
         const res = await fetch('/api/log', {
           method: 'POST',
@@ -241,7 +205,6 @@
             grade: stu.grade,
             name: stu.name,
             phone: stu.phone || '',
-            series: series,
             unit: unit,
             radar: radar,
             completed: true
@@ -1338,8 +1301,6 @@
         // 어휘학습 상태 복원
         if (serverData.vocabState) {
           console.log('[learning-common] ★★★ 어휘학습 서버 데이터:', serverData.vocabState);
-          // ★ 서버 데이터를 영구적으로 저장 (탭 전환 시에도 사용)
-          window._persistedVocabServerData = serverData.vocabState;
           // blank-wrap이 이미 있으면 즉시 복원, 없으면 나중에 복원하도록 저장
           const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
           if (blanks.length > 0) {
@@ -1367,21 +1328,11 @@
     }
 
     // ★ 나중에 content.js에서 호출할 서버 데이터 복원 함수
-    // ★ 탭 전환 시에도 호출 가능 (영구 저장된 데이터 사용)
     window.restoreVocabFromServerData = function() {
-      console.log('[restoreVocabFromServerData] 호출됨, pending:', !!window._pendingVocabServerData, ', persisted:', !!window._persistedVocabServerData);
-      // 우선 pending 데이터 처리
       if (window._pendingVocabServerData) {
-        console.log('[restoreVocabFromServerData] pending 서버 데이터로 어휘학습 복원 시작');
+        console.log('[restoreVocabFromServerData] 서버 데이터로 어휘학습 복원 시작');
         restoreVocabStateFromServer(window._pendingVocabServerData);
         delete window._pendingVocabServerData;
-      }
-      // 탭 전환 시: 영구 저장된 데이터로 복원
-      else if (window._persistedVocabServerData) {
-        console.log('[restoreVocabFromServerData] 영구 저장된 서버 데이터로 어휘학습 복원, isGraded:', window._persistedVocabServerData.isGraded);
-        restoreVocabStateFromServer(window._persistedVocabServerData);
-      } else {
-        console.log('[restoreVocabFromServerData] 복원할 데이터 없음');
       }
     };
 
@@ -1749,14 +1700,10 @@
 
         log.innerHTML = items.map(item => {
           const className = item.ok ? 'success' : 'warning';
-          const icon = item.ok ? '✓' : '!';
+          const emoji = item.ok ? '❤️' : '😅';
           const message = getRandomMessage(item.key, item.ok);
           return `<div class="report-log-item ${className}">
-            <span class="icon">${icon}</span>
-            <div class="feedback-text">
-              <span class="feedback-title">${item.label}</span>
-              ${message}
-            </div>
+            <span>${item.label}: ${message} ${emoji}</span>
           </div>`;
         }).join('');
       }
@@ -2158,10 +2105,6 @@
       localStorage.setItem(stateKey, JSON.stringify(vocabStateData));
       console.log('[saveVocabState] localStorage 저장 완료:', stateKey);
 
-      // ★ 영구 저장 데이터도 업데이트 (탭 전환 시 복원용)
-      window._persistedVocabServerData = vocabStateData;
-      console.log('[saveVocabState] _persistedVocabServerData 업데이트 완료');
-
       // ★ 서버에도 저장
       if (typeof saveUnitProgressToServer === 'function') {
         saveUnitProgressToServer({
@@ -2293,31 +2236,13 @@
       // 채점 즉시 정답(해설) 표시
       const scorePercent = Math.round((correctCnt / total) * 100);
       vocabResultBox.style.display = "block";
-
-      // 각 문항별 결과 아이템 생성
-      const answerItems = answers.map((ans, idx) => {
-        const isCorrect = vocabGradeResults[idx];
-        const itemClass = isCorrect ? 'correct' : 'wrong';
-        const icon = isCorrect ? '✓' : '✗';
-        const correctAnswerHtml = isCorrect ? '' : `<span class="correct-answer">(정답: ${ans})</span>`;
-        return `<div class="vocab-answer-item ${itemClass}">
-          <span class="item-num">${idx + 1}</span>
-          <span class="item-icon">${icon}</span>
-          <span class="item-text">${isCorrect ? '정답' : '오답'} ${correctAnswerHtml}</span>
-        </div>`;
-      }).join('');
-
       vocabResultBox.innerHTML =
-        `<div class="vocab-result-header">
-          <div class="score-title">채점 결과</div>
-          <div class="score-main">
-            <span class="score-num">${correctCnt} / ${total}</span>
-            <span class="score-percent">(${scorePercent}점)</span>
-          </div>
+        `<div style="background:#f5f5f5; padding:12px; border-radius:8px; margin-bottom:10px;">
+          <p style="font-size:18px; margin:0;"><strong>📊 채점 결과: ${correctCnt} / ${total} (${scorePercent}점)</strong></p>
         </div>
-        <div class="vocab-result-body">
-          <div class="answer-title">정답 해설</div>
-          ${answerItems}
+        <div style="background:#fff; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          <p style="font-weight:bold; margin:0 0 8px; color:#333;">📝 정답 해설</p>
+          ${fullMsgs.map(m => `<p style="margin:4px 0;">${m.replace('정답 ✅', '<span style="color:#2e7d32">정답 ✅</span>').replace('오답 ❌', '<span style="color:#c62828">오답 ❌</span>').replace(/\(정답: ([^)]+)\)/, '<span style="color:#1565c0; font-weight:bold">(정답: $1)</span>')}</p>`).join("")}
         </div>`;
 
       vocabFullResultHTML = vocabResultBox.innerHTML;

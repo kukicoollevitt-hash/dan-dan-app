@@ -5318,85 +5318,6 @@ app.post("/api/migrate-world2", async (req, res) => {
   }
 });
 
-// ===== 학습 기록 디버그 조회 API =====
-app.get("/api/debug-learning-logs", async (req, res) => {
-  try {
-    const { grade, name, unitPattern } = req.query;
-    const db = mongoose.connection.db;
-    const learningLogs = db.collection("learninglogs");
-
-    const query = {};
-    if (grade) query.grade = parseInt(grade);
-    if (name) query.name = name;
-    if (unitPattern) query.unit = new RegExp(unitPattern);
-
-    const docs = await learningLogs.find(query).toArray();
-    res.json({ ok: true, count: docs.length, logs: docs });
-  } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
-  }
-});
-
-// ===== BRAIN온 unit 마이그레이션 (bio_XX -> on_bio_XX, on_bio_XX + BRAIN업 -> BRAIN온) =====
-app.post("/api/migrate-on-units", async (req, res) => {
-  try {
-    const db = mongoose.connection.db;
-    const learningLogs = db.collection("learninglogs");
-
-    const subjects = ['bio', 'chem', 'earth', 'physics', 'geo', 'soc', 'law', 'pol', 'modern', 'classic', 'world1', 'world2', 'people1', 'people2'];
-
-    let totalUpdated = 0;
-    const results = [];
-
-    // 1. unit이 on_ 없이 저장된 경우: bio_XX -> on_bio_XX
-    for (const subject of subjects) {
-      const pattern = new RegExp(`^${subject}_\\d{2}$`);
-      const docs = await learningLogs.find({
-        unit: pattern,
-        series: 'BRAIN업'
-      }).toArray();
-
-      for (const doc of docs) {
-        const oldUnit = doc.unit;
-        const newUnit = `on_${oldUnit}`;
-        await learningLogs.updateOne(
-          { _id: doc._id },
-          { $set: { unit: newUnit, series: 'BRAIN온' } }
-        );
-        results.push({ type: 'unit+series', oldUnit, newUnit, grade: doc.grade, name: doc.name });
-        totalUpdated++;
-      }
-    }
-
-    // 2. unit이 on_으로 시작하지만 series가 BRAIN업인 경우: series만 BRAIN온으로 변경
-    for (const subject of subjects) {
-      const pattern = new RegExp(`^on_${subject}_\\d{2}$`);
-      const docs = await learningLogs.find({
-        unit: pattern,
-        series: 'BRAIN업'
-      }).toArray();
-
-      for (const doc of docs) {
-        await learningLogs.updateOne(
-          { _id: doc._id },
-          { $set: { series: 'BRAIN온' } }
-        );
-        results.push({ type: 'series_only', unit: doc.unit, grade: doc.grade, name: doc.name });
-        totalUpdated++;
-      }
-    }
-
-    res.json({
-      ok: true,
-      message: `${totalUpdated}개 레코드 마이그레이션 완료`,
-      results
-    });
-  } catch (err) {
-    console.error("❌ on-units 마이그레이션 에러:", err);
-    res.status(500).json({ ok: false, message: err.message });
-  }
-});
-
 // ===== 학습 이력 로그 저장 API =====
 app.post("/api/log", async (req, res) => {
   try {
@@ -6569,10 +6490,6 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           if (unit.startsWith('deep_')) {
             unit = unit.substring(5);
           }
-          // on_ 접두어 제거: on_bio_01 -> bio_01
-          if (unit.startsWith('on_')) {
-            unit = unit.substring(3);
-          }
           // world1_XX, world2_XX는 이미 표준 형식
           if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
             return unit;
@@ -6710,7 +6627,6 @@ app.get("/admin/logs-old-inline", async (req, res) => {
                 let unitCode = log.unit;
                 if (unitCode.startsWith('fit_')) unitCode = unitCode.substring(4);
                 else if (unitCode.startsWith('deep_')) unitCode = unitCode.substring(5);
-                else if (unitCode.startsWith('on_')) unitCode = unitCode.substring(3);
                 if (unitCode.startsWith(subjectCode + '_')) {
                   unitSet.add(unitCode);
                 }
@@ -6731,8 +6647,6 @@ app.get("/admin/logs-old-inline", async (req, res) => {
               unitForSubject = unitForSubject.substring(4);
             } else if (unitForSubject.startsWith('deep_')) {
               unitForSubject = unitForSubject.substring(5);
-            } else if (unitForSubject.startsWith('on_')) {
-              unitForSubject = unitForSubject.substring(3);
             }
             let subjectCode = unitForSubject.split('_')[0];
 
@@ -9216,10 +9130,6 @@ app.get("/my-learning", async (req, res) => {
           if (unit.startsWith('deep_')) {
             unit = unit.substring(5);
           }
-          // on_ 접두어 제거: on_bio_01 -> bio_01
-          if (unit.startsWith('on_')) {
-            unit = unit.substring(3);
-          }
           // world1_XX, world2_XX는 이미 표준 형식
           if (unit.startsWith('world1_') || unit.startsWith('world2_')) {
             return unit;
@@ -9357,7 +9267,6 @@ app.get("/my-learning", async (req, res) => {
                 let unitCode = log.unit;
                 if (unitCode.startsWith('fit_')) unitCode = unitCode.substring(4);
                 else if (unitCode.startsWith('deep_')) unitCode = unitCode.substring(5);
-                else if (unitCode.startsWith('on_')) unitCode = unitCode.substring(3);
                 if (unitCode.startsWith(subjectCode + '_')) {
                   unitSet.add(unitCode);
                 }
@@ -9378,8 +9287,6 @@ app.get("/my-learning", async (req, res) => {
               unitForSubject = unitForSubject.substring(4);
             } else if (unitForSubject.startsWith('deep_')) {
               unitForSubject = unitForSubject.substring(5);
-            } else if (unitForSubject.startsWith('on_')) {
-              unitForSubject = unitForSubject.substring(3);
             }
             let subjectCode = unitForSubject.split('_')[0];
 
@@ -9676,10 +9583,10 @@ app.get("/my-learning", async (req, res) => {
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
             const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물' };
-            // fit_/deep_/on_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01'], on_bio_01 → ['on', 'bio', '01']
+            // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
             let subjectKey = parts[0];
             let numStr = parts[1];
-            if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+            if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
               subjectKey = parts[1];
               numStr = parts[2];
             }
@@ -10352,8 +10259,6 @@ app.get("/my-learning", async (req, res) => {
           currentSelectedSeries = 'BRAIN업';
         } else if (initialSeries === 'deep') {
           currentSelectedSeries = 'BRAIN딥';
-        } else if (initialSeries === 'on') {
-          currentSelectedSeries = 'BRAIN온';
         }
 
         const allLogs = logsForChart;
@@ -10697,10 +10602,10 @@ app.get("/my-learning", async (req, res) => {
             const unitCode = log.unit || '';
             if (unitCode && unitCode.includes('_')) {
               const parts = unitCode.split('_');
-              // fit_/deep_/on_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01'], on_bio_01 → ['on', 'bio', '01']
+              // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
               let subjectKey = parts[0];
               let numStr = parts[1];
-              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+              if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
                 subjectKey = parts[1];
                 numStr = parts[2];
               }
@@ -10739,10 +10644,10 @@ app.get("/my-learning", async (req, res) => {
             let unitName = log.unit || "";
             if (unitName && unitName.includes('_')) {
               const parts = unitName.split('_');
-              // fit_/deep_/on_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01'], on_bio_01 → ['on', 'bio', '01']
+              // fit_/deep_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01']
               let subjectKey = parts[0];
               let numStr = parts[1];
-              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+              if ((parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
                 subjectKey = parts[1];
                 numStr = parts[2];
               }
@@ -11018,10 +10923,6 @@ app.get("/my-learning", async (req, res) => {
             // deep_ 접두어 제거: deep_bio_01 -> bio_01
             if (unit.startsWith('deep_')) {
               unit = unit.substring(5); // 'deep_' 제거
-            }
-            // on_ 접두어 제거: on_bio_01 -> bio_01
-            if (unit.startsWith('on_')) {
-              unit = unit.substring(3); // 'on_' 제거
             }
             // world_41~80 -> world2_01~40
             if (unit.startsWith('world_')) {
@@ -15671,63 +15572,6 @@ app.get("/api/menu-init", async (req, res) => {
       message: "통합 API 처리 중 오류가 발생했습니다.",
       error: err.message
     });
-  }
-});
-
-// ===== LearningLog series 마이그레이션 API =====
-// on_, deep_, fit_ 접두사에 따라 series를 올바르게 설정
-app.get("/api/migrate-series", async (req, res) => {
-  try {
-    console.log("🔄 [migrate-series] series 마이그레이션 시작...");
-
-    // 1. on_ 접두사 → BRAIN온
-    const onResult = await LearningLog.updateMany(
-      { unit: /^on_/, series: { $ne: 'BRAIN온' } },
-      { $set: { series: 'BRAIN온' } }
-    );
-    console.log(`✅ on_ → BRAIN온: ${onResult.modifiedCount}개 업데이트`);
-
-    // 2. deep_ 접두사 → BRAIN딥
-    const deepResult = await LearningLog.updateMany(
-      { unit: /^deep_/, series: { $ne: 'BRAIN딥' } },
-      { $set: { series: 'BRAIN딥' } }
-    );
-    console.log(`✅ deep_ → BRAIN딥: ${deepResult.modifiedCount}개 업데이트`);
-
-    // 3. fit_ 접두사 → BRAIN핏
-    const fitResult = await LearningLog.updateMany(
-      { unit: /^fit_/, series: { $ne: 'BRAIN핏' } },
-      { $set: { series: 'BRAIN핏' } }
-    );
-    console.log(`✅ fit_ → BRAIN핏: ${fitResult.modifiedCount}개 업데이트`);
-
-    // 4. 접두사 없는 일반 단원 (bio_01, geo_01 등) → BRAIN업
-    const upResult = await LearningLog.updateMany(
-      {
-        unit: /^(?!on_|deep_|fit_)[a-z]+_\d+$/,
-        series: { $nin: ['BRAIN업', 'BRAIN온', 'BRAIN딥', 'BRAIN핏'] }
-      },
-      { $set: { series: 'BRAIN업' } }
-    );
-    console.log(`✅ 일반 단원 → BRAIN업: ${upResult.modifiedCount}개 업데이트`);
-
-    const totalUpdated = onResult.modifiedCount + deepResult.modifiedCount + fitResult.modifiedCount + upResult.modifiedCount;
-    console.log(`🎉 [migrate-series] 마이그레이션 완료! 총 ${totalUpdated}개 업데이트`);
-
-    res.json({
-      ok: true,
-      message: "series 마이그레이션 완료",
-      stats: {
-        on_to_BRAIN온: onResult.modifiedCount,
-        deep_to_BRAIN딥: deepResult.modifiedCount,
-        fit_to_BRAIN핏: fitResult.modifiedCount,
-        up_to_BRAIN업: upResult.modifiedCount,
-        total: totalUpdated
-      }
-    });
-  } catch (err) {
-    console.error("❌ [migrate-series] 오류:", err);
-    res.status(500).json({ ok: false, message: err.message });
   }
 });
 
