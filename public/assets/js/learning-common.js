@@ -1732,10 +1732,14 @@
 
         log.innerHTML = items.map(item => {
           const className = item.ok ? 'success' : 'warning';
-          const emoji = item.ok ? '❤️' : '😅';
+          const icon = item.ok ? '✓' : '!';
           const message = getRandomMessage(item.key, item.ok);
           return `<div class="report-log-item ${className}">
-            <span>${item.label}: ${message} ${emoji}</span>
+            <span class="icon">${icon}</span>
+            <div class="feedback-text">
+              <span class="feedback-title">${item.label}</span>
+              ${message}
+            </div>
           </div>`;
         }).join('');
       }
@@ -2272,13 +2276,31 @@
       // 채점 즉시 정답(해설) 표시
       const scorePercent = Math.round((correctCnt / total) * 100);
       vocabResultBox.style.display = "block";
+
+      // 각 문항별 결과 아이템 생성
+      const answerItems = answers.map((ans, idx) => {
+        const isCorrect = vocabGradeResults[idx];
+        const itemClass = isCorrect ? 'correct' : 'wrong';
+        const icon = isCorrect ? '✓' : '✗';
+        const correctAnswerHtml = isCorrect ? '' : `<span class="correct-answer">(정답: ${ans})</span>`;
+        return `<div class="vocab-answer-item ${itemClass}">
+          <span class="item-num">${idx + 1}</span>
+          <span class="item-icon">${icon}</span>
+          <span class="item-text">${isCorrect ? '정답' : '오답'} ${correctAnswerHtml}</span>
+        </div>`;
+      }).join('');
+
       vocabResultBox.innerHTML =
-        `<div style="background:#f5f5f5; padding:12px; border-radius:8px; margin-bottom:10px;">
-          <p style="font-size:18px; margin:0;"><strong>📊 채점 결과: ${correctCnt} / ${total} (${scorePercent}점)</strong></p>
+        `<div class="vocab-result-header">
+          <div class="score-title">채점 결과</div>
+          <div class="score-main">
+            <span class="score-num">${correctCnt} / ${total}</span>
+            <span class="score-percent">(${scorePercent}점)</span>
+          </div>
         </div>
-        <div style="background:#fff; padding:10px; border:1px solid #ddd; border-radius:8px;">
-          <p style="font-weight:bold; margin:0 0 8px; color:#333;">📝 정답 해설</p>
-          ${fullMsgs.map(m => `<p style="margin:4px 0;">${m.replace('정답 ✅', '<span style="color:#2e7d32">정답 ✅</span>').replace('오답 ❌', '<span style="color:#c62828">오답 ❌</span>').replace(/\(정답: ([^)]+)\)/, '<span style="color:#1565c0; font-weight:bold">(정답: $1)</span>')}</p>`).join("")}
+        <div class="vocab-result-body">
+          <div class="answer-title">정답 해설</div>
+          ${answerItems}
         </div>`;
 
       vocabFullResultHTML = vocabResultBox.innerHTML;
