@@ -15555,10 +15555,7 @@ app.get("/api/menu-init", async (req, res) => {
       lastAssigned,
       completionStatus,
       learningLogs,
-      unitGrades: {
-        ok: true,
-        data: Object.values(unitGradesMap)
-      },
+      unitGrades: unitGradesMap,  // /api/unit-grades와 동일한 형식 (객체)
       _meta: {
         elapsed: elapsed,
         timestamp: new Date().toISOString()
