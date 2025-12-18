@@ -5318,6 +5318,85 @@ app.post("/api/migrate-world2", async (req, res) => {
   }
 });
 
+// ===== 학습 기록 디버그 조회 API =====
+app.get("/api/debug-learning-logs", async (req, res) => {
+  try {
+    const { grade, name, unitPattern } = req.query;
+    const db = mongoose.connection.db;
+    const learningLogs = db.collection("learninglogs");
+
+    const query = {};
+    if (grade) query.grade = parseInt(grade);
+    if (name) query.name = name;
+    if (unitPattern) query.unit = new RegExp(unitPattern);
+
+    const docs = await learningLogs.find(query).toArray();
+    res.json({ ok: true, count: docs.length, logs: docs });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ===== BRAIN온 unit 마이그레이션 (bio_XX -> on_bio_XX, on_bio_XX + BRAIN업 -> BRAIN온) =====
+app.post("/api/migrate-on-units", async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    const learningLogs = db.collection("learninglogs");
+
+    const subjects = ['bio', 'chem', 'earth', 'physics', 'geo', 'soc', 'law', 'pol', 'modern', 'classic', 'world1', 'world2', 'people1', 'people2'];
+
+    let totalUpdated = 0;
+    const results = [];
+
+    // 1. unit이 on_ 없이 저장된 경우: bio_XX -> on_bio_XX
+    for (const subject of subjects) {
+      const pattern = new RegExp(`^${subject}_\\d{2}$`);
+      const docs = await learningLogs.find({
+        unit: pattern,
+        series: 'BRAIN업'
+      }).toArray();
+
+      for (const doc of docs) {
+        const oldUnit = doc.unit;
+        const newUnit = `on_${oldUnit}`;
+        await learningLogs.updateOne(
+          { _id: doc._id },
+          { $set: { unit: newUnit, series: 'BRAIN온' } }
+        );
+        results.push({ type: 'unit+series', oldUnit, newUnit, grade: doc.grade, name: doc.name });
+        totalUpdated++;
+      }
+    }
+
+    // 2. unit이 on_으로 시작하지만 series가 BRAIN업인 경우: series만 BRAIN온으로 변경
+    for (const subject of subjects) {
+      const pattern = new RegExp(`^on_${subject}_\\d{2}$`);
+      const docs = await learningLogs.find({
+        unit: pattern,
+        series: 'BRAIN업'
+      }).toArray();
+
+      for (const doc of docs) {
+        await learningLogs.updateOne(
+          { _id: doc._id },
+          { $set: { series: 'BRAIN온' } }
+        );
+        results.push({ type: 'series_only', unit: doc.unit, grade: doc.grade, name: doc.name });
+        totalUpdated++;
+      }
+    }
+
+    res.json({
+      ok: true,
+      message: `${totalUpdated}개 레코드 마이그레이션 완료`,
+      results
+    });
+  } catch (err) {
+    console.error("❌ on-units 마이그레이션 에러:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 // ===== 학습 이력 로그 저장 API =====
 app.post("/api/log", async (req, res) => {
   try {

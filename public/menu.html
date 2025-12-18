@@ -6405,19 +6405,22 @@ if (logoutConfirmBtn) {
         const stuKey = buildStudentKey(stu);
         const keyPrefix = `dan-progress:${stuKey}:`;
 
-        // ✅ BRAINUP과 BRAINFIT 시리즈 모두 가져오기
+        // ✅ BRAINUP, BRAINFIT, BRAIN온 시리즈 모두 가져오기
         const urlBrainUp = `/api/completion-status?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}&series=BRAIN업`;
         const urlBrainFit = `/api/completion-status?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}&series=BRAIN핏`;
+        const urlBrainOn = `/api/completion-status?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}&series=BRAIN온`;
 
-        const [dataBrainUp, dataBrainFit] = await Promise.all([
+        const [dataBrainUp, dataBrainFit, dataBrainOn] = await Promise.all([
           ApiCache.fetch(urlBrainUp),
-          ApiCache.fetch(urlBrainFit)
+          ApiCache.fetch(urlBrainFit),
+          ApiCache.fetch(urlBrainOn)
         ]);
 
         console.log('[syncCompletionStatus] BRAINUP 응답:', dataBrainUp);
         console.log('[syncCompletionStatus] BRAINFIT 응답:', dataBrainFit);
+        console.log('[syncCompletionStatus] BRAIN온 응답:', dataBrainOn);
 
-        // 두 시리즈의 completedUnits 합치기
+        // 세 시리즈의 completedUnits 합치기
         let allCompletedUnits = [];
         if (dataBrainUp && dataBrainUp.ok && Array.isArray(dataBrainUp.completedUnits)) {
           allCompletedUnits = allCompletedUnits.concat(dataBrainUp.completedUnits);
@@ -6429,6 +6432,10 @@ if (logoutConfirmBtn) {
             return unit.startsWith('fit_') ? unit : `fit_${unit}`;
           });
           allCompletedUnits = allCompletedUnits.concat(fitUnits);
+        }
+        if (dataBrainOn && dataBrainOn.ok && Array.isArray(dataBrainOn.completedUnits)) {
+          // ✅ BRAIN온 단원은 on_ 접두어가 이미 있어야 함 (on_bio_01 형태)
+          allCompletedUnits = allCompletedUnits.concat(dataBrainOn.completedUnits);
         }
 
         if (allCompletedUnits.length === 0) {
@@ -6479,6 +6486,20 @@ if (logoutConfirmBtn) {
                 folder = 'worldlit';
               } else if (unit.startsWith('deep_people_') || unit.startsWith('deep_people1_') || unit.startsWith('deep_people2_')) {
                 folder = 'person';
+              }
+              // BRAIN온 시리즈: on_bio_01, on_earth_02 등
+              else if (unit.startsWith('on_bio_') || unit.startsWith('on_chem_') ||
+                  unit.startsWith('on_physics_') || unit.startsWith('on_earth_')) {
+                folder = 'science';
+              } else if (unit.startsWith('on_modern_') || unit.startsWith('on_classic_')) {
+                folder = 'korlit';
+              } else if (unit.startsWith('on_world_') || unit.startsWith('on_world1_') || unit.startsWith('on_world2_')) {
+                folder = 'worldlit';
+              } else if (unit.startsWith('on_people_') || unit.startsWith('on_people1_') || unit.startsWith('on_people2_')) {
+                folder = 'person';
+              } else if (unit.startsWith('on_geo_') || unit.startsWith('on_soc_') ||
+                  unit.startsWith('on_law_') || unit.startsWith('on_pol_')) {
+                folder = 'social';
               }
               // BRAINUP 시리즈
               else if (unit.startsWith('bio_') || unit.startsWith('chem_') ||
