@@ -10911,18 +10911,84 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         </div>
       `;
 
-      // 클릭 시 학습실 모달 닫고 고래 도서관 팝업 열기
+      // 클릭 시 학습실 모달 닫고 고래 이야기 독서 감상문 팝업 열기
       reportItem.addEventListener('click', () => {
         // 학습실 모달 닫기
         const studyRoomModal = document.getElementById('studyRoomModal');
         if (studyRoomModal) {
           studyRoomModal.classList.remove('show');
         }
-        // 고래 도서관 팝업 열기
-        goToWhaleStory();
+        // 고래 이야기 독서 감상문 팝업 열기
+        openReadingReportModal();
       });
 
       list.appendChild(reportItem);
+
+      // ========== 이 달의 추천 도서 섹션 ==========
+      try {
+        const completedStoryIds = await getCompletedStoryIds();
+        const recommendedBooks = getMonthlyRecommendedBooks(completedStoryIds);
+
+        if (recommendedBooks.length > 0) {
+          // 각 추천 도서 표시 (헤더 없이 바로 도서 버튼만)
+          for (const book of recommendedBooks) {
+            const bookItem = document.createElement('li');
+            bookItem.className = 'study-room-item';
+            bookItem.style.cssText = 'cursor: pointer; padding-left: 20px; background: #fffbeb;';
+            bookItem.dataset.isRecommendedBook = 'true';
+            bookItem.dataset.bookId = book.id;
+
+            const displayTitle = book.season > 1
+              ? `${book.title} 시즌${book.season}`
+              : book.title;
+
+            bookItem.innerHTML = `
+              <div class="task-info">
+                <div class="task-title" style="font-weight: 500; font-size: 13px;">${displayTitle}</div>
+                <div class="task-meta" style="font-size: 11px; color: #92400e; margin-top: 2px;">${book.subtitle}</div>
+              </div>
+              <div class="task-status">
+                <span class="status-badge" style="background: #fef3c7; color: #92400e; font-size: 11px;">📖 읽기</span>
+              </div>
+            `;
+
+            // 클릭 시 해당 슬라이드로 이동
+            bookItem.addEventListener('click', () => {
+              const studyRoomModal = document.getElementById('studyRoomModal');
+              if (studyRoomModal) studyRoomModal.classList.remove('show');
+
+              // storyId를 슬라이드 인덱스로 매핑
+              const storyToSlideIndex = {
+                'whale_island': 0, 'whale_island_season2': 0, 'whale_island_season3': 0,
+                'jungle_journey': 1, 'jungle_journey_season2': 1, 'jungle_journey_season3': 1,
+                'library_season1': 2, 'library_season2': 2, 'library_season3': 2,
+                'time_library_season1': 3, 'time_library_season2': 3, 'time_library_season3': 3,
+                'cat_island_season1': 4, 'cat_island_season2': 4, 'cat_island_season3': 4,
+                'cat_transform_season1': 5, 'cat_transform_season2': 5, 'cat_transform_season3': 5,
+                'sonagi_season1': 6,
+                'goodday_season1': 7,
+                'dongbaek_season1': 8,
+                'samdae_season1': 9,
+                'chunhyang_season1': 10
+              };
+
+              const slideIndex = storyToSlideIndex[book.id] ?? 0;
+
+              // 고래 도서관 캐러셀 모달 열고 해당 슬라이드로 이동
+              const modal = document.getElementById('whaleStoryModal');
+              if (modal) {
+                modal.classList.add('show');
+                currentSlide = slideIndex;
+                updateCarousel();
+              }
+            });
+
+            list.appendChild(bookItem);
+          }
+        }
+      } catch (e) {
+        console.error('추천 도서 로딩 오류:', e);
+      }
 
       // AI 추천 과제 헤더 추가 (AI 과제가 있을 때만)
       if (aiTasks.length > 0) {
@@ -11597,7 +11663,15 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
     });
 
     // 푸른 고래섬 이야기 팝업 열기
-    function goToWhaleStory() {
+    function goToWhaleStory(storyId) {
+      // storyId가 전달되면 바로 독서 감상문 모달 열고 해당 도서 선택
+      if (storyId) {
+        openReadingReportModal().then(() => {
+          setStoryValue(storyId);
+        });
+        return;
+      }
+      // storyId 없으면 기존처럼 시즌 선택 모달 열기
       const modal = document.getElementById('whaleStoryModal');
       modal.classList.add('show');
       // Reset carousel to first slide
@@ -11944,6 +12018,85 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         ]
       }
     };
+
+    // ========== 이 달의 추천 도서 기능 ==========
+    // 매월 1일에 미완료 도서 중에서 2개 추천 (시즌 순서대로)
+    function getMonthlyRecommendedBooks(completedStoryIds) {
+      const now = new Date();
+      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const storageKey = 'monthly-recommended-books';
+
+      // 저장된 추천 정보 확인
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // 같은 달이면 저장된 추천 사용 (단, 완료된 것은 제외하고 새로 추천)
+        if (parsed.month === monthKey) {
+          // 저장된 추천 중 아직 미완료인 것만 필터링
+          const stillIncomplete = parsed.books.filter(b => !completedStoryIds.includes(b.id));
+          // 2개 미만이면 새로 추천 추가
+          if (stillIncomplete.length >= 2) {
+            return stillIncomplete.slice(0, 2);
+          }
+          // 부족한 만큼 새로 추천
+          const needMore = 2 - stillIncomplete.length;
+          const additionalBooks = selectRecommendedBooks(completedStoryIds, [...parsed.books.map(b => b.id)], needMore);
+          const newBooks = [...stillIncomplete, ...additionalBooks];
+          // 저장 업데이트
+          localStorage.setItem(storageKey, JSON.stringify({ month: monthKey, books: newBooks }));
+          return newBooks;
+        }
+      }
+
+      // 새 달이거나 저장된 정보가 없으면 새로 추천
+      const recommended = selectRecommendedBooks(completedStoryIds, [], 2);
+      localStorage.setItem(storageKey, JSON.stringify({ month: monthKey, books: recommended }));
+      return recommended;
+    }
+
+    // 추천 도서 선택 함수 (시즌 순서 고려)
+    function selectRecommendedBooks(completedStoryIds, excludeIds, count) {
+      const recommended = [];
+      const storyKeys = Object.keys(STORY_DATA);
+
+      // 각 시리즈별로 추천 가능한 다음 시즌 찾기
+      for (const key of storyKeys) {
+        if (recommended.length >= count) break;
+
+        const story = STORY_DATA[key];
+        for (const season of story.seasons) {
+          // 이미 완료했거나 제외 목록에 있으면 스킵
+          if (completedStoryIds.includes(season.id) || excludeIds.includes(season.id)) {
+            continue;
+          }
+
+          // 시즌 1이거나, 이전 시즌이 완료된 경우에만 추천
+          if (season.season === 1) {
+            recommended.push({
+              id: season.id,
+              title: story.title,
+              season: season.season,
+              subtitle: season.subtitle
+            });
+            break; // 이 시리즈에서는 하나만 추천
+          } else {
+            // 이전 시즌이 완료되었는지 확인
+            const prevSeason = story.seasons.find(s => s.season === season.season - 1);
+            if (prevSeason && completedStoryIds.includes(prevSeason.id)) {
+              recommended.push({
+                id: season.id,
+                title: story.title,
+                season: season.season,
+                subtitle: season.subtitle
+              });
+              break;
+            }
+          }
+        }
+      }
+
+      return recommended.slice(0, count);
+    }
 
     // 전역 변수: 스토리 목록 저장
     let allStories = [];
@@ -12380,9 +12533,9 @@ ${grade} ${name} 학생의 학습 분석 리포트를 전송합니다.
         return;
       }
 
-      const selectedOption = storySelect.options[storySelect.selectedIndex];
       const storyId = storySelect.value;
-      const storyTitle = selectedOption.getAttribute('data-title');
+      const story = allStories.find(s => s.id === storyId);
+      const storyTitle = story ? story.title : '';
 
       const userStr = sessionStorage.getItem('user');
       if (!userStr) {
@@ -12522,9 +12675,9 @@ ${content}
         return;
       }
 
-      const selectedOption = storySelect.options[storySelect.selectedIndex];
       const storyId = storySelect.value;
-      const storyTitle = selectedOption.getAttribute('data-title');
+      const story = allStories.find(s => s.id === storyId);
+      const storyTitle = story ? story.title : '';
 
       const userStr = sessionStorage.getItem('user');
       if (!userStr) {
