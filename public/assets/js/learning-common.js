@@ -403,6 +403,14 @@
           });
           console.log('[restoreReadingStateFromServer] 분석리포트 해설 업데이트 완료 (q1ok 형식)');
         }
+
+        // ✅ 정답 근거 하이라이팅 (q1ok 형식)
+        setTimeout(() => {
+          if (typeof window.highlightEvidence === 'function') {
+            window.highlightEvidence();
+            console.log('[restoreReadingStateFromServer] 정답 근거 하이라이팅 완료 (q1ok 형식)');
+          }
+        }, 100);
       } else if (hasResultsArray) {
         // results 배열 형식으로 저장된 경우 (pol_01.html 등 새 형식)
         const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
@@ -473,6 +481,14 @@
           });
           console.log('[restoreReadingStateFromServer] 분석리포트 해설 업데이트 완료 (results 배열)');
         }
+
+        // ✅ 정답 근거 하이라이팅 (results 배열 형식)
+        setTimeout(() => {
+          if (typeof window.highlightEvidence === 'function') {
+            window.highlightEvidence();
+            console.log('[restoreReadingStateFromServer] 정답 근거 하이라이팅 완료 (results 배열)');
+          }
+        }, 100);
       } else if (data.graded || data.isGraded || inputs.graded || inputs.isGraded) {
         // 채점 결과가 없지만 graded=true 또는 isGraded=true인 경우 자동 재채점
         console.log('[restoreReadingStateFromServer] graded/isGraded=true, 자동 재채점 시도');
