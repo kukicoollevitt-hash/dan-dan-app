@@ -3506,6 +3506,7 @@ canvas[id^="confetti-canvas"] {
 
     // 🚀 통합 API로 한 번에 모든 데이터 로드 (네트워크 왕복 최소화)
     window.menuInitData = null; // 통합 API 응답 저장
+    window.preloadPromise = null; // preload Promise 저장 (race condition 방지)
 
     window.preloadUserData = async function() {
       const saved = localStorage.getItem('currentStudent');
@@ -3544,8 +3545,8 @@ canvas[id^="confetti-canvas"] {
       }
     };
 
-    // 페이지 로드 즉시 preload 시작
-    window.preloadUserData();
+    // 페이지 로드 즉시 preload 시작 (Promise 저장하여 race condition 방지)
+    window.preloadPromise = window.preloadUserData();
   </script>
 
   <!-- 로그아웃 확인 모달 -->
@@ -6052,7 +6053,8 @@ if (logoutConfirmBtn) {
         fetchUnitGrades(),
         new Promise(resolve => setTimeout(resolve, 300))
       ]);
-      unitGradesData = gradeData;
+      unitGradesData = gradeData || {};
+      console.log('⭐ [renderUnitList] unitGradesData 로드 완료:', Object.keys(unitGradesData).length, '개');
 
       // 🔄 로딩 오버레이 숨기기 (배경 이미지 로딩 중이 아닐 때만)
       if (loadingOverlay && !window.isBackgroundLoading) {
@@ -6088,6 +6090,9 @@ if (logoutConfirmBtn) {
         // 해당 단원의 등급 정보 가져오기
         const gradeInfo = unitGradesData[unitId];
         const stars = gradeInfo ? getStarsForGrade(gradeInfo.grade) : '';
+        if (unitId.startsWith('on_')) {
+          console.log('⭐ [renderUnitList] 온시리즈 단원:', unitId, '등급정보:', gradeInfo ? gradeInfo.grade : '없음');
+        }
 
         // 단원 렌더링 (잠금 표시는 클릭 시 체크)
         li.innerHTML = `
@@ -6222,6 +6227,11 @@ if (logoutConfirmBtn) {
     /* ⭐ 단원별 등급 데이터 가져오기 (캐시 사용) */
     async function fetchUnitGrades() {
       try {
+        // 🔄 preload가 진행 중이면 완료될 때까지 기다림 (race condition 방지)
+        if (window.preloadPromise) {
+          await window.preloadPromise;
+        }
+
         const stu = getCurrentStudent();
         if (!stu) {
           console.log('⭐ 로그인된 학생 정보 없음');
@@ -6230,11 +6240,11 @@ if (logoutConfirmBtn) {
 
         const url = `/api/unit-grades?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}`;
         const data = await ApiCache.fetch(url);
-        console.log('⭐ 단원 등급 데이터 로드:', Object.keys(data).length, '개');
+        console.log('⭐ 단원 등급 데이터 로드:', Object.keys(data || {}).length, '개');
         // 디버그: fit_world1 관련 키 모두 출력
-        const world1Keys = Object.keys(data).filter(k => k.includes('world1'));
+        const world1Keys = Object.keys(data || {}).filter(k => k.includes('world1'));
         console.log('⭐ [디버그] fit_world1 관련 키:', world1Keys);
-        return data;
+        return data || {};
       } catch (error) {
         console.error('⭐ 단원 등급 조회 오류:', error);
         return {};

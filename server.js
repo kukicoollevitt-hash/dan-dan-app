@@ -15601,9 +15601,9 @@ app.get("/api/menu-init", async (req, res) => {
         if (radarAvg >= 9) {
           gradeLabel = '우수';
         } else if (radarAvg >= 8) {
-          gradeLabel = '보통';
+          gradeLabel = '양호';
         } else if (radarAvg >= 7) {
-          gradeLabel = '노력';
+          gradeLabel = '보통';
         }
 
         unitGradesMap[unitId] = {
