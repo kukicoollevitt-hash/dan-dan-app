@@ -1583,7 +1583,7 @@ function getCurrentUnit() {
   return (window.CUR_UNIT || 'physics_01');
 }
 
-let _vocabFillRendered = false;
+if (typeof _vocabFillRendered === "undefined") var _vocabFillRendered = false;
 
 window.renderVocabFill = function () {
   // 이미 렌더링되었으면 다시 렌더링하지 않음 (탭 전환 시 상태 유지)
@@ -1659,7 +1659,7 @@ window.renderVocabFill = function () {
 };
 
 // ✅ 이벤트 리스너 중복 방지를 위한 플래그
-let _tabEventsInitialized = false;
+if (typeof _tabEventsInitialized === "undefined") var _tabEventsInitialized = false;
 
 function _bindTabEvents() {
   // 이미 초기화되었으면 건너뛰기

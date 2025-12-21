@@ -3192,6 +3192,16 @@ canvas[id^="confetti-canvas"] {
   <script src="./BRAINUP/science/deep_earth_content.js"></script>
   <script src="./BRAINUP/science/deep_chem_content.js"></script>
   <script src="./BRAINUP/science/deep_physics_content.js"></script>
+  <script src="./BRAINUP/social/deep_soc_content.js"></script>
+  <script src="./BRAINUP/social/deep_geo_content.js"></script>
+  <script src="./BRAINUP/social/deep_law_content.js"></script>
+  <script src="./BRAINUP/social/deep_pol_content.js"></script>
+  <script src="./BRAINUP/worldlit/deep_world1_content.js"></script>
+  <script src="./BRAINUP/worldlit/deep_world2_content.js"></script>
+  <script src="./BRAINUP/person/deep_people1_content.js"></script>
+  <script src="./BRAINUP/person/deep_people2_content.js"></script>
+  <script src="./BRAINUP/korlit/deep_classic_content.js"></script>
+  <script src="./BRAINUP/korlit/deep_modern_content.js"></script>
 
   <!-- 브레인온 콘텐츠 로드 -->
   <script src="./BRAINUP/science/on_bio_content.js"></script>
@@ -3206,6 +3216,8 @@ canvas[id^="confetti-canvas"] {
   <script src="./BRAINUP/korlit/on_modern_content.js"></script>
   <script src="./BRAINUP/social/on_geo_content.js"></script>
   <script src="./BRAINUP/social/on_soc_content.js"></script>
+  <script src="./BRAINUP/social/on_law_content.js"></script>
+  <script src="./BRAINUP/social/on_pol_content.js"></script>
 
   <!-- 브레인핏 콘텐츠 로드 -->
   <script src="./BRAINUP/science/fit_bio_content.js"></script>
@@ -3220,6 +3232,8 @@ canvas[id^="confetti-canvas"] {
   <script src="./BRAINUP/korlit/fit_modern_content.js"></script>
   <script src="./BRAINUP/social/fit_geo_content.js"></script>
   <script src="./BRAINUP/social/fit_soc_content.js"></script>
+  <script src="./BRAINUP/social/fit_law_content.js"></script>
+  <script src="./BRAINUP/social/fit_pol_content.js"></script>
 
   <!-- 브레인업 콘텐츠 로드 -->
   <script src="./BRAINUP/science/bio_content.js"></script>
@@ -3234,6 +3248,8 @@ canvas[id^="confetti-canvas"] {
   <script src="./BRAINUP/korlit/modern_content.js"></script>
   <script src="./BRAINUP/social/geo_content.js"></script>
   <script src="./BRAINUP/social/soc_content.js"></script>
+  <script src="./BRAINUP/social/law_content.js"></script>
+  <script src="./BRAINUP/social/pol_content.js"></script>
 </head>
 <body>
   <!-- 📱 아이패드용 고정 배경 레이어 -->
@@ -11324,6 +11340,7 @@ async function performLogout() {
       const subjectMap = {
         'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학',
         'soc': '사회문화', 'geo': '지리', 'law': '법', 'pol': '정치경제',
+        'lawpol': '정치경제',  // 잘못된 과목코드 fallback (법과정치 -> 정치경제)
         'classic': '고전문학', 'modern': '현대문학',
         'world': '세계문학', 'world1': '세계문학1', 'world2': '세계문학2',
         'people': '인물', 'people1': '한국인물', 'people2': '세계인물'
@@ -11331,14 +11348,14 @@ async function performLogout() {
 
       // 분야 코드 -> 한글 매핑
       const fieldMap = {
-        'science': '과학분야', 'social': '사회분야', 'korlit': '국어분야',
+        'science': '과학분야', 'social': '사회분야', 'korlit': '한국문학분야',
         'worldlit': '세계문학분야', 'person': '인물분야'
       };
 
       // 과목 코드에서 분야 유추
       const subjectToField = {
         'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
-        'soc': 'social', 'geo': 'social', 'law': 'social', 'pol': 'social',
+        'soc': 'social', 'geo': 'social', 'law': 'social', 'pol': 'social', 'lawpol': 'social',
         'classic': 'korlit', 'modern': 'korlit',
         'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
         'people': 'person', 'people1': 'person', 'people2': 'person'
@@ -11461,9 +11478,12 @@ async function performLogout() {
       }
 
       // CONTENTS에서 제목 가져오기
+      console.log('[getUnitInfoFromId] contentKey:', contentKey, 'CONTENTS 존재:', !!window.CONTENTS, 'key 존재:', window.CONTENTS ? !!window.CONTENTS[contentKey] : false);
       if (window.CONTENTS && window.CONTENTS[contentKey] && window.CONTENTS[contentKey].title) {
         // "과목 번호 제목" 형식으로 표시 (예: "생물 02 🦎 환경이 빚어낸 동물의 몸과 삶")
         displayTitle = `${subjectLabel} ${displayNo} ${window.CONTENTS[contentKey].title}`;
+      } else {
+        console.log('[getUnitInfoFromId] CONTENTS에서 못 찾음! contentKey:', contentKey, 'available keys:', window.CONTENTS ? Object.keys(window.CONTENTS).filter(k => k.includes('bio') || k.includes('physics')).slice(0, 20) : []);
       }
 
       // 시리즈명 결정
@@ -11782,44 +11802,30 @@ async function performLogout() {
 
         const assignedTimeText = formatAssignedTime(task.assignedAt);
 
-        // AI 과제인 경우 unitId에서 한글 정보 추출
-        // 자동과제부여에서는 unitTitle, seriesName, fieldName, subjectName 사용
+        // unitId에서 한글 정보 추출 (AI 과제 및 일반 과제 모두)
         let displayTitle = task.unitTitle || task.title;
         let displayMeta = `${task.seriesName || task.series || ''} > ${task.fieldName || task.field || task.domain || ''} > ${task.subjectName || task.subject || ''}`;
 
-        // 자동과제부여: window.CONTENTS에서 전체 제목 가져오기
-        // 일반 과제(!task.isAI)는 task.title에 이미 전체 제목이 포함되어 있으므로 추가하지 않음
-        if (task.isAutoAssigned && task.isAI) {
-          // unitCode에서 콘텐츠 키 추출 (예: deep_bio_01, fit_chem_01, bio_01)
-          if (window.CONTENTS && window.CONTENTS[unitCode]) {
-            const contentTitle = window.CONTENTS[unitCode].title;
-            if (contentTitle) {
-              displayTitle = `${displayTitle} ${contentTitle}`;
-            }
+        // getUnitInfoFromId로 정확한 제목과 메타 정보 가져오기 (AI/일반 과제 모두)
+        const unitInfo = getUnitInfoFromId(unitId);
+        if (unitInfo.subjectLabel && unitInfo.unitNo) {
+          // unitInfo에서 직접 제목과 시리즈명 사용 (on_, deep_, fit_ 모두 지원)
+          displayTitle = unitInfo.displayTitle;
+          displayMeta = `${unitInfo.seriesName} > ${unitInfo.fieldLabel} > ${unitInfo.subjectLabel}`;
+        } else if (task.title && !task.title.includes('NaN')) {
+          // DB에 저장된 task.title 변환 (people1 1 -> 한국인물 1, people2 1 -> 세계인물 1)
+          let convertedTitle = task.title;
+          // people1 X -> 한국인물 X
+          const people1Match = convertedTitle.match(/^people1\s+(\d+)$/);
+          if (people1Match) {
+            convertedTitle = `한국인물 ${people1Match[1]}`;
           }
-        }
-
-        if (task.isAI) {
-          const unitInfo = getUnitInfoFromId(unitId);
-          if (unitInfo.subjectLabel && unitInfo.unitNo) {
-            // unitInfo에서 직접 제목과 시리즈명 사용 (on_, deep_, fit_ 모두 지원)
-            displayTitle = unitInfo.displayTitle;
-            displayMeta = `${unitInfo.seriesName} > ${unitInfo.fieldLabel} > ${unitInfo.subjectLabel}`;
-          } else if (task.title && !task.title.includes('NaN')) {
-            // DB에 저장된 task.title 변환 (people1 1 -> 한국인물 1, people2 1 -> 세계인물 1)
-            let convertedTitle = task.title;
-            // people1 X -> 한국인물 X
-            const people1Match = convertedTitle.match(/^people1\s+(\d+)$/);
-            if (people1Match) {
-              convertedTitle = `한국인물 ${people1Match[1]}`;
-            }
-            // people2 X -> 세계인물 X
-            const people2Match = convertedTitle.match(/^people2\s+(\d+)$/);
-            if (people2Match) {
-              convertedTitle = `세계인물 ${people2Match[1]}`;
-            }
-            displayTitle = convertedTitle;
+          // people2 X -> 세계인물 X
+          const people2Match = convertedTitle.match(/^people2\s+(\d+)$/);
+          if (people2Match) {
+            convertedTitle = `세계인물 ${people2Match[1]}`;
           }
+          displayTitle = convertedTitle;
         }
 
         li.innerHTML = `

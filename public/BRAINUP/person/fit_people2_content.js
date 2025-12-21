@@ -3685,7 +3685,7 @@ window.renderVocabFill = function () {
 };
 
 // ✅ 이벤트 리스너 중복 방지를 위한 플래그
-let _tabEventsInitialized = false;
+if (typeof _tabEventsInitialized === "undefined") var _tabEventsInitialized = false;
 
 function _bindTabEvents() {
   // 이미 초기화되었으면 건너뛰기

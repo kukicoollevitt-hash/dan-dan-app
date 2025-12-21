@@ -3891,7 +3891,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
 
 
 /* ===== 어휘 채우기 탭 이벤트 ===== */
-let _tabEventsInitialized = false;
+if (typeof _tabEventsInitialized === "undefined") var _tabEventsInitialized = false;
 
 function _bindTabEvents() {
   if (_tabEventsInitialized) return;

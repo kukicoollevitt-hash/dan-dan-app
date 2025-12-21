@@ -3576,7 +3576,7 @@ window.renderVocabFill = function () {
   }, 100);
 };
 
-let _tabEventsInitialized = false;
+if (typeof _tabEventsInitialized === "undefined") var _tabEventsInitialized = false;
 function _bindTabEvents() {
   if (_tabEventsInitialized) return;
   _tabEventsInitialized = true;
