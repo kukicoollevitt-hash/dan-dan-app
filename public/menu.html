@@ -12023,12 +12023,30 @@ async function performLogout() {
         unitCode = match[1];
       }
 
+      // ✅ fit_, on_, deep_ prefix 제거하여 기본 unitCode도 생성
+      // fit_bio_02 -> bio_02, on_soc_01 -> soc_01 등
+      let baseUnitCode = unitCode;
+      if (unitCode.startsWith('fit_')) {
+        baseUnitCode = unitCode.slice(4); // fit_ 제거
+      } else if (unitCode.startsWith('on_')) {
+        baseUnitCode = unitCode.slice(3); // on_ 제거
+      } else if (unitCode.startsWith('deep_')) {
+        baseUnitCode = unitCode.slice(5); // deep_ 제거
+      }
+
+      // ✅ 확인할 unitCode 목록 (원본 + prefix 제거 버전)
+      const codesToCheck = [unitCode];
+      if (baseUnitCode !== unitCode) {
+        codesToCheck.push(baseUnitCode);
+      }
+
       // ✅ 1. 서버에서 가져온 unitGradesData 먼저 확인 (가장 신뢰할 수 있는 데이터)
       if (unitGradesData && Object.keys(unitGradesData).length > 0) {
-        // unitGradesData에 해당 unitCode가 있으면 완료 (등급이 있다 = 학습 완료)
-        if (unitGradesData[unitCode]) {
-          console.log(`[isUnitCompleted] ✅ 서버 데이터 완료! unitCode=${unitCode}`);
-          return true;
+        for (const code of codesToCheck) {
+          if (unitGradesData[code]) {
+            console.log(`[isUnitCompleted] ✅ 서버 데이터 완료! unitCode=${unitCode}, matched=${code}`);
+            return true;
+          }
         }
       }
 
@@ -12049,33 +12067,35 @@ async function performLogout() {
       const gradeNum = String(stu.grade).replace('학년', '');
       const stuKeyWithoutPhone = `${gradeNum}학년_${stu.name}`;
 
-      // 두 키 모두 확인
+      // 두 키 + 두 unitCode 모두 확인
       for (const stuKey of [stuKeyWithPhone, stuKeyWithoutPhone]) {
-        const storageKey = `dan-progress:${stuKey}:${unitCode}`;
-        try {
-          const data = localStorage.getItem(storageKey);
-          if (data) {
-            // ✅ 여러 형식 지원: 배열, 문자열 '1', 기타 truthy 값
-            let saved;
-            try {
-              saved = JSON.parse(data);
-            } catch(parseErr) {
-              // JSON 파싱 실패 → 단순 문자열로 처리
-              saved = data;
-            }
+        for (const code of codesToCheck) {
+          const storageKey = `dan-progress:${stuKey}:${code}`;
+          try {
+            const data = localStorage.getItem(storageKey);
+            if (data) {
+              // ✅ 여러 형식 지원: 배열, 문자열 '1', 기타 truthy 값
+              let saved;
+              try {
+                saved = JSON.parse(data);
+              } catch(parseErr) {
+                // JSON 파싱 실패 → 단순 문자열로 처리
+                saved = data;
+              }
 
-            // 배열인 경우
-            if (Array.isArray(saved) && saved.length > 0) {
-              console.log(`[isUnitCompleted] ✅ 완료(배열)! unitCode=${unitCode}, stuKey=${stuKey}`);
-              return true;
+              // 배열인 경우
+              if (Array.isArray(saved) && saved.length > 0) {
+                console.log(`[isUnitCompleted] ✅ 완료(배열)! unitCode=${unitCode}, matched=${code}, stuKey=${stuKey}`);
+                return true;
+              }
+              // 문자열 '1' 또는 다른 truthy 값인 경우 (과학 분야 등)
+              if (saved && saved !== 'false' && saved !== '0') {
+                console.log(`[isUnitCompleted] ✅ 완료(단순값)! unitCode=${unitCode}, matched=${code}, stuKey=${stuKey}, value=${data}`);
+                return true;
+              }
             }
-            // 문자열 '1' 또는 다른 truthy 값인 경우 (과학 분야 등)
-            if (saved && saved !== 'false' && saved !== '0') {
-              console.log(`[isUnitCompleted] ✅ 완료(단순값)! unitCode=${unitCode}, stuKey=${stuKey}, value=${data}`);
-              return true;
-            }
-          }
-        } catch(e) {}
+          } catch(e) {}
+        }
       }
 
       // ✅ Fallback: localStorage에서 학생 이름과 unitCode가 모두 포함된 키 검색
@@ -12083,30 +12103,32 @@ async function performLogout() {
       const studentName = stu.name;
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('dan-progress:') && key.includes(studentName) && key.endsWith(`:${unitCode}`)) {
-          try {
-            const data = localStorage.getItem(key);
-            if (data) {
-              // ✅ 여러 형식 지원
-              let saved;
-              try {
-                saved = JSON.parse(data);
-              } catch(parseErr) {
-                saved = data;
-              }
+        for (const code of codesToCheck) {
+          if (key && key.startsWith('dan-progress:') && key.includes(studentName) && key.endsWith(`:${code}`)) {
+            try {
+              const data = localStorage.getItem(key);
+              if (data) {
+                // ✅ 여러 형식 지원
+                let saved;
+                try {
+                  saved = JSON.parse(data);
+                } catch(parseErr) {
+                  saved = data;
+                }
 
-              // 배열인 경우
-              if (Array.isArray(saved) && saved.length > 0) {
-                console.log(`[isUnitCompleted] ✅ Fallback 완료(배열)! unitCode=${unitCode}, key=${key}`);
-                return true;
+                // 배열인 경우
+                if (Array.isArray(saved) && saved.length > 0) {
+                  console.log(`[isUnitCompleted] ✅ Fallback 완료(배열)! unitCode=${unitCode}, matched=${code}, key=${key}`);
+                  return true;
+                }
+                // 단순값인 경우
+                if (saved && saved !== 'false' && saved !== '0') {
+                  console.log(`[isUnitCompleted] ✅ Fallback 완료(단순값)! unitCode=${unitCode}, matched=${code}, key=${key}, value=${data}`);
+                  return true;
+                }
               }
-              // 단순값인 경우
-              if (saved && saved !== 'false' && saved !== '0') {
-                console.log(`[isUnitCompleted] ✅ Fallback 완료(단순값)! unitCode=${unitCode}, key=${key}, value=${data}`);
-                return true;
-              }
-            }
-          } catch(e) {}
+            } catch(e) {}
+          }
         }
       }
 
