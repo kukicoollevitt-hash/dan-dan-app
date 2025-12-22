@@ -5274,7 +5274,7 @@ window.sendLearningLog = async function () {
       grade:  stu.grade  || '',
       name:   stu.name   || '',
       school: stu.school || '',
-      series: 'BRAIN핏',
+      series: 'BRAIN온',
       unit:   unit,
       radar:  radar,       // ✅ 레이더 점수 전송
       completed: true      // ✅ 학습 완료 표시
