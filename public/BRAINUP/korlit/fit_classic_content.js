@@ -3972,28 +3972,38 @@ window.gradeQuiz = function () {
 
 /* === 정답·해설 패널 렌더러 === */
 function renderSolutions(pack) {
-  const A = pack.answerKey, EX = pack.explain;
+  const A = pack.answerKey, EX = pack.explain || {}, DT = pack.detail || {};
   const q1Text = pack.quiz.q1_opts[Number(A.q1) - 1] || '';
   const q2Text = pack.quiz.q2_opts[Number(A.q2) - 1] || '';
 
+  // explain (근거 - brown) + detail (상세해설 - green) 둘 다 표시
+  function buildExplainDetail(ex, dt) {
+    let html = '';
+    if (ex) html += `<span style="color:#6b5a48;">${ex}</span><br>`;
+    if (dt) html += `<span style="color:#2e7d32;">${dt}</span>`;
+    return html || '';
+  }
+
   // Q3: 객관식 vs 빈칸 호환
-  let q3Label = '';
+  let q3Html = '';
   if (A.q3 !== undefined && pack.quiz.q3_opts) {
     // 객관식
-    q3Label = `<b>정답:</b> ${A.q3} — ${pack.quiz.q3_opts[Number(A.q3) - 1] || ''}`;
+    const q3Text = pack.quiz.q3_opts[Number(A.q3) - 1] || '';
+    q3Html = `<b>정답:</b> ${A.q3} — ${q3Text}<br>${buildExplainDetail(EX.q3, DT.q3)}`;
   } else if (A.q3_1) {
     // 빈칸 채우기
-    q3Label = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
+    q3Html = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}<br>${buildExplainDetail(EX.q3, DT.q3)}`;
   }
 
   // Q4: 객관식 vs 빈칸 호환
-  let q4Label = '';
+  let q4Html = '';
   if (A.q4 !== undefined && pack.quiz.q4_opts) {
     // 객관식
-    q4Label = `<b>정답:</b> ${A.q4} — ${pack.quiz.q4_opts[Number(A.q4) - 1] || ''}`;
+    const q4Text = pack.quiz.q4_opts[Number(A.q4) - 1] || '';
+    q4Html = `<b>정답:</b> ${A.q4} — ${q4Text}<br>${buildExplainDetail(EX.q4, DT.q4)}`;
   } else if (A.q4_1) {
     // 빈칸 채우기
-    q4Label = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
+    q4Html = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}<br>${buildExplainDetail(EX.q4, DT.q4)}`;
   }
 
   // grade-result (점수 박스) 안의 하단에 해설 추가
@@ -4017,19 +4027,17 @@ function renderSolutions(pack) {
     <ol style="margin:0; padding-left:18px;">
       <li style="margin-bottom:8px;">
         <b>정답:</b> ${A.q1} — ${q1Text}<br>
-        <span style="color:#6b5a48;">${EX.q1 || ''}</span>
+        ${buildExplainDetail(EX.q1, DT.q1)}
       </li>
       <li style="margin-bottom:8px;">
         <b>정답:</b> ${A.q2} — ${q2Text}<br>
-        <span style="color:#6b5a48;">${EX.q2 || ''}</span>
+        ${buildExplainDetail(EX.q2, DT.q2)}
       </li>
       <li style="margin-bottom:8px;">
-        ${q3Label}<br>
-        <span style="color:#6b5a48;">${EX.q3 || ''}</span>
+        ${q3Html}
       </li>
       <li style="margin-bottom:8px;">
-        ${q4Label}<br>
-        <span style="color:#6b5a48;">${EX.q4 || ''}</span>
+        ${q4Html}
       </li>
       <li>
         <b>서술형 예시:</b> <span style="color:#6b5a48;">${EX.q5 || '핵심어 2개 이상 포함 시 정답 처리'}</span>
