@@ -74,6 +74,41 @@
     body {
   background: url("https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/learning-bg.jpg") center center / cover no-repeat fixed;
 }
+
+  /* === 정답 근거 하이라이트 스타일 === */
+  .evidence-highlight {
+    padding: 2px 4px;
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid;
+  }
+  .evidence-highlight .evidence-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: bold;
+    color: white;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  /* 1번 - 분홍 */
+  .evidence-q1 { background: rgba(233, 30, 99, 0.15); border-bottom-color: #e91e63; }
+  .evidence-q1 .evidence-tag { background: #e91e63; }
+  /* 2번 - 하늘 */
+  .evidence-q2 { background: rgba(33, 150, 243, 0.15); border-bottom-color: #2196f3; }
+  .evidence-q2 .evidence-tag { background: #2196f3; }
+  /* 3번 - 연두 */
+  .evidence-q3 { background: rgba(76, 175, 80, 0.15); border-bottom-color: #4caf50; }
+  .evidence-q3 .evidence-tag { background: #4caf50; }
+  /* 4번 - 살구 */
+  .evidence-q4 { background: rgba(255, 152, 0, 0.15); border-bottom-color: #ff9800; }
+  .evidence-q4 .evidence-tag { background: #ff9800; }
+  /* 5번 - 보라 */
+  .evidence-q5 { background: rgba(156, 39, 176, 0.15); border-bottom-color: #9c27b0; }
+  .evidence-q5 .evidence-tag { background: #9c27b0; }
 </style>
 
   <!-- 파비콘 404 방지(선택 사항이지만 적용) -->
@@ -1973,10 +2008,10 @@
             <div class="quiz-content">
               <p class="quiz-q">다음 중 어휘와 그 뜻이 바르게 연결된 것은 무엇인가요?</p>
               <ul class="quiz-options">
-                <li><label><input type="radio" name="q3" value="1"><span>산화 - 산소를 잃거나 전자를 얻는 반응</span></label></li>
-                <li><label><input type="radio" name="q3" value="2"><span>환원 - 산소를 얻거나 전자를 잃는 반응</span></label></li>
-                <li><label><input type="radio" name="q3" value="3"><span>산화제 - 다른 물질을 산화시키고 자신은 환원되는 물질</span></label></li>
-                <li><label><input type="radio" name="q3" value="4"><span>환원제 - 다른 물질을 환원시키고 자신도 환원되는 물질</span></label></li>
+                <li><label><input type="radio" name="q3" value="1"><span>발열 반응 - 열을 흡수하는 화학 반응</span></label></li>
+                <li><label><input type="radio" name="q3" value="2"><span>흡열 반응 - 열을 방출하는 화학 반응</span></label></li>
+                <li><label><input type="radio" name="q3" value="3"><span>촉매 - 활성화 에너지를 낮추는 물질</span></label></li>
+                <li><label><input type="radio" name="q3" value="4"><span>효소 - 무기물로 만들어진 촉매</span></label></li>
               </ul>
             </div>
           </div>
@@ -1987,10 +2022,10 @@
             <div class="quiz-content">
               <p class="quiz-q">이 글을 읽고 추론한 내용으로 가장 알맞은 것은 무엇인가요?</p>
               <ul class="quiz-options">
-                <li><label><input type="radio" name="q4" value="1"><span>철이 녹스는 것은 환원 반응이다.</span></label></li>
-                <li><label><input type="radio" name="q4" value="2"><span>광합성에서 이산화탄소는 산화된다.</span></label></li>
-                <li><label><input type="radio" name="q4" value="3"><span>산화와 환원은 항상 함께 일어난다.</span></label></li>
-                <li><label><input type="radio" name="q4" value="4"><span>산화와 환원은 따로 일어난다.</span></label></li>
+                <li><label><input type="radio" name="q4" value="1"><span>손난로가 뜨거워지는 것은 흡열 반응이다.</span></label></li>
+                <li><label><input type="radio" name="q4" value="2"><span>냉찜질팩이 차가워지는 것은 발열 반응이다.</span></label></li>
+                <li><label><input type="radio" name="q4" value="3"><span>배터리는 화학 에너지를 전기 에너지로 변환한다.</span></label></li>
+                <li><label><input type="radio" name="q4" value="4"><span>촉매는 반응 후에 자신도 변화한다.</span></label></li>
               </ul>
             </div>
           </div>
@@ -2564,6 +2599,128 @@
       }
     }
 
+    /* ===== 하이라이트 함수 ===== */
+    function clearEvidenceHighlights() {
+      const passageTextEl = document.querySelector('.passage-text');
+      const vocabBoxEl = document.querySelector('.vocab-box');
+
+      // 검색할 영역들
+      const areas = [passageTextEl, vocabBoxEl].filter(el => el !== null);
+
+      if (areas.length === 0) {
+        console.log('[clearEvidenceHighlights] 검색 영역 없음');
+        return;
+      }
+
+      let tagCount = 0;
+      let highlightCount = 0;
+
+      areas.forEach(area => {
+        // 1. 먼저 모든 .evidence-tag 제거 (어디에 있든 상관없이)
+        const tags = Array.from(area.querySelectorAll('.evidence-tag'));
+        tagCount += tags.length;
+        tags.forEach(tag => tag.remove());
+
+        // 2. 하이라이트 span 제거 (라이브 컬렉션 문제 방지를 위해 Array.from 사용)
+        const highlights = Array.from(area.querySelectorAll('.evidence-highlight'));
+        highlightCount += highlights.length;
+
+        highlights.forEach(span => {
+          const parent = span.parentNode;
+          // 나머지 내용을 부모로 이동
+          while (span.firstChild) {
+            parent.insertBefore(span.firstChild, span);
+          }
+          // span 제거
+          parent.removeChild(span);
+        });
+      });
+
+      console.log('[clearEvidenceHighlights] 제거 완료 - 태그:', tagCount, '하이라이트:', highlightCount);
+    }
+
+    function highlightEvidence() {
+      const content = window.CONTENTS[window.CUR_UNIT];
+      if (!content || !content.explain) {
+        console.log('[highlightEvidence] explain 데이터 없음');
+        return;
+      }
+
+      const passageTextEl = document.querySelector('.passage-text');
+      const vocabBoxEl = document.querySelector('.vocab-box');
+
+      // 기존 하이라이트 제거
+      clearEvidenceHighlights();
+
+      // evidence가 있으면 evidence 사용, 없으면 explain 사용
+      const evidenceSource = content.evidence || content.explain;
+      const qLabels = { q1: '1번', q2: '2번', q3: '3번', q4: '4번', q5: '5번' };
+
+      // 본문 문단들 (p와 li 모두 포함 - 어휘 목록이 ol > li로 되어 있음)
+      const paragraphs = passageTextEl ? passageTextEl.querySelectorAll('p, li') : [];
+      // 어휘 학습 탭의 어휘 박스 (li 또는 td 등)
+      const vocabItems = vocabBoxEl ? vocabBoxEl.querySelectorAll('li, td, .vocab-item, .vocab-def') : [];
+
+      ['q1', 'q2', 'q3', 'q4'].forEach(qKey => {  // q5(서술형) 제외
+        const evidenceText = evidenceSource[qKey];
+        if (!evidenceText) return;
+
+        let found = false;
+
+        // q3(어휘 문제)는 어휘 박스에서 먼저 검색
+        if (qKey === 'q3' && vocabItems.length > 0) {
+          vocabItems.forEach(item => {
+            if (found) return;
+            const plainText = item.textContent;
+            if (plainText.includes(evidenceText)) {
+              let html = item.innerHTML;
+              const chars = evidenceText.split('');
+              const regexPattern = chars.map(c => {
+                const escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                return escaped;
+              }).join('(?:<[^>]*>)*');
+              const regex = new RegExp(`(${regexPattern})`);
+              if (regex.test(html)) {
+                html = html.replace(regex,
+                  `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
+                item.innerHTML = html;
+                found = true;
+                console.log(`[highlightEvidence] ${qKey} 어휘박스 하이라이팅 완료:`, evidenceText);
+              }
+            }
+          });
+        }
+
+        // 본문에서 검색 (q3가 어휘박스에서 못 찾았으면 본문에서도 시도)
+        if (!found && paragraphs.length > 0) {
+          paragraphs.forEach(p => {
+            if (found) return;
+            const plainText = p.textContent;
+            if (plainText.includes(evidenceText)) {
+              let html = p.innerHTML;
+              const chars = evidenceText.split('');
+              const regexPattern = chars.map(c => {
+                const escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                return escaped;
+              }).join('(?:<[^>]*>)*');
+              const regex = new RegExp(`(${regexPattern})`);
+              if (regex.test(html)) {
+                html = html.replace(regex,
+                  `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
+                p.innerHTML = html;
+                found = true;
+                console.log(`[highlightEvidence] ${qKey} 본문 하이라이팅 완료:`, evidenceText);
+              }
+            }
+          });
+        }
+      });
+
+      console.log('[highlightEvidence] 하이라이팅 완료');
+    }
+    // window 객체에 등록 (learning-common.js에서 호출 가능하도록)
+    window.highlightEvidence = highlightEvidence;
+
     /* ===== 본문 채점 ===== */
     let readingResultHTML = "";
     function gradeQuiz() {
@@ -2737,9 +2894,15 @@
 
       // ★ 분석리포트 탭 즉시 업데이트
       refreshReportTab();
+
+      // ★ 정답 근거 하이라이트
+      highlightEvidence();
     }
 
     function resetQuiz() {
+  // ★ 정답 근거 하이라이트 제거
+  clearEvidenceHighlights();
+
             document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.checked = false);
       // q3, q4 라디오버튼 초기화 (객관식)
       document.querySelectorAll('input[name="q3"]').forEach(r => { r.checked = false; r.disabled = false; });
