@@ -7,6 +7,38 @@
   <!-- 공통 CSS -->
   <link rel="stylesheet" href="/assets/css/learning-common.css">
 
+  <!-- 정답 근거 하이라이트 스타일 -->
+  <style>
+    .evidence-highlight {
+      padding: 2px 4px;
+      border-radius: 4px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-bottom: 2px solid;
+    }
+    .evidence-highlight .evidence-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: bold;
+      color: white;
+      padding: 1px 5px;
+      border-radius: 8px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .evidence-q1 { background: rgba(233, 30, 99, 0.15); border-bottom-color: #e91e63; }
+    .evidence-q1 .evidence-tag { background: #e91e63; }
+    .evidence-q2 { background: rgba(33, 150, 243, 0.15); border-bottom-color: #2196f3; }
+    .evidence-q2 .evidence-tag { background: #2196f3; }
+    .evidence-q3 { background: rgba(76, 175, 80, 0.15); border-bottom-color: #4caf50; }
+    .evidence-q3 .evidence-tag { background: #4caf50; }
+    .evidence-q4 { background: rgba(255, 152, 0, 0.15); border-bottom-color: #ff9800; }
+    .evidence-q4 .evidence-tag { background: #ff9800; }
+    .evidence-q5 { background: rgba(156, 39, 176, 0.15); border-bottom-color: #9c27b0; }
+    .evidence-q5 .evidence-tag { background: #9c27b0; }
+  </style>
+
   <!-- 파비콘 404 방지 -->
   <link rel="icon" href="data:,">
 
@@ -2673,6 +2705,9 @@
       updateReportPanel({ q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, messages: ["채점 결과가 초기화되었습니다. 다시 풀고 채점해 주세요."] });
 
       drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
+
+      // ★ 하이라이트 제거
+      if (typeof clearEvidenceHighlights === 'function') clearEvidenceHighlights();
     }
 
     // 퀴즈 입력 활성화
@@ -2735,6 +2770,9 @@
         // 4) PDF 저장
         disableQuizInputs();
         await captureElementToPDF('capture-reading', '단단국어_본문학습.pdf', { withStudentInfo: true });
+
+        // ★ PDF 캡처 후 하이라이트 적용
+        highlightEvidence();
 
         // 5) 정답·해설 표시
         if (typeof renderSolutions === 'function') {
@@ -3322,6 +3360,49 @@ function _bindTabEvents() {
 }
 </script>
 
+
+<!-- ★ 정답 근거 하이라이트 함수 -->
+<script>
+function clearEvidenceHighlights() {
+  const passage = document.querySelector('.passage-text');
+  if (!passage) return;
+  passage.querySelectorAll('.evidence-highlight').forEach(el => {
+    const text = el.textContent.replace(/\d번$/, '');
+    el.replaceWith(document.createTextNode(text));
+  });
+  passage.normalize();
+}
+
+function highlightEvidence() {
+  const pack = window.CONTENTS?.[window.CUR_UNIT];
+  if (!pack || !pack.explain) return;
+  const passage = document.querySelector('.passage-text');
+  if (!passage) return;
+  clearEvidenceHighlights();
+
+  const qLabels = ['1번', '2번', '3번', '4번', '5번'];
+  const explains = [pack.explain.q1, pack.explain.q2, pack.explain.q3, pack.explain.q4, pack.explain.q5].filter(Boolean);
+
+  explains.forEach((text, idx) => {
+    if (!text || text.length < 2) return;
+    const qClass = `evidence-q${idx + 1}`;
+    const label = qLabels[idx];
+    const chars = Array.from(text);
+    const escapedChars = chars.map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const flexPattern = escapedChars.join('(?:<[^>]*>)*');
+    let regex;
+    try { regex = new RegExp(flexPattern, 'g'); } catch (e) { return; }
+    const html = passage.innerHTML;
+    const newHtml = html.replace(regex, (match) => {
+      return `<span class="evidence-highlight ${qClass}">${match}<span class="evidence-tag">${label}</span></span>`;
+    });
+    if (newHtml !== html) passage.innerHTML = newHtml;
+  });
+}
+
+window.highlightEvidence = highlightEvidence;
+window.clearEvidenceHighlights = clearEvidenceHighlights;
+</script>
 
 <!-- 외부 JS: 단원 콘텐츠 로드 (classic_19.html과 같은 폴더) -->
 <script src="./on_classic_content.js?v=20251202j" defer></script>
