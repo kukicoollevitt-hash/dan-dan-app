@@ -2009,6 +2009,11 @@
         return;
       }
 
+      // ★ 정답 근거 하이라이트 제거
+      if (typeof clearEvidenceHighlights === 'function') {
+        clearEvidenceHighlights();
+      }
+
       document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.checked = false);
       const q31 = document.getElementById("q3-1"); if (q31) q31.value = "";
       const q32 = document.getElementById("q3-2"); if (q32) q32.value = "";
