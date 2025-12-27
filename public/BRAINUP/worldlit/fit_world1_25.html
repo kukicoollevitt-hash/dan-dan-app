@@ -73,6 +73,47 @@
     body {
   background: url("https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/learning-bg.jpg") center center / cover no-repeat fixed;
 }
+    /* 근거 하이라이트 스타일 */
+    .evidence-highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(255, 220, 100, 0.5) 40%);
+      padding: 0 2px;
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+    .evidence-q1 {
+      background: linear-gradient(180deg, transparent 60%, rgba(233, 30, 99, 0.25) 40%);
+    }
+    .evidence-q2 {
+      background: linear-gradient(180deg, transparent 60%, rgba(33, 150, 243, 0.25) 40%);
+    }
+    .evidence-q3 {
+      background: linear-gradient(180deg, transparent 60%, rgba(76, 175, 80, 0.25) 40%);
+    }
+    .evidence-q4 {
+      background: linear-gradient(180deg, transparent 60%, rgba(255, 152, 0, 0.25) 40%);
+    }
+    .evidence-q5 {
+      background: linear-gradient(180deg, transparent 60%, rgba(156, 39, 176, 0.25) 40%);
+    }
+    .evidence-tag {
+      display: inline-block;
+      margin-left: 2px;
+      background: #e91e63;
+      color: white;
+      font-size: 10px;
+      padding: 1px 4px;
+      border-radius: 8px;
+      font-weight: bold;
+      vertical-align: super;
+      line-height: 1;
+    }
+    .evidence-tag.q1-tag { background: #e91e63; }
+    .evidence-tag.q2-tag { background: #2196f3; }
+    .evidence-tag.q3-tag { background: #4caf50; }
+    .evidence-tag.q4-tag { background: #ff9800; }
+    .evidence-tag.q5-tag { background: #9c27b0; }
+
 </style>
 
   <!-- 파비콘 404 방지(선택 사항이지만 적용) -->
@@ -2233,7 +2274,7 @@
         const target = btn.dataset.tab;
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
-        localStorage.setItem(`current-geo-tab:${unit}`, target);
+        localStorage.setItem(`current-geo-tab:${window.CUR_UNIT}`, target);
       });
     });
 
@@ -2594,6 +2635,7 @@
     }
 
     function resetQuiz() {
+      clearEvidenceHighlights();
       document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => {
         r.checked = false;
         r.disabled = false;  // 라디오 버튼 활성화
@@ -2712,6 +2754,7 @@
         if (typeof renderSolutions === 'function') {
           const content = window.CONTENTS[window.CUR_UNIT];
           if (content) renderSolutions(content);
+          highlightEvidence();
         }
 
         // showSubmitSuccess는 제거 - 채점 결과 팝업이 대신 표시됨
@@ -2735,7 +2778,7 @@
       const stu = getCurrentStudent();
       if (!stu) return;
       const stuKey = buildStudentKey(stu);
-      const stateKey = `vocab-state:${stuKey}:${unit}`;
+      const stateKey = `vocab-state:${stuKey}:${window.CUR_UNIT}`;
 
       const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
       const vocabResultBox = document.getElementById('vocab-result');
@@ -2779,7 +2822,7 @@
       const stu = getCurrentStudent();
       if (!stu) return;
       const stuKey = buildStudentKey(stu);
-      const stateKey = `vocab-state:${stuKey}:${unit}`;
+      const stateKey = `vocab-state:${stuKey}:${window.CUR_UNIT}`;
 
       const saved = localStorage.getItem(stateKey);
       if (!saved) return;
@@ -2952,7 +2995,7 @@
       const stu = getCurrentStudent();
       if (stu) {
         const stuKey = buildStudentKey(stu);
-        const stateKey = `vocab-state:${stuKey}:${unit}`;
+        const stateKey = `vocab-state:${stuKey}:${window.CUR_UNIT}`;
         localStorage.removeItem(stateKey);
         console.log('[vocabReset] 저장 삭제:', stateKey);
       }
@@ -2976,7 +3019,7 @@
       const stu = getCurrentStudent();
       if (!stu) return;
       const stuKey = buildStudentKey(stu);
-      const stateKey = `creative-state:${stuKey}:${unit}`;
+      const stateKey = `creative-state:${stuKey}:${window.CUR_UNIT}`;
 
       const textarea = document.getElementById('creative-input');
       if (!textarea) return;
@@ -2989,7 +3032,7 @@
       const stu = getCurrentStudent();
       if (!stu) return;
       const stuKey = buildStudentKey(stu);
-      const stateKey = `creative-state:${stuKey}:${unit}`;
+      const stateKey = `creative-state:${stuKey}:${window.CUR_UNIT}`;
 
       const saved = localStorage.getItem(stateKey);
       if (!saved) return;
@@ -3305,8 +3348,75 @@ function _bindTabEvents() {
 </script>
 
 
-<!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
-<script src="./fit_world1_content.js?v=20251202a" defer></script>
+<script>
+function clearEvidenceHighlights() {
+  document.querySelectorAll('.evidence-tag').forEach(tag => tag.remove());
+  document.querySelectorAll('.evidence-highlight').forEach(el => {
+    const parent = el.parentNode;
+    while (el.firstChild) {
+      parent.insertBefore(el.firstChild, el);
+    }
+    parent.removeChild(el);
+  });
+}
+window.clearEvidenceHighlights = clearEvidenceHighlights;
+
+function highlightEvidence() {
+  const content = window.CONTENTS[window.CUR_UNIT];
+  if (!content || !content.explain) {
+    console.log('[highlightEvidence] explain 데이터 없음');
+    return;
+  }
+
+  const passageTextEl = document.querySelector('.passage-text');
+  const passageVocabEl = document.querySelector('.passage-vocab');
+
+  clearEvidenceHighlights();
+
+  const evidenceSource = content.evidence || content.explain;
+  const qLabels = { q1: '1번', q2: '2번', q3: '3번', q4: '4번', q5: '5번' };
+
+  const paragraphs = passageTextEl ? passageTextEl.querySelectorAll('p') : [];
+  const vocabItems = passageVocabEl ? passageVocabEl.querySelectorAll('li') : [];
+
+  ['q1', 'q2', 'q3', 'q4'].forEach(qKey => {
+    const evidenceText = evidenceSource[qKey];
+    if (!evidenceText) return;
+
+    let found = false;
+
+    if (paragraphs.length > 0) {
+      paragraphs.forEach(p => {
+        if (found) return;
+        const plainText = p.textContent;
+        if (plainText.includes(evidenceText)) {
+          let html = p.innerHTML;
+          const chars = evidenceText.split('');
+          const regexPattern = chars.map(c => {
+            const escaped = c.replace(/[.*+?^${}()|[\]\]/g, '\$&');
+            return escaped;
+          }).join('(?:<[^>]*>)*');
+          const regex = new RegExp(`(${regexPattern})`);
+          if (regex.test(html)) {
+            html = html.replace(regex,
+              `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag ${qKey}-tag">${qLabels[qKey]}</span></span>`);
+            p.innerHTML = html;
+            found = true;
+            console.log(`[highlightEvidence] ${qKey} 본문 하이라이팅 완료:`, evidenceText);
+          }
+        }
+      });
+    }
+  });
+
+  console.log('[highlightEvidence] 하이라이팅 완료');
+}
+window.highlightEvidence = highlightEvidence;
+</script>
+
+
+<!-- <!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
+<script src="./fit_world1_content.js?v=20251227" defer></script>
 
 <!-- 달력 팝업 -->
 <div class="calendar-overlay" id="calendar-overlay"></div>

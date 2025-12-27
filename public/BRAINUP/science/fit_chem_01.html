@@ -77,6 +77,51 @@
     body {
   background: url("https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/learning-bg.jpg") center center / cover no-repeat fixed;
 }
+
+  /* ===== 하이라이트 스타일 ===== */
+  .evidence-highlight {
+    background: linear-gradient(180deg, transparent 60%, rgba(255, 220, 100, 0.5) 40%);
+    padding: 2px 4px;
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .evidence-highlight:hover {
+    background: linear-gradient(180deg, transparent 40%, rgba(255, 200, 50, 0.7) 40%);
+  }
+  .evidence-highlight .evidence-tag {
+    display: inline-block;
+    background: #ff6b6b;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    vertical-align: super;
+    line-height: 1;
+  }
+
+  .evidence-q1 { background: linear-gradient(180deg, transparent 60%, rgba(255, 182, 193, 0.6) 40%); }
+  .evidence-q1:hover { background: linear-gradient(180deg, transparent 40%, rgba(255, 150, 170, 0.8) 40%); }
+  .evidence-q1 .evidence-tag { background: #e91e63; }
+
+  .evidence-q2 { background: linear-gradient(180deg, transparent 60%, rgba(173, 216, 230, 0.6) 40%); }
+  .evidence-q2:hover { background: linear-gradient(180deg, transparent 40%, rgba(140, 190, 220, 0.8) 40%); }
+  .evidence-q2 .evidence-tag { background: #2196f3; }
+
+  .evidence-q3 { background: linear-gradient(180deg, transparent 60%, rgba(144, 238, 144, 0.6) 40%); }
+  .evidence-q3:hover { background: linear-gradient(180deg, transparent 40%, rgba(100, 210, 100, 0.8) 40%); }
+  .evidence-q3 .evidence-tag { background: #4caf50; }
+
+  .evidence-q4 { background: linear-gradient(180deg, transparent 60%, rgba(255, 218, 185, 0.6) 40%); }
+  .evidence-q4:hover { background: linear-gradient(180deg, transparent 40%, rgba(255, 190, 140, 0.8) 40%); }
+  .evidence-q4 .evidence-tag { background: #ff9800; }
+
+  .evidence-q5 { background: linear-gradient(180deg, transparent 60%, rgba(221, 160, 221, 0.6) 40%); }
+  .evidence-q5:hover { background: linear-gradient(180deg, transparent 40%, rgba(200, 130, 200, 0.8) 40%); }
+  .evidence-q5 .evidence-tag { background: #9c27b0; }
 </style>
 
   <!-- 파비콘 404 방지(선택 사항이지만 적용) -->
@@ -3162,6 +3207,9 @@ function resetQuiz() {
   updateReportPanel({ q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, messages: ["채점 결과가 초기화되었습니다. 다시 풀고 채점해 주세요."] });
 
   drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
+
+  // 하이라이트 제거
+  clearEvidenceHighlights();
 }
 
 /* =========================================================
@@ -3249,7 +3297,10 @@ async function saveReadingProgress() {
       }
       await captureElementToPDF('capture-reading', '단단국어_본문학습.pdf', { withStudentInfo: true });
 
-      // 7. 해설 표시
+      // 9. 하이라이트 표시
+      highlightEvidence();
+
+      // 10. 해설 표시
       const pack = window.CONTENTS?.[window.CUR_UNIT];
       if (pack && typeof renderSolutions === 'function') {
         renderSolutions(pack);
@@ -3265,6 +3316,130 @@ async function saveReadingProgress() {
     alert('❌ 서버 연결에 실패했습니다.');
   }
 }
+
+/* ===== 하이라이트 함수 ===== */
+function clearEvidenceHighlights() {
+  const passageTextEl = document.querySelector('.passage-text');
+  const vocabBoxEl = document.querySelector('.vocab-box');
+
+  // 검색할 영역들
+  const areas = [passageTextEl, vocabBoxEl].filter(el => el !== null);
+
+  if (areas.length === 0) {
+    console.log('[clearEvidenceHighlights] 검색 영역 없음');
+    return;
+  }
+
+  let tagCount = 0;
+  let highlightCount = 0;
+
+  areas.forEach(area => {
+    // 1. 먼저 모든 .evidence-tag 제거 (어디에 있든 상관없이)
+    const tags = Array.from(area.querySelectorAll('.evidence-tag'));
+    tagCount += tags.length;
+    tags.forEach(tag => tag.remove());
+
+    // 2. 하이라이트 span 제거 (라이브 컬렉션 문제 방지를 위해 Array.from 사용)
+    const highlights = Array.from(area.querySelectorAll('.evidence-highlight'));
+    highlightCount += highlights.length;
+
+    highlights.forEach(span => {
+      const parent = span.parentNode;
+      // 나머지 내용을 부모로 이동
+      while (span.firstChild) {
+        parent.insertBefore(span.firstChild, span);
+      }
+      // span 제거
+      parent.removeChild(span);
+    });
+  });
+
+  console.log('[clearEvidenceHighlights] 제거 완료 - 태그:', tagCount, '하이라이트:', highlightCount);
+}
+// window 객체에 등록
+window.clearEvidenceHighlights = clearEvidenceHighlights;
+
+function highlightEvidence() {
+  const content = window.CONTENTS[window.CUR_UNIT];
+  if (!content || !content.explain) {
+    console.log('[highlightEvidence] explain 데이터 없음');
+    return;
+  }
+
+  const passageTextEl = document.querySelector('.passage-text');
+  const vocabBoxEl = document.querySelector('.vocab-box');
+
+  // 기존 하이라이트 제거
+  clearEvidenceHighlights();
+
+  // evidence가 있으면 evidence 사용, 없으면 explain 사용
+  const evidenceSource = content.evidence || content.explain;
+  const qLabels = { q1: '1번', q2: '2번', q3: '3번', q4: '4번', q5: '5번' };
+
+  // 본문 문단들 (p와 li 모두 포함 - 어휘 목록이 ol > li로 되어 있음)
+  const paragraphs = passageTextEl ? passageTextEl.querySelectorAll('p, li') : [];
+  // 어휘 학습 탭의 어휘 박스 (li 또는 td 등)
+  const vocabItems = vocabBoxEl ? vocabBoxEl.querySelectorAll('li, td, .vocab-item, .vocab-def') : [];
+
+  ['q1', 'q2', 'q3', 'q4'].forEach(qKey => {  // q5(서술형) 제외
+    const evidenceText = evidenceSource[qKey];
+    if (!evidenceText) return;
+
+    let found = false;
+
+    // q3(어휘 문제)는 어휘 박스에서 먼저 검색
+    if (qKey === 'q3' && vocabItems.length > 0) {
+      vocabItems.forEach(item => {
+        if (found) return;
+        const plainText = item.textContent;
+        if (plainText.includes(evidenceText)) {
+          let html = item.innerHTML;
+          const chars = evidenceText.split('');
+          const regexPattern = chars.map(c => {
+            const escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return escaped;
+          }).join('(?:<[^>]*>)*');
+          const regex = new RegExp(`(${regexPattern})`);
+          if (regex.test(html)) {
+            html = html.replace(regex,
+              `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
+            item.innerHTML = html;
+            found = true;
+            console.log(`[highlightEvidence] ${qKey} 어휘박스 하이라이팅 완료:`, evidenceText);
+          }
+        }
+      });
+    }
+
+    // 본문에서 검색 (q3가 어휘박스에서 못 찾았으면 본문에서도 시도)
+    if (!found && paragraphs.length > 0) {
+      paragraphs.forEach(p => {
+        if (found) return;
+        const plainText = p.textContent;
+        if (plainText.includes(evidenceText)) {
+          let html = p.innerHTML;
+          const chars = evidenceText.split('');
+          const regexPattern = chars.map(c => {
+            const escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return escaped;
+          }).join('(?:<[^>]*>)*');
+          const regex = new RegExp(`(${regexPattern})`);
+          if (regex.test(html)) {
+            html = html.replace(regex,
+              `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
+            p.innerHTML = html;
+            found = true;
+            console.log(`[highlightEvidence] ${qKey} 본문 하이라이팅 완료:`, evidenceText);
+          }
+        }
+      });
+    }
+  });
+
+  console.log('[highlightEvidence] 하이라이팅 완료');
+}
+// window 객체에 등록 (learning-common.js에서 호출 가능하도록)
+window.highlightEvidence = highlightEvidence;
 </script>
 
 
