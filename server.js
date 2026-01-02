@@ -11159,16 +11159,21 @@ app.get("/my-learning", async (req, res) => {
               badgeText = '격려';
             }
 
-            // 어휘 점수 - UNIT_PROGRESS_MAP에서 vocabState 또는 reportState.vocabScoreRatio 가져오기
-            // unitCode에서 fit_/deep_/on_ 접두어 제거하여 조회 (UserProgress는 bio_01 형태로 저장됨)
-            let normalizedUnitCode = unitCode;
-            if (unitCode.startsWith('fit_')) normalizedUnitCode = unitCode.substring(4);
-            else if (unitCode.startsWith('deep_')) normalizedUnitCode = unitCode.substring(5);
-            else if (unitCode.startsWith('on_')) normalizedUnitCode = unitCode.substring(3);
+            // 어휘 점수 - UNIT_PROGRESS_MAP에서 vocabState 가져오기
+            // 1차: 원본 unitCode로 조회 (on_bio_01, fit_bio_01 등)
+            // 2차 fallback: 접두어 제거 버전으로 조회 (bio_01 등)
+            let unitProgress = UNIT_PROGRESS_MAP[unitCode] || {};
 
-            const unitProgress = UNIT_PROGRESS_MAP[normalizedUnitCode] || {};
+            // fallback: 접두어 제거 버전으로 재조회
+            if (!unitProgress.vocabState) {
+              let normalizedUnitCode = unitCode;
+              if (unitCode.startsWith('fit_')) normalizedUnitCode = unitCode.substring(4);
+              else if (unitCode.startsWith('deep_')) normalizedUnitCode = unitCode.substring(5);
+              else if (unitCode.startsWith('on_')) normalizedUnitCode = unitCode.substring(3);
+              unitProgress = UNIT_PROGRESS_MAP[normalizedUnitCode] || {};
+            }
 
-            // vocabState에서 직접 점수 계산 (더 정확함)
+            // vocabState에서 직접 점수 계산
             let vocabScorePercent = 0;
             const vocabState = unitProgress.vocabState;
             if (vocabState && vocabState.vocabData && Array.isArray(vocabState.vocabData)) {
