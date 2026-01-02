@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📚 살아 있는 신비의 도서관 — 시즌 3</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/library-story/library_part3_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #8B4789 0%, #5B2C6F 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(139, 71, 137, 0.3);
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #34495e;
+      margin-bottom: 12px;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: transparent;
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #ffffff;
+      margin-bottom: 40px;
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 24px;
+      }
+
+      .story-card p {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(139, 71, 137, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(139, 71, 137, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(91, 44, 111, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139, 71, 137, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📚 살아 있는 신비의 도서관</h1>
+        <p class="subtitle">
+          시즌 3 - 금지된 책과 도서관의 심장<br>
+          최종 시즌의 모험이 시작됩니다
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_01.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 1</span>
+        <h2>금지된 책의 첫 신호</h2>
+        <p>민준은 새벽 꿈에서 끝없이 펼쳐진 어둠의 바다를 보았다.</p>
+        <p>그 한가운데에 금빛 기둥이 솟아 있었고, 기둥 꼭대기에는 검은 띠로 묶인 책이 떠 있었다.</p>
+        <p>꿈 속 목소리가 말했다. "금지된 책이 깨어난다. 도서관의 심장은 곧 사라질 것이다."</p>
+        <p>민준은 식은땀을 흘리며 깼다. 그의 손등의 인장은 전날보다 한층 짙은 푸른빛으로 타오르고 있었다.</p>
+        <p>학교에서 민준은 수아와 태영에게 이 꿈을 털어놓았다. 수아는 불안하게 교과서를 덮으며 말했다. "금지된 책… 그게 정말 존재하는 거야?"</p>
+        <p>루미에게서 메시지가 도착했다. "오늘 밤… 도서관 '심층계'로 들어가야 한다."</p>
+        <p>아이들은 서로를 바라보며 긴장한 눈빛을 나눴다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_02.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 2</span>
+        <h2>도서관의 붕괴가 시작되다</h2>
+        <p>밤. 도서관에 들어서자마자 아이들은 숨이 막혔다.</p>
+        <p>도서관 벽과 천장이 검은 얼룩처럼 번져가고 있었다. 책장에서 글자들이 하나둘씩 떨어져 내리며 바닥 위에서 사라지고 있었다.</p>
+        <p>루미는 떨리는 목소리로 말했다. "금지된 책의 힘이 풀리기 시작했어. 책들의 '언어' 자체가 사라지고 있어."</p>
+        <p>《세계 명작 동화집》은 표지가 반쯤 없어진 채 속지의 문장들이 흐릿하게 빛나며 사라졌다.</p>
+        <p>태영이 손등으로 책을 만지자 글자는 그의 손에 닿는 순간 먹물처럼 흩어졌다.</p>
+        <p>"이대로면… 도서관이 무너지는 거 아닌가?"</p>
+        <p>루미는 단호하게 고개를 저었다. "그래서 우리가 심층계로 들어가야 해. 도서관의 뿌리, '심장'으로 가야 해."</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_03.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 3</span>
+        <h2>심층계로 내려가는 문</h2>
+        <p>도서관 한가운데에서, 바닥 책장이 자동으로 이동하며 비밀 계단이 만들어졌다.</p>
+        <p>계단을 따라 내려가자 끝없이 깊은 동굴 같은 통로가 펼쳐졌다. 양옆 책장에는 도서관 역사상 가장 오래된 책들이 잠들어 있었다.</p>
+        <p>모든 책은 스스로 희미한 숨을 내는 것처럼 미세하게 진동하고 있었다.</p>
+        <p>루미가 설명했다. "여긴 '심층계'야. 도서관의 기억이 가장 깊게 쌓인 공간. 인간들은 평생 한 번도 본 적 없어."</p>
+        <p>아이들은 신비로움과 공포가 동시에 밀려왔다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_04.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 4</span>
+        <h2>기억의 강: 사라져가는 세계들</h2>
+        <p>심층계 최하단에는 '기억의 강'이 흐르고 있었다. 강물은 물 대신 글자와 문장 조각으로 이루어져 있었다.</p>
+        <p>강가에는 사라진 책들의 세계가 조각난 채 떠다니고 있었다. 파괴된 동화 나라, 색을 잃은 공룡 숲, 소리가 사라진 음악 세계, 이름 없는 나라의 지도…</p>
+        <p>강을 건너려는 순간, 떠다니는 글자들이 민준의 인장을 붙잡고 속삭였다. "우리를 잊지 말아줘…."</p>
+        <p>민준은 숨을 들이켰다. 도서관이 잃어버린 기억들이 고통스럽게 울부짖고 있었다.</p>
+        <p>루미는 말한다. "금지된 책이 깨어나면, 없어져도 될 기억과 없어지면 안 될 기억이 구분 없이 사라져버려."</p>
+        <p>수아의 얼굴이 굳었다. "우리가… 모든 책을 지키려는 이유가 바로 이거였네."</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_05.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 5</span>
+        <h2>그림자 독서단의 습격</h2>
+        <p>갑자기 강 한가운데서 검은 파문이 일었다. 블랙 페이지단이 나타났다. 이번엔 4명이 아니라 여러 그림자 부대를 데리고 있었다.</p>
+        <p>블랙 리더는 어둠 속에서 민준에게 말했다. "우리를 막아도 소용없다. 도서관의 진짜 힘… 그건 금지된 책 안에 있다."</p>
+        <p>크롬은 강물에 뛰어들어 글자들을 '삭제'하기 시작했다. 강이 흔들리고 도서관의 기억이 우수수 떨어져 사라졌다.</p>
+        <p>잉크는 그림자 괴물을 강 너머로 보내 아이들을 다리에서 떨어뜨리려 했다.</p>
+        <p>페이퍼맨은 종이 배 수백 개를 만들어 아이들을 포위했다.</p>
+        <p>태영이 외쳤다. "우린… 절대로 너희한테 안 뺏길 거야!"</p>
+        <p>전투가 시작되었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_06.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 6</span>
+        <h2>금지된 서고의 문</h2>
+        <p>전투가 이어지던 중, 강 너머 깊은 절벽에서 커다란 문이 나타났다.</p>
+        <p>문 표면엔 '봉인 룬'이라 불리는 고대 문자가 새겨져 있었다.</p>
+        <p>루미는 충격받은 듯 중얼거렸다. "저 문은… 도서관에서도 열면 안 되는 문이야."</p>
+        <p>문 위쪽에는 'Forbidden Archives'라는 글자가 어둠 속에서 빛났다.</p>
+        <p>수아가 놀라며 말했다. "저 안에… 금지된 책이 있는 거야?"</p>
+        <p>블랙 리더는 손을 들며 답했다. "맞다. 우리는 저 문을 열 것이다. 도서관의 진짜 힘을 손에 넣기 위해."</p>
+        <p>문은 블랙 페이지단의 어둠의 에너지에 반응해 커다란 '우르릉' 소리와 함께 천천히 열리기 시작했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_07.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 7</span>
+        <h2>금지된 책과의 조우</h2>
+        <p>문 안쪽은 끝이 없는 암흑이었다. 그 중앙에, 검은 띠로 칭칭 묶인 책이 떠 있었다.</p>
+        <p>책 위에는 금색 자물쇠 하나만이 위태롭게 빛나고 있었다.</p>
+        <p>민준이 다가가자 책이 갑자기 흔들리며 말했다. "누구인가… 나를 깨운 것은…"</p>
+        <p>책의 음성은 낮고 거칠며, 수백 권의 책이 동시에 울리는 듯한 소리였다.</p>
+        <p>금지된 책은 스스로 띠를 풀며 검은 빛을 뿜어냈다.</p>
+        <p>순간, 도서관 전체가 흔들렸다.</p>
+        <p>루미가 비명을 질렀다. "안 돼! 금지된 책은 스스로 세계를 만들어! 잘못 건드리면… 모든 책 세계가 무너져!"</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_08.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 8</span>
+        <h2>도서관의 심장: 최종전투</h2>
+        <p>블랙 페이지단은 금지된 책에 힘을 흡수하려 했다. 블랙 리더는 손을 책 위에 올리며 말했다. "도서관의 모든 기억은 이제 나의 힘이 된다."</p>
+        <p>금지된 책은 긴 비명을 지르듯 검고 붉은 파동을 사방으로 흘렸다.</p>
+        <p>그 순간 《루멘 코덱스》가 스스로 나타났다. 코덱스는 민준에게 말했다. "너는 준비되었다. 도서관의 진짜 수호자로서 이 어둠을 정화하라."</p>
+        <p>민준, 수아, 태영의 인장이 세 가지 색의 거대한 빛으로 변했다.</p>
+        <p><strong>민준:</strong> 청록빛 지혜 / <strong>수아:</strong> 은빛 관찰 / <strong>태영:</strong> 붉은 용기</p>
+        <p>세 빛줄기가 한곳으로 모이며 도서관 심장에서 거대한 빛의 구체가 만들어졌다.</p>
+        <p>블랙 페이지단은 이 빛에 밀려 다리를 잃을 정도로 흔들렸다. 펼쳐진 전투는 시즌 전체 중 가장 격렬했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_09.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 9</span>
+        <h2>금지된 책의 정화</h2>
+        <p>전투 끝, 민준은 금지된 책 앞에 선다.</p>
+        <p>책은 여전히 격렬하게 흔들리고 있었다. 속에서 수많은 글자들이 비명을 지르며 날아다녔다.</p>
+        <p>민준은 조심스럽게 책에 손을 얹었다. 책은 민준을 밀어내려 했지만 민준의 손등에서 지혜의 문양이 강하게 빛났다.</p>
+        <p>"도서관의 힘은… 소유하는 게 아니라 지키는 거야."</p>
+        <p>민준이 외치자 세 아이의 인장이 동시에 빛을 내며 금지된 책 안으로 흘러 들어갔다.</p>
+        <p>금지된 책은 천천히 검은빛을 잃고 회색빛, 그리고 희미한 금빛으로 변했다.</p>
+        <p>책은 마지막으로 아이들에게 이렇게 말했다. "고맙다… 나도 원래는 도서관을 지키던 책이었다…"</p>
+        <p>그리고 조용히 잠들었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/library-story/library_part3_10.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 10</span>
+        <h2>새로운 도서관의 탄생 (대단원)</h2>
+        <p>금지된 서고가 무너지기 시작했다. 루미는 급하게 외쳤다. "빨리! 심층계가 닫히기 전에 올라가야 해!"</p>
+        <p>아이들은 무너지는 계단을 뛰어 올라 도서관 중앙으로 겨우 탈출했다.</p>
+        <p>마지막 계단을 넘는 순간, 심층계 입구는 순식간에 사라졌다.</p>
+        <p><strong>엔딩 장면: 재탄생하는 도서관</strong></p>
+        <p>도서관 전체가 환하게 빛났다. 사라졌던 책들의 글자가 하나둘 돌아왔다. 색을 잃은 세계들이 다시 빛을 되찾기 시작했다.</p>
+        <p>루미는 아이들을 바라보며 말했다. "오늘… 도서관은 다시 태어났어. 그리고 너희도 진짜 수호자가 되었어."</p>
+        <p>민준, 수아, 태영은 서로를 바라보며 미소를 지었다.</p>
+        <p>이제 도서관은 밤만 되면 조용히 속삭인다. "고마워, 수호자들. 너희가 지킨 이 이야기들이 앞으로도 세상을 밝힐 것이다."</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24">
+      <path d="M12 4l-8 8h6v8h4v-8h6z"/>
+    </svg>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="window.location.href='/menu.html'">← 메인으로</button>
+  </div>
+
+  <script>
+    // 스크롤 기반 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+
+    let currentBg = '';
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        // 섹션이 화면 중앙에 있을 때
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+
+      // 스크롤 인디케이터 숨기기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '0.7';
+      }
+    }
+
+    // 초기 로드
+    window.addEventListener('load', () => {
+      updateBackground();
+      // 첫 번째 카드는 바로 표시
+      const firstCard = sections[0].querySelector('.story-card');
+      if (firstCard) {
+        firstCard.classList.add('active');
+      }
+    });
+
+    // 스크롤 이벤트
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  </script>
+</body>
+</html>

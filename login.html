@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>단단국어 로그인</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poor+Story&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg: #f2ded5;
+      --card: #fff;
+      --primary: #8b2f2f;
+      --text: #2f2f2f;
+    }
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      /* ✅ 동화풍 기본 폰트 + 기존 폰트들 백업 */
+      font-family: "Poor Story", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .login-wrap {
+      background: var(--card);
+      width: min(420px, 95vw);
+      border-radius: 16px;
+      padding: 28px 28px 32px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      border: 1px solid rgba(139,47,47,0.05);
+      position: relative; /* 모드 전환 버튼 기준점 */
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #6a5a4f;
+      margin-bottom: 22px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus {
+      border-color: rgba(139,47,47,0.4);
+      box-shadow: 0 0 0 3px rgba(139,47,47,0.08);
+    }
+    .field { margin-bottom: 16px; }
+
+    .btn {
+      width: 100%;
+      margin-top: 8px;
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 11px 0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.12s;
+    }
+    .btn:hover {
+      filter: brightness(1.03);
+    }
+
+    .link-line {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #6a5a4f;
+    }
+    .link-line a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* 회원가입/로그인 전환용 버튼 */
+    .link-btn {
+      border: none;
+      background: none;
+      padding: 0 4px;
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* 🎄 크리스마스 배경 GIF */
+    .bg-gif {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: url('/images/christmas_bg.gif') no-repeat center center;
+      background-size: cover;
+    }
+
+    /* ===== 로그인 에러 모달 ===== */
+    .login-error-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(2px);
+    }
+    .login-error-overlay.show {
+      display: flex;
+    }
+    .login-error-modal {
+      background: #fffaf3;
+      border-radius: 18px;
+      padding: 24px 26px 22px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.16);
+      border: 1px solid rgba(139,47,47,0.1);
+    }
+    .login-error-icon {
+      font-size: 42px;
+      margin-bottom: 8px;
+    }
+    .login-error-title {
+      font-weight: 700;
+      font-size: 17px;
+      margin-bottom: 6px;
+      color: #6f2e2e;
+    }
+    .login-error-msg {
+      font-size: 13px;
+      color: #8d6f51;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .login-error-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .login-error-btn {
+      min-width: 90px;
+      border-radius: 999px;
+      border: none;
+      padding: 7px 14px 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .login-error-btn.cancel {
+      background: #f2e3d5;
+      color: #6b4a2a;
+    }
+    .login-error-btn.primary {
+      background: #8b2f2f;
+      color: #fff;
+    }
+    .login-error-btn:hover {
+      opacity: 0.92;
+    }
+
+    /* ✅ 모드 전환 버튼 (학생 로그인 화면용) */
+    .mode-switch {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(0,0,0,0.15);
+      color: var(--primary);
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .mode-switch:hover {
+      background: #f7ece5;
+    }
+
+    /* ✅ 로그인/회원가입 패널 토글 */
+    .panel {
+      display: none;
+    }
+    .panel.active {
+      display: block;
+    }
+
+    /* ✅ 진단테스트 바로가기 이미지 (좌측 하단) */
+    .diagnostic-link {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      z-index: 1000;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      animation: float 3s ease-in-out infinite;
+    }
+    .diagnostic-link img {
+      width: 120px;
+      height: auto;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    }
+    .diagnostic-link:hover {
+      transform: scale(1.05);
+    }
+
+    /* 둥실둥실 떠다니는 애니메이션 */
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .diagnostic-link {
+        bottom: 20px;
+        left: 20px;
+      }
+      .diagnostic-link img {
+        width: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gif"></div>
+
+  <div class="login-wrap">
+    <a href="/admin-login" class="mode-switch">관리자모드</a>
+
+    <div class="title" id="loginTitle">브레인 문해원에 오신 걸 환영합니다</div>
+    <div class="subtitle" id="loginSubtitle">
+      가입했던 이름/학년/전화번호로 로그인하세요.
+    </div>
+
+    <!-- ✅ 로그인 패널 -->
+    <div id="login-panel" class="panel active">
+      <form id="login-form" action="/login" method="POST" autocomplete="on">
+        <div class="field">
+          <label for="grade">학년</label>
+          <input
+            id="grade"
+            name="grade"
+            type="text"
+            placeholder="예) 고3"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="name">이름</label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            placeholder="예) 홍길동"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="password">비밀번호(전화번호)</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="전화번호 입력"
+            inputmode="numeric"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button class="btn" type="submit">로그인</button>
+      </form>
+
+      <div class="link-line">
+        처음이신가요?
+        <button type="button" id="open-register" class="link-btn">
+          회원가입
+        </button>
+      </div>
+    </div> <!-- 🔹 로그인 패널 닫는 div -->
+
+    <!-- ✅ 회원가입 패널 -->
+    <div id="register-panel" class="panel">
+      <form id="register-form" action="/register" method="POST" autocomplete="on">
+        <div class="field">
+          <label for="reg-grade">학년</label>
+          <input
+            id="reg-grade"
+            name="grade"
+            type="text"
+            placeholder="예) 고3"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="reg-name">이름</label>
+          <input
+            id="reg-name"
+            name="name"
+            type="text"
+            placeholder="예) 홍길동"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="reg-phone">전화번호(비밀번호로 사용)</label>
+          <input
+            id="reg-phone"
+            name="phone"
+            type="text"
+            placeholder="예) 01012345678"
+            inputmode="numeric"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="reg-academy">학교명 / 학원명</label>
+          <input
+            id="reg-academy"
+            name="academyName"
+            type="text"
+            placeholder="예) 단단국어 대치점"
+            required
+          />
+        </div>
+
+        <button class="btn" type="submit">회원가입 완료</button>
+      </form>
+
+      <div class="link-line">
+        이미 가입하셨나요?
+        <button type="button" id="back-to-login" class="link-btn">
+          로그인으로 돌아가기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 로그인 에러 모달 -->
+  <div class="login-error-overlay" id="loginErrorOverlay">
+    <div class="login-error-modal">
+      <div class="login-error-icon">🚫</div>
+      <div class="login-error-title" id="loginErrorTitle">로그인에 실패했어요</div>
+      <div class="login-error-msg" id="loginErrorMsg">
+        로그인 정보가 올바르지 않습니다.<br />
+        이름, 학년, 비밀번호를 다시 확인해 주세요.
+      </div>
+      <div class="login-error-actions">
+        <button
+          type="button"
+          class="login-error-btn cancel"
+          id="loginErrorCloseBtn"
+        >
+          닫기
+        </button>
+        <button
+          type="button"
+          class="login-error-btn primary"
+          id="loginErrorRetryBtn"
+        >
+          다시 입력하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 학생 정보 localStorage 저장 + 패널 토글 -->
+  <script>
+    function buildStudentKey(stu) {
+      const cleanPhone = (stu.phone || "").replace(/\D/g, ""); // 숫자만
+      const cleanName = (stu.name || "").trim();
+      const cleanGrade = (stu.grade || "").trim();
+      return `${cleanGrade}_${cleanName}_${cleanPhone}`;
+    }
+
+    function showPanel(which) {
+      const loginPanel = document.getElementById("login-panel");
+      const registerPanel = document.getElementById("register-panel");
+      const titleEl = document.getElementById("loginTitle");
+      const subtitleEl = document.getElementById("loginSubtitle");
+
+      if (!loginPanel || !registerPanel) return;
+
+      if (which === "login") {
+        loginPanel.classList.add("active");
+        registerPanel.classList.remove("active");
+        if (titleEl) titleEl.textContent = "브레인 문해원에 오신 걸 환영합니다";
+        if (subtitleEl)
+          subtitleEl.textContent = "가입했던 이름/학년/전화번호로 로그인하세요.";
+      } else if (which === "register") {
+        registerPanel.classList.add("active");
+        loginPanel.classList.remove("active");
+        if (titleEl) titleEl.textContent = "브레인 문해원 시리즈 회원가입";
+        if (subtitleEl)
+          subtitleEl.textContent = "학년·이름·전화번호·학원명을 정확히 입력해 주세요.";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // 🔥 1) 쿼리 + 경로 둘 다 보고 모드 결정
+      const params = new URLSearchParams(window.location.search);
+      let mode = params.get("mode");
+
+      // 👉 /signup 경로로 들어온 경우 자동 회원가입 모드
+      const path = window.location.pathname;
+      if (!mode && path === "/signup") {
+        mode = "register";
+      }
+
+      if (mode === "register") {
+        showPanel("register");
+      } else {
+        showPanel("login");
+      }
+
+      // 🔹 로그인 시 학생 정보 저장
+      const form = document.getElementById("login-form");
+      if (form) {
+        form.addEventListener("submit", async function (e) {
+          // ✅ 로그인 전 서버 세션 및 모든 캐시 데이터 삭제 (이전 학생 데이터 제거)
+          try {
+            // 서버 세션 삭제 (이전 학생의 세션 제거)
+            await fetch('/logout');
+          } catch (error) {
+            console.log('⚠️ 세션 삭제 오류:', error);
+          }
+
+          localStorage.clear();
+          sessionStorage.clear();
+
+          const name = document.getElementById("name").value;
+          const grade = document.getElementById("grade").value;
+          const phone = document.getElementById("password").value; // 비번=전화번호
+
+          const student = { name, grade, phone };
+          localStorage.setItem("currentStudent", JSON.stringify(student));
+
+          const studentKey = buildStudentKey(student);
+          localStorage.setItem("currentStudentKey", studentKey);
+        });
+      }
+
+      // 🔁 패널 전환 버튼
+      const openRegister = document.getElementById("open-register");
+      const backToLogin = document.getElementById("back-to-login");
+
+      if (openRegister) {
+        openRegister.addEventListener("click", function (e) {
+          e.preventDefault();
+          showPanel("register");
+        });
+      }
+      if (backToLogin) {
+        backToLogin.addEventListener("click", function (e) {
+          e.preventDefault();
+          showPanel("login");
+        });
+      }
+    });
+  </script>
+
+  <!-- ✅ loginError 쿼리 → 예쁜 팝업 -->
+  <script>
+    /* ------------------------------
+       1) 로그인 에러 타입 가져오기
+    ------------------------------ */
+    function getLoginErrorType() {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get("loginError");
+
+      if (!v) return null;            // null 이면 null
+      if (v === "1") return "wrong";  // 서버가 숫자 1로 보낸 경우 문자열 "1"
+      if (v === "pending" || v === "trashed") return v; // 특수 상태
+
+      return "wrong"; // 예외/알 수 없는 값
+    }
+
+    /* ------------------------------
+       2) 팝업 열기
+    ------------------------------ */
+    function openLoginErrorModal(type) {
+      const overlay = document.getElementById("loginErrorOverlay");
+      const titleEl = document.getElementById("loginErrorTitle");
+      const msgEl = document.getElementById("loginErrorMsg");
+
+      if (!overlay) return;
+
+      if (type === "pending") {
+        titleEl.textContent = "승인 대기 중인 계정입니다";
+        msgEl.innerHTML =
+          "아직 관리자 승인 전이라 로그인할 수 없어요.<br>" +
+          "담당 선생님께 회원 승인 요청을 해 주세요 🙂";
+      }
+      else if (type === "trashed") {
+        titleEl.textContent = "휴지 상태 계정입니다";
+        msgEl.innerHTML =
+          "현재 휴지 상태 회원이라 로그인할 수 없어요.<br>" +
+          "관리자(단딘쌤)에게 문의해 주세요.";
+      }
+      else {
+        titleEl.textContent = "로그인에 실패했어요";
+        msgEl.innerHTML =
+          "로그인 정보가 올바르지 않습니다.<br>" +
+          "이름, 학년, 비밀번호를 다시 확인해 주세요.";
+      }
+
+      overlay.classList.add("show");
+    }
+
+    /* ------------------------------
+       3) 팝업 닫기
+    ------------------------------ */
+    function closeLoginErrorModal() {
+      const overlay = document.getElementById("loginErrorOverlay");
+      if (overlay) overlay.classList.remove("show");
+    }
+
+    /* ------------------------------
+       4) 페이지 로드시 처리
+    ------------------------------ */
+    document.addEventListener("DOMContentLoaded", function () {
+      const overlay = document.getElementById("loginErrorOverlay");
+      const closeBtn = document.getElementById("loginErrorCloseBtn");
+      const retryBtn = document.getElementById("loginErrorRetryBtn");
+
+      // ⬅️ URL에서 loginError 읽기
+      const errType = getLoginErrorType();
+
+      if (errType) {
+        openLoginErrorModal(errType);
+
+        // 팝업 뜨고 난 후 URL의 쿼리 제거
+        if (window.history && window.history.replaceState) {
+          const clean = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, clean);
+        }
+      }
+
+      // 닫기 버튼
+      if (closeBtn) {
+        closeBtn.addEventListener("click", closeLoginErrorModal);
+      }
+
+      // 다시 입력 버튼 (입력창 선택)
+      if (retryBtn) {
+        retryBtn.addEventListener("click", function () {
+          closeLoginErrorModal();
+          const firstInput = document.querySelector('input[name="name"]');
+          if (firstInput) {
+            firstInput.focus();
+            firstInput.select();
+          }
+        });
+      }
+
+      // 검은 배경 클릭 시 닫기
+      if (overlay) {
+        overlay.addEventListener("click", function (e) {
+          if (e.target === overlay) closeLoginErrorModal();
+        });
+      }
+
+      // ESC로 닫기
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeLoginErrorModal();
+      });
+    });
+  </script>
+
+  <!-- ✅ 진단테스트 바로가기 이미지 -->
+  <a href="#" onclick="openDiagnosticPopup(); return false;" class="diagnostic-link">
+    <img src="/images/test.png" alt="진단테스트 바로가기">
+  </a>
+
+  <!-- ✅ 진단테스트 팝업 모달 -->
+  <div id="diagnosticModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; backdrop-filter: blur(4px);">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; width: 90%; max-width: 500px; border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+      <button onclick="closeDiagnosticPopup()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #999; line-height: 1; padding: 5px 10px; transition: color 0.2s;">&times;</button>
+
+      <div style="text-align: center; margin-bottom: 25px;">
+        <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
+        <h2 style="font-size: 24px; font-weight: 700; color: #2f2f2f; margin: 0 0 10px;">진단테스트</h2>
+        <p style="font-size: 14px; color: #6a5a4f; margin: 0;">브레인 독해력 진단평가</p>
+      </div>
+
+      <div style="background: #f8f8f8; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <p style="font-size: 14px; color: #2f2f2f; line-height: 1.6; margin: 0;">
+          독해력 수준을 정확하게 진단하고<br>
+          맞춤 학습을 시작하세요!
+        </p>
+      </div>
+
+      <button onclick="window.location.href='/diagnostic_reading_test.html'" style="width: 100%; background: linear-gradient(135deg, #8b2f2f 0%, #6a1f1f 100%); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(139,47,47,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(139,47,47,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(139,47,47,0.3)'">
+        진단테스트 시작하기
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function openDiagnosticPopup() {
+      document.getElementById('diagnosticModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDiagnosticPopup() {
+      document.getElementById('diagnosticModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    // ESC 키로 팝업 닫기
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeDiagnosticPopup();
+      }
+    });
+
+    // 배경 클릭 시 팝업 닫기
+    document.getElementById('diagnosticModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDiagnosticPopup();
+      }
+    });
+  </script>
+
+</body>
+</html>

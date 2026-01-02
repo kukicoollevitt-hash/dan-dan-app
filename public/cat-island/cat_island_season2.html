@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐱 미지의 고양이 섬 표류기 — 시즌 2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-island-story/cat_part2_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF8FAB 0%, #FFB347 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .story-card p {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #34495e;
+      margin-bottom: 15px;
+      font-weight: 400;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: transparent;
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #ffffff;
+      margin-bottom: 40px;
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 네비게이션 바 */
+    .nav-bar {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      padding: 15px 30px;
+      border-radius: 50px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-bar .title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-right: 10px;
+    }
+
+    .nav-bar .progress {
+      font-size: 14px;
+      color: #7f8c8d;
+      font-weight: 500;
+    }
+
+    .nav-bar .home-btn {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF8FAB 0%, #FFB347 100%);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-bar .home-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 143, 171, 0.4);
+    }
+
+    /* 프로그레스 바 */
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: 101;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #FF8FAB 0%, #FFB347 100%);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 24px;
+      }
+
+      .story-card p {
+        font-size: 16px;
+      }
+
+      .nav-bar {
+        padding: 12px 20px;
+        gap: 10px;
+      }
+
+      .nav-bar .title {
+        font-size: 14px;
+      }
+
+      .nav-bar .progress {
+        display: none;
+      }
+    }
+
+    /* 마지막 섹션 여유 공간 */
+    .story-section:last-child {
+      margin-bottom: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <!-- 프로그레스 바 -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- 네비게이션 바 -->
+  <div class="nav-bar">
+    <span class="title">🐱 미지의 고양이 섬 표류기 - 시즌 2</span>
+    <span class="progress" id="navProgress">PART 1 / 10</span>
+    <button class="home-btn" onclick="goHome()">← 메인으로</button>
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐱 미지의 고양이 섬 표류기</h1>
+        <p class="subtitle">
+          시즌 2 - 바람고양이들의 숨겨진 날개<br>
+          잊혀진 고양이들의 힘을 되찾아라
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-bg="cat_part2_01.jpg">
+      <div class="story-card">
+        <span class="chapter">💌 PART 1</span>
+        <h2>의문의 편지, 다시 불어온 고양이 바람</h2>
+        <p>하늘과 세나가 평소처럼 평범한 하루를 보내던 어느 날,</p>
+        <p>창문 틈 사이로 고양이 발바닥 도장이 찍힌 파란 봉투가 날아들었다.</p>
+        <p>봉투를 열자, 짧고 긴장된 글씨가 보였다.</p>
+        <p><em>"위험이 다가와. 섬의 바람이 멈추려고 해. 도와줘. — 루모"</em></p>
+        <p>같은 순간, 방 안의 공기가 갑자기 흔들리고</p>
+        <p>아이들 발치에 은빛 모래가 소용돌이치더니</p>
+        <p>눈을 뜨면 이미 <strong>바다 위를 달리는 작은 배 안이었다.</strong></p>
+        <p>하늘이 놀라 외쳤다. "세나! 우리… 다시 섬으로 가는 거야?"</p>
+        <p>세나는 두근거리는 마음으로 고개를 끄덕였다.</p>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-bg="cat_part2_02.jpg">
+      <div class="story-card">
+        <span class="chapter">🤫 PART 2</span>
+        <h2>고양이 섬의 이상한 침묵</h2>
+        <p>섬에 도착한 아이들은 바로 이상함을 느꼈다.</p>
+        <p>항상 떠들썩하던 고양이 나무마을이 침묵 속에 잠겨 있었다.</p>
+        <p>아이들이 마을로 들어가자, 고양이들이 모두 긴장된 표정으로 모여 있었다.</p>
+        <p>루모가 다가와 말했다. <em>"큰일이야. 섬의 '바람길'이 멈추고 있어."</em></p>
+        <p>하늘이 되묻자 루모는 설명했다.</p>
+        <p><em>"우리 고양이 섬은 '바람고양이 일족'이 바람을 모아 섬 전체에 나눠 주기 때문에 존재하는 곳이야.</em></p>
+        <p><em>그 바람이 멈추면… 섬이 흐려져 사라질 수도 있어."</em></p>
+        <p>세나는 눈을 크게 뜨고 물었다. "그럼 루모, 왜 바람이 멈춘 거야?"</p>
+        <p>루모는 고개를 저었다. <strong>"아무도 몰라. 그래서 너희를 부른 거야."</strong></p>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-bg="cat_part2_03.jpg">
+      <div class="story-card">
+        <span class="chapter">🏔️ PART 3</span>
+        <h2>바람고양이 절벽으로 가는 길</h2>
+        <p>루모는 아이들을 데리고 섬 북서쪽의 높은 절벽으로 안내했다.</p>
+        <p>절벽은 하늘을 찢을 듯 가파르고, 바람은 마치 숨을 참는 것처럼 고요했다.</p>
+        <p>예전엔 날개 바위가 떠다니고, 고양이들이 바람을 타고 뛰어다니던 곳.</p>
+        <p>하지만 지금은…</p>
+        <p><strong>날개 바위가 모두 바닥에 떨어져 있고</strong></p>
+        <p><strong>공기 중의 반짝임도 사라지고</strong></p>
+        <p><strong>고양이들의 귀는 축 처져 있었다</strong></p>
+        <p>절벽 꼭대기에서 '바람고양이 족장'인 미엘이 아이들을 맞았다.</p>
+        <p>미엘은 푸른 무늬가 그려진 아름다운 고양이였다.</p>
+        <p><em>"인간 아이들이여… 우리의 날개가 사라지고 있어."</em></p>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-bg="cat_part2_04.jpg">
+      <div class="story-card">
+        <span class="chapter">👻 PART 4</span>
+        <h2>바람을 훔치는 그림자</h2>
+        <p>바람 절벽 아래쪽 동굴. 그곳에서 섬 전체의 바람이 모여 순환한다.</p>
+        <p>아이들은 미엘의 안내로 동굴 안으로 들어갔다.</p>
+        <p>바위 사이로 은빛 바람이 흐르고, 천장에는 바람 문양이 반짝였다.</p>
+        <p>그런데— 동굴 깊숙한 곳에서 쉭— 하는 소리가 들렸다.</p>
+        <p>동굴 벽면에 <strong>검은 그림자 고양이들이</strong> 바람을 빨아들이듯 움직이고 있었다.</p>
+        <p>루모가 소리쳤다. <em>"저건… 바람을 훔치는 도둑들이야!"</em></p>
+        <p>그들의 몸은 연기처럼 흐릿했고 눈은 파란 불꽃처럼 흔들렸다.</p>
+        <p>그림자 고양이들은 놀랍게도 미엘의 날개 문양에서 흘러나오는 힘을 흡수하고 있었다.</p>
+        <p>세나는 용기 내서 앞으로 나섰다. "멈춰! 왜 바람을 훔치는 거야?!"</p>
+        <p>그러나 그림자 고양이들은 말이 없었다. 그저 바람만 삼키고 사라졌다.</p>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-bg="cat_part2_05.jpg">
+      <div class="story-card">
+        <span class="chapter">🔍 PART 5</span>
+        <h2>그림자 고양이의 흔적을 쫓다</h2>
+        <p>동굴 안에는 그림자 고양이들이 지나간 자국이 희미하게 남아 있었다.</p>
+        <p>발자국 대신 바람이 움푹 파인 작은 흔적들.</p>
+        <p>미엘은 그 흔적을 살피며 말했다.</p>
+        <p><em>"저들은… 바람고양이들과 같은 힘을 쓴다. 어쩌면… 나와 같은 일족이었을지도 모른다."</em></p>
+        <p>루모가 충격받은 듯 눈을 크게 뜬다. "설마… 섬을 떠난 고양이들이 만든 부족?!"</p>
+        <p>미엘은 천천히 고개를 끄덕였다.</p>
+        <p><em>"바람의 힘을 잃고 절벽에서 떨어진 고양이들은 섬에 남을 수 없었다.</em></p>
+        <p><em>그들은… 어둠 속으로 사라졌지."</em></p>
+        <p>아이들의 마음 한구석이 아려왔다.</p>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-bg="cat_part2_06.jpg">
+      <div class="story-card">
+        <span class="chapter">🏫 PART 6</span>
+        <h2>고양이 바람 학원, 잊혀진 이야기</h2>
+        <p>미엘은 아이들을 절벽 아래 숨겨진 공간으로 데려갔다.</p>
+        <p>그곳은 과거 바람고양이들이 날개를 연습하던 <strong>'고양이 바람 학원'.</strong></p>
+        <p>벽에는 오래된 글씨가 적혀 있었다.</p>
+        <p><em>"바람은 함께 날 때 힘이 된다."</em></p>
+        <p>하늘은 손가락으로 글자를 더듬으며 말했다. "같이… 날아야 힘이 된다고?"</p>
+        <p>미엘은 슬픈 눈으로 고개를 끄덕였다.</p>
+        <p><em>"그렇다. 우리가 서로를 잊을수록 바람은 흐트러지고, 고양이 섬도 약해진다."</em></p>
+        <p>세나는 불쑥 말했다. "그러면… 그림자 고양이들도 사실은 날고 싶은 거 아닐까?"</p>
+        <p>미엘은 대답하지 못했다.</p>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-bg="cat_part2_07.jpg">
+      <div class="story-card">
+        <span class="chapter">🚪 PART 7</span>
+        <h2>'바람의 문'이 열리다</h2>
+        <p>그날 밤. 절벽 위에서 기이한 소리가 들렸다.</p>
+        <p>휘이이이—— 바람이 갑자기 다시 세차게 불기 시작하더니</p>
+        <p>절벽 위 허공에 <strong>커다란 바람의 문이 열렸다.</strong></p>
+        <p>문은 푸른빛과 흰빛이 섞여 회오리쳤고,</p>
+        <p>중앙에는 고양이 날개 문양이 깜박이고 있었다.</p>
+        <p>루모가 겁먹은 목소리로 말했다.</p>
+        <p><em>"이건… 오랫동안 닫혀 있던 문이야."</em></p>
+        <p>세나는 문 안에서 작은 고양이 울음소리를 들었다.</p>
+        <p>"안에… 누가 갇힌 것 같아."</p>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-bg="cat_part2_08.jpg">
+      <div class="story-card">
+        <span class="chapter">🌑 PART 8</span>
+        <h2>문 속 세계, 잃어버린 고양이들의 땅</h2>
+        <p>아이들과 루모, 미엘은 바람의 문을 통과했다.</p>
+        <p>문 너머는 빛 하나 없이 고요한 회색 세계였다.</p>
+        <p>바람은 완전히 멈춰 있었고 곳곳에서 고양이들이 웅크려 있었다.</p>
+        <p>그들은 모두 날개 문양이 사라진 상태.</p>
+        <p>한 고양이가 떨리는 목소리로 말했다.</p>
+        <p><em>"우리는… 떨어진 고양이들. 날개를 잃어, 섬에서도 잊힌 존재들."</em></p>
+        <p>하늘은 조용히 다가가 물었다.</p>
+        <p>"혹시… 그래서 바람을 훔친 거야? 다시 날고 싶어서?"</p>
+        <p>고양이는 고개를 끄덕였다.</p>
+        <p><em>"우리는… 돌아가고 싶었어. 하지만 문양이 없어서 아무도 우리를 받아주지 않았지."</em></p>
+        <p>미엘의 눈이 흔들렸다.</p>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-bg="cat_part2_09.jpg">
+      <div class="story-card">
+        <span class="chapter">🤝 PART 9</span>
+        <h2>날개의 약속, 함께 불어오는 바람</h2>
+        <p>하늘은 깊게 숨을 들이쉬며 말했다.</p>
+        <p>"그럼, 우리가 같이 해결하자. 바람을… 모두가 나눠 쓰면 되잖아!"</p>
+        <p>세나도 외쳤다. "섬의 고양이든, 잃어버린 고양이든 다 같이 날 수 있으면 좋잖아!"</p>
+        <p>미엘은 잠시 망설였지만 곧 고개를 끄덕였다.</p>
+        <p><em>"그래… 우리 일족은 서로를 지키는 것이 원래 법이었지."</em></p>
+        <p>미엘은 날개 문양의 일부를 떼어내 잃어버린 고양이들에게 나누어 주었다.</p>
+        <p>그 순간—</p>
+        <p><strong>회색 세계 전체에 부드러운 바람이 다시 불기 시작했다.</strong></p>
+        <p><strong>잃어버린 고양이들의 몸에 옅은 날개 문양이 피어오르고</strong></p>
+        <p><strong>그들의 눈에 희미한 빛이 되돌아오고</strong></p>
+        <p><strong>공중에 은빛 바람길이 만들어졌다</strong></p>
+        <p>섬 전체로 새로운 바람이 흘러가기 시작했다.</p>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-bg="cat_part2_10.jpg">
+      <div class="story-card">
+        <span class="chapter">💨 PART 10</span>
+        <h2>다시 불어온 바람, 섬을 바꾸다</h2>
+        <p>바람의 문이 닫히며 모든 고양이들은 다시 섬으로 돌아왔다.</p>
+        <p>나무마을, 모래언덕, 절벽… 어디든 고양이들이 함께 모여 있었다.</p>
+        <p>잃어버렸던 고양이들은 섬 고양이들 사이에서 조심스럽게 자리를 잡았다.</p>
+        <p>미엘은 아이들에게 다가와 말했다.</p>
+        <p><em>"너희 덕분에 우리는 진짜 바람의 의미를 알게 되었어."</em></p>
+        <p>루모는 꼬리를 흔들며 말했다.</p>
+        <p><em>"너희가 또 올 줄 알았어! 하늘, 세나… 섬의 친구야."</em></p>
+        <p>바람 길이 다시 반짝이며 섬 전체에 따뜻한 기운이 퍼졌다.</p>
+        <p>하늘은 조용히 말했다. "언젠가 또 도와줄게. 우리는 친구니까!"</p>
+        <p>그리고 아이들 발밑에서 은빛 바람이 소용돌이치더니—</p>
+        <p>눈을 뜨자 그들은 다시 집의 방 안이었다.</p>
+        <p>창문을 여니 바람이 가볍게 아이들의 머리를 쓰다듬었다.</p>
+        <p><strong>마치 고양이 친구들의 인사처럼.</strong></p>
+        <p style="text-align: center; margin-top: 30px; font-size: 20px; color: #FF8FAB;">
+          <strong>— 시즌 2 끝 —</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progressBar');
+    const navProgress = document.getElementById('navProgress');
+    const totalSections = sections.length;
+
+    // 스크롤 이벤트로 배경 이미지 및 카드 애니메이션
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // 프로그레스 바 업데이트
+      const scrollPercent = (scrollY / (documentHeight - windowHeight)) * 100;
+      progressBar.style.width = scrollPercent + '%';
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top;
+        const sectionHeight = rect.height;
+
+        // 카드 애니메이션
+        const card = section.querySelector('.story-card');
+        if (sectionTop < windowHeight * 0.75 && sectionTop > -sectionHeight * 0.5) {
+          card.classList.add('active');
+        }
+
+        // 배경 이미지 전환
+        if (sectionTop < windowHeight * 0.5 && sectionTop > -sectionHeight * 0.5) {
+          const bgImage = section.getAttribute('data-bg');
+          if (bgImage) {
+            mapContainer.style.backgroundImage = `url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-island-story/${bgImage})`;
+          }
+
+          // 네비게이션 업데이트
+          navProgress.textContent = `PART ${index + 1} / ${totalSections}`;
+        }
+      });
+    });
+
+    // 페이지 로드 시 첫 섹션 활성화
+    window.addEventListener('load', () => {
+      const firstCard = sections[0].querySelector('.story-card');
+      firstCard.classList.add('active');
+    });
+
+    // 홈 버튼
+    function goHome() {
+      window.location.href = '/menu.html';
+    }
+
+    // 키보드 네비게이션 (ESC로 나가기)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        goHome();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌙 구운몽</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/guunmong/guunmong01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5c4d7d 0%, #3d3259 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #5c4d7d;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #5c4d7d;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #5c4d7d 0%, #3d3259 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌙 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌙 구운몽</h1>
+        <p class="subtitle">
+          고전소설<br>
+          인생무상과 깨달음
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 성진의 수행과 마음속 흔들림">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🙏</span>
+          성진의 수행과 마음속 흔들림
+        </h2>
+        <div class="story-text">『구운몽』은 당나라 남악 형산의 절에서 수행하는 승려 성진의 이야기로 시작된다. 성진은 육관대사의 제자로서 불경을 익히고 수행에 힘쓰며 겉으로 보기에는 모범적인 승려의 모습을 보인다.
+
+그러나 그의 마음속에는 아직 완전히 지워지지 않은 인간적인 욕망이 남아 있다. 그는 속세의 삶이 과연 모두 허망한 것인지, 인간이 누리는 부귀와 사랑이 정말 가치 없는 것인지에 대해 은근한 호기심을 품고 있다.
+
+이러한 내면의 흔들림은 성진이 아직 참된 깨달음에 이르지 못했음을 보여 주며, 이후 전개될 꿈의 서사를 예고한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 연회에서 만난 여덟 여인">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">👸</span>
+          연회에서 만난 여덟 여인
+        </h2>
+        <div class="story-text">어느 날 육관대사는 성진에게 절 밖 연회에 다녀오라는 심부름을 시킨다. 성진은 연회 자리에서 세속의 화려함과 즐거움을 직접 목격하게 되고, 그곳에서 여덟 명의 아름다운 여인을 차례로 만난다.
+
+이 여인들은 뛰어난 미모와 교양, 각기 다른 매력을 지닌 인물들로, 성진은 그들을 보며 마음이 크게 흔들린다. 그는 승려의 신분을 지키려 하지만, 여인들에 대한 인상이 쉽게 지워지지 않는다.
+
+이 장면은 성진의 욕망이 본격적으로 드러나는 계기이며, 육관대사가 그를 시험하게 되는 중요한 출발점이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 육관대사의 판단과 꿈의 시작">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">💭</span>
+          육관대사의 판단과 꿈의 시작
+        </h2>
+        <div class="story-text">연회에서 돌아온 성진의 마음 상태를 꿰뚫어 본 육관대사는 그가 아직 이론적인 수행에 머물러 있다고 판단한다. 육관대사는 성진을 꾸짖기보다는, 욕망의 세계를 직접 겪게 하여 스스로 깨닫게 하는 길을 택한다.
+
+그날 밤 성진은 깊은 잠에 빠지고, 꿈속에서 전혀 다른 삶을 살게 된다.
+
+이 순간부터 『구운몽』의 핵심 구조인 '꿈속의 인생'이 시작된다. 성진은 더 이상 승려가 아닌, 속세의 인물로 다시 태어나게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 양소유로 태어나다">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">👶</span>
+          양소유로 태어나다
+        </h2>
+        <div class="story-text">성진은 꿈속에서 양소유라는 인물로 환생한다. 양소유는 뛰어난 외모와 재능을 타고난 인물로 태어나, 어려서부터 총명함을 드러낸다.
+
+그는 학문에 힘써 과거에 급제하고, 젊은 나이에 높은 벼슬에 오르며 빠르게 출세한다.
+
+양소유의 삶은 성진이 은근히 동경하던 속세의 성공과 영광을 그대로 구현한 모습이다. 이 단계에서 그는 인간이 누릴 수 있는 이상적인 삶의 출발점에 서게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 여덟 여인과의 인연">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">💕</span>
+          여덟 여인과의 인연
+        </h2>
+        <div class="story-text">양소유는 차례로 여덟 명의 여인과 인연을 맺어 부부가 된다. 이 여인들은 현실에서 성진이 연회에서 만났던 여인들의 화신으로, 각각 다른 성격과 재능을 지니고 있다.
+
+양소유는 사랑과 부부의 정을 통해 인간적인 행복을 깊이 경험한다. 그는 권력과 명예뿐만 아니라 사랑까지 모두 손에 넣으며, 인간이 꿈꾸는 가장 완전한 삶을 살아가는 듯 보인다.
+
+이 시기는 양소유 인생의 절정이라 할 수 있다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 전쟁과 시련의 시작">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">⚔️</span>
+          전쟁과 시련의 시작
+        </h2>
+        <div class="story-text">그러나 양소유의 삶은 영원히 평온하지 않다. 나라에 전쟁이 일어나고, 그는 장수로 나서 전쟁을 지휘하게 된다. 전쟁 속에서 그는 수많은 죽음과 이별, 불안과 공포를 경험한다.
+
+또한 정치적 음모와 권력 다툼 속에서 인간관계의 허무함도 깨닫게 된다.
+
+이 과정에서 양소유는 부귀와 권세가 인간을 완전히 지켜 주지 못한다는 사실을 점차 실감하게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 인생의 덧없음 인식">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🍂</span>
+          인생의 덧없음 인식
+        </h2>
+        <div class="story-text">시간이 흐르며 양소유는 젊음과 영광이 서서히 사라지는 것을 느낀다. 사랑하던 사람들과의 이별, 권력의 약화, 육체의 쇠퇴가 그를 찾아온다.
+
+그는 한때 자신이 모든 것을 가졌다고 믿었지만, 그것들이 얼마나 쉽게 무너질 수 있는지를 경험한다.
+
+이 단계에서 양소유는 인생의 즐거움이 결국 덧없다는 사실을 점점 깨닫기 시작한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 모든 성취의 붕괴">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">💨</span>
+          모든 성취의 붕괴
+        </h2>
+        <div class="story-text">결국 양소유가 쌓아 올린 부귀와 명예는 모두 사라진다. 권력은 다른 이의 손으로 넘어가고, 함께했던 사람들은 흩어진다.
+
+그는 홀로 남아 자신의 삶을 되돌아보며 깊은 허무에 빠진다. 인간으로서 누릴 수 있는 모든 것을 경험했음에도, 마음속 공허함은 채워지지 않는다.
+
+이는 욕망의 세계가 가진 근본적인 한계를 드러내는 장면이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 꿈에서 깨어나다">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">👁️</span>
+          꿈에서 깨어나다
+        </h2>
+        <div class="story-text">모든 것을 잃은 순간, 양소유의 삶은 갑작스럽게 끝나고 성진은 잠에서 깨어난다. 그는 다시 절로 돌아와 승려의 모습으로 육관대사 앞에 서 있다.
+
+방금까지의 인생이 한순간의 꿈이었다는 사실을 깨닫고 큰 충격을 받는다.
+
+그러나 동시에 그는 인간 세상의 부귀와 사랑, 권력이 모두 한바탕 꿈에 불과하다는 진리를 분명히 인식하게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 깨달음과 결말">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">☸️</span>
+          깨달음과 결말
+        </h2>
+        <div class="story-text">꿈에서 깨어난 성진은 이전과 달리 세속의 욕망에 흔들리지 않는다. 그는 양소유로서 겪었던 모든 경험을 통해, 욕망을 직접 겪어 보아야만 그 허망함을 알 수 있다는 사실을 깨닫는다.
+
+성진은 육관대사의 가르침을 깊이 이해하며 수행에 더욱 전념하고, 참된 깨달음의 길로 나아간다.
+
+『구운몽』은 인간의 삶과 욕망, 부귀와 사랑이 결국 한바탕 꿈과 같다는 불교적 세계관을 통해 인생의 본질을 성찰하게 하는 작품으로 마무리된다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌙 구운몽</h1>
+        <p class="subtitle">
+          고전소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/guunmong/guunmong01.jpg',
+      '/images/guunmong/guunmong02.jpg',
+      '/images/guunmong/guunmong03.jpg',
+      '/images/guunmong/guunmong04.jpg',
+      '/images/guunmong/guunmong05.jpg',
+      '/images/guunmong/guunmong06.jpg',
+      '/images/guunmong/guunmong07.jpg',
+      '/images/guunmong/guunmong08.jpg',
+      '/images/guunmong/guunmong09.jpg',
+      '/images/guunmong/guunmong10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🌙 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

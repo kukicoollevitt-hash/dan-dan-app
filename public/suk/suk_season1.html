@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 숙향전</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/suk/suk01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #e91e63;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #e91e63;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #e91e63 0%, #ad1457 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌸 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌸 숙향전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          운명을 이겨낸 사랑의 서사
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 숙향의 출생과 어린 시절, 운명을 예고하는 기이한 징조">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">⭐</span>
+          숙향의 출생과 어린 시절, 운명을 예고하는 기이한 징조
+        </h2>
+        <div class="story-text">옛날 어느 지방 고을에 명망 높고 학식 깊은 가문이 있었다. 그 집안에서 숙향이라는 딸이 태어났는데, 그녀가 태어나던 날 밤하늘엔 유난히 밝은 별빛이 비치고, 뜰에서 난데없는 향기가 퍼졌다. 사람들은 "이 아이는 평범치 않은 운명을 지니고 태어났다"고 수군거렸다.
+
+숙향은 어릴 때부터 총명하고 아름다웠으며, 글과 음악, 바느질에 이르기까지 무엇 하나 부족함이 없었다. 부모는 이런 딸을 귀하게 키우며 "언젠가 이 아이에게 큰 인연이 찾아올 것"이라 믿었다.
+
+그러나 운명은 그녀에게 순탄함만을 약속하지 않았다. 숙향이 겨우 일곱 살이던 해, 집안은 뜻밖의 모함을 받아 관가의 박해를 받게 된다. 부모는 누명을 씻기 위해 먼 길을 떠났고, 숙향은 하녀와 함께 피신하듯 다른 지방으로 보내졌다.
+
+이것이 훗날 그녀의 기구한 여정, 끝없는 이별과 재회의 서막이었다. 숙향은 아직 어리지만 이미 운명의 물결 속으로 떠밀려가고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 원앙금(숙향의 정혼자)과의 운명적 만남">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">💕</span>
+          원앙금(숙향의 정혼자)과의 운명적 만남
+        </h2>
+        <div class="story-text">숙향이 안전하게 지내던 어느 날, 마을 부잣집의 아들 원앙금과 우연히 마주치게 된다. 두 사람은 첫눈에 강한 인연을 느꼈고, 서로의 마음이 자연스럽게 끌렸다.
+
+원앙금은 유순한 성품과 훌륭한 학문을 지닌 인재였으며, 숙향의 아름다움과 지성에 매료되었다. 두 사람은 종종 글을 주고받으며 가까워졌고, 어느 날 원앙금의 부모는 두 가문의 인연을 맺기 위해 혼약을 제안한다.
+
+숙향의 하녀는 먼 고향에 있는 부모에게 이 소식을 알렸고, 부모는 "딸이 평생 의지할 인연을 만났구나"라며 기뻐했다. 숙향과 원앙금은 서로를 진심으로 아끼며 언젠가 함께 살 날을 꿈꿨다.
+
+그러나 세상은 늘 행복과 불행을 동시에 준비한 듯, 혼약이 이루어진 직후 둘의 운명을 뒤흔드는 거센 파도가 다가오고 있었다. 그들은 아직 아무것도 알지 못했고, 사랑은 가장 아름다운 순간에 더 큰 시련을 몰고 오는 법이었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 이별의 시작, 해적에게 납치된 숙향">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">🏴‍☠️</span>
+          이별의 시작, 해적에게 납치된 숙향
+        </h2>
+        <div class="story-text">혼약을 맺은 기쁨도 잠시, 숙향의 집은 다시금 도적 떼와 해적들의 습격을 받게 된다. 당시 지방은 혼란스러웠고, 바닷길을 장악한 해적들이 여인들을 납치해 팔아넘기곤 했다.
+
+숙향은 하녀와 함께 배에 실려 낯선 바다로 끌려가고, 원앙금에게 이 소식은 번개처럼 전해졌다. 그는 숙향을 되찾기 위해 사람을 모아 뒤쫓았지만, 이미 해적선은 먼 바다로 사라진 뒤였다.
+
+숙향은 비탄 속에서 원앙금을 떠올리며 "죽더라도 다시 만나겠다"는 마음을 되새겼다. 해적들은 숙향의 아름다움을 보고 다른 나라 상인에게 비싼 값에 팔려고 했고, 숙향은 원치 않는 운명에 의해 타국으로 끌려가는 비극의 길에 올라섰다.
+
+그녀의 손에는 원앙금과 나누었던 작은 노리개 하나만이 남아 있었고, 그것을 꼭 쥔 채 눈물을 흘렸다. 운명은 두 사람을 가혹하게 갈라놓으며 새로운 시련의 장을 열고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 타국에서의 유배 같은 삶, 숙향의 재능이 드러나다">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🌏</span>
+          타국에서의 유배 같은 삶, 숙향의 재능이 드러나다
+        </h2>
+        <div class="story-text">해적선은 먼 바다 건너 이국의 항구에 도착했고, 숙향은 부유한 상인에게 '비범한 미모의 여인'이라는 이유로 팔려갔다. 새로운 나라의 언어도 문화도 알지 못한 채, 그녀는 이방인의 집에서 불안한 삶을 시작해야 했다.
+
+하지만 숙향은 총명함을 잃지 않았다. 곧 그 나라 말과 예절을 빠르게 익혔고, 바느질과 글솜씨도 뛰어나 그 집안 사람들에게 존경을 받기 시작했다.
+
+그녀의 존재는 점차 식솔들 사이에서 소문이 퍼졌고, 어떤 이들은 숙향을 왕궁에 들여 보내고 싶어 했다. 하지만 숙향은 마음속에 오직 원앙금만을 두고 있었기에 어떤 유혹도 받아들이지 않았다.
+
+이국의 밤, 숙향은 자주 달을 보며 고향을 떠올렸다. "원앙금은 나를 잊지 않았을까? 우리 인연은 여기서 끝나는 것일까?" 하지만 그녀는 스스로를 다독이며 언젠가 돌아갈 방법을 찾기로 결심한다. 희망을 포기하지 않는 마음이 숙향을 더 강하고 깊은 사람으로 성장시켰다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 숙향의 도피와 새로운 위기, 다시 잡혀가다">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">🌊</span>
+          숙향의 도피와 새로운 위기, 다시 잡혀가다
+        </h2>
+        <div class="story-text">숙향은 결국 이국에서 탈출하기로 결심한다. 함께 지내던 하녀가 목숨을 걸고 도와주는 바람에, 숙향은 몰래 배에 올라 고향을 향한 항로를 탔다.
+
+그러나 고난은 끝나지 않았다. 배가 폭풍우를 만나 침몰하고, 숙향은 떠내려가듯 또 다른 해안에 도착한다. 이곳은 이전보다 더 위험한 지역이었다.
+
+곧 산적들이 그녀를 발견해 붙잡고는 몸값을 요구하려 했고, 숙향은 또다시 억울한 포로 신세가 되었다. 그녀는 인생에서 반복되는 불행에 절망하면서도, "이 모든 고난은 반드시 끝날 것이다"라고 믿었다.
+
+산적 우두머리는 숙향을 팔아 금전을 얻으려 했으나, 그 지역의 관리들이 산적 소굴을 치는 과정에서 숙향은 극적으로 구출된다. 관리들은 그녀의 교양과 품위를 보고 신분이 범상치 않음을 알아차렸고, 임시로 관가에 보호 조치를 한다.
+
+숙향은 조금씩 고향에 돌아갈 희망이 보이기 시작했다고 느꼈지만, 아직 운명의 바퀴는 완전히 돌지 않았다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 원앙금의 여정, 숙향을 찾기 위한 끝없는 방황">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">🚶</span>
+          원앙금의 여정, 숙향을 찾기 위한 끝없는 방황
+        </h2>
+        <div class="story-text">숙향이 낯선 나라와 길 위에서 고생하는 동안, 원앙금 역시 사랑을 지키기 위해 고난의 길을 걷고 있었다. 숙향이 납치되었다는 소식 이후 그는 눈물과 절망 속에서도 포기하지 않고 그녀를 찾기 위해 남쪽·서쪽·바닷길까지 모든 곳을 헤매었다.
+
+상인과 뱃사람들에게 정보를 묻고, 위험한 항구까지 찾아가며 그녀의 흔적을 좇았다. 그러나 사람들의 말은 제각각이었고, 어떤 이는 "이미 죽었다더라"고 말해 원앙금을 절망에 빠뜨렸다.
+
+하지만 그는 숙향과 했던 약속, 서로의 마음을 믿으며 더욱 단단해졌다. 원앙금은 풍랑에 배가 뒤집히는 위기도 겪고, 돈이 다 떨어져 걸식하며 떠돌기도 했다.
+
+그럼에도 불구하고 한 번도 '포기'라는 말을 마음에 품지 않았다. 이 시기 원앙금은 '숙향을 향한 사랑'이라는 단 한 가지 목적만으로 살아갔다. 그 사랑은 그의 삶을 지탱하는 유일한 등불이었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 극적인 재회, 서로를 알아보는 순간">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">😭</span>
+          극적인 재회, 서로를 알아보는 순간
+        </h2>
+        <div class="story-text">세월이 흘러, 숙향은 마침내 조선으로 돌아오는 상인을 만나 그의 도움을 받아 고향 땅을 밟게 되었다. 그러나 집안은 예전과 달리 쇠락해 있었고, 부모는 숙향이 죽은 줄 알고 객지에서 눈물로 세월을 보낸 뒤 이미 세상을 떠난 상태였다.
+
+숙향은 부모의 무덤 앞에서 통곡하며, 이제 남은 인연은 원앙금뿐이라고 생각한다. 한편 원앙금은 숙향의 생사조차 모른 채 여전히 떠돌아다니고 있었다.
+
+그러던 어느 날, 그는 우연히 절 앞에서 글을 쓰는 여인을 발견한다. 바람에 흩날리는 글씨체, 붓 끝의 섬세한 떨림… 그것은 숙향이 생전에 쓰던 글씨와 너무도 닮아 있었다.
+
+그는 놀라 여인을 바라보았고, 여인 역시 원앙금의 얼굴을 보는 순간 숨이 멎는 듯했다. "원… 원앙금인가요?" "숙향… 정말 그대인가?"
+
+두 사람은 서로의 얼굴을 쓰다듬으며 오열했다. 기나긴 시간과 고난을 뚫고, 마침내 운명의 한 점에서 다시 만난 것이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 헤어짐의 상처를 치유하는 시간, 서로의 고난을 듣다">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">💑</span>
+          헤어짐의 상처를 치유하는 시간, 서로의 고난을 듣다
+        </h2>
+        <div class="story-text">재회한 두 사람은 한동안 말을 잇지 못하고 서로의 손을 잡은 채 눈물을 흘렸다. 이후 숙향은 이국에서 겪은 고난, 수차례 죽을 뻔했던 순간들, 끝없이 원앙금을 떠올렸던 마음을 하나하나 들려주었다.
+
+원앙금도 역시 자신의 방황과 고통, 그리고 그녀를 향한 믿음이 자신을 살렸다고 고백한다. 두 사람은 운명이 자신들을 너무 가혹하게 시험했다고 느끼며, 이제야 찾아온 평화를 감사히 여겼다.
+
+숙향은 원앙금에게 "이제는 부디 나를 두고 어디 가지 말아요"라고 했고, 원앙금은 "이제는 그대의 손을 평생 놓지 않겠다"고 약속한다.
+
+하지만 숙향이 돌아온 집안은 여전히 어려웠고, 둘은 다시 삶을 일으켜야 하는 현실을 마주했다. 그럼에도 서로가 있다는 사실만으로도 두 사람은 모든 고난을 이겨낼 수 있었다. 슬픔은 사랑으로 치유되고 있었고, 숙향의 마음도 점차 평온을 되찾아 갔다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 새로운 위험, 모함과 시험이 다시 찾아오다">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">⚠️</span>
+          새로운 위험, 모함과 시험이 다시 찾아오다
+        </h2>
+        <div class="story-text">숙향의 아름다움과 원앙금의 명성이 다시 세상에 알려지자, 질투한 지역 관리가 두 사람을 모함하기 시작했다. 그는 숙향이 이국에서 돌아온 과정에 의문을 제기하며 "간첩일지도 모른다"는 억지 고발을 한다.
+
+숙향과 원앙금은 관아에 붙들려가 억울한 취조를 받으며 다시금 생이별의 위기에 놓인다.
+
+그러나 숙향은 이국에서 도움을 준 상인과 관리들에게 미리 감사의 편지를 보내두었고, 그들이 숙향의 선량함과 정체를 증명하기 위해 직접 관청을 찾아왔다.
+
+결국 관리는 거짓 혐의를 씌운 사실이 밝혀져 처벌을 받았다. 이 일을 통해 숙향과 원앙금은 세상은 언제나 평탄하지 않다는 것을 다시금 깨달았지만, 서로를 지키려는 사랑은 더욱 단단해졌다.
+
+이 고난은 두 사람의 신뢰를 시험하는 마지막 관문이었고, 그들은 결국 서로를 향한 마음이 결코 흔들리지 않음을 확인했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 사랑의 완성, 혼례와 새로운 출발">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">💒</span>
+          사랑의 완성, 혼례와 새로운 출발
+        </h2>
+        <div class="story-text">모든 고난이 끝나자 두 사람은 마침내 정식 혼례를 치르기 위한 준비를 시작했다. 이번 혼례는 비밀도, 두려움도 없는 정당한 예식이었다. 고향 사람들은 숙향의 기구한 삶을 불쌍히 여기면서도, 두 사람이 운명을 이겨내고 다시 만난 것을 기적이라 말하며 축복했다.
+
+혼례 날, 숙향과 원앙금은 서로를 바라보며 깊고도 단단한 사랑을 다시 약속한다. "천 번을 이별해도, 우리는 다시 만날 것입니다."
+
+이 혼례는 단순한 결혼이 아니라, 운명과 시련을 모두 이겨낸 사랑의 완성이었다.
+
+이후 두 사람은 함께 학문을 닦고, 가난한 사람들을 돕고, 서로의 상처를 보듬으며 평온하게 살아갔다. 숙향의 이름은 '끝내 사랑을 지켜낸 여인'으로 후대에 길이 남게 되었다.
+
+이렇게 『숙향전』은 기구한 운명 속에서도 사랑과 의지는 결코 꺾이지 않는다는 메시지를 담으며 아름답게 마무리된다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌸 숙향전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/suk/suk01.jpg',
+      '/images/suk/suk02.jpg',
+      '/images/suk/suk03.jpg',
+      '/images/suk/suk04.jpg',
+      '/images/suk/suk05.jpg',
+      '/images/suk/suk06.jpg',
+      '/images/suk/suk07.jpg',
+      '/images/suk/suk08.jpg',
+      '/images/suk/suk09.jpg',
+      '/images/suk/suk10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🌸 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>
