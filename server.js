@@ -9242,7 +9242,14 @@ app.get("/my-learning", async (req, res) => {
         <!-- ✨ Today 나의 AI 학습 기록 섹션 -->
         <div class="today-section">
           <div class="section-title">📅 Today 나의 AI 학습 기록</div>
-          <p class="section-description">오늘 완료한 학습 기록입니다.</p>
+          <p class="section-description" id="todayDescription">오늘 완료한 학습 기록입니다.</p>
+
+          <!-- 날짜 네비게이션 -->
+          <div class="date-navigator" style="display:flex; justify-content:center; align-items:center; gap:16px; margin-bottom:16px;">
+            <button id="datePrevBtn" onclick="changeDate(-1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❮</button>
+            <span id="currentDateDisplay" style="color:#fff; font-size:18px; font-weight:600; min-width:140px; text-align:center;"></span>
+            <button id="dateNextBtn" onclick="changeDate(1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❯</button>
+          </div>
 
           <div id="todayTableContainer">
             <!-- JavaScript에서 동적 렌더링 -->
@@ -11043,18 +11050,77 @@ app.get("/my-learning", async (req, res) => {
         }
 
         // ===== Today 나의 AI 학습 기록 렌더링 (나의 AI 학습 분석 팝업용) =====
+        // 날짜 네비게이션을 위한 현재 선택된 날짜 (기본: 오늘)
+        let selectedDate = new Date();
+
+        // 날짜 변경 함수
+        function changeDate(delta) {
+          selectedDate.setDate(selectedDate.getDate() + delta);
+          renderTodaySection();
+        }
+        window.changeDate = changeDate;
+
+        // 날짜 포맷팅 함수 (YYYY년 MM월 DD일 (요일))
+        function formatDateKorean(date) {
+          const days = ['일', '월', '화', '수', '목', '금', '토'];
+          const y = date.getFullYear();
+          const m = date.getMonth() + 1;
+          const d = date.getDate();
+          const dayName = days[date.getDay()];
+          return y + '년 ' + m + '월 ' + d + '일 (' + dayName + ')';
+        }
+
+        // KST 기준 날짜 문자열 반환 (YYYY-MM-DD)
+        function toKSTDateString(date) {
+          const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+          return kst.toISOString().split('T')[0];
+        }
+
+        // 오늘 날짜인지 확인 (KST 기준)
+        function isToday(date) {
+          const today = new Date();
+          return toKSTDateString(date) === toKSTDateString(today);
+        }
+
         function renderTodaySection() {
           console.log('[Today] UNIT_PROGRESS_MAP keys:', Object.keys(UNIT_PROGRESS_MAP));
-          const today = new Date();
-          const todayStr = today.toISOString().split('T')[0];
+          const selectedDateStr = toKSTDateString(selectedDate);
 
-          // 오늘 날짜 학습 기록 필터링 (현재 시리즈만)
+          // 날짜 표시 업데이트
+          const dateDisplay = document.getElementById('currentDateDisplay');
+          const description = document.getElementById('todayDescription');
+          const nextBtn = document.getElementById('dateNextBtn');
+
+          if (dateDisplay) {
+            dateDisplay.textContent = formatDateKorean(selectedDate);
+          }
+          if (description) {
+            if (isToday(selectedDate)) {
+              description.textContent = '오늘 완료한 학습 기록입니다.';
+            } else {
+              description.textContent = '선택한 날짜의 학습 기록입니다.';
+            }
+          }
+          // 오늘 이후 날짜로는 이동 불가
+          if (nextBtn) {
+            if (isToday(selectedDate)) {
+              nextBtn.style.opacity = '0.3';
+              nextBtn.style.cursor = 'not-allowed';
+              nextBtn.disabled = true;
+            } else {
+              nextBtn.style.opacity = '1';
+              nextBtn.style.cursor = 'pointer';
+              nextBtn.disabled = false;
+            }
+          }
+
+          // 선택된 날짜의 학습 기록 필터링 (현재 시리즈만, KST 기준)
           const todayLogs = logsForChart.filter(log => {
             // 현재 시리즈만 필터링 (동적)
             if (!matchesSeries(log.unit, currentSeries)) return false;
             const logDate = log.completedAt || log.timestamp;
             if (!logDate) return false;
-            return new Date(logDate).toISOString().split('T')[0] === todayStr;
+            return toKSTDateString(new Date(logDate)) === selectedDateStr;
           });
 
           const tableContainer = document.getElementById('todayTableContainer');
@@ -11063,7 +11129,8 @@ app.get("/my-learning", async (req, res) => {
           if (!tableContainer || !radarWrap) return;
 
           if (todayLogs.length === 0) {
-            tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#fff; padding:20px; opacity:0.8;">오늘 완료한 학습 기록이 없습니다.</div>';
+            const noDataMsg = isToday(selectedDate) ? '오늘 완료한 학습 기록이 없습니다.' : '해당 날짜의 학습 기록이 없습니다.';
+            tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#fff; padding:20px; opacity:0.8;">' + noDataMsg + '</div>';
             radarWrap.innerHTML = '';
             return;
           }
