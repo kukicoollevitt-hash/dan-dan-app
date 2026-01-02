@@ -7333,6 +7333,20 @@ app.get("/my-learning", async (req, res) => {
     // 🔥 LearningLog에 저장된 aiReviewCompletedAt 직접 사용 (과제 삭제해도 유지됨)
     // logs에는 이미 aiReviewCompletedAt 필드가 포함되어 있음
 
+    // ✅ UserProgress에서 어휘학습 점수 가져오기
+    const userProgress = await UserProgress.findOne({ grade, name }).lean();
+    // Map 타입은 lean()하면 일반 객체로 변환됨
+    let unitProgressMap = {};
+    if (userProgress?.unitProgress) {
+      // Map이 Object로 변환된 경우 또는 이미 Object인 경우 모두 처리
+      if (userProgress.unitProgress instanceof Map) {
+        unitProgressMap = Object.fromEntries(userProgress.unitProgress);
+      } else {
+        unitProgressMap = userProgress.unitProgress;
+      }
+    }
+    console.log("✅ [/my-learning] UserProgress unitProgress 조회 완료, 키 개수:", Object.keys(unitProgressMap).length);
+
     let html = `
     <!DOCTYPE html>
     <html lang="ko">
@@ -10273,6 +10287,7 @@ app.get("/my-learning", async (req, res) => {
 
         const logsForChart = ${JSON.stringify(logs)};
         const UNIT_TITLES = ${JSON.stringify(UNIT_TITLES)};
+        const UNIT_PROGRESS_MAP = ${JSON.stringify(unitProgressMap)};  // ✅ 어휘학습 점수 포함
         const rawSeries = '${series || 'up'}';  // 현재 페이지의 시리즈 (단축코드)
 
         // 시리즈 단축코드를 전체 이름으로 변환
@@ -11029,6 +11044,7 @@ app.get("/my-learning", async (req, res) => {
 
         // ===== Today 나의 AI 학습 기록 렌더링 (나의 AI 학습 분석 팝업용) =====
         function renderTodaySection() {
+          console.log('[Today] UNIT_PROGRESS_MAP keys:', Object.keys(UNIT_PROGRESS_MAP));
           const today = new Date();
           const todayStr = today.toISOString().split('T')[0];
 
@@ -11143,8 +11159,31 @@ app.get("/my-learning", async (req, res) => {
               badgeText = '격려';
             }
 
-            // 어휘 점수 (lexical)
-            const vocabScore = r.lexical || 0;
+            // 어휘 점수 - UNIT_PROGRESS_MAP에서 vocabState 또는 reportState.vocabScoreRatio 가져오기
+            // unitCode에서 fit_/deep_/on_ 접두어 제거하여 조회 (UserProgress는 bio_01 형태로 저장됨)
+            let normalizedUnitCode = unitCode;
+            if (unitCode.startsWith('fit_')) normalizedUnitCode = unitCode.substring(4);
+            else if (unitCode.startsWith('deep_')) normalizedUnitCode = unitCode.substring(5);
+            else if (unitCode.startsWith('on_')) normalizedUnitCode = unitCode.substring(3);
+
+            const unitProgress = UNIT_PROGRESS_MAP[normalizedUnitCode] || {};
+
+            // vocabState에서 직접 점수 계산 (더 정확함)
+            let vocabScorePercent = 0;
+            const vocabState = unitProgress.vocabState;
+            if (vocabState && vocabState.vocabData && Array.isArray(vocabState.vocabData)) {
+              const total = vocabState.vocabData.length;
+              const correct = vocabState.vocabData.filter(v => v.isCorrect).length;
+              if (total > 0) {
+                vocabScorePercent = Math.round((correct / total) * 100);
+              }
+            } else {
+              // fallback: reportState.vocabScoreRatio 사용
+              const reportState = unitProgress.reportState || {};
+              const vocabScoreRatio = reportState.vocabScoreRatio || 0;
+              vocabScorePercent = Math.round(vocabScoreRatio * 100);
+            }
+            const vocabScoreDisplay = vocabScorePercent > 0 ? vocabScorePercent + '점' : '-';
 
             tableHtml += '<tr>';
             tableHtml += '<td>' + (idx + 1) + '</td>';
@@ -11153,7 +11192,7 @@ app.get("/my-learning", async (req, res) => {
             tableHtml += '<td>' + unitName + '</td>';
             tableHtml += '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>';
             tableHtml += '<td>' + avgScore.toFixed(1) + '</td>';
-            tableHtml += '<td>' + vocabScore + '</td>';
+            tableHtml += '<td>' + vocabScoreDisplay + '</td>';
             tableHtml += '</tr>';
           });
 
