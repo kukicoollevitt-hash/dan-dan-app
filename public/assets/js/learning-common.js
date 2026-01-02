@@ -2609,3 +2609,106 @@
 
 // ===== 뒤로가기 버튼 (나의 학습분석으로 돌아가기) - 제거됨 =====
 // 기존 화살표 버튼 대신 menu.html의 "홈으로" 버튼으로 대체됨
+
+/* =========================================================
+   글씨 크기 조절 기능
+========================================================= */
+(function initFontSizeControl() {
+  document.addEventListener('DOMContentLoaded', function() {
+    // 기본 글씨 크기 (단계: 0=기본, -4~+3 범위)
+    let passageFontLevel = parseInt(localStorage.getItem('passageFontLevel') || '0');
+    let quizFontLevel = parseInt(localStorage.getItem('quizFontLevel') || '0');
+    const minLevel = -4;
+    const maxLevel = 3;
+
+    // 버튼 생성 함수
+    function createFontControl(id) {
+      const fontControl = document.createElement('div');
+      fontControl.className = 'font-size-control';
+      fontControl.id = id;
+      fontControl.innerHTML = `
+        <button type="button" class="font-btn font-decrease" title="글씨 축소">-</button>
+        <button type="button" class="font-btn font-increase" title="글씨 확대">+</button>
+      `;
+      return fontControl;
+    }
+
+    // === 본문 지문 영역 ===
+    const passageLabel = document.querySelector('.passage-label');
+    if (passageLabel) {
+      const passageControl = createFontControl('passage-font-control');
+      passageLabel.parentNode.insertBefore(passageControl, passageLabel.nextSibling);
+
+      function applyPassageFontSize() {
+        const passageText = document.querySelector('.passage-text');
+        const passageVocab = document.querySelector('.passage-vocab');
+        const baseSize = 17.5;
+        const newSize = baseSize + (passageFontLevel * 2);
+
+        if (passageText) passageText.style.fontSize = newSize + 'px';
+        if (passageVocab) passageVocab.style.fontSize = newSize + 'px';
+
+        const decreaseBtn = passageControl.querySelector('.font-decrease');
+        const increaseBtn = passageControl.querySelector('.font-increase');
+        decreaseBtn.disabled = passageFontLevel <= minLevel;
+        increaseBtn.disabled = passageFontLevel >= maxLevel;
+        decreaseBtn.style.opacity = passageFontLevel <= minLevel ? '0.4' : '1';
+        increaseBtn.style.opacity = passageFontLevel >= maxLevel ? '0.4' : '1';
+
+        localStorage.setItem('passageFontLevel', passageFontLevel.toString());
+      }
+
+      passageControl.querySelector('.font-decrease').addEventListener('click', function() {
+        if (passageFontLevel > minLevel) { passageFontLevel--; applyPassageFontSize(); }
+      });
+      passageControl.querySelector('.font-increase').addEventListener('click', function() {
+        if (passageFontLevel < maxLevel) { passageFontLevel++; applyPassageFontSize(); }
+      });
+      applyPassageFontSize();
+    }
+
+    // === 문제 영역 (객관식 문제 뱃지 옆) ===
+    const quizSubtitle = document.querySelector('.quiz-subtitle');
+    if (quizSubtitle) {
+      const quizControl = createFontControl('quiz-font-control');
+      // 뱃지와 버튼을 감싸는 컨테이너 생성
+      const wrapper = document.createElement('div');
+      wrapper.className = 'quiz-subtitle-wrapper';
+      quizSubtitle.parentNode.insertBefore(wrapper, quizSubtitle);
+      wrapper.appendChild(quizSubtitle);
+      wrapper.appendChild(quizControl);
+
+      function applyQuizFontSize() {
+        const quizOptionLabels = document.querySelectorAll('.quiz-options li label');
+        const baseSize = 16;
+        const newSize = baseSize + (quizFontLevel * 2);
+
+        // 선지 label들과 동그라미 번호 조절
+        quizOptionLabels.forEach(function(label) {
+          label.style.setProperty('font-size', newSize + 'px', 'important');
+          label.style.setProperty('--quiz-number-size', newSize + 'px');
+        });
+
+        // CSS 변수로 동그라미 번호 크기 설정
+        document.documentElement.style.setProperty('--quiz-number-size', newSize + 'px');
+
+        const decreaseBtn = quizControl.querySelector('.font-decrease');
+        const increaseBtn = quizControl.querySelector('.font-increase');
+        decreaseBtn.disabled = quizFontLevel <= minLevel;
+        increaseBtn.disabled = quizFontLevel >= maxLevel;
+        decreaseBtn.style.opacity = quizFontLevel <= minLevel ? '0.4' : '1';
+        increaseBtn.style.opacity = quizFontLevel >= maxLevel ? '0.4' : '1';
+
+        localStorage.setItem('quizFontLevel', quizFontLevel.toString());
+      }
+
+      quizControl.querySelector('.font-decrease').addEventListener('click', function() {
+        if (quizFontLevel > minLevel) { quizFontLevel--; applyQuizFontSize(); }
+      });
+      quizControl.querySelector('.font-increase').addEventListener('click', function() {
+        if (quizFontLevel < maxLevel) { quizFontLevel++; applyQuizFontSize(); }
+      });
+      applyQuizFontSize();
+    }
+  });
+})();
