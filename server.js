@@ -42,6 +42,8 @@ const CourseApplication = require("./models/CourseApplication");
 const MockExamResult = require("./models/MockExamResult");
 const MockExamUser = require("./models/MockExamUser");
 const MockExamConsultation = require("./models/MockExamConsultation");
+const MegaphoneMessage = require("./models/MegaphoneMessage");
+const Notice = require("./models/Notice");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -408,6 +410,14 @@ app.get("/super/supplement-exam-edit", requireSuperAdmin, (req, res) => {
     "✅ [GET] /super/supplement-exam-edit -> public/super/supplement-exam-edit.html"
   );
   res.sendFile(path.join(__dirname, "public", "super", "supplement-exam-edit.html"));
+});
+
+// ✅ 슈퍼관리자: 고래뱃지 확성기 관리
+app.get("/super/megaphone-management", requireSuperAdmin, (req, res) => {
+  console.log(
+    "✅ [GET] /super/megaphone-management -> public/super/megaphone-management.html"
+  );
+  res.sendFile(path.join(__dirname, "public", "super", "megaphone-management.html"));
 });
 
 // ✅ 슈퍼관리자: 전체 학원 학생 목록 보기
@@ -21983,13 +21993,15 @@ app.get("/api/activity-feed", async (req, res) => {
         type: 'learning',
         icon: '🎉',
         message: `${log.grade} ${maskedName} 학생이 ${unitText}형성평가를 통과하였습니다!`,
+        series: log.series || '',
         timestamp: log.timestamp
       });
     });
 
-    // 2. 최근 어휘퀴즈 코인 획득 기록 (무제한)
+    // 2. 최근 어휘퀴즈 코인 획득 기록 (무제한) - 삭제된 학생 제외
     const recentCoins = await UserProgress.find({
-      'vocabularyQuiz.totalCoins': { $gt: 0 }
+      'vocabularyQuiz.totalCoins': { $gt: 0 },
+      deleted: { $ne: true }
     })
     .sort({ 'vocabularyQuiz.lastRankUpdate': -1 })
     .lean();
@@ -22003,7 +22015,7 @@ app.get("/api/activity-feed", async (req, res) => {
         feeds.push({
           type: 'coin',
           icon: '🐳',
-          message: `${user.grade} ${maskedName} 학생이 고래 ${coins}코인을 획득하였습니다!`,
+          message: `${user.grade} ${maskedName} 학생이 고래 뱃지 ${coins}개를 획득하였습니다!`,
           timestamp: user.vocabularyQuiz?.lastRankUpdate || new Date()
         });
       }
@@ -22015,6 +22027,579 @@ app.get("/api/activity-feed", async (req, res) => {
     res.json({ success: true, feeds });
   } catch (err) {
     console.error("활동 피드 조회 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================
+// 🎉 형성평가 통과 학생 관리 API (관리자용)
+// ============================================
+
+// 형성평가 통과 학생 목록 조회 (관리자용 - 최근 32개)
+app.get("/api/learning-log/admin/list", async (req, res) => {
+  try {
+    // 모든 통과 기록 조회
+    const allLogs = await LearningLog.find({
+      completed: true,
+      deleted: { $ne: true }
+    })
+    .sort({ timestamp: -1 })
+    .lean();
+
+    // 학생별로 최종(가장 높은) 통과 관문만 추출
+    const studentMaxGate = {};
+
+    allLogs.forEach(log => {
+      const key = `${log.grade}_${log.name}`;
+
+      // unit에서 관문 번호 추출 (마지막 숫자)
+      const gateMatch = (log.unit || '').match(/(\d+)$/);
+      const gateNum = gateMatch ? parseInt(gateMatch[1], 10) : 0;
+
+      // 해당 학생의 기존 최고 관문보다 높으면 교체
+      if (!studentMaxGate[key] || gateNum > studentMaxGate[key].gateNum) {
+        studentMaxGate[key] = {
+          ...log,
+          _id: log._id.toString(), // _id를 문자열로 변환
+          gateNum
+        };
+      }
+    });
+
+    // Object에서 배열로 변환하고 최근 업데이트 순으로 정렬, 32명 제한
+    const logs = Object.values(studentMaxGate)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 32);
+
+    res.json({ success: true, logs });
+  } catch (err) {
+    console.error("형성평가 통과 목록 조회 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 형성평가 통과 기록 개별 삭제 (해당 학생의 모든 기록 소프트 삭제)
+app.delete("/api/learning-log/admin/delete/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 먼저 해당 기록을 찾아서 학생 정보 확인
+    const log = await LearningLog.findById(id);
+    if (!log) {
+      return res.status(404).json({ success: false, error: '해당 기록을 찾을 수 없습니다' });
+    }
+
+    // 해당 학생의 모든 기록을 삭제 처리 (같은 grade + name)
+    const result = await LearningLog.updateMany(
+      { grade: log.grade, name: log.name },
+      { deleted: true }
+    );
+
+    res.json({ success: true, message: `${result.modifiedCount}개 기록 삭제 완료` });
+  } catch (err) {
+    console.error("형성평가 통과 기록 삭제 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 형성평가 통과 기록 일괄 삭제 (소프트 삭제)
+app.post("/api/learning-log/admin/bulk-delete", async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: '삭제할 ID 목록이 필요합니다' });
+    }
+
+    const result = await LearningLog.updateMany(
+      { _id: { $in: ids } },
+      { deleted: true }
+    );
+
+    res.json({
+      success: true,
+      message: `${result.modifiedCount}건 삭제 완료`
+    });
+  } catch (err) {
+    console.error("형성평가 통과 기록 일괄 삭제 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 형성평가 통과 기록 수정
+app.put("/api/learning-log/admin/update/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { grade, name, unit, series } = req.body;
+
+    const result = await LearningLog.findByIdAndUpdate(
+      id,
+      {
+        ...(grade && { grade }),
+        ...(name && { name }),
+        ...(unit && { unit }),
+        ...(series && { series })
+      },
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).json({ success: false, error: '해당 기록을 찾을 수 없습니다' });
+    }
+
+    res.json({ success: true, log: result });
+  } catch (err) {
+    console.error("형성평가 통과 기록 수정 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================
+// 📢 확성기 메시지 API (응원 메시지)
+// ============================================
+
+// 확성기 메시지 보내기 (코인 차감)
+app.post("/api/megaphone/send", async (req, res) => {
+  console.log("📢 확성기 API 호출됨:", req.body);
+  try {
+    const { phone, grade, name, school, message } = req.body;
+    const MEGAPHONE_COST = 40; // 확성기 비용
+
+    if (!grade || !name || !message) {
+      return res.status(400).json({ success: false, error: '학년, 이름, 메시지가 필요합니다' });
+    }
+
+    if (message.length > 100) {
+      return res.status(400).json({ success: false, error: '메시지는 100자 이내로 작성해주세요' });
+    }
+
+    // 한국어 비속어 변형어 필터 (초성, 변형 패턴)
+    const koreanBadWordPatterns = [
+      // 시발/씨발/시바/씨바 변형 (euphemism 포함)
+      /[시씨쉬싀슈][발빨벌팔]/gi,  // 시발, 씨발 등
+      /[시씨쉬싀슈][바빠파]/gi,     // 시바, 씨바 등 (euphemism)
+      /[sS][iI1][bB][aA][lL]?/gi,
+      /ㅅㅂ/g,
+      /ㅆㅂ/g,
+      // 병신 변형
+      /[병뼝][신씬sinSIN]/gi,
+      /ㅂㅅ/g,
+      /ㅄ/g,
+      // 지랄 변형
+      /[지쥐][랄랼럴]/gi,
+      /ㅈㄹ/g,
+      // 개새끼 변형
+      /개[새쌔세][끼키낑]/gi,
+      /ㄱㅅㄲ/g,
+      // 좆 변형
+      /[좆좃졷죳]/g,
+      /ㅈㅇㅌ/g,
+      // 씹 변형
+      /[씹씨씌][새세쌔]/gi,
+      // 느금마 변형
+      /느[금끔][마빠]/gi,
+      /ㄴㄱㅁ/g,
+      // 니애미/니엄 변형
+      /니[애에]미/gi,
+      /니[엄]마/gi,
+      // 썅 변형
+      /[썅쌍]/g,
+      // 꺼져 등 (너무 강한 표현)
+      /꺼[져저쪄]/gi,
+      // 죽어 (협박성)
+      /[죽쥬][어어라]/gi,
+      // 미친 변형
+      /[미]친[놈년]/gi,
+      /ㅁㅊ/g,
+      // 짱나 (과도한 표현)
+      /짱[나놔내]/gi
+    ];
+
+    const messageNormalized = message.replace(/\s+/g, ''); // 공백 제거하여 검사
+    for (const pattern of koreanBadWordPatterns) {
+      if (pattern.test(messageNormalized)) {
+        console.log("🚫 한국어 변형 비속어 차단:", message);
+        return res.status(400).json({
+          success: false,
+          error: '부적절한 표현이 포함되어 있습니다. 다시 입력해주세요.'
+        });
+      }
+    }
+
+    // OpenAI Moderation API로 비속어/부적절한 내용 검사
+    try {
+      const moderationResponse = await fetch('https://api.openai.com/v1/moderations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({ input: message })
+      });
+
+      const moderationResult = await moderationResponse.json();
+
+      if (moderationResult.results && moderationResult.results[0]?.flagged) {
+        console.log("🚫 부적절한 메시지 차단:", message);
+        return res.status(400).json({
+          success: false,
+          error: '부적절한 표현이 포함되어 있습니다. 다시 입력해주세요.'
+        });
+      }
+    } catch (moderationError) {
+      console.error("Moderation API 오류:", moderationError);
+      // API 오류 시에도 계속 진행 (선택적으로 차단할 수도 있음)
+    }
+
+    // 사용자 조회 (grade + name으로 검색)
+    console.log("📢 사용자 조회 시작:", { grade, name });
+    const user = await UserProgress.findOne({ grade, name });
+    console.log("📢 사용자 조회 결과:", user ? "찾음" : "없음");
+    if (!user) {
+      return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다' });
+    }
+
+    // 코인 잔액 확인 (totalCoins - usedCoins = 사용 가능한 코인)
+    const totalCoins = user.vocabularyQuiz?.totalCoins || 0;
+    const usedCoins = user.vocabularyQuiz?.usedCoins || 0;
+    const availableCoins = totalCoins - usedCoins;
+    if (availableCoins < MEGAPHONE_COST) {
+      return res.status(400).json({
+        success: false,
+        error: `코인이 부족합니다. (현재: ${availableCoins}코인, 필요: ${MEGAPHONE_COST}코인)`
+      });
+    }
+
+    // 24시간 후 만료 시간 계산
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // 확성기 메시지 저장
+    const megaphoneMsg = new MegaphoneMessage({
+      senderPhone: phone || '',
+      senderName: name || '학생',
+      senderSchool: school || user.school || '',
+      senderGrade: grade || '',
+      message: message,
+      coinUsed: MEGAPHONE_COST,
+      expiresAt: expiresAt
+    });
+    await megaphoneMsg.save();
+
+    // 코인 차감 (usedCoins 증가 방식)
+    await UserProgress.updateOne(
+      { grade, name },
+      { $inc: { 'vocabularyQuiz.usedCoins': MEGAPHONE_COST } }
+    );
+
+    res.json({
+      success: true,
+      message: '응원 메시지가 전송되었습니다!',
+      remainingCoins: availableCoins - MEGAPHONE_COST,
+      expiresAt: expiresAt
+    });
+
+  } catch (err) {
+    console.error("확성기 메시지 전송 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 활성 확성기 메시지 조회 (Live 배너용)
+app.get("/api/megaphone/active", async (req, res) => {
+  try {
+    // 24시간 이내 생성된 메시지 조회 (최신 1개만)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const messages = await MegaphoneMessage.find({
+      createdAt: { $gt: oneDayAgo }
+    }).sort({ createdAt: -1 }).limit(1);
+
+    const feeds = messages.map(msg => {
+      // 이름 마스킹 (예: 박민수 → 박○수)
+      const name = msg.senderName || '학생';
+      const maskedName = name.length >= 2
+        ? name.charAt(0) + '○' + name.slice(-1)
+        : name;
+
+      return {
+        type: 'megaphone',
+        message: `❤️ ${msg.senderGrade} ${maskedName}: "${msg.message}"`,
+        timestamp: msg.createdAt,
+        expiresAt: msg.expiresAt
+      };
+    });
+
+    res.json({ success: true, feeds });
+  } catch (err) {
+    console.error("확성기 메시지 조회 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================
+// 📢 확성기 관리자 API (슈퍼관리자 전용)
+// ============================================
+
+// 확성기 메시지 목록 조회 (관리자)
+app.get("/api/megaphone/admin/list", requireSuperAdmin, async (req, res) => {
+  try {
+    const messages = await MegaphoneMessage.find({ deleted: { $ne: true } })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // 필드명 변환 (senderGrade -> grade, senderName -> name 등)
+    const formattedMessages = messages.map(msg => ({
+      _id: msg._id,
+      grade: msg.senderGrade || '',
+      name: msg.senderName || '',
+      message: msg.message,
+      coinsUsed: msg.coinUsed || 0,
+      type: msg.type || 'megaphone',
+      expiresAt: msg.expiresAt,
+      createdAt: msg.createdAt
+    }));
+
+    res.json({ ok: true, messages: formattedMessages });
+  } catch (err) {
+    console.error("확성기 메시지 목록 조회 오류:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// 확성기 메시지 추가 (관리자 공지용)
+app.post("/api/megaphone/admin/add", requireSuperAdmin, async (req, res) => {
+  try {
+    const { type, grade, name, message, coinsUsed } = req.body;
+
+    if (!message || message.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: "메시지 내용을 입력해주세요." });
+    }
+
+    const newMessage = new MegaphoneMessage({
+      senderGrade: grade || '',
+      senderName: name || '관리자',
+      message: message.trim(),
+      coinUsed: coinsUsed || 0,
+      type: type || 'notice',
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24시간 후
+    });
+
+    await newMessage.save();
+    console.log("✅ 확성기 메시지 추가 완료:", newMessage._id);
+
+    res.json({ ok: true, message: newMessage });
+  } catch (err) {
+    console.error("확성기 메시지 추가 오류:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// 확성기 메시지 수정 (관리자)
+app.put("/api/megaphone/admin/:id", requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, grade, name, message, coinsUsed } = req.body;
+
+    const updateData = {
+      senderGrade: grade || '',
+      senderName: name || '',
+      message: message,
+      coinUsed: coinsUsed || 0,
+      type: type || 'megaphone'
+    };
+
+    const updated = await MegaphoneMessage.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!updated) {
+      return res.status(404).json({ ok: false, error: "메시지를 찾을 수 없습니다." });
+    }
+
+    console.log("✅ 확성기 메시지 수정 완료:", id);
+    res.json({ ok: true, message: updated });
+  } catch (err) {
+    console.error("확성기 메시지 수정 오류:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// 확성기 메시지 일괄 삭제 (관리자) - ⚠️ :id 라우트보다 먼저 정의해야 함
+app.delete("/api/megaphone/admin/bulk-delete", requireSuperAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ ok: false, error: "삭제할 메시지를 선택해주세요." });
+    }
+
+    // 소프트 삭제
+    const result = await MegaphoneMessage.updateMany(
+      { _id: { $in: ids } },
+      { deleted: true }
+    );
+
+    console.log(`✅ 확성기 메시지 일괄 삭제 완료: ${result.modifiedCount}개`);
+    res.json({ ok: true, deletedCount: result.modifiedCount });
+  } catch (err) {
+    console.error("확성기 메시지 일괄 삭제 오류:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// 확성기 메시지 삭제 (관리자)
+app.delete("/api/megaphone/admin/:id", requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 소프트 삭제
+    const updated = await MegaphoneMessage.findByIdAndUpdate(id, { deleted: true }, { new: true });
+
+    if (!updated) {
+      return res.status(404).json({ ok: false, error: "메시지를 찾을 수 없습니다." });
+    }
+
+    console.log("✅ 확성기 메시지 삭제 완료:", id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("확성기 메시지 삭제 오류:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ============================================
+// 📢 공지사항 API (Live 피드 롤링 배너용)
+// ============================================
+
+// 기본 공지사항 목록 (DB에 데이터가 없을 때 초기화용)
+const defaultNotices = [
+  { icon: '📚', message: '[공지] 어휘학습은 최초 1회 완료 후에 어휘력 지수가 반영됩니다!', order: 0 },
+  { icon: '🐳', message: '[공지] AI고래쌤 하루 고래뱃지는 매일 10뱃지가 지급됩니다!', order: 1 },
+  { icon: '🤖', message: '[공지] 학습실의 AI추천과제는 미흡한 단원을 AI고래쌤이 확인하여 부여됩니다!', order: 2 },
+  { icon: '📖', message: '[공지] 고래 독서 감상문은 최소 월 1회 제출이지만 추가 제출도 가능합니다!', order: 3 },
+  { icon: '✅', message: '[공지] 완료된 학습과제는 선생님 확인 후 삭제가 가능합니다!', order: 4 },
+  { icon: '📊', message: '[공지] 종합리포트는 최신 완료된 과제 순으로 기록됩니다!', order: 5 }
+];
+
+// 공지사항 목록 조회 (공개 - 모든 사용자)
+app.get("/api/notices", async (req, res) => {
+  try {
+    let notices = await Notice.find({ deleted: { $ne: true } })
+      .sort({ order: 1 })
+      .lean();
+
+    // DB에 공지사항이 없으면 기본 공지사항 생성
+    if (notices.length === 0) {
+      await Notice.insertMany(defaultNotices);
+      notices = await Notice.find({ deleted: { $ne: true } })
+        .sort({ order: 1 })
+        .lean();
+      console.log("✅ 기본 공지사항 초기화 완료");
+    }
+
+    res.json({
+      success: true,
+      notices: notices.map(n => ({
+        _id: n._id,
+        icon: n.icon,
+        message: n.message
+      }))
+    });
+  } catch (err) {
+    console.error("공지사항 조회 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 공지사항 목록 조회 (관리자용 - 전체 정보 포함)
+app.get("/api/notices/admin", requireSuperAdmin, async (req, res) => {
+  try {
+    let notices = await Notice.find({ deleted: { $ne: true } })
+      .sort({ order: 1 })
+      .lean();
+
+    // DB에 공지사항이 없으면 기본 공지사항 생성
+    if (notices.length === 0) {
+      await Notice.insertMany(defaultNotices);
+      notices = await Notice.find({ deleted: { $ne: true } })
+        .sort({ order: 1 })
+        .lean();
+    }
+
+    res.json({ success: true, notices });
+  } catch (err) {
+    console.error("공지사항 관리자 조회 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 공지사항 추가 (관리자)
+app.post("/api/notices/admin", requireSuperAdmin, async (req, res) => {
+  try {
+    const { icon, message } = req.body;
+
+    if (!icon || !message) {
+      return res.status(400).json({ success: false, error: "아이콘과 메시지를 입력해주세요." });
+    }
+
+    // 새 공지사항의 순서 계산
+    const maxOrderNotice = await Notice.findOne({ deleted: { $ne: true } })
+      .sort({ order: -1 })
+      .lean();
+    const newOrder = maxOrderNotice ? maxOrderNotice.order + 1 : 0;
+
+    const notice = new Notice({
+      icon: icon.trim(),
+      message: message.trim(),
+      order: newOrder
+    });
+
+    await notice.save();
+    console.log("✅ 공지사항 추가 완료:", notice._id);
+    res.json({ success: true, notice });
+  } catch (err) {
+    console.error("공지사항 추가 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 공지사항 수정 (관리자)
+app.put("/api/notices/admin/:id", requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { icon, message } = req.body;
+
+    const updated = await Notice.findByIdAndUpdate(
+      id,
+      { icon: icon.trim(), message: message.trim() },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ success: false, error: "공지사항을 찾을 수 없습니다." });
+    }
+
+    console.log("✅ 공지사항 수정 완료:", id);
+    res.json({ success: true, notice: updated });
+  } catch (err) {
+    console.error("공지사항 수정 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 공지사항 삭제 (관리자)
+app.delete("/api/notices/admin/:id", requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 소프트 삭제
+    const updated = await Notice.findByIdAndUpdate(id, { deleted: true }, { new: true });
+
+    if (!updated) {
+      return res.status(404).json({ success: false, error: "공지사항을 찾을 수 없습니다." });
+    }
+
+    console.log("✅ 공지사항 삭제 완료:", id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("공지사항 삭제 오류:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

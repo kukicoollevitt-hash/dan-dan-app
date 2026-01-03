@@ -241,6 +241,12 @@ const userProgressSchema = new mongoose.Schema({
   lastUpdated: {
     type: Date,
     default: Date.now
+  },
+
+  // 삭제 여부 (소프트 삭제)
+  deleted: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true // createdAt, updatedAt 자동 생성

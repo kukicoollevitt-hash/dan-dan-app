@@ -3713,6 +3713,16 @@
             content: '🎉';
             font-size: 12px;
         }
+
+        .live-ticker-item.megaphone {
+            color: #e0a0ff;
+            font-weight: 500;
+        }
+
+        .live-ticker-item.megaphone::before {
+            content: '📣';
+            font-size: 12px;
+        }
     </style>
     <!-- 카카오 SDK -->
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
@@ -8928,20 +8938,29 @@
 
         // 동적 피드 가져오기
         let gradeFeeds = [];
+        let megaphoneFeeds = [];
         try {
-            const response = await fetch('/api/mock-exam-activity-feed');
-            const data = await response.json();
-            if (data.success && data.feeds) {
-                gradeFeeds = data.feeds;
+            const [gradeResponse, megaphoneResponse] = await Promise.all([
+                fetch('/api/mock-exam-activity-feed'),
+                fetch('/api/megaphone/active')
+            ]);
+            const gradeData = await gradeResponse.json();
+            const megaphoneData = await megaphoneResponse.json();
+            if (gradeData.success && gradeData.feeds) {
+                gradeFeeds = gradeData.feeds;
+            }
+            if (megaphoneData.ok && megaphoneData.messages) {
+                megaphoneFeeds = megaphoneData.messages;
             }
         } catch (error) {
-            console.error('모의고사 피드 로드 오류:', error);
+            console.error('피드 로드 오류:', error);
         }
 
-        // 모든 아이템 합치기 (공지사항 + 등급 피드)
+        // 모든 아이템 합치기 (공지사항 + 등급 피드 + 확성기 메시지)
         const allItems = [
             ...notices.map(n => ({ type: 'notice', text: n })),
-            ...gradeFeeds.map(f => ({ type: 'grade-feed', text: f.message }))
+            ...gradeFeeds.map(f => ({ type: 'grade-feed', text: f.message })),
+            ...megaphoneFeeds.map(m => ({ type: 'megaphone', text: m.displayMessage }))
         ];
 
         // 최소 1개 이상 있어야 함
