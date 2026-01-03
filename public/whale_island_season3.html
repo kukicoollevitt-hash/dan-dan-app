@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐳 푸른 고래섬의 비밀 모험단 - 시즌3 (최종화)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #0a0a0a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 40px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #1a1a2e;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      color: #ffffff;
+      margin-bottom: 16px;
+      line-height: 1.4;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      color: #e0e0e0;
+      margin-bottom: 32px;
+      line-height: 1.8;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 24px;
+      color: #ffffff;
+      font-weight: 700;
+      text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 0 20px rgba(255, 255, 255, 0.6),
+        2px 2px 4px rgba(0, 0, 0, 0.9);
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #1a1a2e 0%, #0f3460 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 엔딩 카드 */
+    .ending-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 60px;
+      border-radius: 30px;
+      max-width: 700px;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+      pointer-events: auto;
+    }
+
+    .ending-card h1 {
+      font-size: 48px;
+      margin-bottom: 30px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .ending-card p {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #2c3e50;
+      margin-bottom: 40px;
+    }
+
+    .ending-card .credits {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 2px solid #e0e0e0;
+    }
+
+    .ending-btn {
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px;
+    }
+
+    .ending-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(26, 26, 46, 0.4);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 36px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+      .ending-card {
+        padding: 40px 30px;
+      }
+      .ending-card h1 {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌊 시즌3 - 최종화
+  </div>
+
+  <!-- 고정 지도 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐳 푸른 고래섬의 비밀 모험단</h1>
+        <p class="subtitle">
+          시즌3 - 바다의 심장을 향하여<br>
+          마지막 모험이 시작됩니다
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 바다가 보낸 마지막 신호">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">📡</span>
+          바다가 보낸 마지막 신호
+        </h2>
+        <div class="story-text">지우는 밤마다 기이한 꿈을 꾸었다.
+하늘도 없는 바닷속, 끝없는 어둠이 물결처럼 움직이더니,
+어딘가에서 거대한 눈이 열리는 꿈이었다.
+꿈속에서 들리는 목소리는 낮고 울림이 강했으며,
+지우를 부르는 것 같았지만 말을 알아들을 수 없었다.
+
+그러던 어느 날 밤,
+지우 방의 공기가 갑자기 무겁게 바뀌었다.
+바람도 없는데 커튼이 흔들리고, 책장의 종이들이 바스락거리며 떨어졌다.
+그리고—
+지우의 손목 밑, 심장 위에서 파란빛이 천천히 떠오르기 시작했다.
+
+시즌2 마지막에 고래가 아이들 가슴속에 남기고 간 '내면의 빛'이
+처음으로 외부로 모습을 드러낸 것이다.
+빛은 방바닥에 장대한 지도를 비추었다.
+
+지도는 단순한 섬이 아니었다.
+지도 한가운데에 커다란 소용돌이 모양이 있었고
+그 아래에는 바다보다 더 깊은 층이 그려져 있었다.
+
+그리고 지도 가장 아래에는 문장이 하나 떠올랐다.
+
+"바다의 심장으로 내려오라."
+
+지우는 그 문장을 보는 순간,
+'끝이 온 것'을 직감했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 다시 만난 아이들, 다시 열린 운명의 회의">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">🤝</span>
+          다시 만난 아이들, 다시 열린 운명의 회의
+        </h2>
+        <div class="story-text">다음 날, 지우는 민호와 나래, 그리고 파도 골짜기에서 남아 있던 라오까지
+모두 바닷가 작은 동굴로 불러모았다.
+그곳은 외부에 잘 알려지지 않은 비밀 장소였다.
+
+"지우야, 네 얼굴 왜 이래? 무슨 일 있어?"
+민호가 묻자 지우는 숨을 한번 고르고 말했다.
+
+"어젯밤… 바다가 나한테 마지막 신호를 보냈어."
+
+지우는 손을 내미는 순간, 가슴에서 푸른빛이 스르륵 나오며
+동굴 바닥에 다시 '바다의 심장' 지도가 나타났다.
+
+라오는 심각한 표정으로 상을 찌푸렸다.
+
+"…저건 바다 밑 가장 깊은 층, '심해단층'이야.
+고래들이 마지막 힘을 숨긴 곳이지."
+
+나래는 눈을 크게 떴다.
+"근데 어둠은? 어둠도 그걸 찾고 있지 않아?"
+
+라오는 고개를 끄덕였다.
+
+"맞아. 어둠은 지금 심해단층으로 내려가고 있어.
+만약 우리가 먼저 가지 못하면… 바다는 영원히 어둠에게 삼켜질 거야."
+
+민호는 손을 꽉 쥐었다.
+"그러면… 우리가 먼저 가야지."
+
+지우는 강하게 고개를 끄덕였다.
+
+"이번 모험은, 진짜 마지막이 될 거야."</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 심해로 내려가는 길">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">🚢</span>
+          심해로 내려가는 길
+        </h2>
+        <div class="story-text">아이들은 작은 배 대신 라오가 준비한 낯선 운송 도구를 보았다.
+이름은 '심해호(深海號)'.
+고래 왕국에 전해 내려오던 지하 이동 장치였다.
+
+심해호가 바닷속으로 내려가기 시작하자,
+주변 빛은 빠르게 사라져 갔다.
+얕은 바다의 푸른빛이 점점 어두워지더니,
+중층에서는 생물들이 내뿜는 희미한 빛만이 주변을 밝혀 주었다.
+
+지우는 유리창 밖을 바라보며 중얼거렸다.
+"여기… 이렇게 깊은 곳이 있었다는 게 믿기지 않아."
+
+나래가 떨리는 손으로 장비를 붙잡았다.
+"근데 왜 바깥이 저렇게 밝지? 분명 깊이 내려왔는데…"
+
+라오는 단호하게 말했다.
+
+"저건 빛이 아니야. 고래들의 기억이 잔뜩 스며 있는 바다야."
+
+그때, 멀리서 거대한 그림자가 스쳐 지나갔다.
+움직임은 유령 같았고, 몸체에서 새어나오는 푸른빛이 흔들렸다.
+
+민호가 작은 목소리로 말했다.
+"저거… 고래야?"
+
+라오는 고개를 저었다.
+
+"…아니야.
+저건 고래 왕국이 무너질 때 어둠에 잠식된 혼령들이야.
+길을 잃고 떠도는 존재들."
+
+아이들은 아무 말도 하지 못했다.
+마지막 모험의 위험이 이제야 실감되는 순간이었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 어둠의 초입, 그림자 회랑">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">👻</span>
+          어둠의 초입, 그림자 회랑
+        </h2>
+        <div class="story-text">심해호가 더 깊은 층으로 내려가자,
+물색은 완전히 검은색으로 뒤바뀌었고
+주변의 생명체들은 모두 사라졌다.
+
+다만, 심해호에 닿지 않게 먼 곳에서 바라보고 있는
+붉은 기운의 실루엣들이 있었다.
+
+그들은 형태가 없었다.
+사람 같기도 했고, 돌고래 같기도 했고,
+연기나 물결처럼 흔들렸다.
+
+나래가 떨며 말했다.
+"왜… 계속 쳐다보고 있어?"
+
+라오는 대답하지 않고 심해호를 더 가속했다.
+그러나 붉은 그림자들은 멀어지지 않았다.
+오히려 더 가까이, 더 많아졌다.
+
+그때, 붉은 그림자들 사이에서
+거대한 무언가가 일어섰다.
+
+거의 산만큼 큰 실루엣.
+심해의 어둠을 꺼낸 존재.
+
+라오는 바로 이름을 말했다.
+
+"…그림자 군주의 하위 혼령이다.
+계속 가면… 곧 본체와 마주칠 거야."
+
+민호가 침을 삼켰다.
+"우린 준비된 거 맞지?"
+
+지우는 스스로를 믿기 위해 힘껏 고개를 끄덕였다.
+"맞아. 그래서 여기까지 온 거잖아."</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 심연의 무덤, 첫 번째 시련">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">⚰️</span>
+          심연의 무덤, 첫 번째 시련
+        </h2>
+        <div class="story-text">심해호가 바닥에 닿자,
+아이들은 심해단층 입구에 도착했다.
+그곳은 단순한 동굴이 아니었다.
+
+수천 마리의 고래가 목소리를 잃은 채
+잠들어 있는 기억의 무덤이었다.
+
+고래들의 형체는 빛으로만 이루어져 있었고,
+마치 시간이 멈춰버린 듯 움직이지 않았다.
+
+지우는 본능적으로 가슴이 아려왔다.
+이들은 모두 어둠에게 빛을 빼앗긴 존재들이었다.
+
+라오는 입구를 가리키며 말했다.
+"여기서 첫 번째 시련이 시작된다.
+고래들이 남긴 기억 속으로 들어가야 해."
+
+아이들은 서로의 손을 잡고 빛의 커튼 속으로 들어갔다.
+
+그곳에서 그들은
+고래 왕국의 멸망 장면을 처음으로 보게 된다.
+
+부서지는 바다,
+어둠에 잠식되어 가는 고래들의 노래,
+마지막까지 빛을 지키려 했던 왕고래의 외침…
+
+그리고 그 순간—
+지우의 몸에서 파란빛이 폭발하듯 솟아올랐다.
+
+라오는 놀란 목소리로 말했다.
+
+"지우… 네 안의 빛이 반응하고 있어.
+너는… 왕고래의 기억을 가장 많이 품은 아이야."
+
+지우는 크게 숨을 들이쉬었다.
+
+"그럼… 난 이 기억을 끝까지 봐야 해."</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 어둠의 핵, 그림자 군주 등장">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">👹</span>
+          어둠의 핵, 그림자 군주 등장
+        </h2>
+        <div class="story-text">기억의 무덤에서 빠져나온 아이들은
+심해단층의 마지막 방에 도착했다.
+
+그곳은 바다 속이라고 믿기 힘들 만큼 넓었다.
+거대한 돔 형태의 공간에
+붉은 기운이 출렁대고 있었다.
+
+그리고 중심에서—
+거대한 그림자가 천천히 일어섰다.
+
+그는 바다의 어둠 그 자체,
+고래 왕국을 멸망시킨 주범,
+그림자 군주였다.
+
+그의 모습은 완전히 고정되어 있지 않았다.
+때로는 고래처럼,
+때로는 인간처럼,
+때로는 모래 폭풍처럼 몸체가 흩어졌다가 다시 모였다.
+
+그림자 군주는 낮게 울리는 목소리로 말했다.
+
+"드디어 왔구나, 빛의 아이들아."
+
+지우는 한발 앞으로 나섰다.
+가슴 속 빛이 심하게 맥동하고 있었다.
+
+"고래 왕국을 돌려줘."
+
+그림자 군주는 조용히 웃었다.
+
+"돌려달라고?
+너희는 이 바다에 무엇을 준 적이 있느냐?"
+
+붉은 파동이 아이들 쪽으로 밀려왔다.
+라오가 몸으로 막아섰다.
+
+"지우! 네 빛의 힘을 꺼내!
+저 어둠은 너를 원하고 있어!"
+
+지우는 숨을 깊게 들이마시며 가슴 위에 손을 올렸다.
+빛이 손바닥으로 모여들기 시작했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 빛과 어둠의 격돌">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">⚔️</span>
+          빛과 어둠의 격돌
+        </h2>
+        <div class="story-text">그림자 군주는 순간적으로 거대한 팔을 만들어
+아이들을 덮치려 했다.
+
+나래는 민호를 끌어당기며 소리쳤다.
+"몸 낮춰!"
+
+붉은 파동이 지나가는 자리마다
+바닥이 부서졌다.
+
+지우는 두려움을 떨쳐내기 위해
+왕고래가 준 마지막 말을 떠올렸다.
+
+"빛은 바다의 기억, 어둠은 바다의 상처."
+
+지우는 마음속 깊은 곳을 끌어올려
+손에서 강력한 푸른빛을 내보냈다.
+
+파란 파동과 붉은 파동이 부딪히는 순간,
+공간 전체가 흔들렸다.
+
+민호는 지우 뒤쪽에서 힘을 보탰고,
+나래는 눈을 감고 그림자의 움직임을 예측하며 지우에게 경고했다.
+
+라오는 지우 옆에서
+고래 장식이 달린 검을 휘둘러
+붉은 기운 일부를 흩어냈다.
+
+전투는 치열했고 위험했다.
+하지만 지우는 서서히 깨닫기 시작했다.
+
+자신의 빛은
+단순한 보호나 공격이 아니라,
+바다를 연결하는 힘이라는 것을.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 바다의 심장과 진실">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">💙</span>
+          바다의 심장과 진실
+        </h2>
+        <div class="story-text">지우가 모든 빛을 끌어올리려는 순간,
+심해단층 아래쪽에서
+거대한 문양이 떠올랐다.
+
+그 문양은 심장처럼 규칙적으로 빛을 내며 맥동했고,
+그 중심에서 맑은 고래 울음이 울려퍼졌다.
+
+라오는 놀란 눈으로 말했다.
+
+"저건… 바다의 심장이야.
+고래 왕국의 진짜 근원."
+
+그림자 군주는 맹렬하게 몸을 부풀렸다.
+
+"그 심장을 차지하면,
+나는 바다 전체를 지배할 수 있다!"
+
+지우는 손을 더 세게 움켜쥐었다.
+가슴의 빛은 더 강하게 쪼여 왔다.
+
+"아니…
+그 심장은 누구의 것이 아니야.
+바다의 것이지!"
+
+지우는 바다의 심장을 향해 손을 뻗어
+자신의 빛을 모두 연결했다.
+
+그 순간—
+심장은 고래 울음소리를 크게 터뜨리며
+엄청난 파란 파동을 만들어냈다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 어둠의 정화">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">✨</span>
+          어둠의 정화
+        </h2>
+        <div class="story-text">파란 파동은 방 전체를 덮었다.
+그리고 그림자 군주의 몸을 관통했다.
+
+어둠은 지우를 향해 마지막으로 손을 뻗었지만
+지우는 두려워하지 않았다.
+그 손을 잡았다.
+
+파란빛이 지우의 손에서 그림자 군주에게 전해졌다.
+그러자 그림자 군주의 모습이 잠시 멈추며
+어딘가 슬픈 울음 같은 소리가 들렸다.
+
+라오는 숨을 삼키며 말했다.
+
+"…저 어둠도… 본래는 바다의 일부였어."
+
+지우는 마지막 힘을 모두 짜내어 말했다.
+
+"이제… 쉬어.
+이 바다에서 너도 고통받아왔잖아."
+
+그림자 군주를 이루던 붉은 빛은
+서서히 파란빛으로 정화되더니
+따뜻한 물결처럼 바다 속으로 스며들었다.
+
+붉은 그림자들은 모두 사라졌다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 다시 찾은 바다, 그리고 새로운 시작">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🌅</span>
+          다시 찾은 바다, 그리고 새로운 시작
+        </h2>
+        <div class="story-text">전투가 끝난 공간은
+아무 소리도 없었다.
+하지만 그 침묵은 무섭지 않았다.
+
+지우의 가슴속 빛은
+편안하고 부드러운 진동을 남겼다.
+
+라오는 바다의 심장 앞에서 무릎을 꿇었다.
+"지우… 네가 바다를 살렸어."
+
+민호와 나래도 지우를 감싸 안으며 울음을 터뜨렸다.
+
+"진짜… 끝난 거야?"
+"우리… 해냈어?"
+
+그 순간, 바다의 심장이 천천히 떠올라
+아이들을 둘러싸며 빛을 나누어 주었다.
+
+그리고 고래 울음소리가 전체 바다에 울려 퍼졌다.
+
+부서졌던 기억은 복원되었고
+어둠은 정화되었고
+고래 왕국의 노래가 다시 되살아났으며
+바다는 다시 살아난 것이다.
+
+지우는 조용히 바다를 바라보았다.
+
+"이제… 우리가 지켜야 할 건,
+모험이 아니라 바다와 이야기가 이어지도록 하는 거야."
+
+라오는 고개를 끄덕였다.
+
+"그래. 이것이 마지막 모험인 동시에…
+새로운 시대의 시작이야."
+
+배가 천천히 수면으로 떠오르기 시작했다.
+해수면에 도착했을 때,
+어느새 해가 떠오르고 있었다.
+
+세 아이는 마지막으로 서로의 손을 맞잡았다.
+
+바다는 오늘도 빛나고 있었고,
+고래 울음은 희미하지만 분명히 들렸다.
+
+"고마워, 빛의 아이들."
+
+바다는 그렇게 속삭이고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <div class="ending-card">
+          <h1>🎊 완결 🎊</h1>
+          <p>
+            푸른 고래섬의 비밀 모험단<br>
+            시즌 1, 2, 3 모든 여정을 완료했습니다.<br><br>
+            지우, 민호, 나래, 라오의 모험은 여기서 끝나지만,<br>
+            바다와 고래들의 이야기는 계속됩니다.<br><br>
+            <strong>당신도 바다의 수호자입니다.</strong>
+          </p>
+          <button class="ending-btn" onclick="goToMain()">
+            🏠 처음으로 돌아가기
+          </button>
+          <button class="ending-btn" onclick="restartSeason3()">
+            🔄 시즌3 다시보기
+          </button>
+          <div class="credits">
+            🐋 푸른 고래섬의 비밀 모험단 🐋<br>
+            모든 모험을 함께해주셔서 감사합니다.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    console.log('🚀 시즌3 스크립트 시작');
+
+    // 캔버스 설정
+    const canvas = document.getElementById('map-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 섬 위치 정의 (10개 챕터)
+    const islands = [
+      { x: 0.15, y: 0.35, name: '마지막 신호', emoji: '📡', color: '#1a1a2e' },
+      { x: 0.22, y: 0.55, name: '운명의 회의', emoji: '🤝', color: '#0f3460' },
+      { x: 0.32, y: 0.4, name: '심해로', emoji: '🚢', color: '#16213e' },
+      { x: 0.42, y: 0.58, name: '그림자 회랑', emoji: '👻', color: '#1a1a2e' },
+      { x: 0.52, y: 0.42, name: '심연의 무덤', emoji: '⚰️', color: '#0f3460' },
+      { x: 0.62, y: 0.56, name: '그림자 군주', emoji: '👹', color: '#16213e' },
+      { x: 0.70, y: 0.38, name: '빛과 어둠', emoji: '⚔️', color: '#1a1a2e' },
+      { x: 0.78, y: 0.52, name: '바다의 심장', emoji: '💙', color: '#0f3460' },
+      { x: 0.85, y: 0.36, name: '정화', emoji: '✨', color: '#16213e' },
+      { x: 0.92, y: 0.48, name: '새로운 시작', emoji: '🌅', color: '#1a1a2e' }
+    ];
+
+    // 고래 초기 위치
+    const whale = { x: 0.1, y: 0.25 };
+
+    // 현재 진행 상태
+    let currentStep = -1;
+    let pathProgress = 0;
+
+    // 지도 그리기
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 별 그리기
+      drawStars();
+
+      // 파도 그리기
+      drawWaves();
+
+      // 섬들 그리기
+      islands.forEach((island, index) => {
+        drawIsland(island, index <= currentStep);
+      });
+
+      // 경로 그리기
+      if (currentStep >= 0) {
+        drawPath();
+      }
+
+      // 고래 그리기
+      drawWhale();
+    }
+
+    // 별 그리기
+    function drawStars() {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      for (let i = 0; i < 50; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height * 0.5;
+        const size = Math.random() * 2;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 파도 그리기
+    function drawWaves() {
+      ctx.fillStyle = 'rgba(26, 26, 46, 0.3)';
+
+      for (let i = 0; i < 4; i++) {
+        const time = Date.now() / 1000;
+        const offset = Math.sin(time + i) * 15;
+        ctx.beginPath();
+        ctx.ellipse(
+          canvas.width * (0.15 + i * 0.25) + offset,
+          canvas.height * (0.6 + i * 0.08),
+          70, 18, 0, 0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+
+    // 섬 그리기
+    function drawIsland(island, isActive) {
+      const x = canvas.width * island.x;
+      const y = canvas.height * island.y;
+
+      // 섬 그림자
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 25, 85, 32, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 섬 베이스
+      ctx.fillStyle = isActive ? '#4d5d6c' : '#333';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 20, 80, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#2d3d4c';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 섬 표면
+      ctx.fillStyle = isActive ? '#6d7d8c' : '#555';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 10, 75, 28, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = isActive ? '#4d5d6c' : '#444';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 보석
+      ctx.fillStyle = isActive ? island.color : '#666';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 5;
+      ctx.fillRect(x - 20, y - 30, 40, 35);
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // 보석 내부
+      ctx.fillStyle = isActive ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)';
+      ctx.fillRect(x - 18, y - 28, 36, 31);
+
+      // 보석 라인
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 15, y - 20);
+      ctx.lineTo(x + 15, y - 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - 15, y - 12);
+      ctx.lineTo(x + 15, y - 12);
+      ctx.stroke();
+
+      // 섬 이름 배경
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillRect(x - 50, y + 42, 100, 28);
+
+      // 섬 이름
+      ctx.fillStyle = isActive ? '#1a1a2e' : '#666';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${island.emoji} ${island.name}`, x, y + 56);
+    }
+
+    // 경로 그리기
+    function drawPath() {
+      if (currentStep < 0) return;
+
+      ctx.strokeStyle = '#0f3460';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.setLineDash([12, 8]);
+      ctx.shadowColor = 'rgba(15, 52, 96, 0.5)';
+      ctx.shadowBlur = 10;
+
+      ctx.beginPath();
+      ctx.moveTo(canvas.width * whale.x, canvas.height * whale.y);
+
+      for (let i = 0; i <= currentStep; i++) {
+        const island = islands[i];
+        const targetX = canvas.width * island.x;
+        const targetY = canvas.height * island.y;
+
+        if (i === currentStep) {
+          const progressX = canvas.width * whale.x + (targetX - canvas.width * whale.x) * pathProgress;
+          const progressY = canvas.height * whale.y + (targetY - canvas.height * whale.y) * pathProgress;
+          ctx.lineTo(progressX, progressY);
+        } else {
+          ctx.lineTo(targetX, targetY);
+        }
+      }
+
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
+    }
+
+    // 고래 그리기
+    function drawWhale() {
+      let x = canvas.width * whale.x;
+      let y = canvas.height * whale.y;
+
+      if (currentStep >= 0 && currentStep < islands.length) {
+        const target = islands[currentStep];
+        x = canvas.width * whale.x + (canvas.width * target.x - canvas.width * whale.x) * pathProgress;
+        y = canvas.height * whale.y + (canvas.height * target.y - canvas.height * whale.y) * pathProgress;
+      }
+
+      const floatOffset = Math.sin(Date.now() / 500) * 8;
+      y += floatOffset;
+
+      // 그림자
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 35, 40, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 고래 몸
+      ctx.fillStyle = '#1a1a2e';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetY = 5;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 40, 25, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // 고래 눈
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(x - 12, y - 6, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      ctx.arc(x - 14, y - 7, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 가방
+      ctx.fillStyle = '#8B4513';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 3;
+      ctx.fillRect(x - 14, y - 25, 25, 22);
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      ctx.fillStyle = '#D2691E';
+      ctx.fillRect(x - 12, y - 23, 21, 18);
+
+      // 가방 스트랩
+      ctx.strokeStyle = '#654321';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 25);
+      ctx.quadraticCurveTo(x - 18, y - 18, x - 18, y);
+      ctx.stroke();
+
+      // 버클
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(x - 4, y - 17, 7, 5);
+    }
+
+    // 스크롤 이벤트
+    let isAnimating = false;
+
+    function handleScroll() {
+      if (isAnimating) return;
+
+      const scrollPercent = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      document.getElementById('progress-bar').style.width = (scrollPercent * 100) + '%';
+
+      // 인트로 섹션 체크
+      const introSection = document.querySelector('.intro-section');
+      const introRect = introSection.getBoundingClientRect();
+
+      // 인트로 섹션이 화면에 있으면 part3-main.jpg 유지
+      if (introRect.bottom > window.innerHeight * 0.3) {
+        const mapContainer = document.getElementById('map-container');
+        const mainBg = 'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-main.jpg)';
+        if (mapContainer.style.backgroundImage !== mainBg) {
+          mapContainer.style.backgroundImage = mainBg;
+        }
+        document.getElementById('chapter-indicator').textContent = '🌊 시즌3 - 최종화';
+        return;
+      }
+
+      const sections = document.querySelectorAll('.story-section');
+      const backgroundImages = [
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-1.jpg)',   // Part 1
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-2.jpg)',   // Part 2
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-3.jpg)',   // Part 3
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-4.jpg)',   // Part 4
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-5.jpg)',   // Part 5
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-6.jpg)',   // Part 6
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-7.jpg)',   // Part 7
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-8.jpg)',   // Part 8
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-9.jpg)',   // Part 9
+        'url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/whale-story/part3-10.jpg)'   // Part 10
+      ];
+
+      // 화면 중앙에 가장 가까운 섹션 찾기
+      let closestSection = null;
+      let closestDistance = Infinity;
+      let closestIndex = -1;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 화면 중앙까지의 거리 계산
+        const sectionCenter = rect.top + rect.height / 2;
+        const screenCenter = window.innerHeight / 2;
+        const distance = Math.abs(sectionCenter - screenCenter);
+
+        // 가장 가까운 섹션 찾기
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = section;
+          closestIndex = index;
+        }
+
+        // 활성화 상태 업데이트
+        if (rect.top < window.innerHeight * 0.6 && rect.bottom > window.innerHeight * 0.4) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+
+      // 가장 가까운 섹션의 배경 이미지 적용
+      if (closestSection && closestIndex >= 0) {
+        const chapterName = closestSection.dataset.chapter;
+        document.getElementById('chapter-indicator').textContent = `🌊 ${chapterName}`;
+
+        const currentBg = backgroundImages[closestIndex];
+        const mapContainer = document.getElementById('map-container');
+
+        // 현재 배경과 다르면 변경
+        if (mapContainer.style.backgroundImage !== currentBg) {
+          mapContainer.style.backgroundImage = currentBg;
+        }
+
+        if (currentStep !== closestIndex) {
+          currentStep = closestIndex;
+          animatePath();
+        }
+      }
+
+      drawMap();
+    }
+
+    // 경로 애니메이션
+    function animatePath() {
+      isAnimating = true;
+      pathProgress = 0;
+
+      const animate = () => {
+        pathProgress += 0.02;
+        if (pathProgress <= 1) {
+          drawMap();
+          requestAnimationFrame(animate);
+        } else {
+          pathProgress = 1;
+          isAnimating = false;
+          drawMap();
+        }
+      };
+
+      animate();
+    }
+
+    // 캔버스 크기 설정
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      console.log(`Canvas 크기: ${canvas.width} x ${canvas.height}`);
+      drawMap();
+    }
+
+    // 연속 애니메이션
+    function continuousAnimation() {
+      drawMap();
+      requestAnimationFrame(continuousAnimation);
+    }
+
+    // 초기화
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    continuousAnimation();
+
+    // 맨위로 스크롤 (부드럽게)
+    function scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    // 메인으로 돌아가기
+    function goToMain() {
+      window.location.href = '/whale_island_journey.html';
+    }
+
+    // 시즌3 다시보기
+    function restartSeason3() {
+      window.location.reload();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') scrollToTop();
+    });
+
+    console.log('✅ 시즌3 스크립트 초기화 완료');
+  </script>
+</body>
+</html>

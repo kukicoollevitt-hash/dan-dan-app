@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥀 꺼삐딴 리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/cap/cap01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #8b6b5a 0%, #6a4a3a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #8b6b5a;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #6a4a3a;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #8b6b5a 0%, #6a4a3a 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🥀 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🥀 꺼삐딴 리</h1>
+        <p class="subtitle">
+          전광용 원작<br>
+          시대에 흔들린 기회주의자의 비극
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 해방 직후, 정체성을 잃은 사내 리인서의 현재">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🏚️</span>
+          해방 직후, 정체성을 잃은 사내 리인서의 현재
+        </h2>
+        <div class="story-text">해방 직후의 서울, 전쟁과 혼란으로 폐허가 된 도시는 군데군데 굴뚝에서 연기만 피어오르고 살기 위한 몸부림이 곳곳에서 벌어지고 있었다. 그 속에 리인서, 흔히 '리씨'라 불리는 남자가 있다.
+
+그는 한때 일본 순사가 되어 억지로 일본에 충성하는 척하며 생을 이어오던 식민지 시대의 전형적 '기회주의자', 소시민적 생존자였다. 일본인이 지배자였던 시대에는 몸을 낮추고 그들 방식으로 살아야 한다고 믿었고, 해방 후에는 순식간에 '애국자' 행세를 하며 태도를 바꿨다.
+
+그러나 리씨의 마음속에는 끊임없는 공포와 불안이 자리하고 있었다. 일제 때의 흔적을 누가 들추지는 않을까, 언제 누가 자신을 고발하지 않을까—이 두려움 때문에 그는 늘 눈치를 보며 살아간다.
+
+집에서는 가족들에게 "세상은 영악해야 산다"고 말하며 허세를 부리지만, 사실 그는 시대 변화에 밀려 떠내려가는 조각배 같은 존재였다. 해방은 그에게 축복이 아니라, 또 다른 불안이었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 해방 이후의 혼란 속에서 떠도는 리씨의 출세욕">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">🔥</span>
+          해방 이후의 혼란 속에서 떠도는 리씨의 출세욕
+        </h2>
+        <div class="story-text">리씨는 해방 후 새로운 권력 구조 속에서 자신이 설 자리를 찾기 위해 불나방처럼 여기저기 기웃거린다. 미군정이 들어서고 좌·우익 세력이 뒤엉키는 혼란 속에서, 그는 어느 쪽에도 확실히 기대지 못한 채 눈치만 본다.
+
+좌익이 득세하면 좌익 쪽에 붙는 척하고, 우익이 우세하면 우익의 논리를 따라 말한다. 그러나 그는 이 모든 행동을 신념이 아니라 오로지 생존과 출세를 위해 한다.
+
+하지만 그런 태도는 오히려 사람들에게 불신만 사고, 그는 어느 편에서도 환영받지 못한다. 그의 내면은 점점 더 비겁함과 두려움으로 가득 차고, 그는 자신이 점점 '잡종같은 인간'으로 변해간다는 사실을 스스로도 느낀다.
+
+하지만 리씨에게 중요한 건 오직 당장의 안전과 가짜 명예였다. "나는 깨어 있는 사람이다"라는 허황된 자기 위안으로 하루를 버틴다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 전쟁의 불길, 그리고 가족을 끌고 도망치는 리씨">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">💥</span>
+          전쟁의 불길, 그리고 가족을 끌고 도망치는 리씨
+        </h2>
+        <div class="story-text">6·25 전쟁이 발발하자 서울은 순식간에 혼란에 빠진다. 사람들은 살기 위해 짐을 싸고 남쪽으로 피난 내려가기 시작한다. 리씨는 남들보다 더 빠르게 위기 상황을 감지하고 가족을 부산하게 챙겨 도망친다.
+
+그는 평소 자신을 무시하던 이웃들에게 "내 말 듣지 그러셨어!"라며 신경질적으로 소리치지만, 사실 그의 마음도 폭탄 터질 듯 무너져 내려간다.
+
+피난길, 리씨는 길목마다 어떤 세력이 장악했는지에 따라 말투와 태도를 재빨리 바꾼다. 북한군이 지키고 있으면 그들에게 굽실거리며 자신이 '해방된 조선의 참된 민중'인 것처럼 행동하고, 국군이나 미군이 나타나면 '반공의 투사'처럼 큰소리친다.
+
+이런 위태로운 태도는 가족들에게도 불안을 안겨준다. 아내는 그런 리씨를 보며 마음속 깊은 곳에서 실망을 느끼고, 아이들은 아버지가 왜 이렇게 급변하는지 이해하지 못한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 피난민 속에서 드러나는 리씨의 이중성과 불안">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">😰</span>
+          피난민 속에서 드러나는 리씨의 이중성과 불안
+        </h2>
+        <div class="story-text">피난길에서 리씨는 수많은 사람들과 스쳐 지나간다. 가족을 잃은 사람, 생계를 잃은 사람, 모든 걸 잃고도 묵묵히 걸어가는 노인들… 그런 모습을 보며 그는 잠시 측은함을 느끼기도 하지만, 금세 자신의 안전과 생계가 더 중요하다는 생각으로 돌아선다.
+
+그가 머무르는 임시 피난처에서는 식량이 부족해지고 사람들의 갈등도 커져 가는데, 리씨는 어떻게든 자신과 가족만은 더 나은 음식을 얻기 위해 군번줄 하나를 주워다 '예비군 출신'이라 속이거나, 뒷전 사람을 제치고 줄 앞으로 새치기를 하기도 한다.
+
+이런 행동은 주변 사람들의 눈총을 사지만, 그는 "살기 위해 어쩔 수 없는 것"이라며 스스로를 합리화한다.
+
+그러나 가족들은 점점 리씨의 이기심과 비겁함을 견디지 못하고, 리씨는 가족의 눈빛마저 피하게 된다. 전쟁은 사람을 바꾸는 동시에 본성을 드러내게 한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 점점 더 무너지는 자존심과, 권력에 붙어 살아남으려는 본능">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">📉</span>
+          점점 더 무너지는 자존심과, 권력에 붙어 살아남으려는 본능
+        </h2>
+        <div class="story-text">전쟁이 장기화되면서 리씨는 점점 더 초라해진다. 예전에는 지배자에게 몸을 굽히는 것이 살길이었지만, 전쟁 속에서는 누가 지배자인지 매일 바뀌기 때문이다.
+
+그는 한때 자신이 일본 순사였다는 사실을 숨기기 위해 노력하지만, 피난촌에서 우연히 자신을 알아보는 사람이 나타나자 공포에 질린다. 그는 그 사람에게 억울하다며 읍소하고, 자신은 강요받아 어쩔 수 없이 순사 노릇을 했다고 변명한다.
+
+하지만 그의 말은 설득력이 없고, 그는 그날 밤 한숨도 자지 못한다. 리씨는 자신이 얼마나 부끄러운 인간인지 점점 깨닫지만, 동시에 그 부끄러움을 인정할 용기도 없다.
+
+그는 여전히 누군가 자신을 이끌어주기만 하면 복종할 준비가 되어 있고, 강한 자에게 기생해 살아남고자 한다. 하지만 시대는 그런 리씨를 받아주지 않는다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 종군기자단과의 우연한 조우, 그리고 잠시 찾은 위안">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">📰</span>
+          종군기자단과의 우연한 조우, 그리고 잠시 찾은 위안
+        </h2>
+        <div class="story-text">어느 날, 리씨는 종군기자단 일행을 우연히 만나게 된다. 기자들은 전쟁의 참혹함을 기록하며 전선을 오가고 있었고, 리씨는 그들을 보며 묘한 감정을 느낀다.
+
+자신과 달리 신념을 가지고 움직이는 사람들, 특정 세력에 붙어 이익을 취하려는 것이 아니라 '사실을 기록하고자' 움직이는 모습을 보며 그는 잠시 압도된다.
+
+기자 중 한 명은 리씨에게 따뜻한 차 한 잔을 건네고, 리씨는 오랜만에 인간다운 대접을 받았다는 느낌에 코끝이 찡해진다. 그는 기자들에게 과거의 자신을 숨기려 애쓰며, 자신도 언젠가는 떳떳하게 살고 싶다고 말한다.
+
+그러나 기자들의 대화 속에는, 시대가 어떻게 개인의 양심을 시험하는지에 대한 성찰이 가득했고, 리씨는 그 이야기에 말없이 귀를 기울인다.
+
+짧은 만남이었지만, 리씨는 잠시나마 인간으로서의 온기를 느끼고, 자신도 변화할 수 있을지 모른다는 희미한 기대를 품는다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 다시금 찾아온 전쟁의 폭력, 그리고 리씨의 극단적 공포">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">💣</span>
+          다시금 찾아온 전쟁의 폭력, 그리고 리씨의 극단적 공포
+        </h2>
+        <div class="story-text">전쟁이 더욱 격해지고 포성이 가까이 들려오자 사람들은 또다시 짐을 싸고 이동한다. 리씨도 가족을 이끌고 피난길을 재개하지만, 어느 날 길목에서 군인들에게 붙잡히게 된다.
+
+그들은 리씨에게 신분을 확인하고, 과거의 행적을 묻는다. 리씨는 패닉에 빠져 자신이 누구인지, 어떤 일을 했는지 뒤죽박죽으로 말하며 오히려 의심만 산다.
+
+그의 아내와 아이들은 두려움에 떨고, 리씨는 그들의 눈을 바라보지도 못한다. 그는 살아남기 위해 바닥까지 추락한 비굴함을 드러내며, 자신이 한 행동 모두 시대의 강요였다고 기어 들어가는 목소리로 변명한다.
+
+그러나 이 모든 모습은 가족에게 더 큰 실망을 안긴다. 포성이 더 가까워지면서 사람들은 흩어지고, 리씨 가족도 우왕좌왕하게 된다. 리씨는 이 절체절명의 순간에도 자신의 생명만을 먼저 챙기려는 모습을 보이며, 결국 가족들과 떨어진 채 홀로 남겨진다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 전쟁 고아들과의 조우, 여전히 남은 인간성의 불씨">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">👦</span>
+          전쟁 고아들과의 조우, 여전히 남은 인간성의 불씨
+        </h2>
+        <div class="story-text">홀로 남겨진 리씨는 며칠 동안 배고픔과 추위에 시달리며 떠돌아다니다가, 우연히 전쟁 고아 몇 명이 모여 있는 폐허 같은 건물을 발견한다.
+
+아이들은 겁에 질려 있지만 서로를 의지하며 살아가고 있었고, 리씨는 그 모습을 보며 마음속 깊은 곳에서 오래된 죄책감이 살아나는 듯한 느낌을 받는다.
+
+그는 아이들에게 먹을 것을 조금 나눠주며 잠시 그들과 함께 생활한다. 아이들은 리씨를 두려워하지도, 판단하지도 않았다. 그저 어른으로서 그를 받아들였고, 리씨는 그 순수함 앞에서 말없이 눈물을 흘린다.
+
+짧은 시간이었지만, 리씨는 오랜 세월 잊고 지내던 인간성을 다시금 느낀다. "나도… 이렇게 살 수 있었을까."
+
+그는 처음으로 자기 삶을 진지하게 돌아보지만, 이미 많은 것이 늦어버렸다는 절망도 동시에 느낀다. 그러나 아이들과 머문 며칠은 그에게 희미한 빛과도 같은 기억으로 남는다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 전쟁이 끝나갈 무렵, 돌아갈 곳을 잃은 리씨">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🏚️</span>
+          전쟁이 끝나갈 무렵, 돌아갈 곳을 잃은 리씨
+        </h2>
+        <div class="story-text">전쟁의 양상이 변하며 소강 상태가 오자 리씨는 다시 움직인다. 그러나 이제 그는 더 이상 돌아갈 가족도, 고향 집도 없다.
+
+전쟁 통에 모든 것이 흩어졌고, 그가 살아남기 위해 취해온 행동들은 사람들의 기억 속에 나쁜 형태로 남아 있었다.
+
+그는 자신이 만든 삶의 잔해를 짊어진 채 텅 빈 도심과 폐허 위를 떠돌며, '살아남은 자의 고독'에 갇힌다.
+
+사람들은 전쟁 중에 희생된 가족을 찾고, 잃어버린 일상을 회복하려 애쓰지만, 리씨는 그 어떤 곳에서도 환영받지 못한다.
+
+그는 자신이 전쟁과 시대의 희생자인 동시에, 그 시대를 비겁하게 살아낸 책임자라는 사실을 깨닫는다. 리씨는 어느 곳에서도 "자신의 자리"를 찾지 못하는 인물로 남게 되었고, 더 이상 무엇을 위해 살아야 할지도 모른 채 무기력에 빠진다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. '꺼삐딴 리'라는 비극적 상징으로 남다">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🥀</span>
+          '꺼삐딴 리'라는 비극적 상징으로 남다
+        </h2>
+        <div class="story-text">전쟁이 끝나고 시간이 흐르면서, 리씨는 결국 사회의 그늘 속에서 조용히 사라져 간다.
+
+사람들은 그를 한때 일본 순사였던 기회주의자, 전쟁 때는 어느 편에도 제대로 서지 못한 우유부단한 인간이라 평가했고, 그의 이름은 비극적 풍자가 담긴 '꺼삐딴 리(Capitan Lee)'라는 별명으로 남았다.
+
+그는 결코 지도자도, 영웅도 아니었고, 시대를 꿰뚫는 지성인도 아니었다. 오히려 시대 변화에 끊임없이 흔들리고, 권력 앞에 약했고, 도망치며 살아온 비겁한 인간이었다.
+
+하지만 동시에 그는 그 시대를 살아야만 했던 수많은 소시민의 축소판이기도 했다. 작품은 리씨를 조롱하면서도 연민하며, 한국 근현대사의 거대한 격변 속에서 '개인'이 얼마나 쉽게 흔들리고 무너질 수 있는가를 보여준다.
+
+결국 리씨의 삶은 실패로 끝났지만, 그 실패는 곧 역사의 잔혹함과 민중의 고단함을 반영하는 하나의 상징처럼 남는다. 이렇게 '꺼삐딴 리'는 풍자와 비극이 한데 얽힌 한국문학 속 잊지 못할 캐릭터로 완성된다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🥀 꺼삐딴 리</h1>
+        <p class="subtitle">
+          전광용 원작<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/cap/cap01.jpg',
+      '/images/cap/cap02.jpg',
+      '/images/cap/cap03.jpg',
+      '/images/cap/cap04.jpg',
+      '/images/cap/cap05.jpg',
+      '/images/cap/cap06.jpg',
+      '/images/cap/cap07.jpg',
+      '/images/cap/cap08.jpg',
+      '/images/cap/cap09.jpg',
+      '/images/cap/cap10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🥀 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

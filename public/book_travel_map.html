@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>단단국어 도서 여행 지도</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 50%, #F0E68C 100%);
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px 40px;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    /* SVG 맵 컨테이너 */
+    .map-container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 120px 20px 20px;
+    }
+
+    svg {
+      max-width: 1200px;
+      max-height: 80vh;
+      width: 100%;
+      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.1));
+    }
+
+    /* 섬 스타일 */
+    .island {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .island:hover {
+      transform: scale(1.05);
+      filter: brightness(1.1);
+    }
+
+    .island-base {
+      fill: #8B7355;
+      stroke: #654321;
+      stroke-width: 2;
+    }
+
+    .island-grass {
+      fill: #90EE90;
+      stroke: #228B22;
+      stroke-width: 1.5;
+    }
+
+    /* 책 아이콘 */
+    .book-icon {
+      transition: all 0.3s ease;
+    }
+
+    .island:hover .book-icon {
+      transform: scale(1.2);
+    }
+
+    /* 고래 애니메이션 */
+    .whale {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 파도 애니메이션 */
+    .wave {
+      animation: wave 4s ease-in-out infinite;
+      opacity: 0.3;
+    }
+
+    @keyframes wave {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(20px); }
+    }
+
+    /* 텍스트 스타일 */
+    .island-label {
+      font-size: 18px;
+      font-weight: bold;
+      fill: #2c3e50;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .island-count {
+      font-size: 14px;
+      fill: #7f8c8d;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    /* 완료 배지 */
+    .completed-badge {
+      fill: #FFD700;
+      stroke: #FFA500;
+      stroke-width: 2;
+    }
+
+    /* 툴팁 */
+    .tooltip {
+      position: absolute;
+      background: white;
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+      max-width: 300px;
+    }
+
+    .tooltip.active {
+      opacity: 1;
+    }
+
+    .tooltip h3 {
+      color: #2c3e50;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+
+    .tooltip p {
+      color: #7f8c8d;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* 경로 선 */
+    .travel-path {
+      fill: none;
+      stroke: #3498db;
+      stroke-width: 3;
+      stroke-dasharray: 10, 5;
+      opacity: 0.5;
+      animation: dash 20s linear infinite;
+    }
+
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -1000;
+      }
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 22px;
+      }
+      .map-container {
+        padding: 100px 10px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 뒤로가기 버튼 -->
+  <button class="back-btn" onclick="goBack()">← 돌아가기</button>
+
+  <!-- 헤더 -->
+  <div class="header">
+    <h1>📚 단단국어 도서 여행 지도</h1>
+    <p>읽고 싶은 섬을 클릭해보세요!</p>
+  </div>
+
+  <!-- 지도 컨테이너 -->
+  <div class="map-container">
+    <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+      <!-- 배경 파도 -->
+      <g class="wave">
+        <ellipse cx="200" cy="500" rx="80" ry="20" fill="#B0E0E6" />
+      </g>
+      <g class="wave" style="animation-delay: 1s;">
+        <ellipse cx="700" cy="450" rx="100" ry="25" fill="#B0E0E6" />
+      </g>
+      <g class="wave" style="animation-delay: 2s;">
+        <ellipse cx="450" cy="520" rx="90" ry="22" fill="#B0E0E6" />
+      </g>
+
+      <!-- 여행 경로 선 -->
+      <path class="travel-path" d="M 500,50 Q 350,200 200,300 T 500,400 T 800,300" />
+
+      <!-- 고래 캐릭터 (중앙 상단) -->
+      <g class="whale" transform="translate(480, 30)">
+        <ellipse cx="20" cy="20" rx="30" ry="20" fill="#4A90E2" />
+        <circle cx="15" cy="15" r="3" fill="white" />
+        <circle cx="13" cy="14" r="1.5" fill="black" />
+        <path d="M -10,20 Q -15,25 -12,28" stroke="#4A90E2" stroke-width="3" fill="none" />
+        <rect x="15" y="5" width="15" height="18" fill="#8B4513" rx="2" />
+        <rect x="17" y="7" width="11" height="14" fill="#D2691E" />
+      </g>
+
+      <!-- 섬 1: 고전문학 (좌측 상단) -->
+      <g class="island" data-category="korlit/classic" onclick="navigateToIsland('classic')">
+        <!-- 섬 베이스 -->
+        <ellipse cx="200" cy="280" rx="100" ry="40" class="island-base" />
+        <ellipse cx="200" cy="270" rx="95" ry="38" class="island-grass" />
+
+        <!-- 책 아이콘 -->
+        <g class="book-icon" transform="translate(200, 250)">
+          <rect x="-20" y="-25" width="40" height="35" fill="#E74C3C" rx="3" />
+          <rect x="-18" y="-23" width="36" height="31" fill="#C0392B" />
+          <line x1="-18" y1="-15" x2="18" y2="-15" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+          <line x1="-18" y1="-8" x2="18" y2="-8" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+        </g>
+
+        <!-- 라벨 -->
+        <text x="200" y="310" class="island-label">고전문학</text>
+        <text x="200" y="330" class="island-count">40개의 작품</text>
+      </g>
+
+      <!-- 섬 2: 현대문학 (중앙) -->
+      <g class="island" data-category="korlit/modern" onclick="navigateToIsland('modern')">
+        <ellipse cx="500" cy="380" rx="110" ry="45" class="island-base" />
+        <ellipse cx="500" cy="370" rx="105" ry="42" class="island-grass" />
+
+        <g class="book-icon" transform="translate(500, 350)">
+          <rect x="-20" y="-25" width="40" height="35" fill="#3498DB" rx="3" />
+          <rect x="-18" y="-23" width="36" height="31" fill="#2980B9" />
+          <line x1="-18" y1="-15" x2="18" y2="-15" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+          <line x1="-18" y1="-8" x2="18" y2="-8" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+        </g>
+
+        <text x="500" y="410" class="island-label">현대문학</text>
+        <text x="500" y="430" class="island-count">40개의 작품</text>
+      </g>
+
+      <!-- 섬 3: 인물전기 (우측 상단) -->
+      <g class="island" data-category="person" onclick="navigateToIsland('person')">
+        <ellipse cx="800" cy="280" rx="95" ry="40" class="island-base" />
+        <ellipse cx="800" cy="270" rx="90" ry="38" class="island-grass" />
+
+        <g class="book-icon" transform="translate(800, 250)">
+          <rect x="-20" y="-25" width="40" height="35" fill="#9B59B6" rx="3" />
+          <rect x="-18" y="-23" width="36" height="31" fill="#8E44AD" />
+          <line x1="-18" y1="-15" x2="18" y2="-15" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+          <line x1="-18" y1="-8" x2="18" y2="-8" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+        </g>
+
+        <text x="800" y="310" class="island-label">인물전기</text>
+        <text x="800" y="330" class="island-count">40개의 인물</text>
+      </g>
+
+      <!-- 섬 4: 사회분야 (좌측 하단) -->
+      <g class="island" data-category="social" onclick="navigateToIsland('social')">
+        <ellipse cx="250" cy="480" rx="90" ry="38" class="island-base" />
+        <ellipse cx="250" cy="470" rx="85" ry="36" class="island-grass" />
+
+        <g class="book-icon" transform="translate(250, 450)">
+          <rect x="-20" y="-25" width="40" height="35" fill="#F39C12" rx="3" />
+          <rect x="-18" y="-23" width="36" height="31" fill="#E67E22" />
+          <line x1="-18" y1="-15" x2="18" y2="-15" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+          <line x1="-18" y1="-8" x2="18" y2="-8" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+        </g>
+
+        <text x="250" y="505" class="island-label">사회분야</text>
+        <text x="250" y="525" class="island-count">지리·역사·도덕</text>
+      </g>
+
+      <!-- 섬 5: 과학분야 (우측 하단) -->
+      <g class="island" data-category="science" onclick="navigateToIsland('science')">
+        <ellipse cx="750" cy="480" rx="90" ry="38" class="island-base" />
+        <ellipse cx="750" cy="470" rx="85" ry="36" class="island-grass" />
+
+        <g class="book-icon" transform="translate(750, 450)">
+          <rect x="-20" y="-25" width="40" height="35" fill="#27AE60" rx="3" />
+          <rect x="-18" y="-23" width="36" height="31" fill="#229954" />
+          <line x1="-18" y1="-15" x2="18" y2="-15" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+          <line x1="-18" y1="-8" x2="18" y2="-8" stroke="#fff" stroke-width="1.5" opacity="0.5" />
+        </g>
+
+        <text x="750" y="505" class="island-label">과학분야</text>
+        <text x="750" y="525" class="island-count">생물·물리·화학</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 툴팁 -->
+  <div class="tooltip" id="tooltip">
+    <h3 id="tooltip-title"></h3>
+    <p id="tooltip-desc"></p>
+  </div>
+
+  <script>
+    // 섬 정보
+    const islandData = {
+      classic: {
+        title: '고전문학 섬',
+        desc: '시대를 초월한 명작들이 기다리고 있어요. 춘향전, 심청전 등 우리 고전을 만나보세요!',
+        url: '/BRAINUP/korlit/classic_list.html'
+      },
+      modern: {
+        title: '현대문학 섬',
+        desc: '현대의 감성이 담긴 작품들. 소년이 온다, 82년생 김지영 등 현대 문학을 탐험해보세요!',
+        url: '/BRAINUP/korlit/modern_list.html'
+      },
+      person: {
+        title: '인물전기 섬',
+        desc: '역사를 만든 위인들의 이야기. 세종대왕, 신사임당 등 40명의 인물을 만나보세요!',
+        url: '/BRAINUP/person/people_list.html'
+      },
+      social: {
+        title: '사회분야 섬',
+        desc: '세상을 이해하는 지혜. 지리, 역사, 도덕 영역의 다양한 지식이 기다려요!',
+        url: '/BRAINUP/social/geo_list.html'
+      },
+      science: {
+        title: '과학분야 섬',
+        desc: '자연의 신비를 탐구해요. 생물, 물리, 화학의 흥미로운 세계로 떠나볼까요?',
+        url: '/BRAINUP/science/bio_list.html'
+      }
+    };
+
+    // 섬 클릭 네비게이션
+    function navigateToIsland(category) {
+      const island = islandData[category];
+      if (island && island.url) {
+        window.location.href = island.url;
+      }
+    }
+
+    // 툴팁 표시
+    const tooltip = document.getElementById('tooltip');
+    const islands = document.querySelectorAll('.island');
+
+    islands.forEach(island => {
+      island.addEventListener('mouseenter', function(e) {
+        const category = this.dataset.category.split('/').pop();
+        const data = islandData[category];
+
+        if (data) {
+          document.getElementById('tooltip-title').textContent = data.title;
+          document.getElementById('tooltip-desc').textContent = data.desc;
+          tooltip.classList.add('active');
+        }
+      });
+
+      island.addEventListener('mousemove', function(e) {
+        tooltip.style.left = (e.clientX + 20) + 'px';
+        tooltip.style.top = (e.clientY + 20) + 'px';
+      });
+
+      island.addEventListener('mouseleave', function() {
+        tooltip.classList.remove('active');
+      });
+    });
+
+    // 뒤로가기
+    function goBack() {
+      window.history.back();
+    }
+
+    // 키보드 단축키 (ESC로 뒤로가기)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        goBack();
+      }
+    });
+  </script>
+</body>
+</html>

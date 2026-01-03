@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌧️ 운수 좋은 날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/good/good1_01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5a6a7a 0%, #3a4a5a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #5a6a7a;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #3a4a5a;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #5a6a7a 0%, #3a4a5a 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌧️ 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌧️ 운수 좋은 날</h1>
+        <p class="subtitle">
+          현진건 원작<br>
+          비극적 아이러니의 걸작
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 비 내리는 아침의 고단한 시작">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🌧️</span>
+          비 내리는 아침의 고단한 시작
+        </h2>
+        <div class="story-text">비가 추적추적 내리는 아침, 김첨지는 무거운 인력거 손잡이를 붙들고 거리에 나섰다. 비가 오면 손님이 적다는 걸 누구보다 잘 알고 있었지만, 그는 멈출 수 없었다.
+
+며칠째 앓아누운 아내가 그의 마음을 계속 짓눌렀다. 아내를 위해서는 오늘도 단 한 푼이라도 벌어야 했다.
+
+비에 젖은 옷은 몸에 달라붙어 더 차갑게 느껴졌지만, 김첨지는 고개를 숙이며 앞으로 걸었다. 사람들은 바쁘게 지나가고, 거리에는 물웅덩이가 생겨 있었다.
+
+그는 텅 빈 길을 바라보며 한숨을 내쉬었지만, 마음속에는 작은 희망 하나가 남아 있었다.
+
+"오늘도 어떻게든 버텨야지."</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 첫 손님이 가져온 작은 희망">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">🙋</span>
+          첫 손님이 가져온 작은 희망
+        </h2>
+        <div class="story-text">한참을 기다린 끝에 드디어 첫 손님이 나타났다. 우산을 쓴 젊은 사내가 "인력거!" 하고 그를 불렀다.
+
+김첨지는 깜짝 놀라 재빨리 인력거를 돌렸다. 첫 손님은 목적지까지 빨리 데려다 달라고 말했고, 그는 비가 더 쏟아지는 길을 힘껏 달렸다.
+
+젖은 바퀴가 물을 튀기며 달리는 소리가 그의 귀에 크게 울렸다.
+
+목적지에 도착했을 때 손님은 생각보다 많은 돈을 건넸다. 그 순간, 김첨지는 가슴 깊은 곳에서 따뜻한 무언가가 올라오는 걸 느꼈다.
+
+"오늘은… 조금 다를지도 모르겠다."
+
+희미한 기대가 그의 발걸음을 가볍게 했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 이어지는 손님, 이어지는 행운">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">🍀</span>
+          이어지는 손님, 이어지는 행운
+        </h2>
+        <div class="story-text">놀랍게도 첫 손님 이후로 손님이 끊이지 않았다. 비는 오히려 더 거세졌지만, 사람들은 우산만으로는 이동하기 어려웠던지 인력거를 찾기 시작했다.
+
+김첨지는 빗속에서 점점 젖어갔지만, 얼굴에는 오랜만에 웃음이 떠올랐다.
+
+손님을 데려다주고 다시 돌아오는 길에도 금세 또 다른 손님이 나타났다.
+
+그의 품속에서 점점 두꺼워지는 돈은 아내를 위한 희망의 표시 같았다.
+
+"오늘 벌이면 약도 사고, 따뜻한 설렁탕도 사갈 수 있을 거야."
+
+오늘만큼은 정말 '운수 좋은 날'인 것처럼 보였다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 아내를 위한 따뜻한 약속">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">💕</span>
+          아내를 위한 따뜻한 약속
+        </h2>
+        <div class="story-text">잠시 비를 피해 처마 아래에 서 있던 김첨지는 호주머니 속의 돈을 꺼내 바라보았다. 손바닥 위에서 묵직하게 느껴지는 그 돈은 아내의 얼굴을 떠올리게 했다.
+
+며칠째 누워 있는 아내는 제대로 먹지 못해 기운이 빠져 있었다.
+
+김첨지는 미안함과 걱정으로 가슴이 조여 왔다.
+
+"오늘만큼은 꼭 따뜻한 걸 먹여야지."
+
+그는 스스로에게 단단히 약속했다. 작은 돈 한 푼에도 흔들리던 그의 마음 속에 오랜만에 '가족을 위한 희망'이 싹트고 있었다.
+
+그는 다시 인력거 손잡이를 잡으며 깊은 숨을 들이마셨다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 고된 길을 건넌 큰손 손님">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">💰</span>
+          고된 길을 건넌 큰손 손님
+        </h2>
+        <div class="story-text">오후 무렵, 한 부유해 보이는 손님이 나타나 김첨지에게 먼 길을 가자고 했다. 비바람은 점점 세지고 길은 울퉁불퉁했지만, 그는 기꺼이 인력거를 끌고 나섰다.
+
+오르막길을 오를 때마다 다리가 후들거렸지만, 그는 이를 악물었다.
+
+"조금만 더 하면 아내가 좋아할 거야."
+
+목적지에 도착하자 손님은 약속보다 훨씬 많은 돈을 건넸다.
+
+김첨지는 깜짝 놀라며 고개를 숙여 몇 번이나 감사를 전했다. 오늘 하루의 벌이가 평소 며칠치에 가까웠다.
+
+그는 빗속에서 젖은 채 웃음을 터뜨렸다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 설렁탕을 품에 안고">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">🍲</span>
+          설렁탕을 품에 안고
+        </h2>
+        <div class="story-text">해가 질 무렵, 김첨지는 가게 하나에 들어가 아내가 평소 가장 좋아하던 따뜻한 설렁탕을 한 그릇 포장했다.
+
+김이 모락모락 피어오르는 국물에서 구수한 향이 났다.
+
+그는 그 그릇을 마치 귀한 보물처럼 들고 조심스럽게 걸었다.
+
+"이걸 먹고 기운 좀 차려야지, 여보…"
+
+그는 설렁탕을 꼭 끌어안고 집으로 향했다. 비는 여전히 내렸지만, 그의 마음만큼은 따뜻한 국물처럼 점점 밝아지고 있었다.
+
+오늘만큼은 아내가 웃을 수 있을 것 같았다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 집으로 달려가는 길">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🏃</span>
+          집으로 달려가는 길
+        </h2>
+        <div class="story-text">김첨지는 설렁탕이 쏟아지지 않게 조심하면서도 빠르게 집으로 달렸다. 온몸은 젖었지만, 마음은 가벼웠다.
+
+"여보, 오늘은 내가 운수 좋은 날이야! 당신 좋아하는 설렁탕 사 왔소!"
+
+그는 집에서 아내가 좋아할 모습을 상상하며 발걸음을 더욱 재촉했다.
+
+빗물이 튀어 오르고 바람이 휘몰아쳤지만, 멀리 보이는 집의 불빛은 그에게 따뜻한 희망처럼 보였다.
+
+김첨지는 거의 뛰다시피 하며 문 앞까지 도착했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 문 앞에서 느껴진 이상한 기운">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">🚪</span>
+          문 앞에서 느껴진 이상한 기운
+        </h2>
+        <div class="story-text">문 앞에 도착한 순간, 그는 평소와 다른 고요함을 느꼈다. 집 안에서는 아무런 소리도 들리지 않았다.
+
+그는 조심스럽게 문을 열었고, 어두운 방 안에서 이웃 아주머니가 굳은 표정으로 다가왔다.
+
+"첨지 아저씨… 마음 굳게 먹어요."
+
+김첨지는 심장이 멎는 듯했다. 설렁탕 그릇을 더 꽉 움켜쥔 채 방 안을 바라보았다.
+
+그곳에는 아내가 조용히 누워 있었다.
+
+그는 손이 떨리며 입술을 움직였지만, 아무 말도 나오지 않았다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 무너지는 희망">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">💔</span>
+          무너지는 희망
+        </h2>
+        <div class="story-text">김첨지는 아내에게 다가가 떨리는 손으로 얼굴을 만졌다. 차갑고 닿는 느낌은 그가 상상했던 따뜻한 저녁과 완전히 달랐다.
+
+"여보… 내가 왔소. 오늘은 운수가 좋다 했는데…"
+
+그는 눈을 질끈 감았다. 그가 하루 종일 끌어안고 왔던 설렁탕은 이제 아무 의미도 없었다.
+
+희망과 기대가 한순간에 산산이 부서졌다.
+
+그는 비에 젖은 옷처럼 무거운 슬픔에 짓눌려 바닥에 주저앉았다.
+
+방 안 공기는 먹먹했고, 그의 흐느낌만이 길게 울렸다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 운수 좋은 날의 잔혹한 진실">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🕯️</span>
+          운수 좋은 날의 잔혹한 진실
+        </h2>
+        <div class="story-text">그날 밤, 김첨지는 오래도록 방 안에 앉아 아내의 손을 잡고 있었다.
+
+낮 동안 자신에게 찾아온 '운수 좋은 날'은 사실 잔혹한 운명의 장난이었다.
+
+아무리 많이 벌어도, 아무리 열심히 살아도 살아 있는 사람에게 하루는 너무 길고, 죽어버린 사람에게 하루는 너무 짧았다.
+
+아내는 이미 떠났고, 김첨지의 운수는 그의 희망이 가장 컸던 순간에 무너졌다.
+
+그는 비 내리는 창밖을 바라보며, 세상의 무심함과 삶의 가혹함을 조용히 받아들였다.
+
+그리고 천천히 속삭였다.
+
+"여보… 내가 너무 늦었소."</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌧️ 운수 좋은 날</h1>
+        <p class="subtitle">
+          현진건 원작<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/good/good1_01.jpg',
+      '/good/good1_02.jpg',
+      '/good/good1_03.jpg',
+      '/good/good1_04.jpg',
+      '/good/good1_05.jpg',
+      '/good/good1_06.jpg',
+      '/good/good1_07.jpg',
+      '/good/good1_08.jpg',
+      '/good/good1_09.jpg',
+      '/good/good1_10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🌧️ ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

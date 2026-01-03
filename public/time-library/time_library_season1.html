@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⏰ 시간도서관 — 시즌 1</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/time-library-story/time_part1_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #34495e;
+      margin-bottom: 12px;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: transparent;
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #ffffff;
+      margin-bottom: 40px;
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 24px;
+      }
+
+      .story-card p {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(255, 107, 53, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(247, 147, 30, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⏰ 시간도서관</h1>
+        <p class="subtitle">
+          시즌 1 - 과거의 문을 열다<br>
+          잊힌 시대의 수호자들
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_01.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 1</span>
+        <h2>도서관의 숨겨진 서고 발견</h2>
+        <p>6학년 민준은 도서관에서 우연히 바닥 장판이 울리는 걸 느낀다.</p>
+        <p>'쿵…쿵…'</p>
+        <p>마치 책장의 아래에서 무언가 심장처럼 뛰는 소리.</p>
+        <p>수아와 태영도 소리를 듣고 놀라 다가온다.</p>
+        <p>그때, 도서관 바닥 무늬 하나가 미세하게 흔들리더니 책장 사이가 스르르 열리며 숨겨진 서고가 나타난다.</p>
+        <p>안쪽엔 먼지가 두껍게 쌓인 고대 책들. 가장 중앙에서 빛나는 금빛 책 한 권이 아이들을 기다리고 있었다.</p>
+        <p>민준이 책을 만지는 순간— 책 표지 문양이 아이들의 손등으로 이동하며 빛을 새기기 시작했다.</p>
+        <p><strong>"선택받은 독자들이여, 과거의 문이 열릴 것이다."</strong></p>
+        <p>아이들은 서로를 보며 숨을 삼킨다. 도서관은 그날부터 완전히 달라지기 시작했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_02.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 2</span>
+        <h2>시간의 책: 『크로노스 기록』</h2>
+        <p>금빛 책 속에서는 글자가 살아 움직이듯 흐르고 있었다. 책 제목은 『크로노스 기록』.</p>
+        <p>페이지가 자동으로 넘겨지더니 첫 장에는 이렇게 쓰여 있었다.</p>
+        <p><strong>"읽는 자는 과거를 보게 되고, 만지는 자는 과거로 들어가게 된다."</strong></p>
+        <p>순간, 아이들 눈앞에 고대 한성(漢城)의 모습이 스케치처럼 펼쳐졌다.</p>
+        <p>한성 시장의 사람들, 상인들의 목소리, 광장 소리… 모두 현실처럼 생생했다.</p>
+        <p>수아가 중얼거렸다. "이거… 그냥 그림이 아니라 실제 장면이야…"</p>
+        <p>그러자 책이 강한 빛을 내며 아이들을 삼켜버렸다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_03.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 3</span>
+        <h2>첫 번째 과거 세계: 고대 한성</h2>
+        <p>아이들은 돌바닥에 발을 딛고 눈을 떴다. 정말로 과거 속에 들어온 것이다.</p>
+        <p>• 상인들이 전통옷을 입고 깨진 토기들을 파는 장면</p>
+        <p>• 기와지붕 아래 아이들이 연을 들고 뛰노는 모습</p>
+        <p>• 시장에서 들리는 구수한 냄새</p>
+        <p>• 공원에서 고려 장군이 훈련하는 모습</p>
+        <p>정말 모든 것이 살아 있었다.</p>
+        <p>아이들이 경악하는 사이, 한 마을 소년이 다급히 달려왔다.</p>
+        <p><strong>"큰일이야! 신비한 서광이 나타났어! 악령이 깨어났대!"</strong></p>
+        <p>아이들은 서로를 바라보며 직감했다. 자신들이 도서관에서 본 '금빛 문양'과 관련된 사건이라는 것을.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_04.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 4</span>
+        <h2>고대 괴현상 조사</h2>
+        <p>한성의 노학자 '연목 선생'은 아이들의 손등에 있는 문양을 보자마자 놀라며 말했다.</p>
+        <p><strong>"그건… 옛 전설에 나온 '시간의 인장'이 아니냐…"</strong></p>
+        <p>선생은 기록을 펼쳐 보이며 설명했다.</p>
+        <p>• 오래전, 시간을 다스리던 고대 장서관이 존재했으며</p>
+        <p>• 그곳에서 '시간의 파편'을 여러 시대에 숨겼다는 것</p>
+        <p>• 그 파편이 깨어날 때마다 과거가 흔들린다는 사실</p>
+        <p>• 그리고 지금, 한성 근처에서 보인 '서광'이 바로 시간파편의 신호라고 했다.</p>
+        <p>민준은 말했다. "우리가… 이걸 찾아야 한다는 거죠?"</p>
+        <p>연목 선생은 고개를 끄덕였다.</p>
+        <p><strong>"그렇지 않으면 한성뿐 아니라 너희 시대까지 무너질 것이다."</strong></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_05.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 5</span>
+        <h2>시간 파편 수색과 고대 생명체 등장</h2>
+        <p>아이들은 서광을 따라 산으로 향했다. 그러자 갑자기 청동 갑옷을 입은 정체불명의 거대한 기계 동물이 나타났다.</p>
+        <p>• 몸은 호랑이</p>
+        <p>• 몸통에는 고대 문자</p>
+        <p>• 눈은 푸른 빛으로 깜빡임</p>
+        <p>• 발걸음마다 '텅—텅' 울림</p>
+        <p>수아가 소리쳤다. "이거… 기계야? 아니면 생명체야?!"</p>
+        <p>태영은 떨리는 목소리로 말했다. "고대 장서관이 만든 시간 수호자…?"</p>
+        <p>기계호랑이는 아이들을 '시간 파편의 후보자'로 인식하고 시험을 시작했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_06.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 6</span>
+        <h2>시간의 시험: 과거를 이해하라</h2>
+        <p>시험은 단순한 전투가 아니었다. 기계호랑이는 아이들 앞에 여러 '과거의 장면'을 띄워 시험했다.</p>
+        <p>• 전쟁으로 마을이 무너지는 모습</p>
+        <p>• 다른 시대의 발명품이 등장하는 순간</p>
+        <p>• 역사적 선택에 따라 미래가 달라지는 장면</p>
+        <p>• 전설 속 영웅의 희생</p>
+        <p>아이들은 선택지 중 하나를 선택해야 했다. 선택에 따라 시간 흐름이 잠시 바뀌었다.</p>
+        <p>수아는 무너진 마을에서 사람들이 서로 돕는 장면을 선택했다.</p>
+        <p>민준은 전쟁을 막기 위한 외교 선택지를 골랐다.</p>
+        <p>태영은 전설 속 영웅의 희생을 기억하는 길을 선택했다.</p>
+        <p>기계호랑이는 고개를 끄덕였다.</p>
+        <p><strong>"너희는 과거를 존중할 줄 아는 자들이다."</strong></p>
+        <p>호랑이는 '시간 파편'을 꺼내 아이들에게 넘긴다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_07.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 7</span>
+        <h2>한성에 닥친 첫 번째 균열</h2>
+        <p>시간 파편을 얻고 돌아오는 길, 하늘 위에 거대한 검은 균열이 생겼다.</p>
+        <p>• 시장의 시간 흐름이 느려지고</p>
+        <p>• 사람들의 움직임이 끊기고</p>
+        <p>• 건물은 반쯤 사라지고</p>
+        <p>• 색깔이 사라진 구역이 생겨났다</p>
+        <p>수아가 말했다. "우리가 파편을 가져오면서… 무언가가 바뀐 것 같아."</p>
+        <p>그때, 어디선가 시간을 비틀어버리는 '어둠의 그림자'가 나타났다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_08.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 8</span>
+        <h2>어둠의 그림자와 첫 전투</h2>
+        <p>그림자 속 인물은 스스로를 <strong>"크로노 브레이커스의 전령"</strong>이라 소개했다.</p>
+        <p>그는 아이들이 가진 파편을 보며 말했다.</p>
+        <p><strong>"시간의 힘은 어린이들의 장난감이 아니다. 과거의 힘은 우리 것이다."</strong></p>
+        <p>전령은 과거 속 여러 시대의 그림자를 불러 아이들을 공격했다.</p>
+        <p>• 과거 전사들의 검 그림자</p>
+        <p>• 고대 장군의 거대한 창</p>
+        <p>• 역사 속 괴물의 실루엣</p>
+        <p>민준은 인장이 반응하자 고대 한성의 '바람의 지혜'를 끌어와 방어막을 만들었다.</p>
+        <p>태영은 새빨간 용기 문양으로 그림자들을 막아냈고, 수아는 기억을 따라 그림자의 약점을 찾아냈다.</p>
+        <p>전령은 결국 물러났지만 마지막으로 말했다.</p>
+        <p><strong>"과거를 건드렸으니, 미래도 변할 것이다."</strong></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_09.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 9</span>
+        <h2>현재로 돌아오지만… 이상하다</h2>
+        <p>파편을 가지고 도서관으로 돌아가는 순간, 아이들은 이상한 소리를 듣는다.</p>
+        <p>'우르르르르—'</p>
+        <p>도서관이 흔들렸다.</p>
+        <p>• 책 표지가 갑자기 뒤바뀌고</p>
+        <p>• 책장 사이에 금빛 실금이 나타나고</p>
+        <p>• 과거에서 본 기계호랑이의 눈빛이 책 속 어느 구석에서 희미하게 반짝였다</p>
+        <p>루미는 충격을 주지 않으려 했지만 결국 말했다.</p>
+        <p><strong>"너희가 과거에서 파편을 가져오면서… 현재 도서관에도 균열이 생긴 것 같아."</strong></p>
+        <p>아이들의 표정이 굳었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/time-library-story/time_part1_10.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 10</span>
+        <h2>시간의 심장이 부린 예고</h2>
+        <p>도서관 깊은 곳에서 파편이 공중으로 떠오르며 강한 빛을 냈다.</p>
+        <p>그 빛 속에는 푸른 구체처럼 생긴 '시간의 심장(Time Core)'가 잠깐 모습을 드러내더니 사라졌다.</p>
+        <p>그러자 책 여러 권이 동시에 속삭였다.</p>
+        <p><strong>"균형이 무너졌다… 미래로 가라… 모든 시간은 연결되어 있다…"</strong></p>
+        <p>민준이 작게 중얼거렸다.</p>
+        <p><strong>"우리가 과거를 살렸지만… 미래가 흔들리고 있어."</strong></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24">
+      <path d="M12 4l-8 8h6v8h4v-8h6z"/>
+    </svg>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="window.location.href='/menu.html'">← 메인으로</button>
+  </div>
+
+  <script>
+    // 스크롤 기반 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+
+    let currentBg = '';
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        // 섹션이 화면 중앙에 있을 때
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+
+      // 스크롤 인디케이터 숨기기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '0.7';
+      }
+    }
+
+    // 초기 로드
+    window.addEventListener('load', () => {
+      updateBackground();
+      // 첫 번째 카드는 바로 표시
+      const firstCard = sections[0].querySelector('.story-card');
+      if (firstCard) {
+        firstCard.classList.add('active');
+      }
+    });
+
+    // 스크롤 이벤트
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  </script>
+</body>
+</html>

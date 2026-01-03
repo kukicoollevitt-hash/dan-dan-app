@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세계지도 지리 학습</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-title span {
+      font-size: 28px;
+    }
+
+    .progress-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: #fff;
+    }
+
+    .progress-text {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .progress-bar-container {
+      width: 200px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+
+    /* 지도 영역 */
+    .map-container {
+      position: relative;
+      width: 95vw;
+      height: 85vh;
+      margin-top: 60px;
+      background: #a7c7e7;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 세계지도 SVG 배경 */
+    .world-map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500"><rect fill="%23a7c7e7" width="1000" height="500"/><g fill="%2390a4ae" opacity="0.6"><path d="M150,100 L180,95 L210,110 L200,140 L170,150 L140,135 Z"/><path d="M250,120 L300,115 L320,140 L310,180 L280,190 L240,170 Z"/><path d="M400,80 L480,75 L520,95 L510,130 L460,145 L410,125 Z"/><path d="M550,110 L620,105 L660,125 L650,165 L600,180 L540,160 Z"/><path d="M200,220 L260,215 L290,240 L280,280 L240,295 L190,270 Z"/><path d="M120,280 L170,275 L195,295 L185,330 L150,345 L110,320 Z"/><path d="M350,250 L420,245 L450,270 L440,310 L390,325 L340,300 Z"/><path d="M500,200 L580,195 L620,220 L610,260 L560,275 L490,250 Z"/><path d="M680,140 L750,135 L780,160 L770,200 L720,215 L670,190 Z"/><path d="M800,180 L860,175 L885,195 L875,230 L830,245 L790,220 Z"/><path d="M300,340 L360,335 L385,355 L375,390 L330,405 L290,380 Z"/><path d="M450,320 L520,315 L550,340 L540,380 L490,395 L440,370 Z"/></g></svg>');
+      background-size: cover;
+      background-position: center;
+      pointer-events: none;
+    }
+
+    /* 깃발 마커 */
+    .flag {
+      position: absolute;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .flag:hover {
+      transform: scale(1.2);
+      z-index: 20;
+    }
+
+    .flag-pole {
+      position: relative;
+      width: 3px;
+      height: 50px;
+      background: #333;
+      margin: 0 auto;
+    }
+
+    .flag-icon {
+      position: absolute;
+      top: 0;
+      left: 3px;
+      width: 35px;
+      height: 25px;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      border-radius: 3px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      animation: wave 2s ease-in-out infinite;
+    }
+
+    .flag.completed .flag-icon {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      animation: none;
+    }
+
+    .flag.locked .flag-icon {
+      background: linear-gradient(135deg, #999 0%, #777 100%);
+      animation: none;
+      cursor: not-allowed;
+    }
+
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-5deg); }
+      75% { transform: rotate(5deg); }
+    }
+
+    .flag-label {
+      position: absolute;
+      top: 55px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 깃발 위치 (20개) - 세계 주요 지역 */
+    #flag1 { top: 25%; left: 8%; }   /* 북미 서부 */
+    #flag2 { top: 30%; left: 15%; }  /* 북미 중부 */
+    #flag3 { top: 35%; left: 20%; }  /* 북미 동부 */
+    #flag4 { top: 50%; left: 12%; }  /* 중남미 북부 */
+    #flag5 { top: 65%; left: 18%; }  /* 남미 */
+    #flag6 { top: 20%; left: 30%; }  /* 북유럽 */
+    #flag7 { top: 28%; left: 32%; }  /* 서유럽 */
+    #flag8 { top: 35%; left: 35%; }  /* 남유럽 */
+    #flag9 { top: 42%; left: 33%; }  /* 북아프리카 */
+    #flag10 { top: 55%; left: 35%; } /* 서아프리카 */
+    #flag11 { top: 65%; left: 38%; } /* 남아프리카 */
+    #flag12 { top: 25%; left: 42%; } /* 동유럽 */
+    #flag13 { top: 30%; left: 50%; } /* 서아시아 */
+    #flag14 { top: 35%; left: 58%; } /* 중앙아시아 */
+    #flag15 { top: 42%; left: 65%; } /* 남아시아 */
+    #flag16 { top: 30%; left: 72%; } /* 동아시아 */
+    #flag17 { top: 45%; left: 75%; } /* 동남아시아 */
+    #flag18 { top: 25%; left: 85%; } /* 동북아시아 */
+    #flag19 { top: 60%; left: 85%; } /* 오세아니아 */
+    #flag20 { top: 50%; left: 80%; } /* 호주 */
+
+    /* 모달 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: modalSlideUp 0.3s ease;
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .modal-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 32px;
+      color: #999;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .modal-image {
+      width: 100%;
+      height: 250px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+    }
+
+    .modal-text {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .modal-question {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .modal-question h3 {
+      font-size: 18px;
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .answer-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .answer-btn {
+      padding: 12px 20px;
+      border: 2px solid #ddd;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .answer-btn:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .answer-btn.correct {
+      background: #4caf50;
+      color: #fff;
+      border-color: #4caf50;
+    }
+
+    .answer-btn.wrong {
+      background: #f44336;
+      color: #fff;
+      border-color: #f44336;
+    }
+
+    .answer-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .modal-footer {
+      text-align: center;
+      padding-top: 20px;
+    }
+
+    .complete-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .complete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .complete-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 완료 축하 모달 */
+    .celebration {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 3000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .celebration.show {
+      display: flex;
+    }
+
+    .celebration-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 60px;
+      border-radius: 20px;
+      text-align: center;
+      animation: celebrationPop 0.5s ease;
+    }
+
+    @keyframes celebrationPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .celebration-content h2 {
+      font-size: 42px;
+      margin-bottom: 20px;
+    }
+
+    .celebration-content p {
+      font-size: 20px;
+      margin-bottom: 30px;
+      opacity: 0.9;
+    }
+
+    .celebration-btn {
+      background: #fff;
+      color: #667eea;
+      border: none;
+      padding: 14px 35px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .celebration-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="header-title">
+      <span>🌍</span>
+      <span>세계 지리 탐험 - BRAIN UP</span>
+    </div>
+    <div class="progress-info">
+      <span class="progress-text" id="progressText">0/20 완료</span>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="map-container">
+      <div class="world-map"></div>
+
+      <!-- 20개 깃발 마커 -->
+      <div class="flag" id="flag1" data-location="1">
+        <div class="flag-pole">
+          <div class="flag-icon">01</div>
+        </div>
+        <div class="flag-label">지리 01</div>
+      </div>
+
+      <div class="flag locked" id="flag2" data-location="2">
+        <div class="flag-pole">
+          <div class="flag-icon">02</div>
+        </div>
+        <div class="flag-label">지리 02</div>
+      </div>
+
+      <div class="flag locked" id="flag3" data-location="3">
+        <div class="flag-pole">
+          <div class="flag-icon">03</div>
+        </div>
+        <div class="flag-label">지리 03</div>
+      </div>
+
+      <div class="flag locked" id="flag4" data-location="4">
+        <div class="flag-pole">
+          <div class="flag-icon">04</div>
+        </div>
+        <div class="flag-label">지리 04</div>
+      </div>
+
+      <div class="flag locked" id="flag5" data-location="5">
+        <div class="flag-pole">
+          <div class="flag-icon">05</div>
+        </div>
+        <div class="flag-label">지리 05</div>
+      </div>
+
+      <div class="flag locked" id="flag6" data-location="6">
+        <div class="flag-pole">
+          <div class="flag-icon">06</div>
+        </div>
+        <div class="flag-label">지리 06</div>
+      </div>
+
+      <div class="flag locked" id="flag7" data-location="7">
+        <div class="flag-pole">
+          <div class="flag-icon">07</div>
+        </div>
+        <div class="flag-label">지리 07</div>
+      </div>
+
+      <div class="flag locked" id="flag8" data-location="8">
+        <div class="flag-pole">
+          <div class="flag-icon">08</div>
+        </div>
+        <div class="flag-label">지리 08</div>
+      </div>
+
+      <div class="flag locked" id="flag9" data-location="9">
+        <div class="flag-pole">
+          <div class="flag-icon">09</div>
+        </div>
+        <div class="flag-label">지리 09</div>
+      </div>
+
+      <div class="flag locked" id="flag10" data-location="10">
+        <div class="flag-pole">
+          <div class="flag-icon">10</div>
+        </div>
+        <div class="flag-label">지리 10</div>
+      </div>
+
+      <div class="flag locked" id="flag11" data-location="11">
+        <div class="flag-pole">
+          <div class="flag-icon">11</div>
+        </div>
+        <div class="flag-label">지리 11</div>
+      </div>
+
+      <div class="flag locked" id="flag12" data-location="12">
+        <div class="flag-pole">
+          <div class="flag-icon">12</div>
+        </div>
+        <div class="flag-label">지리 12</div>
+      </div>
+
+      <div class="flag locked" id="flag13" data-location="13">
+        <div class="flag-pole">
+          <div class="flag-icon">13</div>
+        </div>
+        <div class="flag-label">지리 13</div>
+      </div>
+
+      <div class="flag locked" id="flag14" data-location="14">
+        <div class="flag-pole">
+          <div class="flag-icon">14</div>
+        </div>
+        <div class="flag-label">지리 14</div>
+      </div>
+
+      <div class="flag locked" id="flag15" data-location="15">
+        <div class="flag-pole">
+          <div class="flag-icon">15</div>
+        </div>
+        <div class="flag-label">지리 15</div>
+      </div>
+
+      <div class="flag locked" id="flag16" data-location="16">
+        <div class="flag-pole">
+          <div class="flag-icon">16</div>
+        </div>
+        <div class="flag-label">지리 16</div>
+      </div>
+
+      <div class="flag locked" id="flag17" data-location="17">
+        <div class="flag-pole">
+          <div class="flag-icon">17</div>
+        </div>
+        <div class="flag-label">지리 17</div>
+      </div>
+
+      <div class="flag locked" id="flag18" data-location="18">
+        <div class="flag-pole">
+          <div class="flag-icon">18</div>
+        </div>
+        <div class="flag-label">지리 18</div>
+      </div>
+
+      <div class="flag locked" id="flag19" data-location="19">
+        <div class="flag-pole">
+          <div class="flag-icon">19</div>
+        </div>
+        <div class="flag-label">지리 19</div>
+      </div>
+
+      <div class="flag locked" id="flag20" data-location="20">
+        <div class="flag-pole">
+          <div class="flag-icon">20</div>
+        </div>
+        <div class="flag-label">지리 20</div>
+      </div>
+
+      <!-- 학습 모달 -->
+      <div class="modal" id="modal">
+        <div class="modal-content">
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+
+          <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">지리 01</h2>
+            <div class="modal-badge" id="modalBadge">북미 서부</div>
+          </div>
+
+          <div class="modal-image" id="modalImage">🗺️</div>
+
+          <div class="modal-text" id="modalText">
+            학습 내용이 여기 표시됩니다.
+          </div>
+
+          <div class="modal-question">
+            <h3 id="questionText">문제가 여기 표시됩니다.</h3>
+            <div class="answer-options" id="answerOptions">
+              <!-- 답변 버튼들이 동적으로 생성됨 -->
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="complete-btn" id="completeBtn" disabled onclick="completeLocation()">
+              완료하고 다음으로 →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 완료 축하 모달 -->
+      <div class="celebration" id="celebration">
+        <div class="celebration-content">
+          <h2>🎉 축하합니다! 🎉</h2>
+          <p>세계 지리 20개 지역을 모두 탐험했습니다!</p>
+          <p>전세계 지리를 완벽하게 마스터했어요.</p>
+          <button class="celebration-btn" onclick="closeCelebration()">확인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 지리 데이터 (20개)
+    const geoData = {
+      1: { title: '지리 01', region: '북미 서부', emoji: '🏔️', text: '로키 산맥은 북아메리카 서부에 위치한 거대한 산맥으로, 캐나다부터 미국까지 이어집니다. 험준한 지형과 아름다운 자연경관으로 유명하며, 다양한 야생동물이 서식합니다.', question: '로키 산맥이 위치한 지역은?', answers: [{ text: '① 북미 서부', correct: true }, { text: '② 남미 중부', correct: false }, { text: '③ 유럽 동부', correct: false }, { text: '④ 아시아 남부', correct: false }] },
+      2: { title: '지리 02', region: '북미 중부', emoji: '🌾', text: '미국의 중서부 지역은 광활한 대평원으로 이루어져 있으며, 세계 최대의 곡창지대 중 하나입니다. 밀, 옥수수 등의 농작물 생산이 활발합니다.', question: '미국 중서부 지역의 특징은?', answers: [{ text: '① 광활한 대평원과 곡창지대', correct: true }, { text: '② 높은 산맥', correct: false }, { text: '③ 열대우림', correct: false }, { text: '④ 사막 지대', correct: false }] },
+      3: { title: '지리 03', region: '북미 동부', emoji: '🏙️', text: '북미 동부 해안은 뉴욕, 보스턴 등 대도시가 밀집된 지역으로, 경제와 문화의 중심지입니다. 대서양과 인접해 있어 무역이 발달했습니다.', question: '북미 동부 해안의 특징은?', answers: [{ text: '① 대도시 밀집 지역', correct: true }, { text: '② 농업 중심 지역', correct: false }, { text: '③ 사막 지대', correct: false }, { text: '④ 툰드라 기후', correct: false }] },
+      4: { title: '지리 04', region: '중미', emoji: '🌴', text: '중앙아메리카는 북미와 남미를 연결하는 지협으로, 열대기후를 보이며 커피, 바나나 등의 작물이 재배됩니다. 파나마 운하가 유명합니다.', question: '중앙아메리카의 기후는?', answers: [{ text: '① 열대기후', correct: true }, { text: '② 온대기후', correct: false }, { text: '③ 한대기후', correct: false }, { text: '④ 건조기후', correct: false }] },
+      5: { title: '지리 05', region: '남미', emoji: '🦜', text: '아마존 열대우림은 세계 최대의 열대우림으로 '지구의 허파'로 불립니다. 다양한 생물종이 서식하며 지구 산소의 20%를 생산합니다.', question: '아마존 열대우림의 별명은?', answers: [{ text: '① 지구의 허파', correct: true }, { text: '② 지구의 심장', correct: false }, { text: '③ 지구의 신장', correct: false }, { text: '④ 지구의 간', correct: false }] },
+      6: { title: '지리 06', region: '북유럽', emoji: '🌊', text: '북유럽은 스칸디나비아 반도를 중심으로 한 지역으로, 피오르 지형이 발달했습니다. 높은 복지 수준과 아름다운 자연환경으로 유명합니다.', question: '북유럽에서 발달한 지형은?', answers: [{ text: '① 피오르', correct: true }, { text: '② 카르스트', correct: false }, { text: '③ 사구', correct: false }, { text: '④ 삼각주', correct: false }] },
+      7: { title: '지리 07', region: '서유럽', emoji: '🗼', text: '서유럽은 프랑스, 영국, 독일 등이 위치한 지역으로 산업혁명의 발상지입니다. 온화한 기후와 발달한 문화로 많은 관광객이 방문합니다.', question: '산업혁명이 시작된 지역은?', answers: [{ text: '① 서유럽', correct: true }, { text: '② 동아시아', correct: false }, { text: '③ 남미', correct: false }, { text: '④ 아프리카', correct: false }] },
+      8: { title: '지리 08', region: '남유럽', emoji: '🏛️', text: '지중해 연안의 남유럽은 고대 그리스, 로마 문명의 발상지입니다. 온화한 지중해성 기후로 올리브, 포도 재배가 활발합니다.', question: '남유럽의 기후는?', answers: [{ text: '① 지중해성 기후', correct: true }, { text: '② 열대기후', correct: false }, { text: '③ 사막기후', correct: false }, { text: '④ 한대기후', correct: false }] },
+      9: { title: '지리 09', region: '북아프리카', emoji: '🏜️', text: '사하라 사막은 세계 최대의 열사막으로 북아프리카 대부분을 차지합니다. 극심한 건조기후로 인구 밀도가 매우 낮습니다.', question: '사하라 사막의 위치는?', answers: [{ text: '① 북아프리카', correct: true }, { text: '② 남아시아', correct: false }, { text: '③ 중앙아시아', correct: false }, { text: '④ 오세아니아', correct: false }] },
+      10: { title: '지리 10', region: '서아프리카', emoji: '🦁', text: '서아프리카는 열대 사바나 기후가 나타나며, 카카오, 커피 등의 작물이 재배됩니다. 나이지리아 등 인구가 많은 국가들이 위치합니다.', question: '서아프리카의 주요 기후는?', answers: [{ text: '① 열대 사바나', correct: true }, { text: '② 툰드라', correct: false }, { text: '③ 지중해성', correct: false }, { text: '④ 냉대기후', correct: false }] },
+      11: { title: '지리 11', region: '남아프리카', emoji: '💎', text: '남아프리카는 금, 다이아몬드 등 광물자원이 풍부합니다. 케이프타운은 아름다운 자연경관으로 유명한 관광도시입니다.', question: '남아프리카의 주요 자원은?', answers: [{ text: '① 금, 다이아몬드', correct: true }, { text: '② 석유', correct: false }, { text: '③ 천연가스', correct: false }, { text: '④ 구리', correct: false }] },
+      12: { title: '지리 12', region: '동유럽', emoji: '🏰', text: '동유럽은 슬라브 민족이 주로 거주하며, 다양한 역사적 유산이 남아있습니다. 냉대기후가 나타나며 겨울이 춥고 길습니다.', question: '동유럽의 기후는?', answers: [{ text: '① 냉대기후', correct: true }, { text: '② 열대기후', correct: false }, { text: '③ 건조기후', correct: false }, { text: '④ 지중해성 기후', correct: false }] },
+      13: { title: '지리 13', region: '서아시아', emoji: '🕌', text: '서아시아는 중동이라고도 불리며, 석유 자원이 풍부합니다. 사막 기후가 대부분이며 이슬람 문화권에 속합니다.', question: '서아시아(중동)의 주요 자원은?', answers: [{ text: '① 석유', correct: true }, { text: '② 석탄', correct: false }, { text: '③ 철광석', correct: false }, { text: '④ 우라늄', correct: false }] },
+      14: { title: '지리 14', region: '중앙아시아', emoji: '🐫', text: '중앙아시아는 내륙에 위치해 건조한 기후를 보입니다. 과거 실크로드의 중심지였으며, 유목 문화가 발달했습니다.', question: '중앙아시아의 기후 특징은?', answers: [{ text: '① 건조한 대륙성 기후', correct: true }, { text: '② 해양성 기후', correct: false }, { text: '③ 열대기후', correct: false }, { text: '④ 툰드라 기후', correct: false }] },
+      15: { title: '지리 15', region: '남아시아', emoji: '🏔️', text: '히말라야 산맥은 세계에서 가장 높은 산맥으로, 인도와 중국 사이에 위치합니다. 몬순 기후의 영향을 받습니다.', question: '세계에서 가장 높은 산맥은?', answers: [{ text: '① 히말라야', correct: true }, { text: '② 알프스', correct: false }, { text: '③ 안데스', correct: false }, { text: '④ 로키', correct: false }] },
+      16: { title: '지리 16', region: '동아시아', emoji: '🏯', text: '동아시아는 중국, 한국, 일본 등이 위치한 지역으로 몬순 아시아에 속합니다. 계절풍의 영향으로 사계절이 뚜렷합니다.', question: '동아시아의 기후 특징은?', answers: [{ text: '① 계절풍(몬순) 기후', correct: true }, { text: '② 사막 기후', correct: false }, { text: '③ 툰드라 기후', correct: false }, { text: '④ 지중해성 기후', correct: false }] },
+      17: { title: '지리 17', region: '동남아시아', emoji: '🌺', text: '동남아시아는 열대기후로 연중 고온다습합니다. 벼농사가 발달했으며 관광산업이 중요한 경제 활동입니다.', question: '동남아시아의 기후는?', answers: [{ text: '① 열대기후', correct: true }, { text: '② 온대기후', correct: false }, { text: '③ 한대기후', correct: false }, { text: '④ 건조기후', correct: false }] },
+      18: { title: '지리 18', region: '동북아시아', emoji: '❄️', text: '시베리아는 세계 최대의 침엽수림 지대인 타이가가 분포합니다. 겨울이 매우 길고 춥며 영구동토층이 발달했습니다.', question: '시베리아의 주요 식생은?', answers: [{ text: '① 타이가(침엽수림)', correct: true }, { text: '② 열대우림', correct: false }, { text: '③ 사바나', correct: false }, { text: '④ 초원', correct: false }] },
+      19: { title: '지리 19', region: '오세아니아', emoji: '🏝️', text: '오세아니아는 수많은 섬들로 이루어진 지역입니다. 아름다운 산호초와 해변으로 유명하며 관광산업이 발달했습니다.', question: '오세아니아의 특징은?', answers: [{ text: '① 수많은 섬으로 구성', correct: true }, { text: '② 거대한 대륙', correct: false }, { text: '③ 사막 지역', correct: false }, { text: '④ 고산 지대', correct: false }] },
+      20: { title: '지리 20', region: '호주', emoji: '🦘', text: '호주는 세계에서 가장 건조한 대륙 중 하나로, 내륙에 광대한 사막이 분포합니다. 독특한 동식물이 서식하며 광물자원이 풍부합니다.', question: '호주 대륙의 특징은?', answers: [{ text: '① 건조한 기후와 사막', correct: true }, { text: '② 열대우림', correct: false }, { text: '③ 빙하 지형', correct: false }, { text: '④ 높은 산맥', correct: false }] }
+    };
+
+    let currentLocation = null;
+    let completedLocations = new Set();
+
+    // 깃발 클릭 이벤트
+    document.querySelectorAll('.flag').forEach(flag => {
+      flag.addEventListener('click', function() {
+        if (this.classList.contains('locked')) {
+          alert('이전 지역을 먼저 완료해주세요!');
+          return;
+        }
+
+        const locationId = parseInt(this.dataset.location);
+        openModal(locationId);
+      });
+    });
+
+    function openModal(locationId) {
+      currentLocation = locationId;
+      const data = geoData[locationId];
+
+      document.getElementById('modalTitle').textContent = data.title;
+      document.getElementById('modalBadge').textContent = data.region;
+      document.getElementById('modalImage').textContent = data.emoji;
+      document.getElementById('modalText').textContent = data.text;
+      document.getElementById('questionText').textContent = data.question;
+
+      // 답변 버튼 생성
+      const optionsContainer = document.getElementById('answerOptions');
+      optionsContainer.innerHTML = '';
+
+      data.answers.forEach((answer, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = answer.text;
+        btn.onclick = () => checkAnswer(index);
+        optionsContainer.appendChild(btn);
+      });
+
+      document.getElementById('completeBtn').disabled = true;
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+      currentLocation = null;
+    }
+
+    function checkAnswer(index) {
+      const data = geoData[currentLocation];
+      const buttons = document.querySelectorAll('.answer-btn');
+
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (data.answers[i].correct) {
+          btn.classList.add('correct');
+        } else if (i === index && !data.answers[i].correct) {
+          btn.classList.add('wrong');
+        }
+      });
+
+      if (data.answers[index].correct) {
+        document.getElementById('completeBtn').disabled = false;
+      } else {
+        setTimeout(() => {
+          buttons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('wrong');
+          });
+        }, 1500);
+      }
+    }
+
+    function completeLocation() {
+      completedLocations.add(currentLocation);
+
+      // 현재 깃발을 완료로 표시
+      const flagEl = document.getElementById(`flag${currentLocation}`);
+      flagEl.classList.add('completed');
+
+      // 다음 깃발 잠금 해제
+      const nextLocation = currentLocation + 1;
+      if (nextLocation <= 20) {
+        const nextEl = document.getElementById(`flag${nextLocation}`);
+        nextEl.classList.remove('locked');
+      }
+
+      // 진행도 업데이트
+      updateProgress();
+
+      // 모달 닫기
+      closeModal();
+
+      // 모든 지역 완료 시 축하 모달
+      if (completedLocations.size === 20) {
+        setTimeout(() => {
+          document.getElementById('celebration').classList.add('show');
+
+          // 모든 지역 완료 시 menu.html에 알림
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              type: 'UNIT_COMPLETED',
+              completedLocations: 20
+            }, window.location.origin);
+          }
+        }, 500);
+      }
+    }
+
+    function updateProgress() {
+      const completed = completedLocations.size;
+      const total = 20;
+      const percentage = (completed / total) * 100;
+
+      document.getElementById('progressText').textContent = `${completed}/${total} 완료`;
+      document.getElementById('progressBarFill').style.width = `${percentage}%`;
+    }
+
+    function closeCelebration() {
+      document.getElementById('celebration').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

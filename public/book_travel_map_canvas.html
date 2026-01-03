@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>단단국어 도서 여행 지도 (Canvas)</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow: hidden;
+      background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 30%, #F0E68C 70%, #DEB887 100%);
+    }
+
+    /* 캔버스 컨테이너 */
+    #container {
+      width: 100vw;
+      height: 100vh;
+      cursor: grab;
+    }
+
+    #container.dragging {
+      cursor: grabbing;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      text-align: center;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      background: #f8f9fa;
+    }
+
+    /* 툴팁 */
+    .tooltip {
+      position: absolute;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+      max-width: 300px;
+    }
+
+    .tooltip.active {
+      opacity: 1;
+    }
+
+    .tooltip h3 {
+      color: #2c3e50;
+      font-size: 20px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .tooltip .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #e8f4f8;
+      color: #3498db;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .tooltip p {
+      color: #7f8c8d;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .tooltip button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .tooltip button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    /* 안내 패널 */
+    .info-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .info-panel p {
+      font-size: 13px;
+      color: #7f8c8d;
+      margin: 3px 0;
+    }
+
+    .info-panel strong {
+      color: #2c3e50;
+    }
+
+    /* 로딩 */
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      color: #2c3e50;
+      z-index: 999;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .header {
+        padding: 12px 20px;
+      }
+      .header h1 {
+        font-size: 20px;
+      }
+      .header p {
+        font-size: 12px;
+      }
+      .info-panel {
+        bottom: 10px;
+        right: 10px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 뒤로가기 버튼 -->
+  <button class="back-btn" onclick="goBack()">← 돌아가기</button>
+
+  <!-- 헤더 -->
+  <div class="header">
+    <h1>🐳 단단국어 도서 여행 지도</h1>
+    <p>드래그로 이동하고 섬을 클릭해보세요!</p>
+  </div>
+
+  <!-- 안내 패널 -->
+  <div class="info-panel">
+    <p><strong>💡 사용법</strong></p>
+    <p>🖱️ 드래그: 지도 이동</p>
+    <p>📍 섬 클릭: 상세 정보</p>
+    <p>✨ 호버: 애니메이션 효과</p>
+  </div>
+
+  <!-- 로딩 -->
+  <div class="loading">🗺️ 지도를 불러오는 중...</div>
+
+  <!-- 캔버스 컨테이너 -->
+  <div id="container"></div>
+
+  <!-- 툴팁 -->
+  <div class="tooltip" id="tooltip">
+    <h3 id="tooltip-title"></h3>
+    <div class="badge" id="tooltip-badge"></div>
+    <p id="tooltip-desc"></p>
+    <button id="tooltip-btn" onclick="navigateFromTooltip()">🚀 여행 떠나기</button>
+  </div>
+
+  <!-- Konva.js -->
+  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+
+  <script>
+    // 캔버스 크기
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // Stage 생성
+    const stage = new Konva.Stage({
+      container: 'container',
+      width: width,
+      height: height,
+      draggable: true
+    });
+
+    // 레이어 생성
+    const bgLayer = new Konva.Layer(); // 배경 (파도 등)
+    const islandLayer = new Konva.Layer(); // 섬들
+    const whaleLayer = new Konva.Layer(); // 고래 (최상위)
+
+    stage.add(bgLayer);
+    stage.add(islandLayer);
+    stage.add(whaleLayer);
+
+    // 로딩 제거
+    setTimeout(() => {
+      document.querySelector('.loading').style.display = 'none';
+    }, 500);
+
+    // 드래그 커서 변경
+    stage.on('dragstart', () => {
+      document.getElementById('container').classList.add('dragging');
+    });
+    stage.on('dragend', () => {
+      document.getElementById('container').classList.remove('dragging');
+    });
+
+    // 파도 그리기
+    function createWave(x, y, width, height, opacity) {
+      const wave = new Konva.Ellipse({
+        x: x,
+        y: y,
+        radiusX: width,
+        radiusY: height,
+        fill: '#B0E0E6',
+        opacity: opacity
+      });
+
+      bgLayer.add(wave);
+
+      // 파도 애니메이션
+      const anim = new Konva.Animation((frame) => {
+        const period = 4000;
+        const scale = Math.sin((frame.time * 2 * Math.PI) / period) * 0.2 + 1;
+        wave.scaleX(scale);
+      }, bgLayer);
+      anim.start();
+    }
+
+    // 파도 3개 추가
+    createWave(200, 500, 80, 20, 0.3);
+    createWave(700, 450, 100, 25, 0.3);
+    createWave(450, 520, 90, 22, 0.3);
+
+    // 책 카테고리 데이터
+    const bookCategories = [
+      {
+        name: '고전문학',
+        emoji: '📕',
+        x: width * 0.25,
+        y: height * 0.35,
+        color: '#E74C3C',
+        count: '40개 작품',
+        desc: '시대를 초월한 명작들이 기다리고 있어요. 춘향전, 심청전 등 우리 고전을 만나보세요!',
+        url: '/BRAINUP/korlit/classic_list.html'
+      },
+      {
+        name: '현대문학',
+        emoji: '📘',
+        x: width * 0.5,
+        y: height * 0.55,
+        color: '#3498DB',
+        count: '40개 작품',
+        desc: '현대의 감성이 담긴 작품들. 소년이 온다, 82년생 김지영 등 현대 문학을 탐험해보세요!',
+        url: '/BRAINUP/korlit/modern_list.html'
+      },
+      {
+        name: '인물전기',
+        emoji: '📙',
+        x: width * 0.75,
+        y: height * 0.35,
+        color: '#9B59B6',
+        count: '40명의 인물',
+        desc: '역사를 만든 위인들의 이야기. 세종대왕, 신사임당 등 40명의 인물을 만나보세요!',
+        url: '/BRAINUP/person/people_list.html'
+      },
+      {
+        name: '사회분야',
+        emoji: '📒',
+        x: width * 0.3,
+        y: height * 0.7,
+        color: '#F39C12',
+        count: '지리·역사·도덕',
+        desc: '세상을 이해하는 지혜. 지리, 역사, 도덕 영역의 다양한 지식이 기다려요!',
+        url: '/BRAINUP/social/geo_list.html'
+      },
+      {
+        name: '과학분야',
+        emoji: '📗',
+        x: width * 0.7,
+        y: height * 0.7,
+        color: '#27AE60',
+        count: '생물·물리·화학',
+        desc: '자연의 신비를 탐구해요. 생물, 물리, 화학의 흥미로운 세계로 떠나볼까요?',
+        url: '/BRAINUP/science/bio_list.html'
+      }
+    ];
+
+    // 섬 생성 함수
+    function createIsland(data) {
+      const group = new Konva.Group({
+        x: data.x,
+        y: data.y,
+        draggable: false
+      });
+
+      // 섬 베이스 (타원형)
+      const islandBase = new Konva.Ellipse({
+        x: 0,
+        y: 20,
+        radiusX: 100,
+        radiusY: 40,
+        fill: '#8B7355',
+        stroke: '#654321',
+        strokeWidth: 2,
+        shadowColor: 'black',
+        shadowBlur: 10,
+        shadowOpacity: 0.3,
+        shadowOffsetY: 5
+      });
+
+      // 섬 풀밭
+      const islandGrass = new Konva.Ellipse({
+        x: 0,
+        y: 10,
+        radiusX: 95,
+        radiusY: 38,
+        fill: '#90EE90',
+        stroke: '#228B22',
+        strokeWidth: 1.5
+      });
+
+      // 책 아이콘 (사각형으로 표현)
+      const bookRect = new Konva.Rect({
+        x: -20,
+        y: -35,
+        width: 40,
+        height: 35,
+        fill: data.color,
+        cornerRadius: 3,
+        shadowColor: 'black',
+        shadowBlur: 8,
+        shadowOpacity: 0.4,
+        shadowOffsetY: 4
+      });
+
+      // 책 페이지 라인
+      const line1 = new Konva.Line({
+        points: [-15, -25, 15, -25],
+        stroke: 'white',
+        strokeWidth: 1.5,
+        opacity: 0.5
+      });
+
+      const line2 = new Konva.Line({
+        points: [-15, -15, 15, -15],
+        stroke: 'white',
+        strokeWidth: 1.5,
+        opacity: 0.5
+      });
+
+      // 이모지 텍스트
+      const emojiText = new Konva.Text({
+        x: -15,
+        y: -30,
+        text: data.emoji,
+        fontSize: 30,
+        fill: 'white'
+      });
+
+      // 섬 이름
+      const nameText = new Konva.Text({
+        x: -50,
+        y: 35,
+        text: data.name,
+        fontSize: 18,
+        fontStyle: 'bold',
+        fill: '#2c3e50',
+        width: 100,
+        align: 'center',
+        shadowColor: 'white',
+        shadowBlur: 5,
+        shadowOpacity: 0.8
+      });
+
+      // 작품 수
+      const countText = new Konva.Text({
+        x: -50,
+        y: 55,
+        text: data.count,
+        fontSize: 14,
+        fill: '#7f8c8d',
+        width: 100,
+        align: 'center',
+        shadowColor: 'white',
+        shadowBlur: 5,
+        shadowOpacity: 0.8
+      });
+
+      // 그룹에 추가
+      group.add(islandBase);
+      group.add(islandGrass);
+      group.add(bookRect);
+      group.add(line1);
+      group.add(line2);
+      group.add(emojiText);
+      group.add(nameText);
+      group.add(countText);
+
+      // 호버 효과
+      group.on('mouseenter', () => {
+        document.body.style.cursor = 'pointer';
+        stage.container().style.cursor = 'pointer';
+
+        // 스케일 애니메이션
+        const tween = new Konva.Tween({
+          node: group,
+          duration: 0.3,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          easing: Konva.Easings.EaseOut
+        });
+        tween.play();
+
+        // 툴팁 표시
+        showTooltip(data);
+      });
+
+      group.on('mouseleave', () => {
+        document.body.style.cursor = 'grab';
+        stage.container().style.cursor = 'grab';
+
+        const tween = new Konva.Tween({
+          node: group,
+          duration: 0.3,
+          scaleX: 1,
+          scaleY: 1,
+          easing: Konva.Easings.EaseOut
+        });
+        tween.play();
+
+        // 툴팁 숨김
+        hideTooltip();
+      });
+
+      group.on('mousemove', (e) => {
+        moveTooltip(e.evt.clientX, e.evt.clientY);
+      });
+
+      // 클릭 이벤트
+      group.on('click', () => {
+        // 클릭 애니메이션
+        const tween = new Konva.Tween({
+          node: group,
+          duration: 0.1,
+          scaleX: 0.95,
+          scaleY: 0.95,
+          onFinish: () => {
+            const tweenBack = new Konva.Tween({
+              node: group,
+              duration: 0.1,
+              scaleX: 1.1,
+              scaleY: 1.1,
+              onFinish: () => {
+                navigateTo(data.url);
+              }
+            });
+            tweenBack.play();
+          }
+        });
+        tween.play();
+      });
+
+      // 둥둥 떠다니는 애니메이션
+      const floatAnim = new Konva.Animation((frame) => {
+        const period = 3000;
+        const amplitude = 10;
+        const offset = Math.sin((frame.time * 2 * Math.PI) / period) * amplitude;
+        group.y(data.y + offset);
+      }, islandLayer);
+      floatAnim.start();
+
+      islandLayer.add(group);
+    }
+
+    // 모든 섬 생성
+    bookCategories.forEach(category => {
+      createIsland(category);
+    });
+
+    // 고래 생성
+    const whaleGroup = new Konva.Group({
+      x: width * 0.5,
+      y: height * 0.15
+    });
+
+    // 고래 몸체
+    const whaleBody = new Konva.Ellipse({
+      x: 0,
+      y: 0,
+      radiusX: 40,
+      radiusY: 25,
+      fill: '#4A90E2',
+      shadowColor: 'black',
+      shadowBlur: 10,
+      shadowOpacity: 0.3,
+      shadowOffsetY: 5
+    });
+
+    // 고래 눈
+    const whaleEye = new Konva.Circle({
+      x: -10,
+      y: -5,
+      radius: 4,
+      fill: 'white'
+    });
+
+    const whaleEyeBall = new Konva.Circle({
+      x: -12,
+      y: -6,
+      radius: 2,
+      fill: 'black'
+    });
+
+    // 가방
+    const bag = new Konva.Rect({
+      x: -10,
+      y: -20,
+      width: 20,
+      height: 25,
+      fill: '#8B4513',
+      cornerRadius: 2,
+      shadowColor: 'black',
+      shadowBlur: 5,
+      shadowOpacity: 0.4
+    });
+
+    const bagFront = new Konva.Rect({
+      x: -8,
+      y: -18,
+      width: 16,
+      height: 21,
+      fill: '#D2691E',
+      cornerRadius: 1
+    });
+
+    // 이모지 텍스트
+    const whaleEmoji = new Konva.Text({
+      x: -20,
+      y: -15,
+      text: '🐳',
+      fontSize: 40
+    });
+
+    whaleGroup.add(whaleBody);
+    whaleGroup.add(whaleEye);
+    whaleGroup.add(whaleEyeBall);
+    whaleGroup.add(bag);
+    whaleGroup.add(bagFront);
+    whaleGroup.add(whaleEmoji);
+
+    whaleLayer.add(whaleGroup);
+
+    // 고래 떠다니기 애니메이션
+    const whaleAnim = new Konva.Animation((frame) => {
+      const period = 3000;
+      const amplitude = 15;
+      const offset = Math.sin((frame.time * 2 * Math.PI) / period) * amplitude;
+      whaleGroup.y(height * 0.15 + offset);
+    }, whaleLayer);
+    whaleAnim.start();
+
+    // 툴팁 관련 함수
+    let currentTooltipUrl = '';
+
+    function showTooltip(data) {
+      const tooltip = document.getElementById('tooltip');
+      document.getElementById('tooltip-title').textContent = data.name;
+      document.getElementById('tooltip-badge').textContent = data.count;
+      document.getElementById('tooltip-desc').textContent = data.desc;
+      currentTooltipUrl = data.url;
+      tooltip.classList.add('active');
+    }
+
+    function hideTooltip() {
+      document.getElementById('tooltip').classList.remove('active');
+    }
+
+    function moveTooltip(x, y) {
+      const tooltip = document.getElementById('tooltip');
+      tooltip.style.left = (x + 20) + 'px';
+      tooltip.style.top = (y + 20) + 'px';
+    }
+
+    function navigateFromTooltip() {
+      if (currentTooltipUrl) {
+        window.location.href = currentTooltipUrl;
+      }
+    }
+
+    function navigateTo(url) {
+      window.location.href = url;
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+
+    // 키보드 단축키
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        goBack();
+      }
+    });
+
+    // 창 크기 변경 대응
+    window.addEventListener('resize', () => {
+      location.reload();
+    });
+  </script>
+</body>
+</html>

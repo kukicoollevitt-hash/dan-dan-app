@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌨 삼포 가는 길</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/sampo/sampo01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5a7a8a 0%, #3a5a6a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #5a7a8a;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #3a5a6a;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #5a7a8a 0%, #3a5a6a 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌨 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌨 삼포 가는 길</h1>
+        <p class="subtitle">
+          황석영 원작<br>
+          떠돌이들의 길 위의 연대와 이별
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 공사판에서 시작된 만남과 길 위로 나서는 사내들">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🏗️</span>
+          공사판에서 시작된 만남과 길 위로 나서는 사내들
+        </h2>
+        <div class="story-text">도시 변두리의 허름한 공사판, 겨울바람만 스산하게 부는 현장에서 건설 노동자 영달은 일당을 받지 못한 채 관리자를 찾아 뛰어다닌다. 그러나 결국 부당한 대우 끝에 공사판에서 쫓겨나듯 나오고, 그는 갈 데 없는 몸을 이끌고 길을 나서게 된다.
+
+이때 오랜만에 마주한 인물이 있었으니 바로 정씨였다. 정씨는 떠돌이 목수로, 예전부터 공사판을 전전하며 생계를 이어온 장인 같은 인물이다. 영달보다 나이가 많고 세상풍파를 더 오래 겪은 정씨는, 영달의 성격을 잘 알고 있었기에 묵묵히 등을 두드리며 함께 길을 가자고 권한다.
+
+정씨에게도 마침 고향 삼포로 돌아가 보고 싶은 생각이 들던 참이었다. 도시에서 허망하게 흘러간 겨울 일자리, 불안한 생계, 정착하지 못한 삶에 대한 회의가 쌓여 두 사내는 자연스레 '삼포로 가는 길'을 잡는다.
+
+"한번 가보자, 뭐." 영달이 투덜거리듯 동의하며, 바람 부는 국도를 따라 그들의 여정이 시작된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 겨울 들판을 지나며 드러나는 두 사내의 과거와 상처">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">❄️</span>
+          겨울 들판을 지나며 드러나는 두 사내의 과거와 상처
+        </h2>
+        <div class="story-text">길을 걷는 동안 영달과 정씨는 도시에서의 일자리, 노동자의 현실, 부당함, 그리고 살아온 세월을 조금씩 털어놓는다.
+
+영달은 젊지만 반항심 깊고 거친 성격 탓에 공사판에서 사고치기 일쑤였고, 사람에 대한 믿음도 적었다. 반면 정씨는 나이가 있고 일에 능숙하지만, 세상 변화 속에서 목수가 더 이상 존중받지 못하는 현실을 담담히 받아들이는 편이었다.
+
+두 사람은 서로 다른 인생을 살아왔지만, '떠돌아다니는 삶'이라는 공통점이 둘을 자연스레 묶어놓았다. 들판에는 겨울의 적막이 내려앉아 있고, 버려진 논밭과 얼어붙은 논두렁이 황량하게 펼쳐져 있다.
+
+영달은 인생이 허무하게 흘러가는 것에 대한 분노를 씹어 삼키듯 말했고, 정씨는 "그래도 고향 한번 가보면 마음이 달라질지도 모른다"며 스스로를 다독이는 듯한 말을 반복했다.
+
+그들은 춥고 길고 불확실한 여정 속에서 각자의 상처를 들키지 않으면서도 서로에게 은근한 위로를 건네고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 우연한 만남, 젊은 여자 '백화'를 길 위에서 태우다">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">👩</span>
+          우연한 만남, 젊은 여자 '백화'를 길 위에서 태우다
+        </h2>
+        <div class="story-text">해가 지기 전, 산길을 돌아나오던 두 사내는 버스 정류장 근처에서 젊은 여자 백화를 만나게 된다. 그녀는 성급하게 버스를 놓친 뒤 발을 동동 구르며 갈 길을 잃은 듯 서 있었다.
+
+외투도 얇아 겨울바람에 떨고 있었고 손에는 조그만 가방 하나만 들려 있었다. 영달은 젊은 여자를 보자마자 경계심을 드러내며 "귀찮은 일 생길 거다"라고 불평했지만, 정씨는 그녀의 처지를 보고 지나치지 못한다.
+
+백화는 자신이 '요정집'에서 일하던 여자이며, 더는 그곳에서 버틸 수 없어 도망치듯 나온 중이라고 털어놓는다. 행선지는 먼 친척이 사는 곳 근처라고 말하지만, 말끝마다 불안함이 묻어 있었다.
+
+정씨가 "같이 가자. 밤길 혼자 다니긴 위험하니까"라고 말하자 백화는 안도의 웃음을 지으며 고개를 숙인다. 영달은 마지못해 따라가게 되고, 세 사람은 뜻밖의 동행을 시작한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 얼어붙은 길 위에서 드러나는 백화의 삶의 현실과 고단함">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">💔</span>
+          얼어붙은 길 위에서 드러나는 백화의 삶의 현실과 고단함
+        </h2>
+        <div class="story-text">세 사람이 함께 걷는 동안 백화는 자신의 지난 삶을 조금씩 고백한다. 고향을 떠나 도시에서 일자리를 찾았지만, 결국 요정집 같은 유흥업소에서 일하게 되었다고, 돈은 벌렸지만 사람들에게 손가락질당하고 자신도 마음이 병들어 갔다고 말한다.
+
+그녀의 말에는 쓴웃음과 체념, 그리고 묘한 당당함이 섞여 있었다. 영달은 처음엔 거리를 두고 조롱 섞인 말투로 대했지만, 백화의 솔직한 이야기와 씩씩함을 들으며 점점 마음속의 벽이 허물어지는 경험을 한다.
+
+정씨는 백화를 딸처럼 챙기며, "여자라고 해서 나쁜 길만 있는 건 아니다. 가보고 싶은 곳 가서 사람답게 살아보거라"라고 다독인다.
+
+길은 어두워지고, 겨울밤의 바람은 더 차가워졌지만, 세 사람의 대화는 그 추위를 조금 따뜻하게 덮어주는 듯했다. 각자 도시에서 버림받거나 이용당하며 살아온 공통된 경험이 이들을 느슨한 연대감으로 묶고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 허름한 주막에서의 하룻밤, 낯선 관계 사이의 온기와 불안">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">🏠</span>
+          허름한 주막에서의 하룻밤, 낯선 관계 사이의 온기와 불안
+        </h2>
+        <div class="story-text">날이 완전히 어두워지자 세 사람은 시골길 끝자락의 허름한 주막에 들르게 된다. 주모는 냉랭한 표정으로 손님을 맞지만, 정씨가 따뜻한 막걸리 한 주전자와 밥을 청하며 분위기를 누그러뜨린다.
+
+백화는 여럿이 먹는 따뜻한 밥상 앞에서 잠시 말을 잃어버린다. 오랜 시간 혼자서나 손님 접대용 식사를 해왔기에, 누군가와 온전히 '함께' 먹는 밥의 의미가 새롭게 느껴진 것이다.
+
+영달은 백화에게 관심을 드러내듯 장난스러운 말을 던지지만, 그 속에는 미묘한 호감과 동정이 섞여 있었다. 주막의 따뜻한 불빛 아래 세 사람은 잠시나마 가족 같은 분위기를 느끼고, 백화는 정씨의 잠자리 배려에 눈시울을 붉힌다.
+
+하지만 주막의 삭막한 분위기와 여자 혼자 떠돌며 느꼈을 불안감이 여전히 주변을 감싸고 있었다. 그럼에도 그날 밤, 세 사람은 길 위에서 처음으로 '안전한 잠'을 자는 듯 단잠에 빠진다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 다시 길 위로: 더 깊어지는 유대와 현실의 장벽">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">🚶</span>
+          다시 길 위로: 더 깊어지는 유대와 현실의 장벽
+        </h2>
+        <div class="story-text">아침이 밝자 세 사람은 다시 걸음을 옮긴다. 추운 겨울 햇빛이 언 땅에 비치는 모습은 여전히 참혹했지만, 전날의 대화를 통해 서로에 대한 신뢰가 조금 더 단단해졌다.
+
+백화는 가끔씩 뒤처지며 힘들어했고, 그럴 때마다 정씨가 가방을 들어주거나 영달이 퉁명스레 "좀 빨리 와!" 하면서도 걸음을 느려주는 모습이 보였다.
+
+백화는 자신을 챙겨주는 이 두 사내의 태도에 익숙지 않아 혼란스러워하지만, 묘한 안도감과 따뜻함을 느낀다. 영달은 도시에서의 거친 말투가 조금씩 누그러들고, 정씨는 고향 삼포가 어떤 곳이었는지 추억을 들려주며 길을 밝힌다.
+
+하지만 백화는 삼포에 도착한다 해도 영달·정씨와 같은 길을 갈 수 없음을 너무 잘 알고 있었다. 그녀에게는 돌아갈 고향이 사실상 없었고, 친척이라 말한 곳도 오래 기대할 수 있는 곳이 아니었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 삼포에 가까워질수록 드러나는 정씨의 기대와 두려움">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🏔️</span>
+          삼포에 가까워질수록 드러나는 정씨의 기대와 두려움
+        </h2>
+        <div class="story-text">길을 걷던 중 정씨는 자신의 고향 이야기를 더 깊이 털어놓기 시작한다. 삼포는 자신이 젊은 시절 모든 꿈을 품고 떠났던 곳이었고, 여전히 마음속에 따뜻한 기억으로 남아 있는 장소였다.
+
+하지만 세월이 지나면서 고향이 그대로일지, 사람들이 자신을 기억할지 두려움도 점점 커지고 있었다. 영달은 그런 정씨를 보며 조용히 위로하거나, 일부러 농담을 던져 분위기를 누그러뜨렸다.
+
+백화는 고향 이야기를 듣고 부러움을 느꼈다. 누군가에게 돌아갈 곳이 있다는 사실, 그곳에서 자신의 이름을 불러줄 누군가가 있을지도 모른다는 사실이 그녀에게는 믿을 수 없을 만큼 큰 의미처럼 느껴졌기 때문이다.
+
+길은 점점 농촌의 냄새를 품기 시작하고, 세 사람은 고개를 돌릴 때마다 뿌연 겨울 안개 속에서 삼포의 그림자를 본 듯한 기분을 느낀다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 삼포 도착 직전, 서로의 길이 갈라질 운명을 깨닫다">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">🌬️</span>
+          삼포 도착 직전, 서로의 길이 갈라질 운명을 깨닫다
+        </h2>
+        <div class="story-text">눈발이 조금씩 흩날리는 날, 마침내 세 사람은 삼포가 가까워진 곳에 도착한다. 정씨는 불안과 기대가 뒤섞여 묘한 표정을 짓고, 영달은 그를 응원하려 애쓴다.
+
+백화는 그들을 바라보며 자신은 어느 곳에도 속하지 못한다는 사실을 새삼 깨닫는다. 길가에서 백화는 조심스레 말한다. 자신은 이제 이 근처에서 헤어질 생각이라고.
+
+삼포까지 함께 가면 괜히 두 사내의 일에 끼게 될까 봐, 그리고 자신이 그곳에 어울리지 않는 사람이라는 걸 스스로 너무 잘 알고 있기 때문이었다.
+
+영달은 마음속에서 무언가가 뜯겨나가는 듯한 감정을 느끼지만, 겉으로는 "네 마음대로 해라" 하고 말한다. 정씨는 백화에게 마지막으로 따뜻한 충고를 해준다.
+
+"너도… 사람답게 살 수 있는 날이 꼭 올 거다."
+
+세 사람 모두 알고 있었다. 이 짧은 동행이 서로의 삶에 깊은 흔적을 남겼다는 사실을.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 삼포에 닿은 순간 밝아지는 기억과, 동시에 밀려오는 상실감">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🏘️</span>
+          삼포에 닿은 순간 밝아지는 기억과, 동시에 밀려오는 상실감
+        </h2>
+        <div class="story-text">백화와 작별한 뒤, 영달과 정씨는 드디어 삼포에 들어선다. 하지만 정씨의 고향은 이미 그가 기억하던 모습과 많이 달라져 있었다.
+
+공사판이 들어서고 사람들은 바쁘게 오가며, 그가 떠났던 시대의 흔적은 희미하게만 남아 있었다. 정씨는 변화한 고향의 모습 앞에서 기쁨과 서운함이 뒤섞인 복잡한 감정을 느낀다.
+
+그래도 오래된 풍경 몇 가지는 여전히 그 자리에 있어, 그는 그제야 고향의 숨결을 다시 느끼며 눈시울을 붉힌다. 영달은 정씨 옆에서 묵묵히 기다리며 그가 마음을 정리할 시간을 준다.
+
+그러나 백화와의 갑작스러운 이별이 영달을 내내 괴롭히고 있었다. 그는 왜 그녀를 더 붙잡지 않았는지, 혹시 다른 선택을 했다면 서로의 삶이 달라졌을지 생각하며 마음 한편이 시리게 아팠다.
+
+삼포에 도착했지만, 마냥 기쁜 순간은 아니었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 결국 길은 다시 이어지고, 떠돌이들의 삶은 계속된다">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🌨️</span>
+          결국 길은 다시 이어지고, 떠돌이들의 삶은 계속된다
+        </h2>
+        <div class="story-text">삼포에 머물며 정씨는 잠시나마 옛 사람들을 만나고, 고향의 냄새를 되찾아간다. 영달도 정씨와 함께 시간을 보내며 다시 떠날 준비를 한다. 두 사람은 어느새 서로에게 없어서는 안 될 동료처럼 변해 있었다.
+
+그러나 삼포에서 오래 머물 수는 없었다. 정씨는 고향이 변했고, 자신도 이미 떠돌이 생활에 익숙해져 있음을 깨닫는다. 영달 역시 머무를 곳이 없었다. 길은 다시 두 사람을 부른다.
+
+삼포를 떠나려는 날, 영달은 지나치게 조용해져 있었다. 그는 백화를 떠올리며 속으로 중얼거린다.
+
+"잘 갔을까… 어디 가서 잘 살긴 할까…"
+
+정씨는 그런 영달의 마음을 읽은 듯, "사람 인생이란 게… 다들 저마다 길을 걷는 거지"라고 말한다.
+
+두 사람은 다시 겨울 들판으로 발걸음을 옮기며 삼포를 뒤로 한다. 그리고 눈발이 흩날리는 길 위에서, 그들은 또 다른 여정을 시작한다.
+
+삼포 가는 길은 끝났지만, 떠돌이들의 삶과 길은 끝나지 않았다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌨 삼포 가는 길</h1>
+        <p class="subtitle">
+          황석영 원작<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/sampo/sampo01.jpg',
+      '/images/sampo/sampo02.jpg',
+      '/images/sampo/sampo03.jpg',
+      '/images/sampo/sampo04.jpg',
+      '/images/sampo/sampo05.jpg',
+      '/images/sampo/sampo06.jpg',
+      '/images/sampo/sampo07.jpg',
+      '/images/sampo/sampo08.jpg',
+      '/images/sampo/sampo09.jpg',
+      '/images/sampo/sampo10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🌨 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

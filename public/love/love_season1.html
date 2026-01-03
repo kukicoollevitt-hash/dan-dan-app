@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌿 사랑손님과 어머니</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/love/love01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6b8e7a 0%, #4a7a5a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #6b8e7a;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #4a7a5a;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #6b8e7a 0%, #4a7a5a 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌿 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌿 사랑손님과 어머니</h1>
+        <p class="subtitle">
+          주요섭 원작<br>
+          아이의 눈으로 본 순수한 사랑 이야기
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 홀로 남겨진 가족과 새로운 일상의 시작">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🏠</span>
+          홀로 남겨진 가족과 새로운 일상의 시작
+        </h2>
+        <div class="story-text">윤희와 어머니는 일찍 아버지를 여의고, 단둘이서 서로에게 의지하며 소박한 생활을 이어가고 있었다. 어머니는 생계를 위해 양장점을 운영하며 아침부터 늦은 밤까지 바느질을 놓지 않는다.
+
+윤희는 또래 친구들처럼 밝고 활발한 아이지만, 어머니의 고단한 어깨를 볼 때마다 속 깊은 배려심을 지니게 된다. 동네 사람들도 두 사람을 측은하게 여기면서도, 어머니의 반듯한 성품과 단정한 삶의 태도에 늘 칭찬을 아끼지 않는다.
+
+그러던 어느 날, 어머니의 먼 친척뻘 되는 정 선생님이 잠시 기거할 곳을 찾고 있다는 소식이 전해진다. 어머니는 처음엔 사내를 들이는 것에 망설였지만, 그의 진중한 성품과 사정이 딱한 점을 알고는 결국 집 한 칸을 내주기로 한다.
+
+윤희에게는 오랜만에 생활에 작은 변화가 찾아오게 되고, 어머니 역시 오랫동안 잊고 지냈던 다른 이와의 교류가 시작될 조짐을 느끼며 조금은 어색한 기대 속으로 들어가게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 사랑손님의 입주와 어색하지만 따뜻한 첫 만남">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">👋</span>
+          사랑손님의 입주와 어색하지만 따뜻한 첫 만남
+        </h2>
+        <div class="story-text">정 선생님은 조용하고 예의 바른 청년이었다. 그는 집에 막 도착하자마자 어머니에게 고개 숙여 인사하며 짐을 정돈하고, 양장점의 재봉틀 소리가 잦아들 때까지 폐를 끼치지 않으려 조심스럽게 행동한다.
+
+윤희는 새로운 세입자가 낯설면서도 호기심이 생겨, 문틈 사이로 그를 관찰하며 어떤 사람일지 스스로 판단하려 한다. 엄격하거나 차가운 사람을 상상했는데, 실제로는 따뜻한 미소와 수줍은 말투를 지닌 사람이었다.
+
+어머니는 정 선생님이 방에 들어가고 난 뒤, 윤희의 이부자리를 한 번 더 챙기며 손님을 들인 책임감을 되새긴다.
+
+윤희는 "어머니, 선생님 착한 것 같아!"라고 속삭이고, 어머니는 민망한 듯 웃으며 "그래도 너무 귀찮게 하지 말아라" 하고 타이른다. 세 사람의 첫 만남은 어색했지만, 작은 집 안에 새로운 기운이 스며들기 시작한 것은 분명했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 조용한 청년과 활달한 아이, 그리고 일상의 온기">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">☀️</span>
+          조용한 청년과 활달한 아이, 그리고 일상의 온기
+        </h2>
+        <div class="story-text">정 선생님은 윤희와 조금씩 친해지며 집안의 분위기를 바꿔 놓는다. 그는 퇴근 후 책을 읽거나 조용히 창밖을 바라보며 하루를 정리하곤 했는데, 윤희가 다가오면 "윤희야, 숙제는 했니?" 하고 부드럽게 웃어 준다.
+
+윤희는 그런 선생님이 좋고 편안해서 무엇이든 이야기하게 되었고, 어머니는 그런 모습을 멀찍이서 보며 묘한 미소를 짓는다.
+
+어머니는 선생님의 옷을 빨아 널어주거나, 늦은 밤까지 바느질을 하는 동안 그가 조용히 차 한 잔을 내려놓는 배려를 경험하며 마음 한 켠이 따뜻해짐을 느낀다.
+
+그러나 여전히 여자 혼자 아이를 키우는 처지라 경계를 늦추지 않으려 애쓰며, 정 선생님과 거리를 유지하려 노력한다. 하지만 윤희는 두 사람 사이에 흐르는 미묘한 공기, 말로 표현되지 않은 친근함을 본능적으로 느끼고 있었다.
+
+이 작은 변화들은 어느새 집안의 풍경을 이전과 다르게 물들여 가고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 어머니와 정 선생님의 스치듯 깊어지는 감정">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">💕</span>
+          어머니와 정 선생님의 스치듯 깊어지는 감정
+        </h2>
+        <div class="story-text">정 선생님은 어머니의 성실함과 단아함을 자연스럽게 존경하게 된다. 그는 양장점 앞을 드나드는 손님들 사이에서도 어머니의 바른 태도와 섬세한 손길을 보고 감탄하기도 한다.
+
+어느 날 비가 내리던 오후, 정 선생님은 젖은 어깨로 돌아온 어머니에게 우산을 건네며 "다음엔 말씀만 하시면 제가 모셔다 드리겠습니다"라고 한다. 어머니는 순간 얼굴이 붉어지며 손사래를 치지만, 그 말에 담긴 배려가 마음에 뚜렷하게 남는다.
+
+그날 밤, 어머니는 윤희가 잠든 뒤 무심코 자신의 얼굴을 거울에 비춰보며 차마 입 밖에 낼 수 없는 감정의 싹을 스스로 단호하게 누른다.
+
+정 선생님 역시 어머니에게 말하지 못하는 감정이 생기고 있음을 느끼지만, 자신이 이 집의 '세입자'일 뿐이며 더 이상 가까이 다가가서는 안 된다는 사실을 잘 알고 있었다.
+
+두 사람은 서로에게 향하는 마음을 알면서도, 그 감정을 묻어둔 채 조용히 하루를 이어가고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 윤희의 눈에 비친 '두 사람'의 모습">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">👀</span>
+          윤희의 눈에 비친 '두 사람'의 모습
+        </h2>
+        <div class="story-text">아이의 시선은 때로 어른들보다 예리하다. 윤희는 정 선생님이 어머니에게 보이는 작은 배려들, 어머니가 선생님을 향해 보이는 조용한 미소를 빠르게 알아차린다.
+
+그러나 윤희에게 그것은 '연애'나 '사랑' 같은 개념이 아니라 단순히 좋아하는 어른 두 명이 서로에게 친절하다는 느낌에 가까웠다.
+
+윤희는 둘이 함께 있는 모습을 보면 괜히 기분이 좋아져서, "어머니, 선생님 오늘도 도와줬어요!" 하고 싱글벙글 보고하기도 했다.
+
+하지만 동네 아주머니들은 이런 관계를 곱게 보지 않고, '젊은 과부가 사내를 들였다'며 수군대기 시작한다.
+
+윤희는 자신도 모르게 들려오는 그런 말에 기분이 나빠지고, 어머니가 상처받을까 봐 더욱 정 선생님 편을 든다.
+
+아이의 순수한 마음은 오히려 두 어른의 관계를 더 따뜻하게 만들었지만, 동시에 동네의 시선이 두 사람을 옭아매는 또 다른 그림자처럼 드리우기 시작했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 소문, 시선, 그리고 억눌리는 감정">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">😔</span>
+          소문, 시선, 그리고 억눌리는 감정
+        </h2>
+        <div class="story-text">동네 사람들의 시선은 점점 노골적이 되어 갔다. 양장점 손님 중 일부는 은근히 어머니를 시험하듯 이야기를 꺼냈고, 일부는 정 선생님이 출퇴근하는 모습을 보며 수군댔다.
+
+이런 시선들은 어머니를 불편하게 만들었고, 정 선생님 역시 자신이 집에 머무르는 것이 오히려 어머니에게 부담이 된다는 사실을 절감한다.
+
+어머니는 윤희 앞에서는 아무렇지 않은 척하지만, 밤이 되면 눈물로 감정을 씻어내곤 한다. 정 선생님은 더 이상 이 집에 머물 수 없다는 결심을 조용히 굳힌다.
+
+윤희는 어른들이 숨기는 분위기를 느끼며 이유를 몰라 답답해한다. 어머니가 선생님을 피해 일부러 바쁘게 움직이고, 선생님 역시 말수가 줄어드는 모습에 윤희는 불안함을 느낀다.
+
+그러나 어머니는 윤희에게 "그저 잠깐 괜한 소문이 돌 뿐이니 걱정하지 말아라"라고만 말하고, 마음 깊은 곳의 아픔은 끝내 털어놓지 못한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 정 선생님의 결심과 다가오는 이별">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🚶</span>
+          정 선생님의 결심과 다가오는 이별
+        </h2>
+        <div class="story-text">정 선생님은 결국 어머니에게 이 집을 떠나겠다는 뜻을 전한다. 그는 조심스럽게 "저 때문에 괜한 말을 들으시는 것 같아 죄송합니다"라고 말한다.
+
+어머니는 놀라며 "전혀 그런 뜻이 아니라"라고 손사래를 치지만, 그의 말 속에 담긴 진심을 이미 알고 있었기에 더 붙잡을 수 없다는 사실을 직감한다.
+
+윤희는 이 대화를 엿듣고 충격을 받는다. 선생님이 떠나면 집안의 따뜻한 기운이 사라질 것 같았고, 어머니가 더 외로워질 것 같아 눈물이 난다.
+
+정 선생님은 윤희를 불러 앉혀 조용히 머리를 쓰다듬으며 "윤희야, 너는 씩씩하고 밝으니까 어머니 잘 챙겨 드리렴"이라고 말한다.
+
+윤희는 울음을 삼키며 고개를 끄덕이지만, 마음속에서는 선생님의 결정을 돌리고 싶은 간절함이 솟구친다. 그러나 어머니와 선생님 모두 이미 마음을 정했고, 이별은 피할 수 없는 현실이 되어 다가오고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 이별의 날, 말하지 못한 마음들">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">💐</span>
+          이별의 날, 말하지 못한 마음들
+        </h2>
+        <div class="story-text">정 선생님이 떠나는 날, 집안은 더욱 조용했다. 윤희는 일찍 일어나 선생님이 좋아하던 작은 꽃 한 송이를 화병에 꽂아 그의 방에 넣어두고, 어머니는 조용히 짐을 챙겨주는 선생님을 바라보며 마음속에서 수백 번 감춰왔던 말을 삼켰다.
+
+정 선생님은 어머니에게 "그동안 정말 감사했습니다. 평생 잊지 못할 겁니다"라고 진심 어린 인사를 건넨다. 어머니는 떨리는 목소리로 "건강히 지내세요"라고 말하며 더는 눈을 마주치지 못한다.
+
+윤희는 끝내 울음을 터뜨리며 선생님의 손을 잡지만, 그는 윤희에게 웃음을 보이며 "다시 만날 날도 있겠지"라고 말한다.
+
+그러나 세 사람 모두 이 말이 현실보다 위로에 가깝다는 것을 알고 있었다. 이별의 순간은 말하지 못한 감정들이 공기 속에 흩어지는 듯한 깊은 아쉬움과 슬픔으로 가득했다.
+
+문이 닫히는 순간, 작은 집은 이전보다 더 큰 적막에 잠겼다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 남겨진 어머니와 윤희, 그리고 공허함의 자리">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🌙</span>
+          남겨진 어머니와 윤희, 그리고 공허함의 자리
+        </h2>
+        <div class="story-text">정 선생님이 떠난 뒤 어머니는 다시 바느질로 하루를 채웠지만, 손끝의 움직임에서는 예전보다 더 큰 고단함이 묻어났다.
+
+윤희는 어머니가 잠들지 못하는 밤마다 살며시 다가가 손을 잡아 주었다. 어머니는 딸 앞에서는 웃음을 지었지만, 정 선생님의 빈 방을 지나칠 때마다 가슴 한 켠이 저릿하게 아팠다.
+
+윤희는 어머니가 힘들다는 사실을 알면서도 어른들의 마음을 완전히 이해하기는 어려웠다. 하지만 그녀는 어머니에게 기댈 수 있는 유일한 존재가 바로 자신이라는 사실을 깨닫고, 더 열심히 집안일을 도우며 어머니가 웃을 수 있는 시간을 늘리려 노력했다.
+
+동네의 소문은 시간이 지나며 잦아들었지만, 어머니의 마음속에는 선생님을 향한 미묘한 그리움이 조용히 남아 있었고, 윤희도 선생님이 읽어주던 책의 한 구절을 떠올리며 아쉬움을 달랬다.
+
+두 사람은 서로를 위로하며 다시 견고한 일상의 리듬을 찾아가려 고군분투했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 시간이 흐른 뒤, 남겨진 사랑의 흔적">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🌸</span>
+          시간이 흐른 뒤, 남겨진 사랑의 흔적
+        </h2>
+        <div class="story-text">몇 달이 흐른 뒤, 윤희와 어머니의 삶은 다시 평온을 되찾아 갔다. 양장점에는 다시 손님이 찾아오고, 윤희는 학교에서 밝은 모습으로 친구들과 어울리며 어머니에게 작은 웃음을 선물한다.
+
+어머니는 여전히 조용하고 단정한 모습으로 하루를 살아가지만, 마음 한쪽에는 잊혀지지 않는 따뜻함이 스며 있었다. 그것은 정 선생님을 향한 완성되지 못한 애정이기도 하고, 잠시 스쳐 지나갔지만 깊이 남은 인연의 흔적이기도 했다.
+
+윤희는 어느 날 학교에서 선생님을 닮은 사람을 보자 무심코 마음이 흔들렸고, 어머니는 윤희의 이야기를 들으며 잔잔하게 웃었다.
+
+비록 다시 만나지 못했지만, 정 선생님이 남기고 간 선한 기운은 두 사람의 삶을 더 단단하고 따뜻하게 만들었다.
+
+결국 『사랑손님과 어머니』는 이별로 끝나지만, 그 속에는 사람을 변화시키는 조용하고도 진실된 사랑의 흔적이 고스란히 남아 있었다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌿 사랑손님과 어머니</h1>
+        <p class="subtitle">
+          주요섭 원작<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/love/love01.jpg',
+      '/images/love/love02.jpg',
+      '/images/love/love03.jpg',
+      '/images/love/love04.jpg',
+      '/images/love/love05.jpg',
+      '/images/love/love06.jpg',
+      '/images/love/love07.jpg',
+      '/images/love/love08.jpg',
+      '/images/love/love09.jpg',
+      '/images/love/love10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🌿 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

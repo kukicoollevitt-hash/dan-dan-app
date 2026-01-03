@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 동백꽃</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/flower/flower01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #e8a4b8 0%, #c77a92 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #e8a4b8;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #c77a92;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #e8a4b8 0%, #c77a92 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌸 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌸 동백꽃</h1>
+        <p class="subtitle">
+          김유정 원작<br>
+          순수한 시골 첫사랑 이야기
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 닭과 소녀 사이의 묘한 기운">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🐓</span>
+          닭과 소녀 사이의 묘한 기운
+        </h2>
+        <div class="story-text">봄기운이 완연한 시골 마을, '나'는 사랑하는 수탉 '봉돌이'를 보며 흐뭇해한다. 그런데 이웃집 점순이네 암탉이 자꾸 우리 닭장 근처에 얼쩡거리며 봉돌이에게 들이대는 것이다.
+
+점순이는 그걸 핑계로 괜스레 '나'에게 말을 걸고 장난을 친다. 하지만 '나'는 점순이가 괜히 밉기만 하다. 닭을 뺏어가는 것 같고, 뭔가 마음을 뒤흔드는 모습도 얄밉게 느껴진다.
+
+주변 어른들은 "점순이가 너 좋아한다더라"라고 놀리지만, '나'는 무슨 소리냐며 얼굴을 붉힐 뿐이다.
+
+봄 햇살이 따뜻해질수록, 둘의 묘한 기류도 서서히 달궈지고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 점순이의 도발과 '나'의 짜증">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">😤</span>
+          점순이의 도발과 '나'의 짜증
+        </h2>
+        <div class="story-text">점순이는 자꾸 '나'의 주위를 맴돌며 장난을 건다. 콩밭에서 일하는 '나'에게 "왜 그렇게 굼떠?" 하며 툭툭 말을 던지는가 하면, 일부러 가까이 다가와 흙덩이를 던지기도 한다.
+
+'나'는 그 모든 게 못마땅하다. 마음속에서는 이상하게 반가움이 올라오지만, 겉으로는 짜증만 낸다.
+
+점순이는 '나'의 그런 반응을 재미있어하며 계속 놀린다. 어른들은 "점순이가 그러는 건 네가 좋아서 그러는 거지"라고 말하지만, '나'는 남자 체면이 있지, 부끄럽기도 해서 사실을 인정하지 못한다.
+
+둘의 애매한 감정은 더욱 뒤섞여 간다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 봉돌이 사건의 시작">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">🐔</span>
+          봉돌이 사건의 시작
+        </h2>
+        <div class="story-text">문제는 점순이네 암탉 때문이다. 그 암탉은 기회만 되면 우리 집 수탉 봉돌이에게 다가와 알짱거렸고, '나'는 그 모습이 너무 거슬렸다.
+
+어느 날 점순이는 "우리 암탉이 더 이쁘지?" 하며 일부러 자랑까지 한다.
+
+'나'는 질투가 치밀어 폭언을 하고, 점순이는 발끈해버린다. 둘 사이의 말다툼은 점점 큰 싸움으로 번지고, 그 과정에서 서로의 감정은 엉켜 간다.
+
+사실은 서로에게 호감이 있으면서도 마음을 숨기느라 티격태격하는 꼴이었다. 하지만 '나'는 그런 감정을 아직 잘 모른 채 흥분만 하고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 갈등이 커지는 봄날">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🌿</span>
+          갈등이 커지는 봄날
+        </h2>
+        <div class="story-text">점순이는 '나'에게 일부러 더 차갑게 굴기 시작한다. 아침 인사도 받지 않고, 옆을 지나가도 쳐다보지 않는다.
+
+'나'는 그 행동에 더 짜증이 나서 점순이를 피하려 하지만, 마음은 자꾸만 그녀를 의식한다.
+
+콩밭에서 일할 때도, 물을 길러 갈 때도 점순이가 혹시 근처에 있는지 신경 쓰인다.
+
+그러나 점순이는 오히려 다른 사내아이들과 잘 노는 척하며 '나'를 자극한다.
+
+봄 햇살은 따뜻한데, 둘 사이에는 알 수 없는 긴장감이 감돌고 있었다. '나'는 왜 이렇게 불편한지 스스로도 답을 찾지 못했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 덤불 속에서 벌어진 사건">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">🌾</span>
+          덤불 속에서 벌어진 사건
+        </h2>
+        <div class="story-text">어느 날, '나'는 콩밭에서 일을 하다가 우연히 점순이를 마주친다. 둘은 또다시 티격태격하다가 결국 말싸움으로 번진다.
+
+점순이는 홧김에 '나'를 밀고, '나'도 감정이 올라와 덤불 속으로 서로 엉키며 넘어지고 만다.
+
+가까운 거리에서 마주한 눈동자, 서로의 거친 숨결… 잠시 어색한 침묵이 흐른다.
+
+하지만 '나'는 부끄러움을 참지 못해 점순이를 밀쳐내듯 자리에서 일어나 버린다.
+
+점순이는 살짝 당황한 듯하지만 곧 표정을 굳히고 뒤돌아서 버린다. 둘의 관계는 더 복잡한 감정 속에 빠져든다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 차마 말하지 못한 마음">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">💭</span>
+          차마 말하지 못한 마음
+        </h2>
+        <div class="story-text">덤불 사건 이후, '나'는 점순이가 더 신경 쓰인다. 점순이는 일부러 '나'를 피하는 것처럼 굴지만, 시간이 지나면 다시 장난을 치듯 말을 걸고 다시 멀어진다.
+
+'나'는 점순이가 싫은지 좋은지 헷갈리기 시작한다. 마음을 표현하기에는 어색하고, 숨기기에는 자꾸 티가 난다.
+
+봉돌이와 점순이네 암탉 사이의 묘한 분위기도 계속 이어지고, 그걸 보는 '나'의 질투는 한층 깊어진다.
+
+하지만 그 감정이 단순한 짜증이 아니라는 걸 '나'는 아직 인정할 준비가 되어 있지 않았다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 봄비가 내리던 날">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🌧️</span>
+          봄비가 내리던 날
+        </h2>
+        <div class="story-text">봄비가 부슬부슬 내리는 날, '나'는 외양간에 피신해 있었고, 마침 점순이가 비를 피해 달려 들어온다.
+
+좁은 공간에서 둘은 어색하게 마주 선다. 점순이는 젖은 옷을 털며 "바보같이 비는 왜 맞고 있어?"라고 투덜대지만, 말끝은 부드럽다.
+
+비 냄새가 가득한 공간에서 둘은 아무 말 없이 서로를 의식한다.
+
+'나'는 용기가 나지 않아 눈을 제대로 마주보지 못한다.
+
+하지만 그날의 시간은 두 아이 마음속 깊은 곳에 잔잔히 스며들며 감정의 방향을 조금씩 바꾸고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 진심을 드러내는 작은 행동">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">🥔</span>
+          진심을 드러내는 작은 행동
+        </h2>
+        <div class="story-text">비가 그친 뒤, 점순이는 자신이 감자 한 바구니를 가져왔다며 '나'에게 조용히 건넨다.
+
+"우리 집 감자 맛있어. 먹어."
+
+그 단순한 말 속에는 사과, 관심, 애정이 전부 담겨 있었다.
+
+'나'는 처음으로 점순이의 다정함을 진심으로 느꼈고, 얼굴이 달아올랐다.
+
+그는 감자를 받으며 "………고맙다"라고 겨우 내뱉는다.
+
+그 짧은 한마디가 둘의 간격을 크게 좁혔다. 어색함 속에서도 둘은 같은 방향을 향하고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 마음이 통하는 순간">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">💕</span>
+          마음이 통하는 순간
+        </h2>
+        <div class="story-text">며칠 뒤, '나'는 감자 몇 알을 점순이에게 돌려주며 "너도 먹어라"라고 불쑥 말한다.
+
+서툴지만 진심이 담긴 행동이었다.
+
+점순이는 그 말을 듣고 미소를 지으며 "넌 참 우직하다"고 말한다.
+
+둘은 서로를 향해 부끄러운 듯 웃는다.
+
+주변 풍경은 여전히 평범한 농촌이었지만, 두 아이에게 세상은 처음으로 따뜻하고 밝게 보였다.
+
+둘의 마음은 말보다 행동으로 더 잘 전달되었고, 그 행동은 어린 연애의 시작 같았다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 봄과 함께 피어나는 마음">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🌸</span>
+          봄과 함께 피어나는 마음
+        </h2>
+        <div class="story-text">봄 햇살이 점점 강해질 무렵, '나'와 점순이는 더 이상 이전처럼 싸우지 않았다.
+
+티격태격하던 날들은 점점 줄어들고, 대신 서로를 챙기고 바라보는 시간이 늘었다.
+
+봉돌이와 암탉 사건도 이제는 웃으며 넘길 수 있을 만큼 마음이 여유로워졌다.
+
+'나'는 아직 '좋다'는 말을 할 용기는 없지만, 점순이가 자신에게 소중한 존재라는 걸 깊이 느끼기 시작한다.
+
+점순이는 부끄럽게 웃으며 말한다.
+
+"바보야, 나 너 싫지 않아."
+
+봄바람이 살짝 불어오고, 들판에는 동백꽃처럼 선명한 첫사랑의 기운이 피어나고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌸 동백꽃</h1>
+        <p class="subtitle">
+          김유정 원작<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/flower/flower01.jpg',
+      '/flower/flower02.jpg',
+      '/flower/flower03.jpg',
+      '/flower/flower04.jpg',
+      '/flower/flower05.jpg',
+      '/flower/flower06.jpg',
+      '/flower/flower07.jpg',
+      '/flower/flower08.jpg',
+      '/flower/flower09.jpg',
+      '/flower/flower10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🌸 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

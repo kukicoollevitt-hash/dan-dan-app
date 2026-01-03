@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학습실 - 단단교실</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #a8e6cf 0%, #56c596 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 14px;
+    }
+
+    .student-info {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 18px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    /* 주간 달력 */
+    .calendar-container {
+      margin-bottom: 40px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 20px;
+    }
+
+    .calendar-nav {
+      background: #f0f0f0;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .calendar-nav:hover {
+      background: #e0e0e0;
+    }
+
+    .calendar-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #56c596;
+    }
+
+    .week-calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .week-day {
+      text-align: center;
+      padding: 20px 10px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .week-day:hover {
+      background: #e8f5e9;
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(86, 197, 150, 0.2);
+    }
+
+    .week-day.has-tasks {
+      background: linear-gradient(135deg, #a8e6cf 0%, #56c596 100%);
+      color: white;
+      font-weight: 600;
+    }
+
+    .week-day.has-tasks:hover {
+      background: linear-gradient(135deg, #56c596 0%, #3a8755 100%);
+    }
+
+    .week-day.selected {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .week-day.today {
+      border: 3px solid #ff6b6b;
+    }
+
+    .day-name {
+      font-size: 14px;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+
+    .day-date {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .task-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ff6b6b;
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+    }
+
+    .incomplete-marker {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffa726;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* 과제 목록 */
+    .tasks-section {
+      display: none;
+    }
+
+    .tasks-section.show {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tasks-header {
+      font-size: 22px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #56c596;
+    }
+
+    .task-card {
+      background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+      border: 2px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .task-card:hover {
+      border-color: #56c596;
+      box-shadow: 0 4px 16px rgba(86, 197, 150, 0.2);
+      transform: translateX(5px);
+    }
+
+    .task-card.completed {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      border-color: #4caf50;
+      opacity: 0.8;
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .task-subject {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .task-status {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .task-status.pending {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    .task-status.completed {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .task-units {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .unit-badge {
+      background: white;
+      border: 2px solid #56c596;
+      color: #56c596;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .unit-badge:hover {
+      background: #56c596;
+      color: white;
+    }
+
+    .unit-badge.completed {
+      background: #4caf50;
+      border-color: #4caf50;
+      color: white;
+    }
+
+    .no-tasks {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 16px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #f0f0f0;
+      color: #333;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: #e0e0e0;
+    }
+
+    /* 준비 중 팝업 */
+    .coming-soon-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .coming-soon-modal.show {
+      display: flex;
+    }
+
+    .coming-soon-content {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .coming-soon-icon {
+      font-size: 60px;
+      margin-bottom: 20px;
+    }
+
+    .coming-soon-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .coming-soon-message {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .coming-soon-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 40px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .coming-soon-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/student-menu.html" class="back-btn">← 뒤로 가기</a>
+
+    <h1>📚 나의 학습실</h1>
+    <p class="subtitle">이번 주 학습 과제를 확인하고 진행해보세요</p>
+
+    <div class="student-info" id="studentInfo">
+      <!-- 동적으로 채워짐 -->
+    </div>
+
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <button class="calendar-nav" id="prevWeek">◀ 이전 주</button>
+        <div class="calendar-title" id="weekTitle">2025년 1월 3주차</div>
+        <button class="calendar-nav" id="nextWeek">다음 주 ▶</button>
+      </div>
+
+      <div class="week-calendar" id="weekCalendar">
+        <!-- 동적으로 채워짐 -->
+      </div>
+    </div>
+
+    <div class="tasks-section" id="tasksSection">
+      <div class="tasks-header" id="tasksHeader">1월 20일 (월) 과제</div>
+      <div id="tasksList">
+        <!-- 동적으로 채워짐 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 준비 중 팝업 -->
+  <div class="coming-soon-modal" id="comingSoonModal">
+    <div class="coming-soon-content">
+      <div class="coming-soon-icon">📚✨</div>
+      <div class="coming-soon-title">아직 준비 중입니다</div>
+      <div class="coming-soon-message">곧 지문이 오픈됩니다. 기대해주세요!</div>
+      <button class="coming-soon-btn" onclick="closeComingSoonModal()">확인</button>
+    </div>
+  </div>
+
+  <script>
+    let currentWeekStart = new Date();
+    let selectedDate = null;
+    let studentName = '';
+    let studentGrade = '';
+    let allAssignments = [];
+
+    // 월요일로 설정
+    function setToMonday(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    // 주 시작일 설정
+    currentWeekStart = setToMonday(new Date());
+
+    // ============ 서버 동기화 함수 ============
+
+    // 서버에서 학습실 데이터 불러오기
+    async function loadStudyRoomDataFromServer() {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+        const response = await fetch(`/api/user-progress?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+        const result = await response.json();
+
+        if (result.ok && result.data && result.data.studyRoom) {
+          const studyRoom = result.data.studyRoom;
+
+          // 서버의 과제 데이터를 localStorage에 동기화
+          if (studyRoom.assignedTasks && studyRoom.assignedTasks.length > 0) {
+            const tasksKey = `studyRoom_tasks_${user.grade}_${user.name}`;
+            localStorage.setItem(tasksKey, JSON.stringify(studyRoom.assignedTasks));
+            console.log('✅ 서버에서 학습실 데이터 불러옴:', studyRoom.assignedTasks.length, '개 과제');
+          }
+        }
+      } catch (error) {
+        console.error('서버 학습실 데이터 로드 오류:', error);
+      }
+    }
+
+    // 서버에 학습실 데이터 저장하기
+    async function saveStudyRoomDataToServer() {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+        const tasksKey = `studyRoom_tasks_${user.grade}_${user.name}`;
+        const tasksStr = localStorage.getItem(tasksKey);
+
+        let assignedTasks = [];
+        if (tasksStr) {
+          try {
+            assignedTasks = JSON.parse(tasksStr);
+          } catch(e) {
+            console.error('과제 데이터 파싱 오류:', e);
+          }
+        }
+
+        const studyRoomData = { assignedTasks };
+
+        const response = await fetch('/api/user-progress/study-room', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: user.grade,
+            name: user.name,
+            studyRoomData
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          console.log('✅ 서버에 학습실 데이터 저장 완료');
+        }
+      } catch (error) {
+        console.error('서버 학습실 데이터 저장 오류:', error);
+      }
+    }
+
+    // 학생 정보 로드
+    function loadStudentInfo() {
+      // sessionStorage에서 먼저 확인
+      const userStr = sessionStorage.getItem('user');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          studentGrade = user.grade || '초4';
+          studentName = user.name || '학생';
+        } catch(e) {
+          // 파싱 실패시 localStorage 사용
+          studentGrade = localStorage.getItem('studentGrade') || '초4';
+          studentName = localStorage.getItem('studentName') || '학생';
+        }
+      } else {
+        // localStorage 또는 session에서 학생 정보 가져오기
+        studentGrade = localStorage.getItem('studentGrade') || '초4';
+        studentName = localStorage.getItem('studentName') || '학생';
+      }
+
+      document.getElementById('studentInfo').textContent = `${studentGrade} ${studentName}`;
+    }
+
+    // 주간 달력 렌더링
+    function renderWeekCalendar() {
+      const calendar = document.getElementById('weekCalendar');
+      const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+
+      // 주차 제목 업데이트
+      const weekTitle = document.getElementById('weekTitle');
+      const year = currentWeekStart.getFullYear();
+      const month = currentWeekStart.getMonth() + 1;
+      const weekNumber = Math.ceil((currentWeekStart.getDate() + currentWeekStart.getDay()) / 7);
+      weekTitle.textContent = `${year}년 ${month}월 ${weekNumber}주차`;
+
+      calendar.innerHTML = '';
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(currentWeekStart);
+        date.setDate(currentWeekStart.getDate() + i);
+
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'week-day';
+
+        // 오늘 날짜 표시
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (date.getTime() === today.getTime()) {
+          dayDiv.classList.add('today');
+        }
+
+        // 선택된 날짜 표시
+        if (selectedDate && date.getTime() === selectedDate.getTime()) {
+          dayDiv.classList.add('selected');
+        }
+
+        // 해당 날짜의 과제 확인
+        const tasksForDay = allAssignments.filter(a => {
+          const dueDate = new Date(a.dueDate);
+          dueDate.setHours(0, 0, 0, 0);
+          return dueDate.getTime() === date.getTime();
+        });
+
+        if (tasksForDay.length > 0) {
+          dayDiv.classList.add('has-tasks');
+
+          const countBadge = document.createElement('div');
+          countBadge.className = 'task-count';
+          countBadge.textContent = tasksForDay.length;
+          dayDiv.appendChild(countBadge);
+
+          // 미완료 과제 확인
+          const incompleteTasks = tasksForDay.filter(t => !isTaskCompleted(t));
+          if (incompleteTasks.length > 0) {
+            const marker = document.createElement('div');
+            marker.className = 'incomplete-marker';
+            marker.textContent = '미완료';
+            dayDiv.appendChild(marker);
+          }
+        }
+
+        dayDiv.innerHTML += `
+          <div class="day-name">${weekDays[date.getDay()]}</div>
+          <div class="day-date">${date.getDate()}</div>
+        ` + dayDiv.innerHTML;
+
+        dayDiv.addEventListener('click', () => selectDate(date));
+        calendar.appendChild(dayDiv);
+      }
+    }
+
+    // 날짜 선택
+    function selectDate(date) {
+      selectedDate = new Date(date);
+      selectedDate.setHours(0, 0, 0, 0);
+      renderWeekCalendar();
+      renderTasks();
+    }
+
+    // 과제 완료 여부 확인
+    function isTaskCompleted(assignment) {
+      const studentId = `${studentGrade} ${studentName}`;
+      return assignment.completedBy && assignment.completedBy.some(c => c.studentName === studentId);
+    }
+
+    // 과제 목록 렌더링
+    function renderTasks() {
+      if (!selectedDate) return;
+
+      const tasksSection = document.getElementById('tasksSection');
+      const tasksList = document.getElementById('tasksList');
+      const tasksHeader = document.getElementById('tasksHeader');
+
+      const month = selectedDate.getMonth() + 1;
+      const day = selectedDate.getDate();
+      const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+      const dayName = weekDays[selectedDate.getDay()];
+
+      tasksHeader.textContent = `${month}월 ${day}일 (${dayName}) 과제`;
+
+      // 해당 날짜의 과제 필터링
+      const tasksForDay = allAssignments.filter(a => {
+        const dueDate = new Date(a.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        return dueDate.getTime() === selectedDate.getTime();
+      });
+
+      if (tasksForDay.length === 0) {
+        tasksList.innerHTML = '<div class="no-tasks">📭 이 날짜에는 과제가 없습니다.</div>';
+        tasksSection.classList.add('show');
+        return;
+      }
+
+      tasksList.innerHTML = tasksForDay.map(task => {
+        const completed = isTaskCompleted(task);
+        const seriesName = task.series === 'BRAINUP' ? 'BRAIN업' : 'BRAIN온';
+        const categoryName = getCategoryName(task.category);
+        const subjectName = getSubjectName(task.category, task.subject);
+
+        return `
+          <div class="task-card ${completed ? 'completed' : ''}">
+            <div class="task-header">
+              <div class="task-subject">
+                ${seriesName} - ${categoryName} - ${subjectName}
+              </div>
+              <div class="task-status ${completed ? 'completed' : 'pending'}">
+                ${completed ? '✓ 완료' : '진행중'}
+              </div>
+            </div>
+            <div class="task-units">
+              ${task.units.map(unit => `
+                <div class="unit-badge ${isUnitCompleted(task, unit) ? 'completed' : ''}"
+                     onclick="goToUnit('${task.series}', '${task.category}', '${task.subject}', ${unit})">
+                  ${unit}단원
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      tasksSection.classList.add('show');
+    }
+
+    // 단원 완료 여부 확인
+    function isUnitCompleted(assignment, unit) {
+      const studentId = `${studentGrade} ${studentName}`;
+      return assignment.completedBy && assignment.completedBy.some(
+        c => c.studentName === studentId && c.unit === unit
+      );
+    }
+
+    // 카테고리 이름
+    function getCategoryName(category) {
+      const names = {
+        social: '사회탐구',
+        korlit: '국어문학',
+        worldlit: '세계문학',
+        person: '인물탐구'
+      };
+      return names[category] || category;
+    }
+
+    // 과목 이름
+    function getSubjectName(category, subject) {
+      const names = {
+        geo: '지리',
+        law: '법',
+        pol: '정치',
+        soc: '사회문화',
+        classic: '고전문학',
+        modern: '현대문학',
+        world: '세계문학',
+        people: '인물'
+      };
+      return names[subject] || subject;
+    }
+
+    // 준비 중 팝업 열기
+    function showComingSoonModal() {
+      const modal = document.getElementById('comingSoonModal');
+      modal.classList.add('show');
+    }
+
+    // 준비 중 팝업 닫기
+    function closeComingSoonModal() {
+      const modal = document.getElementById('comingSoonModal');
+      modal.classList.remove('show');
+    }
+
+    // 배경 클릭 시 팝업 닫기
+    document.addEventListener('DOMContentLoaded', function() {
+      const modal = document.getElementById('comingSoonModal');
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            closeComingSoonModal();
+          }
+        });
+      }
+    });
+
+    // 단원 파일 존재 여부 확인 (준비된 단원 목록)
+    const availableUnits = {
+      'BRAINUP': {
+        'social': {
+          'geo': [1, 2, 3, 4], // 지리 01~04만 준비됨
+          'soc': [],
+          'law': [],
+          'pol': []
+        }
+      }
+    };
+
+    // 단원으로 이동
+    function goToUnit(series, category, subject, unit) {
+      // 해당 단원이 준비되어 있는지 확인
+      const isAvailable = availableUnits[series] &&
+                         availableUnits[series][category] &&
+                         availableUnits[series][category][subject] &&
+                         availableUnits[series][category][subject].includes(unit);
+
+      if (!isAvailable) {
+        // 준비되지 않은 단원 → 팝업 표시
+        showComingSoonModal();
+        return;
+      }
+
+      // 준비된 단원 → 페이지 이동
+      const unitStr = unit < 10 ? `0${unit}` : unit;
+      const path = `/${series}/${category}/${subject}_${unitStr}.html`;
+      window.location.href = path;
+    }
+
+    // 과제 데이터 로드
+    async function loadAssignments() {
+      try {
+        const studentId = `${studentGrade} ${studentName}`;
+        const response = await fetch(`/api/assignments/student/${encodeURIComponent(studentId)}`);
+        allAssignments = await response.json();
+        renderWeekCalendar();
+      } catch (error) {
+        console.error('과제 로드 실패:', error);
+      }
+    }
+
+    // 주 이동
+    document.getElementById('prevWeek').addEventListener('click', () => {
+      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+      selectedDate = null;
+      document.getElementById('tasksSection').classList.remove('show');
+      renderWeekCalendar();
+    });
+
+    document.getElementById('nextWeek').addEventListener('click', () => {
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      selectedDate = null;
+      document.getElementById('tasksSection').classList.remove('show');
+      renderWeekCalendar();
+    });
+
+    // 단원 완료 메시지 수신 처리
+    window.addEventListener('message', async (event) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data.type === 'UNIT_COMPLETED') {
+        console.log('📚 단원 완료 메시지 수신됨');
+
+        // 완료 정보를 localStorage와 서버에 저장
+        // (실제 완료 처리는 학습 페이지에서 이미 처리되므로, 여기서는 서버 동기화만 수행)
+        await saveStudyRoomDataToServer();
+
+        // 과제 목록 새로고침
+        await loadAssignments();
+        if (selectedDate) {
+          renderTasks();
+        }
+        renderWeekCalendar();
+      }
+    });
+
+    // 초기화
+    (async () => {
+      // 1. 학생 정보 로드
+      loadStudentInfo();
+
+      // 2. 서버에서 학습실 데이터 불러오기
+      await loadStudyRoomDataFromServer();
+
+      // 3. 과제 목록 로드 및 렌더링
+      await loadAssignments();
+    })();
+  </script>
+</body>
+</html>

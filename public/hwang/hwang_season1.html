@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗣️ 황만근은 이렇게 말했다</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/hwang/hwang01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #7d8c5c 0%, #5a6b3a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #7d8c5c;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #7d8c5c;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #7d8c5c 0%, #5a6b3a 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🗣️ 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🗣️ 황만근은 이렇게 말했다</h1>
+        <p class="subtitle">
+          현대소설<br>
+          공동체와 소외된 인간
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 마을 사람들 속의 황만근">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🏘️</span>
+          마을 사람들 속의 황만근
+        </h2>
+        <div class="story-text">「황만근은 이렇게 말했다」는 시골 마을 공동체를 배경으로, 황만근이라는 인물을 중심에 두고 전개되는 이야기다. 황만근은 마을 사람들 사이에서 '좀 모자라고 둔한 사람'으로 인식된다.
+
+그는 말수가 적고, 상황 판단이 느리며, 세상일에 욕심이 없는 인물로 보인다. 마을 사람들은 그를 함부로 대하거나 은근히 무시하며, 그의 말을 진지하게 받아들이지 않는다.
+
+그러나 황만근은 마을의 잡다한 일을 도맡아 하며 묵묵히 살아간다. 소설은 이러한 황만근의 일상적인 모습 속에서 이야기를 시작하며, 독자에게 '겉으로 보이는 모습만으로 사람을 판단할 수 있는가'라는 질문을 자연스럽게 던진다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. '모자란 사람'으로 규정된 존재">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">👤</span>
+          '모자란 사람'으로 규정된 존재
+        </h2>
+        <div class="story-text">마을 사람들에게 황만근은 늘 도움을 받아야 하는 존재이거나, 이용해도 되는 사람처럼 여겨진다. 그는 어려운 일을 맡기면 불평 없이 해내지만, 그 대가를 제대로 요구하지 않는다.
+
+이 때문에 사람들은 그를 순박하다고 여기면서도, 동시에 만만한 대상으로 삼는다. 황만근의 말이나 행동은 종종 웃음거리로 소비되고, 그의 의견은 중요하게 다뤄지지 않는다.
+
+작가는 이 과정을 통해 공동체 안에서 '정상'과 '비정상'의 기준이 얼마나 쉽게 만들어지는지를 보여 준다. 황만근은 사회적 기준에서 벗어난 존재로 취급되지만, 그 기준 자체가 과연 정당한지 독자는 점점 의문을 품게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 황만근의 침묵과 태도">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">🤫</span>
+          황만근의 침묵과 태도
+        </h2>
+        <div class="story-text">황만근은 마을 사람들의 시선과 평가에 크게 반응하지 않는다. 억울한 일을 당해도 변명하지 않고, 부당한 대우를 받아도 화를 내지 않는다. 그의 침묵은 무기력함처럼 보이기도 하고, 체념처럼 보이기도 한다.
+
+그러나 작가는 이 침묵을 단순한 무지나 어리석음으로 묘사하지 않는다. 황만근은 자신의 자리에서 자신이 할 수 있는 일을 해 나가며, 말보다 행동으로 삶을 보여 준다.
+
+이 파트에서 독자는 황만근이 정말 '아무 생각 없는 사람'인지, 아니면 다른 방식으로 세상을 이해하고 있는 인물인지 고민하게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 마을 공동체의 이기심">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🎭</span>
+          마을 공동체의 이기심
+        </h2>
+        <div class="story-text">마을 사람들은 필요할 때만 황만근을 찾는다. 힘든 일이 있을 때, 궂은일을 해야 할 때, 책임지기 싫은 일이 생길 때 황만근은 가장 먼저 호출된다. 그러나 일이 끝나면 그는 다시 공동체의 주변부로 밀려난다.
+
+이 모습은 공동체의 따뜻함보다는 이기성을 드러낸다. 작가는 황만근을 대하는 마을 사람들의 태도를 통해, 공동체가 약자를 어떻게 소비하고 배제하는지를 보여 준다.
+
+황만근은 공동체 안에 있지만, 진정한 구성원으로 존중받지는 못한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 황만근의 '말'이 갖는 의미">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">💬</span>
+          황만근의 '말'이 갖는 의미
+        </h2>
+        <div class="story-text">소설의 제목처럼, 작품 속에서 황만근은 어느 순간 자신의 생각을 말로 드러낸다. 평소 말이 적던 황만근이 던지는 말은 단순하지만, 그 안에는 삶에 대한 본질적인 통찰이 담겨 있다.
+
+그의 말은 복잡한 논리나 화려한 표현이 아니라, 경험에서 우러난 진솔한 인식이다. 이 말은 마을 사람들에게 잠시 당황과 침묵을 안긴다.
+
+작가는 이 장면을 통해 '말을 잘하는 사람'과 '옳은 말을 하는 사람'이 반드시 같지는 않다는 점을 강조한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 황만근과 마을의 갈등">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">⚡</span>
+          황만근과 마을의 갈등
+        </h2>
+        <div class="story-text">황만근의 말 이후, 마을 사람들은 그를 이전과 다르게 바라보게 된다. 그러나 그 변화는 긍정적이기보다 불편함에 가깝다. 사람들은 자신들이 그동안 황만근을 어떻게 대했는지 떠올리며 불안해한다.
+
+동시에 그 불편함을 외면하려 하거나, 황만근의 말을 대수롭지 않게 넘기려 한다. 이 과정에서 공동체 내부의 갈등이 드러난다.
+
+황만근은 여전히 조용하지만, 그의 존재 자체가 마을의 위선을 비추는 거울이 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 침묵 속에 드러나는 진실">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🔍</span>
+          침묵 속에 드러나는 진실
+        </h2>
+        <div class="story-text">황만근은 이후에도 크게 변하지 않는다. 그는 여전히 묵묵히 자신의 일을 하고, 사람들의 말에 크게 반응하지 않는다. 그러나 독자는 이제 그의 침묵을 다르게 해석하게 된다.
+
+그것은 무지가 아니라 선택이며, 무력함이 아니라 인내에 가깝다. 작가는 황만근의 태도를 통해, 말이 적다고 해서 생각이 없는 것은 아니라는 점을 강조한다.
+
+오히려 그는 공동체 속에서 가장 정직한 시선을 지닌 인물로 떠오른다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 공동체의 자기합리화">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">🪞</span>
+          공동체의 자기합리화
+        </h2>
+        <div class="story-text">마을 사람들은 황만근을 계속해서 '원래 그런 사람'으로 규정하려 한다. 이는 스스로의 행동을 정당화하기 위한 장치이다. 황만근이 진지한 존재로 인정된다면, 그동안의 태도를 반성해야 하기 때문이다.
+
+작가는 이러한 자기합리화 과정을 통해, 인간이 불편한 진실을 어떻게 회피하는지를 보여 준다.
+
+황만근은 말없이 그 과정을 지켜보며, 공동체의 민낯을 드러내는 역할을 한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 황만근이라는 인물의 재해석">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">💡</span>
+          황만근이라는 인물의 재해석
+        </h2>
+        <div class="story-text">이야기가 진행될수록 황만근은 더 이상 '모자란 사람'이 아니다. 그는 욕심이 없고, 계산하지 않으며, 자기 몫을 과하게 요구하지 않는 인물이다. 이는 어리석음이 아니라 다른 가치관의 표현이다.
+
+작가는 황만근을 통해 현대 사회가 중요하게 여기는 능력, 경쟁, 효율이라는 기준을 상대화한다.
+
+황만근의 삶은 느리지만, 그만큼 왜곡되지 않은 삶이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 황만근은 이렇게 말했다의 의미">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">📜</span>
+          황만근은 이렇게 말했다의 의미
+        </h2>
+        <div class="story-text">소설의 마지막에서 황만근의 말과 태도는 독자에게 강한 여운을 남긴다. 그는 큰 변화를 일으키지 않고, 공동체를 바꾸지도 않는다. 그러나 그의 존재는 독자의 시선을 바꾼다.
+
+우리는 그동안 어떤 기준으로 사람을 판단해 왔는지, 누구의 말을 듣고 누구의 말을 무시해 왔는지를 돌아보게 된다.
+
+「황만근은 이렇게 말했다」는 조용하지만 날카롭게, 사회적 기준과 인간의 오만을 비판하는 작품이다. 황만근의 말은 적지만, 그 울림은 오래 남는다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🗣️ 황만근은 이렇게 말했다</h1>
+        <p class="subtitle">
+          현대소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/hwang/hwang01.jpg',
+      '/images/hwang/hwang02.jpg',
+      '/images/hwang/hwang03.jpg',
+      '/images/hwang/hwang04.jpg',
+      '/images/hwang/hwang05.jpg',
+      '/images/hwang/hwang06.jpg',
+      '/images/hwang/hwang07.jpg',
+      '/images/hwang/hwang08.jpg',
+      '/images/hwang/hwang09.jpg',
+      '/images/hwang/hwang10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🗣️ ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

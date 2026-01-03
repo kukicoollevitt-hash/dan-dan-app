@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학습과제 부여 - 단단교실</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 14px;
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .mode-btn {
+      padding: 12px 32px;
+      border: 2px solid #667eea;
+      background: white;
+      color: #667eea;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .mode-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #764ba2;
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .student-select {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 16px;
+      background: #f9f9f9;
+      border-radius: 10px;
+    }
+
+    .student-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .student-checkbox:hover {
+      background: #e8edff;
+    }
+
+    .student-checkbox input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
+
+    .week-schedule {
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .week-day {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+    }
+
+    .week-day-label {
+      min-width: 50px;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .week-day-units {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .unit-checkbox {
+      padding: 6px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+
+    .unit-checkbox:hover {
+      border-color: #667eea;
+      background: #f0f0ff;
+    }
+
+    .unit-checkbox input[type="checkbox"] {
+      margin-right: 4px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 30px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .back-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #f0f0f0;
+      color: #333;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: #e0e0e0;
+    }
+
+    .success-message {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 40px 50px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      z-index: 1000;
+    }
+
+    .success-message.show {
+      display: block;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+
+    .repeat-weeks {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .repeat-weeks select {
+      width: auto;
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/admin-assign-menu" class="back-btn">← 시리즈 선택으로 돌아가기</a>
+
+    <h1 id="pageTitle">📚 학습과제 부여</h1>
+    <p class="subtitle" id="pageSubtitle">학생들에게 주단위로 학습과제를 부여할 수 있습니다</p>
+
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mode="auto">자동 부여 (주단위)</button>
+      <button class="mode-btn" data-mode="manual">수동 부여</button>
+    </div>
+
+    <!-- 자동 부여 (주단위) -->
+    <form id="autoForm" class="form-section active">
+      <div class="form-group">
+        <label>주 시작일 (월요일) 선택</label>
+        <input type="date" id="weekStart" required>
+      </div>
+
+      <div class="form-group">
+        <label>학생 선택 (복수 선택 가능)</label>
+        <div class="student-select" id="studentListAuto">
+          <!-- 동적으로 채워짐 -->
+        </div>
+      </div>
+
+      <div class="form-group" id="seriesGroupAuto" style="display: none;">
+        <label>시리즈 선택</label>
+        <select id="seriesAuto" required>
+          <option value="">시리즈 선택</option>
+          <option value="BRAINUP">BRAIN업</option>
+          <option value="BRAINON">BRAIN온</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>분야 선택</label>
+        <select id="categoryAuto" required disabled>
+          <option value="">분야 선택</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>과목 선택</label>
+        <select id="subjectAuto" required disabled>
+          <option value="">과목 선택</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>주간 스케줄 설정</label>
+        <div class="week-schedule" id="weekSchedule">
+          <!-- 월~금 단원 선택 -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>반복 주수</label>
+        <div class="repeat-weeks">
+          <select id="repeatWeeks">
+            <option value="1">1주</option>
+            <option value="2">2주</option>
+            <option value="3">3주</option>
+            <option value="4">4주</option>
+            <option value="6">6주</option>
+            <option value="8">8주</option>
+          </select>
+          <span>연속 부여</span>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn">과제 부여하기</button>
+    </form>
+
+    <!-- 수동 부여 -->
+    <form id="manualForm" class="form-section">
+      <div class="form-group">
+        <label>과제 날짜 선택</label>
+        <input type="date" id="dueDateManual" required>
+      </div>
+
+      <div class="form-group">
+        <label>학생 선택 (복수 선택 가능)</label>
+        <div class="student-select" id="studentListManual">
+          <!-- 동적으로 채워짐 -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>시리즈 선택</label>
+        <select id="seriesManual" required>
+          <option value="">시리즈 선택</option>
+          <option value="BRAINUP">BRAIN업</option>
+          <option value="BRAINON">BRAIN온</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>분야 선택</label>
+        <select id="categoryManual" required disabled>
+          <option value="">분야 선택</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <select id="subjectManual" required disabled>
+          <option value="">과목 선택</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>단원 선택 (복수 선택 가능)</label>
+        <div id="unitsManual" class="week-day-units">
+          <!-- 동적으로 채워짐 -->
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn">과제 부여하기</button>
+    </form>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="success-message" id="successMessage">
+    <h2 style="color: #667eea; margin-bottom: 16px;">✅ 과제 부여 완료!</h2>
+    <p style="color: #666;">학생들에게 과제가 성공적으로 부여되었습니다.</p>
+  </div>
+
+  <script>
+    // 시리즈별 분야/과목 데이터
+    const contentData = {
+      BRAINUP: {
+        science: {
+          name: "과학문해",
+          subjects: {
+            bio: { name: "생물", units: 4 },
+            chem: { name: "화학", units: 4 },
+            physics: { name: "물리", units: 4 },
+            earth: { name: "지구과학", units: 4 }
+          }
+        },
+        social: {
+          name: "사회탐구",
+          subjects: {
+            geo: { name: "지리", units: 4 },
+            law: { name: "법", units: 4 },
+            pol: { name: "정치", units: 4 },
+            soc: { name: "사회문화", units: 4 }
+          }
+        },
+        korlit: {
+          name: "한국문학",
+          subjects: {
+            classic: { name: "고전문학", units: 2 },
+            modern: { name: "현대문학", units: 2 }
+          }
+        },
+        worldlit: {
+          name: "세계문학",
+          subjects: {
+            world: { name: "세계문학", units: 4 }
+          }
+        },
+        person: {
+          name: "인물문해",
+          subjects: {
+            people: { name: "인물", units: 4 }
+          }
+        }
+      },
+      BRAINON: {
+        science: {
+          name: "과학문해",
+          subjects: {
+            bio: { name: "생물", units: 4 },
+            chem: { name: "화학", units: 4 },
+            physics: { name: "물리", units: 4 },
+            earth: { name: "지구과학", units: 4 }
+          }
+        },
+        social: {
+          name: "사회탐구",
+          subjects: {
+            geo: { name: "지리", units: 4 },
+            law: { name: "법", units: 4 },
+            pol: { name: "정치", units: 4 },
+            soc: { name: "사회문화", units: 4 }
+          }
+        },
+        korlit: {
+          name: "한국문학",
+          subjects: {
+            classic: { name: "고전문학", units: 2 },
+            modern: { name: "현대문학", units: 2 }
+          }
+        },
+        worldlit: {
+          name: "세계문학",
+          subjects: {
+            world: { name: "세계문학", units: 4 }
+          }
+        },
+        person: {
+          name: "인물문해",
+          subjects: {
+            people: { name: "인물", units: 4 }
+          }
+        }
+      }
+    };
+
+    // 시리즈명 매핑
+    const seriesNameMap = {
+      'BRAINON': 'BRAIN온',
+      'BRAINUP': 'BRAIN업',
+      'BRAINFIT': 'BRAIN핏',
+      'BRAINDIP': 'BRAIN딥',
+      'BRAINJUNIOR': 'BRAIN중등',
+      'BRAINHIGH': 'BRAIN고등'
+    };
+
+    // URL 파라미터에서 시리즈 가져오기
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedSeries = urlParams.get('series');
+
+    if (selectedSeries) {
+      console.log('선택된 시리즈:', selectedSeries);
+
+      // 페이지 타이틀 업데이트
+      const seriesDisplayName = seriesNameMap[selectedSeries] || selectedSeries;
+      document.getElementById('pageTitle').textContent = `📚 ${seriesDisplayName} 학습과제 부여`;
+      document.getElementById('pageSubtitle').textContent = `${seriesDisplayName} 시리즈의 학습과제를 학생들에게 부여할 수 있습니다`;
+
+      // 시리즈 선택 드롭다운에 자동 설정 (자동 부여)
+      const seriesAutoSelect = document.getElementById('seriesAuto');
+      if (seriesAutoSelect && contentData[selectedSeries]) {
+        seriesAutoSelect.value = selectedSeries;
+        // 카테고리 드롭다운 활성화 및 채우기
+        const categoryAutoSelect = document.getElementById('categoryAuto');
+        categoryAutoSelect.disabled = false;
+        categoryAutoSelect.innerHTML = '<option value="">분야 선택</option>';
+        Object.keys(contentData[selectedSeries]).forEach(catKey => {
+          const option = document.createElement('option');
+          option.value = catKey;
+          option.textContent = contentData[selectedSeries][catKey].name;
+          categoryAutoSelect.appendChild(option);
+        });
+      }
+
+      // 시리즈 선택 드롭다운에 자동 설정 (수동 부여)
+      const seriesManualSelect = document.getElementById('seriesManual');
+      if (seriesManualSelect && contentData[selectedSeries]) {
+        seriesManualSelect.value = selectedSeries;
+        // 카테고리 드롭다운 활성화 및 채우기
+        const categoryManualSelect = document.getElementById('categoryManual');
+        categoryManualSelect.disabled = false;
+        categoryManualSelect.innerHTML = '<option value="">분야 선택</option>';
+        Object.keys(contentData[selectedSeries]).forEach(catKey => {
+          const option = document.createElement('option');
+          option.value = catKey;
+          option.textContent = contentData[selectedSeries][catKey].name;
+          categoryManualSelect.appendChild(option);
+        });
+      }
+    }
+
+    // 모드 전환
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const mode = btn.dataset.mode;
+        document.querySelectorAll('.form-section').forEach(section => section.classList.remove('active'));
+        document.getElementById(mode === 'auto' ? 'autoForm' : 'manualForm').classList.add('active');
+      });
+    });
+
+    // 학생 목록 로드
+    async function loadStudents() {
+      try {
+        console.log('🔍 학생 목록 로드 시작...');
+
+        // URL 파라미터에서 시리즈 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const series = urlParams.get('series');
+
+        // 시리즈 파라미터가 있으면 쿼리 스트링에 추가
+        const apiUrl = series ? `/api/students?series=${series}` : '/api/students';
+        console.log('   - API 호출:', apiUrl);
+
+        const response = await fetch(apiUrl);
+        console.log('   - 응답 상태:', response.status);
+
+        const students = await response.json();
+        console.log('   - 로드된 학생 수:', students.length);
+        console.log('   - 학생 목록:', students.map(s => `${s.grade} ${s.name} (${s.school}) [${s.assignedSeries?.join(', ') || '시리즈 없음'}]`));
+
+        const autoList = document.getElementById('studentListAuto');
+        const manualList = document.getElementById('studentListManual');
+
+        if (students.length === 0) {
+          const noStudentMsg = `<div style="padding:20px; text-align:center; color:#999;">
+            ${series ? `${seriesNameMap[series] || series} 시리즈가 부여된 학생이 없습니다.` : '학생이 없습니다.'}
+          </div>`;
+          autoList.innerHTML = noStudentMsg;
+          manualList.innerHTML = noStudentMsg;
+          return;
+        }
+
+        students.forEach(student => {
+          const studentId = `${student.grade} ${student.name}`;
+
+          // 자동 부여용
+          const autoCheckbox = document.createElement('label');
+          autoCheckbox.className = 'student-checkbox';
+          autoCheckbox.innerHTML = `
+            <input type="checkbox" name="students" value="${studentId}">
+            <span>${studentId}</span>
+          `;
+          autoList.appendChild(autoCheckbox);
+
+          // 수동 부여용
+          const manualCheckbox = document.createElement('label');
+          manualCheckbox.className = 'student-checkbox';
+          manualCheckbox.innerHTML = `
+            <input type="checkbox" name="students" value="${studentId}">
+            <span>${studentId}</span>
+          `;
+          manualList.appendChild(manualCheckbox);
+        });
+
+        console.log('✅ 학생 목록 표시 완료');
+      } catch (error) {
+        console.error('❌ 학생 목록 로드 실패:', error);
+      }
+    }
+
+    // 시리즈 변경 시 카테고리 업데이트
+    function setupSeriesChange(seriesId, categoryId, subjectId, mode) {
+      const seriesSelect = document.getElementById(seriesId);
+      const categorySelect = document.getElementById(categoryId);
+      const subjectSelect = document.getElementById(subjectId);
+
+      seriesSelect.addEventListener('change', () => {
+        const series = seriesSelect.value;
+        categorySelect.innerHTML = '<option value="">분야 선택</option>';
+        subjectSelect.innerHTML = '<option value="">과목 선택</option>';
+        categorySelect.disabled = true;
+        subjectSelect.disabled = true;
+
+        if (series && contentData[series]) {
+          Object.keys(contentData[series]).forEach(catKey => {
+            const cat = contentData[series][catKey];
+            const option = document.createElement('option');
+            option.value = catKey;
+            option.textContent = cat.name;
+            categorySelect.appendChild(option);
+          });
+          categorySelect.disabled = false;
+        }
+      });
+
+      categorySelect.addEventListener('change', () => {
+        const series = seriesSelect.value;
+        const category = categorySelect.value;
+        subjectSelect.innerHTML = '<option value="">과목 선택</option>';
+        subjectSelect.disabled = true;
+
+        if (series && category && contentData[series][category]) {
+          Object.keys(contentData[series][category].subjects).forEach(subKey => {
+            const sub = contentData[series][category].subjects[subKey];
+            const option = document.createElement('option');
+            option.value = subKey;
+            option.textContent = sub.name;
+            subjectSelect.appendChild(option);
+          });
+          subjectSelect.disabled = false;
+        }
+
+        if (mode === 'auto') {
+          updateWeekSchedule();
+        }
+      });
+
+      if (mode === 'manual') {
+        subjectSelect.addEventListener('change', updateManualUnits);
+      } else {
+        subjectSelect.addEventListener('change', updateWeekSchedule);
+      }
+    }
+
+    // 주간 스케줄 업데이트
+    function updateWeekSchedule() {
+      const series = document.getElementById('seriesAuto').value;
+      const category = document.getElementById('categoryAuto').value;
+      const subject = document.getElementById('subjectAuto').value;
+      const scheduleDiv = document.getElementById('weekSchedule');
+
+      if (!series || !category || !subject) {
+        scheduleDiv.innerHTML = '';
+        return;
+      }
+
+      const unitCount = contentData[series][category].subjects[subject].units;
+      const weekDays = ['월요일', '화요일', '수요일', '목요일', '금요일'];
+
+      scheduleDiv.innerHTML = '';
+      weekDays.forEach(day => {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'week-day';
+        dayDiv.innerHTML = `
+          <div class="week-day-label">${day}</div>
+          <div class="week-day-units" data-day="${day}">
+            ${Array.from({length: unitCount}, (_, i) => `
+              <label class="unit-checkbox">
+                <input type="checkbox" name="units-${day}" value="${i + 1}">
+                ${i + 1}단원
+              </label>
+            `).join('')}
+          </div>
+        `;
+        scheduleDiv.appendChild(dayDiv);
+      });
+    }
+
+    // 수동 부여 단원 업데이트
+    function updateManualUnits() {
+      const series = document.getElementById('seriesManual').value;
+      const category = document.getElementById('categoryManual').value;
+      const subject = document.getElementById('subjectManual').value;
+      const unitsDiv = document.getElementById('unitsManual');
+
+      if (!series || !category || !subject) {
+        unitsDiv.innerHTML = '';
+        return;
+      }
+
+      const unitCount = contentData[series][category].subjects[subject].units;
+      unitsDiv.innerHTML = Array.from({length: unitCount}, (_, i) => `
+        <label class="unit-checkbox">
+          <input type="checkbox" name="units" value="${i + 1}">
+          ${i + 1}단원
+        </label>
+      `).join('');
+    }
+
+    // 자동 부여 폼 제출
+    document.getElementById('autoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const weekStart = new Date(document.getElementById('weekStart').value);
+      const students = Array.from(document.querySelectorAll('#studentListAuto input:checked')).map(el => el.value);
+      const series = document.getElementById('seriesAuto').value;
+      const category = document.getElementById('categoryAuto').value;
+      const subject = document.getElementById('subjectAuto').value;
+      const repeatWeeks = parseInt(document.getElementById('repeatWeeks').value);
+
+      if (students.length === 0) {
+        alert('학생을 선택해주세요.');
+        return;
+      }
+
+      // 주간 스케줄 수집
+      const weekDays = ['월요일', '화요일', '수요일', '목요일', '금요일'];
+      const schedule = [];
+
+      weekDays.forEach((day, idx) => {
+        const units = Array.from(document.querySelectorAll(`input[name="units-${day}"]:checked`)).map(el => parseInt(el.value));
+        if (units.length > 0) {
+          schedule.push({
+            dayOfWeek: day.replace('요일', ''),
+            dayOffset: idx,
+            units: units
+          });
+        }
+      });
+
+      if (schedule.length === 0) {
+        alert('최소 하나 이상의 과제를 설정해주세요.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/assignments/auto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            weekStartDate: weekStart,
+            students,
+            series,
+            category,
+            subject,
+            schedule,
+            repeatWeeks
+          })
+        });
+
+        if (response.ok) {
+          showSuccess();
+        } else {
+          alert('과제 부여에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('서버 오류가 발생했습니다.');
+      }
+    });
+
+    // 수동 부여 폼 제출
+    document.getElementById('manualForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const dueDate = new Date(document.getElementById('dueDateManual').value);
+      const students = Array.from(document.querySelectorAll('#studentListManual input:checked')).map(el => el.value);
+      const series = document.getElementById('seriesManual').value;
+      const category = document.getElementById('categoryManual').value;
+      const subject = document.getElementById('subjectManual').value;
+      const units = Array.from(document.querySelectorAll('#unitsManual input:checked')).map(el => parseInt(el.value));
+
+      if (students.length === 0) {
+        alert('학생을 선택해주세요.');
+        return;
+      }
+
+      if (units.length === 0) {
+        alert('단원을 선택해주세요.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/assignments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dueDate,
+            students,
+            series,
+            category,
+            subject,
+            units
+          })
+        });
+
+        if (response.ok) {
+          showSuccess();
+        } else {
+          alert('과제 부여에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('서버 오류가 발생했습니다.');
+      }
+    });
+
+    function showSuccess() {
+      document.getElementById('overlay').classList.add('show');
+      document.getElementById('successMessage').classList.add('show');
+
+      setTimeout(() => {
+        document.getElementById('overlay').classList.remove('show');
+        document.getElementById('successMessage').classList.remove('show');
+        window.location.reload();
+      }, 2000);
+    }
+
+    // 초기화
+    loadStudents();
+    setupSeriesChange('seriesAuto', 'categoryAuto', 'subjectAuto', 'auto');
+    setupSeriesChange('seriesManual', 'categoryManual', 'subjectManual', 'manual');
+
+    // 오늘 날짜로 초기화
+    const today = new Date();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - today.getDay() + 1);
+    document.getElementById('weekStart').valueAsDate = monday;
+    document.getElementById('dueDateManual').valueAsDate = today;
+  </script>
+</body>
+</html>

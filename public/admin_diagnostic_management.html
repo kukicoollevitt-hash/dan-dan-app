@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>진단테스트 신청 관리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #667eea;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #7f8c8d;
+      font-size: 16px;
+    }
+
+    .academy-name {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-bottom: 30px;
+    }
+
+    .back-btn:hover {
+      background: #764ba2;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .section {
+      margin-bottom: 50px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ecf0f1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .count-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #ecf0f1;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 40px;
+      color: #95a5a6;
+      font-size: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #667eea;
+    }
+
+    .grade-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e8f4fd;
+      color: #3498db;
+    }
+
+    .result-grade-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .grade-S { background: #ffd700; color: #333; }
+    .grade-A { background: #ff6b6b; color: white; }
+    .grade-B { background: #4ecdc4; color: white; }
+    .grade-C { background: #95e1d3; color: #333; }
+    .grade-D { background: #e0e0e0; color: #666; }
+
+    /* 더보기 버튼 스타일 */
+    .show-more-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+      background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+      color: #2c3e50;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .show-more-btn:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .hidden-row {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/admin/dashboard" class="back-btn">← 대시보드로 돌아가기</a>
+
+    <div class="header">
+      <h1>📝 진단테스트 신청 관리</h1>
+      <p>내 학원에서 문해력 진단테스트를 신청한 학생 목록입니다.</p>
+      <div class="academy-name" id="academyName">학원명 로딩 중...</div>
+    </div>
+
+    <!-- 진단테스트 신청 목록 -->
+    <div class="section">
+      <div class="section-title">
+        <span>📋 진단테스트 신청 목록</span>
+        <span class="count-badge" id="testCount">0명</span>
+      </div>
+      <div class="table-container">
+        <div id="diagnosticTestsLoading" class="loading">데이터를 불러오는 중...</div>
+        <table id="diagnosticTestsTable" style="display: none;">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>지점명</th>
+              <th>학년</th>
+              <th>학생 이름</th>
+              <th>학생 연락처</th>
+              <th>학부모 성함</th>
+              <th>학부모 연락처</th>
+              <th>등록 시간</th>
+            </tr>
+          </thead>
+          <tbody id="diagnosticTestsBody">
+          </tbody>
+        </table>
+        <div id="diagnosticTestsEmpty" class="empty-message" style="display: none;">
+          등록된 진단테스트 신청이 없습니다.
+        </div>
+        <button id="diagnosticShowMoreBtn" class="show-more-btn" style="display: none;" onclick="toggleDiagnosticRows()">
+          더보기 (<span id="diagnosticHiddenCount">0</span>명 더)
+        </button>
+      </div>
+    </div>
+
+    <!-- 수강신청(상담) 목록 -->
+    <div class="section">
+      <div class="section-title">
+        <span>🎓 수강신청(상담) 목록</span>
+        <span class="count-badge" id="applicationCount">0명</span>
+      </div>
+      <div class="table-container">
+        <div id="applicationsLoading" class="loading">데이터를 불러오는 중...</div>
+        <table id="applicationsTable" style="display: none;">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>지점명</th>
+              <th>학년</th>
+              <th>학생 이름</th>
+              <th>학생 연락처</th>
+              <th>학부모 연락처</th>
+              <th>등급</th>
+              <th>점수</th>
+              <th>시리즈</th>
+              <th>등록 시간</th>
+              <th>시험지</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsBody">
+          </tbody>
+        </table>
+        <div id="applicationsEmpty" class="empty-message" style="display: none;">
+          등록된 수강신청이 없습니다.
+        </div>
+        <button id="applicationShowMoreBtn" class="show-more-btn" style="display: none;" onclick="toggleApplicationRows()">
+          더보기 (<span id="applicationHiddenCount">0</span>명 더)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DISPLAY_LIMIT = 10; // 기본 표시 개수
+    let diagnosticExpanded = false;
+    let applicationExpanded = false;
+
+    // 진단테스트 목록 불러오기
+    async function loadDiagnosticTests() {
+      try {
+        const response = await fetch('/api/admin/diagnostic-tests');
+        const result = await response.json();
+
+        const loading = document.getElementById('diagnosticTestsLoading');
+        const table = document.getElementById('diagnosticTestsTable');
+        const empty = document.getElementById('diagnosticTestsEmpty');
+        const body = document.getElementById('diagnosticTestsBody');
+        const countBadge = document.getElementById('testCount');
+        const academyNameEl = document.getElementById('academyName');
+        const showMoreBtn = document.getElementById('diagnosticShowMoreBtn');
+        const hiddenCountSpan = document.getElementById('diagnosticHiddenCount');
+
+        loading.style.display = 'none';
+
+        // 학원명 표시
+        if (result.academyName) {
+          academyNameEl.textContent = result.academyName;
+        }
+
+        if (result.success && result.data.length > 0) {
+          table.style.display = 'table';
+          countBadge.textContent = `${result.data.length}명`;
+
+          body.innerHTML = result.data.map((test, index) => `
+            <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row diagnostic-hidden' : ''}">
+              <td>${index + 1}</td>
+              <td>${test.branchName || '-'}</td>
+              <td><span class="grade-badge">${test.studentGrade}</span></td>
+              <td>${test.studentName}</td>
+              <td>${test.studentPhone}</td>
+              <td>${test.parentName}</td>
+              <td>${test.parentPhone}</td>
+              <td>${new Date(test.createdAt).toLocaleString('ko-KR')}</td>
+            </tr>
+          `).join('');
+
+          // 10명 초과 시 더보기 버튼 표시
+          if (result.data.length > DISPLAY_LIMIT) {
+            showMoreBtn.style.display = 'block';
+            hiddenCountSpan.textContent = result.data.length - DISPLAY_LIMIT;
+          } else {
+            showMoreBtn.style.display = 'none';
+          }
+        } else {
+          empty.style.display = 'block';
+          countBadge.textContent = '0명';
+        }
+      } catch (error) {
+        console.error('진단테스트 목록 로드 오류:', error);
+        document.getElementById('diagnosticTestsLoading').textContent = '데이터 로드 중 오류가 발생했습니다.';
+      }
+    }
+
+    // 진단테스트 더보기/접기 토글
+    function toggleDiagnosticRows() {
+      const hiddenRows = document.querySelectorAll('.diagnostic-hidden');
+      const btn = document.getElementById('diagnosticShowMoreBtn');
+
+      diagnosticExpanded = !diagnosticExpanded;
+
+      hiddenRows.forEach(row => {
+        row.classList.toggle('hidden-row', !diagnosticExpanded);
+      });
+
+      if (diagnosticExpanded) {
+        btn.textContent = '접기';
+      } else {
+        btn.innerHTML = `더보기 (<span id="diagnosticHiddenCount">${hiddenRows.length}</span>명 더)`;
+      }
+    }
+
+    // 수강신청 목록 불러오기
+    async function loadCourseApplications() {
+      try {
+        const response = await fetch('/api/admin/course-applications');
+        const result = await response.json();
+
+        const loading = document.getElementById('applicationsLoading');
+        const table = document.getElementById('applicationsTable');
+        const empty = document.getElementById('applicationsEmpty');
+        const body = document.getElementById('applicationsBody');
+        const countBadge = document.getElementById('applicationCount');
+        const showMoreBtn = document.getElementById('applicationShowMoreBtn');
+        const hiddenCountSpan = document.getElementById('applicationHiddenCount');
+
+        loading.style.display = 'none';
+
+        if (result.success && result.data.length > 0) {
+          table.style.display = 'table';
+          countBadge.textContent = `${result.data.length}명`;
+
+          body.innerHTML = result.data.map((app, index) => {
+            const gradeClass = `grade-${app.grade}`;
+            const hasAnswers = app.answers && app.answers.length > 0;
+            return `
+              <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row application-hidden' : ''}">
+                <td>${index + 1}</td>
+                <td>${app.branchName || '-'}</td>
+                <td><span class="grade-badge">${app.studentGrade}</span></td>
+                <td>${app.studentName}</td>
+                <td>${app.studentPhone}</td>
+                <td>${app.parentPhone}</td>
+                <td><span class="result-grade-badge ${gradeClass}">${app.grade}</span></td>
+                <td>${app.score !== undefined ? app.score + '/25' : '-'}</td>
+                <td>${app.series}</td>
+                <td>${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
+                <td>${hasAnswers ? `<button onclick="viewTestPaper('${app._id}')" style="padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">시험지 보기</button>` : '<span style="color: #999;">-</span>'}</td>
+              </tr>
+            `;
+          }).join('');
+
+          // 10명 초과 시 더보기 버튼 표시
+          if (result.data.length > DISPLAY_LIMIT) {
+            showMoreBtn.style.display = 'block';
+            hiddenCountSpan.textContent = result.data.length - DISPLAY_LIMIT;
+          } else {
+            showMoreBtn.style.display = 'none';
+          }
+        } else {
+          empty.style.display = 'block';
+          countBadge.textContent = '0명';
+        }
+      } catch (error) {
+        console.error('수강신청 목록 로드 오류:', error);
+        document.getElementById('applicationsLoading').textContent = '데이터 로드 중 오류가 발생했습니다.';
+      }
+    }
+
+    // 수강신청 더보기/접기 토글
+    function toggleApplicationRows() {
+      const hiddenRows = document.querySelectorAll('.application-hidden');
+      const btn = document.getElementById('applicationShowMoreBtn');
+
+      applicationExpanded = !applicationExpanded;
+
+      hiddenRows.forEach(row => {
+        row.classList.toggle('hidden-row', !applicationExpanded);
+      });
+
+      if (applicationExpanded) {
+        btn.textContent = '접기';
+      } else {
+        btn.innerHTML = `더보기 (<span id="applicationHiddenCount">${hiddenRows.length}</span>명 더)`;
+      }
+    }
+
+    // 시험지 보기 함수
+    function viewTestPaper(applicationId) {
+      window.open(`/test-result-viewer.html?id=${applicationId}`, '_blank', 'width=900,height=800');
+    }
+
+    // 페이지 로드 시 데이터 불러오기
+    window.onload = function() {
+      loadDiagnosticTests();
+      loadCourseApplications();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📚 살아 있는 신비의 도서관 — 시즌 2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/library-story/library_part2_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #C44569 0%, #8B2E5A 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(196, 69, 105, 0.3);
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #34495e;
+      margin-bottom: 12px;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: transparent;
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #ffffff;
+      margin-bottom: 40px;
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 24px;
+      }
+
+      .story-card p {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(196, 69, 105, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(196, 69, 105, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(139, 46, 90, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(196, 69, 105, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📚 살아 있는 신비의 도서관</h1>
+        <p class="subtitle">
+          시즌 2 - 그림자 독서단의 침입<br>
+          새로운 모험이 시작됩니다
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_01.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 1</span>
+        <h2>새벽의 이상한 파동</h2>
+        <p>민준은 아침부터 이상한 기운을 느꼈다. 책가방 속에서 지혜의 인장이 미세하게 떨리고 있었기 때문이다.</p>
+        <p>책가방 안은 분명 어두운데도, 인장은 희미한 청록빛을 뿜고 있었다.</p>
+        <p>쉬는 시간, 수아와 태영이 몰래 교실 뒤에서 민준의 책가방을 들여다본다.</p>
+        <p>수아가 손가락을 가져다대자 인장이 갑자기 더 강하게 빛난다.</p>
+        <p><strong>"이거… 어제보다 훨씬 뜨거워."</strong> 수아는 무의식적으로 손을 떼었다.</p>
+        <p>그 순간, 민준의 인장에서 작은 글자가 떠올랐다.</p>
+        <p><strong>"오늘 밤. 봉인의 균열 주의."</strong></p>
+        <p>민준은 얼굴이 굳어졌다. 세 아이는 수업이 끝나자마자 "도서관에서 다시 만나자"고 약속한다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_02.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 2</span>
+        <h2>규칙이 깨진 도서관</h2>
+        <p>밤이 되자 도서관은 어두운 밖과 달리 은은한 금빛으로 물들어 있었다.</p>
+        <p>루미는 이미 문 앞에서 떨리는 목소리로 기다리고 있었다.</p>
+        <p><strong>"오늘은 낮부터 이상했어. 책 속 세계가 멋대로 흔들렸어."</strong></p>
+        <p>도서관 안은 아수라장이었다. 책장 틈새에서는 모래바람, 물방울, 풀잎 조각이 흘러나오고, 몇몇 책은 표지가 알아서 덜컥덜컥 열렸다 닫혔다.</p>
+        <p>《해양 생물 대도감》 앞에는 작은 물웅덩이가 생겨 작은 물고기 몇 마리가 펄떡거리고 있었고,</p>
+        <p>《사막의 생태계》 앞에는 모래가 도서관 카펫 위에 소복이 쌓여 있었다. 모래 속에서 사막여우가 코를 킁킁거리며 도망쳤다.</p>
+        <p>태영이 입을 떡 벌렸다. <strong>"이건… 그냥 난리가 아니라 재난 급인데?"</strong></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_03.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 3</span>
+        <h2>책 속 세계의 대탈출</h2>
+        <p>도서관 중앙 복도에서는 갑자기 쾅!! 하는 소리가 났다.</p>
+        <p>《바다의 전설》이 열린 채, 책 속 해적 선장이 현실로 튀어나왔다.</p>
+        <p><strong>"어허! 여긴 어디냐? 우리 배는 어디 갔지?!"</strong></p>
+        <p>그 뒤로 선원 두 명과 앵무새까지 튀어나와 도서관 의자 위를 점령했다.</p>
+        <p>반대쪽에서는 《중세의 기사들》에서 나온 기사 두 명이 서로 다른 시대에서 온 해적들과 눈이 마주쳐 "적이냐!" 하며 검을 뽑으려 했다.</p>
+        <p>민준이 급하게 외쳤다. <strong>"싸우면 안 돼요!! 여긴 도서관이란 말이에요!!"</strong></p>
+        <p>루미가 급히 말한다. <strong>"아이들! 원래 세계로 돌려보내야 해! 책 속 존재들은 자기 페이지 근처에 있어야 안정돼!"</strong></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_04.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 4</span>
+        <h2>블랙 페이지단의 본격 침입</h2>
+        <p>도서관 현관문이 탕! 하고 부서졌다.</p>
+        <p>그 속에서 네 명의 그림자 같은 인물이 걸어나왔다.</p>
+        <p><strong>1) 블랙 리더</strong> - 검은 외투와 긴 장갑. 눈빛은 냉정하고 계산적. 손바닥엔 '검은 책 문장'이 새겨져 있음.</p>
+        <p><strong>2) 크롬</strong> - 은빛 안경. 데이터처럼 문장과 글자를 조작하는 능력. 책 속 세계의 규칙을 '편집'할 수 있음.</p>
+        <p><strong>3) 잉크</strong> - 말없이 움직이는 그림자 같은 존재. 손끝에서 검은 잉크가 떨어져, 닿는 것마다 어둠에 잠김.</p>
+        <p><strong>4) 페이퍼맨</strong> - 종이를 자유자재로 조종. 종이로 된 새, 괴물, 칼, 방패를 만들어 공격.</p>
+        <p>블랙 리더는 조용히 주변을 둘러보고 말했다. <strong>"이 도서관의 힘… 이제 거의 깨어났군. 우리가 찾는 '코덱스'도 곧 모습을 드러내겠지."</strong></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_05.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 5</span>
+        <h2>첫 번째 전투: 파괴된 동물관</h2>
+        <p>페이퍼맨이 손바닥을 펼치자 종이 새들이 수천 마리처럼 쏟아져 나온다.</p>
+        <p>그 새들은 날개 끝이 칼날처럼 날카로웠다. 한 마리가 도서관 천장을 지나가자 천장 조명이 툭툭 끊어지며 어둠이 내려앉았다.</p>
+        <p>민준은 손등의 인장을 바라보며 말했다. <strong>"…이걸로 어떻게 싸우는 거지?"</strong></p>
+        <p>루미가 외쳤다. <strong>"인장은 '책의 힘'을 끌어오는 열쇠야! 생각하고, 상상해! 너희가 읽은 이야기의 힘을!"</strong></p>
+        <p>민준은 즉시 《바람의 정령》 책을 떠올렸다. 그 순간, 지혜의 인장이 밝게 빛났다.</p>
+        <p>바람이 도서관 복도에서 거세게 불어 수십 마리 종이 새를 흩뜨려버렸다.</p>
+        <p>수아는 관찰 인장으로 종이 새들의 약점을 찾아낸다. <strong>"등쪽 접힌 부분! 저기가 찢어지면 움직임이 멈춰!"</strong></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_06.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 6</span>
+        <h2>오래된 봉인 책의 위치</h2>
+        <p>루미는 서둘러 아이들을 도서관 맨 깊은 곳, 두꺼운 철문이 여러 겹 잠긴 곳으로 데려간다.</p>
+        <p>그곳은 특수 서고였다. 이곳엔 시대를 대표하는 최고의 책, '도서관의 근본을 결정하는 책'들이 모여 있다.</p>
+        <p>철문이 열리자, 고대 글자들이 책장 사이로 떠다니며 책들이 서로 속삭이는 것이 들렸다.</p>
+        <p>가장 중앙에는 금빛 보호막에 둘러싸인 책이 있었는데, 이름은 《루멘 코덱스》.</p>
+        <p>루미가 말했다.</p>
+        <p><strong>"이 책은 도서관의 심장. 책 속 세계의 균형을 맞추는 중심축이야. 블랙 페이지단이 이것을 차지하려 하고 있어."</strong></p>
+        <p>아이들의 표정은 더 긴장되었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_07.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 7</span>
+        <h2>종이 인형의 함정</h2>
+        <p>크롬과 잉크는 아이들이 특수 서고로 향한 것을 눈치챘다.</p>
+        <p>그들은 도서관 중앙을 비틀어 《미스터리 미로》 책의 세계를 현실로 불러냈다.</p>
+        <p>바닥이 흔들리고, 책장에서 종이 모양의 미로 벽이 솟구친다.</p>
+        <p>미로 내부는 숨 막히게 조용했지만, 벽마다 다른 책의 내용이 복사되어 퍼즐처럼 움직이고 있었다.</p>
+        <p>• 시간 제한 문제<br>• 방향 전환 후 달라지는 길<br>• 그림자 괴물이 문항을 묻고 오답이면 길을 막는 장치</p>
+        <p>수아는 디테일을 분석하며 말한다. <strong>"이 미로, 책 속 규칙 그대로야. 움직이는 벽은 '정답'을 선택한 방향에만 열려!"</strong></p>
+        <p>하지만 크롬이 뒤에서 미로 규칙을 실시간으로 '편집'하고 있어 계속해서 문제가 바뀌었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_08.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 8</span>
+        <h2>오래된 서고에서의 대결</h2>
+        <p>특수 서고 앞에서 블랙 페이지단과 아이들이 맞붙는다.</p>
+        <p>블랙 리더는 크롬, 잉크, 페이퍼맨에게 명령한다. <strong>"코덱스를 손에 넣는다. 아이들은… 제거해라."</strong></p>
+        <p>서고는 책들이 자체적으로 움직이며 방어를 시도했다.</p>
+        <p>• 책들이 날개처럼 펼쳐져 공격을 막고<br>• 책갈피들이 빛나는 칼처럼 변해<br>• 아이들에게 필요한 페이지가 자동으로 펼쳐졌다</p>
+        <p>민준은 《천년의 나무 정령》의 힘을 끌어와 나무뿌리로 블랙 리더의 팔을 막았다.</p>
+        <p>수아는 책 속 '미세한 단서 탐지력'을 얻어 크롬이 조작하는 글자의 흐름을 눈으로 보고 피했다.</p>
+        <p>태영은 《용맹한 늑대 기사》의 힘을 끌어와 용기 인장으로 잉크의 그림자에게 반격했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_09.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 9</span>
+        <h2>코덱스의 선택</h2>
+        <p>전투의 소리가 커지자, 《루멘 코덱스》가 강한 빛을 발하며 서고 전체가 흔들렸다.</p>
+        <p>책이 공중으로 떠오르더니 민준을 향해 천천히 다가왔다.</p>
+        <p><strong>"지식과 용기를 가진 어린 수호자여, 도서관을 지킬 준비가 되어 있느냐?"</strong></p>
+        <p>민준은 숨을 크게 들이쉬고 손을 뻗었다.</p>
+        <p>그 순간— 코덱스에서 세 갈래의 빛이 나와 민준, 수아, 태영의 손등에 흡수되었다.</p>
+        <p>인장이 업그레이드되며 빛의 회오리가 서고 전체를 감쌌다.</p>
+        <p>블랙 페이지단은 빛을 견디지 못하고 뒤로 밀려났다.</p>
+        <p>블랙 리더는 문 가까이 도착하자 미소를 지으며 말했다. <strong>"좋다. 이 힘… 더 강한 '금지된 책'으로 되찾아 주지."</strong></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/library-story/library_part2_10.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 10</span>
+        <h2>깊어지는 어둠의 예감</h2>
+        <p>전투 후, 도서관에는 한동안 바람만 지나갔다.</p>
+        <p>루미는 아이들을 바라보며 처음으로 약한 모습을 보였다.</p>
+        <p><strong>"금지된 책… 그건 도서관에서도 보관을 금지한 아주 위험한 책이야. 책 속 세계 자체를 삼키는 힘을 가지고 있어."</strong></p>
+        <p>민준은 손등에 새겨진 문장을 바라보며 말했다. <strong>"우리가… 그 책을 먼저 찾아야겠지."</strong></p>
+        <p>수아는 고개를 끄덕이며 <strong>"대체 금지된 책이 어디 있는지부터 찾아야 해."</strong> 하고 말했다.</p>
+        <p>태영은 주먹을 꽉 쥐며 외쳤다. <strong>"블랙 페이지단이 다시 오기 전에 우리가 먼저!"</strong></p>
+        <p>루미는 세 아이를 보며 단호하게 말했다.</p>
+        <p><strong>"이제부터… 도서관의 깊은 세계로 들어가야 해. 금지된 서고의 문을 열 준비를 해야 해."</strong></p>
+        <p>도서관 안의 책들이 아이들의 결심에 반응하듯 한 장씩 조용히 흔들렸다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24">
+      <path d="M12 4l-8 8h6v8h4v-8h6z"/>
+    </svg>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="window.location.href='/menu.html'">← 메인으로</button>
+  </div>
+
+  <script>
+    // 스크롤 기반 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+
+    let currentBg = '';
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        // 섹션이 화면 중앙에 있을 때
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+
+      // 스크롤 인디케이터 숨기기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '0.7';
+      }
+    }
+
+    // 초기 로드
+    window.addEventListener('load', () => {
+      updateBackground();
+      // 첫 번째 카드는 바로 표시
+      const firstCard = sections[0].querySelector('.story-card');
+      if (firstCard) {
+        firstCard.classList.add('active');
+      }
+    });
+
+    // 스크롤 이벤트
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐈 고양이가 되어버린 날 — 시즌 3</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-transform-story/transform_part3_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #9B59B6 0%, #E91E63 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #34495e;
+      margin-bottom: 15px;
+      font-weight: 400;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      background-image: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-transform-story/transform_part3-main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .intro-content {
+      background: transparent;
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #ffffff;
+      margin-bottom: 40px;
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 네비게이션 바 */
+    .nav-bar {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      padding: 15px 30px;
+      border-radius: 50px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 1000;
+    }
+
+    .nav-bar .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .nav-bar .progress {
+      font-size: 14px;
+      color: #9B59B6;
+      font-weight: 600;
+    }
+
+    .home-btn {
+      background: linear-gradient(135deg, #9B59B6 0%, #E91E63 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .home-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(155, 89, 182, 0.4);
+    }
+
+    /* 프로그레스 바 */
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1001;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #9B59B6 0%, #E91E63 100%);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 24px;
+      }
+
+      .story-card p {
+        font-size: 16px;
+      }
+
+      .nav-bar {
+        padding: 12px 20px;
+        gap: 10px;
+      }
+
+      .nav-bar .title {
+        font-size: 14px;
+      }
+
+      .nav-bar .progress {
+        display: none;
+      }
+    }
+
+    /* 마지막 섹션 여유 공간 */
+    .story-section:last-child {
+      margin-bottom: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <!-- 프로그레스 바 -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- 네비게이션 바 -->
+  <div class="nav-bar">
+    <span class="title">🐈 고양이가 되어버린 날</span>
+    <span class="progress" id="navProgress">PART 1 / 10</span>
+    <button class="home-btn" onclick="goHome()">← 메인으로</button>
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐈 고양이가 되어버린 날</h1>
+        <p class="subtitle">
+          시즌 3 - 그림자왕국의 심장<br>
+          빛과 그림자의 마지막 균형을 찾아서
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-bg="transform_part3-01.jpg">
+      <div class="story-card">
+        <span class="chapter">🌑 PART 1</span>
+        <h2>그림자문 너머의 낯선 세계</h2>
+        <p>왕국이 무너지는 순간, 빛과 그림자가 소용돌이처럼 뒤엉키며</p>
+        <p>거대한 검은 문이 열렸다.</p>
+        <p>주인공과 초롱은 눈을 질끈 감은 채 문 속으로 떨어진다.</p>
+        <p>눈을 뜨자, 하늘은 구름 대신 검은 안개가 천천히 흐르고</p>
+        <p>땅은 부드러운 돌인데 밟을 때마다 물결처럼 흔들린다.</p>
+        <p>초롱은 떨리는 목소리로 말한다.</p>
+        <p><em>"여기가… 그림자 왕국이야…."</em></p>
+        <p>주인공의 목걸이는 무섭게 빛나며 낯선 방향을 가리킨다.</p>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-bg="transform_part3-02.jpg">
+      <div class="story-card">
+        <span class="chapter">🌲 PART 2</span>
+        <h2>어둠 숲에서의 첫 조우</h2>
+        <p>그림자 문이 닫히자마자, 아이들이 선 곳은 검은 나무들만 있는 숲이었다.</p>
+        <p>나무는 잎이 없는데도 서로 속삭인다.</p>
+        <p>뿌리는 스스로 움직이며 길을 바꾸고, 바람은 지나갈 때마다 발자국을 지워버린다.</p>
+        <p>그때, 어둠 속에서 몇 개의 눈동자가 반짝였다.</p>
+        <p><em>"거기 누구냐?"</em></p>
+        <p>그림자 고양이들이 나타난다. 털이 검은 연기처럼 흐르고, 몸이 실체였다가 흐려지기를 반복한다.</p>
+        <p>그중 가장 큰 고양이, <strong>크로스</strong>, 그림자 부족의 젊은 전사가 다가온다.</p>
+        <p><em>"따라와. 우리 장로가 너희를 만나고 싶어 하신다."</em></p>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-bg="transform_part3-03.jpg">
+      <div class="story-card">
+        <span class="chapter">🏛️ PART 3</span>
+        <h2>그림자 부족의 장로와 충격적인 진실</h2>
+        <p>그림자 부족의 마을은 어둠 속에서도 따뜻했다.</p>
+        <p>검은 돌로 만든 집들, 불 대신 은은한 달빛을 모아 쓰는 조명.</p>
+        <p>장로 <strong>세룬</strong>은 주인공을 오래 바라보다 말했다.</p>
+        <p><em>"네 목걸이는… 잃어버린 빛의 반쪽.</em></p>
+        <p><em>그리고 그 반쪽은 원래부터 우리 것과 연결돼 있다."</em></p>
+        <p>빛의 왕국(미라벨)과 그림자 왕국은 원래 하나였다.</p>
+        <p>'하루는 빛', '하루는 그림자'를 나누어 살아가는 조화의 세계.</p>
+        <p>하지만 오래전 서로의 역할을 이해하지 못해 싸움이 벌어졌고</p>
+        <p><strong>'빛의 목걸이'와 '그림자 목걸이'</strong>가 갈라져 버렸다.</p>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-bg="transform_part3-04.jpg">
+      <div class="story-card">
+        <span class="chapter">💔 PART 4</span>
+        <h2>카론 왕자의 과거를 보다</h2>
+        <p>장로 세룬은 주인공에게 손을 얹고 <strong>기억의 호수</strong>로 안내한다.</p>
+        <p>물 위에 손을 대자, 거대한 파동이 일며 영상처럼 장면이 펼쳐진다.</p>
+        <p>카론은 원래 따뜻하고 장난 많던 그림자 왕국의 왕자였다.</p>
+        <p>빛의 왕국과 화해하려 노력했고, 두 세계의 경계를 지키는 '균형의 수호자'가 되고 싶어 했다.</p>
+        <p>그러나 어느 날, 빛의 왕국과 오해가 생겨 카론의 아버지, 그림자 왕이 다쳤고</p>
+        <p>그 순간부터 카론은 세상에 등을 돌렸다.</p>
+        <p><em>"빛은 우리를 버렸다…."</em></p>
+        <p>그는 스스로 어둠을 받아들였고 목걸이의 힘을 폭주시켜 그림자군을 만들었다.</p>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-bg="transform_part3-05.jpg">
+      <div class="story-card">
+        <span class="chapter">⛰️ PART 5</span>
+        <h2>왕국의 심장으로 가는 여정 시작</h2>
+        <p>두 왕국의 균형이 무너진 이유를 알게 된 주인공은</p>
+        <p>그림자 부족의 안내를 받아 왕국의 심장이 있는 산으로 향한다.</p>
+        <p>길목은 위험투성이였다.</p>
+        <p><strong>발을 디디면 사라지는 검은 구름길</strong></p>
+        <p><strong>고양이의 몸을 도둑질하려는 그림자 유령들</strong></p>
+        <p><strong>시간을 거꾸로 흐르게 하는 미로</strong></p>
+        <p>크로스가 칼날 같은 꼬리로 유령을 쫓고</p>
+        <p>초롱은 재빠르게 미로의 규칙을 풀어</p>
+        <p>주인공은 빛의 목걸이로 길을 밝힌다.</p>
+        <p>여행 끝, 산 정상의 거대한 파란 수정문 앞에 도착한다.</p>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-bg="transform_part3-06.jpg">
+      <div class="story-card">
+        <span class="chapter">🪞 PART 6</span>
+        <h2>심장궁 내부, 거울의 방</h2>
+        <p>문을 지나자 거울의 방이 나타난다.</p>
+        <p>벽 전체가 거울인데, 주인공의 모습이 비정상적으로 많다.</p>
+        <p>어떤 주인공은 빛나고, 어떤 주인공은 그림자로 뒤덮여 있다.</p>
+        <p>각 거울 속 분신은 주인공에게 질문한다.</p>
+        <p><em>"너는 빛만 가진 자냐?"</em></p>
+        <p><em>"그림자를 두려워하느냐?"</em></p>
+        <p><em>"너 자신을 인정할 수 있느냐?"</em></p>
+        <p>주인공은 혼란에 빠지지만 초롱의 목소리가 뒤에서 들린다.</p>
+        <p><em>"난 네가 어떤 모습이어도 친구야."</em></p>
+        <p>그 말에 빛의 목걸이가 밝게 빛나고 모든 거울이 산산이 흩어진다.</p>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-bg="transform_part3-07.jpg">
+      <div class="story-card">
+        <span class="chapter">👁️ PART 7</span>
+        <h2>드디어 카론과 재회</h2>
+        <p>심장궁의 깊은 방에서 주인공은 카론과 마주한다.</p>
+        <p>카론은 거대한 그림자 날개를 펼친 모습을 하고 있다.</p>
+        <p>눈빛은 슬프고도 위험하다.</p>
+        <p><em>"너희 빛의 아이들이… 왜 여기까지 왔지?"</em></p>
+        <p>주인공이 한 걸음 다가가 말한다.</p>
+        <p><em>"두 세계를 다시 하나로 만들기 위해서."</em></p>
+        <p>카론은 비웃는다.</p>
+        <p><em>"둘은 원래 하나가 아니었다. 빛은 그림자를 두려워했고, 그림자는 빛을 미워하게 됐지."</em></p>
+        <p>뒤에서 검은 파동이 일어났다.</p>
+        <p>그것은 바로 <strong>그림자심장</strong>— 왕국의 분노와 고통이 뒤엉켜 태어난 거대한 괴물이었다.</p>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-bg="transform_part3-08.jpg">
+      <div class="story-card">
+        <span class="chapter">⚔️ PART 8</span>
+        <h2>왕국 심장에서의 최종 전투</h2>
+        <p>그림자심장이 폭발하듯 들이닥쳤다.</p>
+        <p>벽이 무너지고, 그림자 파편이 날아오고, 땅이 흔들리며 균열이 생긴다.</p>
+        <p>카론은 자신이 만든 괴물이 폭주하자 경악한 채 공격을 막으려 한다.</p>
+        <p><em>"이럴 리가 없어…! 멈춰!"</em></p>
+        <p>하지만 괴물은 카론조차 공격한다.</p>
+        <p>주인공은 목걸이를 높이 들고 외친다.</p>
+        <p><strong>"빛과 그림자는 서로를 완성하는 거야!"</strong></p>
+        <p>빛의 목걸이가 푸른 빛을 발하자 초롱의 몸에서도 은은한 그림자빛이 퍼진다.</p>
+        <p>빛과 그림자가 합쳐져 둘은 <strong>'균형의 결계'</strong>를 만든다.</p>
+        <p>마침내, 카론이 괴물의 정수리에 뛰어올라 그의 검은 목걸이를 꽂는다.</p>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-bg="transform_part3-09.jpg">
+      <div class="story-card">
+        <span class="chapter">💫 PART 9</span>
+        <h2>카론의 선택과 왕국의 재탄생</h2>
+        <p>폭발이 가라앉자, 그림자심장은 사라져 있었다.</p>
+        <p>카론은 상처투성이로 쓰러져 있었고, 주인공과 초롱이 그의 곁으로 달려간다.</p>
+        <p>카론은 약하게 웃으며 말한다.</p>
+        <p><em>"…빛도… 그림자도… 서로 필요했구나."</em></p>
+        <p>주인공은 카론의 손(발)을 꼭 잡는다.</p>
+        <p><em>"이제 그 사실을… 우리 함께 알려주자."</em></p>
+        <p>카론은 조용히 고개를 끄덕인다.</p>
+        <p>그 순간, 두 목걸이가 스스로 빛의 원을 만들고 하나의 목걸이로 합쳐진다.</p>
+        <p>빛과 그림자가 동시에 흐르는 고리— <strong>'균형의 심장'</strong>이 완성된 것이다.</p>
+        <p>왕국 전체가 진동하듯 환하게 빛난다.</p>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-bg="transform_part3-10.jpg">
+      <div class="story-card">
+        <span class="chapter">🏠 PART 10</span>
+        <h2>다시 고양이가 아닌 '나'로 돌아가는 길</h2>
+        <p>왕국의 심장이 완성되자 주인공의 몸이 따뜻하게 밝아지기 시작한다.</p>
+        <p>털이 사라지고, 몸이 점점 제 모습으로 돌아온다.</p>
+        <p>초롱은 눈물을 글씽이며 웃는다.</p>
+        <p><em>"넌 다시 사람이 되는 거야…."</em></p>
+        <p>카론이 조용히 말한다.</p>
+        <p><em>"빛과 그림자는 이제 하나다. 너희가 그 균형을 되돌린 것이다."</em></p>
+        <p>문 하나가 열린다. 그 문 너머에는 주인공의 현실 세계가 보인다.</p>
+        <p>초롱이 마지막으로 말한다.</p>
+        <p><em>"언제든 돌아와. 우린 영원히 친구니까."</em></p>
+        <p>주인공이 문으로 들어가는 순간—</p>
+        <p>부드러운 고양이 울음이 뒤에서 들린다.</p>
+        <p style="text-align: center; margin-top: 30px; font-size: 20px; color: #9B59B6;">
+          <strong>— 시즌 3 끝 —</strong><br>
+          <span style="font-size: 16px; margin-top: 10px; display: inline-block;">
+            🐈 고양이가 되어버린 날, 완결 🐈
+          </span>
+        </p>
+        <div style="text-align: center; margin-top: 40px;">
+          <button onclick="location.href='/menu.html'" style="
+            background: linear-gradient(135deg, #9B59B6 0%, #E91E63 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(155, 89, 182, 0.3);
+            transition: all 0.3s ease;
+          " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(155, 89, 182, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(155, 89, 182, 0.3)'">
+            🏠 메인 메뉴로 돌아가기
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progressBar');
+    const navProgress = document.getElementById('navProgress');
+    const totalSections = sections.length;
+
+    // 스크롤 이벤트로 배경 이미지 및 카드 애니메이션
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // 프로그레스 바 업데이트
+      const scrollPercent = (scrollY / (documentHeight - windowHeight)) * 100;
+      progressBar.style.width = scrollPercent + '%';
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top;
+        const sectionHeight = rect.height;
+
+        // 카드 애니메이션
+        const card = section.querySelector('.story-card');
+        if (sectionTop < windowHeight * 0.75 && sectionTop > -sectionHeight * 0.5) {
+          card.classList.add('active');
+
+          // 네비게이션 프로그레스 업데이트
+          if (index > 0) {
+            navProgress.textContent = `PART ${index} / 10`;
+          }
+        }
+
+        // 배경 이미지 변경
+        if (sectionTop < windowHeight * 0.5 && sectionTop > -sectionHeight * 0.5) {
+          const bgImage = section.getAttribute('data-bg');
+          if (bgImage) {
+            mapContainer.style.backgroundImage = `url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-transform-story/${bgImage})`;
+          }
+        }
+      });
+    });
+
+    // 홈으로 이동
+    function goHome() {
+      window.location.href = '/menu.html';
+    }
+
+    // 초기 로드 시 첫 번째 카드 활성화
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.intro-section .intro-content');
+      if (firstCard) {
+        firstCard.style.opacity = '1';
+      }
+    });
+  </script>
+</body>
+</html>

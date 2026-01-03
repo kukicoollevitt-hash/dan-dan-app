@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📜 양반전</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/yang/yang01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #8b7355 0%, #6b5344 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #8b7355;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #8b7355;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #8b7355 0%, #6b5344 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    📜 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📜 양반전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          양반 신분 매매의 풍자
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 가난한 양반의 등장">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🎭</span>
+          가난한 양반의 등장
+        </h2>
+        <div class="story-text">강원도 정선에 한 양반이 살고 있었다. 그는 대대로 선비 집안 출신으로, 학문을 익히고 예의를 지키며 살아왔다. 그러나 재물 관리에는 서툴러 점점 생활이 어려워졌다.
+
+양반이라는 신분은 있었으나, 그것이 밥을 먹여 주는 것은 아니었다. 그는 환자(還上, 관아에서 빌려 주는 곡식)를 갚지 못해 빚이 점점 쌓여 갔고, 결국 파산 직전에 이르게 되었다.
+
+이처럼 양반은 명예와 체면은 있었지만, 현실적인 경제력은 없는 인물로 등장한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 관아에서 빚을 독촉하다">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">📋</span>
+          관아에서 빚을 독촉하다
+        </h2>
+        <div class="story-text">해가 바뀌자 관아에서는 환자를 갚으라는 독촉이 이어졌다. 양반은 갚을 방법이 없어 벌벌 떨며 어찌할 줄을 몰랐다.
+
+아내는 곁에서 한탄하며 말했다. "글만 읽으면 무엇 합니까? 벼슬도 못 하고, 돈 한 푼 벌지 못하면서 양반, 양반 하시니 결국 우리 신세가 이 지경입니다."
+
+양반은 부끄러움에 고개를 들지 못했다. 그의 가난은 능력이 아닌 신분에 의존하던 양반 사회의 문제를 상징한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 부자가 등장하다">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">💰</span>
+          부자가 등장하다
+        </h2>
+        <div class="story-text">마을에는 돈이 많은 부자가 살고 있었다. 그는 농사를 지어 재산을 모았지만, 신분은 양반이 아닌 평민이었다.
+
+평민이었던 그는 돈이 아무리 많아도 양반들에게 업신여김을 당했다. 아무리 재산이 많아도 양반 앞에서는 허리를 숙여야 했고, 사회적으로 존중받지 못했다.
+
+그는 양반의 체면과 권위가 부러웠다. "돈만 있으면 무엇하나. 양반이 되어야 제대로 대접받는다." 그의 바람은 신분 상승이었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 양반 신분을 사다">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🤝</span>
+          양반 신분을 사다
+        </h2>
+        <div class="story-text">부자는 기회를 엿보다가 양반에게 제안을 했다. "당신의 빚을 모두 갚아 드릴 테니, 양반 신분을 나에게 파시오."
+
+양반은 처음에는 어이없어하며 거절했다. 그러나 빚쟁이가 들이닥치고, 관아에서 압박이 심해지자 결국 마음을 바꾸게 되었다.
+
+"신분이란 게 굶주림 앞에서 무슨 의미가 있겠소." 양반은 결국 자신의 신분을 팔기로 결정하고, 관청에서 이를 증명하는 문서를 쓰게 되었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 군수의 개입">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">👨‍⚖️</span>
+          군수의 개입
+        </h2>
+        <div class="story-text">이 일을 알게 된 군수는 웃으면서도 흥미롭게 생각했다. 양반 신분을 돈으로 사고파는 일이 공식적으로 이루어지다니, 전례가 없는 일이었다.
+
+군수는 양반 신분을 팔려면 문서가 있어야 한다고 하며, 직접 '양반 증서'를 작성하게 했다.
+
+이 문서에는 양반의 의무와 지켜야 할 조항들이 상세히 담기게 된다. 군수의 개입은 이 작품의 풍자적 성격을 더욱 강화하는 장치이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 첫 번째 증서: 양반의 의무">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">📜</span>
+          첫 번째 증서: 양반의 의무
+        </h2>
+        <div class="story-text">군수가 작성한 첫 번째 증서에는 양반이 지켜야 할 예법과 행동 규범이 적혀 있었다.
+
+"양반은 아무리 배가 고파도 얼굴을 찌푸리지 않고, 아무리 추워도 떨지 않으며, 아무리 더워도 부채질을 하지 않는다. 양반은 하루 종일 '시경', '서경'을 읽어야 하며, 바둑을 두어도 이겨서는 안 된다."
+
+이러한 조항들은 양반의 생활이 허례허식에 얽매여 비현실적임을 풍자한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 부자의 반응">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">😰</span>
+          부자의 반응
+        </h2>
+        <div class="story-text">증서를 본 부자는 얼굴이 굳어졌다. "이렇게 살면 사람이 어떻게 삽니까? 밥도 제대로 못 먹고, 기침 한 번 못 하며, 매일 책만 읽어야 한다니..."
+
+부자는 양반 생활이 자신이 생각했던 것처럼 편하고 화려한 것이 아님을 깨닫기 시작했다.
+
+그는 다시 생각에 빠졌다. "돈을 주고 이런 고통을 사야 하는가?" 하지만 양반이 되고자 하는 바람은 여전히 남아 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 두 번째 증서: 양반의 특권">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">📝</span>
+          두 번째 증서: 양반의 특권
+        </h2>
+        <div class="story-text">군수는 부자의 얼굴을 보고 다시 증서를 작성했다. 이번에는 양반이 누릴 수 있는 특권을 담았다.
+
+"양반은 어디 가나 상석에 앉으며, 아랫사람들은 양반 앞에서 무릎을 꿇어야 한다. 양반은 백성의 재물을 함부로 빼앗을 수 있으며, 장리(높은 이자)를 받고 곡식을 빌려줄 수 있다. 양반은 남의 종을 때려도 벌을 받지 않는다."
+
+이 증서는 양반 특권의 횡포와 불합리함을 고발하는 역할을 한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 부자의 거부">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🙅</span>
+          부자의 거부
+        </h2>
+        <div class="story-text">두 번째 증서를 본 부자는 크게 분노하며 말했다.
+
+"이게 양반입니까, 도둑놈입니까! 양반이라는 것이 남의 것을 빼앗고, 횡포를 부리는 것이라면, 그런 신분은 필요 없습니다!"
+
+부자는 결국 양반 신분을 사지 않기로 결심하고 돌아선다. 이 장면은 부자의 도덕적 각성을 보여 주며, 양반의 위선을 날카롭게 비판한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 작품의 주제와 의미">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">📚</span>
+          작품의 주제와 의미
+        </h2>
+        <div class="story-text">『양반전』은 조선 후기 실학자 연암 박지원이 쓴 한문 단편 소설이다. 이 작품은 신분제의 허구성과 양반 계층의 위선을 날카롭게 풍자한다.
+
+양반은 허울뿐인 명예에 집착하고, 그 특권은 백성들에 대한 억압으로 이어진다. 작가는 이를 통해 신분보다 인간의 도덕성과 능력이 중요하다는 점을 강조한다.
+
+결국 양반도 아닌 인간, 사람다운 삶이 무엇인지를 묻는 이 작품은 오늘날에도 여전히 의미 있는 고전이다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📜 양반전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/yang/yang01.jpg',
+      '/images/yang/yang02.jpg',
+      '/images/yang/yang03.jpg',
+      '/images/yang/yang04.jpg',
+      '/images/yang/yang05.jpg',
+      '/images/yang/yang06.jpg',
+      '/images/yang/yang07.jpg',
+      '/images/yang/yang08.jpg',
+      '/images/yang/yang09.jpg',
+      '/images/yang/yang10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '📜 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>
