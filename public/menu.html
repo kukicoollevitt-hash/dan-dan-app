@@ -3283,6 +3283,79 @@ canvas[id^="confetti-canvas"] {
       }
     }
 
+    /* 📢 활동 피드 롤링 배너 */
+    .activity-ticker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 36px;
+      background: linear-gradient(90deg, rgba(139,47,47,0.95) 0%, rgba(163,74,74,0.95) 50%, rgba(139,47,47,0.95) 100%);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .activity-ticker-label {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      margin-left: 12px;
+      border-radius: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .activity-ticker-content {
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+      margin: 0 16px;
+    }
+
+    .activity-ticker-list {
+      display: flex;
+      flex-direction: column;
+      animation: ticker-scroll 8s ease-in-out infinite;
+    }
+
+    .activity-ticker-item {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      color: #fff;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .activity-ticker-item .icon {
+      margin-right: 8px;
+      font-size: 16px;
+    }
+
+    @keyframes ticker-scroll {
+      0%, 20% { transform: translateY(0); }
+      25%, 45% { transform: translateY(-36px); }
+      50%, 70% { transform: translateY(-72px); }
+      75%, 95% { transform: translateY(-108px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* 헤더 위치 조정 (배너 높이만큼) */
+    #menuHeader {
+      top: 36px !important;
+    }
+
+    /* 레이아웃 조정 */
+    .layout {
+      padding-top: 36px;
+    }
+
   </style>
 
   <!-- html2canvas and jsPDF for PDF generation with Korean support -->
@@ -3357,6 +3430,19 @@ canvas[id^="confetti-canvas"] {
   <script src="./BRAINUP/social/pol_content.js"></script>
 </head>
 <body>
+  <!-- 📢 활동 피드 롤링 배너 -->
+  <div class="activity-ticker" id="activityTicker">
+    <div class="activity-ticker-label">LIVE</div>
+    <div class="activity-ticker-content">
+      <div class="activity-ticker-list" id="activityTickerList">
+        <div class="activity-ticker-item"><span class="icon">🎉</span>학생들의 학습 활동을 불러오는 중...</div>
+        <div class="activity-ticker-item"><span class="icon">🐳</span>잠시만 기다려주세요!</div>
+        <div class="activity-ticker-item"><span class="icon">📚</span>AI BRAIN 문해력 시리즈</div>
+        <div class="activity-ticker-item"><span class="icon">✨</span>오늘도 화이팅!</div>
+      </div>
+    </div>
+  </div>
+
   <!-- 📱 아이패드용 고정 배경 레이어 -->
   <div id="tablet-fixed-bg"></div>
 
@@ -3385,11 +3471,11 @@ canvas[id^="confetti-canvas"] {
 
   <header id="menuHeader">
     <div>
-      <div class="brand-title">단단국어 BRAIN 문해력 시리즈</div>
+      <div class="brand-title">AI BRAIN 문해력 시리즈</div>
 
       <div class="brand-sub-wrap">
         <div class="brand-sub">
-          BRAIN온 → BRAIN업 → BRAIN핏 → BRAIN딥 → BRAIN중등 → BRAIN고등 → 분야 → 세부 과목 → 단원
+          BRAIN온 → BRAIN업 → BRAIN핏 → BRAIN딥 → BRAIN실전 → 분야 → 세부 과목 → 단원
         </div>
 
         <img src="https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/rudolph.png" class="brand-rudolph" alt="루돌프" onclick="goToWhaleStory()" style="cursor: pointer;" title="푸른 고래섬 이야기 시작하기">
@@ -3538,6 +3624,106 @@ canvas[id^="confetti-canvas"] {
       } catch (error) {
         console.error('❌ Error fetching session:', error);
       }
+    })();
+  </script>
+
+  <!-- 📢 활동 피드 + 공지사항 롤링 배너 스크립트 -->
+  <script>
+    (async function initActivityTicker() {
+      const tickerList = document.getElementById('activityTickerList');
+      if (!tickerList) return;
+
+      // 📌 고정 공지사항 목록
+      const notices = [
+        { icon: '📚', message: '[공지] 어휘학습은 최초 1회 완료 후에 어휘력 지수가 반영됩니다!' },
+        { icon: '🐳', message: '[공지] AI고래쌤 하루 고래뱃지는 매일 10뱃지가 지급됩니다!' },
+        { icon: '🤖', message: '[공지] 학습실의 AI추천과제는 미흡한 단원을 AI고래쌤이 확인하여 부여됩니다!' },
+        { icon: '📖', message: '[공지] 고래 독서 감상문은 최소 월 1회 제출이지만 추가 제출도 가능합니다!' },
+        { icon: '✅', message: '[공지] 완료된 학습과제는 선생님 확인 후 삭제가 가능합니다!' },
+        { icon: '📊', message: '[공지] 종합리포트는 최신 완료된 과제 순으로 기록됩니다!' }
+      ];
+
+      // 서버에서 활동 피드 데이터 가져오기
+      async function fetchActivityFeed() {
+        try {
+          const res = await fetch('/api/activity-feed');
+          const data = await res.json();
+          if (data.success && data.feeds && data.feeds.length > 0) {
+            return data.feeds;
+          }
+        } catch (err) {
+          console.error('활동 피드 로드 오류:', err);
+        }
+        return [];
+      }
+
+      // 피드 데이터로 롤링 배너 업데이트
+      function updateTicker(activityFeeds) {
+        // 공지사항 + 활동 피드 합치기
+        let allFeeds = [...notices];
+        if (activityFeeds && activityFeeds.length > 0) {
+          // learning과 coin 타입 모두 추가 (제한 없이)
+          const learningFeeds = activityFeeds.filter(f => f.type === 'learning');
+          const coinFeeds = activityFeeds.filter(f => f.type === 'coin');
+          allFeeds = allFeeds.concat(learningFeeds, coinFeeds);
+        }
+
+        // 셔플하여 다양하게 표시
+        for (let i = allFeeds.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [allFeeds[i], allFeeds[j]] = [allFeeds[j], allFeeds[i]];
+        }
+
+        const displayCount = allFeeds.length; // 제한 없이 모두 표시
+        const displayFeeds = allFeeds;
+
+        tickerList.innerHTML = displayFeeds.map(feed => `
+          <div class="activity-ticker-item">
+            <span class="icon">${feed.icon || '📢'}</span>${feed.message}
+          </div>
+        `).join('');
+
+        // 피드 개수에 맞게 애니메이션 조정
+        const itemHeight = 36;
+        const animationDuration = displayCount * 2.5; // 아이템당 2.5초
+
+        const styleId = 'activity-ticker-dynamic-style';
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = styleId;
+          document.head.appendChild(styleEl);
+        }
+
+        // 동적 키프레임 생성
+        let keyframes = '';
+        for (let i = 0; i < displayCount; i++) {
+          const startPercent = (i / displayCount) * 100;
+          const holdPercent = ((i + 0.8) / displayCount) * 100;
+          keyframes += `${startPercent.toFixed(1)}%, ${holdPercent.toFixed(1)}% { transform: translateY(-${i * itemHeight}px); }\n`;
+        }
+
+        styleEl.textContent = `
+          .activity-ticker-list {
+            animation: ticker-scroll-dynamic ${animationDuration}s ease-in-out infinite;
+          }
+          @keyframes ticker-scroll-dynamic {
+            ${keyframes}
+            100% { transform: translateY(0); }
+          }
+        `;
+      }
+
+      // 초기 로드
+      const feeds = await fetchActivityFeed();
+      updateTicker(feeds);
+      console.log('✅ 롤링 배너 로드 완료 (공지 + 활동피드)');
+
+      // 60초마다 갱신
+      setInterval(async () => {
+        const newFeeds = await fetchActivityFeed();
+        updateTicker(newFeeds);
+      }, 60000);
     })();
   </script>
 

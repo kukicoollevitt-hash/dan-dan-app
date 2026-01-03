@@ -21949,6 +21949,75 @@ mongoose
     app.listen(PORT, () => {
       console.log(`✅ 서버 실행 중: ${PORT}`);
     });
+
+// ============================================
+// 📢 활동 피드 API (롤링 배너용)
+// ============================================
+app.get("/api/activity-feed", async (req, res) => {
+  try {
+    const feeds = [];
+
+    // 1. 최근 학습 완료 기록 (형성평가 통과) - 학생별 최신 1건만 (무제한)
+    const recentLogs = await LearningLog.aggregate([
+      { $match: { completed: true, deleted: { $ne: true } } },
+      { $sort: { timestamp: -1 } },
+      { $group: {
+        _id: { grade: '$grade', name: '$name' },
+        latestLog: { $first: '$$ROOT' }
+      }},
+      { $replaceRoot: { newRoot: '$latestLog' } },
+      { $sort: { timestamp: -1 } }
+    ]);
+
+    recentLogs.forEach(log => {
+      // 이름 마스킹 (예: 김민수 → 김○수)
+      const maskedName = log.name ?
+        log.name.charAt(0) + '○' + log.name.slice(-1) : '학생';
+
+      // 단원 코드에서 숫자 추출 (예: "geo_01" → "01")
+      const unitMatch = log.unit ? log.unit.match(/(\d+)$/) : null;
+      const unitNum = unitMatch ? unitMatch[1].padStart(2, '0') : null;
+      const unitText = unitNum ? `${unitNum}관문 ` : '';
+
+      feeds.push({
+        type: 'learning',
+        icon: '🎉',
+        message: `${log.grade} ${maskedName} 학생이 ${unitText}형성평가를 통과하였습니다!`,
+        timestamp: log.timestamp
+      });
+    });
+
+    // 2. 최근 어휘퀴즈 코인 획득 기록 (무제한)
+    const recentCoins = await UserProgress.find({
+      'vocabularyQuiz.totalCoins': { $gt: 0 }
+    })
+    .sort({ 'vocabularyQuiz.lastRankUpdate': -1 })
+    .lean();
+
+    recentCoins.forEach(user => {
+      const maskedName = user.name ?
+        user.name.charAt(0) + '○' + user.name.slice(-1) : '학생';
+      const coins = user.vocabularyQuiz?.totalCoins || 0;
+
+      if (coins > 0) {
+        feeds.push({
+          type: 'coin',
+          icon: '🐳',
+          message: `${user.grade} ${maskedName} 학생이 고래 ${coins}코인을 획득하였습니다!`,
+          timestamp: user.vocabularyQuiz?.lastRankUpdate || new Date()
+        });
+      }
+    });
+
+    // 시간순 정렬 (무제한)
+    feeds.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    res.json({ success: true, feeds });
+  } catch (err) {
+    console.error("활동 피드 조회 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
   })
   .catch((err) => {
     console.error("❌ MongoDB 연결 실패:", err);
