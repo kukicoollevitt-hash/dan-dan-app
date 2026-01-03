@@ -11916,6 +11916,15 @@ app.get("/my-learning", async (req, res) => {
             return subjectKey;
           }
 
+          // folderMap for URL generation
+          const folderMap = {
+            'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
+            'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
+            'modern': 'korlit', 'classic': 'korlit',
+            'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
+            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
+          };
+
           // 가로 막대 그래프 HTML 생성
           let html = '<div class="vocab-score-bars">';
 
@@ -11929,7 +11938,11 @@ app.get("/my-learning", async (req, res) => {
             // 평균 기준 색상: 이상=초록, 미만=주황
             const barColor = isAboveAvg ? '#4CAF50' : '#FF9800';
 
-            html += '<div class="vocab-bar-row" style="display: flex; align-items: center; margin-bottom: 12px;">';
+            // 어휘 학습 페이지 URL 생성
+            const folder = folderMap[subjectKey] || 'science';
+            const vocabPageUrl = '/BRAINUP/' + folder + '/' + item.unit + '.html?tab=vocab';
+
+            html += '<div class="vocab-bar-row" data-url="' + vocabPageUrl + '" style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: all 0.3s ease;">';
 
             // 단원명 (좌측)
             html += '<div class="vocab-bar-label" style="width: 100px; font-size: 12px; color: #fff; text-align: right; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.name + '</div>';
@@ -11938,7 +11951,7 @@ app.get("/my-learning", async (req, res) => {
             html += '<div class="vocab-bar-container" style="flex: 1; height: 24px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; overflow: visible;">';
 
             // 실제 막대 (평균 기준 색상 적용)
-            html += '<div class="vocab-bar" style="height: 100%; width: ' + barWidth + '%; background: ' + barColor + '; border-radius: 4px; transition: width 0.5s ease;"></div>';
+            html += '<div class="vocab-bar" style="height: 100%; width: ' + barWidth + '%; background: ' + barColor + '; border-radius: 4px; transition: all 0.3s ease;"></div>';
 
             // 평균선 (과목별 평균 위치)
             html += '<div class="vocab-avg-line" style="position: absolute; left: ' + avgPosition + '%; top: -4px; bottom: -4px; width: 2px; background: #fff; opacity: 0.8;"></div>';
@@ -11965,6 +11978,41 @@ app.get("/my-learning", async (req, res) => {
 
           container.innerHTML = html;
           section.style.display = 'block';
+
+          // 막대 그래프 호버 효과 및 클릭 이벤트 추가
+          const barRows = container.querySelectorAll('.vocab-bar-row');
+          barRows.forEach(row => {
+            // 마우스 호버 효과 (빛 강조)
+            row.addEventListener('mouseenter', function() {
+              this.style.background = 'rgba(255, 255, 255, 0.15)';
+              this.style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.1)';
+              this.style.transform = 'scale(1.02)';
+              const bar = this.querySelector('.vocab-bar');
+              if (bar) {
+                bar.style.boxShadow = '0 0 12px 2px ' + (bar.style.background.includes('76, 175, 80') || bar.style.background === '#4CAF50' ? 'rgba(76, 175, 80, 0.6)' : 'rgba(255, 152, 0, 0.6)');
+                bar.style.filter = 'brightness(1.2)';
+              }
+            });
+
+            row.addEventListener('mouseleave', function() {
+              this.style.background = 'transparent';
+              this.style.boxShadow = 'none';
+              this.style.transform = 'scale(1)';
+              const bar = this.querySelector('.vocab-bar');
+              if (bar) {
+                bar.style.boxShadow = 'none';
+                bar.style.filter = 'brightness(1)';
+              }
+            });
+
+            // 클릭 시 어휘 학습 페이지로 이동
+            row.addEventListener('click', function() {
+              const url = this.getAttribute('data-url');
+              if (url) {
+                window.location.href = url;
+              }
+            });
+          });
         }
 
         // 어휘 점수 날짜 네비게이션
