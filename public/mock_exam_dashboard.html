@@ -60,7 +60,7 @@
         }
 
         /* 컨텐츠가 배경 위에 오도록 */
-        .header, .main-container, .ticket-modal-overlay {
+        .header, .main-container, .ticket-modal-overlay, .live-ticker-container {
             position: relative;
             z-index: 1;
         }
@@ -3619,6 +3619,100 @@
         .logout-modal-btn:active {
             transform: scale(0.98);
         }
+
+        /* ===== Live 롤링 배너 (수직 롤링) ===== */
+        .live-ticker-container {
+            position: relative;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
+            border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+            overflow: hidden;
+            height: 36px;
+            z-index: 10;
+        }
+
+        .live-ticker-label {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 10;
+            gap: 6px;
+        }
+
+        .live-ticker-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #ff4757;
+            border-radius: 50%;
+            animation: livePulse 1.5s infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+            50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(255, 71, 87, 0); }
+        }
+
+        .live-ticker-track {
+            position: absolute;
+            left: 80px;
+            right: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .live-ticker-wrapper {
+            display: flex;
+            flex-direction: column;
+            animation: tickerRoll 3s ease-in-out infinite;
+        }
+
+        @keyframes tickerRoll {
+            0%, 20% { transform: translateY(0); }
+            25%, 45% { transform: translateY(-36px); }
+            50%, 70% { transform: translateY(-72px); }
+            75%, 95% { transform: translateY(-108px); }
+            100% { transform: translateY(0); }
+        }
+
+        .live-ticker-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 20px;
+            height: 36px;
+            white-space: nowrap;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .live-ticker-item.notice {
+            color: rgba(165, 180, 252, 0.9);
+        }
+
+        .live-ticker-item.notice::before {
+            content: '📢';
+            font-size: 12px;
+        }
+
+        .live-ticker-item.grade-feed {
+            color: #ffd700;
+            font-weight: 500;
+        }
+
+        .live-ticker-item.grade-feed::before {
+            content: '🎉';
+            font-size: 12px;
+        }
     </style>
     <!-- 카카오 SDK -->
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
@@ -3628,6 +3722,16 @@
 </head>
 <body>
     <div class="bg-gradient"></div>
+
+    <!-- Live 롤링 배너 -->
+    <div class="live-ticker-container">
+        <div class="live-ticker-label">LIVE</div>
+        <div class="live-ticker-track">
+            <div class="live-ticker-wrapper" id="liveTickerWrapper">
+                <!-- 동적으로 채워짐 -->
+            </div>
+        </div>
+    </div>
 
     <header class="header">
         <div class="header-left">
@@ -8806,6 +8910,96 @@
         // 줄바꿈 처리
         return text.replace(/\n/g, '<br>');
     }
+
+    // ===== Live 롤링 배너 초기화 =====
+    async function initLiveTicker() {
+        const wrapper = document.getElementById('liveTickerWrapper');
+        if (!wrapper) return;
+
+        // 정적 공지사항 (6개)
+        const notices = [
+            '나의 예상 수능 점수와 등급을 모의고사를 풀면 실시간으로 반영됩니다',
+            'AI 모의고사 카드 상단 부분 클릭하면 해당 시험지로 이동합니다',
+            '카드 하단 영역별 박스 클릭 시 12+개 상세 지표를 확인할 수 있습니다',
+            '오답노트는 틀린 문제만 다시 확인할 수 있습니다',
+            'AI 분석은 틀린 문제 약점과 보완점, 노하우를 습득할 수 있습니다',
+            'AI추천보완 주간과제는 매주 월요일 평균 이하 영역에 대한 문제가 부여됩니다'
+        ];
+
+        // 동적 피드 가져오기
+        let gradeFeeds = [];
+        try {
+            const response = await fetch('/api/mock-exam-activity-feed');
+            const data = await response.json();
+            if (data.success && data.feeds) {
+                gradeFeeds = data.feeds;
+            }
+        } catch (error) {
+            console.error('모의고사 피드 로드 오류:', error);
+        }
+
+        // 모든 아이템 합치기 (공지사항 + 등급 피드)
+        const allItems = [
+            ...notices.map(n => ({ type: 'notice', text: n })),
+            ...gradeFeeds.map(f => ({ type: 'grade-feed', text: f.message }))
+        ];
+
+        // 최소 1개 이상 있어야 함
+        if (allItems.length === 0) {
+            allItems.push({ type: 'notice', text: notices[0] });
+        }
+
+        // 티커 아이템 생성
+        let tickerHTML = '';
+        allItems.forEach(item => {
+            tickerHTML += `<div class="live-ticker-item ${item.type}">${item.text}</div>`;
+        });
+        // 첫 번째 아이템 복제 (무한 롤링 효과)
+        tickerHTML += `<div class="live-ticker-item ${allItems[0].type}">${allItems[0].text}</div>`;
+
+        wrapper.innerHTML = tickerHTML;
+
+        // 동적 CSS 애니메이션 생성
+        const itemCount = allItems.length;
+        const itemHeight = 36; // px
+        const holdTime = 3; // 각 아이템 보여주는 시간 (초)
+        const transitionTime = 0.5; // 전환 시간 (초)
+        const totalDuration = itemCount * (holdTime + transitionTime);
+
+        // 키프레임 생성
+        let keyframes = '@keyframes tickerRoll {\n';
+        for (let i = 0; i <= itemCount; i++) {
+            const holdStart = (i * (holdTime + transitionTime)) / totalDuration * 100;
+            const holdEnd = (i * (holdTime + transitionTime) + holdTime) / totalDuration * 100;
+            const translateY = -i * itemHeight;
+
+            if (i < itemCount) {
+                keyframes += `  ${holdStart.toFixed(2)}%, ${Math.min(holdEnd, 100).toFixed(2)}% { transform: translateY(${translateY}px); }\n`;
+            } else {
+                // 마지막 - 처음으로 돌아가기
+                keyframes += `  100% { transform: translateY(${translateY}px); }\n`;
+            }
+        }
+        keyframes += '}';
+
+        // 스타일 추가
+        const styleId = 'ticker-animation-style';
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = styleId;
+            document.head.appendChild(styleEl);
+        }
+        styleEl.textContent = keyframes;
+
+        // 애니메이션 적용
+        wrapper.style.animation = `tickerRoll ${totalDuration}s ease-in-out infinite`;
+    }
+
+    // 페이지 로드 시 Live 티커 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        initLiveTicker();
+    });
     </script>
 </body>
 </html>

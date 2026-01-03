@@ -22018,6 +22018,67 @@ app.get("/api/activity-feed", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// ============================================
+// 📢 모의고사 활동 피드 API (Live 롤링 배너용)
+// ============================================
+app.get("/api/mock-exam-activity-feed", async (req, res) => {
+  try {
+    const feeds = [];
+
+    // 점수에서 등급 텍스트 계산 함수
+    const getGradeText = (score) => {
+      if (score >= 97) return '1등급 상';
+      if (score >= 94) return '1등급 중';
+      if (score >= 91) return '1등급 하';
+      if (score >= 88) return '2등급 상';
+      if (score >= 85) return '2등급 중';
+      if (score >= 82) return '2등급 하';
+      return null; // 2등급 하 미만은 표시 안함
+    };
+
+    // 모의고사 결과 - 학생별 최신 1건만 (2등급 하 이상만)
+    const examResults = await MockExamResult.aggregate([
+      { $match: { score: { $gte: 82 } } }, // 2등급 하 이상만
+      { $sort: { createdAt: -1 } },
+      { $group: {
+        _id: '$studentInfo.phoneNumber',
+        latestResult: { $first: '$$ROOT' }
+      }},
+      { $replaceRoot: { newRoot: '$latestResult' } },
+      { $sort: { createdAt: -1 } }
+    ]);
+
+    examResults.forEach(result => {
+      const gradeText = getGradeText(result.score);
+      if (!gradeText) return; // 2등급 하 미만 제외
+
+      // 이름 마스킹 (예: 박민수 → 박○수)
+      const studentName = result.studentInfo?.studentName || '학생';
+      const maskedName = studentName.length >= 2
+        ? studentName.charAt(0) + '○' + studentName.slice(-1)
+        : studentName;
+
+      const schoolName = result.studentInfo?.schoolName || '';
+      const grade = result.studentInfo?.grade || '';
+      const examTitle = result.examTitle || '모의고사';
+
+      feeds.push({
+        type: 'grade',
+        message: `${schoolName} ${grade} ${maskedName} 학생이 ${examTitle} '${gradeText}' 축하합니다`,
+        timestamp: result.createdAt
+      });
+    });
+
+    // 시간순 정렬
+    feeds.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    res.json({ success: true, feeds });
+  } catch (err) {
+    console.error("모의고사 활동 피드 조회 오류:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
   })
   .catch((err) => {
     console.error("❌ MongoDB 연결 실패:", err);
