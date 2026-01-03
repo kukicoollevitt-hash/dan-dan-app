@@ -11970,7 +11970,9 @@ app.get("/my-learning", async (req, res) => {
           { key: 'world1', name: '세계문학1', color: '#FF9800' },
           { key: 'world2', name: '세계문학2', color: '#F44336' },
           { key: 'person1', name: '한국인물', color: '#673AB7' },
-          { key: 'person2', name: '세계인물', color: '#3F51B5' }
+          { key: 'person2', name: '세계인물', color: '#3F51B5' },
+          { key: 'people1', name: '한국인물', color: '#673AB7' },
+          { key: 'people2', name: '세계인물', color: '#3F51B5' }
         ];
 
         function getVocabSubjectColor(unitCode) {
