@@ -420,6 +420,64 @@ app.get("/super/megaphone-management", requireSuperAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "super", "megaphone-management.html"));
 });
 
+// ✅ 슈퍼관리자: 형성평가 관문 AI 데이터 관리 페이지
+app.get("/super/gate-pass-management", requireSuperAdmin, (req, res) => {
+  console.log("✅ [GET] /super/gate-pass-management");
+  res.sendFile(path.join(__dirname, "public", "super", "gate-pass-management.html"));
+});
+
+// ✅ 슈퍼관리자: 형성평가 관문 통과 기록 목록 API
+app.get("/api/super/gate-passes", requireSuperAdmin, async (req, res) => {
+  try {
+    // GatePass 모델은 이미 정의되어 있음 (line 20073)
+    const GatePassModel = mongoose.model("GatePass");
+
+    // 모든 관문 통과 기록 조회
+    const gatePasses = await GatePassModel.find({}).sort({ passedAt: -1 }).lean();
+
+    // 학교명을 가져오기 위해 User 정보와 매칭
+    const enrichedData = await Promise.all(gatePasses.map(async (gp, index) => {
+      // User 컬렉션에서 해당 학생 찾기
+      const user = await User.findOne({ grade: gp.grade, name: gp.name }).lean();
+      return {
+        _id: gp._id,
+        no: index + 1,
+        grade: gp.grade,
+        name: gp.name,
+        school: user?.school || user?.academyName || '-',
+        gate: gp.gate,
+        passedAt: gp.passedAt,
+        units: gp.units || []
+      };
+    }));
+
+    res.json({ ok: true, data: enrichedData });
+  } catch (err) {
+    console.error("❌ 관문 통과 기록 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 슈퍼관리자: 형성평가 관문 통과 기록 일괄 삭제 API
+app.post("/api/super/gate-passes/delete", requireSuperAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.json({ ok: false, message: "삭제할 항목을 선택해주세요." });
+    }
+
+    const GatePassModel = mongoose.model("GatePass");
+    const result = await GatePassModel.deleteMany({ _id: { $in: ids } });
+
+    console.log(`✅ 관문 통과 기록 ${result.deletedCount}개 삭제됨`);
+    res.json({ ok: true, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error("❌ 관문 통과 기록 삭제 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 // ✅ 슈퍼관리자: 전체 학원 학생 목록 보기
 app.get("/super/users", requireSuperAdmin, (req, res) => {
   console.log(
@@ -2833,8 +2891,9 @@ app.get("/admin/users", async (req, res) => {
       ];
     }
 
-    // 정렬 옵션 (기존 로직 유지)
+    // 정렬 옵션 (기본값: 우선순위 정렬)
     let sortOption = { lastLogin: -1, name: 1 };
+    const isPrioritySort = !sort || sort === "priority"; // 우선순위 정렬 플래그 (기본값)
     switch (sort) {
       case "lastLoginAsc":
         sortOption = { lastLogin: 1, name: 1 };
@@ -2850,6 +2909,10 @@ app.get("/admin/users", async (req, res) => {
         break;
       case "nameDesc":
         sortOption = { name: -1 };
+        break;
+      case "priority":
+        // 우선순위 정렬: 메모리에서 처리할 것이므로 기본 정렬 사용
+        sortOption = { lastLogin: -1, name: 1 };
         break;
       default:
         sortOption = { lastLogin: -1, name: 1 };
@@ -2890,14 +2953,39 @@ app.get("/admin/users", async (req, res) => {
       users[i].completedUnits = completedUnitsMap.get(`${user.grade}|${user.name}`) || new Set();
     }
 
-    // 승인대기 학생을 항상 맨 위로 정렬
-    users = users.sort((a, b) => {
-      const statusA = a.status || 'approved';
-      const statusB = b.status || 'approved';
-      if (statusA === 'pending' && statusB !== 'pending') return -1;
-      if (statusA !== 'pending' && statusB === 'pending') return 1;
-      return 0;
-    });
+    // 우선순위 정렬: 미승인 → 미부여 → 최신 학습순
+    if (isPrioritySort) {
+      users = users.sort((a, b) => {
+        const statusA = a.status || 'approved';
+        const statusB = b.status || 'approved';
+
+        // 1. 미승인(pending) 학생이 가장 위
+        const isPendingA = statusA === 'pending';
+        const isPendingB = statusB === 'pending';
+        if (isPendingA && !isPendingB) return -1;
+        if (!isPendingA && isPendingB) return 1;
+
+        // 2. 시리즈 미부여 학생이 그 다음
+        const hasSeriesA = a.studyRoom && a.studyRoom.assignedTasks && a.studyRoom.assignedTasks.length > 0;
+        const hasSeriesB = b.studyRoom && b.studyRoom.assignedTasks && b.studyRoom.assignedTasks.length > 0;
+        if (!hasSeriesA && hasSeriesB) return -1;
+        if (hasSeriesA && !hasSeriesB) return 1;
+
+        // 3. 최신 학습(lastLogin)순 정렬
+        const lastLoginA = a.lastLogin ? new Date(a.lastLogin).getTime() : 0;
+        const lastLoginB = b.lastLogin ? new Date(b.lastLogin).getTime() : 0;
+        return lastLoginB - lastLoginA; // 내림차순 (최신이 위)
+      });
+    } else {
+      // 기존 로직: 승인대기 학생을 항상 맨 위로 정렬
+      users = users.sort((a, b) => {
+        const statusA = a.status || 'approved';
+        const statusB = b.status || 'approved';
+        if (statusA === 'pending' && statusB !== 'pending') return -1;
+        if (statusA !== 'pending' && statusB === 'pending') return 1;
+        return 0;
+      });
+    }
 
     // 스케줄 렌더링 함수
     function renderSchedules(schedules, grade, name) {
@@ -2970,7 +3058,7 @@ app.get("/admin/users", async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>단단국어 전체 회원 목록</title>
+      <title>브레인 문해원 전체 회원 목록</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
         :root {
@@ -3639,10 +3727,10 @@ app.get("/admin/users", async (req, res) => {
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>단단국어 전체 회원 목록</h1>
+            <h1>브레인 문해원 전체 회원 목록</h1>
             <p class="desc">
-              단단국어에 가입된 모든 학생 계정을 한 번에 확인합니다.<br/>
-              학년, 학원명, 이름, 로그인 상태 등을 한눈에 볼 수 있습니다.
+              브레인 문해원에 가입된 모든 학생 계정을 한 번에 확인합니다.<br/>
+              학년, 학교명, 이름, 로그인 상태 등을 한눈에 볼 수 있습니다.
             </p>
           </div>
           <div>
@@ -3679,7 +3767,8 @@ app.get("/admin/users", async (req, res) => {
               value="${q ? q : ""}"
             />
             <select name="sort" class="search-select">
-              <option value="lastLoginDesc" ${!sort || sort === "lastLoginDesc" ? "selected" : ""}>최근 로그인순(내림차순)</option>
+              <option value="priority" ${!sort || sort === "priority" ? "selected" : ""}>⭐ 우선순위 (미승인→미부여→최신)</option>
+              <option value="lastLoginDesc" ${sort === "lastLoginDesc" ? "selected" : ""}>최근 로그인순(내림차순)</option>
               <option value="lastLoginAsc" ${sort === "lastLoginAsc" ? "selected" : ""}>최근 로그인순(오름차순)</option>
               <option value="gradeAsc" ${sort === "gradeAsc" ? "selected" : ""}>학년 오름차순</option>
               <option value="gradeDesc" ${sort === "gradeDesc" ? "selected" : ""}>학년 내림차순</option>
@@ -3779,7 +3868,7 @@ app.get("/admin/users", async (req, res) => {
                 <th>#</th>
                 <th>학년</th>
                 <th>이름</th>
-                <th>학원명</th>
+                <th>학교명</th>
                 <th>전화번호(ID)</th>
                 <th>상태</th>
                 <th>시리즈 부여</th>
@@ -3944,42 +4033,35 @@ app.get("/admin/users", async (req, res) => {
                 <input type="checkbox" id="series-brainun" value="BRAIN은" />
                 <label for="series-brainun">
                   <span class="series-name">BRAIN ON</span>
-                  <span class="series-desc">개념이해 (4~5학년 추천)</span>
+                  <span class="series-desc">개념이해</span>
                 </label>
               </div>
               <div class="checkbox-item">
                 <input type="checkbox" id="series-brainam" value="BRAIN암" />
                 <label for="series-brainam">
                   <span class="series-name">BRAIN UP</span>
-                  <span class="series-desc">응용적용 (5~6학년 추천)</span>
+                  <span class="series-desc">응용적용</span>
                 </label>
               </div>
               <div class="checkbox-item">
                 <input type="checkbox" id="series-brainbit" value="BRAIN빛" />
                 <label for="series-brainbit">
                   <span class="series-name">BRAIN FIT</span>
-                  <span class="series-desc">사고연결 (6학년 ~중1 추천)</span>
+                  <span class="series-desc">사고연결</span>
                 </label>
               </div>
               <div class="checkbox-item">
                 <input type="checkbox" id="series-braindap" value="BRAIN답" />
                 <label for="series-braindap">
                   <span class="series-name">BRAIN DEEP</span>
-                  <span class="series-desc">심화추론 (중1 ~ 중3 추천)</span>
+                  <span class="series-desc">심화추론</span>
                 </label>
               </div>
               <div class="checkbox-item">
                 <input type="checkbox" id="series-brainjung" value="BRAIN중등" />
                 <label for="series-brainjung">
-                  <span class="series-name">BRAIN 중등</span>
-                  <span class="series-desc">중등교과 (중등 선행 ~ 중등 전체)</span>
-                </label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="series-braingo" value="BRAIN고등" />
-                <label for="series-braingo">
-                  <span class="series-name">BRAIN 고등</span>
-                  <span class="series-desc">고등교과 (고등 선행 ~ 고등 전체)</span>
+                  <span class="series-name">BRAIN 실전</span>
+                  <span class="series-desc">수능모고</span>
                 </label>
               </div>
             </div>
@@ -4091,8 +4173,10 @@ app.get("/admin/users", async (req, res) => {
 
             const data = await res.json();
             if (data.success) {
-              alert('시리즈 부여 완료!');
+              alert('시리즈부여 완료');
               closeSeriesModal();
+              // AI 학습 인식 중 스와이프 표시 후 페이지 새로고침
+              showLoadingSwipe();
             } else {
               alert('오류: ' + (data.message || '알 수 없는 오류'));
             }
@@ -4100,6 +4184,52 @@ app.get("/admin/users", async (req, res) => {
             console.error(err);
             alert('저장 중 오류가 발생했습니다.');
           }
+        }
+
+        // AI 학습 인식 중 스와이프 애니메이션
+        function showLoadingSwipe() {
+          const overlay = document.createElement('div');
+          overlay.id = 'aiLoadingOverlay';
+          overlay.innerHTML = \`
+            <div style="
+              position: fixed;
+              top: 0; left: 0; right: 0; bottom: 0;
+              background: rgba(0,0,0,0.7);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              z-index: 99999;
+            ">
+              <div style="
+                background: white;
+                padding: 40px 60px;
+                border-radius: 16px;
+                text-align: center;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+              ">
+                <div style="
+                  width: 50px;
+                  height: 50px;
+                  border: 4px solid #e5e7eb;
+                  border-top-color: #3b82f6;
+                  border-radius: 50%;
+                  animation: spin 1s linear infinite;
+                  margin: 0 auto 20px;
+                "></div>
+                <div style="font-size: 18px; font-weight: 600; color: #333;">AI 학습 인식 중..</div>
+              </div>
+            </div>
+            <style>
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            </style>
+          \`;
+          document.body.appendChild(overlay);
+
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
         }
 
         // 모달 외부 클릭시 닫기
@@ -9260,8 +9390,7 @@ app.get("/my-learning", async (req, res) => {
               <div class="series-item" data-series="BRAIN업">BRAIN업</div>
               <div class="series-item" data-series="BRAIN핏">BRAIN핏</div>
               <div class="series-item" data-series="BRAIN딥">BRAIN딥</div>
-              <div class="series-item" data-series="BRAIN중등">BRAIN중등</div>
-              <div class="series-item" data-series="BRAIN고등">BRAIN고등</div>
+              <div class="series-item" data-series="BRAIN중등">BRAIN실전</div>
             </div>
           </div>
         </div>
@@ -11609,8 +11738,8 @@ app.get("/my-learning", async (req, res) => {
 
           if (todayLogs.length === 0) {
             const noDataMsg = isToday(selectedDate) ? '오늘 완료한 학습 기록이 없습니다.' : '해당 날짜의 학습 기록이 없습니다.';
-            tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#fff; padding:20px; opacity:0.8;">' + noDataMsg + '</div>';
-            radarWrap.innerHTML = '';
+            tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#333; padding:20px; font-size:14px;">' + noDataMsg + '</div>';
+            radarWrap.innerHTML = '<div class="no-data-message" style="width:100%; text-align:center; color:#fff; padding:30px; font-size:14px;">' + noDataMsg + '</div>';
             return;
           }
 
@@ -14325,16 +14454,16 @@ app.get("/my-learning", async (req, res) => {
             const hiddenClass = idx >= 10 ? 'hidden-row' : '';
 
             // AI과제부여 예정 시간 계산 (학습 완료 시간 + 등급별 대기 시간)
-            // 우수: 부여 안 함, 양호: 72시간, 보통: 48시간, 격려: 24시간
+            // 우수: 부여 안 함, 양호: 14일, 보통: 7일, 격려: 3일
             let aiTaskTimestamp = '-';
             let aiTaskStyle = 'color: #999;';
             if (log.timestamp && avgScore < 9) { // 우수 등급이 아닌 경우만
               const completedAt = new Date(log.timestamp);
-              let waitHours = 48; // 기본: 보통 48시간
+              let waitHours = 168; // 기본: 보통 7일(168시간)
               if (avgScore >= 8) {
-                waitHours = 72; // 양호: 72시간
+                waitHours = 336; // 양호: 14일(336시간)
               } else if (avgScore < 7) {
-                waitHours = 24; // 격려: 24시간
+                waitHours = 72; // 격려: 3일(72시간)
               }
               const scheduledAt = new Date(completedAt.getTime() + waitHours * 60 * 60 * 1000);
               aiTaskTimestamp = scheduledAt.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
@@ -17065,11 +17194,11 @@ function getGradeInfo(avgScore) {
   if (avgScore >= 9) {
     return { grade: 'excellent', text: '우수', hours: 0 }; // 우수는 부여 안 함
   } else if (avgScore >= 8) {
-    return { grade: 'good', text: '양호', hours: 72 }; // 양호: 72시간 후
+    return { grade: 'good', text: '양호', hours: 336 }; // 양호: 14일(336시간) 후
   } else if (avgScore >= 7) {
-    return { grade: 'average', text: '보통', hours: 48 }; // 보통: 48시간 후
+    return { grade: 'average', text: '보통', hours: 168 }; // 보통: 7일(168시간) 후
   } else {
-    return { grade: 'encourage', text: '격려', hours: 24 }; // 격려: 24시간 후
+    return { grade: 'encourage', text: '격려', hours: 72 }; // 격려: 3일(72시간) 후
   }
 }
 
@@ -20000,6 +20129,25 @@ const gatePassSchema = new mongoose.Schema({
 });
 const GatePass = mongoose.model("GatePass", gatePassSchema);
 
+// 관문 시도 기록 스키마 (상세 데이터)
+const gateAttemptSchema = new mongoose.Schema({
+  grade: String,
+  name: String,
+  gate: Number,                    // 관문 레벨
+  attemptAt: { type: Date, default: Date.now },  // 시도 시각
+  passed: { type: Boolean, default: false },     // 통과 여부
+  totalTime: { type: Number, default: 0 },       // 전체 풀이 시간 (초)
+  totalWrongClicks: { type: Number, default: 0 }, // 전체 오답 클릭 횟수
+  questionDetails: [{              // 각 문항별 상세
+    questionNo: Number,            // 문항 번호 (1, 2, 3, ...)
+    unitCode: String,              // 단원 코드
+    timeSpent: Number,             // 머문 시간 (초)
+    wrongClicks: Number,           // 오답 클릭 횟수
+    correct: Boolean               // 정답 여부
+  }]
+});
+const GateAttempt = mongoose.model("GateAttempt", gateAttemptSchema);
+
 // 관문 문제 생성 API
 app.get("/api/gate-quiz/generate", async (req, res) => {
   try {
@@ -20037,15 +20185,15 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
     console.log(`[gate-quiz/generate] 통과한 관문: ${passedGateNums}`);
 
     // 3) 해당 관문에 해당하는 단원 범위 계산 (완료 순서 기준)
-    // 관문 1: 1~10번째 완료, 관문 2: 11~20번째 완료, ...
-    const startIdx = (gateLevel - 1) * 10;  // 관문 1: 0, 관문 2: 10, 관문 3: 20
-    const endIdx = gateLevel * 10;          // 관문 1: 10, 관문 2: 20, 관문 3: 30
+    // 관문 1: 1~5번째 완료, 관문 2: 6~10번째 완료, ...
+    const startIdx = (gateLevel - 1) * 5;  // 관문 1: 0, 관문 2: 5, 관문 3: 10
+    const endIdx = gateLevel * 5;          // 관문 1: 5, 관문 2: 10, 관문 3: 15
 
     // 완료 순서대로 해당 범위의 단원들
     const gateUnits = allCompletedUnits.slice(startIdx, endIdx);
     console.log(`[gate-quiz/generate] 관문 ${gateLevel} 범위 단원 (${startIdx + 1}~${endIdx}번째 완료): ${gateUnits.length}개`, gateUnits);
 
-    if (gateUnits.length < 10) {
+    if (gateUnits.length < 5) {
       return res.json({
         ok: false,
         message: `관문 ${gateLevel} 시험을 보려면 ${endIdx}개 단원 완료가 필요합니다. (현재: ${allCompletedUnits.length}개)`
@@ -20055,7 +20203,7 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
     // 4) 각 단원에서 q1 또는 q2 문제 추출 (서버에서 콘텐츠 파일 읽기)
     const quizzes = [];
 
-    for (const unitCode of gateUnits.slice(0, 10)) {
+    for (const unitCode of gateUnits.slice(0, 5)) {
       // unitCode 예: "geo_01", "bio_05", "classic_12", "fit_physics_01", "fit_bio_02"
       // FIT 시리즈: fit_physics_01, fit_bio_02 등
       const isFit = unitCode.startsWith('fit_');
@@ -20153,11 +20301,13 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
               if (options.length === 4) {
                 quizzes.push({
                   unit: unitKey,
+                  unitCode: unitCode,
                   unitTitle: unitTitle,
                   passage: passages,
                   question: q1Question,
                   options: options,
-                  correct: q1Answer
+                  correct: q1Answer,
+                  qType: 'q1'  // 지수 유형: 핵심이해력
                 });
                 console.log(`[gate-quiz] ${unitKey} q1 추출 성공 (passage: ${passages.length}문단)`);
                 continue;
@@ -20182,11 +20332,13 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
               if (options.length === 4) {
                 quizzes.push({
                   unit: unitKey,
+                  unitCode: unitCode,
                   unitTitle: unitTitle,
                   passage: passages,
                   question: q2Question,
                   options: options,
-                  correct: q2Answer
+                  correct: q2Answer,
+                  qType: 'q2'  // 지수 유형: 구조파악력
                 });
                 console.log(`[gate-quiz] ${unitKey} q2 추출 성공 (passage: ${passages.length}문단)`);
               }
@@ -20255,6 +20407,138 @@ app.post("/api/gate-quiz/pass", async (req, res) => {
   }
 });
 
+// 관문 시도 기록 저장 API
+app.post("/api/gate-quiz/attempt", async (req, res) => {
+  try {
+    const { grade, name, gate, passed, totalTime, totalWrongClicks, questionDetails } = req.body;
+
+    console.log(`[gate-quiz/attempt] grade=${grade}, name=${name}, gate=${gate}, passed=${passed}`);
+
+    if (!grade || !name || !gate) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    // 새 시도 기록 저장
+    const attempt = new GateAttempt({
+      grade,
+      name,
+      gate,
+      passed: passed || false,
+      totalTime: totalTime || 0,
+      totalWrongClicks: totalWrongClicks || 0,
+      questionDetails: questionDetails || []
+    });
+    await attempt.save();
+
+    console.log(`[gate-quiz/attempt] 관문 ${gate} 시도 기록 저장 완료`);
+    res.json({ ok: true, message: "시도 기록이 저장되었습니다.", attemptId: attempt._id });
+
+  } catch (err) {
+    console.error("[gate-quiz/attempt] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 관문 상세 정보 조회 API (슈퍼관리자용)
+app.get("/api/super/gate-pass-details", requireSuperAdmin, async (req, res) => {
+  try {
+    const { grade, name, gate } = req.query;
+
+    if (!grade || !name || !gate) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    // 해당 관문의 모든 시도 기록 조회
+    const attempts = await GateAttempt.find({
+      grade,
+      name,
+      gate: parseInt(gate)
+    }).sort({ attemptAt: 1 }).lean();
+
+    // 통과 기록 조회
+    const passRecord = await GatePass.findOne({
+      grade,
+      name,
+      gate: parseInt(gate)
+    }).lean();
+
+    // 재도전 횟수 계산 (통과 전 시도 횟수)
+    const retryCount = attempts.filter(a => !a.passed).length;
+
+    // 누적 데이터 계산
+    let totalTimeAll = 0;
+    let totalWrongClicksAll = 0;
+    const questionTimeMap = {};  // 문항별 누적 시간
+    const questionWrongMap = {}; // 문항별 누적 오답
+
+    attempts.forEach(attempt => {
+      totalTimeAll += attempt.totalTime || 0;
+      totalWrongClicksAll += attempt.totalWrongClicks || 0;
+
+      if (attempt.questionDetails) {
+        attempt.questionDetails.forEach(q => {
+          const key = q.questionNo;
+          if (!questionTimeMap[key]) {
+            questionTimeMap[key] = {
+              time: 0,
+              wrongs: 0,
+              unitCode: q.unitCode,
+              unitTitle: q.unitTitle || '',
+              qType: q.qType || 'q1'
+            };
+          }
+          // 최신 데이터로 업데이트 (unitTitle, qType은 마지막 시도 기준)
+          if (q.unitTitle) questionTimeMap[key].unitTitle = q.unitTitle;
+          if (q.qType) questionTimeMap[key].qType = q.qType;
+          questionTimeMap[key].time += q.timeSpent || 0;
+          questionTimeMap[key].wrongs += q.wrongClicks || 0;
+        });
+      }
+    });
+
+    // 최종 통과 시도 데이터
+    const finalAttempt = attempts.find(a => a.passed) || attempts[attempts.length - 1];
+
+    res.json({
+      ok: true,
+      data: {
+        grade,
+        name,
+        gate: parseInt(gate),
+        passedAt: passRecord?.passedAt,
+        retryCount,                          // 재도전 횟수
+        totalAttempts: attempts.length,      // 총 시도 횟수
+        cumulativeTime: totalTimeAll,        // 누적 전체 시간
+        cumulativeWrongClicks: totalWrongClicksAll, // 누적 오답 클릭
+        questionDetails: Object.entries(questionTimeMap).map(([no, data]) => ({
+          questionNo: parseInt(no),
+          unitCode: data.unitCode,
+          unitTitle: data.unitTitle || UNIT_TITLES[data.unitCode] || '',
+          qType: data.qType || 'q1',
+          cumulativeTime: data.time,         // 문항별 누적 시간
+          cumulativeWrongClicks: data.wrongs // 문항별 누적 오답
+        })),
+        finalAttempt: finalAttempt ? {
+          totalTime: finalAttempt.totalTime,
+          totalWrongClicks: finalAttempt.totalWrongClicks,
+          passed: finalAttempt.passed,
+          attemptAt: finalAttempt.attemptAt
+        } : null,
+        attempts: attempts.map(a => ({
+          attemptAt: a.attemptAt,
+          passed: a.passed,
+          totalTime: a.totalTime,
+          totalWrongClicks: a.totalWrongClicks
+        }))
+      }
+    });
+
+  } catch (err) {
+    console.error("[gate-pass-details] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
 // 관문 상태 확인 API
 app.get("/api/gate-quiz/status", async (req, res) => {
   try {
@@ -20283,8 +20567,8 @@ app.get("/api/gate-quiz/status", async (req, res) => {
       : 0;
     const nextGate = highestPassedGate + 1;
 
-    // 다음 관문을 볼 수 있는지 (10개 단원마다)
-    const requiredUnits = nextGate * 10;
+    // 다음 관문을 볼 수 있는지 (5개 단원마다)
+    const requiredUnits = nextGate * 5;
     const canTakeGate = completedCount >= requiredUnits;
 
     res.json({
@@ -22163,7 +22447,7 @@ app.post("/api/megaphone/send", async (req, res) => {
   console.log("📢 확성기 API 호출됨:", req.body);
   try {
     const { phone, grade, name, school, message } = req.body;
-    const MEGAPHONE_COST = 40; // 확성기 비용
+    const MEGAPHONE_COST = 200; // 확성기 비용
 
     if (!grade || !name || !message) {
       return res.status(400).json({ success: false, error: '학년, 이름, 메시지가 필요합니다' });

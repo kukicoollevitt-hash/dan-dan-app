@@ -3636,12 +3636,12 @@ canvas[id^="confetti-canvas"] {
         <span class="value" id="megaphoneModalCoins">--</span>
       </div>
       <div class="megaphone-cost-info">
-        📢 확성기 사용 시 <strong>40 코인</strong>이 차감됩니다
+        📢 확성기 사용 시 <strong>200 코인</strong>이 차감됩니다
       </div>
       <textarea class="megaphone-textarea" id="megaphoneMessage" placeholder="응원 메시지를 입력하세요! (최대 100자)" maxlength="100"></textarea>
       <div class="megaphone-char-count"><span id="megaphoneCharCount">0</span>/100</div>
       <button class="megaphone-submit-btn" id="megaphoneSubmitBtn" onclick="sendMegaphoneMessage()">
-        📢 응원 메시지 보내기 (40코인)
+        📢 응원 메시지 보내기 (200코인)
       </button>
       <div id="megaphoneStatus"></div>
     </div>
@@ -3706,8 +3706,7 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item active" data-series="BRAINUP"><span>🚀 BRAIN업</span><span class="meta">응용적용</span></li>
         <li class="series-item" data-series="BRAINFIT"><span>🔗 BRAIN핏</span><span class="meta">논리연결</span></li>
         <li class="series-item" data-series="BRAINDEEP"><span>🔎 BRAIN딥</span><span class="meta">심화추론</span></li>
-        <li class="series-item" data-series="BRAINM"><span>📘 BRAIN중등</span><span class="meta">중등교과</span></li>
-        <li class="series-item" data-series="BRAINH"><span>📕 BRAIN고등</span><span class="meta">고등교과</span></li>
+        <li class="series-item" data-series="BRAINM"><span>📘 BRAIN실전</span><span class="meta">수능모고</span></li>
       </ul>
     </div>
 
@@ -4236,8 +4235,7 @@ canvas[id^="confetti-canvas"] {
       BRAINUP: { name: "BRAIN업", desc: "응용 적용" },
       BRAINFIT: { name: "BRAIN핏", desc: "논리 연결" },
       BRAINDEEP: { name: "BRAIN딥", desc: "심화 추론" },
-      BRAINM: { name: "BRAIN중등", desc: "중등 교과" },
-      BRAINH: { name: "BRAIN고등", desc: "고등 교과" }
+      BRAINM: { name: "BRAIN실전", desc: "수능모고" }
     };
 
     /* 1. 시리즈별 분야/과목 */
@@ -13639,19 +13637,22 @@ async function performLogout() {
       }
     };
 
-    // ========== 이 달의 추천 도서 기능 ==========
-    // 매월 1일에 미완료 도서 중에서 2개 추천 (시즌 순서대로)
+    // ========== 오늘의 추천 도서 기능 ==========
+    // 매일 00:00시에 미완료 도서 중에서 2개 랜덤 추천
     function getMonthlyRecommendedBooks(completedStoryIds) {
+      // KST 기준 오늘 날짜 키 생성 (매일 00:00시에 변경)
       const now = new Date();
-      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const storageKey = 'monthly-recommended-books';
+      const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
+      const kstDate = new Date(now.getTime() + kstOffset);
+      const dateKey = `${kstDate.getUTCFullYear()}-${String(kstDate.getUTCMonth() + 1).padStart(2, '0')}-${String(kstDate.getUTCDate()).padStart(2, '0')}`;
+      const storageKey = 'daily-recommended-books';
 
       // 저장된 추천 정보 확인
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // 같은 달이면 저장된 추천 사용 (단, 완료된 것은 제외하고 새로 추천)
-        if (parsed.month === monthKey) {
+        // 같은 날이면 저장된 추천 사용 (단, 완료된 것은 제외하고 새로 추천)
+        if (parsed.date === dateKey) {
           // 저장된 추천 중 아직 미완료인 것만 필터링
           const stillIncomplete = parsed.books.filter(b => !completedStoryIds.includes(b.id));
           // 2개 미만이면 새로 추천 추가
@@ -13660,17 +13661,17 @@ async function performLogout() {
           }
           // 부족한 만큼 새로 추천
           const needMore = 2 - stillIncomplete.length;
-          const additionalBooks = selectRecommendedBooks(completedStoryIds, [...parsed.books.map(b => b.id)], needMore);
+          const additionalBooks = selectRecommendedBooksRandom(completedStoryIds, [...parsed.books.map(b => b.id)], needMore, dateKey);
           const newBooks = [...stillIncomplete, ...additionalBooks];
           // 저장 업데이트
-          localStorage.setItem(storageKey, JSON.stringify({ month: monthKey, books: newBooks }));
+          localStorage.setItem(storageKey, JSON.stringify({ date: dateKey, books: newBooks }));
           return newBooks;
         }
       }
 
-      // 새 달이거나 저장된 정보가 없으면 새로 추천
-      const recommended = selectRecommendedBooks(completedStoryIds, [], 2);
-      localStorage.setItem(storageKey, JSON.stringify({ month: monthKey, books: recommended }));
+      // 새 날짜거나 저장된 정보가 없으면 새로 랜덤 추천
+      const recommended = selectRecommendedBooksRandom(completedStoryIds, [], 2, dateKey);
+      localStorage.setItem(storageKey, JSON.stringify({ date: dateKey, books: recommended }));
       return recommended;
     }
 
@@ -13716,6 +13717,70 @@ async function performLogout() {
       }
 
       return recommended.slice(0, count);
+    }
+
+    // 랜덤 추천 도서 선택 함수 (날짜 기반 시드로 랜덤 셔플)
+    function selectRecommendedBooksRandom(completedStoryIds, excludeIds, count, dateKey) {
+      // 추천 가능한 모든 도서 수집
+      const candidates = [];
+      const storyKeys = Object.keys(STORY_DATA);
+
+      for (const key of storyKeys) {
+        const story = STORY_DATA[key];
+        for (const season of story.seasons) {
+          // 이미 완료했거나 제외 목록에 있으면 스킵
+          if (completedStoryIds.includes(season.id) || excludeIds.includes(season.id)) {
+            continue;
+          }
+
+          // 시즌 1이거나, 이전 시즌이 완료된 경우에만 추천 대상
+          if (season.season === 1) {
+            candidates.push({
+              id: season.id,
+              title: story.title,
+              season: season.season,
+              subtitle: season.subtitle
+            });
+          } else {
+            // 이전 시즌이 완료되었는지 확인
+            const prevSeason = story.seasons.find(s => s.season === season.season - 1);
+            if (prevSeason && completedStoryIds.includes(prevSeason.id)) {
+              candidates.push({
+                id: season.id,
+                title: story.title,
+                season: season.season,
+                subtitle: season.subtitle
+              });
+            }
+          }
+        }
+      }
+
+      // 날짜 기반 시드로 랜덤 셔플 (같은 날에는 같은 순서)
+      const seed = dateKey.split('-').reduce((acc, n) => acc + parseInt(n), 0);
+      const shuffled = shuffleWithSeed(candidates, seed);
+
+      return shuffled.slice(0, count);
+    }
+
+    // 시드 기반 셔플 함수 (Fisher-Yates with seeded random)
+    function shuffleWithSeed(array, seed) {
+      const arr = [...array];
+      let currentSeed = seed;
+
+      // 간단한 시드 기반 난수 생성기
+      const seededRandom = () => {
+        currentSeed = (currentSeed * 9301 + 49297) % 233280;
+        return currentSeed / 233280;
+      };
+
+      // Fisher-Yates 셔플
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+
+      return arr;
     }
 
     // 전역 변수: 스토리 목록 저장
@@ -16119,7 +16184,8 @@ ${content}
       return true;
     }
 
-    // 페이지 로드 시 공지사항 팝업 표시
+    // 페이지 로드 시 공지사항 팝업 표시 (비활성화)
+    /*
     document.addEventListener('DOMContentLoaded', function() {
       if (shouldShowNoticePopup()) {
         // 약간의 딜레이 후 표시 (로딩 완료 후)
@@ -16131,6 +16197,7 @@ ${content}
         }, 1000);
       }
     });
+    */
 
     // fadeOut 애니메이션 추가
     const styleSheet = document.createElement('style');

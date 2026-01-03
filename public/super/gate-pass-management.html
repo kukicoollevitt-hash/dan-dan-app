@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>형성평가 관문 AI 데이터 관리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      --panel: #ffffff;
+      --accent: #495057;
+      --accent-hover: #212529;
+      --text: #212529;
+      --text-light: #495057;
+      --line: #dee2e6;
+      --danger: #dc3545;
+      --danger-hover: #c82333;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 40px 20px;
+      background: var(--bg);
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .title-main {
+      font-size: 32px;
+      font-weight: 700;
+      color: #212529;
+      margin: 0 0 8px;
+    }
+    .title-sub {
+      font-size: 14px;
+      color: #495057;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #495057 0%, #212529 100%);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .search-box input {
+      padding: 10px 16px;
+      border: 2px solid #dee2e6;
+      border-radius: 10px;
+      font-size: 14px;
+      width: 250px;
+      transition: border-color 0.3s;
+    }
+    .search-box input:focus {
+      outline: none;
+      border-color: #495057;
+    }
+    .select-all-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #495057;
+    }
+    .select-all-wrap input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .delete-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, var(--danger) 0%, var(--danger-hover) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .delete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    .delete-btn:disabled {
+      background: #adb5bd;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .count-info {
+      font-size: 14px;
+      color: #495057;
+      background: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+    }
+    .count-info strong {
+      color: #212529;
+    }
+    .table-container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+      color: #fff;
+    }
+    th {
+      padding: 16px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    th:first-child {
+      width: 50px;
+      text-align: center;
+    }
+    tbody tr {
+      border-bottom: 1px solid #e9ecef;
+      transition: background 0.2s;
+    }
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+    tbody tr.selected {
+      background: #e3f2fd;
+    }
+    td {
+      padding: 14px 12px;
+      font-size: 14px;
+      color: #495057;
+    }
+    td:first-child {
+      text-align: center;
+    }
+    td input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .no-data {
+      text-align: center;
+      padding: 60px 20px;
+      color: #868e96;
+      font-size: 16px;
+    }
+    .gate-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+      color: #fff;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .gate-badge:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    /* 모달 스타일 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    .modal-overlay.show .modal-content {
+      transform: translateY(0);
+    }
+    .modal-header {
+      padding: 24px 28px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #212529;
+      margin: 0;
+    }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: #f1f3f5;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover {
+      background: #dee2e6;
+    }
+    .modal-body {
+      padding: 28px;
+    }
+    .detail-section {
+      margin-bottom: 24px;
+    }
+    .detail-section:last-child {
+      margin-bottom: 0;
+    }
+    .detail-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e9ecef;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .detail-item {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .detail-label {
+      font-size: 12px;
+      color: #868e96;
+      margin-bottom: 4px;
+    }
+    .detail-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #212529;
+    }
+    .detail-value.highlight {
+      color: #495057;
+    }
+    .question-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    .question-table th,
+    .question-table td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid #e9ecef;
+      font-size: 13px;
+    }
+    .question-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+    }
+    .question-table td {
+      color: #212529;
+    }
+    .no-attempt-data {
+      text-align: center;
+      padding: 40px 20px;
+      color: #868e96;
+      font-size: 14px;
+    }
+    .loading-modal {
+      text-align: center;
+      padding: 40px;
+      color: #495057;
+    }
+    .date-cell {
+      white-space: nowrap;
+    }
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #495057;
+    }
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #dee2e6;
+      border-top-color: #495057;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #212529;
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    @media (max-width: 768px) {
+      .title-main { font-size: 24px; }
+      header { flex-direction: column; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-left { flex-direction: column; }
+      .search-box input { width: 100%; }
+      th, td { padding: 10px 8px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="title-main">형성평가 관문 AI 데이터 관리</div>
+        <div class="title-sub">
+          학생들의 형성평가 관문 통과 기록을 확인하고 관리합니다.
+        </div>
+      </div>
+      <a href="/super/dashboard" class="back-btn">← 대시보드로 돌아가기</a>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="이름 또는 학교명으로 검색..." />
+        </div>
+        <div class="select-all-wrap">
+          <input type="checkbox" id="selectAll" />
+          <label for="selectAll">전체 선택</label>
+        </div>
+        <div class="count-info">
+          선택: <strong id="selectedCount">0</strong>개 / 전체: <strong id="totalCount">0</strong>개
+        </div>
+      </div>
+      <button class="delete-btn" id="deleteBtn" disabled>
+        🗑️ 선택 항목 일괄 삭제
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>번호</th>
+            <th>학년</th>
+            <th>이름</th>
+            <th>학교명</th>
+            <th>관문</th>
+            <th>관문 통과 날짜</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr>
+            <td colspan="7" class="loading">데이터를 불러오는 중...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 관문 상세 정보 모달 -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">관문 상세 정보</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="loading-modal">데이터를 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allData = [];
+    let filteredData = [];
+    let selectedIds = new Set();
+
+    // 페이지 로드 시 데이터 가져오기
+    document.addEventListener('DOMContentLoaded', loadData);
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/super/gate-passes');
+        const result = await res.json();
+
+        if (result.ok) {
+          allData = result.data;
+          filteredData = [...allData];
+          renderTable();
+          updateCounts();
+        } else {
+          showToast('데이터를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('서버 오류가 발생했습니다.');
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+
+      if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="no-data">관문 통과 기록이 없습니다.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filteredData.map((item, index) => {
+        const isSelected = selectedIds.has(item._id);
+        const passedDate = item.passedAt ? new Date(item.passedAt).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '-';
+
+        return `
+          <tr class="${isSelected ? 'selected' : ''}" data-id="${item._id}">
+            <td>
+              <input type="checkbox" class="row-checkbox" data-id="${item._id}" ${isSelected ? 'checked' : ''} />
+            </td>
+            <td>${index + 1}</td>
+            <td>${item.grade || '-'}</td>
+            <td>${item.name || '-'}</td>
+            <td>${item.school || '-'}</td>
+            <td><span class="gate-badge" onclick="openGateDetail('${item.grade}', '${item.name}', ${item.gate})">관문 ${item.gate}</span></td>
+            <td class="date-cell">${passedDate}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 체크박스 이벤트 바인딩
+      document.querySelectorAll('.row-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const id = e.target.dataset.id;
+          if (e.target.checked) {
+            selectedIds.add(id);
+          } else {
+            selectedIds.delete(id);
+          }
+          updateSelection();
+        });
+      });
+    }
+
+    function updateSelection() {
+      // 행 선택 스타일 업데이트
+      document.querySelectorAll('#tableBody tr[data-id]').forEach(row => {
+        const id = row.dataset.id;
+        if (selectedIds.has(id)) {
+          row.classList.add('selected');
+        } else {
+          row.classList.remove('selected');
+        }
+      });
+
+      // 전체 선택 체크박스 상태
+      const selectAllCb = document.getElementById('selectAll');
+      if (filteredData.length > 0 && selectedIds.size === filteredData.length) {
+        selectAllCb.checked = true;
+        selectAllCb.indeterminate = false;
+      } else if (selectedIds.size > 0) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = true;
+      } else {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
+      }
+
+      updateCounts();
+    }
+
+    function updateCounts() {
+      document.getElementById('selectedCount').textContent = selectedIds.size;
+      document.getElementById('totalCount').textContent = filteredData.length;
+      document.getElementById('deleteBtn').disabled = selectedIds.size === 0;
+    }
+
+    // 전체 선택
+    document.getElementById('selectAll').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        filteredData.forEach(item => selectedIds.add(item._id));
+      } else {
+        selectedIds.clear();
+      }
+      renderTable();
+      updateCounts();
+    });
+
+    // 검색
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      if (!query) {
+        filteredData = [...allData];
+      } else {
+        filteredData = allData.filter(item =>
+          (item.name && item.name.toLowerCase().includes(query)) ||
+          (item.school && item.school.toLowerCase().includes(query)) ||
+          (item.grade && item.grade.toLowerCase().includes(query))
+        );
+      }
+      // 검색 시 선택 초기화
+      selectedIds.clear();
+      renderTable();
+      updateCounts();
+    });
+
+    // 일괄 삭제
+    document.getElementById('deleteBtn').addEventListener('click', async () => {
+      if (selectedIds.size === 0) return;
+
+      const confirmMsg = `선택한 ${selectedIds.size}개의 관문 통과 기록을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch('/api/super/gate-passes/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: Array.from(selectedIds) })
+        });
+
+        const result = await res.json();
+
+        if (result.ok) {
+          showToast(`${result.deletedCount}개 기록이 삭제되었습니다.`);
+          selectedIds.clear();
+          await loadData();
+        } else {
+          showToast(result.message || '삭제 중 오류가 발생했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('서버 오류가 발생했습니다.');
+      }
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // 관문 상세 정보 모달
+    async function openGateDetail(grade, name, gate) {
+      const modal = document.getElementById('detailModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalBody = document.getElementById('modalBody');
+
+      modalTitle.textContent = `${name} - 관문 ${gate} 상세 정보`;
+      modalBody.innerHTML = '<div class="loading-modal">데이터를 불러오는 중...</div>';
+      modal.classList.add('show');
+
+      try {
+        const res = await fetch(`/api/super/gate-pass-details?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&gate=${gate}`);
+        const result = await res.json();
+
+        if (result.ok) {
+          renderDetailModal(result.data);
+        } else {
+          modalBody.innerHTML = '<div class="no-attempt-data">데이터를 불러오는데 실패했습니다.</div>';
+        }
+      } catch (err) {
+        console.error(err);
+        modalBody.innerHTML = '<div class="no-attempt-data">서버 오류가 발생했습니다.</div>';
+      }
+    }
+
+    function renderDetailModal(data) {
+      const modalBody = document.getElementById('modalBody');
+
+      // 시도 기록이 없는 경우
+      if (data.totalAttempts === 0) {
+        modalBody.innerHTML = `
+          <div class="no-attempt-data">
+            <p>아직 상세 시도 기록이 없습니다.</p>
+            <p style="font-size:12px; color:#adb5bd; margin-top:8px;">
+              (새로운 형성평가 풀이부터 기록됩니다)
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      const formatTime = (seconds) => {
+        if (!seconds) return '0초';
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (mins > 0) {
+          return `${mins}분 ${secs}초`;
+        }
+        return `${secs}초`;
+      };
+
+      const passedDate = data.passedAt ? new Date(data.passedAt).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : '-';
+
+      // 지수 유형 매핑 함수
+      const getIndexName = (qType) => {
+        return qType === 'q2' ? '구조파악력' : '핵심이해력';
+      };
+
+      let questionDetailsHtml = '';
+      if (data.questionDetails && data.questionDetails.length > 0) {
+        questionDetailsHtml = `
+          <div class="detail-section">
+            <div class="detail-section-title">각 문항별 누적 기록</div>
+            <table class="question-table">
+              <thead>
+                <tr>
+                  <th>문항</th>
+                  <th>단원명</th>
+                  <th>지수</th>
+                  <th>누적 시간</th>
+                  <th>누적 오답 클릭</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.questionDetails.map(q => `
+                  <tr>
+                    <td>문항 ${q.questionNo}</td>
+                    <td style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${q.unitTitle || q.unitCode || '-'}">${q.unitTitle || q.unitCode || '-'}</td>
+                    <td><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:${q.qType === 'q2' ? '#e3f2fd' : '#fff3e0'}; color:${q.qType === 'q2' ? '#1565c0' : '#e65100'};">${getIndexName(q.qType)}</span></td>
+                    <td>${formatTime(q.cumulativeTime)}</td>
+                    <td>${q.cumulativeWrongClicks}회</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      modalBody.innerHTML = `
+        <div class="detail-section">
+          <div class="detail-section-title">요약 정보</div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">재도전 횟수</div>
+              <div class="detail-value highlight">${data.retryCount}회</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">총 시도 횟수</div>
+              <div class="detail-value">${data.totalAttempts}회</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">누적 전체 풀이 시간</div>
+              <div class="detail-value">${formatTime(data.cumulativeTime)}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">누적 전체 오답 클릭</div>
+              <div class="detail-value">${data.cumulativeWrongClicks}회</div>
+            </div>
+          </div>
+        </div>
+
+        ${data.finalAttempt ? `
+        <div class="detail-section">
+          <div class="detail-section-title">최종 시도 (${data.finalAttempt.passed ? '통과' : '미통과'})</div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">최종 풀이 시간</div>
+              <div class="detail-value">${formatTime(data.finalAttempt.totalTime)}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">최종 오답 클릭</div>
+              <div class="detail-value">${data.finalAttempt.totalWrongClicks}회</div>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+
+        ${questionDetailsHtml}
+
+        <div class="detail-section">
+          <div class="detail-section-title">통과 날짜</div>
+          <div class="detail-item" style="text-align: center;">
+            <div class="detail-value">${passedDate}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('show');
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('detailModal').addEventListener('click', (e) => {
+      if (e.target.id === 'detailModal') {
+        closeModal();
+      }
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>
