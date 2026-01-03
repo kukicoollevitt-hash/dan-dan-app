@@ -8549,6 +8549,36 @@ app.get("/my-learning", async (req, res) => {
           background: #f0f9ff;
         }
 
+        /* 아이패드 세로모드: Today 학습 기록 테이블 최적화 */
+        @media (max-width: 850px) {
+          /* 시리즈 컬럼 숨기기 (2번째 컬럼) */
+          .today-table th:nth-child(2),
+          .today-table td:nth-child(2) {
+            display: none;
+          }
+          /* 분야 컬럼 */
+          .today-table th:nth-child(3),
+          .today-table td:nth-child(3) {
+            min-width: 65px;
+            padding: 10px 8px;
+          }
+          /* 등급 컬럼 - 작은 뱃지 스타일 */
+          .today-table th:nth-child(5),
+          .today-table td:nth-child(5) {
+            min-width: 45px;
+            padding: 8px 4px;
+          }
+          .today-table td:nth-child(5) .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
+          }
+          /* 단원명 폰트 살짝 줄이기 */
+          .today-table td:nth-child(4) {
+            font-size: 12px;
+          }
+        }
+
         .today-no-data {
           text-align: center;
           padding: 40px;
@@ -9348,7 +9378,7 @@ app.get("/my-learning", async (req, res) => {
           </div>
 
           <!-- 창의활동 내역 섹션 -->
-          <div class="record-section" style="margin-top: 25px;">
+          <div class="record-section creative-section" style="margin-top: 25px;">
             <div class="record-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
               <span style="font-size: 20px;">✍️</span>
               <span class="section-title" style="color: #fff; font-size: 16px; font-weight: 600;">창의활동 내역</span>
@@ -9356,21 +9386,25 @@ app.get("/my-learning", async (req, res) => {
             <p class="section-desc" style="color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 15px;">제출된 창의활동 글쓰기 내역을 확인하세요.</p>
 
             <!-- 날짜 네비게이션 -->
-            <div class="creative-nav" style="display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0;">
-              <button id="creativePrev" class="nav-arrow-btn" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 36px; height: 36px; color: #fff; font-size: 18px; cursor: pointer; transition: all 0.2s;">◀</button>
-              <span id="creativeDate" style="color: #fff; font-size: 14px; font-weight: 500;"></span>
-              <button id="creativeNext" class="nav-arrow-btn" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 36px; height: 36px; color: #fff; font-size: 18px; cursor: pointer; transition: all 0.2s;">▶</button>
+            <div class="creative-nav" style="display: flex; align-items: center; justify-content: center; gap: 20px; margin: 20px 0;">
+              <button id="creativePrev" class="creative-nav-btn">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 10L4 6L8 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <span id="creativeDate" class="creative-date-display"></span>
+              <button id="creativeNext" class="creative-nav-btn">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
             </div>
 
             <!-- 창의활동 테이블 -->
-            <div id="creativeTableContainer" style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; overflow-x: auto;">
-              <table style="width: 100%; border-collapse: collapse; color: #fff; font-size: 14px; table-layout: fixed;">
+            <div id="creativeTableContainer" class="creative-table-container">
+              <table class="creative-table">
                 <thead>
-                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; width: 50px;">번호</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; width: 120px;">단원명</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600;">주제</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; width: 70px;">글자수</th>
+                  <tr>
+                    <th style="width: 60px;">번호</th>
+                    <th style="width: 110px;">단원명</th>
+                    <th>주제</th>
+                    <th style="width: 80px;">글자수</th>
                   </tr>
                 </thead>
                 <tbody id="creativeTableBody">
@@ -9379,6 +9413,158 @@ app.get("/my-learning", async (req, res) => {
               </table>
             </div>
           </div>
+
+          <style>
+            /* 창의활동 테이블 세련된 디자인 */
+            .creative-section .creative-nav-btn {
+              background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
+              border: 1px solid rgba(255,255,255,0.2);
+              border-radius: 50%;
+              width: 38px;
+              height: 38px;
+              color: #fff;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              backdrop-filter: blur(10px);
+            }
+            .creative-section .creative-nav-btn:hover {
+              background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.15) 100%);
+              transform: scale(1.1);
+              box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            }
+            .creative-section .creative-date-display {
+              color: #fff;
+              font-size: 15px;
+              font-weight: 600;
+              background: linear-gradient(135deg, rgba(102,126,234,0.3) 0%, rgba(118,75,162,0.3) 100%);
+              padding: 10px 24px;
+              border-radius: 25px;
+              border: 1px solid rgba(255,255,255,0.15);
+              backdrop-filter: blur(10px);
+              letter-spacing: 0.5px;
+            }
+            .creative-table-container {
+              background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%);
+              border-radius: 16px;
+              padding: 0;
+              overflow: hidden;
+              border: 1px solid rgba(0,0,0,0.08);
+              box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+              margin: 0 20px;
+            }
+            .creative-table {
+              width: 100%;
+              border-collapse: collapse;
+              color: #333;
+              font-size: 14px;
+              table-layout: fixed;
+            }
+            .creative-table thead tr {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .creative-table thead th {
+              padding: 16px 12px;
+              text-align: center;
+              font-weight: 600;
+              font-size: 13px;
+              color: #fff;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              border-bottom: none;
+            }
+            .creative-table tbody tr.creative-row {
+              transition: all 0.25s ease;
+              cursor: pointer;
+              border-bottom: 1px solid rgba(0,0,0,0.06);
+            }
+            .creative-table tbody tr.creative-row:hover {
+              background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+            }
+            .creative-table tbody tr.creative-row:last-child {
+              border-bottom: none;
+            }
+            .creative-table tbody td {
+              padding: 14px 12px;
+              color: #333;
+            }
+            .creative-table .creative-num {
+              text-align: center;
+              font-weight: 500;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+            }
+            .creative-table .creative-arrow {
+              font-size: 10px;
+              color: #667eea;
+              transition: all 0.3s ease;
+            }
+            .creative-table .creative-unit {
+              text-align: center;
+              font-weight: 500;
+              color: #444;
+            }
+            .creative-table .creative-topic {
+              text-align: left;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              padding-left: 16px;
+            }
+            .creative-table .creative-chars {
+              text-align: center;
+              font-weight: 600;
+              background: linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%);
+              border-radius: 20px;
+              padding: 4px 0;
+              margin: 0 8px;
+              font-size: 13px;
+            }
+            /* 드롭다운 내용 행 */
+            .creative-table .creative-content-row {
+              background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%);
+            }
+            .creative-table .creative-content-row td {
+              padding: 0;
+            }
+            .creative-content-box {
+              padding: 20px 24px;
+              margin: 12px 16px;
+              background: #fff;
+              border-radius: 12px;
+              border-left: 4px solid linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+              border-left: 4px solid #667eea;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            }
+            .creative-content-label {
+              font-size: 12px;
+              color: #667eea;
+              font-weight: 600;
+              margin-bottom: 10px;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            }
+            .creative-content-text {
+              font-size: 14px;
+              line-height: 1.9;
+              color: #333;
+              white-space: pre-wrap;
+              word-break: break-word;
+              text-align: left;
+            }
+            /* 데이터 없음 메시지 */
+            .creative-table .creative-empty {
+              text-align: center;
+              padding: 40px 20px;
+              color: #888;
+              font-size: 14px;
+            }
+          </style>
 
           <!-- 통합 AI 피드백 영역: 하단에 4개 섹션 모두 표시 -->
           <div id="aiFeedbackSection" class="ai-feedback-section" style="margin-top: 25px; display: none;">
@@ -11441,7 +11627,7 @@ app.get("/my-learning", async (req, res) => {
 
           // 테이블 생성
           let tableHtml = '<table class="today-table"><thead><tr>';
-          tableHtml += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균평점</th><th>어휘점수</th>';
+          tableHtml += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>어휘</th>';
           tableHtml += '</tr></thead><tbody>';
 
           todayLogs.forEach((log, idx) => {
@@ -12162,7 +12348,7 @@ app.get("/my-learning", async (req, res) => {
 
           // 테이블 렌더링
           if (filteredData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: rgba(255,255,255,0.5);">해당 날짜에 제출된 창의활동이 없습니다.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="creative-empty">해당 날짜에 제출된 창의활동이 없습니다.</td></tr>';
             return;
           }
 
@@ -12176,19 +12362,19 @@ app.get("/my-learning", async (req, res) => {
             const contentId = 'creative-content-' + index;
 
             // 메인 행
-            html += '<tr id="' + rowId + '" data-index="' + index + '" style="border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: background 0.2s;" onclick="toggleCreativeContent(' + index + ')">';
-            html += '<td style="padding: 12px 8px; text-align: center;"><span class="creative-arrow" id="arrow-' + index + '" style="display: inline-block; transition: transform 0.3s; margin-right: 4px;">▶</span>' + (index + 1) + '</td>';
-            html += '<td style="padding: 12px 8px; text-align: center;">' + unitName + '</td>';
-            html += '<td style="padding: 12px 8px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + topic + '</td>';
-            html += '<td style="padding: 12px 8px; text-align: center;">' + charCount.toLocaleString() + '</td>';
+            html += '<tr id="' + rowId + '" class="creative-row" data-index="' + index + '" onclick="toggleCreativeContent(' + index + ')">';
+            html += '<td class="creative-num"><span class="creative-arrow" id="arrow-' + index + '">▶</span>' + (index + 1) + '</td>';
+            html += '<td class="creative-unit">' + unitName + '</td>';
+            html += '<td class="creative-topic">' + topic + '</td>';
+            html += '<td><div class="creative-chars">' + charCount.toLocaleString() + '</div></td>';
             html += '</tr>';
 
             // 드롭다운 내용 행 (처음엔 숨김)
-            html += '<tr id="' + contentId + '" style="display: none;">';
-            html += '<td colspan="4" style="padding: 0; background: #f8f9fa;">';
-            html += '<div style="padding: 16px 20px; border-left: 3px solid #667eea; margin: 8px 12px; background: #fff; border-radius: 4px;">';
-            html += '<div style="font-size: 12px; color: #888; margin-bottom: 8px; text-align: left;">📝 작성 내용</div>';
-            html += '<div style="font-size: 14px; line-height: 1.8; color: #333; white-space: pre-wrap; word-break: break-word; text-align: left;">' + textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+            html += '<tr id="' + contentId + '" class="creative-content-row" style="display: none;">';
+            html += '<td colspan="4">';
+            html += '<div class="creative-content-box">';
+            html += '<div class="creative-content-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>작성 내용</div>';
+            html += '<div class="creative-content-text">' + textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
             html += '</div>';
             html += '</td>';
             html += '</tr>';
