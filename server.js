@@ -9347,6 +9347,39 @@ app.get("/my-learning", async (req, res) => {
             </div>
           </div>
 
+          <!-- 창의활동 내역 섹션 -->
+          <div class="record-section" style="margin-top: 25px;">
+            <div class="record-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+              <span style="font-size: 20px;">✍️</span>
+              <span class="section-title" style="color: #fff; font-size: 16px; font-weight: 600;">창의활동 내역</span>
+            </div>
+            <p class="section-desc" style="color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 15px;">제출된 창의활동 글쓰기 내역을 확인하세요.</p>
+
+            <!-- 날짜 네비게이션 -->
+            <div class="creative-nav" style="display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0;">
+              <button id="creativePrev" class="nav-arrow-btn" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 36px; height: 36px; color: #fff; font-size: 18px; cursor: pointer; transition: all 0.2s;">◀</button>
+              <span id="creativeDate" style="color: #fff; font-size: 14px; font-weight: 500;"></span>
+              <button id="creativeNext" class="nav-arrow-btn" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 36px; height: 36px; color: #fff; font-size: 18px; cursor: pointer; transition: all 0.2s;">▶</button>
+            </div>
+
+            <!-- 창의활동 테이블 -->
+            <div id="creativeTableContainer" style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; color: #fff; font-size: 14px; table-layout: fixed;">
+                <thead>
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; width: 50px;">번호</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; width: 120px;">단원명</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600;">주제</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; width: 70px;">글자수</th>
+                  </tr>
+                </thead>
+                <tbody id="creativeTableBody">
+                  <!-- JavaScript에서 동적 렌더링 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <!-- 통합 AI 피드백 영역: 하단에 4개 섹션 모두 표시 -->
           <div id="aiFeedbackSection" class="ai-feedback-section" style="margin-top: 25px; display: none;">
             <div class="ai-feedback-section-header">
@@ -12036,6 +12069,175 @@ app.get("/my-learning", async (req, res) => {
         // 어휘 점수 차트 초기 렌더링은 allLogs 초기화 후에 수행
         // renderVocabScoreChart(); // allLogs 초기화 후 호출됨
 
+        // ===== 창의활동 내역 기능 =====
+        let creativeCurrentDate = new Date();
+        let creativeDataCache = null;
+        const pageGrade = '${grade}';
+        const pageName = '${name}';
+
+        // 단원 코드를 단원명으로 변환
+        function getUnitDisplayName(unitCode) {
+          if (!unitCode || !unitCode.includes('_')) return unitCode;
+          const parts = unitCode.split('_');
+          let subjectKey = parts[0];
+          let number = parts[1] ? parts[1].replace(/^0+/, '') : '';
+
+          // on_bio_01, fit_geo_01, deep_modern_01 형식 처리
+          if ((parts[0] === 'on' || parts[0] === 'fit' || parts[0] === 'deep') && parts.length >= 3) {
+            subjectKey = parts[1];
+            number = parts[2] ? parts[2].replace(/^0+/, '') : '';
+          }
+
+          const subjectNames = {
+            'bio': '생명과학', 'earth': '지구과학', 'physics': '물리학', 'chem': '화학',
+            'geo': '지리', 'soc': '사회', 'law': '법', 'pol': '정치',
+            'modern': '현대문학', 'classic': '고전문학',
+            'world': '세계문학', 'world1': '세계문학1', 'world2': '세계문학2',
+            'people': '인물', 'people1': '인물1', 'people2': '인물2', 'person1': '인물1', 'person2': '인물2'
+          };
+          const subject = subjectNames[subjectKey] || subjectKey;
+          return subject + ' ' + number;
+        }
+
+        // 창의활동 테이블 렌더링
+        async function renderCreativeTable() {
+          const dateLabel = document.getElementById('creativeDate');
+          const tbody = document.getElementById('creativeTableBody');
+          if (!dateLabel || !tbody) {
+            console.log('[renderCreativeTable] 요소 없음');
+            return;
+          }
+
+          console.log('[renderCreativeTable] 시작:', pageGrade, pageName);
+
+          // 날짜 표시
+          const year = creativeCurrentDate.getFullYear();
+          const month = creativeCurrentDate.getMonth() + 1;
+          const date = creativeCurrentDate.getDate();
+          const days = ['일', '월', '화', '수', '목', '금', '토'];
+          const dayName = days[creativeCurrentDate.getDay()];
+          dateLabel.textContent = year + '년 ' + month + '월 ' + date + '일 ' + dayName;
+
+          // 항상 서버에서 최신 데이터 가져오기
+          try {
+            console.log('[renderCreativeTable] API 호출 중...');
+            const res = await fetch('/api/user-progress/creative-activities?grade=' + encodeURIComponent(pageGrade) + '&name=' + encodeURIComponent(pageName));
+            if (res.ok) {
+              const json = await res.json();
+              creativeDataCache = json.data || [];
+              console.log('[renderCreativeTable] 데이터 수신:', creativeDataCache.length + '건');
+            } else {
+              console.log('[renderCreativeTable] API 응답 오류:', res.status);
+              creativeDataCache = [];
+            }
+          } catch (e) {
+            console.error('[renderCreativeTable] 창의활동 데이터 조회 실패:', e);
+            creativeDataCache = [];
+          }
+
+          // unit code로 시리즈 판단하는 함수
+          function getSeriesFromUnit(unitCode) {
+            if (!unitCode) return 'BRAIN업';
+            if (unitCode.startsWith('on_')) return 'BRAIN온';
+            if (unitCode.startsWith('fit_')) return 'BRAIN핏';
+            if (unitCode.startsWith('deep_')) return 'BRAIN딥';
+            return 'BRAIN업'; // 접두사 없으면 브레인업
+          }
+
+          // 선택한 날짜에 해당하는 데이터 필터링
+          const selectedDateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(date).padStart(2, '0');
+          const filteredData = creativeDataCache.filter(item => {
+            if (!item.submittedAt) return false;
+            const itemDate = new Date(item.submittedAt);
+            const itemDateStr = itemDate.getFullYear() + '-' + String(itemDate.getMonth() + 1).padStart(2, '0') + '-' + String(itemDate.getDate()).padStart(2, '0');
+            if (itemDateStr !== selectedDateStr) return false;
+
+            // 시리즈 필터링 (currentSelectedSeries가 'all'이 아니면 해당 시리즈만)
+            if (currentSelectedSeries && currentSelectedSeries !== 'all') {
+              const itemSeries = getSeriesFromUnit(item.unit);
+              return itemSeries === currentSelectedSeries;
+            }
+            return true;
+          });
+
+          // 테이블 렌더링
+          if (filteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: rgba(255,255,255,0.5);">해당 날짜에 제출된 창의활동이 없습니다.</td></tr>';
+            return;
+          }
+
+          let html = '';
+          filteredData.forEach((item, index) => {
+            const unitName = getUnitDisplayName(item.unit);
+            const topic = item.topic || '자유 글쓰기';
+            const charCount = item.text ? item.text.length : 0;
+            const textContent = item.text || '내용 없음';
+            const rowId = 'creative-row-' + index;
+            const contentId = 'creative-content-' + index;
+
+            // 메인 행
+            html += '<tr id="' + rowId + '" data-index="' + index + '" style="border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: background 0.2s;" onclick="toggleCreativeContent(' + index + ')">';
+            html += '<td style="padding: 12px 8px; text-align: center;"><span class="creative-arrow" id="arrow-' + index + '" style="display: inline-block; transition: transform 0.3s; margin-right: 4px;">▶</span>' + (index + 1) + '</td>';
+            html += '<td style="padding: 12px 8px; text-align: center;">' + unitName + '</td>';
+            html += '<td style="padding: 12px 8px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + topic + '</td>';
+            html += '<td style="padding: 12px 8px; text-align: center;">' + charCount.toLocaleString() + '</td>';
+            html += '</tr>';
+
+            // 드롭다운 내용 행 (처음엔 숨김)
+            html += '<tr id="' + contentId + '" style="display: none;">';
+            html += '<td colspan="4" style="padding: 0; background: #f8f9fa;">';
+            html += '<div style="padding: 16px 20px; border-left: 3px solid #667eea; margin: 8px 12px; background: #fff; border-radius: 4px;">';
+            html += '<div style="font-size: 12px; color: #888; margin-bottom: 8px; text-align: left;">📝 작성 내용</div>';
+            html += '<div style="font-size: 14px; line-height: 1.8; color: #333; white-space: pre-wrap; word-break: break-word; text-align: left;">' + textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+            html += '</div>';
+            html += '</td>';
+            html += '</tr>';
+          });
+
+          tbody.innerHTML = html;
+        }
+
+        // 창의활동 드롭다운 토글 함수 (전역)
+        window.toggleCreativeContent = function(index) {
+          const contentRow = document.getElementById('creative-content-' + index);
+          const arrow = document.getElementById('arrow-' + index);
+
+          if (!contentRow || !arrow) return;
+
+          const isVisible = contentRow.style.display !== 'none';
+
+          if (isVisible) {
+            // 닫기
+            contentRow.style.display = 'none';
+            arrow.style.transform = 'rotate(0deg)';
+          } else {
+            // 열기
+            contentRow.style.display = 'table-row';
+            arrow.style.transform = 'rotate(90deg)';
+          }
+        };
+
+        // 창의활동 날짜 네비게이션
+        document.getElementById('creativePrev')?.addEventListener('click', function() {
+          creativeCurrentDate.setDate(creativeCurrentDate.getDate() - 1);
+          renderCreativeTable();
+        });
+
+        document.getElementById('creativeNext')?.addEventListener('click', function() {
+          const today = new Date();
+          today.setHours(23, 59, 59, 999);
+          const nextDate = new Date(creativeCurrentDate);
+          nextDate.setDate(nextDate.getDate() + 1);
+
+          if (nextDate <= today) {
+            creativeCurrentDate = nextDate;
+            renderCreativeTable();
+          }
+        });
+
+        // 초기 렌더링
+        renderCreativeTable();
+
         // ===== Today 레이더 슬라이더 기능 =====
         let todayRadarSlideIndex = 0;
 
@@ -14021,6 +14223,9 @@ app.get("/my-learning", async (req, res) => {
             // 날짜별 차트 재렌더링 (시리즈 변경 시)
             renderIndexTrendChart();
             renderSubjectBarChart();
+
+            // 창의활동 테이블 재렌더링 (시리즈 변경 시)
+            renderCreativeTable();
 
             // 데이터 유무에 따라 날짜별 차트 섹션 표시/숨김
             const indexTrendSection = document.getElementById('indexTrendSection');
@@ -16040,6 +16245,74 @@ app.post('/api/upload-temp-image', upload.single('image'), (req, res) => {
     res.status(500).json({
       ok: false,
       message: '이미지 업로드 중 오류가 발생했습니다',
+      error: error.message
+    });
+  }
+});
+
+// 창의활동 데이터 조회 (unitProgress에서 creativeState 추출)
+app.get('/api/user-progress/creative-activities', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade와 name이 필요합니다'
+      });
+    }
+
+    // unitProgress만 조회
+    const progress = await UserProgress.findOne(
+      { grade, name },
+      { unitProgress: 1, lastUpdated: 1 }
+    );
+
+    console.log('[creative-activities] 조회:', grade, name, '결과:', progress ? '있음' : '없음');
+
+    if (!progress || !progress.unitProgress) {
+      return res.json({
+        ok: true,
+        data: []
+      });
+    }
+
+    // unitProgress에서 creativeState가 있는 단원만 추출
+    const creativeActivities = [];
+    const unitProgressMap = progress.unitProgress instanceof Map
+      ? progress.unitProgress
+      : new Map(Object.entries(progress.unitProgress));
+
+    console.log('[creative-activities] unitProgress 키 개수:', unitProgressMap.size);
+
+    unitProgressMap.forEach((unitData, unitCode) => {
+      // creativeState가 있고, text가 있는 경우 (isSubmitted 조건 완화)
+      if (unitData && unitData.creativeState && unitData.creativeState.text) {
+        const creativeState = unitData.creativeState;
+        creativeActivities.push({
+          unit: unitCode,
+          text: creativeState.text || '',
+          topic: creativeState.topic || '자유 글쓰기',
+          submittedAt: creativeState.submittedAt || unitData.updatedAt || progress.lastUpdated || new Date()
+        });
+        console.log('[creative-activities] 추가:', unitCode, '글자수:', (creativeState.text || '').length);
+      }
+    });
+
+    // 제출일시 기준 최신순 정렬
+    creativeActivities.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+    console.log('[creative-activities] 총 개수:', creativeActivities.length);
+
+    res.json({
+      ok: true,
+      data: creativeActivities
+    });
+  } catch (error) {
+    console.error('창의활동 데이터 조회 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다',
       error: error.message
     });
   }

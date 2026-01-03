@@ -2599,12 +2599,30 @@
           const spellingResult = document.getElementById('spelling-result');
           const spellingCorrect = document.getElementById('spelling-correct');
 
+          // 주제 가져오기
+          let topic = '';
+          const topicBox = document.querySelector('.creative-topic-box');
+          if (topicBox) {
+            const topicDiv = topicBox.querySelector('div:first-child');
+            if (topicDiv) {
+              // "주제: "허 생원과 동이가..."" 형식에서 주제 내용만 추출
+              const topicMatch = topicDiv.textContent.match(/주제[:\s]*[""]?(.+?)[""]?\s*$/);
+              if (topicMatch) {
+                topic = topicMatch[1].replace(/^[""]|[""]$/g, '').trim();
+              } else {
+                topic = topicDiv.textContent.replace(/주제[:\s]*/i, '').replace(/^[""]|[""]$/g, '').trim();
+              }
+            }
+          }
+
           const dataToSave = {
             creativeState: {
               text: text,
+              topic: topic,
               resultHTML: spellingResult ? spellingResult.innerHTML : '',
               correctHTML: spellingCorrect ? spellingCorrect.innerHTML : '',
-              isSubmitted: true
+              isSubmitted: true,
+              submittedAt: new Date().toISOString()
             }
           };
           await saveFn(dataToSave);
