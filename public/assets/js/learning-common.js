@@ -1324,9 +1324,18 @@
       }
     }
 
-    // 페이지 로드 시 항상 본문학습 탭으로 시작 (localStorage 탭 기록 무시)
-    console.log('[learning-common] 탭 선택: 본문학습으로 시작');
-    activateTab('reading');
+    // URL 파라미터에서 tab 확인 (예: ?tab=vocab)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabFromUrl = urlParams.get('tab');
+
+    // 페이지 로드 시 탭 선택: URL 파라미터가 있으면 해당 탭, 없으면 본문학습 탭
+    if (tabFromUrl && ['reading', 'vocab', 'quiz', 'report'].includes(tabFromUrl)) {
+      console.log('[learning-common] 탭 선택: URL 파라미터로 ' + tabFromUrl + ' 탭으로 시작');
+      activateTab(tabFromUrl);
+    } else {
+      console.log('[learning-common] 탭 선택: 본문학습으로 시작');
+      activateTab('reading');
+    }
     // 저장된 탭 기록 초기화
     localStorage.removeItem(`current-geo-tab:${unit}`);
 

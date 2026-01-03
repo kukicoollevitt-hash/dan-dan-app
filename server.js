@@ -9241,8 +9241,21 @@ app.get("/my-learning", async (req, res) => {
 
         <!-- ✨ Today 나의 AI 학습 기록 섹션 -->
         <div class="today-section">
-          <div class="section-title">📅 Today 나의 AI 학습 기록</div>
+          <div class="section-title"><span id="calendarIcon" onclick="openCalendarPopup()" style="cursor:pointer;">📅</span> Today 나의 AI 학습 기록</div>
           <p class="section-description" id="todayDescription">오늘 완료한 학습 기록입니다.</p>
+
+          <!-- 달력 팝업 -->
+          <div id="calendarPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center;">
+            <div style="background:#fff; border-radius:16px; padding:24px; max-width:380px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <button onclick="changeCalendarMonth(-1)" style="background:#667eea; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:16px;">❮</button>
+                <span id="calendarMonthDisplay" style="font-size:18px; font-weight:700; color:#333;"></span>
+                <button onclick="changeCalendarMonth(1)" style="background:#667eea; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:16px;">❯</button>
+              </div>
+              <div id="calendarGrid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center;"></div>
+              <button onclick="closeCalendarPopup()" style="margin-top:16px; width:100%; background:#667eea; color:#fff; border:none; padding:12px; border-radius:8px; cursor:pointer; font-size:16px; font-weight:600;">닫기</button>
+            </div>
+          </div>
 
           <!-- 날짜 네비게이션 -->
           <div class="date-navigator" style="display:flex; justify-content:center; align-items:center; gap:16px; margin-bottom:16px;">
@@ -9282,8 +9295,8 @@ app.get("/my-learning", async (req, res) => {
 
           <!-- 지수별 추이 꺾은선 그래프 섹션 (보라색 배경 내부) -->
           <div class="index-trend-section" id="indexTrendSection" style="margin-top: 20px; display: none;">
-            <div class="today-radar-title">📈 날짜별 성장 지수 변화</div>
-            <p class="section-description" style="color: rgba(255,255,255,0.8); margin-bottom: 10px;">
+            <div class="today-radar-title">📈 날짜별 문해력 성장 지수 변화</div>
+            <p class="section-description" style="color: rgba(255,255,255,0.8); margin-bottom: 10px; text-align: left;">
               일별 학습에서 측정된 5가지 문해력 지수의 평균 추이를 확인하세요.
             </p>
             <div class="index-trend-legend" id="indexTrendLegend">
@@ -9299,11 +9312,11 @@ app.get("/my-learning", async (req, res) => {
             </div>
           </div>
 
-          <!-- 날짜별 과목 평균 점수 막대 그래프 섹션 -->
+          <!-- 날짜별 과목 평균 평점 막대 그래프 섹션 -->
           <div class="subject-bar-section" id="subjectBarSection" style="margin-top: 30px; display: none;">
-            <div class="today-radar-title">📊 날짜별 과목 평균 점수</div>
-            <p class="section-description" style="color: rgba(255,255,255,0.8); margin-bottom: 10px;">
-              날짜별로 완료한 각 과목의 평균 점수를 확인하세요.
+            <div class="today-radar-title">📊 날짜별 과목 평균 평점</div>
+            <p class="section-description" style="color: rgba(255,255,255,0.8); margin-bottom: 10px; text-align: left;">
+              날짜별로 완료한 각 과목의 평균 평점을 확인하세요.
             </p>
             <div class="subject-bar-legend" id="subjectBarLegend">
               <!-- JavaScript에서 동적 렌더링 - 과목별 색상 범례 -->
@@ -10688,7 +10701,7 @@ app.get("/my-learning", async (req, res) => {
           }
         }
 
-        // ===== 날짜별 과목 평균 점수 막대 그래프 렌더링 =====
+        // ===== 날짜별 과목 평균 평점 막대 그래프 렌더링 =====
         let subjectBarChartInstance = null;
         let subjectBarCurrentPage = 0;
         let subjectBarDatesWithData = [];
@@ -11060,6 +11073,119 @@ app.get("/my-learning", async (req, res) => {
         }
         window.changeDate = changeDate;
 
+        // 어휘 학습 페이지로 이동 함수
+        function goToVocabPage(url) {
+          window.location.href = url;
+        }
+        window.goToVocabPage = goToVocabPage;
+
+        // ===== 달력 팝업 기능 =====
+        let calendarMonth = new Date(); // 달력에 표시할 월
+        let completedDatesCount = new Map(); // 날짜별 학습 완료 개수 (YYYY-MM-DD -> count)
+
+        // 달력 팝업 열기
+        function openCalendarPopup() {
+          calendarMonth = new Date(selectedDate); // 현재 선택된 날짜의 월로 시작
+          document.getElementById('calendarPopup').style.display = 'flex';
+          renderCalendar();
+        }
+        window.openCalendarPopup = openCalendarPopup;
+
+        // 달력 팝업 닫기
+        function closeCalendarPopup() {
+          document.getElementById('calendarPopup').style.display = 'none';
+        }
+        window.closeCalendarPopup = closeCalendarPopup;
+
+        // 달력 월 변경
+        function changeCalendarMonth(delta) {
+          calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+          renderCalendar();
+        }
+        window.changeCalendarMonth = changeCalendarMonth;
+
+        // 달력 날짜 선택
+        function selectCalendarDate(dateStr) {
+          selectedDate = new Date(dateStr + 'T00:00:00');
+          closeCalendarPopup();
+          renderTodaySection();
+        }
+        window.selectCalendarDate = selectCalendarDate;
+
+        // 달력 렌더링
+        function renderCalendar() {
+          const monthDisplay = document.getElementById('calendarMonthDisplay');
+          const grid = document.getElementById('calendarGrid');
+          if (!monthDisplay || !grid) return;
+
+          const year = calendarMonth.getFullYear();
+          const month = calendarMonth.getMonth();
+          monthDisplay.textContent = year + '년 ' + (month + 1) + '월';
+
+          // 요일 헤더
+          const days = ['일', '월', '화', '수', '목', '금', '토'];
+          let html = days.map((d, i) => '<div style="padding:8px; font-weight:600; color:' + (i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : '#666') + ';">' + d + '</div>').join('');
+
+          // 월의 첫 날과 마지막 날
+          const firstDay = new Date(year, month, 1);
+          const lastDay = new Date(year, month + 1, 0);
+          const startDayOfWeek = firstDay.getDay();
+
+          // 이전 달 빈 칸
+          for (let i = 0; i < startDayOfWeek; i++) {
+            html += '<div></div>';
+          }
+
+          // 오늘 날짜 (KST)
+          const todayStr = toKSTDateString(new Date());
+
+          // 날짜 렌더링
+          for (let d = 1; d <= lastDay.getDate(); d++) {
+            const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            const isToday = dateStr === todayStr;
+            const isSelected = dateStr === toKSTDateString(selectedDate);
+            const learningCount = completedDatesCount.get(dateStr) || 0;
+            const dayOfWeek = new Date(year, month, d).getDay();
+
+            let bgColor = 'transparent';
+            let textColor = dayOfWeek === 0 ? '#ef4444' : dayOfWeek === 6 ? '#3b82f6' : '#333';
+            let border = 'none';
+            let fontWeight = '400';
+
+            if (isSelected) {
+              bgColor = '#667eea';
+              textColor = '#fff';
+              fontWeight = '700';
+            } else if (isToday) {
+              border = '2px solid #667eea';
+              fontWeight = '600';
+            }
+
+            html += '<div onclick="selectCalendarDate(' + "'" + dateStr + "'" + ')" style="padding:4px 2px; cursor:pointer; background:' + bgColor + '; color:' + textColor + '; border:' + border + '; border-radius:8px; font-weight:' + fontWeight + '; position:relative; min-height:44px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;">';
+            html += '<span style="font-size:14px;">' + d + '</span>';
+            if (learningCount > 0) {
+              html += '<span style="display:flex; align-items:center; gap:2px; margin-top:2px;">';
+              html += '<span style="width:6px; height:6px; background:#10b981; border-radius:50%;"></span>';
+              html += '<span style="font-size:10px; color:#10b981; font-weight:600;">' + learningCount + '</span>';
+              html += '</span>';
+            }
+            html += '</div>';
+          }
+
+          grid.innerHTML = html;
+        }
+
+        // 학습 완료된 날짜 목록 업데이트 (날짜별 개수)
+        function updateCompletedDates(logs) {
+          completedDatesCount.clear();
+          logs.forEach(log => {
+            if (log.timestamp && log.completed) {
+              const dateStr = toKSTDateString(new Date(log.timestamp));
+              completedDatesCount.set(dateStr, (completedDatesCount.get(dateStr) || 0) + 1);
+            }
+          });
+        }
+
         // 날짜 포맷팅 함수 (YYYY년 MM월 DD일 (요일))
         function formatDateKorean(date) {
           const days = ['일', '월', '화', '수', '목', '금', '토'];
@@ -11085,6 +11211,10 @@ app.get("/my-learning", async (req, res) => {
         function renderTodaySection() {
           console.log('[Today] UNIT_PROGRESS_MAP keys:', Object.keys(UNIT_PROGRESS_MAP));
           const selectedDateStr = toKSTDateString(selectedDate);
+
+          // 달력에 표시할 완료된 날짜 목록 업데이트 (현재 시리즈만)
+          const logsForCalendar = logsForChart.filter(log => matchesSeries(log.unit, currentSeries));
+          updateCompletedDates(logsForCalendar);
 
           // 날짜 표시 업데이트
           const dateDisplay = document.getElementById('currentDateDisplay');
@@ -11145,6 +11275,15 @@ app.get("/my-learning", async (req, res) => {
             'modern': '한국문학', 'classic': '한국문학',
             'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학',
             'people': '인물분야', 'people1': '인물분야', 'people2': '인물분야', 'person1': '인물분야', 'person2': '인물분야'
+          };
+
+          // 폴더 매핑 (subjectKey -> 폴더명)
+          const folderMap = {
+            'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
+            'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
+            'modern': 'korlit', 'classic': 'korlit',
+            'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
+            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
           };
 
           // 테이블 생성
@@ -11257,6 +11396,10 @@ app.get("/my-learning", async (req, res) => {
             }
             const vocabScoreDisplay = vocabScorePercent > 0 ? vocabScorePercent + '점' : '-';
 
+            // 어휘 학습 페이지 URL 생성
+            const folder = folderMap[subjectKey] || 'science';
+            const vocabPageUrl = '/BRAINUP/' + folder + '/' + unitCode + '.html?tab=vocab';
+
             tableHtml += '<tr>';
             tableHtml += '<td>' + (idx + 1) + '</td>';
             tableHtml += '<td>' + series + '</td>';
@@ -11264,7 +11407,12 @@ app.get("/my-learning", async (req, res) => {
             tableHtml += '<td>' + unitName + '</td>';
             tableHtml += '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>';
             tableHtml += '<td>' + avgScore.toFixed(1) + '</td>';
-            tableHtml += '<td>' + vocabScoreDisplay + '</td>';
+            // 어휘 점수 클릭 시 해당 단원 어휘 페이지로 이동
+            if (vocabScorePercent > 0) {
+              tableHtml += '<td><span class="vocab-score-link" onclick="goToVocabPage(' + "'" + vocabPageUrl + "'" + ')" style="cursor:pointer; color:#3b82f6 !important; font-weight:600;">' + vocabScoreDisplay + '</span></td>';
+            } else {
+              tableHtml += '<td>' + vocabScoreDisplay + '</td>';
+            }
             tableHtml += '</tr>';
           });
 
@@ -11429,7 +11577,8 @@ app.get("/my-learning", async (req, res) => {
                   }
                 },
                 plugins: {
-                  legend: { display: false }
+                  legend: { display: false },
+                  datalabels: { display: false }
                 },
                 scales: {
                   r: {
@@ -11461,7 +11610,7 @@ app.get("/my-learning", async (req, res) => {
         // 지수별 추이 그래프 렌더링
         renderIndexTrendChart();
 
-        // 날짜별 과목 평균 점수 막대 그래프 렌더링
+        // 날짜별 과목 평균 평점 막대 그래프 렌더링
         renderSubjectBarChart();
 
         // ===== Today 레이더 슬라이더 기능 =====
@@ -11657,6 +11806,7 @@ app.get("/my-learning", async (req, res) => {
             canvas.height = 130;
             card.appendChild(canvas);
 
+            // 통계 정보
             const stats = document.createElement('div');
             stats.className = 'radar-card-stats';
             stats.innerHTML =
@@ -20820,7 +20970,7 @@ ${data.completedCount > 0 ? `특히 "${data.units?.[0] || ''}"과 같은 단원�
         break;
 
       case "growth_trend":
-        userPrompt = `다음은 ${grade} ${name} 학생의 날짜별 성장 지수 변화 데이터입니다.
+        userPrompt = `다음은 ${grade} ${name} 학생의 날짜별 문해력 성장 지수 변화 데이터입니다.
 
 성장 추이:
 - 분석된 날짜 수: ${data.dateCount || 0}일
@@ -20829,21 +20979,21 @@ ${data.completedCount > 0 ? `특히 "${data.units?.[0] || ''}"과 같은 단원�
 - 첫 점수 → 최근 점수: ${data.firstScore || "-"}점 → ${data.latestScore || "-"}점
 - 전체 추세: ${data.trend || "분석 중"} 추세
 
-이 데이터를 바탕으로 "날짜별 성장 지수 변화" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+이 데이터를 바탕으로 "날짜별 문해력 성장 지수 변화" 섹션에 대한 따뜻한 피드백을 작성해주세요.
 ${data.trend === '상승' ? '점수가 올라가는 추세를 칭찬하고 계속 성장 중임을 강조해주세요.' :
   data.trend === '하락' ? '그래프의 오르내림은 자연스러운 학습 과정이며, 곧 다시 올라갈 수 있다고 격려해주세요.' :
   '꾸준히 안정적인 실력을 유지하고 있다고 칭찬해주세요.'}`;
         break;
 
       case "subject_scores":
-        userPrompt = `다음은 ${grade} ${name} 학생의 날짜별 과목 평균 점수 데이터입니다.
+        userPrompt = `다음은 ${grade} ${name} 학생의 날짜별 과목 평균 평점 데이터입니다.
 
-과목별 점수:
+과목별 평점:
 - 과목별 평균: ${data.subjectList || "분석 중"}
 - 가장 강한 과목: ${data.strongSubject || "-"}
 - 보완이 필요한 과목: ${data.weakSubject || "-"}
 
-이 데이터를 바탕으로 "날짜별 과목 평균 점수" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+이 데이터를 바탕으로 "날짜별 과목 평균 평점" 섹션에 대한 따뜻한 피드백을 작성해주세요.
 강한 과목을 구체적으로 칭찬하고, 보완이 필요한 과목은 성장 가능성으로 언급해주세요.
 ${data.strongSubject ? `특히 ${data.strongSubject}에서 뛰어난 점을 강조해주세요.` : ''}`;
         break;
