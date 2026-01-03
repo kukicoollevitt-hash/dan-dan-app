@@ -2204,6 +2204,55 @@
         .legend-dot.average { background: #fbbf24; }
         .legend-dot.global-avg { background: #94a3b8; }
 
+        /* 막대 그래프 토글 버튼 */
+        .bar-toggle-wrapper {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .bar-toggle-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .bar-toggle-btn {
+            position: relative;
+            width: 44px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bar-toggle-btn.active {
+            background: rgba(251, 191, 36, 0.3);
+            border-color: rgba(251, 191, 36, 0.5);
+        }
+
+        .bar-toggle-btn::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .bar-toggle-btn.active::after {
+            left: 24px;
+            background: #fbbf24;
+        }
+
         .trend-no-data {
             text-align: center;
             padding: 60px 20px;
@@ -3943,6 +3992,10 @@
                 </div>
 
                 <div class="trend-chart-container" id="trendChartContainer">
+                    <div class="bar-toggle-wrapper">
+                        <span class="bar-toggle-label">막대</span>
+                        <div class="bar-toggle-btn active" id="barToggleBtn" onclick="toggleBarChart()"></div>
+                    </div>
                     <canvas id="trendChart" width="800" height="350"></canvas>
                 </div>
 
@@ -6294,13 +6347,11 @@
                 // 차이가 큰 순서대로 정렬
                 taskCandidates.sort((a, b) => b.diffPercent - a.diffPercent);
 
-                // 과제 개수 결정
+                // 과제 개수 결정 (문제 추가 전까지 1개로 통일)
                 let taskCount = 0;
                 if (taskCandidates.length > 0) {
                     const maxDiff = taskCandidates[0].diffPercent;
-                    if (maxDiff >= 26) taskCount = 3;
-                    else if (maxDiff >= 16) taskCount = 2;
-                    else if (maxDiff >= 6) taskCount = 1;
+                    if (maxDiff >= 6) taskCount = 1;  // 6% 이상 차이나면 1개
                 }
 
                 recommendTasks = taskCandidates.slice(0, taskCount);
@@ -7453,48 +7504,50 @@
                     }
                 });
 
-                // 투명 막대그래프 그리기 (나의 점수 + 전체 평균)
-                trendData.forEach((item, index) => {
-                    if (item.avgScore !== undefined) {
-                        const x = padding.left + (index + 1) * xStep;
+                // 투명 막대그래프 그리기 (나의 점수 + 전체 평균) - 토글 상태에 따라 표시
+                if (showBarChart) {
+                    trendData.forEach((item, index) => {
+                        if (item.avgScore !== undefined) {
+                            const x = padding.left + (index + 1) * xStep;
 
-                        // 왼쪽: 나의 점수 (노란색)
-                        const myBarHeight = (chartHeight * item.avgScore / 100) * eased;
-                        const myBarY = padding.top + chartHeight - myBarHeight;
-                        const myBarGradient = ctx.createLinearGradient(0, myBarY, 0, padding.top + chartHeight);
-                        myBarGradient.addColorStop(0, 'rgba(251, 191, 36, 0.5)');
-                        myBarGradient.addColorStop(1, 'rgba(251, 191, 36, 0.15)');
-
-                        ctx.save();
-                        ctx.fillStyle = myBarGradient;
-                        ctx.beginPath();
-                        ctx.roundRect(x - singleBarWidth - barGap/2, myBarY, singleBarWidth, myBarHeight, 3);
-                        ctx.fill();
-                        ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
-                        ctx.lineWidth = 1;
-                        ctx.stroke();
-                        ctx.restore();
-
-                        // 오른쪽: 전체 평균 (회색/하늘색)
-                        if (item.globalAvg !== undefined) {
-                            const globalBarHeight = (chartHeight * item.globalAvg / 100) * eased;
-                            const globalBarY = padding.top + chartHeight - globalBarHeight;
-                            const globalBarGradient = ctx.createLinearGradient(0, globalBarY, 0, padding.top + chartHeight);
-                            globalBarGradient.addColorStop(0, 'rgba(148, 163, 184, 0.5)');
-                            globalBarGradient.addColorStop(1, 'rgba(148, 163, 184, 0.15)');
+                            // 왼쪽: 나의 점수 (노란색)
+                            const myBarHeight = (chartHeight * item.avgScore / 100) * eased;
+                            const myBarY = padding.top + chartHeight - myBarHeight;
+                            const myBarGradient = ctx.createLinearGradient(0, myBarY, 0, padding.top + chartHeight);
+                            myBarGradient.addColorStop(0, 'rgba(251, 191, 36, 0.5)');
+                            myBarGradient.addColorStop(1, 'rgba(251, 191, 36, 0.15)');
 
                             ctx.save();
-                            ctx.fillStyle = globalBarGradient;
+                            ctx.fillStyle = myBarGradient;
                             ctx.beginPath();
-                            ctx.roundRect(x + barGap/2, globalBarY, singleBarWidth, globalBarHeight, 3);
+                            ctx.roundRect(x - singleBarWidth - barGap/2, myBarY, singleBarWidth, myBarHeight, 3);
                             ctx.fill();
-                            ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+                            ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
                             ctx.lineWidth = 1;
                             ctx.stroke();
                             ctx.restore();
+
+                            // 오른쪽: 전체 평균 (회색/하늘색)
+                            if (item.globalAvg !== undefined) {
+                                const globalBarHeight = (chartHeight * item.globalAvg / 100) * eased;
+                                const globalBarY = padding.top + chartHeight - globalBarHeight;
+                                const globalBarGradient = ctx.createLinearGradient(0, globalBarY, 0, padding.top + chartHeight);
+                                globalBarGradient.addColorStop(0, 'rgba(148, 163, 184, 0.5)');
+                                globalBarGradient.addColorStop(1, 'rgba(148, 163, 184, 0.15)');
+
+                                ctx.save();
+                                ctx.fillStyle = globalBarGradient;
+                                ctx.beginPath();
+                                ctx.roundRect(x + barGap/2, globalBarY, singleBarWidth, globalBarHeight, 3);
+                                ctx.fill();
+                                ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+                                ctx.lineWidth = 1;
+                                ctx.stroke();
+                                ctx.restore();
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 // 각 영역별 포인트 좌표 미리 계산
                 const areaPoints = {};
@@ -7630,6 +7683,22 @@
         // 차트 호버 상태
         let hoveredBar = null;
 
+        // 막대 그래프 표시 여부
+        let showBarChart = true;
+
+        // 막대 그래프 토글 함수
+        function toggleBarChart() {
+            showBarChart = !showBarChart;
+            const btn = document.getElementById('barToggleBtn');
+            btn.classList.toggle('active', showBarChart);
+
+            // 차트 다시 그리기
+            const canvas = document.getElementById('trendChart');
+            if (canvas && canvas.trendData) {
+                redrawTrendChartWithHover();
+            }
+        }
+
         // 차트 호버 효과를 위한 재그리기 함수
         function redrawTrendChartWithHover() {
             const canvas = document.getElementById('trendChart');
@@ -7698,7 +7767,8 @@
                 }
             });
 
-            // 막대 그래프 (호버 효과 포함)
+            // 막대 그래프 (호버 효과 포함) - 토글 상태에 따라 표시
+            if (showBarChart) {
             trendData.forEach((item, index) => {
                 if (item.avgScore !== undefined) {
                     const x = padding.left + (index + 1) * xStep;
@@ -7815,6 +7885,7 @@
                     }
                 }
             });
+            }
 
             // 라인 그리기
             const areaPoints = {};
