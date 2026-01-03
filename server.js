@@ -9331,6 +9331,22 @@ app.get("/my-learning", async (req, res) => {
             </div>
           </div>
 
+          <!-- 날짜별 어휘 점수 가로 막대 그래프 섹션 -->
+          <div class="vocab-score-section" id="vocabScoreSection" style="margin-top: 30px; display: none;">
+            <div class="today-radar-title">📝 날짜별 어휘 점수</div>
+            <p class="section-description" style="color: rgba(255,255,255,0.8); margin-bottom: 10px; text-align: left;">
+              각 단원별 어휘 퀴즈 점수를 평균과 비교해 보세요.
+            </p>
+            <div class="vocab-score-nav" style="display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0;">
+              <button id="vocabScorePrev" class="nav-arrow-btn" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 36px; height: 36px; color: #fff; font-size: 18px; cursor: pointer; transition: all 0.2s;">◀</button>
+              <span id="vocabScoreDate" style="color: #fff; font-size: 14px; font-weight: 500;"></span>
+              <button id="vocabScoreNext" class="nav-arrow-btn" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 36px; height: 36px; color: #fff; font-size: 18px; cursor: pointer; transition: all 0.2s;">▶</button>
+            </div>
+            <div class="vocab-score-chart-container" id="vocabScoreChartContainer" style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px;">
+              <!-- JavaScript에서 동적 렌더링 -->
+            </div>
+          </div>
+
           <!-- 통합 AI 피드백 영역: 하단에 4개 섹션 모두 표시 -->
           <div id="aiFeedbackSection" class="ai-feedback-section" style="margin-top: 25px; display: none;">
             <div class="ai-feedback-section-header">
@@ -9360,6 +9376,11 @@ app.get("/my-learning", async (req, res) => {
               <div class="ai-feedback-item">
                 <div class="ai-feedback-item-title">🎯 과목별 점수 분석</div>
                 <div id="feedbackContent4" class="ai-feedback-item-content"></div>
+              </div>
+              <!-- 섹션 5: 어휘 점수 피드백 -->
+              <div class="ai-feedback-item">
+                <div class="ai-feedback-item-title">📝 어휘 점수 분석</div>
+                <div id="feedbackContent5" class="ai-feedback-item-content"></div>
               </div>
               <!-- 하단 통합 수정/저장 버튼 -->
               <div class="ai-feedback-bottom-actions" id="feedbackBottomActions">
@@ -9797,8 +9818,8 @@ app.get("/my-learning", async (req, res) => {
           const editAllBtn = document.getElementById('editAllBtn');
           const saveActions = document.getElementById('saveActions');
 
-          // 4개 섹션 모두 textarea로 변환
-          for (let num = 1; num <= 4; num++) {
+          // 5개 섹션 모두 textarea로 변환
+          for (let num = 1; num <= 5; num++) {
             const contentDiv = document.getElementById('feedbackContent' + num);
             if (!contentDiv) continue;
 
@@ -9819,8 +9840,8 @@ app.get("/my-learning", async (req, res) => {
           const editAllBtn = document.getElementById('editAllBtn');
           const saveActions = document.getElementById('saveActions');
 
-          // 4개 섹션 모두 저장
-          for (let num = 1; num <= 4; num++) {
+          // 5개 섹션 모두 저장
+          for (let num = 1; num <= 5; num++) {
             const textarea = document.getElementById('feedbackTextarea' + num);
             const contentDiv = document.getElementById('feedbackContent' + num);
             if (!textarea || !contentDiv) continue;
@@ -9839,8 +9860,8 @@ app.get("/my-learning", async (req, res) => {
           const editAllBtn = document.getElementById('editAllBtn');
           const saveActions = document.getElementById('saveActions');
 
-          // 4개 섹션 모두 원본 복원
-          for (let num = 1; num <= 4; num++) {
+          // 5개 섹션 모두 원본 복원
+          for (let num = 1; num <= 5; num++) {
             const contentDiv = document.getElementById('feedbackContent' + num);
             if (!contentDiv || !originalFeedbackContent[num]) continue;
 
@@ -9999,13 +10020,112 @@ app.get("/my-learning", async (req, res) => {
               }
             }
 
-            // 4개 피드백 동시 로드
+            // ===== 5. 어휘 점수 데이터 수집 (날짜별 어휘 점수 그래프 데이터 활용) =====
+            const vocabScoreData = { hasData: false, items: [], summary: {} };
+
+            // 과목별 평균 점수 설정
+            const vocabSubjectAvgScores = {
+              'bio': 78, 'earth': 75, 'physics': 63, 'chem': 68,
+              'soc': 82, 'geo': 79, 'law': 72, 'pol': 74,
+              'classic': 78, 'modern': 84,
+              'world': 85, 'world1': 85, 'world2': 84,
+              'people': 80, 'people1': 80, 'people2': 80, 'person1': 80, 'person2': 80
+            };
+
+            // 단원 코드에서 과목 키 추출
+            function getVocabSubjectKey(unitCode) {
+              if (!unitCode || !unitCode.includes('_')) return null;
+              const parts = unitCode.split('_');
+              let subjectKey = parts[0];
+              let numStr = parts[1];
+              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+                subjectKey = parts[1];
+                numStr = parts[2];
+              }
+              if (subjectKey === 'world') {
+                const num = parseInt(numStr, 10) || 0;
+                if (num > 40) return 'world2';
+              }
+              return subjectKey;
+            }
+
+            // allLogs와 UNIT_PROGRESS_MAP에서 어휘 점수 데이터 수집
+            let vocabAboveAvgCount = 0;
+            let vocabBelowAvgCount = 0;
+            let vocabTotalScore = 0;
+            let vocabItemCount = 0;
+
+            // 현재 시리즈의 모든 로그에서 어휘 점수 수집
+            allLogs.forEach(log => {
+              if (!log.unit || log.deleted) return;
+              if (!matchesSeries(log.unit, currentSeries)) return;
+
+              const unitCode = log.unit;
+              // 단원 코드 정규화
+              let normalizedUnitCode = unitCode;
+              const parts = unitCode.split('_');
+              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+                normalizedUnitCode = parts[1] + '_' + parts[2];
+              }
+
+              // UNIT_PROGRESS_MAP에서 어휘 점수 계산
+              let vocabScorePercent = 0;
+              const unitProgress = UNIT_PROGRESS_MAP[unitCode] || UNIT_PROGRESS_MAP[normalizedUnitCode] || {};
+              const vocabState = unitProgress.vocabState;
+
+              if (vocabState && vocabState.vocabData && Array.isArray(vocabState.vocabData)) {
+                const total = vocabState.vocabData.length;
+                const correct = vocabState.vocabData.filter(v => v.isCorrect).length;
+                if (total > 0) {
+                  vocabScorePercent = Math.round((correct / total) * 100);
+                }
+              } else {
+                const reportState = unitProgress.reportState || {};
+                const vocabScoreRatio = reportState.vocabScoreRatio || 0;
+                vocabScorePercent = Math.round(vocabScoreRatio * 100);
+              }
+
+              if (vocabScorePercent > 0) {
+                const subjectKey = getVocabSubjectKey(unitCode);
+                const avgScore = vocabSubjectAvgScores[subjectKey] || 75;
+                const isAboveAvg = vocabScorePercent >= avgScore;
+                const unitName = typeof getVocabSubjectName === 'function' ? getVocabSubjectName(unitCode) : unitCode;
+
+                vocabScoreData.items.push({
+                  unit: unitName,
+                  score: vocabScorePercent,
+                  avgScore: avgScore,
+                  isAboveAvg: isAboveAvg
+                });
+
+                if (isAboveAvg) vocabAboveAvgCount++;
+                else vocabBelowAvgCount++;
+
+                vocabTotalScore += vocabScorePercent;
+                vocabItemCount++;
+              }
+            });
+
+            if (vocabItemCount > 0) {
+              vocabScoreData.hasData = true;
+              vocabScoreData.summary = {
+                totalCount: vocabItemCount,
+                avgScore: Math.round(vocabTotalScore / vocabItemCount),
+                aboveAvgCount: vocabAboveAvgCount,
+                belowAvgCount: vocabBelowAvgCount,
+                aboveAvgPercent: Math.round((vocabAboveAvgCount / vocabItemCount) * 100),
+                itemsList: vocabScoreData.items.map(v => v.unit + ' ' + v.score + '점(평균:' + v.avgScore + ')').join(', ')
+              };
+            }
+
+            // 5개 피드백 동시 로드
             try {
               await Promise.all([
                 loadSingleFeedback('today_summary', 'feedbackContent1', todayData),
                 loadSingleFeedback('radar_chart', 'feedbackContent2', radarData),
                 loadSingleFeedback('growth_trend', 'feedbackContent3', growthData),
-                loadSingleFeedback('subject_scores', 'feedbackContent4', subjectData)
+                loadSingleFeedback('subject_scores', 'feedbackContent4', subjectData),
+                loadSingleFeedback('vocab_scores', 'feedbackContent5', vocabScoreData)
               ]);
 
               // 로딩 완료 후 콘텐츠 표시
@@ -11613,6 +11733,261 @@ app.get("/my-learning", async (req, res) => {
         // 날짜별 과목 평균 평점 막대 그래프 렌더링
         renderSubjectBarChart();
 
+        // ===== 날짜별 어휘 점수 가로 막대 그래프 렌더링 =====
+        let vocabScoreCurrentDate = new Date(); // 현재 선택된 날짜
+
+        // 과목별 색상 설정 (기존 subjectConfig 재사용)
+        const vocabSubjectConfig = [
+          { key: 'bio', name: '생물', color: '#4CAF50' },
+          { key: 'earth', name: '지구과학', color: '#2196F3' },
+          { key: 'physics', name: '물리', color: '#9C27B0' },
+          { key: 'chem', name: '화학', color: '#FF5722' },
+          { key: 'soc', name: '사회문화', color: '#E91E63' },
+          { key: 'geo', name: '지리', color: '#00BCD4' },
+          { key: 'law', name: '법', color: '#795548' },
+          { key: 'pol', name: '정치경제', color: '#607D8B' },
+          { key: 'classic', name: '고전소설', color: '#8BC34A' },
+          { key: 'modern', name: '현대문학', color: '#FFC107' },
+          { key: 'world1', name: '세계문학1', color: '#FF9800' },
+          { key: 'world2', name: '세계문학2', color: '#F44336' },
+          { key: 'person1', name: '한국인물', color: '#673AB7' },
+          { key: 'person2', name: '세계인물', color: '#3F51B5' }
+        ];
+
+        function getVocabSubjectColor(unitCode) {
+          if (!unitCode) return '#888';
+          const parts = unitCode.split('_');
+          let subjectKey = parts[0];
+
+          // fit_, deep_, on_ 접두사 처리
+          if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+            subjectKey = parts[1];
+          }
+
+          const found = vocabSubjectConfig.find(s => s.key === subjectKey);
+          return found ? found.color : '#888';
+        }
+
+        function getVocabSubjectName(unitCode) {
+          if (!unitCode) return '기타';
+          const parts = unitCode.split('_');
+          let subjectKey = parts[0];
+          let unitNum = '';
+
+          // fit_, deep_, on_ 접두사 처리
+          if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+            subjectKey = parts[1];
+            unitNum = parts[2] || '';
+          } else {
+            unitNum = parts[1] || '';
+          }
+
+          const found = vocabSubjectConfig.find(s => s.key === subjectKey);
+          const subjectName = found ? found.name : subjectKey;
+          return unitNum ? subjectName + ' ' + unitNum : subjectName;
+        }
+
+        function renderVocabScoreChart() {
+          const section = document.getElementById('vocabScoreSection');
+          const container = document.getElementById('vocabScoreChartContainer');
+          const dateDisplay = document.getElementById('vocabScoreDate');
+
+          if (!section || !container) return;
+
+          // 날짜 표시 업데이트
+          const dateStr = vocabScoreCurrentDate.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'short'
+          });
+          dateDisplay.textContent = dateStr;
+
+          // 해당 날짜의 학습 기록 필터링 (현재 시리즈만, 어휘점수가 있는 것만)
+          const targetDateStr = toKSTDateString(vocabScoreCurrentDate);
+          const dayLogs = allLogs.filter(log => {
+            if (!log.timestamp || log.deleted) return false;
+            // 현재 시리즈만 필터링 (테이블과 동일하게)
+            if (!matchesSeries(log.unit, currentSeries)) return false;
+            const logDateStr = toKSTDateString(new Date(log.timestamp));
+            return logDateStr === targetDateStr;
+          });
+
+          // 어휘점수가 있는 로그만 필터
+          const vocabLogs = dayLogs.filter(log => {
+            // 테이블 행에서 어휘점수를 찾아야 함 - allLogs에 vocabularyScore가 있는지 확인
+            // 실제로는 테이블에서 표시되는 어휘점수를 사용
+            return log.unit && typeof log.vocabularyScore !== 'undefined';
+          });
+
+          // 데이터가 없으면 빈 상태 표시
+          if (dayLogs.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">해당 날짜의 학습 기록이 없습니다.</div>';
+            section.style.display = 'block';
+            return;
+          }
+
+          // 단원별 어휘 점수 데이터 수집 (UNIT_PROGRESS_MAP 활용)
+          const vocabData = [];
+
+          dayLogs.forEach(log => {
+            if (!log.unit) return;
+
+            const unitCode = log.unit;
+            // 단원 코드 정규화 (fit_, deep_, on_ 접두사 제거)
+            let normalizedUnitCode = unitCode;
+            const parts = unitCode.split('_');
+            if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+              normalizedUnitCode = parts[1] + '_' + parts[2];
+            }
+
+            // UNIT_PROGRESS_MAP에서 어휘 점수 계산
+            let vocabScorePercent = 0;
+            const unitProgress = UNIT_PROGRESS_MAP[unitCode] || UNIT_PROGRESS_MAP[normalizedUnitCode] || {};
+            const vocabState = unitProgress.vocabState;
+
+            if (vocabState && vocabState.vocabData && Array.isArray(vocabState.vocabData)) {
+              const total = vocabState.vocabData.length;
+              const correct = vocabState.vocabData.filter(v => v.isCorrect).length;
+              if (total > 0) {
+                vocabScorePercent = Math.round((correct / total) * 100);
+              }
+            } else {
+              // fallback: reportState.vocabScoreRatio 사용
+              const reportState = unitProgress.reportState || {};
+              const vocabScoreRatio = reportState.vocabScoreRatio || 0;
+              vocabScorePercent = Math.round(vocabScoreRatio * 100);
+            }
+
+            // 어휘 점수가 있는 경우만 추가
+            if (vocabScorePercent > 0) {
+              vocabData.push({
+                unit: unitCode,
+                name: getVocabSubjectName(unitCode),
+                score: vocabScorePercent,
+                color: getVocabSubjectColor(unitCode)
+              });
+            }
+          });
+
+          if (vocabData.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">해당 날짜의 어휘 점수 기록이 없습니다.</div>';
+            section.style.display = 'block';
+            return;
+          }
+
+          // 과목별 평균 점수 설정
+          const subjectAvgScores = {
+            'bio': 78,        // 생물
+            'earth': 75,      // 지구과학
+            'physics': 63,    // 물리
+            'chem': 68,       // 화학
+            'soc': 82,        // 사회문화
+            'geo': 79,        // 지리
+            'law': 72,        // 법
+            'pol': 74,        // 정치경제
+            'classic': 78,    // 고전소설
+            'modern': 84,     // 현대소설
+            'world': 85,      // 세계문학1
+            'world1': 85,     // 세계문학1
+            'world2': 84,     // 세계문학2
+            'people': 80,     // 한국인물
+            'people1': 80,    // 한국인물
+            'people2': 80,    // 세계인물
+            'person1': 80,    // 한국인물
+            'person2': 80     // 세계인물
+          };
+
+          // 단원 코드에서 과목 키 추출하는 함수
+          function getSubjectKeyFromUnit(unitCode) {
+            if (!unitCode || !unitCode.includes('_')) return null;
+            const parts = unitCode.split('_');
+            let subjectKey = parts[0];
+            let numStr = parts[1];
+            if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+              subjectKey = parts[1];
+              numStr = parts[2];
+            }
+            // world_41~80은 세계문학2
+            if (subjectKey === 'world') {
+              const num = parseInt(numStr, 10) || 0;
+              if (num > 40) return 'world2';
+            }
+            return subjectKey;
+          }
+
+          // 가로 막대 그래프 HTML 생성
+          let html = '<div class="vocab-score-bars">';
+
+          vocabData.forEach((item, idx) => {
+            const barWidth = Math.min(100, item.score); // 최대 100%
+            // 과목별 평균 점수 가져오기
+            const subjectKey = getSubjectKeyFromUnit(item.unit);
+            const avgScore = subjectAvgScores[subjectKey] || 75;
+            const avgPosition = avgScore; // 평균선 위치 (%)
+            const isAboveAvg = item.score >= avgScore;
+            // 평균 기준 색상: 이상=초록, 미만=주황
+            const barColor = isAboveAvg ? '#4CAF50' : '#FF9800';
+
+            html += '<div class="vocab-bar-row" style="display: flex; align-items: center; margin-bottom: 12px;">';
+
+            // 단원명 (좌측)
+            html += '<div class="vocab-bar-label" style="width: 100px; font-size: 12px; color: #fff; text-align: right; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.name + '</div>';
+
+            // 막대 그래프 영역
+            html += '<div class="vocab-bar-container" style="flex: 1; height: 24px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; overflow: visible;">';
+
+            // 실제 막대 (평균 기준 색상 적용)
+            html += '<div class="vocab-bar" style="height: 100%; width: ' + barWidth + '%; background: ' + barColor + '; border-radius: 4px; transition: width 0.5s ease;"></div>';
+
+            // 평균선 (과목별 평균 위치)
+            html += '<div class="vocab-avg-line" style="position: absolute; left: ' + avgPosition + '%; top: -4px; bottom: -4px; width: 2px; background: #fff; opacity: 0.8;"></div>';
+
+            html += '</div>';
+
+            // 점수 표시 (우측) - 과목별 평균 표시
+            html += '<div class="vocab-bar-score" style="width: 80px; display: flex; align-items: center; justify-content: flex-start; padding-left: 10px;">';
+            html += '<span style="font-size: 14px; font-weight: 600; color: ' + (isAboveAvg ? '#4CAF50' : '#FF9800') + ';">' + item.score + '점</span>';
+            html += '<span style="font-size: 11px; color: rgba(255,255,255,0.5); margin-left: 6px;">/ ' + avgScore + '</span>';
+            html += '</div>';
+
+            html += '</div>';
+          });
+
+          html += '</div>';
+
+          // 범례 추가
+          html += '<div style="display: flex; justify-content: center; margin-top: 15px; gap: 8px; flex-wrap: wrap;">';
+          html += '<div style="display: flex; align-items: center; gap: 4px;"><div style="width: 16px; height: 2px; background: #fff;"></div><span style="font-size: 11px; color: rgba(255,255,255,0.7);">과목별 평균</span></div>';
+          html += '<div style="display: flex; align-items: center; gap: 4px;"><span style="color: #4CAF50; font-size: 11px;">●</span><span style="font-size: 11px; color: rgba(255,255,255,0.7);">평균 이상</span></div>';
+          html += '<div style="display: flex; align-items: center; gap: 4px;"><span style="color: #FF9800; font-size: 11px;">●</span><span style="font-size: 11px; color: rgba(255,255,255,0.7);">평균 미만</span></div>';
+          html += '</div>';
+
+          container.innerHTML = html;
+          section.style.display = 'block';
+        }
+
+        // 어휘 점수 날짜 네비게이션
+        document.getElementById('vocabScorePrev')?.addEventListener('click', function() {
+          vocabScoreCurrentDate.setDate(vocabScoreCurrentDate.getDate() - 1);
+          renderVocabScoreChart();
+        });
+
+        document.getElementById('vocabScoreNext')?.addEventListener('click', function() {
+          const today = new Date();
+          today.setHours(23, 59, 59, 999);
+          const nextDate = new Date(vocabScoreCurrentDate);
+          nextDate.setDate(nextDate.getDate() + 1);
+
+          if (nextDate <= today) {
+            vocabScoreCurrentDate = nextDate;
+            renderVocabScoreChart();
+          }
+        });
+
+        // 어휘 점수 차트 초기 렌더링은 allLogs 초기화 후에 수행
+        // renderVocabScoreChart(); // allLogs 초기화 후 호출됨
+
         // ===== Today 레이더 슬라이더 기능 =====
         let todayRadarSlideIndex = 0;
 
@@ -13086,6 +13461,9 @@ app.get("/my-learning", async (req, res) => {
         }
 
         const allLogs = logsForChart;
+
+        // 어휘 점수 차트 초기 렌더링 (allLogs 초기화 후)
+        renderVocabScoreChart();
 
         // 드롭다운 토글
         document.getElementById('seriesButton').addEventListener('click', function() {
@@ -20996,6 +21374,27 @@ ${data.trend === '상승' ? '점수가 올라가는 추세를 칭찬하고 계�
 이 데이터를 바탕으로 "날짜별 과목 평균 평점" 섹션에 대한 따뜻한 피드백을 작성해주세요.
 강한 과목을 구체적으로 칭찬하고, 보완이 필요한 과목은 성장 가능성으로 언급해주세요.
 ${data.strongSubject ? `특히 ${data.strongSubject}에서 뛰어난 점을 강조해주세요.` : ''}`;
+        break;
+
+      case "vocab_scores":
+        if (!data.hasData) {
+          return res.json({ ok: true, feedback: "아직 어휘 퀴즈 점수 기록이 없어요. 본문 학습 후 어휘 퀴즈를 풀어보면 여기에 분석 결과가 나타날 거예요! 화이팅!" });
+        }
+        userPrompt = `다음은 ${grade} ${name} 학생의 어휘 퀴즈 점수 데이터입니다.
+
+어휘 점수 현황:
+- 총 어휘 퀴즈 개수: ${data.summary?.totalCount || 0}개
+- 전체 평균 점수: ${data.summary?.avgScore || 0}점
+- 과목별 평균 이상인 단원 수: ${data.summary?.aboveAvgCount || 0}개
+- 과목별 평균 미만인 단원 수: ${data.summary?.belowAvgCount || 0}개
+- 평균 이상 비율: ${data.summary?.aboveAvgPercent || 0}%
+- 단원별 점수: ${data.summary?.itemsList || "없음"}
+
+이 데이터를 바탕으로 "어휘 점수 분석" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+${data.summary?.aboveAvgPercent >= 70 ? '평균 이상인 단원이 많으니 어휘력이 뛰어나다고 칭찬해주세요!' :
+  data.summary?.aboveAvgPercent >= 50 ? '균형 잡힌 어휘 실력을 칭찬하고, 조금만 더 노력하면 더 좋아질 수 있다고 격려해주세요.' :
+  '어휘 학습의 중요성을 언급하며, 꾸준히 학습하면 빠르게 성장할 수 있다고 응원해주세요.'}
+구체적인 단원명과 점수를 언급하며 피드백을 작성해주세요.`;
         break;
 
       default:
