@@ -20352,18 +20352,18 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
 
     console.log(`[gate-quiz/generate] 생성된 문제: ${quizzes.length}개`);
 
-    if (quizzes.length < 10) {
+    if (quizzes.length < 5) {
       return res.json({
         ok: false,
-        message: `문제 생성에 실패했습니다. (생성: ${quizzes.length}/10)`
+        message: `문제 생성에 실패했습니다. (생성: ${quizzes.length}/5)`
       });
     }
 
     res.json({
       ok: true,
       gate: gateLevel,
-      quizzes: quizzes.slice(0, 10),
-      units: gateUnits.slice(0, 10)
+      quizzes: quizzes.slice(0, 5),
+      units: gateUnits.slice(0, 5)
     });
 
   } catch (err) {
