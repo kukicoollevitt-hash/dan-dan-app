@@ -1,0 +1,324 @@
+const fs = require('fs');
+const path = require('path');
+
+const DIR = path.join(__dirname, 'public', 'BRAINUP', 'person');
+
+// 온세계인물 21~40 보완학습 데이터
+const REMEDIAL_DATA = {
+  "21": {
+    // 안토니오 스트라디바리 - 바이올린 제작자
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "스트라디바리가 만든 악기로 가장 유명한 것은 무엇인가요?", options: ["① 피아노", "② 바이올린", "③ 첼로", "④ 플루트"], answer: 1, explanation: "스트라디바리는 바이올린 제작의 대가로, 그가 만든 바이올린은 300년이 지난 지금도 최고의 소리를 낸다고 평가받습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "스트라디바리 바이올린이 특별한 이유로 적절한 것은?", options: ["① 가장 크기 때문에", "② 독특하고 뛰어난 음색 때문에", "③ 가장 저렴하기 때문에", "④ 전자 장치가 있어서"], answer: 1, explanation: "스트라디바리 바이올린은 독특하고 아름다운 음색으로 유명하며, 그 비밀은 아직도 완전히 밝혀지지 않았습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'명기(名器)'의 의미로 알맞은 것은?", options: ["① 유명한 그릇", "② 뛰어난 악기", "③ 비싼 기계", "④ 오래된 도구"], answer: 1, explanation: "'명기'는 이름난 뛰어난 악기를 뜻하며, 스트라디바리가 만든 바이올린이 대표적입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "스트라디바리가 평생 악기 제작에 몰두한 이유를 추론하면?", options: ["① 돈을 많이 벌기 위해", "② 완벽한 소리를 추구했기 때문에", "③ 다른 일이 없어서", "④ 강요를 받아서"], answer: 1, explanation: "스트라디바리는 완벽한 소리를 내는 악기를 만들기 위해 평생을 바쳤으며, 이것이 그의 악기가 명품이 된 이유입니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "스트라디바리의 삶에서 배울 수 있는 점은?", options: ["① 빨리 포기하는 것이 좋다", "② 한 분야에 꾸준히 정진하면 최고가 될 수 있다", "③ 여러 가지를 동시에 해야 한다", "④ 남의 것을 모방해야 한다"], answer: 1, explanation: "스트라디바리는 한 분야에 평생을 바쳐 최고의 장인이 되었습니다. 꾸준한 노력의 중요성을 보여줍니다." }] }
+  },
+  "22": {
+    // 베토벤 - 운명 교향곡
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "베토벤이 겪은 가장 큰 시련은 무엇인가요?", options: ["① 시력 상실", "② 청력 상실", "③ 다리 부상", "④ 목소리 상실"], answer: 1, explanation: "베토벤은 음악가에게 가장 치명적인 청력을 잃었지만, 그럼에도 위대한 작품들을 계속 작곡했습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "'운명 교향곡'이라는 이름이 붙은 이유는?", options: ["① 운명을 점치는 곡이라서", "② '운명이 문을 두드리는 소리'라는 설명 때문에", "③ 베토벤이 운이 좋았기 때문에", "④ 우연히 만들어진 곡이라서"], answer: 1, explanation: "베토벤이 이 곡의 첫 부분을 '운명이 문을 두드리는 소리'라고 설명했다고 전해져 이런 이름이 붙었습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'교향곡'의 의미로 알맞은 것은?", options: ["① 혼자 연주하는 곡", "② 관현악단이 연주하는 대규모 곡", "③ 노래가 있는 곡", "④ 춤을 위한 곡"], answer: 1, explanation: "'교향곡'은 오케스트라(관현악단)가 연주하는 여러 악장으로 이루어진 대규모 악곡입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "청력을 잃고도 작곡을 계속한 베토벤의 마음을 추론하면?", options: ["① 음악에 대한 열정과 의지가 강했다", "② 별로 신경 쓰지 않았다", "③ 다른 사람이 대신 작곡했다", "④ 청력이 필요 없었다"], answer: 0, explanation: "베토벤은 음악에 대한 강한 열정과 불굴의 의지로 장애를 극복하고 위대한 작품을 남겼습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "베토벤의 삶이 우리에게 주는 교훈은?", options: ["① 어려움 앞에서 포기해야 한다", "② 역경을 극복하면 더 큰 성취를 이룰 수 있다", "③ 건강한 사람만 성공할 수 있다", "④ 음악은 듣는 것이 전부다"], answer: 1, explanation: "베토벤은 청력 상실이라는 큰 역경을 극복하고 불후의 명작을 남겨, 역경 극복의 의미를 보여줍니다." }] }
+  },
+  "23": {
+    // 레오나르도 다빈치
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "레오나르도 다빈치의 대표작으로 유명한 그림은?", options: ["① 별이 빛나는 밤", "② 모나리자", "③ 해바라기", "④ 절규"], answer: 1, explanation: "모나리자는 다빈치의 가장 유명한 작품으로, 신비로운 미소로 세계적으로 사랑받고 있습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "다빈치가 '르네상스인'이라 불리는 이유는?", options: ["① 르네상스 시대에 태어나서", "② 미술, 과학, 공학 등 다방면에 뛰어나서", "③ 르네상스라는 작품을 그려서", "④ 르네상스 지역 출신이라서"], answer: 1, explanation: "다빈치는 화가이자 과학자, 발명가, 건축가로 다방면에서 뛰어나 '르네상스인'의 전형으로 불립니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'천재'라는 말의 의미로 알맞은 것은?", options: ["① 하늘에서 내려온 사람", "② 타고난 뛰어난 재능을 가진 사람", "③ 오래 산 사람", "④ 많이 배운 사람"], answer: 1, explanation: "'천재'는 타고난 뛰어난 재능과 능력을 가진 사람을 뜻합니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "다빈치가 다양한 분야에 관심을 가진 이유를 추론하면?", options: ["① 강요를 받아서", "② 호기심이 많고 탐구심이 강해서", "③ 돈을 벌기 위해", "④ 할 일이 없어서"], answer: 1, explanation: "다빈치는 세상 모든 것에 대한 호기심과 탐구심이 강했기 때문에 다양한 분야를 연구했습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "다빈치의 삶에서 배울 수 있는 점은?", options: ["① 한 가지만 잘하면 된다", "② 다양한 분야에 관심을 갖고 배우는 것이 좋다", "③ 공부는 필요 없다", "④ 호기심은 나쁜 것이다"], answer: 1, explanation: "다빈치처럼 다양한 분야에 관심을 갖고 끊임없이 배우는 자세가 창의적인 성과를 만듭니다." }] }
+  },
+  "24": {
+    // 알렉산더 플레밍 - 페니실린
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "플레밍이 발견한 것은 무엇인가요?", options: ["① 백신", "② 페니실린", "③ 비타민", "④ DNA"], answer: 1, explanation: "플레밍은 세계 최초의 항생제인 페니실린을 발견하여 수많은 생명을 구했습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "플레밍이 페니실린을 발견하게 된 계기는?", options: ["① 오랜 연구 계획에 따라", "② 우연히 곰팡이가 세균을 죽이는 것을 관찰해서", "③ 다른 과학자에게 배워서", "④ 책에서 읽고"], answer: 1, explanation: "플레밍은 실험 중 우연히 푸른곰팡이가 세균을 죽이는 것을 관찰하고 페니실린을 발견했습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'항생제'의 의미로 알맞은 것은?", options: ["① 바이러스를 키우는 약", "② 세균을 죽이거나 억제하는 약", "③ 영양제", "④ 진통제"], answer: 1, explanation: "'항생제'는 세균을 죽이거나 성장을 억제하여 감염병을 치료하는 약입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "플레밍의 발견이 우연으로 이어진 이유를 추론하면?", options: ["① 운이 좋아서", "② 평소 관찰력이 뛰어나고 호기심이 많아서", "③ 아무나 할 수 있는 일이라서", "④ 실험을 대충 해서"], answer: 1, explanation: "플레밍은 평소 뛰어난 관찰력과 과학적 호기심이 있었기에 우연한 현상을 놓치지 않았습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "플레밍의 발견에서 배울 수 있는 점은?", options: ["① 우연만 기다리면 된다", "② 관찰력과 탐구심이 중요하다", "③ 실험은 필요 없다", "④ 실수는 항상 나쁘다"], answer: 1, explanation: "플레밍의 발견은 준비된 사람에게 우연이 기회가 된다는 것을 보여줍니다. 관찰력과 탐구심이 중요합니다." }] }
+  },
+  "25": {
+    // 링컨 - 노예 해방
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "링컨이 이룬 가장 중요한 업적은 무엇인가요?", options: ["① 미국 건국", "② 노예 해방 선언", "③ 달 착륙", "④ 전화 발명"], answer: 1, explanation: "링컨은 미국 제16대 대통령으로 노예 해방 선언을 통해 흑인 노예들을 해방시켰습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "링컨이 노예 해방을 추진한 배경으로 적절한 것은?", options: ["① 경제적 이익 때문에", "② 모든 사람은 평등하다는 신념 때문에", "③ 외국의 압력 때문에", "④ 인기를 얻기 위해"], answer: 1, explanation: "링컨은 '모든 인간은 평등하게 태어났다'는 신념을 가지고 노예 제도 폐지를 위해 노력했습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'해방'의 의미로 알맞은 것은?", options: ["① 가두는 것", "② 속박에서 풀려나 자유로워지는 것", "③ 이동하는 것", "④ 숨기는 것"], answer: 1, explanation: "'해방'은 억압이나 속박에서 벗어나 자유로워지는 것을 의미합니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "링컨이 많은 반대에도 노예 해방을 추진한 이유를 추론하면?", options: ["① 인기를 얻기 위해", "② 정의와 평등에 대한 확고한 신념 때문에", "③ 다른 방법이 없어서", "④ 강요를 받아서"], answer: 1, explanation: "링컨은 정의와 인간 평등에 대한 확고한 신념으로 반대를 무릅쓰고 노예 해방을 추진했습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "링컨의 삶에서 배울 수 있는 점은?", options: ["① 다수의 의견을 항상 따라야 한다", "② 옳은 일을 위해서는 어려움을 감수해야 한다", "③ 정치는 피해야 한다", "④ 변화는 불가능하다"], answer: 1, explanation: "링컨은 옳다고 믿는 일을 위해 어려움을 감수하고 실천한 지도자입니다." }] }
+  },
+  "26": {
+    // 나폴레옹
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "나폴레옹이 다스린 나라는 어디인가요?", options: ["① 영국", "② 프랑스", "③ 독일", "④ 이탈리아"], answer: 1, explanation: "나폴레옹은 프랑스의 황제로서 유럽 대부분을 정복한 군사적 천재였습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "나폴레옹이 역사에 남긴 업적으로 적절한 것은?", options: ["① 미국 독립", "② 나폴레옹 법전 제정", "③ 산업 혁명 시작", "④ 인쇄술 발명"], answer: 1, explanation: "나폴레옹은 '나폴레옹 법전'을 만들어 근대 법률 체계의 기초를 세웠습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'황제'의 의미로 알맞은 것은?", options: ["① 작은 나라의 왕", "② 제국을 다스리는 최고 통치자", "③ 군대의 장군", "④ 종교 지도자"], answer: 1, explanation: "'황제'는 제국을 통치하는 최고 권력자를 뜻합니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "나폴레옹이 '불가능은 없다'고 말한 이유를 추론하면?", options: ["① 허풍을 좋아해서", "② 강한 의지와 자신감이 있었기 때문에", "③ 농담으로 한 말이라서", "④ 남들이 시켜서"], answer: 1, explanation: "나폴레옹은 강한 의지와 자신감으로 많은 어려움을 극복했기에 이런 말을 남겼습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "나폴레옹의 삶에서 배울 점과 경계할 점은?", options: ["① 모든 것을 정복해야 한다", "② 자신감은 중요하지만 지나친 욕심은 경계해야 한다", "③ 전쟁만이 답이다", "④ 법은 필요 없다"], answer: 1, explanation: "나폴레옹의 자신감과 추진력은 배울 점이지만, 지나친 정복욕이 결국 몰락을 가져왔습니다." }] }
+  },
+  "27": {
+    // 마틴 루터 킹
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "마틴 루터 킹이 주장한 것은 무엇인가요?", options: ["① 전쟁", "② 인종 평등과 비폭력", "③ 경제 발전", "④ 과학 연구"], answer: 1, explanation: "마틴 루터 킹 목사는 비폭력 저항으로 미국의 인종 차별 철폐를 위해 싸웠습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "'나에게는 꿈이 있습니다' 연설의 핵심 내용은?", options: ["① 부자가 되고 싶다", "② 모든 인종이 평등하게 사는 세상", "③ 유명해지고 싶다", "④ 다른 나라로 가고 싶다"], answer: 1, explanation: "이 유명한 연설에서 킹 목사는 인종에 상관없이 모두가 평등하게 사는 세상을 꿈꾸었습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'비폭력'의 의미로 알맞은 것은?", options: ["① 폭력으로 저항하는 것", "② 폭력을 쓰지 않고 평화롭게 저항하는 것", "③ 아무것도 하지 않는 것", "④ 도망가는 것"], answer: 1, explanation: "'비폭력'은 폭력을 사용하지 않고 평화로운 방법으로 목표를 이루려는 것입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "킹 목사가 비폭력을 선택한 이유를 추론하면?", options: ["① 싸울 힘이 없어서", "② 폭력은 더 큰 폭력을 낳고 평화적 방법이 효과적이라 믿어서", "③ 법으로 금지되어서", "④ 남들이 시켜서"], answer: 1, explanation: "킹 목사는 폭력은 더 큰 갈등을 낳는다고 믿었고, 평화적 방법이 진정한 변화를 가져온다고 확신했습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "킹 목사의 운동이 오늘날 우리에게 주는 교훈은?", options: ["① 차별은 당연하다", "② 평화로운 방법으로 불의에 맞서야 한다", "③ 꿈은 이룰 수 없다", "④ 남의 일에 관심 갖지 말아야 한다"], answer: 1, explanation: "킹 목사는 평화로운 방법으로 불의에 맞서 세상을 바꿀 수 있음을 보여주었습니다." }] }
+  },
+  "28": {
+    // 세르반테스 - 돈키호테
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "세르반테스가 쓴 유명한 소설은 무엇인가요?", options: ["① 로미오와 줄리엣", "② 돈키호테", "③ 레미제라블", "④ 어린 왕자"], answer: 1, explanation: "세르반테스는 세계 최초의 근대 소설로 평가받는 '돈키호테'를 썼습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "'돈키호테'의 주인공이 하는 일은?", options: ["① 왕이 되려고 한다", "② 기사가 되어 모험을 떠난다", "③ 상인이 되려고 한다", "④ 농사를 짓는다"], answer: 1, explanation: "돈키호테는 기사 소설에 빠져 스스로 기사가 되어 모험을 떠나는 인물입니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'이상주의자'의 의미로 알맞은 것은?", options: ["① 현실만 중시하는 사람", "② 이상과 꿈을 추구하는 사람", "③ 돈만 좋아하는 사람", "④ 남을 비판하는 사람"], answer: 1, explanation: "'이상주의자'는 현실보다 이상과 꿈을 소중히 여기고 추구하는 사람을 뜻합니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "돈키호테가 풍차를 거인으로 착각한 것이 의미하는 바를 추론하면?", options: ["① 눈이 나빠서", "② 이상과 현실의 차이를 보여줌", "③ 거인이 실제로 있어서", "④ 농담을 한 것"], answer: 1, explanation: "풍차를 거인으로 보는 장면은 이상과 현실 사이의 괴리를 상징적으로 보여줍니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "'돈키호테'가 오늘날에도 읽히는 이유는?", options: ["① 단순히 재미있어서", "② 꿈과 이상, 현실에 대한 깊은 생각을 담고 있어서", "③ 짧아서", "④ 그림이 많아서"], answer: 1, explanation: "돈키호테는 꿈을 꾸는 것의 가치와 현실 사이의 갈등이라는 보편적 주제를 다루기 때문입니다." }] }
+  },
+  "29": {
+    // 공자
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "공자가 강조한 가장 중요한 덕목은 무엇인가요?", options: ["① 부(富)", "② 인(仁)", "③ 권력", "④ 명예"], answer: 1, explanation: "공자는 '인(仁)', 즉 사람을 사랑하는 마음을 가장 중요한 덕목으로 강조했습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "공자의 가르침이 담긴 책은 무엇인가요?", options: ["① 성경", "② 논어", "③ 코란", "④ 법전"], answer: 1, explanation: "논어는 공자와 제자들의 대화를 기록한 책으로 유교의 핵심 경전입니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'군자'의 의미로 알맞은 것은?", options: ["① 군대의 지휘관", "② 덕이 있고 학식이 높은 이상적인 인격자", "③ 부자", "④ 왕족"], answer: 1, explanation: "'군자'는 덕을 갖추고 학문을 닦은 이상적인 인격을 가진 사람을 뜻합니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "공자가 교육을 중시한 이유를 추론하면?", options: ["① 돈을 벌기 위해", "② 배움을 통해 사람이 더 나아질 수 있다고 믿어서", "③ 할 일이 없어서", "④ 강요를 받아서"], answer: 1, explanation: "공자는 교육을 통해 누구나 더 나은 사람이 될 수 있다고 믿었습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "공자의 가르침이 현대에도 의미 있는 이유는?", options: ["① 오래되어서", "② 인간관계와 도덕에 대한 보편적 가르침이기 때문에", "③ 중국 것이라서", "④ 어려워서"], answer: 1, explanation: "공자의 가르침은 사람 사이의 관계와 도덕에 대한 보편적 지혜를 담고 있어 오늘날에도 유효합니다." }] }
+  },
+  "30": {
+    // 알렉산더 대왕
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "알렉산더 대왕이 정복한 범위는 어디까지인가요?", options: ["① 유럽만", "② 그리스에서 인도까지", "③ 아프리카만", "④ 아시아만"], answer: 1, explanation: "알렉산더 대왕은 그리스에서 출발해 페르시아를 거쳐 인도까지 정복한 역사상 가장 위대한 정복자 중 한 명입니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "알렉산더의 정복이 가져온 결과로 적절한 것은?", options: ["① 세계가 분열됨", "② 동서양 문화가 교류하는 헬레니즘 문화 탄생", "③ 전쟁이 계속됨", "④ 문화가 사라짐"], answer: 1, explanation: "알렉산더의 정복으로 그리스 문화와 동방 문화가 만나 '헬레니즘 문화'가 탄생했습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'대왕'이라는 칭호의 의미는?", options: ["① 키가 큰 왕", "② 위대한 업적을 남긴 왕", "③ 나이가 많은 왕", "④ 첫 번째 왕"], answer: 1, explanation: "'대왕'은 뛰어난 업적을 남긴 위대한 왕에게 붙이는 칭호입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "알렉산더가 짧은 생애에 큰 업적을 남긴 이유를 추론하면?", options: ["① 운이 좋아서", "② 뛰어난 군사적 능력과 강한 야망이 있어서", "③ 남들이 도와줘서", "④ 쉬운 상대만 만나서"], answer: 1, explanation: "알렉산더는 뛰어난 전략적 능력과 세계를 정복하려는 강한 야망으로 큰 업적을 이루었습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "알렉산더의 업적에서 배울 점과 생각해볼 점은?", options: ["① 정복만이 답이다", "② 큰 꿈과 실행력은 배울 점이나, 전쟁의 폐해도 생각해야 한다", "③ 전쟁은 항상 좋다", "④ 문화 교류는 나쁘다"], answer: 1, explanation: "알렉산더의 꿈과 실행력은 배울 점이지만, 정복 전쟁이 가져온 희생도 함께 생각해야 합니다." }] }
+  },
+  "31": {
+    // 클레오파트라
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "클레오파트라가 다스린 나라는 어디인가요?", options: ["① 로마", "② 이집트", "③ 그리스", "④ 페르시아"], answer: 1, explanation: "클레오파트라는 고대 이집트의 마지막 파라오(여왕)였습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "클레오파트라가 유명한 이유로 적절한 것은?", options: ["① 단순히 예뻐서", "② 뛰어난 지성과 외교력으로 이집트를 지키려 했기 때문에", "③ 전쟁을 좋아해서", "④ 피라미드를 지어서"], answer: 1, explanation: "클레오파트라는 여러 언어를 구사하고 뛰어난 외교력으로 강대국 사이에서 이집트를 지키려 했습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'파라오'의 의미로 알맞은 것은?", options: ["① 신전", "② 고대 이집트의 왕", "③ 피라미드", "④ 미라"], answer: 1, explanation: "'파라오'는 고대 이집트에서 왕을 부르던 칭호입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "클레오파트라가 로마 지도자들과 동맹을 맺은 이유를 추론하면?", options: ["① 로마를 좋아해서", "② 강대국 로마로부터 이집트를 지키기 위해", "③ 여행을 좋아해서", "④ 할 일이 없어서"], answer: 1, explanation: "클레오파트라는 강대국 로마의 위협 속에서 외교적 동맹으로 이집트를 보호하려 했습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "클레오파트라의 삶에서 배울 수 있는 점은?", options: ["① 외모만 중요하다", "② 지성과 전략적 사고가 중요하다", "③ 강한 나라에 무조건 항복해야 한다", "④ 여성은 정치를 하면 안 된다"], answer: 1, explanation: "클레오파트라는 지성과 전략으로 어려운 상황에서도 나라를 지키려 한 지도자였습니다." }] }
+  },
+  "32": {
+    // 징기스칸
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "징기스칸이 세운 나라는 무엇인가요?", options: ["① 로마 제국", "② 몽골 제국", "③ 페르시아 제국", "④ 오스만 제국"], answer: 1, explanation: "징기스칸은 몽골 부족을 통일하고 역사상 가장 큰 영토를 가진 몽골 제국을 세웠습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "징기스칸이 대제국을 건설할 수 있었던 이유는?", options: ["① 운이 좋아서", "② 뛰어난 군사 전략과 조직력 때문에", "③ 다른 나라가 약해서", "④ 혼자 싸워서"], answer: 1, explanation: "징기스칸은 뛰어난 군사 전략, 기마 전술, 그리고 효율적인 조직 체계로 대제국을 건설했습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'칸'이라는 칭호의 의미는?", options: ["① 장군", "② 몽골과 튀르크 민족의 왕이나 군주", "③ 상인", "④ 학자"], answer: 1, explanation: "'칸'은 몽골과 튀르크 민족에서 왕이나 최고 지도자를 뜻하는 칭호입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "몽골 제국이 동서양 교류에 기여한 이유를 추론하면?", options: ["① 전쟁만 했기 때문에", "② 넓은 영토를 통일하여 교역로가 안전해졌기 때문에", "③ 교류를 금지했기 때문에", "④ 바다를 지배했기 때문에"], answer: 1, explanation: "몽골 제국의 통일로 실크로드 등 교역로가 안전해져 동서양 문화와 물자 교류가 활발해졌습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "징기스칸에 대한 평가에서 고려해야 할 점은?", options: ["① 정복만 좋다", "② 대제국 건설의 업적과 정복 과정의 희생을 함께 봐야 한다", "③ 전쟁은 항상 나쁘다", "④ 몽골만 생각해야 한다"], answer: 1, explanation: "징기스칸은 대제국을 건설하고 문화 교류에 기여했지만, 정복 전쟁의 희생도 함께 평가해야 합니다." }] }
+  },
+  "33": {
+    // 찰스 다윈
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "다윈이 주장한 이론은 무엇인가요?", options: ["① 상대성 이론", "② 진화론", "③ 만유인력 법칙", "④ 지동설"], answer: 1, explanation: "다윈은 생물이 환경에 적응하며 변화한다는 '진화론'을 주장했습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "다윈이 진화론을 발전시킨 계기는?", options: ["① 책만 읽어서", "② 비글호 항해에서 다양한 생물을 관찰해서", "③ 다른 과학자에게 배워서", "④ 꿈에서 영감을 받아서"], answer: 1, explanation: "다윈은 비글호를 타고 항해하며 갈라파고스 제도 등에서 다양한 생물을 관찰하고 진화론을 발전시켰습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'자연선택'의 의미로 알맞은 것은?", options: ["① 자연을 선택하는 것", "② 환경에 적합한 개체가 살아남아 번식하는 것", "③ 자연이 사라지는 것", "④ 사람이 선택하는 것"], answer: 1, explanation: "'자연선택'은 환경에 더 잘 적응한 개체가 살아남아 자손을 남기는 진화의 핵심 원리입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "다윈의 이론이 처음에 논란이 된 이유를 추론하면?", options: ["① 증거가 없어서", "② 기존의 종교적 세계관과 충돌했기 때문에", "③ 다윈이 유명하지 않아서", "④ 너무 쉬워서"], answer: 1, explanation: "진화론은 당시 지배적이던 종교적 창조 관점과 달랐기 때문에 큰 논란을 일으켰습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "다윈의 연구 방법에서 배울 점은?", options: ["① 상상만으로 충분하다", "② 오랜 관찰과 증거 수집이 중요하다", "③ 남의 말을 그대로 믿어야 한다", "④ 빨리 결론을 내야 한다"], answer: 1, explanation: "다윈은 수십 년간 관찰하고 증거를 모아 이론을 발전시켰습니다. 과학적 탐구의 모범입니다." }] }
+  },
+  "34": {
+    // 코코 샤넬
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "코코 샤넬이 활동한 분야는 무엇인가요?", options: ["① 음악", "② 패션", "③ 과학", "④ 정치"], answer: 1, explanation: "코코 샤넬은 20세기를 대표하는 패션 디자이너로, 여성 패션에 혁명을 일으켰습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "샤넬이 여성 패션에 가져온 변화는?", options: ["① 더 화려하게 만들었다", "② 편안하고 실용적인 옷을 만들었다", "③ 남성 옷만 만들었다", "④ 전통 의상만 고집했다"], answer: 1, explanation: "샤넬은 불편한 코르셋을 벗어던지고 여성들이 편안하게 입을 수 있는 실용적인 옷을 만들었습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'혁신'의 의미로 알맞은 것은?", options: ["① 옛것을 그대로 유지하는 것", "② 새롭게 바꾸어 발전시키는 것", "③ 파괴하는 것", "④ 복사하는 것"], answer: 1, explanation: "'혁신'은 기존의 것을 새롭게 바꾸어 더 나은 방향으로 발전시키는 것을 뜻합니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "샤넬이 여성복을 바꾸려 한 이유를 추론하면?", options: ["① 남들과 다르고 싶어서", "② 여성들이 더 자유롭고 활동적이길 바랐기 때문에", "③ 만들기 쉬워서", "④ 돈을 벌기 위해서만"], answer: 1, explanation: "샤넬은 여성들이 불편한 옷에서 벗어나 자유롭게 활동하길 원했습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "샤넬의 성공에서 배울 수 있는 점은?", options: ["① 유행을 따라야 한다", "② 자신만의 철학으로 새로운 길을 개척할 수 있다", "③ 전통만 고수해야 한다", "④ 남의 것을 모방해야 한다"], answer: 1, explanation: "샤넬은 자신만의 철학으로 기존 관념을 깨고 새로운 패션을 창조했습니다." }] }
+  },
+  "35": {
+    // 빌 게이츠
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "빌 게이츠가 창업한 회사는 무엇인가요?", options: ["① 애플", "② 마이크로소프트", "③ 구글", "④ 아마존"], answer: 1, explanation: "빌 게이츠는 마이크로소프트를 창업하여 개인용 컴퓨터 혁명을 이끌었습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "빌 게이츠가 세계에 끼친 영향으로 적절한 것은?", options: ["① 자동차 발명", "② 개인용 컴퓨터의 대중화", "③ 전화 발명", "④ 비행기 발명"], answer: 1, explanation: "빌 게이츠의 마이크로소프트는 윈도우 운영체제로 컴퓨터를 누구나 쉽게 사용할 수 있게 했습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'소프트웨어'의 의미로 알맞은 것은?", options: ["① 컴퓨터 기계 부품", "② 컴퓨터를 작동시키는 프로그램", "③ 키보드", "④ 모니터"], answer: 1, explanation: "'소프트웨어'는 컴퓨터를 작동시키고 특정 작업을 수행하게 하는 프로그램입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "빌 게이츠가 대학을 중퇴하고 창업한 이유를 추론하면?", options: ["① 공부가 싫어서", "② 컴퓨터 산업의 기회를 놓치고 싶지 않아서", "③ 돈이 없어서", "④ 강요를 받아서"], answer: 1, explanation: "빌 게이츠는 컴퓨터 산업이 빠르게 발전하는 것을 보고 기회를 잡기 위해 창업을 선택했습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "빌 게이츠의 현재 활동에서 배울 점은?", options: ["① 돈만 벌면 된다", "② 성공 후 사회에 환원하는 것의 가치", "③ 은퇴 후에는 쉬어야 한다", "④ 자선은 필요 없다"], answer: 1, explanation: "빌 게이츠는 재단을 통해 세계 건강, 교육 문제 해결에 기여하며 사회 환원의 모범을 보여줍니다." }] }
+  },
+  "36": {
+    // 마이클 조던
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "마이클 조던이 활약한 스포츠 종목은 무엇인가요?", options: ["① 축구", "② 농구", "③ 야구", "④ 테니스"], answer: 1, explanation: "마이클 조던은 '농구 황제'로 불리며 NBA 역사상 가장 위대한 선수로 평가받습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "마이클 조던이 위대한 선수가 된 비결은?", options: ["① 타고난 재능만으로", "② 끊임없는 노력과 승부욕", "③ 운이 좋아서", "④ 쉬운 상대만 만나서"], answer: 1, explanation: "조던은 타고난 재능에 끊임없는 노력과 강한 승부욕을 더해 최고가 되었습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'승부욕'의 의미로 알맞은 것은?", options: ["① 지고 싶은 마음", "② 이기고자 하는 강한 의지", "③ 포기하는 마음", "④ 무관심"], answer: 1, explanation: "'승부욕'은 경쟁에서 이기려는 강한 의지와 욕구를 뜻합니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "조던이 '실패'에 대해 말한 것에서 알 수 있는 점을 추론하면?", options: ["① 실패는 피해야 한다", "② 실패를 두려워하지 않고 도전해야 성공한다", "③ 성공만 중요하다", "④ 노력은 필요 없다"], answer: 1, explanation: "조던은 수많은 실패가 성공의 밑거름이 되었다고 말하며 도전의 중요성을 강조했습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "마이클 조던의 삶에서 배울 수 있는 점은?", options: ["① 재능만 있으면 된다", "② 노력과 끈기가 재능을 빛나게 한다", "③ 운동만 하면 된다", "④ 실패하면 포기해야 한다"], answer: 1, explanation: "조던은 재능에 끊임없는 노력과 실패를 극복하는 끈기를 더해 전설이 되었습니다." }] }
+  },
+  "37": {
+    // 아서왕
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "아서왕 전설에서 유명한 검의 이름은 무엇인가요?", options: ["① 듀란달", "② 엑스칼리버", "③ 커세어", "④ 그람"], answer: 1, explanation: "엑스칼리버는 아서왕 전설에 나오는 신비로운 명검입니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "아서왕의 원탁의 기사단이 의미하는 바는?", options: ["① 왕이 가장 높다", "② 모든 기사가 평등하다", "③ 원형 탁자가 좋다", "④ 기사가 적다"], answer: 1, explanation: "원탁은 상석이 없어 모든 기사가 평등함을 상징합니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'전설'의 의미로 알맞은 것은?", options: ["① 실제 역사 기록", "② 오래전부터 전해오는 이야기", "③ 과학적 사실", "④ 최근 뉴스"], answer: 1, explanation: "'전설'은 오래전부터 입에서 입으로 전해 내려오는 이야기입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "아서왕 이야기가 오랫동안 사랑받는 이유를 추론하면?", options: ["① 재미없어서", "② 정의, 용기, 충성 등 보편적 가치를 담고 있어서", "③ 짧아서", "④ 실화라서"], answer: 1, explanation: "아서왕 전설은 정의, 용기, 충성, 우정 등 시대를 초월한 가치를 담고 있습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "아서왕 전설에서 배울 수 있는 리더십의 덕목은?", options: ["① 독재", "② 정의롭고 부하들을 평등하게 대하는 것", "③ 혼자 모든 것을 하는 것", "④ 힘만 강하면 된다"], answer: 1, explanation: "아서왕은 정의를 추구하고 기사들을 평등하게 대하는 이상적인 지도자로 그려집니다." }] }
+  },
+  "38": {
+    // 투탕카멘
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "투탕카멘은 어느 나라의 왕이었나요?", options: ["① 그리스", "② 이집트", "③ 로마", "④ 페르시아"], answer: 1, explanation: "투탕카멘은 고대 이집트의 파라오로, 어린 나이에 왕위에 올랐습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "투탕카멘이 유명해진 이유는?", options: ["① 가장 오래 통치해서", "② 무덤이 도굴되지 않고 발견되어서", "③ 가장 큰 피라미드를 지어서", "④ 전쟁에서 승리해서"], answer: 1, explanation: "투탕카멘의 무덤이 거의 온전한 상태로 발견되어 고대 이집트 문화를 알 수 있게 되었습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'미라'의 의미로 알맞은 것은?", options: ["① 살아있는 사람", "② 방부 처리된 시신", "③ 동상", "④ 그림"], answer: 1, explanation: "'미라'는 썩지 않도록 방부 처리된 고대의 시신입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "고대 이집트인들이 미라를 만든 이유를 추론하면?", options: ["① 무서워서", "② 사후 세계에서의 부활을 믿었기 때문에", "③ 습관이라서", "④ 법으로 정해져서"], answer: 1, explanation: "고대 이집트인들은 사후 세계에서 부활하려면 몸이 보존되어야 한다고 믿었습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "투탕카멘 무덤 발견의 의의는?", options: ["① 금을 얻었다", "② 고대 이집트 문화와 역사를 이해하는 데 큰 도움이 되었다", "③ 관광 수입만 얻었다", "④ 별 의미 없다"], answer: 1, explanation: "투탕카멘 무덤의 발견은 고대 이집트의 문화, 종교, 생활을 이해하는 귀중한 자료를 제공했습니다." }] }
+  },
+  "39": {
+    // 갈릴레오
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "갈릴레오가 주장한 이론은 무엇인가요?", options: ["① 천동설", "② 지동설", "③ 진화론", "④ 상대성 이론"], answer: 1, explanation: "갈릴레오는 지구가 태양 주위를 돈다는 '지동설'을 관측으로 증명하려 했습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "갈릴레오가 천체 관측에 사용한 도구는?", options: ["① 현미경", "② 망원경", "③ 나침반", "④ 시계"], answer: 1, explanation: "갈릴레오는 망원경을 개량하여 목성의 위성 등을 관측하고 지동설의 증거를 찾았습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'지동설'의 의미로 알맞은 것은?", options: ["① 지구가 우주의 중심이라는 설", "② 지구가 태양 주위를 돈다는 설", "③ 달이 지구 주위를 돈다는 설", "④ 태양이 지구 주위를 돈다는 설"], answer: 1, explanation: "'지동설'은 지구를 포함한 행성들이 태양 주위를 돈다는 이론입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "갈릴레오가 종교 재판을 받은 이유를 추론하면?", options: ["① 범죄를 저질러서", "② 지동설이 당시 교회의 가르침과 달랐기 때문에", "③ 망원경을 발명해서", "④ 왕을 비판해서"], answer: 1, explanation: "지동설은 당시 교회가 믿던 천동설과 충돌하여 갈릴레오는 재판을 받았습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "갈릴레오의 삶에서 배울 수 있는 점은?", options: ["① 권위에 무조건 따라야 한다", "② 진실을 추구하고 증거에 기반해야 한다", "③ 관찰은 필요 없다", "④ 기존 생각을 바꾸면 안 된다"], answer: 1, explanation: "갈릴레오는 관찰과 증거를 바탕으로 진실을 추구한 과학자로, 과학 정신의 모범입니다." }] }
+  },
+  "40": {
+    // 니콜라 테슬라
+    literal: { title: "보완학습 | 핵심 이해력", problems: [{ q: "테슬라가 발명하고 발전시킨 전기 시스템은?", options: ["① 직류(DC)", "② 교류(AC)", "③ 배터리", "④ 태양광"], answer: 1, explanation: "테슬라는 교류(AC) 전기 시스템을 발전시켜 현대 전력 시스템의 기초를 만들었습니다." }] },
+    structural: { title: "보완학습 | 구조 파악력", problems: [{ q: "테슬라와 에디슨의 '전류 전쟁'에서 무엇이 쟁점이었나요?", options: ["① 누가 더 부자인가", "② 직류와 교류 중 어느 것이 더 효율적인가", "③ 누가 더 유명한가", "④ 어느 나라 출신인가"], answer: 1, explanation: "테슬라의 교류(AC)와 에디슨의 직류(DC) 중 어느 시스템이 더 효율적인지 경쟁했습니다." }] },
+    lexical: { title: "보완학습 | 어휘 맥락력", problems: [{ q: "'교류(AC)'의 특징으로 알맞은 것은?", options: ["① 전류가 한 방향으로만 흐른다", "② 전류의 방향이 주기적으로 바뀐다", "③ 전기를 저장한다", "④ 빛을 내는 것"], answer: 1, explanation: "'교류'는 전류의 방향이 주기적으로 바뀌는 전기로, 먼 거리 전송에 효율적입니다." }] },
+    inferential: { title: "보완학습 | 추론·통합력", problems: [{ q: "테슬라가 생전에 제대로 인정받지 못한 이유를 추론하면?", options: ["① 발명이 별로 없어서", "② 사업 수완이 부족하고 시대를 앞서갔기 때문에", "③ 유명했기 때문에", "④ 발명을 숨겨서"], answer: 1, explanation: "테슬라는 뛰어난 발명가였지만 사업가적 능력이 부족했고 그의 아이디어가 시대를 너무 앞서갔습니다." }] },
+    critical: { title: "보완학습 | 비판·적용력", problems: [{ q: "테슬라의 삶에서 배울 점과 생각해볼 점은?", options: ["① 돈만 중요하다", "② 순수한 과학적 탐구의 가치와 현실적 어려움", "③ 발명은 필요 없다", "④ 경쟁에서 무조건 이겨야 한다"], answer: 1, explanation: "테슬라는 순수한 과학 탐구의 가치를 보여주지만, 현실적 지원의 중요성도 생각하게 합니다." }] }
+  }
+};
+
+// 보완학습 섹션 생성 함수
+function generateRemedialSection(unit) {
+  const data = REMEDIAL_DATA[unit];
+  if (!data) return null;
+
+  return `
+  // ========== 보완학습(Remedial) 섹션 ==========
+  const REMEDIAL_BANK = {
+    literal: ${JSON.stringify(data.literal, null, 4)},
+    structural: ${JSON.stringify(data.structural, null, 4)},
+    lexical: ${JSON.stringify(data.lexical, null, 4)},
+    inferential: ${JSON.stringify(data.inferential, null, 4)},
+    critical: ${JSON.stringify(data.critical, null, 4)}
+  };
+
+  function openRemedial() {
+    const section = document.getElementById('remedial-section');
+    section.style.display = 'block';
+    section.innerHTML = '';
+    const indicators = ['literal','structural','lexical','inferential','critical'];
+    indicators.forEach((key, idx) => {
+      const cat = REMEDIAL_BANK[key];
+      const prob = cat.problems[0];
+      let optionsHtml = prob.options.map((opt, oi) =>
+        \`<label class="remedial-option"><input type="radio" name="remedial_\${idx}" value="\${oi}"> \${opt}</label>\`
+      ).join('');
+      section.innerHTML += \`
+        <div class="remedial-category" id="remedial-cat-\${idx}">
+          <div class="remedial-title">\${cat.title}</div>
+          <p class="remedial-question">\${prob.q}</p>
+          <div class="remedial-options">\${optionsHtml}</div>
+          <div class="remedial-feedback" id="remedial-feedback-\${idx}"></div>
+        </div>\`;
+    });
+    section.innerHTML += \`<button class="remedial-submit-btn" onclick="gradeRemedial()">제출하기</button>
+                          <button class="remedial-reset-btn" onclick="resetRemedial()">다시 풀기</button>\`;
+  }
+
+  function gradeRemedial() {
+    const indicators = ['literal','structural','lexical','inferential','critical'];
+    indicators.forEach((key, idx) => {
+      const cat = REMEDIAL_BANK[key];
+      const prob = cat.problems[0];
+      const selected = document.querySelector(\`input[name="remedial_\${idx}"]:checked\`);
+      const feedbackDiv = document.getElementById(\`remedial-feedback-\${idx}\`);
+      if (!selected) {
+        feedbackDiv.textContent = '답을 선택해주세요.';
+        feedbackDiv.className = 'remedial-feedback incorrect';
+        return;
+      }
+      if (parseInt(selected.value) === prob.answer) {
+        feedbackDiv.innerHTML = '정답입니다! ✅<br><b>해설:</b> ' + prob.explanation;
+        feedbackDiv.className = 'remedial-feedback correct';
+      } else {
+        feedbackDiv.innerHTML = '오답입니다. ❌<br><b>해설:</b> ' + prob.explanation;
+        feedbackDiv.className = 'remedial-feedback incorrect';
+      }
+    });
+  }
+
+  function resetRemedial() {
+    const indicators = ['literal','structural','lexical','inferential','critical'];
+    indicators.forEach((key, idx) => {
+      const radios = document.querySelectorAll(\`input[name="remedial_\${idx}"]\`);
+      radios.forEach(r => r.checked = false);
+      const feedbackDiv = document.getElementById(\`remedial-feedback-\${idx}\`);
+      feedbackDiv.textContent = '';
+      feedbackDiv.className = 'remedial-feedback';
+    });
+  }
+  // ========== 보완학습 끝 ==========`;
+}
+
+// 파일 처리
+let successCount = 0;
+let failCount = 0;
+
+for (let i = 21; i <= 40; i++) {
+  const unit = String(i).padStart(2, '0');
+  const filePath = path.join(DIR, `on_people2_${unit}.html`);
+
+  if (!fs.existsSync(filePath)) {
+    console.log(`⚠️ 파일 없음: on_people2_${unit}.html`);
+    failCount++;
+    continue;
+  }
+
+  let html = fs.readFileSync(filePath, 'utf8');
+
+  // 모든 REMEDIAL_BANK 관련 코드 완전 제거 (여러 패턴)
+  // 1. 새로운 형식의 보완학습 섹션 제거
+  html = html.replace(/\/\/ =+ 보완학습\(Remedial\) 섹션 =+[\s\S]*?\/\/ =+ 보완학습 끝 =+/g, '');
+
+  // 2. 기존 REMEDIAL_BANK 변수 및 관련 함수 제거 (const REMEDIAL_BANK부터 resetRemedial 함수 끝까지)
+  html = html.replace(/const REMEDIAL_BANK = \{[\s\S]*?function resetRemedial\(\) \{[\s\S]*?\n  \}/g, '');
+
+  // 3. 남아있는 개별 함수들 제거
+  html = html.replace(/function openRemedial\(\) \{[\s\S]*?\n  \}/g, '');
+  html = html.replace(/function gradeRemedial\(\) \{[\s\S]*?\n  \}/g, '');
+  html = html.replace(/function resetRemedial\(\) \{[\s\S]*?\n  \}/g, '');
+
+  // 보완학습 버튼 수정 (display:none 제거)
+  html = html.replace(
+    /<button class="report-btn-remedial" onclick="openRemedial && openRemedial\(\)" style="display:none;">/g,
+    '<button class="report-btn-remedial" onclick="openRemedial()">'
+  );
+  html = html.replace(
+    /<button class="report-btn-remedial" onclick="openRemedial && openRemedial\(\)">/g,
+    '<button class="report-btn-remedial" onclick="openRemedial()">'
+  );
+
+  // renderFeedback 함수 찾기
+  const renderFeedbackMatch = html.match(/function\s+renderFeedback\s*\([^)]*\)\s*\{/);
+  if (!renderFeedbackMatch) {
+    console.log(`⚠️ renderFeedback 함수를 찾을 수 없음: on_people2_${unit}.html`);
+    failCount++;
+    continue;
+  }
+
+  // renderFeedback 함수의 끝 찾기
+  const startIdx = html.indexOf(renderFeedbackMatch[0]);
+  let braceCount = 0;
+  let endIdx = startIdx;
+  let foundStart = false;
+
+  for (let j = startIdx; j < html.length; j++) {
+    if (html[j] === '{') {
+      braceCount++;
+      foundStart = true;
+    } else if (html[j] === '}') {
+      braceCount--;
+      if (foundStart && braceCount === 0) {
+        endIdx = j + 1;
+        break;
+      }
+    }
+  }
+
+  // 보완학습 섹션 삽입
+  const remedialSection = generateRemedialSection(unit);
+  if (!remedialSection) {
+    console.log(`⚠️ 보완학습 데이터 없음: on_people2_${unit}.html`);
+    failCount++;
+    continue;
+  }
+
+  html = html.slice(0, endIdx) + '\n' + remedialSection + html.slice(endIdx);
+
+  fs.writeFileSync(filePath, html, 'utf8');
+  console.log(`✅ 보완학습 추가 완료: on_people2_${unit}.html`);
+  successCount++;
+}
+
+console.log(`\n🎉 온세계인물 21~40 보완학습 수정 완료!`);
+console.log(`   성공: ${successCount}개, 실패: ${failCount}개`);

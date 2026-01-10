@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단단국어 모의고사</title>
+    <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.6/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* 메인 배경 */
+        .main-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 60px;
+            overflow: hidden;
+        }
+
+        /* 배경 영상 */
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            background-color: #000;
+        }
+
+        /* 시작 버튼 */
+        .start-btn {
+            padding: 18px 60px;
+            background: linear-gradient(135deg, rgba(30, 60, 114, 0.85), rgba(42, 82, 152, 0.85));
+            border: 2px solid rgba(100, 149, 237, 0.6);
+            border-radius: 50px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+            box-shadow: 0 4px 15px rgba(30, 60, 114, 0.4);
+        }
+
+        .start-btn:hover {
+            background: linear-gradient(135deg, rgba(42, 82, 152, 0.95), rgba(65, 105, 225, 0.95));
+            border-color: rgba(135, 180, 255, 0.8);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(30, 60, 114, 0.5);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 모달 오버레이 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        /* 모달 컨테이너 */
+        .modal-container {
+            background: linear-gradient(145deg, #0a1628 0%, #1a2d4a 50%, #0d1f35 100%);
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(30, 60, 114, 0.3);
+            border: 1px solid rgba(100, 149, 237, 0.3);
+            width: 100%;
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .modal-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* 닫기 버튼 */
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        /* 로고 섹션 */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* 탭 버튼 */
+        .tab-buttons {
+            display: flex;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4169E1, #1E90FF);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(65, 105, 225, 0.4);
+        }
+
+        /* 폼 섹션 */
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 6px;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #4169E1;
+            box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .input-group select option {
+            background: #1a2d4a;
+            color: #fff;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #4169E1, #1E90FF);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(65, 105, 225, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(65, 105, 225, 0.5);
+            background: linear-gradient(135deg, #5179F1, #2E9FFF);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            color: #ff7b7b;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            color: #5DFFB4;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* 로딩 스피너 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #4169E1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 성공 팝업 */
+        .success-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .success-popup-overlay.show {
+            display: flex;
+        }
+
+        .success-popup {
+            background: linear-gradient(145deg, #0a1628 0%, #1a2d4a 50%, #0d1f35 100%);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            animation: popupBounce 0.4s ease;
+            max-width: 320px;
+            width: 90%;
+            border: 1px solid rgba(100, 149, 237, 0.3);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(30, 60, 114, 0.3);
+        }
+
+        @keyframes popupBounce {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            70% {
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .success-popup-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4169E1, #1E90FF);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            box-shadow: 0 8px 25px rgba(65, 105, 225, 0.4);
+        }
+
+        .success-popup-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .success-popup-message {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .success-popup-btn {
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #4169E1, #1E90FF);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(65, 105, 225, 0.4);
+        }
+
+        .success-popup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(65, 105, 225, 0.5);
+            background: linear-gradient(135deg, #5179F1, #2E9FFF);
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 480px) {
+            .main-container {
+                padding-bottom: 40px;
+            }
+
+            .start-btn {
+                padding: 16px 40px;
+                font-size: 18px;
+            }
+
+            .modal-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .logo-title {
+                font-size: 20px;
+            }
+
+            .input-group input,
+            .input-group select {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+
+            .submit-btn {
+                padding: 14px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 메인 화면 -->
+    <div class="main-container">
+        <video class="video-background" autoplay muted loop playsinline>
+            <source src="/images/aidigital_exam_main.mp4" type="video/mp4">
+        </video>
+        <button class="start-btn" onclick="openModal()">지금바로 시작하기</button>
+    </div>
+
+    <!-- 로그인/회원가입 모달 -->
+    <div class="modal-overlay" id="authModal" onclick="closeModalOnOverlay(event)">
+        <div class="modal-container">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+
+            <div class="logo-section">
+                <div class="logo-title">단단국어 AI 디지털 모의고사</div>
+            </div>
+
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('login')">로그인</button>
+                <button class="tab-btn" onclick="switchTab('register')">회원가입</button>
+            </div>
+
+            <!-- 로그인 폼 -->
+            <div class="form-section active" id="loginForm">
+                <div class="input-group">
+                    <label>학년</label>
+                    <select id="loginGrade">
+                        <option value="">학년 선택</option>
+                        <option value="초4">초4</option>
+                        <option value="초5">초5</option>
+                        <option value="초6">초6</option>
+                        <option value="중1">중1</option>
+                        <option value="중2">중2</option>
+                        <option value="중3">중3</option>
+                        <option value="고1">고1</option>
+                        <option value="고2">고2</option>
+                        <option value="고3">고3</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>이름</label>
+                    <input type="text" id="loginName" placeholder="이름 입력">
+                </div>
+                <div class="input-group">
+                    <label>비밀번호 <span style="font-weight: 400; color: #888;">(가입 시 등록한 전화번호를 입력하세요)</span></label>
+                    <input type="tel" id="loginPassword" placeholder="010-0000-0000">
+                </div>
+                <button class="submit-btn" onclick="handleLogin()">로그인</button>
+                <div class="error-message" id="loginError"></div>
+            </div>
+
+            <!-- 회원가입 폼 -->
+            <div class="form-section" id="registerForm">
+                <div class="input-group">
+                    <label>학교</label>
+                    <input type="text" id="regSchool" placeholder="예: ○○고등학교">
+                </div>
+                <div class="input-group">
+                    <label>학년</label>
+                    <select id="regGrade">
+                        <option value="">학년 선택</option>
+                        <option value="초4">초4</option>
+                        <option value="초5">초5</option>
+                        <option value="초6">초6</option>
+                        <option value="중1">중1</option>
+                        <option value="중2">중2</option>
+                        <option value="중3">중3</option>
+                        <option value="고1">고1</option>
+                        <option value="고2">고2</option>
+                        <option value="고3">고3</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>이름</label>
+                    <input type="text" id="regName" placeholder="이름 입력">
+                </div>
+                <div class="input-group">
+                    <label>전화번호 <span style="font-weight: 400; color: #ff6b6b;">(비밀번호로 사용됩니다! 정확히 입력해주세요)</span></label>
+                    <input type="tel" id="regPhone" placeholder="010-0000-0000">
+                </div>
+                <div class="input-group">
+                    <label>전화번호 확인</label>
+                    <input type="tel" id="regPhoneConfirm" placeholder="전화번호 다시 입력">
+                </div>
+                <button class="submit-btn" onclick="handleRegister()">회원가입</button>
+                <div class="error-message" id="registerError"></div>
+                <div class="success-message" id="registerSuccess"></div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px; color: #666;">처리 중...</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 회원가입 성공 팝업 -->
+    <div class="success-popup-overlay" id="successPopup">
+        <div class="success-popup">
+            <div class="success-popup-icon">✓</div>
+            <div class="success-popup-title">회원가입 완료!</div>
+            <div class="success-popup-message">회원가입이 완료되었습니다.<br>로그인하여 모의고사를 시작하세요.</div>
+            <button class="success-popup-btn" onclick="closeSuccessPopup()">로그인하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 모달 열기
+        function openModal() {
+            document.getElementById('authModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('authModal').classList.remove('show');
+            document.body.style.overflow = '';
+            // 에러 메시지 초기화
+            document.querySelectorAll('.error-message, .success-message').forEach(msg => {
+                msg.classList.remove('show');
+                msg.textContent = '';
+            });
+        }
+
+        // 오버레이 클릭 시 모달 닫기
+        function closeModalOnOverlay(event) {
+            if (event.target === event.currentTarget) {
+                closeModal();
+            }
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // 회원가입 성공 팝업 관련 변수
+        let registeredUserInfo = null;
+
+        // 성공 팝업 표시
+        function showSuccessPopup(grade, name, phone) {
+            registeredUserInfo = { grade, name, phone };
+            document.getElementById('successPopup').classList.add('show');
+        }
+
+        // 성공 팝업 닫기 및 로그인 탭으로 이동
+        function closeSuccessPopup() {
+            document.getElementById('successPopup').classList.remove('show');
+
+            if (registeredUserInfo) {
+                switchTab('login');
+                document.getElementById('loginGrade').value = registeredUserInfo.grade;
+                document.getElementById('loginName').value = registeredUserInfo.name;
+                document.getElementById('loginPassword').value = registeredUserInfo.phone;
+                registeredUserInfo = null;
+            }
+        }
+
+        // 탭 전환
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(form => {
+                form.classList.remove('active');
+                form.style.display = 'none';
+            });
+
+            if (tab === 'login') {
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+                document.getElementById('loginForm').style.display = 'block';
+            } else {
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+                document.getElementById('registerForm').style.display = 'block';
+            }
+
+            // 에러 메시지 초기화
+            document.querySelectorAll('.error-message, .success-message').forEach(msg => {
+                msg.classList.remove('show');
+                msg.textContent = '';
+            });
+        }
+
+        // 전화번호 포맷팅
+        function formatPhone(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value.length > 3 && value.length <= 7) {
+                value = value.slice(0, 3) + '-' + value.slice(3);
+            } else if (value.length > 7) {
+                value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+            }
+            input.value = value;
+        }
+
+        // 전화번호 입력 이벤트
+        document.getElementById('loginPassword').addEventListener('input', function() { formatPhone(this); });
+        document.getElementById('regPhone').addEventListener('input', function() { formatPhone(this); });
+        document.getElementById('regPhoneConfirm').addEventListener('input', function() { formatPhone(this); });
+
+        // 로딩 표시
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.querySelectorAll('.form-section').forEach(form => form.style.display = 'none');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.querySelectorAll('.form-section').forEach(form => {
+                if (form.classList.contains('active')) {
+                    form.style.display = 'block';
+                }
+            });
+        }
+
+        // 로그인 처리
+        async function handleLogin() {
+            const grade = document.getElementById('loginGrade').value;
+            const name = document.getElementById('loginName').value.trim();
+            const phone = document.getElementById('loginPassword').value.trim();
+            const errorEl = document.getElementById('loginError');
+
+            // 유효성 검사
+            if (!grade) {
+                errorEl.textContent = '학년을 선택해주세요.';
+                errorEl.classList.add('show');
+                return;
+            }
+            if (!name) {
+                errorEl.textContent = '이름을 입력해주세요.';
+                errorEl.classList.add('show');
+                return;
+            }
+            if (!phone) {
+                errorEl.textContent = '비밀번호(전화번호)를 입력해주세요.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            errorEl.classList.remove('show');
+            showLoading();
+
+            try {
+                const response = await fetch('/api/mock-exam/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ grade, name, phone })
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    // 로그인 성공 - 세션 저장 후 학습실로 이동
+                    localStorage.setItem('mockExamUser', JSON.stringify(data.user));
+                    window.location.href = '/mock_exam_dashboard.html';
+                } else {
+                    hideLoading();
+                    errorEl.textContent = data.error || '로그인에 실패했습니다.';
+                    errorEl.classList.add('show');
+                }
+            } catch (err) {
+                hideLoading();
+                errorEl.textContent = '서버 오류가 발생했습니다.';
+                errorEl.classList.add('show');
+            }
+        }
+
+        // 회원가입 처리
+        async function handleRegister() {
+            const name = document.getElementById('regName').value.trim();
+            const school = document.getElementById('regSchool').value.trim();
+            const grade = document.getElementById('regGrade').value;
+            const phone = document.getElementById('regPhone').value.trim();
+            const phoneConfirm = document.getElementById('regPhoneConfirm').value.trim();
+
+            const errorEl = document.getElementById('registerError');
+            const successEl = document.getElementById('registerSuccess');
+
+            errorEl.classList.remove('show');
+            successEl.classList.remove('show');
+
+            // 유효성 검사
+            if (!name) {
+                errorEl.textContent = '이름을 입력해주세요.';
+                errorEl.classList.add('show');
+                return;
+            }
+            if (!school) {
+                errorEl.textContent = '학교를 입력해주세요.';
+                errorEl.classList.add('show');
+                return;
+            }
+            if (!grade) {
+                errorEl.textContent = '학년을 선택해주세요.';
+                errorEl.classList.add('show');
+                return;
+            }
+            if (!phone) {
+                errorEl.textContent = '전화번호를 입력해주세요.';
+                errorEl.classList.add('show');
+                return;
+            }
+            if (phone !== phoneConfirm) {
+                errorEl.textContent = '전화번호가 일치하지 않습니다.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/mock-exam/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, school, grade, phone })
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    hideLoading();
+
+                    // 폼 초기화
+                    document.getElementById('regName').value = '';
+                    document.getElementById('regSchool').value = '';
+                    document.getElementById('regGrade').value = '';
+                    document.getElementById('regPhone').value = '';
+                    document.getElementById('regPhoneConfirm').value = '';
+
+                    // 성공 팝업 표시
+                    showSuccessPopup(grade, name, phone);
+                } else {
+                    hideLoading();
+                    errorEl.textContent = data.error || '회원가입에 실패했습니다.';
+                    errorEl.classList.add('show');
+                }
+            } catch (err) {
+                hideLoading();
+                errorEl.textContent = '서버 오류가 발생했습니다.';
+                errorEl.classList.add('show');
+            }
+        }
+
+        // 엔터 키 처리
+        document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+        document.getElementById('regPhoneConfirm').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleRegister();
+        });
+
+        // 페이지 로드 시 이미 로그인된 경우 학습실로 이동
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = localStorage.getItem('mockExamUser');
+            if (user) {
+                window.location.href = '/mock_exam_dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

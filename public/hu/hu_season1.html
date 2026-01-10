@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📚 허생전</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/hu/hu01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #8b7355 0%, #5d4e37 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #8b7355;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #8b7355;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #8b7355 0%, #5d4e37 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    📚 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📚 허생전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          장사로 세상을 비판한 선비
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 가난한 선비 허생의 결심과 변승업과의 만남">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">📖</span>
+          가난한 선비 허생의 결심과 변승업과의 만남
+        </h2>
+        <div class="story-text">조선 후기, 서울 변두리에는 글만 읽으며 세상일에 무관심한 가난한 선비 허생이 살고 있었다. 허생은 평생 책만 읽었고, 그의 아내는 생계를 위해 허리띠를 졸라매며 고생했다. 어느 날 아내는 참다못해 허생에게 "이제는 남들도 하는 장사를 하든지, 밭을 갈든지 하라"며 눈물을 흘린다.
+
+허생은 그 말을 조용히 듣고 나서, 평생 한 번도 실천해본 적 없는 '세상일'을 시험해보기로 결심한다. 그는 붓을 꺾지 않으면서도 현실을 직접 겪어보고자 마음먹으며, 곧장 남대문 시장으로 나가 당시 큰 부자였던 변승업을 찾아간다.
+
+변승업은 허생이 빌려달라는 거액의 은을 듣고 어이없어하지만, 허생의 비범한 풍모와 눈빛에 묘한 신뢰를 느낀다. 결국 그는 1만 냥이라는 큰돈을 빌려준다. 허생은 돈을 받자마자 변승업에게 고개를 숙이고 조용히 자리를 떠난다.
+
+주변 사람들은 허생이 무모한 짓을 한다며 비웃었지만, 아무도 그의 진짜 능력을 알지 못했다. 이렇게 허생은 인생의 대전환이 되는 첫걸음을 내딛는다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 허생의 첫 장사: 전국에서 말총을 사들이다">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">🐴</span>
+          허생의 첫 장사: 전국에서 말총을 사들이다
+        </h2>
+        <div class="story-text">허생이 첫 장사로 선택한 품목은 뜻밖에도 말총이었다. 당시 말총은 전국적으로 널리 쓰이는 생활 자재였지만 가격이 저렴해 큰돈을 벌기 어렵다고 여겨졌다. 하지만 허생은 말총이 특정 산업과 계절에 따라 폭등할 잠재력을 읽고 있었다.
+
+그는 변승업에게 빌린 1만 냥으로 전국 각지의 말총을 시세보다 조금 비싼 값으로 모두 사들였다. 상인들은 말총이 갑자기 귀해지자 서로 돈을 쥐고 허생을 찾아다녔지만 말총은 이미 시장에서 완전히 사라진 뒤였다.
+
+그로 인해 말총 가격은 단기간에 폭등했고, 허생은 시기를 조율해 가격이 가장 높을 때 말총을 다시 시장에 내놓아 엄청난 이익을 남겼다.
+
+사람들은 허생이 천재적인 시장 감각을 가진 인물임을 뒤늦게 깨닫고 놀라워했다. 허생은 이 장사에서 번 거액으로 더 큰 장사를 준비하기 시작하며, 단순한 부를 얻는 것이 목적이 아니라 조선 사회의 모순을 시험해보려는 계획을 품게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 두 번째 장사: 빈민 구제와 시장 가격 붕괴 전략">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">💎</span>
+          두 번째 장사: 빈민 구제와 시장 가격 붕괴 전략
+        </h2>
+        <div class="story-text">첫 장사에서 막대한 이득을 얻은 허생은 이번에는 장사를 통해 사회 문제를 드러내고자 한다. 그는 이번에는 물품을 독점하는 것이 아니라, 고가의 사치품들을 대량으로 사들여 시장을 흔드는 방식을 택했다.
+
+허생은 사치품을 모두 매입한 후 다시 털어놓아 가격을 폭락시키고, 이를 통해 사치에 빠진 양반 사회의 허영과 경제적 취약성을 드러내려 했다. 실제로 사치품의 가격이 폭락하자 양반들은 크게 당황했고, 상인들은 눈앞의 위기에서 벗어나기 위해 가격을 정비하느라 혼란에 빠졌다.
+
+허생은 이때 얻게 된 이익을 빈민들에게 나누어주고, 세상의 불평등을 자신의 방식으로 조정하려 했다. 그는 장사가 단순한 부를 추구하는 것이 아니라, 사회의 구조적 모순을 시험하는 하나의 수단임을 스스로 증명하고 있었다.
+
+사람들은 허생의 행동에서 새로운 시대의 지혜를 보았고, 그가 단순한 장사꾼이 아니라 깊은 뜻을 지닌 선비임을 알아보기 시작했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 도적떼를 회유하여 은혜를 베풀다">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🗡️</span>
+          도적떼를 회유하여 은혜를 베풀다
+        </h2>
+        <div class="story-text">허생은 이번에는 산적들에게 관심을 돌린다. 당시 조선은 불안정한 사회 경제 구조로 인해 산적들이 늘어나고 있었고, 이들은 오히려 한 지역의 질서를 뒤흔드는 존재였다. 허생은 먼저 전국의 소금과 무기를 대량으로 구매해 산적들의 본거지를 방문한다.
+
+산적들의 우두머리는 처음에는 허생을 적으로 의심했지만, 허생이 그의 처지를 이해하고 도적이 된 이유를 듣자 오히려 감명을 받았다. 허생은 산적들에게 "올바르게 살려면 기반이 필요하다"며 무기 대신 곡식과 옷감을 나누어주고, 산적들이 생계를 유지할 수 있도록 새로운 삶의 길을 제시한다.
+
+산적들은 허생의 지혜와 인간됨에 감동하여 도적질을 그만두고 농사로 돌아가겠다는 약속을 한다. 허생은 그들의 삶을 다시 일으킬 수 있도록 직접 경영 방법을 알려주고, 필요하면 도움을 줄 것을 약속했다.
+
+이 과정에서 허생은 단순한 장사꾼이 아니라 백성을 구제하려는 성인 같은 인물로 자리잡는다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 섬나라 프로젝트: 이상 사회 실험">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">🏝️</span>
+          섬나라 프로젝트: 이상 사회 실험
+        </h2>
+        <div class="story-text">허생은 자신의 뜻을 더욱 크게 펼쳐 보고자 사람 드문 외딴 섬을 개척해 이상 사회를 만드는 계획을 세운다. 그는 산적 출신 농민, 빈민, 일자리가 없는 사람들을 섬으로 데려가 농업과 상업을 균형 있게 운영하는 공동체를 만든다.
+
+이 섬은 허생이 설계한 대로 움직였고, 조선 사회에서 볼 수 없던 풍요와 질서가 자리 잡기 시작했다. 부정과 사치, 신분 차별이 사라지고 모두가 노동을 통해 자립하는 사회가 운영되었다.
+
+허생이 이끄는 섬 공동체는 조선의 현실과 극명한 대비를 이루며 사람들에게 큰 깨달음을 주었다. 하지만 조선 정부에서는 이 섬이 점차 번성하자 경계하기 시작했고, 허생이 마련한 이상 사회는 조정의 의심을 사고 만다.
+
+허생은 조선의 구조적 한계를 절감하며 이 사회가 현실 세상에서 지속되기 어렵다는 사실을 깨닫는다. 그는 언젠가는 이 섬도 조정의 간섭을 받게 될 것이라 예감하며 다음 행동을 준비한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 허생의 종적을 감춘 뒤의 조정의 반응">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">🌫️</span>
+          허생의 종적을 감춘 뒤의 조정의 반응
+        </h2>
+        <div class="story-text">어느 날 허생은 아무 말 없이 조용히 섬을 떠난다. 그의 목적은 완성되었다고 판단했기 때문이다. 허생이 떠나자 섬 사람들은 혼란스러워했지만, 이미 자리 잡은 시스템 덕분에 크게 무너지지는 않았다. 그러나 허생의 존재는 다음 단계로 넘어가기 위한 중요한 과정이었다.
+
+한편 조정에서는 허생이라는 인물이 조선 경제에 끼친 영향력에 주목하기 시작했다. 그는 장사를 통해 시장을 뒤흔들었고, 도적들을 회유하며 사회 질서를 바로잡았으며, 심지어는 섬을 개척해 새로운 사회 구조를 만들어냈다.
+
+이런 사실이 조정에도 알려지자 왕은 허생을 불러 나라의 경제 정책을 논하고 싶어 했다. 하지만 허생은 흔적 없이 사라져 아무도 그의 행방을 알 수 없었다.
+
+조정은 허생을 찾아 명을 전달하기 위해 사람들을 파견했지만, 허생을 만났던 이들조차 그의 행방을 알지 못했다. 허생은 마치 바람처럼 세상에서 사라졌다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 이완 장군의 등장과 허생 탐방">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">⚔️</span>
+          이완 장군의 등장과 허생 탐방
+        </h2>
+        <div class="story-text">조정은 결국 조선 최고의 무장인 이완 장군에게 허생을 찾아오라는 명을 내린다. 이완 장군은 허생이 남긴 흔적을 따라 서울과 섬, 산적 마을 등을 돌아다니며 그의 행적을 조사한다. 그는 허생이 단순한 장사꾼이 아니라 깊은 철학을 가진 인물임을 깨닫는다.
+
+이완 장군은 허생을 만나 정치와 경제 개혁을 논하고 싶어 하며, 백성의 삶을 바꾸기 위한 조언을 듣고 싶어 한다. 결국 여러 날 끝에 허생의 집을 찾아오게 되었지만, 허생은 이미 가난한 옷차림으로 조용히 독서를 즐기고 있었다.
+
+이완 장군은 허생에게 그의 능력과 지혜를 높이 평가하며 조선의 개혁이 필요하다고 강조한다. 그는 허생을 왕 앞에 데려가 조정의 자문 역할을 맡기고 싶다고 말하지만, 허생은 내심 세상일에 나설 생각이 없었다.
+
+그는 이완 장군의 호의와 진심을 느끼면서도 조정의 한계를 이미 너무 깊이 이해하고 있었기 때문이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 허생과 이완 장군의 대화: 조선 사회의 본질을 비판">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">💬</span>
+          허생과 이완 장군의 대화: 조선 사회의 본질을 비판
+        </h2>
+        <div class="story-text">허생은 마침내 이완 장군과 깊은 대화를 나누며 조선 사회의 근본적 문제를 지적한다. 그는 양반들의 무능과 사치를 강하게 비판하고, 조선이 발전하지 못하는 이유가 바로 가진 자들의 허영과 게으름 때문이라고 말한다. 또한 백성들은 열심히 일하지만 제도적 억압으로 인해 성장할 수 없다는 점을 강조한다.
+
+허생은 자신이 장사를 통해 시장을 뒤흔들고 산적들을 회유한 경험을 통해, 조선이 변화하려면 경제 기반, 생산 구조, 신분제 개혁이 반드시 필요하다고 역설한다.
+
+이완 장군은 그의 말에 깊은 감탄을 느끼며 왕에게 반드시 이 뜻을 전하겠다고 다짐한다. 하지만 허생은 조정의 구조가 이미 썩어 있어 변화가 쉽지 않다고 생각하며, 자신의 역할은 여기까지라고 판단한다.
+
+그는 "나 같은 선비가 권력을 잡으면 결국 다른 탐관오리처럼 변하게 될 뿐"이라며 조용히 물러난다. 이 대화를 통해 허생은 조선의 문제를 통찰하는 비범한 사상가로 자리매김하게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 허생의 마지막 가르침과 이완 장군의 깨달음">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🎓</span>
+          허생의 마지막 가르침과 이완 장군의 깨달음
+        </h2>
+        <div class="story-text">허생은 이완 장군에게 마지막으로 의미 있는 가르침을 남긴다. 그는 국가를 운영하는 데 있어 가장 중요한 것은 백성이 살기 좋은 사회, 즉 배고픔과 두려움에서 벗어나는 구조라고 말한다. 허생은 조선 사회가 기득권의 욕망을 중심으로 움직이고 있으며, 이는 필연적으로 나라의 몰락을 불러올 것이라고 경고한다.
+
+이완 장군은 허생의 가르침을 통해 조선의 장래를 깊이 고민하게 되었고, 허생을 단순한 장사꾼이 아닌 진정한 스승으로 생각하게 된다. 허생은 장군의 마음에 감동하며 그를 믿을 수 있는 사람으로 인정한다.
+
+하지만 그는 여전히 조정에 나아갈 마음이 없다. 세상은 쉽게 변하지 않으며, 변화는 권력자가 아닌 백성들 스스로가 깨달아야 한다고 강조한다.
+
+이완 장군은 허생을 떠나며 그의 말이 조선의 현실을 꿰뚫는 깊은 통찰임을 새삼스럽게 느낀다. 그는 허생의 뜻을 실천하려 노력하겠다고 다짐하며 허생의 집을 떠난다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 허생의 은둔과 〈허생전〉이 남긴 의미">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">✨</span>
+          허생의 은둔과 〈허생전〉이 남긴 의미
+        </h2>
+        <div class="story-text">이완 장군이 떠난 뒤, 허생은 조용히 다시 학문에 몰두하며 은둔 생활로 돌아간다. 그는 자신이 세상에 남긴 영향이 일시적일 뿐이라는 것을 알고 있었고, 진정한 변혁은 언젠가 올 미래의 세대에게 맡겨야 한다고 생각했다. 허생은 이후 자취를 감추듯 생활하며 다시는 장사나 사회 개혁에 나서지 않았다.
+
+그러나 그의 철학과 행적은 세상을 크게 뒤흔들었고, 사람들은 그의 이야기를 구전으로 전하며 그를 시대를 앞선 지식인으로 칭송했다.
+
+허생전은 단순한 소설이 아니라, 조선 후기 사회의 모순과 양반 사회의 타락을 예리하게 비판한 정치·경제 풍자문학으로 평가된다. 이 작품은 조선의 신분제 및 경제 구조의 문제점을 드러내며, 진정한 지혜와 배움이란 무엇인지 질문을 던진다.
+
+허생은 결국 현실을 변화시키려 한 선비이자, 당시 시대가 이해하기에는 너무 앞서간 개혁가였다. 그의 이야기는 오늘날에도 사회 구조를 바라보는 날카로운 시선과 변혁의 필요성을 일깨우는 작품으로 남아 있다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📚 허생전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/hu/hu01.jpg',
+      '/images/hu/hu02.jpg',
+      '/images/hu/hu03.jpg',
+      '/images/hu/hu04.jpg',
+      '/images/hu/hu05.jpg',
+      '/images/hu/hu06.jpg',
+      '/images/hu/hu07.jpg',
+      '/images/hu/hu08.jpg',
+      '/images/hu/hu09.jpg',
+      '/images/hu/hu10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '📚 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

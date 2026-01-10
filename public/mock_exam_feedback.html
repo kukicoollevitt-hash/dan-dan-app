@@ -1,0 +1,2578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>분석 리포트 - 모의고사</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* iframe 내부 모드 - 헤더 숨기고 스크롤 가능하게 */
+        body.iframe-mode {
+            background: #f5f5f5;
+            padding: 0;
+            min-height: 100%;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        body.iframe-mode .header {
+            display: none;
+        }
+
+        body.iframe-mode .container {
+            padding: 16px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        html.iframe-mode {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 30px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            color: #fff;
+        }
+
+        .header h1 {
+            color: #fff;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header .exam-date {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* 학생 정보 카드 */
+        .student-info-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .student-info-card .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .student-info-card .card-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, transparent);
+        }
+
+        .student-info-row {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            color: #555;
+            font-size: 15px;
+        }
+
+        .student-info-row span {
+            display: flex;
+            gap: 6px;
+        }
+
+        .student-info-row .label {
+            color: #888;
+        }
+
+        .student-info-row .value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 채점 결과 카드 */
+        .result-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .result-card .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .result-card .card-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, transparent);
+        }
+
+        .grade-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 32px;
+            font-weight: 700;
+            padding: 20px 40px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .result-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .result-stats .stat {
+            font-size: 18px;
+            color: #555;
+        }
+
+        .result-stats .stat .num {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 22px;
+        }
+
+        .result-time {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .result-time .time-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 16px;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .wrong-summary {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            display: inline-block;
+            margin-top: 16px;
+        }
+
+        /* 영역별 분석 카드 */
+        .area-analysis-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .area-analysis-card .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .area-analysis-card .card-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, transparent);
+        }
+
+        .radar-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .area-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .area-stat {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .area-name {
+            width: 80px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            flex-shrink: 0;
+        }
+
+        .area-bar-wrap {
+            flex: 1;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .area-bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        .area-stat:nth-child(1) .area-bar { background: linear-gradient(90deg, #667eea, #764ba2); }
+        .area-stat:nth-child(2) .area-bar { background: linear-gradient(90deg, #f093fb, #f5576c); }
+        .area-stat:nth-child(3) .area-bar { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+        .area-stat:nth-child(4) .area-bar { background: linear-gradient(90deg, #43e97b, #38f9d7); }
+
+        .area-score {
+            width: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .feedback-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feedback-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .answer-info {
+            display: flex;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .answer-info span {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .answer-info .correct {
+            background: rgba(76, 175, 80, 0.9);
+        }
+
+        .answer-info .wrong {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .feedback-section {
+            margin-bottom: 20px;
+        }
+
+        .feedback-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .feedback-label {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feedback-label.main-label {
+            color: #1976D2;
+        }
+
+        .feedback-label.mistake-label {
+            color: #D32F2F;
+        }
+
+        .feedback-label.study-label {
+            color: #2E7D32;
+        }
+
+        .feedback-content {
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.9;
+        }
+
+        .feedback-content.main-content {
+            background: #e3f2fd;
+            border-left: 4px solid #1976D2;
+            color: #333;
+        }
+
+        .feedback-content.mistake-content {
+            background: #ffebee;
+            border-left: 4px solid #D32F2F;
+            color: #333;
+        }
+
+        .feedback-content.study-content {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            color: #333;
+        }
+
+        .feedback-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .feedback-content li {
+            margin-bottom: 6px;
+        }
+
+        .feedback-content p {
+            margin-bottom: 8px;
+        }
+
+        .feedback-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .empty-state {
+            background: #fff;
+            border-radius: 16px;
+            padding: 60px 24px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-state .icon {
+            font-size: 60px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h2 {
+            color: #4CAF50;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .loading {
+            background: #fff;
+            border-radius: 16px;
+            padding: 60px 24px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f0f0f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 모바일 최적화 */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .header {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .summary-item {
+                padding: 6px 14px;
+                font-size: 14px;
+            }
+
+            .card-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .card-header h3 {
+                font-size: 14px;
+            }
+
+            .answer-info {
+                font-size: 12px;
+            }
+
+            .card-body {
+                padding: 16px;
+            }
+
+            .explanation-content {
+                font-size: 13px;
+                padding: 12px;
+            }
+        }
+
+        /* 하단 버튼 영역 */
+        .bottom-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 160px;
+        }
+
+        .kakao-btn {
+            background: #FEE500;
+            color: #3C1E1E;
+        }
+
+        .kakao-btn:hover {
+            background: #F5DC00;
+        }
+
+        .pdf-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .pdf-btn:hover {
+            opacity: 0.9;
+        }
+
+        .share-btn svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        /* 하단 버튼 공간 확보 */
+        .container {
+            padding-bottom: 70px;
+        }
+    </style>
+    <!-- 카카오 SDK -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
+    <!-- html2canvas & jsPDF for PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>1월 AI 모의고사 채점 결과</h1>
+            <div class="exam-date" id="examDate"></div>
+            <a href="javascript:history.back()" class="back-btn">
+                <span>← 시험지로 돌아가기</span>
+            </a>
+        </div>
+
+        <!-- 학생 정보 카드 -->
+        <div class="student-info-card">
+            <div class="card-title">📋 학생 정보</div>
+            <div class="student-info-row">
+                <span><span class="label">학교:</span> <span class="value" id="schoolName">-</span></span>
+                <span><span class="label">학년:</span> <span class="value" id="gradeLevel">-</span></span>
+                <span><span class="label">이름:</span> <span class="value" id="studentName">-</span></span>
+            </div>
+        </div>
+
+        <!-- 채점 결과 카드 -->
+        <div class="result-card">
+            <div class="card-title">📊 채점 결과</div>
+            <div class="grade-badge" id="gradeBadge">-</div>
+            <div class="result-stats">
+                <div class="stat"><span class="num" id="scoreNum">0</span>점 / 100점</div>
+                <div class="stat"><span class="num" id="correctNum">0</span>개 / 45개 정답</div>
+            </div>
+            <div class="result-time">소요시간: <span class="time-value" id="elapsedTime">00:00</span> / 80:00</div>
+            <div class="wrong-summary" id="wrongSummary">틀린 문제: 0개</div>
+        </div>
+
+        <!-- 영역별 분석 카드 -->
+        <div class="area-analysis-card">
+            <div class="card-title">📈 영역별 분석</div>
+            <div class="radar-container">
+                <canvas id="radarChart" width="300" height="300"></canvas>
+            </div>
+            <div class="area-stats" id="areaStats">
+                <div class="area-stat">
+                    <span class="area-name">화법과 작문</span>
+                    <div class="area-bar-wrap">
+                        <div class="area-bar" id="bar-speech" style="width: 0%"></div>
+                    </div>
+                    <span class="area-score" id="score-speech">0/8</span>
+                </div>
+                <div class="area-stat">
+                    <span class="area-name">문법</span>
+                    <div class="area-bar-wrap">
+                        <div class="area-bar" id="bar-grammar" style="width: 0%"></div>
+                    </div>
+                    <span class="area-score" id="score-grammar">0/5</span>
+                </div>
+                <div class="area-stat">
+                    <span class="area-name">비문학</span>
+                    <div class="area-bar-wrap">
+                        <div class="area-bar" id="bar-reading" style="width: 0%"></div>
+                    </div>
+                    <span class="area-score" id="score-reading">0/17</span>
+                </div>
+                <div class="area-stat">
+                    <span class="area-name">문학</span>
+                    <div class="area-bar-wrap">
+                        <div class="area-bar" id="bar-literature" style="width: 0%"></div>
+                    </div>
+                    <span class="area-score" id="score-literature">0/15</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="feedback-list" id="feedbackList">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>피드백을 불러오는 중...</p>
+            </div>
+        </div>
+
+        <!-- 하단 버튼 -->
+        <div class="bottom-buttons">
+            <button class="share-btn kakao-btn" onclick="shareKakao()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.86 5.25 4.64 6.67-.15.56-.54 2.03-.62 2.35-.1.39.14.39.3.28.12-.08 1.94-1.32 2.73-1.86.63.09 1.28.14 1.95.14 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
+                </svg>
+                카카오톡 공유
+            </button>
+            <button class="share-btn pdf-btn" onclick="downloadPDF()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="12" y1="18" x2="12" y2="12"/>
+                    <line x1="9" y1="15" x2="12" y2="18"/>
+                    <line x1="15" y1="15" x2="12" y2="18"/>
+                </svg>
+                PDF 다운로드
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 시험별 피드백 데이터
+        const feedbackDataByExam = {
+            'korean_mock_1': {
+                1: {
+                    title: "말하기 방식 파악하기",
+                    feedback: "이 문항은 발표자가 청중과 어떻게 상호작용하며 말하기를 진행하는지를 파악하는 문제입니다. 단순히 질문이 있다는 사실에만 주목하면 오답에 빠지기 쉽습니다.",
+                    mistakes: "• 질문을 정보를 묻는 내용으로만 해석함\n• 발표자의 질문을 내용 설명의 일부로만 보고, 청중 반응을 조절하는 말하기 전략으로 보지 못함",
+                    study: "1. 질문의 목적을 먼저 생각하세요. → \"왜 이 질문을 했지?\" → 정보 수집인가, 청중 반응 확인인가를 구분해야 합니다.\n2. 발표 상황에서는 질문 = 청중 참여 유도 / 이해도 점검 / 흐름 조절 역할을 한다는 점을 기억하세요.\n3. 질문 뒤에 이어지는 말에 주목하세요. \"어려우신가 보네요.\", \"쉽게 설명해 드리겠습니다.\" → 질문 결과를 바탕으로 말하기 방식을 조정하고 있음을 보여 줍니다.\n4. 앞으로는 질문이 나오면 ① 질문 → ② 청중 반응 → ③ 발표 방식 변화 이 구조를 한 묶음으로 파악하는 연습을 하세요."
+                },
+                2: {
+                    title: "발표 전략 파악하기",
+                    feedback: "이 문항은 발표자가 어떤 정보를 어떤 방식으로 제시했는지를 정확히 확인하는 문제입니다. '도표가 있다'는 인상만으로 판단하면 쉽게 오답이 됩니다.",
+                    mistakes: "• 도표가 제시되었다는 사실만 보고 내용까지 포함되었다고 추론함\n• '식물의 의사소통'이라는 주제 전체를 도표가 설명한다고 막연히 판단함\n• 글의 설명과 시각 자료의 역할 범위를 구분하지 못함",
+                    study: "1. 도표가 무엇을 보여 주는지 정확히 한정해서 확인하세요. → 누가 / 무엇의 / 어떤 수치인가를 체크해야 합니다. (이 문단에서는 건강한 리마콩의 살리실산 비율만 제시됨)\n2. 글에서 설명한 모든 정보가 도표로 제시되었는지를 따져보세요.\n   • 설명: 감염된 리마콩 → 살리실산메틸 생성\n   • 도표: 옆에 있는 건강한 리마콩의 살리실산 비율 → 두 대상이 다릅니다.\n3. 발표 전략 문제에서는 '설명했다' ≠ '도표로 제시했다' 이 구분이 핵심입니다.\n4. 앞으로는 시각 자료가 나오면 본문 설명과 1:1로 대응되는지, 일부만 보여 주고 있는지를 반드시 대조하세요."
+                },
+                3: {
+                    title: "청중 반응의 적절성 파악하기",
+                feedback: "이 문항은 여러 학생의 반응을 비교하여, 각 반응이 '무엇을 아쉬워하는지 / 아쉬워하지 않는지'를 정확히 구분하는 문제입니다. 학생들의 말에서 평가의 기준이 무엇인지를 놓치면 오답으로 이어집니다.",
+                mistakes: "• '발표가 유익했다 / 좋았다'는 표현을 아쉬움이 없다는 뜻으로 단순 해석함\n• 모든 학생 반응을 같은 기준(알고 싶은 정보)으로 읽지 않고, 감상 전반으로 뭉뚱그려 해석함\n• '아쉽다'는 말이 명시적으로 드러난 경우와 드러나지 않은 경우를 구분하지 못함",
+                study: "1. 학생 반응 문장은 평가 기준을 먼저 찾으세요.\n   • 학생 1 → \"알고 싶은 정보가 제시되지 않았다\"\n   • 학생 3 → \"유익한 정보를 많이 얻었다\"\n2. '유익했다', '좋았다'는 말은 → 내용에 대한 긍정 평가일 뿐, → 알고 싶은 정보가 빠졌다는 아쉬움과는 직접 연결되지 않습니다.\n3. 학생 반응 비교 문제에서는 같은 기준으로 말하고 있는지를 반드시 확인하세요. 아쉬움의 대상이 같지 않으면 → 같은 반응으로 묶을 수 없습니다.\n4. 앞으로는 ✔ 아쉬워하는가 / 아쉬워하지 않는가, ✔ 그 아쉬움의 이유가 무엇인가 이 두 단계를 분리해서 읽는 연습을 하세요."
+            },
+            4: {
+                title: "대화 참여자의 역할 이해하기",
+                feedback: "이 문항은 발화의 '내용'이 아니라 '의도와 기능'을 정확히 구분하는 문제입니다. 특히, 말한 사람이 상대에게 어떤 행동을 요구하고 있는지를 읽어 내는 것이 핵심입니다.",
+                mistakes: "• 발화 속에 질문이나 설명이 있으면 곧바로 참여를 유도한 것으로 판단함\n• 말하는 태도가 친절하거나 적극적이면 상대에게도 적극적인 참여를 요구한 것으로 확대 해석함\n• '정보 제공'과 '행동 요청'을 구분하지 못함",
+                study: "1. '요청' 표현이 실제로 있는지를 먼저 확인하세요. → 해 보세요, 말해 주세요, 참여해 주세요, 의견을 나눠 봅시다 와 같은 직접적인 요구가 있는지가 기준입니다.\n2. 발화의 기능을 한 문장으로 요약해 보세요.\n   • 정보 전달인가?\n   • 자신의 생각 제시인가?\n   • 상대의 참여를 요구하는 발화인가?\n3. 대화 참여 태도 문제에서는 상대의 행동을 바꾸려는 의도가 있는지가 판단 기준입니다. 단순 설명·질문만으로는 '적극적인 참여 요청'이라고 볼 수 없습니다.\n4. 앞으로는 발화를 볼 때 ✔ 상대가 무엇을 해야 하는지 제시했는가, ✔ 참여를 요청·유도하는 표현이 있는가 이 두 가지를 반드시 체크하세요."
+            },
+            5: {
+                title: "말하기 방식을 파악하기",
+                feedback: "이 문항은 두 학생의 발화를 비교하여, 한 학생이 '의견에 어떻게 반응하고 있는지'와 그 반응이 '이유 제시 + 자기 의견 표명'에 해당하는지를 판단하는 문제입니다. 표면적인 찬반만 보고 판단하면 오답이 되기 쉽습니다.",
+                mistakes: "• '동의하지 않는다'는 사실만 보고 단순한 반대 표현으로 처리함\n• 상대 의견에 대한 반응과 자기 의견 제시를 한 발화 안에서 함께 보고 있지 못함\n• [A]와 [B]의 학생을 비교해야 하는데, 한 쪽 발화만 따로 떼어 해석함",
+                study: "1. 의견 교환 대화에서는 발화를 2단계로 나누어 분석하세요.\n   • ① 앞선 의견에 대한 반응(동의/비동의)\n   • ② 그에 따른 이유 제시 + 자신의 의견 제시\n2. '~취지에 어긋난다'는 표현은 → 단순한 감정 표현이 아니라 → 동의하지 못하는 이유를 설명하는 논거입니다.\n3. 이어지는 '~고려해야 해'는 → 상대 의견에 반응한 뒤 → 새로운 관점의 자기 의견을 추가한 것입니다.\n4. 비교 문제에서는 반드시 누가: 앞선 의견에 반응했는지, 어떻게: 이유를 밝혔는지, 결과적으로: 자기 입장을 드러냈는지를 모두 확인하세요."
+            },
+            6: {
+                title: "글쓰기 계획의 반영 여부 파악하기",
+                feedback: "이 문항은 (가)에 실제로 언급된 정보와 언급되지 않은 정보를 정확히 구분하는 문제입니다. 주제와 관련이 있어 보인다는 이유만으로 '말했을 것'이라고 추론하면 오답으로 이어집니다.",
+                mistakes: "• 부레옥잠이 나오면 자동으로 자정 작용까지 함께 설명했을 것이라고 추측함\n• (가)의 내용을 기억에 의존해 전체적으로 포괄 해석함\n• '자정 작용'처럼 익숙한 개념을 글에 포함시켜 읽음",
+                study: "1. 판단 근거는 반드시 제시문의 명시적 언급이어야 합니다. → 암시·추론·배경 지식은 근거가 될 수 없습니다.\n2. 문항에서 특정 개념이 나오면 → 그 단어가 실제로 등장하는지, → 같은 의미의 표현으로라도 구체적으로 설명되는지를 확인하세요.\n3. (가)의 역할을 먼저 정리해 보세요.\n   • 어떤 대상 소개인가\n   • 어떤 기능까지 설명하는가 → 범위를 정하면 없는 내용을 끼워 넣지 않게 됩니다.\n4. 앞으로는 ✔ 나왔는가 / 나오지 않았는가, ✔ 직접 언급인가 / 배경 지식인가 이 두 기준으로 판단하는 연습을 하세요."
+            },
+            7: {
+                title: "조건에 따른 글쓰기",
+                feedback: "이 문항은 (나)의 주제가 글 속에서 어떻게 드러나는지, 그리고 비유적 표현이 그 주제와 실제로 연결되는지를 판단하는 문제입니다. 표현이 인상적이라는 이유만으로 적절하다고 판단하면 오답이 됩니다.",
+                mistakes: "• '작은 오케스트라'와 같은 표현이 보이면 비유가 곧바로 주제를 잘 드러낸다고 판단함\n• '가치'와 관련된 긍정적 표현이 있으면 주제 전체가 구현되었다고 확대 해석함\n• 주제의 두 요소(고려할 사항 / 가치)를 각각 점검하지 않음",
+                study: "1. 주제를 먼저 구성 요소로 나누세요.\n   • ① 생태 연못 조성 시 고려할 사항\n   • ② 생태 연못의 가치\n2. 비유적 표현이 → 두 요소 중 어느 쪽을 설명하는지를 구분해 보세요. '작은 오케스트라'는 → 생태 연못의 조화롭고 가치 있는 모습을 드러내는 표현이지, → 조성 시 고려할 사항을 직접 설명하지는 않습니다.\n3. 주제 구현 판단 문제에서는 부분 충족 ≠ 전체 충족임을 기억하세요. 주제의 한 요소만 드러나도 '주제가 잘 드러난다'고 단정할 수는 없습니다.\n4. 앞으로는 ✔ 주제의 모든 핵심 요소가 다 반영되었는지, ✔ 표현이 주제 설명에 실제로 기여하는지를 반드시 따로 확인하세요."
+            },
+            8: {
+                title: "글쓰기 전략 파악하기",
+                feedback: "이 문항은 '학생의 초고'가 문제 해결 방안을 여러 관점에서 적절하게 제시하고 있는지를 판단하는 문제입니다. 해결 방안이 '여러 개 있다'는 인상만으로 판단하면 오답이 됩니다.",
+                mistakes: "• 해결 방안이 여러 개 나열되어 있으면 곧바로 '다양한 측면에서 제시했다'고 판단함\n• 방안의 성격(인식·제도·실행)을 구분하지 못함\n• 초고라는 점을 고려하지 않고 구체성·실현 가능성을 따지지 않음",
+                study: "1. 해결 방안을 유형별로 분류해 보세요.\n   • 시민들의 인식 개선 → 인식·문화적 측면\n   • 수거 기준 보완 → 제도·행정적 측면\n   • 처리 방법 마련 → 실행·운영 측면 → 서로 다른 측면임을 확인할 수 있습니다.\n2. '다양한 측면'은 → 같은 방향의 반복이 아니라 → 접근 방식이 다른 방안들을 의미합니다.\n3. 초고 평가에서는 완성도보다 문제 해결 방향을 폭넓게 제시했는지가 핵심입니다.\n4. 앞으로는 ✔ 방안의 개수, ✔ 방안의 성격 차이 이 두 가지를 분리해서 판단하는 연습을 하세요."
+            },
+            9: {
+                title: "자료 활용 방안의 적절성 판단하기",
+                feedback: "이 문항은 주장의 내용과 자료가 논리적으로 연결되는지를 판단하는 문제입니다. 자료가 '관련 있어 보인다'는 인상만으로 활용 가능하다고 판단하면 오답이 됩니다.",
+                mistakes: "• 자료에 비율·수치·증가 추세가 나오면 곧바로 주장의 근거가 된다고 판단함\n• 자료가 무엇을 직접적으로 보여 주는지와 무엇을 새로 해석해야만 알 수 있는지를 구분하지 못함\n• '처리 현황'과 '처리 비용'을 하나의 정보처럼 묶어 확대 해석함",
+                study: "1. 먼저 주장의 핵심을 정확히 정리하세요. → 주장: 방치된 자전거를 수거하는 기준을 보완해야 한다 → 근거가 되려면 기준이 왜 문제인지를 보여 주는 자료여야 합니다.\n2. 자료를 볼 때는 반드시 자료가 직접 말해 주는 내용만 확인하세요.\n   • [자료 1-㉯]: 고철 처리 비율이 높다\n   • [자료 2]: 처리 비용이 증가하고 있다 → '고철 처리 비용이 크다'는 정보는 자료에 없음\n3. 자료 활용 문제에서는 추론이 한 단계라도 더 필요한 경우 → 그 자료는 직접 근거로 쓰기 어렵다는 점을 기억하세요.\n4. 앞으로는 ✔ 자료에 명시된 정보인가, ✔ 주장을 직접 뒷받침하는가, ✔ 중간에 추측·가정이 끼어들지 않는가 이 세 가지를 체크하는 습관을 들이세요."
+            },
+            10: {
+                title: "고쳐쓰기의 적절성 판단하기",
+                feedback: "이 문항은 친구의 조언이 실제 수정 내용에 반영되었는지를 정확히 대조하는 문제입니다. '고쳐 보였다'는 인상만으로 판단하면 오답이 됩니다.",
+                mistakes: "• 수정된 단어가 보이면 조언이 반영되었다고 성급히 판단함\n• 조언의 초점(무엇을 고치라고 했는지)을 명확히 정리하지 않음\n• 맞춤법 수정과 조사 수정을 구분하지 못함",
+                study: "1. 먼저 조언의 핵심 요구를 정확히 정리하세요. → 이 조언은 '부적절하게 사용된 조사'를 알맞게 고치라는 것입니다.\n2. 그다음 수정된 내용을 확인하세요.\n   • '높이고 → 높히고' : 조사 수정이 아님\n   • 오히려 맞춤법 오류가 새로 생긴 수정입니다.\n3. 반영 여부 판단 문제에서는 조언의 대상과 실제 수정 대상이 일치하는지가 핵심입니다. 하나라도 어긋나면 '조언이 반영되었다'고 볼 수 없습니다.\n4. 앞으로는 ✔ 조언이 요구한 수정 범주(조사 / 어휘 / 맞춤법 / 표현), ✔ 실제 수정된 항목의 범주를 반드시 나란히 비교하세요."
+            },
+            11: {
+                title: "보조적 연결 어미의 쓰임 이해하기",
+                feedback: "이 문항은 '-고'가 어떤 기능으로 쓰였는지를 문장 구조 안에서 정확히 판단하는 문제입니다. 형태만 보고 기계적으로 분류하면 오답에 이르기 쉽습니다.",
+                mistakes: "• '-고'가 보이면 곧바로 보조적 연결 어미라고 판단함\n• '단어 연결'과 '문장 연결'을 개념적으로 구분하지 못함\n• '-고서'가 가능하다는 사실을 보조적 연결 어미의 근거로 잘못 사용함",
+                study: "1. 먼저 보조적 연결 어미 '-고'의 기준을 분명히 하세요. → 단어(용언 어간)와 단어를 나란히 연결할 때 쓰입니다. (예: 웃고 떠들다, 먹고 마시다)\n2. 제시 문장은 구조를 분해해서 보세요.\n   • 나무가 태풍을 못 견뎠다\n   • 나무가 쓰러졌다 → 서술어가 각각 독립된 문장입니다. 즉, 단어 연결이 아니라 문장과 문장을 연결하고 있습니다.\n3. '-고서'가 가능하다는 점은 → 선후 관계·원인 결과를 드러내는 연결이라는 뜻이지, → 보조적 연결 어미라는 근거가 되지 않습니다.\n4. 앞으로는 '-고'를 보면 반드시 ✔ 이어지는 것이 단어인가, 문장인가, ✔ 앞뒤 절이 각각 독립 문장으로 성립하는가를 확인하는 연습을 하세요."
+            },
+            12: {
+                title: "이어진문장 내 의미 관계 분석하기",
+                feedback: "이 문항은 '-고'의 의미를 판단할 때, 앞 용언의 의미 자질을 근거로 삼아야 하는 문제입니다. 문장의 흐름이나 느낌만으로 판단하면 오답에 이르기 쉽습니다.",
+                mistakes: "• '차고'처럼 행동이 연속되어 보이면 습관적으로 동시·병렬 관계로 판단함\n• '-고'의 분류 기준(㉡/㉢)을 의미 자질과 연결 짓지 못함\n• [+완결성], [±지속성] 같은 의미 자질을 형식적으로 외우고 실제 분석에 적용하지 못함",
+                study: "1. 먼저 앞 용언의 사전적 의미를 정확히 확인하세요.\n   • '차다' : 발로 내어지르거나 받아 올리다 → 동작이 순간적으로 끝나는 행위입니다.\n2. 의미 자질을 단계적으로 판단하세요.\n   • 결과가 남는가? → ❌\n   • 동작이 지속되는가? → ❌ → [+완결성], [-지속성]\n3. 이 의미 자질을 바탕으로 '-고'의 의미 기능을 결정해야 합니다.\n   • 순간적 동작 + 다음 동작 → 시간적 순차 관계\n4. 따라서 '차고'의 '-고'는 동시·병렬(㉢)이 아니라 앞 동작 이후 뒤 동작이 이어지는 순차(㉡)임을 확인해야 합니다."
+            },
+            13: {
+                title: "음운 변동 현상 이해하기",
+                feedback: "이 문항은 각 음운 변동이 '어떤 과정'으로 일어났는지를 정확히 구분하는 문제입니다. 겉으로 소리가 바뀌었다는 이유만으로 모두 '교체'로 묶으면 오답이 됩니다.",
+                mistakes: "• 소리가 달라지면 무조건 교체라고 판단함\n• 한 예(㉢ 구개음화)가 교체이므로 다른 예(㉡)도 자동으로 교체라고 묶어 버림\n• 음절의 끝소리 규칙 / 비음화 / 구개음화의 성격 차이를 명확히 구분하지 못함",
+                study: "1. 음운 변동은 '결과'가 아니라 '과정'으로 판단해야 합니다.\n   • 교체: 한 음운이 다른 음운으로 바뀌는 것\n   • 탈락: 음운이 사라짐\n   • 첨가: 음운이 새로 생김\n   • 축약: 둘 이상의 음운이 하나로 줄어듦\n2. ㉡을 단계별로 분해해서 보세요.\n   • 부엌문 → 부억문 : 음절의 끝소리 규칙(ㅋ → ㄱ) → 교체\n   • 부억문 → [부엉문] : 비음화(ㄱ → ㅇ) → 교체 → 각각은 교체이지만, 연쇄적으로 서로 다른 규칙이 적용된 경우입니다.\n3. ㉢은 별도의 판단이 필요합니다.\n   • 벼훑이 → [벼훌치] : 구개음화 → 교체 → 단일 규칙에 의한 교체입니다.\n4. 공통점 판단 문제에서는 '같은 결과'가 아니라 '같은 변동 유형이 핵심 변동으로 작용했는지'를 따져야 합니다. ㉡은 두 규칙의 연쇄, ㉢은 단일 규칙이라는 차이가 있습니다."
+            },
+            14: {
+                title: "품사 통용 이해하기",
+                feedback: "이 문항은 '만큼'이 문장마다 어떤 품사로 쓰였는지를 정확히 구분하는 문제입니다. 의미만 비슷하다는 이유로 같은 품사라고 판단하면 오답이 됩니다.",
+                mistakes: "• '만큼'이 비교·정도를 나타내면 항상 조사라고 생각함\n• 앞말과 띄어쓰기 여부를 제대로 보지 않음\n• '체언 뒤에 온다 = 조사'라고 단순화함",
+                study: "1. 먼저 의존 명사와 조사의 판별 기준을 분명히 하세요.\n   • 의존 명사: 관형어의 수식을 받음 / 문장에서 명사 역할\n   • 조사: 체언에 붙어 문법적 관계를 나타냄\n2. 문장을 구조적으로 분석해 보세요.\n   • 노력한 만큼 대가를 얻다 → '노력한'이 관형어, '만큼'이 수식 대상 → 명사 기능 → 의존 명사\n   • 너만큼은 할 수 있다 → '너'에 붙어 비교·강조의 관계를 표시 → 관계 표시 → 조사\n3. 특히 띄어쓰기를 힌트로 활용하세요.\n   • '~한 만큼' → 띄어 씀 → 의존 명사 가능성 큼\n   • '너만큼은' → 붙여 씀 → 조사 가능성 큼\n4. 앞으로는 '만큼'을 보면 ✔ 앞에서 꾸며 주는 말이 있는가, ✔ 문장에서 명사 역할을 하는가, ✔ 체언에 붙어 관계만 표시하는가를 차례로 점검하세요."
+            },
+            15: {
+                title: "중세 국어의 격조사 분석하기",
+                feedback: "이 문항은 주격 조사가 어떤 조건에서 '∅(영형태)'로 실현되는지를 정확히 알고 있는지를 묻는 문제입니다. 형태가 보이지 않는다고 해서 모두 영형태라고 판단하면 오답이 됩니다.",
+                mistakes: "• 체언 뒤에 조사가 드러나지 않으면 무조건 영형태로 처리함\n• 모음으로 끝난 체언이라는 조건만 보고 주격 조사 영형태가 가능하다고 오해함\n• 문맥·통사적 환경을 고려하지 않음",
+                study: "1. 주격 조사 영형태의 핵심 조건을 분명히 하세요. → 주격 조사의 영형태는 특정 구문 환경(특히 구어·체언 단독 주어 등)에서만 나타납니다.\n2. '아비'는 단순히 모음 '이'로 끝난 체언일 뿐, 주격 조사 '∅'가 실현되었다고 볼 형태적·통사적 근거가 없습니다.\n3. 주격 조사는 기본적으로 '이/가'가 실현되는 것이 원칙이며, 영형태는 예외적 현상임을 기억해야 합니다.\n4. 앞으로는 ✔ 조사가 생략된 것인가, ✔ 처음부터 영형태로 실현된 것인가를 구분해서 판단하세요."
+            },
+            16: {
+                title: "내용 전개 방식 파악하기",
+                feedback: "이 문항은 (가)와 (나)가 개념을 어떤 방식으로 설명하고 있는지를 비교하는 문제입니다. 주제어가 어렵다고 해서 내용 이해를 포기하면, 설명 방식의 차이를 놓치기 쉽습니다.",
+                mistakes: "• '정의했다 / 설명했다'는 점만 보고 두 글의 설명 방식이 비슷하다고 판단함\n• 학자 이름이 등장하면 곧바로 '비교했다'고 착각함\n• '견해 소개'와 '견해 비교'를 구분하지 못함",
+                study: "1. 먼저 설명 방식의 기준을 분명히 하세요.\n   • 개념 정의: 무엇인지 설명함\n   • 견해 비교: 둘 이상의 관점을 대조·차이 중심으로 제시\n2. (나)를 볼 때는 → '지지체'의 의미만 설명하고 있을 뿐, → 서로 다른 학자의 관점을 나란히 놓고 비교하지는 않습니다.\n3. (가)는 단계가 다릅니다.\n   • ① '질료'·'형상' 개념 정의\n   • ② 아리스토텔레스·실러·그린버그의 견해 제시\n   • ③ 질료 개념을 중심으로 관점 차이를 대비 → 명확한 '비교 설명'입니다.\n4. 앞으로는 ✔ 학자가 여러 명 등장하는가, ✔ 관점이 대조적으로 제시되는가, ✔ 차이를 드러내는 표현(반면, 그러나, 다르게 등)이 있는가를 함께 확인하세요."
+            },
+            17: {
+                title: "내용 추론하기",
+                feedback: "이 문항은 제시문에 나타난 학자의 주장들을 정확히 연결하여, 그로부터 도출되는 '입장·관점'을 논리적으로 추론했는지를 판단하는 문제입니다. 문장을 길게 요약했더라도, 추론의 고리가 하나라도 어긋나면 오답이 됩니다.",
+                mistakes: "• 제시문의 내용을 많이 끌어왔다는 이유만으로 추론이 타당하다고 판단함\n• 학자의 발언을 부분적으로만 연결하거나, 핵심 개념(질료의 기능, 예술의 목적)을 정리하지 못함\n• '투명한 매체 / 불투명한 매체'와 같은 핵심 대비 개념을 명확히 대비하지 못함",
+                study: "1. 먼저 각 학자의 입장을 한 문장으로 요약해 보세요.\n   • 실러: 예술 → 미적 경험 → 도덕성 회복 / 질료는 의도를 방해하지 않는 투명한 매체\n   • 그린버그: 예술은 그 자체가 목적 / 질료의 물리적 성질과 매체성 자체에 주목\n2. 그런 다음, 제시문에 직접 근거가 되는 표현이 있는지 확인하세요.\n   • '질료의 물리적 성질이 드러나지 않아야 한다'\n   • '질료의 물리적 성질이 갖는 표현 가능성에 주목' → 각각 투명성 / 불투명성으로 일관되게 연결됩니다.\n3. 추론 문제에서는 ✔ 제시문에 없는 내용을 새로 덧붙이지 않았는지, ✔ '~일 것이다'라는 추론이 앞선 근거에서 자연스럽게 나오는지를 반드시 점검하세요.\n4. 앞으로는 학자별 핵심 개념 정리 → 개념 간 대비 구조 확인 → 그 대비가 선택지의 주장과 정확히 일치하는지 이 3단계로 검증하세요."
+            },
+            18: {
+                title: "세부 내용 확인하기",
+                feedback: "이 문항은 (나)에서 정의된 개념들(지지체·규칙·예술작품)의 관계를 정확히 구분했는지를 묻는 문제입니다. 용어를 알고 있다는 것과, 그 용어들이 어떤 위계와 역할로 설명되는지를 구분하는 것은 다릅니다.",
+                mistakes: "• '지지체', '규칙', '매체'라는 용어가 함께 등장하면 서로 같은 범주라고 오해함\n• '물질적 요소'라는 공통 표현에 끌려 규칙 자체를 예술작품으로 확대 해석함\n• 문단별 설명 역할(정의 / 한계 제시)을 구분하지 못함",
+                study: "1. 먼저 (나)의 개념 구조를 단계적으로 정리하세요.\n   • 지지체: 예술작품을 구성하는 물질적 요소\n   • 규칙: 그 지지체를 사용하는 관습·기법 → 둘은 역할이 다르며 동일 범주가 아닙니다.\n2. 2문단의 핵심은 → 포스트매체 조건 이전의 한계를 설명하는 것입니다. 즉, 예술을 물질적 지지체로만 환원해 이해했다는 비판이지, 규칙이 곧 예술작품이라고 말한 것이 아닙니다.\n3. 3문단에서 규칙은 → 지지체를 어떻게 쓰는가에 대한 방식이지, → 예술작품 그 자체로 정의되지 않습니다.\n4. 앞으로는 개념 판단 문제에서 ✔ 무엇이 예술작품인가, ✔ 무엇이 구성 요소인가, ✔ 무엇이 사용 방식(규칙)인가를 명확히 구분하는 연습을 하세요."
+            },
+            19: {
+                title: "구체적 상황에 적용하기",
+                feedback: "이 문항은 학자의 이론을 자료에 적용할 때, 적용 범위와 기준을 정확히 지켰는지를 판단하는 문제입니다. 이론과 자료가 모두 익숙해 보여도, 개념을 한 단계 과잉 적용하면 오답이 됩니다.",
+                mistakes: "• 학자의 핵심 개념(불투명한 매체, 물질적 지지체)을 자료 속 모든 요소에 자동으로 대응시킴\n• '질료', '매체', '지지체'를 같은 개념처럼 혼동함\n• 한 학자의 이론을 다른 학자의 개념 체계에 그대로 겹쳐 적용함",
+                study: "1. 그린버그의 논의 범위를 먼저 명확히 하세요.\n   • 그린버그가 말한 '불투명한 매체'는 → 예술 장르 내부에서 질료가 드러나는 방식에 대한 미학적 기준입니다.\n   • '캔버스' 자체를 불투명/투명으로 단정한 것은 아닙니다.\n2. [자료 2]의 평가는 → '목탄의 질감이 살아 있다'는 작품의 표현 효과에 대한 평가이지, → 그린버그 이론을 직접 적용한 판단 근거는 아닙니다.\n3. 크라우스의 '물질적 지지체' 개념은 → 예술작품을 구성하는 물질적 요소의 정의에 해당합니다. 이는 → 그린버그의 '매체의 불투명성' 논의와 개념 수준과 목적이 다릅니다.\n4. 앞으로는 학자 이론 적용 문제에서 ✔ 이 이론이 무엇을 설명하기 위한 것인지, ✔ 자료의 요소가 그 설명 대상에 정확히 해당하는지, ✔ 서로 다른 이론을 혼합 적용하고 있지는 않은지를 반드시 점검하세요."
+            },
+            20: {
+                title: "구체적 상황에 적용하기",
+                feedback: "이 문항은 그린버그의 미학적 기준을 정확히 이해하고, 그 기준을 작품 평가에 일관되게 적용했는지를 판단하는 문제입니다. 작품에 대한 인상적 평가에 끌리면, 그린버그가 문제 삼는 핵심 기준을 놓치기 쉽습니다.",
+                mistakes: "• '사실적이다 / 그럴듯하다'는 평가를 예술의 목적 달성으로 곧바로 연결함\n• 질료가 드러나지 않는 효과를 오히려 긍정적 가치로 오해함\n• '예술 그 자체가 목적'이라는 표현을 일반적 칭찬으로 받아들임",
+                study: "1. 먼저 그린버그의 판단 기준을 한 줄로 정리하세요. → 예술은 외부 목적을 재현하는 수단이 아니라, → 질료의 물리적 성질이 드러나 장르의 순수성이 실현될 때 그 자체가 목적이 됩니다.\n2. 이 기준으로 자료를 다시 보세요.\n   • [자료 2] 작품 B → '목탄의 질감이 살아 있음' → 질료의 물리적 성질이 전면에 드러남 → 기준 충족\n   • [자료 1] 초상화 → '물감으로 그렸다고 믿기 힘들 정도로 사실적' → 질료가 보이지 않게 숨겨짐 → 기준 불충족\n3. 그린버그에게서 질료가 투명해질수록(재현이 정교할수록) 예술은 외부 목적(현실 모사)에 가까워지고, 예술 자체의 목적성은 약해진다는 점을 기억하세요.\n4. 앞으로는 작품 평가 문제에서 ✔ 질료가 드러나는가 / 감춰지는가, ✔ 재현이 목적이 되는가 / 장르 자체가 목적이 되는가를 반드시 대비해서 판단하세요."
+            },
+            21: {
+                title: "어휘의 사전적 의미 파악하기",
+                feedback: "이 문항은 두 단어의 사전적 의미를 정확히 구분하고, 그 의미가 문맥 판단에 어떻게 작용하는지를 묻는 문제입니다. 어휘를 '대충 비슷한 말'로 처리하면 오답으로 이어집니다.",
+                mistakes: "• '방관'과 '주목'을 모두 '보는 행위'라는 공통점만으로 묶어 해석함\n• 단어의 행동성(개입 여부) 차이를 고려하지 않음\n• 문맥 판단 전에 사전적 의미 확인을 건너뜀",
+                study: "1. 먼저 사전적 의미를 정확히 대비하세요.\n   • 방관: 직접 나서지 않고 개입하지 않음\n   • 주목: 관심을 가지고 주의 깊게 살핌\n2. 두 단어의 핵심 차이는 → 행동의 유무가 아니라 → 개입·관여 의도의 유무입니다.\n3. 따라서 단순히 바라보기만 하는 상황 → 방관, 관심을 가지고 집중해 살피는 태도 → 주목으로 명확히 구분해야 합니다.\n4. 앞으로 어휘 판단 문제에서는 ✔ 공통점보다 차이점을 먼저 찾고, ✔ '의미 자질(개입성, 적극성, 태도)'을 비교하는 연습을 하세요."
+            },
+            22: {
+                title: "서술상의 특징 파악하기",
+                feedback: "이 문항은 서술의 시간적·논리적 순서가 실제로 어떻게 배열되어 있는지를 정확히 확인하는 문제입니다. 인물의 행동이 인상적으로 먼저 떠올랐다는 이유만으로 '행동 → 이유' 구조라고 단정하면 오답이 됩니다.",
+                mistakes: "• 사건의 결과(사직원 작성)만 기억하고 제시문의 실제 전개 순서를 확인하지 않음\n• 이유 설명이 길게 나와 있으면 뒤에 나왔다고 착각함\n• 인물의 심리 서술과 사건 서술의 위치를 혼동함",
+                study: "1. 서술 순서 판단 문제에서는 문단의 실제 배열을 차분히 따라가야 합니다. 기억이나 인상으로 판단하지 말고, 무엇이 먼저 서술되었는지를 문장 단위로 확인하세요.\n2. 특히 '~하게 되었다', '~때문에' 같은 표현이 나오면 원인(이유) 서술인지, 결과(행동) 서술인지를 구분해서 표시해 보세요.\n3. 문학 작품에서는 이유(심리·배경) → 행동 구조가 더 자주 쓰인다는 점도 함께 염두에 두세요.\n4. 앞으로는 ✔ 행동이 실제로 먼저 제시되었는지, ✔ 그 행동의 이유가 뒤에서 설명되는지를 문장 근거로 확인하는 연습을 하세요."
+            },
+            23: {
+                title: "작품의 내용 이해하기",
+                feedback: "이 문항은 문장 속 표현을 근거로 사건의 정확한 시간 순서를 파악했는지를 묻는 문제입니다. 사건을 상식적 흐름으로 재구성하면 오답에 이르기 쉽습니다.",
+                mistakes: "• '사직원'이라는 핵심 사건에만 집중해 앞뒤 행동의 순서를 추론으로 보완함\n• '~하고', '~며' 같은 연결 표현을 단순 나열로 처리하고 시간 관계를 따지지 않음\n• 작품 속 실제 표현보다 자연스러워 보이는 상황을 우선시함",
+                study: "1. 시간 순서 문제에서는 서술된 표현 그대로를 근거로 삼아야 합니다.\n   • '사직원을 쓰고 ~ 인쇄 공장으로 들어가'\n   • '사직원을 내고 ~ 나오며' → 두 표현을 종합하면 인쇄 공장에 들어간 시점은 사직원 제출 이전임을 알 수 있습니다.\n2. '~고', '~며'는 상황에 따라 순차, 동시, 선행 사건을 나타낼 수 있으므로, 앞뒤 맥락을 함께 확인해야 합니다.\n3. 시간 판단 문제에서는 \"보통은 이렇게 했을 것이다\"라는 추측을 배제하고, 텍스트에 실제로 드러난 정보만 연결하는 연습이 필요합니다.\n4. 앞으로는 ✔ 사건 A와 B가 어떤 표현으로 연결되는지, ✔ 그 표현이 선후 관계를 암시하는지를 문장 근거로 표시해 보세요."
+            },
+            24: {
+                title: "공간의 기능 이해하기",
+                feedback: "이 문항은 작품 속 '공간'이 인물의 태도와 어떤 관계를 맺고 있는지를 근거로 판단하는 문제입니다. 사건만 기억하고 공간의 기능적 의미를 연결하지 못하면 오답으로 이어집니다.",
+                mistakes: "• 공간을 단순한 배경으로만 읽고, 인물의 태도 변화와 연결하지 않음\n• 한 공간에서 벌어진 행동 하나만 보고 성격을 단정함\n• 두 공간(㉠, ㉡)을 같은 기준으로 비교하지 않음",
+                study: "1. 공간 판단 문제에서는 인물의 태도 변화를 먼저 정리하세요.\n   • 공장장실: 상사의 이야기를 듣고 의중을 수용 → 수동·수용적 태도\n   • 자기 집: 아내의 만류에도 개의치 않고 행동 → 주체·독립적 태도\n2. 그다음, 각 태도가 어느 공간에서 드러나는지를 대응시키세요.\n   • ㉠ 공장장실 = 타인의 의중을 받아들이는 공간\n   • ㉡ 자기 집 = 타인의 반응에 흔들리지 않는 공간\n3. 공간의 의미는 '무슨 일이 벌어졌는가'보다 '그때 인물이 어떤 태도를 보였는가'로 판단해야 합니다.\n4. 앞으로는 ✔ 공간마다 인물의 행동 성격(수용/저항, 수동/주체) 표시, ✔ 그 성격이 지속적으로 드러나는지 확인 이 두 단계를 거쳐 판단하세요."
+            },
+            25: {
+                title: "외적 준거를 바탕으로 작품 감상하기",
+                feedback: "이 문항은 작품 속 사실 서술과 그에 대한 해석이 논리적으로 연결되는지를 판단하는 문제입니다. 상황이 힘들어 보인다는 이유만으로 사회적 의미까지 확대 해석하면 오답이 됩니다.",
+                mistakes: "• 인물이 과도한 업무를 떠맡은 상황을 곧바로 '도시에 적응하지 못함'으로 일반화함\n• 개인의 능력·전공 한계와 사회 구조에 대한 적응 실패를 혼동함\n• 제시문에 없는 비판적 의미를 추론으로 덧붙임",
+                study: "1. 먼저 제시문에서 확인되는 사실만 정리하세요.\n   • 회사가 전기 기사를 채용하지 않음\n   • 김명학이 전기실 책임까지 떠맡음 → 이는 회사의 요구로 업무가 과중된 상황입니다.\n2. '전기에 대해서는 기계과 출신으로서의 상식밖에 없다'는 표현은 → 전공상의 한계를 나타낼 뿐, → 도시 생활이나 산업 사회에 적응하지 못한다는 평가로 바로 이어지지 않습니다.\n3. 인물 해석 문제에서는 ✔ 원인이 개인 능력의 범위인지, ✔ 아니면 사회 구조에 대한 부적응인지를 반드시 구분해야 합니다.\n4. 앞으로는 사실 서술 → 의미 해석 → 사회적 평가 이 세 단계를 한 번에 뛰어넘지 않는 연습을 하세요."
+            },
+            26: {
+                title: "세부 내용 이해하기",
+                feedback: "이 문항은 여러 문단에 흩어져 있는 정보를 연결해, 개념 간 인과 관계를 정확히 정리했는지를 묻는 문제입니다. 용어를 모두 이해하고 있어도, 연결 방식이 잘못되면 오답이 됩니다.",
+                mistakes: "• '부도체', '분극', '전하', '정전용량'을 서로 같은 수준의 개념으로 혼동함\n• '영향을 받는다'는 표현을 '직접적인 비례 관계'로 단순화함\n• 문단별 설명을 개별적으로만 이해하고 최종 결론 문장의 논리 검증을 하지 않음",
+                study: "1. 먼저 개념 간 위계를 정리하세요.\n   • 수분 유지 기판 → 부도체\n   • 분극 → 부도체 표면에 전하가 형성되는 현상\n   • 정전용량의 기본값 → 분극의 영향을 받은 전극 사이의 값\n2. 핵심은 → 정전용량의 기본값이 '부도체에 축적된 전하의 양' 자체로 결정되는 것이 아니라, → 분극에 의해 전극의 상태가 변한 결과라는 점입니다.\n3. 따라서 문장을 판단할 때는 ✔ 전하가 어디에 형성되는가 (부도체 표면), ✔ 정전용량은 무엇과 무엇 사이의 값인가 (상·하부 전극)를 분리해서 봐야 합니다.\n4. 앞으로 설명문 문제에서는 원인(분극) → 매개 과정(전극 상태 변화) → 결과(정전용량의 기본값)를 단계별 화살표로 정리하는 연습을 하세요."
+            },
+            27: {
+                title: "핵심 내용 이해하기",
+                feedback: "이 문항은 도식 속 구성 요소(ⓐⓑⓒ)와 본문의 설명을 정확히 대응시켜, 전기장의 형성과 전류의 흐름을 구분했는지를 묻는 문제입니다. '전기장이 생긴다'는 표현을 곧바로 '전기가 흐른다'로 해석하면 오답이 됩니다.",
+                mistakes: "• 전기장이 형성되면 전류도 함께 흐른다고 오해함\n• 상·하부 전극과 부도체(수분 유지 기판)의 역할을 혼동함\n• 도식에서의 위치 관계만 보고 물리적 성질(도체/부도체)을 간과함",
+                study: "1. 먼저 각 요소의 성질을 정확히 정리하세요.\n   • ⓐ 상부 전극 → 도체\n   • ⓑ 수분 유지 기판 → 부도체\n   • ⓒ 하부 전극 → 도체\n2. 본문 3문단의 핵심은 → 전원이 인가되면 상·하부 전극 사이에 전기장은 형성되지만, → 부도체인 수분 유지 기판에는 전류가 흐르지 않는다는 점입니다.\n3. 과학 설명 글에서는 반드시 전기장(전하에 작용하는 공간적 상태)과 전류(전하의 실제 이동)를 구분해서 이해해야 합니다.\n4. 앞으로는 도식 문제를 풀 때 ✔ 각 부분의 물질적 성질, ✔ 형성되는 것이 전기장인지 / 전류인지를 따로 체크하는 습관을 들이세요."
+            },
+            28: {
+                title: "핵심 내용 추론하기",
+                feedback: "이 문항은 특정 시점(t)에서 어떤 현상이 '이미 끝났는지', '진행 중인지', '유지되고 있는지'를 정확히 구분했는지를 묻는 문제입니다. 문장의 일부 표현만 보고 상태 변화를 단정하면 오답으로 이어집니다.",
+                mistakes: "• '회복한다'는 표현을 보고 분극이 이미 사라졌다고 성급히 추론함\n• 하나의 변화(물 분자 탈착)와 다른 변화(분극의 소멸)를 동시에 일어난 것으로 묶어 해석함\n• '전원이 공급되는지 여부'를 상태 판단의 핵심 조건으로 고려하지 않음",
+                study: "1. 시간 표시(t)의 의미를 먼저 정리하세요. → t는 모든 변화가 끝난 이후가 아니라, → 변화가 진행되는 특정 시점일 수 있습니다.\n2. 문장을 현상별로 분리해서 읽으세요.\n   • 물 분자 탈착: 이미 진행됨\n   • 전원 공급: 여전히 유지 중\n   • 정전용량: 원래 크기를 유지\n3. 전원이 계속 공급되고 있고, 정전용량이 유지되고 있다면 → 분극이 완전히 사라졌다고 볼 수는 없습니다.\n4. 앞으로는 시간 추론 문제에서 ✔ 무엇이 사라졌는가, ✔ 무엇이 유지되고 있는가, ✔ 조건(전원 공급 등)이 계속되는가를 각각 따로 체크하세요."
+            },
+            29: {
+                title: "핵심 내용 추론하기",
+                feedback: "이 문항은 제시된 문장으로부터 어떤 수준까지 추론이 가능한지를 판단하는 문제입니다. 현상이 나타났다는 사실을 원인 간의 '힘의 크기 비교'까지 확대 해석하면 오답이 됩니다.",
+                mistakes: "• '빠르게 탈착된다'는 결과를 보고 곧바로 힘의 우열(전기력 > 인력)을 단정함\n• 과학 지식(전기력, 인력)을 활용해 제시문에 없는 인과를 보완 추론함\n• '추론 가능'과 '추측 가능'을 구분하지 못함",
+                study: "1. 먼저 문장에서 직접 확인 가능한 사실만 정리하세요. → 물 분자는 박막 소재와의 인력을 오래 유지하지 못하고 빠르게 탈착된다.\n2. 여기서 알 수 있는 것은 → 인력이 충분히 강하지 않다는 사실까지입니다. 하지만 → 서로 밀어내는 전기력이 더 크다는 판단은 제시문에 직접적인 근거가 없습니다.\n3. 과학 설명 글에서 힘의 크기를 비교하려면 '~보다 크다', '~가 지배적이다' 또는 두 힘이 명시적으로 대비되어야 합니다.\n4. 앞으로는 추론 문제에서 ✔ 문장에 직접 제시된 원인·결과인가, ✔ 과학 상식을 보충해서 넣고 있지는 않은가, ✔ 결과를 원인 비교로 과잉 확장하고 있지는 않은가를 반드시 점검하세요."
+            },
+            30: {
+                title: "세부 내용 이해하기",
+                feedback: "이 문항은 '지역권'의 법적 성격을 제시문의 표현 그대로 이해했는지를 묻는 문제입니다. 일상적인 의미나 어감으로 해석하면 오답에 이르기 쉽습니다.",
+                mistakes: "• '권리'라는 말에 집중해 배타적 이용권으로 확대 해석함\n• 토지 이용과 관련된 설명을 소유권과 혼동함\n• 문장의 핵심 부정 표현('~이 아니라')을 정확히 반영하지 못함",
+                study: "1. 법·사회 지문에서는 정의 문장을 가장 먼저 정확히 읽으세요. → \"지역권이 설정되더라도 배타적으로 이용하는 것이 아니다\" → 지역권은 제한된 이용권임을 분명히 밝히고 있습니다.\n2. 지역권은 토지의 소유권을 이전하는 권리가 아니라 특정 목적을 위해 일부 이용을 허용받는 권리입니다.\n3. 따라서 판단할 때는 ✔ '전부 사용 가능한가', ✔ '다른 사람의 이용을 배제할 수 있는가'를 기준으로 개념을 점검해야 합니다.\n4. 앞으로는 부정 표현(아니다, 할 수 없다)에 표시하고 그 부정이 무엇을 제한하는지를 명확히 적어 보는 연습을 하세요."
+            },
+            31: {
+                title: "핵심 내용 이해하기",
+                feedback: "이 문항은 지상권의 성립 요건을 제시문 문장 그대로 해석했는지를 묻는 문제입니다. 법 개념을 상식적으로 추론하거나, 결과를 과도하게 일반화하면 오답이 됩니다.",
+                mistakes: "• '지상물이 없더라도 성립 가능'이라는 표현을 소유권자의 자유로운 계약 가능성으로 확대 해석함\n• '지상권의 목적'과 '지상권 설정 계약'을 같은 단계의 개념으로 혼동함\n• 문장에서 말하는 권리의 성립 조건과 행위의 가능성(계약 체결)을 구분하지 못함",
+                study: "1. 먼저 문장의 핵심 진술을 정확히 제한하세요. → \"지상물이 현재 없더라도 지상권은 성립할 수 있다\" → 이는 지상물의 존재 여부가 성립 요건이 아님을 말할 뿐입니다.\n2. 여기서 바로 → \"토지 소유자가 지상권 설정 계약을 할 수 있다\"로 행위 가능성까지 일반화하는 것은 한 단계 넘어간 해석입니다.\n3. 법·사회 지문에서는\n   • ✔ '~할 수 있다'(권리·상태의 가능성)\n   • ✔ '~할 수 있다'(행위 주체의 계약·처분 가능성)\n   이 두 종류의 '가능성'을 반드시 구분해야 합니다.\n4. 앞으로는 제시문이 권리의 성질을 설명하는지, 아니면 법률 행위의 가능성을 말하는지를 구분해서 표시하는 연습을 하세요."
+            },
+            32: {
+                title: "구체적 상황에 적용하기",
+                feedback: "이 문항은 소유권·지상권·지역권이 시간에 따라 어떻게 이전·설정되는지를 인물별로 정확히 구분했는지를 묻는 문제입니다. 내용이 복잡해 보일수록, 구조를 정리하지 않으면 오답이 나기 쉽습니다.",
+                mistakes: "• 날짜를 대충 전후 관계로만 기억하고 정확히 대응하지 않음\n• '소유권자 / 권리자 / 설정자'를 같은 역할로 혼동함\n• 한 인물의 권리를 정리하지 않은 채 다음 인물로 넘어가며 기억이 섞임",
+                study: "1. 반드시 시간 순서부터 정리하세요. → 2014.10.20 / 2015.10.20 / 2023.10.20 이 날짜들이 권리 변화의 기준점입니다.\n2. 그다음 토지별로 나누어 보세요.\n   • 토지 X: 소유권 변화 + 지상권 설정 관계\n   • 토지 Y: 소유권 변화 + 지역권 설정 관계\n3. 마지막으로 인물별 역할을 분리하세요.\n   • ✔ 소유권자인가\n   • ✔ 권리를 설정한 사람인가\n   • ✔ 권리를 가진 사람(지상권자·지역권자)인가\n4. 이런 유형은 반드시 표나 화살표 구조로 정리하는 연습이 필요합니다. (예: 'A → B : 지상권', 'B → A : 지역권')"
+            },
+            33: {
+                title: "핵심 내용 추론하기",
+                feedback: "이 문항은 상린권이 '누구의 권리를 일방적으로 강화하는 제도'인지, 아니면 '인접 토지 소유자 간의 권리를 조정하는 제도'인지를 정확히 이해했는지를 묻는 문제입니다. 사례가 구체적일수록 판단이 흔들리기 쉬운 유형입니다.",
+                mistakes: "• 다른 사람의 토지를 이용하게 된다는 점에만 주목해 권리의 확대·제한 문제로 단순화함\n• 상린권을 특정 소유자에게 유리한 권리로 오해함\n• '부득이한 경우'라는 조건을 고려하지 않고 일반적인 권리 행사처럼 해석함",
+                study: "1. 먼저 상린권의 목적을 정확히 기억하세요. → 상린권은 인접 토지 소유자들이 토지를 원만하게 이용하도록 권리 행사를 서로 조정하기 위한 제도입니다.\n2. 사례에서 한쪽 토지 소유자가 다른 토지를 이용하는 것은 → 그 소유자의 권리를 확대하기 위한 것이 아니라, → 토지 이용이 사실상 불가능한 상황을 조정하기 위한 예외적 허용입니다.\n3. 따라서 상린권은\n   • 한쪽의 권리를 일방적으로 키우는 제도가 아니라\n   • 쌍방의 권리를 일정 범위에서 제한·조정하는 제도입니다.\n4. 앞으로는 법 개념 판단 문제에서\n   • ✔ 이 제도의 목적이 '조정'인지 '확대'인지\n   • ✔ 권리 행사가 예외적 상황에 한정되는지\n   를 반드시 함께 따져 보세요."
+            },
+            34: {
+                title: "어휘의 문맥적 의미 파악하기",
+                feedback: "이 문항은 '높이다'가 문맥에서 어떤 사전적 의미로 쓰였는지를 정확히 판단하는 문제입니다. 단어의 기본 의미를 알고 있어도, 문맥에 맞는 의미를 선별하지 못하면 오답이 됩니다.",
+                mistakes: "• '높이다'라는 단어를 물리적 높이 상승이나 막연한 긍정 변화로만 인식함\n• 사전적 의미를 확인하더라도 여러 뜻 중 어떤 뜻이 쓰였는지를 고르지 않음\n• 문장 전체의 목적어('요역지의 가치')와 서술어의 의미를 연결하지 않음",
+                study: "1. 먼저 사전적 의미를 여러 갈래로 정리하세요.\n   • 높이다: ① 물리적 높이를 올리다 ② 품질·수준·능력·가치를 더 높은 상태로 만들다\n2. 다음으로 목적어를 확인하세요. → '요역지의 가치를 높이다' → 물리적 높이가 아니라 평가·수준의 상승을 뜻함이 분명합니다.\n3. 어휘 의미 판단 문제에서는 '무엇을 높이는가'가 결정적인 단서입니다. 사람이면 능력, 제도면 수준, 대상이면 가치로 의미가 좁혀집니다.\n4. 앞으로는\n   • ✔ 목적어가 추상 명사인지 / 구체 명사인지\n   • ✔ 그에 맞는 사전적 의미 번호가 무엇인지\n   를 연결해 판단하는 연습을 하세요."
+            },
+            35: {
+                title: "표현상의 특징 파악하기",
+                feedback: "이 문항은 비유적 표현이 '무엇을' '어떤 효과로' 드러내는지를 정확히 연결했는지를 묻는 문제입니다. 비유 표현이 보인다는 이유만으로, 곧바로 적절하다고 판단하면 오답이 됩니다.",
+                mistakes: "• 비유어(석국, 난초)가 등장하면 표현 효과를 깊이 따지지 않고 긍정적으로 해석함\n• 비유의 비교 대상과 드러내는 속성을 구분하지 못함\n• 두 작품을 비교해야 하는데, 각각의 비유 기능을 따로 확인하지 않음",
+                study: "1. 비유 표현을 보면 먼저 구조를 분해하세요.\n   • 무엇을 → 무엇에 비유했는가\n   • 그 비유로 어떤 성질이 드러나는가\n2. (가)의 표현\n   • '시냇가에 누은 돌' → '석국처럼 벌려 있음' → 돌의 자연스럽고 생명력 있는 모습을 시각적으로 형상화\n3. (나)의 표현\n   • '이군의 용모' → '난초와 같음' → 인물의 고결함·기품·맑은 기운을 드러냄\n4. 비교 문제에서는\n   • ✔ 두 텍스트 모두 비유적 표현을 사용했는지\n   • ✔ 그 비유가 각각 대상의 특징을 드러내는 데 기여하는지\n   를 동시에 확인해야 합니다."
+            },
+            36: {
+                title: "세부 내용 이해하기",
+                feedback: "이 문항은 화자의 '의도·계획'과 '실제 행위'가 구분되어 서술되었는지를 정확히 읽어 냈는지를 묻는 문제입니다. 서사 흐름이 자연스럽다는 이유로 일어난 일처럼 단정하면 오답이 됩니다.",
+                mistakes: "• '~가려고 하다'라는 표현을 이미 그 장소에 간 것으로 착각함\n• 꿈에서의 경험과 현실에서의 실제 행동을 구분하지 못함\n• 사건의 완결 여부(도달했는가 / 가지 않았는가)를 확인하지 않음",
+                study: "1. 서술어의 의미 단계를 정확히 구분하세요.\n   • 가다 / 찾아가다 → 실제 행위 완료\n   • 가려고 하다 → 의도·계획 단계\n2. '깨달으니 꿈이로다'와 같은 표현이 나오면 → 그 앞의 내용이 현실에서 실현된 사건인지, → 아니면 꿈속 인식·의지에 그친 것인지를 반드시 점검하세요.\n3. 서사 판단 문제에서는 행위의 결과가 제시되었는지가 핵심 기준입니다.\n   • 도착했다는 서술 ❌\n   • 찾아갔다는 서술 ❌ → 실제로 초선도에 간 사실은 확인되지 않습니다.\n4. 앞으로는\n   • ✔ 동작 동사의 상(완료/미완료)\n   • ✔ 의도 표현(–려고 하다, –고자 하다)\n   를 표시하며 읽는 연습을 하세요."
+            },
+            37: {
+                title: "세부 내용 파악하기",
+                feedback: "이 문항은 인물에 대한 평가가 '누구의 시선에서, 어떤 방식으로 제시되었는지'를 정확히 구분하는 문제입니다. 평가 내용이 타당해 보인다는 이유만으로 제시 방식까지 충족되었다고 판단하면 오답이 됩니다.",
+                mistakes: "• 인물의 성격 평가가 나오면 주변의 평판까지 함께 제시되었다고 착각함\n• '나의 평가'와 '여러 사람의 평가'를 같은 범주로 묶어 해석함\n• 문항에서 요구하는 조건이 '무엇을 말했는가'인지, '어떻게 말했는가'인지를 구분하지 못함",
+                study: "1. 인물 평가 문제에서는 먼저 평가의 주체를 확인하세요.\n   • '나'의 판단인가\n   • 주변 사람들의 공통된 평판인가\n2. ㉣의 경우 → '나'가 이군을 '온화하고 담박하며 세속적 이익에 무관심하다'고 평가하고 있을 뿐, → 다른 사람들도 그렇게 본다는 내용은 제시되지 않습니다.\n3. '주변의 평판과 함께 제시되었다'는 설명이 적절하려면\n   • 사람들의 말, 소문, 일반적 평가('사람들이 말하길', '세상에서는' 등)가 함께 제시되어야 합니다.\n4. 앞으로는\n   • ✔ 평가 주체가 개인인지 / 집단인지\n   • ✔ 평가가 직접 제시인지 / 전언·평판인지\n   를 반드시 나누어 확인하세요."
+            },
+            38: {
+                title: "외적 준거를 바탕으로 작품 감상하기",
+                feedback: "이 문항은 (나)의 문장에서 강조하는 핵심 태도가 무엇인지를 정확히 읽어 냈는지를 묻는 문제입니다. 특히 한자어·개념어가 많은 문장에서는 부정 표현과 조건의 방향을 놓치기 쉽습니다.",
+                mistakes: "• '텅 비고 밝다', '청'과 같은 표현에 주목해 무조건 내면을 비우는 태도라고 단순화함\n• 문장 속 부정 표현(∼은 아니다)을 끝까지 반영하지 않음\n• 철학적 표현을 이미지 중심으로 감각적으로만 해석함",
+                study: "1. 먼저 문장을 논리 구조로 분해하세요.\n   • \"환경을 따르면 … '청'의 지극함은 아니다\" → 환경만 따르고 내면을 잊는 상태를 분명히 경계하고 있습니다.\n2. 여기서 핵심은 → '청'이란 내면을 완전히 잊는 공허한 상태가 아니라는 점입니다.\n3. 따라서\n   • '내면을 잊고'\n   • '텅 비고 밝은 본체를 기른다'\n   는 설명은 → 제시문의 취지와 어긋나는 해석입니다.\n4. 앞으로는 철학·사상 지문을 읽을 때\n   • ✔ '~은 아니다', '~해서는 안 된다' 같은 경계·부정 표현\n   • ✔ 개념의 조건과 한계\n   를 반드시 표시하며 읽는 연습을 하세요."
+            },
+            39: {
+                title: "세부 내용 이해하기",
+                feedback: "이 문항은 말의 내용이 아니라, 그 말을 '누가 했는지'를 정확히 구분했는지를 묻는 문제입니다. 내용 이해가 맞더라도 발화 주체를 잘못 연결하면 오답이 됩니다.",
+                mistakes: "• 말의 의미와 기능에만 집중하고 발화 주체 확인을 소홀히 함\n• 장면에 함께 등장하는 인물들을 역할 없이 한 묶음으로 처리함\n• '요구한다 / 부탁한다'는 행위가 나오면 주요 인물(최 판관)에게 자동으로 귀속시킴",
+                study: "1. 대화가 나오는 부분에서는 반드시 발화 주체를 먼저 표시하세요.\n   • 이 문장에서 말한 사람은 십전 명왕입니다.\n2. 그다음에야 말의 내용과 기능을 해석해야 합니다.\n   • 태종에게\n   • 자신이 베푼 선의의 대가로\n   • 지부에 없는 '수박'을 요청함 → 이 해석 자체는 맞지만, 주체가 최 판관이 아닙니다.\n3. 문항이\n   • '최 판관의 말'\n   • '최 판관의 태도·행동'\n   을 묻고 있다면, 다른 인물의 발언은 아무리 내용이 맞아도 근거가 될 수 없습니다.\n4. 앞으로는\n   • ✔ 말풍선·인용문 옆에 화자 이름 적기\n   • ✔ 인물별로 발언 색깔 구분\n   같은 방식으로 정리해 보세요."
+            },
+            40: {
+                title: "발화내용 이해하기",
+                feedback: "이 문항은 등장인물의 말이 어떤 기능을 하는 발화인지를 정확히 구분했는지를 묻는 문제입니다. 말의 분위기나 감정에만 끌리면, 힐책·설득·요청 같은 발화 기능을 혼동하기 쉽습니다.",
+                mistakes: "• 불만이나 문제 제기가 나오면 모두 '요청'이나 '호소'로 묶어 해석함\n• 상대를 꾸짖는 말과 상대를 납득시키려는 말을 같은 설득 행위로 착각함\n• 발화의 대상과 목적을 끝까지 확인하지 않음",
+                study: "1. 발화 기능 문제에서는 먼저 말의 목적을 따지세요.\n   • 문제를 지적하며 책임을 묻는가? → 힐책\n   • 상대를 납득시켜 행동을 바꾸려 하는가? → 설득\n2. [A]의 경우\n   • 창고지기가 태종에게 → '남에게 베푼 것이 없다'는 점을 들어 → 도덕적 책임을 따지고 꾸짖고 있음 → 이는 분명한 힐책 발화입니다.\n3. [B]의 경우\n   • 태종이 귀졸들에게 → 문제를 해결해 주겠다는 의지를 밝히고 → 위로와 보상을 제시하며 물러가도록 함 → 이는 상대의 동의를 얻기 위한 설득 발화입니다.\n4. 앞으로는\n   • ✔ 말이 누구를 향하는지\n   • ✔ 그 말로 무엇을 얻으려는지\n   를 기준으로 발화 기능을 구분하세요."
+            },
+            41: {
+                title: "소재의 기능 파악하기",
+                feedback: "이 문항은 작품 속 '공간'이 단순한 배경이 아니라, 인물의 과거 행적이나 가치 판단을 드러내는 기능을 하는지를 정확히 파악했는지를 묻는 문제입니다. 장면의 분위기만 보고 공간의 의미를 막연히 해석하면 오답이 됩니다.",
+                mistakes: "• 공간을 사건이 일어난 장소로만 이해하고 그 공간이 무엇을 드러내는지까지 확장하지 못함\n• 인물의 감정(창피함, 놀라움)에만 주목하고 그 감정이 왜 생겼는지를 공간과 연결하지 않음\n• 두 장소를 비교해야 하는데 각각의 기능을 분리하지 않고 한 덩어리로 해석함",
+                study: "1. 공간 제시는 항상 '무엇을 보여 주기 위해 등장했는가'를 생각하세요.\n   • 단순 이동 공간인가\n   • 인물의 삶을 평가·대조하는 공간인가\n2. ㉠의 경우\n   • 텅 빈 창고\n   • 베푼 것이 없어 남은 것이 없음 → 태종이 자신의 과거 행적을 돌아보고 부끄러움을 느끼는 공간\n3. ㉡의 경우\n   • 적선을 일삼아 창고가 가득 참 → 태종이 장상의 과거 행적과 그 결과를 확인하는 공간\n4. 앞으로는\n   • ✔ 공간 + 인물의 반응\n   • ✔ 공간 + 과거 행적의 결과\n   를 함께 묶어 해석하는 연습을 하세요."
+            },
+            42: {
+                title: "외적 준거에 따라 작품 감상하기",
+                feedback: "이 문항은 작품 속 상징적 소재가 무엇을 '직접적으로' 의미하는지, 그리고 그 의미를 어디까지 확장할 수 있는지를 판단하는 문제입니다. 상징이 감동적으로 느껴진다고 해서 서사의 핵심 결과까지 연결하면 오답이 됩니다.",
+                mistakes: "• '짚 한 뭇'이 과거의 선행과 연결된다는 점만 보고 환생 가능성 회복이라는 결정적 의미까지 확대 해석함\n• 상징의 기원(과거 행위의 결과)과 상징의 효과(서사적 결말)를 구분하지 못함\n• 제시문에 명시되지 않은 결과를 맥락 추론으로 보완해 넣음",
+                study: "1. 먼저 상징의 사실 관계를 정확히 정리하세요.\n   • '짚 한 뭇' → 태종이 이름이 알려지기 전, 손식의 처가 해산할 때 준 '태거적'의 결과물임은 맞습니다.\n2. 그러나 여기서 확인 가능한 것은 → 과거에 선행을 베푼 사실이 있었다는 점까지입니다. → 이것이 곧바로 '끊어졌던 환생의 가능성을 되찾았다'는 결과로 이어진다는 서술은 제시문에 없습니다.\n3. 문학 상징 문제에서는\n   • ✔ 상징이 무엇을 환기하는가\n   • ✔ 그 상징이 결말을 직접적으로 바꾸는가\n   를 구분해야 합니다.\n4. 앞으로는\n   • 상징 → 과거 행적의 증거\n   • 판결·결말 → 환생 가능성\n   처럼 기능이 다른 요소들을 선으로 분리해 정리해 보세요."
+            },
+            43: {
+                title: "표현상의 특징 파악하기",
+                feedback: "이 문항은 수미상관 기법이 성립하는 정확한 조건을 알고 있는지를 묻는 문제입니다. 비슷한 표현이 반복된다는 인상만으로 수미상관이라고 판단하면 오답이 됩니다.",
+                mistakes: "• 첫 행과 마지막 행에 비슷한 어휘가 있다는 이유로 수미상관이라고 단정함\n• '같은 정서' 또는 '유사한 이미지'의 반복을 형식적 반복(수미상관)과 혼동함\n• 비교 문항에서 (가)를 충분히 확인하지 않고 (나)만 보고 판단함",
+                study: "1. 수미상관의 핵심 조건을 분명히 하세요. → 시의 첫 부분과 끝부분이 동일하거나 거의 동일한 표현으로 대응되어야 합니다. → 단순한 주제 반복이나 정서 유사성만으로는 성립하지 않습니다.\n2. (나)의 경우\n   • 첫 행과 마지막 행이 '그리운 곳에는 ~ 소리가 있네'로 형식적으로 대응됨 → 수미상관 기법이 분명히 사용됨\n3. (가)는\n   • 시의 처음과 끝이 같은 문장 구조나 표현으로 맞물리지 않음 → 수미상관 기법이 사용되었다고 볼 수 없음\n4. 앞으로는 표현 기법 문제에서\n   • ✔ 어휘·문장 구조의 실제 반복 여부\n   • ✔ 의미가 아니라 형식이 대응되는지\n   를 기준으로 판단하세요."
+            },
+            44: {
+                title: "시어의 의미 파악하기",
+                feedback: "이 문항은 시어 ㉤이 실제로 무엇을 수식하는지, 그리고 그 결과 의미가 어디까지 확장되는지를 정확히 판단했는지를 묻는 문제입니다. '거듭하여'라는 의미만 보고 뒤에 나오는 모든 대상에 반복 의미를 적용하면 오답이 됩니다.",
+                mistakes: "• '거듭하여'라는 의미를 문장 전체에 포괄적으로 적용함\n• 수식어가 어느 어구에 직접 연결되는지를 확인하지 않음\n• 결과 명사('세상의 마지막 저녁')까지 반복의 대상으로 잘못 해석함",
+                study: "1. 시어가 나오면 가장 먼저 문법적으로 무엇을 수식하는지를 확인하세요. → ㉤은 '그렇게 가다보면'을 수식합니다.\n2. 따라서 반복되는 것은 → '고통의 맨발로 걸어가'는 과정·행동이지, → '세상의 마지막 저녁'이라는 도달 지점이나 결과가 아닙니다.\n3. 시에서 반복 의미는 주로\n   • 동작\n   • 과정\n   • 상태의 지속\n   에 적용되는 경우가 많으며, 상징적 결과까지 자동으로 반복되는 것은 아닙니다.\n4. 앞으로는\n   • ✔ 수식어 → 피수식어 직접 연결선 긋기\n   • ✔ 반복되는 대상이 행동인지 / 결과인지 구분\n   을 연습하세요."
+            },
+            45: {
+                title: "외적 준거에 따라 작품 감상하기",
+                feedback: "이 문항은 시에서 '누가 누구와 동일시되는지'를 정확히 구분했는지를 묻는 문제입니다. 동일시가 여러 겹으로 나타날 때, 관계를 과도하게 연결하면 오답이 됩니다.",
+                mistakes: "• 동일시 표현이 여러 번 등장하면 모든 대상이 서로 동일시된다고 확대 해석함\n• 'A=B', '나=C'가 있으면 자동으로 '나=B'까지 성립한다고 착각함\n• 비유·동일시의 직접 제시 여부를 확인하지 않음",
+                study: "1. 동일시 판단은 반드시 문장 근거가 직접 있는지를 확인하세요.\n   • '목련 ↔ 어머님' 동일시: 있음\n   • '나 ↔ 나무' 동일시: 있음\n   • '나 ↔ 어머님' 동일시: 직접 제시 없음\n2. 동일시는 전이(전파)되지 않습니다. → '목련=어머님'과 '나=나무'가 각각 성립해도 → '나=어머님'이 자동 성립하지는 않습니다.\n3. 앞으로는\n   • ✔ 동일시 쌍을 하나씩 분리해 적고\n   • ✔ 각 쌍마다 직접 표현(같다/되다/~처럼)이 있는지\n   를 체크하세요."
+            }
+            },
+            'korean_mock_2': {
+                1: {
+                    title: "말하기 방식 파악하기",
+                    feedback: "이 문항은 발표자가 '무엇을 말했는가'가 아니라 '어떤 방식으로 발표를 조절했는가'를 판단하는 문제입니다. 문장 내용이 자연스럽다는 이유로 적절하다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 질문 문장이 보이면 무조건 '청중 반응 고려'라고 판단함\n• 질문의 기능(확인 / 유도 / 전환)을 구분하지 못함\n• '이해가 되시나요?'를 내용 설명으로 오해함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 말하기 방식, 즉 발표자가 청중의 반응에 따라 발표 전략을 조절했는가입니다.\n2️⃣ 질문의 기능을 구분하세요\n• 확인 질문: 이해 여부 점검\n• 유도 질문: 청중 참여 유도\n• 전환 질문: 주제 전환\n3️⃣ 질문 뒤의 발표자 반응을 확인하세요\n질문 후 발표자가 어떻게 대응하는지가 핵심입니다."
+                },
+                2: {
+                    title: "발표 전략 파악하기",
+                    feedback: "이 문항은 자료가 '있느냐'가 아니라, 그 자료가 발표 목적을 정확히 수행하느냐를 판단하는 문제입니다. 도표·그림·그래프·영상이 제시되었다는 사실만으로 적절하다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 자료의 형식(도표/그래프/영상)만 보고 판단함\n• 발표자가 무엇을 설명하려는지(전략의 목표)를 먼저 정리하지 않음\n• 결과 설명과 원인 설명을 구분하지 못함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 발표 전략 파악입니다. 즉, 해당 자료가 그 문단의 설명 목적을 충족하는가를 따지는 문제입니다.\n2️⃣ 자료의 역할을 명확히 하세요\n• 자료가 무엇을 보여주는지\n• 발표자가 무엇을 설명하려는지\n이 둘이 일치하는지 확인하세요."
+                },
+                3: {
+                    title: "청중 반응의 적절성 파악하기",
+                    feedback: "이 문항은 청중의 말이 발표 내용과 어떻게 연결되는지를 판단하는 문제입니다. 반응이 '그럴듯하다'는 인상만으로 적절하다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 반응이 긍정적이면 자동으로 적절하다고 판단함\n• '유익했다'는 감상 표현을 정보 충족 여부와 혼동함\n• 청중이 아쉬워하는 이유의 방향을 정확히 구분하지 못함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 청중 반응의 적절성 파악입니다. 즉, 청중이 기대한 정보가 발표에서 다루어졌는지에 대한 반응인가를 따지는 문제입니다.\n2️⃣ 반응의 근거를 확인하세요\n• 청중이 무엇을 기대했는지\n• 그 기대가 충족되었는지\n• 아쉬움의 대상이 무엇인지"
+                },
+                4: {
+                    title: "대화 참여자의 역할 이해하기",
+                    feedback: "이 문항은 대화의 주제나 분위기를 묻는 문제가 아니라, 대화 참여자가 어떤 '역할을 수행하는 발화'를 했는지를 판단하는 문제입니다. 말이 자연스럽고 대화를 이끌어 간다는 인상만으로 적절하다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 대화를 주도하면 '적극적 참여 요청'을 했다고 착각함\n• 역할 표현(요청·지시·분담)과 일반 발화를 구분하지 못함\n• 질문이 나오면 모두 '참여 유도'로 판단함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 대화 참여자의 역할 이해입니다. 즉, 학생 1이 실제로 어떤 역할을 수행했는지를 발화 내용으로 확인해야 합니다.\n2️⃣ 역할 표현을 구분하세요\n• 정보 제공: 사실 전달\n• 의견 제시: 자기 생각 표현\n• 참여 요청: 상대에게 행동 요구"
+                },
+                5: {
+                    title: "말하기 방식을 파악하기",
+                    feedback: "이 문항은 의견의 내용이 맞는지를 묻는 문제가 아니라, 의견을 '어떤 방식'으로 제시했는지를 판단하는 문제입니다. 의견이 합리적으로 들린다는 이유만으로 적절하다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 자신의 의견을 말했으니 무조건 적절하다고 판단함\n• '동의/반대' 여부만 보고 말하기 방식의 차이를 보지 못함\n• 이유 제시와 방식상의 특징을 구분하지 못함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 말하기 방식 파악입니다. 즉, 앞선 발화에 어떻게 대응하며 자신의 의견을 제시했는가를 보는 문제입니다.\n2️⃣ 발화를 2단계로 분석하세요\n• 1단계: 앞선 의견에 대한 반응(동의/비동의)\n• 2단계: 이유 제시 + 자신의 의견 제시"
+                },
+                6: {
+                    title: "글쓰기 계획의 반영 여부 파악하기",
+                    feedback: "이 문항은 글의 내용이 그럴듯한지를 묻는 문제가 아니라, 처음에 세운 '글쓰기 계획'이 실제 글에 정확히 반영되었는지를 판단하는 문제입니다. 글의 완성도나 정보의 타당성만 보고 판단하면 오답이 됩니다.",
+                    mistakes: "• (나)의 내용이 논리적이면 계획이 반영되었다고 판단함\n• (가)에 없는 내용이 추가된 것을 계획 반영으로 착각함\n• 계획의 '핵심 항목'과 '부가 정보'를 구분하지 못함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 글쓰기 계획의 반영 여부 파악입니다. 즉, (가)에 세운 계획 항목이 (나)에 실제로 구현되었는가를 따지는 문제입니다.\n2️⃣ 계획 항목을 하나씩 체크하세요\n• 계획에 있는 내용이 글에 있는가?\n• 글에 있는 내용이 계획에 있는가?"
+                },
+                7: {
+                    title: "조건에 따른 글쓰기",
+                    feedback: "이 문항은 글이 '잘 써졌는가'를 묻는 문제가 아니라, 주어진 조건이 글에 정확히 반영되었는지를 판단하는 문제입니다. 표현이 인상적이라는 이유만으로 적절하다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 비유적 표현이 있으면 조건을 충족했다고 판단함\n• 주제가 드러난다는 인상만으로 판단함\n• 조건을 항목별로 분해하지 않고 통째로 판단함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 조건에 따른 글쓰기입니다. 즉, 제시된 조건이 각각 빠짐없이 반영되었는가를 따지는 문제입니다.\n2️⃣ 조건을 분해해서 체크하세요\n• 조건 1: 충족 여부\n• 조건 2: 충족 여부\n• 모든 조건이 충족되어야 적절합니다."
+                },
+                8: {
+                    title: "글쓰기 전략 파악하기",
+                    feedback: "이 문항은 글의 주장이 타당한지를 묻는 문제가 아니라, 문제 해결을 위해 어떤 '글쓰기 전략'을 사용했는지를 판단하는 문제입니다. 해결 방안이 많아 보인다는 이유만으로 적절하다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 해결책이 여러 개 제시되면 자동으로 적절하다고 판단함\n• 전략(접근 방식)과 내용(주장)을 구분하지 못함\n• 하나의 관점에서 반복 설명한 것을 '다양한 측면'으로 착각함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 글쓰기 전략 파악입니다. 즉, 문제를 어떤 방식으로 풀어 가고 있는가를 보는 문제입니다.\n2️⃣ 전략의 종류를 구분하세요\n• 다양한 측면: 서로 다른 관점에서 접근\n• 반복 강조: 같은 관점을 여러 번 설명"
+                },
+                9: {
+                    title: "자료 활용 방안의 적절성 판단하기",
+                    feedback: "이 문항은 자료가 '관련 있어 보이는가'를 묻는 문제가 아니라, 자료가 해당 주장에 대해 '직접적인 근거 역할'을 할 수 있는지를 판단하는 문제입니다. 수치가 인상적이거나 문제 상황과 연결돼 보인다는 이유만으로 적절하다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 자료에 '비율'이나 '증가 추세'가 보이면 근거로 쓸 수 있다고 판단함\n• 주장과 자료 사이의 논리적 연결 고리를 따지지 않음\n• '비용이 늘었다'는 정보로 '특정 처리 방식의 비용이 크다'는 결론을 성급히 도출함",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 자료 활용 방안의 적절성 판단입니다. 즉, 해당 자료로 그 주장을 뒷받침할 수 있는가를 따지는 문제입니다.\n2️⃣ 자료와 주장의 연결을 확인하세요\n• 자료가 직접 말하는 내용은 무엇인가?\n• 그 내용이 주장의 근거가 되는가?"
+                },
+                10: {
+                    title: "고쳐쓰기의 적절성 판단하기",
+                    feedback: "이 문항은 문장이 바뀌었는지를 묻는 문제가 아니라, 친구의 조언에서 요구한 '수정 대상'이 실제로 반영되었는지를 판단하는 문제입니다. 수정 흔적이 보인다는 이유만으로 반영되었다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 수정된 단어가 있으면 조언이 반영되었다고 성급히 판단함\n• 조언의 초점(조사)과 실제 수정 대상(맞춤법)을 구분하지 못함\n• 주어·조사 관계를 끝까지 확인하지 않음",
+                    study: "1️⃣ 조언의 핵심 요구를 먼저 고정하세요\n친구의 조언은 '부적절하게 사용된 조사'를 알맞게 고치자는 것입니다.\n이 문장의 전체 주어는 '우리 모두'이므로, '시민들' 뒤에 붙은 조사는 주어-서술어 호응상 부적절합니다.\n2️⃣ 수정 대상을 정확히 확인하세요\n• 조언이 요구한 수정: 조사\n• 실제 수정된 부분: 조사인가 / 다른 것인가"
+                },
+                11: {
+                    title: "보조적 연결 어미의 쓰임 이해하기",
+                    feedback: "이 문항은 '-고'가 들어갔다는 사실을 묻는 문제가 아니라, 해당 '-고'가 보조적 연결 어미로 쓰였는지를 정확히 판별하는 문제입니다. 형태만 보고 판단하면 오답이 됩니다.",
+                    mistakes: "• '-고'가 있으면 자동으로 보조적 연결 어미라고 판단함\n• 단어 연결과 문장 연결을 구분하지 못함\n• 뒤에 다른 연결 어미가 붙을 수 있는지 여부를 확인하지 않음",
+                    study: "1️⃣ 보조적 연결 어미의 기준을 먼저 고정하세요\n보조적 연결 어미 '-고'는 단어(용언)와 단어를 느슨하게 연결하는 기능을 합니다.\n반대로, 문장과 문장을 이어 주면 보조적 연결 어미가 아닙니다.\n2️⃣ 문장 구조를 분석하세요\n• 앞뒤가 각각 독립된 문장인가?\n• 단어와 단어를 연결하는가?"
+                },
+                12: {
+                    title: "이어진문장 내 의미 관계 분석하기",
+                    feedback: "이 문항은 '-고'가 쓰였다는 사실을 묻는 문제가 아니라, 앞선 동사의 의미 자질에 따라 '-고'가 어떤 의미 관계를 형성하는지를 판단하는 문제입니다. 문장 흐름이 자연스럽다는 인상만으로 판단하면 오답이 됩니다.",
+                    mistakes: "• '-고'가 나오면 자동으로 나열·동시 관계라고 판단함\n• 동사의 사전적 의미를 정확히 확인하지 않음\n• 완결성·지속성 같은 의미 자질을 연결 어미 판단에 적용하지 못함",
+                    study: "1️⃣ 핵심 어휘의 의미 자질을 먼저 고정하세요\n'차다'는 사전적 의미: 발로 내어 지르거나 받아 올리다\n이 동작은 한 번의 행위로 끝나며 그 결과가 지속되지 않습니다.\n따라서 의미 자질은 [+완결성], [-지속성]입니다.\n2️⃣ 의미 자질에 따라 '-고'의 관계를 판단하세요\n• 순간적 동작 + 다음 동작 → 시간적 순차 관계"
+                },
+                13: {
+                    title: "음운 변동 현상 이해하기",
+                    feedback: "이 문항은 발음이 바뀌었는지를 묻는 문제가 아니라, 어떤 '유형의 음운 변동'이 일어났는지를 정확히 구분하는 문제입니다. 여러 현상이 함께 나타났다는 이유만으로 하나의 유형으로 묶으면 오답이 됩니다.",
+                    mistakes: "• 음이 달라지면 전부 '교체'라고 판단함\n• 한 단어에서 여러 음운 변동이 단계적으로 일어날 수 있다는 점을 놓침\n• 공통점을 찾을 때 전체 과정이 아니라 일부 현상만 보고 판단함",
+                    study: "1️⃣ 음운 변동 유형의 기준을 먼저 고정하세요\n• 교체: 기존 음운이 다른 음운으로 바뀜\n• 탈락: 음운이 없어짐\n• 첨가: 새로운 음운이 더해짐\n• 축약: 두 음운이 하나로 합쳐짐\n2️⃣ 단계별로 분석하세요\n• 부엌문 → 부억문 → 음절의 끝소리 규칙 (ㅋ → ㄱ) : 교체\n• 부억문 → [부엉문] → 비음화 (ㄱ → ㅇ) : 교체"
+                },
+                14: {
+                    title: "품사 통용 이해하기",
+                    feedback: "이 문항은 단어의 뜻이 비슷한지를 묻는 문제가 아니라, 같은 형태의 단어가 문맥에 따라 '품사 기능'을 달리하는지(통용되는지)를 판단하는 문제입니다. 품사 이름만 암기해서 적용하면 오답이 됩니다.",
+                    mistakes: "• 같은 단어가 나오면 무조건 품사 통용이라고 판단함\n• 의미는 비슷한데 문장 속 기능 차이를 보지 못함\n• 조사·의존 명사처럼 형태가 비슷한 품사를 혼동함",
+                    study: "1️⃣ 품사 통용의 기준을 먼저 고정하세요\n품사 통용이란 같은 형태의 단어가 문맥에 따라 서로 다른 품사 기능을 수행하는 것입니다.\n단, 조사 ↔ 의존 명사처럼 문법적으로 명확히 구분되는 경우는 통용으로 보지 않습니다.\n2️⃣ 문장 속 기능을 확인하세요\n• 앞에서 꾸며 주는 말이 있는가?\n• 문장에서 명사 역할을 하는가?\n• 체언에 붙어 관계만 표시하는가?"
+                },
+                15: {
+                    title: "중세 국어의 격조사 분석하기",
+                    feedback: "이 문항은 현대 국어 감각으로 조사를 보았는지를 점검하는 문제입니다. 중세 국어에서는 체언의 끝소리(모음/자음), 유정성, 음운 환경에 따라 격조사의 실현 형태(유형/영형태)가 달라집니다. 현대 국어 기준을 그대로 적용하면 오답이 됩니다.",
+                    mistakes: "• 주격 조사가 보이지 않으면 무조건 '잘못'이라고 판단함\n• 영형태(∅) 개념을 놓침\n• 중세 국어의 체언 종성(모음/자음)에 따른 조사 실현 규칙을 구분하지 못함",
+                    study: "1️⃣ 중세 국어 주격 조사 규칙을 먼저 고정하세요\n중세 국어에서 주격 조사는 다음과 같이 실현됩니다.\n• 자음으로 끝난 체언 → 주격 조사 '이' 실현\n• 모음으로 끝난 체언 → 주격 조사 ∅(영형태) 실현\n조사가 안 보이는 것도 '실현된 것'입니다.\n2️⃣ 문제의 핵심 사례를 정확히 분석하세요\n• '아비': 끝소리가 모음 '이' → 주격 조사 ∅(영형태)"
+                },
+                16: {
+                    title: "내용 전개 방식 파악하기",
+                    feedback: "이 문항은 글에 어떤 개념이 등장했는지를 묻는 문제가 아니라, 그 개념이 '어떤 방식으로 전개되었는지'를 판단하는 문제입니다. 학자 이름이 나온다는 이유만으로 '비교 전개'라고 판단하면 오답이 됩니다.",
+                    mistakes: "• 여러 개념이나 학자가 등장하면 자동으로 '비교'라고 판단함\n• 정의 제시와 견해 비교를 구분하지 못함\n• (가)와 (나)를 같은 기준으로 나란히 비교하지 않음",
+                    study: "1️⃣ 출제의도를 먼저 고정하세요\n이 문항의 출제의도는 내용 전개 방식 파악입니다. 즉, 글이 정보를 어떻게 조직하고 확장하는가를 보는 문제입니다.\n2️⃣ 각 글의 전개 방식을 구조로 정리하세요\n• (가): '질료'·'형상' 개념 정의 + 학자 간 견해 비교 → 정의 + 비교 전개\n• (나): '지지체' 개념 정의, 학자 간 견해 비교 없음 → 정의 중심 전개"
+                },
+                17: {
+                    title: "내용 추론하기",
+                    feedback: "이 문항은 지문에 나온 말을 요약하는 문제가 아니라, 제시된 근거를 바탕으로 '허용되는 범위 안에서' 결론을 이끌어낼 수 있는지를 묻는 문제입니다. 그럴듯한 해석이라도 근거를 한 단계 넘겨 확장하면 오답이 됩니다.",
+                    mistakes: "• 학자의 입장을 개념 키워드 하나로 단순화함\n• '투명/불투명' 같은 용어를 지문보다 넓은 의미로 일반화함\n• 한 학자의 기준을 다른 학자의 이론 체계에 겹쳐 적용함",
+                    study: "1️⃣ 추론의 출발점을 정확히 고정하세요\n실러: 예술가는 아름다움이라는 형상을 질료에 담음, 감상자는 미적 경험을 통해 도덕성 회복, 이를 위해 질료의 물리적 성질은 드러나지 않아야 함\n→ 확실히 말할 수 있는 것: 질료는 감상자의 미적 경험을 방해하지 않도록 기능해야 한다\n2️⃣ 허용되지 않는 추론을 점검하세요\n'투명한 매체'라는 표현은 지문에 없으며, 예술가의 의도 전달 자체를 예술의 목적이라고 명시하지도 않았습니다."
+                },
+                18: {
+                    title: "세부 내용 확인하기",
+                    feedback: "이 문항은 개념을 이해했는지를 묻는 문제가 아니라, 지문에 실제로 '어디까지' 말해져 있는지를 정확히 확인했는지를 점검하는 문제입니다. 개념을 알고 있어도 지문에 없는 말을 보태면 오답이 됩니다.",
+                    mistakes: "• 여러 문단의 정보를 하나의 문장으로 과잉 종합함\n• '지지체'·'규칙' 개념을 이론적으로 확장해 해석함\n• '환원된다'는 설명을 '예술작품이 아니다'라는 단정으로 바꿈",
+                    study: "1️⃣ 근거 문단을 정확히 분리하세요\n• (나) 2문단: 포스트매체 조건 이전 → 예술작품을 구성하는 물질적 요소만을 지지체로 인정\n• (나) 3문단: 규칙 = 지지체를 사용하는 관습이나 기법\n→ 두 문단은 지지체의 범위와 규칙의 정의를 각각 설명할 뿐, 규칙의 예술성 여부를 판단하지 않습니다.\n2️⃣ 세부 내용 확인 문제의 판단 기준\n• 지문에 '직접' 말해졌는가\n• 동일한 표현 또는 명시적 의미가 있는가"
+                },
+                19: {
+                    title: "구체적 상황에 적용하기",
+                    feedback: "이 문항은 이론을 알고 있는지가 아니라, 이론을 '구체적 상황'에 어디까지 적용할 수 있는지를 묻는 문제입니다. 그럴듯한 연결이라도 이론의 적용 범위를 넘으면 오답이 됩니다.",
+                    mistakes: "• 학자의 핵심 키워드를 사물 하나에 직접 대응시킴\n• '불투명한 매체' 개념을 캔버스 같은 특정 재료로 단순 치환함\n• 서로 다른 이론(그린버그 / 크라우스)을 한 기준으로 묶어 적용함",
+                    study: "1️⃣ 이론의 적용 기준을 먼저 고정하세요\n그린버그: 예술은 그 자체가 목적, 질료의 물리적 성질이 드러나야 함, '불투명한 매체'는 장르 내부에서 질료가 드러나는 미학적 기준\n→ '불투명한 매체'는 이론적 기능 개념이지, 특정 물질을 지칭하는 명사가 아님\n2️⃣ 크라우스의 개념과 섞이지 않았는지 점검하세요\n크라우스의 '물질적 요소'는 매체 조건에 대한 개념 규정이지, 그린버그의 '불투명한 매체' 개념과 동일한 기준이 아님"
+                },
+                20: {
+                    title: "구체적 상황에 적용하기",
+                    feedback: "이 문항은 그린버그의 주장을 알고 있는지가 아니라, 그 주장을 자료에 '어디까지' 적용할 수 있는지를 판단하는 문제입니다. 이론의 핵심 문장을 기억하고 있어도, 판단 기준을 하나 더 보태면 오답이 됩니다.",
+                    mistakes: "• '질료의 물리적 성질이 드러난다/안 드러난다'를 이분법적으로 단정함\n• '사실적이다'는 평가를 곧바로 질료가 지워졌다는 의미로 해석함\n• 그린버그의 '순수성' 개념을 작품의 완성도·목적성 판단으로 확장함",
+                    study: "1️⃣ 그린버그의 판단 기준을 정확히 고정하세요\n그린버그는 예술은 그 자체가 목적이어야 하고, 질료의 물리적 성질이 갖는 표현 가능성에 주목해야 하며, 장르 내부의 순수성을 실현해야 한다고 말합니다.\n핵심은 '질료가 드러나는 방식에 대한 미학적 기준'이지, 작품이 예술인지 아닌지를 판정하는 절대 기준이 아닙니다.\n2️⃣ 자료에 적용할 때 범위를 점검하세요\n• 질료가 드러나는가 / 감춰지는가\n• 재현이 목적이 되는가 / 장르 자체가 목적이 되는가"
+                },
+                21: {
+                    title: "어휘의 사전적 의미 파악하기",
+                    feedback: "이 문항은 그린버그의 주장을 알고 있는지가 아니라, 그 주장을 자료에 '어디까지' 적용할 수 있는지를 판단하는 문제입니다. 이론의 핵심 문장을 기억하고 있어도, 판단 기준을 하나 더 보태면 오답이 됩니다.",
+                    mistakes: "• '질료의 물리적 성질이 드러난다/안 드러난다'를 이분법적으로 단정함\n• '사실적이다'는 평가를 곧바로 질료가 지워졌다는 의미로 해석함\n• 그린버그의 '순수성' 개념을 작품의 완성도·목적성 판단으로 확장함",
+                    study: "1️⃣ 그린버그의 판단 기준을 정확히 고정하세요\n핵심은 '질료가 드러나는 방식에 대한 미학적 기준'이지, 작품이 예술인지 아닌지를 판정하는 절대 기준이 아닙니다.\n2️⃣ 자료의 평을 있는 그대로 해석하세요\n• [자료 2] '작품 B': 목탄의 질감이 살아 있음 → 질료의 물리적 성질이 두드러짐\n• [자료 1] '초상화': 사실적 → 질료가 전혀 드러나지 않는다고 직접 말하지는 않음\n'사실적 표현' ≠ '질료의 물리적 성질이 완전히 소거됨'"
+                },
+                22: {
+                    title: "서술상의 특징 파악하기",
+                    feedback: "이 문항은 문맥에서 어울려 보이는지를 묻는 문제가 아니라, 사전에 등재된 '정확한 의미'가 일치하는지를 판단하는 문제입니다. 뉘앙스가 비슷하다는 이유만으로 판단하면 오답이 됩니다.",
+                    mistakes: "• '관여하지 않는다'라는 느낌만 보고 어휘를 대응시킴\n• 일상적으로 쓰는 의미와 사전적 의미를 혼동함\n• 비슷한 맥락의 단어를 의미까지 같다고 착각함",
+                    study: "1️⃣ 사전적 의미를 정확히 고정하세요\n• 방관 → 어떤 일에 직접 나서서 관여하지 않고 곁에서 보기만 함\n• 주목 → 관심을 가지고 주의 깊게 살핌\n두 단어는 행위 태도(관여하지 않음 vs 적극적 관심)에서 의미 방향이 정반대입니다.\n2️⃣ 문맥에서 어휘의 기능을 확인하세요\n단어의 느낌이 아니라 사전적 정의와 일치하는지 판단해야 합니다."
+                },
+                23: {
+                    title: "작품의 내용 이해하기",
+                    feedback: "이 문항은 작품의 분위기나 인물의 심리를 묻는 문제가 아니라, 작품 속 사건이 어떤 순서로 일어났는지를 정확히 파악했는지를 묻는 문제입니다. 사건의 앞뒤 관계를 흐릿하게 읽으면 오답이 됩니다.",
+                    mistakes: "• '사직원'이라는 핵심 사건만 보고 시간 순서를 추측함\n• 비슷한 표현(사직원을 쓰다 / 내다)을 같은 시점으로 오해함\n• 인과 관계와 선후 관계를 구분하지 못함",
+                    study: "1️⃣ 시간 순서를 명확히 고정하세요\n작품에서는 다음과 같은 표현이 제시됩니다.\n• '사직원을 쓰고 ~ 인쇄 공장으로 들어가'\n• '사직원을 내고 ~ 나오며'\n이 두 표현을 종합하면 인쇄 공장에 들어간 뒤에 사직원을 낸 것입니다.\n2️⃣ 연결 표현의 의미를 확인하세요\n'~고', '~며'는 상황에 따라 순차, 동시, 선행 사건을 나타낼 수 있으므로 앞뒤 맥락을 함께 확인해야 합니다."
+                },
+                24: {
+                    title: "공간의 기능 이해하기",
+                    feedback: "이 문항은 장소가 어디인지를 묻는 문제가 아니라, 그 공간에서 인물이 어떤 태도와 선택을 보였는지를 근거로 공간의 '기능'을 정확히 파악했는지를 묻는 문제입니다. 공간을 단순 배경으로만 읽으면 오답이 됩니다.",
+                    mistakes: "• 공간을 사건이 일어난 장소로만 이해함\n• 인물의 행동 변화를 공간 기능과 연결하지 못함\n• '수용/저항' 같은 태도 변화를 심리 묘사로만 처리함",
+                    study: "1️⃣ 공간 기능 판단의 기준을 먼저 고정하세요\n공간의 기능은 그 공간에서 인물이 보이는 태도(수용·저항·독립·갈등 등)로 판단합니다.\n2️⃣ 각 공간의 기능을 근거로 확인하세요\n• ㉠ '공장장실': 타인의 의중을 받아들이고 결정을 내리는 공간\n• ㉡ '자기 집': 타인의 반응이나 제지를 무시한 채 행동을 밀어붙이는 공간"
+                },
+                25: {
+                    title: "외적 준거를 바탕으로 작품 감상하기",
+                    feedback: "이 문항은 외적 준거(사회·역사적 관점)를 적용했는지를 묻는 문제이지, 작품 속 사실을 외적 준거로 과도하게 일반화했는지를 허용하는 문제가 아닙니다. 외적 준거는 작품 근거를 보완할 뿐, 작품 사실을 뒤집거나 왜곡해서는 안 됩니다.",
+                    mistakes: "• 외적 준거(획일화된 도시·산업 사회)를 모든 인물 행동에 자동 적용함\n• 인물의 능력 한계를 곧바로 도시 적응 실패로 확대 해석함\n• 작품 내 구체적 원인(회사 요구)을 간과함",
+                    study: "1️⃣ 외적 준거의 적용 기준을 먼저 고정하세요\n외적 준거 감상은 작품 속 근거가 외적 관점과 연결될 때만 성립합니다.\n작품 사실 → 외적 준거로 설명 가능해야지, 외적 준거 → 작품 사실을 억지로 규정하면 안 됩니다.\n2️⃣ 작품 속 사실을 정확히 확인하세요\n김명학이 도시에 적응하지 못해서가 아니라 회사의 요구로 업무가 과중된 상황임을 보여 줍니다."
+                },
+                26: {
+                    title: "세부 내용 이해하기",
+                    feedback: "이 문항은 과학 개념을 알고 있는지를 묻는 문제가 아니라, 지문에서 설명한 인과 관계를 정확히 구분했는지를 묻는 문제입니다. 여러 문장의 정보를 하나로 묶는 과정에서 관계를 잘못 이어 붙이면 오답이 됩니다.",
+                    mistakes: "• 같은 문단에 나온 개념들을 원인–결과 관계로 자동 연결함\n• '분극'과 '전하의 축적'을 같은 현상으로 혼동함\n• '영향을 받는다'는 설명을 직접적 비례 관계로 확대 해석함",
+                    study: "1️⃣ 각 문장에서 말하는 사실을 분리해서 정리하세요\n• 2문단: 수분 유지 기판은 부도체\n• 3문단 (앞부분): 부도체 표면에 전하가 형성되는 현상 = 분극\n• 3문단 (뒷부분): 센서의 정전용량의 기본값은 → 수분 유지 기판의 분극 상태에 영향을 받은 상·하부 전극의 정전용량\n➡️ 여기까지 지문이 말하는 핵심은 👉 정전용량의 기본값은 '분극의 영향'을 반영한 값이라는 점입니다.\n2️⃣ 지문에 없는 관계를 점검하세요\n선택지는 \"센서가 가지는 정전용량의 기본값은 부도체에 축적된 전하의 양과 관계가 없다\"라고 판단하고 있습니다.\n하지만 지문에서는 분극을 '부도체 표면에 전하가 형성되는 현상'이라고 설명했을 뿐, 전하의 양과 정전용량의 관계를 '없다'고 단정하지는 않았습니다.\n➡️ 즉, ❌ 지문에 없는 부정(무관하다)을 추가한 판단입니다.\n3️⃣ 세부 내용 이해 문제의 판단 기준\n세부 내용 이해는 ✔ 지문에 명시된 사실인가 ✔ 같은 표현 또는 직접적 의미가 있는가 를 기준으로 판단합니다.\n이 문항은 → '관계가 없다'는 결론을 지문 근거 없이 추가했기 때문에 👉 적절하지 않습니다."
+                },
+                27: {
+                    title: "핵심 내용 이해하기",
+                    feedback: "이 문항은 용어를 알고 있는지를 묻는 문제가 아니라, 지문에서 말하는 '핵심 작동 원리'를 정확히 이해했는지를 묻는 문제입니다. 전기장과 전류를 혼동하면 오답으로 이어집니다.",
+                    mistakes: "• 전기장 형성 = 전기가 흐른다고 오해함\n• 상·하부 전극과 수분 유지 기판의 역할을 동일하게 봄\n• 핵심 문장을 읽고도 부정 정보(흐르지 않는다)를 놓침",
+                    study: "1️⃣ 핵심 구성 요소를 먼저 고정하세요\n• ⓐ : 상부 전극\n• ⓑ : 수분 유지 기판(부도체)\n• ⓒ : 하부 전극\n➡️ 핵심은 ⓑ가 부도체라는 점입니다.\n2️⃣ 3문단의 핵심 진술을 정확히 읽으세요\n3문단에는 다음과 같이 제시되어 있습니다.\n\"센서에 전원이 공급되면 상·하부 전극 사이에 전기장이 형성된다.\"\n➡️ 여기서 중요한 점은 전기장이 형성된다는 것이지, 전기가 흐른다고 말하지 않았다는 것입니다."
+                },
+                28: {
+                    title: "핵심 내용 추론하기",
+                    feedback: "이 문항은 그래프의 변화가 무엇 때문인지를 묻는 문제가 아니라, 지문에서 허용한 '원인 설명의 범위' 안에서만 추론했는지를 판단하는 문제입니다. 가능해 보이는 물리적 설명을 지문 근거 없이 배제하면 오답이 됩니다.",
+                    mistakes: "• 시간 구간이 같으면 원인도 같아야 한다고 단정함\n• '분극'과 '물 분자 흡착'을 서로 배타적인 원인으로 오해함\n• 지문에 없는 원인 배제 판단(∼은 아니다)을 추가함",
+                    study: "1️⃣ 시간 조건을 정확히 고정하세요\n• t₁, t₃ → 모두 전원이 공급된 이후 → 수분 유지 기판에서 분극이 일어난 상태\n이 점은 지문 근거로 확실합니다.\n2️⃣ 지문이 말한 핵심 인과를 다시 확인하세요\n3문단에서는 다음을 말합니다.\n• 분극이 일어난 수분 유지 기판 → 유전율이 분극 이전보다 커진다\n• 정전용량의 기본값 → 수분 유지 기판의 분극에 영향을 받는다\n➡️ 즉, 지문은 👉 분극 → 유전율 증가 → 정전용량 변화 라는 연결을 허용하고 있습니다."
+                },
+                29: {
+                    title: "핵심 내용 추론하기",
+                    feedback: "이 문항은 물리 개념을 알고 있는지를 묻는 문제가 아니라, 지문에 제시된 정보로부터 '어디까지' 추론할 수 있는지를 묻는 문제입니다. 과학적으로 그럴듯해 보여도, 지문에 없는 힘의 비교까지 나가면 오답이 됩니다.",
+                    mistakes: "• '전기력'이 언급되면 자동으로 반발력/인력의 크기 비교까지 추론함\n• 물 분자의 탈착 현상을 힘의 우열 관계로 단정함\n• 지문에 없는 \"더 크게 작용한다\"는 비교 판단을 추가함",
+                    study: "1️⃣ 지문이 직접 말한 사실을 정확히 고정하세요\n• 4문단: 물 분자 내부에서 → 산소 원자는 음전하를 띰, 전기장의 방향에 따라 분극됨\n• 5문단: 박막 소재와 물 분자 사이에 작용하는 힘은 전기력, 물 분자는 박막 소재와의 인력을 오래 유지하지 못하고 빠르게 탈착\n➡️ 여기까지가 지문이 직접 말한 내용의 한계입니다.\n2️⃣ 지문이 말하지 않은 것을 점검하세요\n선택지는 \"서로 밀어내는 전기력이 인력보다 더 크게 작용한다\"를 추론합니다.\n하지만 지문에서는 전기력이 인력인지 반발력인지의 비율, 어느 힘이 더 크다는 비교를 전혀 제시하지 않았습니다."
+                },
+                30: {
+                    title: "세부 내용 이해하기",
+                    feedback: "이 문항은 법률 개념을 아는지를 묻는 문제가 아니라, 지문에 제시된 문장을 그대로 정확히 읽었는지를 묻는 문제입니다. 용어의 느낌이나 일반 상식으로 판단하면 오답이 됩니다.",
+                    mistakes: "• '지역권'이라는 단어를 소유·점유 개념으로 오해함\n• 지문 속 부정 표현(아니다)을 놓침\n• 세부 내용 확인 문제에서 추가 해석을 덧붙임",
+                    study: "1️⃣ 근거 문장을 정확히 고정하세요\n6문단에는 다음과 같이 명시되어 있습니다.\n\"지역권이 설정되더라도 지역권자가 해당 토지를 배타적으로 이용하는 것이 아니라\"\n➡️ 이 문장은 분명히 👉 배타적 이용을 '부정'하고 있습니다."
+                },
+                31: {
+                    title: "핵심 내용 이해하기",
+                    feedback: "이 문항은 법률 용어를 아는지를 묻는 문제가 아니라, 지문에서 말한 핵심 내용을 '어디까지' 이해하고 옮길 수 있는지를 묻는 문제입니다. 문장을 읽고 논리적으로 한 단계 옮긴 추론이 지문에 의해 허용되는지가 관건입니다.",
+                    mistakes: "• 핵심 문장을 읽고도 그 의미를 좁게 해석함\n• '성립할 수 있다'는 표현을 현존 요건 필요로 오해함\n• 권리의 성립 조건과 설정 행위 가능성을 구분하지 못함",
+                    study: "1️⃣ 핵심 문장을 정확히 고정하세요\n3문단의 핵심 문장은 다음과 같습니다.\n\"지상권의 목적은 지상물을 소유하기 위한 토지의 이용에 있으므로 이 권리는 토지에 지상물이 현재는 없더라도 성립할 수 있다.\"\n➡️ 여기서 핵심은 👉 '현재 지상물이 없어도 지상권은 성립 가능하다'는 점입니다.\n2️⃣ 문장의 의미를 법적 관계로 옮기세요\n• 지상권이 성립 가능하다는 것은 → 지상물의 존재가 성립 요건이 아님을 뜻함\n• 그렇다면 → 토지 소유자는 지상물이 아직 없는 상태에서도 지상권 설정을 위한 계약을 체결할 수 있음"
+                },
+                32: {
+                    title: "구체적 상황에 적용하기",
+                    feedback: "이 문항은 사람 관계를 복잡하게 외우는 문제가 아니라, 지문에서 제시한 '권리의 대항력 규칙'을 실제 상황에 정확히 적용했는지를 묻는 문제입니다. 소유권 변동에만 주목하고 기존 물권의 효력을 놓치면 오답이 됩니다.",
+                    mistakes: "• 소유권 이전 = 기존 권리 소멸로 착각함\n• 날짜·지위 정리는 했지만 적용해야 할 법 규칙을 빠뜨림\n• '설정자/권리자'를 바꿔 읽어 권리 주체를 혼동함",
+                    study: "1️⃣ 적용해야 할 핵심 법 규칙을 먼저 고정하세요\n4문단의 핵심 규칙은 다음입니다.\n\"토지 소유권이 제3자에게 이전되더라도, 해당 토지에 설정된 기존의 지상권은 영향을 받지 않는다.\"\n➡️ 즉, 지상권은 소유권 이전에도 존속합니다.\n2️⃣ <보기>의 권리 관계를 정확히 정리하세요\n• B 씨: 2015.10.20 이후 토지 X의 지상권자\n• C 씨: 2023.10.20 이후 토지 X의 소유권자\n➡️ 토지 X의 소유권만 A → C로 이전된 상황입니다.\n3️⃣ 법 규칙을 상황에 그대로 적용하세요\n• 토지 X에 설정된 지상권의 주체 = B 씨\n• 소유권 이전의 상대 = C 씨(제3자)\n➡️ 4문단 규칙에 따라 👉 B 씨의 토지 X 지상권은 그대로 유지됩니다"
+                },
+                33: {
+                    title: "핵심 내용 추론하기",
+                    feedback: "이 문항은 지역권·상린권의 정의를 아는지를 묻는 문제가 아니라, 두 제도가 '소유권에 어떤 방향으로 작용하는지'를 같은 기준으로 추론했는지를 묻는 문제입니다. 한쪽만 부분적으로 해석하거나, 권리의 성격을 다르게 적용하면 오답이 됩니다.",
+                    mistakes: "• '권리 확대/제한'을 감정적·상식적으로 판단함\n• 요역지·승역지의 입장 차이를 구분하지 않음\n• 상린권을 예외적 배려로만 보고, 권리 작용 구조를 정리하지 않음",
+                    study: "1️⃣ 지역권의 권리 작용 구조를 정확히 정리하세요\n5·6문단에서 지역권은 다음과 같이 설명됩니다.\n• 요역지: 다른 토지를 이용해 편익이 증가 → 요역지 소유권자의 권리 확대\n• 승역지: 타인의 이용을 허용해야 함 → 승역지 소유권자의 권리 제한\n➡️ 즉, 지역권은 👉 한쪽의 소유권을 확대하면서, 다른 한쪽의 소유권을 제한하는 제도입니다.\n2️⃣ 상린권의 권리 작용을 같은 기준으로 보세요\n<보기>에서 상린권은 인접 토지 소유자 간 토지 이용을 원만하게 조절하기 위한 제도이며, 사례에서는 한쪽이 도로에 접근하기 위해 다른 사람의 토지를 이용할 수 있음이 제시됩니다.\n➡️ 이를 권리 구조로 정리하면\n• 이용하는 쪽: 자기 토지 이용을 위해 권리 확대\n• 이용당하는 쪽: 자기 토지 이용이 제한\n👉 지역권과 동일한 권리 작용 구조를 가집니다."
+                },
+                34: {
+                    title: "어휘의 문맥적 의미 파악하기",
+                    feedback: "이 문항은 단어를 아는지를 묻는 문제가 아니라, 문맥 속에서 그 단어가 어떤 의미로 사용되었는지를 정확히 판단했는지를 묻는 문제입니다. 단어의 느낌이 맞아 보인다고 판단하면 오답이 됩니다.",
+                    mistakes: "• 단어의 대표 의미 하나만 떠올려 판단함\n• 법·사회 설명문에서의 추상적 의미를 일상적 의미로 축소함\n• 문장 전체의 논지를 보지 않고 단어만 떼어 해석함",
+                    study: "1️⃣ 사전적 의미를 정확히 고정하세요\n'높이다'의 사전적 의미 중 하나는 다음과 같습니다.\n• 높이다 → 품질·수준·능력·가치 따위를 더 높은 수준으로 만들다\n2️⃣ 문맥에서의 쓰임을 확인하세요\n문장: \"요역지의 가치를 높이는 데 있어야 한다\"\n이 문맥에서는 요역지가 가지는 재산적·이용상의 가치가 지역권 설정을 통해 증대되어야 한다는 의미입니다.\n➡️ 이는 👉 '가치를 더 높은 수준으로 만든다'는 사전적 의미와 정확히 일치합니다."
+                },
+                35: {
+                    title: "표현상의 특징 파악하기",
+                    feedback: "이 문항은 작품의 주제를 해석하는 문제가 아니라, 작품에서 사용된 '표현 방식'이 무엇인지를 정확히 파악했는지를 묻는 문제입니다. 의미를 넓게 해석하다가 표현 기법 자체를 놓치면 오답이 됩니다.",
+                    mistakes: "• 비유를 상징·의인과 혼동함\n• '~처럼', '~같으니' 같은 비유 표지를 놓침\n• 표현 효과보다 주제·정서로 판단함",
+                    study: "1️⃣ 표현 방식의 핵심 기준을 먼저 고정하세요\n비유적 표현은 ➡️ 어떤 대상을 다른 대상에 빗대어 그 모습·성질·기운을 드러내는 방식입니다.\n대표 표지어: '처럼', '같이', '같으니' 등"
+                },
+                36: {
+                    title: "세부 내용 이해하기",
+                    feedback: "이 문항은 작품의 분위기나 상징을 묻는 문제가 아니라, 화자가 실제로 '무엇을 했는지'와 '하려 했는지'를 정확히 구분했는지를 묻는 문제입니다. 의도를 곧바로 행동으로 바꾸어 해석하면 오답이 됩니다.",
+                    mistakes: "• 화자의 의지·계획을 실제 행동으로 착각함\n• '~하려다', '~가려고' 같은 표현을 이미 실행한 것으로 오해함\n• 결말의 환상적 분위기에 끌려 사건 단계를 흐림",
+                    study: "1️⃣ 핵심 표현을 정확히 고정하세요\n작품에는 다음과 같은 표현이 제시되어 있습니다.\n• \"초선도로 가려고 하니\"\n• \"깨달으니 꿈이로다\"\n➡️ 이 표현은 👉 초선도로 가려는 의도만 있었고, 👉 실제로 초선도에 도달하지는 않았음을 분명히 합니다."
+                },
+                37: {
+                    title: "세부 내용 파악하기",
+                    feedback: "이 문항은 이군의 성격이 어떤지를 묻는 문제가 아니라, 그 평가가 '누구의 관점으로' 제시되었는지를 정확히 구분했는지를 묻는 문제입니다. 내용이 맞아 보여도 제시 방식이 다르면 오답이 됩니다.",
+                    mistakes: "• 인물에 대한 평가 내용만 보고 판단함\n• 화자의 평가와 주변 인물의 평판을 구분하지 않음\n• '함께 제시되었다'는 조건을 느슨하게 해석함",
+                    study: "1️⃣ 평가의 출처를 먼저 고정하세요\n㉣에서는 '나'의 시각에서 이군을 → '온화하고 담박하여 세속적인 이익에 무관심하다'고 평가합니다.\n➡️ 이는 👉 화자의 주관적 평가입니다.\n2️⃣ '주변의 평판' 제시 여부를 점검하세요\n선택지는 화자의 평가가 주변의 평판과 함께 제시되었다고 판단하고 있습니다.\n하지만 ㉣에는 타인의 말, 세간의 소문, 주변 인물의 평가가 함께 제시되지 않습니다.\n➡️ 즉, ❌ '함께 제시되었다'는 조건이 충족되지 않았습니다."
+                },
+                38: {
+                    title: "외적 준거를 바탕으로 작품 감상하기",
+                    feedback: "이 문항은 자연 공간이 어떤 의미를 갖는지를 외적 준거로 해석하되, 작품 속 진술이 허용하는 범위 안에서만 감상했는지를 묻는 문제입니다. 외적 준거가 맞아 보여도, 작품의 명시적 진술과 충돌하면 오답입니다.",
+                    mistakes: "• 외적 준거(가문 의식, 수양 공간)를 두 작품에 동일하게 적용함\n• 자연 공간의 상징을 인물의 태도까지 단정함\n• 작품이 경계하는 태도를 오히려 긍정적 수양으로 오해함",
+                    study: "1️⃣ (가)에서 외적 준거 적용의 타당성 확인\n(가) 「거룩할사 ~ 많기도 많구나」 → 가문의 어른들의 장수를 '거룩'하다고 표현 → 가문에 대한 자부심이 드러남\n➡️ 따라서 👉 개암정 = 가문 의식이 실현된 자연 공간이라는 해석은 외적 준거와 작품 근거가 일치하여 적절합니다.\n2️⃣ (나)에서 작품의 명시적 태도 점검\n(나) 「환경을 따르면 ~ '청'의 지극함은 아니다」 → 자연 환경을 따른다 해도 → 내면을 잊어서는 안 된다는 경계 제시\n➡️ 이는 자연 속에서 ❌ 내면을 잊고 ❌ '텅 비고 밝은 본체'만을 기르는 태도를 비판하는 맥락입니다."
+                },
+                39: {
+                    title: "세부 내용 이해하기",
+                    feedback: "이 문항은 무슨 말을 했는지보다, 그 말을 '누가 했는지'를 정확히 구분했는지를 묻는 문제입니다. 내용이 맞아 보여도 발화 주체가 다르면 오답이 됩니다.",
+                    mistakes: "• 발화 내용만 보고 화자를 확인하지 않음\n• 등장인물이 많을 때 말을 한 인물을 혼동함\n• '~라고 말하다'의 주어를 끝까지 추적하지 않음",
+                    study: "1️⃣ 발화 주체를 먼저 고정하세요\n지문에서는 십전 명왕이 → \"지부의 토질이 달라서 ~ 보내 주시기 바라나이다\" 라고 직접 말합니다.\n➡️ 이 발화의 주체는 👉 최 판관이 아니라, 십전 명왕입니다.\n2️⃣ 발화 내용과 선택지를 대조하세요\n선택지는 이 요구가 최 판관의 발언인 것처럼 설명하고 있습니다.\n하지만 지문에서는 ❌ 최 판관이 해당 요구를 했다는 근거가 없습니다."
+                },
+                40: {
+                    title: "발화내용 이해하기",
+                    feedback: "이 문항은 누가 무엇을 말했는지를 넘어, 그 발화가 어떤 기능(힐책·설득·해결 의지 표명)을 수행하는지를 정확히 파악했는지를 묻는 문제입니다. 내용 요약만 하고 발화의 기능을 놓치면 오답이 됩니다.",
+                    mistakes: "• 발화 내용을 사실 전달로만 이해함\n• 힐책·요구·설득 같은 화행 기능을 구분하지 않음\n• 문제 제기와 해결 의지를 같은 발화로 혼동함",
+                    study: "1️⃣ [A]의 발화 기능을 정확히 잡으세요\n창고지기는 태종에게 '천자의 부귀함으로도 남에게 준 것이 없다', '저승 창고에 곡식과 금전이 없다' 라는 문제 상황을 제시하며 \"나에게 무엇을… 어찌 이러하리오?\"라고 책망합니다.\n➡️ [A]의 핵심 기능은 👉 문제 제기 + 태종에 대한 힐책입니다.\n2️⃣ [B]의 발화 기능을 분리해 보세요\n태종은 귀졸들에게 '세상으로 인도하여 가게 하겠다'며 해결 의지를 밝히고 '너희 혼령을 위로하고자… 나누어 가지고 물러나라'고 하여 행동을 유도하는 설득을 합니다.\n➡️ [B]의 핵심 기능은 👉 문제 해결 의지 표명 + 귀졸 설득입니다."
+                },
+                41: {
+                    title: "소재의 기능 파악하기",
+                    feedback: "이 문항은 장소가 무엇인지를 묻는 문제가 아니라, 그 장소(소재)가 인물의 인식과 태도를 어떻게 드러내는지, 즉 기능을 정확히 파악했는지를 묻는 문제입니다. 장면 요약에 그치면 오답이 됩니다.",
+                    mistakes: "• 장소를 단순 배경으로만 이해함\n• '많다/없다' 같은 상태만 보고 기능을 일반화함\n• 두 장소의 대비 관계를 놓침",
+                    study: "1️⃣ ㉠의 소재 기능을 정확히 잡으세요\n㉠은 \"넓고 크나 텅 비어 있\"고 \"천자의 부귀함으로도 남에게 준 것이 없\"어 \"한낱의 곡식과 일푼의 금전\"도 없음 → 태종이 부끄러움을 느끼는 장면\n➡️ 이 장소의 기능은 👉 태종으로 하여금 자신의 과거 행적(베풂의 부재)을 환기·성찰하게 하는 공간입니다.\n2️⃣ ㉡의 소재 기능을 대비해 확인하세요\n㉡은 \"평생에 적선하기를 일삼아\" \"창고에 쌓고 노적\"한 모습 → 장상의 선행의 결과가 가시적으로 제시됨\n➡️ 이 장소의 기능은 👉 태종이 타인의 과거 행적의 결과(보상의 축적)를 확인하는 공간입니다.\n3️⃣ 소재 기능 파악의 핵심\n• ㉠: 자기 성찰의 장소\n• ㉡: 타인의 행적 결과를 확인하는 장소\n→ 두 소재는 대비를 통해 태종의 인식 변화를 강화합니다."
+                },
+                42: {
+                    title: "외적 준거에 따라 작품 감상하기",
+                    feedback: "이 문항은 사건의 의미를 얼마나 크게 해석해도 되는지를 묻는 문제입니다. 외적 준거를 적용하더라도, 작품 안에서 확인되지 않는 결과까지 단정하면 오답이 됩니다.",
+                    mistakes: "• 상징적 소재가 나오면 서사 전체의 운명 변화까지 확대 해석함\n• '보답·선행의 흔적'을 곧바로 환생 가능성 회복으로 연결함\n• 외적 준거(윤회·업보)를 작품 근거 없이 완결된 결말처럼 적용함",
+                    study: "1️⃣ 작품 속 사실을 먼저 정확히 고정하세요\n태종이 발견한 '짚 한 뭇'은 → 과거, 태종이 이름이 알려지기 전 → 손식의 처가 해산할 때 베풀었던 '태거적'의 결과물\n➡️ 이 사실 자체는 작품 속에서 명확히 확인 가능합니다.\n2️⃣ 외적 준거로 허용되는 해석의 범위를 점검하세요\n외적 준거(윤회·업보 관점)로 볼 때 과거의 선행이 뒤늦게 드러난다, 베풂이 헛되지 않았음을 확인한다 까지는 허용 가능한 감상입니다.\n하지만 작품에서는 태종이 환생의 가능성을 되찾았다고 명시하지도, 그 결과가 확정적으로 제시되지도 않습니다."
+                },
+                43: {
+                    title: "표현상의 특징 파악하기",
+                    feedback: "이 문항은 시의 의미나 정서를 묻는 문제가 아니라, 형식적 반복이 실제로 '기법'으로 성립하는지를 정확히 판단했는지를 묻는 문제입니다. 비슷해 보인다는 인상만으로 기법을 단정하면 오답이 됩니다.",
+                    mistakes: "• 첫 행과 마지막 행의 일부 표현만 비슷해도 수미상관이라고 판단함\n• 정서나 주제가 반복되면 형식 기법까지 있다고 착각함\n• 두 작품을 비교할 때 각각의 기법 성립 여부를 분리해 보지 않음",
+                    study: "1️⃣ 수미상관의 성립 조건을 먼저 고정하세요\n수미상관은 ➡️ 첫 행과 마지막 행이 동일하거나 거의 동일한 표현으로 대응되어 작품 전체를 형식적으로 감싸는 구조일 때 성립합니다.\n2️⃣ (나)의 표현을 정확히 확인하세요\n(나)의 첫 행과 마지막 행은 → \"그리운 곳에는 ~ 소리가 있네\"로 동일하게 제시됨\n➡️ 이는 👉 형식적 반복이 분명한 수미상관입니다.\n3️⃣ (가)의 표현과 비교하세요\n(가)는 첫 부분과 끝부분이 표현상 동일하거나 대응되는 구조를 이루지 않음\n➡️ 즉, 👉 수미상관 기법이 사용되지 않았습니다."
+                },
+                44: {
+                    title: "시어의 의미 파악하기",
+                    feedback: "이 문항은 시어의 사전적 의미를 아는지를 묻는 문제가 아니라, 그 의미가 시 속에서 '어디까지' 작용하는지를 정확히 파악했는지를 묻는 문제입니다. 의미를 넓게 퍼뜨리면 오답이 됩니다.",
+                    mistakes: "• '또'의 의미를 행 전체에 확장함\n• 시어가 어느 어절을 수식하는지 확인하지 않음\n• 반복의 대상을 막연한 정서로 확대 해석함",
+                    study: "1️⃣ 시어의 기본 의미를 먼저 고정하세요\n㉤ '또' → 어떤 일이 거듭하여 (반복의 의미)\n2️⃣ 수식 대상을 정확히 확인하세요\n문장: \"고통의 맨발로 걸어가네 또 그렇게 가다보면 세상의 마지막 저녁과\"\n여기서 '또'가 수식하는 것은 👉 '그렇게 가다보면'\n➡️ 즉, '고통의 맨발로 걸어가는 행위'가 되풀이됨을 나타냄\n3️⃣ 선택지의 해석이 넘은 지점\n선택지는 '세상의 마지막 저녁'을 거듭해서 겪는다는 의미까지 포함시키고 있습니다.\n하지만 시어 '또'는 ❌ '세상의 마지막 저녁'이라는 결과를 반복한다고 말하지 않습니다.\n➡️ 반복의 범위는 👉 행동(걸어감)에만 한정됩니다."
+                },
+                45: {
+                    title: "외적 준거에 따라 작품 감상하기",
+                    feedback: "이 문항은 상징이나 정서를 읽는 문제가 아니라, 작품 안에서 '누가 누구와 동일시되는지'가 실제로 제시되었는지를 정확히 확인하는 문제입니다. 유사한 정서가 있다고 해서 동일시 관계가 자동으로 성립하지는 않습니다.",
+                    mistakes: "• 동일시가 연쇄적으로 확장된다고 착각함\n• 'A와 B 동일시', 'A와 C 동일시'가 나오면 → 'B와 C 동일시'까지 성립한다고 오해함\n• 외적 준거(상징 해석)를 작품 근거 없이 완성함",
+                    study: "1️⃣ 작품에서 제시된 동일시 관계를 정확히 고정하세요\n(가) 3연에서는 다음이 확인됩니다.\n• 목련 ↔ 어머님 → \"목련이 지면 어머님은 떠나가시고\"\n• 나 ↔ 나무 → \"나는 서서 나무가 되고 싶다.\"\n➡️ 작품은 👉 두 개의 동일시 관계를 각각 제시하고 있을 뿐입니다.\n2️⃣ 작품에 없는 동일시를 점검하세요\n선택지는 화자가 자신과 어머님을 동일시한다고 설명합니다.\n하지만 작품에는 '나 = 어머님'이라는 직접적·간접적 동일시는 ❌ 제시되지 않습니다.\n➡️ 동일시는 표현된 경우에만 인정됩니다."
+                }
+            },
+            'korean_mock_3': {
+                1: {
+                    title: "발표 표현 전략 사용하기",
+                    feedback: "이 문항은 강연자가 청중의 이해를 돕기 위해 어떤 표현 전략을 사용했는지, 특히 질문의 기능이 '상호 작용'인지, '정보 요청'인지를 구분할 수 있는지를 묻는 문제입니다.\n\n질문이 등장한다고 해서 모두 청중의 정보를 요구하는 질문은 아닙니다.",
+                    mistakes: "• 질문이 나오면 곧바로 '청중의 정보 요청'이라고 판단함\n• 질문의 의도(확인 / 유도 / 요청)를 구분하지 않음\n• 발표 맥락을 보지 않고 형식(물음표)만 보고 판단함",
+                    study: "1단계｜질문의 기능부터 판단하세요.\n발표에서 질문은 크게 세 가지 역할로 쓰입니다.\n① 이해 여부 확인 질문\n② 관심을 끌기 위한 유도 질문\n③ 실제 정보를 요구하는 질문"
+                },
+                2: {
+                    title: "발표 내용 조직하기",
+                    feedback: "이 문항은 발표에서 제시된 정보의 범위와 조직 방식을 정확히 파악했는지를 묻는 문제입니다.\n발표자가 한 문단에서 무엇을 말했고, 무엇을 말하지 않았는지를 구분하는 것이 핵심입니다.",
+                    mistakes: "• 주제와 관련된 내용이면 언급되었을 것이라고 추정함\n• '발생 이유'와 '발생률'을 같은 정보로 혼동함\n• 발표의 구체적 제시 여부를 확인하지 않음",
+                    study: "1단계｜정보의 성격을 구분하세요.\n• '식중독의 발생 이유' → 원인 설명\n• '식중독의 종류별 발생률' → 통계·수치 정보\n👉 둘은 성격이 전혀 다른 정보입니다."
+                },
+                3: {
+                    title: "발표 내용 이해·평가하기",
+                    feedback: "이 문항은 청자의 반응이 어떤 듣기 태도에 해당하는지를 구분하는 문제입니다.\n'궁금해했다'는 사실만으로 의문 제기나 신뢰성 평가로 판단하면 오답이 됩니다.",
+                    mistakes: "• 궁금한 점을 떠올리면 → 의문 제기라고 판단함\n• 공통점을 찾았다는 이유로 → 비판적 평가라고 착각함\n• 듣기 태도의 기준 정의를 혼동함",
+                    study: "1단계｜듣기 태도의 기준을 정확히 기억하세요.\n• 정보 파악 → 관계 파악\n• 가치 판단 → 활용 계획\n• 더 알고 싶은 점 → 확장 이해\n• 신뢰성 평가 → 의문·검증 시도"
+                },
+                4: {
+                    title: "대화 내용 이해·평가하기",
+                    feedback: "이 문항은 상대의 말에 대한 반응 방식을 정확히 파악하는 문제입니다.\n새로운 정보를 제시했다고 해서 상대 의견에 동의한 것은 아닙니다.",
+                    mistakes: "• 설명이 길면 → 동의했다고 판단함\n• 정보 추가를 → 공감·동의로 착각함\n• 질문의 의도 파악 여부를 놓침",
+                    study: "1단계｜동의와 정보 제공을 구분하세요.\n• 동의 → 상대 의견을 받아들임\n• 정보 제공 → 새로운 관점이나 설명 추가"
+                },
+                5: {
+                    title: "대화 내용 조직하기",
+                    feedback: "이 문항은 대화에서 각 발화가 어떤 정보를 요구하고 있는지를 구분하는 문제입니다.\n묻고 있는 내용과 묻지 않은 내용을 정확히 가려야 합니다.",
+                    mistakes: "• 주제와 관련 있으면 → 다 물었다고 판단함\n• 질문의 초점을 끝까지 확인하지 않음\n• 발화 목적을 추측으로 판단함",
+                    study: "1단계｜질문의 초점을 정확히 잡으세요.\n'학생 1'은\n→ 미술 심리 상담사가 무슨 일을 하는지는 묻고 있지만,\n→ 어떤 사람에게 필요한지는 묻고 있지 않습니다."
+                },
+                6: {
+                    title: "정보 전달 글쓰기 ― 내용 조직하기",
+                    feedback: "이 문항은 문단별로 어떤 조직 방식이 사용되었는지를 정확히 파악하는 문제입니다.\n내용이 무엇인지보다, 어떤 방식으로 배열·설명되었는지를 보는 것이 핵심입니다.",
+                    mistakes: "• 설명 내용이 있으면 → 특정 조직 방식이 사용되었다고 판단함\n• '이유 제시'와 '시간 순서', '나열'을 혼동함\n• 조직 방식의 형식적 특징을 확인하지 않음",
+                    study: "1단계｜조직 방식의 기준을 먼저 정리하세요.\n• 나열 → 여러 항목을 나란히 제시\n• 비교 → 공통점·차이점 대비\n• 시간 순서 → 앞→뒤 흐름\n• 문답 → 질문과 답변 구조\n• 비유 → 다른 대상에 빗대 설명"
+                },
+                7: {
+                    title: "정보 전달 글쓰기 ― 내용 점검·조정하기",
+                    feedback: "이 문항은 고쳐 쓴 글에서 어떤 내용이 추가·변경되었는지, 그리고 그 변화의 목적이 무엇인지를 판단하는 문제입니다.",
+                    mistakes: "• 문장이 바뀌면 → 의미도 완전히 바뀌었다고 판단함\n• 접속 표현 수정의 의도를 잘못 해석함\n• '직업 추천'과 '전문성 강조'를 혼동함",
+                    study: "1단계｜추가된 내용을 정확히 확인하세요.\n고쳐 쓴 글에서는\n→ 미술 심리 상담사의 역할이 중요해지는 사회적 이유가 추가되었습니다."
+                },
+                8: {
+                    title: "설득 글쓰기 ― 내용 이해·평가하기",
+                    feedback: "이 문항은 주장·근거·대안이 문단별로 어떻게 배치되어 있는지를 파악하는 문제입니다.\n제시된 사실과 제시되지 않은 이유를 구분해야 합니다.",
+                    mistakes: "• 현상 제시 = 이유 제시로 착각함\n• 서로 다른 문단의 정보를 한 문단에 섞어 판단함\n• '문제점'과 '원인'을 혼동함",
+                    study: "1단계｜3문단의 역할을 정확히 보세요.\n• 청소년 구독 경제 이용이 디지털 콘텐츠에 편중 → 제시 O\n• 그 이유 → 제시 X"
+                },
+                9: {
+                    title: "설득 글쓰기 ― 자료·매체 활용하기",
+                    feedback: "이 문항은 자료의 의미와 사용 목적이 글의 주장과 논리에 맞는지를 판단하는 문제입니다.\n자료가 있어도 문단의 주장과 방향이 맞지 않으면 부적절합니다.",
+                    mistakes: "• 자료 내용만 맞으면 → 활용 가능하다고 판단함\n• 자료의 기능(근거/보완/대안)을 구분하지 않음\n• 문단의 주장과 자료의 방향을 연결하지 않음",
+                    study: "1단계｜자료의 '보여 주는 것'을 정확히 파악하세요.\n• ㄱ-2 → 이용 분야 편중\n• ㄷ → 도파민 과다 분비"
+                },
+                10: {
+                    title: "설득 글쓰기 ― 내용 생성하기",
+                    feedback: "이 문항은 표현의 의미와 제시된 해결 방안이 글의 내용과 정확히 대응되는지를 묻는 문제입니다.",
+                    mistakes: "• 비유 표현을 감상적으로만 해석함\n• 해결 방안 중 일부만 확인함",
+                    study: "• '독이 될 수 있다' → 과도한 이용의 문제점을 비유적으로 표현\n• '필요한 것만 선택', '이용 시간 제한' → 4문단 해결 방안 모두 반영"
+                },
+                11: {
+                    title: "단어들의 의미 관계",
+                    feedback: "이 문항은 의미 성분의 수와 단어 사이의 상하 관계·반대 관계를 정확히 이해했는지를 묻는 문제입니다.",
+                    mistakes: "• 상의어·하의어 판단을 직관으로 함\n• 의미 성분과 지시 대상 범위를 혼동함\n• 반의어의 기준을 잘못 적용함",
+                    study: "1단계｜기본 원칙을 기억하세요.\n• 하의어 → 의미 성분 많음 / 범위 좁음\n• 상의어 → 의미 성분 적음 / 범위 넓음"
+                },
+                12: {
+                    title: "단어들의 의미 관계",
+                    feedback: "이 문항은 한 단어가 문맥에 따라 서로 다른 의미로 쓰일 수 있으며, 그 의미에 따라 반의어도 달라진다는 점을 정확히 구분하는 문제입니다.",
+                    mistakes: "• 단어의 대표 의미 하나만 떠올림\n• 반의어를 단어 전체 기준으로 고정해 판단함\n• 문맥에 따른 의미 차이를 구분하지 않음",
+                    study: "• [A] '걸다(매달다)' ↔ 떼다\n• [B] '걸다(채우다)' → 예문 제시 필요\n• [C] '걸다(작동시키다)' ↔ 끄다\n👉 같은 단어라도 쓰인 의미가 다르면 대응 관계도 달라집니다."
+                },
+                13: {
+                    title: "목적격 조사의 형태",
+                    feedback: "이 문항은 중세 국어 목적격 조사 실현 조건을 정확히 적용할 수 있는지를 묻는 문제입니다.",
+                    mistakes: "• 양성/음성 모음 구분이 불확실함\n• 받침 유무 조건을 놓침\n• '을/를/ᄅᆞᆯ'의 실현 조건을 혼동함",
+                    study: "• ㉠ 소 → 양성 모음 + 받침 있음 → ᄅᆞᆯ\n• ㉡ 들 → 음성 모음 + 받침 있음 → 을\n• ㉢ 부텨를 → 음성 모음 + 받침 없음 → 를"
+                },
+                14: {
+                    title: "음운 변동의 유형",
+                    feedback: "이 문항은 여러 음운 변동이 연속적으로 일어나는 과정을 정확히 설명할 수 있는지를 묻는 문제입니다.",
+                    mistakes: "• 하나의 음운 변동만 확인함\n• 변동 순서를 고려하지 않음\n• 조음 방법 변화의 방향을 혼동함",
+                    study: "• '끓는' → 자음군 단순화 [끌는]\n• 이후 유음화 → [끌른]\n→ 뒤 자음 'ㄴ'이 앞 자음 'ㄹ'에 동화"
+                },
+                15: {
+                    title: "이어진문장·안은문장",
+                    feedback: "이 문항은 인용절이 포함된 안은문장의 구조를 정확히 파악하는 문제입니다.",
+                    mistakes: "• 안은문장과 안긴문장의 주어를 혼동함\n• 인용 조사 '고'의 기능을 놓침",
+                    study: "• 전체 문장 주어 → '그는'\n• 안긴문장 주어 → '영수가'\n→ 주어 생략 없음"
+                },
+                16: {
+                    title: "작품의 내용 이해",
+                    feedback: "이 문항은 인물의 말 속에 드러난 태도와 심리를 정확히 해석하는 문제입니다.",
+                    mistakes: "• 발언의 일부만 보고 태도를 단정함\n• 타인의 말과 인물의 태도를 혼동함",
+                    study: "• '그' → 실행 가능성에 의구심\n• 정비업체 사장 → 보험 처리의 당연함 제시\n→ 비난이나 질책 ❌"
+                },
+                17: {
+                    title: "작품의 맥락 이해",
+                    feedback: "이 문항은 대화의 진행에 따라 인물의 심리가 어떻게 변화하는지를 파악하는 문제입니다.",
+                    mistakes: "• 감정의 원인을 단편적으로 해석함\n• 문답 구조의 누적 효과를 놓침",
+                    study: "상담원과의 문답이 반복되며\n→ '그'는 점차 수치심과 부끄러움을 느낌"
+                },
+                18: {
+                    title: "서술상의 특징 파악",
+                    feedback: "이 문항은 서술 주체의 불분명함과 서술 방식의 기능을 정확히 구분하는 문제입니다.",
+                    mistakes: "• 서술 주체 불분명 = 서술자 변화로 오해함\n• 공간 변화와 서술자 변화를 연결함",
+                    study: "• ㉣: 생각의 주체가 불분명 → 자유 간접화법 효과\n• 공간은 동일 → 서술자 변화 ❌"
+                },
+                19: {
+                    title: "외적 준거에 따른 작품 감상",
+                    feedback: "이 문항은 외적 준거(입장·관점)를 적용해 인물의 상황을 판단하는 문제입니다.",
+                    mistakes: "• 감정 변화가 있으면 입장이 달라졌다고 판단함\n• 사건 이후의 태도를 입장 변화로 오해함",
+                    study: "• '그'는 사고 전후 모두 피해자 입장\n→ 외적 준거에 따른 입장 변화 없음"
+                },
+                20: {
+                    title: "세부 내용 파악 (의미 내재주의 vs 퍼트넘)",
+                    feedback: "이 문항은 각 입장이 '의미의 주관성'을 어떻게 보는지를 세부 문장 근거로 구분하는 문제입니다.\n비슷한 키워드(인식/의미)가 나와도 평가 태도(긍정/비판)가 다르면 같은 입장으로 묶으면 안 됩니다.",
+                    mistakes: "• '인식이 의미를 구성'이라는 표현만 보고 둘을 같은 입장으로 처리함\n• 퍼트넘의 '비판' 대목을 놓치고, 의미 내재주의와 동일하게 해석함\n• '주관성'이라는 단어를 공통점으로 과잉 일반화함",
+                    study: "• 의미 내재주의: 개인의 인식 일부를 의미로 제시 → 주관성 강조\n• 퍼트넘: 기술구가 의미를 객관적으로 결정한다는 주장에 비판적\n• 결론: 둘 다 주관성을 '중요'하게 본다고 묶는 건 ❌"
+                },
+                21: {
+                    title: "내용의 인과 관계 파악 (쌍둥이 지구 사고 실험)",
+                    feedback: "이 문항은 퍼트넘의 주장(의미 결정 요인) → 사고 실험의 역할(증명)로 이어지는 인과 연결을 묻습니다.\n즉, '왜 그 실험을 했는지'를 논리로 설명할 수 있어야 합니다.",
+                    mistakes: "• 사고 실험을 단순 사례로만 보고, '주장 입증' 역할을 놓침\n• '인식이 같아도 의미가 같다'로 감각적으로 결론 냄\n• 지시체(대상 자체)와 기술구(인식 기술)를 뒤섞음",
+                    study: "• 퍼트넘: 의미는 지시체(외부 세계의 대상)가 결정\n• 사고 실험: 인식이 같아도 대상(지시체)이 다를 수 있음\n• 따라서: 기술구가 같아도 지시체가 다르면 의미는 같지 않음"
+                },
+                22: {
+                    title: "구체적 사례 적용 (몰리브데넘/알루미늄)",
+                    feedback: "이 문항은 퍼트넘의 관점을 사례에 '정확히' 적용하는 문제입니다.\n퍼트넘에서는 의미가 이미 대상의 실제적 본성에 의해 결정되므로, '의미 결정을 위해 공동체 협업이 필요'하다고 보면 어긋납니다.",
+                    mistakes: "• '전문가가 구별한다'를 '공동체가 의미를 만든다'로 오해함\n• 언어적 노동 분업(사용 방식)과 의미 결정(근거)을 혼동함\n• 과학적 발견 전에는 의미가 없었다고 생각함",
+                    study: "• 퍼트넘: 의미는 대상의 실제적 본성에 의해 결정(발견 전에도 대상은 존재)\n• 전문가는 그 본성을 구별할 수 있고, 일반인은 이를 따라 사용함\n• 공동체 협업이 '의미를 만드는 것'이 아니라 사용을 정교화하는 것임"
+                },
+                23: {
+                    title: "다른 견해와의 비교 (<보기> vs 퍼트넘)",
+                    feedback: "이 문항은 <보기>의 관점이 퍼트넘과 어디에서 충돌하는지를 비교하는 문제입니다.\n핵심은 '외부 세계에 없는 대상의 단어도 의미가 있는가?'입니다.",
+                    mistakes: "• 퍼트넘을 '외부 세계만 인정'으로 단순화해 과하게 배제함\n• <보기>의 논점을 '상상=거짓'로 오해함\n• '의미'와 '지시 대상 존재'를 같은 것으로 봄",
+                    study: "• 퍼트넘: 의미 결정에 외부 지시체의 역할이 크다\n• <보기>: 외부 대상이 없어도 단어는 의미를 가질 수 있다\n• 따라서 <보기> 관점에서는 퍼트넘 주장만으로는 상상 산물의 의미를 설명하기 어렵다"
+                },
+                24: {
+                    title: "단어의 의미 파악 (지니다)",
+                    feedback: "이 문항은 같은 단어라도 문맥에 따라 의미가 달라지는 다의어 판별 문제입니다.\n사전 의미를 전부 외우는 게 아니라, 문장 안에서 어떤 의미가 작동하는지 확인해야 합니다.",
+                    mistakes: "• 대표 의미('가지다')만으로 밀어붙임\n• 추상/구체 용례 구분이 약함\n• '간직/맡다/기억' 계열 의미를 헷갈림",
+                    study: "ⓐ는 '바탕으로 갖추고 있다'(성품·자질) → '착한 성품을 지닌 사람'과 유사"
+                },
+                25: {
+                    title: "작품의 내용 이해 (고전)",
+                    feedback: "이 문항은 사건의 인과를 정확히 파악하는 문제입니다.\n노인의 말은 '능력이 있어서 비서를 받았다'가 아니라 '차를 마시면 그렇게 된다'는 조건/예언에 가깝습니다.",
+                    mistakes: "• 결과를 원인으로 착각함('천리를 간다' → 원래 능력)\n• 인물의 발언을 '사실 확인'이 아니라 '조건 제시'로 못 봄\n• 인물 평가를 감정적으로 단정함",
+                    study: "• 노인: '이 차를 마시면 천리를 갈 것' → 능력의 원인 제공\n• 따라서 이생이 원래 천리를 가는 능력 때문에 비서를 받은 것이 아님"
+                },
+                26: {
+                    title: "구절의 의미 이해",
+                    feedback: "이 문항은 구절이 담고 있는 근거(과거) vs 예측(미래)의 방향을 구분하는 문제입니다.",
+                    mistakes: "• 자책(과거 근거)과 만류(미래 예측)를 섞어 읽음\n• 말의 목적(자책/설득/만류)을 놓침\n• 다른 인물 대사의 기능을 동일하게 처리함",
+                    study: "• ㉢: 과거의 미준수(제사/남편 소식 없음)를 근거로 자책\n• ㉣: 장래 복록을 예측하며 넋 인도를 만류"
+                },
+                27: {
+                    title: "외적 준거에 따른 작품 감상",
+                    feedback: "이 문항은 '외적 준거(안내자/시련/극복)' 틀로 사건을 해석할 때, 장면의 행위가 어떤 기능(정보 제공/휴식/상징)을 하는지를 정확히 연결하는 문제입니다.",
+                    mistakes: "• 행위(차 권함)를 곧바로 '정보 제공'으로 해석함\n• 외적 준거 요소(안내자, 시련, 극복 방법)를 임의로 끼워 맞춤\n• '오래됨' 같은 조건을 읽고도 기능 판단을 놓침",
+                    study: "• 이 공 부부의 차 권유: '온 지 오래됨'에 따른 대접/환대 성격\n• 시련 극복 정보 제공은 오히려 '노인'의 조언(청운사 등)에서 확인됨"
+                },
+                28: {
+                    title: "전개 방식 파악 (공유물 분할)",
+                    feedback: "이 문항은 글의 전개가 분류 → 설명 구조인지, 다른 구조인지 판단하는 문제입니다.\n'어디에서 분류했고, 어디에서 각 항목을 설명했는가'를 정확히 잡아야 합니다.",
+                    mistakes: "• 정의/절차/장단점/사례를 전개 방식과 혼동함\n• '절차 제시'가 없는데 단계 서술로 착각함\n• 분류된 항목과 설명 문단의 대응을 확인하지 않음",
+                    study: "• 3문단: 현물/대금/가격배상으로 구분(분류)\n• 3~5문단: 각 방법 특징 설명\n→ 전개 방식: 분류 후 설명"
+                },
+                29: {
+                    title: "세부 내용 파악 (협의 분할)",
+                    feedback: "이 문항은 '협의에 의한 분할'의 핵심 특징을 정확히 찾아내는 문제입니다.\n법원 개입 여부와 방법 선택의 자율성이 포인트입니다.",
+                    mistakes: "• 협의 분할도 법원 절차가 필요하다고 착각함\n• '대금 분할'을 재판 전용으로 오해함\n• 핵심 문장(3문단) 근거를 확인하지 않음",
+                    study: "• 협의 분할: 공유자들이 세 가지 방법 중 임의 선택 가능\n• 따라서 법원 개입 없이도 합의로 대금 분할 가능"
+                },
+                30: {
+                    title: "세부 내용 추론 (공통 가능한 분할 방법)",
+                    feedback: "이 문항은 두 방식(협의/재판)에 공통으로 적용 가능한 분할 방법을 추론하는 문제입니다.\n둘 다 가능하다고 명시된 방법을 정확히 연결해야 합니다.",
+                    mistakes: "• 한쪽만 가능한 방법을 공통으로 착각함\n• '분량적으로 나눈다' 같은 표현만 보고 성급히 결론 냄\n• '방법의 존재'와 '실행 조건'을 혼동함",
+                    study: "• 3문단: 협의/재판 모두 현물·대금·가격배상 존재\n• 따라서 공통으로 현물 분할로도 분할 가능(추론 성립)"
+                },
+                31: {
+                    title: "구체적 사례 적용 (현물 분할: 가치 vs 면적)",
+                    feedback: "이 문항은 현물 분할에서 법원이 조정하는 것이 지분(권리)이 아니라 '경제적 가치에 맞춘 면적'임을 적용하는 문제입니다.",
+                    mistakes: "• 면적 조정 = 지분 조정으로 오해함\n• 지분(권리 비율)과 면적(물리적 분할)을 동일시함\n• 보기 사례의 '가치 불균등 조건'을 놓침",
+                    study: "• 법원은 지분을 바꾸지 않고, 가치가 지분 비율에 맞게 면적을 조정\n• 따라서 '지분을 조정하여 현물 분할'은 ❌\n• 고압선 등으로 가치가 달라지면 면적 조정이 허용됨"
+                },
+                32: {
+                    title: "세부 내용 파악 (진동 촉감/포스 피드백)",
+                    feedback: "이 문항은 (가)에서 제시된 내용을 (나)에서 '왜 그런지'까지 근거로 뒷받침하는지를 확인하는 문제입니다.\n즉, '(가)에서 말했다'는 사실만으로 (나)에서도 근거가 있다고 단정하면 오답이 됩니다.",
+                    mistakes: "• (가)의 정보가 (나)에도 있을 거라고 추정함\n• 보기 문장(대표성 이유)을 (나)에서 직접 찾지 않음\n• '알 수 있다/확인할 수 없다' 표현의 차이를 놓침",
+                    study: "• (가): 진동 촉감이 대표적 포스 피드백임은 알 수 있음\n• (나): 왜 대표적인지(대표성 근거)는 직접 확인 불가\n→ 그래서 '(나)에서 확인할 수 없다'가 핵심"
+                },
+                33: {
+                    title: "세부 내용 파악 (자극 강도 vs 체감각 피질 영역)",
+                    feedback: "이 문항은 '강도↑ → 신호↑'와 '강도↑ → 뇌 영역↑'를 구분하는 문제입니다.\n전기 신호의 크기와 뇌 활성 영역의 넓이는 같은 정보가 아닙니다.",
+                    mistakes: "• 자극 강도가 커지면 모든 결과가 '더 커진다'고 단순화함\n• 신호 크기 증가를 뇌 영역 증가로 확대 해석함\n• 지문에 없는 결과를 상식으로 보충함",
+                    study: "• (나) 2문단: 자극 강도↑ → 수용체 전기 신호↑ (근거 O)\n• 하지만: 자극 강도↑ → 체감각 피질 활성 영역 넓어짐 (근거 X)"
+                },
+                34: {
+                    title: "중심 내용 파악 (전압–진폭–스퀴즈 힘–마찰)",
+                    feedback: "이 문항은 글의 핵심 메커니즘(연쇄 인과)을 한 번에 연결할 수 있는지 묻는 문제입니다.\n전압 변화가 결국 촉감(부드러움)으로 이어지는 경로를 정확히 따라가야 합니다.",
+                    mistakes: "• 전압, 진동수, 진폭 개념을 섞어버림\n• 스퀴즈 힘의 정의(진폭/거리)를 놓침\n• 마찰 감소 → 부드러움의 결론을 중간에서 끊음",
+                    study: "• 전압↑ → 진폭↑\n• 손가락 거리 일정이면 (진폭/거리)↑ → 스퀴즈 힘↑\n• 스퀴즈 힘↑ → 마찰력↓\n• 마찰력↓ → 더 부드럽게 느껴짐"
+                },
+                35: {
+                    title: "생략된 내용 추론 (스퀴즈 필름/스퀴즈 힘/마찰)",
+                    feedback: "이 문항은 지문에 제시된 조건들을 바탕으로 '어떤 과정을 거쳐 어떤 결과가 생기는지'를 추론하는 문제입니다.\n특히 스퀴즈 필름 형성 조건(진폭·접촉면) → 스퀴즈 힘 → 마찰 변화 → 촉감 인지의 연결이 핵심입니다.",
+                    mistakes: "• '마찰이 감소한다'를 '마찰이 0이 된다'로 과장 해석함\n• 스퀴즈 필름이 생기면 스퀴즈 힘이 줄어든다고 착각함\n• 조건(1㎛ 이상, 반지름>h)을 확인하지 않고 추론함",
+                    study: "• 형성 조건: 진동 진폭 ≥ 1㎛, 손가락 접촉면 반지름 > h → 스퀴즈 필름 형성\n• 스퀴즈 필름이 생기면 마찰 계수는 감소하지만, 마찰이 완전히 없어지는 건 아님\n• 스퀴즈 힘은 '필름이 있을 때 작용하는 힘'"
+                },
+                36: {
+                    title: "구체적 사례 적용 (수용체-주파수-촉감)",
+                    feedback: "이 문항은 지문의 생리 정보(수용체 반응 주파수)를 <보기> 사례에 적용해 어떤 수용체가 반응했는지 추론하는 문제입니다.\n단, 결론을 낼 때는 지문에서 제시된 근거 범위 안에서만 판단해야 합니다.",
+                    mistakes: "• '부드러움/거침'의 원인을 지문에 없는 요소(예: 수용장 넓이)로 단정함\n• 주파수-수용체 대응을 혼동함(1㎐, 40㎐, 300㎐)\n• '추측할 수 있다'를 '확정할 수 있다'로 바꿔 읽음",
+                    study: "• 느린 순응 타입Ⅰ: 1㎐ 이하\n• 빠른 순응 타입Ⅰ: 30~40㎐\n• 빠른 순응 타입Ⅱ: 200~300㎐\n→ 주파수별 수용체 반응을 정확히 대응시켜야 함"
+                },
+                37: {
+                    title: "단어의 의미 파악 (유사하다 ↔ 가깝다)",
+                    feedback: "이 문항은 두 단어가 문맥에서 같은 의미로 바꿔 쓸 수 있는지(대치 가능성)를 판단하는 문제입니다.\n사전 뜻이 비슷해도, 쓰임(결합/뉘앙스)이 다르면 완전 대치가 안 될 수 있습니다.",
+                    mistakes: "• '비슷하다' = '가깝다'로 무조건 치환함\n• '가깝다'가 갖는 정도/거리감 뉘앙스를 고려하지 않음\n• 문장 속 결합(어울림)을 확인하지 않음",
+                    study: "• '유사하다' = 성질·특성이 서로 비슷하다(비교 중심)\n• '가깝다' = 기준과 정도상 근접(뉘앙스 포함)\n→ 바꿔 쓸 수 있으려면 성질 비교 문맥에서만 자연스러운지 확인해야 함"
+                },
+                38: {
+                    title: "작품 간 공통점·차이점 파악 (표현/태도/기능)",
+                    feedback: "이 문항은 (가)와 (나)가 공통으로 사용하는 표현 방식과, 각 작품이 그 표현을 통해 드러내는 상황·정서·태도의 차이를 구분하는 문제입니다.\n겉표현(영탄)만 같다고 해서 내용 기능까지 같다고 보면 틀립니다.",
+                    mistakes: "• 둘 다 영탄 표현이 있으니 '완전 동일'로 처리함\n• (가)의 '명령형 어조' 같은 태도 특징을 놓침\n• 고사 인물 언급을 '성찰'로 단정함(근거 없는 확대)",
+                    study: "• 공통점: (가) '어와 ~ 우습도다', (나) '아! … 알리겠는가?' → 영탄으로 정서 강조\n• 차이점: (가)는 명령형으로 대상의 태도 변화 요구, (나)는 회고/애도 중심\n• 고사 인물 언급 = 삶 성찰로 바로 연결 ❌"
+                },
+                39: {
+                    title: "표현상의 특징 파악",
+                    feedback: "이 문항은 자연물 표현이 어떤 정서를 드러내는지, 그리고 그 정서가 화자의 행동·의지와 연결되는지를 구분하는 문제입니다.\n자연물이 쓰였다고 해서 모두 '노력'이나 '행동 의지'를 드러내는 것은 아닙니다.",
+                    mistakes: "• 자연물이 나오면 → 화자의 적극적 노력으로 해석함\n• 정서 표현과 행동 표현을 구분하지 않음\n• '허망함'과 '의지'를 같은 정서로 착각함",
+                    study: "• [E]: '오동잎에 비 떨어지는 소리' → 꿈에서 깨어난 상황 제시\n• '새벽 달빛에 작은 별뿐' → 소망이 이루어지지 않은 허망함 강조\n• 자연물은 정서 드러내기 기능이지, 임에게 마음 전하려는 노력 표현은 아님"
+                },
+                40: {
+                    title: "작품의 내용 파악",
+                    feedback: "이 문항은 글쓴이의 말 속에서 외손녀에 대한 태도와 의도를 정확히 파악하는 문제입니다.\n'알리고 싶다'는 표현이 있으면, 숨기려는 태도로 해석할 수 없습니다.",
+                    mistakes: "• 슬픔을 표현하면 → 세상에 알리고 싶지 않다고 추론함\n• 애도와 은폐를 혼동함\n• 문장의 직접적 진술을 반대로 해석함",
+                    study: "• '누가 불쌍히 여기고 누가 세상에 알리겠는가?'\n→ 외손녀의 죽음을 세상에 알리고 싶은 마음 분명\n• 따라서 '사람들이 알지 않기를 바랐다'는 해석은 ❌"
+                },
+                41: {
+                    title: "시어·시구의 의미와 기능 파악",
+                    feedback: "이 문항은 시어가 관계를 단절하는지, 이어 주는지 그 기능을 대비해 파악하는 문제입니다.",
+                    mistakes: "• 이미지가 비슷하면 기능도 같다고 판단함\n• 상징의 '방향성(차단/연결)'을 놓침",
+                    study: "• ㉠: 화자와 임 사이를 가로막는 장애물 → 마음 전달 차단\n• ㉡: '묶여 이어진' 구조 → 글쓴이 ↔ 외손녀 마음의 연결"
+                },
+                42: {
+                    title: "외적 준거에 따른 작품 감상",
+                    feedback: "이 문항은 화자의 태도를 운명 수용으로 볼 수 있는지, 아니면 관계 회복에 대한 바람으로 봐야 하는지를 구분하는 문제입니다.",
+                    mistakes: "• 신적 존재에게 호소 → 체념으로 해석함\n• 간절함과 수용을 혼동함",
+                    study: "• '상제께 임의 죄를 아뢰겠다'\n→ 임이 마음을 돌리기를 바라는 능동적 바람\n• 이별을 운명으로 받아들이는 태도 ❌"
+                },
+                43: {
+                    title: "표현상의 특징 파악",
+                    feedback: "이 문항은 음성 상징어가 장면을 어떻게 생동감 있게 만드는지를 파악하는 문제입니다.",
+                    mistakes: "• 음성 상징어를 단순한 꾸밈 표현으로만 봄\n• 행동 묘사 기능을 놓침",
+                    study: "• '불쑥' → 갑작스럽게 꺼내는 모습\n• '주섬주섬' → 정성스럽게 챙기는 동작\n→ 마을 사람들의 행동이 눈앞에 그려지듯 표현됨"
+                },
+                44: {
+                    title: "시어·시구의 의미와 기능 파악",
+                    feedback: "이 문항은 시어가 화자의 깨달음과 어떤 관계를 맺는지를 묻는 문제입니다.\n단어의 사전 뜻과 작품 속 기능을 반드시 구분해야 합니다.",
+                    mistakes: "• 사전 뜻만으로 판단함\n• 깨달음의 방향(높이 ↔ 깊이)을 놓침",
+                    study: "• '단숨에'는 사전적으로 '곧장'이지만, 작품에서는 쉽게 목표를 이룰 수 있음을 강조하지 않음\n• 오히려 '속리산'을 길게 오르며 → 더 깊이 들어가는 삶의 중요성을 깨달음"
+                },
+                45: {
+                    title: "외적 준거에 따른 작품 감상",
+                    feedback: "이 문항은 대상이 어떤 존재로 형상화되었는지를 외적 준거의 관점에서 판단하는 문제입니다.",
+                    mistakes: "• 말해 준다/속삭인다 → 희생으로 해석함\n• 조언자와 희생자를 혼동함",
+                    study: "• 속리산은 화자에게 → '어깨를 낮추며' 깨달음을 전해 주는 존재\n• 화자를 위해 자신을 희생하는 존재 ❌"
+                }
+            },
+            'korean_mock_4': {
+                1: {
+                    title: "말하기 방식 파악하기",
+                    feedback: "이 문항은 발표자가 어떤 설명 방식을 사용해 중심 화제를 드러내는지를 파악하는 문제입니다. 질문이 등장한다고 해서 항상 청중 반응 점검 전략이라고 보기는 어렵습니다.",
+                    mistakes: "• 질문이 나오면 무조건 '청중 반응 점검'으로 판단함\n• 비교 설명과 상호 작용 전략을 구분하지 않음",
+                    study: "• 2문단에서는 → 녹차와의 차이점(산화 여부)을 통해 → 중심 화제인 홍차의 특성을 설명하고 있음\n• 1문단의 질문은 도입용일 뿐, → 발표 중간중간 청중 반응을 점검하는 방식은 아님\n\n🎯 한마디 조언: 질문이 있다고 다 상호 작용은 아니다. 기능부터 확인하자."
+                },
+                2: {
+                    title: "발표 계획 확인하기",
+                    feedback: "이 문항은 발표의 구성 흐름과 각 문단의 역할을 정확히 짚는 문제입니다. 내용이 비슷해 보여도 계획에 포함되었는지 여부를 엄격하게 구분해야 합니다.",
+                    mistakes: "• 관련 내용이 있으면 계획에 포함됐다고 판단함\n• '방법 제시'와 '일부 요소 언급'을 혼동함",
+                    study: "• 4문단에서는 → 조리법·첨가물 종류에 따른 즐기는 방법만 제시\n• ❌ 첨가물의 양을 조절하는 방법은 언급되지 않음\n• 따라서 발표 계획에 없는 내용을 있다고 보면 오답\n\n🎯 한마디 조언: \"비슷하다\" ≠ \"포함되어 있다\""
+                },
+                3: {
+                    title: "청중의 반응 분석하기",
+                    feedback: "이 문항은 청중의 발화를 반응 유형별로 구분하는 문제입니다. 추론과 아쉬움 표현은 명확히 다른 반응입니다.",
+                    mistakes: "• 궁금해 보이면 '아쉬움'으로 해석함\n• 추론과 비판·요구 반응을 혼동함",
+                    study: "• 청중 2는 → 발표 내용을 바탕으로 → '왜 블랙티라고 부를까?'를 스스로 추론함\n• ❌ 발표자가 다루지 않은 내용을 아쉬워하거나 요구하지는 않음\n\n🎯 한마디 조언: 추론 = 이해의 확장 / 아쉬움 = 내용의 부족 지적"
+                },
+                4: {
+                    title: "입론 이해하기",
+                    feedback: "이 문항은 반대 측 입론에서 주장의 조건과 범위를 정확히 해석하는 문제입니다. '항상', '반드시'와 같은 표현은 특히 주의해야 합니다.",
+                    mistakes: "• 일부 조건을 전체 주장으로 확대 해석함\n• 예외 가능성을 무시함",
+                    study: "• 반대 1은 → 사람 판사의 검토가 필요한 경우 효율성이 떨어진다고 말함\n• ❌ 모든 인공지능 판결에 항상 사람 판사의 검토가 필요하다고 본 것은 아님\n\n🎯 한마디 조언: 조건이 붙은 주장인지, 전면 주장인지 꼭 구분하자."
+                },
+                5: {
+                    title: "반대 신문 이해하기",
+                    feedback: "이 문항은 반대 신문에서 자료 활용 방식과 질문의 목적을 파악하는 문제입니다. 자료를 쓴다고 해서 목적이 모두 같은 것은 아닙니다.",
+                    mistakes: "• 물음 형식이면 전부 '추가 자료 요구'로 판단함\n• 상대 발언 재진술과 검증을 구분하지 못함",
+                    study: "• [B]의 반대 2, [C]의 찬성 2 모두 → 보고서 자료를 근거로 → 상대측을 압박하는 질문을 던지고 있음\n• ❌ 상대 발언의 공정성을 검증하거나 추가 자료를 요구하는 질문은 아님\n\n🎯 한마디 조언: 반대 신문 질문은 ✔ 압박인지 ✔ 검증인지 ✔ 요구인지부터 따져보자"
+                },
+                6: {
+                    title: "내용 조직 파악하기",
+                    feedback: "이 문항은 글의 각 문단이 어떤 역할을 맡고 있는지를 정확히 구분하는 문제입니다. '한계'와 '부작용'은 비슷해 보여도 글쓰기에서는 명확히 다른 개념입니다.",
+                    mistakes: "• 부정적인 내용이면 모두 '부작용'으로 묶어 해석함\n• 개념 설명과 결과 제시를 구분하지 않음",
+                    study: "• (나) 3문단은 → 인공지능 판사가 본질적으로 갖는 한계를 설명한 문단\n• ❌ 도입 이후 새롭게 발생한 사회적 문제(부작용)를 제시한 것은 아님\n\n🎯 한마디 조언: '한계'는 성격 설명, '부작용'은 결과 설명이다."
+                },
+                7: {
+                    title: "고쳐 쓰기 계획 파악하기",
+                    feedback: "이 문항은 고쳐 쓴 부분이 어떤 방향의 수정인지를 파악하는 문제입니다. 표현이 바뀌었을 때, 그 변화의 초점을 먼저 봐야 합니다.",
+                    mistakes: "• 문장이 바뀌면 전부 '입장 변화'로 해석함\n• 표현 강화와 역할 구체화를 구분하지 못함",
+                    study: "• '판사 업무의 보조적 수단' → '사법 절차의 효율성을 높이는 수단'으로 수정\n• 이어서 구체적인 쟁점 설명이 추가됨 → 인공지능의 역할을 더 분명히 밝히는 수정\n\n🎯 한마디 조언: 고쳐 쓰기는 입장 변화보다 역할·기능의 구체화를 먼저 본다."
+                },
+                8: {
+                    title: "글쓰기 계획 파악하기",
+                    feedback: "이 문항은 문단의 핵심 기능이 설명인지, 주장인지를 판단하는 문제입니다.",
+                    mistakes: "• 개념 설명 문단을 주장 문단으로 착각함\n• 정보 제공과 설득을 혼동함",
+                    study: "• 2문단에서는 → '소셜 기부'의 개념을 정의·설명하여 → 독자의 이해를 돕고 있음\n• 이는 글쓰기 계획과 정확히 일치함\n\n🎯 한마디 조언: 개념 소개 문단 = 이해 중심, 설득 아님."
+                },
+                9: {
+                    title: "자료 활용의 적절성 파악하기",
+                    feedback: "이 문항은 자료가 문단의 주장과 직접 연결되는지를 따지는 문제입니다. 자료의 신뢰성보다 내용 적합성이 핵심입니다.",
+                    mistakes: "• 전문가 인터뷰면 무조건 적절하다고 판단함\n• 자료의 주제와 문단의 목적을 따로 보지 않음",
+                    study: "• ㄴ의 전문가 인터뷰는 → 기부 참여를 쉽게 하는 방법 설명과는 거리가 있음\n• 따라서 기부 참여 방식 설명에 활용하기에는 부적절\n\n🎯 한마디 조언: 자료는 좋아 보여도 문단 목적에 맞지 않으면 탈락이다."
+                },
+                10: {
+                    title: "조건에 맞게 표현하기",
+                    feedback: "이 문항은 제시된 조건을 모두 충족했는지를 확인하는 문제입니다. 하나라도 빠지면 오답이 됩니다.",
+                    mistakes: "• 의미는 맞으니까 조건도 맞다고 판단함\n• 비유·문장 유형·마무리 형식을 따로 보지 않음",
+                    study: "• '큰 물결' → 비유적 표현 충족\n• '함께하자' → 청유문으로 마무리\n• 앞 문단의 흐름(기부의 긍정적 영향)도 자연스럽게 이어짐\n\n🎯 한마디 조언: 조건 문제는 느낌이 아니라 체크리스트다."
+                },
+                11: {
+                    title: "어근과 접사 이해하기",
+                    feedback: "이 문항은 어근과 접사의 개념을 알고, 단어의 구성을 분석할 수 있는지를 묻는 문제입니다.",
+                    mistakes: "• 단어의 의미에만 주목해 형태 분석을 하지 않음\n• '풋-', '덧-' 같은 접두사를 어근으로 오해함",
+                    study: "• 어근 = 단어의 핵심 의미를 담은 형태소\n• 접사 = 어근에 붙어 의미를 더하거나 바꾸는 형태소\n• '덧저고리' → '덧-'은 접두사, '저고리'는 어근\n• '덧니' → '덧-'은 접두사, '니(이)'는 어근\n• '풋과일' → '풋-'은 접두사, '과일'은 어근\n\n🎯 한마디 조언: 앞에 붙어 의미를 보태면 접두사다."
+                },
+                12: {
+                    title: "구성 요소에 따라 단어 분류하기",
+                    feedback: "이 문항은 단어의 구성 요소에 따라 단일어·파생어·합성어를 구분하는 문제입니다.",
+                    mistakes: "• 어절(띄어쓰기 단위)과 단어를 혼동함\n• 어근·접사 분석 없이 단어 종류를 판단함",
+                    study: "• 단일어 = 어근 하나로만 구성\n• 파생어 = 어근 + 접사\n• 합성어 = 어근 + 어근\n• '푸르다' → 단일어\n• '덧저고리', '풋과일', '덧니' → 파생어\n• '햇빛', '군살', '맨밥' → 파생어\n• '풋사랑', '헛웃음' → 파생어\n\n🎯 한마디 조언: 형태소 분석을 먼저 하고 종류를 정하자."
+                },
+                13: {
+                    title: "음운의 변동 이해하기",
+                    feedback: "이 문항은 음운의 변동(교체·탈락·첨가·축약) 중 '교체'를 이해하고 있는지를 묻는 문제입니다.",
+                    mistakes: "• 발음 변화는 모두 '탈락'이라고 생각함\n• 음운의 '교체'와 '탈락'을 혼동함",
+                    study: "• 교체 = 한 음운이 다른 음운으로 바뀜\n• 탈락 = 음운이 사라짐\n• '닫는[단는]' → 'ㄷ'이 'ㄴ'으로 바뀜 (비음화, 교체)\n• 'ㄷ'이 사라진 게 아님\n\n🎯 한마디 조언: 음운이 '바뀌면' 교체, '없어지면' 탈락이다."
+                },
+                14: {
+                    title: "부사어 이해하기",
+                    feedback: "이 문항은 부사어의 종류(성분 부사어 vs. 문장 부사어)를 구분하는 문제입니다.",
+                    mistakes: "• 부사어의 수식 대상을 정확히 파악하지 않음\n• 문장 전체를 수식하는 부사어를 성분 부사어로 착각함",
+                    study: "• 성분 부사어 = 특정 성분(용언, 관형어, 다른 부사어 등)을 수식\n• 문장 부사어 = 문장 전체를 수식하며, 화자의 태도나 판단을 나타냄\n• '다행히', '아마', '설마' → 문장 부사어\n• '매우', '아주', '빨리' → 성분 부사어\n\n🎯 한마디 조언: 화자의 태도가 담기면 문장 부사어다."
+                },
+                15: {
+                    title: "중세 국어의 특징 이해하기",
+                    feedback: "이 문항은 중세 국어의 문법적 특징을 현대 국어와 비교하여 이해하는 문제입니다.",
+                    mistakes: "• 중세 국어 표기를 현대어로 단순 해석함\n• 중세 국어의 문법 형태소를 무시함",
+                    study: "• 중세 국어의 관형격 조사 'ㅅ' → 현대 국어 '의'\n• 중세 국어의 목적격 조사 '을/를' → 현대 국어와 유사\n• 중세 국어의 주격 조사 'ㅣ' → 현대 국어 '이/가'\n• 중세 국어의 객체 높임 선어말어미 '-/오/우-' 등\n\n🎯 한마디 조언: 중세 국어는 조사와 어미 형태에 주목하라."
+                },
+                16: {
+                    title: "표현상의 특징 파악하기",
+                    feedback: "이 문항은 시에서 사용된 표현 기법(비유, 반복, 대조 등)을 파악하는 문제입니다.",
+                    mistakes: "• 표현 기법의 명칭만 외우고 실제 적용을 못함\n• 시어의 의미보다 형식적 특징에만 집중함",
+                    study: "• 반복법 = 같은 말이나 구절을 되풀이함\n• 대조법 = 상반되는 의미를 나란히 배치함\n• 영탄법 = 감탄사나 감탄형 어미를 사용함\n• 설의법 = 답을 알면서 일부러 물음 형식으로 표현함\n\n🎯 한마디 조언: 표현 기법은 '효과'와 함께 파악하라."
+                },
+                17: {
+                    title: "작품의 내용 이해하기",
+                    feedback: "이 문항은 작품의 내용을 정확하게 파악했는지를 묻는 문제입니다.",
+                    mistakes: "• 작품의 일부만 보고 전체 내용을 추측함\n• 선지의 표현과 작품의 표현을 꼼꼼히 대조하지 않음",
+                    study: "• 시의 화자가 누구인지 파악하기\n• 시적 상황(시간, 공간, 분위기) 파악하기\n• 시어의 함축적 의미 파악하기\n• 선지의 내용이 작품에 '직접' 나오는지 확인하기\n\n🎯 한마디 조언: 선지는 작품 속 근거로 검증하라."
+                },
+                18: {
+                    title: "외적 준거에 따라 작품 감상하기",
+                    feedback: "이 문항은 작품 외적 정보(작가, 시대, 창작 배경 등)를 활용해 작품을 감상하는 문제입니다.",
+                    mistakes: "• 외적 정보를 작품 내용과 연결하지 못함\n• 보기의 정보를 읽지 않고 작품만으로 답을 고름",
+                    study: "• <보기>에서 제공한 정보를 먼저 정리하기\n• 그 정보가 작품의 어떤 부분과 연결되는지 찾기\n• 작가의 의도, 시대적 배경 등을 작품 해석에 적용하기\n\n🎯 한마디 조언: <보기>는 해석의 '열쇠'다."
+                },
+                19: {
+                    title: "소재의 기능 파악하기",
+                    feedback: "이 문항은 작품에서 특정 소재가 어떤 역할(상징, 분위기 형성, 주제 부각 등)을 하는지를 묻는 문제입니다.",
+                    mistakes: "• 소재의 사전적 의미만 생각함\n• 소재가 작품 전체에서 어떤 의미를 갖는지 파악하지 못함",
+                    study: "• 소재의 일반적 의미 vs. 작품 속 맥락적 의미 구분하기\n• 소재가 반복되거나 강조되는 이유 생각하기\n• 소재와 화자의 정서, 주제와의 관계 파악하기\n\n🎯 한마디 조언: 소재는 '맥락' 속에서 의미를 갖는다."
+                },
+                20: {
+                    title: "외적 준거에 따라 작품 감상하기",
+                    feedback: "이 문항은 작품 외적 정보를 활용해 작품을 깊이 있게 감상하는 문제입니다.",
+                    mistakes: "• <보기>의 정보를 대충 읽고 넘어감\n• 외적 정보와 작품 내용을 따로 이해함",
+                    study: "• <보기>의 핵심 정보를 밑줄 치며 정리하기\n• 작품의 어떤 표현이 <보기>의 내용과 연결되는지 찾기\n• 외적 준거가 작품 해석에 어떤 영향을 주는지 생각하기\n\n🎯 한마디 조언: <보기>와 작품을 '대응'시켜라."
+                },
+                21: {
+                    title: "세부 정보 이해하기",
+                    feedback: "이 문항은 제도 설명 글에서 예외 규정까지 포함해 정확한 사실을 찾는지를 묻는 문제입니다.",
+                    mistakes: "• '납부하지 못했다' = 무조건 체납으로만 해석함\n• 환급·충당 같은 사후 처리 규정을 놓침",
+                    study: "• 7문단에 따르면 → 미납이 있더라도 다른 세금에서 환급금이 발생하면 → 과세 관청이 직권으로 미납 세금에 충당할 수 있음\n• 따라서 납부 불이행 = 곧바로 해결 불가 ❌\n\n🎯 한마디 조언: 세부 정보 문제는 예외·보완 규정을 끝까지 확인하자."
+                },
+                22: {
+                    title: "부분적 의미 추론하기",
+                    feedback: "이 문항은 '확정'이라는 개념이 언제·무엇을 의미하는지를 문맥에서 정확히 추론하는 문제입니다.",
+                    mistakes: "• '성립'과 '확정'을 같은 단계로 생각함\n• 용어 정의를 흐릿하게 기억함",
+                    study: "• 과세권 행사(징수)에는 → 납세 의무의 성립 이후 '확정'이 필요\n• '확정'이란 → 세액과 납부 기한이 정해지는 것\n\n🎯 한마디 조언: 성립 = 요건 충족, 확정 = 얼마를 언제 낼지 결정."
+                },
+                23: {
+                    title: "세부 내용 비교하기",
+                    feedback: "이 문항은 과세 방식별로 확정 효력이 발생하는 시점을 비교하는 문제입니다.",
+                    mistakes: "• 신고 여부만 보고 확정 시점을 판단함\n• 자동 확정·신고 납세·부과 과세를 섞어 기억함",
+                    study: "• ㉠ 자동 확정: → 성립과 동시에 확정\n• ㉢ 부과 과세: → 과세 관청의 확정 + 납세 고지서 도달 시 확정\n• 두 방식의 확정 시점과 절차가 다름\n\n🎯 한마디 조언: 비교 문제는 '언제 확정되나'를 기준으로 정리하자."
+                },
+                24: {
+                    title: "구체적 사례에 적용하기",
+                    feedback: "이 문항은 법 적용 시점과 납세 의무 성립 시점을 사례에 정확히 대입하는 문제입니다.",
+                    mistakes: "• 법 개정일만 보고 동일 적용으로 판단함\n• '성립 시점'을 놓침",
+                    study: "• 납세 의무 성립 시점:\n  - 소득세(갑): 과세 기간 종료 시\n  - 상속세(을): 상속 개시 시\n• 개정법 시행 전에 성립한 갑은 개정 이전 법 적용\n• 을은 개정 이후 성립 → 개정법 적용\n\n🎯 한마디 조언: 법 적용은 개정일이 아니라 '성립 시점'이 기준이다."
+                },
+                25: {
+                    title: "단어의 문맥적 의미 파악하기",
+                    feedback: "이 문항은 같은 단어라도 문맥에 따라 의미가 달라짐을 파악하는 문제입니다.",
+                    mistakes: "• 가장 익숙한 뜻을 자동으로 선택함\n• 문장 속 쓰임을 확인하지 않음",
+                    study: "• ⓐ는 → '무엇을 무엇으로 이름 지어 부르다'의 의미\n• 성과·결과·직업·화제와는 무관\n\n🎯 한마디 조언: 어휘 문제는 사전 뜻이 아니라 문맥 기능을 본다."
+                },
+                26: {
+                    title: "서술상의 특징 파악하기",
+                    feedback: "이 문항은 누가, 어떤 시점에서, 무엇을 바라보고 서술하는지를 정확히 파악했는지를 묻는 문제입니다.",
+                    mistakes: "• 시간의 이동이 있다는 이유만으로 복합 사건 구조로 판단함\n• 시제 표현이 섞였다고 과거 사건을 현재 시제로 서술했다고 오해함",
+                    study: "• 이 글은 서술자 '나'의 시선으로 → 어머니의 과거 삶과 현재 삶을 회상·관찰하는 구조\n• 사건이 병렬적으로 동시에 전개되지는 않음\n• 서술자는 일관되게 '나'\n\n🎯 한마디 조언: 서술상의 특징은 시간 이동 ≠ 복수 사건이다."
+                },
+                27: {
+                    title: "세부 내용 이해하기",
+                    feedback: "이 문항은 인물의 행위와 서술자의 반응을 통해 정서적 판단의 방향을 정확히 읽었는지를 묻는 문제입니다.",
+                    mistakes: "• '냄새'라는 소재를 곧바로 부정적 감정으로 단정함\n• 서술자의 복합 감정을 한 방향으로 단순화함",
+                    study: "• '나'는 어머니의 냄새를 → 단순히 혐오하거나 부정적으로 판단하지 않음\n• 오히려 → '쓰디쓴 세월의 냄새'라는 말에서 고통·연민·아픔을 느낀다\n\n🎯 한마디 조언: 감정 문제는 표현 대상 ≠ 화자의 태도를 구분하자."
+                },
+                28: {
+                    title: "외적 준거에 따라 감상하기",
+                    feedback: "이 문항은 외적 준거(세대·사회적 맥락)를 적용해 가치 판단이 타당한지를 평가하는 문제입니다.",
+                    mistakes: "• '궁핍, 땀, 희생' 같은 단어를 자동으로 부정으로 해석함\n• 외적 준거를 감정 비난 도구처럼 사용함",
+                    study: "• '나'가 어머니의 삶을 → '궁핍과 땀과 희생'으로 본 것은 → 비하가 아니라 삶의 실존적 무게를 인식한 것\n• 외적 준거 감상은 시대·세대 이해가 핵심\n\n🎯 한마디 조언: 외적 준거 = 평가 ❌, 외적 준거 = 맥락화 ⭕"
+                },
+                29: {
+                    title: "세부 정보 파악하기 (이론)",
+                    feedback: "이 문항은 리쾨르의 미메시스 이론에서 각 단계의 주체와 역할을 정확히 구분했는지를 묻는 문제입니다.",
+                    mistakes: "• '이야기 정체성'을 작가가 만든다고 착각함\n• 미메시스 단계의 역할을 혼동함",
+                    study: "• 인물의 이야기 정체성은 → 미메시스 Ⅲ (독자의 해석 과정)에서 형성됨\n• 따라서 → 작가(미메시스 Ⅰ, Ⅱ)가 직접 형상화한다는 진술은 부적절\n\n🎯 한마디 조언: 리쾨르 핵심 공식 - 형성(Ⅰ) – 구성(Ⅱ) – 이해·정체성(Ⅲ)"
+                },
+                30: {
+                    title: "관점의 차이 파악하기",
+                    feedback: "이 문항은 철학자별 예술관을 정확한 논리 구조로 구분했는지를 묻는 문제입니다.",
+                    mistakes: "• '이원적 세계관'의 원인과 결과를 뒤집어 이해함\n• 플라톤의 비판 논리를 과도하게 일반화함",
+                    study: "• 플라톤: 세계는 이데아 / 현실의 이원 구조\n• 예술 = 현실(이미 모방된 것)의 재모방\n• 플라톤은 → 예술이 세계를 이원화한다고 보지 않음 → 이미 이원적인 세계에서 예술이 인간을 더 멀어지게 한다고 봄\n\n🎯 한마디 조언: 철학 문제는 '왜 그렇게 봤는가'의 논리 방향을 반드시 확인하자."
+                },
+                31: {
+                    title: "세부 정보 비교하기 (미메시스)",
+                    feedback: "이 문항은 줄거리가 어느 미메시스 단계에서 형성되는지를 정확히 구분하는 문제입니다.",
+                    mistakes: "• 줄거리 = 항상 작가가 만든 것이라고 단정함\n• 미메시스 Ⅱ와 Ⅲ의 주체를 혼동함",
+                    study: "• ㉠은 미메시스 Ⅱ(형상화) → 작가가 의미 있다고 판단한 행동을 허구적 이야기로 구성\n• ㉡은 미메시스 Ⅲ(재형상화) → 독자가 독서 후 자신의 삶을 이야기 구조로 재구성\n\n🎯 한마디 조언: 줄거리는 하나가 아니다. 작가의 줄거리(Ⅱ) vs 독자의 줄거리(Ⅲ)"
+                },
+                32: {
+                    title: "구체적 사례에 적용하기",
+                    feedback: "이 문항은 소설 속 사건이 무작위 현실 재현이 아니라 '선택·배치된 행동'임을 이해했는지 묻는 문제입니다.",
+                    mistakes: "• 소설 에피소드를 현실 그대로의 기록처럼 이해함\n• 인과 관계보다는 사실 여부에만 집중함",
+                    study: "• 소설의 에피소드는 → 작가가 의미 있다고 판단한 행동만 선별 → 인과 관계에 따라 배열\n• 따라서 소설 속 인물 B의 행동은 → 우연이 아니라 의도된 선택\n\n🎯 한마디 조언: 소설 = 삶의 복사본 ❌, 소설 = 의미 중심의 재구성 ⭕"
+                },
+                33: {
+                    title: "단어의 사전적 의미 파악하기",
+                    feedback: "이 문항은 사전적 의미 vs 문맥적 적합성을 구분하는 문제입니다.",
+                    mistakes: "• 단어의 기본 뜻만 보고 무조건 적용함\n• 문맥에서 요구하는 의미 기능을 고려하지 않음",
+                    study: "• '계승하다' → 전통·업적을 물려받아 이어감\n• ⓓ의 맥락은 → 전통을 잇는 것이 아니라 사상·개념을 이어 붙이는 관계\n• 따라서 '연결하다'가 적절\n\n🎯 한마디 조언: 국어 어휘 문제의 핵심은 뜻의 정확성보다 쓰임의 적합성"
+                },
+                34: {
+                    title: "세부 내용 이해하기",
+                    feedback: "이 문항은 사건의 주체와 결과를 정확히 대응시키는 문제입니다.",
+                    mistakes: "• 인물 이름이 비슷해 사건을 섞어 기억함\n• 도망·구출·포획 장면을 혼동함",
+                    study: "• 진권: 성 안의 물이 넘쳐 → 웅주를 버리고 도망\n• 진걸 / 양달 / 황운은 → 각각 다른 사건 흐름을 가짐\n\n🎯 한마디 조언: 고전 서사는 인물별 사건 한 줄 요약이 생명이다."
+                },
+                35: {
+                    title: "발화의 의미 파악하기",
+                    feedback: "이 문항은 발화의 표면 의미가 아니라 화자의 인식 수준과 상황 인지를 묻는 문제입니다.",
+                    mistakes: "• 독자는 알고, 인물도 안다고 착각함\n• 도움 요청 = 상대의 정체 인식이라고 오해함",
+                    study: "• 황운은 → 노인이 사명산 도인임을 인식하지 못한 상태 → 단순히 위기 상황에서 도움을 요청\n• 즉, 발화에는 → 존재 인식의 결핍이 포함됨\n\n🎯 한마디 조언: 발화 의미 = 말의 내용 + 말하는 당시의 인식 상태"
+                },
+                36: {
+                    title: "소재의 기능 파악하기",
+                    feedback: "이 문항은 같은 작품 안의 소재라도 기능이 다를 수 있음을 구분하는 문제입니다.",
+                    mistakes: "• 소재를 '중요하다/상징적이다'로만 뭉뚱그려 해석\n• 누가, 언제, 왜 남겼는지를 분리하지 못함",
+                    study: "• '절구 십여 수(ⓐ)' → 황운이 설연을 배려해 남긴 것 → 기능: 안부를 전하는 수단(정서적·서사적 연결)\n• '천서 옥갑경(ⓑ)' → 원수가 계책을 떠올리게 되는 계기 → 기능: 사건 전개의 촉발 장치\n\n🎯 한마디 조언: 소재는 '무엇을 상징하나?'보다 '이로 인해 무엇이 벌어지나?'를 먼저 보자."
+                },
+                37: {
+                    title: "외적 준거에 따라 감상하기 (영웅소설)",
+                    feedback: "이 문항은 영웅성 ≠ 초월적 능력을 구분하는 문제입니다.",
+                    mistakes: "• 군사적 활약 = 초월성이라고 오해\n• '대단함'과 '초월성'을 동일시",
+                    study: "• 원수의 → 병력 운용, 기습, 병법 활용 = 현실적 지략\n• 이는 → 영웅성은 맞지만 → 초월적 능력 발현은 아님\n\n🎯 한마디 조언: 영웅소설에서 초월성은 인간의 한계를 넘어선 능력일 때만 성립한다."
+                },
+                38: {
+                    title: "내용 전개 방식 파악하기",
+                    feedback: "이 글은 구조 설명형 설명문입니다.",
+                    mistakes: "• 원리 설명 / 과정 설명과 혼동\n• 핵심 대상(구성 요소)을 놓침",
+                    study: "• 글의 전개 방식: → 태양전지를 구성하는 각 '층'을 나열 → 각 층의 특징과 역할 설명\n• 즉, 구성 요소별 설명 방식\n\n🎯 한마디 조언: '무엇이 어떻게 이루어져 있는가?' → 구조 설명"
+                },
+                39: {
+                    title: "내용 일치 판단하기",
+                    feedback: "이 문항은 정의 문장(1문단)을 정확히 잡았는지를 묻습니다.",
+                    mistakes: "• 최신 기술 설명을 정의로 착각\n• 예시·확장 내용을 본질로 오해",
+                    study: "• 태양전지의 정의 → 태양광 에너지를 전기 에너지로 변환하는 → 반도체 소자 또는 그 집합체\n• 나머지는 → 종류, 특징, 한계에 대한 부가 정보\n\n🎯 한마디 조언: 정의는 항상 '무엇을 말하는가' 한 문장으로 고정된다."
+                },
+                40: {
+                    title: "세부 정보 확인하기",
+                    feedback: "이 문항은 특정 성질의 원인–결과 연결을 묻습니다.",
+                    mistakes: "• 구조 설명과 성질 설명을 섞음\n• '결합 에너지'의 의미를 놓침",
+                    study: "• 결합 에너지가 작다 → 약한 자극에도 반응이 큼 → 전하 이동, 반응성 활발\n• 따라서 → '약한 에너지 자극에도 반응이 활발'이 정확\n\n🎯 한마디 조언: 과학 설명문은 용어 하나 = 성질 하나로 대응시켜야 한다."
+                },
+                41: {
+                    title: "세부 정보 재조직하기",
+                    feedback: "이 문항은 각 층의 '재료 + 역할'을 정확히 연결해 다시 배열할 수 있는지를 묻는 문제입니다.",
+                    mistakes: "• 전자 수송층 / 정공 수송층을 이름만 외워서 헷갈림\n• '무기 / 유기' 구분을 놓침",
+                    study: "• ⓑ 전자 수송층 → 다공질 구조 → 무기 반도체 금속 산화물(이산화 타이타늄)\n• ⓓ 정공 수송층 → 열에 안정적, 합성 간단 → 유기 반도체 소재\n• 핵심은 '전자 = 무기 / 정공 = 유기' 구조적 대비\n\n🎯 한마디 조언: 층별 재료와 역할을 표로 정리하면 헷갈리지 않는다."
+                },
+                42: {
+                    title: "외적 준거에 따라 판단하기",
+                    feedback: "이 문항은 보기의 기준(외적 준거)을 '어디에 써야 하는지'를 정확히 적용하는 문제입니다.",
+                    mistakes: "• '흡광 계수'가 높으면 효율도 높다고 단순 판단\n• 원인과 해결 방향을 반대로 생각함",
+                    study: "• 유기 태양전지 → 흡광 계수는 높음 → 하지만 전자 이동 속도가 느려 효율이 낮음\n• 따라서 핵심은 → 흡광 계수 ↑ ❌ → 전자 이동 속도 ↑ ⭕\n\n🎯 한마디 조언: 효율을 결정하는 '병목 요인'이 무엇인지 찾는 문제다."
+                },
+                43: {
+                    title: "표현상의 특징 파악하기",
+                    feedback: "이 문항은 '무엇을 반복했는가'가 아니라 '왜 반복했는가'를 묻습니다.",
+                    mistakes: "• 반복 = 운율이라고만 판단\n• 반복되는 말의 형식(통사 구조)를 보지 않음",
+                    study: "• (가): → '-고 싶고', '-ㄹ 일 –ㅂ니다'\n• (나): → '라고 ~ 대답하지 않는다'\n• 공통점: → 통사 구조 반복을 통해 시적 상황 강조\n\n🎯 한마디 조언: 반복은 '무엇을'보다 '왜'를 먼저 생각하자."
+                },
+                44: {
+                    title: "시구의 의미 파악하기",
+                    feedback: "이 문항은 '드러난 것'과 '드러나지 않은 것'을 구분하는 문제입니다.",
+                    mistakes: "• 상황을 곧바로 인물의 인식으로 확대 해석\n• '보인다' ≠ '의식한다' 구분 실패",
+                    study: "• '당신'이 '나'를 인지하지 못하는 상황은 맞음\n• 그러나 → 그 상황에 대한 '당신'의 인식은 제시되지 않음\n• 드러난 것은 → 전부 '나'의 감정과 인식\n\n🎯 한마디 조언: 시에서 드러난 것만 근거로 삼아라."
+                },
+                45: {
+                    title: "외적 준거에 따라 감상하기",
+                    feedback: "이 문항은 자연 현상과 가치 부여를 구분하는 문제입니다.",
+                    mistakes: "• 자연의 움직임 = 희생이라고 확대 해석\n• '힘듦'이 보이면 자동으로 희생으로 판단",
+                    study: "• '추운 땅속을 헤매다'가 → '부르지 않아도 오는 것' → 자연의 섭리\n• 여기에 → 의식적 희생, 선택, 헌신은 드러나지 않음\n\n🎯 한마디 조언: 희생은 의지 + 대가가 있어야 성립한다."
+                }
+            }
+        
+            'korean_mock_5': {
+                1: {
+                    title: "말하기 방식 파악하기",
+                    feedback: "본 문항은 발표자가 청중과 어떻게 상호작용하며 말하기를 진행하는지를 분석하는 문제입니다. 단순히 질문이 있다는 사실에만 주목하면 오답을 선택하기 쉽습니다.",
+                    mistakes: "• 질문을 정보를 묻는 내용으로만 해석함\n• 발표자의 질문을 내용 설명의 일부로만 보고, 청중 반응을 조절하는 말하기 전략으로 보지 못함",
+                    study: "1. 질문의 목적을 우선 생각하세요. → \"왜 이 질문을 했지?\" → 정보 수집인가, 청중 반응 확인인가를 구분해야 합니다.\n2. 발표 상황에서는 질문 = 청중 참여 유도 / 이해도 점검 / 흐름 조절 역할을 한다는 점을 명심하세요.\n3. 질문 뒤에 이어지는 말에 주목하세요. \"어려우신가 보네요.\", \"쉽게 설명해 드리겠습니다.\" → 질문 결과를 바탕으로 말하기 방식을 조정하고 있음을 보여 줍니다.\n4. 앞으로는 질문이 나오면 ① 질문 → ② 청중 반응 → ③ 발표 방식 변화 이 구조를 한 묶음으로 파악하는 훈련을 하세요."
+                },
+                2: {
+                    title: "발표 전략 파악하기",
+                    feedback: "본 문항은 발표자가 어떤 정보를 어떤 방식으로 제시했는지를 정확히 확인하는 문제입니다. '도표가 있다'는 인상만으로 판단하면 쉽게 오답으로 이어집니다.",
+                    mistakes: "• 도표가 제시되었다는 사실만 보고 내용까지 포함되었다고 추론함\n• '식물의 의사소통'이라는 주제 전체를 도표가 설명한다고 막연히 간주함\n• 글의 설명과 시각 자료의 역할 범위를 분별하지 못함",
+                    study: "1. 도표가 무엇을 보여 주는지 정확히 한정해서 점검하세요. → 누가 / 무엇의 / 어떤 수치인가를 체크해야 합니다. (이 문단에서는 건강한 리마콩의 살리실산 비율만 제시됨)\n2. 글에서 설명한 모든 정보가 도표로 제시되었는지를 따져보세요.\n   • 설명: 감염된 리마콩 → 살리실산메틸 생성\n   • 도표: 옆에 있는 건강한 리마콩의 살리실산 비율 → 두 대상이 다릅니다.\n3. 발표 전략 문제에서는 '설명했다' ≠ '도표로 제시했다' 이 구분이 요체입니다.\n4. 앞으로는 시각 자료가 나오면 본문 설명과 1:1로 대응되는지, 일부만 보여 주고 있는지를 꼭 대조하세요."
+                },
+                3: {
+                    title: "청중 반응의 적절성 파악하기",
+                feedback: "본 문항은 여러 학생의 반응을 비교하여, 각 반응이 '무엇을 아쉬워하는지 / 아쉬워하지 않는지'를 정확히 분류하는 문제입니다. 학생들의 말에서 평가의 기준이 무엇인지를 놓치면 오답으로 이어집니다.",
+                mistakes: "• '발표가 유익했다 / 좋았다'는 표현을 아쉬움이 없다는 뜻으로 단순 해석함\n• 모든 학생 반응을 같은 기준(알고 싶은 정보)으로 읽지 않고, 감상 전반으로 뭉뚱그려 해석함\n• '아쉽다'는 말이 명시적으로 드러난 경우와 드러나지 않은 경우를 분별하지 못함",
+                study: "1. 학생 반응 문장은 평가 기준을 우선 찾으세요.\n   • 학생 1 → \"알고 싶은 정보가 제시되지 않았다\"\n   • 학생 3 → \"유익한 정보를 많이 얻었다\"\n2. '유익했다', '좋았다'는 말은 → 내용에 대한 긍정 평가일 뿐, → 알고 싶은 정보가 빠졌다는 아쉬움과는 직접 연결되지 않습니다.\n3. 학생 반응 비교 문제에서는 같은 기준으로 말하고 있는지를 꼭 점검하세요. 아쉬움의 대상이 같지 않으면 → 같은 반응으로 묶을 수 없습니다.\n4. 앞으로는 ✔ 아쉬워하는가 / 아쉬워하지 않는가, ✔ 그 아쉬움의 이유가 무엇인가 이 두 단계를 분리해서 읽는 훈련을 하세요."
+            },
+            4: {
+                title: "대화 참여자의 역할 이해하기",
+                feedback: "본 문항은 발화의 '내용'이 아니라 '의도와 기능'을 정확히 분류하는 문제입니다. 특히, 말한 사람이 상대에게 어떤 행동을 요구하고 있는지를 읽어 내는 것이 요체입니다.",
+                mistakes: "• 발화 속에 질문이나 설명이 있으면 곧바로 참여를 유도한 것으로 간주함\n• 말하는 태도가 친절하거나 적극적이면 상대에게도 적극적인 참여를 요구한 것으로 확대 해석함\n• '정보 제공'과 '행동 요청'을 분별하지 못함",
+                study: "1. '요청' 표현이 실제로 있는지를 우선 점검하세요. → 해 보세요, 말해 주세요, 참여해 주세요, 의견을 나눠 봅시다 와 같은 직접적인 요구가 있는지가 기준입니다.\n2. 발화의 기능을 한 문장으로 요약해 보세요.\n   • 정보 전달인가?\n   • 자신의 생각 제시인가?\n   • 상대의 참여를 요구하는 발화인가?\n3. 대화 참여 태도 문제에서는 상대의 행동을 바꾸려는 의도가 있는지가 판단 기준입니다. 단순 설명·질문만으로는 '적극적인 참여 요청'이라고 볼 수 없습니다.\n4. 앞으로는 발화를 볼 때 ✔ 상대가 무엇을 해야 하는지 제시했는가, ✔ 참여를 요청·유도하는 표현이 있는가 이 두 가지를 꼭 확인하세요."
+            },
+            5: {
+                title: "말하기 방식을 파악하기",
+                feedback: "본 문항은 두 학생의 발화를 비교하여, 한 학생이 '의견에 어떻게 반응하고 있는지'와 그 반응이 '이유 제시 + 자기 의견 표명'에 해당하는지를 평가하는 문제입니다. 표면적인 찬반만 보고 판단하면 오답이 되기 쉽습니다.",
+                mistakes: "• '동의하지 않는다'는 사실만 보고 단순한 반대 표현으로 처리함\n• 상대 의견에 대한 반응과 자기 의견 제시를 한 발화 안에서 함께 보고 있지 못함\n• [A]와 [B]의 학생을 비교해야 하는데, 한 쪽 발화만 따로 떼어 해석함",
+                study: "1. 의견 교환 대화에서는 발화를 2단계로 나누어 분석하세요.\n   • ① 앞선 의견에 대한 반응(동의/비동의)\n   • ② 그에 따른 이유 제시 + 자신의 의견 제시\n2. '~취지에 어긋난다'는 표현은 → 단순한 감정 표현이 아니라 → 동의하지 못하는 이유를 설명하는 논거입니다.\n3. 이어지는 '~고려해야 해'는 → 상대 의견에 반응한 뒤 → 새로운 관점의 자기 의견을 추가한 것입니다.\n4. 비교 문제에서는 꼭 누가: 앞선 의견에 반응했는지, 어떻게: 이유를 밝혔는지, 결과적으로: 자기 입장을 드러냈는지를 모두 점검하세요."
+            },
+            6: {
+                title: "글쓰기 계획의 반영 여부 파악하기",
+                feedback: "본 문항은 (가)에 실제로 언급된 정보와 언급되지 않은 정보를 정확히 분류하는 문제입니다. 주제와 관련이 있어 보인다는 이유만으로 '말했을 것'이라고 추론하면 오답으로 이어집니다.",
+                mistakes: "• 부레옥잠이 나오면 자동으로 자정 작용까지 함께 설명했을 것이라고 추측함\n• (가)의 내용을 기억에 의존해 전체적으로 포괄 해석함\n• '자정 작용'처럼 익숙한 개념을 글에 포함시켜 읽음",
+                study: "1. 판단 근거는 꼭 제시문의 명시적 언급이어야 합니다. → 암시·추론·배경 지식은 근거가 될 수 없습니다.\n2. 문항에서 특정 개념이 나오면 → 그 단어가 실제로 등장하는지, → 같은 의미의 표현으로라도 구체적으로 설명되는지를 점검하세요.\n3. (가)의 역할을 우선 정리해 보세요.\n   • 어떤 대상 소개인가\n   • 어떤 기능까지 설명하는가 → 범위를 정하면 없는 내용을 끼워 넣지 않게 됩니다.\n4. 앞으로는 ✔ 나왔는가 / 나오지 않았는가, ✔ 직접 언급인가 / 배경 지식인가 이 두 기준으로 판단하는 훈련을 하세요."
+            },
+            7: {
+                title: "조건에 따른 글쓰기",
+                feedback: "본 문항은 (나)의 주제가 글 속에서 어떻게 드러나는지, 그리고 비유적 표현이 그 주제와 실제로 연결되는지를 평가하는 문제입니다. 표현이 인상적이라는 이유만으로 적절하다고 판단하면 오답으로 이어집니다.",
+                mistakes: "• '작은 오케스트라'와 같은 표현이 보이면 비유가 곧바로 주제를 잘 드러낸다고 간주함\n• '가치'와 관련된 긍정적 표현이 있으면 주제 전체가 구현되었다고 확대 해석함\n• 주제의 두 요소(고려할 사항 / 가치)를 각각 점검하지 않음",
+                study: "1. 주제를 우선 구성 요소로 나누세요.\n   • ① 생태 연못 조성 시 고려할 사항\n   • ② 생태 연못의 가치\n2. 비유적 표현이 → 두 요소 중 어느 쪽을 설명하는지를 구분해 보세요. '작은 오케스트라'는 → 생태 연못의 조화롭고 가치 있는 모습을 드러내는 표현이지, → 조성 시 고려할 사항을 직접 설명하지는 않습니다.\n3. 주제 구현 판단 문제에서는 부분 충족 ≠ 전체 충족임을 명심하세요. 주제의 한 요소만 드러나도 '주제가 잘 드러난다'고 단정할 수는 없습니다.\n4. 앞으로는 ✔ 주제의 모든 핵심 요소가 다 반영되었는지, ✔ 표현이 주제 설명에 실제로 기여하는지를 꼭 따로 점검하세요."
+            },
+            8: {
+                title: "글쓰기 전략 파악하기",
+                feedback: "본 문항은 '학생의 초고'가 문제 해결 방안을 여러 관점에서 적절하게 제시하고 있는지를 평가하는 문제입니다. 해결 방안이 '여러 개 있다'는 인상만으로 판단하면 오답으로 이어집니다.",
+                mistakes: "• 해결 방안이 여러 개 나열되어 있으면 곧바로 '다양한 측면에서 제시했다'고 간주함\n• 방안의 성격(인식·제도·실행)을 분별하지 못함\n• 초고라는 점을 고려하지 않고 구체성·실현 가능성을 따지지 않음",
+                study: "1. 해결 방안을 유형별로 분류해 보세요.\n   • 시민들의 인식 개선 → 인식·문화적 측면\n   • 수거 기준 보완 → 제도·행정적 측면\n   • 처리 방법 마련 → 실행·운영 측면 → 서로 다른 측면임을 확인할 수 있습니다.\n2. '다양한 측면'은 → 같은 방향의 반복이 아니라 → 접근 방식이 다른 방안들을 의미합니다.\n3. 초고 평가에서는 완성도보다 문제 해결 방향을 폭넓게 제시했는지가 요체입니다.\n4. 앞으로는 ✔ 방안의 개수, ✔ 방안의 성격 차이 이 두 가지를 분리해서 판단하는 훈련을 하세요."
+            },
+            9: {
+                title: "자료 활용 방안의 적절성 판단하기",
+                feedback: "본 문항은 주장의 내용과 자료가 논리적으로 연결되는지를 평가하는 문제입니다. 자료가 '관련 있어 보인다'는 인상만으로 활용 가능하다고 판단하면 오답으로 이어집니다.",
+                mistakes: "• 자료에 비율·수치·증가 추세가 나오면 곧바로 주장의 근거가 된다고 간주함\n• 자료가 무엇을 직접적으로 보여 주는지와 무엇을 새로 해석해야만 알 수 있는지를 분별하지 못함\n• '처리 현황'과 '처리 비용'을 하나의 정보처럼 묶어 확대 해석함",
+                study: "1. 우선 주장의 핵심을 명확히 정리하세요. → 주장: 방치된 자전거를 수거하는 기준을 보완해야 한다 → 근거가 되려면 기준이 왜 문제인지를 보여 주는 자료여야 합니다.\n2. 자료를 볼 때는 꼭 자료가 직접 말해 주는 내용만 점검하세요.\n   • [자료 1-㉯]: 고철 처리 비율이 높다\n   • [자료 2]: 처리 비용이 증가하고 있다 → '고철 처리 비용이 크다'는 정보는 자료에 없음\n3. 자료 활용 문제에서는 추론이 한 단계라도 더 필요한 경우 → 그 자료는 직접 근거로 쓰기 어렵다는 점을 명심하세요.\n4. 앞으로는 ✔ 자료에 명시된 정보인가, ✔ 주장을 직접 뒷받침하는가, ✔ 중간에 추측·가정이 끼어들지 않는가 이 세 가지를 체크하는 습관을 들이세요."
+            },
+            10: {
+                title: "고쳐쓰기의 적절성 판단하기",
+                feedback: "본 문항은 친구의 조언이 실제 수정 내용에 반영되었는지를 정확히 대조하는 문제입니다. '고쳐 보였다'는 인상만으로 판단하면 오답으로 이어집니다.",
+                mistakes: "• 수정된 단어가 보이면 조언이 반영되었다고 성급히 간주함\n• 조언의 초점(무엇을 고치라고 했는지)을 명확히 정리하지 않음\n• 맞춤법 수정과 조사 수정을 분별하지 못함",
+                study: "1. 우선 조언의 핵심 요구를 명확히 정리하세요. → 이 조언은 '부적절하게 사용된 조사'를 알맞게 고치라는 것입니다.\n2. 그다음 수정된 내용을 점검하세요.\n   • '높이고 → 높히고' : 조사 수정이 아님\n   • 오히려 맞춤법 오류가 새로 생긴 수정입니다.\n3. 반영 여부 판단 문제에서는 조언의 대상과 실제 수정 대상이 일치하는지가 요체입니다. 하나라도 어긋나면 '조언이 반영되었다'고 볼 수 없습니다.\n4. 앞으로는 ✔ 조언이 요구한 수정 범주(조사 / 어휘 / 맞춤법 / 표현), ✔ 실제 수정된 항목의 범주를 꼭 나란히 비교하세요."
+            },
+            11: {
+                title: "보조적 연결 어미의 쓰임 이해하기",
+                feedback: "본 문항은 '-고'가 어떤 기능으로 쓰였는지를 문장 구조 안에서 정확히 평가하는 문제입니다. 형태만 보고 기계적으로 분류하면 오답을 선택하게 됩니다.",
+                mistakes: "• '-고'가 보이면 곧바로 보조적 연결 어미라고 간주함\n• '단어 연결'과 '문장 연결'을 개념적으로 분별하지 못함\n• '-고서'가 가능하다는 사실을 보조적 연결 어미의 근거로 잘못 사용함",
+                study: "1. 우선 보조적 연결 어미 '-고'의 기준을 분명히 하세요. → 단어(용언 어간)와 단어를 나란히 연결할 때 쓰입니다. (예: 웃고 떠들다, 먹고 마시다)\n2. 제시 문장은 구조를 분해해서 보세요.\n   • 나무가 태풍을 못 견뎠다\n   • 나무가 쓰러졌다 → 서술어가 각각 독립된 문장입니다. 즉, 단어 연결이 아니라 문장과 문장을 연결하고 있습니다.\n3. '-고서'가 가능하다는 점은 → 선후 관계·원인 결과를 드러내는 연결이라는 뜻이지, → 보조적 연결 어미라는 근거가 되지 않습니다.\n4. 앞으로는 '-고'를 보면 꼭 ✔ 이어지는 것이 단어인가, 문장인가, ✔ 앞뒤 절이 각각 독립 문장으로 성립하는가를 확인하는 훈련을 하세요."
+            },
+            12: {
+                title: "이어진문장 내 의미 관계 분석하기",
+                feedback: "본 문항은 '-고'의 의미를 판단할 때, 앞 용언의 의미 자질을 근거로 삼아야 하는 문제입니다. 문장의 흐름이나 느낌만으로 판단하면 오답을 선택하게 됩니다.",
+                mistakes: "• '차고'처럼 행동이 연속되어 보이면 습관적으로 동시·병렬 관계로 간주함\n• '-고'의 분류 기준(㉡/㉢)을 의미 자질과 연결 짓지 못함\n• [+완결성], [±지속성] 같은 의미 자질을 형식적으로 외우고 실제 분석에 적용하지 못함",
+                study: "1. 우선 앞 용언의 사전적 의미를 정확히 점검하세요.\n   • '차다' : 발로 내어지르거나 받아 올리다 → 동작이 순간적으로 끝나는 행위입니다.\n2. 의미 자질을 단계적으로 판단하세요.\n   • 결과가 남는가? → ❌\n   • 동작이 지속되는가? → ❌ → [+완결성], [-지속성]\n3. 이 의미 자질을 바탕으로 '-고'의 의미 기능을 결정해야 합니다.\n   • 순간적 동작 + 다음 동작 → 시간적 순차 관계\n4. 따라서 '차고'의 '-고'는 동시·병렬(㉢)이 아니라 앞 동작 이후 뒤 동작이 이어지는 순차(㉡)임을 확인해야 합니다."
+            },
+            13: {
+                title: "음운 변동 현상 이해하기",
+                feedback: "본 문항은 각 음운 변동이 '어떤 과정'으로 일어났는지를 정확히 분류하는 문제입니다. 겉으로 소리가 바뀌었다는 이유만으로 모두 '교체'로 묶으면 오답으로 이어집니다.",
+                mistakes: "• 소리가 달라지면 무조건 교체라고 간주함\n• 한 예(㉢ 구개음화)가 교체이므로 다른 예(㉡)도 자동으로 교체라고 묶어 버림\n• 음절의 끝소리 규칙 / 비음화 / 구개음화의 성격 차이를 명확히 분별하지 못함",
+                study: "1. 음운 변동은 '결과'가 아니라 '과정'으로 판단해야 합니다.\n   • 교체: 한 음운이 다른 음운으로 바뀌는 것\n   • 탈락: 음운이 사라짐\n   • 첨가: 음운이 새로 생김\n   • 축약: 둘 이상의 음운이 하나로 줄어듦\n2. ㉡을 단계별로 분해해서 보세요.\n   • 부엌문 → 부억문 : 음절의 끝소리 규칙(ㅋ → ㄱ) → 교체\n   • 부억문 → [부엉문] : 비음화(ㄱ → ㅇ) → 교체 → 각각은 교체이지만, 연쇄적으로 서로 다른 규칙이 적용된 경우입니다.\n3. ㉢은 별도의 판단이 필요합니다.\n   • 벼훑이 → [벼훌치] : 구개음화 → 교체 → 단일 규칙에 의한 교체입니다.\n4. 공통점 판단 문제에서는 '같은 결과'가 아니라 '같은 변동 유형이 핵심 변동으로 작용했는지'를 따져야 합니다. ㉡은 두 규칙의 연쇄, ㉢은 단일 규칙이라는 차이가 있습니다."
+            },
+            14: {
+                title: "품사 통용 이해하기",
+                feedback: "본 문항은 '만큼'이 문장마다 어떤 품사로 쓰였는지를 정확히 분류하는 문제입니다. 의미만 비슷하다는 이유로 같은 품사라고 판단하면 오답으로 이어집니다.",
+                mistakes: "• '만큼'이 비교·정도를 나타내면 항상 조사라고 생각함\n• 앞말과 띄어쓰기 여부를 제대로 보지 않음\n• '체언 뒤에 온다 = 조사'라고 단순화함",
+                study: "1. 우선 의존 명사와 조사의 판별 기준을 분명히 하세요.\n   • 의존 명사: 관형어의 수식을 받음 / 문장에서 명사 역할\n   • 조사: 체언에 붙어 문법적 관계를 나타냄\n2. 문장을 구조적으로 분석해 보세요.\n   • 노력한 만큼 대가를 얻다 → '노력한'이 관형어, '만큼'이 수식 대상 → 명사 기능 → 의존 명사\n   • 너만큼은 할 수 있다 → '너'에 붙어 비교·강조의 관계를 표시 → 관계 표시 → 조사\n3. 특히 띄어쓰기를 힌트로 활용하세요.\n   • '~한 만큼' → 띄어 씀 → 의존 명사 가능성 큼\n   • '너만큼은' → 붙여 씀 → 조사 가능성 큼\n4. 앞으로는 '만큼'을 보면 ✔ 앞에서 꾸며 주는 말이 있는가, ✔ 문장에서 명사 역할을 하는가, ✔ 체언에 붙어 관계만 표시하는가를 차례로 점검하세요."
+            },
+            15: {
+                title: "중세 국어의 격조사 분석하기",
+                feedback: "본 문항은 주격 조사가 어떤 조건에서 '∅(영형태)'로 실현되는지를 정확히 알고 있는지를 묻는 문제입니다. 형태가 보이지 않는다고 해서 모두 영형태라고 판단하면 오답으로 이어집니다.",
+                mistakes: "• 체언 뒤에 조사가 드러나지 않으면 무조건 영형태로 처리함\n• 모음으로 끝난 체언이라는 조건만 보고 주격 조사 영형태가 가능하다고 오해함\n• 문맥·통사적 환경을 고려하지 않음",
+                study: "1. 주격 조사 영형태의 핵심 조건을 분명히 하세요. → 주격 조사의 영형태는 특정 구문 환경(특히 구어·체언 단독 주어 등)에서만 나타납니다.\n2. '아비'는 단순히 모음 '이'로 끝난 체언일 뿐, 주격 조사 '∅'가 실현되었다고 볼 형태적·통사적 근거가 없습니다.\n3. 주격 조사는 기본적으로 '이/가'가 실현되는 것이 원칙이며, 영형태는 예외적 현상임을 기억해야 합니다.\n4. 앞으로는 ✔ 조사가 생략된 것인가, ✔ 처음부터 영형태로 실현된 것인가를 구분해서 판단하세요."
+            },
+            16: {
+                title: "내용 전개 방식 파악하기",
+                feedback: "본 문항은 (가)와 (나)가 개념을 어떤 방식으로 설명하고 있는지를 비교하는 문제입니다. 주제어가 어렵다고 해서 내용 이해를 포기하면, 설명 방식의 차이를 놓치기 쉽습니다.",
+                mistakes: "• '정의했다 / 설명했다'는 점만 보고 두 글의 설명 방식이 비슷하다고 간주함\n• 학자 이름이 등장하면 곧바로 '비교했다'고 착각함\n• '견해 소개'와 '견해 비교'를 분별하지 못함",
+                study: "1. 우선 설명 방식의 기준을 분명히 하세요.\n   • 개념 정의: 무엇인지 설명함\n   • 견해 비교: 둘 이상의 관점을 대조·차이 중심으로 제시\n2. (나)를 볼 때는 → '지지체'의 의미만 설명하고 있을 뿐, → 서로 다른 학자의 관점을 나란히 놓고 비교하지는 않습니다.\n3. (가)는 단계가 다릅니다.\n   • ① '질료'·'형상' 개념 정의\n   • ② 아리스토텔레스·실러·그린버그의 견해 제시\n   • ③ 질료 개념을 중심으로 관점 차이를 대비 → 명확한 '비교 설명'입니다.\n4. 앞으로는 ✔ 학자가 여러 명 등장하는가, ✔ 관점이 대조적으로 제시되는가, ✔ 차이를 드러내는 표현(반면, 그러나, 다르게 등)이 있는가를 함께 점검하세요."
+            },
+            17: {
+                title: "내용 추론하기",
+                feedback: "본 문항은 제시문에 나타난 학자의 주장들을 정확히 연결하여, 그로부터 도출되는 '입장·관점'을 논리적으로 추론했는지를 평가하는 문제입니다. 문장을 길게 요약했더라도, 추론의 고리가 하나라도 어긋나면 오답으로 이어집니다.",
+                mistakes: "• 제시문의 내용을 많이 끌어왔다는 이유만으로 추론이 타당하다고 간주함\n• 학자의 발언을 부분적으로만 연결하거나, 핵심 개념(질료의 기능, 예술의 목적)을 정리하지 못함\n• '투명한 매체 / 불투명한 매체'와 같은 핵심 대비 개념을 명확히 대비하지 못함",
+                study: "1. 우선 각 학자의 입장을 한 문장으로 요약해 보세요.\n   • 실러: 예술 → 미적 경험 → 도덕성 회복 / 질료는 의도를 방해하지 않는 투명한 매체\n   • 그린버그: 예술은 그 자체가 목적 / 질료의 물리적 성질과 매체성 자체에 주목\n2. 그런 다음, 제시문에 직접 근거가 되는 표현이 있는지 점검하세요.\n   • '질료의 물리적 성질이 드러나지 않아야 한다'\n   • '질료의 물리적 성질이 갖는 표현 가능성에 주목' → 각각 투명성 / 불투명성으로 일관되게 연결됩니다.\n3. 추론 문제에서는 ✔ 제시문에 없는 내용을 새로 덧붙이지 않았는지, ✔ '~일 것이다'라는 추론이 앞선 근거에서 자연스럽게 나오는지를 꼭 점검하세요.\n4. 앞으로는 학자별 핵심 개념 정리 → 개념 간 대비 구조 확인 → 그 대비가 선택지의 주장과 정확히 일치하는지 이 3단계로 검증하세요."
+            },
+            18: {
+                title: "세부 내용 확인하기",
+                feedback: "본 문항은 (나)에서 정의된 개념들(지지체·규칙·예술작품)의 관계를 정확히 구분했는지를 묻는 문제입니다. 용어를 알고 있다는 것과, 그 용어들이 어떤 위계와 역할로 설명되는지를 구분하는 것은 다릅니다.",
+                mistakes: "• '지지체', '규칙', '매체'라는 용어가 함께 등장하면 서로 같은 범주라고 오해함\n• '물질적 요소'라는 공통 표현에 끌려 규칙 자체를 예술작품으로 확대 해석함\n• 문단별 설명 역할(정의 / 한계 제시)을 분별하지 못함",
+                study: "1. 우선 (나)의 개념 구조를 단계적으로 정리하세요.\n   • 지지체: 예술작품을 구성하는 물질적 요소\n   • 규칙: 그 지지체를 사용하는 관습·기법 → 둘은 역할이 다르며 동일 범주가 아닙니다.\n2. 2문단의 핵심은 → 포스트매체 조건 이전의 한계를 설명하는 것입니다. 즉, 예술을 물질적 지지체로만 환원해 이해했다는 비판이지, 규칙이 곧 예술작품이라고 말한 것이 아닙니다.\n3. 3문단에서 규칙은 → 지지체를 어떻게 쓰는가에 대한 방식이지, → 예술작품 그 자체로 정의되지 않습니다.\n4. 앞으로는 개념 판단 문제에서 ✔ 무엇이 예술작품인가, ✔ 무엇이 구성 요소인가, ✔ 무엇이 사용 방식(규칙)인가를 명확히 구분하는 훈련을 하세요."
+            },
+            19: {
+                title: "구체적 상황에 적용하기",
+                feedback: "본 문항은 학자의 이론을 자료에 적용할 때, 적용 범위와 기준을 정확히 지켰는지를 평가하는 문제입니다. 이론과 자료가 모두 익숙해 보여도, 개념을 한 단계 과잉 적용하면 오답으로 이어집니다.",
+                mistakes: "• 학자의 핵심 개념(불투명한 매체, 물질적 지지체)을 자료 속 모든 요소에 자동으로 대응시킴\n• '질료', '매체', '지지체'를 같은 개념처럼 혼동함\n• 한 학자의 이론을 다른 학자의 개념 체계에 그대로 겹쳐 적용함",
+                study: "1. 그린버그의 논의 범위를 우선 명확히 하세요.\n   • 그린버그가 말한 '불투명한 매체'는 → 예술 장르 내부에서 질료가 드러나는 방식에 대한 미학적 기준입니다.\n   • '캔버스' 자체를 불투명/투명으로 단정한 것은 아닙니다.\n2. [자료 2]의 평가는 → '목탄의 질감이 살아 있다'는 작품의 표현 효과에 대한 평가이지, → 그린버그 이론을 직접 적용한 판단 근거는 아닙니다.\n3. 크라우스의 '물질적 지지체' 개념은 → 예술작품을 구성하는 물질적 요소의 정의에 해당합니다. 이는 → 그린버그의 '매체의 불투명성' 논의와 개념 수준과 목적이 다릅니다.\n4. 앞으로는 학자 이론 적용 문제에서 ✔ 이 이론이 무엇을 설명하기 위한 것인지, ✔ 자료의 요소가 그 설명 대상에 정확히 해당하는지, ✔ 서로 다른 이론을 혼합 적용하고 있지는 않은지를 꼭 점검하세요."
+            },
+            20: {
+                title: "구체적 상황에 적용하기",
+                feedback: "본 문항은 그린버그의 미학적 기준을 정확히 이해하고, 그 기준을 작품 평가에 일관되게 적용했는지를 평가하는 문제입니다. 작품에 대한 인상적 평가에 끌리면, 그린버그가 문제 삼는 핵심 기준을 놓치기 쉽습니다.",
+                mistakes: "• '사실적이다 / 그럴듯하다'는 평가를 예술의 목적 달성으로 곧바로 연결함\n• 질료가 드러나지 않는 효과를 오히려 긍정적 가치로 오해함\n• '예술 그 자체가 목적'이라는 표현을 일반적 칭찬으로 받아들임",
+                study: "1. 우선 그린버그의 판단 기준을 한 줄로 정리하세요. → 예술은 외부 목적을 재현하는 수단이 아니라, → 질료의 물리적 성질이 드러나 장르의 순수성이 실현될 때 그 자체가 목적이 됩니다.\n2. 이 기준으로 자료를 다시 보세요.\n   • [자료 2] 작품 B → '목탄의 질감이 살아 있음' → 질료의 물리적 성질이 전면에 드러남 → 기준 충족\n   • [자료 1] 초상화 → '물감으로 그렸다고 믿기 힘들 정도로 사실적' → 질료가 보이지 않게 숨겨짐 → 기준 불충족\n3. 그린버그에게서 질료가 투명해질수록(재현이 정교할수록) 예술은 외부 목적(현실 모사)에 가까워지고, 예술 자체의 목적성은 약해진다는 점을 명심하세요.\n4. 앞으로는 작품 평가 문제에서 ✔ 질료가 드러나는가 / 감춰지는가, ✔ 재현이 목적이 되는가 / 장르 자체가 목적이 되는가를 꼭 대비해서 판단하세요."
+            },
+            21: {
+                title: "어휘의 사전적 의미 파악하기",
+                feedback: "본 문항은 두 단어의 사전적 의미를 정확히 구분하고, 그 의미가 문맥 판단에 어떻게 작용하는지를 묻는 문제입니다. 어휘를 '대충 비슷한 말'로 처리하면 오답으로 이어집니다.",
+                mistakes: "• '방관'과 '주목'을 모두 '보는 행위'라는 공통점만으로 묶어 해석함\n• 단어의 행동성(개입 여부) 차이를 고려하지 않음\n• 문맥 판단 전에 사전적 의미 확인을 건너뜀",
+                study: "1. 우선 사전적 의미를 정확히 대비하세요.\n   • 방관: 직접 나서지 않고 개입하지 않음\n   • 주목: 관심을 가지고 주의 깊게 살핌\n2. 두 단어의 핵심 차이는 → 행동의 유무가 아니라 → 개입·관여 의도의 유무입니다.\n3. 따라서 단순히 바라보기만 하는 상황 → 방관, 관심을 가지고 집중해 살피는 태도 → 주목으로 명확히 구분해야 합니다.\n4. 앞으로 어휘 판단 문제에서는 ✔ 공통점보다 차이점을 우선 찾고, ✔ '의미 자질(개입성, 적극성, 태도)'을 비교하는 훈련을 하세요."
+            },
+            22: {
+                title: "서술상의 특징 파악하기",
+                feedback: "본 문항은 서술의 시간적·논리적 순서가 실제로 어떻게 배열되어 있는지를 정확히 확인하는 문제입니다. 인물의 행동이 인상적으로 우선 떠올랐다는 이유만으로 '행동 → 이유' 구조라고 단정하면 오답으로 이어집니다.",
+                mistakes: "• 사건의 결과(사직원 작성)만 기억하고 제시문의 실제 전개 순서를 확인하지 않음\n• 이유 설명이 길게 나와 있으면 뒤에 나왔다고 착각함\n• 인물의 심리 서술과 사건 서술의 위치를 혼동함",
+                study: "1. 서술 순서 판단 문제에서는 문단의 실제 배열을 차분히 따라가야 합니다. 기억이나 인상으로 판단하지 말고, 무엇이 우선 서술되었는지를 문장 단위로 점검하세요.\n2. 특히 '~하게 되었다', '~때문에' 같은 표현이 나오면 원인(이유) 서술인지, 결과(행동) 서술인지를 구분해서 표시해 보세요.\n3. 문학 작품에서는 이유(심리·배경) → 행동 구조가 더 자주 쓰인다는 점도 함께 염두에 두세요.\n4. 앞으로는 ✔ 행동이 실제로 우선 제시되었는지, ✔ 그 행동의 이유가 뒤에서 설명되는지를 문장 근거로 확인하는 훈련을 하세요."
+            },
+            23: {
+                title: "작품의 내용 이해하기",
+                feedback: "본 문항은 문장 속 표현을 근거로 사건의 정확한 시간 순서를 파악했는지를 묻는 문제입니다. 사건을 상식적 흐름으로 재구성하면 오답을 선택하게 됩니다.",
+                mistakes: "• '사직원'이라는 핵심 사건에만 집중해 앞뒤 행동의 순서를 추론으로 보완함\n• '~하고', '~며' 같은 연결 표현을 단순 나열로 처리하고 시간 관계를 따지지 않음\n• 작품 속 실제 표현보다 자연스러워 보이는 상황을 우선시함",
+                study: "1. 시간 순서 문제에서는 서술된 표현 그대로를 근거로 삼아야 합니다.\n   • '사직원을 쓰고 ~ 인쇄 공장으로 들어가'\n   • '사직원을 내고 ~ 나오며' → 두 표현을 종합하면 인쇄 공장에 들어간 시점은 사직원 제출 이전임을 알 수 있습니다.\n2. '~고', '~며'는 상황에 따라 순차, 동시, 선행 사건을 나타낼 수 있으므로, 앞뒤 맥락을 함께 확인해야 합니다.\n3. 시간 판단 문제에서는 \"보통은 이렇게 했을 것이다\"라는 추측을 배제하고, 텍스트에 실제로 드러난 정보만 연결하는 연습이 필요합니다.\n4. 앞으로는 ✔ 사건 A와 B가 어떤 표현으로 연결되는지, ✔ 그 표현이 선후 관계를 암시하는지를 문장 근거로 표시해 보세요."
+            },
+            24: {
+                title: "공간의 기능 이해하기",
+                feedback: "본 문항은 작품 속 '공간'이 인물의 태도와 어떤 관계를 맺고 있는지를 근거로 평가하는 문제입니다. 사건만 기억하고 공간의 기능적 의미를 연결하지 못하면 오답으로 이어집니다.",
+                mistakes: "• 공간을 단순한 배경으로만 읽고, 인물의 태도 변화와 연결하지 않음\n• 한 공간에서 벌어진 행동 하나만 보고 성격을 단정함\n• 두 공간(㉠, ㉡)을 같은 기준으로 비교하지 않음",
+                study: "1. 공간 판단 문제에서는 인물의 태도 변화를 우선 정리하세요.\n   • 공장장실: 상사의 이야기를 듣고 의중을 수용 → 수동·수용적 태도\n   • 자기 집: 아내의 만류에도 개의치 않고 행동 → 주체·독립적 태도\n2. 그다음, 각 태도가 어느 공간에서 드러나는지를 대응시키세요.\n   • ㉠ 공장장실 = 타인의 의중을 받아들이는 공간\n   • ㉡ 자기 집 = 타인의 반응에 흔들리지 않는 공간\n3. 공간의 의미는 '무슨 일이 벌어졌는가'보다 '그때 인물이 어떤 태도를 보였는가'로 판단해야 합니다.\n4. 앞으로는 ✔ 공간마다 인물의 행동 성격(수용/저항, 수동/주체) 표시, ✔ 그 성격이 지속적으로 드러나는지 확인 이 두 단계를 거쳐 판단하세요."
+            },
+            25: {
+                title: "외적 준거를 바탕으로 작품 감상하기",
+                feedback: "본 문항은 작품 속 사실 서술과 그에 대한 해석이 논리적으로 연결되는지를 평가하는 문제입니다. 상황이 힘들어 보인다는 이유만으로 사회적 의미까지 확대 해석하면 오답으로 이어집니다.",
+                mistakes: "• 인물이 과도한 업무를 떠맡은 상황을 곧바로 '도시에 적응하지 못함'으로 일반화함\n• 개인의 능력·전공 한계와 사회 구조에 대한 적응 실패를 혼동함\n• 제시문에 없는 비판적 의미를 추론으로 덧붙임",
+                study: "1. 우선 제시문에서 확인되는 사실만 정리하세요.\n   • 회사가 전기 기사를 채용하지 않음\n   • 김명학이 전기실 책임까지 떠맡음 → 이는 회사의 요구로 업무가 과중된 상황입니다.\n2. '전기에 대해서는 기계과 출신으로서의 상식밖에 없다'는 표현은 → 전공상의 한계를 나타낼 뿐, → 도시 생활이나 산업 사회에 적응하지 못한다는 평가로 바로 이어지지 않습니다.\n3. 인물 해석 문제에서는 ✔ 원인이 개인 능력의 범위인지, ✔ 아니면 사회 구조에 대한 부적응인지를 꼭 구분해야 합니다.\n4. 앞으로는 사실 서술 → 의미 해석 → 사회적 평가 이 세 단계를 한 번에 뛰어넘지 않는 훈련을 하세요."
+            },
+            26: {
+                title: "세부 내용 이해하기",
+                feedback: "본 문항은 여러 문단에 흩어져 있는 정보를 연결해, 개념 간 인과 관계를 정확히 정리했는지를 묻는 문제입니다. 용어를 모두 이해하고 있어도, 연결 방식이 잘못되면 오답으로 이어집니다.",
+                mistakes: "• '부도체', '분극', '전하', '정전용량'을 서로 같은 수준의 개념으로 혼동함\n• '영향을 받는다'는 표현을 '직접적인 비례 관계'로 단순화함\n• 문단별 설명을 개별적으로만 이해하고 최종 결론 문장의 논리 검증을 하지 않음",
+                study: "1. 우선 개념 간 위계를 정리하세요.\n   • 수분 유지 기판 → 부도체\n   • 분극 → 부도체 표면에 전하가 형성되는 현상\n   • 정전용량의 기본값 → 분극의 영향을 받은 전극 사이의 값\n2. 핵심은 → 정전용량의 기본값이 '부도체에 축적된 전하의 양' 자체로 결정되는 것이 아니라, → 분극에 의해 전극의 상태가 변한 결과라는 점입니다.\n3. 따라서 문장을 판단할 때는 ✔ 전하가 어디에 형성되는가 (부도체 표면), ✔ 정전용량은 무엇과 무엇 사이의 값인가 (상·하부 전극)를 분리해서 봐야 합니다.\n4. 앞으로 설명문 문제에서는 원인(분극) → 매개 과정(전극 상태 변화) → 결과(정전용량의 기본값)를 단계별 화살표로 정리하는 훈련을 하세요."
+            },
+            27: {
+                title: "핵심 내용 이해하기",
+                feedback: "본 문항은 도식 속 구성 요소(ⓐⓑⓒ)와 본문의 설명을 정확히 대응시켜, 전기장의 형성과 전류의 흐름을 구분했는지를 묻는 문제입니다. '전기장이 생긴다'는 표현을 곧바로 '전기가 흐른다'로 해석하면 오답으로 이어집니다.",
+                mistakes: "• 전기장이 형성되면 전류도 함께 흐른다고 오해함\n• 상·하부 전극과 부도체(수분 유지 기판)의 역할을 혼동함\n• 도식에서의 위치 관계만 보고 물리적 성질(도체/부도체)을 간과함",
+                study: "1. 우선 각 요소의 성질을 명확히 정리하세요.\n   • ⓐ 상부 전극 → 도체\n   • ⓑ 수분 유지 기판 → 부도체\n   • ⓒ 하부 전극 → 도체\n2. 본문 3문단의 핵심은 → 전원이 인가되면 상·하부 전극 사이에 전기장은 형성되지만, → 부도체인 수분 유지 기판에는 전류가 흐르지 않는다는 점입니다.\n3. 과학 설명 글에서는 꼭 전기장(전하에 작용하는 공간적 상태)과 전류(전하의 실제 이동)를 구분해서 이해해야 합니다.\n4. 앞으로는 도식 문제를 풀 때 ✔ 각 부분의 물질적 성질, ✔ 형성되는 것이 전기장인지 / 전류인지를 따로 체크하는 습관을 들이세요."
+            },
+            28: {
+                title: "핵심 내용 추론하기",
+                feedback: "본 문항은 특정 시점(t)에서 어떤 현상이 '이미 끝났는지', '진행 중인지', '유지되고 있는지'를 정확히 구분했는지를 묻는 문제입니다. 문장의 일부 표현만 보고 상태 변화를 단정하면 오답으로 이어집니다.",
+                mistakes: "• '회복한다'는 표현을 보고 분극이 이미 사라졌다고 성급히 추론함\n• 하나의 변화(물 분자 탈착)와 다른 변화(분극의 소멸)를 동시에 일어난 것으로 묶어 해석함\n• '전원이 공급되는지 여부'를 상태 판단의 핵심 조건으로 고려하지 않음",
+                study: "1. 시간 표시(t)의 의미를 우선 정리하세요. → t는 모든 변화가 끝난 이후가 아니라, → 변화가 진행되는 특정 시점일 수 있습니다.\n2. 문장을 현상별로 분리해서 읽으세요.\n   • 물 분자 탈착: 이미 진행됨\n   • 전원 공급: 여전히 유지 중\n   • 정전용량: 원래 크기를 유지\n3. 전원이 계속 공급되고 있고, 정전용량이 유지되고 있다면 → 분극이 완전히 사라졌다고 볼 수는 없습니다.\n4. 앞으로는 시간 추론 문제에서 ✔ 무엇이 사라졌는가, ✔ 무엇이 유지되고 있는가, ✔ 조건(전원 공급 등)이 계속되는가를 각각 따로 확인하세요."
+            },
+            29: {
+                title: "핵심 내용 추론하기",
+                feedback: "본 문항은 제시된 문장으로부터 어떤 수준까지 추론이 가능한지를 평가하는 문제입니다. 현상이 나타났다는 사실을 원인 간의 '힘의 크기 비교'까지 확대 해석하면 오답으로 이어집니다.",
+                mistakes: "• '빠르게 탈착된다'는 결과를 보고 곧바로 힘의 우열(전기력 > 인력)을 단정함\n• 과학 지식(전기력, 인력)을 활용해 제시문에 없는 인과를 보완 추론함\n• '추론 가능'과 '추측 가능'을 분별하지 못함",
+                study: "1. 우선 문장에서 직접 확인 가능한 사실만 정리하세요. → 물 분자는 박막 소재와의 인력을 오래 유지하지 못하고 빠르게 탈착된다.\n2. 여기서 알 수 있는 것은 → 인력이 충분히 강하지 않다는 사실까지입니다. 하지만 → 서로 밀어내는 전기력이 더 크다는 판단은 제시문에 직접적인 근거가 없습니다.\n3. 과학 설명 글에서 힘의 크기를 비교하려면 '~보다 크다', '~가 지배적이다' 또는 두 힘이 명시적으로 대비되어야 합니다.\n4. 앞으로는 추론 문제에서 ✔ 문장에 직접 제시된 원인·결과인가, ✔ 과학 상식을 보충해서 넣고 있지는 않은가, ✔ 결과를 원인 비교로 과잉 확장하고 있지는 않은가를 꼭 점검하세요."
+            },
+            30: {
+                title: "세부 내용 이해하기",
+                feedback: "본 문항은 '지역권'의 법적 성격을 제시문의 표현 그대로 이해했는지를 묻는 문제입니다. 일상적인 의미나 어감으로 해석하면 오답을 선택하게 됩니다.",
+                mistakes: "• '권리'라는 말에 집중해 배타적 이용권으로 확대 해석함\n• 토지 이용과 관련된 설명을 소유권과 혼동함\n• 문장의 핵심 부정 표현('~이 아니라')을 정확히 반영하지 못함",
+                study: "1. 법·사회 지문에서는 정의 문장을 가장 우선 정확히 읽으세요. → \"지역권이 설정되더라도 배타적으로 이용하는 것이 아니다\" → 지역권은 제한된 이용권임을 분명히 밝히고 있습니다.\n2. 지역권은 토지의 소유권을 이전하는 권리가 아니라 특정 목적을 위해 일부 이용을 허용받는 권리입니다.\n3. 따라서 판단할 때는 ✔ '전부 사용 가능한가', ✔ '다른 사람의 이용을 배제할 수 있는가'를 기준으로 개념을 점검해야 합니다.\n4. 앞으로는 부정 표현(아니다, 할 수 없다)에 표시하고 그 부정이 무엇을 제한하는지를 명확히 적어 보는 훈련을 하세요."
+            },
+            31: {
+                title: "핵심 내용 이해하기",
+                feedback: "본 문항은 지상권의 성립 요건을 제시문 문장 그대로 해석했는지를 묻는 문제입니다. 법 개념을 상식적으로 추론하거나, 결과를 과도하게 일반화하면 오답으로 이어집니다.",
+                mistakes: "• '지상물이 없더라도 성립 가능'이라는 표현을 소유권자의 자유로운 계약 가능성으로 확대 해석함\n• '지상권의 목적'과 '지상권 설정 계약'을 같은 단계의 개념으로 혼동함\n• 문장에서 말하는 권리의 성립 조건과 행위의 가능성(계약 체결)을 분별하지 못함",
+                study: "1. 우선 문장의 핵심 진술을 정확히 제한하세요. → \"지상물이 현재 없더라도 지상권은 성립할 수 있다\" → 이는 지상물의 존재 여부가 성립 요건이 아님을 말할 뿐입니다.\n2. 여기서 바로 → \"토지 소유자가 지상권 설정 계약을 할 수 있다\"로 행위 가능성까지 일반화하는 것은 한 단계 넘어간 해석입니다.\n3. 법·사회 지문에서는\n   • ✔ '~할 수 있다'(권리·상태의 가능성)\n   • ✔ '~할 수 있다'(행위 주체의 계약·처분 가능성)\n   이 두 종류의 '가능성'을 꼭 구분해야 합니다.\n4. 앞으로는 제시문이 권리의 성질을 설명하는지, 아니면 법률 행위의 가능성을 말하는지를 구분해서 표시하는 훈련을 하세요."
+            },
+            32: {
+                title: "구체적 상황에 적용하기",
+                feedback: "본 문항은 소유권·지상권·지역권이 시간에 따라 어떻게 이전·설정되는지를 인물별로 정확히 구분했는지를 묻는 문제입니다. 내용이 복잡해 보일수록, 구조를 정리하지 않으면 오답이 나기 쉽습니다.",
+                mistakes: "• 날짜를 대충 전후 관계로만 기억하고 정확히 대응하지 않음\n• '소유권자 / 권리자 / 설정자'를 같은 역할로 혼동함\n• 한 인물의 권리를 정리하지 않은 채 다음 인물로 넘어가며 기억이 섞임",
+                study: "1. 꼭 시간 순서부터 정리하세요. → 2014.10.20 / 2015.10.20 / 2023.10.20 이 날짜들이 권리 변화의 기준점입니다.\n2. 그다음 토지별로 나누어 보세요.\n   • 토지 X: 소유권 변화 + 지상권 설정 관계\n   • 토지 Y: 소유권 변화 + 지역권 설정 관계\n3. 마지막으로 인물별 역할을 분리하세요.\n   • ✔ 소유권자인가\n   • ✔ 권리를 설정한 사람인가\n   • ✔ 권리를 가진 사람(지상권자·지역권자)인가\n4. 이런 유형은 꼭 표나 화살표 구조로 정리하는 연습이 필요합니다. (예: 'A → B : 지상권', 'B → A : 지역권')"
+            },
+            33: {
+                title: "핵심 내용 추론하기",
+                feedback: "본 문항은 상린권이 '누구의 권리를 일방적으로 강화하는 제도'인지, 아니면 '인접 토지 소유자 간의 권리를 조정하는 제도'인지를 정확히 이해했는지를 묻는 문제입니다. 사례가 구체적일수록 판단이 흔들리기 쉬운 유형입니다.",
+                mistakes: "• 다른 사람의 토지를 이용하게 된다는 점에만 주목해 권리의 확대·제한 문제로 단순화함\n• 상린권을 특정 소유자에게 유리한 권리로 오해함\n• '부득이한 경우'라는 조건을 고려하지 않고 일반적인 권리 행사처럼 해석함",
+                study: "1. 우선 상린권의 목적을 정확히 명심하세요. → 상린권은 인접 토지 소유자들이 토지를 원만하게 이용하도록 권리 행사를 서로 조정하기 위한 제도입니다.\n2. 사례에서 한쪽 토지 소유자가 다른 토지를 이용하는 것은 → 그 소유자의 권리를 확대하기 위한 것이 아니라, → 토지 이용이 사실상 불가능한 상황을 조정하기 위한 예외적 허용입니다.\n3. 따라서 상린권은\n   • 한쪽의 권리를 일방적으로 키우는 제도가 아니라\n   • 쌍방의 권리를 일정 범위에서 제한·조정하는 제도입니다.\n4. 앞으로는 법 개념 판단 문제에서\n   • ✔ 이 제도의 목적이 '조정'인지 '확대'인지\n   • ✔ 권리 행사가 예외적 상황에 한정되는지\n   를 꼭 함께 따져 보세요."
+            },
+            34: {
+                title: "어휘의 문맥적 의미 파악하기",
+                feedback: "본 문항은 '높이다'가 문맥에서 어떤 사전적 의미로 쓰였는지를 정확히 평가하는 문제입니다. 단어의 기본 의미를 알고 있어도, 문맥에 맞는 의미를 선별하지 못하면 오답으로 이어집니다.",
+                mistakes: "• '높이다'라는 단어를 물리적 높이 상승이나 막연한 긍정 변화로만 인식함\n• 사전적 의미를 확인하더라도 여러 뜻 중 어떤 뜻이 쓰였는지를 고르지 않음\n• 문장 전체의 목적어('요역지의 가치')와 서술어의 의미를 연결하지 않음",
+                study: "1. 우선 사전적 의미를 여러 갈래로 정리하세요.\n   • 높이다: ① 물리적 높이를 올리다 ② 품질·수준·능력·가치를 더 높은 상태로 만들다\n2. 다음으로 목적어를 점검하세요. → '요역지의 가치를 높이다' → 물리적 높이가 아니라 평가·수준의 상승을 뜻함이 분명합니다.\n3. 어휘 의미 판단 문제에서는 '무엇을 높이는가'가 결정적인 단서입니다. 사람이면 능력, 제도면 수준, 대상이면 가치로 의미가 좁혀집니다.\n4. 앞으로는\n   • ✔ 목적어가 추상 명사인지 / 구체 명사인지\n   • ✔ 그에 맞는 사전적 의미 번호가 무엇인지\n   를 연결해 판단하는 훈련을 하세요."
+            },
+            35: {
+                title: "표현상의 특징 파악하기",
+                feedback: "본 문항은 비유적 표현이 '무엇을' '어떤 효과로' 드러내는지를 정확히 연결했는지를 묻는 문제입니다. 비유 표현이 보인다는 이유만으로, 곧바로 적절하다고 판단하면 오답으로 이어집니다.",
+                mistakes: "• 비유어(석국, 난초)가 등장하면 표현 효과를 깊이 따지지 않고 긍정적으로 해석함\n• 비유의 비교 대상과 드러내는 속성을 분별하지 못함\n• 두 작품을 비교해야 하는데, 각각의 비유 기능을 따로 확인하지 않음",
+                study: "1. 비유 표현을 보면 우선 구조를 분해하세요.\n   • 무엇을 → 무엇에 비유했는가\n   • 그 비유로 어떤 성질이 드러나는가\n2. (가)의 표현\n   • '시냇가에 누은 돌' → '석국처럼 벌려 있음' → 돌의 자연스럽고 생명력 있는 모습을 시각적으로 형상화\n3. (나)의 표현\n   • '이군의 용모' → '난초와 같음' → 인물의 고결함·기품·맑은 기운을 드러냄\n4. 비교 문제에서는\n   • ✔ 두 텍스트 모두 비유적 표현을 사용했는지\n   • ✔ 그 비유가 각각 대상의 특징을 드러내는 데 기여하는지\n   를 동시에 확인해야 합니다."
+            },
+            36: {
+                title: "세부 내용 이해하기",
+                feedback: "본 문항은 화자의 '의도·계획'과 '실제 행위'가 구분되어 서술되었는지를 정확히 읽어 냈는지를 묻는 문제입니다. 서사 흐름이 자연스럽다는 이유로 일어난 일처럼 단정하면 오답으로 이어집니다.",
+                mistakes: "• '~가려고 하다'라는 표현을 이미 그 장소에 간 것으로 착각함\n• 꿈에서의 경험과 현실에서의 실제 행동을 분별하지 못함\n• 사건의 완결 여부(도달했는가 / 가지 않았는가)를 확인하지 않음",
+                study: "1. 서술어의 의미 단계를 정확히 구분하세요.\n   • 가다 / 찾아가다 → 실제 행위 완료\n   • 가려고 하다 → 의도·계획 단계\n2. '깨달으니 꿈이로다'와 같은 표현이 나오면 → 그 앞의 내용이 현실에서 실현된 사건인지, → 아니면 꿈속 인식·의지에 그친 것인지를 꼭 점검하세요.\n3. 서사 판단 문제에서는 행위의 결과가 제시되었는지가 핵심 기준입니다.\n   • 도착했다는 서술 ❌\n   • 찾아갔다는 서술 ❌ → 실제로 초선도에 간 사실은 확인되지 않습니다.\n4. 앞으로는\n   • ✔ 동작 동사의 상(완료/미완료)\n   • ✔ 의도 표현(–려고 하다, –고자 하다)\n   를 표시하며 읽는 훈련을 하세요."
+            },
+            37: {
+                title: "세부 내용 파악하기",
+                feedback: "본 문항은 인물에 대한 평가가 '누구의 시선에서, 어떤 방식으로 제시되었는지'를 정확히 분류하는 문제입니다. 평가 내용이 타당해 보인다는 이유만으로 제시 방식까지 충족되었다고 판단하면 오답으로 이어집니다.",
+                mistakes: "• 인물의 성격 평가가 나오면 주변의 평판까지 함께 제시되었다고 착각함\n• '나의 평가'와 '여러 사람의 평가'를 같은 범주로 묶어 해석함\n• 문항에서 요구하는 조건이 '무엇을 말했는가'인지, '어떻게 말했는가'인지를 분별하지 못함",
+                study: "1. 인물 평가 문제에서는 우선 평가의 주체를 점검하세요.\n   • '나'의 판단인가\n   • 주변 사람들의 공통된 평판인가\n2. ㉣의 경우 → '나'가 이군을 '온화하고 담박하며 세속적 이익에 무관심하다'고 평가하고 있을 뿐, → 다른 사람들도 그렇게 본다는 내용은 제시되지 않습니다.\n3. '주변의 평판과 함께 제시되었다'는 설명이 적절하려면\n   • 사람들의 말, 소문, 일반적 평가('사람들이 말하길', '세상에서는' 등)가 함께 제시되어야 합니다.\n4. 앞으로는\n   • ✔ 평가 주체가 개인인지 / 집단인지\n   • ✔ 평가가 직접 제시인지 / 전언·평판인지\n   를 꼭 나누어 점검하세요."
+            },
+            38: {
+                title: "외적 준거를 바탕으로 작품 감상하기",
+                feedback: "본 문항은 (나)의 문장에서 강조하는 핵심 태도가 무엇인지를 정확히 읽어 냈는지를 묻는 문제입니다. 특히 한자어·개념어가 많은 문장에서는 부정 표현과 조건의 방향을 놓치기 쉽습니다.",
+                mistakes: "• '텅 비고 밝다', '청'과 같은 표현에 주목해 무조건 내면을 비우는 태도라고 단순화함\n• 문장 속 부정 표현(∼은 아니다)을 끝까지 반영하지 않음\n• 철학적 표현을 이미지 중심으로 감각적으로만 해석함",
+                study: "1. 우선 문장을 논리 구조로 분해하세요.\n   • \"환경을 따르면 … '청'의 지극함은 아니다\" → 환경만 따르고 내면을 잊는 상태를 분명히 경계하고 있습니다.\n2. 여기서 핵심은 → '청'이란 내면을 완전히 잊는 공허한 상태가 아니라는 점입니다.\n3. 따라서\n   • '내면을 잊고'\n   • '텅 비고 밝은 본체를 기른다'\n   는 설명은 → 제시문의 취지와 어긋나는 해석입니다.\n4. 앞으로는 철학·사상 지문을 읽을 때\n   • ✔ '~은 아니다', '~해서는 안 된다' 같은 경계·부정 표현\n   • ✔ 개념의 조건과 한계\n   를 꼭 표시하며 읽는 훈련을 하세요."
+            },
+            39: {
+                title: "세부 내용 이해하기",
+                feedback: "본 문항은 말의 내용이 아니라, 그 말을 '누가 했는지'를 정확히 구분했는지를 묻는 문제입니다. 내용 이해가 맞더라도 발화 주체를 잘못 연결하면 오답으로 이어집니다.",
+                mistakes: "• 말의 의미와 기능에만 집중하고 발화 주체 확인을 소홀히 함\n• 장면에 함께 등장하는 인물들을 역할 없이 한 묶음으로 처리함\n• '요구한다 / 부탁한다'는 행위가 나오면 주요 인물(최 판관)에게 자동으로 귀속시킴",
+                study: "1. 대화가 나오는 부분에서는 꼭 발화 주체를 우선 표시하세요.\n   • 이 문장에서 말한 사람은 십전 명왕입니다.\n2. 그다음에야 말의 내용과 기능을 해석해야 합니다.\n   • 태종에게\n   • 자신이 베푼 선의의 대가로\n   • 지부에 없는 '수박'을 요청함 → 이 해석 자체는 맞지만, 주체가 최 판관이 아닙니다.\n3. 문항이\n   • '최 판관의 말'\n   • '최 판관의 태도·행동'\n   을 묻고 있다면, 다른 인물의 발언은 아무리 내용이 맞아도 근거가 될 수 없습니다.\n4. 앞으로는\n   • ✔ 말풍선·인용문 옆에 화자 이름 적기\n   • ✔ 인물별로 발언 색깔 구분\n   같은 방식으로 정리해 보세요."
+            },
+            40: {
+                title: "발화내용 이해하기",
+                feedback: "본 문항은 등장인물의 말이 어떤 기능을 하는 발화인지를 정확히 구분했는지를 묻는 문제입니다. 말의 분위기나 감정에만 끌리면, 힐책·설득·요청 같은 발화 기능을 혼동하기 쉽습니다.",
+                mistakes: "• 불만이나 문제 제기가 나오면 모두 '요청'이나 '호소'로 묶어 해석함\n• 상대를 꾸짖는 말과 상대를 납득시키려는 말을 같은 설득 행위로 착각함\n• 발화의 대상과 목적을 끝까지 확인하지 않음",
+                study: "1. 발화 기능 문제에서는 우선 말의 목적을 따지세요.\n   • 문제를 지적하며 책임을 묻는가? → 힐책\n   • 상대를 납득시켜 행동을 바꾸려 하는가? → 설득\n2. [A]의 경우\n   • 창고지기가 태종에게 → '남에게 베푼 것이 없다'는 점을 들어 → 도덕적 책임을 따지고 꾸짖고 있음 → 이는 분명한 힐책 발화입니다.\n3. [B]의 경우\n   • 태종이 귀졸들에게 → 문제를 해결해 주겠다는 의지를 밝히고 → 위로와 보상을 제시하며 물러가도록 함 → 이는 상대의 동의를 얻기 위한 설득 발화입니다.\n4. 앞으로는\n   • ✔ 말이 누구를 향하는지\n   • ✔ 그 말로 무엇을 얻으려는지\n   를 기준으로 발화 기능을 구분하세요."
+            },
+            41: {
+                title: "소재의 기능 파악하기",
+                feedback: "본 문항은 작품 속 '공간'이 단순한 배경이 아니라, 인물의 과거 행적이나 가치 판단을 드러내는 기능을 하는지를 정확히 파악했는지를 묻는 문제입니다. 장면의 분위기만 보고 공간의 의미를 막연히 해석하면 오답으로 이어집니다.",
+                mistakes: "• 공간을 사건이 일어난 장소로만 이해하고 그 공간이 무엇을 드러내는지까지 확장하지 못함\n• 인물의 감정(창피함, 놀라움)에만 주목하고 그 감정이 왜 생겼는지를 공간과 연결하지 않음\n• 두 장소를 비교해야 하는데 각각의 기능을 분리하지 않고 한 덩어리로 해석함",
+                study: "1. 공간 제시는 항상 '무엇을 보여 주기 위해 등장했는가'를 생각하세요.\n   • 단순 이동 공간인가\n   • 인물의 삶을 평가·대조하는 공간인가\n2. ㉠의 경우\n   • 텅 빈 창고\n   • 베푼 것이 없어 남은 것이 없음 → 태종이 자신의 과거 행적을 돌아보고 부끄러움을 느끼는 공간\n3. ㉡의 경우\n   • 적선을 일삼아 창고가 가득 참 → 태종이 장상의 과거 행적과 그 결과를 확인하는 공간\n4. 앞으로는\n   • ✔ 공간 + 인물의 반응\n   • ✔ 공간 + 과거 행적의 결과\n   를 함께 묶어 해석하는 훈련을 하세요."
+            },
+            42: {
+                title: "외적 준거에 따라 작품 감상하기",
+                feedback: "본 문항은 작품 속 상징적 소재가 무엇을 '직접적으로' 의미하는지, 그리고 그 의미를 어디까지 확장할 수 있는지를 평가하는 문제입니다. 상징이 감동적으로 느껴진다고 해서 서사의 핵심 결과까지 연결하면 오답으로 이어집니다.",
+                mistakes: "• '짚 한 뭇'이 과거의 선행과 연결된다는 점만 보고 환생 가능성 회복이라는 결정적 의미까지 확대 해석함\n• 상징의 기원(과거 행위의 결과)과 상징의 효과(서사적 결말)를 분별하지 못함\n• 제시문에 명시되지 않은 결과를 맥락 추론으로 보완해 넣음",
+                study: "1. 우선 상징의 사실 관계를 명확히 정리하세요.\n   • '짚 한 뭇' → 태종이 이름이 알려지기 전, 손식의 처가 해산할 때 준 '태거적'의 결과물임은 맞습니다.\n2. 그러나 여기서 확인 가능한 것은 → 과거에 선행을 베푼 사실이 있었다는 점까지입니다. → 이것이 곧바로 '끊어졌던 환생의 가능성을 되찾았다'는 결과로 이어진다는 서술은 제시문에 없습니다.\n3. 문학 상징 문제에서는\n   • ✔ 상징이 무엇을 환기하는가\n   • ✔ 그 상징이 결말을 직접적으로 바꾸는가\n   를 구분해야 합니다.\n4. 앞으로는\n   • 상징 → 과거 행적의 증거\n   • 판결·결말 → 환생 가능성\n   처럼 기능이 다른 요소들을 선으로 분리해 정리해 보세요."
+            },
+            43: {
+                title: "표현상의 특징 파악하기",
+                feedback: "본 문항은 수미상관 기법이 성립하는 정확한 조건을 알고 있는지를 묻는 문제입니다. 비슷한 표현이 반복된다는 인상만으로 수미상관이라고 판단하면 오답으로 이어집니다.",
+                mistakes: "• 첫 행과 마지막 행에 비슷한 어휘가 있다는 이유로 수미상관이라고 단정함\n• '같은 정서' 또는 '유사한 이미지'의 반복을 형식적 반복(수미상관)과 혼동함\n• 비교 문항에서 (가)를 충분히 확인하지 않고 (나)만 보고 간주함",
+                study: "1. 수미상관의 핵심 조건을 분명히 하세요. → 시의 첫 부분과 끝부분이 동일하거나 거의 동일한 표현으로 대응되어야 합니다. → 단순한 주제 반복이나 정서 유사성만으로는 성립하지 않습니다.\n2. (나)의 경우\n   • 첫 행과 마지막 행이 '그리운 곳에는 ~ 소리가 있네'로 형식적으로 대응됨 → 수미상관 기법이 분명히 사용됨\n3. (가)는\n   • 시의 처음과 끝이 같은 문장 구조나 표현으로 맞물리지 않음 → 수미상관 기법이 사용되었다고 볼 수 없음\n4. 앞으로는 표현 기법 문제에서\n   • ✔ 어휘·문장 구조의 실제 반복 여부\n   • ✔ 의미가 아니라 형식이 대응되는지\n   를 기준으로 판단하세요."
+            },
+            44: {
+                title: "시어의 의미 파악하기",
+                feedback: "본 문항은 시어 ㉤이 실제로 무엇을 수식하는지, 그리고 그 결과 의미가 어디까지 확장되는지를 정확히 판단했는지를 묻는 문제입니다. '거듭하여'라는 의미만 보고 뒤에 나오는 모든 대상에 반복 의미를 적용하면 오답으로 이어집니다.",
+                mistakes: "• '거듭하여'라는 의미를 문장 전체에 포괄적으로 적용함\n• 수식어가 어느 어구에 직접 연결되는지를 확인하지 않음\n• 결과 명사('세상의 마지막 저녁')까지 반복의 대상으로 잘못 해석함",
+                study: "1. 시어가 나오면 가장 우선 문법적으로 무엇을 수식하는지를 점검하세요. → ㉤은 '그렇게 가다보면'을 수식합니다.\n2. 따라서 반복되는 것은 → '고통의 맨발로 걸어가'는 과정·행동이지, → '세상의 마지막 저녁'이라는 도달 지점이나 결과가 아닙니다.\n3. 시에서 반복 의미는 주로\n   • 동작\n   • 과정\n   • 상태의 지속\n   에 적용되는 경우가 많으며, 상징적 결과까지 자동으로 반복되는 것은 아닙니다.\n4. 앞으로는\n   • ✔ 수식어 → 피수식어 직접 연결선 긋기\n   • ✔ 반복되는 대상이 행동인지 / 결과인지 구분\n   을 연습하세요."
+            },
+            45: {
+                title: "외적 준거에 따라 작품 감상하기",
+                feedback: "본 문항은 시에서 '누가 누구와 동일시되는지'를 정확히 구분했는지를 묻는 문제입니다. 동일시가 여러 겹으로 나타날 때, 관계를 과도하게 연결하면 오답으로 이어집니다.",
+                mistakes: "• 동일시 표현이 여러 번 등장하면 모든 대상이 서로 동일시된다고 확대 해석함\n• 'A=B', '나=C'가 있으면 자동으로 '나=B'까지 성립한다고 착각함\n• 비유·동일시의 직접 제시 여부를 확인하지 않음",
+                study: "1. 동일시 판단은 꼭 문장 근거가 직접 있는지를 점검하세요.\n   • '목련 ↔ 어머님' 동일시: 있음\n   • '나 ↔ 나무' 동일시: 있음\n   • '나 ↔ 어머님' 동일시: 직접 제시 없음\n2. 동일시는 전이(전파)되지 않습니다. → '목련=어머님'과 '나=나무'가 각각 성립해도 → '나=어머님'이 자동 성립하지는 않습니다.\n3. 앞으로는\n   • ✔ 동일시 쌍을 하나씩 분리해 적고\n   • ✔ 각 쌍마다 직접 표현(같다/되다/~처럼)이 있는지\n   를 확인하세요."
+            }
+            },};
+
+        // 현재 시험에 맞는 피드백 데이터 가져오기
+        function getFeedbackData() {
+            return feedbackDataByExam[currentExamId] || feedbackDataByExam['korean_mock_1'];
+        }
+
+        // 정답 데이터
+        const correctAnswers = {
+            1: 1, 2: 3, 3: 3, 4: 5, 5: 4, 6: 5, 7: 3, 8: 2, 9: 2, 10: 5,
+            11: 4, 12: 3, 13: 3, 14: 4, 15: 3, 16: 1, 17: 4, 18: 3, 19: 2, 20: 4,
+            21: 2, 22: 4, 23: 5, 24: 2, 25: 4, 26: 4, 27: 5, 28: 3, 29: 3, 30: 5,
+            31: 5, 32: 1, 33: 2, 34: 5, 35: 3, 36: 3, 37: 4, 38: 1, 39: 5, 40: 3,
+            41: 4, 42: 2, 43: 3, 44: 4, 45: 3
+        };
+
+        // 시험별 영역별 문항 번호
+        const areaQuestionsByExam = {
+            'korean_mock_1': {
+                speech: [1, 2, 4, 5, 6, 28, 29, 30],      // 화법과 작문 (8문항)
+                grammar: [3, 7, 8, 9, 10],                 // 문법 (5문항)
+                reading: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],  // 비문학 (17문항)
+                literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]  // 문학 (15문항)
+            },
+            'korean_mock_2': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],   // 화법과 작문 (10문항)
+                grammar: [11, 12, 13, 14, 15],              // 문법 (5문항)
+                reading: [16, 17, 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34], // 비문학 (15문항)
+                literature: [22, 23, 24, 25, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]  // 문학 (15문항)
+            },
+            'korean_mock_3': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],   // 화법과 작문 (10문항)
+                grammar: [11, 12, 13, 14, 15],              // 문법 (5문항)
+                reading: [20, 21, 22, 23, 24, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37], // 비문학 (15문항)
+                literature: [16, 17, 18, 19, 25, 26, 27, 38, 39, 40, 41, 42, 43, 44, 45]  // 문학 (15문항)
+            },
+            'korean_mock_4': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],   // 화법과 작문 (10문항)
+                grammar: [11, 12, 13, 14, 15],              // 문법 (5문항)
+                reading: [16, 17, 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34],  // 독서 (15문항)
+                literature: [22, 23, 24, 25, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]  // 문학 (15문항)
+            }
+        };
+
+        // 현재 시험 ID (나중에 설정됨)
+        let currentExamId = 'korean_mock_1';
+
+        // 현재 시험의 영역별 문항 번호 가져오기
+        function getAreaQuestions() {
+            return areaQuestionsByExam[currentExamId] || areaQuestionsByExam['korean_mock_1'];
+        }
+
+        // 선지 번호를 원형 문자로 변환
+        function getChoiceSymbol(num) {
+            const symbols = ['①', '②', '③', '④', '⑤'];
+            return symbols[num - 1] || num;
+        }
+
+        // 영역별 점수 계산
+        function calculateAreaScores(wrongAnswers) {
+            const wrongSet = new Set(wrongAnswers.map(w => w.questionNum));
+            const areaQuestions = getAreaQuestions();
+
+            const scores = {};
+            for (const [area, questions] of Object.entries(areaQuestions)) {
+                const total = questions.length;
+                const correct = questions.filter(q => !wrongSet.has(q)).length;
+                scores[area] = { correct, total, percent: Math.round((correct / total) * 100) };
+            }
+            return scores;
+        }
+
+        // 사각형 레이더 차트 그리기
+        function drawRadarChart(areaScores) {
+            const canvas = document.getElementById('radarChart');
+            const ctx = canvas.getContext('2d');
+            const size = 300;
+            const center = size / 2;
+            const maxRadius = 110;
+
+            // 고해상도 디스플레이 지원
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+            ctx.scale(dpr, dpr);
+
+            // 배경 클리어
+            ctx.clearRect(0, 0, size, size);
+
+            // 영역 이름과 점수
+            const labels = ['화법과 작문', '문법', '비문학', '문학'];
+            const values = [
+                areaScores.speech.percent,
+                areaScores.grammar.percent,
+                areaScores.reading.percent,
+                areaScores.literature.percent
+            ];
+
+            // 사각형 꼭짓점 위치 (상, 우, 하, 좌)
+            const getPoint = (index, radius) => {
+                const positions = [
+                    { x: center, y: center - radius },
+            'korean_mock_5': {
+                speech: [1, 2, 4, 5, 6, 28, 29, 30],      // 화법과 작문 (8문항)
+                grammar: [3, 7, 8, 9, 10],                 // 문법 (5문항)
+                reading: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],  // 비문학 (17문항)
+                literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]  // 문학 (15문항)
+            },           // 상 (화법과 작문)
+                    { x: center + radius, y: center },           // 우 (문법)
+                    { x: center, y: center + radius },           // 하 (비문학)
+                    { x: center - radius, y: center }            // 좌 (문학)
+                ];
+                return positions[index];
+            };
+
+            // 배경 격자 그리기 (5단계)
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let level = 1; level <= 5; level++) {
+                const r = (maxRadius / 5) * level;
+                ctx.beginPath();
+                for (let i = 0; i < 4; i++) {
+                    const p = getPoint(i, r);
+                    if (i === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            // 축 그리기
+            ctx.strokeStyle = '#ccc';
+            for (let i = 0; i < 4; i++) {
+                const p = getPoint(i, maxRadius);
+                ctx.beginPath();
+                ctx.moveTo(center, center);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+            }
+
+            // 데이터 영역 그리기
+            ctx.fillStyle = 'rgba(102, 126, 234, 0.3)';
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < 4; i++) {
+                const r = (values[i] / 100) * maxRadius;
+                const p = getPoint(i, r);
+                if (i === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 꼭짓점 점 그리기
+            ctx.fillStyle = '#667eea';
+            for (let i = 0; i < 4; i++) {
+                const r = (values[i] / 100) * maxRadius;
+                const p = getPoint(i, r);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 라벨 그리기
+            ctx.fillStyle = '#333';
+            ctx.font = '12px "Noto Sans KR", sans-serif';
+            ctx.textAlign = 'center';
+
+            // 상 (화법과 작문)
+            ctx.fillText(labels[0], center, center - maxRadius - 15);
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 14px "Noto Sans KR", sans-serif';
+            ctx.fillText(values[0] + '%', center, center - maxRadius - 1);
+
+            // 우 (문법)
+            ctx.fillStyle = '#333';
+            ctx.font = '12px "Noto Sans KR", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(labels[1], center + maxRadius + 8, center - 8);
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 14px "Noto Sans KR", sans-serif';
+            ctx.fillText(values[1] + '%', center + maxRadius + 8, center + 10);
+
+            // 하 (비문학)
+            ctx.fillStyle = '#333';
+            ctx.font = '12px "Noto Sans KR", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(labels[2], center, center + maxRadius + 25);
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 14px "Noto Sans KR", sans-serif';
+            ctx.fillText(values[2] + '%', center, center + maxRadius + 12);
+
+            // 좌 (문학)
+            ctx.fillStyle = '#333';
+            ctx.font = '12px "Noto Sans KR", sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(labels[3], center - maxRadius - 8, center - 8);
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 14px "Noto Sans KR", sans-serif';
+            ctx.fillText(values[3] + '%', center - maxRadius - 8, center + 10);
+        }
+
+        // 영역별 통계 업데이트
+        function updateAreaStats(areaScores) {
+            // 바 업데이트
+            document.getElementById('bar-speech').style.width = areaScores.speech.percent + '%';
+            document.getElementById('bar-grammar').style.width = areaScores.grammar.percent + '%';
+            document.getElementById('bar-reading').style.width = areaScores.reading.percent + '%';
+            document.getElementById('bar-literature').style.width = areaScores.literature.percent + '%';
+
+            // 점수 텍스트 업데이트
+            document.getElementById('score-speech').textContent = `${areaScores.speech.correct}/${areaScores.speech.total}`;
+            document.getElementById('score-grammar').textContent = `${areaScores.grammar.correct}/${areaScores.grammar.total}`;
+            document.getElementById('score-reading').textContent = `${areaScores.reading.correct}/${areaScores.reading.total}`;
+            document.getElementById('score-literature').textContent = `${areaScores.literature.correct}/${areaScores.literature.total}`;
+        }
+
+        // 등급 계산 함수
+        function calculateGrade(score) {
+            if (score >= 97) return '1등급 상';
+            if (score >= 94) return '1등급 중';
+            if (score >= 91) return '1등급 하';
+            if (score >= 88) return '2등급 상';
+            if (score >= 85) return '2등급 중';
+            if (score >= 82) return '2등급 하';
+            if (score >= 78) return '3등급 상';
+            if (score >= 74) return '3등급 중';
+            if (score >= 70) return '3등급 하';
+            if (score >= 67) return '4등급 상';
+            if (score >= 63) return '4등급 중';
+            if (score >= 59) return '4등급 하';
+            return '5등급';
+        }
+
+        // 날짜 포맷팅
+        function formatDate(dateStr) {
+            if (!dateStr) {
+                const now = new Date();
+                return `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
+            }
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', async function() {
+            // iframe 내에서 열렸는지 감지
+            if (window.self !== window.top) {
+                document.documentElement.classList.add('iframe-mode');
+                document.body.classList.add('iframe-mode');
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const resultId = urlParams.get('id');
+            const examId = urlParams.get('examId');
+            const userId = urlParams.get('userId');
+
+            // examId가 URL에 있으면 설정
+            if (examId) {
+                currentExamId = examId;
+            }
+
+            let wrongAnswers = [];
+            let resultData = {
+                studentInfo: { schoolName: '-', grade: '-', studentName: '-' },
+                score: 0,
+                correctCount: 0,
+                elapsedTimeStr: '00:00',
+                createdAt: null
+            };
+
+            // examId와 userId로 조회 (대시보드 팝업에서 호출 시)
+            if (examId && userId) {
+                try {
+                    const response = await fetch(`/api/mock-exam/result/${examId}/${userId}`);
+                    const data = await response.json();
+
+                    if (data.ok && data.result) {
+                        wrongAnswers = data.result.wrongAnswers || [];
+                        resultData = {
+                            studentInfo: data.result.studentInfo || { schoolName: '-', grade: '-', studentName: '-' },
+                            score: data.result.score || 0,
+                            correctCount: data.result.correctCount || 0,
+                            elapsedTimeStr: data.result.elapsedTimeStr || '00:00',
+                            createdAt: data.result.createdAt,
+                            grade: data.result.grade
+                        };
+                        // DB에서 examId 가져오기
+                        if (data.result.examId) {
+                            currentExamId = data.result.examId;
+                        }
+                    }
+                } catch (err) {
+                    console.error('결과 조회 오류:', err);
+                }
+            } else if (resultId) {
+                // DB에서 결과 불러오기
+                try {
+                    const response = await fetch(`/api/mock-exam/result/${resultId}`);
+                    const data = await response.json();
+
+                    if (data.ok && data.result) {
+                        wrongAnswers = data.result.wrongAnswers || [];
+                        resultData = {
+                            studentInfo: data.result.studentInfo || { schoolName: '-', grade: '-', studentName: '-' },
+                            score: data.result.score || 0,
+                            correctCount: data.result.correctCount || 0,
+                            elapsedTimeStr: data.result.elapsedTimeStr || '00:00',
+                            createdAt: data.result.createdAt
+                        };
+                        // DB에서 examId 가져오기
+                        if (data.result.examId) {
+                            currentExamId = data.result.examId;
+                        }
+                    }
+                } catch (err) {
+                    console.error('결과 불러오기 오류:', err);
+                }
+            } else {
+                // localStorage에서 불러오기
+                const storedData = localStorage.getItem('wrongAnswersForFeedback');
+                if (storedData) {
+                    wrongAnswers = JSON.parse(storedData);
+                }
+                // localStorage에서 결과 데이터도 가져오기
+                const examResult = localStorage.getItem('examResult');
+                if (examResult) {
+                    const parsed = JSON.parse(examResult);
+                    resultData.score = parsed.score || 0;
+                    resultData.correctCount = parsed.correctCount || 0;
+                    resultData.elapsedTimeStr = parsed.elapsedTimeStr || '00:00';
+                    // localStorage에서도 examId 가져오기
+                    if (parsed.examId) {
+                        currentExamId = parsed.examId;
+                    }
+                }
+                // localStorage에서 학생 정보 가져오기
+                const studentInfo = localStorage.getItem('studentInfo');
+                if (studentInfo) {
+                    const parsed = JSON.parse(studentInfo);
+                    resultData.studentInfo = {
+                        schoolName: parsed.schoolName || '-',
+                        grade: parsed.grade || '-',
+                        studentName: parsed.studentName || '-'
+                    };
+                }
+            }
+
+            renderFeedback(wrongAnswers, resultData);
+        });
+
+        // 피드백 렌더링
+        function renderFeedback(wrongAnswers, resultData) {
+            const feedbackList = document.getElementById('feedbackList');
+
+            // 날짜 표시
+            document.getElementById('examDate').textContent = formatDate(resultData.createdAt);
+
+            // 학생 정보 표시
+            document.getElementById('schoolName').textContent = resultData.studentInfo.schoolName || '-';
+            document.getElementById('gradeLevel').textContent = resultData.studentInfo.grade || '-';
+            document.getElementById('studentName').textContent = resultData.studentInfo.studentName || '-';
+
+            // 채점 결과 표시
+            const gradeText = calculateGrade(resultData.score);
+            document.getElementById('gradeBadge').textContent = gradeText;
+            document.getElementById('scoreNum').textContent = resultData.score;
+            document.getElementById('correctNum').textContent = resultData.correctCount;
+            document.getElementById('elapsedTime').textContent = resultData.elapsedTimeStr;
+            document.getElementById('wrongSummary').textContent = `틀린 문제: ${wrongAnswers.length}개`;
+
+            // 영역별 점수 계산 및 차트/통계 표시
+            const areaScores = calculateAreaScores(wrongAnswers);
+            drawRadarChart(areaScores);
+            updateAreaStats(areaScores);
+
+            if (wrongAnswers.length === 0) {
+                feedbackList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🎉</div>
+                        <h2>축하합니다!</h2>
+                        <p>모든 문제를 맞혔습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 문제 번호순으로 정렬
+            wrongAnswers.sort((a, b) => a.questionNum - b.questionNum);
+
+            const feedbackData = getFeedbackData();
+            feedbackList.innerHTML = wrongAnswers.map(item => {
+                const qNum = item.questionNum;
+                const data = feedbackData[qNum] || {
+                    title: `${qNum}번 문제`,
+                    feedback: '피드백이 준비 중입니다.',
+                    mistakes: '',
+                    study: ''
+                };
+
+                return `
+                    <div class="feedback-card">
+                        <div class="card-header">
+                            <h3>${qNum}. ${data.title}</h3>
+                            <div class="answer-info">
+                                <span class="wrong">내 답: ${item.userAnswer ? getChoiceSymbol(item.userAnswer) : '미응답'}</span>
+                                <span class="correct">정답: ${getChoiceSymbol(item.correctAnswer)}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="feedback-section">
+                                <div class="feedback-label main-label">📌 학습 피드백</div>
+                                <div class="feedback-content main-content">${data.feedback}</div>
+                            </div>
+                            ${data.mistakes ? `
+                            <div class="feedback-section">
+                                <div class="feedback-label mistake-label">❌ 자주 하는 실수</div>
+                                <div class="feedback-content mistake-content">${data.mistakes.replace(/\n/g, '<br>')}</div>
+                            </div>
+                            ` : ''}
+                            ${data.study ? `
+                            <div class="feedback-section">
+                                <div class="feedback-label study-label">✅ 이렇게 공부하세요</div>
+                                <div class="feedback-content study-content">${data.study.replace(/\n/g, '<br>')}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 카카오 SDK 초기화
+        if (window.Kakao && !Kakao.isInitialized()) {
+            Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
+        }
+
+        // 카카오톡 공유하기
+        function shareKakao() {
+            const studentName = document.getElementById('studentName').textContent;
+            const score = document.getElementById('scoreNum').textContent;
+            const grade = document.getElementById('gradeBadge').textContent;
+            const correctCount = document.getElementById('correctNum').textContent;
+
+            if (window.Kakao && Kakao.isInitialized()) {
+                Kakao.Share.sendDefault({
+                    objectType: 'feed',
+                    content: {
+                        title: '1월 AI 모의고사 분석 리포트',
+                        description: `${studentName}님의 결과: ${grade} (${score}점, ${correctCount}/45 정답)`,
+                        imageUrl: 'https://dan-dan.co.kr/images/mock-exam-share.png',
+                        link: {
+                            mobileWebUrl: window.location.href,
+                            webUrl: window.location.href
+                        }
+                    },
+                    buttons: [
+                        {
+                            title: '분석 리포트 보기',
+                            link: {
+                                mobileWebUrl: window.location.href,
+                                webUrl: window.location.href
+                            }
+                        }
+                    ]
+                });
+            } else {
+                alert('카카오톡 공유 기능을 사용할 수 없습니다.');
+            }
+        }
+
+        // PDF 다운로드
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+
+            // 로딩 표시
+            const btn = document.querySelector('.pdf-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>PDF 생성 중...</span>';
+            btn.disabled = true;
+
+            try {
+                const container = document.querySelector('.container');
+
+                // 버튼 영역 임시 숨김
+                const bottomButtons = document.querySelector('.bottom-buttons');
+                bottomButtons.style.display = 'none';
+
+                // html2canvas로 캡처
+                const canvas = await html2canvas(container, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#667eea'
+                });
+
+                // 버튼 다시 표시
+                bottomButtons.style.display = 'flex';
+
+                // PDF 생성
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                // 첫 페이지
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                // 추가 페이지가 필요한 경우
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                // 파일명 생성
+                const studentName = document.getElementById('studentName').textContent || '학생';
+                const date = new Date().toISOString().slice(0, 10);
+                pdf.save(`분석리포트_${studentName}_${date}.pdf`);
+
+            } catch (error) {
+                console.error('PDF 생성 오류:', error);
+                alert('PDF 생성 중 오류가 발생했습니다.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

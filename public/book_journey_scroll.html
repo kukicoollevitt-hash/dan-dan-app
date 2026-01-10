@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>단단국어 책 여행 지도</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #f5f5f5;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 30%, #F0E68C 70%, #DEB887 100%);
+      z-index: 1;
+    }
+
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 450px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card h2 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .story-card .emoji {
+      font-size: 48px;
+    }
+
+    .story-card .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .story-card .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .story-card .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 60px;
+      border-radius: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      pointer-events: auto;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #95a5a6;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 뒤로가기 버튼 -->
+  <button class="back-btn" onclick="goBack()">← 돌아가기</button>
+
+  <!-- 고정 지도 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐳 책 여행을 떠나요</h1>
+        <p class="subtitle">고래와 함께하는 문해력 모험</p>
+        <p class="scroll-hint">↓ 스크롤하여 여행 시작 ↓</p>
+      </div>
+    </section>
+
+    <!-- 섹션 1: 고전문학 -->
+    <section class="story-section" data-step="0">
+      <div class="story-card">
+        <h2>
+          <span class="emoji">📕</span>
+          고전문학 섬
+        </h2>
+        <div class="badge">40개의 작품</div>
+        <p>
+          시간을 초월한 우리의 이야기들이 기다리고 있어요.
+          춘향전의 사랑, 심청전의 효, 흥부전의 형제애까지.
+          조상들의 지혜가 담긴 고전 속으로 빠져보세요.
+        </p>
+        <a href="/BRAINUP/korlit/classic_list.html" class="btn">
+          섬 탐험하기 →
+        </a>
+      </div>
+    </section>
+
+    <!-- 섹션 2: 현대문학 -->
+    <section class="story-section" data-step="1">
+      <div class="story-card">
+        <h2>
+          <span class="emoji">📘</span>
+          현대문학 섬
+        </h2>
+        <div class="badge">40개의 작품</div>
+        <p>
+          지금 이 시대를 살아가는 우리의 이야기.
+          소년이 온다, 82년생 김지영, 채식주의자...
+          현대 작가들이 들려주는 삶의 진실을 만나보세요.
+        </p>
+        <a href="/BRAINUP/korlit/modern_list.html" class="btn">
+          섬 탐험하기 →
+        </a>
+      </div>
+    </section>
+
+    <!-- 섹션 3: 인물전기 -->
+    <section class="story-section" data-step="2">
+      <div class="story-card">
+        <h2>
+          <span class="emoji">📙</span>
+          인물전기 섬
+        </h2>
+        <div class="badge">40명의 위인</div>
+        <p>
+          역사를 만든 사람들의 발자취를 따라가요.
+          세종대왕의 백성 사랑, 신사임당의 예술혼,
+          유관순의 독립 정신까지. 위인들에게 배워요.
+        </p>
+        <a href="/BRAINUP/person/people_list.html" class="btn">
+          섬 탐험하기 →
+        </a>
+      </div>
+    </section>
+
+    <!-- 섹션 4: 사회분야 -->
+    <section class="story-section" data-step="3">
+      <div class="story-card">
+        <h2>
+          <span class="emoji">📒</span>
+          사회분야 섬
+        </h2>
+        <div class="badge">지리·역사·도덕</div>
+        <p>
+          세상을 이해하는 렌즈를 얻어요.
+          우리나라의 아름다운 땅, 흘러온 역사의 강,
+          더불어 살아가는 지혜까지. 사회를 배워요.
+        </p>
+        <a href="/BRAINUP/social/geo_list.html" class="btn">
+          섬 탐험하기 →
+        </a>
+      </div>
+    </section>
+
+    <!-- 섹션 5: 과학분야 -->
+    <section class="story-section" data-step="4">
+      <div class="story-card">
+        <h2>
+          <span class="emoji">📗</span>
+          과학분야 섬
+        </h2>
+        <div class="badge">생물·물리·화학</div>
+        <p>
+          자연의 신비를 탐험해요.
+          작은 세포부터 넓은 우주까지,
+          만물의 원리를 알아가는 흥미진진한 과학 여행!
+        </p>
+        <a href="/BRAINUP/science/bio_list.html" class="btn">
+          섬 탐험하기 →
+        </a>
+      </div>
+    </section>
+
+    <!-- 엔딩 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎉 여행 완료!</h1>
+        <p class="subtitle">더 많은 책들이 기다리고 있어요</p>
+        <a href="/" class="btn" style="display: inline-block; margin-top: 20px;">
+          메인으로 돌아가기
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 캔버스 설정
+    const canvas = document.getElementById('map-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 캔버스 크기 설정
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      drawMap();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // 섬 위치 정의 (캔버스 좌표)
+    const islands = [
+      { x: 0.2, y: 0.3, emoji: '📕', name: '고전문학', color: '#E74C3C' },
+      { x: 0.5, y: 0.45, emoji: '📘', name: '현대문학', color: '#3498DB' },
+      { x: 0.75, y: 0.35, emoji: '📙', name: '인물전기', color: '#9B59B6' },
+      { x: 0.3, y: 0.65, emoji: '📒', name: '사회분야', color: '#F39C12' },
+      { x: 0.7, y: 0.7, emoji: '📗', name: '과학분야', color: '#27AE60' }
+    ];
+
+    // 고래 초기 위치
+    const whale = { x: 0.5, y: 0.15 };
+
+    // 현재 진행 상태
+    let currentStep = -1;
+    let pathProgress = 0;
+
+    // 지도 그리기
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 파도 그리기
+      drawWaves();
+
+      // 섬들 그리기
+      islands.forEach((island, index) => {
+        drawIsland(island, index <= currentStep);
+      });
+
+      // 경로 그리기
+      if (currentStep >= 0) {
+        drawPath();
+      }
+
+      // 고래 그리기
+      drawWhale();
+    }
+
+    // 파도 그리기
+    function drawWaves() {
+      ctx.fillStyle = 'rgba(176, 224, 230, 0.3)';
+
+      for (let i = 0; i < 3; i++) {
+        const time = Date.now() / 1000;
+        const offset = Math.sin(time + i) * 20;
+        ctx.beginPath();
+        ctx.ellipse(
+          canvas.width * (0.2 + i * 0.3) + offset,
+          canvas.height * (0.5 + i * 0.1),
+          80, 20, 0, 0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+
+    // 섬 그리기
+    function drawIsland(island, isActive) {
+      const x = canvas.width * island.x;
+      const y = canvas.height * island.y;
+
+      // 섬 그림자
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 25, 85, 32, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 섬 베이스
+      ctx.fillStyle = isActive ? '#8B7355' : '#999';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 20, 80, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#654321';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 섬 풀밭
+      ctx.fillStyle = isActive ? '#90EE90' : '#ccc';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 10, 75, 28, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = isActive ? '#228B22' : '#999';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 책 베이스
+      ctx.fillStyle = isActive ? island.color : '#999';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 4;
+      ctx.beginPath();
+      ctx.roundRect(x - 20, y - 30, 40, 35, 3);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // 책 내부
+      ctx.fillStyle = isActive ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+      ctx.beginPath();
+      ctx.roundRect(x - 18, y - 28, 36, 31, 2);
+      ctx.fill();
+
+      // 책 라인
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 15, y - 20);
+      ctx.lineTo(x + 15, y - 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - 15, y - 12);
+      ctx.lineTo(x + 15, y - 12);
+      ctx.stroke();
+
+      // 섬 이름 배경
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.beginPath();
+      ctx.roundRect(x - 45, y + 42, 90, 26, 8);
+      ctx.fill();
+
+      // 섬 이름
+      ctx.fillStyle = isActive ? '#2c3e50' : '#666';
+      ctx.font = 'bold 16px "Gmarket Sans", Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(island.name, x, y + 55);
+    }
+
+    // 경로 그리기
+    function drawPath() {
+      if (currentStep < 0) return;
+
+      ctx.strokeStyle = '#3498db';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.setLineDash([10, 5]);
+
+      // 고래부터 현재 섬까지 경로
+      ctx.beginPath();
+      ctx.moveTo(canvas.width * whale.x, canvas.height * whale.y);
+
+      for (let i = 0; i <= currentStep; i++) {
+        const island = islands[i];
+        const targetX = canvas.width * island.x;
+        const targetY = canvas.height * island.y;
+
+        if (i === currentStep) {
+          // 현재 섬까지는 부분적으로
+          const progressX = canvas.width * whale.x + (targetX - canvas.width * whale.x) * pathProgress;
+          const progressY = canvas.height * whale.y + (targetY - canvas.height * whale.y) * pathProgress;
+          ctx.lineTo(progressX, progressY);
+        } else {
+          // 이전 섬들은 완전히
+          ctx.lineTo(targetX, targetY);
+        }
+      }
+
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // 고래 그리기
+    function drawWhale() {
+      let x = canvas.width * whale.x;
+      let y = canvas.height * whale.y;
+
+      // 현재 섬으로 이동 중이면 위치 업데이트
+      if (currentStep >= 0 && currentStep < islands.length) {
+        const target = islands[currentStep];
+        x = canvas.width * whale.x + (canvas.width * target.x - canvas.width * whale.x) * pathProgress;
+        y = canvas.height * whale.y + (canvas.height * target.y - canvas.height * whale.y) * pathProgress;
+      }
+
+      // 둥둥 떠다니는 효과
+      const floatOffset = Math.sin(Date.now() / 500) * 5;
+      y += floatOffset;
+
+      // 그림자
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 30, 35, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 고래 몸
+      ctx.fillStyle = '#4A90E2';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 4;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 35, 22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // 고래 눈 (흰자)
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(x - 10, y - 5, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 고래 눈동자
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      ctx.arc(x - 12, y - 6, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 가방
+      ctx.fillStyle = '#8B4513';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 5;
+      ctx.shadowOffsetY = 2;
+      ctx.fillRect(x - 12, y - 22, 22, 20);
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // 가방 앞면
+      ctx.fillStyle = '#D2691E';
+      ctx.fillRect(x - 10, y - 20, 18, 16);
+
+      // 가방 스트랩
+      ctx.strokeStyle = '#654321';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 8, y - 22);
+      ctx.quadraticCurveTo(x - 15, y - 15, x - 15, y);
+      ctx.stroke();
+
+      // 가방 버클
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(x - 3, y - 15, 6, 4);
+    }
+
+    // 스크롤 이벤트
+    let isAnimating = false;
+
+    function handleScroll() {
+      if (isAnimating) return;
+
+      const scrollPercent = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      document.getElementById('progress-bar').style.width = (scrollPercent * 100) + '%';
+
+      // 각 섹션 활성화
+      const sections = document.querySelectorAll('.story-section');
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        if (rect.top < window.innerHeight * 0.6 && rect.bottom > window.innerHeight * 0.4) {
+          card.classList.add('active');
+
+          if (currentStep !== index) {
+            currentStep = index;
+            animatePath();
+          }
+        } else {
+          card.classList.remove('active');
+        }
+      });
+
+      drawMap();
+    }
+
+    // 경로 애니메이션
+    function animatePath() {
+      isAnimating = true;
+      pathProgress = 0;
+
+      const animate = () => {
+        pathProgress += 0.02;
+        if (pathProgress <= 1) {
+          drawMap();
+          requestAnimationFrame(animate);
+        } else {
+          pathProgress = 1;
+          isAnimating = false;
+          drawMap();
+        }
+      };
+
+      animate();
+    }
+
+    // 연속 애니메이션 (파도)
+    function continuousAnimation() {
+      drawMap();
+      requestAnimationFrame(continuousAnimation);
+    }
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    continuousAnimation();
+
+    // 뒤로가기
+    function goBack() {
+      window.history.back();
+    }
+
+    // 키보드 단축키
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') goBack();
+    });
+  </script>
+</body>
+</html>

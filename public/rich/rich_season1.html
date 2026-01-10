@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎃 흥부전</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/rich/rich01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #d4a574;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #d4a574;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #d4a574 0%, #b8860b 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🎃 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎃 흥부전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          권선징악과 형제의 화해
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 형제의 대비되는 성격">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">👬</span>
+          형제의 대비되는 성격
+        </h2>
+        <div class="story-text">『흥부전』은 형 놀부와 동생 흥부라는 두 형제를 중심으로 전개되는 고전 소설이다. 놀부와 흥부는 같은 부모에게서 태어났지만 성격과 삶의 태도는 극명하게 다르다.
+
+놀부는 욕심이 많고 인색하며, 재산을 모으는 데에만 관심을 두는 인물이다. 반면 흥부는 마음이 착하고 남을 돕기를 좋아하는 인물로, 자신의 이익보다 타인의 어려움을 먼저 생각한다.
+
+이러한 형제의 대비는 작품 전체의 갈등 구조를 형성하며, 이후 벌어질 사건의 원인이 된다. 작가는 처음부터 두 인물의 성격을 분명히 드러내어 권선징악이라는 주제를 예고한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 재산 다툼과 형제의 이별">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">💔</span>
+          재산 다툼과 형제의 이별
+        </h2>
+        <div class="story-text">부모가 돌아가신 뒤, 놀부는 재산을 독차지하려는 욕심을 드러낸다. 그는 흥부에게 몫을 나누어 주지 않고, 갖은 핑계를 대며 동생을 집에서 내쫓는다.
+
+흥부는 억울한 상황에 놓이지만 형을 원망하지 않고, 가족을 데리고 가난한 삶을 받아들인다.
+
+이 장면은 놀부의 탐욕과 흥부의 인내심을 동시에 보여 주며, 형제 관계가 완전히 단절되는 계기가 된다. 이후 흥부는 극심한 가난 속에서도 성실하게 살아가려 노력한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 가난한 흥부의 생활">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">🏚️</span>
+          가난한 흥부의 생활
+        </h2>
+        <div class="story-text">흥부는 아내와 많은 자식들을 데리고 초라한 집에서 살아간다. 먹을 것이 부족해 아이들이 굶주리는 날이 잦고, 옷 한 벌 제대로 마련하기 어려운 형편이다.
+
+그럼에도 흥부는 불평하지 않고, 가족을 다독이며 하루하루를 살아간다. 그는 주변 사람들에게도 친절하며, 자신의 어려운 처지 속에서도 남을 도울 마음을 잃지 않는다.
+
+이 장면은 흥부의 선한 성품을 강조하며, 이후 복을 받게 되는 인물의 자격을 충분히 보여 준다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 제비를 구해 주는 흥부">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🐦</span>
+          제비를 구해 주는 흥부
+        </h2>
+        <div class="story-text">어느 날 흥부는 다리가 부러진 제비 한 마리를 발견한다. 흥부는 제비를 불쌍히 여겨 정성껏 다리를 고쳐 주고, 따뜻하게 돌본 뒤 하늘로 날려 보낸다.
+
+이 행동은 아무런 보답을 기대하지 않은 순수한 선행이었다.
+
+작가는 이 사건을 통해 흥부의 인간적인 따뜻함과 생명을 존중하는 태도를 부각한다. 이 제비는 이후 흥부의 인생을 바꾸는 중요한 매개체가 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 박씨를 물고 온 제비">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">🌱</span>
+          박씨를 물고 온 제비
+        </h2>
+        <div class="story-text">시간이 지나 제비는 다시 흥부의 집을 찾아온다. 제비는 은혜에 보답하듯 박씨를 물어다 준다. 흥부는 그 박씨를 소중히 간직했다가 밭에 심고 정성껏 가꾼다.
+
+이 장면은 흥부의 인내와 성실함을 보여 주며, 선행이 곧바로 보상으로 이어지지 않더라도 꾸준한 노력이 필요하다는 점을 암시한다.
+
+박이 무럭무럭 자라는 모습은 이후 펼쳐질 변화의 징조이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 박을 타다, 복이 쏟아지다">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">🎃</span>
+          박을 타다, 복이 쏟아지다
+        </h2>
+        <div class="story-text">가을이 되어 박이 잘 익자 흥부는 박을 타게 된다. 박 속에서는 쌀과 돈, 비단, 집과 노비 등 온갖 재물이 쏟아져 나온다.
+
+흥부는 하루아침에 가난에서 벗어나 풍족한 삶을 살게 된다. 그러나 그는 재물을 얻었다고 해서 마음이 변하지 않고, 이웃과 친척을 도우며 나눔을 실천한다.
+
+이 장면은 착한 마음이 복으로 돌아온다는 권선징악 구조를 분명히 보여 준다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 흥부의 소식을 들은 놀부">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">👂</span>
+          흥부의 소식을 들은 놀부
+        </h2>
+        <div class="story-text">흥부가 부자가 되었다는 소식은 곧 놀부의 귀에 들어간다. 놀부는 동생의 변화에 놀라지만, 그 이유를 흥부의 착한 마음에서 찾지 않는다.
+
+대신 자신도 같은 방법으로 재물을 얻을 수 있을 것이라 생각하며 욕심을 품는다. 놀부는 흥부를 찾아가 겉으로는 화해하는 척하지만, 속으로는 이익을 노린다.
+
+이 장면은 놀부의 탐욕이 더욱 심화되는 계기이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 일부러 제비 다리를 부러뜨리는 놀부">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">😈</span>
+          일부러 제비 다리를 부러뜨리는 놀부
+        </h2>
+        <div class="story-text">놀부는 흥부의 이야기를 듣고, 일부러 제비의 다리를 부러뜨린 뒤 고쳐 주는 흉내를 낸다. 그는 제비를 도운 것이 아니라 복을 얻기 위한 수단으로 이용한 것이다.
+
+제비는 결국 박씨를 물어다 주고, 놀부는 큰 기대 속에 박을 심고 가꾼다.
+
+이 장면은 선행의 동기와 마음가짐이 얼마나 중요한지를 드러내며, 흥부와 놀부의 결정적인 차이를 보여 준다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 박을 타자 재앙이 쏟아지다">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">👹</span>
+          박을 타자 재앙이 쏟아지다
+        </h2>
+        <div class="story-text">놀부가 박을 타자, 박 속에서는 재물이 아닌 도깨비와 온갖 재앙이 쏟아져 나온다. 도깨비들은 놀부의 집을 부수고, 재산을 망가뜨리며 놀부를 혼내 준다.
+
+놀부는 그제야 자신의 욕심과 악행을 깨닫고 크게 후회한다.
+
+이 장면은 악한 행동에는 반드시 벌이 따른다는 교훈을 강하게 전달한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 형제의 화해와 결말">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🤝</span>
+          형제의 화해와 결말
+        </h2>
+        <div class="story-text">모든 재산을 잃고 어려움에 처한 놀부는 흥부를 찾아와 진심으로 잘못을 뉘우친다. 흥부는 형을 원망하지 않고, 자신의 재산을 나누어 형을 돕는다.
+
+형제는 다시 화해하고 함께 살아가게 된다.
+
+작품은 착한 마음은 복으로 돌아오고, 욕심과 악행은 벌을 받는다는 권선징악의 주제를 분명히 하며 마무리된다. 『흥부전』은 공동체적 가치와 나눔의 중요성을 강조하는 고전소설이다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎃 흥부전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/rich/rich01.jpg',
+      '/images/rich/rich02.jpg',
+      '/images/rich/rich03.jpg',
+      '/images/rich/rich04.jpg',
+      '/images/rich/rich05.jpg',
+      '/images/rich/rich06.jpg',
+      '/images/rich/rich07.jpg',
+      '/images/rich/rich08.jpg',
+      '/images/rich/rich09.jpg',
+      '/images/rich/rich10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🎃 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

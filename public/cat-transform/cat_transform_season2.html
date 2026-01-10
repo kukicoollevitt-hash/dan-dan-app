@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐈 고양이가 되어버린 날 — 시즌 2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-transform-story/transform_part2_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #9B59B6 0%, #E91E63 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #34495e;
+      margin-bottom: 15px;
+      font-weight: 400;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      background-image: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-transform-story/transform_part2-main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .intro-content {
+      background: transparent;
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #ffffff;
+      margin-bottom: 40px;
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 네비게이션 바 */
+    .nav-bar {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      padding: 15px 30px;
+      border-radius: 50px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 1000;
+    }
+
+    .nav-bar .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .nav-bar .progress {
+      font-size: 14px;
+      color: #9B59B6;
+      font-weight: 600;
+    }
+
+    .home-btn {
+      background: linear-gradient(135deg, #9B59B6 0%, #E91E63 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .home-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(155, 89, 182, 0.4);
+    }
+
+    /* 프로그레스 바 */
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1001;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #9B59B6 0%, #E91E63 100%);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 24px;
+      }
+
+      .story-card p {
+        font-size: 16px;
+      }
+
+      .nav-bar {
+        padding: 12px 20px;
+        gap: 10px;
+      }
+
+      .nav-bar .title {
+        font-size: 14px;
+      }
+
+      .nav-bar .progress {
+        display: none;
+      }
+    }
+
+    /* 마지막 섹션 여유 공간 */
+    .story-section:last-child {
+      margin-bottom: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <!-- 프로그레스 바 -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- 네비게이션 바 -->
+  <div class="nav-bar">
+    <span class="title">🐈 고양이가 되어버린 날</span>
+    <span class="progress" id="navProgress">PART 1 / 10</span>
+    <button class="home-btn" onclick="goHome()">← 메인으로</button>
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐈 고양이가 되어버린 날</h1>
+        <p class="subtitle">
+          시즌 2 - 목걸이의 비밀과 그림자 왕국<br>
+          잃어버린 왕국의 비밀이 드러난다
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-bg="transform_part2-01.jpg">
+      <div class="story-card">
+        <span class="chapter">🚪 PART 1</span>
+        <h2>폐공장의 문이 열리다</h2>
+        <p>폐공장 앞에서 목걸이가 강하게 빛나던 순간,</p>
+        <p>쇳덩이 문이 스르르 열렸다.</p>
+        <p>안쪽에서는 먼지 냄새와 함께 오래된 철제의 삐걱거리는 소리가 울렸다.</p>
+        <p>초롱은 "느낌이 좋지 않아."라며 주인공의 앞을 막아섰지만,</p>
+        <p>주인공은 이상하게 공장 안으로 끌려 들어가는 듯한 기분을 느꼈다.</p>
+        <p>마치 목걸이가 스스로 길을 찾는 것처럼.</p>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-bg="transform_part2-02.jpg">
+      <div class="story-card">
+        <span class="chapter">🐈‍⬛ PART 2</span>
+        <h2>검은 고양이의 시험</h2>
+        <p>공장 안에는 오래전에 버려진 기계와 컨베이어 벨트가</p>
+        <p>마치 거대한 괴물의 몸처럼 이어져 있었다.</p>
+        <p>그때 머리 위에서 두 눈이 반짝였다.</p>
+        <p>시즌 1에서 만났던 푸른 눈의 검은 고양이가 천천히 주인공 앞에 내려왔다.</p>
+        <p><em>"드디어 왔군. 선택받은 자여."</em></p>
+        <p>검은 고양이는 이름을 밝히지 않은 채,</p>
+        <p>주인공에게 <em>"따라올 수 있나?"</em>라 물으며 미로 같은 공장 내부로 몸을 던졌다.</p>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-bg="transform_part2-03.jpg">
+      <div class="story-card">
+        <span class="chapter">🌀 PART 3</span>
+        <h2>지하왕국으로의 입구</h2>
+        <p>주인공이 절벽 같은 철골 끝에서 몸을 던지는 순간—</p>
+        <p>바닥은 존재하지 않았다.</p>
+        <p>대신 푸른 빛의 길이 목걸이에서 펼쳐져 세 고양이를 공중에 떠받쳤다.</p>
+        <p>검은 고양이가 말했다.</p>
+        <p><em>"네가 가진 건 단순한 장신구가 아니다.</em></p>
+        <p><em>이건 고양이 왕국의 '계승자'에게만 반응하는 힘이다."</em></p>
+        <p>폐공장의 바닥이 열리며 푸른 빛의 원형 문양이 나타났다.</p>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-bg="transform_part2-04.jpg">
+      <div class="story-card">
+        <span class="chapter">✨ PART 4</span>
+        <h2>황금길고양이들의 도시, '미라벨'</h2>
+        <p>지하 깊은 곳, 드디어 빛이 보였다.</p>
+        <p>끝없이 펼쳐진 돌길 위에서 수십 마리의 고양이들이 자유롭게 뛰어다니고 있었고,</p>
+        <p>머리 위에는 고반사된 금빛 결정이 달린 거대한 동굴.</p>
+        <p>도시 이름은 <strong>미라벨(Mirabel).</strong></p>
+        <p>초롱은 감탄을 숨기지 못했다.</p>
+        <p><em>"이… 이게 고양이 왕국이라고?"</em></p>
+        <p>주인공의 목걸이가 빛나는 순간 모두 조용해지며 길을 열었다.</p>
+        <p><em>"왕의 계승자다…"</em></p>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-bg="transform_part2-05.jpg">
+      <div class="story-card">
+        <span class="chapter">📜 PART 5</span>
+        <h2>왕국의 역사와 '어둠의 발톱단'</h2>
+        <p>고양이 왕국의 장로 '아르모'는 오래된 이야기들을 펼쳐 보였다.</p>
+        <p>오래전 왕국은 빛의 힘을 가진 고양이 왕이 다스렸고</p>
+        <p>고양이와 인간의 세계는 비밀리에 연결되어 있었다.</p>
+        <p>그러나 왕이 사라진 뒤, 왕국은 서로를 믿지 못하고 분열되었다.</p>
+        <p>그 혼란 속에서 생긴 무리가 있었다. 바로 <strong>'어둠의 발톱단'.</strong></p>
+        <p>그들의 지도자는 푸른 눈의 검은 고양이와… 연관이 있었다.</p>
+        <p>검은 고양이는 시선을 피하며 말했다.</p>
+        <p><em>"난 과거의 죄를 돌이킬 수 없다. 하지만 지금은 너를 지켜야 할 이유가 있지."</em></p>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-bg="transform_part2-06.jpg">
+      <div class="story-card">
+        <span class="chapter">⚡ PART 6</span>
+        <h2>빛의 시련의 방</h2>
+        <p>왕국의 힘을 계승하려면 '빛의 시련'을 통과해야만 했다.</p>
+        <p>시련의 방은 고양이만을 위한 미로, 점프대, 빛의 함정으로 가득한 공간이었다.</p>
+        <p>주인공은 시련을 통과하며 자신이 평범한 고양이가 아니라는 것을 느꼈다.</p>
+        <p><strong>더 멀리 뛰고</strong></p>
+        <p><strong>어둠 속에서 냄새를 잡아내고</strong></p>
+        <p><strong>빛의 마법을 살짝 다룰 수 있게 되고</strong></p>
+        <p>시련의 마지막 순간, 주인공의 목걸이가 강하게 빛나면서</p>
+        <p>주인공의 눈동자가 잠시 <strong>은빛으로 변했다.</strong></p>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-bg="transform_part2-07.jpg">
+      <div class="story-card">
+        <span class="chapter">⚠️ PART 7</span>
+        <h2>왕국을 뒤흔드는 침투자</h2>
+        <p>왕국 전체에 갑자기 비상 종이 울렸다.</p>
+        <p><strong>"어둠의 발톱단이 침입했다!"</strong></p>
+        <p>검은 연기 같은 고양이 그림자들이 도시 곳곳에서 튀어나와</p>
+        <p>왕국의 구조물을 공격하기 시작했다.</p>
+        <p>초롱이 흑발톱단의 일원에게 잡힐 뻔했고,</p>
+        <p>주인공은 목걸이의 빛으로 그것을 막아냈다.</p>
+        <p>그러나 그 순간—</p>
+        <p><em>"찾았다."</em></p>
+        <p>검은 가면을 쓴 고양이가 주인공 앞에 나타났다.</p>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-bg="transform_part2-08.jpg">
+      <div class="story-card">
+        <span class="chapter">👑 PART 8</span>
+        <h2>'그림자군 왕자'의 진실</h2>
+        <p>가면 고양이의 이름은 <strong>카론(Caron).</strong></p>
+        <p>그의 목에는 주인공 목걸이와 똑같이 생긴 검은 반쪽 목걸이가 걸려 있었다.</p>
+        <p>카론이 충격적인 사실을 밝혔다.</p>
+        <p><em>"너는 빛의 계승자, 나는 그림자의 계승자다."</em></p>
+        <p>고양이 왕은 생전에 두 개의 힘을 모두 이어받을 존재를 기다렸지만</p>
+        <p>왕국의 분열로 인해 목걸이가 두 조각으로 나뉘어 버렸다.</p>
+        <p><em>"빛과 그림자가 합쳐져야 왕국이 다시 열린다.</em></p>
+        <p><em>하지만… 그때 누가 왕이 될까?"</em></p>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-bg="transform_part2-09.jpg">
+      <div class="story-card">
+        <span class="chapter">💥 PART 9</span>
+        <h2>왕국 붕괴의 시작</h2>
+        <p>카론과 어둠의 발톱단은 왕국 중심부의 빛의 수정탑을 공격하기 시작했다.</p>
+        <p>탑이 무너지기 시작하자 주인공은 큰 충격을 받았다.</p>
+        <p>그 순간, 시련에서 받은 은빛 힘이 주인공의 몸에서 폭발적으로 깨어났다.</p>
+        <p>주인공의 발밑에서 빛의 원형 문양이 생기고</p>
+        <p>하늘로 기둥처럼 뻗어 올라가 왕국을 지탱하기 시작했다.</p>
+        <p>초롱은 주인공의 변화에 감탄하며 말했다.</p>
+        <p><em>"네가… 진짜 왕국을 지킬 수 있는 존재인가 봐…"</em></p>
+        <p>그러나 카론은 <em>"아직 끝나지 않았다."</em> 며 그림자 속으로 사라졌다.</p>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-bg="transform_part2-10.jpg">
+      <div class="story-card">
+        <span class="chapter">🌑 PART 10</span>
+        <h2>그림자 왕국으로의 문이 열린다</h2>
+        <p>빛의 폭발이 끝난 뒤, 주인공의 목걸이는 더 은은한 빛을 내기 시작했다.</p>
+        <p>그러나 동시에 왕국 동굴 깊은 곳에서</p>
+        <p>검은 문양이 천천히 일어나며 새로운 거대한 문을 만들었다.</p>
+        <p>장로 아르모는 떨리는 목소리로 말했다.</p>
+        <p><em>"그곳이… 그림자 왕국으로 이어진 문이다.</em></p>
+        <p><em>카론은 너를 그곳으로 끌어들일 것이다."</em></p>
+        <p>초롱은 주인공 옆에서 말없이 고개를 끄덕이며 미리 결심을 한 듯 했다.</p>
+        <p>주인공은 목걸이를 움켜쥐고 눈을 감았다.</p>
+        <p>다음 모험의 장소는 정해져 있었다.</p>
+        <p><strong>빛의 왕국을 넘어, 그림자의 세계로.</strong></p>
+        <p style="text-align: center; margin-top: 30px; font-size: 20px; color: #9B59B6;">
+          <strong>— 시즌 2 끝 —</strong>
+        </p>
+        <div style="text-align: center; margin-top: 40px;">
+          <button onclick="location.href='/cat-transform/cat_transform_season3_quiz.html'" style="
+            background: linear-gradient(135deg, #9B59B6 0%, #E91E63 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(155, 89, 182, 0.3);
+            transition: all 0.3s ease;
+          " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(155, 89, 182, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(155, 89, 182, 0.3)'">
+            🐈 시즌3 관문으로 가기
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progressBar');
+    const navProgress = document.getElementById('navProgress');
+    const totalSections = sections.length;
+
+    // 스크롤 이벤트로 배경 이미지 및 카드 애니메이션
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // 프로그레스 바 업데이트
+      const scrollPercent = (scrollY / (documentHeight - windowHeight)) * 100;
+      progressBar.style.width = scrollPercent + '%';
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top;
+        const sectionHeight = rect.height;
+
+        // 카드 애니메이션
+        const card = section.querySelector('.story-card');
+        if (sectionTop < windowHeight * 0.75 && sectionTop > -sectionHeight * 0.5) {
+          card.classList.add('active');
+
+          // 네비게이션 프로그레스 업데이트
+          if (index > 0) {
+            navProgress.textContent = `PART ${index} / 10`;
+          }
+        }
+
+        // 배경 이미지 변경
+        if (sectionTop < windowHeight * 0.5 && sectionTop > -sectionHeight * 0.5) {
+          const bgImage = section.getAttribute('data-bg');
+          if (bgImage) {
+            mapContainer.style.backgroundImage = `url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/cat-transform-story/${bgImage})`;
+          }
+        }
+      });
+    });
+
+    // 홈으로 이동
+    function goHome() {
+      window.location.href = '/menu.html';
+    }
+
+    // 초기 로드 시 첫 번째 카드 활성화
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.intro-section .intro-content');
+      if (firstCard) {
+        firstCard.style.opacity = '1';
+      }
+    });
+  </script>
+</body>
+</html>

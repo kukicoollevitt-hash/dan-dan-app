@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>오답노트 - 모의고사 1회차</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* 배경 효과 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .quiz-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 750px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 닫기 버튼 */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f0f4ff;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #667eea;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        .close-btn:hover {
+            background: #667eea;
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .quiz-header h1 {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .quiz-header .gate-number {
+            font-size: 18px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .quiz-header .gate-info {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .question-info {
+            background: #f0f4ff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .question-info strong {
+            color: #667eea;
+        }
+
+        .question-info .your-answer {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .question-box {
+            background: #faf8f6;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            border-left: 5px solid #667eea;
+        }
+
+        .question-text {
+            font-size: 17px;
+            color: #333;
+            font-weight: 600;
+            line-height: 1.7;
+        }
+
+        .question-number-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .option-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateX(5px);
+        }
+
+        .option-btn.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .option-btn.correct {
+            border-color: #27ae60;
+            background: #27ae60;
+            color: white;
+        }
+
+        .option-btn.wrong {
+            border-color: #e74c3c;
+            background: #e74c3c;
+            color: white;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-message {
+            text-align: center;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-message.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .result-message.wrong {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        /* 해설 영역 */
+        .explanation-box {
+            background: #f8f9fa;
+            border-radius: 16px;
+            margin-top: 20px;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .explanation-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            padding: 14px 20px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .explanation-body {
+            padding: 20px;
+        }
+
+        .explanation-correct {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .explanation-correct-label {
+            font-weight: 700;
+            color: #2E7D32;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .explanation-correct-text {
+            color: #333;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .explanation-wrong {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #e53935;
+        }
+
+        .explanation-wrong-label {
+            font-weight: 700;
+            color: #c62828;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .explanation-wrong-text {
+            color: #333;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .next-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.4);
+        }
+
+        .congrats-container {
+            text-align: center;
+            animation: scaleIn 0.6s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .congrats-container h2 {
+            font-size: 42px;
+            margin-bottom: 20px;
+        }
+
+        .congrats-container p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .back-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 로딩 상태 */
+        .loading-container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f0f0f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* 오답 없음 상태 */
+        .no-wrong-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .no-wrong-container .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .no-wrong-container h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .no-wrong-container p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 25px 20px;
+                border-radius: 20px;
+            }
+            .quiz-header h1 {
+                font-size: 22px;
+            }
+            .question-text {
+                font-size: 15px;
+            }
+            .option-btn {
+                font-size: 14px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container" id="quizContainer">
+        <!-- 닫기 버튼 -->
+        <button class="close-btn" onclick="closeQuiz()" title="닫기">&#10005;</button>
+
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">오답 데이터를 불러오는 중...</p>
+        </div>
+    </div>
+
+    <script>
+        // ===== 전역 변수 =====
+        let wrongQuestions = [];   // 틀린 문제 배열
+        let currentIndex = 0;      // 현재 문제 인덱스
+        let selectedAnswer = null;
+        let answeredCorrectly = 0; // 맞춘 문제 수
+
+        // 정답 데이터 (1회차)
+        const correctAnswers = {
+            1: 1, 2: 3, 3: 1, 4: 3, 5: 4, 6: 5, 7: 3, 8: 1, 9: 4, 10: 4,
+            11: 5, 12: 2, 13: 3, 14: 5, 15: 2, 16: 3, 17: 2, 18: 2, 19: 3, 20: 1,
+            21: 5, 22: 2, 23: 1, 24: 5, 25: 2, 26: 2, 27: 5, 28: 5, 29: 4, 30: 1,
+            31: 3, 32: 5, 33: 5, 34: 4, 35: 2, 36: 3, 37: 4, 38: 2, 39: 3, 40: 4,
+            41: 1, 42: 4, 43: 2, 44: 4, 45: 4
+        };
+
+        // 문제 데이터 (문제 텍스트, 선택지, 해설)
+        const questionsData = {
+            1: {
+                text: '위 발표자의 말하기 방식으로 가장 적절한 것은?',
+                options: [
+                    '대비되는 발화를 실연하여 청중의 관심을 유도하고 있다.',
+                    '비언어적 표현을 사용하여 발표의 절차를 안내하고 있다.',
+                    '정보의 출처를 언급하여 청중의 궁금증을 해소하고 있다.',
+                    '같은 내용을 거듭 질문하여 청중의 답변을 끌어내고 있다.',
+                    '구체적인 통계를 제시하여 발표의 필요성을 부각하고 있다.'
+                ],
+                explanation: {
+                    correct: '발표자는 "어휘는 베리 시그니피컨트합니다."와 "어휘는 매우 중요합니다."라는 대비되는 발화를 사용하여 청중의 관심을 유도하고 있다.',
+                    wrong: '②~⑤는 발표 내용에서 찾아볼 수 없는 방식이다.'
+                }
+            },
+            2: {
+                text: '다음은 위 발표를 하기 위해 학생이 세운 계획이다. 발표에 반영되지 않은 것은?',
+                options: [
+                    '지난 시간에 배운 내용을 환기하고, 발표의 화제가 \'표현의 적절성\'임을 소개',
+                    '어휘와 관련하여 \'표현의 적절성\'의 개념 및 그 판단 기준을 밝히겠다',
+                    '\'표현의 적절성\'의 개념이 변하는 양상을 예시와 함께 분석',
+                    '문장과 관련하여 \'표현의 적절성\'의 개념 및 그 판단 기준을 밝히겠다',
+                    '발표 화제와 관련한 경험을 공유하며 발표를 마무리'
+                ],
+                explanation: {
+                    correct: '발표 계획 중 [전개] 부분에서 \'표현의 적절성\'의 개념이 변하는 양상을 예시와 함께 분석하겠다는 내용은 실제 발표에서 찾아볼 수 없다.',
+                    wrong: '①, ②, ④, ⑤는 모두 발표에서 확인할 수 있는 내용이다.'
+                }
+            },
+            3: {
+                text: '[A]에 들어갈 학생의 말로 가장 적절한 것은?',
+                options: [
+                    'ⓐ는 ⓑ와 달리 보조 용언을 써서 확신의 정도를 드러냈구나.',
+                    'ⓐ는 ⓑ와 달리 형용사를 활용하여 사태를 묘사하고 있구나.',
+                    'ⓐ와 ⓑ는 모두 의존명사를 활용하여 근거를 제시하고 있구나.',
+                    'ⓐ와 ⓑ는 모두 접속 부사를 활용하여 내용을 전환하고 있구나.',
+                    'ⓐ와 ⓑ는 모두 피동 표현을 활용하여 대상을 부각하고 있구나.'
+                ],
+                explanation: {
+                    correct: 'ⓐ와 ⓑ는 모두 각각 보조 용언 구성 \'-고 있다\'와 \'-게 되다\'를 사용하여 확신의 정도를 드러내고 있으므로, ⓐ는 ⓑ와 달리 보조 용언을 써서 확신의 정도를 드러냈다는 것은 적절하지 않다.',
+                    wrong: '②~⑤도 ⓐ와 ⓑ의 표현 특성을 정확히 설명하지 못한다.'
+                }
+            },
+            4: {
+                text: '토의에서 \'사회자\'의 역할로 가장 적절한 것은?',
+                options: [
+                    '토의자들의 발언 내용을 요약하여 정리하고 있다.',
+                    '토의자들에게 질문을 던져 논의를 이끌어 내고 있다.',
+                    '토의자들의 발언 순서를 조정하여 발언 기회를 분배하고 있다.',
+                    '토의자들 간의 갈등을 중재하여 합의를 도출하고 있다.',
+                    '토의의 주제와 관련된 배경지식을 토의자들에게 제공하고 있다.'
+                ],
+                explanation: {
+                    correct: '토의자들의 발언 순서를 조정하여 발언 기회를 분배하는 것은 사회자의 중요한 역할 중 하나이지만, 제시된 토의에서는 이와 관련 있는 내용을 찾아볼 수 없다.',
+                    wrong: '사회자는 토의자들에게 질문을 던져 논의를 이끌어 내고 있다.'
+                }
+            },
+            5: {
+                text: '토의 내용을 이해한 것으로 가장 적절한 것은?',
+                options: [
+                    '\'학생 1\'은 계단 경사를 완만하게 하자는 대안의 근거로 안전 법규를 제시하고 있다.',
+                    '\'학생 2\'는 난간 보수가 시급하다는 점을 들어 \'학생 1\'의 대안에 반대하고 있다.',
+                    '\'학생 3\'은 사고 사례를 언급하며 \'학생 2\'의 대안이 실효성이 있다고 주장하고 있다.',
+                    '\'학생 4\'는 \'학생 1\'이 제시한 대안의 실행 가능성이 높다는 점에 공감하고 있다.',
+                    '\'학생 4\'는 공간상의 문제를 들어 계단 재시공이 어렵다고 말하고 있다.'
+                ],
+                explanation: {
+                    correct: '\'학생 4\'는 \'학생 1\'이 제시한 대안의 실행 가능성이 높다는 점에 공감하는 것이 아니라, 그 대안의 취지에 동의하고 있다. 오히려 \'학생 4\'는 공간상의 문제로 계단 재시공이 어려우니 현재의 난간을 보수하는 것은 어떠냐는 대안을 제시하고 있다.',
+                    wrong: '⑤ \'학생 4\'는 공간상의 문제를 들어 계단 재시공이 어렵다고 말하고 있다.'
+                }
+            },
+            6: {
+                text: '토의에서 자료를 활용한 것으로 가장 적절한 것은?',
+                options: [
+                    '\'학생 1\'은 계단 경사도 비교 자료를 활용하여 현 계단의 위험성을 입증하고 있다.',
+                    '\'학생 2\'는 난간 설치 기준 자료를 활용하여 현 난간의 문제점을 지적하고 있다.',
+                    '\'학생 3\'은 사고 통계 자료를 활용하여 시설 개선의 시급성을 강조하고 있다.',
+                    '\'학생 4\'는 건물 도면 자료를 활용하여 계단 재시공의 어려움을 설명하고 있다.',
+                    '\'사회자\'는 예산 자료를 활용하여 토의자들의 대안을 비교 평가하고 있다.'
+                ],
+                explanation: {
+                    correct: '제시된 토의에서 \'학생 4\'가 건물 도면 자료를 활용하는 내용은 나타나지 않지만, \'학생 4\'가 공간상의 문제를 언급한 것은 이와 관련이 있다.',
+                    wrong: '①~③, ⑤에서 언급한 자료 활용은 토의에서 확인되지 않는다.'
+                }
+            },
+            7: {
+                text: '윗글을 바탕으로 <보기>를 이해한 내용으로 적절하지 않은 것은?',
+                options: [
+                    'ⓐ에서 화자는 청자의 체면을 고려하여 부탁을 완곡하게 표현하고 있다.',
+                    'ⓑ에서 화자는 청자의 부담을 덜어 주려고 요청의 강도를 낮추고 있다.',
+                    'ⓒ에서 화자는 공손성의 격률을 위반하여 청자에게 불쾌감을 주고 있다.',
+                    'ⓓ에서 화자는 상대를 높이는 표현을 사용하여 격식을 갖추고 있다.',
+                    'ⓔ에서 화자는 청자와의 친밀감을 드러내며 편안한 분위기를 조성하고 있다.'
+                ],
+                explanation: {
+                    correct: 'ⓒ에서 화자는 공손성의 격률을 위반하여 청자에게 불쾌감을 주는 것이 아니라, 적절한 공손 표현을 사용하고 있다.',
+                    wrong: '①, ②, ④, ⑤는 각 상황에서의 화자의 표현 방식을 적절하게 설명하고 있다.'
+                }
+            },
+            8: {
+                text: '윗글의 내용과 일치하지 않는 것은?',
+                options: [
+                    '표현의 적절성은 절대적인 기준에 따라 판단된다.',
+                    '어휘의 적절성은 상황 맥락에 따라 달라질 수 있다.',
+                    '문장의 적절성은 문법 규칙에 따라 판단할 수 있다.',
+                    '표현의 적절성 판단에는 사회문화적 요인이 작용한다.',
+                    '언어 사용의 적절성은 의사소통 상황과 밀접한 관련이 있다.'
+                ],
+                explanation: {
+                    correct: '글에서는 표현의 적절성이 상황 맥락이나 사회문화적 요인에 따라 달라질 수 있다고 설명하고 있으므로, 절대적인 기준에 따라 판단된다는 것은 글의 내용과 일치하지 않는다.',
+                    wrong: '②~⑤는 글의 내용과 일치하는 설명이다.'
+                }
+            },
+            9: {
+                text: '윗글에서 제시한 \'어휘의 적절성\'과 관련된 설명으로 적절하지 않은 것은?',
+                options: [
+                    '같은 어휘라도 사용되는 상황에 따라 적절성이 달라질 수 있다.',
+                    '어휘의 적절성 판단에는 청자에 대한 고려가 반영된다.',
+                    '어휘 선택 시 화자와 청자의 관계를 고려해야 한다.',
+                    '어휘의 적절성은 어휘의 사전적 의미에 의해서만 결정된다.',
+                    '상황에 따라 비속어도 적절한 표현이 될 수 있다.'
+                ],
+                explanation: {
+                    correct: '어휘의 적절성은 사전적 의미뿐만 아니라 상황 맥락, 화자와 청자의 관계 등 다양한 요인에 의해 결정된다.',
+                    wrong: '①~③, ⑤는 어휘의 적절성과 관련된 적절한 설명이다.'
+                }
+            },
+            10: {
+                text: '윗글에서 제시한 \'문장의 적절성\'과 관련된 설명으로 적절하지 않은 것은?',
+                options: [
+                    '문장의 적절성 판단에는 문법 규칙이 중요한 기준이 된다.',
+                    '문장의 적절성은 문맥에 따라 달라질 수 있다.',
+                    '문장 구조가 복잡해도 의미 전달이 명확하면 적절하다.',
+                    '문장의 적절성은 문법적 정확성에 의해서만 결정된다.',
+                    '상황에 맞는 문체 선택도 문장의 적절성에 영향을 미친다.'
+                ],
+                explanation: {
+                    correct: '문장의 적절성은 문법적 정확성뿐만 아니라 문맥, 상황, 문체 등 다양한 요인에 의해 결정된다.',
+                    wrong: '①~③, ⑤는 문장의 적절성과 관련된 적절한 설명이다.'
+                }
+            }
+            // 11번 이후 문제들은 필요에 따라 추가...
+        };
+
+        // 기본 문제 데이터 생성 (데이터가 없는 문제용)
+        function getDefaultQuestionData(num) {
+            return {
+                text: `${num}번 문제`,
+                options: ['선택지 1', '선택지 2', '선택지 3', '선택지 4', '선택지 5'],
+                explanation: {
+                    correct: `${num}번 문제의 정답 해설입니다.`,
+                    wrong: ''
+                }
+            };
+        }
+
+        // ===== 닫기 버튼 =====
+        function closeQuiz() {
+            if (confirm('오답노트를 종료하시겠습니까?')) {
+                goBack();
+            }
+        }
+
+        // ===== 뒤로가기 =====
+        function goBack() {
+            window.location.href = '/mock_exam_dashboard.html';
+        }
+
+        // ===== 오답 데이터 로드 =====
+        async function loadWrongAnswers() {
+            try {
+                // mockExamUser에서 사용자 정보 가져오기
+                const mockExamUser = localStorage.getItem('mockExamUser');
+                if (!mockExamUser) {
+                    showNoWrongState('로그인이 필요합니다', '오답노트를 보려면 먼저 로그인해주세요.');
+                    return;
+                }
+
+                const user = JSON.parse(mockExamUser);
+                console.log('사용자 정보:', user);
+
+                // 서버에서 시험 결과 가져오기
+                const response = await fetch(`/api/mock-exam/results/${user._id}?examId=korean_mock_1`);
+                const data = await response.json();
+                console.log('API 응답:', data);
+
+                if (!data.ok || !data.results || data.results.length === 0) {
+                    showNoWrongState('시험 기록이 없습니다', '먼저 모의고사를 응시하고 채점해주세요.');
+                    return;
+                }
+
+                // 가장 최근 결과 사용
+                const result = data.results[0];
+                console.log('시험 결과:', result);
+
+                // 틀린 문제 추출
+                const answers = result.answers || {};
+                wrongQuestions = [];
+
+                for (let i = 1; i <= 45; i++) {
+                    const userAnswer = answers[i] ? parseInt(answers[i]) : 0;
+                    const correctAnswer = correctAnswers[i];
+
+                    if (!userAnswer || userAnswer !== correctAnswer) {
+                        wrongQuestions.push({
+                            questionNum: i,
+                            userAnswer: userAnswer,
+                            correctAnswer: correctAnswer,
+                            data: questionsData[i] || getDefaultQuestionData(i)
+                        });
+                    }
+                }
+
+                if (wrongQuestions.length === 0) {
+                    showNoWrongState('축하합니다!', '틀린 문제가 없습니다. 모든 문제를 맞추셨네요!');
+                    return;
+                }
+
+                renderQuiz();
+            } catch (err) {
+                console.error('오답 데이터 로드 실패:', err);
+                showNoWrongState('오류 발생', '오답 데이터를 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // ===== 오답 없음 상태 표시 =====
+        function showNoWrongState(title, message) {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = `
+                <div class="no-wrong-container">
+                    <div class="icon">${title === '축하합니다!' ? '&#127881;' : '&#128221;'}</div>
+                    <h2>${title}</h2>
+                    <p>${message}</p>
+                    <button class="back-btn" onclick="goBack()">&#8592; 대시보드로 돌아가기</button>
+                </div>
+            `;
+        }
+
+        // ===== 퀴즈 렌더링 =====
+        function renderQuiz() {
+            const container = document.getElementById('quizContainer');
+            const question = wrongQuestions[currentIndex];
+            const qNum = currentIndex + 1;
+            const total = wrongQuestions.length;
+
+            const choiceSymbols = ['&#9312;', '&#9313;', '&#9314;', '&#9315;', '&#9316;']; // ①②③④⑤
+
+            container.innerHTML = `
+                <button class="close-btn" onclick="closeQuiz()" title="닫기">&#10005;</button>
+
+                <div class="quiz-header">
+                    <h1>&#128221; 오답노트</h1>
+                    <p class="gate-number">${total}개 오답 중 ${qNum}번째</p>
+                    <p class="gate-info">틀린 문제를 다시 풀어보세요</p>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: ${(qNum / total) * 100}%"></div>
+                </div>
+
+                <div class="question-info">
+                    <strong>${question.questionNum}번 문제</strong> |
+                    원래 선택: <span class="your-answer">${question.userAnswer ? choiceSymbols[question.userAnswer - 1] : '미응답'}</span> |
+                    정답: <strong>${choiceSymbols[question.correctAnswer - 1]}</strong>
+                </div>
+
+                <div class="question-box">
+                    <div class="question-number-badge">${question.questionNum}번</div>
+                    <p class="question-text">${question.data.text}</p>
+                </div>
+
+                <div class="options-container">
+                    ${question.data.options.map((option, index) => `
+                        <button class="option-btn" onclick="selectAnswer(${index})">
+                            ${choiceSymbols[index]} ${option}
+                        </button>
+                    `).join('')}
+                </div>
+
+                <button class="submit-btn" onclick="submitAnswer()" disabled>
+                    답안 제출
+                </button>
+            `;
+        }
+
+        // ===== 답안 선택 =====
+        function selectAnswer(index) {
+            selectedAnswer = index;
+
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            buttons[index].classList.add('selected');
+
+            document.querySelector('.submit-btn').disabled = false;
+        }
+
+        // ===== 답안 제출 =====
+        function submitAnswer() {
+            const question = wrongQuestions[currentIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            const submitBtn = document.querySelector('.submit-btn');
+
+            buttons.forEach(btn => btn.disabled = true);
+            submitBtn.disabled = true;
+
+            // 정답 인덱스 (1~5 -> 0~4로 변환)
+            const correctIndex = question.correctAnswer - 1;
+
+            if (selectedAnswer === correctIndex) {
+                buttons[selectedAnswer].classList.remove('selected');
+                buttons[selectedAnswer].classList.add('correct');
+                answeredCorrectly++;
+                showResult(true, question);
+            } else {
+                buttons[selectedAnswer].classList.remove('selected');
+                buttons[selectedAnswer].classList.add('wrong');
+                buttons[correctIndex].classList.add('correct');
+                showResult(false, question);
+            }
+        }
+
+        // ===== 결과 표시 =====
+        function showResult(isCorrect, question) {
+            const container = document.getElementById('quizContainer');
+
+            // 결과 메시지
+            const resultMsg = document.createElement('div');
+            resultMsg.className = `result-message ${isCorrect ? 'correct' : 'wrong'}`;
+            resultMsg.innerHTML = isCorrect
+                ? '&#127881; 정답입니다!'
+                : '&#10060; 틀렸습니다. 해설을 확인해보세요.';
+
+            const header = container.querySelector('.quiz-header');
+            header.insertAdjacentElement('afterend', resultMsg);
+
+            // 해설 표시
+            const explanation = question.data.explanation;
+            const explanationBox = document.createElement('div');
+            explanationBox.className = 'explanation-box';
+            explanationBox.innerHTML = `
+                <div class="explanation-header">&#128218; 해설</div>
+                <div class="explanation-body">
+                    <div class="explanation-correct">
+                        <div class="explanation-correct-label">&#10003; 정답 해설</div>
+                        <div class="explanation-correct-text">${explanation.correct}</div>
+                    </div>
+                    ${explanation.wrong ? `
+                    <div class="explanation-wrong">
+                        <div class="explanation-wrong-label">&#10007; 오답 피하기</div>
+                        <div class="explanation-wrong-text">${explanation.wrong}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            const optionsContainer = container.querySelector('.options-container');
+            optionsContainer.insertAdjacentElement('afterend', explanationBox);
+
+            // 다음 버튼 추가
+            const submitBtn = container.querySelector('.submit-btn');
+            submitBtn.style.display = 'none';
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'next-btn';
+            nextBtn.innerHTML = currentIndex < wrongQuestions.length - 1
+                ? '다음 문제 &#8594;'
+                : '결과 보기 &#127942;';
+            nextBtn.onclick = goToNext;
+            submitBtn.insertAdjacentElement('afterend', nextBtn);
+        }
+
+        // ===== 다음 문제로 이동 =====
+        function goToNext() {
+            currentIndex++;
+            selectedAnswer = null;
+
+            if (currentIndex >= wrongQuestions.length) {
+                showCongratulations();
+            } else {
+                renderQuiz();
+            }
+        }
+
+        // ===== 축하 화면 =====
+        function showCongratulations() {
+            const container = document.getElementById('quizContainer');
+            const total = wrongQuestions.length;
+            const percentage = Math.round((answeredCorrectly / total) * 100);
+
+            let message = '';
+            if (percentage === 100) {
+                message = '모든 문제를 맞추셨습니다!<br>완벽한 복습이었어요!';
+            } else if (percentage >= 70) {
+                message = `${total}개 중 ${answeredCorrectly}개를 맞추셨습니다.<br>훌륭한 복습이었어요!`;
+            } else if (percentage >= 50) {
+                message = `${total}개 중 ${answeredCorrectly}개를 맞추셨습니다.<br>조금 더 복습이 필요해요.`;
+            } else {
+                message = `${total}개 중 ${answeredCorrectly}개를 맞추셨습니다.<br>다시 한번 복습해보세요.`;
+            }
+
+            container.innerHTML = `
+                <div class="congrats-container">
+                    <h2>&#127942;</h2>
+                    <p>
+                        <strong>오답노트 완료!</strong><br><br>
+                        ${message}
+                    </p>
+                    <button class="retry-btn" onclick="retryWrongNotes()">
+                        &#128260; 다시 풀기
+                    </button>
+                    <button class="back-btn" onclick="goBack()">
+                        &#128218; 대시보드로 돌아가기
+                    </button>
+                </div>
+            `;
+        }
+
+        // ===== 다시 풀기 =====
+        function retryWrongNotes() {
+            currentIndex = 0;
+            selectedAnswer = null;
+            answeredCorrectly = 0;
+            renderQuiz();
+        }
+
+        // ===== 페이지 로드 =====
+        window.addEventListener('DOMContentLoaded', () => {
+            loadWrongAnswers();
+        });
+
+        // ESC 키로 뒤로가기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (confirm('오답노트를 종료하고 대시보드로 돌아가시겠습니까?')) {
+                    goBack();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

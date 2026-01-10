@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 보완학습 - 현대소설</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nanum Myeongjo', '바탕', Batang, serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+            padding-top: 45px;
+        }
+
+        /* 상단 학생 정보 바 */
+        .student-info-display {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .student-info-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 5px;
+        }
+
+        .info-item strong {
+            color: #bdc3c7;
+        }
+
+        /* 타이머 */
+        .exam-timer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .exam-timer.warning {
+            background: rgba(255, 193, 7, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        .exam-timer.danger {
+            background: rgba(244, 67, 54, 0.4);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* 페이지 */
+        .page {
+            width: 100%;
+            max-width: 900px;
+            min-height: auto;
+            padding: 12mm 10mm 15mm 10mm;
+            margin: 0 auto;
+            background: #fff;
+            position: relative;
+        }
+
+        .page-footer {
+            text-align: center;
+            font-size: 10pt;
+            color: #333;
+            margin-top: 10mm;
+            padding-top: 5mm;
+        }
+
+        /* 헤더 */
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8mm;
+            position: relative;
+        }
+
+        .session-badge {
+            position: absolute;
+            left: 0;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 11pt;
+            font-weight: 600;
+        }
+
+        .title {
+            font-size: 22pt;
+            font-weight: 700;
+            letter-spacing: 4px;
+        }
+
+        .page-number {
+            position: absolute;
+            right: 0;
+            font-size: 18pt;
+            font-weight: 700;
+        }
+
+        .header-divider {
+            border-top: 1px solid #000;
+            margin-bottom: 5mm;
+        }
+
+        /* 2단 레이아웃 */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .column {
+            text-align: justify;
+            padding: 0 4mm;
+        }
+
+        .column:first-child {
+            border-right: 1px solid #000;
+            padding-left: 0;
+        }
+
+        .column:last-child {
+            padding-right: 0;
+        }
+
+        /* 문제 범위 안내 */
+        .question-range {
+            background: #f0f0f0;
+            padding: 3mm 4mm;
+            margin-bottom: 5mm;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+
+        /* 지문 박스 */
+        .passage-box {
+            border: 1px solid #000;
+            padding: 4mm;
+            margin-bottom: 5mm;
+            text-align: justify;
+            font-size: 9.5pt;
+            line-height: 1.7;
+        }
+
+        .passage-box .label {
+            font-weight: 700;
+            margin-bottom: 2mm;
+        }
+
+        .passage-box p {
+            margin-bottom: 2mm;
+            text-indent: 0;
+        }
+
+        .passage-box .poem-line {
+            margin-bottom: 0.5mm;
+        }
+
+        .passage-box .poem-line.bold {
+            font-weight: 700;
+        }
+
+        .passage-box .note {
+            font-size: 8.5pt;
+            margin-top: 3mm;
+            padding-top: 2mm;
+            border-top: 1px dashed #999;
+        }
+
+        .passage-box .note-item {
+            margin-bottom: 1mm;
+        }
+
+        /* 문제 */
+        .question {
+            margin-bottom: 5mm;
+        }
+
+        .question-number {
+            font-size: 13pt;
+            font-weight: 900;
+            margin-right: 2mm;
+        }
+
+        .question-text {
+            margin-bottom: 3mm;
+            font-weight: 700;
+        }
+
+        /* 선택지 */
+        .choices {
+            margin-left: 4mm;
+        }
+
+        .choice {
+            display: flex;
+            margin-bottom: 1.5mm;
+            text-align: justify;
+            padding: 2mm 3mm;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .choice:hover {
+            background-color: rgba(0, 100, 255, 0.08);
+        }
+
+        .choice.selected {
+            background-color: rgba(0, 100, 255, 0.35);
+        }
+
+        .choice-number {
+            min-width: 1.5em;
+            margin-right: 1mm;
+        }
+
+        /* 밑줄 */
+        .underline {
+            text-decoration: underline;
+        }
+
+        /* 볼드 처리 */
+        .bold {
+            font-weight: 700;
+        }
+
+        /* 동그라미 문자 */
+        .circled {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.3em;
+            height: 1.3em;
+            border: 1px solid #000;
+            border-radius: 50%;
+            font-size: 0.85em;
+            margin: 0 1px;
+        }
+
+        /* 채점 결과 배너 */
+        .exam-result-banner {
+            display: none;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin: 10px 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .result-banner-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 25px;
+        }
+
+        .result-banner-score {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .result-banner-score span {
+            color: #f093fb;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .result-banner-correct {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .result-banner-time {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .result-banner-time span {
+            color: #4facfe;
+            font-weight: 700;
+        }
+
+        /* 하단 고정 버튼 */
+        .bottom-fixed-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .bottom-fixed-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 180px;
+        }
+
+        .btn-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .btn-grade:hover {
+            opacity: 0.9;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+        }
+
+        .bottom-spacer {
+            height: 80px;
+        }
+
+        /* 정답 표시 스타일 */
+        .choice.correct-answer {
+            background-color: #c8f7c5 !important;
+        }
+
+        .choice.wrong-answer {
+            background-color: #ffcdd2 !important;
+        }
+
+        .correct-mark {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 채점 완료 시 선지 클릭 비활성화 */
+        body.graded .choice {
+            pointer-events: none;
+        }
+        body.graded .choice.correct-answer {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* 해설 팝업 */
+        .explanation-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+
+        .explanation-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .explanation-popup-header {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explanation-popup-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .explanation-popup-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .explanation-popup-body {
+            padding: 20px;
+        }
+
+        .explanation-correct {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .explanation-correct-label {
+            color: #2E7D32;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .explanation-correct-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* 확대/축소 컨트롤 */
+        .zoom-controls {
+            position: fixed;
+            top: 60px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover {
+            background: #f0f0f0;
+        }
+        .zoom-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.95);
+        }
+        .zoom-level {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+            padding: 2px 0;
+        }
+        .zoom-btn-reset {
+            font-size: 12px;
+            background: #667eea;
+            color: #fff;
+        }
+        .zoom-btn-reset:hover {
+            background: #5a6fd6;
+        }
+
+        /* 펜 도구 컨트롤 */
+        .pen-controls {
+            position: fixed;
+            top: 220px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .pen-tools {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        .pen-controls.collapsed .pen-tools {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .pen-toggle-collapse {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-toggle-collapse:hover {
+            background: #5a6fd6;
+        }
+        .pen-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-btn:hover {
+            background: #f0f0f0;
+        }
+        .pen-btn:active {
+            transform: scale(0.95);
+        }
+        .pen-btn.active {
+            background: #667eea;
+            color: #fff;
+        }
+        .pen-btn.eraser-btn.active {
+            background: #ff6b6b;
+            color: #fff;
+        }
+        .pen-color-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            margin: 2px auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pen-color-btn:hover {
+            transform: scale(1.1);
+        }
+        .pen-color-btn.active {
+            border-color: #333;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+        }
+        .pen-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 0;
+        }
+
+        /* 드로잉 캔버스 */
+        #drawingCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 500;
+            pointer-events: none;
+            touch-action: none;
+        }
+        #drawingCanvas.drawing-mode {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        #drawingCanvas.eraser-mode {
+            pointer-events: auto;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="white" stroke="gray" stroke-width="2"/></svg>') 10 10, auto;
+        }
+        #drawingCanvas.pan-mode {
+            pointer-events: auto;
+            cursor: grab;
+        }
+        #drawingCanvas.pan-mode.panning {
+            cursor: grabbing;
+        }
+        .pen-btn.pan-btn.active {
+            background: #43a047;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <!-- 드로잉 캔버스 -->
+    <canvas id="drawingCanvas"></canvas>
+
+    <!-- 펜 도구 컨트롤 -->
+    <div class="pen-controls" id="penControls">
+        <button class="pen-toggle-collapse" id="penCollapseBtn" onclick="togglePenCollapse()" title="펜 도구 접기/펼치기">▲</button>
+        <div class="pen-tools">
+            <div class="pen-divider"></div>
+            <button class="pen-btn" id="penToggleBtn" onclick="togglePenMode()" title="펜 모드">🖊️</button>
+            <div class="pen-divider"></div>
+            <div class="pen-color-btn active" style="background: #e53935;" data-color="#e53935" onclick="setPenColor('#e53935')"></div>
+            <div class="pen-color-btn" style="background: #1e88e5;" data-color="#1e88e5" onclick="setPenColor('#1e88e5')"></div>
+            <div class="pen-color-btn" style="background: #333;" data-color="#333" onclick="setPenColor('#333')"></div>
+            <div class="pen-divider"></div>
+            <button class="pen-btn eraser-btn" id="eraserBtn" onclick="toggleEraserMode()" title="지우개">🧹</button>
+            <button class="pen-btn pan-btn" id="panBtn" onclick="togglePanMode()" title="손으로 이동">🖐️</button>
+            <div class="pen-divider"></div>
+            <button class="pen-btn" onclick="clearCanvas()" title="전체 지우기">🗑️</button>
+        </div>
+    </div>
+
+    <!-- 확대/축소 컨트롤 -->
+    <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+        <button class="zoom-btn zoom-btn-reset" onclick="zoomReset()">맞춤</button>
+    </div>
+
+    <!-- 상단 학생 정보 바 -->
+    <div class="student-info-display">
+        <div class="student-info-left">
+            <button class="home-btn" onclick="goBack()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <div class="info-item">
+                <strong>학교:</strong>
+                <span id="studentSchool">-</span>
+            </div>
+            <div class="info-item">
+                <strong>학년:</strong>
+                <span id="studentGrade">-</span>
+            </div>
+            <div class="info-item">
+                <strong>이름:</strong>
+                <span id="studentName">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 채점 결과 배너 -->
+    <div class="exam-result-banner" id="resultBanner">
+        <div class="result-banner-content">
+            <div class="result-banner-grade">채점 완료</div>
+            <div class="result-banner-score"><span id="bannerScore">0</span>점</div>
+            <div class="result-banner-correct">(<span id="bannerCorrect">0</span>/7 정답)</div>
+        </div>
+    </div>
+
+    <div class="exam-wrapper">
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">현대소설</div>
+                <div class="page-number">1</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <div class="question-range">【1~7】 다음 글을 읽고 물음에 답하시오.</div>
+
+            <!-- 통합 지문 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">"김 기사장의 인격이나 기술을 우리 사에서는 믿고 맡기고 있었소. 한 회사라는 것은 그 회사의 사업을 위주로 해서 사람을 쓴다는 것은 두말도 할 필요 없겠지요. 김 기사는 우리 회사가 환도 후 재건에 있어서 가장 큰 공로를 세운 사람이라고 생각하고 있소. 그러나 금년 삼월에 들어 발전기와 제23호 인쇄기의 고장은 우리 <span class="bold">회사의 치명적인 타격</span>이었소. 이렇게 되면 회사에서는 그 기계를 다루는 기사장의 책임으로 돌리지 않을 수 없소. 기사라는 것은 기계의 고장을 사전에 발견하는 것이라, 아니 고장이 나지 않게 하는 것이 제일 큰 직책이라고 회사에서는 생각하고 있소. 한두 번이 아닌 고장의 수리가 이삼일이 멀다 해서 또 고장 또 고장이라면 결국 기사는 고장의 원인을 모르는 것이라고 해석하지 않을 수 없겠지요. 그 책임을 기사장이 져야 한다면 현명한 기사장은 자기 처신을 어떻게 해야 한다는 것은 여기서 민망한 말을 하지 않아도 잘 이해해 줄 것이라고 아오. <span class="underline">ⓐ회사의 고충을……"</span></p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">"네 알았습니다."</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">"이해해 주어서 고맙소."</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">기사장은 <span class="underline">㉠공장장실</span>에서 사장의 이 말을 듣고 나와 전기실 자기 의자에 앉아 침울한 생각에 자기 자신을 견잡을 수 없었다. 기사로서의 패배감이 머리를 쳤다. 그러나 사직원을 썼다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">기사장으로서 사고 전에 고장을 발견하지 못하였다는 윤리의 세계, 그는 이것만을 생각했다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">우리나라 전기 사정은 공장마다 자가 발전기를 놓아야 하는 현실이다. 이 공장의 총마력은 백 마력이 조금 넘는다. 야간 조업과 정전에 대비해서 자가 발전기를 설비하지 않을 수 없었다. 회사에서는 막대한 금액으로 100kW의 출력 발전기를 수입했다. 사실 이렇게 되면은 제2종 전기 기사를 채용하여야 하는 것이다. 그러나 회사에서는 기사를 채용하지 않고 기사장의 전기 기술을 믿는다고 하며 전기실의 책임도 김명학 기사장에게 맡긴다는 것이었다. 그는 하는 수 없이 전기실 책임도 맡기는 말았으나 <span class="bold">전기</span></p>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div style="padding-left: 4mm;">
+                    <p style="margin-bottom: 2mm;"><span class="bold">에 대해서는 기계과 출신으로서의 상식밖에 없다는 것</span>을 자기 자신이 잘 알고 있었다. 그러나 인쇄 공장의 요만한 전기 시설쯤은 그의 기술로써 감당 못할 바도 아니었다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">전기 기계에 있어서 우기(雨期)라는 것은 가장 고장이 나기 쉬운 시기다. 금년따라 교과서 인쇄기(期)에 눈비가 그치지 않는 우기를 만나 습기로 인한 것인지 모르나 발전기와 인쇄기 모터에 고장만 났다. 하루는 단상교류(單相交流)로 인해서 인쇄기의 모터들이 우우 하는 비명을 지르며 파란 연기를 내며 모터의 코일이 타버리고 말았다. 이 수리는 즉석에서 고쳐지는 것은 아니었다. 모터 수리 공장 직공들을 불러 오셨으나 사흘이 걸렸다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">사장과 공장장은 김명학 씨만을 원망하는 것 같았다. 왜 고장이 일어날 것을 미리 발견하지 못했느냐고 했다. 그럴 때마다 동력의 삼상교류(三相交流)의 원칙을 설명하고, 공장 밖에서 합선이 된 것으로 어쩔 수 없는 고장이라고 변명했으나, 사장과 공장장은 구구한 그의 변명으로만 생각하는 것 같았다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">이러한 고장이 일어난 얼마 후에, 또다시 발전기의 슬리플링과 인슐레이션의 상태가 좋지 않았던지 그것이 또 타 버리고 말았다. 그는 그날 밤을 밝혀서 수리를 완성했다. 그는 고장의 원인을 과열로 인한 고장이 아닌가 생각했다. 이튿날 협소한 발전기실의 냉각을 위해서 큰 창을 두 개나 내게 했다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">한데 그 고장의 수리가 일주일도 못 되었는데 또 그것이 타 버리고 말았다. 그는 야간 종업을 싫어했다. 그날 조수에게 맡기고 여섯 시 정각에 집으로 돌아갔다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">그날 밤에 일어난 것이었다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">갑자기 때 아닌 모진 바람에 눈비가 뿌렸다. 그 발전기실의 통풍창으로 휘날려 들어간 눈비는 발전기를 녹인 모양이었다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">조수는 발전기실에 무엇이 일어났는지도 모르고 전기실 의자에 기대어 졸고 있다가 발전기가 완전히 타 버린 후에야 당황해했다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">기사 김명학 씨는 <span class="bold">성심성의를 다해서 기계와 살아왔</span>으나 기계는 기계대로 고장만 냈다. 그리고 <span class="bold">기계</span></p>
+                </div>
+            </div>
+            <div class="page-footer">- 1 -</div>
+        </div>
+
+        <!-- 2페이지 -->
+        <div class="page">
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <p style="margin-bottom: 2mm;">는 김 기사장을 <span class="bold">면직케</span> 했다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">김명학 씨는 사직원을 쓰고 의자에서 일어나 인쇄 공장으로 들어가 제1호기에서부터 32호까지 하나하나 바라보며, 이 인쇄기의 고장은 어디에서 나고, 저 인쇄기는 어디가 약하고…… 직공들이 인사하는 것도 모르고 기계만을 응시하며 지나갔다. 제1, 제2, 제3, 제4, 제5 기계실을 빙 돈 후 출입구에 서서 인쇄기를 바라볼 때, 그는 그 <span class="bold">인쇄기들</span>이 움직이는 괴물처럼 보였다. 또 <span class="bold">자기를 덮칠 것같이 노려보고 있는 것 같</span>았다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">그는 <span class="bold">강한 고독</span>을 느꼈다. 공허한 가슴을 느꼈다. 매일같이 매만지고 바라보던 저 인쇄기들을 다시 대하지 못한다는 것으로 이렇게 차가운 고독이 절박해 오는 것일까.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">이 공장의 일체가 자기에게 적의를 갖고 자기를 조소하고 자기와는 무관(無關)이라는 것이 이렇게도 자기를 공허하게 하는 것일까.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">그는 사직원을 내고 모자를 들고 나오며, 그는 자기의 이 시간을 무슨 행동으로써 자기의 공허한 가슴을 메우려는 충동이 있었다. 그러나 <span class="bold">아무것도 할 수 없는 공허한 시간</span>이 자기를 싸고 있다는 것을 느꼈다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">[중략 부분 줄거리] 일자리를 알아보기 위해 외출했던 김명학은 귀가하던 중, 모두 똑같이 생긴 주택들 사이에서 자기 집을 착각해 다른 집에 들어간다. 이에 김명학은 집주인의 신고로 유치장에서 하룻밤을 보낸 후 아내와 함께 귀가한다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">눈을 감고 걷던 김명학 씨는 육십 미터쯤에서 눈을 떴다. 틀림없는 <span class="underline">㉡자기 집</span> 앞이었다. 그는 현관에 들어가 옷저고리를 벗어던지고 곁간으로 나가 삽을 들고 나오는 것이었다. 그리고 길가에서 현관으로 들어가는 뜰길에 발자국을 내어놓고 그 발자국 하나 하나를 파내는 것이었다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">아내는 보다 못해,</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">"여보, 왜 이러세요, 왜 이래요."</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">"왜 이러긴 뭐가 왜 이래."</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">그는 곁간 담 밑에 가서 벽돌을 안고 왔다. 벽돌을 수없이 날라 놓고 그 발자국 구멍에 벽돌 돌씩을 가지런히 놓고 발돌옴길을 만드는 것이었다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">아내는 무슨 영문인지 모르고 이러한 남편이 슬프게만 보였다.</p>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div style="padding-left: 4mm;">
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">"여보, 당신, 정말 이게 뭐예요. 사람이 돌기도 한다더니 정말 돌았수?"</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">"돌아? 누가…… <span class="bold">돌지 않기 위해</span>서 이렇게 해 놓는 거야."</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">그는 발돌옴길이 되자 몇 번이고 그 <span class="bold">발돌옴길을 걸어 본다</span>. 또 눈을 감고 걸어 본다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">아내는 남편이 가엾었다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">김명학 씨는 다시 부엌으로 들어가 식칼을 들고 나오는 것이다. 그의 아내는 깜짝 놀랐다. 아내는 남편의 칼 든 손을 붙들고 그 칼을 빼앗으려 했다. 무슨 영문인지 몰랐다. 그는 아내를 밀어버리고 <span class="bold">현관문의 손잡이 근방을 깎아 내</span>는 것이다. 마치 일본 빨래판 모양 손잡이 부근을 깎아 내고 파내는 것이었다. 그리고 그는 눈을 감고 손잡이 부근을 쓸어 보는 것이다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">김명학 씨는 다시 길가로 나와 현관 발돌옴길을, 눈을 감고 걸어가 문의 손잡이 부근을 쓸어 보고, 문을 드르륵 하고 열어 보는 것이다.</p>
+                    <p style="text-align: right; margin-bottom: 2mm;">－「213호 주택」</p>
+                    <hr style="border: none; border-top: 1px solid #000; margin: 3mm 0;">
+
+                    <!-- 1번 문제 -->
+                    <div class="question" data-question="1" style="margin-top: 5mm;">
+                        <div class="question-text">
+                            <span class="question-number">1.</span> 윗글의 서술상의 특징으로 가장 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(1, 1)">
+                                <span class="choice-number">①</span>
+                                <span>순행적 구성을 활용하여 사건이 일어난 이유를 밝히고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(1, 2)">
+                                <span class="choice-number">②</span>
+                                <span>공간적 배경을 묘사하여 갈등 해결의 실마리를 제공하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(1, 3)">
+                                <span class="choice-number">③</span>
+                                <span>등장인물이 관찰자 입장에서 인물들의 말과 행동을 전달하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(1, 4)">
+                                <span class="choice-number">④</span>
+                                <span>동일 시간에 다른 장소에서 벌어지는 사건을 병렬적으로 나열하여 사건에 대한 다양한 관점을 제시하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(1, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>작품 외부의 서술자가 특정 인물의 심리적 상황을 제시하고 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 2 -</div>
+        </div>
+
+        <!-- 3페이지 -->
+        <div class="page">
+            <div class="content">
+                <!-- 왼쪽 컬럼 -->
+                <div class="column">
+                    <!-- 2번 문제 -->
+                    <div class="question" data-question="2">
+                        <div class="question-text">
+                            <span class="question-number">2.</span> 윗글의 내용을 이해한 것으로 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(2, 1)">
+                                <span class="choice-number">①</span>
+                                <span>아내는 벽돌을 나르는 김명학의 모습을 보고 남편의 의도를 파악하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(2, 2)">
+                                <span class="choice-number">②</span>
+                                <span>김명학은 사장과 공장장에게 기계의 고장은 어쩔 수 없는 일이라고 변명했다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(2, 3)">
+                                <span class="choice-number">③</span>
+                                <span>김명학은 발전기 고장의 원인을 통풍창으로 유입되는 눈비로 판단해 발전기실의 큰 창을 없애 버렸다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(2, 4)">
+                                <span class="choice-number">④</span>
+                                <span>회사는 막대한 금액으로 발전기를 수입하였고, 이를 맡을 제2종 전기 기사를 김명학의 조수로 채용하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(2, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>김명학은 사직원을 쓰고 나서 인쇄 공장에 들어갔을 때, 직공들이 인사하는 것을 보았지만 무시하고 지나갔다.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3번 문제 -->
+                    <div class="question" data-question="3" style="margin-top: 8mm;">
+                        <div class="question-text">
+                            <span class="question-number">3.</span> ㉠과 ㉡에 대한 이해로 적절하지 <span class="underline">않은</span> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(3, 1)">
+                                <span class="choice-number">①</span>
+                                <span>㉠은 김명학이 상대에게 질책을 받는 공간이고, ㉡은 김명학이 상대에게 동정을 받는 공간이다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(3, 2)">
+                                <span class="choice-number">②</span>
+                                <span>㉠은 김명학이 직업으로서의 윤리 세계를 생각하는 공간이고, ㉡은 김명학이 인간으로서의 개별성을 추구하려는 공간이다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(3, 3)">
+                                <span class="choice-number">③</span>
+                                <span>㉠은 김명학이 패배감을 느끼는 공간이고, ㉡은 김명학이 상대에게 의문을 품게 하는 공간이다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(3, 4)">
+                                <span class="choice-number">④</span>
+                                <span>㉠은 김명학이 상대의 약점을 찾기 위해 노력하는 공간이고, ㉡은 김명학이 상대를 이해하기 위해 노력하는 공간이다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(3, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>㉠은 김명학이 상대의 의중을 수용하는 공간이고, ㉡은 김명학이 상대의 반응에 개의치 않고 행동하는 공간이다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div class="column">
+                    <!-- 4번 문제 -->
+                    <div class="question" data-question="4">
+                        <div class="question-text">
+                            <span class="question-number">4.</span> &lt;보기&gt;를 바탕으로 윗글을 감상한 내용으로 적절한 것은?
+                        </div>
+                        <div class="passage-box" style="margin: 3mm 0;">
+                            <p style="text-align: center; margin-bottom: 2mm;">&lt;보기&gt;</p>
+                            <p style="text-indent: 1em; margin-bottom: 2mm;">1950년대 우리 사회는 전후(戰後) 피폐해진 도시를 재건하는 과정에서 노동자는 기계에 예속되었고, 도시의 건물은 획일화되었다. 이 작품은 이러한 사회적 변화로 야기된 도시 노동자의 소외와 획일화된 도시에 대한 부적응을 드러내고 있다. 특히 노동에 쏟은 애정이 경시된 도시 노동자가 보이는 무력감이 획일화된 도시에 대한 문제의식으로 이어지면서 현대 사회에서 개별성을 추구하려는 의지를 형상화하고 있다.</p>
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(4, 1)">
+                                <span class="choice-number">①</span>
+                                <span>'회사의 치명적인 타격'의 책임을 '성심성의를 다해서 기계와 살아왔'던 김명학에게 돌리는 사장의 말에서, 노동에 애정을 쏟은 인간의 태도가 경시되는 문제를 엿볼 수 있군.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(4, 2)">
+                                <span class="choice-number">②</span>
+                                <span>자신이 '전기에 대해서는 기계과 출신으로서의 상식밖에 없다는 것'을 알고 있는 김명학의 모습에서, 기계에 예속된 노동자가 보이는 무력감을 엿볼 수 있군.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(4, 3)">
+                                <span class="choice-number">③</span>
+                                <span>자신을 '면직케' 한 '기계'를 보고 공장에서 나오면서 '아무것도 할 수 없는 공허한 시간'을 느끼는 김명학의 모습에서, 개별성을 추구하려는 의지를 엿볼 수 있군.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(4, 4)">
+                                <span class="choice-number">④</span>
+                                <span>'인쇄기들'이 '자기를 덮칠 것같이 노려보고 있는 것 같'다고 생각하고 '강한 고독'을 느끼는 김명학의 모습에서, 획일화되고 있는 도시의 모습을 엿볼 수 있군.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(4, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>'돌지 않기 위해' 만든 '발돌옴길을 걸어 본' 후 다시 '현관문의 손잡이 근방을 깎아 내'는 김명학의 모습에서, 전후로 인해 피폐해진 도시를 재건하는 모습을 엿볼 수 있군.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 3 -</div>
+        </div>
+
+        <!-- 4페이지 -->
+        <div class="page">
+            <div class="content">
+                <!-- 왼쪽 컬럼 -->
+                <div class="column">
+                    <!-- 5번 문제 -->
+                    <div class="question" data-question="5">
+                        <div class="question-text">
+                            <span class="question-number">5.</span> 윗글에 대한 설명으로 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(5, 1)">
+                                <span class="choice-number">①</span>
+                                <span>김명학이 다니던 공장에서는 자가 발전기가 필요함에도 불구하고 비용 절감을 위해 자가 발전기 없이 무리하게 설비를 운용하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(5, 2)">
+                                <span class="choice-number">②</span>
+                                <span>김명학은 자신의 기술로는 전기실의 책임 자리를 감당하지 못할 것임을 알고 있었다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(5, 3)">
+                                <span class="choice-number">③</span>
+                                <span>김명학은 고장의 원인에 대해 사장과 공장장에게 제대로 설명하지 못하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(5, 4)">
+                                <span class="choice-number">④</span>
+                                <span>발전기실을 관리하던 조수는 자신의 실수로 발전기가 타기 시작하자 당황하여 제대로 된 대처를 하지 못했고, 결국 발전기가 완전히 타 버리게 되었다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(5, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>당시 우리나라에서는 김명학이 다니던 공장뿐 아니라 다른 공장들도 자가 발전기를 놓아야 하는 상황이었다.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6번 문제 -->
+                    <div class="question" data-question="6" style="margin-top: 8mm;">
+                        <div class="question-text">
+                            <span class="question-number">6.</span> 윗글에 등장하는 인물들에 대한 설명으로 적절하지 <span class="underline">않은</span> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(6, 1)">
+                                <span class="choice-number">①</span>
+                                <span>김명학은 회사의 재건에 있어 공로가 있다고 회사로부터 인정받았다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(6, 2)">
+                                <span class="choice-number">②</span>
+                                <span>사장은 우회적인 표현으로 김명학에게 사직을 권고하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(6, 3)">
+                                <span class="choice-number">③</span>
+                                <span>김명학은 야간 종업까지 하면서 몸소 기계를 관리하였지만 기계 고장을 막을 수 없었다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(6, 4)">
+                                <span class="choice-number">④</span>
+                                <span>김명학의 아내는 남편의 행동을 이해하지 못하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(6, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>사장은 기계 고장의 원인을 김명학에게 돌리고 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div class="column">
+                    <!-- 7번 문제 -->
+                    <div class="question" data-question="7">
+                        <div class="question-text">
+                            <span class="question-number">7.</span> ⓐ를 완전한 문장으로 만들어 보았다. 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(7, 1)">
+                                <span class="choice-number">①</span>
+                                <span>회사의 고충을 이해하고 회사를 그만뒤 주기를 바라오.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(7, 2)">
+                                <span class="choice-number">②</span>
+                                <span>회사의 고충을 알지 못하는 직원들 때문에 회사가 정말 힘들어지고 있소.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(7, 3)">
+                                <span class="choice-number">③</span>
+                                <span>회사의 고충을 알면서도 왜 이런 일이 자꾸 벌어지도록 하는 거요?</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(7, 4)">
+                                <span class="choice-number">④</span>
+                                <span>회사의 고충을 이해하고 그 원인을 파악한다면 사직을 보류하겠소.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(7, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>회사의 고충을 전혀 이해하지 못하는 당신과는 더 이상 일을 할 수가 없소.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 4 -</div>
+        </div>
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <!-- 하단 버튼 -->
+    <div class="bottom-fixed-buttons" id="bottomButtons">
+        <button class="bottom-fixed-btn btn-back" onclick="resetExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+            </svg>
+            다시풀기
+        </button>
+        <button class="bottom-fixed-btn btn-grade" onclick="gradeExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            채점하기
+        </button>
+    </div>
+
+    <!-- 해설 팝업 -->
+    <div class="explanation-overlay" id="explanationOverlay" onclick="closeExplanation()"></div>
+    <div class="explanation-popup" id="explanationPopup">
+        <div class="explanation-popup-header">
+            <h3 id="explanationTitle">문제 해설</h3>
+            <button class="explanation-popup-close" onclick="closeExplanation()">×</button>
+        </div>
+        <div class="explanation-popup-body" id="explanationBody"></div>
+    </div>
+
+    <script>
+        // ===== 펜 도구 관련 변수 =====
+        let isPenMode = false;
+        let isEraserMode = false;
+        let isPanMode = false;
+        let isPanning = false;
+        let panStartX = 0, panStartY = 0;
+        let isDrawing = false;
+        let penColor = '#e53935';
+        let penSize = 3;
+        let eraserSize = 20;
+        let drawingCanvas, drawingCtx;
+        let lastX = 0, lastY = 0;
+
+        // 그림 데이터 저장 (문서 좌표계)
+        let drawingPaths = [];
+        let currentPath = null;
+        let lastScrollX = 0, lastScrollY = 0;
+        let currentScale = 1;
+
+        // 줌 관련 변수
+        let currentZoom = 1;
+        const minZoom = 0.3;
+        const maxZoom = 1.5;
+        const zoomStep = 0.1;
+        let autoScale = 1;
+
+        // 현재 적용된 스케일 가져오기
+        function getCurrentScale() {
+            return autoScale * currentZoom;
+        }
+
+        // 펜 도구 초기화
+        function initDrawingCanvas() {
+            drawingCanvas = document.getElementById('drawingCanvas');
+            drawingCtx = drawingCanvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('scroll', redrawCanvas);
+
+            drawingCanvas.addEventListener('mousedown', startDrawing);
+            drawingCanvas.addEventListener('mousemove', bindDraw);
+            drawingCanvas.addEventListener('mouseup', stopDrawing);
+            drawingCanvas.addEventListener('mouseout', stopDrawing);
+
+            drawingCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            drawingCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            drawingCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function resizeCanvas() {
+            const canvas = document.getElementById('drawingCanvas');
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            lastScrollX = window.scrollX;
+            lastScrollY = window.scrollY;
+            redrawCanvas();
+        }
+
+        function redrawCanvas() {
+            if (!drawingCtx || !drawingCanvas) return;
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            const scale = getCurrentScale();
+
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+            drawingPaths.forEach(path => {
+                if (path.points.length < 2) return;
+                drawingCtx.beginPath();
+                drawingCtx.strokeStyle = path.color;
+                drawingCtx.lineWidth = path.size * scale;
+                drawingCtx.lineCap = 'round';
+                drawingCtx.lineJoin = 'round';
+                drawingCtx.globalCompositeOperation = 'source-over';
+
+                const firstPoint = path.points[0];
+                drawingCtx.moveTo(firstPoint.x * scale - scrollX, firstPoint.y * scale - scrollY);
+
+                for (let i = 1; i < path.points.length; i++) {
+                    const point = path.points[i];
+                    drawingCtx.lineTo(point.x * scale - scrollX, point.y * scale - scrollY);
+                }
+                drawingCtx.stroke();
+            });
+
+            lastScrollX = scrollX;
+            lastScrollY = scrollY;
+            currentScale = scale;
+        }
+
+        let isPenCollapsed = false;
+        function togglePenCollapse() {
+            isPenCollapsed = !isPenCollapsed;
+            const penControls = document.getElementById('penControls');
+            const collapseBtn = document.getElementById('penCollapseBtn');
+            if (isPenCollapsed) {
+                penControls.classList.add('collapsed');
+                collapseBtn.innerHTML = '▼';
+            } else {
+                penControls.classList.remove('collapsed');
+                collapseBtn.innerHTML = '▲';
+            }
+        }
+
+        function togglePenMode() {
+            isPenMode = !isPenMode;
+            isEraserMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isPenMode) {
+                penBtn.classList.add('active');
+                eraserBtn.classList.remove('active');
+                canvas.classList.add('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            } else {
+                penBtn.classList.remove('active');
+                canvas.classList.remove('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            }
+        }
+
+        function toggleEraserMode() {
+            isEraserMode = !isEraserMode;
+            isPenMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isEraserMode) {
+                eraserBtn.classList.add('active');
+                penBtn.classList.remove('active');
+                canvas.classList.add('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            } else {
+                eraserBtn.classList.remove('active');
+                canvas.classList.remove('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            }
+        }
+
+        function togglePanMode() {
+            isPanMode = !isPanMode;
+            isPenMode = false;
+            isEraserMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            penBtn.classList.remove('active');
+            eraserBtn.classList.remove('active');
+            canvas.classList.remove('drawing-mode');
+            canvas.classList.remove('eraser-mode');
+
+            if (isPanMode) {
+                panBtn.classList.add('active');
+                canvas.classList.add('pan-mode');
+            } else {
+                panBtn.classList.remove('active');
+                canvas.classList.remove('pan-mode');
+            }
+        }
+
+        function setPenColor(color) {
+            penColor = color;
+            document.querySelectorAll('.pen-color-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.color === color) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (!isPenMode) {
+                togglePenMode();
+            }
+            isEraserMode = false;
+            document.getElementById('eraserBtn').classList.remove('active');
+            document.getElementById('drawingCanvas').classList.remove('eraser-mode');
+            document.getElementById('drawingCanvas').classList.add('drawing-mode');
+        }
+
+        function startDrawing(e) {
+            if (isPanMode) {
+                isPanning = true;
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (e.clientX + window.scrollX) / scale;
+            const docY = (e.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = e.clientX;
+                lastY = e.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = e.clientX;
+            lastY = e.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function bindDraw(e) {
+            if (isPanning) {
+                const dx = e.clientX - panStartX;
+                const dy = e.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+
+            const x = e.clientX;
+            const y = e.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function stopDrawing() {
+            if (isPanning) {
+                isPanning = false;
+                drawingCanvas.classList.remove('panning');
+                return;
+            }
+
+            if (isDrawing && currentPath && currentPath.points.length > 1) {
+                drawingPaths.push(currentPath);
+            }
+            isDrawing = false;
+            currentPath = null;
+        }
+
+        function eraseAtPoint(docX, docY) {
+            const eraseRadius = eraserSize / getCurrentScale();
+            let needsRedraw = false;
+
+            for (let i = drawingPaths.length - 1; i >= 0; i--) {
+                const path = drawingPaths[i];
+                const newPoints = [];
+                let segmentStart = 0;
+
+                for (let j = 0; j < path.points.length; j++) {
+                    const point = path.points[j];
+                    const dist = Math.sqrt(Math.pow(point.x - docX, 2) + Math.pow(point.y - docY, 2));
+
+                    if (dist <= eraseRadius) {
+                        if (j > segmentStart && newPoints.length > 1) {
+                            const newPath = {
+                                color: path.color,
+                                size: path.size,
+                                points: newPoints.slice()
+                            };
+                            if (newPath.points.length > 1) {
+                                drawingPaths.push(newPath);
+                            }
+                            newPoints.length = 0;
+                        } else {
+                            newPoints.length = 0;
+                        }
+                        segmentStart = j + 1;
+                        needsRedraw = true;
+                    } else {
+                        newPoints.push(point);
+                    }
+                }
+
+                if (newPoints.length > 1) {
+                    path.points = newPoints;
+                } else {
+                    drawingPaths.splice(i, 1);
+                    needsRedraw = true;
+                }
+            }
+
+            if (needsRedraw) {
+                redrawCanvas();
+            }
+        }
+
+        function handleTouchStart(e) {
+            if (isPanMode) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                isPanning = true;
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (touch.clientX + window.scrollX) / scale;
+            const docY = (touch.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = touch.clientX;
+                lastY = touch.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function handleTouchMove(e) {
+            if (isPanning) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const dx = touch.clientX - panStartX;
+                const dy = touch.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const x = touch.clientX;
+            const y = touch.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function clearCanvas() {
+            if (confirm('그린 내용을 모두 지우시겠습니까?')) {
+                drawingPaths = [];
+                currentPath = null;
+                drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+        }
+
+        // 모바일 스케일 적용 함수
+        function applyMobileScale() {
+            const wrapper = document.querySelector('.exam-wrapper');
+            if (!wrapper) return;
+
+            const baseWidth = 900;
+            const screenWidth = window.innerWidth;
+
+            if (screenWidth < baseWidth) {
+                autoScale = screenWidth / baseWidth;
+            } else {
+                autoScale = 1;
+            }
+
+            const finalScale = autoScale * currentZoom;
+            wrapper.style.transform = `scale(${finalScale})`;
+            wrapper.style.transformOrigin = 'top center';
+
+            updateZoomDisplay();
+
+            if (typeof redrawCanvas === 'function') {
+                setTimeout(redrawCanvas, 50);
+            }
+        }
+
+        // 줌 인
+        function zoomIn() {
+            if (currentZoom < maxZoom) {
+                currentZoom = Math.min(maxZoom, currentZoom + zoomStep);
+                applyMobileScale();
+            }
+        }
+
+        // 줌 아웃
+        function zoomOut() {
+            if (currentZoom > minZoom) {
+                currentZoom = Math.max(minZoom, currentZoom - zoomStep);
+                applyMobileScale();
+            }
+        }
+
+        // 줌 리셋 (화면 맞춤)
+        function zoomReset() {
+            currentZoom = 1;
+            applyMobileScale();
+        }
+
+        // 줌 레벨 표시 업데이트
+        function updateZoomDisplay() {
+            const zoomLevelEl = document.getElementById('zoomLevel');
+            if (zoomLevelEl) {
+                const displayPercent = Math.round(currentZoom * 100);
+                zoomLevelEl.textContent = displayPercent + '%';
+            }
+        }
+
+        // 페이지 로드 시 캔버스 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initDrawingCanvas();
+            applyMobileScale();
+            window.addEventListener('resize', applyMobileScale);
+        });
+
+        // ===== 설정 =====
+        const EXAM_ID = 'supplement_modern_novel';
+        const TOTAL_QUESTIONS = 7;
+        const TOTAL_TIME = 20 * 60; // 20분
+
+        // 현재 사용자 ID (사용자별 데이터 분리)
+        let currentUserId = '';
+
+        // localStorage 키 (다른 시험과 겹치지 않게 + 사용자별 분리)
+        function LS_KEY(key) {
+            return `supp_modern_novel_${currentUserId}_${key}`;
+        }
+
+        // 정답 데이터
+        const correctAnswers = {
+            1: 5, 2: 2, 3: 4, 4: 1, 5: 5, 6: 3, 7: 1
+        };
+
+        // 배점 (7문항 = 총 100점 기준)
+        const threePointQuestions = [2, 3, 5, 6];
+
+        function getQuestionScore(questionNum) {
+            if (threePointQuestions.includes(questionNum)) return 15;
+            if (questionNum === 7) return 12;
+            return 14;
+        }
+
+        // 해설 데이터
+        const explanations = {
+            1: { correct: "정답: ⑤", text: "윗글은 작품 밖 서술자가 주인공인 김명학의 심리를 직접적으로 제시하는 전지적 작가 시점의 소설이다.<br><br>① 김명학이 사직원을 작성하게 되는 장면을 먼저 서술한 후 그 이유를 밝히고 있으므로 역순행적 구성에 해당한다.<br>② 윗글에서 갈등 해결의 실마리가 나타나는 부분은 찾아볼 수 없다.<br>③ 윗글은 작품 밖 서술자에 의해 인물들의 말과 행동이 전달된다.<br>④ 윗글은 동일 시간에 다른 장소에서 벌어지는 사건을 병렬적으로 나열하고 있지는 않다." },
+            2: { correct: "정답: ②", text: "김명학은 사장과 공장장이 왜 고장이 일어날 것을 미리 발견하지 못했는지 물을 때마다 동력의 삼상교류(三相交流)의 원칙을 설명하고, 공장 밖에서 합선이 된 것으로 어찌할 수 없는 고장이라고 변명하였다.<br><br>① 벽돌을 날라 오는 남편을 보는 아내의 심리를 \"아내는 무슨 영문인지 모르고 이러한 남편이 슬프게만 보였다.\"라고 제시하였으므로 적절하지 않다.<br>③ 김명학은 고장의 원인을 과열로 인한 고장으로 판단하여 협소한 발전기실의 냉각을 위해서 큰 창을 두 개나 내게 했다.<br>④ 회사는 막대한 금액으로 발전기를 수입하였으나, 이를 맡을 제2종 전기 기사는 채용하지 않고 전기실의 책임을 김명학에게 맡겼다.<br>⑤ 김명학은 인쇄 공장에서 직공들이 인사하는 것도 모르고 기계만을 응시하며 지나갔다." },
+            3: { correct: "정답: ④", text: "㉠에서 김명학이 상대의 약점을 찾기 위해 노력하는 모습은 나타나지 않고, ㉡에서 김명학이 아내를 이해하기 위해 노력하고 있지도 않다.<br><br>① ㉠에서 김명학은 사장에게 질책을 받아 사직하게 되고, ㉡에서는 김명학의 아내가 남편을 가엾게 여기고 있으므로 적절한 설명이다.<br>② ㉠에서 김명학은 사장의 말을 듣고 기사장으로서 사고 전에 고장을 발견하지 못하였다는 윤리의 세계를 생각하고 있고, ㉡에서 김명학은 획일화된 도시에서 개별성을 추구하기 위해 발돋움길을 만들고 현관문의 손잡이 근방을 깎아 내고 있으므로 적절한 설명이다.<br>③ ㉠에서 김명학은 사장의 말을 듣고 기사로서의 패배감을 느끼고 있고, ㉡에서는 김명학의 아내가 김명학의 행위에 의문을 느끼고 있으므로 적절한 설명이다.<br>⑤ 김명학이 공장장실에서 사장의 이야기를 듣고 그 의중을 수용하여 전기실에 와서 사직원을 쓰고 있으므로 ㉠ '공장장실'은 김명학이 상대의 의중을 수용하는 공간이라는 설명은 적절하다. 김명학이 아내의 만류에도 개의치 않고, 자기 집 앞 뜰길에 발돋움길을 만든 후 자기 집 현관문 손잡이 근방을 깎아 내고 있으므로, ㉡ '자기 집'은 김명학이 상대의 반응에 개의치 않고 행동하는 공간이라는 설명은 적절하다." },
+            4: { correct: "정답: ①", text: "'성심성의를 다해서 기계와 살아왔'다는 것을 통해 김명학이 지금까지 노동에 애정을 쏟아 왔음을, 사장이 '회사의 치명적인 타격'의 책임을 김명학에게 돌리는 것을 통해 사장이 그러한 김명학의 자세를 경시하고 있음을 확인할 수 있으므로 적절하다.<br><br>② 김명학이 자신이 '전기에 대해서는 기계과 출신으로서의 상식밖에 없다는 것'을 알고 있는 것은 상황을 객관적으로 파악하고 있는 것이지 노동자의 무력감을 드러내는 것은 아니다.<br>③ '기계'가 김명학을 '면직케' 했다는 것을 통해 기계에 예속된 노동자의 삶을, 김명학이 '아무것도 할 수 없는 공허한 시간'을 느꼈다는 것을 통해서는 개별성을 추구하려는 의지가 아닌, 기계에 예속된 노동자의 무력감을 확인할 수 있다.<br>④ '인쇄기들'을 다뤄온 도시 노동자 김명학이 '인쇄기들'을 보면서 '자기를 덮칠 것같이 노려보고 있는 것 같'다고 생각하고 '강한 고독'을 느끼는 것을 통해서는 도시 노동자의 소외를 확인할 수 있다.<br>⑤ '돌지 않기 위해' 만든 '발돋움길을 걸어 본' 후 다시 '현관문의 손잡이 근방을 깎아 내'는 김명학의 모습에서는 획일화된 도시에서 개별성을 추구하려는 의지를 엿볼 수 있다." },
+            5: { correct: "정답: ⑤", text: "'우리나라 전기 사정은 공장마다 자가 발전기를 놓아야 하는 현실이다.'라는 부분을 통해 알 수 있다.<br><br>① 김명학이 다니던 공장에서는 막대한 금액으로 100kW의 출력 발전기를 수입하였다.<br>② 김명학은 전기에 대해서는 기계과 출신으로서의 상식밖에 없다는 것을 자기 자신이 잘 알고 있었지만 인쇄 공장의 요만한 전기 시설쯤은 그의 기술로써 감당 못할 바도 아니었다는 내용이 제시되어 있다.<br>③ 김명학은 사장과 공장장이 고장의 책임을 물을 때마다 동력의 삼상교류(三相交流)의 원칙을 설명하고, 공장 밖에서 합선이 된 것으로 어찌할 수 없는 고장이라고 하였으므로 적절하지 않은 선지이다.<br>④ 발전기실의 조수는 상황을 모르고 졸고 있다가 발전기가 완전히 타 버린 후에야 당황해하였다." },
+            6: { correct: "정답: ③", text: "김명학은 야간 종업을 싫어하여 전기실 관리를 조수에게 맡기고 여섯 시 정각에 집으로 돌아갔다. 그날 밤에 발전기가 고장나는 일이 벌어졌다.<br><br>① '김기사는 우리 회사가 환도 후 재건에 있어서 가장 큰 공로를 세운 사람이라고 생각하고 있소.'라는 사장의 말을 통해 알 수 있다.<br>② 사장은 '그 책임을 기사장이 져야 한다면 현명한 기사장은 자기 처신을 어떻게 해야 한다는 것은 여기서 민망한 말을 하지 않아도 잘 이해해 줄 것이라고 아오.'라는 말을 하며 김명학에게 사직을 권고하고 있다.<br>④ 김명학의 아내는 발돋움길을 만들고 손잡이를 깎는 남편의 행동을 이해하지 못하고 있다.<br>⑤ 사장과 공장장은 기계가 고장날 때마다 김명학만을 원망하는 듯하였고, 김명학의 변명도 구구하게만 생각하였다." },
+            7: { correct: "정답: ①", text: "ⓐ의 앞부분에서 사장은 김명학에게 사직을 우회적으로 권고하고 있음을 알 수 있다. 이를 통해 문맥상 ⓐ는 김명학이 회사의 고충을 이해하고 회사를 그만두기를 바라는 내용이 된다.<br><br>②~⑤의 내용은 문맥상 어울리지 않는 부분이다." }
+        };
+
+        // ===== 타이머 =====
+        let remainingSeconds = TOTAL_TIME;
+        let timerInterval = null;
+
+        function startTimer() {
+            const saved = localStorage.getItem(LS_KEY('examTimer'));
+            if (saved) {
+                remainingSeconds = parseInt(saved);
+            }
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                if (remainingSeconds <= 0) {
+                    remainingSeconds = 0;
+                    stopTimer();
+                    alert('시간이 종료되었습니다. 자동으로 채점합니다.');
+                    gradeExam();
+                }
+                localStorage.setItem(LS_KEY('examTimer'), remainingSeconds);
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            const timerEl = document.getElementById('timerValue');
+            if (timerEl) {
+                timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+        }
+
+        // ===== 선택지 클릭 =====
+        function selectChoice(questionId, choiceNum, skipServerSave = false) {
+            const questionEl = document.querySelector(`[data-question="${questionId}"]`);
+            if (!questionEl) return;
+
+            questionEl.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+            const selectedChoice = questionEl.querySelector(`.choice[data-choice="${choiceNum}"]`);
+            if (selectedChoice) {
+                selectedChoice.classList.add('selected');
+            }
+            localStorage.setItem(LS_KEY(`question_${questionId}`), choiceNum);
+
+            // 서버에 답안 저장 (초기 로드 시에는 스킵)
+            if (!skipServerSave) {
+                saveAnswerToServer(questionId, choiceNum);
+            }
+        }
+
+        // 서버에 답안 저장
+        async function saveAnswerToServer(questionNumber, answer) {
+            try {
+                await fetch('/api/supplement-result/save-answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        questionNumber,
+                        answer
+                    })
+                });
+            } catch (err) {
+                console.error('답안 저장 오류:', err);
+            }
+        }
+
+        // ===== 채점 =====
+        function gradeExam(skipServerSave = false) {
+            const elapsedSeconds = TOTAL_TIME - remainingSeconds;
+            const elapsedMin = Math.floor(elapsedSeconds / 60);
+            const elapsedSec = elapsedSeconds % 60;
+            const elapsedTimeStr = `${String(elapsedMin).padStart(2, '0')}:${String(elapsedSec).padStart(2, '0')}`;
+
+            stopTimer();
+            const timerEl = document.getElementById('examTimer');
+            if (timerEl) timerEl.style.display = 'none';
+
+            // 기존 채점 마크 제거
+            document.querySelectorAll('.grade-mark').forEach(el => el.remove());
+
+            let correctCount = 0;
+            let totalScore = 0;
+
+            // 모든 문제 번호 요소 찾기
+            const questionNumbers = document.querySelectorAll('.question-number');
+
+            questionNumbers.forEach((qNum) => {
+                const questionText = qNum.textContent.replace(/[○✓⭕✔]/g, '').trim();
+                const questionId = parseInt(questionText.replace('.', ''));
+                if (isNaN(questionId) || questionId < 1 || questionId > TOTAL_QUESTIONS) return;
+
+                const userAnswer = localStorage.getItem(LS_KEY(`question_${questionId}`));
+                const correctAnswer = correctAnswers[questionId];
+
+                // 문제 번호의 부모 요소에 position: relative 추가
+                qNum.style.position = 'relative';
+
+                // 정답 선지에 연녹색 배경 표시
+                const questionEl = qNum.closest('.question');
+                if (questionEl) {
+                    const choices = questionEl.querySelectorAll('.choice');
+                    if (choices[correctAnswer - 1]) {
+                        choices[correctAnswer - 1].style.backgroundColor = '#c8f7c5';
+                        choices[correctAnswer - 1].style.position = 'relative';
+                        choices[correctAnswer - 1].classList.add('correct-answer');
+
+                        // 해설 버튼 추가
+                        const correctMark = document.createElement('span');
+                        correctMark.className = 'correct-mark';
+                        correctMark.textContent = '해설';
+                        correctMark.onclick = (e) => {
+                            e.stopPropagation();
+                            showExplanation(questionId);
+                        };
+                        choices[correctAnswer - 1].appendChild(correctMark);
+                    }
+
+                    // 틀린 답안에 표시
+                    if (userAnswer && parseInt(userAnswer) !== correctAnswer) {
+                        const userChoiceIdx = parseInt(userAnswer) - 1;
+                        if (choices[userChoiceIdx]) {
+                            choices[userChoiceIdx].classList.add('wrong-answer');
+                        }
+                    }
+                }
+
+                // 채점 마크 생성
+                const mark = document.createElement('span');
+                mark.className = 'grade-mark';
+
+                if (userAnswer && parseInt(userAnswer) === correctAnswer) {
+                    // 정답 - 빨간 동그라미
+                    correctCount++;
+                    totalScore += getQuestionScore(questionId);
+                    mark.innerHTML = '⭕';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 72px;
+                        position: absolute;
+                        left: -20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        opacity: 0.75;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                } else {
+                    // 오답 또는 미응답 - 빨간 체크 (V 표시)
+                    mark.innerHTML = '✔';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 60px;
+                        position: absolute;
+                        left: -15px;
+                        top: 50%;
+                        transform: translateY(-50%) rotate(-15deg);
+                        opacity: 0.8;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                }
+
+                qNum.appendChild(mark);
+            });
+
+            // 결과 배너 표시
+            document.getElementById('bannerScore').textContent = totalScore;
+            document.getElementById('bannerCorrect').textContent = correctCount;
+            document.getElementById('resultBanner').style.display = 'block';
+
+            document.body.classList.add('graded');
+
+            // localStorage 정리
+            localStorage.removeItem(LS_KEY('examTimer'));
+
+            // 서버에 채점 결과 저장 (복원 시에는 스킵)
+            if (!skipServerSave) {
+                saveGradeToServer(correctCount, totalScore);
+            }
+        }
+
+        // 서버에 채점 결과 저장
+        async function saveGradeToServer(correctCount, score) {
+            try {
+                // 모든 답안 수집
+                const answers = {};
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        answers[i] = parseInt(saved);
+                    }
+                }
+
+                // localStorage에서 사용자 정보 가져오기 (세션 만료 대비)
+                const userData = localStorage.getItem('mockExamUser');
+                let userInfo = {};
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userInfo = {
+                        userId: user._id,
+                        phone: user.phone,
+                        studentInfo: {
+                            name: user.name,
+                            school: user.school,
+                            grade: user.grade
+                        }
+                    };
+                }
+
+                await fetch('/api/supplement-result/save-grade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        answers,
+                        correctCount,
+                        totalQuestions: TOTAL_QUESTIONS,
+                        score,
+                        ...userInfo
+                    })
+                });
+                console.log('채점 결과 저장 완료');
+            } catch (err) {
+                console.error('채점 결과 저장 오류:', err);
+            }
+        }
+
+        // ===== 해설 =====
+        function showExplanation(questionId) {
+            const exp = explanations[questionId];
+            if (!exp) return;
+
+            document.getElementById('explanationTitle').textContent = `${questionId}번 문제 해설`;
+            document.getElementById('explanationBody').innerHTML = `
+                <div class="explanation-correct">
+                    <div class="explanation-correct-label">${exp.correct}</div>
+                    <div class="explanation-correct-text">${exp.text}</div>
+                </div>
+            `;
+            document.getElementById('explanationOverlay').style.display = 'block';
+            document.getElementById('explanationPopup').style.display = 'block';
+        }
+
+        function closeExplanation() {
+            document.getElementById('explanationOverlay').style.display = 'none';
+            document.getElementById('explanationPopup').style.display = 'none';
+        }
+
+        // ===== 뒤로가기 (대시보드로 이동) =====
+        function goBack() {
+            window.location.href = '/mock_exam_dashboard.html';
+        }
+
+        // ===== 다시풀기 =====
+        async function resetExam() {
+            if (!confirm('모든 답안과 채점 결과가 초기화됩니다. 다시 풀겠습니까?')) {
+                return;
+            }
+
+            // localStorage 초기화
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                localStorage.removeItem(LS_KEY(`question_${i}`));
+            }
+            localStorage.removeItem(LS_KEY('isGraded'));
+
+            // 서버 데이터 삭제
+            try {
+                // 쿼리 파라미터로 사용자 정보 전달 (세션 만료 대비)
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`, {
+                    method: 'DELETE'
+                });
+            } catch (err) {
+                console.error('서버 데이터 삭제 오류:', err);
+            }
+
+            // 페이지 새로고침
+            window.location.reload();
+        }
+
+        // ===== 초기화 =====
+        async function init() {
+            // 사용자 정보 로드
+            const userData = localStorage.getItem('mockExamUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                currentUserId = user._id || user.phone || ''; // 사용자 ID 설정
+                document.getElementById('studentSchool').textContent = user.school || '-';
+                document.getElementById('studentGrade').textContent = user.grade || '-';
+                document.getElementById('studentName').textContent = user.name || '-';
+            }
+
+            // 서버에서 저장된 답안 로드
+            try {
+                // 쿼리 파라미터로 사용자 정보 전달 (세션 만료 대비)
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                const response = await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`);
+                const data = await response.json();
+
+                if (data.ok && data.result) {
+                    const serverResult = data.result;
+
+                    // 서버에서 답안 복원
+                    if (serverResult.answers) {
+                        for (const [questionId, answer] of Object.entries(serverResult.answers)) {
+                            // localStorage에도 저장하고 UI 업데이트 (서버 저장은 스킵)
+                            localStorage.setItem(LS_KEY(`question_${questionId}`), answer);
+                            selectChoice(parseInt(questionId), answer, true);
+                        }
+                    }
+
+                    // 이미 채점 완료된 경우 채점 결과 표시 (서버 저장 스킵)
+                    if (serverResult.isGraded) {
+                        setTimeout(() => {
+                            gradeExam(true);
+                        }, 100);
+                    }
+                } else {
+                    // 서버에 데이터가 없으면 localStorage에서 복원
+                    for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                        const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                        if (saved) {
+                            selectChoice(i, parseInt(saved), true);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('서버 데이터 로드 오류:', err);
+                // 서버 오류 시 localStorage에서 복원
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        selectChoice(i, parseInt(saved), true);
+                    }
+                }
+            }
+
+            // 타이머 시작 (보완학습은 타이머 없음)
+            // startTimer();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
