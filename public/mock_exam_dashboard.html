@@ -1020,6 +1020,112 @@
             box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
         }
 
+        /* 강의 시청하기 버튼 */
+        .btn-lecture {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-lecture:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-lecture.disabled {
+            background: linear-gradient(135deg, #4b5563, #374151);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-lecture.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Vimeo 모달 */
+        .vimeo-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .vimeo-modal-overlay.show {
+            display: flex;
+        }
+
+        .vimeo-modal {
+            background: #1a1a2e;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .vimeo-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #252540;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .vimeo-modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .vimeo-modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .vimeo-modal-close:hover {
+            color: #fff;
+        }
+
+        .vimeo-modal-body {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 비율 */
+        }
+
+        .vimeo-modal-body iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
         /* 로딩 */
         .loading-container {
             text-align: center;
@@ -4612,6 +4718,38 @@
             }
         }
 
+        // 회차별 Vimeo 강의 URL 매핑 (1회차만 활성화)
+        const lectureVideos = {
+            1: { url: 'https://player.vimeo.com/video/1153250824', title: '1월 AI 모의고사 1회 해설강의' },
+            // 2: { url: '', title: '1월 AI 모의고사 2회 해설강의' },
+            // 3: { url: '', title: '1월 AI 모의고사 3회 해설강의' },
+            // 추후 회차 추가
+        };
+
+        // Vimeo 모달 열기
+        function openLectureModal(round) {
+            const lecture = lectureVideos[round];
+            if (!lecture) {
+                alert('해설강의 준비 중입니다.');
+                return;
+            }
+
+            document.getElementById('vimeoModalTitle').textContent = lecture.title;
+            document.getElementById('vimeoIframe').src = lecture.url + '?muted=0';
+            document.getElementById('vimeoModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Vimeo 모달 닫기
+        function closeVimeoModal(event) {
+            if (event && event.target !== document.getElementById('vimeoModal')) {
+                return;
+            }
+            document.getElementById('vimeoIframe').src = '';
+            document.getElementById('vimeoModal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
         // 점수에 따른 등급 반환 함수 (시험지와 동일한 기준) - 1회차 기준: 전체 4점 하향
         // 등급별 색상: 1등급 하늘색, 2등급 노란색, 3등급 연두색, 4등급 주황색, 5등급 핑크색
         function getGradeFromScore(score) {
@@ -4827,6 +4965,22 @@
                     buttons = `<button class="btn-start" onclick="event.stopPropagation(); startExam('${exam.id}')">시험 시작</button>`;
             }
 
+            // 강의 버튼 생성 (1회차만 활성화)
+            const hasLecture = lectureVideos[exam.round];
+            const lectureButton = hasLecture
+                ? `<button class="btn-lecture" onclick="event.stopPropagation(); openLectureModal(${exam.round})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    강의 시청하기
+                   </button>`
+                : `<button class="btn-lecture disabled" onclick="event.stopPropagation(); alert('해설강의 준비 중입니다.')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    강의 준비 중
+                   </button>`;
+
             return `
                 <div class="exam-card">
                     <div class="card-clickable-area" onclick="handleCardClick('${exam.id}', '${progress.status}')">
@@ -4843,6 +4997,7 @@
                     <div class="card-buttons-area">
                         ${areaContent}
                         ${buttons}
+                        ${lectureButton}
                     </div>
                 </div>
             `;
@@ -9171,5 +9326,18 @@
         initLiveTicker();
     });
     </script>
+
+    <!-- Vimeo 강의 모달 -->
+    <div class="vimeo-modal-overlay" id="vimeoModal" onclick="closeVimeoModal(event)">
+        <div class="vimeo-modal" onclick="event.stopPropagation()">
+            <div class="vimeo-modal-header">
+                <span class="vimeo-modal-title" id="vimeoModalTitle">강의 시청</span>
+                <button class="vimeo-modal-close" onclick="closeVimeoModal()">&times;</button>
+            </div>
+            <div class="vimeo-modal-body">
+                <iframe id="vimeoIframe" src="" allow="autoplay; fullscreen; picture-in-picture"></iframe>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
