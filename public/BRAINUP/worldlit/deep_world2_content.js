@@ -4399,9 +4399,9 @@ window.loadCompletionStatus = async function () {
   } finally {
     window._completionStatusLoading = false;
     window._completionStatusLoaded = true;
-}
+  }
   })();
-  return window._completionStatusPromise; }
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
