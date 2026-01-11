@@ -108,7 +108,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 문단별 중심 내용: 1문단은 자연 관찰과 탐구, 2문단은 발명가로서 비행 기계와 해부학, 3문단은 대표작과 만능인, 4문단은 호기심과 끈기의 교훈입니다. 선택지의 문단 번호가 뒤섞여 있습니다.',
       q3: '정답: ④번. 본문에서 "호기심과 끈기로 세상을 탐구한 사람"이라고 서술되어 있으며, 끈기는 어려움을 참고 꾸준히 해내는 힘을 뜻합니다.',
       q4: '정답: ③번. 본문에서 "새가 나는 모습"을 관찰하고 "비행 기계를 설계했다"고 서술되어 있으므로, 새를 관찰하며 아이디어를 얻었다고 추론할 수 있습니다.'
-    }
+  }
   },
 
   /* ===== people2_02 : "천장을 그린 남자, 미켈란젤로" ===== */
@@ -207,7 +207,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 지구와 자연을 보호하는 그림을 그려서 환경의 소중함을 알리고 싶다.',
         '예시 3) 꿈을 향해 달려가는 사람들의 모습을 그려 희망과 용기를 전하고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_03 : "극장으로 들어간 한 남자의 이야기" ===== */
@@ -305,7 +305,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 꿈을 포기하지 않고 도전해서 성공하는 주인공의 이야기를 쓰고 싶다.',
         '예시 3) 셰익스피어처럼 사랑과 우정에 관한 감동적인 이야기를 쓰고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_04 : "놀라운 재능을 지닌 어린 음악가" ===== */
@@ -402,7 +402,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 모차르트처럼 누구나 쉽게 따라 부를 수 있는 동요를 만들어 아이들에게 들려주고 싶다.',
         '예시 3) 할머니, 할아버지도 좋아하실 수 있는 따뜻한 멜로디의 곡을 작곡하고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_05 : "상상력으로 우주를 탐험한 과학자, 아인슈타인" ===== */
@@ -500,7 +500,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 만약 시간을 멈출 수 있다면 무엇을 하고 싶을까?',
         '예시 3) 만약 동물과 대화할 수 있다면 무엇을 물어보고 싶을까?'
       ]
-    }
+  }
   },
 
   /* ===== people2_06 : "방사능의 비밀을 밝힌 여성 과학자, 마리 퀴리" ===== */
@@ -595,7 +595,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 수영을 무서워했지만 용기를 내어 배웠고, 지금은 즐겁게 수영한다.',
         '예시 3) 앞으로 과학자가 되어 새로운 것을 발견하고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_07 : "비폭력으로 세상을 바꾼 지도자, 간디" ===== */
@@ -690,7 +690,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 동생과 물건 때문에 다투었을 때 번갈아 쓰기로 약속했다.',
         '예시 3) 반에서 의견이 달랐을 때 투표로 공정하게 결정했다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_08 : "하늘을 나는 꿈을 이룬 형제, 라이트 형제" ===== */
@@ -785,7 +785,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 로봇 공학자가 되어 사람을 도와주는 로봇을 만들고 싶다.',
         '예시 3) 올림픽에 출전하는 운동선수가 되고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_09 : "어둠 속에서 빛을 찾은 헬렌 켈러" ===== */
@@ -880,7 +880,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 발표가 무서웠지만 연습을 많이 해서 반 앞에서 성공적으로 발표했다.',
         '예시 3) 영어 단어 외우기가 어려웠지만 매일 조금씩 해서 시험에서 좋은 점수를 받았다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_10 : "붓으로 감정을 그린 화가, 반 고흐" ===== */
@@ -975,7 +975,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 슬플 때는 일기장에 글을 쓰면서 마음을 정리한다.',
         '예시 3) 화가 날 때는 운동을 하면서 감정을 풀기도 한다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_11 : "백의의 천사, 나이팅게일" ===== */
@@ -1070,7 +1070,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 아픈 친구의 숙제를 대신 전해주거나 위로해 줄 수 있다.',
         '예시 3) 동네 어르신들께 인사를 잘 하고 무거운 짐을 들어드릴 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_12 : "27년의 감옥, 용서로 나라를 바꾼 넬슨 만델라" ===== */
@@ -1165,7 +1165,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 동생이 내 물건을 망가뜨려서 화가 났지만, 사과를 받고 용서했다.',
         '예시 3) 용서하기 어려웠지만, 용서하고 나니 마음이 편해졌다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_13 : "다르게 생각하라, 스티브 잡스" ===== */
@@ -1260,7 +1260,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 무거운 가방을 대신 들어주는 드론 가방을 발명하고 싶다.',
         '예시 3) 생각만 해도 글이 써지는 펜을 만들고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_14 : "가난한 이들의 어머니, 마더 테레사" ===== */
@@ -1355,7 +1355,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 동생이 숙제를 어려워할 때 옆에서 도와줄 수 있다.',
         '예시 3) 학교에서 외로워 보이는 친구에게 먼저 말을 걸어줄 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_15 : "세상을 새롭게 본 화가, 피카소" ===== */
@@ -1450,7 +1450,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 영어 일기를 써보는 새로운 공부 방법에 도전하고 싶다.',
         '예시 3) 평소에 안 먹던 음식을 직접 만들어 보고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_16 : "꿈의 왕국을 세운 월트 디즈니" ===== */
@@ -1545,7 +1545,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 하늘을 날 수 있는 구름 위 놀이공원을 만들고 싶다.',
         '예시 3) 책 속으로 들어갈 수 있는 도서관을 만들고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_17 : "세균을 발견한 과학자, 루이 파스퇴르" ===== */
@@ -1640,7 +1640,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 감기에 걸리면 마스크를 쓰고 다른 사람에게 옮기지 않도록 한다.',
         '예시 3) 독감 예방 주사를 맞아서 병에 걸리지 않도록 미리 예방한다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_18 : "기적을 만든 선생님, 앤 설리번" ===== */
@@ -1735,7 +1735,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 아버지께서 포기하지 않는 것이 중요하다는 것을 가르쳐 주셨다.',
         '예시 3) 할머니께서 다른 사람을 배려하는 마음을 가르쳐 주셨다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_19 : "웃음으로 세상을 위로한 찰리 채플린" ===== */
@@ -1830,7 +1830,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 가족과 다퉜는데 동생의 재미있는 행동에 웃으며 화해했다.',
         '예시 3) 웃으면 스트레스가 풀리고 몸도 건강해진다고 한다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_20 : "침팬지와 함께 살다, 제인 구달" ===== */
@@ -1925,7 +1925,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 펭귄이 추운 곳에서 어떻게 사는지 관찰하고 싶다.',
         '예시 3) 멸종 위기인 호랑이를 연구해서 보호 방법을 찾고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_21 : "안토니오 스트라디바리" ===== */
@@ -2020,7 +2020,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 그림 그리는 것을 좋아해서 평생 그림을 그리고 싶다.',
         '예시 3) 의사가 되어 아픈 사람들을 치료하고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_22 : "베토벤" ===== */
@@ -2115,7 +2115,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 발표할 때 긴장되지만, 베토벤처럼 용기를 내서 도전하고 싶다.',
         '예시 3) 피아노 곡이 어려워도 매일 조금씩 연습하면 결국 칠 수 있게 될 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_23 : "레오나르도 다빈치" ===== */
@@ -2210,7 +2210,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 컴퓨터가 어떻게 작동하는지 알고 싶어서 코딩을 배워보려고 한다.',
         '예시 3) 식물이 어떻게 자라는지 직접 씨앗을 심어서 관찰해 보겠다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_24 : "알렉산더 플레밍" ===== */
@@ -2305,7 +2305,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 길을 잘못 들었는데 예쁜 꽃밭을 발견했다.',
         '예시 3) 장난치다가 새로운 놀이 방법을 알게 되었다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_25 : "링컨" ===== */
@@ -2400,7 +2400,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 장애가 있는 친구를 도와주고 함께 놀겠다.',
         '예시 3) 불공평한 일을 보면 용기 있게 말하겠다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_26 : "나폴레옹" ===== */
@@ -2495,7 +2495,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 어려울 때 용기를 가지고 앞장서서 문제를 해결해야 한다.',
         '예시 3) 욕심을 부리지 않고 모두를 위해 공정하게 행동해야 한다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_27 : "마틴 루터 킹" ===== */
@@ -2590,7 +2590,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나에게는 꿈이 있습니다. 가난한 나라의 아이들도 배불리 먹고 공부할 수 있는 꿈입니다.',
         '예시 3) 나에게는 꿈이 있습니다. 환경이 깨끗해져서 동물들도 행복하게 사는 꿈입니다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_28 : "세르반테스" ===== */
@@ -2687,7 +2687,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 바닷속 왕국에 가서 인어와 친구가 되고 싶다.',
         '예시 3) 미래 도시로 가서 날아다니는 자동차를 타보고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_29 : "공자" ===== */
@@ -2784,7 +2784,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 부모님이 피곤하실 때 집안일을 도와드리겠다.',
         '예시 3) 동생이 잘못해도 화내지 않고 이해하려고 노력하겠다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_30 : "알렉산더 대왕" ===== */
@@ -2881,7 +2881,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 좋은 리더가 되려면 먼저 많이 배우고 준비해야 한다.',
         '예시 3) 함께하는 사람들을 존중하고 아끼는 마음이 중요하다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_31 : "클레오파트라" ===== */
@@ -2978,7 +2978,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 서로를 존중하고 대화로 문제를 해결해야 한다.',
         '예시 3) 공통의 이익을 찾아 함께 협력하는 것이 좋다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_32 : "징기스칸" ===== */
@@ -3075,7 +3075,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 다른 사람과 협력하고 배려하는 성품도 중요하다.',
         '예시 3) 어려운 상황에서도 포기하지 않는 끈기가 필요하다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_33 : "다윈" ===== */
@@ -3172,7 +3172,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 민들레 씨앗이 바람에 날아가는 것을 보고 식물이 퍼지는 방법을 알았다.',
         '예시 3) 장마철에 달팽이가 많이 나오는 것을 보고 습도와 관련이 있다고 생각했다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_34 : "코코 샤넬" ===== */
@@ -3269,7 +3269,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 파란색 옷을 좋아하는데, 시원해 보이고 기분이 좋아지기 때문이다.',
         '예시 3) 단순한 디자인의 옷이 좋다. 여러 옷과 잘 어울리기 때문이다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_35 : "빌 게이츠" ===== */
@@ -3366,7 +3366,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 외국어를 실시간으로 번역해 주는 안경을 발명하고 싶다.',
         '예시 3) 아픈 곳을 스스로 찾아 치료하는 약을 개발하고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_36 : "마이클 조던" ===== */
@@ -3463,7 +3463,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 피아노 대회에서 떨어졌지만 더 연습해서 다음 해에 상을 받았다.',
         '예시 3) 달리기에서 꼴찌했지만 매일 연습해서 반에서 1등이 되었다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_37 : "아서왕" ===== */
@@ -3560,7 +3560,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 잃어버린 공주를 찾아 위험한 숲을 지나 마법의 성에 가고 싶다.',
         '예시 3) 친구들과 함께 사라진 마법의 책을 찾아 세상을 구하고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_38 : "투탕카멘" ===== */
@@ -3658,7 +3658,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 투탕카멘의 황금 마스크를 가까이서 보고 싶다.',
         '예시 3) 고대 이집트 사람들이 어떻게 살았는지 그들의 집을 구경하고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_39 : "갈릴레오 갈릴레이" ===== */
@@ -3756,7 +3756,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 다수가 틀린 답을 말해도 내가 옳다고 확신하면 용기 내어 말하겠다.',
         '예시 3) 잘못된 규칙이 있으면 고치자고 제안하겠다.'
       ]
-    }
+  }
   },
 
   /* ===== people2_40 : "니콜라 테슬라" ===== */
@@ -3854,8 +3854,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 공기를 깨끗하게 만들어주는 기계를 발명하고 싶다.',
         '예시 3) 말이 자동으로 번역되는 이어폰을 만들고 싶다.'
       ]
-    }
   }
+}
 });
 
 /* ===============================
@@ -3874,7 +3874,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -3920,7 +3920,7 @@ window.renderVocabFill = function () {
   setTimeout(() => {
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
   }, 100);
 };
 
@@ -3942,12 +3942,12 @@ function _bindTabEvents() {
       setTimeout(() => {
         if (typeof window.loadVocabState === 'function') {
           window.loadVocabState();
-        }
+      }
         if (typeof window.restoreVocabFromServerData === 'function') {
           window.restoreVocabFromServerData();
-        }
+      }
       }, 100);
-    }
+  }
   });
 }
 
@@ -3958,7 +3958,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -3972,7 +3972,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -3986,8 +3986,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -3996,8 +3996,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -4007,7 +4007,7 @@ function applyContentPack(unitKey) {
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   // Q4
   if (blocks[3]) {
@@ -4017,13 +4017,13 @@ function applyContentPack(unitKey) {
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 창의활동 동적 로드
   if (pack.creative) {
@@ -4033,10 +4033,10 @@ function applyContentPack(unitKey) {
 
     if (topicEl && pack.creative.topic) {
       topicEl.textContent = pack.creative.topic;
-    }
+  }
     if (hintEl && pack.creative.hint) {
       hintEl.textContent = pack.creative.hint;
-    }
+  }
     if (examplesBox && pack.creative.examples) {
       // 기존 예시 제거 (example-title 유지)
       const existingExamples = examplesBox.querySelectorAll('div:not(.example-title)');
@@ -4047,8 +4047,8 @@ function applyContentPack(unitKey) {
         div.textContent = ex;
         examplesBox.appendChild(div);
       });
-    }
   }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -4063,7 +4063,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -4097,7 +4097,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -4129,7 +4129,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -4145,11 +4145,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -4167,12 +4167,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -4191,7 +4191,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -4218,8 +4218,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -4255,7 +4255,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -4285,7 +4285,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -4302,10 +4302,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -4313,7 +4313,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -4334,7 +4334,7 @@ function renderSolutions(pack) {
     q3Answer = `<b>정답:</b> ${A.q3} — ${q3Text}`;
   } else {
     q3Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
-  }
+}
 
   // Q4 정답 텍스트
   let q4Answer;
@@ -4343,7 +4343,7 @@ function renderSolutions(pack) {
     q4Answer = `<b>정답:</b> ${A.q4} — ${q4Text}`;
   } else {
     q4Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
-  }
+}
 
   // grade-result (점수 박스) 안의 하단에 해설 추가
   const gradeResult = document.getElementById('grade-result');
@@ -4407,9 +4407,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/people2_(\d+)\.html/i);
       if (m) unitParam = `on_people2_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'people2_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'people2_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -4417,21 +4417,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:people2_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -4448,9 +4448,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // people2_01, people2_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (people2_01 등) */
@@ -4471,11 +4471,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -4492,7 +4492,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (people2_01, people2_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -4506,7 +4506,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -4517,7 +4517,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -4526,7 +4526,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -4534,8 +4534,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -4557,7 +4557,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -4574,7 +4574,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -4588,12 +4588,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -4601,7 +4601,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -4609,6 +4609,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -4616,12 +4621,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -4637,7 +4642,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -4663,24 +4668,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -4694,12 +4704,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -4739,11 +4749,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -4754,7 +4764,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -4767,12 +4777,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => {
       if (typeof window.loadVocabState === 'function') {
         window.loadVocabState();
-      }
+    }
       if (typeof window.restoreVocabFromServerData === 'function') {
         window.restoreVocabFromServerData();
-      }
+    }
     }, 100);
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -4787,14 +4797,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.people2_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -4803,13 +4813,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINFIT용 fit_ 키 매핑 (on_people2_XX → people2_XX 데이터 참조)
@@ -4820,6 +4830,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `on_people2_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

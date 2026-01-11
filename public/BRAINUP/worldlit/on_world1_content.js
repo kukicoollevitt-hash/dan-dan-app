@@ -7,7 +7,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('on_world1_')) {
     console.log('[on_world1_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -15,17 +15,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/world1_(\d{1,2})/);
     if (m) unit = `on_world1_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/world1_(\d{1,2})\.html/);
     if (m2) unit = `on_world1_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `on_world1_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'on_world1_01';
 })();
@@ -106,7 +106,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 문단별 중심 내용: 1문단은 두려움에 사로잡힌 나, 2문단은 데미안 책 발견과 깨달음, 3문단은 친구에게 고백과 용기, 4문단은 변화와 성장입니다.',
       q3: '정답: ③번. 데미안의 "새는 알에서 나오려고 투쟁한다"는 말은 두려워도 알을 깨고 나와야 새로운 세상을 만날 수 있다는 의미입니다.',
       q4: '정답: ④번. 본문에서 "이제는 그 두려움이 나를 성장시키는 시작점이라는 예감이 듭니다"라고 하여 두려움을 극복하는 과정에서 성장할 수 있기 때문입니다.'
-    }
+  }
   },
 
   /* ===== world1_02 : "섬의 비밀과 소년들의 결심" (15소년 표류기) ===== */
@@ -176,7 +176,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 문단별 중심 내용: 1문단은 케이트의 사연과 소년들의 경험 공유, 2문단은 무법자들의 위험 전달, 3문단은 드니팬 일행과의 갈등, 4문단은 브리앙의 결심입니다. 선택지의 문단 번호가 뒤섞여 있습니다.',
       q3: '정답: ④번. 본문의 어휘 설명에서 무인도는 "사람이 살지 않는 섬", 은신처는 "숨거나 몸을 피할 수 있는 곳"입니다.',
       q4: '정답: ①번. 본문에서 "악당들에게 들키지 않으려면 밤을 기다리는 수밖에 없어"라고 브리앙이 말했습니다.'
-    }
+  }
   },
 
   /* ===== world1_03 : "꽃의 요정이 이룬 소원" ===== */
@@ -247,7 +247,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ④번. 문단별 중심 내용: 1문단은 마야의 성장과 다짐, 2문단은 인간을 만나고 싶은 바람, 3문단은 요정의 도움으로 소원 실현, 4문단은 사랑의 아름다움 깨달음입니다. 선택지의 문단 번호가 뒤섞여 있습니다.',
       q3: '정답: ①번. 본문의 어휘 설명에서 성장은 "시간이 지나면서 능력이나 모습이 발달하는 과정", 간절함은 "마음속 깊이 바라고 원하는 마음"입니다.',
       q4: '정답: ②번. 본문에서 "우연히 만난 꽃의 요정이 마야의 마음을 알아채고 소원을 이루어 준 것이었습니다"라고 서술되어 있습니다.'
-    }
+  }
   },
 
   /* ===== world1_04 : "타미노와 파파게노에게 내려진 첫 번째 시험" ===== */
@@ -327,7 +327,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 어머니를 사랑하는 마음은 변하지 않아도, 잘못된 명령을 따르지 않는 것이 진정한 효도일 수 있어.',
         '예시 3) 빛의 세계를 믿고 타미노와 함께 시험을 이겨내면 분명 좋은 결과가 있을 거야.'
       ]
-    }
+  }
   },
 
   /* ===== world1_05 : "어린 왕자와 여우의 특별한 만남" (어린 왕자) ===== */
@@ -406,7 +406,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 친구에게: 함께 놀고 웃었던 시간들이 너를 특별하게 만들었어.',
         '예시 3) 강아지에게: 매일 산책하며 보낸 시간이 너를 세상에서 가장 소중한 친구로 만들었어.'
       ]
-    }
+  }
   },
 
   /* ===== world1_06 : 보물섬 (스티븐슨) ===== */
@@ -485,7 +485,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 숲속에서 무서운 늑대를 만났지만, 서로를 믿고 손을 꼭 잡은 채 용기를 내어 조용히 지나갔더니 늑대가 우리를 그냥 보내주었다.',
         '예시 3) 마침내 보물 상자를 열었을 때, 금화 대신 오래된 편지가 나왔고, 거기에는 진짜 보물은 함께한 시간과 우정이라는 메시지가 적혀 있었다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_07 : 피노키오 (콜로디) ===== */
@@ -565,7 +565,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 동생 과자를 몰래 먹고 모른다고 했더니 코가 길어져서 엄마가 바로 알아차렸고, 솔직하게 사과하니 오히려 마음이 편해졌다.',
         '예시 3) 이 능력 덕분에 항상 진실만 말하게 되었고, 친구들이 나를 더욱 믿어주어서 오히려 좋은 능력이라고 생각하게 되었다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_08 : 오즈의 마법사 (바움) ===== */
@@ -645,7 +645,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 모든 동물과 대화하는 능력을 원하는데, 우리 집 강아지가 무슨 생각을 하는지 알고 싶고 동물들의 이야기를 책으로 써서 사람들에게 알려주고 싶다.',
         '예시 3) 하지만 도로시 이야기처럼 내가 원하는 것은 이미 내 안에 있을 수도 있다는 생각이 들어서, 먼저 내가 가진 것을 찾아보기로 마음먹었다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_09 : 이상한 나라의 앨리스 (루이스 캐럴) ===== */
@@ -725,7 +725,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 거꾸로 걸어 다니는 사람들의 마을을 방문해서 천장에서 밥을 먹고 바닥에 매달려 자는 신기한 경험을 해보고 싶다.',
         '예시 3) 시간을 멈출 수 있는 시계를 발견해서, 가장 행복한 순간에 시간을 멈추고 친구들과 영원히 놀 수 있다면 정말 좋겠다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_10 : 정글북 (키플링) ===== */
@@ -805,7 +805,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 학교에서는 조용한 학생이고 집에서는 시끄러운 동생인데, 두 모습 모두 진짜 나이고 상황에 따라 다른 나를 보여주는 것도 괜찮다고 생각한다.',
         '예시 3) 모글리처럼 나도 어디에도 완벽히 속하지 않지만, 그래서 오히려 더 넓은 세상을 볼 수 있고 다양한 친구를 사귈 수 있다는 것을 깨달았다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_11 : 피터 팬 (배리) ===== */
@@ -885,7 +885,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 어른이 되고 싶은데, 어른이 되면 내가 좋아하는 일을 직업으로 삼고 가족을 돌볼 수 있기 때문이다.',
         '예시 3) 처음에는 영원히 아이이고 싶었지만, 웬디처럼 부모님이 그리워질 것 같고 새로운 경험도 해보고 싶어서 천천히 어른이 되어도 괜찮을 것 같다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_12 : 로빈슨 크루소 (디포) ===== */
@@ -965,7 +965,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 그다음에는 나뭇잎과 나뭇가지로 잠잘 곳을 만들고, 돌을 부딪쳐 불을 피워서 밤에 추위와 야생동물로부터 나를 보호할 것이다.',
         '예시 3) 매일 해변에 큰 글씨로 SOS를 써 놓고, 높은 곳에서 연기 신호를 올려 지나가는 배나 비행기가 나를 발견할 수 있게 할 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_13 : 걸리버 여행기 (스위프트) ===== */
@@ -1045,7 +1045,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 내가 건물만큼 커진다면 한 발자국에 학교까지 갈 수 있겠지만, 집에 들어갈 수 없고 친구들과 놀기도 어려울 것 같다.',
         '예시 3) 걸리버처럼 두 세상을 모두 경험하면 평소에 당연하게 여겼던 내 크기와 일상이 얼마나 소중한지 깨닫게 될 것 같다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_14 : 톰 소여의 모험 (마크 트웨인) ===== */
@@ -1125,7 +1125,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 발표할 때 너무 떨렸지만, 열심히 준비한 것을 생각하며 용기를 내서 끝까지 발표했더니 선생님과 친구들이 박수를 쳐주었다.',
         '예시 3) 만약 나도 톰처럼 범죄를 목격한다면 처음에는 무서워서 말을 못 하겠지만, 무고한 사람을 생각하면 결국 진실을 말할 용기를 낼 것 같다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_15 : 백설공주 (그림 형제) ===== */
@@ -1205,7 +1205,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 거울에게 내 친구가 진짜로 나를 좋아하는지 물어보고 싶은데, 진실을 알면 오히려 마음이 편해질 것 같다.',
         '예시 3) 하지만 거울이 항상 진실만 말한다면 듣기 싫은 대답도 있을 수 있어서, 어떤 질문은 안 하는 게 나을 수도 있다고 생각했다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_16 : 신데렐라 (페로/그림 형제) ===== */
@@ -1285,7 +1285,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 작은 방을 거대한 도서관으로 바꿔달라고 해서, 세상의 모든 책을 읽고 싶다.',
         '예시 3) 하지만 신데렐라 이야기처럼 마법이 시간 제한이 있다면, 가장 소중한 순간에만 쓰고 싶어서 신중하게 생각할 것 같다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_17 : 인어공주 (안데르센) ===== */
@@ -1365,7 +1365,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 친구가 발표를 무서워해서 내가 대신 하겠다고 했는데, 정작 나도 떨렸지만 친구의 안도하는 모습을 보니 기뻤다.',
         '예시 3) 인어공주처럼 목소리를 포기하는 것은 너무 큰 희생이라 나라면 다른 방법을 찾아봤을 것 같지만, 그만큼 사랑이 깊었다는 것이 감동적이다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_18 : 잠자는 숲속의 공주 (페로/그림 형제) ===== */
@@ -1445,7 +1445,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 내가 알던 친구들과 가족들이 모두 없어서 정말 슬플 것 같지만, 새로운 친구를 사귀며 적응해 나갈 것이다.',
         '예시 3) 공주처럼 성 안 모든 사람들이 함께 잠들었다면 덜 외로웠을 텐데, 젊은 요정의 배려가 정말 따뜻하다고 생각했다.'
       ]
-    }
+  }
   },
 
   /* ===== world1_19 : 빨간 모자 (샤를 페로/그림 형제) ===== */
@@ -1522,7 +1522,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 늑대가 지름길을 알려주었을 때 수상하다고 느껴서 오히려 반대 방향으로 가고, 마을 사람들에게 숲에 무서운 늑대가 있다고 알렸을 거예요. 그러면 마을 사람들이 함께 늑대를 쫓아냈을 거예요.',
         '예시 3) 할머니 댁에 도착해서 할머니 모습이 이상하다고 느끼는 순간, 바로 밖으로 뛰쳐나가서 큰 소리로 도움을 요청했을 거예요. 그러면 사냥꾼이 더 빨리 와서 할머니를 구할 수 있었을 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_20 : 헨젤과 그레텔 (그림 형제) ===== */
@@ -1599,7 +1599,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 과자로 만든 집이 너무 신기해서 일단 멀리서 지켜보면서 어떤 사람이 사는지 확인할 거예요. 이상한 할머니가 살고 있다면 절대 가까이 가지 않고 다른 길을 찾아볼 거예요.',
         '예시 3) 숲에서 길을 잃었으니 과자 집 대신 높은 나무 위로 올라가서 마을이 어느 방향에 있는지 찾아볼 거예요. 그리고 해가 지기 전에 빨리 숲을 빠져나가려고 노력할 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_21 : 라푼젤 (그림 형제) ===== */
@@ -1676,7 +1676,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 탑에 갇혀 있는 동안 책을 많이 읽고 노래를 부르면서 시간을 보낼 거예요. 그리고 새들과 친구가 되어서 편지를 보내달라고 부탁할 거예요.',
         '예시 3) 마녀가 올라올 때 사용하는 방법을 잘 관찰해서 마녀가 없을 때 같은 방법으로 내려갈 방법을 찾을 거예요. 그리고 숲속으로 도망가서 마을을 찾아갈 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_22 : 잭과 콩나무 (영국 전래동화) ===== */
@@ -1753,7 +1753,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 구름 위에서 하늘을 나는 새들과 친구가 되어서 함께 여행하고 싶어요. 그리고 무지개 끝에 가서 정말 보물이 있는지 확인해 볼 거예요.',
         '예시 3) 구름 위 세상에서 별들을 가까이 볼 수 있으면 좋겠어요. 밤에는 별똥별을 잡아서 소원을 빌고, 낮에는 구름 미끄럼틀을 타며 놀 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_23 : 아기 돼지 삼 형제 (영국 전래동화) ===== */
@@ -1830,7 +1830,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 환경을 생각해서 재활용 재료로 친환경 집을 지을 거예요. 태양광 패널을 설치해서 전기도 스스로 만들고, 빗물을 모아서 정원에 물을 줄 거예요.',
         '예시 3) 나무와 유리를 많이 사용해서 숲속에 있는 것 같은 집을 짓고 싶어요. 큰 창문으로 햇빛이 잘 들어오고, 나무 냄새가 나는 따뜻한 집에서 살고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_24 : 미운 오리 새끼 (안데르센) ===== */
@@ -1907,7 +1907,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 말이 느려서 친구들이 답답해할 때가 있어요. 하지만 그래서 말하기 전에 더 많이 생각하고, 중요한 말만 하게 되어서 실수가 적어요.',
         '예시 3) 나는 혼자 있는 것을 좋아해서 외톨이 같아 보일 때가 있어요. 하지만 혼자 있을 때 책도 많이 읽고 그림도 그리면서 나만의 세계를 만들어요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_25 : 성냥팔이 소녀 (안데르센) ===== */
@@ -1984,7 +1984,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 성냥을 다 사주고, 소녀가 입을 따뜻한 옷을 사주러 함께 가게에 갔을 거예요. 그리고 소녀가 왜 이렇게 추운 밤에 혼자 있는지 물어보고 도와줄 방법을 찾았을 거예요.',
         '예시 3) 크리스마스라서 우리 집에서 하는 파티에 소녀를 초대했을 거예요. 케이크도 나눠 먹고 선물도 같이 열어보면서 즐거운 시간을 보내게 해주고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_26 : 브레멘 음악대 (그림 형제) ===== */
@@ -2061,7 +2061,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 아름다운 노래를 부르는 꾀꼬리가 되고 싶어요. 다른 동물들이 악기 소리를 내면 나는 그 위에 멜로디를 얹어서 노래할 거예요.',
         '예시 3) 나는 드럼을 치는 딱따구리가 되고 싶어요. 나무를 빠르게 두드리는 것처럼 신나는 리듬을 만들어서 음악대의 박자를 맞춰줄 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_27 : 개구리 왕자 (그림 형제) ===== */
@@ -2138,7 +2138,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 내가 왕자로서 개구리가 되었다면 너무 슬펐을 거예요. 하지만 포기하지 않고 저주를 풀어줄 착한 사람을 찾아다니며 희망을 잃지 않았을 거예요.',
         '예시 3) 내가 공주라면 개구리를 벽에 던지는 대신 부드럽게 대했을 거예요. 겉모습이 달라도 친절하게 대하면 좋은 친구가 될 수 있다는 것을 알거든요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_28 : 피리 부는 사나이 (독일 전설) ===== */
@@ -2215,7 +2215,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 피리 소리로 사람들의 마음을 편안하게 해주고 싶어요. 슬프거나 화가 난 사람들이 피리 소리를 들으면 마음이 치유되어 행복해질 거예요.',
         '예시 3) 나는 피리를 불어서 잃어버린 물건들을 찾아줄 거예요. 피리 소리에 잃어버린 물건이 주인에게 스스로 돌아오면 사람들이 정말 기뻐할 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_29 : 장화 신은 고양이 (샤를 페로) ===== */
@@ -2292,7 +2292,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 고양이에게 친구들과 잘 지내는 방법을 물어볼 거예요. 영리한 고양이가 사람들의 마음을 이해하는 법과 좋은 친구가 되는 법을 알려줄 거예요.',
         '예시 3) 나는 고양이와 함께 여행을 다니고 싶어요. 고양이가 외국어도 할 줄 알아서 세계 여러 나라를 다니며 신기한 경험을 할 수 있을 것 같아요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_30 : 엄지공주 (안데르센) ===== */
@@ -2369,7 +2369,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 꽃잎 위에서 미끄럼틀을 타고, 민들레 씨앗을 우산처럼 잡고 하늘을 날아다닐 거예요. 나비 등에 타고 정원을 여행하는 것도 정말 신날 것 같아요.',
         '예시 3) 나는 장난감 집에서 진짜로 살아볼 거예요. 인형들과 파티도 하고, 레고 블록으로 만든 성에서 왕처럼 지내면서 작은 세계의 왕국을 다스릴 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_31 : 늑대와 일곱 마리 아기 염소 (그림 형제) ===== */
@@ -2446,7 +2446,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 모르는 사람이 문을 두드리면 "부모님이 지금 바쁘세요"라고 말하고, 나중에 다시 오라고 할 거예요. 절대로 혼자 있다고 말하지 않을 거예요.',
         '예시 3) 택배라고 해도 문을 열지 않고 경비실에 맡겨달라고 할 거예요. 만약 계속 문을 두드리면 112에 전화해서 도움을 요청할 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_32 : 호두까기 인형 (호프만) ===== */
@@ -2523,7 +2523,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 사탕 숲에서 롤리팝 나무에 열린 여러 가지 맛 사탕을 다 맛보고 싶어요. 그리고 솜사탕 구름 위에 누워서 하늘을 보고 싶어요.',
         '예시 3) 과자 성에서 쿠키 왕자와 함께 젤리빈으로 만든 보석을 구경하고, 아이스크림 분수에서 원하는 맛을 마음껏 먹고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_33 : 빨간 구두 (안데르센) ===== */
@@ -2600,7 +2600,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 바로 사달라고 조르는 대신, 저금을 하거나 좋은 행동을 해서 스스로 노력해 볼 거예요. 그렇게 얻은 물건은 더 소중하게 느껴질 것 같아요.',
         '예시 3) 친구가 가진 것을 부러워하기보다 내가 가진 것에 감사하려고 노력할 거예요. 물건보다 가족과 친구가 더 소중하다는 것을 기억할 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_34 : 금도끼 은도끼 (이솝 우화) ===== */
@@ -2677,7 +2677,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 산신령에게 감사 인사를 하고, 잃어버린 물건만 돌려받을 거예요. 그리고 앞으로는 물건을 더 조심해서 다루겠다고 약속할 거예요.',
         '예시 3) 만약 금 연필이나 금 지우개가 나와도 "제 것은 평범한 연필이에요"라고 솔직하게 말할 거예요. 정직하면 마음이 편하고 좋은 일이 생길 테니까요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_35 : 행복한 왕자 (오스카 와일드) ===== */
@@ -2754,7 +2754,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 읽은 책들을 모아서 책이 없는 친구들에게 보내주고 싶어요. 책을 통해 새로운 세상을 알게 되면 친구들도 기뻐할 것 같아요.',
         '예시 3) 나는 시간을 나눠서 외로운 할머니 할아버지를 찾아뵙고 싶어요. 함께 이야기 나누고 심부름도 도와드리면 마음이 따뜻해질 것 같아요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_36 : 백조 왕자 (안데르센) ===== */
@@ -2831,7 +2831,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 부모님이 힘드실 때 내가 좋아하는 것을 참을 수 있어요. 게임이나 간식을 줄이고 공부를 열심히 해서 부모님을 기쁘게 해드리고 싶어요.',
         '예시 3) 할머니가 외로우실 때 친구들과 노는 대신 할머니와 시간을 보낼 수 있어요. 가족이 행복하면 나도 더 행복하다는 것을 알거든요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_37 : 눈의 여왕 (안데르센) ===== */
@@ -2908,7 +2908,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 먼저 어른들에게 도움을 요청하고, 할 수 있는 방법을 모두 찾을 거예요. 혼자 힘으로 안 되면 많은 사람의 도움을 받을 거예요.',
         '예시 3) 친구에게 내가 간다고 믿음을 주고 싶어요. "내가 꼭 데리러 갈게"라는 마음을 담아 편지라도 보내고, 반드시 약속을 지킬 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_38 : 어린 왕자 (생텍쥐페리) ===== */
@@ -2985,7 +2985,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 어렸을 때부터 함께한 인형이 소중해요. 비싸지 않지만 내가 울 때 안고 잤고, 많은 추억이 있어서 다른 어떤 인형으로도 바꿀 수 없어요.',
         '예시 3) 나에게 소중한 것은 친구들이에요. 함께 웃고 놀고, 때로는 다투기도 하지만 그런 시간들이 쌓여서 우리를 진정한 친구로 만들었어요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_39 : 양치기 소년과 늑대 (이솝 우화) ===== */
@@ -3062,7 +3062,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 친구에게 거짓말을 했다가 들킨 적이 있어요. 그 후로 친구가 내 말을 잘 안 믿어서 정말 힘들었어요. 그때 정직이 얼마나 중요한지 알았어요.',
         '예시 3) 부모님께 솔직하게 말했더니 혼나기는 했지만 오히려 칭찬도 받았어요. "정직하게 말해줘서 고맙다"고 하셨어요. 정직하면 결국 좋은 일이 생겨요.'
       ]
-    }
+  }
   },
 
   /* ===== world1_40 : 토끼와 거북이 (이솝 우화) ===== */
@@ -3139,8 +3139,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 책 읽기를 싫어했는데 매일 10분씩 읽기 시작했어요. 지금은 책이 재미있어져서 스스로 찾아 읽게 되었어요. 꾸준히 하니까 습관이 되었어요.',
         '예시 3) 처음에 줄넘기를 잘 못했지만 매일 연습했어요. 100개도 힘들었는데 지금은 500개도 할 수 있어요. 느려도 포기하지 않으면 된다는 걸 알았어요.'
       ]
-    }
   }
+}
 });
 function getCurrentUnit() {
   return (window.CUR_UNIT || 'world1_01');
@@ -3155,7 +3155,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -3202,11 +3202,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -3233,7 +3233,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -3247,7 +3247,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -3261,8 +3261,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -3271,8 +3271,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -3282,7 +3282,7 @@ function applyContentPack(unitKey) {
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   // Q4
   if (blocks[3]) {
@@ -3292,13 +3292,13 @@ function applyContentPack(unitKey) {
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -3313,7 +3313,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -3347,7 +3347,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -3379,7 +3379,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -3395,11 +3395,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -3417,12 +3417,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -3441,7 +3441,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -3468,8 +3468,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -3495,7 +3495,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 - 객관식(A.q4) vs 빈칸(A.q4_1) 호환
@@ -3512,7 +3512,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -3529,7 +3529,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -3559,7 +3559,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -3576,10 +3576,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -3587,7 +3587,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -3604,7 +3604,7 @@ function renderSolutions(pack) {
   } else if (A.q3_1) {
     // 빈칸 채우기
     q3Label = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
-  }
+}
 
   // Q4: 객관식 vs 빈칸 호환
   let q4Label = '';
@@ -3614,7 +3614,7 @@ function renderSolutions(pack) {
   } else if (A.q4_1) {
     // 빈칸 채우기
     q4Label = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
-  }
+}
 
   // grade-result (점수 박스) 안의 하단에 해설 추가
   const gradeResult = document.getElementById('grade-result');
@@ -3678,9 +3678,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/world1_(\d+)\.html/i);
       if (m) unitParam = `on_world1_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'world1_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'world1_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -3688,21 +3688,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:world1_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -3719,9 +3719,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // world1_01, world1_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (world1_01 등) */
@@ -3760,7 +3760,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (world1_01, world1_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -3774,7 +3774,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -3785,7 +3785,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -3794,7 +3794,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -3802,8 +3802,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -3825,7 +3825,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -3842,7 +3842,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -3856,12 +3856,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -3869,7 +3869,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -3877,6 +3877,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -3884,12 +3889,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -3905,7 +3910,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -3931,24 +3936,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -3963,12 +3973,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -4008,11 +4018,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -4023,7 +4033,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   // 세계문학(2)인 경우 world2_content.js 로드 완료를 기다림
@@ -4037,16 +4047,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('[on_world1_content.js] world2ContentLoaded 이벤트 수신, applyContentPack 호출');
         applyContentPack(window.CUR_UNIT);
       }, { once: true });
-    }
+  }
   } else {
     applyContentPack(window.CUR_UNIT);
-  }
+}
 
   // 2) 탭 이벤트 + 어휘 자동 렌더
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -4061,14 +4071,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.world1_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -4077,13 +4087,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINFIT용 fit_ 키 매핑 (on_world1_XX → world1_XX 데이터 참조)
@@ -4094,6 +4104,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `on_world1_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

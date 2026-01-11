@@ -8,7 +8,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('on_physics_')) {
     console.log('[on_physics_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -16,17 +16,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/fit_physics[_-]?(\d{1,2})/);
     if (m) unit = `on_physics_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/fit_physics[_-]?(\d{1,2})\.html/);
     if (m2) unit = `on_physics_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `on_physics_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'on_physics_01';
 })();
@@ -118,7 +118,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ③번. 3문단은 중력과 마찰력의 역할에 대한 내용입니다. 1문단은 힘의 정의, 2문단은 힘의 크기와 방향, 4문단은 탄성력·전기력·자기력입니다.',
       q3:'정답: ③번. 탄성력은 늘어나거나 찌그러진 물체가 원래 모양으로 돌아가려는 힘입니다.',
       q4:'정답: ③번. 용수철을 눌렀다 놓으면 탄성력 때문에 원래 길이로 돌아옵니다.'
-    }
+  }
   },
 
   /* ===== physics_02 : "지도에 담긴 약속과 표현" ===== */
@@ -200,7 +200,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 우주에서의 중력과 궤도에 대한 내용입니다. 1문단은 중력의 정의, 3문단은 조석 현상, 4문단은 만유인력입니다.',
       q3:'정답: ③번. 만유인력은 모든 질량을 가진 물체가 서로 끌어당기는 힘입니다.',
       q4:'정답: ①번. 3문단에서 달의 중력이 조석 현상을 일으킨다고 설명했으므로, 달의 중력이 없다면 밀물과 썰물이 사라질 것입니다.'
-    }
+  }
   },
 
   /* ===== physics_03 : "지구와 달에서 다른 몸무게의 비밀" ===== */
@@ -282,7 +282,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ①번. 1문단은 무게와 중력의 관계에 대한 내용입니다.',
       q3:'정답: ③번. 중력은 물체를 서로 끌어당기는 자연의 힘입니다.',
       q4:'정답: ③번. 4문단에서 "달에서 더 높이 점프할 수 있는 것도 무게가 가벼워지기 때문"이라고 설명합니다. 달의 중력이 약하기 때문에 점프를 높이 할 수 있습니다.'
-    }
+  }
   },
 
   /* ===== on_physics_04 : "시소에서 크레인까지, 균형의 원리" ===== */
@@ -364,7 +364,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ①번. 1문단은 균형의 개념과 수평의 정의에 대한 내용입니다.',
       q3:'정답: ②번. 균형은 서로 반대 방향의 힘이 같은 크기로 작용하는 상태입니다.',
       q4:'정답: ②번. 2문단에서 "두 물체의 무게가 같다면 받침점에서 같은 거리에 있어야 균형이 맞아요"라고 설명합니다.'
-    }
+  }
   },
 
   /* ===== on_physics_05 : "움직임을 이해하는 세 가지 열쇠" ===== */
@@ -445,7 +445,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 기준점과 관찰자의 중요성에 대한 내용입니다.',
       q3:'정답: ③번. 방향은 물체가 어느 쪽으로 이동했는지를 나타내는 것입니다.',
       q4:'정답: ①번. 2문단에서 "차 안에 앉은 사람은 풍경이 움직이는 것처럼 느끼죠"라고 설명합니다. 기차 안에서도 마찬가지로 나무가 움직이는 것처럼 보일 수 있습니다.'
-    }
+  }
   },
 
   /* ===== on_physics_06 : "전기의 흐름, 전류와 전압" ===== */
@@ -528,7 +528,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ④번. 4문단은 옴의 법칙과 전구에 대한 내용입니다. 1문단은 전류, 2문단은 전압, 3문단은 저항입니다. ①②③번은 문단과 내용이 일치하지 않습니다.',
       q3:'정답: ③번. 저항은 "전류의 흐름을 방해하는 정도"입니다. "전압의 크기를 나타내는 단위"는 볼트(V)입니다.',
       q4:'정답: ②번. 3문단에서 "저항이 크면 전류가 적게 흐르고"라고 설명합니다. 같은 전압에서 저항이 커지면 전류가 줄어듭니다.'
-    }
+  }
   },
 
   /* ===== on_physics_07 : "불이 켜지는 길, 전기 회로" ===== */
@@ -617,7 +617,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'전기 회로는 전원, 도선, 스위치, 전기 기구로 구성됩니다',
       q3:'폐회로',
       q4:'하나의 전구가 고장 나도 다른 전구들은 계속 켜져 있어요'
-    }
+  }
   },
 
   /* ===== on_physics_08 : "자석과 자기장의 세계" ===== */
@@ -700,7 +700,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ③번. 3문단은 자기력선의 세기와 규칙에 대한 내용입니다. 1문단은 자석의 극과 성질, 2문단은 자기장과 자기력선, 4문단은 지구 자기장입니다.',
       q3:'정답: ③번. 자성은 "자석이 다른 물체를 끌어당기거나 밀어내는 성질"입니다. "자석 주변에 자기력이 작용하는 공간"은 자기장의 정의입니다.',
       q4:'정답: ②번. 4문단에서 "지구 자기장 덕분에 나침반이 작동"하고 "태양에서 오는 해로운 입자들을 막아준다"고 설명합니다.'
-    }
+  }
   },
 
   /* ===== physics_09 : "전자기 유도와 발전기" ===== */
@@ -783,7 +783,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 발전기의 원리와 에너지원에 대한 내용입니다. 1문단은 전자기 유도 발견, 3문단은 전동기, 4문단은 변압기입니다.',
       q3:'정답: ③번. 변압기는 "전압을 높이거나 낮추는 장치"입니다. "전류가 흐르는 코일이 자석 사이에서 회전하는 원리"는 전동기의 설명입니다.',
       q4:'정답: ②번. 전자기 유도는 발전기의 기본 원리입니다. 이 발견이 없었다면 전기를 대량 생산하기 어려웠을 것입니다.'
-    }
+  }
   },
 
   /* ===== physics_10 : "파동이란 무엇일까" ===== */
@@ -866,7 +866,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ③번. 3문단은 소리의 특성과 가청 범위에 대한 내용입니다.',
       q3:'정답: ③번. 파장은 마루에서 마루까지(또는 골에서 골까지)의 거리입니다.',
       q4:'정답: ③번. 3문단에서 "진동수가 클수록 높은 소리가 난다"고 설명합니다.'
-    }
+  }
   },
 
   /* ===== physics_11 ~ physics_20 ===== */
@@ -951,7 +951,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ①번. 1문단은 빛의 직진 성질과 그림자에 대한 내용입니다. 2문단은 반사의 법칙, 3문단은 정반사와 난반사, 4문단은 빛의 활용입니다.',
       q3:'정답: ③번. 입사각은 "빛이 표면에 들어오는 각도"입니다. "빛이 표면에서 튕겨 나가는 각도"는 반사각의 정의입니다.',
       q4:'정답: ③번. 3문단에서 울퉁불퉁한 표면에서는 난반사가 일어나 "빛이 여러 방향으로 흩어진다"고 설명합니다. 따라서 선명한 상이 보이지 않습니다.'
-    }
+  }
   },
 
   /* ===== physics_12 : "빛의 굴절과 렌즈" ===== */
@@ -1034,7 +1034,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 볼록 렌즈와 오목 렌즈에 대한 내용입니다. 1문단은 굴절, 3문단은 눈의 구조, 4문단은 근시와 원시 교정입니다.',
       q3:'정답: ③번. 수정체는 "눈에서 렌즈 역할을 하는 부분"입니다. "빛이 매질이 바뀔 때 경로가 꺾이는 현상"은 굴절의 정의입니다.',
       q4:'정답: ②번. 4문단에서 "근시는 오목 렌즈로 교정한다"고 설명합니다.'
-    }
+  }
   },
 
   /* ===== on_physics_13 : "소리의 성질" ===== */
@@ -1117,7 +1117,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ③번. 3문단은 메아리와 음파탐지기에 대한 내용입니다. 1문단은 소리 발생, 2문단은 소리의 세 가지 특성, 4문단은 소리의 속도입니다.',
       q3:'정답: ③번. 음색은 "소리의 맵시나 느낌"입니다. 음높이는 높고 낮음, 음량은 크고 작음, 진폭은 진동 폭의 크기입니다.',
       q4:'정답: ②번. 4문단에서 "공기에서는 약 340m/s, 물에서는 약 1,500m/s"라고 설명합니다. 물에서 더 빠릅니다.'
-    }
+  }
   },
 
   /* ===== on_physics_14 : "열과 온도" ===== */
@@ -1200,7 +1200,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ④번. 4문단은 복사와 단열재에 대한 내용입니다. 1문단은 온도와 열팽창, 2문단은 열의 정의와 이동 방향, 3문단은 전도와 대류입니다.',
       q3:'정답: ③번. 복사는 "물질 없이 전자기파로 열이 전달되는 현상"입니다. 전도는 물질을 통해, 대류는 액체나 기체 이동으로, 단열재는 열 이동을 막는 재료입니다.',
       q4:'정답: ③번. 4문단에서 "보온병은 전도, 대류, 복사를 모두 차단해 온도를 유지한다"고 설명합니다. ①번은 반대(높→낮), ②번은 금속은 뜨거워져서 위험, ④번은 복사입니다.'
-    }
+  }
   },
 
   /* ===== on_physics_15 : "에너지의 전환과 보존" ===== */
@@ -1283,7 +1283,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ①번. 1문단은 에너지의 여러 형태에 대한 내용입니다. 2문단은 에너지 전환, 3문단은 에너지 보존 법칙, 4문단은 효율입니다.',
       q3:'정답: ③번. 화학 에너지는 "음식이나 연료에 저장된 에너지"입니다. 운동 에너지는 움직임, 위치 에너지는 높이와 관련, 효율은 투입 대비 유용한 에너지 비율입니다.',
       q4:'정답: ②번. 2문단에서 "높은 곳에서 공을 떨어뜨리면 위치 에너지가 운동 에너지로 바뀐다"고 설명합니다. ①번은 에너지는 사라지지 않음, ③번은 100% 효율 불가, ④번은 열도 발생합니다.'
-    }
+  }
   },
 
   /* ===== on_physics_16 : "원자와 분자의 세계" ===== */
@@ -1366,7 +1366,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ④번. 4문단은 쿼크와 원자 내부의 빈 공간에 대한 내용입니다. 1문단은 원자의 구조, 2문단은 원소와 분자의 형성, 3문단은 결합 방식과 물질 성질입니다.',
       q3:'정답: ③번. 양성자는 "원자핵 안에 있는 양전하 입자"입니다. 원자핵은 양성자+중성자 덩어리, 전자는 원자핵 주위를 돌고, 중성자는 전하가 없습니다.',
       q4:'정답: ②번. 4문단에서 "물질의 대부분은 빈 공간이지만, 전자들의 반발력 때문에 물체를 통과할 수 없다"고 설명합니다. ①번은 수소2+산소1, ③번은 원소마다 양성자 수가 다름, ④번은 같은 탄소입니다.'
-    }
+  }
   },
 
   /* ===== on_physics_17 : "압력과 부력" ===== */
@@ -1449,7 +1449,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ③번. 3문단은 부력과 아르키메데스의 원리에 대한 내용입니다. 1문단은 압력의 개념과 단위, 2문단은 수압과 기압, 4문단은 배와 열기구가 뜨는 원리입니다.',
       q3:'정답: ③번. 부력은 "유체가 물체를 위로 밀어 올리는 힘"입니다. 수압은 물의 압력, 기압은 공기의 압력, 밀도는 단위 부피당 질량입니다.',
       q4:'정답: ②번. 1문단에서 "같은 힘이라도 넓은 면적에 가하면 압력이 작다"고 설명합니다. 스키는 면적이 넓어 압력이 분산됩니다. ①번은 빈 공간으로 부력, ③번은 깊을수록 커짐, ④번은 기압이 낮아서 터집니다.'
-    }
+  }
   },
 
   /* ===== on_physics_18 : "전기와 안전" ===== */
@@ -1532,7 +1532,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 합선과 과부하에 대한 내용입니다. 1문단은 감전의 위험성, 3문단은 퓨즈와 누전 차단기, 4문단은 접지와 안전 수칙입니다.',
       q3:'정답: ③번. 접지는 "전기 기구의 금속 부분을 땅과 연결하는 것"입니다. 합선은 전선끼리 닿는 것, 과부하는 전류 과다, 퓨즈는 녹아서 끊는 장치입니다.',
       q4:'정답: ②번. 2문단에서 "콘센트에 너무 많은 기구를 연결하면 과부하가 생기고 화재가 일어난다"고 설명합니다. ①번은 녹아서 끊김, ③번은 저항이 낮음, ④번은 피복이 벗겨지면 합선 위험입니다.'
-    }
+  }
   },
 
   /* ===== on_physics_19 : "우주와 별" ===== */
@@ -1615,7 +1615,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ④번. 4문단은 빅뱅 이론과 우주 팽창에 대한 내용입니다. 1문단은 별과 핵융합, 2문단은 별의 색깔과 표면 온도, 3문단은 은하의 구성입니다.',
       q3:'정답: ②번. 항성은 "태양처럼 스스로 빛을 내는 별"입니다. 핵융합은 합쳐지며 에너지 방출, 은하는 별들의 집단, 행성은 별 주위를 도는 천체입니다.',
       q4:'정답: ②번. 2문단에서 "뜨거운 별은 파란색이나 흰색, 차가운 별은 노란색이나 빨간색으로 보인다"고 설명합니다. ①번은 팽창 중, ③번은 핵융합은 합쳐지는 것, ④번은 약 2,000억 개입니다.'
-    }
+  }
   },
 
   /* ===== on_physics_20 : "미래 물리학과 첨단 기술" ===== */
@@ -1698,8 +1698,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 양자 컴퓨터와 큐비트에 대한 내용입니다. 1문단은 반도체와 레이저, 3문단은 핵융합 발전과 우주 탐사, 4문단은 인공지능과 물리학입니다.',
       q3:'정답: ③번. 큐비트는 "0과 1을 동시에 가질 수 있는 양자 정보 단위"입니다. 반도체는 전기 전도성 조절, 레이저는 빛 모음, 트랜지스터는 전기 신호 조절입니다.',
       q4:'정답: ②번. 2문단에서 "양자 컴퓨터는 큐비트를 사용해 복잡한 문제를 훨씬 빠르게 풀 수 있다"고 설명합니다. ①번은 수소→헬륨, ③번은 여러 번 사용, ④번은 저항이 0입니다.'
-    }
   }
+}
 });
 
 /* ===============================
@@ -1716,7 +1716,7 @@ window.renderVocabFill = function () {
   if (_vocabFillRendered) {
     console.log('[renderVocabFill] 이미 렌더링됨, 건너뛰기');
     return;
-  }
+}
 
   const unit = window.CUR_UNIT || 'physics_01';
   const pack = window.CONTENTS?.[unit];
@@ -1726,7 +1726,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -1776,11 +1776,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -1807,7 +1807,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -1821,7 +1821,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -1835,8 +1835,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -1845,8 +1845,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -1856,7 +1856,7 @@ function applyContentPack(unitKey) {
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   // Q4
   if (blocks[3]) {
@@ -1866,13 +1866,13 @@ function applyContentPack(unitKey) {
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -1887,7 +1887,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -1921,7 +1921,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -1953,7 +1953,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -1969,11 +1969,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -1991,12 +1991,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -2015,7 +2015,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -2042,8 +2042,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -2070,7 +2070,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 - 객관식 또는 빈칸 채우기
@@ -2088,7 +2088,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -2105,7 +2105,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -2135,7 +2135,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -2152,10 +2152,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -2163,7 +2163,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -2182,7 +2182,7 @@ function renderSolutions(pack) {
     const q3Ans1 = Array.isArray(A.q3_1) ? A.q3_1[0] : A.q3_1;
     const q3Ans2 = Array.isArray(A.q3_2) ? A.q3_2[0] : A.q3_2;
     q3AnswerText = `${q3Ans1 || ''} / ${q3Ans2 || ''}`;
-  }
+}
 
   if (A.q4 && typeof A.q4 === 'string' && pack.quiz.q4_opts) {
     // 객관식
@@ -2192,7 +2192,7 @@ function renderSolutions(pack) {
     const q4Ans1 = Array.isArray(A.q4_1) ? A.q4_1[0] : A.q4_1;
     const q4Ans2 = Array.isArray(A.q4_2) ? A.q4_2[0] : A.q4_2;
     q4AnswerText = `${q4Ans1 || ''} / ${q4Ans2 || ''}`;
-  }
+}
 
   // grade-result (점수 박스) 안의 하단에 해설 추가
   const gradeResult = document.getElementById('grade-result');
@@ -2256,9 +2256,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/physics_(\d+)\.html/i);
       if (m) unitParam = `on_physics_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'physics_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'physics_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -2266,21 +2266,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:physics_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -2297,9 +2297,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // physics_01, physics_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (physics_01 등) */
@@ -2320,11 +2320,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -2341,7 +2341,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (physics_01, physics_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -2355,7 +2355,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -2366,7 +2366,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -2375,7 +2375,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -2383,8 +2383,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -2406,7 +2406,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -2423,7 +2423,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -2437,12 +2437,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -2450,7 +2450,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -2458,6 +2458,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -2465,12 +2470,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -2486,7 +2491,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -2512,24 +2517,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -2543,12 +2553,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -2588,11 +2598,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -2603,7 +2613,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -2612,7 +2622,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -2627,14 +2637,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.physics_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -2643,13 +2653,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINFIT용 fit_ 키 매핑 (on_physics_XX → physics_XX 데이터 참조)
@@ -2660,6 +2670,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `on_physics_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

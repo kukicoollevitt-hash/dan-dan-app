@@ -8,7 +8,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('world2_')) {
     console.log('[world2_content.js] CUR_UNIT already set:', window.CUR_UNIT);
     return;
-  }
+}
 
   // 직접 world2 파일 접근 시 (fallback)
   const qs = new URLSearchParams(location.search).get('unit');
@@ -17,17 +17,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/world2[_-]?(\d{1,2})/);
     if (m) unit = `world2_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/world2[_-]?(\d{1,2})\.html/);
     if (m2) unit = `world2_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `world2_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'world2_01';
 })();
@@ -108,7 +108,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 1문단은 총독이 텔 체포와 화가 남, 2문단은 사과 맞히기 제안과 사람들 놀람, 3문단은 화살 두 개 준비와 묘안 떠올림, 4문단은 사과 맞히기 성공, 5문단은 화살의 이유입니다.',
       q3: '정답: 묘안, 배짱. 텔은 좋은 생각인 "묘안"을 떠올려 화살 두 개를 준비했고, 겁내지 않고 맞서는 용기인 "배짱"을 보여주었습니다.',
       q4: '정답: 아들, 총독. 텔은 "아들"을 다치게 하면 "총독"을 쏘겠다고 말했습니다.'
-    }
+  }
   },
 
   /* ===== world2_02 : "소년들의 용기와 케이트의 눈물" (15소년 표류기) ===== */
@@ -177,7 +177,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 1문단은 케이트와 소년들 사연 공유, 2문단은 악당들의 존재와 드니팬 일행 걱정, 3문단은 브리앙의 결심과 밤에 출발 준비, 4문단은 작품 소개입니다.',
       q3: '정답: 무인도, 은신처. 소년들이 2년간 살아온 곳은 사람이 살지 않는 "무인도"이고, 악당들에게 들키지 않기 위해 "은신처"(동굴)를 지켜야 했습니다.',
       q4: '정답: 결심, 밤. 브리앙은 단단히 마음먹어("결심") 드니팬 일행을 찾아가기로 했고, 악당들에게 들키지 않기 위해 "밤"을 기다리기로 했습니다.'
-    }
+  }
   },
 
   /* ===== world2_03 : "로빈 후드의 은밀한 재판" ===== */
@@ -248,7 +248,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 1문단은 리처드 경의 사연 소개, 2문단은 주교와의 대화와 활쏘기 구경, 3문단은 금고 발견과 돈 분배 및 리처드 경 감사, 4문단은 작품 소개입니다.',
       q3: '정답: 저당, 몸값. 리처드 경은 아들을 구하려고 성과 땅문서까지 "저당" 잡히며 돈을 빌렸고, 월터 경 가문은 막대한 "몸값"을 요구했습니다.',
       q4: '정답: 청빈, 은혜. 주교는 "청빈"한 삶을 산다고 했지만 많은 돈을 숨기고 있었고, 리처드 경은 로빈 후드의 "은혜"에 깊이 감사했습니다.'
-    }
+  }
   },
 
   /* ===== world2_04 : "말괄량이 카타리나를 둘러싼 오해와 진실" ===== */
@@ -329,7 +329,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 진정한 배우자는 상대를 변화시키려 하기보다 있는 그대로를 이해하려는 사람이다.',
         '예시 3) 어려울 때 함께 고민하고 기쁠 때 함께 웃을 수 있는 사람이 좋은 배우자라고 생각한다.'
       ]
-    }
+  }
   },
 
   /* ===== world2_05 : "올리버의 용기 있는 한마디" (올리버 트위스트) ===== */
@@ -407,7 +407,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 동생만 혼나지 않을 때 부당하다고 느꼈지만 말하지 못했다. 용기를 내어 말했으면 좋겠다.',
         '예시 3) 친구가 따돌림 당할 때 도와주고 싶었지만 무서워서 못했다. 올리버처럼 용기를 내고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== world2_06 : 허클베리 핀의 모험 (마크 트웨인) ===== */
@@ -475,7 +475,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 길에서 지갑을 주웠는데 친구가 그냥 가지자고 해도, 나는 경찰서에 가져다줄 거예요. 지갑을 잃어버린 사람이 얼마나 걱정하고 있을지 생각하면 마음이 편하지 않을 것 같거든요.',
         '예시 3) 시험에서 친구가 답을 보여달라고 해도 거절할 거예요. 당장은 미움받을 수 있지만, 정직하게 사는 것이 나중에 더 중요하고 진짜 친구라면 이해해줄 거라고 믿어요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_07 : 비밀의 화원 (프랜시스 호지슨 버넷) ===== */
@@ -554,7 +554,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '나는 학교 옥상에 허브 정원을 만들고 싶어요. 라벤더와 바질을 심어서 향기로운 공간을 만들고, 반 친구들과 함께 요리에 쓸 허브를 키울 거예요.',
         '나는 우리 집 베란다에 작은 화분 정원을 만들고 싶어요. 다육식물과 선인장을 모으고, 매일 아침 물을 주면서 식물들이 자라는 걸 관찰할 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_08 : 80일간의 세계일주 (쥘 베른) ===== */
@@ -623,7 +623,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '나는 미국, 영국, 중국, 케냐, 뉴질랜드를 여행하고 싶어요. 미국에서 디즈니랜드에 가고, 영국에서 해리 포터 촬영지를 방문하고, 중국에서 만리장성을 걷고, 케냐에서 사파리 투어를 하고, 뉴질랜드에서 양떼를 보고 싶어요.',
         '나는 이탈리아, 그리스, 인도, 태국, 캐나다를 돌고 싶어요. 이탈리아에서 피자를 먹고, 그리스에서 신전을 보고, 인도에서 타지마할을 구경하고, 태국에서 코끼리와 놀고, 캐나다에서 나이아가라 폭포를 보고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_09 : 해저 2만리 (쥘 베른) ===== */
@@ -692,7 +692,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '산호초 숲을 지나며 알록달록한 물고기들을 구경했다. 광대어가 말미잘 사이에 숨어 있는 것도 보았다. 콩세유가 물고기 이름을 모두 외우고 있어서 놀랐다. 나도 바다 생물을 공부해야겠다.',
         '잃어버린 도시 아틀란티스를 발견했다! 돌로 만든 건물들이 바닷속에 잠겨 있었다. 언젠가는 육지였던 곳이 바다가 되다니 자연의 힘은 정말 대단하다. 이곳의 비밀을 더 알고 싶다.'
       ]
-    }
+  }
   },
 
   /* ===== world2_10 : 왕자와 거지 (마크 트웨인) ===== */
@@ -761,7 +761,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '나는 우리 강아지와 하루를 바꿔 보고 싶어요. 매일 잠만 자고, 간식 먹고, 산책하는 강아지의 삶이 궁금해요. 하지만 말을 못 해서 답답할 것 같기도 해요.',
         '나는 우리 엄마와 하루를 바꿔 보고 싶어요. 엄마가 얼마나 바쁘고 힘든지 직접 느껴 보고, 앞으로 더 잘 도와드려야겠다고 생각할 것 같아요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_11 : 톰 소여의 모험 (마크 트웨인) ===== */
@@ -830,7 +830,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '나는 우주선을 타고 달나라로 모험을 떠나고 싶어요. 우주복을 입고 달 표면을 걸어 다니며 지구에서 볼 수 없는 풍경을 구경할 거예요.',
         '나는 숲속 깊은 곳에 있는 비밀 동굴을 탐험하고 싶어요. 랜턴을 들고 들어가서 신비로운 보석이나 고대 유물을 발견하는 상상을 해요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_12 : 정글북 (러디어드 키플링) ===== */
@@ -899,7 +899,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '발루 아저씨에게, 아저씨가 가르쳐 준 정글의 법칙 덕분에 나는 안전하게 살 수 있어요. 꿀을 함께 먹으며 놀던 시간이 가장 행복했어요.',
         '늑대 형제들에게, 우리가 함께 뛰어다니며 사냥 연습을 하던 때가 그리워. 비록 내가 인간이지만, 너희는 나의 진짜 형제야. 늘 고마워!'
       ]
-    }
+  }
   },
 
   /* ===== world2_13 : 피터팬 (J.M. 배리) ===== */
@@ -968,7 +968,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '팅커벨에게 요정 가루를 받아서 하늘을 날고 싶어요. 악어와 숨바꼭질도 하고, 해적선을 탐험해서 보물을 찾아볼 거예요!',
         '인디언 마을에 가서 춤을 배우고, 피터팬의 비밀 은신처에서 점심을 먹을 거예요. 밤에는 별똥별을 세며 소원을 빌고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_14 : 보물섬 (로버트 루이스 스티븐슨) ===== */
@@ -1034,7 +1034,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '나만의 보물섬: 만약 내가 보물섬의 지도를 발견한다면, 친한 친구들과 함께 배를 타고 모험을 떠날 거예요. 섬에서 해적의 함정을 피하고, 숨겨진 동굴에서 오래된 보물 상자를 발견하는 상상을 하면 정말 신나요.',
       example2: '짐에게 배우는 용기: 짐처럼 무서운 상황에서도 도망치지 않고 맞서는 용기를 배우고 싶어요. 학교에서 어려운 일이 생겨도 포기하지 않고 끝까지 해내는 사람이 되고 싶어요.',
       example3: '바다 모험 일기: 만약 내가 히스패니올라호의 선원이라면, 매일 바다 일기를 쓸 거예요. 돌고래를 만난 날, 폭풍우를 이겨낸 날, 별이 가득한 밤하늘을 본 날 등 모든 순간을 기록하고 싶어요.'
-    }
+  }
   },
 
   /* ===== world2_15 : 오즈의 마법사 (라이먼 프랭크 바움) ===== */
@@ -1100,7 +1100,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '오즈에서 만나고 싶은 친구: 저는 오즈의 나라에서 말하는 동물 친구를 만나고 싶어요. 토끼나 부엉이 같은 동물이 저에게 지혜로운 조언을 해주고, 함께 에메랄드 성까지 재미있게 여행하는 상상을 해요.',
       example2: '내가 갖고 싶은 마법: 저도 도로시처럼 특별한 마법 물건을 갖고 싶어요. 무엇이든 소원을 이루어주는 요술 모자가 있다면, 아픈 사람들을 낫게 해주고 슬픈 사람들을 웃게 만들어주고 싶어요.',
       example3: '집이 소중한 이유: 도로시가 \"집만큼 좋은 곳은 없다\"고 한 말처럼, 저도 우리 집이 세상에서 가장 편안한 곳이에요. 가족이 있고, 맛있는 밥을 먹고, 따뜻한 이불에서 잠들 수 있으니까요.'
-    }
+  }
   },
 
   /* ===== world2_16 : 지킬 박사와 하이드 (로버트 루이스 스티븐슨) ===== */
@@ -1166,7 +1166,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '화가 날 때의 나: 평소에는 친구들에게 친절하지만, 너무 화가 나면 소리를 지르거나 퉁명스러워질 때가 있어요. 그럴 때마다 나중에 후회하게 되어서, 화가 나면 먼저 심호흡을 하려고 노력해요.',
       example2: '좋은 모습 키우기: 지킬처럼 나쁜 면을 키우지 않고, 착하고 바른 면을 더 키우고 싶어요. 친구가 힘들 때 위로해주고, 어려운 사람을 도와주면 좋은 모습의 나를 더 강하게 만들 수 있을 거예요.',
       example3: '자기 통제의 중요성: 하고 싶은 일이 있어도 해서는 안 되는 일이 있어요. 게임을 하고 싶어도 숙제를 먼저 하고, 간식을 먹고 싶어도 참을 줄 아는 것이 나를 통제하는 것이에요.'
-    }
+  }
   },
 
   /* ===== world2_17 : 작은 아씨들 (루이자 메이 올컷) ===== */
@@ -1232,7 +1232,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '우리 가족 소개: 우리 가족은 아빠, 엄마, 나, 동생 이렇게 네 명이에요. 아빠는 요리를 잘하시고, 엄마는 이야기를 잘 들어주세요. 동생은 장난꾸러기지만 가끔 귀여워요. 우리는 주말마다 함께 보드게임을 해요.',
       example2: '형제자매의 장점: 작은 아씨들처럼 저도 형제/자매가 있어요. 가끔 싸우기도 하지만, 힘들 때 서로 도와주고 비밀을 나눌 수 있어서 좋아요. 혼자가 아니라는 게 참 든든해요.',
       example3: '가족에게 감사한 일: 지난번에 아팠을 때 엄마가 밤새 간호해 주신 일이 기억나요. 그때 가족의 사랑이 얼마나 소중한지 깨달았어요. 앞으로 가족에게 더 잘하고 싶어요.'
-    }
+  }
   },
 
   /* ===== world2_18 : 폭풍의 언덕 (에밀리 브론테) ===== */
@@ -1298,7 +1298,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '상처받았던 경험: 친구가 제 비밀을 다른 친구에게 말했을 때 정말 화가 났어요. 처음에는 그 친구와 말도 하기 싫었지만, 나중에 친구가 사과해서 용서했어요. 용서하니까 마음이 편해졌어요.',
       example2: '복수 대신 용서: 히스클리프처럼 복수하면 더 큰 불행이 올 수 있어요. 화가 나도 일단 마음을 가라앉히고 상대방과 대화해 보는 것이 좋을 것 같아요. 그래야 오해도 풀리고 더 좋은 관계가 될 수 있어요.',
       example3: '마음의 상처 치유하기: 상처받으면 친한 사람에게 이야기하거나, 일기를 쓰거나, 좋아하는 취미 활동을 하면서 마음을 달래는 것이 좋아요. 시간이 지나면 상처도 조금씩 나아질 거예요.'
-    }
+  }
   },
 
   /* ===== world2_19 : 제인 에어 (샬럿 브론테) ===== */
@@ -1364,7 +1364,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '자존심을 지킨 경험: 친구들이 하자는 대로 따라가지 않고 내 생각을 말한 적이 있어요. 처음에는 떨렸지만, 내 의견을 당당하게 말하니까 친구들도 존중해 주었어요.',
       example2: '자존심과 고집의 차이: 자존심은 자신을 존중하는 것이고, 고집은 무조건 내 말이 맞다고 우기는 거예요. 잘못했을 때는 인정하고 사과하는 것도 자존심 있는 행동이에요.',
       example3: '제인에게 배우기: 제인처럼 어려운 상황에서도 옳은 것을 선택하는 용기를 갖고 싶어요. 당장은 힘들어도 나중에 후회하지 않을 선택을 하는 것이 중요하다고 생각해요.'
-    }
+  }
   },
 
   /* ===== world2_20 : 몬테크리스토 백작 (알렉상드르 뒤마) ===== */
@@ -1430,7 +1430,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '기다림의 경험: 시험 결과를 기다리는 동안 너무 떨렸지만, 포기하지 않고 희망을 가졌더니 좋은 결과가 나왔어요. 힘든 시간도 참고 기다리면 좋은 일이 생긴다는 것을 배웠어요.',
       example2: '복수보다 나은 것: 나를 괴롭힌 친구에게 복수하고 싶을 때가 있었지만, 그냥 내 일에 집중했어요. 나중에 그 친구가 먼저 사과했고, 지금은 좋은 친구가 되었어요.',
       example3: '희망을 잃지 않기: 아무리 힘든 상황에서도 희망을 잃지 않는 것이 중요해요. 단테스처럼 14년이나 감옥에 있어도 포기하지 않았기에 결국 자유를 얻었어요.'
-    }
+  }
   },
 
   /* ===== world2_21 : 로빈슨 크루소 (다니엘 디포) ===== */
@@ -1496,7 +1496,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '무인도에서 가장 먼저 할 일: 저라면 먼저 물을 찾을 거예요. 물 없이는 며칠도 못 살기 때문이에요. 그 다음에는 비를 피할 곳을 만들고, 먹을 수 있는 열매나 물고기를 찾을 거예요.',
       example2: '무인도에 가져가고 싶은 것: 만약 세 가지만 가져갈 수 있다면 칼, 라이터, 그리고 튼튼한 밧줄을 가져갈 거예요. 칼로 나무를 자르고, 라이터로 불을 피우고, 밧줄로 집을 만들 수 있으니까요.',
       example3: '로빈슨에게 배우기: 로빈슨처럼 포기하지 않는 것이 가장 중요한 것 같아요. 힘든 상황에서도 할 수 있는 일부터 하나씩 해나가면 결국 해결할 수 있다는 것을 배웠어요.'
-    }
+  }
   },
 
   /* ===== world2_22 : 걸리버 여행기 (조너선 스위프트) ===== */
@@ -1562,7 +1562,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '내가 거인이라면: 만약 내가 걸리버처럼 소인국에 간다면, 아주 조심해서 걸어야 할 거예요. 실수로 건물을 부수거나 사람들을 다치게 할 수 있으니까요. 힘이 세다고 함부로 하면 안 된다는 것을 배울 것 같아요.',
       example2: '내가 소인이라면: 거인국에서 개미만큼 작아진다면 정말 무서울 것 같아요. 평소에 무시했던 작은 것들도 거인에게는 무서운 존재가 될 수 있다는 것을 깨달을 거예요.',
       example3: '관점의 중요성: 같은 일도 누구의 입장에서 보느냐에 따라 다르게 느껴져요. 친구와 다툴 때 친구 입장에서 생각해 보면 화가 풀리기도 해요.'
-    }
+  }
   },
 
   /* ===== world2_23 : 돈키호테 (미겔 데 세르반테스) ===== */
@@ -1628,7 +1628,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '나의 이상과 현실: 저는 과학자가 되고 싶은데, 지금은 수학이 어려워요. 하지만 포기하지 않고 조금씩 공부하면 언젠가 꿈을 이룰 수 있을 거라 믿어요.',
       example2: '돈키호테처럼: 남들이 불가능하다고 해도 자신의 꿈을 포기하지 않는 것이 돈키호테의 장점이에요. 저도 누군가 안 된다고 해도 제 꿈을 향해 노력하고 싶어요.',
       example3: '현실과 이상의 균형: 꿈만 꾸면 안 되고, 현실적인 노력도 해야 해요. 돈키호테의 순수한 마음과 산초의 현실 감각이 둘 다 필요한 것 같아요.'
-    }
+  }
   },
 
   /* ===== world2_24 : 주홍글씨 (나다니엘 호손) ===== */
@@ -1691,7 +1691,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '숨겼던 경험: 시험에서 친구 답을 보고도 말하지 않았는데, 계속 마음이 불편했어요. 결국 선생님께 말씀드렸더니 혼났지만 마음은 편해졌어요.',
       example2: '고백의 용기: 동생 장난감을 부수고 숨겼는데, 용기 내어 말했더니 동생이 화냈다가도 나중에 용서해 주었어요. 솔직함이 더 좋은 결과를 가져왔어요.',
       example3: '위선에 대해: 겉으로만 착한 척하는 것은 나중에 더 창피해질 수 있어요. 처음부터 솔직하게 인정하는 것이 진정한 용기라고 생각해요.'
-    }
+  }
   },
 
   /* ===== world2_25 : 오만과 편견 (제인 오스틴) ===== */
@@ -1754,7 +1754,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '친구와의 경험: 전학 온 친구가 말이 없어서 차갑다고 생각했는데, 알고 보니 수줍음이 많은 것이었어요. 지금은 가장 친한 친구가 되었어요.',
       example2: '선생님과의 경험: 새 담임선생님이 무서워 보였는데, 시간이 지나면서 학생들을 정말 아껴주시는 분이라는 걸 알았어요. 겉모습만 보고 판단하면 안 되겠다고 느꼈어요.',
       example3: '가족과의 경험: 할아버지가 잔소리만 하신다고 생각했는데, 다 저를 걱정해서 하시는 말씀이었어요. 사랑이 담긴 말이라는 걸 이제 알아요.'
-    }
+  }
   },
 
   /* ===== world2_26 : 파우스트 (괴테) ===== */
@@ -1817,7 +1817,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '나만의 행복: 처음에는 게임하는 것이 가장 행복하다고 생각했는데, 가족과 함께 보내는 시간이 더 오래 기억에 남고 행복해요.',
       example2: '나눔의 기쁨: 용돈을 모아 어려운 친구에게 선물했을 때 받는 것보다 더 기뻤어요. 파우스트처럼 남을 위할 때 행복한 것 같아요.',
       example3: '노력의 보람: 시험 공부를 열심히 해서 좋은 결과를 얻었을 때 뿌듯했어요. 쉽게 얻는 것보다 노력해서 얻는 것이 더 값진 것 같아요.'
-    }
+  }
   },
 
   /* ===== world2_27 : 레 미제라블 (빅토르 위고) ===== */
@@ -1880,7 +1880,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '용서한 경험: 친구가 제 비밀을 말했을 때 많이 화났지만, 사과를 받고 용서했어요. 마음이 편해지고 우정도 더 깊어졌어요.',
       example2: '용서받은 경험: 동생에게 짜증을 많이 냈는데 동생이 먼저 화해하자고 해서 미안했어요. 용서받으니까 더 잘해줘야겠다는 생각이 들었어요.',
       example3: '용서의 의미: 용서하지 않으면 내 마음이 계속 아파요. 장 발장처럼 용서를 받으면 새 사람이 될 수 있다고 생각해요.'
-    }
+  }
   },
 
   /* ===== world2_28 : 안나 카레니나 (톨스토이) ===== */
@@ -1943,7 +1943,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '일상의 행복: 특별한 것보다 매일 밥 먹고 가족과 이야기하는 것이 행복이에요. 레빈처럼 평범한 일상이 소중하다고 느껴요.',
       example2: '관계의 행복: 친구들과 놀 때가 제일 행복해요. 혼자 비싼 것을 가지는 것보다 함께하는 시간이 더 좋아요.',
       example3: '안나의 교훈: 안나는 가진 것을 버리고 새것을 쫓다가 불행해졌어요. 지금 가진 것에 감사하는 마음이 행복의 시작인 것 같아요.'
-    }
+  }
   },
 
   /* ===== world2_29 : 죄와 벌 (도스토예프스키) ===== */
@@ -2006,7 +2006,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '양심의 고통: 시험에서 컨닝했는데 점수가 좋아도 기쁘지 않았어요. 마음이 계속 불편해서 나중에 선생님께 말씀드렸어요.',
       example2: '정직의 기쁨: 길에서 주운 지갑을 경찰서에 맡겼어요. 돈을 가질 수도 있었지만, 돌려주니까 마음이 편하고 뿌듯했어요.',
       example3: '라스콜니코프의 교훈: 아무리 좋은 목적이라도 나쁜 방법을 쓰면 안 되는 것 같아요. 양심을 속이면 결국 자신이 제일 고통받아요.'
-    }
+  }
   },
 
   /* ===== world2_30 : 변신 (프란츠 카프카) ===== */
@@ -2069,7 +2069,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '나의 가치: 공부를 잘 못해도, 운동을 못해도, 저는 저만의 가치가 있어요. 친구를 잘 웃게 해주고 동물을 좋아하는 것도 제 장점이에요.',
       example2: '쓸모의 의미: 그레고르는 돈을 못 벌자 버림받았어요. 하지만 사람은 돈 때문에 존재하는 게 아니에요. 사랑받을 자격은 누구에게나 있어요.',
       example3: '가족의 의미: 진짜 가족은 힘들 때 더 도와주는 거라고 생각해요. 그레고르 가족처럼 되지 않으려면 서로 아끼고 사랑해야 해요.'
-    }
+  }
   },
 
   /* ===== world2_31 : 이상한 나라의 앨리스 (루이스 캐럴) ===== */
@@ -2132,7 +2132,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '나만의 이상한 나라: 모든 것이 거꾸로 된 나라를 상상해요. 비가 아래에서 위로 오르고, 집이 하늘에 있고, 물고기가 하늘을 날아요.',
       example2: '만나고 싶은 존재: 말하는 책이 사는 나라를 상상해요. 책들이 스스로 이야기를 들려주고, 궁금한 것을 물어보면 답해줘요.',
       example3: '모험 이야기: 색깔이 소리가 되는 나라에서 모험을 해요. 빨간색을 보면 음악이 들리고, 파란색을 만지면 바람 소리가 나요.'
-    }
+  }
   },
 
   /* ===== world2_32 : 모비 딕 (허먼 멜빌) ===== */
@@ -2195,7 +2195,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '게임 집착: 게임에 너무 빠져서 친구도 만나지 않고, 잠도 못 잤어요. 결국 건강이 나빠지고 성적도 떨어졌어요. 지금은 적당히 즐기려고 노력해요.',
       example2: '승부 집착: 시합에서 지면 안 된다고 너무 생각한 적이 있어요. 긴장해서 오히려 실수가 많았어요. 에이햅처럼 집착하면 오히려 손해인 것 같아요.',
       example3: '포기의 용기: 안 되는 것을 계속 붙잡고 있으면 다른 기회도 놓쳐요. 때로는 놓아주는 것도 용기라고 생각해요.'
-    }
+  }
   },
 
   /* ===== world2_33 : 템페스트/폭풍우 (셰익스피어) ===== */
@@ -2258,7 +2258,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '용서의 경험: 친구가 약속을 어겨서 많이 화났는데, 용서했더니 마음이 편해졌어요. 프로스페로처럼 용서가 더 큰 힘인 것 같아요.',
       example2: '용서의 어려움: 나를 힘들게 한 사람을 용서하기 정말 어려워요. 하지만 미워하는 것도 힘들어서, 그냥 잊으려고 노력해요.',
       example3: '새로운 시작: 용서하면 과거에서 벗어나 새로 시작할 수 있어요. 프로스페로가 마법을 버리고 밀라노로 돌아간 것처럼요.'
-    }
+  }
   },
 
   /* ===== world2_34 : 호밀밭의 파수꾼 (샐린저) ===== */
@@ -2321,7 +2321,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '기대되는 점: 하고 싶은 것을 자유롭게 할 수 있을 것 같아요. 용돈을 직접 벌고, 여행도 마음대로 갈 수 있어요.',
       example2: '두려운 점: 모든 것을 혼자 결정해야 하는 게 무서워요. 실패해도 누가 도와주지 않을 것 같아서요.',
       example3: '지키고 싶은 것: 어른이 되어도 순수한 마음을 잃지 않고 싶어요. 홀든처럼 가짜가 되고 싶지 않아요.'
-    }
+  }
   },
 
   /* ===== world2_35 : 노인과 바다 (헤밍웨이) ===== */
@@ -2384,7 +2384,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '운동 경험: 마라톤 대회에서 너무 힘들어서 포기하고 싶었어요. 하지만 끝까지 달려서 완주했을 때 정말 뿌듯했어요.',
       example2: '공부 경험: 수학 문제를 못 풀어서 그만두고 싶었는데, 계속 시도해서 풀었어요. 포기했으면 그 기쁨을 몰랐을 거예요.',
       example3: '산티아고의 교훈: 결과가 뼈만 남았어도 산티아고는 패배하지 않았어요. 과정에서 보여준 의지가 진정한 승리라고 생각해요.'
-    }
+  }
   },
 
   /* ===== world2_36 : 동물농장 (조지 오웰) ===== */
@@ -2447,7 +2447,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '공정한 세상: 모두가 같은 기회를 가지고, 열심히 한 만큼 인정받는 세상이요. 태어날 때부터 차별받지 않는 세상이요.',
       example2: '동물농장의 교훈: 규칙은 모두에게 똑같이 적용되어야 해요. 누군가 \'더 평등\'해지면 그건 불평등인 거예요.',
       example3: '감시의 중요성: 권력을 가진 사람도 누군가가 지켜봐야 해요. 아무도 감시하지 않으면 동물농장처럼 될 수 있어요.'
-    }
+  }
   },
 
   /* ===== world2_37 : 위대한 개츠비 (피츠제럴드) ===== */
@@ -2510,7 +2510,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '나의 꿈: 수의사가 되고 싶어요. 동물을 좋아하고, 아픈 동물을 치료해 주고 싶거든요. 그래서 생물 공부를 열심히 하고 있어요.',
       example2: '꿈을 위한 노력: 개츠비처럼 무슨 수를 써서라도 하면 안 되는 것 같아요. 정당하게 노력해서 이루는 게 진짜 성공이에요.',
       example3: '현실과 꿈: 꿈만 꾸면 안 되고 현실적인 계획도 세워야 해요. 초록빛만 바라보다가 개츠비처럼 되면 안 되니까요.'
-    }
+  }
   },
 
   /* ===== world2_38 : 앵무새 죽이기 (하퍼 리) ===== */
@@ -2573,7 +2573,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '편견의 경험: 전학 온 친구를 외모만 보고 무서운 애라고 생각했는데, 알고 보니 정말 친절했어요. 편견이 얼마나 틀릴 수 있는지 알았어요.',
       example2: '공정함의 중요성: 톰처럼 억울한 일을 당하면 정말 슬플 것 같아요. 누구나 공정하게 대우받아야 한다고 생각해요.',
       example3: '애티커스의 교훈: 남의 입장에서 걸어봐야 이해할 수 있다는 말이 인상적이었어요. 미워하기 전에 이해하려고 노력할 거예요.'
-    }
+  }
   },
 
   /* ===== world2_39 : 1984 (조지 오웰) ===== */
@@ -2636,7 +2636,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '자유의 소중함: 하고 싶은 것을 못 하고, 생각도 자유롭게 못 한다면 살고 싶지 않을 것 같아요. 자유가 있어서 행복해요.',
       example2: '감시의 무서움: 누군가 항상 지켜본다면 정말 무서울 것 같아요. 윈스턴처럼 숨도 못 쉴 것 같아요.',
       example3: '1984의 교훈: 독재자가 나타나지 않도록 시민들이 깨어 있어야 한다고 생각해요. 자유는 지키려고 노력해야 유지돼요.'
-    }
+  }
   },
 
   /* ===== world2_40 : 파리대왕 (윌리엄 골딩) ===== */
@@ -2709,8 +2709,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       example1: '규칙이 없는 세상: 신호등이 없으면 사고가 나고, 줄을 서지 않으면 싸움이 날 거예요. 규칙은 모두를 지켜줘요.',
       example2: '학교의 규칙: 학교에 규칙이 없으면 수업이 엉망이 되고, 약한 친구가 괴롭힘 당할 수 있어요. 규칙이 있어서 안전해요.',
       example3: '파리대왕의 교훈: 소년들은 어른이 없자 야만으로 변했어요. 우리 안에도 그런 면이 있을 수 있어서 스스로 조심해야 해요.'
-    }
   }
+}
 });
 
 // ✅ 세계문학(2) 콘텐츠 로드 완료 이벤트 발생
@@ -2734,7 +2734,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -2777,11 +2777,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -2804,7 +2804,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -2814,7 +2814,7 @@ function applyContentPack(unitKey) {
   const passageBox = document.querySelector('.passage-text');
   if (passageBox) {
     passageBox.innerHTML = pack.passage.map(p => `<p>${p}</p>`).join('');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox) vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -2827,8 +2827,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   if (blocks[1]) {
     const q2Text = blocks[1].querySelector('.quiz-q');
@@ -2836,8 +2836,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   if (blocks[2]) {
     const q3P = blocks[2].querySelector('.quiz-q');
@@ -2846,7 +2846,7 @@ function applyContentPack(unitKey) {
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   if (blocks[3]) {
     const q4P = blocks[3].querySelector('.quiz-q');
@@ -2855,12 +2855,12 @@ function applyContentPack(unitKey) {
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -2875,7 +2875,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -2942,11 +2942,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
     const q4_1 = document.getElementById('q4-1');
@@ -2959,7 +2959,7 @@ function loadReadingState() {
     if (q5 && state.q5 !== undefined) q5.value = state.q5;
     if (state.graded && typeof window.gradeQuiz === 'function') {
       setTimeout(() => { try { window.gradeQuiz(); } catch (e) { console.warn('auto re-grade error', e); } }, 0);
-    }
+  }
   } catch (e) { console.warn('loadReadingState error', e); }
 }
 
@@ -2979,7 +2979,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -3006,8 +3006,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   const q1 = document.querySelector('input[name="q1"]:checked');
   const q1ok = (q1 && q1.value === A.q1);
@@ -3049,7 +3049,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -3077,7 +3077,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   const radarScores = {
     literal: q1ok ? 10 : 6,
@@ -3140,26 +3140,26 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/world2_(\d+)\.html/i);
       if (m) unitParam = `world2_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'world2_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'world2_01')).toLowerCase();
+}
 
   function buildStudentKey(stu) {
     const cleanPhone = (stu.phone || '').replace(/\D/g, '');
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   function buildProgressKey(stu, unit) {
     return `dan-progress:${buildStudentKey(stu)}:${unit}`;
-  }
+}
 
   function readDoneList() {
     const stu = getCurrentStudent();
@@ -3173,9 +3173,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     getUnit: detectUnit,
@@ -3215,13 +3215,13 @@ window.DanDan = window.DanDan || {};
         await original.apply(this, args);
       } else if (typeof window.captureElementToPDF === 'function') {
         await captureElementToPDF('capture-report', '단단국어_분석리포트.pdf', { withStudentInfo: true });
-      }
+    }
       const key = ProgressManager.markComplete();
       if (typeof window.showSubmitSuccess === 'function') showSubmitSuccess('분석리포트');
       else console.log(`학습완료 처리됨: ${key}`);
       if (typeof window.sendLearningLog === 'function') {
         try { await window.sendLearningLog(); } catch (e) { console.warn('[submitReport] sendLearningLog 실패', e); }
-      }
+    }
     };
   })();
 })();
@@ -3234,7 +3234,7 @@ window.submitCreative = async function () {
   if (!textarea || !renderBox || !captureBox) {
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
   try {
     renderBox.textContent = textarea.value || '';
     textarea.style.display  = 'none';
@@ -3251,7 +3251,7 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다.');
-    }
+  }
     if (typeof window.showSubmitSuccess === 'function') window.showSubmitSuccess('창의활동');
   } catch (e) {
     console.warn('submitCreative error', e);
@@ -3259,11 +3259,16 @@ window.submitCreative = async function () {
   } finally {
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===== 서버 완료 상태 동기화 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -3284,8 +3289,14 @@ window.loadCompletionStatus = async function () {
       data.completedUnits.forEach(unit => {
         localStorage.setItem(keyPrefix + unit, '1');
       });
-    }
-  } catch (e) { console.warn('[loadCompletionStatus] 오류', e); }
+  }
+  } catch (e) { console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
+}
+  })();
+  return window._completionStatusPromise; }
 };
 
 window.sendLearningLog = async function () {
@@ -3325,12 +3336,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderSolutions(pack);
       } catch (e) { console.warn('submit-btn handler error', e); }
     });
-  }
+}
   const creativeBtn = document.getElementById('creative-submit-btn');
   if (creativeBtn && typeof window.submitCreative === 'function') {
     creativeBtn.type = 'button';
     creativeBtn.addEventListener('click', () => submitCreative());
-  }
+}
   if (typeof loadReadingState === 'function') loadReadingState();
 });
 

@@ -7,7 +7,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('deep_modern_')) {
     console.log('[deep_modern_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -15,17 +15,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/deep_modern[_-]?(d{1,2})/);
     if (m) unit = `deep_modern_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/deep_modern[_-]?(d{1,2})\.html/);
     if (m2) unit = `deep_modern_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `deep_modern_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'deep_modern_01';
 })();
@@ -141,7 +141,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 동이는 어머니에게 허 생원을 소개했습니다. 어머니는 잠시 멈칫하더니 눈물을 글썽였고, 허 생원도 말없이 고개를 끄덕였습니다.',
         '예시 3) 달빛 아래에서 세 사람은 오랜 침묵 끝에 이야기를 나누었습니다. 잃어버린 시간을 되찾을 수는 없지만, 앞으로 함께할 날들이 있다는 것에 감사했습니다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_02 : "소나기가 남긴 흔적" ===== */
@@ -247,7 +247,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 분홍색 스웨터를 입혀 달라고 했다니... 소녀도 그날을 기억하고 있었구나. 조약돌을 건네던 내 마음을 알았을까.',
         '예시 3) 개울가에 가면 아직도 소녀가 있을 것 같다. 송진 조각을 바라보던 소녀의 모습이 눈에 선하다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_03 : "장인과의 충돌, 점순이의 선택" ===== */
@@ -352,7 +352,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 아버지한테 맞으면 불쌍해서라도 못 떠날 거야. 킬킬 웃긴 했지만 사실 마음이 조마조마했어.',
         '예시 3) 떠나겠다고? 안 돼! 3년이나 기다렸는데. 장인 이겼다고 소리치는 거 보니까 이제 우리 집 사람 다 됐네.'
       ]
-    }
+  }
   },
 
   /* ===== modern_04 : "운수 좋은 날" (현진건) ===== */
@@ -457,7 +457,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 설렁탕을 사다 놓고도 함께 먹지 못한 아저씨의 슬픔을 생각하면 가슴이 먹먹해집니다. 아내분은 분명 그 마음을 알고 계셨을 거예요.',
         '예시 3) 돈을 벌어야 한다는 책임감과 아내 곁에 있고 싶은 마음 사이에서 힘드셨을 아저씨를 위로하고 싶습니다. 가난이 사람의 선택을 얼마나 힘들게 하는지 느꼈습니다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_05 : "순진한 소년과 장난꾸러기 점순" (동백꽃) ===== */
@@ -562,7 +562,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 어머니는 점순이네에서 감자를 받아오라고 하셨다. 나는 부끄럽지만 감자를 받으러 갔고, 점순이가 문 앞에서 기다리고 있었다.',
         '예시 3) 동백꽃이 질 무렵, 점순이가 호드기를 불며 산길을 걸었다. 나도 몰래 뒤따라갔다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_06 : "사랑손님과 어머니" (주요섭) ===== */
@@ -667,7 +667,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 닭을 돌려보내면서 얼마나 마음이 아팠는지 모릅니다. 옥희가 그토록 좋아했는데, 저는 체면 때문에 아이의 기쁨마저 빼앗아야 했습니다.',
         '예시 3) 비 오는 날 옥희가 선생님을 만났다는 말에 눈물이 났습니다. 다시 한번 뵙고 싶었지만, 그럴 수 없는 제 처지가 너무나 원망스러웠습니다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_07 : "감자" (김동인) ===== */
@@ -772,7 +772,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 복녀가 자신의 처지를 합리화한 것이 안타까웠습니다. 하지만 굶어 죽을 것 같은 상황에서 도덕을 지키기란 정말 어려운 일이라는 생각도 들었습니다.',
         '예시 3) 오늘날에도 경제적 어려움 때문에 범죄에 빠지거나 삶이 무너지는 사람들이 있습니다. 사회가 이런 사람들을 도울 수 있는 제도가 필요하다고 생각합니다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_08 : "배따라기" (김동인) ===== */
@@ -867,7 +867,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 형의 행동을 보며 의심이 얼마나 무서운 것인지 알게 되었습니다. 근거 없는 의심은 결국 자신도 파멸시킨다는 것을 이 이야기가 보여주고 있습니다.',
         '예시 3) 오해를 풀지 않고 행동으로 옮긴 형이 결국 가장 큰 벌을 받았습니다. 사람 사이의 문제는 대화로 풀어야 한다는 교훈을 얻었습니다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_09 : "빈처" (현진건) ===== */
@@ -962,7 +962,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 시래기국 앞에서도 웃어 주던 당신, 수척해진 얼굴을 보면서도 나는 아무것도 해 줄 수 없어 미안했소. 언젠가 꼭 좋은 밥상을 차려 드리겠소.',
         '예시 3) 친구 T의 말이 아팠지만, 당신의 믿음 덕분에 다시 펜을 들 수 있었소. 당신이 없었다면 나는 벌써 문학을 포기했을 것이오.'
       ]
-    }
+  }
   },
 
   /* ===== modern_10 : "레디메이드 인생" (채만식) ===== */
@@ -1057,7 +1057,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) P가 "레디메이드"라고 자조한 것처럼, 지금도 획일화된 교육을 받고 나와도 일자리가 없는 청년들이 있습니다. 사회가 다양한 일자리를 만들어야 한다고 생각합니다.',
         '예시 3) P는 공부한 것이 쓸모없다고 느꼈지만, 저는 교육의 가치는 취업만이 아니라 생각하는 힘을 기르는 데 있다고 생각합니다. 다만 사회도 교육받은 사람들을 활용할 방법을 마련해야 합니다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_11 : 탁류 (채만식) ===== */
@@ -1152,7 +1152,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 일제강점기에는 조선인이 정직하게 살기 어려웠고, 가난한 집안의 여성은 더욱 선택지가 없었다. 초봉의 비극은 시대의 희생양이었다.',
         '예시 3) 개인의 노력만으로는 어쩔 수 없는 시대가 있다. 초봉처럼 최선을 다해도 무너지는 삶을 보면서, 사회가 약자를 보호해야 한다고 느꼈다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_12 : 삼대 (염상섭) ===== */
@@ -1247,7 +1247,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 조의관, 조상훈, 조덕기 모두 자기 방식이 옳다고 생각했지만 소통이 부족했다. 오늘날에도 세대 간 대화와 경청이 갈등 해결의 열쇠라고 생각한다.',
         '예시 3) 세대마다 가치관이 다른 것은 자연스러운 일이다. 중요한 것은 서로를 존중하며 변화하는 시대에 함께 적응해 나가는 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_13 : 태평천하 (채만식) ===== */
@@ -1342,7 +1342,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나라가 어려울 때 혼자만 편하면 된다는 생각은 결국 공동체를 무너뜨린다. 개인의 행복도 건강한 사회 안에서만 가능하다.',
         '예시 3) 오늘날에도 사회 문제에 무관심하고 자기 이익만 챙기는 사람들이 있다. 윤직원을 보면서 우리 모두가 공동체에 대한 책임감을 가져야 한다고 느꼈다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_14 : 천변풍경 (박태원) ===== */
@@ -1437,7 +1437,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 아파트 단지 앞 공원에서 아이들이 뛰어놀고, 어르신들이 벤치에 앉아 대화를 나눈다. 택배 기사님은 분주히 물건을 배달한다. 각자의 삶이 교차한다.',
         '예시 3) 시장에는 채소 가게, 생선 가게, 옷 가게가 늘어서 있다. 손님을 부르는 목소리, 흥정하는 소리가 뒤섞인다. 이곳에서 많은 사람들이 생계를 이어간다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_15 : 무정 (이광수) ===== */
@@ -1532,7 +1532,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 형식, 영채, 선형이 함께 기차를 탄 것처럼, 새 시대는 혼자가 아니라 함께 나아갈 때 의미가 있다.',
         '예시 3) 교육과 계몽은 시대가 바뀌어도 중요하다. 새로운 지식을 배우고 나누는 것이 변화를 이끄는 힘이다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_16 : 만세전 (염상섭) ===== */
@@ -1627,7 +1627,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 혼자서는 바꿀 수 없는 것도 함께하면 가능하다. 만세 운동처럼 많은 사람이 뜻을 모으면 암흑 같은 현실도 바뀔 수 있다.',
         '예시 3) 절망 속에서도 기록하고 알리는 것이 중요하다. 염상섭이 소설로 현실을 고발했듯이, 문제를 드러내는 것이 변화의 시작이다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_17 : 날개 (이상) ===== */
@@ -1722,7 +1722,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 무기력함은 혼자 있을 때 더 심해진다. 친구나 가족과 대화하고, 함께 활동하는 것이 날개를 다시 돋게 하는 방법이라고 생각한다.',
         '예시 3) "나"는 아내에게 의존하며 스스로 아무것도 하지 않았다. 자신의 삶을 스스로 책임지려는 의지가 있어야 날개가 돋을 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_18 : 봉별기 (이상) ===== */
@@ -1817,7 +1817,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 금홍은 "나"를 위해 헌신했지만 결국 헤어졌다. 사랑에는 때로 아픔이 따르고, 그 아픔 속에서도 아름다운 기억이 남는다고 생각한다.',
         '예시 3) "나"가 느낀 자괴감처럼, 사랑하는 사람에게 아무것도 해줄 수 없을 때 가장 힘들다. 그래서 스스로 성장하는 것이 사랑의 조건이라고 생각한다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_19 : 삼포 가는 길 (황석영) ===== */
@@ -1912,7 +1912,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 개발이 필요하지만, 사람들의 추억과 터전을 완전히 없애는 것은 안타깝다. 변화 속에서도 기억을 남길 수 있는 방법이 필요하다고 생각한다.',
         '예시 3) 고향이 변해도 그곳에서의 기억은 마음속에 남아 있다. 물리적 공간보다 사람과의 관계가 진정한 고향이라고 생각한다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_20 : 장마 (윤흥길) ===== */
@@ -2007,7 +2007,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 이념이나 정치적 견해가 달라도 가족이라는 끈은 끊어지지 않는다. 먼저 손을 내밀고 대화하는 것이 화해의 시작이라고 생각한다.',
         '예시 3) 상대방의 아픔을 이해하려고 노력하면 갈등이 줄어든다. 두 할머니가 구렁이를 통해 서로의 슬픔을 공감한 것처럼, 공감이 화해의 열쇠이다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_21 : 광장 (최인훈) ===== */
@@ -2112,7 +2112,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) SNS는 현대인의 광장이지만, 지나치게 노출되면 피곤하다. 밀실처럼 나만의 시간도 있어야 정신 건강을 지킬 수 있다고 생각한다.',
         '예시 3) 광장에서 다양한 의견을 듣고 밀실에서 깊이 생각하는 것이 균형 잡힌 삶이다. 이명준처럼 한쪽만 있으면 불행해질 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_22 : 오발탄 (이범선) ===== */
@@ -2217,7 +2217,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 개인의 노력만으로는 한계가 있으므로 사회 안전망이 필요하다. 의료, 주거, 교육이 보장되어야 희생양이 줄어들 것이다.',
         '예시 3) 이웃과 공동체의 관심도 중요하다. 철호 가족처럼 고립되면 더 힘들어진다. 서로 돕는 사회가 되어야 한다고 생각한다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_23 : 수난이대 (하근찬) ===== */
@@ -2322,7 +2322,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 이사 후 친구가 없어 외로웠는데, 옆집 언니가 먼저 말을 걸어줘서 새로운 환경에 적응할 수 있었다. 서로 의지하는 것이 중요하다.',
         '예시 3) 아버지가 실직했을 때 온 가족이 아르바이트를 하며 함께 어려움을 넘겼다. 수난이 고개처럼 함께하면 못 넘을 고개가 없다고 느꼈다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_24 : 카인의 후예 (황순원) ===== */
@@ -2427,7 +2427,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) IMF 때 많은 가정이 경제적으로 몰락했다. 위기에 대비해 다양한 능력을 기르고 저축하는 습관이 중요하다고 느꼈다.',
         '예시 3) 갑작스러운 변화 앞에서 개인이 할 수 있는 것은 한계가 있다. 그래서 민주주의와 인권을 지키는 사회 시스템이 중요하다고 생각한다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_25 : 역마 (김동리) ===== */
@@ -2532,7 +2532,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 어느 정도 운명이 있다고 생각한다. 타고난 성격이나 재능은 바꾸기 어렵기 때문이다. 하지만 그 안에서 최선을 다하는 것은 내 의지이다.',
         '예시 3) 역마살처럼 떠돌아다니는 것이 꼭 불행은 아니다. 여행을 좋아하는 사람에게는 오히려 축복일 수 있다. 운명을 어떻게 받아들이느냐가 중요하다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_26 : 사하촌 (김정한) ===== */
@@ -2637,7 +2637,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 기부금을 받아서 좋은 일에 쓰겠다는 단체가 실제로는 일부만 사용한다는 뉴스를 봤다. 투명한 운영이 중요하다.',
         '예시 3) 모든 종교와 기관이 나쁜 것은 아니다. 진정으로 봉사하는 곳도 많다. 중요한 것은 겉과 속이 같아야 한다는 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_27 : 학 (황순원) ===== */
@@ -2742,7 +2742,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 규칙을 어기는 것이므로 쉬운 결정은 아니다. 하지만 생명이 걸린 상황에서 인간적 선택을 한 "나"를 이해할 수 있다.',
         '예시 3) 전쟁이 만든 적과 아군의 구분은 인위적이다. 작품의 "나"처럼 그 경계를 넘어 인간으로서 연결되는 순간이 감동적이다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_28 : 황만근은 이렇게 말했다 (성석제) ===== */
@@ -2847,7 +2847,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 나는 어느 정도 야망이 있어야 발전한다고 생각한다. 하지만 황만근의 담담함도 배울 점이 있다. 균형이 중요하다.',
         '예시 3) 사회가 성공만 강조하지만, 황만근 같은 삶도 존중받아야 한다. 모든 사람이 특별해질 필요는 없고, 평범함의 가치도 인정해야 한다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_29 : 아홉 켤레의 구두로 남은 사내 (윤흥길) ===== */
@@ -2952,7 +2952,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 할머니가 맛있는 것은 항상 손주에게 먼저 주셨다. 자신을 아끼지 않고 가족을 위하는 마음이 권씨와 닮았다고 느꼈다.',
         '예시 3) 가족의 헌신은 당연한 것이 아니라 감사해야 할 일이다. 나도 나중에 가족을 위해 무엇을 할 수 있을지 생각하게 된다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_30 : 엄마의 말뚝 (박완서) ===== */
@@ -3057,7 +3057,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 엄마가 아빠 없이 나를 키우시면서 항상 밝게 웃으셨다. 힘들어도 티를 내지 않으시는 모습이 작품 속 엄마와 닮았다고 생각한다.',
         '예시 3) 역사 속에서 많은 여성들이 전쟁과 가난을 이겨냈다. 그들의 희생 위에 지금의 우리가 있다는 것을 잊지 말아야 한다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_31 : 난장이가 쏘아올린 작은 공 (조세희) ===== */
@@ -3152,7 +3152,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 소외 계층에 대한 편견을 없애는 것이 먼저라고 생각한다. 그들을 이상하게 보는 시선이 더 큰 상처를 줄 수 있기 때문이다.',
         '예시 3) 개인의 노력만으로는 한계가 있으므로 사회 제도가 바뀌어야 한다. 복지 정책이 강화되어 난장이 가족 같은 비극이 없어져야 한다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_32 : 우리들의 일그러진 영웅 (이문열) ===== */
@@ -3248,7 +3248,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 완전히 굴복하지 않더라도, 상황을 지켜보며 기회를 기다리는 것도 방법이다. 때로는 현명한 판단이 필요하다.',
         '예시 3) 엄석대 같은 권력이 무너진 것은 새 담임이 비리를 밝혔기 때문이다. 진실을 알리는 것이 부당한 권력을 무너뜨리는 힘이다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_33 : 깃발 없는 기수 (조정래) ===== */
@@ -3344,7 +3344,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 개인의 노력만으로는 한계가 있다. 사회가 노동자들의 꿈을 지원하는 제도를 만들어야 한다고 생각한다.',
         '예시 3) 꿈을 완전히 포기하지 말고, 작은 목표부터 이루어가는 것이 좋다. 한 번에 모든 것을 이루려 하면 지칠 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_34 : 객지 (황석영) ===== */
@@ -3440,7 +3440,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 노동자들이 안전하게 일할 수 있는 환경이 만들어져야 한다. 사고 예방과 적정 임금이 보장되어야 한다고 생각한다.',
         '예시 3) 정규직과 비정규직의 차별이 줄어들어야 한다. 객지의 노동자들처럼 불안정한 고용은 삶을 힘들게 한다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_35 : 서편제 (이청준) ===== */
@@ -3535,7 +3535,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 유봉의 행위는 이해하기 어렵지만, 예술가의 광기로 볼 수도 있다. 위대한 예술 뒤에는 희생이 따르기도 한다.',
         '예시 3) 송화가 최고의 소리꾼이 된 것은 사실이지만, 그 과정이 정당화될 수는 없다. 결과가 좋아도 과정이 나쁘면 문제가 있다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_36 : 토지 (박경리) ===== */
@@ -3630,7 +3630,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 역사를 바꿀 수 없더라도 기록하고 기억하는 것이 중요하다. 작품처럼 후대에 전해야 같은 실수를 반복하지 않는다.',
         '예시 3) 큰 역사 속에서 개인은 작지만, 많은 개인이 모이면 역사가 된다. 각자의 자리에서 최선을 다하는 것이 역사를 만드는 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_37 : 혼불 (최명희) ===== */
@@ -3725,7 +3725,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 혼불처럼 문학작품으로 기록하는 것이 중요하다. 기록이 남아야 후대도 배울 수 있기 때문이다.',
         '예시 3) 전통문화를 현대에 맞게 변형하는 것도 방법이다. 무조건 옛것만 고집하면 젊은 세대가 외면할 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_38 : 태백산맥 (조정래) ===== */
@@ -3820,7 +3820,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 역사를 어느 한쪽 관점에서만 배우면 편견이 생긴다. 다양한 시각에서 역사를 배워야 화해가 가능하다.',
         '예시 3) 정치적 입장과 별개로, 같은 민족이라는 동질감을 회복하는 것이 중요하다. 문화, 언어, 역사를 공유하는 우리는 하나가 될 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_39 : 무녀도 (김동리) ===== */
@@ -3915,7 +3915,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 시대가 변하면 전통도 일부 변할 수 있다. 하지만 핵심 가치는 지키면서 현대에 맞게 적응하는 것이 좋다고 생각한다.',
         '예시 3) 개인의 신앙은 자유이므로, 서로 강요하지 말아야 한다. 모화도 욱이도 각자의 믿음을 존중받아야 했다.'
       ]
-    }
+  }
   },
 
   /* ===== modern_40 : 동백꽃 (김유정) ===== */
@@ -4010,8 +4010,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 너무 적극적이면 부담스러울 수 있다. 점순이처럼 감자를 주는 등 작은 행동으로 천천히 다가가는 것이 좋다.',
         '예시 3) 표현 방식은 사람마다 다르다. 중요한 것은 진심을 담는 것이라고 생각한다. 점순이도 자기 방식대로 마음을 전했다.'
       ]
-    }
   }
+}
 });
 
 /* ===============================
@@ -4030,14 +4030,14 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   // ✅ 이미 렌더링된 경우 다시 렌더링하지 않음 (탭 전환 시 채점 결과 유지)
   const existingBlanks = root.querySelectorAll('.blank-wrap');
   if (existingBlanks.length > 0) {
     console.log('[renderVocabFill] 이미 렌더링됨 - 스킵 (채점 결과 유지)');
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -4084,11 +4084,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -4115,7 +4115,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -4129,7 +4129,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -4143,8 +4143,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -4153,8 +4153,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -4168,8 +4168,8 @@ function applyContentPack(unitKey) {
           const q3Lis = q3OptsUl.querySelectorAll('li');
           if (q3Lis.length === 4) {
             q3Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q3" value="${i+1}"><span>${pack.quiz.q3_opts[i]}</span></label>`);
-          }
         }
+      }
       } else if (pack.quiz.q3_html) {
         q3P.innerHTML = pack.quiz.q3_html;
       } else if (pack.quiz.q3_text) {
@@ -4178,9 +4178,9 @@ function applyContentPack(unitKey) {
       } else if (pack.quiz.q3_1_ph && pack.quiz.q3_2_ph) {
         // q3_html이 없으면 자동 생성
         q3P.innerHTML = `<input class="inline-input" id="q3-1" type="text" placeholder="${pack.quiz.q3_1_ph}"> / <input class="inline-input" id="q3-2" type="text" placeholder="${pack.quiz.q3_2_ph}">`;
-      }
     }
   }
+}
 
   // Q4
   if (blocks[3]) {
@@ -4194,8 +4194,8 @@ function applyContentPack(unitKey) {
           const q4Lis = q4OptsUl.querySelectorAll('li');
           if (q4Lis.length === 4) {
             q4Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q4" value="${i+1}"><span>${pack.quiz.q4_opts[i]}</span></label>`);
-          }
         }
+      }
       } else if (pack.quiz.q4_html) {
         q4P.innerHTML = pack.quiz.q4_html;
       } else if (pack.quiz.q4_text) {
@@ -4204,15 +4204,15 @@ function applyContentPack(unitKey) {
       } else if (pack.quiz.q4_1_ph && pack.quiz.q4_2_ph) {
         // q4_html이 없으면 자동 생성
         q4P.innerHTML = `<input class="inline-input" id="q4-1" type="text" placeholder="${pack.quiz.q4_1_ph}"> / <input class="inline-input" id="q4-2" type="text" placeholder="${pack.quiz.q4_2_ph}">`;
-      }
     }
   }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 창의활동 렌더링
   if (pack.creative) {
@@ -4227,7 +4227,7 @@ function applyContentPack(unitKey) {
     if (creativeEx1 && pack.creative.examples[0]) creativeEx1.textContent = pack.creative.examples[0];
     if (creativeEx2 && pack.creative.examples[1]) creativeEx2.textContent = pack.creative.examples[1];
     if (creativeEx3 && pack.creative.examples[2]) creativeEx3.textContent = pack.creative.examples[2];
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -4242,7 +4242,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -4276,7 +4276,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -4308,7 +4308,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -4324,11 +4324,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -4346,12 +4346,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -4370,7 +4370,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -4397,8 +4397,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -4425,7 +4425,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 - 객관식(A.q4) vs 빈칸(A.q4_1) 호환
@@ -4443,7 +4443,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -4460,7 +4460,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -4490,7 +4490,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -4507,10 +4507,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -4518,7 +4518,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -4539,11 +4539,11 @@ function renderSolutions(pack) {
     box.style.borderRadius = '12px';
     box.style.padding = '16px';
     box.style.lineHeight = '1.6';
-  }
+}
   // ✅ grade-result 내부에 추가 (점수 박스 아래)
   if (gradeResult) {
     gradeResult.appendChild(box);
-  }
+}
 
   // 3번: 객관식(q3) 또는 빈칸(q3_1, q3_2) 형식 처리
   let q3Answer = '';
@@ -4552,7 +4552,7 @@ function renderSolutions(pack) {
     q3Answer = `<b>정답:</b> ${A.q3} — ${q3Text}`;
   } else if (A.q3_1) {
     q3Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
-  }
+}
 
   // 4번: 객관식(q4) 또는 빈칸(q4_1, q4_2) 형식 처리
   let q4Answer = '';
@@ -4561,14 +4561,14 @@ function renderSolutions(pack) {
     q4Answer = `<b>정답:</b> ${A.q4} — ${q4Text}`;
   } else if (A.q4_1) {
     q4Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
-  }
+}
 
   // detail 상세해설 헬퍼
   function buildExplainDetail(ex, dt) {
     let html = ex ? `<span style="color:#6b5a48;">${ex}</span>` : '';
     if (dt) html += `<br><span style="color:#2e7d32;">${dt}</span>`;
     return html;
-  }
+}
 
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
@@ -4610,9 +4610,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/modern_(\d+)\.html/i);
       if (m) unitParam = `deep_modern_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'modern_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'modern_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -4620,21 +4620,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:modern_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -4651,9 +4651,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // modern_01, modern_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (modern_01 등) */
@@ -4674,11 +4674,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -4695,7 +4695,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (modern_01, modern_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -4709,7 +4709,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -4720,7 +4720,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -4729,7 +4729,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -4737,8 +4737,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -4760,7 +4760,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -4777,7 +4777,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -4791,12 +4791,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -4804,7 +4804,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -4812,6 +4812,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -4819,12 +4824,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -4840,7 +4845,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -4866,24 +4871,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -4897,12 +4907,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -4942,11 +4952,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -4957,7 +4967,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -4966,7 +4976,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -4981,14 +4991,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.modern_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -4997,13 +5007,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINDEEP용 fit_ 키 매핑 (deep_modern_XX → modern_XX 데이터 참조)
@@ -5014,6 +5024,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `deep_modern_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

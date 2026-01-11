@@ -7,7 +7,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('deep_classic_')) {
     console.log('[deep_classic_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -15,17 +15,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/deep_classic[_-]?(d{1,2})/);
     if (m) unit = `deep_classic_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/deep_classic[_-]?(d{1,2})\.html/);
     if (m2) unit = `deep_classic_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `deep_classic_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'deep_classic_01';
 })();
@@ -131,7 +131,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 이 작품은 3인칭 전지적 작가 시점으로 서술되며, 단오날 만남 → 이별 → 변학도 등장 → 춘향의 시련까지 시간 순서대로 사건을 배치하는 순행적 구성이다.',
       q3: '정답: ②번. 변학도는 "욕심이 많고 백성을 괴롭히는 나쁜 탐관오리"였으므로, "백성을 사랑하고 덕을 베푸는 청렴한 관리"라는 설명은 정반대의 의미이다.',
       q4: '정답: ④번. 본문에는 월매가 춘향을 양반처럼 키우려 한 동기가 "딸의 행복한 삶을 바라는 어머니의 사랑"이었다고 명시적으로 언급되어 있지 않아 본문 근거가 부족하다.'
-    }
+  }
   },
 
   /* ===== classic_02 : "어사 이도령과 춘향의 재회" ===== */
@@ -226,7 +226,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 이 작품은 시련과 극복, 재회와 정의 실현이라는 고전 소설의 전형적 구조를 따르며, 권선징악의 주제 의식을 명확히 드러낸다.',
       q3: '정답: ②번. "박대"는 푸대접하거나 냉정하게 대하는 것을 의미한다. "정성을 다해 융숭하게 대접하는 것"은 정반대의 의미이다.',
       q4: '정답: ④번. 임금이 춘향에게 정렬부인 칭호를 내린 것은 학문적 재능이나 예술적 능력 때문이 아니라, 절개를 끝까지 지킨 것을 인정받았기 때문이다.'
-    }
+  }
   },
 
   /* ===== classic_03 : "홍계월, 물에서 건져 올린 운명" ===== */
@@ -321,7 +321,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 홍계월전은 고난과 극복, 성공과 갈등, 화해와 행복이라는 여성 영웅 소설의 전형적 구조를 따르며, 여성의 능력과 가치를 강조한다.',
       q3: '정답: ③번. "원수"는 이 문맥에서 군대를 지휘하는 가장 높은 장수를 의미한다. "원한을 품고 복수하려는 대상"은 다른 의미의 원수(冤讐)이다.',
       q4: '정답: ④번. 계월이 고난을 겪은 것은 간신들의 반란이라는 외부적 요인 때문이다. 오히려 계월은 뛰어난 능력으로 전쟁을 승리로 이끄는 강인한 인물이다.'
-    }
+  }
   },
 
   /* ===== classic_04 : "백성을 위해 나선 신비한 선비" ===== */
@@ -426,7 +426,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 끼니를 걱정하는 사람들에게 도술로 음식을 만들어 나눠 주겠다.',
         '예시 3) 불공정한 일을 당한 사람들의 억울함을 도술로 밝혀내 정의를 실현하겠다.'
       ]
-    }
+  }
   },
 
   /* ===== classic_05 : "숙향의 기이한 탄생과 잃어버린 어린 시절" (숙향전) ===== */
@@ -531,7 +531,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 용녀는 용궁에서 온 신비로운 여인입니다. 강물에 빠진 숙향을 건져내어 목숨을 구해 주었습니다.',
         '예시 3) 거북은 김전이 예전에 살려준 은혜를 갚기 위해 홍수 때 나타났습니다. 등을 내어 주어 김전을 안전한 곳으로 데려다 주었습니다.'
       ]
-    }
+  }
   },
 
   /* ===== classic_06 : "아버지의 눈을 뜨게 한 효녀의 희생" (심청전) ===== */
@@ -636,7 +636,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 심청아, 네가 얼마나 두렵고 슬플지 알아. 하지만 네 희생은 반드시 하늘이 알아줄 거야. 용기를 내, 분명 좋은 일이 생길 거야.',
         '예시 3) 심청아, 아버지를 향한 네 마음이 너무 아름다워. 비록 헤어지지만 언젠가 꼭 다시 만날 수 있을 거야. 힘내렴.'
       ]
-    }
+  }
   },
 
   /* ===== classic_07 : "제비가 물어다 준 복과 벌" (흥부전) ===== */
@@ -742,7 +742,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "욕심은 모든 것을 잃게 합니다" - 놀부처럼 지나친 탐욕을 부리면 가진 것마저 잃을 수 있습니다.',
         '예시 3) "진정한 행복은 나눔에서 옵니다" - 흥부는 부자가 된 후에도 마을 사람들에게 베풀며 행복하게 살았습니다.'
       ]
-    }
+  }
   },
 
   /* ===== classic_08 : "용궁에서 살아 돌아온 토끼의 지혜" (토끼전) ===== */
@@ -847,7 +847,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "토끼 간보다 천 배 좋은 불로초가 산꼭대기에 있습니다. 제가 안내해 드리겠습니다."라며 육지로 나가는 구실을 만들겠습니다.',
         '예시 3) "제 간은 무서울 때 녹아 없어집니다. 지금 너무 무서워서 간이 사라졌으니, 편하게 해주셔야 간이 다시 생깁니다."라고 거짓말하겠습니다.'
       ]
-    }
+  }
   },
 
   /* ===== classic_09 : "장화홍련전" ===== */
@@ -952,7 +952,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "아버지, 저는 아버지를 원망하지 않습니다. 다만 언니의 억울함만은 꼭 밝혀 주세요. 우리는 저승에서 기다리겠습니다."',
         '예시 3) "아버지, 계모에게 속으신 것 용서합니다. 하지만 진실은 반드시 드러납니다. 다음 생에서는 행복한 가족이 되고 싶습니다."'
       ]
-    }
+  }
   },
 
   /* ===== classic_10 : "콩쥐팥쥐전" ===== */
@@ -1058,7 +1058,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 학교에서 왕따를 당하던 콩쥐가 온라인 코딩 대회에서 우승하여 글로벌 IT 기업에 스카우트되고, 괴롭히던 아이들은 부끄러워합니다.',
         '예시 3) 새엄마와 새언니에게 구박받던 콩쥐가 몰래 연습한 춤 실력으로 오디션에 합격해 아이돌이 되어 행복하게 삽니다.'
       ]
-    }
+  }
   },
 
   /* ===== classic_11 : "배비장전" ===== */
@@ -1163,7 +1163,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "난 게임 절대 안 해, 공부만 해"라고 자랑하던 친구의 게임 아이디가 학급 카페에 올라와 1000시간 플레이 기록이 들통납니다.',
         '예시 3) 환경 보호를 외치던 유명인이 일회용품을 잔뜩 쓰는 모습이 찍혀 인터넷에 퍼지면서 위선이 드러납니다.'
       ]
-    }
+  }
   },
 
   /* ===== classic_12 : "옹고집전" ===== */
@@ -1268,7 +1268,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 어릴 때 무릎에 생긴 상처 자국과 그 사연을 부모님께 확인받아 진짜임을 보여주겠습니다.',
         '예시 3) 제가 좋아하는 음식의 특이한 조합(라면에 치즈+김치)을 직접 만들어 먹는 모습을 보여주겠습니다.'
       ]
-    }
+  }
   },
 
   /* ===== classic_13 : 박씨전 ===== */
@@ -1368,7 +1368,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 순간이동 능력이 있다면, 재난 현장에서 사람들을 구출할 때 사용하겠어요.',
         '예시 3) 동물과 대화하는 능력이 있다면, 길 잃은 동물을 집에 데려다주는 봉사활동 때 드러내겠어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_14 : 운영전 ===== */
@@ -1473,7 +1473,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 운영은 유명 작가, 김진사는 대학교수가 되어 문학 행사에서 다시 만나 사랑을 이루었을 거예요.',
         '예시 3) 신분 차별이 없으니 당당하게 부모님께 소개하고 축복받으며 결혼했을 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_15 : 채봉감별곡 ===== */
@@ -1578,7 +1578,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 채봉: "당신 그림은 제 평생의 보물이었어요." 필선: "이번 생에는 꼭 함께하자."',
         '예시 3) 둘은 미술관에서 우연히 만나 옛 추억을 이야기하며 다시 사랑을 시작하기로 약속했어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_16 : 구운몽 ===== */
@@ -1683,7 +1683,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 세계여행을 하며 맛있는 음식을 먹었는데, 깨어나니 가족과 함께하는 일상이 더 소중했어요.',
         '예시 3) 대통령이 되어 나라를 다스렸는데, 깨어나니 작은 일부터 잘하는 게 중요하다고 생각했어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_17 : 사씨남정기 ===== */
@@ -1788,7 +1788,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 가족에게 위로받으며 힘을 내고, 내 결백을 증명할 증거를 찾으려 노력했을 거예요.',
         '예시 3) 원망하기보다 나를 믿어줄 사람들과 함께 시간을 보내며 마음을 다스렸을 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_18 : 창선감의록 ===== */
@@ -1893,7 +1893,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 작은 것부터 양보하는 마음이 필요해요. 내가 먼저 양보하면 상대도 감동받아요.',
         '예시 3) 가족이니까 당연하다고 생각하지 말고, 고맙다는 말을 자주 해야 해요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_19 : 임진록 ===== */
@@ -1998,7 +1998,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 농사일을 도와 군대에 식량을 보내고, 다친 군사들을 치료하는 일을 도왔을 거예요.',
         '예시 3) 어린이라도 돌을 모으고 불화살 만드는 것을 도우며 어른들을 도왔을 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_20 : 허생전 ===== */
@@ -2103,7 +2103,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 마스크를 모두 사서 전염병 때 무료로 나누어 주어 건강을 지키겠어요.',
         '예시 3) 태양광 패널을 다 사서 가난한 마을에 설치하여 전기 걱정 없이 살게 하겠어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_21 : 양반전 ===== */
@@ -2208,7 +2208,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 누구나 공부할 수 있는 학교를 세워 배움의 기회를 주고 싶어요.',
         '예시 3) 장사를 해서 번 돈으로 가난한 사람들을 돕고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_22 : 호질 ===== */
@@ -2313,7 +2313,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 개미가 "작은 일도 꾸준히 하면 큰 성과가 돼요"라고 말할 것 같아요.',
         '예시 3) 새가 "자유롭게 세상을 바라보세요"라고 조언할 것 같아요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_23 : 이춘풍전 ===== */
@@ -2418,7 +2418,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 장사를 해서 돈을 벌어 춘풍의 빚을 갚아주었을 거예요.',
         '예시 3) 춘풍이 스스로 깨닫도록 편지를 보내 마음을 움직였을 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_24 : 옥단춘전 ===== */
@@ -2523,7 +2523,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 선생님께 감사 편지를 써서 마음을 전하고 싶어요.',
         '예시 3) 친구가 도와준 것처럼 저도 다른 친구들을 도와주고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_25 : 숙영낭자전 ===== */
@@ -2623,7 +2623,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 어려울 때 도와주는 선생님이 운명적 인연일 것 같아요.',
         '예시 3) 같은 꿈을 가진 친구를 만나 함께 그 꿈을 이루고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_26 : 최척전 ===== */
@@ -2728,7 +2728,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 전학 간 친구를 만나면 그동안 못 한 이야기를 밤새 나누고 싶어요.',
         '예시 3) 멀리 사는 삼촌을 만나면 같이 축구를 하고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_27 : 김영철전 ===== */
@@ -2833,7 +2833,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 힘들 때 고향 음식을 떠올리며 힘을 낼 거예요.',
         '예시 3) 착한 사람을 찾아 도움을 요청할 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_28 : 홍길동전 ===== */
@@ -2938,7 +2938,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 환경을 지키는 "푸른나라"에서 모두가 자연과 함께 살고 싶어요.',
         '예시 3) 차별 없이 누구나 꿈을 이룰 수 있는 "희망나라"를 만들고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_29 : 서동지전 ===== */
@@ -3043,7 +3043,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 도시락을 잊고 왔는데 친구가 나눠줘서 더 친해졌어요.',
         '예시 3) 잘못 보낸 메시지로 오해가 풀리고 화해했어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_30 : 장끼전 ===== */
@@ -3148,7 +3148,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 덫의 위험성을 자세히 설명하며 무섭다고 말했을 거예요.',
         '예시 3) "조금만 참으면 봄이 와요"라며 희망을 줬을 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_31 : 구렁덩덩 신선비 ===== */
@@ -3253,7 +3253,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 꿈을 이루기 위해 친구들이 물어봐도 끝까지 참을 거예요.',
         '예시 3) 좋아하는 사람을 위해 힘들어도 약속을 지킬 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_32 : 바리데기 ===== */
@@ -3358,7 +3358,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 동생을 위해 무서운 곳도 갈 수 있어요.',
         '예시 3) 친구를 위해 밤새 숙제를 도와줄 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_33 : 금방울전 ===== */
@@ -3463,7 +3463,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 물을 만드는 능력으로 물이 부족한 곳을 도와주고 싶어요.',
         '예시 3) 마음을 읽는 능력으로 외로운 친구들을 찾아 위로해주고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_34 : 유충렬전 ===== */
@@ -3563,7 +3563,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 힘센 영웅이 되어 자연재해에서 사람들을 구하고 싶어요.',
         '예시 3) 따뜻한 영웅이 되어 외로운 사람들에게 희망을 주고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_35 : 조웅전 ===== */
@@ -3668,7 +3668,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 맛있는 밥을 매일 해주셔서 감사해요. 나중에 맛있는 음식을 해드리고 싶어요.',
         '예시 3) 힘들 때 항상 응원해주셔서 감사해요. 꼭 성공해서 기쁘게 해드리고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_36 : 소대성전 ===== */
@@ -3773,7 +3773,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 운동을 못하지만 매일 연습해서 운동선수가 되고 싶어요.',
         '예시 3) 부끄러움이 많지만 용기를 내서 가수가 되고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_37 : 임경업전 ===== */
@@ -3878,7 +3878,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 힘든 시대에 용기를 내신 점이 존경스럽습니다.',
         '예시 3) 덕분에 평화롭게 살고 있어요. 그 은혜를 잊지 않겠습니다.'
       ]
-    }
+  }
   },
 
   /* ===== classic_38 : 적성의전 ===== */
@@ -3983,7 +3983,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 친구 문제로 힘들지만 이겨내서 친구들을 잘 이해하는 사람이 되고 싶어요.',
         '예시 3) 운동이 힘들지만 이겨내서 건강한 체육 선생님이 되고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_39 : 월영낭자전 ===== */
@@ -4088,7 +4088,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 이사 간 친구야, 네가 너무 그리워. 다음에 꼭 만나자.',
         '예시 3) 하늘에 계신 할아버지, 건강하게 잘 자라고 있어요.'
       ]
-    }
+  }
   },
 
   /* ===== classic_40 : 이생규장전 ===== */
@@ -4193,8 +4193,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 친구야, 우리 어른이 되어서도 계속 친구로 지내자.',
         '예시 3) 반려동물에게, 네가 옆에 있어서 너무 행복해.'
       ]
-    }
   }
+}
 });
 
 /* ===============================
@@ -4213,14 +4213,14 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   // ✅ 이미 렌더링된 경우 다시 렌더링하지 않음 (탭 전환 시 채점 결과 유지)
   const existingBlanks = root.querySelectorAll('.blank-wrap');
   if (existingBlanks.length > 0) {
     console.log('[renderVocabFill] 이미 렌더링됨 - 스킵 (채점 결과 유지)');
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -4267,11 +4267,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -4298,7 +4298,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -4312,7 +4312,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -4326,8 +4326,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -4336,8 +4336,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -4351,20 +4351,20 @@ function applyContentPack(unitKey) {
           const q3Lis = q3OptsUl.querySelectorAll('li');
           if (q3Lis.length === 4) {
             q3Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q3" value="${i+1}"><span>${pack.quiz.q3_opts[i]}</span></label>`);
-          }
         }
+      }
       } else if (pack.quiz.q3_html) {
         q3P.innerHTML = pack.quiz.q3_html;
       } else if (pack.quiz.q3_1_ph && pack.quiz.q3_2_ph) {
         // 빈칸 채우기 자동 생성
         q3P.innerHTML = `<input class="inline-input" id="q3-1" type="text" placeholder="${pack.quiz.q3_1_ph}"> / <input class="inline-input" id="q3-2" type="text" placeholder="${pack.quiz.q3_2_ph}">`;
-      }
     }
+  }
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   // Q4
   if (blocks[3]) {
@@ -4378,26 +4378,26 @@ function applyContentPack(unitKey) {
           const q4Lis = q4OptsUl.querySelectorAll('li');
           if (q4Lis.length === 4) {
             q4Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q4" value="${i+1}"><span>${pack.quiz.q4_opts[i]}</span></label>`);
-          }
         }
+      }
       } else if (pack.quiz.q4_html) {
         q4P.innerHTML = pack.quiz.q4_html;
       } else if (pack.quiz.q4_1_ph && pack.quiz.q4_2_ph) {
         // 빈칸 채우기 자동 생성
         q4P.innerHTML = `<input class="inline-input" id="q4-1" type="text" placeholder="${pack.quiz.q4_1_ph}"> / <input class="inline-input" id="q4-2" type="text" placeholder="${pack.quiz.q4_2_ph}">`;
-      }
     }
+  }
     const q4_1 = document.getElementById('q4-1');
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -4412,7 +4412,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -4446,7 +4446,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -4478,7 +4478,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -4494,11 +4494,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -4516,12 +4516,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -4540,7 +4540,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -4567,8 +4567,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -4595,7 +4595,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 - 객관식(A.q4) vs 빈칸(A.q4_1) 호환
@@ -4613,7 +4613,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -4630,7 +4630,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -4660,7 +4660,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -4677,10 +4677,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -4688,7 +4688,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -4709,11 +4709,11 @@ function renderSolutions(pack) {
     box.style.borderRadius = '12px';
     box.style.padding = '16px';
     box.style.lineHeight = '1.6';
-  }
+}
   // ✅ grade-result 내부에 추가 (점수 박스 아래)
   if (gradeResult) {
     gradeResult.appendChild(box);
-  }
+}
 
   // 3번: 객관식(q3) 또는 빈칸(q3_1, q3_2) 형식 처리
   let q3Answer = '';
@@ -4722,7 +4722,7 @@ function renderSolutions(pack) {
     q3Answer = `<b>정답:</b> ${A.q3} — ${q3Text}`;
   } else if (A.q3_1) {
     q3Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
-  }
+}
 
   // 4번: 객관식(q4) 또는 빈칸(q4_1, q4_2) 형식 처리
   let q4Answer = '';
@@ -4731,14 +4731,14 @@ function renderSolutions(pack) {
     q4Answer = `<b>정답:</b> ${A.q4} — ${q4Text}`;
   } else if (A.q4_1) {
     q4Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
-  }
+}
 
   // detail 상세해설 헬퍼
   function buildExplainDetail(ex, dt) {
     let html = ex ? `<span style="color:#6b5a48;">${ex}</span>` : '';
     if (dt) html += `<br><span style="color:#2e7d32;">${dt}</span>`;
     return html;
-  }
+}
 
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
@@ -4780,9 +4780,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/classic_(\d+)\.html/i);
       if (m) unitParam = `deep_classic_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'classic_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'classic_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -4790,21 +4790,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:classic_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -4821,9 +4821,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // classic_01, classic_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (classic_01 등) */
@@ -4844,11 +4844,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -4865,7 +4865,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (classic_01, classic_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -4879,7 +4879,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -4890,7 +4890,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -4899,7 +4899,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -4907,8 +4907,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -4930,7 +4930,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -4947,7 +4947,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -4961,12 +4961,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -4974,7 +4974,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -4982,6 +4982,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -4989,12 +4994,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -5010,7 +5015,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -5036,24 +5041,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -5067,12 +5077,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -5112,11 +5122,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -5127,7 +5137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -5136,7 +5146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -5151,14 +5161,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.classic_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -5167,13 +5177,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINDEEP용 fit_ 키 매핑 (deep_classic_XX → classic_XX 데이터 참조)
@@ -5184,6 +5194,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `deep_classic_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

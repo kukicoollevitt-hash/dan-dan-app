@@ -7,7 +7,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('earth_')) {
     console.log('[earth_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -15,17 +15,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/earth[_-]?(\d{1,2})/);
     if (m) unit = `earth_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/earth[_-]?(\d{1,2})\.html/);
     if (m2) unit = `earth_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `earth_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'earth_01';
   console.log('[earth_content.js] CUR_UNIT 설정됨:', window.CUR_UNIT);
@@ -106,7 +106,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 원시 지구의 성장(미행성 충돌)에 대한 내용입니다.',
       q3:'정답: 원시, 지구. 갓 만들어진 지구의 초기 모습을 원시 지구라고 합니다.',
       q4:'정답: 마그마, 지각. 녹은 돌인 마그마가 식어서 단단한 지각(껍질)이 되었습니다.'
-    }
+  }
   },
 
   /* ===== earth_02 : "마그마가 들려주는 지구의 이야기" ===== */
@@ -182,7 +182,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 화산 폭발의 피해와 회복에 대한 내용입니다.',
       q3:'정답: 마그마, 압력. 지하 깊은 곳의 녹은 암석은 마그마, 누르는 힘은 압력입니다.',
       q4:'정답: 지각, 용암. 지구 바깥 껍질은 지각, 지상으로 나온 마그마는 용암입니다.'
-    }
+  }
   },
 
   /* ===== earth_03 : "돌은 어떻게 만들어질까?" ===== */
@@ -273,10 +273,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
           step: 3,
           title: '💭 생각 나누기',
           content: '만약 내가 건축가라면, 어떤 암석으로 무엇을 만들고 싶은지 상상해서 적어 보세요.'
-        }
+      }
       ],
       reflection: '이 활동을 통해 암석이 어떻게 만들어지고 우리 생활에 어떻게 활용되는지 이해할 수 있습니다.'
-    }
+  }
   },
 
   /* ===== earth_04 : "작은 알갱이가 되기까지, 암석의 삶" ===== */
@@ -377,10 +377,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
           title: '🏖️ 모래가 되어',
           content: '마침내 작은 알갱이가 된 바위의 마지막 일기를 써 보세요.',
           example: '예: 이제 나는 해변의 고운 모래가 되었다. 아이들이 내 위에서 모래성을 쌓는다. 새로운 삶이 시작되었다.'
-        }
+      }
       ],
       reflection: '수천 년에 걸친 바위의 변화를 상상하며 자연의 힘이 얼마나 강하고 꾸준한지 느낄 수 있었나요?'
-    }
+  }
   },
 
   /* ===== earth_05 : "강의 흐름이 빚어낸 자연 조각품" ===== */
@@ -460,7 +460,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 산 아래에 도착하니 속도가 느려지며 부채 모양의 선상지가 펼쳐졌다.',
         '예시 3) 강이 바다에 가까워지자 삼각주가 나타났고, 넓은 평야가 보였다.'
       ]
-    }
+  }
   },
 
   /* ===== earth_06 : "지도를 보고 길을 찾아가다" (샘플 데이터) ===== */
@@ -543,7 +543,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "새로운 땅을 선물할게" - 화산 폭발로 새로운 섬이 만들어지듯, 지구는 파괴와 창조를 반복한다.',
         '예시 3) "조심해서 살아" - 환태평양 화산대에 사는 사람들에게 자연재해에 대비하라는 경고의 메시지일 수도 있다.'
       ]
-    }
+  }
   },
 
   /* ===== earth_07 : "산과 바다는 어떻게 만들어졌을까" ===== */
@@ -625,7 +625,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 바다 밑에서 두 판이 서로 밀었다. 한쪽 판이 참다못해 다른 판 아래로 들어가면서 세상에서 가장 깊은 골짜기가 생겼다.',
         '예시 3) 만약 산이 말을 할 수 있다면, 히말라야는 "나는 지금도 자라고 있어! 매년 몇 mm씩!"이라고 자랑할 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== earth_08 : "돌멩이 속에 숨은 지구의 역사" ===== */
@@ -707,7 +707,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [사암] "나는 강가의 모래알이었어. 수천 년 동안 친구들과 함께 쌓이고 눌려서 단단한 돌이 되었지. 내 몸에는 옛날 물결무늬가 남아 있어."',
         '예시 3) [대리암] "원래 나는 석회암이었어. 그런데 땅속 깊이 들어가 엄청난 열과 압력을 받고 완전히 새로운 돌로 다시 태어났지. 지금은 조각가들이 나로 예술 작품을 만들어."'
       ]
-    }
+  }
   },
 
   /* ===== earth_09 : "화석이 들려주는 옛날 이야기" ===== */
@@ -789,7 +789,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [공룡] "나는 중생대에 지구를 지배했던 공룡이야. 하늘에서 큰 운석이 떨어지던 날, 모든 게 변했어. 내 발자국이 화석이 되어 남았다니, 부디 나를 기억해 줘."',
         '예시 3) [암모나이트] "나는 소라처럼 생긴 껍데기를 가진 암모나이트야. 바다 속을 유유히 헤엄치던 시절이 그리워. 내 껍데기 무늬가 예쁘다고? 고마워, 친구야!"'
       ]
-    }
+  }
   },
 
   /* ===== earth_10 : "지구가 거대한 자석이라고?" ===== */
@@ -871,7 +871,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "지구 자기장님, 만약 당신이 없었다면 나침반도 작동하지 않고, 옛날 사람들은 항해를 못 했을 거예요. 문명 발전에 큰 도움을 주셨네요!"',
         '예시 3) "보이지 않지만 항상 지구를 감싸고 있는 당신. 우주 방사선으로부터 생명을 지켜주는 투명 방패 같아요. 앞으로도 잘 부탁해요!"'
       ]
-    }
+  }
   },
 
   /* ===== earth_11 : "날씨는 왜 매일 달라질까?" ===== */
@@ -957,7 +957,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [북태평양 기단] "뜨겁고 습한 태평양 위에서 자란 나. 여름이 되면 한국을 찾아가. 내가 가면 사람들이 에어컨을 켜고, 아이들은 물놀이를 해!"',
         '예시 3) [오호츠크해 기단] "나는 오호츠크해에서 왔어. 차갑고 습한 내가 북태평양 기단과 만나면 장마가 시작되지. 비가 주룩주룩 내리는 건 우리 때문이야."'
       ]
-    }
+  }
   },
 
   /* ===== earth_12 : "구름은 어떻게 만들어질까?" ===== */
@@ -1043,7 +1043,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [적란운] "저는 적란운, 하늘의 거인이에요! 10km 넘게 치솟을 수 있죠. 저를 보면 우산을 준비하세요. 소나기와 번개를 몰고 다니거든요."',
         '예시 3) [층운] "안녕하세요, 저는 층운입니다. 하늘을 넓게 덮는 담요 같은 구름이에요. 가끔 이슬비를 뿌리기도 하지만, 대체로 조용한 편이에요."'
       ]
-    }
+  }
   },
 
   /* ===== earth_13 : "기압과 바람의 관계" ===== */
@@ -1129,7 +1129,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 저기압: "왜 항상 네 공기가 내 쪽으로 오는 거야?" 고기압: "넌 압력이 낮으니까 내 공기가 저절로 가는 거야. 그게 바로 바람이지!"',
         '예시 3) 고기압: "등압선을 보면 우리 관계를 알 수 있어." 저기압: "맞아, 선이 촘촘하면 바람이 세게 불고, 느슨하면 약하게 불지."'
       ]
-    }
+  }
   },
 
   /* ===== earth_14 : "기후와 기후 변화" ===== */
@@ -1214,7 +1214,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "미래의 지구야, 우리 세대가 더 열심히 노력했어야 했는데 미안해. 이 편지를 읽을 때쯤이면 해수면이 얼마나 올랐을까? 섬나라들은 무사하니?"',
         '예시 3) "안녕, 2125년의 지구! 우리는 지금 온실가스를 줄이려고 노력하고 있어. 네가 이 편지를 읽을 때 이상 기후가 줄어들었으면 좋겠어."'
       ]
-    }
+  }
   },
 
   /* ===== earth_15 : "태양계와 지구의 위치" ===== */
@@ -1300,7 +1300,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [토성] "나는 토성, 아름다운 고리가 자랑이야. 사실 고리는 얼음과 암석 조각들이야. 위성도 80개가 넘어서 친구가 정말 많지!"',
         '예시 3) [화성] "나는 붉은 행성 화성이야. 지구 사람들이 나에게 로봇을 보내더라고. 언젠가 사람이 직접 올지도 몰라. 기다리고 있을게!"'
       ]
-    }
+  }
   },
 
   earth_16: {
@@ -1365,7 +1365,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "물이 없는 하루" - 수돗물이 안 나온다! 세수도, 밥도, 화장실도... 물이 얼마나 소중한지 깨달았다.',
         '예시 3) "전기가 끊긴 날" - 스마트폰 충전 불가, TV 안 켜짐, 냉장고 녹음... 100년 전 사람들은 어떻게 살았을까?'
       ]
-    }
+  }
   },
 
   earth_17: {
@@ -1430,7 +1430,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "조석의 하루" - 아침에 밀물로 바닷가를 가득 채우고, 오후엔 썰물로 물러나. 갯벌 친구들이 숨 쉴 수 있게 해주는 게 내 일이야.',
         '예시 3) "한류와 난류의 만남" - 차가운 나와 따뜻한 친구가 만나면 물고기들이 모여들어. 우리의 만남이 풍요로운 바다를 만들어.'
       ]
-    }
+  }
   },
 
   earth_18: {
@@ -1495,7 +1495,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "고생대 바다 속으로" - 잠수복을 입고 고생대 바다에 들어갔다. 삼엽충이 바닥을 기어 다니고, 이상한 물고기들이 헤엄치고 있었어.',
         '예시 3) "신생대 초원에서" - 공룡이 사라진 지구. 털북숭이 매머드가 걸어가고, 멀리서 검치호랑이가 나를 노려보고 있었다!'
       ]
-    }
+  }
   },
 
   earth_19: {
@@ -1560,7 +1560,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "목성의 달 탐험" - 유로파라는 달 밑에 바다가 있대. 거기 생명체가 있을지도 몰라. 잠수 로봇을 보내고 싶어!',
         '예시 3) "우주정거장 생활기" - ISS에서 한 달 살아보고 싶어. 무중력에서 실험하고, 지구가 얼마나 아름다운지 창문으로 볼 거야.'
       ]
-    }
+  }
   },
 
   earth_20: {
@@ -1625,8 +1625,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "태풍 생존 가이드" - 태풍이 온다면? 창문에서 떨어져 욕조에 물 받아두기 손전등과 라디오 준비 절대 밖에 나가지 않기!',
         '예시 3) "우리 가족 비상 계획" - 비상 가방에 물, 손전등, 약, 라디오를 넣어뒀어. 대피 장소는 학교 운동장. 흩어지면 거기서 만나기로 했어.'
       ]
-    }
   }
+}
 });
 
 /* ===============================
@@ -1645,7 +1645,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -1692,11 +1692,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -1723,7 +1723,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -1737,7 +1737,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -1751,8 +1751,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -1761,8 +1761,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -1772,7 +1772,7 @@ function applyContentPack(unitKey) {
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   // Q4
   if (blocks[3]) {
@@ -1782,13 +1782,13 @@ function applyContentPack(unitKey) {
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -1803,7 +1803,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -1837,7 +1837,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -1869,7 +1869,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -1885,11 +1885,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -1907,12 +1907,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -1931,7 +1931,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -1958,8 +1958,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -2007,7 +2007,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -2037,7 +2037,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -2054,10 +2054,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -2065,7 +2065,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -2129,9 +2129,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/earth_(\d+)\.html/i);
       if (m) unitParam = `earth_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'earth_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'earth_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -2139,21 +2139,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:earth_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -2170,9 +2170,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // earth_01, earth_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (earth_01 등) */
@@ -2202,7 +2202,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (earth_01, earth_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -2216,7 +2216,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -2227,7 +2227,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -2236,7 +2236,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -2244,8 +2244,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -2267,7 +2267,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -2284,7 +2284,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -2298,12 +2298,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -2311,7 +2311,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -2319,6 +2319,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -2326,12 +2331,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -2347,7 +2352,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -2373,7 +2378,12 @@ window.loadCompletionStatus = async function () {
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -2387,12 +2397,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 레이더 점수 꺼내기
     const radar =
@@ -2423,11 +2433,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -2438,7 +2448,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -2447,7 +2457,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -2462,14 +2472,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.earth_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -2478,12 +2488,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });

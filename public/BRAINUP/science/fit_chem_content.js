@@ -8,7 +8,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('fit_chem_')) {
     console.log('[fit_chem_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -16,17 +16,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/fit_chem[_-]?(\d{1,2})/);
     if (m) unit = `fit_chem_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/fit_chem[_-]?(\d{1,2})\.html/);
     if (m2) unit = `fit_chem_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `fit_chem_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'fit_chem_01';
 })();
@@ -122,7 +122,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ①번. 1문단에서 물체의 정의, 2문단에서 물질의 정의, 3문단에서 물질의 성질, 4문단에서 생활 속 활용 순서로 전개됩니다.',
       q3:'정답: ④번. 성질은 물질이 가지고 있는 고유한 특징입니다. ①물체는 모양이 있고 공간을 차지하는 것, ②물질은 물체를 이루는 재료, ③탄성은 늘어나거나 줄어든 물체가 원래대로 돌아가려는 성질입니다.',
       q4:'정답: ③번. 본문에서 고무는 탄성이 좋아 타이어에 사용된다고 했으므로, 충격을 흡수하기 위함이라고 추론할 수 있습니다.'
-    }
+  }
   },
 
   /* ===== chem_02 : "설탕이 사라지는 마법, 용해" ===== */
@@ -216,7 +216,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 식용유를 물에 넣으니 섞이지 않고 물 위에 둥둥 떴다. 아무리 저어도 잠시 후 다시 분리되었다.',
         '예시 3: 따뜻한 물과 차가운 물에 각각 설탕을 넣었더니 따뜻한 물에서 더 빨리 녹았다. 온도가 용해에 영향을 주는 것 같다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_03 : "흐르고 섞이고 사라지는 액체의 세계" ===== */
@@ -318,7 +318,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '   - 1시간 후: ______  3시간 후: ______',
         '4. 이 실험을 통해 알게 된 액체의 성질을 정리해 봅시다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_04 : "기체의 성질" ===== */
@@ -414,7 +414,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 빨대로 물컵 속에 바람을 불면 물속에서 공기 방울이 올라오는 것을 볼 수 있다.',
         '예시 3) 페트병을 꽉 닫고 누르면 찌그러지지만, 뚜껑을 열면 공기가 들어와 다시 펴지는 것을 관찰할 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_05 : "물질의 상태 변화" ===== */
@@ -504,7 +504,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 물을 얼음 틀에 넣어 냉동실에 두었더니 얼음이 되었다. 이것은 응고이다.',
         '예시 3) 생일 케이크의 초에 불을 붙이자 초가 녹아 흘러내렸다가, 불을 끄니 다시 굳었다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_06 : "원소와 주기율표의 비밀" ===== */
@@ -598,7 +598,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 주방에서 쓰는 소금(NaCl)은 나트륨(Na, 11번)과 염소(Cl, 17번)의 결합으로, 나트륨은 알칼리 금속, 염소는 할로젠에 속한다.',
         '예시 3: 금반지의 금(Au, 79번)은 11족에 속하는 전이 금속으로, 반응성이 낮아 공기 중에서 녹슬지 않고 오래 광택을 유지한다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_07 : "원자의 구조" ===== */
@@ -692,7 +692,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 종이에 동심원을 그려 전자껍질을 나타내고, 중심에 양성자 6개와 중성자 6개를 그린 후, 첫 번째 껍질에 2개, 두 번째 껍질에 4개의 전자를 배치해 탄소를 표현한다.',
         '예시 3: 점토로 양성자와 중성자를 빚어 원자핵을 만들고, 빨대를 전자껍질로 사용해 구슬(전자)이 돌 수 있게 산소 원자(양성자 8개, 전자 8개)를 입체적으로 표현한다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_08 : "화학 결합의 세계" ===== */
@@ -786,7 +786,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 수소(H) 카드 두 장을 모아 전자쌍을 공유하면 수소 분자(H₂)가 되는 규칙으로, 공유 결합 분자 만들기 게임을 설계한다.',
         '예시 3: 산소(O) 카드 1장과 수소(H) 카드 2장을 모으면 물(H₂O)이 완성되고, 탄소(C)와 산소(O) 2장으로 이산화탄소(CO₂)를 만드는 분자 조합 게임을 만든다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_09 : "화학 반응식과 질량 보존" ===== */
@@ -880,7 +880,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 철솜을 밀봉된 용기에서 연소시키고 반응 전후 질량을 비교하면, 산화철이 생성되어도 총 질량이 같음을 알 수 있다.',
         '예시 3: 염산과 수산화나트륨 수용액을 혼합하기 전후 질량을 측정하면, 중화 반응이 일어나도 질량이 보존됨을 확인할 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_10 : "산과 염기의 성질" ===== */
@@ -974,7 +974,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 식초, 탄산음료, 우유, 비눗물, 베이킹소다 물의 pH를 측정하고 0~14 척도에서 어디에 위치하는지 표로 정리해 본다.',
         '예시 3: 산성 용액(식초)과 염기성 용액(베이킹소다 물)을 섞으면서 pH 변화를 관찰하고, 중화 반응이 일어나는지 확인해 본다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_11 ~ chem_20 ===== */
@@ -1070,7 +1070,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 철솜을 식초에 담갔다가 꺼내 공기 중에 두면 빠르게 녹슬며 열이 나는데, 이것은 산화 반응이 촉진된 것이다.',
         '예시 3: 구리 동전을 식초와 소금 혼합액에 담그면 표면 산화물이 벗겨져 반짝이게 되는데, 이는 산화물 제거(일종의 환원)이다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_12 : "전기 분해와 화학 전지" ===== */
@@ -1164,7 +1164,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 감자, 사과, 오렌지 등 다양한 과일과 채소로 전지를 만들어 어떤 것이 가장 강한 전압을 내는지 비교해 본다.',
         '예시 3: 여러 개의 과일 전지를 직렬로 연결하면 전압이 높아져 작은 전구나 전자시계를 작동시킬 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_13 : "용해와 용액의 농도" ===== */
@@ -1258,7 +1258,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 뜨거운 물에 설탕을 녹을 때까지 계속 넣어 포화 용액을 만든 후, 식혀서 설탕 결정이 생기는 과정을 관찰한다.',
         '예시 3: 탄산음료를 상온과 냉장 상태로 각각 흔들어 열었을 때 기포 발생량을 비교해 기체 용해도와 온도의 관계를 확인한다.'
       ]
-    }
+  }
   },
 
   /* ===== chem_14 : "기체의 성질과 법칙" ===== */
@@ -1352,7 +1352,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 빈 페트병에 뜨거운 물을 조금 넣었다가 버리고 뚜껑을 닫으면 식으면서 병이 찌그러지는데, 이것은 온도가 내려가면 부피가 줄어드는 샤를 법칙의 예이다.',
         '예시 3: 풍선을 냉동실에 넣으면 작아지고 따뜻한 곳에 두면 다시 커지는데, 이것으로 온도와 기체 부피의 비례 관계를 확인할 수 있다.'
       ]
-    }
+  }
   },
 
   fit_chem_15: {
@@ -1421,7 +1421,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '냉찜질팩을 흔들면 차가워지는 이유는 질산암모늄이 물에 녹으면서 열을 흡수하는 흡열 반응이 일어나기 때문이다. 이로 인해 부상 부위를 냉각할 수 있다.',
         '휴대폰 배터리는 화학 에너지를 전기 에너지로 변환하고, 이 전기 에너지는 화면의 빛에너지와 스피커의 소리에너지로 다시 변환된다.'
       ]
-    }
+  }
   },
 
   fit_chem_16: {
@@ -1490,7 +1490,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '일회용 플라스틱 컵 대신 텀블러를 가지고 다녔다. 카페에서 할인도 받고 쓰레기도 줄일 수 있어서 좋았다. 앞으로도 계속 텀블러를 사용할 것이다.',
         '과대 포장된 과자 대신 포장이 적은 제품을 선택했다. 포장재가 줄어드니 쓰레기 버리기도 편해졌다. 소비자의 선택이 기업의 포장 방식을 바꿀 수 있다고 생각한다.'
       ]
-    }
+  }
   },
 
   fit_chem_17: {
@@ -1559,7 +1559,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '악기실의 트럼펫은 황동으로 만들어져 있다. 황동은 가공하기 쉽고 아름다운 소리를 내기 때문에 금관 악기 제작에 적합하다.',
         '창문틀은 알루미늄으로 만들어져 있다. 알루미늄은 가볍고 녹슬지 않아서 오래 사용할 수 있고 열 손실도 적다.'
       ]
-    }
+  }
   },
 
   fit_chem_18: {
@@ -1628,7 +1628,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '설거지할 때 합성 세제 대신 천연 세제를 사용하고, 음식물 찌꺼기를 싱크대에 버리지 않으면 수질 오염을 줄일 수 있다. 샤워 시간을 줄이는 것도 도움이 된다.',
         '일회용품 사용을 줄이고 분리수거를 철저히 하면 쓰레기 소각으로 인한 대기 오염을 줄일 수 있다. 나무를 심으면 이산화탄소를 흡수하여 온실 효과를 완화할 수 있다.'
       ]
-    }
+  }
   },
 
   fit_chem_19: {
@@ -1697,7 +1697,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '주방 세제 성분표에서 계면활성제를 발견했다. 세제가 기름기를 제거하는 원리가 계면활성제 덕분이라는 것을 배웠다. 세제를 적당량만 사용해야 수질 오염을 줄일 수 있다.',
         '과자 봉지 뒷면에서 감미료(아스파탐)와 색소(황색4호)를 발견했다. 식품 첨가물이 안전성 검사를 거친다는 것을 알았지만, 가공식품을 너무 많이 먹지 않는 것이 좋겠다.'
       ]
-    }
+  }
   },
 
   fit_chem_20: {
@@ -1766,8 +1766,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '수소 연료 전지 자동차가 일반화되어 도시의 공기가 맑아질 것이다. 주유소 대신 수소 충전소가 생기고, 자동차에서 나오는 것은 깨끗한 물뿐이다. 대기 오염으로 인한 질병도 크게 줄어들 것이다.',
         '나노 의약품 덕분에 암 치료가 혁신적으로 발전할 것이다. 나노 캡슐이 암세포만 찾아가 약물을 전달하여 정상 세포는 손상시키지 않는다. 항암 치료의 부작용이 줄어들어 환자들의 삶의 질이 높아질 것이다.'
       ]
-    }
   }
+}
 });
 
 /* ===============================
@@ -1786,7 +1786,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -1833,11 +1833,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -1864,7 +1864,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -1878,7 +1878,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -1892,8 +1892,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -1902,8 +1902,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -1913,7 +1913,7 @@ function applyContentPack(unitKey) {
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   // Q4
   if (blocks[3]) {
@@ -1923,13 +1923,13 @@ function applyContentPack(unitKey) {
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -1944,7 +1944,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -1978,7 +1978,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -2010,7 +2010,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -2026,11 +2026,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -2048,12 +2048,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -2073,7 +2073,7 @@ if (!window.gradeQuiz) window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -2100,8 +2100,8 @@ if (!window.gradeQuiz) window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -2128,7 +2128,7 @@ if (!window.gradeQuiz) window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 - 객관식 또는 빈칸 채우기 지원
@@ -2146,7 +2146,7 @@ if (!window.gradeQuiz) window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -2163,7 +2163,7 @@ if (!window.gradeQuiz) window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -2193,7 +2193,7 @@ if (!window.gradeQuiz) window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -2210,10 +2210,10 @@ if (!window.gradeQuiz) window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -2221,7 +2221,7 @@ if (!window.gradeQuiz) window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -2246,12 +2246,12 @@ function renderSolutions(pack) {
     box.style.borderRadius = '12px';
     box.style.padding = '16px';
     box.style.lineHeight = '1.6';
-  }
+}
   if (gradeResult) {
     gradeResult.appendChild(box);
   } else {
     document.body.appendChild(box);
-  }
+}
 
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
@@ -2297,9 +2297,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/chem_(\d+)\.html/i);
       if (m) unitParam = `fit_chem_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'chem_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'chem_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -2307,21 +2307,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:chem_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -2338,9 +2338,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // chem_01, chem_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (chem_01 등) */
@@ -2361,11 +2361,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -2382,7 +2382,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (chem_01, chem_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -2396,7 +2396,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -2407,7 +2407,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -2416,7 +2416,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -2424,8 +2424,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -2447,7 +2447,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -2464,7 +2464,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -2478,12 +2478,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -2491,7 +2491,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -2499,6 +2499,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -2506,12 +2511,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -2527,7 +2532,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -2553,24 +2558,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -2584,12 +2594,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -2629,11 +2639,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -2644,7 +2654,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -2653,7 +2663,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -2668,14 +2678,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.chem_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -2684,13 +2694,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINFIT용 fit_ 키 매핑 (fit_chem_XX → chem_XX 데이터 참조)
@@ -2701,6 +2711,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `fit_chem_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

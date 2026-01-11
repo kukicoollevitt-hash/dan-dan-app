@@ -8,7 +8,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('fit_law_')) {
     console.log('[fit_law_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -16,17 +16,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/fit_law[_-]?(d{1,2})/);
     if (m) unit = `fit_law_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/fit_law[_-]?(d{1,2})\.html/);
     if (m2) unit = `fit_law_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `fit_law_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'fit_law_01';
   console.log('[fit_law_content.js] CUR_UNIT 설정:', window.CUR_UNIT);
@@ -123,7 +123,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 이 글은 인권의 정의(1문단) → 인권의 예시(2문단) → 인권의 특성(3문단) → 인권 보호 노력(4문단) 순서로 설명합니다.',
       q3: '정답: ③번. 존중은 사람을 소중하게 여기고 예의를 지키는 것입니다. ①②는 정의가 서로 뒤바뀌어 있고, ④는 인권의 잘못된 정의입니다.',
       q4: '정답: ②번. 본문에서 인권은 태어날 때부터 자연스럽게 갖는 권리이며, 누구도 빼앗을 수 없다고 했습니다. ①③④는 본문 내용과 반대됩니다.'
-    }
+  }
   },
 
   /* ===== law_02 : "평등을 향한 오랜 여정" ===== */
@@ -209,7 +209,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 이 글은 신분제 사회의 모습 → 자유와 새로운 문제 발생 → 세계 인권 선언과 노력 순서로 전개됩니다.',
       q3: '정답: ③번. 신분은 사람이 사회에서 속한 지위입니다. ①②④는 어휘와 뜻이 잘못 연결되어 있습니다.',
       q4: '정답: ②번. 본문에서 전쟁의 비극이 반복되지 않도록 세계 인권 선언이 만들어졌다고 했습니다. ①③④는 본문 내용과 반대됩니다.'
-    }
+  }
   },
 
   /* ===== law_03 : "우리 곁의 인권, 어떻게 지켜졌을까?" ===== */
@@ -309,7 +309,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { label: '오늘날 우리에게 미친 영향', placeholder: '예: 덕분에 어린이도 존중받는 사회가 되었다' },
         { label: '감사의 말', placeholder: '예: 용기 있는 행동에 감사드립니다' }
       ]
-    }
+  }
   },
 
   /* ===== law_04 : "사이버 폭력에서 아동 학대까지, 인권 보호의 중요성" ===== */
@@ -405,7 +405,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) "악플 대신 응원을, 따돌림 대신 친구를!"',
         '예시 3) "모두가 소중한 사람, 인권은 우리 모두의 권리!"'
       ]
-    }
+  }
   },
 
   /* ===== law_05 : "삼복 제도와 조선의 신중한 재판 방식" ===== */
@@ -495,7 +495,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 신문고는 백성이 임금에게 직접 억울함을 알릴 수 있는 북이야. 궁궐 밖에 설치되어 있어서 누구나 칠 수 있었대.',
         '예시 3) 명통시는 시각 장애인들이 모여 나라의 평화를 기원하는 일을 했어. 조선 시대에도 장애인을 위한 제도가 있었다니 놀라워!'
       ]
-    }
+  }
   },
 
   /* ===== law_06 : "헌법, 나라의 가장 높은 약속" ===== */
@@ -590,7 +590,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 우리 가족 헌법 제1조: 우리 가족은 서로를 사랑하고 존중하는 민주 가정이다. 중요한 결정은 가족회의를 통해 함께 정하며, 모든 가족 구성원은 동등한 발언권을 가진다.',
         '예시 3) 우리 동아리 헌법 제1조: 우리 동아리는 창의와 협력의 공동체이다. 모든 회원은 자신의 아이디어를 자유롭게 제안할 수 있고, 다른 회원의 의견을 경청하며 함께 성장한다.'
       ]
-    }
+  }
   },
 
   /* ===== law_07 : "법은 어떻게 만들어질까?" ===== */
@@ -685,7 +685,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [규칙 제안] 청소 시간에 역할을 공평하게 분담하는 규칙을 제안합니다. 매주 청소 역할을 돌아가며 바꾸면 특정 친구만 힘든 일을 하지 않아도 됩니다. 이렇게 하면 모두가 책임감을 가지고 깨끗한 교실을 만들 수 있습니다.',
         '예시 3) [규칙 제안] 모둠 활동에서 모든 친구가 발표 기회를 가지는 규칙을 제안합니다. 발표를 잘하는 친구만 하는 것이 아니라 돌아가면서 하면, 발표가 서툰 친구도 연습할 기회가 생기고 자신감을 키울 수 있습니다.'
       ]
-    }
+  }
   },
 
   /* ===== law_08 : "법원과 재판, 정의를 찾아서" ===== */
@@ -780,7 +780,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [사건] 체육 시간에 지호가 축구공을 세게 차서 유리창이 깨졌다. 지호는 일부러 그런 것이 아니라고 주장한다. [증거] 목격자 3명의 증언, 축구공 위치. [재판] 판사는 고의가 아닌 실수로 판단하고, 지호에게 유리창 수리비의 일부를 부담하라고 판결한다.',
         '예시 3) [사건] 급식 시간에 누군가 새치기를 했다. 피해자 수연이는 앞에 있던 준호가 새치기했다고 주장하고, 준호는 원래 자기 자리였다고 반박한다. [증거] 급식 순서표, 친구들 증언. [재판] 판사는 증거를 검토하여 공정하게 판결을 내린다.'
       ]
-    }
+  }
   },
 
   /* ===== law_09 : "범죄와 형벌, 왜 처벌할까?" ===== */
@@ -875,7 +875,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [포스터 문구] "폭력은 NO! 대화는 YES!" 화가 나도 주먹 대신 말로 해결하세요. 폭력은 상대방도 나도 다치게 합니다. 갈등이 생기면 선생님이나 어른에게 도움을 요청하세요.',
         '예시 3) [포스터 문구] "온라인도 현실이야!" 익명이라고 아무 말이나 해도 될까요? 사이버 폭력도 범죄예요. 화면 뒤에도 상처받는 사람이 있다는 걸 잊지 마세요.'
       ]
-    }
+  }
   },
 
   /* ===== law_10 : "청소년도 법의 보호를 받아요" ===== */
@@ -970,7 +970,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) [장면1] 단톡방에서 한 학생의 사진을 올리며 놀리는 메시지가 오간다. 피해 학생은 밤에 혼자 울며 휴대폰을 본다. [장면2] 한 친구가 "그만하자"라고 말하고, 피해 학생에게 개인 메시지로 "괜찮아?"라고 보낸다. [메시지] "온라인에서 한 말도 현실의 상처가 됩니다."',
         '예시 3) [장면1] 점심시간, 한 학생이 혼자 밥을 먹는다. 주변 친구들은 그 학생을 피하며 수군거린다. [장면2] 용기 있는 한 친구가 "같이 먹자"라며 옆에 앉는다. [메시지] "당신의 작은 용기가 누군가의 하루를 바꿀 수 있습니다."'
       ]
-    }
+  }
   },
 
   /* ===== law_11 ~ law_15 법 콘텐츠 ===== */
@@ -1066,7 +1066,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '불량품 사진과 결제 내역을 캡처해두고, 판매자에게 교환이나 환불을 요구하며, 판매자가 거부하면 1372 소비자 상담 센터에 전화하여 도움을 받습니다.',
         '물건을 받은 날짜를 기록하고 7일 이내에 반품 신청을 하며, 택배비 부담 문제가 생기면 소비자기본법에 따라 판매자 책임임을 알리고 정당한 권리를 요구합니다.'
       ]
-    }
+  }
   },
 
   fit_law_12: {
@@ -1160,7 +1160,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '아파트에서 물건을 떨어뜨려 주차된 차량이 파손된 경우, 과실로 인한 재산적 손해가 발생했으므로 수리비 전액을 배상해야 합니다.',
         '공사장에서 안전 조치 없이 작업하다가 행인이 다친 경우, 업체의 과실로 인한 불법 행위이므로 치료비, 휴업 손해, 위자료까지 배상받을 수 있습니다.'
       ]
-    }
+  }
   },
 
   fit_law_13: {
@@ -1254,7 +1254,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '결혼하면 배우자의 생활을 돌봐야 하는 부양 의무가 있고, 결혼 중 모은 재산은 이혼 시 나눌 수 있으며, 자녀의 법적 대리인으로서 중요한 결정을 내릴 권한이 생깁니다.',
         '법적 부부가 되면 상대방의 가족과도 인척 관계가 형성되고, 배우자가 사망하면 상속을 받을 권리가 생기며, 서로의 재산에 대해 일정한 권리를 갖게 됩니다.'
       ]
-    }
+  }
   },
 
   fit_law_14: {
@@ -1348,7 +1348,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '시급이 최저 임금보다 낮지 않은지 확인하고, 주 15시간 이상 일하면 주휴 수당을 받을 수 있는지 알아보며, 근로 계약서 사본을 반드시 받아 보관합니다.',
         '하루 근무 시간과 휴게 시간을 계약서에 명시하고, 연장 근로 시 1.5배 수당을 받는지 확인하며, 문제가 생기면 고용노동부 1350에 상담할 수 있음을 알아둡니다.'
       ]
-    }
+  }
   },
 
   fit_law_15: {
@@ -1442,7 +1442,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '환경 문제가 전 세계에 영향을 미치므로, 일회용품 사용을 줄이고 분리수거를 철저히 하며, 기후 변화 대응을 촉구하는 서명 운동에 참여합니다.',
         '공정 무역 인증 제품을 구매하여 개발도상국 노동자의 정당한 대가를 지지하고, 학교에서 세계 인권의 날 행사를 기획하여 친구들과 함께 인권의 중요성을 나눕니다.'
       ]
-    }
+  }
   },
 
   fit_law_16: {
@@ -1536,7 +1536,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '가정에서 사용하지 않는 전자기기의 플러그를 뽑고, 샤워 시간을 5분 이내로 줄이며, 실내 온도를 적정하게 유지하여 에너지를 절약합니다.',
         '학교까지 자전거나 도보로 통학하고, 친구들과 함께 학교 주변 쓰레기 줍기 캠페인을 진행하여 환경 보호의 중요성을 알립니다.'
       ]
-    }
+  }
   },
 
   fit_law_17: {
@@ -1630,7 +1630,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '음악이나 영화를 볼 때 불법 다운로드 사이트 대신 정식 스트리밍 서비스를 이용하고, 정당한 비용을 지불하여 창작자를 응원합니다.',
         '친구의 그림이나 글을 SNS에 올릴 때 반드시 허락을 받고 원작자를 표시하며, 다른 사람의 아이디어를 사용할 때도 동의를 구합니다.'
       ]
-    }
+  }
   },
 
   fit_law_18: {
@@ -1724,7 +1724,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         'SNS에 집 주소, 전화번호, 일정 등 개인정보를 올리지 않고, 공개 범위를 친구로 제한하며, 모르는 사람의 친구 요청은 거절합니다.',
         '앱을 설치할 때 요청하는 권한을 확인하고, 불필요한 위치 정보나 연락처 접근은 거부하며, 사용하지 않는 앱은 삭제합니다.'
       ]
-    }
+  }
   },
 
   fit_law_19: {
@@ -1818,7 +1818,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '온라인 쇼핑에서 물건이 설명과 다르게 왔을 때, 판매자와 협상하여 환불이나 교환을 요청하고, 거부하면 소비자원에 조정을 신청합니다.',
         '이웃과 층간 소음 문제로 다툼이 생겼다면, 직접 대화로 협상을 시도하고, 합의가 안 되면 아파트 관리사무소나 주민센터에 조정을 요청합니다.'
       ]
-    }
+  }
   },
 
   fit_law_20: {
@@ -1912,8 +1912,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '아르바이트생이 최저 임금도 못 받는 경우가 많아서, 임금 체불 시 사업주에게 더 강력한 처벌을 하고 피해자에게 즉시 배상하도록 하는 법을 강화해야 합니다.',
         '반려동물을 학대해도 처벌이 약한 것이 불공정하다고 느껴서, 동물학대에 대한 처벌을 강화하고, 학대자는 다시 동물을 기를 수 없도록 금지하는 법이 필요합니다.'
       ]
-    }
   }
+}
 });
 
 /* ===============================
@@ -1932,7 +1932,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -1979,11 +1979,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -2010,7 +2010,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -2024,7 +2024,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -2038,8 +2038,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -2048,8 +2048,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3 (객관식)
   if (blocks[2]) {
@@ -2058,8 +2058,8 @@ function applyContentPack(unitKey) {
     if (q3Text && pack.quiz.q3_text) q3Text.textContent = pack.quiz.q3_text;
     if (q3Lis.length === 4 && pack.quiz.q3_opts) {
       q3Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q3" value="${i+1}"><span>${pack.quiz.q3_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q4 (객관식)
   if (blocks[3]) {
@@ -2068,14 +2068,14 @@ function applyContentPack(unitKey) {
     if (q4Text && pack.quiz.q4_text) q4Text.textContent = pack.quiz.q4_text;
     if (q4Lis.length === 4 && pack.quiz.q4_opts) {
       q4Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q4" value="${i+1}"><span>${pack.quiz.q4_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -2090,7 +2090,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -2124,7 +2124,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -2152,7 +2152,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -2168,19 +2168,19 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
     if (state.q3) {
       const r3 = document.querySelector(`input[name="q3"][value="${state.q3}"]`);
       if (r3) r3.checked = true;
-    }
+  }
     if (state.q4) {
       const r4 = document.querySelector(`input[name="q4"][value="${state.q4}"]`);
       if (r4) r4.checked = true;
-    }
+  }
 
     const q5 = document.getElementById('q5');
     if (q5 && state.q5 !== undefined) q5.value = state.q5;
@@ -2189,12 +2189,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -2213,7 +2213,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -2240,8 +2240,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -2277,7 +2277,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -2307,7 +2307,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -2324,10 +2324,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -2335,7 +2335,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -2368,7 +2368,7 @@ function renderSolutions(pack) {
     q3Answer = `<b>정답:</b> ${A.q3} — ${q3Text}`;
   } else if (A.q3_1) {
     q3Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
-  }
+}
 
   // 4번: 객관식(q4) 또는 빈칸(q4_1, q4_2) 형식 처리
   let q4Answer = '';
@@ -2377,7 +2377,7 @@ function renderSolutions(pack) {
     q4Answer = `<b>정답:</b> ${A.q4} — ${q4Text}`;
   } else if (A.q4_1) {
     q4Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
-  }
+}
 
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
@@ -2425,9 +2425,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/law_(\d+)\.html/i);
       if (m) unitParam = `fit_law_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'law_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'law_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -2435,21 +2435,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:law_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -2466,9 +2466,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // law_01, law_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (law_01 등) */
@@ -2489,11 +2489,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -2510,7 +2510,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (law_01, law_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -2524,7 +2524,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -2535,7 +2535,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -2544,7 +2544,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -2552,8 +2552,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -2575,7 +2575,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -2592,7 +2592,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -2606,12 +2606,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -2619,7 +2619,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -2627,6 +2627,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -2634,12 +2639,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -2655,7 +2660,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -2681,24 +2686,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -2712,12 +2722,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -2757,11 +2767,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -2772,7 +2782,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -2781,7 +2791,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -2796,14 +2806,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.law_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -2812,13 +2822,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINFIT용 fit_ 키 매핑 (fit_law_XX → law_XX 데이터 참조)
@@ -2829,6 +2839,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `fit_law_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

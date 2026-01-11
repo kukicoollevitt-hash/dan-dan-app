@@ -6323,12 +6323,13 @@ app.get("/api/user-info", async (req, res) => {
   }
 });
 
-// ===== 학습 완료 상태 조회 API =====
+// ===== 학습 완료 상태 조회 API (동시 요청 병합) =====
+// 동시에 같은 요청이 들어오면 하나의 DB 쿼리만 실행하고 결과 공유
+const pendingCompletionRequests = new Map();
+
 app.get("/api/completion-status", async (req, res) => {
   try {
     const { grade, name, series } = req.query;
-
-    console.log("[/api/completion-status] 조회 요청:", { grade, name, series });
 
     if (!grade || !name || !series) {
       return res.status(400).json({ ok: false, message: "필수 파라미터 부족 (grade, name, series)" });
@@ -6338,27 +6339,47 @@ app.get("/api/completion-status", async (req, res) => {
     const cacheKey = getCacheKey('completion-status', { grade, name, series });
     const cached = getCache(cacheKey);
     if (cached) {
-      console.log("💾 [/api/completion-status] 캐시 사용");
       return res.json(cached);
     }
 
-    // 해당 학생의 완료된 단원 목록 조회
-    const completedLogs = await LearningLog.find({
-      grade,
-      name,
-      series,
-      completed: true
-    }).select('unit').lean();
+    // ✅ 동시 요청 병합: 이미 같은 요청이 진행 중이면 그 결과를 기다림
+    if (pendingCompletionRequests.has(cacheKey)) {
+      console.log("⏳ [/api/completion-status] 동시 요청 병합 - 기존 요청 대기:", cacheKey);
+      const result = await pendingCompletionRequests.get(cacheKey);
+      return res.json(result);
+    }
 
-    // 완료된 단원 코드 배열
-    const completedUnits = completedLogs.map(log => log.unit);
+    // 새로운 요청 시작 - Promise 저장
+    console.log("[/api/completion-status] 조회 요청:", { grade, name, series });
+    const queryPromise = (async () => {
+      // 해당 학생의 완료된 단원 목록 조회
+      const completedLogs = await LearningLog.find({
+        grade,
+        name,
+        series,
+        completed: true
+      }).select('unit').lean();
 
-    const result = { ok: true, completedUnits };
+      // 완료된 단원 코드 배열
+      const completedUnits = completedLogs.map(log => log.unit);
+      const result = { ok: true, completedUnits };
 
-    // 캐시에 저장
-    setCache(cacheKey, result);
+      // 캐시에 저장
+      setCache(cacheKey, result);
 
-    return res.json(result);
+      return result;
+    })();
+
+    // 진행 중인 요청으로 등록
+    pendingCompletionRequests.set(cacheKey, queryPromise);
+
+    try {
+      const result = await queryPromise;
+      return res.json(result);
+    } finally {
+      // 요청 완료 후 목록에서 제거
+      pendingCompletionRequests.delete(cacheKey);
+    }
   } catch (err) {
     console.error("[/api/completion-status] error:", err);
     res.status(500).json({ ok: false, message: "서버 오류" });
@@ -12212,10 +12233,26 @@ app.get("/my-learning", async (req, res) => {
         // 날짜 네비게이션을 위한 현재 선택된 날짜 (기본: 오늘)
         let selectedDate = new Date();
 
-        // 날짜 변경 함수
+        // 날짜 변경 함수 (Today 학습 기록 + 어휘 점수 + 창의활동 동기화)
         function changeDate(delta) {
           selectedDate.setDate(selectedDate.getDate() + delta);
           renderTodaySection();
+
+          // ✅ 날짜별 어휘 점수도 같은 날짜로 동기화
+          if (typeof vocabScoreCurrentDate !== 'undefined') {
+            vocabScoreCurrentDate = new Date(selectedDate);
+            if (typeof renderVocabScoreChart === 'function') {
+              renderVocabScoreChart();
+            }
+          }
+
+          // ✅ 창의활동 내역도 같은 날짜로 동기화
+          if (typeof creativeCurrentDate !== 'undefined') {
+            creativeCurrentDate = new Date(selectedDate);
+            if (typeof renderCreativeTable === 'function') {
+              renderCreativeTable();
+            }
+          }
         }
         window.changeDate = changeDate;
 
@@ -12250,11 +12287,27 @@ app.get("/my-learning", async (req, res) => {
         }
         window.changeCalendarMonth = changeCalendarMonth;
 
-        // 달력 날짜 선택
+        // 달력 날짜 선택 (어휘 점수 + 창의활동도 동기화)
         function selectCalendarDate(dateStr) {
           selectedDate = new Date(dateStr + 'T00:00:00');
           closeCalendarPopup();
           renderTodaySection();
+
+          // ✅ 날짜별 어휘 점수도 같은 날짜로 동기화
+          if (typeof vocabScoreCurrentDate !== 'undefined') {
+            vocabScoreCurrentDate = new Date(selectedDate);
+            if (typeof renderVocabScoreChart === 'function') {
+              renderVocabScoreChart();
+            }
+          }
+
+          // ✅ 창의활동 내역도 같은 날짜로 동기화
+          if (typeof creativeCurrentDate !== 'undefined') {
+            creativeCurrentDate = new Date(selectedDate);
+            if (typeof renderCreativeTable === 'function') {
+              renderCreativeTable();
+            }
+          }
         }
         window.selectCalendarDate = selectCalendarDate;
 
@@ -13043,10 +13096,22 @@ app.get("/my-learning", async (req, res) => {
           });
         }
 
-        // 어휘 점수 날짜 네비게이션
+        // 어휘 점수 날짜 네비게이션 (모든 섹션 동기화)
         document.getElementById('vocabScorePrev')?.addEventListener('click', function() {
           vocabScoreCurrentDate.setDate(vocabScoreCurrentDate.getDate() - 1);
           renderVocabScoreChart();
+
+          // ✅ Today 학습 기록도 같은 날짜로 동기화
+          selectedDate = new Date(vocabScoreCurrentDate);
+          renderTodaySection();
+
+          // ✅ 창의활동 내역도 같은 날짜로 동기화
+          if (typeof creativeCurrentDate !== 'undefined') {
+            creativeCurrentDate = new Date(vocabScoreCurrentDate);
+            if (typeof renderCreativeTable === 'function') {
+              renderCreativeTable();
+            }
+          }
         });
 
         document.getElementById('vocabScoreNext')?.addEventListener('click', function() {
@@ -13058,6 +13123,18 @@ app.get("/my-learning", async (req, res) => {
           if (nextDate <= today) {
             vocabScoreCurrentDate = nextDate;
             renderVocabScoreChart();
+
+            // ✅ Today 학습 기록도 같은 날짜로 동기화
+            selectedDate = new Date(vocabScoreCurrentDate);
+            renderTodaySection();
+
+            // ✅ 창의활동 내역도 같은 날짜로 동기화
+            if (typeof creativeCurrentDate !== 'undefined') {
+              creativeCurrentDate = new Date(vocabScoreCurrentDate);
+              if (typeof renderCreativeTable === 'function') {
+                renderCreativeTable();
+              }
+            }
           }
         });
 
@@ -13212,10 +13289,22 @@ app.get("/my-learning", async (req, res) => {
           }
         };
 
-        // 창의활동 날짜 네비게이션
+        // 창의활동 날짜 네비게이션 (모든 섹션 동기화)
         document.getElementById('creativePrev')?.addEventListener('click', function() {
           creativeCurrentDate.setDate(creativeCurrentDate.getDate() - 1);
           renderCreativeTable();
+
+          // ✅ Today 학습 기록도 같은 날짜로 동기화
+          selectedDate = new Date(creativeCurrentDate);
+          renderTodaySection();
+
+          // ✅ 어휘 점수도 같은 날짜로 동기화
+          if (typeof vocabScoreCurrentDate !== 'undefined') {
+            vocabScoreCurrentDate = new Date(creativeCurrentDate);
+            if (typeof renderVocabScoreChart === 'function') {
+              renderVocabScoreChart();
+            }
+          }
         });
 
         document.getElementById('creativeNext')?.addEventListener('click', function() {
@@ -13227,6 +13316,18 @@ app.get("/my-learning", async (req, res) => {
           if (nextDate <= today) {
             creativeCurrentDate = nextDate;
             renderCreativeTable();
+
+            // ✅ Today 학습 기록도 같은 날짜로 동기화
+            selectedDate = new Date(creativeCurrentDate);
+            renderTodaySection();
+
+            // ✅ 어휘 점수도 같은 날짜로 동기화
+            if (typeof vocabScoreCurrentDate !== 'undefined') {
+              vocabScoreCurrentDate = new Date(creativeCurrentDate);
+              if (typeof renderVocabScoreChart === 'function') {
+                renderVocabScoreChart();
+              }
+            }
           }
         });
 
@@ -17010,37 +17111,43 @@ app.get('/api/user-progress/vocabulary-history/today', async (req, res) => {
       });
     }
 
-    const progress = await UserProgress.findOne({ grade, name });
+    // ✅ 캐시 확인 (10초 캐시 - 어휘학습 완료 여부는 자주 변경될 수 있음)
+    const cacheKey = getCacheKey('vocab-today', { grade, name });
+    const cached = getCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const progress = await UserProgress.findOne({ grade, name }).lean();
 
     if (!progress || !progress.vocabularyQuizHistory || progress.vocabularyQuizHistory.length === 0) {
-      return res.json({
-        ok: true,
-        completedToday: false
-      });
+      const result = { ok: true, completedToday: false };
+      setCache(cacheKey, result);
+      return res.json(result);
     }
 
     // 오늘 날짜 범위 계산 (KST 기준 00:00:00 ~ 23:59:59)
-    // 서버가 UTC로 실행되는 경우 한국 시간과 9시간 차이가 발생하므로 KST 기준으로 계산
     const now = new Date();
-    const kstOffset = 9 * 60 * 60 * 1000; // KST = UTC + 9시간
+    const kstOffset = 9 * 60 * 60 * 1000;
     const kstNow = new Date(now.getTime() + kstOffset);
-
-    // KST 기준 오늘 00:00:00 (UTC 기준으로 변환하면 전날 15:00:00)
     const kstTodayStart = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 0, 0, 0) - kstOffset);
-    // KST 기준 오늘 23:59:59 (UTC 기준으로 변환하면 당일 14:59:59)
     const kstTodayEnd = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate(), 23, 59, 59) - kstOffset);
 
-    // 오늘 날짜에 학습이력이 있는지 확인 (KST 기준)
     const todayHistory = progress.vocabularyQuizHistory.find(history => {
       const historyDate = new Date(history.date);
       return historyDate >= kstTodayStart && historyDate <= kstTodayEnd;
     });
 
-    res.json({
+    const result = {
       ok: true,
       completedToday: !!todayHistory,
       latestHistory: todayHistory || null
-    });
+    };
+
+    // ✅ 캐시 저장
+    setCache(cacheKey, result);
+
+    res.json(result);
   } catch (error) {
     console.error('오늘 어휘학습 이력 확인 오류:', error);
     res.status(500).json({
@@ -18351,12 +18458,24 @@ app.get('/api/ai-task/last-assigned', async (req, res) => {
       });
     }
 
-    const progress = await UserProgress.findOne({ grade, name });
+    // ✅ 캐시 확인
+    const cacheKey = getCacheKey('last-assigned', { grade, name });
+    const cached = getCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
 
-    res.json({
+    const progress = await UserProgress.findOne({ grade, name }).lean();
+
+    const result = {
       ok: true,
       lastAIAssignedAt: progress?.studyRoom?.lastAIAssignedAt || null
-    });
+    };
+
+    // ✅ 캐시 저장
+    setCache(cacheKey, result);
+
+    res.json(result);
 
   } catch (error) {
     console.error('마지막 AI 부여 시간 조회 오류:', error);
@@ -21352,7 +21471,6 @@ app.get("/api/gate-quiz/status", async (req, res) => {
 // 여러 API를 한 번에 호출하여 네트워크 왕복 횟수를 줄임
 app.get("/api/menu-init", async (req, res) => {
   const startTime = Date.now();
-  console.log("🚀 [/api/menu-init] 통합 API 호출 시작");
 
   try {
     const { grade, name, series, phone } = req.query;
@@ -21364,18 +21482,27 @@ app.get("/api/menu-init", async (req, res) => {
       });
     }
 
+    // ✅ 캐시 키 생성 및 확인 (30초 캐시)
+    const cacheKey = getCacheKey('menu-init', { grade, name, series: series || '', phone: phone || '' });
+    const cached = getCache(cacheKey);
+    if (cached) {
+      console.log("💾 [/api/menu-init] 캐시 사용");
+      return res.json(cached);
+    }
+
+    console.log("🚀 [/api/menu-init] DB 조회 시작");
+
     // 세션 정보
     const session = req.session && req.session.user
       ? { ok: true, user: req.session.user }
       : { ok: false, user: null };
 
-    // 병렬로 모든 데이터 조회
+    // 병렬로 모든 데이터 조회 (✅ 중복 쿼리 제거: allLogs 하나로 통합)
     const [
       userInfo,
       userProgress,
       completedLogs,
-      allLogs,
-      unitGradesData
+      allLogs
     ] = await Promise.all([
       // 1. user-info: 사용자 정보
       User.findOne({ grade, name, deleted: { $ne: true } }).lean(),
@@ -21388,16 +21515,14 @@ app.get("/api/menu-init", async (req, res) => {
         ? LearningLog.find({ grade, name, series, completed: true }).select('unit').lean()
         : Promise.resolve([]),
 
-      // 4. learning-logs: 학습 기록
+      // 4. learning-logs: 학습 기록 (✅ unitGradesData와 통합 - deleted 필터 제거하여 한 번만 조회)
       LearningLog.find(phone ? { grade, name, phone } : { grade, name })
-        .sort({ timestamp: -1 })
-        .lean(),
-
-      // 5. unit-grades: 단원별 등급
-      LearningLog.find({ grade, name, deleted: false })
         .sort({ timestamp: -1 })
         .lean()
     ]);
+
+    // ✅ unitGradesData는 allLogs에서 필터링 (중복 쿼리 제거)
+    const unitGradesData = allLogs.filter(log => log.deleted !== true);
 
     // user-info 가공
     const userInfoResult = userInfo
@@ -21503,7 +21628,7 @@ app.get("/api/menu-init", async (req, res) => {
     console.log(`✅ [/api/menu-init] 완료 (${elapsed}ms)`);
 
     // 모든 결과를 한 번에 반환
-    res.json({
+    const result = {
       ok: true,
       session,
       userInfo: userInfoResult,
@@ -21517,7 +21642,12 @@ app.get("/api/menu-init", async (req, res) => {
         elapsed: elapsed,
         timestamp: new Date().toISOString()
       }
-    });
+    };
+
+    // ✅ 캐시에 저장 (30초)
+    setCache(cacheKey, result);
+
+    res.json(result);
 
   } catch (err) {
     console.error("❌ [/api/menu-init] 오류:", err);

@@ -8,7 +8,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('deep_world2_')) {
     console.log('[deep_world2_content.js] CUR_UNIT already set:', window.CUR_UNIT);
     return;
-  }
+}
 
   // 직접 world2 파일 접근 시 (fallback)
   const qs = new URLSearchParams(location.search).get('unit');
@@ -17,17 +17,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/deep_world2[_-]?(d{1,2})/);
     if (m) unit = `deep_world2_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/deep_world2[_-]?(d{1,2})\.html/);
     if (m2) unit = `deep_world2_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `deep_world2_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'deep_world2_01';
 })();
@@ -137,7 +137,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 두려움보다 사랑이 더 크다면 반드시 해낼 수 있어요. 용기를 내세요!',
         '예시 3) 아들도 아버지를 믿고 있어요. 그 믿음이 아저씨의 손을 안정시켜 줄 거예요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_02 : "소년들의 용기와 케이트의 눈물" (15소년 표류기) ===== */
@@ -236,7 +236,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 진정한 리더는 갈등을 넘어 협력할 줄 아는 사람이야. 너라면 할 수 있어!',
         '예시 3) 밤길은 위험하지만, 동료를 구하려는 마음이 어둠보다 밝을 거야.'
       ]
-    }
+  }
   },
 
   /* ===== world2_03 : "로빈 후드의 은밀한 재판" ===== */
@@ -336,7 +336,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 당신의 정의로운 행동이 우리 가문에 희망을 주었습니다. 이 은혜를 평생 잊지 않겠습니다.',
         '예시 3) 부패한 권력에 맞서는 당신의 용기가 많은 사람들에게 빛이 됩니다.'
       ]
-    }
+  }
   },
 
   /* ===== world2_04 : "말괄량이 카타리나를 둘러싼 오해와 진실" ===== */
@@ -436,7 +436,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 진정한 배우자는 상대를 변화시키려 하기보다 있는 그대로를 이해하려는 사람이에요.',
         '예시 3) 어려울 때 함께 고민하고 기쁠 때 함께 웃을 수 있는 사람이 좋은 배우자라고 생각해요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_05 : "올리버의 용기 있는 한마디" (올리버 트위스트) ===== */
@@ -535,7 +535,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 벌을 받을 줄 알면서도 말한 너의 용기가 세상을 바꾸는 시작이 될 거야.',
         '예시 3) 두려워도 옳은 일을 한 너는 진정한 영웅이야. 포기하지 마!'
       ]
-    }
+  }
   },
 
   /* ===== world2_06 : 허클베리 핀의 모험 (마크 트웨인) ===== */
@@ -629,7 +629,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 법보다 중요한 건 사람의 마음이야. 네 양심을 따라.',
         '예시 3) 진정한 우정은 규칙보다 강해. 짐을 도와주는 게 옳은 일이야.'
       ]
-    }
+  }
   },
 
   /* ===== world2_07 : 비밀의 화원 (프랜시스 호지슨 버넷) ===== */
@@ -728,7 +728,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 학교 옥상에 허브 정원을 만들어서 친구들과 함께 요리에 쓸 허브를 키우고 싶어요.',
         '예시 3) 우리 집 베란다에 다육식물 정원을 만들어 매일 아침 물을 주고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_08 : 80일간의 세계일주 (쥘 베른) ===== */
@@ -822,7 +822,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 미국 디즈니랜드, 영국 해리포터 촬영지, 케냐 사파리를 가보고 싶어요.',
         '예시 3) 이탈리아 피자, 그리스 신전, 태국 코끼리를 만나보고 싶어요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_09 : 해저 2만리 (쥘 베른) ===== */
@@ -916,7 +916,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 산호초 숲을 지나며 알록달록한 열대어들을 구경했다. 정말 아름다웠다.',
         '예시 3) 잃어버린 도시 아틀란티스를 발견했다! 돌로 만든 건물들이 바닷속에 잠겨 있었다.'
       ]
-    }
+  }
   },
 
   /* ===== world2_10 : 왕자와 거지 (마크 트웨인) ===== */
@@ -1010,7 +1010,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 신분이 아니라 마음이 중요하다는 것을 배우셨군요. 공정한 왕이 되어주세요.',
         '예시 3) 거지로 살면서 배운 것들을 잊지 마시고, 모든 백성을 사랑해 주세요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_11 : 톰 소여의 모험 (마크 트웨인) ===== */
@@ -1101,7 +1101,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 네가 법정에서 진실을 말한 용기가 정말 멋있었어. 나도 그런 용기를 갖고 싶어.',
         '예시 3) 우리 함께 미시시피 강에서 뗏목 여행을 떠나자!'
       ]
-    }
+  }
   },
 
   /* ===== world2_12 : 정글북 (러디어드 키플링) ===== */
@@ -1192,7 +1192,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 늑대 형제들과의 우정은 영원할 거야. 어디에 있든 그건 변하지 않아.',
         '예시 3) 네가 어디에 속하든, 너 자신으로 사는 게 가장 중요해.'
       ]
-    }
+  }
   },
 
   /* ===== world2_13 : 피터팬 (J.M. 배리) ===== */
@@ -1283,7 +1283,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 네버랜드의 자유가 부러워. 하지만 나는 가족과 함께 성장하고 싶어.',
         '예시 3) 어린이의 마음을 간직한 채 어른이 될 수 있다면 좋겠어.'
       ]
-    }
+  }
   },
 
   /* ===== world2_14 : 보물섬 (로버트 루이스 스티븐슨) ===== */
@@ -1374,7 +1374,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 보물보다 소중한 건 모험에서 얻은 경험이라고 생각해.',
         '예시 3) 롱 존 실버를 경계하면서도 배운 점이 있었을 거야. 정말 특별한 모험이었네!'
       ]
-    }
+  }
   },
 
   /* ===== world2_15 : 오즈의 마법사 (라이먼 프랭크 바움) ===== */
@@ -1465,7 +1465,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 집보다 좋은 곳은 없다는 말, 정말 맞는 것 같아.',
         '예시 3) 루비 구두의 마법보다 네 마음이 더 강했어!'
       ]
-    }
+  }
   },
 
   /* ===== world2_16 : 지킬 박사와 하이드 (로버트 루이스 스티븐슨) ===== */
@@ -1556,7 +1556,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 선과 악은 모두 우리 안에 있어요. 어떤 것을 선택하느냐가 중요해요.',
         '예시 3) 완벽해지려 하기보다 불완전한 자신을 인정하는 것도 용기예요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_17 : 작은 아씨들 (루이자 메이 올컷) ===== */
@@ -1647,7 +1647,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 베스, 네 따뜻한 마음이 가족을 하나로 만들었어. 정말 고마워.',
         '예시 3) 에이미, 예술을 사랑하는 네 열정이 부러워. 네 그림을 보고 싶어.'
       ]
-    }
+  }
   },
 
   /* ===== world2_18 : 폭풍의 언덕 (에밀리 브론테) ===== */
@@ -1738,7 +1738,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 캐서린을 향한 사랑이 증오로 변한 건 슬퍼. 사랑은 원래 그런 게 아니야.',
         '예시 3) 과거에 갇혀 있지 말고 새로운 시작을 해봐. 아직 늦지 않았어.'
       ]
-    }
+  }
   },
 
   /* ===== world2_19 : 제인 에어 (샬럿 브론테) ===== */
@@ -1829,7 +1829,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 진정한 사랑은 평등한 관계에서 온다는 것을 네가 보여줬어.',
         '예시 3) 어려운 환경에서도 포기하지 않은 네 용기가 감동이야.'
       ]
-    }
+  }
   },
 
   /* ===== world2_20 : 몬테크리스토 백작 (알렉상드르 뒤마) ===== */
@@ -1920,7 +1920,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 14년의 감옥 생활은 정말 억울했을 거예요. 하지만 새 삶을 살아가세요.',
         '예시 3) 당신의 이야기가 정의와 용서에 대해 많은 것을 생각하게 해요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_21 : 로빈슨 크루소 (다니엘 디포) ===== */
@@ -2011,7 +2011,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 혼자서도 집을 짓고 농사를 지은 당신의 지혜가 놀라워요.',
         '예시 3) 프라이데이와의 우정이 외로움을 이겨내는 데 도움이 되었겠죠.'
       ]
-    }
+  }
   },
 
   /* ===== world2_22 : 걸리버 여행기 (조너선 스위프트) ===== */
@@ -2102,7 +2102,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 거인국에서 작아진 경험이 겸손함을 가르쳐줬을 것 같아요.',
         '예시 3) 여러 나라를 여행하며 인간의 모습을 다시 생각하게 되었겠네요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_23 : 돈키호테 (미겔 데 세르반테스) ===== */
@@ -2193,7 +2193,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 세상이 비웃어도 포기하지 않는 당신의 이상이 아름다워요.',
         '예시 3) 산초와 함께한 여행이 외롭지 않았을 거예요. 진정한 친구가 있었으니까요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_24 : 주홍글씨 (나다니엘 호손) ===== */
@@ -2283,7 +2283,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 세상의 손가락질 속에서도 당당하게 산 당신이 존경스러워요.',
         '예시 3) 펄을 훌륭하게 키운 당신은 진정한 어머니예요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_25 : 오만과 편견 (제인 오스틴) ===== */
@@ -2373,7 +2373,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 자존심 때문에 놓칠 뻔한 사랑을 찾아서 다행이에요.',
         '예시 3) 편견을 버리는 것이 얼마나 어려운지 당신의 이야기가 가르쳐줘요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_26 : 파우스트 (괴테) ===== */
@@ -2463,7 +2463,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 끊임없이 배우려는 열정은 좋지만, 영혼을 팔면 안 돼요.',
         '예시 3) 마지막에 구원받았다니 다행이에요. 깨달음이 늦지 않았어요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_27 : 레 미제라블 (빅토르 위고) ===== */
@@ -2553,7 +2553,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 억울한 세월을 보냈지만 새 사람이 된 당신이 존경스러워요.',
         '예시 3) 코제트를 진심으로 사랑한 당신은 진정한 아버지예요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_28 : 안나 카레니나 (톨스토이) ===== */
@@ -2643,7 +2643,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 사랑 때문에 모든 것을 잃은 당신의 이야기가 마음 아파요.',
         '예시 3) 당신의 슬픈 이야기가 사랑에 대해 많은 것을 생각하게 해요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_29 : 죄와 벌 (도스토예프스키) ===== */
@@ -2733,7 +2733,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 소냐의 사랑이 당신을 구원했어요. 새로운 삶을 살아가세요.',
         '예시 3) 양심의 소리를 무시하면 안 돼요. 그것이 우리를 인간으로 만들어요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_30 : 변신 (프란츠 카프카) ===== */
@@ -2823,7 +2823,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 가족을 위해 희생했는데 버림받은 기분이 얼마나 슬펐을까요.',
         '예시 3) 당신의 이야기가 진정한 가족의 의미를 생각하게 해요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_31 : 이상한 나라의 앨리스 (루이스 캐럴) ===== */
@@ -2913,7 +2913,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 이상한 나라의 캐릭터들이 정말 신기했을 것 같아. 가장 기억에 남는 건 누구야?',
         '예시 3) 꿈에서 깨어났을 때 아쉬웠을 것 같아. 하지만 현실도 충분히 모험적이야!'
       ]
-    }
+  }
   },
 
   /* ===== world2_32 : 모비 딕 (허먼 멜빌) ===== */
@@ -3003,7 +3003,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 모비딕을 잡아도 다리는 돌아오지 않아요. 과거를 놓아주세요.',
         '예시 3) 집념이 용기인지 광기인지 생각해보게 하는 이야기예요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_33 : 템페스트/폭풍우 (셰익스피어) ===== */
@@ -3093,7 +3093,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 마법 지팡이를 부러뜨린 것은 새로운 시작을 의미하는 거죠.',
         '예시 3) 에어리얼에게 자유를 준 것처럼, 당신도 과거에서 자유로워졌어요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_34 : 호밀밭의 파수꾼 (샐린저) ===== */
@@ -3183,7 +3183,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 호밀밭의 파수꾼이 되고 싶은 마음, 이해해. 순수한 것을 지키고 싶은 거잖아.',
         '예시 3) 피비가 네 곁에 있어서 다행이야. 가족의 사랑을 잊지 마.'
       ]
-    }
+  }
   },
 
   /* ===== world2_35 : 노인과 바다 (헤밍웨이) ===== */
@@ -3273,7 +3273,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 인간은 파괴될 수 있지만 패배할 수는 없다는 말씀이 감동이에요.',
         '예시 3) 상어와 싸우면서도 포기하지 않은 당신이 진정한 승자예요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_36 : 동물농장 (조지 오웰) ===== */
@@ -3363,7 +3363,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 돼지들이 인간처럼 변했어요. 권력은 왜 사람을 변하게 할까요?',
         '예시 3) 복서의 희생이 너무 슬퍼요. 성실함이 배신당하면 안 되는데...'
       ]
-    }
+  }
   },
 
   /* ===== world2_37 : 위대한 개츠비 (피츠제럴드) ===== */
@@ -3453,7 +3453,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 화려한 파티 뒤에 숨겨진 외로움이 안타까워요.',
         '예시 3) 당신의 이야기가 꿈과 현실에 대해 많은 것을 생각하게 해요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_38 : 앵무새 죽이기 (하퍼 리) ===== */
@@ -3543,7 +3543,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 다른 사람의 입장에서 생각하라는 가르침을 잊지 않을게요.',
         '예시 3) 스카웃과 젬에게 진정한 용기를 가르쳐주셔서 감사해요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_39 : 1984 (조지 오웰) ===== */
@@ -3633,7 +3633,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 2+2=5라고 말해야 했던 고통이 얼마나 컸을까요.',
         '예시 3) 당신의 이야기가 자유의 소중함을 일깨워줘요.'
       ]
-    }
+  }
   },
 
   /* ===== world2_40 : 파리대왕 (윌리엄 골딩) ===== */
@@ -3733,8 +3733,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 잭 무리의 폭력 앞에서도 포기하지 않은 네가 대단해.',
         '예시 3) 이 경험이 인간에 대해 많은 것을 생각하게 했을 거야.'
       ]
-    }
   }
+}
 });
 
 // ✅ 세계문학(2) 콘텐츠 로드 완료 이벤트 발생
@@ -3758,14 +3758,14 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   // ✅ 이미 렌더링된 경우 다시 렌더링하지 않음 (탭 전환 시 채점 결과 유지)
   const existingBlanks = root.querySelectorAll('.blank-wrap');
   if (existingBlanks.length > 0) {
     console.log('[renderVocabFill] 이미 렌더링됨 - 스킵 (채점 결과 유지)');
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -3808,11 +3808,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -3835,7 +3835,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -3845,7 +3845,7 @@ function applyContentPack(unitKey) {
   const passageBox = document.querySelector('.passage-text');
   if (passageBox) {
     passageBox.innerHTML = pack.passage.map(p => `<p>${p}</p>`).join('');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox) vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -3858,8 +3858,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   if (blocks[1]) {
     const q2Text = blocks[1].querySelector('.quiz-q');
@@ -3867,8 +3867,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   if (blocks[2]) {
     const q3P = blocks[2].querySelector('.quiz-q');
@@ -3877,7 +3877,7 @@ function applyContentPack(unitKey) {
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   if (blocks[3]) {
     const q4P = blocks[3].querySelector('.quiz-q');
@@ -3886,12 +3886,12 @@ function applyContentPack(unitKey) {
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -3906,7 +3906,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -3973,11 +3973,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
     const q4_1 = document.getElementById('q4-1');
@@ -3990,7 +3990,7 @@ function loadReadingState() {
     if (q5 && state.q5 !== undefined) q5.value = state.q5;
     if (state.graded && typeof window.gradeQuiz === 'function') {
       setTimeout(() => { try { window.gradeQuiz(); } catch (e) { console.warn('auto re-grade error', e); } }, 0);
-    }
+  }
   } catch (e) { console.warn('loadReadingState error', e); }
 }
 
@@ -4010,7 +4010,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -4037,8 +4037,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   const q1 = document.querySelector('input[name="q1"]:checked');
   const q1ok = (q1 && q1.value === A.q1);
@@ -4064,7 +4064,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4번: 객관식(q4) 또는 주관식(q4_1, q4_2) 처리
@@ -4083,7 +4083,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   const essay = (document.getElementById('q5')?.value || '').trim().toLowerCase();
@@ -4098,7 +4098,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -4126,7 +4126,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   const radarScores = {
     literal: q1ok ? 10 : 6,
@@ -4160,10 +4160,10 @@ function renderSolutions(pack) {
     box.style.borderRadius = '12px';
     box.style.padding = '16px';
     box.style.lineHeight = '1.6';
-  }
+}
   if (gradeResult) {
     gradeResult.appendChild(box);
-  }
+}
 
   // 3번: 객관식(q3) 또는 빈칸(q3_1, q3_2) 형식 처리
   let q3Answer = '';
@@ -4172,7 +4172,7 @@ function renderSolutions(pack) {
     q3Answer = `<b>정답:</b> ${A.q3} — ${q3Text}`;
   } else if (A.q3_1) {
     q3Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
-  }
+}
 
   // 4번: 객관식(q4) 또는 빈칸(q4_1, q4_2) 형식 처리
   let q4Answer = '';
@@ -4181,14 +4181,14 @@ function renderSolutions(pack) {
     q4Answer = `<b>정답:</b> ${A.q4} — ${q4Text}`;
   } else if (A.q4_1) {
     q4Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
-  }
+}
 
   // detail 상세해설 헬퍼
   function buildExplainDetail(ex, dt) {
     let html = ex ? `<span style="color:#6b5a48;">${ex}</span>` : '';
     if (dt) html += `<br><span style="color:#2e7d32;">${dt}</span>`;
     return html;
-  }
+}
 
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
@@ -4227,26 +4227,26 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/world2_(\d+)\.html/i);
       if (m) unitParam = `deep_world2_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'world2_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'world2_01')).toLowerCase();
+}
 
   function buildStudentKey(stu) {
     const cleanPhone = (stu.phone || '').replace(/\D/g, '');
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   function buildProgressKey(stu, unit) {
     return `dan-progress:${buildStudentKey(stu)}:${unit}`;
-  }
+}
 
   function readDoneList() {
     const stu = getCurrentStudent();
@@ -4260,9 +4260,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     getUnit: detectUnit,
@@ -4302,13 +4302,13 @@ window.DanDan = window.DanDan || {};
         await original.apply(this, args);
       } else if (typeof window.captureElementToPDF === 'function') {
         await captureElementToPDF('capture-report', '단단국어_분석리포트.pdf', { withStudentInfo: true });
-      }
+    }
       const key = ProgressManager.markComplete();
       if (typeof window.showSubmitSuccess === 'function') showSubmitSuccess('분석리포트');
       else console.log(`학습완료 처리됨: ${key}`);
       if (typeof window.sendLearningLog === 'function') {
         try { await window.sendLearningLog(); } catch (e) { console.warn('[submitReport] sendLearningLog 실패', e); }
-      }
+    }
     };
   })();
 })();
@@ -4321,7 +4321,7 @@ window.submitCreative = async function () {
   if (!textarea || !renderBox || !captureBox) {
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
   try {
     renderBox.textContent = textarea.value || '';
     textarea.style.display  = 'none';
@@ -4338,7 +4338,7 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다.');
-    }
+  }
     if (typeof window.showSubmitSuccess === 'function') window.showSubmitSuccess('창의활동');
   } catch (e) {
     console.warn('submitCreative error', e);
@@ -4346,11 +4346,16 @@ window.submitCreative = async function () {
   } finally {
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===== 서버 완료 상태 동기화 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -4378,19 +4383,25 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_worldlit_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
-    }
-  } catch (e) { console.warn('[loadCompletionStatus] 오류', e); }
+  }
+  } catch (e) { console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
+}
+  })();
+  return window._completionStatusPromise; }
 };
 
 window.sendLearningLog = async function () {
@@ -4434,12 +4445,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderSolutions(pack);
       } catch (e) { console.warn('submit-btn handler error', e); }
     });
-  }
+}
   const creativeBtn = document.getElementById('creative-submit-btn');
   if (creativeBtn && typeof window.submitCreative === 'function') {
     creativeBtn.type = 'button';
     creativeBtn.addEventListener('click', () => submitCreative());
-  }
+}
   if (typeof loadReadingState === 'function') loadReadingState();
 });
 
@@ -4451,6 +4462,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `deep_world2_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

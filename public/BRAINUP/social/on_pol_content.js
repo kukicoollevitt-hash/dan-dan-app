@@ -8,7 +8,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('on_pol_')) {
     console.log('[on_pol_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -16,17 +16,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/fit_pol[_-]?(\d{1,2})/);
     if (m) unit = `on_pol_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/fit_pol[_-]?(\d{1,2})\.html/);
     if (m2) unit = `on_pol_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `on_pol_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'on_pol_01';
   console.log('[on_pol_content.js] CUR_UNIT 설정:', window.CUR_UNIT);
@@ -117,7 +117,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 정치의 좁은/넓은 의미에 대한 내용입니다. ①1문단: 정치의 필요성, ③3문단: 일상 속 정치 활동과 참여, ④4문단 없음(3문단까지).',
       q3: '정답: ②번. 정치는 사회나 나라의 문제를 해결하고 더 나은 방향으로 이끄는 활동입니다. ①갈등은 다툼/문제, ③권한은 할 수 있는 힘, ④의무는 꼭 해야 하는 일.',
       q4: '정답: ②번. 3문단에서 "학급회의, 가족회의, 주민 회의 같은 것들도 넓은 의미의 정치 활동"이라고 설명합니다.'
-    }
+  }
   },
 
   /* ===== on_pol_02 : "국민이 주인이 되는 나라, 민주주의" ===== */
@@ -197,7 +197,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단은 민주주의의 핵심 가치(자유, 평등, 존엄성)에 대한 내용입니다. ①1문단: 민주주의의 정의와 특징, ②2문단: 직접/대의 민주주의.',
       q3: '정답: ②번. 2문단에서 "직접 민주주의는 나라의 중요한 일을 국민이 직접 모여 결정하는 방식"이라고 설명합니다. ①대의 민주주의 설명.',
       q4: '정답: ③번. 3문단에서 "평등은 \'기회\'를 똑같이 주는 것을 의미"한다고 설명합니다. ①결과 아닌 기회, ②돈과 무관.'
-    }
+  }
   },
 
   /* ===== on_pol_03 : "4·19에서 6월 항쟁까지, 민주주의의 성장" ===== */
@@ -282,7 +282,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 5·18 민주화 운동에 대한 내용입니다. ①1문단: 4·19 혁명, ③3문단: 6월 민주항쟁과 지방자치제, ④4문단: 시민 단체와 시민 참여.',
       q3: '정답: ④번. 3문단에서 "6월 민주항쟁을 통해 대통령을 국민이 직접 뽑는 직선제가 도입되었다"고 설명합니다. ①지방자치제는 1990년대, ③4·19 혁명 결과.',
       q4: '정답: ①번. 본문에서 "민주주의는 시민들이 직접 행동하고 참여해 만들어 낸 결과"라고 했으므로, "한 번 얻으면 영원히 유지된다"는 내용은 없습니다.'
-    }
+  }
   },
 
   /* ===== pol_04 : "51% vs 49%, 이 결정이 정말 옳을까?" ===== */
@@ -368,7 +368,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단은 토론과 타협, 관용에 대한 내용입니다. ①1문단: 다수결의 정의, ②2문단: 다수결의 한계, ④4문단: 진정한 민주주의.',
       q3: '정답: ②번. 관용은 다른 사람의 의견과 차이를 존중하는 태도입니다. ①다수결, ③타협, ④공약 설명.',
       q4: '정답: ④번. 민주주의 사회에서는 다수결로 결정하더라도 인권처럼 모든 사람이 당연히 누려야 할 권리는 헌법으로 보호합니다.'
-    }
+  }
   },
 
   /* ===== pol_05 : "단 한 표 차이로 뒤바뀐 역사적 선거들" ===== */
@@ -448,7 +448,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단은 평등 선거와 비밀 선거에 대한 내용입니다. ①1문단: 주권과 대표 민주주의, ②2문단: 보통 선거와 직접 선거, ④4문단: 비밀 선거의 중요성.',
       q3: '정답: ③번. 공약은 후보자가 당선되면 실천하겠다고 약속하는 내용입니다. ①세금, ②선거 운동, ④개표.',
       q4: '정답: ②번. 4문단에서 "비밀 선거 덕분에 눈치를 보지 않고 자유롭게 투표할 수 있다"고 설명합니다.'
-    }
+  }
   },
 
   /* ===== pol_06 : "왕에게 모든 권력이 집중됐던 시대의 비극" ===== */
@@ -530,7 +530,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 입법권(국회)과 행정권(정부)에 대한 내용입니다. ①1문단: 삼권분립의 정의, ③3문단: 사법권과 견제, ④4문단: 상호 견제의 목적.',
       q3: '정답: ③번. 3문단에서 "사법권은 법에 따라 재판을 하는 권한으로 법원이 담당"한다고 설명합니다.',
       q4: '정답: ②번. 3문단에서 "국회는 정부가 제출한 예산안을 심의"한다고 설명합니다.'
-    }
+  }
   },
 
   /* ===== pol_07 : "내가 살고 싶은 동네, 주민들이 직접 바꾼 성공 사례" ===== */
@@ -612,7 +612,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 지방의회와 지방자치단체장에 대한 내용입니다. ①1문단: 지방자치의 의미, ③3문단: 주민 청원과 주민 투표, ④4문단: 주민 소환.',
       q3: '정답: ①번. 2문단에서 "지방의회는 지역의 조례를 만들고, 지역의 예산을 심의"한다고 설명합니다.',
       q4: '정답: ④번. 4문단에서 "주민이 지역의 주인으로서 적극적으로 참여"해야 지방자치가 잘 이루어진다고 설명합니다.'
-    }
+  }
   },
 
   /* ===== pol_08 : "내 SNS 게시물, 표현의 자유일까 명예훼손일까?" ===== */
@@ -694,7 +694,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단은 국민의 4대 의무(납세, 국방, 교육, 근로)에 대한 내용입니다. ①1문단: 기본권의 정의, ②2문단: 사회권과 참정권, ④4문단: 권리와 책임의 조화.',
       q3: '정답: ②번. 참정권은 정치에 참여할 수 있는 권리입니다. ①자유권, ③사회권, ④청구권 설명.',
       q4: '정답: ③번. 본문에서 기본권은 "국가 안전 보장, 질서 유지, 공공복리를 위해 필요한 경우"에 제한될 수 있다고 암시합니다.'
-    }
+  }
   },
 
   /* ===== pol_09 : "전염병이 국경을 넘을 때, 세계가 협력하는 방법" ===== */
@@ -776,7 +776,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 UN, WTO, WHO, ODA에 대한 내용입니다. ①1문단: 국제기구의 필요성, ③3문단: 유네스코와 한국의 기여, ④4문단: 외교와 국제법.',
       q3: '정답: ②번. 외교는 국가 간 대화와 협상을 통해 문제를 평화적으로 해결하는 방법입니다. ①입법, ③군사력, ④국내 경제.',
       q4: '정답: ③번. 본문에서 ODA 제공, 유네스코 협력, 환경 협약 동참을 언급했지만, "군대 파병하여 전쟁 지원"은 언급되지 않았습니다.'
-    }
+  }
   },
 
   /* ===== pol_10 : "서울에서 평양까지 기차로 3시간, 통일 후 달라지는 것들" ===== */
@@ -858,7 +858,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 "남북한은 여러 차례 대화와 교류를 시도해 왔어요"로 시작하여 2000년 남북정상회담, 6·15 남북공동선언, 금강산 관광, 개성공단 운영 등 남북 교류와 정상회담에 대해 설명하고 있습니다.',
       q3: '정답: ②번. 본문에서 "다름을 인정하면서도 평화롭게 공존하고 점진적으로 통합해 나가는 자세가 필요합니다"라고 강조합니다. 평화 통일은 서로를 이해하고 존중하며 통합하는 것이 핵심입니다.',
       q4: '정답: ③번. 본문에서 통일의 효과로 "이산가족이 만날 수 있고, 군사적 긴장이 해소되며 경제적으로도 큰 발전이 기대됩니다"라고 언급했지만, "모든 문제의 즉각적 해결"은 언급되지 않았습니다.'
-    }
+  }
   },
 
   /* ===== pol_11 ~ pol_20 경제 주제 ===== */
@@ -941,7 +941,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ④번. 4문단은 "합리적 선택을 위해서는 먼저 자신이 진정으로 원하는 것이 무엇인지 파악하고..."로 시작하여 합리적 선택의 구체적인 방법을 설명하고 있습니다.',
       q3: '정답: ②번. 본문에서 "이때 포기한 것 중 가장 가치 있는 것을 기회비용이라고 해요"라고 설명하고 있습니다. 기회비용은 선택으로 인해 포기하는 대안의 가치입니다.',
       q4: '정답: ②번. 본문에서 "충동적으로 결정하기보다 신중하게 생각하는 습관을 기르면" 좋은 결정을 할 수 있다고 했습니다. 충동적으로 빠르게 결정하는 것은 합리적 선택이 아닙니다.'
-    }
+  }
   },
 
   on_pol_12: {
@@ -1022,7 +1022,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단은 "우리 주변에는 다양한 시장이 있어요"로 시작하여 시장의 개념과 수요/공급의 정의를 설명하고 있습니다.',
       q3: '정답: ②번. 본문에서 "공급은 가격이 오르면 공급량이 늘어나요. 생산자 입장에서는 높은 가격에 팔수록 더 많은 이익을 얻을 수 있기 때문"이라고 설명하고 있습니다.',
       q4: '정답: ③번. 수요량이 공급량보다 많으면 물건이 부족해지고, 부족한 물건을 사려는 경쟁이 생겨 가격이 올라갑니다.'
-    }
+  }
   },
 
   on_pol_13: {
@@ -1103,7 +1103,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 "가격은 시장에서 중요한 신호 역할을 해요"로 시작하여 가격이 생산자와 소비자에게 행동 신호를 주는 기능을 설명하고 있습니다.',
       q3: '정답: ②번. 본문에서 "가격이 오르면 생산자에게는 \'더 많이 만들어!\'라는 신호가 되고, 소비자에게는 \'조금 덜 사!\'라는 신호가 돼요"라고 설명하고 있습니다.',
       q4: '정답: ③번. 본문에서 "정부가 시장에 개입하여 국민의 생활을 안정시키려고 노력해요", "정부가 국민을 보호하기 위해 사용하는 정책"이라고 설명하고 있습니다.'
-    }
+  }
   },
 
   on_pol_14: {
@@ -1184,7 +1184,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단은 "은행 외에도 증권 회사, 보험 회사 같은 금융 기관이 있어서"로 시작하여 금융 기관의 종류와 저축의 의미를 설명하고 있습니다.',
       q3: '정답: ②번. 본문에서 "미래를 위해 돈을 모아두는 것을 저축이라고 해요. 저축을 하면 급하게 돈이 필요할 때 쓸 수 있고, 이자를 받아 돈을 불릴 수도 있어요"라고 설명하고 있습니다.',
       q4: '정답: ①번. 본문 마지막에서 "돈의 흐름을 이해하고 현명하게 관리하는 능력을 길러야 합니다"라고 강조하고 있습니다. 이것이 금융 문해력입니다.'
-    }
+  }
   },
 
   on_pol_15: {
@@ -1265,7 +1265,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ④번. 4문단은 "환경을 생각하여 꼭 필요한 만큼만 사는 착한 소비도 점점 중요해지고 있어요"로 시작하여 착한 소비와 미래 준비에 대해 설명하고 있습니다.',
       q3: '정답: ③번. 본문에서 "광고에 현혹되거나 친구가 샀다고 무작정 따라 사면 충동 소비가 돼요"라고 설명하고 있습니다. 이것이 합리적 소비를 방해하는 요인입니다.',
       q4: '정답: ②번. 신용을 잘 관리하면 신용 점수가 높아지고, 좋은 조건으로 대출을 받을 수 있습니다. 신용이 낮으면 대출이 어렵거나 높은 이자를 내야 합니다.'
-    }
+  }
   },
 
   on_pol_16: {
@@ -1346,7 +1346,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단은 "기업은 물건이나 서비스를 만들어 팔고 이윤을 얻는 조직"이라며 기업의 정의와 생산 활동 역할을 설명하고 있습니다.',
       q3: '정답: ②번. 본문에서 "이윤은 기업이 물건을 팔아 얻는 이익. 수입에서 비용을 뺀 금액"이라고 설명하고 있습니다.',
       q4: '정답: ③번. 본문에서 사회적 책임으로 환경 보호, 직원 존중, 지역 사회 기여 등을 언급했지만, "이윤만 추구하고 환경 오염 무시"는 오히려 문제점으로 지적했습니다.'
-    }
+  }
   },
 
   on_pol_17: {
@@ -1427,7 +1427,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 "경제에는 좋아졌다 나빠졌다 하는 흐름이 있어요. 이것을 경기 변동이라고 해요"로 시작하여 경기 변동과 인플레이션을 설명하고 있습니다.',
       q3: '정답: ③번. 본문에서 "호황일 때는 기업이 잘 되고 일자리가 많지만"이라고 설명하고 있습니다. 호황은 경제 활동이 활발한 시기입니다.',
       q4: '정답: ③번. 본문에서 정부의 경제 안정 정책으로 세금·지출 조절, 금리 조절 등을 언급했지만, "모든 기업을 국가 소유로 만들기"는 언급하지 않았습니다.'
-    }
+  }
   },
 
   on_pol_18: {
@@ -1508,7 +1508,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단은 "정부는 세금으로 여러 가지 일을 해요. 공공재를 제공하고, 가난한 사람을 돕는 복지 정책을 펴요"로 시작하여 정부의 역할을 설명하고 있습니다.',
       q3: '정답: ③번. 본문에서 "부가가치세는 물건을 살 때 가격에 포함되어 내는 세금"이라고 설명하고 있습니다. 이것이 간접세의 대표적인 예입니다.',
       q4: '정답: ③번. 본문에서 공공 서비스로 학교, 도로, 병원, 복지 등을 언급했지만, "개인 여행 경비 지원"은 언급되지 않았습니다.'
-    }
+  }
   },
 
   on_pol_19: {
@@ -1589,7 +1589,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ④번. 4문단은 "우리나라는 무역 의존도가 높은 나라예요"로 시작하여 우리나라의 무역 상황과 상호 의존에 대해 설명하고 있습니다.',
       q3: '정답: ③번. 본문에서 "우리나라에서 만든 물건을 외국에 파는 것을 수출"이라고 설명하고 있습니다.',
       q4: '정답: ①번. 환율이 올라가면(원화 가치 하락) 우리나라 물건이 외국에서 더 싸게 느껴져 수출이 유리해집니다. 반대로 수입 물건 가격은 올라갑니다.'
-    }
+  }
   },
 
   on_pol_20: {
@@ -1670,8 +1670,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단은 "기술의 발전으로 인공지능(AI), 로봇, 빅데이터 같은 것들이 경제를 크게 바꾸고 있어요"로 시작하여 4차 산업 혁명과 미래 경제를 설명하고 있습니다.',
       q3: '정답: ③번. 지속 가능한 발전은 경제 성장만이 아니라 환경, 경제, 사회의 균형 있는 발전을 추구합니다. 현재와 미래 세대 모두를 위한 것입니다.',
       q4: '정답: ③번. 본문에서 실천 방법으로 "일회용품 사용을 줄이고, 대중교통을 이용하며, 재활용을 실천하는 것"을 언급했습니다. 일회용품을 많이 사용하는 것은 오히려 환경에 해롭습니다.'
-    }
   }
+}
 });
 
 /* ===============================
@@ -1690,7 +1690,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -1737,11 +1737,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -1768,7 +1768,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -1782,7 +1782,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -1796,8 +1796,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -1806,8 +1806,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -1820,8 +1820,8 @@ function applyContentPack(unitKey) {
         q3Lis.forEach((li, i) => {
           li.innerHTML = `<label><input type="radio" name="q3" value="${i+1}"><span>${pack.quiz.q3_opts[i]}</span></label>`;
         });
-      }
     }
+  }
     // 빈칸 채우기 형태 (q3_html)
     else if (q3P && pack.quiz.q3_html) {
       q3P.innerHTML = pack.quiz.q3_html;
@@ -1829,8 +1829,8 @@ function applyContentPack(unitKey) {
       const q3_2 = document.getElementById('q3-2');
       if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
       if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-    }
   }
+}
 
   // Q4
   if (blocks[3]) {
@@ -1843,8 +1843,8 @@ function applyContentPack(unitKey) {
         q4Lis.forEach((li, i) => {
           li.innerHTML = `<label><input type="radio" name="q4" value="${i+1}"><span>${pack.quiz.q4_opts[i]}</span></label>`;
         });
-      }
     }
+  }
     // 빈칸 채우기 형태 (q4_html)
     else if (q4P && pack.quiz.q4_html) {
       q4P.innerHTML = pack.quiz.q4_html;
@@ -1852,14 +1852,14 @@ function applyContentPack(unitKey) {
       const q4_2 = document.getElementById('q4-2');
       if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
       if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-    }
   }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -1874,7 +1874,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -1908,7 +1908,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -1940,7 +1940,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -1956,11 +1956,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -1978,12 +1978,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -2002,7 +2002,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -2029,8 +2029,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -2058,7 +2058,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 (객관식 또는 빈칸 채우기)
@@ -2077,7 +2077,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -2094,7 +2094,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -2124,7 +2124,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -2141,10 +2141,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -2152,7 +2152,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -2184,7 +2184,7 @@ function renderSolutions(pack) {
     q3Answer = `<b>정답:</b> ${A.q3} — ${q3Text}`;
   } else if (A.q3_1) {
     q3Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
-  }
+}
 
   // 4번: 객관식(q4) 또는 빈칸(q4_1, q4_2) 형식 처리
   let q4Answer = '';
@@ -2193,7 +2193,7 @@ function renderSolutions(pack) {
     q4Answer = `<b>정답:</b> ${A.q4} — ${q4Text}`;
   } else if (A.q4_1) {
     q4Answer = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
-  }
+}
 
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
@@ -2241,9 +2241,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/pol_(\d+)\.html/i);
       if (m) unitParam = `on_pol_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'pol_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'pol_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -2251,21 +2251,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:pol_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -2282,9 +2282,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // pol_01, pol_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (pol_01 등) */
@@ -2305,11 +2305,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -2326,7 +2326,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (pol_01, pol_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -2340,7 +2340,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -2351,7 +2351,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -2360,7 +2360,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -2368,8 +2368,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -2391,7 +2391,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -2408,7 +2408,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -2422,12 +2422,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -2435,7 +2435,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -2443,6 +2443,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -2450,12 +2455,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -2471,7 +2476,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -2497,24 +2502,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -2528,12 +2538,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -2573,11 +2583,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -2588,7 +2598,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -2597,7 +2607,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -2612,14 +2622,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.pol_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -2628,13 +2638,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINFIT용 fit_ 키 매핑 (on_pol_XX → pol_XX 데이터 참조)
@@ -2645,6 +2655,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `on_pol_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

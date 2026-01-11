@@ -8,7 +8,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('on_soc_')) {
     console.log('[on_soc_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -16,17 +16,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/fit_soc[_-]?(\d{1,2})/);
     if (m) unit = `on_soc_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/fit_soc[_-]?(\d{1,2})\.html/);
     if (m2) unit = `on_soc_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `on_soc_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'on_soc_01';
 })();
@@ -118,7 +118,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단은 가족의 정의와 구성에 대한 내용입니다. 2문단은 다양한 가족 형태, 3문단은 가정의 역할과 기능, 4문단은 가정의 중요성입니다.',
       q3: '정답: ③번. 입양은 친부모가 아닌 사람이 법적으로 자녀를 들이는 일입니다. ①혼인은 남녀가 부부가 되는 일, ②혈연은 피를 나눈 관계, ④재혼은 한 번 결혼했던 사람이 다시 결혼하는 것입니다.',
       q4: '정답: ④번. 글에서 "가정이 기능을 제대로 잘해야 사회와 나라도 건강하게 발전할 수 있다"고 했으므로, 건강한 가정에서 자란 사람들이 건강한 사회를 만들 수 있다고 추론할 수 있습니다.'
-    }
+  }
   },
 
   /* ===== soc_02 : "시대에 따라 달라진 가족 이야기" ===== */
@@ -199,7 +199,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 산업화와 핵가족의 등장에 대한 내용입니다. 1문단은 옛날 확대 가족의 모습, 3문단은 오늘날 다양한 가족 형태, 4문단은 가족 형태의 존중입니다.',
       q3: '정답: ③번. 조손 가족은 조부모와 손주가 함께 사는 가족입니다. ①핵가족은 부모와 자녀로만 이루어진 가족, ②확대 가족은 여러 세대가 함께 사는 가족, ④산업화는 산업이 발달하고 생활 방식이 바뀌는 과정입니다.',
       q4: '정답: ④번. 글에서 "모든 형태를 가족으로 인정하고 존중하는 사회가 되어가고 있다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== soc_03 : "배려로 완성되는 가족 관계" ===== */
@@ -281,7 +281,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단은 가족 갈등과 해결 방법에 대한 내용입니다. 1문단은 옛날 가족의 역할 분담, 2문단은 현대 가족의 역할 변화, 4문단은 존중과 배려의 중요성입니다.',
       q3: '정답: ③번. 가족회의는 가족이 함께 모여 의견을 나누는 자리입니다. ①갈등은 생각이나 의견이 달라 생기는 다툼, ②분담은 여러 사람이 일을 나누어 맡는 것, ④존중은 상대를 귀하게 여기고 대하는 마음입니다.',
       q4: '정답: ④번. 글에서 "상대를 이해하려는 마음이 있을 때 가족의 관계는 한층 더 단단해지고 가까워질 수 있다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== soc_04 : "시간을 단축한 발명들, 더 넓어진 생활권" ===== */
@@ -363,7 +363,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ④번. 4문단은 교통과 통신 발달의 영향에 대한 내용입니다. 1문단은 옛날 이동의 어려움, 2문단은 새로운 교통수단의 등장, 3문단은 통신의 변화입니다.',
       q3: '정답: ④번. 교류는 사람·지역·문화 등이 서로 소통하고 영향을 주고받는 것입니다. ①전차는 전기로 움직이는 차량, ②증기선은 수증기의 힘으로 움직이는 배, ③파발꾼은 옛날에 급한 소식을 전달하던 사람입니다.',
       q4: '정답: ①번. 글에서 "교통과 통신의 발달은 사람들 사이의 거리감을 줄이고, 지역과 나라 사이의 교류를 활발하게 만든다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== soc_05 : "우리 동네 문제, 함께 해결해요" ===== */
@@ -444,7 +444,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단은 주민 참여의 중요성에 대한 내용입니다. 2문단은 주민 참여 방법, 3문단은 시민 단체의 역할, 4문단은 주민 참여의 효과입니다.',
       q3: '정답: ③번. 시민 단체는 공익을 위해 자발적으로 모인 단체입니다. ①민원은 불편을 알려 해결을 요구하는 일, ②공청회는 정책 결정 전 주민 의견을 듣는 회의, ④예산은 공공 기관이 쓸 돈을 계획해서 정해 놓은 것입니다.',
       q4: '정답: ④번. 글에서 "주민들이 힘을 모아 움직이면 정부나 지방 자치 단체가 미처 해결하지 못한 문제들을 찾아 개선할 수 있다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== soc_06 : "게임 속 나 vs 현실의 나, 정체성 이야기" ===== */
@@ -525,7 +525,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 청소년기 자아 정체성 형성에 대한 내용입니다. 1문단은 온라인 정체성과 아바타, 3문단은 온라인 정체성의 장단점, 4문단은 건강한 정체성 형성 방법입니다.',
       q3: '정답: ③번. 혼란은 갈피를 잡지 못하고 어지러운 상태입니다. ①아바타는 온라인에서 자신을 대신하는 캐릭터, ②페르소나는 사회적 상황에서 보여주는 외적 이미지, ④일관성은 처음부터 끝까지 한결같은 성질입니다.',
       q4: '정답: ②번. 글에서 "건강한 정체성을 형성하려면 온라인과 오프라인 모두에서 일관성 있는 태도를 유지해야 한다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== soc_07 : "📱 SNS가 바꾼 우리의 관계" ===== */
@@ -606,7 +606,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단은 피상적 관계의 문제에 대한 내용입니다. 1문단은 SNS와 소통의 변화, 2문단은 SNS의 부정적 측면, 4문단은 건강한 SNS 사용법입니다.',
       q3: '정답: ③번. 외로움은 혼자라는 느낌이나 사람들과 단절된 감정입니다. ①상대적 박탈감은 다른 사람과 비교해서 느끼는 부족함, ②피상적은 겉만 보고 깊이가 없는 것, ④인정 욕구는 다른 사람에게 인정받고 싶은 마음입니다.',
       q4: '정답: ①번. 글에서 "진정한 관계는 사람과 사람 사이의 신뢰와 진심에서 만들어진다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_08 : "🤖 AI와 함께 사는 법, 인간다움이란?" ===== */
@@ -687,7 +687,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ④번. 4문단은 인간 고유의 가치에 대한 내용입니다. 1문단은 AI의 활용과 보완 역할, 2문단은 AI 발전의 사회적 문제, 3문단은 AI의 윤리와 공정성입니다.',
       q3: '정답: ③번. 책임은 어떤 일의 결과에 대해 맡아야 하는 의무입니다. ①인공지능은 인간의 학습과 판단을 모방하여 만든 컴퓨터 프로그램, ②보완은 부족한 부분을 채우는 것, ④공정성은 한쪽으로 치우치지 않고 올바른 성질입니다.',
       q4: '정답: ③번. 글에서 미래 사회에서는 AI를 도구로 잘 활용하면서도 인간만의 고유한 능력을 키우는 것이 중요하다고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_09 : "👥 인싸와 아싸, 집단 속 우리의 모습" ===== */
@@ -768,7 +768,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단은 인싸와 아싸, 내집단과 외집단에 대한 내용입니다. 2문단은 소속 욕구와 준거 집단, 3문단은 동조 압력의 문제, 4문단은 개성과 다양성 존중입니다.',
       q3: '정답: ③번. 준거 집단은 자신의 행동이나 가치관의 기준이 되는 집단입니다. ①내집단은 자신이 소속된 집단, ②동조 압력은 집단에 맞추도록 느끼는 압박, ④개성은 다른 사람과 구별되는 자신만의 특성입니다.',
       q4: '정답: ④번. 글에서 "진정한 친구는 나를 있는 그대로 받아들여 주는 사람"이라고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_10 : 라면은 문화일까? 문화의 의미 탐구 ===== */
@@ -849,7 +849,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단의 중심 내용은 문화의 학습과 전승, 변동입니다. 1문단은 라면 문화의 의미, 3문단은 문화 상대주의와 자문화 중심주의, 4문단은 문화 다양성의 존중입니다.',
       q3: '정답: ③번. 문화 변동은 시간이 지남에 따라 문화가 변화하는 현상입니다. ①문화 상대주의는 타 문화를 존중하는 태도, ②자문화 중심주의는 자기 문화의 우월성을 주장하는 태도입니다.',
       q4: '정답: ④번. 글에서 "세계화 시대에는 서로 다른 문화를 열린 마음으로 받아들이는 문화 다양성의 존중이 더욱 중요해지고 있다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_11 : K-드라마는 왜 세계를 사로잡았을까? ===== */
@@ -930,7 +930,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ④번. 4문단의 중심 내용은 소프트 파워와 한류입니다. 1문단은 한류와 문화 산업의 정의, 2문단은 한류의 성공 요인, 3문단은 한류의 경제적 효과입니다.',
       q3: '정답: ③번. OTT는 인터넷으로 영상 콘텐츠를 제공하는 서비스입니다. ①한류는 한국 대중문화가 해외에서 인기를 얻는 현상, ②소프트 파워가 아닌 하드 파워가 군사력으로 영향력을 행사하는 힘입니다.',
       q4: '정답: ③번. 본문에서 한류의 경제적 파급효과로 외국인들이 한국 제품을 구매하고 한국 여행을 계획한다고 설명했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_12 : 가짜 뉴스를 구별하는 법 ===== */
@@ -1009,7 +1009,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단의 중심 내용은 가짜 뉴스의 정의와 확산입니다. 2문단은 가짜 뉴스 구별 방법, 3문단은 가짜 뉴스의 사회적 해악, 4문단은 비판적 사고와 정보 윤리입니다.',
       q3: '정답: ③번. 비판적 사고는 정보를 그대로 받아들이지 않고 분석하고 평가하는 사고 방식입니다. 팩트체크는 보도된 내용이 사실인지 검증하는 것, 여론은 사회 구성원 다수가 공유하는 의견, 미디어 리터러시는 미디어 정보를 비판적으로 이해하고 활용하는 능력입니다.',
       q4: '정답: ③번. 본문에서 "가짜 뉴스에 속은 경험이 쌓이면 진짜 뉴스조차 믿지 못하게 되어 언론 불신이 커진다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_13 : 18세 선거권, 우리의 목소리 ===== */
@@ -1088,7 +1088,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단의 중심 내용은 18세 선거권의 도입입니다. 2문단은 18세 선거권의 근거, 3문단은 우려에 대한 반론과 대안, 4문단은 다양한 정치 참여 방법입니다.',
       q3: '정답: ③번. 유권자는 선거에서 투표할 자격이 있는 사람입니다. 선거권은 선거에 참여하여 투표할 수 있는 권리, 형평성은 공평하고 균형 있게 대우하는 것, 대의 민주주의는 국민이 선출한 대표가 정치를 수행하는 민주주의입니다.',
       q4: '정답: ④번. 본문에서 "민주 시민 교육을 통해 청소년들은 책임감 있는 유권자로 성장할 수 있다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_14 : 정의란 무엇인가? 공정한 사회를 향하여 ===== */
@@ -1167,7 +1167,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단의 중심 내용은 현대 사회의 정의 논쟁입니다. 1문단은 분배적 정의와 교정적 정의, 3문단은 사회 불평등 문제, 4문단은 정의로운 실천 방법입니다.',
       q3: '정답: ③번. 기회의 평등은 모든 사람에게 동등한 기회가 주어지는 것입니다. 교정적 정의는 잘못에 대해 처벌하고 피해를 보상하는 정의, 능력주의는 개인의 능력과 노력에 따라 보상이 결정되어야 한다는 생각입니다.',
       q4: '정답: ③번. 본문에서 "불의에 대해 침묵하지 않고 목소리를 내는 용기도 필요하다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_15 : 기후 위기와 미래 세대의 책임 ===== */
@@ -1246,7 +1246,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ③번. 3문단의 중심 내용은 개인의 실천과 청소년들의 행동입니다. 1문단은 기후 변화의 원인과 온실효과, 2문단은 기후 위기의 영향과 탄소 중립, 4문단은 세대 간 정의와 행동의 필요성입니다.',
       q3: '정답: ③번. 세대 간 정의는 현재 세대와 미래 세대 간의 공정한 자원 분배와 책임입니다. 기후 변화는 장기간에 걸친 변화, 온실효과는 열이 빠져나가지 못하는 현상, 일회용품은 한 번 쓰고 버리는 물건입니다.',
       q4: '정답: ③번. 본문에서 "세대 간 정의의 관점에서 현재 세대는 미래 세대에게 건강한 지구를 물려줄 책임이 있다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_16 : 국제사회와 글로벌 시민 ===== */
@@ -1325,7 +1325,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ④번. 4문단의 중심 내용은 세계 시민의 역할입니다. 1문단은 세계화와 지구촌, 2문단은 지구촌 문제와 협력의 필요성, 3문단은 국제기구의 역할입니다.',
       q3: '정답: ③번. 세계 시민은 지구촌의 문제를 나의 문제로 여기고 행동하는 사람입니다. 지구촌은 하나의 마을처럼 가까워진 세계, 난민은 전쟁이나 박해를 피해 떠난 사람, 협력은 함께 힘을 합치는 것입니다.',
       q4: '정답: ②번. 본문에서 지구촌 문제는 한 나라만의 노력으로는 해결하기 어렵고 여러 나라가 협력해야 한다고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_17 : 과학기술이 바꾸는 일상 ===== */
@@ -1404,7 +1404,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단의 중심 내용은 새로운 기술들(AI, 로봇, 자율주행, IoT)의 소개입니다. 1문단은 일상 속 과학기술, 3문단은 과학기술 발전의 문제점, 4문단은 기술과 사람의 조화입니다.',
       q3: '정답: ③번. 프라이버시는 개인의 사적인 정보나 생활이 보호받을 권리입니다. 인공지능은 사람처럼 생각하고 배우는 기술, 사물인터넷은 인터넷으로 연결되는 기술, 자율주행은 운전자 없이 스스로 운행하는 기술입니다.',
       q4: '정답: ④번. 본문에서 "기술의 편리함을 누리면서도 그에 따른 문제점을 함께 해결해 나가는 지혜가 필요하다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_18 : 복지란 무엇인가? 함께 사는 사회 ===== */
@@ -1483,7 +1483,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단의 중심 내용은 사회보험과 공공부조입니다. 1문단은 사회복지의 개념과 필요성, 3문단은 사회서비스와 복지의 쟁점, 4문단은 양극화와 복지의 조화입니다.',
       q3: '정답: ②번. 공공부조는 생활이 어려운 사람에게 국가가 최소한의 생활을 지원하는 제도입니다. 사회보험은 미리 돈을 모아 대비하는 제도, 양극화는 차이가 커지는 현상, 보편적 복지는 모든 국민에게 동등하게 제공하는 복지입니다.',
       q4: '정답: ②번. 본문에서 "복지가 부족하면 가난한 사람은 더 가난해지는 양극화 문제가 심해진다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_19 : 지속가능한 삶, 환경과 경제의 균형 ===== */
@@ -1562,7 +1562,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단의 중심 내용은 소비와 환경 문제입니다. 2문단은 지속가능한 발전의 개념과 SDGs, 3문단은 일상에서의 친환경 실천, 4문단은 업사이클링과 환경을 생각하는 소비입니다.',
       q3: '정답: ③번. 친환경 소비는 환경에 미치는 영향을 고려하여 물건을 구매하는 것입니다. 지속가능한 발전은 미래 세대도 생각하는 발전, 업사이클링은 버려지는 물건을 새 제품으로 재탄생시키는 것, 탄소발자국은 활동으로 발생하는 탄소 배출량입니다.',
       q4: '정답: ③번. 본문에서 "작은 실천이 모이면 지구를 지킬 수 있다"고 했습니다.'
-    }
+  }
   },
 
   /* ===== on_soc_20 : 미래 사회, 우리가 만들어갈 세상 ===== */
@@ -1641,8 +1641,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단의 중심 내용은 시민의 역할과 민주 시민입니다. 1문단은 미래 사회의 변화 예측, 3문단은 시민 의식과 청소년 참여, 4문단은 참여를 통한 미래 만들기입니다.',
       q3: '정답: ③번. 민주 시민은 민주주의 원리에 따라 권리를 행사하고 의무를 다하는 시민입니다. 시민은 사회 문제에 관심을 갖고 참여하는 사람, 참여는 관심을 갖고 직접 행동하는 것, 투표는 대표자를 뽑기 위해 표를 행사하는 것입니다.',
       q4: '정답: ③번. 본문에서 "오늘의 작은 관심이 내일의 큰 변화를 만든다"고 했습니다.'
-    }
   }
+}
 });
 
 /* ===============================
@@ -1661,7 +1661,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -1707,11 +1707,11 @@ window.renderVocabFill = function () {
   setTimeout(() => {
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // ✅ 서버 데이터에서 어휘 상태 복원
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -1738,7 +1738,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -1752,7 +1752,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -1766,8 +1766,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -1776,8 +1776,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3 - 객관식 또는 빈칸 지원
   if (blocks[2]) {
@@ -1791,7 +1791,7 @@ function applyContentPack(unitKey) {
         q3Opts = document.createElement('ul');
         q3Opts.className = 'quiz-options';
         blocks[2].querySelector('.quiz-content').appendChild(q3Opts);
-      }
+    }
       q3Opts.innerHTML = pack.quiz.q3_opts.map((opt, i) =>
         `<li><label><input type="radio" name="q3" value="${i+1}"><span>${opt}</span></label></li>`
       ).join('');
@@ -1804,8 +1804,8 @@ function applyContentPack(unitKey) {
       const q3_2 = document.getElementById('q3-2');
       if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
       if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-    }
   }
+}
 
   // Q4 - 객관식 또는 빈칸 지원
   if (blocks[3]) {
@@ -1819,7 +1819,7 @@ function applyContentPack(unitKey) {
         q4Opts = document.createElement('ul');
         q4Opts.className = 'quiz-options';
         blocks[3].querySelector('.quiz-content').appendChild(q4Opts);
-      }
+    }
       q4Opts.innerHTML = pack.quiz.q4_opts.map((opt, i) =>
         `<li><label><input type="radio" name="q4" value="${i+1}"><span>${opt}</span></label></li>`
       ).join('');
@@ -1832,14 +1832,14 @@ function applyContentPack(unitKey) {
       const q4_2 = document.getElementById('q4-2');
       if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
       if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-    }
   }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -1854,7 +1854,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -1888,7 +1888,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -1924,7 +1924,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -1940,21 +1940,21 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
     // Q3 객관식 복원
     if (state.q3) {
       const r3 = document.querySelector(`input[name="q3"][value="${state.q3}"]`);
       if (r3) r3.checked = true;
-    }
+  }
     // Q4 객관식 복원
     if (state.q4) {
       const r4 = document.querySelector(`input[name="q4"][value="${state.q4}"]`);
       if (r4) r4.checked = true;
-    }
+  }
 
     // 빈칸 방식 복원 (구버전 호환)
     const q3_1 = document.getElementById('q3-1');
@@ -1973,12 +1973,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -1997,7 +1997,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -2024,8 +2024,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -2052,7 +2052,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 (객관식 또는 빈칸)
@@ -2070,7 +2070,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -2087,7 +2087,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -2117,7 +2117,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -2134,10 +2134,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -2145,7 +2145,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -2165,11 +2165,11 @@ function renderSolutions(pack) {
     box.style.borderRadius = '12px';
     box.style.padding = '16px';
     box.style.lineHeight = '1.6';
-  }
+}
   // ✅ grade-result 내부에 추가 (점수 박스 아래)
   if (gradeResult) {
     gradeResult.appendChild(box);
-  }
+}
 
   // 3번: 객관식(q3) 또는 빈칸(q3_1, q3_2) 형식 처리
   let q3AnswerText = '';
@@ -2180,7 +2180,7 @@ function renderSolutions(pack) {
     const q3Ans1 = Array.isArray(A.q3_1) ? A.q3_1[0] : A.q3_1;
     const q3Ans2 = Array.isArray(A.q3_2) ? A.q3_2[0] : A.q3_2;
     q3AnswerText = `${q3Ans1 || ''} / ${q3Ans2 || ''}`;
-  }
+}
 
   // 4번: 객관식(q4) 또는 빈칸(q4_1, q4_2) 형식 처리
   let q4AnswerText = '';
@@ -2191,7 +2191,7 @@ function renderSolutions(pack) {
     const q4Ans1 = Array.isArray(A.q4_1) ? A.q4_1[0] : A.q4_1;
     const q4Ans2 = Array.isArray(A.q4_2) ? A.q4_2[0] : A.q4_2;
     q4AnswerText = `${q4Ans1 || ''} / ${q4Ans2 || ''}`;
-  }
+}
 
   box.innerHTML = `
     <h3 style="margin:0 0 10px; font-size:16px; color:#8b2f2f;">정답 · 해설</h3>
@@ -2237,9 +2237,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/soc_(\d+)\.html/i);
       if (m) unitParam = `on_soc_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'soc_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'soc_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -2247,21 +2247,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:soc_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -2278,9 +2278,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // soc_01, soc_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (soc_01 등) */
@@ -2301,11 +2301,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -2322,7 +2322,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (soc_01, soc_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -2336,7 +2336,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -2347,7 +2347,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -2356,7 +2356,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -2364,8 +2364,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -2387,7 +2387,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -2404,7 +2404,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -2418,12 +2418,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -2431,7 +2431,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -2439,6 +2439,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -2446,12 +2451,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -2467,7 +2472,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -2493,24 +2498,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -2524,12 +2534,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -2569,11 +2579,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -2586,7 +2596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   console.log('[on_soc_content.js] applyContentPack 호출 전, CUR_UNIT:', window.CUR_UNIT);
@@ -2598,14 +2608,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (overlay && overlay.classList.contains('show')) {
       overlay.classList.remove('show');
       console.log('[on_soc_content.js] 백업 스피너 숨김');
-    }
+  }
   }, 2000);
 
   // 2) 탭 이벤트 + 어휘 자동 렌더
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -2620,14 +2630,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.soc_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -2636,13 +2646,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 // ✅ BRAINFIT용 fit_ 키 매핑 (on_soc_XX → soc_XX 데이터 참조)
@@ -2653,6 +2663,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `on_soc_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

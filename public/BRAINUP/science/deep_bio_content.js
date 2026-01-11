@@ -7,7 +7,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('deep_bio_')) {
     console.log('[deep_bio_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -15,17 +15,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/deep_bio[_-]?(\d{1,2})/);
     if (m) unit = `deep_bio_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/deep_bio[_-]?(\d{1,2})\.html/);
     if (m2) unit = `deep_bio_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `deep_bio_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'deep_bio_01';
 })();
@@ -131,7 +131,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ③번. 4문단에서 생물과 무생물이 서로 영향을 주고받으며 순환을 이룬다고 했으므로, 생물만이 순환을 주도한다는 3번 설명은 적절하지 않다.',
       q3:'정답: ②번. 번식은 자손을 만들어 종을 유지하는 생명 활동이지, 외부 환경에서 영양분을 흡수하는 과정이 아니다. 영양분 흡수는 에너지 획득 과정에 해당한다.',
       q4:'정답: ③번. 바이러스는 세포 구조가 없고 독자적인 물질대사가 불가능하며 숙주 없이는 증식할 수 없으므로, 완전한 생물로 분류되지 않는다.'
-    }
+  }
   },
 
   /* ===== bio_02 : "환경이 빚어낸 동물의 몸과 삶" ===== */
@@ -237,7 +237,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 올빼미는 밤에 잘 보기 위해 큰 눈이 발달했고, 박쥐는 어둠 속에서 초음파로 주변을 인식합니다. 독수리는 높은 곳에서 먹이를 찾기 위해 뛰어난 시력을 가지고 있습니다.',
         '예시 3) 고래는 물속에서 빠르게 헤엄치기 위해 유선형 몸과 지느러미를 가지고 있으며, 치타는 육지에서 빠르게 달리기 위해 긴 다리와 유연한 척추를 가지고 있습니다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_03 : "등뼈의 유무로 나뉘는 동물의 세계" ===== */
@@ -343,7 +343,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 지렁이는 땅속에서 낙엽과 썩은 유기물을 분해하여 흙을 비옥하게 만든다. 지렁이가 없으면 토양이 메말라 식물이 잘 자라지 못한다. 지렁이를 보호하려면 화학비료 대신 퇴비를 사용해야 한다.',
         '예시 3) 개미는 씨앗을 운반하여 식물의 번식을 돕고, 다른 곤충을 잡아먹어 해충을 조절하는 역할을 한다. 개미가 사라지면 생태계 균형이 무너질 수 있다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_04 : "작지만 위대한 존재, 곤충의 세계" ===== */
@@ -448,7 +448,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 숲속에는 낙엽과 죽은 동물의 사체가 쌓여만 갔다. 쇠똥구리와 송장벌레 같은 분해자 곤충이 없어져 아무것도 분해되지 않았다. 토양은 점점 메말라갔고, 나무들은 영양분을 얻지 못해 시들기 시작했다.',
         '예시 3) 새들이 하늘에서 떨어졌다. 먹이가 되는 곤충이 모두 사라져 굶어 죽은 것이다. 개구리, 도마뱀, 물고기도 마찬가지였다. 먹이 사슬이 끊어지자 생태계 전체가 무너지기 시작했다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_05 : "완전 탈바꿈과 불완전 탈바꿈의 차이" ===== */
@@ -553,7 +553,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2) 여름에 매미 허물을 주웠는데, 땅속에서 몇 년이나 살다가 나왔을지 신기했다.',
         '예시 3) 메뚜기 애벌레가 탈피하는 모습을 영상으로 봤는데, 새 껍질이 부드러워 보여서 놀랐다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_06 : "식물의 구조와 생존 전략" ===== */
@@ -657,7 +657,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 나는 열대 우림의 큰 나무 위에서 사는 착생 식물이 되고 싶다. 공기뿌리로 공기 중 수분을 흡수하고, 줄기로 나무를 감아 높이 올라가며, 넓은 잎으로 햇빛을 받아 광합성을 할 것이다.',
         '예시 3: 나는 연못에 사는 수생 식물이 되고 싶다. 뿌리는 물속 흙에 고정하고, 줄기는 유연하게 물결에 따라 흔들리게 하며, 잎은 물 위에 둥둥 떠서 햇빛을 충분히 받을 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_07 : "광합성, 지구를 살리는 마법" ===== */
@@ -761,7 +761,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 정오가 되자 햇빛이 가장 강해졌다. 광합성이 최고조에 달해 엄청난 양의 포도당을 만들었다. 만든 양분은 줄기를 통해 뿌리로 보내 녹말로 저장했다. 내일 비가 와도 이 양분으로 버틸 수 있을 것이다.',
         '예시 3: 해가 지자 광합성을 멈추었다. 낮에 만든 포도당으로 조용히 호흡하며 에너지를 사용한다. 내일 아침 해가 뜨면 다시 광합성을 시작할 것이다. 식물로 사는 것은 규칙적이고 평화롭다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_08 : "세포, 생명의 기본 단위" ===== */
@@ -865,7 +865,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 나는 뇌의 신경 세포가 되고 싶다. 생각하고 느끼고 기억하는 모든 활동의 중심에서 다른 신경 세포들과 신호를 주고받으며 사람의 모든 행동을 조절하고 싶다.',
         '예시 3: 나는 백혈구가 되고 싶다. 몸에 나쁜 세균이 들어오면 용감하게 싸워서 물리치는 경찰관 같은 역할을 하고 싶다. 몸을 지키는 수호자가 되어 건강을 지킬 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_09 : "세포는 어떻게 분열할까?" ===== */
@@ -969,7 +969,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 세포 복제 공장에서 DNA 복사 기계가 고장 났다. 잘못된 설계도로 만들어진 세포는 제 기능을 하지 못했다. 다행히 품질 검사관인 세포 자멸사 시스템이 작동해 불량품 세포를 폐기했다.',
         '예시 3: 감수 분열 중 염색체가 제대로 나누어지지 않았다. 한쪽 세포는 염색체가 많고 다른 쪽은 적어졌다. 이런 비정상 생식 세포가 수정되면 아기에게 문제가 생길 수 있어서, 몸은 이런 세포를 조심스럽게 확인한다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_10 : "음식물의 여행, 소화의 비밀" ===== */
@@ -1073,7 +1073,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 나는 삼킨 고기 조각이다. 위에서 펩신이라는 효소를 만나 단백질이 잘게 분해되었다. 위의 근육이 나를 마구 흔들어 죽처럼 만들었다. 소장에서 췌액을 만나 더 작게 분해되어 혈관 속으로 들어갔다.',
         '예시 3: 나는 버터가 듬뿍 발린 빵이다. 소장에 도착하니 담즙이 나를 감싸 기름을 작은 알갱이로 만들었다. 소화 효소들이 나를 분해하고, 융모가 영양분을 쏙쏙 빨아들였다. 이제 피를 타고 온몸을 여행할 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_11 : "온몸을 도는 혈액의 순환" ===== */
@@ -1177,7 +1177,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 정맥을 타고 천천히 심장으로 돌아가는 길, 판막 덕분에 뒤로 흘러가지 않았다. 심장에 도착하니 다시 폐로 보내져 신선한 산소를 받아 기분이 좋아졌다.',
         '예시 3: 하루에 수천 번 심장을 지나치며 온몸을 여행한다. 힘들지만 세포들이 건강하게 살 수 있도록 쉬지 않고 일하는 것이 자랑스럽다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_12 : "숨 쉬고 내보내는 호흡과 배설" ===== */
@@ -1281,7 +1281,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 콩팥: "하루에 180리터나 걸러내느라 정말 바빠." 폐: "나도 3억 개 폐포에서 쉬지 않고 기체 교환 중이야. 서로 힘내자!"',
         '예시 3: 폐: "주인이 운동을 열심히 해서 기분이 좋아." 콩팥: "물도 많이 마셔서 나도 일하기 편해. 건강한 주인 덕분이야!"'
       ]
-    }
+  }
   },
 
   /* ===== bio_13 : "자극과 반응, 신경계의 작동" ===== */
@@ -1385,7 +1385,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 뇌는 바통을 분석하고 "손을 움직여라!"라는 새 바통을 만들어 4번 주자 운동 신경에게 주었다. 운동 신경은 마지막 주자 근육에게 바통을 전달하고, 근육이 결승선을 통과하며 손이 움직였다!',
         '예시 3: 만약 중간에 누군가 넘어지면 반응이 느려지듯, 신경이 다치면 자극 전달이 안 되어 몸이 제대로 반응하지 못한다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_14 : "뼈와 근육이 만드는 움직임" ===== */
@@ -1489,7 +1489,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 삼두근: "이번엔 내가 수축해서 팔을 쭉 펼 차례야." 이두근: "좋아, 나는 이완하며 기다릴게. 우리 둘이 잘 호흡하니까 팔이 잘 움직여!"',
         '예시 3: 이두근: "우리가 서로 반대로 움직이는 걸 길항 작용이라고 한대." 삼두근: "응, 함께 일해야 주인이 물건도 들고 던지기도 할 수 있지!"'
       ]
-    }
+  }
   },
 
   /* ===== bio_15 : "부모를 닮는 이유, 유전의 원리" ===== */
@@ -1593,7 +1593,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 나는 멸종 위기 동물의 DNA를 보존하고 싶다. 북극곰이나 호랑이의 유전자를 연구해서 미래에 복원할 수 있는 기술을 만들 것이다.',
         '예시 3: 나는 가뭄에도 잘 자라는 식물의 유전자를 연구하고 싶다. 기후 변화로 식량이 부족해지지 않도록 튼튼한 작물을 만들어 사람들을 도울 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_16 : "생태계와 먹이 사슬" ===== */
@@ -1697,7 +1697,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 학교 연못 생태계 - 수초 → 물벼룩 → 붕어 → 왜가리. 수초가 광합성으로 양분을 만들고, 물벼룩이 수초를 먹고, 붕어가 물벼룩을 먹는다.',
         '예시 3: 만약 우리 동네에서 참새가 사라지면 애벌레가 많아져 나무 잎이 많이 먹히고, 고양이는 다른 먹이를 찾아야 할 것이다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_17 : "환경 오염과 생태계 보전" ===== */
@@ -1801,7 +1801,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 슬로건 - "플라스틱 NO! 지구 YES!" 그림 - 바다거북이 웃고 있는 모습. 실천 방법 - 비닐봉지 대신 장바구니, 빨대 안 쓰기',
         '예시 3: 슬로건 - "미래를 위한 오늘의 선택" 그림 - 깨끗한 지구와 오염된 지구 비교. 실천 방법 - 전기 절약, 대중교통 이용, 나무 심기'
       ]
-    }
+  }
   },
 
   /* ===== bio_18 : "생물 다양성의 중요성" ===== */
@@ -1905,7 +1905,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 수달 - 서식지: 하천, 계곡. 위협 요인: 수질 오염, 도로 건설. 보호 방안: 하천 정화, 수달 보호 구역 지정, 로드킬 방지 시설 설치.',
         '예시 3: 장수하늘소 - 서식지: 참나무 숲. 위협 요인: 산림 개발. 보호 방안: 참나무 숲 보전, 인공 번식 프로그램 운영.'
       ]
-    }
+  }
   },
 
   /* ===== bio_19 : "기후 변화와 생물의 적응" ===== */
@@ -2009,7 +2009,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2 (부정): 2050년, 기후 변화를 막지 못해 해수면이 크게 상승했다. 많은 해안 도시가 물에 잠기고, 폭염과 폭우가 자주 발생한다. 수많은 생물이 멸종했다.',
         '예시 3: 2050년의 나는 환경 과학자가 되어 멸종 위기 동물을 보호하는 일을 하고 있다. 어렸을 때 환경 보호의 중요성을 배운 덕분에 지구를 지키는 일에 참여하게 되었다.'
       ]
-    }
+  }
   },
 
   /* ===== bio_20 : "미래 생명 과학과 우리의 삶" ===== */
@@ -2113,8 +2113,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예시 2: 나는 줄기세포로 인공 장기를 만드는 연구를 하고 싶다. 장기 이식을 기다리다 세상을 떠나는 사람이 없도록 모든 사람에게 맞는 장기를 만들 것이다.',
         '예시 3: 나는 환경 오염을 정화하는 미생물을 개발하고 싶다. 플라스틱을 분해하는 세균이나 오염된 물을 깨끗하게 하는 생물을 만들어 지구를 살릴 것이다.'
       ]
-    }
   }
+}
 });
 
 /* ===============================
@@ -2133,14 +2133,14 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   // ✅ 이미 렌더링된 경우 다시 렌더링하지 않음 (탭 전환 시 채점 결과 유지)
   const existingBlanks = root.querySelectorAll('.blank-wrap');
   if (existingBlanks.length > 0) {
     console.log('[renderVocabFill] 이미 렌더링됨 - 스킵 (채점 결과 유지)');
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -2187,11 +2187,11 @@ window.renderVocabFill = function () {
     // 1. localStorage에서 복원
     if (typeof window.loadVocabState === 'function') {
       window.loadVocabState();
-    }
+  }
     // 2. 서버 데이터가 있으면 서버 데이터로 복원 (우선순위 높음)
     if (typeof window.restoreVocabFromServerData === 'function') {
       window.restoreVocabFromServerData();
-    }
+  }
   }, 100);
 };
 
@@ -2218,7 +2218,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS:', window.CONTENTS);
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -2232,7 +2232,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -2246,8 +2246,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.innerHTML = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -2256,8 +2256,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.innerHTML = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -2267,7 +2267,7 @@ function applyContentPack(unitKey) {
     const q3_2 = document.getElementById('q3-2');
     if (q3_1 && pack.quiz.q3_1_ph) q3_1.placeholder = pack.quiz.q3_1_ph;
     if (q3_2 && pack.quiz.q3_2_ph) q3_2.placeholder = pack.quiz.q3_2_ph;
-  }
+}
 
   // Q4
   if (blocks[3]) {
@@ -2277,13 +2277,13 @@ function applyContentPack(unitKey) {
     const q4_2 = document.getElementById('q4-2');
     if (q4_1 && pack.quiz.q4_1_ph) q4_1.placeholder = pack.quiz.q4_1_ph;
     if (q4_2 && pack.quiz.q4_2_ph) q4_2.placeholder = pack.quiz.q4_2_ph;
-  }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // ✅ 모든 콘텐츠 로드 완료 후 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -2298,7 +2298,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -2332,7 +2332,7 @@ function getReadingStateKey(unit) {
   if (!stu) {
     // 로그인 안 되어 있으면 예전처럼 단원 단독 키 사용
     return `dan-reading-state:${unit}`;
-  }
+}
   const studentKey = buildStudentKeyForReading(stu);
   return `dan-reading-state:${studentKey}:${unit}`;
 }
@@ -2364,7 +2364,7 @@ function saveReadingState() {
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('saveReadingState error', e);
-  }
+}
 }
 
 function loadReadingState() {
@@ -2380,11 +2380,11 @@ function loadReadingState() {
     if (state.q1) {
       const r1 = document.querySelector(`input[name="q1"][value="${state.q1}"]`);
       if (r1) r1.checked = true;
-    }
+  }
     if (state.q2) {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
-    }
+  }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
@@ -2402,12 +2402,12 @@ function loadReadingState() {
       setTimeout(() => {
         try { window.gradeQuiz(); } catch (e) {
           console.warn('auto re-grade reading error', e);
-        }
+      }
       }, 0);
-    }
+  }
   } catch (e) {
     console.warn('loadReadingState error', e);
-  }
+}
 }
 
 /* ===== 통합 채점기 ===== */
@@ -2426,7 +2426,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -2453,8 +2453,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -2481,7 +2481,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 (객관식 라디오버튼 또는 빈칸채우기 지원)
@@ -2499,7 +2499,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -2516,7 +2516,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -2546,7 +2546,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -2563,10 +2563,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -2574,7 +2574,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* === 정답·해설 패널 렌더러 === */
@@ -2589,7 +2589,7 @@ function renderSolutions(pack) {
     if (ex) html += `<span style="color:#6b5a48;">${ex}</span><br>`;
     if (dt) html += `<span style="color:#2e7d32;">${dt}</span>`;
     return html || '';
-  }
+}
 
   // Q3: 객관식 vs 빈칸 호환
   let q3Html = '';
@@ -2598,7 +2598,7 @@ function renderSolutions(pack) {
     q3Html = `<b>정답:</b> ${A.q3} — ${q3Text}<br>${buildExplainDetail(EX.q3, DT.q3)}`;
   } else if (A.q3_1) {
     q3Html = `<b>정답(두 칸):</b> ${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}<br>${buildExplainDetail(EX.q3, DT.q3)}`;
-  }
+}
 
   // Q4: 객관식 vs 빈칸 호환
   let q4Html = '';
@@ -2607,7 +2607,7 @@ function renderSolutions(pack) {
     q4Html = `<b>정답:</b> ${A.q4} — ${q4Text}<br>${buildExplainDetail(EX.q4, DT.q4)}`;
   } else if (A.q4_1) {
     q4Html = `<b>정답(두 칸):</b> ${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}<br>${buildExplainDetail(EX.q4, DT.q4)}`;
-  }
+}
 
   // grade-result (점수 박스) 안의 하단에 해설 추가
   const gradeResult = document.getElementById('grade-result');
@@ -2653,9 +2653,9 @@ window.DanDan = window.DanDan || {};
     if (!unitParam) {
       const m = location.pathname.match(/bio_(\d+)\.html/i);
       if (m) unitParam = `deep_bio_${m[1].padStart(2, '0')}`;
-    }
-    return (unitParam || (window.CUR_UNIT || 'bio_01')).toLowerCase();
   }
+    return (unitParam || (window.CUR_UNIT || 'bio_01')).toLowerCase();
+}
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
   function buildStudentKey(stu) {
@@ -2663,21 +2663,21 @@ window.DanDan = window.DanDan || {};
     const cleanName  = (stu.name  || '').trim();
     const cleanGrade = (stu.grade || '').trim();
     return `${cleanGrade}_${cleanName}_${cleanPhone}`;
-  }
+}
 
   /* ✅ 현재 로그인 학생 */
   function getCurrentStudent() {
     const saved = localStorage.getItem('currentStudent');
     if (!saved) return null;
     try { return JSON.parse(saved); } catch { return null; }
-  }
+}
 
   /* ✅ 특정 학생 + 단원 기준 진행도 key 만들기
      → dan-progress:학년_이름_전화:bio_04 */
   function buildProgressKey(stu, unit) {
     const studentKey = buildStudentKey(stu);
     return `dan-progress:${studentKey}:${unit}`;
-  }
+}
 
   /* ✅ 현재 학생의 완료된 단원 목록 읽기 */
   function readDoneList() {
@@ -2694,9 +2694,9 @@ window.DanDan = window.DanDan || {};
       const unit = k.slice(prefix.length);  // bio_01, bio_02 ...
       const val  = localStorage.getItem(k);
       if (val) unitList.push(unit);
-    }
-    return { keyPrefix: prefix, list: unitList };
   }
+    return { keyPrefix: prefix, list: unitList };
+}
 
   const ProgressManager = {
     /* 현재 단원 unit (bio_01 등) */
@@ -2717,11 +2717,11 @@ window.DanDan = window.DanDan || {};
         if (existing) {
           saved = JSON.parse(existing);
           if (!Array.isArray(saved)) saved = [];
-        }
+      }
       } catch(e) { saved = []; }
       if (saved.length === 0) {
         saved.push(window.PAGE_KEY || key);
-      }
+    }
       localStorage.setItem(key, JSON.stringify(saved));
       return key;
     },
@@ -2738,7 +2738,7 @@ window.DanDan = window.DanDan || {};
     /* ✅ 현재 학생의 완료 단원 리스트 얻기 (bio_01, bio_03 ...) */
     getStudentProgress() {
       return readDoneList();   // { keyPrefix, list }
-    }
+  }
   };
 
   window.DanDan.ProgressManager = ProgressManager;
@@ -2752,7 +2752,7 @@ window.DanDan = window.DanDan || {};
       if (!stu) {
         alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
         return;
-      }
+    }
 
       // 1) 기존 제출 로직(PDF 등) 실행
       if (typeof original === 'function') {
@@ -2763,7 +2763,7 @@ window.DanDan = window.DanDan || {};
           '단단국어_분석리포트.pdf',
           { withStudentInfo: true }
         );
-      }
+    }
 
       // 2) ✅ 진행도: 학생 + 단원 기준으로 학습완료 저장
       const key = ProgressManager.markComplete();
@@ -2772,7 +2772,7 @@ window.DanDan = window.DanDan || {};
         showSubmitSuccess('분석리포트');
       } else {
         console.log(`학습완료 처리됨: ${key}`);
-      }
+    }
 
       // 3) 서버 학습 이력 로그
       if (typeof window.sendLearningLog === 'function') {
@@ -2780,8 +2780,8 @@ window.DanDan = window.DanDan || {};
           await window.sendLearningLog();
         } catch (e) {
           console.warn('[submitReport] sendLearningLog 실패', e);
-        }
       }
+    }
     };
   })();
 })();
@@ -2803,7 +2803,7 @@ window.submitCreative = async function () {
     });
     alert('창의활동 영역을 찾을 수 없습니다.');
     return;
-  }
+}
 
   try {
     // 1) textarea 내용 → 렌더 박스로 복사
@@ -2820,7 +2820,7 @@ window.submitCreative = async function () {
         '단단국어_창의활동.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
     // 4) 없으면 html2canvas + jsPDF 직접 사용 (백업)
     else if (window.html2canvas && window.jsPDF) {
       const canvas = await html2canvas(captureBox);
@@ -2834,12 +2834,12 @@ window.submitCreative = async function () {
       pdf.save('단단국어_창의활동.pdf');
     } else {
       alert('PDF 모듈을 찾을 수 없습니다. (html2canvas / jsPDF 확인)');
-    }
+  }
 
     // (원하면 여기에서 창의활동도 showSubmitSuccess 호출 가능)
     if (typeof window.showSubmitSuccess === 'function') {
       window.showSubmitSuccess('창의활동');
-    }
+  }
   } catch (e) {
     console.warn('submitCreative error', e);
     alert('창의활동 PDF 생성 중 오류가 발생했습니다.');
@@ -2847,7 +2847,7 @@ window.submitCreative = async function () {
     // 5) 화면 복구: textarea 다시 보이게, 렌더 박스 숨김
     if (textarea)   textarea.style.display  = 'block';
     if (renderBox)  renderBox.style.display = 'none';
-  }
+}
 };
 
 /* ===========================
@@ -2855,6 +2855,11 @@ window.submitCreative = async function () {
  * =========================== */
 /* ===== 🔄 서버에서 완료 상태 가져오기 ===== */
 window.loadCompletionStatus = async function () {
+  // ✅ 중복 호출 방지 - 이미 로딩 중이거나 완료된 경우 스킵
+  if (window._completionStatusLoading) { console.log("[loadCompletionStatus] 이미 로딩 중 - 스킵"); return window._completionStatusPromise; }
+  if (window._completionStatusLoaded) { console.log("[loadCompletionStatus] 이미 로드됨 - 스킵"); return; }
+  window._completionStatusLoading = true;
+  window._completionStatusPromise = (async () => {
   try {
     let stu = null;
     try {
@@ -2862,12 +2867,12 @@ window.loadCompletionStatus = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[loadCompletionStatus] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[loadCompletionStatus] 학생 정보 없음 → 스킵');
       return;
-    }
+  }
 
     const params = new URLSearchParams({
       grade: stu.grade || '',
@@ -2883,7 +2888,7 @@ window.loadCompletionStatus = async function () {
     if (!res.ok) {
       console.warn('[loadCompletionStatus] 서버 응답 오류:', res.status);
       return;
-    }
+  }
 
     const data = await res.json();
     console.log('[loadCompletionStatus] 서버 응답:', data);
@@ -2909,24 +2914,29 @@ window.loadCompletionStatus = async function () {
             if (existing) {
               saved = JSON.parse(existing);
               if (!Array.isArray(saved)) saved = [];
-            }
+          }
           } catch(e) { saved = []; }
           if (saved.length === 0) {
             saved.push('BRAINUP_' + unit);
-          }
+        }
           localStorage.setItem(key, JSON.stringify(saved));
           console.log('[loadCompletionStatus] 저장:', key);
         } catch(e) {
           // QuotaExceededError 등 무시하고 계속 진행
           console.warn('[loadCompletionStatus] 저장 실패 (용량 초과?):', unit, e.message);
-        }
+      }
       });
 
       console.log('[loadCompletionStatus] 완료 상태 동기화 완료:', data.completedUnits);
     }
   } catch (e) {
     console.warn('[loadCompletionStatus] 오류', e);
+  } finally {
+    window._completionStatusLoading = false;
+    window._completionStatusLoaded = true;
   }
+  })();
+  return window._completionStatusPromise;
 };
 
 window.sendLearningLog = async function () {
@@ -2940,12 +2950,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -2985,11 +2995,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 
@@ -3000,7 +3010,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -3009,7 +3019,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -3024,14 +3034,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.bio_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
     // 🔶 창의활동 제출 버튼 → submitCreative 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -3040,13 +3050,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
 
   // 5) 지난번 채점/입력 상태 복원 (✅ 학생별로 분리된 키 기준)
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 
 });
 (function() {
@@ -3056,6 +3066,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fitKey = `deep_bio_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();

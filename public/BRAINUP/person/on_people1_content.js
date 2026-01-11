@@ -7,7 +7,7 @@
   if (window.CUR_UNIT && window.CUR_UNIT.startsWith('on_people1_')) {
     console.log('[on_people1_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
-  }
+}
 
   const qs = new URLSearchParams(location.search).get('unit');
   let unit = null;
@@ -15,17 +15,17 @@
   if (qs) {
     const m = qs.toLowerCase().match(/fit_people1[_-]?(d{1,2})/);
     if (m) unit = `on_people1_${m[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit) {
     const m2 = location.pathname.toLowerCase().match(/fit_people1[_-]?(d{1,2})\.html/);
     if (m2) unit = `on_people1_${m2[1].padStart(2, '0')}`;
-  }
+}
 
   if (!unit && document.title) {
     const m3 = document.title.match(/(\d{1,2})/);
     if (m3) unit = `on_people1_${m3[1].padStart(2, '0')}`;
-  }
+}
 
   window.CUR_UNIT = unit || 'on_people1_01';
 })();
@@ -149,7 +149,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '자꾸 늦잠을 자는 습관이 문제예요. 아침 시간을 낭비하게 되어서 바꾸고 싶어요. 알람을 세 개 맞추고, 일어나면 바로 세수하는 습관을 만들기로 했어요.',
         '숙제를 미루는 습관을 고치고 싶어요. 미루다 보면 밤늦게까지 하게 되어 힘들거든요. 학교에서 돌아오면 간식 먹은 뒤 바로 숙제부터 하기로 다짐했어요.'
       ]
-    }
+  }
   },
 
   /* ===== people1_02 : "아버지의 뜻을 잇는 왕, 문무왕" ===== */
@@ -245,7 +245,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '김유신 장군을 잃고도 전쟁을 계속하신 게 정말 힘드셨을 것 같아요. 저도 힘든 일이 생겨도 문무왕님처럼 끝까지 해내는 사람이 되고 싶습니다.',
         '죽어서도 나라를 지키겠다는 마음이 감동적이에요. 저도 나중에 우리나라를 위해 도움이 되는 사람이 되고 싶어요. 문무왕님의 나라 사랑을 본받겠습니다.'
       ]
-    }
+  }
   },
 
   /* ===== people1_03 : "해골 물에서 얻은 깨달음" ===== */
@@ -329,7 +329,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '비 오는 날 소풍이 취소되어 속상했어요. 그런데 집에서 가족과 보드게임을 하며 즐겁게 보냈더니 오히려 더 좋은 추억이 되었습니다.',
         '발표를 망칠까 봐 무서웠는데, "연습을 많이 했으니 괜찮아"라고 생각하니 떨림이 줄었어요. 마음을 바꾸니 자신감이 생겼습니다.'
       ]
-    }
+  }
   },
 
   /* ===== people1_04 : "우물 안 개구리를 벗어난 혜초의 모험" ===== */
@@ -416,7 +416,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '일본에 가서 전통 문화와 현대 기술이 공존하는 모습을 여행기로 남기고 싶어요. 옛날 성과 최신 로봇을 같이 볼 수 있다니 신기할 것 같습니다.',
         '혜초처럼 여러 나라를 돌아다니며 각 나라의 음식 문화를 비교하는 기록을 쓰고 싶어요. 같은 재료로 나라마다 다른 음식을 만드는 것이 재미있을 것 같습니다.'
       ]
-    }
+  }
   },
 
   /* ===== people1_05 : "노비 출신 천재 과학자 장영실" ===== */
@@ -500,7 +500,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '장영실이 자격루로 백성들에게 시간을 알려준 것처럼, 나는 할머니 할아버지들이 스마트폰 없이도 가족과 화상통화를 할 수 있는 말하는 TV 전화기를 발명하고 싶습니다.',
         '장영실이 신분의 벽을 넘어 꿈을 이룬 것처럼, 나도 시각장애인이 길을 안전하게 찾아갈 수 있도록 음성으로 안내해주는 스마트 지팡이를 발명해서 사람들을 돕고 싶습니다.'
       ]
-    }
+  }
   },
 
   /* ===== people1_06 : "바다를 지킨 영웅 이순신" ===== */
@@ -588,7 +588,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '이순신 장군이 거북선이라는 새로운 무기를 만들어 낸 것처럼, 나도 문제가 생겼을 때 기존의 방법만 고집하지 않고 창의적인 해결책을 찾아내는 리더가 되고 싶습니다.',
         '이순신 장군이 모함을 받고 파직당해도 포기하지 않았던 것처럼, 나도 실패하거나 오해를 받더라도 끝까지 맡은 일을 완수하는 책임감 있는 리더가 되고 싶습니다.'
       ]
-    }
+  }
   },
 
   /* ===== people1_07 : "백성을 사랑한 임금 세종대왕" ===== */
@@ -677,7 +677,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '세종대왕이 누구나 쉽게 배울 수 있는 문자를 만들었던 것처럼, 나는 수학을 어려워하는 친구들을 위해 게임처럼 재미있게 수학 원리를 알려주는 앱을 만들고 싶습니다.',
         '세종대왕이 백성들의 어려움에 공감하여 한글을 만든 것처럼, 나는 혼자 사시는 어르신들이 외롭지 않도록 대화도 하고 건강도 체크해주는 친구 로봇을 만들고 싶습니다.'
       ]
-    }
+  }
   },
 
   /* ===== people1_08 : "백성의 병을 고친 의원 허준" ===== */
@@ -766,7 +766,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '허준이 동의보감이라는 의학책을 써서 후세에 지식을 남긴 것처럼, 나는 아직 치료법이 없는 희귀병을 연구해서 치료제를 개발하고 싶습니다.',
         '허준이 임금뿐 아니라 일반 백성들도 정성껏 치료한 것처럼, 나는 외진 시골이나 전쟁 지역에 가서 의료 봉사를 하는 의사가 되고 싶습니다.'
       ]
-    }
+  }
   },
 
   /* ===== people1_09 : "그림과 학문으로 빛난 신사임당" ===== */
@@ -855,7 +855,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '신사임당이 자녀 교육에 정성을 쏟아 율곡 이이를 훌륭하게 키운 것처럼, 나도 선생님이 되어 학생들이 꿈을 찾고 이룰 수 있도록 도와주고 싶습니다.',
         '신사임당이 여성으로서 한계를 극복하고 뛰어난 업적을 남긴 것처럼, 나도 어떤 어려움이 있어도 포기하지 않고 내 꿈을 향해 노력하는 사람이 되고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 10: 이황
@@ -944,7 +944,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '이황이 평생 학문에 정진하며 70권이 넘는 책을 쓴 것처럼, 나도 학생들에게 끊임없이 배우고 성장하는 자세의 중요성을 가르치고 싶습니다.',
         '이황의 가르침이 일본까지 전해진 것처럼, 나도 좋은 가르침은 널리 퍼져야 한다고 생각하여 더 많은 사람들이 배울 수 있도록 책이나 영상으로 지식을 나누고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 11: 이이
@@ -1032,7 +1032,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '이이가 백성을 위해 개혁안을 제시한 것처럼, 나도 우리 사회의 문제점을 찾아 해결책을 고민하고 더 나은 세상을 만드는 데 기여하고 싶습니다.',
         '이이가 학문과 실천을 모두 중시한 것처럼, 나도 공부만 하는 것이 아니라 배운 것을 실제로 활용하여 주변 사람들을 돕는 사람이 되고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 12: 정약용
@@ -1123,7 +1123,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정약용이 목민심서로 좋은 관리의 모범을 보여준 것처럼, 나도 사람들이 서로 돕고 배려할 수 있도록 착한 행동을 공유하는 앱을 만들고 싶습니다.',
         '정약용이 실학으로 농사 기술을 발전시킨 것처럼, 나도 물이 부족한 지역에서도 농사를 지을 수 있는 절수 농업 기술을 연구하고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 13: 광개토대왕
@@ -1214,7 +1214,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '광개토대왕이 신라를 도와 우호 관계를 맺은 것처럼, 나도 이웃 나라들과 친하게 지내며 서로 돕는 협력의 나라를 만들고 싶습니다.',
         '광개토대왕이 젊은 나이에도 큰 업적을 남긴 것처럼, 나도 나이에 상관없이 능력 있는 사람이 인정받는 공정한 나라를 만들고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 14: 을지문덕
@@ -1301,7 +1301,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '을지문덕이 지형을 활용한 것처럼, 나도 어떤 문제를 풀 때 주어진 조건과 상황을 잘 분석해서 가장 효과적인 해결책을 찾겠습니다.',
         '을지문덕이 심리전으로 적을 무모하게 만든 것처럼, 나도 상대방의 마음을 이해하고 대화로 갈등을 해결하는 지혜를 발휘하겠습니다.'
       ]
-    }
+  }
   },
 
   // 15: 강감찬
@@ -1391,7 +1391,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '강감찬이 과거의 전략(을지문덕의 수공)을 활용한 것처럼, 나도 역사와 선배들의 경험에서 배워 같은 실수를 반복하지 않겠습니다.',
         '강감찬이 70세에도 나라를 위해 헌신한 것처럼, 나도 나이가 들어도 사회에 도움이 되는 일을 계속하는 어른이 되고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 16: 최무선
@@ -1481,7 +1481,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '최무선이 중국 상인들에게 조금씩 정보를 얻은 것처럼, 나도 모르는 것이 있으면 여러 사람에게 물어보고 책도 찾아보며 끈기 있게 배워가겠습니다.',
         '최무선이 나라를 위해 연구한 것처럼, 나도 미래에 사회에 도움이 되는 연구를 하는 과학자가 되어 포기하지 않고 문제를 해결하고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 17: 정몽주
@@ -1571,7 +1571,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정몽주가 단심가로 자신의 마음을 표현한 것처럼, 나도 내가 중요하게 생각하는 가치가 무엇인지 항상 생각하고 그것을 지키기 위해 노력하겠습니다.',
         '정몽주의 충절이 오래도록 기억되는 것처럼, 나도 당장은 손해를 보더라도 정직하고 바르게 행동하여 신뢰받는 사람이 되고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 18: 황희
@@ -1658,7 +1658,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '황희가 양쪽의 이야기를 다 들어본 것처럼, 나도 친구들이 싸울 때 한쪽 편만 들지 않고 양쪽의 말을 다 들어보고 공정하게 판단하겠습니다.',
         '황희가 검소하게 산 것처럼, 나도 불필요한 물건을 사지 않고 꼭 필요한 것만 쓰는 절약하는 습관을 기르겠습니다.'
       ]
-    }
+  }
   },
 
   // 19: 이사부
@@ -1748,7 +1748,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '이사부가 상대방의 두려움을 이용한 것처럼, 나도 상대방의 입장과 마음을 이해하면 갈등을 더 쉽게 해결할 수 있다고 생각합니다.',
         '이사부가 기발한 아이디어를 낸 것처럼, 나도 어려운 문제가 생기면 창의적으로 생각해서 새로운 해결 방법을 찾겠습니다.'
       ]
-    }
+  }
   },
 
   // 20: 김정호
@@ -1838,7 +1838,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '김정호가 30년간 답사한 것처럼, 나도 관심 있는 분야에 대해 꾸준히 공부하고 조사하여 전문가가 되고 싶습니다.',
         '김정호가 목판 인쇄로 많은 사람에게 지도를 나눈 것처럼, 나도 내가 알게 된 유용한 정보를 인터넷이나 책으로 많은 사람과 나누고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 21: 안중근
@@ -1928,7 +1928,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '안중근이 동양평화를 꿈꾼 것처럼, 나도 전쟁 없는 평화로운 세상을 만드는 데 기여하는 외교관이나 국제기구 직원이 되고 싶습니다.',
         '안중근이 목숨을 바쳐 독립운동을 한 것처럼, 나도 비록 목숨까지는 아니더라도 봉사활동이나 기부를 통해 어려운 이웃을 돕고 싶습니다.'
       ]
-    }
+  }
   },
 
   // 22: 유관순
@@ -2018,7 +2018,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '좋은 일에 친구들이 함께 참여하도록 열심히 설득하겠어요.',
         '힘든 상황에서도 정의롭고 옳은 일이라면 포기하지 않겠어요.'
       ]
-    }
+  }
   },
 
   // 23: 윤봉길
@@ -2109,7 +2109,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '내가 가진 재능이나 지식으로 어려운 사람들을 돕는 봉사활동을 하겠어요.',
         '한번 마음먹은 일은 어려움이 있어도 끝까지 해내는 사람이 되겠어요.'
       ]
-    }
+  }
   },
 
   // 24: 김구
@@ -2200,7 +2200,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '남북이 평화롭게 통일되어 전쟁 걱정 없는 나라가 되기를 바라요.',
         '서로 돕고 배려하는 따뜻한 사회를 만드는 데 기여하고 싶어요.'
       ]
-    }
+  }
   },
 
   // 25: 한석봉
@@ -2290,7 +2290,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '선생님이나 부모님의 조언을 겸손히 받아들이고 발전의 기회로 삼겠어요.',
         '여건이 좋지 않더라도 핑계 대지 않고 내가 할 수 있는 최선을 다하겠어요.'
       ]
-    }
+  }
   },
 
   // 26: 김홍도
@@ -2378,7 +2378,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '우리 반 수업 시간의 재미있는 순간들을 그림일기로 기록하고 싶어요.',
         '시장에서 물건 파시는 할머니나 음식 만드시는 분들의 모습을 사진으로 남기고 싶어요.'
       ]
-    }
+  }
   },
 
   // 27: 신윤복
@@ -2468,7 +2468,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '가족이나 친구의 아름다운 순간을 글이나 그림으로 남기고 싶어요.',
         '남들이 잘 다루지 않는 소재로 작품을 만들어 보고 싶어요.'
       ]
-    }
+  }
   },
 
   // 28: 박지원
@@ -2559,7 +2559,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '여행에서 있었던 재미있는 에피소드를 웃기게 기록해서 친구들과 나누고 싶어요.',
         '우리 사회의 개선할 점을 이야기 형식으로 써서 많은 사람들이 생각해 볼 수 있게 하고 싶어요.'
       ]
-    }
+  }
   },
 
   // 29: 김대건
@@ -2650,7 +2650,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '나를 힘들게 한 사람도 미워하지 않고 용서하는 마음을 갖겠어요.',
         '꿈을 이루기 위해 어떤 어려움이 있어도 포기하지 않겠어요.'
       ]
-    }
+  }
   },
 
   // 30: 주시경
@@ -2737,7 +2737,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '맞춤법을 정확히 익혀서 올바른 글쓰기를 하겠어요.',
         '한글의 아름다움을 외국 친구들에게 알려 한글을 세계에 전파하고 싶어요.'
       ]
-    }
+  }
   },
 
   // 31: 방정환
@@ -2829,7 +2829,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '어린 아이들이 좋아할 만한 그림이나 만화를 그려서 나눠주고 싶어요.',
         '저학년 친구들이 놀림받거나 무시당하면 보호해주고 함께 놀아주겠어요.'
       ]
-    }
+  }
   },
 
   // 32: 장보고
@@ -2924,7 +2924,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '해군이 되어 우리 바다를 지키고 국민을 보호하고 싶어요.',
         '우리나라가 물류의 중심이 되도록 항만을 발전시키는 일을 하고 싶어요.'
       ]
-    }
+  }
   },
 
   // 33: 선덕여왕
@@ -3020,7 +3020,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '팀 활동에서 친한 친구만이 아니라 능력 있는 사람을 인정하고 함께 일하고 싶어요.',
         '여성 과학자가 되어 우주 탐사나 의학 연구에 기여하고 싶어요.'
       ]
-    }
+  }
   },
 
   // 34: 연개소문
@@ -3112,7 +3112,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '위기 상황에서는 국민 모두가 단결해야 한다고 생각해요.',
         '내부의 단결이 외부의 위협만큼이나 중요하다고 생각해요.'
       ]
-    }
+  }
   },
 
   // 35: 계백
@@ -3207,7 +3207,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '팀 활동에서 힘들어하는 친구들에게 용기를 주고 함께 이겨내겠어요.',
         '결과가 좋지 않더라도 최선을 다한 과정 자체가 가치 있다고 생각해요.'
       ]
-    }
+  }
   },
 
   // 36: 최영
@@ -3301,7 +3301,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '남과 비교하며 부러워하지 않고 정직하게 노력해서 얻은 것에 만족하겠어요.',
         '돈보다 더 중요한 가치(정직, 우정, 가족)를 소중히 여기며 살겠어요.'
       ]
-    }
+  }
   },
 
   // 37: 권율
@@ -3396,7 +3396,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '우리 반 친구들과 힘을 합치면 어떤 대회에서도 좋은 성과를 낼 수 있다고 생각해요.',
         '팀 프로젝트에서 내 맡은 일을 책임감 있게 하고 친구들을 도와 함께 성공하겠어요.'
       ]
-    }
+  }
   },
 
   // 38: 곽재우
@@ -3488,7 +3488,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '아무도 나서지 않는 일에 용기를 내어 먼저 시작하겠어요.',
         '내가 먼저 좋은 일을 하면 친구들도 따라 할 것이라 생각하며 솔선수범하겠어요.'
       ]
-    }
+  }
   },
 
   // 39: 문익점
@@ -3584,7 +3584,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '주변 사람들의 불편함을 살펴보고 해결책을 찾아보겠어요.',
         '좋은 일을 위해서라면 조금 힘들거나 어려운 일도 감수하겠어요.'
       ]
-    }
+  }
   },
 
   // 40: 허난설헌
@@ -3680,7 +3680,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '내 경험을 글로 써서 비슷한 상황의 사람들에게 위로가 되고 싶어요.',
         '좋아하는 분야(글쓰기, 그림, 음악)를 꾸준히 연습해서 나만의 작품을 만들고 싶어요.'
       ]
-    }
+  }
   },
   on_people1_41: {
     labelNo: '41',
@@ -3764,7 +3764,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       materials: ['노트나 종이', '연필과 색연필', '돋보기 (선택)'],
       example: '예시: 개미를 관찰하면 - 몸이 세 부분으로 나뉨, 다리가 6개, 줄지어 이동함 / 궁금한 점: 왜 줄을 지어 다닐까?'
-    }
+  }
   },
 
   on_people1_42: {
@@ -4693,7 +4693,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: {q1:'1',q2:'1',q3_1:['인물'],q3_2:['업적'],q4_1:['역사'],q4_2:['가치']},
     essayKeywords: ['인물','업적','역사','가치','공헌','영향'],
     explain: {q1:'해설: 역사적 인물은 중요한 업적 남김.',q2:'해설: 가치와 정신을 배움.',q3:'해설: 인물과 업적.',q4:'해설: 역사와 가치.',q5:'예시: 리더십, 희생, 헌신, 혁신 정신.'}
-  }
+}
 
 });
 
@@ -4729,7 +4729,7 @@ window.gradeQuiz = function () {
       markEl = document.createElement('div');
       markEl.className = 'mark';
       numEl.appendChild(markEl);
-    }
+  }
     numEl.textContent = numLabels[idx];
     numEl.appendChild(markEl);
     numEl.classList.remove('correct','wrong');
@@ -4756,8 +4756,8 @@ window.gradeQuiz = function () {
       if(markEl) markEl.textContent='✖';
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
-    }
   }
+}
 
   // 1
   const q1 = document.querySelector('input[name="q1"]:checked');
@@ -4784,7 +4784,7 @@ window.gradeQuiz = function () {
     const ok3_1 = A.q3_1.some(a => norm(a) === norm(q3Text1));
     const ok3_2 = A.q3_2 ? A.q3_2.some(a => norm(a) === norm(q3Text2)) : true;
     q3ok = ok3_1 && ok3_2;
-  }
+}
   mark(2, q3ok, '③', EX.q3);
 
   // 4 (객관식 또는 빈칸)
@@ -4802,7 +4802,7 @@ window.gradeQuiz = function () {
     const ok4_1 = A.q4_1.some(a => norm(a) === norm(q4Text1));
     const ok4_2 = A.q4_2 ? A.q4_2.some(a => norm(a) === norm(q4Text2)) : true;
     q4ok = ok4_1 && ok4_2;
-  }
+}
   mark(3, q4ok, '④', EX.q4);
 
   // 5 (서술형)
@@ -4819,7 +4819,7 @@ window.gradeQuiz = function () {
   if (box) {
     box.style.display = 'block';
     box.innerHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + shortMsgs.map(m => `<p>${m}</p>`).join('');
-  }
+}
   window.fullResultHTML = `<p><strong>점수: ${score} / ${totalAuto}</strong></p>` + fullMsgs.map(m => `<p>${m}</p>`).join('');
 
   const g=document.getElementById('grade-btn');
@@ -4849,7 +4849,7 @@ window.gradeQuiz = function () {
         "비판·적용력: " + (q5ok?"좋아요! ✅":"보완 필요 ❗")
       ]
     });
-  }
+}
 
   // ✅ 레이더 점수 객체로 빼두기
   const radarScores = {
@@ -4866,10 +4866,10 @@ window.gradeQuiz = function () {
   // ✅ 화면 레이더 차트 그리기
   if (typeof updateRadarChart === 'function') {
     updateRadarChart(radarScores);
-  }
+}
   if (typeof drawRadarChart === 'function') {
     drawRadarChart(radarScores);
-  }
+}
 
   // ✅ 서버 로그용으로도 보관 (옵션)
   window.reportState = window.reportState || {};
@@ -4877,7 +4877,7 @@ window.gradeQuiz = function () {
 
   if (typeof saveReadingState === 'function') {
     saveReadingState();
-  }
+}
 };
 
 /* ===== 텍스트 주입 (HTML 구조/ids 유지) ===== */
@@ -4887,7 +4887,7 @@ function applyContentPack(unitKey) {
   if (!pack) {
     console.error('[applyContentPack] pack이 없음! unitKey:', unitKey, 'CONTENTS keys:', Object.keys(window.CONTENTS));
     return;
-  }
+}
 
   const labelNoEl = document.querySelector('.passage-label strong');
   const titleEl   = document.querySelector('.passage-title');
@@ -4901,7 +4901,7 @@ function applyContentPack(unitKey) {
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
-  }
+}
 
   const vocabBox = document.querySelector('.passage-vocab ol');
   if (vocabBox)  vocabBox.innerHTML = pack.vocab.map(([w,d]) => `<li><b>${w}</b>: ${d}</li>`).join('');
@@ -4915,8 +4915,8 @@ function applyContentPack(unitKey) {
     if (q1Text) q1Text.textContent = pack.quiz.q1_text;
     if (q1Lis.length === 4) {
       q1Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q1" value="${i+1}"><span>${pack.quiz.q1_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q2
   if (blocks[1]) {
@@ -4925,8 +4925,8 @@ function applyContentPack(unitKey) {
     if (q2Text) q2Text.textContent = pack.quiz.q2_text;
     if (q2Lis.length === 4) {
       q2Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q2" value="${i+1}"><span>${pack.quiz.q2_opts[i]}</span></label>`);
-    }
   }
+}
 
   // Q3
   if (blocks[2]) {
@@ -4940,8 +4940,8 @@ function applyContentPack(unitKey) {
           const q3Lis = q3OptsUl.querySelectorAll('li');
           if (q3Lis.length === 4) {
             q3Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q3" value="${i+1}"><span>${pack.quiz.q3_opts[i]}</span></label>`);
-          }
         }
+      }
       } else if (pack.quiz.q3_html) {
         q3P.innerHTML = pack.quiz.q3_html;
       } else if (pack.quiz.q3_1_ph && pack.quiz.q3_2_ph) {
@@ -4950,9 +4950,9 @@ function applyContentPack(unitKey) {
         const q3_2 = document.getElementById('q3-2');
         if (q3_1) q3_1.placeholder = pack.quiz.q3_1_ph;
         if (q3_2) q3_2.placeholder = pack.quiz.q3_2_ph;
-      }
     }
   }
+}
 
   // Q4
   if (blocks[3]) {
@@ -4966,8 +4966,8 @@ function applyContentPack(unitKey) {
           const q4Lis = q4OptsUl.querySelectorAll('li');
           if (q4Lis.length === 4) {
             q4Lis.forEach((li,i)=> li.innerHTML = `<label><input type="radio" name="q4" value="${i+1}"><span>${pack.quiz.q4_opts[i]}</span></label>`);
-          }
         }
+      }
       } else if (pack.quiz.q4_html) {
         q4P.innerHTML = pack.quiz.q4_html;
       } else if (pack.quiz.q4_1_ph && pack.quiz.q4_2_ph) {
@@ -4976,15 +4976,15 @@ function applyContentPack(unitKey) {
         const q4_2 = document.getElementById('q4-2');
         if (q4_1) q4_1.placeholder = pack.quiz.q4_1_ph;
         if (q4_2) q4_2.placeholder = pack.quiz.q4_2_ph;
-      }
     }
   }
+}
 
   // Q5
   if (blocks[4]) {
     const q5Text = blocks[4].querySelector('.quiz-q');
     if (q5Text && pack.quiz.q5_text) q5Text.textContent = pack.quiz.q5_text;
-  }
+}
 
   // 창의활동 렌더링 (v2 - 2024.12.11)
   if (pack.creative) {
@@ -4993,7 +4993,7 @@ function applyContentPack(unitKey) {
     const creativeTitle = document.querySelector('.creative-title');
     if (creativeTitle) {
       creativeTitle.textContent = `Ai고래쌤과 함께하는 창의활동 — ${c.title}`;
-    }
+  }
     // 주제/힌트 박스
     const topicBox = document.querySelector('.creative-topic-box');
     if (topicBox) {
@@ -5003,7 +5003,7 @@ function applyContentPack(unitKey) {
       let hint = c.hint || '';
       if (!hint && c.prompts && c.prompts.length > 0) {
         hint = '🔍 힌트) ' + c.prompts.map(p => p.placeholder).join(', ');
-      }
+    }
       topicBox.innerHTML = `
         <div>
           <strong>🌟 주제:</strong>
@@ -5011,7 +5011,7 @@ function applyContentPack(unitKey) {
         </div>
         ${hint ? `<div class="creative-hint">${hint}</div>` : ''}
       `;
-    }
+  }
     // 예시 박스
     const examplesBox = document.querySelector('.creative-examples-box');
     if (examplesBox) {
@@ -5025,9 +5025,9 @@ function applyContentPack(unitKey) {
           <div class="example-title">📝 작성 예시</div>
           ${c.prompts.map((p, i) => `<div>예시 ${i+1}) ${p.placeholder}</div>`).join('')}
         `;
-      }
     }
   }
+}
 
   // 로딩 오버레이 숨기기
   requestAnimationFrame(() => {
@@ -5041,7 +5041,7 @@ function applyContentPack(unitKey) {
         loadingOverlay.classList.remove('show');
         console.log('[applyContentPack] 로딩 오버레이 숨김 완료');
       }, delay);
-    }
+  }
   });
 }
 
@@ -5061,7 +5061,7 @@ function renderSolutions(pack) {
   } else {
     q3Label = '정답(두 칸):';
     q3Answer = `${Array.isArray(A.q3_1)?A.q3_1[0]:A.q3_1} / ${Array.isArray(A.q3_2)?A.q3_2[0]:A.q3_2}`;
-  }
+}
 
   // Q4 정답 텍스트 (객관식 또는 빈칸)
   let q4Label, q4Answer;
@@ -5071,7 +5071,7 @@ function renderSolutions(pack) {
   } else {
     q4Label = '정답(두 칸):';
     q4Answer = `${Array.isArray(A.q4_1)?A.q4_1[0]:A.q4_1} / ${Array.isArray(A.q4_2)?A.q4_2[0]:A.q4_2}`;
-  }
+}
 
   const gradeResult = document.getElementById('grade-result');
   if (!gradeResult) return;
@@ -5126,7 +5126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 0) 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
     await loadCompletionStatus();
-  }
+}
 
   // 1) 본문 내용 채우기
   applyContentPack(window.CUR_UNIT);
@@ -5135,7 +5135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) {
     if (typeof renderVocabFill === 'function') renderVocabFill();
-  }
+}
 
   // 3) 버튼 type=button 통일
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {
@@ -5150,16 +5150,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
-        }
+      }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.people1_01;
         if (typeof renderSolutions === 'function') {
           renderSolutions(pack);
-        }
+      }
       } catch (e) {
         console.warn('submit-btn handler error', e);
-      }
+    }
     });
-  }
+}
 
   // 5) 창의활동 제출 버튼 연결
   const creativeBtn = document.getElementById('creative-submit-btn');
@@ -5168,12 +5168,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     creativeBtn.addEventListener('click', () => {
       submitCreative();
     });
-  }
+}
 
   // 6) 지난번 채점/입력 상태 복원
   if (typeof loadReadingState === 'function') {
     loadReadingState();
-  }
+}
 });
 
 /* ===== 어휘학습 렌더링 함수 (blank-wrap 방식) ===== */
@@ -5186,7 +5186,7 @@ window.renderVocabFill = function () {
   if (!root || !pack?.vocabFill?.items?.length) {
     console.warn('[vocab] root or items missing:', { root: !!root, unit, items: pack?.vocabFill?.items?.length });
     return;
-  }
+}
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
     const slot = `
@@ -5231,7 +5231,7 @@ window.renderVocabFill = function () {
   // 서버 데이터 복원 (있으면)
   if (typeof window.restoreVocabFromServerData === 'function') {
     window.restoreVocabFromServerData();
-  }
+}
 
   console.log('[renderVocabFill] 완료, 빈칸 수:', pack.vocabFill.items.length);
 };
@@ -5248,12 +5248,12 @@ window.sendLearningLog = async function () {
       if (raw) stu = JSON.parse(raw);
     } catch (e) {
       console.warn('[sendLearningLog] currentStudent 파싱 실패', e);
-    }
+  }
 
     if (!stu) {
       console.warn('[sendLearningLog] 학생 정보 없음 → 로그 전송 스킵');
       return;
-    }
+  }
 
     // ✅ gradeQuiz 에서 저장해 둔 q1ok~q5ok로 레이더 점수 계산
     const rs = window.reportState || {};
@@ -5293,11 +5293,11 @@ window.sendLearningLog = async function () {
       data = await res.json();
     } catch (_) {
       data = {};
-    }
+  }
     console.log('[sendLearningLog] result =', data);
   } catch (e) {
     console.warn('sendLearningLog outer error', e);
-  }
+}
 };
 
 /* ✅ 제출하기 훅: 완료처리 + 로그 전송 */
@@ -5311,11 +5311,11 @@ window.sendLearningLog = async function () {
         const raw = localStorage.getItem('currentStudent');
         if (raw) stu = JSON.parse(raw);
       } catch (e) {}
-    }
+  }
     if (!stu) {
       alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
       return;
-    }
+  }
 
     // 1) 기존 제출 로직(PDF 등) 실행
     if (typeof original === 'function') {
@@ -5326,14 +5326,14 @@ window.sendLearningLog = async function () {
         '단단국어_분석리포트.pdf',
         { withStudentInfo: true }
       );
-    }
+  }
 
     // 2) 완료 메시지
     if (typeof window.showSubmitSuccess === 'function') {
       showSubmitSuccess('분석리포트');
     } else {
       console.log('학습완료 처리됨');
-    }
+  }
 
     // 3) 서버 학습 이력 로그 (레이더 점수 전송)
     if (typeof window.sendLearningLog === 'function') {
@@ -5341,8 +5341,8 @@ window.sendLearningLog = async function () {
         await window.sendLearningLog();
       } catch (e) {
         console.warn('[submitReport] sendLearningLog 실패', e);
-      }
     }
+  }
   };
 })();
 
@@ -5354,6 +5354,6 @@ window.sendLearningLog = async function () {
     const fitKey = `on_people1_${num}`;
     if (window.CONTENTS[srcKey] && !window.CONTENTS[fitKey]) {
       window.CONTENTS[fitKey] = window.CONTENTS[srcKey];
-    }
   }
+}
 })();
