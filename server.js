@@ -19058,6 +19058,29 @@ async function executeAutoTaskForStudent(grade, name, setting) {
   try {
     console.log(`🎯 [${grade} ${name}] 개별 자동과제부여 시작`);
 
+    // 오늘 날짜 (한국 시간 기준)
+    const now = new Date();
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstDate = new Date(now.getTime() + kstOffset);
+    const todayKST = kstDate.toISOString().split('T')[0];
+
+    // 현재 학습실 조회하여 오늘 이미 자동과제를 부여했는지 체크
+    const existingProgress = await UserProgress.findOne({ grade, name });
+    if (existingProgress?.studyRoom?.assignedTasks) {
+      const todayAutoTasks = existingProgress.studyRoom.assignedTasks.filter(task => {
+        if (!task.isAutoAssigned || !task.assignedAt) return false;
+        const taskDate = new Date(task.assignedAt);
+        const taskKST = new Date(taskDate.getTime() + kstOffset);
+        const taskDateStr = taskKST.toISOString().split('T')[0];
+        return taskDateStr === todayKST;
+      });
+
+      if (todayAutoTasks.length >= setting.taskCount * setting.series.length) {
+        console.log(`⏭️ [${grade} ${name}] 오늘(${todayKST}) 이미 자동과제 ${todayAutoTasks.length}개 부여됨. 스킵합니다.`);
+        return;
+      }
+    }
+
     // 해당 학생의 완료된 학습 기록 조회
     const completedLogs = await LearningLog.find({
       grade,
@@ -19276,6 +19299,27 @@ async function executeAutoTaskAssignment() {
           continue;
         }
 
+        // 오늘 이미 자동과제를 부여했는지 체크 (학생별 중복 방지)
+        const userProgress = await UserProgress.findOne({
+          grade: setting.grade,
+          name: setting.name
+        });
+
+        if (userProgress?.studyRoom?.assignedTasks) {
+          const todayAutoTasks = userProgress.studyRoom.assignedTasks.filter(task => {
+            if (!task.isAutoAssigned || !task.assignedAt) return false;
+            const taskDate = new Date(task.assignedAt);
+            const taskKST = new Date(taskDate.getTime() + kstOffset);
+            const taskDateStr = taskKST.toISOString().split('T')[0];
+            return taskDateStr === todayKST;
+          });
+
+          if (todayAutoTasks.length >= setting.taskCount * setting.series.length) {
+            console.log(`⏭️ [${setting.grade} ${setting.name}] 오늘(${todayKST}) 이미 자동과제 ${todayAutoTasks.length}개 부여됨. 스킵합니다.`);
+            continue;
+          }
+        }
+
         console.log(`🔄 [${setting.grade} ${setting.name}] 자동과제 부여 시작 (${setting.taskCount}개)`);
 
         // 해당 학생의 완료된 학습 기록 조회
@@ -19301,12 +19345,7 @@ async function executeAutoTaskAssignment() {
         }
         console.log(`  📊 완료된 단원: ${completedUnits.size}개`);
 
-        // 현재 학습실에 있는 과제 조회
-        const userProgress = await UserProgress.findOne({
-          grade: setting.grade,
-          name: setting.name
-        });
-
+        // userProgress는 이미 위에서 조회했으므로 재사용
         const existingTasks = new Set();
         if (userProgress?.studyRoom?.assignedTasks) {
           for (const task of userProgress.studyRoom.assignedTasks) {
