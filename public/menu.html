@@ -17923,6 +17923,13 @@ ${content}
 
         // 관문 시험을 볼 수 있는 상태인지 확인
         if (data.canTakeGate) {
+          // 이미 팝업이 활성화되어 있으면 중복 표시 방지
+          const gatePopupCheck = document.getElementById('gatePopup');
+          if (gatePopupCheck && gatePopupCheck.classList.contains('active')) {
+            console.log('[Gate Status] 팝업이 이미 활성화됨, 스킵');
+            return;
+          }
+
           // 팝업 표시 (매 접속 시 항상 표시)
           document.getElementById('gateLevel').textContent = data.nextGate;
           document.getElementById('gateCompletedCount').textContent = data.completedUnits;
@@ -17933,6 +17940,11 @@ ${content}
             const gatePopup = document.getElementById('gatePopup');
             const noticePopup = document.getElementById('noticePopup');
 
+            // 이미 관문 팝업이 활성화되어 있으면 스킵
+            if (gatePopup.classList.contains('active')) {
+              return;
+            }
+
             // 공지사항 팝업이 활성화되어 있지 않으면 관문 팝업 표시
             if (!noticePopup || !noticePopup.classList.contains('active')) {
               gatePopup.classList.add('active');
@@ -17940,7 +17952,10 @@ ${content}
               // 공지사항 팝업이 닫힐 때까지 기다림
               const observer = new MutationObserver((mutations) => {
                 if (!noticePopup.classList.contains('active')) {
-                  setTimeout(() => gatePopup.classList.add('active'), 500);
+                  // 관문 팝업이 아직 활성화되지 않은 경우에만 표시
+                  if (!gatePopup.classList.contains('active')) {
+                    setTimeout(() => gatePopup.classList.add('active'), 500);
+                  }
                   observer.disconnect();
                 }
               });
