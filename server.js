@@ -10099,7 +10099,28 @@ app.get("/my-learning", async (req, res) => {
 
         <!-- ✨ Today 나의 AI 학습 기록 섹션 -->
         <div class="today-section">
-          <div class="section-title"><span id="calendarIcon" onclick="openCalendarPopup()" style="cursor:pointer;">📅</span> Today 나의 AI 학습 기록</div>
+          <!-- 주간/일간 토글 버튼 -->
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+            <button id="weeklyToggleBtn" onclick="toggleWeeklyMode()" style="
+              background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+              border: 2px solid rgba(255,255,255,0.4);
+              color: #fff;
+              padding: 10px 20px;
+              border-radius: 25px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              backdrop-filter: blur(10px);
+            ">
+              <span id="weeklyToggleIcon">📅</span>
+              <span id="weeklyToggleText">주간리포트</span>
+            </button>
+          </div>
+          <div class="section-title"><span id="calendarIcon" onclick="openCalendarPopup()" style="cursor:pointer;">📅</span> <span id="sectionTitleText">Today 나의 AI 학습 기록</span></div>
           <p class="section-description" id="todayDescription">오늘 완료한 학습 기록입니다.</p>
 
           <!-- 달력 팝업 -->
@@ -10115,11 +10136,17 @@ app.get("/my-learning", async (req, res) => {
             </div>
           </div>
 
-          <!-- 날짜 네비게이션 -->
-          <div class="date-navigator" style="display:flex; justify-content:center; align-items:center; gap:16px; margin-bottom:16px;">
+          <!-- 날짜 네비게이션 (일간) -->
+          <div id="dailyNavigator" class="date-navigator" style="display:flex; justify-content:center; align-items:center; gap:16px; margin-bottom:16px;">
             <button id="datePrevBtn" onclick="changeDate(-1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❮</button>
             <span id="currentDateDisplay" style="color:#fff; font-size:18px; font-weight:600; min-width:140px; text-align:center;"></span>
             <button id="dateNextBtn" onclick="changeDate(1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❯</button>
+          </div>
+          <!-- 주간 네비게이션 (주간 모드에서만 표시) -->
+          <div id="weeklyNavigator" class="date-navigator" style="display:none; justify-content:center; align-items:center; gap:16px; margin-bottom:16px;">
+            <button id="weekPrevBtn" onclick="changeWeek(-1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❮</button>
+            <span id="currentWeekDisplay" style="color:#fff; font-size:18px; font-weight:600; min-width:280px; text-align:center;"></span>
+            <button id="weekNextBtn" onclick="changeWeek(1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❯</button>
           </div>
 
           <div id="todayTableContainer">
@@ -10128,7 +10155,13 @@ app.get("/my-learning", async (req, res) => {
 
           <!-- 오늘 완료한 단원별 미니 레이더 카드 -->
           <div class="today-radar-section">
-            <div class="today-radar-title">📊 오늘 완료한 단원별 문해력 AI 레이더</div>
+            <div class="today-radar-title" id="radarSectionTitle">📊 오늘 완료한 단원별 문해력 AI 레이더</div>
+            <!-- 주간 레이더 네비게이션 (주간 모드에서만 표시) -->
+            <div id="weeklyRadarNavigator" style="display:none; justify-content:center; align-items:center; gap:16px; margin-bottom:16px;">
+              <button id="weekRadarPrevBtn" onclick="changeWeekRadar(-1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❮</button>
+              <span id="currentWeekRadarDisplay" style="color:#fff; font-size:16px; font-weight:600; min-width:280px; text-align:center;"></span>
+              <button id="weekRadarNextBtn" onclick="changeWeekRadar(1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❯</button>
+            </div>
             <div class="today-radar-slider" id="todayRadarSlider">
               <button class="slider-arrow slider-prev" id="todayRadarPrev" onclick="slideTodayRadar(-1)">❮</button>
               <div class="today-radar-viewport">
@@ -10208,8 +10241,8 @@ app.get("/my-learning", async (req, res) => {
           <!-- 창의활동 내역 섹션 -->
           <div class="record-section creative-section" style="margin-top: 25px;">
             <div class="record-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-              <span style="font-size: 20px;">✍️</span>
-              <span class="section-title" style="color: #fff; font-size: 16px; font-weight: 600;">창의활동 내역</span>
+              <span style="font-size: 20px; line-height: 1;">✍️</span>
+              <span class="section-title" style="color: #fff; font-size: 16px; font-weight: 600; line-height: 1;">창의활동 내역</span>
             </div>
             <p class="section-desc" style="color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 15px;">제출된 창의활동 글쓰기 내역을 확인하세요.</p>
 
@@ -10398,7 +10431,7 @@ app.get("/my-learning", async (req, res) => {
           <div id="aiFeedbackSection" class="ai-feedback-section" style="margin-top: 25px; display: none;">
             <div class="ai-feedback-section-header">
               <span class="ai-feedback-icon">🌟</span>
-              <span class="ai-feedback-section-title">오늘의 학습 분석</span>
+              <span id="aiFeedbackMainTitle" class="ai-feedback-section-title">오늘의 학습 분석</span>
             </div>
             <div class="ai-feedback-loading-box" id="aiFeedbackLoading">
               <div class="ai-feedback-loading">AI 선생님이 학습 데이터를 분석하고 있어요...</div>
@@ -10406,7 +10439,7 @@ app.get("/my-learning", async (req, res) => {
             <div id="aiFeedbackContent" class="ai-feedback-all-content" style="display: none;">
               <!-- 섹션 1: 오늘 학습 요약 -->
               <div class="ai-feedback-item">
-                <div class="ai-feedback-item-title">📚 오늘의 학습 기록</div>
+                <div id="feedbackTitle1" class="ai-feedback-item-title">📚 오늘의 학습 기록</div>
                 <div id="feedbackContent1" class="ai-feedback-item-content"></div>
               </div>
               <!-- 섹션 2: 레이더 차트 -->
@@ -10921,25 +10954,48 @@ app.get("/my-learning", async (req, res) => {
           editAllBtn.style.display = 'inline-block';
         }
 
-        // 통합 AI 피드백 초기화 함수 (페이지 로드 시 호출)
-        async function initAIFeedbacks() {
-          // 데이터 렌더링 완료 대기 (3초)
-          setTimeout(async () => {
+        // 통합 AI 피드백 초기화 함수 (페이지 로드 시 호출, 주간모드 전환 시에도 호출)
+        async function initAIFeedbacks(skipDelay = false) {
+          const runFeedback = async () => {
             const feedbackSection = document.getElementById('aiFeedbackSection');
             const loadingBox = document.getElementById('aiFeedbackLoading');
             const contentBox = document.getElementById('aiFeedbackContent');
+            const mainTitle = document.getElementById('aiFeedbackMainTitle');
+            const title1 = document.getElementById('feedbackTitle1');
 
             if (!feedbackSection) return;
 
             // 피드백 섹션 표시
             feedbackSection.style.display = 'block';
 
-            // ===== 1. 오늘 학습 기록 데이터 상세 수집 =====
+            // 주간/일간 모드에 따른 타이틀 변경
+            if (mainTitle) {
+              mainTitle.textContent = isWeeklyMode ? '주간 학습 분석' : '오늘의 학습 분석';
+            }
+            if (title1) {
+              title1.textContent = isWeeklyMode ? '📚 주간 학습 기록' : '📚 오늘의 학습 기록';
+            }
+
+            // 로딩 표시
+            loadingBox.style.display = 'block';
+            contentBox.style.display = 'none';
+
+            // 주간 날짜 범위 계산
+            let weekDateRange = '';
+            if (isWeeklyMode) {
+              const weekStart = new Date(selectedWeekStart);
+              const weekEnd = getWeekEnd(weekStart);
+              const formatShort = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+              weekDateRange = formatShort(weekStart) + ' (월) ~ ' + formatShort(weekEnd) + ' (일)';
+            }
+
+            // ===== 1. 학습 기록 데이터 상세 수집 =====
             const tableContainer = document.getElementById('todayTableContainer');
-            const hasTableData = tableContainer && tableContainer.innerHTML.trim() !== '' && !tableContainer.innerHTML.includes('오늘 완료한 학습 기록이 없습니다');
+            const noDataMsg = isWeeklyMode ? '해당 주간의 학습 기록이 없습니다' : '오늘 완료한 학습 기록이 없습니다';
+            const hasTableData = tableContainer && tableContainer.innerHTML.trim() !== '' && !tableContainer.innerHTML.includes(noDataMsg);
 
             const rows = document.querySelectorAll('#todayTableContainer tbody tr');
-            const todayData = { completedCount: rows.length, units: [], grades: [], scores: [], fields: [] };
+            const todayData = { completedCount: rows.length, units: [], grades: [], scores: [], fields: [], isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
 
             if (hasTableData && rows.length > 0) {
               rows.forEach(row => {
@@ -10969,7 +11025,7 @@ app.get("/my-learning", async (req, res) => {
             // ===== 2. 레이더 차트 상세 데이터 수집 =====
             const radarWrap = document.getElementById('today-radar-wrap');
             const radarCards = radarWrap ? radarWrap.querySelectorAll('.radar-card') : [];
-            const radarData = { chartCount: radarCards.length, radarScores: [] };
+            const radarData = { chartCount: radarCards.length, radarScores: [], isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
 
             if (radarCards.length > 0) {
               // 각 레이더 카드에서 단원명과 점수 정보 수집
@@ -11016,142 +11072,313 @@ app.get("/my-learning", async (req, res) => {
               }
             }
 
-            // ===== 3. 성장 지수 차트 데이터 수집 =====
-            const growthData = { hasData: false };
-            const growthCanvas = document.getElementById('growthChart');
-            if (growthCanvas && window.Chart) {
-              const chartInstance = Chart.getChart(growthCanvas);
-              if (chartInstance && chartInstance.data) {
-                const labels = chartInstance.data.labels || [];
-                const datasets = chartInstance.data.datasets || [];
-                if (datasets.length > 0 && datasets[0].data) {
-                  const scores = datasets[0].data;
-                  growthData.hasData = true;
-                  growthData.dateCount = labels.length;
-                  growthData.dates = labels.slice(-5).join(', ');
-                  growthData.scores = scores.slice(-5).map(s => s?.toFixed(0) || '-').join(', ');
-                  growthData.latestScore = scores[scores.length - 1]?.toFixed(0) || '-';
-                  growthData.firstScore = scores[0]?.toFixed(0) || '-';
-                  growthData.trend = scores.length >= 2 ?
-                    (scores[scores.length - 1] > scores[0] ? '상승' :
-                     scores[scores.length - 1] < scores[0] ? '하락' : '유지') : '분석중';
+            // ===== 3. 성장 지수 차트 데이터 수집 (allLogs에서 직접 계산) =====
+            // 성장 추이는 여러 날짜의 데이터를 봐야 하므로, 선택 날짜까지의 최근 데이터를 수집
+            const growthData = { hasData: false, isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
+
+            if (typeof allLogs !== 'undefined' && allLogs.length > 0) {
+              // 성장 추이: 선택 날짜까지의 최근 데이터 수집 (그래프와 동일하게)
+              const endDate = isWeeklyMode ? getWeekEnd(new Date(selectedWeekStart)) : new Date(selectedDate);
+              endDate.setHours(23, 59, 59, 999);
+
+              // 선택 날짜까지의 모든 로그를 가져와서 날짜별로 집계
+              const filteredLogs = allLogs.filter(log => {
+                if (!log.timestamp) return false;
+                const logDate = new Date(log.timestamp);
+                return logDate <= endDate;
+              });
+
+              // 날짜 포맷 함수 (1월 4일 형태)
+              const formatDateKr = (d) => {
+                const date = new Date(d);
+                return (date.getMonth() + 1) + '월 ' + date.getDate() + '일';
+              };
+
+              // 날짜별 평균 점수 계산
+              const dateScoreMap = {};
+              filteredLogs.forEach(log => {
+                const dateStr = formatDateKr(log.timestamp);
+                if (!dateScoreMap[dateStr]) {
+                  dateScoreMap[dateStr] = { total: 0, count: 0 };
                 }
+                // 5가지 문해력 지수 평균 계산
+                const indices = [log.literalIndex, log.structuralIndex, log.lexicalIndex, log.inferentialIndex, log.criticalIndex];
+                const validIndices = indices.filter(i => i !== undefined && i !== null);
+                if (validIndices.length > 0) {
+                  const avgIndex = validIndices.reduce((a, b) => a + b, 0) / validIndices.length;
+                  dateScoreMap[dateStr].total += avgIndex;
+                  dateScoreMap[dateStr].count++;
+                }
+              });
+
+              const sortedDates = Object.keys(dateScoreMap).sort((a, b) => {
+                const parseKrDate = (str) => {
+                  const match = str.match(/(\d+)월\s*(\d+)일/);
+                  if (match) return new Date(2025, parseInt(match[1]) - 1, parseInt(match[2]));
+                  return new Date(0);
+                };
+                return parseKrDate(a) - parseKrDate(b);
+              });
+
+              // 최근 5일치만 사용 (그래프와 동일)
+              const recentDates = sortedDates.slice(-5);
+              const recentScores = recentDates.map(d => dateScoreMap[d].total / dateScoreMap[d].count);
+
+              if (recentDates.length > 0) {
+                growthData.hasData = true;
+                growthData.dateCount = recentDates.length;
+                growthData.dates = recentDates.join(', ');
+                growthData.scores = recentScores.map(s => s?.toFixed(0) || '-').join(', ');
+                growthData.latestScore = recentScores[recentScores.length - 1]?.toFixed(0) || '-';
+                growthData.firstScore = recentScores[0]?.toFixed(0) || '-';
+
+                // 가장 높은/낮은 날짜와 점수 찾기
+                let maxIdx = 0, minIdx = 0;
+                recentScores.forEach((s, i) => {
+                  if (s > recentScores[maxIdx]) maxIdx = i;
+                  if (s < recentScores[minIdx]) minIdx = i;
+                });
+                growthData.highestDate = recentDates[maxIdx];
+                growthData.highestScore = recentScores[maxIdx]?.toFixed(0);
+                growthData.lowestDate = recentDates[minIdx];
+                growthData.lowestScore = recentScores[minIdx]?.toFixed(0);
+
+                // 선택한 날짜가 최고/최저인지 확인
+                const selectedDateStr = formatDateKr(selectedDate);
+
+                // 날짜 문자열의 월/일 숫자만 추출해서 비교 (공백 등 포맷 차이 방지)
+                const extractMonthDay = (str) => {
+                  const match = str.match(/(\d+)월\s*(\d+)일/);
+                  return match ? match[1] + '-' + match[2] : str;
+                };
+                const selectedMD = extractMonthDay(selectedDateStr);
+                const highestMD = extractMonthDay(recentDates[maxIdx] || '');
+                const lowestMD = extractMonthDay(recentDates[minIdx] || '');
+
+                growthData.isSelectedDateHighest = (highestMD === selectedMD);
+                growthData.isSelectedDateLowest = (lowestMD === selectedMD);
+
+                console.log('[AI피드백-성장지수] selectedDate원본:', selectedDate, 'selectedDateStr:', selectedDateStr, 'selectedMD:', selectedMD);
+                console.log('[AI피드백-성장지수] lowestDate:', recentDates[minIdx], 'lowestMD:', lowestMD, 'isLowest:', growthData.isSelectedDateLowest);
+                console.log('[AI피드백-성장지수] highestDate:', recentDates[maxIdx], 'highestMD:', highestMD, 'isHighest:', growthData.isSelectedDateHighest);
+
+                growthData.trend = recentScores.length >= 2 ?
+                  (recentScores[recentScores.length - 1] > recentScores[0] ? '상승' :
+                   recentScores[recentScores.length - 1] < recentScores[0] ? '하락' : '유지') : '분석중';
               }
             }
 
-            // ===== 4. 과목별 점수 차트 데이터 수집 =====
-            const subjectData = { hasData: false };
-            const subjectCanvas = document.getElementById('subjectChart');
-            if (subjectCanvas && window.Chart) {
-              const chartInstance = Chart.getChart(subjectCanvas);
-              if (chartInstance && chartInstance.data) {
-                const labels = chartInstance.data.labels || [];
-                const datasets = chartInstance.data.datasets || [];
-                subjectData.hasData = true;
-                subjectData.subjects = [];
+            // ===== 4. 과목별 점수 차트 데이터 수집 (allLogs에서 직접 계산) =====
+            // 성장 지수와 동일하게 선택 날짜까지의 데이터를 수집하고, 날짜별 비교도 제공
+            const subjectData = { hasData: false, isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
 
-                datasets.forEach(ds => {
-                  if (ds.label && ds.data) {
-                    const avgScore = ds.data.reduce((a, b) => a + (b || 0), 0) / ds.data.length;
-                    subjectData.subjects.push({ name: ds.label, avgScore: avgScore.toFixed(0) });
-                  }
+            if (typeof allLogs !== 'undefined' && allLogs.length > 0) {
+              // 선택 날짜까지의 모든 로그를 가져옴 (성장 지수와 동일)
+              const endDate = isWeeklyMode ? getWeekEnd(new Date(selectedWeekStart)) : new Date(selectedDate);
+              endDate.setHours(23, 59, 59, 999);
+
+              const filteredLogs = allLogs.filter(log => {
+                if (!log.timestamp) return false;
+                const logDate = new Date(log.timestamp);
+                return logDate <= endDate;
+              });
+
+              // 단원명에서 과목 추출 함수
+              const getSubject = (unit) => {
+                if (unit.includes('생물')) return '생물';
+                if (unit.includes('지구과학')) return '지구과학';
+                if (unit.includes('물리')) return '물리';
+                if (unit.includes('화학')) return '화학';
+                if (unit.includes('사회')) return '사회';
+                if (unit.includes('지리')) return '지리';
+                if (unit.includes('법')) return '법';
+                if (unit.includes('정치')) return '정치';
+                if (unit.includes('고전')) return '고전문학';
+                if (unit.includes('현대')) return '현대문학';
+                if (unit.includes('세계')) return '세계문학';
+                if (unit.includes('인물')) return '인물';
+                return '기타';
+              };
+
+              // 날짜 포맷 함수 (성장 지수와 동일)
+              const formatDateKr2 = (d) => {
+                const date = new Date(d);
+                return (date.getMonth() + 1) + '월 ' + date.getDate() + '일';
+              };
+
+              // 날짜별 전체 평균 점수 계산 (최고/최저 날짜 판단용)
+              const dateScoreMap2 = {};
+              filteredLogs.forEach(log => {
+                const dateStr = formatDateKr2(log.timestamp);
+                if (!dateScoreMap2[dateStr]) {
+                  dateScoreMap2[dateStr] = { total: 0, count: 0 };
+                }
+                const indices = [log.literalIndex, log.structuralIndex, log.lexicalIndex, log.inferentialIndex, log.criticalIndex];
+                const validIndices = indices.filter(i => i !== undefined && i !== null);
+                if (validIndices.length > 0) {
+                  const avgIndex = validIndices.reduce((a, b) => a + b, 0) / validIndices.length;
+                  dateScoreMap2[dateStr].total += avgIndex;
+                  dateScoreMap2[dateStr].count++;
+                }
+              });
+
+              // 날짜별 평균 계산 및 최고/최저 찾기
+              const sortedDates2 = Object.keys(dateScoreMap2).sort((a, b) => {
+                const parseKrDate = (str) => {
+                  const match = str.match(/(\d+)월\s*(\d+)일/);
+                  if (match) return new Date(2025, parseInt(match[1]) - 1, parseInt(match[2]));
+                  return new Date(0);
+                };
+                return parseKrDate(a) - parseKrDate(b);
+              });
+              const recentDates2 = sortedDates2.slice(-5);
+              const recentScores2 = recentDates2.map(d => dateScoreMap2[d].total / dateScoreMap2[d].count);
+
+              if (recentDates2.length > 0) {
+                // 날짜별 데이터가 있으면 hasData = true (과목이 없어도)
+                subjectData.hasData = true;
+
+                let maxIdx2 = 0, minIdx2 = 0;
+                recentScores2.forEach((s, i) => {
+                  if (s > recentScores2[maxIdx2]) maxIdx2 = i;
+                  if (s < recentScores2[minIdx2]) minIdx2 = i;
                 });
 
-                if (subjectData.subjects.length > 0) {
-                  subjectData.subjects.sort((a, b) => parseFloat(b.avgScore) - parseFloat(a.avgScore));
-                  subjectData.strongSubject = subjectData.subjects[0]?.name + '(' + subjectData.subjects[0]?.avgScore + '점)';
-                  subjectData.weakSubject = subjectData.subjects[subjectData.subjects.length - 1]?.name +
-                    '(' + subjectData.subjects[subjectData.subjects.length - 1]?.avgScore + '점)';
-                  subjectData.subjectList = subjectData.subjects.map(s => s.name + ' ' + s.avgScore + '점').join(', ');
+                // NaN 체크 함수
+                const safeScore = (s) => (s !== undefined && s !== null && !isNaN(s)) ? s.toFixed(0) : '-';
+
+                subjectData.highestDate = recentDates2[maxIdx2];
+                subjectData.highestScore = safeScore(recentScores2[maxIdx2]);
+                subjectData.lowestDate = recentDates2[minIdx2];
+                subjectData.lowestScore = safeScore(recentScores2[minIdx2]);
+                subjectData.dates = recentDates2.join(', ');
+                subjectData.scores = recentScores2.map(s => safeScore(s)).join(', ');
+
+                // 선택한 날짜가 최고/최저인지 확인
+                const selectedDateStr2 = formatDateKr2(selectedDate);
+                const extractMonthDay2 = (str) => {
+                  const match = str.match(/(\d+)월\s*(\d+)일/);
+                  return match ? match[1] + '-' + match[2] : str;
+                };
+                const selectedMD2 = extractMonthDay2(selectedDateStr2);
+                const highestMD2 = extractMonthDay2(recentDates2[maxIdx2] || '');
+                const lowestMD2 = extractMonthDay2(recentDates2[minIdx2] || '');
+
+                subjectData.isSelectedDateHighest = (highestMD2 === selectedMD2);
+                subjectData.isSelectedDateLowest = (lowestMD2 === selectedMD2);
+
+                console.log('[AI피드백-과목별] recentDates2:', recentDates2, 'scores:', recentScores2.map(s => s?.toFixed(0)));
+                console.log('[AI피드백-과목별] selectedMD:', selectedMD2, 'lowestMD:', lowestMD2, 'isLowest:', subjectData.isSelectedDateLowest);
+              }
+
+              // 전체 기간 과목별 점수 집계
+              const subjectScoreMap = {};
+              filteredLogs.forEach(log => {
+                const subject = getSubject(log.unit || '');
+                if (!subjectScoreMap[subject]) {
+                  subjectScoreMap[subject] = { total: 0, count: 0 };
                 }
+                const indices = [log.literalIndex, log.structuralIndex, log.lexicalIndex, log.inferentialIndex, log.criticalIndex];
+                const validIndices = indices.filter(i => i !== undefined && i !== null);
+                if (validIndices.length > 0) {
+                  const avgIndex = validIndices.reduce((a, b) => a + b, 0) / validIndices.length;
+                  subjectScoreMap[subject].total += avgIndex;
+                  subjectScoreMap[subject].count++;
+                }
+              });
+
+              subjectData.subjects = [];
+              Object.keys(subjectScoreMap).forEach(subject => {
+                if (subject !== '기타' && subjectScoreMap[subject].count > 0) {
+                  const avgScore = subjectScoreMap[subject].total / subjectScoreMap[subject].count;
+                  subjectData.subjects.push({ name: subject, avgScore: avgScore.toFixed(0), count: subjectScoreMap[subject].count });
+                }
+              });
+
+              if (subjectData.subjects.length > 0) {
+                subjectData.hasData = true;
+                subjectData.subjects.sort((a, b) => parseFloat(b.avgScore) - parseFloat(a.avgScore));
+                subjectData.strongSubject = subjectData.subjects[0]?.name + '(' + subjectData.subjects[0]?.avgScore + '점)';
+                subjectData.weakSubject = subjectData.subjects[subjectData.subjects.length - 1]?.name +
+                  '(' + subjectData.subjects[subjectData.subjects.length - 1]?.avgScore + '점)';
+                subjectData.subjectList = subjectData.subjects.map(s => s.name + ' ' + s.avgScore + '점').join(', ');
               }
             }
 
-            // ===== 5. 어휘 점수 데이터 수집 (날짜별 어휘 점수 그래프 데이터 활용) =====
-            const vocabScoreData = { hasData: false, items: [], summary: {} };
+            // ===== 5. 어휘 점수 데이터 수집 (테이블에서 직접 가져오기) =====
+            const vocabScoreData = { hasData: false, items: [], summary: {}, isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
 
             // 과목별 평균 점수 설정
             const vocabSubjectAvgScores = {
-              'bio': 78, 'earth': 75, 'physics': 63, 'chem': 68,
-              'soc': 82, 'geo': 79, 'law': 72, 'pol': 74,
-              'classic': 78, 'modern': 84,
-              'world': 85, 'world1': 85, 'world2': 84,
-              'people': 80, 'people1': 80, 'people2': 80, 'person1': 80, 'person2': 80
+              '생물': 78, '지구과학': 75, '물리': 63, '화학': 68,
+              '사회': 82, '지리': 79, '법': 72, '정치': 74,
+              '고전문학': 78, '현대문학': 84,
+              '세계문학': 85, '인물': 80
             };
 
-            // 단원 코드에서 과목 키 추출
-            function getVocabSubjectKey(unitCode) {
-              if (!unitCode || !unitCode.includes('_')) return null;
-              const parts = unitCode.split('_');
-              let subjectKey = parts[0];
-              let numStr = parts[1];
-              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
-                subjectKey = parts[1];
-                numStr = parts[2];
-              }
-              if (subjectKey === 'world') {
-                const num = parseInt(numStr, 10) || 0;
-                if (num > 40) return 'world2';
-              }
-              return subjectKey;
+            // 단원명에서 과목 추출
+            function getVocabSubjectFromName(unitName) {
+              if (unitName.includes('생물')) return '생물';
+              if (unitName.includes('지구과학')) return '지구과학';
+              if (unitName.includes('물리')) return '물리';
+              if (unitName.includes('화학')) return '화학';
+              if (unitName.includes('사회')) return '사회';
+              if (unitName.includes('지리')) return '지리';
+              if (unitName.includes('법')) return '법';
+              if (unitName.includes('정치')) return '정치';
+              if (unitName.includes('고전')) return '고전문학';
+              if (unitName.includes('현대')) return '현대문학';
+              if (unitName.includes('세계')) return '세계문학';
+              if (unitName.includes('인물')) return '인물';
+              return null;
             }
 
-            // allLogs와 UNIT_PROGRESS_MAP에서 어휘 점수 데이터 수집
+            // 테이블에서 어휘 점수 데이터 수집 (rows는 DOM 요소)
             let vocabAboveAvgCount = 0;
             let vocabBelowAvgCount = 0;
             let vocabTotalScore = 0;
             let vocabItemCount = 0;
 
-            // 현재 시리즈의 모든 로그에서 어휘 점수 수집
-            allLogs.forEach(log => {
-              if (!log.unit || log.deleted) return;
-              if (!matchesSeries(log.unit, currentSeries)) return;
+            // 해당 날짜/주간 테이블 행에서 어휘 점수 수집
+            rows.forEach(row => {
+              const cells = row.querySelectorAll('td');
+              if (cells.length >= 7) {
+                const unitName = cells[3]?.textContent?.trim() || '';
+                const vocabScoreText = cells[6]?.textContent?.trim() || '';
 
-              const unitCode = log.unit;
-              // 단원 코드 정규화
-              let normalizedUnitCode = unitCode;
-              const parts = unitCode.split('_');
-              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
-                normalizedUnitCode = parts[1] + '_' + parts[2];
-              }
+                console.log('[AI피드백-어휘] 단원:', unitName, '어휘점수텍스트:', vocabScoreText);
 
-              // UNIT_PROGRESS_MAP에서 어휘 점수 계산
-              let vocabScorePercent = 0;
-              const unitProgress = UNIT_PROGRESS_MAP[unitCode] || UNIT_PROGRESS_MAP[normalizedUnitCode] || {};
-              const vocabState = unitProgress.vocabState;
-
-              if (vocabState && vocabState.vocabData && Array.isArray(vocabState.vocabData)) {
-                const total = vocabState.vocabData.length;
-                const correct = vocabState.vocabData.filter(v => v.isCorrect).length;
-                if (total > 0) {
-                  vocabScorePercent = Math.round((correct / total) * 100);
+                // 어휘 점수 파싱 (예: "100점" -> 100)
+                // replace 방식으로 숫자만 추출 (인코딩 문제 방지)
+                let vocabScorePercent = 0;
+                if (vocabScoreText && vocabScoreText !== '-') {
+                  const numOnly = vocabScoreText.replace(/[^0-9]/g, '');
+                  vocabScorePercent = numOnly ? parseInt(numOnly, 10) : 0;
                 }
-              } else {
-                const reportState = unitProgress.reportState || {};
-                const vocabScoreRatio = reportState.vocabScoreRatio || 0;
-                vocabScorePercent = Math.round(vocabScoreRatio * 100);
-              }
 
-              if (vocabScorePercent > 0) {
-                const subjectKey = getVocabSubjectKey(unitCode);
-                const avgScore = vocabSubjectAvgScores[subjectKey] || 75;
-                const isAboveAvg = vocabScorePercent >= avgScore;
-                const unitName = typeof getVocabSubjectName === 'function' ? getVocabSubjectName(unitCode) : unitCode;
+                console.log('[AI피드백-어휘] 파싱결과:', vocabScorePercent);
 
-                vocabScoreData.items.push({
-                  unit: unitName,
-                  score: vocabScorePercent,
-                  avgScore: avgScore,
-                  isAboveAvg: isAboveAvg
-                });
+                if (vocabScorePercent > 0) {
+                  const subject = getVocabSubjectFromName(unitName);
+                  const avgScore = vocabSubjectAvgScores[subject] || 75;
+                  const isAboveAvg = vocabScorePercent >= avgScore;
 
-                if (isAboveAvg) vocabAboveAvgCount++;
-                else vocabBelowAvgCount++;
+                  vocabScoreData.items.push({
+                    unit: unitName,
+                    score: vocabScorePercent,
+                    avgScore: avgScore,
+                    isAboveAvg: isAboveAvg
+                  });
 
-                vocabTotalScore += vocabScorePercent;
-                vocabItemCount++;
+                  if (isAboveAvg) vocabAboveAvgCount++;
+                  else vocabBelowAvgCount++;
+
+                  vocabTotalScore += vocabScorePercent;
+                  vocabItemCount++;
+                }
               }
             });
+            console.log('[AI피드백-어휘] 최종 vocabItemCount:', vocabItemCount, 'vocabScoreData:', JSON.stringify(vocabScoreData));
 
             if (vocabItemCount > 0) {
               vocabScoreData.hasData = true;
@@ -11182,7 +11409,14 @@ app.get("/my-learning", async (req, res) => {
               console.error('AI 피드백 로드 오류:', err);
               loadingBox.innerHTML = '<div class="ai-feedback-error">AI 피드백을 불러오는 중 오류가 발생했습니다.</div>';
             }
-          }, 3000);
+          };
+
+          // skipDelay가 true면 바로 실행, 아니면 3초 대기 후 실행
+          if (skipDelay) {
+            runFeedback();
+          } else {
+            setTimeout(runFeedback, 3000);
+          }
         }
 
         // 페이지 로드 시 AI 피드백 초기화
@@ -11587,9 +11821,25 @@ app.get("/my-learning", async (req, res) => {
 
           // 차트 업데이트 함수
           function updateIndexTrendChart() {
-            const startIdx = indexTrendCurrentPage;
-            const endIdx = Math.min(startIdx + DAYS_TO_SHOW, indexTrendAllDates.length);
-            const displayDates = indexTrendAllDates.slice(startIdx, endIdx);
+            let displayDates;
+
+            if (isWeeklyMode) {
+              // 주간 모드: selectedWeekStart 기준 월~일 7일
+              const weekStart = new Date(selectedWeekStart);
+              const weekDates = [];
+              for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + i);
+                weekDates.push(toKSTDateString(d));
+              }
+              // 해당 주간 중 데이터가 있는 날짜만 표시
+              displayDates = weekDates.filter(d => indexTrendDateIndexMap[d]);
+            } else {
+              // 일간 모드: 기존 7일 슬라이딩 윈도우
+              const startIdx = indexTrendCurrentPage;
+              const endIdx = Math.min(startIdx + DAYS_TO_SHOW, indexTrendAllDates.length);
+              displayDates = indexTrendAllDates.slice(startIdx, endIdx);
+            }
 
             // 날짜 라벨 포맷 (MM/DD)
             const dateLabels = displayDates.map(d => {
@@ -11598,24 +11848,39 @@ app.get("/my-learning", async (req, res) => {
             });
 
             // 데이터 계산
-            const literalData = displayDates.map(d => calcAvg(indexTrendDateIndexMap[d].literal));
-            const criticalData = displayDates.map(d => calcAvg(indexTrendDateIndexMap[d].critical));
-            const structuralData = displayDates.map(d => calcAvg(indexTrendDateIndexMap[d].structural));
-            const inferentialData = displayDates.map(d => calcAvg(indexTrendDateIndexMap[d].inferential));
-            const lexicalData = displayDates.map(d => calcAvg(indexTrendDateIndexMap[d].lexical));
+            const literalData = displayDates.map(d => indexTrendDateIndexMap[d] ? calcAvg(indexTrendDateIndexMap[d].literal) : null);
+            const criticalData = displayDates.map(d => indexTrendDateIndexMap[d] ? calcAvg(indexTrendDateIndexMap[d].critical) : null);
+            const structuralData = displayDates.map(d => indexTrendDateIndexMap[d] ? calcAvg(indexTrendDateIndexMap[d].structural) : null);
+            const inferentialData = displayDates.map(d => indexTrendDateIndexMap[d] ? calcAvg(indexTrendDateIndexMap[d].inferential) : null);
+            const lexicalData = displayDates.map(d => indexTrendDateIndexMap[d] ? calcAvg(indexTrendDateIndexMap[d].lexical) : null);
 
             // 날짜 범위 표시
-            if (dateRangeSpan && displayDates.length > 0) {
+            if (dateRangeSpan && isWeeklyMode) {
+              // 주간 모드: 통일된 형식 사용 (2026년 1/6 (월) ~ 1/11 (일))
+              const weekStart = new Date(selectedWeekStart);
+              const weekEnd = getWeekEnd(weekStart);
+              const formatShort = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+              dateRangeSpan.textContent = weekStart.getFullYear() + '년 ' + formatShort(weekStart) + ' (월) ~ ' + formatShort(weekEnd) + ' (일)';
+            } else if (dateRangeSpan && displayDates.length > 0) {
+              // 일간 모드: 기존 형식 유지
               const firstLabel = dateLabels[0];
               const lastLabel = dateLabels[dateLabels.length - 1];
               dateRangeSpan.textContent = firstLabel + ' ~ ' + lastLabel;
             }
 
-            // 버튼 활성화 상태
-            if (prevBtn) prevBtn.disabled = indexTrendCurrentPage === 0;
-            if (nextBtn) nextBtn.disabled = endIdx >= indexTrendAllDates.length;
-            if (prevBtn) prevBtn.style.opacity = indexTrendCurrentPage === 0 ? '0.4' : '1';
-            if (nextBtn) nextBtn.style.opacity = endIdx >= indexTrendAllDates.length ? '0.4' : '1';
+            // 버튼 활성화 상태 (주간 모드에서는 숨김)
+            if (isWeeklyMode) {
+              if (prevBtn) prevBtn.style.display = 'none';
+              if (nextBtn) nextBtn.style.display = 'none';
+            } else {
+              if (prevBtn) prevBtn.style.display = '';
+              if (nextBtn) nextBtn.style.display = '';
+              const endIdx = Math.min(indexTrendCurrentPage + DAYS_TO_SHOW, indexTrendAllDates.length);
+              if (prevBtn) prevBtn.disabled = indexTrendCurrentPage === 0;
+              if (nextBtn) nextBtn.disabled = endIdx >= indexTrendAllDates.length;
+              if (prevBtn) prevBtn.style.opacity = indexTrendCurrentPage === 0 ? '0.4' : '1';
+              if (nextBtn) nextBtn.style.opacity = endIdx >= indexTrendAllDates.length ? '0.4' : '1';
+            }
 
             // 기존 차트 제거
             if (indexTrendChartInstance) {
@@ -11866,6 +12131,9 @@ app.get("/my-learning", async (req, res) => {
               }
             };
           }
+
+          // 외부에서 호출 가능하도록 window에 노출
+          window.updateIndexTrendChart = updateIndexTrendChart;
         }
 
         // ===== 날짜별 과목 평균 평점 막대 그래프 렌더링 =====
@@ -12039,31 +12307,62 @@ app.get("/my-learning", async (req, res) => {
 
           // 차트 업데이트 함수 (슬라이딩 윈도우 방식: 하루씩 이동)
           function updateChart() {
+            let visibleDates;
             const daysToShow = 4; // 화면에 보여줄 날짜 수
-            const totalDates = subjectBarDatesWithData.length;
-            const maxStartIdx = Math.max(0, totalDates - daysToShow);
 
-            // 슬라이딩 윈도우 범위 계산 (subjectBarCurrentPage는 시작 인덱스로 사용)
-            const startIdx = Math.min(subjectBarCurrentPage, maxStartIdx);
-            const endIdx = Math.min(startIdx + daysToShow, totalDates);
-            const visibleDates = subjectBarDatesWithData.slice(startIdx, endIdx);
+            if (isWeeklyMode) {
+              // 주간 모드: selectedWeekStart 기준 월~일 7일 중 데이터가 있는 날짜
+              const weekStart = new Date(selectedWeekStart);
+              const weekDates = [];
+              for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + i);
+                weekDates.push(toKSTDateString(d));
+              }
+              // 해당 주간 중 데이터가 있는 날짜만 필터링
+              visibleDates = weekDates.filter(d => dateSubjectScores[d]);
+            } else {
+              // 일간 모드: 기존 슬라이딩 윈도우
+              const totalDates = subjectBarDatesWithData.length;
+              const maxStartIdx = Math.max(0, totalDates - daysToShow);
+              const startIdx = Math.min(subjectBarCurrentPage, maxStartIdx);
+              const endIdx = Math.min(startIdx + daysToShow, totalDates);
+              visibleDates = subjectBarDatesWithData.slice(startIdx, endIdx);
+            }
 
             // 날짜 범위 표시
-            if (dateRangeSpan && visibleDates.length > 0) {
+            if (dateRangeSpan) {
               const formatDate = (d) => {
                 const date = new Date(d);
                 return (date.getMonth() + 1) + '/' + date.getDate();
               };
-              if (visibleDates.length === 1) {
-                dateRangeSpan.textContent = formatDate(visibleDates[0]);
-              } else {
-                dateRangeSpan.textContent = formatDate(visibleDates[0]) + ' ~ ' + formatDate(visibleDates[visibleDates.length - 1]);
+              if (isWeeklyMode) {
+                // 주간 모드: 통일된 형식 사용 (2026년 1/5 (월) ~ 1/11 (일))
+                const weekStart = new Date(selectedWeekStart);
+                const weekEnd = getWeekEnd(weekStart);
+                const formatShort = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+                dateRangeSpan.textContent = weekStart.getFullYear() + '년 ' + formatShort(weekStart) + ' (월) ~ ' + formatShort(weekEnd) + ' (일)';
+              } else if (visibleDates.length > 0) {
+                if (visibleDates.length === 1) {
+                  dateRangeSpan.textContent = formatDate(visibleDates[0]);
+                } else {
+                  dateRangeSpan.textContent = formatDate(visibleDates[0]) + ' ~ ' + formatDate(visibleDates[visibleDates.length - 1]);
+                }
               }
             }
 
-            // 네비게이션 버튼 상태 (하루씩 이동)
-            if (prevBtn) prevBtn.disabled = subjectBarCurrentPage <= 0;
-            if (nextBtn) nextBtn.disabled = subjectBarCurrentPage >= maxStartIdx;
+            // 네비게이션 버튼 상태 (주간 모드에서는 숨김)
+            if (isWeeklyMode) {
+              if (prevBtn) prevBtn.style.display = 'none';
+              if (nextBtn) nextBtn.style.display = 'none';
+            } else {
+              if (prevBtn) prevBtn.style.display = '';
+              if (nextBtn) nextBtn.style.display = '';
+              const totalDates = subjectBarDatesWithData.length;
+              const maxStartIdx = Math.max(0, totalDates - daysToShow);
+              if (prevBtn) prevBtn.disabled = subjectBarCurrentPage <= 0;
+              if (nextBtn) nextBtn.disabled = subjectBarCurrentPage >= maxStartIdx;
+            }
 
             // X축 라벨 (날짜)
             const labels = visibleDates.map(d => {
@@ -12227,11 +12526,173 @@ app.get("/my-learning", async (req, res) => {
           subjectBarCurrentPage = maxStartIdx;
 
           updateChart();
+
+          // 외부에서 호출 가능하도록 window에 노출
+          window.updateSubjectBarChart = updateChart;
         }
 
         // ===== Today 나의 AI 학습 기록 렌더링 (나의 AI 학습 분석 팝업용) =====
         // 날짜 네비게이션을 위한 현재 선택된 날짜 (기본: 오늘)
         let selectedDate = new Date();
+
+        // ===== 주간 모드 관련 변수 =====
+        let isWeeklyMode = false; // 주간 모드 여부
+        let selectedWeekStart = getWeekStart(new Date()); // 현재 주의 월요일
+
+        // 해당 날짜가 속한 주의 월요일을 반환
+        function getWeekStart(date) {
+          const d = new Date(date);
+          const day = d.getDay();
+          const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일 기준
+          return new Date(d.setDate(diff));
+        }
+
+        // 해당 날짜가 속한 주의 일요일을 반환
+        function getWeekEnd(date) {
+          const weekStart = getWeekStart(date);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+          return weekEnd;
+        }
+
+        // 주간 레이더용 별도 주차 변수
+        let selectedWeekRadarStart = getWeekStart(new Date());
+
+        // 주간 레이더 차트 인스턴스 저장 배열
+        let weeklyRadarCharts = [];
+
+        // 주간/일간 모드 토글
+        function toggleWeeklyMode() {
+          isWeeklyMode = !isWeeklyMode;
+          const btn = document.getElementById('weeklyToggleBtn');
+          const iconEl = document.getElementById('weeklyToggleIcon');
+          const textEl = document.getElementById('weeklyToggleText');
+          const titleEl = document.getElementById('sectionTitleText');
+          const descEl = document.getElementById('todayDescription');
+          const dailyNav = document.getElementById('dailyNavigator');
+          const weeklyNav = document.getElementById('weeklyNavigator');
+          const calendarIcon = document.getElementById('calendarIcon');
+          const weeklyRadarNav = document.getElementById('weeklyRadarNavigator');
+          const radarTitle = document.getElementById('radarSectionTitle');
+
+          if (isWeeklyMode) {
+            // 주간 모드로 전환
+            iconEl.textContent = '📆';
+            textEl.textContent = '일간리포트';
+            titleEl.textContent = '이번 주 나의 AI 학습 기록';
+            btn.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(255,165,0,0.2) 100%)';
+            btn.style.borderColor = 'rgba(255,215,0,0.6)';
+            dailyNav.style.display = 'none';
+            weeklyNav.style.display = 'flex';
+            calendarIcon.style.display = 'none';
+            weeklyRadarNav.style.display = 'flex';
+            selectedWeekStart = getWeekStart(selectedDate);
+            selectedWeekRadarStart = new Date(selectedWeekStart);
+            renderWeeklySection();
+            updateWeeklyRadarNav();
+            // AI 학습 분석도 주간 모드로 업데이트
+            if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+          } else {
+            // 일간 모드로 전환
+            iconEl.textContent = '📅';
+            textEl.textContent = '주간리포트';
+            titleEl.textContent = 'Today 나의 AI 학습 기록';
+            btn.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)';
+            btn.style.borderColor = 'rgba(255,255,255,0.4)';
+            dailyNav.style.display = 'flex';
+            weeklyNav.style.display = 'none';
+            calendarIcon.style.display = 'inline';
+            weeklyRadarNav.style.display = 'none';
+            if (radarTitle) radarTitle.textContent = '📊 오늘 완료한 단원별 문해력 AI 레이더';
+            renderTodaySection();
+            // 지수 추이 그래프도 일간 모드로 업데이트
+            if (typeof window.updateIndexTrendChart === 'function') window.updateIndexTrendChart();
+            // 과목 평균 평점 그래프도 일간 모드로 업데이트
+            if (typeof window.updateSubjectBarChart === 'function') window.updateSubjectBarChart();
+            // 어휘 점수 그래프도 일간 모드로 업데이트
+            if (typeof renderVocabScoreChart === 'function') renderVocabScoreChart();
+            // 창의활동 내역도 일간 모드로 업데이트
+            if (typeof renderCreativeTable === 'function') renderCreativeTable();
+            // AI 학습 분석도 일간 모드로 업데이트
+            if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+          }
+        }
+        window.toggleWeeklyMode = toggleWeeklyMode;
+
+        // 주차 변경 함수 (학습 기록 테이블용)
+        function changeWeek(delta) {
+          selectedWeekStart.setDate(selectedWeekStart.getDate() + (delta * 7));
+          renderWeeklySection();
+          // AI 학습 분석도 해당 주차로 업데이트
+          if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+        }
+        window.changeWeek = changeWeek;
+
+        // 주간 레이더 네비게이션 업데이트
+        function updateWeeklyRadarNav() {
+          const weekStart = new Date(selectedWeekRadarStart);
+          const weekEnd = getWeekEnd(weekStart);
+          const weekDisplay = document.getElementById('currentWeekRadarDisplay');
+          const radarTitle = document.getElementById('radarSectionTitle');
+          const nextBtn = document.getElementById('weekRadarNextBtn');
+
+          const formatShort = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+          const formatFull = (d) => d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+
+          if (weekDisplay) {
+            weekDisplay.textContent = formatFull(weekStart) + ' (월) ~ ' + formatShort(weekEnd) + ' (일)';
+          }
+          if (radarTitle) {
+            radarTitle.textContent = '📊 ' + formatShort(weekStart) + '~' + formatShort(weekEnd) + ' 완료한 단원별 문해력 AI 레이더';
+          }
+
+          // 이번 주 이후로는 이동 불가
+          const todayWeekStart = getWeekStart(new Date());
+          if (nextBtn) {
+            if (weekStart >= todayWeekStart) {
+              nextBtn.style.opacity = '0.3';
+              nextBtn.style.cursor = 'not-allowed';
+              nextBtn.disabled = true;
+            } else {
+              nextBtn.style.opacity = '1';
+              nextBtn.style.cursor = 'pointer';
+              nextBtn.disabled = false;
+            }
+          }
+        }
+
+        // 주간 레이더 주차 변경 함수
+        function changeWeekRadar(delta) {
+          selectedWeekRadarStart.setDate(selectedWeekRadarStart.getDate() + (delta * 7));
+          updateWeeklyRadarNav();
+          renderWeeklyRadarOnly();
+        }
+        window.changeWeekRadar = changeWeekRadar;
+
+        // 주간 레이더만 렌더링 (테이블은 그대로)
+        function renderWeeklyRadarOnly() {
+          const weekStart = new Date(selectedWeekRadarStart);
+          const weekEnd = getWeekEnd(weekStart);
+
+          const weekDates = [];
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(weekStart);
+            d.setDate(d.getDate() + i);
+            weekDates.push(toKSTDateString(d));
+          }
+
+          const weeklyLogs = logsForChart.filter(log => {
+            if (!matchesSeries(log.unit, currentSeries)) return false;
+            const logDate = log.completedAt || log.timestamp;
+            if (!logDate) return false;
+            const logDateStr = toKSTDateString(new Date(logDate));
+            return weekDates.includes(logDateStr);
+          });
+
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
+
+          renderWeeklyRadarCards(weeklyLogs, subjectMap);
+        }
 
         // 날짜 변경 함수 (Today 학습 기록 + 어휘 점수 + 창의활동 동기화)
         function changeDate(delta) {
@@ -12252,6 +12713,11 @@ app.get("/my-learning", async (req, res) => {
             if (typeof renderCreativeTable === 'function') {
               renderCreativeTable();
             }
+          }
+
+          // ✅ AI 학습 분석도 해당 날짜로 업데이트
+          if (typeof initAIFeedbacks === 'function') {
+            initAIFeedbacks(true);
           }
         }
         window.changeDate = changeDate;
@@ -12803,6 +13269,460 @@ app.get("/my-learning", async (req, res) => {
           });
         }
 
+        // ===== 주간 리포트 렌더링 함수 =====
+        function renderWeeklySection() {
+          const weekStart = new Date(selectedWeekStart);
+          const weekEnd = getWeekEnd(weekStart);
+
+          // 주간 표시 업데이트
+          const weekDisplay = document.getElementById('currentWeekDisplay');
+          const description = document.getElementById('todayDescription');
+          const nextBtn = document.getElementById('weekNextBtn');
+
+          const formatShort = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+          const formatFull = (d) => d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+
+          if (weekDisplay) {
+            weekDisplay.textContent = formatFull(weekStart) + ' (월) ~ ' + formatShort(weekEnd) + ' (일)';
+          }
+          if (description) {
+            description.textContent = '해당 주간의 학습 기록입니다. (월~일)';
+          }
+
+          // 이번 주 이후로는 이동 불가
+          const todayWeekStart = getWeekStart(new Date());
+          if (nextBtn) {
+            if (weekStart >= todayWeekStart) {
+              nextBtn.style.opacity = '0.3';
+              nextBtn.style.cursor = 'not-allowed';
+              nextBtn.disabled = true;
+            } else {
+              nextBtn.style.opacity = '1';
+              nextBtn.style.cursor = 'pointer';
+              nextBtn.disabled = false;
+            }
+          }
+
+          // 주간 날짜 배열 생성 (월~일)
+          const weekDates = [];
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(weekStart);
+            d.setDate(d.getDate() + i);
+            weekDates.push(toKSTDateString(d));
+          }
+
+          // 주간 학습 기록 필터링
+          const weeklyLogs = logsForChart.filter(log => {
+            if (!matchesSeries(log.unit, currentSeries)) return false;
+            const logDate = log.completedAt || log.timestamp;
+            if (!logDate) return false;
+            const logDateStr = toKSTDateString(new Date(logDate));
+            return weekDates.includes(logDateStr);
+          });
+
+          const tableContainer = document.getElementById('todayTableContainer');
+          const radarWrap = document.getElementById('today-radar-wrap');
+
+          if (!tableContainer || !radarWrap) return;
+
+          if (weeklyLogs.length === 0) {
+            tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#333; padding:20px; font-size:14px;">해당 주간의 학습 기록이 없습니다.</div>';
+            radarWrap.innerHTML = '<div class="no-data-message" style="width:100%; text-align:center; color:#fff; padding:30px; font-size:14px;">해당 주간의 학습 기록이 없습니다.</div>';
+            // 다른 섹션 타이틀도 주간으로 변경
+            updateWeeklySectionTitles(weekStart, weekEnd);
+            // 지수 추이 그래프도 주간 데이터로 업데이트
+            if (typeof window.updateIndexTrendChart === 'function') window.updateIndexTrendChart();
+            // 과목 평균 평점 그래프도 주간 데이터로 업데이트
+            if (typeof window.updateSubjectBarChart === 'function') window.updateSubjectBarChart();
+            // 어휘 점수 그래프도 주간 데이터로 업데이트
+            if (typeof renderVocabScoreChart === 'function') renderVocabScoreChart();
+            // 창의활동 내역도 주간 데이터로 업데이트
+            if (typeof renderCreativeTable === 'function') renderCreativeTable();
+            return;
+          }
+
+          // 과목 매핑
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
+
+          // 분야 매핑
+          const fieldMap = {
+            'bio': '과학분야', 'earth': '과학분야', 'physics': '과학분야', 'chem': '과학분야',
+            'geo': '사회분야', 'soc': '사회분야', 'law': '사회분야', 'pol': '사회분야',
+            'modern': '한국문학', 'classic': '한국문학',
+            'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학',
+            'people': '인물분야', 'people1': '인물분야', 'people2': '인물분야', 'person1': '인물분야', 'person2': '인물분야'
+          };
+
+          const folderMap = {
+            'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
+            'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
+            'modern': 'korlit', 'classic': 'korlit',
+            'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
+            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
+          };
+
+          // 날짜별로 그룹화
+          const logsByDate = {};
+          weekDates.forEach(dateStr => { logsByDate[dateStr] = []; });
+          weeklyLogs.forEach(log => {
+            const logDate = log.completedAt || log.timestamp;
+            const logDateStr = toKSTDateString(new Date(logDate));
+            if (logsByDate[logDateStr]) {
+              logsByDate[logDateStr].push(log);
+            }
+          });
+
+          // 요일 이름
+          const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+          // 테이블 생성 (날짜별로 구분 - 기록이 있는 날만 표시)
+          let tableHtml = '';
+          let displayedCount = 0;
+          weekDates.forEach((dateStr, dayIdx) => {
+            const dayLogs = logsByDate[dateStr];
+
+            // 학습 기록이 없는 날은 스킵
+            if (dayLogs.length === 0) return;
+
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            const dayName = dayNames[dateObj.getDay()];
+            const displayDate = (dateObj.getMonth() + 1) + '/' + dateObj.getDate() + ' (' + dayName + ')';
+
+            // 날짜 헤더 (흰색 배경, 검은 글씨)
+            tableHtml += '<div class="weekly-day-header" style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%); padding: 12px 16px; margin-top: ' + (displayedCount === 0 ? '0' : '15px') + '; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.08); border-bottom: none;">';
+            tableHtml += '<span style="color: #333; font-weight: 700; font-size: 15px;">📅 ' + displayDate + '</span>';
+            tableHtml += '<span style="color: #667eea; font-size: 13px; font-weight: 600;">' + dayLogs.length + '건</span>';
+            tableHtml += '</div>';
+
+            displayedCount++;
+            {
+              tableHtml += '<table class="today-table" style="margin-bottom: 0; border-radius: 0 0 10px 10px; overflow: hidden;"><thead><tr>';
+              tableHtml += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>어휘</th>';
+              tableHtml += '</tr></thead><tbody>';
+
+              dayLogs.forEach((log, idx) => {
+                const unitCode = log.unit || '';
+                let subjectName = '-';
+                let subjectKey = '';
+                let numStr = '';
+                if (unitCode && unitCode.includes('_')) {
+                  const parts = unitCode.split('_');
+                  subjectKey = parts[0];
+                  numStr = parts[1];
+                  if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+                    subjectKey = parts[1];
+                    numStr = parts[2];
+                  }
+                  let number = numStr ? parseInt(numStr, 10) : 0;
+                  if (subjectKey === 'world' && number > 40) {
+                    subjectName = '세계문학2';
+                  } else {
+                    subjectName = subjectMap[subjectKey] || subjectKey;
+                  }
+                }
+
+                let series = 'BRAIN업';
+                if (unitCode.includes('on_')) series = 'BRAIN온';
+                else if (unitCode.includes('fit_')) series = 'BRAIN핏';
+                else if (unitCode.includes('deep_')) series = 'BRAIN딥';
+
+                const field = fieldMap[subjectKey] || '기타';
+
+                let shortName = unitCode;
+                if (unitCode && unitCode.includes('_')) {
+                  const parts = unitCode.split('_');
+                  let sk = parts[0];
+                  let ns = parts[1];
+                  if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+                    sk = parts[1];
+                    ns = parts[2];
+                  }
+                  const subject = subjectMap[sk] || sk;
+                  let number = ns ? parseInt(ns, 10) : 0;
+                  shortName = subject + ' ' + number;
+                }
+
+                const fullTitle = UNIT_TITLES[unitCode];
+                let unitName = fullTitle ? (shortName + ' ' + fullTitle) : shortName;
+
+                const r = log.radar || {};
+                const scores = [r.literal, r.structural, r.lexical, r.inferential, r.critical].filter(s => s != null);
+                const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+
+                // 등급 결정 (일간리포트와 동일)
+                let badgeClass = 'badge-normal';
+                let badgeText = '보통';
+                if (avgScore >= 9) { badgeClass = 'badge-excellent'; badgeText = '우수'; }
+                else if (avgScore >= 8) { badgeClass = 'badge-good'; badgeText = '양호'; }
+                else if (avgScore >= 7) { badgeClass = 'badge-normal'; badgeText = '보통'; }
+                else { badgeClass = 'badge-encourage'; badgeText = '격려'; }
+
+                // 어휘 점수 - UNIT_PROGRESS_MAP에서 vocabState 가져오기 (일간리포트와 동일)
+                let unitProgress = UNIT_PROGRESS_MAP[unitCode] || {};
+                if (!unitProgress.vocabState) {
+                  let normalizedUnitCode = unitCode;
+                  if (unitCode.startsWith('fit_')) normalizedUnitCode = unitCode.substring(4);
+                  else if (unitCode.startsWith('deep_')) normalizedUnitCode = unitCode.substring(5);
+                  else if (unitCode.startsWith('on_')) normalizedUnitCode = unitCode.substring(3);
+                  unitProgress = UNIT_PROGRESS_MAP[normalizedUnitCode] || {};
+                }
+
+                let vocabScorePercent = 0;
+                const vocabState = unitProgress.vocabState;
+                if (vocabState && vocabState.vocabData && Array.isArray(vocabState.vocabData)) {
+                  const total = vocabState.vocabData.length;
+                  const correct = vocabState.vocabData.filter(v => v.isCorrect).length;
+                  if (total > 0) {
+                    vocabScorePercent = Math.round((correct / total) * 100);
+                  }
+                } else {
+                  const reportState = unitProgress.reportState || {};
+                  const vocabScoreRatio = reportState.vocabScoreRatio || 0;
+                  vocabScorePercent = Math.round(vocabScoreRatio * 100);
+                }
+                const vocabScoreDisplay = vocabScorePercent > 0 ? vocabScorePercent + '점' : '-';
+
+                const folder = folderMap[subjectKey] || 'science';
+                const unitUrl = '/BRAINUP/' + folder + '/' + unitCode + '.html';
+                const vocabPageUrl = '/BRAINUP/' + folder + '/' + unitCode + '.html?tab=vocab';
+
+                tableHtml += '<tr onclick="window.open(\\'' + unitUrl + '\\', \\'_blank\\')" style="cursor:pointer;">';
+                tableHtml += '<td>' + (idx + 1) + '</td>';
+                tableHtml += '<td>' + series + '</td>';
+                tableHtml += '<td>' + field + '</td>';
+                tableHtml += '<td>' + unitName + '</td>';
+                tableHtml += '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>';
+                tableHtml += '<td>' + avgScore.toFixed(1) + '</td>';
+                if (vocabScorePercent > 0) {
+                  tableHtml += '<td><span style="color:#3b82f6; font-weight:600;">' + vocabScoreDisplay + '</span></td>';
+                } else {
+                  tableHtml += '<td>' + vocabScoreDisplay + '</td>';
+                }
+                tableHtml += '</tr>';
+              });
+
+              tableHtml += '</tbody></table>';
+            }
+          });
+
+          tableContainer.innerHTML = tableHtml;
+
+          // 주간 레이더 카드 렌더링
+          renderWeeklyRadarCards(weeklyLogs, subjectMap);
+
+          // 레이더 네비게이터 날짜도 테이블과 동기화
+          selectedWeekRadarStart = new Date(weekStart);
+          const weekRadarDisplay = document.getElementById('currentWeekRadarDisplay');
+          const formatShortR = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+          const formatFullR = (d) => d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+          if (weekRadarDisplay) {
+            weekRadarDisplay.textContent = formatFullR(weekStart) + ' (월) ~ ' + formatShortR(weekEnd) + ' (일)';
+          }
+          const radarTitle = document.getElementById('radarSectionTitle');
+          if (radarTitle) {
+            radarTitle.textContent = '📊 ' + formatShortR(weekStart) + '~' + formatShortR(weekEnd) + ' 완료한 단원별 문해력 AI 레이더';
+          }
+
+          // 다른 섹션 타이틀 업데이트
+          updateWeeklySectionTitles(weekStart, weekEnd);
+
+          // 지수 추이 그래프도 주간 데이터로 업데이트
+          if (typeof window.updateIndexTrendChart === 'function') window.updateIndexTrendChart();
+          // 과목 평균 평점 그래프도 주간 데이터로 업데이트
+          if (typeof window.updateSubjectBarChart === 'function') window.updateSubjectBarChart();
+          // 어휘 점수 그래프도 주간 데이터로 업데이트
+          if (typeof renderVocabScoreChart === 'function') renderVocabScoreChart();
+          // 창의활동 내역도 주간 데이터로 업데이트
+          if (typeof renderCreativeTable === 'function') renderCreativeTable();
+        }
+
+        // 주간 레이더 카드 렌더링 (일간과 동일한 방식 - Chart.js 사용)
+        function renderWeeklyRadarCards(logs, subjectMap) {
+          const radarWrap = document.getElementById('today-radar-wrap');
+          const radarGrid = document.getElementById('todayRadarGrid');
+          if (!radarWrap) return;
+
+          // 기존 차트 인스턴스 파괴
+          weeklyRadarCharts.forEach(chart => {
+            if (chart && typeof chart.destroy === 'function') {
+              chart.destroy();
+            }
+          });
+          weeklyRadarCharts = [];
+
+          radarWrap.innerHTML = '';
+          if (radarGrid) radarGrid.innerHTML = '';
+
+          if (logs.length === 0) {
+            radarWrap.innerHTML = '<div class="no-data-message" style="width:100%; text-align:center; color:#fff; padding:30px; font-size:14px;">해당 주간의 학습 기록이 없습니다.</div>';
+            return;
+          }
+
+          const folderMap = {
+            'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
+            'bio': 'science', 'earth': 'science', 'physics': 'science', 'chem': 'science',
+            'modern': 'korlit', 'classic': 'korlit',
+            'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
+            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
+          };
+
+          logs.forEach((log, idx) => {
+            const unitCode = log.unit || '';
+            const r = log.radar || {};
+
+            const scores = [
+              r.literal || 0,
+              r.structural || 0,
+              r.lexical || 0,
+              r.inferential || 0,
+              r.critical || 0
+            ];
+            const avgScore = (scores.reduce((a, b) => a + b, 0) / 5).toFixed(1);
+            const maxScore = Math.max(...scores).toFixed(1);
+            const minScore = Math.min(...scores).toFixed(1);
+
+            let badgeClass = 'badge-normal';
+            let badgeText = '보통';
+            if (avgScore >= 9) { badgeClass = 'badge-excellent'; badgeText = '우수'; }
+            else if (avgScore >= 8) { badgeClass = 'badge-good'; badgeText = '양호'; }
+            else if (avgScore >= 7) { badgeClass = 'badge-normal'; badgeText = '보통'; }
+            else { badgeClass = 'badge-encourage'; badgeText = '격려'; }
+
+            let shortName = unitCode;
+            if (unitCode && unitCode.includes('_')) {
+              const parts = unitCode.split('_');
+              let sk = parts[0];
+              let ns = parts[1];
+              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+                sk = parts[1];
+                ns = parts[2];
+              }
+              const subject = subjectMap[sk] || sk;
+              let number = ns ? parseInt(ns, 10) : 0;
+              shortName = subject + ' ' + number;
+            }
+
+            // 완료 날짜
+            const completedDate = new Date(log.completedAt || log.timestamp);
+            const dateStr = (completedDate.getMonth() + 1) + '/' + completedDate.getDate();
+
+            // 카드 생성 (radar-card 클래스 사용 - 일간과 동일)
+            const card = document.createElement('div');
+            card.className = 'radar-card';
+
+            const header = document.createElement('div');
+            header.className = 'radar-card-header';
+
+            const title = document.createElement('div');
+            title.className = 'radar-card-title';
+            title.textContent = shortName;
+
+            const time = document.createElement('div');
+            time.className = 'radar-card-time';
+            time.textContent = dateStr;
+
+            const badge = document.createElement('div');
+            badge.className = 'score-badge ' + badgeClass;
+            badge.textContent = badgeText;
+
+            header.appendChild(title);
+            header.appendChild(time);
+            header.appendChild(badge);
+            card.appendChild(header);
+
+            const canvas = document.createElement('canvas');
+            canvas.id = 'weeklyRadar' + idx;
+            canvas.width = 130;
+            canvas.height = 130;
+            card.appendChild(canvas);
+
+            const stats = document.createElement('div');
+            stats.className = 'radar-card-stats';
+            stats.innerHTML =
+              '<div class="stat-item">' +
+                '<div class="stat-label">평균</div>' +
+                '<div class="stat-value">' + avgScore + '</div>' +
+              '</div>' +
+              '<div class="stat-item">' +
+                '<div class="stat-label">최고</div>' +
+                '<div class="stat-value">' + maxScore + '</div>' +
+              '</div>' +
+              '<div class="stat-item">' +
+                '<div class="stat-label">최저</div>' +
+                '<div class="stat-value">' + minScore + '</div>' +
+              '</div>';
+            card.appendChild(stats);
+
+            // 카드 클릭 시 해당 단원 페이지로 이동
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', function() {
+              if (unitCode) {
+                const parts = unitCode.split('_');
+                let subject = parts[0] || '';
+                if ((subject === 'fit' || subject === 'deep' || subject === 'on') && parts.length >= 3) {
+                  subject = parts[1];
+                }
+                const folder = folderMap[subject] || 'social';
+                const unitUrl = '/BRAINUP/' + folder + '/' + unitCode + '.html';
+                window.location.href = unitUrl;
+              }
+            });
+
+            radarWrap.appendChild(card);
+
+            // Chart.js 레이더 차트 생성 및 인스턴스 저장
+            const chartInstance = new Chart(canvas.getContext('2d'), {
+              type: 'radar',
+              data: {
+                labels: ['핵심 이해력', '구조 파악력', '어휘 맥락력', '추론·통합력', '비판·적용력'],
+                datasets: [{
+                  data: scores,
+                  backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                  borderColor: '#667eea',
+                  borderWidth: 2,
+                  pointBackgroundColor: '#667eea',
+                  pointBorderColor: '#fff',
+                  pointBorderWidth: 1,
+                  pointRadius: 3
+                }]
+              },
+              options: {
+                responsive: false,
+                layout: {
+                  padding: { top: 10, bottom: 5, left: 5, right: 5 }
+                },
+                plugins: {
+                  legend: { display: false },
+                  datalabels: { display: false }
+                },
+                scales: {
+                  r: {
+                    suggestedMin: 0,
+                    suggestedMax: 10,
+                    ticks: { display: false, stepSize: 2 },
+                    grid: { color: 'rgba(102, 126, 234, 0.1)' },
+                    angleLines: { color: 'rgba(102, 126, 234, 0.1)' },
+                    pointLabels: { display: false }
+                  }
+                }
+              }
+            });
+            weeklyRadarCharts.push(chartInstance);
+          });
+        }
+
+        // 주간 모드일 때 다른 섹션 타이틀 업데이트
+        function updateWeeklySectionTitles(weekStart, weekEnd) {
+          const formatRange = (s, e) => (s.getMonth() + 1) + '/' + s.getDate() + '~' + (e.getMonth() + 1) + '/' + e.getDate();
+          const rangeStr = formatRange(weekStart, weekEnd);
+
+          // 레이더 섹션 타이틀
+          const radarTitle = document.querySelector('.today-radar-title');
+          if (radarTitle && radarTitle.textContent.includes('오늘')) {
+            radarTitle.textContent = '📊 ' + rangeStr + ' 완료한 단원별 문해력 AI 레이더';
+          }
+        }
+
         // 페이지 로드 시 Today 섹션 렌더링
         renderTodaySection();
 
@@ -12872,27 +13792,62 @@ app.get("/my-learning", async (req, res) => {
           const section = document.getElementById('vocabScoreSection');
           const container = document.getElementById('vocabScoreChartContainer');
           const dateDisplay = document.getElementById('vocabScoreDate');
+          const prevBtn = document.getElementById('vocabScorePrev');
+          const nextBtn = document.getElementById('vocabScoreNext');
 
           if (!section || !container) return;
 
-          // 날짜 표시 업데이트
-          const dateStr = vocabScoreCurrentDate.toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            weekday: 'short'
-          });
-          dateDisplay.textContent = dateStr;
+          let dayLogs;
 
-          // 해당 날짜의 학습 기록 필터링 (현재 시리즈만, 어휘점수가 있는 것만)
-          const targetDateStr = toKSTDateString(vocabScoreCurrentDate);
-          const dayLogs = allLogs.filter(log => {
-            if (!log.timestamp || log.deleted) return false;
-            // 현재 시리즈만 필터링 (테이블과 동일하게)
-            if (!matchesSeries(log.unit, currentSeries)) return false;
-            const logDateStr = toKSTDateString(new Date(log.timestamp));
-            return logDateStr === targetDateStr;
-          });
+          if (isWeeklyMode) {
+            // 주간 모드: selectedWeekStart 기준 월~일 7일
+            const weekStart = new Date(selectedWeekStart);
+            const weekEnd = getWeekEnd(weekStart);
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+              const d = new Date(weekStart);
+              d.setDate(d.getDate() + i);
+              weekDates.push(toKSTDateString(d));
+            }
+
+            // 날짜 표시 업데이트 (주간 범위)
+            const formatShort = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+            dateDisplay.textContent = weekStart.getFullYear() + '년 ' + formatShort(weekStart) + ' (월) ~ ' + formatShort(weekEnd) + ' (일)';
+
+            // 네비게이션 버튼 숨김
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+
+            // 해당 주간의 학습 기록 필터링
+            dayLogs = allLogs.filter(log => {
+              if (!log.timestamp || log.deleted) return false;
+              if (!matchesSeries(log.unit, currentSeries)) return false;
+              const logDateStr = toKSTDateString(new Date(log.timestamp));
+              return weekDates.includes(logDateStr);
+            });
+          } else {
+            // 일간 모드: 기존 방식
+            const dateStr = vocabScoreCurrentDate.toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              weekday: 'short'
+            });
+            dateDisplay.textContent = dateStr;
+
+            // 네비게이션 버튼 표시
+            if (prevBtn) prevBtn.style.display = '';
+            if (nextBtn) nextBtn.style.display = '';
+
+            // 해당 날짜의 학습 기록 필터링
+            const targetDateStr = toKSTDateString(vocabScoreCurrentDate);
+            dayLogs = allLogs.filter(log => {
+              if (!log.timestamp || log.deleted) return false;
+              if (!matchesSeries(log.unit, currentSeries)) return false;
+              const logDateStr = toKSTDateString(new Date(log.timestamp));
+              return logDateStr === targetDateStr;
+            });
+          }
 
           // 어휘점수가 있는 로그만 필터
           const vocabLogs = dayLogs.filter(log => {
@@ -12903,7 +13858,8 @@ app.get("/my-learning", async (req, res) => {
 
           // 데이터가 없으면 빈 상태 표시
           if (dayLogs.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">해당 날짜의 학습 기록이 없습니다.</div>';
+            const emptyMsg = isWeeklyMode ? '해당 주간의 학습 기록이 없습니다.' : '해당 날짜의 학습 기록이 없습니다.';
+            container.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">' + emptyMsg + '</div>';
             section.style.display = 'block';
             return;
           }
@@ -13175,20 +14131,50 @@ app.get("/my-learning", async (req, res) => {
         async function renderCreativeTable() {
           const dateLabel = document.getElementById('creativeDate');
           const tbody = document.getElementById('creativeTableBody');
+          const prevBtn = document.getElementById('creativePrev');
+          const nextBtn = document.getElementById('creativeNext');
           if (!dateLabel || !tbody) {
             console.log('[renderCreativeTable] 요소 없음');
             return;
           }
 
-          console.log('[renderCreativeTable] 시작:', pageGrade, pageName);
+          console.log('[renderCreativeTable] 시작:', pageGrade, pageName, '주간모드:', isWeeklyMode);
+
+          // 주간 모드일 때 네비게이션 버튼 숨김
+          if (isWeeklyMode) {
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+          } else {
+            if (prevBtn) prevBtn.style.display = 'flex';
+            if (nextBtn) nextBtn.style.display = 'flex';
+          }
 
           // 날짜 표시
-          const year = creativeCurrentDate.getFullYear();
-          const month = creativeCurrentDate.getMonth() + 1;
-          const date = creativeCurrentDate.getDate();
-          const days = ['일', '월', '화', '수', '목', '금', '토'];
-          const dayName = days[creativeCurrentDate.getDay()];
-          dateLabel.textContent = year + '년 ' + month + '월 ' + date + '일 ' + dayName;
+          let filteredData = [];
+          let weekDates = [];
+
+          if (isWeeklyMode) {
+            // 주간 모드: 주간 범위 표시
+            const weekStart = new Date(selectedWeekStart);
+            const weekEnd = getWeekEnd(weekStart);
+            const formatShort = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+            dateLabel.textContent = weekStart.getFullYear() + '년 ' + formatShort(weekStart) + ' (월) ~ ' + formatShort(weekEnd) + ' (일)';
+
+            // 주간 날짜 배열 생성
+            for (let i = 0; i < 7; i++) {
+              const d = new Date(weekStart);
+              d.setDate(d.getDate() + i);
+              weekDates.push(toKSTDateString(d));
+            }
+          } else {
+            // 일간 모드: 기존 방식
+            const year = creativeCurrentDate.getFullYear();
+            const month = creativeCurrentDate.getMonth() + 1;
+            const date = creativeCurrentDate.getDate();
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayName = days[creativeCurrentDate.getDay()];
+            dateLabel.textContent = year + '년 ' + month + '월 ' + date + '일 ' + dayName;
+          }
 
           // 항상 서버에서 최신 데이터 가져오기
           try {
@@ -13216,25 +14202,46 @@ app.get("/my-learning", async (req, res) => {
             return 'BRAIN업'; // 접두사 없으면 브레인업
           }
 
-          // 선택한 날짜에 해당하는 데이터 필터링
-          const selectedDateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(date).padStart(2, '0');
-          const filteredData = creativeDataCache.filter(item => {
-            if (!item.submittedAt) return false;
-            const itemDate = new Date(item.submittedAt);
-            const itemDateStr = itemDate.getFullYear() + '-' + String(itemDate.getMonth() + 1).padStart(2, '0') + '-' + String(itemDate.getDate()).padStart(2, '0');
-            if (itemDateStr !== selectedDateStr) return false;
+          // 데이터 필터링
+          if (isWeeklyMode) {
+            // 주간 모드: 해당 주간의 데이터 필터링
+            filteredData = creativeDataCache.filter(item => {
+              if (!item.submittedAt) return false;
+              const itemDateStr = toKSTDateString(new Date(item.submittedAt));
+              if (!weekDates.includes(itemDateStr)) return false;
 
-            // 시리즈 필터링 (currentSelectedSeries가 'all'이 아니면 해당 시리즈만)
-            if (currentSelectedSeries && currentSelectedSeries !== 'all') {
-              const itemSeries = getSeriesFromUnit(item.unit);
-              return itemSeries === currentSelectedSeries;
-            }
-            return true;
-          });
+              // 시리즈 필터링
+              if (currentSelectedSeries && currentSelectedSeries !== 'all') {
+                const itemSeries = getSeriesFromUnit(item.unit);
+                return itemSeries === currentSelectedSeries;
+              }
+              return true;
+            });
+          } else {
+            // 일간 모드: 선택한 날짜에 해당하는 데이터 필터링
+            const year = creativeCurrentDate.getFullYear();
+            const month = creativeCurrentDate.getMonth() + 1;
+            const date = creativeCurrentDate.getDate();
+            const selectedDateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(date).padStart(2, '0');
+            filteredData = creativeDataCache.filter(item => {
+              if (!item.submittedAt) return false;
+              const itemDate = new Date(item.submittedAt);
+              const itemDateStr = itemDate.getFullYear() + '-' + String(itemDate.getMonth() + 1).padStart(2, '0') + '-' + String(itemDate.getDate()).padStart(2, '0');
+              if (itemDateStr !== selectedDateStr) return false;
+
+              // 시리즈 필터링 (currentSelectedSeries가 'all'이 아니면 해당 시리즈만)
+              if (currentSelectedSeries && currentSelectedSeries !== 'all') {
+                const itemSeries = getSeriesFromUnit(item.unit);
+                return itemSeries === currentSelectedSeries;
+              }
+              return true;
+            });
+          }
 
           // 테이블 렌더링
+          const emptyMsg = isWeeklyMode ? '해당 주간에 제출된 창의활동이 없습니다.' : '해당 날짜에 제출된 창의활동이 없습니다.';
           if (filteredData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="creative-empty">해당 날짜에 제출된 창의활동이 없습니다.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="creative-empty">' + emptyMsg + '</td></tr>';
             return;
           }
 
@@ -13437,19 +14444,42 @@ app.get("/my-learning", async (req, res) => {
           grid.innerHTML = '';
           todayGridCharts = [];
 
-          const todayStr = new Date().toISOString().split('T')[0];
-          const todayLogs = logsForChart.filter(log => {
-            // 현재 시리즈만 필터링 (동적)
-            if (!matchesSeries(log.unit, currentSeries)) return false;
-            const logDate = log.timestamp || log.createdAt;
-            if (!logDate) return false;
-            return new Date(logDate).toISOString().split('T')[0] === todayStr;
-          });
+          let filteredLogs;
 
-          if (todayLogs.length === 0) {
-            grid.innerHTML = '<div class="today-empty-cards">오늘 완료한 학습 기록이 없습니다.</div>';
+          if (isWeeklyMode) {
+            // 주간 모드: selectedWeekRadarStart 기준으로 주간 데이터 필터링
+            const weekStart = new Date(selectedWeekRadarStart);
+            const weekEnd = getWeekEnd(weekStart);
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+              const d = new Date(weekStart);
+              d.setDate(d.getDate() + i);
+              weekDates.push(toKSTDateString(d));
+            }
+            filteredLogs = logsForChart.filter(log => {
+              if (!matchesSeries(log.unit, currentSeries)) return false;
+              const logDate = log.completedAt || log.timestamp;
+              if (!logDate) return false;
+              const logDateStr = toKSTDateString(new Date(logDate));
+              return weekDates.includes(logDateStr);
+            });
+          } else {
+            // 일간 모드: 선택된 날짜 기준
+            const selectedDateStr = toKSTDateString(selectedDate);
+            filteredLogs = logsForChart.filter(log => {
+              if (!matchesSeries(log.unit, currentSeries)) return false;
+              const logDate = log.completedAt || log.timestamp;
+              if (!logDate) return false;
+              return toKSTDateString(new Date(logDate)) === selectedDateStr;
+            });
+          }
+
+          if (filteredLogs.length === 0) {
+            grid.innerHTML = '<div class="today-empty-cards">' + (isWeeklyMode ? '해당 주간의 학습 기록이 없습니다.' : '해당 날짜의 학습 기록이 없습니다.') + '</div>';
             return;
           }
+
+          const todayLogs = filteredLogs;
 
           const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
 
@@ -23235,22 +24265,33 @@ app.post("/api/ai-learning-feedback", async (req, res) => {
     console.log(`🤖 [AI 피드백] ${grade} ${name} - ${section} 섹션 피드백 생성 요청`);
 
     // 섹션별 프롬프트 생성
+    // 이름에서 성을 제거하고 이름만 추출 (예: "안유빈" -> "유빈", "김철수" -> "철수")
+    const friendlyName = name && name.length >= 2 ? name.slice(1) : name;
+
     let systemPrompt = `당신은 초등학생과 중학생을 위한 따뜻하고 격려하는 교육 피드백 전문가입니다.
 학생의 학습 데이터를 분석하여 친근하고 긍정적인 피드백을 제공합니다.
 
 [필수 규칙]
-- 반말체를 사용하여 친근하게 말합니다 (예: "정말 잘했어!", "대단해!")
+- 반말체를 사용하여 친근하게 말합니다
+- 학생 이름을 부를 때는 성을 빼고 이름만 부릅니다 (예: "안유빈" 학생이면 "유빈아"라고 부름, "김철수" 학생이면 "철수야"라고 부름)
 - 이모지를 문장 중간이나 끝에 적절히 1-2개 사용합니다
-- 구체적인 칭찬과 격려를 포함합니다
 - 앞으로의 성장 가능성을 언급합니다
+
+[중요: 등급별 피드백 톤 조절]
+등급은 점수에 따라 다음과 같이 분류됩니다:
+- "탁월" (10점): 최고 등급! 정말 대단하다고 칭찬해주세요.
+- "우수" (9점): 매우 잘했다고 칭찬해주세요.
+- "양호" (8점): 잘하고 있다고 칭찬하고, 조금만 더 노력하면 우수해질 수 있다고 격려해주세요.
+- "보통" (7점): 괜찮은 수준이지만, 더 잘할 수 있다고 응원해주세요.
+- "격려" (6점): 가장 낮은 등급입니다. "잘했다"라고 하지 마세요! 대신 "힘들었을 텐데 끝까지 풀어본 것만으로도 대견해", "다음엔 더 잘할 수 있을 거야", "포기하지 않고 도전한 게 중요해"처럼 진심으로 격려해주세요. 부족한 점을 인정하되 따뜻하게 응원하는 톤으로 작성하세요.
 
 [중요: 반드시 5줄로 작성]
 피드백은 반드시 5줄(5문장)으로 작성해야 합니다.
 각 줄은 줄바꿈(\\n)으로 구분합니다.
 예시:
-1줄: 오늘 학습에 대한 칭찬
-2줄: 구체적인 성과 언급
-3줄: 잘한 점 강조
+1줄: 학습에 대한 총평 (등급에 맞게)
+2줄: 구체적인 성과 또는 노력 언급
+3줄: 잘한 점 또는 개선 가능한 점
 4줄: 격려와 응원
 5줄: 앞으로의 기대`;
 
@@ -23258,7 +24299,9 @@ app.post("/api/ai-learning-feedback", async (req, res) => {
 
     switch (section) {
       case "today_summary":
-        userPrompt = `다음은 ${grade} ${name} 학생의 오늘 학습 기록입니다.
+        const periodText1 = data.isWeeklyMode ? `이번 주 (${data.weekDateRange || ''})` : '오늘';
+        const sectionText1 = data.isWeeklyMode ? '주간 나의 AI 학습 기록' : '오늘 나의 AI 학습 기록';
+        userPrompt = `다음은 ${grade} ${name} 학생의 ${periodText1} 학습 기록입니다.
 
 학습 데이터:
 - 총 학습 건수: ${data.completedCount || 0}건
@@ -23267,13 +24310,15 @@ app.post("/api/ai-learning-feedback", async (req, res) => {
 - 학습 영역: ${data.fieldsSummary || "없음"}
 - 평균 점수: ${data.avgScore || "측정 중"}
 
-이 데이터를 바탕으로 "오늘 나의 AI 학습 기록" 섹션에 대한 따뜻한 피드백을 작성해주세요.
-학생이 오늘 열심히 공부한 것을 칭찬하고, 구체적인 단원명이나 성과를 언급하며 격려해주세요.
+이 데이터를 바탕으로 "${sectionText1}" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+학생이 ${periodText1} 열심히 공부한 것을 칭찬하고, 구체적인 단원명이나 성과를 언급하며 격려해주세요.
 ${data.completedCount > 0 ? `특히 "${data.units?.[0] || ''}"과 같은 단원을 완료한 점을 칭찬해주세요.` : ''}`;
         break;
 
       case "radar_chart":
-        userPrompt = `다음은 ${grade} ${name} 학생의 오늘 완료한 단원별 문해력 AI 레이더 데이터입니다.
+        const periodText2 = data.isWeeklyMode ? `이번 주 (${data.weekDateRange || ''})` : '오늘';
+        const sectionText2 = data.isWeeklyMode ? '주간 완료한 단원별 문해력 AI 레이더' : '오늘 완료한 단원별 문해력 AI 레이더';
+        userPrompt = `다음은 ${grade} ${name} 학생의 ${periodText2} 완료한 단원별 문해력 AI 레이더 데이터입니다.
 
 레이더 데이터:
 - 완료한 단원 수: ${data.chartCount || 0}개
@@ -23286,44 +24331,85 @@ ${data.completedCount > 0 ? `특히 "${data.units?.[0] || ''}"과 같은 단원�
 - 가장 강한 영역: ${data.strongestArea || "-"}
 - 보완이 필요한 영역: ${data.weakestArea || "-"}
 
-이 데이터를 바탕으로 "오늘 완료한 단원별 문해력 AI 레이더" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+이 데이터를 바탕으로 "${sectionText2}" 섹션에 대한 따뜻한 피드백을 작성해주세요.
 강한 영역을 구체적으로 칭찬하고, 보완이 필요한 영역은 성장 가능성으로 언급해주세요.`;
         break;
 
       case "growth_trend":
-        userPrompt = `다음은 ${grade} ${name} 학생의 날짜별 문해력 성장 지수 변화 데이터입니다.
+        if (!data.hasData) {
+          return res.json({ ok: true, feedback: "아직 학습 기록이 없어서 성장 지수를 분석할 수 없어요. 학습을 시작하면 여기에서 성장 그래프를 확인할 수 있을 거야! 화이팅!" });
+        }
+        const periodText3 = data.isWeeklyMode ? `이번 주 (${data.weekDateRange || ''})` : '최근';
+        const sectionText3 = data.isWeeklyMode ? '주간 문해력 성장 지수 변화' : '날짜별 문해력 성장 지수 변화';
+
+        // 선택한 날짜 기준 피드백 방향 결정
+        let growthFeedbackDirection = '';
+        if (data.isSelectedDateLowest) {
+          growthFeedbackDirection = `오늘(${data.lowestDate})은 최근 중 가장 낮은 점수(${data.lowestScore}점)를 받은 날이에요. 하지만 "잘했다"고 하지 마세요! 대신 "오늘은 조금 힘들었나 보네", "다음엔 분명 더 잘할 수 있어", "포기하지 않고 학습한 것 자체가 대단해"처럼 진심으로 격려해주세요. 가장 높았던 ${data.highestDate}(${data.highestScore}점)처럼 다시 올라갈 수 있다고 응원해주세요.`;
+        } else if (data.isSelectedDateHighest) {
+          growthFeedbackDirection = `오늘(${data.highestDate})은 최근 중 가장 높은 점수(${data.highestScore}점)를 받은 날이에요! 정말 대단하다고 칭찬해주세요. 꾸준히 노력한 결과라고 강조해주세요.`;
+        } else {
+          growthFeedbackDirection = `가장 높은 점수를 받은 날(${data.highestDate}, ${data.highestScore}점)을 칭찬하고, 가장 낮은 점수를 받은 날(${data.lowestDate}, ${data.lowestScore}점)은 다음에 더 잘할 수 있다고 격려해주세요.`;
+        }
+
+        userPrompt = `다음은 ${grade} ${name} 학생의 ${sectionText3} 데이터입니다.
 
 성장 추이:
 - 분석된 날짜 수: ${data.dateCount || 0}일
-- 최근 날짜: ${data.dates || "-"}
+- ${data.isWeeklyMode ? '주간' : '최근'} 날짜: ${data.dates || "-"}
 - 점수 변화: ${data.scores || "-"}
 - 첫 점수 → 최근 점수: ${data.firstScore || "-"}점 → ${data.latestScore || "-"}점
+- 가장 높은 점수: ${data.highestDate || "-"} ${data.highestScore || "-"}점
+- 가장 낮은 점수: ${data.lowestDate || "-"} ${data.lowestScore || "-"}점
 - 전체 추세: ${data.trend || "분석 중"} 추세
 
-이 데이터를 바탕으로 "날짜별 문해력 성장 지수 변화" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+이 데이터를 바탕으로 "${sectionText3}" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+${growthFeedbackDirection}
 ${data.trend === '상승' ? '점수가 올라가는 추세를 칭찬하고 계속 성장 중임을 강조해주세요.' :
   data.trend === '하락' ? '그래프의 오르내림은 자연스러운 학습 과정이며, 곧 다시 올라갈 수 있다고 격려해주세요.' :
   '꾸준히 안정적인 실력을 유지하고 있다고 칭찬해주세요.'}`;
         break;
 
       case "subject_scores":
-        userPrompt = `다음은 ${grade} ${name} 학생의 날짜별 과목 평균 평점 데이터입니다.
+        if (!data.hasData) {
+          return res.json({ ok: true, feedback: "아직 과목별 점수 기록이 없어요. 학습을 시작하면 여기에서 과목별 분석을 확인할 수 있을 거야! 화이팅!" });
+        }
+        const periodText4 = data.isWeeklyMode ? `이번 주 (${data.weekDateRange || ''})` : '최근';
+        const sectionText4 = data.isWeeklyMode ? '주간 과목 평균 평점' : '날짜별 과목 평균 평점';
 
-과목별 평점:
-- 과목별 평균: ${data.subjectList || "분석 중"}
-- 가장 강한 과목: ${data.strongSubject || "-"}
-- 보완이 필요한 과목: ${data.weakSubject || "-"}
+        // 선택한 날짜 기준 피드백 방향 결정 (성장 지수와 동일)
+        let subjectFeedbackDirection = '';
+        if (data.isSelectedDateLowest) {
+          subjectFeedbackDirection = `오늘(${data.lowestDate})은 최근 중 가장 낮은 점수(${data.lowestScore}점)를 받은 날이에요. "잘했다"고 하지 말고, "오늘은 조금 힘들었나 보네", "다음엔 분명 더 잘할 수 있어", "포기하지 않고 학습한 것 자체가 대단해"처럼 진심으로 격려해주세요.`;
+        } else if (data.isSelectedDateHighest) {
+          subjectFeedbackDirection = `오늘(${data.highestDate})은 최근 중 가장 높은 점수(${data.highestScore}점)를 받은 날이에요! 정말 대단하다고 칭찬해주세요.`;
+        } else {
+          subjectFeedbackDirection = `가장 높은 점수를 받은 날(${data.highestDate}, ${data.highestScore}점)을 칭찬하고, 가장 낮은 점수를 받은 날(${data.lowestDate}, ${data.lowestScore}점)은 다음에 더 잘할 수 있다고 격려해주세요.`;
+        }
 
-이 데이터를 바탕으로 "날짜별 과목 평균 평점" 섹션에 대한 따뜻한 피드백을 작성해주세요.
-강한 과목을 구체적으로 칭찬하고, 보완이 필요한 과목은 성장 가능성으로 언급해주세요.
-${data.strongSubject ? `특히 ${data.strongSubject}에서 뛰어난 점을 강조해주세요.` : ''}`;
+        userPrompt = `다음은 ${grade} ${name} 학생의 ${sectionText4} 데이터입니다.
+
+날짜별/과목별 평점:
+- 분석된 날짜: ${data.dates || "-"}
+- 날짜별 점수: ${data.scores || "-"}
+- 가장 높은 점수 날짜: ${data.highestDate || "-"} (${data.highestScore || "-"}점)
+- 가장 낮은 점수 날짜: ${data.lowestDate || "-"} (${data.lowestScore || "-"}점)
+${data.subjectList ? `- 과목별 평균: ${data.subjectList}` : ''}
+${data.strongSubject ? `- 가장 강한 과목: ${data.strongSubject}` : ''}
+${data.weakSubject ? `- 보완이 필요한 과목: ${data.weakSubject}` : ''}
+
+이 데이터를 바탕으로 "${sectionText4}" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+${subjectFeedbackDirection}
+${data.strongSubject ? `가장 강한 과목(${data.strongSubject})을 구체적으로 칭찬하고, 보완이 필요한 과목(${data.weakSubject || ''})은 조금만 노력하면 더 좋은 점수를 받을 수 있다고 격려해주세요.` : '날짜별 점수 변화를 분석하여 피드백을 작성해주세요.'}`;
         break;
 
       case "vocab_scores":
         if (!data.hasData) {
           return res.json({ ok: true, feedback: "아직 어휘 퀴즈 점수 기록이 없어요. 본문 학습 후 어휘 퀴즈를 풀어보면 여기에 분석 결과가 나타날 거예요! 화이팅!" });
         }
-        userPrompt = `다음은 ${grade} ${name} 학생의 어휘 퀴즈 점수 데이터입니다.
+        const periodText5 = data.isWeeklyMode ? `이번 주 (${data.weekDateRange || ''})` : '전체';
+        const sectionText5 = data.isWeeklyMode ? '주간 어휘 점수 분석' : '어휘 점수 분석';
+        userPrompt = `다음은 ${grade} ${name} 학생의 ${periodText5} 어휘 퀴즈 점수 데이터입니다.
 
 어휘 점수 현황:
 - 총 어휘 퀴즈 개수: ${data.summary?.totalCount || 0}개
@@ -23333,7 +24419,7 @@ ${data.strongSubject ? `특히 ${data.strongSubject}에서 뛰어난 점을 강�
 - 평균 이상 비율: ${data.summary?.aboveAvgPercent || 0}%
 - 단원별 점수: ${data.summary?.itemsList || "없음"}
 
-이 데이터를 바탕으로 "어휘 점수 분석" 섹션에 대한 따뜻한 피드백을 작성해주세요.
+이 데이터를 바탕으로 "${sectionText5}" 섹션에 대한 따뜻한 피드백을 작성해주세요.
 ${data.summary?.aboveAvgPercent >= 70 ? '평균 이상인 단원이 많으니 어휘력이 뛰어나다고 칭찬해주세요!' :
   data.summary?.aboveAvgPercent >= 50 ? '균형 잡힌 어휘 실력을 칭찬하고, 조금만 더 노력하면 더 좋아질 수 있다고 격려해주세요.' :
   '어휘 학습의 중요성을 언급하며, 꾸준히 학습하면 빠르게 성장할 수 있다고 응원해주세요.'}
