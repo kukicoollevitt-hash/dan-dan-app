@@ -12566,6 +12566,9 @@ app.get("/my-learning", async (req, res) => {
         // 주간 레이더 차트 인스턴스 저장 배열
         let weeklyRadarCharts = [];
 
+        // 전체 로그 데이터 (성장 지수 차트 등에서 사용)
+        let allLogs = [];
+
         // URL 파라미터 업데이트 함수 (주간 모드 공유용)
         function updateWeeklyUrlParams() {
           const url = new URL(window.location.href);
@@ -15907,7 +15910,7 @@ app.get("/my-learning", async (req, res) => {
           currentSelectedSeries = 'BRAIN온';
         }
 
-        const allLogs = logsForChart;
+        allLogs = logsForChart;
 
         // 어휘 점수 차트 초기 렌더링 (allLogs 초기화 후)
         renderVocabScoreChart();
