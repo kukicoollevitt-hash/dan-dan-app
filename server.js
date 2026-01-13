@@ -12536,8 +12536,13 @@ app.get("/my-learning", async (req, res) => {
         let selectedDate = new Date();
 
         // ===== 주간 모드 관련 변수 =====
-        let isWeeklyMode = false; // 주간 모드 여부
-        let selectedWeekStart = getWeekStart(new Date()); // 현재 주의 월요일
+        // URL 파라미터에서 주간 모드 정보 읽기
+        const weeklyUrlParams = new URLSearchParams(window.location.search);
+        const weeklyParamValue = weeklyUrlParams.get('weekly');
+        const weekStartParam = weeklyUrlParams.get('weekStart');
+
+        let isWeeklyMode = (weeklyParamValue === 'true'); // URL 파라미터로 주간 모드 여부 결정
+        let selectedWeekStart = weekStartParam ? new Date(weekStartParam) : getWeekStart(new Date()); // URL 파라미터 또는 현재 주의 월요일
 
         // 해당 날짜가 속한 주의 월요일을 반환
         function getWeekStart(date) {
@@ -12560,6 +12565,54 @@ app.get("/my-learning", async (req, res) => {
 
         // 주간 레이더 차트 인스턴스 저장 배열
         let weeklyRadarCharts = [];
+
+        // URL 파라미터 업데이트 함수 (주간 모드 공유용)
+        function updateWeeklyUrlParams() {
+          const url = new URL(window.location.href);
+          if (isWeeklyMode) {
+            url.searchParams.set('weekly', 'true');
+            const weekStartStr = selectedWeekStart.toISOString().split('T')[0];
+            url.searchParams.set('weekStart', weekStartStr);
+          } else {
+            url.searchParams.delete('weekly');
+            url.searchParams.delete('weekStart');
+          }
+          window.history.replaceState({}, '', url.toString());
+        }
+
+        // 주간 모드 UI 초기화 함수 (페이지 로드 시 URL 파라미터로 주간 모드 활성화)
+        function initWeeklyModeFromUrl() {
+          if (isWeeklyMode) {
+            const btn = document.getElementById('weeklyToggleBtn');
+            const iconEl = document.getElementById('weeklyToggleIcon');
+            const textEl = document.getElementById('weeklyToggleText');
+            const titleEl = document.getElementById('sectionTitleText');
+            const dailyNav = document.getElementById('dailyNavigator');
+            const weeklyNav = document.getElementById('weeklyNavigator');
+            const calendarIcon = document.getElementById('calendarIcon');
+            const weeklyRadarNav = document.getElementById('weeklyRadarNavigator');
+
+            // 주간 모드 UI 설정
+            if (iconEl) iconEl.textContent = '📆';
+            if (textEl) textEl.textContent = '일간리포트';
+            if (titleEl) titleEl.textContent = '이번 주 나의 AI 학습 기록';
+            if (btn) {
+              btn.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(255,165,0,0.2) 100%)';
+              btn.style.borderColor = 'rgba(255,215,0,0.6)';
+            }
+            if (dailyNav) dailyNav.style.display = 'none';
+            if (weeklyNav) weeklyNav.style.display = 'flex';
+            if (calendarIcon) calendarIcon.style.display = 'none';
+            if (weeklyRadarNav) weeklyRadarNav.style.display = 'flex';
+
+            selectedWeekRadarStart = new Date(selectedWeekStart);
+            renderWeeklySection();
+            updateWeeklyRadarNav();
+            if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+            return true; // 주간 모드로 초기화됨
+          }
+          return false; // 일간 모드
+        }
 
         // 주간/일간 모드 토글
         function toggleWeeklyMode() {
@@ -12592,6 +12645,8 @@ app.get("/my-learning", async (req, res) => {
             updateWeeklyRadarNav();
             // AI 학습 분석도 주간 모드로 업데이트
             if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+            // URL 파라미터 업데이트 (공유 시 주간 모드 유지)
+            updateWeeklyUrlParams();
           } else {
             // 일간 모드로 전환
             iconEl.textContent = '📅';
@@ -12615,6 +12670,8 @@ app.get("/my-learning", async (req, res) => {
             if (typeof renderCreativeTable === 'function') renderCreativeTable();
             // AI 학습 분석도 일간 모드로 업데이트
             if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+            // URL 파라미터 업데이트 (공유 시 일간 모드로)
+            updateWeeklyUrlParams();
           }
         }
         window.toggleWeeklyMode = toggleWeeklyMode;
@@ -12625,6 +12682,8 @@ app.get("/my-learning", async (req, res) => {
           renderWeeklySection();
           // AI 학습 분석도 해당 주차로 업데이트
           if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+          // URL 파라미터 업데이트 (공유 시 해당 주차 유지)
+          updateWeeklyUrlParams();
         }
         window.changeWeek = changeWeek;
 
@@ -13723,8 +13782,11 @@ app.get("/my-learning", async (req, res) => {
           }
         }
 
-        // 페이지 로드 시 Today 섹션 렌더링
-        renderTodaySection();
+        // 페이지 로드 시 URL 파라미터에 따라 주간/일간 모드 초기화
+        if (!initWeeklyModeFromUrl()) {
+          // 일간 모드일 때만 Today 섹션 렌더링
+          renderTodaySection();
+        }
 
         // 지수별 추이 그래프 렌더링
         renderIndexTrendChart();
