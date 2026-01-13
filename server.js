@@ -12541,7 +12541,7 @@ app.get("/my-learning", async (req, res) => {
         const weeklyParamValue = weeklyUrlParams.get('weekly');
         const weekStartParam = weeklyUrlParams.get('weekStart');
 
-        let isWeeklyMode = (weeklyParamValue === 'true'); // URL 파라미터로 주간 모드 여부 결정
+        let isWeeklyMode = (weeklyParamValue !== 'false'); // 기본값: 주간 모드 (weekly=false일 때만 일간 모드)
         let selectedWeekStart = weekStartParam ? new Date(weekStartParam) : getWeekStart(new Date()); // URL 파라미터 또는 현재 주의 월요일
 
         // 해당 날짜가 속한 주의 월요일을 반환
