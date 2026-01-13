@@ -11479,6 +11479,18 @@ async function performLogout() {
           console.error('❌ 홈으로 버튼을 찾을 수 없습니다');
         }
 
+        // iframe에서 전달받는 주간 모드 상태 저장 변수
+        let iframeWeeklyMode = { isWeeklyMode: false, weekStart: null };
+
+        // iframe으로부터 주간 모드 상태 메시지 수신
+        window.addEventListener('message', function(event) {
+          if (event.data && event.data.type === 'weeklyModeUpdate') {
+            iframeWeeklyMode.isWeeklyMode = event.data.isWeeklyMode;
+            iframeWeeklyMode.weekStart = event.data.weekStart;
+            console.log('📅 주간 모드 상태 수신:', iframeWeeklyMode);
+          }
+        });
+
         // 카카오톡 공유 버튼 클릭 시
         const kakaoShareBtn = document.getElementById('kakaoShareBtn');
         if (kakaoShareBtn) {
@@ -11501,7 +11513,16 @@ async function performLogout() {
                   : 'https://dan-dan-app.onrender.com';
 
                 const reportPath = iframeSrc.replace(window.location.origin, '');
-                const fullUrl = baseUrl + reportPath;
+
+                // 주간 모드인 경우 URL에 파라미터 추가
+                let fullUrl = baseUrl + reportPath;
+                if (iframeWeeklyMode.isWeeklyMode && iframeWeeklyMode.weekStart) {
+                  const shareUrl = new URL(fullUrl);
+                  shareUrl.searchParams.set('weekly', 'true');
+                  shareUrl.searchParams.set('weekStart', iframeWeeklyMode.weekStart);
+                  fullUrl = shareUrl.toString();
+                  console.log('📅 주간 모드 공유 URL:', fullUrl);
+                }
 
                 Kakao.Share.sendDefault({
                   objectType: 'feed',

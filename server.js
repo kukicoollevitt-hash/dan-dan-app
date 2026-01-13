@@ -12578,6 +12578,15 @@ app.get("/my-learning", async (req, res) => {
             url.searchParams.delete('weekStart');
           }
           window.history.replaceState({}, '', url.toString());
+
+          // 부모 창에 주간 모드 상태 전달 (카카오톡 공유 URL에 반영하기 위함)
+          if (window.parent !== window) {
+            window.parent.postMessage({
+              type: 'weeklyModeUpdate',
+              isWeeklyMode: isWeeklyMode,
+              weekStart: isWeeklyMode ? selectedWeekStart.toISOString().split('T')[0] : null
+            }, '*');
+          }
         }
 
         // 주간 모드 UI 초기화 함수 (페이지 로드 시 URL 파라미터로 주간 모드 활성화)
