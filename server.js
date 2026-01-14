@@ -22844,13 +22844,16 @@ app.post("/api/mock-exam/submit", async (req, res) => {
           user.examProgress[examIndex].status = 'completed';
           user.examProgress[examIndex].resultId = result._id;
           user.examProgress[examIndex].completedAt = new Date();
+          // 채점 횟수 증가
+          user.examProgress[examIndex].attemptCount = (user.examProgress[examIndex].attemptCount || 0) + 1;
         } else {
           // 새로 추가
           user.examProgress.push({
             examId: examId || 'korean_mock_1',
             status: 'completed',
             resultId: result._id,
-            completedAt: new Date()
+            completedAt: new Date(),
+            attemptCount: 1  // 첫 채점
           });
         }
 
@@ -23149,6 +23152,9 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
       // 먼저 MockExamResult에서 해당 시험 결과 찾기 (가장 최근 결과)
       const directResult = allResults.find(r => r.examId === exam.id);
 
+      // attemptCount: 해당 시험의 결과 개수를 카운트 (채점 횟수)
+      const attemptCount = allResults.filter(r => r.examId === exam.id).length;
+
       if (directResult) {
         // 결과가 있으면 완료 상태로 표시
         progress.push({
@@ -23159,7 +23165,8 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
           correctCount: directResult.correctCount,
           elapsedTimeStr: directResult.elapsedTimeStr || '--:--',
           wrongAnswers: directResult.wrongAnswers || [],
-          completedAt: directResult.completedAt
+          completedAt: directResult.completedAt,
+          attemptCount: attemptCount
         });
       } else if (examProg) {
         if (examProg.status === 'completed' && examProg.resultId) {
@@ -23174,26 +23181,30 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
               correctCount: result.correctCount,
               elapsedTimeStr: result.elapsedTimeStr || '--:--',
               wrongAnswers: result.wrongAnswers || [],
-              completedAt: result.completedAt
+              completedAt: result.completedAt,
+              attemptCount: attemptCount
             });
           } else {
             progress.push({
               examId: exam.id,
               status: examProg.status,
-              remainingTime: examProg.remainingTime
+              remainingTime: examProg.remainingTime,
+              attemptCount: attemptCount
             });
           }
         } else {
           progress.push({
             examId: exam.id,
             status: examProg.status,
-            remainingTime: examProg.remainingTime
+            remainingTime: examProg.remainingTime,
+            attemptCount: attemptCount
           });
         }
       } else {
         progress.push({
           examId: exam.id,
-          status: 'not_started'
+          status: 'not_started',
+          attemptCount: 0
         });
       }
     }
