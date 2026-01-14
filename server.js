@@ -21718,9 +21718,17 @@ app.get('/api/supplement-result/:examId', async (req, res) => {
     }
 
     // userId나 phone이 있는 경우에만 조회
+    // visitor_xxx 형태의 userId는 ObjectId가 아니므로 검증 필요
     const queryConditions = [];
-    if (userId) queryConditions.push({ userId });
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      queryConditions.push({ userId });
+    }
     if (phone) queryConditions.push({ phone });
+
+    // 쿼리 조건이 없으면 결과 없음 반환
+    if (queryConditions.length === 0) {
+      return res.json({ ok: true, result: null });
+    }
 
     const result = await SupplementResult.findOne({
       examId,
@@ -23226,7 +23234,11 @@ app.get("/api/mock-exam/area-analysis/:userId", async (req, res) => {
     }
 
     // 사용자 정보 조회 (전화번호+이름으로 매칭하기 위해)
-    const user = await MockExamUser.findById(userId);
+    // visitor_xxx 형태의 userId는 ObjectId가 아니므로 검증 필요
+    let user = null;
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      user = await MockExamUser.findById(userId);
+    }
 
     // 해당 사용자의 완료된 모든 시험 결과 조회
     // userId 또는 전화번호+이름으로 매칭 (visitor_xxx 형태의 userId도 지원)
@@ -23592,7 +23604,11 @@ app.get("/api/mock-exam/area-trend/:userId", async (req, res) => {
     }
 
     // 사용자 정보 조회 (전화번호+이름으로 매칭하기 위해)
-    const user = await MockExamUser.findById(userId);
+    // visitor_xxx 형태의 userId는 ObjectId가 아니므로 검증 필요
+    let user = null;
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      user = await MockExamUser.findById(userId);
+    }
 
     // 해당 사용자의 완료된 모든 시험 결과 조회 (최신순으로)
     const queryConditions = [{ userId }];
@@ -23865,6 +23881,13 @@ app.put("/api/mock-exam/admin/users/:id/status", async (req, res) => {
 app.get("/api/mock-exam/user/:id/tickets", async (req, res) => {
   try {
     const { id } = req.params;
+
+    // visitor_xxx 형태의 userId는 ObjectId가 아니므로 검증 필요
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      // visitor 사용자는 이용권 무제한으로 처리
+      return res.json({ ok: true, tickets: 999 });
+    }
+
     const user = await MockExamUser.findById(id).select('tickets');
 
     if (!user) {
