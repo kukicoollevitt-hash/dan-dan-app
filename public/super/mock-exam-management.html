@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>모의고사 관리</title>
+  <!-- 카카오 SDK -->
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -440,6 +442,35 @@
       color: #721c24;
     }
 
+    /* AI과제 배지 스타일 */
+    .ai-task-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ai-task-none {
+      background: #f1f3f4;
+      color: #9aa0a6;
+    }
+
+    .ai-task-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .ai-task-progress {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .ai-task-complete {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+    }
+
     .status-btn {
       padding: 6px 12px;
       border: none;
@@ -873,6 +904,7 @@
               <th>전화번호</th>
               <th>이용권</th>
               <th>상태</th>
+              <th class="sortable" id="sortAiTask" onclick="toggleAiTaskSort()">AI과제</th>
               <th>가입일</th>
               <th>최근 로그인</th>
               <th>관리</th>
@@ -880,7 +912,7 @@
           </thead>
           <tbody id="userTableBody">
             <tr>
-              <td colspan="11" class="loading">데이터를 불러오는 중...</td>
+              <td colspan="12" class="loading">데이터를 불러오는 중...</td>
             </tr>
           </tbody>
         </table>
@@ -1040,6 +1072,7 @@
     let allUsers = [];
     let allConsultations = [];
     let rankSortOrder = null; // null, 'asc', 'desc'
+    let aiTaskSortOrder = null; // null, 'asc', 'desc' (asc: 미완료 순)
 
     // 페이지당 표시 개수
     const ITEMS_PER_PAGE = 10;
@@ -1382,7 +1415,7 @@
       const showMoreBtn = document.getElementById('userShowMoreBtn');
 
       if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" class="empty-message">등록된 회원이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" class="empty-message">등록된 회원이 없습니다.</td></tr>';
         showMoreBtn.style.display = 'none';
         return;
       }
@@ -1398,6 +1431,20 @@
                           u.status === 'suspended' ? '정지' : '비활성';
         const isChecked = selectedUserIds.includes(u._id) ? 'checked' : '';
 
+        // AI과제 배지 색상 결정
+        const aiCompleted = u.aiTaskCompleted || 0;
+        const aiTotal = u.aiTaskTotal || 0;
+        let aiTaskBadgeClass = 'ai-task-none';
+        if (aiTotal > 0) {
+          if (aiCompleted === aiTotal) {
+            aiTaskBadgeClass = 'ai-task-complete';
+          } else if (aiCompleted > 0) {
+            aiTaskBadgeClass = 'ai-task-progress';
+          } else {
+            aiTaskBadgeClass = 'ai-task-pending';
+          }
+        }
+
         return `
         <tr>
           <td class="checkbox-cell"><input type="checkbox" class="user-checkbox user-row-checkbox" data-user-id="${u._id}" ${isChecked} onchange="updateSelection()"></td>
@@ -1408,6 +1455,7 @@
           <td>${u.phone || '-'}</td>
           <td><span class="ticket-btn" onclick="openTicketModal('${u._id}', '${u.name}', ${u.tickets || 0})">${u.tickets || 0}회</span></td>
           <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td><span class="ai-task-badge ${aiTaskBadgeClass}" onclick="shareAiTaskKakao('${u._id}', '${u.name}', ${aiCompleted}, ${aiTotal})" style="cursor: pointer;" title="클릭하여 카카오톡으로 공유">${aiTotal > 0 ? `${aiCompleted}/${aiTotal}` : '-'}</span></td>
           <td>${formatDate(u.createdAt)}</td>
           <td>${u.lastLogin ? formatDate(u.lastLogin) : '-'}</td>
           <td>
@@ -1438,8 +1486,61 @@
       renderUserTable(filteredUsers);
     }
 
+    // AI과제 정렬 토글
+    function toggleAiTaskSort() {
+      const sortBtn = document.getElementById('sortAiTask');
+
+      if (aiTaskSortOrder === null || aiTaskSortOrder === 'desc') {
+        aiTaskSortOrder = 'asc';
+        sortBtn.className = 'sortable asc';
+      } else {
+        aiTaskSortOrder = 'desc';
+        sortBtn.className = 'sortable desc';
+      }
+
+      // 미완료 과제가 많은 순으로 정렬 (asc: 미완료 순)
+      if (aiTaskSortOrder === 'asc') {
+        // 미완료 순: 과제가 있고 완료율이 낮은 순
+        filteredUsers = [...filteredUsers].sort((a, b) => {
+          const aTotal = a.aiTaskTotal || 0;
+          const bTotal = b.aiTaskTotal || 0;
+          const aCompleted = a.aiTaskCompleted || 0;
+          const bCompleted = b.aiTaskCompleted || 0;
+          const aRemaining = aTotal - aCompleted;
+          const bRemaining = bTotal - bCompleted;
+
+          // 과제가 있는 사람 우선
+          if (aTotal > 0 && bTotal === 0) return -1;
+          if (aTotal === 0 && bTotal > 0) return 1;
+          if (aTotal === 0 && bTotal === 0) return 0;
+
+          // 미완료 개수가 많은 순
+          return bRemaining - aRemaining;
+        });
+      } else {
+        // 완료 순: 완료율이 높은 순
+        filteredUsers = [...filteredUsers].sort((a, b) => {
+          const aTotal = a.aiTaskTotal || 0;
+          const bTotal = b.aiTaskTotal || 0;
+          const aCompleted = a.aiTaskCompleted || 0;
+          const bCompleted = b.aiTaskCompleted || 0;
+
+          // 과제가 있는 사람 우선
+          if (aTotal > 0 && bTotal === 0) return -1;
+          if (aTotal === 0 && bTotal > 0) return 1;
+          if (aTotal === 0 && bTotal === 0) return 0;
+
+          // 완료 개수가 많은 순
+          return bCompleted - aCompleted;
+        });
+      }
+
+      userDisplayCount = ITEMS_PER_PAGE;
+      renderUserTable(filteredUsers);
+    }
+
     function showUserError(msg) {
-      document.getElementById('userTableBody').innerHTML = `<tr><td colspan="11" class="empty-message">${msg}</td></tr>`;
+      document.getElementById('userTableBody').innerHTML = `<tr><td colspan="12" class="empty-message">${msg}</td></tr>`;
     }
 
     // 회원 일괄 삭제
@@ -2138,6 +2239,47 @@
     function goToStudentDashboard(userId, userName) {
       const dashboardUrl = `/mock_exam_dashboard.html?userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(userName)}`;
       window.open(dashboardUrl, '_blank');
+    }
+
+    // 카카오 SDK 초기화
+    if (window.Kakao && !Kakao.isInitialized()) {
+      Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
+    }
+
+    // AI과제 카카오톡 공유
+    function shareAiTaskKakao(userId, userName, completed, total) {
+      const remaining = total - completed;
+      const baseUrl = 'https://dan-dan-app.onrender.com/mock_exam_dashboard.html';
+      const shareUrl = `${baseUrl}?userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(userName)}`;
+
+      // 이름에서 성 제외 (김미소 -> 미소 학생)
+      const displayName = userName && userName.length >= 2 ? userName.slice(1) + ' 학생' : userName + ' 학생';
+
+      if (window.Kakao && Kakao.isInitialized()) {
+        Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `${displayName}, AI 추천 과제를 확인해주세요!`,
+            description: `📚 미완료 과제: ${remaining}개 (${completed}/${total} 완료)\n\n아래 버튼을 눌러 과제를 확인하세요.`,
+            imageUrl: 'https://dan-dan-app.onrender.com/images/ai-task-reminder.png',
+            link: {
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl
+            }
+          },
+          buttons: [
+            {
+              title: 'AI 과제 확인하기',
+              link: {
+                mobileWebUrl: shareUrl,
+                webUrl: shareUrl
+              }
+            }
+          ]
+        });
+      } else {
+        alert('카카오톡 공유 기능을 사용할 수 없습니다.');
+      }
     }
   </script>
 

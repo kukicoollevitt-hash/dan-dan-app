@@ -23791,7 +23791,27 @@ app.get("/api/mock-exam/admin/users", async (req, res) => {
       .select('-password')
       .sort({ createdAt: -1 });
 
-    res.json({ ok: true, users });
+    // 각 유저별 AI 추천 과제 현황 조회
+    const currentWeek = getWeekNumber();
+    const usersWithTasks = await Promise.all(users.map(async (user) => {
+      const userObj = user.toObject();
+
+      // 해당 유저의 현재 주차 AI 추천 과제 조회
+      const tasks = await MockExamRecommendTask.find({
+        userId: user._id.toString(),
+        weekNumber: currentWeek
+      });
+
+      const totalTasks = tasks.length;
+      const completedTasks = tasks.filter(t => t.status === 'completed').length;
+
+      userObj.aiTaskTotal = totalTasks;
+      userObj.aiTaskCompleted = completedTasks;
+
+      return userObj;
+    }));
+
+    res.json({ ok: true, users: usersWithTasks });
   } catch (err) {
     console.error("❌ [/api/mock-exam/admin/users] 오류:", err);
     res.status(500).json({ ok: false, error: "조회 중 오류가 발생했습니다." });
