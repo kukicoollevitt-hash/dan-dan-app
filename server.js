@@ -23735,6 +23735,25 @@ app.post("/api/mock-exam/update-progress", async (req, res) => {
 });
 
 // ===== 모의고사 회원 관리자 API =====
+// areaKey → 보충학습 examId 매핑
+const AREA_TO_SUPPLEMENT_EXAM_MAP = {
+  litClassicPoem: 'supplement_classic_poem',
+  litClassicProse: 'supplement_classic_prose',
+  speechWrite: 'supplement_writing',
+  grammarClassic: 'supplement_grammar_classic',
+  litModernNovel: 'supplement_modern_novel',
+  speechTalk: 'supplement_speech',
+  speechIntegrated: 'supplement_speech_integrated',
+  litModernPoem: 'supplement_modern_poem',
+  grammarModern: 'supplement_grammar_modern',
+  readingScience: 'supplement_reading_science',
+  readingLaw: 'supplement_reading_law',
+  readingSocial: 'supplement_reading_social',
+  readingTech: 'supplement_reading_tech',
+  readingHumanities: 'supplement_reading_humanities',
+  readingArt: 'supplement_reading_art'
+};
+
 // 모든 회원 조회
 app.get("/api/mock-exam/admin/users", async (req, res) => {
   try {
@@ -23754,10 +23773,35 @@ app.get("/api/mock-exam/admin/users", async (req, res) => {
       });
 
       const totalTasks = tasks.length;
-      const completedTasks = tasks.filter(t => t.status === 'completed').length;
+
+      // 완료 개수: task.status === 'completed' OR 보충학습 결과가 채점 완료된 경우
+      let completedCount = 0;
+      for (const task of tasks) {
+        // 1) task.status가 completed이면 완료
+        if (task.status === 'completed') {
+          completedCount++;
+          continue;
+        }
+
+        // 2) 보충학습 결과 확인 (SupplementResult에서 채점 완료 여부)
+        const supplementExamId = AREA_TO_SUPPLEMENT_EXAM_MAP[task.areaKey];
+        if (supplementExamId) {
+          const supplementResult = await SupplementResult.findOne({
+            examId: supplementExamId,
+            $or: [
+              { userId: user._id.toString() },
+              { phone: user.phone }
+            ],
+            isGraded: true
+          });
+          if (supplementResult) {
+            completedCount++;
+          }
+        }
+      }
 
       userObj.aiTaskTotal = totalTasks;
-      userObj.aiTaskCompleted = completedTasks;
+      userObj.aiTaskCompleted = completedCount;
 
       return userObj;
     }));
