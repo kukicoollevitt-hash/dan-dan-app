@@ -22818,6 +22818,11 @@ app.post("/api/mock-exam/submit", async (req, res) => {
 
         await user.save();
         console.log(`✅ [submit] 사용자 ${visitorId}의 examProgress 업데이트 완료`);
+
+        // AI 추천 과제 자동 생성 (비동기로 처리)
+        generateRecommendTasksForUser(visitorId, user.phone).catch(err => {
+          console.error("❌ [submit] AI 추천 과제 생성 실패:", err);
+        });
       }
     } catch (userErr) {
       console.error("❌ [submit] examProgress 업데이트 실패:", userErr);
@@ -23766,9 +23771,12 @@ app.get("/api/mock-exam/admin/users", async (req, res) => {
     const usersWithTasks = await Promise.all(users.map(async (user) => {
       const userObj = user.toObject();
 
-      // 해당 유저의 현재 주차 AI 추천 과제 조회
+      // 해당 유저의 현재 주차 AI 추천 과제 조회 (userId 또는 phone으로 매칭)
       const tasks = await MockExamRecommendTask.find({
-        userId: user._id.toString(),
+        $or: [
+          { userId: user._id.toString() },
+          { phone: user.phone }
+        ],
         weekNumber: currentWeek
       });
 
