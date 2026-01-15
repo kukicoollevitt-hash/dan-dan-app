@@ -20975,6 +20975,8 @@ const mockExamRecommendTaskSchema = new mongoose.Schema({
   avgRate: { type: Number, required: true },          // 평균 정답률 (%)
   diffPercent: { type: Number, required: true },      // 차이 (평균 - 사용자)
   weekNumber: { type: Number, required: true },       // 해당 주차 번호 (주간 구분용)
+  targetMockRound: { type: Number, default: null },   // 대상 모의고사 회차 (학생이 응시한 회차)
+  supplementExamId: { type: String, default: null },  // 추천된 보완학습 시험지 ID
   status: {
     type: String,
     enum: ['pending', 'completed'],
@@ -20994,6 +20996,7 @@ const supplementExamSchema = new mongoose.Schema({
   areaName: { type: String, required: true },             // 영역 한글명 (화법, 현대문법 등)
   parentArea: { type: String, required: true },           // 상위 영역 (speech, grammar, reading, literature)
   title: { type: String, required: true },                // 시험지 제목
+  targetMockRound: { type: Number, default: null },       // 대상 모의고사 회차 (1, 2, 3...) - 해당 회차 응시자에게 추천
   questionCount: { type: Number, default: 0 },            // 문항 수
   questions: [{                                           // 문제 배열
     questionNumber: Number,
@@ -21123,11 +21126,14 @@ app.get('/api/mock-exam/recommend-tasks/:userId', async (req, res) => {
     const { userId } = req.params;
     const currentWeek = getWeekNumber();
 
-    // 현재 주차의 과제만 조회 (userId는 String 타입)
+    // 미완료 과제는 주차와 관계없이 모두 조회, 완료된 과제는 현재 주차만 조회
     const tasks = await MockExamRecommendTask.find({
       userId: userId,
-      weekNumber: currentWeek
-    }).sort({ diffPercent: -1 }); // 차이가 큰 순서대로
+      $or: [
+        { status: { $ne: 'completed' } },  // 미완료 과제는 모든 주차
+        { weekNumber: currentWeek }         // 완료된 과제는 현재 주차만
+      ]
+    }).sort({ weekNumber: -1, diffPercent: -1 }); // 최신 주차 먼저, 그 다음 차이가 큰 순서
 
     res.json({ ok: true, tasks, weekNumber: currentWeek });
   } catch (err) {
@@ -21234,6 +21240,7 @@ app.get('/api/supplement-exams', async (req, res) => {
           title: exam.title,
           questionCount: exam.questionCount,
           isActive: exam.isActive,
+          targetMockRound: exam.targetMockRound || null,
           createdAt: exam.createdAt,
           updatedAt: exam.updatedAt
         });
@@ -21241,6 +21248,7 @@ app.get('/api/supplement-exams', async (req, res) => {
     });
 
     // 하드코딩된 보완 학습 시험지 추가 (HTML 파일로 직접 만든 시험지)
+    // targetMockRound: 해당 회차 모의고사 응시자에게 우선 추천 (1=1회차용)
     const hardcodedExams = [
       {
         areaKey: 'litClassicPoem',
@@ -21249,6 +21257,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_classic_poem.html',
         createdAt: new Date('2024-12-30'),
         updatedAt: new Date('2024-12-30')
@@ -21260,6 +21269,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 7,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_writing.html',
         createdAt: new Date('2024-12-31'),
         updatedAt: new Date('2024-12-31')
@@ -21271,6 +21281,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 2,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_grammar_classic.html',
         createdAt: new Date('2024-12-31'),
         updatedAt: new Date('2024-12-31')
@@ -21282,6 +21293,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 7,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_modern_novel.html',
         createdAt: new Date('2024-12-31'),
         updatedAt: new Date('2024-12-31')
@@ -21293,6 +21305,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_speech.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21304,6 +21317,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_classic_prose.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21315,6 +21329,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 4,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_speech_integrated.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21326,6 +21341,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_modern_poem.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21337,6 +21353,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 4,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_grammar_modern.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21348,6 +21365,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_reading_science.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21359,6 +21377,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 7,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_reading_law.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21370,6 +21389,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: true,
         isHardcoded: true,
+        targetMockRound: 1,
         pageUrl: '/supplement_reading_humanities.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21381,6 +21401,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: false,
         isHardcoded: true,
+        targetMockRound: null,
         pageUrl: '/supplement_reading_social.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21392,6 +21413,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: false,
         isHardcoded: true,
+        targetMockRound: null,
         pageUrl: '/supplement_reading_tech.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21403,6 +21425,7 @@ app.get('/api/supplement-exams', async (req, res) => {
         questionCount: 6,
         isActive: false,
         isHardcoded: true,
+        targetMockRound: null,
         pageUrl: '/supplement_reading_art.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
@@ -21415,6 +21438,10 @@ app.get('/api/supplement-exams', async (req, res) => {
         return;
       }
       if (grouped[exam.areaKey]) {
+        // 메모리에 저장된 회차 정보가 있으면 사용, 없으면 기본값 사용
+        const savedRound = hardcodedExamRounds.get(exam.examId);
+        const targetMockRound = savedRound !== undefined ? savedRound : exam.targetMockRound;
+
         grouped[exam.areaKey].exams.unshift({
           _id: exam.examId,
           examId: exam.examId,
@@ -21422,6 +21449,7 @@ app.get('/api/supplement-exams', async (req, res) => {
           questionCount: exam.questionCount,
           isActive: exam.isActive,
           isHardcoded: exam.isHardcoded,
+          targetMockRound: targetMockRound,
           pageUrl: exam.pageUrl,
           createdAt: exam.createdAt,
           updatedAt: exam.updatedAt
@@ -21480,6 +21508,48 @@ app.post('/api/supplement-exams', async (req, res) => {
   } catch (err) {
     console.error('❌ [POST /api/supplement-exams] 오류:', err);
     res.status(500).json({ ok: false, message: '생성 중 오류가 발생했습니다.', error: err.message });
+  }
+});
+
+// 하드코딩 시험지 회차 수정 (메모리에 저장) - 더 구체적인 라우트가 먼저 와야 함!
+const hardcodedExamRounds = new Map(); // examId -> targetMockRound
+
+app.put('/api/supplement-exams/hardcoded/:examId/round', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const { targetMockRound } = req.body;
+
+    hardcodedExamRounds.set(examId, targetMockRound);
+
+    console.log(`✅ [PUT /api/supplement-exams/hardcoded/${examId}/round] 회차 설정: ${targetMockRound || '없음'}`);
+    res.json({ ok: true, message: '회차 설정이 저장되었습니다. (서버 재시작 시 초기화됩니다. 영구 저장하려면 server.js를 수정하세요.)' });
+  } catch (err) {
+    console.error('❌ [PUT /api/supplement-exams/hardcoded/:examId/round] 오류:', err);
+    res.status(500).json({ ok: false, message: '회차 수정 중 오류가 발생했습니다.', error: err.message });
+  }
+});
+
+// 보완 학습 시험지 회차 수정 (DB 시험지용)
+app.put('/api/supplement-exams/:examId/round', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const { targetMockRound } = req.body;
+
+    const exam = await SupplementExam.findOneAndUpdate(
+      { examId },
+      { targetMockRound, updatedAt: new Date() },
+      { new: true }
+    );
+
+    if (!exam) {
+      return res.status(404).json({ ok: false, message: '시험지를 찾을 수 없습니다.' });
+    }
+
+    console.log(`✅ [PUT /api/supplement-exams/${examId}/round] 회차 설정: ${targetMockRound || '없음'}`);
+    res.json({ ok: true, exam });
+  } catch (err) {
+    console.error('❌ [PUT /api/supplement-exams/:examId/round] 오류:', err);
+    res.status(500).json({ ok: false, message: '회차 수정 중 오류가 발생했습니다.', error: err.message });
   }
 });
 
@@ -22003,6 +22073,52 @@ async function generateRecommendTasksForUser(userId, phone) {
     // 차이가 큰 순서대로 정렬
     taskCandidates.sort((a, b) => b.diffPercent - a.diffPercent);
 
+    // 학생이 응시한 모의고사 회차 목록 추출 (1회차, 2회차 등)
+    const completedRounds = new Set();
+    Object.keys(latestByExam).forEach(examId => {
+      // examId 형식: korean_mock_1, korean_mock_2 등에서 회차 추출
+      const match = examId.match(/korean_mock_(\d+)/);
+      if (match) {
+        completedRounds.add(parseInt(match[1]));
+      }
+    });
+    const latestCompletedRound = Math.max(...completedRounds) || 1;
+    console.log(`[RecommendTask] 사용자 ${userId} 응시 회차: ${[...completedRounds].join(', ')}, 최신 회차: ${latestCompletedRound}`);
+
+    // 해당 회차에 맞는 보완학습 시험지 조회 (DB + 하드코딩)
+    const supplementExams = await SupplementExam.find({ isActive: true }).lean();
+
+    // 하드코딩된 시험지도 포함
+    const HARDCODED_SUPPLEMENT_EXAMS = [
+      { examId: 'supplement_classic_poem', areaKey: 'litClassicPoem', targetMockRound: 1 },
+      { examId: 'supplement_writing', areaKey: 'speechWrite', targetMockRound: 1 },
+      { examId: 'supplement_grammar_classic', areaKey: 'grammarClassic', targetMockRound: 1 },
+      { examId: 'supplement_modern_novel', areaKey: 'litModernNovel', targetMockRound: 1 },
+      { examId: 'supplement_speech', areaKey: 'speechTalk', targetMockRound: 1 },
+      { examId: 'supplement_classic_prose', areaKey: 'litClassicProse', targetMockRound: 1 },
+      { examId: 'supplement_speech_integrated', areaKey: 'speechIntegrated', targetMockRound: 1 },
+      { examId: 'supplement_modern_poem', areaKey: 'litModernPoem', targetMockRound: 1 },
+      { examId: 'supplement_grammar_modern', areaKey: 'grammarModern', targetMockRound: 1 },
+      { examId: 'supplement_reading_science', areaKey: 'readingScience', targetMockRound: 1 },
+      { examId: 'supplement_reading_law', areaKey: 'readingLaw', targetMockRound: 1 },
+      { examId: 'supplement_reading_humanities', areaKey: 'readingHumanities', targetMockRound: 1 }
+    ];
+
+    // 영역별로 해당 회차 보완학습이 있는지 확인
+    const areaToSupplementExam = {};
+    [...supplementExams, ...HARDCODED_SUPPLEMENT_EXAMS].forEach(exam => {
+      const round = hardcodedExamRounds.get(exam.examId) !== undefined
+        ? hardcodedExamRounds.get(exam.examId)
+        : exam.targetMockRound;
+
+      // 해당 회차에 맞는 과제만 매핑 (또는 회차 지정 안된 과제)
+      if (round === latestCompletedRound || round === null) {
+        if (!areaToSupplementExam[exam.areaKey]) {
+          areaToSupplementExam[exam.areaKey] = exam.examId;
+        }
+      }
+    });
+
     // 과제 개수 결정: 6% 이상 차이나는 모든 영역 (최대 12개까지)
     // 목표 점수 대비 부족한 영역은 모두 보완 과제로 추천
     const tasksToCreate = taskCandidates; // 이미 diff > 5 조건으로 필터링됨
@@ -22011,11 +22127,13 @@ async function generateRecommendTasksForUser(userId, phone) {
         userId,
         phone,
         ...task,
+        targetMockRound: latestCompletedRound,
+        supplementExamId: areaToSupplementExam[task.areaKey] || null,
         weekNumber: currentWeek
       });
     }
 
-    console.log(`[RecommendTask] 사용자 ${userId}에게 ${tasksToCreate.length}개 과제 생성 (${currentWeek}주차)`);
+    console.log(`[RecommendTask] 사용자 ${userId}에게 ${tasksToCreate.length}개 과제 생성 (${currentWeek}주차, ${latestCompletedRound}회차용)`);
   } catch (err) {
     console.error(`[RecommendTask] 사용자 ${userId} 과제 생성 오류:`, err);
   }

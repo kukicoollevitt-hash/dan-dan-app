@@ -252,6 +252,17 @@
       color: #6c757d;
     }
 
+    .round-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+      background: rgba(255, 193, 7, 0.2);
+      color: #d68910;
+    }
+
     /* 모달 */
     .modal-overlay {
       display: none;
@@ -402,6 +413,18 @@
           <input type="text" id="examTitle" placeholder="시험지 제목을 입력하세요" required>
         </div>
 
+        <div class="form-group">
+          <label>대상 모의고사 회차</label>
+          <select id="targetMockRound">
+            <option value="">선택 안함</option>
+            <option value="1">1회차 모의고사 응시자용</option>
+            <option value="2">2회차 모의고사 응시자용</option>
+            <option value="3">3회차 모의고사 응시자용</option>
+            <option value="4">4회차 모의고사 응시자용</option>
+            <option value="5">5회차 모의고사 응시자용</option>
+          </select>
+        </div>
+
         <div class="modal-actions">
           <button type="button" class="modal-btn modal-btn-cancel" onclick="closeModal()">취소</button>
           <button type="submit" class="modal-btn modal-btn-primary">저장</button>
@@ -423,6 +446,37 @@
         <button type="button" class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">취소</button>
         <button type="button" class="modal-btn modal-btn-danger" onclick="confirmDelete()">삭제</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 회차 수정 모달 -->
+  <div class="modal-overlay" id="roundEditModal">
+    <div class="modal">
+      <div class="modal-title">대상 모의고사 회차 설정</div>
+      <form id="roundEditForm">
+        <input type="hidden" id="roundEditExamId">
+        <input type="hidden" id="roundEditIsHardcoded">
+
+        <div class="form-group">
+          <label>대상 모의고사 회차</label>
+          <select id="roundEditValue">
+            <option value="">선택 안함</option>
+            <option value="1">1회차 모의고사 응시자용</option>
+            <option value="2">2회차 모의고사 응시자용</option>
+            <option value="3">3회차 모의고사 응시자용</option>
+            <option value="4">4회차 모의고사 응시자용</option>
+            <option value="5">5회차 모의고사 응시자용</option>
+          </select>
+          <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px;">
+            선택한 회차 모의고사를 푼 학생에게 이 보완학습이 우선 추천됩니다.
+          </p>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeRoundEditModal()">취소</button>
+          <button type="submit" class="modal-btn modal-btn-primary">저장</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -523,6 +577,7 @@
               const createdAt = new Date(exam.createdAt).toLocaleDateString('ko-KR');
               const isHardcoded = exam.isHardcoded || false;
               const hardcodedBadge = isHardcoded ? '<span class="status-badge" style="background: rgba(102, 126, 234, 0.15); color: #667eea;">HTML</span>' : '';
+              const roundBadge = exam.targetMockRound ? `<span class="round-badge">${exam.targetMockRound}회차용</span>` : '';
 
               if (isHardcoded) {
                 // 하드코딩된 시험지 (HTML 파일)
@@ -531,12 +586,14 @@
                     <div class="exam-info" onclick="window.open('${exam.pageUrl}', '_blank')">
                       <div class="exam-title">
                         ${exam.title}
+                        ${roundBadge}
                         ${hardcodedBadge}
                         <span class="status-badge ${statusClass}">${statusText}</span>
                       </div>
                       <div class="exam-meta">문항 수: ${exam.questionCount}개 | 생성일: ${createdAt}</div>
                     </div>
                     <div class="exam-actions">
+                      <button class="edit-btn" onclick="openRoundEditModal('${exam.examId}', ${exam.targetMockRound || 'null'}, true)">회차</button>
                       <button class="edit-btn" onclick="window.open('${exam.pageUrl}', '_blank')">보기</button>
                       <button class="delete-btn" onclick="openDeleteHardcodedModal('${exam.examId}', '${exam.title}')">삭제</button>
                     </div>
@@ -549,11 +606,13 @@
                     <div class="exam-info" onclick="goToEditPage('${exam.examId}')">
                       <div class="exam-title">
                         ${exam.title}
+                        ${roundBadge}
                         <span class="status-badge ${statusClass}">${statusText}</span>
                       </div>
                       <div class="exam-meta">문항 수: ${exam.questionCount}개 | 생성일: ${createdAt}</div>
                     </div>
                     <div class="exam-actions">
+                      <button class="edit-btn" onclick="openRoundEditModal('${exam.examId}', ${exam.targetMockRound || 'null'}, false)">회차</button>
                       <button class="edit-btn" onclick="goToEditPage('${exam.examId}')">수정</button>
                       <button class="delete-btn" onclick="openDeleteModal('${exam.examId}')">삭제</button>
                     </div>
@@ -585,7 +644,21 @@
       document.getElementById('areaKey').value = areaKey;
       document.getElementById('areaName').value = DETAIL_AREA_INFO[areaKey].name;
       document.getElementById('examTitle').value = '';
+      document.getElementById('targetMockRound').value = '';
       document.getElementById('examModal').classList.add('active');
+    }
+
+    // 회차 수정 모달 열기
+    function openRoundEditModal(examId, currentRound, isHardcoded) {
+      document.getElementById('roundEditExamId').value = examId;
+      document.getElementById('roundEditIsHardcoded').value = isHardcoded ? 'true' : 'false';
+      document.getElementById('roundEditValue').value = currentRound || '';
+      document.getElementById('roundEditModal').classList.add('active');
+    }
+
+    // 회차 수정 모달 닫기
+    function closeRoundEditModal() {
+      document.getElementById('roundEditModal').classList.remove('active');
     }
 
     // 모달 닫기
@@ -671,18 +744,57 @@
       }
     }
 
+    // 회차 수정 폼 제출
+    document.getElementById('roundEditForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const examId = document.getElementById('roundEditExamId').value;
+      const isHardcoded = document.getElementById('roundEditIsHardcoded').value === 'true';
+      const targetMockRound = document.getElementById('roundEditValue').value;
+
+      try {
+        const url = isHardcoded
+          ? `/api/supplement-exams/hardcoded/${examId}/round`
+          : `/api/supplement-exams/${examId}/round`;
+
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetMockRound: targetMockRound ? parseInt(targetMockRound) : null })
+        });
+
+        const result = await response.json();
+
+        if (result.ok) {
+          alert('회차 설정이 저장되었습니다.');
+          closeRoundEditModal();
+          loadData();
+        } else {
+          alert('저장 실패: ' + result.message);
+        }
+      } catch (err) {
+        console.error('회차 저장 실패:', err);
+        alert('서버 오류가 발생했습니다.');
+      }
+    });
+
     // 폼 제출 (시험지 추가)
     document.getElementById('examForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
       const areaKey = document.getElementById('areaKey').value;
       const title = document.getElementById('examTitle').value;
+      const targetMockRound = document.getElementById('targetMockRound').value;
 
       try {
         const response = await fetch('/api/supplement-exams', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ areaKey, title })
+          body: JSON.stringify({
+            areaKey,
+            title,
+            targetMockRound: targetMockRound ? parseInt(targetMockRound) : null
+          })
         });
 
         const result = await response.json();
