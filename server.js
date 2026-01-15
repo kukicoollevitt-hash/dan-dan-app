@@ -11072,236 +11072,128 @@ app.get("/my-learning", async (req, res) => {
               }
             }
 
-            // ===== 3. 성장 지수 차트 데이터 수집 (allLogs에서 직접 계산) =====
-            // 성장 추이는 여러 날짜의 데이터를 봐야 하므로, 선택 날짜까지의 최근 데이터를 수집
+            // ===== 3. 성장 지수 차트 데이터 수집 (실제 차트 데이터 사용) =====
             const growthData = { hasData: false, isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
 
-            if (typeof allLogs !== 'undefined' && allLogs.length > 0) {
-              // 성장 추이: 선택 날짜까지의 최근 데이터 수집 (그래프와 동일하게)
-              const endDate = isWeeklyMode ? getWeekEnd(new Date(selectedWeekStart)) : new Date(selectedDate);
-              endDate.setHours(23, 59, 59, 999);
+            // 차트에서 저장된 데이터를 사용 (차트와 완전 동기화)
+            const chartGrowthData = window.chartDataForAI?.growthTrend;
+            if (chartGrowthData && chartGrowthData.hasData) {
+              const chartDates = chartGrowthData.dates;  // MM/DD 형식
+              const chartScores = chartGrowthData.scores.filter(s => s !== null);
 
-              // 선택 날짜까지의 모든 로그를 가져와서 날짜별로 집계
-              const filteredLogs = allLogs.filter(log => {
-                if (!log.timestamp) return false;
-                const logDate = new Date(log.timestamp);
-                return logDate <= endDate;
-              });
-
-              // 날짜 포맷 함수 (1월 4일 형태)
-              const formatDateKr = (d) => {
-                const date = new Date(d);
-                return (date.getMonth() + 1) + '월 ' + date.getDate() + '일';
-              };
-
-              // 날짜별 평균 점수 계산
-              const dateScoreMap = {};
-              filteredLogs.forEach(log => {
-                const dateStr = formatDateKr(log.timestamp);
-                if (!dateScoreMap[dateStr]) {
-                  dateScoreMap[dateStr] = { total: 0, count: 0 };
-                }
-                // 5가지 문해력 지수 평균 계산
-                const indices = [log.literalIndex, log.structuralIndex, log.lexicalIndex, log.inferentialIndex, log.criticalIndex];
-                const validIndices = indices.filter(i => i !== undefined && i !== null);
-                if (validIndices.length > 0) {
-                  const avgIndex = validIndices.reduce((a, b) => a + b, 0) / validIndices.length;
-                  dateScoreMap[dateStr].total += avgIndex;
-                  dateScoreMap[dateStr].count++;
-                }
-              });
-
-              const sortedDates = Object.keys(dateScoreMap).sort((a, b) => {
-                const parseKrDate = (str) => {
-                  const match = str.match(/(\d+)월\s*(\d+)일/);
-                  if (match) return new Date(2025, parseInt(match[1]) - 1, parseInt(match[2]));
-                  return new Date(0);
-                };
-                return parseKrDate(a) - parseKrDate(b);
-              });
-
-              // 최근 5일치만 사용 (그래프와 동일)
-              const recentDates = sortedDates.slice(-5);
-              const recentScores = recentDates.map(d => dateScoreMap[d].total / dateScoreMap[d].count);
-
-              if (recentDates.length > 0) {
+              if (chartDates.length > 0 && chartScores.length > 0) {
                 growthData.hasData = true;
-                growthData.dateCount = recentDates.length;
-                growthData.dates = recentDates.join(', ');
-                growthData.scores = recentScores.map(s => s?.toFixed(0) || '-').join(', ');
-                growthData.latestScore = recentScores[recentScores.length - 1]?.toFixed(0) || '-';
-                growthData.firstScore = recentScores[0]?.toFixed(0) || '-';
+                growthData.dateCount = chartDates.length;
+                growthData.dates = chartDates.join(', ');
+                growthData.scores = chartScores.map(s => s?.toFixed(0) || '-').join(', ');
+                growthData.latestScore = chartScores[chartScores.length - 1]?.toFixed(0) || '-';
+                growthData.firstScore = chartScores[0]?.toFixed(0) || '-';
 
                 // 가장 높은/낮은 날짜와 점수 찾기
                 let maxIdx = 0, minIdx = 0;
-                recentScores.forEach((s, i) => {
-                  if (s > recentScores[maxIdx]) maxIdx = i;
-                  if (s < recentScores[minIdx]) minIdx = i;
+                chartScores.forEach((s, i) => {
+                  if (s > chartScores[maxIdx]) maxIdx = i;
+                  if (s < chartScores[minIdx]) minIdx = i;
                 });
-                growthData.highestDate = recentDates[maxIdx];
-                growthData.highestScore = recentScores[maxIdx]?.toFixed(0);
-                growthData.lowestDate = recentDates[minIdx];
-                growthData.lowestScore = recentScores[minIdx]?.toFixed(0);
+                growthData.highestDate = chartDates[maxIdx];
+                growthData.highestScore = chartScores[maxIdx]?.toFixed(0);
+                growthData.lowestDate = chartDates[minIdx];
+                growthData.lowestScore = chartScores[minIdx]?.toFixed(0);
 
-                // 선택한 날짜가 최고/최저인지 확인
-                const selectedDateStr = formatDateKr(selectedDate);
+                // 선택한 날짜가 최고/최저인지 확인 (MM/DD 형식으로 비교)
+                const selectedMonth = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+                const selectedDay = selectedDate.getDate().toString().padStart(2, '0');
+                const selectedMD = selectedMonth + '/' + selectedDay;
 
-                // 날짜 문자열의 월/일 숫자만 추출해서 비교 (공백 등 포맷 차이 방지)
-                const extractMonthDay = (str) => {
-                  const match = str.match(/(\d+)월\s*(\d+)일/);
-                  return match ? match[1] + '-' + match[2] : str;
-                };
-                const selectedMD = extractMonthDay(selectedDateStr);
-                const highestMD = extractMonthDay(recentDates[maxIdx] || '');
-                const lowestMD = extractMonthDay(recentDates[minIdx] || '');
+                growthData.isSelectedDateHighest = (chartDates[maxIdx] === selectedMD);
+                growthData.isSelectedDateLowest = (chartDates[minIdx] === selectedMD);
 
-                growthData.isSelectedDateHighest = (highestMD === selectedMD);
-                growthData.isSelectedDateLowest = (lowestMD === selectedMD);
+                console.log('[AI피드백-성장지수] 차트데이터 사용:', chartDates, chartScores);
+                console.log('[AI피드백-성장지수] selectedMD:', selectedMD, 'highestDate:', chartDates[maxIdx], 'lowestDate:', chartDates[minIdx]);
 
-                console.log('[AI피드백-성장지수] selectedDate원본:', selectedDate, 'selectedDateStr:', selectedDateStr, 'selectedMD:', selectedMD);
-                console.log('[AI피드백-성장지수] lowestDate:', recentDates[minIdx], 'lowestMD:', lowestMD, 'isLowest:', growthData.isSelectedDateLowest);
-                console.log('[AI피드백-성장지수] highestDate:', recentDates[maxIdx], 'highestMD:', highestMD, 'isHighest:', growthData.isSelectedDateHighest);
+                growthData.trend = chartScores.length >= 2 ?
+                  (chartScores[chartScores.length - 1] > chartScores[0] ? '상승' :
+                   chartScores[chartScores.length - 1] < chartScores[0] ? '하락' : '유지') : '분석중';
 
-                growthData.trend = recentScores.length >= 2 ?
-                  (recentScores[recentScores.length - 1] > recentScores[0] ? '상승' :
-                   recentScores[recentScores.length - 1] < recentScores[0] ? '하락' : '유지') : '분석중';
+                // 5가지 문해력 지수 데이터 추가
+                const indices = chartGrowthData.literacyIndices;
+                if (indices) {
+                  const indexNames = {
+                    literal: '핵심 이해력',
+                    critical: '비판 적용력',
+                    structural: '구조 파악력',
+                    inferential: '추론 통합력',
+                    lexical: '어휘 맥락력'
+                  };
+                  const indexArr = Object.entries(indices)
+                    .filter(([k, v]) => v !== null && v !== undefined)
+                    .map(([k, v]) => ({ key: k, name: indexNames[k], score: v }))
+                    .sort((a, b) => b.score - a.score);
+
+                  if (indexArr.length > 0) {
+                    growthData.literacyIndices = indexArr;
+                    growthData.strongestIndex = indexArr[0].name + '(' + indexArr[0].score.toFixed(1) + '점)';
+                    growthData.weakestIndex = indexArr[indexArr.length - 1].name + '(' + indexArr[indexArr.length - 1].score.toFixed(1) + '점)';
+                    growthData.indexList = indexArr.map(i => i.name + ' ' + i.score.toFixed(1) + '점').join(', ');
+                    console.log('[AI피드백-성장지수] 문해력지수:', growthData.indexList);
+                  }
+                }
               }
             }
 
-            // ===== 4. 과목별 점수 차트 데이터 수집 (allLogs에서 직접 계산) =====
-            // 성장 지수와 동일하게 선택 날짜까지의 데이터를 수집하고, 날짜별 비교도 제공
+            // ===== 4. 과목별 점수 차트 데이터 수집 (실제 차트 데이터 사용) =====
             const subjectData = { hasData: false, isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
 
-            if (typeof allLogs !== 'undefined' && allLogs.length > 0) {
-              // 선택 날짜까지의 모든 로그를 가져옴 (성장 지수와 동일)
-              const endDate = isWeeklyMode ? getWeekEnd(new Date(selectedWeekStart)) : new Date(selectedDate);
-              endDate.setHours(23, 59, 59, 999);
+            // 차트에서 저장된 과목별 데이터를 사용 (차트와 완전 동기화)
+            const chartSubjectData = window.chartDataForAI?.subjectScores;
+            if (chartSubjectData && chartSubjectData.hasData) {
+              const chartDates = chartSubjectData.dates;  // MM/DD 형식
+              const chartSubjects = chartSubjectData.subjects;  // { 과목명: 평균점수 }
 
-              const filteredLogs = allLogs.filter(log => {
-                if (!log.timestamp) return false;
-                const logDate = new Date(log.timestamp);
-                return logDate <= endDate;
-              });
+              subjectData.hasData = true;
+              subjectData.dates = chartDates.join(', ');
 
-              // 단원명에서 과목 추출 함수
-              const getSubject = (unit) => {
-                if (unit.includes('생물')) return '생물';
-                if (unit.includes('지구과학')) return '지구과학';
-                if (unit.includes('물리')) return '물리';
-                if (unit.includes('화학')) return '화학';
-                if (unit.includes('사회')) return '사회';
-                if (unit.includes('지리')) return '지리';
-                if (unit.includes('법')) return '법';
-                if (unit.includes('정치')) return '정치';
-                if (unit.includes('고전')) return '고전문학';
-                if (unit.includes('현대')) return '현대문학';
-                if (unit.includes('세계')) return '세계문학';
-                if (unit.includes('인물')) return '인물';
-                return '기타';
-              };
+              // 과목별 점수를 배열로 변환하여 강점/약점 분석
+              const subjectArr = Object.entries(chartSubjects).map(([name, score]) => ({
+                name,
+                avgScore: score.toFixed(1)
+              }));
 
-              // 날짜 포맷 함수 (성장 지수와 동일)
-              const formatDateKr2 = (d) => {
-                const date = new Date(d);
-                return (date.getMonth() + 1) + '월 ' + date.getDate() + '일';
-              };
+              if (subjectArr.length > 0) {
+                subjectArr.sort((a, b) => parseFloat(b.avgScore) - parseFloat(a.avgScore));
+                subjectData.subjects = subjectArr;
+                subjectData.strongSubject = subjectArr[0]?.name + '(' + subjectArr[0]?.avgScore + '점)';
+                subjectData.weakSubject = subjectArr[subjectArr.length - 1]?.name + '(' + subjectArr[subjectArr.length - 1]?.avgScore + '점)';
+                subjectData.subjectList = subjectArr.map(s => s.name + ' ' + s.avgScore + '점').join(', ');
 
-              // 날짜별 전체 평균 점수 계산 (최고/최저 날짜 판단용)
-              const dateScoreMap2 = {};
-              filteredLogs.forEach(log => {
-                const dateStr = formatDateKr2(log.timestamp);
-                if (!dateScoreMap2[dateStr]) {
-                  dateScoreMap2[dateStr] = { total: 0, count: 0 };
+                // 성장 지수 차트의 날짜별 점수 데이터로 최고/최저 날짜 분석
+                const growthDates = window.chartDataForAI?.growthTrend?.dates || [];
+                const growthScores = window.chartDataForAI?.growthTrend?.scores?.filter(s => s !== null) || [];
+
+                if (growthDates.length > 0 && growthScores.length > 0) {
+                  let maxIdx = 0, minIdx = 0;
+                  growthScores.forEach((s, i) => {
+                    if (s > growthScores[maxIdx]) maxIdx = i;
+                    if (s < growthScores[minIdx]) minIdx = i;
+                  });
+
+                  subjectData.highestDate = growthDates[maxIdx];
+                  subjectData.highestScore = growthScores[maxIdx]?.toFixed(0);
+                  subjectData.lowestDate = growthDates[minIdx];
+                  subjectData.lowestScore = growthScores[minIdx]?.toFixed(0);
+                  subjectData.scores = growthScores.map(s => s?.toFixed(0) || '-').join(', ');
+
+                  // 선택한 날짜가 최고/최저인지 확인
+                  const selectedMonth = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+                  const selectedDay = selectedDate.getDate().toString().padStart(2, '0');
+                  const selectedMD = selectedMonth + '/' + selectedDay;
+
+                  subjectData.isSelectedDateHighest = (growthDates[maxIdx] === selectedMD);
+                  subjectData.isSelectedDateLowest = (growthDates[minIdx] === selectedMD);
+
+                  console.log('[AI피드백-과목별] 차트데이터 사용:', chartSubjects);
+                  console.log('[AI피드백-과목별] dates:', growthDates, 'scores:', growthScores.map(s => s?.toFixed(0)));
                 }
-                const indices = [log.literalIndex, log.structuralIndex, log.lexicalIndex, log.inferentialIndex, log.criticalIndex];
-                const validIndices = indices.filter(i => i !== undefined && i !== null);
-                if (validIndices.length > 0) {
-                  const avgIndex = validIndices.reduce((a, b) => a + b, 0) / validIndices.length;
-                  dateScoreMap2[dateStr].total += avgIndex;
-                  dateScoreMap2[dateStr].count++;
-                }
-              });
-
-              // 날짜별 평균 계산 및 최고/최저 찾기
-              const sortedDates2 = Object.keys(dateScoreMap2).sort((a, b) => {
-                const parseKrDate = (str) => {
-                  const match = str.match(/(\d+)월\s*(\d+)일/);
-                  if (match) return new Date(2025, parseInt(match[1]) - 1, parseInt(match[2]));
-                  return new Date(0);
-                };
-                return parseKrDate(a) - parseKrDate(b);
-              });
-              const recentDates2 = sortedDates2.slice(-5);
-              const recentScores2 = recentDates2.map(d => dateScoreMap2[d].total / dateScoreMap2[d].count);
-
-              if (recentDates2.length > 0) {
-                // 날짜별 데이터가 있으면 hasData = true (과목이 없어도)
-                subjectData.hasData = true;
-
-                let maxIdx2 = 0, minIdx2 = 0;
-                recentScores2.forEach((s, i) => {
-                  if (s > recentScores2[maxIdx2]) maxIdx2 = i;
-                  if (s < recentScores2[minIdx2]) minIdx2 = i;
-                });
-
-                // NaN 체크 함수
-                const safeScore = (s) => (s !== undefined && s !== null && !isNaN(s)) ? s.toFixed(0) : '-';
-
-                subjectData.highestDate = recentDates2[maxIdx2];
-                subjectData.highestScore = safeScore(recentScores2[maxIdx2]);
-                subjectData.lowestDate = recentDates2[minIdx2];
-                subjectData.lowestScore = safeScore(recentScores2[minIdx2]);
-                subjectData.dates = recentDates2.join(', ');
-                subjectData.scores = recentScores2.map(s => safeScore(s)).join(', ');
-
-                // 선택한 날짜가 최고/최저인지 확인
-                const selectedDateStr2 = formatDateKr2(selectedDate);
-                const extractMonthDay2 = (str) => {
-                  const match = str.match(/(\d+)월\s*(\d+)일/);
-                  return match ? match[1] + '-' + match[2] : str;
-                };
-                const selectedMD2 = extractMonthDay2(selectedDateStr2);
-                const highestMD2 = extractMonthDay2(recentDates2[maxIdx2] || '');
-                const lowestMD2 = extractMonthDay2(recentDates2[minIdx2] || '');
-
-                subjectData.isSelectedDateHighest = (highestMD2 === selectedMD2);
-                subjectData.isSelectedDateLowest = (lowestMD2 === selectedMD2);
-
-                console.log('[AI피드백-과목별] recentDates2:', recentDates2, 'scores:', recentScores2.map(s => s?.toFixed(0)));
-                console.log('[AI피드백-과목별] selectedMD:', selectedMD2, 'lowestMD:', lowestMD2, 'isLowest:', subjectData.isSelectedDateLowest);
-              }
-
-              // 전체 기간 과목별 점수 집계
-              const subjectScoreMap = {};
-              filteredLogs.forEach(log => {
-                const subject = getSubject(log.unit || '');
-                if (!subjectScoreMap[subject]) {
-                  subjectScoreMap[subject] = { total: 0, count: 0 };
-                }
-                const indices = [log.literalIndex, log.structuralIndex, log.lexicalIndex, log.inferentialIndex, log.criticalIndex];
-                const validIndices = indices.filter(i => i !== undefined && i !== null);
-                if (validIndices.length > 0) {
-                  const avgIndex = validIndices.reduce((a, b) => a + b, 0) / validIndices.length;
-                  subjectScoreMap[subject].total += avgIndex;
-                  subjectScoreMap[subject].count++;
-                }
-              });
-
-              subjectData.subjects = [];
-              Object.keys(subjectScoreMap).forEach(subject => {
-                if (subject !== '기타' && subjectScoreMap[subject].count > 0) {
-                  const avgScore = subjectScoreMap[subject].total / subjectScoreMap[subject].count;
-                  subjectData.subjects.push({ name: subject, avgScore: avgScore.toFixed(0), count: subjectScoreMap[subject].count });
-                }
-              });
-
-              if (subjectData.subjects.length > 0) {
-                subjectData.hasData = true;
-                subjectData.subjects.sort((a, b) => parseFloat(b.avgScore) - parseFloat(a.avgScore));
-                subjectData.strongSubject = subjectData.subjects[0]?.name + '(' + subjectData.subjects[0]?.avgScore + '점)';
-                subjectData.weakSubject = subjectData.subjects[subjectData.subjects.length - 1]?.name +
-                  '(' + subjectData.subjects[subjectData.subjects.length - 1]?.avgScore + '점)';
-                subjectData.subjectList = subjectData.subjects.map(s => s.name + ' ' + s.avgScore + '점').join(', ');
               }
             }
 
@@ -11743,6 +11635,12 @@ app.get("/my-learning", async (req, res) => {
         let indexTrendAllDates = [];
         let indexTrendDateIndexMap = {};
 
+        // AI 피드백용 차트 데이터 저장 (차트와 동기화)
+        window.chartDataForAI = {
+          growthTrend: { dates: [], scores: [], hasData: false },
+          subjectScores: { dates: [], subjects: {}, hasData: false }
+        };
+
         function renderIndexTrendChart() {
           const canvas = document.getElementById('indexTrendChart');
           const legendContainer = document.getElementById('indexTrendLegend');
@@ -11853,6 +11751,38 @@ app.get("/my-learning", async (req, res) => {
             const structuralData = displayDates.map(d => indexTrendDateIndexMap[d] ? calcAvg(indexTrendDateIndexMap[d].structural) : null);
             const inferentialData = displayDates.map(d => indexTrendDateIndexMap[d] ? calcAvg(indexTrendDateIndexMap[d].inferential) : null);
             const lexicalData = displayDates.map(d => indexTrendDateIndexMap[d] ? calcAvg(indexTrendDateIndexMap[d].lexical) : null);
+
+            // ===== AI 피드백용 데이터 저장 (차트와 완전 동기화) =====
+            const avgScores = displayDates.map((d, i) => {
+              const indices = [
+                literalData[i],
+                criticalData[i],
+                structuralData[i],
+                inferentialData[i],
+                lexicalData[i]
+              ].filter(v => v !== null && v !== undefined);
+              return indices.length > 0 ? indices.reduce((a, b) => a + b, 0) / indices.length : null;
+            });
+
+            // 5가지 문해력 지수별 평균 계산 (AI 피드백용)
+            const calcIndexAvg = (arr) => {
+              const valid = arr.filter(v => v !== null && v !== undefined);
+              return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+            };
+            const literacyIndices = {
+              literal: calcIndexAvg(literalData),      // 핵심 이해력
+              critical: calcIndexAvg(criticalData),    // 비판 적용력
+              structural: calcIndexAvg(structuralData), // 구조 파악력
+              inferential: calcIndexAvg(inferentialData), // 추론 통합력
+              lexical: calcIndexAvg(lexicalData)       // 어휘 맥락력
+            };
+
+            window.chartDataForAI.growthTrend = {
+              dates: dateLabels,  // MM/DD 형식
+              scores: avgScores,
+              literacyIndices: literacyIndices,  // 5가지 문해력 지수
+              hasData: displayDates.length > 0 && avgScores.some(s => s !== null)
+            };
 
             // 날짜 범위 표시
             if (dateRangeSpan && isWeeklyMode) {
@@ -12407,6 +12337,27 @@ app.get("/my-learning", async (req, res) => {
                 skipNull: true
               };
             }).filter(ds => ds.data.some(v => v !== null)); // 데이터가 있는 과목만
+
+            // ===== AI 피드백용 과목별 점수 데이터 저장 (차트와 완전 동기화) =====
+            const subjectAvgMap = {};
+            subjectConfig.forEach(subj => {
+              const allScores = visibleDates.map(dateStr => {
+                const subjData = dateSubjectScores[dateStr]?.[subj.key];
+                if (subjData && subjData.count > 0) {
+                  return subjData.sum / subjData.count;
+                }
+                return null;
+              }).filter(s => s !== null);
+
+              if (allScores.length > 0) {
+                subjectAvgMap[subj.name] = parseFloat((allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(1));
+              }
+            });
+            window.chartDataForAI.subjectScores = {
+              dates: labels,  // MM/DD 형식
+              subjects: subjectAvgMap,
+              hasData: Object.keys(subjectAvgMap).length > 0
+            };
 
             // 기존 차트 제거
             if (subjectBarChartInstance) {
@@ -24401,7 +24352,9 @@ app.post("/api/ai-learning-feedback", async (req, res) => {
 
 [필수 규칙]
 - 반말체를 사용하여 친근하게 말합니다
-- 학생 이름을 부를 때는 성을 빼고 이름만 부릅니다 (예: "안유빈" 학생이면 "유빈아"라고 부름, "김철수" 학생이면 "철수야"라고 부름)
+- 학생 이름을 부를 때는 성을 빼고 이름만 부르며, 받침 유무에 따라 "~아" 또는 "~야"를 붙입니다
+  예시: "나도해" → "도해야", "안유빈" → "유빈아", "김철수" → "철수야"
+- ⚠️ 절대 금지: "나도야", "나도해야", "유빈이야" 같이 성을 포함하거나 이상한 형태로 부르지 마세요
 - 이모지를 문장 중간이나 끝에 적절히 1-2개 사용합니다
 - 앞으로의 성장 가능성을 언급합니다
 
@@ -24467,68 +24420,46 @@ ${data.completedCount > 0 ? `특히 "${data.units?.[0] || ''}"과 같은 단원�
         if (!data.hasData) {
           return res.json({ ok: true, feedback: "아직 학습 기록이 없어서 성장 지수를 분석할 수 없어요. 학습을 시작하면 여기에서 성장 그래프를 확인할 수 있을 거야! 화이팅!" });
         }
-        const periodText3 = data.isWeeklyMode ? `이번 주 (${data.weekDateRange || ''})` : '최근';
         const sectionText3 = data.isWeeklyMode ? '주간 문해력 성장 지수 변화' : '날짜별 문해력 성장 지수 변화';
-
-        // 선택한 날짜 기준 피드백 방향 결정
-        let growthFeedbackDirection = '';
-        if (data.isSelectedDateLowest) {
-          growthFeedbackDirection = `오늘(${data.lowestDate})은 최근 중 가장 낮은 점수(${data.lowestScore}점)를 받은 날이에요. 하지만 "잘했다"고 하지 마세요! 대신 "오늘은 조금 힘들었나 보네", "다음엔 분명 더 잘할 수 있어", "포기하지 않고 학습한 것 자체가 대단해"처럼 진심으로 격려해주세요. 가장 높았던 ${data.highestDate}(${data.highestScore}점)처럼 다시 올라갈 수 있다고 응원해주세요.`;
-        } else if (data.isSelectedDateHighest) {
-          growthFeedbackDirection = `오늘(${data.highestDate})은 최근 중 가장 높은 점수(${data.highestScore}점)를 받은 날이에요! 정말 대단하다고 칭찬해주세요. 꾸준히 노력한 결과라고 강조해주세요.`;
-        } else {
-          growthFeedbackDirection = `가장 높은 점수를 받은 날(${data.highestDate}, ${data.highestScore}점)을 칭찬하고, 가장 낮은 점수를 받은 날(${data.lowestDate}, ${data.lowestScore}점)은 다음에 더 잘할 수 있다고 격려해주세요.`;
-        }
 
         userPrompt = `다음은 ${grade} ${name} 학생의 ${sectionText3} 데이터입니다.
 
-성장 추이:
-- 분석된 날짜 수: ${data.dateCount || 0}일
-- ${data.isWeeklyMode ? '주간' : '최근'} 날짜: ${data.dates || "-"}
-- 점수 변화: ${data.scores || "-"}
-- 첫 점수 → 최근 점수: ${data.firstScore || "-"}점 → ${data.latestScore || "-"}점
-- 가장 높은 점수: ${data.highestDate || "-"} ${data.highestScore || "-"}점
-- 가장 낮은 점수: ${data.lowestDate || "-"} ${data.lowestScore || "-"}점
-- 전체 추세: ${data.trend || "분석 중"} 추세
+5가지 문해력 지수:
+${data.indexList || '데이터 없음'}
+- 가장 강한 지수: ${data.strongestIndex || '-'}
+- 보완이 필요한 지수: ${data.weakestIndex || '-'}
 
 이 데이터를 바탕으로 "${sectionText3}" 섹션에 대한 따뜻한 피드백을 작성해주세요.
-${growthFeedbackDirection}
-${data.trend === '상승' ? '점수가 올라가는 추세를 칭찬하고 계속 성장 중임을 강조해주세요.' :
-  data.trend === '하락' ? '그래프의 오르내림은 자연스러운 학습 과정이며, 곧 다시 올라갈 수 있다고 격려해주세요.' :
-  '꾸준히 안정적인 실력을 유지하고 있다고 칭찬해주세요.'}`;
+
+⚠️ 작성 규칙:
+1. "오늘은 조금 힘들었나 보네", "노력한 것 자체가 대단해" 같은 일반적인 위로 멘트는 절대 사용하지 마세요.
+2. 가장 높은 문해력 지수(${data.strongestIndex || '-'})를 구체적으로 칭찬해주세요. 예: "핵심 이해력 10점, 정말 대단해!"
+3. 상대적으로 낮은 지수(${data.weakestIndex || '-'})는 성장 가능성으로 격려해주세요. 예: "어휘 맥락력은 조금만 더 연습하면 금방 올라갈 거야!"
+4. 구체적인 지수 이름과 점수를 반드시 포함해주세요.
+5. 꾸준히 학습하면 모든 지수가 균형 있게 성장할 수 있다는 메시지로 마무리해주세요.`;
         break;
 
       case "subject_scores":
         if (!data.hasData) {
           return res.json({ ok: true, feedback: "아직 과목별 점수 기록이 없어요. 학습을 시작하면 여기에서 과목별 분석을 확인할 수 있을 거야! 화이팅!" });
         }
-        const periodText4 = data.isWeeklyMode ? `이번 주 (${data.weekDateRange || ''})` : '최근';
         const sectionText4 = data.isWeeklyMode ? '주간 과목 평균 평점' : '날짜별 과목 평균 평점';
-
-        // 선택한 날짜 기준 피드백 방향 결정 (성장 지수와 동일)
-        let subjectFeedbackDirection = '';
-        if (data.isSelectedDateLowest) {
-          subjectFeedbackDirection = `오늘(${data.lowestDate})은 최근 중 가장 낮은 점수(${data.lowestScore}점)를 받은 날이에요. "잘했다"고 하지 말고, "오늘은 조금 힘들었나 보네", "다음엔 분명 더 잘할 수 있어", "포기하지 않고 학습한 것 자체가 대단해"처럼 진심으로 격려해주세요.`;
-        } else if (data.isSelectedDateHighest) {
-          subjectFeedbackDirection = `오늘(${data.highestDate})은 최근 중 가장 높은 점수(${data.highestScore}점)를 받은 날이에요! 정말 대단하다고 칭찬해주세요.`;
-        } else {
-          subjectFeedbackDirection = `가장 높은 점수를 받은 날(${data.highestDate}, ${data.highestScore}점)을 칭찬하고, 가장 낮은 점수를 받은 날(${data.lowestDate}, ${data.lowestScore}점)은 다음에 더 잘할 수 있다고 격려해주세요.`;
-        }
 
         userPrompt = `다음은 ${grade} ${name} 학생의 ${sectionText4} 데이터입니다.
 
-날짜별/과목별 평점:
-- 분석된 날짜: ${data.dates || "-"}
-- 날짜별 점수: ${data.scores || "-"}
-- 가장 높은 점수 날짜: ${data.highestDate || "-"} (${data.highestScore || "-"}점)
-- 가장 낮은 점수 날짜: ${data.lowestDate || "-"} (${data.lowestScore || "-"}점)
-${data.subjectList ? `- 과목별 평균: ${data.subjectList}` : ''}
-${data.strongSubject ? `- 가장 강한 과목: ${data.strongSubject}` : ''}
-${data.weakSubject ? `- 보완이 필요한 과목: ${data.weakSubject}` : ''}
+과목별 평균 평점:
+${data.subjectList || '데이터 없음'}
+- 가장 강한 과목: ${data.strongSubject || '-'}
+- 보완이 필요한 과목: ${data.weakSubject || '-'}
 
 이 데이터를 바탕으로 "${sectionText4}" 섹션에 대한 따뜻한 피드백을 작성해주세요.
-${subjectFeedbackDirection}
-${data.strongSubject ? `가장 강한 과목(${data.strongSubject})을 구체적으로 칭찬하고, 보완이 필요한 과목(${data.weakSubject || ''})은 조금만 노력하면 더 좋은 점수를 받을 수 있다고 격려해주세요.` : '날짜별 점수 변화를 분석하여 피드백을 작성해주세요.'}`;
+
+⚠️ 작성 규칙:
+1. "오늘은 조금 힘들었나 보네", "노력한 것 자체가 대단해", "점수를 받았지만 이렇게 노력한 것 자체가 대단해" 같은 일반적인 위로 멘트는 절대 사용하지 마세요.
+2. 가장 높은 점수의 과목(${data.strongSubject || '-'})을 구체적으로 칭찬해주세요. 예: "생물 10점, 정말 대단해! 과학적 사고력이 뛰어나네!"
+3. 상대적으로 낮은 과목(${data.weakSubject || '-'})은 성장 가능성으로 격려해주세요. 예: "현대소설은 조금만 더 연습하면 금방 올라갈 거야!"
+4. 구체적인 과목명과 점수를 반드시 포함해주세요.
+5. 다양한 과목을 학습하면서 균형 잡힌 실력을 키워가고 있다는 메시지로 마무리해주세요.`;
         break;
 
       case "vocab_scores":
