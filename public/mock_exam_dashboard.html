@@ -6827,7 +6827,7 @@
                 litModernPoem: '목련나무 옆+그리운 곳',
                 litModernNovel: '213호 주택',
                 litClassicPoem: '개암정가+청청각기',
-                litClassicProse: '당태종전'
+                litClassicProse: '고전산문'
             };
             return titles[key] || '';
         }
@@ -6842,26 +6842,32 @@
         }
 
         // 보완 학습 완료 상태 및 점수 확인
-        async function checkSupplementStatus(areaKey) {
-            const examIdMap = {
-                litClassicPoem: 'supplement_classic_poem',
-                litClassicProse: 'supplement_classic_prose',
-                speechWrite: 'supplement_writing',
-                grammarClassic: 'supplement_grammar_classic',
-                litModernNovel: 'supplement_modern_novel',
-                speechTalk: 'supplement_speech',
-                speechIntegrated: 'supplement_speech_integrated',
-                // 추가 보완학습 매핑
-                litModernPoem: 'supplement_modern_poem',
-                grammarModern: 'supplement_grammar_modern',
-                readingScience: 'supplement_reading_science',
-                readingLaw: 'supplement_reading_law',
-                readingSocial: 'supplement_reading_social',
-                readingTech: 'supplement_reading_tech',
-                readingHumanities: 'supplement_reading_humanities',
-                readingArt: 'supplement_reading_art'
-            };
-            const examId = examIdMap[areaKey];
+        async function checkSupplementStatus(areaKey, specificExamId = null) {
+            // 특정 examId가 지정되면 그것을 우선 사용
+            let examId = specificExamId;
+
+            if (!examId) {
+                // 기본 매핑 (하위 호환성)
+                const examIdMap = {
+                    litClassicPoem: 'supplement_classic_poem',
+                    litClassicProse: 'supplement_classic_prose',
+                    speechWrite: 'supplement_writing',
+                    grammarClassic: 'supplement_grammar_classic',
+                    litModernNovel: 'supplement_modern_novel',
+                    speechTalk: 'supplement_speech',
+                    speechIntegrated: 'supplement_speech_integrated',
+                    // 추가 보완학습 매핑
+                    litModernPoem: 'supplement_modern_poem',
+                    grammarModern: 'supplement_grammar_modern',
+                    readingScience: 'supplement_reading_science',
+                    readingLaw: 'supplement_reading_law',
+                    readingSocial: 'supplement_reading_social',
+                    readingTech: 'supplement_reading_tech',
+                    readingHumanities: 'supplement_reading_humanities',
+                    readingArt: 'supplement_reading_art'
+                };
+                examId = examIdMap[areaKey];
+            }
             if (!examId) return { isCompleted: false, score: null };
 
             try {
@@ -6891,9 +6897,21 @@
             const slider = document.getElementById('recommendTaskSlider');
             slider.innerHTML = '';
 
+            // examId 기준으로 중복 제거 (같은 시험지면 첫번째 것만 유지)
+            const uniqueTaskMap = new Map();
+            recommendTasks.forEach(task => {
+                const key = task.examInfo?.examId || `${task.areaKey}_${task.targetMockRound || 'null'}`;
+                if (!uniqueTaskMap.has(key)) {
+                    uniqueTaskMap.set(key, task);
+                }
+            });
+            const uniqueTasks = Array.from(uniqueTaskMap.values());
+
             // 먼저 모든 과제의 완료 상태를 확인
-            const tasksWithStatus = await Promise.all(recommendTasks.map(async (task, index) => {
-                const supplementResult = await checkSupplementStatus(task.areaKey);
+            // 과제의 status 필드 또는 보완학습 결과(SupplementResult)로 완료 여부 판단
+            const tasksWithStatus = await Promise.all(uniqueTasks.map(async (task, index) => {
+                const supplementResult = await checkSupplementStatus(task.areaKey, task.examInfo?.examId);
+                // 과제 status가 completed이거나, 해당 보완학습을 이미 풀었으면 완료
                 const isCompleted = task.status === 'completed' || supplementResult.isCompleted;
                 return { task, index, supplementResult, isCompleted };
             }));
@@ -6914,11 +6932,11 @@
                 readingLaw: 12        // 법경제
             };
 
-            // 완료 -> 미완료 순서, 같은 상태 내에서는 영역 우선순위 순서
+            // 미완료 -> 완료 순서, 같은 상태 내에서는 영역 우선순위 순서
             tasksWithStatus.sort((a, b) => {
-                // 1차: 완료/미완료 (완료가 앞으로)
-                if (a.isCompleted && !b.isCompleted) return -1;
-                if (!a.isCompleted && b.isCompleted) return 1;
+                // 1차: 완료/미완료 (미완료가 앞으로)
+                if (!a.isCompleted && b.isCompleted) return -1;
+                if (a.isCompleted && !b.isCompleted) return 1;
                 // 2차: 같은 상태 내에서 영역 우선순위
                 const priorityA = areaPriority[a.task.areaKey] || 99;
                 const priorityB = areaPriority[b.task.areaKey] || 99;
@@ -6928,10 +6946,19 @@
             for (const { task, index, supplementResult, isCompleted } of tasksWithStatus) {
                 const diffClass = task.diffPercent >= 26 ? 'high' : (task.diffPercent >= 16 ? 'medium' : 'low');
                 const completedClass = isCompleted ? 'completed' : '';
-                const parentName = PARENT_AREA_NAMES[task.parentArea] || task.parentArea;
+                // parentArea가 없으면 areaKey에서 추론
+                let parentArea = task.parentArea;
+                if (!parentArea || parentArea === 'undefined') {
+                    if (task.areaKey?.startsWith('speech')) parentArea = 'speech';
+                    else if (task.areaKey?.startsWith('grammar')) parentArea = 'grammar';
+                    else if (task.areaKey?.startsWith('reading')) parentArea = 'reading';
+                    else if (task.areaKey?.startsWith('lit')) parentArea = 'literature';
+                }
+                const parentName = PARENT_AREA_NAMES[parentArea] || parentArea || '';
                 const statusText = isCompleted ? '완료' : '미완료';
                 const statusClass = isCompleted ? 'completed' : 'pending';
-                const supplementTitle = getSupplementTitle(task.areaKey);
+                // 서버에서 반환한 examInfo가 있으면 그 제목 사용, 없으면 기본값
+                const supplementTitle = task.examInfo?.title || getSupplementTitle(task.areaKey);
 
                 // 점수 표시 (완료된 경우)
                 let scoreHtml = '';
@@ -6945,7 +6972,7 @@
 
                 card.innerHTML = `
                     <div class="status-badge ${statusClass}">${statusText}</div>
-                    <div class="area-name">${task.areaName}</div>
+                    <div class="area-name">${getDetailAreaName(task.areaKey)}</div>
                     <div class="supplement-title">${supplementTitle}</div>
                     ${scoreHtml}
                     <div class="diff-percent ${diffClass}">
@@ -6960,75 +6987,30 @@
 
         // 과제 카드 클릭 핸들러
         function handleRecommendTaskClick(task, index) {
-            // 화법(발표 : 식물의 인지 행동) - 보완학습 페이지로 이동
-            if (task.areaKey === 'speechTalk') {
-                window.location.href = 'supplement_speech.html';
+            // 서버에서 반환한 examInfo.pageUrl이 있으면 그것을 우선 사용
+            if (task.examInfo?.pageUrl) {
+                window.location.href = task.examInfo.pageUrl;
                 return;
             }
 
-            // 화작통합(환경 동아리 대화 + 초고) - 보완학습 페이지로 이동
-            if (task.areaKey === 'speechIntegrated') {
-                window.location.href = 'supplement_speech_integrated.html';
-                return;
-            }
+            // 기존 fallback 로직
+            const areaPageMap = {
+                speechTalk: 'supplement_speech.html',
+                speechIntegrated: 'supplement_speech_integrated.html',
+                litClassicPoem: 'supplement_classic_poem.html',
+                speechWrite: 'supplement_writing.html',
+                grammarClassic: 'supplement_grammar_classic.html',
+                litModernNovel: 'supplement_modern_novel.html',
+                litClassicProse: 'supplement_classic_prose.html',
+                grammarModern: 'supplement_grammar_modern.html',
+                litModernPoem: 'supplement_modern_poem.html',
+                readingScience: 'supplement_reading_science.html',
+                readingLaw: 'supplement_reading_law.html',
+                readingHumanities: 'supplement_reading_humanities.html'
+            };
 
-            // 고전시가(개암정가+청청각기) - 보완학습 페이지로 이동
-            if (task.areaKey === 'litClassicPoem') {
-                window.location.href = 'supplement_classic_poem.html';
-                return;
-            }
-
-            // 작문(자전거 주차장 방치 문제) - 보완학습 페이지로 이동
-            if (task.areaKey === 'speechWrite') {
-                window.location.href = 'supplement_writing.html';
-                return;
-            }
-
-            // 중세문법(연결어미+주격조사) - 보완학습 페이지로 이동
-            if (task.areaKey === 'grammarClassic') {
-                window.location.href = 'supplement_grammar_classic.html';
-                return;
-            }
-
-            // 현대소설(213호 주택) - 보완학습 페이지로 이동
-            if (task.areaKey === 'litModernNovel') {
-                window.location.href = 'supplement_modern_novel.html';
-                return;
-            }
-
-            // 고전산문(당태종전) - 보완학습 페이지로 이동
-            if (task.areaKey === 'litClassicProse') {
-                window.location.href = 'supplement_classic_prose.html';
-                return;
-            }
-
-            // 현대문법(문장의 종류+음운변동) - 보완학습 페이지로 이동
-            if (task.areaKey === 'grammarModern') {
-                window.location.href = 'supplement_grammar_modern.html';
-                return;
-            }
-
-            // 현대시(목련나무 옆+그리운 곳) - 보완학습 페이지로 이동
-            if (task.areaKey === 'litModernPoem') {
-                window.location.href = 'supplement_modern_poem.html';
-                return;
-            }
-
-            // 과학기술(기술 : 햅틱스) - 보완학습 페이지로 이동
-            if (task.areaKey === 'readingScience') {
-                window.location.href = 'supplement_reading_science.html';
-                return;
-            }
-
-            // 법경제(법 : 민법 공유물 분할) - 보완학습 페이지로 이동
-            if (task.areaKey === 'readingLaw') {
-                window.location.href = 'supplement_reading_law.html';
-                return;
-            }
-
-            // 인문사회예술(인문 : 언어철학 퍼트넘) - 보완학습 페이지로 이동
-            if (task.areaKey === 'readingHumanities') {
-                window.location.href = 'supplement_reading_humanities.html';
+            if (areaPageMap[task.areaKey]) {
+                window.location.href = areaPageMap[task.areaKey];
                 return;
             }
 

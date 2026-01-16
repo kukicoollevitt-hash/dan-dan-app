@@ -21050,7 +21050,7 @@ const DETAIL_AREA_INFO = {
   litModernPoem: { name: '현대시', parent: 'literature' },
   litModernNovel: { name: '현대소설', parent: 'literature' },
   litClassicPoem: { name: '고전시가', parent: 'literature' },
-  litClassicProse: { name: '당태종전', parent: 'literature' }
+  litClassicProse: { name: '고전산문', parent: 'literature' }
 };
 
 // 시험별 12개 세부 영역 문항 매핑
@@ -21126,16 +21126,98 @@ app.get('/api/mock-exam/recommend-tasks/:userId', async (req, res) => {
     const { userId } = req.params;
     const currentWeek = getWeekNumber();
 
-    // 미완료 과제는 주차와 관계없이 모두 조회, 완료된 과제는 현재 주차만 조회
-    const tasks = await MockExamRecommendTask.find({
-      userId: userId,
-      $or: [
-        { status: { $ne: 'completed' } },  // 미완료 과제는 모든 주차
-        { weekNumber: currentWeek }         // 완료된 과제는 현재 주차만
-      ]
-    }).sort({ weekNumber: -1, diffPercent: -1 }); // 최신 주차 먼저, 그 다음 차이가 큰 순서
+    // userId 또는 visitorId로 사용자 조회하여 phone 가져오기
+    let phone = null;
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      const user = await MockExamUser.findById(userId).select('phone').lean();
+      if (user) phone = user.phone;
+    }
 
-    res.json({ ok: true, tasks, weekNumber: currentWeek });
+    // 미완료 과제는 주차와 관계없이 모두 조회, 완료된 과제는 현재 주차만 조회
+    // userId 또는 phone으로 조회
+    const userCondition = phone
+      ? { $or: [{ userId }, { phone }] }
+      : { userId };
+
+    const tasks = await MockExamRecommendTask.find({
+      $and: [
+        userCondition,
+        {
+          $or: [
+            { status: { $ne: 'completed' } },  // 미완료 과제는 모든 주차
+            { weekNumber: currentWeek }         // 완료된 과제는 현재 주차만
+          ]
+        }
+      ]
+    }).sort({ weekNumber: -1, diffPercent: -1 }).lean(); // 최신 주차 먼저, 그 다음 차이가 큰 순서
+
+    // 각 과제에 해당하는 시험지 정보 추가
+    const dbExams = await SupplementExam.find({}).lean();
+
+    // 하드코딩된 보완 학습 시험지 목록 (HTML 파일로 직접 만든 시험지)
+    const hardcodedExamsList = [
+      { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem', title: '개암정가 + 청청각기', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_classic_poem.html' },
+      { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem_geumrusa', title: '금루사 + 그리운 외손녀', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_classic_poem_geumrusa.html' },
+      { areaKey: 'speechWrite', examId: 'supplement_writing', title: '자전거 주차장 방치 문제', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_writing.html' },
+      { areaKey: 'grammarClassic', examId: 'supplement_grammar_classic', title: '연결어미+주격조사', questionCount: 2, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_grammar_classic.html' },
+      { areaKey: 'grammarClassic', examId: 'supplement_grammar_classic_case', title: '목적격조사+서술격조사', questionCount: 2, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_grammar_classic_case.html' },
+      { areaKey: 'litModernNovel', examId: 'supplement_modern_novel', title: '213호 주택', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_modern_novel.html' },
+      { areaKey: 'speechTalk', examId: 'supplement_speech', title: '발표 : 식물의 인지 행동', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_speech.html' },
+      { areaKey: 'speechTalk', examId: 'supplement_speech_food', title: '강연 : 식중독 예방법', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_speech_food.html' },
+      { areaKey: 'speechWrite', examId: 'supplement_writing_subscription', title: '구독 경제 이용', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_writing_subscription.html' },
+      { areaKey: 'litClassicProse', examId: 'supplement_classic_prose', title: '당태종전', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_classic_prose.html' },
+      { areaKey: 'litClassicProse', examId: 'supplement_classic_prose_nakseong', title: '낙성비룡', questionCount: 8, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_classic_prose_nakseong.html' },
+      { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated', title: '환경 동아리 대화 + 초고', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_speech_integrated.html' },
+      { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated_job', title: '미술 심리 상담사', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_speech_integrated_job.html' },
+      { areaKey: 'litModernPoem', examId: 'supplement_modern_poem', title: '목련나무 옆+그리운 곳', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_modern_poem.html' },
+      { areaKey: 'litModernPoem', examId: 'supplement_literature_poem_sea', title: '주머니 속의 바다+속리산에서', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_literature_poem_sea.html' },
+      { areaKey: 'litModernNovel', examId: 'supplement_literature_novel_rondo', title: '론도', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_literature_novel_rondo.html' },
+      { areaKey: 'grammarModern', examId: 'supplement_grammar_modern', title: '문장의 종류+음운변동', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_grammar_modern.html' },
+      { areaKey: 'grammarModern', examId: 'supplement_grammar_modern_semantic', title: '단어의미관계+음운변동+안은문장', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_grammar_modern_semantic.html' },
+      { areaKey: 'readingScience', examId: 'supplement_reading_science', title: '기술 : 햅틱스', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_reading_science.html' },
+      { areaKey: 'readingScience', examId: 'supplement_reading_science_tech', title: '기술 : 근접 습도 센서', questionCount: 9, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_reading_science_tech.html' },
+      { areaKey: 'readingLaw', examId: 'supplement_reading_law', title: '법 : 민법 공유물 분할', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_reading_law.html' },
+      { areaKey: 'readingLaw', examId: 'supplement_reading_law_property', title: '법 : 물권법', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_reading_law_property.html' },
+      { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities', title: '인문 : 언어철학 퍼트넘', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_reading_humanities.html' },
+      { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities_art', title: '예술 : 분석미학의 이해', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_reading_humanities_art.html' }
+    ];
+
+    const allExams = [...dbExams, ...hardcodedExamsList];
+
+    const tasksWithExamInfo = tasks.map(task => {
+      // 해당 영역 + 회차에 맞는 시험지 찾기
+      const targetRound = task.targetMockRound;
+      let matchedExam = null;
+
+      // 1차: 영역 + 회차 일치하는 시험지
+      matchedExam = allExams.find(exam => {
+        return exam.areaKey === task.areaKey && exam.targetMockRound === targetRound && exam.isActive !== false;
+      });
+
+      // 2차: 영역만 일치하고 회차 미지정인 시험지
+      if (!matchedExam) {
+        matchedExam = allExams.find(exam => {
+          return exam.areaKey === task.areaKey && (exam.targetMockRound === null || exam.targetMockRound === undefined) && exam.isActive !== false;
+        });
+      }
+
+      // 3차: 영역만 일치하는 아무 시험지
+      if (!matchedExam) {
+        matchedExam = allExams.find(exam => exam.areaKey === task.areaKey && exam.isActive !== false);
+      }
+
+      return {
+        ...task,
+        examInfo: matchedExam ? {
+          examId: matchedExam.examId,
+          title: matchedExam.title,
+          pageUrl: matchedExam.pageUrl,
+          questionCount: matchedExam.questionCount
+        } : null
+      };
+    });
+
+    res.json({ ok: true, tasks: tasksWithExamInfo, weekNumber: currentWeek });
   } catch (err) {
     console.error('❌ [/api/mock-exam/recommend-tasks] 오류:', err);
     res.status(500).json({ ok: false, message: '조회 중 오류가 발생했습니다.', error: err.message });
@@ -21263,6 +21345,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2024-12-30')
       },
       {
+        areaKey: 'litClassicPoem',
+        examId: 'supplement_classic_poem_geumrusa',
+        title: '금루사 + 그리운 외손녀',
+        questionCount: 4,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_classic_poem_geumrusa.html',
+        createdAt: new Date('2025-01-16'),
+        updatedAt: new Date('2025-01-16')
+      },
+      {
         areaKey: 'speechWrite',
         examId: 'supplement_writing',
         title: '자전거 주차장 방치 문제',
@@ -21287,6 +21381,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2024-12-31')
       },
       {
+        areaKey: 'grammarClassic',
+        examId: 'supplement_grammar_classic_case',
+        title: '목적격조사+서술격조사',
+        questionCount: 2,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_grammar_classic_case.html',
+        createdAt: new Date('2024-12-31'),
+        updatedAt: new Date('2024-12-31')
+      },
+      {
         areaKey: 'litModernNovel',
         examId: 'supplement_modern_novel',
         title: '213호 주택',
@@ -21302,13 +21408,37 @@ app.get('/api/supplement-exams', async (req, res) => {
         areaKey: 'speechTalk',
         examId: 'supplement_speech',
         title: '발표 : 식물의 인지 행동',
-        questionCount: 6,
+        questionCount: 7,
         isActive: true,
         isHardcoded: true,
         targetMockRound: 1,
         pageUrl: '/supplement_speech.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
+      },
+      {
+        areaKey: 'speechTalk',
+        examId: 'supplement_speech_food',
+        title: '강연 : 식중독 예방법',
+        questionCount: 7,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_speech_food.html',
+        createdAt: new Date('2025-01-16'),
+        updatedAt: new Date('2025-01-16')
+      },
+      {
+        areaKey: 'speechWrite',
+        examId: 'supplement_writing_subscription',
+        title: '구독 경제 이용',
+        questionCount: 4,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_writing_subscription.html',
+        createdAt: new Date('2025-01-16'),
+        updatedAt: new Date('2025-01-16')
       },
       {
         areaKey: 'litClassicProse',
@@ -21323,6 +21453,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2025-01-01')
       },
       {
+        areaKey: 'litClassicProse',
+        examId: 'supplement_classic_prose_nakseong',
+        title: '낙성비룡',
+        questionCount: 8,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_classic_prose_nakseong.html',
+        createdAt: new Date('2025-01-16'),
+        updatedAt: new Date('2025-01-16')
+      },
+      {
         areaKey: 'speechIntegrated',
         examId: 'supplement_speech_integrated',
         title: '환경 동아리 대화 + 초고',
@@ -21331,6 +21473,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         isHardcoded: true,
         targetMockRound: 1,
         pageUrl: '/supplement_speech_integrated.html',
+        createdAt: new Date('2025-01-01'),
+        updatedAt: new Date('2025-01-01')
+      },
+      {
+        areaKey: 'speechIntegrated',
+        examId: 'supplement_speech_integrated_job',
+        title: '미술 심리 상담사',
+        questionCount: 7,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_speech_integrated_job.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
       },
@@ -21347,6 +21501,30 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2025-01-01')
       },
       {
+        areaKey: 'litModernPoem',
+        examId: 'supplement_literature_poem_sea',
+        title: '주머니 속의 바다+속리산에서',
+        questionCount: 6,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_literature_poem_sea.html',
+        createdAt: new Date('2025-01-01'),
+        updatedAt: new Date('2025-01-01')
+      },
+      {
+        areaKey: 'litModernNovel',
+        examId: 'supplement_literature_novel_rondo',
+        title: '론도',
+        questionCount: 4,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_literature_novel_rondo.html',
+        createdAt: new Date('2025-01-16'),
+        updatedAt: new Date('2025-01-16')
+      },
+      {
         areaKey: 'grammarModern',
         examId: 'supplement_grammar_modern',
         title: '문장의 종류+음운변동',
@@ -21357,6 +21535,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         pageUrl: '/supplement_grammar_modern.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
+      },
+      {
+        areaKey: 'grammarModern',
+        examId: 'supplement_grammar_modern_semantic',
+        title: '단어의미관계+음운변동+안은문장',
+        questionCount: 4,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_grammar_modern_semantic.html',
+        createdAt: new Date('2025-01-16'),
+        updatedAt: new Date('2025-01-16')
       },
       {
         areaKey: 'readingScience',
@@ -21371,6 +21561,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2025-01-01')
       },
       {
+        areaKey: 'readingScience',
+        examId: 'supplement_reading_science_tech',
+        title: '기술 : 근접 습도 센서',
+        questionCount: 9,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_reading_science_tech.html',
+        createdAt: new Date('2025-01-01'),
+        updatedAt: new Date('2025-01-01')
+      },
+      {
         areaKey: 'readingLaw',
         examId: 'supplement_reading_law',
         title: '법 : 민법 공유물 분할',
@@ -21379,6 +21581,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         isHardcoded: true,
         targetMockRound: 1,
         pageUrl: '/supplement_reading_law.html',
+        createdAt: new Date('2025-01-01'),
+        updatedAt: new Date('2025-01-01')
+      },
+      {
+        areaKey: 'readingLaw',
+        examId: 'supplement_reading_law_property',
+        title: '법 : 물권법',
+        questionCount: 5,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 2,
+        pageUrl: '/supplement_reading_law_property.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
       },
@@ -21396,40 +21610,16 @@ app.get('/api/supplement-exams', async (req, res) => {
       },
       {
         areaKey: 'readingHumanities',
-        examId: 'supplement_reading_social',
-        title: '사회 독서 보완학습',
-        questionCount: 6,
-        isActive: false,
+        examId: 'supplement_reading_humanities_art',
+        title: '예술 : 분석미학의 이해',
+        questionCount: 5,
+        isActive: true,
         isHardcoded: true,
-        targetMockRound: null,
-        pageUrl: '/supplement_reading_social.html',
+        targetMockRound: 2,
+        pageUrl: '/supplement_reading_humanities_art.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
       },
-      {
-        areaKey: 'readingScience',
-        examId: 'supplement_reading_tech',
-        title: '기술 독서 보완학습',
-        questionCount: 6,
-        isActive: false,
-        isHardcoded: true,
-        targetMockRound: null,
-        pageUrl: '/supplement_reading_tech.html',
-        createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-01')
-      },
-      {
-        areaKey: 'readingHumanities',
-        examId: 'supplement_reading_art',
-        title: '예술 독서 보완학습',
-        questionCount: 6,
-        isActive: false,
-        isHardcoded: true,
-        targetMockRound: null,
-        pageUrl: '/supplement_reading_art.html',
-        createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-01')
-      }
     ];
 
     hardcodedExams.forEach(exam => {
@@ -21631,10 +21821,20 @@ app.post('/api/supplement-result/save-answer', async (req, res) => {
       return res.status(400).json({ ok: false, message: '필수 정보가 누락되었습니다.' });
     }
 
+    // 사용자 정보가 없으면 저장하지 않음 (orphan 데이터 방지)
+    if (!userId && !phone) {
+      console.log(`⚠️ [보완학습] 사용자 정보 없음 - 답안 저장 스킵: ${examId}`);
+      return res.json({ ok: true, skipped: true, message: '사용자 정보가 없어 서버에 저장되지 않았습니다.' });
+    }
+
     // 기존 결과 찾기 또는 새로 생성
+    const queryConditions = [];
+    if (userId) queryConditions.push({ userId });
+    if (phone) queryConditions.push({ phone });
+
     let result = await SupplementResult.findOne({
       examId,
-      $or: [{ userId }, { phone }]
+      $or: queryConditions
     });
 
     if (!result) {
@@ -21716,6 +21916,24 @@ app.post('/api/supplement-result/save-grade', async (req, res) => {
     result.completedAt = new Date();
     result.updatedAt = new Date();
     await result.save();
+
+    // 해당 보완학습 과제의 status를 completed로 업데이트
+    const taskQueryConditions = [];
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      taskQueryConditions.push({ userId });
+    }
+    if (phone) taskQueryConditions.push({ phone });
+
+    if (taskQueryConditions.length > 0) {
+      await MockExamRecommendTask.updateMany(
+        {
+          $or: taskQueryConditions,
+          supplementExamId: examId,
+          status: { $ne: 'completed' }
+        },
+        { $set: { status: 'completed', completedAt: new Date() } }
+      );
+    }
 
     console.log(`✅ [보완학습] 채점 완료: ${examId} - ${correctCount}/${totalQuestions} (${score}점) (사용자: ${phone || userId})`);
     res.json({ ok: true, result: { correctCount, totalQuestions, score } });
@@ -21854,20 +22072,32 @@ app.get('/api/mock-exam/supplement-progress/:userId', async (req, res) => {
     const examAreaMap = {
       // 하드코딩된 시험지 매핑 (HTML 파일 기반)
       'supplement_classic_poem': { parentArea: 'literature', areaKey: 'litClassicPoem' },
+      'supplement_classic_poem_geumrusa': { parentArea: 'literature', areaKey: 'litClassicPoem' },
       'supplement_classic_prose': { parentArea: 'literature', areaKey: 'litClassicProse' },
+      'supplement_classic_prose_nakseong': { parentArea: 'literature', areaKey: 'litClassicProse' },
       'supplement_writing': { parentArea: 'speech', areaKey: 'speechWrite' },
       'supplement_grammar_classic': { parentArea: 'grammar', areaKey: 'grammarClassic' },
+      'supplement_grammar_classic_case': { parentArea: 'grammar', areaKey: 'grammarClassic' },
       'supplement_modern_novel': { parentArea: 'literature', areaKey: 'litModernNovel' },
       'supplement_speech': { parentArea: 'speech', areaKey: 'speechTalk' },
       'supplement_modern_poem': { parentArea: 'literature', areaKey: 'litModernPoem' },
       'supplement_grammar_modern': { parentArea: 'grammar', areaKey: 'grammarModern' },
+      'supplement_grammar_modern_semantic': { parentArea: 'grammar', areaKey: 'grammarModern' },
       'supplement_reading_science': { parentArea: 'reading', areaKey: 'readingScience' },
+      'supplement_reading_science_tech': { parentArea: 'reading', areaKey: 'readingScience' },
       'supplement_reading_law': { parentArea: 'reading', areaKey: 'readingLaw' },
+      'supplement_reading_law_property': { parentArea: 'reading', areaKey: 'readingLaw' },
       'supplement_reading_social': { parentArea: 'reading', areaKey: 'readingHumanities' },
       'supplement_reading_tech': { parentArea: 'reading', areaKey: 'readingScience' },
       'supplement_reading_humanities': { parentArea: 'reading', areaKey: 'readingHumanities' },
+      'supplement_reading_humanities_art': { parentArea: 'reading', areaKey: 'readingHumanities' },
       'supplement_reading_art': { parentArea: 'reading', areaKey: 'readingHumanities' },
-      'supplement_speech_integrated': { parentArea: 'speech', areaKey: 'speechIntegrated' }
+      'supplement_speech_integrated': { parentArea: 'speech', areaKey: 'speechIntegrated' },
+      'supplement_speech_integrated_job': { parentArea: 'speech', areaKey: 'speechIntegrated' },
+      'supplement_speech_food': { parentArea: 'speech', areaKey: 'speechTalk' },
+      'supplement_writing_subscription': { parentArea: 'speech', areaKey: 'speechWrite' },
+      'supplement_literature_poem_sea': { parentArea: 'literature', areaKey: 'litModernPoem' },
+      'supplement_literature_novel_rondo': { parentArea: 'literature', areaKey: 'litModernNovel' }
     };
     // DB에 저장된 시험지 매핑 추가
     supplementExams.forEach(exam => {
@@ -21916,9 +22146,13 @@ app.get('/api/mock-exam/supplement-progress/:userId', async (req, res) => {
     });
 
     // 4. AI 추천 보완 과제 완료 데이터도 추가 (MockExamRecommendTask에서 status='completed'인 것)
+    // 단, SupplementResult에 이미 있는 보완학습은 중복 집계하지 않음
     const recommendTaskQuery = [];
     if (userId && userId !== 'undefined') recommendTaskQuery.push({ userId });
     if (phone) recommendTaskQuery.push({ phone });
+
+    // SupplementResult에서 이미 집계된 examId 목록 생성
+    const alreadyCountedExamIds = new Set(supplementResults.map(r => r.examId));
 
     if (recommendTaskQuery.length > 0) {
       const completedTasks = await MockExamRecommendTask.find({
@@ -21926,7 +22160,14 @@ app.get('/api/mock-exam/supplement-progress/:userId', async (req, res) => {
         status: 'completed'
       });
 
+      let skippedCount = 0;
       completedTasks.forEach(task => {
+        // 이미 SupplementResult에서 집계된 보완학습이면 스킵 (중복 방지)
+        if (task.supplementExamId && alreadyCountedExamIds.has(task.supplementExamId)) {
+          skippedCount++;
+          return;
+        }
+
         const parentArea = task.parentArea;
         const areaKey = task.areaKey;
         const taskTotal = task.totalCount || 5;
@@ -21944,7 +22185,7 @@ app.get('/api/mock-exam/supplement-progress/:userId', async (req, res) => {
         }
       });
 
-      console.log(`[예측레이더] AI 추천 과제 완료 ${completedTasks.length}건 반영`);
+      console.log(`[예측레이더] AI 추천 과제 완료 ${completedTasks.length}건 중 ${skippedCount}건 중복으로 스킵, ${completedTasks.length - skippedCount}건 반영`);
     }
 
     // 5. 퍼센트 계산 (대분류)
@@ -21977,12 +22218,7 @@ async function generateRecommendTasksForUser(userId, phone) {
   try {
     const currentWeek = getWeekNumber();
 
-    // 이미 이번 주 과제가 있으면 스킵
-    const existingTasks = await MockExamRecommendTask.findOne({ userId, weekNumber: currentWeek });
-    if (existingTasks) {
-      console.log(`[RecommendTask] 사용자 ${userId}는 이미 ${currentWeek}주차 과제가 있음`);
-      return;
-    }
+    // 기존 과제 유무와 관계없이 새 회차 과제는 추가 생성 (아래 existingTaskKeys로 중복 체크)
 
     // 사용자의 모든 모의고사 결과 조회
     const results = await MockExamResult.find({
@@ -22092,48 +22328,98 @@ async function generateRecommendTasksForUser(userId, phone) {
     const HARDCODED_SUPPLEMENT_EXAMS = [
       { examId: 'supplement_classic_poem', areaKey: 'litClassicPoem', targetMockRound: 1 },
       { examId: 'supplement_writing', areaKey: 'speechWrite', targetMockRound: 1 },
+      { examId: 'supplement_writing_subscription', areaKey: 'speechWrite', targetMockRound: 2 },
       { examId: 'supplement_grammar_classic', areaKey: 'grammarClassic', targetMockRound: 1 },
+      { examId: 'supplement_grammar_classic_case', areaKey: 'grammarClassic', targetMockRound: 2 },
       { examId: 'supplement_modern_novel', areaKey: 'litModernNovel', targetMockRound: 1 },
       { examId: 'supplement_speech', areaKey: 'speechTalk', targetMockRound: 1 },
+      { examId: 'supplement_speech_food', areaKey: 'speechTalk', targetMockRound: 2 },
       { examId: 'supplement_classic_prose', areaKey: 'litClassicProse', targetMockRound: 1 },
+      { examId: 'supplement_classic_prose_nakseong', areaKey: 'litClassicProse', targetMockRound: 2 },
       { examId: 'supplement_speech_integrated', areaKey: 'speechIntegrated', targetMockRound: 1 },
+      { examId: 'supplement_speech_integrated_job', areaKey: 'speechIntegrated', targetMockRound: 2 },
       { examId: 'supplement_modern_poem', areaKey: 'litModernPoem', targetMockRound: 1 },
+      { examId: 'supplement_literature_poem_sea', areaKey: 'litModernPoem', targetMockRound: 2 },
+      { examId: 'supplement_literature_novel_rondo', areaKey: 'litModernNovel', targetMockRound: 2 },
       { examId: 'supplement_grammar_modern', areaKey: 'grammarModern', targetMockRound: 1 },
+      { examId: 'supplement_grammar_modern_semantic', areaKey: 'grammarModern', targetMockRound: 2 },
       { examId: 'supplement_reading_science', areaKey: 'readingScience', targetMockRound: 1 },
+      { examId: 'supplement_reading_science_tech', areaKey: 'readingScience', targetMockRound: 2 },
       { examId: 'supplement_reading_law', areaKey: 'readingLaw', targetMockRound: 1 },
-      { examId: 'supplement_reading_humanities', areaKey: 'readingHumanities', targetMockRound: 1 }
+      { examId: 'supplement_reading_law_property', areaKey: 'readingLaw', targetMockRound: 2 },
+      { examId: 'supplement_reading_humanities', areaKey: 'readingHumanities', targetMockRound: 1 },
+      { examId: 'supplement_reading_humanities_art', areaKey: 'readingHumanities', targetMockRound: 2 }
     ];
 
-    // 영역별로 해당 회차 보완학습이 있는지 확인
-    const areaToSupplementExam = {};
+    // 각 응시 회차별로 해당 회차 보완학습 매핑 (회차별로 별도 과제 생성)
+    const roundToAreaExamMap = {}; // { round: { areaKey: examId } }
+
+    [...completedRounds].forEach(round => {
+      roundToAreaExamMap[round] = {};
+    });
+
     [...supplementExams, ...HARDCODED_SUPPLEMENT_EXAMS].forEach(exam => {
       const round = hardcodedExamRounds.get(exam.examId) !== undefined
         ? hardcodedExamRounds.get(exam.examId)
         : exam.targetMockRound;
 
-      // 해당 회차에 맞는 과제만 매핑 (또는 회차 지정 안된 과제)
-      if (round === latestCompletedRound || round === null) {
-        if (!areaToSupplementExam[exam.areaKey]) {
-          areaToSupplementExam[exam.areaKey] = exam.examId;
+      // 해당 회차에 맞는 과제 매핑 (또는 회차 지정 안된 과제는 모든 회차에 매핑)
+      if (round !== null && completedRounds.has(round)) {
+        if (!roundToAreaExamMap[round][exam.areaKey]) {
+          roundToAreaExamMap[round][exam.areaKey] = exam.examId;
         }
+      } else if (round === null) {
+        // 회차 지정 안된 과제는 모든 응시 회차에 매핑
+        [...completedRounds].forEach(r => {
+          if (!roundToAreaExamMap[r][exam.areaKey]) {
+            roundToAreaExamMap[r][exam.areaKey] = exam.examId;
+          }
+        });
       }
     });
 
-    // 과제 개수 결정: 6% 이상 차이나는 모든 영역 (최대 12개까지)
+    // 기존 과제 조회 (areaKey + targetMockRound 조합으로 중복 체크)
+    const existingTasks = await MockExamRecommendTask.find({
+      $or: [{ userId }, { phone }]
+    }).select('areaKey targetMockRound').lean();
+    const existingTaskKeys = new Set(existingTasks.map(t => `${t.areaKey}_${t.targetMockRound}`));
+    console.log(`[RecommendTask] 사용자 ${userId} 기존 과제: ${existingTaskKeys.size}개`);
+
+    // 과제 개수 결정: 6% 이상 차이나는 모든 영역에 대해, 각 응시 회차별로 과제 생성
     // 목표 점수 대비 부족한 영역은 모두 보완 과제로 추천
-    const tasksToCreate = taskCandidates; // 이미 diff > 5 조건으로 필터링됨
-    for (const task of tasksToCreate) {
-      await MockExamRecommendTask.create({
-        userId,
-        phone,
-        ...task,
-        targetMockRound: latestCompletedRound,
-        supplementExamId: areaToSupplementExam[task.areaKey] || null,
-        weekNumber: currentWeek
-      });
+    let createdCount = 0;
+    for (const task of taskCandidates) {
+      // 각 응시 회차별로 과제 생성
+      for (const round of [...completedRounds]) {
+        const taskKey = `${task.areaKey}_${round}`;
+
+        // 이미 같은 영역 + 회차 조합의 과제가 있으면 건너뛰기
+        if (existingTaskKeys.has(taskKey)) {
+          console.log(`[RecommendTask] ${task.areaKey} 영역 ${round}회차 과제 이미 존재 - 건너뛰기`);
+          continue;
+        }
+
+        // 해당 회차에 맞는 보완학습 시험지가 있는 경우에만 생성
+        const supplementExamId = roundToAreaExamMap[round]?.[task.areaKey] || null;
+        if (!supplementExamId) {
+          console.log(`[RecommendTask] ${task.areaKey} 영역 ${round}회차 보완학습 없음 - 건너뛰기`);
+          continue;
+        }
+
+        await MockExamRecommendTask.create({
+          userId,
+          phone,
+          ...task,
+          targetMockRound: round,
+          supplementExamId,
+          weekNumber: currentWeek
+        });
+        createdCount++;
+        existingTaskKeys.add(taskKey); // 새로 생성한 과제도 중복 체크에 추가
+      }
     }
 
-    console.log(`[RecommendTask] 사용자 ${userId}에게 ${tasksToCreate.length}개 과제 생성 (${currentWeek}주차, ${latestCompletedRound}회차용)`);
+    console.log(`[RecommendTask] 사용자 ${userId}에게 ${createdCount}개 과제 생성 (${currentWeek}주차, ${[...completedRounds].join(',')}회차용)`);
   } catch (err) {
     console.error(`[RecommendTask] 사용자 ${userId} 과제 생성 오류:`, err);
   }
@@ -22177,12 +22463,17 @@ app.post('/api/mock-exam/recommend-tasks/generate/:userId', async (req, res) => 
       return res.status(404).json({ ok: false, message: '사용자를 찾을 수 없습니다.' });
     }
 
-    // 기존 과제 삭제 후 재생성 (테스트용)
-    const currentWeek = getWeekNumber();
-    await MockExamRecommendTask.deleteMany({ userId, weekNumber: currentWeek });
+    // 기존 과제는 유지하고 새 회차 과제만 추가
     await generateRecommendTasksForUser(userId, user.phone);
 
-    const tasks = await MockExamRecommendTask.find({ userId, weekNumber: currentWeek });
+    // 모든 과제 조회 (주차 관계없이)
+    const tasks = await MockExamRecommendTask.find({
+      userId,
+      $or: [
+        { status: { $ne: 'completed' } },
+        { weekNumber: getWeekNumber() }
+      ]
+    });
     res.json({ ok: true, message: '과제가 생성되었습니다.', tasks });
   } catch (err) {
     console.error('❌ [/api/mock-exam/recommend-tasks/generate] 오류:', err);
