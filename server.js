@@ -22214,11 +22214,12 @@ app.get('/api/mock-exam/supplement-progress/:userId', async (req, res) => {
 });
 
 // AI 추천 보완 학습 과제 생성 함수 (사용자별)
-async function generateRecommendTasksForUser(userId, phone) {
+async function generateRecommendTasksForUser(userId, phone, targetRound = null) {
   try {
     const currentWeek = getWeekNumber();
 
     // 기존 과제 유무와 관계없이 새 회차 과제는 추가 생성 (아래 existingTaskKeys로 중복 체크)
+    // targetRound가 지정되면 해당 회차만, 없으면 모든 완료 회차에 대해 과제 생성
 
     // 사용자의 모든 모의고사 결과 조회
     const results = await MockExamResult.find({
@@ -22352,9 +22353,11 @@ async function generateRecommendTasksForUser(userId, phone) {
     ];
 
     // 각 응시 회차별로 해당 회차 보완학습 매핑 (회차별로 별도 과제 생성)
+    // targetRound가 있으면 해당 회차만, 없으면 모든 완료 회차에 대해 매핑
     const roundToAreaExamMap = {}; // { round: { areaKey: examId } }
+    const roundsForMapping = targetRound !== null ? [targetRound] : [...completedRounds];
 
-    [...completedRounds].forEach(round => {
+    roundsForMapping.forEach(round => {
       roundToAreaExamMap[round] = {};
     });
 
@@ -22364,13 +22367,13 @@ async function generateRecommendTasksForUser(userId, phone) {
         : exam.targetMockRound;
 
       // 해당 회차에 맞는 과제 매핑 (또는 회차 지정 안된 과제는 모든 회차에 매핑)
-      if (round !== null && completedRounds.has(round)) {
+      if (round !== null && roundsForMapping.includes(round)) {
         if (!roundToAreaExamMap[round][exam.areaKey]) {
           roundToAreaExamMap[round][exam.areaKey] = exam.examId;
         }
       } else if (round === null) {
         // 회차 지정 안된 과제는 모든 응시 회차에 매핑
-        [...completedRounds].forEach(r => {
+        roundsForMapping.forEach(r => {
           if (!roundToAreaExamMap[r][exam.areaKey]) {
             roundToAreaExamMap[r][exam.areaKey] = exam.examId;
           }
@@ -22387,10 +22390,14 @@ async function generateRecommendTasksForUser(userId, phone) {
 
     // 과제 개수 결정: 6% 이상 차이나는 모든 영역에 대해, 각 응시 회차별로 과제 생성
     // 목표 점수 대비 부족한 영역은 모두 보완 과제로 추천
+    // targetRound가 지정되면 해당 회차만, 없으면 모든 완료 회차에 대해 생성
+    const roundsToProcess = targetRound !== null ? [targetRound] : [...completedRounds];
+    console.log(`[RecommendTask] 처리할 회차: ${roundsToProcess.join(', ')} (targetRound: ${targetRound})`);
+
     let createdCount = 0;
     for (const task of taskCandidates) {
-      // 각 응시 회차별로 과제 생성
-      for (const round of [...completedRounds]) {
+      // 지정된 회차에 대해서만 과제 생성
+      for (const round of roundsToProcess) {
         const taskKey = `${task.areaKey}_${round}`;
 
         // 이미 같은 영역 + 회차 조합의 과제가 있으면 건너뛰기
@@ -23229,7 +23236,13 @@ app.post("/api/mock-exam/submit", async (req, res) => {
         console.log(`✅ [submit] 사용자 ${visitorId}의 examProgress 업데이트 완료`);
 
         // AI 추천 과제 자동 생성 (비동기로 처리)
-        generateRecommendTasksForUser(visitorId, user.phone).catch(err => {
+        // 현재 제출한 회차만 과제 생성하도록 회차 추출
+        const currentExamId = examId || 'korean_mock_1';
+        const roundMatch = currentExamId.match(/korean_mock_(\d+)/);
+        const currentRound = roundMatch ? parseInt(roundMatch[1]) : 1;
+        console.log(`✅ [submit] 현재 제출 회차: ${currentRound}회차 (examId: ${currentExamId})`);
+
+        generateRecommendTasksForUser(visitorId, user.phone, currentRound).catch(err => {
           console.error("❌ [submit] AI 추천 과제 생성 실패:", err);
         });
       }
