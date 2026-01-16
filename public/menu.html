@@ -8471,6 +8471,36 @@ async function performLogout() {
             li.classList.add("disabled");
           }
         });
+
+        // ✅ 부여된 시리즈가 있고, 저장된 시리즈가 없으면 첫 번째 부여 시리즈를 기본 선택
+        const savedSeries = localStorage.getItem('selectedMenuSeries');
+        if (allowedSeriesIds.length > 0 && (!savedSeries || !allowedSeriesIds.includes(savedSeries))) {
+          const firstAllowedSeries = allowedSeriesIds[0];
+          console.log('✅ 부여된 시리즈 중 첫 번째로 기본 선택:', firstAllowedSeries);
+
+          // 현재 선택 업데이트
+          currentSelectedSeries = firstAllowedSeries;
+
+          // UI 활성화 상태 업데이트
+          document.querySelectorAll("#seriesList .series-item").forEach(li => {
+            li.classList.remove("active");
+            if (li.dataset.series === firstAllowedSeries) {
+              li.classList.add("active");
+            }
+          });
+
+          // 분야 렌더링
+          renderDomains(firstAllowedSeries);
+
+          // 설명 텍스트 업데이트
+          if (seriesInfo[firstAllowedSeries]) {
+            document.getElementById("unitDesc").textContent =
+              seriesInfo[firstAllowedSeries].desc + " · 분야와 과목을 선택하세요.";
+          }
+
+          // localStorage에 저장
+          localStorage.setItem('selectedMenuSeries', firstAllowedSeries);
+        }
       } catch (err) {
         console.error('❌ Error applying series restrictions:', err);
       }
