@@ -2310,6 +2310,20 @@
         .legend-dot.average { background: #fbbf24; }
         .legend-dot.global-avg { background: #94a3b8; }
 
+        /* 예측 범례 다이아몬드 */
+        .legend-diamond {
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #fb923c, #c084fc);
+            transform: rotate(45deg);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .legend-prediction {
+            border-left: 1px dashed rgba(255, 255, 255, 0.3);
+            padding-left: 16px;
+            margin-left: 8px;
+        }
+
         /* 막대 그래프 토글 버튼 */
         .bar-toggle-wrapper {
             position: absolute;
@@ -4310,6 +4324,10 @@
                     <div class="legend-item">
                         <span class="legend-dot global-avg"></span>
                         <span>전체 평균</span>
+                    </div>
+                    <div class="legend-item legend-prediction">
+                        <span class="legend-diamond"></span>
+                        <span>예측</span>
                     </div>
                 </div>
 
@@ -8006,6 +8024,50 @@
                         ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
                         ctx.stroke();
                     });
+                });
+
+                // 예측 점수 점선 마커 그리기 (2회차부터, 보완학습 있을 때만)
+                trendData.forEach((item, index) => {
+                    if (item.prediction) {
+                        const x = padding.left + (index + 1) * xStep;
+
+                        // 각 영역별 예측 점수 점선 마커
+                        ['speech', 'grammar', 'reading', 'literature'].forEach(area => {
+                            const color = colors[area];
+                            const predScore = item.prediction[area];
+                            if (predScore !== undefined && predScore !== null) {
+                                const predY = padding.top + chartHeight - ((chartHeight * predScore / 100) * eased);
+
+                                // 예측 마커 (점선 가로선 + 다이아몬드)
+                                // 점선 가로선 (짧게)
+                                ctx.save();
+                                ctx.strokeStyle = color.light;
+                                ctx.lineWidth = 1.5;
+                                ctx.setLineDash([3, 3]);
+                                ctx.beginPath();
+                                ctx.moveTo(x - 12, predY);
+                                ctx.lineTo(x + 12, predY);
+                                ctx.stroke();
+                                ctx.setLineDash([]);
+                                ctx.restore();
+
+                                // 작은 다이아몬드 마커
+                                ctx.save();
+                                ctx.fillStyle = color.light;
+                                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(x, predY - 4);
+                                ctx.lineTo(x + 4, predY);
+                                ctx.lineTo(x, predY + 4);
+                                ctx.lineTo(x - 4, predY);
+                                ctx.closePath();
+                                ctx.fill();
+                                ctx.stroke();
+                                ctx.restore();
+                            }
+                        });
+                    }
                 });
 
                 // 애니메이션 계속
