@@ -10865,11 +10865,127 @@ app.get("/my-learning", async (req, res) => {
       </div>
       </div><!-- detailedLogSection 닫기 -->
 
+      <!-- 형성평가 관문 상세 모달 -->
+      <div id="gateDetailModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#fff; border-radius:20px; width:90%; max-width:600px; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+          <div style="padding:24px 28px; border-bottom:1px solid #e9ecef; display:flex; justify-content:space-between; align-items:center;">
+            <h3 id="gateModalTitle" style="font-size:20px; font-weight:700; color:#212529; margin:0;">관문 상세 정보</h3>
+            <button onclick="closeGateDetailModal()" style="width:36px; height:36px; border:none; background:#f1f3f5; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
+          </div>
+          <div id="gateModalBody" style="padding:28px;">
+            <div style="text-align:center; padding:40px; color:#495057;">데이터를 불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
       <script>
         // datalabels 플러그인 등록
         Chart.register(ChartDataLabels);
+
+        // ===== 형성평가 관문 상세 모달 함수 =====
+        async function showGateDetailModal(gate) {
+          const modal = document.getElementById('gateDetailModal');
+          const modalTitle = document.getElementById('gateModalTitle');
+          const modalBody = document.getElementById('gateModalBody');
+
+          const grade = '${grade}';
+          const name = '${name}';
+
+          modalTitle.textContent = '관문 ' + gate + ' 상세 정보';
+          modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#495057;">데이터를 불러오는 중...</div>';
+          modal.style.display = 'flex';
+
+          try {
+            const res = await fetch('/api/gate-quiz/details?grade=' + encodeURIComponent(grade) + '&name=' + encodeURIComponent(name) + '&gate=' + gate);
+            const result = await res.json();
+
+            if (result.ok) {
+              renderGateDetailModal(result.data, gate);
+            } else {
+              modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#868e96;">데이터를 불러오는데 실패했습니다.</div>';
+            }
+          } catch (err) {
+            console.error('관문 상세 조회 오류:', err);
+            modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#868e96;">서버 오류가 발생했습니다.</div>';
+          }
+        }
+
+        function renderGateDetailModal(data, gate) {
+          const modalBody = document.getElementById('gateModalBody');
+
+          if (data.totalAttempts === 0) {
+            modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#868e96;"><p>아직 상세 시도 기록이 없습니다.</p><p style="font-size:12px; color:#adb5bd; margin-top:8px;">(새로운 형성평가 풀이부터 기록됩니다)</p></div>';
+            return;
+          }
+
+          const formatTime = (seconds) => {
+            if (!seconds) return '0초';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            if (mins > 0) return mins + '분 ' + secs + '초';
+            return secs + '초';
+          };
+
+          const passedDate = data.passedAt ? new Date(data.passedAt).toLocaleDateString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+          }) : '-';
+
+          const getIndexName = (qType) => qType === 'q2' ? '구조파악력' : '핵심이해력';
+
+          let weakestQuestionsHtml = '';
+          let questionDetailsHtml = '';
+
+          if (data.questionDetails && data.questionDetails.length > 0) {
+            const validQuestions = data.questionDetails.filter(q => q.questionNo != null && !isNaN(q.questionNo));
+
+            // 가장 미흡한 문항 2개 선정
+            const sortedByWeakness = [...validQuestions].sort((a, b) => {
+              if (b.cumulativeWrongClicks !== a.cumulativeWrongClicks) return b.cumulativeWrongClicks - a.cumulativeWrongClicks;
+              if (b.cumulativeTime !== a.cumulativeTime) return b.cumulativeTime - a.cumulativeTime;
+              if (a.qType !== b.qType) return a.qType === 'q2' ? -1 : 1;
+              return 0;
+            });
+
+            const weakestTwo = sortedByWeakness.slice(0, 2);
+            const weakestQuestionNos = new Set(weakestTwo.map(q => q.questionNo));
+
+            if (weakestTwo.length > 0) {
+              weakestQuestionsHtml = '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#dc3545; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #ffcdd2;">⚠️ 가장 미흡한 문항 (상위 ' + weakestTwo.length + '개)</div><table style="width:100%; border-collapse:collapse; border:2px solid #ffcdd2; border-radius:8px; overflow:hidden;"><thead style="background:#ffebee;"><tr><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">문항</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">단원명</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">지수</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">누적 시간</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">누적 오답</th></tr></thead><tbody>';
+              weakestTwo.forEach(q => {
+                const indexBg = q.qType === 'q2' ? '#e3f2fd' : '#fff3e0';
+                const indexColor = q.qType === 'q2' ? '#1565c0' : '#e65100';
+                weakestQuestionsHtml += '<tr style="background:#fff8f8;"><td style="padding:10px 12px; text-align:center; font-weight:600; color:#c62828; border-bottom:1px solid #e9ecef;">문항 ' + q.questionNo + '</td><td style="padding:10px 12px; text-align:center; font-size:11px; border-bottom:1px solid #e9ecef;">' + (q.unitTitle || q.unitCode || '-') + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:' + indexBg + '; color:' + indexColor + ';">' + getIndexName(q.qType) + '</span></td><td style="padding:10px 12px; text-align:center; font-weight:600; border-bottom:1px solid #e9ecef;">' + formatTime(q.cumulativeTime) + '</td><td style="padding:10px 12px; text-align:center; font-weight:600; color:#c62828; border-bottom:1px solid #e9ecef;">' + q.cumulativeWrongClicks + '회</td></tr>';
+              });
+              weakestQuestionsHtml += '</tbody></table></div>';
+            }
+
+            questionDetailsHtml = '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #e9ecef;">각 문항별 누적 기록</div><table style="width:100%; border-collapse:collapse;"><thead style="background:#f8f9fa;"><tr><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">문항</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">단원명</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">지수</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">누적 시간</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">누적 오답</th></tr></thead><tbody>';
+            validQuestions.sort((a, b) => a.questionNo - b.questionNo).forEach(q => {
+              const isWeak = weakestQuestionNos.has(q.questionNo);
+              const rowStyle = isWeak ? 'background:#fff8f8;' : '';
+              const cellStyle = isWeak ? 'color:#c62828; font-weight:600;' : '';
+              const indexBg = q.qType === 'q2' ? '#e3f2fd' : '#fff3e0';
+              const indexColor = q.qType === 'q2' ? '#1565c0' : '#e65100';
+              questionDetailsHtml += '<tr style="' + rowStyle + '"><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef; ' + cellStyle + '">문항 ' + q.questionNo + '</td><td style="padding:10px 12px; text-align:center; font-size:11px; border-bottom:1px solid #e9ecef;">' + (q.unitTitle || q.unitCode || '-') + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:' + indexBg + '; color:' + indexColor + ';">' + getIndexName(q.qType) + '</span></td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;">' + formatTime(q.cumulativeTime) + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef; ' + cellStyle + '">' + q.cumulativeWrongClicks + '회</td></tr>';
+            });
+            questionDetailsHtml += '</tbody></table></div>';
+          }
+
+          modalBody.innerHTML = '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #e9ecef;">요약 정보</div><div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;"><div style="background:#f8f9fa; border-radius:12px; padding:16px;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">재도전 횟수</div><div style="font-size:18px; font-weight:700; color:#495057;">' + data.retryCount + '회</div></div><div style="background:#f8f9fa; border-radius:12px; padding:16px;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">총 시도 횟수</div><div style="font-size:18px; font-weight:700; color:#212529;">' + data.totalAttempts + '회</div></div><div style="background:#f8f9fa; border-radius:12px; padding:16px;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">누적 전체 풀이 시간</div><div style="font-size:18px; font-weight:700; color:#212529;">' + formatTime(data.cumulativeTime) + '</div></div><div style="background:#f8f9fa; border-radius:12px; padding:16px;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">누적 전체 오답 클릭</div><div style="font-size:18px; font-weight:700; color:#212529;">' + data.cumulativeWrongClicks + '회</div></div></div></div>' + (data.finalAttempt ? '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #e9ecef;">최종 시도 (' + (data.finalAttempt.passed ? '통과' : '미통과') + ')</div><div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;"><div style="background:#f8f9fa; border-radius:12px; padding:16px;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">최종 풀이 시간</div><div style="font-size:18px; font-weight:700; color:#212529;">' + formatTime(data.finalAttempt.totalTime) + '</div></div><div style="background:#f8f9fa; border-radius:12px; padding:16px;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">최종 오답 클릭</div><div style="font-size:18px; font-weight:700; color:#212529;">' + data.finalAttempt.totalWrongClicks + '회</div></div></div></div>' : '') + weakestQuestionsHtml + questionDetailsHtml + '<div style="margin-bottom:0;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #e9ecef;">통과 날짜</div><div style="background:#f8f9fa; border-radius:12px; padding:16px; text-align:center;"><div style="font-size:18px; font-weight:700; color:#212529;">' + passedDate + '</div></div></div>';
+        }
+
+        function closeGateDetailModal() {
+          document.getElementById('gateDetailModal').style.display = 'none';
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('gateDetailModal').addEventListener('click', function(e) {
+          if (e.target.id === 'gateDetailModal') {
+            closeGateDetailModal();
+          }
+        });
 
         // ===== 통합 AI 피드백 로딩 함수 =====
         async function loadSingleFeedback(section, contentId, data) {
@@ -12902,7 +13018,7 @@ app.get("/my-learning", async (req, res) => {
           return toKSTDateString(date) === toKSTDateString(today);
         }
 
-        function renderTodaySection() {
+        async function renderTodaySection() {
           console.log('[Today] UNIT_PROGRESS_MAP keys:', Object.keys(UNIT_PROGRESS_MAP));
           const selectedDateStr = toKSTDateString(selectedDate);
 
@@ -12952,7 +13068,22 @@ app.get("/my-learning", async (req, res) => {
 
           if (!tableContainer || !radarWrap) return;
 
-          if (todayLogs.length === 0) {
+          // 해당 날짜에 통과한 관문 데이터 먼저 가져오기
+          let passedGatesToday = [];
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentGrade = urlParams.get('grade') || '';
+            const studentName = urlParams.get('name') || '';
+            const gateRes = await fetch('/api/gate-quiz/passed-by-date?grade=' + encodeURIComponent(studentGrade) + '&name=' + encodeURIComponent(studentName) + '&date=' + selectedDateStr);
+            const gateData = await gateRes.json();
+            if (gateData.ok && gateData.data) {
+              passedGatesToday = gateData.data;
+            }
+          } catch (err) {
+            console.error('관문 데이터 조회 실패:', err);
+          }
+
+          if (todayLogs.length === 0 && passedGatesToday.length === 0) {
             const noDataMsg = isToday(selectedDate) ? '오늘 완료한 학습 기록이 없습니다.' : '해당 날짜의 학습 기록이 없습니다.';
             tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#333; padding:20px; font-size:14px;">' + noDataMsg + '</div>';
             radarWrap.innerHTML = '<div class="no-data-message" style="width:100%; text-align:center; color:#fff; padding:30px; font-size:14px;">' + noDataMsg + '</div>';
@@ -13109,6 +13240,21 @@ app.get("/my-learning", async (req, res) => {
             }
             tableHtml += '</tr>';
           });
+
+          // 형성평가 관문 통과 기록 추가
+          if (passedGatesToday.length > 0) {
+            passedGatesToday.forEach((gateInfo) => {
+              const passedTime = gateInfo.passedAt ? new Date(gateInfo.passedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+              tableHtml += '<tr class="gate-pass-row" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); cursor: pointer;" onclick="showGateDetailModal(' + gateInfo.gate + ')">';
+              tableHtml += '<td style="text-align:center;">🏆</td>';
+              tableHtml += '<td colspan="2" style="font-weight:600; color:#92400e;">형성평가</td>';
+              tableHtml += '<td style="font-weight:700; color:#78350f;">관문 ' + gateInfo.gate + ' 통과</td>';
+              tableHtml += '<td><span class="badge" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff;">통과</span></td>';
+              tableHtml += '<td style="color:#92400e;">' + passedTime + '</td>';
+              tableHtml += '<td></td>';
+              tableHtml += '</tr>';
+            });
+          }
 
           tableHtml += '</tbody></table>';
           tableContainer.innerHTML = tableHtml;
@@ -13299,7 +13445,7 @@ app.get("/my-learning", async (req, res) => {
         }
 
         // ===== 주간 리포트 렌더링 함수 =====
-        function renderWeeklySection() {
+        async function renderWeeklySection() {
           const weekStart = new Date(selectedWeekStart);
           const weekEnd = getWeekEnd(weekStart);
 
@@ -13401,6 +13547,25 @@ app.get("/my-learning", async (req, res) => {
             }
           });
 
+          // 주간 기간 동안의 관문 통과 데이터 가져오기
+          const urlParams = new URLSearchParams(window.location.search);
+          const studentGrade = urlParams.get('grade') || '';
+          const studentName = urlParams.get('name') || '';
+          let weeklyGatePasses = [];
+          try {
+            const gatePromises = weekDates.map(dateStr =>
+              fetch('/api/gate-quiz/passed-by-date?grade=' + encodeURIComponent(studentGrade) + '&name=' + encodeURIComponent(studentName) + '&date=' + dateStr)
+                .then(res => res.json())
+                .then(data => ({ date: dateStr, gates: data.ok && data.data ? data.data : [] }))
+            );
+            weeklyGatePasses = await Promise.all(gatePromises);
+          } catch (err) {
+            console.error('주간 관문 데이터 조회 실패:', err);
+          }
+          // 날짜별 관문 데이터 맵
+          const gatesByDate = {};
+          weeklyGatePasses.forEach(item => { gatesByDate[item.date] = item.gates; });
+
           // 요일 이름
           const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -13409,18 +13574,20 @@ app.get("/my-learning", async (req, res) => {
           let displayedCount = 0;
           weekDates.forEach((dateStr, dayIdx) => {
             const dayLogs = logsByDate[dateStr];
+            const dayGates = gatesByDate[dateStr] || [];
 
-            // 학습 기록이 없는 날은 스킵
-            if (dayLogs.length === 0) return;
+            // 학습 기록과 관문 모두 없는 날은 스킵
+            if (dayLogs.length === 0 && dayGates.length === 0) return;
 
             const dateObj = new Date(dateStr + 'T00:00:00');
             const dayName = dayNames[dateObj.getDay()];
             const displayDate = (dateObj.getMonth() + 1) + '/' + dateObj.getDate() + ' (' + dayName + ')';
 
             // 날짜 헤더 (흰색 배경, 검은 글씨)
+            const totalCount = dayLogs.length + dayGates.length;
             tableHtml += '<div class="weekly-day-header" style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%); padding: 12px 16px; margin-top: ' + (displayedCount === 0 ? '0' : '15px') + '; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.08); border-bottom: none;">';
             tableHtml += '<span style="color: #333; font-weight: 700; font-size: 15px;">📅 ' + displayDate + '</span>';
-            tableHtml += '<span style="color: #667eea; font-size: 13px; font-weight: 600;">' + dayLogs.length + '건</span>';
+            tableHtml += '<span style="color: #667eea; font-size: 13px; font-weight: 600;">' + totalCount + '건</span>';
             tableHtml += '</div>';
 
             displayedCount++;
@@ -13529,6 +13696,21 @@ app.get("/my-learning", async (req, res) => {
                 }
                 tableHtml += '</tr>';
               });
+
+              // 해당 날짜의 형성평가 관문 통과 기록 추가
+              if (dayGates.length > 0) {
+                dayGates.forEach((gateInfo) => {
+                  const passedTime = gateInfo.passedAt ? new Date(gateInfo.passedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+                  tableHtml += '<tr class="gate-pass-row" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); cursor: pointer;" onclick="showGateDetailModal(' + gateInfo.gate + ')">';
+                  tableHtml += '<td style="text-align:center;">🏆</td>';
+                  tableHtml += '<td colspan="2" style="font-weight:600; color:#92400e;">형성평가</td>';
+                  tableHtml += '<td style="font-weight:700; color:#78350f;">관문 ' + gateInfo.gate + ' 통과</td>';
+                  tableHtml += '<td><span class="badge" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff;">통과</span></td>';
+                  tableHtml += '<td style="color:#92400e;">' + passedTime + '</td>';
+                  tableHtml += '<td></td>';
+                  tableHtml += '</tr>';
+                });
+              }
 
               tableHtml += '</tbody></table>';
             }
@@ -22960,6 +23142,143 @@ app.get("/api/super/gate-pass-details", requireSuperAdmin, async (req, res) => {
 
   } catch (err) {
     console.error("[gate-pass-details] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 특정 날짜에 통과한 관문 조회 API
+app.get("/api/gate-quiz/passed-by-date", async (req, res) => {
+  try {
+    const { grade, name, date } = req.query;
+
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    // date가 있으면 해당 날짜, 없으면 오늘
+    let targetDate = date ? new Date(date) : new Date();
+
+    // KST 기준으로 해당 날짜의 시작과 끝
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstTargetDate = new Date(targetDate.getTime() + kstOffset);
+    const startOfDay = new Date(Date.UTC(kstTargetDate.getUTCFullYear(), kstTargetDate.getUTCMonth(), kstTargetDate.getUTCDate(), 0, 0, 0) - kstOffset);
+    const endOfDay = new Date(Date.UTC(kstTargetDate.getUTCFullYear(), kstTargetDate.getUTCMonth(), kstTargetDate.getUTCDate(), 23, 59, 59, 999) - kstOffset);
+
+    const passedGates = await GatePass.find({
+      grade,
+      name,
+      passedAt: { $gte: startOfDay, $lte: endOfDay }
+    }).sort({ gate: 1 }).lean();
+
+    res.json({
+      ok: true,
+      data: passedGates.map(g => ({
+        gate: g.gate,
+        passedAt: g.passedAt,
+        units: g.units || []
+      }))
+    });
+
+  } catch (err) {
+    console.error("[gate-quiz/passed-by-date] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 학생용 관문 상세 정보 조회 API
+app.get("/api/gate-quiz/details", async (req, res) => {
+  try {
+    const { grade, name, gate } = req.query;
+
+    if (!grade || !name || !gate) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    // 해당 관문의 모든 시도 기록 조회
+    const attempts = await GateAttempt.find({
+      grade,
+      name,
+      gate: parseInt(gate)
+    }).sort({ createdAt: 1 }).lean();
+
+    // 통과 기록 조회
+    const passRecord = await GatePass.findOne({
+      grade,
+      name,
+      gate: parseInt(gate)
+    }).lean();
+
+    if (attempts.length === 0) {
+      return res.json({
+        ok: true,
+        data: {
+          totalAttempts: 0,
+          retryCount: 0,
+          cumulativeTime: 0,
+          cumulativeWrongClicks: 0,
+          finalAttempt: null,
+          questionDetails: [],
+          passedAt: passRecord?.passedAt || null
+        }
+      });
+    }
+
+    // 재도전 횟수 (실패한 시도 수)
+    const retryCount = attempts.filter(a => !a.passed).length;
+
+    // 누적 풀이 시간 계산
+    const cumulativeTime = attempts.reduce((sum, a) => sum + (a.totalTime || 0), 0);
+
+    // 누적 오답 클릭 계산
+    const cumulativeWrongClicks = attempts.reduce((sum, a) => sum + (a.totalWrongClicks || 0), 0);
+
+    // 최종 시도 정보
+    const finalAttempt = attempts[attempts.length - 1];
+
+    // 문항별 상세 정보 집계
+    const questionMap = new Map();
+    attempts.forEach(attempt => {
+      if (attempt.questionDetails && Array.isArray(attempt.questionDetails)) {
+        attempt.questionDetails.forEach(q => {
+          const key = q.questionNo;
+          if (!questionMap.has(key)) {
+            questionMap.set(key, {
+              questionNo: q.questionNo,
+              unitCode: q.unitCode,
+              unitTitle: q.unitTitle,
+              qType: q.qType,
+              cumulativeTime: 0,
+              cumulativeWrongClicks: 0
+            });
+          }
+          const existing = questionMap.get(key);
+          existing.cumulativeTime += (q.timeSpent || 0);
+          existing.cumulativeWrongClicks += (q.wrongClicks || 0);
+        });
+      }
+    });
+
+    const questionDetails = Array.from(questionMap.values());
+
+    res.json({
+      ok: true,
+      data: {
+        totalAttempts: attempts.length,
+        retryCount,
+        cumulativeTime,
+        cumulativeWrongClicks,
+        finalAttempt: {
+          totalTime: finalAttempt.totalTime,
+          totalWrongClicks: finalAttempt.totalWrongClicks,
+          passed: finalAttempt.passed
+        },
+        questionDetails,
+        passedAt: passRecord?.passedAt || null
+      }
+    });
+
+  } catch (err) {
+    console.error("[gate-quiz/details] error:", err);
     res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
   }
 });
