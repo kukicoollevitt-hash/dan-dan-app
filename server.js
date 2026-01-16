@@ -10262,10 +10262,11 @@ app.get("/my-learning", async (req, res) => {
               <table class="creative-table">
                 <thead>
                   <tr>
-                    <th style="width: 60px;">번호</th>
-                    <th style="width: 110px;">단원명</th>
+                    <th style="width: 50px;">번호</th>
+                    <th style="width: 85px;">작성일</th>
+                    <th style="width: 100px;">단원명</th>
                     <th>주제</th>
-                    <th style="width: 80px;">글자수</th>
+                    <th style="width: 70px;">글자수</th>
                   </tr>
                 </thead>
                 <tbody id="creativeTableBody">
@@ -10363,6 +10364,12 @@ app.get("/my-learning", async (req, res) => {
               font-size: 10px;
               color: #667eea;
               transition: all 0.3s ease;
+            }
+            .creative-table .creative-date {
+              text-align: center;
+              font-weight: 500;
+              color: #667eea;
+              font-size: 13px;
             }
             .creative-table .creative-unit {
               text-align: center;
@@ -13923,11 +13930,18 @@ app.get("/my-learning", async (req, res) => {
 
             // 어휘 점수가 있는 경우만 추가
             if (vocabScorePercent > 0) {
+              // 날짜 포맷팅 (MM/DD)
+              let dateStr = '';
+              if (log.timestamp) {
+                const logDate = new Date(log.timestamp);
+                dateStr = (logDate.getMonth() + 1) + '/' + logDate.getDate();
+              }
               vocabData.push({
                 unit: unitCode,
                 name: getVocabSubjectName(unitCode),
                 score: vocabScorePercent,
-                color: getVocabSubjectColor(unitCode)
+                color: getVocabSubjectColor(unitCode),
+                date: dateStr
               });
             }
           });
@@ -14006,8 +14020,13 @@ app.get("/my-learning", async (req, res) => {
 
             html += '<div class="vocab-bar-row" data-url="' + vocabPageUrl + '" style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: all 0.3s ease;">';
 
-            // 단원명 (좌측)
-            html += '<div class="vocab-bar-label" style="width: 100px; font-size: 12px; color: #fff; text-align: right; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.name + '</div>';
+            // 단원명 + 날짜 (좌측)
+            html += '<div class="vocab-bar-label" style="width: 100px; font-size: 12px; color: #fff; text-align: right; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">';
+            html += '<div>' + item.name + '</div>';
+            if (item.date) {
+              html += '<div style="font-size: 10px; color: rgba(255,255,255,0.6);">' + item.date + '</div>';
+            }
+            html += '</div>';
 
             // 막대 그래프 영역
             html += '<div class="vocab-bar-container" style="flex: 1; height: 24px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; overflow: visible;">';
@@ -14266,7 +14285,7 @@ app.get("/my-learning", async (req, res) => {
           // 테이블 렌더링
           const emptyMsg = isWeeklyMode ? '해당 주간에 제출된 창의활동이 없습니다.' : '해당 날짜에 제출된 창의활동이 없습니다.';
           if (filteredData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="creative-empty">' + emptyMsg + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="creative-empty">' + emptyMsg + '</td></tr>';
             return;
           }
 
@@ -14279,9 +14298,17 @@ app.get("/my-learning", async (req, res) => {
             const rowId = 'creative-row-' + index;
             const contentId = 'creative-content-' + index;
 
+            // 작성일 포맷팅 (MM/DD)
+            let submitDateStr = '-';
+            if (item.submittedAt) {
+              const submitDate = new Date(item.submittedAt);
+              submitDateStr = (submitDate.getMonth() + 1) + '/' + submitDate.getDate();
+            }
+
             // 메인 행
             html += '<tr id="' + rowId + '" class="creative-row" data-index="' + index + '" onclick="toggleCreativeContent(' + index + ')">';
             html += '<td class="creative-num"><span class="creative-arrow" id="arrow-' + index + '">▶</span>' + (index + 1) + '</td>';
+            html += '<td class="creative-date">' + submitDateStr + '</td>';
             html += '<td class="creative-unit">' + unitName + '</td>';
             html += '<td class="creative-topic">' + topic + '</td>';
             html += '<td><div class="creative-chars">' + charCount.toLocaleString() + '</div></td>';
@@ -14289,7 +14316,7 @@ app.get("/my-learning", async (req, res) => {
 
             // 드롭다운 내용 행 (처음엔 숨김)
             html += '<tr id="' + contentId + '" class="creative-content-row" style="display: none;">';
-            html += '<td colspan="4">';
+            html += '<td colspan="5">';
             html += '<div class="creative-content-box">';
             html += '<div class="creative-content-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>작성 내용</div>';
             html += '<div class="creative-content-text">' + textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
@@ -18065,7 +18092,7 @@ app.post('/api/user-progress/vocabulary-history/add', async (req, res) => {
       });
     }
 
-    const { vocabCount, correctAnswers, totalQuestions, score } = historyData;
+    const { vocabCount, correctAnswers, totalQuestions, score, questions } = historyData;
 
     if (!vocabCount || correctAnswers === undefined || !totalQuestions || score === undefined) {
       return res.status(400).json({
@@ -18086,7 +18113,8 @@ app.post('/api/user-progress/vocabulary-history/add', async (req, res) => {
       vocabCount,
       correctAnswers,
       totalQuestions,
-      score
+      score,
+      questions: questions || [] // 문제별 상세 결과
     });
 
     await progress.save();

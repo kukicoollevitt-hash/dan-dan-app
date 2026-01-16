@@ -89,7 +89,17 @@ const userProgressSchema = new mongoose.Schema({
       required: true,
       min: 0
       // max 제한 제거 - 보너스 점수로 100점 초과 가능
-    }
+    },
+    // 문제별 상세 결과
+    questions: [{
+      word: String,           // 어휘
+      question: String,       // 문제 텍스트
+      userAnswer: String,     // 사용자 답변
+      correctAnswer: String,  // 정답
+      isCorrect: Boolean,     // 정답 여부
+      explanation: String,    // 해설
+      example: String         // 예문
+    }]
   }],
 
   // 독서 감상문 제출 이력

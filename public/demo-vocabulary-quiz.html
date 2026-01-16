@@ -1831,6 +1831,161 @@
     </div>
   </div>
 
+  <!-- 어휘학습 이력 상세보기 팝업 -->
+  <div class="history-detail-popup" id="historyDetailPopup">
+    <div class="history-detail-content">
+      <div class="history-detail-header">
+        <button class="history-back-btn" onclick="closeHistoryDetail()">← 뒤로</button>
+        <div class="history-detail-title">학습 상세보기</div>
+        <button class="history-close-btn" onclick="closeHistoryDetail()">✕</button>
+      </div>
+      <div class="history-detail-summary" id="historyDetailSummary">
+        <!-- 요약 정보 -->
+      </div>
+      <div class="history-detail-list" id="historyDetailList">
+        <!-- 문제별 상세 내용 -->
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* 이력 상세보기 팝업 스타일 */
+    .history-detail-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10001;
+    }
+    .history-detail-popup.show {
+      display: flex;
+    }
+    .history-detail-content {
+      background: #fff;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .history-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .history-detail-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .history-back-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    .history-detail-header .history-close-btn {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    .history-detail-summary {
+      padding: 16px 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+    }
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .summary-label {
+      font-size: 12px;
+      color: #666;
+    }
+    .summary-value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .summary-value.correct { color: #4CAF50; }
+    .summary-value.wrong { color: #f44336; }
+    .history-detail-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    .detail-question-item {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid #ddd;
+    }
+    .detail-question-item.correct {
+      border-left-color: #4CAF50;
+      background: #f1f8e9;
+    }
+    .detail-question-item.wrong {
+      border-left-color: #f44336;
+      background: #ffebee;
+    }
+    .detail-question-num {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .detail-question-word {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .detail-answer-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    .detail-answer-label {
+      color: #666;
+      min-width: 70px;
+    }
+    .detail-answer-value {
+      font-weight: 500;
+    }
+    .detail-answer-value.user-correct { color: #4CAF50; }
+    .detail-answer-value.user-wrong { color: #f44336; }
+    .detail-explanation {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #ddd;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+    }
+    .detail-example {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #888;
+      font-style: italic;
+    }
+  </style>
+
   <!-- 피드백 -->
   <div class="feedback" id="feedback">O</div>
 
@@ -6829,6 +6984,7 @@
     let selectedAnswer = null;
     let timerInterval = null;
     let timeLeft = 20;
+    let questionResults = []; // 문제별 결과 저장
 
     // 배경 별 생성
     function createStars() {
@@ -6859,6 +7015,19 @@
           showFeedback(false);
           disableChoices();
           wrongAnswers++;
+
+          // 시간 초과 시 문제별 결과 저장
+          const quiz = selectedQuizData[currentQuestionIndex];
+          questionResults.push({
+            word: quiz.word,
+            question: quiz.question.replace(/<[^>]*>/g, ''),
+            userAnswer: '시간 초과',
+            correctAnswer: quiz.choices[quiz.correct],
+            isCorrect: false,
+            explanation: quiz.explanation,
+            example: quiz.example
+          });
+
           showExplanation();
           setTimeout(() => {
             nextQuestion();
@@ -6948,12 +7117,34 @@
           setTotalScore(totalScore); // localStorage에 저장
           showFeedback(true);
           createConfetti();
+
+          // 문제별 결과 저장 (정답)
+          questionResults.push({
+            word: quiz.word,
+            question: quiz.question.replace(/<[^>]*>/g, ''), // HTML 태그 제거
+            userAnswer: quiz.choices[index] || quiz.choices[quiz.shuffledCorrect !== undefined ? shuffledChoices[index].originalIndex : index],
+            correctAnswer: quiz.choices[quiz.correct],
+            isCorrect: true,
+            explanation: quiz.explanation,
+            example: quiz.example
+          });
         } else {
           buttons[index].classList.remove('selected');
           buttons[index].classList.add('wrong');
           buttons[correctIndex].classList.add('correct');
           wrongAnswers++;
           showFeedback(false);
+
+          // 문제별 결과 저장 (오답)
+          questionResults.push({
+            word: quiz.word,
+            question: quiz.question.replace(/<[^>]*>/g, ''), // HTML 태그 제거
+            userAnswer: quiz.choices[index] || '선택 없음',
+            correctAnswer: quiz.choices[quiz.correct],
+            isCorrect: false,
+            explanation: quiz.explanation,
+            example: quiz.example
+          });
         }
 
         disableChoices();
@@ -7105,6 +7296,7 @@
       correctAnswers = 0;
       wrongAnswers = 0;
       selectedAnswer = null;
+      questionResults = []; // 문제별 결과 초기화
 
       // 문제 데이터는 초기화만 하고, 시작하기 버튼을 누를 때 새로 생성됨
       selectedQuizData = [];
@@ -7157,7 +7349,8 @@
           vocabCount: totalQuestions,
           correctAnswers: correctAnswers,
           totalQuestions: totalQuestions,
-          score: score
+          score: score,
+          questions: questionResults // 문제별 상세 결과 포함
         };
 
         // 서버에 이력 저장
@@ -7310,17 +7503,24 @@
       }
     }
 
+    // 이력 데이터 캐시 (상세보기용)
+    let historyDataCache = [];
+
     // 이력 목록 렌더링
     function renderHistoryList(history, clearFirst = true) {
       const historyList = document.getElementById('historyList');
 
       if (clearFirst) {
         historyList.innerHTML = '';
+        historyDataCache = history;
+      } else {
+        historyDataCache = historyDataCache.concat(history);
       }
 
-      history.forEach(item => {
+      history.forEach((item, idx) => {
         const li = document.createElement('li');
         li.className = 'history-item';
+        li.style.cursor = 'pointer';
 
         // 날짜 포맷 (한국어)
         const date = new Date(item.date);
@@ -7330,16 +7530,91 @@
         const scorePercent = Math.round((item.correctAnswers / item.totalQuestions) * 100);
         const scoreStr = `${item.correctAnswers}/${item.totalQuestions} (${scorePercent}점)`;
 
+        // 상세보기 가능 여부 표시
+        const hasDetail = item.questions && item.questions.length > 0;
+        const detailHint = hasDetail ? '<span style="font-size: 11px; color: #667eea; margin-left: 8px;">상세보기 ›</span>' : '';
+
         li.innerHTML = `
-          <div class="history-date">${dateStr}</div>
+          <div class="history-date">${dateStr}${detailHint}</div>
           <div class="history-stats">
             <div class="history-vocab-count">어휘 ${item.vocabCount}개</div>
             <div class="history-score">${scoreStr}</div>
           </div>
         `;
 
+        // 클릭 이벤트 (상세보기)
+        if (hasDetail) {
+          const actualIndex = clearFirst ? idx : (historyDataCache.length - history.length + idx);
+          li.onclick = () => showHistoryDetail(actualIndex);
+        }
+
         historyList.appendChild(li);
       });
+    }
+
+    // 이력 상세보기 표시
+    function showHistoryDetail(index) {
+      const item = historyDataCache[index];
+      if (!item || !item.questions || item.questions.length === 0) {
+        alert('상세 정보가 없습니다.');
+        return;
+      }
+
+      const popup = document.getElementById('historyDetailPopup');
+      const summaryEl = document.getElementById('historyDetailSummary');
+      const listEl = document.getElementById('historyDetailList');
+
+      // 요약 정보
+      const correctCount = item.questions.filter(q => q.isCorrect).length;
+      const wrongCount = item.questions.length - correctCount;
+      const scorePercent = Math.round((correctCount / item.questions.length) * 100);
+
+      summaryEl.innerHTML = `
+        <div class="summary-item">
+          <span class="summary-label">정답</span>
+          <span class="summary-value correct">${correctCount}개</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">오답</span>
+          <span class="summary-value wrong">${wrongCount}개</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">점수</span>
+          <span class="summary-value">${scorePercent}점</span>
+        </div>
+      `;
+
+      // 문제별 상세 목록
+      let listHtml = '';
+      item.questions.forEach((q, i) => {
+        const statusClass = q.isCorrect ? 'correct' : 'wrong';
+        const userAnswerClass = q.isCorrect ? 'user-correct' : 'user-wrong';
+
+        listHtml += `
+          <div class="detail-question-item ${statusClass}">
+            <div class="detail-question-num">${i + 1}번 문제 ${q.isCorrect ? '✓ 정답' : '✗ 오답'}</div>
+            <div class="detail-question-word">${q.word || ''}</div>
+            <div class="detail-answer-row">
+              <span class="detail-answer-label">내 답:</span>
+              <span class="detail-answer-value ${userAnswerClass}">${q.userAnswer || '-'}</span>
+            </div>
+            <div class="detail-answer-row">
+              <span class="detail-answer-label">정답:</span>
+              <span class="detail-answer-value">${q.correctAnswer || '-'}</span>
+            </div>
+            <div class="detail-explanation">${q.explanation || ''}</div>
+            ${q.example ? `<div class="detail-example">${q.example}</div>` : ''}
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = listHtml;
+      popup.classList.add('show');
+    }
+
+    // 이력 상세보기 닫기
+    function closeHistoryDetail() {
+      document.getElementById('historyDetailPopup').classList.remove('show');
     }
 
     // 한국어 날짜 포맷
