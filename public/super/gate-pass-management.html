@@ -703,7 +703,63 @@
       };
 
       let questionDetailsHtml = '';
+      let weakestQuestionsHtml = '';
+
       if (data.questionDetails && data.questionDetails.length > 0) {
+        const validQuestions = data.questionDetails
+          .filter(q => q.questionNo != null && !isNaN(q.questionNo));
+
+        // 가장 미흡한 문항 2개 선정
+        // 조건: 1) 누적 오답 클릭 많은 순, 2) 누적 시간 높은 순, 3) 구조파악력 우선
+        const sortedByWeakness = [...validQuestions].sort((a, b) => {
+          // 1. 누적 오답 클릭이 많은 순
+          if (b.cumulativeWrongClicks !== a.cumulativeWrongClicks) {
+            return b.cumulativeWrongClicks - a.cumulativeWrongClicks;
+          }
+          // 2. 누적 시간이 높은 순
+          if (b.cumulativeTime !== a.cumulativeTime) {
+            return b.cumulativeTime - a.cumulativeTime;
+          }
+          // 3. 구조파악력(q2) 우선
+          if (a.qType !== b.qType) {
+            return a.qType === 'q2' ? -1 : 1;
+          }
+          return 0;
+        });
+
+        const weakestTwo = sortedByWeakness.slice(0, 2);
+        const weakestQuestionNos = new Set(weakestTwo.map(q => q.questionNo));
+
+        if (weakestTwo.length > 0) {
+          weakestQuestionsHtml = `
+            <div class="detail-section">
+              <div class="detail-section-title" style="color:#dc3545;">⚠️ 가장 미흡한 문항 (상위 ${weakestTwo.length}개)</div>
+              <table class="question-table" style="border:2px solid #ffcdd2; border-radius:8px;">
+                <thead style="background:#ffebee;">
+                  <tr>
+                    <th style="color:#c62828;">문항</th>
+                    <th style="color:#c62828;">단원명</th>
+                    <th style="color:#c62828;">지수</th>
+                    <th style="color:#c62828;">누적 시간</th>
+                    <th style="color:#c62828;">누적 오답 클릭</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${weakestTwo.map(q => `
+                    <tr style="background:#fff8f8;">
+                      <td style="font-weight:600; color:#c62828;">문항 ${q.questionNo}</td>
+                      <td style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${q.unitTitle || q.unitCode || '-'}">${q.unitTitle || q.unitCode || '-'}</td>
+                      <td><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:${q.qType === 'q2' ? '#e3f2fd' : '#fff3e0'}; color:${q.qType === 'q2' ? '#1565c0' : '#e65100'};">${getIndexName(q.qType)}</span></td>
+                      <td style="font-weight:600;">${formatTime(q.cumulativeTime)}</td>
+                      <td style="font-weight:600; color:#c62828;">${q.cumulativeWrongClicks}회</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
         questionDetailsHtml = `
           <div class="detail-section">
             <div class="detail-section-title">각 문항별 누적 기록</div>
@@ -718,16 +774,15 @@
                 </tr>
               </thead>
               <tbody>
-                ${data.questionDetails
-                  .filter(q => q.questionNo != null && !isNaN(q.questionNo))
+                ${validQuestions
                   .sort((a, b) => a.questionNo - b.questionNo)
                   .map(q => `
-                  <tr>
-                    <td>문항 ${q.questionNo}</td>
+                  <tr style="${weakestQuestionNos.has(q.questionNo) ? 'background:#fff8f8;' : ''}">
+                    <td style="${weakestQuestionNos.has(q.questionNo) ? 'color:#c62828; font-weight:600;' : ''}">문항 ${q.questionNo}</td>
                     <td style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${q.unitTitle || q.unitCode || '-'}">${q.unitTitle || q.unitCode || '-'}</td>
                     <td><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:${q.qType === 'q2' ? '#e3f2fd' : '#fff3e0'}; color:${q.qType === 'q2' ? '#1565c0' : '#e65100'};">${getIndexName(q.qType)}</span></td>
                     <td>${formatTime(q.cumulativeTime)}</td>
-                    <td>${q.cumulativeWrongClicks}회</td>
+                    <td style="${weakestQuestionNos.has(q.questionNo) ? 'color:#c62828; font-weight:600;' : ''}">${q.cumulativeWrongClicks}회</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -774,6 +829,8 @@
           </div>
         </div>
         ` : ''}
+
+        ${weakestQuestionsHtml}
 
         ${questionDetailsHtml}
 
