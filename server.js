@@ -10952,23 +10952,24 @@ app.get("/my-learning", async (req, res) => {
             const weakestQuestionNos = new Set(weakestTwo.map(q => q.questionNo));
 
             if (weakestTwo.length > 0) {
-              weakestQuestionsHtml = '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#dc3545; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #ffcdd2;">⚠️ 가장 미흡한 문항 (상위 ' + weakestTwo.length + '개)</div><table style="width:100%; border-collapse:collapse; border:2px solid #ffcdd2; border-radius:8px; overflow:hidden;"><thead style="background:#ffebee;"><tr><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">문항</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">단원명</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">지수</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">누적 시간</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">누적 오답</th></tr></thead><tbody>';
+              weakestQuestionsHtml = '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#dc3545; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #ffcdd2;">⚠️ 가장 미흡한 문항 (상위 ' + weakestTwo.length + '개)</div><div style="font-size:11px; color:#868e96; margin-bottom:8px;">클릭하면 문제를 확인할 수 있습니다</div><table style="width:100%; border-collapse:collapse; border:2px solid #ffcdd2; border-radius:8px; overflow:hidden;"><thead style="background:#ffebee;"><tr><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">문항</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">단원명</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">지수</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">누적 시간</th><th style="padding:10px 12px; text-align:center; font-size:13px; color:#c62828;">누적 오답</th></tr></thead><tbody>';
               weakestTwo.forEach(q => {
                 const indexBg = q.qType === 'q2' ? '#e3f2fd' : '#fff3e0';
                 const indexColor = q.qType === 'q2' ? '#1565c0' : '#e65100';
-                weakestQuestionsHtml += '<tr style="background:#fff8f8;"><td style="padding:10px 12px; text-align:center; font-weight:600; color:#c62828; border-bottom:1px solid #e9ecef;">문항 ' + q.questionNo + '</td><td style="padding:10px 12px; text-align:center; font-size:11px; border-bottom:1px solid #e9ecef;">' + (q.unitTitle || q.unitCode || '-') + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:' + indexBg + '; color:' + indexColor + ';">' + getIndexName(q.qType) + '</span></td><td style="padding:10px 12px; text-align:center; font-weight:600; border-bottom:1px solid #e9ecef;">' + formatTime(q.cumulativeTime) + '</td><td style="padding:10px 12px; text-align:center; font-weight:600; color:#c62828; border-bottom:1px solid #e9ecef;">' + q.cumulativeWrongClicks + '회</td></tr>';
+                weakestQuestionsHtml += '<tr style="background:#fff8f8; cursor:pointer; transition:all 0.2s;" onclick="showQuestionDetail(\\'' + (q.unitCode || '') + '\\', \\'' + (q.qType || 'q1') + '\\', ' + q.questionNo + ')" onmouseover="this.style.background=\\'#ffe8e8\\'" onmouseout="this.style.background=\\'#fff8f8\\'"><td style="padding:10px 12px; text-align:center; font-weight:600; color:#c62828; border-bottom:1px solid #e9ecef;">문항 ' + q.questionNo + '</td><td style="padding:10px 12px; text-align:center; font-size:11px; border-bottom:1px solid #e9ecef;">' + (q.unitTitle || q.unitCode || '-') + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:' + indexBg + '; color:' + indexColor + ';">' + getIndexName(q.qType) + '</span></td><td style="padding:10px 12px; text-align:center; font-weight:600; border-bottom:1px solid #e9ecef;">' + formatTime(q.cumulativeTime) + '</td><td style="padding:10px 12px; text-align:center; font-weight:600; color:#c62828; border-bottom:1px solid #e9ecef;">' + q.cumulativeWrongClicks + '회</td></tr>';
               });
               weakestQuestionsHtml += '</tbody></table></div>';
             }
 
-            questionDetailsHtml = '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #e9ecef;">각 문항별 누적 기록</div><table style="width:100%; border-collapse:collapse;"><thead style="background:#f8f9fa;"><tr><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">문항</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">단원명</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">지수</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">누적 시간</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">누적 오답</th></tr></thead><tbody>';
+            questionDetailsHtml = '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #e9ecef;">각 문항별 누적 기록</div><div style="font-size:11px; color:#868e96; margin-bottom:8px;">클릭하면 문제를 확인할 수 있습니다</div><table style="width:100%; border-collapse:collapse;"><thead style="background:#f8f9fa;"><tr><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">문항</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">단원명</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">지수</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">누적 시간</th><th style="padding:10px 12px; text-align:center; font-size:13px; font-weight:600; color:#495057;">누적 오답</th></tr></thead><tbody>';
             validQuestions.sort((a, b) => a.questionNo - b.questionNo).forEach(q => {
               const isWeak = weakestQuestionNos.has(q.questionNo);
-              const rowStyle = isWeak ? 'background:#fff8f8;' : '';
+              const rowBg = isWeak ? '#fff8f8' : '#ffffff';
+              const rowHoverBg = isWeak ? '#ffe8e8' : '#f8f9fa';
               const cellStyle = isWeak ? 'color:#c62828; font-weight:600;' : '';
               const indexBg = q.qType === 'q2' ? '#e3f2fd' : '#fff3e0';
               const indexColor = q.qType === 'q2' ? '#1565c0' : '#e65100';
-              questionDetailsHtml += '<tr style="' + rowStyle + '"><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef; ' + cellStyle + '">문항 ' + q.questionNo + '</td><td style="padding:10px 12px; text-align:center; font-size:11px; border-bottom:1px solid #e9ecef;">' + (q.unitTitle || q.unitCode || '-') + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:' + indexBg + '; color:' + indexColor + ';">' + getIndexName(q.qType) + '</span></td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;">' + formatTime(q.cumulativeTime) + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef; ' + cellStyle + '">' + q.cumulativeWrongClicks + '회</td></tr>';
+              questionDetailsHtml += '<tr style="background:' + rowBg + '; cursor:pointer; transition:all 0.2s;" onclick="showQuestionDetail(\\'' + (q.unitCode || '') + '\\', \\'' + (q.qType || 'q1') + '\\', ' + q.questionNo + ')" onmouseover="this.style.background=\\'' + rowHoverBg + '\\'" onmouseout="this.style.background=\\'' + rowBg + '\\'"><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef; ' + cellStyle + '">문항 ' + q.questionNo + '</td><td style="padding:10px 12px; text-align:center; font-size:11px; border-bottom:1px solid #e9ecef;">' + (q.unitTitle || q.unitCode || '-') + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:' + indexBg + '; color:' + indexColor + ';">' + getIndexName(q.qType) + '</span></td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef;">' + formatTime(q.cumulativeTime) + '</td><td style="padding:10px 12px; text-align:center; border-bottom:1px solid #e9ecef; ' + cellStyle + '">' + q.cumulativeWrongClicks + '회</td></tr>';
             });
             questionDetailsHtml += '</tbody></table></div>';
           }
@@ -10978,6 +10979,61 @@ app.get("/my-learning", async (req, res) => {
 
         function closeGateDetailModal() {
           document.getElementById('gateDetailModal').style.display = 'none';
+        }
+
+        // 문제 상세 보기 팝업
+        async function showQuestionDetail(unitCode, qType, questionNo) {
+          if (!unitCode) {
+            alert('문제 정보를 찾을 수 없습니다.');
+            return;
+          }
+
+          // 기존 팝업이 있으면 제거
+          const existingPopup = document.getElementById('questionDetailPopup');
+          if (existingPopup) existingPopup.remove();
+
+          // 팝업 생성
+          const popup = document.createElement('div');
+          popup.id = 'questionDetailPopup';
+          popup.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:10001; padding:20px;';
+          popup.innerHTML = '<div style="background:white; border-radius:20px; max-width:600px; width:100%; max-height:80vh; overflow-y:auto; padding:24px; position:relative;"><div style="text-align:center; padding:40px; color:#868e96;">문제를 불러오는 중...</div></div>';
+          document.body.appendChild(popup);
+
+          // 팝업 외부 클릭 시 닫기
+          popup.addEventListener('click', function(e) {
+            if (e.target === popup) {
+              popup.remove();
+            }
+          });
+
+          try {
+            const response = await fetch('/api/gate-quiz/question?unitCode=' + encodeURIComponent(unitCode) + '&qType=' + encodeURIComponent(qType));
+            const result = await response.json();
+
+            if (!result.ok) {
+              popup.querySelector('div > div').innerHTML = '<div style="text-align:center; padding:40px; color:#dc3545;"><p>문제를 불러올 수 없습니다.</p><p style="font-size:12px; margin-top:8px;">' + (result.message || '') + '</p><button onclick="this.closest(\\'#questionDetailPopup\\').remove()" style="margin-top:16px; padding:10px 24px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; cursor:pointer;">닫기</button></div>';
+              return;
+            }
+
+            const data = result.data;
+            const indexName = data.qType === 'q2' ? '구조파악력' : '핵심이해력';
+            const indexBg = data.qType === 'q2' ? '#e3f2fd' : '#fff3e0';
+            const indexColor = data.qType === 'q2' ? '#1565c0' : '#e65100';
+
+            let optionsHtml = data.options.map((opt, idx) => {
+              const symbol = ['①', '②', '③', '④'][idx];
+              return '<div style="padding:12px 16px; border-radius:10px; margin-bottom:8px; border:2px solid; background:#f8f9fa; border-color:#dee2e6;"><span style="font-weight:600; margin-right:8px;">' + symbol + '</span>' + opt + '</div>';
+            }).join('');
+
+            const correctSymbol = ['①', '②', '③', '④'][data.correct - 1];
+            const correctText = data.options[data.correct - 1];
+            const answerHtml = '<div style="margin-top:20px; background:linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border:2px solid #28a745; border-radius:12px; padding:16px;"><div style="font-size:14px; font-weight:600; color:#155724; margin-bottom:8px;">정답: ' + correctSymbol + '</div><div style="font-size:14px; color:#155724; line-height:1.6;">' + correctText + '</div></div>';
+
+            popup.querySelector('div').innerHTML = '<button onclick="this.closest(\\'#questionDetailPopup\\').remove()" style="position:absolute; top:16px; right:16px; width:32px; height:32px; border:none; background:#f8f9fa; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;">✕</button><div style="margin-bottom:20px;"><div style="font-size:18px; font-weight:700; color:#212529; margin-bottom:8px;">문항 ' + questionNo + '</div><div style="font-size:14px; color:#495057; margin-bottom:8px;">' + data.unitTitle + '</div><span style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; background:' + indexBg + '; color:' + indexColor + ';">' + indexName + '</span></div>' + (data.passage && data.passage.length > 0 ? '<div style="margin-bottom:20px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px;">본문</div><div style="background:#fffaf5; padding:16px; border-radius:12px; border:1px solid #f0e0d0; max-height:200px; overflow-y:auto;"><p style="font-size:14px; color:#4a3728; line-height:1.8; margin:0;">' + data.passage.join('</p><p style="font-size:14px; color:#4a3728; line-height:1.8; margin-top:12px;">') + '</p></div></div>' : '') + '<div style="background:#faf8f6; padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid #8b2f2f;"><p style="font-size:16px; color:#333; font-weight:600; line-height:1.7; margin:0;">' + data.question + '</p></div><div style="margin-bottom:0;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px;">선지</div>' + optionsHtml + answerHtml + '</div>';
+          } catch (err) {
+            console.error('문제 상세 조회 오류:', err);
+            popup.querySelector('div > div').innerHTML = '<div style="text-align:center; padding:40px; color:#dc3545;"><p>서버 오류가 발생했습니다.</p><button onclick="this.closest(\\'#questionDetailPopup\\').remove()" style="margin-top:16px; padding:10px 24px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; cursor:pointer;">닫기</button></div>';
+          }
         }
 
         // 모달 외부 클릭 시 닫기
@@ -23284,6 +23340,132 @@ app.get("/api/gate-quiz/details", async (req, res) => {
 
   } catch (err) {
     console.error("[gate-quiz/details] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 특정 단원의 문제/선지 조회 API (관문 상세 모달에서 사용)
+app.get("/api/gate-quiz/question", async (req, res) => {
+  try {
+    const { unitCode, qType } = req.query;
+
+    if (!unitCode || !qType) {
+      return res.json({ ok: false, message: "unitCode와 qType이 필요합니다." });
+    }
+
+    // unitCode 파싱 (예: "geo_01", "fit_physics_01", "on_bio_02")
+    const isFit = unitCode.startsWith('fit_');
+    const isOn = unitCode.startsWith('on_');
+    let subject, num;
+
+    if (isFit) {
+      const fitMatch = unitCode.match(/fit_([a-z]+\d?)_(\d{1,2})/);
+      if (!fitMatch) return res.json({ ok: false, message: "잘못된 unitCode 형식입니다." });
+      subject = fitMatch[1];
+      num = fitMatch[2].padStart(2, '0');
+    } else if (isOn) {
+      const onMatch = unitCode.match(/on_([a-z]+\d?)_(\d{1,2})/);
+      if (!onMatch) return res.json({ ok: false, message: "잘못된 unitCode 형식입니다." });
+      subject = onMatch[1];
+      num = onMatch[2].padStart(2, '0');
+    } else {
+      const match = unitCode.match(/([a-z]+\d?)_(\d{1,2})/);
+      if (!match) return res.json({ ok: false, message: "잘못된 unitCode 형식입니다." });
+      subject = match[1];
+      num = match[2].padStart(2, '0');
+    }
+
+    // 폴더 경로 결정
+    let folder = 'social';
+    if (['bio', 'physics', 'chem', 'earth'].includes(subject)) folder = 'science';
+    else if (['modern', 'classic'].includes(subject)) folder = 'korlit';
+    else if (['world1', 'world2'].includes(subject)) folder = 'worldlit';
+    else if (['people1', 'people2'].includes(subject)) folder = 'person';
+
+    // 콘텐츠 파일 경로
+    let contentFileName;
+    if (isFit) {
+      contentFileName = `fit_${subject}_content.js`;
+    } else if (isOn) {
+      contentFileName = `on_${subject}_content.js`;
+    } else {
+      contentFileName = `${subject}_content.js`;
+    }
+    const contentPath = path.join(__dirname, 'public', 'BRAINUP', folder, contentFileName);
+
+    if (!fs.existsSync(contentPath)) {
+      return res.json({ ok: false, message: "콘텐츠 파일을 찾을 수 없습니다." });
+    }
+
+    const content = fs.readFileSync(contentPath, 'utf8');
+
+    // 해당 단원 블록 찾기
+    const labelNoMatch = content.match(new RegExp(`labelNo:\\s*["']${num}["']`));
+    if (!labelNoMatch) {
+      return res.json({ ok: false, message: "해당 단원을 찾을 수 없습니다." });
+    }
+
+    const unitIndex = content.indexOf(labelNoMatch[0]);
+    const nextUnitMatch = content.slice(unitIndex + 100).match(/labelNo:\s*["']\d{2}["']/);
+    const endIndex = nextUnitMatch ? unitIndex + 100 + content.slice(unitIndex + 100).indexOf(nextUnitMatch[0]) : content.length;
+    const unitBlock = content.slice(unitIndex, endIndex);
+
+    // title 추출
+    const titleMatch = unitBlock.match(/title:\s*["'](.+?)["']/);
+    const unitTitle = titleMatch ? titleMatch[1] : `${subject} ${num}`;
+
+    // passage 추출
+    const passageMatch = unitBlock.match(/passage:\s*\[([\s\S]*?)\],?\s*\n\s*vocab:/);
+    let passages = [];
+    if (passageMatch) {
+      const passageRaw = passageMatch[1];
+      passages = passageRaw.match(/'((?:\\'|[^'])+)'/g)?.map(s => {
+        return s.slice(1, -1).replace(/\\'/g, "'");
+      }) || [];
+    }
+
+    // 요청된 문제 타입에 따라 문제/선지 추출
+    const qKey = qType === 'q2' ? 'q2' : 'q1';
+    const textMatch = unitBlock.match(new RegExp(`${qKey}_text:\\s*'((?:\\\\'|[^'])+?)'`)) ||
+                      unitBlock.match(new RegExp(`${qKey}_text:\\s*"((?:\\\\"|[^"])+?)"`));
+    const optsMatch = unitBlock.match(new RegExp(`${qKey}_opts:\\s*\\[([\\s\\S]*?)\\]`));
+
+    if (!textMatch || !optsMatch) {
+      return res.json({ ok: false, message: "문제를 찾을 수 없습니다." });
+    }
+
+    const question = textMatch[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+    const optionsRaw = optsMatch[1];
+    let options = optionsRaw.match(/['"]((\\['"]|[^'"])+?)['"]/g)?.map(s => {
+      let opt = s.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
+      opt = opt.replace(/^[①②③④]\s*/, '');
+      return opt;
+    }) || [];
+
+    // 정답 추출
+    const answerKeyMatch = unitBlock.match(/answerKey:\s*\{([^}]+)\}/);
+    let correctAnswer = 1;
+    if (answerKeyMatch) {
+      const answerKeyBlock = answerKeyMatch[1];
+      const ansMatch = answerKeyBlock.match(new RegExp(`${qKey}:\\s*['"]?(\\d)['"]?`));
+      if (ansMatch) correctAnswer = parseInt(ansMatch[1]);
+    }
+
+    res.json({
+      ok: true,
+      data: {
+        unitCode,
+        unitTitle,
+        qType,
+        question,
+        options,
+        correct: correctAnswer,
+        passage: passages  // 전체 본문 제공
+      }
+    });
+
+  } catch (err) {
+    console.error("[gate-quiz/question] error:", err);
     res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
   }
 });
