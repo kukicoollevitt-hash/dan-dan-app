@@ -21343,23 +21343,14 @@ app.get('/api/mock-exam/recommend-tasks/:userId', async (req, res) => {
       if (user) phone = user.phone;
     }
 
-    // 미완료 과제는 주차와 관계없이 모두 조회, 완료된 과제는 현재 주차만 조회
+    // 미완료/완료 과제 모두 조회 (완료된 과제도 유지)
     // userId 또는 phone으로 조회
     const userCondition = phone
       ? { $or: [{ userId }, { phone }] }
       : { userId };
 
-    const tasks = await MockExamRecommendTask.find({
-      $and: [
-        userCondition,
-        {
-          $or: [
-            { status: { $ne: 'completed' } },  // 미완료 과제는 모든 주차
-            { weekNumber: currentWeek }         // 완료된 과제는 현재 주차만
-          ]
-        }
-      ]
-    }).sort({ weekNumber: -1, diffPercent: -1 }).lean(); // 최신 주차 먼저, 그 다음 차이가 큰 순서
+    const tasks = await MockExamRecommendTask.find(userCondition)
+      .sort({ status: 1, weekNumber: -1, diffPercent: -1 }).lean(); // 미완료(pending) 먼저, 그 다음 최신 주차, 차이가 큰 순서
 
     // 각 과제에 해당하는 시험지 정보 추가
     const dbExams = await SupplementExam.find({}).lean();
