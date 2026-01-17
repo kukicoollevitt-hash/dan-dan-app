@@ -4648,19 +4648,30 @@
             // 공유 링크로 들어온 경우 12+ 상세 지표 모달 자동으로 열기
             const openDetail = urlParams.get('openDetail');
             const sharedExamId = urlParams.get('examId');
-            console.log('[DEBUG] openDetail:', openDetail, 'sharedExamId:', sharedExamId, 'shareUserId:', shareUserId);
-            if (openDetail === 'true') {
+            // 해시에서도 파라미터 확인 (카카오톡 인앱 브라우저 대응)
+            const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+            const hashOpenDetail = hashParams.get('openDetail');
+            const hashExamId = hashParams.get('examId');
+
+            console.log('[DEBUG] URL:', window.location.href);
+            console.log('[DEBUG] openDetail:', openDetail, 'sharedExamId:', sharedExamId);
+            console.log('[DEBUG] hashOpenDetail:', hashOpenDetail, 'hashExamId:', hashExamId);
+
+            const shouldOpenDetail = openDetail === 'true' || hashOpenDetail === 'true';
+            const finalExamId = sharedExamId || hashExamId;
+
+            if (shouldOpenDetail) {
                 // 데이터 로드 완료 후 모달 열기
                 setTimeout(() => {
-                    console.log('[DEBUG] 모달 열기 시도');
-                    if (sharedExamId) {
+                    console.log('[DEBUG] 모달 열기 시도, examId:', finalExamId);
+                    if (finalExamId) {
                         // 특정 회차의 상세 지표 열기
-                        openExamDetailIndicator(sharedExamId);
+                        openExamDetailIndicator(finalExamId);
                     } else {
                         // 전체 상세 지표 열기
                         openDetailIndicator();
                     }
-                }, 1000);
+                }, 1500);
             }
         });
 
@@ -5926,9 +5937,10 @@
             }
 
             // 공유 링크에 userId, name, openDetail 파라미터 추가 (모달 자동 오픈용)
+            // 쿼리 파라미터와 해시 둘 다 사용 (카카오톡 인앱 브라우저 대응)
             const baseUrl = 'https://dan-dan-app.onrender.com/mock_exam_dashboard.html';
             const examIdParam = currentDetailExamId ? `&examId=${encodeURIComponent(currentDetailExamId)}` : '';
-            const shareUrl = `${baseUrl}?userId=${encodeURIComponent(currentUser._id)}&name=${encodeURIComponent(userName)}&openDetail=true${examIdParam}`;
+            const shareUrl = `${baseUrl}?userId=${encodeURIComponent(currentUser._id)}&name=${encodeURIComponent(userName)}&openDetail=true${examIdParam}#openDetail=true${examIdParam}`;
 
             if (window.Kakao && Kakao.isInitialized()) {
                 Kakao.Share.sendDefault({
