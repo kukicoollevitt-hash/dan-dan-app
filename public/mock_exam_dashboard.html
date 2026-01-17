@@ -4634,6 +4634,22 @@
             const shareUserId = urlParams.get('userId');
             const shareName = urlParams.get('name');
 
+            // 공유 링크에서 openDetail 파라미터 미리 확인
+            const openDetail = urlParams.get('openDetail');
+            const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+            const hashOpenDetail = hashParams.get('openDetail');
+            const isSharedDetailView = openDetail === 'true' || hashOpenDetail === 'true';
+
+            // 공유 링크로 상세 지표 열기 요청 시, 모달과 스피너 먼저 표시
+            if (isSharedDetailView) {
+                const loadingOverlay = document.getElementById('detailModalLoadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('hidden');
+                }
+                document.getElementById('detailModalOverlay').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
             // 공유 링크로 들어온 경우 해당 유저 정보 사용
             if (shareUserId) {
                 currentUser = {
@@ -4692,43 +4708,20 @@
             // 줌 링크 로드
             await loadZoomLinkForButton();
 
-            // 공유 링크로 들어온 경우 12+ 상세 지표 모달 자동으로 열기
-            const openDetail = urlParams.get('openDetail');
-            const sharedExamId = urlParams.get('examId');
-            // 해시에서도 파라미터 확인 (카카오톡 인앱 브라우저 대응)
-            const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
-            const hashOpenDetail = hashParams.get('openDetail');
-            const hashExamId = hashParams.get('examId');
+            // 공유 링크로 들어온 경우 12+ 상세 지표 모달 로딩 완료 처리
+            if (isSharedDetailView) {
+                const sharedExamId = urlParams.get('examId');
+                const hashExamId = hashParams.get('examId');
+                const finalExamId = sharedExamId || hashExamId;
 
-            console.log('[DEBUG] URL:', window.location.href);
-            console.log('[DEBUG] openDetail:', openDetail, 'sharedExamId:', sharedExamId);
-            console.log('[DEBUG] hashOpenDetail:', hashOpenDetail, 'hashExamId:', hashExamId);
+                console.log('[DEBUG] 공유 링크로 접근 - 데이터 로드 완료, examId:', finalExamId);
 
-            const shouldOpenDetail = openDetail === 'true' || hashOpenDetail === 'true';
-            const finalExamId = sharedExamId || hashExamId;
-
-            if (shouldOpenDetail) {
-                // 모달 즉시 열고 로딩 표시
-                console.log('[DEBUG] 공유 링크로 접근 - 모달 즉시 열기, examId:', finalExamId);
-
-                // 로딩 오버레이 표시
-                const loadingOverlay = document.getElementById('detailModalLoadingOverlay');
-                if (loadingOverlay) {
-                    loadingOverlay.classList.remove('hidden');
+                // 데이터 로드 완료 후 실제 데이터 표시
+                if (finalExamId) {
+                    await openExamDetailIndicatorFromShare(finalExamId);
+                } else {
+                    await openDetailIndicatorFromShare();
                 }
-
-                // 모달 즉시 열기
-                document.getElementById('detailModalOverlay').classList.add('active');
-                document.body.style.overflow = 'hidden';
-
-                // 데이터 로드 후 실제 데이터 표시
-                setTimeout(() => {
-                    if (finalExamId) {
-                        openExamDetailIndicatorFromShare(finalExamId);
-                    } else {
-                        openDetailIndicatorFromShare();
-                    }
-                }, 500);
             }
         });
 
