@@ -77,12 +77,12 @@ const CURRICULUM = {
         '세계문학(1)': {
           id: 'world1',
           unitCount: 40,
-          unitPrefix: 'world'
+          unitPrefix: 'world1'
         },
         '세계문학(2)': {
           id: 'world2',
           unitCount: 40,
-          unitPrefix: 'world'
+          unitPrefix: 'world2'
         }
       }
     },
@@ -92,12 +92,12 @@ const CURRICULUM = {
         '인물(1)': {
           id: 'people1',
           unitCount: 40,
-          unitPrefix: 'people'
+          unitPrefix: 'people1'
         },
         '인물(2)': {
           id: 'people2',
           unitCount: 40,
-          unitPrefix: 'people'
+          unitPrefix: 'people2'
         }
       }
     }

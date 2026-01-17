@@ -11724,11 +11724,12 @@ app.get("/my-learning", async (req, res) => {
         const logsForChart = ${JSON.stringify(logs)};
         const UNIT_TITLES = ${JSON.stringify(UNIT_TITLES)};
         const UNIT_PROGRESS_MAP = ${JSON.stringify(unitProgressMap)};  // ✅ 어휘학습 점수 포함
-        const rawSeries = '${series || 'up'}';  // 현재 페이지의 시리즈 (단축코드)
+        const rawSeries = '${series || 'all'}';  // 현재 페이지의 시리즈 (단축코드) - 기본값 전체
 
         // 시리즈 단축코드를 전체 이름으로 변환
         function getFullSeriesName(series) {
           const seriesMap = {
+            'all': '전체 시리즈',
             'up': 'BRAIN업',
             'on': 'BRAIN온',
             'fit': 'BRAIN핏',
@@ -11738,13 +11739,15 @@ app.get("/my-learning", async (req, res) => {
             'BRAIN핏': 'BRAIN핏',
             'BRAIN딥': 'BRAIN딥'
           };
-          return seriesMap[series] || 'BRAIN업';
+          return seriesMap[series] || '전체 시리즈';
         }
         let currentSeries = getFullSeriesName(rawSeries);
+        console.log('[DEBUG] rawSeries:', rawSeries, ', currentSeries:', currentSeries);
 
         // 시리즈별 unit 접두사 필터 함수 (filterLogsBySeries와 동일한 로직 사용)
         function matchesSeries(unit, series) {
           if (!unit) return false;
+          if (series === '전체 시리즈') return true; // 전체 시리즈: 모든 로그 포함
           if (series === 'BRAIN온') return unit.includes('on_');
           if (series === 'BRAIN핏') return unit.includes('fit_');
           if (series === 'BRAIN딥') return unit.includes('deep_');
@@ -12667,7 +12670,7 @@ app.get("/my-learning", async (req, res) => {
         }
 
         // 주간 모드 UI 초기화 함수 (페이지 로드 시 URL 파라미터로 주간 모드 활성화)
-        function initWeeklyModeFromUrl() {
+        async function initWeeklyModeFromUrl() {
           if (isWeeklyMode) {
             const btn = document.getElementById('weeklyToggleBtn');
             const iconEl = document.getElementById('weeklyToggleIcon');
@@ -12692,7 +12695,7 @@ app.get("/my-learning", async (req, res) => {
             if (weeklyRadarNav) weeklyRadarNav.style.display = 'flex';
 
             selectedWeekRadarStart = new Date(selectedWeekStart);
-            renderWeeklySection();
+            await renderWeeklySection();
             updateWeeklyRadarNav();
             if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
             return true; // 주간 모드로 초기화됨
@@ -12701,7 +12704,7 @@ app.get("/my-learning", async (req, res) => {
         }
 
         // 주간/일간 모드 토글
-        function toggleWeeklyMode() {
+        async function toggleWeeklyMode() {
           isWeeklyMode = !isWeeklyMode;
           const btn = document.getElementById('weeklyToggleBtn');
           const iconEl = document.getElementById('weeklyToggleIcon');
@@ -12727,7 +12730,7 @@ app.get("/my-learning", async (req, res) => {
             weeklyRadarNav.style.display = 'flex';
             selectedWeekStart = getWeekStart(selectedDate);
             selectedWeekRadarStart = new Date(selectedWeekStart);
-            renderWeeklySection();
+            await renderWeeklySection();
             updateWeeklyRadarNav();
             // AI 학습 분석도 주간 모드로 업데이트
             if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
@@ -12763,9 +12766,9 @@ app.get("/my-learning", async (req, res) => {
         window.toggleWeeklyMode = toggleWeeklyMode;
 
         // 주차 변경 함수 (학습 기록 테이블용)
-        function changeWeek(delta) {
+        async function changeWeek(delta) {
           selectedWeekStart.setDate(selectedWeekStart.getDate() + (delta * 7));
-          renderWeeklySection();
+          await renderWeeklySection();
           // AI 학습 분석도 해당 주차로 업데이트
           if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
           // URL 파라미터 업데이트 (공유 시 해당 주차 유지)
@@ -20728,8 +20731,19 @@ async function executeAutoTaskAssignment() {
             progress.studyRoom = { assignedTasks: [] };
           }
 
+          // 저장 직전 중복 체크 (동시 실행 방지)
+          const existingUnitIds = new Set(
+            progress.studyRoom.assignedTasks.map(t => t.unitId).filter(Boolean)
+          );
+          const filteredTasks = tasksToAssign.filter(task => !existingUnitIds.has(task.unitId));
+
+          if (filteredTasks.length === 0) {
+            console.log(`⏭️ [${setting.grade} ${setting.name}] 이미 동일한 과제가 존재합니다. 스킵합니다.`);
+            continue;
+          }
+
           // 새 과제 추가
-          for (const task of tasksToAssign) {
+          for (const task of filteredTasks) {
             const newTask = {
               unitId: task.unitId,
               unitTitle: task.unitTitle,
@@ -20744,8 +20758,8 @@ async function executeAutoTaskAssignment() {
           }
 
           await progress.save();
-          console.log(`✅ [${setting.grade} ${setting.name}] ${tasksToAssign.length}개 과제 부여 완료`);
-          tasksToAssign.forEach(t => console.log(`   - ${t.seriesName} > ${t.subjectName} ${t.unitTitle.split(' ')[1]}`));
+          console.log(`✅ [${setting.grade} ${setting.name}] ${filteredTasks.length}개 과제 부여 완료`);
+          filteredTasks.forEach(t => console.log(`   - ${t.seriesName} > ${t.subjectName} ${t.unitTitle.split(' ')[1]}`));
         } else {
           console.log(`ℹ️ [${setting.grade} ${setting.name}] 부여할 미완료 과제가 없습니다`);
         }
