@@ -10449,11 +10449,13 @@ app.get("/my-learning", async (req, res) => {
                 <div id="feedbackTitle1" class="ai-feedback-item-title">📚 오늘의 학습 기록</div>
                 <div id="feedbackContent1" class="ai-feedback-item-content"></div>
               </div>
-              <!-- 섹션 2: 레이더 차트 -->
+              <!-- 섹션 2: 레이더 차트 (숨김) -->
+              <!--
               <div class="ai-feedback-item">
                 <div class="ai-feedback-item-title">📊 문해력 AI 레이더 분석</div>
                 <div id="feedbackContent2" class="ai-feedback-item-content"></div>
               </div>
+              -->
               <!-- 섹션 3: 성장 지수 -->
               <div class="ai-feedback-item">
                 <div class="ai-feedback-item-title">📈 성장 지수 변화</div>
@@ -11464,11 +11466,11 @@ app.get("/my-learning", async (req, res) => {
               };
             }
 
-            // 5개 피드백 동시 로드
+            // 4개 피드백 동시 로드 (레이더 차트 숨김)
             try {
               await Promise.all([
                 loadSingleFeedback('today_summary', 'feedbackContent1', todayData),
-                loadSingleFeedback('radar_chart', 'feedbackContent2', radarData),
+                // loadSingleFeedback('radar_chart', 'feedbackContent2', radarData), // 숨김
                 loadSingleFeedback('growth_trend', 'feedbackContent3', growthData),
                 loadSingleFeedback('subject_scores', 'feedbackContent4', subjectData),
                 loadSingleFeedback('vocab_scores', 'feedbackContent5', vocabScoreData)
