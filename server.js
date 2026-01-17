@@ -11204,7 +11204,7 @@ app.get("/my-learning", async (req, res) => {
             // ===== 2. 레이더 차트 상세 데이터 수집 =====
             const radarWrap = document.getElementById('today-radar-wrap');
             const radarCards = radarWrap ? radarWrap.querySelectorAll('.radar-card') : [];
-            const radarData = { chartCount: radarCards.length, radarScores: [], isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
+            const radarData = { hasData: false, chartCount: radarCards.length, radarScores: [], isWeeklyMode: isWeeklyMode, weekDateRange: weekDateRange };
 
             if (radarCards.length > 0) {
               // 각 레이더 카드에서 단원명과 점수 정보 수집
@@ -11222,6 +11222,7 @@ app.get("/my-learning", async (req, res) => {
 
               // 평균 레이더 점수 계산
               if (radarData.radarScores.length > 0) {
+                radarData.hasData = true;
                 const avgRadar = { literal: 0, structural: 0, lexical: 0, inferential: 0, critical: 0 };
                 radarData.radarScores.forEach(r => {
                   avgRadar.literal += (r.literal || 0);
@@ -25580,6 +25581,9 @@ ${data.completedCount > 0 ? `특히 "${data.units?.[0] || ''}"과 같은 단원�
         break;
 
       case "radar_chart":
+        if (!data.hasData) {
+          return res.json({ ok: true, feedback: "아직 문해력 레이더 분석 기록이 없어요. 학습을 완료하면 여기에서 5가지 문해력 영역별 분석을 확인할 수 있을 거야! 화이팅!" });
+        }
         const periodText2 = data.isWeeklyMode ? `이번 주 (${data.weekDateRange || ''})` : '오늘';
         const sectionText2 = data.isWeeklyMode ? '주간 완료한 단원별 문해력 AI 레이더' : '오늘 완료한 단원별 문해력 AI 레이더';
         userPrompt = `다음은 ${grade} ${name} 학생의 ${periodText2} 완료한 단원별 문해력 AI 레이더 데이터입니다.
