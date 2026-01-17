@@ -25691,6 +25691,24 @@ ${data.summary?.aboveAvgPercent >= 70 ? '평균 이상인 단원이 많으니 �
     let feedback = completion.choices[0].message.content;
     // 줄바꿈을 공백으로 변환하여 통일감 있게 표시
     feedback = feedback.replace(/\n/g, ' ');
+
+    // 잘못된 호칭 수정: "나도해야" -> "도해야", "나도해아" -> "도해아" 등
+    // 풀네임+야/아 패턴을 이름만+야/아로 교체
+    if (name && name.length >= 2) {
+      const fullNameWithYa = name + '야';
+      const fullNameWithA = name + '아';
+      const friendlyNameOnly = name.slice(1);
+      // 받침 유무 판단
+      const lastChar = friendlyNameOnly.charAt(friendlyNameOnly.length - 1);
+      const lastCharCode = lastChar.charCodeAt(0);
+      const hasBatchim = (lastCharCode - 0xAC00) % 28 !== 0;
+      const correctSuffix = hasBatchim ? '아' : '야';
+      const correctName = friendlyNameOnly + correctSuffix;
+
+      feedback = feedback.replace(new RegExp(fullNameWithYa, 'g'), correctName);
+      feedback = feedback.replace(new RegExp(fullNameWithA, 'g'), correctName);
+    }
+
     console.log(`✅ [AI 피드백] ${section} 피드백 생성 완료`);
 
     res.json({ ok: true, feedback });
