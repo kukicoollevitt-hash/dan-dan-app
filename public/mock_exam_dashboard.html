@@ -5711,6 +5711,22 @@
         // 12+ 상세 세부 지표 모달 열기 (기존 - 전체 누적)
         function openDetailIndicator() {
             currentDetailExamId = null;
+
+            // 평균 점수와 평균 등급 계산 (updateStats 함수와 동일한 로직)
+            const scores = userProgressData.filter(p => p.status === 'completed' && p.score).map(p => p.score);
+            const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+            const avgGradeInfo = avgScore !== null ? getGradeFromScore(avgScore) : null;
+
+            // 모달 제목 업데이트 - 종합 평균 표시
+            const titleEl = document.querySelector('.detail-modal-title');
+            if (titleEl) {
+                let gradeHtml = '';
+                if (avgGradeInfo && avgScore !== null) {
+                    gradeHtml = `<span style="display: inline-block; margin-left: 10px; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; background: linear-gradient(135deg, ${avgGradeInfo.color}, ${avgGradeInfo.color}dd); color: #fff; box-shadow: 0 2px 8px ${avgGradeInfo.color}66;">${avgGradeInfo.text} (${avgScore}점)</span>`;
+                }
+                titleEl.innerHTML = `12+ 상세 세부 지표<br><span style="font-size: 14px; font-weight: 500; color: #c4b5fd;">종합 평균</span>${gradeHtml}`;
+            }
+
             document.getElementById('detailModalOverlay').classList.add('active');
             document.body.style.overflow = 'hidden';
             loadDetailIndicatorData();
@@ -5779,10 +5795,19 @@
         async function openDetailIndicatorFromShare() {
             currentDetailExamId = null;
 
-            // 모달 제목 업데이트
+            // 평균 점수와 평균 등급 계산 (updateStats 함수와 동일한 로직)
+            const scores = userProgressData.filter(p => p.status === 'completed' && p.score).map(p => p.score);
+            const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+            const avgGradeInfo = avgScore !== null ? getGradeFromScore(avgScore) : null;
+
+            // 모달 제목 업데이트 - 종합 평균 표시
             const titleEl = document.querySelector('.detail-modal-title');
             if (titleEl) {
-                titleEl.innerHTML = '12+ 상세 세부 지표';
+                let gradeHtml = '';
+                if (avgGradeInfo && avgScore !== null) {
+                    gradeHtml = `<span style="display: inline-block; margin-left: 10px; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; background: linear-gradient(135deg, ${avgGradeInfo.color}, ${avgGradeInfo.color}dd); color: #fff; box-shadow: 0 2px 8px ${avgGradeInfo.color}66;">${avgGradeInfo.text} (${avgScore}점)</span>`;
+                }
+                titleEl.innerHTML = `12+ 상세 세부 지표<br><span style="font-size: 14px; font-weight: 500; color: #c4b5fd;">종합 평균</span>${gradeHtml}`;
             }
 
             // 데이터 로드
@@ -8157,6 +8182,28 @@
                                 ctx.restore();
                             }
 
+                            // 예측 막대 (핑크색) - 나의 평균 막대 바로 왼쪽에 표시
+                            if (item.prediction && item.prediction.avg !== undefined) {
+                                const predAvg = item.prediction.avg;
+                                const predBarHeight = (chartHeight * predAvg / 100) * eased;
+                                const predBarY = padding.top + chartHeight - predBarHeight;
+                                const predBarX = x - singleBarWidth * 2 - barGap;  // 나의 평균 막대 왼쪽
+
+                                const predBarGradient = ctx.createLinearGradient(0, predBarY, 0, padding.top + chartHeight);
+                                predBarGradient.addColorStop(0, 'rgba(236, 72, 153, 0.5)');  // 핑크색
+                                predBarGradient.addColorStop(1, 'rgba(236, 72, 153, 0.15)');
+
+                                ctx.save();
+                                ctx.fillStyle = predBarGradient;
+                                ctx.beginPath();
+                                ctx.roundRect(predBarX, predBarY, singleBarWidth, predBarHeight, 3);
+                                ctx.fill();
+                                ctx.strokeStyle = 'rgba(236, 72, 153, 0.6)';
+                                ctx.lineWidth = 1;
+                                ctx.stroke();
+                                ctx.restore();
+                            }
+
                             // 오른쪽: 전체 평균 (회색/하늘색)
                             if (item.globalAvg !== undefined) {
                                 const globalBarHeight = (chartHeight * item.globalAvg / 100) * eased;
@@ -8231,50 +8278,6 @@
                     });
                 });
 
-                // 예측 점수 점선 마커 그리기 (2회차부터, 보완학습 있을 때만)
-                trendData.forEach((item, index) => {
-                    if (item.prediction) {
-                        const x = padding.left + (index + 1) * xStep;
-
-                        // 각 영역별 예측 점수 점선 마커
-                        ['speech', 'grammar', 'reading', 'literature'].forEach(area => {
-                            const color = colors[area];
-                            const predScore = item.prediction[area];
-                            if (predScore !== undefined && predScore !== null) {
-                                const predY = padding.top + chartHeight - ((chartHeight * predScore / 100) * eased);
-
-                                // 예측 마커 (점선 가로선 + 다이아몬드)
-                                // 점선 가로선 (짧게)
-                                ctx.save();
-                                ctx.strokeStyle = color.light;
-                                ctx.lineWidth = 1.5;
-                                ctx.setLineDash([3, 3]);
-                                ctx.beginPath();
-                                ctx.moveTo(x - 12, predY);
-                                ctx.lineTo(x + 12, predY);
-                                ctx.stroke();
-                                ctx.setLineDash([]);
-                                ctx.restore();
-
-                                // 작은 다이아몬드 마커
-                                ctx.save();
-                                ctx.fillStyle = color.light;
-                                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-                                ctx.lineWidth = 1;
-                                ctx.beginPath();
-                                ctx.moveTo(x, predY - 4);
-                                ctx.lineTo(x + 4, predY);
-                                ctx.lineTo(x, predY + 4);
-                                ctx.lineTo(x - 4, predY);
-                                ctx.closePath();
-                                ctx.fill();
-                                ctx.stroke();
-                                ctx.restore();
-                            }
-                        });
-                    }
-                });
-
                 // 애니메이션 계속
                 if (animationProgress < 1) {
                     requestAnimationFrame(animate);
@@ -8304,6 +8307,22 @@
                         score: item.avgScore,
                         data: item
                     });
+
+                    // 예측 막대 위치 추가
+                    if (item.prediction && item.prediction.avg !== undefined) {
+                        const predBarHeight = chartHeight * item.prediction.avg / 100;
+                        const predBarY = padding.top + chartHeight - predBarHeight;
+                        barPositions.push({
+                            index,
+                            type: 'prediction',
+                            x: x - singleBarWidth * 2 - barGap,
+                            y: predBarY,
+                            width: singleBarWidth,
+                            height: predBarHeight,
+                            score: item.prediction.avg,
+                            data: item
+                        });
+                    }
 
                     if (item.globalAvg !== undefined) {
                         const globalBarHeight = chartHeight * item.globalAvg / 100;
@@ -8448,6 +8467,7 @@
                     const x = padding.left + (index + 1) * xStep;
                     const isMyBarHovered = hoveredBar && hoveredBar.type === 'my' && hoveredBar.index === index;
                     const isGlobalBarHovered = hoveredBar && hoveredBar.type === 'global' && hoveredBar.index === index;
+                    const isPredBarHovered = hoveredBar && hoveredBar.type === 'prediction' && hoveredBar.index === index;
 
                     // 나의 평균 막대
                     const myBarHeight = chartHeight * item.avgScore / 100;
@@ -8533,6 +8553,59 @@
                         ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
                         ctx.fillText(text, barCenterX, barCenterY);
                         ctx.restore();
+                    }
+
+                    // 예측 막대 (핑크색) - 나의 평균 막대 바로 왼쪽에 표시
+                    if (item.prediction && item.prediction.avg !== undefined) {
+                        const predAvg = item.prediction.avg;
+                        const predBarHeight = chartHeight * predAvg / 100;
+                        const predBarY = padding.top + chartHeight - predBarHeight;
+                        const predBarX = x - singleBarWidth * 2 - barGap;  // 나의 평균 막대 왼쪽
+
+                        ctx.save();
+                        if (isPredBarHovered) {
+                            ctx.shadowColor = 'rgba(236, 72, 153, 0.8)';
+                            ctx.shadowBlur = 20;
+                            ctx.translate(predBarX + singleBarWidth/2, padding.top + chartHeight);
+                            ctx.scale(1.15, 1.05);
+                            ctx.translate(-(predBarX + singleBarWidth/2), -(padding.top + chartHeight));
+                        }
+
+                        const predBarGradient = ctx.createLinearGradient(0, predBarY, 0, padding.top + chartHeight);
+                        if (isPredBarHovered) {
+                            predBarGradient.addColorStop(0, 'rgba(236, 72, 153, 0.85)');
+                            predBarGradient.addColorStop(1, 'rgba(236, 72, 153, 0.4)');
+                        } else {
+                            predBarGradient.addColorStop(0, 'rgba(236, 72, 153, 0.5)');
+                            predBarGradient.addColorStop(1, 'rgba(236, 72, 153, 0.15)');
+                        }
+                        ctx.fillStyle = predBarGradient;
+                        ctx.beginPath();
+                        ctx.roundRect(predBarX, predBarY, singleBarWidth, predBarHeight, 3);
+                        ctx.fill();
+                        ctx.strokeStyle = isPredBarHovered ? 'rgba(236, 72, 153, 1)' : 'rgba(236, 72, 153, 0.6)';
+                        ctx.lineWidth = isPredBarHovered ? 2 : 1;
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // 예측 막대 호버 시 % 표시
+                        if (isPredBarHovered) {
+                            ctx.save();
+                            ctx.font = 'bold 11px "Pretendard", sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            const barCenterX = predBarX + singleBarWidth/2;
+                            const barCenterY = predBarY + predBarHeight/2;
+                            const text = `${predAvg}%`;
+                            const textWidth = ctx.measureText(text).width;
+                            ctx.fillStyle = 'rgba(236, 72, 153, 0.95)';
+                            ctx.beginPath();
+                            ctx.roundRect(barCenterX - textWidth/2 - 4, barCenterY - 8, textWidth + 8, 16, 4);
+                            ctx.fill();
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                            ctx.fillText(text, barCenterX, barCenterY);
+                            ctx.restore();
+                        }
                     }
 
                     // 전체 평균 막대

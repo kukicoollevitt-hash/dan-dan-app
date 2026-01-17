@@ -23779,6 +23779,176 @@ app.post("/api/mock-exam/submit", async (req, res) => {
         generateRecommendTasksForUser(visitorId, user.phone, currentRound).catch(err => {
           console.error("❌ [submit] AI 추천 과제 생성 실패:", err);
         });
+
+        // 2회차 이상일 때 이전 회차 보완학습 기반 예측값 계산 및 저장
+        if (currentRound >= 2) {
+          try {
+            // 보완학습 데이터 조회 (supplement-progress API와 동일한 로직)
+            const queryConditions = [{ userId: visitorId }];
+            if (user.phone) queryConditions.push({ phone: user.phone });
+
+            const supplementResults = await SupplementResult.find({
+              $or: queryConditions,
+              isGraded: true
+            });
+
+            // AI 추천 과제 데이터도 조회 (status: 'completed' - supplement-progress API와 동일)
+            const completedTasks = await MockExamRecommendTask.find({
+              $or: queryConditions,
+              status: 'completed'
+            });
+
+            // 보완학습 영역별 집계
+            const supplementProgress = {
+              speech: { correct: 0, total: 0 },
+              grammar: { correct: 0, total: 0 },
+              reading: { correct: 0, total: 0 },
+              literature: { correct: 0, total: 0 }
+            };
+
+            // SupplementResult 집계
+            const examAreaMap = {
+              'supplement_classic_poem': 'literature', 'supplement_classic_poem_geumrusa': 'literature',
+              'supplement_classic_prose': 'literature', 'supplement_classic_prose_nakseong': 'literature',
+              'supplement_writing': 'speech', 'supplement_grammar_classic': 'grammar',
+              'supplement_grammar_classic_case': 'grammar', 'supplement_modern_novel': 'literature',
+              'supplement_speech': 'speech', 'supplement_modern_poem': 'literature',
+              'supplement_grammar_modern': 'grammar', 'supplement_grammar_modern_semantic': 'grammar',
+              'supplement_reading_science': 'reading', 'supplement_reading_science_tech': 'reading',
+              'supplement_reading_law': 'reading', 'supplement_reading_law_property': 'reading',
+              'supplement_reading_social': 'reading', 'supplement_reading_tech': 'reading',
+              'supplement_reading_humanities': 'reading', 'supplement_reading_humanities_art': 'reading',
+              'supplement_reading_art': 'reading', 'supplement_speech_integrated': 'speech',
+              'supplement_speech_integrated_job': 'speech', 'supplement_speech_food': 'speech',
+              'supplement_writing_subscription': 'speech', 'supplement_literature_poem_sea': 'literature',
+              'supplement_literature_novel_rondo': 'literature'
+            };
+
+            supplementResults.forEach(sr => {
+              const parentArea = examAreaMap[sr.examId];
+              if (parentArea && supplementProgress[parentArea]) {
+                supplementProgress[parentArea].correct += sr.correctCount || 0;
+                supplementProgress[parentArea].total += sr.totalQuestions || 0;
+              }
+            });
+
+            // AI 추천 과제 집계 (supplement-progress API와 동일 로직)
+            const alreadyCountedExamIds = new Set(supplementResults.map(r => r.examId));
+            completedTasks.forEach(task => {
+              // 이미 SupplementResult에서 집계된 보완학습이면 스킵 (중복 방지)
+              if (task.supplementExamId && alreadyCountedExamIds.has(task.supplementExamId)) return;
+              const parentArea = task.parentArea;
+              const taskTotal = task.totalCount || 5;
+              const taskCorrect = task.correctCount || Math.round(taskTotal * (task.avgRate || 70) / 100);
+              if (parentArea && supplementProgress[parentArea]) {
+                supplementProgress[parentArea].correct += taskCorrect;
+                supplementProgress[parentArea].total += taskTotal;
+              }
+            });
+
+            // 현재 회차 실제 점수 사용 (레이더 차트와 동일: 현재 회차 + 보완학습)
+            // 시험별 영역별 문항 번호
+            const areaQuestionsByExam = {
+              'korean_mock_1': {
+                speech: [1, 2, 4, 5, 6, 24, 25, 26, 27, 28, 29, 30],
+                grammar: [3, 7, 8, 9, 10],
+                reading: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+                literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+              },
+              'korean_mock_2': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [16, 17, 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+                literature: [22, 23, 24, 25, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+              },
+              'korean_mock_3': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [20, 21, 22, 23, 24, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
+                literature: [16, 17, 18, 19, 25, 26, 27, 38, 39, 40, 41, 42, 43, 44, 45]
+              },
+              'korean_mock_4': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 34, 38, 39, 40, 41, 42],
+                literature: [16, 17, 18, 19, 20, 26, 27, 28, 34, 35, 36, 37, 43, 44, 45]
+              }
+            };
+
+            const currentExamId = `korean_mock_${currentRound}`;
+            const currentWrongSet = new Set(wrongAnswers.map(w => w.questionNum));
+
+            // 누적 예측값 계산: (이전 회차들 + 보완학습) - 현재 회차 제외
+            // 1. 이전 회차들의 결과 조회 (MockExamResult용 쿼리 조건 별도 구성)
+            const mockExamQueryConditions = [{ userId: visitorId }];
+            if (user.phone) mockExamQueryConditions.push({ 'studentInfo.phoneNumber': user.phone });
+
+            const previousResults = await MockExamResult.find({
+              $or: mockExamQueryConditions,
+              examId: { $in: Array.from({ length: currentRound - 1 }, (_, i) => `korean_mock_${i + 1}`) }
+            }).sort({ examId: 1, completedAt: -1 });
+
+            // 각 회차별로 최신 결과 1개씩만 사용 (completedAt 기준 정렬 후 첫 번째)
+            const latestByExam = {};
+            previousResults.forEach(r => {
+              const examId = r.examId;
+              if (!latestByExam[examId] || r.completedAt > latestByExam[examId].completedAt) {
+                latestByExam[examId] = r;
+              }
+            });
+
+            // 2. 누적 영역별 합계 계산 (이전 회차들)
+            const cumulativeTotals = {
+              speech: { correct: 0, total: 0 },
+              grammar: { correct: 0, total: 0 },
+              reading: { correct: 0, total: 0 },
+              literature: { correct: 0, total: 0 }
+            };
+
+            Object.values(latestByExam).forEach(prevResult => {
+              const prevWrongSet = new Set((prevResult.wrongAnswers || []).map(w => w.questionNum));
+              const prevAreaQuestions = areaQuestionsByExam[prevResult.examId] || areaQuestionsByExam['korean_mock_1'];
+
+              ['speech', 'grammar', 'reading', 'literature'].forEach(area => {
+                const questions = prevAreaQuestions[area];
+                const wrongCount = questions.filter(q => prevWrongSet.has(q)).length;
+                cumulativeTotals[area].correct += questions.length - wrongCount;
+                cumulativeTotals[area].total += questions.length;
+              });
+            });
+
+            // 3. 예측값 계산: (이전 회차들 누적 + 보완학습) - 현재 회차는 제외!
+            // 예측 = "이번 회차를 풀기 전 예상 점수"
+            const predictionScores = {};
+            let totalPredCorrect = 0;
+            let totalPredTotal = 0;
+
+            ['speech', 'grammar', 'reading', 'literature'].forEach(area => {
+              const cumulativeCorrect = cumulativeTotals[area].correct;
+              const cumulativeTotal = cumulativeTotals[area].total;
+
+              const suppCorrect = supplementProgress[area].correct;
+              const suppTotal = supplementProgress[area].total;
+
+              const areaCorrect = cumulativeCorrect + suppCorrect;
+              const areaTotal = cumulativeTotal + suppTotal;
+              predictionScores[area] = areaTotal > 0 ? Math.round((areaCorrect / areaTotal) * 100) : 0;
+
+              totalPredCorrect += areaCorrect;
+              totalPredTotal += areaTotal;
+            });
+
+            // 종합 예측 평균
+            predictionScores.avg = totalPredTotal > 0 ? Math.round((totalPredCorrect / totalPredTotal) * 100) : 0;
+
+            // MockExamResult에 예측값 저장
+            result.predictionAtSubmit = predictionScores;
+            await result.save();
+            console.log(`✅ [submit] ${currentRound}회차 예측값 저장:`, predictionScores);
+          } catch (predErr) {
+            console.error("❌ [submit] 예측값 계산/저장 실패:", predErr);
+          }
+        }
       }
     } catch (userErr) {
       console.error("❌ [submit] examProgress 업데이트 실패:", userErr);
@@ -24596,56 +24766,6 @@ app.get("/api/mock-exam/area-trend/:userId", async (req, res) => {
       }
     }
 
-    // 보완학습 시험지 매핑 (parentArea 추출용)
-    const supplementExamAreaMap = {
-      'supplement_classic_poem': 'literature',
-      'supplement_classic_poem_geumrusa': 'literature',
-      'supplement_classic_prose': 'literature',
-      'supplement_classic_prose_nakseong': 'literature',
-      'supplement_writing': 'speech',
-      'supplement_grammar_classic': 'grammar',
-      'supplement_grammar_classic_case': 'grammar',
-      'supplement_modern_novel': 'literature',
-      'supplement_speech': 'speech',
-      'supplement_modern_poem': 'literature',
-      'supplement_grammar_modern': 'grammar',
-      'supplement_grammar_modern_semantic': 'grammar',
-      'supplement_reading_science': 'reading',
-      'supplement_reading_science_tech': 'reading',
-      'supplement_reading_law': 'reading',
-      'supplement_reading_law_property': 'reading',
-      'supplement_reading_social': 'reading',
-      'supplement_reading_tech': 'reading',
-      'supplement_reading_humanities': 'reading',
-      'supplement_reading_humanities_art': 'reading',
-      'supplement_reading_art': 'reading',
-      'supplement_speech_integrated': 'speech',
-      'supplement_speech_integrated_job': 'speech',
-      'supplement_speech_food': 'speech',
-      'supplement_writing_subscription': 'speech',
-      'supplement_literature_poem_sea': 'literature',
-      'supplement_literature_novel_rondo': 'literature'
-    };
-
-    // 각 회차별 이전 회차 보완학습 완료 데이터 조회
-    // (예: 2회차의 예측 = 1회차 이후, 2회차 전에 완료한 보완학습)
-    const supplementQueryConditions = [{ userId }];
-    if (user) {
-      supplementQueryConditions.push({ phone: user.phone });
-    }
-
-    // 모든 보완학습 결과 조회
-    const allSupplementResults = await SupplementResult.find({
-      $or: supplementQueryConditions,
-      isGraded: true
-    });
-
-    // AI 추천 과제 완료 데이터도 조회
-    const completedTasks = await MockExamRecommendTask.find({
-      $or: supplementQueryConditions,
-      status: 'completed'
-    });
-
     // 각 시험별 영역 점수 계산
     const trendData = results.map((result, idx) => {
       const wrongSet = new Set((result.wrongAnswers || []).map(w => w.questionNum));
@@ -24678,84 +24798,9 @@ app.get("/api/mock-exam/area-trend/:userId", async (req, res) => {
       const date = new Date(result.completedAt);
       const dateStr = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
 
-      // 예측 점수 계산 (2회차부터, 이전 회차를 목표로 한 보완학습 데이터)
-      // 현재 회차 번호 추출 (korean_mock_N에서 N)
-      const currentRound = parseInt((result.examId || 'korean_mock_1').replace('korean_mock_', ''));
-      let predictionScores = null;
-
-      if (currentRound >= 2 && idx > 0) {
-        // 이전 회차들을 목표로 한 보완학습만 필터링
-        const targetRounds = [];
-        for (let r = 1; r < currentRound; r++) {
-          targetRounds.push(r);
-        }
-
-        // 보완학습 영역별 집계
-        const supplementByArea = {
-          speech: { correct: 0, total: 0 },
-          grammar: { correct: 0, total: 0 },
-          reading: { correct: 0, total: 0 },
-          literature: { correct: 0, total: 0 }
-        };
-
-        // SupplementResult에서 해당 회차 이전 보완학습 필터링
-        const countedExamIds = new Set();
-        allSupplementResults.forEach(sr => {
-          // targetMockRound가 현재 회차 미만인 것만 (이전 회차 대상 보완학습)
-          if (sr.targetMockRound && sr.targetMockRound < currentRound) {
-            const parentArea = supplementExamAreaMap[sr.examId];
-            if (parentArea && supplementByArea[parentArea]) {
-              supplementByArea[parentArea].correct += sr.correctCount || 0;
-              supplementByArea[parentArea].total += sr.totalQuestions || 0;
-              countedExamIds.add(sr.examId);
-            }
-          }
-        });
-
-        // AI 추천 과제에서도 이전 회차 대상 보완학습 추가
-        completedTasks.forEach(task => {
-          if (task.targetMockRound && task.targetMockRound < currentRound) {
-            // 중복 체크
-            if (task.supplementExamId && countedExamIds.has(task.supplementExamId)) {
-              return;
-            }
-            const parentArea = task.parentArea;
-            if (parentArea && supplementByArea[parentArea]) {
-              const taskTotal = task.totalCount || 5;
-              const taskCorrect = task.correctCount || Math.round(taskTotal * (task.avgRate || 70) / 100);
-              supplementByArea[parentArea].correct += taskCorrect;
-              supplementByArea[parentArea].total += taskTotal;
-            }
-          }
-        });
-
-        // 보완학습이 하나라도 있으면 예측 점수 계산
-        const hasAnySupplement = Object.values(supplementByArea).some(v => v.total > 0);
-        if (hasAnySupplement) {
-          // 이전 회차 데이터 가져오기
-          const prevResult = results[idx - 1];
-          const prevWrongSet = new Set((prevResult.wrongAnswers || []).map(w => w.questionNum));
-          const prevAreaQuestions = areaQuestionsByExam[prevResult.examId] || areaQuestionsByExam['korean_mock_1'];
-
-          predictionScores = {};
-          ['speech', 'grammar', 'reading', 'literature'].forEach(area => {
-            // 이전 회차 실제 점수
-            const prevQuestions = prevAreaQuestions[area];
-            const prevWrongCount = prevQuestions.filter(q => prevWrongSet.has(q)).length;
-            const prevCorrect = prevQuestions.length - prevWrongCount;
-            const prevTotal = prevQuestions.length;
-
-            // 보완학습 데이터
-            const suppCorrect = supplementByArea[area].correct;
-            const suppTotal = supplementByArea[area].total;
-
-            // 예측 = (이전 회차 실제 + 보완학습) 합산 정답률
-            const totalCorrect = prevCorrect + suppCorrect;
-            const totalTotal = prevTotal + suppTotal;
-            predictionScores[area] = totalTotal > 0 ? Math.round((totalCorrect / totalTotal) * 100) : 0;
-          });
-        }
-      }
+      // 예측 점수: 제출 시 저장된 predictionAtSubmit 값 사용
+      // (2회차 이상 제출 시 레이더 차트와 동일한 예측값이 저장됨)
+      let predictionScores = result.predictionAtSubmit || null;
 
       return {
         date: dateStr,

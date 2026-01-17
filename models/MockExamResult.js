@@ -55,6 +55,11 @@ const mockExamResultSchema = new mongoose.Schema({
     completedAt: {
         type: Date,
         default: Date.now
+    },
+    // 제출 시점의 예측값 (레이더 차트와 동일: 현재 회차 + 보완학습)
+    predictionAtSubmit: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null
     }
 }, {
     timestamps: true
