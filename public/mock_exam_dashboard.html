@@ -4646,13 +4646,19 @@
             await loadZoomLinkForButton();
 
             // 공유 링크로 들어온 경우 12+ 상세 지표 모달 자동으로 열기
-            if (shareUserId) {
+            const openDetail = urlParams.get('openDetail');
+            const sharedExamId = urlParams.get('examId');
+            if (openDetail === 'true' && shareUserId) {
                 // 데이터 로드 완료 후 모달 열기
-                setTimeout(async () => {
-                    await loadDetailIndicatorData();
-                    const modal = document.getElementById('detailIndicatorModal');
-                    if (modal) modal.style.display = 'flex';
-                }, 500);
+                setTimeout(() => {
+                    if (sharedExamId) {
+                        // 특정 회차의 상세 지표 열기
+                        openExamDetailIndicator(sharedExamId);
+                    } else {
+                        // 전체 상세 지표 열기
+                        openDetailIndicator();
+                    }
+                }, 800);
             }
         });
 
@@ -5907,9 +5913,10 @@
 
             const userName = currentUser?.name || '학생';
 
-            // 공유 링크에 userId와 name 파라미터 추가
+            // 공유 링크에 userId, name, openDetail 파라미터 추가 (모달 자동 오픈용)
             const baseUrl = 'https://dan-dan-app.onrender.com/mock_exam_dashboard.html';
-            const shareUrl = `${baseUrl}?userId=${encodeURIComponent(currentUser._id)}&name=${encodeURIComponent(userName)}`;
+            const examIdParam = currentDetailExamId ? `&examId=${encodeURIComponent(currentDetailExamId)}` : '';
+            const shareUrl = `${baseUrl}?userId=${encodeURIComponent(currentUser._id)}&name=${encodeURIComponent(userName)}&openDetail=true${examIdParam}`;
 
             if (window.Kakao && Kakao.isInitialized()) {
                 Kakao.Share.sendDefault({
