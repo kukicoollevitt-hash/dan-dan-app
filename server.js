@@ -13136,10 +13136,14 @@ app.get("/my-learning", async (req, res) => {
             const urlParams = new URLSearchParams(window.location.search);
             const studentGrade = urlParams.get('grade') || '';
             const studentName = urlParams.get('name') || '';
-            const gateRes = await fetch('/api/gate-quiz/passed-by-date?grade=' + encodeURIComponent(studentGrade) + '&name=' + encodeURIComponent(studentName) + '&date=' + selectedDateStr);
-            const gateData = await gateRes.json();
-            if (gateData.ok && gateData.data) {
-              passedGatesToday = gateData.data;
+            // 특정 학생은 형성평가 숨김 (테스트 계정)
+            const hideGateStudents = ['최수종'];
+            if (!hideGateStudents.includes(studentName)) {
+              const gateRes = await fetch('/api/gate-quiz/passed-by-date?grade=' + encodeURIComponent(studentGrade) + '&name=' + encodeURIComponent(studentName) + '&date=' + selectedDateStr);
+              const gateData = await gateRes.json();
+              if (gateData.ok && gateData.data) {
+                passedGatesToday = gateData.data;
+              }
             }
           } catch (err) {
             console.error('관문 데이터 조회 실패:', err);
@@ -13614,15 +13618,19 @@ app.get("/my-learning", async (req, res) => {
           const studentGrade = urlParams.get('grade') || '';
           const studentName = urlParams.get('name') || '';
           let weeklyGatePasses = [];
-          try {
-            const gatePromises = weekDates.map(dateStr =>
-              fetch('/api/gate-quiz/passed-by-date?grade=' + encodeURIComponent(studentGrade) + '&name=' + encodeURIComponent(studentName) + '&date=' + dateStr)
-                .then(res => res.json())
-                .then(data => ({ date: dateStr, gates: data.ok && data.data ? data.data : [] }))
-            );
-            weeklyGatePasses = await Promise.all(gatePromises);
-          } catch (err) {
-            console.error('주간 관문 데이터 조회 실패:', err);
+          // 특정 학생은 형성평가 숨김 (테스트 계정)
+          const hideGateStudents = ['최수종'];
+          if (!hideGateStudents.includes(studentName)) {
+            try {
+              const gatePromises = weekDates.map(dateStr =>
+                fetch('/api/gate-quiz/passed-by-date?grade=' + encodeURIComponent(studentGrade) + '&name=' + encodeURIComponent(studentName) + '&date=' + dateStr)
+                  .then(res => res.json())
+                  .then(data => ({ date: dateStr, gates: data.ok && data.data ? data.data : [] }))
+              );
+              weeklyGatePasses = await Promise.all(gatePromises);
+            } catch (err) {
+              console.error('주간 관문 데이터 조회 실패:', err);
+            }
           }
           // 날짜별 관문 데이터 맵
           const gatesByDate = {};
