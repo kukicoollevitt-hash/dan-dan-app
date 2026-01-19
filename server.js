@@ -1665,9 +1665,9 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>관리자(원장/선생님) 계정 목록</h1>
+            <h1>관리자(선생님) 계정 목록</h1>
             <p class="desc">
-              브랜치 관리자와 슈퍼관리자 계정을 한눈에 확인하고,<br/>
+              선생님 관리자 계정을 한눈에 확인하고,<br/>
               승인 상태 변경 및 삭제(휴지 처리)를 할 수 있습니다.
             </p>
           </div>
@@ -1683,7 +1683,7 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>학원/지점명</th>
+                <th>학교명</th>
                 <th>이름</th>
                 <th>직책</th>
                 <th>전화번호(ID)</th>
@@ -1842,7 +1842,7 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
           <input type="hidden" name="id" value="${admin._id.toString()}" />
 
           <div class="row">
-            <label>학원/지점명</label>
+            <label>학교명</label>
             <input type="text" name="academyName" value="${admin.academyName || ""}" />
           </div>
 
@@ -2071,7 +2071,7 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
       branchMap[name].adminCount += 1;
     });
 
-    // 학생 기준(학교/학원명)
+    // 학생 기준(학교명)
     users.forEach((u) => {
       const name = u.school || "학원명 미입력";
       if (!branchMap[name]) {
@@ -2297,20 +2297,20 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>학원 / 지점 목록</h1>
+            <h1>학교 목록</h1>
             <p class="desc">
-              등록된 학원/지점별로 관리자 수와 학생 수를 한눈에 확인합니다.<br/>
-              지점을 클릭하면 해당 학원에 소속된 학생 목록만 따로 볼 수 있습니다.
+              등록된 학교별로 선생님 수와 학생 수를 한눈에 확인합니다.<br/>
+              학교를 클릭하면 해당 학교에 소속된 학생 목록만 따로 볼 수 있습니다.
             </p>
           </div>
           <div>
-            <a href="/super/branch-trash" class="btn-trash">🗑 지점 휴지통</a>
+            <a href="/super/branch-trash" class="btn-trash">🗑 학교 휴지통</a>
             <a href="/super/dashboard" class="btn-back">← 대시보드로 돌아가기</a>
           </div>
         </div>
 
         <p class="info-line">
-          총 <strong>${branches.length}</strong>개의 학원/지점이 있습니다.
+          총 <strong>${branches.length}</strong>개의 학교가 있습니다.
         </p>
 
         <div class="table-wrap">
@@ -2318,8 +2318,8 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>학원/지점명</th>
-                <th>관리자 수</th>
+                <th>학교명</th>
+                <th>선생님 수</th>
                 <th>학생 수</th>
                 <th>승인 학생</th>
                 <th>대기 학생</th>
@@ -2584,8 +2584,8 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
             <thead>
               <tr>
                 <th>#</th>
-                <th>학원/지점명</th>
-                <th>휴지 관리자 수</th>
+                <th>학교명</th>
+                <th>휴지 선생님 수</th>
                 <th>휴지 학생 수</th>
                 <th>마지막 휴지 시각</th>
                 <th>작업</th>
@@ -3262,7 +3262,7 @@ app.get("/admin/user-edit", async (req, res) => {
         </div>
 
         <div class="row">
-          <label>학교/학원명</label>
+          <label>학교</label>
           <input type="text" name="school" value="${user.school || ""}" />
         </div>
 
@@ -3726,7 +3726,7 @@ app.get("/admin/users", async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>브레인 문해원 전체 회원 목록</title>
+      <title>브레인 문해력 전체 학생 목록</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
         :root {
@@ -4395,9 +4395,9 @@ app.get("/admin/users", async (req, res) => {
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>브레인 문해원 전체 회원 목록</h1>
+            <h1>브레인 문해력 전체 학생 목록</h1>
             <p class="desc">
-              브레인 문해원에 가입된 모든 학생 계정을 한 번에 확인합니다.<br/>
+              브레인 문해력에 가입된 모든 학생 계정을 한 번에 확인합니다.<br/>
               학년, 학교명, 이름, 로그인 상태 등을 한눈에 볼 수 있습니다.
             </p>
           </div>
@@ -4431,7 +4431,7 @@ app.get("/admin/users", async (req, res) => {
               type="text"
               name="q"
               class="search-input"
-              placeholder="이름, 학교/학원명, 학년, 전화번호 검색"
+              placeholder="이름, 학교, 학년, 전화번호 검색"
               value="${q ? q : ""}"
             />
             <select name="sort" class="search-select">
@@ -4477,7 +4477,7 @@ app.get("/admin/users", async (req, res) => {
         </div>
 
         <p class="info-line">
-          총 <strong>${users.length}</strong>명의 회원이 있습니다.
+          총 <strong>${users.length}</strong>명의 학생이 있습니다.
           ${q && q.trim() !== "" ? `<span class="small">(검색어: "${q.trim()}")</span>` : ""}
           <br/>
           <span class="small">※ 링크 클릭 시 휴지통 이동, 상태 변경, 학습 이력 확인 등이 가능합니다.</span>
@@ -5886,7 +5886,7 @@ app.get("/admin/users-export", async (req, res) => {
       [
         "번호",
         "학년",
-        "학교/학원명",
+        "학교",
         "이름",
         "전화번호(ID)",
         "상태",
@@ -21025,6 +21025,36 @@ app.put("/api/course-applications/:id", async (req, res) => {
   }
 });
 
+// 진단테스트 선택삭제 (슈퍼 관리자용)
+app.delete("/api/diagnostic-tests/delete-selected", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+    const result = await DiagnosticTest.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("진단테스트 선택삭제 오류:", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
+// 수강신청(진단테스트 결과) 선택삭제 (슈퍼 관리자용)
+app.delete("/api/course-applications/delete-selected", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+    const result = await CourseApplication.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("수강신청 선택삭제 오류:", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
 // 관리자 정보 조회 (브랜치 관리자용)
 app.get("/api/admin/info", async (req, res) => {
   try {
@@ -21039,6 +21069,49 @@ app.get("/api/admin/info", async (req, res) => {
   } catch (error) {
     console.error("관리자 정보 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// 학생 추가 API (브랜치 관리자용)
+app.post("/api/admin/branch/add-student", async (req, res) => {
+  try {
+    // 세션에서 관리자 정보 확인
+    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+
+    const { grade, name, phone, school } = req.body;
+
+    if (!grade || !name || !phone) {
+      return res.status(400).json({ success: false, message: "학년, 이름, 전화번호는 필수입니다." });
+    }
+
+    // 이미 존재하는 전화번호인지 확인
+    const existingUser = await User.findOne({ phone: phone.trim() });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "이미 등록된 전화번호입니다." });
+    }
+
+    // 관리자의 학교명을 기본값으로 사용
+    const academyName = req.session.admin.academyName;
+
+    // 새 학생 생성
+    const newUser = new User({
+      grade: grade.trim(),
+      name: name.trim(),
+      phone: phone.trim(),
+      school: school ? school.trim() : academyName,
+      status: "approved",
+      createdAt: new Date()
+    });
+
+    await newUser.save();
+    console.log("✅ 학생 추가 완료:", newUser.name, newUser.phone);
+
+    res.json({ success: true, message: "학생이 추가되었습니다.", data: newUser });
+  } catch (error) {
+    console.error("학생 추가 오류:", error);
+    res.status(500).json({ success: false, message: "학생 추가 중 오류가 발생했습니다." });
   }
 });
 
@@ -21083,6 +21156,60 @@ app.get("/api/admin/course-applications", async (req, res) => {
   } catch (error) {
     console.error("브랜치 관리자 수강신청 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// 진단테스트 선택삭제 (브랜치 관리자용)
+app.delete("/api/admin/diagnostic-tests/delete-selected", async (req, res) => {
+  try {
+    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+
+    const academyName = req.session.admin.academyName;
+
+    // 자신의 학교에 속한 항목만 삭제
+    const result = await DiagnosticTest.deleteMany({
+      _id: { $in: ids },
+      branchName: { $regex: academyName, $options: 'i' }
+    });
+
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("브랜치 관리자 진단테스트 선택삭제 오류:", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
+// 수강신청(진단테스트 결과) 선택삭제 (브랜치 관리자용)
+app.delete("/api/admin/course-applications/delete-selected", async (req, res) => {
+  try {
+    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+
+    const academyName = req.session.admin.academyName;
+
+    // 자신의 학교에 속한 항목만 삭제
+    const result = await CourseApplication.deleteMany({
+      _id: { $in: ids },
+      branchName: { $regex: academyName, $options: 'i' }
+    });
+
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("브랜치 관리자 수강신청 선택삭제 오류:", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
   }
 });
 
