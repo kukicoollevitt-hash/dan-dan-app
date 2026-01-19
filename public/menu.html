@@ -2,11 +2,11 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>AI BRAIN 문해원 | 메인</title>
+  <title>AI BRAIN 문해력 | 메인</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <!-- Open Graph 메타 태그 (카카오톡, SNS 공유용) -->
-  <meta property="og:title" content="AI BRAIN 문해원" />
+  <meta property="og:title" content="AI BRAIN 문해력" />
   <meta property="og:description" content="AI 기반 맞춤형 국어 학습 플랫폼" />
   <meta property="og:image" content="https://dan-dan-app.onrender.com/images/brain-main-hero.jpg" />
   <meta property="og:url" content="https://dan-dan-app.onrender.com" />
@@ -3436,6 +3436,81 @@ canvas[id^="confetti-canvas"] {
       100% { transform: translateY(0); }
     }
 
+    /* 🐳 고래 배지 파티클 애니메이션 */
+    .whale-particle-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999999;
+      overflow: hidden;
+    }
+    .whale-particle {
+      position: absolute;
+      font-size: 32px;
+      opacity: 0;
+      animation: whaleFloat 1.5s ease-out forwards;
+      filter: drop-shadow(0 4px 8px rgba(52, 152, 219, 0.5));
+    }
+    @keyframes whaleFloat {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) rotate(-20deg);
+      }
+      15% {
+        opacity: 1;
+        transform: scale(1.2) rotate(10deg);
+      }
+      30% {
+        transform: scale(1) rotate(-5deg);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.4) rotate(15deg);
+      }
+    }
+    /* 배지 받는 효과 - 펄스 */
+    @keyframes badgePulse {
+      0% { transform: scale(1); box-shadow: 0 1px 3px rgba(52,152,219,0.4); }
+      50% { transform: scale(1.3); box-shadow: 0 0 20px rgba(52,152,219,0.8), 0 0 40px rgba(52,152,219,0.4); }
+      100% { transform: scale(1); box-shadow: 0 1px 3px rgba(52,152,219,0.4); }
+    }
+    .header-whale-badge.receiving {
+      animation: badgePulse 0.4s ease-in-out;
+    }
+    /* +N 배지 플로팅 텍스트 */
+    .badge-plus-text {
+      position: fixed;
+      font-size: 18px;
+      font-weight: 800;
+      color: #3498db;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 0 10px rgba(52,152,219,0.5);
+      pointer-events: none;
+      z-index: 999999;
+      opacity: 0;
+      animation: badgePlusFloat 1.2s ease-out forwards;
+    }
+    @keyframes badgePlusFloat {
+      0% {
+        opacity: 0;
+        transform: translateY(0) scale(0.5);
+      }
+      20% {
+        opacity: 1;
+        transform: translateY(-10px) scale(1.2);
+      }
+      80% {
+        opacity: 1;
+        transform: translateY(-30px) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+      }
+    }
+
     /* 확성기 버튼 - 완전히 숨김 (새 header-whale-badge로 대체됨) */
     .megaphone-btn {
       display: none !important;
@@ -3703,6 +3778,12 @@ canvas[id^="confetti-canvas"] {
     .cu-store-buttons {
       display: flex;
       gap: 10px;
+    }
+    .cu-store-notice {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #888;
+      text-align: center;
     }
     .cu-btn {
       flex: 1;
@@ -3983,7 +4064,7 @@ canvas[id^="confetti-canvas"] {
         </button>
         <button class="badge-menu-btn store-option" onclick="openCuStoreFromMenu()">
           <span class="btn-icon">🏪</span>
-          <span>CU 간식 상점</span>
+          <span>CU 간식 이벤트 상점</span>
         </button>
       </div>
       <button class="badge-menu-close" onclick="closeBadgeMenu()">닫기</button>
@@ -4017,7 +4098,7 @@ canvas[id^="confetti-canvas"] {
   <div class="cu-store-modal" id="cuStoreModal" onclick="if(event.target===this)closeCuStoreModal()">
     <div class="cu-store-content" onclick="event.stopPropagation()">
       <div class="cu-store-header">
-        <div class="cu-store-title">🏪 CU 간식 상점</div>
+        <div class="cu-store-title">🏪 CU 간식 이벤트 상점</div>
         <div class="cu-store-badge-info">
           <span>🐋</span>
           <span id="cuStoreBadgeCount">0</span> 뱃지 보유
@@ -4042,8 +4123,9 @@ canvas[id^="confetti-canvas"] {
         </div>
         <div class="cu-store-buttons">
           <button class="cu-btn cu-btn-cancel" onclick="closeCuStoreModal()">닫기</button>
-          <button class="cu-btn cu-btn-buy" id="cuBuyBtn" onclick="purchaseCuStoreItems()" disabled>구매하기</button>
+          <button class="cu-btn cu-btn-buy" id="cuBuyBtn" onclick="purchaseCuStoreItems()" disabled>응모하기</button>
         </div>
+        <div class="cu-store-notice">*전체 이벤트 응모자 중 매월 10명의 학생에게 개별 기프티콘이 발송됩니다*</div>
       </div>
     </div>
   </div>
@@ -8335,6 +8417,39 @@ async function performLogout() {
         return;
       }
 
+      // 🐋 고래 배지 지급 메시지 처리 (최초 학습 완료 보상)
+      if (event.data && event.data.type === 'WHALE_BADGE_AWARDED') {
+        console.log(`🐋 [WHALE_BADGE_AWARDED] 고래 배지 ${event.data.badgesAwarded}개 지급됨! 총: ${event.data.newTotal}개`);
+
+        // 🐳 고래 파티클 애니메이션 실행
+        const badgesAwarded = event.data.badgesAwarded || 10;
+        if (typeof playWhaleBadgeAnimation === 'function') {
+          playWhaleBadgeAnimation(badgesAwarded);
+        }
+
+        // 헤더의 고래 배지 개수 업데이트 (애니메이션 완료 후)
+        const headerWhaleCount = document.getElementById('headerWhaleCount');
+        if (headerWhaleCount) {
+          const usedCoinsKey = `whaleUsedCoins_${getCurrentStudent()?.grade}_${getCurrentStudent()?.name}`;
+          const usedCoins = parseInt(localStorage.getItem(usedCoinsKey) || '0');
+          const availableCoins = event.data.newTotal - usedCoins;
+
+          // 애니메이션이 끝난 후 숫자 업데이트
+          setTimeout(() => {
+            headerWhaleCount.textContent = availableCoins;
+          }, Math.min(badgesAwarded, 10) * 80 + 800);
+        }
+
+        // megaphone 관련 변수도 업데이트
+        if (typeof megaphoneAvailableCoins !== 'undefined') {
+          const usedCoinsKey = `whaleUsedCoins_${getCurrentStudent()?.grade}_${getCurrentStudent()?.name}`;
+          const usedCoins = parseInt(localStorage.getItem(usedCoinsKey) || '0');
+          megaphoneAvailableCoins = event.data.newTotal - usedCoins;
+        }
+
+        return;
+      }
+
       // 어휘퀴즈 완료 메시지 처리
       if (event.data && event.data.type === 'vocabularyQuizCompleted') {
         console.log('✅ 어휘퀴즈 완료 메시지 수신');
@@ -11551,7 +11666,7 @@ async function performLogout() {
                   objectType: 'feed',
                   content: {
                     title: `📊 ${grade} ${name} 학생 학습 분석 리포트`,
-                    description: '브레인 문해원 학습 분석 결과를 확인하세요\n\n📈 학습 기록 및 점수\n📊 단원별 문해력 레이더 차트\n✨ 종합 분석 결과',
+                    description: 'AI 브레인 문해력 학습 분석 결과를 확인하세요\n\n📈 학습 기록 및 점수\n📊 단원별 문해력 레이더 차트\n✨ 종합 분석 결과',
                     imageUrl: 'https://project-2516060862411225169.web.app/images/report-share-thumbnail.png',
                     link: {
                       mobileWebUrl: fullUrl,
@@ -17836,6 +17951,36 @@ ${content}
           throw new Error(data.error || '저장 실패');
         }
 
+        // 🐳 고래 배지 지급 시 애니메이션 실행
+        if (data.badgesAwarded && data.badgesAwarded > 0) {
+          console.log(`🐋 [Gate Pass] 고래 배지 ${data.badgesAwarded}개 지급됨!`);
+
+          // 서버에서 최신 배지 정보 가져와서 헤더 업데이트
+          try {
+            const badgeRes = await fetch(`/api/user-progress/whale-badges?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
+            const badgeData = await badgeRes.json();
+
+            if (badgeData.ok) {
+              // 고래 파티클 애니메이션 실행
+              if (typeof playWhaleBadgeAnimation === 'function') {
+                playWhaleBadgeAnimation(data.badgesAwarded);
+              }
+
+              // 헤더 배지 숫자 업데이트 (애니메이션 완료 후)
+              setTimeout(() => {
+                const headerWhaleCount = document.getElementById('headerWhaleCount');
+                if (headerWhaleCount) {
+                  const usedCoinsKey = `whaleUsedCoins_${student.grade}_${student.name}`;
+                  const usedCoins = parseInt(localStorage.getItem(usedCoinsKey) || '0');
+                  headerWhaleCount.textContent = badgeData.totalCoins - usedCoins;
+                }
+              }, Math.min(data.badgesAwarded, 10) * 80 + 800);
+            }
+          } catch (badgeErr) {
+            console.error('배지 정보 조회 실패:', badgeErr);
+          }
+        }
+
         // 전역 변수 업데이트
         passedGates = gateCurrentLevel;
 
@@ -18082,6 +18227,113 @@ ${content}
       });
     });
 
+    // 🐳 고래 배지 파티클 애니메이션 함수
+    function playWhaleBadgeAnimation(badgeCount) {
+      const badge = document.getElementById('headerWhaleBadge');
+      if (!badge) return;
+
+      // 배지 위치 가져오기
+      const badgeRect = badge.getBoundingClientRect();
+      const targetX = badgeRect.left + badgeRect.width / 2;
+      const targetY = badgeRect.top + badgeRect.height / 2;
+
+      // 파티클 컨테이너 생성
+      let container = document.querySelector('.whale-particle-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'whale-particle-container';
+        document.body.appendChild(container);
+      }
+
+      // 고래 파티클 생성 (배지 개수에 따라 조절, 최대 10개)
+      const particleCount = Math.min(badgeCount, 10);
+      const startY = window.innerHeight * 0.5; // 화면 중앙에서 시작
+      const startX = window.innerWidth * 0.5;
+
+      for (let i = 0; i < particleCount; i++) {
+        setTimeout(() => {
+          const whale = document.createElement('div');
+          whale.className = 'whale-particle';
+          whale.textContent = '🐳';
+
+          // 랜덤 시작 위치 (중앙 근처에서 퍼져나감)
+          const offsetX = (Math.random() - 0.5) * 200;
+          const offsetY = (Math.random() - 0.5) * 150;
+          const initialX = startX + offsetX;
+          const initialY = startY + offsetY;
+
+          whale.style.left = initialX + 'px';
+          whale.style.top = initialY + 'px';
+
+          // 베지어 곡선을 따라 이동하는 애니메이션
+          const duration = 1200 + Math.random() * 400;
+          const delay = i * 80;
+
+          whale.style.animation = `whaleFloat ${duration}ms ease-out ${delay}ms forwards`;
+
+          // 목표 지점으로 이동하는 커스텀 애니메이션
+          whale.animate([
+            {
+              left: initialX + 'px',
+              top: initialY + 'px',
+              opacity: 0,
+              transform: 'scale(0.3) rotate(-20deg)'
+            },
+            {
+              left: (initialX + targetX) / 2 + (Math.random() - 0.5) * 100 + 'px',
+              top: (initialY + targetY) / 2 - 50 + 'px',
+              opacity: 1,
+              transform: 'scale(1.2) rotate(10deg)',
+              offset: 0.3
+            },
+            {
+              left: targetX + 'px',
+              top: targetY + 'px',
+              opacity: 0,
+              transform: 'scale(0.3) rotate(15deg)'
+            }
+          ], {
+            duration: duration,
+            delay: delay,
+            easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            fill: 'forwards'
+          });
+
+          container.appendChild(whale);
+
+          // 파티클 제거
+          setTimeout(() => {
+            whale.remove();
+          }, duration + delay + 100);
+        }, i * 50);
+      }
+
+      // 모든 파티클이 도착한 후 배지 펄스 효과
+      setTimeout(() => {
+        badge.classList.add('receiving');
+
+        // +N 텍스트 표시
+        const plusText = document.createElement('div');
+        plusText.className = 'badge-plus-text';
+        plusText.textContent = '+' + badgeCount;
+        plusText.style.left = targetX + 'px';
+        plusText.style.top = (targetY - 20) + 'px';
+        document.body.appendChild(plusText);
+
+        setTimeout(() => {
+          badge.classList.remove('receiving');
+          plusText.remove();
+        }, 1200);
+      }, particleCount * 80 + 800);
+
+      // 컨테이너 정리
+      setTimeout(() => {
+        if (container && container.children.length === 0) {
+          container.remove();
+        }
+      }, 3000);
+    }
+
     // 사용자 정보 가져오기 (sessionStorage 사용)
     function getMegaphoneUser() {
       const userStr = sessionStorage.getItem('user');
@@ -18095,8 +18347,8 @@ ${content}
       return null;
     }
 
-    // localStorage에서 코인 불러오기 (어휘학습/AI챗봇과 동일한 구조)
-    function loadMegaphoneCoins() {
+    // 🐋 서버에서 고래 배지 불러오기 (실시간 반영)
+    async function loadMegaphoneCoins() {
       const user = getMegaphoneUser();
       const grade = user?.grade || '';
       const name = user?.name || '';
@@ -18107,7 +18359,39 @@ ${content}
         return;
       }
 
-      // localStorage 키 (어휘학습/AI챗봇과 동일)
+      try {
+        // 서버에서 배지 정보 불러오기
+        const res = await fetch(`/api/user-progress/whale-badges?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`);
+        const result = await res.json();
+
+        if (result.ok) {
+          megaphoneAvailableCoins = result.availableCoins || 0;
+
+          // localStorage도 동기화 (다른 기능들과 호환성 유지)
+          const totalCoinsKey = `whaleTotalCoins_${grade}_${name}`;
+          const usedCoinsKey = `whaleUsedCoins_${grade}_${name}`;
+          localStorage.setItem(totalCoinsKey, (result.totalCoins || 0).toString());
+          localStorage.setItem(usedCoinsKey, (result.usedCoins || 0).toString());
+
+          document.getElementById('megaphoneCoinCount').textContent = megaphoneAvailableCoins;
+          document.getElementById('headerWhaleCount').textContent = megaphoneAvailableCoins;
+          console.log(`🐋 [loadMegaphoneCoins] 서버에서 배지 로드: 총 ${result.totalCoins}, 사용 ${result.usedCoins}, 잔여 ${megaphoneAvailableCoins}`);
+        } else {
+          // 서버 오류 시 localStorage fallback
+          loadMegaphoneCoinsFromLocal();
+        }
+      } catch (error) {
+        console.error('🐋 [loadMegaphoneCoins] 서버 조회 실패, localStorage 사용:', error);
+        loadMegaphoneCoinsFromLocal();
+      }
+    }
+
+    // localStorage fallback 함수 (오프라인/오류 시)
+    function loadMegaphoneCoinsFromLocal() {
+      const user = getMegaphoneUser();
+      const grade = user?.grade || '';
+      const name = user?.name || '';
+
       const totalCoinsKey = `whaleTotalCoins_${grade}_${name}`;
       const usedCoinsKey = `whaleUsedCoins_${grade}_${name}`;
 
@@ -18329,7 +18613,7 @@ ${content}
           // 성공 메시지
           const itemNames = cuSelectedItems.map(i => i.name).join(', ');
           closeCuStoreModal();
-          alert(`구매 신청 완료!\n\n${itemNames}\n총 ${totalBadges.toLocaleString()} 뱃지 사용\n\n선생님께 전달 후 받을 수 있어요!`);
+          alert(`응모 신청 완료!\n\n${itemNames}\n총 ${totalBadges.toLocaleString()} 뱃지 사용\n\n매월 1일에 10명 당첨자에 포함되면 받을 수 있어요!`);
         } else {
           alert(data.message || '구매에 실패했습니다.');
         }

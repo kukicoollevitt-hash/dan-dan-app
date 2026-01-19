@@ -770,7 +770,7 @@
       }
 
       try {
-        await fetch('/api/gate-quiz/pass', {
+        const res = await fetch('/api/gate-quiz/pass', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -780,7 +780,29 @@
             units: completedUnits
           })
         });
+        const result = await res.json();
         console.log('[saveGatePass] saved successfully, gate=' + gateLevel);
+
+        // 🐳 고래 배지 지급 시 부모 창에 메시지 전송
+        if (result.badgesAwarded && result.badgesAwarded > 0) {
+          console.log(`🐋 [saveGatePass] 고래 배지 ${result.badgesAwarded}개 지급됨!`);
+
+          // 서버에서 최신 배지 정보 가져오기
+          try {
+            const badgeRes = await fetch(`/api/user-progress/whale-badges?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
+            const badgeData = await badgeRes.json();
+
+            if (badgeData.ok && window.parent) {
+              window.parent.postMessage({
+                type: 'WHALE_BADGE_AWARDED',
+                badgesAwarded: result.badgesAwarded,
+                newTotal: badgeData.totalCoins || result.badgesAwarded
+              }, window.location.origin);
+            }
+          } catch (badgeErr) {
+            console.error('배지 정보 조회 실패:', badgeErr);
+          }
+        }
       } catch (err) {
         console.error('관문 통과 저장 실패:', err);
       }

@@ -243,8 +243,32 @@
           })
         });
         const result = await res.json();
-        if (result.success || result._id) {
+        if (result.ok || result.success || result._id) {
           console.log(`[sendLearningLog] ${unit} 학습 로그 전송 완료`, radar);
+
+          // 🐋 최초 학습 완료 시 고래 배지 축하 팝업 표시 및 localStorage 업데이트
+          if (result.firstCompletion && result.badgesAwarded > 0) {
+            console.log(`🐋 [sendLearningLog] 최초 학습 완료! 고래 배지 ${result.badgesAwarded}개 지급!`);
+
+            // localStorage 업데이트 (기존 값에 추가)
+            const totalCoinsKey = `whaleTotalCoins_${stu.grade}_${stu.name}`;
+            const currentTotalCoins = parseInt(localStorage.getItem(totalCoinsKey) || '0');
+            const newTotalCoins = currentTotalCoins + result.badgesAwarded;
+            localStorage.setItem(totalCoinsKey, newTotalCoins.toString());
+            console.log(`🐋 [sendLearningLog] localStorage 업데이트: ${currentTotalCoins} → ${newTotalCoins}`);
+
+            // 부모 창(menu.html)에 배지 업데이트 메시지 전송
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({
+                type: 'WHALE_BADGE_AWARDED',
+                badgesAwarded: result.badgesAwarded,
+                newTotal: newTotalCoins
+              }, window.location.origin);
+            }
+
+            // 축하 팝업 표시
+            showWhaleBadgePopup(result.badgesAwarded, newTotalCoins);
+          }
 
           // 🔥 부모 창(menu.html)에 캐시 무효화 메시지 전송
           if (window.parent && window.parent !== window) {
@@ -257,6 +281,114 @@
       } catch (err) {
         console.error('[sendLearningLog] 네트워크 오류:', err);
       }
+    }
+
+    // 🐋 고래 배지 획득 축하 팝업 함수
+    function showWhaleBadgePopup(badgesAwarded, newTotal) {
+      // 기존 팝업이 있으면 제거
+      const existingPopup = document.getElementById('whaleBadgePopup');
+      if (existingPopup) existingPopup.remove();
+
+      const popup = document.createElement('div');
+      popup.id = 'whaleBadgePopup';
+      popup.innerHTML = `
+        <div class="whale-popup-overlay">
+          <div class="whale-popup-box">
+            <div class="whale-popup-emoji">🐋</div>
+            <div class="whale-popup-title">축하합니다!</div>
+            <div class="whale-popup-msg">
+              <strong>최초 학습 완료 보상</strong>으로<br>
+              고래 배지 <span class="badge-count">+${badgesAwarded}개</span>를 받았어요!
+            </div>
+            <div class="whale-popup-total">
+              현재 보유: <strong>${newTotal}개</strong>
+            </div>
+            <button type="button" class="whale-popup-btn" onclick="this.closest('.whale-popup-overlay').remove()">확인</button>
+          </div>
+        </div>
+        <style>
+          .whale-popup-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            animation: fadeIn 0.3s ease;
+          }
+          .whale-popup-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 20px;
+            padding: 30px 40px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: popIn 0.4s ease;
+            max-width: 320px;
+          }
+          .whale-popup-emoji {
+            font-size: 60px;
+            margin-bottom: 10px;
+            animation: bounce 0.6s ease infinite alternate;
+          }
+          .whale-popup-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1565c0;
+            margin-bottom: 10px;
+          }
+          .whale-popup-msg {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 10px;
+          }
+          .whale-popup-msg .badge-count {
+            color: #1565c0;
+            font-size: 20px;
+            font-weight: 700;
+          }
+          .whale-popup-total {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+          }
+          .whale-popup-btn {
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+            color: #fff;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+          }
+          .whale-popup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(21, 101, 192, 0.4);
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+          }
+        </style>
+      `;
+      document.body.appendChild(popup);
+
+      // 5초 후 자동 닫기
+      setTimeout(() => {
+        const el = document.getElementById('whaleBadgePopup');
+        if (el) el.remove();
+      }, 5000);
     }
 
     // ★ 전역으로 노출

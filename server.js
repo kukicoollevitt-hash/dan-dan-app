@@ -3726,7 +3726,7 @@ app.get("/admin/users", async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>브레인 문해력 전체 학생 목록</title>
+      <title>AI 브레인 문해력 전체 학생 목록</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
         :root {
@@ -4395,9 +4395,9 @@ app.get("/admin/users", async (req, res) => {
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>브레인 문해력 전체 학생 목록</h1>
+            <h1>AI 브레인 문해력 전체 학생 목록</h1>
             <p class="desc">
-              브레인 문해력에 가입된 모든 학생 계정을 한 번에 확인합니다.<br/>
+              AI 브레인 문해력에 가입된 모든 학생 계정을 한 번에 확인합니다.<br/>
               학년, 학교명, 이름, 로그인 상태 등을 한눈에 볼 수 있습니다.
             </p>
           </div>
@@ -6178,6 +6178,10 @@ app.post("/api/log", async (req, res) => {
       return res.status(400).json({ ok: false, message: "필수 정보 부족" });
     }
 
+    // 🐋 최초 학습 완료 여부 확인 (배지 지급용)
+    const existingLog = await LearningLog.findOne({ grade, name, unit });
+    const isFirstCompletion = !existingLog && completed === true;
+
     const logData = {
       grade,
       name,
@@ -6202,6 +6206,26 @@ app.post("/api/log", async (req, res) => {
       }
     );
     console.log("[/api/log] 저장 완료:", savedLog._id, "completed:", savedLog.completed);
+
+    // 🐋 최초 학습 완료 시 고래 배지 10개 지급
+    let badgesAwarded = 0;
+    if (isFirstCompletion) {
+      try {
+        const badgeResult = await UserProgress.findOneAndUpdate(
+          { grade, name },
+          {
+            $inc: { 'vocabularyQuiz.totalCoins': 10 },
+            $set: { 'vocabularyQuiz.lastRankUpdate': new Date() }
+          },
+          { upsert: true, new: true }
+        );
+        badgesAwarded = 10;
+        console.log(`🐋 [/api/log] 최초 학습 완료! 고래 배지 10개 지급: ${grade} ${name} (단원: ${unit})`);
+        console.log(`🐋 [/api/log] 현재 총 배지: ${badgeResult.vocabularyQuiz?.totalCoins || 10}개`);
+      } catch (badgeErr) {
+        console.error("⚠️ [/api/log] 고래 배지 지급 실패:", badgeErr.message);
+      }
+    }
 
     // 🔥 unit-grades 캐시 삭제 (학습 완료 시 등급 데이터 갱신 필요)
     const cacheKey = getCacheKey('unit-grades', { grade, name });
@@ -6287,7 +6311,12 @@ app.post("/api/log", async (req, res) => {
       }
     }
 
-    return res.json({ ok: true });
+    // 🐋 응답에 최초 완료 여부와 배지 지급 정보 포함
+    return res.json({
+      ok: true,
+      firstCompletion: isFirstCompletion,
+      badgesAwarded: badgesAwarded
+    });
   } catch (err) {
     console.error("[/api/log] error:", err);
     res.status(500).json({ ok: false });
@@ -18395,6 +18424,41 @@ app.get('/api/user-progress', async (req, res) => {
   }
 });
 
+// 🐋 고래 배지 조회 API (간단 버전)
+app.get('/api/user-progress/whale-badges', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.status(400).json({
+        ok: false,
+        message: 'grade와 name이 필요합니다'
+      });
+    }
+
+    const progress = await UserProgress.findOne(
+      { grade, name },
+      { 'vocabularyQuiz.totalCoins': 1, 'vocabularyQuiz.usedCoins': 1 }
+    ).lean();
+
+    const totalCoins = progress?.vocabularyQuiz?.totalCoins || 0;
+    const usedCoins = progress?.vocabularyQuiz?.usedCoins || 0;
+
+    res.json({
+      ok: true,
+      totalCoins,
+      usedCoins,
+      availableCoins: totalCoins - usedCoins
+    });
+  } catch (error) {
+    console.error('고래 배지 조회 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
 // 어휘퀴즈 데이터 저장
 app.post('/api/user-progress/vocabulary', async (req, res) => {
   try {
@@ -23306,8 +23370,26 @@ app.post("/api/gate-quiz/pass", async (req, res) => {
     });
     await gatePass.save();
 
+    // 🐋 관문 통과 시 고래 배지 20개 지급
+    let badgesAwarded = 0;
+    try {
+      const badgeResult = await UserProgress.findOneAndUpdate(
+        { grade, name },
+        {
+          $inc: { 'vocabularyQuiz.totalCoins': 20 },
+          $set: { 'vocabularyQuiz.lastRankUpdate': new Date() }
+        },
+        { upsert: true, new: true }
+      );
+      badgesAwarded = 20;
+      console.log(`🐋 [gate-quiz/pass] 관문 ${gate} 통과! 고래 배지 20개 지급: ${grade} ${name}`);
+      console.log(`🐋 [gate-quiz/pass] 현재 총 배지: ${badgeResult.vocabularyQuiz?.totalCoins || 20}개`);
+    } catch (badgeErr) {
+      console.error("⚠️ [gate-quiz/pass] 고래 배지 지급 실패:", badgeErr.message);
+    }
+
     console.log(`[gate-quiz/pass] 관문 ${gate} 통과 저장 완료`);
-    res.json({ ok: true, message: "관문 통과가 저장되었습니다." });
+    res.json({ ok: true, message: "관문 통과가 저장되었습니다.", badgesAwarded });
 
   } catch (err) {
     console.error("[gate-quiz/pass] error:", err);
@@ -25685,7 +25767,7 @@ ${categoryEntries.map(c => `- ${c.name}: ${c.value}% (${gradeGroup} 평균 ${c.a
   "overall": "종합 평가 (3-4문장): 총점과 전체적인 수준을 언급하고, 평균 대비 잘한 지수/과목 수를 구체적으로 칭찬",
   "strengths": "강점 분석 (3-4문장): 평균 이상인 지수와 과목을 구체적인 수치(%)와 함께 언급. 예: '핵심 이해력이 80%로 평균 63%보다 17%p나 높아요!'",
   "improvements": "성장 포인트 (3-4문장): 평균 미만인 지수와 과목을 부드럽게 언급하고 개선 방법 제안. 예: '구조 파악력은 40%로 평균 58%보다 조금 낮지만, 글의 구조를 파악하는 연습을 하면 금방 올라갈 거예요!'",
-  "tips": "학습 TIP (3-4문장): 구체적인 학습 방법 제안 + 반드시 마지막에 '브레인 문해력'을 언급하며 꾸준히 학습하면 문해력이 향상된다는 격려 메시지 포함"
+  "tips": "학습 TIP (3-4문장): 구체적인 학습 방법 제안 + 반드시 마지막에 'AI 브레인 문해력'을 언급하며 꾸준히 학습하면 문해력이 향상된다는 격려 메시지 포함"
 }
 
 [중요 규칙]
@@ -25696,7 +25778,7 @@ ${categoryEntries.map(c => `- ${c.name}: ${c.value}% (${gradeGroup} 평균 ${c.a
 5. 이모지 적절히 사용 (문장당 1개 정도)
 6. 모든 점수가 낮아도 격려와 희망적인 메시지 포함
 7. 평균 이상인 항목이 없으면 "테스트에 도전한 용기"를 칭찬
-8. tips 마지막에 반드시 "브레인 문해력을 꾸준히 학습하면 문해력이 쑥쑥 자랄 거예요!" 또는 비슷한 문장 포함`;
+8. tips 마지막에 반드시 "AI 브레인 문해력을 꾸준히 학습하면 문해력이 쑥쑥 자랄 거예요!" 또는 비슷한 문장 포함`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -26212,46 +26294,112 @@ app.post("/api/megaphone/send", async (req, res) => {
       return res.status(400).json({ success: false, error: '메시지는 100자 이내로 작성해주세요' });
     }
 
-    // 한국어 비속어 변형어 필터 (초성, 변형 패턴)
+    // 한국어 비속어 변형어 필터 (초성, 변형 패턴) - 확장판
     const koreanBadWordPatterns = [
-      // 시발/씨발/시바/씨바 변형 (euphemism 포함)
-      /[시씨쉬싀슈][발빨벌팔]/gi,  // 시발, 씨발 등
-      /[시씨쉬싀슈][바빠파]/gi,     // 시바, 씨바 등 (euphemism)
+      // ===== 존나/졸라/존내 =====
+      /[존졸][나라내]/gi,
+      /ㅈㄴ/g,
+      /[jJ][oO0][nN][nN]?[aA]/gi,
+
+      // ===== 시발/씨발/시바/씨바 =====
+      /[시씨쉬싀슈쓔][발빨벌팔불]/gi,
+      /[시씨쉬싀슈쓔][바빠파부]/gi,
       /[sS][iI1][bB][aA][lL]?/gi,
       /ㅅㅂ/g,
       /ㅆㅂ/g,
-      // 병신 변형
-      /[병뼝][신씬sinSIN]/gi,
+
+      // ===== 병신 =====
+      /[병뼝벙][신씬싄sin]/gi,
       /ㅂㅅ/g,
       /ㅄ/g,
-      // 지랄 변형
-      /[지쥐][랄랼럴]/gi,
+
+      // ===== 지랄 =====
+      /[지쥐찌][랄랼럴롤]/gi,
       /ㅈㄹ/g,
-      // 개새끼 변형
-      /개[새쌔세][끼키낑]/gi,
+
+      // ===== 개새끼/개소리/개같 =====
+      /개[새쌔세썌][끼키낑꺼]/gi,
+      /개[소쏘][리뤼]/gi,
+      /개[같갗]/gi,
       /ㄱㅅㄲ/g,
-      // 좆 변형
-      /[좆좃졷죳]/g,
+
+      // ===== 좆/좇 =====
+      /[좆좃졷죳좇됐]/g,
       /ㅈㅇㅌ/g,
-      // 씹 변형
-      /[씹씨씌][새세쌔]/gi,
-      // 느금마 변형
-      /느[금끔][마빠]/gi,
+      /ㅈㅎ/g,
+
+      // ===== 씹/십 =====
+      /[씹씨씌십][새세쌔썌]/gi,
+      /[씹십][창덕]/gi,
+      /ㅆㅂ/g,
+
+      // ===== 느금마/니미/에미 =====
+      /느[금끔귬][마빠]/gi,
       /ㄴㄱㅁ/g,
-      // 니애미/니엄 변형
-      /니[애에]미/gi,
-      /니[엄]마/gi,
-      // 썅 변형
-      /[썅쌍]/g,
-      // 꺼져 등 (너무 강한 표현)
-      /꺼[져저쪄]/gi,
-      // 죽어 (협박성)
-      /[죽쥬][어어라]/gi,
-      // 미친 변형
-      /[미]친[놈년]/gi,
+      /니[애에][미비]/gi,
+      /니[엄업][마빠]/gi,
+      /에[미비]야/gi,
+      /[니네]미[럴랄]/gi,
+
+      // ===== 썅/쌍 =====
+      /[썅쌍씅]/g,
+
+      // ===== 꺼져/닥쳐 =====
+      /꺼[져저쪄죠]/gi,
+      /닥[쳐처쳐]/gi,
+      /입닥/gi,
+
+      // ===== 죽어/뒤져 =====
+      /[죽쥬줘][어어라을]/gi,
+      /뒤[져저쪄질]/gi,
+      /[디뒈]져/gi,
+
+      // ===== 미친 =====
+      /[미]친[놈년새끼]/gi,
+      /미[쳤친][어냐니]/gi,
       /ㅁㅊ/g,
-      // 짱나 (과도한 표현)
-      /짱[나놔내]/gi
+
+      // ===== 또라이/돌아이 =====
+      /[또또돌][라라아][이이]/gi,
+      /ㄸㄹㅇ/g,
+
+      // ===== 찐따/찐찌 =====
+      /[찐찐][따다빠]/gi,
+      /[찐진][찌지]/gi,
+
+      // ===== 한남/한녀 (혐오 표현) =====
+      /한[남녀][충놈년]/gi,
+
+      // ===== 보지/자지 =====
+      /[보뽀][지쥐]/gi,
+      /[자짜][지쥐]/gi,
+
+      // ===== 걸레/창녀 =====
+      /[걸겔][레래]/gi,
+      /창[녀놈]/gi,
+
+      // ===== 기타 욕설 =====
+      /[애에]자/gi,
+      /애[비미]없/gi,
+      /호[구모]/gi,
+      /빡[쳐대]/gi,
+      /빠[가꾸]/gi,
+      /등[신딱]/gi,
+      /[새쌔][끼키]야/gi,
+      /[년놈]아/gi,
+      /[병빙]딱/gi,
+      /멍[청텅]/gi,
+      /바[보봉]/gi,
+      /[븅빙]신/gi,
+      /[엠앰]창/gi,
+      /애[미비]뒤/gi,
+      /[섹쎅쎅][스쓰]/gi,
+      /ㅅㅅ/g,
+      /[fF][uU][cC][kK]/gi,
+      /[sS][hH][iI][tT]/gi,
+      /[bB][iI][tT][cC][hH]/gi,
+      /[aA][sS][sS][hH]?[oO0]?[lL]?[eE]?/gi,
+      /[dD][aA][mM][nN]/gi
     ];
 
     const messageNormalized = message.replace(/\s+/g, ''); // 공백 제거하여 검사
