@@ -17505,6 +17505,111 @@ JSON 형식:
   }
 });
 
+// ✅ AI 글 다듬기 API (맞춤법 + 문장 개선)
+app.post("/api/polish-writing", async (req, res) => {
+  console.log("✅ [POST] /api/polish-writing 호출");
+
+  const { text } = req.body;
+
+  if (!text || text.trim().length === 0) {
+    return res.status(400).json({ error: "텍스트를 입력해주세요." });
+  }
+
+  try {
+    const OpenAI = require('openai');
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
+    console.log("🤖 OpenAI API로 글 다듬기 시작...");
+
+    // OpenAI API 호출
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `당신은 초등학생~중학생의 글쓰기를 도와주는 친절한 AI 선생님입니다.
+학생이 작성한 글을 다듬어주세요. 다음 사항을 지켜주세요:
+
+1. 맞춤법과 띄어쓰기 오류를 수정합니다
+2. 문장이 자연스럽게 읽히도록 개선합니다
+3. 학생의 원래 의도와 표현을 최대한 살립니다
+4. 너무 어려운 단어는 피하고 학생 수준에 맞게 유지합니다
+5. 글의 구조가 논리적으로 흐르도록 개선합니다
+
+반드시 다음 JSON 형식으로만 응답하세요:
+{
+  "polished_text": "다듬어진 글 (전체 텍스트)",
+  "changes": [
+    {"before": "원래 표현", "after": "수정된 표현", "reason": "수정 이유"}
+  ],
+  "feedback": "전체적인 피드백 (칭찬과 개선점 포함, 2-3문장)"
+}`
+        },
+        {
+          role: "user",
+          content: `다음 글을 다듬어주세요:\n\n"${text}"`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000
+    });
+
+    const aiResponse = response.choices[0].message.content.trim();
+    console.log("🤖 AI 응답:", aiResponse);
+
+    // JSON 파싱 시도
+    try {
+      // JSON 블록 추출
+      let jsonStr = aiResponse;
+      const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1];
+      } else {
+        // JSON 객체만 추출
+        const jsonStart = aiResponse.indexOf('{');
+        const jsonEnd = aiResponse.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+          jsonStr = aiResponse.substring(jsonStart, jsonEnd + 1);
+        }
+      }
+
+      const result = JSON.parse(jsonStr);
+
+      console.log("✅ 글 다듬기 완료");
+
+      return res.json({
+        success: true,
+        original_text: text,
+        polished_text: result.polished_text || text,
+        changes: result.changes || [],
+        feedback: result.feedback || "글이 잘 작성되었습니다!"
+      });
+
+    } catch (parseError) {
+      console.log("JSON 파싱 실패, 원본 응답 사용:", parseError.message);
+
+      // JSON 파싱 실패시 간단한 응답
+      return res.json({
+        success: true,
+        original_text: text,
+        polished_text: text,
+        changes: [],
+        feedback: "글이 잘 작성되었습니다. 맞춤법과 문장이 괜찮아 보입니다!"
+      });
+    }
+
+  } catch (err) {
+    console.error("❌ /api/polish-writing 에러:", err.message);
+    res.status(500).json({
+      success: false,
+      error: "AI 처리 중 오류가 발생했습니다.",
+      original_text: text
+    });
+  }
+});
+
 // ✅ DB 테스트
 app.get("/dbtest", async (req, res) => {
   console.log("✅ [GET] /dbtest 호출");

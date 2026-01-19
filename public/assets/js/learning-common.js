@@ -2498,6 +2498,30 @@
       }
     }
 
+    /* ===== AI 글 다듬기 함수 ===== */
+    async function polishWriting(text) {
+      try {
+        const response = await fetch('/api/polish-writing', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: text })
+        });
+
+        if (!response.ok) {
+          throw new Error('서버 응답 오류');
+        }
+
+        const data = await response.json();
+        return data;
+
+      } catch (error) {
+        console.error('AI 글 다듬기 오류:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
   /* ===== 창의활동 제출 ===== */
   let creativeBtn, creativeCheckBtn, creativeTextarea;
 
@@ -2513,7 +2537,7 @@
       });
     }
 
-    // 채점하기 버튼 클릭 시
+    // 맞춤법 검사 + AI 다듬기 버튼 클릭 시
     if (creativeCheckBtn) {
       creativeCheckBtn.addEventListener('click', async () => {
         const text = creativeTextarea ? creativeTextarea.value.trim() : '';
@@ -2525,11 +2549,19 @@
 
         // 로딩 팝업 표시
         const loadingPopup = document.getElementById('spell-check-loading');
+        const loadingText = loadingPopup.querySelector('.spell-check-loading-text');
+        if (loadingText) {
+          loadingText.textContent = 'AI가 글을 분석하고 다듬는 중입니다...';
+        }
         loadingPopup.style.display = 'flex';
         creativeCheckBtn.disabled = true;
 
         try {
-          const result = await checkSpelling(text);
+          // 1. 맞춤법 검사
+          const spellResult = await checkSpelling(text);
+
+          // 2. AI 글 다듬기 (병렬로 호출하지 않고 순차 호출 - 안정성)
+          const polishResult = await polishWriting(text);
 
           // 결과 영역 표시
           const spellingResult = document.getElementById('spelling-result');
@@ -2537,13 +2569,23 @@
           const spellingErrors = document.getElementById('spelling-errors');
           const spellingCorrected = document.getElementById('spelling-corrected');
 
-          if (result.errata_count > 0) {
-            // 오류가 있는 경우
+          // AI 피드백 영역 (동적 생성)
+          let aiFeedbackEl = document.getElementById('ai-feedback-result');
+          if (!aiFeedbackEl) {
+            aiFeedbackEl = document.createElement('div');
+            aiFeedbackEl.id = 'ai-feedback-result';
+            aiFeedbackEl.className = 'creative-result';
+            aiFeedbackEl.style.cssText = 'margin-top: 18px; background: #f0f7ff; border: 2px solid #7d9fc9; border-radius: 10px; padding: 14px 16px; font-size: 15px; line-height: 1.7;';
+            spellingCorrect.parentNode.insertBefore(aiFeedbackEl, spellingCorrect.nextSibling);
+          }
+
+          // 맞춤법 결과 표시
+          if (spellResult.errata_count > 0) {
             spellingErrors.innerHTML = `
               <div style="margin-bottom:8px; font-weight:600; color:#c04a3b;">
-                맞춤법/띄어쓰기 오류 ${result.errata_count}개 발견
+                맞춤법/띄어쓰기 오류 ${spellResult.errata_count}개 발견
               </div>
-              <div style="line-height:1.8; white-space:pre-wrap;">${result.html}</div>
+              <div style="line-height:1.8; white-space:pre-wrap;">${spellResult.html}</div>
             `;
 
             spellingCorrected.innerHTML = `
@@ -2551,14 +2593,13 @@
                 <div style="margin-bottom:6px; font-weight:600; color:#3a8755;">
                   ✓ 올바른 맞춤법
                 </div>
-                <div style="line-height:1.8; white-space:pre-wrap;">${result.corrected_html || result.notag_html}</div>
+                <div style="line-height:1.8; white-space:pre-wrap;">${spellResult.corrected_html || spellResult.notag_html}</div>
               </div>
             `;
 
             spellingResult.style.display = 'block';
             spellingCorrect.style.display = 'block';
           } else {
-            // 오류가 없는 경우
             spellingErrors.innerHTML = `
               <div style="font-weight:600; color:#3a8755;">
                 ✓ 맞춤법과 띄어쓰기가 정확합니다!
@@ -2568,14 +2609,61 @@
             spellingResult.style.display = 'block';
             spellingCorrect.style.display = 'none';
           }
+
+          // AI 피드백 결과 표시
+          if (polishResult.success) {
+            let changesHtml = '';
+            if (polishResult.changes && polishResult.changes.length > 0) {
+              changesHtml = `
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #b8d4f0;">
+                  <div style="font-weight: 600; color: #4a7ab0; margin-bottom: 8px;">수정 제안:</div>
+                  <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    ${polishResult.changes.map(c => `
+                      <li style="margin-bottom: 6px;">
+                        <span style="color: #c04a3b; text-decoration: line-through;">${c.before}</span>
+                        → <span style="color: #3a8755; font-weight: 600;">${c.after}</span>
+                        ${c.reason ? `<br><span style="color: #666; font-size: 13px;">  (${c.reason})</span>` : ''}
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+              `;
+            }
+
+            aiFeedbackEl.innerHTML = `
+              <div style="margin-bottom: 10px; font-weight: 700; color: #4a7ab0; font-size: 16px;">
+                AI 선생님의 피드백
+              </div>
+              <div style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #d4e4f7;">
+                <div style="font-weight: 600; color: #333; margin-bottom: 8px;">다듬어진 글:</div>
+                <div style="line-height: 1.8; white-space: pre-wrap; color: #333;">${polishResult.polished_text}</div>
+              </div>
+              <div style="margin-top: 12px; padding: 10px; background: #e8f4e8; border-radius: 8px;">
+                <span style="font-weight: 600; color: #3a8755;">선생님 한마디:</span> ${polishResult.feedback}
+              </div>
+              ${changesHtml}
+            `;
+            aiFeedbackEl.style.display = 'block';
+          } else {
+            aiFeedbackEl.innerHTML = `
+              <div style="color: #999;">AI 피드백을 가져오는 데 실패했습니다.</div>
+            `;
+            aiFeedbackEl.style.display = 'block';
+          }
+
         } catch (error) {
-          alert('맞춤법 검사 중 오류가 발생했습니다. 다시 시도해주세요.');
-          console.error('맞춤법 검사 오류:', error);
+          alert('검사 중 오류가 발생했습니다. 다시 시도해주세요.');
+          console.error('맞춤법 검사/AI 다듬기 오류:', error);
         } finally {
           // 로딩 팝업 숨기기
           loadingPopup.style.display = 'none';
           // 버튼 복원
           creativeCheckBtn.disabled = false;
+          // 로딩 텍스트 원복
+          const loadingText = loadingPopup.querySelector('.spell-check-loading-text');
+          if (loadingText) {
+            loadingText.textContent = '맞춤법 검사 중입니다...';
+          }
         }
       });
     }
