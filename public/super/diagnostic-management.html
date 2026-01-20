@@ -289,6 +289,33 @@
       display: none;
     }
 
+    /* 검색 입력창 스타일 */
+    .search-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 12px 16px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .search-input::placeholder {
+      color: #95a5a6;
+    }
+
     .grade-badge {
       display: inline-block;
       padding: 4px 12px;
@@ -377,6 +404,9 @@
         </div>
         <button id="deleteDiagnosticBtn" class="delete-btn" onclick="deleteSelectedDiagnosticTests()" disabled>🗑 선택삭제 (<span id="diagnosticSelectedCount">0</span>명)</button>
       </div>
+      <div class="search-container">
+        <input type="text" id="diagnosticSearch" class="search-input" placeholder="🔍 학교명, 학년, 이름으로 검색..." oninput="filterDiagnosticTests()">
+      </div>
       <div class="table-container">
         <div id="diagnosticTestsLoading" class="loading">데이터를 불러오는 중...</div>
         <table id="diagnosticTestsTable" style="display: none;">
@@ -414,6 +444,9 @@
           <span class="count-badge" id="applicationCount">0명</span>
         </div>
         <button id="deleteApplicationBtn" class="delete-btn" onclick="deleteSelectedApplications()" disabled>🗑 선택삭제 (<span id="applicationSelectedCount">0</span>명)</button>
+      </div>
+      <div class="search-container">
+        <input type="text" id="applicationSearch" class="search-input" placeholder="🔍 학교명, 학년, 이름, 등급으로 검색..." oninput="filterApplications()">
       </div>
       <div class="table-container">
         <div id="applicationsLoading" class="loading">데이터를 불러오는 중...</div>
@@ -495,6 +528,10 @@
     let diagnosticExpanded = false;
     let applicationExpanded = false;
 
+    // 전체 데이터 저장 변수 (검색용)
+    let allDiagnosticTests = [];
+    let allApplications = [];
+
     // 진단테스트 목록 불러오기
     async function loadDiagnosticTests() {
       try {
@@ -512,6 +549,9 @@
         loading.style.display = 'none';
 
         if (result.success && result.data.length > 0) {
+          // 검색용 데이터 저장
+          allDiagnosticTests = result.data;
+
           table.style.display = 'table';
           countBadge.textContent = `${result.data.length}명`;
 
@@ -583,6 +623,9 @@
         loading.style.display = 'none';
 
         if (result.success && result.data.length > 0) {
+          // 검색용 데이터 저장
+          allApplications = result.data;
+
           table.style.display = 'table';
           countBadge.textContent = `${result.data.length}명`;
 
@@ -834,6 +877,158 @@
       } catch (error) {
         console.error('삭제 오류:', error);
         alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    // 진단테스트 검색 필터링
+    function filterDiagnosticTests() {
+      const searchTerm = document.getElementById('diagnosticSearch').value.toLowerCase().trim();
+      const body = document.getElementById('diagnosticTestsBody');
+      const showMoreBtn = document.getElementById('diagnosticShowMoreBtn');
+      const countBadge = document.getElementById('testCount');
+
+      if (!searchTerm) {
+        // 검색어가 없으면 원래 데이터로 복원
+        renderDiagnosticTests(allDiagnosticTests);
+        return;
+      }
+
+      // 검색어로 필터링
+      const filtered = allDiagnosticTests.filter(test => {
+        const branchName = (test.branchName || '').toLowerCase();
+        const studentGrade = (test.studentGrade || '').toLowerCase();
+        const studentName = (test.studentName || '').toLowerCase();
+        return branchName.includes(searchTerm) ||
+               studentGrade.includes(searchTerm) ||
+               studentName.includes(searchTerm);
+      });
+
+      renderDiagnosticTests(filtered);
+    }
+
+    // 진단테스트 목록 렌더링
+    function renderDiagnosticTests(data) {
+      const body = document.getElementById('diagnosticTestsBody');
+      const countBadge = document.getElementById('testCount');
+      const showMoreBtn = document.getElementById('diagnosticShowMoreBtn');
+      const hiddenCountSpan = document.getElementById('diagnosticHiddenCount');
+      const table = document.getElementById('diagnosticTestsTable');
+      const empty = document.getElementById('diagnosticTestsEmpty');
+
+      if (data.length > 0) {
+        table.style.display = 'table';
+        empty.style.display = 'none';
+        countBadge.textContent = `${data.length}명`;
+
+        body.innerHTML = data.map((test, index) => `
+          <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row diagnostic-hidden' : ''}">
+            <td><input type="checkbox" class="select-checkbox diagnostic-checkbox" data-id="${test._id}" onchange="updateDiagnosticCount()"></td>
+            <td>${index + 1}</td>
+            <td>${test.branchName || '-'}</td>
+            <td>${test.studentGrade}</td>
+            <td>${test.studentName}</td>
+            <td>${test.studentPhone}</td>
+            <td>${test.parentName}</td>
+            <td>${test.parentPhone}</td>
+            <td>${new Date(test.createdAt).toLocaleString('ko-KR')}</td>
+            <td><button class="edit-btn" onclick="openEditModal('diagnostic', '${test._id}', '${test.branchName || ''}', '${test.studentGrade}', '${test.studentName}', '${test.studentPhone}', '${test.parentName}', '${test.parentPhone}')">수정</button></td>
+          </tr>
+        `).join('');
+
+        // 10명 초과 시 더보기 버튼 표시
+        if (data.length > DISPLAY_LIMIT) {
+          showMoreBtn.style.display = 'block';
+          hiddenCountSpan.textContent = data.length - DISPLAY_LIMIT;
+          diagnosticExpanded = false;
+          showMoreBtn.innerHTML = `더보기 (<span id="diagnosticHiddenCount">${data.length - DISPLAY_LIMIT}</span>명 더)`;
+        } else {
+          showMoreBtn.style.display = 'none';
+        }
+      } else {
+        table.style.display = 'none';
+        empty.style.display = 'block';
+        empty.textContent = '검색 결과가 없습니다.';
+        countBadge.textContent = '0명';
+        showMoreBtn.style.display = 'none';
+      }
+    }
+
+    // 진단테스트 결과 검색 필터링
+    function filterApplications() {
+      const searchTerm = document.getElementById('applicationSearch').value.toLowerCase().trim();
+
+      if (!searchTerm) {
+        // 검색어가 없으면 원래 데이터로 복원
+        renderApplications(allApplications);
+        return;
+      }
+
+      // 검색어로 필터링
+      const filtered = allApplications.filter(app => {
+        const branchName = (app.branchName || '').toLowerCase();
+        const studentGrade = (app.studentGrade || '').toLowerCase();
+        const studentName = (app.studentName || '').toLowerCase();
+        const grade = (app.grade || '').toLowerCase();
+        return branchName.includes(searchTerm) ||
+               studentGrade.includes(searchTerm) ||
+               studentName.includes(searchTerm) ||
+               grade.includes(searchTerm);
+      });
+
+      renderApplications(filtered);
+    }
+
+    // 진단테스트 결과 목록 렌더링
+    function renderApplications(data) {
+      const body = document.getElementById('applicationsBody');
+      const countBadge = document.getElementById('applicationCount');
+      const showMoreBtn = document.getElementById('applicationShowMoreBtn');
+      const hiddenCountSpan = document.getElementById('applicationHiddenCount');
+      const table = document.getElementById('applicationsTable');
+      const empty = document.getElementById('applicationsEmpty');
+
+      if (data.length > 0) {
+        table.style.display = 'table';
+        empty.style.display = 'none';
+        countBadge.textContent = `${data.length}명`;
+
+        body.innerHTML = data.map((app, index) => {
+          const gradeClass = `grade-${app.grade}`;
+          const hasAnswers = app.answers && app.answers.length > 0;
+          return `
+            <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row application-hidden' : ''}">
+              <td><input type="checkbox" class="select-checkbox application-checkbox" data-id="${app._id}" onchange="updateApplicationCount()"></td>
+              <td>${index + 1}</td>
+              <td>${app.branchName || '-'}</td>
+              <td>${app.studentGrade}</td>
+              <td>${app.studentName}</td>
+              <td>${app.studentPhone}</td>
+              <td>${app.parentPhone}</td>
+              <td><span class="grade-badge ${gradeClass}">${app.grade}</span></td>
+              <td>${app.score !== undefined ? app.score + '/25' : '-'}</td>
+              <td>${app.series}</td>
+              <td>${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
+              <td>${hasAnswers ? `<button onclick="viewTestPaper('${app._id}')" style="padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">시험지 보기</button>` : '<span style="color: #999;">-</span>'}</td>
+              <td><button class="edit-btn" onclick="openEditModal('application', '${app._id}', '${app.branchName || ''}', '${app.studentGrade}', '${app.studentName}', '${app.studentPhone}', '', '${app.parentPhone}')">수정</button></td>
+            </tr>
+          `;
+        }).join('');
+
+        // 10명 초과 시 더보기 버튼 표시
+        if (data.length > DISPLAY_LIMIT) {
+          showMoreBtn.style.display = 'block';
+          hiddenCountSpan.textContent = data.length - DISPLAY_LIMIT;
+          applicationExpanded = false;
+          showMoreBtn.innerHTML = `더보기 (<span id="applicationHiddenCount">${data.length - DISPLAY_LIMIT}</span>명 더)`;
+        } else {
+          showMoreBtn.style.display = 'none';
+        }
+      } else {
+        table.style.display = 'none';
+        empty.style.display = 'block';
+        empty.textContent = '검색 결과가 없습니다.';
+        countBadge.textContent = '0명';
+        showMoreBtn.style.display = 'none';
       }
     }
 
