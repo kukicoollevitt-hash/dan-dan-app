@@ -23413,13 +23413,25 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
       return res.json({ ok: false, message: "학생 정보가 필요합니다." });
     }
 
-    // 1) 해당 학생의 완료된 단원 조회 (완료 시간순 정렬)
-    const completedLogs = await LearningLog.find({
+    // 1) 해당 학생의 완료된 단원 조회 (완료 시간순 정렬, 이름 기반 폴백 매칭)
+    let completedLogs = await LearningLog.find({
       grade,
       name,
       completed: true,
       deleted: { $ne: true }
     }).select('unit timestamp').sort({ timestamp: 1 }).lean();
+
+    // 폴백: grade|name으로 못 찾으면 name으로만 검색 (복구된 학생용)
+    if (completedLogs.length === 0) {
+      completedLogs = await LearningLog.find({
+        name,
+        completed: true,
+        deleted: { $ne: true }
+      }).select('unit timestamp').sort({ timestamp: 1 }).lean();
+      if (completedLogs.length > 0) {
+        console.log(`[gate-quiz/generate] 이름 기반 폴백 매칭 사용: ${name}`);
+      }
+    }
 
     // 중복 제거 (첫 번째 완료 기록만 유지, 완료 순서 보존)
     const seen = new Set();
@@ -23432,8 +23444,16 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
     }
     console.log(`[gate-quiz/generate] 전체 완료 단원 (순서대로): ${allCompletedUnits.length}개`);
 
-    // 2) 이미 통과한 관문 확인
-    const passedGates = await GatePass.find({ grade, name }).select('gate').lean();
+    // 2) 이미 통과한 관문 확인 (이름 기반 폴백 매칭)
+    let passedGates = await GatePass.find({ grade, name }).select('gate').lean();
+
+    // 폴백: grade|name으로 못 찾으면 name으로만 검색 (복구된 학생용)
+    if (passedGates.length === 0) {
+      passedGates = await GatePass.find({ name }).select('gate').lean();
+      if (passedGates.length > 0) {
+        console.log(`[gate-quiz/generate] GatePass 이름 기반 폴백 매칭 사용: ${name}`);
+      }
+    }
     const passedGateNums = passedGates.map(g => g.gate);
     console.log(`[gate-quiz/generate] 통과한 관문: ${passedGateNums}`);
 
@@ -24106,18 +24126,38 @@ app.get("/api/gate-quiz/status", async (req, res) => {
       return res.json({ ok: false, message: "학생 정보가 필요합니다." });
     }
 
-    // 완료된 단원 목록
-    const completedLogs = await LearningLog.find({
+    // 완료된 단원 목록 (이름 기반 폴백 매칭)
+    let completedLogs = await LearningLog.find({
       grade,
       name,
       completed: true,
       deleted: { $ne: true }
     }).select('unit').lean();
+
+    // 폴백: grade|name으로 못 찾으면 name으로만 검색 (복구된 학생용)
+    if (completedLogs.length === 0) {
+      completedLogs = await LearningLog.find({
+        name,
+        completed: true,
+        deleted: { $ne: true }
+      }).select('unit').lean();
+      if (completedLogs.length > 0) {
+        console.log(`[gate-quiz/status] 이름 기반 폴백 매칭 사용: ${name}`);
+      }
+    }
     const completedUnitIds = [...new Set(completedLogs.map(log => log.unit))];
     const completedCount = completedUnitIds.length;
 
-    // 통과한 관문들
-    const passedGates = await GatePass.find({ grade, name }).select('gate passedAt').lean();
+    // 통과한 관문들 (이름 기반 폴백 매칭)
+    let passedGates = await GatePass.find({ grade, name }).select('gate passedAt').lean();
+
+    // 폴백: grade|name으로 못 찾으면 name으로만 검색 (복구된 학생용)
+    if (passedGates.length === 0) {
+      passedGates = await GatePass.find({ name }).select('gate passedAt').lean();
+      if (passedGates.length > 0) {
+        console.log(`[gate-quiz/status] GatePass 이름 기반 폴백 매칭 사용: ${name}`);
+      }
+    }
 
     // 다음 관문 레벨 계산
     const highestPassedGate = passedGates.length > 0
