@@ -590,6 +590,66 @@
             box-shadow: 0 0 0 1px rgba(242, 155, 90, 0.3);
         }
 
+        /* 검색 가능한 학교 드롭다운 */
+        .school-search-wrapper {
+            position: relative;
+        }
+        .school-search-input {
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 10px;
+            border: 1px solid #f0c8a9;
+            font-size: 14px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .school-search-input:focus {
+            border-color: #f29b5a;
+            box-shadow: 0 0 0 1px rgba(242, 155, 90, 0.3);
+        }
+        .school-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 180px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #f0c8a9;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .school-dropdown.show {
+            display: block;
+        }
+        .school-option {
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4b3123;
+            border-bottom: 1px solid #f5e6d8;
+        }
+        .school-option:last-child {
+            border-bottom: none;
+        }
+        .school-option:hover,
+        .school-option.highlighted {
+            background: #fff5e6;
+        }
+        .school-option.selected {
+            background: #ffe0c0;
+            font-weight: 600;
+        }
+        .school-no-result {
+            padding: 10px 12px;
+            color: #999;
+            font-size: 13px;
+            text-align: center;
+        }
+
         .modal-btn {
             margin-top: 18px;
             width: 100%;
@@ -759,21 +819,30 @@
                 <button type="button" class="modal-close" id="closeLoginBtn">✕</button>
 
                 <div class="modal-title-wrap">
-                    <h1 class="modal-title" id="modalTitle">AI 브레인 문해력에 오신 걸 환영합니다</h1>
+                    <h1 class="modal-title" id="modalTitle">AI 브레인 문해력 로그인</h1>
                     <p class="modal-subtitle" id="modalSubtitle">
-                        가입했던 이름·학년·전화번호로 로그인해 주세요.
+                        가입했던 학교·학년·반·번호·이름으로 로그인해 주세요.
                     </p>
                 </div>
 
-                <a href="/admin-login" class="admin-pill">관리자모드</a>
+                <a href="/admin-login" class="admin-pill">선생님모드</a>
             </div>
 
             <!-- 🔹 로그인 패널 -->
             <div id="login-panel" class="panel active">
                 <form action="/login" method="post" class="modal-form" id="login-form">
                     <label>
+                        학교
+                        <div class="school-search-wrapper">
+                            <input type="text" class="school-search-input" id="loginSchoolSearch" placeholder="학교명 검색..." autocomplete="off" />
+                            <input type="hidden" name="school" id="loginSchoolValue" required />
+                            <div class="school-dropdown" id="loginSchoolDropdown"></div>
+                        </div>
+                    </label>
+
+                    <label>
                         학년
-                        <select name="grade" class="modal-input" required>
+                        <select name="grade" id="loginGrade" class="modal-input" required>
                             <option value="" disabled selected>학년 선택</option>
                             <option value="3학년">3학년</option>
                             <option value="4학년">4학년</option>
@@ -789,6 +858,37 @@
                     </label>
 
                     <label>
+                        반
+                        <select name="classNum" id="loginClassNum" class="modal-input" required>
+                            <option value="" disabled selected>반 선택</option>
+                            <option value="1반">1반</option>
+                            <option value="2반">2반</option>
+                            <option value="3반">3반</option>
+                            <option value="4반">4반</option>
+                            <option value="5반">5반</option>
+                            <option value="6반">6반</option>
+                            <option value="7반">7반</option>
+                            <option value="8반">8반</option>
+                            <option value="9반">9반</option>
+                            <option value="10반">10반</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        번호
+                        <input
+                            type="number"
+                            name="studentNum"
+                            id="loginStudentNum"
+                            class="modal-input"
+                            placeholder="예) 15"
+                            min="1"
+                            max="50"
+                            required
+                        />
+                    </label>
+
+                    <label>
                         이름
                         <input
                             type="text"
@@ -800,12 +900,14 @@
                     </label>
 
                     <label>
-                        비밀번호(전화번호)
+                        비밀번호 (학년+반+번호 자동생성)
                         <input
-                            type="tel"
+                            type="text"
                             name="phone"
+                            id="loginPhone"
                             class="modal-input"
-                            placeholder="전화번호 입력"
+                            placeholder="학년/반/번호 입력 시 자동 생성"
+                            readonly
                             required
                         />
                     </label>
@@ -823,8 +925,17 @@
             <div id="register-panel" class="panel">
                 <form action="/register" method="post" class="modal-form" id="register-form">
                     <label>
+                        학교
+                        <div class="school-search-wrapper">
+                            <input type="text" class="school-search-input" id="registerSchoolSearch" placeholder="학교명 입력 예) 00초등학교/00중학교" autocomplete="off" />
+                            <input type="hidden" name="academyName" id="registerSchoolValue" required />
+                            <div class="school-dropdown" id="registerSchoolDropdown"></div>
+                        </div>
+                    </label>
+
+                    <label>
                         학년
-                        <select name="grade" class="modal-input" required>
+                        <select name="grade" id="registerGrade" class="modal-input" required>
                             <option value="" disabled selected>학년 선택</option>
                             <option value="3학년">3학년</option>
                             <option value="4학년">4학년</option>
@@ -840,6 +951,37 @@
                     </label>
 
                     <label>
+                        반
+                        <select name="classNum" id="registerClassNum" class="modal-input" required>
+                            <option value="" disabled selected>반 선택</option>
+                            <option value="1반">1반</option>
+                            <option value="2반">2반</option>
+                            <option value="3반">3반</option>
+                            <option value="4반">4반</option>
+                            <option value="5반">5반</option>
+                            <option value="6반">6반</option>
+                            <option value="7반">7반</option>
+                            <option value="8반">8반</option>
+                            <option value="9반">9반</option>
+                            <option value="10반">10반</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        번호
+                        <input
+                            type="number"
+                            name="studentNum"
+                            id="registerStudentNum"
+                            class="modal-input"
+                            placeholder="예) 15"
+                            min="1"
+                            max="50"
+                            required
+                        />
+                    </label>
+
+                    <label>
                         이름
                         <input
                             type="text"
@@ -851,23 +993,14 @@
                     </label>
 
                     <label>
-                        전화번호(비밀번호로 사용)
-                        <input
-                            type="tel"
-                            name="phone"
-                            class="modal-input"
-                            placeholder="예) 01012345678"
-                            required
-                        />
-                    </label>
-
-                    <label>
-                        학교명
+                        비밀번호 (학년+반+번호 자동생성)
                         <input
                             type="text"
-                            name="academyName"
+                            name="phone"
+                            id="registerPhone"
                             class="modal-input"
-                            placeholder="예) 00초중고등학교"
+                            placeholder="학년/반/번호 입력 시 자동 생성"
+                            readonly
                             required
                         />
                     </label>
@@ -906,10 +1039,10 @@
     <div class="login-error-overlay" id="signupPendingOverlay">
         <div class="login-error-modal">
             <div class="login-error-icon">🚫</div>
-            <div class="login-error-title">승인 대기 중인 계정입니다</div>
+            <div class="login-error-title">승인 대기 중인 학생입니다</div>
             <div class="login-error-msg">
-                현재 회원님은 '승인 대기' 상태입니다.<br />
-                담당 선생님께 회원 승인 요청을 해 주세요 🙂
+                현재 '승인 대기' 상태입니다.<br />
+                담당 선생님께 승인 요청을 해 주세요 🙂
             </div>
             <div class="login-error-actions">
                 <button type="button" class="login-error-btn primary" id="signupPendingCloseBtn">
@@ -1136,6 +1269,202 @@
     </div>
 
     <script>
+        // ========== 학교 검색 드롭다운 ==========
+        let schoolList = [];
+
+        // 서버에서 학교 목록 가져오기
+        async function loadSchools() {
+            try {
+                const res = await fetch('/api/schools');
+                const data = await res.json();
+                if (data.ok && data.schools) {
+                    schoolList = data.schools;
+                }
+            } catch (err) {
+                console.error('학교 목록 로딩 실패:', err);
+            }
+        }
+
+        // 학교 검색 드롭다운 초기화 (allowCustom: 회원가입용 - 새 학교 입력 가능)
+        function initSchoolSearch(searchInputId, hiddenInputId, dropdownId, allowCustom = false) {
+            const searchInput = document.getElementById(searchInputId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            const dropdown = document.getElementById(dropdownId);
+
+            if (!searchInput || !hiddenInput || !dropdown) return;
+
+            let highlightIndex = -1;
+
+            // 드롭다운 렌더링 (검색어가 있을 때만 결과 표시)
+            function renderDropdown(filter = '') {
+                // 검색어가 없으면 드롭다운 숨기기
+                if (!filter || filter.trim() === '') {
+                    dropdown.innerHTML = '<div class="school-no-result">학교명을 입력해주세요</div>';
+                    return;
+                }
+
+                const filtered = schoolList.filter(s => s.toLowerCase().includes(filter.toLowerCase()));
+
+                if (filtered.length === 0) {
+                    if (allowCustom) {
+                        // 회원가입: 새 학교 입력 가능 - 드롭다운 숨기기
+                        dropdown.classList.remove('show');
+                    } else {
+                        dropdown.innerHTML = '<div class="school-no-result">검색 결과가 없습니다</div>';
+                    }
+                } else {
+                    dropdown.innerHTML = filtered.map((school, idx) => `
+                        <div class="school-option${hiddenInput.value === school ? ' selected' : ''}" data-value="${school}" data-index="${idx}">
+                            ${school}
+                        </div>
+                    `).join('');
+                }
+                highlightIndex = -1;
+            }
+
+            // 입력 시 필터링
+            searchInput.addEventListener('input', () => {
+                const val = searchInput.value.trim();
+                if (val.length > 0) {
+                    renderDropdown(val);
+                    dropdown.classList.add('show');
+                    // 회원가입: 입력값을 바로 hidden input에 반영 (새 학교 입력 허용)
+                    if (allowCustom) {
+                        hiddenInput.value = val;
+                    }
+                } else {
+                    dropdown.classList.remove('show');
+                    if (allowCustom) {
+                        hiddenInput.value = '';
+                    }
+                }
+            });
+
+            // 포커스 시 - 이미 값이 있을 때만 드롭다운 표시
+            searchInput.addEventListener('focus', () => {
+                const val = searchInput.value.trim();
+                if (val.length > 0) {
+                    renderDropdown(val);
+                    dropdown.classList.add('show');
+                }
+            });
+
+            // 외부 클릭 시 닫기
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // 옵션 클릭
+            dropdown.addEventListener('click', (e) => {
+                const option = e.target.closest('.school-option');
+                if (option) {
+                    const value = option.dataset.value;
+                    searchInput.value = value;
+                    hiddenInput.value = value;
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // 키보드 네비게이션
+            searchInput.addEventListener('keydown', (e) => {
+                const options = dropdown.querySelectorAll('.school-option');
+                if (options.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    highlightIndex = Math.min(highlightIndex + 1, options.length - 1);
+                    updateHighlight(options);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    highlightIndex = Math.max(highlightIndex - 1, 0);
+                    updateHighlight(options);
+                } else if (e.key === 'Enter' && highlightIndex >= 0) {
+                    e.preventDefault();
+                    const value = options[highlightIndex].dataset.value;
+                    searchInput.value = value;
+                    hiddenInput.value = value;
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            function updateHighlight(options) {
+                options.forEach((opt, idx) => {
+                    opt.classList.toggle('highlighted', idx === highlightIndex);
+                });
+                if (highlightIndex >= 0) {
+                    options[highlightIndex].scrollIntoView({ block: 'nearest' });
+                }
+            }
+        }
+
+        // 페이지 로드 시 학교 목록 불러오기 및 검색 초기화
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSchools();
+            initSchoolSearch('loginSchoolSearch', 'loginSchoolValue', 'loginSchoolDropdown', false);  // 로그인: 기존 학교만
+            initSchoolSearch('registerSchoolSearch', 'registerSchoolValue', 'registerSchoolDropdown', true);  // 회원가입: 새 학교 입력 가능
+
+            // ========== 비밀번호 자동 생성 (공통 함수) ==========
+            function generatePasswordFor(gradeEl, classNumEl, studentNumEl, phoneEl) {
+                const grade = gradeEl?.value || '';
+                const classNum = classNumEl?.value || '';
+                const studentNum = studentNumEl?.value || '';
+
+                if (!grade || !classNum || !studentNum) {
+                    phoneEl.value = '';
+                    return;
+                }
+
+                // 학년 숫자 추출 (3학년 → 03, 중1 → 71, 고2 → 82)
+                let gradeNum = '';
+                if (grade.includes('학년')) {
+                    gradeNum = grade.replace('학년', '').padStart(2, '0');
+                } else if (grade.startsWith('중')) {
+                    gradeNum = '7' + grade.replace('중', '');
+                } else if (grade.startsWith('고')) {
+                    gradeNum = '8' + grade.replace('고', '');
+                }
+
+                // 반 숫자 추출 (1반 → 01, 10반 → 10)
+                const classNumOnly = classNum.replace('반', '').padStart(2, '0');
+
+                // 번호 (15 → 15, 5 → 05)
+                const studentNumPadded = studentNum.padStart(2, '0');
+
+                // 비밀번호 생성: 학년(2) + 반(2) + 번호(2)
+                phoneEl.value = gradeNum + classNumOnly + studentNumPadded;
+            }
+
+            // ========== 로그인 비밀번호 자동 생성 ==========
+            const loginGrade = document.getElementById('loginGrade');
+            const loginClassNum = document.getElementById('loginClassNum');
+            const loginStudentNum = document.getElementById('loginStudentNum');
+            const loginPhone = document.getElementById('loginPhone');
+
+            function generateLoginPassword() {
+                generatePasswordFor(loginGrade, loginClassNum, loginStudentNum, loginPhone);
+            }
+
+            loginGrade?.addEventListener('change', generateLoginPassword);
+            loginClassNum?.addEventListener('change', generateLoginPassword);
+            loginStudentNum?.addEventListener('input', generateLoginPassword);
+
+            // ========== 회원가입 비밀번호 자동 생성 ==========
+            const registerGrade = document.getElementById('registerGrade');
+            const registerClassNum = document.getElementById('registerClassNum');
+            const registerStudentNum = document.getElementById('registerStudentNum');
+            const registerPhone = document.getElementById('registerPhone');
+
+            function generateRegisterPassword() {
+                generatePasswordFor(registerGrade, registerClassNum, registerStudentNum, registerPhone);
+            }
+
+            registerGrade?.addEventListener('change', generateRegisterPassword);
+            registerClassNum?.addEventListener('change', generateRegisterPassword);
+            registerStudentNum?.addEventListener('input', generateRegisterPassword);
+        });
+
         // 스크롤 애니메이션
         const observerOptions = {
             root: null,
@@ -1184,12 +1513,12 @@
                 registerPanel.classList.add("active");
                 loginPanel.classList.remove("active");
                 if (titleEl)    titleEl.textContent    = "회원가입 후 다시 만나요!";
-                if (subtitleEl) subtitleEl.textContent = "학년·이름·전화번호·학교명을 정확히 입력해 주세요.";
+                if (subtitleEl) subtitleEl.textContent = "학교·학년·반·번호·이름을 정확히 입력해 주세요.";
             } else {
                 loginPanel.classList.add("active");
                 registerPanel.classList.remove("active");
-                if (titleEl)    titleEl.textContent    = "AI 브레인 문해력에 오신 걸 환영합니다";
-                if (subtitleEl) subtitleEl.textContent = "가입했던 이름·학년·전화번호로 로그인해 주세요.";
+                if (titleEl)    titleEl.textContent    = "AI 브레인 문해력 로그인";
+                if (subtitleEl) subtitleEl.textContent = "가입했던 학교·학년·반·번호·이름으로 로그인해 주세요.";
             }
         }
 
@@ -1207,10 +1536,10 @@
             if (!overlay || !titleEl || !msgEl) return;
 
             if (type === "pending") {
-                titleEl.textContent = "승인 대기 중인 계정입니다";
+                titleEl.textContent = "승인 대기 중인 학생입니다";
                 msgEl.innerHTML =
                     "아직 관리자 승인 전이라 로그인할 수 없어요.<br>" +
-                    "담당 선생님께 회원 승인 요청을 해 주세요 🙂";
+                    "담당 선생님께 승인 요청을 해 주세요 🙂";
             } else if (type === "trashed") {
                 titleEl.textContent = "휴지 상태 계정입니다";
                 msgEl.innerHTML =

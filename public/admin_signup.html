@@ -50,7 +50,27 @@
       font-weight: 500;
     }
     input[type="text"],
-    input[type="tel"] {
+    input[type="tel"],
+    select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #d5c0b3;
+      font-size: 14px;
+      outline: none;
+      background: #fff;
+    }
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px rgba(139,47,47,0.13);
+    }
+    /* 학교 검색 드롭다운 */
+    .school-search-wrapper {
+      position: relative;
+    }
+    .school-search-input {
       width: 100%;
       margin-top: 6px;
       padding: 8px 10px;
@@ -59,9 +79,51 @@
       font-size: 14px;
       outline: none;
     }
-    input:focus {
+    .school-search-input:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 1px rgba(139,47,47,0.13);
+    }
+    .school-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #d5c0b3;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .school-dropdown.show {
+      display: block;
+    }
+    .school-option {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #2f2f2f;
+      border-bottom: 1px solid #f0e6df;
+    }
+    .school-option:last-child {
+      border-bottom: none;
+    }
+    .school-option:hover,
+    .school-option.highlighted {
+      background: #fdf5f0;
+    }
+    .school-option.selected {
+      background: #f2ded5;
+      font-weight: 600;
+    }
+    .school-no-result {
+      padding: 10px 12px;
+      color: #999;
+      font-size: 13px;
+      text-align: center;
     }
     .hint {
       margin-top: 3px;
@@ -104,16 +166,45 @@
     <form action="/admin-signup" method="post">
       <label>
         학교명
-        <input type="text" name="academyName" required />
-        <div class="hint">
-          예) 서울초등학교 / 서울중학교<br>
-          *학교명을 정확하게 입력해야만 해당 학교 학생 목록을 볼 수 있습니다*
+        <div class="school-search-wrapper">
+          <input type="text" class="school-search-input" id="schoolSearch" placeholder="학교명 검색 또는 직접 입력..." autocomplete="off" />
+          <input type="hidden" name="academyName" id="schoolValue" required />
+          <div class="school-dropdown" id="schoolDropdown"></div>
         </div>
       </label>
 
       <label>
-        직책
-        <input type="text" name="role" placeholder="선생님" required />
+        학년
+        <select name="grade" id="signupGrade" required>
+          <option value="" disabled selected>학년 선택</option>
+          <option value="3학년">3학년</option>
+          <option value="4학년">4학년</option>
+          <option value="5학년">5학년</option>
+          <option value="6학년">6학년</option>
+          <option value="중1">중1</option>
+          <option value="중2">중2</option>
+          <option value="중3">중3</option>
+          <option value="고1">고1</option>
+          <option value="고2">고2</option>
+          <option value="고3">고3</option>
+        </select>
+      </label>
+
+      <label>
+        반
+        <select name="classNum" id="signupClassNum" required>
+          <option value="" disabled selected>반 선택</option>
+          <option value="1반">1반</option>
+          <option value="2반">2반</option>
+          <option value="3반">3반</option>
+          <option value="4반">4반</option>
+          <option value="5반">5반</option>
+          <option value="6반">6반</option>
+          <option value="7반">7반</option>
+          <option value="8반">8반</option>
+          <option value="9반">9반</option>
+          <option value="10반">10반</option>
+        </select>
       </label>
 
       <label>
@@ -122,23 +213,150 @@
       </label>
 
       <label>
-        생년월일 (예: 900507)
+        생년월일 (로그인 후 인증번호로 사용 / 예: 900507)
         <input type="text" name="birth" maxlength="6" required />
       </label>
 
       <label>
         전화번호 (로그인 시 비밀번호로 사용)
-        <input type="tel" name="phone" placeholder="예) 010-0000-0000" required />
+        <input type="tel" name="phone" placeholder="01012341234" required />
         <div class="hint">*전화번호는 로그인 시 비밀번호로 사용됩니다*</div>
       </label>
 
-      <button type="submit" class="btn-main">관리자 계정 등록하기</button>
+      <button type="submit" class="btn-main">선생님 계정 등록하기</button>
     </form>
 
     <div class="bottom">
-      이미 관리자 계정이 있나요?
-      <a href="/admin-login">관리자 로그인</a>
+      이미 선생님 계정이 있나요?
+      <a href="/admin-login">선생님 로그인</a>
     </div>
   </div>
+
+  <script>
+    // ========== 학교 검색 드롭다운 ==========
+    let schoolList = [];
+
+    // 서버에서 학교 목록 가져오기
+    async function loadSchools() {
+      try {
+        const res = await fetch('/api/schools');
+        const data = await res.json();
+        if (data.ok && data.schools) {
+          schoolList = data.schools;
+        }
+      } catch (err) {
+        console.error('학교 목록 로딩 실패:', err);
+      }
+    }
+
+    // 학교 검색 드롭다운 초기화 (회원가입: 새 학교 입력 허용)
+    function initSchoolSearch() {
+      const searchInput = document.getElementById('schoolSearch');
+      const hiddenInput = document.getElementById('schoolValue');
+      const dropdown = document.getElementById('schoolDropdown');
+
+      if (!searchInput || !hiddenInput || !dropdown) return;
+
+      let highlightIndex = -1;
+
+      // 드롭다운 렌더링
+      function renderDropdown(filter = '') {
+        if (!filter || filter.trim() === '') {
+          dropdown.innerHTML = '<div class="school-no-result">학교명을 입력해주세요</div>';
+          return;
+        }
+
+        const filtered = schoolList.filter(s => s.toLowerCase().includes(filter.toLowerCase()));
+
+        if (filtered.length === 0) {
+          // 회원가입: 새 학교 입력 허용 - 드롭다운 숨기기
+          dropdown.classList.remove('show');
+        } else {
+          dropdown.innerHTML = filtered.map((school, idx) =>
+            '<div class="school-option' + (hiddenInput.value === school ? ' selected' : '') + '" data-value="' + school + '" data-index="' + idx + '">' + school + '</div>'
+          ).join('');
+        }
+        highlightIndex = -1;
+      }
+
+      // 입력 시 필터링
+      searchInput.addEventListener('input', () => {
+        const val = searchInput.value.trim();
+        // 회원가입: 입력값을 바로 hidden input에 반영 (새 학교 입력 허용)
+        hiddenInput.value = val;
+
+        if (val.length > 0) {
+          renderDropdown(val);
+          dropdown.classList.add('show');
+        } else {
+          dropdown.classList.remove('show');
+        }
+      });
+
+      // 포커스 시
+      searchInput.addEventListener('focus', () => {
+        const val = searchInput.value.trim();
+        if (val.length > 0) {
+          renderDropdown(val);
+          dropdown.classList.add('show');
+        }
+      });
+
+      // 외부 클릭 시 닫기
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.remove('show');
+        }
+      });
+
+      // 옵션 클릭
+      dropdown.addEventListener('click', (e) => {
+        const option = e.target.closest('.school-option');
+        if (option) {
+          const value = option.dataset.value;
+          searchInput.value = value;
+          hiddenInput.value = value;
+          dropdown.classList.remove('show');
+        }
+      });
+
+      // 키보드 네비게이션
+      searchInput.addEventListener('keydown', (e) => {
+        const options = dropdown.querySelectorAll('.school-option');
+        if (options.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          highlightIndex = Math.min(highlightIndex + 1, options.length - 1);
+          updateHighlight(options);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          highlightIndex = Math.max(highlightIndex - 1, 0);
+          updateHighlight(options);
+        } else if (e.key === 'Enter' && highlightIndex >= 0) {
+          e.preventDefault();
+          const value = options[highlightIndex].dataset.value;
+          searchInput.value = value;
+          hiddenInput.value = value;
+          dropdown.classList.remove('show');
+        }
+      });
+
+      function updateHighlight(options) {
+        options.forEach((opt, idx) => {
+          opt.classList.toggle('highlighted', idx === highlightIndex);
+        });
+        if (highlightIndex >= 0) {
+          options[highlightIndex].scrollIntoView({ block: 'nearest' });
+        }
+      }
+    }
+
+    // 페이지 로드 시 실행
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadSchools();
+      initSchoolSearch();
+    });
+  </script>
 </body>
 </html>

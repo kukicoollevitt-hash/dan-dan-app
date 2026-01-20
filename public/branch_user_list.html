@@ -542,7 +542,7 @@
       <div class="right-actions">
         <button id="btn-add-student" class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="openAddStudentModal()">+ 학생 추가</button>
         <button id="btn-delete-selected" class="btn-delete-selected">선택 삭제 (<span id="selected-count">0</span>)</button>
-        <input type="text" id="search-input" placeholder="이름 / 학년 검색" />
+        <input type="text" id="search-input" placeholder="이름 검색" />
         <select id="sort-select" class="btn btn-outline">
           <option value="lastLoginDesc">최근 로그인순(내림차순)</option>
           <option value="lastLoginAsc">최근 로그인순(오름차순)</option>
@@ -568,9 +568,10 @@
             <th class="checkbox-col"><input type="checkbox" id="select-all" /></th>
             <th class="num-col">#</th>
             <th>학년</th>
+            <th>반</th>
             <th>이름</th>
             <th>학교명</th>
-            <th>전화번호(ID)</th>
+            <th>학년반번호(ID)</th>
             <th style="cursor: pointer;" onclick="sortByPendingTasks()" title="클릭하면 미완료 과제순으로 정렬">
               학습실 상태 <span id="studyRoomSortIcon" style="font-size: 12px;">↕</span>
             </th>
@@ -583,7 +584,7 @@
         </thead>
         <tbody id="student-tbody">
           <tr class="empty-row">
-            <td colspan="12">학생 목록을 불러오는 중입니다…</td>
+            <td colspan="14">학생 목록을 불러오는 중입니다…</td>
           </tr>
         </tbody>
       </table>
@@ -600,21 +601,18 @@
         <button onclick="closeAddStudentModal()" style="background: transparent; border: none; font-size: 24px; cursor: pointer; color: #666;">✕</button>
       </div>
       <form id="add-student-form" onsubmit="submitAddStudent(event)">
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">학년 *</label>
-          <input type="text" id="add-grade" placeholder="예: 초3, 중1, 고2" required style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+        <!-- 학교/학년/반 자동 표시 (읽기전용) -->
+        <div style="margin-bottom: 16px; padding: 12px 14px; background: #f3f4f6; border-radius: 8px; color: #666; font-size: 14px;">
+          <span id="add-info-display">학교/학년/반 정보 로딩 중...</span>
         </div>
         <div style="margin-bottom: 16px;">
           <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">이름 *</label>
           <input type="text" id="add-name" placeholder="학생 이름" required style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
         </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">전화번호 (ID) *</label>
-          <input type="tel" id="add-phone" placeholder="010-0000-0000" required style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-        </div>
         <div style="margin-bottom: 24px;">
-          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">학교명</label>
-          <input type="text" id="add-school" placeholder="학교명 (선택)" style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">번호 *</label>
+          <input type="text" id="add-number" placeholder="예: 1, 15, 23" required style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+          <div style="margin-top: 6px; font-size: 12px; color: #888;">* 비밀번호(ID)는 자동 생성됩니다</div>
         </div>
         <div style="display: flex; gap: 12px; justify-content: flex-end;">
           <button type="button" onclick="closeAddStudentModal()" style="padding: 10px 20px; border: 2px solid #e5e7eb; border-radius: 8px; background: #fff; color: #666; font-weight: 600; cursor: pointer;">취소</button>
@@ -800,7 +798,7 @@
 
       tbody.innerHTML = `
         <tr class="empty-row">
-          <td colspan="12">학생 목록을 불러오는 중입니다…</td>
+          <td colspan="14">학생 목록을 불러오는 중입니다…</td>
         </tr>
       `;
 
@@ -818,11 +816,15 @@
         const data = await res.json();
         const list = data.students || data.users || [];
 
+        // 선생님 학년/반 정보 저장 (제목 표시용)
+        window.adminGrade = data.adminGrade || "";
+        window.adminClassNum = data.adminClassNum || "";
+
         renderTable(list);
       } catch (err) {
         tbody.innerHTML = `
           <tr class="empty-row">
-            <td colspan="12">❌ 학생 목록을 불러오는 중 오류가 발생했습니다.</td>
+            <td colspan="14">❌ 학생 목록을 불러오는 중 오류가 발생했습니다.</td>
           </tr>
         `;
         errorBox.textContent = "오류: " + err.message;
@@ -837,7 +839,7 @@
       if (!Array.isArray(list) || list.length === 0) {
         totalEl.textContent = "0";
         tbody.innerHTML = `
-          <tr class="empty-row"><td colspan="13">표시할 학생이 없습니다.</td></tr>
+          <tr class="empty-row"><td colspan="14">표시할 학생이 없습니다.</td></tr>
         `;
         return;
       }
@@ -847,10 +849,19 @@
       const firstSchool = list[0].school || "";
       if (firstSchool) {
         currentAcademyName = firstSchool;
-        document.getElementById("page-title").textContent =
-          firstSchool + " 학생 목록";
+        // 학년/반 정보가 있으면 함께 표시 (예: 서울초등학교 4학년 7반 학생 목록)
+        let titleText = firstSchool;
+        let descText = firstSchool;
+        if (window.adminGrade || window.adminClassNum) {
+          const gradeClassText = [window.adminGrade, window.adminClassNum].filter(Boolean).join(" ");
+          if (gradeClassText) {
+            titleText = firstSchool + " " + gradeClassText;
+            descText = firstSchool + " " + gradeClassText;
+          }
+        }
+        document.getElementById("page-title").textContent = titleText + " 학생 목록";
         document.getElementById("page-desc").innerHTML =
-          "이 화면에는 <b>" + firstSchool + "</b>에 소속된 승인 학생만 표시됩니다.";
+          "이 화면에는 <b>" + descText + "</b>에 소속된 승인 학생만 표시됩니다.";
       }
 
       updateTopLinks();
@@ -905,13 +916,26 @@
           .replace(/'/g, "\\'")
           .replace(/"/g, "&quot;");
 
-        // 학습실 상태 계산 (슈퍼관리자와 동일)
-        let totalTasks = 0;
-        let completedTasks = 0;
-        if (u.studyRoom && u.studyRoom.assignedTasks) {
-          totalTasks = u.studyRoom.assignedTasks.length;
-          completedTasks = u.studyRoom.assignedTasks.filter(t => t.status === 'completed').length;
-        }
+        // 학습실 상태 계산 (LearningLog 기반 - 슈퍼관리자와 완전히 동일)
+        const assignedTasks = u.studyRoom?.assignedTasks || [];
+        const totalTasks = assignedTasks.length;
+        // completedUnits를 Set으로 변환 (빠른 조회)
+        const completedUnitsSet = new Set(u.completedUnits || []);
+
+        // 완료 개수 계산: AI 과제는 status, 일반 과제는 LearningLog 확인 (슈퍼관리자와 동일)
+        const completedTasks = assignedTasks.filter(t => {
+          if (t.isAI) {
+            // AI 과제는 status가 'completed'인 경우
+            return t.status === 'completed';
+          } else {
+            // 일반 과제는 LearningLog에서 확인
+            // unitId에서 단원 코드 추출: ./BRAINUP/science/bio_01.html → bio_01
+            const unitId = t.unitId || t.id || '';
+            const match = unitId.match(/([a-z_]+_\d+)\.html$/i) || unitId.match(/([a-z_]+_\d+)$/i);
+            const unitCode = match ? match[1] : unitId;
+            return completedUnitsSet.has(unitCode);
+          }
+        }).length;
         const pendingTasks = totalTasks - completedTasks;
 
         // 학습실 상태 표시 (완료/전체)
@@ -937,6 +961,7 @@
           </td>
           <td class="num-col center">${idx + 1}</td>
           <td class="center">${u.grade || ""}</td>
+          <td class="center">${u.classNum || ""}</td>
           <td class="center">
             <a class="btn-student"
                href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openStudyRoom=true"
@@ -1539,10 +1564,15 @@
     // ===== 학생 추가 모달 기능 =====
     function openAddStudentModal() {
       document.getElementById('add-student-modal').style.display = 'flex';
-      document.getElementById('add-grade').value = '';
       document.getElementById('add-name').value = '';
-      document.getElementById('add-phone').value = '';
-      document.getElementById('add-school').value = '';
+      document.getElementById('add-number').value = '';
+
+      // 학교/학년/반 정보 자동 표시
+      const school = currentAcademyName || '(학교 정보 없음)';
+      const grade = window.adminGrade || '';
+      const classNum = window.adminClassNum || '';
+      const infoText = [school, grade, classNum].filter(Boolean).join(' ');
+      document.getElementById('add-info-display').textContent = infoText || '학교/학년/반 정보를 불러오는 중...';
     }
 
     function closeAddStudentModal() {
@@ -1552,13 +1582,16 @@
     async function submitAddStudent(event) {
       event.preventDefault();
 
-      const grade = document.getElementById('add-grade').value.trim();
       const name = document.getElementById('add-name').value.trim();
-      const phone = document.getElementById('add-phone').value.trim();
-      const school = document.getElementById('add-school').value.trim();
+      const number = document.getElementById('add-number').value.trim();
 
-      if (!grade || !name || !phone) {
-        alert('학년, 이름, 전화번호는 필수 입력 항목입니다.');
+      // 학교/학년/반은 자동으로 가져옴
+      const school = currentAcademyName || '';
+      const grade = window.adminGrade || '';
+      const classNum = window.adminClassNum || '';
+
+      if (!name || !number) {
+        alert('이름과 번호는 필수 입력 항목입니다.');
         return;
       }
 
@@ -1566,7 +1599,7 @@
         const response = await fetch('/api/admin/branch/add-student', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ grade, name, phone, school })
+          body: JSON.stringify({ grade, name, school, number, classNum })
         });
 
         const result = await response.json();
@@ -1574,7 +1607,7 @@
         if (result.success) {
           alert('학생이 추가되었습니다.');
           closeAddStudentModal();
-          loadUsers(); // 목록 새로고침
+          fetchBranchStudents(); // 목록 새로고침
         } else {
           alert(result.message || '학생 추가에 실패했습니다.');
         }

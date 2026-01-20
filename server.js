@@ -162,9 +162,9 @@ app.get("/student-login", (req, res) => {
 });
 
 
-// ✅ 1) 메인(/) = 학생 로그인 페이지
+// ✅ 1) 메인(/) = 랜딩 페이지
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "student-main.html"));
+  res.sendFile(path.join(__dirname, "public", "brain_landing.html"));
 });
 
 // ✅ 1-2) /login = 로그인 페이지 (쿼리 유지)
@@ -184,13 +184,37 @@ app.get("/menu", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "menu.html"));
 });
 
+// ✅ 등록된 학교 목록 조회 API (로그인/회원가입용)
+app.get("/api/schools", async (req, res) => {
+  try {
+    // Admin 테이블에서 academyName 목록 가져오기
+    const adminSchools = await Admin.find({ deleted: { $ne: true } }).distinct("academyName");
+
+    // User 테이블에서 school 목록 가져오기
+    const userSchools = await User.find({ deleted: { $ne: true } }).distinct("school");
+
+    // 두 목록 합치기 (중복 제거)
+    const allSchools = [...new Set([...adminSchools, ...userSchools])];
+
+    // 빈 값 제거 및 정렬
+    const schools = allSchools
+      .filter(name => name && name.trim() && name !== "어드민")
+      .sort((a, b) => a.localeCompare(b, "ko"));
+
+    res.json({ ok: true, schools });
+  } catch (err) {
+    console.error("❌ /api/schools 에러:", err);
+    res.json({ ok: false, schools: [] });
+  }
+});
+
 // ✅ 학생 회원가입 처리
 // ✅ 학생 회원가입 처리
 app.post("/register", async (req, res) => {
   try {
-    const { grade, name, phone, academyName } = req.body;
+    const { grade, classNum, studentNum, name, phone, academyName } = req.body;
 
-    console.log("📩 [POST] /register 요청:", grade, name, phone, academyName);
+    console.log("📩 [POST] /register 요청:", grade, classNum, studentNum, name, phone, academyName);
 
     // 1) 필수값 체크
     if (!grade || !name || !phone || !academyName) {
@@ -216,6 +240,8 @@ return res.redirect("/?loginError=pending");
     // 3) 새 학생 생성
     const created = await User.create({
       grade,
+      classNum: classNum || "",      // 🔹 반 저장
+      studentNum: studentNum || "",  // 🔹 번호 저장
       name,
       phone: cleanPhone,
       pw: cleanPhone,        // 🔥 로그인에서 쓰는 비밀번호 필드
@@ -230,7 +256,7 @@ return res.redirect("/?loginError=pending");
     // 4) 회원가입 후 이동
     //  - 지금 구조에서는 '승인 대기' 안내를 보여주는 게 자연스러우니까
     //    /login 으로 보내면서 pending 팝업 띄우도록 함
-return res.redirect("/student-main.html?signup=pending");
+return res.redirect("/brain_landing.html?signup=pending");
     // 또는 메인에서만 쓰고 싶으면:
     // return res.redirect("/?mode=login");
   } catch (err) {
@@ -285,6 +311,8 @@ if (!fs.existsSync(USERS_FILE)) {
 // ===== 학생/일반 User 스키마 =====
 const userSchema = new mongoose.Schema({
   grade: String,
+  classNum: String,      // 🔹 반 (예: "1반", "2반")
+  studentNum: String,    // 🔹 번호 (예: "15", "03")
   name: String,
   phone: String,
   id: String,
@@ -312,10 +340,15 @@ const User = mongoose.model("User", userSchema);
 const adminSchema = new mongoose.Schema({
   academyName: { type: String, required: true }, // 학원명/지점명
 
-  // 직책: 자유 입력
-  role: {
+  // 학년
+  grade: {
     type: String,
-    default: "원장",
+    default: "",
+  },
+  // 반
+  classNum: {
+    type: String,
+    default: "",
   },
 
   name:  { type: String, required: true }, // 성함
@@ -1144,13 +1177,29 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
     }
 
     const academyName = admin.academyName;
+    const adminGrade = admin.grade;      // 선생님 학년
+    const adminClassNum = admin.classNum; // 선생님 반
     const { q, status, sort } = req.query; // 검색어 + 상태 필터(옵션) + 정렬
+
+    console.log("🔍 [/api/branch/users] 필터 조건:", {
+      academyName,
+      adminGrade,
+      adminClassNum
+    });
 
     // 기본 필터: 내 학원 + 휴지 아님
     const filter = {
       school: academyName,
       deleted: { $ne: true },
     };
+
+    // ✅ 학년/반 필터 활성화 (선생님이 담당하는 학년/반만 표시)
+    if (adminGrade) {
+      filter.grade = adminGrade;
+    }
+    if (adminClassNum) {
+      filter.classNum = adminClassNum;
+    }
 
     // 👉 필요하면 특정 상태만 보고 싶을 때 쿼리로 status=approved / pending 넘길 수 있음
     if (status === "approved" || status === "pending") {
@@ -1192,21 +1241,80 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
         sortOption = { lastLogin: -1, name: 1 };
     }
 
-    let users = await User.find(filter)
-      .sort(sortOption)
-      .lean();
+    // 세 쿼리를 병렬로 실행 (슈퍼관리자와 동일한 방식)
+    const [usersResult, allProgress, allLearningLogs] = await Promise.all([
+      User.find(filter).sort(sortOption).lean(),
+      UserProgress.find({}, { grade: 1, name: 1, school: 1, 'studyRoom.autoTaskSchedules': 1, 'studyRoom.assignedTasks': 1 }).lean(),
+      LearningLog.find({ completed: true, deleted: { $ne: true } }, { grade: 1, name: 1, unit: 1, school: 1 }).lean()
+    ]);
+    let users = usersResult;
 
-    // 각 user에 대해 UserProgress 데이터 병합 (자동과제 스케줄 포함)
+    // UserProgress를 Map으로 변환
+    const progressMap = new Map();
+    for (const p of allProgress) {
+      progressMap.set(`${p.grade}|${p.name}`, p);
+    }
+
+    // LearningLog를 Map<학생키, Set<완료된 단원>>으로 변환
+    // 학년|이름 키와 학교|이름 키 두 가지로 매핑 (복구된 학생도 매칭되도록)
+    const completedUnitsMap = new Map();
+    const completedUnitsMapBySchoolName = new Map(); // 학교|이름 기준 폴백용
+    for (const log of allLearningLogs) {
+      const key = `${log.grade}|${log.name}`;
+      if (!completedUnitsMap.has(key)) {
+        completedUnitsMap.set(key, new Set());
+      }
+      completedUnitsMap.get(key).add(log.unit);
+
+      // 학교|이름 기준으로도 매핑 (폴백용)
+      if (log.school) {
+        const schoolKey = `${log.school}|${log.name}`;
+        if (!completedUnitsMapBySchoolName.has(schoolKey)) {
+          completedUnitsMapBySchoolName.set(schoolKey, new Set());
+        }
+        completedUnitsMapBySchoolName.get(schoolKey).add(log.unit);
+      }
+    }
+
+    // 이름만으로 매핑 (최후의 폴백)
+    const completedUnitsMapByName = new Map();
+    for (const log of allLearningLogs) {
+      if (!completedUnitsMapByName.has(log.name)) {
+        completedUnitsMapByName.set(log.name, new Set());
+      }
+      completedUnitsMapByName.get(log.name).add(log.unit);
+    }
+
+    // 각 user에 대해 UserProgress 데이터 병합 (메모리에서 매핑)
     for (let i = 0; i < users.length; i++) {
       const user = users[i];
-      const progress = await UserProgress.findOne({
-        grade: user.grade,
-        name: user.name
-      }).lean();
-
+      // UserProgress 매칭 (학년|이름 우선, 학교|이름 폴백, 이름만 최후 폴백)
+      let progress = progressMap.get(`${user.grade}|${user.name}`);
+      if (!progress && user.school) {
+        // 학교|이름으로 시도
+        for (const [key, p] of progressMap) {
+          if (key.endsWith(`|${user.name}`) && p.school === user.school) {
+            progress = p;
+            break;
+          }
+        }
+      }
       if (progress && progress.studyRoom) {
         users[i].studyRoom = progress.studyRoom;
       }
+
+      // 완료된 단원 Set을 배열로 변환하여 추가
+      // 1. 학년|이름으로 먼저 시도
+      let completedUnitsSet = completedUnitsMap.get(`${user.grade}|${user.name}`);
+      // 2. 학교|이름으로 폴백
+      if ((!completedUnitsSet || completedUnitsSet.size === 0) && user.school) {
+        completedUnitsSet = completedUnitsMapBySchoolName.get(`${user.school}|${user.name}`);
+      }
+      // 3. 이름만으로 최후 폴백 (같은 학교 내에서 이름이 유일할 때만 적용)
+      if ((!completedUnitsSet || completedUnitsSet.size === 0)) {
+        completedUnitsSet = completedUnitsMapByName.get(user.name);
+      }
+      users[i].completedUnits = Array.from(completedUnitsSet || new Set());
     }
 
     // 승인대기 학생을 항상 맨 위로 정렬
@@ -1221,6 +1329,8 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
     return res.json({
       ok: true,
       academyName,
+      adminGrade: adminGrade || "",
+      adminClassNum: adminClassNum || "",
       count: users.length,
       students: users,
       users,
@@ -1325,18 +1435,18 @@ app.get("/admin-signup", (req, res) => {
 /// 관리자 회원가입 처리 (POST)
 app.post("/admin-signup", async (req, res) => {
   try {
-    const { academyName, role, name, birth, phone } = req.body;
+    const { academyName, grade, classNum, name, birth, phone } = req.body;
     console.log("📥 [POST] /admin-signup:", req.body);
 
     // 필수값 체크
-    if (!academyName || !role || !name || !birth || !phone) {
+    if (!academyName || !grade || !classNum || !name || !birth || !phone) {
       return res.status(400).send("필수 정보가 부족합니다.");
     }
 
-    // 간단 중복 체크: 같은 학원명 + 이름 + 전화번호
-    const exists = await Admin.findOne({ academyName, name, phone });
+    // 간단 중복 체크: 같은 학원명 + 학년 + 반 + 이름 + 전화번호
+    const exists = await Admin.findOne({ academyName, grade, classNum, name, phone });
     if (exists) {
-      console.log("⛔ 이미 존재하는 관리자:", academyName, name, phone);
+      console.log("⛔ 이미 존재하는 관리자:", academyName, grade, classNum, name, phone);
       return res.redirect("/admin-login");
     }
 
@@ -1358,7 +1468,8 @@ app.post("/admin-signup", async (req, res) => {
     // 관리자 계정 생성
     await Admin.create({
       academyName,
-      role,
+      grade,
+      classNum,
       name,
       birth,
       phone,
@@ -1382,28 +1493,27 @@ app.post("/admin-signup", async (req, res) => {
 // 관리자 로그인 처리 (POST)
 app.post("/admin-login", async (req, res) => {
   try {
-    const { academyName, name, birth, phone } = req.body;
+    const { academyName, grade, classNum, name, birth, phone } = req.body;
     console.log("📥 [POST] /admin-login:", req.body);
 
-    // DB에서 관리자 찾기
-    const admin = await Admin.findOne({
-      academyName,
-      name,
-      birth,
-      phone,
-    });
-
-    if (!admin) {
-      console.log("❌ 관리자 로그인 실패: 일치하는 계정 없음");
-      return res.redirect("/admin-login?error=invalid");
-    }
-
-    // 🔥 이 로그인 시도가 '슈퍼관리자'인지 여부를 직접 계산
+    // 🔥 슈퍼관리자 로그인 시도 여부 확인 (grade/classNum 없이도 로그인 가능)
     const isSuperLogin =
       academyName === "어드민" &&
       name === "어드민" &&
       birth === "830911" &&
       phone === "01012341234";
+
+    // DB에서 관리자 찾기 (슈퍼관리자는 grade/classNum 없이 검색)
+    const query = isSuperLogin
+      ? { academyName, name, birth, phone }
+      : { academyName, grade, classNum, name, birth, phone };
+
+    const admin = await Admin.findOne(query);
+
+    if (!admin) {
+      console.log("❌ 관리자 로그인 실패: 일치하는 계정 없음");
+      return res.redirect("/admin-login?error=invalid");
+    }
 
     // 🔒 슈퍼관리자가 아닌데 승인 대기면 로그인 막기
     if (!isSuperLogin && admin.status === "pending") {
@@ -1421,6 +1531,8 @@ app.post("/admin-login", async (req, res) => {
       academyName: admin.academyName,
       name: admin.name,
       role: admin.role,
+      grade: admin.grade || "",       // ✅ 선생님 학년 추가
+      classNum: admin.classNum || "", // ✅ 선생님 반 추가
       isSuper: isSuperLogin,   // ✅ 여기!
     };
 
@@ -1685,7 +1797,8 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
                 <th>#</th>
                 <th>학교명</th>
                 <th>이름</th>
-                <th>직책</th>
+                <th>학년</th>
+                <th>반</th>
                 <th>전화번호(ID)</th>
                 <th>생년월일</th>
                 <th>권한</th>
@@ -1953,7 +2066,8 @@ app.post("/super/admin-edit", requireSuperAdmin, async (req, res) => {
           <td>${idx + 1}</td>
           <td>${a.academyName || ""}</td>
           <td>${a.name || ""}</td>
-          <td>${a.role || ""}</td>
+          <td>${a.grade || ""}</td>
+          <td>${a.classNum || ""}</td>
           <td>${a.phone || ""}</td>
           <td>${a.birth || "-"}</td>
           <td>
@@ -2053,47 +2167,65 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
     const users = await User.find({ deleted: { $ne: true } }).lean();
     const admins = await Admin.find({ deleted: { $ne: true } }).lean();
 
-    // 2) 학원/지점별로 묶기
+    // 2) 학원/지점 + 반별로 묶기
     const branchMap = {};
 
-    // 관리자 기준(학원명)
+    // 관리자 기준(학원명) - 관리자는 반 정보가 없으므로 학교 단위로만 카운트
+    const adminCountBySchool = {};
     admins.forEach((a) => {
       const name = a.academyName || "학원명 미입력";
-      if (!branchMap[name]) {
-        branchMap[name] = {
-          academyName: name,
-          adminCount: 0,
-          studentCount: 0,
-          approvedCount: 0,
-          pendingCount: 0,
-        };
-      }
-      branchMap[name].adminCount += 1;
+      adminCountBySchool[name] = (adminCountBySchool[name] || 0) + 1;
     });
 
-    // 학생 기준(학교명)
+    // 학생 기준(학교명 + 학년 + 반)
     users.forEach((u) => {
-      const name = u.school || "학원명 미입력";
-      if (!branchMap[name]) {
-        branchMap[name] = {
-          academyName: name,
-          adminCount: 0,
+      const school = u.school || "학원명 미입력";
+      const grade = u.grade || "학년 미입력";
+      const classNum = u.classNum || "반 미입력";
+      const key = `${school}___${grade}___${classNum}`; // 학교+학년+반을 키로 사용
+
+      if (!branchMap[key]) {
+        branchMap[key] = {
+          academyName: school,
+          grade: grade,
+          classNum: classNum,
+          adminCount: 0, // 나중에 학교별로 분배
           studentCount: 0,
           approvedCount: 0,
           pendingCount: 0,
         };
       }
-      branchMap[name].studentCount += 1;
+      branchMap[key].studentCount += 1;
       if (u.status === "approved") {
-        branchMap[name].approvedCount += 1;
+        branchMap[key].approvedCount += 1;
       } else {
-        branchMap[name].pendingCount += 1;
+        branchMap[key].pendingCount += 1;
       }
     });
 
-    const branches = Object.values(branchMap).sort((a, b) =>
-      a.academyName.localeCompare(b.academyName, "ko")
-    );
+    // 관리자 수를 각 학교의 첫 번째 반에만 표시 (또는 모든 반에 동일하게)
+    const schoolFirstRow = {};
+    Object.keys(branchMap).forEach(key => {
+      const school = branchMap[key].academyName;
+      if (!schoolFirstRow[school]) {
+        schoolFirstRow[school] = key;
+        branchMap[key].adminCount = adminCountBySchool[school] || 0;
+      }
+    });
+
+    const branches = Object.values(branchMap).sort((a, b) => {
+      // 먼저 학교명으로 정렬
+      const schoolCompare = a.academyName.localeCompare(b.academyName, "ko");
+      if (schoolCompare !== 0) return schoolCompare;
+      // 같은 학교면 학년으로 정렬 (숫자 추출해서 비교)
+      const aGradeNum = parseInt(a.grade) || 999;
+      const bGradeNum = parseInt(b.grade) || 999;
+      if (aGradeNum !== bGradeNum) return aGradeNum - bGradeNum;
+      // 같은 학년이면 반으로 정렬 (숫자 추출해서 비교)
+      const aClassNum = parseInt(a.classNum) || 999;
+      const bClassNum = parseInt(b.classNum) || 999;
+      return aClassNum - bClassNum;
+    });
 
     // 🔑 슈퍼관리자용 링크에 쓸 key는 서버에서 직접 넣어줌
     const key = ADMIN_KEY;
@@ -2291,16 +2423,72 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
             padding: 12px 10px;
           }
         }
+
+        /* 검색 영역 스타일 */
+        .search-box {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 20px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .search-input {
+          flex: 1;
+          min-width: 200px;
+          max-width: 400px;
+          padding: 12px 16px;
+          border: 2px solid #dee2e6;
+          border-radius: 12px;
+          font-size: 14px;
+          outline: none;
+          transition: all 0.3s ease;
+        }
+        .search-input:focus {
+          border-color: #495057;
+          box-shadow: 0 0 0 3px rgba(73, 80, 87, 0.1);
+        }
+        .search-input::placeholder {
+          color: #adb5bd;
+        }
+        .search-result-info {
+          font-size: 13px;
+          color: #6c757d;
+        }
+        .search-result-info strong {
+          color: #495057;
+        }
+        .btn-reset {
+          padding: 10px 16px;
+          border: 2px solid #dee2e6;
+          border-radius: 12px;
+          background: white;
+          color: #495057;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .btn-reset:hover {
+          background: #f8f9fa;
+          border-color: #adb5bd;
+        }
+        .highlight {
+          background-color: #fff3cd;
+          padding: 0 2px;
+          border-radius: 2px;
+        }
+        tr.hidden-row {
+          display: none;
+        }
       </style>
     </head>
     <body>
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>학교 목록</h1>
+            <h1>학교/학년/반 목록</h1>
             <p class="desc">
-              등록된 학교별로 선생님 수와 학생 수를 한눈에 확인합니다.<br/>
-              학교를 클릭하면 해당 학교에 소속된 학생 목록만 따로 볼 수 있습니다.
+              등록된 학교/학년/학급 리스트를 보고, 학교/학년/학급을 선택하면 해당 학교/학년/학급 학생들만 따로 볼 수 있습니다.
             </p>
           </div>
           <div>
@@ -2309,9 +2497,14 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
           </div>
         </div>
 
-        <p class="info-line">
-          총 <strong>${branches.length}</strong>개의 학교가 있습니다.
-        </p>
+        <!-- 검색 영역 -->
+        <div class="search-box">
+          <input type="text" class="search-input" id="schoolSearch" placeholder="🔍 학교명으로 검색..." autocomplete="off" />
+          <button type="button" class="btn-reset" id="resetSearch">초기화</button>
+          <span class="search-result-info" id="searchResultInfo">
+            총 <strong>${branches.length}</strong>개의 학교/학년/학급
+          </span>
+        </div>
 
         <div class="table-wrap">
           <table>
@@ -2319,6 +2512,8 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
               <tr>
                 <th>#</th>
                 <th>학교명</th>
+                <th>학년</th>
+                <th>반</th>
                 <th>선생님 수</th>
                 <th>학생 수</th>
                 <th>승인 학생</th>
@@ -2329,13 +2524,15 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
             <tbody>
     `;
 
-     // 🔹 각 지점 한 줄씩 출력
+     // 🔹 각 지점+학년+반 한 줄씩 출력
     branches.forEach((b, idx) => {
       html += `
-        <tr>
-          <td>${idx + 1}</td>
-          <td>${b.academyName}</td>
-          <td>${b.adminCount}</td>
+        <tr data-school="${b.academyName}" data-grade="${b.grade}" data-class="${b.classNum}" data-idx="${idx + 1}">
+          <td class="row-num">${idx + 1}</td>
+          <td class="school-name">${b.academyName}</td>
+          <td>${b.grade}</td>
+          <td>${b.classNum}</td>
+          <td>${b.adminCount || '-'}</td>
           <td>${b.studentCount}</td>
           <td>${b.approvedCount}</td>
           <td>${b.pendingCount}</td>
@@ -2343,7 +2540,7 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
             <a class="btn-primary"
                href="/super/branch-users?academyName=${encodeURIComponent(
                  b.academyName
-               )}">
+               )}&grade=${encodeURIComponent(b.grade)}&classNum=${encodeURIComponent(b.classNum)}">
               학생 목록 보기
             </a>
             <a class="btn-branch-del"
@@ -2351,7 +2548,7 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
                  b.academyName
                )}"
                onclick="return confirm('이 지점의 관리자와 학생을 모두 휴지 상태로 보낼까요?\\n[${b.academyName}]');">
-              지점 삭제
+              학급 삭제
             </a>
           </td>
         </tr>
@@ -2363,6 +2560,82 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
           </table>
         </div>
       </div>
+
+      <script>
+        // 학교 검색 기능
+        const searchInput = document.getElementById('schoolSearch');
+        const resetBtn = document.getElementById('resetSearch');
+        const resultInfo = document.getElementById('searchResultInfo');
+        const tbody = document.querySelector('tbody');
+        const allRows = tbody.querySelectorAll('tr');
+        const totalCount = ${branches.length};
+
+        // 원본 학교명 저장
+        allRows.forEach(row => {
+          const schoolCell = row.querySelector('.school-name');
+          if (schoolCell) {
+            row.dataset.originalSchool = schoolCell.textContent;
+          }
+        });
+
+        function doSearch() {
+          const keyword = searchInput.value.trim().toLowerCase();
+          let visibleCount = 0;
+          let num = 0;
+
+          allRows.forEach(row => {
+            const schoolName = row.dataset.school || '';
+            const schoolCell = row.querySelector('.school-name');
+            const numCell = row.querySelector('.row-num');
+
+            // 원본 복원
+            if (row.dataset.originalSchool) {
+              schoolCell.textContent = row.dataset.originalSchool;
+            }
+
+            if (!keyword || schoolName.toLowerCase().includes(keyword)) {
+              row.classList.remove('hidden-row');
+              visibleCount++;
+              num++;
+              // 번호 재정렬
+              if (numCell) numCell.textContent = num;
+              // 하이라이트
+              if (keyword && schoolCell) {
+                const original = row.dataset.originalSchool;
+                const escaped = keyword.replace(/[-\\/\\\\^$*+?.()|[\\]{}]/g, String.fromCharCode(92) + String.fromCharCode(36) + '&');
+                const regex = new RegExp('(' + escaped + ')', 'gi');
+                schoolCell.innerHTML = original.replace(regex, '<span class="highlight">' + String.fromCharCode(36) + '1</span>');
+              }
+            } else {
+              row.classList.add('hidden-row');
+            }
+          });
+
+          // 검색 결과 정보 업데이트
+          if (keyword) {
+            resultInfo.innerHTML = '검색 결과: <strong>' + visibleCount + '</strong>개 (전체 ' + totalCount + '개)';
+          } else {
+            resultInfo.innerHTML = '총 <strong>' + totalCount + '</strong>개의 학교/학년/학급';
+          }
+        }
+
+        // 검색 이벤트
+        searchInput.addEventListener('input', doSearch);
+
+        // 초기화 버튼
+        resetBtn.addEventListener('click', function() {
+          searchInput.value = '';
+          doSearch();
+          searchInput.focus();
+        });
+
+        // Enter 키 방지
+        searchInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+          }
+        });
+      </script>
     </body>
     </html>
     `;
@@ -2713,17 +2986,26 @@ app.get("/super/branch-trash-delete", requireSuperAdmin, async (req, res) => {
 
 // 🔹 특정 학원/지점 학생 목록 (슈퍼관리자 모드에서 보기)
 app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
-  const { academyName } = req.query;
+  const { academyName, grade, classNum } = req.query;
   if (!academyName) {
     return res.status(400).send("academyName 파라미터가 필요합니다.");
   }
 
   try {
-    const users = await User.find({
+    // 쿼리 조건 생성 - grade, classNum이 있으면 학년/반별로 필터링
+    const query = {
       deleted: { $ne: true },
       school: academyName,
-    })
-      .sort({ grade: 1, name: 1 })
+    };
+    if (grade) {
+      query.grade = grade;
+    }
+    if (classNum) {
+      query.classNum = classNum;
+    }
+
+    const users = await User.find(query)
+      .sort({ grade: 1, classNum: 1, studentNum: 1, name: 1 })
       .lean();
 
     const key = ADMIN_KEY; // 🔑 여기서도 서버가 직접 넣어줌
@@ -2740,12 +3022,16 @@ app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
     // 그 부분만 반영해서 붙여 넣으면 돼.
 
 
+    // 학년과 반 정보로 제목 생성
+    const gradeClassText = [grade, classNum].filter(Boolean).join(' ');
+    const pageTitle = gradeClassText ? `${academyName} ${gradeClassText} 학생 목록` : `${academyName} 학생 목록`;
+
     let html = `
     <!DOCTYPE html>
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>${academyName} 학생 목록</title>
+      <title>${pageTitle}</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
         :root {
@@ -2970,12 +3256,12 @@ app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>${academyName} 학생 목록</h1>
-            <p class="desc">이 화면에는 ${academyName}에 소속된 학생만 표시됩니다.</p>
+            <h1>${pageTitle}</h1>
+            <p class="desc">이 화면에는 ${gradeClassText ? `${academyName} ${gradeClassText}` : academyName}에 소속된 학생만 표시됩니다.</p>
           </div>
           <a href="/super/branches?key=${encodeURIComponent(
             key
-          )}" class="btn-back">← 학원/지점 목록으로</a>
+          )}" class="btn-back">← 학교/학년/반 목록으로</a>
         </div>
 
         <div class="toolbar">
@@ -2990,11 +3276,12 @@ app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
               <tr>
                 <th>#</th>
                 <th>학년</th>
+                <th>반</th>
+                <th>번호</th>
                 <th>이름</th>
-                <th>학원명</th>
-                <th>전화번호(ID)</th>
+                <th>학교명</th>
+                <th>학년반번호(ID)</th>
                 <th>상태</th>
-                <th>학습 이력</th>
                 <th>수정</th>
                 <th>휴지통</th>
               </tr>
@@ -3032,22 +3319,14 @@ app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
         <tr>
           <td>${idx + 1}</td>
           <td>${u.grade || ""}</td>
+          <td>${u.classNum || ""}</td>
+          <td>${u.studentNum || ""}</td>
           <td>${u.name || ""}</td>
           <td>${u.school || ""}</td>
           <td>${idOrPhone}</td>
           <td>
             <span class="badge ${statusClass}">${statusLabel}</span>
             ${approveLink}
-          </td>
-          <td>
-            <a class="link"
-               href="/admin/logs?key=${encodeURIComponent(
-                 key
-               )}&grade=${encodeURIComponent(
-        u.grade || ""
-      )}&name=${encodeURIComponent(u.name || "")}">
-              학습 이력 보기
-            </a>
           </td>
           <td>
             <a class="link"
@@ -3262,6 +3541,16 @@ app.get("/admin/user-edit", async (req, res) => {
         </div>
 
         <div class="row">
+          <label>반</label>
+          <input type="text" name="classNum" value="${user.classNum || ""}" />
+        </div>
+
+        <div class="row">
+          <label>번호</label>
+          <input type="text" name="studentNum" value="${user.studentNum || ""}" />
+        </div>
+
+        <div class="row">
           <label>학교</label>
           <input type="text" name="school" value="${user.school || ""}" />
         </div>
@@ -3272,7 +3561,7 @@ app.get("/admin/user-edit", async (req, res) => {
         </div>
 
         <div class="row">
-          <label>전화번호(ID)</label>
+          <label>학년반번호(ID)</label>
           <input type="text" name="phone" value="${user.phone || ""}" />
         </div>
 
@@ -3297,6 +3586,8 @@ app.post("/admin/user-edit", async (req, res) => {
     originalId,
     key,
     grade,
+    classNum,
+    studentNum,
     school,
     name,
     phone,
@@ -3331,6 +3622,8 @@ app.post("/admin/user-edit", async (req, res) => {
 
     // 필드 업데이트
     user.grade = newGrade;
+    user.classNum = classNum || "";
+    user.studentNum = studentNum || "";
     user.school = school || "";
     user.name = newName;
     user.phone = phone || "";
@@ -4431,7 +4724,7 @@ app.get("/admin/users", async (req, res) => {
               type="text"
               name="q"
               class="search-input"
-              placeholder="이름, 학교, 학년, 전화번호 검색"
+              placeholder="이름, 학교, 학년 검색"
               value="${q ? q : ""}"
             />
             <select name="sort" class="search-select">
@@ -4535,9 +4828,11 @@ app.get("/admin/users", async (req, res) => {
                 </th>
                 <th>#</th>
                 <th>학년</th>
+                <th>반</th>
+                <th>번호</th>
                 <th>이름</th>
                 <th>학교명</th>
-                <th>전화번호(ID)</th>
+                <th>학년반번호(ID)</th>
                 <th>상태</th>
                 <th>시리즈 부여</th>
                 <th style="cursor: pointer;" onclick="sortByPendingTasks()" title="클릭하면 미완료 과제순으로 정렬">
@@ -4546,7 +4841,6 @@ app.get("/admin/users", async (req, res) => {
                 </th>
                 <th>과제 알림<br><span style="font-size: 10px; color: #888; font-weight: normal;">(개인별 발송)</span></th>
                 <th>자동과제 스케줄</th>
-                <th>학습 이력</th>
                 <th>수정</th>
               </tr>
             </thead>
@@ -4613,6 +4907,8 @@ app.get("/admin/users", async (req, res) => {
           </td>
           <td>${idx + 1}</td>
           <td>${u.grade || ""}</td>
+          <td>${u.classNum || ""}</td>
+          <td>${u.studentNum || ""}</td>
           <td>
             <a class="btn-action btn-student"
                href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}"
@@ -4659,16 +4955,6 @@ app.get("/admin/users", async (req, res) => {
             <div id="schedule-${idOrPhone}" class="auto-schedule-cell">
               ${renderSchedules(u.studyRoom?.autoTaskSchedules || [], u.grade || '', u.name || '')}
             </div>
-          </td>
-          <td>
-            <a class="btn-action btn-history"
-               href="/my-learning?grade=${encodeURIComponent(
-        u.grade || ""
-      )}&name=${encodeURIComponent(u.name || "")}&series=up"
-               target="_blank"
-               title="종합리포트 (나의 학습분석)">
-              📊 종합리포트
-            </a>
           </td>
           <td>
             <a class="btn-action btn-edit"
@@ -5888,7 +6174,7 @@ app.get("/admin/users-export", async (req, res) => {
         "학년",
         "학교",
         "이름",
-        "전화번호(ID)",
+        "학년반번호(ID)",
         "상태",
         "마지막 로그인",
       ]
@@ -17139,9 +17425,9 @@ app.get("/admin/trash", async (req, res) => {
           <tr>
             <th>#</th>
             <th>학년</th>
-            <th>학원명</th>
+            <th>학교명</th>
             <th>이름</th>
-            <th>전화번호(ID)</th>
+            <th>학년반번호(ID)</th>
             <th>휴지로 보낸 시각</th>
             <th>복구</th>
             <th>완전 삭제</th>
@@ -21233,7 +21519,9 @@ app.get("/api/admin/info", async (req, res) => {
     res.json({
       success: true,
       academyName: req.session.admin.academyName || "",
-      adminId: req.session.admin.adminId || ""
+      adminId: req.session.admin.adminId || "",
+      grade: req.session.admin.grade || "",
+      classNum: req.session.admin.classNum || ""
     });
   } catch (error) {
     console.error("관리자 정보 조회 오류:", error);
@@ -21249,35 +21537,49 @@ app.post("/api/admin/branch/add-student", async (req, res) => {
       return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
     }
 
-    const { grade, name, phone, school } = req.body;
+    const { grade, name, school, number, classNum } = req.body;
 
-    if (!grade || !name || !phone) {
-      return res.status(400).json({ success: false, message: "학년, 이름, 전화번호는 필수입니다." });
+    if (!name || !number) {
+      return res.status(400).json({ success: false, message: "이름과 번호는 필수입니다." });
     }
+
+    // 관리자의 학교/학년/반 정보 사용
+    const academyName = req.session.admin.academyName;
+    const adminGrade = req.session.admin.grade || grade || "";
+    const adminClassNum = req.session.admin.classNum || classNum || "";
+
+    // 전화번호(ID) 자동 생성: 학년+반+번호 조합 (예: 4학년7반15번 → 040715)
+    // 학년에서 숫자 추출
+    const gradeNum = (adminGrade || "").replace(/[^0-9]/g, "").padStart(2, "0");
+    // 반에서 숫자 추출
+    const classNumDigit = (adminClassNum || "").replace(/[^0-9]/g, "").padStart(2, "0");
+    // 번호 패딩
+    const studentNum = String(number).padStart(2, "0");
+    // 자동 생성 ID
+    const autoPhone = gradeNum + classNumDigit + studentNum;
 
     // 이미 존재하는 전화번호인지 확인
-    const existingUser = await User.findOne({ phone: phone.trim() });
+    const existingUser = await User.findOne({ phone: autoPhone });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "이미 등록된 전화번호입니다." });
+      return res.status(400).json({ success: false, message: "이미 등록된 번호입니다. (ID: " + autoPhone + ")" });
     }
-
-    // 관리자의 학교명을 기본값으로 사용
-    const academyName = req.session.admin.academyName;
 
     // 새 학생 생성
     const newUser = new User({
-      grade: grade.trim(),
+      grade: adminGrade,
       name: name.trim(),
-      phone: phone.trim(),
+      phone: autoPhone,
       school: school ? school.trim() : academyName,
+      classNum: adminClassNum,
+      number: number.trim(),
       status: "approved",
       createdAt: new Date()
     });
 
     await newUser.save();
-    console.log("✅ 학생 추가 완료:", newUser.name, newUser.phone);
+    console.log("✅ 학생 추가 완료:", newUser.name, "ID:", autoPhone);
 
-    res.json({ success: true, message: "학생이 추가되었습니다.", data: newUser });
+    res.json({ success: true, message: "학생이 추가되었습니다. (ID: " + autoPhone + ")", data: newUser });
   } catch (error) {
     console.error("학생 추가 오류:", error);
     res.status(500).json({ success: false, message: "학생 추가 중 오류가 발생했습니다." });
