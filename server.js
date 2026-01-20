@@ -1197,7 +1197,8 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
     if (adminGrade) {
       filter.grade = adminGrade;
     }
-    if (adminClassNum) {
+    // ✅ "전체" 반 선택 시 반 필터링 건너뛰기 (해당 학교 전체 학생 표시)
+    if (adminClassNum && adminClassNum !== "전체") {
       filter.classNum = adminClassNum;
     }
 
