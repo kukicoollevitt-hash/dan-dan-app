@@ -806,7 +806,7 @@
       </div>
 
       <div class="filter-section">
-        <select id="consultSearchGrade">
+        <select id="consultSearchGrade" onchange="filterConsultations()">
           <option value="">전체 학년</option>
           <option value="초4">초4</option>
           <option value="초5">초5</option>
@@ -818,14 +818,13 @@
           <option value="고2">고2</option>
           <option value="고3">고3</option>
         </select>
-        <input type="text" id="consultSearchName" placeholder="이름 검색">
-        <select id="consultSearchStatus">
+        <input type="text" id="consultSearchName" placeholder="이름 검색" oninput="filterConsultations()">
+        <select id="consultSearchStatus" onchange="filterConsultations()">
           <option value="">전체 상태</option>
           <option value="pending">대기</option>
           <option value="contacted">연락완료</option>
           <option value="completed">상담완료</option>
         </select>
-        <button class="search-btn" onclick="loadConsultations()">검색</button>
       </div>
 
       <!-- 상담 일괄 처리 버튼 -->
@@ -868,7 +867,7 @@
       </div>
 
       <div class="filter-section">
-        <select id="userSearchGrade">
+        <select id="userSearchGrade" onchange="filterUsers()">
           <option value="">전체 학년</option>
           <option value="중1">중1</option>
           <option value="중2">중2</option>
@@ -878,9 +877,8 @@
           <option value="고3">고3</option>
           <option value="N수">N수</option>
         </select>
-        <input type="text" id="userSearchSchool" placeholder="학교명 검색">
-        <input type="text" id="userSearchName" placeholder="이름 검색">
-        <button class="search-btn" onclick="loadUsers()">검색</button>
+        <input type="text" id="userSearchSchool" placeholder="학교명 검색" oninput="filterUsers()">
+        <input type="text" id="userSearchName" placeholder="이름 검색" oninput="filterUsers()">
         <button class="add-btn" onclick="openAddUserModal()">+ 회원 추가</button>
       </div>
 
@@ -928,14 +926,14 @@
       </div>
 
       <div class="filter-section">
-        <select id="searchRound">
+        <select id="searchRound" onchange="filterResults()">
           <option value="">전체 회차</option>
           <option value="korean_mock_1">1회</option>
           <option value="korean_mock_2">2회</option>
           <option value="korean_mock_3">3회</option>
         </select>
-        <input type="text" id="searchSchool" placeholder="학교명 검색">
-        <select id="searchGrade">
+        <input type="text" id="searchSchool" placeholder="학교명 검색" oninput="filterResults()">
+        <select id="searchGrade" onchange="filterResults()">
           <option value="">전체 학년</option>
           <option value="초4">초4</option>
           <option value="초5">초5</option>
@@ -947,8 +945,7 @@
           <option value="고2">고2</option>
           <option value="고3">고3</option>
         </select>
-        <input type="text" id="searchName" placeholder="이름 검색">
-        <button class="search-btn" onclick="loadResults()">검색</button>
+        <input type="text" id="searchName" placeholder="이름 검색" oninput="filterResults()">
       </div>
 
       <!-- 응시결과 일괄 처리 버튼 -->
@@ -1177,6 +1174,24 @@
         console.error(err);
         showConsultError('서버 연결에 실패했습니다.');
       }
+    }
+
+    // 상담 실시간 필터링 함수
+    function filterConsultations() {
+      const searchGrade = document.getElementById('consultSearchGrade').value;
+      const searchName = document.getElementById('consultSearchName').value.trim().toLowerCase();
+      const searchStatus = document.getElementById('consultSearchStatus').value;
+
+      filteredConsultations = allConsultations.filter(c => {
+        const gradeMatch = !searchGrade || c.grade === searchGrade;
+        const nameMatch = !searchName || (c.name && c.name.toLowerCase().includes(searchName));
+        const statusMatch = !searchStatus || c.status === searchStatus;
+        return gradeMatch && nameMatch && statusMatch;
+      });
+
+      consultDisplayCount = ITEMS_PER_PAGE;
+      renderConsultTable(filteredConsultations);
+      document.getElementById('consultCount').textContent = `총 ${filteredConsultations.length}명`;
     }
 
     function renderConsultTable(consultations) {
@@ -1408,6 +1423,24 @@
         console.error(err);
         showUserError('서버 연결에 실패했습니다.');
       }
+    }
+
+    // 회원 실시간 필터링 함수
+    function filterUsers() {
+      const searchGrade = document.getElementById('userSearchGrade').value;
+      const searchSchool = document.getElementById('userSearchSchool').value.trim().toLowerCase();
+      const searchName = document.getElementById('userSearchName').value.trim().toLowerCase();
+
+      filteredUsers = allUsers.filter(u => {
+        const gradeMatch = !searchGrade || u.grade === searchGrade;
+        const schoolMatch = !searchSchool || (u.school && u.school.toLowerCase().includes(searchSchool));
+        const nameMatch = !searchName || (u.name && u.name.toLowerCase().includes(searchName));
+        return gradeMatch && schoolMatch && nameMatch;
+      });
+
+      userDisplayCount = ITEMS_PER_PAGE;
+      renderUserTable(filteredUsers);
+      document.getElementById('userCount').textContent = `총 ${filteredUsers.length}명`;
     }
 
     function renderUserTable(users) {
@@ -1769,6 +1802,26 @@
         console.error(err);
         showError('서버 연결에 실패했습니다.');
       }
+    }
+
+    // 응시 결과 실시간 필터링 함수
+    function filterResults() {
+      const searchRound = document.getElementById('searchRound').value;
+      const searchSchool = document.getElementById('searchSchool').value.trim().toLowerCase();
+      const searchGrade = document.getElementById('searchGrade').value;
+      const searchName = document.getElementById('searchName').value.trim().toLowerCase();
+
+      filteredResults = allResults.filter(r => {
+        const roundMatch = !searchRound || r.examId === searchRound;
+        const schoolMatch = !searchSchool || (r.studentInfo?.schoolName && r.studentInfo.schoolName.toLowerCase().includes(searchSchool));
+        const gradeMatch = !searchGrade || r.studentInfo?.grade === searchGrade;
+        const nameMatch = !searchName || (r.studentInfo?.studentName && r.studentInfo.studentName.toLowerCase().includes(searchName));
+        return roundMatch && schoolMatch && gradeMatch && nameMatch;
+      });
+
+      resultDisplayCount = ITEMS_PER_PAGE;
+      renderTable(filteredResults);
+      document.getElementById('totalCount').textContent = `총 ${filteredResults.length}명`;
     }
 
     // 점수 기준 등급 계산 함수 - 1회차 기준: 전체 4점 하향
