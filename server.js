@@ -21587,7 +21587,7 @@ app.post("/api/admin/branch/add-student", async (req, res) => {
   }
 });
 
-// 진단테스트 목록 조회 (브랜치 관리자용 - 지점명 필터링)
+// 진단테스트 목록 조회 (브랜치 관리자용 - 지점명/학년 필터링)
 app.get("/api/admin/diagnostic-tests", async (req, res) => {
   try {
     // 세션에서 관리자 정보 확인
@@ -21596,11 +21596,19 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
     }
 
     const academyName = req.session.admin.academyName;
+    const adminGrade = req.session.admin.grade;
 
     // 지점명으로 필터링하여 조회 (지점명에 academyName이 포함된 경우 매칭)
-    const tests = await DiagnosticTest.find({
+    const filter = {
       branchName: { $regex: academyName, $options: 'i' }
-    }).sort({ createdAt: -1 });
+    };
+
+    // ✅ "전체" 학년 선택 시 학년 필터링 건너뛰기 (해당 학교 전체 학년 표시)
+    if (adminGrade && adminGrade !== "전체") {
+      filter.studentGrade = adminGrade;
+    }
+
+    const tests = await DiagnosticTest.find(filter).sort({ createdAt: -1 });
 
     res.json({ success: true, data: tests, academyName: academyName });
   } catch (error) {
