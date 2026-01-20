@@ -3320,7 +3320,7 @@ app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
           <td>${idx + 1}</td>
           <td>${u.grade || ""}</td>
           <td>${u.classNum || ""}</td>
-          <td>${u.studentNum || ""}</td>
+          <td>${u.studentNum || u.number || ""}</td>
           <td>${u.name || ""}</td>
           <td>${u.school || ""}</td>
           <td>${idOrPhone}</td>
@@ -4908,7 +4908,7 @@ app.get("/admin/users", async (req, res) => {
           <td>${idx + 1}</td>
           <td>${u.grade || ""}</td>
           <td>${u.classNum || ""}</td>
-          <td>${u.studentNum || ""}</td>
+          <td>${u.studentNum || u.number || ""}</td>
           <td>
             <a class="btn-action btn-student"
                href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}"
@@ -21571,7 +21571,7 @@ app.post("/api/admin/branch/add-student", async (req, res) => {
       phone: autoPhone,
       school: school ? school.trim() : academyName,
       classNum: adminClassNum,
-      number: number.trim(),
+      studentNum: number.trim(),
       status: "approved",
       createdAt: new Date()
     });
