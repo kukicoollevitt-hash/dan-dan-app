@@ -21597,6 +21597,7 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
 
     const academyName = req.session.admin.academyName;
     const adminGrade = req.session.admin.grade;
+    const adminClassNum = req.session.admin.classNum;
 
     // 지점명으로 필터링하여 조회 (지점명에 academyName이 포함된 경우 매칭)
     const filter = {
@@ -21606,6 +21607,11 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
     // ✅ "전체" 학년 선택 시 학년 필터링 건너뛰기 (해당 학교 전체 학년 표시)
     if (adminGrade && adminGrade !== "전체") {
       filter.studentGrade = adminGrade;
+    }
+
+    // ✅ "전체" 반 선택 시 반 필터링 건너뛰기 (해당 학교 전체 반 표시)
+    if (adminClassNum && adminClassNum !== "전체") {
+      filter.studentClassNum = adminClassNum;
     }
 
     const tests = await DiagnosticTest.find(filter).sort({ createdAt: -1 });

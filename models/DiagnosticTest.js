@@ -13,6 +13,10 @@ const DiagnosticTestSchema = new mongoose.Schema({
     type: String,
     required: true
   }, // 학년
+  studentClassNum: {
+    type: String,
+    default: ''
+  }, // 반
   studentName: {
     type: String,
     required: true
