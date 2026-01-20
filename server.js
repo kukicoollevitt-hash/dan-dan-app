@@ -1193,8 +1193,8 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
       deleted: { $ne: true },
     };
 
-    // ✅ 학년/반 필터 활성화 (선생님이 담당하는 학년/반만 표시)
-    if (adminGrade) {
+    // ✅ "전체" 학년 선택 시 학년 필터링 건너뛰기 (해당 학교 전체 학년 표시)
+    if (adminGrade && adminGrade !== "전체") {
       filter.grade = adminGrade;
     }
     // ✅ "전체" 반 선택 시 반 필터링 건너뛰기 (해당 학교 전체 학생 표시)
