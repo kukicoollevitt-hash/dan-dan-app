@@ -21341,11 +21341,12 @@ app.post('/api/test/auto-task-trigger', async (req, res) => {
 // 진단테스트 정보 저장 (진단 시작하기 버튼 클릭 시)
 app.post("/api/diagnostic-test", async (req, res) => {
   try {
-    const { branchName, studentGrade, studentName, studentPhone, parentName, parentPhone } = req.body;
+    const { branchName, studentGrade, studentClassNum, studentName, studentPhone, parentName, parentPhone } = req.body;
 
     const diagnosticTest = new DiagnosticTest({
       branchName,
       studentGrade,
+      studentClassNum: studentClassNum || '',
       studentName,
       studentPhone,
       parentName,
@@ -21364,11 +21365,12 @@ app.post("/api/diagnostic-test", async (req, res) => {
 // 수강신청(상담) 정보 저장 (상담신청 팝업에서 제출 시)
 app.post("/api/course-application", async (req, res) => {
   try {
-    const { branchName, studentGrade, studentName, studentPhone, parentPhone, grade, series, answers, score, duration } = req.body;
+    const { branchName, studentGrade, studentClassNum, studentName, studentPhone, parentPhone, grade, series, answers, score, duration } = req.body;
 
     const courseApplication = new CourseApplication({
       branchName,
       studentGrade,
+      studentClassNum: studentClassNum || '',
       studentName,
       studentPhone,
       parentPhone,
@@ -21616,7 +21618,13 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
 
     const tests = await DiagnosticTest.find(filter).sort({ createdAt: -1 });
 
-    res.json({ success: true, data: tests, academyName: academyName });
+    res.json({
+      success: true,
+      data: tests,
+      academyName: academyName,
+      adminGrade: adminGrade,
+      adminClassNum: adminClassNum
+    });
   } catch (error) {
     console.error("브랜치 관리자 진단테스트 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
@@ -21632,13 +21640,32 @@ app.get("/api/admin/course-applications", async (req, res) => {
     }
 
     const academyName = req.session.admin.academyName;
+    const adminGrade = req.session.admin.grade;
+    const adminClassNum = req.session.admin.classNum;
 
     // 지점명으로 필터링하여 조회 (지점명에 academyName이 포함된 경우 매칭)
-    const applications = await CourseApplication.find({
+    const filter = {
       branchName: { $regex: academyName, $options: 'i' }
-    }).sort({ createdAt: -1 });
+    };
 
-    res.json({ success: true, data: applications, academyName: academyName });
+    // ✅ "전체" 학년 선택 시 학년 필터링 건너뛰기
+    if (adminGrade && adminGrade !== "전체") {
+      filter.studentGrade = adminGrade;
+    }
+
+    // ✅ 반 필터링: 기존 데이터는 studentClassNum이 없으므로, 해당 반이거나 빈 값인 경우 모두 포함
+    if (adminClassNum && adminClassNum !== "전체") {
+      filter.$or = [
+        { studentClassNum: adminClassNum },
+        { studentClassNum: { $exists: false } },
+        { studentClassNum: '' },
+        { studentClassNum: null }
+      ];
+    }
+
+    const applications = await CourseApplication.find(filter).sort({ createdAt: -1 });
+
+    res.json({ success: true, data: applications, academyName: academyName, adminGrade: adminGrade, adminClassNum: adminClassNum });
   } catch (error) {
     console.error("브랜치 관리자 수강신청 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
