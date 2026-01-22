@@ -2766,6 +2766,39 @@
 
       // ★ 분석리포트 탭 즉시 업데이트
       refreshReportTab();
+
+      // ★ 서버에 본문학습 채점 결과 저장
+      const saveFn = typeof saveUnitProgressToServer === 'function' ? saveUnitProgressToServer : window.saveUnitProgressToServer;
+
+      if (typeof saveFn === 'function') {
+        // 현재 입력값 수집
+        const currentInputs = {
+          q1: document.querySelector('input[name="q1"]:checked')?.value || '',
+          q2: document.querySelector('input[name="q2"]:checked')?.value || '',
+          q3: document.querySelector('input[name="q3"]:checked')?.value || '',
+          q4: document.querySelector('input[name="q4"]:checked')?.value || '',
+          q5: document.getElementById("q5")?.value || ''
+        };
+
+        saveFn({
+          reportState: {
+            q1ok: reportState.q1ok,
+            q2ok: reportState.q2ok,
+            q3ok: reportState.q3ok,
+            q4ok: reportState.q4ok,
+            q5ok: reportState.q5ok,
+            vocabScoreRatio: reportState.vocabScoreRatio || 0,
+            literal: reportState.q1ok ? 10 : 6,
+            structural: reportState.q2ok ? 10 : 6,
+            lexical: lexicalFromRatio,
+            inferential: reportState.q4ok ? 10 : 6,
+            critical: reportState.q5ok ? 10 : 6,
+            inputs: currentInputs,
+            resultHTML: readingResultHTML
+          }
+        });
+        console.log('[gradeQuiz] 서버에 본문학습 채점 결과 저장 요청 완료');
+      }
     }
 
     function resetQuiz() {
