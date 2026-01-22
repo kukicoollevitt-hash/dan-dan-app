@@ -1510,7 +1510,7 @@ body {
   gap: 8px;
 }
 
-.series-btn, .day-btn {
+.series-btn, .day-btn, .domain-btn {
   padding: 8px 14px;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
@@ -1522,18 +1522,18 @@ body {
   color: #374151;
 }
 
-.series-btn:hover:not(:disabled), .day-btn:hover:not(:disabled) {
+.series-btn:hover:not(:disabled), .day-btn:hover:not(:disabled), .domain-btn:hover:not(:disabled) {
   border-color: #667eea;
   color: #667eea;
 }
 
-.series-btn.selected, .day-btn.selected {
+.series-btn.selected, .day-btn.selected, .domain-btn.selected {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-color: #667eea;
   color: white;
 }
 
-.series-btn:disabled, .day-btn:disabled {
+.series-btn:disabled, .day-btn:disabled, .domain-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   background: #f3f4f6;
@@ -11949,6 +11949,7 @@ async function performLogout() {
     let autoTaskSettings = {
       series: [],          // 선택된 시리즈 ('up', 'fit')
       days: [],            // 선택된 요일 (0=일, 1=월, ..., 6=토, 'everyday')
+      domains: ['all'],    // 선택된 분야 배열 ('all', 'science', 'social', 'korlit', 'worldlit', 'person')
       taskCount: 1,        // 과제 개수
       status: 'stopped'    // 'running', 'paused', 'stopped'
     };
@@ -12024,6 +12025,32 @@ async function performLogout() {
       });
     }
 
+    // 분야 버튼 클릭 핸들러
+    function initDomainButtons() {
+      const domainBtns = document.querySelectorAll('#domainBtnGroup .domain-btn');
+      domainBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const domain = this.dataset.domain;
+
+          if (domain === 'all') {
+            // 전체 선택 시: 다른 분야 모두 해제, 전체만 선택
+            if (!this.classList.contains('selected')) {
+              domainBtns.forEach(b => b.classList.remove('selected'));
+              this.classList.add('selected');
+            } else {
+              this.classList.remove('selected');
+            }
+          } else {
+            // 개별 분야 선택 시: 전체 해제
+            const allBtn = document.querySelector('#domainBtnGroup .domain-btn[data-domain="all"]');
+            if (allBtn) allBtn.classList.remove('selected');
+            this.classList.toggle('selected');
+          }
+          updateAutoTaskSettings();
+        });
+      });
+    }
+
     // 과제 개수 입력 핸들러
     function initTaskCountInput() {
       const input = document.getElementById('autoTaskCount');
@@ -12053,6 +12080,13 @@ async function performLogout() {
         selectedDays.push(btn.dataset.day);
       });
       autoTaskSettings.days = selectedDays;
+
+      // 분야 (복수 선택 지원)
+      const selectedDomains = [];
+      document.querySelectorAll('#domainBtnGroup .domain-btn.selected').forEach(btn => {
+        selectedDomains.push(btn.dataset.domain);
+      });
+      autoTaskSettings.domains = selectedDomains;
 
       // 과제 개수
       const countInput = document.getElementById('autoTaskCount');
@@ -12092,6 +12126,15 @@ async function performLogout() {
       document.querySelectorAll('#dayBtnGroup .day-btn').forEach(btn => {
         btn.classList.remove('selected');
         if (autoTaskSettings.days.includes(btn.dataset.day)) {
+          btn.classList.add('selected');
+        }
+      });
+
+      // 분야 버튼 (복수 선택 지원)
+      const domains = autoTaskSettings.domains || ['all'];
+      document.querySelectorAll('#domainBtnGroup .domain-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        if (domains.includes(btn.dataset.domain)) {
           btn.classList.add('selected');
         }
       });
@@ -12154,7 +12197,10 @@ async function performLogout() {
           }).join(', ') || '미선택';
           const daysText = autoTaskSettings.days.includes('everyday') ? '매일' :
             autoTaskSettings.days.map(d => ['일','월','화','수','목','금','토'][d] || d).join(', ') || '미선택';
-          statusEl.innerHTML = `▶️ 자동과제부여 실행 중<br><small style="opacity: 0.8;">${seriesText} / ${daysText} / ${autoTaskSettings.taskCount}개</small>`;
+          const domainTextMap = { all: '전체', science: '과학', social: '사회', korlit: '한국문학', worldlit: '세계문학', person: '인물' };
+          const domainsArr = autoTaskSettings.domains || ['all'];
+          const domainText = domainsArr.includes('all') ? '전체' : domainsArr.map(d => domainTextMap[d] || d).join(', ') || '미선택';
+          statusEl.innerHTML = `▶️ 자동과제부여 실행 중<br><small style="opacity: 0.8;">${seriesText} / ${daysText} / ${domainText} / ${autoTaskSettings.taskCount}개</small>`;
           break;
         case 'paused':
           statusEl.classList.add('paused');
@@ -12245,6 +12291,7 @@ async function performLogout() {
       // 설정 초기화
       autoTaskSettings.series = [];
       autoTaskSettings.days = [];
+      autoTaskSettings.domains = ['all'];
       autoTaskSettings.taskCount = 1;
       autoTaskSettings.status = 'stopped';
 
@@ -12260,6 +12307,7 @@ async function performLogout() {
     document.addEventListener('DOMContentLoaded', function() {
       initSeriesButtons();
       initDayButtons();
+      initDomainButtons();
       initTaskCountInput();
     });
 
@@ -15570,9 +15618,22 @@ ${content}
                   </div>
                 </div>
 
+                <!-- 분야 선택 -->
+                <div class="auto-task-section">
+                  <div class="auto-task-section-title">📂 분야 선택</div>
+                  <div class="auto-task-btn-group" id="domainBtnGroup">
+                    <button class="domain-btn selected" data-domain="all">전체</button>
+                    <button class="domain-btn" data-domain="science">과학</button>
+                    <button class="domain-btn" data-domain="social">사회</button>
+                    <button class="domain-btn" data-domain="korlit">한국문학</button>
+                    <button class="domain-btn" data-domain="worldlit">세계문학</button>
+                    <button class="domain-btn" data-domain="person">인물</button>
+                  </div>
+                </div>
+
                 <!-- 과제 개수 -->
                 <div class="auto-task-section">
-                  <div class="auto-task-section-title">🎯 랜덤과제개수</div>
+                  <div class="auto-task-section-title">🎯 과제 개수(선택 분야에 해당과제가 각각 부여)</div>
                   <div class="task-count-input">
                     <input type="number" id="autoTaskCount" min="1" max="15" value="1">
                     <span>개 (최소 1개 ~ 최대 15개)</span>
