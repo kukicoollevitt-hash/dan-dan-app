@@ -25619,19 +25619,69 @@ app.get("/api/mock-exam/admin/users", async (req, res) => {
         ]
       });
 
-      const totalTasks = tasks.length;
+      // 학생 대시보드와 동일하게 examId 또는 areaKey_targetMockRound 조합으로 중복 제거
+      const uniqueTaskMap = new Map();
+      for (const task of tasks) {
+        // examInfo를 계산 (학생 대시보드 API와 동일한 로직)
+        const targetRound = task.targetMockRound;
+        let examId = null;
+
+        // hardcodedExamsList에서 매칭되는 examId 찾기
+        const hardcodedExamsList = [
+          { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem', targetMockRound: 1 },
+          { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem_geumrusa', targetMockRound: 2 },
+          { areaKey: 'speechWrite', examId: 'supplement_writing', targetMockRound: 1 },
+          { areaKey: 'grammarClassic', examId: 'supplement_grammar_classic', targetMockRound: 1 },
+          { areaKey: 'grammarClassic', examId: 'supplement_grammar_classic_case', targetMockRound: 2 },
+          { areaKey: 'litModernNovel', examId: 'supplement_modern_novel', targetMockRound: 1 },
+          { areaKey: 'speechTalk', examId: 'supplement_speech', targetMockRound: 1 },
+          { areaKey: 'speechTalk', examId: 'supplement_speech_food', targetMockRound: 2 },
+          { areaKey: 'speechWrite', examId: 'supplement_writing_subscription', targetMockRound: 2 },
+          { areaKey: 'litClassicProse', examId: 'supplement_classic_prose', targetMockRound: 1 },
+          { areaKey: 'litClassicProse', examId: 'supplement_classic_prose_nakseong', targetMockRound: 2 },
+          { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated', targetMockRound: 1 },
+          { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated_job', targetMockRound: 2 },
+          { areaKey: 'litModernPoem', examId: 'supplement_modern_poem', targetMockRound: 1 },
+          { areaKey: 'litModernPoem', examId: 'supplement_literature_poem_sea', targetMockRound: 2 },
+          { areaKey: 'litModernNovel', examId: 'supplement_literature_novel_rondo', targetMockRound: 2 },
+          { areaKey: 'grammarModern', examId: 'supplement_grammar_modern', targetMockRound: 1 },
+          { areaKey: 'grammarModern', examId: 'supplement_grammar_modern_semantic', targetMockRound: 2 },
+          { areaKey: 'readingScience', examId: 'supplement_reading_science', targetMockRound: 1 },
+          { areaKey: 'readingScience', examId: 'supplement_reading_science_tech', targetMockRound: 2 },
+          { areaKey: 'readingLaw', examId: 'supplement_reading_law', targetMockRound: 1 },
+          { areaKey: 'readingLaw', examId: 'supplement_reading_law_property', targetMockRound: 2 },
+          { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities', targetMockRound: 1 },
+          { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities_art', targetMockRound: 2 }
+        ];
+
+        // 1차: 영역 + 회차 일치
+        let matchedExam = hardcodedExamsList.find(e => e.areaKey === task.areaKey && e.targetMockRound === targetRound);
+        // 2차: 영역만 일치
+        if (!matchedExam) {
+          matchedExam = hardcodedExamsList.find(e => e.areaKey === task.areaKey);
+        }
+        if (matchedExam) examId = matchedExam.examId;
+
+        const key = examId || `${task.areaKey}_${task.targetMockRound || 'null'}`;
+        if (!uniqueTaskMap.has(key)) {
+          uniqueTaskMap.set(key, { task, examId });
+        }
+      }
+
+      const uniqueTasks = Array.from(uniqueTaskMap.values());
+      const totalTasks = uniqueTasks.length;
 
       // 완료 개수: task.status === 'completed' OR 보충학습 결과가 채점 완료된 경우
       let completedCount = 0;
-      for (const task of tasks) {
+      for (const { task, examId } of uniqueTasks) {
         // 1) task.status가 completed이면 완료
         if (task.status === 'completed') {
           completedCount++;
           continue;
         }
 
-        // 2) 보충학습 결과 확인 (SupplementResult에서 채점 완료 여부)
-        const supplementExamId = AREA_TO_SUPPLEMENT_EXAM_MAP[task.areaKey];
+        // 2) 보충학습 결과 확인 (해당 examId로 SupplementResult 조회)
+        const supplementExamId = examId || AREA_TO_SUPPLEMENT_EXAM_MAP[task.areaKey];
         if (supplementExamId) {
           const supplementResult = await SupplementResult.findOne({
             examId: supplementExamId,
