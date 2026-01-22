@@ -2472,103 +2472,38 @@
     /* ===== 전역 리포트 상태 ===== */
     let reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
 
-    /* ===== 탭 전환 ===== */
-    // 분석리포트 새로고침 함수 (서버에서 최신 데이터 가져오기)
-    async function refreshReportTab() {
-      const reportPanel = document.getElementById('tab-report');
-      if (!reportPanel) return;
-
-      // ★ 1순위: 현재 세션의 채점 결과 (window.reportState.radarScores)
-      if (window.reportState && window.reportState.radarScores) {
-        console.log('[refreshReportTab] 현재 세션 데이터 사용:', window.reportState.radarScores);
-        const rs = window.reportState.radarScores;
-
-        if (typeof drawRadarChart === 'function') {
-          drawRadarChart(rs);
-        }
-        if (typeof updateReportPanel === 'function') {
-          // 레이더 점수로 ok 여부 판단 (10점=정답, 6점=오답)
-          updateReportPanel({
-            q1ok: rs.literal >= 10,
-            q2ok: rs.structural >= 10,
-            q3ok: rs.lexical >= 7,
-            q4ok: rs.inferential >= 10,
-            q5ok: rs.critical >= 10
-          });
-        }
-        return;
-      }
-
-      // ★ 2순위: localStorage (dan-people1-report-state)
+        /* ===== 탭 전환 ===== */
+    // 분석리포트 새로고침 함수 (localStorage에서 데이터 가져오기)
+    function refreshReportTab() {
       try {
-        const saved = localStorage.getItem(`dan-people1-report-state:${window.CUR_UNIT || 'on_people1_34'}`);
+        const saved = localStorage.getItem(`dan-people1-report-state:${window.CUR_UNIT || 'on_people1_01'}`);
         if (saved) {
-          const rs = JSON.parse(saved);
-          console.log('[refreshReportTab] localStorage 데이터 사용:', rs);
+          const savedReportState = JSON.parse(saved);
 
-          if (typeof drawRadarChart === 'function') {
-            drawRadarChart({
-              literal: rs.literal || (rs.q1ok ? 10 : 6),
-              structural: rs.structural || (rs.q2ok ? 10 : 6),
-              lexical: rs.lexical || (rs.q3ok ? 10 : 6),
-              inferential: rs.inferential || (rs.q4ok ? 10 : 6),
-              critical: rs.critical || (rs.q5ok ? 10 : 6)
-            });
-          }
+          // 리포트 패널 업데이트
           if (typeof updateReportPanel === 'function') {
             updateReportPanel({
-              q1ok: rs.q1ok || false,
-              q2ok: rs.q2ok || false,
-              q3ok: rs.q3ok || false,
-              q4ok: rs.q4ok || false,
-              q5ok: rs.q5ok || false
+              q1ok: savedReportState.q1ok || false,
+              q2ok: savedReportState.q2ok || false,
+              q3ok: savedReportState.q3ok || false,
+              q4ok: savedReportState.q4ok || false,
+              q5ok: savedReportState.q5ok || false
             });
           }
-          return;
-        }
-      } catch (e) {
-        console.warn('[refreshReportTab] localStorage 읽기 실패:', e);
-      }
 
-      // ★ 3순위: 서버 API
-      const stu = typeof getCurrentStudent === 'function' ? getCurrentStudent() : null;
-      if (!stu) {
-        console.log('[refreshReportTab] 학생 정보 없음');
-        return;
-      }
-
-      try {
-        console.log(`[refreshReportTab] 서버 요청: unit=${window.CUR_UNIT}, grade=${stu.grade}, name=${stu.name}`);
-        const res = await fetch(`/api/unit-grades?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
-        const unitGradesMap = await res.json();
-        const unitData = unitGradesMap[window.CUR_UNIT];
-
-        if (unitData && unitData.radar) {
-          console.log('[refreshReportTab] 서버 데이터 사용:', unitData);
-
+          // 레이더 차트 업데이트
           if (typeof drawRadarChart === 'function') {
             drawRadarChart({
-              literal: unitData.radar.literal || 0,
-              structural: unitData.radar.structural || 0,
-              lexical: unitData.radar.lexical || 0,
-              inferential: unitData.radar.inferential || 0,
-              critical: unitData.radar.critical || 0
+              literal: savedReportState.literal || 0,
+              structural: savedReportState.structural || 0,
+              lexical: savedReportState.lexical || 0,
+              inferential: savedReportState.inferential || 0,
+              critical: savedReportState.critical || 0
             });
           }
-          if (typeof updateReportPanel === 'function') {
-            updateReportPanel({
-              q1ok: unitData.radar.literal >= 10,
-              q2ok: unitData.radar.structural >= 10,
-              q3ok: unitData.radar.lexical >= 7,
-              q4ok: unitData.radar.inferential >= 10,
-              q5ok: unitData.radar.critical >= 10
-            });
-          }
-        } else {
-          console.log('[refreshReportTab] 서버에 데이터 없음');
         }
       } catch(e) {
-        console.error('[refreshReportTab] 서버 요청 오류:', e);
+        console.error('Failed to refresh report:', e);
       }
     }
 
