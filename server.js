@@ -25611,13 +25611,12 @@ app.get("/api/mock-exam/admin/users", async (req, res) => {
     const usersWithTasks = await Promise.all(users.map(async (user) => {
       const userObj = user.toObject();
 
-      // 해당 유저의 현재 주차 AI 추천 과제 조회 (userId 또는 phone으로 매칭)
+      // 해당 유저의 전체 AI 추천 과제 조회 (userId 또는 phone으로 매칭)
       const tasks = await MockExamRecommendTask.find({
         $or: [
           { userId: user._id.toString() },
           { phone: user.phone }
-        ],
-        weekNumber: currentWeek
+        ]
       });
 
       const totalTasks = tasks.length;
