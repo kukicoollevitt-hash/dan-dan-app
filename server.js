@@ -22101,28 +22101,40 @@ app.get('/api/mock-exam/recommend-tasks/:userId', async (req, res) => {
     const hardcodedExamsList = [
       { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem', title: '개암정가 + 청청각기', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_classic_poem.html' },
       { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem_geumrusa', title: '금루사 + 그리운 외손녀', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_classic_poem_geumrusa.html' },
+      { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem_gangho', title: '강호구가 + 백상루별곡', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_classic_poem_gangho.html' },
       { areaKey: 'speechWrite', examId: 'supplement_writing', title: '자전거 주차장 방치 문제', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_writing.html' },
       { areaKey: 'grammarClassic', examId: 'supplement_grammar_classic', title: '연결어미+주격조사', questionCount: 2, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_grammar_classic.html' },
       { areaKey: 'grammarClassic', examId: 'supplement_grammar_classic_case', title: '목적격조사+서술격조사', questionCount: 2, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_grammar_classic_case.html' },
+      { areaKey: 'grammarClassic', examId: 'supplement_grammar_medieval_honorific', title: '높임법+조사', questionCount: 2, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_grammar_medieval_honorific.html' },
       { areaKey: 'litModernNovel', examId: 'supplement_modern_novel', title: '213호 주택', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_modern_novel.html' },
       { areaKey: 'speechTalk', examId: 'supplement_speech', title: '발표 : 식물의 인지 행동', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_speech.html' },
       { areaKey: 'speechTalk', examId: 'supplement_speech_food', title: '강연 : 식중독 예방법', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_speech_food.html' },
+      { areaKey: 'speechTalk', examId: 'supplement_speech_tea', title: '발표 : 홍차', questionCount: 8, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_speech_tea.html' },
       { areaKey: 'speechWrite', examId: 'supplement_writing_subscription', title: '구독 경제 이용', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_writing_subscription.html' },
+      { areaKey: 'speechWrite', examId: 'supplement_writing_donation', title: '작문 : 기부 방법', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_writing_donation.html' },
       { areaKey: 'litClassicProse', examId: 'supplement_classic_prose', title: '당태종전', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_classic_prose.html' },
       { areaKey: 'litClassicProse', examId: 'supplement_classic_prose_nakseong', title: '낙성비룡', questionCount: 8, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_classic_prose_nakseong.html' },
+      { areaKey: 'litClassicProse', examId: 'supplement_literature_classic_hwangun', title: '황운전', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_literature_classic_hwangun.html' },
       { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated', title: '환경 동아리 대화 + 초고', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_speech_integrated.html' },
       { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated_job', title: '미술 심리 상담사', questionCount: 7, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_speech_integrated_job.html' },
+      { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated_aijudge', title: '인공지능 판사 도입 토론', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_speech_integrated_aijudge.html' },
       { areaKey: 'litModernPoem', examId: 'supplement_modern_poem', title: '목련나무 옆+그리운 곳', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_modern_poem.html' },
       { areaKey: 'litModernPoem', examId: 'supplement_literature_poem_sea', title: '주머니 속의 바다+속리산에서', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_literature_poem_sea.html' },
+      { areaKey: 'litModernPoem', examId: 'supplement_literature_poem_flower', title: '꽃피는 시절+저수지', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_literature_poem_flower.html' },
       { areaKey: 'litModernNovel', examId: 'supplement_literature_novel_rondo', title: '론도', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_literature_novel_rondo.html' },
+      { areaKey: 'litModernNovel', examId: 'supplement_literature_novel_mother', title: '늙으신 어머니의 향기', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_literature_novel_mother.html' },
       { areaKey: 'grammarModern', examId: 'supplement_grammar_modern', title: '문장의 종류+음운변동', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_grammar_modern.html' },
       { areaKey: 'grammarModern', examId: 'supplement_grammar_modern_semantic', title: '단어의미관계+음운변동+안은문장', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_grammar_modern_semantic.html' },
+      { areaKey: 'grammarModern', examId: 'supplement_grammar_word_sound', title: '단어형성법+음운변동', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_grammar_word_sound.html' },
       { areaKey: 'readingScience', examId: 'supplement_reading_science', title: '기술 : 햅틱스', questionCount: 6, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_reading_science.html' },
       { areaKey: 'readingScience', examId: 'supplement_reading_science_tech', title: '기술 : 근접 습도 센서', questionCount: 9, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_reading_science_tech.html' },
       { areaKey: 'readingLaw', examId: 'supplement_reading_law', title: '법 : 민법 공유물 분할', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_reading_law.html' },
       { areaKey: 'readingLaw', examId: 'supplement_reading_law_property', title: '법 : 물권법', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_reading_law_property.html' },
+      { areaKey: 'readingLaw', examId: 'supplement_reading_law_tax', title: '법 : 납세 의무', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_reading_law_tax.html' },
       { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities', title: '인문 : 언어철학 퍼트넘', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 1, pageUrl: '/supplement_reading_humanities.html' },
-      { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities_art', title: '예술 : 분석미학의 이해', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_reading_humanities_art.html' }
+      { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities_art', title: '예술 : 분석미학의 이해', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 2, pageUrl: '/supplement_reading_humanities_art.html' },
+      { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities_mimesis', title: '인문 : 미메시스의 삼중구조', questionCount: 5, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_reading_humanities_mimesis.html' },
+      { areaKey: 'readingScience', examId: 'supplement_reading_science_solar', title: '과학 : 태양전지', questionCount: 4, isActive: true, isHardcoded: true, targetMockRound: 3, pageUrl: '/supplement_reading_science_solar.html' }
     ];
 
     const allExams = [...dbExams, ...hardcodedExamsList];
@@ -22300,6 +22312,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2025-01-16')
       },
       {
+        areaKey: 'litClassicPoem',
+        examId: 'supplement_classic_poem_gangho',
+        title: '강호구가 + 백상루별곡',
+        questionCount: 5,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_classic_poem_gangho.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
+      },
+      {
         areaKey: 'speechWrite',
         examId: 'supplement_writing',
         title: '자전거 주차장 방치 문제',
@@ -22334,6 +22358,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         pageUrl: '/supplement_grammar_classic_case.html',
         createdAt: new Date('2024-12-31'),
         updatedAt: new Date('2024-12-31')
+      },
+      {
+        areaKey: 'grammarClassic',
+        examId: 'supplement_grammar_medieval_honorific',
+        title: '높임법+조사',
+        questionCount: 2,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_grammar_medieval_honorific.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
       },
       {
         areaKey: 'litModernNovel',
@@ -22372,6 +22408,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2025-01-16')
       },
       {
+        areaKey: 'speechTalk',
+        examId: 'supplement_speech_tea',
+        title: '발표 : 홍차',
+        questionCount: 8,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_speech_tea.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
+      },
+      {
         areaKey: 'speechWrite',
         examId: 'supplement_writing_subscription',
         title: '구독 경제 이용',
@@ -22382,6 +22430,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         pageUrl: '/supplement_writing_subscription.html',
         createdAt: new Date('2025-01-16'),
         updatedAt: new Date('2025-01-16')
+      },
+      {
+        areaKey: 'speechWrite',
+        examId: 'supplement_writing_donation',
+        title: '작문 : 기부 방법',
+        questionCount: 6,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_writing_donation.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
       },
       {
         areaKey: 'litClassicProse',
@@ -22408,6 +22468,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2025-01-16')
       },
       {
+        areaKey: 'litClassicProse',
+        examId: 'supplement_literature_classic_hwangun',
+        title: '황운전',
+        questionCount: 5,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_literature_classic_hwangun.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
+      },
+      {
         areaKey: 'speechIntegrated',
         examId: 'supplement_speech_integrated',
         title: '환경 동아리 대화 + 초고',
@@ -22428,6 +22500,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         isHardcoded: true,
         targetMockRound: 2,
         pageUrl: '/supplement_speech_integrated_job.html',
+        createdAt: new Date('2025-01-01'),
+        updatedAt: new Date('2025-01-01')
+      },
+      {
+        areaKey: 'speechIntegrated',
+        examId: 'supplement_speech_integrated_aijudge',
+        title: '인공지능 판사 도입 토론',
+        questionCount: 5,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_speech_integrated_aijudge.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
       },
@@ -22456,6 +22540,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2025-01-01')
       },
       {
+        areaKey: 'litModernPoem',
+        examId: 'supplement_literature_poem_flower',
+        title: '꽃피는 시절+저수지',
+        questionCount: 4,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_literature_poem_flower.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
+      },
+      {
         areaKey: 'litModernNovel',
         examId: 'supplement_literature_novel_rondo',
         title: '론도',
@@ -22466,6 +22562,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         pageUrl: '/supplement_literature_novel_rondo.html',
         createdAt: new Date('2025-01-16'),
         updatedAt: new Date('2025-01-16')
+      },
+      {
+        areaKey: 'litModernNovel',
+        examId: 'supplement_literature_novel_mother',
+        title: '늙으신 어머니의 향기',
+        questionCount: 5,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_literature_novel_mother.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
       },
       {
         areaKey: 'grammarModern',
@@ -22490,6 +22598,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         pageUrl: '/supplement_grammar_modern_semantic.html',
         createdAt: new Date('2025-01-16'),
         updatedAt: new Date('2025-01-16')
+      },
+      {
+        areaKey: 'grammarModern',
+        examId: 'supplement_grammar_word_sound',
+        title: '단어형성법+음운변동',
+        questionCount: 4,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_grammar_word_sound.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
       },
       {
         areaKey: 'readingScience',
@@ -22540,6 +22660,18 @@ app.get('/api/supplement-exams', async (req, res) => {
         updatedAt: new Date('2025-01-01')
       },
       {
+        areaKey: 'readingLaw',
+        examId: 'supplement_reading_law_tax',
+        title: '법 : 납세 의무',
+        questionCount: 4,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_reading_law_tax.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
+      },
+      {
         areaKey: 'readingHumanities',
         examId: 'supplement_reading_humanities',
         title: '인문 : 언어철학 퍼트넘',
@@ -22562,6 +22694,30 @@ app.get('/api/supplement-exams', async (req, res) => {
         pageUrl: '/supplement_reading_humanities_art.html',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01')
+      },
+      {
+        areaKey: 'readingHumanities',
+        examId: 'supplement_reading_humanities_mimesis',
+        title: '인문 : 미메시스의 삼중구조',
+        questionCount: 5,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_reading_humanities_mimesis.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
+      },
+      {
+        areaKey: 'readingScience',
+        examId: 'supplement_reading_science_solar',
+        title: '과학 : 태양전지',
+        questionCount: 4,
+        isActive: true,
+        isHardcoded: true,
+        targetMockRound: 3,
+        pageUrl: '/supplement_reading_science_solar.html',
+        createdAt: new Date('2025-01-23'),
+        updatedAt: new Date('2025-01-23')
       },
     ];
 
@@ -23016,6 +23172,7 @@ app.get('/api/mock-exam/supplement-progress/:userId', async (req, res) => {
       // 하드코딩된 시험지 매핑 (HTML 파일 기반)
       'supplement_classic_poem': { parentArea: 'literature', areaKey: 'litClassicPoem' },
       'supplement_classic_poem_geumrusa': { parentArea: 'literature', areaKey: 'litClassicPoem' },
+      'supplement_classic_poem_gangho': { parentArea: 'literature', areaKey: 'litClassicPoem' },
       'supplement_classic_prose': { parentArea: 'literature', areaKey: 'litClassicProse' },
       'supplement_classic_prose_nakseong': { parentArea: 'literature', areaKey: 'litClassicProse' },
       'supplement_writing': { parentArea: 'speech', areaKey: 'speechWrite' },
@@ -23028,19 +23185,30 @@ app.get('/api/mock-exam/supplement-progress/:userId', async (req, res) => {
       'supplement_grammar_modern_semantic': { parentArea: 'grammar', areaKey: 'grammarModern' },
       'supplement_reading_science': { parentArea: 'reading', areaKey: 'readingScience' },
       'supplement_reading_science_tech': { parentArea: 'reading', areaKey: 'readingScience' },
+      'supplement_reading_science_solar': { parentArea: 'reading', areaKey: 'readingScience' },
       'supplement_reading_law': { parentArea: 'reading', areaKey: 'readingLaw' },
       'supplement_reading_law_property': { parentArea: 'reading', areaKey: 'readingLaw' },
       'supplement_reading_social': { parentArea: 'reading', areaKey: 'readingHumanities' },
       'supplement_reading_tech': { parentArea: 'reading', areaKey: 'readingScience' },
       'supplement_reading_humanities': { parentArea: 'reading', areaKey: 'readingHumanities' },
       'supplement_reading_humanities_art': { parentArea: 'reading', areaKey: 'readingHumanities' },
+      'supplement_reading_humanities_mimesis': { parentArea: 'reading', areaKey: 'readingHumanities' },
       'supplement_reading_art': { parentArea: 'reading', areaKey: 'readingHumanities' },
       'supplement_speech_integrated': { parentArea: 'speech', areaKey: 'speechIntegrated' },
       'supplement_speech_integrated_job': { parentArea: 'speech', areaKey: 'speechIntegrated' },
+      'supplement_speech_integrated_aijudge': { parentArea: 'speech', areaKey: 'speechIntegrated' },
       'supplement_speech_food': { parentArea: 'speech', areaKey: 'speechTalk' },
+      'supplement_speech_tea': { parentArea: 'speech', areaKey: 'speechTalk' },
       'supplement_writing_subscription': { parentArea: 'speech', areaKey: 'speechWrite' },
+      'supplement_writing_donation': { parentArea: 'speech', areaKey: 'speechWrite' },
       'supplement_literature_poem_sea': { parentArea: 'literature', areaKey: 'litModernPoem' },
-      'supplement_literature_novel_rondo': { parentArea: 'literature', areaKey: 'litModernNovel' }
+      'supplement_literature_novel_rondo': { parentArea: 'literature', areaKey: 'litModernNovel' },
+      'supplement_literature_novel_mother': { parentArea: 'literature', areaKey: 'litModernNovel' },
+      'supplement_literature_classic_hwangun': { parentArea: 'literature', areaKey: 'litClassicProse' },
+      'supplement_literature_poem_flower': { parentArea: 'literature', areaKey: 'litModernPoem' },
+      'supplement_reading_law_tax': { parentArea: 'reading', areaKey: 'readingLaw' },
+      'supplement_grammar_word_sound': { parentArea: 'grammar', areaKey: 'grammarModern' },
+      'supplement_grammar_medieval_honorific': { parentArea: 'grammar', areaKey: 'grammarClassic' }
     };
     // DB에 저장된 시험지 매핑 추가
     supplementExams.forEach(exam => {
@@ -23282,9 +23450,11 @@ async function generateRecommendTasksForUser(userId, phone, targetRound = null) 
       { examId: 'supplement_classic_prose_nakseong', areaKey: 'litClassicProse', targetMockRound: 2 },
       { examId: 'supplement_speech_integrated', areaKey: 'speechIntegrated', targetMockRound: 1 },
       { examId: 'supplement_speech_integrated_job', areaKey: 'speechIntegrated', targetMockRound: 2 },
+      { examId: 'supplement_speech_integrated_aijudge', areaKey: 'speechIntegrated', targetMockRound: 3 },
       { examId: 'supplement_modern_poem', areaKey: 'litModernPoem', targetMockRound: 1 },
       { examId: 'supplement_literature_poem_sea', areaKey: 'litModernPoem', targetMockRound: 2 },
       { examId: 'supplement_literature_novel_rondo', areaKey: 'litModernNovel', targetMockRound: 2 },
+      { examId: 'supplement_literature_novel_mother', areaKey: 'litModernNovel', targetMockRound: 3 },
       { examId: 'supplement_grammar_modern', areaKey: 'grammarModern', targetMockRound: 1 },
       { examId: 'supplement_grammar_modern_semantic', areaKey: 'grammarModern', targetMockRound: 2 },
       { examId: 'supplement_reading_science', areaKey: 'readingScience', targetMockRound: 1 },
@@ -23292,7 +23462,17 @@ async function generateRecommendTasksForUser(userId, phone, targetRound = null) 
       { examId: 'supplement_reading_law', areaKey: 'readingLaw', targetMockRound: 1 },
       { examId: 'supplement_reading_law_property', areaKey: 'readingLaw', targetMockRound: 2 },
       { examId: 'supplement_reading_humanities', areaKey: 'readingHumanities', targetMockRound: 1 },
-      { examId: 'supplement_reading_humanities_art', areaKey: 'readingHumanities', targetMockRound: 2 }
+      { examId: 'supplement_reading_humanities_art', areaKey: 'readingHumanities', targetMockRound: 2 },
+      { examId: 'supplement_speech_tea', areaKey: 'speechTalk', targetMockRound: 3 },
+      { examId: 'supplement_writing_donation', areaKey: 'speechWrite', targetMockRound: 3 },
+      { examId: 'supplement_literature_classic_hwangun', areaKey: 'litClassicProse', targetMockRound: 3 },
+      { examId: 'supplement_literature_poem_flower', areaKey: 'litModernPoem', targetMockRound: 3 },
+      { examId: 'supplement_classic_poem_gangho', areaKey: 'litClassicPoem', targetMockRound: 3 },
+      { examId: 'supplement_reading_law_tax', areaKey: 'readingLaw', targetMockRound: 3 },
+      { examId: 'supplement_reading_humanities_mimesis', areaKey: 'readingHumanities', targetMockRound: 3 },
+      { examId: 'supplement_reading_science_solar', areaKey: 'readingScience', targetMockRound: 3 },
+      { examId: 'supplement_grammar_word_sound', areaKey: 'grammarModern', targetMockRound: 3 },
+      { examId: 'supplement_grammar_medieval_honorific', areaKey: 'grammarClassic', targetMockRound: 3 }
     ];
 
     // 각 응시 회차별로 해당 회차 보완학습 매핑 (회차별로 별도 과제 생성)
@@ -24538,7 +24718,7 @@ app.post("/api/mock-exam/submit", async (req, res) => {
 
             // SupplementResult 집계
             const examAreaMap = {
-              'supplement_classic_poem': 'literature', 'supplement_classic_poem_geumrusa': 'literature',
+              'supplement_classic_poem': 'literature', 'supplement_classic_poem_geumrusa': 'literature', 'supplement_classic_poem_gangho': 'literature',
               'supplement_classic_prose': 'literature', 'supplement_classic_prose_nakseong': 'literature',
               'supplement_writing': 'speech', 'supplement_grammar_classic': 'grammar',
               'supplement_grammar_classic_case': 'grammar', 'supplement_modern_novel': 'literature',
@@ -24549,9 +24729,15 @@ app.post("/api/mock-exam/submit", async (req, res) => {
               'supplement_reading_social': 'reading', 'supplement_reading_tech': 'reading',
               'supplement_reading_humanities': 'reading', 'supplement_reading_humanities_art': 'reading',
               'supplement_reading_art': 'reading', 'supplement_speech_integrated': 'speech',
-              'supplement_speech_integrated_job': 'speech', 'supplement_speech_food': 'speech',
-              'supplement_writing_subscription': 'speech', 'supplement_literature_poem_sea': 'literature',
-              'supplement_literature_novel_rondo': 'literature'
+              'supplement_speech_integrated_job': 'speech', 'supplement_speech_integrated_aijudge': 'speech', 'supplement_speech_food': 'speech', 'supplement_speech_tea': 'speech',
+              'supplement_writing_subscription': 'speech', 'supplement_writing_donation': 'speech',
+              'supplement_literature_poem_sea': 'literature', 'supplement_literature_novel_rondo': 'literature',
+              'supplement_literature_novel_mother': 'literature', 'supplement_literature_classic_hwangun': 'literature',
+              'supplement_literature_poem_flower': 'literature', 'supplement_reading_law_tax': 'reading',
+              'supplement_reading_humanities_mimesis': 'reading',
+              'supplement_reading_science_solar': 'reading',
+              'supplement_grammar_word_sound': 'grammar',
+              'supplement_grammar_medieval_honorific': 'grammar'
             };
 
             supplementResults.forEach(sr => {
@@ -25651,28 +25837,38 @@ app.get("/api/mock-exam/admin/users", async (req, res) => {
         const hardcodedExamsList = [
           { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem', targetMockRound: 1 },
           { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem_geumrusa', targetMockRound: 2 },
+          { areaKey: 'litClassicPoem', examId: 'supplement_classic_poem_gangho', targetMockRound: 3 },
           { areaKey: 'speechWrite', examId: 'supplement_writing', targetMockRound: 1 },
           { areaKey: 'grammarClassic', examId: 'supplement_grammar_classic', targetMockRound: 1 },
           { areaKey: 'grammarClassic', examId: 'supplement_grammar_classic_case', targetMockRound: 2 },
+          { areaKey: 'grammarClassic', examId: 'supplement_grammar_medieval_honorific', targetMockRound: 3 },
           { areaKey: 'litModernNovel', examId: 'supplement_modern_novel', targetMockRound: 1 },
           { areaKey: 'speechTalk', examId: 'supplement_speech', targetMockRound: 1 },
           { areaKey: 'speechTalk', examId: 'supplement_speech_food', targetMockRound: 2 },
+          { areaKey: 'speechTalk', examId: 'supplement_speech_tea', targetMockRound: 3 },
           { areaKey: 'speechWrite', examId: 'supplement_writing_subscription', targetMockRound: 2 },
+          { areaKey: 'speechWrite', examId: 'supplement_writing_donation', targetMockRound: 3 },
           { areaKey: 'litClassicProse', examId: 'supplement_classic_prose', targetMockRound: 1 },
           { areaKey: 'litClassicProse', examId: 'supplement_classic_prose_nakseong', targetMockRound: 2 },
           { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated', targetMockRound: 1 },
           { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated_job', targetMockRound: 2 },
+          { areaKey: 'speechIntegrated', examId: 'supplement_speech_integrated_aijudge', targetMockRound: 3 },
           { areaKey: 'litModernPoem', examId: 'supplement_modern_poem', targetMockRound: 1 },
           { areaKey: 'litModernPoem', examId: 'supplement_literature_poem_sea', targetMockRound: 2 },
           { areaKey: 'litModernNovel', examId: 'supplement_literature_novel_rondo', targetMockRound: 2 },
+          { areaKey: 'litModernNovel', examId: 'supplement_literature_novel_mother', targetMockRound: 3 },
           { areaKey: 'grammarModern', examId: 'supplement_grammar_modern', targetMockRound: 1 },
           { areaKey: 'grammarModern', examId: 'supplement_grammar_modern_semantic', targetMockRound: 2 },
+          { areaKey: 'grammarModern', examId: 'supplement_grammar_word_sound', targetMockRound: 3 },
           { areaKey: 'readingScience', examId: 'supplement_reading_science', targetMockRound: 1 },
           { areaKey: 'readingScience', examId: 'supplement_reading_science_tech', targetMockRound: 2 },
           { areaKey: 'readingLaw', examId: 'supplement_reading_law', targetMockRound: 1 },
           { areaKey: 'readingLaw', examId: 'supplement_reading_law_property', targetMockRound: 2 },
+          { areaKey: 'readingLaw', examId: 'supplement_reading_law_tax', targetMockRound: 3 },
           { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities', targetMockRound: 1 },
-          { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities_art', targetMockRound: 2 }
+          { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities_art', targetMockRound: 2 },
+          { areaKey: 'readingHumanities', examId: 'supplement_reading_humanities_mimesis', targetMockRound: 3 },
+          { areaKey: 'readingScience', examId: 'supplement_reading_science_solar', targetMockRound: 3 }
         ];
 
         // 1차: 영역 + 회차 일치
