@@ -1825,7 +1825,7 @@
     }
 
     // 점수 기준 등급 계산 함수 - 1회차 기준: 전체 4점 하향
-    function calculateGrade(score) {
+    function calculateGradeRound1(score) {
       if (score >= 93) return { grade: 1, text: '1등급 상' };
       if (score >= 90) return { grade: 1, text: '1등급 중' };
       if (score >= 87) return { grade: 1, text: '1등급 하' };
@@ -1839,6 +1839,31 @@
       if (score >= 59) return { grade: 4, text: '4등급 중' };
       if (score >= 55) return { grade: 4, text: '4등급 하' };
       return { grade: 5, text: '5등급' };
+    }
+
+    // 2회차, 3회차 등급 계산 함수 - 1회차 대비 6점씩 하향 (난이도 상향으로 인한 조정)
+    function calculateGradeRound2(score) {
+      if (score >= 91) return { grade: 1, text: '1등급 상' };
+      if (score >= 88) return { grade: 1, text: '1등급 중' };
+      if (score >= 85) return { grade: 1, text: '1등급 하' };
+      if (score >= 82) return { grade: 2, text: '2등급 상' };
+      if (score >= 79) return { grade: 2, text: '2등급 중' };
+      if (score >= 76) return { grade: 2, text: '2등급 하' };
+      if (score >= 72) return { grade: 3, text: '3등급 상' };
+      if (score >= 68) return { grade: 3, text: '3등급 중' };
+      if (score >= 64) return { grade: 3, text: '3등급 하' };
+      if (score >= 61) return { grade: 4, text: '4등급 상' };
+      if (score >= 57) return { grade: 4, text: '4등급 중' };
+      if (score >= 53) return { grade: 4, text: '4등급 하' };
+      return { grade: 5, text: '5등급' };
+    }
+
+    // 회차별 등급 계산 분기
+    function calculateGrade(score, examId) {
+      if (examId === 'korean_mock_2' || examId === 'korean_mock_3') {
+        return calculateGradeRound2(score);
+      }
+      return calculateGradeRound1(score);
     }
 
     function renderTable(results) {
@@ -1888,9 +1913,9 @@
       const remaining = results.length - resultDisplayCount;
 
       tbody.innerHTML = displayData.map((r, idx) => {
-        const gradeInfo = calculateGrade(r.score || 0);
         // examId에서 회차 추출 (korean_mock_1 -> 1회)
         const examId = r.examId || 'korean_mock_1';
+        const gradeInfo = calculateGrade(r.score || 0, examId);
         const examRound = examId.replace(/[^0-9]/g, '') + '회';
         const rank = rankMap[r._id] || '-';
         const total = totalByExam[examId] || 0;
