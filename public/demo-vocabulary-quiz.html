@@ -1796,7 +1796,7 @@
         어휘력이 뛰어납니다!
       </div>
       <button class="restart-btn" onclick="completeQuizAndSaveHistory()">학습완료</button>
-      <div class="complete-notice">학습완료 버튼을 눌러야<br>학습이력 저장과<br>학습완료가 됩니다</div>
+      <div class="complete-notice">학습이력이 자동 저장되었습니다<br>학습완료 버튼을 누르면 창이 닫힙니다</div>
     </div>
   </div>
 
@@ -6913,20 +6913,18 @@
       const usedWords = getTodayUsedWords();
       const availableData = data.filter(item => !usedWords.includes(item.word));
 
-      // 남은 어휘가 부족한 경우 안내
+      // 남은 어휘가 부족한 경우: 리셋하고 처음부터 요청한 개수만큼 출제
       let actualCount = totalCount;
-      let isAllCompleted = false;
-      if (availableData.length === 0) {
-        // 모든 어휘를 다 푼 경우 - 리셋하고 처음부터
-        console.log(`🎉 오늘의 ${label} 어휘를 모두 학습했습니다! 처음부터 다시 시작합니다.`);
-        localStorage.removeItem(getTodayKey());
-        isAllCompleted = true;
-      } else if (availableData.length < totalCount) {
-        actualCount = availableData.length;
-        console.log(`📢 남은 어휘: ${actualCount}개 (전체 ${data.length}개 중 ${usedWords.length}개 완료)`);
-      }
+      let dataToUse = availableData;
 
-      const dataToUse = isAllCompleted ? data : availableData;
+      if (availableData.length < totalCount) {
+        // 남은 어휘가 요청 개수보다 적으면 리셋하고 전체에서 출제
+        console.log(`🔄 남은 어휘(${availableData.length}개)가 요청(${totalCount}개)보다 적어 리셋합니다.`);
+        localStorage.removeItem(getTodayKey());
+        dataToUse = data;
+        actualCount = Math.min(totalCount, data.length);
+        console.log(`📚 리셋 완료! 전체 ${data.length}개 중 ${actualCount}개 출제`);
+      }
 
       // 오늘의 분야 표시
       console.log(`📚 오늘의 어휘 분야: ${label} (${dataToUse.length}개 중 ${actualCount}개 출제)`);
@@ -7199,6 +7197,7 @@
     // 다음 문제
     function nextQuestion() {
       currentQuestionIndex++;
+      console.log(`[다음 문제] currentIndex: ${currentQuestionIndex}, selectedQuizData.length: ${selectedQuizData.length}, totalQuestions: ${totalQuestions}`);
 
       if (currentQuestionIndex < selectedQuizData.length) {
         document.getElementById('quizCard').style.animation = 'none';
@@ -7207,6 +7206,7 @@
           loadQuestion();
         }, 10);
       } else {
+        console.log('[퀴즈 종료] showResult 호출');
         showResult();
       }
     }
@@ -7272,6 +7272,9 @@
       // 서버에 데이터 저장
       saveDataToServer();
 
+      // 어휘학습 이력 자동 저장 (마지막 문제 완료 시 바로 저장)
+      saveVocabularyHistory();
+
       resultScreen.classList.add('show');
 
       if (percentage >= 70) {
@@ -7297,6 +7300,7 @@
       wrongAnswers = 0;
       selectedAnswer = null;
       questionResults = []; // 문제별 결과 초기화
+      historySaved = false; // 이력 저장 플래그 초기화
 
       // 문제 데이터는 초기화만 하고, 시작하기 버튼을 누를 때 새로 생성됨
       selectedQuizData = [];
@@ -7331,14 +7335,19 @@
 
     let historyOffset = 0;
     const historyLimit = 10;
+    let historySaved = false; // 중복 저장 방지 플래그
 
-    // 학습완료 버튼 클릭 시 이력 저장 및 퀴즈 재시작
-    async function completeQuizAndSaveHistory() {
+    // 어휘학습 이력 저장 (마지막 문제 완료 시 자동 호출)
+    async function saveVocabularyHistory() {
+      if (historySaved) {
+        console.log('이미 이력이 저장되었습니다');
+        return;
+      }
+
       try {
         const userStr = sessionStorage.getItem('user');
         if (!userStr) {
           console.error('사용자 정보가 없습니다');
-          restartQuiz();
           return;
         }
 
@@ -7366,14 +7375,18 @@
 
         const result = await response.json();
         if (result.ok) {
-          console.log('학습 이력이 저장되었습니다');
+          console.log('✅ 학습 이력이 자동 저장되었습니다');
+          historySaved = true; // 저장 완료 플래그
         } else {
           console.warn('학습 이력 저장 실패:', result.message);
         }
       } catch (error) {
         console.error('학습 이력 저장 오류:', error);
       }
+    }
 
+    // 학습완료 버튼 클릭 시 모달 닫기
+    function completeQuizAndSaveHistory() {
       // 모달 닫기 (부모 창에 메시지 전송)
       try {
         // iframe이므로 부모 창에 완료 메시지 전송
@@ -7872,9 +7885,24 @@
         return;
       }
 
+      // ★ 퀴즈 상태 초기화 (다시 시작할 때 이전 상태가 남아있는 버그 수정)
+      currentQuestionIndex = 0;
+      score = 0;
+      correctAnswers = 0;
+      wrongAnswers = 0;
+      selectedAnswer = null;
+      questionResults = [];
+      historySaved = false;
+      clearInterval(timerInterval); // 타이머도 초기화
+
       // 문제 수 설정 및 문제 선택
       totalQuestions = count;
       selectedQuizData = selectRandomQuestions(count);
+
+      // 실제 선택된 문제 수로 totalQuestions 업데이트 (남은 어휘가 적을 경우 대비)
+      totalQuestions = selectedQuizData.length;
+
+      console.log(`[퀴즈 시작] 요청: ${count}개, 실제 선택: ${selectedQuizData.length}개, currentIndex: ${currentQuestionIndex}`);
 
       // 문제 수 선택 화면 닫고 퀴즈 시작
       document.getElementById('questionCountScreen').classList.remove('show');
@@ -7955,7 +7983,7 @@
   <div class="cu-store-modal" id="cuStoreModal">
     <div class="cu-store-content">
       <div class="cu-store-header">
-        <div class="cu-store-title">🏪 CU 간식 상점</div>
+        <div class="cu-store-title">🏪 CU 간식 이벤트 상점</div>
         <div class="cu-store-badge-info">
           <span>🐋</span>
           <span id="cuStoreBadgeCount">0</span> 뱃지 보유
@@ -7980,8 +8008,9 @@
         </div>
         <div class="cu-store-buttons">
           <button class="cu-btn cu-btn-cancel" onclick="closeCuStore()">닫기</button>
-          <button class="cu-btn cu-btn-buy" id="cuBuyBtn" onclick="purchaseCuItems()" disabled>구매하기</button>
+          <button class="cu-btn cu-btn-buy" id="cuBuyBtn" onclick="purchaseCuItems()" disabled>응모하기</button>
         </div>
+        <div class="cu-store-notice" style="text-align:center; font-size:12px; color:#666; margin-top:10px;">*전체 이벤트 응모자 중 매월 10명의 학생에게 개별 기프티콘이 발송됩니다*</div>
       </div>
     </div>
   </div>
