@@ -25117,8 +25117,6 @@ app.post("/api/mock-exam/login", async (req, res) => {
 app.get("/api/mock-exam/my-exams", async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
-    const userPhone = req.headers['x-user-phone'];
-    const userName = req.headers['x-user-name'];
 
     if (!userId) {
       return res.status(401).json({ ok: false, error: "로그인이 필요합니다." });
@@ -25148,13 +25146,6 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
       queryConditions.push({
         'studentInfo.phoneNumber': user.phone,
         'studentInfo.studentName': user.name
-      });
-    }
-    // 헤더로 전달된 전화번호+이름으로도 매칭 (슈퍼 관리자에서 직접 접근 시)
-    if (userPhone && userName) {
-      queryConditions.push({
-        'studentInfo.phoneNumber': decodeURIComponent(userPhone),
-        'studentInfo.studentName': decodeURIComponent(userName)
       });
     }
     const allResults = await MockExamResult.find({
