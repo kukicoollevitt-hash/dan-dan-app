@@ -21172,10 +21172,14 @@ async function executeAutoTaskAssignment() {
         // 부여할 과제 목록 생성
         const tasksToAssign = [];
 
+        // ★ 분야 설정 가져오기 (없으면 전체)
+        const selectedDomains = setting.domains && setting.domains.length > 0
+          ? (setting.domains.includes('all') ? ['all'] : setting.domains)
+          : ['all'];
+
         // 시리즈별로 각각 taskCount개씩 부여
         for (const series of setting.series) {
           console.log(`  🔹 시리즈: ${series}`);
-          let seriesTaskCount = 0;  // 이 시리즈에서 부여한 개수
 
           // 시리즈별 prefix와 이름 설정
           let prefix = '';
@@ -21194,68 +21198,77 @@ async function executeAutoTaskAssignment() {
             seriesName = 'BRAIN업';
           }
 
-          // 우선순위: 1. 미완료 단원 2. 단원번호 낮은 순 3. 과목 우선순위
-          // 단원 번호 01부터 시작하여, 각 번호에서 과목 우선순위대로 검색
-          const maxUnitNum = 30;  // 가장 큰 단원 수 (현대/고전문학)
+          // ★ 분야별로 각각 taskCount개씩 부여
+          for (const domain of selectedDomains) {
+            console.log(`    📂 분야: ${domain}`);
+            let domainTaskCount = 0;
 
-          outerLoop:
-          for (let unitNum = 1; unitNum <= maxUnitNum; unitNum++) {
-            if (seriesTaskCount >= setting.taskCount) break;
+            // 해당 분야의 과목만 필터링
+            const domainSubjects = DOMAIN_SUBJECTS[domain] || DOMAIN_SUBJECTS.all;
+            const filteredSubjects = AUTO_TASK_SUBJECT_PRIORITY.filter(s => domainSubjects.includes(s));
 
-            const unitNo = String(unitNum).padStart(2, '0');
+            const maxUnitNum = 30;  // 가장 큰 단원 수 (현대/고전문학)
 
-            // 같은 단원번호 내에서 과목 우선순위대로
-            for (const subject of AUTO_TASK_SUBJECT_PRIORITY) {
-              if (seriesTaskCount >= setting.taskCount) break outerLoop;
+            domainLoop:
+            for (let unitNum = 1; unitNum <= maxUnitNum; unitNum++) {
+              if (domainTaskCount >= setting.taskCount) break;
 
-              const maxUnits = SUBJECT_MAX_UNITS[subject] || 20;
-              if (unitNum > maxUnits) continue;  // 해당 과목의 최대 단원 수 초과하면 스킵
+              const unitNo = String(unitNum).padStart(2, '0');
 
-              const subjectInfo = SUBJECT_INFO[subject];
-              const unitKey = `${prefix}${subject}_${unitNo}`;
+              // 같은 단원번호 내에서 해당 분야의 과목만 순회
+              for (const subject of filteredSubjects) {
+                if (domainTaskCount >= setting.taskCount) break domainLoop;
 
-              // 이미 완료했거나 학습실에 있는 경우 스킵
-              if (completedUnits.has(unitKey) || existingTasks.has(unitKey)) {
-                continue;
+                const maxUnits = SUBJECT_MAX_UNITS[subject] || 20;
+                if (unitNum > maxUnits) continue;  // 해당 과목의 최대 단원 수 초과하면 스킵
+
+                const subjectInfo = SUBJECT_INFO[subject];
+                const unitKey = `${prefix}${subject}_${unitNo}`;
+
+                // 이미 완료했거나 학습실에 있는 경우 스킵
+                if (completedUnits.has(unitKey) || existingTasks.has(unitKey)) {
+                  continue;
+                }
+
+                // 중복 체크 (이번에 추가할 목록에서)
+                if (tasksToAssign.some(t => t.unitKey === unitKey && t.series === series)) {
+                  continue;
+                }
+
+                // 경로 설정
+                let unitPath;
+                if (['bio', 'chem', 'physics', 'earth'].includes(subject)) {
+                  unitPath = `./BRAINUP/science/${prefix}${subject}_${unitNo}.html`;
+                } else if (['geo', 'soc', 'law', 'pol', 'econ'].includes(subject)) {
+                  unitPath = `./BRAINUP/social/${prefix}${subject}_${unitNo}.html`;
+                } else if (['classic', 'modern'].includes(subject)) {
+                  unitPath = `./BRAINUP/korlit/${prefix}${subject}_${unitNo}.html`;
+                } else if (['world1', 'world2'].includes(subject)) {
+                  unitPath = `./BRAINUP/worldlit/${prefix}${subject}_${unitNo}.html`;
+                } else if (['people1', 'people2'].includes(subject)) {
+                  unitPath = `./BRAINUP/person/${prefix}${subject}_${unitNo}.html`;
+                }
+
+                // 콘텐츠 파일에서 전체 제목 가져오기
+                const contentTitle = getContentTitle(unitKey, unitPath);
+                const fullTitle = contentTitle
+                  ? `${subjectInfo.label} ${unitNo} ${contentTitle}`
+                  : `${subjectInfo.label} ${unitNo}`;
+
+                tasksToAssign.push({
+                  unitKey,
+                  unitId: unitPath,
+                  unitTitle: fullTitle,
+                  series: series,
+                  seriesName: seriesName,
+                  fieldName: subjectInfo.field,
+                  subjectName: subjectInfo.label,
+                  assignedAt: new Date(),
+                  isAutoAssigned: true
+                });
+                domainTaskCount++;
+                console.log(`      ✅ ${unitKey} 추가 (${domainTaskCount}/${setting.taskCount})`);
               }
-
-              // 중복 체크 (이번에 추가할 목록에서)
-              if (tasksToAssign.some(t => t.unitKey === unitKey && t.series === series)) {
-                continue;
-              }
-
-              // 경로 설정
-              let unitPath;
-              if (['bio', 'chem', 'physics', 'earth'].includes(subject)) {
-                unitPath = `./BRAINUP/science/${prefix}${subject}_${unitNo}.html`;
-              } else if (['geo', 'soc', 'law', 'pol', 'econ'].includes(subject)) {
-                unitPath = `./BRAINUP/social/${prefix}${subject}_${unitNo}.html`;
-              } else if (['classic', 'modern'].includes(subject)) {
-                unitPath = `./BRAINUP/korlit/${prefix}${subject}_${unitNo}.html`;
-              } else if (['world1', 'world2'].includes(subject)) {
-                unitPath = `./BRAINUP/worldlit/${prefix}${subject}_${unitNo}.html`;
-              } else if (['people1', 'people2'].includes(subject)) {
-                unitPath = `./BRAINUP/person/${prefix}${subject}_${unitNo}.html`;
-              }
-
-              // 콘텐츠 파일에서 전체 제목 가져오기
-              const contentTitle = getContentTitle(unitKey, unitPath);
-              const fullTitle = contentTitle
-                ? `${subjectInfo.label} ${unitNo} ${contentTitle}`
-                : `${subjectInfo.label} ${unitNo}`;
-
-              tasksToAssign.push({
-                unitKey,
-                unitId: unitPath,
-                unitTitle: fullTitle,
-                series: series,
-                seriesName: seriesName,
-                fieldName: subjectInfo.field,
-                subjectName: subjectInfo.label,
-                assignedAt: new Date(),
-                isAutoAssigned: true
-              });
-              seriesTaskCount++;
             }
           }
         }
