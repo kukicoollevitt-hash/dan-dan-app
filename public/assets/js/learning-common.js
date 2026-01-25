@@ -972,6 +972,10 @@
     /* ======= (임시 alert 버전 openRemedial 삭제) ======= */
     // ===== 보완학습 문제 뱅크 (객관식 2문제씩) =====
     // window 객체로 선언하여 개별 페이지에서 덮어쓸 수 있도록 함
+    console.log('[learning-common.js] REMEDIAL_BANK 체크 전:', window.REMEDIAL_BANK ? '이미 있음' : '없음');
+    if (window.REMEDIAL_BANK) {
+      console.log('[learning-common.js] 기존 REMEDIAL_BANK 유지, lexical:', window.REMEDIAL_BANK.lexical?.problems?.[0]?.q);
+    }
     window.REMEDIAL_BANK = window.REMEDIAL_BANK || {
       literal: {
         title: "보완학습 | 핵심 이해력",
@@ -1012,24 +1016,12 @@
 
     // ===== 보완학습 열기(실구현 버전만 유지) =====
     function openRemedial() {
-      const needKeys = [];
-      if (typeof reportState !== "undefined") {
-        if (!window.reportState.q1ok) needKeys.push('literal');
-        if (!window.reportState.q2ok) needKeys.push('structural');
-        if (!window.reportState.q3ok) needKeys.push('lexical');
-        if (!window.reportState.q4ok) needKeys.push('inferential');
-        if (!window.reportState.q5ok) needKeys.push('critical');
-      }
+      // 항상 5개 영역 모두 표시
+      const needKeys = ['literal', 'structural', 'lexical', 'inferential', 'critical'];
 
       const panel = document.getElementById('remedial-panel');
       const body = document.getElementById('remedial-panel-body');
       if (!panel || !body) return;
-
-      if (needKeys.length === 0) {
-        body.innerHTML = "<p>보완이 필요한 영역이 없습니다 👏</p>";
-        panel.style.display = 'flex';
-        return;
-      }
 
       let html = "";
       needKeys.forEach(key => {
