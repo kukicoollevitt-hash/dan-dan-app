@@ -1941,8 +1941,7 @@
           <strong>주제:</strong>
           <strong>"미래의 지도를 한 가지 기준으로 묶어서 AI 지도처럼 소개해 보자."</strong>
         </div>
-        <div class="creative-hint">
-          💡 힌트) '내 기분을 분석해 주는 감정 AI 지도', '손바닥 위 홀로그램 지도', '안전한 길만 안내하는 스마트 안전 지도' 등 한 가지 기준으로 쓰면 좋아요.
+        <div class="creative-hint" id="creative-hint">
         </div>
       </div>
 
@@ -2123,7 +2122,7 @@
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
         const unit = window.CUR_UNIT || 'geo_03';
-        localStorage.setItem(`current-geo-tab:${unit}`, target);
+        localStorage.setItem(`current-geo-tab:${window.CUR_UNIT}`, target);
       });
     });
 
@@ -2564,11 +2563,11 @@
 
       // ★ 분석리포트 텍스트/박스 동기화
       updateReportPanel({
-        q1ok: reportState.q1ok,
-        q2ok: reportState.q2ok,
+        q1ok: window.reportState.q1ok,
+        q2ok: window.reportState.q2ok,
         q3ok: reportState.q3ok,
-        q4ok: reportState.q4ok,
-        q5ok: reportState.q5ok,
+        q4ok: window.reportState.q4ok,
+        q5ok: window.reportState.q5ok,
         messages: (function(){
           const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
           const lexicalOk = lexicalRatio >= 0.7;
@@ -2772,48 +2771,43 @@
         } else {
           bw.classList.add('wrong');
           if (mark) mark.textContent = "✖";
-          basicMsgs.push(`${idx+1}번: 오답 ❌`);
+          basicMsgs.push(`${idx+1}번: 오답 ❌ (정답: ${ans})`);
           fullMsgs.push(`${idx+1}번: 오답 ❌ (정답: ${ans})`);
         }
       });
 
       vocabResultBox.style.display = "block";
       vocabResultBox.innerHTML =
-        `<p><strong>맞은 개수: ${correctCnt} / ${total}</strong></p>` +
+        `<p><strong>맞은 개수: ${correctCnt} / ${total} (${Math.round(correctCnt/total*100)}점)</strong></p>` +
         basicMsgs.map(m => `<p>${m}</p>`).join("");
 
       vocabFullResultHTML =
-        `<p><strong>맞은 개수: ${correctCnt} / ${total}</strong></p>` +
+        `<p><strong>맞은 개수: ${correctCnt} / ${total} (${Math.round(correctCnt/total*100)}점)</strong></p>` +
         fullMsgs.map(m => `<p>${m}</p>`).join("");
 
       // ★ 본문 3번(어휘) 1문항까지 합산한 비율
-      const mainQ3Correct = reportState.q3ok ? 1 : 0;
+      const mainQ3Correct = window.reportState?.q3ok ? 1 : 0;
       const totalCorrect = correctCnt + mainQ3Correct;
       const totalQuestions = total + 1;
-      reportState.vocabScoreRatio = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
+      window.reportState = window.reportState || {};
+      window.reportState.vocabScoreRatio = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
 
-      const lexicalScore = Math.round((reportState.vocabScoreRatio || 0) * 10);
+      const lexicalScore = Math.round((window.reportState.vocabScoreRatio || 0) * 10);
 
-      drawRadarChart({
-        literal:     reportState.q1ok ? 10 : 6,
-        structural:  reportState.q2ok ? 10 : 6,
-        lexical:     lexicalScore,
-        inferential: reportState.q4ok ? 10 : 6,
-        critical:    reportState.q5ok ? 10 : 6
-      });
+      // 레이더 차트는 본문학습 채점에서만 반영 (어휘학습에서는 변경 안 함)
 
       updateReportPanel({
-        q1ok: reportState.q1ok,
-        q2ok: reportState.q2ok,
-        q3ok: true,
-        q4ok: reportState.q4ok,
-        q5ok: reportState.q5ok,
+        q1ok: window.reportState.q1ok,
+        q2ok: window.reportState.q2ok,
+        q3ok: window.reportState.q3ok,
+        q4ok: window.reportState.q4ok,
+        q5ok: window.reportState.q5ok,
         messages: [
-          "핵심 이해력(객관식): " + (reportState.q1ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
-          "구조 파악력(객관식): " + (reportState.q2ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
-          "어휘 맥락력(어휘학습): " + ((reportState.vocabScoreRatio || 0) >= 0.7 ? "어휘 맥락력이 좋아요! ✅" : "어휘 복습이 해요 ❗") + " (정답 " + (totalCorrect) + " / " + (total + 1) + ")",
-          "추론·통합력(빈칸): " + (reportState.q4ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
-          "비판·적용력(서술형): " + (reportState.q5ok ? "좋아요 ✅" : "보완 필요해요 ❗")
+          "핵심 이해력(객관식): " + (window.reportState.q1ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
+          "구조 파악력(객관식): " + (window.reportState.q2ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
+          "어휘 맥락력(어휘학습): " + ((window.reportState.vocabScoreRatio || 0) >= 0.7 ? "어휘 맥락력이 좋아요! ✅" : "어휘 복습이 해요 ❗") + " (정답 " + (totalCorrect) + " / " + (total + 1) + ")",
+          "추론·통합력(빈칸): " + (window.reportState.q4ok ? "좋아요 ✅" : "보완 필요해요 ❗"),
+          "비판·적용력(서술형): " + (window.reportState.q5ok ? "좋아요 ✅" : "보완 필요해요 ❗")
         ]
       });
 

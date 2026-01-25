@@ -145,6 +145,7 @@
     console.log('[study page] CUR_UNIT =', window.CUR_UNIT);
 
     // 분석리포트 탭으로 새로고침된 경우 로딩 텍스트 변경
+    const savedTab = localStorage.getItem(`current-modern-tab:${window.CUR_UNIT}`);
     if (savedTab === 'report') {
       document.addEventListener('DOMContentLoaded', () => {
         const loadingText = document.querySelector('.loading-text');
@@ -441,24 +442,12 @@
     // ===== 보완학습 열기 =====
     const NUM_CIRCLE = ['①', '②', '③', '④'];
     function openRemedial() {
-      const needKeys = [];
-      if (typeof reportState !== "undefined") {
-        if (!reportState.q1ok) needKeys.push('literal');
-        if (!reportState.q2ok) needKeys.push('structural');
-        if (!reportState.q3ok) needKeys.push('lexical');
-        if (!reportState.q4ok) needKeys.push('inferential');
-        if (!reportState.q5ok) needKeys.push('critical');
-      }
+      // 모든 영역 보완학습 문제 표시 (다 맞춰도 나옴)
+      const needKeys = ['literal', 'structural', 'lexical', 'inferential', 'critical'];
 
       const panel = document.getElementById('remedial-panel');
       const body = document.getElementById('remedial-panel-body');
       if (!panel || !body) return;
-
-      if (needKeys.length === 0) {
-        body.innerHTML = "<p style='text-align:center; padding:20px;'>보완이 필요한 영역이 없습니다 👏</p>";
-        panel.style.display = 'flex';
-        return;
-      }
 
       let html = "";
       needKeys.forEach(key => {
@@ -2616,7 +2605,7 @@
 
         activateTab(target);
         // 현재 탭을 단원별로 localStorage에 저장
-        localStorage.setItem(`current-modern-tab:${unit}`, target);
+        localStorage.setItem(`current-modern-tab:${window.CUR_UNIT}`, target);
       });
     });
 
@@ -2923,6 +2912,11 @@
 
       // ★ window.reportState에도 저장 (sendLearningLog에서 사용)
       window.reportState = window.reportState || {};
+      window.reportState.q1ok = q1ok;
+      window.reportState.q2ok = q2ok;
+      window.reportState.q3ok = q3ok;
+      window.reportState.q4ok = q4ok;
+      window.reportState.q5ok = q5ok;
       window.reportState.radarScores = reportState.radarScores;
 
       // ★ 분석리포트 텍스트/박스 동기화
@@ -2975,7 +2969,7 @@
         vocabScoreRatio: reportState.vocabScoreRatio,
         literal: reportState.q1ok ? 10 : 6,
         structural: reportState.q2ok ? 10 : 6,
-        lexical: lexicalFromRatio,
+        lexical: reportState.q3ok ? 10 : 6,
         inferential: reportState.q4ok ? 10 : 6,
         critical: reportState.q5ok ? 10 : 6
       }));
@@ -3013,7 +3007,7 @@
             vocabScoreRatio: reportState.vocabScoreRatio || 0,
             literal: reportState.q1ok ? 10 : 6,
             structural: reportState.q2ok ? 10 : 6,
-            lexical: lexicalFromRatio,
+            lexical: reportState.q3ok ? 10 : 6,
             inferential: reportState.q4ok ? 10 : 6,
             critical: reportState.q5ok ? 10 : 6,
             inputs: currentInputs,

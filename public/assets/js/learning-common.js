@@ -532,7 +532,7 @@
         // ✅ 레이더 차트 업데이트 (q1ok 형식 기반)
         // lexical은 서버에 저장된 값이 있으면 우선 사용 (어휘 빈칸 채우기 점수)
         if (typeof window.drawRadarChart === 'function') {
-          const lexicalValue = (typeof data.lexical === 'number') ? data.lexical : (data.q3ok ? 10 : 6);
+          const lexicalValue = (typeof data.lexical === 'number' && data.lexical >= 6) ? data.lexical : (data.q3ok ? 10 : 6);
           window.drawRadarChart({
             literal: data.q1ok ? 10 : 6,
             structural: data.q2ok ? 10 : 6,
@@ -550,6 +550,13 @@
         window.reportState.q3ok = data.q3ok;
         window.reportState.q4ok = data.q4ok;
         window.reportState.q5ok = data.q5ok;
+        window.reportState.radarScores = {
+          literal: data.q1ok ? 10 : 6,
+          structural: data.q2ok ? 10 : 6,
+          lexical: lexicalValue,
+          inferential: data.q4ok ? 10 : 6,
+          critical: data.q5ok ? 10 : 6
+        };
 
         // ✅ 분석리포트 해설 업데이트 (q1ok 형식)
         if (typeof updateReportPanel === 'function') {
@@ -628,6 +635,13 @@
         window.reportState.q3ok = q3ok;
         window.reportState.q4ok = q4ok;
         window.reportState.q5ok = q5ok;
+        window.reportState.radarScores = {
+          literal: q1ok ? 10 : 6,
+          structural: q2ok ? 10 : 6,
+          lexical: q3ok ? 10 : 6,
+          inferential: q4ok ? 10 : 6,
+          critical: q5ok ? 10 : 6
+        };
 
         // ✅ 분석리포트 해설 업데이트 (results 배열 형식)
         if (typeof updateReportPanel === 'function') {
@@ -1574,7 +1588,7 @@
       const hintDiv = topicBox.querySelector('.creative-hint');
       if (hintDiv) {
         if (creative.hint) {
-          hintDiv.textContent = '💡 힌트) ' + creative.hint;
+          hintDiv.textContent = creative.hint;
           hintDiv.style.display = 'block';
         } else {
           // 힌트가 없으면 숨김
