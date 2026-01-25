@@ -23733,11 +23733,13 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
     const quizzes = [];
 
     for (const unitCode of gateUnits.slice(0, 5)) {
-      // unitCode 예: "geo_01", "bio_05", "classic_12", "fit_physics_01", "fit_bio_02", "on_physics_01"
+      // unitCode 예: "geo_01", "bio_05", "classic_12", "fit_physics_01", "fit_bio_02", "on_physics_01", "deep_physics_01"
       // FIT 시리즈: fit_physics_01, fit_bio_02 등
       // ON 시리즈 (브레인온): on_physics_01, on_bio_02 등
+      // DEEP 시리즈 (브레인딥): deep_physics_01, deep_chem_01 등
       const isFit = unitCode.startsWith('fit_');
       const isOn = unitCode.startsWith('on_');
+      const isDeep = unitCode.startsWith('deep_');
       let subject, num;
 
       if (isFit) {
@@ -23752,6 +23754,12 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
         if (!onMatch) continue;
         subject = onMatch[1];
         num = onMatch[2].padStart(2, '0');
+      } else if (isDeep) {
+        // deep_physics_01 → subject: physics, num: 01
+        const deepMatch = unitCode.match(/deep_([a-z]+\d?)_(\d{1,2})/);
+        if (!deepMatch) continue;
+        subject = deepMatch[1];
+        num = deepMatch[2].padStart(2, '0');
       } else {
         // geo_01, bio_05 → subject: geo, num: 01
         const match = unitCode.match(/([a-z]+\d?)_(\d{1,2})/);
@@ -23767,12 +23775,14 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
       else if (['world1', 'world2'].includes(subject)) folder = 'worldlit';
       else if (['people1', 'people2'].includes(subject)) folder = 'person';
 
-      // FIT 시리즈는 fit_xxx_content.js, ON 시리즈는 on_xxx_content.js 파일 사용
+      // FIT 시리즈는 fit_xxx_content.js, ON 시리즈는 on_xxx_content.js, DEEP 시리즈는 deep_xxx_content.js 파일 사용
       let contentFileName;
       if (isFit) {
         contentFileName = `fit_${subject}_content.js`;
       } else if (isOn) {
         contentFileName = `on_${subject}_content.js`;
+      } else if (isDeep) {
+        contentFileName = `deep_${subject}_content.js`;
       } else {
         contentFileName = `${subject}_content.js`;
       }
@@ -23783,12 +23793,14 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
           const content = fs.readFileSync(contentPath, 'utf8');
 
           // 해당 단원의 quiz 객체 찾기
-          // FIT 시리즈는 fit_physics_01 형식, ON 시리즈는 on_physics_01, 일반 시리즈는 physics_01 형식
+          // FIT 시리즈는 fit_physics_01 형식, ON 시리즈는 on_physics_01, DEEP 시리즈는 deep_physics_01, 일반 시리즈는 physics_01 형식
           let unitKey;
           if (isFit) {
             unitKey = `fit_${subject}_${num}`;
           } else if (isOn) {
             unitKey = `on_${subject}_${num}`;
+          } else if (isDeep) {
+            unitKey = `deep_${subject}_${num}`;
           } else {
             unitKey = `${subject}_${num}`;
           }
