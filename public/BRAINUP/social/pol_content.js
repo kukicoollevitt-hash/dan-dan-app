@@ -89,7 +89,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 정치가 필요한 이유 (갈등 해결)',
         '4문단 : 일상 속 정치 활동 예시와 참여'
       ],
+      q3_html: `많은 사람들이 함께 생활하다 보면 서로의 생각이 달라 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄷ">이 생기곤 합니다. 이럴 때 중요한 역할을 하는 것이 바로 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅊ">입니다.`,
       q3_1_ph: 'ㄱㄷ', q3_2_ph: 'ㅈㅊ',
+      q4_html: `정치란 사람들 사이에 생긴 의견 차이와 이해관계를 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅈ">하고 모두가 더 나은 방향으로 살아갈 수 있도록 돕는 활동입니다. 더 좋은 사회를 만들기 위해서는 정치에 올바르게 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅇ">하려는 태도가 필요합니다.`,
       q4_1_ph: 'ㅈㅈ', q4_2_ph: 'ㅊㅇ',
       q5_text: '본문에서 "정치는 몇몇 사람들만 하는 특별한 일이 아니라, 우리 모두의 삶에 영향을 주는 중요한 과정"이라고 했습니다. 학교나 가정에서 경험할 수 있는 넓은 의미의 정치 활동 예시를 두 가지 이상 써 보세요.'
     },
@@ -159,7 +161,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 민주주의의 정의와 특징 (국민이 주인)',
         '4문단 : 민주주의의 두 가지 방식 (직접/대의)'
       ],
+      q3_html: `첫 번째는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅈ"> 민주주의로, 나라의 중요한 일을 국민이 직접 모여 결정하는 방식이에요. 두 번째는 <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅇ"> 민주주의로, 국민이 대표를 뽑아 그 대표들이 정책을 정하고 나라 일을 처리하는 방식이죠.`,
       q3_1_ph: 'ㅈㅈ', q3_2_ph: 'ㄷㅇ',
+      q4_html: `평등은 '<input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅎ">'를 똑같이 주는 것을 의미하고, 노력과 능력에 따른 차이는 자연스럽게 나타날 수 있습니다. 모든 사람은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅍㄷ">하게 대우받아야 합니다.`,
       q4_1_ph: 'ㄱㅎ', q4_2_ph: 'ㅍㄷ',
       q5_text: '민주주의에서 말하는 \'평등\'이 결과의 평등이 아니라 기회의 평등을 의미하는 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
@@ -232,8 +236,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '4문단 : 5·18 민주화 운동과 6월 민주항쟁'
       ],
       /* 03. 어휘 맥락력 (빈칸 2개) */
+      q3_html: `이 운동을 통해 대통령을 국민이 직접 뽑는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅅㅈ">가 도입되고, 1990년대에 들어서면서 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅂㅈㅊㅈ">가 본격적으로 실시되었습니다.`,
       q3_1_ph: 'ㅈㅅㅈ', q3_2_ph: 'ㅈㅂㅈㅊㅈ',
       /* 04. 추론·통합력 (빈칸 2개) */
+      q4_html: `우리나라의 민주주의는 많은 시민의 용기와 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅅ">을 바탕으로 조금씩 자리를 잡아 왔습니다. 시대마다 시민들이 직접 행동하고 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅇ">해 만들어 낸 소중한 결과입니다.`,
       q4_1_ph: 'ㅎㅅ', q4_2_ph: 'ㅊㅇ',
       /* 05. 비판·적용력 (서술형) */
       q5_text: '본문에서 "우리나라의 민주주의는 시대마다 시민들이 직접 행동하고 참여해 만들어 낸 소중한 결과"라고 했습니다. 이를 뒷받침하는 역사적 사건을 두 가지 이상 들어 설명해 보세요.'
@@ -406,7 +412,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 주권과 대표 민주주의',
         '4문단 : 보통·직접·평등 선거'
       ],
+      q3_html: `국민이 국가 운영의 방향을 결정할 힘을 가지고 있다는 것을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㄱ">이라고 합니다. 국민이 자신의 뜻을 대신할 사람을 선거로 뽑아 중요한 일을 맡기는 방식을 <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅍㅁㅈㅈㅇ">라고 합니다.`,
       q3_1_ph: 'ㅈㄱ', q3_2_ph: 'ㄷㅍㅁㅈㅈㅇ',
+      q4_html: `민주 선거에서 빠질 수 없는 것이 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅁㅅㄱ">의 원칙이에요. 누가 어떤 후보를 선택했는지 다른 사람이 알 수 없어야 눈치를 보거나 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅇㅇ">을 걱정하지 않고 자신의 의사를 자유롭게 표현할 수 있습니다.`,
       q4_1_ph: 'ㅂㅁㅅㄱ', q4_2_ph: 'ㅂㅇㅇ',
       q5_text: '비밀 선거가 민주주의에서 중요한 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },

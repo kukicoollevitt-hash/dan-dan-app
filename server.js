@@ -12688,8 +12688,17 @@ app.get("/my-learning", async (req, res) => {
             dateSubjectScores[dateStr][subjectKey].sum += score;
             dateSubjectScores[dateStr][subjectKey].count += 1;
             // 단원별 점수 저장 (단원명, 점수)
+            // fit_, deep_, on_ 접두어 제거 후 fallback 조회
+            let unitTitle = UNIT_TITLES[log.unit];
+            if (!unitTitle && log.unit) {
+              let normalizedCode = log.unit;
+              if (log.unit.startsWith('fit_')) normalizedCode = log.unit.substring(4);
+              else if (log.unit.startsWith('deep_')) normalizedCode = log.unit.substring(5);
+              else if (log.unit.startsWith('on_')) normalizedCode = log.unit.substring(3);
+              unitTitle = UNIT_TITLES[normalizedCode];
+            }
             dateSubjectScores[dateStr][subjectKey].units.push({
-              name: UNIT_TITLES[log.unit] || log.unit,
+              name: unitTitle || log.unit,
               score: score
             });
           });
@@ -12876,6 +12885,11 @@ app.get("/my-learning", async (req, res) => {
               options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                  padding: {
+                    top: 20
+                  }
+                },
                 plugins: {
                   legend: {
                     display: false
@@ -13547,7 +13561,15 @@ app.get("/my-learning", async (req, res) => {
             }
 
             // UNIT_TITLES에서 풀네임 가져오기, 없으면 shortName 사용
-            const fullTitle = UNIT_TITLES[unitCode];
+            // fit_, deep_, on_ 접두어 제거 후 fallback 조회 (fit_people2_01 → people2_01)
+            let fullTitle = UNIT_TITLES[unitCode];
+            if (!fullTitle && unitCode) {
+              let normalizedCode = unitCode;
+              if (unitCode.startsWith('fit_')) normalizedCode = unitCode.substring(4);
+              else if (unitCode.startsWith('deep_')) normalizedCode = unitCode.substring(5);
+              else if (unitCode.startsWith('on_')) normalizedCode = unitCode.substring(3);
+              fullTitle = UNIT_TITLES[normalizedCode];
+            }
             let unitName = fullTitle ? (shortName + ' ' + fullTitle) : shortName;
 
             // 레이더 평균 점수 계산 (종합 학습 기록과 동일)
@@ -14024,7 +14046,15 @@ app.get("/my-learning", async (req, res) => {
                   shortName = subject + ' ' + number;
                 }
 
-                const fullTitle = UNIT_TITLES[unitCode];
+                // fit_, deep_, on_ 접두어 제거 후 fallback 조회 (fit_people2_01 → people2_01)
+                let fullTitle = UNIT_TITLES[unitCode];
+                if (!fullTitle && unitCode) {
+                  let normalizedCode = unitCode;
+                  if (unitCode.startsWith('fit_')) normalizedCode = unitCode.substring(4);
+                  else if (unitCode.startsWith('deep_')) normalizedCode = unitCode.substring(5);
+                  else if (unitCode.startsWith('on_')) normalizedCode = unitCode.substring(3);
+                  fullTitle = UNIT_TITLES[normalizedCode];
+                }
                 let unitName = fullTitle ? (shortName + ' ' + fullTitle) : shortName;
 
                 const r = log.radar || {};
@@ -24093,14 +24123,25 @@ app.get("/api/super/gate-pass-details", requireSuperAdmin, async (req, res) => {
         totalAttempts: attempts.length,      // 총 시도 횟수
         cumulativeTime: totalTimeAll,        // 누적 전체 시간
         cumulativeWrongClicks: totalWrongClicksAll, // 누적 오답 클릭
-        questionDetails: Object.entries(questionTimeMap).map(([no, data]) => ({
-          questionNo: parseInt(no),
-          unitCode: data.unitCode,
-          unitTitle: data.unitTitle || UNIT_TITLES[data.unitCode] || '',
-          qType: data.qType || 'q1',
-          cumulativeTime: data.time,         // 문항별 누적 시간
-          cumulativeWrongClicks: data.wrongs // 문항별 누적 오답
-        })),
+        questionDetails: Object.entries(questionTimeMap).map(([no, data]) => {
+          // fit_, deep_, on_ 접두어 제거 후 fallback 조회
+          let unitTitle = data.unitTitle || UNIT_TITLES[data.unitCode];
+          if (!unitTitle && data.unitCode) {
+            let normalizedCode = data.unitCode;
+            if (data.unitCode.startsWith('fit_')) normalizedCode = data.unitCode.substring(4);
+            else if (data.unitCode.startsWith('deep_')) normalizedCode = data.unitCode.substring(5);
+            else if (data.unitCode.startsWith('on_')) normalizedCode = data.unitCode.substring(3);
+            unitTitle = UNIT_TITLES[normalizedCode];
+          }
+          return {
+            questionNo: parseInt(no),
+            unitCode: data.unitCode,
+            unitTitle: unitTitle || '',
+            qType: data.qType || 'q1',
+            cumulativeTime: data.time,         // 문항별 누적 시간
+            cumulativeWrongClicks: data.wrongs // 문항별 누적 오답
+          };
+        }),
         finalAttempt: finalAttempt ? {
           totalTime: finalAttempt.totalTime,
           totalWrongClicks: finalAttempt.totalWrongClicks,
