@@ -7443,20 +7443,23 @@ if (logoutConfirmBtn) {
         const stuKey = buildStudentKey(stu);
         const keyPrefix = `dan-progress:${stuKey}:`;
 
-        // ✅ BRAINUP, BRAINFIT, BRAINON 시리즈 모두 가져오기
+        // ✅ BRAINUP, BRAINFIT, BRAINON, BRAIN딥 시리즈 모두 가져오기
         const urlBrainUp = `/api/completion-status?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}&series=BRAIN업`;
         const urlBrainFit = `/api/completion-status?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}&series=BRAIN핏`;
         const urlBrainOn = `/api/completion-status?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}&series=BRAIN온`;
+        const urlBrainDeep = `/api/completion-status?grade=${encodeURIComponent(stu.grade || '')}&name=${encodeURIComponent(stu.name || '')}&series=BRAIN딥`;
 
-        const [dataBrainUp, dataBrainFit, dataBrainOn] = await Promise.all([
+        const [dataBrainUp, dataBrainFit, dataBrainOn, dataBrainDeep] = await Promise.all([
           ApiCache.fetch(urlBrainUp),
           ApiCache.fetch(urlBrainFit),
-          ApiCache.fetch(urlBrainOn)
+          ApiCache.fetch(urlBrainOn),
+          ApiCache.fetch(urlBrainDeep)
         ]);
 
         console.log('[syncCompletionStatus] BRAINUP 응답:', dataBrainUp);
         console.log('[syncCompletionStatus] BRAINFIT 응답:', dataBrainFit);
         console.log('[syncCompletionStatus] BRAINON 응답:', dataBrainOn);
+        console.log('[syncCompletionStatus] BRAIN딥 응답:', dataBrainDeep);
 
         // 두 시리즈의 completedUnits 합치기
         let allCompletedUnits = [];
@@ -7478,6 +7481,14 @@ if (logoutConfirmBtn) {
             return unit.startsWith('on_') ? unit : `on_${unit}`;
           });
           allCompletedUnits = allCompletedUnits.concat(onUnits);
+        }
+        if (dataBrainDeep && dataBrainDeep.ok && Array.isArray(dataBrainDeep.completedUnits)) {
+          // ✅ BRAIN딥 단원은 deep_ 접두어 추가 (DB에 deep_people1_01로 저장되어 있음)
+          const deepUnits = dataBrainDeep.completedUnits.map(unit => {
+            // 이미 deep_ 접두어가 있으면 그대로, 없으면 추가
+            return unit.startsWith('deep_') ? unit : `deep_${unit}`;
+          });
+          allCompletedUnits = allCompletedUnits.concat(deepUnits);
         }
 
         if (allCompletedUnits.length === 0) {
