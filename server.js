@@ -3928,8 +3928,8 @@ app.get("/admin/users", async (req, res) => {
         if (!isPendingA && isPendingB) return 1;
 
         // 2. 시리즈 미부여 학생이 그 다음
-        const hasSeriesA = a.studyRoom && a.studyRoom.assignedTasks && a.studyRoom.assignedTasks.length > 0;
-        const hasSeriesB = b.studyRoom && b.studyRoom.assignedTasks && b.studyRoom.assignedTasks.length > 0;
+        const hasSeriesA = a.assignedSeries && a.assignedSeries.length > 0;
+        const hasSeriesB = b.assignedSeries && b.assignedSeries.length > 0;
         if (!hasSeriesA && hasSeriesB) return -1;
         if (hasSeriesA && !hasSeriesB) return 1;
 
@@ -4891,9 +4891,18 @@ app.get("/admin/users", async (req, res) => {
           // 일반 과제는 LearningLog에서 확인
           // unitId에서 단원 코드 추출: ./BRAINUP/science/bio_01.html → bio_01
           const unitId = t.unitId || t.id || '';
-          const match = unitId.match(/([a-z_]+_\d+)\.html$/i) || unitId.match(/([a-z_]+_\d+)$/i);
-          const unitCode = match ? match[1] : unitId;
-          return completedUnits.has(unitCode);
+          const match = unitId.match(/([a-z0-9_]+_\d+)\.html$/i) || unitId.match(/([a-z0-9_]+_\d+)$/i);
+          let unitCode = match ? match[1] : unitId;
+
+          // 접두어 제거하여 기본 코드 추출 (fit_world1_01 → world1_01)
+          const baseCode = unitCode.replace(/^(fit_|on_|deep_)/, '');
+
+          // 기본 코드 또는 접두어 포함 코드 중 하나라도 완료되었으면 완료로 처리
+          return completedUnits.has(unitCode) ||
+                 completedUnits.has(baseCode) ||
+                 completedUnits.has('fit_' + baseCode) ||
+                 completedUnits.has('on_' + baseCode) ||
+                 completedUnits.has('deep_' + baseCode);
         }
       }).length;
 
@@ -6735,6 +6744,12 @@ app.get("/api/admin/logs", async (req, res) => {
       .lean();
 
     console.log("[/api/admin/logs] 조회 결과:", logs.length, "개 기록 찾음");
+    // 디버그: unit 값 확인
+    logs.forEach(log => {
+      if (log.unit && log.unit.includes('world2')) {
+        console.log("[DEBUG] world2 unit:", log.unit, "| UNIT_TITLES[unit]:", UNIT_TITLES[log.unit]);
+      }
+    });
 
     // UserProgress에서 AI 과제 복습 완료 시간 가져오기
     const userProgress = await UserProgress.findOne({ grade, name });
@@ -12101,6 +12116,12 @@ app.get("/my-learning", async (req, res) => {
         const UNIT_PROGRESS_MAP = ${JSON.stringify(unitProgressMap)};  // ✅ 어휘학습 점수 포함
         const rawSeries = '${series || 'all'}';  // 현재 페이지의 시리즈 (단축코드) - 기본값 전체
 
+        // 디버그: UNIT_TITLES 키 확인
+        console.log('[UNIT_TITLES 디버그] 전체 키 개수:', Object.keys(UNIT_TITLES).length);
+        console.log('[UNIT_TITLES 디버그] fit_world2_01:', UNIT_TITLES['fit_world2_01']);
+        console.log('[UNIT_TITLES 디버그] fit_pol_01:', UNIT_TITLES['fit_pol_01']);
+        console.log('[UNIT_TITLES 디버그] fit_world2 키 존재여부:', Object.keys(UNIT_TITLES).filter(k => k.startsWith('fit_world2')).length, '개');
+
         // 시리즈 단축코드를 전체 이름으로 변환
         function getFullSeriesName(series) {
           const seriesMap = {
@@ -14048,12 +14069,14 @@ app.get("/my-learning", async (req, res) => {
 
                 // fit_, deep_, on_ 접두어 제거 후 fallback 조회 (fit_people2_01 → people2_01)
                 let fullTitle = UNIT_TITLES[unitCode];
+                console.log('[주간리포트 디버그] unitCode:', unitCode, '| UNIT_TITLES[unitCode]:', fullTitle);
                 if (!fullTitle && unitCode) {
                   let normalizedCode = unitCode;
                   if (unitCode.startsWith('fit_')) normalizedCode = unitCode.substring(4);
                   else if (unitCode.startsWith('deep_')) normalizedCode = unitCode.substring(5);
                   else if (unitCode.startsWith('on_')) normalizedCode = unitCode.substring(3);
                   fullTitle = UNIT_TITLES[normalizedCode];
+                  console.log('[주간리포트 디버그] normalizedCode:', normalizedCode, '| fallback result:', fullTitle);
                 }
                 let unitName = fullTitle ? (shortName + ' ' + fullTitle) : shortName;
 

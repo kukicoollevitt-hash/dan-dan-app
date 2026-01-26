@@ -1090,6 +1090,12 @@
       body.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
       body.querySelectorAll('.remed-result').forEach(el => el.remove());
     }
+
+    // ✅ 보완학습 함수 전역 노출
+    window.openRemedial = openRemedial;
+    window.gradeRemedial = gradeRemedial;
+    window.resetRemedial = resetRemedial;
+
     /* ===== 전역 리포트 상태 ===== */
     // window 객체로 선언하여 개별 페이지에서 덮어쓸 수 있도록 함
     window.reportState = window.reportState || { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
