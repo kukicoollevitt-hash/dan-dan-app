@@ -11179,17 +11179,20 @@ async function performLogout() {
       const name = user.name || '';
 
       if (!grade || !name) {
-        console.log('⚠️ 사용자 정보 없음');
+        console.log('⚠️ 사용자 정보 없음 (시리즈 뱃지)');
+        document.getElementById('radarGradeBadge').innerHTML = '-<span class="badge-unit">점</span> / 0<span class="badge-unit">%</span>';
         return;
       }
 
       try {
         const url = `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
+        console.log('📊 뱃지 API 호출:', url, '사용자:', grade, name);
         const response = await fetch(url);
         const logs = await response.json();
 
         if (!logs || logs.length === 0) {
-          document.getElementById('radarGradeBadge').textContent = '-';
+          console.log('⚠️ 학습 기록 없음 (시리즈:', seriesKey, ')');
+          document.getElementById('radarGradeBadge').innerHTML = '-<span class="badge-unit">점</span> / 0<span class="badge-unit">%</span>';
           // localStorage에도 저장
           localStorage.setItem('selectedSeriesBadge', JSON.stringify({
             series: seriesKey,
@@ -11200,6 +11203,7 @@ async function performLogout() {
         }
 
         // 시리즈별 단원 필터링
+        console.log('📊 전체 로그 수:', logs.length, '시리즈:', seriesKey);
         const seriesPrefix = seriesKey === 'BRAINFIT' ? 'fit_' : (seriesKey === 'BRAINDEEP' ? 'deep_' : (seriesKey === 'BRAINON' ? 'on_' : ''));
         const filteredLogs = logs.filter(log => {
           if (!log.unit) return false;
@@ -11214,6 +11218,7 @@ async function performLogout() {
           }
           return true;
         });
+        console.log('📊 필터링된 로그 수:', filteredLogs.length);
 
         // 진도율 계산 (시리즈별 200개 단원 기준)
         const completedUnits = new Set();

@@ -21078,7 +21078,18 @@ async function executeAutoTaskForStudent(grade, name, setting) {
         progress.studyRoom = { assignedTasks: [] };
       }
 
-      for (const task of tasksToAssign) {
+      // 저장 직전 중복 체크 (동시 실행 방지)
+      const existingUnitIds = new Set(
+        progress.studyRoom.assignedTasks.map(t => t.unitId).filter(Boolean)
+      );
+      const filteredTasks = tasksToAssign.filter(task => !existingUnitIds.has(task.unitId));
+
+      if (filteredTasks.length === 0) {
+        console.log(`⏭️ [${grade} ${name}] 이미 동일한 과제가 존재합니다. 스킵합니다.`);
+        return;
+      }
+
+      for (const task of filteredTasks) {
         progress.studyRoom.assignedTasks.push({
           unitId: task.unitId,
           unitTitle: task.unitTitle,
@@ -21091,8 +21102,8 @@ async function executeAutoTaskForStudent(grade, name, setting) {
       }
 
       await progress.save();
-      console.log(`✅ [${grade} ${name}] ${tasksToAssign.length}개 과제 부여 완료`);
-      tasksToAssign.forEach(t => console.log(`   - ${t.seriesName} > ${t.subjectName} ${t.unitTitle.split(' ')[1]}`));
+      console.log(`✅ [${grade} ${name}] ${filteredTasks.length}개 과제 부여 완료`);
+      filteredTasks.forEach(t => console.log(`   - ${t.seriesName} > ${t.subjectName} ${t.unitTitle.split(' ')[1]}`));
     } else {
       console.log(`ℹ️ [${grade} ${name}] 부여할 미완료 과제가 없습니다`);
     }
