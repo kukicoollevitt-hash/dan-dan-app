@@ -146,12 +146,12 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: MONGO_URI,
-      ttl: 60 * 60 * 2, // 2시간 (초 단위)
+      ttl: 60 * 60 * 24, // 24시간 (초 단위)
       autoRemove: 'native'
     }),
     cookie: {
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 2, // 2시간
+      maxAge: 1000 * 60 * 60 * 24, // 24시간
     },
   })
 );
