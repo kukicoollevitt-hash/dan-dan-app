@@ -1341,18 +1341,64 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('content').style.display = 'block';
 
+      // 정답/오답 개수 먼저 계산
+      let correctCount = 0;
+      let wrongCount = 0;
+      data.answers.forEach((userAnswer, index) => {
+        if (index < quizData.length) {
+          const isCorrect = userAnswer === quizData[index].correct;
+          if (isCorrect) {
+            correctCount++;
+          } else {
+            wrongCount++;
+          }
+        }
+      });
+
+      // 실제 점수 결정 (data.score가 0이거나 없으면 correctCount 사용)
+      const displayScore = (data.score && data.score > 0) ? data.score : correctCount;
+
+      // 등급 재계산 (점수 기반)
+      const studentGradeValue = data.studentGrade || '';
+      const isElementary = ['3학년', '4학년', '5학년', '6학년'].includes(studentGradeValue);
+      let displayGrade;
+
+      if (isElementary) {
+        // 초등 기준: 23~25 A+, 19~22 A, 14~18 C+, 0~13 D
+        if (displayScore >= 23) {
+          displayGrade = "최우수 (A+) / 수능내신 1~2등급(예측)";
+        } else if (displayScore >= 19) {
+          displayGrade = "우수 (A) / 수능내신 3등급(예측)";
+        } else if (displayScore >= 14) {
+          displayGrade = "보통 (C+) / 수능내신 4등급(예측)";
+        } else {
+          displayGrade = "기초 (D) / 수능내신 5등급(예측)";
+        }
+      } else {
+        // 중고등 기준: 24~25 A+, 22~23 A, 16~21 C+, 0~15 D
+        if (displayScore >= 24) {
+          displayGrade = "최우수 (A+) / 수능내신 1~2등급(예측)";
+        } else if (displayScore >= 22) {
+          displayGrade = "우수 (A) / 수능내신 3등급(예측)";
+        } else if (displayScore >= 16) {
+          displayGrade = "보통 (C+) / 수능내신 4등급(예측)";
+        } else {
+          displayGrade = "기초 (D) / 수능내신 5등급(예측)";
+        }
+      }
+
       // 학생 정보 표시
-      const gradeClass = `grade-${data.grade}`;
+      const gradeClass = `grade-${displayGrade}`;
       document.getElementById('studentInfo').innerHTML = `
         <span class="info-badge name">${data.studentName}</span>
         <span class="info-badge grade">${data.studentGrade}</span>
-        <span class="info-badge result-grade ${gradeClass}">${data.grade}등급</span>
-        <span class="info-badge score">${data.score}/25점</span>
+        <span class="info-badge result-grade ${gradeClass}">${displayGrade}</span>
+        <span class="info-badge score">${displayScore}/25점</span>
       `;
 
-      // 정답/오답 개수 계산 및 스킬별/과목별 점수 계산
-      let correctCount = 0;
-      let wrongCount = 0;
+      // 스킬별/과목별 점수 계산 (정답/오답은 위에서 이미 계산됨)
+      correctCount = 0;
+      wrongCount = 0;
       const skillScores = {
         "핵심 이해력": 0,
         "구조 파악력": 0,
@@ -1409,30 +1455,57 @@
         if (skillScores[skill] < skillScores[lowestSkill]) lowestSkill = skill;
       }
 
-      // 분석 결과 계산
-      const score = data.score || correctCount;
+      // 분석 결과 계산 (학년별 기준 적용)
+      const score = displayScore; // 이미 계산된 displayScore 사용
       let series, recommendation, strength, weakness;
 
-      if (score >= 24) {
-        series = "BRAIN 딥";
-        recommendation = "고급 수준의 문해력을 갖추셨습니다. BRAIN 딥 시리즈로 더 깊은 사고력을 키워보세요!";
-        strength = `${highestSkill} 영역이 특히 뛰어납니다 (정답률 ${skillPercentages[highestSkill]}%). 복잡한 문맥을 이해하는 능력이 탁월합니다.`;
-        weakness = skillScores[lowestSkill] < 4 ? `${lowestSkill} 영역을 더 강화하면 완벽합니다!` : "현재 수준을 유지하며, 더 다양한 장르의 텍스트를 접해보세요.";
-      } else if (score >= 20) {
-        series = "BRAIN 핏";
-        recommendation = "추론력과 이해력이 고르게 발달했습니다. BRAIN 핏 시리즈로 균형 잡힌 문해력을 완성하세요!";
-        strength = `${highestSkill} 영역이 우수합니다 (정답률 ${skillPercentages[highestSkill]}%). 기본적인 독해 능력이 탄탄합니다.`;
-        weakness = `${lowestSkill} 영역에서 조금 더 연습이 필요합니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
-      } else if (score >= 17) {
-        series = "BRAIN 업";
-        recommendation = "기초 이해력은 있습니다. BRAIN 업 시리즈로 추론력과 사고력을 한 단계 더 키워보세요!";
-        strength = `${highestSkill} 영역에서 가능성이 보입니다 (정답률 ${skillPercentages[highestSkill]}%).`;
-        weakness = `${lowestSkill} 영역을 집중 학습하면 큰 발전이 있을 것입니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+      // 초등/중고등 기준 분리
+      if (isElementary) {
+        // 초등 기준: 23~25 딥, 19~22 핏, 14~18 업, 0~13 온
+        if (score >= 23) {
+          series = "BRAIN 딥";
+          recommendation = "고급 수준의 문해력을 갖추셨습니다. BRAIN 딥 시리즈로 더 깊은 사고력을 키워보세요!";
+          strength = `${highestSkill} 영역이 특히 뛰어납니다 (정답률 ${skillPercentages[highestSkill]}%). 복잡한 문맥을 이해하는 능력이 탁월합니다.`;
+          weakness = skillScores[lowestSkill] < 4 ? `${lowestSkill} 영역을 더 강화하면 완벽합니다!` : "현재 수준을 유지하며, 더 다양한 장르의 텍스트를 접해보세요.";
+        } else if (score >= 19) {
+          series = "BRAIN 핏";
+          recommendation = "추론력과 이해력이 고르게 발달했습니다. BRAIN 핏 시리즈로 균형 잡힌 문해력을 완성하세요!";
+          strength = `${highestSkill} 영역이 우수합니다 (정답률 ${skillPercentages[highestSkill]}%). 기본적인 독해 능력이 탄탄합니다.`;
+          weakness = `${lowestSkill} 영역에서 조금 더 연습이 필요합니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+        } else if (score >= 14) {
+          series = "BRAIN 업";
+          recommendation = "기초 이해력은 있습니다. BRAIN 업 시리즈로 추론력과 사고력을 한 단계 더 키워보세요!";
+          strength = `${highestSkill} 영역에서 가능성이 보입니다 (정답률 ${skillPercentages[highestSkill]}%).`;
+          weakness = `${lowestSkill} 영역을 집중 학습하면 큰 발전이 있을 것입니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+        } else {
+          series = "BRAIN 온";
+          recommendation = "문해력 기초를 탄탄히 다질 시간입니다. BRAIN 온 시리즈로 기초부터 차근차근 시작하세요!";
+          strength = "학습 의지가 있으며, 앞으로 발전 가능성이 높습니다.";
+          weakness = "5가지 문해력 지수를 모두 기초부터 차근차근 쌓아가는 것이 필요합니다.";
+        }
       } else {
-        series = "BRAIN 온";
-        recommendation = "문해력 기초를 탄탄히 다질 시간입니다. BRAIN 온 시리즈로 기초부터 차근차근 시작하세요!";
-        strength = "학습 의지가 있으며, 앞으로 발전 가능성이 높습니다.";
-        weakness = "5가지 문해력 지수를 모두 기초부터 차근차근 쌓아가는 것이 필요합니다.";
+        // 중고등 기준: 24~25 딥, 22~23 핏, 16~21 업, 0~15 온
+        if (score >= 24) {
+          series = "BRAIN 딥";
+          recommendation = "고급 수준의 문해력을 갖추셨습니다. BRAIN 딥 시리즈로 더 깊은 사고력을 키워보세요!";
+          strength = `${highestSkill} 영역이 특히 뛰어납니다 (정답률 ${skillPercentages[highestSkill]}%). 복잡한 문맥을 이해하는 능력이 탁월합니다.`;
+          weakness = skillScores[lowestSkill] < 4 ? `${lowestSkill} 영역을 더 강화하면 완벽합니다!` : "현재 수준을 유지하며, 더 다양한 장르의 텍스트를 접해보세요.";
+        } else if (score >= 22) {
+          series = "BRAIN 핏";
+          recommendation = "추론력과 이해력이 고르게 발달했습니다. BRAIN 핏 시리즈로 균형 잡힌 문해력을 완성하세요!";
+          strength = `${highestSkill} 영역이 우수합니다 (정답률 ${skillPercentages[highestSkill]}%). 기본적인 독해 능력이 탄탄합니다.`;
+          weakness = `${lowestSkill} 영역에서 조금 더 연습이 필요합니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+        } else if (score >= 16) {
+          series = "BRAIN 업";
+          recommendation = "기초 이해력은 있습니다. BRAIN 업 시리즈로 추론력과 사고력을 한 단계 더 키워보세요!";
+          strength = `${highestSkill} 영역에서 가능성이 보입니다 (정답률 ${skillPercentages[highestSkill]}%).`;
+          weakness = `${lowestSkill} 영역을 집중 학습하면 큰 발전이 있을 것입니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+        } else {
+          series = "BRAIN 온";
+          recommendation = "문해력 기초를 탄탄히 다질 시간입니다. BRAIN 온 시리즈로 기초부터 차근차근 시작하세요!";
+          strength = "학습 의지가 있으며, 앞으로 발전 가능성이 높습니다.";
+          weakness = "5가지 문해력 지수를 모두 기초부터 차근차근 쌓아가는 것이 필요합니다.";
+        }
       }
 
       // 추천 시리즈 및 분석 결과 표시

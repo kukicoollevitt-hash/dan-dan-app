@@ -21500,11 +21500,83 @@ app.get("/api/diagnostic-tests", async (req, res) => {
   }
 });
 
+// 문해력 진단테스트 정답 배열 (25문제) - diagnostic_reading_test.html과 동일하게 유지
+const diagnosticCorrectAnswers = [2, 0, 1, 1, 2, 1, 2, 1, 2, 3, 2, 0, 1, 1, 2, 1, 1, 1, 2, 2, 1, 0, 1, 1, 2];
+
+// score 계산 함수 (answers 배열로 정답 개수 계산)
+function calculateScoreFromAnswers(answers) {
+  if (!answers || !Array.isArray(answers) || answers.length === 0) return 0;
+  let correctCount = 0;
+  answers.forEach((userAnswer, index) => {
+    if (index < diagnosticCorrectAnswers.length && userAnswer === diagnosticCorrectAnswers[index]) {
+      correctCount++;
+    }
+  });
+  return correctCount;
+}
+
+// 등급 및 시리즈 계산 함수
+function calculateGradeAndSeries(score, studentGrade) {
+  const isElementary = ['3학년', '4학년', '5학년', '6학년'].includes(studentGrade);
+  let grade, series;
+
+  if (isElementary) {
+    // 초등 기준: 23~25 딥, 19~22 핏, 14~18 업, 0~13 온
+    if (score >= 23) {
+      grade = "최우수 (A+) / 수능내신 1~2등급(예측)";
+      series = "BRAIN 딥";
+    } else if (score >= 19) {
+      grade = "우수 (A) / 수능내신 3등급(예측)";
+      series = "BRAIN 핏";
+    } else if (score >= 14) {
+      grade = "보통 (C+) / 수능내신 4등급(예측)";
+      series = "BRAIN 업";
+    } else {
+      grade = "기초 (D) / 수능내신 5등급(예측)";
+      series = "BRAIN 온";
+    }
+  } else {
+    // 중고등 기준: 24~25 딥, 22~23 핏, 16~21 업, 0~15 온
+    if (score >= 24) {
+      grade = "최우수 (A+) / 수능내신 1~2등급(예측)";
+      series = "BRAIN 딥";
+    } else if (score >= 22) {
+      grade = "우수 (A) / 수능내신 3등급(예측)";
+      series = "BRAIN 핏";
+    } else if (score >= 16) {
+      grade = "보통 (C+) / 수능내신 4등급(예측)";
+      series = "BRAIN 업";
+    } else {
+      grade = "기초 (D) / 수능내신 5등급(예측)";
+      series = "BRAIN 온";
+    }
+  }
+
+  return { grade, series };
+}
+
 // 수강신청 목록 조회 (슈퍼 관리자용)
 app.get("/api/course-applications", async (req, res) => {
   try {
     const applications = await CourseApplication.find().sort({ createdAt: -1 });
-    res.json({ success: true, data: applications });
+
+    // answers 배열이 있으면 항상 점수 재계산, 등급/시리즈도 항상 재계산
+    const applicationsWithScore = applications.map(app => {
+      const appObj = app.toObject();
+      // answers 배열이 있으면 항상 점수 재계산
+      if (appObj.answers && appObj.answers.length > 0) {
+        appObj.score = calculateScoreFromAnswers(appObj.answers);
+      }
+      // 등급과 시리즈 항상 재계산
+      if (appObj.studentGrade) {
+        const { grade, series } = calculateGradeAndSeries(appObj.score || 0, appObj.studentGrade);
+        appObj.grade = grade;
+        appObj.series = series;
+      }
+      return appObj;
+    });
+
+    res.json({ success: true, data: applicationsWithScore });
   } catch (error) {
     console.error("수강신청 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
@@ -21518,7 +21590,20 @@ app.get("/api/course-application/:id", async (req, res) => {
     if (!application) {
       return res.status(404).json({ success: false, message: "해당 수강신청 정보를 찾을 수 없습니다." });
     }
-    res.json({ success: true, data: application });
+
+    // answers 배열이 있으면 항상 점수 재계산, 등급/시리즈도 항상 재계산
+    const appObj = application.toObject();
+    if (appObj.answers && appObj.answers.length > 0) {
+      appObj.score = calculateScoreFromAnswers(appObj.answers);
+    }
+    // 등급과 시리즈 항상 재계산
+    if (appObj.studentGrade) {
+      const { grade, series } = calculateGradeAndSeries(appObj.score || 0, appObj.studentGrade);
+      appObj.grade = grade;
+      appObj.series = series;
+    }
+
+    res.json({ success: true, data: appObj });
   } catch (error) {
     console.error("수강신청 개별 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
@@ -21764,7 +21849,23 @@ app.get("/api/admin/course-applications", async (req, res) => {
 
     const applications = await CourseApplication.find(filter).sort({ createdAt: -1 });
 
-    res.json({ success: true, data: applications, academyName: academyName, adminGrade: adminGrade, adminClassNum: adminClassNum });
+    // answers 배열이 있으면 항상 점수 재계산, 등급/시리즈도 항상 재계산
+    const applicationsWithScore = applications.map(app => {
+      const appObj = app.toObject();
+      // answers 배열이 있으면 항상 점수 재계산
+      if (appObj.answers && appObj.answers.length > 0) {
+        appObj.score = calculateScoreFromAnswers(appObj.answers);
+      }
+      // 등급과 시리즈 항상 재계산
+      if (appObj.studentGrade) {
+        const { grade, series } = calculateGradeAndSeries(appObj.score || 0, appObj.studentGrade);
+        appObj.grade = grade;
+        appObj.series = series;
+      }
+      return appObj;
+    });
+
+    res.json({ success: true, data: applicationsWithScore, academyName: academyName, adminGrade: adminGrade, adminClassNum: adminClassNum });
   } catch (error) {
     console.error("브랜치 관리자 수강신청 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
