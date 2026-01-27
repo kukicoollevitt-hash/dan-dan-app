@@ -4724,9 +4724,11 @@ app.get("/admin/users", async (req, res) => {
             <input
               type="text"
               name="q"
+              id="searchInput"
               class="search-input"
-              placeholder="이름, 학교, 학년 검색"
+              placeholder="이름, 학교, 학년 검색 (실시간)"
               value="${q ? q : ""}"
+              oninput="filterTable(this.value)"
             />
             <select name="sort" class="search-select">
               <option value="priority" ${!sort || sort === "priority" ? "selected" : ""}>⭐ 우선순위 (미승인→미부여→최신)</option>
@@ -4845,7 +4847,7 @@ app.get("/admin/users", async (req, res) => {
                 <th>수정</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="usersTbody">
     `;
 
     users.forEach((u, idx) => {
@@ -5203,6 +5205,34 @@ app.get("/admin/users", async (req, res) => {
             closeSeriesModal();
           }
         });
+
+        // 실시간 검색 필터링 함수
+        function filterTable(keyword) {
+          const tbody = document.getElementById('usersTbody');
+          if (!tbody) return;
+
+          const rows = tbody.querySelectorAll('tr');
+          const searchTerm = keyword.toLowerCase().trim();
+          let visibleCount = 0;
+
+          rows.forEach((row, idx) => {
+            // 테이블 행의 텍스트 내용을 검색
+            const rowText = row.textContent.toLowerCase();
+
+            if (searchTerm === '' || rowText.includes(searchTerm)) {
+              row.style.display = '';
+              visibleCount++;
+            } else {
+              row.style.display = 'none';
+            }
+          });
+
+          // 검색 결과 개수 표시 (info-line 업데이트)
+          const infoLine = document.querySelector('.info-line strong');
+          if (infoLine) {
+            infoLine.textContent = visibleCount;
+          }
+        }
 
         // 학습실 상태 정렬 관련 변수 및 함수
         let pendingSortOrder = 'desc';  // 기본: 내림차순 (미완료 많은 순)
