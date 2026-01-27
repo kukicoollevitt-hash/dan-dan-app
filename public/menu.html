@@ -8425,6 +8425,19 @@ async function performLogout() {
           ApiCache.invalidate('completion-status');
           ApiCache.invalidate('learning-logs');
         }
+
+        // 🔥 별표 즉시 반영: 단원 목록 다시 렌더링
+        setTimeout(async () => {
+          try {
+            if (typeof currentUnits !== 'undefined' && currentUnits && currentUnits.length > 0) {
+              await renderUnitList(currentUnits);
+              restoreProgressOnRenderedList();
+              console.log('⭐ [INVALIDATE_CACHE] 단원 목록 다시 렌더링 완료');
+            }
+          } catch (e) {
+            console.warn('[INVALIDATE_CACHE] 단원 목록 업데이트 오류:', e);
+          }
+        }, 500);
         return;
       }
 
@@ -8533,18 +8546,19 @@ async function performLogout() {
           console.log('🗑️ [UNIT_COMPLETED] API 캐시 무효화 완료');
         }
 
-        // 🔥 별표 데이터 다시 로드 및 단원 목록 업데이트
+        // 🔥 별표 데이터 다시 로드 및 단원 목록 업데이트 (서버 저장 완료 대기)
         setTimeout(async () => {
           try {
             // 현재 표시된 단원 목록 다시 렌더링 (최신 별표 데이터 반영)
             if (typeof currentUnits !== 'undefined' && currentUnits && currentUnits.length > 0) {
               await renderUnitList(currentUnits);
+              restoreProgressOnRenderedList();
               console.log('⭐ [UNIT_COMPLETED] 단원 목록 다시 렌더링 (별표 반영)');
             }
           } catch (e) {
             console.warn('[UNIT_COMPLETED] 단원 목록 업데이트 오류:', e);
           }
-        }, 800);
+        }, 1500);
 
         // 학습실 모달이 열려있다면 리스트 다시 렌더링
         const studyRoomModal = document.getElementById('studyRoomModal');
