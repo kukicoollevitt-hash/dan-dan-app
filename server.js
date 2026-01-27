@@ -1801,7 +1801,7 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
                 <th>학년</th>
                 <th>반</th>
                 <th>전화번호(ID)</th>
-                <th>생년월일</th>
+                <th>2차인증번호</th>
                 <th>권한</th>
                 <th>상태</th>
                 <th>가입일</th>
@@ -1971,7 +1971,7 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
           </div>
 
           <div class="row">
-            <label>생년월일 (예: 900305)</label>
+            <label>2차인증번호 6자리</label>
             <input type="text" name="birth" value="${admin.birth || ""}" />
           </div>
 
@@ -3314,7 +3314,7 @@ app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
               idOrPhone
             )}&status=approved&key=${encodeURIComponent(
               key
-            )}" onclick="return confirm('이 회원을 승인하시겠습니까?');">승인하기</a>`;
+            )}" onclick="return confirm('[필수] 본 학생은 만 14세 미만일 수 있으며, 해당 학생의 개인정보 제공에 대해 법정대리인 동의를 절차에 따라 확보하였음을 확인합니다.\\n\\n이 회원을 승인하시겠습니까?');">승인하기</a>`;
 
       html += `
         <tr>
@@ -4864,7 +4864,7 @@ app.get("/admin/users", async (req, res) => {
       const nextStatus = status === "approved" ? "pending" : "approved";
       const confirmMessage = status === "approved"
         ? "이 회원을 미승인 상태로 전환할까요?"
-        : "이 회원을 승인하시겠습니까?";
+        : "[필수] 본 학생은 만 14세 미만일 수 있으며, 해당 학생의 개인정보 제공에 대해 법정대리인 동의를 절차에 따라 확보하였음을 확인합니다.\\n\\n이 회원을 승인하시겠습니까?";
 
       // 안전하게 JSON 데이터 전달
       const escapedName = (u.name || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
@@ -5062,11 +5062,12 @@ app.get("/admin/users", async (req, res) => {
             const baseUrl = 'https://dan-dan-app.onrender.com';
             const studyRoomUrl = baseUrl + '/menu.html?openStudyRoom=true&grade=' + encodeURIComponent(grade) + '&name=' + encodeURIComponent(name);
 
+            const firstName = name.length >= 2 ? name.slice(1) : name;
             Kakao.Share.sendDefault({
               objectType: 'feed',
               content: {
-                title: '📚 ' + name + ' 학생 과제 알림',
-                description: grade + ' ' + name + ' 학생, 학습실의 과제를 꼭 확인해 주세요!',
+                title: '📚 ' + firstName + ' 학생 과제 알림',
+                description: grade + ' ' + firstName + ' 학생, 학습실의 과제를 꼭 확인해 주세요!',
                 imageUrl: 'https://dan-dan-app.onrender.com/images/dandan_logo.png',
                 link: {
                   mobileWebUrl: studyRoomUrl,
