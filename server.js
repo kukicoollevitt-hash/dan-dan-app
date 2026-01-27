@@ -5374,50 +5374,125 @@ app.get("/admin/users", async (req, res) => {
           }
         }
 
-        // 전체 데이터 삭제
-        async function deleteAllData() {
-          const confirmMsg = "⚠️ 경고: 모든 회원 정보와 학습 기록이 영구 삭제됩니다.\\n\\n정말로 전체 데이터를 삭제하시겠습니까?\\n\\n이 작업은 되돌릴 수 없습니다!";
+        // 전체 데이터 삭제 - PIN 모달 열기
+        function deleteAllData() {
+          document.getElementById("pinModal").style.display = "flex";
+          document.getElementById("pinInput").value = "";
+          document.getElementById("pinInput").focus();
+          document.getElementById("pinError").style.display = "none";
+        }
 
-          if (!confirm(confirmMsg)) {
-            return;
-          }
+        // PIN 모달 닫기
+        function closePinModal() {
+          document.getElementById("pinModal").style.display = "none";
+          document.getElementById("pinInput").value = "";
+          document.getElementById("pinError").style.display = "none";
+        }
 
-          // 2차 확인
-          const doubleConfirm = prompt("정말로 삭제하시려면 '삭제하기'를 입력하세요:");
-          if (doubleConfirm !== "삭제하기") {
-            alert("삭제가 취소되었습니다.");
+        // PIN 확인 후 삭제 실행
+        async function confirmDeleteWithPin() {
+          const pin = document.getElementById("pinInput").value.trim();
+
+          if (!pin || pin.length !== 6) {
+            document.getElementById("pinError").textContent = "6자리 PIN을 입력해주세요.";
+            document.getElementById("pinError").style.display = "block";
             return;
           }
 
           try {
             const btn = document.getElementById("btn-delete-all");
+            const confirmBtn = document.getElementById("pinConfirmBtn");
             btn.disabled = true;
             btn.textContent = "삭제 중...";
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "삭제 중...";
 
             const res = await fetch("/api/delete-all-data", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ key: "${key}" })
+              body: JSON.stringify({
+                key: "${key}",
+                pin: pin,
+                adminType: "super"
+              })
             });
 
             const data = await res.json();
 
             if (data.success) {
+              closePinModal();
               alert(\`✅ 전체 데이터 삭제 완료!\\n\\n삭제된 회원: \${data.deletedUsers}명\\n삭제된 학습 기록: \${data.deletedRecords}개\`);
               window.location.reload();
             } else {
-              alert("❌ 삭제 실패: " + (data.message || "알 수 없는 오류"));
+              document.getElementById("pinError").textContent = data.message || "PIN이 일치하지 않습니다.";
+              document.getElementById("pinError").style.display = "block";
+              document.getElementById("pinInput").value = "";
+              document.getElementById("pinInput").focus();
             }
           } catch (err) {
             console.error("삭제 에러:", err);
-            alert("❌ 삭제 중 오류가 발생했습니다.");
+            document.getElementById("pinError").textContent = "삭제 중 오류가 발생했습니다.";
+            document.getElementById("pinError").style.display = "block";
           } finally {
             const btn = document.getElementById("btn-delete-all");
+            const confirmBtn = document.getElementById("pinConfirmBtn");
             btn.disabled = false;
             btn.textContent = "전체 데이터 삭제";
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = "확인";
           }
         }
+
+        // PIN 입력 엔터키 처리
+        document.addEventListener("DOMContentLoaded", function() {
+          const pinInput = document.getElementById("pinInput");
+          if (pinInput) {
+            pinInput.addEventListener("keydown", function(e) {
+              if (e.key === "Enter") {
+                confirmDeleteWithPin();
+              }
+            });
+          }
+        });
       </script>
+
+      <!-- PIN 인증 모달 -->
+      <div id="pinModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 400px; padding: 30px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <span style="font-size: 48px;">🔐</span>
+            <h2 style="margin: 16px 0 8px; font-size: 20px; font-weight: 700; color: #dc2626;">전체 데이터 삭제</h2>
+            <p style="color: #666; font-size: 14px; margin: 0;">삭제를 진행하려면 관리자 PIN 6자리를 입력하세요.</p>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <input
+              type="password"
+              id="pinInput"
+              maxlength="6"
+              placeholder="PIN 6자리 입력"
+              style="width: 100%; padding: 14px; font-size: 18px; text-align: center; border: 2px solid #ddd; border-radius: 8px; letter-spacing: 8px; font-weight: 600;"
+            />
+            <p id="pinError" style="display: none; color: #dc2626; font-size: 13px; margin-top: 8px; text-align: center;"></p>
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <button
+              onclick="closePinModal()"
+              style="flex: 1; padding: 12px; background: #f3f4f6; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; color: #374151;"
+            >
+              취소
+            </button>
+            <button
+              id="pinConfirmBtn"
+              onclick="confirmDeleteWithPin()"
+              style="flex: 1; padding: 12px; background: #dc2626; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; color: white;"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- AI 추천과제 목록 모달 -->
       <div id="aiTasksModal" class="modal-overlay" style="display: none;">
@@ -19566,16 +19641,57 @@ app.get('/api/check-data-count', async (req, res) => {
   }
 });
 
-// 전체 데이터 삭제 API (관리자 전용)
+// 전체 데이터 삭제 API (관리자 전용) - PIN 인증 필수
 app.post('/api/delete-all-data', async (req, res) => {
   try {
-    const { key } = req.body;
+    const { key, pin, adminType } = req.body;
 
     // 관리자 키 확인
     if (key !== ADMIN_KEY) {
       return res.status(403).json({
         success: false,
         message: '관리자 권한이 없습니다'
+      });
+    }
+
+    // PIN 인증 확인
+    if (!pin) {
+      return res.status(400).json({
+        success: false,
+        message: 'PIN 인증이 필요합니다'
+      });
+    }
+
+    // 슈퍼관리자: 고정 PIN (284600)
+    // 브랜치관리자: 자신의 birth 값
+    const SUPER_ADMIN_PIN = '284600';
+
+    if (adminType === 'super') {
+      if (pin !== SUPER_ADMIN_PIN) {
+        return res.status(403).json({
+          success: false,
+          message: 'PIN이 일치하지 않습니다'
+        });
+      }
+    } else if (adminType === 'branch') {
+      // 브랜치 관리자의 경우 세션에서 birth 값 확인
+      const adminSession = req.session && req.session.admin;
+      if (!adminSession || !adminSession.birth) {
+        return res.status(403).json({
+          success: false,
+          message: '관리자 세션 정보가 없습니다'
+        });
+      }
+      if (pin !== adminSession.birth) {
+        return res.status(403).json({
+          success: false,
+          message: 'PIN이 일치하지 않습니다'
+        });
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: '유효하지 않은 관리자 유형입니다'
       });
     }
 

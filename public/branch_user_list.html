@@ -788,6 +788,33 @@
     </div>
   </div>
 
+  <!-- PIN 인증 모달 (전체 데이터 삭제용) -->
+  <div id="pinModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box" style="max-width: 400px; padding: 30px; text-align: center;">
+      <div style="margin-bottom: 20px;">
+        <span style="font-size: 48px;">🔐</span>
+        <h2 style="margin: 16px 0 8px; font-size: 20px; font-weight: 700; color: #dc2626;">전체 데이터 삭제</h2>
+        <p style="color: #666; font-size: 14px; margin: 0;">삭제를 진행하려면 2차 인증번호 6자리를 입력하세요.</p>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <input
+          type="password"
+          id="pinInput"
+          maxlength="6"
+          placeholder="PIN 6자리 입력"
+          style="width: 100%; padding: 14px; font-size: 18px; text-align: center; border: 2px solid #ddd; border-radius: 8px; letter-spacing: 8px; font-weight: 600;"
+        />
+        <p id="pinError" style="display: none; color: #dc2626; font-size: 13px; margin-top: 8px;"></p>
+      </div>
+
+      <div class="modal-actions" style="display: flex; gap: 12px;">
+        <button class="modal-btn modal-btn-cancel" onclick="closePinModal()">취소</button>
+        <button class="modal-btn modal-btn-submit" id="pinConfirmBtn" onclick="confirmDeleteWithPin()" style="background: #dc2626; border-color: #dc2626;">확인</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const ADMIN_KEY = "DandanAdminKey!";
     let currentAcademyName = "";
@@ -1125,48 +1152,24 @@
         fetchBranchStudents("");
       });
 
-      // 전체 데이터 삭제 버튼
+      // 전체 데이터 삭제 버튼 - PIN 모달 열기
       const btnDeleteAll = document.getElementById("btn-delete-all");
-      btnDeleteAll.addEventListener("click", async () => {
-        const confirmMsg = "⚠️ 경고: 모든 회원 정보와 학습 기록이 영구 삭제됩니다.\n\n정말로 전체 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!";
-
-        if (!confirm(confirmMsg)) {
-          return;
-        }
-
-        // 2차 확인
-        const doubleConfirm = prompt("정말로 삭제하시려면 '삭제합니다'를 입력하세요:");
-        if (doubleConfirm !== "삭제합니다") {
-          alert("삭제가 취소되었습니다.");
-          return;
-        }
-
-        try {
-          btnDeleteAll.disabled = true;
-          btnDeleteAll.textContent = "삭제 중...";
-
-          const res = await fetch("/api/delete-all-data", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ key: ADMIN_KEY })
-          });
-
-          const data = await res.json();
-
-          if (data.success) {
-            alert(`✅ 전체 데이터 삭제 완료!\n\n삭제된 회원: ${data.deletedUsers}명\n삭제된 학습 기록: ${data.deletedRecords}개`);
-            fetchBranchStudents("");
-          } else {
-            alert("❌ 삭제 실패: " + (data.message || "알 수 없는 오류"));
-          }
-        } catch (err) {
-          console.error("삭제 에러:", err);
-          alert("❌ 삭제 중 오류가 발생했습니다.");
-        } finally {
-          btnDeleteAll.disabled = false;
-          btnDeleteAll.textContent = "전체 데이터 삭제";
-        }
+      btnDeleteAll.addEventListener("click", () => {
+        document.getElementById("pinModal").style.display = "flex";
+        document.getElementById("pinInput").value = "";
+        document.getElementById("pinInput").focus();
+        document.getElementById("pinError").style.display = "none";
       });
+
+      // PIN 입력 엔터키 처리
+      const pinInput = document.getElementById("pinInput");
+      if (pinInput) {
+        pinInput.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") {
+            confirmDeleteWithPin();
+          }
+        });
+      }
 
       fetchBranchStudents("");
     });
@@ -1209,6 +1212,73 @@
       document.getElementById("series-modal").classList.remove("show");
       currentUserId = null;
     }
+
+    // ===== PIN 모달 관련 함수 =====
+    function closePinModal() {
+      document.getElementById("pinModal").style.display = "none";
+      document.getElementById("pinInput").value = "";
+      document.getElementById("pinError").style.display = "none";
+    }
+
+    async function confirmDeleteWithPin() {
+      const pin = document.getElementById("pinInput").value.trim();
+
+      if (!pin || pin.length !== 6) {
+        document.getElementById("pinError").textContent = "6자리 PIN을 입력해주세요.";
+        document.getElementById("pinError").style.display = "block";
+        return;
+      }
+
+      try {
+        const btn = document.getElementById("btn-delete-all");
+        const confirmBtn = document.getElementById("pinConfirmBtn");
+        btn.disabled = true;
+        btn.textContent = "삭제 중...";
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "삭제 중...";
+
+        const res = await fetch("/api/delete-all-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            key: ADMIN_KEY,
+            pin: pin,
+            adminType: "branch"
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          closePinModal();
+          alert(`✅ 전체 데이터 삭제 완료!\n\n삭제된 회원: ${data.deletedUsers}명\n삭제된 학습 기록: ${data.deletedRecords}개`);
+          fetchBranchStudents("");
+        } else {
+          document.getElementById("pinError").textContent = data.message || "PIN이 일치하지 않습니다.";
+          document.getElementById("pinError").style.display = "block";
+          document.getElementById("pinInput").value = "";
+          document.getElementById("pinInput").focus();
+        }
+      } catch (err) {
+        console.error("삭제 에러:", err);
+        document.getElementById("pinError").textContent = "삭제 중 오류가 발생했습니다.";
+        document.getElementById("pinError").style.display = "block";
+      } finally {
+        const btn = document.getElementById("btn-delete-all");
+        const confirmBtn = document.getElementById("pinConfirmBtn");
+        btn.disabled = false;
+        btn.textContent = "전체 데이터 삭제";
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "확인";
+      }
+    }
+
+    // PIN 모달 오버레이 클릭 시 닫기
+    document.getElementById("pinModal").addEventListener("click", function(e) {
+      if (e.target === this) {
+        closePinModal();
+      }
+    });
 
     async function submitSeries() {
       if (!currentUserId) {
