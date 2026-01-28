@@ -3572,16 +3572,65 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
+    // 탁상시계 초기화 (00분 00초)
+    const minInput = document.getElementById('minute-input');
+    const secInput = document.getElementById('second-input');
+    if (minInput) minInput.value = '00';
+    if (secInput) secInput.value = '00';
+
+    // DB에서 독해시간 불러와서 탁상시계에 표시
+    const stu = getCurrentStudentForReading();
+    if (stu) {
+      const studentKey = buildStudentKeyForReading(stu);
+      const curUnit = window.CUR_UNIT || 'fit_modern_01';
+      fetch(`/api/reading-time/${encodeURIComponent(studentKey)}/${encodeURIComponent(curUnit)}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success && result.data && result.data.duration) {
+            const duration = result.data.duration;
+            const minutes = Math.floor(duration / 60000);
+            const seconds = Math.floor((duration % 60000) / 1000);
+            if (minInput) minInput.value = String(minutes).padStart(2, '0');
+            if (secInput) secInput.value = String(seconds).padStart(2, '0');
+          }
+        })
+        .catch(err => console.error('독해시간 조회 실패:', err));
+    }
+
     passageBox.addEventListener('click', (e) => {
       const sentenceSpan = e.target.closest('.sentence'); if (!sentenceSpan) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
       sentenceSpan.classList.toggle('selected');
       const allSentences = passageBox.querySelectorAll('.sentence'); const selectedIndices = [];
       allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices)); if (selectedIndices.length === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
       if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
         const endTime = new Date(); const duration = endTime - readingStartTime;
         localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+        // DB에 독해시간 저장 + 탁상시계 업데이트
+        const stu = getCurrentStudentForReading();
+        if (stu) {
+          const studentKey = buildStudentKeyForReading(stu);
+          const unitKeyForSave = window.CUR_UNIT || 'fit_modern_01';
+          fetch('/api/reading-time', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              studentKey,
+              unitKey: unitKeyForSave,
+              duration,
+              startTime: readingStartTime.toISOString(),
+              endTime: endTime.toISOString()
+            })
+          }).catch(err => console.error('독해시간 저장 실패:', err));
+        }
+        // 탁상시계에 독해시간 표시
+        const clockMinutes = Math.floor(duration / 60000);
+        const clockSeconds = Math.floor((duration % 60000) / 1000);
+        const minInputUpdate = document.getElementById('minute-input');
+        const secInputUpdate = document.getElementById('second-input');
+        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
+        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
         if (!document.getElementById('toast-style')) { const toastStyle = document.createElement('style'); toastStyle.id = 'toast-style'; toastStyle.textContent = `.toast-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 40px; border-radius: 20px; font-size: 22px; font-weight: 700; z-index: 10000; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); text-align: center; } .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); } .toast-message .emoji { font-size: 32px; display: block; margin-bottom: 8px; } .sparkle-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; } .sparkle { position: absolute; top: -20px; animation: sparkle-fall linear forwards; font-size: 24px; } @keyframes sparkle-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`; document.head.appendChild(toastStyle); }
         const toast = document.createElement('div'); toast.className = 'toast-message'; toast.innerHTML = `<span class="emoji">🎉</span>지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast);
         setTimeout(() => toast.classList.add('show'), 50); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 4000);

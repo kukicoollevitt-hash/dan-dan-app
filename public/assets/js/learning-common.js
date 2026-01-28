@@ -792,6 +792,7 @@
     var isTimerRunning = false;
 
     function toggleTimer() {
+      return; // 비활성화 - 독해시간 표시용
       const timerIcon = document.getElementById('timer-icon');
       if (!timerIcon) return;
 

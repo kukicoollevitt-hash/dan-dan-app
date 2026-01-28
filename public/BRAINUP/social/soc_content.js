@@ -1897,6 +1897,16 @@ function applyContentPack(unitKey) {
       // 모든 문장 선택 완료 시 축하 토스트 + 폭죽
       const total = passageBox.querySelectorAll('.sentence').length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+
+      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
+      if (selected === 0) {
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = '00';
+        if (secInput) secInput.value = '00';
+        readingStartTime = null;
+        localStorage.removeItem(timeKey);
+      }
       if (total > 0 && total === selected) {
         // 완료 시간 기록
         const endTime = new Date();
@@ -1906,6 +1916,31 @@ function applyContentPack(unitKey) {
           end: endTime.toISOString(),
           duration: duration
         }));
+
+        // DB에 독해시간 저장 + 탁상시계 업데이트
+        const stu = getCurrentStudentForReading();
+        if (stu) {
+          const studentKey = buildStudentKeyForReading(stu);
+          const unitKeyForSave = window.CUR_UNIT || 'unknown';
+          fetch('/api/reading-time', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              studentKey,
+              unitKey: unitKeyForSave,
+              duration,
+              startTime: readingStartTime.toISOString(),
+              endTime: endTime.toISOString()
+            })
+          }).catch(err => console.error('독해시간 저장 실패:', err));
+        }
+        // 탁상시계에 독해시간 표시
+        const clockMinutes = Math.floor(duration / 60000);
+        const clockSeconds = Math.floor((duration % 60000) / 1000);
+        const minInputUpdate = document.getElementById('minute-input');
+        const secInputUpdate = document.getElementById('second-input');
+        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
+        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
 
         // 토스트
         const toast = document.createElement('div');

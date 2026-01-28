@@ -2065,11 +2065,35 @@ function applyContentPack(unitKey) {
       const allSentences = passageBox.querySelectorAll('.sentence');
       const selectedIndices = [];
       allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices)); if (selectedIndices.length === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
 
       if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
         const endTime = new Date(); const duration = endTime - readingStartTime;
         localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+        // DB에 독해시간 저장 + 탁상시계 업데이트
+        const stu = getCurrentStudentForReading();
+        if (stu) {
+          const studentKey = buildStudentKeyForReading(stu);
+          const unitKeyForSave = window.CUR_UNIT || 'unknown';
+          fetch('/api/reading-time', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              studentKey,
+              unitKey: unitKeyForSave,
+              duration,
+              startTime: readingStartTime.toISOString(),
+              endTime: endTime.toISOString()
+            })
+          }).catch(err => console.error('독해시간 저장 실패:', err));
+        }
+        // 탁상시계에 독해시간 표시
+        const clockMinutes = Math.floor(duration / 60000);
+        const clockSeconds = Math.floor((duration % 60000) / 1000);
+        const minInputUpdate = document.getElementById('minute-input');
+        const secInputUpdate = document.getElementById('second-input');
+        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
+        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
         if (!document.getElementById('toast-style')) {
           const toastStyle = document.createElement('style');
           toastStyle.id = 'toast-style';

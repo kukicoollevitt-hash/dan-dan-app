@@ -26999,6 +26999,63 @@ ${data.summary?.aboveAvgPercent >= 70 ? '평균 이상인 단원이 많으니 �
   }
 });
 
+// ============================================
+// 📖 독해시간 저장/조회 API
+// ============================================
+
+// 독해시간 저장
+app.post('/api/reading-time', async (req, res) => {
+  try {
+    const { studentKey, unitKey, duration, startTime, endTime } = req.body;
+    if (!studentKey || !unitKey || duration === undefined) {
+      return res.status(400).json({ error: '필수 항목 누락' });
+    }
+
+    const db = mongoose.connection.db;
+    const collection = db.collection('reading_times');
+
+    // upsert: 이미 있으면 업데이트, 없으면 생성
+    await collection.updateOne(
+      { studentKey, unitKey },
+      {
+        $set: {
+          duration,
+          startTime,
+          endTime,
+          completedAt: new Date()
+        }
+      },
+      { upsert: true }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('독해시간 저장 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// 독해시간 조회
+app.get('/api/reading-time/:studentKey/:unitKey', async (req, res) => {
+  try {
+    const { studentKey, unitKey } = req.params;
+
+    const db = mongoose.connection.db;
+    const collection = db.collection('reading_times');
+
+    const record = await collection.findOne({ studentKey, unitKey });
+
+    if (record) {
+      res.json({ success: true, data: record });
+    } else {
+      res.json({ success: true, data: null });
+    }
+  } catch (err) {
+    console.error('독해시간 조회 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
 // ===== 서버 시작 =====
 mongoose
   .connect(MONGO_URI, {
