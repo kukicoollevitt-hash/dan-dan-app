@@ -2103,6 +2103,22 @@ function applyContentPack(unitKey) {
 
   const blocks = Array.from(document.querySelectorAll('#tab-reading .quiz-block'));
 
+  // 완독 전 문제풀이 차단
+  blocks.forEach(block => {
+    block.addEventListener('click', (e) => {
+      if (e.target.closest('input[type="radio"], label, .quiz-options li')) {
+        const totalSentences = passageBox.querySelectorAll('.sentence').length;
+        const selectedSentences = passageBox.querySelectorAll('.sentence.selected').length;
+        if (totalSentences > 0 && selectedSentences < totalSentences) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!document.getElementById('reading-alert-style')) { const s = document.createElement('style'); s.id = 'reading-alert-style'; s.textContent = '.reading-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 99999; } .reading-alert-box { background: white; padding: 32px 48px; border-radius: 16px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: alertPop 0.3s ease; } .reading-alert-box p { font-size: 16px; color: #333; margin: 0 0 20px 0; line-height: 1.6; } .reading-alert-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 36px; border-radius: 25px; font-size: 15px; cursor: pointer; font-weight: 600; } .reading-alert-btn:hover { transform: scale(1.05); } @keyframes alertPop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }'; document.head.appendChild(s); } const overlay = document.createElement('div'); overlay.className = 'reading-alert-overlay'; overlay.innerHTML = '<div class="reading-alert-box"><p>지문의 모든 문장을 클릭하여<br>완독 후 문제풀이가 가능합니다</p><button class="reading-alert-btn">확인</button></div>'; document.body.appendChild(overlay); overlay.querySelector('.reading-alert-btn').onclick = () => overlay.remove(); overlay.onclick = (ev) => { if (ev.target === overlay) overlay.remove(); };
+          return false;
+        }
+      }
+    }, true);
+  });
+
   // Q1
   if (blocks[0]) {
     const q1Text = blocks[0].querySelector('.quiz-q');
