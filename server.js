@@ -8613,6 +8613,31 @@ app.get("/my-learning", async (req, res) => {
     }
     console.log("✅ [/my-learning] UserProgress unitProgress 조회 완료, 키 개수:", Object.keys(unitProgressMap).length);
 
+    // ✅ 독해시간 데이터 조회를 위해 User에서 전화번호 가져오기
+    let readingTimesMap = {};
+    try {
+      const userInfo = await User.findOne({ grade, name }).lean();
+      if (userInfo && userInfo.phone) {
+        const cleanPhone = (userInfo.phone || '').replace(/\D/g, '');
+        const studentKey = `${grade}_${name}_${cleanPhone}`;
+
+        // reading_times 컬렉션에서 해당 학생의 모든 독해시간 조회
+        const db = mongoose.connection.db;
+        const readingTimesCollection = db.collection('reading_times');
+        const readingTimes = await readingTimesCollection.find({ studentKey }).toArray();
+
+        // unitKey를 key로 하는 Map 생성
+        readingTimes.forEach(rt => {
+          if (rt.unitKey && rt.duration) {
+            readingTimesMap[rt.unitKey] = rt.duration;
+          }
+        });
+        console.log("✅ [/my-learning] 독해시간 조회 완료:", Object.keys(readingTimesMap).length, "개 기록");
+      }
+    } catch (err) {
+      console.error("⚠️ [/my-learning] 독해시간 조회 실패:", err);
+    }
+
     let html = `
     <!DOCTYPE html>
     <html lang="ko">
@@ -12220,6 +12245,7 @@ app.get("/my-learning", async (req, res) => {
         const logsForChart = ${JSON.stringify(logs)};
         const UNIT_TITLES = ${JSON.stringify(UNIT_TITLES)};
         const UNIT_PROGRESS_MAP = ${JSON.stringify(unitProgressMap)};  // ✅ 어휘학습 점수 포함
+        const READING_TIMES_MAP = ${JSON.stringify(readingTimesMap)};  // ✅ 독해시간 (밀리초)
         const rawSeries = '${series || 'all'}';  // 현재 페이지의 시리즈 (단축코드) - 기본값 전체
 
         // 디버그: UNIT_TITLES 키 확인
@@ -13636,7 +13662,7 @@ app.get("/my-learning", async (req, res) => {
 
           // 테이블 생성
           let tableHtml = '<table class="today-table"><thead><tr>';
-          tableHtml += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>어휘</th>';
+          tableHtml += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>독해시간</th><th>어휘</th>';
           tableHtml += '</tr></thead><tbody>';
 
           todayLogs.forEach((log, idx) => {
@@ -13763,6 +13789,16 @@ app.get("/my-learning", async (req, res) => {
             tableHtml += '<td>' + unitName + '</td>';
             tableHtml += '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>';
             tableHtml += '<td>' + avgScore.toFixed(1) + '</td>';
+            // 독해시간 표시 (밀리초 → 분:초 형식)
+            const readingDuration = READING_TIMES_MAP[unitCode] || 0;
+            let readingTimeDisplay = '-';
+            if (readingDuration > 0) {
+              const totalSeconds = Math.floor(readingDuration / 1000);
+              const minutes = Math.floor(totalSeconds / 60);
+              const seconds = totalSeconds % 60;
+              readingTimeDisplay = minutes + ':' + String(seconds).padStart(2, '0');
+            }
+            tableHtml += '<td style="color:#059669; font-weight:600;">' + readingTimeDisplay + '</td>';
             // 어휘 점수 클릭 시 해당 단원 어휘 페이지로 이동
             if (vocabScorePercent > 0) {
               tableHtml += '<td><span class="vocab-score-link" onclick="goToVocabPage(' + "'" + vocabPageUrl + "'" + ')" style="cursor:pointer; color:#3b82f6 !important; font-weight:600;">' + vocabScoreDisplay + '</span></td>';
@@ -13782,6 +13818,7 @@ app.get("/my-learning", async (req, res) => {
               tableHtml += '<td style="font-weight:700; color:#78350f;">관문 ' + gateInfo.gate + ' 통과</td>';
               tableHtml += '<td><span class="badge" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff;">통과</span></td>';
               tableHtml += '<td style="color:#92400e;">' + passedTime + '</td>';
+              tableHtml += '<td></td>';
               tableHtml += '<td></td>';
               tableHtml += '</tr>';
             });
@@ -14128,7 +14165,7 @@ app.get("/my-learning", async (req, res) => {
             displayedCount++;
             {
               tableHtml += '<table class="today-table" style="margin-bottom: 0; border-radius: 0 0 10px 10px; overflow: hidden;"><thead><tr>';
-              tableHtml += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>어휘</th>';
+              tableHtml += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>독해시간</th><th>어휘</th>';
               tableHtml += '</tr></thead><tbody>';
 
               dayLogs.forEach((log, idx) => {
@@ -14234,6 +14271,16 @@ app.get("/my-learning", async (req, res) => {
                 tableHtml += '<td>' + unitName + '</td>';
                 tableHtml += '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>';
                 tableHtml += '<td>' + avgScore.toFixed(1) + '</td>';
+                // 독해시간 표시 (밀리초 → 분:초 형식)
+                const readingDuration = READING_TIMES_MAP[unitCode] || 0;
+                let readingTimeDisplay = '-';
+                if (readingDuration > 0) {
+                  const totalSeconds = Math.floor(readingDuration / 1000);
+                  const minutes = Math.floor(totalSeconds / 60);
+                  const seconds = totalSeconds % 60;
+                  readingTimeDisplay = minutes + ':' + String(seconds).padStart(2, '0');
+                }
+                tableHtml += '<td style="color:#059669; font-weight:600;">' + readingTimeDisplay + '</td>';
                 if (vocabScorePercent > 0) {
                   tableHtml += '<td><span style="color:#3b82f6; font-weight:600;">' + vocabScoreDisplay + '</span></td>';
                 } else {
@@ -14252,6 +14299,7 @@ app.get("/my-learning", async (req, res) => {
                   tableHtml += '<td style="font-weight:700; color:#78350f;">관문 ' + gateInfo.gate + ' 통과</td>';
                   tableHtml += '<td><span class="badge" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff;">통과</span></td>';
                   tableHtml += '<td style="color:#92400e;">' + passedTime + '</td>';
+                  tableHtml += '<td></td>';
                   tableHtml += '<td></td>';
                   tableHtml += '</tr>';
                 });
