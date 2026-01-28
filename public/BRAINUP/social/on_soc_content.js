@@ -1767,10 +1767,95 @@ function applyContentPack(unitKey) {
   const passageBox = document.querySelector('.passage-text');
   console.log('[applyContentPack] passageBox:', passageBox, 'pack.passage:', pack.passage);
   if (passageBox) {
-    const html = pack.passage.map(p => `<p>${p}</p>`).join('');
+    // 문장 단위로 span 감싸기 (마침표, 물음표, 느낌표 기준)
+    const wrapSentences = (text) => {
+      const tagPlaceholders = [];
+      let protectedText = text.replace(/<[^>]+>/g, (match) => {
+        tagPlaceholders.push(match);
+        return `__TAG_${tagPlaceholders.length - 1}__`;
+      });
+      const sentences = protectedText.split(/(?<=[.?!])(?=\s|$)/);
+      return sentences.map(sentence => {
+        const trimmed = sentence.trim();
+        if (!trimmed) return '';
+        let restored = trimmed.replace(/__TAG_(\d+)__/g, (_, idx) => tagPlaceholders[parseInt(idx)]);
+        return `<span class="sentence">${restored}</span>`;
+      }).join(' ');
+    };
+
+    const html = pack.passage.map(p => `<p>${wrapSentences(p)}</p>`).join('');
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
+
+    // 문장 호버 스타일 추가
+    if (!document.getElementById('sentence-hover-style')) {
+      const style = document.createElement('style');
+      style.id = 'sentence-hover-style';
+      style.textContent = `
+        .passage-text .sentence { cursor: pointer; transition: background-color 0.15s ease, font-weight 0.15s ease; border-radius: 3px; padding: 1px 0; }
+        .passage-text .sentence:hover { background-color: rgba(211, 90, 26, 0.12); font-weight: 600; }
+        .passage-text .sentence.selected { background-color: rgba(211, 90, 26, 0.2); font-weight: 600; }
+        .complete-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #fff9c4 100%); color: #e65100; padding: 24px 40px; border-radius: 16px; font-size: 20px; font-weight: 700; box-shadow: 0 8px 32px rgba(255,152,0,0.3), 0 0 0 4px rgba(255,193,7,0.4); border: 2px solid #ffb300; z-index: 9999; animation: toastPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); text-align: center; }
+        @keyframes toastPop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+        .sparkle-rain { position: fixed; top: -30px; z-index: 9998; pointer-events: none; text-shadow: 0 0 8px currentColor, 0 0 15px currentColor; animation: sparkleDown 2s ease-in forwards; }
+        @keyframes sparkleDown { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; } 50% { opacity: 1; transform: translateY(50vh) rotate(360deg) scale(1.2); } 100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; } }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // localStorage 키
+    const storageKey = `passage_read_${unitKey}`;
+
+    // 저장된 선택 상태 복원
+    const savedSelection = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const allSentences = passageBox.querySelectorAll('.sentence');
+    savedSelection.forEach(idx => {
+      if (allSentences[idx]) allSentences[idx].classList.add('selected');
+    });
+
+    // 선택 상태 저장 함수
+    const saveSelection = () => {
+      const selected = [];
+      passageBox.querySelectorAll('.sentence').forEach((s, idx) => {
+        if (s.classList.contains('selected')) selected.push(idx);
+      });
+      localStorage.setItem(storageKey, JSON.stringify(selected));
+    };
+
+    // 문장 클릭 시 선택 유지
+    passageBox.addEventListener('click', (e) => {
+      const sentence = e.target.closest('.sentence');
+      if (!sentence) return;
+      sentence.classList.toggle('selected');
+      saveSelection();
+
+      // 모든 문장 선택 완료 시 축하
+      const total = passageBox.querySelectorAll('.sentence').length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (total > 0 && total === selected) {
+        const toast = document.createElement('div');
+        toast.className = 'complete-toast';
+        toast.textContent = '지문 완독! 대단해요!';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+
+        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
+        const shapes = ['●','★','◆','♥','✦'];
+        for (let i = 0; i < 60; i++) {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'sparkle-rain';
+          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
+          sparkle.style.left = Math.random() * 100 + 'vw';
+          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
+          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
+          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
+          document.body.appendChild(sparkle);
+          setTimeout(() => sparkle.remove(), 3500);
+        }
+      }
+    });
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');

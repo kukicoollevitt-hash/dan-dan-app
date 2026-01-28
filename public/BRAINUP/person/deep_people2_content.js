@@ -4341,10 +4341,39 @@ function applyContentPack(unitKey) {
   const passageBox = document.querySelector('.passage-text');
   console.log('[applyContentPack] passageBox:', passageBox, 'pack.passage:', pack.passage);
   if (passageBox) {
-    const html = pack.passage.map(p => `<p>${p}</p>`).join('');
+    const wrapSentences = (text) => {
+      const tagPlaceholders = [];
+      let protectedText = text.replace(/<[^>]+>/g, (match) => { tagPlaceholders.push(match); return `__TAG_${tagPlaceholders.length - 1}__`; });
+      const sentences = protectedText.split(/(?<=[.?!])(?=\s|$)/);
+      return sentences.map(sentence => { const trimmed = sentence.trim(); if (!trimmed) return ''; let restored = trimmed.replace(/__TAG_(\d+)__/g, (_, idx) => tagPlaceholders[parseInt(idx)]); return `<span class="sentence">${restored}</span>`; }).join(' ');
+    };
+    const html = pack.passage.map(p => `<p>${wrapSentences(p)}</p>`).join('');
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
+
+    if (!document.getElementById('sentence-hover-style')) {
+      const style = document.createElement('style'); style.id = 'sentence-hover-style';
+      style.textContent = `.passage-text .sentence { cursor: pointer; transition: background-color 0.15s ease, font-weight 0.15s ease; border-radius: 3px; padding: 1px 0; } .passage-text .sentence:hover { background-color: rgba(211, 90, 26, 0.12); font-weight: 600; } .passage-text .sentence.selected { background-color: rgba(211, 90, 26, 0.2); font-weight: 600; }`;
+      document.head.appendChild(style);
+    }
+    const unitKey = window.CUR_UNIT || 'deep_people2_01'; const storageKey = `passage_read_${unitKey}`;
+    const saved = localStorage.getItem(storageKey); const selectedSet = new Set(saved ? JSON.parse(saved) : []);
+    const allSentences = passageBox.querySelectorAll('.sentence');
+    allSentences.forEach((span, idx) => { if (selectedSet.has(idx)) span.classList.add('selected'); });
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      const idx = Array.from(allSentences).indexOf(span);
+      span.classList.toggle('selected');
+      if (span.classList.contains('selected')) selectedSet.add(idx); else selectedSet.delete(idx);
+      localStorage.setItem(storageKey, JSON.stringify([...selectedSet]));
+      if (selectedSet.size === allSentences.length) {
+        if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 2.5s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+        const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.textContent = '지문 완독! 대단해요!'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2600);
+        for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+        if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+      }
+    });
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');

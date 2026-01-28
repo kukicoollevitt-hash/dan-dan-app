@@ -188,6 +188,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     },
     answerKey: { q1:'3', q2:'2', q3:'3', q4:'1' },
     essayKeywords: ['중력','만유인력','끌어당기','떨어지','떠다니','걷','물','공기','우주','무중력','날아가','흩어지','대기','산소','호흡','숨','음식','먹','서있','땅','바닥','생활','불가능','살','생존','사과','달','지구','태양','궤도','조석','밀물','썰물','질량','인공위성','뉴턴','천체','행성','별','돌','공','던지','내려오','표면','붙들'],
+    evidence: {
+      q2: '를 따라 서로 끌어당기기 때문입니다',
+      q3: '만유인력'
+    },
     explain: {
       q1:'중력은 지구가 모든 물체를 자신의 중심으로 끌어당기는 힘입니다',
       q2:'2문단은 우주에서의 중력과 궤도에 대한 내용이에요',
@@ -200,7 +204,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 "달이 지구 주위를 돌고, 지구가 태양 주위를 도는 것"에 대해 설명하므로 우주에서의 중력과 궤도에 대한 내용입니다.<br><br>① 1문단 : 조석 현상의 원리 → 1문단은 중력의 정의와 역할에 대한 내용 (조석 현상은 3문단) ❌<br>③ 3문단 : 만유인력과 우주 탐사 → 3문단은 조석 현상에 대한 내용 (만유인력은 4문단) ❌<br>④ 4문단 : 중력의 정의와 역할 → 4문단은 만유인력과 우주 탐사에 대한 내용 (중력 정의는 1문단) ❌',
       q3:'정답: ③번. 4문단에서 "만유인력은 모든 질량을 가진 물체가 서로 끌어당기는 힘"이라고 설명합니다.<br><br>① 중력 - 천체가 다른 천체 주위를 도는 길 → 이것은 궤도의 뜻, 중력은 끌어당기는 힘 ❌<br>② 궤도 - 지구가 물체를 끌어당기는 힘 → 이것은 중력의 뜻, 궤도는 천체가 도는 길 ❌<br>④ 조석 현상 - 물체가 가진 물질의 양 → 이것은 질량의 뜻, 조석 현상은 밀물과 썰물 ❌',
       q4:'정답: ①번. 3문단에서 "달의 중력은 바닷물을 끌어당겨 조석 현상을 일으켜요"라고 설명했으므로, 달의 중력이 없다면 밀물과 썰물이 사라질 것입니다.<br><br>② 뉴턴 이전에도 사람들은 만유인력의 원리를 알고 있었다 → 4문단에서 뉴턴이 만유인력 원리를 발견했다고 설명 ❌<br>③ 중력은 지구에서만 작용하고 우주에서는 작용하지 않는다 → 2문단에서 중력은 우주 전체에서 작용한다고 설명 ❌<br>④ 사과가 떨어지는 것과 달이 지구를 도는 것은 서로 다른 힘 때문이다 → 둘 다 같은 중력(만유인력) 때문 ❌'
-  }
+  },
+    creative: {
+      title: '중력이 없는 세상 상상하기',
+      topic: '만약 지구에 중력이 없다면 우리 생활은 어떻게 달라질까요?',
+      hint: '💡 힌트) 본문에서 배운 중력의 역할을 바탕으로, 일상생활에서 중력이 없을 때 일어날 변화를 상상해 보세요.',
+      examples: [
+        '예시 1: 중력이 없으면 물이 둥둥 떠다녀서 컵에 물을 담을 수 없고, 빨대로만 마셔야 해요.',
+        '예시 2: 걸을 수 없어서 벽이나 천장을 밀면서 이동해야 하고, 집안 가구도 모두 고정해야 해요.',
+        '예시 3: 공기도 떠다녀서 한곳에 모이면 숨쉬기 어려울 수 있어요. 우주정거장처럼 환기 시스템이 필요해요.'
+      ]
+    }
   },
 
   /* ===== physics_03 : "지구와 달에서 다른 몸무게의 비밀" ===== */
@@ -1817,10 +1831,95 @@ function applyContentPack(unitKey) {
   const passageBox = document.querySelector('.passage-text');
   console.log('[applyContentPack] passageBox:', passageBox, 'pack.passage:', pack.passage);
   if (passageBox) {
-    const html = pack.passage.map(p => `<p>${p}</p>`).join('');
+    // 문장 단위로 span 감싸기 (마침표, 물음표, 느낌표 기준)
+    const wrapSentences = (text) => {
+      const tagPlaceholders = [];
+      let protectedText = text.replace(/<[^>]+>/g, (match) => {
+        tagPlaceholders.push(match);
+        return `__TAG_${tagPlaceholders.length - 1}__`;
+      });
+      const sentences = protectedText.split(/(?<=[.?!])(?=\s|$)/);
+      return sentences.map(sentence => {
+        const trimmed = sentence.trim();
+        if (!trimmed) return '';
+        let restored = trimmed.replace(/__TAG_(\d+)__/g, (_, idx) => tagPlaceholders[parseInt(idx)]);
+        return `<span class="sentence">${restored}</span>`;
+      }).join(' ');
+    };
+
+    const html = pack.passage.map(p => `<p>${wrapSentences(p)}</p>`).join('');
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
+
+    // 문장 호버 스타일 추가
+    if (!document.getElementById('sentence-hover-style')) {
+      const style = document.createElement('style');
+      style.id = 'sentence-hover-style';
+      style.textContent = `
+        .passage-text .sentence { cursor: pointer; transition: background-color 0.15s ease, font-weight 0.15s ease; border-radius: 3px; padding: 1px 0; }
+        .passage-text .sentence:hover { background-color: rgba(211, 90, 26, 0.12); font-weight: 600; }
+        .passage-text .sentence.selected { background-color: rgba(211, 90, 26, 0.2); font-weight: 600; }
+        .complete-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #fff9c4 100%); color: #e65100; padding: 24px 40px; border-radius: 16px; font-size: 20px; font-weight: 700; box-shadow: 0 8px 32px rgba(255,152,0,0.3), 0 0 0 4px rgba(255,193,7,0.4); border: 2px solid #ffb300; z-index: 9999; animation: toastPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); text-align: center; }
+        @keyframes toastPop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+        .sparkle-rain { position: fixed; top: -30px; z-index: 9998; pointer-events: none; text-shadow: 0 0 8px currentColor, 0 0 15px currentColor; animation: sparkleDown 2s ease-in forwards; }
+        @keyframes sparkleDown { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; } 50% { opacity: 1; transform: translateY(50vh) rotate(360deg) scale(1.2); } 100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; } }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // localStorage 키
+    const storageKey = `passage_read_${unitKey}`;
+
+    // 저장된 선택 상태 복원
+    const savedSelection = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const allSentences = passageBox.querySelectorAll('.sentence');
+    savedSelection.forEach(idx => {
+      if (allSentences[idx]) allSentences[idx].classList.add('selected');
+    });
+
+    // 선택 상태 저장 함수
+    const saveSelection = () => {
+      const selected = [];
+      passageBox.querySelectorAll('.sentence').forEach((s, idx) => {
+        if (s.classList.contains('selected')) selected.push(idx);
+      });
+      localStorage.setItem(storageKey, JSON.stringify(selected));
+    };
+
+    // 문장 클릭 시 선택 유지
+    passageBox.addEventListener('click', (e) => {
+      const sentence = e.target.closest('.sentence');
+      if (!sentence) return;
+      sentence.classList.toggle('selected');
+      saveSelection();
+
+      // 모든 문장 선택 완료 시 축하
+      const total = passageBox.querySelectorAll('.sentence').length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (total > 0 && total === selected) {
+        const toast = document.createElement('div');
+        toast.className = 'complete-toast';
+        toast.textContent = '지문 완독! 대단해요!';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+
+        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
+        const shapes = ['●','★','◆','♥','✦'];
+        for (let i = 0; i < 60; i++) {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'sparkle-rain';
+          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
+          sparkle.style.left = Math.random() * 100 + 'vw';
+          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
+          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
+          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
+          document.body.appendChild(sparkle);
+          setTimeout(() => sparkle.remove(), 3500);
+        }
+      }
+    });
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');

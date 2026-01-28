@@ -3973,10 +3973,42 @@ function applyContentPack(unitKey) {
   const passageBox = document.querySelector('.passage-text');
   console.log('[applyContentPack] passageBox:', passageBox, 'pack.passage:', pack.passage);
   if (passageBox) {
-    const html = pack.passage.map(p => `<p>${p}</p>`).join('');
+    const wrapSentences = (text) => {
+      const tagPlaceholders = [];
+      let protectedText = text.replace(/<[^>]+>/g, (match) => { tagPlaceholders.push(match); return `__TAG_${tagPlaceholders.length - 1}__`; });
+      const sentences = protectedText.split(/(?<=[.?!])(?=\s|$)/);
+      return sentences.map(sentence => { const trimmed = sentence.trim(); if (!trimmed) return ''; let restored = trimmed.replace(/__TAG_(\d+)__/g, (_, idx) => tagPlaceholders[parseInt(idx)]); return `<span class="sentence">${restored}</span>`; }).join(' ');
+    };
+    const html = pack.passage.map(p => `<p>${wrapSentences(p)}</p>`).join('');
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
+
+    if (!document.getElementById('sentence-hover-style')) {
+      const style = document.createElement('style'); style.id = 'sentence-hover-style';
+      style.textContent = `.passage-text .sentence { cursor: pointer; transition: background-color 0.15s ease, font-weight 0.15s ease; border-radius: 3px; padding: 1px 0; } .passage-text .sentence:hover { background-color: rgba(211, 90, 26, 0.12); font-weight: 600; } .passage-text .sentence.selected { background-color: rgba(211, 90, 26, 0.2); font-weight: 600; }`;
+      document.head.appendChild(style);
+    }
+    const unitKey = window.CUR_UNIT || 'fit_people2_01'; const storageKey = `passage_read_${unitKey}`;
+    const savedSelections = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const sentences = passageBox.querySelectorAll('.sentence');
+    sentences.forEach((span, idx) => { if (savedSelections.includes(idx)) span.classList.add('selected'); });
+
+    passageBox.addEventListener('click', (e) => {
+      const sentenceSpan = e.target.closest('.sentence'); if (!sentenceSpan) return;
+      sentenceSpan.classList.toggle('selected');
+      const allSentences = passageBox.querySelectorAll('.sentence'); const selectedIndices = [];
+      allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
+        if (!document.getElementById('toast-style')) { const toastStyle = document.createElement('style'); toastStyle.id = 'toast-style'; toastStyle.textContent = `.toast-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 40px; border-radius: 20px; font-size: 22px; font-weight: 700; z-index: 10000; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); text-align: center; } .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); } .toast-message .emoji { font-size: 32px; display: block; margin-bottom: 8px; } .sparkle-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; } .sparkle { position: absolute; top: -20px; animation: sparkle-fall linear forwards; font-size: 24px; } @keyframes sparkle-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`; document.head.appendChild(toastStyle); }
+        const toast = document.createElement('div'); toast.className = 'toast-message'; toast.innerHTML = '<span class="emoji">🎉</span>지문 완독! 대단해요!'; document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 50); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 2500);
+        const sparkleContainer = document.createElement('div'); sparkleContainer.className = 'sparkle-rain'; document.body.appendChild(sparkleContainer);
+        const emojis = ['⭐', '✨', '🌟', '💫', '🎊', '🎉', '📚', '🐋']; for (let i = 0; i < 40; i++) { setTimeout(() => { const sparkle = document.createElement('div'); sparkle.className = 'sparkle'; sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)]; sparkle.style.left = Math.random() * 100 + 'vw'; sparkle.style.animationDuration = (Math.random() * 2 + 2) + 's'; sparkle.style.fontSize = (Math.random() * 16 + 16) + 'px'; sparkleContainer.appendChild(sparkle); }, i * 60); }
+        setTimeout(() => sparkleContainer.remove(), 4500);
+      }
+    });
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');
