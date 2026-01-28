@@ -1823,10 +1823,41 @@ function applyContentPack(unitKey) {
       localStorage.setItem(storageKey, JSON.stringify(selected));
     };
 
+    // 읽기 시간 기록용
+    const timeKey = `passage_time_${unitKey}`;
+    let readingStartTime = null;
+    const savedTime = localStorage.getItem(timeKey);
+    if (savedTime) {
+      const parsed = JSON.parse(savedTime);
+      readingStartTime = parsed.start ? new Date(parsed.start) : null;
+    }
+
+    // 시간 포맷 함수
+    const formatDateTime = (date) => {
+      const m = date.getMonth() + 1;
+      const d = date.getDate();
+      const h = date.getHours();
+      const min = date.getMinutes().toString().padStart(2, '0');
+      return `${m}월 ${d}일 ${h}:${min}`;
+    };
+    const formatDuration = (ms) => {
+      const totalSec = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSec / 60);
+      const seconds = totalSec % 60;
+      return `${minutes}분 ${seconds}초`;
+    };
+
     // 문장 클릭 시 선택 유지
     passageBox.addEventListener('click', (e) => {
       const sentence = e.target.closest('.sentence');
       if (!sentence) return;
+
+      // 첫 클릭 시 시작 시간 기록
+      if (!readingStartTime) {
+        readingStartTime = new Date();
+        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
+      }
+
       sentence.classList.toggle('selected');
       saveSelection();
 
@@ -1834,11 +1865,25 @@ function applyContentPack(unitKey) {
       const total = passageBox.querySelectorAll('.sentence').length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
       if (total > 0 && total === selected) {
+        // 완료 시간 기록
+        const endTime = new Date();
+        const duration = endTime - readingStartTime;
+        localStorage.setItem(timeKey, JSON.stringify({
+          start: readingStartTime.toISOString(),
+          end: endTime.toISOString(),
+          duration: duration
+        }));
+
         const toast = document.createElement('div');
         toast.className = 'complete-toast';
-        toast.textContent = '지문 완독! 대단해요!';
+        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
+          <div style="font-size:14px;color:#666;line-height:1.6;">
+            <div>시작: ${formatDateTime(readingStartTime)}</div>
+            <div>완료: ${formatDateTime(endTime)}</div>
+            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
+          </div>`;
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2500);
+        setTimeout(() => toast.remove(), 4000);
 
         const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
         const shapes = ['●','★','◆','♥','✦'];
