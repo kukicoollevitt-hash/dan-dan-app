@@ -186,7 +186,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['열정','예술','완성','포기','끈기','책임','사명','도전','노력','집중','미켈란젤로','시스티나 성당','천장화','아담의 창조','다비드','조각','르네상스','고난','인내','재능','걸작'],
     explain: {
       q1: '교황 율리우스 2세는 미켈란젤로에게 시스티나 성당의 천장화를 그려 달라고 부탁했어요',
-      q2: '',
+      q2: '어릴 때부터 그림과 조각에 뛰어난 재능을 보였고',
       q3: '걸작',
       q4: '미켈란젤로는 자신의 모든 열정을 쏟아 이 작품을 완성했고',
       q5: ''
@@ -3996,7 +3996,7 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

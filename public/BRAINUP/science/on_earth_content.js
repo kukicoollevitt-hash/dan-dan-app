@@ -188,7 +188,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'4', q3:'4', q4:'1' },
     essayKeywords: ['지열','발전','온천','관광','새로운 땅','섬','제주도','하와이','전기','휴식','땅','식물','자원','열','에너지','발전소','관광지','연구','토양','비옥','용암','식고','굳어','만들어','형성','자라','씨앗','바람','비','활용','이용','도움','긍정','좋은','혜택','뜨거운','따뜻','쉬다','즐기','여행','구경','자연','환경'],
     explain: {
-      q1:'이 점점 높아집니다. 압력이 너무 세지면',
+      q1:'압력이 점점 높아집니다. 압력이 너무 세지면',
       q2:'에서 전기를 만드는 데 쓰이기도 하고, 자연 온천을 만들어 사람들이 휴식을 즐길 수 있도록 도와주기도 해요',
       q3:'용암',
       q4:'자연 온천을 만들어 사람들이 휴식을 즐길 수 있도록',
@@ -1965,6 +1965,16 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
     }
 
     // 탁상시계 초기화 (00분 00초)

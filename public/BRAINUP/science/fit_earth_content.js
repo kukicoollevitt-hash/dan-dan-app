@@ -114,7 +114,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1:'지구 내부는 무거운 철과 니켈 성분이 중력에 이끌려 중심부로 가라앉으면서',
       q2:'갓 태어난 원시 지구의 표면은 지금과는 전혀 달랐으며, 수많은 충돌로 인해 발생한 열 때문에 온 땅이 펄펄 끓어오르는 뜨거운 불덩이 상태',
       q3:'의 바다로 뒤덮여 있었고',
-      q4:'이다. 지각이 형성되고 나서야 비로소 대기 중의 수증기가 비가 되어 내렸고',
+      q4:'지각이 형성되고 나서야 비로소 대기 중의 수증기가 비가 되어 내렸고',
       q5:'예시 답안: 처음 지구는 마그마의 바다로 뒤덮인 뜨거운 불덩이였습니다. 오랜 시간이 지나면서 표면의 마그마가 천천히 식어 굳어지며 단단한 지각이 형성되었습니다. 지각이 형성된 후 대기 중의 수증기가 비가 되어 내렸고, 이 물이 움푹 파인 곳에 모여 바다가 만들어졌습니다. 이렇게 지각과 바다가 생기면서 생명체가 탄생할 수 있는 환경이 갖춰졌습니다.'
     },
     detail: {
@@ -197,7 +197,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['비옥', '토양', '농작물', '온천', '광물질', '지열', '발전', '전기', '관광', '친환경', '화산', '열', '에너지', '건강', '제주', '하와이', '자원', '혜택', '도움', '이점', '장점', '활용'],
     explain: {
       q1:'에서는 농작물이 잘 자라기 때문에 위험을 무릅쓰고도',
-      q2:'1문단: 마그마와 화산 폭발 원리 / 2문단: 화산의 피해와 회복 / 3문단: 화산의 혜택 / 4문단: 화산 지형 활용',
+      q2:'다른 한편으로는 새로운 환경을 만들어 주는 자연의 특별한 과정입니다',
       q3:'과 함께 재, 돌조각, 가스가 한꺼번에 뿜어져 나오는데',
       q4:'이 만들어지기도 하는데, 온천물에는 몸에 좋은 광물질이',
       q5:'예시 답안: 화산이 주는 긍정적인 면은 여러 가지가 있습니다. 첫째, 화산 물질이 쌓인 토양은 매우 비옥해서 농작물이 잘 자랍니다. 둘째, 땅속의 뜨거운 열로 온천이 만들어져 건강에 도움을 줍니다. 셋째, 지열 발전소에서 화석연료 없이 친환경 전기를 만들 수 있습니다. 넷째, 독특한 화산 지형은 관광자원으로 활용됩니다.'
@@ -207,7 +207,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ③번. 1문단은 마그마와 화산 폭발의 원리, 2문단은 화산의 피해와 자연 회복 과정, 3문단은 비옥한 토양과 온천 등 화산의 혜택, 4문단은 화산 지형의 관광 및 에너지 활용을 설명합니다.\n\n<오답 해설>\n①번: 2문단에서 "화산의 혜택"이라고 했지만, 2문단은 피해와 회복을 다룹니다.\n②번: 3문단에서 "화산 지형 활용"이라고 했지만, 3문단은 화산의 혜택(토양, 온천)을 다룹니다.\n④번: 2문단에서 "화산 지형 활용"이라고 했지만, 2문단은 피해와 회복을 다룹니다.',
       q3:'정답: ④번. 용암은 지표면 위로 나온 뜨거운 마그마입니다.\n\n<오답 해설>\n①번: 지각은 "지구의 가장 중심에 있는 부분"이 아니라 "지구의 가장 바깥을 둘러싼 단단한 껍질"입니다.\n②번: 압력은 "물체를 끌어당기는 힘"이 아니라 "한 곳에 집중되어 밀어내는 힘"입니다.\n③번: 폭발은 "천천히 조용하게 나오는 현상"이 아니라 "갑자기 세게 터져 나오는 현상"입니다.',
       q4:'정답: ①번. 본문에서 "화산 활동이 활발한 지역에서 땅속 열이 전달되어 온천이 만들어진다"고 했으므로, 화산 활동이 없으면 온천이 만들어지기 어려울 것입니다.\n\n<오답 해설>\n②번: 본문 3문단에서 "화산 토양에서는 농작물이 잘 자란다"고 했으므로 농사를 지을 수 있습니다.\n③번: 본문 2문단에서 "화산 폭발은 매우 위험해서 건물이 무너지고 농작물이 피해를 입는다"고 했으므로 피해가 있습니다.\n④번: 본문 4문단에서 "지열 발전소는 화석연료를 사용하지 않는 친환경 에너지"라고 했으므로 화석연료만 사용하지 않습니다.'
-  }
+    },
+    creative: {
+      topic: '🌋 화산이 들려주는 이야기',
+      hint: '💡 힌트) 화산이 되어 자신의 이야기를 들려준다면? 화산의 입장에서 폭발 전후의 감정이나 경험을 써 보세요.',
+      examples: [
+        '예시 1) "나는 한라산이야. 오랫동안 조용히 잠들어 있지만, 내 속에는 아직 뜨거운 마그마가 흐르고 있어. 언젠가 다시 깨어날지도 몰라."',
+        '예시 2) "나는 백두산이야. 1000년 전에 크게 폭발했었지. 그때 뿜어낸 화산재가 일본까지 날아갔대. 지금은 천지라는 아름다운 호수를 품고 있어."',
+        '예시 3) "나는 하와이의 킬라우에아 화산이야. 자주 용암을 흘려보내지만, 덕분에 새로운 땅이 만들어지고 있어. 파괴와 창조, 둘 다 내 역할이야."'
+      ]
+    }
   },
 
   /* ===== fit_earth_03 : "돌은 어떻게 만들어질까?" ===== */
@@ -1965,7 +1974,7 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

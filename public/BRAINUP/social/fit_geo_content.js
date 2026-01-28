@@ -197,9 +197,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['등고선','간격','좁','넓','급경사','완만','경사','높이','높다','낮다','지형','고도','산','언덕','평지','오르막','내리막','가파르다','부드럽다','지도','기호','축척','색깔','초록','노랑','갈색','고동색','방위표','동서남북','범례','약속','표현','거리','비율','선','해수면','기준'],
     explain: {
       q1: '이 기호는 누구나 같은 의미로 이해할 수 있도록 정해진 약속이다',
-      q2: '과 색깔로 표현한다',
-      q3: '지도의 방향을 알려주는 기준',
-      q4: '하다. 색은 초록에서 노랑, 갈색, 고동색 순으로',
+      q2: '색은 초록에서 노랑, 갈색, 고동색 순으로 낮은 곳에서 높은 곳으로 바뀌며',
+      q3: '방위표',
+      q4: '등고선 간격이 좁으면 경사가 급하고, 넓으면',
       q5: '예시 답안: 등고선 간격이 좁은 곳은 경사가 급하여 오르기 힘든 곳이고, 등고선 간격이 넓은 곳은 경사가 완만하여 평지에 가까운 곳입니다.'
     },
     detail: {
@@ -2053,7 +2053,7 @@ function applyContentPack(unitKey) {
     const timeKey = `passage_time_${unitKey}`;
     let readingStartTime = null;
     const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

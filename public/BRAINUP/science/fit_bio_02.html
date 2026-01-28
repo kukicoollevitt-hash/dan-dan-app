@@ -2745,126 +2745,50 @@ window.REMEDIAL_BANK = {
     }
     /* ===== 정답 근거 하이라이팅 함수 ===== */
     function clearEvidenceHighlights() {
-      const passageTextEl = document.querySelector('.passage-text');
-      const vocabBoxEl = document.querySelector('.vocab-box');
-
-      // 검색할 영역들
-      const areas = [passageTextEl, vocabBoxEl].filter(el => el !== null);
-
-      if (areas.length === 0) {
-        console.log('[clearEvidenceHighlights] 검색 영역 없음');
-        return;
-      }
-
-      let tagCount = 0;
-      let highlightCount = 0;
-
+      const areas = [document.querySelector('.passage-text'), document.getElementById('vocab-result')];
       areas.forEach(area => {
-        // 1. 먼저 모든 .evidence-tag 제거 (어디에 있든 상관없이)
-        const tags = Array.from(area.querySelectorAll('.evidence-tag'));
-        tagCount += tags.length;
-        tags.forEach(tag => tag.remove());
-
-        // 2. 하이라이트 span 제거 (라이브 컬렉션 문제 방지를 위해 Array.from 사용)
+        if (!area) return;
         const highlights = Array.from(area.querySelectorAll('.evidence-highlight'));
-        highlightCount += highlights.length;
-
-        highlights.forEach(span => {
-          const parent = span.parentNode;
-          // 나머지 내용을 부모로 이동
-          while (span.firstChild) {
-            parent.insertBefore(span.firstChild, span);
-          }
-          // span 제거
-          parent.removeChild(span);
+        highlights.forEach(el => {
+          const text = el.textContent.replace(/\d번$/, '');
+          el.replaceWith(document.createTextNode(text));
         });
+        area.normalize();
       });
-
-      console.log('[clearEvidenceHighlights] 제거 완료 - 태그:', tagCount, '하이라이트:', highlightCount);
     }
-    // window 객체에 등록
     window.clearEvidenceHighlights = clearEvidenceHighlights;
 
     function highlightEvidence() {
-      const content = window.CONTENTS[window.CUR_UNIT];
-      if (!content || !content.explain) {
-        console.log('[highlightEvidence] explain 데이터 없음');
-        return;
-      }
-
-      const passageTextEl = document.querySelector('.passage-text');
-      const vocabBoxEl = document.querySelector('.vocab-box');
-
-      // 기존 하이라이트 제거
+      const pack = window.CONTENTS?.[window.CUR_UNIT];
+      if (!pack || !pack.explain) return;
       clearEvidenceHighlights();
-
-      // evidence가 있으면 evidence 사용, 없으면 explain 사용
-      const evidenceSource = content.evidence || content.explain;
       const qLabels = { q1: '1번', q2: '2번', q3: '3번', q4: '4번', q5: '5번' };
+      const areas = [document.querySelector('.passage-text'), document.getElementById('vocab-result')];
 
-      // 본문 문단들 (p와 li 모두 포함 - 어휘 목록이 ol > li로 되어 있음)
-      const paragraphs = passageTextEl ? passageTextEl.querySelectorAll('p, li') : [];
-      // 어휘 학습 탭의 어휘 박스 (li 또는 td 등)
-      const vocabItems = vocabBoxEl ? vocabBoxEl.querySelectorAll('li, td, .vocab-item, .vocab-def') : [];
+      ['q1', 'q2', 'q3', 'q4'].forEach(qKey => {
+        const evidenceText = pack.explain[qKey];
+        if (!evidenceText || evidenceText.length < 2) return;
 
-      ['q1', 'q2', 'q3', 'q4'].forEach(qKey => {  // q5(서술형) 제외
-        const evidenceText = evidenceSource[qKey];
-        if (!evidenceText) return;
+        const chars = Array.from(evidenceText);
+        const escapedChars = chars.map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const flexPattern = escapedChars.join('(?:<[^>]*>)*');
 
-        let found = false;
-
-        // q3(어휘 문제)는 어휘 박스에서 먼저 검색
-        if (qKey === 'q3' && vocabItems.length > 0) {
-          vocabItems.forEach(item => {
-            if (found) return;
-            const plainText = item.textContent;
-            if (plainText.includes(evidenceText)) {
-              let html = item.innerHTML;
-              const chars = evidenceText.split('');
-              const regexPattern = chars.map(c => {
-                const escaped = c.replace(/[.*+?^${}()|[\]\]/g, '\$&');
-                return escaped;
-              }).join('(?:<[^>]*>)*');
-              const regex = new RegExp(`(${regexPattern})`);
-              if (regex.test(html)) {
-                html = html.replace(regex,
-                  `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
-                item.innerHTML = html;
-                found = true;
-                console.log(`[highlightEvidence] ${qKey} 어휘박스 하이라이팅 완료:`, evidenceText);
-              }
+        areas.forEach(area => {
+          if (!area) return;
+          try {
+            const regex = new RegExp(`(${flexPattern})`, 'g');
+            const html = area.innerHTML;
+            const newHtml = html.replace(regex,
+              `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
+            if (newHtml !== html) {
+              area.innerHTML = newHtml;
             }
-          });
-        }
-
-        // 본문에서 검색 (q3가 어휘박스에서 못 찾았으면 본문에서도 시도)
-        if (!found && paragraphs.length > 0) {
-          paragraphs.forEach(p => {
-            if (found) return;
-            const plainText = p.textContent;
-            if (plainText.includes(evidenceText)) {
-              let html = p.innerHTML;
-              const chars = evidenceText.split('');
-              const regexPattern = chars.map(c => {
-                const escaped = c.replace(/[.*+?^${}()|[\]\]/g, '\$&');
-                return escaped;
-              }).join('(?:<[^>]*>)*');
-              const regex = new RegExp(`(${regexPattern})`);
-              if (regex.test(html)) {
-                html = html.replace(regex,
-                  `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
-                p.innerHTML = html;
-                found = true;
-                console.log(`[highlightEvidence] ${qKey} 본문 하이라이팅 완료:`, evidenceText);
-              }
-            }
-          });
-        }
+          } catch (e) {
+            console.warn(`[highlightEvidence] ${qKey} 패턴 오류:`, e);
+          }
+        });
       });
-
-      console.log('[highlightEvidence] 하이라이팅 완료');
     }
-    // window 객체에 등록 (learning-common.js에서 호출 가능하도록)
     window.highlightEvidence = highlightEvidence;
 
 

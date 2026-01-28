@@ -196,7 +196,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'1', q3:'4', q4:'2' },
     essayKeywords: ['용해','녹다','녹지 않','녹아','물','섞이다','섞이지 않','분리','층','성질','입자','다르','달라','모래','밀가루','식용유','기름','가라앉','떠다니','뜨다','둥둥','저어도','아무리','때문','이유','특성'],
     explain: {
-      q1:'라고 해요. 녹아 들어가는 물질을',
+      q1:'한 물질이 다른 물질 속에 골고루 섞여 들어가는 현상',
       q2:'가 점점 작아지더니 어느새 눈에 보이지 않게 사라져 버리지요',
       q3:'증발',
       q4:'해서 날아가고 하얀 설탕만 남게 되지요',
@@ -1897,7 +1897,7 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

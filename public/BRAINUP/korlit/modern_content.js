@@ -177,7 +177,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['소나기','소년','추억','분홍색','스웨터','업다','그날','비','함께','소녀','개울가','조약돌','첫사랑','이별','죽음','유언','송진','초시','수숫단','갈밭','원두막','냇물','체온','두근거리다','가슴','등','손','달리다','건너다','젖다','창백','감기','가을','만남','이주','떠나다','충격','소중히','기억','영원','순간','황순원','단편소설','순수','서정적','농촌','마을','상징'],
     explain: {
       q1: '을 건네며 물속에서 이쁜 것만 골랐다고 말했다',
-      q2: '과 갈밭을 지나갔다. 갑자기 하늘이 어두워지더니 세찬 소나기가 쏟아졌다',
+      q2: '갑자기 하늘이 어두워지더니 세찬 소나기가 쏟아졌다',
       q3: '조각을 바라보고 있었다',
       q4: '이 스쳐 지나갔다',
       q5: '예시 답안: 소녀는 소나기를 맞던 그날 소년이 자신을 업어 주었던 추억을 간직하고 싶었기 때문이다. 그 순간이 소녀에게 가장 소중한 기억이었을 것이다.'
@@ -3543,6 +3543,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

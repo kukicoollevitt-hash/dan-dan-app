@@ -196,10 +196,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'3', q3:'4', q4:'1' },
     essayKeywords: ['초식','육식','잡식','소화','장','위산','감각','시력','청각','후각','초음파','지느러미','생존','환경','적응','동물','기관','먹이','식물','고기','단백질','섬유','미생물','독수리','박쥐','상어','냄새','피','날개','다리','꼬리','유선형','포유류','새','물고기','헤엄','달리기','걷기','날다','사자','토끼','소','말','돼지','곰','뱃속','분해','흡수','영양'],
     explain: {
-      q1:' 기관도 각자 다르게 발달했다',
-      q2:'이나 몸의 구조를 발달시켜 왔다',
-      q3:'해 왔다',
-      q4:'를 내보내고 되돌아오는 소리를 들어 장애물의 위치와 거리를 정확하게 알아낸다',
+      q1:'동물은 먹는 음식이 서로 다르기 때문에',
+      q2:'자신이 살아가는 환경에서 더 잘 생존하기 위해',
+      q3:'자신이 살아가는 환경에 가장 알맞은 감각 기관을 발달시켜',
+      q4:'되돌아오는 소리를 들어 장애물의 위치와 거리를 정확하게 알아낸다',
       q5:'예시 답안: 육식 동물인 사자는 고기를 빠르게 소화해야 하므로 강한 위산과 짧은 장을 가지고 있습니다. 또한 사냥할 때 먹이를 정확히 보기 위해 뛰어난 시력이 발달했습니다.'
     },
     detail: {
@@ -2124,7 +2124,7 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

@@ -153,9 +153,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['열정','예술','완성','포기','끈기','책임','사명','도전','노력','집중','인내','참을성','버티다','견디다','이겨내다','극복','의지','결심','결단','목표','꿈','신념','믿음','자신감','확신','뜨거운','강한','불굴','불타는','헌신','몰두','몰입','전념','매진','최선','정성','마음','진심','진정성','혼','혼신','영혼','온힘','모든','쏟다','바치다','투자','시간','고통','아픔','힘듦','어려움','고생','시련','역경','고난','장애물','한계','넘다','뛰어넘다','이루다','달성','성취','성공','결과','결실','보람','가치','의미','보답','작품','예술가','창작','창조'],
     explain: {
       q1: '를 그려 달라고 부탁했어요',
-      q2: '입니다',
-      q3: '을 겪으며 그림을 그렸어요',
-      q4: '을 쏟아 이 작품을',
+      q2: '어릴 때부터 그림과 조각에 남다른 재능을 보였고',
+      q3: '을 겪으면서도, 그는 단 하루도 붓을 놓지 않았습니다',
+      q4: '과 재능을 쏟아 이 대작을',
       q5: '예시 답안: 미켈란젤로는 예술에 대한 열정이 있었기 때문에 고난을 이겨낼 수 있었다. 자신의 작품을 완성하겠다는 강한 의지와 책임감이 그를 포기하지 않게 했을 것이다.'
     },
     detail: {
@@ -3430,6 +3430,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

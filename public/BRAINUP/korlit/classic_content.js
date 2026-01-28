@@ -167,6 +167,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 어사 재판, 춘향 시험과 재회, 한양행',
         '4문단 : 암행어사 임무, 남원 도착, 향단 대접'
       ],
+      q3_html: `이도령은 과거 시험에서 으뜸으로 급제해 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅎㅇㅅ"> 임무를 받았고, 춘향이 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅊ">을 거절해 감옥에 갇혔다는 소식을 들었다.`,
+      q4_html: `임금은 춘향에게 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㄹㅂㅇ">이라는 칭호를 내렸는데, 이는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㄱ">를 지킨 여인에게 주는 이름이다.`,
       q3_1_ph: 'ㅇㅎㅇㅅ', q3_2_ph: 'ㅅㅊ',
       q4_1_ph: 'ㅈㄹㅂㅇ', q4_2_ph: 'ㅈㄱ',
       q5_text: '춘향이 어사가 된 이도령 앞에서도 수청을 거절한 행동에서 알 수 있는 춘향의 성격과 가치관을 본문 내용을 바탕으로 써 보세요.'
@@ -176,8 +178,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     explain: {
       q1: '은 눈빛만 보고도 그가 이도령임을 알아차린 듯 정성껏 대접하며 숨은 뜻을 헤아렸습니다',
       q2: '어사 또가 된 이도령은 죄수들을 한 명씩 불러 억울함을 풀어 주기 시작했습니다',
-      q3: ' 임무를 받게 되었어요. 그는 백성의 삶을 살피기 위해',
-      q4: '이라는 이름을 내렸습니다. 두 사람은 혼인하여 오래도록',
+      q3: '임무를 받게 되었어요',
+      q4: '이라는 이름을 내렸습니다',
       q5: '예시 답안: 춘향은 죽음 앞에서도 수청을 거절하며 자신의 약속과 절개를 지켰다. 이를 통해 춘향이 신의와 지조를 중요하게 여기는 인물임을 알 수 있다.'
     },
     detail: {
@@ -3384,6 +3386,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

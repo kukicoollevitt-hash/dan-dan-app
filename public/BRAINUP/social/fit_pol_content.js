@@ -202,7 +202,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['기회','노력','능력','차이','결과','똑같이','조건','도전','자연스럽게','평등','공정','출발점','출발선','같은','동일','차별','권리','선택','참여','시작','기본','보장','존중','가능성','잠재력'],
     explain: {
       q1: '를 바탕으로 운영되는 나라예요. 민주주의 사회에서는 나라의 실제 주인이 국민이며',
-      q2: '',
+      q2: '정치에 참여하는 방식에 따라 두 가지로 나눌 수 있어요',
       q3: '직접 민주주의',
       q4: '를 똑같이 주는 것을 의미하고, 노력과 능력에 따른 차이는 자연스럽게 나타날 수 있답니다',
       q5: ''
@@ -2123,6 +2123,16 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
     }
 
     // 시간 포맷 함수

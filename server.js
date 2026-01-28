@@ -6572,9 +6572,9 @@ app.post("/api/migrate-world2", async (req, res) => {
 // ===== 학습 이력 로그 저장 API =====
 app.post("/api/log", async (req, res) => {
   try {
-    const { grade, name, school, series, unit, radar, completed } = req.body;
+    const { grade, name, school, series, unit, radar, completed, readingTime } = req.body;
 
-    console.log("[/api/log] 받은 데이터:", { grade, name, school, series, unit, completed });
+    console.log("[/api/log] 받은 데이터:", { grade, name, school, series, unit, completed, readingTime });
 
     if (!grade || !name || !unit) {
       return res.status(400).json({ ok: false, message: "필수 정보 부족" });
@@ -6592,6 +6592,7 @@ app.post("/api/log", async (req, res) => {
       unit,
       radar: radar || undefined,
       completed: completed === true,  // 명시적으로 true인지 확인
+      readingTime: readingTime || 0,  // 독해시간 (초 단위)
       timestamp: new Date(),  // 학습할 때마다 시간 갱신 (최종 학습 시간)
     };
 

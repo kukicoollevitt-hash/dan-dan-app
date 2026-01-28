@@ -168,6 +168,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 케이트와 소년들 사연 공유',
         '4문단 : 브리앙의 결심, 밤에 출발 준비'
       ],
+      q3_html: `「15소년 표류기」는 열다섯 명의 소년이 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅇㄷ">에서 어른 없이 2년간 생존하는 이야기입니다. 소년들은 악당들이 자신들의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅㅊ">를 찾아낼까 봐 걱정했습니다.`,
+      q4_html: `브리앙은 드니팬 일행을 찾아가기로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅅ">했습니다. 악당들에게 들키지 않기 위해 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂ">에 출발하기로 했습니다.`,
       q3_1_ph: 'ㅁㅇㄷ', q3_2_ph: 'ㅇㅅㅊ',
       q4_1_ph: 'ㄱㅅ', q4_2_ph: 'ㅂ',
       q5_text: '브리앙이 드니팬 일행과 사이가 좋지 않았음에도 그들을 찾아가기로 결심한 이유를 본문 내용을 바탕으로 설명해 보세요.'
@@ -2982,6 +2984,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

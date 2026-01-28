@@ -197,10 +197,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     },
     essayKeywords: ['당나라','전쟁','김유신','사망','유민','고구려','백제','통일','아버지','뜻','문무왕','무열왕','김춘추','법민','신라','즉위','정벌','함락','평양성','668년','676년','속셈','욕심','대들보','장군','각오','결심','다짐','포기','끈질긴','전투','대동강','호국','대왕암','동해','바위','슬픔','눈물','연합','협력','끝까지','완성','군주','왕','지휘','공격','승리','극복','어려움'],
     explain: {
-      q1: '들과 손을 잡고 당나라군을 몰아내기 위한',
-      q2: '에 나섰습니다',
-      q3: '되며 고구려가 무너졌지요',
-      q4: '의 뜻을 이루었습니다',
+      q1: '손을 잡고 당나라군을 몰아내기 위한 새로운 전쟁을 준비하기 시작했습니다',
+      q2: '바람을 이루기도 전에 세상을 떠나고 말았어요',
+      q3: '정벌',
+      q4: '각오',
       q5: '예시 답안: 문무왕은 당나라와의 오랜 전쟁, 김유신 장군의 죽음이라는 어려움을 극복했습니다. 나라의 대들보인 김유신을 잃었지만 포기하지 않고 싸움을 이어갔고, 고구려와 백제 유민들과 힘을 합쳐 당나라군을 물리쳤습니다.'
     },
     detail: {
@@ -4434,6 +4434,39 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
+    }
+
+    // 🔐 현재 로그인 학생 정보 가져오기
+    function getCurrentStudentForReading() {
+      const saved = localStorage.getItem('currentStudent');
+      if (!saved) return null;
+      try { return JSON.parse(saved); } catch (e) { return null; }
+    }
+
+    // 🔐 학생키 만들기: 학년_이름_전화숫자
+    function buildStudentKeyForReading(stu) {
+      const cleanPhone = (stu.phone || '').replace(/\D/g, '');
+      const cleanName  = (stu.name  || '').trim();
+      const cleanGrade = (stu.grade || '').trim();
+      return `${cleanGrade}_${cleanName}_${cleanPhone}`;
     }
 
     // 시간 포맷 함수

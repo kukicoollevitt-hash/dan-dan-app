@@ -209,9 +209,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'1', q3:'3', q4:'4' },
     essayKeywords: ['존중','인정','다양','배려','이해','사랑','돌봄','책임','열린','마음','받아들이다','차별','편견','가족','형태','핵가족','한부모','다문화','조손','1인','가구','행복','소중','함께'],
     explain: {
-      q1:'이 흔했지요. 집 안에서는 여러',
+      q1:'할아버지와 할머니, 부모님, 자녀가 한집에 모여 사는',
       q2:'는 가족 형태에 큰 변화를 가져왔어요',
-      q3:'여러 세대가 한집에서 함께 사는 가족 형태',
+      q3:'확대 가족',
       q4:'서로 사랑하고 책임지며 살아간다면 그것이 바로 행복한 가족이랍니다',
       q5:'예시 답안: 어떤 형태든 서로 존중하고 배려하는 태도가 필요합니다. 다양한 가족의 모습을 열린 마음으로 받아들여야 합니다.'
     },
@@ -2072,7 +2072,7 @@ function applyContentPack(unitKey) {
     const timeKey = `passage_time_${unitKey}`;
     let readingStartTime = null;
     const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

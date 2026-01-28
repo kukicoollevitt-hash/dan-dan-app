@@ -169,7 +169,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'1', q2:'2', q3_1:['비율'], q3_2:['축척'], q4_1:['표시'], q4_2:['방위표'] },
     essayKeywords: ['등고선','간격','좁','넓','급경사','완만','경사','높이','높다','낮다','지형','산','언덕','평지','골짜기','변화','크다','작다','가파르다','급하다','짧은 거리','긴 거리','올라가다','내려가다','오르막','내리막','선','연결','같은 높이','고도','차이','표현','나타내다'],
     explain: {
-      q1: '로 표시됩니다. 이 기호는 누구나 같은 의미로 이해할 수 있도록',
+      q1: '누구나 같은 의미로 이해할 수 있도록 정해진 약속이에요',
       q2: '은 실제 거리와 지도 거리의 관계를 알려주는 중요한 요소예요',
       q3: '은 실제 거리와 지도 거리의 관계를 알려주는 중요한 요소예요',
       q4: '는 지도에서 동서남북의 방향을 알려주는 기준이에요',
@@ -180,10 +180,20 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ②번. 2문단은 기호와 축척의 개념에 대한 내용입니다. 기호(symbol)로 지형 요소를 표시하고, 축척(scale)으로 실제 거리와 지도 거리의 관계를 나타냅니다.\n\n<오답 해설>\n① 기호와 축척의 개념은 2문단의 내용이며, 1문단은 지도의 약속과 보편성에 대한 내용입니다.\n③ 지도의 약속과 보편성은 1문단의 내용이며, 3문단은 등고선과 방위표에 대한 내용입니다.\n④ 등고선과 방위표는 3문단의 내용이며, 4문단은 지도 읽기의 중요성에 대한 내용입니다.',
       q3: '정답: 비율, 축척\n\n<정답 해설>\n• 비율: 두 양의 상대적인 크기 관계를 나타내는 것입니다.\n• 축척(scale): 실제 거리와 지도 거리의 비율을 말합니다.\n• 2문단에서 "축척(scale)은 실제 거리와 지도 거리의 관계를 알려주는 중요한 요소예요. \'5만 분의 1 지도\'는 실제 거리 5만 센티미터가 지도에서는 1센티미터로 나타난다는 뜻입니다"라고 설명합니다.\n• 축척 덕분에 지도 위에서도 거리나 위치를 정확하게 계산할 수 있습니다.',
       q4: '정답: 표시, 방위표\n\n<정답 해설>\n• 표시: 어떤 정보를 알려주기 위해 나타낸 것입니다.\n• 방위표(compass rose): 지도에서 동서남북의 방향을 알려주는 기준입니다.\n• 3문단에서 "방위표(compass rose)는 지도에서 동서남북의 방향을 알려주는 기준이에요. 방위표가 없을 때는 위쪽이 북쪽, 오른쪽이 동쪽으로 간주합니다"라고 설명합니다.\n• 방위표를 통해 지도에서 방향을 정확히 파악할 수 있습니다.'
+    },
+    creative: {
+      title: '나만의 지도 기호 만들기',
+      topic: '"우리 동네의 주요 장소를 나타내는 나만의 기호를 만들어 보자."',
+      hint: '💡 힌트) 학교, 도서관, 공원, 병원, 소방서 등 우리 동네에 있는 장소를 생각해 보고, 그 장소를 쉽게 알아볼 수 있는 간단한 그림이나 기호를 만들어 보세요!',
+      examples: [
+        '예시 1) 학교는 책 모양 기호로 나타내고, 도서관은 책이 여러 권 쌓인 모양으로 표시했다.',
+        '예시 2) 병원은 하트에 십자가를 넣은 기호로, 소방서는 불꽃 모양으로 만들었다.',
+        '예시 3) 공원은 나무와 벤치 모양을 합쳐서 기호로 표현했다.'
+      ]
   }
   },
 
-  /* ===== geo_03 : “우리 고장의 상징과 유래” ===== */
+  /* ===== geo_03 : "우리 고장의 상징과 유래" ===== */
   geo_03: {
     labelNo: '03',
     title: '🏙️ 우리 고장의 상징과 유래',
@@ -1826,6 +1836,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

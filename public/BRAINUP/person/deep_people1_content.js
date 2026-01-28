@@ -5179,7 +5179,11 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
+    // 🔐 현재 로그인 학생 정보 가져오기
+    function getCurrentStudentForReading() { const saved = localStorage.getItem('currentStudent'); if (!saved) return null; try { return JSON.parse(saved); } catch (e) { return null; } }
+    // 🔐 학생키 만들기: 학년_이름_전화숫자
+    function buildStudentKeyForReading(stu) { const cleanPhone = (stu.phone || '').replace(/\D/g, ''); const cleanName = (stu.name || '').trim(); const cleanGrade = (stu.grade || '').trim(); return `${cleanGrade}_${cleanName}_${cleanPhone}`; }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

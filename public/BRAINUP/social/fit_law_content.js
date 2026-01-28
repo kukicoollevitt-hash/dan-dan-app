@@ -199,7 +199,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['전쟁','비극','존엄성','훼손','반복','인권','평등','자유','보호','지키','목숨','잃다','잃었','죽다','죽었','희생','고통','차별','불평등','약자','세계 인권 선언','국제 연합','헌법','법률','정책','신분','귀족','평민','노력'],
     explain: {
       q1: '하다는 생각이 자리 잡기 시작했어요',
-      q2: '',
+      q2: '그렇다고 모든 고민이 사라진 것은 아니었어요',
       q3: '신분',
       q4: '비극이 반복되지 않도록 하기 위해 세계 여러 나라는 힘을 모아',
       q5: ''
@@ -2062,7 +2062,7 @@ function applyContentPack(unitKey) {
     const timeKey = `passage_time_${unitKey}`;
     let readingStartTime = null;
     const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

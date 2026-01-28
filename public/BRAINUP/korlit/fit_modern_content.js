@@ -187,7 +187,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['소나기','소년','추억','분홍색','스웨터','업다','그날','비','함께','소녀','개울가','조약돌','첫사랑','기억','간직','유언','마지막','소중','손','잡다','원두막','냇물','건너다','떨다','창백','이주','죽음','송진','들길','눈물'],
     explain: {
       q1: '개울가에 가도 소녀는 보이지 않았고, 들판에 나가도 소녀의',
-      q2: '',
+      q2: '세찬 소나기가 쏟아졌다',
       q3: '조약돌',
       q4: '소녀가 죽기 전 분홍색 스웨터를 입혀서 묻어 달라고 했다는 말을 전해 들었다',
       q5: ''
@@ -3568,7 +3568,7 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

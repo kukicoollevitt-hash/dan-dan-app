@@ -229,6 +229,17 @@
       // 🔥 디버깅: 전송할 radar 값 출력
       console.log('[sendLearningLog] 🔍 전송할 radar:', JSON.stringify(radar));
 
+      // 🕐 독해시간 계산 (탁상시계에서 가져오기)
+      const minuteInput = document.getElementById('minute-input');
+      const secondInput = document.getElementById('second-input');
+      let readingTimeSeconds = 0;
+      if (minuteInput && secondInput) {
+        const minutes = parseInt(minuteInput.value) || 0;
+        const seconds = parseInt(secondInput.value) || 0;
+        readingTimeSeconds = minutes * 60 + seconds;
+      }
+      console.log('[sendLearningLog] 🕐 독해시간:', readingTimeSeconds, '초');
+
       try {
         const res = await fetch('/api/log', {
           method: 'POST',
@@ -239,7 +250,8 @@
             phone: stu.phone || '',
             unit: unit,
             radar: radar,
-            completed: true
+            completed: true,
+            readingTime: readingTimeSeconds
           })
         });
         const result = await res.json();
@@ -531,8 +543,8 @@
 
         // ✅ 레이더 차트 업데이트 (q1ok 형식 기반)
         // lexical은 서버에 저장된 값이 있으면 우선 사용 (어휘 빈칸 채우기 점수)
+        const lexicalValue = (typeof data.lexical === 'number' && data.lexical >= 6) ? data.lexical : (data.q3ok ? 10 : 6);
         if (typeof window.drawRadarChart === 'function') {
-          const lexicalValue = (typeof data.lexical === 'number' && data.lexical >= 6) ? data.lexical : (data.q3ok ? 10 : 6);
           window.drawRadarChart({
             literal: data.q1ok ? 10 : 6,
             structural: data.q2ok ? 10 : 6,

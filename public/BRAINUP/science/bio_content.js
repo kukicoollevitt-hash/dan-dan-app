@@ -193,6 +193,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     },
     answerKey: { q1:'2', q2:'1', q3_1:['소화'], q3_2:['위산'], q4_1:['초음파'], q4_2:['지느러미'] },
     essayKeywords: ['초식','육식','잡식','소화','장','위산','감각','시력','청각','후각','초음파','지느러미','생존','환경','적응','토끼','소','말','양','사슴','기린','사자','호랑이','늑대','독수리','상어','박쥐','곰','돼지','인간','닭','오리','긴 장','짧은 장','미생물','풀','고기','먹이','눈','코','귀','날개','다리','꼬리','헤엄','달리기','날기','포유류','물고기','새','발달','진화'],
+    evidence: {
+      q1:'더 잘 생존하기 위해 특별한',
+      q2:'같은 동물이라도 사는 곳이 다르면 모습과 생활 방식이 조금씩 다르답니다',
+      q3:'소화',
+      q4:'초음파'
+    },
     explain: {
       q1:'[정답 ②] 동물들은 자신이 살아가는 환경에 맞게 몸과 기관을 발달시켜 왔기 때문입니다.<br>[오답] ①번: 동물의 몸 구조는 사람이 키우는 방법과 관계없이 환경에 맞게 진화한 것입니다. ③번: 동물들은 다양한 조상에서 진화했으며, 환경에 따라 서로 다른 모습을 가지게 되었습니다. ④번: 모든 동물은 생존을 위해 먹이를 먹어야 합니다.',
       q2:'[정답 ①] 1문단은 동물의 다양성과 환경에 맞는 몸 구조 발달을 설명합니다.<br>[오답] ②번: 2문단의 실제 내용은 먹이에 따른 소화 기관의 차이입니다. ③번: 3문단의 실제 내용은 생존을 위한 감각 기관의 발달입니다. ④번: 4문단의 실제 내용은 다양한 이동 방식(다리, 날개, 지느러미 등)입니다.',
@@ -210,6 +216,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     creative: {
       title: '🦁 동물의 몸과 생활 방식은 왜 다를까? - 나만의 동물 도감 만들기',
       instruction: '다음 활동을 통해 동물의 다양한 적응 방식을 탐구해 봅시다.',
+      hint: '💡 힌트) 동물이 살아가는 환경(육지, 물속, 하늘)과 먹이(초식, 육식, 잡식)에 따라 어떤 기관이 발달했는지 떠올려 보세요!',
       steps: [
         {
           step: 1,
@@ -1953,6 +1960,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

@@ -20,6 +20,7 @@ const LearningLogSchema = new mongoose.Schema({
 
   completed: { type: Boolean, default: false }, // 학습 완료 여부
   deleted: { type: Boolean, default: false }, // 소프트 삭제 여부
+  readingTime: { type: Number, default: 0 }, // 독해시간 (초 단위)
 
   timestamp: { type: Date, default: Date.now },
   aiReviewCompletedAt: { type: Date, default: null }, // AI 복습 완료 시간

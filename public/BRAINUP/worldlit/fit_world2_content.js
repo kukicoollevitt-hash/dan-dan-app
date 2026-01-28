@@ -196,11 +196,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['위험','악당','무법자','협력','화합','단결','함께','생존','안전','갈등','드니팬','방향','15소년','표류기','케이트','난파선','반란','선장','항해사','월스턴','선원','무인도','동굴','은신처','사냥','낚시','식량','용기','감동','눈물','어른 없이','2년','열다섯','나이','언어','힘을 합쳐','고든','무기','브리앙','모코','호수','결심','어둠','밤','들키지','동료','구하기','창백','일행','과거','감정','한마음'],
         explain: {
       q1: '열다섯 명의 소년들은 표류 끝에 이 무인도에 도착했어요. 나이도 다르고 서로의 언어도 달랐지만, 힘을 합쳐 생존해왔지요',
-      q2: '',
+      q2: '조심스럽게 자신들의 사정을 털어놓기 시작했어요',
       q3: '무인도',
       q4: '악당들에게 들키지 않으려면 오늘 밤이야. 밤이 우리에게 가장 안전한 길을 열어 줄 거야',
       q5: ''
-    
     },
     detail: {
       q1:'정답: ②번. 본문에서 "케이트는 어린 소년들이 해낸 용기와 협력에 마음이 뜨거워져 눈물을 글썽였어요"라고 했습니다. 어른 없이 2년간 힘을 합쳐 살아남았다는 사실에 감동한 것입니다.\n\n<오답 해설>\n①번: 소년들은 케이트를 도와주려 했고, 케이트도 소년들에게 감사했습니다.\n③번: 악당들에게 쫓기던 기억 때문이 아니라 소년들의 용기와 협력에 감동한 것입니다.\n④번: 케이트가 소년들을 거짓말한다고 의심했다는 내용은 없습니다.',
@@ -3496,7 +3495,7 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

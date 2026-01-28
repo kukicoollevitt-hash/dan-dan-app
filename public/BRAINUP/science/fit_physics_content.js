@@ -207,10 +207,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'4', q2:'2', q3:'3', q4:'1' },
     essayKeywords: ['중력','떠다니','걷','물','공기','떨어지','붙잡','우주','무중력','뜨','날아','고정','흩어지','모이지','서있','앉','눕','마시','먹','생활','불편','위험','숨','호흡'],
     explain: {
-      q1:'를 따라 서로 끌어당기기 때문이다',
-      q2:'1문단: 중력의 개념 / 2문단: 우주에서의 중력과 조석 현상 / 3문단: 만유인력의 원리 / 4문단: 과학 혁명',
-      q3:'이라 불렀다',
-      q4:'을 일으킨다',
+      q1:'중력은 지구뿐 아니라 우주 전체에서 작용한다',
+      q2:'뉴턴은 이런 중력의 원리를',
+      q3:'만유인력',
+      q4:'하루 두 번 밀물과 썰물이 생기는 것도 이 힘 덕분이다',
       q5:'예시 답안: 중력이 없으면 물체가 떠다니고 걷기 어려워요. 물이나 공기도 한곳에 모이지 않아서 생활이 매우 불편해질 거예요.'
     },
     detail: {
@@ -1958,7 +1958,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
    ★ 어휘 빈칸 렌더러 & 탭 이벤트
 =================================*/
 function getCurrentUnit() {
-  return (window.CUR_UNIT || 'physics_01');
+  return (window.CUR_UNIT || 'fit_physics_01');
 }
 
 if (typeof _vocabFillRendered === "undefined") var _vocabFillRendered = false;
@@ -1970,7 +1970,7 @@ window.renderVocabFill = function () {
     return;
 }
 
-  const unit = window.CUR_UNIT || 'physics_01';
+  const unit = window.CUR_UNIT || 'fit_physics_01';
   const pack = window.CONTENTS?.[unit];
   const root = document.getElementById('vocab-fill')
             || document.querySelector('.vocab-fill-text');
@@ -2092,7 +2092,7 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
@@ -2191,7 +2191,7 @@ function applyContentPack(unitKey) {
     const loadingOverlay = document.getElementById('loadingOverlay');
     if (loadingOverlay) {
       // 분석리포트 탭일 경우 1.3초 후에 숨기기
-      const unit = window.CUR_UNIT || 'physics_01';
+      const unit = window.CUR_UNIT || 'fit_physics_01';
       const savedTab = localStorage.getItem(`current-geo-tab:${unit}`);
       const delay = (savedTab === 'report') ? 1300 : 0;
 
@@ -2240,7 +2240,7 @@ function getReadingStateKey(unit) {
 
 function saveReadingState() {
   try {
-    const unit = window.CUR_UNIT || 'physics_01';
+    const unit = window.CUR_UNIT || 'fit_physics_01';
     const key  = getReadingStateKey(unit);   // ✅ 학생별 + 단원별 키
 
     const q1   = document.querySelector('input[name="q1"]:checked');
@@ -2270,7 +2270,7 @@ function saveReadingState() {
 
 function loadReadingState() {
   try {
-    const unit = window.CUR_UNIT || 'physics_01';
+    const unit = window.CUR_UNIT || 'fit_physics_01';
     const key  = getReadingStateKey(unit);   // ✅ 학생별 + 단원별 키
     const raw  = localStorage.getItem(key);
     if (!raw) return;
@@ -2313,7 +2313,7 @@ function loadReadingState() {
 
 /* ===== 통합 채점기 ===== */
 window.gradeQuiz = function () {
-  const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.physics_01;
+  const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.fit_physics_01;
   const A = pack.answerKey;
   const EX = pack.explain;
 
@@ -2569,7 +2569,7 @@ window.DanDan = window.DanDan || {};
       const m = location.pathname.match(/physics_(\d+)\.html/i);
       if (m) unitParam = `fit_physics_${m[1].padStart(2, '0')}`;
   }
-    return (unitParam || (window.CUR_UNIT || 'physics_01')).toLowerCase();
+    return (unitParam || (window.CUR_UNIT || 'fit_physics_01')).toLowerCase();
 }
 
   /* ✅ 학생키: 학년_이름_전화숫자 */
@@ -2950,7 +2950,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof window.gradeQuiz === 'function') {
           gradeQuiz();
       }
-        const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.physics_01;
+        const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.fit_physics_01;
         renderSolutions(pack);
       } catch (e) {
         console.warn('submit-btn handler error', e);

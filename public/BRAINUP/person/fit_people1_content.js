@@ -224,11 +224,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['당나라','전쟁','김유신','사망','유민','고구려','백제','통일','아버지','뜻','무열왕','김춘추','삼국','평양성','함락','신라','즉위','정벌','내분','지휘','속셈','야욕','대들보','각오','유언','용','바다','호국','나라','끈기','인내','의지','포기','극복','슬픔','약속','책임','충성','지도자','결단','676년','668년'],
     explain: {
       q1: '신라는 고구려와 백제의 유민들과 손을 잡고 당나라군을 몰아내기 위한 새로운 전쟁을 준비하기 시작했습니다',
-      q2: '',
+      q2: '세상을 떠나고 말았어요',
       q3: '함락',
       q4: '아버지의 꿈을 제가 이루겠습니다',
       q5: ''
-    
     },
     detail: {
       q1:'정답: ②번. 본문에서 신라는 고구려와 백제의 유민들과 손을 잡고 당나라군을 몰아냈다고 합니다.\n\n<오답 해설>\n①번: 무열왕(김춘추)은 삼국 통일을 이루기 전에 세상을 떠났고, 문무왕이 그 뜻을 이어 통일을 완성했습니다.\n③번: 김유신 장군은 당나라와의 전쟁이 끝나기 전인 673년에 세상을 떠났습니다.\n④번: 당나라는 고구려 멸망 후 바로 철수하지 않고 오히려 신라 땅까지 차지하려는 야욕을 드러냈습니다.',
@@ -4963,7 +4962,11 @@ function applyContentPack(unitKey) {
 
     // 읽기 시간 기록용
     const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; }
+    if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
+    // 🔐 현재 로그인 학생 정보 가져오기
+    function getCurrentStudentForReading() { const saved = localStorage.getItem('currentStudent'); if (!saved) return null; try { return JSON.parse(saved); } catch (e) { return null; } }
+    // 🔐 학생키 만들기: 학년_이름_전화숫자
+    function buildStudentKeyForReading(stu) { const cleanPhone = (stu.phone || '').replace(/\D/g, ''); const cleanName = (stu.name || '').trim(); const cleanGrade = (stu.grade || '').trim(); return `${cleanGrade}_${cleanName}_${cleanPhone}`; }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 

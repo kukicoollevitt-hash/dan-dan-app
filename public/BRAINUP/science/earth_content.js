@@ -171,10 +171,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'2', q3_1:['마그마'], q3_2:['압력'], q4_1:['지각'], q4_2:['용암'] },
     essayKeywords: ['지열','발전','온천','관광','새로운 땅','섬','제주도','하와이','전기','휴식','화산회토','토양','비옥','농작물','감귤','파인애플','미네랄','농사','식물','자원','연구','땅','열','에너지','자연','환경','회복','성장'],
     explain: {
-      q1:'이 점점 높아집니다. 압력이 너무 세지면',
+      q1:'한곳에 모여 압력이 점점 높아집니다',
       q2:'화산의 폭발은 매우 위험해서 주변의 나무나 건물이 불에 타거나 무너질 수도 있어요.',
-      q3:'가 계속 움직이고 있어요. 이 마그마는 지구 내부의 열에 의해',
-      q4:'의 약한 틈을 밀어 올리게 되고, 결국 그 틈을 통해',
+      q3:'이 마그마는 지구 내부의 열에 의해 흐르듯 이동하다가',
+      q4:'결국 그 틈을 통해 마그마가 지표면 가까이까지 올라오게 돼요',
       q5:'예시 답안: 화산은 지열 발전소에서 전기를 만들거나 온천을 통해 휴식을 제공하고, 새로운 땅과 관광자원을 만들어 줘요.'
     },
     detail: {
@@ -182,7 +182,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2:'정답: ②번. 2문단은 화산 폭발의 피해(나무, 건물 피해, 화산재)와 회복(새로운 땅, 식물 성장)에 대한 내용입니다.\n\n<오답 해설>\n① 화산의 활용(관광, 지열 발전)은 3문단의 내용입니다.\n③ 화산 예측과 연구는 4문단의 내용입니다.\n④ 마그마의 이동과 폭발 원리는 1문단의 내용입니다.',
       q3:'정답: 마그마, 압력\n\n<정답 해설>\n• 마그마: 지하 깊은 곳에서 녹은 암석을 말합니다.\n• 압력: 누르는 힘을 말합니다.\n• 1문단에서 "지구의 깊은 땅속에서는 뜨겁게 녹은 마그마가 계속 움직이고 있어요. 이 마그마는... 한곳에 모여 압력이 점점 높아집니다"라고 설명합니다.\n• 마그마가 모이면 압력이 높아지고, 이 압력이 화산 폭발의 원인이 됩니다.',
       q4:'정답: 지각, 용암\n\n<정답 해설>\n• 지각: 지구의 가장 바깥 단단한 껍질을 말합니다.\n• 용암: 지상으로 나온 뜨거운 마그마를 말합니다.\n• 1문단에서 "압력이 너무 세지면 지각의 약한 틈을 밀어 올리게 되고, 결국 그 틈을 통해 마그마가 지표면 가까이까지 올라오게 돼요. 이때 뜨거운 용암과 재, 돌조각, 가스가 한꺼번에 뿜어져 나오며"라고 설명합니다.\n• 마그마는 땅속에 있을 때의 이름이고, 지표로 나오면 용암이라고 부릅니다.'
-  }
+    },
+    creative: {
+      topic: '🌋 화산이 들려주는 이야기',
+      hint: '💡 힌트) 화산이 사람에게 말을 할 수 있다면, 자신의 탄생과 폭발, 그리고 인간에게 주는 선물에 대해 어떻게 이야기할까요?',
+      examples: [
+        '예시 1) "나는 지구 깊은 곳에서 태어난 마그마야. 압력이 높아지면 참을 수 없어 밖으로 뛰쳐나가지. 무섭다고? 하지만 나는 새로운 땅도 만들어 준다고!"',
+        '예시 2) "제주도를 아니? 그건 내가 만든 거야. 오래전 내가 폭발해서 용암이 흘러 굳으면서 아름다운 섬이 되었지. 사람들이 관광 오는 걸 보면 뿌듯해."',
+        '예시 3) "나는 위험하지만 지열 발전소에서 전기를 만드는 데 도움을 줘. 온천도 내 덕분이야. 화산은 파괴만 하는 게 아니라 새로운 것을 만들어 낸단다."'
+      ]
+    }
   },
 
   /* ===== earth_03 : "돌은 어떻게 만들어질까?" ===== */
@@ -1809,6 +1818,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

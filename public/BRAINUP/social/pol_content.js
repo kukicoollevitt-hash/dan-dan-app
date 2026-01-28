@@ -170,7 +170,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'1', q3_1:['직접','직접 민주주의'], q3_2:['대의','대의 민주주의'], q4_1:['기회'], q4_2:['평등'] },
     essayKeywords: ['기회','노력','능력','차이','결과','똑같이','조건','도전','자연스럽게','평등','출발선','공정','동등','권리','의무','차별','대우','시작','출발','같은','동일','기준','적용','경쟁','성취','성과','보장','누구나','모든','사람','법','앞','처우','보상'],
     explain: {
-      q1: '를 바탕으로 운영되는 나라예요. 민주주의 사회에서는 나라의 실제 주인이 국민이며',
+      q1: '국민이 스스로 나라를 이끌어 간다는 민주주의의 중요한 정신',
       q2: '를 바탕으로 운영되는 나라예요',
       q3: '로, 나라의 중요한 일을 국민이 직접 모여 결정하는 방식이에요',
       q4: '를 똑같이 주는 것을 의미하고',
@@ -1833,6 +1833,16 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
     }
 
     // 탁상시계 초기화 (00분 00초)

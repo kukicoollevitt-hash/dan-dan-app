@@ -673,12 +673,13 @@
             <th>날짜/시간<br/><small style="font-weight: normal; color: #999;">(AI복습)</small></th>
             <th>시리즈</th>
             <th>단원명</th>
+            <th>독해시간</th>
             <th>작업</th>
           </tr>
         </thead>
         <tbody id="logs-tbody">
           <tr>
-            <td colspan="6" style="text-align:center;">학습 이력을 불러오는 중...</td>
+            <td colspan="7" style="text-align:center;">학습 이력을 불러오는 중...</td>
           </tr>
         </tbody>
       </table>
@@ -750,7 +751,7 @@
 
     if (!grade || !name) {
       document.getElementById('logs-tbody').innerHTML =
-        '<tr><td colspan="5" style="text-align:center; color:red;">grade와 name 파라미터가 필요합니다.</td></tr>';
+        '<tr><td colspan="7" style="text-align:center; color:red;">grade와 name 파라미터가 필요합니다.</td></tr>';
     } else {
       // 페이지 제목 업데이트
       document.querySelector('h1').textContent = '학습 이력';
@@ -808,7 +809,7 @@
       } catch (err) {
         console.error('학습 이력 로드 오류:', err);
         document.getElementById('logs-tbody').innerHTML =
-          `<tr><td colspan="5" style="text-align:center; color:red;">❌ 학습 이력을 불러오는 중 오류가 발생했습니다: ${err.message}</td></tr>`;
+          `<tr><td colspan="7" style="text-align:center; color:red;">❌ 학습 이력을 불러오는 중 오류가 발생했습니다: ${err.message}</td></tr>`;
       }
     }
 
@@ -940,7 +941,7 @@
       const tbody = document.getElementById('logs-tbody');
 
       if (logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">학습 이력이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">학습 이력이 없습니다.</td></tr>';
         return;
       }
 
@@ -951,6 +952,14 @@
         const aiReviewTimestamp = log.aiReviewCompletedAt ?
           new Date(log.aiReviewCompletedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '-';
 
+        // 독해시간 포맷팅 (초 → 분:초)
+        let readingTimeStr = '-';
+        if (log.readingTime && log.readingTime > 0) {
+          const minutes = Math.floor(log.readingTime / 60);
+          const seconds = log.readingTime % 60;
+          readingTimeStr = `${minutes}분 ${seconds}초`;
+        }
+
         const hiddenClass = idx >= 6 ? ' class="hidden-row"' : '';
         return `
           <tr${hiddenClass}>
@@ -959,6 +968,7 @@
             <td style="${log.aiReviewCompletedAt ? 'color: #6b21a8; font-weight: 600;' : 'color: #999;'}">${aiReviewTimestamp}</td>
             <td>${log.series || ''}</td>
             <td>${getUnitName(log.unit || '')}</td>
+            <td style="color: #2563eb; font-weight: 600;">${readingTimeStr}</td>
             <td>
               <button class="table-delete-btn" onclick="deleteLog('${log._id}')">
                 🗑️ 삭제

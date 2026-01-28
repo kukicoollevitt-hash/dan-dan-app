@@ -168,10 +168,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'3', q2:'1', q3_1:['신분'], q3_2:['특권'], q4_1:['존엄성'], q4_2:['세계 인권 선언','세계인권선언'] },
     essayKeywords: ['전쟁','비극','존엄성','훼손','반복','인권','평등','자유','보호','지키','목숨','잃','차별','존중','소중','가치','선언','약속','세계','국제','연합','모든','사람','태어날','기본','권리','사회','노력'],
     explain: {
-      q1: '하다는 생각이 자리 잡기 시작했어요. 이러한 깨달음은 여러 나라에서',
-      q2: '에 따라 삶의 모습이 크게 달랐어요. 왕이나 귀족처럼',
+      q1: '신분제를 없애고 자유로운 사회를 만들기 위한 움직임으로 이어졌습니다.',
+      q2: '사람들은 인간이라면 누구나 태어날 때부터 소중한 권리를 가지고 있으며',
       q3: '에 따라 삶의 모습이',
-      q4: '까지 심하게 훼손되었어요. 이러한 아픔은 인권 보호의',
+      q4: '까지 심하게 훼손되었어요',
       q5: '예시 답안: 두 차례의 큰 전쟁으로 많은 사람이 목숨을 잃고 인간의 존엄성이 훼손되는 비극을 겪었기 때문에, 이런 일이 반복되지 않도록 모든 사람의 자유와 평등, 존엄성을 보호하자는 약속을 담은 것이다.'
     },
     detail: {
@@ -179,6 +179,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '📌 정답: ①번\n\n✅ 정답 해설: 1문단은 과거 신분제 사회의 불평등과 평등 사상의 등장을 다룹니다. 왕과 귀족의 특권, 평민의 제약, 그리고 평등 사상의 시작을 설명합니다.\n\n❌ 오답 해설:\n②번: 세계 인권 선언과 인권 보호 노력은 3문단의 내용입니다. 2문단은 경제적 불평등과 전쟁의 비극을 다룹니다.\n③번: 평등의 여정 지속은 4문단의 내용입니다. 3문단은 세계 인권 선언을 다룹니다.\n④번: 경제적 불평등과 전쟁의 비극은 2문단의 내용입니다. 4문단은 현재에도 차별이 존재하며 평등을 실천해야 함을 다룹니다.',
       q3: '📌 정답: 신분, 특권\n\n✅ 정답 해설:\n• 신분: 본문에서 "아주 오래전에는 사람의 신분에 따라 삶의 모습이 크게 달랐어요"라고 설명합니다. 신분은 사람이 사회에서 속한 지위를 말합니다.\n• 특권: 본문에서 "왕이나 귀족처럼 높은 신분에 속한 사람들은 특권을 마음껏 누릴 수 있었지만"이라고 설명합니다. 특권은 특정한 사람만 누릴 수 있는 특별한 권리입니다.',
       q4: '📌 정답: 존엄성, 세계 인권 선언\n\n✅ 정답 해설:\n• 존엄성: 본문에서 "두 차례의 큰 전쟁을 겪으면서 많은 사람이 목숨을 잃고 인간의 존엄성까지 심하게 훼손되었어요"라고 설명합니다. 존엄성은 인간으로서 마땅히 존중받아야 하는 가치입니다.\n• 세계 인권 선언: 본문에서 "이런 비극이 반복되지 않도록 하기 위해 세계 여러 나라는 힘을 모아 국제 연합에서 세계 인권 선언을 발표했어요"라고 설명합니다. 모든 사람의 기본적 권리를 정한 선언입니다.'
+    },
+    /* 창의활동 */
+    creative: {
+      title: '✍️ 평등한 세상을 위한 나의 다짐',
+      topic: '"모든 사람이 차별 없이 존중받는 세상을 만들기 위해 내가 할 수 있는 일을 써 보자."',
+      hint: '💡 힌트) 성별, 인종, 장애 등을 이유로 한 차별이 아직 존재해요. 친구를 차별하지 않기, 다른 사람의 의견 존중하기, 어려운 이웃 돕기 등 일상에서 실천할 수 있는 작은 일부터 생각해 보세요!',
+      examples: [
+        '예시 1) 외모나 성적으로 친구를 판단하지 않고, 모두를 똑같이 대하겠다.',
+        '예시 2) 장애가 있는 친구를 놀리지 않고, 필요할 때 도움을 주겠다.',
+        '예시 3) 다른 나라에서 온 친구의 문화를 존중하고 차별하지 않겠다.'
+      ]
   }
   },
 
@@ -1962,6 +1973,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

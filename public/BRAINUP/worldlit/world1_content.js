@@ -166,6 +166,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 섬의 위험 상황, 무법자들 존재',
         '4문단 : 작품 소개 (15소년 표류기)'
       ],
+      q3_html: `「15소년 표류기」는 열다섯 명의 소년이 어른 없이 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅇㄷ">에서 2년간 생존하며 협력하는 이야기입니다. 소년들은 무법자들이 자신들의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅㅊ">를 찾아낼까 봐 걱정했습니다.`,
+      q4_html: `브리앙이 드니팬 일행을 데리러 가기로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅅ">하자, 고든은 언제 떠날 것인지 물었습니다. 브리앙은 악당들에게 들키지 않으려면 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂ">을 기다리는 수밖에 없다고 대답했습니다.`,
       q3_1_ph: 'ㅁㅇㄷ', q3_2_ph: 'ㅇㅅㅊ',
       q4_1_ph: 'ㄱㅅ', q4_2_ph: 'ㅂ',
       q5_text: '브리앙이 드니팬 일행과 사이가 좋지 않았음에도 그들을 데리러 가기로 결심한 이유를 본문 내용을 바탕으로 설명해 보세요.'
@@ -173,7 +175,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'1', q3_1:['무인도'], q3_2:['은신처'], q4_1:['결심'], q4_2:['밤','밤을'] },
     essayKeywords: ['위험','악당','무법자','협력','화합','단결','함께','생존','안전','갈등','해결','드니팬','브리앙','모코','은신처','동굴','이동','방향','밤','떠나','데리고','돌아오다','책임','용기','우정','사이','감정','개인','모두','전체','집단','리더십','희생','결심','걱정','불안'],
     explain: {
-      q1: '어린 나이에 이런 고난을 견뎌냈다는 사실에 가슴이 뭉클해져 눈물을 흘리고 말았습니다',
+      q1: '2년 동안의 생활을 조심스럽게 들려주었지요',
       q2: '케이트는 그들의 설명을 들으며 어린 나이에 이런 고난을 견뎌냈다는 사실에 가슴이 뭉클해져',
       q3: '에서 2년간 생존하며 협력과 성장을 이루어가는 과정을 그리고 있어요',
       q4: '밤을 기다리는 수밖에 없어',
@@ -3283,6 +3285,24 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
+    }
+
+    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
+    if (!savedTime || !JSON.parse(savedTime).duration) {
+      const minInput = document.getElementById('minute-input');
+      const secInput = document.getElementById('second-input');
+      if (minInput) minInput.value = '00';
+      if (secInput) secInput.value = '00';
     }
 
     // 시간 포맷 함수

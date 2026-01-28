@@ -192,10 +192,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'1', q3:'4', q4:'1' },
     essayKeywords: ['초식','육식','잡식','소화','장','위산','감각','시력','청각','후각','초음파','지느러미','생존','환경','적응','동물','기관','발달','먹이','사냥','독수리','박쥐','포유류','새','물고기','다리','날개','꼬리','미생물','분해','흡수','고기','식물','이동','헤엄'],
     explain: {
-      q1:'자신이 살아가는 환경에서 더 잘 생존하기 위해 특별한 기관이나 몸의 구조를 발달시켜 왔어요',
+      q1:'더 잘 생존하기 위해 특별한',
       q2:'같은 동물이라도 사는 곳이 다르면 모습과 생활 방식이 조금씩 다르답니다',
-      q3:'동물은 먹는 음식이 다르기 때문에 소화 기관도 서로 다르게 발달했어요',
-      q4:'박쥐는 어두운 밤에도 초음파를 이용해 장애물의 위치를 알아냅니다',
+      q3:'소화',
+      q4:'초음파',
       q5:'예시 답안: 육식 동물인 사자는 고기를 빠르게 소화해야 하므로 강한 위산과 짧은 장을 가지고 있습니다. 또한 사냥할 때 먹이를 정확히 보기 위해 뛰어난 시력과 빠른 속도를 가진 다리가 발달했습니다. 이러한 특징 덕분에 사자는 초원에서 다른 동물을 사냥하며 생존할 수 있습니다.'
     },
     detail: {
@@ -208,6 +208,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     creative: {
       title: '🦁 동물의 몸과 생활 방식은 왜 다를까? - 나만의 동물 도감 만들기',
       instruction: '다음 활동을 통해 동물의 다양한 적응 방식을 탐구해 봅시다.',
+      hint: '🔍 힌트) 동물이 살아가는 환경(육지, 물속, 하늘)과 먹이(초식, 육식, 잡식)에 따라 어떤 기관이 발달했는지 떠올려 보세요!',
       steps: [
         {
           step: 1,
@@ -2124,6 +2125,16 @@ function applyContentPack(unitKey) {
     if (savedTime) {
       const parsed = JSON.parse(savedTime);
       readingStartTime = parsed.start ? new Date(parsed.start) : null;
+
+      // 저장된 duration이 있으면 탁상 시계에 복원
+      if (parsed.duration) {
+        const clockMinutes = Math.floor(parsed.duration / 60000);
+        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
+        const minInput = document.getElementById('minute-input');
+        const secInput = document.getElementById('second-input');
+        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      }
     }
 
     // 탁상시계 초기화 (00분 00초)
