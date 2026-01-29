@@ -44,6 +44,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_01: {
     labelNo: '01',
     title: '🔍 사회를 보는 눈',
+    paragraphMain: [
+      '자연현상과 사회·문화 현상: 인간의 의지와 무관한 보편적 자연현상과 의도가 개입된 특수한 사회·문화 현상의 차이를 이해하다',
+      '거시적 관점: 사회 전체의 구조와 제도에 초점을 맞추는 기능론과 갈등론의 특징과 공통점을 살펴보다',
+      '미시적 관점: 개인 간 상호작용과 의미 해석에 주목하는 상징적 상호작용론의 특징을 알아보다',
+      '통합적 접근: 각 관점의 장점과 한계를 파악하고 다원적 시각으로 사회를 바라보는 것의 중요성을 깨닫다'
+    ],
     passage: [
       '우리가 살아가는 세상에는 수많은 현상이 존재한다. 비가 내리고 바람이 부는 것처럼 인간의 의지와 무관하게 발생하는 <b>자연현상</b>이 있는가 하면, 선거에 참여하고 물건을 사고파는 것처럼 인간의 의도와 행위가 개입된 <b>사회·문화 현상</b>도 있다. 자연현상은 어디서나 동일한 조건이 주어지면 같은 결과가 나타나는 <b>보편성</b>을 갖지만, 사회·문화 현상은 시대와 지역에 따라 다르게 나타나는 <b>특수성</b>을 보인다. 예를 들어 물은 100도에서 끓지만, 결혼 풍습이나 식사 예절은 나라마다 다르다. 이러한 차이를 이해하는 것이 사회·문화 현상 탐구의 출발점이다.',
       '사회·문화 현상을 바라보는 관점은 크게 <b>거시적 관점</b>과 <b>미시적 관점</b>으로 나뉜다. 거시적 관점은 사회 전체의 구조와 제도에 초점을 맞추어 현상을 설명하는 방식이다. 이 관점은 다시 <b>기능론</b>과 <b>갈등론</b>으로 구분된다. 기능론은 사회를 유기체에 비유하며 각 부분이 조화롭게 기능할 때 사회가 안정된다고 본다. 반면 갈등론은 사회를 지배 집단과 피지배 집단 간의 대립 구조로 파악하며, 불평등과 갈등이 사회 변동의 원동력이라고 주장한다. 두 관점 모두 사회 구조의 영향력을 중시한다는 공통점이 있다.',
@@ -151,6 +157,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_02: {
     labelNo: '02',
     title: '🎭 진실을 찾는 여정',
+    paragraphMain: [
+      '연구 방법의 분류: 양적 연구와 질적 연구의 특징과 차이점을 이해하다',
+      '양적 연구의 자료 수집: 설문 조사와 실험법, 독립 변인과 종속 변인의 개념을 알아보다',
+      '질적 연구의 자료 수집: 심층 면접과 참여 관찰의 특징과 장단점을 살펴보다',
+      '혼합 연구의 필요성: 양적 연구와 질적 연구의 상호 보완적 관계와 효과적인 활용 방법을 깨닫다'
+    ],
     passage: [
       '사회·문화 현상을 과학적으로 탐구하기 위해서는 체계적인 <b>연구 방법</b>이 필요하다. 연구 방법은 크게 <b>양적 연구</b>와 <b>질적 연구</b>로 구분된다. 양적 연구는 수치화된 자료를 통계적으로 분석하여 사회 현상의 일반적인 법칙을 발견하려는 방법이다. 이 방법은 자연과학적 연구 방식을 사회 현상에 적용한 것으로, 객관성과 정밀성을 중시한다. 반면 질적 연구는 연구 대상자의 주관적 경험과 의미를 깊이 있게 이해하려는 방법이다. 질적 연구는 인간의 행위가 갖는 맥락과 의미를 파악하는 데 유용하며, 해석적 관점에 기반한다.',
       '양적 연구의 대표적인 자료 수집 방법으로는 <b>설문 조사</b>와 <b>실험법</b>이 있다. 설문 조사는 표준화된 질문지를 통해 다수의 응답자로부터 자료를 수집하는 방법으로, 짧은 시간에 많은 양의 자료를 얻을 수 있다. 실험법은 연구자가 의도적으로 특정 조건을 조작하여 변인 간의 인과 관계를 파악하는 방법이다. 이때 조작하는 변인을 <b>독립 변인</b>, 그에 따라 변화하는 결과를 <b>종속 변인</b>이라 한다. 양적 연구는 연구 결과의 <b>일반화</b>가 가능하다는 장점이 있지만, 인간 행위의 깊은 의미를 놓칠 수 있다는 한계도 있다.',
@@ -246,6 +258,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_03: {
     labelNo: '03',
     title: '⚖️ 연구자의 윤리적 딜레마',
+    paragraphMain: [
+      '연구 윤리와 객관성: 연구 과정에서 지켜야 할 도덕적 원칙과 편견 없는 자료 수집의 중요성을 알아보다',
+      '연구 대상자 보호: 사전 동의와 비밀 보장, 아동과 사회적 약자에 대한 세심한 주의의 필요성을 살펴보다',
+      '정직한 보고의 원칙: 자료 위조와 표절 금지, 연구 부정행위의 결과와 학문적 신뢰의 중요성을 이해하다',
+      '연구 윤리의 사회적 의미: 가치 중립과 사회적 책임, 오류 가능성 인정과 열린 자세의 필요성을 깨닫다'
+    ],
     passage: [
       '사회 과학 연구가 객관적이고 신뢰할 수 있는 결과를 도출하기 위해서는 엄격한 <b>연구 윤리</b>가 필수적이다. 연구 윤리란 연구 과정 전반에서 지켜야 할 도덕적 원칙과 규범을 의미한다. 먼저 연구자는 자료를 수집하고 분석하는 과정에서 <b>객관성</b>을 유지해야 한다. 이는 연구자 자신의 가치관이나 편견이 연구 결과에 영향을 미치지 않도록 해야 함을 뜻한다. 예를 들어 특정 결론을 미리 정해 놓고 그에 맞는 자료만 선택하거나 불리한 자료를 누락하는 것은 연구 윤리 위반에 해당한다. 연구자는 자신이 기대하는 결과와 다르더라도 있는 그대로의 사실을 보고해야 한다.',
       '연구 대상자의 권리를 보호하는 것도 중요한 윤리적 원칙이다. 연구 참여는 반드시 대상자의 자발적인 <b>동의</b>를 바탕으로 이루어져야 하며, 이를 <b>사전 동의</b>라고 한다. 연구자는 연구의 목적, 방법, 예상되는 위험과 이익 등을 대상자에게 충분히 설명해야 한다. 또한 연구 과정에서 수집된 개인 정보는 철저히 <b>비밀 보장</b>이 되어야 하며, 연구 목적 외에 사용되어서는 안 된다. 연구로 인해 대상자가 신체적·심리적 피해를 입지 않도록 해야 하며, 특히 아동이나 사회적 약자를 대상으로 한 연구에서는 더욱 세심한 주의가 필요하다.',
@@ -353,6 +371,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_04: {
     labelNo: '04',
     title: '🧩 나는 누구인가',
+    paragraphMain: [
+      '사회화의 정의: 개인이 사회의 문화와 규범을 내면화하여 사회적 존재로 성장하는 과정을 이해하다',
+      '사회화 기관의 종류: 1차적 사회화 기관인 가족과 2차적 사회화 기관인 학교·직장·대중매체를 살펴보다',
+      '자아 정체성의 형성: 미드의 주관적 자아와 객관적 자아 개념으로 청소년기 정체성 형성을 알아보다',
+      '재사회화의 필요성: 현대 사회의 급격한 변화 속에서 평생 학습과 자기 재정립의 중요성을 깨닫다'
+    ],
     passage: [
       '인간은 태어나면서부터 사회 속에서 다른 사람들과 관계를 맺으며 살아간다. 갓 태어난 아기는 생물학적 존재에 불과하지만, 가족과 사회 속에서 성장하면서 점차 그 사회의 구성원으로서 필요한 언어, 규범, 가치관을 배우게 된다. 이처럼 개인이 소속된 사회의 문화와 규범을 내면화하여 사회적 존재로 성장해 가는 과정을 <b>사회화</b>라고 한다. 사회화는 일생에 걸쳐 지속되며, 이를 통해 개인은 사회가 기대하는 행동 양식과 가치를 습득하고 사회에 적응하는 능력을 기르게 된다. 사회화가 제대로 이루어지지 않으면 개인은 사회생활에 어려움을 겪을 수 있다.',
       '사회화는 다양한 <b>사회화 기관</b>을 통해 이루어진다. 가장 먼저 접하는 것이 <b>가족</b>으로, 기초적인 언어 습득과 기본적인 인성 형성이 이루어지는 <b>1차적 사회화 기관</b>이다. 이후 학교, 직장, 대중 매체 등의 <b>2차적 사회화 기관</b>에서 보다 전문적이고 공식적인 사회화가 진행된다. 학교는 지식과 기술을 전수하고 사회 규범을 가르치며, 또래 집단은 비공식적인 상호작용을 통해 협동과 경쟁을 경험하게 한다. 최근에는 인터넷과 SNS 같은 <b>대중 매체</b>의 영향력이 커지면서 새로운 형태의 사회화가 이루어지고 있다.',
@@ -458,6 +482,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_05: {
     labelNo: '05',
     title: '🎪 보이지 않는 무대',
+    paragraphMain: [
+      '지위와 역할의 개념: 귀속 지위와 성취 지위의 차이, 현대 사회에서 성취 지위의 중요성을 이해하다',
+      '역할 행동과 인상 관리: 고프먼의 연극적 관점으로 사회생활에서의 역할 수행을 살펴보다',
+      '역할 갈등의 발생: 여러 지위에서 요구되는 역할들이 충돌할 때 나타나는 문제를 알아보다',
+      '역할 갈등의 해결: 우선순위 설정과 일·가정 양립 정책 등 개인과 사회의 노력을 살펴보다'
+    ],
     passage: [
       '사회 속에서 개인은 다양한 위치를 점하며 그에 따른 행동을 한다. 이처럼 개인이 사회 속에서 차지하는 위치를 <b>지위</b>라고 하고, 그 지위에 기대되는 행동 양식을 <b>역할</b>이라고 한다. 지위는 크게 선천적으로 주어지는 <b>귀속 지위</b>와 개인의 노력으로 획득하는 <b>성취 지위</b>로 나눌 수 있다. 귀속 지위의 예로는 자녀, 왕자, 양반 등이 있고, 성취 지위의 예로는 의사, 대통령, 교수 등이 있다. 전통 사회에서는 귀속 지위가 중시되었으나, 현대 사회에서는 개인의 능력과 노력에 따른 성취 지위의 비중이 높아지고 있다.',
       '모든 지위에는 사회적으로 기대되는 역할이 있다. 학생이라는 지위에는 공부하고 교칙을 지키는 역할이, 부모라는 지위에는 자녀를 양육하고 보호하는 역할이 기대된다. 역할을 기대에 맞게 수행하는 것을 <b>역할 행동</b>이라 하고, 같은 역할이라도 개인마다 수행 방식이 다를 수 있다. 사회학자 고프먼(Goffman)은 사회생활을 연극에 비유하여 사람들이 상황에 따라 적절한 역할을 연기한다고 보았다. 이를 <b>인상 관리</b>라고 하며, 사람들은 타인에게 좋은 인상을 주기 위해 자신의 행동과 외모를 의식적으로 조절한다.',
@@ -563,6 +593,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_06: {
     labelNo: '06',
     title: '👥 함께 살아가는 법',
+    paragraphMain: [
+      '사회 집단의 정의: 소속감을 가지고 지속적으로 상호작용하는 집단의 개념과 기능을 이해하다',
+      '1차 집단과 2차 집단: 친밀한 관계의 1차 집단과 목표 지향적인 2차 집단의 특징을 비교하다',
+      '내집단과 외집단: 자신이 소속감을 느끼는 집단과 이질감을 느끼는 집단의 구분과 상대성을 알아보다',
+      '준거 집단: 행동과 가치관의 기준이 되는 집단과 상대적 박탈감의 관계를 살펴보다'
+    ],
     passage: [
       '인간은 홀로 살아갈 수 없는 사회적 존재이다. 태어나면서부터 가족이라는 집단에 속하고, 성장하면서 학교, 직장, 동호회 등 다양한 집단에 소속되어 살아간다. 이처럼 둘 이상의 사람들이 소속감을 가지고 지속적으로 상호작용하는 모임을 <b>사회 집단</b>이라고 한다. 사회 집단은 구성원들에게 소속감과 정체성을 제공하고, 사회화의 장이 되며, 사회 전체의 유지와 발전에 기여한다. 우리는 여러 집단에 동시에 소속되며, 각 집단에서 다양한 역할을 수행한다. 집단 내에서 구성원들은 공동의 목표를 추구하고 규범을 공유하며 유대를 형성해 나간다.',
       '사회 집단은 구성원들 간의 접촉 방식에 따라 <b>1차 집단</b>과 <b>2차 집단</b>으로 분류된다. 1차 집단은 가족, 친구 집단처럼 친밀한 대면 접촉을 통해 강한 정서적 유대를 형성하는 집단이다. 인격 전체가 관여하며, 집단 자체가 목적이 된다. 반면 2차 집단은 회사, 정당, 학교처럼 특정 목표 달성을 위해 형성된 집단으로, 관계가 공식적이고 형식적인 특성을 갖는다. 구성원 간의 접촉이 선택적이고 부분적이며, 집단은 목표 달성의 수단이 된다. 현대 사회에서는 2차 집단의 비중이 증가하고 있지만, 1차 집단의 정서적 기능은 여전히 중요하다.',
@@ -668,6 +704,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_07: {
     labelNo: '07',
     title: '🏛️ 관료제의 두 얼굴',
+    paragraphMain: [
+      '관료제의 개념: 막스 베버가 체계화한 규칙과 절차에 따른 대규모 조직의 특징을 이해하다',
+      '관료제의 장단점: 효율성과 공정성의 장점과 형식주의, 목표 대치 등의 역기능을 살펴보다',
+      '탈관료제 조직: 수평적 구조와 유연성을 특징으로 하는 프로젝트·네트워크·학습 조직을 알아보다',
+      '조직 형태의 결합: 관료제와 탈관료제의 장점을 결합하여 상황에 맞는 조직 설계의 중요성을 깨닫다'
+    ],
     passage: [
       '현대 사회의 대규모 조직은 대부분 <b>관료제</b>의 형태를 띠고 있다. 관료제란 명확한 규칙과 절차에 따라 운영되는 대규모 조직 형태로, 독일의 사회학자 막스 베버(Max Weber)가 이론적으로 체계화하였다. 관료제의 특징으로는 <b>위계 서열</b>에 따른 명령 체계, 전문화된 <b>업무 분업</b>, 문서화된 규칙과 절차, 공사의 구분, 실적에 따른 인사 관리 등이 있다. 이러한 특성 덕분에 관료제는 효율적이고 예측 가능한 조직 운영이 가능하다. 대기업, 정부 기관, 학교 등 현대 사회의 많은 조직이 관료제적 특성을 가지고 있다.',
       '관료제는 여러 장점을 지닌다. 업무가 전문화되어 있어 <b>효율성</b>이 높고, 명확한 규칙에 따라 운영되므로 일관성과 공정성을 확보할 수 있다. 또한 문서화된 절차 덕분에 <b>책임 소재</b>가 분명하고 조직 운영의 연속성이 보장된다. 인사가 연고가 아닌 능력과 자격을 기준으로 이루어지므로 합리성도 높다. 그러나 관료제는 여러 역기능도 가지고 있다. 규칙과 절차를 지나치게 중시하여 <b>형식주의</b>에 빠지거나, 목표와 수단이 전도되는 <b>목표 대치</b> 현상이 나타날 수 있다. 또한 권한이 상층부에 집중되어 의사 결정이 경직되고, 구성원의 창의성과 자율성이 억압될 수 있다.',
@@ -774,6 +816,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_08: {
     labelNo: '08',
     title: '📱 연결된 세상의 명암',
+    paragraphMain: [
+      '정보 사회로의 전환: 정보와 지식이 핵심 생산 자원이 되는 현대 사회의 특징을 이해하다',
+      '정보 사회의 긍정적 변화: 정보 접근성 향상, 전자 민주주의, 재택근무와 원격 교육의 확산을 살펴보다',
+      '정보 사회의 문제점: 정보 격차, 사이버 범죄, 디지털 감시와 프라이버시 침해 문제를 알아보다',
+      '문제 해결 방안: 디지털 리터러시 교육과 포용적 정보화 정책의 필요성을 깨닫다'
+    ],
     passage: [
       '현대 사회는 <b>정보화 사회</b>에서 <b>정보 사회</b>로 전환되었다. 정보 사회란 정보와 지식이 핵심적인 생산 자원이 되고, 정보 통신 기술이 사회 전반에 영향을 미치는 사회를 의미한다. 과거 산업 사회에서는 토지, 노동, 자본이 핵심 생산 요소였지만, 정보 사회에서는 정보와 지식의 창출·활용 능력이 경쟁력을 좌우한다. 인터넷과 스마트폰의 보급으로 시간과 공간의 제약 없이 정보를 주고받을 수 있게 되었고, 이로 인해 사회 구조와 생활양식에 근본적인 변화가 일어나고 있다. <b>디지털 전환</b>은 이제 선택이 아닌 필수가 되었으며, 개인과 조직 모두 새로운 환경에 적응해야 하는 과제를 안고 있다.',
       '정보 사회는 다양한 긍정적 변화를 가져왔다. 첫째, 정보 접근성이 향상되어 누구나 원하는 정보를 쉽게 얻을 수 있게 되었다. 둘째, <b>전자 민주주의</b>의 가능성이 열려 시민들이 정책 결정 과정에 더 쉽게 참여할 수 있다. 온라인 청원, 전자 투표 등이 대표적인 예이다. 셋째, <b>재택근무</b>와 <b>원격 교육</b>이 확산되어 일과 학습의 유연성이 높아졌다. 넷째, 다양한 온라인 커뮤니티를 통해 취미나 관심사를 공유하는 사람들끼리 쉽게 연결될 수 있다. 이러한 변화는 개인의 삶의 질을 높이고 사회적 효율성을 증대시키는 데 기여하고 있다.',
@@ -870,6 +918,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_09: {
     labelNo: '09',
     title: '🚨 왜 규칙을 어기는가',
+    paragraphMain: [
+      '일탈 행동의 개념: 사회적 규범에서 벗어난 행동이 시대와 사회에 따라 달라지는 상대적 개념임을 이해하다',
+      '일탈 이론 1: 아노미 이론과 차별적 교제 이론으로 일탈이 발생하는 원인을 살펴보다',
+      '일탈 이론 2: 낙인 이론으로 사회적 반응이 2차적 일탈로 이어지는 과정을 알아보다',
+      '일탈에 대한 대응: 처벌적 접근의 한계와 치료적·교육적 접근, 회복적 정의의 효과를 이해하다'
+    ],
     passage: [
       '모든 사회에는 구성원들이 따라야 할 규범이 있다. 그러나 어떤 사람들은 이러한 규범을 어기고 <b>일탈 행동</b>을 한다. 일탈 행동이란 사회적으로 용인되는 규범에서 벗어난 행동을 의미한다. 중요한 것은 일탈의 정의가 시대와 사회에 따라 달라진다는 점이다. 과거에는 문제시되지 않았던 행동이 오늘날에는 일탈로 여겨지기도 하고, 그 반대의 경우도 있다. 예를 들어 과거에는 여성의 사회 활동이 제한되었지만 오늘날에는 당연시된다. 이처럼 일탈은 절대적인 것이 아니라 <b>상대적</b> 개념이며, 사회가 정한 기준에 따라 규정된다. 따라서 일탈을 이해하기 위해서는 그 사회의 규범과 맥락을 함께 살펴봐야 한다.',
       '일탈 행동이 발생하는 원인을 설명하는 여러 이론이 있다. <b>아노미 이론</b>은 사회적으로 강조되는 목표와 그것을 달성할 수 있는 합법적 수단 사이의 괴리에서 일탈이 발생한다고 본다. 사회가 성공을 강조하지만 모든 사람에게 성공의 기회가 주어지지 않을 때, 일부는 불법적인 수단을 사용하게 된다는 것이다. <b>차별적 교제 이론</b>은 일탈이 학습된다고 주장한다. 일탈 행동을 하는 사람들과 많이 접촉하면 일탈에 호의적인 태도와 기술을 배우게 되어 일탈 가능성이 높아진다. 이 이론은 청소년 비행에서 또래 집단의 영향을 설명하는 데 유용하다.',
@@ -966,6 +1020,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_10: {
     labelNo: '10',
     title: '🎓 학교는 평등한가',
+    paragraphMain: [
+      '교육에 대한 기능론적 관점: 교육이 사회화와 선발 기능을 통해 사회 이동의 통로가 된다는 주장을 살펴보다',
+      '교육에 대한 갈등론적 관점: 문화 자본 이론과 재생산 이론으로 교육이 불평등을 재생산한다는 비판을 알아보다',
+      '교육 불평등의 유형: 교육 기회, 과정, 결과의 불평등이 다양한 형태로 나타나는 양상을 이해하다',
+      '진정한 교육 평등 실현: 교육 격차 해소와 대안 교육, 교육의 본질적 가치 회복의 필요성을 깨닫다'
+    ],
     passage: [
       '교육은 모든 사람에게 평등한 기회를 제공하는가? 이 질문에 대해 <b>기능론</b>과 <b>갈등론</b>은 서로 다른 답을 내놓는다. 기능론적 관점에서 교육은 사회 이동의 통로이다. 누구나 능력과 노력에 따라 교육을 받고, 그에 상응하는 사회적 지위를 획득할 수 있다는 것이다. 이 관점에서 학교는 <b>사회화</b> 기능과 <b>선발</b> 기능을 수행한다. 학교는 사회가 필요로 하는 지식과 규범을 가르치고, 개인의 능력에 따라 적절한 위치에 배치하는 역할을 한다. 따라서 교육적 성취의 차이는 개인의 능력과 노력의 차이를 반영한 정당한 결과로 여겨진다.',
       '반면 갈등론적 관점에서 교육은 기존의 <b>사회 불평등</b>을 재생산하는 기제이다. <b>문화 자본</b> 이론에 따르면, 상류층 가정의 자녀들은 어릴 때부터 학교 교육에 유리한 언어 습관, 문화적 취향, 학습 태도 등을 습득한다. 반면 하류층 가정의 자녀들은 이러한 문화 자본을 갖추지 못해 학교에서 불리한 위치에 놓이게 된다. 또한 <b>재생산 이론</b>은 학교가 지배 계층의 이데올로기를 전달하고, 기존의 계층 구조를 정당화하는 역할을 한다고 비판한다. 학교에서 순응과 규율을 강조하는 것은 노동자 계층을 양산하기 위한 것이라는 주장이다.',
@@ -1062,6 +1122,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_11: {
     labelNo: '11',
     title: '📊 숫자로 보는 사회',
+    paragraphMain: [
+      '사회 불평등과 계층: 사회적 자원의 불균등한 배분과 계층의 개념을 이해하다',
+      '불평등에 대한 관점: 기능론적 관점과 갈등론적 관점의 차이를 비교하다',
+      '사회 이동의 유형: 세대 내·세대 간 이동과 개방적·폐쇄적 계층 구조를 살펴보다',
+      '불평등 측정 지표: 지니 계수, 5분위 배율, 상대적 빈곤율과 불평등 완화 정책을 알아보다'
+    ],
     passage: [
       '현대 사회에서 사람들은 동등한 위치에 있는가? <b>사회 불평등</b>이란 사회적 자원이 개인이나 집단에게 불균등하게 배분되는 현상을 말한다. 여기서 사회적 자원이란 경제적 자원(소득, 재산), 정치적 자원(권력), 사회적 자원(명예, 위신) 등을 포함한다. <b>사회 계층</b>은 이러한 사회적 자원의 분배에 따라 구분되는 사회 구성원의 위계적 서열을 의미한다. 계층은 상류층, 중산층, 하류층 등으로 구분되며, 각 계층은 생활양식, 가치관, 의식 등에서 차이를 보인다. 사회 불평등은 모든 사회에 존재하지만, 그 정도와 양상은 사회마다 다르게 나타난다.',
       '사회 불평등을 설명하는 관점은 크게 두 가지가 있다. <b>기능론적 관점</b>은 불평등이 사회적으로 필요하고 정당하다고 본다. 사회의 중요한 위치에는 유능한 인재가 배치되어야 하며, 이를 위해 높은 보상이 주어져야 한다는 것이다. 차등적 보상은 개인의 성취 동기를 자극하여 사회 전체의 효율성을 높인다고 주장한다. 반면 <b>갈등론적 관점</b>은 불평등이 지배 집단의 이익을 위해 만들어진 것이라고 비판한다. 기존의 불평등 구조는 권력을 가진 집단에 의해 유지·강화되며, 교육과 같은 사회 제도도 불평등을 재생산하는 역할을 한다고 본다.',
@@ -1158,6 +1224,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_12: {
     labelNo: '12',
     title: '🏘️ 우리 동네가 변하고 있다',
+    paragraphMain: [
+      '사회 변동의 의미: 사회 구조와 제도, 가치관의 변화를 진화론과 순환론의 관점에서 이해하다',
+      '사회 변동의 요인: 기술 발전, 인구 변화, 가치관 변화, 문화 접촉, 사회 운동의 역할을 살펴보다',
+      '사회 변동의 양상: 근대화, 세계화, 정보화가 가져온 긍정적·부정적 영향을 알아보다',
+      '변동에 대한 대응: 혁신과 보수 세력의 긴장, 개인의 적응, 사회 안전망 강화의 필요성을 깨닫다'
+    ],
     passage: [
       '사회는 끊임없이 변화한다. <b>사회 변동</b>이란 사회의 구조, 제도, 가치관 등이 시간이 흐름에 따라 변화하는 현상을 말한다. 농경 사회에서 산업 사회로, 다시 정보 사회로의 전환이 대표적인 사회 변동의 예이다. 사회 변동은 자연적으로 발생하기도 하고, 인간의 의도적인 노력에 의해 일어나기도 한다. <b>진화론</b>적 관점에서는 사회가 단순한 형태에서 복잡한 형태로, 미발전 상태에서 발전 상태로 점진적으로 진보한다고 본다. 반면 <b>순환론</b>적 관점에서는 사회가 생성, 성장, 쇠퇴, 소멸의 과정을 반복한다고 본다. 어떤 관점을 취하든, 사회 변동은 불가피한 현상이며 우리 삶에 직접적인 영향을 미친다.',
       '사회 변동을 일으키는 요인은 다양하다. <b>기술 발전</b>은 가장 강력한 변동 요인 중 하나이다. 증기기관의 발명은 산업혁명을 이끌었고, 인터넷의 등장은 정보화 사회를 열었다. <b>인구 변화</b>도 중요한 요인이다. 저출산·고령화는 노동력 구조, 복지 제도, 가족 형태 등에 광범위한 영향을 미친다. <b>가치관의 변화</b>도 사회 변동을 촉발한다. 개인주의의 확산, 성평등 의식의 성장 등이 사회 제도와 관행을 변화시킨다. 또한 <b>문화 접촉</b>과 <b>사회 운동</b>도 변동의 원인이 된다. 다른 문화와의 교류는 새로운 가치와 제도를 도입하게 하고, 시민들의 집단 행동은 사회 개혁을 이끌어낸다.',
@@ -1254,6 +1326,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_13: {
     labelNo: '13',
     title: '📺 미디어가 만드는 세상',
+    paragraphMain: [
+      '대중매체의 영향력: 의제 설정 기능과 여론 형성에 미치는 대중매체의 역할과 사회적 책임을 이해하다',
+      '대중문화에 대한 관점: 기능론과 갈등론의 관점에서 대중문화의 긍정적·부정적 측면을 살펴보다',
+      '뉴미디어의 등장: 프로슈머로의 전환과 가짜뉴스, 확증 편향 등 새로운 문제점을 알아보다',
+      '미디어 리터러시의 중요성: 필터 버블 환경에서 비판적 사고와 정보 검증 능력의 필요성을 깨닫다'
+    ],
     passage: [
       '현대 사회에서 <b>대중매체</b>는 단순한 정보 전달 수단을 넘어 우리의 인식과 가치관을 형성하는 핵심적인 사회화 기관으로 기능한다. 대중매체란 신문, 방송, 인터넷 등 불특정 다수에게 대량의 정보를 전달하는 수단을 의미하며, <b>매스미디어</b>라고도 불린다. 대중매체는 <b>의제 설정 기능</b>을 통해 사회적으로 중요하게 다루어야 할 주제를 결정하고, 공중의 관심사를 특정 방향으로 유도한다. 예컨대 언론이 특정 사회 문제를 집중적으로 보도하면 대중은 그 문제를 중요하게 인식하게 되며, 반대로 보도되지 않는 이슈는 공론장에서 배제될 수 있다. 이처럼 대중매체는 <b>여론</b> 형성에 결정적인 영향을 미치므로, 그 사회적 책임과 영향력에 대한 비판적 성찰이 요구된다.',
       '<b>대중문화</b>란 대중매체를 통해 생산되고 소비되는 문화로, 영화, 드라마, 대중음악, 게임 등이 이에 해당한다. 대중문화에 대한 평가는 <b>기능론적 관점</b>과 <b>갈등론적 관점</b>에서 상이하게 나타난다. 기능론적 관점에서 대중문화는 사회 구성원에게 오락과 휴식을 제공하고 공동의 경험을 통해 <b>사회 통합</b>에 기여한다고 본다. K-팝이나 한류 드라마가 세계적으로 확산되면서 한국 문화에 대한 관심을 높이고 국가 이미지를 향상시키는 것이 그 예이다. 반면 갈등론적 관점에서는 대중문화가 지배 계층의 이데올로기를 확산시키는 <b>문화 산업</b>의 산물로서 대중의 비판 의식을 약화시킨다고 비판한다. 획일화된 상품으로서의 문화는 개인의 창의성을 억압하고 소비자를 수동적 존재로 전락시킬 수 있다는 것이다.',
@@ -1350,6 +1428,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_14: {
     labelNo: '14',
     title: '🌍 지구촌 시대의 빛과 그림자',
+    paragraphMain: [
+      '세계화의 개념: 국가 간 경계가 약화되고 교통·통신 기술 발달로 가속화되는 세계화를 이해하다',
+      '세계화의 양면: 문화 교류 확대 등 긍정적 효과와 경제 격차, 문화 제국주의 등 부정적 측면을 살펴보다',
+      '다문화 사회로의 전환: 동화주의와 다문화주의의 차이와 한국 사회의 변화를 알아보다',
+      '다문화 사회의 과제: 편견과 차별 극복, 문화 상대주의적 태도와 세계 시민 의식의 필요성을 깨닫다'
+    ],
     passage: [
       '오늘날 우리는 한국에 살면서 미국 드라마를 스트리밍하고, 베트남 쌀국수를 먹으며, 일본 게임을 즐긴다. 이처럼 국가 간 경계가 약화되고 전 세계가 하나의 생활권으로 연결되는 현상을 <b>세계화</b>라고 한다. 세계화는 정치, 경제, 사회, 문화 등 전 영역에서 국경의 의미가 축소되고 상호 의존성이 증가하는 과정이다. <b>교통</b>과 <b>통신</b> 기술의 혁신적인 발달이 세계화를 가속화했으며, 특히 인터넷과 소셜미디어의 확산은 시공간의 제약을 획기적으로 줄였다. <b>다국적 기업</b>은 여러 국가에 생산 기지와 판매망을 구축하여 국경을 초월한 경제 활동을 전개하고 있으며, <b>자유 무역 협정(FTA)</b>의 확대로 국가 간 무역 장벽이 낮아지고 있다.',
       '세계화는 다양한 <b>긍정적 효과</b>를 가져온다. 첫째, 상품과 서비스의 자유로운 이동으로 소비자는 더 다양한 선택지를 갖게 되었고, 기업은 더 넓은 시장에 진출할 수 있게 되었다. 둘째, <b>문화 교류</b>가 활발해지면서 다양한 문화를 경험하고 이해할 수 있는 기회가 증가했다. K-팝과 한류의 세계적 확산은 문화 세계화의 대표적 사례이다. 셋째, 정보와 지식의 공유가 용이해지면서 기술 혁신이 촉진되고 있다. 그러나 세계화에는 <b>부정적 측면</b>도 존재한다. 선진국과 개발도상국 간의 경제적 격차가 심화되고, 자본의 논리에 따라 환경 파괴와 노동 착취가 발생하기도 한다. 또한 강대국의 문화가 약소국의 문화를 압도하는 <b>문화 제국주의</b> 우려도 제기된다.',
@@ -1446,6 +1530,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_15: {
     labelNo: '15',
     title: '🗳️ 한 표의 힘',
+    paragraphMain: [
+      '선거의 의의: 정치 참여의 핵심 수단인 선거가 국민 주권을 실현하고 정당성을 부여하는 역할을 이해하다',
+      '선거의 4대 원칙: 보통·평등·직접·비밀 선거 원칙의 개념과 민주적 의의를 살펴보다',
+      '다양한 정치 참여 방식: 정당, 이익 집단, 시민 단체 활동과 전자 민주주의의 가능성을 알아보다',
+      '정치 참여의 중요성: 정치적 무관심의 문제점과 민주 시민 교육의 필요성을 깨닫다'
+    ],
     passage: [
       '민주주의 국가에서 <b>정치 참여</b>는 시민의 권리이자 의무이다. 정치 참여란 시민이 정치 과정에 영향을 미치기 위해 행하는 모든 활동을 의미하며, <b>선거</b>는 가장 기본적이고 대표적인 정치 참여 방식이다. 선거란 일정한 자격을 갖춘 시민들이 대표자를 선출하는 절차로, <b>국민 주권</b>의 원리를 실현하는 핵심 제도이다. 대한민국 헌법은 만 18세 이상의 국민에게 <b>선거권</b>을 부여하고 있으며, 이를 통해 국회의원, 대통령, 지방자치단체장 등을 선출한다. 선거는 국민이 정치 권력에 <b>정당성</b>을 부여하고, 대표자의 활동을 평가하여 책임을 묻는 수단이 된다. 따라서 선거 참여는 민주 시민으로서 공동체의 의사 결정에 참여하는 가장 직접적인 방법이다.',
       '민주적 선거가 되기 위해서는 <b>선거의 4대 원칙</b>이 지켜져야 한다. 첫째, <b>보통 선거</b>는 재산, 성별, 학력 등에 관계없이 일정 연령 이상의 모든 국민에게 선거권을 부여하는 원칙이다. 둘째, <b>평등 선거</b>는 모든 유권자에게 동등한 투표 가치를 인정하여 1인 1표를 부여하는 원칙이다. 셋째, <b>직접 선거</b>는 유권자가 대표자를 직접 선출하는 것으로, 선거인단을 통한 간접 선거와 구별된다. 넷째, <b>비밀 선거</b>는 투표 내용을 공개하지 않아 유권자가 외부 압력 없이 자유롭게 의사를 표현할 수 있도록 보장하는 원칙이다. 이러한 원칙들은 오랜 민주주의 발전 과정에서 확립된 것으로, 선거의 공정성과 민주적 정당성을 담보하는 핵심 요소이다.',
@@ -1542,6 +1632,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_16: {
     labelNo: '16',
     title: '🔍 우리 사회의 민낯',
+    paragraphMain: [
+      '사회 문제의 정의: 구조적 원인을 가지며 사회적 합의를 통해 인식되는 사회 문제의 개념을 이해하다',
+      '한국 사회의 당면 과제: 저출산·고령화, 청년 실업, 양극화, 주거 불안 등 주요 사회 문제를 살펴보다',
+      '사회 문제에 대한 관점: 기능론, 갈등론, 상징적 상호작용론에서 사회 문제를 바라보는 시각을 알아보다',
+      '사회 문제의 해결: 정부, 시민 사회, 기업, 개인의 역할과 사회 구조적 맥락에서의 접근 필요성을 깨닫다'
+    ],
     passage: [
       '현대 사회는 급격한 산업화, 도시화, 정보화를 거치며 물질적 풍요와 생활의 편리함을 가져왔다. 그러나 이와 동시에 다양한 <b>사회 문제</b>가 발생하고 있다. 사회 문제란 사회 구성원 다수에게 부정적 영향을 미치고, 그 원인이 사회적 요인에 있으며, 사회적 해결이 필요하다고 인식되는 문제를 의미한다. 개인적 불운이나 일시적 현상과 달리 사회 문제는 <b>구조적 원인</b>을 가지며 광범위하게 영향을 미친다. 또한 사회 문제로 인식되려면 상당수의 사람들이 그것을 문제라고 여기고 해결을 요구하는 <b>사회적 합의</b>가 필요하다. 같은 현상도 시대와 사회에 따라 사회 문제로 인식되기도 하고 그렇지 않기도 한다.',
       '한국 사회가 당면한 대표적인 사회 문제로는 <b>저출산·고령화</b>, <b>청년 실업</b>, <b>양극화</b>, <b>주거 불안</b> 등이 있다. 저출산·고령화는 출생률 감소와 평균 수명 연장으로 인해 젊은 세대가 줄고 노인 인구가 급증하는 현상으로, 노동력 부족과 복지 재정 부담 증가를 초래한다. 청년 실업은 양질의 일자리 감소, 노동시장의 이중구조 등 복합적 원인에서 비롯되며 청년들의 경제적 독립과 미래 설계를 어렵게 만든다. 양극화는 소득, 자산, 교육 등에서 계층 간 격차가 확대되는 현상으로 사회 통합을 저해하고 갈등을 심화시킨다. 주거 불안은 급등하는 주거비용으로 인해 안정적인 주거를 확보하지 못하는 문제이다.',
@@ -1638,6 +1734,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_17: {
     labelNo: '17',
     title: '🏥 함께 만드는 안전망',
+    paragraphMain: [
+      '사회 보장 제도의 개념: 국민의 기본적 생활 보장을 위한 제도의 헌법적 근거와 유형을 이해하다',
+      '사회 보험의 특성: 보험료 기반의 국민연금, 건강보험, 고용보험 등의 운영 방식을 살펴보다',
+      '공공 부조와 사회 서비스: 조세 기반의 저소득층 지원과 돌봄 서비스의 특징을 알아보다',
+      '복지 정책의 논쟁: 보편적 복지와 선별적 복지의 장단점, 세대 간 형평성 문제를 이해하다'
+    ],
     passage: [
       '모든 국민은 질병, 노령, 실업, 재해 등 다양한 사회적 위험에 노출되어 있다. 개인의 힘만으로는 이러한 위험에 대처하기 어렵기 때문에 국가가 <b>사회 보장 제도</b>를 통해 국민의 기본적인 생활을 보장한다. 사회 보장이란 국민이 인간다운 생활을 영위할 수 있도록 국가가 제공하는 각종 급여와 서비스를 총칭한다. 대한민국 헌법 제34조는 "모든 국민은 인간다운 생활을 할 권리를 가진다"고 규정하고 있으며, 국가는 사회 보장·사회 복지의 증진에 노력할 의무가 있다. 사회 보장 제도는 <b>사회 보험</b>, <b>공공 부조</b>, <b>사회 서비스</b>의 세 가지 유형으로 구분된다.',
       '<b>사회 보험</b>은 국민에게 발생할 수 있는 사회적 위험을 보험 방식으로 대처하는 제도이다. 가입자가 평소에 <b>보험료</b>를 납부하고, 위험이 발생했을 때 급여를 받는 방식으로 운영된다. 우리나라의 주요 사회 보험으로는 <b>국민연금</b>(노령, 장애, 사망 시 급여), <b>국민건강보험</b>(질병, 부상 시 의료비 지원), <b>고용보험</b>(실업 시 급여 및 재취업 지원), <b>산업재해보상보험</b>(업무상 재해 시 보상)이 있으며, 최근에는 <b>노인장기요양보험</b>도 시행되고 있다. 사회 보험은 가입자의 보험료를 기반으로 하기 때문에 <b>기여</b>에 따른 급여라는 특성이 있으며, 일정 소득 이상의 국민은 의무적으로 가입해야 한다는 점에서 <b>강제성</b>을 띤다.',
@@ -1734,6 +1836,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_18: {
     labelNo: '18',
     title: '🌱 지구와 함께 살아가기',
+    paragraphMain: [
+      '환경 문제의 심각성: 기후 변화, 대기·수질·토양 오염, 생물 다양성 감소 등의 현황을 이해하다',
+      '환경 문제의 특성: 전 지구적 성격, 불가역성, 세대 간 문제의 특징을 살펴보다',
+      '지속 가능한 발전: 브룬트란트 보고서와 SDGs, 탄소 중립의 개념과 목표를 알아보다',
+      '환경 문제 해결 방안: 정부·기업·시민의 역할과 녹색 소비, 순환 경제로의 전환을 깨닫다'
+    ],
     passage: [
       '산업화 이후 인류는 물질적 풍요를 누리게 되었지만, 그 대가로 심각한 <b>환경 문제</b>에 직면하고 있다. 환경 문제란 인간의 활동으로 인해 자연환경이 파괴되거나 오염되어 생태계와 인간 생활에 부정적 영향을 미치는 현상을 말한다. 대표적인 환경 문제로는 <b>기후 변화</b>, <b>대기 오염</b>, <b>수질 오염</b>, <b>토양 오염</b>, <b>생물 다양성 감소</b> 등이 있다. 특히 기후 변화는 인류가 당면한 가장 심각한 환경 위기로 꼽힌다. 화석 연료의 연소로 배출되는 <b>온실가스</b>가 지구의 평균 기온을 상승시켜 이상 기후, 해수면 상승, 생태계 파괴 등을 초래하고 있다. 과학자들은 지구 평균 기온 상승을 1.5도 이내로 억제하지 못하면 돌이킬 수 없는 기후 재앙이 올 것이라고 경고한다.',
       '환경 문제는 몇 가지 특성을 가진다. 첫째, <b>전 지구적 성격</b>으로 한 지역의 환경 오염이 국경을 넘어 다른 지역에 영향을 미친다. 황사, 미세먼지, 해양 플라스틱 오염 등은 특정 국가만의 문제가 아니다. 둘째, <b>불가역성</b>으로 한번 파괴된 환경은 원상 복구가 어렵거나 불가능하다. 멸종된 종은 되살릴 수 없고, 오염된 토양을 정화하는 데는 수십 년이 걸린다. 셋째, <b>세대 간 문제</b>로 현재 세대의 환경 파괴가 미래 세대의 삶에 영향을 미친다. 따라서 현재 세대는 미래 세대를 위해 환경을 보전할 책임이 있다. 이러한 환경 문제를 해결하기 위해 등장한 개념이 <b>지속 가능한 발전</b>이다.',
@@ -1829,6 +1937,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_19: {
     labelNo: '19',
     title: '⚖️ 법의 지배와 정의',
+    paragraphMain: [
+      '법과 법치주의: 사회 규범으로서 법의 특성과 법치주의의 의미를 이해하다',
+      '형식적·실질적 법치주의: 법의 절차와 내용 모두의 정당성을 요구하는 실질적 법치주의를 살펴보다',
+      '법의 분류: 공법과 사법, 형사법과 민사법의 특성과 원칙을 알아보다',
+      '법의 발전: 사회법과 국제법의 등장, 정의를 실현하는 도구로서 법의 역할을 깨닫다'
+    ],
     passage: [
       '인간 사회에서 질서를 유지하고 갈등을 해결하기 위해서는 일정한 규범이 필요하다. <b>사회 규범</b>이란 사회 구성원들이 지켜야 할 행위의 기준으로, 관습, 도덕, 종교 규범, 법 등이 있다. 이 중 <b>법</b>은 국가 권력에 의해 강제되는 규범으로, 위반 시 제재가 따른다는 점에서 다른 규범과 구별된다. 법은 사회 질서를 유지하고 개인의 권리를 보호하며 분쟁을 공정하게 해결하는 기능을 수행한다. <b>법치주의</b>란 법에 의한 통치를 의미하며, 국가 권력이 법의 테두리 안에서만 행사되어야 함을 뜻한다. 이는 권력자의 자의적인 지배를 막고 모든 사람이 법 앞에 평등하게 대우받도록 보장하는 근대 민주주의의 핵심 원리이다.',
       '<b>형식적 법치주의</b>는 법의 형식과 절차만 갖추면 그 내용에 관계없이 합법적이라고 보는 입장이다. 그러나 나치 독일처럼 합법적 절차를 거쳐 제정된 법이 인권을 침해할 수 있다는 역사적 교훈이 있다. 이에 대한 반성으로 등장한 <b>실질적 법치주의</b>는 법의 내용도 정의와 인권에 부합해야 한다고 본다. 현대 민주주의 국가에서는 <b>헌법</b>을 최고 규범으로 하여 모든 법률이 헌법 정신에 맞게 제정되어야 한다. 또한 <b>위헌법률심사제도</b>를 통해 헌법에 위반되는 법률의 효력을 상실시킬 수 있다. 이처럼 실질적 법치주의는 법의 형식뿐만 아니라 내용의 정당성까지 요구함으로써 국민의 기본권을 실질적으로 보장한다.',
@@ -1924,6 +2038,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_soc_20: {
     labelNo: '20',
     title: '✊ 인권의 역사와 시민사회',
+    paragraphMain: [
+      '인권 사상의 역사: 근대 시민 혁명과 천부인권, 자연권 사상의 발전 과정을 이해하다',
+      '국제 인권 보장: 세계인권선언과 국제인권규약, 자유권과 사회권의 구분을 살펴보다',
+      '기본권 보장과 구제: 헌법상 기본권과 위헌법률심판, 헌법소원 등 구제 제도를 알아보다',
+      '시민사회의 역할: 시민단체와 NGO의 인권 보호 활동, 사회 운동의 의의를 깨닫다'
+    ],
     passage: [
       '<b>인권</b>이란 인간이라면 누구나 태어날 때부터 가지는 기본적인 권리를 말한다. 인권 사상의 역사적 기원은 근대 시민 혁명에서 찾을 수 있다. 1776년 미국 독립선언서는 "모든 인간은 평등하게 태어났다"라고 선언했고, 1789년 프랑스 <b>인권선언</b>은 자유, 재산, 안전, 압제에 대한 저항을 <b>천부인권</b>으로 규정했다. 이러한 인권 사상은 <b>자연권 사상</b>에 기초하며, 인간의 권리는 국가가 부여하는 것이 아니라 인간 본성에서 비롯된다고 본다. 그러나 초기 인권은 재산을 가진 백인 남성에게만 적용되는 한계가 있었고, 여성, 흑인, 노동자 등 사회적 약자들의 투쟁을 통해 점차 보편적 권리로 확장되어 왔다.',
       '제2차 세계대전 이후 국제 사회는 인권 보장을 위한 노력을 본격화했다. 1948년 유엔에서 채택된 <b>세계인권선언</b>은 모든 인간의 존엄성과 평등, 생명권, 자유권, 사회권 등을 포괄적으로 규정했다. 이후 <b>국제인권규약</b>이 체결되어 세계인권선언의 내용을 법적 구속력 있는 조약으로 발전시켰다. 인권은 크게 <b>자유권</b>과 <b>사회권</b>으로 구분된다. 자유권은 국가 권력으로부터의 자유를 보장하는 권리로 신체의 자유, 표현의 자유, 양심의 자유 등이 있다. 사회권은 국가에 적극적인 급부를 요구할 수 있는 권리로 교육받을 권리, 근로의 권리, 인간다운 생활을 할 권리 등이 있다.',
@@ -2154,46 +2274,97 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
-    passageBox.addEventListener('click', (e) => {
-      const sentenceSpan = e.target.closest('.sentence'); if (!sentenceSpan) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
+
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
+
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
+
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
-      sentenceSpan.classList.toggle('selected');
-      const allSentences = passageBox.querySelectorAll('.sentence'); const selectedIndices = [];
-      allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices)); if (selectedIndices.length === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
-      if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
-        const endTime = new Date(); const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'unknown';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
+
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+      }
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-        if (!document.getElementById('toast-style')) { const toastStyle = document.createElement('style'); toastStyle.id = 'toast-style'; toastStyle.textContent = `.toast-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 40px; border-radius: 20px; font-size: 22px; font-weight: 700; z-index: 10000; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); text-align: center; } .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); } .toast-message .emoji { font-size: 32px; display: block; margin-bottom: 8px; } .sparkle-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; } .sparkle { position: absolute; top: -20px; animation: sparkle-fall linear forwards; font-size: 24px; } @keyframes sparkle-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`; document.head.appendChild(toastStyle); }
-        const toast = document.createElement('div'); toast.className = 'toast-message'; toast.innerHTML = `<span class="emoji">🎉</span>지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 50); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 4000);
-        const sparkleContainer = document.createElement('div'); sparkleContainer.className = 'sparkle-rain'; document.body.appendChild(sparkleContainer);
-        const emojis = ['⭐', '✨', '🌟', '💫', '🎊', '🎉', '📚', '🐋']; for (let i = 0; i < 40; i++) { setTimeout(() => { const sparkle = document.createElement('div'); sparkle.className = 'sparkle'; sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)]; sparkle.style.left = Math.random() * 100 + 'vw'; sparkle.style.animationDuration = (Math.random() * 2 + 2) + 's'; sparkle.style.fontSize = (Math.random() * 16 + 16) + 'px'; sparkleContainer.appendChild(sparkle); }, i * 60); }
-        setTimeout(() => sparkleContainer.remove(), 4500);
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

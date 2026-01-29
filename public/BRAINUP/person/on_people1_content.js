@@ -58,6 +58,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_01: {
     labelNo: '01',
     title: '⚔️ 다짐으로 다시 태어난 김유신',
+    paragraphMain: [
+      '화랑 김유신의 방황과 어머니의 꾸중으로 결심을 다짐함',
+      '말이 여인의 집으로 가고 스스로 마음이 바로서지 않았음을 반성함',
+      '결심을 행동으로 옮겨 성실하게 자신을 단련함',
+      '삼국 통일의 영웅이 되어 역사에 이름을 남김'
+    ],
     passage: [
       '김유신은 훗날 신라를 이끄는 뛰어난 장군이 되었지만, 젊을 때부터 성숙했던 것은 아니었어요. 열다섯 살에 <b>화랑</b>이 되어 큰 기대를 받았지만, 그는 친구들과 어울려 놀거나 술자리에 참석하는 등 아직 마음이 흔들리는 청소년이었습니다. 그러던 어느 날, 그가 한 여인과 가까이 지낸다는 소문을 들은 어머니는 단호하게 <b>꾸짖으며</b> 나라를 위해 큰일을 하려면 지금의 행동을 고쳐야 한다고 말했어요. 그 말을 들은 김유신은 마음을 고쳐먹고 <b>무예</b>와 학문을 다시 다지기로 결심했습니다.',
       '그러나 어느 날 일을 마치고 집으로 돌아가던 길, 피곤함에 잠시 졸았던 김유신은 깨어보니 자신도 모르게 늘 찾아가던 여인의 집 앞에 와 있었어요. 그는 부끄러움과 실망감 속에서 스스로의 마음이 아직 완전히 바로서지 않았음을 깨달았습니다. "내가 마음을 다잡지 못하니 말까지 이 길을 기억하는구나." 그는 스스로를 반성하며, 다시는 <b>약속</b>을 어기지 않겠다는 결심을 굳혔어요.',
@@ -171,6 +177,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_02: {
     labelNo: '02',
     title: '👑 아버지의 뜻을 잇는 왕, 문무왕',
+    paragraphMain: [
+      '무열왕의 뜻을 이어 문무왕이 즉위하고 고구려 정벌에 나섬',
+      '고구려 멸망 후 당나라의 속셈이 드러나 새로운 전쟁 준비',
+      '김유신 사망에도 포기하지 않고 당나라와 계속 싸움',
+      '676년 삼국 통일 완성, 죽어서도 나라를 지키겠다는 유언'
+    ],
     passage: [
       '백제가 멸망한 뒤, 김춘추(무열왕)는 삼국을 하나로 잇겠다는 큰 뜻을 품고 나라를 이끌었지만, 바람을 이루기도 전에 세상을 떠났어요. 뒤를 이은 아들 법민은 신라 제30대 왕인 문무왕으로 즉위하며 아버지의 뜻을 반드시 이어 가겠다고 다짐했습니다. "아버지의 꿈을 제가 이루겠습니다." 문무왕은 강화된 신라의 힘과 당나라의 지원을 바탕으로, 오랫동안 신라를 괴롭히던 고구려 <b>정벌</b>에 나섰어요. 고구려는 이미 내분으로 약해진 상태였고, 문무왕은 이 틈을 놓치지 않았습니다.',
       '문무왕은 신라군과 당나라군이 힘을 합쳐 고구려의 주요 지역을 공격하도록 지휘했어요. 마침내 668년, 평양성이 <b>함락</b>되며 고구려가 무너졌습니다. 하지만 승리의 기쁨도 잠시, 당나라는 고구려와 백제의 넓은 땅을 자기들이 직접 다스리려는 <b>속셈</b>을 드러냈어요. 문무왕은 당나라의 욕심을 그대로 둘 수 없다고 판단했습니다. 신라는 고구려와 백제의 <b>유민</b>들과 손을 잡고 당나라군을 몰아내기 위한 새로운 전쟁을 준비했어요.',
@@ -267,6 +279,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_03: {
     labelNo: '03',
     title: '💀 해골 물에서 얻은 깨달음',
+    paragraphMain: [
+      '백성에게 불교를 전하고자 당나라 유학을 결심함',
+      '어두운 동굴에서 달고 시원한 물을 마시고 잠듦',
+      '해골에 고인 썩은 물이었음을 알고 마음의 중요성을 깨달음',
+      '마음가짐의 중요성을 깨닫고 신라로 돌아와 백성에게 가르침을 전함'
+    ],
     passage: [
       '신라 시대의 원효는 승려가 된 뒤, 부처님의 <b>가르침</b>이 일부 귀족들만의 것이 아니라 모든 <b>백성</b>이 함께 나누어야 할 <b>진리</b>라고 믿었어요. 하지만 그 당시엔 글을 모르는 백성이 많아 불교의 뜻을 깊이 이해하기 어려웠습니다. "부처님의 말씀을 제대로 전하려면, 나부터 더 넓고 깊게 배워야 한다." 그때 마침 의상 스님이 <b>당나라</b>로 <b>유학</b>을 떠난다는 소식을 듣고, 원효는 함께 길을 나서기로 결심했어요.',
       '당나라로 향하는 길은 쉽지 않았습니다. 날이 어두워지고 빗줄기가 거세지자 두 스님은 근처의 동굴로 몸을 피했어요. 동굴은 <b>칠흑</b>처럼 어두웠지만 바람도 잘 막아 주어 하룻밤을 보내기에 충분했습니다. 한밤중 목이 타던 원효는 손에 잡히는 바가지를 들어 물을 마셨어요. 차갑고 달게 느껴지는 물맛에 만족하며 그는 다시 잠이 들었습니다.',
@@ -351,6 +369,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_04: {
     labelNo: '04',
     title: '🌏 우물 안 개구리를 벗어난 혜초의 모험',
+    paragraphMain: [
+      '소년이 멧돼지 사건으로 생명의 소중함을 깨달음',
+      '혜초의 성장과 불교 공부, 인도 여행 결심',
+      '인도와 중앙아시아로의 험난한 여정',
+      '여러 나라의 풍습 체험과 왕오천축국전 기록'
+    ],
     passage: [
       '옛날 한 산골 마을에 호기심 많은 소년이 살았어요. 하루는 우연히 산에서 멧돼지 한 마리를 잡아 가족들과 함께 맛있게 구워 먹었습니다. 그런데 다음 날, 마당에 두었던 뼈가 사라진 것을 본 소년은 이상한 마음이 들어 숲으로 향했어요. 숲 속에서 그는 믿기 힘든 광경을 마주했습니다. 죽은 줄 알았던 멧돼지가 살아 돌아와 새끼들에게 젖을 먹이고 있었던 거예요.',
       '소년은 자신이 생명을 가볍게 여겼다는 사실을 깊이 반성했습니다. 그날 이후 마음을 닦는 <b>수행자</b>의 길을 걷기로 했고, 훗날 이 소년이 바로 신라 시대의 유명한 승려 혜초가 되었어요. 혜초는 성장한 뒤 당나라로 건너가 불교를 깊이 공부하게 되었습니다. 그곳에서 인도에서 온 <b>고승</b>에게 가르침을 받으며 부처가 태어난 땅이 어떤 곳인지 더 알고 싶다는 마음이 커졌어요.',
@@ -438,6 +462,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_05: {
     labelNo: '05',
     title: '⚙️ 노비 출신 천재 과학자 장영실',
+    paragraphMain: [
+      '장영실의 노비 출신 배경과 뛰어난 천재성',
+      '세종대왕의 등용과 과학 기구 발명 시작',
+      '자격루, 측우기, 앙부일구 등 주요 발명품',
+      '백성을 위한 발명과 신분의 벽을 넘은 도전'
+    ],
     passage: [
       '장영실은 조선 시대 세종대왕 때 활약한 과학자로, <b>노비</b> 출신이라는 낮은 신분에도 불구하고 뛰어난 재능으로 역사에 이름을 남겼어요. 그는 어린 시절부터 손재주가 뛰어나 고장 난 물건을 척척 고치고, 복잡한 기계의 원리를 금세 파악하는 <b>천재성</b>을 보였습니다. 당시 조선은 신분 제도가 엄격하여 노비가 높은 자리에 오르는 것은 상상도 할 수 없는 일이었어요. 하지만 장영실의 뛰어난 능력은 점차 소문이 퍼져 마침내 세종대왕의 귀에까지 들어가게 되었습니다.',
       '세종대왕은 신하들의 반대에도 불구하고 장영실을 궁궐로 불러들여 그의 재능을 직접 확인했어요. "사람의 가치는 신분이 아니라 <b>능력</b>으로 판단해야 한다"며 그를 적극 <b>등용</b>하기로 결심했습니다. 궁궐에 들어온 장영실은 세종대왕의 전폭적인 <b>후원</b> 아래 본격적으로 과학 기구들을 발명하기 시작했어요. 가장 먼저 하늘의 별과 해, 달의 움직임을 <b>관측</b>하는 혼천의와 간의대를 만들었습니다.',
@@ -522,6 +552,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_06: {
     labelNo: '06',
     title: '⚓ 바다를 지킨 영웅 이순신',
+    paragraphMain: [
+      '이순신의 어린 시절과 무과 합격, 시련',
+      '전라좌도 수군절도사 임명과 임진왜란 발발',
+      '거북선과 한산대첩 등 주요 전투 승리',
+      '백의종군과 노량해전에서의 전사'
+    ],
     passage: [
       '이순신은 조선 시대 임진왜란 때 나라를 구한 위대한 <b>장군</b>입니다. 그는 1545년 서울에서 태어나 어린 시절부터 활쏘기와 말타기를 좋아했으며, <b>무인</b>의 꿈을 키워 나갔어요. 서른두 살에 무과에 합격한 이순신은 여러 지역에서 성실하게 근무하며 <b>전략</b>과 전투 능력을 쌓아 갔습니다. 그러나 곧은 성품 때문에 상관들과 마찰을 빚기도 했고, 억울하게 <b>파직</b>당하는 시련을 겪기도 했어요.',
       '하지만 이순신은 좌절하지 않고 묵묵히 자신의 길을 걸어갔습니다. 마침내 1591년, 전라좌도 수군절도사로 임명되어 <b>수군</b>을 이끌게 되었어요. 이듬해인 1592년, 일본이 조선을 침략하는 <b>임진왜란</b>이 일어났습니다. 육지에서는 조선군이 연패를 거듭했지만, 바다에서는 이순신의 수군이 연전연승을 거두었어요.',
@@ -610,6 +646,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_07: {
     labelNo: '07',
     title: '📚 백성을 사랑한 임금 세종대왕',
+    paragraphMain: [
+      '세종대왕의 어린 시절과 학문에 대한 열정',
+      '백성을 위한 훈민정음 창제 결심',
+      '훈민정음 28자 완성과 반포',
+      '한글 외 다양한 과학 기구 발명과 업적'
+    ],
     passage: [
       '세종대왕은 조선의 네 번째 임금으로, 우리 역사상 가장 위대한 왕으로 손꼽혀요. 1397년에 태어난 세종은 어린 시절부터 책 읽기를 무척 좋아하여 밤늦도록 공부에 빠져들곤 했습니다. 아버지 태종은 건강을 걱정하여 책을 빼앗기도 했지만, 세종의 <b>학문</b>에 대한 열정은 꺾이지 않았어요. 스물두 살에 <b>왕위</b>에 오른 세종은 백성들의 삶을 살피며 그들이 겪는 어려움에 깊이 <b>공감</b>했습니다.',
       '특히 글을 모르는 백성들이 억울한 일을 당해도 호소할 방법이 없다는 사실에 안타까움을 느꼈어요. "백성이 말하고자 하는 바가 있어도 제 뜻을 펴지 못하니, 내 이를 위해 가엾이 여기노라." 세종의 이 마음이 바로 <b>훈민정음</b> 창제의 시작이었습니다. 세종대왕은 뛰어난 <b>학자</b>들을 모아 집현전을 설치하고 함께 새로운 문자를 연구하기 시작했어요.',
@@ -699,6 +741,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_08: {
     labelNo: '08',
     title: '💊 백성의 병을 고친 의원 허준',
+    paragraphMain: [
+      '허준의 서얼 출신 배경과 의술에 대한 열정',
+      '내의원에서 일하며 선조 임금의 신임을 얻음',
+      '15년간 심혈을 기울여 동의보감 집필과 완성',
+      '동의보감의 가치와 한국 의학의 아버지로 존경받음'
+    ],
     passage: [
       '허준은 조선 시대에 백성들의 병을 고치기 위해 평생을 바친 위대한 <b>의원</b>입니다. 1539년에 태어난 허준은 어린 시절 양반 가문 출신이었지만, 어머니가 천민 출신이어서 <b>서얼</b>이라는 낮은 신분으로 <b>차별</b>을 받아야 했어요. 그러나 허준은 신분의 벽에 좌절하지 않고 의학에 뜻을 두었습니다. 어려운 <b>한의학</b> 서적들을 밤낮으로 공부한 끝에, 서른 살 무렵 왕실의 의원인 <b>내의원</b>에 들어가게 되었어요.',
       '허준은 내의원에서 일하면서 선조 임금의 <b>신임</b>을 받게 되었습니다. 특히 1592년 임진왜란이 일어나 선조가 피난을 갈 때, 허준은 임금 곁을 떠나지 않고 끝까지 <b>호종</b>했어요. 전쟁 중에도 허준은 병든 백성들을 돌보며 의원으로서의 사명을 다했습니다. 선조는 허준에게 백성들을 위한 의학책을 만들라고 명령했어요.',
@@ -788,6 +836,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_09: {
     labelNo: '09',
     title: '🎨 그림과 학문으로 빛난 신사임당',
+    paragraphMain: [
+      '신사임당의 어린 시절과 다양한 분야의 예술적 재능',
+      '초충도 등 뛰어난 그림 작품과 자녀 교육에 대한 열정',
+      '아들 율곡 이이의 성장과 신사임당의 섬세한 예술 작품',
+      '국보급 작품과 5만 원권 지폐에 초상이 실림'
+    ],
     passage: [
       '신사임당은 조선 시대 최고의 여성 예술가이자 현명한 어머니로 <b>존경</b>받는 인물입니다. 1504년 강원도 강릉에서 태어난 신사임당은 어린 시절부터 남다른 <b>재능</b>을 보였어요. 당시에는 여성이 공부하는 것을 좋지 않게 여기는 분위기였지만, 아버지는 딸의 재능을 알아보고 <b>학문</b>과 예술을 배울 수 있도록 지원했습니다. 덕분에 신사임당은 글씨, 그림, 시, <b>자수</b> 등 다양한 분야에서 뛰어난 실력을 갖추게 되었어요.',
       '특히 <b>초충도</b>라 불리는 풀과 벌레 그림은 생명력이 넘쳐서, 그녀가 그린 포도 그림에 새가 날아와 쪼았다는 전설이 전해질 정도입니다. 신사임당은 스물한 살에 결혼하여 7남매를 낳았어요. 결혼 후에도 그녀는 예술 활동을 멈추지 않았고, 자녀들의 <b>교육</b>에도 온 마음을 쏟았습니다. 자녀들에게 책을 읽어 주고 글씨를 가르치며 올바른 <b>인성</b>을 길러 주려고 노력했어요.',
@@ -877,6 +931,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_10: {
     labelNo: '10',
     title: '📖 조선 성리학의 거장 이황',
+    paragraphMain: [
+      '이황의 어린 시절과 학문에 대한 열정',
+      '성균관 입학과 성리학 연구, 이기론 정립',
+      '기대승과의 논쟁과 도산서원 설립',
+      '성학십도 등 저술 활동과 천 원권 지폐'
+    ],
     passage: [
       '이황은 조선 시대 최고의 유학자로, 퇴계라는 <b>호</b>로도 잘 알려져 있어요. 1501년 경상북도 안동에서 태어난 이황은 어린 시절 아버지를 여의고 어렵게 성장했습니다. 그러나 어머니의 가르침과 형들의 도움으로 <b>학문</b>에 <b>정진</b>할 수 있었어요. 이황은 어릴 때부터 책 읽기를 좋아하여 논어와 맹자 같은 <b>유학</b> 경전을 깊이 공부했습니다.',
       '열두 살에 이미 논어를 다 읽었다고 전해지며, 스물세 살에는 성균관에 입학하여 본격적으로 학문을 닦았어요. 이황은 관직에 나가기보다 학문을 연구하고 후학을 가르치는 것을 더 중요하게 여겼습니다. 그는 <b>성리학</b>을 깊이 연구하여 조선 성리학의 기틀을 세웠어요. 인간의 마음에 <b>이</b>와 <b>기</b>가 있다고 보았으며, 이가 기를 이끌어야 올바른 인간이 된다고 주장했습니다.',
@@ -966,6 +1026,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_11: {
     labelNo: '11',
     title: '💡 실천하는 학자 율곡 이이',
+    paragraphMain: [
+      '이이의 어린 시절과 어머니 신사임당의 가르침',
+      '과거 시험 장원급제와 기의 역할 강조',
+      '현실 정치 참여와 10만 양병설 주장',
+      '젊은 나이에 세상을 떠났지만 남긴 학문적 업적'
+    ],
     passage: [
       '이이는 조선 시대를 대표하는 유학자이자 정치가로, 율곡이라는 호로 더 잘 알려져 있어요. 1536년 강원도 강릉에서 태어난 이이는 어머니 <b>신사임당</b>으로부터 어린 시절 교육을 받았습니다. 신사임당은 조선 최고의 여성 예술가이자 <b>현모양처</b>로 이이에게 학문과 인성을 가르쳤어요. 이이는 어릴 때부터 <b>천재</b>적인 재능을 보여 열세 살에 진사시에 합격했습니다.',
       '스물세 살 때는 별시에서 장원급제하여 세상을 놀라게 했어요. 이이는 과거 시험에서 무려 아홉 번이나 <b>장원</b>을 차지하여 구도장원공이라는 별명을 얻었습니다. 학문적으로 <b>기</b>의 역할을 강조한 점에서 이황과 다른 <b>견해</b>를 보였어요. 이황이 이(理)를 중시했다면, 이이는 기(氣)가 더 중요하다고 주장했습니다. 두 학자의 이론은 조선 유학의 양대 산맥이 되었어요.',
@@ -1054,6 +1120,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_12: {
     labelNo: '12',
     title: '🔬 백성을 위한 실학자 정약용',
+    paragraphMain: [
+      '정약용의 어린 시절과 정조의 신임, 거중기 발명',
+      '실학 발전과 실용 학문 추구, 천주교로 인한 유배',
+      '18년 유배 생활 중 500권이 넘는 책 저술',
+      '정약용의 학문적 유산과 청렴한 정신'
+    ],
     passage: [
       '정약용은 조선 후기 최고의 <b>실학자</b>로, 다산이라는 호로도 잘 알려져 있어요. 1762년 경기도 광주에서 태어난 정약용은 어린 시절부터 <b>총명</b>하여 일곱 살에 이미 시를 지었다고 전해집니다. 스물두 살에 과거에 <b>급제</b>하여 관직에 나간 정약용은 정조 임금의 신임을 받아 다양한 국가 사업에 참여했어요. 특히 수원 <b>화성</b>을 설계할 때 <b>거중기</b>라는 기계를 발명하여 무거운 돌을 쉽게 들어 올릴 수 있게 했습니다.',
       '정약용은 <b>실학</b>이라는 학문을 발전시킨 학자예요. 실학은 실제 생활에 도움이 되는 실용적인 학문을 추구하는 것으로, 농업, 의학, 기술 등 다양한 분야를 연구합니다. 정약용은 농사짓는 법을 정리한 책, 지방 관리가 지켜야 할 <b>도리</b>를 적은 책 등 많은 저서를 남겼어요. 그러나 정조가 세상을 떠난 후 천주교를 믿었다는 이유로 <b>유배</b>를 당하게 됩니다.',
@@ -1145,6 +1217,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_13: {
     labelNo: '13',
     title: '🏹 영토를 넓힌 광개토대왕',
+    paragraphMain: [
+      '광개토대왕의 즉위와 정복 전쟁 시작',
+      '백제 공격과 신라를 도와 왜구 격퇴',
+      '서쪽으로 영토 확장과 동아시아 최강국 달성',
+      '광개토대왕릉비와 역사적 업적'
+    ],
     passage: [
       '광개토대왕은 고구려의 역사상 가장 위대한 왕으로, 374년에 태어나 391년 열여덟 살의 나이로 왕위에 올랐어요. 그의 본명은 담덕이며, 광개토대왕은 "넓게 땅을 <b>개척</b>한 큰 왕"이라는 뜻의 <b>시호</b>입니다. 어린 나이에 왕이 되었지만 광개토대왕은 뛰어난 <b>리더십</b>과 군사 전략으로 고구려를 동아시아 최강의 나라로 만들었어요. <b>즉위</b>하자마자 군사를 정비하고 대규모 <b>정복</b> 전쟁을 시작했습니다.',
       '광개토대왕은 백제를 공격하여 한강 유역을 차지했고, 북쪽으로는 거란과 숙신을 물리쳐 만주 지역을 장악했어요. 그의 업적 중 가장 유명한 것은 신라를 도와 왜구를 물리친 일입니다. 당시 신라는 왜구의 <b>침입</b>으로 큰 어려움을 겪고 있었어요. 광개토대왕은 5만 대군을 보내 왜구를 <b>격퇴</b>했습니다.',
@@ -1236,6 +1314,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_14: {
     labelNo: '14',
     title: '⚔️ 살수대첩의 영웅 을지문덕',
+    paragraphMain: [
+      '수나라 113만 대군의 침략과 을지문덕의 전략',
+      '적을 유인하는 작전과 조롱하는 시로 심리전',
+      '살수에서 둑을 터뜨려 적군을 궤멸시킴',
+      '살수대첩의 역사적 의의와 민족의 영웅'
+    ],
     passage: [
       '을지문덕은 고구려의 <b>명장</b>으로, 612년 <b>살수대첩</b>에서 수나라의 대군을 물리친 영웅이에요. 당시 중국을 통일한 수나라의 양제는 113만 대군을 이끌고 고구려를 <b>침략</b>했습니다. 이는 역사상 유례없는 대규모 원정군이었어요. 고구려는 수적으로 절대 열세였지만, 을지문덕은 뛰어난 <b>전략</b>으로 이 위기를 극복할 계획을 세웠습니다.',
       '을지문덕은 먼저 적을 깊숙이 <b>유인</b>하는 작전을 펼쳤어요. 수나라 군대와 싸우다가 일부러 지는 척하며 후퇴하기를 반복했습니다. 수나라 장수들은 고구려군이 약하다고 착각하여 점점 더 깊이 쫓아왔어요. 을지문덕은 적장에게 시를 보내 능력을 치켜세우면서도 "만족할 줄 알고 돌아가라"라고 <b>조롱</b>하는 심리전을 펼쳤습니다.',
@@ -1323,6 +1407,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_15: {
     labelNo: '15',
     title: '🛡️ 귀주대첩의 명장 강감찬',
+    paragraphMain: [
+      '강감찬의 출신과 노장으로서 상원수가 됨',
+      '흥화진에서 을지문덕과 같은 수공 작전 펼침',
+      '귀주에서 후퇴하는 거란군을 격파함',
+      '귀주대첩의 역사적 의의와 호국 영웅'
+    ],
     passage: [
       '강감찬은 고려 시대의 명장으로, 1019년 <b>귀주대첩</b>에서 거란의 대군을 물리친 영웅이에요. 948년에 태어난 강감찬은 어린 시절부터 <b>총명</b>하여 과거에 <b>급제</b>하고 여러 관직을 거쳤습니다. 그는 <b>문신</b>이었지만 나라가 위기에 처하자 군대를 이끄는 <b>장수</b>의 역할을 맡게 되었어요. 일흔 살이 넘은 <b>노장</b> 강감찬이 상원수가 되어 10만 거란군을 막아야 했습니다.',
       '강감찬은 먼저 흥화진에서 적을 맞아 싸웠어요. 그는 미리 강물을 막아 두었다가 적군이 강을 건널 때 물을 터뜨리는 <b>수공</b> 작전을 펼쳤습니다. 이 작전은 수백 년 전 을지문덕이 살수대첩에서 사용한 것과 같은 <b>전략</b>이었어요. 물에 휩쓸린 거란군은 큰 피해를 입었지만, 주력 부대는 개경을 향해 <b>진격</b>했습니다.',
@@ -1413,6 +1503,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_16: {
     labelNo: '16',
     title: '💣 화약을 만든 최무선',
+    paragraphMain: [
+      '왜구 침략과 화약의 필요성, 중국의 기밀',
+      '수십 년 연구 끝에 화약 제조 성공과 화통도감 설치',
+      '진포대첩에서 화약 무기로 왜선 500척 전멸',
+      '군사 과학의 선구자로서 최무선의 업적'
+    ],
     passage: [
       '최무선은 고려 말기의 과학자이자 군인으로, 우리나라 최초로 <b>화약</b>을 만든 인물이에요. 당시 왜구(일본 해적)의 침략으로 고려는 큰 고통을 받고 있었습니다. 해안가 마을은 <b>약탈</b>당하고, 백성들은 삶의 터전을 잃었어요. 최무선은 왜구를 물리치기 위해 강력한 무기가 필요하다고 생각했습니다. 그러나 화약 제조법은 최고의 <b>군사 기밀</b>이어서 중국은 절대 가르쳐 주지 않았어요.',
       '최무선은 수십 년 동안 화약 연구에 매달렸습니다. 중국 상인들을 만나 조금씩 정보를 얻었고, 화약의 주요 재료인 <b>염초</b>를 구하는 방법을 알아냈어요. 수많은 <b>실험</b>과 실패를 거듭한 끝에, 마침내 화약 제조에 성공했습니다. 그는 조정에 <b>건의</b>하여 1377년 <b>화통도감</b>이라는 관청을 설치했어요.',
@@ -1503,6 +1599,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_17: {
     labelNo: '17',
     title: '🌸 충절의 선비 정몽주',
+    paragraphMain: [
+      '정몽주의 출신과 학자이자 외교관으로서의 활동',
+      '이성계 세력의 왕조 교체 시도와 이방원의 권유',
+      '단심가로 고려에 대한 변치 않는 충성심 표현',
+      '선죽교에서 암살과 충절의 상징으로 기억됨'
+    ],
     passage: [
       '정몽주는 고려 말기의 <b>충신</b>으로, 나라에 대한 <b>충절</b>의 상징으로 기억되는 인물이에요. 1337년에 태어난 정몽주는 어린 시절부터 학문에 뛰어나 스물세 살에 <b>장원급제</b>했습니다. 그는 뛰어난 학자이자 외교관으로 활동했는데, 일본에 <b>사신</b>으로 가서 왜구 문제를 해결하기도 했어요. 정몽주는 <b>성리학</b>을 깊이 연구하여 조선 성리학의 기초를 닦은 학자로도 평가받습니다.',
       '고려 말기, 이성계를 중심으로 한 새로운 세력이 <b>왕조</b>를 바꾸려고 했어요. 이성계의 아들 이방원은 정몽주가 뛰어난 <b>인재</b>이므로 새 왕조에 합류해 달라고 여러 차례 <b>권유</b>했습니다. 이방원은 "이런들 어떠하리 저런들 어떠하리"라는 시를 지어 정몽주의 마음을 떠보았어요. 그러나 정몽주는 고려에 대한 충성심을 담아 답시를 지었습니다.',
@@ -1593,6 +1695,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_18: {
     labelNo: '18',
     title: '⚖️ 청렴한 재상 황희',
+    paragraphMain: [
+      '황희의 출신과 영의정 18년 역임',
+      '청렴하고 검소한 생활',
+      '공정한 분쟁 조정 능력과 양쪽 이야기를 다 들어주는 포용력',
+      '뇌물 거부와 청렴함의 유산'
+    ],
     passage: [
       '황희는 조선 초기 최고의 <b>재상</b>으로, <b>청렴</b>과 공정함의 상징으로 기억되는 인물이에요. 1363년에 태어난 황희는 열네 살에 과거에 <b>급제</b>할 정도로 뛰어난 인재였습니다. 고려 말에 관직을 시작했지만 조선 <b>건국</b> 후에도 능력을 인정받아 계속 벼슬을 했어요. 황희는 <b>영의정</b>을 18년 동안 지내며 세종을 도와 태평성대를 이룬 명재상이었습니다.',
       '황희는 매우 청렴한 생활을 했어요. 최고 관직에 오랫동안 있었지만 재산을 모으지 않아 집이 가난했습니다. 비가 오면 지붕에서 물이 새어 방 안에서 우산을 써야 할 정도였어요. 한 번은 임금이 황희의 가난한 살림을 보고 놀라 특별히 쌀과 돈을 <b>하사</b>했다는 <b>일화</b>도 전해집니다. 황희는 <b>검소</b>한 생활로 백성들에게 모범을 보였어요.',
@@ -1680,6 +1788,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_19: {
     labelNo: '19',
     title: '🦁 우산국을 정복한 장군 이사부',
+    paragraphMain: [
+      '이사부의 명장으로서의 업적과 우산국 발견',
+      '우산국 복속을 위한 지혜로운 계획',
+      '나무 사자로 우산국을 위협하여 항복 받음',
+      '울릉도와 독도의 우리 영토 편입과 역사적 의의'
+    ],
     passage: [
       '이사부는 신라 시대의 <b>명장</b>으로, <b>우산국</b>(지금의 울릉도와 독도)을 신라에 <b>복속</b>시킨 영웅이에요. 그는 뛰어난 <b>지략</b>과 <b>용맹</b>함을 갖춘 장군으로 가야 지역을 정복하는 데에도 큰 공을 세웠습니다. 505년, 이사부는 지금의 강원도 삼척 지역인 실직주의 군주가 되었어요. 이때 동해 바다 건너에서 신라에 <b>복종</b>하지 않는 우산국이 그의 눈에 들어왔습니다.',
       '이사부는 우산국을 신라에 복속시키기로 결심했어요. 그러나 우산국 사람들은 용맹하여 무력으로 정복하기가 쉽지 않았습니다. 이사부는 <b>지혜</b>를 발휘하여 기발한 작전을 세웠어요. 그는 나무로 만든 큰 <b>사자</b> 인형을 여러 개 만들어 배에 싣고 우산국으로 향했습니다.',
@@ -1770,6 +1884,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_20: {
     labelNo: '20',
     title: '🗺️ 대동여지도를 만든 김정호',
+    paragraphMain: [
+      '김정호의 지리에 대한 관심과 정확한 지도의 필요성',
+      '30여 년간 전국 답사와 지리 정보 수집',
+      '대동여지도 완성과 휴대 가능한 22첩 구성',
+      '목판 인쇄와 대동여지도의 가치 인정'
+    ],
     passage: [
       '김정호는 조선 후기의 <b>지리학자</b>로, 우리나라 최고의 지도인 <b>대동여지도</b>를 만든 인물이에요. 그는 어린 시절부터 <b>지리</b>에 큰 관심을 가졌고, 정확한 지도를 만들겠다는 꿈을 품었습니다. 당시 조선에는 제대로 된 전국 지도가 없었어요. 기존의 지도들은 <b>정확도</b>가 떨어지고 정보가 부족하여 실제 사용하기 어려웠습니다.',
       '김정호는 직접 <b>측량</b>을 하고 자료를 모아 정확한 지도를 만들기로 결심했어요. 30여 년 동안 전국 각지를 <b>답사</b>하며 지리 정보를 <b>수집</b>했습니다. 산과 강, 도로와 마을의 위치를 직접 확인하고 기록했어요. 그 과정에서 수많은 고생을 했지만 포기하지 않았습니다.',
@@ -1860,6 +1980,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_21: {
     labelNo: '21',
     title: '🔫 독립을 위해 싸운 안중근',
+    paragraphMain: [
+      '안중근의 성장 배경과 을사늑약 이후 독립운동에 투신',
+      '하얼빈 역에서 이토 히로부미를 저격하고 대한 만세를 외침',
+      '재판에서 정당한 전쟁 행위임을 주장',
+      '옥중에서 동양평화론 집필과 순국'
+    ],
     passage: [
       '안중근은 대한제국 시대의 <b>독립운동가</b>로, 일본 <b>침략</b>에 맞서 싸운 민족의 영웅이에요. 1879년 황해도에서 태어난 안중근은 어린 시절부터 무예와 학문을 함께 익혔습니다. 그는 뛰어난 사격 실력을 가졌으며, <b>정의</b>와 평화를 중시했어요. 1905년 일본은 <b>을사늑약</b>을 강제로 체결하여 대한제국의 <b>외교권</b>을 빼앗았습니다. 이에 안중근은 분노하여 독립운동에 <b>투신</b>했어요.',
       '안중근은 국내에서 <b>의병</b> 활동을 하다가 만주로 건너가 독립군을 조직하고 일본군과 직접 싸웠습니다. 1909년 10월 26일, 중국 하얼빈 역에서 일본의 초대 <b>통감</b>이자 을사늑약의 주역인 이토 히로부미를 저격했어요. 안중근은 세 발의 총을 쏘아 그를 <b>처단</b>했고, 현장에서 "대한 만세!"를 외쳤습니다.',
@@ -1950,6 +2076,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_22: {
     labelNo: '22',
     title: '🇰🇷 만세를 외친 유관순',
+    paragraphMain: [
+      '유관순의 성장과 3·1 운동 발발',
+      '고향으로 돌아가 만세운동 조직',
+      '아우내 만세운동과 진압, 체포',
+      '수감과 옥중 만세, 순국'
+    ],
     passage: [
       '유관순은 일제강점기의 <b>독립운동가</b>로, 열일곱 살의 나이에 만세운동을 이끈 민족의 영웅이에요. 1902년 충청남도 천안에서 태어난 유관순은 어린 시절부터 똑똑하고 용감했습니다. 그녀는 이화학당에 입학하여 공부하던 중, 1919년 3월 1일 서울에서 <b>3·1 운동</b>이 일어났어요. 일본의 식민 지배에 <b>항거</b>하여 전국에서 "대한 독립 만세!"를 외치는 운동이 시작된 것입니다.',
       '유관순도 서울의 만세시위에 참여했어요. 그러나 일제가 학교를 <b>휴교</b>시키자, 유관순은 고향으로 내려가 직접 만세운동을 조직하기로 결심했습니다. 그녀는 고향 천안의 아우내 장터에서 만세운동을 계획했어요. 밤마다 마을을 돌며 사람들을 <b>설득</b>하고, 태극기를 만들어 나눠 주었습니다.',
@@ -2040,6 +2172,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_23: {
     labelNo: '23',
     title: '💪 조국을 위해 목숨 바친 윤봉길',
+    paragraphMain: [
+      '윤봉길의 성장과 중국행 결심',
+      '임시정부와 한인애국단 가입',
+      '상하이 의거 실행과 체포',
+      '의거의 세계적 반향과 순국'
+    ],
     passage: [
       '윤봉길은 일제강점기의 <b>독립운동가</b>로, 상하이 의거로 세계에 한국 독립의 의지를 알린 영웅이에요. 1908년 충청남도 예산에서 태어난 윤봉길은 어린 시절부터 학문에 뛰어났고, 정의감이 강했습니다. 그는 농촌 <b>계몽</b>운동을 하며 고향에서 야학을 열어 문맹 퇴치에 앞장섰어요. 스물한 살이 되던 해, 조국 <b>독립</b>을 위해 중국으로 떠났습니다.',
       '"장부가 집을 나서면 살아서 돌아오지 않는다"는 그의 말에는 굳은 <b>결의</b>가 담겨 있었어요. 중국 상하이에서 윤봉길은 김구 선생이 이끄는 대한민국 <b>임시정부</b>와 한인애국단에 가입했습니다. 1932년 4월 29일, 상하이 홍커우 공원에서 일본군의 전승기념 행사가 열렸어요.',
@@ -2131,6 +2269,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_24: {
     labelNo: '24',
     title: '🕊️ 독립운동의 지도자 김구',
+    paragraphMain: [
+      '김구의 성장과 초기 독립운동 활동',
+      '임시정부 주석과 한인애국단 의거 지휘',
+      '항일 투쟁과 광복',
+      '통일 노력과 백범일지'
+    ],
     passage: [
       '김구는 대한민국 <b>임시정부</b>의 주석으로, 평생을 조국 독립에 바친 위대한 지도자예요. 1876년 황해도에서 태어난 김구는 어린 시절 가난했지만 학문에 뜻을 두었습니다. 청년 시절 동학농민운동에 참여했고, <b>을미사변</b>으로 명성황후가 시해되자 일본인을 처단하기도 했어요. 이후 투옥과 탈옥을 겪으며 <b>독립</b>의 의지를 더욱 굳혔습니다.',
       '1919년 중국 상하이에서 대한민국 임시정부가 수립되자, 김구는 <b>주석</b>이 되어 임시정부를 이끌었어요. 그는 <b>한인애국단</b>을 결성하여 이봉창, 윤봉길 의사의 의거를 지휘했습니다. 이 의거들은 세계에 한국 독립의 의지를 알리는 데 큰 역할을 했어요. 일제는 김구를 잡기 위해 <b>현상금</b>을 걸었습니다.',
@@ -2222,6 +2366,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_25: {
     labelNo: '25',
     title: '✍️ 명필의 대가 한석봉',
+    paragraphMain: [
+      '한석봉의 성장과 절에서 서예 공부',
+      '어머니와 캄캄한 방에서 떡 썰기 시합',
+      '다시 정진하여 조선 제일의 명필이 됨',
+      '석봉체의 영향과 인내의 상징'
+    ],
     passage: [
       '한석봉은 조선 시대 최고의 <b>명필</b>로, 뛰어난 글씨 솜씨로 이름을 날린 서예가예요. 1543년에 태어난 한석봉(본명 한호)은 어린 시절부터 글씨 쓰기를 좋아했습니다. 그러나 가정 형편이 어려워 정식으로 <b>서예</b>를 배우기 어려웠어요. 어머니는 아들의 재능을 알아보고, 어렵게 모은 돈으로 한석봉을 절에 보내 글씨 공부를 하게 했습니다.',
       '한석봉의 어머니와 관련된 유명한 <b>일화</b>가 있어요. 절에서 공부하던 한석봉이 몇 년 만에 집에 돌아왔을 때, 어머니는 캄캄한 방에서 시합을 제안했습니다. 어머니는 떡을 썰고, 한석봉은 글씨를 쓰는 것이었어요. 불을 켜고 보니 어머니의 떡은 <b>균일</b>하게 썰어져 있었지만, 한석봉의 글씨는 삐뚤빼뚤했습니다.',
@@ -2312,6 +2462,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_26: {
     labelNo: '26',
     title: '🖌️ 서민의 삶을 그린 김홍도',
+    paragraphMain: [
+      '김홍도의 성장과 도화서 화원으로서의 활동',
+      '풍속화 대표작 씨름과 서당의 특징',
+      '배경을 간략히 하고 인물에 집중하는 화법',
+      '서민의 삶을 기록한 위대한 예술가'
+    ],
     passage: [
       '김홍도는 조선 후기 최고의 <b>화가</b>로, 서민들의 일상을 생동감 있게 그린 풍속화로 유명해요. 1745년에 태어난 김홍도(호 단원)는 어린 시절부터 그림에 뛰어난 <b>재능</b>을 보였습니다. 그는 <b>도화서</b>(왕실 그림을 담당하는 기관)의 화원이 되어 정조 임금의 총애를 받았어요. 김홍도는 <b>산수화</b>, 인물화, 불교화 등 다양한 장르를 소화했지만, 특히 <b>풍속화</b>에서 뛰어난 업적을 남겼습니다.',
       '김홍도의 풍속화는 농부, <b>장인</b>, 상인 등 평범한 사람들의 모습을 담고 있어요. 대표작인 "씨름"에서는 씨름하는 두 사람과 이를 구경하는 사람들의 모습이 <b>역동적</b>으로 그려져 있습니다. "서당"에서는 훈장님께 혼나는 아이와 이를 지켜보며 웃는 친구들의 모습이 <b>익살</b>스럽게 표현되어 있어요.',
@@ -2400,6 +2556,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_27: {
     labelNo: '27',
     title: '👘 아름다움을 그린 신윤복',
+    paragraphMain: [
+      '신윤복 소개와 김홍도와의 차이',
+      '대표작 미인도와 월하정인의 특징',
+      '단오풍정과 파격적인 화풍',
+      '예술적 가치와 평가'
+    ],
     passage: [
       '신윤복은 조선 후기의 <b>화가</b>로, 김홍도와 함께 조선을 대표하는 <b>풍속화가</b>예요. 1758년경에 태어난 신윤복(호 혜원)은 아버지도 화원이었던 화가 집안 출신입니다. 김홍도가 서민들의 일상을 그렸다면, 신윤복은 주로 <b>양반</b>과 기녀들의 모습, 남녀 간의 사랑, 도시의 <b>유흥</b> 문화를 그렸어요.',
       '신윤복의 그림은 <b>섬세</b>하고 아름다운 선과 화려한 <b>색채</b>가 특징입니다. 대표작인 "미인도"는 조선 여인의 아름다움을 표현한 <b>걸작</b>으로, 여인의 우아한 자태와 표정이 매우 정교하게 그려져 있어요. "월하정인"은 달빛 아래 만나는 남녀의 모습을 <b>낭만적</b>으로 그린 작품입니다.',
@@ -2490,6 +2652,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_28: {
     labelNo: '28',
     title: '📝 열하일기를 쓴 박지원',
+    paragraphMain: [
+      '박지원의 성장과 실학 연구',
+      '열하일기 집필',
+      '소설 집필 (허생전, 양반전, 호질)',
+      '비판 정신과 사회 개혁 요구'
+    ],
     passage: [
       '박지원은 조선 후기의 <b>실학자</b>이자 문학가로, 열하일기라는 명작을 남긴 인물이에요. 1737년에 태어난 박지원(호 연암)은 양반 가문 출신이었지만, 과거 시험에는 응시하지 않고 학문과 <b>저술</b>에 전념했습니다. 그는 당시 조선이 청나라에 비해 뒤처져 있다고 생각하고, <b>실학</b>을 연구했어요. 그는 글재주가 뛰어나 <b>문장가</b>로도 유명했습니다.',
       '1780년, 박지원은 청나라 건륭제의 70세 생일을 축하하는 <b>사절단</b>에 참여하여 중국을 방문했어요. 이때의 경험을 기록한 것이 바로 <b>열하일기</b>입니다. 열하일기는 청나라의 발전된 <b>문물</b>과 제도를 조선에 소개하고 <b>개혁</b>을 촉구하는 내용을 담고 있어요. 박지원의 날카로운 <b>관찰력</b>과 유머러스한 문체는 열하일기를 명작으로 만들었습니다.',
@@ -2581,6 +2749,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_29: {
     labelNo: '29',
     title: '✝️ 첫 한국인 신부 김대건',
+    paragraphMain: [
+      '김대건의 성장과 천주교 집안 배경',
+      '유학과 신부 서품, 선교 활동',
+      '체포와 배교 거부',
+      '순교와 성인 시성'
+    ],
     passage: [
       '김대건은 한국인 최초의 <b>가톨릭</b> 사제(신부)로, 신앙을 위해 목숨을 바친 <b>순교자</b>예요. 1821년 충청남도 당진에서 태어난 김대건은 <b>독실</b>한 천주교 집안에서 자랐습니다. 당시 조선에서는 천주교가 금지되어 있었고, 신자들은 <b>박해</b>를 받았어요. 김대건의 증조부, 아버지도 신앙 때문에 순교했습니다.',
       '열다섯 살 때, 김대건은 신부가 되기 위해 중국 마카오로 <b>유학</b>을 떠났어요. 그는 험난한 여정을 거쳐 <b>신학</b>을 공부하고, 1845년 중국 상하이에서 사제 서품을 받아 한국인 최초의 신부가 되었습니다. 김대건 신부는 조선으로 돌아와 <b>선교</b> 활동을 시작했어요. 비밀리에 신자들을 만나 <b>미사</b>를 집전하고, 세례를 주며 복음을 전파했습니다.',
@@ -2672,6 +2846,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_30: {
     labelNo: '30',
     title: '🔤 한글 연구의 아버지 주시경',
+    paragraphMain: [
+      '주시경의 성장과 국어 연구의 중요성 인식',
+      '한글 문법 연구와 저술 활동',
+      '한글 보급과 제자 양성',
+      '제자들의 한글 연구 계승과 업적'
+    ],
     passage: [
       '주시경은 대한제국과 일제강점기에 활동한 <b>국어학자</b>로, 한글의 체계를 <b>정립</b>하고 보급에 앞장선 인물이에요. 1876년 황해도에서 태어난 주시경은 어린 시절부터 우리말과 글에 관심이 많았습니다. 당시 조선의 <b>지식인</b>들은 한문을 더 중요하게 여겼지만, 주시경은 우리 <b>국어</b>를 연구하고 발전시켜야 한다고 생각했어요.',
       '그는 "말이 오르면 나라가 오르고, 말이 내리면 나라가 내린다"고 하여 언어와 민족 <b>정체성</b>의 관계를 강조했습니다. 주시경은 한글의 <b>문법</b>을 과학적으로 정리하여 국어문법, 대한국어문법 등의 책을 <b>저술</b>했어요. 특히 "한글"이라는 이름을 처음 사용한 것도 주시경입니다.',
@@ -2759,6 +2939,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_31: {
     labelNo: '31',
     title: '👶 어린이날을 만든 방정환',
+    paragraphMain: [
+      '방정환의 성장과 어린이 인권 인식',
+      '어린이 잡지 창간과 어린이날 제정',
+      '동화 구연과 어린이 가능성 강조',
+      '서거와 유산'
+    ],
     passage: [
       '방정환은 일제강점기의 <b>아동문학가</b>이자 어린이 <b>인권</b> 운동가로, 어린이날을 만든 인물이에요. 1899년 서울에서 태어난 방정환은 <b>천도교</b>에 입교한 후 어린이의 <b>권리</b>와 교육에 관심을 갖게 되었습니다. 당시 아이들은 "어린것", "아해"라고 불리며 존중받지 못했어요. 방정환은 아이들을 <b>인격체</b>로 존중해야 한다고 생각하고, <b>어린이</b>라는 말을 널리 퍼뜨렸습니다.',
       '방정환은 1922년 어린이 잡지 "어린이"를 <b>창간</b>하여 아이들에게 읽을거리를 제공했어요. 또한 1923년 5월 1일을 첫 <b>어린이날</b>로 정하고 기념행사를 열었습니다. 그는 "어린이에게 경어를 쓰라", "어린이를 때리지 말라" 등의 <b>선언</b>을 발표하여 어린이 인권 신장에 앞장섰어요.',
@@ -2851,6 +3037,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_32: {
     labelNo: '32',
     title: '🚢 해상왕 장보고',
+    paragraphMain: [
+      '장보고의 성장과 당나라 활동',
+      '청해진 설치와 해적 소탕',
+      '무역 장악과 동아시아 경제 발전',
+      '비극적 최후와 역사적 의의'
+    ],
     passage: [
       '장보고는 통일신라 시대의 인물로, 동아시아 바다를 지배한 <b>해상왕</b>이에요. 대략 790년경에 태어난 것으로 <b>추정</b>됩니다. 장보고는 뛰어난 <b>무예</b>와 리더십을 가지고 있었어요. 젊은 시절 당나라로 건너가 군대에서 두각을 나타내어 <b>장교</b>까지 올랐습니다. 그러나 그는 신라인들이 <b>노예</b>로 팔려가는 비참한 현실을 목격했어요.',
       '장보고는 신라인들의 고통을 해결하기 위해 <b>귀국</b>하여 흥덕왕에게 건의했습니다. 청해진(지금의 완도)에 <b>군사</b> 기지를 설치하고 해적을 <b>소탕</b>할 것을 제안했어요. 828년 장보고는 청해진 대사가 되었습니다. 1만 명의 군사를 이끈 장보고는 해적들을 모두 소탕하고 바닷길을 안전하게 만들었어요.',
@@ -2946,6 +3138,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_33: {
     labelNo: '33',
     title: '👑 신라의 첫 여왕 선덕여왕',
+    paragraphMain: [
+      '선덕여왕의 즉위 배경',
+      '첨성대와 황룡사 9층 목탑 건립',
+      '불교 장려와 인재 등용',
+      '삼국통일 기반과 역사적 의의'
+    ],
     passage: [
       '선덕여왕은 신라의 제27대 왕으로, 한국 역사상 최초의 <b>여왕</b>이에요. 진평왕의 딸로 태어난 선덕여왕은 어린 시절부터 <b>총명</b>하고 <b>지혜</b>로웠습니다. 아버지 진평왕이 아들 없이 세상을 떠나자, 632년 선덕여왕이 왕위에 올랐어요. <b>재위</b> 기간 동안 신라의 <b>문화</b>와 정치를 발전시키기 위해 많은 노력을 기울였습니다.',
       '선덕여왕의 가장 큰 <b>업적</b> 중 하나는 <b>첨성대</b>를 세운 것이에요. 첨성대는 동아시아에서 현존하는 가장 오래된 <b>천문</b> 관측대로, 별을 관찰하고 농사철을 알려주는 데 사용되었습니다. 선덕여왕은 또한 황룡사 9층 <b>목탑</b>을 세웠는데, 이 탑은 당시 동아시아에서 가장 높은 건축물이었어요. 이러한 건축물들은 신라의 <b>국력</b>을 과시하고 백성들에게 자부심을 심어 주었습니다.',
@@ -3042,6 +3240,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_34: {
     labelNo: '34',
     title: '🏰 고구려의 명장 연개소문',
+    paragraphMain: [
+      '연개소문의 정변과 권력 장악',
+      '당나라 침략과 안시성 전투',
+      '당군 격퇴와 강력한 리더십',
+      '사후 고구려 멸망'
+    ],
     passage: [
       '연개소문은 고구려 말기의 <b>권력자</b>이자 명장으로, 당나라의 침략을 막아낸 인물이에요. 7세기 초에 태어난 것으로 <b>추정</b>됩니다. 연개소문은 고구려의 높은 <b>귀족</b> 가문 출신으로, 642년 <b>정변</b>을 일으켜 <b>대막리지</b>(최고 관직)가 되어 고구려의 <b>실권</b>을 장악했어요.',
       '당시 당나라 태종은 천하통일의 <b>야망</b>을 품고 고구려 정복을 계획했습니다. 645년, 당 태종은 직접 20만 대군을 이끌고 고구려를 <b>침략</b>했어요. 연개소문은 뛰어난 군사 <b>전략</b>으로 당군에 맞섰습니다. 특히 <b>안시성</b> 전투에서 고구려군은 88일 동안 성을 지키며 당군을 <b>격퇴</b>했어요.',
@@ -3134,6 +3338,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_35: {
     labelNo: '35',
     title: '⚔️ 황산벌의 영웅 계백',
+    paragraphMain: [
+      '황산벌 전투 배경과 결사대',
+      '비장한 결심과 사기 북돋움',
+      '네 번의 승리와 최후의 전사',
+      '충절의 상징으로 기억됨'
+    ],
     passage: [
       '계백은 백제의 마지막 명장으로, 황산벌 전투에서 나라를 위해 목숨을 바친 <b>충신</b>이에요. 계백은 뛰어난 <b>무예</b>와 <b>용기</b>를 갖추었습니다. 660년, 신라와 당나라 <b>연합군</b>이 백제를 공격해 왔을 때, 계백은 5,000명의 <b>결사대</b>를 이끌고 황산벌에서 적을 맞아 싸웠어요. 적군 5만 명에 비해 계백의 군대는 10분의 1에 불과했습니다.',
       '전투에 나서기 전, 계백은 <b>비장</b>한 결심을 했어요. 그는 자신의 <b>가족</b>을 직접 죽였다고 전해집니다. 전쟁에서 지면 가족이 적에게 <b>치욕</b>을 당할 것을 두려워했기 때문이에요. 이 결정은 당시에는 죽음을 각오한 결사의 <b>의지</b>를 보여주는 행동이었습니다. 계백은 병사들에게 "한 사람이 천 명을 당해낼 수 있다"며 <b>사기</b>를 북돋웠어요.',
@@ -3229,6 +3439,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_36: {
     labelNo: '36',
     title: '🗡️ 고려의 충신 최영',
+    paragraphMain: [
+      '최영의 성장과 청렴함',
+      '외적 격퇴와 청렴한 삶',
+      '위화도 회군과 이성계와의 대립',
+      '처형과 역사적 평가'
+    ],
     passage: [
       '최영은 고려 말기의 명장으로, 나라에 대한 <b>충성</b>과 <b>청렴</b>함으로 유명한 인물이에요. 1316년에 태어난 최영은 <b>무인</b> 집안 출신으로, 어린 시절부터 무예를 익혔습니다. 그의 아버지는 "황금 보기를 돌같이 하라"는 <b>유언</b>을 남겼는데, 최영은 평생 이 말을 지키며 살았어요.',
       '최영은 고려군의 장군으로서 <b>왜구</b>, 홍건적 등 외적의 침입을 물리치며 큰 공을 세웠습니다. 특히 홍건적이 개경을 점령했을 때, 최영은 이를 <b>격퇴</b>하고 왕을 구해 <b>영웅</b>으로 칭송받았어요. 높은 <b>벼슬</b>에 올랐음에도 <b>불의</b>한 방법으로 재물을 모으는 것을 거부했습니다. 그는 <b>뇌물</b>을 거절하고 권력을 사사로이 쓰지 않아, 백성들의 존경을 받았어요.',
@@ -3323,6 +3539,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_37: {
     labelNo: '37',
     title: '🏯 행주대첩의 명장 권율',
+    paragraphMain: [
+      '권율의 성장과 의병 활동',
+      '행주대첩 승리',
+      '행주치마 일화와 전략',
+      '이후 활동과 업적'
+    ],
     passage: [
       '권율은 조선 시대의 명장으로, <b>임진왜란</b> 때 행주대첩을 이끈 영웅이에요. 1537년에 태어난 권율은 <b>명문</b> 집안 출신으로, 마흔여섯 살에 문과에 <b>급제</b>했습니다. 1592년 임진왜란이 일어나자, 권율은 <b>의병</b>을 일으켜 일본군에 맞서 싸웠어요. 전라도에서 군사를 모아 <b>북상</b>하며 여러 전투에서 승리했습니다. 특히 이치 전투에서 일본군을 크게 물리쳐 <b>도원수</b>로 임명되었어요.',
       '1593년 2월, 권율은 행주산성에서 역사적인 승리를 거두었습니다. 일본군 3만 명이 행주산성을 <b>포위</b>하고 공격해 왔지만, 권율은 2,300명의 병력으로 이를 막아냈어요. 하루 동안 아홉 번의 공격을 받았지만, 조선군은 <b>화차</b>, 화살, 돌 등을 사용해 <b>격퇴</b>했습니다.',
@@ -3418,6 +3640,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_38: {
     labelNo: '38',
     title: '🔥 의병장 곽재우',
+    paragraphMain: [
+      '곽재우의 의병 모집과 홍의장군',
+      '게릴라 전술과 정암진 전투',
+      '전국 의병 운동의 계기',
+      '전쟁 후 겸손한 삶'
+    ],
     passage: [
       '곽재우는 조선 시대 <b>임진왜란</b> 때 최초로 의병을 일으킨 <b>의병장</b>이에요. 1552년 경상남도 의령에서 태어난 곽재우는 <b>과거</b>에 급제했으나 벼슬에 뜻이 없어 고향에서 살았습니다. 1592년 임진왜란이 일어나 일본군이 <b>순식간</b>에 조선을 점령하자, 곽재우는 자신의 재산을 팔아 <b>의병</b>을 모집했어요. 붉은 옷을 입고 싸운 그는 "홍의장군"이라는 <b>별명</b>을 얻었습니다.',
       '곽재우는 관군이 무너진 상황에서 최초로 일어나 <b>저항</b>을 시작한 인물이에요. 그의 의병은 낙동강 유역에서 <b>게릴라</b> 전술을 사용하여 적을 <b>기습</b>하고 후퇴하기를 반복했습니다. 적의 <b>보급로</b>를 끊고 <b>매복</b> 공격을 하는 전략이었어요. 특히 정암진 전투에서는 일본군을 크게 물리쳐 경상도 지역의 <b>사기</b>를 올렸습니다.',
@@ -3510,6 +3738,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_39: {
     labelNo: '39',
     title: '🌱 목화씨를 가져온 문익점',
+    paragraphMain: [
+      '원나라와 목화씨 발견',
+      '목화씨 반입 과정',
+      '재배 성공과 물레 발명',
+      '의생활 개선과 혜택'
+    ],
     passage: [
       '문익점은 고려 말기의 관리로, 중국에서 <b>목화씨</b>를 가져와 우리나라에 목화 <b>재배</b>를 시작하게 한 인물이에요. 1329년 경상남도 산청에서 태어난 문익점은 공민왕 때 과거에 <b>급제</b>하여 관리가 되었습니다. 1363년, 문익점은 원나라에 <b>사신</b>으로 갔다가 정치적 사건에 휘말려 <b>귀양</b>을 가게 되었어요. 목화에서 얻는 <b>솜</b>은 유용했지만, 당시 원나라는 목화씨 <b>반출</b>을 금지하고 있었습니다.',
       '문익점은 목화씨를 몰래 가져오기로 결심했어요. 그는 <b>붓대</b> 끝에 목화씨 10알을 숨겨 고려로 돌아왔습니다. 이 행동은 <b>발각</b>되면 목숨을 잃을 수 있는 위험한 일이었지만, 문익점은 백성들의 <b>생활</b>을 위해 용기를 냈어요. 고려에 돌아온 문익점은 장인 정천익과 함께 목화를 재배하기 시작했습니다.',
@@ -3606,6 +3840,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_40: {
     labelNo: '40',
     title: '📜 조선 최고의 여류 시인 허난설헌',
+    paragraphMain: [
+      '성장과 신동 시절',
+      '고난과 시 창작',
+      '유언과 허균의 보관',
+      '사후 인정과 문학적 유산'
+    ],
     passage: [
       '허난설헌은 조선 시대 최고의 <b>여류 시인</b>으로, 뛰어난 문학적 <b>재능</b>으로 이름을 남긴 인물이에요. 1563년 강원도 강릉에서 태어난 허난설헌(본명 허초희)은 <b>명문</b> 집안에서 자랐습니다. 그녀의 남동생 <b>허균</b>은 홍길동전을 쓴 작가예요. 허난설헌은 어린 시절부터 시를 잘 지어 "<b>신동</b>"이라 불렸습니다.',
       '여덟 살 때 지은 <b>광한전백옥루상량문</b>은 어린 나이에 쓴 것이라고 믿기 어려울 만큼 뛰어났어요. 그러나 허난설헌의 삶은 <b>순탄</b>치 않았습니다. 열다섯 살에 결혼했지만 시집 생활이 힘들었고, 더 큰 <b>슬픔</b>은 어린 자녀 둘을 잃은 것이었어요. 그녀의 시에는 인생의 <b>덧없음</b>, 그리움, 슬픔 등이 아름답게 담겨 있습니다.',
@@ -3700,6 +3940,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_people1_41: {
     labelNo: '41',
     title: '🎨 관찰로 세상을 그린 소년, 레오나르도',
+    paragraphMain: [
+      '자연 관찰과 메두사 그림',
+      '베로키오 제자 시절과 독립',
+      '다재다능한 예술가로서의 업적'
+    ],
     passage: [
       '이탈리아의 한 작은 시골 마을에서 자란 레오나르도는 매일같이 마을의 들판과 숲을 돌아다니며 자연을 관찰하던 소년이었어요. 그는 작은 곤충 한 마리, 돌 하나에도 관심을 보이며 "왜 이렇게 생겼을까?" 하고 스스로 질문을 던지곤 했지요. 그러던 어느 날, 마을의 농부가 낡은 방패를 들고 와 특별한 그림을 부탁했습니다. 레오나르도는 며칠 동안이나 어떤 그림을 그릴지 고민하다가, 사람들이 보면 깜짝 놀랄 만한 괴물 \'메두사\'를 그려 넣기로 했어요. 더욱 <b>실감 나</b>게 표현하려고 직접 뱀을 관찰하며 세세한 부분까지 그렸지요. <b>완성</b>된 그림을 본 아버지는 진짜 뱀이라 착각할 만큼 생생한 모습에 크게 놀라며 아들의 재능을 인정하게 되었답니다.',
       '그림 실력이 입소문을 타자, 레오나르도는 피렌체의 유명한 화가 베로키오의 작업실에서 <b>제자</b>가 되어 본격적으로 그림을 배우게 되었어요. 그는 스승의 그림을 옆에서 보며 색을 섞는 방법, 사람의 몸을 표현하는 법, 빛을 다루는 기술 등을 하나하나 익혔습니다. 시간이 흐르자 레오나르도는 스승을 도와 작품을 <b>완성</b>할 정도로 실력이 향상했고, 점차 사람들 사이에서 그의 이름이 알려지기 시작했지요. 이후 <b>독립</b>하여 밀라노로 간 레오나르도는 큰 벽화 작업을 맡아 오랜 시간 정성을 들여 완성했습니다. 그는 작업 외에도 자신의 생각과 발견을 작은 종이에 기록하는 습관이 있었고, 이 메모들이 모여 세상에서 유명한 \'다빈치 노트\'가 되었어요. 그림뿐 아니라 일상에서 떠오른 아이디어까지 적어 두는 모습은 많은 사람들에게 영감을 주었습니다.',
@@ -5026,94 +5271,97 @@ function applyContentPack(unitKey) {
       const seconds = totalSec % 60;
       return `${minutes}분 ${seconds}초`;
     };
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
-    // 문장 클릭 시 선택 유지
-    passageBox.addEventListener('click', (e) => {
-      const sentence = e.target.closest('.sentence');
-      if (!sentence) return;
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
 
-      // 첫 클릭 시 시작 시간 기록
-      if (!readingStartTime) {
-        readingStartTime = new Date();
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
-      }
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
 
-      sentence.classList.toggle('selected');
-      saveSelection();
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
 
-      // 모든 문장 선택 완료 시 축하
-      const total = passageBox.querySelectorAll('.sentence').length;
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
-      if (selected === 0) {
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = '00';
-        if (secInput) secInput.value = '00';
-        readingStartTime = null;
-        localStorage.removeItem(timeKey);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
       }
-      if (total > 0 && total === selected) {
-        // 완료 시간 기록
-        const endTime = new Date();
-        const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({
-          start: readingStartTime.toISOString(),
-          end: endTime.toISOString(),
-          duration: duration
-        }));
-
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'on_people1_01';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-
-        const toast = document.createElement('div');
-        toast.className = 'complete-toast';
-        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
-          <div style="font-size:14px;color:#666;line-height:1.6;">
-            <div>시작: ${formatDateTime(readingStartTime)}</div>
-            <div>완료: ${formatDateTime(endTime)}</div>
-            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
-          </div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-
-        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
-        const shapes = ['●','★','◆','♥','✦'];
-        for (let i = 0; i < 60; i++) {
-          const sparkle = document.createElement('div');
-          sparkle.className = 'sparkle-rain';
-          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-          sparkle.style.left = Math.random() * 100 + 'vw';
-          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
-          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
-          document.body.appendChild(sparkle);
-          setTimeout(() => sparkle.remove(), 3500);
-        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

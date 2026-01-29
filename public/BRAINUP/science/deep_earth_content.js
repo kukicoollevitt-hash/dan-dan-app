@@ -44,6 +44,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_01: {
     labelNo: '01',
     title: '🌍 태양계 성운에서 분화까지, 지구 형성의 천문학적 과정',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '약 46억 년 전 <b>태양계 성운</b>이라 불리는 거대한 가스와 먼지 구름이 자체 중력에 의해 수축하기 시작하면서 지구를 포함한 태양계의 역사가 시작되었다. 성운의 중심부에서는 물질이 집중되어 <b>원시 태양</b>이 형성되었고, 주변에는 원반 형태의 <b>원시 행성계 원반</b>이 만들어져 태양 주위를 공전했다. 이 원반 내에서 미세한 먼지 입자들이 정전기력과 중력에 의해 서로 달라붙는 <b>강착</b>(accretion) 과정을 거치며 점차 크기가 커져 갔으며, 수 밀리미터에서 수 센티미터 크기의 입자들이 모여 <b>미행성체</b>(planetesimal)라 불리는 수 킬로미터 규모의 천체로 성장했다. 태양에서 가까운 내행성 영역에서는 휘발성 물질이 증발하여 암석과 금속 성분이 주로 남았고, 먼 외행성 영역에서는 얼음과 가스가 풍부하게 존재하여 오늘날 암석형 행성과 가스형 행성의 차이가 결정되었다.',
       '미행성체들은 상호 <b>중력 섭동</b>에 의해 궤도가 교란되면서 서로 충돌하고 합체하는 과정을 반복했으며, 이 과정을 <b>미행성 강착</b> 또는 <b>과두성장</b>(oligarchic growth)이라 한다. 충돌 과정에서 발생한 운동 에너지는 열로 전환되어 천체를 가열했고, 미행성체가 점점 커져 원시 행성 수준에 도달하면 중력이 강해져 더 많은 물질을 끌어모을 수 있게 되었다. 특히 화성 크기 정도의 원시 행성 <b>테이아</b>(Theia)가 원시 지구와 충돌한 <b>거대 충돌 가설</b>(Giant Impact Hypothesis)은 달의 기원을 설명하는 유력한 이론으로, 이 충돌로 방출된 물질이 지구 궤도에서 뭉쳐 달을 형성했다고 추정된다. 이러한 격렬한 충돌 사건들은 원시 지구에 막대한 에너지를 공급하여 표면 전체를 녹인 <b>마그마 바다</b>(magma ocean) 상태로 만들었다.',
@@ -139,6 +140,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_02: {
     labelNo: '02',
     title: '🌋 맨틀 대류에서 화산 분출까지, 지구 내부 열역학의 지표 표현',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '지구 내부에서 생성되는 <b>마그마</b>는 단순히 녹은 암석이 아니라 맨틀의 <b>부분 용융</b> 과정을 통해 형성되는 복잡한 규산염 용융체이며, 그 화학 조성은 모암의 성분과 용융 조건에 따라 크게 달라진다. 맨틀을 구성하는 <b>감람암</b>이 특정 온도-압력 조건에서 부분적으로 녹으면 현무암질 마그마가 생성되고, 이 마그마가 상승하면서 지각 물질을 동화하거나 <b>분별 결정</b> 작용을 거치면 안산암질, 유문암질 등 다양한 조성의 마그마로 분화한다. <b>맨틀 대류</b>는 지구 내부의 열을 표면으로 운반하는 핵심 메커니즘으로, 뜨거운 맨틀 물질이 상승하고 차가운 물질이 하강하는 순환 과정에서 마그마 생성의 근본적인 구동력을 제공한다.',
       '화산 활동의 지구조적 배경은 크게 세 가지로 구분되는데, 첫째는 <b>섭입대</b>에서 해양판이 대륙판 아래로 침강할 때 탈수 반응으로 인한 맨틀 쐐기의 용융이고, 둘째는 <b>해령</b>에서 판이 갈라지면서 맨틀이 상승하여 감압 용융되는 경우이며, 셋째는 <b>열점</b>에서 맨틀 플룸이 고정된 위치에서 지각을 뚫고 올라오는 현상이다. 섭입대 화산은 안데스 산맥이나 일본 열도처럼 폭발성이 강한 반면, 해령 화산은 대부분 해저에서 조용하게 분출하고, 열점 화산은 하와이처럼 판의 이동에 따라 화산섬 사슬을 형성한다. 이러한 지구조 환경의 차이는 분출되는 마그마의 성질과 화산의 형태를 결정하는 핵심 요인이다.',
@@ -217,7 +219,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['탈가스', '대기', '해양', '열수 분출공', '지열 에너지', '화산 폭발 지수', '화쇄류', '라하르', '기후 변화', '마그마', '부분 용융', '규산염 용융체', '감람암', '현무암질', '안산암질', '유문암질', '분별 결정', '맨틀 대류', '섭입대', '해령', '열점', '맨틀 플룸', '탈수 반응', '맨틀 쐐기', '감압 용융', '안데스 산맥', '일본 열도', '하와이', '화산섬 사슬', 'VEI', '로그 척도', '분출물', '분연주', '피나투보', '이산화황', '황산염 에어로졸', '태양 복사', '성층권', '원시 지구', '탄소 순환', '이산화탄소', '수증기', '질소', '화학합성 생물', '아이슬란드', '지열 발전', '재생 가능 에너지'],
     explain: {
       q1:'이후 2년간 지구 평균 기온이 약 0.5도 하강하였다',
-      q2:'',
+      q2:'화산 지대의 지하 열을 활용하는 재생 가능 에너지원으로, 아이슬란드는 전력의 약 30퍼센트를 지열 발전으로 충당하고 있다',
       q3:'화쇄류',
       q4:'마그마 생성의 근본적인 구동력을 제공한다',
       q5:''
@@ -247,6 +249,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
 ② 본문 2문단에서 "섭입대, 해령, 열점"은 각각 다른 지구조 환경에서 형성되며, "이러한 지구조 환경의 차이는 분출되는 마그마의 성질과 화산의 형태를 결정하는 핵심 요인"이라고 설명합니다. 따라서 동일한 환경에서 형성된다는 추론은 적절하지 않습니다.
 ③ 본문 3문단에서 "성층권에 주입된 이산화황이 황산염 에어로졸로 전환되어 태양 복사를 차단함으로써 이후 2년간 지구 평균 기온이 약 0.5도 하강하였다"고 설명합니다. 따라서 기온이 상승한다는 추론은 적절하지 않습니다.
 ④ 본문에서 지열 에너지는 재생 가능 에너지원으로 활용 가능하나, "화쇄류는 고온의 가스와 화산재가 시속 수백 킬로미터로 산사면을 내려오는 치명적인 현상", "라하르는 화산재와 물이 섞여 형성되는 화산 이류로 분출 후에도 오랜 기간 위험 요인으로 작용한다"고 설명합니다. 따라서 재해 위험이 전혀 없다는 추론은 적절하지 않습니다.`
+    },
+    creative: {
+      topic: '🌋 화산 활동의 영향 글쓰기',
+      hint: '💡 힌트) 화산 활동이 지구와 인류에게 미치는 긍정적 영향(지열 에너지, 비옥한 토양 등)과 부정적 영향(화쇄류, 라하르, 기후 변화 등)을 고려해서 써 보세요.',
+      examples: [
+        '예시 1) 만약 내가 화산 마을에 산다면, 지열 온천으로 따뜻한 겨울을 보낼 수 있지만 언제 폭발할지 걱정도 될 것 같다.',
+        '예시 2) 화산 폭발이 일어나면 화쇄류가 시속 수백 킬로미터로 내려와 위험하지만, 화산재가 쌓인 땅은 농사짓기에 좋다고 한다.',
+        '예시 3) 아이슬란드 사람들은 화산 덕분에 전력의 30%를 지열 발전으로 얻는다니, 화산과 함께 사는 지혜가 대단하다.'
+      ]
   }
   },
 
@@ -254,6 +265,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_03: {
     labelNo: '03',
     title: '🪨 암석 순환과 광물 조성, 지각 물질의 기원과 변환',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '지각을 구성하는 암석은 그 생성 과정에 따라 <b>화성암</b>, <b>퇴적암</b>, <b>변성암</b>의 세 범주로 분류되며, 이들은 <b>암석 순환</b>이라는 거대한 지질학적 사이클을 통해 상호 전환된다. 화성암은 마그마나 용암이 냉각·고결되어 형성되는 암석으로, 지구 지각 질량의 약 65퍼센트를 차지하는 가장 근원적인 암석 유형이다. 퇴적암은 기존 암석의 풍화·침식 산물이나 생물 유해, 화학 침전물이 <b>속성 작용</b>을 거쳐 고화된 것이며, 변성암은 기존 암석이 고온·고압 환경에서 <b>재결정 작용</b>을 통해 광물 조성이나 조직이 변화한 결과물이다. 이러한 삼대 암석군은 지구 역사 46억 년 동안 끊임없이 생성되고 파괴되며 순환해 왔다.',
       '화성암은 냉각 속도와 장소에 따라 <b>심성암</b>과 <b>화산암</b>으로 구분되는데, 심성암은 지하 수 킬로미터 깊이에서 마그마가 수십만 년에 걸쳐 서서히 냉각되며 형성되어 <b>조립질</b> 결정을 특징으로 한다. 화강암은 대표적인 심성암으로 석영, 장석, 운모 등의 광물이 맨눈으로 식별될 만큼 큰 결정을 이루며, 대륙 지각의 핵심 구성 물질이다. 반면 화산암은 지표에서 용암이 급속히 냉각되어 <b>세립질</b> 또는 <b>유리질</b> 조직을 가지며, 현무암은 해양 지각의 주요 구성 암석으로 철과 마그네슘이 풍부한 <b>고철질</b> 조성을 띤다. <b>보웬 반응 계열</b>은 마그마 냉각 시 광물이 특정 순서로 결정화되는 원리를 설명하며, 이를 통해 단일 마그마에서 다양한 화성암이 분화되는 과정을 이해할 수 있다.',
@@ -369,6 +381,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_04: {
     labelNo: '04',
     title: '🏜️ 풍화와 토양 생성, 암석권에서 생물권으로의 물질 전환',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>풍화</b>는 암석이 지표 환경에서 물리적·화학적·생물학적 작용을 받아 분해되는 과정으로, 지표면 물질 순환의 출발점이다. <b>물리적 풍화</b>는 암석의 화학 조성 변화 없이 기계적으로 파쇄되는 현상을 지칭하며, 대표적으로 <b>동결 파쇄</b>가 있는데 이는 암석 틈에 스며든 물이 얼면서 약 9퍼센트 부피 팽창하여 암석을 쪼개는 작용이다. <b>박리 작용</b>은 심성암이 지표에 노출될 때 상부 하중 감소로 인해 양파 껍질처럼 벗겨지는 현상이며, <b>열 팽창 수축</b>은 일교차가 큰 사막에서 암석 표면과 내부의 불균등한 온도 변화로 인해 균열이 발생하는 과정이다. 이러한 물리적 풍화는 암석의 표면적을 증가시켜 화학적 풍화의 효율을 높이는 전처리 역할을 수행한다.',
       '<b>화학적 풍화</b>는 암석을 구성하는 광물이 물, 산소, 이산화탄소, 유기산 등과 반응하여 화학 조성이 변화하는 과정이며, 기후 조건에 따라 풍화 속도가 크게 달라진다. <b>가수분해</b>는 물 분자가 광물 결정 구조에 침투하여 수소 이온이 양이온을 치환하는 반응으로, 장석이 점토 광물인 <b>카올리나이트</b>로 변하는 것이 대표적 예이다. <b>산화 작용</b>은 철 함유 광물이 산소와 결합하여 산화철을 형성하는 반응이며, 암석이 붉은색을 띠는 원인이 된다. <b>탄산화 작용</b>은 이산화탄소가 녹은 약산성 빗물이 탄산칼슘을 용해시키는 과정으로, 석회암 지역에서 <b>카르스트 지형</b>을 형성하는 핵심 기작이다.',
@@ -484,6 +497,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_05: {
     labelNo: '05',
     title: '🌊 하천 작용과 지형 발달, 유수의 침식·운반·퇴적 역학',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>하천</b>은 지표면에서 가장 활발한 지형 형성 작용을 수행하는 외적 영력으로, <b>침식</b>, <b>운반</b>, <b>퇴적</b>의 세 작용을 통해 지형을 조각한다. <b>유량</b>과 <b>유속</b>은 하천의 작용 능력을 결정하는 핵심 변수인데, 유량은 단위 시간당 흐르는 물의 양이고 유속은 물의 이동 속도이다. <b>흄의 제곱 법칙</b>에 따르면 유속이 2배 증가하면 운반력은 64배로 급증하여, 홍수 시 하천의 침식·운반 능력이 비약적으로 증대된다. 하천의 <b>유역</b>은 분수계로 둘러싸인 집수 영역을 의미하며, <b>유역 분지</b>의 형태와 면적은 하천의 유량 특성과 홍수 발생 패턴에 영향을 미친다.',
       '하천 <b>상류</b>는 급경사 구간으로 침식 작용이 우세하며, 특히 <b>하방 침식</b>이 탁월하여 깊은 <b>V자곡</b>을 형성한다. <b>폭포</b>는 암석 경도 차이로 인해 연암층이 선택적으로 침식되면서 형성되고, 폭포 기저부에는 와류에 의한 <b>폭호</b>가 발달한다. <b>하식애</b>는 측방 침식이 활발한 곡류부 공격사면에 형성되는 급경사 절벽이며, 하천이 단층선이나 절리를 따라 흐르면 <b>협곡</b>이 발달한다. 미국 그랜드캐니언은 콜로라도강이 약 500만 년에 걸쳐 고원을 하방 침식하여 형성한 세계 최대의 하식 협곡으로, 깊이가 1600미터에 달한다.',
@@ -599,6 +613,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_06: {
     labelNo: '06',
     title: '🌋 판 경계와 지진 발생 메커니즘, 탄성 반발설과 지진파 해석',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>지진</b>은 지각에 축적된 탄성 에너지가 순간적으로 방출되어 지진파를 발생시키는 현상으로, 대부분 <b>판 경계</b>를 따라 발생한다. <b>탄성 반발설</b>에 따르면 판의 상대적 운동에 의해 암석에 응력이 축적되고, 암석의 강도 한계를 초과하면 <b>단층</b>을 따라 급격한 변위가 발생하여 에너지가 방출된다. 지진이 시작되는 지하 지점을 <b>진원</b>이라 하고, 진원 바로 위 지표면 지점을 <b>진앙</b>이라 하며, 진원 깊이에 따라 천발·중발·심발 지진으로 분류된다. <b>규모(M)</b>는 지진이 방출한 총 에너지를 나타내는 로그 척도로, 규모가 1 증가할 때마다 에너지는 약 32배 증가한다.',
       '<b>지진파</b>는 <b>실체파</b>와 <b>표면파</b>로 구분되며, 실체파는 다시 <b>P파</b>와 <b>S파</b>로 나뉜다. P파는 매질의 진동 방향과 파의 진행 방향이 같은 종파로 모든 매질을 통과하며, S파는 진동 방향과 진행 방향이 수직인 횡파로 고체만 통과한다. S파가 외핵을 통과하지 못한다는 사실은 외핵이 액체 상태임을 증명하는 핵심 증거이다. <b>표면파</b>는 지표를 따라 전파되어 가장 큰 진폭과 피해를 유발하며, <b>러브파</b>와 <b>레일리파</b>로 구분된다. 지진파 도달 시간차 분석을 통해 진원 위치와 지구 내부 구조를 추정할 수 있다.',
@@ -714,6 +729,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_07: {
     labelNo: '07',
     title: '🏔️ 판구조론과 조산운동, 해저 확장에서 대륙 충돌까지',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>판구조론</b>은 지구 표면이 약 15개의 <b>암석권</b> 판으로 구성되어 있으며, 이 판들이 <b>연약권</b> 위에서 이동한다는 이론으로 현대 지구과학의 통합적 패러다임이다. 판의 이동은 <b>맨틀 대류</b>와 <b>섭입판 견인력</b>, <b>해령 밀어내기</b> 등 복합적 힘에 의해 구동되며, 연간 수 센티미터의 속도로 진행된다. 판 경계는 <b>발산 경계</b>, <b>수렴 경계</b>, <b>변환 경계</b>의 세 유형으로 분류되고, 각 경계에서 특징적인 지질 현상이 발생한다. <b>대륙 이동설</b>을 제안한 베게너의 가설은 <b>해저 확장설</b>과 결합되어 판구조론으로 발전하였으며, 고지자기 줄무늬, 해저 연령 분포, GPS 측정 등 다양한 증거가 이를 뒷받침한다.',
       '<b>조산운동</b>은 판의 수렴에 의해 산맥이 형성되는 지질학적 과정으로, 대륙-대륙 충돌, 해양-대륙 충돌, 섬호 형성 등 다양한 유형이 있다. <b>히말라야 산맥</b>은 인도판이 유라시아판과 충돌하면서 약 5000만 년 전부터 형성되기 시작한 대표적인 <b>충돌대 조산대</b>로, 현재도 연간 약 5밀리미터씩 융기하고 있다. 해양판이 대륙판 아래로 섭입하는 곳에서는 <b>안데스형 조산대</b>가 형성되며, 화산호와 해구가 평행하게 발달한다. <b>습곡</b>과 <b>단층</b>은 조산운동 과정에서 암석이 응력을 받아 변형되는 구조로, 습곡은 연성 변형, 단층은 취성 파괴를 반영한다.',
@@ -829,6 +845,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_08: {
     labelNo: '08',
     title: '📚 지층 누중과 퇴적 구조, 층서학적 기록 해석의 원리',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>지층</b>은 퇴적물이 연속적으로 쌓여 형성된 암석층으로, 지구 역사의 시간적 기록을 담고 있다. <b>지층 누중의 법칙</b>에 따르면 교란되지 않은 지층에서는 아래층이 위층보다 먼저 형성되었으며, 이는 <b>상대 연령</b> 결정의 기본 원리가 된다. <b>수평 퇴적의 법칙</b>은 퇴적물이 처음에는 수평에 가깝게 쌓인다는 원리로, 현재 기울어진 지층은 퇴적 후 <b>지각 변동</b>을 경험했음을 의미한다. <b>측방 연속의 법칙</b>은 같은 시기에 형성된 지층이 수평 방향으로 연속되어 있다는 원리인데, 침식이나 단층에 의해 분리되더라도 <b>대비</b>를 통해 동일 지층임을 확인할 수 있다. 이러한 <b>층서학</b>적 원리들은 17세기 니콜라스 스테노에 의해 정립되었으며, 현대 지질학의 토대가 되었다.',
       '<b>퇴적 구조</b>는 퇴적 당시의 환경 조건을 지시하는 암석 내 구조로, <b>층리</b>가 가장 기본적인 형태이다. <b>점이 층리</b>는 한 층 내에서 하부에서 상부로 갈수록 입자 크기가 감소하는 구조로, <b>저탁류</b>에 의한 심해 퇴적을 지시한다. <b>사층리</b>는 주 층리면과 경사를 이루는 세층리가 발달한 구조로, 사막의 <b>사구</b>나 하천의 삼각주 전면부에서 형성된다. 사층리의 경사 방향을 분석하면 과거 <b>고수류 방향</b>을 복원할 수 있어 고환경 해석에 중요하다. <b>연흔</b>은 수면이나 바람에 의해 형성되는 물결 모양 구조로, 대칭형 연흔은 파도 작용을, 비대칭형 연흔은 일방향 흐름을 지시한다. <b>건열</b>은 수분 증발에 의해 형성되는 다각형 균열로, 간헐적 노출 환경을 나타낸다.',
@@ -953,6 +970,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_09: {
     labelNo: '09',
     title: '🦴 화석의 형성과 고생물학, 생명 진화의 지질학적 기록',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>화석</b>은 과거 생물체의 유해나 흔적이 지질학적 과정을 통해 보존된 것으로, <b>고생물학</b>의 핵심 연구 대상이다. 화석화 과정인 <b>타포노미</b>는 생물이 죽은 후부터 화석이 발견되기까지의 모든 과정을 연구하는 분야로, 매몰, 분해, 광물 치환 등의 단계를 포함한다. <b>치환 화석</b>은 원래 생물체의 물질이 규산이나 탄산칼슘 같은 광물로 대체된 것이고, <b>주형 화석</b>은 생물체가 녹아 사라진 후 남은 공간이나 그 공간을 채운 물질이다. <b>압축 화석</b>은 잎이나 연체 생물이 퇴적물에 눌려 얇은 탄소막으로 보존된 형태로, 버제스 셰일의 캄브리아기 동물군이 대표적이다. <b>흔적 화석</b>은 발자국, 굴, 배설물 등 생물의 활동 흔적으로, 생물의 행동 양식을 추론하는 데 중요한 자료가 된다.',
       '<b>지질 시대</b>는 지구 역사를 생물의 대규모 변화를 기준으로 구분한 것으로, <b>이언</b>, <b>대</b>, <b>기</b>, <b>세</b>의 계층적 단위로 나뉜다. <b>선캄브리아 시대</b>는 지구 형성부터 약 5억 4천만 년 전까지의 시기로, 지구 역사의 약 88%를 차지한다. 이 시기에는 <b>스트로마톨라이트</b>를 형성한 남세균이 광합성을 통해 산소를 생산하여 <b>대산화 사건</b>을 일으켰으며, 이는 이후 복잡한 생명체 출현의 기반이 되었다. <b>에디아카라 동물군</b>은 선캄브리아 말기에 출현한 최초의 다세포 동물로, 대칭성을 가진 연체 생물들이 특징적이다. 캄브리아기 초에는 <b>캄브리아기 대폭발</b>이 일어나 현존하는 대부분의 동물 문이 짧은 시간 내에 출현했다.',
@@ -1057,6 +1075,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_10: {
     labelNo: '10',
     title: '🧲 지구 자기장과 다이나모 이론, 고지자기의 지질학적 응용',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>지구 자기장</b>은 지구가 가진 <b>쌍극자</b> 형태의 자기력으로, <b>자북극</b>과 <b>자남극</b>을 연결하는 축이 자전축과 약 11도 기울어져 있다. 지구 자기장의 기원을 설명하는 <b>다이나모 이론</b>에 따르면, <b>외핵</b>의 액체 철-니켈 합금이 지구 자전과 <b>열대류</b>의 영향으로 복잡하게 움직이면서 전기를 생성하고, 이 전류가 자기장을 유도한다. 이 과정은 <b>자기 유도</b>의 원리에 기반하며, 생성된 자기장이 다시 유체 운동에 영향을 주는 피드백 메커니즘을 형성한다. 지구 자기장의 세기는 지표면에서 약 25~65 마이크로테슬라이며, <b>복각</b>은 적도에서 0도, 자극에서 90도로 위도에 따라 변한다. <b>편각</b>은 진북과 자북 사이의 각도 차이로, 지역과 시간에 따라 변동한다.',
       '<b>자기권</b>은 지구 자기장이 우주 공간으로 확장되어 형성된 영역으로, <b>태양풍</b>과 상호작용하여 혜성 꼬리처럼 비대칭적인 형태를 띤다. 태양 방향의 <b>자기권계면</b>은 약 10 지구 반경 거리에 위치하며, 반대편의 <b>자기권 꼬리</b>는 수백 지구 반경까지 뻗어 있다. <b>밴앨런대</b>는 자기권 내에서 하전 입자가 집중된 도넛 모양의 영역으로, 내대는 양성자, 외대는 전자가 주로 포획되어 있다. <b>오로라</b>는 태양풍 입자가 자기력선을 따라 극지방 대기로 진입하여 산소와 질소 원자와 충돌할 때 발생하는 발광 현상으로, 산소는 녹색과 적색, 질소는 청색과 자주색 빛을 낸다. <b>자기 폭풍</b>은 태양 플레어나 <b>코로나 질량 방출</b> 시 발생하는 지구 자기장의 급격한 교란으로, 위성 통신과 전력망에 영향을 줄 수 있다.',
@@ -1161,6 +1180,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_11: {
     labelNo: '11',
     title: '🌤️ 대기 순환과 기단의 상호작용, 종관 기상학의 원리',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>대기 순환</b>은 태양 에너지의 위도별 불균등 분배로 발생하는 지구 규모의 공기 운동으로, <b>해들리 순환</b>, <b>페렐 순환</b>, <b>극순환</b>의 삼중 구조를 이룬다. 적도 부근의 <b>열대 수렴대</b>(ITCZ)에서 강한 태양 복사로 가열된 공기가 상승하여 대류권 상부로 이동한 후, 위도 약 30도에서 하강하며 <b>아열대 고압대</b>를 형성한다. 이 하강 기류 지역에는 사하라, 아라비아, 오스트레일리아 등 주요 사막이 분포한다. 지표면에서는 아열대 고압대에서 적도를 향해 <b>무역풍</b>이, 중위도를 향해 <b>편서풍</b>이 불며, <b>코리올리 효과</b>에 의해 북반구에서는 오른쪽으로, 남반구에서는 왼쪽으로 편향된다. <b>제트류</b>는 대류권 상부에서 편서풍대를 따라 흐르는 강한 기류로, 폭은 수백 km, 속도는 초속 100m에 달하며 기상 시스템의 이동에 큰 영향을 미친다.',
       '<b>기단</b>은 수평적으로 균질한 기온과 습도 특성을 가진 대규모 공기 덩어리로, 발원지의 특성에 따라 분류된다. <b>대륙성 기단</b>은 건조하고 <b>해양성 기단</b>은 습하며, <b>한대 기단</b>은 차갑고 <b>열대 기단</b>은 따뜻하다. 우리나라에 영향을 미치는 주요 기단으로, <b>시베리아 기단</b>은 겨울철 한파와 서해안 폭설의 원인이 되는 한랭 건조 기단이고, <b>북태평양 기단</b>은 여름철 무더위와 열대야를 유발하는 고온 다습 기단이다. <b>오호츠크해 기단</b>은 한랭 다습하여 초여름 장마와 냉해의 원인이 되며, <b>양쯔강 기단</b>은 온난 건조하여 봄철 이동성 고기압을 형성한다. 기단이 이동하면서 지표면 특성에 의해 <b>기단 변질</b>이 일어나는데, 시베리아 기단이 서해를 지나며 수증기를 흡수하여 서해안에 눈을 뿌리는 것이 대표적 예이다.',
@@ -1265,6 +1285,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_12: {
     labelNo: '12',
     title: '☁️ 구름 물리학과 강수 과정, 대기 수문학의 메커니즘',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>구름</b>은 대기 중 수증기가 <b>응결</b> 또는 <b>승화</b>를 통해 미세한 물방울이나 빙정으로 변환된 집합체로, 그 형성에는 <b>응결핵</b>의 존재가 필수적이다. <b>클라우드 응결핵</b>(CCN)은 직경 0.1~1마이크로미터의 미세 입자로, 해염 에어로졸, 황산염, 유기탄소 등이 포함되며 수증기 분자가 부착하여 물방울로 성장하는 기점이 된다. 공기괴가 상승하면 <b>단열 팽창</b>에 의해 냉각되는데, 수증기를 포함하지 않은 건조 공기는 100m 상승당 약 1°C 냉각되는 <b>건조 단열 감률</b>을 따른다. 상승하는 공기의 온도가 <b>이슬점</b>에 도달하면 포화 상태가 되어 응결이 시작되고, 이 고도를 <b>상승 응결 고도</b>(LCL)라고 한다. 이후에는 응결 잠열 방출로 인해 냉각률이 감소하여 100m당 약 0.5~0.6°C의 <b>습윤 단열 감률</b>을 따르게 된다.',
       '<b>구름 분류</b>는 루크 하워드가 1803년 제안한 체계를 기반으로 하며, 형태와 고도에 따라 구분된다. <b>적운형</b> 구름은 강한 대류에 의해 수직으로 발달하는 구름으로, 맑은 날 낮에 형성되는 <b>적운</b>에서 뇌우를 동반하는 <b>적란운</b>까지 다양하다. <b>층운형</b> 구름은 안정한 대기에서 수평으로 넓게 퍼지는 구름으로, <b>층운</b>, <b>층적운</b>, <b>난층운</b> 등이 있다. 고도에 따라 상층운(5~13km)은 <b>권운</b>, <b>권층운</b>, <b>권적운</b>으로 대부분 빙정으로 구성되고, 중층운(2~7km)은 <b>고층운</b>, <b>고적운</b>, 하층운(지표~2km)은 <b>층운</b>, <b>층적운</b>으로 나뉜다. <b>적란운</b>은 모든 고도층을 관통하여 최대 15km까지 발달할 수 있는 대류 구름이다.',
@@ -1369,6 +1390,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_13: {
     labelNo: '13',
     title: '💨 해양 순환과 열염분 대류, 기후 조절자로서의 해양',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>해양 순환</b>은 해수의 대규모 이동 시스템으로, <b>표층 순환</b>과 <b>심층 순환</b>으로 구분된다. 표층 순환은 주로 <b>탁월풍</b>에 의해 구동되며, 해수면에서 약 수백 미터 깊이까지 영향을 미친다. <b>무역풍</b>은 적도 부근에서 서향하는 <b>적도 해류</b>를 형성하고, <b>편서풍</b>은 중위도에서 동향하는 해류를 만든다. 이러한 해류는 대륙에 막혀 순환하며 <b>환류</b>를 형성하는데, 북반구에서는 시계 방향, 남반구에서는 반시계 방향으로 회전한다. <b>코리올리 효과</b>는 해류 방향을 바람 방향에서 편향시키며, <b>에크만 수송</b>에 따르면 표층 해수는 북반구에서 바람 방향의 오른쪽 90도로 이동한다. 해류가 대륙 서안에서 극쪽으로 향하면 <b>난류</b>가, 동안에서 적도쪽으로 향하면 <b>한류</b>가 된다.',
       '<b>심층 순환</b>은 <b>열염분 순환</b>이라고도 불리며, 해수의 밀도 차이에 의해 구동된다. 극지방에서는 해수가 냉각되고 해빙 형성 시 염분이 배출되어 밀도가 증가한 해수가 심해로 침강한다. <b>북대서양 심층수</b>(NADW)는 그린란드-아이슬란드-노르웨이 해역에서 형성되어 대서양 심층을 따라 남하하고, <b>남극 저층수</b>(AABW)는 남극 대륙 주변에서 형성되어 전 세계 해저를 따라 퍼져나간다. 이 순환은 <b>대서양 자오선 역전 순환</b>(AMOC)의 핵심 구성 요소로, 적도의 따뜻한 표층수를 북대서양으로 운반하여 유럽의 기후를 온화하게 유지한다. 심층 순환의 완전한 한 바퀴는 약 1,000~2,000년이 소요되며, 이를 <b>전지구 컨베이어 벨트</b>라고도 부른다.',
@@ -1473,6 +1495,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_14: {
     labelNo: '14',
     title: '🌡️ 기후 시스템의 복잡성과 인위적 기후 변화의 과학',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>기후</b>는 특정 지역에서 30년 이상의 기간 동안 관측된 대기 상태의 통계적 특성으로, 일시적 대기 현상인 날씨와 구별된다. <b>기후 시스템</b>은 대기권, 수권, 빙권, 암석권, 생물권의 다섯 구성요소가 상호작용하는 복잡계이며, 각 권역 간의 에너지와 물질 교환이 지구의 기후를 결정한다. <b>쾨펜의 기후 구분</b>은 기온과 강수량을 기준으로 열대(A), 건조(B), 온대(C), 냉대(D), 한대(E) 기후로 분류하는 체계이다. 기후를 결정하는 <b>기후 인자</b>로는 위도, 해발 고도, 해류, 수륙 분포, 지형 등이 있으며, 이들의 복합적 작용이 지역별 기후 특성을 형성한다. 한반도는 대륙 동안에 위치하여 여름에는 고온 다습하고 겨울에는 한랭 건조한 <b>대륙성 기후</b>와 해양성 기후의 특성이 혼합되어 나타난다.',
       '<b>지구 에너지 수지</b>는 태양으로부터 입사되는 단파복사와 지구가 방출하는 장파복사 간의 균형으로, 이 평형이 지구의 평균 기온을 결정한다. <b>온실효과</b>는 대기 중의 수증기, 이산화탄소, 메탄, 아산화질소 등 <b>온실가스</b>가 지구 복사 에너지를 흡수하여 대기를 가열하는 현상이다. 자연적 온실효과는 지구 평균 기온을 약 33°C 높여 생명체가 살 수 있는 환경을 유지하지만, 산업혁명 이후 화석 연료 연소와 삼림 벌채로 대기 중 이산화탄소 농도가 산업화 이전 280ppm에서 현재 420ppm 이상으로 증가하면서 <b>복사 강제력</b>이 강화되었다. <b>기후 민감도</b>는 이산화탄소 농도가 2배 증가했을 때 지구 평균 기온이 상승하는 정도를 나타내며, IPCC는 이를 2.5~4°C로 추정한다. 이러한 인위적 온실가스 증가가 <b>지구 온난화</b>의 주요 원인이다.',
@@ -1577,6 +1600,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_15: {
     labelNo: '15',
     title: '🪐 태양계의 구조와 행성 과학, 비교 행성학의 관점',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>태양계</b>는 약 46억 년 전 <b>태양 성운</b>이라 불리는 거대한 분자 구름의 중력 붕괴로 형성되었다. 성운의 중심부에서는 밀도가 높아져 수소 핵융합이 시작되면서 <b>태양</b>이 탄생했고, 주변의 가스와 먼지는 <b>원시 행성계 원반</b>을 형성했다. 이 원반 내에서 먼지 입자들이 충돌과 결합을 반복하며 <b>미행성체</b>로 성장하고, 이들이 다시 병합하여 행성이 되었다. 태양계는 중심의 태양과 8개의 행성, 다수의 위성, 소행성, 혜성, <b>카이퍼 벨트</b> 천체 등으로 구성된다. 태양은 태양계 전체 질량의 약 99.86%를 차지하며, 수소를 헬륨으로 융합하는 핵반응으로 초당 약 3.8×10²⁶W의 에너지를 방출한다. 이 태양 에너지가 지구의 기후, 광합성, 물의 순환 등 생명 유지에 필수적인 과정을 구동한다.',
       '태양계 행성은 <b>지구형 행성</b>(암석형)과 <b>목성형 행성</b>(거대 가스형)으로 분류된다. 지구형 행성인 수성, 금성, 지구, 화성은 규산염 암석과 금속으로 구성되어 밀도가 높고 크기가 작으며, 태양에 가까운 내행성 영역에 분포한다. 수성은 대기가 거의 없어 온도 변화가 극심하고, 금성은 두꺼운 이산화탄소 대기로 인한 <b>폭주 온실효과</b>로 표면 온도가 460°C에 달한다. 화성은 과거에 물이 흘렀던 증거가 발견되어 탐사의 주요 대상이다. 목성형 행성인 목성, 토성은 주로 수소와 헬륨으로 구성된 <b>가스 거대 행성</b>이며, 천왕성과 해왕성은 물, 암모니아, 메탄 얼음이 많은 <b>얼음 거대 행성</b>으로 구분된다. 목성의 <b>대적점</b>은 300년 이상 지속된 거대 폭풍이며, 토성의 고리는 얼음과 암석 파편으로 구성된 장관을 이룬다.',
@@ -1680,6 +1704,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_16: {
     labelNo: '16',
     title: '⛏️ 지구 자원의 형성과 분포, 에너지 전환의 지구과학적 기반',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>자원</b>은 인류 문명을 유지하는 물질적 기반으로, 형성 과정과 재생 가능성에 따라 분류된다. <b>화석 연료</b>인 석유, 석탄, 천연가스는 수백만 년에 걸쳐 유기물이 열과 압력을 받아 변환된 것으로, 인간 시간 척도에서는 <b>비재생 자원</b>이다. <b>석유</b>는 해양 플랑크톤이 퇴적되어 <b>근원암</b>에서 생성된 후 투과성 암층을 따라 이동해 <b>배사 구조</b>나 단층 트랩 같은 <b>저류암</b>에 집적된다. <b>석탄</b>은 고대 습지의 식물이 퇴적되어 토탄, 갈탄, 역청탄, <b>무연탄</b>으로 석탄화 과정을 거친 결과물이다. <b>광물 자원</b>은 마그마 냉각 시 결정화되는 <b>정마그마 광상</b>, 열수 용액에서 침전되는 <b>열수 광상</b>, 풍화와 퇴적 과정을 거친 <b>퇴적 광상</b> 등 다양한 지질 과정으로 형성된다.',
       '자원의 <b>편재성</b>은 지질학적 역사와 판구조 환경에 기인한다. 중동의 막대한 석유 매장량은 고대 테티스해의 퇴적 환경과 후속 지각 변동이 만든 거대한 트랩 구조 때문이다. 철광석의 대규모 매장지인 <b>호상 철광층</b>(BIF)은 원시 해양에서 철이 산화되어 침전된 선캄브리아 시대의 산물이다. <b>희토류</b>는 풍력 터빈, 전기차 모터, 전자기기에 필수적인 17개 원소로, 중국이 전 세계 생산의 60% 이상을 담당한다. <b>리튬</b>은 배터리의 핵심 원료로 칠레, 호주, 아르헨티나의 <b>리튬 삼각지대</b>에 집중 분포한다. 자원의 불균등 분포는 <b>자원 민족주의</b>와 지정학적 긴장을 야기하며, <b>공급망 안보</b>는 현대 국가의 주요 전략 과제가 되었다.',
@@ -1780,6 +1805,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_17: {
     labelNo: '17',
     title: '🌊 조석 역학과 해양 파동, 천체와 해양의 상호작용',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>조석</b>은 달과 태양의 <b>기조력</b>에 의해 해수면이 주기적으로 오르내리는 현상으로, 지구-달-태양 시스템의 중력 상호작용을 보여준다. 기조력은 천체가 지구의 서로 다른 지점에 미치는 중력 차이로 발생하며, 달은 태양보다 질량이 훨씬 작지만 가까이 있어 기조력이 약 2.2배 더 크다. 달과 태양이 일직선에 놓이는 삭(신월)과 망(보름) 때는 두 천체의 기조력이 합쳐져 조차가 최대인 <b>사리</b>가 발생하고, 상현과 하현 때는 두 힘이 직각으로 작용해 조차가 최소인 <b>조금</b>이 나타난다. <b>조차</b>는 만조와 간조 사이의 해수면 높이 차이로, 지역에 따라 수십 센티미터에서 10미터 이상까지 큰 차이를 보인다. 조석 현상은 약 12시간 25분 주기로 반복되는데, 이는 달의 공전으로 인해 매일 약 50분씩 늦어지기 때문이다.',
       '조석의 양상은 해안선 형태, 수심, 대륙붕 폭 등 <b>지형 효과</b>에 의해 크게 변형된다. 좁은 만이나 강 하구에서는 조석파가 수렴하여 <b>공명 현상</b>으로 조차가 증폭되며, 캐나다의 <b>펀디 만</b>은 이 효과로 세계 최대 16m 이상의 조차를 기록한다. 한국 서해안은 얕은 수심과 복잡한 해안선으로 조차가 크고, <b>갯벌</b>이 광범위하게 발달했다. <b>조석 비대칭</b>은 밀물과 썰물의 지속 시간이 다른 현상으로, 퇴적물 이동과 하구 지형 형성에 영향을 미친다. 일부 하구에서는 밀물이 급격히 들어오며 벽처럼 진행하는 <b>조석 해일</b>(bore)이 발생한다. 조석은 단순한 해수면 변동을 넘어 <b>조류</b>라는 수평적 해수 흐름을 유발하여 해양 생태계와 연안 퇴적 환경에 깊이 관여한다.',
@@ -1880,6 +1906,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_18: {
     labelNo: '18',
     title: '⏳ 지질 연대학과 생물 진화사, 대멸종과 생태계 재편',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>지질 연대</b>는 지구 역사를 시간적으로 구분한 체계로, <b>상대 연령</b>과 <b>절대 연령</b>으로 결정된다. 상대 연령은 <b>지층 누중의 법칙</b>, <b>동물군 천이의 법칙</b>, 부정합 관계 등을 이용해 지층의 선후 관계를 판단하는 방법이다. 절대 연령은 <b>방사성 동위원소</b>의 붕괴를 이용해 암석의 실제 나이를 측정하며, 탄소-14, 우라늄-납, 칼륨-아르곤 등의 <b>방사성 연대 측정법</b>이 사용된다. <b>반감기</b>는 방사성 원소가 절반으로 줄어드는 데 걸리는 시간으로, 탄소-14의 반감기는 약 5,730년이어서 최근 5만 년 이내의 유기물 연대 측정에 적합하다. 지질 시대는 이언, 대, 기, 세로 세분되며, 가장 큰 단위인 <b>이언</b>은 명왕누대, 시생누대, 원생누대, 현생누대로 구분된다.',
       '<b>선캄브리아 시대</b>는 지구 역사의 약 88%를 차지하는 최장 기간으로, 지구 형성(46억 년 전)부터 캄브리아기 시작(5.4억 년 전)까지이다. 초기에는 마그마 바다와 미행성 충돌이 빈번했으며, 약 38억 년 전 최초의 생명체가 출현한 것으로 추정된다. <b>스트로마톨라이트</b>는 남세균이 만든 층상 구조물로, 광합성을 통해 대기에 산소를 공급하여 <b>대산화 사건</b>(약 24억 년 전)을 일으켰다. 이로 인해 철이 산화되어 <b>호상 철광층</b>이 형성되고, 혐기성 생물은 대거 멸종했다. 약 6억 년 전에는 <b>에디아카라 생물군</b>이라는 최초의 대형 다세포 생물이 등장했으나, 캄브리아기 직전에 대부분 사라졌다. <b>눈덩이 지구</b> 가설은 선캄브리아 말기에 지구 전체가 얼음으로 덮였다는 이론이다.',
@@ -1980,6 +2007,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_19: {
     labelNo: '19',
     title: '🚀 우주 탐사의 과학과 기술, 천문학적 관측의 지구과학적 의의',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>우주 탐사</b>는 로켓, 인공위성, 우주 탐사선을 이용하여 지구 외 공간을 연구하는 과학 활동으로, 지구과학의 외연을 우주로 확장한다. <b>로켓 추진</b>은 뉴턴의 작용-반작용 법칙에 기반하며, 연료를 연소시켜 고속의 가스를 분출함으로써 추력을 얻는다. <b>우주 속도</b>는 천체의 중력을 극복하는 데 필요한 속도로, 제1우주속도(약 7.9km/s)는 지구 궤도 진입, 제2우주속도(약 11.2km/s)는 지구 중력권 탈출, 제3우주속도(약 16.7km/s)는 태양계 탈출에 필요하다. <b>호만 전이 궤도</b>는 연료 효율이 높은 행성 간 이동 경로로, 지구와 목표 행성의 궤도를 접선으로 연결하는 타원 궤도이다. 화성 탐사선의 발사 시기는 약 26개월마다 도래하는 <b>발사 창</b>에 맞춰야 하며, 이는 지구와 화성의 상대적 위치가 최적일 때를 의미한다.',
       '<b>인공위성</b>은 궤도 고도와 용도에 따라 분류된다. <b>저궤도 위성</b>(200~2,000km)은 지구 관측, 과학 연구에 사용되며, 국제우주정거장(ISS)이 이 궤도에 위치한다. <b>중궤도 위성</b>(2,000~36,000km)은 GPS 같은 항법 위성이 운용되는 영역이다. <b>정지궤도 위성</b>(약 36,000km)은 지구 자전 주기와 공전 주기가 같아 지표면에서 볼 때 한 점에 고정되어 보이며, 기상 위성과 통신 위성에 적합하다. 한국의 천리안 위성 시리즈는 정지궤도에서 기상 관측과 해양 환경 감시를 수행한다. <b>원격탐사</b>는 위성에 탑재된 센서로 지표면의 전자기 복사를 측정하여 지구 환경을 분석하는 기술로, 기후 변화 모니터링, 농업, 재난 관리 등에 활용된다.',
@@ -2080,6 +2108,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_earth_20: {
     labelNo: '20',
     title: '🌋 자연재해의 발생 메커니즘과 방재 과학, 재해 경감 기술의 발전',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>자연재해</b>는 지구 시스템의 에너지 방출 과정에서 발생하는 극단적 현상이 인간 사회에 피해를 주는 것으로, <b>지구조적 재해</b>(지진, 화산, 쓰나미)와 <b>기상학적 재해</b>(태풍, 홍수, 가뭄, 폭설)로 대별된다. 지진은 단층면에 축적된 탄성 에너지가 임계점을 초과하여 급격히 방출되는 현상으로, 지진파는 P파(종파, 5~8km/s), S파(횡파, 3~5km/s), 표면파(Love파, Rayleigh파)로 구분된다. <b>모멘트 규모</b>(Mw)는 단층 면적, 평균 변위량, 암석 강성률의 곱으로 정의되어 지진의 물리적 에너지를 정량화하며, <b>수정 메르칼리 진도</b>(MMI)는 I~XII 등급으로 진동 강도를 표현한다. 해저 지진에서 단층의 수직 변위가 해수를 급격히 이동시키면 <b>쓰나미</b>가 발생하는데, 심해에서 시속 700km 이상으로 전파되다가 천해에서 파고가 급증하여 연안에 치명적 피해를 야기한다. 2011년 도호쿠 지진(Mw 9.1)은 최대 40m 이상의 쓰나미를 발생시켜 후쿠시마 원전 사고를 초래했다.',
       '<b>화산 폭발</b>은 마그마의 화학 조성, 점성, 휘발성 물질 함량에 따라 분출 양상이 결정된다. 현무암질 마그마는 점성이 낮아 <b>분출성 분화</b>(하와이형)를 일으키고, 유문암질 마그마는 고점성으로 인해 가스가 갇혀 <b>폭발성 분화</b>(플리니식, 벌카노식)를 유발한다. <b>화쇄류</b>는 고온 가스와 화산쇄설물이 혼합된 밀도류로 시속 700km, 온도 1000℃에 달하여 가장 치명적인 화산 재해이다. <b>라하르</b>는 화산재가 강수와 결합하여 형성되는 이류로, 1985년 네바도델루이스 화산에서 23,000명의 사망자를 발생시켰다. <b>태풍</b>(열대저기압)은 해수면 온도 26.5℃ 이상, 코리올리 힘이 작용하는 위도 5° 이상에서 발생하며, <b>사피어-심프슨 등급</b>으로 강도를 분류한다. 태풍의 <b>폭풍 해일</b>은 저기압에 의한 해수면 상승과 강풍에 의한 취송류가 중첩되어 연안 침수를 일으킨다.',
@@ -2316,23 +2345,96 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
+
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
+
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
+
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
     passageBox.addEventListener('click', e => {
       const span = e.target.closest('.sentence'); if (!span) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
       const idx = Array.from(allSentences).indexOf(span);
       span.classList.toggle('selected');
       if (span.classList.contains('selected')) selectedSet.add(idx); else selectedSet.delete(idx);
-      localStorage.setItem(storageKey, JSON.stringify([...selectedSet])); if (selectedSet.size === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
-      if (selectedSet.size === allSentences.length) {
-        const endTime = new Date(); const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
-        const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-        if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
-        const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
-        for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
-        if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+      localStorage.setItem(storageKey, JSON.stringify([...selectedSet]));
+      const total = passageBox.querySelectorAll('.sentence').length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
+
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+      }
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
+        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

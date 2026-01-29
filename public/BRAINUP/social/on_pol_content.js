@@ -45,6 +45,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_01: {
     labelNo: '01',
     title: '🏛️ 정치는 왜 필요할까?',
+    paragraphMain: [
+      '정치의 필요성: 국가 구성원으로서 의무·책임 가짐, 갈등 발생 시 큰 문제 해결에 정치가 중요한 역할',
+      '정치의 의미: 좁은 의미=권한 가진 사람의 활동(국회의원·대통령), 넓은 의미=이해관계 조정·더 나은 삶 도움',
+      '일상 속 정치: 학급회의·가족회의·주민 회의 등 규칙 정하고 문제 논의하는 것도 넓은 의미의 정치 활동',
+      '정치 참여 태도: 정치는 몇몇만의 일 아님, 모두의 삶에 영향, 관심 갖고 올바르게 참여하는 자세 필요'
+    ],
     passage: [
       '우리는 대한민국이라는 나라에 살며, 국가의 한 구성원으로서 여러 <b>의무</b>와 책임을 가지고 있어요. 국가는 우리가 안전하고 평화롭게 생활할 수 있도록 도와주지만, 많은 사람들이 함께 생활하다 보면 서로의 생각이 달라 <b>갈등</b>이 생기곤 합니다. 작은 다툼은 대화를 하거나 규칙을 지키면서 해결할 수 있지만, 나라 전체에 영향을 주는 큰 문제는 더 복잡해서 쉽게 해결되지 않아요. 이럴 때 중요한 역할을 하는 것이 바로 <b>정치</b>입니다.',
       '정치를 좁은 의미로 보면, 나라를 이끌기 위해 <b>권한</b>을 가진 사람들이 하는 활동을 말해요. 예를 들어, 국회의원이 법을 만들고, 대통령이 중요한 나라의 일을 결정하는 것이 이에 포함되지요. 하지만 넓은 의미로 보면, 정치란 사람들 사이에 생긴 의견 차이와 <b>이해관계</b>를 <b>조정</b>하고 모두가 더 나은 방향으로 살아갈 수 있도록 돕는 활동을 뜻해요.',
@@ -125,6 +131,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_02: {
     labelNo: '02',
     title: '🗳️ 국민이 주인이 되는 나라, 민주주의',
+    paragraphMain: [
+      '민주주의 정의: 나라의 주인=국민, 누구나 정치 참여·비판 가능, 국민이 스스로 나라를 이끌어 가는 정신',
+      '민주주의 유형: 직접 민주주의(국민이 직접 결정), 대의 민주주의(대표 선출→대표가 정책 결정), 현대는 대의제 사용',
+      '민주주의 핵심 가치: 자유·평등·존엄성, 태어날 때부터 권리 가짐, 타인에게 해 끼치지 않는 범위 내 선택 자유',
+      '평등의 의미: 권리·의무·자격 평등 대우, 결과가 아닌 기회 평등, 노력·능력에 따른 차이는 자연스러운 것'
+    ],
     passage: [
       '우리나라는 <b>민주주의</b>를 바탕으로 운영되는 나라예요. 민주주의 사회에서는 나라의 실제 주인이 국민이며, 가장 존중받아야 할 존재 또한 국민이지요. 국민은 누구라도 정치에 관심을 가지고 참여할 수 있고, 정부가 하는 일을 살펴보고 잘못된 점이 있다면 비판도 할 수 있어요. 이런 특징은 국민이 스스로 나라를 이끌어 간다는 민주주의의 중요한 정신을 보여줍니다.',
       '민주주의는 정치에 참여하는 방식에 따라 두 가지로 나눌 수 있어요. 첫 번째는 <b>직접 민주주의</b>로, 나라의 중요한 일을 국민이 직접 모여 결정하는 방식이에요. 두 번째는 <b>대의 민주주의</b>로, 국민이 대표를 뽑아 그 대표들이 정책을 정하고 나라 일을 처리하는 방식이죠. 우리나라처럼 국회 의원이나 대통령을 선거로 뽑아 국가 운영을 맡기는 제도는 대의 민주주의의 대표적인 사례예요. 많은 사람이 함께 사는 현대 사회에서는 대의 민주주의가 더 널리 사용되고 있어요.',
@@ -206,6 +218,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_03: {
     labelNo: '03',
     title: '✊ 4·19에서 6월 항쟁까지, 민주주의의 성장',
+    paragraphMain: [
+      '4·19 혁명: 1960년 부정 선거에 항의, 학생·시민 거리로 나섬, 전국으로 확산→민주주의 시작',
+      '5·18 민주화 운동: 1980년 광주, 군사 정권에 맞서 민주화 요구, 목숨 건 저항과 희생, 열망 계속',
+      '6월 민주항쟁과 지방자치: 1987년 전국적 민주화 운동→직선제·표현의 자유 확대, 1990년대 지방자치제 실시',
+      '시민 참여 확대: 시민 단체 활동 증가, 2000년대 인터넷 확산→시민 참여 활발, 민주주의=시민 행동의 결과'
+    ],
     passage: [
       '우리나라의 <b>민주주의</b>는 하루아침에 만들어진 것이 아니라, 많은 시민의 용기와 희생을 바탕으로 자리를 잡아 왔습니다. 1960년, 당시 정권이 부정한 방식으로 선거를 치르자 학생과 시민들이 이에 강하게 반발하며 거리로 나섰습니다. 이 시위는 전국으로 퍼졌고, <b>4·19 혁명</b>으로 이어졌어요.',
       '그러나 민주주의의 길은 순탄하지 않았어요. 1980년, 새로운 권력이 군사력을 이용해 정권을 차지하자 광주 시민들은 민주화를 요구하며 일어섰습니다. 이것이 <b>5·18 민주화 운동</b>입니다. 시민들은 목숨을 걸고 자유와 정의를 외쳤지만, 많은 희생이 뒤따랐습니다. 국민들의 열망은 사라지지 않았어요.',
@@ -291,6 +309,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_04: {
     labelNo: '04',
     title: '⚖️ 다수결만으로 충분할까? 민주주의의 진짜 원리',
+    paragraphMain: [
+      '다수결의 정의: 학급 회장 선거처럼 공약 발표 후 투표, 더 많은 지지 의견을 공동 의사로 삼는 방식',
+      '다수결의 한계: 15명 중 8:7 찬성 시 모두의 뜻 반영? 소수 의견 불만 커질 수 있음, 숫자만으로 옳다 X',
+      '민주적 결정 과정: 서로 듣고 토론, 논리적·비판적 사고, 양보·타협 태도, 소수 의견 존중하는 관용이 핵심',
+      '진정한 민주주의: 서로 다른 생각 인정·존중→공동체 건강·안정, 다수결+소수 의견 존중+대화·양보 필요'
+    ],
     passage: [
       '학교에서 학급 회장을 뽑을 때를 떠올려 보세요. 후보들이 자신의 생각과 <b>공약</b>을 발표하면, 학생들은 가장 마음에 드는 후보에게 투표하지요. 이처럼 <b>민주주의</b> 사회에서는 여러 사람의 의견을 정리하고 결정을 내릴 때 <b>다수결</b>의 원칙을 자주 사용해요. 더 많은 사람이 지지하는 의견을 공동의 <b>의사</b>로 삼는 방식이지요.',
       '하지만 다수결이 항상 완벽한 것은 아니에요. 예를 들어 15명 중 8명만 찬성하고 7명이 반대한다면, 과연 이 결정이 모두의 뜻을 반영한 걸까요? 찬성과 반대가 큰 차이를 보이지 않을 경우, <b>소수 의견</b>을 가진 사람들의 불만이 커질 수 있어요. 그래서 단순히 숫자가 많다는 이유만으로 무조건 옳다고 여겨서는 안 돼요.',
@@ -377,6 +401,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_05: {
     labelNo: '05',
     title: '🗳️ 한 표의 힘이 모여 만드는 민주주의',
+    paragraphMain: [
+      '주권과 대표 민주주의: 국민이 주인=주권, 현대 사회 규모 커서 직접 참여 어려움→대표 선출하는 대표 민주주의',
+      '보통 선거와 직접 선거: 만 18세 이상 투표권, 신분·재산·학력 무관=보통 선거, 본인이 직접 투표=직접 선거',
+      '평등 선거와 비밀 선거: 모든 사람 똑같이 1표=평등 선거, 선택 비밀 보장→눈치 없이 자유롭게 투표=비밀 선거',
+      '비밀 선거의 중요성: 투표 공개 시 압력·불이익 걱정→의견 숨김, 네 가지 원칙 모두 지켜야 진정한 민주 선거'
+    ],
     passage: [
       '민주 국가에서 가장 중요한 원리는 \'국민이 나라의 주인\'이라는 사실이에요. 국민이 국가 운영의 방향을 결정할 힘을 가지고 있다는 것을 <b>주권</b>이라고 하지요. 하지만 현대 사회는 규모도 크고 처리해야 할 일도 많아서 모든 국민이 직접 정치에 참여하기는 어려워요. 그래서 대부분의 민주 국가는 국민이 자신의 뜻을 대신할 사람을 선거로 뽑는 <b>대표 민주주의</b> 방식을 사용해요.',
       '우리나라에서는 만 18세 이상이면 선거에 참여할 자격이 주어져요. 이처럼 신분이나 재산, 학력과 관계없이 모든 국민에게 투표권을 보장하는 것을 <b>보통 선거</b> 원칙이라고 해요. 또 투표는 반드시 본인이 직접 해야 하는데, 다른 사람이 대신할 수 없기 때문에 이를 <b>직접 선거</b>라고 부르지요.',
@@ -457,6 +487,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_06: {
     labelNo: '06',
     title: '⚖️ 권력을 나누는 지혜, 삼권분립',
+    paragraphMain: [
+      '삼권분립의 배경: 한 사람·기관에 권력 집중→위험, 권력 나눠 견제·균형, 몽테스키외가 처음 주장한 원리',
+      '입법권과 행정권: 입법권=법 제정(국회), 국회의원 선거로 구성, 행정권=법 집행(정부), 나라 일 처리',
+      '사법권과 상호 견제: 사법권=재판(법원), 법 위반 처벌·분쟁 해결, 국회→예산 심의·장관 검증으로 정부 견제',
+      '삼권분립의 목적: 정부 거부권·법원 위헌 심사, 상호 견제로 지나친 권력 방지, 국민 자유·권리 보호가 핵심'
+    ],
     passage: [
       '민주주의 국가에서는 한 사람이나 한 기관이 모든 권력을 가지면 위험하다고 생각해요. 권력이 한 곳에 집중되면 국민의 자유와 권리가 침해받을 수 있기 때문이에요. 그래서 국가 권력을 여러 기관으로 나누어 서로 <b>견제</b>하고 <b>균형</b>을 이루게 만들었어요. 이것을 <b>삼권분립</b>이라 하며, 프랑스의 사상가 <b>몽테스키외</b>가 처음 주장한 원리예요.',
       '삼권분립에서 말하는 세 가지 권력은 <b>입법권</b>, <b>행정권</b>, <b>사법권</b>이에요. 입법권은 법을 만드는 권한으로 <b>국회</b>가 담당합니다. 국회는 국민이 선거로 뽑은 국회의원들로 구성되며, 새로운 법을 만들거나 기존의 법을 고치는 일을 해요. 행정권은 법에 따라 나라의 일을 집행하는 권한으로 <b>정부</b>가 담당합니다.',
@@ -539,6 +575,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_07: {
     labelNo: '07',
     title: '🏠 우리 동네를 우리 손으로, 지방자치',
+    paragraphMain: [
+      '지방자치의 의미: 지역 주민이 지역 문제 직접 결정·해결, 풀뿌리 민주주의=가장 가까운 곳에서 시작하는 민주주의',
+      '지방의회와 단체장: 지방의회=조례 제정·예산 심의·감시, 시장·군수·구청장=행정 총괄, 모두 주민 직접 선거',
+      '주민 참여 방법: 주민 청원(검토 요청), 주민 투표(중요 사안 결정), 주민 감사 청구·주민 소송 등 다양',
+      '주민 소환 제도: 직무 미이행 시 투표로 물러나게 함, 주민이 지역 주인으로서 참여→주민 자치 실현'
+    ],
     passage: [
       '우리나라는 중앙 정부뿐만 아니라 각 지역에도 스스로를 다스리는 정부가 있어요. 이것을 <b>지방자치</b>라고 합니다. 지방자치는 지역 주민들이 자신이 사는 지역의 문제를 직접 결정하고 해결해 나가는 제도예요. 지방자치를 통해 주민들은 <b>풀뿌리 민주주의</b>를 경험하게 되는데, 이는 민주주의가 가장 가까운 곳에서부터 시작된다는 의미를 담고 있어요.',
       '지방자치를 실현하는 기관으로는 <b>지방의회</b>와 <b>지방자치단체장</b>이 있어요. 지방의회는 지역의 법규인 <b>조례</b>를 만들고, 지역의 예산을 심의하며, 지방자치단체의 일을 감시하는 역할을 합니다. 지방자치단체장은 시장, 군수, 구청장 등으로 불리며, 지역의 행정 업무를 총괄하고 조례를 집행해요. 이들은 모두 주민들이 직접 선거로 뽑습니다.',
@@ -621,6 +663,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_08: {
     labelNo: '08',
     title: '📜 시민의 권리와 책임',
+    paragraphMain: [
+      '기본권의 종류: 헌법 보장, 자유권(국가 간섭 없이 자유), 평등권(차별 없이 동등 대우), 사회권·참정권·청구권 등',
+      '사회권·참정권·청구권: 사회권=인간다운 생활, 참정권=정치 참여, 청구권=구제 요청, 권리에는 책임이 따름',
+      '4대 의무: 납세(세금), 국방(나라 지킴), 교육(자녀 교육), 근로(능력껏 일함), 헌법이 규정하는 국민 의무',
+      '권리와 책임의 조화: 내 권리 주장+타인 권리 존중, 의무 이행=사회 구성원 책임, 표현의 자유≠명예 훼손'
+    ],
     passage: [
       '민주주의 사회에서 시민은 다양한 <b>권리</b>를 가지고 있어요. 우리나라 헌법은 모든 국민이 태어날 때부터 가지는 <b>기본권</b>을 보장합니다. 기본권에는 <b>자유권</b>, <b>평등권</b>, <b>사회권</b>, <b>참정권</b>, <b>청구권</b> 등이 있어요. 자유권은 국가 간섭 없이 자유롭게 생활할 권리이고, 평등권은 차별 없이 동등하게 대우받을 권리예요.',
       '<b>사회권</b>은 인간다운 생활을 보장받을 권리로 교육받을 권리, 일할 권리 등이 포함됩니다. <b>참정권</b>은 정치에 참여할 수 있는 권리이며, <b>청구권</b>은 기본권이 침해되었을 때 국가에 구제를 요청할 수 있는 권리예요. 그러나 권리에는 반드시 <b>책임</b>이 따릅니다. 헌법은 국민의 <b>의무</b>도 함께 규정하고 있어요.',
@@ -703,6 +751,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_09: {
     labelNo: '09',
     title: '🌍 세계 속의 대한민국, 국제정치',
+    paragraphMain: [
+      '국제기구의 필요성: 국가 간 교류 활발→경제·환경·안보 문제 상호 영향, 혼자 해결 어려움→국제기구 협력(UN)',
+      'UN과 국제기구들: UN=평화·인권·경제 발전, WTO=무역 질서, WHO=보건, 한국 ODA 제공으로 개도국 지원',
+      '한국의 국제 기여: 유네스코 협력→문화유산 보호, 환경 협약 동참, UN 도움받던 나라→돕는 나라로 성장',
+      '외교와 국제법: 외교=대화·협상으로 평화적 해결, 국제법=국가 간 관계 규율, ICJ=분쟁 재판, 세계 시민 의식 필요'
+    ],
     passage: [
       '오늘날 세계는 국가 간 교류가 활발해지며 서로 긴밀하게 연결되어 있어요. 한 나라의 경제, 환경, 안보 문제는 다른 나라에도 영향을 미치기 때문에 혼자서는 해결하기 어려운 문제들이 많아졌습니다. 이러한 문제를 함께 해결하기 위해 국가들은 협력하고, 다양한 <b>국제기구</b>를 만들었어요. 대표적으로 세계 평화와 안전을 위한 <b>국제연합(UN)</b>이 있습니다.',
       'UN은 전쟁을 예방하고 분쟁을 해결하며, 인권 보호와 경제 발전을 위해 노력해요. 또한 세계 무역 질서를 조정하는 <b>세계무역기구(WTO)</b>, 보건 문제를 다루는 <b>세계보건기구(WHO)</b> 등이 있습니다. 대한민국은 국제 사회의 책임 있는 일원으로서 개발도상국을 돕는 <b>공적개발원조(ODA)</b>를 제공하고 있어요.',
@@ -785,6 +839,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_10: {
     labelNo: '10',
     title: '☮️ 평화 통일을 향한 여정',
+    paragraphMain: [
+      '분단의 역사: 1945년 광복 후 남북 분단, 1950년 한국전쟁, 휴전선 대립, 이산가족 아픔·군사적 긴장 계속',
+      '남북 교류 노력: 2000년 최초 남북정상회담→6·15 공동선언, 금강산 관광·개성공단·이산가족 상봉 등 교류',
+      '판문점 선언: 2018년 판문점 남북정상회담, 항구적 평화 체제 구축 노력, 통일 시 이산가족 상봉·경제 발전 기대',
+      '통일을 위한 자세: 서로 이해·신뢰 필요, 적대 아닌 다름 인정·평화 공존, 점진적 통합, 평화로운 한반도 미래'
+    ],
     passage: [
       '한반도는 1945년 광복 이후 남과 북으로 나뉘어 오랜 시간 <b>분단</b> 상태에 있어요. 1950년에 발발한 <b>한국전쟁</b>은 수많은 사람들의 목숨을 앗아갔고, 전쟁 후에도 남북한은 <b>휴전선</b>을 사이에 두고 대립을 이어왔습니다. 분단으로 인해 수백만 명의 <b>이산가족</b>이 서로 만나지 못하는 아픔을 겪고 있으며, 군사적 긴장과 경제적 부담도 계속되고 있어요.',
       '이러한 분단을 극복하기 위해 남북한은 여러 차례 대화와 교류를 시도해 왔어요. 2000년에는 최초의 <b>남북정상회담</b>이 열려 <b>6·15 남북공동선언</b>이 발표되어 화해와 협력의 물꼬를 텄습니다. 이후로도 금강산 관광, 개성공단 운영, 이산가족 상봉 등 다양한 남북 교류가 이루어졌어요.',
@@ -868,6 +928,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_11: {
     labelNo: '11',
     title: '💰 경제 활동의 시작, 희소성과 선택',
+    paragraphMain: [
+      '경제 활동과 희소성: 물건·서비스 만들고 나누고 사용=경제 활동, 원하는 것 무한+자원 한정=희소성',
+      '선택과 기회비용: 희소성→선택 필요, 게임 vs 음식처럼 하나만 선택, 포기한 것 중 최고 가치=기회비용',
+      '합리적 선택: 편익(이득·만족)이 비용보다 클 때 선택, 얻는 것 > 잃는 것이 좋은 선택의 기준',
+      '현명한 선택 방법: 진정 원하는 것 파악, 대안 비교, 편익·비용 따지기, 충동 아닌 신중한 결정→효율적 자원 사용'
+    ],
     passage: [
       '우리는 매일 다양한 <b>경제 활동</b>을 하며 살아가고 있어요. 경제 활동이란 사람들이 필요한 것을 얻기 위해 물건이나 서비스를 만들고, 나누고, 사용하는 모든 과정을 말합니다. 이러한 경제 활동의 출발점에는 <b>희소성</b>이 있어요. 희소성이란 원하는 것은 무한하지만 자원은 한정되어 있다는 것을 의미합니다.',
       '희소성 때문에 우리는 항상 <b>선택</b>을 해야 해요. 모든 것을 다 가질 수 없으니, 여러 가지 중에서 하나를 골라야 하는 상황에 놓이게 됩니다. 예를 들어 만 원으로 게임을 살지, 음식을 먹을지 선택해야 하지요. 이때 포기한 것 중 가장 가치 있는 것을 <b>기회비용</b>이라고 해요. 기회비용을 생각하면 더 현명한 선택을 할 수 있어요.',
@@ -949,6 +1015,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_12: {
     labelNo: '12',
     title: '🏪 시장에서 만나는 수요와 공급',
+    paragraphMain: [
+      '시장과 수요·공급: 시장=사는 사람+파는 사람 만나는 곳(인터넷 쇼핑몰도 포함), 수요=사려는 욕구, 공급=팔려는 것',
+      '수요 법칙과 공급 법칙: 가격↑→수요량↓(수요 법칙), 가격↑→공급량↑(공급 법칙, 이익 때문)',
+      '그래프와 균형: 세로축=가격, 가로축=수량, 수요 곡선↘, 공급 곡선↗, 두 곡선 교차점=균형(가격·수량 결정)',
+      '시장의 역할: 수요·공급 만나 균형=시소 수평처럼, 수요자·공급자 필요 충족, 경제 활동 가능하게 함'
+    ],
     passage: [
       '우리 주변에는 다양한 <b>시장</b>이 있어요. 시장은 물건을 사고파는 장소만이 아니라, 사고 싶은 사람과 팔고 싶은 사람이 만나는 모든 곳을 말해요. 인터넷 쇼핑몰도 시장이고, 중고 거래 앱도 시장이에요. 시장에서는 <b>수요</b>와 <b>공급</b>이 만나요. 수요란 물건을 사려는 욕구이고, 공급이란 팔려고 하는 것을 의미해요.',
       '수요는 가격과 밀접한 관계가 있어요. 가격이 오르면 <b>수요량</b>은 줄어들고, 가격이 내리면 수요량은 늘어나요. 이것을 <b>수요 법칙</b>이라고 해요. 반대로 공급은 가격이 오르면 <b>공급량</b>이 늘어나요. 생산자 입장에서는 높은 가격에 팔수록 더 많은 이익을 얻을 수 있기 때문이에요. 이것이 <b>공급 법칙</b>이에요.',
@@ -1030,6 +1102,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_13: {
     labelNo: '13',
     title: '📈 가격은 어떻게 정해질까?',
+    paragraphMain: [
+      '균형 가격: 수요·공급 만나는 곳에서 자연 결정, 수요↑공급↓→가격↑, 수요↓공급↑→가격↓, 균형 가격·균형 거래량',
+      '가격의 신호 기능: 가격↑→생산자에게 "더 만들어", 소비자에게 "덜 사", 가격↓→반대, 행동 조절 역할',
+      '가격 상한제: 생필품 가격 급등 시 어려운 사람 보호, 정부가 일정 이상 오르지 못하게 막음, 국민 생활 안정',
+      '가격 하한제: 농산물 가격 급락 시 농민 보호, 최저 가격 보장, 시장 불안정 시 정부 개입으로 국민 보호'
+    ],
     passage: [
       '마트에서 물건을 살 때 가격표를 보게 되지요. 그런데 이 <b>가격</b>은 누가 정하는 걸까요? 시장 경제에서 가격은 수요와 공급이 만나는 곳에서 자연스럽게 결정돼요. 수요가 많고 공급이 적으면 가격이 오르고, 수요가 적고 공급이 많으면 가격이 내려요. 이렇게 정해진 가격을 <b>균형 가격</b>이라고 하고, 그때 거래되는 양을 <b>균형 거래량</b>이라고 해요.',
       '가격은 시장에서 중요한 신호 역할을 해요. 가격이 오르면 <b>생산자</b>에게는 "더 많이 만들어!"라는 신호가 되고, <b>소비자</b>에게는 "조금 덜 사!"라는 신호가 돼요. 반대로 가격이 내리면 생산자는 생산을 줄이고, 소비자는 더 많이 사려고 해요. 이처럼 가격은 행동을 조절하는 <b>가격의 신호 기능</b>을 해요.',
@@ -1111,6 +1189,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_14: {
     labelNo: '14',
     title: '🏦 돈의 흐름, 금융과 저축',
+    paragraphMain: [
+      '화폐의 발달: 물물 교환→불편, 조개·소금·금속→화폐, 오늘날 종이돈·동전·카드·전자 화폐까지 다양',
+      '돈의 역할과 금융: 교환의 수단·가치의 척도·가치의 저장, 금융=돈 관련 활동, 은행 예금→대출→이자',
+      '금융 기관과 저축: 은행·증권·보험 회사, 저축=미래 위해 돈 모음, 급할 때 사용+이자로 돈 불림',
+      '저축과 투자: 저축만 시 물가 상승→가치 하락, 투자로 돈 불리기도, 자신에게 맞는 방법 찾기, 현명한 관리 능력'
+    ],
     passage: [
       '우리가 사용하는 돈은 어디에서 왔을까요? 옛날에는 물건과 물건을 바꾸는 <b>물물 교환</b>을 했어요. 하지만 서로 원하는 것이 맞아야만 거래가 가능해서 불편했지요. 그래서 사람들은 조개껍데기, 소금, 금속 등을 <b>화폐</b>로 사용하기 시작했어요. 오늘날에는 종이돈, 동전뿐 아니라 카드와 전자 화폐까지 다양한 형태의 돈이 있어요.',
       '돈은 물건을 사고파는 <b>교환의 수단</b>, 가치를 나타내는 <b>가치의 척도</b>, 나중에 쓰기 위해 모아두는 <b>가치의 저장</b> 역할을 해요. 돈과 관련된 다양한 활동을 <b>금융</b>이라고 해요. 은행에 돈을 맡기면 은행은 그 돈을 빌려주고 <b>이자</b>를 받아요. 은행은 예금자에게도 이자를 주지요.',
@@ -1192,6 +1276,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_15: {
     labelNo: '15',
     title: '💳 신용과 합리적 소비',
+    paragraphMain: [
+      '신용의 개념: 나중에 갚겠다는 약속에 대한 믿음, 약속 잘 지키면 신용↑·어기면 신용↓, 어른은 신용 점수 중요',
+      '신용카드 사용과 주의점: 돈 없어도 물건 구매 가능, 나중에 반드시 갚아야 함, 연체 시 추가 비용+신용↓',
+      '합리적 소비와 충동 소비: 정말 필요한지·예산 안인지 확인, 광고 현혹·무작정 따라 사면 충동 소비, 가격 비교+품질 확인',
+      '착한 소비와 미래 준비: 환경 생각해 필요한 만큼만 구매, 현명한 소비 습관=미래 경제적 자유, 어릴 때부터 계획적 소비 습관'
+    ],
     passage: [
       '친구에게 "내일 돈 갚을게"라고 약속하고 물건을 빌린 적 있나요? 이렇게 나중에 갚겠다는 약속을 믿고 거래하는 것을 <b>신용</b>이라고 해요. 신용은 "믿음"이라는 뜻으로, 약속을 잘 지키면 신용이 좋아지고, 약속을 어기면 신용이 나빠져요. 어른들은 <b>신용카드</b>를 사용할 때 <b>신용 점수</b>가 중요해요.',
       '신용카드는 지금 돈이 없어도 물건을 살 수 있게 해 주는 편리한 도구예요. 하지만 신용카드로 산 금액은 나중에 반드시 갚아야 해요. 제때 갚지 못하면 <b>연체</b>가 되어 추가 비용을 내야 하고, 신용 점수도 떨어져요. 그래서 신용카드는 자신이 갚을 수 있는 범위 안에서 <b>계획적</b>으로 사용해야 해요.',
@@ -1273,6 +1363,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_16: {
     labelNo: '16',
     title: '🏭 기업의 역할과 사회적 책임',
+    paragraphMain: [
+      '기업의 정의와 역할: 물건·서비스 만들어 팔고 이윤 획득, 생산 활동으로 필요한 것 제공, 경쟁으로 더 나은 제품',
+      '기업의 경제적 기여: 일자리 창출→소득, 세금→도로·학교·병원 등 사회 발전, 이윤만 추구 시 환경오염·소비자 피해 문제',
+      '사회적 책임과 윤리 경영: 이윤 추구+환경 보호+직원 존중+지역 사회 기여, 정직하게 사업·법 준수·사회 기여',
+      '착한 기업과 소비자: 착한 기업 제품 선호, 기업과 사회 함께 성장, 사회적 책임 다하는 기업에 관심 갖고 소비'
+    ],
     passage: [
       '우리가 사용하는 물건은 대부분 <b>기업</b>이 만들어요. 기업은 물건이나 서비스를 만들어 팔고 <b>이윤</b>을 얻는 조직이에요. 기업은 <b>생산</b> 활동을 통해 사람들이 필요로 하는 것들을 제공하고, 그 대가로 돈을 벌어요. 경쟁하는 다른 기업보다 더 나은 제품을 만들기 위해 끊임없이 노력하지요.',
       '기업은 일자리를 만들어 사람들이 일하고 <b>소득</b>을 얻을 수 있게 해 줘요. 또한 기업이 내는 <b>세금</b>은 도로, 학교, 병원 등 우리 사회를 위해 사용돼요. 이처럼 기업은 경제에서 매우 중요한 역할을 해요. 하지만 기업이 이윤만 추구하면 환경 오염이나 소비자 피해 같은 문제가 생길 수 있어요.',
@@ -1354,6 +1450,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_17: {
     labelNo: '17',
     title: '📊 국가 경제와 경제 성장',
+    paragraphMain: [
+      'GDP와 경제 성장: 국내 총생산=일정 기간 모든 상품·서비스 가치 합, GDP 증가=경제 성장, 일자리↑·생활 수준↑',
+      '경기 변동과 인플레이션: 경기 좋을 때=호황, 나쁠 때=불황, 호황 시 물가 상승 가능→인플레이션',
+      '불황과 경제 정책: 불황 시 물건 안 팔리고 실업↑, 정부가 돈 풀어 경제 살리거나 인플레 심할 때 돈 거둬들임',
+      '중앙은행과 금리 조절: 한국은행이 금리 조절, 금리↓→대출↑, 금리↑→저축↑, 정부+중앙은행이 경제 균형 노력'
+    ],
     passage: [
       '한 나라의 경제 규모는 얼마나 될까요? 이것을 측정하는 대표적인 지표가 <b>국내 총생산</b>, 줄여서 <b>GDP</b>예요. GDP는 한 나라 안에서 일정 기간 동안 만들어진 모든 상품과 서비스의 가치를 합한 것이에요. GDP가 늘어나면 <b>경제 성장</b>이 일어났다고 해요. 경제가 성장하면 일자리가 늘고 생활 수준이 높아질 수 있어요.',
       '경제에는 좋아졌다 나빠졌다 하는 흐름이 있어요. 이것을 <b>경기 변동</b>이라고 해요. 경기가 좋을 때를 <b>호황</b>, 나쁠 때를 <b>불황</b>이라고 해요. 호황일 때는 기업이 잘 되고 일자리가 많지만, 물가가 오를 수 있어요. 물가가 계속 오르는 것을 <b>인플레이션</b>이라고 해요.',
@@ -1435,6 +1537,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_18: {
     labelNo: '18',
     title: '💵 세금과 정부의 역할',
+    paragraphMain: [
+      '정부의 역할과 세금: 학교·도로·병원 등 정부 운영에 돈 필요, 세금=국민이 나라에 내는 돈→공공 서비스에 사용',
+      '세금의 종류: 소득세(돈 벌 때), 부가가치세(물건 살 때), 재산세(집·땅 가질 때), 누진세=소득 많을수록 세율↑',
+      '정부의 역할과 공공재: 공공재 제공, 복지 정책, 도로·다리·철도 등 사회 간접 자본, 예산=한 해 수입·지출 계획',
+      '예산과 시민의 자세: 예산은 국민 세금으로 구성→투명·효율적 사용 의무, 세금 사용처에 관심→민주 시민의 자세'
+    ],
     passage: [
       '우리가 학교에서 공부하고, 도로를 이용하고, 병원에서 치료받을 수 있는 것은 <b>정부</b>가 여러 가지 일을 하기 때문이에요. 정부가 이런 일을 하려면 돈이 필요한데, 그 돈은 바로 <b>세금</b>이에요. 세금은 국민이 나라에 내는 돈으로, 정부는 이 돈을 모아 공공 서비스에 사용해요.',
       '세금에는 여러 종류가 있어요. <b>소득세</b>는 돈을 벌 때 내는 세금이고, <b>부가가치세</b>는 물건을 살 때 가격에 포함되어 내는 세금이에요. <b>재산세</b>는 집이나 땅을 가진 사람이 내는 세금이지요. 소득이 많을수록 세율이 높아지는 것을 <b>누진세</b>라고 해요. 이렇게 하면 더 공평해져요.',
@@ -1516,6 +1624,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_19: {
     labelNo: '19',
     title: '🌍 무역과 세계 경제',
+    paragraphMain: [
+      '무역의 개념: 나라 간 물건 사고팔기, 수출=우리 물건 외국에 팔기, 수입=외국 물건 사오기, 무역은 모두에게 이익',
+      '국제 무역 협력: FTA=관세 낮추거나 없앰, WTO=세계 무역 규칙, 세계 경제 연결=세계화',
+      '세계화의 장단점: 외국 물건 유입→국내 기업 어려움, 한 나라 경제 문제가 다른 나라에 영향, 자국 산업 보호+무역 혜택 균형',
+      '우리나라와 상호 의존: 무역 의존도 높음, 좋은 제품 수출+필요 자원 수입, 상호 의존 세계에서 협력 자세, 국제 경제 관심'
+    ],
     passage: [
       '우리가 사용하는 물건 중에는 외국에서 온 것이 많아요. 스마트폰 부품, 과일, 옷 등이 그래요. 이렇게 나라와 나라 사이에서 물건을 사고파는 것을 <b>무역</b>이라고 해요. 우리나라에서 만든 물건을 외국에 파는 것을 <b>수출</b>, 외국에서 물건을 사오는 것을 <b>수입</b>이라고 하지요. 무역을 하면 모두에게 이익이 돼요.',
       '세계 여러 나라는 무역을 더 활발하게 하기 위해 협력해요. 여러 나라가 모여 만든 <b>자유 무역 협정(FTA)</b>은 서로 <b>관세</b>를 낮추거나 없애서 물건을 더 싸게 사고팔 수 있게 해요. 또한 세계 무역의 규칙을 정하는 <b>세계 무역 기구(WTO)</b> 같은 국제기구도 있어요. 세계 경제가 하나로 연결되는 것을 <b>세계화</b>라고 해요.',
@@ -1597,6 +1711,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_pol_20: {
     labelNo: '20',
     title: '🌱 미래 경제와 지속 가능한 발전',
+    paragraphMain: [
+      '4차 산업 혁명과 미래 경제: AI·로봇·빅데이터가 경제 변화, 4차 산업 혁명, 일자리 사라지기도·새로 생기기도',
+      '환경 문제와 지속 가능한 발전: 경제 발전→환경 문제(오염·자원 고갈·기후 변화), 지속 가능한 발전=현재+미래 세대 모두 고려',
+      '친환경 노력: 친환경 에너지(태양광·풍력), 재활용, 탄소 중립, ESG 경영, 에너지 아끼고 환경 생각하는 소비',
+      '일상 속 실천: 일회용품 줄이기, 대중교통 이용, 재활용, 경제+환경 함께 발전, 미래 세대도 행복한 지구 만들기'
+    ],
     passage: [
       '미래의 경제는 어떤 모습일까요? 기술의 발전으로 <b>인공지능(AI)</b>, <b>로봇</b>, <b>빅데이터</b> 같은 것들이 경제를 크게 바꾸고 있어요. 공장에서는 로봇이 물건을 만들고, 인공지능이 복잡한 일을 대신해요. 이런 변화를 <b>4차 산업 혁명</b>이라고 불러요. 이 변화 속에서 사라지는 일자리도 있지만 새로 생기는 일자리도 많아요.',
       '하지만 경제가 발전하면서 환경 문제도 커졌어요. 공장에서 나오는 오염 물질, 자원 고갈, 기후 변화 등이 지구를 위협하고 있지요. 그래서 등장한 개념이 <b>지속 가능한 발전</b>이에요. 지속 가능한 발전이란 지금 세대의 필요를 충족하면서도 미래 세대가 사용할 자원을 아끼고 환경을 보호하는 것이에요.',
@@ -1908,98 +2028,97 @@ function applyContentPack(unitKey) {
       return `${minutes}분 ${seconds}초`;
     };
 
-    // 문장 클릭 시 선택 유지 (기존 선택 유지, 개별 토글)
-    passageBox.addEventListener('click', (e) => {
-      const sentence = e.target.closest('.sentence');
-      if (!sentence) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
-      // 첫 클릭 시 시작 시간 기록
-      if (!readingStartTime) {
-        readingStartTime = new Date();
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
-      }
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
 
-      // 클릭한 문장만 토글 (기존 선택은 그대로 유지)
-      sentence.classList.toggle('selected');
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
 
-      // 선택 상태 저장
-      saveSelection();
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
 
-      // 모든 문장 선택 완료 시 축하 토스트 + 폭죽
-      const total = passageBox.querySelectorAll('.sentence').length;
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
-      if (selected === 0) {
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = '00';
-        if (secInput) secInput.value = '00';
-        readingStartTime = null;
-        localStorage.removeItem(timeKey);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
       }
-      if (total > 0 && total === selected) {
-        // 완료 시간 기록
-        const endTime = new Date();
-        const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({
-          start: readingStartTime.toISOString(),
-          end: endTime.toISOString(),
-          duration: duration
-        }));
-
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'on_pol_01';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-
-        // 토스트
-        const toast = document.createElement('div');
-        toast.className = 'complete-toast';
-        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
-          <div style="font-size:14px;color:#666;line-height:1.6;">
-            <div>시작: ${formatDateTime(readingStartTime)}</div>
-            <div>완료: ${formatDateTime(endTime)}</div>
-            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
-          </div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-
-        // 반짝이 비 효과 (다양한 크기와 모양)
-        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
-        const shapes = ['●','★','◆','♥','✦'];
-        for (let i = 0; i < 60; i++) {
-          const sparkle = document.createElement('div');
-          sparkle.className = 'sparkle-rain';
-          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-          sparkle.style.left = Math.random() * 100 + 'vw';
-          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
-          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
-          document.body.appendChild(sparkle);
-          setTimeout(() => sparkle.remove(), 3500);
-        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 

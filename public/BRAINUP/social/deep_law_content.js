@@ -45,6 +45,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_01: {
     labelNo: '01',
     title: '⚖️ 왜 우리에게 법이 필요한가',
+    paragraphMain: [
+      '법의 탄생: 인간의 사회적 본성과 이해충돌에서 비롯된 법의 필요성과 정의를 살펴보다',
+      '법의 기능: 질서 유지, 분쟁 해결, 권리 보장의 세 가지 기능과 사법 기관의 역할을 알아보다',
+      '법의 분류: 공법과 사법, 실체법과 절차법으로 나뉘는 체계적 분류의 의미를 이해하다',
+      '법치주의 원칙: 법 앞의 평등, 소급 적용 금지, 명확성의 원칙으로 정의로운 법을 실현하다'
+    ],
     passage: [
       '인간은 태생적으로 <b>사회적 존재</b>이다. 혼자서는 생존할 수 없기에 타인과 더불어 살아가야 하며, 이 과정에서 필연적으로 이해관계의 충돌이 발생한다. 고대 사회에서는 힘이 센 자가 약자를 지배하는 <b>약육강식</b>의 논리가 지배했으나, 문명이 발전하면서 인류는 보다 합리적인 분쟁 해결 방식을 모색하게 되었다. 그 결과물이 바로 <b>법</b>이다. 법이란 국가 권력에 의해 강제되는 <b>사회 규범</b>으로, 구성원 모두가 준수해야 하는 행위의 기준을 제시한다. 법이 없다면 사회는 혼란에 빠지고, 개인의 자유와 권리는 보장받기 어렵다. 따라서 법은 단순한 규칙이 아니라 <b>사회 질서</b>를 유지하고 인간의 존엄성을 보호하기 위한 필수적인 장치라 할 수 있다.',
       '법은 다양한 기능을 수행한다. 첫째, <b>질서 유지 기능</b>이다. 법은 사회 구성원들이 지켜야 할 행동 규범을 명확히 제시함으로써 예측 가능한 사회생활을 가능하게 한다. 신호등을 지키고, 타인의 재산을 침해하지 않으며, 계약을 이행하는 것 모두 법이 정한 규범을 따르는 것이다. 둘째, <b>분쟁 해결 기능</b>이다. 개인 간 또는 집단 간에 갈등이 발생했을 때 법은 공정한 기준을 제시하여 분쟁을 평화적으로 해결한다. 법원이라는 <b>사법 기관</b>을 통해 객관적인 판단을 내림으로써 사적 복수나 폭력을 방지한다. 셋째, <b>권리 보장 기능</b>이다. 법은 개인의 생명, 신체, 재산, 자유 등 기본적 권리를 보호하고, 이를 침해하는 행위에 대해 제재를 가한다.',
@@ -141,6 +147,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_02: {
     labelNo: '02',
     title: '📜 대한민국의 설계도',
+    paragraphMain: [
+      '헌법의 특성: 최고법으로서 경성헌법의 성격과 현행 헌법의 핵심(대통령 직선제)을 알아보다',
+      '기본 원리: 국민주권주의, 자유민주주의, 법치주의를 통해 민주공화국의 가치를 천명하다',
+      '복지와 평화: 복지국가의 원리, 국제 평화주의, 평화통일의 원칙을 헌법에 규정하다',
+      '헌법재판소: 위헌법률심판, 권한쟁의심판, 헌법소원심판으로 헌법 질서를 수호하다'
+    ],
     passage: [
       '<b>헌법</b>은 국가의 근본 질서를 규정하는 최고법으로, 모든 법률의 기초가 된다. 일반 법률이 국회의 과반수 찬성으로 개정될 수 있는 것과 달리, 헌법 개정은 국회 재적의원 3분의 2 이상의 찬성과 <b>국민투표</b>를 거쳐야 하는 <b>경성헌법</b>의 성격을 지닌다. 이는 헌법이 정치적 상황에 따라 쉽게 변경되어서는 안 된다는 <b>헌법의 안정성</b>을 보장하기 위함이다. 대한민국 헌법은 1948년 제헌헌법 이래 아홉 차례 개정되었으며, 현행 헌법은 1987년 제9차 개정헌법으로 <b>대통령 직선제</b>와 5년 단임제를 핵심으로 한다. 헌법은 단순한 법 조문을 넘어 대한민국이라는 국가 공동체가 지향하는 가치와 이상을 담고 있는 설계도라 할 수 있다.',
       '대한민국 헌법은 몇 가지 <b>기본 원리</b>를 천명하고 있다. 첫째, <b>국민주권주의</b>이다. 헌법 제1조 2항은 "대한민국의 주권은 국민에게 있고, 모든 권력은 국민으로부터 나온다"고 규정한다. 이는 국가 권력의 정당성이 국민의 동의에서 비롯됨을 의미한다. 둘째, <b>자유민주주의</b>이다. 국민의 기본권을 보장하고 <b>권력분립</b>을 통해 국가 권력의 남용을 방지하며, 복수정당제와 선거를 통한 정권 교체를 보장한다. 셋째, <b>법치주의</b>이다. 국가의 모든 작용은 헌법과 법률에 근거해야 하며, 적법한 절차에 따라 이루어져야 한다. 이 원리들은 대한민국이 민주공화국으로서 갖추어야 할 핵심적인 가치를 제시한다.',
@@ -237,6 +249,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_03: {
     labelNo: '03',
     title: '🗽 나의 권리는 어디까지인가',
+    paragraphMain: [
+      '기본권의 의의: 자연권 사상에 뿌리를 둔 기본권의 정의와 인간 존엄의 이념적 기초를 살펴보다',
+      '기본권의 종류: 자유권·평등권·참정권·청구권·사회권의 다섯 가지 유형을 알아보다',
+      '기본권의 제한: 공공복리·질서 유지를 위해 법률로 제한되나 본질적 내용은 침해 불가하다',
+      '제한의 원칙: 법률유보, 과잉금지, 본질적 내용 침해 금지로 자의적 제한을 방지하다'
+    ],
     passage: [
       '<b>기본권</b>이란 헌법이 보장하는 국민의 기본적인 권리를 말한다. 기본권은 국가 권력으로부터 개인을 보호하고, 인간으로서의 존엄과 가치를 실현하기 위해 반드시 보장되어야 하는 권리이다. 대한민국 헌법은 <b>인간의 존엄과 가치</b>, <b>행복추구권</b>을 기본권의 이념적 기초로 삼고 있으며, 제10조에서 "모든 국민은 인간으로서의 존엄과 가치를 가지며, 행복을 추구할 권리를 가진다"고 선언하고 있다. 기본권은 역사적으로 국가 권력의 횡포에 맞서 시민들이 쟁취해 온 것으로, 근대 시민혁명을 통해 확립된 <b>자연권 사상</b>에 그 뿌리를 두고 있다. 오늘날 기본권은 단순히 국가의 간섭을 배제하는 소극적 권리를 넘어, 국가에 적극적인 보호와 급부를 요구할 수 있는 권리로까지 확대되었다.',
       '기본권은 그 성격에 따라 여러 유형으로 분류된다. <b>자유권</b>은 국가의 간섭 없이 개인의 자유로운 영역을 보장받는 권리로, 신체의 자유, 거주 이전의 자유, 직업 선택의 자유, 종교의 자유, 양심의 자유, 표현의 자유 등이 포함된다. <b>평등권</b>은 불합리한 차별을 받지 않을 권리로, 성별, 종교, 사회적 신분에 의한 차별을 금지한다. <b>참정권</b>은 국민이 국가의 정치적 의사 결정에 참여할 수 있는 권리로, 선거권과 피선거권, 국민투표권 등이 해당된다. <b>청구권</b>은 기본권이 침해되었을 때 국가에 구제를 요청할 수 있는 권리로, 재판청구권, 청원권, 국가배상청구권 등이 있다. <b>사회권</b>은 인간다운 생활을 위해 국가에 적극적인 배려를 요구할 수 있는 권리로, 교육권, 근로권, 환경권 등이 포함된다.',
@@ -333,6 +351,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_04: {
     labelNo: '04',
     title: '🏛️ 권력을 나누는 이유',
+    paragraphMain: [
+      '권력분립의 의의: 독재 방지를 위해 몽테스키외가 체계화한 삼권분립의 원리를 살펴보다',
+      '입법부: 국회의 법률 제정, 예산 심의, 국정감사, 탄핵소추권의 역할을 알아보다',
+      '행정부: 대통령을 수반으로 국무회의, 행정각부, 감사원의 권한과 기능을 살펴보다',
+      '사법부: 대법원과 법원의 재판 독립, 헌법재판소와 선거관리위원회의 역할을 이해하다'
+    ],
     passage: [
       '국가 권력이 한 사람이나 한 기관에 집중되면 <b>독재</b>와 권력 남용의 위험이 커진다. 역사적으로 절대 권력을 가진 왕이나 독재자가 국민의 자유와 권리를 억압한 사례는 수없이 많다. 이러한 폐해를 막기 위해 근대 민주주의 국가들은 <b>권력분립</b>의 원칙을 채택했다. 권력분립이란 국가 권력을 <b>입법권</b>, <b>행정권</b>, <b>사법권</b>으로 나누어 서로 다른 기관이 담당하게 함으로써 권력 간의 균형과 견제를 이루는 것이다. 이 이론은 18세기 프랑스의 사상가 <b>몽테스키외</b>에 의해 체계화되었으며, 오늘날 대부분의 민주주의 국가에서 채택하고 있다. 대한민국 헌법도 삼권분립을 기본 원리로 삼아 국회, 행정부, 법원이 각각 독립적으로 권한을 행사하도록 규정하고 있다.',
       '<b>국회</b>는 입법권을 행사하는 기관으로, 국민의 대표인 <b>국회의원</b>으로 구성된다. 국회는 법률을 제정하고 개정하며, 국가 예산을 심의하고 확정하는 역할을 한다. 또한 행정부를 감시하고 견제하기 위해 <b>국정감사</b>와 국정조사를 실시하며, 대통령이 임명하는 고위 공직자에 대한 <b>인사청문회</b>를 개최한다. 중대한 헌법 위반이나 직무 수행의 문제가 있는 공무원에 대해서는 <b>탄핵소추</b>권을 행사할 수 있다. 현재 대한민국 국회는 300명의 국회의원으로 구성되며, 4년마다 총선거를 통해 선출된다. 국회의원은 <b>불체포특권</b>과 <b>면책특권</b>을 가지며, 이는 의원이 소신껏 의정활동을 할 수 있도록 보장하기 위한 것이다.',
@@ -429,6 +453,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_05: {
     labelNo: '05',
     title: '🗳️ 한 표가 세상을 바꾼다',
+    paragraphMain: [
+      '선거의 의의: 국민 주권을 실현하는 핵심 수단으로서 선거권의 범위와 투표 참여의 중요성을 알아보다',
+      '선거의 원칙: 보통·평등·직접·비밀 선거의 네 가지 원칙으로 공정한 선거를 보장하다',
+      '정당의 역할: 정치적 견해를 공유하는 사람들이 정강 정책을 체계화하고 여당·야당으로 활동하다',
+      '선거 참여: 선거 운동, 공약 비교, 매니페스토 검토로 성숙한 민주 시민의 자세를 기르다'
+    ],
     passage: [
       '민주주의 국가에서 국민이 정치에 참여하는 가장 기본적인 방법은 <b>선거</b>이다. 선거란 국민이 직접 투표를 통해 자신을 대표할 사람을 선출하는 제도로, 국민 주권을 실현하는 핵심적인 수단이다. 대한민국에서는 만 18세 이상의 국민에게 <b>선거권</b>이 부여되며, 대통령 선거, 국회의원 선거, 지방 선거 등 다양한 선거가 실시된다. 선거를 통해 국민은 자신의 의견을 정치에 반영하고, 국가 운영에 간접적으로 참여하게 된다. 선거권은 단순한 권리가 아니라 민주 시민으로서의 책임이기도 하다. 투표율이 낮아지면 특정 집단의 이익만 대표될 수 있으므로, 적극적인 정치 참여가 민주주의의 건강성을 유지하는 데 필수적이다.',
       '공정한 선거를 위해서는 몇 가지 기본 원칙이 지켜져야 한다. 먼저 <b>보통 선거</b>는 일정 연령 이상의 모든 국민에게 선거권을 부여하는 원칙으로, 재산이나 성별, 학력에 관계없이 누구나 투표할 수 있음을 의미한다. <b>평등 선거</b>는 모든 유권자의 표가 동등한 가치를 갖는다는 원칙이다. 부자의 한 표나 가난한 사람의 한 표나 똑같은 영향력을 행사한다. <b>직접 선거</b>는 유권자가 대리인 없이 직접 투표하는 것을 말하고, <b>비밀 선거</b>는 누구에게 투표했는지 비밀이 보장되어야 한다는 원칙이다. 이러한 원칙들이 지켜질 때 선거의 공정성과 정당성이 확보된다.',
@@ -525,6 +555,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_06: {
     labelNo: '06',
     title: '👤 법 앞에 선 나, 권리의 주체',
+    paragraphMain: [
+      '민법의 기초: 개인 간 관계를 규율하는 민법의 정의와 권리·의무의 개념을 알아보다',
+      '권리능력: 자연인과 법인의 권리능력, 권리능력 평등의 원칙으로 법적 주체가 되다',
+      '행위능력: 미성년자의 행위능력 제한과 법정대리인의 동의, 취소권으로 약자를 보호하다',
+      '민법의 원칙: 사적 자치, 소유권 절대, 과실책임의 원칙과 현대적 수정을 이해하다'
+    ],
     passage: [
       '<b>민법</b>은 개인과 개인 사이의 관계를 규율하는 법으로, 우리 일상생활에서 가장 밀접하게 적용되는 법이다. 물건을 사고팔거나, 집을 빌리거나, 결혼을 하는 등 개인 간의 모든 거래와 관계가 민법의 적용을 받는다. 민법의 가장 기본적인 개념은 <b>권리</b>와 <b>의무</b>이다. 권리란 법이 인정하는 이익을 누릴 수 있는 힘이고, 의무란 반드시 해야 할 일 또는 하지 말아야 할 일이다. 예를 들어 물건을 산 사람은 물건을 받을 권리가 있고, 판 사람은 물건을 넘겨줄 의무가 있다. 이처럼 민법은 사람들 사이에 권리와 의무가 어떻게 발생하고 행사되는지를 정하고 있다.',
       '민법에서 권리와 의무의 주체가 될 수 있는 존재를 <b>권리능력</b>을 가진다고 말한다. 모든 <b>자연인</b>, 즉 사람은 태어나면서부터 권리능력을 갖는다. 이것은 신분이나 재산과 상관없이 누구에게나 인정되는 것으로, 근대 민법의 핵심 원리인 <b>권리능력 평등의 원칙</b>이다. 한편 회사나 학교, 재단 같은 단체도 법이 정한 요건을 갖추면 <b>법인</b>으로서 권리능력을 가질 수 있다. 법인은 자연인이 아니지만 법적으로 사람처럼 취급되어 계약을 체결하고 재산을 소유할 수 있다. 이처럼 민법은 거래의 주체를 명확히 함으로써 법적 안정성을 보장한다.',
@@ -621,6 +657,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_07: {
     labelNo: '07',
     title: '📝 약속은 지켜야 한다',
+    paragraphMain: [
+      '계약의 성립: 법적 효력 있는 합의로서 청약과 승낙을 통해 계약이 성립하다',
+      '계약의 한계: 계약 자유의 원칙과 공서양속 위반, 사기·강박 계약의 무효·취소를 알아보다',
+      '채무 불이행: 채무의 개념과 이행 지체·이행 불능·불완전 이행에 따른 손해배상을 이해하다',
+      '소비자 보호: 청약 철회권, 불공정약관 규제, 신의성실의 원칙으로 약자를 보호하다'
+    ],
     passage: [
       '우리는 일상생활에서 수많은 약속을 한다. 친구와 만나기로 한 시간, 부모님께 한 다짐 등 다양한 약속이 있다. 그런데 법적으로 효력이 있는 특별한 약속이 있는데, 그것이 바로 <b>계약</b>이다. 계약이란 두 명 이상의 당사자가 서로 합의하여 법적 효력이 있는 약속을 하는 것이다. 물건을 사고팔거나, 집을 빌리거나, 일자리를 얻는 것 모두 계약을 통해 이루어진다. 계약이 성립하려면 한쪽의 <b>청약</b>(계약을 제안함)과 다른 쪽의 <b>승낙</b>(제안을 받아들임)이 있어야 한다. 예를 들어 가게에서 "이 물건 주세요"라고 하고 점원이 "네, 1만원입니다"라고 하면 매매 계약이 성립한다.',
       '계약의 가장 중요한 원칙은 <b>계약 자유의 원칙</b>이다. 이는 누구와 어떤 내용으로 계약을 맺을지 개인이 자유롭게 결정할 수 있다는 것이다. 국가가 개인의 계약에 함부로 간섭하지 않는다는 의미이기도 하다. 그러나 계약 자유에도 한계가 있다. 법에 어긋나거나 <b>공서양속</b>(공공의 질서와 선량한 풍속)에 반하는 계약은 무효가 된다. 예를 들어 도박 빚을 갚겠다는 계약이나 범죄를 대가로 한 계약은 처음부터 법적 효력이 없다. 또한 상대방을 속이거나(<b>사기</b>), 위협하여(<b>강박</b>) 맺은 계약은 취소할 수 있다.',
@@ -717,6 +759,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_08: {
     labelNo: '08',
     title: '🏠 내 것과 네 것의 경계',
+    paragraphMain: [
+      '재산권과 물권: 헌법이 보장하는 재산권과 물건을 직접 지배하는 소유권의 개념을 알아보다',
+      '물권의 종류: 점유권·지상권·전세권·저당권 등 다양한 물권과 물권법정주의를 이해하다',
+      '물권의 취득: 부동산 등기와 동산 인도, 취득시효를 통한 소유권 취득 방법을 살펴보다',
+      '물권의 제한: 공공복리를 위한 수용, 상린관계, 주위토지통행권으로 사회적 조화를 이루다'
+    ],
     passage: [
       '사람이 살아가려면 음식, 옷, 집 등 여러 가지 물건이 필요하다. 이러한 물건에 대한 권리를 <b>재산권</b>이라고 하며, 헌법에서도 보장하는 중요한 기본권 중 하나이다. 재산권 중에서 물건에 대해 직접적으로 지배할 수 있는 권리를 <b>물권</b>이라고 한다. 물권은 누구에게나 주장할 수 있는 권리로, 다른 사람이 함부로 침해할 수 없다. 가장 대표적인 물권이 <b>소유권</b>이다. 소유권이란 물건을 자유롭게 사용하고, 수익을 얻고, 처분할 수 있는 권리이다. 내 책상, 내 휴대폰에 대해 내가 마음대로 쓰고 팔 수 있는 것은 소유권이 있기 때문이다.',
       '소유권 외에도 다양한 물권이 있다. <b>점유권</b>은 물건을 실제로 지배하고 있다는 사실에 기초한 권리이다. 내 물건이 아니더라도 빌려서 가지고 있으면 점유권이 인정된다. <b>지상권</b>은 다른 사람의 토지 위에 건물이나 시설물을 소유하기 위해 그 토지를 사용할 수 있는 권리이다. <b>전세권</b>은 전세금을 주고 다른 사람의 부동산을 사용·수익할 수 있는 권리이다. <b>저당권</b>은 돈을 빌려준 사람이 채무자의 부동산을 담보로 잡는 권리로, 돈을 갚지 않으면 그 부동산을 팔아 빚을 회수할 수 있다. 이처럼 물권의 종류는 법률로 정해져 있는데, 이를 <b>물권법정주의</b>라고 한다.',
@@ -813,6 +861,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_09: {
     labelNo: '09',
     title: '💍 가족, 법으로 묶인 인연',
+    paragraphMain: [
+      '가족법의 원리: 양성평등과 개인의 존엄을 기본으로 현대 가족법이 발전해왔음을 알아보다',
+      '혼인의 성립: 혼인신고의 법적 효력, 혼인 요건, 부부의 권리와 의무를 살펴보다',
+      '이혼의 유형: 협의 이혼과 재판 이혼, 친권·양육권·재산 분할·위자료 결정 방법을 이해하다',
+      '친자와 상속: 친자 관계의 성립, 인지, 입양, 상속 순위와 배우자·자녀의 권리를 알아보다'
+    ],
     passage: [
       '가족은 사회의 가장 기본적인 단위이며, 법은 가족 간의 관계를 규율하는 규정을 두고 있다. 이를 <b>가족법</b> 또는 <b>친족법</b>이라고 한다. 가족법에서 다루는 내용은 크게 <b>혼인</b>(결혼), <b>이혼</b>, <b>친자</b>(부모와 자녀) 관계, <b>상속</b> 등으로 나뉜다. 과거에는 가부장적 가족 제도가 법에 반영되어 있었지만, 현대 가족법은 양성평등과 개인의 존엄을 기본 원리로 삼고 있다. 헌법에서도 "혼인과 가족생활은 개인의 존엄과 양성의 평등을 기초로 성립되고 유지되어야 한다"고 규정하고 있다. 가족법은 시대의 변화에 따라 계속 발전하고 있다.',
       '<b>혼인</b>은 법적으로 부부가 되는 것으로, 혼인신고를 해야 법적 효력이 발생한다. 결혼식을 올렸더라도 신고하지 않으면 법적으로는 부부가 아니다. 혼인의 요건으로는 만 18세 이상이어야 하고, 당사자 간 합의가 있어야 하며, 근친혼이나 중혼(이미 결혼한 사람이 또 결혼)은 금지된다. 혼인하면 부부는 서로 <b>부양</b>할 의무가 생기고, <b>동거</b>할 의무와 <b>정조</b>의 의무를 지게 된다. 부부는 서로의 재산을 어떻게 관리할지 약정할 수 있는데, 이를 <b>부부재산제</b>라고 한다. 혼인 중 형성한 재산은 원칙적으로 부부 공동으로 기여한 것으로 본다.',
@@ -909,6 +963,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_10: {
     labelNo: '10',
     title: '🚨 무엇이 범죄인가',
+    paragraphMain: [
+      '형법의 원칙: 죄형법정주의로 국가의 자의적 처벌을 막고 개인의 자유를 보장하다',
+      '범죄의 성립: 구성요건 해당성, 위법성, 정당방위·긴급피난의 위법성 조각을 이해하다',
+      '책임의 요건: 고의와 과실의 차이, 책임능력, 형사미성년자의 불벌을 알아보다',
+      '형벌과 교화: 9종의 형벌과 교화·사회복귀를 위한 집행유예·보호관찰 제도를 살펴보다'
+    ],
     passage: [
       '<b>형법</b>은 어떤 행위가 범죄인지를 정하고, 범죄를 저지른 사람에게 어떤 <b>형벌</b>을 내릴지를 규정하는 법이다. 사회 질서를 유지하고 국민의 생명, 신체, 재산을 보호하기 위해 국가는 특정 행위를 금지하고 이를 어기면 처벌한다. 형법의 가장 중요한 원칙은 <b>죄형법정주의</b>이다. 이는 "법률 없으면 범죄도 없고, 법률 없으면 형벌도 없다"는 원칙으로, 어떤 행위를 처벌하려면 반드시 미리 법률로 그 행위를 범죄로 규정하고 형벌을 정해 두어야 한다는 것이다. 이 원칙은 국가가 자의적으로 국민을 처벌하지 못하도록 막아 개인의 자유와 권리를 보장하는 역할을 한다.',
       '어떤 행위가 범죄로 인정되려면 세 가지 요건을 갖추어야 한다. 첫째, <b>구성요건</b> 해당성이다. 구성요건이란 법률에 규정된 범죄의 유형을 말하며, 행위가 이에 해당해야 범죄가 될 수 있다. 예를 들어 남의 물건을 몰래 가져가는 행위는 절도죄의 구성요건에 해당한다. 둘째, <b>위법성</b>이다. 행위가 법질서 전체에 비추어 허용되지 않는 것이어야 한다. 구성요건에 해당하더라도 <b>정당방위</b>나 <b>긴급피난</b> 같은 사유가 있으면 위법성이 조각되어 범죄가 성립하지 않는다. 정당방위란 자신이나 타인에 대한 위협을 막기 위한 방어 행위를, 긴급피난은 긴박한 위험을 피하기 위한 행위를 말한다.',
@@ -1007,6 +1067,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_11: {
     labelNo: '11',
     title: '💥 피해를 입었다면 배상받자',
+    paragraphMain: [
+      '불법행위의 개념: 위법하게 타인에게 손해를 끼치는 행위와 민법 제750조의 법적 근거를 알아보다',
+      '성립 요건: 고의·과실, 위법성, 손해 발생, 인과관계의 네 가지 요건을 충족해야 성립하다',
+      '특수불법행위: 감독자책임, 사용자책임, 공작물책임 등 피해자 보호를 강화하는 유형을 살펴보다',
+      '손해배상 방법: 금전배상 원칙, 적극적·소극적 손해, 과실상계, 소멸시효를 이해하다'
+    ],
     passage: [
       '일상생활에서 타인의 잘못된 행위로 인해 피해를 입는 경우가 있다. 교통사고로 부상을 당하거나, 이웃집 공사 소음으로 고통을 받거나, 다른 사람의 SNS 글로 명예가 훼손되는 상황 등이 그 예이다. 이처럼 위법한 행위로 타인에게 손해를 끼치는 것을 <b>불법행위</b>라고 한다. 불법행위가 성립하면 가해자는 피해자에게 <b>손해배상</b> 책임을 진다. 손해배상이란 피해자가 입은 손해를 금전이나 기타 방법으로 전보하는 것을 말한다. 민법 제750조는 "고의 또는 과실로 인한 위법행위로 타인에게 손해를 가한 자는 그 손해를 배상할 책임이 있다"고 규정하여 불법행위에 대한 손해배상 책임을 명시하고 있다.',
       '불법행위가 성립하려면 네 가지 요건을 충족해야 한다. 첫째, <b>고의</b> 또는 <b>과실</b>이 있어야 한다. 고의는 자신의 행위가 손해를 발생시킬 것을 알면서도 행하는 것이고, 과실은 주의의무를 게을리하여 손해를 발생시키는 것이다. 둘째, <b>위법성</b>이 있어야 한다. 가해 행위가 법질서에 반하는 것이어야 한다. 셋째, <b>손해</b>가 발생해야 한다. 손해에는 재산적 손해뿐만 아니라 <b>정신적 손해</b>도 포함된다. 정신적 고통에 대한 배상을 <b>위자료</b>라고 한다. 넷째, 가해 행위와 손해 사이에 <b>인과관계</b>가 있어야 한다. 즉, 그 행위가 없었다면 손해도 발생하지 않았을 것이라는 관계가 인정되어야 한다.',
@@ -1103,6 +1169,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_12: {
     labelNo: '12',
     title: '⚖️ 법정에서는 무슨 일이',
+    paragraphMain: [
+      '재판의 종류: 민사·형사·행정재판의 성격과 제기 사유를 구분하여 알아보다',
+      '민사재판 절차: 원고·피고, 소장 제출, 처분권주의와 변론주의 원칙을 이해하다',
+      '형사재판 절차: 기소, 무죄추정의 원칙, 검사의 입증책임, 피고인의 권리를 살펴보다',
+      '상소와 삼심제: 항소·상고, 기판력, 공개재판주의로 재판의 공정성을 보장하다'
+    ],
     passage: [
       '법적 분쟁이 발생하면 당사자들은 법원에 재판을 청구하여 해결할 수 있다. <b>재판</b>이란 법원이 법률에 따라 분쟁을 심리하고 판단하는 절차를 말한다. 재판은 그 성격에 따라 크게 <b>민사재판</b>, <b>형사재판</b>, <b>행정재판</b>으로 나뉜다. 민사재판은 개인과 개인 사이의 권리 분쟁을 해결하는 재판이다. 예를 들어 돈을 빌려준 사람이 돌려받지 못했을 때, 계약을 이행하지 않았을 때 제기한다. 형사재판은 범죄 혐의가 있는 사람을 처벌할지를 결정하는 재판이며, 검사가 피고인을 기소하면 시작된다. 행정재판은 국가나 지방자치단체의 행정처분에 불복할 때 제기하는 재판이다.',
       '민사재판의 절차를 살펴보면, 권리를 주장하는 측이 <b>원고</b>가 되어 법원에 <b>소장</b>을 제출하면 소송이 시작된다. 소송을 당하는 측은 <b>피고</b>라고 한다. 법원은 양측의 주장과 증거를 심리하고 <b>판결</b>을 내린다. 민사재판에서는 <b>처분권주의</b>와 <b>변론주의</b>가 적용된다. 처분권주의란 소송의 개시, 범위, 종결을 당사자가 결정한다는 원칙이고, 변론주의란 판단의 기초가 되는 사실과 증거를 당사자가 제출해야 한다는 원칙이다. 따라서 민사소송에서는 당사자가 적극적으로 자신의 주장을 입증해야 한다.',
@@ -1199,6 +1271,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_13: {
     labelNo: '13',
     title: '🤝 싸우지 않고 해결하는 법',
+    paragraphMain: [
+      '분쟁 해결의 선택: 소송과 대안적 분쟁 해결(ADR)의 장단점을 비교하다',
+      '화해와 조정: 당사자 간 합의와 조정인의 도움으로 원만하게 해결하다',
+      '중재 제도: 중재인의 판정에 따르는 방식과 국제 상거래 분쟁에서의 활용을 알아보다',
+      '행정심판과 법률구조: 행정 분쟁 해결과 대한법률구조공단의 무료 법률 서비스를 살펴보다'
+    ],
     passage: [
       '사람들 사이에 갈등이나 분쟁이 발생하면 이를 해결할 방법이 필요하다. 분쟁 해결 방법은 크게 <b>소송</b>과 <b>대안적 분쟁 해결(ADR)</b>로 나눌 수 있다. 소송은 법원에 재판을 청구하여 판결로 분쟁을 해결하는 방법이다. 법원의 판결은 법적 구속력이 있어 강제 집행이 가능하다는 장점이 있다. 그러나 소송은 시간과 비용이 많이 들고, 당사자 간의 관계가 악화될 수 있다는 단점이 있다. 이에 따라 소송 외에도 당사자가 합의하거나 제3자의 도움을 받아 분쟁을 해결하는 대안적 방법들이 활용되고 있다. 이러한 방법들은 소송보다 신속하고 비용이 적게 들며, 당사자 간의 관계를 유지할 수 있다는 장점이 있다.',
       '대안적 분쟁 해결 방법 중 하나가 <b>화해</b>이다. 화해는 분쟁 당사자들이 서로 양보하여 합의에 이르는 것을 말한다. 당사자들이 직접 대화하여 해결하므로 가장 원만한 방법이다. <b>조정</b>은 제3자인 <b>조정인</b>이 당사자 사이에서 의견을 조율하여 합의를 도출하도록 돕는 방법이다. 조정인은 판단을 내리지 않고, 당사자들이 스스로 합의점을 찾도록 중재한다. 법원에서 운영하는 <b>민사조정</b>이나 분야별 <b>분쟁조정위원회</b>가 대표적이다. 소비자 분쟁, 의료 분쟁, 건설 분쟁 등 다양한 분야에 조정 제도가 마련되어 있으며, 조정이 성립하면 재판상 화해와 같은 효력이 발생한다.',
@@ -1295,6 +1373,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_14: {
     labelNo: '14',
     title: '💼 일하는 사람을 지키는 법',
+    paragraphMain: [
+      '노동법의 탄생: 산업혁명 이후 근로자 보호를 위해 발전한 노동법과 근로기준법의 의의를 알아보다',
+      '근로자 보호 규정: 근로계약 서면 교부, 법정근로시간, 연장근로 가산, 최저임금, 연차유급휴가를 살펴보다',
+      '노동3권의 보장: 단결권, 단체교섭권, 단체행동권을 통해 사용자와 대등한 지위에서 교섭하다',
+      '근로자 구제 제도: 부당해고 시 노동위원회 구제, 임금체불 대응, 산업재해보상보험을 활용하다'
+    ],
     passage: [
       '자본주의 사회에서 대부분의 사람들은 노동을 통해 생계를 유지한다. <b>근로자</b>란 사용자에게 고용되어 노무를 제공하고 그 대가로 <b>임금</b>을 받는 사람을 말한다. 산업혁명 이후 근로자들은 장시간 노동, 저임금, 열악한 작업 환경 등으로 고통받았다. 이에 따라 근로자를 보호하기 위한 <b>노동법</b>이 발전하였다. 우리 헌법은 제32조에서 근로의 권리를 보장하고, 근로 조건의 기준은 인간의 존엄성을 보장하도록 법률로 정한다고 명시하고 있다. <b>근로기준법</b>은 이러한 헌법 정신을 구체화하여 근로 조건의 최저 기준을 규정하는 법률이다.',
       '근로기준법은 근로자 보호를 위한 다양한 규정을 두고 있다. 우선 <b>근로계약</b>을 체결할 때 사용자는 임금, 근로시간, 휴일 등 중요한 근로조건을 명시한 서면을 근로자에게 교부해야 한다. <b>법정근로시간</b>은 1일 8시간, 1주 40시간이며, 이를 초과하면 <b>연장근로</b>로서 통상임금의 50% 이상을 가산하여 지급해야 한다. <b>최저임금</b>은 국가가 정하는 임금의 최저 수준으로, 사용자는 이보다 낮은 임금을 지급할 수 없다. 또한 근로자에게는 <b>연차유급휴가</b>가 주어지며, 1년간 80% 이상 출근한 근로자에게 15일의 유급휴가가 보장된다.',
@@ -1391,6 +1475,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_15: {
     labelNo: '15',
     title: '🌍 세계를 묶는 약속',
+    paragraphMain: [
+      '국제법의 연원: 조약과 국제관습법, 법의 일반원칙 등 국가 간 관계를 규율하는 국제법의 근거를 살펴보다',
+      '유엔의 구성: 총회, 안전보장이사회, 국제사법재판소 등 유엔 기관과 상임이사국의 거부권을 알아보다',
+      '국제기구의 역할: WTO, IMF, WHO, ILO 등 다양한 국제기구가 국제 협력을 이끌어내다',
+      '국제법의 실효성: 유엔 안보리의 제재, 국제형사재판소의 개인 처벌, 국제 여론으로 법 준수를 유도하다'
+    ],
     passage: [
       '오늘날 세계에는 190여 개의 주권 국가가 존재하며, 이들 국가 간의 관계를 규율하는 법이 <b>국제법</b>이다. 국제법의 주된 연원(법원)에는 <b>조약</b>과 <b>국제관습법</b>이 있다. 조약은 국가 간에 문서로 체결되는 합의로서, 협약, 협정, 헌장, 의정서 등 다양한 이름으로 불린다. 조약에 가입한 국가는 <b>비준</b> 절차를 거쳐 그 내용에 구속된다. 국제관습법은 오랜 기간 국가들의 관행이 법적 확신을 갖추어 법규범으로 인정된 것이다. 외교관의 특권과 면제, 공해 자유의 원칙 등이 대표적이다. 이 외에도 <b>법의 일반원칙</b>, 국제재판소의 판례, 학설 등이 국제법의 연원으로 인정된다.',
       '국제 평화와 안전을 유지하기 위해 1945년 <b>유엔</b>(UN, 국제연합)이 설립되었다. 유엔은 총회, <b>안전보장이사회</b>, 경제사회이사회, 국제사법재판소, 사무국 등으로 구성된다. 총회는 모든 회원국이 참여하는 최고 의결기관이며, 안전보장이사회는 국제 평화와 안전에 관한 사항을 결정한다. 안보리는 5개 상임이사국(미국, 영국, 프랑스, 러시아, 중국)과 10개 비상임이사국으로 구성되며, 상임이사국은 <b>거부권</b>을 가진다. <b>국제사법재판소</b>(ICJ)는 국가 간 법적 분쟁을 재판하는 유엔의 사법기관이다.',
@@ -1487,6 +1577,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_16: {
     labelNo: '16',
     title: '🛒 현명한 소비자가 되려면',
+    paragraphMain: [
+      '소비자의 권리: 소비자기본법이 보장하는 8대 소비자 권리의 내용과 의의를 이해하다',
+      '청약철회 제도: 통신판매 시 7일 이내 청약철회권과 불공정 약관 규제를 알아보다',
+      '피해구제 방법: 한국소비자원, 소비자분쟁조정위원회, 소비자집단소송으로 피해를 구제받다',
+      '현명한 소비 습관: 약관과 품질보증서 확인, 증거 보관으로 소비자 권리를 지키다'
+    ],
     passage: [
       '현대 사회에서 우리는 매일 <b>소비자</b>로서 상품을 구매하고 서비스를 이용한다. 소비자란 사업자가 제공하는 물품이나 용역을 소비생활을 위해 사용하는 자를 말한다. 과거에는 "구매자 위험 부담"이라는 원칙이 적용되어 소비자가 불량 상품을 구매해도 스스로 책임져야 했다. 그러나 오늘날에는 소비자를 보호하기 위한 법률이 발전했다. <b>소비자기본법</b>은 소비자의 기본 권리와 보호에 관한 사항을 규정하는 법률이다. 이 법에 따르면 소비자는 안전할 권리, 알 권리, 선택할 권리, 의견을 반영할 권리, 피해를 보상받을 권리, 교육받을 권리, 단체를 조직할 권리, 쾌적한 소비생활 환경에서 소비할 권리 등 <b>8대 소비자 권리</b>를 가진다.',
       '물품을 구매하거나 서비스를 이용할 때 문제가 발생하면 소비자는 <b>청약철회</b>를 할 수 있다. 청약철회란 계약 체결 후 일정 기간 내에 이유 없이 계약을 취소할 수 있는 권리이다. <b>전자상거래법</b>에 따르면 인터넷 쇼핑 등 통신판매의 경우 상품을 받은 날부터 7일 이내에 청약철회가 가능하다. 다만 소비자의 사용으로 상품 가치가 현저히 떨어진 경우 등에는 청약철회가 제한된다. <b>약관</b>은 사업자가 미리 작성해 놓은 계약 내용인데, 소비자에게 부당하게 불리한 약관 조항은 <b>약관규제법</b>에 따라 무효가 될 수 있다.',
@@ -1583,6 +1679,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_17: {
     labelNo: '17',
     title: '💡 아이디어도 재산이다',
+    paragraphMain: [
+      '지식재산권의 개념: 무형의 지적 창작물을 보호하는 산업재산권과 저작권의 차이를 이해하다',
+      '산업재산권의 유형: 특허권(20년), 실용신안권(10년), 디자인권(20년), 상표권(갱신 가능)의 특징을 살펴보다',
+      '저작권의 구성: 저작인격권과 저작재산권의 차이, 저작권침해와 공정이용의 균형을 알아보다',
+      '지식재산권 보호: 민사·형사·행정적 구제수단과 국제적 보호체계로 창작물을 지키다'
+    ],
     passage: [
       '<b>지식재산권</b>이란 인간의 지적 창작 활동의 결과물에 대해 법이 인정하는 재산적 권리를 말한다. 토지나 건물 같은 유형 재산과 달리 지식재산은 눈에 보이지 않는 무형의 가치를 대상으로 한다는 특징이 있다. 지식재산권은 크게 <b>산업재산권</b>과 <b>저작권</b>으로 나뉜다. 산업재산권은 산업 활동과 관련된 발명, 디자인, 상표 등을 보호하며 특허청에 등록해야 권리가 발생한다. 반면 저작권은 문학, 예술, 학술 분야의 창작물을 보호하고 창작과 동시에 자동으로 권리가 발생한다. 지식기반사회에서 지식재산권은 국가 경쟁력의 핵심 요소로 부상하였으며, 지식재산의 창출, 보호, 활용이 경제 성장의 원동력이 되고 있다.',
       '산업재산권의 대표적인 유형으로는 <b>특허권</b>, <b>실용신안권</b>, <b>디자인권</b>, <b>상표권</b>이 있다. 특허권은 자연법칙을 이용한 기술적 사상의 창작으로서 고도한 것, 즉 발명을 보호하며 출원일로부터 20년간 독점적 권리가 인정된다. 실용신안권은 물품의 형상, 구조, 조합에 관한 고안으로 특허보다 진보성 요건이 낮고 출원일로부터 10년간 보호된다. 디자인권은 물품의 형상, 모양, 색채 또는 이들의 결합으로 시각을 통해 미감을 일으키는 것을 보호하며 등록일로부터 20년간 유효하다. 상표권은 자기의 상품을 타인의 상품과 식별하기 위한 표지를 보호하며 10년마다 갱신 가능하여 반영구적 보호가 가능하다.',
@@ -1679,6 +1781,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_18: {
     labelNo: '18',
     title: '🌿 자연을 지키는 법',
+    paragraphMain: [
+      '환경권과 환경법: 헌법이 보장하는 환경권과 사전예방·오염원인자책임의 원칙을 이해하다',
+      '환경오염 규제: 배출허용기준의 직접 규제와 탄소배출권거래제의 경제적 유인 방식을 살펴보다',
+      '환경피해 구제: 무과실책임과 인과관계추정, 환경분쟁조정제도로 피해자를 보호하다',
+      '환경범죄와 국제협력: 가중처벌과 파리협정 등 국제조약으로 지속가능한 발전을 추구하다'
+    ],
     passage: [
       '<b>환경권</b>은 건강하고 쾌적한 환경에서 생활할 권리로 헌법 제35조에서 보장하는 기본권이다. 환경권은 국가에 대해 환경보전을 위한 정책을 요구할 수 있는 권리이자, 환경을 훼손하는 행위로부터 보호받을 권리를 포함한다. 환경법은 이러한 환경권을 실현하기 위한 법률 체계로, <b>환경정책기본법</b>을 기본법으로 하여 대기환경보전법, 수질 및 수생태계 보전에 관한 법률, 폐기물관리법 등 개별법으로 구성된다. 환경법의 기본 원칙으로는 <b>사전예방의원칙</b>, <b>오염원인자책임원칙</b>, <b>협력의원칙</b> 등이 있으며, 환경오염을 사후에 치유하기보다 미리 방지하는 것이 더 효율적이라는 인식에 기반한다.',
       '환경오염을 규제하는 주요 수단으로는 직접 규제와 경제적 유인이 있다. 직접 규제는 <b>배출허용기준</b>을 설정하여 오염물질의 배출량을 법적으로 제한하는 방식이다. 이를 위반하면 개선명령, 조업정지, 과징금 등 행정처분을 받을 수 있다. 경제적 유인 방식에는 <b>환경개선부담금</b>, <b>배출부과금</b>, <b>탄소배출권거래제</b> 등이 있다. 배출부과금은 오염물질 배출량에 비례하여 부과하는 금전적 부담으로 오염저감 유인을 제공한다. 탄소배출권거래제는 온실가스 배출 허용량을 정하고 남거나 부족한 배출권을 시장에서 거래하게 하여 효율적인 감축을 유도하는 제도이다.',
@@ -1775,6 +1883,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_19: {
     labelNo: '19',
     title: '👦 미성년자의 법적 지위',
+    paragraphMain: [
+      '민법상 미성년자: 법정대리인 동의 필요와 단독으로 가능한 법률행위의 예외를 알아보다',
+      '형사법상 보호: 형사미성년자 제도와 소년법에 따른 보호처분으로 청소년을 교화하다',
+      '청소년 보호 법률: 청소년보호법, 아동학대처벌법, 학교폭력예방법으로 안전을 지키다',
+      '연소근로자 보호: 근로시간 제한, 야간근로 금지, 본인 직접 계약으로 노동 착취를 방지하다'
+    ],
     passage: [
       '법에서 <b>미성년자</b>란 만 19세가 되지 않은 사람을 말하며, 민법상 미성년자는 단독으로 유효한 법률행위를 할 수 없다. 미성년자가 법률행위를 하려면 <b>법정대리인</b>의 동의가 필요하며, 동의 없이 한 법률행위는 법정대리인이 <b>취소</b>할 수 있다. 법정대리인은 통상 친권자인 부모가 되며, 부모가 없거나 친권을 행사할 수 없는 경우 후견인이 법정대리인이 된다. 다만 미성년자도 용돈 범위 내의 처분행위, 권리만 얻거나 의무만 면하는 행위, 영업이 허락된 범위 내의 행위 등은 단독으로 유효하게 할 수 있다. 이러한 <b>미성년자보호제도</b>는 사회 경험과 판단력이 부족한 미성년자를 보호하기 위한 것이다.',
       '형사법에서는 <b>형사미성년자</b> 제도를 두어 만 14세 미만의 자는 형사책임능력이 없는 것으로 본다. 따라서 만 14세 미만자가 범죄를 저질러도 형사처벌을 받지 않으며, 대신 <b>소년법</b>에 따라 보호처분을 받을 수 있다. 만 14세 이상 19세 미만의 <b>소년범</b>에 대해서는 성인과 달리 소년부 송치, 보호관찰, 소년원 송치 등 <b>보호처분</b>이 가능하다. 소년법은 범죄소년, 촉법소년, 우범소년을 구분하여 규율하며, 환경의 조정과 품행의 교정을 통해 소년의 건전한 성장을 도모하는 것을 목적으로 한다. 다만 흉악범죄의 경우 검찰 송치되어 형사재판을 받을 수 있다.',
@@ -1871,6 +1985,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_law_20: {
     labelNo: '20',
     title: '📋 알아두면 좋은 법',
+    paragraphMain: [
+      '부동산 거래: 등기부등본 확인, 주택임대차보호법의 대항력과 우선변제권으로 세입자를 보호하다',
+      '상속과 유언: 법정상속분, 유류분, 상속포기, 한정승인으로 재산 승계 문제를 해결하다',
+      '개인정보 보호: 개인정보보호법과 정보통신망법으로 명예훼손, 모욕 피해에 대응하다',
+      '법적 분쟁 대비: 내용증명, 소멸시효, 법률구조공단으로 권리를 지키고 전문가 조언을 구하다'
+    ],
     passage: [
       '일상생활에서 자주 접하는 법률 문제 중 하나가 <b>부동산</b> 관련 사항이다. 부동산 거래 시에는 <b>등기부등본</b>을 반드시 확인해야 하는데, 이는 해당 부동산의 소유자와 권리관계를 공식적으로 증명하는 문서이다. <b>전세권</b>이나 <b>임차권</b>이 설정된 경우 그 내용이 등기부에 기재되며, <b>주택임대차보호법</b>은 등기 없이도 주민등록전입신고와 확정일자를 받으면 대항력과 우선변제권을 인정하여 세입자를 보호한다. <b>보증금</b>을 돌려받지 못할 위험에 대비하여 <b>전세보증보험</b>에 가입하거나, 임대인의 채무 상황을 사전에 확인하는 것이 안전하다. 부동산 계약서 작성 시에는 특약사항을 명확히 기재하고 계약금, 중도금, 잔금의 지급 일정을 구체적으로 정해야 한다.',
       '<b>상속</b>은 사망으로 인해 재산상의 지위가 포괄적으로 승계되는 것을 말한다. <b>민법</b>에서 정한 <b>법정상속분</b>에 따르면 배우자는 직계비속과 공동상속 시 1.5배의 상속분을 받고, 직계비속은 균등 상속한다. <b>유언</b>으로 법정상속분과 다르게 재산을 처분할 수 있으나, <b>유류분</b> 제도에 의해 일정 범위의 상속인은 법정상속분의 일정 비율을 반드시 받을 수 있다. 피상속인의 채무가 재산보다 많을 경우 <b>상속포기</b>를 통해 채무 승계를 면할 수 있으며, 상속개시를 안 날로부터 3개월 이내에 가정법원에 신고해야 한다. <b>한정승인</b>은 상속재산의 범위 내에서만 채무를 변제하겠다는 의사표시로 상속포기보다 유리할 수 있다.',
@@ -2102,46 +2222,97 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
-    passageBox.addEventListener('click', (e) => {
-      const sentenceSpan = e.target.closest('.sentence'); if (!sentenceSpan) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
+
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
+
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
+
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
-      sentenceSpan.classList.toggle('selected');
-      const allSentences = passageBox.querySelectorAll('.sentence'); const selectedIndices = [];
-      allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices)); if (selectedIndices.length === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
-      if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
-        const endTime = new Date(); const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'unknown';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
+
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+      }
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-        if (!document.getElementById('toast-style')) { const toastStyle = document.createElement('style'); toastStyle.id = 'toast-style'; toastStyle.textContent = `.toast-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 40px; border-radius: 20px; font-size: 22px; font-weight: 700; z-index: 10000; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); text-align: center; } .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); } .toast-message .emoji { font-size: 32px; display: block; margin-bottom: 8px; } .sparkle-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; } .sparkle { position: absolute; top: -20px; animation: sparkle-fall linear forwards; font-size: 24px; } @keyframes sparkle-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`; document.head.appendChild(toastStyle); }
-        const toast = document.createElement('div'); toast.className = 'toast-message'; toast.innerHTML = `<span class="emoji">🎉</span>지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 50); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 4000);
-        const sparkleContainer = document.createElement('div'); sparkleContainer.className = 'sparkle-rain'; document.body.appendChild(sparkleContainer);
-        const emojis = ['⭐', '✨', '🌟', '💫', '🎊', '🎉', '📚', '🐋']; for (let i = 0; i < 40; i++) { setTimeout(() => { const sparkle = document.createElement('div'); sparkle.className = 'sparkle'; sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)]; sparkle.style.left = Math.random() * 100 + 'vw'; sparkle.style.animationDuration = (Math.random() * 2 + 2) + 's'; sparkle.style.fontSize = (Math.random() * 16 + 16) + 'px'; sparkleContainer.appendChild(sparkle); }, i * 60); }
-        setTimeout(() => sparkleContainer.remove(), 4500);
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

@@ -45,6 +45,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_01: {
     labelNo: '01',
     title: '🌟 태어나면서 받는 선물, 인권이란?',
+    paragraphMain: [
+      '존중받으며 살고 싶은 인간의 존엄성과 인권',
+      '인권의 정의와 모든 사람에게 공평하게 주어지는 권리',
+      '태어날 때부터 갖는 권리, 빼앗거나 넘겨줄 수 없는 인권',
+      '세계 인권 선언, 헌법, 아동 권리 협약으로 보호되는 인권'
+    ],
     passage: [
       '우리는 모두 서로를 <b>존중</b>받으며 살아가길 바라요. 누군가에게 억울하게 무시당하지 않고, 이유 없이 <b>차별</b>받지도 않으며, 평화롭고 안전한 환경에서 행복하게 살고 싶어 하지요. 이런 삶을 가능하게 해 주는 것이 바로 인간의 <b>존엄성</b>과 <b>인권</b>이에요.',
       '\'인권\'은 \'사람\'을 뜻하는 인과 \'권리\'를 뜻하는 권이 합쳐진 말이에요. 즉, 사람이라면 누구나 가지는 기본적인 권리를 말하지요. 예를 들어, 안전한 곳에서 지낼 권리, 깨끗한 공기를 마실 권리, 자신이 원하는 곳에서 살아갈 권리 등이 모두 인권에 포함됩니다. 이 권리들은 나이, 성별, 돈의 많고 적음, <b>장애</b>의 유무와 상관없이 모든 사람에게 똑같이 주어지는 <b>공평</b>한 권리예요.',
@@ -130,6 +136,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_02: {
     labelNo: '02',
     title: '🚀 "모두 평등하다"가 당연해지기까지',
+    paragraphMain: [
+      '신분제 사회에서 평등 사상의 등장과 자유를 향한 움직임',
+      '자유 획득 후 새로운 문제(경제적 불평등, 전쟁과 존엄성 훼손)',
+      '세계 인권 선언 발표와 헌법에 반영된 인권 보호 정책',
+      '성별·나이·장애 차별 금지 법률과 인권 교육 강화'
+    ],
     passage: [
       '아주 오래전에는 사람의 <b>신분</b>에 따라 삶의 모습이 크게 달랐어요. 왕이나 귀족처럼 높은 신분에 속한 사람들은 <b>특권</b>을 마음껏 누릴 수 있었지만, 평민이나 천민은 하고 싶은 일조차 마음대로 선택하기 어려웠지요. 그러나 시간이 흐르면서 사람들은 인간이라면 누구나 태어날 때부터 소중한 권리를 가지고 있으며, 서로 <b>평등</b>하다는 생각이 자리 잡기 시작했어요. 이러한 깨달음은 여러 나라에서 신분제를 없애고 자유로운 사회를 만들기 위한 움직임으로 이어졌습니다.',
       '오랜 노력 끝에 사람들은 신분의 굴레에서 벗어나 자유를 손에 넣었지만, 그렇다고 모든 고민이 사라진 것은 아니었어요. 산업이 발전하면서 도시가 커지고 경제 활동이 활발해졌지만, 그 과정에서 <b>경제적 불평등</b>, 환경 오염과 같은 새로운 문제가 생겨났지요. 어떤 사람들은 기본적인 생활을 유지하기조차 어려웠고, 사회적 약자는 차별을 받기도 했습니다. 특히 두 차례의 큰 전쟁을 겪으면서 많은 사람이 목숨을 잃고 인간의 <b>존엄성</b>까지 심하게 훼손되었어요.',
@@ -216,6 +228,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_03: {
     labelNo: '03',
     title: '🦸 인권 지킴이들의 위대한 도전',
+    paragraphMain: [
+      '《홍길동전》이 전하는 신분 차별 문제와 인권 메시지',
+      '방정환, 이태영, 전태일 등 우리나라 인권 운동가들',
+      '마틴 루서 킹, 테레사 수녀, 루이 브라유의 인권 노력',
+      '국가인권위원회와 학교 인권 교육으로 이어지는 보호 노력'
+    ],
     passage: [
       '《홍길동전》은 많은 사람들이 어린 시절 한 번쯤 들어 본 이야기예요. 소설 속 홍길동은 총명하고 재능이 뛰어난 인물이었지만, 태어난 <b>신분</b> 때문에 하고 싶은 일을 마음껏 펼치지 못했어요. 결국 그는 집을 떠나 \'활빈당\'이라는 무리의 우두머리가 되어 부정한 관리들을 혼내고, 부자에게서 거둔 <b>재물</b>을 가난한 사람들에게 나누어 주었지요. 이 이야기는 당시 사회 속 신분 <b>차별</b>의 문제를 드러내고, 모든 사람이 존중받아야 한다는 메시지를 전하고 있습니다.',
       '우리나라에도 <b>인권</b>을 지키고 넓히기 위해 힘쓴 사람들이 많아요. 방정환은 어린이가 어른과 똑같이 소중한 존재임을 알리기 위해 \'어린이날\'을 만들었고, 이태영 변호사는 여성에게 불리한 제도를 바꾸기 위해 평생 노력했어요. 또한 전태일은 열악한 환경에서 일하던 <b>노동자</b>들의 권리를 지켜 달라며 목소리를 높였고, 그의 행동은 사회가 노동의 가치를 다시 바라보게 만드는 계기가 되었습니다. 이들의 노력이 쌓여 오늘날 더 나은 사회가 만들어진 것이지요.',
@@ -316,6 +334,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_04: {
     labelNo: '04',
     title: '🔒 보이지 않는 폭력, 어떻게 막을까?',
+    paragraphMain: [
+      '편견·차별에서 비롯된 학교 폭력과 사이버 폭력, 사회적 약자 인권 침해',
+      '학교의 인권·다문화 교육과 네티켓 교육으로 타인 존중 기르기',
+      '국가의 편의 시설, 돌봄 서비스, 아동 복지법 등 제도적 보호',
+      '유엔 아동 권리 협약, 국가인권위원회, 학교 인권 활동'
+    ],
     passage: [
       '우리가 살아가는 사회에는 여러 배경과 생각을 가진 사람들이 함께 생활하고 있어요. 이런 다양성은 사회를 풍요롭게 만들지만, 동시에 서로를 이해하지 못해 갈등이 생기기도 합니다. 예를 들어 학교에서는 피부색, 국적, 외모가 다르다는 이유로 친구를 놀리거나 따돌리는 행동이 일어날 수 있어요. 이를 <b>편견</b>과 <b>차별</b>에서 비롯된 학교 폭력이라고 해요. 인터넷에서도 비슷한 문제가 발생합니다. 예절을 지키지 않고 악성 댓글을 쓰거나, 다른 사람의 사진과 정보를 허락 없이 퍼뜨리는 <b>사생활 침해</b>, <b>사이버 폭력</b> 등이 대표적이지요. 또한 장애인이 이용하기 어려운 시설, 보호받지 못하는 노인, 학대받는 어린이처럼 사회적인 약자를 향한 인권 침해도 여전히 존재합니다.',
       '이런 문제를 해결하기 위해 학교와 사회는 <b>인권</b> 보호에 관심을 가지고 적극적으로 행동하고 있어요. 학교에서는 서로 다른 문화를 존중하고 이해하도록 교육하며, 차별을 줄이기 위한 다양한 활동을 진행합니다. 학생들이 서로의 입장을 존중하며 살아가도록 인권 교육을 강화하고 있어요. 특히 온라인에서의 피해가 늘어나자, 인터넷에서 지켜야 할 예절을 담은 <b>네티켓</b> 교육도 이루어지고 있습니다. 이러한 교육은 학생들이 현실과 온라인 모두에서 타인을 존중하는 태도를 기를 수 있도록 돕는 중요한 과정이에요.',
@@ -412,6 +436,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_05: {
     labelNo: '05',
     title: '🏯 조선시대에도 억울함을 풀 수 있었다고?',
+    paragraphMain: [
+      '신문고 제도로 백성이 임금에게 억울함을 직접 알림',
+      '상언, 격쟁, 삼복 등 다양한 인권 보호 장치',
+      '명통시와 세금 면제 등 장애인 지원 제도',
+      '오늘날의 국민신문고, 삼심 제도, 복지 정책으로 발전'
+    ],
     passage: [
       '오늘날에는 억울한 일을 겪으면 경찰 신고나 법원의 재판을 통해 문제를 해결하지만, 조선 시대에도 백성의 억울함을 풀기 위한 여러 장치가 마련되어 있었어요. 백성들이 큰 <b>누명</b>을 쓰거나 집안의 안위가 달린 문제를 당했을 때는 궁궐 밖에 설치된 북을 두드려 임금에게 직접 알릴 수 있었는데, 이것이 바로 <b>신문고</b> 제도예요. 이 제도는 누구라도 억울함을 호소할 수 있게 했다는 점에서 중요한 인권 보호 장치였답니다.',
       '신문고 외에도 백성이 억울한 일을 해결하기 위해 직접 임금에게 의견을 전달하는 방법이 있었어요. 글로 작성해 올리는 <b>상언</b>, 임금이 행차할 때 징이나 꽹과리를 쳐 즉석에서 억울함을 호소하는 <b>격쟁</b>이 대표적인 예예요. 또 조선의 형벌 제도에서는 판결을 서둘러 내리지 않기 위해 <b>삼복</b>이라는 절차를 마련해, 세 번에 걸쳐 사실을 다시 조사한 뒤 최종 결정을 내렸어요. 이는 백성이 억울하게 처벌받는 일을 줄이기 위한 안전장치였지요.',
@@ -502,6 +532,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_06: {
     labelNo: '06',
     title: '👑 대통령도 지켜야 하는 법, 헌법',
+    paragraphMain: [
+      '모든 법 위에 있는 최고법, 헌법의 정의와 위상',
+      '국민 주권과 기본권(자유권, 평등권, 사회권, 참정권, 청구권)',
+      '헌법 제1조와 국민 보호, 자유롭고 평등한 삶의 보장',
+      '헌법 개정 절차와 헌법 재판소의 역할'
+    ],
     passage: [
       '우리가 살아가는 사회에는 수많은 규칙과 법이 있어요. 학교에는 교칙이 있고, 도로에는 교통 법규가 있지요. 그런데 이 모든 법 위에 가장 높은 법이 있는데, 그것이 바로 <b>헌법</b>이에요. 헌법은 나라를 운영하는 기본 원칙과 국민의 권리를 담은 최고의 법이에요. 다른 모든 법은 헌법에 어긋나지 않아야 하며, 만약 어긋나면 그 법은 효력을 잃게 됩니다. 그래서 헌법을 \'법 중의 법\', \'최고법\'이라고 부르기도 해요.',
       '헌법에서 가장 중요한 내용 중 하나는 <b>국민 주권</b>이에요. 이는 나라의 주인이 국민이며, 나라를 다스리는 모든 권력이 국민으로부터 나온다는 뜻이에요. 또한 헌법은 <b>기본권</b>을 보장하는데, 여기에는 자유롭게 생각하고 말할 수 있는 <b>자유권</b>, 모든 사람이 동등하게 대우받는 <b>평등권</b>, 인간다운 생활을 할 수 있는 <b>사회권</b>, 선거에 참여할 수 있는 <b>참정권</b>, 권리를 침해당했을 때 구제받을 수 있는 <b>청구권</b> 등이 포함됩니다.',
@@ -597,6 +633,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_07: {
     labelNo: '07',
     title: '📝 내 아이디어가 법이 된다면?',
+    paragraphMain: [
+      '국회와 국회의원의 역할, 입법권과 대의 민주주의',
+      '법률안 제안 → 상임위원회 검토 → 본회의 투표 → 공포',
+      '삼권분립(입법부·행정부·사법부)으로 권력 견제와 균형',
+      '국민 청원, 국민 발안, 국민 투표로 국민의 정치 참여'
+    ],
     passage: [
       '우리가 지켜야 할 법은 누가, 어떻게 만드는 것일까요? 민주주의 국가에서 법을 만드는 곳은 바로 <b>국회</b>예요. 국회는 국민이 직접 뽑은 <b>국회의원</b>들이 모여 나라의 중요한 일을 결정하고 법률을 만드는 곳입니다. 국회의원은 국민을 대신해서 법을 만들기 때문에 <b>대의 민주주의</b>의 핵심이라고 할 수 있어요. 이처럼 법을 만드는 권한을 <b>입법권</b>이라고 하며, 국회가 이 권한을 가지고 있습니다.',
       '법이 만들어지는 과정을 <b>입법 과정</b>이라고 해요. 먼저 국회의원이나 정부가 새로운 법을 제안하는 <b>법률안</b>을 내놓습니다. 이 법률안은 해당 분야를 담당하는 <b>상임위원회</b>에서 전문가들의 의견을 듣고 꼼꼼히 검토해요. 그 다음 모든 국회의원이 모인 <b>본회의</b>에서 찬성과 반대 토론을 거쳐 투표를 합니다. 국회의원 과반수가 찬성하면 법률안이 통과되고, 대통령이 <b>공포</b>하면 비로소 법으로서 효력을 갖게 됩니다.',
@@ -692,6 +734,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_08: {
     labelNo: '08',
     title: '🔨 판사의 망치가 내려오기까지',
+    paragraphMain: [
+      '법원의 역할과 재판, 판사의 공정한 판결, 사법권',
+      '민사·형사·행정 재판의 종류, 항소와 3심 제도',
+      '무죄 추정·재판 공개·사법권 독립 원칙으로 공정성 보장',
+      '판사·검사·변호사의 역할, 국민 참여 재판과 배심원'
+    ],
     passage: [
       '사람들 사이에 다툼이 생기거나 누군가 법을 어겼을 때, 누가 옳고 그른지를 판단해 주는 곳이 필요해요. 그곳이 바로 <b>법원</b>입니다. 법원은 법에 따라 분쟁을 해결하고, 범죄를 저지른 사람에게 적절한 <b>형벌</b>을 내리는 <b>재판</b>을 담당해요. 재판을 진행하는 사람을 <b>판사</b>라고 하며, 판사는 어느 한쪽 편을 들지 않고 오직 법과 증거에 따라 공정하게 판결을 내려야 합니다. 이처럼 법원이 재판을 통해 정의를 실현하는 권한을 <b>사법권</b>이라고 해요.',
       '재판에는 여러 종류가 있어요. 개인 간의 돈 문제나 계약 분쟁을 다루는 <b>민사 재판</b>, 범죄를 저지른 사람을 처벌하는 <b>형사 재판</b>, 국가 기관의 잘못된 결정에 대해 다투는 <b>행정 재판</b> 등이 있습니다. 재판에서 판결에 불만이 있으면 더 높은 법원에 다시 판단을 요청할 수 있는데, 이를 <b>항소</b>라고 해요. 우리나라는 <b>3심 제도</b>를 채택하여 최대 세 번까지 재판을 받을 기회를 보장합니다.',
@@ -787,6 +835,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_09: {
     labelNo: '09',
     title: '⛓️ 나쁜 짓을 하면 왜 벌을 받을까?',
+    paragraphMain: [
+      '범죄의 정의(폭행·절도·사기)와 법으로 금지하는 이유',
+      '형벌의 목적: 응보, 예방, 교화',
+      '형벌의 종류(사형·징역·벌금)와 교도소의 재범 방지 프로그램',
+      '형사 미성년자와 소년법, 보호 관찰과 사회봉사 명령'
+    ],
     passage: [
       '사회에는 모든 사람이 지켜야 할 규칙이 있어요. 그중에서도 특히 중요한 규칙을 어기면 <b>범죄</b>가 되고, 범죄를 저지른 사람은 법에 따라 <b>형벌</b>을 받게 됩니다. 범죄에는 다른 사람을 때리거나 다치게 하는 <b>폭행</b>, 남의 물건을 훔치는 <b>절도</b>, 거짓말로 남을 속여 이익을 얻는 <b>사기</b> 등 여러 종류가 있어요. 이러한 행위들은 다른 사람의 생명, 재산, 권리를 침해하기 때문에 법으로 금지하고 처벌하는 것입니다.',
       '그렇다면 왜 범죄를 저지른 사람을 처벌하는 것일까요? 첫째, <b>응보</b>의 목적이 있어요. 잘못한 만큼 그에 맞는 벌을 받아야 한다는 생각이지요. 둘째, <b>예방</b>의 목적이 있습니다. 처벌을 통해 다른 사람들이 같은 범죄를 저지르지 않도록 경고하고, 범죄자 본인도 다시는 범죄를 저지르지 않도록 하는 것이에요. 셋째, <b>교화</b>의 목적이 있어요. 범죄자가 잘못을 반성하고 올바른 사람으로 다시 사회에 돌아올 수 있도록 돕는 것입니다.',
@@ -882,6 +936,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_10: {
     labelNo: '10',
     title: '🎒 미성년자라서 괜찮다? 착각이야!',
+    paragraphMain: [
+      '청소년 보호법: 술·담배·유해업소 출입·야간 PC방 제한',
+      '소년법과 보호 처분: 소년원, 사회봉사 명령, 반성과 교육',
+      '학교폭력예방법: 언어폭력·따돌림·사이버폭력도 학교폭력',
+      '유엔 아동 권리 협약: 생존권·보호권·발달권·참여권'
+    ],
     passage: [
       '청소년은 아직 성장하는 과정에 있기 때문에 특별한 보호가 필요해요. 그래서 우리나라에는 청소년을 보호하고 건강하게 성장할 수 있도록 돕는 여러 법률이 있습니다. <b>청소년 보호법</b>은 청소년에게 해로운 환경으로부터 보호하기 위한 법이에요. 이 법에 따라 청소년은 술, 담배를 살 수 없고, 유해 업소에 출입할 수 없으며, 밤 10시 이후에는 PC방이나 노래방에 들어갈 수 없어요. 이런 규정은 청소년을 괴롭히려는 것이 아니라 건강과 안전을 지키기 위한 것이랍니다.',
       '만약 청소년이 범죄를 저지르면 어떻게 될까요? 청소년도 법을 어기면 책임을 져야 하지만, 어른과는 다르게 처리됩니다. <b>소년법</b>에 따르면 만 10세 이상 19세 미만의 청소년이 범죄를 저지르면 <b>소년원</b>에 가거나 <b>보호 처분</b>을 받게 되어요. 보호 처분에는 보호자에게 맡기기, 사회봉사 명령, 수강 명령 등이 있습니다. 이렇게 하는 이유는 청소년에게 반성과 교육의 기회를 주어 다시 건강한 사회 구성원으로 성장하도록 돕기 위해서예요.',
@@ -978,6 +1038,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_11: {
     labelNo: '11',
     title: '🛒 환불받고 싶을 때, 어떻게 해야 할까?',
+    paragraphMain: [
+      '계약의 개념: 편의점 구매, 버스 승차도 계약',
+      '소비자기본법과 소비자 권리(알 권리, 안전, 보상)',
+      '청약 철회(7일 이내 반품), 소비자원 상담',
+      '미성년자 취소권과 현명한 소비 습관의 중요성'
+    ],
     passage: [
       '우리는 생활 속에서 수많은 <b>계약</b>을 맺습니다. 편의점에서 과자를 사는 것, 버스를 타는 것, 휴대폰을 개통하는 것, 학원에 등록하는 것 모두 계약이에요. 계약이란 두 사람 이상이 서로의 <b>권리</b>와 <b>의무</b>를 약속하는 것을 말합니다. 물건을 사면 대금을 지불할 의무가 생기고, 판매자는 물건을 넘겨줄 의무가 생기지요. 구두로 한 약속도 계약이 될 수 있지만, 중요한 계약은 문서로 작성하여 나중에 문제가 생겼을 때 증거로 사용하는 것이 좋습니다. 이처럼 계약은 우리 생활의 기본이 되며, 사회가 원활하게 돌아가도록 하는 중요한 약속입니다.',
       '그런데 물건을 샀는데 불량품이거나, 광고와 전혀 다른 경우가 있어요. 인터넷 쇼핑몰에서 예쁜 옷을 샀는데 색상이 다르거나 사이즈가 맞지 않을 때도 있지요. 이럴 때 <b>소비자</b>는 어떻게 해야 할까요? 우리나라는 <b>소비자기본법</b>으로 소비자의 권리를 보호합니다. 소비자는 물건에 대한 정확한 정보를 알 권리, 안전하게 사용할 권리, 피해를 보상받을 권리, 합리적인 선택을 할 권리 등을 가지고 있어요. 이를 <b>소비자 권리</b>라고 하며, 법으로 보장되어 있습니다.',
@@ -1072,6 +1138,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_12: {
     labelNo: '12',
     title: '💸 친구가 내 물건을 망가뜨렸다면?',
+    paragraphMain: [
+      '불법 행위와 손해 배상, 민법의 피해 보상 원칙',
+      '불법 행위 성립 요건: 고의·과실, 손해, 인과 관계',
+      '재산적 손해와 위자료, 증거 수집의 중요성',
+      '협의·민사 소송으로 배상 청구, 소멸 시효(3년/10년)'
+    ],
     passage: [
       '길을 걷다가 누군가의 실수로 다쳤다면 어떻게 해야 할까요? 자전거를 타던 사람이 부딪혀서 넘어지거나, 위에서 떨어진 물건에 맞는 경우도 있어요. 이처럼 다른 사람에게 피해를 주는 행위를 <b>불법 행위</b>라고 합니다. 불법 행위를 한 사람은 피해자에게 <b>손해 배상</b>을 해야 해요. 손해 배상이란 피해를 금전으로 보상하는 것을 말합니다. 이것은 <b>민법</b>에서 정하고 있는 중요한 원칙으로, 피해자가 입은 손해를 원래 상태로 돌려놓기 위한 제도예요.',
       '불법 행위가 성립하려면 몇 가지 조건이 필요합니다. 먼저 가해자에게 <b>고의</b>나 <b>과실</b>이 있어야 해요. 고의는 일부러 피해를 주려고 한 것이고, 과실은 조심하지 않아서 부주의로 피해를 준 것입니다. 예를 들어 장난으로 친구를 밀어서 다치게 한 것은 고의이고, 뒤를 보지 않고 갑자기 문을 열어서 지나가던 사람이 다친 것은 과실이에요. 또한 실제로 <b>손해</b>가 발생해야 하고, 가해자의 행위와 손해 사이에 원인과 결과의 연결인 <b>인과 관계</b>가 있어야 합니다.',
@@ -1166,6 +1238,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_13: {
     labelNo: '13',
     title: '💍 결혼하면 법적으로 뭐가 달라질까?',
+    paragraphMain: [
+      '혼인 신고로 법적 부부, 부양 의무와 재산 관리 권리',
+      '친권(자녀 보호·교육), 부양 의무, 상속 순서와 비율',
+      '협의 이혼과 재판 이혼, 양육권과 재산 분할',
+      '다양한 가족(핵가족·조손·다문화), 평등한 친권과 입양'
+    ],
     passage: [
       '가족은 사랑으로 맺어진 관계이지만, 법적으로도 중요한 의미를 가집니다. <b>민법</b>은 가족 관계에 대한 여러 규칙을 정하고 있어요. <b>혼인</b>을 하면 법적으로 부부가 되고, 서로를 부양할 의무와 재산을 함께 관리할 권리가 생깁니다. 우리나라에서 혼인은 <b>혼인 신고</b>를 해야 법적 효력이 생겨요. 결혼식만 하고 신고를 하지 않으면 법적으로는 부부로 인정받지 못하고, 이를 사실혼이라고 합니다. 법적 부부가 되면 세금 혜택, 건강보험 피부양자 등록 등 다양한 법적 보호를 받을 수 있습니다.',
       '부모와 자녀 사이에도 법적 권리와 의무가 있습니다. 부모는 자녀가 성년이 될 때까지 보호하고 교육할 의무가 있는데, 이러한 권리와 의무를 <b>친권</b>이라고 해요. 친권자는 자녀의 거주지를 정하고, 자녀를 대신해서 법적 결정을 내릴 수 있습니다. 반대로 성인이 된 자녀는 경제적 능력이 없는 부모를 <b>부양</b>할 의무가 있어요. 가족 중 누군가가 세상을 떠나면 재산을 물려받는 <b>상속</b>이 일어납니다. 상속은 배우자와 자녀가 우선이며, 법으로 정해진 순서와 비율에 따라 이루어져요.',
@@ -1260,6 +1338,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_14: {
     labelNo: '14',
     title: '💰 알바비 못 받았을 때 이렇게 하세요!',
+    paragraphMain: [
+      '근로자·사용자·임금의 개념, 노동법의 필요성',
+      '근로기준법: 8시간/40시간, 연장 근로 1.5배, 최저 임금',
+      '주휴일·연차 휴가·휴게 시간, 부당 해고 구제 신청',
+      '노동조합과 단체 교섭, 산재 보험과 4대 보험'
+    ],
     passage: [
       '아르바이트를 하거나 회사에 취직하면 <b>근로자</b>가 됩니다. 근로자는 <b>사용자</b>(고용주)를 위해 일하고 그 대가로 <b>임금</b>을 받아요. 그런데 과거 산업혁명 시기에는 근로자들이 하루 16시간 넘게 일하면서도 매우 낮은 임금을 받고, 위험한 환경에서 다치거나 병에 걸리는 일이 많았습니다. 이처럼 약한 위치에 있는 근로자들을 보호하기 위해 <b>노동법</b>이 만들어졌어요. 노동법은 근로자가 인간다운 생활을 하면서 일할 수 있도록 권리를 보장하는 법입니다.',
       '우리나라 <b>근로기준법</b>은 근로자를 위한 최소한의 기준을 정하고 있어요. 성인 근로자는 하루 8시간, 주 40시간이 법정 근로 시간이고, 이를 초과해서 일하면 <b>연장 근로</b>로 통상 임금의 1.5배를 추가 수당으로 받아야 합니다. 또한 모든 근로자에게 적용되는 <b>최저 임금</b>이 있어서, 사용자는 이보다 낮은 임금을 줄 수 없어요. 일을 시작하기 전에 임금, 근무 시간, 휴게 시간 등을 적은 <b>근로 계약서</b>를 작성하는 것도 매우 중요합니다. 계약서가 있어야 나중에 문제가 생겼을 때 증거가 됩니다.',
@@ -1354,6 +1438,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_15: {
     labelNo: '15',
     title: '🌐 국경을 넘는 약속, 국제법',
+    paragraphMain: [
+      '국제법의 정의: 조약, 국제 관습, 국제기구 결의',
+      '유엔과 세계 인권 선언, 기본적 인권 보장',
+      '난민 협약, 파리 기후 협약, 세계 시민의 역할',
+      '국제사법재판소(ICJ)와 국제형사재판소(ICC), 국제 제재'
+    ],
     passage: [
       '우리가 사는 세상에는 200개가 넘는 나라가 있고, 나라들 사이에도 규칙이 필요합니다. 나라와 나라 사이의 관계를 규율하는 법을 <b>국제법</b>이라고 해요. 국제법은 <b>조약</b>, <b>국제 관습</b>, 국제기구의 결의 등으로 이루어집니다. 조약은 나라들이 서로 약속을 문서로 적은 것으로, 무역 협정, 평화 조약, 환경 협약 등이 있어요. 국제 관습은 오랫동안 국가들이 지켜온 관행이 법처럼 굳어진 것입니다. 조약에 가입한 나라는 그 내용을 지켜야 하며, 어기면 국제 사회에서 제재를 받을 수 있어요.',
       '국제법에서 가장 중요한 원칙 중 하나는 <b>인권</b> 보호입니다. 제2차 세계 대전에서 수천만 명이 목숨을 잃고, 유대인 학살 같은 끔찍한 인권 침해가 일어났어요. 이런 비극을 다시는 반복하지 않기 위해 1945년 <b>유엔</b>(UN)이 만들어지고, 1948년 <b>세계 인권 선언</b>이 발표되었습니다. 이 선언은 모든 인간이 태어날 때부터 자유롭고 평등하며, 존엄한 존재라고 선언해요. 생명권, 자유권, 교육받을 권리 등 전 세계 모든 사람의 <b>기본적 인권</b>을 보장하자는 인류 공통의 약속이지요.',
@@ -1448,6 +1538,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_16: {
     labelNo: '16',
     title: '🌱 지구를 지키는 법의 힘',
+    paragraphMain: [
+      '환경 오염 문제와 환경법의 필요성',
+      '환경정책기본법, 대기환경보전법, 물환경보전법, 폐기물관리법',
+      '미래 세대, 지속 가능한 발전, 환경권(헌법 기본권)',
+      '환경 오염 피해 배상, 환경영향평가로 예방과 처벌'
+    ],
     passage: [
       '깨끗한 공기와 맑은 물, 푸른 숲은 우리 삶에 꼭 필요합니다. 숨 쉬고, 물 마시고, 음식을 먹는 모든 활동이 자연과 연결되어 있어요. 그런데 산업이 발달하고 도시가 커지면서 <b>환경 오염</b>이 심각해졌습니다. 공장에서 나오는 매연과 폐수, 자동차 배기가스, 플라스틱 쓰레기 매립 등이 공기와 물, 땅을 오염시키고 있어요. 이러한 환경 파괴로부터 자연과 국민의 건강을 지키기 위해 <b>환경법</b>이 만들어졌습니다. 환경법은 오염을 규제하고 자연을 보전하기 위한 법적 장치예요.',
       '우리나라에는 여러 환경 관련 법률이 있어요. <b>환경정책기본법</b>은 환경 보전의 기본 원칙과 정책 방향을 정하는 상위법입니다. <b>대기환경보전법</b>은 공장이나 자동차에서 나오는 오염 물질 배출을 규제하여 공기 오염을 막고, <b>물환경보전법</b>은 하천, 호수, 바다의 수질을 보호합니다. <b>폐기물관리법</b>은 쓰레기 처리 방법을 정하고 불법 투기를 처벌해요. 이 법들은 구체적인 오염 물질 배출 기준과 이를 어겼을 때의 처벌 규정을 담고 있어서, 기업과 개인 모두 지켜야 합니다.',
@@ -1542,6 +1638,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_17: {
     labelNo: '17',
     title: '🎨 내 창작물, 누가 훔쳐가면?',
+    paragraphMain: [
+      '지식재산권: 무형의 창작물 보호, 정당한 대가',
+      '저작권·특허권·상표권·디자인권, 특허청 등록',
+      '인터넷 시대 표절과 불법 다운로드, 출처 표기',
+      '저작권 침해 처벌(5년/5천만 원), 공정 이용과 저작권료'
+    ],
     passage: [
       '누군가 몇 년간 열심히 만든 노래나 소설을 허락도 없이 복사해서 공짜로 나눠 주거나 돈 받고 판다면 어떨까요? 창작자의 노력과 시간을 빼앗는 것이나 마찬가지예요. 이처럼 사람들의 창의적인 아이디어와 창작물을 보호하는 권리를 <b>지식재산권</b>이라고 합니다. 지식재산권은 땅이나 집처럼 눈에 보이는 재산이 아니라 눈에 보이지 않는 무형의 재산을 법으로 보호하는 것이에요. 창작자가 자신의 노력에 대해 정당한 대가를 받을 수 있도록 보장합니다.',
       '지식재산권에는 여러 종류가 있습니다. <b>저작권</b>은 음악, 소설, 시, 그림, 사진, 영화, 컴퓨터 프로그램 등 창작물을 보호해요. 저작권은 창작과 동시에 자동으로 생기며, 저작권자의 허락 없이 복제하거나 배포하면 <b>저작권 침해</b>가 됩니다. <b>특허권</b>은 새로운 기술이나 발명품을 보호하고, <b>상표권</b>은 기업의 브랜드 이름이나 로고를 보호해서 소비자가 제품을 구별할 수 있게 해요. <b>디자인권</b>은 제품의 독특한 외관 디자인을 보호합니다. 이러한 권리들은 특허청에 등록해야 법적 보호를 받을 수 있어요.',
@@ -1636,6 +1738,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_18: {
     labelNo: '18',
     title: '🔐 내 개인정보, 어디까지 알고 있을까?',
+    paragraphMain: [
+      '디지털 시대 개인정보(검색·위치·결제) 저장과 유출 위험',
+      '개인정보보호법: 동의, 수집 목적 외 사용 금지, 암호화',
+      '잊힐 권리, 정보통신망법으로 해킹·명예훼손 규제',
+      '청소년 SNS 주의, 사이버 불링 신고와 디지털 시민 의식'
+    ],
     passage: [
       '스마트폰과 인터넷이 없는 생활을 상상할 수 있나요? 디지털 기술의 발달로 우리의 <b>개인정보</b>가 수많은 곳에 저장되고 있어요. 이름, 전화번호, 주소는 기본이고, 인터넷 검색 기록, GPS 위치 정보, 카드 결제 내역, SNS 활동까지 우리의 모든 행동이 데이터로 기록됩니다. 이 정보들이 한곳에 모이면 그 사람의 생활 패턴과 취향, 재정 상태까지 파악할 수 있어요. 만약 이 정보가 유출되거나 범죄에 악용되면 큰 피해를 입을 수 있습니다.',
       '이를 보호하기 위해 <b>개인정보보호법</b>이 있습니다. 이 법은 기업이나 기관이 개인정보를 수집할 때 반드시 본인의 <b>동의</b>를 받도록 하고, 수집 목적 외에 다른 용도로 사용하거나 제3자에게 제공하는 것을 금지합니다. 개인정보가 <b>유출</b>되면 <b>보이스피싱</b>이나 스미싱, <b>스팸</b> 문자 같은 범죄에 악용될 수 있어요. 범죄자들이 유출된 정보로 가족을 사칭하거나 금융 사기를 치는 일이 실제로 많이 일어납니다. 그래서 기업은 개인정보를 암호화하여 안전하게 관리할 의무가 있고, 유출 시 손해 배상 책임을 집니다.',
@@ -1730,6 +1838,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_19: {
     labelNo: '19',
     title: '⚔️ 싸움이 생겼을 때, 법원 말고 다른 방법',
+    paragraphMain: [
+      '소송의 정의와 판결의 강제력, 시간·비용 부담',
+      '대체적 분쟁 해결(ADR): 조정, 중재, 협상',
+      '분쟁 종류·금액에 따른 방법 선택, 계약서로 예방',
+      '민사·형사·행정 소송, 삼심 제도와 법률 구조 공단'
+    ],
     passage: [
       '살다 보면 다른 사람과 다툼이 생길 수 있어요. 물건을 팔았는데 값을 안 준다거나, 빌려준 돈을 갚지 않거나, 계약을 어기는 경우가 있지요. 이런 <b>분쟁</b>을 해결하는 가장 공식적인 방법이 <b>소송</b>입니다. 소송은 법원에 판단을 요청하는 것으로, 법관이 양측의 주장과 증거를 검토하여 법에 따라 <b>판결</b>을 내립니다. 판결은 법적 강제력이 있어서 지키지 않으면 재산을 압류당할 수도 있어요. 하지만 소송은 변호사 비용이 들고, 결론이 나기까지 몇 달에서 몇 년이 걸리기도 합니다.',
       '그래서 소송보다 빠르고 저렴한 다른 분쟁 해결 방법도 있습니다. <b>조정</b>은 중립적인 제3자인 조정위원이 양측의 의견을 듣고 서로 양보하여 합의점을 찾도록 돕는 것이에요. <b>중재</b>는 양측이 중재인의 판단을 따르기로 미리 약속하고, 중재인이 결정을 내리는 방식입니다. <b>협상</b>은 제3자 개입 없이 당사자끼리 직접 대화하여 해결하는 것이지요. 이처럼 소송을 대신하는 방법들을 <b>대체적 분쟁 해결</b>(ADR: Alternative Dispute Resolution)이라고 해요. 법원에 가지 않고도 합리적으로 문제를 풀 수 있습니다.',
@@ -1824,6 +1938,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_law_20: {
     labelNo: '20',
     title: '🌈 법이 없다면 세상은 어떻게 될까?',
+    paragraphMain: [
+      '법의 목적: 정의 실현, 약자 보호, 불공정 방지',
+      '법 앞의 평등, 법치주의, 사회 변화에 맞는 법 발전',
+      '시민의 역할: 법 준수와 불합리한 법 개정 참여',
+      '선거권(18세), 국민 청원, 헌법 소원, 법적 소양의 중요성'
+    ],
     passage: [
       '지금까지 다양한 법에 대해 배웠어요. 헌법, 형법, 민법, 노동법, 환경법 등 우리 생활 곳곳에 법이 있습니다. 그런데 법은 왜 존재할까요? 법의 가장 중요한 목적은 <b>정의</b>를 실현하는 것입니다. 정의란 옳고 바른 것, <b>공정</b>한 것을 말해요. 법은 정의를 지키기 위한 사회 구성원들의 약속이에요. 만약 법이 없다면 힘센 사람이 약한 사람을 괴롭히고, 부자만 유리하고 가난한 사람은 피해를 볼 수 있습니다. 법은 이런 불공정을 막고 모든 사람이 존엄하게 살 수 있도록 보호합니다.',
       '좋은 법은 몇 가지 조건을 갖추어야 합니다. 먼저 부자든 가난하든, 높은 지위에 있든 없든 모든 사람에게 공평하게 적용되어야 해요. 이것을 <b>법 앞의 평등</b>이라고 합니다. 대통령이나 재벌도 법을 어기면 처벌받아야 해요. 또한 법은 사회의 변화에 맞게 계속 발전해야 합니다. 100년 전에는 괜찮았던 것이 지금은 불공정하거나 시대에 맞지 않을 수 있으니까요. <b>법치주의</b>란 개인의 마음대로가 아니라 법에 따라 국가를 운영하는 원칙을 말합니다. 권력자도 법의 테두리 안에서만 권력을 행사해야 해요.',
@@ -2066,79 +2186,97 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
-    passageBox.addEventListener('click', (e) => {
-      const sentenceSpan = e.target.closest('.sentence');
-      if (!sentenceSpan) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
+
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
+
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
+
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
-      sentenceSpan.classList.toggle('selected');
-      const allSentences = passageBox.querySelectorAll('.sentence');
-      const selectedIndices = [];
-      allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices)); if (selectedIndices.length === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
-        const endTime = new Date(); const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'unknown';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
-        }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-        if (!document.getElementById('toast-style')) {
-          const toastStyle = document.createElement('style');
-          toastStyle.id = 'toast-style';
-          toastStyle.textContent = `
-            .toast-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 40px; border-radius: 20px; font-size: 22px; font-weight: 700; z-index: 10000; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); text-align: center; }
-            .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            .toast-message .emoji { font-size: 32px; display: block; margin-bottom: 8px; }
-            .sparkle-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; }
-            .sparkle { position: absolute; top: -20px; animation: sparkle-fall linear forwards; font-size: 24px; }
-            @keyframes sparkle-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
-          `;
-          document.head.appendChild(toastStyle);
-        }
-        const toast = document.createElement('div');
-        toast.className = 'toast-message';
-        toast.innerHTML = `<span class="emoji">🎉</span>지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 50);
-        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 4000);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
 
-        const sparkleContainer = document.createElement('div');
-        sparkleContainer.className = 'sparkle-rain';
-        document.body.appendChild(sparkleContainer);
-        const emojis = ['⭐', '✨', '🌟', '💫', '🎊', '🎉', '📚', '🐋'];
-        for (let i = 0; i < 40; i++) {
-          setTimeout(() => {
-            const sparkle = document.createElement('div');
-            sparkle.className = 'sparkle';
-            sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-            sparkle.style.left = Math.random() * 100 + 'vw';
-            sparkle.style.animationDuration = (Math.random() * 2 + 2) + 's';
-            sparkle.style.fontSize = (Math.random() * 16 + 16) + 'px';
-            sparkleContainer.appendChild(sparkle);
-          }, i * 60);
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+      }
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        setTimeout(() => sparkleContainer.remove(), 4500);
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

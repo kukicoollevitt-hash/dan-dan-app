@@ -11644,13 +11644,14 @@ app.get("/my-learning", async (req, res) => {
             if (hasTableData && rows.length > 0) {
               rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                if (cells.length >= 7) {
+                if (cells.length >= 8) {
                   const series = cells[1]?.textContent?.trim() || '';
                   const field = cells[2]?.textContent?.trim() || '';
                   const unitName = cells[3]?.textContent?.trim() || '';
                   const grade = cells[4]?.textContent?.trim() || '';
                   const avgScore = cells[5]?.textContent?.trim() || '';
-                  const vocabScore = cells[6]?.textContent?.trim() || '';
+                  // cells[6]은 독해시간 컬럼 (새로 추가됨)
+                  const vocabScore = cells[7]?.textContent?.trim() || '';
 
                   todayData.units.push(unitName);
                   todayData.grades.push(grade);
@@ -11879,9 +11880,10 @@ app.get("/my-learning", async (req, res) => {
             // 해당 날짜/주간 테이블 행에서 어휘 점수 수집
             rows.forEach(row => {
               const cells = row.querySelectorAll('td');
-              if (cells.length >= 7) {
+              if (cells.length >= 8) {
                 const unitName = cells[3]?.textContent?.trim() || '';
-                const vocabScoreText = cells[6]?.textContent?.trim() || '';
+                // cells[6]은 독해시간 컬럼 (새로 추가됨), cells[7]이 어휘 점수
+                const vocabScoreText = cells[7]?.textContent?.trim() || '';
 
                 console.log('[AI피드백-어휘] 단원:', unitName, '어휘점수텍스트:', vocabScoreText);
 
@@ -24194,8 +24196,9 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
               const q1Question = q1TextMatch[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
 
               // 옵션 파싱 - ① ② ③ ④ 제거, 이스케이프 문자 처리
+              // 작은따옴표 옵션: '...' (내부에 "허용), 쌍따옴표 옵션: "..." (내부에 '허용)
               const optionsRaw = q1OptsMatch[1];
-              let options = optionsRaw.match(/['"]((\\['"]|[^'"])+?)['"]/g)?.map(s => {
+              let options = optionsRaw.match(/'((?:\\'|[^'])+)'|"((?:\\"|[^"])+)"/g)?.map(s => {
                 let opt = s.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
                 // ① ② ③ ④ 제거
                 opt = opt.replace(/^[①②③④]\s*/, '');
@@ -24225,8 +24228,9 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
             if (q2TextMatch && q2OptsMatch) {
               // 이스케이프 문자 제거
               const q2Question = q2TextMatch[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+              // 작은따옴표 옵션: '...' (내부에 "허용), 쌍따옴표 옵션: "..." (내부에 '허용)
               const optionsRaw = q2OptsMatch[1];
-              let options = optionsRaw.match(/['"]((\\['"]|[^'"])+?)['"]/g)?.map(s => {
+              let options = optionsRaw.match(/'((?:\\'|[^'])+)'|"((?:\\"|[^"])+)"/g)?.map(s => {
                 let opt = s.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
                 opt = opt.replace(/^[①②③④]\s*/, '');
                 return opt;

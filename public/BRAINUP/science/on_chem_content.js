@@ -44,6 +44,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_01: {
     labelNo: '01',
     title: '🧪 물체 vs 물질, 그 차이의 비밀',
+    paragraphMain: [
+      '물체의 정의: 모양이 있고 공간을 차지하며, 쓰임새에 따라 모양이 다양함',
+      '물질의 정의: 물체를 이루는 재료로, 물질마다 특징이 다름',
+      '물질의 성질: 플라스틱(가볍고 매끄러움), 고무(질김), 철(무겁고 단단), 나무(가볍고 가공 쉬움)',
+      '물질의 성질을 알면 적합한 재료 선택 가능, 편리한 물체 제작'
+    ],
     passage: [
       '우리가 사용하는 물체들은 모두 모양이 있고 공간을 차지해요. 옷, 가방, 필통, 공처럼 손에 잡히는 모든 것이 <b>물체</b>이지요. 공은 동그란 모양이라 데굴데굴 잘 굴러가고, 연필은 길쭉해서 손에 쥐기 편해요. 이처럼 물체의 모양은 쓰임새에 따라 다양하게 만들어집니다.',
       '물체는 겉모습뿐 아니라 무엇으로 만들었는지에 따라서도 성질이 달라져요. 탁구공은 가볍게 움직여야 해서 얇은 <b>플라스틱</b>으로 만들고, 농구공은 튼튼해야 해서 <b>고무</b>나 가죽을 사용합니다. 이처럼 물체를 이루는 재료를 <b>물질</b>이라고 부르며, 물질마다 특징이 다르답니다.',
@@ -125,6 +131,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_02: {
     labelNo: '02',
     title: '🍬 설탕이 사라지는 마법, 용해',
+    paragraphMain: [
+      '물질의 세 가지 상태: 고체(일정한 모양), 액체(그릇에 따라 변함), 기체(눈에 안 보임)',
+      '사탕은 고체: 일정한 모양을 유지하고 그릇에 넣어도 변하지 않음',
+      '설탕 가루도 고체: 알갱이 하나하나가 모양을 가진 고체',
+      '물질 상태 구분: 겉모습보다 작은 부분의 특징을 살펴보는 것이 중요'
+    ],
     passage: [
       '우리 주변의 <b>물질</b>은 <b>고체</b>, <b>액체</b>, <b>기체</b> 세 가지 상태로 존재해요. 고체는 돌처럼 일정한 모양을 가지고 있어서 손으로 잡을 수 있고 눈에도 보입니다. 액체는 물처럼 눈에는 보이지만, 담는 그릇에 따라 형태가 바뀌지요. 기체는 공기처럼 눈에 보이지 않고 일정한 모양도 없어요.',
       '그럼 달콤한 사탕은 고체일까요, 액체일까요? 당연히 고체예요. 눈에 보이고 손에 잡히며 일정한 모양을 유지하기 때문이죠. 사탕은 둥근 그릇에 넣어도, 길쭉한 그릇에 넣어도 모양이 바뀌지 않습니다. 이것이 바로 고체의 <b>성질</b>이에요. 그럼 설탕 가루는 어떨까요?',
@@ -216,6 +228,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_03: {
     labelNo: '03',
     title: '💧 액체의 정체를 밝혀라!',
+    paragraphMain: [
+      '액체의 기본 성질: 용기에 따라 모양이 달라지지만 양은 변하지 않음',
+      '액체의 밀도와 혼합: 꿀은 천천히, 물은 빨리 흐름, 물과 식용유는 분리',
+      '액체의 분리와 활용: 물과 식초는 잘 섞임, 기름때 제거에 분리 성질 이용',
+      '증발: 물이 수증기로 변해 공기 중으로 날아감, 빨래 마름과 웅덩이 사라짐'
+    ],
     passage: [
       '물, 우유, 식용유처럼 흐르는 성질을 가진 물질을 <b>액체</b>라고 해요. 액체는 담는 <b>용기</b>에 따라 모양이 달라지지만, 전체 양은 변하지 않아요. 예를 들어 주스를 컵에서 병으로 옮기면 모양은 달라지지만 양은 같지요. 이것이 액체의 중요한 성질이에요.',
       '액체마다 흐르는 빠르기나 무거운 정도, 즉 <b>밀도</b>가 달라요. 꿀은 끈적여서 천천히 흐르고, 물은 묽어서 빨리 흐르지요. 또한 서로 다른 액체를 섞으면 어떻게 될까요? 물과 식용유는 아무리 섞어도 <b>분리</b>되어 층이 생겨요. 두 액체의 <b>성질</b>이 다르기 때문이에요.',
@@ -299,6 +317,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_04: {
     labelNo: '04',
     title: '🌬️ 보이지 않는 공기의 힘',
+    paragraphMain: [
+      '기체의 정의와 모양: 담는 그릇에 따라 모양이 달라지며 일정한 형태 없음',
+      '기체의 부피 변화: 압력을 받으면 부피가 작아지고, 힘을 빼면 원래로 돌아감',
+      '공기의 무게: 양팔저울 실험으로 공기가 무게를 가진 물질임을 증명',
+      '공기의 공간 차지: 컵 실험으로 공기가 물이 들어오는 것을 막음을 확인'
+    ],
     passage: [
       '아무것도 없는 것처럼 느껴지는 공간에도 공기가 가득 차 있어요. 공기는 눈에 보이지 않지만 지구를 둘러싸고 있는 중요한 <b>기체</b>입니다. 기체는 고체처럼 모양이 정해져 있지 않고, 담는 그릇에 따라 모습이 달라져요. 둥근 공에 넣으면 둥글게, 네모난 통에 담으면 네모나게 퍼집니다.',
       '기체는 힘을 받으면 <b>부피</b>가 달라지는 성질이 있어요. 빈 페트병을 꼭 닫은 뒤 손으로 눌러 보면 쉽게 찌그러지죠. 공기가 <b>압력</b>을 받으면 작아지기 때문이에요. 기체는 밀면 작은 공간에 들어가고, 힘을 빼면 다시 원래 상태로 돌아가려 합니다.',
@@ -380,6 +404,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_05: {
     labelNo: '05',
     title: '🧊 물의 세 가지 변신, 상태 변화',
+    paragraphMain: [
+      '융해: 고체가 열을 받아 액체로 변함 (얼음→물, 버터가 녹음)',
+      '응고: 액체가 열을 잃어 고체로 변함 (물→얼음, 촛농 굳음, 마그마→암석)',
+      '상태 변화: 형태는 바뀌지만 물질 자체는 변하지 않음, 물은 모두 같은 물',
+      '온도나 압력에 따른 상태 변화: 빨래 마름, 비, 서리 등 자연 현상과 연결'
+    ],
     passage: [
       '손에 얼음을 올려두면 얼음이 천천히 녹아 물이 됩니다. 손의 따뜻한 체온이 얼음에 전달되어 고체가 액체로 바뀌기 때문이에요. 따끈한 빵 위에 딱딱한 버터를 올리면 빵의 열기로 버터가 녹는 것도 마찬가지예요. 이처럼 고체가 열을 받아 액체로 변하는 과정을 <b>융해</b>라고 합니다.',
       '반대로 물을 냉동실에 넣어두면 열을 잃고 단단한 얼음으로 변해요. 이처럼 액체가 다시 고체가 되는 현상을 <b>응고</b>라고 합니다. 촛불을 끈 후 촛농이 식어 굳는 것, 뜨거운 마그마가 식으며 암석이 되는 것도 응고의 예예요. 온도가 낮아지면 분자들이 단단하게 붙어 고체가 됩니다.',
@@ -461,6 +491,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_06: {
     labelNo: '06',
     title: '⚗️ 118개로 만든 우주, 주기율표',
+    paragraphMain: [
+      '원소의 정의: 더 이상 쪼갤 수 없는 기본 성분, 118종, 원소 기호로 표기',
+      '멘델레예프의 발견: 원자량 순 배열 시 비슷한 성질 반복, 주기율표 탄생',
+      '주기율표 구조: 원자 번호 순 배열, 같은 족은 비슷한 성질 (알칼리 금속, 할로젠)',
+      '비활성 기체(18족)의 안정성, 주기율표로 원소 성질 예측 가능'
+    ],
     passage: [
       '모든 물질은 더 이상 쪼갤 수 없는 기본 성분으로 이루어져 있는데, 이것을 <b>원소</b>라고 해요. 현재까지 발견된 원소는 약 118종이며, 각 원소는 고유한 <b>원소 기호</b>로 나타냅니다. 산소는 O, 탄소는 C, 철은 Fe로 표기하지요. 이 약속 덕분에 전 세계 과학자들이 같은 언어로 원소를 표현할 수 있어요.',
       '러시아의 화학자 <b>멘델레예프</b>는 1869년에 원소를 <b>원자량</b> 순서로 배열하다가 놀라운 규칙을 발견했어요. 비슷한 성질을 가진 원소들이 일정한 간격으로 반복된 것이지요. 이를 바탕으로 원소를 가로줄인 <b>주기</b>와 세로줄인 <b>족</b>으로 정리한 <b>주기율표</b>를 만들었습니다.',
@@ -544,6 +580,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_07: {
     labelNo: '07',
     title: '⚛️ 원자 속 미니 우주 탐험',
+    paragraphMain: [
+      '원자의 구조: 중심에 원자핵, 주위를 전자가 돌며 태양계와 유사',
+      '원자핵 구성: 양성자(+), 중성자(전하 없음), 전자(-), 원자 번호는 양성자 수',
+      '전자껍질: 정해진 층에 전자 배치, 최외각 전자가 화학적 성질 결정',
+      '최외각 전자 8개면 안정(비활성 기체), 부족하면 다른 원자와 결합하려 함'
+    ],
     passage: [
       '모든 물질은 아주 작은 입자인 <b>원자</b>로 이루어져 있어요. 원자는 너무 작아서 눈에 보이지 않지만, 과학자들이 그 구조를 밝혀냈습니다. 원자의 중심에는 <b>원자핵</b>이 있고, 그 주위를 <b>전자</b>가 돌고 있어요. 마치 태양 주위를 행성이 도는 것과 비슷하지요.',
       '원자핵은 <b>양성자</b>와 <b>중성자</b>로 이루어져 있어요. 양성자는 (+) 전하를 띠고, 중성자는 전하가 없습니다. 전자는 (-) 전하를 띠어요. 원자는 양성자 수와 전자 수가 같아서 전기적으로 중성을 유지합니다. 양성자의 수가 원소의 종류를 결정하는데, 이를 <b>원자 번호</b>라고 해요.',
@@ -627,6 +669,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_08: {
     labelNo: '08',
     title: '🔗 원자들의 우정, 화학 결합',
+    paragraphMain: [
+      '화학 결합의 정의와 옥텟 규칙: 최외각 전자 8개로 안정, 이온/공유 결합',
+      '이온 결합: 금속이 전자 잃어 양이온, 비금속이 얻어 음이온, 소금(NaCl) 예시',
+      '공유 결합: 비금속끼리 전자쌍 공유, 수소 분자(H₂), 물(H₂O) 예시',
+      '결합 종류에 따른 성질 차이: 이온 결합은 단단/전기 전도, 공유 결합은 낮은 녹는점'
+    ],
     passage: [
       '원자들은 혼자 있기보다 다른 원자와 결합해 안정한 상태를 이루려 해요. 이것을 <b>화학 결합</b>이라고 합니다. 원자가 결합하는 이유는 최외각 전자껍질을 채워 안정해지려는 성질 때문이에요. 최외각 전자가 8개인 상태를 <b>옥텟 규칙</b>이라고 하며, 결합은 <b>이온 결합</b>과 <b>공유 결합</b>으로 나뉩니다.',
       '<b>이온 결합</b>은 금속과 비금속 원자 사이에서 일어나요. 금속 원자는 전자를 잃어 (+) 전하의 <b>양이온</b>이 되고, 비금속 원자는 전자를 얻어 (-) 전하의 <b>음이온</b>이 됩니다. 서로 반대 전하끼리 끌어당겨 결합해요. 소금(NaCl)이 대표적인 예입니다.',
@@ -708,6 +756,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_09: {
     labelNo: '09',
     title: '⚖️ 사라지지 않는 질량의 법칙',
+    paragraphMain: [
+      '화학 반응의 정의: 물질이 다른 물질로 변함, 반응물과 생성물, 화학 반응식',
+      '계수와 균형 맞추기: 계수는 분자 개수, 반응 전후 원자 수 동일해야 함',
+      '질량 보존 법칙: 원자 재배열만 일어남, 반응 전후 총 질량 동일, 라부아지에 발견',
+      '질량 보존 법칙의 예: 철 56g + 산소 32g = 산화철 88g'
+    ],
     passage: [
       '물질이 다른 물질로 변하는 것을 <b>화학 반응</b>이라고 해요. 철이 녹슬거나, 나무가 타거나, 음식이 소화되는 것 모두 화학 반응입니다. 변화 전의 물질을 <b>반응물</b>, 변화 후 물질을 <b>생성물</b>이라고 하며, 이를 <b>화학 반응식</b>으로 나타내요. 반응물을 왼쪽에, 생성물을 오른쪽에 쓰고 화살표로 연결합니다.',
       '화학 반응식에서 중요한 것은 <b>계수</b>예요. 계수는 화학식 앞에 붙는 숫자로, 분자의 개수를 나타냅니다. 2H₂O에서 2가 계수이고, 물 분자가 2개라는 뜻이에요. 반응식을 쓸 때는 반응 전후에 각 원소의 원자 수가 같아야 해요. 이것을 <b>균형 맞추기</b>라고 합니다.',
@@ -789,6 +843,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_10: {
     labelNo: '10',
     title: '🧂 시큼 vs 미끈, 산과 염기의 대결',
+    paragraphMain: [
+      '산과 염기의 정의와 성질: 산은 신맛, 염기는 쓴맛과 미끈거림, 지시약으로 구별',
+      'pH 척도와 리트머스 종이: 0~14로 산성/염기성 표시, 7이 중성',
+      '중화 반응: 산의 H⁺와 염기의 OH⁻가 만나 물과 염 생성',
+      '중화 반응의 발열과 활용: 제산제로 위산 과다 완화, 일상의 다양한 활용'
+    ],
     passage: [
       '신맛이 나는 물질을 <b>산</b>, 쓴맛이 나고 미끈거리는 물질을 <b>염기</b>라고 해요. 레몬즙, 식초, 위산은 산성 물질이고, 비누, 베이킹소다, 세제는 염기성 물질입니다. 산은 금속과 반응해 수소 기체를 발생시키고, 염기는 기름때를 잘 녹여요. 직접 맛보는 것은 위험하므로 <b>지시약</b>으로 구별합니다.',
       '물질의 산성과 염기성 정도를 나타내는 척도를 <b>pH</b>라고 해요. pH는 0~14의 숫자로 표현되며, 7이 <b>중성</b>입니다. pH가 7보다 작으면 산성, 크면 염기성이에요. <b>리트머스 종이</b>를 사용해 구별하는데, 푸른색이 붉게 변하면 산성, 붉은색이 푸르게 변하면 염기성입니다.',
@@ -874,6 +934,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_11: {
     labelNo: '11',
     title: '🔥 철이 녹슬고 불이 타는 이유',
+    paragraphMain: [
+      '산화의 정의: 물질이 산소와 결합하는 반응, 녹, 갈변, 연소의 예시',
+      '환원의 정의: 산화물에서 산소가 빠져나가는 반응, 제철 공정에서 활용',
+      '코크스를 이용한 제철 과정, 산화와 환원은 항상 동시에 일어남',
+      '산화-환원 반응의 정의와 예시: 철 녹슬기, 포도당 산화로 에너지 획득'
+    ],
     passage: [
       '철못을 오래 두면 붉은색 녹이 생겨요. 철이 공기 중의 <b>산소</b>와 결합해 <b>산화철</b>이 되는 현상입니다. 이처럼 물질이 산소와 결합하는 반응을 <b>산화</b>라고 해요. 사과가 갈색으로 변하고, 나무가 타서 재가 되는 것도 산화 반응이에요. 빠르게 산화하며 열과 빛을 내는 것을 <b>연소</b>라고 합니다.',
       '산화의 반대 개념이 <b>환원</b>이에요. 환원은 산화물에서 산소가 빠져나가는 반응입니다. 산화구리를 수소와 함께 가열하면 산소가 빠져나가 구리로 돌아가요. 제철 공정에서도 환원 반응이 쓰이는데, 철광석에서 산소를 빼내 순수한 철을 얻습니다.',
@@ -957,6 +1023,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_12: {
     labelNo: '12',
     title: '⚡ 물을 쪼개다! 전기분해의 세계',
+    paragraphMain: [
+      '전해질과 전기 분해: 이온으로 분리되어 전기 통함, 물 분해 시 산소·수소 발생',
+      '화학 전지의 원리: 화학 에너지를 전기 에너지로 전환, 볼타 전지 예시',
+      '1차 전지와 2차 전지: 망간 건전지는 1회용, 리튬 이온 전지는 충전 가능',
+      '연료 전지: 수소와 산소 반응으로 전기 생산, 부산물은 물뿐인 친환경 에너지'
+    ],
     passage: [
       '물에 소금이나 산을 녹이면 <b>전해질</b> 용액이 돼요. 전해질은 물에 녹아 <b>이온</b>으로 분리되어 전기를 통하게 하는 물질입니다. 이 용액에 전극을 넣고 전기를 흘리면 화학 반응이 일어나는데, 이것을 <b>전기 분해</b>라고 해요. 물을 전기 분해하면 (+)극에서 산소, (-)극에서 수소가 발생합니다.',
       '전기 분해와 반대 원리로 작동하는 것이 <b>화학 전지</b>예요. 화학 전지는 화학 에너지를 전기 에너지로 바꾸는 장치입니다. 대표적인 예가 <b>볼타 전지</b>인데, 아연판과 구리판을 묽은 황산에 넣고 연결하면 전류가 흘러요. 아연이 전자를 잃고 이온이 되며 전류가 발생합니다.',
@@ -1040,6 +1112,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_13: {
     labelNo: '13',
     title: '🌡️ 녹고 또 녹는 용해의 한계',
+    paragraphMain: [
+      '용해의 정의와 용어: 용매가 용질을 녹여 용액 형성, 물은 보편적 용매',
+      '농도의 정의와 종류: 퍼센트 농도(용액 100g 중 용질 g), 몰 농도(용액 1L 중 몰 수)',
+      '용해도의 개념: 온도에 따라 변함, 고체는 고온에서 증가, 기체는 고온에서 감소',
+      '포화 용액과 불포화 용액: 탄산음료 차갑게 보관하는 이유는 기체 용해도'
+    ],
     passage: [
       '설탕을 물에 넣고 저으면 설탕이 보이지 않게 되면서 물이 달콤해져요. 이처럼 한 물질이 다른 물질에 골고루 섞이는 현상을 <b>용해</b>라고 합니다. 다른 물질을 녹이는 물질을 <b>용매</b>, 녹는 물질을 <b>용질</b>, 용매에 용질이 녹은 혼합물을 <b>용액</b>이라고 해요. 물은 다양한 물질을 녹일 수 있어 보편적 용매라고 불려요.',
       '용액에 용질이 얼마나 녹아 있는지를 나타내는 것이 <b>농도</b>예요. 가장 흔히 쓰는 것이 <b>퍼센트 농도</b>인데, 용액 100g 중 용질이 몇 g인지를 나타냅니다. 소금 10g을 물 90g에 녹이면 퍼센트 농도는 10%예요. 화학에서는 용액 1L 중 용질의 몰 수를 나타내는 <b>몰 농도</b>도 자주 사용해요.',
@@ -1125,6 +1203,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_14: {
     labelNo: '14',
     title: '💨 기체가 부피를 바꾸는 비밀',
+    paragraphMain: [
+      '기체의 압력: 분자 충돌로 발생, 기압(atm)·파스칼(Pa) 단위, 해수면 1기압',
+      '보일 법칙: 온도 일정 시 압력과 부피 반비례, 주사기 압축 예시',
+      '샤를 법칙: 압력 일정 시 온도와 부피 비례, 열기구가 뜨는 원리',
+      '이상 기체 법칙(PV=nRT): 보일·샤를 법칙 통합, 압력·부피·온도·몰 수 관계'
+    ],
     passage: [
       '기체는 담는 용기에 따라 자유롭게 퍼져요. 기체 분자들이 빠르게 움직이며 용기 벽에 충돌하는데, 이 충돌이 만드는 힘이 <b>기체의 압력</b>입니다. 압력의 단위로는 <b>기압(atm)</b>이나 <b>파스칼(Pa)</b>을 사용해요. 해수면에서 대기압은 약 1기압입니다. 기체의 성질은 온도, 압력, 부피와 밀접한 관계가 있어요.',
       '영국의 과학자 <b>보일</b>은 온도가 일정할 때 기체의 압력과 부피가 <b>반비례</b>한다는 것을 발견했어요. 이것을 <b>보일 법칙</b>이라고 해요. 압력을 2배로 높이면 부피는 절반으로 줄어듭니다. 주사기 끝을 막고 피스톤을 누르면 공기가 압축되는 것이 보일 법칙의 예예요.',
@@ -1207,6 +1291,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_15: {
     labelNo: '15',
     title: '🔬 에너지를 품은 화학 반응',
+    paragraphMain: [
+      '발열 반응과 흡열 반응: 연소·중화는 열 방출, 냉찜질팩은 열 흡수',
+      '활성화 에너지와 촉매: 촉매가 활성화 에너지 낮춤, 효소는 생체 촉매',
+      '화학 에너지 활용: 배터리는 전기 에너지로 전환, 손난로는 산화 반응열',
+      '에너지 보존 법칙: 에너지 형태만 바뀌고 총량 불변, 효율적 사용 중요'
+    ],
     passage: [
       '화학 반응이 일어날 때는 에너지 변화가 동반돼요. <b>발열 반응</b>은 열을 방출하는 반응으로, <b>연소</b>, <b>중화 반응</b>, 금속의 산화 등이 대표적입니다. 연료가 타면서 열과 빛을 내는 것이 발열 반응이에요. 반대로 <b>흡열 반응</b>은 열을 흡수하는 반응으로, 냉찜질팩이 이 원리를 이용해요.',
       '화학 반응이 일어나려면 반응물이 일정 에너지 이상을 가져야 해요. 이를 <b>활성화 에너지</b>라고 합니다. <b>촉매</b>는 활성화 에너지를 낮춰 반응 속도를 빠르게 만드는 물질이에요. <b>효소</b>는 생물체 내에서 작용하는 생체 촉매로, 소화 효소가 대표적입니다. 촉매는 반응 후에도 자신은 변하지 않아요.',
@@ -1266,6 +1356,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_16: {
     labelNo: '16',
     title: '🧬 썩지 않는 플라스틱의 정체',
+    paragraphMain: [
+      '고분자의 정의: 단위체가 수천~수만 개 연결된 거대 분자, 중합 반응',
+      '플라스틱 환경 문제: 분해에 수백 년, 미세 플라스틱이 해양 생물에 피해',
+      '생분해성 플라스틱: 미생물이 물과 이산화탄소로 분해, 환경에 무해',
+      '플라스틱 문제 해결: 재활용, 분리수거, 일회용품 줄이기, 과대 포장 금지'
+    ],
     passage: [
       '플라스틱, 고무, 섬유는 모두 <b>고분자</b> 물질이에요. 고분자란 작은 분자들이 수천에서 수만 개씩 연결된 거대한 분자입니다. 반복되는 작은 단위를 <b>단위체</b>라고 하고, 단위체가 결합하는 반응을 <b>중합</b>이라고 해요. 에틸렌이 수천 개 연결되면 폴리에틸렌 플라스틱이 됩니다.',
       '<b>플라스틱</b>은 대표적인 <b>합성 고분자</b>로, 열을 가하면 모양을 바꿀 수 있어요. 가볍고 튼튼하며 녹슬지 않아 널리 사용됩니다. 하지만 자연에서 <b>분해</b>되는 데 수백 년이 걸려 환경 오염의 원인이 돼요. 바다에 버려진 플라스틱은 <b>미세 플라스틱</b>으로 쪼개져 해양 생물에게 피해를 줍니다.',
@@ -1325,6 +1421,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_17: {
     labelNo: '17',
     title: '⚙️ 금속의 변신, 합금의 탄생',
+    paragraphMain: [
+      '금속의 성질: 열·전기 전달, 연성(두드리면 펴짐), 전성(잡아당기면 늘어남)',
+      '합금의 정의와 스테인리스강: 두 가지 이상 금속 혼합, 철+크로뮴+니켈로 녹 방지',
+      '다양한 합금: 청동(구리+주석), 황동(구리+아연), 두랄루민(알루미늄 합금)',
+      '합금의 중요성: 아말감(수은 합금), 원하는 성질 맞춤 개발, 재료 과학의 핵심'
+    ],
     passage: [
       '인류 문명은 <b>금속</b>의 발견과 함께 발전해 왔어요. 금속은 열과 전기를 잘 전달하고, 두드리면 얇게 펴지는 <b>연성</b>과 잡아당기면 늘어나는 <b>전성</b>을 가지고 있습니다. 특유의 광택이 있어 빛을 반사해요. 철, 구리, 알루미늄, 금, 은 등이 대표적인 금속입니다.',
       '순수한 금속은 원하는 성질을 갖추지 못할 때가 있어요. 이를 보완하기 위해 두 가지 이상의 금속을 섞어 만든 것이 <b>합금</b>입니다. 합금은 순수 금속보다 더 단단하거나 녹슬지 않는 등 개선된 성질을 가져요. <b>스테인리스강</b>은 철에 크로뮴과 니켈을 섞어 녹이 슬지 않게 만든 합금이에요.',
@@ -1384,6 +1486,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_18: {
     labelNo: '18',
     title: '🌿 지구를 아프게 하는 화학 오염',
+    paragraphMain: [
+      '대기 오염과 온실 효과: 이산화황이 산성비 유발, 온실가스로 지구 온난화',
+      '수질 오염과 부영양화: 폐수·농약 오염, 조류 번식으로 적조 발생',
+      '녹색 화학: 오염 물질 감소, 에너지 절약, 재활용 가능 물질 사용',
+      '생분해성 물질 개발: 화학이 환경 문제의 원인이자 해결책, 친환경 기술 중요'
+    ],
     passage: [
       '현대 문명은 화학 덕분에 편리해졌지만 <b>환경 오염</b>이라는 문제도 생겼어요. <b>대기 오염</b>은 공장이나 자동차에서 배출되는 이산화황 등이 공기를 오염시키는 것입니다. 이 물질이 빗물에 녹으면 <b>산성비</b>가 되어 식물을 죽이고 건물을 부식시켜요. <b>온실 효과</b>로 지구 온난화도 가속화되고 있습니다.',
       '<b>수질 오염</b>은 공장 폐수나 농약 등이 물을 오염시키는 것이에요. 오염된 물은 수생 생물을 죽게 하고, 인간의 건강에도 해를 끼칩니다. <b>부영양화</b>는 물속에 영양 물질이 과다해 조류가 급격히 번식하는 현상이에요. 조류가 죽으며 산소를 소모하면 물고기가 떼죽음 당하는 <b>적조</b>가 생겨요.',
@@ -1443,6 +1551,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_19: {
     labelNo: '19',
     title: '🧴 우리 집 속 숨은 화학자들',
+    paragraphMain: [
+      '비누와 세제의 원리: 계면활성제가 기름때를 둘러싸 물에 녹게 함',
+      '화장품 속 화학: 보습제·자외선 차단제·방부제·유화제 역할',
+      '식품 첨가물: 방부제·감미료·색소로 맛·색·향 개선, 안전성 검사 통과',
+      '현명한 소비자: 성분표 읽기, 화학 지식으로 맞는 제품 선택'
+    ],
     passage: [
       '우리 일상은 화학 제품으로 가득해요. <b>비누</b>와 <b>세제</b>는 <b>계면활성제</b> 덕분에 기름때를 물에 씻어낼 수 있습니다. 계면활성제는 물을 좋아하는 부분과 기름을 좋아하는 부분이 있어서, 기름 오염 물질을 둘러싸 물에 녹게 해요. 샴푸, 주방 세제, 세탁 세제 모두 이 원리를 이용합니다.',
       '화장품에도 다양한 화학 물질이 들어 있어요. <b>보습제</b>는 피부에 수분을 공급하고, <b>자외선 차단제</b>는 피부를 자외선으로부터 보호합니다. <b>방부제</b>는 화장품이 상하지 않도록 미생물 번식을 막아요. <b>유화제</b>는 물과 기름을 섞이게 해서 크림 형태 제품을 만들어요.',
@@ -1502,6 +1616,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_chem_20: {
     labelNo: '20',
     title: '🚀 미래를 여는 꿈의 신소재',
+    paragraphMain: [
+      '나노 기술과 신소재: 탄소 나노 튜브(철보다 100배 강함), 그래핀(전기 전도성)',
+      '에너지 분야: 수소 연료 전지(친환경), 태양 전지, 이차 전지(전기차·휴대기기)',
+      '의료 분야: 나노 의약품(표적 치료), 생체 적합성 소재, 스마트 소재',
+      '화학의 미래: 친환경 에너지, 첨단 의료, 신소재 개발로 무궁무진한 가능성'
+    ],
     passage: [
       '미래 사회는 <b>신소재</b>의 발전에 따라 크게 변화할 거예요. <b>나노 기술</b>은 10억분의 1미터 크기의 물질을 다루는 기술입니다. <b>탄소 나노 튜브</b>는 철보다 100배 강하면서도 가볍고, <b>그래핀</b>은 전기 전도성이 뛰어나 차세대 반도체 소재로 주목받아요.',
       '에너지 분야에서도 화학의 역할이 중요해요. <b>수소 연료 전지</b>는 수소와 산소의 반응으로 전기를 생산하며, 물만 배출해 친환경적입니다. <b>태양 전지</b>는 빛을 전기로 바꾸고, <b>이차 전지</b>는 전기차와 휴대 기기에 필수예요. 더 효율적인 배터리 개발이 진행 중입니다.',
@@ -1778,93 +1898,97 @@ function applyContentPack(unitKey) {
       return `${minutes}분 ${seconds}초`;
     };
 
-    // 문장 클릭 시 선택 유지
-    passageBox.addEventListener('click', (e) => {
-      const sentence = e.target.closest('.sentence');
-      if (!sentence) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
-      // 첫 클릭 시 시작 시간 기록
-      if (!readingStartTime) {
-        readingStartTime = new Date();
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
-      }
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
 
-      sentence.classList.toggle('selected');
-      saveSelection();
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
 
-      // 모든 문장 선택 완료 시 축하
-      const total = passageBox.querySelectorAll('.sentence').length;
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
-      if (selected === 0) {
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = '00';
-        if (secInput) secInput.value = '00';
-        readingStartTime = null;
-        localStorage.removeItem(timeKey);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
       }
-      if (total > 0 && total === selected) {
-        // 완료 시간 기록
-        const endTime = new Date();
-        const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({
-          start: readingStartTime.toISOString(),
-          end: endTime.toISOString(),
-          duration: duration
-        }));
-
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'on_chem_01';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-
-        const toast = document.createElement('div');
-        toast.className = 'complete-toast';
-        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
-          <div style="font-size:14px;color:#666;line-height:1.6;">
-            <div>시작: ${formatDateTime(readingStartTime)}</div>
-            <div>완료: ${formatDateTime(endTime)}</div>
-            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
-          </div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-
-        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
-        const shapes = ['●','★','◆','♥','✦'];
-        for (let i = 0; i < 60; i++) {
-          const sparkle = document.createElement('div');
-          sparkle.className = 'sparkle-rain';
-          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-          sparkle.style.left = Math.random() * 100 + 'vw';
-          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
-          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
-          document.body.appendChild(sparkle);
-          setTimeout(() => sparkle.remove(), 3500);
-        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

@@ -517,120 +517,7 @@
       box.innerHTML = html;
     }
 
-    /* ======= (임시 alert 버전 openRemedial 삭제) ======= */
-    // ===== 보완학습 문제 뱅크 (객관식 2문제씩) =====
-    const REMEDIAL_BANK = {
-      literal: {
-        title: "보완학습 | 핵심 이해력",
-        problems: [
-          { type: "mcq", q: "지도를 만들 때 약속된 기호를 쓰는 까닭은?", options: ["보기 쉽도록", "예쁘게 하려고", "값싸게 하려고", "사진처럼 하려고"], answer: 0 },
-          { type: "mcq", q: "이 글의 중심 내용으로 알맞은 것은?", options: ["지도는 장식품이다", "지도는 약속에 따라 정보를 표현한다", "지도는 사진보다 선명하다", "지도는 세계지도를 말한다"], answer: 1 }
-        ]
-      },
-      structural: {
-        title: "보완학습 | 구조 파악력",
-        problems: [
-          { type: "mcq", q: "글에서 '먼저-다음-마지막으로' 순으로 설명하는 것은?", options: ["순서 구조", "비교 구조", "문제해결 구조", "열거 구조"], answer: 0 },
-          { type: "mcq", q: "등고선 설명 글의 전개 방식으로 알맞은 것은?", options: ["원인-결과", "설명-예시", "비교-대조", "문제-해결"], answer: 1 }
-        ]
-      },
-      lexical: {
-        title: "보완학습 | 어휘 맥락력",
-        problems: [
-          { type: "mcq", q: "'촘촘하다'와 가장 비슷한 말은?", options: ["드문드문하다", "빽빽하다", "느슨하다", "엉성하다"], answer: 1 },
-          { type: "mcq", q: "'경사가 가파르다'의 뜻과 가까운 것은?", options: ["평평하다", "비탈이 심하다", "길다", "넓다"], answer: 1 }
-        ]
-      },
-      inferential: {
-        title: "보완학습 | 추론·통합력",
-        problems: [
-          { type: "mcq", q: "이 글을 쓴 사람의 의도로 알맞은 것은?", options: ["지도를 그려 보이려는 것", "지도를 활용하는 법을 알려 주려는 것", "그림을 소개하려는 것", "사진을 비교하려는 것"], answer: 1 },
-          { type: "mcq", q: "산과 강의 위치를 함께 보면 알 수 있는 것은?", options: ["마을 위치를 추측할 수 있다", "국가 면적을 알 수 있다", "세계 인구를 안다", "기온을 안다"], answer: 0 }
-        ]
-      },
-      critical: {
-        title: "보완학습 | 비판·적용형",
-        problems: [
-          { type: "mcq", q: "관광용 지도를 볼 때 주의할 점으로 알맞은 것은?", options: ["항상 축척이 정확하다", "목적에 따라 내용이 달라질 수 있다", "산이 없다고 볼 수 있다", "기호는 임의로 바꾼다"], answer: 1 },
-          { type: "mcq", q: "다음 중 지도를 비판적으로 보는 태도와 거리가 먼 것은?", options: ["누가 만들었는지 살핀다", "어떤 목적인지 본다", "전부 사실이라고 믿는다", "필요한 정보가 있는지 본다"], answer: 2 }
-        ]
-      }
-    };
-
-    // ===== 보완학습 열기(실구현 버전만 유지) =====
-    function openRemedial() {
-      const needKeys = [];
-      if (typeof reportState !== "undefined") {
-        if (!reportState.q1ok) needKeys.push('literal');
-        if (!reportState.q2ok) needKeys.push('structural');
-        if (!reportState.q3ok) needKeys.push('lexical');
-        if (!reportState.q4ok) needKeys.push('inferential');
-        if (!reportState.q5ok) needKeys.push('critical');
-      }
-
-      const panel = document.getElementById('remedial-panel');
-      const body = document.getElementById('remedial-panel-body');
-      if (!panel || !body) return;
-
-      if (needKeys.length === 0) {
-        body.innerHTML = "<p>보완이 필요한 영역이 없습니다 👏</p>";
-        panel.style.display = 'flex';
-        return;
-      }
-
-      let html = "";
-      needKeys.forEach(key => {
-        const data = REMEDIAL_BANK[key];
-        if (!data) return;
-        html += `<div style="margin-bottom:16px;">
-          <h4 style="margin:4px 0 6px; color:#8b2f2f;">${data.title}</h4>
-          <ol style="padding-left:18px;">`;
-        (data.problems || []).forEach((p, idx) => {
-          html += `<li style="margin-bottom:6px;">${p.q}<br>`;
-          p.options.forEach(opt => {
-            html += `<label style="display:block;font-weight:normal;"><input type="radio" name="${key}-q${idx}"> ${opt}</label>`;
-          });
-          html += `</li>`;
-        });
-        html += `</ol></div>`;
-      });
-
-      body.innerHTML = html;
-      panel.style.display = 'flex';
-    }
-
-    // 보완학습 채점/리셋
-    function gradeRemedial() {
-      const body = document.getElementById('remedial-panel-body');
-      if (!body) return;
-      for (const key in REMEDIAL_BANK) {
-        const data = REMEDIAL_BANK[key];
-        if (!data) continue;
-        (data.problems || []).forEach((p, idx) => {
-          const name = key + '-q' + idx;
-          const inputs = body.querySelectorAll(`input[name="${name}"]`);
-          if (!inputs.length) return;
-          let selected = -1;
-          inputs.forEach((inp, i) => { if (inp.checked) selected = i; });
-          const li = inputs[0].closest('li');
-          if (!li) return;
-          const old = li.querySelector('.remed-result');
-          if (old) old.remove();
-          if (selected === p.answer) {
-            li.insertAdjacentHTML('beforeend', '<div class="remed-result" style="margin-top:3px; color:#157347; font-size:12px;">정답입니다 ✅</div>');
-          } else {
-            const correctText = p.options[p.answer];
-            li.insertAdjacentHTML('beforeend', `<div class="remed-result" style="margin-top:3px; color:#b3261e; font-size:12px;">틀렸어요 ❌ 정답: ${correctText}</div>`);
-          }
-        });
-      }
-    }
-    function resetRemedial() {
-      const body = document.getElementById('remedial-panel-body');
-      if (!body) return;
-      body.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
-      body.querySelectorAll('.remed-result').forEach(el => el.remove());
-    }
+    /* ===== 보완학습: learning-common.js의 openRemedial 함수 사용 ===== */
   </script>
 
   <style>
@@ -2051,14 +1938,15 @@
                 <button class="webtoon-dropdown-close" onclick="closeWebtoonDropdown()">&times;</button>
               </div>
               <div class="webtoon-dropdown-body" id="webtoonBody">
-                <img data-src="/images/웹툰/화학02/화학02_01.png" alt="웹툰 힌트 1">
-                <img data-src="/images/웹툰/화학02/화학02_02.png" alt="웹툰 힌트 2">
-                <img data-src="/images/웹툰/화학02/화학02_03.png" alt="웹툰 힌트 3">
-                <img data-src="/images/웹툰/화학02/화학02_04.png" alt="웹툰 힌트 4">
-                <img data-src="/images/웹툰/화학02/화학02_05.png" alt="웹툰 힌트 5">
-                <img data-src="/images/웹툰/화학02/화학02_06.png" alt="웹툰 힌트 6">
-                <img data-src="/images/웹툰/화학02/화학02_07.png" alt="웹툰 힌트 7">
-                <img data-src="/images/웹툰/화학02/화학02_08.png" alt="웹툰 힌트 8">
+                <img data-src="/images/웹툰/딥화학02/01.png" alt="웹툰 힌트 1">
+                <img data-src="/images/웹툰/딥화학02/02.png" alt="웹툰 힌트 2">
+                <img data-src="/images/웹툰/딥화학02/03.png" alt="웹툰 힌트 3">
+                <img data-src="/images/웹툰/딥화학02/04.png" alt="웹툰 힌트 4">
+                <img data-src="/images/웹툰/딥화학02/05.png" alt="웹툰 힌트 5">
+                <img data-src="/images/웹툰/딥화학02/06.png" alt="웹툰 힌트 6">
+                <img data-src="/images/웹툰/딥화학02/07.png" alt="웹툰 힌트 7">
+                <img data-src="/images/웹툰/딥화학02/08.png" alt="웹툰 힌트 8">
+                <img data-src="/images/웹툰/딥화학02/09.png" alt="웹툰 힌트 9">
               </div>
             </div>
           </div>
@@ -2333,18 +2221,19 @@
       <div class="creative-topic-box">
         <div>
           <strong>주제:</strong>
-          <strong>"내가 만약 새로운 물질을 발명한다면 어떤 성질을 가진 물질을 만들고 싶은가?"</strong>
+          <strong>"🔬 주기율표 속 원소 자기소개서 쓰기"</strong>
         </div>
         <div class="creative-hint" id="creative-hint">
+          💡 힌트) 주기율표에서 원소 하나를 골라 그 원소가 되어 자기소개서를 써 보세요. 원자 번호, 전자 배치, 같은 족 원소와의 관계, 화학적 성질 등을 포함해 보세요.
         </div>
       </div>
 
       <!-- 예시 박스 -->
       <div class="creative-examples-box">
         <div class="example-title">📝 작성 예시</div>
-        <div>예시 1) 나는 깃털처럼 가볍지만 철보다 단단한 물질을 발명해서 무거운 건물도 쉽게 지을 수 있게 하고 싶다.</div>
-        <div>예시 2) 물에 절대 젖지 않고 더러움도 묻지 않는 천을 만들어 빨래할 필요 없는 옷을 만들고 싶다.</div>
-        <div>예시 3) 온도에 따라 색이 변하는 물질로 컵을 만들면 음료가 너무 뜨거운지 알 수 있어서 안전할 것이다.</div>
+        <div>예시 1) 안녕, 나는 나트륨이야. 원자 번호 11번이고, K껍질에 2개, L껍질에 8개, M껍질에 1개의 전자가 있어. 원자가 전자가 1개라서 전자를 잃고 양이온이 되기 쉬워.</div>
+        <div>예시 2) 나는 염소야. 17족 할로젠 원소로 원자가 전자가 7개야. 전자 1개만 더 얻으면 옥텟을 이루니까 반응성이 커서 소독제로 많이 쓰여.</div>
+        <div>예시 3) 나는 네온이야. 18족 비활성 기체로 전자껍질이 꽉 차 있어서 다른 원소와 반응하지 않아. 그래서 네온사인에서 안전하게 빛날 수 있어.</div>
       </div>
 
       <!-- 🔶 창의활동 입력/제출 영역 (교체본) -->
@@ -2417,7 +2306,7 @@
 
       <!-- ✅ 제출하기 버튼 -->
       <div class="report-actions">
-        <button class="report-btn-remedial" onclick="openRemedial && openRemedial()" style="display:none;">
+        <button class="report-btn-remedial" onclick="openRemedial && openRemedial()">
           보완학습 하기
         </button>
         <button class="report-btn-submit" onclick="submitReport()">

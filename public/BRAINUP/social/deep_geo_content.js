@@ -43,6 +43,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_01: {
     labelNo: '01',
     title: '🗺️ 세상을 읽는 지도',
+    paragraphMain: [
+      '지도의 기본 개념: 지도의 정의와 발전 과정, 축척과 방위 등 공간 정보 해석의 기초를 배우다',
+      '지도의 분류: 일반도와 주제도의 차이, 등치선도·단계구분도·도형표현도·유선도의 특징을 알아보다',
+      '공간정보기술의 발전: GIS, 원격탐사, GPS 등 현대 기술이 지도를 동적 정보 플랫폼으로 변화시키다',
+      '지도의 비판적 읽기: 투영법에 따른 왜곡과 제작자의 관점을 이해하며 지도 리터러시를 기르다'
+    ],
     passage: [
       '<b>지도</b>는 지구 표면의 일부 또는 전체를 일정한 비율로 줄여 평면에 나타낸 것이다. 지도는 인류 문명과 함께 발전해 왔으며, 고대 바빌로니아의 점토판 지도에서 현대의 디지털 지도에 이르기까지 그 형태와 기술은 끊임없이 진화해 왔다. 지도는 단순히 위치를 표시하는 것을 넘어 공간 정보를 체계적으로 전달하는 매체로서 기능한다. <b>축척</b>은 실제 거리와 지도상의 거리 비율을 나타내며, 대축척 지도는 좁은 지역을 상세히, 소축척 지도는 넓은 지역을 개괄적으로 보여준다. <b>방위</b>는 지도에서 방향을 나타내는 기준으로, 일반적으로 북쪽이 위를 향하도록 제작된다. 이러한 지도의 기본 요소들을 이해하는 것은 공간 정보를 정확히 해석하는 첫걸음이다.',
       '지도는 그 목적과 표현 내용에 따라 다양하게 분류된다. <b>일반도</b>는 지형, 하천, 도로, 행정 구역 등 여러 정보를 종합적으로 나타낸 지도로 지형도가 대표적이다. 반면 <b>주제도</b>는 기후, 인구, 토지 이용 등 특정 주제를 중심으로 제작된 지도이다. 주제도에는 <b>등치선도</b>, <b>단계구분도</b>, <b>도형표현도</b>, <b>유선도</b> 등이 있다. 등치선도는 같은 값을 가진 지점을 연결한 선으로 기온이나 강수량을 표현하고, 단계구분도는 통계 값을 색상의 농담으로 구분하여 나타낸다. 도형표현도는 원이나 막대의 크기로 수량을 비교하고, 유선도는 화살표로 이동 방향과 양을 표시한다. 이처럼 주제도의 유형을 이해하면 다양한 공간 현상을 효과적으로 분석할 수 있다.',
@@ -139,6 +145,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_02: {
     labelNo: '02',
     title: '🌍 위치가 운명을 바꾼다',
+    paragraphMain: [
+      '수리적 위치: 위도와 경도로 표현하는 절대적 위치, 우리나라의 중위도 위치와 기후·시간대 영향',
+      '지리적 위치: 유라시아 대륙 동쪽의 반도 국가, 대륙과 해양 문화 교류의 교량 역할과 양면성',
+      '관계적 위치: 냉전 시대 분단에서 동북아 경제 협력 중심지로, 통일 후 물류·교통 허브 잠재력',
+      '지정학의 중요성: 영국과 폴란드 사례로 본 위치와 국가 운명, 우리나라의 외교 전략 필요성'
+    ],
     passage: [
       '<b>위치</b>는 지표면 위에서 어떤 지점이 차지하는 자리를 의미하며, 지리학에서 가장 기본적인 개념이다. 위치는 크게 <b>수리적 위치</b>, <b>지리적 위치</b>, <b>관계적 위치</b>로 구분된다. 수리적 위치는 <b>위도</b>와 <b>경도</b>라는 좌표 체계를 이용해 지구상의 특정 지점을 수치로 나타낸 것으로, 전 세계 어디서나 동일하게 적용되는 객관적이고 절대적인 위치 표현 방식이다. 우리나라의 수리적 위치는 북위 33°~43°, 동경 124°~132° 사이에 걸쳐 있으며, 이러한 위치는 기후와 계절 변화에 직접적인 영향을 미친다. 북위 33°~43°는 <b>중위도</b> 지역에 해당하여 사계절이 뚜렷하게 나타나고, 동경 124°~132°는 본초 자오선 기준 동쪽에 위치하여 세계 표준시보다 9시간 빠른 시간대를 사용하게 된다.',
       '지리적 위치는 대륙과 해양, 산맥과 하천 등 <b>자연환경</b>을 기준으로 한 위치를 말한다. 우리나라는 <b>유라시아 대륙</b>의 동쪽 끝에 위치하며, 삼면이 바다로 둘러싸인 <b>반도</b> 국가이다. 서쪽으로는 황해를 사이에 두고 중국과 마주하고, 동쪽으로는 동해를 건너 일본과 인접해 있으며, 남쪽으로는 남해를 통해 동남아시아와 연결된다. 이러한 반도적 위치는 대륙 문화와 해양 문화가 교차하는 <b>문화 전파</b>의 교량 역할을 가능하게 했다. 역사적으로 중국의 선진 문물을 받아들여 일본에 전달하는 통로 역할을 수행했으며, 동시에 해양을 통한 무역과 교류의 거점으로 기능했다. 그러나 대륙 세력과 해양 세력이 충돌하는 지정학적 요충지로서 외침을 받기도 했던 양면성을 지닌다.',
@@ -236,6 +248,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_03: {
     labelNo: '03',
     title: '🏔️ 땅이 들려주는 이야기',
+    paragraphMain: [
+      '지형 형성의 역사: 선캄브리아기부터 중생대까지의 지각 변동, 경동성 요곡 운동으로 동고서저 지형 형성',
+      '화산 지형과 고위 평탄면: 신생대의 풍화·침식으로 고위 평탄면 형성, 백두산·제주도의 화산 지형 발달',
+      '산맥의 구조: 1차 산맥과 2차 산맥의 구분, 동고서저·북고남저의 한반도 지형 특징',
+      '하천과 해안 지형: 동서 하천 특성 차이와 충적 평야, 동해안 사빈과 서·남해안 리아스식 해안·갯벌'
+    ],
     passage: [
       '한반도의 지형은 수억 년에 걸친 <b>지각 변동</b>과 <b>침식</b>, <b>퇴적</b> 작용의 결과물이다. 한반도의 기반암은 대부분 <b>선캄브리아기</b>에 형성된 변성암과 화강암으로 이루어져 있으며, 이는 약 25억 년 전부터 5억 년 전 사이에 만들어진 매우 오래된 지층이다. 이후 <b>고생대</b>에는 바다에 잠겨 석회암과 사암이 퇴적되었고, <b>중생대</b>에는 격렬한 화산 활동과 <b>조산 운동</b>이 일어나 지금의 산지 골격이 형성되기 시작했다. 특히 중생대 말의 <b>경동성 요곡 운동</b>은 한반도 지형의 핵심적인 특징인 동고서저의 <b>비대칭</b> 지형을 만들어 냈다. 동쪽이 솟아오르고 서쪽이 낮아지면서, 동해안은 급경사의 해안 절벽이, 서해안은 완만한 갯벌과 리아스식 해안이 발달하게 되었다.',
       '<b>신생대</b> 제3기에는 비교적 안정된 시기가 지속되면서 오랜 세월에 걸쳐 <b>풍화</b>와 침식 작용이 진행되었고, 이로 인해 <b>고위 평탄면</b>이 형성되었다. 고위 평탄면은 해발 고도가 높은 산지 위에 평평하게 남아 있는 옛 지표면으로, 대관령, 진부령, 육백산 고원 등이 대표적이다. 이러한 고위 평탄면은 현재 고랭지 농업과 목축업에 활용되고 있다. 신생대 제4기에는 <b>백두산</b>과 <b>제주도</b>, <b>울릉도</b> 등에서 화산 활동이 일어나 <b>화산 지형</b>이 형성되었다. 백두산의 <b>천지</b>는 화산 폭발 후 칼데라에 물이 고여 만들어진 <b>칼데라호</b>이며, 제주도의 <b>한라산</b>은 순상 화산으로 완만한 경사를 이루고, 섬 곳곳에 360여 개의 <b>오름</b>(기생 화산)이 분포하여 독특한 화산 경관을 형성한다.',
@@ -332,6 +350,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_04: {
     labelNo: '04',
     title: '🌊 물이 빚어낸 지형',
+    paragraphMain: [
+      '하천 상류 지형: 급경사와 빠른 유속으로 침식 작용이 활발, V자곡·폭포·감입 곡류가 형성되다',
+      '중류와 하류 지형: 자유 곡류와 공격 사면·포인트 바, 범람원·자연 제방·배후 습지의 토지 이용',
+      '하구와 갯벌: 삼각주 형성 조건과 서해안 갯벌의 생태적 가치, 유네스코 세계유산 등재',
+      '해안 침식과 퇴적 지형: 해식애·파식대와 사빈·사주·석호, 물의 작용이 빚어낸 다양한 지형'
+    ],
     passage: [
       '<b>하천</b>은 지표면 위를 흐르는 물의 통로로, 상류에서 하류로 흐르면서 다양한 지형을 형성한다. 하천의 작용은 크게 <b>침식</b>, <b>운반</b>, <b>퇴적</b>의 세 가지로 나눌 수 있으며, 이 작용들의 상대적 세기에 따라 만들어지는 지형이 달라진다. 상류는 경사가 급하고 유속이 빨라 침식 작용이 활발하여 <b>V자곡</b>과 <b>폭포</b>, <b>감입 곡류</b> 등이 형성된다. 감입 곡류는 하천이 굽이치며 흐르다가 지반이 융기하면서 골짜기가 깊어진 지형으로, 영월의 <b>동강</b>이나 단양의 구담봉 일대에서 잘 관찰된다. 이러한 상류 지역은 급경사와 좁은 골짜기로 인해 농경지보다는 관광 자원으로 활용되는 경우가 많다.',
       '중류와 하류로 갈수록 경사가 완만해지고 유속이 느려지면서 퇴적 작용이 우세해진다. 중류에서는 하천이 굽이치는 <b>자유 곡류</b>가 발달하며, 곡류의 바깥쪽은 침식되어 <b>공격 사면</b>이, 안쪽은 퇴적되어 <b>포인트 바</b>가 형성된다. 곡류가 심해지면 물길이 직선화되면서 <b>우각호</b>나 <b>구하도</b>가 남기도 한다. 하류에서는 운반되어 온 토사가 쌓여 넓은 <b>범람원</b>이 형성되며, 범람원 내에서 하천 양쪽에 쌓인 퇴적물은 <b>자연 제방</b>을, 그 뒤쪽의 낮은 습지대는 <b>배후 습지</b>를 이룬다. 자연 제방은 배수가 양호하여 취락과 과수원이 입지하고, 배후 습지는 논농사에 이용되어 왔다.',
@@ -429,6 +453,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_05: {
     labelNo: '05',
     title: '☀️ 기후가 삶을 결정한다',
+    paragraphMain: [
+      '기후 요소: 기온·강수량·바람·습도가 지역의 농업·의복·주거에 미치는 영향을 알아보다',
+      '기후 요인: 위도·수륙 분포·해발 고도가 기온과 연교차에 미치는 영향을 이해하다',
+      '온대 계절풍 기후: 우리나라의 사계절과 여름 강수 집중, 벼농사·발효 음식·온돌 문화 형성',
+      '기후와 인간 생활: 쾨펜의 기후 구분, 지역별 주거 형태, 기후 변화로 인한 전 지구적 위협'
+    ],
     passage: [
       '<b>기후</b>는 특정 지역에서 오랜 기간에 걸쳐 나타나는 대기 상태의 평균적인 특성을 의미하며, <b>날씨</b>가 짧은 시간의 기상 현상이라면 기후는 30년 이상의 장기적인 경향을 말한다. 기후를 구성하는 <b>기후 요소</b>에는 <b>기온</b>, <b>강수량</b>, <b>바람</b>, <b>습도</b> 등이 있다. 기온은 대기의 온도로, 지역의 농업 방식과 의복, 주거 형태에 영향을 미친다. 강수량은 일정 기간 동안 내린 비나 눈의 양으로, 물 자원의 확보와 농업 생산성을 좌우한다. 바람은 대기의 흐름으로, 항해와 풍력 발전에 활용되며, 습도는 공기 중 수증기의 양으로 체감 온도와 쾌적성에 영향을 준다. 이러한 기후 요소들은 상호작용하며 지역의 기후 특성을 형성한다.',
       '기후 요소에 영향을 주는 조건을 <b>기후 요인</b>이라 하며, <b>위도</b>, <b>수륙 분포</b>, <b>해발 고도</b>, <b>지형</b>, <b>해류</b> 등이 있다. 위도는 기후에 가장 큰 영향을 미치는 요인으로, 적도에 가까울수록 <b>태양 복사 에너지</b>를 많이 받아 기온이 높고, 극지방으로 갈수록 기온이 낮아진다. 수륙 분포는 바다와 육지의 비열 차이로 인해 해안 지역과 내륙 지역의 기온 차이를 만든다. 바다는 비열이 커서 천천히 데워지고 천천히 식으므로 해안 지역은 <b>기온의 연교차</b>가 작고, 내륙 지역은 연교차가 크다. 해발 고도가 높아지면 기온이 낮아지는데, 일반적으로 100m 상승할 때마다 약 0.6°C씩 기온이 하강한다.',
@@ -525,6 +555,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_06: {
     labelNo: '06',
     title: '👥 사람은 왜 모여 살까',
+    paragraphMain: [
+      '인구 분포의 요인: 기후·지형 등 자연적 요인과 산업·교통 등 인문적 요인이 인구 밀도를 결정하다',
+      '도시화와 산업화: 산업혁명 이후 농촌 인구가 도시로 이동하며 메가시티가 증가하다',
+      '인구 이동의 유형: 이촌향도·역도시화·국제이주, 배출 요인과 흡인 요인으로 이동 원인을 분석하다',
+      '수도권 집중 문제: 과밀과 지방 소멸 위기가 동시에 나타나며 균형 발전 정책이 필요하다'
+    ],
     passage: [
       '<b>인구 분포</b>는 일정한 지역에 인구가 어떻게 퍼져 있는지를 나타내는 것으로, 자연적 요인과 인문적 요인의 영향을 받는다. 자연적 요인으로는 기후, 지형, 수자원 등이 있다. 인간은 기온이 온화하고 강수량이 적당하며 평야가 발달한 곳에 주로 거주해 왔다. 열대 우림, 사막, 극지방, 고산 지대 등은 인간이 살기에 불리한 <b>극한 환경</b>으로, 인구 희박 지역에 해당한다. 반면 동아시아의 하천 유역, 유럽의 평야 지대, 북아메리카의 오대호 연안 등은 일찍부터 인구가 밀집한 지역이다. <b>인구 밀도</b>는 단위 면적당 거주하는 인구수로, 보통 km²당 인구로 표현한다. 세계 평균 인구 밀도는 약 60명/km²이지만, 방글라데시나 싱가포르처럼 1,000명 이상인 나라도 있고, 몽골이나 호주처럼 3명 미만인 나라도 있다.',
       '인문적 요인은 산업, 교통, 정책 등 인간 활동과 관련된 요인이다. <b>산업화</b>와 <b>도시화</b>는 인구 집중의 가장 강력한 동인이 되었다. 산업 혁명 이후 공장과 상업 시설이 집중된 도시로 농촌 인구가 대거 이동하면서 도시 인구가 급증했다. 오늘날 세계 인구의 절반 이상이 도시에 거주하며, 도쿄, 델리, 상하이, 서울 등 <b>메가시티</b>(인구 1,000만 이상 도시)가 증가하고 있다. 교통의 발달도 인구 분포에 영향을 미친다. 항구, 철도역, 고속도로 인터체인지 주변은 접근성이 좋아 인구와 산업이 집중되는 경향이 있다. 정부의 <b>수도 이전</b>이나 <b>신도시 개발</b> 정책도 인구 분포를 변화시키는 요인이 된다.',
@@ -621,6 +657,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_07: {
     labelNo: '07',
     title: '🏙️ 도시의 빛과 그림자',
+    paragraphMain: [
+      '도시화의 단계: 초기·가속화·종착 단계를 거치며, 우리나라는 30년 만에 90% 이상 도시화율 달성',
+      '도시 내부 구조: 도심·부도심·주거지역으로 분화, 중심업무지구와 인구 공동화 현상을 이해하다',
+      '도시 문제의 발생: 주택 부족·교통 혼잡·열섬 현상, 개발도상국의 과잉 도시화 문제',
+      '도시 문제 해결책: 공공임대주택·대중교통 확충·스마트시티와 생태도시로 삶의 질 향상'
+    ],
     passage: [
       '<b>도시화</b>는 도시 인구 비율이 증가하고 도시적 생활 양식이 확산되는 현상으로, 산업화와 밀접한 관련이 있다. <b>도시화율</b>은 전체 인구 중 도시 인구가 차지하는 비율로, 선진국은 대부분 70% 이상의 높은 도시화율을 보인다. 도시화는 일반적으로 <b>초기 단계</b>, <b>가속화 단계</b>, <b>종착 단계</b>의 과정을 거친다. 초기 단계에서는 도시화율이 낮고 농업 중심의 사회가 유지되며, 가속화 단계에서는 산업화와 함께 농촌 인구가 급격히 도시로 이동하여 도시화율이 빠르게 상승한다. 종착 단계에서는 도시화율이 70~80%에 도달하여 안정되며, 일부 인구가 교외나 농촌으로 이동하는 <b>역도시화</b> 현상이 나타나기도 한다. 우리나라는 1960년대 이후 급속한 산업화와 함께 불과 30년 만에 가속화 단계를 거쳐 현재 90% 이상의 높은 도시화율을 보이고 있다.',
       '도시는 다양한 기능에 따라 여러 유형으로 구분된다. <b>행정 도시</b>는 정부 기관이 집중된 도시이고, <b>공업 도시</b>는 제조업이 발달한 도시이다. <b>상업 도시</b>는 무역과 금융이 발달했으며, <b>관광 도시</b>는 자연경관이나 문화유산을 바탕으로 관광 산업이 발달한 도시이다. 도시 내부는 기능에 따라 <b>도심</b>, <b>부도심</b>, <b>주거 지역</b>, <b>공업 지역</b> 등으로 분화된다. 도심은 도시의 중심부로 상업·업무 기능이 집중되어 지가가 높고, <b>중심 업무 지구</b>(CBD)가 형성된다. 도심은 낮에는 출퇴근 인구로 붐비지만 밤에는 인구가 줄어드는 <b>인구 공동화</b> 현상이 나타난다. 도시가 성장하면서 도심의 기능 일부를 분담하는 부도심이 발달하고, 주거 지역은 외곽으로 확산되는 <b>교외화</b>가 진행된다.',
@@ -718,6 +760,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_08: {
     labelNo: '08',
     title: '🌾 마을이 사라지고 있다',
+    paragraphMain: [
+      '촌락의 형태: 집촌과 산촌, 농촌·어촌·산지촌의 기능별 분류와 전통적 공동체 조직',
+      '촌락의 위기: 산업화로 인한 과소화와 초고령사회, 소멸위험지역의 증가와 기초 서비스 축소',
+      '도농 격차 실태: 소득·의료·교육·문화 측면의 불균형, 의료취약지와 교육불평등 심화',
+      '촌락 활성화 정책: 귀농귀촌·청년농 육성·6차 산업·스마트팜으로 도농 상생 추구'
+    ],
     passage: [
       '<b>촌락</b>은 농업, 어업, 임업 등 1차 산업에 종사하는 인구가 많고 인구 밀도가 낮은 정주 공간이다. 촌락은 형성 배경에 따라 <b>집촌</b>과 <b>산촌</b>으로 구분된다. 집촌은 가옥들이 밀집해 있는 형태로 주로 벼농사 지역에서 발달했는데, 이는 협동 노동과 관개 시설 공유의 필요성 때문이다. 반면 산촌은 가옥들이 흩어져 있는 형태로 밭농사 지역이나 산간 지역에서 주로 나타난다. 또한 촌락은 기능에 따라 농촌, <b>어촌</b>, 산지촌으로 분류되며, 각각 농업, 어업, 임업이 주된 경제 활동이다. 전통적으로 촌락은 지역사회의 기본 단위로서 공동체적 유대가 강했으며, 두레나 품앗이 같은 협동 조직이 발달했다. 그러나 산업화와 도시화가 진행되면서 촌락의 인구 구조와 경제 기반은 급격한 변화를 겪고 있다.',
       '우리나라의 촌락은 1960년대 이후 산업화 과정에서 심각한 인구 유출을 경험했다. 젊은 층이 일자리와 교육 기회를 찾아 도시로 떠나면서 촌락에는 노인 인구만 남게 되는 <b>과소화</b> 현상이 나타났다. 65세 이상 고령 인구 비율이 20%를 넘는 <b>초고령사회</b> 상태의 촌락이 급증했으며, 일부 지역에서는 마을 전체가 소멸 위기에 처한 <b>소멸위험지역</b>도 등장했다. 한국고용정보원의 지방소멸지수에 따르면 전국 기초자치단체의 약 40%가 소멸 위험에 놓여 있다. 촌락의 인구 감소는 단순한 인구 문제가 아니라 학교, 의료 기관, 상점 등 기초 서비스의 축소로 이어지며, 남아 있는 주민들의 삶의 질 저하를 초래한다. 이러한 악순환 속에서 촌락 공동체의 존립 자체가 위협받고 있다.',
@@ -814,6 +862,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_09: {
     labelNo: '09',
     title: '🏗️ 국토의 균형을 찾아서',
+    paragraphMain: [
+      '지역 불균형: 수도권에 인구 50%, GDP 52% 집중, 비수도권 공동화와 과밀 문제 발생',
+      '개발 방식 비교: 성장 거점 개발과 균형 개발의 장단점, 통합적 지역 개발 전략 모색',
+      '균형 발전 정책: 혁신도시·세종시·기업도시·지역특화발전특구로 지방 성장 동력 제공',
+      '미래 국토 발전: 지역 상생과 메가시티, 스마트시티로 삶의 질 중심 질적 발전 추구'
+    ],
     passage: [
       '<b>지역 개발</b>은 특정 지역의 자원을 활용하여 경제 성장, 생활 환경 개선, 주민 복지 향상을 추구하는 계획적 활동이다. 우리나라는 1960년대 이후 급속한 경제 성장을 이루었으나, 수도권과 대도시 중심의 성장 전략은 심각한 <b>지역 불균형</b>을 초래했다. 수도권에는 전체 인구의 절반 이상이 집중되어 있으며, GDP의 약 52%가 생산되고 있다. 반면 비수도권 지역은 인구 유출과 경제 침체로 어려움을 겪고 있다. 이러한 <b>수도권 집중</b> 현상은 수도권 내부의 과밀 문제와 비수도권의 공동화 문제를 동시에 발생시킨다. 주택 가격 상승, 교통 혼잡, 환경 오염 등 수도권의 과밀 문제와 지방의 인구 감소, 일자리 부족 문제는 국토 전체의 지속 가능성을 위협하고 있다.',
       '지역 개발 방식은 크게 <b>성장 거점 개발</b>과 <b>균형 개발</b>로 구분된다. 성장 거점 개발은 특정 지역에 투자를 집중하여 주변 지역으로 성장 효과가 파급되기를 기대하는 방식이다. 1970~80년대 울산, 포항, 구미 등에 조성된 산업단지가 대표적이다. 이 방식은 단기간에 경제 성장을 이끌어낼 수 있으나 지역 간 격차를 심화시키는 단점이 있다. 반면 균형 개발은 모든 지역에 고르게 투자하여 지역 간 격차를 줄이려는 방식이다. 효율성 측면에서는 성장 거점 개발보다 낮을 수 있으나 국토의 균형 있는 발전과 지역 주민의 삶의 질 향상에 기여한다. 최근에는 두 방식을 결합한 <b>통합적 지역 개발</b> 전략이 모색되고 있다.',
@@ -910,6 +964,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_10: {
     labelNo: '10',
     title: '⚡ 에너지, 미래를 바꾸다',
+    paragraphMain: [
+      '자원의 특성: 자원의 가변성과 편재성, 화석연료의 집중 분포와 에너지 안보 문제',
+      '화석연료의 한계: 석탄·석유·천연가스의 역할과 지구온난화, 고갈성 자원의 위기',
+      '신재생에너지: 태양광·풍력·수력 등 청정에너지의 장점과 초기 비용·변동성 단점',
+      '에너지 전환: 탄소중립과 파리기후협약, 원자력 논쟁과 에너지 믹스의 미래'
+    ],
     passage: [
       '<b>자원</b>은 인간 생활과 경제 활동에 필요한 물질을 말하며, 크게 에너지 자원, 광물 자원, 생물 자원으로 구분된다. 자원의 가치는 고정적이지 않고 기술 발전, 경제 상황, 대체재 출현 등에 따라 변화한다. 과거에는 가치가 없던 물질이 기술 발전으로 중요한 자원이 되기도 하며, 이를 <b>자원의 가변성</b>이라 한다. 또한 자원은 지구상에 고르게 분포하지 않아 <b>편재성</b>을 띠는데, 이로 인해 자원 부국과 빈국 간의 갈등이 발생하기도 한다. 특히 <b>화석 연료</b>인 석유, 석탄, 천연가스는 특정 지역에 집중되어 있어 국제 정세와 밀접하게 연관된다. 우리나라는 에너지 자원의 대부분을 수입에 의존하고 있어 <b>에너지 안보</b> 문제가 중요한 국가적 과제이다.',
       '화석 연료는 산업혁명 이후 인류 문명을 지탱해 온 핵심 에너지원이다. <b>석탄</b>은 산업혁명의 원동력이었으며, 현재도 화력 발전의 주요 연료로 사용된다. <b>석유</b>는 20세기 이후 교통, 화학 공업의 핵심 자원으로 부상했고, 중동 지역에 전 세계 매장량의 약 50%가 집중되어 있다. <b>천연가스</b>는 석탄이나 석유보다 청정한 연료로 난방과 발전에 널리 쓰인다. 그러나 화석 연료는 사용 시 이산화탄소를 배출하여 <b>지구 온난화</b>를 유발하고, 매장량이 한정되어 있는 <b>고갈성 자원</b>이라는 한계가 있다. 현재의 소비 추세가 지속된다면 석유는 약 50년, 천연가스는 약 50년, 석탄은 약 130년 내에 고갈될 것으로 전망된다.',
@@ -1006,6 +1066,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_11: {
     labelNo: '11',
     title: '🌐 세계가 하나로 연결되다',
+    paragraphMain: [
+      '세계화의 촉진: 교통·통신 발달과 다국적 기업 성장, WTO와 국제무역 30배 증가의 순기능',
+      '세계화의 문제점: 경제적 불평등 심화, 문화 획일화와 문화제국주의, 전염 효과의 위험',
+      '지역화의 의미: 고유 문화 보존과 로컬푸드 운동, 지리적 표시제와 세계문화유산 보호',
+      '세방화 전략: 세계화와 지역화의 조화, 장소 마케팅으로 지역 고유성이 경쟁력이 되다'
+    ],
     passage: [
       '<b>세계화</b>는 국경을 넘어 정치, 경제, 사회, 문화의 상호 의존성과 연결성이 심화되는 현상이다. 교통과 통신 기술의 발달, 무역 장벽의 완화, 다국적 기업의 성장 등이 세계화를 촉진했다. 오늘날 우리는 아침에 콜롬비아산 커피를 마시고, 중국에서 만든 스마트폰을 사용하며, 미국 드라마를 스트리밍으로 시청한다. <b>국제 무역</b>의 규모는 지난 50년간 약 30배 증가했으며, 자본, 기술, 정보가 국경을 초월하여 이동한다. <b>세계무역기구(WTO)</b>는 자유 무역을 촉진하고 무역 분쟁을 해결하는 국제기구로, 세계화의 제도적 기반을 제공한다. 세계화는 전 세계를 하나의 네트워크로 연결하여 경제적 효율성을 높이고 문화 교류를 활성화하는 순기능을 가진다.',
       '그러나 세계화는 다양한 문제점도 수반한다. 선진국과 개발도상국 간의 <b>경제적 불평등</b>이 심화되는 경향이 있다. 다국적 기업은 저임금 국가에서 생산하여 고소득 국가에 판매함으로써 이윤을 극대화하지만, 이 과정에서 개발도상국 노동자들의 열악한 노동 환경 문제가 발생하기도 한다. 또한 세계화는 <b>문화 획일화</b>를 초래한다는 비판도 받는다. 미국 헐리우드 영화, 패스트푸드 체인, 글로벌 브랜드가 전 세계로 확산되면서 각 지역의 고유한 문화가 위축되는 <b>문화 제국주의</b> 현상이 나타날 수 있다. 또한 한 지역의 경제 위기가 전 세계로 전파되는 <b>전염 효과</b>도 세계화의 위험 요소이다. 2008년 미국 금융위기가 전 세계 경제를 침체시킨 것이 대표적인 사례이다.',
@@ -1102,6 +1168,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_12: {
     labelNo: '12',
     title: '✈️ 시간과 공간을 넘어',
+    paragraphMain: [
+      '교통의 혁명: 철도·항공기 발달로 시간 거리와 비용 거리 단축, 접근성 향상과 교류 활성화',
+      '통신과 정보화: 원격 근무·전자상거래의 일상화, 공간의 압축과 물리적 공간 중요성 약화',
+      '공간 구조 변화: 교통 결절점의 집적과 교외화 현상, 접근성 격차에 따른 지역 불균형',
+      '미래 교통·통신: 자율주행차·UAM·메타버스가 바꿀 도시 구조와 경제 활동의 재편'
+    ],
     passage: [
       '<b>교통</b>의 발달은 인류의 이동 능력을 혁명적으로 변화시켰다. 과거 도보나 마차에 의존하던 시대에는 하루에 수십 킬로미터 이동이 한계였으나, 철도, 자동차, 항공기의 등장으로 이동 속도와 범위가 비약적으로 확대되었다. <b>고속철도(KTX)</b>는 서울-부산 간 이동 시간을 4시간에서 2시간 30분으로 단축했고, 항공기는 대륙 간 이동을 하루 내에 가능하게 했다. 이러한 교통 발달은 <b>시간 거리</b>와 <b>비용 거리</b>의 단축을 가져왔다. 시간 거리란 두 지점 간 이동에 소요되는 시간을 의미하며, 교통수단이 발달할수록 물리적 거리가 같아도 시간 거리는 감소한다. 교통 발달은 접근성을 높여 지역 간 교류를 활성화하고 경제 활동의 범위를 확대시켰다.',
       '<b>통신</b>의 발달 또한 공간적 제약을 극복하는 데 결정적인 역할을 했다. 전신, 전화를 거쳐 인터넷과 모바일 통신이 보편화되면서 <b>정보화 사회</b>가 도래했다. 정보화 사회에서는 정보의 생산, 가공, 유통이 경제 활동의 핵심이 되며, 시간과 장소에 구애받지 않고 업무를 수행할 수 있다. <b>원격 근무</b>와 <b>화상 회의</b>가 일상화되면서 출퇴근 없이도 협업이 가능해졌고, 이는 직주 근접의 필요성을 감소시켰다. <b>전자상거래</b>의 성장은 상권의 개념을 변화시켜 온라인 플랫폼이 전통적인 오프라인 상점을 대체하는 현상도 나타나고 있다. 통신 발달은 물리적 공간의 중요성을 상대적으로 약화시키는 <b>공간의 압축</b>을 가속화하고 있다.',
@@ -1198,6 +1270,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_13: {
     labelNo: '13',
     title: '🌍 지구촌 기후 여행',
+    paragraphMain: [
+      '열대 기후: 적도 부근의 열대 우림과 사바나, 생물 다양성과 열대 작물, 우림 파괴 문제',
+      '건조 기후: 사막과 스텝의 특징, 오아시스 문명과 유목 생활, 사막화의 심각성',
+      '온대 기후: 서안 해양성·지중해성·온대 계절풍 기후의 특징과 인간 거주에 적합한 환경',
+      '냉대와 한대 기후: 타이가와 툰드라, 영구 동토층 해빙과 기후 변화의 국제 협력 필요성'
+    ],
     passage: [
       '지구의 <b>기후</b>는 위도, 해발 고도, 수륙 분포, 해류 등 다양한 요인에 의해 결정되며, 지역에 따라 다양한 기후대가 나타난다. <b>열대 기후</b>는 적도 부근에 분포하며 연중 고온 다습한 특성을 보인다. 열대 우림 기후에서는 연중 강수량이 많아 울창한 열대 우림이 발달하고, 생물 다양성이 매우 높다. 아마존, 콩고 분지, 동남아시아가 대표적이다. <b>사바나 기후</b>는 열대 우림 기후의 주변에 나타나며, 건기와 우기가 뚜렷하다. 아프리카 사바나에서는 대형 초식 동물들의 대이동이 일어난다. 열대 기후 지역에서는 쌀, 카카오, 고무, 커피 등 열대 작물이 재배되며, 최근에는 열대 우림 파괴와 생물 다양성 감소가 심각한 환경 문제로 대두되고 있다.',
       '<b>건조 기후</b>는 강수량보다 증발량이 많아 물이 부족한 기후로, 사막 기후와 스텝 기후로 구분된다. <b>사막 기후</b>는 연 강수량 250mm 미만의 극도로 건조한 지역에서 나타나며, 사하라, 아라비아, 고비 사막 등이 대표적이다. 사막에서는 일교차가 매우 크고 식생이 거의 없으며, <b>오아시스</b> 주변이나 외래 하천 연안에서만 인간 거주가 가능하다. <b>스텝 기후</b>는 사막 기후의 주변에 나타나며, 짧은 풀이 자라는 초원이 형성된다. 유목이나 방목이 주된 생업이며, 몽골, 중앙아시아, 미국 대평원이 이에 해당한다. 건조 기후 지역에서는 물 부족과 <b>사막화</b>가 심각한 문제이며, 기후 변화로 사막화가 가속화되고 있다.',
@@ -1294,6 +1372,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_14: {
     labelNo: '14',
     title: '👥 80억 인류의 불균형한 지도',
+    paragraphMain: [
+      '인구 폭발: 산업혁명 이후 사망률 감소와 급격한 인구 증가, 식량·환경·자원 문제의 심화',
+      '인구 분포의 불균형: 아시아 60% 집중과 인구 대국, 자연·인문 요인에 따른 밀집과 희박',
+      '인구 문제의 양면: 선진국의 저출산·고령화와 개발도상국의 인구 과잉, 각기 다른 사회 문제',
+      '인구 정책: 출산 억제에서 장려로 전환한 중국 사례, 이민·정년 연장·AI 활용의 대안 모색'
+    ],
     passage: [
       '2022년 세계 인구가 80억 명을 돌파하면서 <b>인구 문제</b>는 인류가 직면한 가장 중요한 과제 중 하나로 부각되었다. 인구의 성장과 분포는 지역마다 크게 다르며, 이러한 차이가 다양한 사회적·경제적 문제를 야기하고 있다. <b>인구 성장률</b>은 출생률에서 사망률을 뺀 자연 증가율에 국제 이동을 더한 값으로 산출되는데, 선진국과 개발도상국 사이에 현저한 차이를 보인다. 역사적으로 인류 인구는 산업 혁명 이후 급격히 증가하기 시작했으며, 의학의 발달과 위생 환경 개선으로 사망률이 낮아지면서 <b>인구 폭발</b>이라 불리는 급격한 증가 현상이 나타났다. 특히 20세기 중반 이후 개발도상국에서 사망률은 급감했으나 출생률은 여전히 높게 유지되어 인구 증가가 가속화되었고, 이에 따라 식량 부족, 환경 파괴, 자원 고갈 등의 문제가 심화되고 있다.',
       '세계 인구의 분포는 매우 불균등하여 몇몇 지역에 인구가 집중되어 있다. 아시아에는 세계 인구의 약 60%가 거주하며, 특히 중국과 인도는 각각 14억 명이 넘는 인구를 보유한 <b>인구 대국</b>이다. 인구 분포에 영향을 미치는 요인으로는 기후, 지형, 수자원, 토양 등의 자연적 요인과 산업 발달, 교통 발달, 정치적 안정 등의 인문적 요인이 있다. <b>인구 밀도</b>가 높은 지역은 주로 온대 기후와 평야 지대에 위치하며, 대규모 하천 유역과 해안 지역에 집중되는 경향이 있다. 반면 사막, 고산 지대, 극지방 등 자연환경이 척박한 지역은 <b>인구 희박 지역</b>으로 남아 있다. 이러한 인구 분포의 불균형은 지역 간 경제력 격차와 환경 문제를 심화시키는 요인으로 작용한다.',
@@ -1390,6 +1474,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_15: {
     labelNo: '15',
     title: '🏙️ 도시의 빛과 그림자',
+    paragraphMain: [
+      '세계 도시화: 산업혁명 이후 도시 집중, 2007년 이후 세계 인구 절반 이상이 도시 거주',
+      '도시 공간 구조: 도심 공동화와 교외화, 대도시권과 메가시티의 형성, 세계 도시의 영향력',
+      '도시 문제: 주택난과 슬럼, 교통 체증과 환경 오염, 녹지 부족으로 인한 열섬 현상',
+      '도시 문제 해결: 도시 재생과 스마트 시티, 지속 가능한 도시와 압축 도시 모델'
+    ],
     passage: [
       '<b>도시화</b>는 인구와 산업이 도시로 집중되면서 도시 지역이 확대되는 현상을 의미한다. 산업 혁명 이후 공장이 도시에 들어서면서 일자리를 찾는 농촌 인구가 도시로 대규모 이동하기 시작했고, 이후 도시화는 전 세계적으로 빠르게 진행되었다. <b>도시화율</b>은 전체 인구 중 도시 거주 인구의 비율을 나타내는데, 2007년을 기점으로 세계 인구의 절반 이상이 도시에 거주하게 되었으며, 현재는 약 56%에 달한다. 선진국의 경우 이미 도시화가 성숙 단계에 접어들어 도시화율이 80% 이상인 경우가 많지만, 개발도상국에서는 현재도 급격한 도시화가 진행 중이다. 도시화는 경제 발전과 삶의 편의성을 높이는 긍정적 측면이 있으나, 동시에 다양한 <b>도시 문제</b>를 야기하고 있어 균형 잡힌 시각이 필요하다.',
       '도시의 성장 과정에서 나타나는 공간 구조의 변화도 주목할 필요가 있다. <b>도심</b>은 도시의 중심부로 상업 업무 기능이 집중되어 땅값이 비싸고 고층 건물이 밀집해 있다. 그러나 높은 지가와 혼잡 때문에 주거 기능은 외곽으로 밀려나는 <b>도심 공동화</b> 현상이 나타나기도 한다. 도시가 확장되면서 기존 도시 주변에 새로운 주거지와 상업 시설이 형성되어 <b>교외화</b>가 진행되고, 이러한 교외 지역이 인접 도시들과 연결되어 <b>대도시권</b>이나 <b>메가시티</b>를 형성하기도 한다. 도쿄, 서울, 뉴욕, 상하이 등은 인구 1,000만 명이 넘는 대표적인 메가시티로, 이들 도시는 경제적·문화적 영향력이 국경을 넘어 전 세계에 미치는 <b>세계 도시</b>로 기능한다.',
@@ -1486,6 +1576,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_16: {
     labelNo: '16',
     title: '🗺️ 디지털 지구를 읽다',
+    paragraphMain: [
+      '지리 정보의 개념: 위치·속성·관계 정보로 구분되는 지리 정보가 디지털 형태로 일상에 활용되다',
+      '지리 정보 기술: GIS의 레이어 중첩 분석, 원격 탐사의 환경 모니터링, GPS의 위치 측정 기술을 살펴보다',
+      '다양한 분야 활용: 도시 계획, 환경 관리, 물류, 정밀 농업, 재난 관리에서 의사 결정을 지원하다',
+      '미래 기술 융합: 빅데이터·인공지능과 결합하여 디지털 트윈, AR/VR, 자율주행차로 진화하다'
+    ],
     passage: [
       '<b>지리 정보</b>는 지표면 위에 존재하는 자연환경과 인문 환경에 관한 정보로, 특정 지점의 위치와 그 장소가 지닌 속성을 포함한다. 지리 정보는 위치 정보, 속성 정보, 관계 정보로 구분되는데, <b>위치 정보</b>는 어떤 대상이 어디에 있는지를 나타내며, <b>속성 정보</b>는 그 대상의 특성이나 성질을 설명한다. <b>관계 정보</b>는 여러 대상 간의 공간적 관계를 나타내는 것으로, 예를 들어 특정 지역이 다른 지역과 얼마나 떨어져 있는지, 어떤 경로로 연결되어 있는지 등의 정보를 포함한다. 과거에는 종이 지도를 통해 지리 정보를 표현하고 활용했으나, 정보통신기술의 발달로 현재는 디지털 형태의 지리 정보가 광범위하게 활용되고 있다. 스마트폰 지도 앱, 자동차 내비게이션, 부동산 정보 서비스 등 일상생활 곳곳에서 지리 정보를 접할 수 있다.',
       '<b>지리 정보 시스템(GIS)</b>은 지리 정보를 컴퓨터를 이용하여 수집, 저장, 분석, 표현하는 종합적인 정보 체계이다. GIS의 핵심은 여러 종류의 지리 정보를 <b>레이어</b> 형태로 중첩하여 분석할 수 있다는 점이다. 예를 들어 지형도, 토지이용도, 인구분포도 등을 겹쳐서 보면 특정 지역의 개발 적합성이나 재해 위험성을 종합적으로 판단할 수 있다. <b>원격 탐사</b>는 인공위성이나 항공기 등에 탑재된 센서를 이용하여 지표면의 정보를 원거리에서 수집하는 기술로, 넓은 지역의 환경 변화를 신속하게 파악할 수 있다. 위성 영상을 통해 산림 파괴, 도시 확장, 기후 변화 등을 모니터링하고 분석하는 데 활용된다. <b>위성 위치 확인 시스템(GPS)</b>은 인공위성을 이용하여 지구상의 위치를 정확하게 측정하는 시스템으로, 내비게이션과 위치 기반 서비스의 핵심 기술이다.',
@@ -1582,6 +1678,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_17: {
     labelNo: '17',
     title: '⚔️ 국경선에 새겨진 갈등의 역사',
+    paragraphMain: [
+      '국제 분쟁의 원인: 영토·자원·민족·종교·역사적 배경으로 분쟁이 발생하고 EEZ 해양 경계 갈등이 증가하다',
+      '자원 분쟁의 심화: 석유·수자원·광물을 둘러싼 갈등과 북극해 자원 경쟁이 치열해지다',
+      '민족·종교 분쟁: 쿠르드족 독립 요구, 이스라엘-팔레스타인, 카슈미르 분쟁 등 정체성 갈등을 살펴보다',
+      '분쟁 해결 노력: UN·ICJ·지역 협력체의 중재와 다문화 이해 교육, 평화적 접근의 필요성을 강조하다'
+    ],
     passage: [
       '세계 곳곳에서는 다양한 원인으로 <b>국제 분쟁</b>이 발생하고 있다. 분쟁의 원인은 크게 <b>영토 분쟁</b>, 자원을 둘러싼 갈등, 민족과 종교의 차이, 역사적 배경 등으로 구분할 수 있다. <b>영토 분쟁</b>은 특정 지역의 소유권이나 경계선을 두고 국가 간에 벌어지는 갈등으로, 대표적인 사례로 남중국해 영유권 분쟁, 센카쿠 열도(댜오위다오) 분쟁, 카슈미르 분쟁 등이 있다. 영토 분쟁은 단순히 땅의 문제가 아니라 해당 지역에 매장된 자원, 전략적 위치, 역사적 상징성 등이 복합적으로 얽혀 있어 해결이 쉽지 않다. 특히 <b>배타적 경제 수역(EEZ)</b>을 둘러싼 해양 경계 분쟁이 증가하고 있는데, 이는 해저 자원 개발권과 어업권이 걸린 중요한 문제이기 때문이다.',
       '<b>자원 분쟁</b>은 석유, 천연가스, 수자원, 광물 등 한정된 자원을 확보하기 위한 갈등이다. 중동 지역은 풍부한 석유 자원으로 인해 오랫동안 강대국들의 이해관계가 충돌하는 지역이었으며, 아프리카의 일부 국가에서는 다이아몬드, 희토류 등 광물 자원을 둘러싼 내전이 발생하기도 했다. <b>수자원 분쟁</b>은 기후 변화와 인구 증가로 더욱 심화되고 있는데, 나일강, 메콩강, 요르단강 유역 국가들 사이에서 물 이용권을 둘러싼 갈등이 대표적이다. 국제하천의 상류 국가가 댐을 건설하면 하류 국가의 수량이 감소하여 농업과 생활용수에 심각한 영향을 미칠 수 있기 때문이다. <b>북극해 자원</b>을 둘러싼 갈등도 주목되는데, 기후 변화로 북극 빙하가 녹으면서 접근이 쉬워지자 연안국들 사이에 자원 개발과 항로 이용권을 둘러싼 경쟁이 치열해지고 있다.',
@@ -1678,6 +1780,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_18: {
     labelNo: '18',
     title: '🌿 지구를 살리는 선택',
+    paragraphMain: [
+      '환경 오염 문제: 대기·수질·토양 오염이 국경을 초월하여 인간과 생태계에 피해를 주다',
+      '기후 변화의 위협: 온실가스로 인한 지구 온난화, 사막화, 생물 다양성 감소가 심화되다',
+      '지속 가능한 발전: 경제·환경·사회의 조화를 추구하며 파리 협정과 탄소 중립을 이행하다',
+      '환경 보전 노력: 신재생 에너지, 순환 경제, ESG 경영으로 미래 세대를 위한 지혜로운 선택을 하다'
+    ],
     passage: [
       '산업화와 도시화가 진행되면서 전 지구적으로 다양한 <b>환경 문제</b>가 심화되고 있다. <b>대기 오염</b>은 공장, 자동차, 난방 시설 등에서 배출되는 오염 물질로 인해 발생하며, 미세먼지, 스모그, 산성비 등의 형태로 인간의 건강과 생태계에 피해를 준다. <b>수질 오염</b>은 생활 하수, 산업 폐수, 농약 등이 하천과 바다로 유입되어 발생하며, 수생 생물의 서식 환경을 파괴하고 식수원을 오염시킨다. <b>토양 오염</b>은 쓰레기 매립, 화학 비료와 농약 사용, 중금속 배출 등으로 발생하여 농작물 생산과 지하수에 영향을 미친다. 이러한 환경 오염은 국경을 초월하여 발생하며, 한 지역의 오염이 다른 지역으로 확산되기도 한다.',
       '<b>기후 변화</b>는 21세기 인류가 직면한 가장 심각한 환경 문제로 꼽힌다. 화석 연료의 사용으로 대기 중 <b>온실가스</b> 농도가 높아지면서 지구의 평균 기온이 상승하는 <b>지구 온난화</b>가 가속화되고 있다. 지구 온난화는 극지방 빙하 감소, 해수면 상승, 이상 기후 현상 증가, 생태계 교란 등 다양한 문제를 야기한다. 또한 <b>사막화</b>는 과도한 방목, 산림 벌채, 기후 변화 등으로 인해 사막이 확대되는 현상으로, 아프리카 사헬 지역이 대표적이다. <b>생물 다양성 감소</b>도 심각한 문제인데, 서식지 파괴, 남획, 환경 오염 등으로 수많은 종이 멸종 위기에 처해 있으며, 이는 생태계 균형을 위협하고 있다.',
@@ -1774,6 +1882,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_19: {
     labelNo: '19',
     title: '⛽ 에너지 전환의 시대',
+    paragraphMain: [
+      '에너지 자원의 구분: 화석 에너지의 고갈성 한계와 기후 변화 문제로 에너지 전환이 필요하다',
+      '자원의 불균등 분포: 중동 석유 집중, 에너지 안보 문제, 자원 민족주의 확산을 살펴보다',
+      '신재생 에너지: 태양광·풍력·수력·지열·바이오 에너지의 장단점과 활용 조건을 알아보다',
+      '탄소 중립 정책: 수소·원자력 에너지와 에너지 효율 향상으로 지속 가능한 미래를 준비하다'
+    ],
     passage: [
       '현대 사회는 막대한 양의 <b>에너지 자원</b>을 소비하며 운영되고 있다. 에너지 자원은 크게 <b>화석 에너지</b>와 <b>신재생 에너지</b>로 구분된다. 화석 에너지에는 <b>석탄</b>, <b>석유</b>, <b>천연가스</b>가 포함되며, 이들은 수백만 년에 걸쳐 생물체의 유해가 지하에서 변성되어 형성된 것이다. 산업 혁명 이후 화석 에너지는 경제 성장의 원동력이 되어 왔으나, <b>고갈성 자원</b>이라는 근본적인 한계를 지닌다. 현재 확인된 매장량 기준으로 석유는 약 50년, 천연가스는 약 50년, 석탄은 약 130년 정도 사용할 수 있을 것으로 추정된다. 또한 화석 에너지의 연소 과정에서 발생하는 이산화탄소는 기후 변화의 주요 원인으로 지목되어 <b>에너지 전환</b>의 필요성이 대두되고 있다.',
       '에너지 자원의 분포는 전 세계적으로 불균등하여 국제 정치와 경제에 큰 영향을 미친다. 석유는 중동 지역에 세계 매장량의 약 50%가 집중되어 있으며, 사우디아라비아, 이란, 이라크, 쿠웨이트, 아랍에미리트 등이 주요 산유국이다. 천연가스는 러시아, 이란, 카타르 등에 풍부하게 매장되어 있다. 이러한 자원의 편재성은 <b>에너지 안보</b> 문제를 야기하며, 자원 수입국들은 안정적인 에너지 확보를 위해 외교적 노력을 기울인다. 우리나라는 에너지 자원의 97% 이상을 수입에 의존하고 있어 에너지 안보가 매우 중요한 과제이다. <b>자원 민족주의</b>가 확산되면서 자원 보유국들이 자국 자원에 대한 통제를 강화하는 추세도 나타나고 있다.',
@@ -1870,6 +1984,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_geo_20: {
     labelNo: '20',
     title: '📍 지역이 브랜드가 되는 시대',
+    paragraphMain: [
+      '지역화와 장소 마케팅: 세계화 속 지역 정체성 강화와 장소 브랜딩 전략의 중요성을 알아보다',
+      '성공 사례 분석: 프로방스, 구마몬, 순천만, 평창의 창의적 장소 마케팅 전략을 살펴보다',
+      '고유성과 진정성: 지역 주민 참여와 거버넌스를 통한 장소 정체성 확보의 핵심을 강조하다',
+      '디지털과 지속 가능성: SNS 마케팅의 가능성과 과잉 관광 방지를 위한 균형 잡힌 접근이 필요하다'
+    ],
     passage: [
       '<b>세계화</b>의 물결 속에서 역설적으로 <b>지역화</b>의 중요성이 부각되고 있다. 지역화란 특정 지역의 고유한 특성과 자원을 바탕으로 경쟁력을 강화하는 전략으로, 세계화로 인한 획일화에 대응하여 지역의 <b>정체성</b>을 유지하고 발전시키려는 움직임이다. 이 과정에서 핵심적인 역할을 하는 것이 바로 <b>장소 마케팅</b>이다. 장소 마케팅은 특정 장소를 하나의 상품처럼 브랜드화하여 관광객, 투자자, 거주민을 유치하고 지역 경제를 활성화하는 전략이다. 과거에는 단순히 자연경관이나 역사 유적을 홍보하는 수준에 머물렀으나, 현대의 장소 마케팅은 지역의 <b>문화 자원</b>, 축제, 음식, 예술 등 다양한 요소를 종합적으로 활용하여 차별화된 장소 이미지를 구축한다. 이러한 전략은 지역 간 경쟁이 치열해지는 상황에서 생존과 발전을 위한 필수적인 요소로 자리 잡았다.',
       '성공적인 장소 마케팅의 대표적 사례로 프랑스의 <b>프로방스</b> 지역을 들 수 있다. 라벤더 밭과 지중해성 기후를 활용한 이미지 마케팅으로 전 세계 관광객을 유치하고 있으며, 관련 향수, 비누, 식품 등의 <b>지역 특산물</b> 산업도 함께 성장했다. 일본의 구마모토현은 귀여운 곰 캐릭터 \'구마몬\'을 활용한 <b>캐릭터 마케팅</b>으로 연간 수조 원의 경제적 효과를 거두고 있다. 국내에서는 전라남도 순천시가 <b>순천만 습지</b>를 생태 관광의 성지로 브랜딩하여 연간 수백만 명의 방문객을 유치하고 있으며, 강원도 평창은 동계올림픽 개최를 계기로 국제적인 <b>스포츠 관광</b> 도시로 거듭났다. 이처럼 장소 마케팅은 지역의 자연환경, 역사, 문화 등 다양한 자원을 창의적으로 재해석하여 새로운 가치를 창출한다.',
@@ -2102,46 +2222,97 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
-    passageBox.addEventListener('click', (e) => {
-      const sentenceSpan = e.target.closest('.sentence'); if (!sentenceSpan) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
+
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
+
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
+
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
-      sentenceSpan.classList.toggle('selected');
-      const allSentences = passageBox.querySelectorAll('.sentence'); const selectedIndices = [];
-      allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices)); if (selectedIndices.length === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
-      if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
-        const endTime = new Date(); const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'unknown';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
+
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+      }
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-        if (!document.getElementById('toast-style')) { const toastStyle = document.createElement('style'); toastStyle.id = 'toast-style'; toastStyle.textContent = `.toast-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 40px; border-radius: 20px; font-size: 22px; font-weight: 700; z-index: 10000; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); text-align: center; } .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); } .toast-message .emoji { font-size: 32px; display: block; margin-bottom: 8px; } .sparkle-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; } .sparkle { position: absolute; top: -20px; animation: sparkle-fall linear forwards; font-size: 24px; } @keyframes sparkle-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`; document.head.appendChild(toastStyle); }
-        const toast = document.createElement('div'); toast.className = 'toast-message'; toast.innerHTML = `<span class="emoji">🎉</span>지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 50); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 4000);
-        const sparkleContainer = document.createElement('div'); sparkleContainer.className = 'sparkle-rain'; document.body.appendChild(sparkleContainer);
-        const emojis = ['⭐', '✨', '🌟', '💫', '🎊', '🎉', '📚', '🐋']; for (let i = 0; i < 40; i++) { setTimeout(() => { const sparkle = document.createElement('div'); sparkle.className = 'sparkle'; sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)]; sparkle.style.left = Math.random() * 100 + 'vw'; sparkle.style.animationDuration = (Math.random() * 2 + 2) + 's'; sparkle.style.fontSize = (Math.random() * 16 + 16) + 'px'; sparkleContainer.appendChild(sparkle); }, i * 60); }
-        setTimeout(() => sparkleContainer.remove(), 4500);
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

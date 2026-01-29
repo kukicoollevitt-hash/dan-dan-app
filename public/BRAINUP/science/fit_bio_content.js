@@ -43,6 +43,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_01: {
     labelNo: '01',
     title: '🌱 살아 있다는 건 뭘까?',
+    paragraphMain: [
+      '생물과 무생물: 생명 활동 여부로 구분, 자연 이해의 첫걸음',
+      '생물의 특징: 영양분 획득, 에너지 생성, 환경 변화에 반응',
+      '번식: 자손을 낳아 종족 유지, 유전 정보 전달',
+      '상호 연결: 생물·무생물이 순환하며 환경의 균형 유지'
+    ],
     passage: [
       '우리가 살아가는 세상에는 스스로 움직이며 자라고 새끼를 낳거나 씨앗을 퍼뜨리는 존재가 있는가 하면, 아무리 오랜 시간이 지나도 스스로 변하거나 움직이지 않고 그 자리에 그대로 머물러 있는 존재도 함께 있다. 이처럼 살아 있으면서 생명 활동을 하는 것을 우리는 <b>생물</b>이라고 부르고, 생명 활동 없이 존재하는 것을 <b>무생물</b>이라고 부른다. 강아지나 고양이처럼 뛰어다니는 동물과 꽃이나 나무처럼 뿌리를 내리고 자라는 식물, 그리고 눈에 보이지 않을 만큼 작은 세균까지 모두 생물에 해당하고, 돌멩이나 물과 책상이나 의자처럼 스스로 움직이거나 자라지 않는 것들은 무생물에 해당한다. 생물과 무생물을 구분하는 것은 자연을 이해하는 첫 번째 단계이며, 과학자들은 이 구분을 바탕으로 생명의 신비를 연구해 왔다.',
       '생물이 무생물과 구별되는 가장 큰 특징은 바로 스스로 살아가기 위해 필요한 영양분을 얻고 에너지를 만들어 사용한다는 점이다. 식물은 햇빛과 물과 이산화탄소를 이용하여 <b>광합성</b>이라는 과정을 통해 스스로 양분을 만들어 내고, 동물은 다른 생물을 먹이로 <b>섭취</b>하여 그 안에 들어 있는 영양분을 분해하고 흡수함으로써 에너지를 얻는다. 이렇게 얻은 에너지를 바탕으로 생물은 숨을 쉬고 움직이고 생각하는 등 다양한 <b>생명 활동</b>을 이어 나간다. 또한 생물은 주변 환경의 변화에 반응하여 적절하게 대처하는 능력도 가지고 있어서, 더우면 땀을 흘리고 추우면 몸을 떨어 체온을 유지하는 것처럼 스스로 몸 상태를 조절한다.',
@@ -128,6 +134,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_02: {
     labelNo: '02',
     title: '🐾 왜 치타는 빠르고 나무늘보는 느릴까?',
+    paragraphMain: [
+      '동물의 다양성: 환경에 맞춰 특별한 기관과 구조 발달',
+      '소화 기관: 초식·육식·잡식 동물마다 다른 소화 방식',
+      '감각 기관: 독수리 시력, 박쥐 초음파, 상어 후각 등 환경 적응',
+      '이동 방식: 다리, 날개, 지느러미 등 환경에 따른 다양한 방법'
+    ],
     passage: [
       '지구에는 작은 개미부터 거대한 고래까지 정말 셀 수 없이 많은 종류의 동물들이 살고 있다. 이들은 크기와 생김새뿐만 아니라 사는 곳과 행동 방식까지 모두 제각각이어서, 어떤 동물은 넓은 초원을 빠르게 달리고 어떤 동물은 깊은 바닷속에서 유유히 헤엄치며 또 어떤 동물은 높은 하늘을 자유롭게 날아다니기도 한다. 이렇게 다양한 동물들은 모두 먹이를 먹고 숨을 쉬며 이동하고 새끼를 키우면서 자신이 살아가는 환경에서 더 잘 생존하기 위해 오랜 세월에 걸쳐 특별한 <b>기관</b>이나 몸의 구조를 발달시켜 왔다.',
       '동물은 먹는 음식이 서로 다르기 때문에 음식물을 분해하고 흡수하는 <b>소화</b> 기관도 각자 다르게 발달했다. 예를 들어 풀이나 나뭇잎처럼 질긴 식물을 주로 먹는 <b>초식 동물</b>은 식물 섬유를 천천히 분해해야 하므로 장이 매우 길고 소화를 돕는 특별한 미생물이 뱃속에 살고 있다. 반대로 고기를 주로 먹는 <b>육식 동물</b>은 단백질이 풍부한 먹이를 빠르게 소화해야 하므로 강한 <b>위산</b>을 가지고 있고 장의 길이는 비교적 짧은 편이다. 한편 곰이나 돼지처럼 식물과 고기를 모두 먹는 <b>잡식 동물</b>은 다양한 먹이를 소화할 수 있도록 초식 동물과 육식 동물의 중간 정도 되는 소화 기관을 갖추고 있다.',
@@ -251,6 +263,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_03: {
     labelNo: '03',
     title: '🦑 뼈 없이도 살 수 있어!',
+    paragraphMain: [
+      '동물 분류: 등뼈 유무로 척추동물과 무척추동물로 구분',
+      '척추동물: 포유류, 조류, 파충류, 양서류로 세분화',
+      '어류: 물속에서 아가미로 호흡, 지느러미로 이동',
+      '무척추동물: 절지동물, 연체동물 등 종류와 개체 수 가장 많음'
+    ],
     passage: [
       '동물학자들은 지구 위에 살아가는 수많은 동물들을 여러 가지 방식으로 구별하고 분류한다. 그중에서도 가장 기본이 되고 널리 쓰이는 기준은 바로 몸속에 등뼈가 있는지 없는지를 따지는 것이다. 등뼈가 있는 동물은 <b>척추동물</b>이라 부르고 등뼈가 없는 동물은 <b>무척추동물</b>이라 부르는데, 이 구분법은 동물의 몸 구조와 생활 방식의 차이를 가장 명확하게 보여 주기 때문에 아주 오래전부터 과학자들 사이에서 널리 사용되어 왔다. 척추동물과 무척추동물은 생김새와 크기가 매우 달라서 처음 보면 완전히 다른 생물처럼 느껴지지만, 사실 모두 같은 지구에서 함께 살아가는 소중한 생명체들이다.',
       '척추동물은 다시 다섯 가지 부류로 세분화된다. 먼저 <b>포유류</b>는 온몸에 털이 나 있고 폐로 공기를 들이마셔 숨을 쉬며 어미가 새끼를 낳아 젖을 먹여 키우는 특징이 있는데, 사람도 포유류에 속한다. <b>조류</b>는 깃털로 온몸이 덮여 있으며 날개를 펼쳐 하늘을 날고 딱딱한 껍데기를 가진 알을 낳아 품어서 부화시킨다. <b>파충류</b>는 비늘로 덮인 딱딱하고 건조한 피부를 가지고 폐로 호흡하면서 대부분 알을 낳아 번식하고, <b>양서류</b>는 어릴 때는 물속에서 아가미로 숨 쉬다가 자라면 육지로 올라와 촉촉한 피부와 폐로 호흡하며 물과 땅을 오가며 살아간다. 이렇게 척추동물은 생활 방식에 따라 여러 갈래로 나뉘어 다양한 환경에서 번성하고 있다.',
@@ -377,6 +395,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_04: {
     labelNo: '04',
     title: '🐝 지구의 진짜 지배자, 곤충',
+    paragraphMain: [
+      '곤충의 특징: 머리·가슴·배, 다리 6개, 겹눈과 더듬이',
+      '절지동물: 다리 마디 있음, 거미는 다리 8개로 곤충 아님',
+      '생태계 역할: 분해자, 꽃가루 수분, 먹이 사슬 연결',
+      '곤충의 중요성: 사라지면 생태계 균형 붕괴, 보호 필요'
+    ],
     passage: [
       '<b>곤충</b>은 지구상에서 가장 종류가 많은 동물로서 지금까지 알려진 전체 동물 종의 약 70퍼센트를 차지할 정도로 엄청나게 다양하다. 곤충의 몸은 크게 머리와 가슴과 배의 세 부분으로 나뉘며 다리는 가슴 부분에서 세 쌍 즉 여섯 개가 난다. 곤충의 눈은 수천 개의 작은 낱눈이 벌집처럼 모여 이루어진 <b>겹눈</b>이 대표적이어서 한 번에 아주 넓은 범위를 볼 수 있으며, 머리에는 냄새와 감촉과 공기의 흐름까지 느낄 수 있는 <b>더듬이</b>가 달려 있다. 이런 특별한 감각 기관 덕분에 곤충은 작은 몸집에도 불구하고 빠르게 위험을 감지하고 먹이를 찾아낼 수 있다.',
       '곤충은 다리가 여러 마디로 나뉘어 있어서 게나 거미와 함께 <b>절지동물</b>이라는 큰 분류에 속한다. 흔히 곤충과 혼동하는 거미와 진드기는 다리가 네 쌍 즉 여덟 개이므로 곤충이 아니라 거미류에 해당한다. 개미는 암컷인 <b>여왕개미</b>와 알을 낳지 못하는 일개미가 무리를 이루어 집단생활을 하고, 여왕개미는 <b>결혼 비행</b>이라 불리는 짝짓기 비행을 마친 뒤에는 더 이상 필요 없어진 날개가 <b>퇴화</b>하여 떨어지며, 일개미는 처음부터 날개 없이 태어나 평생 먹이를 모으고 집을 짓는 일만 한다. 이러한 개미의 사회 구조는 곤충 세계에서 볼 수 있는 놀라운 조직력을 잘 보여 준다.',
@@ -495,6 +519,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_05: {
     labelNo: '05',
     title: '🦋 애벌레는 어떻게 나비가 될까?',
+    paragraphMain: [
+      '탈바꿈: 곤충이 성장하며 형태가 크게 변하는 현상',
+      '완전 탈바꿈: 애벌레가 고치·번데기 거쳐 나비가 됨',
+      '불완전 탈바꿈: 번데기 없이 탈피 반복하며 성장',
+      '매미: 땅속에서 수년간 수액 먹고 탈피, 짧은 성충 생활'
+    ],
     passage: [
       '곤충 가운데는 자라는 동안 모습이 완전히 달라지는 종류가 있다. 이처럼 생물이 성장하면서 몸의 형태가 크게 변하는 현상을 <b>탈바꿈</b>이라고 부른다. 그중에서도 나비는 가장 대표적인 <b>완전 탈바꿈</b> 곤충으로서, 작은 알에서 깨어난 <b>애벌레</b>는 처음에는 마치 작은 실뱀처럼 보이지만 시간이 지나면서 나뭇잎을 부지런히 갉아 먹으며 몸집을 점점 키워 나간다. 애벌레 시기에는 오직 먹는 일에만 집중하여 몸속에 충분한 영양분을 저장하는 것이 주된 목표이다.',
       '충분히 먹고 힘을 기른 나비 애벌레는 어느 순간 자기 몸에서 실을 뽑아내어 스스로를 감싸는 단단한 <b>고치</b>를 만들고 그 안에서 <b>번데기</b>라는 중간 단계로 변한다. 번데기 속에서는 겉으로 보기에는 아무 움직임도 없는 것 같지만 사실 눈에 보이지 않는 놀라운 변화가 일어나고 있다. 애벌레의 몸 조직이 완전히 분해되어 새로운 형태로 재구성되는 신비로운 과정이 진행되는 것이다. 충분한 시간이 지나면 마침내 번데기의 껍질을 뚫고 화려한 날개를 가진 아름다운 나비가 세상 밖으로 나오게 된다.',
@@ -590,6 +620,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_06: {
     labelNo: '06',
     title: '🌳 움직이지 않고 살아남는 법',
+    paragraphMain: [
+      '뿌리: 물·양분 흡수, 식물 고정, 뿌리털로 효율 증대',
+      '줄기: 식물 지탱, 물관·체관으로 물과 양분 운반',
+      '잎: 광합성으로 양분 생성, 기공 통해 기체 교환·증산 작용',
+      '생존 전략: 사막 식물 가시, 수련 넓은 잎, 식충 식물 등 환경 적응'
+    ],
     passage: [
       '식물은 동물처럼 움직이지 못하지만 뿌리와 줄기와 잎이라는 세 가지 기본 구조를 통해 스스로 양분을 만들고 생존한다. <b>뿌리</b>는 땅속 깊이 뻗어 물과 무기 양분을 흡수하고 식물 전체를 단단히 고정하는 역할을 한다. 당근이나 무처럼 뿌리에 양분을 저장하는 식물도 있고, 난초처럼 공기 중의 수분을 흡수하는 공기뿌리를 가진 식물도 있다. 뿌리의 끝에는 아주 가느다란 <b>뿌리털</b>이 빽빽하게 나 있어 물과 양분을 효율적으로 빨아들인다. 이처럼 뿌리는 눈에 보이지 않는 땅속에서 식물의 생존을 위해 묵묵히 제 역할을 다하고 있다.',
       '<b>줄기</b>는 식물의 몸을 지탱하고 뿌리에서 흡수한 물과 양분을 잎까지 운반하는 통로 역할을 한다. 줄기 안에는 <b>물관</b>과 <b>체관</b>이라는 관다발이 있어서, 물관은 물과 무기 양분을 위로 올려 보내고 체관은 잎에서 만든 양분을 식물 전체로 내려 보낸다. 나무의 굵은 줄기처럼 곧게 자라는 것도 있고, 포도나 호박처럼 다른 물체를 감고 올라가는 <b>덩굴줄기</b>도 있다. 또한 선인장처럼 줄기가 굵어져 물을 저장하는 경우도 있어서 줄기는 식물이 다양한 환경에 적응하도록 돕는 중요한 기관이다. 이렇게 다양한 형태의 줄기는 식물이 살아가는 환경에 맞게 진화해 온 결과이다.',
@@ -684,6 +720,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_07: {
     labelNo: '07',
     title: '☀️ 햇빛을 먹는 생물',
+    paragraphMain: [
+      '광합성 원리: 엽록체에서 빛·이산화탄소·물 → 포도당+산소',
+      '산물 이용: 포도당은 에너지원·녹말 저장, 산소는 기공으로 방출',
+      '조건 1: 충분한 햇빛과 이산화탄소 필요',
+      '조건 2: 적당한 온도·물 필요, 생태계 유지의 핵심 과정'
+    ],
     passage: [
       '식물은 동물과 달리 스스로 양분을 만들어 살아가는데 이 놀라운 능력을 <b>광합성</b>이라고 부른다. 광합성은 식물의 잎에서 일어나며, 햇빛 에너지를 이용하여 공기 중의 <b>이산화탄소</b>와 뿌리에서 흡수한 <b>물</b>을 결합시켜 <b>포도당</b>이라는 양분과 <b>산소</b>를 만들어낸다. 이 과정은 주로 잎 속의 <b>엽록체</b>에서 일어나며, 엽록체 안에 들어 있는 초록색 색소인 <b>엽록소</b>가 햇빛을 흡수하는 역할을 한다. 그래서 식물의 잎이 초록색으로 보이는 것이다. 광합성은 마치 공장에서 원료를 넣고 제품을 만들어 내는 것처럼 빛과 이산화탄소와 물을 원료로 양분과 산소를 만들어 내는 놀라운 화학 반응이다.',
       '광합성으로 만들어진 포도당은 식물이 살아가는 데 필요한 <b>에너지원</b>이 된다. 포도당은 줄기와 뿌리로 이동하여 <b>녹말</b>의 형태로 저장되기도 하고, 세포를 만드는 데 사용되기도 한다. 감자나 고구마의 덩이줄기에 녹말이 많이 저장되어 있는 것은 바로 이 때문이다. 또한 광합성 과정에서 부산물로 나오는 산소는 잎의 <b>기공</b>을 통해 공기 중으로 방출된다. 우리가 숨 쉬는 산소의 대부분이 바로 식물의 광합성을 통해 만들어지는 것이며, 특히 바다에 사는 식물성 플랑크톤도 광합성을 통해 엄청난 양의 산소를 만들어 낸다.',
@@ -778,6 +820,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_08: {
     labelNo: '08',
     title: '🔬 모든 생명은 여기서 시작됐다',
+    paragraphMain: [
+      '세포 정의: 생명체 기본 단위, 단세포·다세포 생물 구분',
+      '내부 구조: 세포막, 세포질, 핵(DNA 포함)으로 구성',
+      '식물 세포: 세포벽·엽록체 보유, 물질대사와 세포 분열',
+      '환경 반응: 온도·영양 변화에 적응, 면역 세포가 병원균 방어'
+    ],
     passage: [
       '모든 생물의 몸은 <b>세포</b>라는 아주 작은 단위로 이루어져 있다. 세포는 생명체를 구성하는 기본 단위로서 스스로 살아가며 생명 활동을 수행한다. 어떤 생물은 하나의 세포로만 이루어져 있어서 <b>단세포 생물</b>이라 부르고, 사람이나 동식물처럼 수많은 세포로 이루어진 생물은 <b>다세포 생물</b>이라고 한다. 아메바나 짚신벌레 같은 단세포 생물은 하나의 세포가 먹고 숨 쉬고 움직이는 모든 일을 혼자서 해낸다. 우리 몸은 약 37조 개의 세포로 이루어져 있으며, 각 세포는 자신만의 역할을 수행하면서 전체 몸이 잘 기능하도록 협력한다.',
       '세포의 내부를 들여다보면 여러 가지 구조물이 있다. 세포의 가장 바깥쪽은 <b>세포막</b>으로 둘러싸여 있어서 세포 안팎을 구분하고 물질의 출입을 조절한다. 세포막은 필요한 물질은 들여보내고 해로운 물질은 막아 주는 경비원 역할을 한다. 세포 안에는 젤리처럼 채워진 <b>세포질</b>이 있고 그 속에 다양한 세포 소기관이 떠 있다. 세포의 중심에는 <b>핵</b>이 있는데, 핵 안에는 생명체의 설계도인 <b>DNA</b>가 들어 있어 세포의 모든 활동을 지휘한다. DNA에는 우리 몸의 모든 특징을 결정하는 유전 정보가 담겨 있다.',
@@ -872,6 +920,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_09: {
     labelNo: '09',
     title: '✂️ 세포가 자신을 복사하는 방법',
+    paragraphMain: [
+      '세포 분열: DNA 복제 후 둘로 나뉨, 성장과 치유의 기반',
+      '분열 종류: 체세포 분열(성장), 감수 분열(생식 세포)',
+      '염색체: 정자·난자 각 23개 → 수정란 46개, 암 발생 위험',
+      '조절 시스템: 비정상 세포는 세포 자멸사로 제거'
+    ],
     passage: [
       '모든 생물은 성장하고 상처가 나면 치유되며 자손을 남긴다. 이 모든 과정의 바탕에는 <b>세포 분열</b>이 있다. 세포 분열이란 하나의 세포가 둘로 나누어지는 과정으로, 세포 수가 늘어나면서 생물이 성장하거나 손상된 조직이 복구된다. 세포가 분열하기 전에 먼저 핵 속의 <b>DNA</b>가 <b>복제</b>되어 똑같은 유전 정보가 두 벌 만들어지고, 이후 세포가 둘로 나누어지면서 각 세포에 동일한 DNA가 하나씩 전달된다. 이 과정이 정확하게 이루어져야 모든 세포가 동일한 유전 정보를 가지고 제 역할을 수행할 수 있다.',
       '세포 분열에는 크게 <b>체세포 분열</b>과 <b>감수 분열</b> 두 가지가 있다. 체세포 분열은 우리 몸의 일반 세포가 분열하는 방식으로, 하나의 세포가 유전 정보가 똑같은 두 개의 세포로 나누어진다. 이 분열은 성장과 상처 치유와 낡은 세포의 교체에 사용된다. 예를 들어 우리 피부 세포는 약 2주마다 새로운 세포로 교체되는데, 이는 체세포 분열 덕분에 가능하다. 반면 감수 분열은 생식 세포인 <b>정자</b>와 <b>난자</b>를 만들 때 일어나는 분열로, <b>염색체</b> 수가 절반으로 줄어든 세포가 만들어진다.',
@@ -966,6 +1020,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_10: {
     labelNo: '10',
     title: '🍕 피자 한 조각의 대모험',
+    paragraphMain: [
+      '입: 치아로 씹고, 침의 아밀레이스가 녹말 분해 시작',
+      '위: 위액(염산+펩신)이 단백질 분해, 2~4시간 소화',
+      '소장: 췌장·간 소화액으로 영양소 분해, 담즙이 지방 분해',
+      '흡수: 융모가 영양소 흡수, 대장에서 수분 흡수 후 배출'
+    ],
     passage: [
       '우리가 먹는 음식은 그대로 몸에 흡수되지 않는다. 음식 속 영양소는 너무 커서 작은 장벽을 통과할 수 없기 때문에 작게 분해하는 과정이 필요하다. 이것을 <b>소화</b>라고 한다. 소화는 입에서 시작되는데, 음식을 씹으면 치아가 음식을 잘게 부수고 혀가 음식과 침을 섞어준다. 침 속에는 <b>아밀레이스</b>라는 소화 효소가 있어서 녹말을 분해하기 시작한다. 밥을 오래 씹으면 단맛이 나는 것은 바로 아밀레이스가 녹말을 당으로 분해하기 때문이다. 잘 씹은 음식은 식도를 통해 위로 내려간다.',
       '<b>위</b>는 주머니 모양의 기관으로서 음식을 저장하고 본격적으로 분해한다. 위에서는 <b>위액</b>이 분비되는데, 위액에는 강한 산성의 염산과 <b>펩신</b>이라는 소화 효소가 들어 있다. 염산은 음식과 함께 들어온 세균을 죽이고 펩신이 활성화되도록 도와주며, 펩신은 단백질을 작은 조각으로 분해한다. 위의 근육이 수축과 이완을 반복하며 음식을 잘 섞어 죽처럼 만들고 이것을 조금씩 <b>소장</b>으로 보낸다. 위에서는 약 2시간에서 4시간 정도 음식을 소화시킨다.',
@@ -1060,6 +1120,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_11: {
     labelNo: '11',
     title: '❤️ 멈추지 않는 심장의 펌프질',
+    paragraphMain: [
+      '혈액: 산소·영양분 운반, 적혈구·백혈구·혈소판 포함',
+      '심장과 혈관: 동맥→모세혈관→정맥, 하루 10만 회 펌프질',
+      '두 순환: 온몸 순환(전신)과 폐순환(산소 교환)',
+      '건강 유지: 운동·식습관으로 심장·혈관 튼튼히'
+    ],
     passage: [
       '우리 몸속에는 붉은 액체인 <b>혈액</b>이 끊임없이 흐르고 있다. 혈액은 온몸 구석구석을 돌아다니며 산소와 영양분을 세포에 전달하고 세포에서 나온 이산화탄소와 노폐물을 거두어 가는 중요한 역할을 한다. 혈액 속에는 산소를 운반하는 <b>적혈구</b>, 세균과 싸우는 백혈구, 상처가 났을 때 피를 멈추게 하는 혈소판 등이 들어 있다. 이렇게 혈액이 온몸을 돌아다니는 과정을 <b>혈액 순환</b>이라고 한다. 혈액은 <b>혈관</b>이라는 관을 따라 이동하는데, 혈관은 마치 도로망처럼 몸 전체에 그물처럼 퍼져 있다.',
       '혈액 순환의 중심에는 <b>심장</b>이 있다. 심장은 주먹만 한 크기의 근육 덩어리로서 하루에 약 10만 번이나 수축과 이완을 반복하며 혈액을 온몸으로 밀어낸다. 심장은 네 개의 방으로 나뉘어 있으며 평생 쉬지 않고 펌프질을 한다. 심장에서 나온 혈액은 <b>동맥</b>을 통해 온몸으로 퍼져 나가고, 아주 가느다란 <b>모세 혈관</b>에서 산소와 영양분을 세포에 전달한다. 그리고 <b>이산화탄소</b>와 노폐물을 받아온 혈액은 <b>정맥</b>을 통해 다시 심장으로 돌아온다.',
@@ -1154,6 +1220,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_12: {
     labelNo: '12',
     title: '💨 들숨과 날숨 사이에 일어나는 일',
+    paragraphMain: [
+      '호흡: 폐에서 산소 흡수, 이산화탄소 배출, 폐포 3억 개',
+      '세포 호흡: 산소로 양분 분해 → 에너지, 콩팥이 노폐물 제거',
+      '배설 기관: 콩팥(오줌), 땀샘(땀+노폐물), 체온 조절',
+      '건강 습관: 충분한 물, 규칙적 운동, 신선한 공기'
+    ],
     passage: [
       '우리는 매 순간 숨을 쉬며 살아간다. 숨을 들이마실 때 공기 중의 <b>산소</b>가 코와 기관을 거쳐 <b>폐</b>로 들어가고, 숨을 내쉴 때 몸속에서 생긴 <b>이산화탄소</b>가 밖으로 나간다. 이처럼 산소를 받아들이고 이산화탄소를 내보내는 과정을 <b>호흡</b>이라고 한다. 폐는 스펀지처럼 부드러운 기관으로, 그 안에는 <b>폐포</b>라는 작은 공기주머니가 약 3억 개나 들어 있다. 폐포에서는 얇은 막을 통해 산소와 이산화탄소가 교환되는데, 이 막은 매우 얇아서 기체가 쉽게 오갈 수 있다.',
       '세포는 산소를 이용해 양분을 분해하고 에너지를 얻는다. 이 과정을 <b>세포 호흡</b>이라고 하며 이때 이산화탄소와 물이 <b>노폐물</b>로 생긴다. 세포 호흡은 우리가 의식하지 못하는 사이에도 쉬지 않고 일어나며, 체온을 유지하고 몸을 움직이는 데 필요한 에너지를 공급한다. 이산화탄소는 폐를 통해 내보내지만 요소와 같은 다른 노폐물들은 배설 기관을 통해 몸 밖으로 나간다. <b>콩팥</b>은 혈액 속의 노폐물을 걸러내어 오줌을 만드는 중요한 배설 기관이다.',
@@ -1248,6 +1320,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_13: {
     labelNo: '13',
     title: '⚡ 뇌에서 발끝까지 전기 신호',
+    paragraphMain: [
+      '자극과 반응: 감각 기관이 자극 받음, 감각 신경→뇌→반응',
+      '신경계 구성: 중추 신경계(뇌+척수), 운동 신경이 근육에 명령',
+      '뉴런: 초속 100m 이상 전기 신호 전달, 반사는 척수에서 즉시 반응',
+      '신경계 건강: 수면·운동·두뇌 활동이 빠른 판단과 반응에 도움'
+    ],
     passage: [
       '우리는 눈으로 보고 귀로 듣고 피부로 느끼며 세상을 인식한다. 빛과 소리와 냄새와 맛과 촉감 등 우리 몸에 들어오는 모든 정보를 <b>자극</b>이라고 한다. 이러한 자극을 받아들이는 기관을 <b>감각 기관</b>이라 하며, 눈과 귀와 코와 혀와 피부가 여기에 해당한다. 각 감각 기관은 특정한 종류의 자극만 받아들이는데, 예를 들어 눈은 빛만, 귀는 소리만 감지할 수 있다. 감각 기관에서 받아들인 자극은 <b>감각 신경</b>을 통해 뇌로 전달되고, 뇌는 이 정보를 분석하고 판단하여 어떻게 <b>반응</b>할지 결정한다.',
       '뇌에서 결정된 명령은 <b>운동 신경</b>을 통해 근육으로 전달되어 실제 움직임이 일어난다. 이처럼 자극을 받아 반응하는 전체 과정을 담당하는 기관을 <b>신경계</b>라고 한다. 신경계는 크게 <b>중추 신경계</b>와 말초 신경계로 나뉜다. 중추 신경계는 뇌와 <b>척수</b>로 이루어져 있으며 모든 정보를 처리하고 명령을 내리는 사령탑 역할을 한다. 뇌는 기억하고 생각하고 감정을 느끼는 일을 담당하며, 척수는 뇌와 몸을 연결하는 통로 역할을 한다.',
@@ -1342,6 +1420,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_14: {
     labelNo: '14',
     title: '🦴 206개의 뼈가 춤을 춘다',
+    paragraphMain: [
+      '뼈와 관절: 206개 뼈가 골격 형성, 관절로 움직임 가능',
+      '근육 작용: 수축·이완으로 뼈 움직임, 이두근·삼두근 길항 작용',
+      '근육 종류: 골격근(자의), 심장근, 내장근; 골수에서 혈액 세포 생성',
+      '건강 유지: 칼슘(뼈), 단백질(근육), 운동, 바른 자세'
+    ],
     passage: [
       '우리 몸이 걷고 뛰고 물건을 집을 수 있는 것은 <b>뼈</b>와 <b>근육</b>이 함께 작용하기 때문이다. 뼈는 몸의 형태를 만들고 지탱하는 <b>골격</b>을 이루며 심장이나 폐 같은 중요한 장기를 보호하는 역할도 한다. 두개골은 부드러운 뇌를 감싸고, 갈비뼈는 심장과 폐를 단단하게 보호한다. 성인의 몸에는 약 206개의 뼈가 있으며, 뼈와 뼈가 만나는 곳을 <b>관절</b>이라고 한다. 관절 덕분에 우리는 팔을 굽히고 펴거나 고개를 돌리는 등 다양한 움직임을 할 수 있으며, 무릎 관절은 걷고 뛸 때, 손가락 관절은 글씨를 쓰고 물건을 잡을 때 중요하게 쓰인다.',
       '<b>근육</b>은 뼈에 붙어서 수축과 이완을 반복하며 뼈를 움직인다. 근육이 수축하면 짧아지면서 뼈를 당기고 이완하면 원래 길이로 돌아간다. 우리 몸에는 약 600개가 넘는 근육이 있어서, 얼굴 표정을 짓거나 심장을 뛰게 하는 등 다양한 역할을 수행한다. 팔을 굽힐 때는 <b>이두근</b>이 수축하고 <b>삼두근</b>이 이완한다. 반대로 팔을 펼 때는 삼두근이 수축하고 이두근이 이완한다. 이처럼 두 근육이 서로 반대로 작용하는 것을 <b>길항 작용</b>이라고 하며, 걷기, 달리기, 글씨 쓰기 등 우리의 모든 움직임은 이러한 근육의 협동으로 이루어진다.',
@@ -1436,6 +1520,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_15: {
     labelNo: '15',
     title: '👨‍👩‍👧 왜 나는 부모님을 닮았을까?',
+    paragraphMain: [
+      '유전: 부모 특성이 DNA·유전자로 자녀에게 전달',
+      '염색체: 46개(부모 각 23개), 형제자매는 다른 조합',
+      '우성/열성: 우성이 더 잘 드러남, 조합에 따라 형질 결정',
+      '유전자 연구: 유전병 진단·치료, 유전자 가위 기술로 질병 극복'
+    ],
     passage: [
       '사람들은 종종 "너는 아빠 코를 닮았구나", "엄마 눈매를 쏙 빼닮았네"라는 말을 하는데, 이렇게 부모의 특징이 자녀에게 전해지는 현상을 <b>유전</b>이라고 한다. 유전은 사람뿐만 아니라 동물과 식물 등 모든 생물에서 일어나며, 강아지가 부모 강아지를 닮고 꽃의 색깔이 부모 꽃과 비슷한 것도 모두 유전 때문이다. 유전은 세포 속에 들어 있는 <b>유전자</b>를 통해 일어나며, 유전자는 <b>DNA</b>(디엔에이)라는 물질로 이루어져 있다. DNA 안에는 생물의 모든 특성을 결정하는 정보가 담겨 있어서, 마치 설계도처럼 눈 색깔, 머리카락 모양, 키 등 수많은 특성이 DNA에 기록되어 있다.',
       'DNA는 세포 속 <b>염색체</b>에 담겨 있으며, 사람의 세포에는 46개의 염색체가 있다. 이 중 23개는 어머니에게서, 나머지 23개는 아버지에게서 물려받기 때문에 우리는 부모 양쪽의 특징을 절반씩 가지게 된다. 마치 카드 게임에서 두 벌의 카드를 섞어 새로운 패를 만드는 것처럼, 부모의 유전자가 섞여서 새로운 조합이 만들어지는 것이다. 같은 부모에게서 태어난 형제자매라도 각각 다른 조합의 유전자를 받기 때문에 서로 다른 모습을 가지게 되는데, 예를 들어 눈 색깔을 결정하는 유전자에는 갈색 눈 유전자와 파란 눈 유전자가 있을 수 있고 어떤 조합을 받느냐에 따라 눈 색깔이 달라진다. 일란성 쌍둥이만이 완전히 같은 유전자를 가지고 있어서 외모가 똑같다.',
@@ -1530,6 +1620,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_16: {
     labelNo: '16',
     title: '🦁 누가 누구를 먹을까?',
+    paragraphMain: [
+      '생태계 구성: 생산자(식물), 소비자(동물), 분해자(세균·곰팡이)',
+      '먹이 사슬/그물: 먹고 먹히는 관계 연결, 한 생물 사라지면 전체 영향',
+      '에너지 흐름: 90% 열로 방출, 위로 갈수록 에너지·생물 수 감소',
+      '균형 유지: 생물 수 적절해야 생태계 안정, 인간 활동이 균형 파괴'
+    ],
     passage: [
       '지구에는 다양한 생물이 살아가고 있으며, 이들은 서로 밀접하게 연결되어 함께 살아간다. 특정 지역에서 생물과 비생물(햇빛, 물, 공기, 흙 등)이 서로 영향을 주고받으며 함께 살아가는 체계를 <b>생태계</b>라고 하는데, 숲, 강, 바다, 사막 등 다양한 형태의 생태계가 존재한다. 생태계에서 생물은 역할에 따라 <b>생산자</b>, <b>소비자</b>, <b>분해자</b>로 나뉜다. 생산자는 식물처럼 광합성을 통해 스스로 양분을 만드는 생물이고, 소비자는 다른 생물을 먹어서 에너지를 얻는 동물이며, 분해자는 세균이나 곰팡이처럼 죽은 생물을 분해하여 양분을 흙으로 돌려보내는 역할을 한다. 분해자가 없다면 죽은 생물이 쌓이기만 하고 영양분이 순환되지 않아 생태계가 유지될 수 없다.',
       '생태계에서 생물들은 먹고 먹히는 관계로 연결되어 있는데, 이를 <b>먹이 사슬</b>이라고 한다. 예를 들어 풀 → 메뚜기 → 개구리 → 뱀 → 독수리의 순서로 먹이 사슬이 형성되며, 바다에서는 플랑크톤 → 새우 → 작은 물고기 → 큰 물고기 → 상어와 같은 먹이 사슬이 있다. 실제 자연에서는 한 생물이 여러 종류의 먹이를 먹기 때문에 먹이 사슬이 복잡하게 얽혀 있는데, 개구리는 메뚜기뿐만 아니라 파리나 거미도 먹는다. 이렇게 여러 먹이 사슬이 서로 연결된 것을 <b>먹이 그물</b>이라고 하며, 먹이 그물에서 한 종류의 생물이 사라지면 연결된 다른 생물에게도 영향을 미쳐 생태계 전체의 균형이 흔들릴 수 있다.',
@@ -1624,6 +1720,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_17: {
     labelNo: '17',
     title: '🏭 지구가 아프면 우리도 아파',
+    paragraphMain: [
+      '대기/수질 오염: 매연·미세먼지, 폐수·농약으로 공기와 물 오염',
+      '토양/플라스틱: 흙 오염 복원에 수십 년, 플라스틱 분해 500년 이상',
+      '해결 방안: 재활용, 친환경 에너지, 멸종 위기종 보호',
+      '작은 실천: 분리수거, 전기·물 절약, 걷기, 대중교통 이용'
+    ],
     passage: [
       '오늘날 지구의 환경은 다양한 <b>오염</b>으로 위협받고 있다. <b>대기 오염</b>은 공장이나 자동차에서 나오는 매연, 미세먼지 등이 공기를 더럽히는 것으로, 오염된 공기를 마시면 호흡기 질환이 생기고 식물의 광합성도 방해받는다. 미세먼지가 심한 날에는 눈이 따갑고 기침이 나며, 오래 노출되면 폐 건강에 심각한 영향을 미칠 수 있다. <b>수질 오염</b>은 공장 폐수, 생활 하수, 농약 등이 강이나 바다로 흘러들어 물을 오염시키는 것인데, 오염된 물에서는 물고기와 수생 생물이 살기 어렵고 사람이 마시면 건강에 심각한 문제가 생긴다. 녹조 현상이 일어나면 물속 산소가 부족해져 물고기들이 떼죽음을 당하기도 한다.',
       '<b>토양 오염</b>은 쓰레기 매립, 농약, 중금속 등으로 흙이 오염되는 것으로, 오염된 토양에서 자란 농작물은 사람의 건강을 해칠 수 있다. 한번 오염된 토양을 원래대로 복원하려면 수십 년이 걸리기도 하므로 예방이 중요하다. 또한 플라스틱과 같은 썩지 않는 쓰레기는 땅과 바다에 쌓여 <b>생태계</b>를 위협하는데, 플라스틱은 분해되는 데 500년 이상이 걸리며 미세 플라스틱으로 쪼개져 더욱 심각한 문제를 일으킨다. 바다로 흘러간 플라스틱 쓰레기를 먹이로 착각해 먹은 바다거북이나 새들이 죽는 일도 많다. 이러한 환경 오염은 단순히 자연만 파괴하는 것이 아니라 먹이 사슬을 통해 결국 인간에게도 돌아온다.',
@@ -1718,6 +1820,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_18: {
     labelNo: '18',
     title: '🌈 다양한 생물이 지구를 지킨다',
+    paragraphMain: [
+      '생물 다양성: 유전적·종·생태계 다양성, 약 200만 종 존재',
+      '중요한 이유: 생태계 균형, 식량·의약품 제공, 환경 적응력',
+      '위협 요인: 서식지 파괴, 오염, 기후 변화 → 대멸종 진행 중',
+      '보전 방안: 자연보호구역, 외래종 관리, 지속가능한 이용'
+    ],
     passage: [
       '지구에는 알려진 것만 해도 약 200만 종의 생물이 살고 있으며, 아직 발견되지 않은 종까지 합하면 수백만 종에 이를 것으로 추정된다. 열대우림 한 곳에서만 수천 종의 생물이 함께 살아가고 있으며, 깊은 바다 속에는 아직 인간이 보지 못한 생물이 무수히 많다. 이처럼 지구상에 다양한 생물이 존재하는 것을 <b>생물 다양성</b>이라고 하는데, 생물 다양성에는 같은 종 안에서도 개체마다 조금씩 다른 <b>유전적 다양성</b>, 한 지역에 여러 종류의 생물이 사는 <b>종 다양성</b>, 숲, 습지, 사막 등 다양한 <b>생태계 다양성</b>이 포함된다. 이 세 가지가 함께 어우러져야 건강한 지구 환경이 유지된다.',
       '생물 다양성이 중요한 이유는 여러 가지가 있다. 첫째, 다양한 생물이 서로 의존하며 생태계의 균형을 유지하는데, 예를 들어 꿀벌이 없으면 식물의 <b>수분</b>(꽃가루받이)이 어려워지고 식물이 줄어들면 그것을 먹는 동물도 사라진다. 우리가 먹는 과일과 채소의 상당수가 꿀벌의 수분 활동 덕분에 열매를 맺는다. 둘째, 생물 다양성은 인간에게 식량, 의약품, 원료 등을 제공하며, 많은 약품이 자연에서 발견된 물질로 만들어지고 새로운 치료제 개발에도 생물 자원이 필수적이다. 예를 들어 아스피린은 버드나무 껍질에서, 페니실린은 곰팡이에서 발견되었다. 셋째, 다양한 유전자가 있어야 환경 변화에 적응하고 살아남을 수 있다.',
@@ -1812,6 +1920,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_19: {
     labelNo: '19',
     title: '🌡️ 지구가 뜨거워지면 생물은 어떻게 될까?',
+    paragraphMain: [
+      '지구 온난화: 온실가스가 열을 가두어 지구 온도 상승, 100년간 1도↑',
+      '생물 적응: 이동 시기·서식지 변화, 변화 속도 빨라 적응 못하는 생물도',
+      '피해 사례: 북극곰 사냥터 상실, 산호초 백화 현상, 멸종 위기 증가',
+      '해결 방안: 신재생 에너지, 나무 심기, 채식, 파리 기후 협정 등 협력'
+    ],
     passage: [
       '지구의 기후는 오랜 시간에 걸쳐 변해 왔지만, 최근 100여 년 동안의 변화는 매우 빠르게 진행되고 있다. 공장, 자동차, 발전소 등에서 나오는 <b>온실가스</b>(이산화탄소, 메탄 등)가 대기 중에 쌓이면서 <b>지구 온난화</b>가 일어나고 있는데, 온실가스는 마치 온실의 유리처럼 열을 가두어 지구의 온도를 높인다. 석탄과 석유 같은 화석 연료를 태울 때 특히 많은 이산화탄소가 발생하며, 소가 내뿜는 트림과 방귀에서 나오는 메탄도 온실가스의 한 종류이다. 지난 100년간 지구의 평균 기온은 약 1도 올랐는데, 이 작은 변화가 생태계에 큰 영향을 미치고 있다.',
       '기후 변화로 인해 <b>빙하</b>가 녹아 해수면이 상승하고, <b>이상 기후</b>(폭염, 한파, 폭우, 가뭄 등)가 자주 발생한다. 해수면이 상승하면 해안가에 사는 수많은 사람들이 삶의 터전을 잃게 될 위험이 있다. 생물들도 기후 변화에 적응하기 위해 변화하고 있는데, 일부 새들은 따뜻해진 기온에 맞춰 <b>이동 시기</b>를 앞당기고 나비와 곤충은 더 북쪽이나 높은 산으로 <b>서식지를 이동</b>하고 있다. 식물도 개화 시기가 빨라지는 등 계절 변화에 반응하지만, 변화 속도가 너무 빨라 적응하지 못하는 생물도 많고, 꽃이 피는 시기와 곤충이 나타나는 시기가 어긋나면서 생태계 균형이 깨지기도 한다.',
@@ -1906,6 +2020,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_bio_20: {
     labelNo: '20',
     title: '🚀 내일의 생명 과학, 어디까지 갈까?',
+    paragraphMain: [
+      '유전자 편집/줄기세포: 크리스퍼로 유전병 치료, 줄기세포로 장기 재생',
+      '맞춤형 의료/백신: 개인 유전 정보로 최적 치료, mRNA 백신 혁신',
+      '윤리적 문제: 유전자 조작 허용 범위, 기술 혜택의 불평등 우려',
+      '시민 참여: 기술 발전과 사회적 논의·규제가 함께, 모두의 지혜 필요'
+    ],
     passage: [
       '생명 과학 기술은 빠르게 발전하고 있으며, 미래에는 우리 삶에 더욱 큰 영향을 미칠 것이다. <b>유전자 편집</b> 기술인 <b>크리스퍼</b>(CRISPR)는 마치 유전자 가위처럼 DNA의 특정 부분을 잘라내거나 수정할 수 있게 해주는데, 이 기술로 유전병을 치료하거나 병에 강한 작물을 개발하는 것이 가능해졌다. 크리스퍼는 기존 기술보다 훨씬 정확하고 저렴하여 생명 과학 연구에 혁명을 일으켰다. 또한 <b>줄기세포</b> 연구는 손상된 장기나 조직을 재생하는 데 활용되고 있어, 미래에는 장기 이식을 기다리지 않고도 치료받을 수 있을 것이며, 피부나 연골 등 일부 조직은 이미 줄기세포로 재생하는 연구가 진행 중이다.',
       '<b>맞춤형 의료</b>도 생명 과학의 발전으로 가능해지고 있다. 개인의 유전 정보를 분석하여 그 사람에게 가장 효과적인 약과 치료법을 찾아주는 것인데, 같은 병이라도 사람마다 효과적인 약이 다를 수 있기 때문이다. 이미 일부 암 치료에서는 환자의 유전자를 분석해 맞춤 치료를 하고 있으며, 부작용을 줄이고 치료 효과를 높이는 데 큰 도움이 되고 있다. <b>백신</b> 기술도 크게 발전하여 새로운 전염병이 발생했을 때 빠르게 백신을 개발할 수 있게 되었으며, <b>mRNA 백신</b> 기술은 코로나19 팬데믹에서 그 가능성을 보여주었다.',
@@ -2128,25 +2248,97 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
-    passageBox.addEventListener('click', (e) => {
-      const sentenceSpan = e.target.closest('.sentence'); if (!sentenceSpan) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
+
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
+
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
+
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
-      sentenceSpan.classList.toggle('selected');
-      const allSentences = passageBox.querySelectorAll('.sentence'); const selectedIndices = [];
-      allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices)); if (selectedIndices.length === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
-      if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
-        const endTime = new Date(); const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
-        const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-        if (!document.getElementById('toast-style')) { const toastStyle = document.createElement('style'); toastStyle.id = 'toast-style'; toastStyle.textContent = `.toast-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 40px; border-radius: 20px; font-size: 22px; font-weight: 700; z-index: 10000; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); text-align: center; } .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); } .toast-message .emoji { font-size: 32px; display: block; margin-bottom: 8px; } .sparkle-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; } .sparkle { position: absolute; top: -20px; animation: sparkle-fall linear forwards; font-size: 24px; } @keyframes sparkle-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`; document.head.appendChild(toastStyle); }
-        const toast = document.createElement('div'); toast.className = 'toast-message'; toast.innerHTML = `<span class="emoji">🎉</span>지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 50); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 4000);
-        const sparkleContainer = document.createElement('div'); sparkleContainer.className = 'sparkle-rain'; document.body.appendChild(sparkleContainer);
-        const emojis = ['⭐', '✨', '🌟', '💫', '🎊', '🎉', '📚', '🐋']; for (let i = 0; i < 40; i++) { setTimeout(() => { const sparkle = document.createElement('div'); sparkle.className = 'sparkle'; sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)]; sparkle.style.left = Math.random() * 100 + 'vw'; sparkle.style.animationDuration = (Math.random() * 2 + 2) + 's'; sparkle.style.fontSize = (Math.random() * 16 + 16) + 'px'; sparkleContainer.appendChild(sparkle); }, i * 60); }
-        setTimeout(() => sparkleContainer.remove(), 4500);
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
+
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+      }
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
+        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

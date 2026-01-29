@@ -44,6 +44,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_01: {
     labelNo: '01',
     title: '🌍 지구는 어떻게 만들어졌을까?',
+    paragraphMain: [
+      '46억 년 전 우주의 가스와 먼지가 태양 주위에서 뭉쳐지기 시작',
+      '먼지가 모여 돌덩이가 되고, 충돌해 원시 지구 형성',
+      '처음 지구는 마그마로 덮인 뜨거운 불덩이 행성',
+      '오랜 시간 식으며 지각(지구의 껍질) 형성, 우리가 사는 지구 탄생'
+    ],
     passage: [
       '아주, 아주 오래전 약 46억 년 전, 지구는 아직 존재하지 않았어요. 그때 우주에는 <b>가스</b>와 <b>먼지</b>가 가득했답니다. 이 물질들이 천천히 모여서 커다란 구름처럼 되었다가 태양을 중심으로 돌며 조금씩 뭉쳐졌어요. 이 거대한 구름을 <b>성운</b>이라고 부르는데, 성운 속에서 중력의 힘으로 물질들이 점점 중심으로 모이기 시작했습니다. 태양이 먼저 만들어지고, 그 주변을 도는 물질들이 뭉쳐서 여러 행성이 탄생했어요. 지구도 그렇게 태어난 행성 중 하나입니다.',
       '먼지가 모이고 또 모여 작은 돌덩이가 되었고, 이 돌덩이들이 서로 <b>부딪치</b>고 합쳐져서 점점 더 큰 지구의 씨앗이 만들어졌어요. 그 씨앗이 바로 <b>원시 지구</b>예요. 원시 지구는 지금보다 훨씬 작았지만, 주변의 물질들을 계속 끌어당기며 점점 커져 갔습니다. 이 과정을 <b>강착</b>이라고 해요. 수많은 <b>미행성</b>들이 원시 지구에 충돌하면서 지구의 크기는 점점 커졌고, 충돌할 때마다 엄청난 열이 발생했어요. 이렇게 해서 지구는 지금의 크기에 가깝게 성장하게 되었습니다.',
@@ -113,6 +119,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_02: {
     labelNo: '02',
     title: '🌋 마그마가 들려주는 지구의 이야기',
+    paragraphMain: [
+      '마그마가 모여 압력이 높아지면 지각 틈을 밀어 올려 지표면까지 상승',
+      '화산 폭발로 용암·화산재·가스 분출, 주변 피해와 시야 저하',
+      '시간이 지나 용암이 식고 새로운 땅 형성, 제주도·하와이 예시',
+      '화산의 활용: 지열 발전소 전기 생산, 온천 휴식, 관광 자원'
+    ],
     passage: [
       '지구의 깊은 땅속에서는 뜨겁게 녹은 <b>마그마</b>가 계속 움직이고 있어요. 이 마그마는 지구 내부의 열에 의해 흐르듯 이동하다가 어느 순간 한곳에 모여 <b>압력</b>이 점점 높아집니다. 압력이 너무 세지면 <b>지각</b>의 약한 틈을 밀어 올리게 되고, 결국 그 틈을 통해 마그마가 지표면 가까이까지 올라오게 돼요. 이때 뜨거운 <b>용암</b>과 재, 돌조각, 가스가 한꺼번에 뿜어져 나오며 \'화산 <b>폭발</b>\'이 일어나지요. 화산이 폭발할 때는 엄청난 불빛과 연기, 그리고 큰 굉음이 하늘로 치솟아 주변 공기가 흐려질 정도로 강력합니다.',
       '화산의 폭발은 매우 위험해서 주변의 나무나 건물이 불에 타거나 무너질 수도 있어요. 폭발 뒤에는 공기 중에 <b>화산재</b>가 퍼져 낮에도 어둡고 흐릿하게 보일 만큼 시야가 나빠지기도 합니다. 하지만 시간이 지나면 뜨거웠던 용암도 식고 굳어 새로운 땅을 만들어내요. 처음에는 아무것도 없는 것처럼 보이지만, 바람이 씨앗을 가져오고 비가 내리면서 조금씩 식물이 자라기 시작합니다. 이렇게 화산은 한편으로는 파괴를 일으키지만, 다른 한편으로는 새로운 환경을 만들어 주는 자연의 특별한 과정이에요.',
@@ -198,6 +210,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_03: {
     labelNo: '03',
     title: '🪨 돌은 어떻게 만들어질까?',
+    paragraphMain: [
+      '암석의 세 종류: 화성암(마그마), 퇴적암(흙·모래), 변성암(열·압력)',
+      '화성암: 심성암(천천히 식음, 화강암), 화산암(빠르게 식음)',
+      '퇴적암: 강·바다에 쌓인 퇴적물이 눌려 굳어짐(사암, 석회암)',
+      '변성암: 열과 압력으로 성질 변화(사암→규암, 석회암→대리암)'
+    ],
     passage: [
       '지구의 겉부분, 즉 <b>지각</b>은 여러 종류의 단단한 암석으로 이루어져 있어요. 우리가 흔히 \'돌\', \'바위\'라고 부르는 것들도 사실은 암석이지요. 그런데 암석은 어떻게 만들어졌는지에 따라 세 가지로 구분할 수 있습니다. 뜨거운 마그마가 식어 굳어 생긴 <b>화성암</b>, 흙과 모래가 쌓여 굳어진 <b>퇴적암</b>, 다른 암석이 높은 열과 압력을 받아 성질이 바뀐 <b>변성암</b>이 바로 그것이에요. 각각의 암석은 지구가 오랜 시간 동안 변화해 온 모습을 보여 주는 기록과도 같습니다. 과학자들은 암석을 연구하여 과거 지구의 환경과 역사를 알아낼 수 있어요.',
       '먼저 화성암은 마그마가 식는 속도와 장소에 따라 모습이 달라져요. 땅속 깊은 곳에서 천천히 식으면 입자가 굵고 단단한 <b>심성암</b>이 되는데, 대표적인 예가 <b>화강암</b>이에요. 화강암은 돌이 단단하고 무늬가 아름다워 오래전부터 건축물에 자주 사용되었고, 석굴암에도 이 돌이 쓰였지요. 한편, 지표 밖으로 흘러나온 용암이 빠르게 식으면 작은 구멍이 많고 결이 거친 <b>화산암</b>이 됩니다. 우리가 제주도나 현무암 절벽에서 자주 볼 수 있는 검은색 바위가 바로 이런 암석이에요. 용암이 식을 때 가스가 빠져나가면서 구멍이 생긴 것입니다.',
@@ -292,6 +310,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_04: {
     labelNo: '04',
     title: '🏜️ 작은 알갱이가 되기까지, 암석의 삶',
+    paragraphMain: [
+      '풍화 작용: 낮밤 온도 차로 암석이 팽창·수축하며 금이 감',
+      '물리적 풍화: 비·바람, 강물에 휩쓸려 바위가 자갈·모래로 부서짐',
+      '생물·화학적 풍화: 뿌리가 바위 깨뜨림, 산소·이산화탄소가 암석 약화',
+      '오랜 세월 풍화 반복으로 암석이 흙이 됨, 자연의 귀중한 결과물'
+    ],
     passage: [
       '우리가 보기에는 단단하고 변하지 않을 것 같은 암석도, 사실은 아주 긴 시간 동안 자연의 여러 힘을 받으며 조금씩 달라지고 있어요. 햇빛이 암석을 달구고, 밤에는 차갑게 식는 과정이 반복되면 바위의 겉과 속이 다르게 <b>팽창</b>하고 <b>수축</b>해요. 여기에 비·바람 같은 기후 요인이 더해지면 암석은 서서히 금이 가고 작은 조각으로 떨어져 나갑니다. 처음에는 커다란 바위가 작은 돌이 되고, 돌은 자갈이 되며, 결국에는 고운 모래처럼 아주 작은 알갱이로 부서지게 되지요. 이런 자연 속의 분해 과정을 <b>풍화 작용</b>이라고 합니다.',
       '암석이 부서지는 이유는 기온 변화만 있는 것이 아니에요. 강의 상류에서 빠르게 흐르는 물에 휩쓸린 바위는 서로 부딪히며 모서리가 깎이고, 강을 따라 <b>하류</b>로 내려갈수록 점점 더 작아집니다. 또한 식물의 뿌리도 중요한 역할을 해요. 바위 <b>틈새</b>로 뿌리가 자라 들어가면 점점 굵어지면서 틈을 벌리고 결국 바위를 깨뜨리기도 합니다. 생물의 활동도 암석의 풍화에 영향을 주는 것이죠. 이처럼 다양한 물리적 힘들이 동시에 작용해 암석은 아주 긴 시간 동안 조금씩 형태를 잃어 갑니다.',
@@ -396,6 +420,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_05: {
     labelNo: '05',
     title: '🌊 강의 흐름이 빚어낸 자연 조각품',
+    paragraphMain: [
+      '침식(빠른 물이 깎음)과 퇴적(느린 물에 쌓임) 작용',
+      '상류: V자 계곡(급경사, 침식), 선상지(완만한 지역, 퇴적)',
+      '중류: 곡류 하천(S자 굽이), 바깥쪽 침식·안쪽 퇴적',
+      '하류: 강이 바다와 만나 삼각형 퇴적 지형인 삼각주 형성'
+    ],
     passage: [
       '자연 속에서 물은 늘 움직이며 지형을 바꾸는 강력한 힘을 가지고 있어요. 물이 빠르게 흐르면 흙과 돌을 깎아 내리는데, 이러한 과정을 <b>침식</b> 작용이라고 합니다. 반대로 물이 천천히 흐르는 곳에서는 깎여 나온 흙과 자갈이 쌓이게 되는데, 이것을 <b>퇴적</b> 작용이라 불러요. 비가 많이 내리거나 여러 계절이 반복되면서 물은 끊임없이 흐르고, 이 흐름에 따라 땅의 모습은 조금씩 변해 갑니다. 강물의 속도인 <b>유속</b>이 빠를수록 침식이 활발하고, 느릴수록 퇴적이 잘 일어납니다. 이처럼 물의 흐름은 지구의 지형을 끊임없이 조각하는 자연의 예술가와 같아요.',
       '경사가 급한 산 위에서는 비가 내릴 때 물이 빠르게 흘러내리기 때문에 땅이 세게 깎입니다. 그래서 계곡의 단면이 알파벳 \'V\'처럼 좁고 깊은 <b>V자 계곡</b>이 만들어지지요. 물이 산 아래의 완만한 지역으로 내려오면 속도가 줄어들어 흙과 자갈이 쌓이기 쉬워집니다. 이렇게 해서 넓은 부채 모양의 \'<b>선상지</b>\'가 생겨요. 평평한 땅에서는 물이 직선으로 흐르지 않고, 차츰 S자 모양으로 굽어지며 흐릅니다. 굽은 부분 바깥쪽은 물살이 강해서 침식이 일어나고, 안쪽은 물살이 느려 흙이 쌓이는 퇴적이 나타납니다. 이런 강을 \'<b>곡류 하천</b>\'이라고 합니다.',
@@ -477,6 +507,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_06: {
     labelNo: '06',
     title: '🌋 땅이 흔들리고 불이 솟는다',
+    paragraphMain: [
+      '지구 표면은 여러 판으로 구성, 맨틀 위에서 움직이며 충돌 시 지진 발생',
+      '화산: 마그마가 지표로 분출, 용암(1000도 이상)과 화산재 방출',
+      '환태평양 화산대(불의 고리): 태평양 주변 지진·화산 다발 지역',
+      '진앙에서 지진파 확산, 건물 붕괴 등 피해 발생, 대비의 중요성'
+    ],
     passage: [
       '지구의 표면은 하나의 단단한 덩어리가 아니라 여러 개의 거대한 <b>판</b>으로 이루어져 있어요. 이 판들은 지구 내부의 뜨거운 <b>맨틀</b> 위에 떠 있으면서 아주 천천히 움직이고 있습니다. 마치 끓는 물 위에 떠 있는 나무 조각들처럼요. 판들이 서로 부딪치거나 멀어지거나 스쳐 지나갈 때 엄청난 <b>에너지</b>가 발생하는데, 이 에너지가 땅을 흔드는 것이 바로 <b>지진</b>입니다. 지진이 발생하면 건물이 무너지고 도로가 갈라지는 등 큰 피해가 발생할 수 있어요. 지진의 세기는 <b>규모</b>라는 수치로 나타내며, 규모가 클수록 더 강한 지진입니다.',
       '지진이 일어나는 곳 근처에서는 <b>화산</b>도 자주 발생합니다. 화산은 지구 내부의 뜨거운 <b>마그마</b>가 지표면으로 분출하는 현상이에요. 마그마가 지표로 나오면 <b>용암</b>이라고 부르는데, 이 용암은 온도가 1000도 이상으로 매우 뜨겁습니다. 화산이 폭발하면 용암뿐만 아니라 <b>화산재</b>와 <b>화산 가스</b>도 뿜어져 나와요. 화산재는 하늘을 뒤덮어 햇빛을 가리고, 비행기 운항을 방해하기도 합니다. 과거에 큰 화산 폭발이 일어났을 때는 지구 전체의 기온이 낮아지기도 했어요.',
@@ -559,6 +595,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_07: {
     labelNo: '07',
     title: '🏔️ 산과 바다는 어떻게 만들어졌을까',
+    paragraphMain: [
+      '융기: 땅이 솟아 산 형성, 히말라야는 판 충돌로 생긴 습곡 산맥',
+      '풍화(바위 부서짐)·침식(옮겨짐)·퇴적(쌓임)으로 산이 낮아지고 지형 변화',
+      '바다 밑 지형: 대륙붕(얕음)→대륙사면(급경사)→해구(가장 깊음)',
+      '해령(해저 산맥)에서 새 해양 지각 생성, 퇴적물이 쌓여 퇴적암 형성'
+    ],
     passage: [
       '지구의 표면은 끊임없이 변하고 있어요. 높은 산도 처음부터 그 자리에 있었던 것이 아니라 오랜 시간에 걸쳐 만들어졌습니다. 산이 만들어지는 과정 중 하나는 <b>융기</b>예요. 지구 내부의 힘이 땅을 밀어 올리면 평평했던 땅이 솟아오르면서 산이 됩니다. 히말라야 산맥은 인도 판과 유라시아 판이 충돌하면서 땅이 밀려 올라가 만들어진 <b>습곡 산맥</b>이에요. 지금도 히말라야는 매년 조금씩 높아지고 있답니다. 또한 화산 활동으로 용암이 쌓여 만들어진 <b>화산</b>도 산의 한 종류입니다.',
       '반대로 높은 산도 시간이 지나면 낮아질 수 있어요. 바람, 물, 온도 변화 등이 바위를 조금씩 부수는 것을 <b>풍화</b>라고 합니다. 풍화된 바위 조각들이 물이나 바람에 의해 다른 곳으로 옮겨지는 것을 <b>침식</b>이라고 해요. 강물은 산에서 깎아낸 흙과 모래를 실어 나르다가 흐름이 느려지는 곳에 내려놓는데, 이것을 <b>퇴적</b>이라고 합니다. 퇴적물이 오랜 시간 쌓이면 <b>퇴적암</b>이 되기도 해요. 이렇게 산은 솟아오르기도 하고 깎여 나가기도 하면서 계속 모습이 변하고 있습니다.',
@@ -641,6 +683,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_08: {
     labelNo: '08',
     title: '🪨 돌멩이 속에 숨은 지구의 역사',
+    paragraphMain: [
+      '화성암: 마그마가 식어 굳음(화강암-천천히, 현무암-빠르게)',
+      '퇴적암: 모래·진흙·생물 유해가 쌓여 굳음(사암, 셰일, 석회암)',
+      '변성암: 열과 압력으로 성질 변화(석회암→대리암, 셰일→편암), 화석 발견',
+      '암석의 순환: 화성암→퇴적암→변성암→마그마→화성암 반복'
+    ],
     passage: [
       '지구에는 수많은 종류의 암석이 있어요. 이 암석들은 만들어진 방법에 따라 크게 세 가지로 나뉩니다. 첫 번째는 <b>화성암</b>이에요. 화성암은 뜨거운 마그마나 용암이 식으면서 굳어진 암석입니다. 마그마가 땅속 깊은 곳에서 천천히 식으면 <b>화강암</b>처럼 알갱이가 큰 암석이 되고, 용암이 지표면에서 빨리 식으면 <b>현무암</b>처럼 알갱이가 작거나 거의 보이지 않는 암석이 됩니다. 화강암은 단단하고 아름다워서 건축물이나 조각품에 많이 사용되고 있어요.',
       '두 번째는 <b>퇴적암</b>이에요. 퇴적암은 모래, 진흙, 생물의 유해 등이 오랜 시간 쌓이고 눌려서 굳어진 암석입니다. 모래가 굳으면 <b>사암</b>이 되고, 진흙이 굳으면 <b>셰일</b>이 됩니다. 조개껍데기나 산호 같은 생물의 잔해가 쌓여 굳은 것은 <b>석회암</b>이에요. 퇴적암에서는 옛날 생물의 흔적인 <b>화석</b>이 발견되기도 합니다. 화석을 연구하면 수억 년 전 지구에 어떤 생물이 살았는지, 당시 환경이 어땠는지 알 수 있어요.',
@@ -723,6 +771,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_09: {
     labelNo: '09',
     title: '🦴 화석이 들려주는 옛날 이야기',
+    paragraphMain: [
+      '화석: 옛 생물의 흔적이 퇴적암에 보존, 빠르게 묻혀야 형성',
+      '지질 시대: 선캄브리아대(46억 년 전)→고생대(삼엽충)→중생대→신생대',
+      '표준 화석: 특정 시대 대표(삼엽충-고생대, 암모나이트-중생대)',
+      '시상 화석: 당시 환경 알려줌(산호→따뜻한 얕은 바다), 암석 나이 추정'
+    ],
     passage: [
       '<b>화석</b>은 오래전에 살았던 생물의 몸이나 흔적이 암석 속에 보존된 것이에요. 공룡의 뼈, 조개껍데기, 나뭇잎 자국, 심지어 공룡 발자국까지도 화석이 될 수 있습니다. 화석이 만들어지려면 생물이 죽은 후 빠르게 흙이나 모래에 묻혀야 해요. 그래야 썩기 전에 단단하게 보존될 수 있거든요. 보통 화석은 <b>퇴적암</b>에서 발견되는데, 이는 퇴적물이 쌓이면서 생물을 덮어 보존했기 때문이에요. 아주 드물게 송진에 갇힌 곤충이나 얼음 속에 보존된 매머드처럼 원래 모습 그대로 남은 화석도 있습니다.',
       '과학자들은 화석을 통해 지구의 역사를 연구합니다. 지구의 역사는 <b>지질 시대</b>라는 단위로 나뉘는데, 생물의 변화를 기준으로 구분해요. 가장 오래된 <b>선캄브리아대</b>는 약 46억 년 전 지구 탄생부터 시작되며, 단순한 생물만 존재했습니다. 그 다음 <b>고생대</b>에는 삼엽충과 같은 바다 생물이 번성했고, <b>중생대</b>는 공룡이 지배한 시대였어요. <b>신생대</b>는 포유류와 인류가 등장한 시대로, 지금 우리가 살고 있는 시대입니다. 약 6600만 년 전 소행성 충돌로 공룡이 멸종하면서 신생대가 시작되었어요.',
@@ -805,6 +859,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_10: {
     labelNo: '10',
     title: '🧲 지구가 거대한 자석이라고?',
+    paragraphMain: [
+      '지구 자기장: 외핵(액체 철·니켈)의 움직임이 전류와 자기장 생성',
+      '자기장의 역할: 태양풍과 우주 방사선으로부터 지구 보호',
+      '오로라: 태양풍이 극지방 대기와 충돌해 발생, 지자기 역전 현상',
+      '지자기 역전의 증거: 해저 암석의 자기장 줄무늬가 해저 확장설 뒷받침'
+    ],
     passage: [
       '나침반의 바늘은 왜 항상 북쪽을 가리킬까요? 그것은 지구 자체가 거대한 <b>자석</b>이기 때문이에요. 지구는 <b>지구 자기장</b>이라는 보이지 않는 힘을 가지고 있어요. 이 자기장은 지구의 <b>외핵</b>에서 만들어집니다. 외핵은 주로 철과 니켈로 이루어져 있고, 액체 상태로 흐르고 있어요. 이 액체 금속이 움직이면서 전류가 생기고, 그 전류가 자기장을 만들어냅니다. 마치 전선에 전류가 흐르면 자기장이 생기는 것과 같은 원리예요. 이 원리를 <b>지구 발전기 이론</b>이라고 합니다.',
       '지구 자기장은 우주에서 날아오는 <b>태양풍</b>과 <b>우주 방사선</b>으로부터 지구를 보호하는 역할을 해요. 태양풍은 태양에서 방출되는 고에너지 입자들인데, 이것이 지구로 직접 쏟아지면 생물에게 해로울 수 있어요. 하지만 지구 자기장이 이 입자들을 막아주거나 지구의 극지방으로 유도합니다. 태양풍 입자들이 극지방의 대기와 부딪히면 아름다운 빛을 내는데, 이것이 바로 <b>오로라</b>예요. 오로라는 주로 녹색, 분홍색, 보라색 등 다양한 색으로 나타나며 북극과 남극에서 볼 수 있습니다.',
@@ -887,6 +947,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_11: {
     labelNo: '11',
     title: '🌤️ 날씨는 왜 매일 달라질까?',
+    paragraphMain: [
+      '날씨: 기온·습도·바람·구름·강수 등 여러 요소가 어우러진 대기 상태',
+      '태양 에너지: 지표면 불균등 가열로 온도 차이 발생, 바람 생성',
+      '해륙풍(낮-바다→육지, 밤-육지→바다)과 계절풍, 기단의 영향',
+      '여름(북태평양 기단-무덥고 비), 겨울(시베리아 기단-춥고 건조)'
+    ],
     passage: [
       '아침에 일어나서 창밖을 보면 어떤 날은 해가 쨍쨍, 어떤 날은 비가 주룩주룩 내려요. 이렇게 하루하루 달라지는 공기의 상태를 <b>날씨</b>라고 합니다. 날씨는 <b>기온</b>, <b>습도</b>, <b>바람</b>, <b>구름</b>, <b>강수</b> 등 여러 요소가 복잡하게 어우러져 만들어져요. 예를 들어, 기온이 높고 습도가 낮으면 맑고 건조한 날씨가 되고, 습도가 높아지면 구름이 생기면서 비가 올 가능성이 커지지요. 날씨는 우리 생활에 직접적인 영향을 주기 때문에 사람들은 오래전부터 날씨를 예측하려고 노력해 왔어요.',
       '날씨가 달라지는 가장 큰 이유는 <b>태양 에너지</b> 때문이에요. 태양은 지구 표면을 골고루 데우지 않아요. 적도 근처는 태양빛을 거의 수직으로 받아 뜨거워지고, 극지방은 비스듬히 받아 차가워집니다. 이렇게 지역마다 온도 차이가 생기면 공기가 움직이기 시작해요. 따뜻한 공기는 위로 올라가고, 차가운 공기는 그 자리를 채우며 <b>바람</b>이 불게 됩니다. 또한 바다와 육지는 데워지는 속도가 달라서 낮에는 바다에서 육지로, 밤에는 육지에서 바다로 바람이 부는 <b>해륙풍</b>이 생기기도 해요.',
@@ -973,6 +1039,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_12: {
     labelNo: '12',
     title: '☁️ 구름은 어떻게 만들어질까?',
+    paragraphMain: [
+      '구름의 정체: 물방울·얼음 알갱이 모임, 물 증발→수증기 상승',
+      '응결: 수증기가 응결핵(먼지·꽃가루)에 달라붙어 물방울 형성',
+      '공기 상승→기압↓·온도↓→응결 촉진, 산에서 구름이 가까이 보임',
+      '구름 종류: 권운(새털·높음), 적운(뭉게구름), 적란운(비·번개)'
+    ],
     passage: [
       '하늘을 올려다보면 하얀 솜뭉치 같은 구름이 떠다니는 것을 볼 수 있어요. 구름은 어떻게 생기는 걸까요? 구름의 정체는 바로 아주 작은 <b>물방울</b>이나 <b>얼음 알갱이</b>가 모인 것이에요. 지표면의 물이 태양열에 의해 <b>증발</b>하면 눈에 보이지 않는 <b>수증기</b>가 됩니다. 이 수증기가 하늘 높이 올라가면 기온이 낮아지면서 다시 작은 물방울로 변하는데, 이 과정을 <b>응결</b>이라고 해요. 응결된 물방울들이 모여서 우리 눈에 보이는 구름이 되는 것이지요.',
       '구름이 만들어지려면 수증기 외에도 <b>응결핵</b>이 필요해요. 응결핵은 먼지, 꽃가루, 소금 알갱이처럼 공기 중에 떠다니는 아주 작은 입자예요. 수증기는 이 응결핵을 중심으로 달라붙어 물방울을 형성합니다. 만약 응결핵이 없다면 수증기는 쉽게 물방울로 변하지 못해요. 또한 공기가 <b>상승</b>할수록 기압이 낮아지고 온도가 내려가기 때문에 응결이 더 잘 일어납니다. 산을 오르면 구름이 가까이 보이는 것도 이런 이유 때문이에요. 높은 산꼭대기가 구름에 싸여 있는 모습을 자주 볼 수 있는 것도 같은 원리입니다.',
@@ -1059,6 +1131,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_13: {
     labelNo: '13',
     title: '💨 기압과 바람의 관계',
+    paragraphMain: [
+      '기압: 공기가 누르는 힘, 고기압(공기 하강·확산), 저기압(공기 모임·상승)',
+      '바람: 고기압→저기압으로 공기 이동, 기압 차이가 클수록 강한 바람',
+      '등압선: 기압 같은 지점 연결, 촘촘하면 강풍, 넓으면 약한 바람',
+      '날씨: 고기압-하강-맑음, 저기압-상승-구름·비·눈 가능성'
+    ],
     passage: [
       '우리 주변의 공기는 무게가 있어서 지표면을 누르고 있어요. 이렇게 공기가 누르는 힘을 <b>기압</b>이라고 합니다. 기압은 장소와 시간에 따라 달라지는데, 공기가 무거워지면 기압이 높아지고 가벼워지면 기압이 낮아져요. 기압이 높은 곳을 <b>고기압</b>, 낮은 곳을 <b>저기압</b>이라고 해요. 고기압 지역에서는 공기가 아래로 내려앉으면서 밖으로 퍼져 나가고, 저기압 지역에서는 공기가 모여들어 위로 올라가요. 이 공기의 이동이 바로 <b>바람</b>입니다.',
       '바람은 항상 기압이 높은 곳에서 낮은 곳으로 불어요. 마치 물이 높은 곳에서 낮은 곳으로 흐르는 것처럼요. 두 지역 사이의 기압 차이가 클수록 바람은 더 세게 붑니다. 일기 예보에서 <b>등압선</b>이라는 곡선을 볼 수 있는데, 이것은 기압이 같은 지점을 연결한 선이에요. 등압선이 촘촘하게 모여 있으면 기압 차이가 크다는 뜻이므로 바람이 강하게 불고, 등압선 사이가 넓으면 바람이 약해요. <b>일기도</b>를 보면 고기압과 저기압의 위치를 확인할 수 있습니다.',
@@ -1145,6 +1223,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_14: {
     labelNo: '14',
     title: '🌡️ 기후와 기후 변화',
+    paragraphMain: [
+      '기후: 오랜 기간의 평균 날씨, 위도별로 열대·한대 기후 다르게 나타남',
+      '기후 변화 원인: 이산화탄소 등 온실가스 배출 증가로 온실효과 강화',
+      '지구 온난화: 빙하 녹음, 해수면 상승, 온실효과가 과도하면 발생',
+      '이상 기후(폭염·가뭄·홍수·태풍) 증가, 온실가스 줄이기 노력 필요'
+    ],
     passage: [
       '<b>날씨</b>가 하루하루 변하는 대기 상태라면, <b>기후</b>는 오랜 기간 동안 평균적으로 나타나는 날씨의 특성이에요. 예를 들어, "오늘 비가 온다"는 날씨이고, "우리나라는 여름에 비가 많이 온다"는 기후입니다. 기후는 보통 30년 이상의 날씨를 평균 내어 결정하지요. 지구의 기후는 <b>위도</b>, <b>해발 고도</b>, 바다와의 거리 등에 따라 다르게 나타납니다. 적도 근처는 연중 덥고 비가 많은 <b>열대 기후</b>, 극지방은 일 년 내내 추운 <b>한대 기후</b>가 나타나지요.',
       '그런데 최근 지구의 기후가 점점 변하고 있어요. 이것을 <b>기후 변화</b>라고 합니다. 산업이 발달하면서 공장과 자동차에서 <b>이산화탄소</b>와 같은 <b>온실가스</b>가 많이 배출되었어요. 온실가스는 지구로 들어온 태양열이 우주로 빠져나가는 것을 막아 지구의 온도를 높이는데, 이 현상을 <b>온실효과</b>라고 해요. 마치 온실의 유리가 열을 가두는 것과 비슷합니다. 적당한 온실효과는 지구를 따뜻하게 유지해 주지만, 온실가스가 너무 많아지면 지구가 점점 더워지는 <b>지구 온난화</b>가 일어나요.',
@@ -1230,6 +1314,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_15: {
     labelNo: '15',
     title: '🪐 태양계와 지구의 위치',
+    paragraphMain: [
+      '태양계: 태양(항성) 중심, 8개 행성(수성~해왕성) 공전',
+      '행성 종류: 지구형(딱딱한 표면, 수금지화), 목성형(기체, 목토천해)',
+      '지구에 생명체가 살 수 있는 이유: 적당한 거리, 물, 대기(골디락스 존)',
+      '기타 천체: 위성(달), 소행성대(화성-목성 사이), 혜성(얼음+먼지, 꼬리)'
+    ],
     passage: [
       '밤하늘을 올려다보면 수많은 별이 반짝이는 것을 볼 수 있어요. 그중에서 우리와 가장 가까운 별은 바로 <b>태양</b>입니다. 태양은 스스로 빛과 열을 내는 <b>항성</b>이에요. 태양을 중심으로 여러 천체들이 주위를 돌고 있는데, 이것을 <b>태양계</b>라고 합니다. 태양계에는 8개의 <b>행성</b>이 있어요. 태양에서 가까운 순서대로 <b>수성</b>, <b>금성</b>, <b>지구</b>, <b>화성</b>, <b>목성</b>, <b>토성</b>, <b>천왕성</b>, <b>해왕성</b>입니다. 우리가 사는 지구는 태양에서 세 번째로 가까운 행성이에요.',
       '태양계의 행성들은 크기와 특징이 서로 달라요. 수성, 금성, 지구, 화성은 딱딱한 표면을 가진 <b>지구형 행성</b>이고, 목성, 토성, 천왕성, 해왕성은 기체로 이루어진 거대한 <b>목성형 행성</b>입니다. 목성은 태양계에서 가장 큰 행성이고, 토성은 아름다운 고리가 특징이에요. 지구는 태양계에서 생명체가 존재하는 것으로 알려진 유일한 행성입니다. 태양과의 거리가 적당하고, 물과 대기가 있어서 생물이 살기에 알맞은 환경이 갖추어져 있지요.',
@@ -1315,6 +1405,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_16: {
     labelNo: '16',
     title: '⛏️ 자원의 분포와 이용',
+    paragraphMain: [
+      '자원: 광물 자원, 에너지 자원(석유·석탄·천연가스=화석 연료)',
+      '자원 분포: 지역마다 다름(중동-석유, 호주-철광석), 무역 발생',
+      '우리나라: 자원 부족으로 수입 의존, 해외 광산 개발과 비축으로 대비',
+      '자원 보존: 한정적이므로 아껴야 함, 재생 에너지(태양광·풍력) 개발'
+    ],
     passage: [
       '우리가 매일 사용하는 물건들은 모두 <b>자원</b>으로 만들어집니다. 자원이란 인간 생활에 필요한 물질을 말해요. 자원에는 여러 종류가 있는데, 땅속에서 캐내는 <b>광물 자원</b>, 에너지를 만드는 <b>에너지 자원</b>, 숲이나 바다에서 얻는 <b>생물 자원</b> 등이 있습니다. 특히 <b>석유</b>, <b>석탄</b>, <b>천연가스</b>는 연료로 사용되는 대표적인 에너지 자원이에요. 이런 자원들은 지구가 수억 년에 걸쳐 만들어 낸 것이라 한번 쓰면 다시 만들어지기 어렵습니다.',
       '자원은 지구 어디에나 똑같이 있는 것이 아니에요. 어떤 지역에는 석유가 많고, 어떤 지역에는 철광석이 풍부하며, 또 어떤 곳에는 금이나 다이아몬드가 많습니다. 이렇게 자원이 지역마다 다르게 퍼져 있는 것을 <b>자원의 분포</b>라고 해요. 중동 지역은 석유가 많아 산유국이라 불리고, 호주와 브라질은 철광석이 풍부합니다. 우리나라는 자원이 적은 편이라 많은 자원을 외국에서 <b>수입</b>해서 사용하고 있어요. 그래서 자원을 가진 나라들과 좋은 관계를 유지하는 것이 중요합니다.',
@@ -1380,6 +1476,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_17: {
     labelNo: '17',
     title: '🌊 해류와 조석, 바다의 움직임',
+    paragraphMain: [
+      '해류: 바닷물의 일정한 흐름, 난류(따뜻)·한류(차가움), 조경 수역→어장',
+      '해류와 기후: 난류 지역-온화(영국+멕시코 만류), 한류 지역-서늘(페루)',
+      '조석: 달·태양 인력으로 바닷물 높이 변화, 만조(높음)·간조(낮음)',
+      '조석 활용: 갯벌(조개잡이), 조력 발전소(시화호-세계 최대급)'
+    ],
     passage: [
       '바다는 가만히 있는 것처럼 보이지만, 사실 끊임없이 움직이고 있습니다. 바닷물이 일정한 방향으로 흐르는 것을 <b>해류</b>라고 해요. 해류는 바람, 수온 차이, 염분 차이 등에 의해 만들어집니다. 따뜻한 바닷물이 흐르는 것을 <b>난류</b>, 차가운 바닷물이 흐르는 것을 <b>한류</b>라고 해요. 우리나라 동해에는 북쪽에서 내려오는 차가운 북한 한류와 남쪽에서 올라오는 따뜻한 쿠로시오 해류가 만납니다. 이 두 해류가 만나는 곳에서 물고기가 많이 모여 좋은 어장이 형성됩니다.',
       '해류는 지구의 기후에도 큰 영향을 미칩니다. 따뜻한 난류가 지나가는 지역은 겨울에도 비교적 온화하고, 차가운 한류가 지나가는 지역은 여름에도 서늘합니다. 예를 들어 영국은 위도가 높지만 <b>멕시코 만류</b>라는 따뜻한 해류 덕분에 겨울이 그리 춥지 않아요. 반대로 페루 해안은 적도 근처인데도 차가운 <b>페루 해류</b> 때문에 시원한 기후를 보입니다. 이처럼 해류는 지구 곳곳의 <b>기후</b>를 조절하는 중요한 역할을 합니다.',
@@ -1445,6 +1547,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_18: {
     labelNo: '18',
     title: '⏳ 지구의 역사와 지질 시대',
+    paragraphMain: [
+      '지질 시대: 지구 46억 년 역사를 선캄브리아·고생대·중생대·신생대로 구분, 화석으로 나눔',
+      '고생대: 삼엽충·양치식물 번성, 석탄 생성, 말기 대멸종으로 90% 생물 사라짐',
+      '중생대: 공룡의 시대, 티라노사우루스·익룡·어룡, 6600만 년 전 소행성 충돌로 멸종',
+      '신생대: 포유류 번성, 매머드·인류 조상 등장, 인류 역사는 24시간 중 1초도 안 됨'
+    ],
     passage: [
       '지구는 약 46억 년 전에 탄생했습니다. 이 긴 시간 동안 지구는 끊임없이 변해 왔어요. 과학자들은 지구의 역사를 크게 <b>선캄브리아 시대</b>, <b>고생대</b>, <b>중생대</b>, <b>신생대</b>로 나눕니다. 이것을 <b>지질 시대</b>라고 해요. 각 시대는 지층에 남아 있는 <b>화석</b>과 암석의 특징으로 구분합니다. 가장 오래된 선캄브리아 시대는 지구 역사의 약 88%를 차지하지만, 생물이 많지 않아 화석이 드물어요. 이 시대에 바다에서 최초의 단순한 생명체가 나타났습니다.',
       '<b>고생대</b>는 약 5억 4천만 년 전부터 시작되었어요. 이 시대에 바다에는 <b>삼엽충</b>이 번성했고, 물고기와 양서류가 등장했습니다. 육지에는 고사리 같은 양치식물이 자랐고, 나중에 거대한 숲을 이루었어요. 이 숲이 땅에 묻혀 오랜 세월이 지나 석탄이 되었답니다. <b>중생대</b>는 공룡의 시대예요. 약 2억 5천만 년 전부터 6600만 년 전까지 공룡이 지구를 지배했습니다. 티라노사우루스, 트리케라톱스 같은 거대한 공룡들이 살았고, 하늘에는 익룡이, 바다에는 어룡이 살았어요.',
@@ -1510,6 +1618,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_19: {
     labelNo: '19',
     title: '🚀 우주 탐사와 인류의 도전',
+    paragraphMain: [
+      '우주 시대의 시작: 1957년 스푸트니크, 1969년 아폴로 11호 달 착륙, 국제우주정거장 연구',
+      '우주 탐사의 중요성: 지구·생명 기원 이해, 화성 탐사, GPS·기상예보·통신이 위성 덕분',
+      '미래 가능성: 소행성·달 광물 채굴, 화성 우주 식민지 건설, 과학 기술 발전의 원동력',
+      '최근 동향: 민간 기업(스페이스X 재사용 로켓), 우리나라 누리호·다누리호 성공'
+    ],
     passage: [
       '인류는 오래전부터 밤하늘의 별을 바라보며 우주를 꿈꿔 왔습니다. 1957년 소련이 최초의 <b>인공위성</b> 스푸트니크 1호를 쏘아 올리면서 우주 시대가 시작되었어요. 1969년에는 미국의 아폴로 11호가 <b>달</b>에 착륙하여 닐 암스트롱이 인류 최초로 달 표면을 걸었습니다. "이것은 한 사람에게는 작은 발걸음이지만, 인류에게는 위대한 도약이다"라는 그의 말은 유명해요. 이후 우주 탐사는 계속 발전하여 오늘날에는 <b>국제우주정거장</b>(ISS)에서 여러 나라 우주인들이 함께 생활하며 연구하고 있습니다.',
       '우주 탐사는 왜 중요할까요? 우주를 연구하면 지구와 생명의 기원을 더 잘 이해할 수 있어요. <b>화성</b> 탐사 로버인 퍼서비어런스는 화성에 물이 있었는지, 과거에 생명체가 살았는지 조사하고 있습니다. 또한 우주에서 개발된 기술은 우리 생활에도 많이 쓰여요. GPS를 이용한 내비게이션, 기상 위성을 통한 일기예보, 통신 <b>위성</b>을 통한 인터넷 서비스 등이 모두 우주 기술 덕분에 가능합니다. 우주 탐사를 통해 소행성에서 새로운 자원을 발견하거나, 언젠가 인류가 화성 같은 다른 행성에서 살 수 있는 가능성도 열리고 있어요.',
@@ -1575,6 +1689,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   earth_20: {
     labelNo: '20',
     title: '🌪️ 자연재해와 방재',
+    paragraphMain: [
+      '자연재해와 지진: 땅 흔들림(규모·진도), 바다 밑 지진→쓰나미 발생 가능',
+      '태풍과 화산: 열대 바다에서 발생, 태풍의 눈, 홍수·산사태, 마그마 분출 피해',
+      '국가의 방재 활동: 내진 설계 건물, 홍수 방지 댐, 기상청 경보, 119 구조 활동',
+      '개인의 대비: 지진 시 책상 밑→계단 대피, 비상 가방(물·손전등·비상식량) 준비'
+    ],
     passage: [
       '자연에서 발생하여 사람에게 피해를 주는 현상을 <b>자연재해</b>라고 합니다. <b>지진</b>은 땅속의 암석이 갑자기 부서지거나 움직이면서 땅이 흔들리는 현상이에요. 지진의 세기는 <b>규모</b>와 <b>진도</b>로 나타내는데, 규모는 지진 자체의 에너지 크기이고, 진도는 특정 장소에서 느껴지는 흔들림의 정도입니다. 바다 밑에서 큰 지진이 일어나면 <b>지진 해일(쓰나미)</b>이 발생할 수 있어요. 거대한 파도가 해안을 덮쳐 큰 피해를 줍니다.',
       '<b>태풍</b>은 열대 바다에서 발생하는 강력한 저기압으로, 강한 바람과 많은 비를 동반합니다. 우리나라는 주로 여름과 가을에 태풍의 영향을 받아요. 태풍이 지나가면 하천이 범람하여 <b>홍수</b>가 일어나고, 비에 젖은 산비탈이 무너지는 산사태가 발생하기도 합니다. <b>화산</b> 폭발도 무서운 자연재해예요. 땅속 깊은 곳의 뜨거운 <b>마그마</b>가 지표로 분출하면 뜨거운 용암이 흘러내리고, 화산재와 화산 가스가 하늘로 솟구쳐 주변 지역에 큰 피해를 줍니다. 화산재는 바람을 타고 수천 킬로미터까지 날아가 비행기 엔진에 문제를 일으키기도 해요.',
@@ -1853,98 +1973,97 @@ function applyContentPack(unitKey) {
       return `${minutes}분 ${seconds}초`;
     };
 
-    // 문장 클릭 시 선택 유지 (기존 선택 유지, 개별 토글)
-    passageBox.addEventListener('click', (e) => {
-      const sentence = e.target.closest('.sentence');
-      if (!sentence) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
-      // 첫 클릭 시 시작 시간 기록
-      if (!readingStartTime) {
-        readingStartTime = new Date();
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
-      }
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
 
-      // 클릭한 문장만 토글 (기존 선택은 그대로 유지)
-      sentence.classList.toggle('selected');
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
 
-      // 선택 상태 저장
-      saveSelection();
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
 
-      // 모든 문장 선택 완료 시 축하 토스트 + 폭죽
-      const total = passageBox.querySelectorAll('.sentence').length;
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
-      if (selected === 0) {
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = '00';
-        if (secInput) secInput.value = '00';
-        readingStartTime = null;
-        localStorage.removeItem(timeKey);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
       }
-      if (total > 0 && total === selected) {
-        // 완료 시간 기록
-        const endTime = new Date();
-        const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({
-          start: readingStartTime.toISOString(),
-          end: endTime.toISOString(),
-          duration: duration
-        }));
-
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'unknown';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-
-        // 토스트
-        const toast = document.createElement('div');
-        toast.className = 'complete-toast';
-        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
-          <div style="font-size:14px;color:#666;line-height:1.6;">
-            <div>시작: ${formatDateTime(readingStartTime)}</div>
-            <div>완료: ${formatDateTime(endTime)}</div>
-            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
-          </div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-
-        // 반짝이 비 효과 (다양한 크기와 모양)
-        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
-        const shapes = ['●','★','◆','♥','✦'];
-        for (let i = 0; i < 60; i++) {
-          const sparkle = document.createElement('div');
-          sparkle.className = 'sparkle-rain';
-          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-          sparkle.style.left = Math.random() * 100 + 'vw';
-          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
-          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
-          document.body.appendChild(sparkle);
-          setTimeout(() => sparkle.remove(), 3500);
-        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 

@@ -44,6 +44,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_01: {
     labelNo: '01',
     title: '🔬 물리량의 측정과 국제단위계(SI)의 이해',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '물리학은 자연 현상을 <b>정량적</b>으로 기술하는 학문으로, 모든 물리량은 측정을 통해 <b>수치</b>와 <b>단위</b>로 표현된다. 측정이란 어떤 물리량을 기준이 되는 양과 비교하여 그 크기를 나타내는 과정이다. 예를 들어 책상의 길이를 측정할 때 자를 사용하면 "120cm"와 같이 수치(120)와 단위(cm)의 조합으로 표현된다. 단위 없이 수치만으로는 물리량의 의미를 전달할 수 없으므로, 전 세계가 공통으로 사용하는 표준 단위 체계가 필요하게 되었다. 1960년 제11차 국제도량형총회에서 <b>국제단위계(SI)</b>가 채택되었으며, 이는 미터법을 기반으로 7개의 <b>기본 단위</b>를 정의하고 있다. SI 단위계의 사용으로 과학자들은 국경을 넘어 정확하게 소통할 수 있게 되었다.',
       'SI 기본 단위에는 길이의 <b>미터(m)</b>, 질량의 <b>킬로그램(kg)</b>, 시간의 <b>초(s)</b>, 전류의 <b>암페어(A)</b>, 온도의 <b>켈빈(K)</b>, 물질량의 <b>몰(mol)</b>, 광도의 <b>칸델라(cd)</b>가 있다. 이 7가지 기본 단위를 조합하여 속도(m/s), 가속도(m/s²), 힘(N = kg·m/s²), 에너지(J = kg·m²/s²) 등의 <b>유도 단위</b>를 만든다. 특히 2019년에는 킬로그램, 암페어, 켈빈, 몰의 정의가 플랑크 상수, 기본 전하, 볼츠만 상수, 아보가드로 상수와 같은 <b>자연 상수</b>를 기반으로 재정의되었다. 이전에 킬로그램은 프랑스에 보관된 국제 킬로그램 원기의 질량으로 정의되었으나, 이제는 플랑크 상수를 정확히 6.62607015×10⁻³⁴ J·s로 고정하여 정의한다.',
@@ -148,6 +149,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_02: {
     labelNo: '02',
     title: '📐 벡터와 스칼라, 물리량의 분류와 연산',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '물리량은 그 성질에 따라 <b>스칼라</b>와 <b>벡터</b>로 구분된다. 스칼라는 크기만으로 완전히 기술되는 물리량으로, 질량, 시간, 온도, 에너지, 전하량 등이 이에 해당한다. 예를 들어 "이 물체의 질량은 5kg이다"라고 하면 충분한 정보가 전달되며, 방향을 언급할 필요가 없다. 반면 벡터는 크기와 방향을 모두 가져야 완전히 기술되는 물리량이다. <b>변위</b>, <b>속도</b>, <b>가속도</b>, <b>힘</b>, <b>운동량</b> 등이 벡터량이며, "동쪽으로 10m 이동했다"처럼 방향 정보가 필수적이다. 벡터는 화살표로 표시하며, 화살표의 길이는 크기를, 방향은 벡터의 방향을 나타낸다. 수학적으로 벡터는 굵은 글씨(v)나 위에 화살표(→v)를 붙여 표기한다.',
       '벡터의 <b>덧셈</b>은 일반적인 수의 덧셈과 다르다. 두 벡터를 더할 때는 <b>평행사변형법</b>이나 <b>삼각형법</b>을 사용한다. 평행사변형법은 두 벡터를 같은 시작점에서 그린 뒤 평행사변형을 완성하고, 대각선이 합벡터가 되는 방법이다. 삼각형법은 첫 번째 벡터의 끝점에서 두 번째 벡터를 이어 그리고, 처음 시작점에서 마지막 끝점으로 이은 벡터가 합벡터가 되는 방법이다. 예를 들어 동쪽으로 3m, 북쪽으로 4m 이동하면 총 이동 거리는 7m이지만, 변위의 크기는 피타고라스 정리에 의해 5m가 된다. 벡터의 <b>뺄셈</b>은 빼려는 벡터의 방향을 반대로 바꾼 뒤 더하는 것과 같다. 이러한 벡터 연산은 힘의 합성, 속도의 합성 등 물리 문제 해결의 기본이 된다.',
@@ -226,9 +228,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     essayKeywords: ['벡터','스칼라','크기','방향','속도','온도','힘','질량','변위','시간','가속도','운동량','에너지','화살표','합성','덧셈','뺄셈','성분','x축','y축','단위벡터','내적','외적','스칼라곱','벡터곱','돌림힘','각운동량','평행사변형','삼각형','거리'],
     explain: {
       q1:'벡터의 덧셈은 일반적인 수의 덧셈과 다르다',
-      q2:'',
+      q2:'스칼라곱 A·B = |A||B|cosθ는 두 벡터와 사이각 θ로 계산하며, 결과가 스칼라이다',
       q3:'성분',
-      q4:'벡터곱의 결과가 두 벡터에 수직인 새로운 벡터',
+      q4:'벡터곱은',
       q5:''
     },
     detail: {
@@ -252,6 +254,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_03: {
     labelNo: '03',
     title: '🚀 직선 운동의 기술, 속도와 가속도의 물리학',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '물체의 운동을 기술하기 위해서는 <b>위치</b>, <b>변위</b>, <b>속도</b>, <b>가속도</b>의 개념이 필요하다. 위치는 기준점에서 물체까지의 거리와 방향을 나타내는 벡터량이며, 좌표계를 사용하여 수치로 표현한다. <b>변위</b>는 물체의 위치 변화량으로 처음 위치에서 나중 위치까지의 직선 거리와 방향을 나타내는 벡터량이다. 이와 달리 <b>이동 거리</b>는 물체가 실제로 움직인 경로의 총 길이로 방향과 관계없는 스칼라량이다. 예를 들어 출발점에서 동쪽으로 3m, 북쪽으로 4m 이동했다면 이동 거리는 7m이지만, 변위의 크기는 피타고라스 정리에 의해 5m이고 방향은 북동쪽이다. 운동학은 힘의 원인을 고려하지 않고 순수하게 운동 자체를 기술하는 역학의 분야이다.',
       '<b>속도</b>는 단위 시간당 변위의 변화량으로 v = Δx/Δt로 정의되며, 크기와 방향을 모두 가지는 벡터량이다. 반면 <b>속력</b>은 단위 시간당 이동 거리로 방향 정보가 없는 스칼라량이다. <b>평균 속도</b>는 총 변위를 총 시간으로 나눈 값이고, <b>순간 속도</b>는 극히 짧은 시간 간격에서의 속도로 v = lim(Δt→0) Δx/Δt = dx/dt이다. 속도-시간 그래프에서 그래프 아래 면적은 변위를 나타낸다. <b>가속도</b>는 단위 시간당 속도의 변화량으로 a = Δv/Δt = dv/dt로 정의된다. 가속도가 양수면 속도가 증가하고, 음수면 속도가 감소한다. 속도와 가속도의 방향이 같으면 물체는 빨라지고, 반대이면 느려진다.',
@@ -357,6 +360,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_04: {
     labelNo: '04',
     title: '🍎 뉴턴의 운동 법칙, 고전역학의 기초',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '아이작 뉴턴은 1687년 ≪자연철학의 수학적 원리≫(프린키피아)에서 운동의 세 가지 법칙을 발표하여 고전역학의 기초를 확립했다. <b>뉴턴의 제1법칙</b>(<b>관성의 법칙</b>)은 외부에서 힘이 작용하지 않으면 정지한 물체는 계속 정지해 있고, 운동하는 물체는 등속 직선 운동을 유지한다는 것이다. 이때 물체가 현재 운동 상태를 유지하려는 성질을 <b>관성</b>이라 하며, 질량이 클수록 관성이 크다. 버스가 갑자기 출발할 때 승객이 뒤로 쏠리고, 급정거할 때 앞으로 쏠리는 것은 관성의 대표적인 예이다. 또한 테이블보를 빠르게 잡아당기면 그 위의 식기가 제자리에 남아 있는 것도 관성 때문이다. 제1법칙은 관성 기준계(가속하지 않는 기준계)에서만 성립한다.',
       '<b>뉴턴의 제2법칙</b>(<b>가속도의 법칙</b>)은 물체에 작용하는 <b>알짜힘</b>(합력)이 물체의 질량과 가속도의 곱과 같다는 것으로, F = ma로 표현된다. 이 식에서 F는 힘(N), m은 질량(kg), a는 가속도(m/s²)이다. 같은 힘이 작용할 때 질량이 작은 물체가 더 큰 가속도를 받으며, 같은 가속도를 내려면 질량이 큰 물체에 더 큰 힘이 필요하다. 제2법칙은 힘의 정의이자 운동 방정식의 기초로서, 물체의 운동을 예측하고 분석하는 데 핵심적인 역할을 한다. 여러 힘이 작용할 때는 벡터 합인 알짜힘을 먼저 구한 뒤 F = ma를 적용한다. 중력장에서 자유 낙하하는 물체의 가속도가 질량에 관계없이 g인 것도 제2법칙으로 설명된다.',
@@ -485,6 +489,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_05: {
     labelNo: '05',
     title: '🎯 포물선 운동, 2차원에서의 물체 운동 분석',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '물체가 2차원 평면에서 운동할 때, 수평 방향과 연직 방향의 운동은 <b>독립적</b>으로 발생한다. 이를 <b>운동의 독립성</b>이라 하며, 갈릴레오가 처음 발견하고 뉴턴이 수학적으로 정리했다. 공을 수평으로 던지면 수평 방향으로는 등속 운동을 하고, 연직 방향으로는 중력에 의한 자유 낙하 운동을 한다. 두 운동이 합성되어 공은 <b>포물선</b> 궤적을 그리며 날아간다. 수평으로 던진 물체와 같은 높이에서 자유 낙하시킨 물체는 초기 수평 속도와 관계없이 동시에 바닥에 도달하는데, 이는 수평 운동이 연직 운동에 영향을 주지 않기 때문이다. 이 원리는 총알과 떨어뜨린 물체가 동시에 착지하는 유명한 실험으로 검증되었다.',
       '<b>수평 투사</b>는 물체를 수평 방향으로 던지는 운동이다. 수평 방향으로 초기 속도 v₀로 던지면, x = v₀t (수평 이동), y = ½gt² (연직 낙하)의 관계가 성립한다. 시간 t를 소거하면 y = (g/2v₀²)x²의 포물선 방정식을 얻는다. 높이 h에서 수평 투사 시 체공 시간은 t = √(2h/g)이고, 수평 도달 거리(사정거리)는 R = v₀√(2h/g)이다. <b>비스듬히 던지기</b>는 초기 속도 v₀를 수평 성분 v₀cosθ와 연직 성분 v₀sinθ로 분해하여 분석한다. 최고점에서 연직 속도가 0이 되고, 대칭적인 포물선을 그리며 원래 높이로 돌아온다. 최고 높이는 H = (v₀sinθ)²/2g, 체공 시간은 T = 2v₀sinθ/g, 수평 도달 거리는 R = v₀²sin2θ/g이다.',
@@ -590,6 +595,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_06: {
     labelNo: '06',
     title: '🔄 원운동과 구심력, 회전하는 물체의 역학',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '물체가 원형 경로를 따라 운동할 때 이를 <b>원운동</b>이라 한다. 원운동에서 물체의 속력이 일정하더라도 방향이 계속 변하므로 <b>속도</b>는 변한다. 속도가 변한다는 것은 <b>가속도</b>가 존재한다는 의미이며, 이 가속도는 항상 원의 중심을 향한다. 이처럼 원의 중심 방향으로 작용하는 가속도를 <b>구심 가속도</b>라 하고, 이를 일으키는 힘을 <b>구심력</b>이라 한다. 뉴턴의 제2법칙에 의해 구심력 F = ma꜀ = mv²/r = mrω²로 표현되며, 여기서 m은 질량, v는 속력, r은 원의 반지름, ω는 <b>각속도</b>이다. 구심력은 별도의 새로운 힘이 아니라 장력, 중력, 마찰력 등 기존 힘이 원운동에서 중심 방향으로 작용할 때 부르는 역할의 이름이다.',
       '<b>등속 원운동</b>은 속력이 일정한 원운동으로, 구심 가속도의 크기가 일정하다. 등속 원운동하는 물체가 원을 한 바퀴 도는 데 걸리는 시간을 <b>주기</b>(T)라 하고, 단위 시간당 회전수를 <b>진동수</b>(f = 1/T)라 한다. 각속도 ω = 2π/T = 2πf는 단위 시간당 회전 각도(rad/s)이며, 선속도 v = rω로 반지름과 각속도의 곱이다. 구심 가속도는 a꜀ = v²/r = rω²로 계산된다. 회전 놀이기구, 원심분리기, 행성의 공전 등이 원운동의 대표적 예이다. 등속 원운동에서 물체의 속력은 일정하지만, 가속도가 존재하므로 알짜힘이 0이 아님에 주의해야 한다.',
@@ -694,6 +700,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_07: {
     labelNo: '07',
     title: '⚡ 일과 에너지, 역학적 에너지 보존의 원리',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '물리학에서 <b>일</b>(Work)은 힘이 작용하여 물체를 이동시킬 때 에너지가 전달되는 양을 나타낸다. 일의 정의는 W = F·s·cosθ로, 힘 F와 변위 s의 곱에 사이각 θ의 코사인을 곱한 값이다. 힘의 방향과 이동 방향이 같으면(θ = 0°) 일은 최대가 되고, 수직이면(θ = 90°) 일은 0이 된다. 예를 들어 가방을 들고 수평으로 걸어가면 중력에 대해 한 일은 0이다. 왜냐하면 중력은 연직 방향이고 이동은 수평 방향이라 θ = 90°이기 때문이다. 일의 단위는 <b>줄(J)</b>이며, 1J = 1N·m로 1N의 힘으로 물체를 1m 이동시킬 때 하는 일이다. 마찰력이나 공기 저항처럼 운동 방향과 반대로 작용하는 힘은 <b>음의 일</b>을 하며, 이는 물체의 에너지를 감소시킨다.',
       '<b>에너지</b>는 일을 할 수 있는 능력으로 정의되며, 역학에서는 <b>운동 에너지</b>와 <b>퍼텐셜 에너지</b>가 핵심이다. 운동 에너지 Eₖ = ½mv²는 물체가 운동하기 때문에 갖는 에너지로, 질량과 속력의 제곱에 비례한다. 정지 상태에서 속력 v까지 가속시키기 위해 해야 할 일이 곧 운동 에너지와 같다는 것이 <b>일-에너지 정리</b>: W = ΔEₖ이다. <b>중력 퍼텐셜 에너지</b> Eₚ = mgh는 기준면으로부터 높이 h에 있는 물체가 위치 때문에 갖는 에너지이다. 퍼텐셜 에너지의 기준점은 임의로 정할 수 있으며, 중요한 것은 높이의 차이이다. 스프링에 저장되는 <b>탄성 퍼텐셜 에너지</b>는 Eₑ = ½kx²로, 용수철 상수 k와 변형량 x의 제곱에 비례한다.',
@@ -798,6 +805,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_08: {
     labelNo: '08',
     title: '💥 운동량과 충격량, 충돌의 물리학',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>운동량</b>(momentum)은 물체의 운동 상태를 나타내는 물리량으로 p = mv로 정의된다. 여기서 m은 질량, v는 속도이며, 운동량은 속도와 같은 방향의 <b>벡터</b>이다. 단위는 kg·m/s이다. 운동량은 물체를 정지시키기 위해 얼마나 큰 힘이 필요한지를 나타내는 지표로, 같은 속도라도 질량이 큰 트럭이 승용차보다 운동량이 크므로 멈추기 더 어렵다. 뉴턴의 제2법칙은 F = ma로 알려져 있지만, 원래 형태는 F = dp/dt로 힘은 운동량의 시간 변화율이다. 이 표현은 질량이 변하는 경우(로켓 추진 등)에도 적용 가능하다. 운동량 개념은 단순히 "빠르다"는 것을 넘어 "얼마나 강하게 운동하는가"를 정량적으로 표현한다.',
       '<b>충격량</b>(impulse)은 힘이 작용한 시간의 곱 J = FΔt로 정의되며, 물체의 운동량 변화량과 같다. 이를 <b>충격량-운동량 정리</b>라 하며, J = Δp = mv\' - mv로 표현된다. 이 원리는 왜 안전벨트와 에어백이 중요한지 설명한다. 자동차 충돌 시 승객의 운동량 변화(Δp)는 정해져 있으므로, 충돌 시간(Δt)을 늘리면 평균 힘(F)이 줄어든다. 에어백은 부풀어 오르면서 충돌 시간을 연장하여 승객에게 가해지는 힘을 크게 줄인다. 마찬가지로 야구 포수가 공을 잡을 때 손을 뒤로 빼면서 잡으면 충격이 완화되고, 높은 곳에서 뛰어내릴 때 무릎을 구부리면 착지 충격이 줄어드는 것도 같은 원리이다.',
@@ -902,6 +910,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_09: {
     labelNo: '09',
     title: '🔥 열과 열역학, 에너지 전환의 법칙',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>열</b>(heat)은 온도 차이로 인해 물체 사이에서 이동하는 에너지이다. 열과 <b>온도</b>는 다른 개념으로, 온도는 물체를 구성하는 분자의 평균 운동 에너지를 나타내는 척도이고, 열은 이동하는 에너지의 양이다. 온도의 단위로는 섭씨(°C), 화씨(°F), <b>켈빈(K)</b>이 있으며, 절대온도 K = °C + 273이다. 0K(-273.15°C)는 <b>절대영도</b>로 분자 운동이 최소가 되는 온도이며, 이론상 도달할 수 없다. 열의 단위는 줄(J)이며, 역사적으로 사용된 칼로리(cal)는 1cal = 4.186J로 환산된다. <b>열용량</b>은 물체의 온도를 1K 올리는 데 필요한 열량이고, <b>비열</b>은 단위 질량당 열용량으로 c = Q/(mΔT)로 정의된다. 물의 비열은 4.186J/(g·K)로 대부분의 물질보다 높아 온도 변화가 느리다.',
       '열은 세 가지 방법으로 전달된다. <b>전도</b>는 매질 내에서 분자 간 충돌로 열이 전달되는 방식으로, 고체에서 주로 발생하며 금속이 좋은 열전도체이다. <b>대류</b>는 유체(액체, 기체)에서 물질의 이동과 함께 열이 전달되는 방식으로, 난방기 근처의 따뜻한 공기가 위로 올라가는 것이 예이다. <b>복사</b>는 매질 없이 전자기파(적외선 등)로 열이 전달되는 방식으로, 태양열이 지구에 도달하는 원리이다. 단열재는 열전도율이 낮고 대류를 억제하여 열 손실을 줄이며, 보온병은 진공층으로 전도와 대류를 막고 은박 코팅으로 복사를 줄인다. 열전달 속도는 온도 차이, 접촉 면적, 물질의 열전도율에 비례한다.',
@@ -1006,6 +1015,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_10: {
     labelNo: '10',
     title: '🌊 파동의 기초, 진동이 전파되는 원리',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>파동</b>은 매질의 입자가 진동하면서 에너지가 공간을 통해 전파되는 현상이다. 중요한 점은 매질 자체는 이동하지 않고 에너지만 전달된다는 것이다. 예를 들어 물결파에서 물 분자는 제자리에서 위아래로 진동할 뿐 파도를 따라 이동하지 않는다. 파동은 진동 방향과 진행 방향의 관계에 따라 <b>횡파</b>와 <b>종파</b>로 구분된다. <b>횡파</b>는 진동 방향이 진행 방향에 수직인 파동으로, 빛, 물결파, 지진의 S파가 대표적이다. <b>종파</b>는 진동 방향이 진행 방향과 평행한 파동으로, 소리, 지진의 P파가 이에 해당한다. 소리가 종파인 이유는 공기 분자가 소리의 진행 방향으로 압축과 팽창을 반복하기 때문이다.',
       '파동을 기술하는 기본 물리량으로 <b>파장</b>(λ), <b>진폭</b>(A), <b>진동수</b>(f), <b>주기</b>(T)가 있다. 파장은 한 파동의 길이로 마루에서 다음 마루, 또는 골에서 다음 골까지의 거리이다. 진폭은 평형 위치에서 최대 변위의 크기로, 파동이 전달하는 에너지는 진폭의 제곱에 비례한다. 진동수는 단위 시간당 진동 횟수로 단위는 Hz(헤르츠)이며, 1Hz는 1초에 1번 진동함을 의미한다. 주기는 한 번 진동하는 데 걸리는 시간으로 T = 1/f의 관계가 있다. 파동의 속력 v = fλ = λ/T로 계산되며, 같은 매질에서 파동의 속력은 일정하므로 진동수가 높으면 파장이 짧아진다.',
@@ -1112,6 +1122,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_11: {
     labelNo: '11',
     title: '🔊 소리와 음파, 진동이 만들어내는 청각 세계',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>소리</b>는 물체의 진동이 매질을 통해 전파되어 귀에 도달하는 <b>종파</b>의 일종이다. 소리가 발생하려면 진동하는 <b>음원</b>, 진동을 전달하는 <b>매질</b>, 그리고 진동을 감지하는 <b>수신기</b>(귀나 마이크)가 필요하다. 소리는 공기뿐만 아니라 물, 금속 등 다양한 매질을 통해 전파되지만, 진공에서는 전달되지 않는다. 이는 소리가 매질 입자의 압축과 팽창(소밀)을 통해 전파되기 때문이다. 공기 중에서 소리의 속력은 약 340m/s이며, 온도가 높을수록 빨라진다. 물속에서는 약 1,500m/s, 철에서는 약 5,000m/s로 매질이 조밀할수록 더 빠르게 전파된다. 번개와 천둥의 시차로 거리를 추정하는 것은 빛(약 30만 km/s)과 소리의 속력 차이를 이용한 것이다.',
       '소리의 특성은 <b>높낮이</b>(pitch), <b>크기</b>(loudness), <b>음색</b>(timbre)의 세 가지로 구분된다. 소리의 높낮이는 <b>진동수</b>(f)에 의해 결정되며, 진동수가 클수록 높은 음으로 인식된다. 사람이 들을 수 있는 가청 주파수 범위는 약 20Hz~20,000Hz이며, 이보다 낮은 것을 <b>초저주파</b>(infrasound), 높은 것을 <b>초음파</b>(ultrasound)라 한다. 소리의 크기는 <b>진폭</b>과 관련되며, 진폭이 클수록 큰 소리가 난다. 소리의 세기 수준은 <b>데시벨</b>(dB) 단위로 나타내는데, 이는 기준 세기에 대한 로그 스케일로 정의된다. 일상 대화는 약 60dB, 록 콘서트는 110dB 이상이며, 85dB 이상의 소음에 장기간 노출되면 청력 손상이 발생할 수 있다. 음색은 같은 높이와 크기의 소리라도 악기마다 다르게 들리는 특성으로, 이는 <b>배음</b> 구조의 차이 때문이다.',
@@ -1216,6 +1227,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_12: {
     labelNo: '12',
     title: '💡 빛과 광학, 반사와 굴절의 물리학',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>빛</b>은 전자기파의 일종으로, 진공에서 약 3×10⁸ m/s의 속력으로 전파된다. 빛의 본성에 대해서는 역사적으로 <b>입자설</b>과 <b>파동설</b>의 대립이 있었다. 뉴턴은 빛이 입자라고 주장했고, 호이겐스는 파동이라고 주장했다. 19세기 영(Young)의 <b>이중 슬릿 실험</b>에서 빛의 간섭무늬가 관측되어 파동설이 우세해졌다. 그러나 20세기 초 <b>광전 효과</b>가 발견되면서 빛이 입자적 성질도 가진다는 것이 밝혀졌다. 현대 물리학에서 빛은 <b>파동-입자 이중성</b>을 가지며, 광자(photon)라는 에너지 덩어리로 양자화되어 있다. 광자의 에너지는 E = hf로 주어지며, h는 플랑크 상수(6.63×10⁻³⁴ J·s), f는 진동수이다.',
       '빛이 매끄러운 표면에 부딪히면 <b>반사</b>가 일어나는데, <b>반사 법칙</b>에 따라 입사각과 반사각이 같다. 평면거울에서는 좌우가 바뀐 허상이 형성되고, <b>오목 거울</b>은 빛을 한 점(초점)으로 모아 실상을 만들 수 있으며 반사망원경과 자동차 헤드라이트에 사용된다. <b>볼록 거울</b>은 빛을 퍼뜨려 넓은 범위를 볼 수 있게 하며 자동차 사이드미러에 활용된다. 빛이 서로 다른 매질의 경계면을 통과할 때는 <b>굴절</b>이 일어난다. <b>스넬의 법칙</b> n₁sinθ₁ = n₂sinθ₂에 따라 굴절 방향이 결정되며, <b>굴절률</b>(n)이 큰 매질에서 빛의 속력이 느려지고 법선 쪽으로 꺾인다. 빛이 굴절률이 큰 매질에서 작은 매질로 진행할 때 입사각이 <b>임계각</b>을 넘으면 <b>전반사</b>가 일어나며, 이는 광섬유 통신의 원리이다.',
@@ -1320,6 +1332,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_13: {
     labelNo: '13',
     title: '⚡ 전기와 전하, 정전기 현상과 쿨롱의 법칙',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>전하</b>는 물질이 가지는 전기적 성질의 근원으로, <b>양전하</b>(+)와 <b>음전하</b>(-)의 두 종류가 있다. 모든 물질은 원자로 구성되며, 원자핵의 <b>양성자</b>는 양전하를, 원자핵 주위를 도는 <b>전자</b>는 음전하를 띤다. 전하의 기본 단위는 전자 하나가 가진 전하량으로 <b>기본 전하</b> e = 1.6×10⁻¹⁹ C(쿨롬)이다. 중성 원자는 양성자 수와 전자 수가 같아 전기적으로 중성이지만, 전자를 잃으면 양이온, 전자를 얻으면 음이온이 된다. <b>전하 보존 법칙</b>에 따르면 고립계에서 전하의 총합은 항상 일정하게 유지되며, 전하가 새로 생성되거나 소멸하지 않고 한 물체에서 다른 물체로 이동할 뿐이다.',
       '<b>정전기</b>는 물체에 전하가 정지 상태로 축적된 현상이다. 두 물체를 마찰시키면 전자가 한쪽에서 다른 쪽으로 이동하여 각각 양전하와 음전하를 띠게 되는데, 이를 <b>마찰 대전</b>이라 한다. 털가죽으로 에보나이트 막대를 문지르면 전자가 털가죽에서 에보나이트로 이동하여 에보나이트는 음전하를 띤다. <b>접촉 대전</b>은 대전체와 중성체가 접촉할 때 전하가 이동하는 현상이고, <b>유도 대전</b>은 대전체를 가까이 가져가면 중성체 내부의 전하가 재배열되는 현상이다. 대전체를 금속에 가까이 하면 가까운 쪽에는 반대 전하가, 먼 쪽에는 같은 전하가 유도되어 인력이 발생한다. 번개는 구름과 지면 사이에 축적된 거대한 정전기가 방전되는 자연현상이다.',
@@ -1424,6 +1437,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_14: {
     labelNo: '14',
     title: '🔌 전류와 전기회로, 옴의 법칙과 회로 해석',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>전류</b>는 전하의 흐름으로, 단위 시간당 통과하는 전하량으로 정의되며 단위는 암페어(A)이다. 금속 도선에서 전류는 자유 전자의 이동에 의해 발생하며, 전자는 실제로 (-)극에서 (+)극으로 이동하지만 역사적 관례에 따라 <b>전류의 방향</b>은 (+)에서 (-)로 정의한다. <b>전압</b>(전위차)이 존재하면 전하가 이동하여 전류가 흐르며, 전압은 전하를 이동시키는 원동력이다. <b>기전력</b>(emf)은 전지나 발전기가 전하에 공급하는 에너지로, 이상적인 전원의 전압과 같다. 실제 전지는 <b>내부 저항</b>을 가지므로 단자 전압은 기전력보다 약간 낮다. 도선 내 전자의 평균 이동 속력인 <b>유동 속력</b>은 수 mm/s로 매우 느리지만, 전기 신호는 빛의 속도에 가깝게 전파된다.',
       '<b>저항</b>은 전류의 흐름을 방해하는 정도로, 단위는 옴(Ω)이다. <b>옴의 법칙</b> V = IR은 전압, 전류, 저항 사이의 관계를 나타내며, 전류는 전압에 비례하고 저항에 반비례한다. 도선의 저항은 R = ρL/A로, <b>비저항</b>(ρ)과 길이(L)에 비례하고 단면적(A)에 반비례한다. 비저항은 물질의 고유한 성질로, 은은 1.6×10⁻⁸ Ω·m, 구리는 1.7×10⁻⁸ Ω·m로 매우 낮아 전선 재료로 사용된다. 대부분의 금속은 온도가 올라가면 저항이 증가하지만, <b>초전도체</b>는 임계 온도 이하에서 저항이 0이 된다. 저항에서 소비되는 <b>전력</b>은 P = VI = I²R = V²/R로 계산되며, 저항에서 전기 에너지가 열로 변환되는 것을 <b>줄 열</b>이라 한다.',
@@ -1528,6 +1542,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_15: {
     labelNo: '15',
     title: '🧲 자기와 전자기 유도, 전기와 자기의 통합',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>자기</b>는 자석이나 전류가 만드는 힘으로, <b>자기장</b>(B)이라는 공간의 성질로 기술된다. 모든 자석은 <b>N극</b>과 <b>S극</b>을 가지며, 같은 극끼리는 밀어내고 다른 극끼리는 끌어당긴다. 자석을 반으로 잘라도 각각 N극과 S극을 가진 두 개의 자석이 되며, 단일 <b>자기홀극</b>은 자연에서 발견되지 않는다. 지구는 거대한 자석으로 <b>지구 자기장</b>을 형성하며, 나침반의 N극이 북쪽을 가리키는 것은 지구의 지리적 북극 근처에 자기적 S극이 있기 때문이다. <b>자기력선</b>은 자기장의 방향과 세기를 나타내며, N극에서 나와 S극으로 들어간다. 자기장의 단위는 테슬라(T)이며, 지구 자기장은 약 25~65μT, MRI 장비는 1.5~3T 정도의 자기장을 사용한다.',
       '전류가 흐르는 도선 주위에는 자기장이 형성되는데, 이를 <b>외르스테드</b>가 1820년에 발견했다. 직선 전류 주위의 자기장은 전류를 감싸는 동심원 형태로, <b>오른손 법칙</b>에 따라 엄지가 전류 방향을 가리키면 나머지 손가락이 자기장 방향을 나타낸다. 도선을 <b>솔레노이드</b>(코일) 형태로 감으면 내부에 균일하고 강한 자기장이 형성되며, 코일 내부에 철심을 넣으면 <b>전자석</b>이 된다. 전자석은 전류를 조절하여 자기장의 세기를 바꿀 수 있어 전동기, 스피커, 전자 잠금장치 등에 널리 사용된다. <b>앙페르의 법칙</b>은 폐곡선을 따라 적분한 자기장이 그 곡선을 통과하는 전류에 비례한다는 것을 나타낸다.',
@@ -1632,6 +1647,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_16: {
     labelNo: '16',
     title: '🚀 상대성 이론, 시간과 공간의 혁명',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '1905년 아인슈타인이 발표한 <b>특수 상대성 이론</b>은 물리학의 패러다임을 바꾸었다. 이 이론은 두 가지 기본 가정에 기반한다. 첫째, <b>상대성 원리</b>는 모든 관성계에서 물리 법칙이 동일하게 적용된다는 것이다. 둘째, <b>광속 불변의 원리</b>는 진공에서의 빛의 속력 c(약 3×10⁸ m/s)가 관측자의 운동 상태와 무관하게 일정하다는 것이다. 이 두 가정은 뉴턴 역학에서 당연시되던 절대 시간과 절대 공간의 개념을 무너뜨렸다. 서로 다른 <b>관성계</b>에서 관측되는 시간과 공간은 상대적이며, 빛의 속력만이 절대적인 상수로 남는다. <b>동시성의 상대성</b>에 따르면 한 관성계에서 동시에 일어난 사건이 다른 관성계에서는 동시가 아닐 수 있다.',
       '특수 상대성 이론의 핵심 결과 중 하나는 <b>시간 지연</b>(time dilation)이다. 운동하는 물체에서 측정한 시간 간격은 정지한 관측자가 측정한 것보다 길어진다. 이 관계는 Δt = γΔt₀로 표현되며, <b>로렌츠 인자</b> γ = 1/√(1-v²/c²)이다. 빛의 속력에 가까워질수록 γ가 급격히 증가하여 시간 지연 효과가 커진다. 예를 들어 광속의 99%로 운동하면 γ ≈ 7이므로, 외부에서 7년이 흐를 때 우주선 내부에서는 1년만 흐른다. 또 다른 결과는 <b>길이 수축</b>(length contraction)으로, 운동 방향으로의 길이가 L = L₀/γ로 짧아진다. 이러한 효과는 일상적 속도에서는 무시할 만큼 작지만, 입자 가속기에서 가속되는 <b>뮤온</b>의 수명 증가로 실험적으로 검증되었다.',
@@ -1736,6 +1752,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_17: {
     labelNo: '17',
     title: '⚛️ 양자역학의 기초, 미시 세계의 새로운 물리학',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '20세기 초, 고전 물리학으로 설명할 수 없는 현상들이 발견되면서 <b>양자역학</b>이라는 새로운 물리학이 탄생했다. 1900년 막스 플랑크는 <b>흑체 복사</b> 문제를 해결하기 위해 에너지가 연속적이지 않고 불연속적인 덩어리, 즉 <b>양자</b>(quantum)로 방출된다는 혁명적 가설을 제안했다. 그에 따르면 에너지의 최소 단위는 E=hν로 주어지며, 여기서 h는 <b>플랑크 상수</b>(6.626×10⁻³⁴ J·s)이고 ν는 빛의 진동수이다. 이 가설은 당시로서는 너무나 급진적이어서 플랑크 자신도 그 물리적 의미를 완전히 받아들이지 못했다. 그러나 1905년 아인슈타인은 플랑크의 양자 개념을 발전시켜 빛이 <b>광자</b>라는 에너지 입자로 이루어져 있다고 제안하며 <b>광전 효과</b>를 성공적으로 설명했고, 이로써 양자 혁명이 본격화되었다.',
       '<b>광전 효과</b>는 금속 표면에 빛을 비추면 전자가 방출되는 현상으로, 고전 파동 이론으로는 설명할 수 없는 특성을 보인다. 고전 이론에 따르면 빛의 세기가 강하면 방출되는 전자의 에너지가 커져야 하지만, 실험 결과 전자의 최대 운동 에너지는 빛의 세기와 무관하고 오직 빛의 <b>진동수</b>에만 의존한다. 또한 특정 진동수(<b>문턱 진동수</b>) 이하의 빛은 아무리 강해도 전자를 방출시키지 못한다. 아인슈타인은 빛이 hν의 에너지를 가진 광자로 이루어져 있으며, 광자 하나가 전자 하나에 에너지를 전달한다고 설명했다. 광전자의 최대 운동 에너지는 K_max = hν - W로 표현되며, W는 전자를 금속 표면에서 떼어내는 데 필요한 최소 에너지인 <b>일함수</b>이다. 이 발견으로 아인슈타인은 1921년 노벨 물리학상을 수상했다.',
@@ -1840,6 +1857,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_18: {
     labelNo: '18',
     title: '☢️ 원자와 핵물리, 물질의 가장 깊은 구조',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '<b>원자</b>는 물질을 구성하는 기본 단위로, 중심의 <b>원자핵</b>과 그 주위를 도는 <b>전자</b>로 이루어진다. 러더퍼드는 1911년 알파 입자 산란 실험을 통해 원자의 대부분은 빈 공간이고 양전하와 질량은 매우 작은 핵에 집중되어 있음을 밝혔다. 원자핵은 양전하를 가진 <b>양성자</b>와 전하가 없는 <b>중성자</b>로 구성되며, 이들을 통칭하여 <b>핵자</b>라 한다. 원자의 <b>원자 번호</b>(Z)는 양성자 수이고, <b>질량수</b>(A)는 양성자와 중성자의 합이다. 예를 들어 탄소-12(¹²C)는 양성자 6개, 중성자 6개로 이루어져 있다. 같은 원소라도 중성자 수가 다른 <b>동위원소</b>가 존재하며, 수소의 동위원소로는 보통 수소(¹H), 중수소(²H), 삼중수소(³H)가 있다.',
       '원자핵 내부에서 양성자들은 전기적 반발력으로 서로 밀어내지만, 핵이 붕괴하지 않는 이유는 <b>강한 핵력</b>이 작용하기 때문이다. 강한 핵력은 약 10⁻¹⁵ m 이내의 극히 짧은 거리에서만 작용하지만, 전자기력보다 약 100배 강하여 양성자 사이의 전기적 반발을 극복한다. 핵의 안정성은 양성자와 중성자의 비율에 따라 결정되는데, 가벼운 원소에서는 N/Z≈1이 안정적이고, 무거운 원소에서는 중성자가 더 많아야 안정하다. <b>질량 결손</b>은 핵을 구성하는 개별 핵자들의 질량 합이 실제 핵의 질량보다 큰 현상으로, 이 차이가 핵을 결합시키는 <b>결합 에너지</b>로 변환된다. 아인슈타인의 E=mc² 공식에 따라 결합 에너지는 Δm·c²로 계산된다.',
@@ -1944,6 +1962,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_19: {
     labelNo: '19',
     title: '💻 반도체와 전자소자, 현대 전자공학의 물리적 기초',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '물질은 전기 전도성에 따라 <b>도체</b>, <b>부도체</b>, <b>반도체</b>로 분류된다. 도체는 자유 전자가 많아 전류가 잘 흐르고, 부도체는 전자가 원자에 강하게 구속되어 전류가 거의 흐르지 않는다. 반도체는 그 중간 특성을 가지며, 온도나 불순물에 따라 전기 전도성이 크게 변한다. 반도체의 전기적 성질은 <b>에너지 띠</b> 구조로 설명되는데, 전자가 채운 <b>원자가띠</b>와 전자가 자유롭게 이동할 수 있는 <b>전도띠</b> 사이에 <b>띠틈</b>(밴드갭)이 존재한다. 순수한 실리콘의 띠틈은 약 1.1eV로, 상온에서 일부 전자가 열에너지를 얻어 전도띠로 올라가 전류를 흐르게 한다. 전자가 빠져나간 자리는 양전하처럼 행동하는 <b>양공</b>(정공)이 되어 전류 흐름에 기여한다.',
       '반도체의 전기 전도성을 조절하기 위해 <b>도핑</b>이라는 공정을 사용한다. 실리콘에 인(P)이나 비소(As)와 같은 5족 원소를 첨가하면 여분의 전자가 생겨 <b>n형 반도체</b>가 되고, 붕소(B)나 갈륨(Ga)과 같은 3족 원소를 첨가하면 전자가 부족하여 양공이 증가하는 <b>p형 반도체</b>가 된다. n형에서는 전자가, p형에서는 양공이 <b>다수 운반자</b>로서 전류를 운반한다. n형과 p형 반도체를 접합하면 <b>p-n 접합</b>이 형성되는데, 접합면에서 전자와 양공이 결합하여 <b>공핍층</b>이 만들어진다. 공핍층에는 이동 가능한 전하가 없어 내부 전기장이 형성되며, 이 전기장이 추가적인 전하 이동을 막는다.',
@@ -2048,6 +2067,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_physics_20: {
     labelNo: '20',
     title: '🌐 물리학과 현대 기술, 과학이 만든 일상의 혁신',
+    paragraphMain: ['1문단', '2문단', '3문단', '4문단'],
     passage: [
       '현대 생활에서 사용하는 거의 모든 전자 기기는 <b>반도체</b> 물리학의 산물이다. 스마트폰, 컴퓨터, TV 등에 탑재된 <b>집적 회로</b>(IC)는 수십억 개의 <b>트랜지스터</b>를 손톱만 한 칩에 집적한 것으로, 양자역학적 원리에 기반한다. <b>레이저</b>는 <b>유도 방출</b>이라는 양자역학적 현상을 이용해 단일 파장의 고강도 광선을 생성하며, 바코드 스캐너, 레이저 프린터, DVD 플레이어, 광통신, 레이저 수술 등 일상 곳곳에서 활용된다. <b>광섬유</b> 통신은 빛의 <b>전반사</b> 원리를 이용하여 대량의 정보를 빛의 속도로 전송하며, 인터넷 인프라의 핵심이다. GPS 위성은 <b>상대성 이론</b>의 시간 지연 효과를 보정하지 않으면 하루에 수 킬로미터의 오차가 발생하므로, 일상적인 내비게이션조차 아인슈타인 물리학의 실용적 응용이다.',
       '의료 분야에서 물리학의 응용은 생명을 구하는 진단과 치료 기술로 이어진다. <b>X선</b>은 뼈와 연조직의 밀도 차이를 이용해 인체 내부를 영상화하며, <b>CT</b>(컴퓨터 단층촬영)는 여러 방향에서 X선을 조사하여 3차원 영상을 구성한다. <b>MRI</b>(자기공명영상)는 강한 자기장과 라디오파를 이용하여 수소 원자핵의 <b>핵자기 공명</b> 신호를 측정하는 것으로, 방사선 노출 없이 연조직을 상세히 영상화한다. <b>PET</b>(양전자 방출 단층촬영)는 방사성 동위원소에서 방출된 양전자가 전자와 충돌하여 생성되는 감마선을 검출하여 대사 활동을 영상화한다. <b>방사선 치료</b>는 고에너지 X선이나 양성자 빔으로 암세포를 파괴하며, <b>양성자 치료</b>는 양성자가 특정 깊이에서 에너지를 집중 방출하는 <b>브래그 피크</b> 현상을 이용하여 정상 조직 손상을 최소화한다.',
@@ -2292,23 +2312,96 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
+
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
+
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
+
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
     passageBox.addEventListener('click', e => {
       const span = e.target.closest('.sentence'); if (!span) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
       const idx = Array.from(allSentences).indexOf(span);
       span.classList.toggle('selected');
       if (span.classList.contains('selected')) selectedSet.add(idx); else selectedSet.delete(idx);
-      localStorage.setItem(storageKey, JSON.stringify([...selectedSet])); if (selectedSet.size === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
-      if (selectedSet.size === allSentences.length) {
-        const endTime = new Date(); const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
-        const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-        if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
-        const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
-        for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
-        if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+      localStorage.setItem(storageKey, JSON.stringify([...selectedSet]));
+      const total = passageBox.querySelectorAll('.sentence').length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
+
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+      }
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
+        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

@@ -45,6 +45,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_01: {
     labelNo: '01',
     title: '🗳️ 민주주의란 무엇인가',
+    paragraphMain: [
+      '민주주의의 개념: 국민이 국가 권력의 원천인 정치 체제와 국민주권의 원리를 이해하다',
+      '기본 이념: 자유(소극적/적극적), 평등(형식적/실질적), 인간존엄성의 의미를 살펴보다',
+      '민주주의 원리: 입헌주의, 권력분립, 법치주의(실질적 법치주의)의 중요성을 알아보다',
+      '다수결과 소수 보호: 절차적·실질적 민주주의의 균형과 시민 참여의 필요성을 강조하다'
+    ],
     passage: [
       '<b>민주주의</b>는 국민이 국가 권력의 원천이자 주인이 되는 정치 체제를 의미한다. 민주주의의 어원은 그리스어 데모스(demos, 민중)와 크라티아(kratia, 지배)의 합성어로 \'민중에 의한 지배\'를 뜻한다. 민주주의의 핵심 원리는 <b>국민주권</b>으로, 모든 권력은 국민으로부터 나오며 국민을 위해 행사되어야 한다는 원칙이다. 우리 헌법 제1조 2항도 \'대한민국의 주권은 국민에게 있고, 모든 권력은 국민으로부터 나온다\'고 명시하고 있다. 민주주의는 단순한 정치 제도를 넘어 인간의 존엄성과 자유, 평등을 실현하기 위한 이념이자 생활양식이라고 할 수 있다.',
       '민주주의의 기본 이념으로는 <b>자유</b>, <b>평등</b>, <b>인간존엄성</b>이 있다. 자유는 외부의 간섭이나 강제 없이 스스로 결정하고 행동할 수 있는 상태를 말하며, 국가권력의 부당한 침해로부터 개인을 보호하는 <span class="highlight-answer" data-answer="3"><b>소극적자유</b></span>와 정치 참여를 통해 공동체의 의사결정에 참여하는 <b>적극적자유</b>로 구분된다. 평등은 모든 인간이 성별, 종교, 사회적 지위에 관계없이 동등한 권리와 기회를 가져야 한다는 원리이다. 형식적 평등은 법 앞에 모든 사람이 똑같이 대우받는 것이고, <b>실질적평등</b>은 사회적 약자를 배려하여 실제로 평등한 결과를 추구하는 것이다.',
@@ -150,6 +156,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_02: {
     labelNo: '02',
     title: '🏛️ 대통령제와 의원내각제',
+    paragraphMain: [
+      '정부형태의 의미: 입법부와 행정부의 관계에 따른 대통령제와 의원내각제의 구분을 알아보다',
+      '대통령제의 특징: 엄격한 권력분립, 임기 보장, 거부권, 견제와 균형의 장단점을 살펴보다',
+      '의원내각제의 구조: 의회와 행정부의 융합, 내각불신임권과 의회해산권의 상호 견제를 이해하다',
+      '혼합 정부형태: 이원집정부제와 우리나라의 정부형태, 국민주권 실현의 중요성을 강조하다'
+    ],
     passage: [
       '민주주의 국가에서 <b>정부형태</b>란 국가권력이 어떻게 구성되고 행사되는지를 규정하는 통치구조를 의미한다. 정부형태는 입법부와 행정부의 관계에 따라 크게 <b>대통령제</b>와 <b>의원내각제</b>로 구분된다. 대통령제는 행정부 수반인 대통령이 국민에 의해 직접 선출되고 의회와 독립적으로 국정을 운영하는 제도이다. 반면 의원내각제는 의회에서 선출된 총리가 행정부를 이끌며 의회에 책임을 지는 제도이다. 각 정부형태는 권력분립의 정도, 정부의 안정성, 민주적 책임성 등에서 서로 다른 특징을 보인다.',
       '<b>대통령제</b>의 가장 큰 특징은 엄격한 <b>권력분립</b>이다. 대통령은 국민이 직접 선거로 선출하며 <b>임기</b>가 헌법으로 보장되어 의회에 의해 불신임되지 않는다. 행정부와 입법부가 상호 독립적으로 기능하여 <b>견제와균형</b>을 이룬다. 대통령은 법률안에 대한 <b>거부권</b>을 행사할 수 있고, 의회는 대통령의 정책에 대해 예산 심의와 입법을 통해 견제한다. 미국이 대통령제의 전형적인 모델이며, 우리나라도 대통령제를 채택하고 있다. 대통령제의 장점은 정부의 안정성과 정책의 일관성이지만, <b>여소야대</b> 상황에서 행정부와 입법부 간 갈등으로 국정이 교착상태에 빠질 수 있다는 단점이 있다.',
@@ -255,6 +267,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_03: {
     labelNo: '03',
     title: '✋ 한 표의 힘, 선거',
+    paragraphMain: [
+      '선거의 의미: 대통령·국회의원·지방선거를 통해 국민이 주권을 행사하는 방법을 알아보다',
+      '민주적 선거 원칙: 보통선거, 평등선거, 직접선거, 비밀선거의 4대 원칙을 이해하다',
+      '선거제도의 종류: 소선거구제와 대선거구제, 다수대표제와 비례대표제의 장단점을 비교하다',
+      '다양한 정치 참여: 국민투표, 국민발안, 국민소환, 시민단체 활동 등으로 민주주의에 기여하다'
+    ],
     passage: [
       '<b>선거</b>는 민주주의 국가에서 국민이 자신의 대표자를 직접 선택하는 가장 기본적인 정치 참여 방식입니다. 국민은 선거를 통해 자신의 의사를 정치 과정에 반영하고, 공직자에게 권력을 위임합니다. 우리나라에서는 대통령 선거, 국회의원 선거, 지방선거 등 다양한 종류의 선거가 실시됩니다. <b>대통령 선거</b>는 5년마다 국민이 직접 대통령을 선출하는 선거이고, <b>국회의원 선거</b>는 4년마다 국회를 구성할 의원들을 뽑는 선거입니다. <b>지방선거</b>는 시장, 도지사, 지방의회 의원 등 지역 대표를 선출하는 선거로, 지역 주민의 삶과 밀접하게 연결됩니다. 이러한 선거들은 모두 국민이 주권을 행사하는 중요한 기회입니다.',
       '민주적 선거가 되기 위해서는 몇 가지 기본 원칙이 반드시 지켜져야 합니다. <b>보통선거</b>는 일정 연령 이상의 모든 국민에게 선거권을 부여하는 원칙으로, 재산이나 성별, 학력 등에 관계없이 누구나 투표할 수 있음을 의미합니다. <b>평등선거</b>는 모든 유권자의 표가 동등한 가치를 가진다는 원칙입니다. <b>직접선거</b>는 유권자가 대표자를 중간 단계 없이 직접 선출하는 것을 말합니다. <b>비밀선거</b>는 투표 내용이 다른 사람에게 알려지지 않도록 보장하는 원칙으로, 유권자가 어떤 외부 압력 없이 자유롭게 의사를 표현할 수 있게 합니다. 이 네 가지 원칙은 민주적 선거의 핵심 요소로서, 선거의 정당성을 보장합니다.',
@@ -360,6 +378,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_04: {
     labelNo: '04',
     title: '🤝 정치를 움직이는 집단들',
+    paragraphMain: [
+      '정당의 역할: 의견 수렴, 정강과 정책 체계화, 후보 공천, 여당과 야당의 견제를 알아보다',
+      '정당 체제: 다당제와 양당제의 장단점, 당내 민주주의와 투명한 공천 과정의 중요성을 살펴보다',
+      '이익집단의 활동: 로비, 여론 형성, 선거 지원으로 정책에 영향을 미치며 장단점을 분석하다',
+      '시민단체의 특성: 공익 실현을 목적으로 정부 감시, 약자 대변, 정치 집단 간 견제와 균형을 추구하다'
+    ],
     passage: [
       '<b>정당</b>은 정치적 견해를 같이하는 사람들이 정권을 획득하거나 유지하기 위해 조직한 단체입니다. 정당은 민주주의 정치에서 핵심적인 역할을 수행합니다. 첫째, 정당은 사회의 다양한 의견과 요구를 수렴하여 <b>정강</b>과 <b>정책</b>으로 체계화합니다. 둘째, 선거에 후보자를 공천하고 선거 운동을 통해 국민의 지지를 호소하여 정치적 충원 기능을 담당합니다. 셋째, 선거에서 승리한 정당은 <b>여당</b>이 되어 정부를 구성하고, 패배한 정당은 <b>야당</b>이 되어 정부를 견제하고 비판하는 역할을 수행합니다. 이처럼 정당은 국민과 정부 사이를 연결하는 중요한 매개체 역할을 합니다.',
       '우리나라는 <b>다당제</b>를 채택하고 있어 여러 정당이 자유롭게 활동할 수 있습니다. 다당제는 다양한 정치적 견해가 대표될 수 있다는 장점이 있지만, 정당 간 갈등으로 인해 정책 결정이 지연될 수 있다는 단점도 있습니다. 반면 미국과 같은 <b>양당제</b> 국가에서는 두 개의 주요 정당이 정치를 주도하여 정국이 안정적이지만, 다양한 의견이 충분히 반영되지 못할 수 있습니다. 정당이 건전하게 발전하기 위해서는 당내 민주주의가 확립되어야 하고, <b>정당 공천</b> 과정이 투명하게 이루어져야 합니다. 또한 정당은 국민의 의사를 정책에 반영하고, 정치 지도자를 양성하는 본연의 기능에 충실해야 합니다.',
@@ -465,6 +489,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_05: {
     labelNo: '05',
     title: '🏘️ 우리 지역은 우리 손으로',
+    paragraphMain: [
+      '지방자치의 의미: 주민자치와 단체자치의 원리, 민주주의의 학교로서의 역할을 이해하다',
+      '지방자치단체의 구조: 광역·기초자치단체, 지방자치단체장과 지방의회의 역할을 살펴보다',
+      '자치권의 내용: 자치입법권, 자치행정권, 자치재정권과 자치사무의 범위를 알아보다',
+      '주민 참여 제도: 주민투표, 주민발의, 주민소환, 주민감사청구로 풀뿌리 민주주의를 실현하다'
+    ],
     passage: [
       '<b>지방자치</b>는 일정한 지역의 주민들이 그 지역의 공공 사무를 스스로 처리하는 제도입니다. 중앙정부가 모든 것을 결정하는 것이 아니라, 지역 주민들이 자신들의 대표를 선출하고 지역 문제를 직접 해결해 나가는 것이 지방자치의 핵심입니다. 지방자치는 <b>주민자치</b>와 <b>단체자치</b>의 두 가지 원리로 구성됩니다. 주민자치는 지역 주민이 지역 행정에 직접 참여하는 것을 의미하고, 단체자치는 중앙정부로부터 독립된 지방자치단체가 지역 사무를 처리하는 것을 말합니다. 지방자치는 민주주의의 학교라고 불리는데, 이는 주민들이 지역 문제에 참여하면서 민주주의를 실천하고 학습할 수 있기 때문입니다.',
       '우리나라의 <b>지방자치단체</b>는 광역자치단체와 기초자치단체로 나뉩니다. <b>광역자치단체</b>에는 특별시, 광역시, 특별자치시, 도, 특별자치도가 있으며, <b>기초자치단체</b>에는 시, 군, 구가 있습니다. 각 지방자치단체에는 집행 기관인 <b>지방자치단체장</b>과 의결 기관인 <b>지방의회</b>가 있습니다. 지방자치단체장은 도지사, 시장, 군수, 구청장 등으로 불리며, 지역 행정을 총괄합니다. 지방의회는 지방의원들로 구성되어 조례를 제정하고, 예산을 심의하며, 지방자치단체장의 활동을 감시합니다. 이들은 모두 지역 주민의 직접 선거로 선출됩니다.',
@@ -570,6 +600,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_06: {
     labelNo: '06',
     title: '💰 경제활동의 기초',
+    paragraphMain: [
+      '경제활동과 희소성: 무한한 욕구와 한정된 자원으로 인한 선택과 기회비용을 이해하다',
+      '경제 주체의 역할: 가계(소비), 기업(생산), 정부(공공재 공급, 재분배)의 기능을 살펴보다',
+      '경제 순환의 흐름: 생산요소 시장과 생산물 시장에서 실물과 화폐의 순환을 알아보다',
+      '합리적 선택: 비용-편익 분석, 이윤 극대화, 효용 극대화와 제한된 합리성을 이해하다'
+    ],
     passage: [
       '<b>경제활동</b>이란 인간의 욕구를 충족시키기 위해 재화와 서비스를 생산, 분배, 소비하는 모든 활동을 말합니다. 인간의 욕구는 무한한 반면, 이를 충족시켜 줄 자원은 한정되어 있기 때문에 <b>희소성</b>이 발생합니다. 희소성으로 인해 우리는 항상 <b>선택</b>의 문제에 직면하게 됩니다. 어떤 것을 선택하면 다른 것을 포기해야 하는데, 이때 포기한 것 중 가장 가치 있는 것을 <b>기회비용</b>이라고 합니다. 예를 들어, 학생이 공부 대신 영화를 보기로 선택했다면, 그 시간에 할 수 있었던 공부가 기회비용이 됩니다. 합리적인 경제활동을 위해서는 기회비용을 고려하여 선택해야 합니다.',
       '경제활동에 참여하는 주체를 <b>경제 주체</b>라고 하며, 크게 <b>가계</b>, <b>기업</b>, <b>정부</b>로 나뉩니다. 가계는 소비의 주체로서 기업에 노동, 토지, 자본 등의 <b>생산요소</b>를 제공하고 그 대가로 소득을 얻습니다. 가계는 이 소득을 가지고 재화와 서비스를 구매하여 소비합니다. 기업은 생산의 주체로서 가계로부터 생산요소를 구입하여 재화와 서비스를 생산하고 판매하여 이윤을 추구합니다. 정부는 가계와 기업으로부터 <b>세금</b>을 거두어 공공재를 공급하고, 시장 실패를 보완하며, 소득을 재분배하는 역할을 합니다.',
@@ -675,6 +711,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_07: {
     labelNo: '07',
     title: '📊 수요와 공급의 만남',
+    paragraphMain: [
+      '시장과 가격: 수요와 공급의 상호작용으로 가격이 결정되는 시장경제의 원리를 이해하다',
+      '수요·공급 법칙: 수요의 법칙(우하향)과 공급의 법칙(우상향)의 개념과 곡선 이동을 알아보다',
+      '균형가격의 형성: 초과공급과 초과수요, 가격의 자동 조절 기능으로 균형을 찾아가다',
+      '가격의 신호 기능: 아담 스미스의 보이지 않는 손과 자원 배분 역할, 시장의 한계를 살펴보다'
+    ],
     passage: [
       '<b>시장</b>은 재화나 서비스의 거래가 이루어지는 장소 또는 추상적 공간을 말합니다. 시장에서는 물건을 사려는 사람과 팔려는 사람이 만나 거래가 성립됩니다. 시장에서 물건을 사려는 욕구를 <b>수요</b>라고 하고, 물건을 팔려는 욕구를 <b>공급</b>이라고 합니다. 수요와 공급의 상호작용에 의해 <b>가격</b>이 결정되는데, 이것이 시장경제의 핵심 원리입니다. <b>수요량</b>은 일정 기간 동안 소비자들이 특정 가격에서 구매하고자 하는 재화의 양이고, <b>공급량</b>은 생산자들이 특정 가격에서 판매하고자 하는 재화의 양입니다. 가격이 변하면 수요량과 공급량도 함께 변합니다.',
       '일반적으로 가격이 오르면 수요량은 줄어들고, 가격이 내리면 수요량은 늘어납니다. 이를 <b>수요의 법칙</b>이라고 합니다. 이러한 관계를 그래프로 나타낸 것이 <b>수요곡선</b>으로, 우하향하는 모양을 띕니다. 반대로 가격이 오르면 공급량은 늘어나고, 가격이 내리면 공급량은 줄어듭니다. 이를 <b>공급의 법칙</b>이라고 하며, <b>공급곡선</b>은 우상향하는 모양을 띕니다. 가격 외에 소득, 대체재 가격, 선호도 변화 등은 수요 자체를 변화시키고, 생산 기술, 생산 요소 가격, 생산자 수 등은 공급 자체를 변화시킵니다. 이 경우 수요곡선이나 공급곡선이 좌우로 이동합니다.',
@@ -780,6 +822,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_08: {
     labelNo: '08',
     title: '🏪 경쟁 시장과 독점 시장',
+    paragraphMain: [
+      '완전 경쟁 시장: 다수 판매자, 동질적 상품, 자유로운 진입, 가격 수용자의 이상적 모형을 이해하다',
+      '독점과 과점 시장: 가격 설정자, 자연 독점, 담합의 유인과 정부 규제의 필요성을 살펴보다',
+      '독점적 경쟁 시장: 제품 차별화를 통한 시장 지배력과 혁신의 필요성을 알아보다',
+      '정부의 역할: 공정거래위원회의 담합 감시, 진입 장벽 완화, 소비자 보호로 건전한 경쟁을 유도하다'
+    ],
     passage: [
       '시장은 경쟁의 정도에 따라 여러 유형으로 나눌 수 있어요. 가장 이상적인 시장 형태는 <b>완전 경쟁 시장</b>입니다. 완전 경쟁 시장은 수많은 판매자와 구매자가 존재하고, 모든 상품이 동질적이며, 시장 진입과 퇴출이 자유롭고, 모든 경제 주체가 완전한 정보를 가진 시장이에요. 이런 조건에서는 어떤 개별 기업도 가격에 영향을 미칠 수 없어서 시장에서 결정된 가격을 그대로 받아들이는 <b>가격 수용자</b>가 됩니다. 농산물 시장이나 주식 시장이 완전 경쟁 시장에 가까운 예시로 거론되지만, 현실에서 완전 경쟁 시장의 모든 조건을 충족하는 시장은 거의 존재하지 않아요. 완전 경쟁 시장은 자원 배분의 효율성이 가장 높은 이상적인 모형으로서, 다른 시장 형태를 분석하는 기준점 역할을 합니다.',
       '현실 경제에서 흔히 볼 수 있는 시장 형태는 <b>독점 시장</b>과 <b>과점 시장</b>이에요. 독점 시장은 한 기업만이 상품을 공급하는 시장으로, 그 기업이 시장 전체의 공급량과 가격을 결정할 수 있는 <b>가격 설정자</b>가 됩니다. 전기, 가스, 수도와 같은 공공재 성격의 상품은 규모의 경제로 인해 자연스럽게 독점이 형성되기도 하는데, 이를 <b>자연 독점</b>이라고 해요. 과점 시장은 소수의 대기업이 시장을 지배하는 형태입니다. 자동차, 통신, 정유 산업 등이 대표적인 과점 시장이에요. 과점 기업들은 서로의 행동을 주시하며 전략적으로 가격과 생산량을 결정하고, 때로는 담합을 통해 가격을 높게 유지하려는 유인이 있어 정부의 규제가 필요합니다.',
@@ -885,6 +933,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_09: {
     labelNo: '09',
     title: '⚖️ 보이지 않는 손의 한계',
+    paragraphMain: [
+      '외부 효과: 부정적·긍정적 외부 효과로 사회적 최적과 시장 균형이 달라지는 문제를 이해하다',
+      '공공재의 특성: 비배제성과 비경합성으로 인한 무임승차 문제와 정부 공급의 필요성을 알아보다',
+      '정보의 비대칭성: 역선택과 도덕적 해이, 품질 인증과 정보 공개로 문제를 해결하다',
+      '정부의 시장 개입: 환경세, 보조금, 규제로 시장 실패를 교정하되 정부 실패도 경계하다'
+    ],
     passage: [
       '시장 경제는 가격을 통해 자원을 효율적으로 배분하지만, 시장이 제 기능을 하지 못하는 경우가 있어요. 이를 <b>시장 실패</b>라고 합니다. 시장 실패의 대표적인 원인 중 하나는 <b>외부 효과</b>예요. 외부 효과란 경제 활동이 시장 거래에 참여하지 않은 제3자에게 의도치 않게 이익이나 손해를 주는 것을 말합니다. 공장에서 오염 물질을 배출하면 주변 주민들이 피해를 입는 것이 <b>부정적 외부 효과</b>의 예시예요. 반대로 양봉업자의 꿀벌이 주변 과수원의 수분을 도와 과일 생산량을 높이는 것은 <b>긍정적 외부 효과</b>입니다. 외부 효과가 있으면 시장에서 결정되는 생산량이 사회적으로 바람직한 수준과 달라지게 되어 자원이 비효율적으로 배분됩니다.',
       '<b>공공재</b>의 존재도 시장 실패의 중요한 원인이에요. 공공재는 <b>비배제성</b>과 <b>비경합성</b>의 특성을 가집니다. 비배제성이란 대가를 지불하지 않는 사람도 소비에서 제외할 수 없다는 것이고, 비경합성이란 한 사람의 소비가 다른 사람의 소비를 방해하지 않는다는 것이에요. 국방, 치안, 가로등, 공원 등이 공공재의 예시입니다. 이런 특성 때문에 사람들은 대가를 지불하지 않고 공공재를 이용하려는 <b>무임승차</b> 유인이 생기고, 민간 기업은 공공재를 충분히 공급하지 않으려 합니다. 결국 시장에 맡겨두면 공공재는 사회적으로 필요한 양보다 적게 공급되어 정부의 개입이 필요해집니다.',
@@ -990,6 +1044,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_10: {
     labelNo: '10',
     title: '📈 GDP로 보는 나라 경제',
+    paragraphMain: [
+      'GDP의 개념: 한 나라 안에서 생산된 최종 재화와 서비스의 시장 가치를 합한 국내총생산을 이해하다',
+      '1인당 GDP와 GNI: 인구수로 나눈 1인당 GDP와 국민이 국내외에서 벌어들인 국민총소득을 비교하다',
+      '경제 성장의 원동력: 노동, 자본, 기술 혁신이 생산 능력을 지속적으로 증가시키는 과정을 살펴보다',
+      '경제 성장의 한계: 소득 불평등과 환경 파괴, 지속 가능한 발전과 행복 지수의 중요성을 알아보다'
+    ],
     passage: [
       '한 나라의 경제 규모와 성과를 측정하는 가장 대표적인 지표는 <b>국내총생산(GDP)</b>이에요. GDP는 일정 기간 동안 한 나라 안에서 생산된 모든 최종 재화와 서비스의 시장 가치를 합한 것입니다. 여기서 \'최종\'이라는 말이 중요한데, 빵을 만들 때 밀가루의 가치는 빵 가격에 이미 포함되어 있으므로 밀가루를 따로 계산하면 <b>이중 계산</b>이 되기 때문이에요. GDP는 국민의 생활 수준과 경제 발전 정도를 비교하는 데 널리 사용됩니다. 한국의 GDP는 세계 10위권으로, 전쟁의 폐허에서 눈부신 경제 성장을 이루었다는 것을 보여줍니다. 그러나 GDP만으로 국민의 삶의 질이나 행복을 모두 측정할 수 없다는 한계도 있어요.',
       'GDP를 인구수로 나눈 <b>1인당 GDP</b>는 평균적인 국민 소득 수준을 보여주는 지표예요. 같은 GDP라도 인구가 적으면 1인당 GDP가 높아지고, 인구가 많으면 낮아집니다. 따라서 국가 간 생활 수준을 비교할 때는 총 GDP보다 1인당 GDP를 보는 것이 더 적절해요. 또한 <b>국민총소득(GNI)</b>이라는 지표도 있는데, 이는 국민이 국내외에서 벌어들인 소득을 모두 합한 것입니다. 해외에서 일하는 한국인의 소득은 GNI에 포함되지만 GDP에는 포함되지 않아요. 반대로 한국에서 일하는 외국인의 소득은 GDP에는 포함되지만 GNI에는 빠집니다. 이처럼 GDP와 GNI는 측정 기준이 달라서 목적에 따라 적절한 지표를 선택해야 합니다.',
@@ -1096,6 +1156,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_11: {
     labelNo: '11',
     title: '💸 왜 과자가 점점 작아지는 걸까?',
+    paragraphMain: [
+      '물가의 개념: 상품과 서비스의 평균적인 가격 수준과 소비자물가지수(CPI)를 이해하다',
+      '인플레이션의 원인: 수요 견인 인플레이션과 비용 인상 인플레이션의 발생 원리를 알아보다',
+      '인플레이션의 영향: 화폐의 구매력 하락과 고정 소득자, 채무자에게 미치는 차별적 영향을 살펴보다',
+      '물가 안정 정책: 한국은행의 물가안정목표제와 기준금리 조절, 디플레이션의 위험을 이해하다'
+    ],
     passage: [
       '여러분은 예전보다 과자 양이 줄었다거나 같은 돈으로 살 수 있는 물건이 줄었다고 느낀 적이 있나요? 이것은 <b>물가</b>가 올랐기 때문이에요. 물가란 시장에서 거래되는 여러 상품과 서비스의 평균적인 가격 수준을 말합니다. 개별 상품의 가격이 아니라 경제 전체의 가격 수준을 나타내는 것이지요. 물가를 측정하기 위해 <b>소비자물가지수(CPI)</b>를 사용해요. 이는 가계가 주로 소비하는 상품과 서비스의 가격 변동을 종합적으로 측정한 지표입니다. 기준 연도를 100으로 놓고, 현재 물가가 얼마나 변했는지를 백분율로 나타내요. 물가가 오르면 같은 돈으로 살 수 있는 물건의 양이 줄어들어 돈의 가치가 떨어지는 것과 같은 효과가 나타납니다.',
       '<b>인플레이션</b>은 물가가 지속적으로 상승하는 현상을 말해요. 일시적인 가격 상승이 아니라 전반적인 물가 수준이 계속 오르는 것이 특징입니다. 인플레이션의 원인은 크게 두 가지로 나눌 수 있어요. 첫째, <b>수요 견인 인플레이션</b>은 경제 전체의 수요가 공급 능력을 초과할 때 발생합니다. 소비, 투자, 정부 지출이 늘어나거나 수출이 증가하면 총수요가 늘어나 물가가 오르지요. 둘째, <b>비용 인상 인플레이션</b>은 생산 비용이 상승하여 발생합니다. 원자재 가격이 오르거나 임금이 상승하면 기업은 비용을 상품 가격에 반영하여 물가가 오르게 됩니다. 최근 국제 유가 상승으로 인한 물가 상승이 비용 인상 인플레이션의 대표적 사례예요.',
@@ -1201,6 +1267,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_12: {
     labelNo: '12',
     title: '👷 일자리와 실업률',
+    paragraphMain: [
+      '고용과 실업: 일할 능력과 의사가 있지만 일자리를 구하지 못한 상태와 실업률의 개념을 이해하다',
+      '실업의 유형: 마찰적 실업, 구조적 실업, 경기적 실업과 자연 실업률의 의미를 알아보다',
+      '실업의 비용: 개인의 소득 감소와 심리적 어려움, 사회적 생산 감소와 청년 실업 문제를 살펴보다',
+      '실업 대책: 적극적·소극적 노동시장 정책과 실업 급여, 고용보험제도를 이해하다'
+    ],
     passage: [
       '경제가 건강하게 돌아가려면 사람들이 일자리를 갖고 일할 수 있어야 해요. <b>고용</b>이란 근로자가 기업이나 조직에서 일하고 대가로 임금을 받는 것을 말합니다. 반대로 일할 능력과 의사가 있지만 일자리를 구하지 못한 상태를 <b>실업</b>이라고 해요. 실업은 개인에게는 소득 감소와 심리적 어려움을, 국가 경제에는 생산 감소와 세수 감소를 초래하므로 중요한 경제 문제입니다. 실업 상태에 있는 사람들의 비율을 <b>실업률</b>이라고 하는데, 이는 경제 활동 인구 중 실업자가 차지하는 비율로 계산합니다. 경제 활동 인구란 15세 이상 인구 중 일하고 있거나 일자리를 찾고 있는 사람을 말해요.',
       '실업에는 여러 유형이 있어요. <b>마찰적 실업</b>은 직장을 옮기거나 새로운 일자리를 찾는 과정에서 일시적으로 발생하는 실업입니다. 대학을 졸업하고 첫 직장을 구하는 동안이나 더 좋은 직장으로 이직하는 사이에 생기는 실업이 여기에 해당해요. <b>구조적 실업</b>은 산업 구조의 변화로 특정 기술이나 직종에 대한 수요가 줄어들어 발생합니다. 기술 발전으로 자동화가 진행되면서 일부 일자리가 사라지는 것이 예시예요. <b>경기적 실업</b>은 경기 침체로 기업들이 생산을 줄이고 고용을 줄여서 발생하는 실업입니다. 불황기에 실업률이 높아지는 것이 경기적 실업이에요. 마찰적 실업과 구조적 실업을 합쳐 <b>자연 실업률</b>이라고 하며, 경제가 정상적으로 작동해도 존재하는 실업입니다.',
@@ -1306,6 +1378,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_13: {
     labelNo: '13',
     title: '📊 호황과 불황의 반복',
+    paragraphMain: [
+      '경기 변동: 경제 활동이 호황과 불황을 반복하는 경기 순환의 개념을 이해하다',
+      '경기 변동의 원인: 소비와 투자의 변화, 해외 경제 상황과 금융 위기의 영향을 알아보다',
+      '경기 지표: 경제성장률, GDP, 실업률, 물가 상승률로 경기 상태를 파악하는 방법을 살펴보다',
+      '경제 안정화 정책: 재정정책과 통화정책으로 경기 변동의 폭을 줄이는 방법을 이해하다'
+    ],
     passage: [
       '경제는 항상 일정한 상태를 유지하지 않고 좋아졌다 나빠졌다를 반복해요. 이렇게 경제 활동의 수준이 시간에 따라 변하는 현상을 <b>경기 변동</b>이라고 해요. 경기가 좋을 때를 <b>호황</b> 또는 <b>경기 확장기</b>라고 하는데, 이때는 기업들이 물건을 많이 팔아 생산을 늘리고, 일자리도 많아지며, 사람들의 소득이 증가해요. 반대로 경기가 나쁠 때를 <b>불황</b> 또는 <b>경기 수축기</b>라고 하는데, 기업들은 물건이 안 팔려 생산을 줄이고, 일자리가 줄어들며, 실업자가 늘어나요. 이처럼 경기는 확장과 수축을 주기적으로 반복하는데, 이것을 <b>경기 순환</b>이라고 해요.',
       '경기 변동은 여러 가지 원인으로 발생해요. <b>소비</b>가 줄어들면 기업의 매출이 감소하고, 기업은 생산과 고용을 줄이게 되어 경기가 나빠져요. 반대로 소비가 늘면 기업은 생산을 확대하고 직원을 더 고용해서 경기가 좋아지지요. 또한 기업의 <b>투자</b>도 중요한 역할을 해요. 기업이 새로운 공장을 짓거나 기계를 사면 생산이 늘고 일자리가 생기지만, 투자를 줄이면 경기가 위축돼요. 해외 경제 상황, 유가 변동, 금융 위기 등 외부 요인도 경기에 영향을 미쳐요. 2008년 미국에서 시작된 금융 위기가 전 세계로 퍼진 것처럼, 오늘날 각국 경제는 서로 연결되어 있어요.',
@@ -1411,6 +1489,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_14: {
     labelNo: '14',
     title: '🚢 왜 나라끼리 물건을 사고팔까?',
+    paragraphMain: [
+      '국제 무역의 필요성: 나라마다 자원, 기술, 노동력이 달라 서로 교환하면 이익이 되는 원리를 이해하다',
+      '비교우위와 특화: 더 적은 기회비용으로 생산할 수 있는 상품에 집중하면 생산량이 늘어남을 알아보다',
+      '수출입과 무역수지: 수출, 수입, 무역흑자·적자의 개념과 자유무역협정(FTA)을 살펴보다',
+      '보호무역과 자유무역: 관세와 수입할당제로 자국 산업을 보호하는 정책과 무역분쟁을 이해하다'
+    ],
     passage: [
       '우리가 먹는 바나나는 필리핀에서, 입는 옷의 원료인 면화는 미국에서, 타고 다니는 자동차의 연료인 석유는 중동에서 왔어요. 이처럼 나라와 나라 사이에 물건이나 서비스를 사고파는 것을 <b>국제 무역</b>이라고 해요. 그런데 왜 각 나라는 모든 물건을 스스로 만들지 않고 다른 나라와 무역을 할까요? 그 이유는 나라마다 <b>자원</b>, 기술, 노동력 등이 다르기 때문이에요. 어떤 나라는 넓은 땅에서 농산물을 많이 생산하고, 어떤 나라는 첨단 기술로 전자제품을 잘 만들어요. 이렇게 각 나라가 <b>잘 만드는 물건</b>에 집중하고 서로 교환하면 모두에게 이익이 돼요.',
       '경제학자들은 무역의 이점을 설명하기 위해 <b>비교우위</b>라는 개념을 사용해요. 비교우위란 같은 물건을 만들 때 더 적은 기회비용으로 생산할 수 있는 능력을 말해요. 예를 들어, A국이 자동차와 쌀을 모두 B국보다 잘 만들더라도, A국은 자동차 생산에 더 큰 강점이 있고 B국은 쌀 생산에 상대적 강점이 있다면, A국은 자동차에, B국은 쌀에 집중하고 서로 교환하는 것이 유리해요. 이것을 <b>특화</b>라고 하는데, 각 나라가 비교우위가 있는 상품 생산에 집중하면 전체적으로 생산량이 늘어나고 모든 나라가 더 많은 상품을 소비할 수 있게 돼요.',
@@ -1516,6 +1600,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_15: {
     labelNo: '15',
     title: '💱 원화와 달러의 관계',
+    paragraphMain: [
+      '환율의 개념: 우리나라 돈과 외국 돈을 교환하는 비율과 외환시장의 작동 원리를 이해하다',
+      '환율 변동의 원인: 수요와 공급에 의해 원화 강세(절상)와 약세(절하)가 결정됨을 알아보다',
+      '환율의 경제적 영향: 환율 상승 시 수출 유리·수입 불리, 환율 하락 시 그 반대임을 살펴보다',
+      '외환 정책: 중앙은행의 외환시장 개입과 외환보유고, 1997년 외환위기의 교훈을 이해하다'
+    ],
     passage: [
       '해외여행을 가거나 외국 물건을 살 때 우리나라 돈인 원화를 외국 돈으로 바꿔야 해요. 이때 우리나라 돈과 외국 돈을 교환하는 비율을 <b>환율</b>이라고 해요. 예를 들어 1달러가 1,300원이라면, 달러/원 환율이 1,300이라는 뜻이에요. 이 환율은 매일, 심지어 매 순간 변해요. 각 나라의 돈을 <b>외환</b> 또는 <b>외국환</b>이라고 하고, 이러한 외환을 사고파는 시장을 <b>외환시장</b>이라고 해요. 외환시장은 전 세계가 연결되어 24시간 거래가 이루어지는 거대한 시장이에요.',
       '환율은 왜 변하는 걸까요? 환율도 다른 물건의 가격처럼 수요와 공급에 의해 결정돼요. 외국인이 우리나라에 <b>투자</b>하려고 원화를 많이 사면 원화의 가치가 올라가고 환율이 내려가요. 이것을 원화 <b>강세</b> 또는 <b>절상</b>이라고 해요. 반대로 우리나라 사람들이 해외여행이나 수입을 많이 해서 달러를 많이 사면 원화의 가치가 내려가고 환율이 올라가요. 이것을 원화 <b>약세</b> 또는 <b>절하</b>라고 해요. 또한 한 나라의 경제 상황, <b>금리</b>, 물가, 정치적 안정성 등도 환율에 영향을 미쳐요.',
@@ -1621,6 +1711,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_16: {
     labelNo: '16',
     title: '🏭 기업은 어떻게 돈을 벌까?',
+    paragraphMain: [
+      '기업과 이윤: 재화와 서비스를 생산하여 판매하고 총수입에서 총비용을 뺀 이윤을 얻는 과정을 이해하다',
+      '기업의 형태: 개인 기업, 법인 기업, 주식회사와 주주·배당금의 개념을 알아보다',
+      '기업가 정신: 혁신, 도전, 창의성으로 새로운 사업에 도전하는 스타트업 정신을 살펴보다',
+      '기업의 역할과 책임: 생산, 고용, 세금, 혁신 기여와 기업의 사회적 책임(CSR)을 이해하다'
+    ],
     passage: [
       '우리가 사용하는 스마트폰, 먹는 과자, 타는 자동차는 모두 <b>기업</b>이 만든 것이에요. 기업은 재화나 서비스를 생산하여 판매하고 <b>이윤</b>을 얻는 경제 주체예요. 이윤은 기업이 번 돈(총수입)에서 물건을 만드는 데 들어간 비용(총비용)을 뺀 금액이에요. 기업이 이윤을 얻으려면 소비자가 원하는 좋은 품질의 제품을 경쟁력 있는 가격에 제공해야 해요. 기업은 <b>생산 요소</b>인 노동, 자본, 토지를 결합하여 상품을 만들어요. 예를 들어 빵집은 제빵사(노동), 오븐(자본), 가게 공간(토지)을 활용해 빵을 만들지요.',
       '기업의 형태는 다양해요. 한 사람이 자본을 대고 운영하는 <b>개인 기업</b>은 의사 결정이 빠르지만 규모가 작아요. 여러 사람이 함께 출자하는 <b>법인 기업</b>은 더 많은 자본을 모을 수 있어요. 특히 <b>주식회사</b>는 <b>주식</b>을 발행하여 많은 사람들로부터 자금을 모으는 형태예요. 주식을 산 사람을 <b>주주</b>라고 하는데, 주주는 회사의 부분적인 소유자가 되어 회사가 이익을 내면 <b>배당금</b>을 받을 수 있어요. 주식회사는 대규모 자금을 조달할 수 있어 삼성, 현대 같은 대기업의 대부분이 주식회사 형태예요.',
@@ -1726,6 +1822,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_17: {
     labelNo: '17',
     title: '🏦 은행은 우리 돈으로 무엇을 할까?',
+    paragraphMain: [
+      '저축과 이자: 현재 소비를 미래로 미루고 은행에서 이자를 받는 저축의 개념을 이해하다',
+      '은행의 금융 중개: 저축받은 돈을 대출해주고 이자 차이로 수익을 얻는 금융 중개 기관의 역할을 알아보다',
+      '금융 상품: 주식, 채권, 펀드의 특징과 위험을 줄이는 분산 투자의 중요성을 살펴보다',
+      '금융 문해력과 신용: 올바른 금융 결정을 위한 신용 관리와 핀테크 서비스를 이해하다'
+    ],
     passage: [
       '우리가 용돈을 모아 은행에 맡기면 어떻게 될까요? 은행에 돈을 맡기는 것을 <b>저축</b>이라고 해요. 저축은 현재의 소비를 미래로 미루는 것이에요. 용돈을 바로 쓰지 않고 저금통에 모으는 것도 저축이지요. 은행에 저축하면 돈을 안전하게 보관할 수 있고, 은행이 주는 <b>이자</b>도 받을 수 있어요. 이자는 돈을 맡긴 대가로 은행이 주는 추가 금액이에요. 예를 들어 100만 원을 저축하고 연 5%의 이자를 받으면, 1년 뒤에 105만 원이 되는 거예요. 이렇게 이자가 붙는 비율을 <b>금리</b>라고 해요.',
       '은행은 우리가 맡긴 돈을 그냥 보관하기만 할까요? 아니에요! 은행은 우리 돈을 필요한 사람이나 기업에게 빌려줘요. 이것을 <b>대출</b>이라고 해요. 집을 사거나 사업을 시작할 때 목돈이 필요하면 은행에서 대출을 받지요. 대출받은 사람은 원금과 함께 이자를 갚아야 해요. 은행은 저축자에게 주는 이자보다 대출자에게 받는 이자가 더 높아요. 이 차이가 은행의 수입이 되는 거예요. 이렇게 은행은 저축과 대출을 연결해 주는 <b>금융 중개 기관</b> 역할을 해요.',
@@ -1831,6 +1933,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_18: {
     labelNo: '18',
     title: '💰 세금은 어디에 쓰일까?',
+    paragraphMain: [
+      '세금과 재정: 국민이 나라에 내는 세금으로 정부가 공공 서비스를 제공하는 재정 활동을 이해하다',
+      '세금의 종류: 직접세(소득세, 재산세)와 간접세(부가가치세), 누진세의 개념을 알아보다',
+      '정부의 지출: 공공재 제공, 복지 정책, 사회 간접 자본 건설과 예산의 국회 심의를 살펴보다',
+      '건전 재정: 탈세의 문제점과 재정 적자·국채, 미래 세대를 위한 건전 재정 운영을 이해하다'
+    ],
     passage: [
       '우리가 학교에서 공부하고, 도로를 이용하고, 병원에서 치료받을 수 있는 것은 <b>정부</b>가 여러 가지 일을 하기 때문이에요. 그런데 정부가 이런 일을 하려면 돈이 필요하겠지요? 그 돈은 어디서 올까요? 바로 <b>세금</b>이에요. 세금은 국민이 나라에 내는 돈으로, 정부는 이 돈을 모아 공공 서비스에 사용해요. 정부가 세금을 거두고 사용하는 활동을 <b>재정</b>이라고 해요. 세금 덕분에 무료로 학교를 다니고, 경찰이 우리를 지켜 주고, 소방관이 불을 꺼 줄 수 있는 거예요. 정부의 돈 들어오는 것을 <b>세입</b>, 나가는 것을 <b>세출</b>이라고 해요.',
       '세금에는 여러 종류가 있어요. <b>직접세</b>는 세금을 내는 사람이 직접 부담하는 세금이에요. 돈을 벌 때 내는 <b>소득세</b>, 집이나 땅에 내는 <b>재산세</b>, 회사가 이익에 대해 내는 <b>법인세</b>가 직접세예요. <b>간접세</b>는 물건 가격에 포함되어 다른 사람에게 전가되는 세금이에요. 물건을 살 때 내는 <b>부가가치세</b>가 대표적이지요. 또한 소득이 많을수록 세율이 높아지는 것을 <b>누진세</b>라고 해요. 이렇게 하면 부자가 더 많이 내고, 어려운 사람은 적게 내서 공평해져요.',
@@ -1936,6 +2044,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_19: {
     labelNo: '19',
     title: '🏛️ 정부는 왜 경제에 개입할까?',
+    paragraphMain: [
+      '시장 경제와 시장 실패: 공공재 부족과 외부 효과로 시장이 효율적 배분에 실패하는 경우를 이해하다',
+      '정부의 경제 개입: 재정 정책(세금·지출 조절)과 통화 정책(금리·통화량 조절)의 역할을 알아보다',
+      '공정 거래와 소득 재분배: 담합 규제와 복지 정책으로 형평성을 높이는 정부의 역할을 살펴보다',
+      '정부 실패와 균형: 정부 개입의 한계와 시장-정부의 적절한 균형의 중요성을 이해하다'
+    ],
     passage: [
       '시장에서 물건의 가격과 양이 수요와 공급에 의해 자연스럽게 결정되는 것을 <b>시장 경제</b>라고 해요. 시장 경제는 자유로운 경쟁을 통해 효율적으로 자원을 배분해요. 하지만 시장이 모든 것을 잘 해결하지는 못해요. 이것을 <b>시장 실패</b>라고 해요. 예를 들어, 공기나 국방처럼 모두가 함께 사용하지만 돈을 내지 않아도 쓸 수 있는 것은 기업이 만들려 하지 않아요. 이런 <b>공공재</b>는 정부가 제공해야 해요. 또한 공장이 오염 물질을 내뿜으면 주민들이 피해를 입지만, 기업은 이 비용을 지불하지 않아요. 이렇게 시장 거래가 제3자에게 영향을 미치는 것을 <b>외부 효과</b>라고 해요.',
       '시장 실패를 해결하기 위해 정부는 경제에 개입해요. 정부가 경제에 개입하는 방법에는 여러 가지가 있어요. 첫째, <b>재정 정책</b>은 정부가 세금과 지출을 조절하는 것이에요. 경기가 나쁠 때 정부가 지출을 늘리거나 세금을 낮추면 사람들이 돈을 더 쓰게 되어 경기가 살아나요. 둘째, <b>통화 정책</b>은 중앙은행(우리나라는 한국은행)이 돈의 양과 <b>금리</b>를 조절하는 것이에요. 금리가 낮아지면 기업과 개인이 돈을 빌리기 쉬워져서 소비와 투자가 늘어나요.',
@@ -2041,6 +2155,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   deep_pol_20: {
     labelNo: '20',
     title: '🌐 세계는 어떻게 연결되어 있을까?',
+    paragraphMain: [
+      '무역과 비교 우위: 각 나라가 잘 만드는 것에 집중하고 교환하면 모두에게 이익이 되는 원리를 이해하다',
+      '세계화와 FTA: 관세를 낮추는 자유 무역 협정과 세계 무역 기구(WTO)의 역할을 알아보다',
+      '세계화의 명암: 외국인 직접 투자와 문화 교류, 국내 기업 어려움과 경제 위기 전파를 살펴보다',
+      '국제 협력과 세계 시민: 유엔, 파리 협정 등 국제기구의 협력과 세계 시민 의식의 중요성을 이해하다'
+    ],
     passage: [
       '우리가 사용하는 물건 중에는 외국에서 온 것이 많아요. 스마트폰에 들어가는 부품, 먹는 바나나, 입는 옷 등이 그래요. 이렇게 나라와 나라 사이에서 물건을 사고파는 것을 <b>무역</b>이라고 해요. 우리나라에서 만든 물건을 외국에 파는 것을 <b>수출</b>, 외국에서 물건을 사오는 것을 <b>수입</b>이라고 하지요. 무역을 하면 각 나라가 잘 만드는 것에 집중하고, 필요한 것을 서로 교환할 수 있어서 모두에게 이익이 돼요. 이것을 <b>비교 우위</b>의 원리라고 해요. 예를 들어 우리나라는 반도체를 잘 만들고, 베트남은 옷을 저렴하게 만들어요. 서로 잘 만드는 것을 교환하면 둘 다 이득을 볼 수 있어요.',
       '세계 여러 나라는 무역을 더 활발하게 하기 위해 협력해요. 외국 물건에 붙는 세금을 <b>관세</b>라고 하는데, 관세가 높으면 수입품 가격이 비싸져요. 여러 나라가 모여 만든 <b>자유 무역 협정(FTA)</b>은 서로 관세를 낮추거나 없애서 물건을 더 싸게 사고팔 수 있게 해요. 우리나라는 미국, 유럽, 중국 등 많은 나라와 FTA를 맺었어요. 또한 세계 무역의 규칙을 정하는 <b>세계 무역 기구(WTO)</b> 같은 국제기구도 있어요. 이렇게 세계 경제가 하나로 연결되는 것을 <b>세계화</b>라고 해요.',
@@ -2281,46 +2401,97 @@ function applyContentPack(unitKey) {
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
-    passageBox.addEventListener('click', (e) => {
-      const sentenceSpan = e.target.closest('.sentence'); if (!sentenceSpan) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
+
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
+
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
+
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
       if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
-      sentenceSpan.classList.toggle('selected');
-      const allSentences = passageBox.querySelectorAll('.sentence'); const selectedIndices = [];
-      allSentences.forEach((span, idx) => { if (span.classList.contains('selected')) selectedIndices.push(idx); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices)); if (selectedIndices.length === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); }
-      if (selectedIndices.length === allSentences.length && allSentences.length > 0) {
-        const endTime = new Date(); const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'unknown';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
+      const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
+
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+      }
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-        if (!document.getElementById('toast-style')) { const toastStyle = document.createElement('style'); toastStyle.id = 'toast-style'; toastStyle.textContent = `.toast-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 40px; border-radius: 20px; font-size: 22px; font-weight: 700; z-index: 10000; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); text-align: center; } .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); } .toast-message .emoji { font-size: 32px; display: block; margin-bottom: 8px; } .sparkle-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; } .sparkle { position: absolute; top: -20px; animation: sparkle-fall linear forwards; font-size: 24px; } @keyframes sparkle-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`; document.head.appendChild(toastStyle); }
-        const toast = document.createElement('div'); toast.className = 'toast-message'; toast.innerHTML = `<span class="emoji">🎉</span>지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 50); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 4000);
-        const sparkleContainer = document.createElement('div'); sparkleContainer.className = 'sparkle-rain'; document.body.appendChild(sparkleContainer);
-        const emojis = ['⭐', '✨', '🌟', '💫', '🎊', '🎉', '📚', '🐋']; for (let i = 0; i < 40; i++) { setTimeout(() => { const sparkle = document.createElement('div'); sparkle.className = 'sparkle'; sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)]; sparkle.style.left = Math.random() * 100 + 'vw'; sparkle.style.animationDuration = (Math.random() * 2 + 2) + 's'; sparkle.style.fontSize = (Math.random() * 16 + 16) + 'px'; sparkleContainer.appendChild(sparkle); }, i * 60); }
-        setTimeout(() => sparkleContainer.remove(), 4500);
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

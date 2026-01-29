@@ -2069,9 +2069,10 @@ window.REMEDIAL_BANK = {
   <!-- 근거 하이라이트 함수 -->
   <script>
     function clearEvidenceHighlights() {
-      document.querySelectorAll('.evidence-highlight').forEach(el => {
-        const text = el.textContent.replace(/[1-5]번$/, '');
-        el.replaceWith(document.createTextNode(text));
+      const passageTextEl = document.querySelector('.passage-text');
+      if (!passageTextEl) return;
+      passageTextEl.querySelectorAll('.evidence-highlight').forEach(el => {
+        el.outerHTML = el.innerHTML.replace(/<span class="evidence-tag">.*?<\/span>/g, '');
       });
     }
 
@@ -2083,24 +2084,27 @@ window.REMEDIAL_BANK = {
       clearEvidenceHighlights();
       const evidenceSource = content.evidence || content.explain;
       const qLabels = { q1: '1번', q2: '2번', q3: '3번', q4: '4번', q5: '5번' };
-      const paragraphs = passageTextEl.querySelectorAll('p');
+      const qColors = { q1: 'evidence-q1', q2: 'evidence-q2', q3: 'evidence-q3', q4: 'evidence-q4', q5: 'evidence-q5' };
+
       ['q1', 'q2', 'q3', 'q4'].forEach(qKey => {
         const evidenceText = evidenceSource[qKey];
         if (!evidenceText || evidenceText.length < 2) return;
-        paragraphs.forEach(p => {
-          const textContent = p.textContent || p.innerText;
-          if (textContent.includes(evidenceText)) {
-            const originalHTML = p.innerHTML;
-            const idx = originalHTML.indexOf(evidenceText);
-            if (idx !== -1) {
-              const before = originalHTML.substring(0, idx);
-              const match = originalHTML.substring(idx, idx + evidenceText.length);
-              const after = originalHTML.substring(idx + evidenceText.length);
-              p.innerHTML = before + '<span class="evidence-highlight evidence-' + qKey + '">' + match + '<span class="evidence-tag">' + qLabels[qKey] + '</span></span>' + after;
-            }
-          }
+
+        let html = passageTextEl.innerHTML;
+        const escapedText = evidenceText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const flexPattern = escapedText.split('').join('(?:<[^>]*>)*');
+        const regex = new RegExp(flexPattern, 'g');
+
+        html = html.replace(regex, match => {
+          return '<span class="evidence-highlight ' + qColors[qKey] + '">' + match + '<span class="evidence-tag">' + qLabels[qKey] + '</span></span>';
         });
+        passageTextEl.innerHTML = html;
       });
+
+      // 문장 클릭 이벤트 재바인딩
+      if (typeof bindSentenceClicks === 'function') {
+        bindSentenceClicks();
+      }
     }
     window.highlightEvidence = highlightEvidence;
   </script>
@@ -3458,9 +3462,6 @@ async function saveReadingProgress() {
     alert('저장 실패: ' + err.message);
   }
 }
-</script>
-
-
 
   // === 웹툰 힌트 드롭다운 ===
   let webtoonImagesLoaded = false;
@@ -3494,7 +3495,7 @@ async function saveReadingProgress() {
   </script>
 
 <!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
-<script src="./deep_people1_content.js?v=20251206" defer></script>
+<script src="./deep_people1_content.js?v=20260129" defer></script>
   <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Q3, Q4 객관식 렌더링
@@ -3548,49 +3549,6 @@ async function saveReadingProgress() {
   </div>
 </div>
 
-
-<!-- 웹툰힌트 드롭다운 스크립트 -->
-<script>
-let webtoonImagesLoaded = false;
-
-function loadWebtoonImages() {
-  if (webtoonImagesLoaded) return;
-  const images = document.querySelectorAll('#webtoonBody img[data-src]');
-  images.forEach(img => {
-    img.src = img.dataset.src;
-    img.removeAttribute('data-src');
-  });
-  webtoonImagesLoaded = true;
-}
-
-function toggleWebtoonDropdown() {
-  const btn = document.getElementById('webtoonHintBtn');
-  const dropdown = document.getElementById('webtoonDropdown');
-  const isOpening = !dropdown.classList.contains('active');
-
-  btn.classList.toggle('active');
-  dropdown.classList.toggle('active');
-
-  if (isOpening) {
-    loadWebtoonImages();
-  }
-}
-function closeWebtoonDropdown() {
-  const btn = document.getElementById('webtoonHintBtn');
-  const dropdown = document.getElementById('webtoonDropdown');
-  btn.classList.remove('active');
-  dropdown.classList.remove('active');
-}
-document.addEventListener('click', function(e) {
-  const container = document.querySelector('.webtoon-hint-container');
-  if (container && !container.contains(e.target)) {
-    closeWebtoonDropdown();
-  }
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeWebtoonDropdown();
-});
-</script>
 
 </body>
 </html>

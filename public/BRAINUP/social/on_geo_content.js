@@ -43,6 +43,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_01: {
     labelNo: '01',
     title: '🗺️ 지도를 통해 세상을 이해하다',
+    paragraphMain: [
+      '지도의 역할: 세상의 구조와 지리적 특징을 보여주는 정보의 그림',
+      '지도의 종류: 일반도와 주제도로 나뉘어 목적에 맞게 사용됨',
+      '디지털 지도: 스마트폰으로 실시간 길 안내를 받을 수 있음',
+      '지도 읽기의 의미: 지도를 잘 읽는 사람은 세상을 이해하는 사람'
+    ],
     passage: [
       '우리가 낯선 곳을 가거나 여행을 떠날 때 가장 먼저 확인하는 것은 지도예요. 지도는 단순히 길을 찾는 도구가 아니라, 세상의 구조와 사람들의 삶을 한눈에 볼 수 있게 해 주는 정보의 그림이에요. 지도 속에는 산의 높이와 모양, 강의 흐름, 도로와 건물의 위치가 표시되어 있어요. 그래서 지도만 봐도 그 지역의 <b>지리적 특징</b>을 짐작할 수 있지요.',
       '지도는 목적에 따라 여러 종류로 나뉘어요. 산과 강, 도시와 나라의 경계를 보여주는 <b>일반도</b>가 있고, 특정한 정보를 중심으로 만든 <b>주제도</b>가 있어요. 예를 들어 관광 지도는 여행지를 안내하고, 교통 지도는 도로망이나 지하철 노선을 보여 줍니다. <b>기후도</b>나 <b>인구 분포도</b>처럼 한 가지 주제를 깊이 다루는 지도도 있어요.',
@@ -123,6 +129,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_02: {
     labelNo: '02',
     title: '🗺️ 지도에 담긴 약속과 표현',
+    paragraphMain: [
+      '지도의 약속: 기호와 색채, 축척으로 땅의 모습을 표현함',
+      '기호: 산맥, 하천, 도로 등을 약속된 표시로 나타냄',
+      '축척: 실제 거리와 지도 거리의 비율을 나타냄',
+      '방위표와 등고선: 방향과 높이를 표시하는 방법'
+    ],
     passage: [
       '지도는 사람이 복잡한 공간을 이해하기 위해 만든 정보의 표현 도구예요. 현실의 땅을 그대로 그리면 복잡하고 알아보기 어려우므로, 사람들은 기호, 색채, 축척 등의 약속을 정해 땅의 모습을 단순하고 정확하게 표현합니다. 지도를 읽으려면 이런 약속들을 알아야 해요.',
       '지도에는 산맥, 하천, 도로, 건물과 같은 요소가 <b>기호(symbol)</b>로 표시돼요. 이 기호는 누구나 같은 의미로 이해할 수 있도록 정해진 약속이에요. 예를 들어 학교는 특정 모양 그림, 강은 파란색 선, 도로는 굵은 선으로 나타냅니다. 범례를 보면 기호의 의미를 알 수 있어요.',
@@ -213,6 +225,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_03: {
     labelNo: '03',
     title: '🏙️ 우리 고장의 상징과 유래',
+    paragraphMain: [
+      '고장의 구성: 생활시설과 자연환경이 어우러진 공간',
+      '지도 활용: 주요 장소의 위치를 파악할 수 있음',
+      '상징물과 문화유산: 지역의 정체성을 표현하는 것들',
+      '지명의 유래: 옛사람들의 생활과 가치관이 담겨 있음'
+    ],
     passage: [
       '우리가 사는 고장은 여러 장소가 어우러져 만들어진 생활의 공간이에요. 집과 학교, 시장 같은 생활 시설뿐 아니라 산과 강, 공원 같은 자연 환경도 함께 존재합니다. 이 모든 요소가 어우러져 고유한 지역의 모습을 형성해요. 우리 고장에는 특별한 이야기가 담겨 있답니다.',
       '고장을 <b>탐방</b>할 때 지도를 활용하면 주요 장소의 위치를 쉽게 파악할 수 있어요. 지도 속 정보를 실제 모습과 비교해 보면 우리 지역의 구조와 특징을 더 정확히 이해할 수 있습니다. 지도는 단순히 길을 찾는 도구가 아니라 공간의 질서를 이해하게 하는 시각적 약속이에요.',
@@ -293,6 +311,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_04: {
     labelNo: '04',
     title: '🏙️ 우리 동네는 왜 불편할까? 지역 문제 살펴보기',
+    paragraphMain: [
+      '지역 문제의 다양성: 환경과 조건에 따라 다양한 문제 발생',
+      '촌락과 도시 문제: 촌락과 도시는 서로 다른 문제를 가짐',
+      '문제 해결 요청: 주민이 시청이나 구청에 민원으로 알림',
+      '해결 과정: 원인 조사 후 의견을 모아 해결 방안을 결정함'
+    ],
     passage: [
       '우리가 살고 있는 동네에서도 불편함을 느끼는 순간들이 있어요. 버스가 자주 오지 않거나, 새 아파트가 지어졌는데 학교나 공원이 부족한 경우가 있지요. 오래된 건물이 많아 안전 걱정이 생기기도 해요. 지역마다 환경과 조건이 다르기 때문에 겪는 불편도 여러 가지 형태로 나타납니다.',
       '지역의 종류에 따라 겪는 문제도 달라요. <b>촌락</b>에서는 인구가 줄어들고 젊은 사람이 부족해 일손이 모자랄 때가 많아요. 병원이나 약국 같은 의료 시설이 멀리 있어 이용하기 어려운 경우도 있지요. 반대로 <b>도시</b>는 많은 사람이 모여 살다 보니 주택 부족과 <b>교통 혼잡</b> 문제가 생겨요.',
@@ -374,6 +398,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_05: {
     labelNo: '05',
     title: '🌾 시대와 함께 발전하는 시골 마을',
+    paragraphMain: [
+      '촌락의 종류: 농촌, 어촌, 산촌이 자연환경에 따라 형성됨',
+      '촌락별 생업: 각 촌락마다 다른 생업에 종사함',
+      '산촌의 특징: 산 자원을 활용하여 독특한 생활문화를 형성함',
+      '촌락의 변화: 기술 발달과 관광지화로 변화하고 있음'
+    ],
     passage: [
       '<b>촌락</b>은 자연을 활용해 살아가는 사람들이 모여 이루는 작은 마을이에요. 넓은 평야가 있는 곳에서는 농사를 짓는 <b>농촌</b>이 형성되고, 바다 근처에서는 물고기나 해산물을 잡는 <b>어촌</b>이 발달합니다. 산이 많은 지역에서는 숲과 산의 자원을 활용하는 <b>산촌</b>이 자리 잡고 있어요.',
       '이처럼 촌락은 주변 <b>자연환경</b>의 특징에 따라 생활 모습과 생업이 달라져요. 농촌에서는 넓은 논과 밭에서 쌀, 채소, 과일 등을 기르며 농업이 중심이 됩니다. 어촌은 바다 가까이에 위치하여 어업과 <b>양식업</b>이 발달했고, 수산물을 중심으로 생활이 이루어져요.',
@@ -455,6 +485,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_06: {
     labelNo: '06',
     title: '🧭 지구에 주소가 있다고? 위도와 경도의 비밀',
+    paragraphMain: [
+      '위도와 경도의 개념: 지구상 모든 곳의 위치를 나타내는 주소',
+      '위도의 기준: 적도를 기준으로 남북 방향을 나타냄',
+      '경도와 시차: 본초 자오선을 기준으로 동서 방향과 시차를 나타냄',
+      '위도와 경도의 활용: 정확한 위치 파악과 기후, 시간을 연결함'
+    ],
     passage: [
       '지구상의 모든 곳에는 주소가 있어요. 바로 <b>위도</b>와 <b>경도</b>입니다. 위도와 경도는 지구 위의 어떤 지점이라도 정확하게 표현할 수 있는 좌표 체계예요. 마치 바둑판 위에서 가로줄과 세로줄이 만나는 점처럼, 위도와 경도가 만나는 곳이 바로 특정 위치가 됩니다.',
       '<b>위도</b>는 지구의 중심을 가로지르는 가상의 선인 <b>적도</b>를 기준으로 남북 방향 위치를 나타내요. 적도는 위도 0도이고, 북극은 <b>북위</b> 90도, 남극은 <b>남위</b> 90도입니다. <b>경도</b>는 영국 그리니치를 지나는 선인 <b>본초 자오선</b>을 기준으로 동서 방향 위치를 나타내요.',
@@ -535,6 +571,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_07: {
     labelNo: '07',
     title: '🌍 지구의 얼굴, 대륙과 바다 이야기',
+    paragraphMain: [
+      '지구의 구성: 70%가 바다, 30%가 육지로 이루어진 푸른 행성',
+      '6대륙 소개: 아시아, 아프리카, 유럽 등 6개 대륙이 있음',
+      '5대양 소개: 태평양, 대서양, 인도양 등 5개 대양이 있음',
+      '대륙과 해양의 연결: 서로 연결되어 기후와 문화 교류에 영향을 줌'
+    ],
     passage: [
       '지구를 우주에서 바라보면 파란색과 초록색, 갈색이 어우러진 아름다운 행성이에요. 파란색은 <b>해양</b>, 즉 바다이고, 초록색과 갈색은 <b>대륙</b>, 즉 땅입니다. 지구 표면의 약 70%는 바다로 덮여 있고, 나머지 30%만이 육지예요. 그래서 지구를 "푸른 행성"이라고도 부른답니다.',
       '지구의 육지는 크게 6대륙으로 나뉘어요. 가장 큰 대륙은 <b>아시아</b>로, 세계 인구의 절반 이상이 이곳에 살고 있습니다. <b>아프리카</b>는 두 번째로 크며 다양한 야생 동물의 보금자리예요. <b>유럽</b>은 작지만 역사적으로 많은 문화를 발전시켰고, <b>오세아니아</b>는 호주와 태평양의 섬들로 이루어져 있어요.',
@@ -615,6 +657,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_08: {
     labelNo: '08',
     title: '🇰🇷 우리나라는 어디에 있을까? 한반도의 위치',
+    paragraphMain: [
+      '한반도의 지리적 위치: 동북아시아 중심에서 대륙과 해양을 연결함',
+      '삼면의 바다: 동해, 서해, 남해가 각각 다른 특징을 가짐',
+      '영역의 개념: 영토, 영해, 영공으로 이루어진 주권이 미치는 공간',
+      '배타적 경제 수역: 200해리까지 자원을 독점할 수 있는 권리'
+    ],
     passage: [
       '우리나라는 아시아 대륙의 동쪽 끝, <b>한반도</b>에 자리 잡고 있어요. 한반도는 북쪽으로 중국, 러시아와 국경을 맞대고 있고, 동쪽으로는 일본과 바다를 사이에 두고 마주하고 있습니다. 이처럼 한반도는 <b>동북아시아</b>의 중심에 있어서 예로부터 대륙과 해양을 연결하는 다리 역할을 해 왔어요.',
       '한반도는 삼면이 바다로 둘러싸인 <b>반도</b> 지형이에요. 동쪽에는 동해, 서쪽에는 서해(황해), 남쪽에는 남해가 있어요. 동해는 수심이 깊고 해안선이 단조로우며, 서해는 수심이 얕고 <b>조수 간만의 차</b>가 커서 넓은 갯벌이 발달했습니다. 남해는 섬이 많고 해안선이 복잡해요.',
@@ -695,6 +743,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_09: {
     labelNo: '09',
     title: '🏔️ 백두산에서 한라산까지, 국토 여행',
+    paragraphMain: [
+      '국토의 지형 특성: 70%가 산지이며 동고서저 지형임',
+      '한강과 낙동강: 태백에서 발원하여 서해와 남해로 흐름',
+      '다양한 지형: 분지, 해안 등 다양한 지형이 있음',
+      '화산섬 제주도: 화산 활동으로 형성된 섬'
+    ],
     passage: [
       '우리나라의 국토는 북쪽 끝 백두산에서 시작해 남쪽 끝 한라산까지 약 1,100km에 이르러요. 국토의 약 70%가 산지로 이루어져 있고, 높은 산들은 주로 동쪽에 몰려 있습니다. 이렇게 동쪽이 높고 서쪽이 낮은 지형을 <b>동고서저</b>라고 해요. 서쪽으로는 완만한 구릉과 넓은 <b>평야</b>가 펼쳐져 있어요.',
       '우리나라의 큰 강들은 대부분 동쪽의 높은 산에서 발원해 서쪽이나 남쪽 바다로 흘러가요. <b>한강</b>은 태백에서 시작해 서울을 지나 서해로 흘러갑니다. <b>낙동강</b>은 태백에서 시작해 부산으로 흘러 남해로 빠져요. 강 유역에는 넓은 <b>충적 평야</b>가 발달해 예로부터 벼농사가 활발했어요.',
@@ -775,6 +829,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_10: {
     labelNo: '10',
     title: '☀️ 왜 제주도는 서울보다 따뜻할까?',
+    paragraphMain: [
+      '위도와 기후 관계: 위도에 따라 태양빛의 양이 달라 기후가 다름',
+      '고도와 해양의 영향: 고도와 바다 거리가 기후에 영향을 줌',
+      '해양성과 대륙성 기후: 바다와의 거리에 따라 기후 특성이 다름',
+      '기후와 생활 문화: 기후가 농업과 생활에 영향을 줌'
+    ],
     passage: [
       '겨울에 서울에서는 눈이 펑펑 내리는데, 같은 시기 제주도에서는 유채꽃이 피기도 해요. 왜 이런 차이가 생길까요? 그 비밀은 바로 <b>위도</b>와 <b>기후</b>에 있어요. 지구는 둥글기 때문에 위도에 따라 태양 빛을 받는 양이 달라집니다. <b>적도</b> 근처는 태양 빛을 수직에 가깝게 받아 연중 덥고, <b>고위도</b> 지역은 비스듬히 받아 추워요.',
       '우리나라는 <b>중위도</b>에 위치해 사계절이 뚜렷해요. 하지만 같은 나라 안에서도 남쪽이 북쪽보다 따뜻합니다. 위도 외에도 <b>해발 고도</b>와 <b>해양의 영향</b>이 기온을 좌우해요. 고도가 100m 높아질 때마다 기온이 약 0.6℃씩 낮아져서 한여름에도 산꼭대기는 서늘해요.',
@@ -856,6 +916,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_11: {
     labelNo: '11',
     title: '🏙️ 도시는 왜 커질까? 도시화의 빛과 그림자',
+    paragraphMain: [
+      '도시화의 개념과 원인: 산업화로 인구가 도시로 집중되는 현상',
+      '도시화의 장단점: 편의시설이 많지만 교통체증과 환경오염 문제 발생',
+      '열섬 현상과 이촌향도: 도시 기온 상승과 농촌 인구 감소 현상',
+      '균형 발전의 필요성: 도시와 농촌의 조화로운 발전이 필요함'
+    ],
     passage: [
       '전 세계 인구의 절반 이상이 도시에 살고 있어요. 예전에는 대부분의 사람들이 농촌에서 농사를 지으며 살았지만, <b>산업화</b>가 진행되면서 공장이 들어서고 일자리가 생긴 도시로 사람들이 모여들기 시작했어요. 이렇게 도시에 인구가 집중되고 확대되는 현상을 <b>도시화</b>라고 합니다.',
       '우리나라도 1960년대 이후 빠르게 도시화가 진행되어 전체 인구의 약 90%가 도시에 살아요. 도시에는 학교, 병원, 문화 시설이 많고 다양한 직업을 선택할 수 있어요. 하지만 인구가 너무 많이 모이면 <b>교통 체증</b>, <b>주택 부족</b>, <b>환경 오염</b> 같은 문제가 생깁니다.',
@@ -937,6 +1003,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_12: {
     labelNo: '12',
     title: '👨‍👩‍👧‍👦 인구 이동, 사람들은 왜 움직일까?',
+    paragraphMain: [
+      '인구 이동의 개념과 요인: 배출 요인과 흡인 요인에 의해 발생함',
+      '인구 이동의 유형: 이촌향도와 귀농·귀촌 등 국내 이동',
+      '국제 이동과 인구 공동화: 이민과 난민 등 국가 간 이동',
+      '인구 과밀과 정책: 인구의 균형 있는 분포를 위한 정책 필요'
+    ],
     passage: [
       '사람들은 왜 고향을 떠나 다른 곳으로 이동할까요? <b>인구 이동</b>은 사람들이 살던 곳을 떠나 다른 지역으로 옮겨 가는 것을 말해요. 인구 이동에는 <b>배출 요인</b>과 <b>흡인 요인</b>이 있어요. 배출 요인은 현재 지역에서 밀어내는 힘이고, 흡인 요인은 다른 지역이 끌어당기는 힘이에요.',
       '인구 이동은 국내 이동과 국제 이동으로 나눌 수 있어요. 국내 이동의 대표적인 예가 바로 <b>이촌향도</b>예요. 산업화 시기에 농촌 사람들이 일자리를 찾아 도시로 이동했지요. 반대로 최근에는 <b>귀농·귀촌</b> 현상도 나타나요. 도시의 복잡함에서 벗어나 농촌으로 돌아가는 거예요.',
@@ -1018,6 +1090,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_13: {
     labelNo: '13',
     title: '🚄 세계는 하나로, 교통과 통신의 발달',
+    paragraphMain: [
+      '교통의 발달: 육상, 해상, 항공 교통으로 이동 시간 단축',
+      '통신과 정보화 사회: 인터넷으로 실시간 소통하는 정보화 사회',
+      '세계화의 진행: 국경이 낮아지고 문화 교류가 활발해짐',
+      '세계화의 문제와 정체성: 지역 고유 문화 보존과 존중 필요'
+    ],
     passage: [
       '옛날에는 서울에서 부산까지 가는 데 며칠씩 걸렸지만, 지금은 KTX로 2시간 반이면 충분해요. 이처럼 <b>교통</b>의 발달은 우리의 이동 시간을 크게 줄여 주었어요. 교통수단에는 도로와 철도를 이용하는 <b>육상 교통</b>, 배를 이용하는 <b>해상 교통</b>, 비행기를 이용하는 <b>항공 교통</b>이 있어요.',
       '<b>통신</b>의 발달도 세상을 크게 바꾸었어요. 과거에는 편지 답장을 받기까지 며칠이 걸렸지만, 지금은 스마트폰으로 즉시 연락할 수 있어요. <b>인터넷</b>을 통해 전 세계 사람들과 실시간으로 소통하고, 원하는 정보를 바로 검색할 수 있지요. 이런 사회를 <b>정보화 사회</b>라고 합니다.',
@@ -1099,6 +1177,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_14: {
     labelNo: '14',
     title: '🗺️ 지도 속 보물찾기, 지리 정보 기술',
+    paragraphMain: [
+      '지리 정보 기술과 GPS: 인공위성으로 현재 위치를 확인함',
+      'GIS의 개념과 활용: 지리 정보를 컴퓨터로 저장하고 분석함',
+      '원격 탐사의 활용: 위성으로 멀리서 지표면 정보를 얻음',
+      '스마트 시티와 미래: 정보 기술로 도시를 효율적으로 운영'
+    ],
     passage: [
       '스마트폰으로 길을 찾거나 맛집을 검색해 본 적 있나요? 이런 일들은 모두 <b>지리 정보 기술</b> 덕분에 가능해요. 지리 정보 기술이란 위치와 관련된 정보를 수집하고, 분석하고, 활용하는 기술을 말해요. 대표적인 것이 <b>GPS</b>(위성 위치 확인 시스템)예요. GPS는 인공위성을 이용해 현재 위치를 정확하게 알려 줍니다.',
       '<b>GIS</b>(지리 정보 시스템)는 다양한 지리 정보를 컴퓨터로 저장하고 분석하는 시스템이에요. 인구 분포, 토지 이용, 도로망 등의 정보를 지도 위에 겹쳐서 보여 줄 수 있어요. 도시 계획을 세우거나 재해 대비 계획을 만들 때 GIS가 큰 도움이 됩니다. 자동차 내비게이션과 지도 앱도 이런 기술을 활용해요.',
@@ -1179,6 +1263,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_15: {
     labelNo: '15',
     title: '⛽ 자원은 어디에? 에너지와 자원의 분포',
+    paragraphMain: [
+      '에너지 자원과 화석 연료: 석유, 석탄, 천연가스는 비재생 자원',
+      '에너지 자원의 세계 분포: 자원이 특정 지역에 집중되어 있음',
+      '에너지 안보와 재생 에너지: 태양광, 풍력 등 무한히 얻을 수 있는 에너지',
+      '재생 에너지의 장점: 친환경적이고 지속 가능한 에너지원'
+    ],
     passage: [
       '우리가 일상에서 사용하는 전기, 난방, 자동차 연료는 모두 <b>에너지 자원</b>에서 나와요. 대표적인 것이 <b>석유</b>, <b>석탄</b>, <b>천연가스</b>예요. 이들은 수억 년 전 생물의 유해가 땅속에서 변해 만들어진 것이라 <b>화석 연료</b>라고 불러요. 화석 연료는 다시 만들어지지 않는 <b>비재생 자원</b>이에요.',
       '자원은 세계 각지에 골고루 분포하지 않아요. 석유는 중동의 사우디아라비아, 이란 등에 많이 묻혀 있고, 석탄은 중국, 미국, 인도 등에 풍부해요. 천연가스는 러시아, 이란, 카타르 등에 많아요. 자원이 특정 지역에 집중되어 있어서 국가 간 갈등이 생기기도 합니다.',
@@ -1258,6 +1348,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_16: {
     labelNo: '16',
     title: '⚡ 석유가 사라진다면? 에너지의 미래',
+    paragraphMain: [
+      '화석 연료의 개념: 오래전 생물이 변해 만들어진 고갈성 자원',
+      '화석 연료의 문제점: 고갈 위험과 지구 온난화를 일으킴',
+      '신재생 에너지의 종류: 태양광, 풍력, 수력, 지열 등',
+      '신재생 에너지의 장점: 환경을 오염시키지 않는 깨끗한 에너지'
+    ],
     passage: [
       '오늘날 우리가 사용하는 에너지의 대부분은 <b>화석 연료</b>에서 나와요. <b>석유</b>, <b>석탄</b>, <b>천연가스</b>는 수억 년 전 생물의 사체가 땅속에 묻혀 오랜 시간 열과 압력을 받아 만들어진 것입니다. 화석 연료는 자동차를 움직이고, 공장을 돌리며, 전기를 만들어요. 그러나 다시 만들어지기까지 수억 년이 걸리는 <b>고갈성 자원</b>이에요.',
       '문제는 화석 연료가 빠르게 줄어들고 있다는 것이에요. 전문가들은 현재 속도로 사용하면 석유는 약 50년, 천연가스는 약 60년 후면 바닥날 것으로 예측해요. 게다가 화석 연료를 태우면 <b>이산화 탄소</b>가 나와 지구 온난화를 일으킵니다. 대기 오염과 미세먼지의 주요 원인도 화석 연료예요.',
@@ -1337,6 +1433,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_17: {
     labelNo: '17',
     title: '🐟 바다는 무한한 보물창고일까?',
+    paragraphMain: [
+      '바다의 수산 자원: 물고기, 조개, 해조류 등 식량 제공',
+      '수산업과 해양 개발: 어업, 양식업, 해저 자원 개발 활동',
+      '해양 환경 문제: 남획과 해양 오염으로 바다가 위협받음',
+      '바다 자원 보호: 지속 가능한 이용을 위한 보호 필요'
+    ],
     passage: [
       '바다는 지구 표면의 약 70%를 덮고 있는 거대한 공간이에요. 바다에는 물고기, 조개, 해조류 등 다양한 <b>수산 자원</b>이 살고 있어 인류에게 중요한 식량을 제공합니다. 한류와 난류가 만나는 <b>조경 수역</b>은 물고기의 먹이가 풍부해 좋은 어장이 돼요. 바닷속에는 <b>해저 자원</b>도 매장되어 있습니다.',
       '인류는 오래전부터 <b>수산업</b>을 통해 바다의 혜택을 누려 왔어요. 연근해에서 물고기를 잡는 <b>어업</b>, 양식장에서 물고기나 해조류를 키우는 <b>양식업</b> 등 다양한 활동이 이루어집니다. 최근에는 바다 밑의 석유와 가스를 캐내는 <b>해양 개발</b>도 활발해지고 있어요. 바다는 물류 운송의 중요한 통로이기도 해요.',
@@ -1416,6 +1518,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_18: {
     labelNo: '18',
     title: '🌋 땅이 흔들리고 하늘이 무너질 때',
+    paragraphMain: [
+      '지진과 화산의 원인: 판의 경계에서 지진과 화산 발생',
+      '기상 관련 자연재해: 태풍, 홍수, 가뭄, 쓰나미 등',
+      '자연재해 대비와 방재: 내진 설계와 재해 예보로 피해 감소',
+      '평소의 준비: 대피 훈련과 비상용품 준비가 중요함'
+    ],
     passage: [
       '지구는 여러 개의 거대한 <b>판</b>으로 이루어져 있고, 이 판들이 천천히 움직이면서 충돌하거나 멀어져요. 판과 판이 만나는 경계에서는 <b>지진</b>과 <b>화산</b> 활동이 자주 일어납니다. 지진은 땅속의 에너지가 방출되면서 땅이 흔들리는 현상이고, 화산은 땅속의 뜨거운 <b>마그마</b>가 지표로 분출되는 것이에요.',
       '자연재해는 이것만이 아니에요. <b>태풍</b>은 열대 바다에서 발생해 강한 바람과 많은 비를 몰고 옵니다. <b>홍수</b>는 폭우로 강물이 넘치는 것이고, <b>가뭄</b>은 오랫동안 비가 오지 않아 물이 부족해지는 현상이에요. <b>쓰나미</b>는 해저 지진으로 발생한 거대한 파도가 해안을 덮치는 재해예요.',
@@ -1495,6 +1603,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_19: {
     labelNo: '19',
     title: '🌐 전 세계가 이웃이 된 시대, 세계화',
+    paragraphMain: [
+      '세계화의 개념: 교통과 통신 발달로 세계가 하나로 연결됨',
+      '세계화의 장단점과 지역화: 문화 교류 증가와 지역화 움직임',
+      '다문화 사회와 이주민: 다양한 문화를 가진 사람들이 함께 삶',
+      '문화 다양성 존중: 다름을 인정하고 존중하는 자세 필요'
+    ],
     passage: [
       '오늘날 우리는 미국 영화를 보고, 일본 애니메이션을 즐기며, 베트남 쌀국수를 먹어요. 교통과 통신의 발달로 세계가 하나로 연결되는 <b>세계화</b>가 빠르게 진행되고 있습니다. <b>다국적 기업</b>은 여러 나라에서 물건을 만들고 판매하며, 인터넷으로 전 세계 뉴스를 실시간으로 볼 수 있어요.',
       '세계화는 좋은 점도 있지만 문제점도 있어요. 물건과 정보가 쉽게 이동하면서 경제가 성장하고 문화 교류가 늘어났습니다. 하지만 강한 나라의 문화가 약한 나라의 문화를 밀어내는 <b>문화 획일화</b> 문제도 생겼어요. 이에 맞서 자기 지역의 고유한 문화를 지키려는 <b>지역화</b> 움직임도 일어나고 있어요.',
@@ -1574,6 +1688,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_geo_20: {
     labelNo: '20',
     title: '🌏 100년 후에도 살 수 있을까? 지구의 미래',
+    paragraphMain: [
+      '환경 문제의 심각성: 지구 온난화와 환경 오염이 심각함',
+      '국제 협력과 지속 가능 발전: SDGs와 파리 기후 협약 추진',
+      '개인 실천 방안: 다회용품 사용과 재활용으로 환경 보호',
+      '행동 촉구: 작은 실천이 모여 큰 변화를 만듦'
+    ],
     passage: [
       '지구가 점점 아파하고 있어요. 공장과 자동차에서 나오는 <b>온실가스</b>로 지구 기온이 올라가는 <b>지구 온난화</b>가 심해지고 있습니다. 북극의 빙하가 녹아 해수면이 높아지고, 이상 기후로 홍수와 가뭄이 자주 발생해요. 플라스틱 쓰레기는 바다를 오염시키고, 숲이 사라지면서 많은 동식물이 <b>멸종</b> 위기에 처해 있어요.',
       '이런 <b>환경 문제</b>를 해결하기 위해 전 세계가 힘을 모으고 있어요. 유엔(UN)은 <b>지속 가능 발전 목표(SDGs)</b>를 정해 빈곤 퇴치, 기후 행동 등 17가지 목표를 세웠습니다. <b>파리 기후 협약</b>에서는 각 나라가 온실가스를 줄이기로 약속했어요. <b>지속 가능한 발전</b>은 미래 세대의 자원과 환경을 지키는 발전이에요.',
@@ -1870,93 +1990,97 @@ function applyContentPack(unitKey) {
       return `${minutes}분 ${seconds}초`;
     };
 
-    // 문장 클릭 시 선택 유지
-    passageBox.addEventListener('click', (e) => {
-      const sentence = e.target.closest('.sentence');
-      if (!sentence) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
-      // 첫 클릭 시 시작 시간 기록
-      if (!readingStartTime) {
-        readingStartTime = new Date();
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
-      }
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
 
-      sentence.classList.toggle('selected');
-      saveSelection();
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
 
-      // 모든 문장 선택 완료 시 축하
-      const total = passageBox.querySelectorAll('.sentence').length;
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
-      if (selected === 0) {
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = '00';
-        if (secInput) secInput.value = '00';
-        readingStartTime = null;
-        localStorage.removeItem(timeKey);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
       }
-      if (total > 0 && total === selected) {
-        // 완료 시간 기록
-        const endTime = new Date();
-        const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({
-          start: readingStartTime.toISOString(),
-          end: endTime.toISOString(),
-          duration: duration
-        }));
-
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'on_geo_01';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const minutes = Math.floor(duration / 60000);
-        const seconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(minutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(seconds).padStart(2, '0');
-
-        const toast = document.createElement('div');
-        toast.className = 'complete-toast';
-        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
-          <div style="font-size:14px;color:#666;line-height:1.6;">
-            <div>시작: ${formatDateTime(readingStartTime)}</div>
-            <div>완료: ${formatDateTime(endTime)}</div>
-            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
-          </div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-
-        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
-        const shapes = ['●','★','◆','♥','✦'];
-        for (let i = 0; i < 60; i++) {
-          const sparkle = document.createElement('div');
-          sparkle.className = 'sparkle-rain';
-          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-          sparkle.style.left = Math.random() * 100 + 'vw';
-          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
-          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
-          document.body.appendChild(sparkle);
-          setTimeout(() => sparkle.remove(), 3500);
-        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

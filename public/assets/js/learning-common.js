@@ -2179,11 +2179,21 @@
         inputs: {
           q1: q1 ? q1.value : '',
           q2: q2 ? q2.value : '',
-          q3_1: document.getElementById("q3-1").value,
-          q3_2: document.getElementById("q3-2").value,
-          q4_1: document.getElementById("q4-1").value,
-          q4_2: document.getElementById("q4-2").value,
-          q5: document.getElementById("q5").value
+          // 객관식 q3, q4 라디오 버튼 값 저장
+          q3: (function() {
+            const q3Radio = document.querySelector('input[name="q3"]:checked');
+            return q3Radio ? q3Radio.value : '';
+          })(),
+          q4: (function() {
+            const q4Radio = document.querySelector('input[name="q4"]:checked');
+            return q4Radio ? q4Radio.value : '';
+          })(),
+          // 빈칸형 q3, q4 텍스트 입력 값 저장
+          q3_1: document.getElementById("q3-1")?.value || '',
+          q3_2: document.getElementById("q3-2")?.value || '',
+          q4_1: document.getElementById("q4-1")?.value || '',
+          q4_2: document.getElementById("q4-2")?.value || '',
+          q5: document.getElementById("q5")?.value || ''
         },
         resultHTML: fullResultHTML
       };

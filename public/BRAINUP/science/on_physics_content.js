@@ -44,6 +44,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_01: {
     labelNo: '01',
     title: '💪 힘, 세상을 움직이는 보이지 않는 손',
+    paragraphMain: [
+      '힘의 정의: 물체의 모양이나 움직임을 바꾸는 것, 눈에 보이지 않지만 항상 작용',
+      '힘의 작용: 공 찌그러뜨림·굴러감, 힘 크기에 따라 영향 다름, 방향에 따라 움직임 달라짐',
+      '중력과 마찰력: 땅에 서 있고 걸을 수 있는 이유, 얼음이 미끄러운 건 마찰력이 작아서',
+      '여러 힘: 탄성력(고무줄), 전기력(전기 띤 물체), 자기력(자석), 생활 곳곳에서 작용'
+    ],
     passage: [
       '옛날 그리스 신화에 나오는 헤라클레스는 힘이 아주 셌어요. 무거운 괴물을 번쩍 들고, 괴물들이 몰려와도 손으로 밀어 버렸지요. 이처럼 무언가의 모양이나 움직임을 바꾸는 것을 과학에서는 "<b>힘</b>이 작용한다"라고 해요. 힘은 눈에 보이지 않지만 우리 주변 곳곳에서 항상 작용하고 있습니다.',
       '공을 손으로 눌러 찌그러뜨리면 공의 모양이 바뀌어요. 멈춰 있던 공을 발로 차면 굴러가지요. 이것은 모두 힘이 하는 일이에요. 힘이 물체에 작용하면 물체의 모양이 변하거나 움직임이 달라집니다. 힘의 크기가 클수록 물체에 미치는 영향도 크고, 힘의 방향에 따라 물체가 움직이는 방향도 달라져요.',
@@ -125,6 +131,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_02: {
     labelNo: '02',
     title: '🌍 사과가 떨어진 이유, 중력의 발견',
+    paragraphMain: [
+      '중력: 지구가 물체를 중심으로 끌어당기는 힘, 사과·공이 떨어지는 이유',
+      '우주에서의 중력: 달이 지구, 지구가 태양 주위를 도는 것도 중력으로 궤도 따라 끌어당김',
+      '조석 현상: 달의 중력이 바닷물 끌어당김, 하루 두 번 밀물·썰물 발생',
+      '만유인력: 뉴턴이 발견, 모든 질량 가진 물체가 서로 끌어당김, 인공위성·달 탐사 가능'
+    ],
     passage: [
       '우리가 땅 위에 서 있을 수 있는 것은 <b>중력</b> 덕분이에요. 중력은 지구가 모든 물체를 자신의 중심으로 끌어당기는 힘입니다. 사과가 나무에서 떨어지고, 던진 공이 다시 땅으로 내려오는 이유도 모두 중력 때문이에요. 중력은 눈에 보이지 않지만 항상 우리를 지구 표면에 붙들어 두며, <b>지각</b> 위에서 걷고 생활할 수 있게 해 줍니다.',
       '중력은 지구뿐 아니라 우주 전체에서 작용해요. 달이 지구 주위를 돌고, 지구가 태양 주위를 도는 것도 <b>궤도</b>를 따라 서로 끌어당기기 때문입니다. 우주의 모든 천체들은 중력으로 연결되어 있어요. 중력이 없다면 달은 지구에서 멀리 날아가 버리고, 지구도 태양 주위를 돌지 못할 거예요.',
@@ -221,6 +233,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_03: {
     labelNo: '03',
     title: '🌙 달에서는 점프왕! 무게 vs 질량',
+    paragraphMain: [
+      '무게와 중력: 코끼리 무겁고 생쥐 가벼운 이유, 중력 크기와 관련',
+      '장소에 따른 무게 변화: 달에서 60kgf→10kgf, 달 중력이 지구의 1/6이기 때문',
+      '질량의 불변성: 물질의 양, 지구·달·우주정거장 어디서나 항상 같음',
+      '단위: 무게는 N·kgf(힘), 질량은 kg·g(양), 달에서 높이 점프 가능한 이유는 무게 감소'
+    ],
     passage: [
       '코끼리는 아주 무겁고, 생쥐는 손바닥에 올려도 가벼워요. 이렇게 물체가 무겁거나 가볍게 느껴지는 이유는 <b>무게</b>가 다르기 때문이에요. 무게는 지구가 물체를 끌어당기는 <b>힘</b>, 즉 <b>중력</b>의 크기와 관련이 있습니다. 지구는 큰 <b>질량</b>을 가지고 있어 모든 물체를 중심으로 끌어당기고 있어요.',
       '무게는 장소에 따라 달라질 수 있어요. 달이나 화성처럼 <b>중력 세기</b>가 다른 곳에서는 같은 물체라도 무게가 다르게 <b>측정</b>됩니다. 예를 들어 지구에서 60kgf인 사람이 달에서는 약 10kgf밖에 되지 않아요. 달의 중력이 지구의 약 6분의 1이기 때문이지요.',
@@ -303,6 +321,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_04: {
     labelNo: '04',
     title: '⚖️ 시소의 과학, 지렛대와 균형',
+    paragraphMain: [
+      '균형과 수평: 모빌이 기울지 않는 이유, 양쪽 힘이 맞춰진 안정된 상태',
+      '수평의 요소: 받침점·무게·거리, 무게 같으면 같은 거리, 다르면 무거운 것 가까이',
+      '지렛대 원리: 무게×거리의 곱이 같으면 균형, 시소에서 무거운 사람 가까이 앉기',
+      '균형의 활용: 저울(정확한 측정), 크레인(하중), 다리(안정), 반대 힘이 같은 크기로 작용'
+    ],
     passage: [
       '천장에 걸린 모빌은 여러 조각이 다른 모양과 무게를 가지고 있는데도 한쪽으로 기울지 않아요. 각각의 조각이 서로의 힘을 <b>균형</b> 있게 주고받고 있기 때문이에요. 이렇게 어느 한쪽으로도 치우치지 않은 상태를 <b>수평</b>이라고 합니다. 수평은 물체를 잡아 주는 힘과 아래로 끌리는 힘이 맞춰진 안정된 상태예요.',
       '물체가 수평을 이루려면 몇 가지 요소가 필요해요. 첫째는 물체를 지탱하는 <b>받침점</b>, 둘째는 물체의 무게, 셋째는 받침점에서 떨어진 <b>거리</b>입니다. 두 물체의 무게가 같다면 받침점에서 같은 거리에 있어야 균형이 맞아요. 무게가 다르면 무거운 물체는 가까이, 가벼운 물체는 멀리 있어야 해요.',
@@ -385,6 +409,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_05: {
     labelNo: '05',
     title: '🚗 속력, 거리, 시간의 삼각관계',
+    paragraphMain: [
+      '운동의 정의: 시간 지남에 따라 위치가 변하는 현상, 자동차·공·로봇 모두 운동',
+      '기준점과 관찰자: 기준점 기준으로 움직임 판단, 차 안 사람은 풍경이 움직이는 것처럼 느낌',
+      '운동의 세 요소: 기준점(출발점), 방향(어느 쪽), 거리(얼마나 이동)',
+      '속력: 거리÷시간, 같은 거리를 짧은 시간에 이동하면 빠름, 속력·거리·시간은 연결됨'
+    ],
     passage: [
       '과학에서 말하는 \'<b>운동</b>\'은 달리기나 줄넘기와는 다른 의미예요. 과학에서는 물체가 시간이 지남에 따라 위치가 변하는 현상을 운동이라 합니다. 자동차, 공, 로봇처럼 물체가 조금이라도 다른 위치로 옮겨 갔다면 그것은 모두 운동이에요. 운동을 이해하려면 물체가 어디서 어디로, 얼마나 이동했는지 살펴봐야 해요.',
       '운동을 판단하려면 \'<b>기준점</b>\'이 중요해요. 기준점은 물체가 움직였는지 비교하는 위치입니다. 예를 들어 자동차가 집을 기준으로 동쪽 <b>방향</b> 400미터를 이동했다면 운동한 것이에요. 하지만 차 안에 앉은 사람은 풍경이 움직이는 것처럼 느끼죠. 운동은 <b>관찰자</b> 위치에 따라 다르게 보여요.',
@@ -466,6 +496,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_06: {
     labelNo: '06',
     title: '⚡ 전자들의 대이동, 전류와 전압',
+    paragraphMain: [
+      '전류: 전자가 도선 따라 이동, 물이 파이프 흐르듯, 세기는 암페어(A)',
+      '전압: 전자를 밀어주는 힘, 볼트(V) 단위, 건전지 1.5V vs 콘센트 220V(위험)',
+      '저항: 전류 흐름 방해 정도, 옴(Ω) 단위, 가늘거나 길면 저항 증가',
+      '옴의 법칙: V=IR(전압=전류×저항), 적절한 전압·전류 필요, 전압 너무 높으면 전구 타버림'
+    ],
     passage: [
       '스마트폰 충전, 전등, 냉장고 등 우리 생활에는 전기가 꼭 필요해요. 전기의 흐름을 <b>전류</b>라고 합니다. 전류는 전자라는 아주 작은 입자들이 도선을 따라 이동하는 것이에요. 마치 물이 파이프를 따라 흐르듯이 전자들이 전선을 따라 움직이며 전기 에너지를 전달해요. 전류의 세기는 <b>암페어(A)</b>로 나타내요.',
       '전류가 흐르려면 전자를 밀어주는 힘이 필요해요. 이 힘을 <b>전압</b>이라고 합니다. 전압이 높을수록 전류가 더 세게 흘러요. 전압의 단위는 <b>볼트(V)</b>예요. 건전지에 1.5V라고 쓰여 있다면 전자를 밀어내는 힘이 1.5볼트라는 뜻이에요. 가정용 콘센트는 220V로 건전지보다 훨씬 강해서 위험해요.',
@@ -549,6 +585,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_07: {
     labelNo: '07',
     title: '🔌 불이 켜지는 길, 전기 회로',
+    paragraphMain: [
+      '전기 회로 구성: 전원·도선·스위치·전기 기구, 개방 회로(끊김)·폐회로(연결됨)',
+      '회로도: 전기 회로를 기호로 표시, 전지(긴선+짧은선), 전구(원+X), 스위치(열린 문)',
+      '직렬 연결: 한 줄로 이음, 하나 고장 나면 전체 꺼짐, 크리스마스 트리 전구 예시',
+      '병렬 연결: 전구마다 따로 길, 하나 고장 나도 다른 것은 켜짐, 집 전등 방식'
+    ],
     passage: [
       '전기 기구가 작동하려면 전류가 흐를 수 있는 길, 즉 <b>전기 회로</b>가 필요해요. 전기 회로는 전원, 도선, 스위치, 전기 기구로 구성됩니다. 이들이 하나로 연결되어야 전류가 흘러요. 끊어진 회로를 <b>개방 회로</b>, 연결된 회로를 <b>폐회로</b>라고 합니다. 스위치는 회로를 열고 닫아 전류를 조절해요.',
       '전기 회로를 그림으로 나타낼 때는 <b>회로도</b>를 사용해요. 회로도에서는 각 부품을 간단한 기호로 표시합니다. 전지는 긴 선과 짧은 선, 전구는 원 안에 X표, 스위치는 열린 문 모양으로 그려요. 이런 <b>전기 기호</b>를 사용하면 복잡한 회로도 간단하게 표현할 수 있어요.',
@@ -638,6 +680,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_08: {
     labelNo: '08',
     title: '🧲 끌어당기고 밀어내는 자석의 힘',
+    paragraphMain: [
+      '자석의 성질: N극·S극, 같은 극=척력(밀어냄), 다른 극=인력(끌어당김), 쪼개도 양극 생김',
+      '자기장: 자석 주변 힘의 영역, 철가루로 확인, 자기력선은 N극→S극',
+      '자기력선 규칙: 촘촘할수록 자기장 강함, 양 끝(극)에서 가장 강함, 끊기거나 교차 안 함',
+      '지구 자기장: 지구도 거대한 자석, 나침반이 북쪽 가리킴, 태양 해로운 입자 막아줌, 철새 이동'
+    ],
     passage: [
       '<b>자석</b>은 철, 니켈, 코발트 같은 금속을 끌어당기는 물체예요. 자석에는 <b>N극</b>과 <b>S극</b>이 있어요. 같은 극끼리는 서로 밀어내고(<b>척력</b>), 다른 극끼리는 서로 끌어당깁니다(<b>인력</b>). 이런 성질을 <b>자성</b>이라고 해요. 자석을 쪼개도 각 조각에 다시 N극과 S극이 생깁니다.',
       '자석 주변에는 눈에 보이지 않는 힘의 영역이 있는데, 이를 <b>자기장</b>이라고 해요. 자기장의 모습은 철가루를 뿌려서 확인할 수 있습니다. 철가루가 곡선 모양으로 배열되는데, 이 선들을 <b>자기력선</b>이라고 해요. 자기력선은 N극에서 나와 S극으로 들어갑니다.',
@@ -721,6 +769,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_09: {
     labelNo: '09',
     title: '⚡ 자석으로 전기를 만든다! 전자기 유도',
+    paragraphMain: [
+      '전자기 유도: 패러데이 발견, 자기장 변화로 전류 발생, 자석 빠르게+코일 많이 감으면 강한 전류',
+      '발전기: 코일을 자석 사이에서 회전, 수력·화력·풍력 발전소가 발전기 돌림',
+      '전동기(모터): 발전기의 반대, 전기→운동으로 변환, 선풍기·세탁기·전기차에 사용',
+      '변압기: 전압 높이거나 낮춤, 발전소→가정 전기 전달에 필수, 전자기 유도 응용'
+    ],
     passage: [
       '1831년, 영국의 과학자 <b>패러데이</b>는 놀라운 발견을 했어요. 코일 근처에서 자석을 움직이면 전류가 흐른다는 것이었죠. 이처럼 자기장의 변화로 전류가 발생하는 현상을 <b>전자기 유도</b>라고 합니다. 자석을 빠르게 움직일수록, 코일을 많이 감을수록 더 강한 전류가 발생해요.',
       '전자기 유도 원리를 이용한 대표적인 장치가 <b>발전기</b>예요. 발전기는 코일을 자석 사이에서 회전시켜 전류를 만들어냅니다. 수력 발전소는 물의 힘으로, 화력 발전소는 증기의 힘으로, 풍력 발전소는 바람의 힘으로 발전기를 돌려요. 다양한 에너지원이 전기로 바뀌는 것입니다.',
@@ -804,6 +858,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_10: {
     labelNo: '10',
     title: '🌊 출렁이며 퍼져나가는 파동',
+    paragraphMain: [
+      '파동의 정의: 에너지가 퍼져나가는 현상, 물질은 이동 안 함, 마루·골·파장',
+      '파동의 종류: 횡파(수직, 물결·빛), 종파(평행, 소리), 진동수(Hz)=1초에 진동 횟수',
+      '소리: 공기 통해 전달되는 종파, 진동수 클수록 높은 소리, 가청범위 20~20,000Hz',
+      '빛: 진공에서도 전달되는 전자기파, 라디오·TV·자외선·X선 모두 전자기파'
+    ],
     passage: [
       '연못에 돌을 던지면 물결이 퍼져나가요. 이처럼 에너지가 한 곳에서 다른 곳으로 전달되는 현상을 <b>파동</b>이라고 합니다. 파동이 전달될 때 물질은 이동하지 않고 에너지만 이동해요. 파동에서 가장 높은 부분을 <b>마루</b>, 가장 낮은 부분을 <b>골</b>이라 하고, 마루에서 마루까지의 거리를 <b>파장</b>이라고 해요.',
       '파동은 진동 방향에 따라 두 종류로 나뉘어요. <b>횡파</b>는 진동 방향이 진행 방향과 수직인 파동으로, 물결파나 빛이 대표적이에요. <b>종파</b>는 진동 방향이 진행 방향과 같은 파동으로, 소리가 대표적입니다. 파동이 1초에 진동하는 횟수를 <b>진동수</b>라 하고 단위는 Hz예요.',
@@ -889,6 +949,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_11: {
     labelNo: '11',
     title: '💡 거울 속 세상, 빛의 반사',
+    paragraphMain: [
+      '빛의 성질: 광원에서 출발해 직진, 물체 뒤에 그림자 생성',
+      '반사의 법칙: 빛이 물체에 부딪혀 튕겨 나옴, 입사각=반사각, 거울에서 상 보임',
+      '정반사와 난반사: 매끄러운 면→선명한 상, 울퉁불퉁한 면→여러 방향 흩어짐',
+      '반사의 활용: 달은 태양빛 반사, 잠망경·만화경·백미러 모두 반사 원리'
+    ],
     passage: [
       '<b>빛</b>은 우리가 세상을 볼 수 있게 해주는 에너지예요. 빛은 태양이나 전구처럼 스스로 빛을 내는 <b>광원</b>에서 출발해 사방으로 퍼져나갑니다. 빛의 중요한 성질 중 하나는 <b>직진</b>한다는 것이에요. 빛은 똑바로 나아가기 때문에 물체 뒤에 <b>그림자</b>가 생깁니다.',
       '빛이 물체 표면에 부딪히면 튕겨 나오는데, 이를 <b>반사</b>라고 해요. 거울에서 우리 모습을 볼 수 있는 것도 빛의 반사 덕분이에요. 빛이 들어오는 각도인 <b>입사각</b>과 튕겨 나가는 각도인 <b>반사각</b>은 항상 같습니다. 이것을 <b>반사의 법칙</b>이라고 해요.',
@@ -972,6 +1038,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_12: {
     labelNo: '12',
     title: '🔍 물속 다리가 꺾여 보이는 이유',
+    paragraphMain: [
+      '굴절: 빛이 매질 바뀔 때 경로 꺾임, 공기→물에서 속도 느려짐, 빨대 꺾여 보임',
+      '렌즈: 볼록 렌즈(두꺼움, 빛 모음, 초점, 돋보기), 오목 렌즈(얇음, 빛 퍼뜨림, 근시 안경)',
+      '눈의 구조: 수정체(볼록 렌즈 역할)→망막에 상, 두께 조절로 가까운/먼 것 선명히',
+      '시력 교정: 근시=먼 것 흐림(오목), 원시=가까운 것 흐림(볼록), 망원경·현미경도 렌즈 조합'
+    ],
     passage: [
       '빛이 한 매질에서 다른 매질로 들어갈 때 경로가 꺾이는 현상을 <b>굴절</b>이라고 해요. 빛이 공기에서 물로 들어가면 속도가 느려지면서 방향이 바뀝니다. 물속 빨대가 꺾여 보이는 것도 굴절 때문이에요. 매질마다 빛의 속도가 달라 <b>굴절률</b>도 다릅니다.',
       '<b>렌즈</b>는 빛의 굴절을 이용한 도구예요. <b>볼록 렌즈</b>는 가운데가 두꺼워서 빛을 한 점으로 모읍니다. 이 점을 <b>초점</b>이라 해요. 돋보기나 카메라에 볼록 렌즈가 쓰여요. <b>오목 렌즈</b>는 가운데가 얇아서 빛을 퍼뜨립니다. 근시 안경에 오목 렌즈가 들어가요.',
@@ -1055,6 +1127,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_13: {
     labelNo: '13',
     title: '🔊 진동이 만들어낸 소리의 세계',
+    paragraphMain: [
+      '소리의 발생: 물체 진동→음원, 진동이 공기 밀고 당김→음파→귀에 도달',
+      '소리 세 특성: 음높이(진동수, 클수록 높음), 음색(악기마다 다름), 음량(진폭, 클수록 큼)',
+      '메아리: 소리가 벽·산에 부딪혀 되돌아옴, 박쥐·돌고래 초음파 이용, 음파탐지기',
+      '소리 속도: 공기 340m/s, 물 1,500m/s(더 빠름), 진공에서는 전달 안 됨(우주)'
+    ],
     passage: [
       '<b>소리</b>는 물체가 진동할 때 발생해요. 기타 줄을 튕기면 줄이 떨리면서 소리가 나고, 북을 치면 북 표면이 진동하면서 소리가 납니다. 이렇게 진동하는 물체를 <b>음원</b>이라고 해요. 음원의 진동이 공기를 밀고 당기면서 <b>음파</b>가 만들어지고, 귀에 도달하면 소리로 인식됩니다.',
       '소리에는 세 가지 중요한 특성이 있어요. 첫째, <b>음높이</b>는 소리의 높고 낮음으로 진동수가 클수록 높은 소리가 나요. 둘째, <b>음색</b>은 소리의 맵시로 같은 높이라도 악기마다 다른 느낌이 납니다. 셋째, <b>음량</b>은 소리의 크기로 <b>진폭</b>이 클수록 큰 소리가 나요.',
@@ -1138,6 +1216,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_14: {
     labelNo: '14',
     title: '🌡️ 뜨거움의 정체, 열과 온도',
+    paragraphMain: [
+      '온도: 차갑고 뜨거운 정도, 섭씨(℃) 0도=어는점/100도=끓는점, 열팽창 원리로 온도계 작동',
+      '열의 이동: 온도 높은→낮은 곳으로 이동, 커피가 식는 이유, 전도·대류·복사 3가지 방법',
+      '전도와 대류: 전도=물질 통해 전달(냄비 손잡이), 대류=액체·기체 움직임(따뜻한 물 위로)',
+      '복사와 단열재: 복사=물질 없이 전자기파 전달(태양열), 보온병은 전도·대류·복사 모두 차단'
+    ],
     passage: [
       '<b>온도</b>는 물체의 차갑고 뜨거운 정도를 나타내요. 온도 단위는 섭씨(℃)로 물이 어는점이 0℃, 끓는점이 100℃입니다. 온도계는 물질이 온도에 따라 부피가 변하는 <b>열팽창</b> 원리를 이용해요. 온도가 올라가면 알코올이나 수은이 팽창하여 눈금이 올라갑니다.',
       '<b>열</b>은 온도가 다른 두 물체 사이에서 이동하는 에너지예요. 열은 항상 온도가 높은 곳에서 낮은 곳으로 이동합니다. 뜨거운 커피가 식는 것도 커피의 열이 공기로 빠져나가기 때문이에요. 열이 이동하는 방법에는 전도, 대류, 복사 세 가지가 있어요.',
@@ -1221,6 +1305,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_15: {
     labelNo: '15',
     title: '⚡ 에너지는 변할 뿐, 사라지지 않는다',
+    paragraphMain: [
+      '에너지 형태: 일을 할 수 있는 능력, 운동·위치·열·전기·화학 에너지 등',
+      '에너지 전환: 한 형태→다른 형태, 위치→운동(공 떨어짐), 전기→빛(전구), 화학→운동(자동차)',
+      '에너지 보존 법칙: 새로 생기거나 없어지지 않고 형태만 바뀜, 롤러코스터 위치↓=운동↑',
+      '효율: 원하지 않는 형태(열 등)로 바뀌어 100% 안 됨, LED=고효율, 에너지 절약 중요'
+    ],
     passage: [
       '<b>에너지</b>는 일을 할 수 있는 능력이에요. 에너지에는 여러 형태가 있습니다. 움직이는 물체가 가진 <b>운동 에너지</b>, 높은 곳에 있는 물체가 가진 <b>위치 에너지</b>, 뜨거운 물체가 가진 <b>열에너지</b>, 전기의 흐름인 <b>전기 에너지</b>, 음식이나 연료에 저장된 <b>화학 에너지</b> 등이 있어요.',
       '에너지의 놀라운 점은 한 형태에서 다른 형태로 바뀔 수 있다는 거예요. 이를 <b>에너지 전환</b>이라고 합니다. 높은 곳에서 공을 떨어뜨리면 위치 에너지가 운동 에너지로 바뀌어요. 전구는 전기 에너지를 빛에너지로, 자동차 엔진은 화학 에너지를 운동 에너지로 바꿉니다.',
@@ -1304,6 +1394,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_16: {
     labelNo: '16',
     title: '⚛️ 눈에 보이지 않는 작은 세계',
+    paragraphMain: [
+      '원자 구조: 물질의 기본 알갱이, 중심=원자핵(양성자+중성자), 주위를 전자가 돔',
+      '원소와 분자: 양성자 수=원소 종류 결정, 원자 결합→분자(물 H₂O=수소2+산소1)',
+      '결합 방식: 같은 원자도 결합 방식 다르면 성질 다름(흑연=부드러움, 다이아몬드=단단함)',
+      '쿼크와 빈 공간: 양성자·중성자도 쿼크로 구성, 원자 대부분 빈 공간이나 전자 반발력으로 통과 불가'
+    ],
     passage: [
       '모든 물질은 아주 작은 알갱이로 이루어져 있어요. 이 알갱이 중 가장 기본이 되는 것이 <b>원자</b>입니다. 원자의 중심에는 <b>원자핵</b>이 있고, 그 주위를 <b>전자</b>가 돌고 있어요. 원자핵은 양전하를 띤 <b>양성자</b>와 전하가 없는 <b>중성자</b>로 이루어져 있습니다.',
       '양성자의 수에 따라 원소의 종류가 결정돼요. 수소는 양성자가 1개, 산소는 8개, 금은 79개입니다. 원자들이 결합하면 <b>분자</b>가 되어요. 물 분자(H₂O)는 수소 원자 2개와 산소 원자 1개가 결합한 것이에요. 산소 기체(O₂)는 산소 원자 2개가 결합한 분자입니다.',
@@ -1387,6 +1483,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_17: {
     labelNo: '17',
     title: '🎈 배가 뜨고 풍선이 날아오르는 원리',
+    paragraphMain: [
+      '압력: 단위 면적당 힘, 좁은 면적=높은 압력(압정), 단위는 파스칼(Pa)',
+      '수압과 기압: 물속 깊이↑=수압↑(잠수부 귀 아픔), 높은 산=기압↓, 빨대는 기압 차이 이용',
+      '부력: 유체가 물체 위로 밀어 올림, 아르키메데스 원리=밀어낸 유체 무게와 같음',
+      '부력 활용: 철 배가 뜨는 이유=빈 공간 많아 큰 부피→큰 부력, 열기구=뜨거운 공기가 가벼워서'
+    ],
     passage: [
       '<b>압력</b>은 단위 면적에 가해지는 힘이에요. 같은 힘이라도 넓은 면적에 가하면 압력이 작고, 좁은 면적에 가하면 압력이 커요. 압정이 벽에 잘 박히는 이유는 뾰족한 끝에 힘이 집중되기 때문이에요. 압력의 단위는 <b>파스칼(Pa)</b>입니다.',
       '물이나 공기 같은 유체도 압력을 가해요. 물속에서 깊이 내려갈수록 <b>수압</b>이 커집니다. 잠수부가 깊이 내려가면 귀가 아픈 것도 수압 때문이에요. 공기도 무게가 있어서 <b>기압</b>을 만들어요. 높은 산에서는 기압이 낮아지고, 빨대로 음료를 마시는 것도 기압 차이를 이용해요.',
@@ -1470,6 +1572,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_18: {
     labelNo: '18',
     title: '🔌 감전을 피하라! 전기 안전 수칙',
+    paragraphMain: [
+      '감전 위험: 전류가 인체 통과시 심장 마비 가능, 젖은 피부=저항 낮아 위험 증가',
+      '합선과 과부하: 합선=피복 벗겨져 전선끼리 닿음, 과부하=콘센트에 너무 많은 기구→과열→화재',
+      '안전 장치: 퓨즈(과전류시 녹아 끊김), 누전 차단기(전류 누출 감지→자동 차단), 두꺼비집',
+      '접지와 안전수칙: 접지=금속 부분을 땅과 연결(감전 방지), 문어발식 연결 금지'
+    ],
     passage: [
       '전기는 현대 생활에 꼭 필요하지만 잘못 사용하면 위험할 수 있어요. <b>감전</b>은 전류가 인체를 통과할 때 발생하며, 심하면 심장 마비로 이어질 수 있습니다. 특히 젖은 피부는 저항이 낮아져 감전 위험이 커져요. 그래서 젖은 손으로 전기 기구를 만지면 안 됩니다.',
       '전기 화재도 조심해야 해요. <b>합선</b>은 전선의 피복이 벗겨져 전선끼리 닿을 때 발생합니다. 이때 큰 전류가 흐르며 열이 나서 불이 날 수 있어요. <b>과부하</b>는 콘센트에 너무 많은 기구를 연결할 때 생겨요. 전선이 감당 못 할 전류가 흐르면 과열되어 화재가 일어납니다.',
@@ -1553,6 +1661,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_19: {
     labelNo: '19',
     title: '🌟 밤하늘 별빛 속에 담긴 우주',
+    paragraphMain: [
+      '별과 핵융합: 별은 스스로 빛 내는 천체, 태양도 별, 수소→헬륨 핵융합으로 에너지 발생',
+      '별의 색깔: 표면 온도에 따라 결정, 뜨거움=파랑·흰색, 차가움=노랑·빨강, 태양=5,500℃=노랑',
+      '은하: 별들의 거대한 집단, 우리 은하=2,000억 개 별, 우주에 은하 수천억 개 존재',
+      '빅뱅 이론: 138억 년 전 대폭발로 우주 시작, 지금도 계속 팽창 중, 먼 은하일수록 빠르게 멀어짐'
+    ],
     passage: [
       '밤하늘에 반짝이는 <b>별</b>은 스스로 빛을 내는 천체예요. 태양도 별이며, 우리에게 가장 가까운 별입니다. 별이 빛나는 이유는 중심에서 <b>핵융합</b> 반응이 일어나기 때문이에요. 수소 원자핵이 합쳐져 헬륨이 되면서 엄청난 에너지가 나옵니다.',
       '별의 색깔은 <b>표면 온도</b>에 따라 달라요. 뜨거운 별은 파란색이나 흰색, 차가운 별은 노란색이나 빨간색으로 보입니다. 태양은 약 5,500℃로 노란색이에요. 멀리 있는 별은 실제로 밝아도 어둡게 보이고, 가까운 별은 어두워도 밝게 보여요.',
@@ -1636,6 +1750,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_physics_20: {
     labelNo: '20',
     title: '🚀 SF가 현실이 되는 미래 기술',
+    paragraphMain: [
+      '반도체와 레이저: 반도체=전기 전도성 조절(모든 전자기기에), 레이저=빛 집중(의료·통신)',
+      '양자 컴퓨터: 큐비트=0과 1 동시 가능, 복잡한 문제 빠르게 해결, 기존 컴퓨터 초월',
+      '핵융합과 우주 탐사: 핵융합=수소→헬륨(꿈의 에너지, 오염 적음), 재사용 로켓으로 화성 식민지',
+      'AI와 물리학: AI가 물리 법칙 발견·시뮬레이션 수행, 물리학=미래 기술의 원동력'
+    ],
     passage: [
       '물리학의 발전은 첨단 기술의 기반이 됩니다. <b>반도체</b>는 전기가 통하는 정도를 조절할 수 있는 물질로, 스마트폰과 컴퓨터 등 거의 모든 전자 기기에 쓰여요. <b>레이저</b>도 물리학의 산물입니다. 빛을 한 방향으로 모아 강하게 만든 것으로, 의료와 통신에 널리 사용됩니다.',
       '미래에는 <b>양자 컴퓨터</b>가 등장할 거예요. 기존 컴퓨터가 0과 1로 정보를 처리하는 것과 달리, 양자 컴퓨터는 0과 1을 동시에 가질 수 있는 <b>큐비트</b>를 사용합니다. 이를 통해 복잡한 문제를 훨씬 빠르게 풀 수 있어요.',
@@ -1946,93 +2066,97 @@ function applyContentPack(unitKey) {
       return `${minutes}분 ${seconds}초`;
     };
 
-    // 문장 클릭 시 선택 유지
-    passageBox.addEventListener('click', (e) => {
-      const sentence = e.target.closest('.sentence');
-      if (!sentence) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
-      // 첫 클릭 시 시작 시간 기록
-      if (!readingStartTime) {
-        readingStartTime = new Date();
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
-      }
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
 
-      sentence.classList.toggle('selected');
-      saveSelection();
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
 
-      // 모든 문장 선택 완료 시 축하
-      const total = passageBox.querySelectorAll('.sentence').length;
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
-      if (selected === 0) {
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = '00';
-        if (secInput) secInput.value = '00';
-        readingStartTime = null;
-        localStorage.removeItem(timeKey);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
       }
-      if (total > 0 && total === selected) {
-        // 완료 시간 기록
-        const endTime = new Date();
-        const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({
-          start: readingStartTime.toISOString(),
-          end: endTime.toISOString(),
-          duration: duration
-        }));
-
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'on_physics_01';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-
-        const toast = document.createElement('div');
-        toast.className = 'complete-toast';
-        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
-          <div style="font-size:14px;color:#666;line-height:1.6;">
-            <div>시작: ${formatDateTime(readingStartTime)}</div>
-            <div>완료: ${formatDateTime(endTime)}</div>
-            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
-          </div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-
-        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
-        const shapes = ['●','★','◆','♥','✦'];
-        for (let i = 0; i < 60; i++) {
-          const sparkle = document.createElement('div');
-          sparkle.className = 'sparkle-rain';
-          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-          sparkle.style.left = Math.random() * 100 + 'vw';
-          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
-          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
-          document.body.appendChild(sparkle);
-          setTimeout(() => sparkle.remove(), 3500);
-        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

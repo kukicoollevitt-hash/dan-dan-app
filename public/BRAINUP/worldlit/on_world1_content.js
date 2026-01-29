@@ -43,6 +43,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_01: {
     labelNo: '01',
     title: '📚 두려움을 넘어선 새로운 시작',
+    paragraphMain: [
+      '두려움에 사로잡혀 말하고 싶은 것을 표현하지 못했던 나',
+      '도서관에서 「데미안」을 발견하고 변화의 메시지를 받음',
+      '친구 민호에게 고백하고 마음의 짐을 덜게 됨',
+      '낯선 사람에게 먼저 인사하며 두려움을 성장의 시작점으로 받아들임'
+    ],
     passage: [
       '나는 늘 <b>두려움</b>에 사로잡혀 살았어요. 학교에서 발표를 할 때마다 목소리가 떨렸고, 새로운 사람을 만나면 무슨 말을 해야 할지 몰라 <b>망설이다</b> 결국 아무 말도 하지 못했습니다. 친구들은 나를 조용한 아이라고 생각했지만, 사실 나는 속으로 늘 말하고 싶은 것들이 가득했어요.',
       '어느 날, <b>우연히</b> 도서관에서 「데미안」이라는 책을 발견했습니다. 책 속의 주인공 싱클레어는 나처럼 <b>두려움</b>을 안고 살아가다가, 데미안이라는 친구를 만나 조금씩 변해갔어요. 데미안은 싱클레어에게 "새는 알에서 나오려고 투쟁한다"라는 말을 해 주었습니다. 그 말은 마치 나에게도 하는 것 같았어요.',
@@ -123,6 +129,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_02: {
     labelNo: '02',
     title: '🏝️ 섬의 비밀과 소년들의 결심',
+    paragraphMain: [
+      '케이트의 사연 공유와 소년들의 2년간 무인도 생존 이야기',
+      '섬에 숨어있는 무법자들의 위험을 소년들에게 전달',
+      '드니팬 일행과의 갈등, 그들이 위험한 방향으로 떠남',
+      '브리앙이 밤에 드니팬 일행을 데리러 가기로 결심'
+    ],
     passage: [
       '케이트는 자신이 섬에 오게 된 긴 사연을 모두 털어놓았어요. 소년들은 어른 없이 <b>무인도</b>에서 지낸 2년간의 생활을 들려주었습니다. 열다섯 명의 소년이 힘을 모아 살아남은 이야기였어요. 케이트는 어린 나이에 이런 <b>고난</b>을 견뎌냈다는 사실에 눈물을 흘렸습니다.',
       '소년들은 케이트에게 섬 어딘가에 <b>무법자</b>들이 숨어 있다는 사실을 전했어요. <b>반란</b>을 일으킨 윌스턴과 무리들은 배의 선장과 <b>항해사</b>까지 해치고 달아난 사람들이었습니다. 고든과 브리앙은 긴장한 표정으로 말했어요. "저들이 우리 <b>은신처</b>를 찾아내면 큰일이야."',
@@ -203,6 +215,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_03: {
     labelNo: '03',
     title: '🌸 꽃의 요정이 이룬 소원',
+    paragraphMain: [
+      '마야가 여러 곤충들과 함께하며 용감하고 똑똑한 꿀벌로 성장',
+      '인간을 직접 만나보고 싶은 마야의 간절한 바람',
+      '꽃의 요정이 마야의 소원을 이루어줌',
+      '서로 사랑하는 인간의 모습에서 아름다움을 깨달음'
+    ],
     passage: [
       '마야는 이제 더 이상 작고 연약한 어린 꿀벌이 아니었어요. 여러 곤충들과 함께하며 배운 시간은 마야를 단단하게 만들었습니다. 숲 속의 위험한 <b>순간</b>들을 여러 번 이겨 내면서 마야는 용감하고 똑똑한 꿀벌로 <b>성장</b>했어요. 마야는 자신의 경험을 누군가를 위해 사용하고 싶다고 다짐했습니다.',
       '하지만 마야에게는 아직 이루지 못한 바람이 남아 있었어요. 마야는 \'인간\'을 꼭 직접 만나 보고 싶었습니다. 숲에서 들려온 인간에 대한 이야기들은 서로 달라 혼란스러웠지만, 마야는 인간이 <b>고귀한</b> 존재일지도 모른다고 믿었어요. 그래서 인간을 마주할 기회를 <b>간절히</b> 꿈꾸었습니다.',
@@ -284,6 +302,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_04: {
     labelNo: '04',
     title: '🎭 타미노와 파파게노에게 내려진 첫 번째 시험',
+    paragraphMain: [
+      '타미노가 자라스트로의 궁전에서 침묵의 시험을 받게 됨',
+      '타미노와 파파게노의 시험 참여, 밤의 여왕 등장',
+      '밤의 여왕이 파미나에게 자라스트로를 무찌르라고 명령',
+      '자라스트로가 파미나에게 빛의 왕국은 보복을 허락하지 않는다고 조언'
+    ],
     passage: [
       '타미노 왕자는 파미나 공주를 구하려다가 태양의 <b>사제</b> 자라스트로의 궁전에 들어오게 되었어요. 처음에는 자라스트로를 오해했지만, 곧 이곳이 지혜와 빛을 상징하는 세계라는 사실을 알게 되었습니다. 자라스트로는 두 사람의 결혼을 허락하되, 먼저 \'<b>침묵</b>의 <b>시험</b>\'을 통과해야 한다고 제안했어요.',
       '타미노는 흔들림 없이 시험을 받아들였고, 겁 많은 파파게노도 마지못해 참여하게 되었습니다. 타미노가 시험을 견디는 동안 파미나는 깊은 고민에 잠겨 있었어요. 그때 천둥 같은 소리와 함께 어둠을 다스리는 밤의 여왕이 나타났습니다.',
@@ -364,6 +388,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_05: {
     labelNo: '05',
     title: '🦊 어린 왕자와 여우의 특별한 만남',
+    paragraphMain: [
+      '까다로운 장미를 떠나 여행을 시작한 어린 왕자',
+      '지구에서 여우를 만나 길들이기의 의미를 배움',
+      '여우가 마음으로 보는 것이 가장 중요하다는 비밀을 알려줌',
+      '시간을 쏟은 것에 책임을 져야 한다는 깨달음'
+    ],
     passage: [
       '어린 왕자는 자신의 작은 별에서 장미꽃 한 송이를 돌보며 살았어요. 하지만 장미는 까다롭고 <b>허영심</b>이 강해서 어린 왕자를 힘들게 했습니다. 결국 어린 왕자는 다른 별들을 여행하기로 마음먹고 자신의 별을 떠났어요. 여러 별에서 이상한 어른들을 만났지만 점점 외로워졌습니다.',
       '마침내 지구에 도착한 어린 왕자는 사막을 걷다가 한 <b>여우</b>를 만났어요. 여우는 "나를 <b>길들여</b> 줘"라고 부탁했습니다. 어린 왕자가 그 뜻을 묻자 여우는 대답했어요. "길들인다는 건 <b>관계</b>를 맺는 거야. 네가 나를 길들이면, 우린 서로에게 <b>유일한</b> 존재가 되는 거야."',
@@ -443,6 +473,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_06: {
     labelNo: '06',
     title: '🏴‍☠️ 보물 지도를 손에 넣은 소년',
+    paragraphMain: [
+      '여관에 수상한 노인 빌리 본즈(전직 해적)가 찾아옴',
+      '빌리 본즈가 남긴 상자에서 보물 지도를 발견',
+      '보물을 찾아 항해를 떠나고, 롱 존 실버의 음모를 엿듣게 됨',
+      '실버의 반란 계획을 알고 용기 내어 어른들에게 알리기로 결심'
+    ],
     passage: [
       '짐 호킨스는 부모님이 운영하는 작은 <b>여관</b>에서 평범하게 살아가던 소년이었어요. 어느 날, 낡은 옷을 입은 수상한 노인이 찾아왔습니다. 그 노인은 빌리 본즈라는 이름의 전직 <b>해적</b>이었어요. 그는 항상 바다를 바라보며 누군가를 두려워하는 것처럼 보였습니다.',
       '어느 날 밤, 정체를 알 수 없는 사람들이 찾아오자 빌리 본즈는 크게 놀라 세상을 떠났어요. 그가 남긴 낡은 상자 속에서 짐은 놀라운 것을 발견했습니다. 바로 전설적인 <b>해적</b> 플린트 선장이 숨긴 보물의 위치가 표시된 <b>지도</b>였어요.',
@@ -522,6 +558,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_07: {
     labelNo: '07',
     title: '🪵 나무 인형이 사람이 되기까지',
+    paragraphMain: [
+      '제페토 할아버지가 통나무를 깎아 피노키오를 만들고 살아 움직임',
+      '개구쟁이 피노키오가 학교 대신 서커스 구경을 감',
+      '거짓말로 코가 길어지고, 고래 뱃속 할아버지를 구하러 결심',
+      '할아버지를 구출한 피노키오가 진짜 사람이 됨'
+    ],
     passage: [
       '이탈리아의 가난한 <b>목수</b> 제페토 할아버지는 외롭게 혼자 살고 있었어요. 어느 날 이상한 통나무를 발견했는데, 손을 대자마자 까르르 웃었습니다. 제페토는 정성껏 나무를 깎아 귀여운 <b>인형</b>을 만들었어요. 인형이 완성되자 기적처럼 눈을 깜빡이며 살아 움직이기 시작했습니다.',
       '제페토는 이 특별한 인형에게 피노키오라는 이름을 지어주고, 진짜 <b>아들</b>처럼 사랑하기로 했어요. 피노키오는 호기심이 많은 개구쟁이였습니다. 제페토가 <b>외투</b>를 팔아서 사준 교과서를 들고 학교에 가다가, <b>서커스</b> 구경을 가버렸어요.',
@@ -602,6 +644,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_08: {
     labelNo: '08',
     title: '🌪️ 회오리바람을 타고 마법의 나라로',
+    paragraphMain: [
+      '도로시가 회오리바람에 휩쓸려 오즈의 나라에 도착',
+      '노란 벽돌길에서 허수아비, 양철 나무꾼, 겁쟁이 사자를 만남',
+      '위대한 마법사 오즈가 사실 평범한 사람임을 알게 됨',
+      '원하던 것은 이미 가지고 있었음을 깨닫고 캔자스로 귀환'
+    ],
     passage: [
       '캔자스의 넓은 <b>평원</b>에서 살던 소녀 도로시는 어느 날 무시무시한 <b>회오리바람</b>에 휩쓸려 집과 함께 하늘로 날아갔어요. 강아지 토토와 함께 빙글빙글 돌다가 낯선 땅에 도착했습니다. 그곳은 신비로운 오즈의 나라였어요. 착한 북쪽 마녀가 나타나 은색 <b>구두</b>를 선물해 주었습니다.',
       '도로시는 집으로 돌아가려면 위대한 오즈의 마법사를 만나야 했어요. 노란 벽돌길을 따라 <b>에메랄드 시티</b>로 가는 길에 <b>허수아비</b>, <b>양철 나무꾼</b>, 겁쟁이 <b>사자</b>를 만났습니다. 서로 다른 소원을 가진 네 친구는 함께 오즈에게 가기로 했어요.',
@@ -682,6 +730,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_09: {
     labelNo: '09',
     title: '🐰 토끼 굴 속으로 떨어진 소녀',
+    paragraphMain: [
+      '하얀 토끼를 따라 토끼 굴로 뛰어들어 이상한 나라에 도착',
+      '크기 변화와 체셔 고양이, 미친 모자장수 등 이상한 존재들',
+      '하트 여왕의 정원에서 재판에 참석하고 카드 병사들에게 쫓김',
+      '꿈에서 깨어나 모든 것이 꿈이었음을 알게 됨'
+    ],
     passage: [
       '어느 나른한 오후, 소녀 앨리스는 언니 옆에서 졸고 있었어요. 그때 갑자기 하얀 <b>토끼</b>가 회중시계를 들고 "늦었어, 늦었어!"라고 외치며 뛰어갔습니다. 호기심이 많은 앨리스는 토끼를 따라 커다란 <b>토끼 굴</b>로 뛰어들었어요. 끝없이 떨어지다가 도착한 그곳은 <b>이상한 나라</b>였습니다.',
       '앨리스는 신비로운 <b>음료</b>를 마시면 몸이 작아지고, 특별한 <b>과자</b>를 먹으면 엄청나게 커지는 것을 발견했어요. 커졌다 작아졌다를 반복하며 항상 웃는 <b>체셔 고양이</b>와 <b>티 파티</b>를 여는 미친 모자장수를 만났습니다. 모두가 이상한 행동을 해서 앨리스는 점점 혼란스러워졌어요.',
@@ -762,6 +816,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_10: {
     labelNo: '10',
     title: '🐺 늑대에게 키워진 아이',
+    paragraphMain: [
+      '호랑이 시어칸에게 쫓기던 아기가 늑대 가족에게 입양됨',
+      '발루와 바기라의 보증으로 늑대 무리 일원이 되어 정글에서 성장',
+      '인간 마을에서 가져온 불로 시어칸에게 맞서 물리침',
+      '두 세계 사이에서 자신만의 정체성을 찾아감'
+    ],
     passage: [
       '인도의 깊은 <b>정글</b> 속, 어느 날 밤 늑대 가족의 동굴 앞에 작은 아기가 나타났어요. 무서운 <b>호랑이</b> 시어칸에게 쫓기다가 이곳까지 온 것이었습니다. 어미 늑대는 아기를 불쌍히 여겨 자신의 새끼들과 함께 키우기로 했어요. 아기는 모글리라는 이름을 얻었습니다.',
       '곰 <b>발루</b>와 흑표범 <b>바기라</b>가 모글리를 보증해주어 정식으로 늑대 무리의 일원이 되었어요. 모글리는 정글에서 자연의 법칙을 배우며 자라났습니다. 발루에게서는 정글의 규칙을 배웠고, 바기라에게서는 사냥하는 법을 익혔어요. 정글의 동물들이 모글리를 어린 <b>형제</b>로 받아들였습니다.',
@@ -842,6 +902,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_11: {
     labelNo: '11',
     title: '🧚 영원히 어른이 되지 않는 소년',
+    paragraphMain: [
+      '피터 팬이 달링 가족의 세 남매를 네버랜드로 데려감',
+      '잃어버린 아이들과 후크 선장의 복수 위협',
+      '집으로 돌아가려는 아이들을 후크가 붙잡지만 피터 팬이 구출',
+      '웬디와 동생들이 집으로 돌아오고 피터 팬은 네버랜드로 돌아감'
+    ],
     passage: [
       '런던의 달링 가족에게는 웬디, 존, 마이클 세 남매가 있었어요. 어느 날 밤, 신비한 소년 <b>피터 팬</b>이 창문으로 들어왔습니다. 피터 팬은 영원히 어른이 되지 않는 소년으로, 작은 <b>요정</b> 팅커벨과 함께 살고 있었어요. 세 남매는 <b>요정 가루</b>를 뿌리고 하늘을 날아 <b>네버랜드</b>로 떠났습니다.',
       '네버랜드에는 부모 없이 사는 <b>잃어버린 아이들</b>이 피터를 대장으로 따르고 있었어요. 하지만 가장 무서운 것은 <b>갈고리</b>를 달고 있는 해적 선장 후크였습니다. 후크 선장은 예전에 피터 팬에게 손을 잃어서 <b>복수</b>하려고 노렸어요. 웬디는 잃어버린 아이들에게 엄마 역할을 하며 네버랜드 생활을 즐겼습니다.',
@@ -922,6 +988,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_12: {
     labelNo: '12',
     title: '🏝️ 무인도에서 살아남은 사나이',
+    paragraphMain: [
+      '폭풍으로 난파되어 무인도에 홀로 살아남은 로빈슨',
+      '오두막 짓기, 목축, 농사로 생존의 달인이 됨',
+      '식인종에게 쫓기던 원주민을 구해 프라이데이로 이름 지음',
+      '28년 만에 영국 배를 만나 고향으로 귀환'
+    ],
     passage: [
       '영국의 젊은이 로빈슨 크루소는 아버지의 반대를 무릅쓰고 <b>항해</b>를 떠났어요. 하지만 배가 폭풍을 만나 <b>난파</b>되었습니다. 정신을 차려보니 아무도 없는 <b>무인도</b>에 혼자 살아남아 있었어요. 그는 난파된 배에서 <b>도구</b>와 식량을 최대한 건져왔습니다.',
       '로빈슨은 섬에서 혼자 살아가는 법을 익혀갔어요. 나무를 베어 <b>오두막</b>을 짓고, 야생 염소를 길들여 <b>목축</b>을 했습니다. 밀을 심어 농사도 지었어요. 처음에는 외로웠지만 시간이 흐르면서 <b>생존</b>의 달인이 되어갔습니다.',
@@ -1002,6 +1074,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_13: {
     labelNo: '13',
     title: '🔍 거인이 되었다가 난쟁이가 된 사나이',
+    paragraphMain: [
+      '표류 후 소인국 릴리퍼트에서 줄에 묶여 깨어남',
+      '거인국 브로브딩낵에서 구경거리가 됨',
+      '비행섬 라퓨타 등 여러 신기한 나라 여행',
+      '고향 영국 귀환 후 인간의 어리석음을 깨달음'
+    ],
     passage: [
       '배의 <b>의사</b>였던 걸리버는 항해 중 폭풍을 만나 낯선 해변에 표류했어요. 잠에서 깨어보니 온몸이 가는 줄에 묶여 있었습니다. 손가락만 한 크기의 <b>소인</b>들이 둘러싸고 있었어요! 그곳은 <b>릴리퍼트</b>라는 소인국이었습니다.',
       '걸리버는 소인국의 <b>전쟁</b>을 도와주고 불이 난 궁전을 구하기도 했어요. 이후 또 다른 항해에서 <b>브로브딩낵</b>이라는 <b>거인</b>국에 가게 되었습니다. 이곳 사람들은 걸리버보다 열두 배나 컸어요. 어떤 농부가 걸리버를 <b>구경거리</b>로 전시하기도 했습니다.',
@@ -1082,6 +1160,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_14: {
     labelNo: '14',
     title: '🧢 미시시피강가의 말썽꾸러기',
+    paragraphMain: [
+      '말썽꾸러기 톰 소여와 울타리 페인트칠 에피소드',
+      '허클베리 핀과 묘지에서 살인 사건 목격',
+      '무고한 사람 구하기 위해 법정에서 용기 있게 증언',
+      '동굴 탈출과 보물 발견으로 마을 영웅이 됨'
+    ],
     passage: [
       '미국의 작은 마을에 <b>톰 소여</b>라는 소년이 살았어요. 톰은 폴리 <b>이모</b>와 함께 살면서 늘 말썽을 피웠습니다. 어느 토요일, 이모는 벌로 톰에게 긴 <b>울타리</b>를 페인트칠하게 했어요. 톰은 기발한 생각으로 아이들이 대신 칠하게 만들었습니다.',
       '톰에게는 <b>허클베리 핀</b>이라는 친한 친구가 있었어요. 어느 날 밤, 두 소년은 <b>묘지</b>에서 무서운 광경을 목격했습니다. 인디언 조라는 악당이 사람을 죽이는 장면이었어요. 인디언 조는 죄를 다른 사람에게 뒤집어씌우려 했습니다.',
@@ -1162,6 +1246,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_15: {
     labelNo: '15',
     title: '🍎 일곱 난쟁이와 독사과',
+    paragraphMain: [
+      '질투에 눈먼 왕비가 사냥꾼에게 공주를 죽이라고 명령',
+      '착한 사냥꾼 덕에 도망쳐 일곱 난쟁이와 함께 생활',
+      '할머니로 변장한 왕비의 독사과로 깊은 잠에 빠짐',
+      '왕자의 입맞춤으로 마법이 풀려 행복하게 삶'
+    ],
     passage: [
       '옛날 어느 나라에 눈처럼 하얀 피부를 가진 <b>백설공주</b>가 살았어요. 왕비인 <b>새어머니</b>는 매일 마법 <b>거울</b>에게 누가 가장 아름다운지 물었습니다. 백설공주가 자라면서 거울은 공주가 더 아름답다고 말했어요. 질투에 눈이 먼 왕비는 사냥꾼에게 공주를 <b>숲</b>에서 죽이라고 명령했습니다.',
       '하지만 착한 사냥꾼은 공주를 차마 해치지 못하고 도망가게 해주었어요. 백설공주는 숲속에서 일곱 명의 <b>난쟁이</b>들이 사는 집을 발견했습니다. 착한 난쟁이들은 공주를 환영하며 함께 살자고 했어요. 공주는 <b>행복</b>하게 지냈습니다.',
@@ -1242,6 +1332,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_16: {
     labelNo: '16',
     title: '👠 유리구두의 주인을 찾아서',
+    paragraphMain: [
+      '새어머니와 의붓언니에게 구박받는 신데렐라와 무도회 소식',
+      '요정 대모가 마법으로 마차와 드레스를 선물하고 자정 경고',
+      '무도회에서 왕자와 춤추다 자정에 서둘러 달아나며 유리구두 분실',
+      '유리구두로 신데렐라 발견, 왕자와 결혼하여 행복하게 삶'
+    ],
     passage: [
       '착하고 아름다운 소녀 신데렐라는 아버지가 돌아가신 후 <b>새어머니</b>와 두 <b>의붓언니</b>에게 구박을 받으며 살았어요. 집안일을 모두 도맡아 하고 부엌 <b>재</b> 옆에서 잠을 자야 했습니다. 어느 날, 왕자님이 신부를 고르기 위해 <b>무도회</b>를 연다는 소식이 전해졌어요.',
       '의붓언니들은 화려한 드레스를 입고 떠났지만, 신데렐라는 갈 수 없어 혼자 울고 있었어요. 그때 <b>요정 대모</b>가 나타났습니다! 요정은 마법으로 <b>호박</b>을 마차로, 낡은 옷을 드레스로, 그리고 <b>유리구두</b>를 선물해 주었어요. 마법이 <b>자정</b>에 풀린다고 경고했습니다.',
@@ -1322,6 +1418,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_17: {
     labelNo: '17',
     title: '🧜‍♀️ 바다 밑에서 온 공주',
+    paragraphMain: [
+      '물 위로 올라간 인어공주가 왕자를 구하고 사랑에 빠짐',
+      '바다 마녀에게 목소리를 주고 다리를 얻음',
+      '말을 못해 정체를 밝히지 못하고 왕자는 다른 공주와 결혼',
+      '왕자를 해치지 못하고 물거품이 되어 정령으로 승화'
+    ],
     passage: [
       '깊은 <b>바다</b> 밑 아름다운 왕국에 인어공주가 살았어요. 열다섯 살이 되어 물 위로 올라간 인어공주는 <b>배</b> 위에서 멋진 <b>왕자</b>님을 보았습니다. 폭풍이 몰아쳐 배가 가라앉자 인어공주는 왕자님을 구해 해변에 눕혀 놓았어요. 인어공주는 왕자님을 진심으로 <b>사랑</b>하게 되었습니다.',
       '인어공주는 <b>바다 마녀</b>를 찾아갔어요. 마녀는 물고기 <b>꼬리</b>를 다리로 바꿔주는 대신 아름다운 <b>목소리</b>를 가져갔습니다. 왕자님의 사랑을 얻지 못하면 물거품이 된다고 경고했어요. 인어공주는 모든 것을 감수하고 다리를 얻었습니다.',
@@ -1402,6 +1504,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_18: {
     labelNo: '18',
     title: '🌹 백 년 동안 잠든 공주',
+    paragraphMain: [
+      '공주 탄생 축하 잔치에서 초대받지 못한 요정의 저주',
+      '젊은 요정이 저주를 바꾸고, 공주는 물레에 찔려 백 년 잠에 빠짐',
+      '백 년 후 왕자가 가시나무 숲을 지나 잠든 공주에게 도착',
+      '왕자의 입맞춤으로 공주와 성 안 모든 이가 깨어남'
+    ],
     passage: [
       '옛날 어느 왕국에 오랫동안 기다리던 공주가 태어났어요. 왕과 왕비는 기뻐하며 <b>축하 잔치</b>를 열고 <b>요정</b>들을 초대했습니다. 하지만 초대받지 못한 늙은 요정이 화가 나서 끔찍한 <b>저주</b>를 내렸어요. "공주는 열여섯 살에 <b>물레</b>의 바늘에 찔려 죽을 것이다!"',
       '다행히 젊은 요정이 저주를 바꿔서 죽는 대신 백 년 동안 잠들게 했어요. 왕은 모든 물레를 없애라고 명령했습니다. 하지만 열여섯 살이 된 공주는 성 안 <b>탑</b>에서 물레를 만지다가 바늘에 찔려 깊은 잠에 빠졌어요. 젊은 요정은 공주가 깨어났을 때 외롭지 않도록 성 안 모든 사람들까지 함께 잠들게 했습니다.',
@@ -1482,6 +1590,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_19: {
     labelNo: '19',
     title: '🐺 숲속의 무서운 늑대',
+    paragraphMain: [
+      '빨간 모자가 엄마의 당부를 받고 할머니 댁으로 출발',
+      '늑대가 지름길을 알려주는 척하며 속이고 할머니로 변장',
+      '할머니로 변장한 늑대에게 빨간 모자가 당할 뻔함',
+      '사냥꾼이 늑대를 물리치고 구출, 낯선 사람 조심 교훈'
+    ],
     passage: [
       '옛날 어느 마을에 빨간 <b>모자</b>를 쓴 귀여운 소녀가 살았어요. 사람들은 그 소녀를 <b>빨간 모자</b>라고 불렀습니다. 어느 날 엄마가 말했어요. "숲 건너 할머니 댁에 음식을 가져다 드리렴. 절대 낯선 사람과 이야기하면 안 된단다." 빨간 모자는 바구니를 들고 출발했습니다.',
       '숲을 지나가던 빨간 모자 앞에 교활한 <b>늑대</b>가 나타났어요. 늑대는 친절한 척하며 할머니 댁에 간다는 말을 들었습니다. 늑대는 <b>지름길</b>을 알려주는 척하며 빨간 모자를 돌려보냈어요. 그 사이 늑대는 먼저 할머니 댁에 도착해 할머니를 삼키고 <b>변장</b>했습니다.',
@@ -1559,6 +1673,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_20: {
     labelNo: '20',
     title: '🍬 과자로 만든 집',
+    paragraphMain: [
+      '기근으로 새어머니가 아이들을 숲에 버리려 하고 헨젤이 조약돌 준비',
+      '조약돌로 돌아왔지만 두 번째는 빵부스러기가 새에게 먹혀 길 잃음',
+      '과자 집에서 마녀에게 잡혀 헨젤이 우리에 갇힘',
+      '용감한 그레텔이 마녀를 화덕에 밀어 넣고 보물 갖고 귀환'
+    ],
     passage: [
       '옛날 깊은 숲 근처에 가난한 <b>나무꾼</b> 가족이 살았어요. 아버지, 새어머니, 그리고 <b>헨젤</b>과 <b>그레텔</b> 남매가 있었습니다. 어느 해 심한 <b>기근</b>이 들어 먹을 것이 없게 되자, 새어머니는 아이들을 숲에 버리자고 했어요. 헨젤은 밤에 몰래 하얀 <b>조약돌</b>을 주머니에 넣었습니다.',
       '다음 날 아이들을 깊은 숲속으로 데려갔어요. 헨젤은 가는 길에 조약돌을 하나씩 떨어뜨렸습니다. 밤이 되자 달빛에 반짝이는 조약돌을 따라 집으로 돌아올 수 있었어요. 하지만 두 번째로 버려졌을 때는 <b>빵 부스러기</b>를 뿌렸는데, 새들이 다 먹어버렸습니다.',
@@ -1636,6 +1756,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_21: {
     labelNo: '21',
     title: '💇 높은 탑에 갇힌 소녀',
+    paragraphMain: [
+      '남편이 마녀의 정원에서 라푼젤 풀을 훔치다 들켜 아이를 넘기기로 약속',
+      '마녀가 라푼젤을 탑에 가두고 긴 머리카락으로 오르내림',
+      '왕자가 라푼젤을 발견하고 사랑에 빠지지만 마녀에게 들킴',
+      '재회 후 라푼젤의 눈물이 왕자의 눈을 치유하고 행복하게 삶'
+    ],
     passage: [
       '옛날에 한 부부가 아이를 간절히 원했어요. 아내가 이웃집 정원에 있는 <b>라푼젤</b>이라는 풀을 너무 먹고 싶어했습니다. 남편은 몰래 그 풀을 가져왔는데, 정원 주인은 무서운 <b>마녀</b>였어요. 마녀에게 들킨 남편은 태어날 아이를 마녀에게 주겠다고 <b>약속</b>해야 했습니다.',
       '아기가 태어나자 마녀는 아이를 데려가 라푼젤이라 이름 짓고 높은 <b>탑</b>에 가두었어요. 탑에는 작은 창문만 있었습니다. 마녀가 "라푼젤, <b>머리카락</b>을 내려다오!"라고 외치면, 라푼젤이 긴 금빛 머리카락을 내려 마녀가 올라왔어요. 머리카락은 무려 20미터나 되었습니다.',
@@ -1713,6 +1839,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_22: {
     labelNo: '22',
     title: '🌱 하늘까지 자란 콩나무',
+    paragraphMain: [
+      '잭이 소를 마법 콩과 교환하고 어머니가 화나서 콩을 버림',
+      '하늘까지 자란 콩나무를 타고 올라가 구름 위 거인의 성 발견',
+      '거인의 집에서 금화, 황금 알 거위, 하프를 가져오다 쫓김',
+      '도끼로 콩나무를 쓰러뜨려 거인을 물리치고 부자가 됨'
+    ],
     passage: [
       '옛날 어느 마을에 <b>잭</b>이라는 소년이 가난한 어머니와 살았어요. 어느 날 어머니는 유일한 재산인 <b>소</b>를 팔아오라고 했습니다. 잭은 시장으로 가는 길에 이상한 노인을 만났어요. 노인은 소와 신비로운 <b>마법 콩</b>을 바꾸자고 했습니다. 화가 난 어머니는 콩을 창밖으로 던져버렸어요.',
       '다음 날 아침 잭은 깜짝 놀랐어요. 콩이 하늘 끝까지 자란 거대한 <b>콩나무</b>가 되어 있었습니다! 잭은 호기심을 참지 못하고 콩나무를 타고 올라갔어요. 구름 위에는 거대한 <b>성</b>이 있었고, 무시무시한 <b>거인</b>이 살고 있었습니다. 잭은 재빨리 숨었어요.',
@@ -1790,6 +1922,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_23: {
     labelNo: '23',
     title: '🐷 세 마리 아기 돼지',
+    paragraphMain: [
+      '엄마의 독립 권유로 삼 형제가 각자 지푸라기, 나무, 벽돌로 집 짓기',
+      '늑대가 지푸라기집과 나무집을 불어 무너뜨리고 형들이 막내 집으로 도망',
+      '벽돌집은 끄떡없자 늑대가 굴뚝으로 들어가다 가마솥에 빠짐',
+      '삼 형제가 벽돌집에서 함께 살며 열심히 준비하는 것의 중요성 깨달음'
+    ],
     passage: [
       '옛날 어느 농장에 아기 돼지 <b>삼 형제</b>가 엄마 돼지와 함께 살았어요. 어느 날 엄마가 말했습니다. "이제 각자 <b>집</b>을 짓고 독립해서 살아라." 첫째 돼지는 <b>지푸라기</b>로 대충 집을 지었어요. 둘째 돼지도 <b>나무</b>로 집을 지었습니다. 하지만 막내 돼지만은 단단한 <b>벽돌</b>로 집을 지었어요.',
       '어느 날 배고픈 <b>늑대</b>가 나타났어요. 늑대가 크게 불자 지푸라기 집은 순식간에 날아갔습니다. 첫째는 둘째 집으로 도망쳤어요. 늑대가 또 불자 나무 집도 무너져 버렸습니다. 두 형은 막내 집으로 필사적으로 도망갔어요.',
@@ -1867,6 +2005,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_24: {
     labelNo: '24',
     title: '🦢 아름다운 백조가 된 오리',
+    paragraphMain: [
+      '다르게 생긴 새끼가 태어나 농장에서 놀림받음',
+      '슬퍼서 농장을 떠나 방랑하며 어디서든 놀림받음',
+      '겨울에 얼어 죽을 뻔하고 농부에게 구조되어 성장',
+      '봄에 호수에 비친 자신이 아름다운 백조임을 발견'
+    ],
     passage: [
       '어느 따뜻한 봄날, 오리 엄마가 알을 품고 있었어요. 마침내 알들이 깨지며 귀여운 아기 오리들이 태어났습니다. 그런데 가장 큰 알에서 나온 새끼는 다른 오리들과 많이 달랐어요. 몸집도 크고, <b>깃털</b> 색도 다르고, 걸음걸이도 어색했거든요. 농장의 다른 동물들은 그 새끼를 보고 "저 못생긴 것 좀 봐!"라며 놀렸습니다.',
       '형제 오리들도 함께 놀아주지 않고, 심지어 엄마 오리조차 못생긴 새끼를 부끄러워했어요. 결국 아기 <b>백조</b>는 너무 슬퍼서 <b>농장</b>을 떠나기로 했습니다. 못생긴 새끼는 혼자서 넓은 세상을 떠돌아다녔어요. 어디를 가든 동물들은 그의 생김새를 보고 <b>놀림</b>하거나 피했습니다.',
@@ -1944,6 +2088,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_25: {
     labelNo: '25',
     title: '🔥 추운 밤의 작은 불꽃',
+    paragraphMain: [
+      '추운 겨울밤 맨발로 성냥을 팔지만 아무도 사지 않음',
+      '추위에 성냥을 켜자 따뜻한 난로 환상이 보임',
+      '성냥을 켤 때마다 음식, 크리스마스트리 등 행복한 환상',
+      '마지막 성냥에서 할머니가 나타나 소녀를 하늘로 데려감'
+    ],
     passage: [
       '눈이 펑펑 내리는 춥디추운 <b>겨울</b>밤, 한 어린 소녀가 <b>맨발</b>로 거리를 걷고 있었어요. 소녀의 손에는 팔다 남은 <b>성냥</b> 묶음이 들려 있었습니다. "성냥 사세요, 성냥요..." 소녀는 떨리는 목소리로 외쳤지만 바쁜 사람들은 아무도 거들떠보지 않았어요. 집에 돌아가면 아버지에게 혼날 것이 뻔했기에 소녀는 차마 집에 갈 수가 없었습니다.',
       '손과 발은 이미 얼어붙을 것처럼 시렸고, 배에서는 계속 <b>배고픔</b>의 소리가 났어요. 소녀는 건물 사이 구석진 곳에 웅크려 앉아 손을 녹이려 성냥을 한 개비 켰습니다. 치직! 성냥에 불이 붙자 따뜻하고 환한 빛이 퍼졌어요. 그 순간 소녀는 신기한 <b>환상</b>을 보았습니다. 눈앞에 따뜻한 <b>난로</b>가 나타난 것이에요!',
@@ -2021,6 +2171,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_26: {
     labelNo: '26',
     title: '🎵 동물들의 음악 여행',
+    paragraphMain: [
+      '늙어 버림받은 당나귀가 브레멘 음악대가 되려고 떠남',
+      '사냥개, 고양이, 수탉을 만나 함께 여행',
+      '도둑들의 집을 발견하고 함께 소리질러 쫓아냄',
+      '도둑 집에 정착하여 행복하게 살며 협력의 가치 깨달음'
+    ],
     passage: [
       '어느 <b>농장</b>에 늙은 <b>당나귀</b>가 살았어요. 오랫동안 무거운 짐을 나르며 열심히 일했지만, 이제 힘이 없어지자 주인은 당나귀를 내쫓으려 했습니다. "나는 더 이상 쓸모없는 걸까?" 당나귀는 슬펐지만 포기하지 않았어요. "그래, <b>브레멘</b>에 가서 <b>음악대</b>가 되자!" 당나귀는 노래를 좋아했거든요.',
       '길을 가다가 <b>사냥개</b>를 만났어요. 개도 늙어서 주인에게 버림받을 처지였습니다. "나와 함께 음악대를 하자!" 둘은 함께 길을 떠났어요. 또 늙은 <b>고양이</b>와 내일 스프가 될 처지인 <b>수탉</b>도 만났습니다. "우리 모두 브레멘에 가서 음악대를 하자!" 네 동물은 의기투합하여 함께 여행을 시작했어요.',
@@ -2098,6 +2254,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_27: {
     labelNo: '27',
     title: '🐸 황금 공과 개구리',
+    paragraphMain: [
+      '공주의 황금 공이 연못에 빠지고 개구리가 나타남',
+      '개구리가 공을 건져주는 대가로 친구가 되자고 약속',
+      '공주가 약속을 어기려 하자 왕이 지키라고 훈계',
+      '개구리가 왕자로 변신하고 약속의 중요성 깨달음'
+    ],
     passage: [
       '옛날 어느 아름다운 <b>왕국</b>에 예쁜 <b>공주</b>가 살았어요. 공주에게는 세상에서 가장 아끼는 <b>보물</b>이 있었는데, 바로 햇빛에 반짝이는 <b>황금 공</b>이었습니다. 공주는 매일 궁전 옆 <b>연못</b>가에서 공을 가지고 놀았어요. 그런데 어느 날 공이 손에서 미끄러져 깊은 연못 속으로 퐁당 빠져버렸습니다.',
       '"아, 내 공!" 공주는 연못을 들여다보며 울기 시작했어요. 그때 물속에서 못생긴 <b>개구리</b>가 올라와 "공주님, 왜 우세요?"라고 물었습니다. 개구리가 말했어요. "제가 공을 건져 드릴게요. 대신 저와 <b>약속</b>해 주세요. 저를 친구로 삼고, 같은 식탁에서 밥을 먹고, 같은 침대에서 자게 해주세요."',
@@ -2175,6 +2337,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_28: {
     labelNo: '28',
     title: '🎶 쥐를 쫓아낸 피리',
+    paragraphMain: [
+      '하멜른 마을에 쥐 떼가 창궐하고 피리 부는 사나이 등장',
+      '피리 소리로 쥐들을 강물에 빠뜨려 퇴치하고 금화 요구',
+      '시장이 약속을 어기고 금화를 주지 않음',
+      '화난 사나이가 피리로 아이들을 데려가고 마을 사람들 후회'
+    ],
     passage: [
       '옛날 독일의 <b>하멜른</b>이라는 마을에 큰 문제가 생겼어요. 온 마을에 <b>쥐</b>가 들끓어 곡식을 먹어치우고, 집 안을 어지럽히고, 심지어 아기들을 물기까지 했습니다. 사람들은 쥐를 잡으려고 온갖 방법을 다 써봤지만 쥐는 점점 더 늘어났어요. 그때 알록달록한 옷을 입은 낯선 사나이가 나타났습니다.',
       '"제가 쥐를 모두 없애 드리겠습니다. 대신 <b>금화</b> 천 냥을 주십시오." <b>시장</b>은 기꺼이 <b>약속</b>했어요. 사나이가 <b>피리</b>를 꺼내 아름다운 곡을 연주하기 시작했습니다. 신기하게도 피리 소리가 울려 퍼지자 온 마을의 쥐들이 줄을 지어 사나이를 따라갔어요. 쥐들은 마치 홀린 듯이 모두 강물에 빠져 사라졌습니다.',
@@ -2252,6 +2420,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_29: {
     labelNo: '29',
     title: '🥾 영리한 고양이의 계략',
+    paragraphMain: [
+      '막내 아들이 유산으로 고양이만 받고 장화를 사줌',
+      '고양이가 왕에게 선물을 바치며 카라바스 후작 행세',
+      '강가에서 왕을 속여 막내를 후작으로 꾸밈',
+      '마법사를 쥐로 변하게 해 잡아먹고 성을 차지, 공주와 결혼'
+    ],
     passage: [
       '옛날 어느 가난한 <b>방앗간</b> 주인이 세상을 떠나면서 세 아들에게 <b>유산</b>을 남겼어요. 첫째는 방앗간을, 둘째는 당나귀를 받았지만, 막내는 고양이 한 마리밖에 받지 못했습니다. "형들은 먹고살 수 있지만 나는 어떡하지?" 막내는 한숨을 쉬었어요. 그때 고양이가 말했습니다. "주인님, 저를 믿고 <b>장화</b> 한 켤레와 자루 하나만 주세요."',
       '막내는 마지막 돈으로 장화를 사주었어요. 장화를 신은 고양이는 씩씩하게 <b>계략</b>을 세웠습니다. 고양이는 자루로 토끼와 새를 잡아 <b>왕</b>에게 가져갔어요. "이것은 저의 주인 카라바스 <b>후작</b>님이 드리는 선물입니다." 왕은 선물을 기뻐하며 고마워했습니다.',
@@ -2329,6 +2503,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_30: {
     labelNo: '30',
     title: '👸 꽃에서 태어난 작은 소녀',
+    paragraphMain: [
+      '마법 씨앗에서 엄지공주 탄생, 행복하게 생활',
+      '두꺼비에게 납치되었다 탈출, 딱정벌레에게 버림받음',
+      '겨울에 들쥐 집에서 지내며 제비를 구해줌',
+      '제비가 꽃의 나라로 데려가 왕자와 결혼'
+    ],
     passage: [
       '옛날 아이가 없는 아주머니가 <b>마법사</b>에게 <b>씨앗</b>을 받아 화분에 심었어요. 씨앗에서 예쁜 꽃이 피더니 그 안에서 엄지손가락만 한 작은 소녀가 태어났습니다. 아주머니는 "너를 <b>엄지공주</b>라고 부를게"라며 기뻐했어요. 엄지공주는 호두 껍데기 침대에서 자고, 꽃잎 이불을 덮으며 행복하게 살았습니다.',
       '어느 날 밤, 못생긴 <b>두꺼비</b>가 엄지공주를 납치해 아들과 <b>결혼</b>시키려 했어요. 엄지공주는 물고기들의 도움으로 도망쳤지만, 이번엔 딱정벌레에게 붙잡혔습니다. 딱정벌레들은 엄지공주가 안테나도 없고 다리도 두 개뿐이라 못생겼다며 버렸어요. 혼자가 된 엄지공주는 여름과 가을을 꽃잎과 풀을 먹으며 지냈습니다.',
@@ -2406,6 +2586,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_31: {
     labelNo: '31',
     title: '🐐 엄마 염소와 아기 염소들',
+    paragraphMain: [
+      '엄마 염소가 시장 가면서 늑대를 조심하라고 당부함',
+      '늑대가 분필로 목소리를 꾸미고 찾아왔으나 발이 까매서 거절당함',
+      '밀가루로 발을 하얗게 한 늑대에게 속아 문을 열어 잡아먹힘, 막내만 시계 속에 숨어 생존',
+      '엄마 염소가 늑대 배를 갈라 아기들을 구하고 돌을 넣어 우물에 빠뜨림'
+    ],
     passage: [
       '옛날 숲 속 작은 집에 <b>엄마 염소</b>와 귀여운 일곱 마리 <b>아기 염소</b>가 살았어요. 어느 날 엄마 염소가 먹을 것을 사러 시장에 가게 되었습니다. "얘들아, 엄마 없는 동안 문을 절대로 열어주면 안 돼. 특히 무서운 <b>늑대</b>를 조심해야 해. 늑대는 목소리가 거칠고 발이 까맣단다." 아기 염소들은 "네, 엄마!"라고 씩씩하게 대답했어요.',
       '엄마가 떠나자 정말로 늑대가 문 앞에 나타났어요. "얘들아, 엄마가 왔단다." 하지만 목소리가 너무 거칠었습니다. 아기 염소들이 문을 열어주지 않자 늑대는 <b>분필</b>을 먹어 목소리를 곱게 만들었어요. 다시 찾아와 부드럽게 말했지만, 아기 염소들이 발을 보여달라고 했습니다. 발이 새까맣자 문을 열어주지 않았어요.',
@@ -2483,6 +2669,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_32: {
     labelNo: '32',
     title: '🎄 크리스마스의 마법 인형',
+    paragraphMain: [
+      '크리스마스 이브에 클라라가 대부에게 호두까기 인형을 선물받음',
+      '호두까기 인형이 살아나 쥐 왕과 전투, 클라라의 도움으로 저주가 풀려 왕자로 변함',
+      '왕자가 클라라를 과자 나라로 초대해 설탕 요정과 과자 인형들의 환영을 받음',
+      '아침에 깨어난 클라라, 꿈같은 모험의 추억이 마음에 남음'
+    ],
     passage: [
       '<b>크리스마스</b> 이브, 어린 소녀 <b>클라라</b>는 대부인 <b>드로셀마이어</b> 아저씨에게 특별한 선물을 받았어요. 바로 호두를 깨는 병정 모양의 <b>호두까기 인형</b>이었습니다. 클라라는 그 인형이 너무 마음에 들어 안고 잠이 들었어요. 그런데 자정이 되자 방 안에서 신기한 일이 벌어졌습니다.',
       '호두까기 인형이 살아 움직이기 시작했어요! 동시에 <b>쥐 왕</b>이 이끄는 쥐 군대가 나타나 <b>전투</b>가 시작되었습니다. 호두까기 인형이 위험에 빠지자 클라라는 용기를 내어 슬리퍼를 쥐 왕에게 던졌어요. 쥐 왕이 쓰러지고 <b>저주</b>가 풀리자 호두까기 인형은 멋진 <b>왕자</b>로 변했습니다.',
@@ -2560,6 +2752,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_33: {
     labelNo: '33',
     title: '👠 멈출 수 없는 춤',
+    paragraphMain: [
+      '가난한 카렌이 할머니에게 입양되어 빨간 구두를 사달라고 함',
+      '빨간 구두가 저절로 춤추기 시작해 멈출 수 없게 되어 할머니도 돌보지 못함',
+      '집행인에게 발목을 잘라 구두에서 벗어나고, 자신의 허영을 반성하며 봉사함',
+      '진심으로 참회하자 하느님이 용서해주고 천국에서 평화를 찾음'
+    ],
     passage: [
       '가난한 소녀 <b>카렌</b>은 착한 <b>할머니</b>에게 입양되어 살게 되었어요. 어느 날 카렌은 상점에서 아름다운 <b>빨간 구두</b>를 보았습니다. 반짝반짝 빛나는 구두가 너무 갖고 싶었어요. 할머니는 눈이 안 좋아서 구두가 빨간색인 줄 모르고 사주셨습니다. 카렌은 <b>교회</b>에도 화려한 빨간 구두를 신고 갔어요.',
       '그런데 이상한 일이 벌어졌어요. <b>빨간 구두</b>가 저절로 <b>춤</b>을 추기 시작한 거예요! 카렌이 아무리 멈추려 해도 구두는 멈추지 않았습니다. 춤을 추며 이리저리 끌려다니느라 카렌은 아픈 할머니를 돌볼 수도 없었어요. 할머니가 돌아가셨는데도 카렌은 춤을 멈출 수 없었습니다.',
@@ -2637,6 +2835,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_34: {
     labelNo: '34',
     title: '⚔️ 정직한 나무꾼',
+    paragraphMain: [
+      '가난하지만 정직한 나무꾼이 연못에 쇠도끼를 빠뜨리고 울음',
+      '산신령이 금도끼, 은도끼를 보여주며 나무꾼의 것인지 물음',
+      '나무꾼이 정직하게 자기 것이 아니라 대답하자 세 도끼를 모두 받음',
+      '욕심쟁이가 거짓말해 원래 도끼마저 잃고, 정직한 나무꾼은 행복하게 삶'
+    ],
     passage: [
       '옛날 깊은 산속에 가난하지만 마음씨 착하고 <b>정직</b>한 <b>나무꾼</b>이 살았어요. 나무꾼은 매일 열심히 나무를 해서 팔아 늙으신 어머니를 모시고 살았습니다. 어느 날 나무꾼이 <b>연못</b>가에서 나무를 하다가 그만 낡은 <b>쇠도끼</b>가 손에서 미끄러져 연못 속으로 풍덩 빠져버렸어요. 나무꾼은 연못가에 주저앉아 울기 시작했습니다.',
       '그때 연못 속에서 빛이 나더니 흰 수염의 <b>산신령</b>이 나타났어요. 산신령은 연못 속으로 들어갔다가 번쩍번쩍 빛나는 <b>금도끼</b>를 들고 나왔습니다. "이것이 네 <b>도끼</b>냐?" "아니요, 그건 제 것이 아닙니다." 산신령은 다시 들어갔다가 <b>은도끼</b>를 가져왔어요. "아니요, 그것도 제 것이 아닙니다."',
@@ -2714,6 +2918,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_35: {
     labelNo: '35',
     title: '💎 슬픔을 아는 황금 동상',
+    paragraphMain: [
+      '황금 동상이 된 행복한 왕자가 높은 곳에서 가난한 사람들을 보고 슬퍼함',
+      '제비에게 부탁해 루비와 사파이어, 황금을 가난한 사람들에게 나눠줌',
+      '제비가 추위에 죽고 왕자의 납 심장이 갈라짐',
+      '천사가 납 심장과 제비를 가져가 천국에서 영원히 살게 함'
+    ],
     passage: [
       '높은 기둥 위에 <b>행복한 왕자</b> 동상이 서 있었어요. 동상은 온몸이 <b>황금</b>으로 덮여 있고, 눈은 <b>사파이어</b>, 허리띠에는 커다란 <b>루비</b>가 박혀 있어 아름답게 빛났습니다. 하지만 동상이 된 후 높은 곳에서 마을을 내려다보니 가난하고 아픈 사람들이 눈에 들어왔어요. 왕자의 눈에서 <b>슬픔</b>의 눈물이 흘렀습니다.',
       '어느 날 따뜻한 나라로 날아가던 <b>제비</b> 한 마리가 왕자 발치에서 쉬었어요. 왕자는 제비에게 부탁했습니다. "저기 다락방에 아픈 아이가 있어. 내 칼에 박힌 루비를 가져다주렴." 제비는 루비를 물고 날아가 아이에게 전해주었어요. 다음 날에도, 그다음 날에도 왕자는 자신의 사파이어와 황금을 가난한 사람들에게 나눠주라고 했습니다.',
@@ -2791,6 +3001,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_36: {
     labelNo: '36',
     title: '🦢 마법에 걸린 오빠들',
+    paragraphMain: [
+      '사악한 계모가 열한 명의 왕자들에게 저주를 걸어 백조로 만듦',
+      '엘리사가 오빠들을 찾아 저주 해제 조건(쐐기풀 옷, 침묵)을 알게 됨',
+      '마녀로 오해받아 처형장에 끌려가면서도 침묵하며 옷을 짬',
+      '마지막 순간 옷을 던져 오빠들이 사람으로 돌아오고 가족이 재회함'
+    ],
     passage: [
       '옛날 어느 나라에 아름다운 공주 <b>엘리사</b>와 열한 명의 오빠 <b>왕자</b>들이 살았어요. 그런데 왕이 사악한 <b>계모</b>와 재혼했습니다. 계모는 왕자들에게 <b>저주</b>를 걸어 낮에는 <b>백조</b>가 되게 했어요. 왕자들은 궁을 떠나야 했고, 엘리사도 쫓겨났습니다.',
       '엘리사는 오빠들을 찾아 헤맸어요. 마침내 백조가 된 오빠들을 만났습니다. 저주를 풀려면 가시 돋친 <b>쐐기풀</b>로 열한 벌의 옷을 짜야 했어요. 그리고 옷을 완성할 때까지 절대 <b>침묵</b>을 지켜야 했습니다. 한마디라도 하면 오빠들이 죽기 때문이었어요.',
@@ -2868,6 +3084,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_37: {
     labelNo: '37',
     title: '❄️ 얼음 궁전으로 간 소년',
+    paragraphMain: [
+      '소꿉친구 카이와 게르다, 악마의 거울 조각이 카이 눈과 심장에 박혀 차갑게 변함',
+      '눈의 여왕이 카이를 데려가고, 게르다가 친구를 찾아 긴 여행을 떠남',
+      '얼음 궁전에서 게르다가 카이를 발견하고 울며 끌어안음',
+      '따뜻한 눈물이 카이의 얼음을 녹이고 함께 집으로 돌아옴'
+    ],
     passage: [
       '어느 마을에 <b>카이</b>와 <b>게르다</b>라는 소꿉친구가 살았어요. 두 아이는 옆집에 살며 항상 함께 놀고, 창가에 심은 <b>장미</b>꽃을 함께 가꾸었습니다. 그런데 어느 겨울날, 악마가 만든 저주받은 <b>거울</b> 조각이 카이의 눈과 심장에 박혔어요. 그 후 카이는 차갑게 변했습니다.',
       '어느 날, 눈처럼 하얀 <b>눈의 여왕</b>이 탄 썰매가 나타나 카이를 데려가 버렸어요. 게르다는 친구를 찾아 긴 여행을 떠났습니다. <b>마녀</b>의 꽃밭에서 탈출하고, 왕자와 공주의 도움을 받았어요. <b>순록</b>을 타고 차가운 북쪽 끝 <b>얼음 궁전</b>까지 갔습니다.',
@@ -2945,6 +3167,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_38: {
     labelNo: '38',
     title: '⭐ 작은 별에서 온 소년',
+    paragraphMain: [
+      '사막에 불시착한 비행사가 작은 별에서 온 어린 왕자를 만남',
+      '왕자가 까다로운 장미와 다투고 별을 떠나 여행하다 지구에서 여우를 만남',
+      '여우가 길들이다의 의미와 마음으로 보는 것의 중요성을 가르쳐줌',
+      '왕자가 자신의 장미가 유일한 존재임을 깨닫고 별로 돌아감'
+    ],
     passage: [
       '사막에 불시착한 <b>비행사</b>는 이상한 소년을 만났어요. 금발의 그 소년은 작은 <b>별</b>에서 왔다며 자신을 <b>어린 왕자</b>라고 소개했습니다. 왕자의 별은 아주 작아서 의자만 옮기면 해가 지는 것을 볼 수 있었대요. 왕자는 별에서 정성껏 <b>장미</b>꽃 한 송이를 키웠습니다.',
       '장미는 아름다웠지만 까다롭고 투정을 부렸어요. 왕자는 장미와 다투고 별을 떠났지만, 여행 중에 장미가 그리워졌습니다. 왕자는 여러 별을 여행하며 이상한 어른들을 만났어요. 지구에 도착해서는 <b>여우</b>를 만났습니다.',
@@ -3022,6 +3250,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_39: {
     labelNo: '39',
     title: '🐑 거짓말의 대가',
+    paragraphMain: [
+      '양치기 소년이 심심해서 늑대가 나타났다고 거짓말하여 마을 사람들을 속임',
+      '두 번째 거짓말에 마을 사람들이 다시는 속지 않겠다고 화냄',
+      '진짜 늑대가 나타났을 때 아무도 오지 않아 양들이 당함',
+      '소년이 신뢰의 소중함과 정직의 교훈을 깨달음'
+    ],
     passage: [
       '옛날 어느 마을에 <b>양</b>을 돌보는 <b>양치기 소년</b>이 살았어요. 소년은 매일 언덕에서 양떼를 지켰습니다. 하지만 혼자 있는 시간이 너무 지루해서 <b>장난</b>을 치고 싶어졌어요. "<b>늑대</b>다! 늑대가 나타났어요!" 소년이 소리치자 마을 사람들이 달려왔습니다. 하지만 늑대는 어디에도 없었어요.',
       '"하하, 속았지?" 소년은 배를 잡고 웃었어요. 마을 사람들은 화가 났지만 한 번은 봐주었습니다. 그러나 소년은 며칠 후 또 <b>거짓말</b>을 했어요. "늑대다! 이번엔 진짜예요!" 달려온 마을 사람들은 또 속은 것을 알고 머리끝까지 화가 났습니다. "다시는 속지 않을 거야!"',
@@ -3099,6 +3333,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_world1_40: {
     labelNo: '40',
     title: '🐢 느림보의 승리',
+    paragraphMain: [
+      '빠른 토끼가 자만하며 느린 거북이의 경주 도전을 비웃음',
+      '토끼가 앞서 나가다 낮잠을 자고, 거북이는 쉬지 않고 걸음',
+      '거북이가 자는 토끼를 지나쳐 결승선에 먼저 도착함',
+      '꾸준한 노력과 끈기가 빠른 것보다 중요하다는 교훈을 얻음'
+    ],
     passage: [
       '어느 맑은 날, 숲속에서 <b>토끼</b>가 자랑을 했어요. "나는 세상에서 가장 빨라! 아무도 나를 이길 수 없지!" 토끼는 매일 빠른 다리를 뽐내며 다른 동물들을 깔보았습니다. 그러던 어느 날, 느릿느릿 걷는 <b>거북이</b>가 말했어요. "토끼야, 나와 <b>경주</b>를 하자." 토끼는 배꼽을 잡고 웃었습니다.',
       '"출발!" 토끼는 바람처럼 달려 나갔고, 거북이는 천천히 한 발 한 발 걸었어요. 금세 토끼는 거북이가 보이지 않을 만큼 앞서 나갔습니다. "거북이가 올 때까지 한참 걸리겠군." 토끼는 시원한 나무 아래 누워 쿨쿨 <b>낮잠</b>이 들었어요. <b>자만</b>이 토끼를 방심하게 만들었습니다.',
@@ -3388,93 +3628,97 @@ function applyContentPack(unitKey) {
       return `${minutes}분 ${seconds}초`;
     };
 
-    // 문장 클릭 시 선택 유지
-    passageBox.addEventListener('click', (e) => {
-      const sentence = e.target.closest('.sentence');
-      if (!sentence) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
-      // 첫 클릭 시 시작 시간 기록
-      if (!readingStartTime) {
-        readingStartTime = new Date();
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
-      }
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
 
-      sentence.classList.toggle('selected');
-      saveSelection();
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
 
-      // 모든 문장 선택 완료 시 축하
-      const total = passageBox.querySelectorAll('.sentence').length;
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
-      if (selected === 0) {
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = '00';
-        if (secInput) secInput.value = '00';
-        readingStartTime = null;
-        localStorage.removeItem(timeKey);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
       }
-      if (total > 0 && total === selected) {
-        // 완료 시간 기록
-        const endTime = new Date();
-        const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({
-          start: readingStartTime.toISOString(),
-          end: endTime.toISOString(),
-          duration: duration
-        }));
-
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'on_world1_01';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const clockMinutes = Math.floor(duration / 60000);
-        const clockSeconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-
-        const toast = document.createElement('div');
-        toast.className = 'complete-toast';
-        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
-          <div style="font-size:14px;color:#666;line-height:1.6;">
-            <div>시작: ${formatDateTime(readingStartTime)}</div>
-            <div>완료: ${formatDateTime(endTime)}</div>
-            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
-          </div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-
-        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
-        const shapes = ['●','★','◆','♥','✦'];
-        for (let i = 0; i < 60; i++) {
-          const sparkle = document.createElement('div');
-          sparkle.className = 'sparkle-rain';
-          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-          sparkle.style.left = Math.random() * 100 + 'vw';
-          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
-          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
-          document.body.appendChild(sparkle);
-          setTimeout(() => sparkle.remove(), 3500);
-        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }

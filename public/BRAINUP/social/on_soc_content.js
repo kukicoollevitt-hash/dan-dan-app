@@ -44,6 +44,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_01: {
     labelNo: '01',
     title: '👨‍👩‍👧‍👦 우리 가족은 어떻게 이루어질까요?',
+    paragraphMain: [
+      '가족의 정의와 구성: 혼인으로 맺어진 부부 중심, 혈연으로 이루어진 관계, 떨어져 살아도 책임지면 가족',
+      '다양한 가족 형태: 입양·재혼 통해 가족 됨, 피 안 나눠도 마음 나누면 가족, 가족 형태 점점 다양해짐',
+      '가정의 역할과 기능: 가정=가족 생활 공간+사회 기본 단위, 사랑·배려·규칙·예절 배움, 첫 관계 맺는 곳',
+      '가정의 중요성: 가정 없이 사회·나라 없음, 가정이 잘 기능해야 사회 건강, 따뜻한 보금자리이자 출발점'
+    ],
     passage: [
       '여러분은 누구와 함께 살고 있나요? 가족은 보통 <b>혼인</b>으로 맺어진 부부를 중심으로 이루어져요. 부부가 자식을 낳으면 부모와 자식, 형제자매처럼 <b>혈연</b>으로 이루어진 사람들이 함께 살게 되지요. 멀리 떨어져 살아도 가족으로서 <b>책임</b>을 지고 집안일에 관심을 두는 사람도 가족이에요. 가족은 서로를 아끼고 돌보는 관계랍니다.',
       '요즘은 <b>입양</b>이나 <b>재혼</b>을 통해 이루어지는 가족도 많아졌어요. 꼭 피를 나눈 사이가 아니어도 함께 마음을 나누고 살아가면 얼마든지 가족이 될 수 있답니다. 입양 가족은 법적 절차를 통해 새로운 부모와 자녀 관계를 맺어요. 재혼 가족은 새로운 배우자와 그 자녀들이 한 가정을 이루지요. 이처럼 가족의 형태는 점점 다양해지고 있어요.',
@@ -125,6 +131,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_02: {
     labelNo: '02',
     title: '👨‍👩‍👧 시대에 따라 달라진 가족 이야기',
+    paragraphMain: [
+      '옛날 확대 가족: 농사지으며 여러 세대 한집 생활, 확대 가족 흔함, 어른은 지혜·예절 가르치고 젊은이는 일 맡음',
+      '산업화와 핵가족 등장: 공장·회사 생기고 도시로 이동, 여러 세대 함께 살기 어려움, 부모+자녀 핵가족 증가',
+      '오늘날 다양한 가족: 조손 가족·한부모 가족·다문화 가족 증가, 1인 가구도 빠르게 늘어남',
+      '가족 형태의 존중: 핵가족은 간단하나 도움 부족, 모든 형태 가족으로 인정·존중, 형태보다 아끼는 마음 중요'
+    ],
     passage: [
       '옛날 우리 조상들은 대부분 농사를 지으며 가족 모두가 힘을 모아 생활했어요. 그때는 할아버지와 할머니, 부모님, 자녀가 한집에 모여 사는 <b>확대 가족</b>이 흔했지요. 여러 세대가 함께 지내며 서로 도왔습니다. 어른들은 아이들에게 생활 지혜와 예절을 가르치고, 젊은이들은 농사일이나 집안일을 맡아 어른들을 돌봤어요.',
       '시간이 지나 산업이 발달하면서 공장과 회사가 생기고, 많은 사람이 일자리를 찾아 도시로 <b>이동</b>하게 되었어요. 농촌을 떠나 도시에서 살게 되면서 예전처럼 여러 세대가 함께 살기 어려워졌지요. 이때부터 부모님과 자녀로만 이루어진 <b>핵가족</b>이 점차 늘어나기 시작했습니다. 이처럼 <b>산업화</b>는 가족 형태에 큰 변화를 가져왔어요.',
@@ -216,6 +228,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_03: {
     labelNo: '03',
     title: '💕 배려로 완성되는 가족 관계',
+    paragraphMain: [
+      '옛날 가족의 역할 분담: 성별·나이 따라 역할 분명, 할아버지=결정, 할머니=살림, 아버지=생계, 어머니=집안일',
+      '현대 가족의 역할 변화: 남녀 상관없이 집안일·바깥일 분담, 아버지도 요리·청소, 아이들도 작은 일부터 참여',
+      '가족 갈등과 해결 방법: 생각 달라 갈등 생김, 서로 경청+가족회의+대화로 해결, 이해·양보 자세 중요',
+      '존중과 배려의 중요성: 존중·배려 마음이 핵심, 이해하려는 마음으로 관계 단단해짐, 소중히 여기는 마음이 가족의 힘'
+    ],
     passage: [
       '옛날에는 가족 구성원의 역할이 성별과 나이에 따라 뚜렷하게 나뉘어 있었어요. 할아버지는 집안의 큰 어른으로서 중요한 일을 결정했고, 할머니는 <b>살림</b>을 챙기며 손주들을 돌보았지요. 아버지는 가족의 생활비를 벌고, 어머니는 집안일을 맡아 가족을 보살폈어요. 자녀들도 정해진 <b>역할</b>을 따라 자랐습니다.',
       '하지만 시대가 흐르면서 가족의 모습도 크게 변화했어요. 이제는 남녀에 상관없이 가족 모두가 집안일과 바깥일을 함께 나눕니다. 아버지가 요리를 하거나 청소를 맡기도 하고, 어머니가 직장에서 일하며 가족의 <b>생계</b>를 돕기도 하지요. 아이들도 설거지나 정리정돈처럼 작은 일부터 함께하며 책임감을 키워 가요.',
@@ -298,6 +316,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_04: {
     labelNo: '04',
     title: '🚂 시간을 단축한 발명들, 더 넓어진 생활권',
+    paragraphMain: [
+      '옛날 이동의 어려움: 빠른 교통수단 없어 많은 시간·노력 필요, 말·당나귀·나룻배 이용, 날씨 나쁘면 며칠 대기',
+      '새로운 교통수단 등장: 전차·증기선 등장, 자동차·버스·기차·비행기 보급, 하루 만에 전국 이동 가능',
+      '통신의 변화: 옛날 파발꾼이 직접 전달→며칠 소요, 전신·전화 등장→빠른 소식, 오늘날 휴대전화·인터넷으로 즉시 대화',
+      '교통과 통신 발달의 영향: 사람 간 거리감 줄어듦, 지역·나라 간 교류 활발, 생활권 크게 넓어짐'
+    ],
     passage: [
       '빠른 <b>교통수단</b>이 없던 시절, 사람들은 먼 지역을 오가는 데 많은 시간과 노력이 필요했어요. 말을 타거나 당나귀에 짐을 싣고 걸어가며 천천히 이동했지요. 큰 강을 건널 때는 나룻배를 이용했는데, 날씨가 좋지 않으면 며칠씩 기다려야 했어요. 목적지까지 일주일 이상 걸리는 일도 흔했고, 여행은 늘 위험을 감수해야 했습니다.',
       '시간이 흐르면서 새로운 교통수단이 등장했어요. 전기를 이용해 움직이는 <b>전차</b>는 도시를 빠르게 연결해 주었고, 뜨거운 수증기의 힘을 이용한 <b>증기선</b>은 강과 바다를 훨씬 빠르게 건널 수 있게 했어요. 이후 자동차, 버스, 기차, 비행기가 보급되면서 우리 생활은 더욱 달라졌습니다. 이제 하루 만에 전국을 이동할 수 있게 되었지요.',
@@ -380,6 +404,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_05: {
     labelNo: '05',
     title: '🏘️ 우리 동네 문제, 함께 해결해요',
+    paragraphMain: [
+      '주민 참여의 중요성: 주민이 지역 상황 가장 잘 앎, 문제 해결에 큰 역할, 적극적 참여 필요',
+      '의견 제시 방법: 시청·도청 누리집 의견 제출, 민원실 방문, 공청회 참석, 서명 운동 참여',
+      '시민 단체 활동: 환경 보호·교육·역사·복지 등 다양한 분야, 캠페인·봉사·생활품 전달 등 지역 사회 도움',
+      '주민 참여의 효과: 정부·지자체가 못한 문제 해결, 더 편안하고 안전한 지역 만들기, 작은 관심이 큰 변화'
+    ],
     passage: [
       '지역 사회에서도 주민들이 직접 참여해 문제를 해결하려는 노력이 중요해요. 주민들은 자신이 사는 곳의 상황을 가장 잘 알고 있기 때문에, 문제가 생겼을 때 해결책을 찾는 데 큰 역할을 합니다. 지역 문제는 주민들의 생활과 안전에 직접적인 영향을 주므로, 많은 사람들이 의견을 모아 적극적으로 참여하는 것이 필요해요.',
       '주민들이 의견을 낼 수 있는 방법은 다양해요. 시청이나 도청 누리집에 접속해 의견을 제출할 수 있고, 공공 기관의 <b>민원</b>실을 직접 찾아가 문제 상황을 설명할 수도 있어요. 또 정책을 만들기 전에 열리는 <b>공청회</b>에 참석해 자신의 의견을 공개적으로 말할 수 있으며, <b>서명 운동</b>에 참여해 특정 주장에 찬성한다는 뜻을 나타낼 수도 있답니다.',
@@ -461,6 +491,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_06: {
     labelNo: '06',
     title: '🎮 게임 속 나 vs 현실의 나, 정체성 이야기',
+    paragraphMain: [
+      '온라인과 오프라인 정체성: 아바타로 현실과 다른 모습 가능, 상황 따라 다양한 정체성 표현, 정체성=자신에 대한 생각·느낌',
+      '청소년기 자아 정체성 형성: 가족·친구·학교·미디어가 자아에 영향, 청소년기=자아 정체성 확립 중요 시기, 혼란 겪기도 함',
+      '온라인 정체성의 장단점: 자유로운 표현 가능(+), 페르소나 의존 시 현실 부정(-), 익명성 뒤 사이버 불링·거짓 정보(-)',
+      '건강한 정체성 형성: 온·오프라인 모두 일관성 유지, 핵심 가치관 지키기, 다양한 경험 통해 통합된 자아 형성'
+    ],
     passage: [
       '온라인 세계에서는 현실과 다른 이름, 외모, 성격을 가진 <b>아바타</b>를 만들어 활동할 수 있어요. 어떤 사람은 현실에서 내성적이지만 게임 속에서는 용감한 리더가 되기도 하지요. 이처럼 온라인과 오프라인에서 보여주는 모습이 다를 수 있는데, 이것은 상황에 따라 다양한 <b>정체성</b>을 표현하기 때문이에요. 정체성이란 자신에 대한 생각과 느낌을 말합니다.',
       '사람은 성장하면서 여러 경험을 통해 자신만의 정체성을 형성해 가요. 가족, 친구, 학교, 미디어 등 다양한 환경이 우리의 <b>자아</b> 형성에 영향을 미치지요. 특히 청소년기는 <b>자아 정체성</b>을 확립해 가는 중요한 시기예요. 이 과정에서 부모님이 원하는 나, 친구들 사이에서의 나가 서로 다르게 느껴져 <b>혼란</b>을 겪기도 합니다.',
@@ -542,6 +578,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_07: {
     labelNo: '07',
     title: '📱 SNS가 바꾼 우리의 관계',
+    paragraphMain: [
+      'SNS와 소통의 변화: 인스타그램·틱톡·유튜브가 일상, 실시간 소통·전 세계 연결, 인간관계 방식 크게 변화',
+      'SNS의 부정적 측면: 타인과 비교→상대적 박탈감, 좋아요·팔로워 수에 집착→인정 욕구, 많은 친구 있어도 외로움',
+      '피상적 관계의 문제: 깊은 대화<짧은 댓글, 진심 만남<화면 소통, 좋은 순간만 공유→전부가 아님 기억',
+      '건강한 SNS 사용법: 디지털 리터러시로 사용 시간 조절, 오프라인 직접 만남 소중히, 진정한 관계는 신뢰+진심'
+    ],
     passage: [
       '인스타그램, 틱톡, 유튜브 같은 <b>소셜 미디어</b>는 이제 청소년들의 일상에서 빠질 수 없는 존재가 되었어요. SNS를 통해 우리는 친구들과 실시간으로 <b>소통</b>하고, 멀리 사는 사람과도 쉽게 연결될 수 있습니다. 좋아하는 연예인의 일상을 가까이에서 볼 수 있고, 자신의 생각을 전 세계에 공유할 수도 있지요. SNS는 <b>인간관계</b>를 맺고 유지하는 방식을 크게 바꿔 놓았어요.',
       '그러나 SNS가 가져온 변화가 모두 긍정적인 것만은 아니에요. 다른 사람의 화려한 일상을 보며 <b>상대적 박탈감</b>을 느끼거나 자신을 비교하게 되는 경우가 많습니다. 또한 좋아요 수나 팔로워 수에 지나치게 신경 쓰며 <b>인정 욕구</b>에 휘둘리기도 하지요. 온라인에서 많은 친구가 있어도 진정한 고민을 나눌 사람이 없다는 <b>외로움</b>을 느끼기도 해요.',
@@ -623,6 +665,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_08: {
     labelNo: '08',
     title: '🤖 AI와 함께 사는 법, 인간다움이란?',
+    paragraphMain: [
+      'AI의 활용과 보완 역할: 음성 비서·맞춤 추천·자동 번역, 데이터 학습→판단·문제 해결, 인간 능력 보완하는 도구',
+      'AI 발전의 사회적 문제: 일자리 대체(공장 로봇, AI 챗봇), 잘못된 결정의 책임 소재 불분명',
+      'AI의 공정성과 윤리: AI 저작권 문제, 편향된 데이터→차별적 결과, 공정성·윤리 사회적 합의 필요, 제도도 함께 발전',
+      '인간 고유의 가치: 창의성·공감 능력·윤리적 판단력=인간만 가능, AI와 공존 시대, 인간다움 깊이 생각 필요'
+    ],
     passage: [
       '<b>인공지능(AI)</b>은 이제 우리 생활 곳곳에 들어와 있어요. 스마트폰의 음성 비서, 넷플릭스의 맞춤 추천, 자동 번역기까지 모두 AI 기술 덕분에 가능해진 것들이지요. AI는 방대한 데이터를 <b>학습</b>하여 인간처럼 판단하고 문제를 해결할 수 있어요. 의료 분야에서는 AI가 질병을 진단하기도 합니다. 이처럼 AI는 인간의 능력을 <b>보완</b>하는 도구가 되고 있어요.',
       '그러나 AI의 발전은 여러 사회적 질문을 던지고 있어요. AI가 점점 더 많은 일을 대신하면 사람들의 <b>일자리</b>는 어떻게 될까요? 이미 일부 공장에서는 로봇이 사람 대신 일하고, 고객 상담도 AI 챗봇이 맡는 경우가 늘고 있어요. 또한 AI가 내린 결정이 잘못되었을 때, 그 <b>책임</b>은 누가 져야 할까요?',
@@ -704,6 +752,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_09: {
     labelNo: '09',
     title: '👥 인싸와 아싸, 집단 속 우리의 모습',
+    paragraphMain: [
+      '인싸와 아싸, 내집단과 외집단: 인싸=인사이더(인기), 아싸=아웃사이더(겉돎), 내집단=소속감, 외집단=비소속',
+      '소속 욕구와 준거 집단: 소속 욕구=본능적으로 인정받고 싶음, 준거 집단=행동·가치관 기준, 또래 따라하기=준거 집단 영향',
+      '동조 압력의 문제: 개성 포기+동조 압력→문제, 인싸·아싸 구분은 절대적 아님, 상황·집단 따라 다른 모습 가능',
+      '개성과 다양성 존중: 소속도 중요하나 가치관·개성 지키기 중요, 진정한 친구=있는 그대로 받아들임, 다름≠틀림'
+    ],
     passage: [
       '<b>인싸</b>는 "인사이더"의 줄임말로 집단에서 인기 있고 활발한 사람을 뜻하고, <b>아싸</b>는 "아웃사이더"의 줄임말로 집단에서 겉도는 사람을 의미해요. 우리는 집단 속에서 자신의 위치를 의식하며 살아갑니다. 자신이 속해 있다고 느끼는 집단을 <b>내집단</b>, 속하지 않았다고 느끼는 집단을 <b>외집단</b>이라고 해요.',
       '왜 사람들은 집단에 속하고 싶어할까요? 인간은 본능적으로 <b>소속 욕구</b>를 가지고 있기 때문이에요. 어딘가에 소속되어 인정받고 싶은 마음은 자연스러운 것이지요. 자신의 행동이나 가치관의 기준이 되는 집단을 <b>준거 집단</b>이라고 해요. 친구들이 좋아하는 것을 따라 하는 것은 또래 집단이 준거 집단 역할을 하기 때문입니다.',
@@ -785,6 +839,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_10: {
     labelNo: '10',
     title: '🍜 라면은 문화일까? 문화의 의미 탐구',
+    paragraphMain: [
+      '라면 문화의 의미: 문화=생활 방식·가치관·신념·관습 등, 라면은 단순 음식 넘어 한국만의 독특한 의미 가짐',
+      '문화의 학습과 전승, 변동: 문화는 학습 통해 세대 간 전승, 시대 따라 변동(냄비 라면→컵라면)',
+      '문화 상대주의와 자문화 중심주의: 문화 상대주의=각 문화 맥락에서 이해·존중, 자문화 중심주의=자기 문화 우월 생각',
+      '문화 다양성 존중: 자문화 중심주의→문화 간 갈등, 세계화 시대에 문화 다양성 존중 중요, 일상 습관에서도 문화 발견'
+    ],
     passage: [
       '우리가 일상에서 먹는 <b>라면</b>은 단순한 음식일까요, 아니면 <b>문화</b>일까요? 문화란 특정 집단이 공유하는 생활 방식, 가치관, 신념, 예술, 관습 등을 모두 포함하는 개념이에요. 한국에서 라면은 배고픔을 해결하는 음식을 넘어 독특한 의미를 갖습니다. 야식으로 라면을 끓여 먹는 습관, 편의점 앞에서 라면을 나눠 먹는 풍경 모두가 한국만의 <b>라면 문화</b>예요.',
       '문화는 <b>학습</b>을 통해 전해지며, 한 세대에서 다음 세대로 <b>전승</b>됩니다. 부모님이 라면에 김치와 계란을 넣어 끓이는 방법을 알려주면, 그것이 바로 문화의 전승이에요. 또한 문화는 고정된 것이 아니라 시대에 따라 <b>변동</b>해요. 과거에는 냄비에 끓여 먹던 라면을 이제는 컵라면으로 즐기기도 하지요. 이러한 변화가 <b>문화 변동</b>입니다.',
@@ -866,6 +926,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_11: {
     labelNo: '11',
     title: '🎬 K-드라마는 왜 세계를 사로잡았을까?',
+    paragraphMain: [
+      '한류와 문화 산업: 한류=한국 대중문화 해외 인기, 90년대부터 전 세계 확산, 문화 산업=문화 상품화→경제 가치',
+      '한류 성공 요인: ①스토리텔링 능력, ②높은 제작 품질(영상미·음악·연기), ③디지털 플랫폼·OTT 덕분 글로벌 유통',
+      '한류의 경제적 효과: 한국어 학습·한국 제품 구매·한국 여행 증가, 국가 이미지 긍정적 변화',
+      '소프트 파워와 한류: 하드 파워(군사력·경제력) vs 소프트 파워(문화·가치관 매력), 한류=창의력+기술+글로벌 유통망 결합'
+    ],
     passage: [
       'K-드라마, K-팝, K-영화로 대표되는 <b>한류</b>는 이제 전 세계적인 문화 현상이 되었어요. 한류란 한국의 대중문화가 해외에서 인기를 얻는 현상을 말하며, 1990년대를 시작으로 동남아시아, 유럽, 미주까지 확산되었습니다. <b>문화 산업</b>이란 문화를 상품으로 만들어 경제적 가치를 창출하는 산업을 의미해요. 한국은 이 분야에서 세계적인 경쟁력을 갖추게 되었습니다.',
       '한류의 성공 요인은 무엇일까요? 첫째, <b>스토리텔링</b> 능력이에요. 한국 드라마는 사랑, 가족, 사회 문제 등 보편적 주제를 흥미진진한 이야기로 풀어냅니다. 둘째, 높은 제작 품질이에요. 영상미, 음악, 연기력에서 세계적 수준을 자랑해요. 셋째, <b>디지털 플랫폼</b>의 발달입니다. 유튜브, 넷플릭스 같은 <b>OTT</b> 서비스 덕분에 전 세계 어디서든 한국 콘텐츠를 볼 수 있게 되었어요.',
@@ -947,6 +1013,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_12: {
     labelNo: '12',
     title: '📰 가짜 뉴스를 구별하는 법',
+    paragraphMain: [
+      '가짜 뉴스의 정의와 확산: 가짜 뉴스=사실 아닌 정보를 진짜처럼 퍼뜨림, 광고 수익·여론 조작 목적, SNS 통해 빠르게 확산',
+      '가짜 뉴스 구별 방법: ①출처 확인, ②팩트체크(여러 언론사 비교), ③감정에 휘둘리지 않기(분노·공포 자극 설계)',
+      '가짜 뉴스의 사회적 해악: 잘못된 건강 정보→생명 위협, 정치적 가짜 뉴스→민주주의 훼손, 언론 불신 증가',
+      '비판적 사고와 정보 윤리: 비판적 사고 갖추기, 검증 안 된 정보 공유 금지, "이것이 사실인가?" 질문 습관, 신중한 판단'
+    ],
     passage: [
       '사실이 아닌 정보를 마치 진짜 뉴스처럼 만들어 퍼뜨리는 것을 <b>가짜 뉴스</b> 또는 <b>허위 정보</b>라고 해요. 가짜 뉴스는 주로 클릭을 유도해 광고 수익을 얻거나, 특정 정치적 목적을 위해 <b>여론</b>을 조작하려는 의도로 만들어집니다. SNS와 메신저를 통해 빠르게 퍼지기 때문에 진짜 뉴스보다 가짜 뉴스가 더 빨리 확산되기도 해요.',
       '가짜 뉴스를 구별하려면 어떻게 해야 할까요? 첫째, <b>출처</b>를 확인해야 해요. 기사를 쓴 사람이나 언론사가 신뢰할 수 있는지 살펴보세요. 둘째, <b>팩트체크</b>를 해야 합니다. 같은 사건을 다룬 여러 언론사의 기사를 비교해 보세요. 셋째, 감정에 휘둘리지 말아야 해요. 가짜 뉴스는 분노나 공포 같은 강한 감정을 자극하도록 설계됩니다.',
@@ -1027,6 +1099,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_13: {
     labelNo: '13',
     title: '🗳️ 18세 선거권, 우리의 목소리',
+    paragraphMain: [
+      '18세 선거권의 도입: 2019년 만 18세로 하향, 일부 고3 학생도 투표권, 선거=국민 주권 실현 기본 방법',
+      '18세 선거권의 근거: ①18세 이미 법적 책임 짐(운전·근로·형사), ②판단 능력 있음, ③OECD 대부분 18세 선거권',
+      '우려에 대한 반론과 대안: 정치적 중립 훼손·판단력 부족 우려→민주 시민 교육으로 해결, 비판적 사고 훈련→책임 있는 유권자',
+      '다양한 정치 참여 방법: 투표만이 전부 아님, 청원·집회·캠페인·정책 제안 등, 청소년 미래 직결 문제에 목소리 필요'
+    ],
     passage: [
       '2019년, 한국에서 <b>선거 연령</b>이 만 19세에서 만 18세로 낮아졌어요. 이로써 고등학교 3학년 중 일부 학생들도 <b>투표권</b>을 갖게 되었지요. <b>선거권</b>이란 국가의 대표를 뽑는 선거에 참여할 수 있는 권리를 말해요. 민주주의 사회에서 선거는 <b>국민 주권</b>을 실현하는 가장 기본적인 방법입니다. <b>대의 민주주의</b>는 국민이 대표를 선출하고 그 대표가 정치를 하는 것이에요.',
       '왜 18세에게 선거권을 주어야 할까요? 첫째, 18세는 이미 다양한 법적 책임을 지는 나이예요. 운전면허 취득, 근로 계약이 가능하며, 범죄를 저지르면 형사 처벌을 받습니다. 권리 없이 책임만 지는 것은 <b>형평성</b>에 맞지 않아요. 둘째, 18세 청소년도 사회 문제에 대해 충분히 판단할 능력이 있습니다. 셋째, OECD 대부분의 국가에서 18세 이상에게 선거권을 부여해요.',
@@ -1107,6 +1185,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_14: {
     labelNo: '14',
     title: '⚖️ 정의란 무엇인가? 공정한 사회를 향하여',
+    paragraphMain: [
+      '정의의 개념: 아리스토텔레스 "각자에게 그의 몫을", 분배적 정의=기여·상황 맞게 분배, 교정적 정의=처벌+보상',
+      '정의에 대한 다양한 관점: 롤스=사회적 약자 보호, 능력주의=노력·능력 따라 보상, 기회의 평등 vs 결과의 평등 논쟁',
+      '사회 불평등 문제: 빈부 격차·교육 불평등·채용 비리 등, 제도 개선+인식 변화 필요, 시민 의식 중요',
+      '일상 속 정의 실천: 불의에 침묵하지 않는 용기, 규칙 공정하게 지키고 약자 배려, 작은 실천→정의로운 사회'
+    ],
     passage: [
       '우리는 일상에서 자주 <b>정의</b>와 <b>공정</b>에 대해 이야기해요. 철학자 아리스토텔레스는 정의를 "각자에게 그의 몫을 주는 것"이라고 했어요. 똑같이 나누는 것이 항상 공정한 것은 아니며, 각자의 노력이나 상황에 맞게 분배하는 것이 정의롭다는 뜻이에요. 이를 <b>분배적 정의</b>라고 해요. 반면 잘못에 대해 처벌하고 피해자에게 보상하는 것은 <b>교정적 정의</b>예요.',
       '현대 사회에서 정의에 대한 논쟁은 더욱 복잡해졌어요. 철학자 존 롤스는 <b>사회적 약자</b>를 보호하는 것이 정의라고 주장했습니다. 하지만 어떤 사람들은 <b>능력주의</b>, 즉 개인의 노력과 능력에 따라 결과가 달라져야 한다고 주장해요. 결과의 평등보다 <b>기회의 평등</b>이 더 중요하다는 의견도 있어요. 정의에 대한 생각은 사람마다 다를 수 있습니다.',
@@ -1187,6 +1271,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_15: {
     labelNo: '15',
     title: '🌍 기후 위기와 미래 세대의 책임',
+    paragraphMain: [
+      '기후 변화의 원인: 폭염 등 이상 기후=기후 변화 결과, 인간 활동→온실가스 배출→온실효과 강화→지구 온도 상승',
+      '기후 위기의 결과와 탄소 중립: 해수면 상승·가뭄·홍수·멸종 위기, 탄소 중립=배출량과 흡수량 같게 해 순 배출량 0',
+      '개인의 실천과 청소년들의 행동: 대중교통·전기 절약·일회용품 줄이기, 그레타 툰베리 기후 파업→수백만 청소년 동참',
+      '세대 간 정의와 행동: 현재 세대→미래 세대에 건강한 지구 물려줄 책임, 지금 당장 행동 필요, 작은 노력이 지구 지킴'
+    ],
     passage: [
       '전 세계가 기록적인 폭염에 시달리고 있어요. 이러한 이상 기후 현상은 <b>기후 변화</b>의 결과입니다. 기후 변화란 지구의 평균 기온이 장기간에 걸쳐 변하는 현상으로, 현재의 급격한 온난화는 주로 인간 활동에 의해 발생해요. 공장과 자동차에서 배출되는 <b>온실가스</b>가 지구를 뒤덮어 <b>온실효과</b>가 강화되면서 지구 온도가 상승하고 있습니다.',
       '기후 위기가 심각해지면 어떻게 될까요? 해수면 상승으로 해안 도시가 물에 잠기고, 극심한 가뭄과 홍수가 반복되며, 식량 생산이 줄어들 수 있어요. 생태계가 파괴되어 수많은 동식물이 멸종 위기에 처할 것입니다. 이에 전 세계는 <b>탄소 중립</b>을 목표로 삼고 있어요. 탄소 중립이란 배출하는 온실가스양과 흡수하는 양을 같게 하여 순 배출량을 "0"으로 만드는 것이에요.',
@@ -1267,6 +1357,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_16: {
     labelNo: '16',
     title: '🌍 국제사회와 글로벌 시민',
+    paragraphMain: [
+      '세계화와 지구촌: 교통·통신 발달→세계 하나의 마을처럼 가까워짐=지구촌, 실시간 소통·쉬운 물건 구매·빠른 이동',
+      '지구촌 문제와 협력: 기후 변화 자연재해·난민 문제·빈곤 굶주림, 한 나라 노력만으로 해결 어려움→협력 필요',
+      '국제기구의 역할: 유엔(UN) 중심 해결책 논의, WHO·유니세프 등 평화 유지·인권 보호·환경 보전 활동',
+      '세계 시민의 역할: 세계 시민=지구촌 문제를 나의 문제로 여김, 공정무역·기부·환경 보호 생활 실천'
+    ],
     passage: [
       '오늘날 우리는 <b>세계화</b> 시대에 살고 있어요. 스마트폰으로 지구 반대편 친구와 실시간으로 대화하고, 외국에서 만든 물건을 마트에서 쉽게 구입해요. 비행기를 타면 반나절 만에 다른 나라에 도착할 수도 있지요. 교통과 통신의 발달로 세계는 마치 하나의 마을처럼 가까워졌어요. 이것을 <b>지구촌</b>이라고 불러요.',
       '지구촌에서는 한 나라에서 일어난 일이 다른 나라에도 영향을 미치기 때문에 서로 <b>협력</b>하는 것이 중요해요. <b>기후 변화</b>로 인한 자연재해, 전쟁과 분쟁으로 발생하는 <b>난민</b> 문제, 가난한 나라의 <b>빈곤</b>과 굶주림 문제가 대표적입니다. 이러한 문제들은 한 나라만의 노력으로는 해결하기 어려워요.',
@@ -1347,6 +1443,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_17: {
     labelNo: '17',
     title: '🔬 과학기술이 바꾸는 일상',
+    paragraphMain: [
+      '일상 속 과학기술: 스마트폰 알람·인공지능 스피커·전자칠판·태블릿, 과학기술이 일상 곳곳에 스며듦',
+      '새로운 기술들의 소개: AI=생각·학습하는 컴퓨터, 로봇=공장·병원 활용, 자율주행=운전자 없이 운행, IoT=집 밖에서 가전 제어',
+      '과학기술 발전의 문제점: 로봇→실업 문제, 개인 정보 유출→프라이버시 침해, 기술 다루지 못하면 소외→디지털 격차',
+      '기술과 사람의 조화: 편리함 누리며 문제점 해결 지혜 필요, 올바른 사용, 모든 사람이 혜택 누리도록 노력, 기술+사람 함께 발전'
+    ],
     passage: [
       '아침에 일어나 스마트폰 알람을 끄고, 인공지능 스피커에게 오늘 날씨를 물어봐요. 학교에 가면 전자칠판으로 수업을 듣고, 태블릿으로 과제를 제출합니다. 이처럼 <b>과학기술</b>은 우리 일상 곳곳에 스며들어 있어요. 불과 20년 전만 해도 상상하기 어려웠던 일들이 지금은 너무나 자연스러워졌지요.',
       '<b>인공지능(AI)</b>은 사람처럼 생각하고 배우는 컴퓨터 기술이에요. AI는 번역, 작곡, 그림 그리기까지 다양한 분야에서 활용됩니다. <b>로봇</b>은 공장에서 물건을 만들거나 병원에서 수술을 돕기도 해요. <b>자율주행</b> 기술이 발전하면 운전자 없이 자동차가 스스로 목적지까지 갈 수 있게 됩니다. <b>사물인터넷(IoT)</b>은 집 밖에서도 가전제품을 조종할 수 있는 기술이에요.',
@@ -1427,6 +1529,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_18: {
     labelNo: '18',
     title: '🏥 복지란 무엇인가? 함께 사는 사회',
+    paragraphMain: [
+      '사회복지의 개념: 국가가 국민 건강·행복 위해 도움=사회복지, 모든 사람 인간다운 생활 보장, 다양한 복지 서비스',
+      '사회보험과 공공부조: 사회보험=건강보험·국민연금·고용보험(미리 돈 모아 대비), 공공부조=기초생활보장(생활비 지원)',
+      '사회서비스와 복지 쟁점: 어린이집·노인돌봄·장애인 활동지원, 복지 늘리려면 세금 더 필요, 지나친 복지→노력 의지 저하 우려',
+      '양극화와 복지의 조화: 복지 부족→양극화 심화, 보편적 복지+선별적 복지 적절히 조화, 모든 사람 기본 삶의 질 유지'
+    ],
     passage: [
       '여러분은 아프면 병원에 가고, 학교에서 무료로 급식을 먹어요. 이처럼 국가가 국민의 건강하고 행복한 삶을 위해 도움을 주는 것을 <b>사회복지</b>라고 합니다. 복지는 모든 사람이 인간다운 생활을 할 수 있도록 보장하는 제도예요. 어린이, 노인, 장애인 등 도움이 필요한 사람들을 위한 다양한 복지 서비스가 있답니다.',
       '국가는 <b>사회보험</b>과 <b>공공부조</b>를 통해 국민을 보호해요. 사회보험은 건강보험, 국민연금, 고용보험 등 미리 돈을 모아 위험에 대비하는 제도입니다. 아플 때 병원비를 적게 내고, 나이가 들면 연금을 받을 수 있지요. 공공부조는 <b>기초생활보장</b>처럼 생활이 어려운 사람에게 생활비를 지원하는 제도예요.',
@@ -1507,6 +1615,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_19: {
     labelNo: '19',
     title: '♻️ 지속가능한 삶, 환경과 경제의 균형',
+    paragraphMain: [
+      '소비와 환경 문제: 많은 소비+버림→환경 부담, 공장 탄소 배출·쓰레기 오염, 지속가능한 발전 개념 등장',
+      '지속가능한 발전과 SDGs: 현재 필요 충족+미래 환경 보전, 유엔 SDGs 17가지(빈곤 퇴치·깨끗한 물·기후 변화 대응 등)',
+      '친환경 소비와 탄소발자국: 환경 생각해 구매, 필요한 만큼만+오래 쓰기+재활용, 탄소발자국 줄이기 위해 걷기·대중교통',
+      '업사이클링과 미래: 버려지는 물건→새 제품 재탄생, 경제 성장+환경 보전 균형, 오늘 선택이 미래 세대 삶 결정'
+    ],
     passage: [
       '우리는 매일 물건을 사고 버려요. 옷장에는 한 번도 입지 않은 옷이 있고, 냉장고에는 버리는 음식이 있습니다. 이처럼 많은 것을 소비하고 버리는 생활 방식은 환경에 큰 부담을 줘요. 공장에서 물건을 만들 때 <b>탄소</b>가 배출되고, 버려진 쓰레기는 땅과 바다를 오염시킵니다. 그래서 등장한 개념이 <b>지속가능한 발전</b>이에요.',
       '지속가능한 발전이란 현재 세대의 필요를 충족시키면서도 미래 세대가 필요한 것을 사용할 수 있도록 환경을 보전하는 발전 방식이에요. 유엔은 2015년에 <b>지속가능발전목표(SDGs)</b> 17가지를 정했습니다. 빈곤 퇴치, 깨끗한 물과 위생, 기후 변화 대응 등이 포함되어 있어요. 이 목표들은 전 세계가 함께 노력해야 달성할 수 있습니다.',
@@ -1587,6 +1701,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   on_soc_20: {
     labelNo: '20',
     title: '🔮 미래 사회, 우리가 만들어갈 세상',
+    paragraphMain: [
+      '미래 사회 변화: 2040년 AI 로봇·자율주행·우주여행, 기후 변화·인구 고령화 도전, 기회와 도전이 함께 오는 시대',
+      '시민의 역할: 사회 문제 관심+참여하는 사람, 투표·공청회·시민 단체·SNS로 의견 표현, 민주 시민 활동',
+      '시민 의식과 청소년 참여: 공동체 규칙 준수+권리 존중, 학생회·청소년 의회·온라인 청원, 만 18세 투표권(2019년~)',
+      '미래 만들기: 청소년 목소리 인정, 관심+참여→더 나은 세상, 오늘의 작은 관심이 내일의 큰 변화'
+    ],
     passage: [
       '여러분이 어른이 되는 2040년, 세상은 어떻게 바뀌어 있을까요? 인공지능 로봇이 집안일을 하고, 자율주행 자동차가 도로를 달리며, 우주여행이 보편화될지도 모릅니다. 하지만 기후 변화로 자연재해가 늘어나고, 인구 고령화로 젊은 세대의 부담이 커질 수도 있어요. <b>미래 사회</b>는 기회와 도전이 함께 찾아오는 시대가 될 것입니다.',
       '미래 사회에서는 <b>시민</b>의 역할이 더욱 중요해집니다. 시민이란 단순히 한 나라에 사는 사람이 아니라 사회 문제에 관심을 갖고 <b>참여</b>하는 사람을 말해요. 투표를 통해 대표자를 뽑고, 공청회나 시민 단체 활동에 참여하며, SNS를 통해 의견을 나누는 것이 모두 <b>민주 시민</b>의 활동입니다.',
@@ -1882,93 +2002,97 @@ function applyContentPack(unitKey) {
       return `${minutes}분 ${seconds}초`;
     };
 
-    // 문장 클릭 시 선택 유지
-    passageBox.addEventListener('click', (e) => {
-      const sentence = e.target.closest('.sentence');
-      if (!sentence) return;
+    // 문단별 완료 상태 추적
+    const paragraphs = passageBox.querySelectorAll('p');
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
+    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
-      // 첫 클릭 시 시작 시간 기록
-      if (!readingStartTime) {
-        readingStartTime = new Date();
-        localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() }));
-      }
+    // 문단 중심 내용 팝업 스타일
+    if (!document.getElementById('paragraph-popup-style')) {
+      const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
+      pps.textContent = `.paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; } .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; } @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; } .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; } .paragraph-popup-option { padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.2s; background: #fafafa; } .paragraph-popup-option:hover { border-color: #ff6f35; background: #fff5f0; } .paragraph-popup-option.correct { border-color: #4caf50; background: #e8f5e9; } .paragraph-popup-option.wrong { border-color: #f44336; background: #ffebee; } .paragraph-popup-feedback { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; } .paragraph-popup-feedback.correct { background: #e8f5e9; color: #2e7d32; } .paragraph-popup-feedback.wrong { background: #ffebee; color: #c62828; }`;
+      document.head.appendChild(pps);
+    }
 
-      sentence.classList.toggle('selected');
-      saveSelection();
+    // 문단 중심 내용 팝업 함수
+    function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
+      if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
+      const correctAnswer = pack.paragraphMain[paragraphIndex];
+      const allOptions = [...pack.paragraphMain];
+      for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
+      const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
+      const popup = document.createElement('div'); popup.className = 'paragraph-popup';
+      popup.innerHTML = `<div class="paragraph-popup-title">📖 방금 읽은 ${paragraphIndex + 1}번째 문단의 중심 내용을 골라주세요</div><div class="paragraph-popup-options">${allOptions.map((opt, i) => `<div class="paragraph-popup-option" data-idx="${i}">${opt}</div>`).join('')}</div>`;
+      overlay.appendChild(popup); document.body.appendChild(overlay);
+      const options = popup.querySelectorAll('.paragraph-popup-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const selectedText = opt.textContent; const isCorrect = selectedText === correctAnswer;
+          if (isCorrect) {
+            opt.classList.add('correct'); options.forEach(o => o.style.pointerEvents = 'none');
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback correct'; feedback.textContent = '정답입니다! 👏'; popup.appendChild(feedback);
+            if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+            for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
+            setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
+          } else {
+            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+          }
+        });
+      });
+    }
 
-      // 모든 문장 선택 완료 시 축하
-      const total = passageBox.querySelectorAll('.sentence').length;
+    // 완독 축하 팝업 함수
+    function showCompletionToast() {
+      const endTime = new Date(); const duration = endTime - readingStartTime;
+      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
+      const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 24px 48px; border-radius: 20px; font-size: 1.5rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:14px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
+      if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
+    }
+
+    passageBox.addEventListener('click', e => {
+      const span = e.target.closest('.sentence'); if (!span) return;
+      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      const currentSentences = passageBox.querySelectorAll('.sentence');
+      const idx = Array.from(currentSentences).indexOf(span);
+      span.classList.toggle('selected');
+      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+      const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
 
-      // 문장 전체 해제 시 시계 초기화 + 재측정 준비
-      if (selected === 0) {
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = '00';
-        if (secInput) secInput.value = '00';
-        readingStartTime = null;
-        localStorage.removeItem(timeKey);
+      const currentParagraph = span.closest('p');
+      const currentParagraphs = passageBox.querySelectorAll('p');
+      const paragraphIdx = Array.from(currentParagraphs).indexOf(currentParagraph);
+
+      if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
+        paragraphCompletedSet.delete(paragraphIdx);
+        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
       }
-      if (total > 0 && total === selected) {
-        // 완료 시간 기록
-        const endTime = new Date();
-        const duration = endTime - readingStartTime;
-        localStorage.setItem(timeKey, JSON.stringify({
-          start: readingStartTime.toISOString(),
-          end: endTime.toISOString(),
-          duration: duration
-        }));
-
-        // DB에 독해시간 저장 + 탁상시계 업데이트
-        const stu = getCurrentStudentForReading();
-        if (stu) {
-          const studentKey = buildStudentKeyForReading(stu);
-          const unitKeyForSave = window.CUR_UNIT || 'on_soc_01';
-          fetch('/api/reading-time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              studentKey,
-              unitKey: unitKeyForSave,
-              duration,
-              startTime: readingStartTime.toISOString(),
-              endTime: endTime.toISOString()
-            })
-          }).catch(err => console.error('독해시간 저장 실패:', err));
+      if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
+        const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
+        const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
+        if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
+          paragraphCompletedSet.add(paragraphIdx);
+          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
+          const isFullyCompleted = (total > 0 && total === selected);
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          if (isLastParagraph && isFullyCompleted) {
+            showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
+          } else {
+            showParagraphPopup(paragraphIdx, () => { if (isFullyCompleted) { showCompletionToast(); } }, handleWrong);
+          }
         }
-        // 탁상시계에 독해시간 표시
-        const minutes = Math.floor(duration / 60000);
-        const seconds = Math.floor((duration % 60000) / 1000);
-        const minInputUpdate = document.getElementById('minute-input');
-        const secInputUpdate = document.getElementById('second-input');
-        if (minInputUpdate) minInputUpdate.value = String(minutes).padStart(2, '0');
-        if (secInputUpdate) secInputUpdate.value = String(seconds).padStart(2, '0');
-
-        const toast = document.createElement('div');
-        toast.className = 'complete-toast';
-        toast.innerHTML = `<div style="font-size:24px;margin-bottom:12px;">🎉 지문 완독! 대단해요!</div>
-          <div style="font-size:14px;color:#666;line-height:1.6;">
-            <div>시작: ${formatDateTime(readingStartTime)}</div>
-            <div>완료: ${formatDateTime(endTime)}</div>
-            <div style="margin-top:8px;font-weight:bold;color:#e65100;">총 독해시간: ${formatDuration(duration)}</div>
-          </div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-
-        const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff8fd8','#fff','#ffa502','#a55eea'];
-        const shapes = ['●','★','◆','♥','✦'];
-        for (let i = 0; i < 60; i++) {
-          const sparkle = document.createElement('div');
-          sparkle.className = 'sparkle-rain';
-          sparkle.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-          sparkle.style.left = Math.random() * 100 + 'vw';
-          sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-          sparkle.style.fontSize = (8 + Math.random() * 24) + 'px';
-          sparkle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-          sparkle.style.animationDelay = Math.random() * 0.8 + 's';
-          document.body.appendChild(sparkle);
-          setTimeout(() => sparkle.remove(), 3500);
-        }
+      } else if (total > 0 && total === selected) {
+        showCompletionToast();
       }
     });
 }
