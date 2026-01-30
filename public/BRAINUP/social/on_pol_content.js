@@ -2062,9 +2062,32 @@ function applyContentPack(unitKey) {
             for (let i = 0; i < 12; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (16 + Math.random()*12) + 'px', zIndex: 10001, pointerEvents: 'none', animation: `fall ${1.5 + Math.random()*1}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 2500); }
             setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
           } else {
-            opt.classList.add('wrong'); opt.style.pointerEvents = 'none';
+            opt.classList.add('wrong');
+            options.forEach(o => o.style.pointerEvents = 'none');
             const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
-            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 찾아보세요!'; popup.appendChild(feedback);
+            // 큰 X 표시 추가
+            const wrongMark = document.createElement('div');
+            wrongMark.textContent = '❌';
+            wrongMark.style.cssText = 'font-size: 80px; text-align: center; margin: 20px 0; animation: shake 0.5s ease;';
+            if (!document.getElementById('shake-keyframes')) { const sk = document.createElement('style'); sk.id = 'shake-keyframes'; sk.textContent = '@keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }'; document.head.appendChild(sk); }
+            popup.appendChild(wrongMark);
+            const feedback = document.createElement('div'); feedback.className = 'paragraph-popup-feedback wrong'; feedback.textContent = '다시 읽고 문단중심내용을 찾아주세요'; popup.appendChild(feedback);
+            // 3초 후 팝업 닫고 해당 문단 문장 해제
+            setTimeout(() => {
+              overlay.remove();
+              // 해당 문단의 모든 문장 선택 해제
+              const currentParagraphs = passageBox.querySelectorAll('p');
+              if (currentParagraphs[paragraphIndex]) {
+                const sentencesInParagraph = currentParagraphs[paragraphIndex].querySelectorAll('.sentence');
+                sentencesInParagraph.forEach(s => s.classList.remove('selected'));
+                // localStorage 업데이트
+                const allSentences = passageBox.querySelectorAll('.sentence');
+                const selectedIndices = [];
+                allSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
+                localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+              }
+              onWrong(paragraphIndex);
+            }, 3000);
           }
         });
       });

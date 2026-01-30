@@ -2962,7 +2962,7 @@
 
       function applyQuizFontSize() {
         const quizOptionLabels = document.querySelectorAll('.quiz-options li label');
-        const baseSize = 16;
+        const baseSize = 14;
         const newSize = baseSize + (quizFontLevel * 2);
 
         // 선지 label들과 동그라미 번호 조절
