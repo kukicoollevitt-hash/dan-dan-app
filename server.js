@@ -380,6 +380,32 @@ const adminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model("Admin", adminSchema);
 
+// ===== 학습 행동 데이터 스키마 (본문학습 오답 추적) =====
+const learningBehaviorSchema = new mongoose.Schema({
+  grade: String,
+  name: String,
+  school: String,
+  unit: String,                      // 단원 코드 (예: on_chem_01)
+  unitTitle: String,                 // 단원 제목
+  readingTime: { type: Number, default: 0 },  // 독해 총 소요시간 (초)
+  paragraphQuizErrors: {             // 중심문단 퀴즈 오답 기록
+    total: { type: Number, default: 0 },      // 총 오답 횟수
+    details: [{
+      paragraphNo: Number,           // 문단 번호
+      errorCount: Number             // 해당 문단 오답 횟수
+    }]
+  },
+  problemErrors: {                   // 오른쪽 5문제 오답 기록
+    total: { type: Number, default: 0 },      // 총 오답 횟수 (다시풀기 포함 누적)
+    details: [{
+      problemNo: Number,             // 문제 번호 (1~5)
+      errorCount: Number             // 해당 문제 오답 횟수
+    }]
+  },
+  createdAt: { type: Date, default: Date.now }
+});
+const LearningBehavior = mongoose.model("LearningBehavior", learningBehaviorSchema);
+
 /* ====================================
  * ✅ 브랜치 관리자용 미들웨어
  * ==================================== */
@@ -947,6 +973,82 @@ app.post("/api/super/gate-passes/delete", requireSuperAdmin, async (req, res) =>
     res.json({ ok: true, deletedCount: result.deletedCount });
   } catch (err) {
     console.error("❌ 관문 통과 기록 삭제 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 슈퍼관리자: 학습 행동 데이터 목록 API
+app.get("/api/super/learning-behaviors", requireSuperAdmin, async (req, res) => {
+  try {
+    const LearningBehaviorModel = mongoose.model("LearningBehavior");
+
+    // 모든 학습 행동 데이터 조회
+    const behaviors = await LearningBehaviorModel.find({}).sort({ createdAt: -1 }).lean();
+
+    // 학교명을 가져오기 위해 User 정보와 매칭
+    const enrichedData = await Promise.all(behaviors.map(async (item, index) => {
+      const user = await User.findOne({ grade: item.grade, name: item.name }).lean();
+      return {
+        _id: item._id,
+        no: index + 1,
+        grade: item.grade,
+        name: item.name,
+        school: user?.school || user?.academyName || item.school || '-',
+        unit: item.unit,
+        unitTitle: item.unitTitle || item.unit,
+        readingTime: item.readingTime || 0,
+        paragraphQuizErrors: item.paragraphQuizErrors || { total: 0, details: [] },
+        problemErrors: item.problemErrors || { total: 0, details: [] },
+        createdAt: item.createdAt
+      };
+    }));
+
+    res.json({ ok: true, data: enrichedData });
+  } catch (err) {
+    console.error("❌ 학습 행동 데이터 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 슈퍼관리자: 학습 행동 데이터 상세 조회 API
+app.get("/api/super/learning-behavior-details", requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.json({ ok: false, message: "ID가 필요합니다." });
+    }
+
+    const LearningBehaviorModel = mongoose.model("LearningBehavior");
+    const behavior = await LearningBehaviorModel.findById(id).lean();
+
+    if (!behavior) {
+      return res.json({ ok: false, message: "데이터를 찾을 수 없습니다." });
+    }
+
+    res.json({ ok: true, data: behavior });
+  } catch (err) {
+    console.error("❌ 학습 행동 데이터 상세 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 슈퍼관리자: 학습 행동 데이터 일괄 삭제 API
+app.post("/api/super/learning-behaviors/delete", requireSuperAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.json({ ok: false, message: "삭제할 항목을 선택해주세요." });
+    }
+
+    const LearningBehaviorModel = mongoose.model("LearningBehavior");
+    const result = await LearningBehaviorModel.deleteMany({ _id: { $in: ids } });
+
+    console.log(`✅ 학습 행동 데이터 ${result.deletedCount}개 삭제됨`);
+    res.json({ ok: true, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error("❌ 학습 행동 데이터 삭제 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
@@ -6723,6 +6825,45 @@ app.post("/api/log", async (req, res) => {
   } catch (err) {
     console.error("[/api/log] error:", err);
     res.status(500).json({ ok: false });
+  }
+});
+
+// ===== 학습 행동 데이터 저장 API (본문학습 오답 추적) =====
+app.post("/api/learning-behavior/save", async (req, res) => {
+  try {
+    const { grade, name, unit, unitTitle, readingTime, paragraphQuizErrors, problemErrors } = req.body;
+
+    console.log("[/api/learning-behavior/save] 받은 데이터:", { grade, name, unit, unitTitle, readingTime });
+
+    if (!grade || !name || !unit) {
+      return res.status(400).json({ ok: false, message: "필수 정보 부족 (grade, name, unit)" });
+    }
+
+    // 학교명 가져오기
+    const user = await User.findOne({ grade, name, deleted: { $ne: true } }).lean();
+    const school = user?.school || user?.academyName || '';
+
+    // 항상 새 기록으로 저장 (학습 회차별 기록)
+    const LearningBehaviorModel = mongoose.model("LearningBehavior");
+    const newBehavior = new LearningBehaviorModel({
+      grade,
+      name,
+      school,
+      unit,
+      unitTitle: unitTitle || unit,
+      readingTime: readingTime || 0,
+      paragraphQuizErrors: paragraphQuizErrors || { total: 0, details: [] },
+      problemErrors: problemErrors || { total: 0, details: [] },
+      createdAt: new Date()
+    });
+
+    const saved = await newBehavior.save();
+    console.log("[/api/learning-behavior/save] 저장 완료:", saved._id);
+
+    res.json({ ok: true, _id: saved._id });
+  } catch (err) {
+    console.error("[/api/learning-behavior/save] error:", err);
+    res.status(500).json({ ok: false, message: err.message });
   }
 });
 

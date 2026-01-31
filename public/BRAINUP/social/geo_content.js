@@ -2028,6 +2028,10 @@ function applyContentPack(unitKey) {
             setTimeout(() => { overlay.remove(); onComplete(); }, 1200);
           } else {
             opt.classList.add('wrong');
+            // ★ 중심문단 퀴즈 오답 기록
+            if (typeof window.recordParagraphQuizError === 'function') {
+              window.recordParagraphQuizError(paragraphIndex + 1);
+            }
             options.forEach(o => o.style.pointerEvents = 'none');
             const existingFeedback = popup.querySelector('.paragraph-popup-feedback'); if (existingFeedback) existingFeedback.remove();
             // 큰 X 표시 추가
@@ -2398,6 +2402,10 @@ window.gradeQuiz = function () {
     } else {
       num?.classList.add('wrong');
       if(markEl) markEl.textContent='✖';
+      // ★ 5문제 오답 기록
+      if (typeof window.recordProblemError === 'function') {
+        window.recordProblemError(idx + 1);
+      }
       shortMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌`);
       fullMsgs.push(`${label} ${isEssay?'서술형: ':''}오답 ❌ ${ex||''}`);
   }
@@ -2921,6 +2929,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
         const pack = window.CONTENTS[window.CUR_UNIT] || window.CONTENTS.geo_01;
         renderSolutions(pack);
+        // ★ 학습 행동 데이터 전송
+        if (typeof window.sendLearningBehavior === 'function') {
+          window.sendLearningBehavior();
+        }
       } catch (e) {
         console.warn('submit-btn handler error', e);
     }

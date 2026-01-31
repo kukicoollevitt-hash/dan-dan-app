@@ -2913,7 +2913,7 @@
       const q1Mark = q1Num.querySelector('.mark');
       const q1ok = (q1 && q1.value === answerKey.q1);
       if (q1ok) { score++; q1Num.classList.add('correct'); q1Mark.textContent="⭕"; shortMsgs.push("정답 ✅"); fullMsgs.push("정답 ✅ " + q1Msg); }
-      else { q1Num.classList.add('wrong'); q1Mark.textContent="✖"; shortMsgs.push("오답 ❌"); fullMsgs.push("오답 ❌ " + q1Msg); }
+      else { q1Num.classList.add('wrong'); q1Mark.textContent="✖"; shortMsgs.push("오답 ❌"); fullMsgs.push("오답 ❌ " + q1Msg); if(window.recordProblemError) window.recordProblemError(1); }
 
       // 2번
       const q2 = document.querySelector('input[name="q2"]:checked');
@@ -2921,7 +2921,7 @@
       const q2Mark = q2Num.querySelector('.mark');
       const q2ok = (q2 && q2.value === answerKey.q2);
       if (q2ok) { score++; q2Num.classList.add('correct'); q2Mark.textContent="⭕"; shortMsgs.push("정답 ✅"); fullMsgs.push("정답 ✅ " + q2Msg); }
-      else { q2Num.classList.add('wrong'); q2Mark.textContent="✖"; shortMsgs.push("오답 ❌"); fullMsgs.push("오답 ❌ " + q2Msg); }
+      else { q2Num.classList.add('wrong'); q2Mark.textContent="✖"; shortMsgs.push("오답 ❌"); fullMsgs.push("오답 ❌ " + q2Msg); if(window.recordProblemError) window.recordProblemError(2); }
 
             // 3번 (객관식)
       const q3Radio = document.querySelector('input[name="q3"]:checked');
@@ -2929,7 +2929,7 @@
       const q3Mark = q3Num.querySelector('.mark');
       const q3ok = (q3Radio && q3Radio.value === answerKey.q3);
       if (q3ok) { score++; q3Num.classList.add('correct'); q3Mark.textContent="⭕"; shortMsgs.push("정답 ✅"); fullMsgs.push("정답 ✅ " + q3Msg); }
-      else { q3Num.classList.add('wrong'); q3Mark.textContent="✖"; shortMsgs.push("오답 ❌"); fullMsgs.push("오답 ❌ " + q3Msg); }
+      else { q3Num.classList.add('wrong'); q3Mark.textContent="✖"; shortMsgs.push("오답 ❌"); fullMsgs.push("오답 ❌ " + q3Msg); if(window.recordProblemError) window.recordProblemError(3); }
 
       // 4번 (객관식)
       const q4Radio = document.querySelector('input[name="q4"]:checked');
@@ -2937,7 +2937,7 @@
       const q4Mark = q4Num.querySelector('.mark');
       const q4ok = (q4Radio && q4Radio.value === answerKey.q4);
       if (q4ok) { score++; q4Num.classList.add('correct'); q4Mark.textContent="⭕"; shortMsgs.push("정답 ✅"); fullMsgs.push("정답 ✅ " + q4Msg); }
-      else { q4Num.classList.add('wrong'); q4Mark.textContent="✖"; shortMsgs.push("오답 ❌"); fullMsgs.push("오답 ❌ " + q4Msg); }
+      else { q4Num.classList.add('wrong'); q4Mark.textContent="✖"; shortMsgs.push("오답 ❌"); fullMsgs.push("오답 ❌ " + q4Msg); if(window.recordProblemError) window.recordProblemError(4); }
 
       // 5번 서술형
       const essay = document.getElementById("q5").value.trim().toLowerCase();
@@ -2950,8 +2950,7 @@
 
       if (essay.length === 0) {
         q5Num.classList.add('wrong'); q5Mark.textContent="✖";
-        shortMsgs.push("서술형: 미작성 ❌");
-        fullMsgs.push("서술형: 미작성 ❌ " + explain.q5);
+        shortMsgs.push("서술형: 미작성 ❌"); fullMsgs.push("서술형: 미작성 ❌ " + explain.q5); if(window.recordProblemError) window.recordProblemError(5);
       } else if (hit >= 1) {
         q5Num.classList.add('correct'); q5Mark.textContent="⭕";
         shortMsgs.push("서술형: 핵심어 표현 감지 ✅");
@@ -2959,8 +2958,7 @@
         q5ok = true;
       } else {
         q5Num.classList.add('wrong'); q5Mark.textContent="✖";
-        shortMsgs.push("서술형: 핵심어 표현 부족 ❌");
-        fullMsgs.push("서술형: 핵심어 표현 부족 ❌ " + explain.q5);
+        shortMsgs.push("서술형: 핵심어 표현 부족 ❌"); fullMsgs.push("서술형: 핵심어 표현 부족 ❌ " + explain.q5); if(window.recordProblemError) window.recordProblemError(5);
       }
 
       const box = document.getElementById("grade-result");
@@ -3164,6 +3162,10 @@
       try {
         if (typeof window.saveUnitProgressToServer === 'function') {
           await window.saveUnitProgressToServer(dataToSave);
+        }
+        // ★ 학습 행동 데이터 저장 (오답 카운트)
+        if (typeof window.sendLearningBehavior === 'function') {
+          await window.sendLearningBehavior();
         }
         disableQuizInputs();
         await captureElementToPDF('capture-reading', '단단국어_본문학습.pdf', { withStudentInfo: true });

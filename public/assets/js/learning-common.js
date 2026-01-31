@@ -295,6 +295,125 @@
       }
     }
 
+    // ★ 전역으로 노출
+    window.sendLearningLog = sendLearningLog;
+
+    // ===== 학습 행동 데이터 추적 (오답 카운트) =====
+    // 전역 변수: 중심문단 퀴즈 오답 카운트
+    window.paragraphQuizErrorCounts = {};  // { 문단번호: 오답횟수 }
+    // 전역 변수: 오른쪽 5문제 오답 카운트 (다시풀기 포함 누적)
+    window.problemErrorCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    // 중심문단 퀴즈 오답 기록 함수
+    function recordParagraphQuizError(paragraphNo) {
+      if (!window.paragraphQuizErrorCounts[paragraphNo]) {
+        window.paragraphQuizErrorCounts[paragraphNo] = 0;
+      }
+      window.paragraphQuizErrorCounts[paragraphNo]++;
+      console.log(`[학습행동] 문단 ${paragraphNo} 오답 기록 - 현재: ${window.paragraphQuizErrorCounts[paragraphNo]}회`);
+    }
+
+    // 오른쪽 5문제 오답 기록 함수 (문제번호: 1~5)
+    function recordProblemError(problemNo) {
+      if (problemNo >= 1 && problemNo <= 5) {
+        window.problemErrorCounts[problemNo]++;
+        console.log(`[학습행동] 문제 ${problemNo}번 오답 기록 - 현재: ${window.problemErrorCounts[problemNo]}회`);
+      }
+    }
+
+    // 학습 행동 데이터 서버 저장 함수
+    async function sendLearningBehavior() {
+      const stu = getCurrentStudent();
+      if (!stu) {
+        console.log('[sendLearningBehavior] 학생 정보 없음, 전송 건너뜀');
+        return;
+      }
+
+      const unit = window.CUR_UNIT || 'geo_01';
+
+      // 단원 제목 가져오기 (CONTENTS에서)
+      let unitTitle = unit;
+      if (window.CONTENTS && window.CONTENTS[unit] && window.CONTENTS[unit].title) {
+        unitTitle = window.CONTENTS[unit].title;
+      }
+
+      // 독해시간 계산
+      const minuteInput = document.getElementById('minute-input');
+      const secondInput = document.getElementById('second-input');
+      let readingTimeSeconds = 0;
+      if (minuteInput && secondInput) {
+        const minutes = parseInt(minuteInput.value) || 0;
+        const seconds = parseInt(secondInput.value) || 0;
+        readingTimeSeconds = minutes * 60 + seconds;
+      }
+
+      // 중심문단 오답 데이터 정리
+      const paragraphDetails = [];
+      let paragraphTotal = 0;
+      for (const [pNo, count] of Object.entries(window.paragraphQuizErrorCounts)) {
+        if (count > 0) {
+          paragraphDetails.push({ paragraphNo: parseInt(pNo), errorCount: count });
+          paragraphTotal += count;
+        }
+      }
+
+      // 문제 오답 데이터 정리
+      const problemDetails = [];
+      let problemTotal = 0;
+      for (let i = 1; i <= 5; i++) {
+        const count = window.problemErrorCounts[i] || 0;
+        if (count > 0) {
+          problemDetails.push({ problemNo: i, errorCount: count });
+          problemTotal += count;
+        }
+      }
+
+      // 데이터가 없으면 저장하지 않음
+      if (paragraphTotal === 0 && problemTotal === 0 && readingTimeSeconds === 0) {
+        console.log('[sendLearningBehavior] 저장할 데이터 없음, 전송 건너뜀');
+        return;
+      }
+
+      const behaviorData = {
+        grade: stu.grade,
+        name: stu.name,
+        unit: unit,
+        unitTitle: unitTitle,
+        readingTime: readingTimeSeconds,
+        paragraphQuizErrors: {
+          total: paragraphTotal,
+          details: paragraphDetails
+        },
+        problemErrors: {
+          total: problemTotal,
+          details: problemDetails
+        }
+      };
+
+      console.log('[sendLearningBehavior] 전송할 데이터:', behaviorData);
+
+      try {
+        const res = await fetch('/api/learning-behavior/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(behaviorData)
+        });
+        const result = await res.json();
+        if (result.ok) {
+          console.log('[sendLearningBehavior] 학습 행동 데이터 저장 완료:', result._id);
+        } else {
+          console.error('[sendLearningBehavior] 저장 실패:', result.message);
+        }
+      } catch (err) {
+        console.error('[sendLearningBehavior] 네트워크 오류:', err);
+      }
+    }
+
+    // ★ 전역으로 노출
+    window.recordParagraphQuizError = recordParagraphQuizError;
+    window.recordProblemError = recordProblemError;
+    window.sendLearningBehavior = sendLearningBehavior;
+
     // 🐋 고래 배지 획득 축하 팝업 함수
     function showWhaleBadgePopup(badgesAwarded, newTotal) {
       // 기존 팝업이 있으면 제거
@@ -402,9 +521,6 @@
         if (el) el.remove();
       }, 5000);
     }
-
-    // ★ 전역으로 노출
-    window.sendLearningLog = sendLearningLog;
 
     // ★ 서버에서 단원별 학습 진행 불러오기
     async function loadUnitProgressFromServer() {

@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>형성평가 관문 AI 데이터 관리</title>
+  <title>행동예측 AI 데이터 관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -449,6 +449,60 @@
         </tbody>
       </table>
     </div>
+
+    <!-- ========== 학습 행동 데이터 섹션 ========== -->
+    <div style="margin-top: 60px; padding-top: 40px; border-top: 3px solid #dee2e6;">
+      <header style="margin-bottom: 30px;">
+        <div>
+          <div class="title-main" style="font-size: 28px;">본문학습 행동 데이터</div>
+          <div class="title-sub">
+            학생들의 본문학습 오답 기록을 확인합니다. (독해시간, 중심문단 퀴즈 오답, 문제 오답)
+          </div>
+        </div>
+      </header>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-box">
+            <input type="text" id="behaviorSearchInput" placeholder="이름 또는 단원명으로 검색..." />
+          </div>
+          <div class="select-all-wrap">
+            <input type="checkbox" id="behaviorSelectAll" />
+            <label for="behaviorSelectAll">전체 선택</label>
+          </div>
+          <div class="count-info">
+            선택: <strong id="behaviorSelectedCount">0</strong>개 / 전체: <strong id="behaviorTotalCount">0</strong>개
+          </div>
+        </div>
+        <button class="delete-btn" id="behaviorDeleteBtn" disabled>
+          🗑️ 선택 항목 일괄 삭제
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>번호</th>
+              <th>학교명</th>
+              <th>학년</th>
+              <th>이름</th>
+              <th>단원명</th>
+              <th>독해 총소요시간</th>
+              <th>중심문단 총오답</th>
+              <th>문제 총오답</th>
+              <th>학습일시</th>
+            </tr>
+          </thead>
+          <tbody id="behaviorTableBody">
+            <tr>
+              <td colspan="10" class="loading">데이터를 불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -466,10 +520,25 @@
     </div>
   </div>
 
+  <!-- 학습 행동 상세 모달 -->
+  <div class="modal-overlay" id="behaviorDetailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="behaviorModalTitle">오답 상세 정보</h3>
+        <button class="modal-close" onclick="closeBehaviorModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="behaviorModalBody">
+        <div class="loading-modal">데이터를 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let allData = [];
     let filteredData = [];
     let selectedIds = new Set();
+    let gateShowAll = false;  // 더보기 상태
+    const GATE_INITIAL_COUNT = 10;  // 초기 표시 개수
 
     // 페이지 로드 시 데이터 가져오기
     document.addEventListener('DOMContentLoaded', loadData);
@@ -501,7 +570,11 @@
         return;
       }
 
-      tbody.innerHTML = filteredData.map((item, index) => {
+      // 더보기 상태에 따라 표시할 데이터 결정
+      const displayData = gateShowAll ? filteredData : filteredData.slice(0, GATE_INITIAL_COUNT);
+      const hasMore = filteredData.length > GATE_INITIAL_COUNT && !gateShowAll;
+
+      let html = displayData.map((item, index) => {
         const isSelected = selectedIds.has(item._id);
         const passedDate = item.passedAt ? new Date(item.passedAt).toLocaleDateString('ko-KR', {
           year: 'numeric',
@@ -526,6 +599,51 @@
         `;
       }).join('');
 
+      // 더보기 버튼 추가
+      if (hasMore) {
+        html += `
+          <tr>
+            <td colspan="7" style="text-align:center; padding:20px;">
+              <button onclick="toggleGateShowAll()" style="
+                background: linear-gradient(135deg, #495057 0%, #212529 100%);
+                color: #fff;
+                border: none;
+                padding: 12px 32px;
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+              " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                더보기 (${filteredData.length - GATE_INITIAL_COUNT}개 더)
+              </button>
+            </td>
+          </tr>
+        `;
+      } else if (gateShowAll && filteredData.length > GATE_INITIAL_COUNT) {
+        html += `
+          <tr>
+            <td colspan="7" style="text-align:center; padding:20px;">
+              <button onclick="toggleGateShowAll()" style="
+                background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+                color: #fff;
+                border: none;
+                padding: 12px 32px;
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+              " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                접기
+              </button>
+            </td>
+          </tr>
+        `;
+      }
+
+      tbody.innerHTML = html;
+
       // 체크박스 이벤트 바인딩
       document.querySelectorAll('.row-checkbox').forEach(cb => {
         cb.addEventListener('change', (e) => {
@@ -538,6 +656,11 @@
           updateSelection();
         });
       });
+    }
+
+    function toggleGateShowAll() {
+      gateShowAll = !gateShowAll;
+      renderTable();
     }
 
     function updateSelection() {
@@ -858,6 +981,309 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeModal();
+        closeBehaviorModal();
+      }
+    });
+
+    // ========== 학습 행동 데이터 섹션 ==========
+    let behaviorAllData = [];
+    let behaviorFilteredData = [];
+    let behaviorSelectedIds = new Set();
+
+    // 페이지 로드 시 학습 행동 데이터도 가져오기
+    document.addEventListener('DOMContentLoaded', loadBehaviorData);
+
+    async function loadBehaviorData() {
+      try {
+        const res = await fetch('/api/super/learning-behaviors');
+        const result = await res.json();
+
+        if (result.ok) {
+          behaviorAllData = result.data;
+          behaviorFilteredData = [...behaviorAllData];
+          renderBehaviorTable();
+          updateBehaviorCounts();
+        } else {
+          showToast('학습 행동 데이터를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('서버 오류가 발생했습니다.');
+      }
+    }
+
+    function formatTime(seconds) {
+      if (!seconds) return '0초';
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      if (mins > 0) {
+        return `${mins}분 ${secs}초`;
+      }
+      return `${secs}초`;
+    }
+
+    function renderBehaviorTable() {
+      const tbody = document.getElementById('behaviorTableBody');
+
+      if (behaviorFilteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="no-data">학습 행동 데이터가 없습니다.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = behaviorFilteredData.map((item, index) => {
+        const isSelected = behaviorSelectedIds.has(item._id);
+        const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '-';
+
+        const paragraphTotal = item.paragraphQuizErrors?.total || 0;
+        const problemTotal = item.problemErrors?.total || 0;
+
+        return `
+          <tr class="${isSelected ? 'selected' : ''}" data-id="${item._id}">
+            <td>
+              <input type="checkbox" class="behavior-row-checkbox" data-id="${item._id}" ${isSelected ? 'checked' : ''} />
+            </td>
+            <td>${index + 1}</td>
+            <td>${item.school || '-'}</td>
+            <td>${item.grade || '-'}</td>
+            <td>${item.name || '-'}</td>
+            <td>${item.unitTitle || item.unit || '-'}</td>
+            <td>${formatTime(item.readingTime)}</td>
+            <td>
+              ${paragraphTotal > 0
+                ? `<span class="gate-badge" style="background: linear-gradient(135deg, #e57373 0%, #c62828 100%);" onclick="openParagraphDetail('${item._id}')">${paragraphTotal}회</span>`
+                : '<span style="color:#868e96;">0회</span>'}
+            </td>
+            <td>
+              ${problemTotal > 0
+                ? `<span class="gate-badge" style="background: linear-gradient(135deg, #ff8a65 0%, #d84315 100%);" onclick="openProblemDetail('${item._id}')">${problemTotal}회</span>`
+                : '<span style="color:#868e96;">0회</span>'}
+            </td>
+            <td class="date-cell">${createdDate}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 체크박스 이벤트 바인딩
+      document.querySelectorAll('.behavior-row-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const id = e.target.dataset.id;
+          if (e.target.checked) {
+            behaviorSelectedIds.add(id);
+          } else {
+            behaviorSelectedIds.delete(id);
+          }
+          updateBehaviorSelection();
+        });
+      });
+    }
+
+    function updateBehaviorSelection() {
+      document.querySelectorAll('#behaviorTableBody tr[data-id]').forEach(row => {
+        const id = row.dataset.id;
+        if (behaviorSelectedIds.has(id)) {
+          row.classList.add('selected');
+        } else {
+          row.classList.remove('selected');
+        }
+      });
+
+      const selectAllCb = document.getElementById('behaviorSelectAll');
+      if (behaviorFilteredData.length > 0 && behaviorSelectedIds.size === behaviorFilteredData.length) {
+        selectAllCb.checked = true;
+        selectAllCb.indeterminate = false;
+      } else if (behaviorSelectedIds.size > 0) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = true;
+      } else {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
+      }
+
+      updateBehaviorCounts();
+    }
+
+    function updateBehaviorCounts() {
+      document.getElementById('behaviorSelectedCount').textContent = behaviorSelectedIds.size;
+      document.getElementById('behaviorTotalCount').textContent = behaviorFilteredData.length;
+      document.getElementById('behaviorDeleteBtn').disabled = behaviorSelectedIds.size === 0;
+    }
+
+    // 전체 선택
+    document.getElementById('behaviorSelectAll').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        behaviorFilteredData.forEach(item => behaviorSelectedIds.add(item._id));
+      } else {
+        behaviorSelectedIds.clear();
+      }
+      renderBehaviorTable();
+      updateBehaviorCounts();
+    });
+
+    // 검색
+    document.getElementById('behaviorSearchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      if (!query) {
+        behaviorFilteredData = [...behaviorAllData];
+      } else {
+        behaviorFilteredData = behaviorAllData.filter(item =>
+          (item.name && item.name.toLowerCase().includes(query)) ||
+          (item.unitTitle && item.unitTitle.toLowerCase().includes(query)) ||
+          (item.unit && item.unit.toLowerCase().includes(query)) ||
+          (item.school && item.school.toLowerCase().includes(query))
+        );
+      }
+      behaviorSelectedIds.clear();
+      renderBehaviorTable();
+      updateBehaviorCounts();
+    });
+
+    // 일괄 삭제
+    document.getElementById('behaviorDeleteBtn').addEventListener('click', async () => {
+      if (behaviorSelectedIds.size === 0) return;
+
+      const confirmMsg = `선택한 ${behaviorSelectedIds.size}개의 학습 행동 기록을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch('/api/super/learning-behaviors/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: Array.from(behaviorSelectedIds) })
+        });
+
+        const result = await res.json();
+
+        if (result.ok) {
+          showToast(`${result.deletedCount}개 기록이 삭제되었습니다.`);
+          behaviorSelectedIds.clear();
+          await loadBehaviorData();
+        } else {
+          showToast(result.message || '삭제 중 오류가 발생했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('서버 오류가 발생했습니다.');
+      }
+    });
+
+    // 중심문단 오답 상세 모달
+    function openParagraphDetail(id) {
+      const item = behaviorAllData.find(d => d._id === id);
+      if (!item) return;
+
+      const modal = document.getElementById('behaviorDetailModal');
+      const modalTitle = document.getElementById('behaviorModalTitle');
+      const modalBody = document.getElementById('behaviorModalBody');
+
+      modalTitle.textContent = `${item.name} - 중심문단 퀴즈 오답 상세`;
+
+      const details = item.paragraphQuizErrors?.details || [];
+      if (details.length === 0) {
+        modalBody.innerHTML = '<div class="no-attempt-data">상세 오답 기록이 없습니다.</div>';
+      } else {
+        modalBody.innerHTML = `
+          <div class="detail-section">
+            <div class="detail-section-title">문단별 오답 횟수</div>
+            <table class="question-table">
+              <thead>
+                <tr>
+                  <th>문단 번호</th>
+                  <th>오답 횟수</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${details.map(d => `
+                  <tr>
+                    <td>문단 ${d.paragraphNo}</td>
+                    <td style="color:#c62828; font-weight:600;">${d.errorCount}회</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="detail-section">
+            <div class="detail-item" style="text-align:center;">
+              <div class="detail-label">총 오답 횟수</div>
+              <div class="detail-value" style="color:#c62828;">${item.paragraphQuizErrors?.total || 0}회</div>
+            </div>
+          </div>
+        `;
+      }
+
+      modal.classList.add('show');
+    }
+
+    // 문제 오답 상세 모달
+    const problemIndexNames = {
+      1: '핵심 이해력',
+      2: '구조 파악력',
+      3: '어휘 맥락력',
+      4: '추론 통합력',
+      5: '비판 적용력'
+    };
+
+    function openProblemDetail(id) {
+      const item = behaviorAllData.find(d => d._id === id);
+      if (!item) return;
+
+      const modal = document.getElementById('behaviorDetailModal');
+      const modalTitle = document.getElementById('behaviorModalTitle');
+      const modalBody = document.getElementById('behaviorModalBody');
+
+      modalTitle.textContent = `${item.name} - 문제 오답 상세`;
+
+      const details = item.problemErrors?.details || [];
+      if (details.length === 0) {
+        modalBody.innerHTML = '<div class="no-attempt-data">상세 오답 기록이 없습니다.</div>';
+      } else {
+        modalBody.innerHTML = `
+          <div class="detail-section">
+            <div class="detail-section-title">문항별 오답 횟수 (다시풀기 포함 누적)</div>
+            <table class="question-table">
+              <thead>
+                <tr>
+                  <th>문항 번호</th>
+                  <th>지수 명칭</th>
+                  <th>오답 횟수</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${details.map(d => `
+                  <tr>
+                    <td>문항 ${d.problemNo}</td>
+                    <td style="color:#495057;">${problemIndexNames[d.problemNo] || '-'}</td>
+                    <td style="color:#d84315; font-weight:600;">${d.errorCount}회</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="detail-section">
+            <div class="detail-item" style="text-align:center;">
+              <div class="detail-label">총 오답 횟수</div>
+              <div class="detail-value" style="color:#d84315;">${item.problemErrors?.total || 0}회</div>
+            </div>
+          </div>
+        `;
+      }
+
+      modal.classList.add('show');
+    }
+
+    function closeBehaviorModal() {
+      document.getElementById('behaviorDetailModal').classList.remove('show');
+    }
+
+    // 학습 행동 모달 외부 클릭 시 닫기
+    document.getElementById('behaviorDetailModal').addEventListener('click', (e) => {
+      if (e.target.id === 'behaviorDetailModal') {
+        closeBehaviorModal();
       }
     });
   </script>
