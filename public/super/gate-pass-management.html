@@ -489,6 +489,7 @@
               <th>학년</th>
               <th>이름</th>
               <th>단원명</th>
+              <th>과목평균소요시간</th>
               <th>독해 총소요시간</th>
               <th>중심문단 총오답</th>
               <th>문제 총오답</th>
@@ -497,7 +498,7 @@
           </thead>
           <tbody id="behaviorTableBody">
             <tr>
-              <td colspan="10" class="loading">데이터를 불러오는 중...</td>
+              <td colspan="11" class="loading">데이터를 불러오는 중...</td>
             </tr>
           </tbody>
         </table>
@@ -989,6 +990,45 @@
     let behaviorAllData = [];
     let behaviorFilteredData = [];
     let behaviorSelectedIds = new Set();
+    let subjectAverages = {}; // 과목별 평균 소요시간
+
+    // 단원명에서 과목코드 추출 (on_chem_04 → chem)
+    function getSubjectCode(unitName) {
+      if (!unitName) return null;
+      // on_, fit_, deep_ 접두어 제거 후 마지막 _숫자 제거
+      let code = unitName.replace(/^(on_|fit_|deep_)/, '');
+      code = code.replace(/_\d+$/, '');
+      return code || null;
+    }
+
+    // 과목별 평균 소요시간 계산 (30분 초과 데이터 제외)
+    function calculateSubjectAverages(data) {
+      const subjectTimes = {};
+
+      data.forEach(item => {
+        const unitName = item.unit || item.unitTitle;
+        const subjectCode = getSubjectCode(unitName);
+        const readingTime = item.readingTime || 0;
+
+        // 30분(1800초) 초과 데이터 제외
+        if (!subjectCode || readingTime > 1800) return;
+
+        if (!subjectTimes[subjectCode]) {
+          subjectTimes[subjectCode] = { total: 0, count: 0 };
+        }
+        subjectTimes[subjectCode].total += readingTime;
+        subjectTimes[subjectCode].count += 1;
+      });
+
+      // 평균 계산
+      const averages = {};
+      for (const code in subjectTimes) {
+        if (subjectTimes[code].count > 0) {
+          averages[code] = Math.round(subjectTimes[code].total / subjectTimes[code].count);
+        }
+      }
+      return averages;
+    }
 
     // 페이지 로드 시 학습 행동 데이터도 가져오기
     document.addEventListener('DOMContentLoaded', loadBehaviorData);
@@ -1001,6 +1041,7 @@
         if (result.ok) {
           behaviorAllData = result.data;
           behaviorFilteredData = [...behaviorAllData];
+          subjectAverages = calculateSubjectAverages(behaviorAllData);
           renderBehaviorTable();
           updateBehaviorCounts();
         } else {
@@ -1026,7 +1067,7 @@
       const tbody = document.getElementById('behaviorTableBody');
 
       if (behaviorFilteredData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="no-data">학습 행동 데이터가 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="no-data">학습 행동 데이터가 없습니다.</td></tr>';
         return;
       }
 
@@ -1043,6 +1084,11 @@
         const paragraphTotal = item.paragraphQuizErrors?.total || 0;
         const problemTotal = item.problemErrors?.total || 0;
 
+        // 과목평균소요시간 계산
+        const unitName = item.unit || item.unitTitle;
+        const subjectCode = getSubjectCode(unitName);
+        const subjectAvg = subjectCode ? subjectAverages[subjectCode] : null;
+
         return `
           <tr class="${isSelected ? 'selected' : ''}" data-id="${item._id}">
             <td>
@@ -1053,6 +1099,7 @@
             <td>${item.grade || '-'}</td>
             <td>${item.name || '-'}</td>
             <td>${item.unitTitle || item.unit || '-'}</td>
+            <td>${subjectAvg ? formatTime(subjectAvg) : '-'}</td>
             <td>${formatTime(item.readingTime)}</td>
             <td>
               ${paragraphTotal > 0

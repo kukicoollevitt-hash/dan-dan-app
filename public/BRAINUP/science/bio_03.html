@@ -3238,27 +3238,35 @@ function clearEvidenceHighlights() {
 
 function highlightEvidence() {
   const pack = window.CONTENTS?.[window.CUR_UNIT];
-  if (!pack || !pack.explain) return;
+  if (!pack) return;
+  const evidenceSource = pack.evidence || pack.explain;
+  if (!evidenceSource) return;
   const passage = document.querySelector('.passage-text');
   if (!passage) return;
   clearEvidenceHighlights();
-  const qLabels = ['1번', '2번', '3번', '4번', '5번'];
-  const explains = [pack.explain.q1, pack.explain.q2, pack.explain.q3, pack.explain.q4, pack.explain.q5].filter(Boolean);
-  explains.forEach((text, idx) => {
-    if (!text || text.length < 2) return;
+  const qKeys = ['q1', 'q2', 'q3', 'q4'];
+  const qLabels = ['1번', '2번', '3번', '4번'];
+  qKeys.forEach((qKey, idx) => {
+    const evidenceText = evidenceSource[qKey];
+    if (!evidenceText) return;
     const qClass = `evidence-q${idx + 1}`;
     const label = qLabels[idx];
-    const chars = Array.from(text);
-    const escapedChars = chars.map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    const flexPattern = escapedChars.join('(?:<[^>]*>)*');
-    let regex;
-    try { regex = new RegExp(flexPattern, 'g'); }
-    catch (e) { return; }
-    const html = passage.innerHTML;
-    const newHtml = html.replace(regex, (match) => {
-      return `<span class="evidence-highlight ${qClass}">${match}<span class="evidence-tag">${label}</span></span>`;
+    const paragraphs = passage.querySelectorAll('p');
+    paragraphs.forEach(p => {
+      const plainText = p.textContent;
+      if (plainText.includes(evidenceText)) {
+        const chars = evidenceText.split('');
+        const escaped = chars.map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const flexPattern = escaped.join('(?:<[^>]*>)*');
+        try {
+          const regex = new RegExp(flexPattern, 'g');
+          const newHtml = p.innerHTML.replace(regex, (match) => {
+            return `<span class="evidence-highlight ${qClass}">${match}<span class="evidence-tag">${label}</span></span>`;
+          });
+          if (newHtml !== p.innerHTML) { p.innerHTML = newHtml; }
+        } catch (e) { console.error('하이라이트 오류:', e); }
+      }
     });
-    if (newHtml !== html) { passage.innerHTML = newHtml; }
   });
 }
 window.highlightEvidence = highlightEvidence;
