@@ -115,7 +115,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단은 정치가 필요한 이유(갈등 해결), 2문단은 정치의 좁은/넓은 의미, 3문단은 일상 속 정치 활동 예시와 참여, 4문단은 민주적 의사결정 연습을 설명합니다.<br><br>【오답 해설】<br>②번: 2문단은 \'민주적 의사결정 연습\'이 아니라 \'정치의 좁은/넓은 의미\'를 설명합니다. 좁은 의미는 국회의원이나 대통령의 활동, 넓은 의미는 이해관계 조정 활동입니다.<br>③번: 3문단은 \'정치가 필요한 이유\'가 아니라 \'일상 속 정치 활동 예시와 참여\'(학급회의, 가족회의, 주민 회의)를 설명합니다.<br>④번: 4문단은 \'일상 속 정치 활동 예시\'가 아니라 \'민주적 의사결정 연습\'(다수결, 존중)을 설명합니다.',
       q3: '정답: 갈등, 정치.<br><br>【해설】 지문 1문단에서 "많은 사람들이 함께 생활하다 보면 서로의 생각이 달라 <b>갈등</b>이 생기곤 합니다"라고 했고, "이럴 때 중요한 역할을 하는 것이 바로 <b>정치</b>입니다"라고 했습니다. 갈등은 의견이나 생각이 달라서 생기는 다툼이나 문제를 의미하며, 정치는 이러한 갈등을 해결하고 사회를 더 나은 방향으로 이끄는 활동입니다.',
       q4: '정답: 조정, 참여.<br><br>【해설】 지문 2문단에서 "정치란 사람들 사이에 생긴 의견 차이와 이해관계를 <b>조정</b>하고 모두가 더 나은 방향으로 살아갈 수 있도록 돕는 활동"이라고 했습니다. 또한 3문단에서 "더 좋은 사회를 만들기 위해서는, 우리가 정치에 관심을 가지고 올바르게 <b>참여</b>하려는 태도가 필요하답니다"라고 했습니다. 조정은 서로 다른 의견을 조화롭게 맞추는 것이고, 참여는 직접 나서서 활동에 함께하는 것입니다.'
-  }
+    },
+    creative: {
+      title: '우리 반 문제 해결하기',
+      hint: '💡 힌트) 우리 반에서 겪는 갈등이나 문제를 생각해 보고, 그것을 해결하기 위해 어떤 방법을 사용할 수 있을지 본문에서 배운 정치의 역할을 떠올려 보세요.',
+      examples: [
+        '우리 반에서 자주 발생하는 갈등(예: 청소 당번, 체육 시간 종목 결정 등)을 하나 정하고, 이를 해결하기 위한 학급회의 진행 방법을 적어 보세요.',
+        '가족 안에서 의견이 다를 때 어떻게 조정할 수 있는지 구체적인 예시를 들어 설명해 보세요.'
+      ]
+    }
   },
 
   /* ===== pol_02 : "국민이 주인이 되는 나라, 민주주의" ===== */
@@ -193,7 +201,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2: '정답: ①번. 1문단은 민주주의의 정의와 특징(국민이 주인), 2문단은 민주주의의 두 가지 방식(직접/대의), 3문단은 민주주의의 핵심 가치(자유, 평등, 존엄성), 4문단은 민주주의를 지키려는 노력을 설명합니다.<br><br>【오답 해설】<br>②번: 2문단은 \'민주주의의 핵심 가치\'가 아니라 \'민주주의의 두 가지 방식\'(직접 민주주의, 대의 민주주의)을 설명합니다.<br>③번: 3문단은 \'민주주의의 정의와 특징\'이 아니라 \'민주주의의 핵심 가치\'(자유, 평등, 존엄성, 기회의 평등)를 설명합니다.<br>④번: 4문단은 \'민주주의의 두 가지 방식\'이 아니라 \'민주주의를 지키려는 노력\'(관심, 참여)을 설명합니다.',
       q3: '정답: 직접, 대의.<br><br>【해설】 지문 2문단에서 "<b>직접 민주주의</b>로, 나라의 중요한 일을 국민이 직접 모여 결정하는 방식"이라고 했고, "<b>대의 민주주의</b>로, 국민이 대표를 뽑아 그 대표들이 정책을 정하고 나라 일을 처리하는 방식"이라고 했습니다. 직접 민주주의는 국민이 직접 참여하고, 대의 민주주의는 선출된 대표가 국민을 대신해 정치를 수행합니다. 우리나라는 대의 민주주의를 채택하고 있습니다.',
       q4: '정답: 기회, 평등.<br><br>【해설】 지문 3문단에서 "평등은 \'<b>기회</b>\'를 똑같이 주는 것을 의미하고, 노력과 능력에 따른 차이는 자연스럽게 나타날 수 있답니다"라고 했습니다. 또한 "모든 사람은 권리와 의무, 자격 면에서 <b>평등</b>하게 대우받아야 하지요"라고 했습니다. 민주주의에서 평등은 결과의 평등이 아니라 출발선에서의 기회 평등을 의미합니다.'
-  }
+    },
+    creative: {
+      title: '민주주의의 핵심 가치 실천하기',
+      hint: '💡 힌트) 자유, 평등, 존엄성이라는 민주주의의 핵심 가치를 일상생활에서 어떻게 실천할 수 있는지 생각해 보세요. 학교나 가정에서의 구체적인 상황을 떠올려 봅시다.',
+      examples: [
+        '학교에서 자유와 평등을 실천할 수 있는 구체적인 방법을 적어 보세요. (예: 친구의 의견 존중하기, 모든 친구에게 공평한 기회 주기)',
+        '기회의 평등과 결과의 차이에 대해 예시를 들어 설명해 보세요.'
+      ]
+    }
   },
 
   /* ===== pol_03 : "4·19에서 6월 항쟁까지, 민주주의의 성장" ===== */
@@ -202,9 +218,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     title: '✊ 4·19에서 6월 항쟁까지, 민주주의의 성장',
     paragraphMain: [
       '4·19 혁명: 1960년 부정 선거에 항의해 학생과 시민이 거리로 나섰다',
-      '5·18 민주화 운동: 1980년 광주에서 군사 정권에 맞서 민주화를 요구했다',
-      '6월 민주항쟁과 지방자치: 1987년 전국적 민주화 운동으로 직선제가 확대되었다',
-      '시민 참여 확대: 2000년대 인터넷 확산으로 시민 참여가 더욱 활발해졌다'
+      '5·18 민주화 운동과 6월 민주항쟁: 1980년 광주 민주화 운동과 1987년 직선제 도입',
+      '지방자치제와 시민 참여 확대: 1990년대 지방자치와 2000년대 인터넷 시민 참여',
+      '민주주의 실천: 민주주의를 지키고 학교와 사회에서 참여하기'
     ],
     passage: [
       '우리나라의 <b>민주주의</b>는 하루아침에 만들어진 것이 아니라, 많은 시민의 용기와 희생을 바탕으로 조금씩 자리를 잡아 왔습니다. 1960년, 당시 정권이 부정한 방식으로 선거를 치르자 학생과 시민들이 이에 강하게 반발하며 거리로 나섰습니다. 이 시위는 전국으로 퍼졌고, 결국 부정 선거에 항의하는 거대한 민주화 운동, 즉 <b>4·19 혁명</b>으로 이어졌어요. 국민들은 정당한 절차와 자유로운 선거를 요구했고, 그 결과 당시 대통령이 자리에서 물러나게 되면서 민주주의의 문을 열기 시작했습니다.',
@@ -227,9 +243,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '',
       items: [
         { no: 1, text: '국민이 정치 과정에 참여하고 권리를 보장받는 정치 체제를 (        )라고 해요.', answer: '민주주의', initials: 'ㅁㅈㅈㅇ', aliases: ['민주주의'] },
-        { no: 2, text: '1960년 부정 선거에 항의해 일어난 민주화 운동을 (        )이라고 해요.', answer: '4·19 혁명', initials: 'ㅅㅇㄱ ㅎㅁ', aliases: ['4·19혁명','4·19 혁명','사일구 혁명','4.19혁명'] },
-        { no: 3, text: '1980년 광주에서 민주화를 요구하며 일어난 시민 항쟁을 (            )이라고 해요.', answer: '5·18 민주화 운동', initials: 'ㅇㅇㅍ ㅁㅈㅎ ㅇㄷ', aliases: ['5·18민주화운동','5·18 민주화 운동','오일팔 민주화 운동'] },
-        { no: 4, text: '1987년 직선제 도입을 이끈 전국적 민주화 운동을 (          )이라고 해요.', answer: '6월 민주항쟁', initials: 'ㅇㅇ ㅁㅈㅎㅈ', aliases: ['6월민주항쟁','6월 민주항쟁','유월 민주항쟁'] },
+        { no: 2, text: '1960년 부정 선거에 항의해 일어난 민주화 운동을 4·19 (    )이라고 해요.', answer: '혁명', initials: 'ㅎㅁ', aliases: ['혁명'] },
+        { no: 3, text: '1980년 광주에서 민주화를 요구하며 일어난 시민 항쟁을 5·18 (        )이라고 해요.', answer: '민주화 운동', initials: 'ㅁㅈㅎ ㅇㄷ', aliases: ['민주화운동','민주화 운동'] },
+        { no: 4, text: '1987년 직선제 도입을 이끈 전국적 민주화 운동을 6월 (      )이라고 해요.', answer: '민주항쟁', initials: 'ㅁㅈㅎㅈ', aliases: ['민주항쟁'] },
         { no: 5, text: '국민이 직접 대통령을 뽑는 선거 방식을 (        )라고 해요.', answer: '직선제', initials: 'ㅈㅅㅈ', aliases: ['직선제'] },
         { no: 6, text: '지역 주민이 지역 행정을 스스로 결정하는 제도를 (          )라고 해요.', answer: '지방자치제', initials: 'ㅈㅂㅈㅊㅈ', aliases: ['지방자치제'] },
         { no: 7, text: '사회 문제 해결을 위해 시민들이 자발적으로 만든 단체를 (        )라고 해요.', answer: '시민 단체', initials: 'ㅅㅁ ㄷㅊ', aliases: ['시민단체','시민 단체'] },
@@ -249,8 +265,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
         '1문단 : 4·19 혁명 (부정 선거 항의)',
-        '2문단 : 지방자치제와 시민 참여 확대',
-        '3문단 : 4·19 혁명 (부정 선거 항의)',
+        '2문단 : 민주주의 실천',
+        '3문단 : 지방자치제와 시민 참여 확대',
         '4문단 : 5·18 민주화 운동과 6월 민주항쟁'
       ],
       /* 03. 어휘 맥락력 (빈칸 2개) */
@@ -272,10 +288,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     },
     essayKeywords: ['4·19','5·18','6월','민주화','직선제','시민','학생','광주','항쟁','혁명','참여','투표','부정 선거','부정선거','1960','1980','1987','대통령','선거','운동','자유','정의','희생','용기','권력','군사','표현','언론','지방자치','시민 단체','시민단체','인터넷','거리','전국','요구','국민','민주주의','발전','물러나','도입'],
     explain: {
-      q1: '으로 이어졌어요. 국민들은 정당한 절차와 자유로운 선거를 요구했고',
-      q2: '는 하루아침에 만들어진 것이 아니라',
+      q1: '당시 정권이 부정한 방식으로 선거를 치르자',
+      q2: '으로 이어졌어요',
       q3: '가 도입되고',
-      q4: '을 바탕으로 조금씩 자리를 잡아 왔습니다. 1960년',
+      q4: '시민 참여가 더욱 활발',
       q5: '예시 답안: 4·19 혁명에서 학생과 시민들이 부정 선거에 항의하며 거리로 나서 민주주의의 문을 열었고, 5·18 민주화 운동에서 광주 시민들이 목숨을 걸고 민주화를 요구했으며, 6월 민주항쟁에서 전국적으로 시민들이 참여해 직선제 도입을 이끌어냈습니다.'
     },
     detail: {
@@ -287,6 +303,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     /* 창의활동 */
     creative: {
       title: '📜 민주주의 발전 연표 만들기',
+      hint: '💡 힌트) 4·19 혁명(1960년), 5·18 민주화 운동(1980년), 6월 민주항쟁(1987년)의 시대적 배경과 결과를 떠올려 보세요. 각 사건이 민주주의 발전에 어떤 영향을 미쳤는지 생각해 봅시다.',
       instruction: '본문에 나온 민주화 운동들을 시간 순서대로 정리하고, 각 사건의 의미를 적어 봅시다.',
       prompts: [
         { label: '1960년에 일어난 사건과 그 의미', placeholder: '예: 4·19 혁명 - 부정 선거에 항의, 민주주의의 문을 열다' },
@@ -294,7 +311,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { label: '1987년에 일어난 사건과 그 의미', placeholder: '예: 6월 민주항쟁 - 직선제 도입' },
         { label: '민주주의 발전을 위해 내가 할 수 있는 일', placeholder: '예: 선거에 관심 갖기, 사회 문제에 의견 표현하기' }
       ]
-  }
+    }
   },
 
   /* ===== pol_04 : "다수결만으로 충분할까? 민주주의의 진짜 원리" ===== */
@@ -873,9 +890,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 남북 대화와 교류의 노력',
+        '1문단 : 분단의 역사와 아픔',
         '2문단 : 남북 대화와 교류의 노력',
-        '3문단 : 분단의 역사와 아픔',
+        '3문단 : 남북 대화와 교류의 노력',
         '4문단 : 통일의 의미와 준비 자세'
       ],
       q3_html: `분단으로 헤어져 만나지 못하는 가족을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅅㄱㅈ">이라 하고, 2018년 남북정상회담에서 채택된 평화 합의를 <input class="inline-input" id="q3-2" type="text" placeholder="ㅍㅁㅈ ㅅㅇ">이라고 합니다.`,
@@ -961,10 +978,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 선택과 기회비용',
-        '2문단 : 경제 활동과 희소성 개념',
-        '3문단 : 합리적 선택의 방법',
-        '4문단 : 선택과 기회비용'
+        '1문단 : 경제 활동과 희소성 개념',
+        '2문단 : 선택과 기회비용',
+        '3문단 : 선택과 기회비용',
+        '4문단 : 현명한 선택 방법'
       ],
       q3_html: `원하는 것은 무한하지만 자원은 한정된 상태를 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅅㅅ">이라 하고, 선택할 때 포기한 것 중 가장 가치 있는 것을 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅎㅂㅇ">이라고 합니다.`,
       q3_1_ph: 'ㅎㅅㅅ', q3_2_ph: 'ㄱㅎㅂㅇ',
@@ -1047,10 +1064,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 수요와 공급 법칙',
-        '2문단 : 시장의 개념',
+        '1문단 : 시장의 개념',
+        '2문단 : 수요와 공급 법칙',
         '3문단 : 수요와 공급 법칙',
-        '4문단 : 시장에서의 가격 변화 예시'
+        '4문단 : 시장의 역할'
       ],
       q3_html: `사람들이 물건을 사려는 욕구를 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅇ">라 하고, 생산자가 물건을 팔려고 내놓는 것을 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㄱ">이라고 합니다.`,
       q3_1_ph: 'ㅅㅇ', q3_2_ph: 'ㄱㄱ',
@@ -1134,9 +1151,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
         '1문단 : 가격 결정 원리 (균형 가격)',
-        '2문단 : 정부의 가격 정책 (상한제, 하한제)',
+        '2문단 : 가격의 신호 기능',
         '3문단 : 가격 결정 원리 (균형 가격)',
-        '4문단 : 가격의 신호 기능'
+        '4문단 : 정부의 가격 정책 (상한제, 하한제)'
       ],
       q3_html: `수요와 공급이 만나 결정되는 가격을 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅎ ㄱㄱ">이라 하고, 가격 변화가 행동을 유도하는 것을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅎ ㄱㄴ">이라고 합니다.`,
       q3_1_ph: 'ㄱㅎ ㄱㄱ', q3_2_ph: 'ㅅㅎ ㄱㄴ',
@@ -1219,9 +1236,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 금융의 개념과 기관',
-        '2문단 : 금융의 개념과 기관',
-        '3문단 : 화폐의 발달 과정과 역할',
+        '1문단 : 화폐의 발달 과정',
+        '2문단 : 돈의 역할과 금융',
+        '3문단 : 화폐의 발달 과정',
         '4문단 : 저축과 투자의 중요성'
       ],
       q3_html: `돈과 관련된 다양한 활동을 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅇ">이라 하고, 나중에 쓰기 위해 돈을 모아두는 것을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅊ">이라고 합니다.`,
@@ -1305,10 +1322,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 신용카드 사용 시 주의점',
-        '2문단 : 신용의 개념',
-        '3문단 : 합리적 소비 방법',
-        '4문단 : 신용카드 사용 시 주의점'
+        '1문단 : 신용의 개념',
+        '2문단 : 신용카드 사용 시 주의점',
+        '3문단 : 신용의 개념',
+        '4문단 : 착한 소비와 미래 준비'
       ],
       q3_html: `약속을 지킬 것이라는 믿음을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅇ">이라 하고, 빚을 제때 갚지 못하는 것을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅊ">라고 합니다.`,
       q3_1_ph: 'ㅅㅇ', q3_2_ph: 'ㅇㅊ',
@@ -1391,10 +1408,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 기업의 경제적 기여',
-        '2문단 : 기업의 정의와 역할',
-        '3문단 : 기업의 경제적 기여',
-        '4문단 : 소비자의 역할'
+        '1문단 : 기업의 정의와 역할',
+        '2문단 : 기업의 경제적 기여',
+        '3문단 : 기업의 정의와 역할',
+        '4문단 : 착한 기업과 소비자'
       ],
       q3_html: `기업이 물건을 팔아 얻는 이익을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅇ">이라 하고, 일을 해서 벌어들이는 돈을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㄷ">이라고 합니다.`,
       q3_1_ph: 'ㅇㅇ', q3_2_ph: 'ㅅㄷ',
@@ -1478,8 +1495,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
         '1문단 : GDP와 경제 성장',
-        '2문단 : GDP와 경제 성장',
-        '3문단 : 경기 변동과 호황/불황',
+        '2문단 : 경기 변동과 호황/불황',
+        '3문단 : GDP와 경제 성장',
         '4문단 : 정부와 중앙은행의 역할'
       ],
       q3_html: `경기가 좋아 활발한 상태를 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅎ">이라 하고, 경기가 나빠 어려운 상태를 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㅎ">이라고 합니다.`,
@@ -1563,10 +1580,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 세금의 종류',
+        '1문단 : 세금의 필요성',
         '2문단 : 세금의 종류',
         '3문단 : 세금의 필요성',
-        '4문단 : 정부의 역할과 예산'
+        '4문단 : 예산과 시민의 자세'
       ],
       q3_html: `돈을 벌었을 때 내는 세금을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄷㅅ">라 하고, 물건을 살 때 내는 세금을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄱㄱㅊㅅ">라고 합니다.`,
       q3_1_ph: 'ㅅㄷㅅ', q3_2_ph: 'ㅂㄱㄱㅊㅅ',
@@ -1649,10 +1666,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 국제 무역 협력 (FTA, WTO)',
-        '2문단 : 무역의 개념과 장점',
-        '3문단 : 세계화의 장단점',
-        '4문단 : 국제 무역 협력 (FTA, WTO)'
+        '1문단 : 무역의 개념과 장점',
+        '2문단 : 국제 무역 협력 (FTA, WTO)',
+        '3문단 : 무역의 개념과 장점',
+        '4문단 : 우리나라와 상호 의존'
       ],
       q3_html: `우리나라 물건을 외국에 파는 것을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅊ">이라 하고, 외국 물건을 사오는 것을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅇ">이라고 합니다.`,
       q3_1_ph: 'ㅅㅊ', q3_2_ph: 'ㅅㅇ',
@@ -1735,10 +1752,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 환경 문제와 지속 가능한 발전',
-        '2문단 : 미래 경제의 변화 (4차 산업혁명)',
-        '3문단 : 환경 문제와 지속 가능한 발전',
-        '4문단 : 미래 준비'
+        '1문단 : 미래 경제의 변화 (4차 산업혁명)',
+        '2문단 : 환경 문제와 지속 가능한 발전',
+        '3문단 : 미래 경제의 변화 (4차 산업혁명)',
+        '4문단 : 일상 속 실천'
       ],
       q3_html: `AI, 로봇 등으로 일어나는 산업 변화를 <input class="inline-input" id="q3-1" type="text" placeholder="4ㅊ ㅅㅇ ㅎㅁ">이라 하고, 미래 세대도 쓸 수 있게 발전하는 것을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅅ ㄱㄴㅎ ㅂㅈ">이라고 합니다.`,
       q3_1_ph: '4ㅊ ㅅㅇ ㅎㅁ', q3_2_ph: 'ㅈㅅ ㄱㄴㅎ ㅂㅈ',
@@ -2130,57 +2147,6 @@ function applyContentPack(unitKey) {
       }
     });
 
-    // 토스트 스타일
-    if (!document.getElementById('toast-style')) {
-      const toastStyle = document.createElement('style');
-      toastStyle.id = 'toast-style';
-      toastStyle.textContent = `
-        .complete-toast {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #fff9c4 100%);
-          color: #e65100;
-          padding: 24px 40px;
-          border-radius: 16px;
-          font-size: 20px;
-          font-weight: 700;
-          box-shadow: 0 8px 32px rgba(255,152,0,0.3), 0 0 0 4px rgba(255,193,7,0.4);
-          border: 2px solid #ffb300;
-          z-index: 9999;
-          animation: toastPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-          text-align: center;
-        }
-        @keyframes toastPop {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        .sparkle-rain {
-          position: fixed;
-          top: -30px;
-          z-index: 9998;
-          pointer-events: none;
-          text-shadow: 0 0 8px currentColor, 0 0 15px currentColor;
-          animation: sparkleDown 2s ease-in forwards;
-        }
-        @keyframes sparkleDown {
-          0% {
-            transform: translateY(0) rotate(0deg) scale(1);
-            opacity: 1;
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(50vh) rotate(360deg) scale(1.2);
-          }
-          100% {
-            transform: translateY(110vh) rotate(720deg) scale(0.5);
-            opacity: 0;
-          }
-        }
-      `;
-      document.head.appendChild(toastStyle);
-    }
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');

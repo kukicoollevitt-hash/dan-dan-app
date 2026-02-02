@@ -289,17 +289,13 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     },
     /* ✅ 창의활동 */
     creative: {
-      title: '🔬 나만의 액체 탐구 실험',
-      instruction: '집에서 쉽게 구할 수 있는 액체들로 실험해 보고, 관찰 결과를 기록해 봅시다.',
-      steps: [
-        '1. 투명한 컵에 물, 식용유, 꿀을 차례로 넣어 봅시다.',
-        '   - 어떤 순서로 층이 생기나요? ____________________',
-        '   - 왜 이런 순서가 될까요? ____________________',
-        '2. 각 액체의 흐르는 빠르기를 비교해 봅시다.',
-        '   - 가장 빨리 흐르는 것: ______  가장 천천히 흐르는 것: ______',
-        '3. 물을 접시에 담아 햇볕에 두고 변화를 관찰해 봅시다.',
-        '   - 1시간 후: ______  3시간 후: ______',
-        '4. 이 실험을 통해 알게 된 액체의 성질을 정리해 봅시다.'
+      title: '내가 만약 새로운 물질을 발명한다면 어떤 성질을 가진 물질을 만들고 싶은가?',
+      topic: '내가 만약 새로운 물질을 발명한다면 어떤 성질을 가진 물질을 만들고 싶은가?',
+      hint: '💡 힌트) 본문에서 배운 액체의 성질(모양 변화, 밀도, 분리, 증발)을 바탕으로 새로운 물질의 성질을 상상해 보세요.',
+      examples: [
+        '예시 1) 나는 깃털처럼 가볍지만 철보다 단단한 물질을 발명해서 무거운 건물도 쉽게 지을 수 있게 하고 싶다.',
+        '예시 2) 물에 절대 젖지 않고 더러움도 묻지 않는 천을 만들어 빨래할 필요 없는 옷을 만들고 싶다.',
+        '예시 3) 온도에 따라 색이 변하는 물질로 컵을 만들면 음료가 너무 뜨거운지 알 수 있어서 안전할 것이다.'
       ]
   }
   },
@@ -1962,57 +1958,6 @@ function applyContentPack(unitKey) {
       }
     });
 
-    // 토스트 스타일
-    if (!document.getElementById('toast-style')) {
-      const toastStyle = document.createElement('style');
-      toastStyle.id = 'toast-style';
-      toastStyle.textContent = `
-        .complete-toast {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #fff9c4 100%);
-          color: #e65100;
-          padding: 24px 40px;
-          border-radius: 16px;
-          font-size: 20px;
-          font-weight: 700;
-          box-shadow: 0 8px 32px rgba(255,152,0,0.3), 0 0 0 4px rgba(255,193,7,0.4);
-          border: 2px solid #ffb300;
-          z-index: 9999;
-          animation: toastPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-          text-align: center;
-        }
-        @keyframes toastPop {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        .sparkle-rain {
-          position: fixed;
-          top: -30px;
-          z-index: 9998;
-          pointer-events: none;
-          text-shadow: 0 0 8px currentColor, 0 0 15px currentColor;
-          animation: sparkleDown 2s ease-in forwards;
-        }
-        @keyframes sparkleDown {
-          0% {
-            transform: translateY(0) rotate(0deg) scale(1);
-            opacity: 1;
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(50vh) rotate(360deg) scale(1.2);
-          }
-          100% {
-            transform: translateY(110vh) rotate(720deg) scale(0.5);
-            opacity: 0;
-          }
-        }
-      `;
-      document.head.appendChild(toastStyle);
-    }
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');

@@ -285,10 +285,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'3', q3_1:['갈등'], q3_2:['가족회의','가족 회의'], q4_1:['존중'], q4_2:['배려'] },
     essayKeywords: ['대화','존중','배려','이해','양보','타협','경청','사과','화해','가족회의','소통','공감','듣기','말하기','감정','표현','인정','수용','노력','해결','문제','의견','생각','마음','관계','가족','갈등','화목','화합','단단','가까워','서로','상대','귀','기울여','듣고','나누','함께','협력','돌봄','사랑','감사','진심','솔직','열린'],
     explain: {
-      q1:'를 돕기도 하지요. 아이들 역시 설거지, 정리정돈',
-      q2:'이 생길 수도 있어요. 이런 상황에서는',
+      q1:'남녀에 상관없이 가족 구성원 모두가 집안일과 바깥일을 함께 나누어 합니다',
+      q2:'가족이 함께 생활하다 보면 생각이 다르거나 마음이 상해',
       q3:'나 대화를 통해 문제를 해결하려는 노력이 필요합니다',
-      q4:'하는 마음이에요. 비록 서로의 생각이 달라도',
+      q4:'하는 마음이에요.',
       q5:'예시 답안: 서로의 이야기를 끝까지 경청하고, 가족회의를 통해 모두가 납득할 수 있는 해결 방법을 찾으면 좋겠습니다. 상대를 이해하려는 마음이 있을 때 가족 관계는 더 단단해집니다.'
     },
     detail: {
@@ -2104,8 +2104,8 @@ function applyContentPack(unitKey) {
       localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
       const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
       const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
-      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 32px 60px; border-radius: 20px; font-size: 1.8rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
-      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:16px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4100);
+      if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50vh; left: 50vw; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 32px 60px; border-radius: 20px; font-size: 1.8rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
+      const toast = document.createElement('div'); toast.className = 'toast-pop'; toast.innerHTML = `지문 완독! 대단해요!<div style="font-size:16px;margin-top:12px;color:rgba(255,255,255,0.9);line-height:1.6;"><div>시작: ${formatDateTime(readingStartTime)}</div><div>완료: ${formatDateTime(endTime)}</div><div style="margin-top:8px;font-weight:bold;">총 독해시간: ${formatDuration(duration)}</div></div>`; document.documentElement.appendChild(toast); setTimeout(() => toast.remove(), 4100);
       for (let i = 0; i < 18; i++) { const sparkle = document.createElement('div'); sparkle.textContent = ['✨','🎉','⭐','🌟','💫','🎊'][Math.floor(Math.random()*6)]; Object.assign(sparkle.style, { position: 'fixed', left: Math.random()*100 + 'vw', top: '-30px', fontSize: (18 + Math.random()*16) + 'px', zIndex: 9998, pointerEvents: 'none', animation: `fall ${2 + Math.random()*1.5}s ease-out forwards` }); document.body.appendChild(sparkle); setTimeout(() => sparkle.remove(), 3500); }
       if (!document.getElementById('fall-keyframes')) { const fk = document.createElement('style'); fk.id = 'fall-keyframes'; fk.textContent = '@keyframes fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(360deg); } }'; document.head.appendChild(fk); }
       // confetti 종이 꽃가루 효과
@@ -2152,57 +2152,6 @@ function applyContentPack(unitKey) {
       }
     });
 
-    // 토스트 스타일
-    if (!document.getElementById('toast-style')) {
-      const toastStyle = document.createElement('style');
-      toastStyle.id = 'toast-style';
-      toastStyle.textContent = `
-        .complete-toast {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #fff9c4 100%);
-          color: #e65100;
-          padding: 24px 40px;
-          border-radius: 16px;
-          font-size: 20px;
-          font-weight: 700;
-          box-shadow: 0 8px 32px rgba(255,152,0,0.3), 0 0 0 4px rgba(255,193,7,0.4);
-          border: 2px solid #ffb300;
-          z-index: 9999;
-          animation: toastPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-          text-align: center;
-        }
-        @keyframes toastPop {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        .sparkle-rain {
-          position: fixed;
-          top: -30px;
-          z-index: 9998;
-          pointer-events: none;
-          text-shadow: 0 0 8px currentColor, 0 0 15px currentColor;
-          animation: sparkleDown 2s ease-in forwards;
-        }
-        @keyframes sparkleDown {
-          0% {
-            transform: translateY(0) rotate(0deg) scale(1);
-            opacity: 1;
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(50vh) rotate(360deg) scale(1.2);
-          }
-          100% {
-            transform: translateY(110vh) rotate(720deg) scale(0.5);
-            opacity: 0;
-          }
-        }
-      `;
-      document.head.appendChild(toastStyle);
-    }
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');

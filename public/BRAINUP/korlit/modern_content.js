@@ -217,10 +217,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     labelNo: '03',
     title: '📖 봄봄, 장인에게 속은 데릴사위의 분노',
     paragraphMain: [
-      '데릴사위의 처지: 3년째 품삯 없이 장인집에서 일하다',
-      '내쫓김과 불러들임 반복: 점순이 눈짓에 번번이 돌아오다',
-      '장인과의 싸움: 점순이 거짓말로 장인과 싸우게 되다',
-      '점순이 계략 깨달음: 싸움도 떠나지 못하게 하는 계략이었다'
+      '데릴사위의 처지: 3년째 품삯 없이 일하며 점순이 눈짓에 번번이 돌아오다',
+      '점순이의 부추김: 점순이가 때리고 장인에게 거짓말하다',
+      '장인과의 싸움: 장인을 이기고 허탈감을 느끼다',
+      '작품 해설: 1930년대 농촌 배경의 해학적 단편소설'
     ],
     passage: [
       '"나"는 아버지를 일찍 여의고 장인의 집에서 일하며 사는 <b>데릴사위</b>다. 장인은 마을의 <b>마름</b>으로, 나에게 3년 동안 품삯 한 푼 주지 않고 부려먹었다. 그래도 나는 장인의 딸 점순이가 좋아서 참고 일한다. 그런데 장인은 내가 일을 조금만 쉬어도 트집을 잡고, 벌써 세 차례나 나를 내쫓았다. 그때마다 점순이가 삐죽이 나와 눈짓으로 불러들여서 나는 다시 돌아왔다. 점순이는 장인 몰래 달걀을 건네주거나 밥을 남겨 두기도 했다. 그래서 나는 점순이가 나를 좋아한다고 믿었고, 언젠가는 반드시 결혼할 수 있으리라 생각했다.',
@@ -261,22 +261,22 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
-        '1문단 : 점순이가 나를 때리고 장인에게 거짓말한 사건',
-        '2문단 : 작품 해설 (봄봄 작품 소개)',
-        '3문단 : 장인과의 싸움에서 이겼지만 허탈함을 느낌',
-        '4문단 : 점순이가 나를 때리고 장인에게 거짓말한 사건'
+        '1문단 : 장인과의 싸움에서 이기고 허탈함을 느낌',
+        '2문단 : 점순이가 때리고 장인에게 거짓말함',
+        '3문단 : 점순이가 때리고 장인에게 거짓말함',
+        '4문단 : 데릴사위의 처지와 점순이 눈짓에 돌아옴'
       ],
       q3_html: '"나"는 처가에서 일하는 <input class="inline-input" id="q3-1" type="text" placeholder="ㄷㄹㅅㅇ">이고, 장인은 마을의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㄹ">이다.',
       q4_html: '점순이의 행동은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅊㄱ">이자 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅁㅎ">한 계략이었다.',
       q5_text: '점순이가 "나"를 때린 뒤 장인에게 거짓말을 한 이유를 본문 내용을 바탕으로 추론해 보세요.'
     },
-    answerKey: { q1:'3', q2:'3', q3_1:['데릴사위'], q3_2:['마름'], q4_1:['부추김'], q4_2:['교묘함'] },
+    answerKey: { q1:'3', q2:'2', q3_1:['데릴사위'], q3_2:['마름'], q4_1:['부추김'], q4_2:['교묘함'] },
     essayKeywords: ['부추김','장인','싸움','대항','떠나지 못하게','점순이','계략','교묘','데릴사위','마름','봄봄','김유정','처가','품삯','혼인','결혼','달걀','밥','눈짓','울상','핑계','때리다','거짓말','삽자루','허탈','킬킬','웃다','속다','이기다','허리','안간힘','아버지','내쫓다','불러들이다','시험','이용','1930년대','농촌','해학','어수룩','영악','향토적','연민','갈등','트집'],
     explain: {
       q1: '그때마다 점순이가 삐죽이 나와 눈짓으로 불러들여서 나는 다시 돌아왔다',
-      q2: '감과 함께 점순이를 바라봤다. 점순이는 킬킬대며 웃고 있었다',
-      q3: '다. 장인은 마을의 마름으로',
-      q4: '이다. 점순이는 장인을 이용해 나를 시험하려는 것이다',
+      q2: '점순이는 재빨리 자기 아버지에게 달려가 내가 때렸다고 거짓말을 했다',
+      q3: '데릴사위',
+      q4: '부추김',
       q5: '예시 답안: 점순이는 "나"가 떠나지 못하게 하려고 일부러 장인과 싸움을 붙인 것이다. 장인에게 맞서면 "나"는 오히려 처가에 더 얽매이게 되기 때문이다.'
     },
     detail: {
@@ -3943,57 +3943,6 @@ function applyContentPack(unitKey) {
       }
     });
 
-    // 토스트 스타일
-    if (!document.getElementById('toast-style')) {
-      const toastStyle = document.createElement('style');
-      toastStyle.id = 'toast-style';
-      toastStyle.textContent = `
-        .complete-toast {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #fff9c4 100%);
-          color: #e65100;
-          padding: 24px 40px;
-          border-radius: 16px;
-          font-size: 20px;
-          font-weight: 700;
-          box-shadow: 0 8px 32px rgba(255,152,0,0.3), 0 0 0 4px rgba(255,193,7,0.4);
-          border: 2px solid #ffb300;
-          z-index: 9999;
-          animation: toastPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-          text-align: center;
-        }
-        @keyframes toastPop {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        .sparkle-rain {
-          position: fixed;
-          top: -30px;
-          z-index: 9998;
-          pointer-events: none;
-          text-shadow: 0 0 8px currentColor, 0 0 15px currentColor;
-          animation: sparkleDown 2s ease-in forwards;
-        }
-        @keyframes sparkleDown {
-          0% {
-            transform: translateY(0) rotate(0deg) scale(1);
-            opacity: 1;
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(50vh) rotate(360deg) scale(1.2);
-          }
-          100% {
-            transform: translateY(110vh) rotate(720deg) scale(0.5);
-            opacity: 0;
-          }
-        }
-      `;
-      document.head.appendChild(toastStyle);
-    }
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');

@@ -286,7 +286,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'2', q2:'1', q3_1:['중력'], q3_2:['무게'], q4_1:['6','육','여섯'], q4_2:['가볍','가벼'] },
     essayKeywords: ['질량','무게','중력','변하지 않','달','6분의 1','10kg','가볍','같다','다르다','60kg','물질의 양','장소','천체','행성','화성','목성','지구','끌어당기','줄어들','늘어나','체중계','뉴턴','kgf','kg','일정','변화','우주','무중력'],
     explain: {
-      q1:'가 다르기 때문입니다. 무게는 지구가 물체를 끌어당기는 힘, 즉 중력의 크기와 관련이 있어요',
+      q1:'의 크기와 관련이 있어요',
       q2:'이렇게 물체가 더 무겁거나 가볍게 느껴지는 까닭은 물체가 받는',
       q3:'을 가지고 있기 때문에, 그 위에 있는 모든 물체를 중심 방향으로 당기는',
       q4:'달의 중력이 지구의 약 6분의 1 수준이기 때문이지요',
@@ -2152,57 +2152,6 @@ function applyContentPack(unitKey) {
       }
     });
 
-    // 토스트 스타일
-    if (!document.getElementById('toast-style')) {
-      const toastStyle = document.createElement('style');
-      toastStyle.id = 'toast-style';
-      toastStyle.textContent = `
-        .complete-toast {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #fff9c4 100%);
-          color: #e65100;
-          padding: 24px 40px;
-          border-radius: 16px;
-          font-size: 20px;
-          font-weight: 700;
-          box-shadow: 0 8px 32px rgba(255,152,0,0.3), 0 0 0 4px rgba(255,193,7,0.4);
-          border: 2px solid #ffb300;
-          z-index: 9999;
-          animation: toastPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-          text-align: center;
-        }
-        @keyframes toastPop {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        .sparkle-rain {
-          position: fixed;
-          top: -30px;
-          z-index: 9998;
-          pointer-events: none;
-          text-shadow: 0 0 8px currentColor, 0 0 15px currentColor;
-          animation: sparkleDown 2s ease-in forwards;
-        }
-        @keyframes sparkleDown {
-          0% {
-            transform: translateY(0) rotate(0deg) scale(1);
-            opacity: 1;
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(50vh) rotate(360deg) scale(1.2);
-          }
-          100% {
-            transform: translateY(110vh) rotate(720deg) scale(0.5);
-            opacity: 0;
-          }
-        }
-      `;
-      document.head.appendChild(toastStyle);
-    }
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');

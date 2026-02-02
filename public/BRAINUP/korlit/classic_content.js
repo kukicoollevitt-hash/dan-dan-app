@@ -273,10 +273,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'3', q2:'4', q3_1:['장원'], q3_2:['원수'], q4_1:['중매'], q4_2:['금실'] },
     essayKeywords: ['구하다','마음','확인','금실','돈독','부부','갈등','화해','사랑','신뢰','믿음','용서','이해','배려','희생','헌신','위험','목숨','살리다','변화','성장','관계','개선','발전','회복','정','애정','존중','감사','고마움','미안함','반성','인정','수용','소통','대화','진심','진정성','용기','결단','책임','의리','우정','동반자','평생','함께','동고동락'],
     explain: {
-      q1: '들에게 붙잡혀 물에 던져지는 위험한 일을 겪습니다. 다행히도 무릉포에 살던 여공 부부가 우연히 그녀를 발견해',
+      q1: '무릉포에 살던 여공 부부가 우연히 그녀를 발견해 살려 주었고',
       q2: '로, 여성이 남성처럼 과거에 급제하고 장수가 되어 나라를 구하는 이야기입니다',
       q3: '에 오르고, 여공의 아들 여보국 역시 부장원으로',
-      q4: '를 서서 혼인을 이끌었지요. 하지만 두 사람은 위치와 자존심 때문에',
+      q4: '를 서서 혼인을 이끌었지요',
       q5: '예시 답안: 홍계월이 여보국을 구한 일을 계기로 두 사람은 서로의 마음을 다시 확인하게 되었고, 부부의 정인 금실이 더욱 돈독해졌다.'
     },
     detail: {
@@ -3786,57 +3786,6 @@ function applyContentPack(unitKey) {
       }
     });
 
-    // 토스트 스타일
-    if (!document.getElementById('toast-style')) {
-      const toastStyle = document.createElement('style');
-      toastStyle.id = 'toast-style';
-      toastStyle.textContent = `
-        .complete-toast {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #fff9c4 100%);
-          color: #e65100;
-          padding: 24px 40px;
-          border-radius: 16px;
-          font-size: 20px;
-          font-weight: 700;
-          box-shadow: 0 8px 32px rgba(255,152,0,0.3), 0 0 0 4px rgba(255,193,7,0.4);
-          border: 2px solid #ffb300;
-          z-index: 9999;
-          animation: toastPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-          text-align: center;
-        }
-        @keyframes toastPop {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        .sparkle-rain {
-          position: fixed;
-          top: -30px;
-          z-index: 9998;
-          pointer-events: none;
-          text-shadow: 0 0 8px currentColor, 0 0 15px currentColor;
-          animation: sparkleDown 2s ease-in forwards;
-        }
-        @keyframes sparkleDown {
-          0% {
-            transform: translateY(0) rotate(0deg) scale(1);
-            opacity: 1;
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(50vh) rotate(360deg) scale(1.2);
-          }
-          100% {
-            transform: translateY(110vh) rotate(720deg) scale(0.5);
-            opacity: 0;
-          }
-        }
-      `;
-      document.head.appendChild(toastStyle);
-    }
 }
 
   const vocabBox = document.querySelector('.passage-vocab ol');
