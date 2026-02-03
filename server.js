@@ -2129,8 +2129,11 @@ app.get("/academy/branch/users", requireAdminLogin, (req, res) => {
 // 🔹 관리자 계정 목록 페이지
 app.get("/super/admins", requireSuperAdmin, async (req, res) => {
   try {
-    // 삭제 안 된 관리자만
-    const admins = await Admin.find({ deleted: { $ne: true } })
+    // 삭제 안 된 학교용 관리자만 (userType이 academy가 아닌 것들)
+    const admins = await Admin.find({
+      deleted: { $ne: true },
+      userType: { $ne: "academy" }  // 학원용 제외
+    })
       .sort({ academyName: 1, name: 1 })
       .lean();
 
@@ -2331,9 +2334,79 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
           <a href="/super/dashboard?type=school" class="btn-back">← 대시보드로 돌아가기</a>
         </div>
 
-        <p class="info-line">
-          총 <strong>${admins.length}</strong>개의 관리자 계정이 있습니다.
-        </p>
+        <div class="table-header-row" style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+          <button type="button" class="btn-add" onclick="openAddModal()" style="
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+          ">+ 선생님 추가</button>
+          <p class="info-line" style="margin: 0;">
+            총 <strong>${admins.length}</strong>개의 관리자 계정이 있습니다.
+          </p>
+        </div>
+
+        <!-- 선생님 추가 모달 -->
+        <div id="addModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+          <div style="background:white; padding:30px; border-radius:16px; max-width:450px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h2 style="margin:0 0 20px; font-size:20px; color:#333;">학교용 선생님 추가</h2>
+            <form method="POST" action="/super/school-admin-add">
+              <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">학교명 *</label>
+                <input type="text" name="academyName" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 서울초등학교">
+              </div>
+              <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">선생님 이름 *</label>
+                <input type="text" name="name" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 홍길동">
+              </div>
+              <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <div style="flex:1;">
+                  <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">학년</label>
+                  <input type="text" name="grade" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 4학년">
+                </div>
+                <div style="flex:1;">
+                  <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">반</label>
+                  <input type="text" name="classNum" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 2반">
+                </div>
+              </div>
+              <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">생년월일 *</label>
+                <input type="text" name="birth" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 850315">
+              </div>
+              <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">전화번호(ID) *</label>
+                <input type="text" name="phone" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 01012345678">
+              </div>
+              <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">승인 상태</label>
+                <select name="status" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;">
+                  <option value="approved">승인</option>
+                  <option value="pending">대기</option>
+                </select>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button type="button" onclick="closeAddModal()" style="flex:1; padding:12px; background:#f0f0f0; border:none; border-radius:8px; cursor:pointer; font-weight:600;">취소</button>
+                <button type="submit" style="flex:1; padding:12px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;">추가</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <script>
+          function openAddModal() {
+            document.getElementById('addModal').style.display = 'flex';
+          }
+          function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+          }
+          // 모달 바깥 클릭 시 닫기
+          document.getElementById('addModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddModal();
+          });
+        </script>
 
         <div class="table-wrap">
           <table>
@@ -2823,6 +2896,105 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           font-size: 20px;
           margin-bottom: 8px;
         }
+        .btn-add {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 20px;
+          font-size: 14px;
+          font-weight: 600;
+          border-radius: 12px;
+          border: none;
+          background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+          color: white;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .btn-add:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(107, 91, 149, 0.3);
+        }
+        .top-buttons {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+        /* 모달 */
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: 1000;
+          align-items: center;
+          justify-content: center;
+        }
+        .modal-overlay.show {
+          display: flex;
+        }
+        .modal-card {
+          background: white;
+          border-radius: 20px;
+          padding: 30px;
+          width: min(450px, 90vw);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-card h2 {
+          margin: 0 0 8px;
+          font-size: 22px;
+          color: var(--accent);
+        }
+        .modal-card p.modal-desc {
+          margin: 0 0 24px;
+          font-size: 14px;
+          color: var(--text-light);
+        }
+        .modal-card label {
+          display: block;
+          font-size: 14px;
+          font-weight: 600;
+          margin-bottom: 6px;
+          color: var(--text);
+        }
+        .modal-card input,
+        .modal-card select {
+          width: 100%;
+          padding: 12px 14px;
+          margin-bottom: 16px;
+          border: 2px solid var(--line);
+          border-radius: 10px;
+          font-size: 14px;
+          outline: none;
+        }
+        .modal-card input:focus,
+        .modal-card select:focus {
+          border-color: var(--accent);
+        }
+        .modal-btns {
+          display: flex;
+          gap: 12px;
+          margin-top: 10px;
+        }
+        .modal-btns button {
+          flex: 1;
+          padding: 12px;
+          border: none;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .modal-btns .cancel-btn {
+          background: #e0e0e0;
+          color: #333;
+        }
+        .modal-btns .submit-btn {
+          background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+          color: white;
+        }
+        .modal-btns .submit-btn:hover {
+          opacity: 0.9;
+        }
         @media (max-width: 768px) {
           body {
             padding: 20px 12px;
@@ -2853,14 +3025,60 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           <a href="/super/dashboard?type=academy" class="btn-back">← 대시보드로</a>
         </div>
 
-        <p class="info-line">
-          총 <strong>${admins.length}</strong>개의 학원 선생님 계정이 있습니다.
-        </p>
+        <!-- 선생님 추가 모달 -->
+        <div class="modal-overlay" id="addModal">
+          <div class="modal-card">
+            <h2>👨‍💼 선생님 추가</h2>
+            <p class="modal-desc">새로운 학원 선생님 계정을 직접 추가합니다.</p>
+            <form action="/super/academy-admin-add" method="POST">
+              <label>학원명 (지점명) *</label>
+              <input type="text" name="academyName" placeholder="예: 공터국어" required />
+
+              <label>선생님 이름 *</label>
+              <input type="text" name="name" placeholder="예: 홍길동" required />
+
+              <label>전화번호 (ID) *</label>
+              <input type="tel" name="phone" placeholder="예: 01012345678" maxlength="11" required />
+
+              <label>상태</label>
+              <select name="status">
+                <option value="approved">승인</option>
+                <option value="pending">대기</option>
+              </select>
+
+              <div class="modal-btns">
+                <button type="button" class="cancel-btn" onclick="closeAddModal()">취소</button>
+                <button type="submit" class="submit-btn">추가하기</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <script>
+          function openAddModal() {
+            document.getElementById('addModal').classList.add('show');
+          }
+          function closeAddModal() {
+            document.getElementById('addModal').classList.remove('show');
+          }
+          // 모달 배경 클릭 시 닫기
+          document.getElementById('addModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddModal();
+          });
+        </script>
+
+        <div class="table-header-row" style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+          <button type="button" class="btn-add" onclick="openAddModal()">+ 선생님 추가</button>
+          <p class="info-line" style="margin: 0;">
+            총 <strong>${admins.length}</strong>개의 학원 선생님 계정이 있습니다.
+          </p>
+        </div>
 
         ${admins.length === 0 ? `
         <div class="empty-state">
           <h3>등록된 학원 선생님이 없습니다</h3>
           <p>학원용 선생님 가입이 진행되면 여기에 표시됩니다.</p>
+          <button type="button" class="btn-add" style="margin-top: 20px;" onclick="openAddModal()">+ 선생님 추가</button>
         </div>
         ` : `
         <div class="table-wrap">
@@ -2958,6 +3176,83 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
   } catch (err) {
     console.error("❌ /super/academy-admins 에러:", err);
     res.status(500).send("학원 선생님 목록 조회 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 학원용 관리자 추가 (슈퍼관리자)
+app.post("/super/academy-admin-add", requireSuperAdmin, async (req, res) => {
+  try {
+    const { academyName, name, phone, status } = req.body;
+
+    if (!academyName || !name || !phone) {
+      return res.status(400).send("학원명, 이름, 전화번호는 필수입니다.");
+    }
+
+    // 중복 체크
+    const existing = await Admin.findOne({ phone, userType: "academy", deleted: { $ne: true } });
+    if (existing) {
+      return res.status(400).send("이미 등록된 전화번호입니다.");
+    }
+
+    const newAdmin = new Admin({
+      academyName,
+      name,
+      phone,
+      status: status || "approved",
+      userType: "academy",
+      createdAt: new Date()
+    });
+
+    await newAdmin.save();
+    console.log("✅ 학원 선생님 추가:", academyName, name, phone);
+    res.redirect("/super/academy-admins");
+  } catch (err) {
+    console.error("❌ /super/academy-admin-add 에러:", err);
+    res.status(500).send("선생님 추가 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 학교용 관리자 추가 (슈퍼관리자)
+app.post("/super/school-admin-add", requireSuperAdmin, async (req, res) => {
+  try {
+    const { academyName, name, grade, classNum, birth, phone, status } = req.body;
+
+    if (!academyName || !name || !birth || !phone) {
+      return res.status(400).send("학교명, 이름, 생년월일, 전화번호는 필수입니다.");
+    }
+
+    // 중복 체크 (학교용 - userType이 없거나 school인 계정)
+    const existing = await Admin.findOne({
+      phone,
+      $or: [
+        { userType: "school" },
+        { userType: { $exists: false } },
+        { userType: null }
+      ],
+      deleted: { $ne: true }
+    });
+    if (existing) {
+      return res.status(400).send("이미 등록된 전화번호입니다.");
+    }
+
+    const newAdmin = new Admin({
+      academyName, // 학교명으로 사용
+      name,
+      grade: grade || "",
+      classNum: classNum || "",
+      birth,
+      phone,
+      status: status || "approved",
+      userType: "school",
+      createdAt: new Date()
+    });
+
+    await newAdmin.save();
+    console.log("✅ 학교 선생님 추가:", academyName, name, grade, classNum, phone);
+    res.redirect("/super/admins");
+  } catch (err) {
+    console.error("❌ /super/school-admin-add 에러:", err);
+    res.status(500).send("선생님 추가 중 오류가 발생했습니다.");
   }
 });
 

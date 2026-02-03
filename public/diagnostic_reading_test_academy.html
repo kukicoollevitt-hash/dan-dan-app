@@ -916,6 +916,53 @@
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
+    /* 학원 검색 드롭다운 */
+    .academy-search-wrapper {
+      position: relative;
+    }
+    .academy-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #fff;
+      border: 2px solid #667eea;
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      display: none;
+    }
+    .academy-dropdown.show {
+      display: block;
+    }
+    .academy-dropdown-item {
+      padding: 12px 15px;
+      cursor: pointer;
+      font-size: 15px;
+      color: #34495e;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .academy-dropdown-item:last-child {
+      border-bottom: none;
+    }
+    .academy-dropdown-item:hover,
+    .academy-dropdown-item.highlight {
+      background: #f0f4ff;
+    }
+    .academy-dropdown-item.new-entry {
+      color: #667eea;
+      font-style: italic;
+    }
+    .academy-no-result {
+      padding: 12px 15px;
+      font-size: 14px;
+      color: #999;
+      text-align: center;
+    }
+
     .form-divider {
       height: 1px;
       background: linear-gradient(to right, transparent, #e0e0e0, transparent);
@@ -980,7 +1027,11 @@
 
         <div class="form-group">
           <label>학원명(지점명)<span class="required">*</span></label>
-          <input type="text" id="branchName" placeholder="예: ○○학원 ○○점" required>
+          <div class="academy-search-wrapper">
+            <input type="text" id="branchNameSearch" placeholder="학원명 검색..." autocomplete="off">
+            <input type="hidden" id="branchName">
+            <div class="academy-dropdown" id="academyDropdown"></div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -1205,6 +1256,136 @@
   </div>
 
   <script>
+    // ========== 학원 검색 드롭다운 ==========
+    let academyList = [];
+
+    // 서버에서 학원 목록 가져오기
+    async function loadAcademies() {
+      try {
+        const res = await fetch('/api/academies');
+        const data = await res.json();
+        if (data.ok && data.academies) {
+          academyList = data.academies;
+        }
+      } catch (err) {
+        console.error('학원 목록 로드 실패:', err);
+      }
+    }
+
+    // 학원 검색 드롭다운 초기화
+    function initAcademySearch() {
+      const searchInput = document.getElementById('branchNameSearch');
+      const hiddenInput = document.getElementById('branchName');
+      const dropdown = document.getElementById('academyDropdown');
+
+      if (!searchInput || !hiddenInput || !dropdown) return;
+
+      let highlightIndex = -1;
+
+      // 드롭다운 렌더링
+      function renderDropdown(query) {
+        dropdown.innerHTML = '';
+        highlightIndex = -1;
+
+        if (!query.trim()) {
+          dropdown.classList.remove('show');
+          return;
+        }
+
+        const filtered = academyList.filter(name =>
+          name.toLowerCase().includes(query.toLowerCase())
+        );
+
+        if (filtered.length === 0) {
+          // 새 학원 입력 옵션
+          const newItem = document.createElement('div');
+          newItem.className = 'academy-dropdown-item new-entry';
+          newItem.textContent = `"${query}" (새 학원으로 등록)`;
+          newItem.addEventListener('click', () => {
+            searchInput.value = query.trim();
+            hiddenInput.value = query.trim();
+            dropdown.classList.remove('show');
+          });
+          dropdown.appendChild(newItem);
+        } else {
+          filtered.forEach((name, idx) => {
+            const item = document.createElement('div');
+            item.className = 'academy-dropdown-item';
+            item.textContent = name;
+            item.addEventListener('click', () => {
+              searchInput.value = name;
+              hiddenInput.value = name;
+              dropdown.classList.remove('show');
+            });
+            dropdown.appendChild(item);
+          });
+        }
+
+        dropdown.classList.add('show');
+      }
+
+      // 입력 이벤트
+      searchInput.addEventListener('input', () => {
+        renderDropdown(searchInput.value);
+        hiddenInput.value = '';
+      });
+
+      // 포커스 시 드롭다운 표시
+      searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim()) {
+          renderDropdown(searchInput.value);
+        }
+      });
+
+      // 키보드 네비게이션
+      searchInput.addEventListener('keydown', (e) => {
+        const items = dropdown.querySelectorAll('.academy-dropdown-item');
+        if (!items.length) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          highlightIndex = Math.min(highlightIndex + 1, items.length - 1);
+          updateHighlight(items);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          highlightIndex = Math.max(highlightIndex - 1, 0);
+          updateHighlight(items);
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (highlightIndex >= 0 && items[highlightIndex]) {
+            items[highlightIndex].click();
+          } else if (searchInput.value.trim()) {
+            hiddenInput.value = searchInput.value.trim();
+            dropdown.classList.remove('show');
+          }
+        } else if (e.key === 'Escape') {
+          dropdown.classList.remove('show');
+        }
+      });
+
+      function updateHighlight(items) {
+        items.forEach((item, idx) => {
+          item.classList.toggle('highlight', idx === highlightIndex);
+        });
+      }
+
+      // 외부 클릭 시 드롭다운 닫기
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.remove('show');
+          if (!hiddenInput.value && searchInput.value.trim()) {
+            hiddenInput.value = searchInput.value.trim();
+          }
+        }
+      });
+    }
+
+    // 페이지 로드 시 학원 목록 불러오기 및 검색 초기화
+    (async () => {
+      await loadAcademies();
+      initAcademySearch();
+    })();
+
     // 퀴즈 데이터 (25문항 - 5개 지문 × 5개 문해력 지수)
     const quizData = [
       // ========== 사회 (1-5) ==========
@@ -1646,7 +1827,7 @@
       // 유효성 검사
       if (!branchName) {
         alert('학원명(지점명)을 입력해주세요.');
-        document.getElementById('branchName').focus();
+        document.getElementById('branchNameSearch').focus();
         return;
       }
 
