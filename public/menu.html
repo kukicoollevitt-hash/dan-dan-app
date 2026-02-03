@@ -7248,6 +7248,12 @@ if (logoutConfirmBtn) {
       catch(e) { return null; }
     }
 
+    /* 🏠 로그아웃 후 리다이렉트 URL (학원용/학교용 분기) */
+    function getLogoutRedirectUrl() {
+      const userType = localStorage.getItem('userType');
+      return userType === 'academy' ? '/academy' : '/';
+    }
+
     /* 🔐 학생키 만들기 (로그인 페이지랑 같은 규칙) */
     function buildStudentKey(stu) {
       const cleanPhone = (stu.phone || '').replace(/\D/g, '');
@@ -7798,9 +7804,13 @@ if (logoutConfirmBtn) {
         }, 80);
       }
 
+      // 리다이렉트 URL 미리 저장 (localStorage 삭제 전)
+      const redirectUrl = getLogoutRedirectUrl();
+
       try {
         // 현재 학생 정보 제거
         localStorage.removeItem('currentStudent');
+        localStorage.removeItem('userType');
 
         await fetch("/logout", {
           method: "POST",
@@ -7816,7 +7826,7 @@ if (logoutConfirmBtn) {
         if (progressTimer) clearInterval(progressTimer);
 
         setTimeout(() => {
-          window.location.href = "/";
+          window.location.href = redirectUrl;
         }, 400);
       }
     }
@@ -8241,9 +8251,13 @@ if (logoutConfirmBtn) {
         }, 80);
       }
 
+      // 리다이렉트 URL 미리 저장 (localStorage 삭제 전)
+      const redirectUrl = getLogoutRedirectUrl();
+
       try {
         // 현재 학생 정보 제거
         localStorage.removeItem('currentStudent');
+        localStorage.removeItem('userType');
 
         await fetch("/logout", {
           method: "POST",
@@ -8259,7 +8273,7 @@ if (logoutConfirmBtn) {
         if (progressTimer) clearInterval(progressTimer);
 
         setTimeout(() => {
-          window.location.href = "/";
+          window.location.href = redirectUrl;
         }, 400);
       }
     }
@@ -8285,6 +8299,9 @@ async function performLogout() {
 
   if (btn) btn.disabled = true;
 
+  // 리다이렉트 URL 미리 저장 (localStorage 삭제 전)
+  const redirectUrl = getLogoutRedirectUrl();
+
   let progressTimer = null;
   if (bar && percent) {
     progressTimer = setInterval(() => {
@@ -8299,6 +8316,7 @@ async function performLogout() {
 
   try {
     localStorage.removeItem('currentStudent');
+    localStorage.removeItem('userType');
 
     await fetch("/logout", {
       method: "POST",
@@ -8314,7 +8332,7 @@ async function performLogout() {
     if (progressTimer) clearInterval(progressTimer);
 
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = redirectUrl;
     }, 400);
   }
 }
@@ -8667,7 +8685,7 @@ async function performLogout() {
 
       // 🔐 로그아웃 후 뒤로가기 하면 무조건 로그인 페이지로 돌려보내기
       if (!stu) {
-        window.location.href = "/";
+        window.location.href = getLogoutRedirectUrl();
         return;
       }
 

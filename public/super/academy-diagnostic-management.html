@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학원용 진단테스트 및 결과 관리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #6B5B95;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #7f8c8d;
+      font-size: 16px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      background: #6B5B95;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-bottom: 30px;
+    }
+
+    .back-btn:hover {
+      background: #4a3d6e;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(107, 91, 149, 0.4);
+    }
+
+    .section {
+      margin-bottom: 50px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ecf0f1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .count-badge {
+      background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    thead {
+      background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+      color: white;
+    }
+
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #ecf0f1;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 40px;
+      color: #95a5a6;
+      font-size: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #6B5B95;
+    }
+
+    .edit-btn {
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .edit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+    }
+
+    /* 수정 모달 스타일 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .modal-header h2 {
+      font-size: 24px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .modal-header p {
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #6B5B95;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-cancel {
+      background: #ecf0f1;
+      color: #7f8c8d;
+    }
+
+    .btn-cancel:hover {
+      background: #bdc3c7;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+      color: white;
+    }
+
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(107, 91, 149, 0.4);
+    }
+
+    /* 더보기 버튼 스타일 */
+    .show-more-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+      background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+      color: #2c3e50;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .show-more-btn:hover {
+      background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(107, 91, 149, 0.4);
+    }
+
+    .hidden-row {
+      display: none;
+    }
+
+    /* 검색 입력창 스타일 */
+    .search-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 12px 16px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #6B5B95;
+    }
+
+    .search-input::placeholder {
+      color: #95a5a6;
+    }
+
+    .grade-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .grade-S { background: #ffd700; color: #333; }
+    .grade-A { background: #ff6b6b; color: white; }
+    .grade-B { background: #4ecdc4; color: white; }
+    .grade-C { background: #95e1d3; color: #333; }
+    .grade-D { background: #e0e0e0; color: #666; }
+
+    /* 체크박스 스타일 */
+    .select-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .delete-btn:hover {
+      background: #b91c1c;
+      transform: translateY(-1px);
+    }
+
+    .delete-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .section-title {
+        font-size: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 10px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
+
+    <div class="header">
+      <h1>📊 학원용 진단테스트 및 결과 관리</h1>
+      <p>학원용 진단테스트 및 결과를 한 곳에서 관리합니다.</p>
+    </div>
+
+    <!-- 진단테스트 학생 목록 -->
+    <div class="section">
+      <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span>📝 진단테스트 학생 목록</span>
+          <span class="count-badge" id="testCount">0명</span>
+        </div>
+        <button id="deleteDiagnosticBtn" class="delete-btn" onclick="deleteSelectedDiagnosticTests()" disabled>🗑 선택삭제 (<span id="diagnosticSelectedCount">0</span>명)</button>
+      </div>
+      <div class="search-container">
+        <input type="text" id="diagnosticSearch" class="search-input" placeholder="🔍 학원/학교명, 학년, 이름으로 검색..." oninput="filterDiagnosticTests()">
+      </div>
+      <div class="table-container">
+        <div id="diagnosticTestsLoading" class="loading">데이터를 불러오는 중...</div>
+        <table id="diagnosticTestsTable" style="display: none;">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="select-checkbox" id="diagnosticSelectAll" onchange="toggleAllDiagnostic(this)"></th>
+              <th>No.</th>
+              <th>학원/학교명</th>
+              <th>학년</th>
+              <th>이름</th>
+              <th>전화번호</th>
+              <th>학부모 연락처</th>
+              <th>등록 시간</th>
+              <th>수정</th>
+            </tr>
+          </thead>
+          <tbody id="diagnosticTestsBody">
+          </tbody>
+        </table>
+        <div id="diagnosticTestsEmpty" class="empty-message" style="display: none;">
+          등록된 진단테스트 신청이 없습니다.
+        </div>
+        <button id="diagnosticShowMoreBtn" class="show-more-btn" style="display: none;" onclick="toggleDiagnosticRows()">
+          더보기 (<span id="diagnosticHiddenCount">0</span>명 더)
+        </button>
+      </div>
+    </div>
+
+    <!-- 진단테스트 결과 목록 -->
+    <div class="section">
+      <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span>🎓 진단테스트 결과 목록</span>
+          <span class="count-badge" id="applicationCount">0명</span>
+        </div>
+        <button id="deleteApplicationBtn" class="delete-btn" onclick="deleteSelectedApplications()" disabled>🗑 선택삭제 (<span id="applicationSelectedCount">0</span>명)</button>
+      </div>
+      <div class="search-container">
+        <input type="text" id="applicationSearch" class="search-input" placeholder="🔍 학원/학교명, 학년, 이름, 등급으로 검색..." oninput="filterApplications()">
+      </div>
+      <div class="table-container">
+        <div id="applicationsLoading" class="loading">데이터를 불러오는 중...</div>
+        <table id="applicationsTable" style="display: none;">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="select-checkbox" id="applicationSelectAll" onchange="toggleAllApplication(this)"></th>
+              <th>No.</th>
+              <th>학원/학교명</th>
+              <th>학년</th>
+              <th>이름</th>
+              <th>전화번호</th>
+              <th>등급</th>
+              <th>점수</th>
+              <th>시리즈</th>
+              <th>등록 시간</th>
+              <th>시험지</th>
+              <th>수정</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsBody">
+          </tbody>
+        </table>
+        <div id="applicationsEmpty" class="empty-message" style="display: none;">
+          등록된 진단테스트 결과가 없습니다.
+        </div>
+        <button id="applicationShowMoreBtn" class="show-more-btn" style="display: none;" onclick="toggleApplicationRows()">
+          더보기 (<span id="applicationHiddenCount">0</span>명 더)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✏️ 정보 수정</h2>
+        <p>학생 정보를 수정할 수 있습니다</p>
+      </div>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        <input type="hidden" id="editType">
+        <div class="form-group">
+          <label>학원/학교명</label>
+          <input type="text" id="editAcademyName" placeholder="학원명 또는 학교명을 입력하세요">
+        </div>
+        <div class="form-group">
+          <label>학년</label>
+          <input type="text" id="editStudentGrade" placeholder="예: 3학년, 중1, 고2">
+        </div>
+        <div class="form-group">
+          <label>이름</label>
+          <input type="text" id="editStudentName" placeholder="이름을 입력하세요">
+        </div>
+        <div class="form-group">
+          <label>전화번호</label>
+          <input type="text" id="editStudentPhone" placeholder="010-0000-0000">
+        </div>
+        <div class="form-group" id="parentPhoneGroup">
+          <label>학부모 연락처</label>
+          <input type="text" id="editParentPhone" placeholder="010-0000-0000">
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="closeEditModal()">취소</button>
+          <button type="submit" class="btn-save">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const DISPLAY_LIMIT = 10;
+    let diagnosticExpanded = false;
+    let applicationExpanded = false;
+
+    let allDiagnosticTests = [];
+    let allApplications = [];
+
+    // 진단테스트 목록 불러오기 (학원용)
+    async function loadDiagnosticTests() {
+      try {
+        const response = await fetch('/api/academy-diagnostic-tests');
+        const result = await response.json();
+
+        const loading = document.getElementById('diagnosticTestsLoading');
+        const table = document.getElementById('diagnosticTestsTable');
+        const empty = document.getElementById('diagnosticTestsEmpty');
+        const body = document.getElementById('diagnosticTestsBody');
+        const countBadge = document.getElementById('testCount');
+        const showMoreBtn = document.getElementById('diagnosticShowMoreBtn');
+        const hiddenCountSpan = document.getElementById('diagnosticHiddenCount');
+
+        loading.style.display = 'none';
+
+        if (result.success && result.data.length > 0) {
+          allDiagnosticTests = result.data;
+
+          table.style.display = 'table';
+          countBadge.textContent = `${result.data.length}명`;
+
+          body.innerHTML = result.data.map((test, index) => {
+            const orgName = test.academyName || test.school || test.branchName || '-';
+            return `
+            <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row diagnostic-hidden' : ''}">
+              <td><input type="checkbox" class="select-checkbox diagnostic-checkbox" data-id="${test._id}" onchange="updateDiagnosticCount()"></td>
+              <td>${index + 1}</td>
+              <td>${orgName}</td>
+              <td>${test.studentGrade}</td>
+              <td>${test.studentName}</td>
+              <td>${test.studentPhone}</td>
+              <td>${test.parentPhone || '-'}</td>
+              <td>${new Date(test.createdAt).toLocaleString('ko-KR')}</td>
+              <td><button class="edit-btn" onclick="openEditModal('diagnostic', '${test._id}', '${orgName.replace(/'/g, "\\'")}', '${test.studentGrade}', '${test.studentName}', '${test.studentPhone}', '${test.parentPhone || ''}')">수정</button></td>
+            </tr>
+          `}).join('');
+
+          if (result.data.length > DISPLAY_LIMIT) {
+            showMoreBtn.style.display = 'block';
+            hiddenCountSpan.textContent = result.data.length - DISPLAY_LIMIT;
+          } else {
+            showMoreBtn.style.display = 'none';
+          }
+        } else {
+          empty.style.display = 'block';
+          countBadge.textContent = '0명';
+        }
+      } catch (error) {
+        console.error('진단테스트 목록 로드 오류:', error);
+        document.getElementById('diagnosticTestsLoading').textContent = '데이터 로드 중 오류가 발생했습니다.';
+      }
+    }
+
+    function toggleDiagnosticRows() {
+      const hiddenRows = document.querySelectorAll('.diagnostic-hidden');
+      const btn = document.getElementById('diagnosticShowMoreBtn');
+
+      diagnosticExpanded = !diagnosticExpanded;
+
+      hiddenRows.forEach(row => {
+        row.classList.toggle('hidden-row', !diagnosticExpanded);
+      });
+
+      if (diagnosticExpanded) {
+        btn.textContent = '접기';
+      } else {
+        btn.innerHTML = `더보기 (<span id="diagnosticHiddenCount">${hiddenRows.length}</span>명 더)`;
+      }
+    }
+
+    // 진단테스트 결과 목록 불러오기 (학원용)
+    async function loadCourseApplications() {
+      try {
+        const response = await fetch('/api/academy-course-applications');
+        const result = await response.json();
+
+        const loading = document.getElementById('applicationsLoading');
+        const table = document.getElementById('applicationsTable');
+        const empty = document.getElementById('applicationsEmpty');
+        const body = document.getElementById('applicationsBody');
+        const countBadge = document.getElementById('applicationCount');
+        const showMoreBtn = document.getElementById('applicationShowMoreBtn');
+        const hiddenCountSpan = document.getElementById('applicationHiddenCount');
+
+        loading.style.display = 'none';
+
+        if (result.success && result.data.length > 0) {
+          allApplications = result.data;
+
+          table.style.display = 'table';
+          countBadge.textContent = `${result.data.length}명`;
+
+          body.innerHTML = result.data.map((app, index) => {
+            const gradeClass = `grade-${app.grade}`;
+            const hasAnswers = app.answers && app.answers.length > 0;
+            const orgName = app.academyName || app.school || app.branchName || '-';
+            return `
+              <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row application-hidden' : ''}">
+                <td><input type="checkbox" class="select-checkbox application-checkbox" data-id="${app._id}" onchange="updateApplicationCount()"></td>
+                <td>${index + 1}</td>
+                <td>${orgName}</td>
+                <td>${app.studentGrade}</td>
+                <td>${app.studentName}</td>
+                <td>${app.studentPhone}</td>
+                <td><span class="grade-badge ${gradeClass}">${app.grade}</span></td>
+                <td>${app.score !== undefined ? app.score + '/25' : '-'}</td>
+                <td>${app.series}</td>
+                <td>${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
+                <td>${hasAnswers ? `<button onclick="viewTestPaper('${app._id}')" style="padding: 6px 12px; background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">시험지 보기</button>` : '<span style="color: #999;">-</span>'}</td>
+                <td><button class="edit-btn" onclick="openEditModal('application', '${app._id}', '${orgName.replace(/'/g, "\\'")}', '${app.studentGrade}', '${app.studentName}', '${app.studentPhone}', '')">수정</button></td>
+              </tr>
+            `;
+          }).join('');
+
+          if (result.data.length > DISPLAY_LIMIT) {
+            showMoreBtn.style.display = 'block';
+            hiddenCountSpan.textContent = result.data.length - DISPLAY_LIMIT;
+          } else {
+            showMoreBtn.style.display = 'none';
+          }
+        } else {
+          empty.style.display = 'block';
+          countBadge.textContent = '0명';
+        }
+      } catch (error) {
+        console.error('진단테스트 결과 목록 로드 오류:', error);
+        document.getElementById('applicationsLoading').textContent = '데이터 로드 중 오류가 발생했습니다.';
+      }
+    }
+
+    function toggleApplicationRows() {
+      const hiddenRows = document.querySelectorAll('.application-hidden');
+      const btn = document.getElementById('applicationShowMoreBtn');
+
+      applicationExpanded = !applicationExpanded;
+
+      hiddenRows.forEach(row => {
+        row.classList.toggle('hidden-row', !applicationExpanded);
+      });
+
+      if (applicationExpanded) {
+        btn.textContent = '접기';
+      } else {
+        btn.innerHTML = `더보기 (<span id="applicationHiddenCount">${hiddenRows.length}</span>명 더)`;
+      }
+    }
+
+    function viewTestPaper(applicationId) {
+      window.open(`/test-result-viewer.html?id=${applicationId}`, '_blank', 'width=900,height=800');
+    }
+
+    function openEditModal(type, id, academyName, studentGrade, studentName, studentPhone, parentPhone) {
+      document.getElementById('editId').value = id;
+      document.getElementById('editType').value = type;
+      document.getElementById('editAcademyName').value = academyName;
+      document.getElementById('editStudentGrade').value = studentGrade;
+      document.getElementById('editStudentName').value = studentName;
+      document.getElementById('editStudentPhone').value = studentPhone;
+      document.getElementById('editParentPhone').value = parentPhone;
+
+      const parentPhoneGroup = document.getElementById('parentPhoneGroup');
+      if (type === 'application') {
+        parentPhoneGroup.style.display = 'none';
+      } else {
+        parentPhoneGroup.style.display = 'block';
+      }
+
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('editId').value;
+      const type = document.getElementById('editType').value;
+      const data = {
+        academyName: document.getElementById('editAcademyName').value,
+        studentGrade: document.getElementById('editStudentGrade').value,
+        studentName: document.getElementById('editStudentName').value,
+        studentPhone: document.getElementById('editStudentPhone').value
+      };
+
+      if (type === 'diagnostic') {
+        data.parentPhone = document.getElementById('editParentPhone').value;
+      }
+
+      try {
+        const endpoint = type === 'diagnostic'
+          ? `/api/academy-diagnostic-tests/${id}`
+          : `/api/academy-course-applications/${id}`;
+
+        const response = await fetch(endpoint, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert('정보가 성공적으로 수정되었습니다.');
+          closeEditModal();
+          if (type === 'diagnostic') {
+            loadDiagnosticTests();
+          } else {
+            loadCourseApplications();
+          }
+        } else {
+          alert('수정 중 오류가 발생했습니다: ' + (result.message || '알 수 없는 오류'));
+        }
+      } catch (error) {
+        console.error('수정 오류:', error);
+        alert('수정 중 오류가 발생했습니다.');
+      }
+    });
+
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditModal();
+      }
+    });
+
+    function toggleAllDiagnostic(checkbox) {
+      const checkboxes = document.querySelectorAll('.diagnostic-checkbox');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+      updateDiagnosticCount();
+    }
+
+    function updateDiagnosticCount() {
+      const checkboxes = document.querySelectorAll('.diagnostic-checkbox:checked');
+      const count = checkboxes.length;
+      document.getElementById('diagnosticSelectedCount').textContent = count;
+      document.getElementById('deleteDiagnosticBtn').disabled = count === 0;
+
+      const allCheckboxes = document.querySelectorAll('.diagnostic-checkbox');
+      document.getElementById('diagnosticSelectAll').checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+    }
+
+    async function deleteSelectedDiagnosticTests() {
+      const checkboxes = document.querySelectorAll('.diagnostic-checkbox:checked');
+      const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+
+      if (ids.length === 0) {
+        alert('삭제할 항목을 선택해주세요.');
+        return;
+      }
+
+      if (!confirm(`⚠️ 선택한 ${ids.length}명의 진단테스트 신청을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
+
+      try {
+        const response = await fetch('/api/academy-diagnostic-tests/delete-selected', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          alert(`✅ ${result.deletedCount}건의 진단테스트 신청이 삭제되었습니다.`);
+          loadDiagnosticTests();
+        } else {
+          alert('삭제 중 오류가 발생했습니다: ' + (result.message || '알 수 없는 오류'));
+        }
+      } catch (error) {
+        console.error('삭제 오류:', error);
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    function toggleAllApplication(checkbox) {
+      const checkboxes = document.querySelectorAll('.application-checkbox');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+      updateApplicationCount();
+    }
+
+    function updateApplicationCount() {
+      const checkboxes = document.querySelectorAll('.application-checkbox:checked');
+      const count = checkboxes.length;
+      document.getElementById('applicationSelectedCount').textContent = count;
+      document.getElementById('deleteApplicationBtn').disabled = count === 0;
+
+      const allCheckboxes = document.querySelectorAll('.application-checkbox');
+      document.getElementById('applicationSelectAll').checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+    }
+
+    async function deleteSelectedApplications() {
+      const checkboxes = document.querySelectorAll('.application-checkbox:checked');
+      const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+
+      if (ids.length === 0) {
+        alert('삭제할 항목을 선택해주세요.');
+        return;
+      }
+
+      if (!confirm(`⚠️ 선택한 ${ids.length}명의 진단테스트 결과를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
+
+      try {
+        const response = await fetch('/api/academy-course-applications/delete-selected', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          alert(`✅ ${result.deletedCount}건의 진단테스트 결과가 삭제되었습니다.`);
+          loadCourseApplications();
+        } else {
+          alert('삭제 중 오류가 발생했습니다: ' + (result.message || '알 수 없는 오류'));
+        }
+      } catch (error) {
+        console.error('삭제 오류:', error);
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    function filterDiagnosticTests() {
+      const searchTerm = document.getElementById('diagnosticSearch').value.toLowerCase().trim();
+
+      if (!searchTerm) {
+        renderDiagnosticTests(allDiagnosticTests);
+        return;
+      }
+
+      const filtered = allDiagnosticTests.filter(test => {
+        const orgName = (test.academyName || test.school || test.branchName || '').toLowerCase();
+        const studentGrade = (test.studentGrade || '').toLowerCase();
+        const studentName = (test.studentName || '').toLowerCase();
+        return orgName.includes(searchTerm) ||
+               studentGrade.includes(searchTerm) ||
+               studentName.includes(searchTerm);
+      });
+
+      renderDiagnosticTests(filtered);
+    }
+
+    function renderDiagnosticTests(data) {
+      const body = document.getElementById('diagnosticTestsBody');
+      const countBadge = document.getElementById('testCount');
+      const showMoreBtn = document.getElementById('diagnosticShowMoreBtn');
+      const table = document.getElementById('diagnosticTestsTable');
+      const empty = document.getElementById('diagnosticTestsEmpty');
+
+      if (data.length > 0) {
+        table.style.display = 'table';
+        empty.style.display = 'none';
+        countBadge.textContent = `${data.length}명`;
+
+        body.innerHTML = data.map((test, index) => {
+          const orgName = test.academyName || test.school || test.branchName || '-';
+          return `
+          <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row diagnostic-hidden' : ''}">
+            <td><input type="checkbox" class="select-checkbox diagnostic-checkbox" data-id="${test._id}" onchange="updateDiagnosticCount()"></td>
+            <td>${index + 1}</td>
+            <td>${orgName}</td>
+            <td>${test.studentGrade}</td>
+            <td>${test.studentName}</td>
+            <td>${test.studentPhone}</td>
+            <td>${test.parentPhone || '-'}</td>
+            <td>${new Date(test.createdAt).toLocaleString('ko-KR')}</td>
+            <td><button class="edit-btn" onclick="openEditModal('diagnostic', '${test._id}', '${orgName.replace(/'/g, "\\'")}', '${test.studentGrade}', '${test.studentName}', '${test.studentPhone}', '${test.parentPhone || ''}')">수정</button></td>
+          </tr>
+        `}).join('');
+
+        if (data.length > DISPLAY_LIMIT) {
+          showMoreBtn.style.display = 'block';
+          diagnosticExpanded = false;
+          showMoreBtn.innerHTML = `더보기 (<span id="diagnosticHiddenCount">${data.length - DISPLAY_LIMIT}</span>명 더)`;
+        } else {
+          showMoreBtn.style.display = 'none';
+        }
+      } else {
+        table.style.display = 'none';
+        empty.style.display = 'block';
+        empty.textContent = '검색 결과가 없습니다.';
+        countBadge.textContent = '0명';
+        showMoreBtn.style.display = 'none';
+      }
+    }
+
+    function filterApplications() {
+      const searchTerm = document.getElementById('applicationSearch').value.toLowerCase().trim();
+
+      if (!searchTerm) {
+        renderApplications(allApplications);
+        return;
+      }
+
+      const filtered = allApplications.filter(app => {
+        const orgName = (app.academyName || app.school || app.branchName || '').toLowerCase();
+        const studentGrade = (app.studentGrade || '').toLowerCase();
+        const studentName = (app.studentName || '').toLowerCase();
+        const grade = (app.grade || '').toLowerCase();
+        return orgName.includes(searchTerm) ||
+               studentGrade.includes(searchTerm) ||
+               studentName.includes(searchTerm) ||
+               grade.includes(searchTerm);
+      });
+
+      renderApplications(filtered);
+    }
+
+    function renderApplications(data) {
+      const body = document.getElementById('applicationsBody');
+      const countBadge = document.getElementById('applicationCount');
+      const showMoreBtn = document.getElementById('applicationShowMoreBtn');
+      const table = document.getElementById('applicationsTable');
+      const empty = document.getElementById('applicationsEmpty');
+
+      if (data.length > 0) {
+        table.style.display = 'table';
+        empty.style.display = 'none';
+        countBadge.textContent = `${data.length}명`;
+
+        body.innerHTML = data.map((app, index) => {
+          const gradeClass = `grade-${app.grade}`;
+          const hasAnswers = app.answers && app.answers.length > 0;
+          const orgName = app.academyName || app.school || app.branchName || '-';
+          return `
+            <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row application-hidden' : ''}">
+              <td><input type="checkbox" class="select-checkbox application-checkbox" data-id="${app._id}" onchange="updateApplicationCount()"></td>
+              <td>${index + 1}</td>
+              <td>${orgName}</td>
+              <td>${app.studentGrade}</td>
+              <td>${app.studentName}</td>
+              <td>${app.studentPhone}</td>
+              <td><span class="grade-badge ${gradeClass}">${app.grade}</span></td>
+              <td>${app.score !== undefined ? app.score + '/25' : '-'}</td>
+              <td>${app.series}</td>
+              <td>${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
+              <td>${hasAnswers ? `<button onclick="viewTestPaper('${app._id}')" style="padding: 6px 12px; background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">시험지 보기</button>` : '<span style="color: #999;">-</span>'}</td>
+              <td><button class="edit-btn" onclick="openEditModal('application', '${app._id}', '${orgName.replace(/'/g, "\\'")}', '${app.studentGrade}', '${app.studentName}', '${app.studentPhone}', '')">수정</button></td>
+            </tr>
+          `;
+        }).join('');
+
+        if (data.length > DISPLAY_LIMIT) {
+          showMoreBtn.style.display = 'block';
+          applicationExpanded = false;
+          showMoreBtn.innerHTML = `더보기 (<span id="applicationHiddenCount">${data.length - DISPLAY_LIMIT}</span>명 더)`;
+        } else {
+          showMoreBtn.style.display = 'none';
+        }
+      } else {
+        table.style.display = 'none';
+        empty.style.display = 'block';
+        empty.textContent = '검색 결과가 없습니다.';
+        countBadge.textContent = '0명';
+        showMoreBtn.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDiagnosticTests();
+      loadCourseApplications();
+    });
+  </script>
+</body>
+</html>

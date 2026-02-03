@@ -2,11 +2,24 @@
 const mongoose = require("mongoose");
 
 const CourseApplicationSchema = new mongoose.Schema({
-  // 지점 정보
+  // 지점 정보 (학교용)
   branchName: {
     type: String,
-    required: true
-  }, // 지점명(학원명)
+    default: ''
+  }, // 지점명(학교명)
+
+  // 학원 정보 (학원용)
+  academyName: {
+    type: String,
+    default: ''
+  }, // 학원명
+
+  // 사용자 타입: school(학교용) / academy(학원용)
+  userType: {
+    type: String,
+    enum: ["school", "academy"],
+    default: "school"
+  },
 
   // 학생 정보
   studentGrade: {

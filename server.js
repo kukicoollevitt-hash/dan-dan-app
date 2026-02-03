@@ -45,6 +45,7 @@ const MockExamConsultation = require("./models/MockExamConsultation");
 const MegaphoneMessage = require("./models/MegaphoneMessage");
 const Notice = require("./models/Notice");
 const SnackOrder = require("./models/SnackOrder");
+const SentenceRead = require("./models/SentenceRead");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -167,6 +168,128 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "brain_landing.html"));
 });
 
+// ✅ 학원용 랜딩 페이지
+app.get("/academy", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "academy.html"));
+});
+
+// ✅ 학원용 관리자 로그인 페이지
+app.get("/academy-admin-login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "academy_admin_login.html"));
+});
+
+// ✅ 학원용 관리자 로그인 처리 (POST)
+app.post("/academy-admin-login", async (req, res) => {
+  try {
+    const { academyName, name, phone } = req.body;
+    console.log("📥 [POST] /academy-admin-login:", { academyName, name, phone });
+
+    // DB에서 학원용 관리자 찾기
+    const admin = await Admin.findOne({
+      academyName,
+      name,
+      phone,
+      userType: "academy",
+      deleted: { $ne: true }
+    });
+
+    if (!admin) {
+      console.log("❌ 학원 관리자 로그인 실패: 일치하는 계정 없음");
+      return res.redirect("/academy-admin-login?error=invalid");
+    }
+
+    // 승인 대기 상태면 로그인 막기
+    if (admin.status === "pending") {
+      console.log("⛔ 승인 대기 학원 관리자 로그인 시도:", admin.name);
+      return res.redirect("/academy-admin-login?error=pending");
+    }
+
+    // 마지막 로그인 시간 업데이트
+    admin.lastLogin = new Date();
+    await admin.save();
+
+    // 🔥 슈퍼관리자 체크 (role: "super" 또는 isSuper: true)
+    console.log("🔍 [DEBUG] admin.role:", admin.role, "admin.isSuper:", admin.isSuper);
+    const isSuperAdmin = admin.role === "super" || admin.isSuper === true;
+    console.log("🔍 [DEBUG] isSuperAdmin 결과:", isSuperAdmin);
+
+    // 세션에 관리자 정보 저장
+    req.session.admin = {
+      id: admin._id.toString(),
+      academyName: admin.academyName,
+      name: admin.name,
+      role: admin.role || "teacher",
+      userType: "academy",
+      isSuper: isSuperAdmin
+    };
+
+    console.log("✅ 학원 관리자 로그인 성공:", admin.academyName, admin.name, isSuperAdmin ? "(슈퍼관리자)" : "");
+
+    // 🔥 슈퍼관리자면 PIN 인증 페이지로 이동 (슈퍼관리자 대시보드 접근용)
+    if (isSuperAdmin) {
+      console.log("🔐 학원 슈퍼관리자 PIN 인증 필요:", admin.name);
+      req.session.superPinRequired = true;
+      return res.redirect("/super/pin");
+    }
+
+    // 🔥 학원명이 "어드민"이면 슈퍼관리자 대시보드로 바로 이동
+    if (academyName === "어드민") {
+      console.log("🏢 어드민 계정 → 슈퍼관리자 대시보드로 이동");
+      req.session.admin.isSuper = true;  // 슈퍼관리자 권한 부여
+      req.session.superPinVerified = true;
+      return res.redirect("/super/dashboard?type=academy");
+    }
+
+    // 🔥 일반 학원 관리자는 PIN 인증 없이 바로 학원용 브랜치 대시보드로 이동
+    console.log("🏢 학원 관리자 → 학원용 브랜치 대시보드로 이동 (PIN 생략)");
+    req.session.adminPinVerified = true;
+    return res.redirect("/academy/dashboard");
+  } catch (err) {
+    console.error("❌ /academy-admin-login 에러:", err);
+    res.status(500).send("학원 관리자 로그인 중 오류가 발생했습니다.");
+  }
+});
+
+// ✅ 학원용 관리자 회원가입 처리 (POST)
+app.post("/academy-admin-register", async (req, res) => {
+  try {
+    const { academyName, name, phone } = req.body;
+    console.log("📥 [POST] /academy-admin-register:", { academyName, name, phone });
+
+    // 전화번호 중복 체크 (학원용 관리자)
+    const existingAdmin = await Admin.findOne({
+      phone,
+      userType: "academy",
+      deleted: { $ne: true }
+    });
+
+    if (existingAdmin) {
+      console.log("❌ 학원 관리자 회원가입 실패: 전화번호 중복");
+      return res.redirect("/academy-admin-login?error=duplicate");
+    }
+
+    // 새 학원 관리자 생성
+    const newAdmin = new Admin({
+      academyName,
+      name,
+      phone,
+      userType: "academy",
+      role: "teacher",
+      status: "pending",  // 승인 대기 상태
+      pin: phone.slice(-4),  // 전화번호 뒤 4자리를 PIN으로
+      createdAt: new Date()
+    });
+
+    await newAdmin.save();
+    console.log("✅ 학원 관리자 회원가입 완료 (승인 대기):", academyName, name);
+
+    return res.redirect("/academy-admin-login?success=registered");
+  } catch (err) {
+    console.error("❌ /academy-admin-register 에러:", err);
+    res.status(500).send("학원 관리자 회원가입 중 오류가 발생했습니다.");
+  }
+});
+
 // ✅ 1-2) /login = 로그인 페이지 (쿼리 유지)
 app.get("/login", (req, res) => {
   console.log("✅ [GET] /login  -> login.html 보내기 (쿼리 유지)");
@@ -182,6 +305,36 @@ app.get("/signup", (req, res) => {
 app.get("/menu", (req, res) => {
   console.log("✅ [GET] /menu -> menu.html 제공 (grade:", req.query.grade, ", name:", req.query.name, ")");
   res.sendFile(path.join(__dirname, "public", "menu.html"));
+});
+
+// ✅ 등록된 학원 목록 조회 API (학원용 로그인/회원가입용)
+app.get("/api/academies", async (req, res) => {
+  try {
+    // Admin 테이블에서 학원용 academyName 목록 가져오기
+    const adminAcademies = await Admin.find({
+      deleted: { $ne: true },
+      userType: "academy"
+    }).distinct("academyName");
+
+    // User 테이블에서 학원용 academyName 목록 가져오기
+    const userAcademies = await User.find({
+      deleted: { $ne: true },
+      userType: "academy"
+    }).distinct("academyName");
+
+    // 두 목록 합치기 (중복 제거)
+    const allAcademies = [...new Set([...adminAcademies, ...userAcademies])];
+
+    // 빈 값 제거 및 정렬
+    const academies = allAcademies
+      .filter(name => name && name.trim() && name !== "어드민")
+      .sort((a, b) => a.localeCompare(b, "ko"));
+
+    res.json({ ok: true, academies });
+  } catch (err) {
+    console.error("❌ /api/academies 에러:", err);
+    res.json({ ok: false, academies: [] });
+  }
 });
 
 // ✅ 등록된 학교 목록 조회 API (로그인/회원가입용)
@@ -319,6 +472,14 @@ const userSchema = new mongoose.Schema({
   pw: String,
   lastLogin: Date,
   school: String,
+  // 🔹 학원용: 학원명 (학교용은 school 필드 사용)
+  academyName: String,
+  // 🔹 사용자 타입: school(학교용) / academy(학원용)
+  userType: {
+    type: String,
+    enum: ["school", "academy"],
+    default: "school"
+  },
   status: {
     type: String,
     enum: ["pending", "approved"],
@@ -352,7 +513,7 @@ const adminSchema = new mongoose.Schema({
   },
 
   name:  { type: String, required: true }, // 성함
-  birth: { type: String, required: true }, // 예) 900305
+  birth: { type: String, default: "" }, // 예) 900305 (학교용만 사용, 학원용은 생략)
   phone: { type: String, required: true }, // 로그인 ID + PW
 
   // 🔥 슈퍼관리자 여부 (어드민 계정만 true)
@@ -376,6 +537,13 @@ const adminSchema = new mongoose.Schema({
 
   // 🔐 브랜치 관리자 PIN (6자리)
   pin: { type: String, default: null },
+
+  // 🔹 사용자 타입: school(학교용) / academy(학원용)
+  userType: {
+    type: String,
+    enum: ["school", "academy"],
+    default: "school"
+  },
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
@@ -887,6 +1055,239 @@ app.get("/super/diagnostic-management", requireSuperAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "super", "diagnostic-management.html"));
 });
 
+// ✅ 슈퍼관리자: 학원용 진단테스트 관리
+app.get("/super/academy-diagnostic-management", requireSuperAdmin, (req, res) => {
+  console.log(
+    "✅ [GET] /super/academy-diagnostic-management -> public/super/academy-diagnostic-management.html"
+  );
+  res.sendFile(path.join(__dirname, "public", "super", "academy-diagnostic-management.html"));
+});
+
+// ✅ 슈퍼관리자: 학원용 모의고사 관리
+app.get("/super/academy-mock-exam-management", requireSuperAdmin, (req, res) => {
+  console.log("✅ [GET] /super/academy-mock-exam-management");
+  // 학원용 모의고사 관리 페이지 (준비 중 안내)
+  const html = `
+  <!DOCTYPE html>
+  <html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학원용 모의고사 관리</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+      h1 { font-size: 28px; color: #6B5B95; margin-bottom: 20px; }
+      p { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 30px; }
+      .back-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+        color: white;
+        padding: 14px 28px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+      .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(107, 91, 149, 0.4); }
+      .icon { font-size: 64px; margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">📝</div>
+      <h1>학원용 모의고사 관리</h1>
+      <p>학원용 모의고사 기능은 현재 준비 중입니다.<br>학원 학생들이 모의고사를 응시하면 이 페이지에서 관리할 수 있습니다.</p>
+      <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
+    </div>
+  </body>
+  </html>
+  `;
+  res.send(html);
+});
+
+// ✅ 슈퍼관리자: 학원용 보완 학습 시험지 관리
+app.get("/super/academy-supplement-exam-management", requireSuperAdmin, (req, res) => {
+  console.log("✅ [GET] /super/academy-supplement-exam-management");
+  const html = `
+  <!DOCTYPE html>
+  <html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학원용 보완 학습 관리</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+      h1 { font-size: 28px; color: #6B5B95; margin-bottom: 20px; }
+      p { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 30px; }
+      .back-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+        color: white;
+        padding: 14px 28px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+      .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(107, 91, 149, 0.4); }
+      .icon { font-size: 64px; margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">📚</div>
+      <h1>학원용 보완 학습 관리</h1>
+      <p>학원용 보완 학습 기능은 현재 준비 중입니다.<br>학원 학생들의 보완 학습 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
+      <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
+    </div>
+  </body>
+  </html>
+  `;
+  res.send(html);
+});
+
+// ✅ 슈퍼관리자: 학원용 형성평가 관문 AI 관리
+app.get("/super/academy-gate-pass-management", requireSuperAdmin, (req, res) => {
+  console.log("✅ [GET] /super/academy-gate-pass-management");
+  const html = `
+  <!DOCTYPE html>
+  <html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학원용 형성평가 관문 AI 관리</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+      h1 { font-size: 28px; color: #6B5B95; margin-bottom: 20px; }
+      p { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 30px; }
+      .back-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+        color: white;
+        padding: 14px 28px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+      .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(107, 91, 149, 0.4); }
+      .icon { font-size: 64px; margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">🤖</div>
+      <h1>학원용 형성평가 관문 AI 관리</h1>
+      <p>학원용 형성평가 관문 AI 기능은 현재 준비 중입니다.<br>학원 학생들의 AI 추천 학습 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
+      <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
+    </div>
+  </body>
+  </html>
+  `;
+  res.send(html);
+});
+
+// ✅ 슈퍼관리자: 학원용 고래뱃지/확성기 관리
+app.get("/super/academy-megaphone-management", requireSuperAdmin, (req, res) => {
+  console.log("✅ [GET] /super/academy-megaphone-management");
+  const html = `
+  <!DOCTYPE html>
+  <html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학원용 고래뱃지/확성기 관리</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+      h1 { font-size: 28px; color: #6B5B95; margin-bottom: 20px; }
+      p { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 30px; }
+      .back-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+        color: white;
+        padding: 14px 28px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+      .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(107, 91, 149, 0.4); }
+      .icon { font-size: 64px; margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">🐋</div>
+      <h1>학원용 고래뱃지/확성기 관리</h1>
+      <p>학원용 고래뱃지/확성기 기능은 현재 준비 중입니다.<br>학원 학생들의 Live 및 고래뱃지 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
+      <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
+    </div>
+  </body>
+  </html>
+  `;
+  res.send(html);
+});
+
 // ✅ 슈퍼관리자: 모의고사 관리
 app.get("/super/mock-exam-management", requireSuperAdmin, (req, res) => {
   console.log(
@@ -1259,13 +1660,20 @@ app.delete("/api/super/snack-orders/:id", requireSuperAdmin, async (req, res) =>
 
 // ✅ 슈퍼관리자: 전체 학원 학생 목록 보기
 app.get("/super/users", requireSuperAdmin, (req, res) => {
+  const { type } = req.query; // school 또는 academy
   console.log(
-    "✅ [GET] /super/users -> /admin/users 로 리다이렉트 (슈퍼관리자 전용)"
+    "✅ [GET] /super/users -> /admin/users 로 리다이렉트 (슈퍼관리자 전용)",
+    type ? `타입: ${type}` : ""
   );
 
   // 🔐 ADMIN_KEY 는 서버에서만 알고 있으니,
   // 여기서 쿼리에 붙여서 기존 /admin/users 화면을 재사용한다.
-  res.redirect(`/admin/users?key=${encodeURIComponent(ADMIN_KEY)}`);
+  // 🔹 type 파라미터가 있으면 함께 전달 (학교용/학원용 필터링)
+  let redirectUrl = `/admin/users?key=${encodeURIComponent(ADMIN_KEY)}`;
+  if (type) {
+    redirectUrl += `&type=${encodeURIComponent(type)}`;
+  }
+  res.redirect(redirectUrl);
 });
 
 
@@ -1283,17 +1691,26 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
     const adminClassNum = admin.classNum; // 선생님 반
     const { q, status, sort } = req.query; // 검색어 + 상태 필터(옵션) + 정렬
 
+    const userType = admin.userType || "school";  // 🔥 학교용/학원용 구분
+
     console.log("🔍 [/api/branch/users] 필터 조건:", {
       academyName,
       adminGrade,
-      adminClassNum
+      adminClassNum,
+      userType
     });
 
-    // 기본 필터: 내 학원 + 휴지 아님
+    // 기본 필터: 휴지 아님
     const filter = {
-      school: academyName,
       deleted: { $ne: true },
     };
+
+    // 🔥 학원용인 경우 academyName 필드로 필터링, 학교용인 경우 school 필드로 필터링
+    if (userType === "academy") {
+      filter.academyName = academyName;
+    } else {
+      filter.school = academyName;
+    }
 
     // ✅ "전체" 학년 선택 시 학년 필터링 건너뛰기 (해당 학교 전체 학년 표시)
     if (adminGrade && adminGrade !== "전체") {
@@ -1413,8 +1830,12 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
       if ((!completedUnitsSet || completedUnitsSet.size === 0) && user.school) {
         completedUnitsSet = completedUnitsMapBySchoolName.get(`${user.school}|${user.name}`);
       }
-      // 3. 이름만으로 최후 폴백 (같은 학교 내에서 이름이 유일할 때만 적용)
-      if ((!completedUnitsSet || completedUnitsSet.size === 0)) {
+      // 3. 학원명|이름으로 폴백 (학원용)
+      if ((!completedUnitsSet || completedUnitsSet.size === 0) && user.academyName) {
+        completedUnitsSet = completedUnitsMapBySchoolName.get(`${user.academyName}|${user.name}`);
+      }
+      // 4. 이름만으로 최후 폴백 (학원용이 아닌 경우에만, 동명이인 문제 방지)
+      if ((!completedUnitsSet || completedUnitsSet.size === 0) && !user.academyName) {
         completedUnitsSet = completedUnitsMapByName.get(user.name);
       }
       users[i].completedUnits = Array.from(completedUnitsSet || new Set());
@@ -1434,6 +1855,7 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
       academyName,
       adminGrade: adminGrade || "",
       adminClassNum: adminClassNum || "",
+      userType,  // 🔥 학교용/학원용 구분 추가
       count: users.length,
       students: users,
       users,
@@ -1679,6 +2101,26 @@ app.get("/admin/dashboard", requireAdminLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin_dashboard.html"));
 });
 
+// 🔥 학원용 브랜치 관리자 대시보드
+app.get("/academy/dashboard", requireAdminLogin, (req, res) => {
+  console.log(
+    "✅ [GET] /academy/dashboard -> public/academy_admin_dashboard.html",
+    "admin:",
+    req.session.admin && req.session.admin.academyName
+  );
+  res.sendFile(path.join(__dirname, "public", "academy_admin_dashboard.html"));
+});
+
+// 🔥 학원용 학생 목록 페이지
+app.get("/academy/branch/users", requireAdminLogin, (req, res) => {
+  console.log(
+    "✅ [GET] /academy/branch/users -> public/academy_branch_user_list.html",
+    "admin:",
+    req.session.admin && req.session.admin.academyName
+  );
+  res.sendFile(path.join(__dirname, "public", "academy_branch_user_list.html"));
+});
+
 /* ====================================
  * ✅ 슈퍼관리자: 관리자 계정 목록 / 상태 변경 / 삭제
  * ==================================== */
@@ -1886,7 +2328,7 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
               승인 상태 변경 및 삭제(휴지 처리)를 할 수 있습니다.
             </p>
           </div>
-          <a href="/super/dashboard" class="btn-back">← 대시보드로 돌아가기</a>
+          <a href="/super/dashboard?type=school" class="btn-back">← 대시보드로 돌아가기</a>
         </div>
 
         <p class="info-line">
@@ -2203,6 +2645,523 @@ app.post("/super/admin-edit", requireSuperAdmin, async (req, res) => {
   } catch (err) {
     console.error("❌ /super/admins 에러:", err);
     res.status(500).send("관리자 목록 조회 중 오류가 발생했습니다.");
+  }
+});
+
+/* ====================================
+ * ✅ 슈퍼관리자: 학원용 관리자(선생님) 목록
+ * ==================================== */
+app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
+  try {
+    // 학원용 관리자만 조회 (userType === 'academy')
+    const admins = await Admin.find({
+      deleted: { $ne: true },
+      userType: "academy"
+    })
+      .sort({ academyName: 1, name: 1 })
+      .lean();
+
+    let html = `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8" />
+      <title>학원 선생님 계정 관리</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <style>
+        :root {
+          --bg: linear-gradient(135deg, #f5f0fa 0%, #e8e0f0 100%);
+          --panel: #ffffff;
+          --accent: #6B5B95;
+          --accent-hover: #4a3d6e;
+          --text: #2d2d3a;
+          --text-light: #5a5a6e;
+          --line: #d8d0e8;
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          padding: 40px 20px;
+          background: var(--bg);
+          font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+          color: var(--text);
+          min-height: 100vh;
+        }
+        .wrap {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        h1 {
+          margin: 0 0 12px;
+          font-size: 32px;
+          font-weight: 700;
+          color: var(--accent);
+        }
+        .desc {
+          margin: 0 0 24px;
+          font-size: 15px;
+          color: var(--text-light);
+          line-height: 1.6;
+        }
+        .top-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 30px;
+        }
+        .btn-back {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 20px;
+          font-size: 14px;
+          font-weight: 600;
+          border-radius: 12px;
+          border: 2px solid var(--line);
+          background: var(--panel);
+          color: var(--accent);
+          text-decoration: none;
+          transition: all 0.3s ease;
+        }
+        .btn-back:hover {
+          background: var(--accent);
+          color: white;
+          border-color: var(--accent);
+        }
+        .info-line {
+          background: var(--panel);
+          padding: 12px 20px;
+          border-radius: 12px;
+          font-size: 14px;
+          color: var(--text);
+          margin: 0 0 20px;
+          box-shadow: 0 2px 8px rgba(107, 91, 149, 0.1);
+        }
+        .table-wrap {
+          background: var(--panel);
+          border-radius: 20px;
+          padding: 24px;
+          box-shadow: 0 10px 40px rgba(107, 91, 149, 0.1);
+          overflow-x: auto;
+        }
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          min-width: 900px;
+          font-size: 14px;
+        }
+        th, td {
+          border-bottom: 1px solid var(--line);
+          padding: 14px 12px;
+          text-align: left;
+          font-weight: 500;
+          color: var(--text);
+          font-size: 14px;
+        }
+        th {
+          background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+          font-weight: 600;
+          color: white;
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
+        tbody tr {
+          transition: all 0.2s ease;
+        }
+        tbody tr:hover {
+          background: rgba(107, 91, 149, 0.05);
+        }
+        .badge {
+          display: inline-block;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+        .badge-approved {
+          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+          color: #065f46;
+        }
+        .badge-pending {
+          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+          color: #92400e;
+        }
+        a.link {
+          font-size: 13px;
+          color: var(--accent);
+          text-decoration: none;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+        a.link:hover {
+          color: var(--accent-hover);
+          text-decoration: underline;
+        }
+        a.link-danger {
+          font-size: 13px;
+          color: #dc2626;
+          text-decoration: none;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+        a.link-danger:hover {
+          color: #991b1b;
+          text-decoration: underline;
+        }
+        .empty-state {
+          text-align: center;
+          padding: 60px 20px;
+          color: var(--text-light);
+        }
+        .empty-state h3 {
+          font-size: 20px;
+          margin-bottom: 8px;
+        }
+        @media (max-width: 768px) {
+          body {
+            padding: 20px 12px;
+          }
+          h1 {
+            font-size: 24px;
+          }
+          .top-bar {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .table-wrap {
+            padding: 16px;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="wrap">
+        <div class="top-bar">
+          <div>
+            <h1>👨‍💼 학원 선생님 계정 관리</h1>
+            <p class="desc">
+              학원용 선생님 관리자 계정을 확인하고,<br/>
+              승인 상태 변경 및 삭제(휴지 처리)를 할 수 있습니다.
+            </p>
+          </div>
+          <a href="/super/dashboard?type=academy" class="btn-back">← 대시보드로</a>
+        </div>
+
+        <p class="info-line">
+          총 <strong>${admins.length}</strong>개의 학원 선생님 계정이 있습니다.
+        </p>
+
+        ${admins.length === 0 ? `
+        <div class="empty-state">
+          <h3>등록된 학원 선생님이 없습니다</h3>
+          <p>학원용 선생님 가입이 진행되면 여기에 표시됩니다.</p>
+        </div>
+        ` : `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>학원명</th>
+                <th>이름</th>
+                <th>전화번호(ID)</th>
+                <th>상태</th>
+                <th>가입일</th>
+                <th>마지막 로그인</th>
+                <th>수정</th>
+                <th>삭제</th>
+              </tr>
+            </thead>
+            <tbody>
+    `}`;
+
+    admins.forEach((a, idx) => {
+      const status = a.status || "approved";
+      const statusLabel = status === "approved" ? "승인" : "대기";
+      const statusClass = status === "approved" ? "badge-approved" : "badge-pending";
+
+      const createdAt = a.createdAt
+        ? new Date(a.createdAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+        : "-";
+      const lastLogin = a.lastLogin
+        ? new Date(a.lastLogin).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+        : "-";
+
+      let statusToggleLink = "";
+      if (status === "pending") {
+        statusToggleLink = `
+          <a class="link"
+             href="/super/academy-admin-status?id=${a._id}&status=approved"
+             onclick="return confirm('이 관리자를 승인 상태로 변경할까요?');">
+             승인하기
+          </a>
+        `;
+      } else {
+        statusToggleLink = `
+          <a class="link"
+             href="/super/academy-admin-status?id=${a._id}&status=pending"
+             onclick="return confirm('이 관리자 상태를 대기로 변경할까요?');">
+             대기 전환
+          </a>
+        `;
+      }
+
+      const deleteCell = `
+        <a class="link-danger"
+           href="/super/academy-admin-trash?id=${a._id}"
+           onclick="return confirm('이 관리자 계정을 휴지통으로 보낼까요?\\n[${a.academyName} / ${a.name}]');">
+          휴지통
+        </a>
+      `;
+
+      html += `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${a.academyName || ""}</td>
+          <td>${a.name || ""}</td>
+          <td>${a.phone || ""}</td>
+          <td>
+            <span class="badge ${statusClass}">${statusLabel}</span>
+            ${statusToggleLink}
+          </td>
+          <td>${createdAt}</td>
+          <td>${lastLogin}</td>
+          <td>
+            <a class="link" href="/super/academy-admin-edit?id=${a._id}">수정</a>
+          </td>
+          <td>${deleteCell}</td>
+        </tr>
+      `;
+    });
+
+    if (admins.length > 0) {
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    html += `
+      </div>
+    </body>
+    </html>
+    `;
+
+    res.send(html);
+  } catch (err) {
+    console.error("❌ /super/academy-admins 에러:", err);
+    res.status(500).send("학원 선생님 목록 조회 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 학원용 관리자 상태 변경
+app.get("/super/academy-admin-status", requireSuperAdmin, async (req, res) => {
+  const { id, status } = req.query;
+  const allowed = ["approved", "pending"];
+
+  if (!id || !allowed.includes(status)) {
+    return res.status(400).send("잘못된 요청입니다.");
+  }
+
+  try {
+    await Admin.findByIdAndUpdate(id, { status });
+    console.log("✅ 학원 관리자 상태 변경:", id, "→", status);
+    res.redirect("/super/academy-admins");
+  } catch (err) {
+    console.error("❌ /super/academy-admin-status 에러:", err);
+    res.status(500).send("상태 변경 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 학원용 관리자 휴지통 이동
+app.get("/super/academy-admin-trash", requireSuperAdmin, async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).send("id 파라미터가 필요합니다.");
+
+  try {
+    await Admin.findByIdAndUpdate(id, {
+      deleted: true,
+      deletedAt: new Date()
+    });
+    console.log("🗑 학원 관리자 휴지통 이동:", id);
+    res.redirect("/super/academy-admins");
+  } catch (err) {
+    console.error("❌ /super/academy-admin-trash 에러:", err);
+    res.status(500).send("휴지통 이동 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 학원용 관리자 정보 수정 화면
+app.get("/super/academy-admin-edit", requireSuperAdmin, async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).send("id 파라미터가 필요합니다.");
+
+  try {
+    const admin = await Admin.findById(id);
+    if (!admin) return res.status(404).send("관리자 계정을 찾을 수 없습니다.");
+
+    const html = `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8" />
+      <title>학원 선생님 정보 수정</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <style>
+        body {
+          font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+          padding: 20px;
+          background: linear-gradient(135deg, #f5f0fa 0%, #e8e0f0 100%);
+          min-height: 100vh;
+        }
+        .card {
+          max-width: 520px;
+          margin: 0 auto;
+          background: #fff;
+          border-radius: 16px;
+          padding: 24px;
+          box-shadow: 0 10px 40px rgba(107, 91, 149, 0.15);
+        }
+        h1 {
+          margin: 0 0 8px;
+          font-size: 24px;
+          color: #6B5B95;
+        }
+        .small {
+          font-size: 13px;
+          color: #5a5a6e;
+          margin-bottom: 20px;
+        }
+        .row {
+          margin-bottom: 16px;
+        }
+        label {
+          display: block;
+          font-size: 13px;
+          font-weight: 600;
+          color: #5a5a6e;
+          margin-bottom: 6px;
+        }
+        input, select {
+          width: 100%;
+          padding: 10px 12px;
+          border: 1px solid #d8d0e8;
+          border-radius: 8px;
+          font-size: 14px;
+        }
+        input:focus, select:focus {
+          outline: none;
+          border-color: #6B5B95;
+        }
+        .btn-row {
+          display: flex;
+          gap: 12px;
+          margin-top: 24px;
+        }
+        .btn {
+          flex: 1;
+          padding: 12px;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-primary {
+          background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+          color: white;
+        }
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(107, 91, 149, 0.3);
+        }
+        .btn-secondary {
+          background: #f0e8f8;
+          color: #6B5B95;
+        }
+        .btn-secondary:hover {
+          background: #e8daf0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>학원 선생님 정보 수정</h1>
+        <p class="small">학원 선생님 계정 정보를 수정합니다.</p>
+
+        <form method="POST" action="/super/academy-admin-edit">
+          <input type="hidden" name="id" value="${admin._id.toString()}" />
+
+          <div class="row">
+            <label>학원명</label>
+            <input type="text" name="academyName" value="${admin.academyName || ""}" />
+          </div>
+
+          <div class="row">
+            <label>이름</label>
+            <input type="text" name="name" value="${admin.name || ""}" />
+          </div>
+
+          <div class="row">
+            <label>전화번호(ID)</label>
+            <input type="text" name="phone" value="${admin.phone || ""}" />
+          </div>
+
+          <div class="row">
+            <label>상태</label>
+            <select name="status">
+              <option value="approved" ${admin.status === "approved" ? "selected" : ""}>승인</option>
+              <option value="pending" ${admin.status === "pending" ? "selected" : ""}>대기</option>
+            </select>
+          </div>
+
+          <div class="btn-row">
+            <a href="/super/academy-admins" class="btn btn-secondary" style="text-decoration:none; text-align:center;">← 취소</a>
+            <button type="submit" class="btn btn-primary">저장하기</button>
+          </div>
+        </form>
+      </div>
+    </body>
+    </html>
+    `;
+
+    res.send(html);
+  } catch (err) {
+    console.error("❌ /super/academy-admin-edit(GET) 에러:", err);
+    res.status(500).send("관리자 수정 화면 생성 중 오류");
+  }
+});
+
+// 🔹 학원용 관리자 정보 수정 처리
+app.post("/super/academy-admin-edit", requireSuperAdmin, async (req, res) => {
+  const { id, academyName, name, phone, status } = req.body;
+
+  if (!id) return res.status(400).send("id 값이 없습니다.");
+
+  try {
+    const admin = await Admin.findById(id);
+    if (!admin) return res.status(404).send("관리자 계정을 찾을 수 없습니다.");
+
+    admin.academyName = academyName || admin.academyName;
+    admin.name = name || admin.name;
+    admin.phone = phone || admin.phone;
+    admin.status = status || admin.status;
+
+    await admin.save();
+    console.log("✅ 학원 관리자 정보 수정 완료:", admin.academyName, admin.name);
+
+    res.redirect("/super/academy-admins");
+  } catch (err) {
+    console.error("❌ /super/academy-admin-edit(POST) 에러:", err);
+    res.status(500).send("관리자 정보 수정 중 오류");
   }
 });
 
@@ -2596,7 +3555,7 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
           </div>
           <div>
             <a href="/super/branch-trash" class="btn-trash">🗑 학교 휴지통</a>
-            <a href="/super/dashboard" class="btn-back">← 대시보드로 돌아가기</a>
+            <a href="/super/dashboard?type=school" class="btn-back">← 대시보드로 돌아가기</a>
           </div>
         </div>
 
@@ -2747,6 +3706,374 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
   } catch (err) {
     console.error("❌ /super/branches 에러:", err);
     res.status(500).send("지점 목록 조회 중 오류가 발생했습니다.");
+  }
+});
+
+/* ====================================
+ * ✅ 슈퍼관리자: 학원용 지점 목록 (academy type)
+ * ==================================== */
+
+// 🔹 학원용 지점 목록 페이지
+app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
+  try {
+    // 학원용 학생만 가져오기 (userType === 'academy')
+    const users = await User.find({
+      deleted: { $ne: true },
+      userType: "academy"
+    }).lean();
+
+    // 학원명별로 묶기
+    const branchMap = {};
+
+    users.forEach((u) => {
+      const academyName = u.academyName || "학원명 미입력";
+
+      if (!branchMap[academyName]) {
+        branchMap[academyName] = {
+          academyName: academyName,
+          studentCount: 0,
+          approvedCount: 0,
+          pendingCount: 0,
+          grades: new Set(),
+        };
+      }
+      branchMap[academyName].studentCount += 1;
+      if (u.status === "approved") {
+        branchMap[academyName].approvedCount += 1;
+      } else {
+        branchMap[academyName].pendingCount += 1;
+      }
+      if (u.grade) {
+        branchMap[academyName].grades.add(u.grade);
+      }
+    });
+
+    // Set을 배열로 변환하고 정렬
+    Object.values(branchMap).forEach(b => {
+      b.gradeList = Array.from(b.grades).sort((a, b) => {
+        const order = ["3학년", "4학년", "5학년", "6학년", "중1", "중2", "중3", "고1", "고2", "고3"];
+        return order.indexOf(a) - order.indexOf(b);
+      });
+      delete b.grades;
+    });
+
+    const branches = Object.values(branchMap).sort((a, b) =>
+      a.academyName.localeCompare(b.academyName, "ko")
+    );
+
+    const key = ADMIN_KEY;
+
+    let html = `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8" />
+      <title>학원 목록 (학원용)</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <style>
+        :root {
+          --bg: linear-gradient(135deg, #f5f0fa 0%, #e8e0f0 100%);
+          --panel: #ffffff;
+          --accent: #6B5B95;
+          --accent-hover: #4a3d6e;
+          --text: #2d2d3a;
+          --text-light: #5a5a6e;
+          --line: #d8d0e8;
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          padding: 40px 20px;
+          background: var(--bg);
+          font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+          color: var(--text);
+          min-height: 100vh;
+        }
+        .wrap { max-width: 1400px; margin: 0 auto; }
+        h1 {
+          margin: 0 0 8px;
+          font-size: 32px;
+          font-weight: 700;
+          color: var(--accent);
+        }
+        .desc {
+          margin: 0 0 24px;
+          font-size: 15px;
+          color: var(--text-light);
+        }
+        .top-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+        .btn-back {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 18px;
+          font-size: 14px;
+          font-weight: 600;
+          border-radius: 999px;
+          border: 1px solid var(--line);
+          background: var(--panel);
+          color: var(--accent);
+          text-decoration: none;
+          transition: all 0.2s;
+        }
+        .btn-back:hover {
+          background: var(--accent);
+          color: white;
+          border-color: var(--accent);
+        }
+        .stats-bar {
+          display: flex;
+          gap: 16px;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+        }
+        .stat-card {
+          background: var(--panel);
+          border-radius: 16px;
+          padding: 20px 28px;
+          box-shadow: 0 2px 12px rgba(107, 91, 149, 0.1);
+          text-align: center;
+          min-width: 140px;
+        }
+        .stat-value {
+          font-size: 32px;
+          font-weight: 700;
+          color: var(--accent);
+        }
+        .stat-label {
+          font-size: 13px;
+          color: var(--text-light);
+          margin-top: 4px;
+        }
+        .table-wrap {
+          background: var(--panel);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(107, 91, 149, 0.1);
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        th, td {
+          padding: 16px;
+          text-align: left;
+          border-bottom: 1px solid var(--line);
+        }
+        th {
+          background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        tbody tr:hover {
+          background: rgba(107, 91, 149, 0.05);
+        }
+        .btn-view {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          border-radius: 8px;
+          background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+          color: white;
+          text-decoration: none;
+          transition: all 0.2s;
+        }
+        .btn-view:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(107, 91, 149, 0.3);
+        }
+        .btn-delete {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          border-radius: 8px;
+          background: #dc3545;
+          color: white;
+          text-decoration: none;
+          margin-left: 8px;
+          transition: all 0.2s;
+        }
+        .btn-delete:hover {
+          background: #c82333;
+        }
+        .grade-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .grade-tag {
+          display: inline-block;
+          padding: 4px 10px;
+          font-size: 12px;
+          background: rgba(107, 91, 149, 0.1);
+          color: var(--accent);
+          border-radius: 12px;
+        }
+        .badge-approved {
+          color: #28a745;
+          font-weight: 600;
+        }
+        .badge-pending {
+          color: #dc3545;
+          font-weight: 600;
+        }
+        .empty-state {
+          text-align: center;
+          padding: 60px 20px;
+          color: var(--text-light);
+        }
+        .empty-state h3 {
+          font-size: 20px;
+          margin-bottom: 8px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="wrap">
+        <div class="top-bar">
+          <div>
+            <h1>🏢 학원 목록</h1>
+            <p class="desc">등록된 학원을 선택하면 해당 학원 학생들만 따로 볼 수 있습니다.</p>
+          </div>
+          <a href="/super/dashboard?type=academy" class="btn-back">← 대시보드로</a>
+        </div>
+
+        <div class="stats-bar">
+          <div class="stat-card">
+            <div class="stat-value">${branches.length}</div>
+            <div class="stat-label">총 학원 수</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${users.length}</div>
+            <div class="stat-label">총 학생 수</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${users.filter(u => u.status === 'approved').length}</div>
+            <div class="stat-label">승인 학생</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${users.filter(u => u.status !== 'approved').length}</div>
+            <div class="stat-label">대기 학생</div>
+          </div>
+        </div>
+
+        ${branches.length === 0 ? `
+        <div class="empty-state">
+          <h3>등록된 학원이 없습니다</h3>
+          <p>학원용 회원가입을 통해 학원 학생이 등록되면 여기에 표시됩니다.</p>
+        </div>
+        ` : `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>학원명</th>
+                <th>등록 학년</th>
+                <th>총 학생 수</th>
+                <th>승인</th>
+                <th>대기</th>
+                <th>작업</th>
+              </tr>
+            </thead>
+            <tbody>
+        `}
+    `;
+
+    branches.forEach((b, idx) => {
+      html += `
+              <tr>
+                <td>${idx + 1}</td>
+                <td><strong>${b.academyName}</strong></td>
+                <td>
+                  <div class="grade-tags">
+                    ${b.gradeList.map(g => `<span class="grade-tag">${g}</span>`).join('')}
+                  </div>
+                </td>
+                <td>${b.studentCount}명</td>
+                <td class="badge-approved">${b.approvedCount}명</td>
+                <td class="badge-pending">${b.pendingCount}명</td>
+                <td>
+                  <a class="btn-view" href="/admin/users?key=${encodeURIComponent(key)}&type=academy&academyName=${encodeURIComponent(b.academyName)}">
+                    👥 학생 보기
+                  </a>
+                  <a class="btn-delete" href="/super/academy-branch-delete?academyName=${encodeURIComponent(b.academyName)}"
+                     onclick="return confirm('이 학원을 휴지통으로 이동할까요?\\n[${b.academyName}]\\n\\n해당 학원의 모든 학생이 휴지통으로 이동합니다.');">
+                    🗑 삭제
+                  </a>
+                </td>
+              </tr>
+      `;
+    });
+
+    if (branches.length > 0) {
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    html += `
+      </div>
+    </body>
+    </html>
+    `;
+
+    res.send(html);
+  } catch (err) {
+    console.error("❌ /super/academy-branches 에러:", err);
+    res.status(500).send("학원 목록 조회 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 학원용 지점 삭제
+app.get("/super/academy-branch-delete", requireSuperAdmin, async (req, res) => {
+  const { academyName } = req.query;
+  if (!academyName) {
+    return res.status(400).send("academyName 파라미터가 필요합니다.");
+  }
+
+  const name = String(academyName).trim();
+  const now = new Date();
+
+  try {
+    // 해당 학원 학생 모두 휴지 상태로
+    const userResult = await User.updateMany(
+      { academyName: name, userType: "academy", deleted: { $ne: true } },
+      {
+        $set: {
+          deleted: true,
+          deletedAt: now,
+          branchDeleted: true
+        }
+      }
+    );
+
+    console.log(
+      "🗑 학원 삭제:",
+      name,
+      "학생", userResult.modifiedCount, "명 휴지 상태로 이동"
+    );
+
+    res.redirect("/super/academy-branches");
+  } catch (err) {
+    console.error("❌ /super/academy-branch-delete 에러:", err);
+    res.status(500).send("학원 삭제 중 오류가 발생했습니다.");
   }
 });
 
@@ -3511,10 +4838,18 @@ app.get("/admin/logout", (req, res) => {
   if (!req.session) {
     return res.redirect("/admin-login");
   }
+
+  // 🔥 학원용 관리자면 학원 로그인 페이지로 리다이렉트
+  const isAcademyAdmin = req.session.admin && req.session.admin.userType === "academy";
+
   req.session.admin = null;
   req.session.superPinVerified = false; // 슈퍼관리자 PIN 인증 초기화
   req.session.adminPinVerified = false; // 브랜치 관리자 PIN 인증 초기화
   req.session.adminPinRequired = false;
+
+  if (isAcademyAdmin) {
+    return res.redirect("/academy-admin-login");
+  }
   res.redirect("/admin-login");
 });
 
@@ -3588,7 +4923,7 @@ app.post("/signup", async (req, res) => {
 
 // ===== 회원 정보 수정 화면 (GET) =====
 app.get("/admin/user-edit", async (req, res) => {
-  const { id: rawId, key, view } = req.query;
+  const { id: rawId, key, view, type, academyName } = req.query;
 
   if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
@@ -3598,6 +4933,7 @@ app.get("/admin/user-edit", async (req, res) => {
   }
 
   const id = String(rawId).trim();
+  const isAcademy = type === "academy" || view === "academy";
 
   try {
     const user = await User.findOne({
@@ -3610,34 +4946,51 @@ app.get("/admin/user-edit", async (req, res) => {
     }
 
     // 🔙 수정 후 돌아갈 주소
-    const returnUrl =
-      view === "branch"
-        ? "/admin/branch/users"
-        : `/admin/users?key=${encodeURIComponent(key)}`;
+    let returnUrl;
+    if (view === "academy") {
+      // 학원 브랜치 관리자 학생 목록으로 돌아가기
+      returnUrl = "/academy/branch/users";
+    } else if (view === "branch") {
+      returnUrl = "/admin/branch/users";
+    } else if (isAcademy) {
+      // 슈퍼 어드민 학원용 전체 목록
+      returnUrl = `/admin/users?key=${encodeURIComponent(key)}&type=academy`;
+      if (academyName) {
+        returnUrl += `&academyName=${encodeURIComponent(academyName)}`;
+      }
+    } else {
+      returnUrl = `/admin/users?key=${encodeURIComponent(key)}`;
+    }
 
-    const html = `
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-      <meta charset="UTF-8" />
-      <title>회원 정보 수정</title>
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif; padding: 20px; }
-        h1 { margin-bottom: 16px; }
-        label { display:block; margin:8px 0 4px; font-size:14px; }
-        input[type="text"] { width:260px; padding:6px 8px; font-size:14px; }
-        .row { margin-bottom:8px; }
-        button { margin-top:12px; padding:6px 14px; font-size:14px; }
-        a { font-size:13px; margin-left:8px; }
-      </style>
-    </head>
-    <body>
-      <h1>회원 정보 수정</h1>
-      <form method="POST" action="/admin/user-edit">
-        <input type="hidden" name="key" value="${key}" />
-        <input type="hidden" name="originalId" value="${id}" />
-        <input type="hidden" name="return" value="${returnUrl}" />
+    // 학원용/학교용에 따라 다른 폼 필드 생성
+    const gradeOptions = ['초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+    const gradeSelectOptions = gradeOptions.map(g =>
+      `<option value="${g}" ${user.grade === g ? 'selected' : ''}>${g}</option>`
+    ).join('');
 
+    const formFields = isAcademy ? `
+        <input type="hidden" name="type" value="academy" />
+        ${academyName ? `<input type="hidden" name="academyName" value="${academyName}" />` : ""}
+        <input type="hidden" name="academyNameField" value="${user.academyName || ""}" />
+
+        <div class="row">
+          <label>학년</label>
+          <select name="grade" style="width:280px; padding:8px 10px; font-size:14px; border-radius:6px; border:1px solid #ddd;">
+            <option value="">학년 선택</option>
+            ${gradeSelectOptions}
+          </select>
+        </div>
+
+        <div class="row">
+          <label>이름</label>
+          <input type="text" name="name" value="${user.name || ""}" />
+        </div>
+
+        <div class="row">
+          <label>전화번호(ID)</label>
+          <input type="tel" name="phone" value="${user.phone || ""}" maxlength="13" placeholder="010-0000-0000" oninput="formatPhone(this)" />
+        </div>
+    ` : `
         <div class="row">
           <label>학년</label>
           <input type="text" name="grade" value="${user.grade || ""}" />
@@ -3667,10 +5020,56 @@ app.get("/admin/user-edit", async (req, res) => {
           <label>학년반번호(ID)</label>
           <input type="text" name="phone" value="${user.phone || ""}" />
         </div>
+    `;
 
+    const themeColor = isAcademy ? "#6B5B95" : "#007bff";
+    const pageTitle = isAcademy ? "학원 회원 정보 수정" : "회원 정보 수정";
+
+    const html = `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>${pageTitle}</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif; padding: 20px; max-width: 400px; }
+        h1 { margin-bottom: 16px; color: ${themeColor}; }
+        label { display:block; margin:12px 0 6px; font-size:14px; font-weight: 600; }
+        input[type="text"], input[type="tel"] { width:100%; padding:10px 12px; font-size:14px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        input[type="text"]:focus, input[type="tel"]:focus { outline: none; border-color: ${themeColor}; }
+        select { width:100%; padding:10px 12px; font-size:14px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; background: white; }
+        select:focus { outline: none; border-color: ${themeColor}; }
+        .row { margin-bottom:16px; }
+        button { margin-top:16px; padding:10px 20px; font-size:14px; background: ${themeColor}; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        button:hover { opacity: 0.9; }
+        a { font-size:13px; margin-left:12px; color: ${themeColor}; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+      </style>
+    </head>
+    <body>
+      <h1>${pageTitle}</h1>
+      <form method="POST" action="/admin/user-edit">
+        <input type="hidden" name="key" value="${key}" />
+        <input type="hidden" name="originalId" value="${id}" />
+        <input type="hidden" name="return" value="${returnUrl}" />
+        ${formFields}
         <button type="submit">저장하기</button>
         <a href="${returnUrl}">돌아가기</a>
       </form>
+      <script>
+        function formatPhone(input) {
+          let value = input.value.replace(/[^0-9]/g, '');
+          if (value.length > 11) value = value.slice(0, 11);
+          if (value.length >= 8) {
+            input.value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+          } else if (value.length >= 4) {
+            input.value = value.slice(0, 3) + '-' + value.slice(3);
+          } else {
+            input.value = value;
+          }
+        }
+      </script>
     </body>
     </html>
     `;
@@ -3694,6 +5093,9 @@ app.post("/admin/user-edit", async (req, res) => {
     school,
     name,
     phone,
+    type,
+    academyName,
+    academyNameField,  // 학원용: 학원명 필드
     return: returnUrl,   // 🔹 hidden input 으로 넘어온 return 주소
   } = req.body;
 
@@ -3704,6 +5106,8 @@ app.post("/admin/user-edit", async (req, res) => {
   if (!originalId) {
     return res.status(400).send("originalId 가 필요합니다.");
   }
+
+  const isAcademy = type === "academy";
 
   try {
     const targetId = String(originalId).trim();
@@ -3723,15 +5127,23 @@ app.post("/admin/user-edit", async (req, res) => {
     const newGrade = grade || "";
     const newName = name || "";
 
-    // 필드 업데이트
+    // 필드 업데이트 - 학원용/학교용 분기
     user.grade = newGrade;
-    user.classNum = classNum || "";
-    user.studentNum = studentNum || "";
-    user.school = school || "";
     user.name = newName;
     user.phone = phone || "";
     user.id = phone || "";
     user.pw = phone || "";
+
+    if (isAcademy) {
+      // 학원용: 학원명만 업데이트 (반/번호/학교 필드 사용 안 함)
+      user.academyName = academyNameField || "";
+      user.userType = "academy";
+    } else {
+      // 학교용: 기존 필드 업데이트
+      user.classNum = classNum || "";
+      user.studentNum = studentNum || "";
+      user.school = school || "";
+    }
 
     await user.save();
 
@@ -3751,7 +5163,7 @@ app.post("/admin/user-edit", async (req, res) => {
       console.log(`📊 진행도 업데이트: ${oldGrade}/${oldName} → ${newGrade}/${newName} (${progressUpdateResult.modifiedCount}건)`);
     }
 
-    console.log("✅ 회원 정보 수정 완료:", user.name, user.id);
+    console.log("✅ 회원 정보 수정 완료:", user.name, user.id, isAcademy ? "(학원용)" : "(학교용)");
 
     // 🔙 return 값이 있으면 거기로, 없으면 기본 회원 목록으로
     if (returnUrl && returnUrl.startsWith("/")) {
@@ -3887,7 +5299,7 @@ app.get("/trash-user", async (req, res) => {
 // ⭐⭐⭐ 회원 상태(승인/대기) 변경 라우트 ⭐⭐⭐
 // ⭐⭐⭐ 회원 상태(승인/대기) 변경 라우트 ⭐⭐⭐
 app.get("/admin/status", async (req, res) => {
-  const { key, id: rawId, status } = req.query;
+  const { key, id: rawId, status, type, academyName } = req.query;
 
   if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
@@ -3922,7 +5334,16 @@ app.get("/admin/status", async (req, res) => {
       return res.redirect(returnUrl);
     }
 
-    res.redirect(`/admin/users?key=${encodeURIComponent(key)}`);
+    // ✅ type, academyName 파라미터 유지
+    let redirectUrl = `/admin/users?key=${encodeURIComponent(key)}`;
+    if (type) {
+      redirectUrl += `&type=${encodeURIComponent(type)}`;
+    }
+    if (academyName) {
+      redirectUrl += `&academyName=${encodeURIComponent(academyName)}`;
+    }
+
+    res.redirect(redirectUrl);
   } catch (err) {
     console.error("❌ /admin/status 에러:", err);
     res.status(500).send("상태 변경 중 오류");
@@ -3932,7 +5353,7 @@ app.get("/admin/status", async (req, res) => {
 
 // ⭐⭐⭐ 회원 조회 페이지 (슈퍼관리자 전용, 새 디자인) ⭐⭐⭐
 app.get("/admin/users", async (req, res) => {
-  const { key, q, sort } = req.query;
+  const { key, q, sort, type, academyName } = req.query;
 
   if (key !== ADMIN_KEY) {
     return res.status(403).send("관리자 인증 실패 (key 불일치)");
@@ -3940,6 +5361,18 @@ app.get("/admin/users", async (req, res) => {
 
   try {
     const filter = { deleted: { $ne: true } };
+
+    // 🔹 학교용/학원용 필터링
+    if (type === "school") {
+      filter.userType = { $in: ["school", null, undefined] }; // 기존 데이터 호환
+      filter.userType = { $ne: "academy" }; // academy가 아닌 것들
+    } else if (type === "academy") {
+      filter.userType = "academy";
+      // 특정 학원명 필터링
+      if (academyName) {
+        filter.academyName = academyName;
+      }
+    }
 
     let keyword = "";
     if (q && q.trim() !== "") {
@@ -3952,6 +5385,7 @@ app.get("/admin/users", async (req, res) => {
         { id: regex },
         { school: regex },
         { grade: regex },
+        { academyName: regex }, // 🔹 학원명도 검색 가능
       ];
     }
 
@@ -4798,7 +6232,7 @@ app.get("/admin/users", async (req, res) => {
             </p>
           </div>
           <div>
-            <a href="/super/dashboard" class="btn-back">← 대시보드로 돌아가기</a>
+            <a href="/super/dashboard?type=${type || 'school'}" class="btn-back">← 대시보드로 돌아가기</a>
           </div>
         </div>
 
@@ -4932,12 +6366,19 @@ app.get("/admin/users", async (req, res) => {
                   <input type="checkbox" id="selectAll" onclick="toggleSelectAll()" />
                 </th>
                 <th>#</th>
+                ${type === 'academy' ? `
+                <th>학원명</th>
+                <th>학년</th>
+                <th>이름</th>
+                <th>전화번호</th>
+                ` : `
                 <th>학년</th>
                 <th>반</th>
                 <th>번호</th>
                 <th>이름</th>
                 <th>학교명</th>
                 <th>학년반번호(ID)</th>
+                `}
                 <th>상태</th>
                 <th>시리즈 부여</th>
                 <th style="cursor: pointer;" onclick="sortByPendingTasks()" title="클릭하면 미완료 과제순으로 정렬">
@@ -5014,7 +6455,27 @@ app.get("/admin/users", async (req, res) => {
       const studyRoomStatusClass = totalTasks === 0 ? 'study-room-empty' : (completedTasks === totalTasks ? 'study-room-complete' : 'study-room-pending');
       const pendingTasks = totalTasks - completedTasks;  // 미완료 과제 수
 
-      html += `
+      // 학원용과 학교용 테이블 행 분기
+      if (type === 'academy') {
+        html += `
+        <tr data-user-grade="${u.grade || ''}" data-user-name="${u.name || ''}" data-pending="${pendingTasks}">
+          <td class="checkbox-col">
+            <input type="checkbox" class="user-checkbox" value="${idOrPhone}" data-grade="${u.grade || ''}" data-name="${u.name || ''}" onchange="updateSelectedCount()" />
+          </td>
+          <td>${idx + 1}</td>
+          <td>${u.academyName || ""}</td>
+          <td>${u.grade || ""}</td>
+          <td>
+            <a class="btn-action btn-student"
+               href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}"
+               target="_blank"
+               title="학생 화면으로 이동 (새 탭)">
+              👤 ${u.name || ""}
+            </a>
+          </td>
+          <td>${u.phone || ""}</td>`;
+      } else {
+        html += `
         <tr data-user-grade="${u.grade || ''}" data-user-name="${u.name || ''}" data-pending="${pendingTasks}">
           <td class="checkbox-col">
             <input type="checkbox" class="user-checkbox" value="${idOrPhone}" data-grade="${u.grade || ''}" data-name="${u.name || ''}" onchange="updateSelectedCount()" />
@@ -5032,10 +6493,19 @@ app.get("/admin/users", async (req, res) => {
             </a>
           </td>
           <td>${u.school || ""}</td>
-          <td>${idOrPhone}</td>
+          <td>${idOrPhone}</td>`;
+      }
+
+      // 공통 컬럼 (상태, 시리즈 부여, 학습실 등)
+      // type, academyName 파라미터 유지를 위한 URL 구성
+      let statusUrl = `/admin/status?id=${encodeURIComponent(idOrPhone)}&status=${nextStatus}&key=${encodeURIComponent(key)}`;
+      if (type) statusUrl += `&type=${encodeURIComponent(type)}`;
+      if (academyName) statusUrl += `&academyName=${encodeURIComponent(academyName)}`;
+
+      html += `
           <td>
             <a class="${statusButtonClass}"
-               href="/admin/status?id=${encodeURIComponent(idOrPhone)}&status=${nextStatus}&key=${encodeURIComponent(key)}"
+               href="${statusUrl}"
                onclick="return confirm('${confirmMessage}');">
               ${statusButtonText}
             </a>
@@ -5072,9 +6542,7 @@ app.get("/admin/users", async (req, res) => {
           </td>
           <td>
             <a class="btn-action btn-edit"
-               href="/admin/user-edit?id=${encodeURIComponent(
-                 idOrPhone
-               )}&key=${encodeURIComponent(key)}">
+               href="/admin/user-edit?id=${encodeURIComponent(idOrPhone)}&key=${encodeURIComponent(key)}${type ? `&type=${encodeURIComponent(type)}` : ''}${academyName ? `&academyName=${encodeURIComponent(academyName)}` : ''}">
               ✏️ 수정
             </a>
           </td>
@@ -18024,6 +19492,138 @@ return res.redirect(
   }
 });
 
+// ============================================
+// 🏫 학원용 회원가입 API
+// ============================================
+app.post("/academy-register", async (req, res) => {
+  try {
+    const { academyName, grade, name, phone } = req.body;
+
+    console.log("📩 [POST] /academy-register 요청:", academyName, grade, name, phone);
+
+    // 1) 필수값 체크
+    if (!academyName || !grade || !name || !phone) {
+      return res.status(400).send("필수 정보가 부족합니다.");
+    }
+
+    const cleanPhone = String(phone).replace(/\D/g, "").trim();
+
+    // 2) 전화번호 전체 중복 확인 (학원용은 전화번호 전체가 유니크)
+    const existing = await User.findOne({
+      phone: cleanPhone,
+      userType: "academy",
+      deleted: { $ne: true }
+    });
+
+    if (existing) {
+      console.log("⚠ 이미 등록된 전화번호입니다:", cleanPhone);
+      return res.redirect("/academy.html?loginError=duplicate");
+    }
+
+    // 3) 새 학원용 학생 생성
+    const created = await User.create({
+      academyName,
+      grade,             // 🔹 학년 추가
+      name,
+      phone: cleanPhone,
+      pw: cleanPhone,        // 🔥 전화번호 전체를 비밀번호로 사용
+      userType: "academy",   // 🔹 학원용 타입
+      approved: false,
+      status: "pending",     // 기본값: 승인 전
+      deleted: false,
+      createdAt: new Date(),
+    });
+
+    console.log("✅ [POST] 학원용 회원가입 DB 저장 완료:", created.name, created.grade);
+
+    // 4) 회원가입 후 승인 대기 안내
+    return res.redirect("/academy.html?signup=pending");
+  } catch (err) {
+    console.error("❌ /academy-register 처리 중 오류:", err);
+    return res.status(500).send("회원가입 처리 중 오류가 발생했습니다.");
+  }
+});
+
+// ============================================
+// 🏫 학원용 로그인 API
+// ============================================
+app.post("/academy-login", async (req, res) => {
+  try {
+    const { academyName, grade, name, phone } = req.body;
+    const cleanPhone = String(phone || "").replace(/\D/g, "").trim();
+
+    console.log("📥 [POST] /academy-login:", academyName, grade, name, cleanPhone);
+
+    // 필수값 없으면 바로 실패
+    if (!academyName || !grade || !name || !cleanPhone) {
+      return res.redirect("/academy.html?loginError=1");
+    }
+
+    // 학원용 사용자 찾기 (학원명 + 학년 + 이름 + 전화번호 전체)
+    const user = await User.findOne({
+      academyName,
+      grade,
+      name,
+      userType: "academy",
+      deleted: { $ne: true },
+      $or: [
+        { pw: cleanPhone },
+        { phone: cleanPhone },
+      ],
+    });
+
+    if (!user) {
+      console.log("❌ 학원용 로그인 실패: 해당 사용자 없음");
+      return res.redirect("/academy.html?loginError=1");
+    }
+
+    // 🔹 지점 통째로 휴지(브랜치 삭제)된 경우
+    if (user.branchDeleted) {
+      console.log("🚫 브랜치 휴지 상태 계정:", user.name);
+      return res.redirect("/academy.html?loginError=trashed");
+    }
+
+    // 🔹 개인 계정 휴지 상태
+    if (user.deleted) {
+      console.log("🚫 휴지 상태 계정:", user.name);
+      return res.redirect("/academy.html?loginError=trashed");
+    }
+
+    // 🔹 승인 대기 상태(pending)면 전용 팝업
+    if (user.status && user.status !== "approved") {
+      console.log("⏳ 승인 대기 계정:", user.name);
+      return res.redirect("/academy.html?loginError=pending");
+    }
+
+    // ✅ 정상 로그인
+    req.session.user = {
+      _id: user._id,
+      name: user.name,
+      grade: user.grade,
+      academyName: user.academyName,
+      userType: "academy",
+      role: "student",
+      assignedSeries: user.assignedSeries || [],
+    };
+
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { lastLogin: new Date() } }
+    );
+
+    console.log("✅ 학원용 로그인 성공:", user.name, user.grade, user.academyName);
+
+    // 학원용도 동일한 메뉴 페이지로 이동
+    const NEXT_URL = "/menu.html";
+    return res.redirect(
+      "/loading.html?to=" + encodeURIComponent(NEXT_URL)
+    );
+  } catch (err) {
+    console.error("❌ /academy-login 처리 중 오류:", err);
+    return res.redirect("/academy.html?loginError=1");
+  }
+});
+
 // ✅ 세션 정보 조회 API (클라이언트에서 사용)
 app.get("/api/session", (req, res) => {
   if (req.session && req.session.user) {
@@ -18051,6 +19651,57 @@ app.post('/api/zoom-link', (req, res) => {
   }
   currentZoomLink = zoomLink;
   res.json({ success: true, message: '줌 링크가 저장되었습니다.' });
+});
+
+// ============================================
+// 📖 문장 완독 상태 저장/불러오기 API
+// ============================================
+
+// 문장 완독 상태 저장
+app.post('/api/sentence-read/save', async (req, res) => {
+  try {
+    const { grade, name, phone, unit, selectedSentences, completedParagraphs, readingTime } = req.body;
+
+    if (!grade || !name || !unit) {
+      return res.json({ ok: false, message: '필수 정보가 누락되었습니다.' });
+    }
+
+    const filter = { grade, name, phone: phone || '', unit };
+    const update = {
+      selectedSentences: selectedSentences || [],
+      completedParagraphs: completedParagraphs || [],
+      readingTime: readingTime || {},
+      updatedAt: new Date()
+    };
+
+    const result = await SentenceRead.findOneAndUpdate(filter, update, { upsert: true, new: true });
+    res.json({ ok: true, data: result });
+  } catch (err) {
+    console.error('[sentence-read/save] 오류:', err);
+    res.json({ ok: false, message: err.message });
+  }
+});
+
+// 문장 완독 상태 불러오기
+app.get('/api/sentence-read/load', async (req, res) => {
+  try {
+    const { grade, name, phone, unit } = req.query;
+
+    if (!grade || !name || !unit) {
+      return res.json({ ok: false, message: '필수 정보가 누락되었습니다.' });
+    }
+
+    const data = await SentenceRead.findOne({ grade, name, phone: phone || '', unit });
+
+    if (data) {
+      res.json({ ok: true, data });
+    } else {
+      res.json({ ok: true, data: null });
+    }
+  } catch (err) {
+    console.error('[sentence-read/load] 오류:', err);
+    res.json({ ok: false, message: err.message });
+  }
 });
 
 // ✅ 맞춤법 검사 API
@@ -21827,14 +23478,117 @@ app.post("/api/course-application", async (req, res) => {
   }
 });
 
-// 진단테스트 목록 조회 (슈퍼 관리자용)
+// 진단테스트 목록 조회 (슈퍼 관리자용 - 학교용)
 app.get("/api/diagnostic-tests", async (req, res) => {
   try {
-    const tests = await DiagnosticTest.find().sort({ createdAt: -1 });
+    const tests = await DiagnosticTest.find({ userType: { $ne: "academy" } }).sort({ createdAt: -1 });
     res.json({ success: true, data: tests });
   } catch (error) {
     console.error("진단테스트 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// ✅ 학원용 진단테스트 목록 조회 (공용 - 모든 데이터 표시)
+app.get("/api/academy-diagnostic-tests", async (req, res) => {
+  try {
+    const tests = await DiagnosticTest.find({}).sort({ createdAt: -1 });
+    res.json({ success: true, data: tests });
+  } catch (error) {
+    console.error("학원용 진단테스트 조회 오류:", error);
+    res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// ✅ 학원용 진단테스트 수정
+app.put("/api/academy-diagnostic-tests/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { academyName, studentGrade, studentName, studentPhone, parentPhone } = req.body;
+
+    const updated = await DiagnosticTest.findByIdAndUpdate(id, {
+      academyName,
+      studentGrade,
+      studentName,
+      studentPhone,
+      parentPhone
+    }, { new: true });
+
+    if (!updated) {
+      return res.json({ success: false, message: "데이터를 찾을 수 없습니다." });
+    }
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    console.error("학원용 진단테스트 수정 오류:", error);
+    res.status(500).json({ success: false, message: "수정 중 오류가 발생했습니다." });
+  }
+});
+
+// ✅ 학원용 진단테스트 일괄 삭제
+app.delete("/api/academy-diagnostic-tests/delete-selected", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+
+    const result = await DiagnosticTest.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("학원용 진단테스트 삭제 오류:", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
+// ✅ 학원용 진단테스트 결과 목록 조회 (공용 - 모든 데이터 표시)
+app.get("/api/academy-course-applications", async (req, res) => {
+  try {
+    const applications = await CourseApplication.find({}).sort({ createdAt: -1 });
+    res.json({ success: true, data: applications });
+  } catch (error) {
+    console.error("학원용 진단테스트 결과 조회 오류:", error);
+    res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// ✅ 학원용 진단테스트 결과 수정
+app.put("/api/academy-course-applications/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { academyName, studentGrade, studentName, studentPhone } = req.body;
+
+    const updated = await CourseApplication.findByIdAndUpdate(id, {
+      academyName,
+      studentGrade,
+      studentName,
+      studentPhone
+    }, { new: true });
+
+    if (!updated) {
+      return res.json({ success: false, message: "데이터를 찾을 수 없습니다." });
+    }
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    console.error("학원용 진단테스트 결과 수정 오류:", error);
+    res.status(500).json({ success: false, message: "수정 중 오류가 발생했습니다." });
+  }
+});
+
+// ✅ 학원용 진단테스트 결과 일괄 삭제
+app.delete("/api/academy-course-applications/delete-selected", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+
+    const result = await CourseApplication.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("학원용 진단테스트 결과 삭제 오류:", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
   }
 });
 
@@ -22046,7 +23800,8 @@ app.get("/api/admin/info", async (req, res) => {
       academyName: req.session.admin.academyName || "",
       adminId: req.session.admin.adminId || "",
       grade: req.session.admin.grade || "",
-      classNum: req.session.admin.classNum || ""
+      classNum: req.session.admin.classNum || "",
+      userType: req.session.admin.userType || "school"  // 🔥 학교용/학원용 구분
     });
   } catch (error) {
     console.error("관리자 정보 조회 오류:", error);
@@ -22111,6 +23866,57 @@ app.post("/api/admin/branch/add-student", async (req, res) => {
   }
 });
 
+// 학생 추가 API (학원 관리자용)
+app.post("/api/admin/academy/add-student", async (req, res) => {
+  try {
+    // 세션에서 관리자 정보 확인
+    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+
+    const { grade, name, academyName, number } = req.body;
+
+    if (!grade || !name || !number) {
+      return res.status(400).json({ success: false, message: "학년, 이름, 전화번호는 필수입니다." });
+    }
+
+    // 관리자의 학원 정보 사용
+    const adminAcademyName = req.session.admin.academyName;
+
+    // 전화번호(ID): 11자리 전체 사용 (하이픈 제거)
+    const phone = String(number).replace(/[^0-9]/g, '');
+
+    // 전화번호 11자리 검증
+    if (phone.length !== 11) {
+      return res.status(400).json({ success: false, message: "전화번호를 11자리로 입력해주세요." });
+    }
+
+    // 이미 존재하는 전화번호인지 확인
+    const existingUser = await User.findOne({ phone: phone });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "이미 등록된 전화번호입니다. (ID: " + phone + ")" });
+    }
+
+    // 새 학생 생성
+    const newUser = new User({
+      grade: grade.trim(),
+      name: name.trim(),
+      phone: phone,
+      academyName: adminAcademyName,  // 학원명 필드 사용
+      status: "approved",
+      createdAt: new Date()
+    });
+
+    await newUser.save();
+    console.log("✅ 학원 학생 추가 완료:", newUser.name, "ID:", phone, "학원:", adminAcademyName);
+
+    res.json({ success: true, message: "학생이 추가되었습니다. (ID: " + phone + ")", data: newUser });
+  } catch (error) {
+    console.error("학원 학생 추가 오류:", error);
+    res.status(500).json({ success: false, message: "학생 추가 중 오류가 발생했습니다." });
+  }
+});
+
 // 진단테스트 목록 조회 (브랜치 관리자용 - 지점명/학년 필터링)
 app.get("/api/admin/diagnostic-tests", async (req, res) => {
   try {
@@ -22145,7 +23951,8 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
       data: tests,
       academyName: academyName,
       adminGrade: adminGrade,
-      adminClassNum: adminClassNum
+      adminClassNum: adminClassNum,
+      userType: req.session.admin.userType || 'school'  // 학원/학교 구분
     });
   } catch (error) {
     console.error("브랜치 관리자 진단테스트 조회 오류:", error);

@@ -102,7 +102,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     answerKey: { q1:'1', q2:'1', q3_1:['왼손잡이'], q3_2:['봉평'], q4_1:['달빛'], q4_2:['아들'] },
     essayKeywords: ['왼손잡이','봉평','성 서방네','처녀','아들','인연','허 생원','동이','메밀꽃','달빛','물레방앗간','개울가','젊은 시절','추억','나귀','밧줄','충주집','조 선달','장돌뱅이','제천','어머니','친정','쫓겨나','운명','만남','기억','자신','아버지','얼굴','채찍','왼손','복잡한 마음','밤길','흐드러지다','울다','정','밑천','재산','얼금자국','헛디디다','냇물','업다'],
     explain: {
-      q1: '을 끊고 난리를 피운다고 알려주었다. 그 일로 허 생원은 동이를 눈여겨보게 되었고',
+      q1: '밧줄을 끊고 난리를 피운다고 알려주었다. 그 일로 허 생원은 동이를 눈여겨보게 되었고',
       q2: '동이라는 어린 장돌뱅이를 만나게 되었다',
       q3: '동이가 자신과 똑같이 왼손잡이라는 점이 떠올랐다',
       q4: '허 생원은 달빛 아래에서 옛 기억이 밀려오며 복잡한 마음이 들었다',
@@ -3691,7 +3691,7 @@ function _bindTabEvents() {
 }
 
 /* ===== 텍스트 주입 (HTML 구조/ids 유지) ===== */
-function applyContentPack(unitKey) {
+async function applyContentPack(unitKey) {
   console.log('[applyContentPack] 호출됨, unitKey:', unitKey);
   const pack = window.CONTENTS[unitKey];
   if (!pack) {
@@ -3757,46 +3757,105 @@ function applyContentPack(unitKey) {
       document.head.appendChild(style);
     }
 
-    // localStorage 키
-    const storageKey = `passage_read_${unitKey}`;
+    // ===== 서버 저장/불러오기 함수 =====
+    let readingStartTime = null;
+    let paragraphCompletedSet = new Set();
 
-    // 저장된 선택 상태 복원
-    const savedSelection = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    const allSentences = passageBox.querySelectorAll('.sentence');
-    savedSelection.forEach(idx => {
-      if (allSentences[idx]) allSentences[idx].classList.add('selected');
-    });
-
-    // 선택 상태 저장 함수
-    const saveSelection = () => {
-      const selected = [];
-      passageBox.querySelectorAll('.sentence').forEach((s, idx) => {
-        if (s.classList.contains('selected')) selected.push(idx);
-      });
-      localStorage.setItem(storageKey, JSON.stringify(selected));
+    // 학생 정보 가져오기
+    const getStudentInfo = () => {
+      const stu = getCurrentStudentForReading();
+      if (!stu) return null;
+      return { grade: stu.grade, name: stu.name, phone: stu.phone || '' };
     };
 
-    // 읽기 시간 기록용
-    const timeKey = `passage_time_${unitKey}`;
-    let readingStartTime = null;
-    const savedTime = localStorage.getItem(timeKey);
-    if (savedTime) {
-      const parsed = JSON.parse(savedTime);
-      readingStartTime = parsed.start ? new Date(parsed.start) : null;
+    // 서버에 완독 상태 저장
+    const saveToServer = async () => {
+      const stu = getStudentInfo();
+      if (!stu) {
+        console.log('[saveToServer] 학생 정보 없음, 저장 건너뜀');
+        return;
+      }
 
-      // 저장된 duration이 있으면 탁상 시계에 복원
-      if (parsed.duration) {
-        const clockMinutes = Math.floor(parsed.duration / 60000);
-        const clockSeconds = Math.floor((parsed.duration % 60000) / 1000);
-        const minInput = document.getElementById('minute-input');
-        const secInput = document.getElementById('second-input');
-        if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
-        if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+      const selectedSentences = [];
+      passageBox.querySelectorAll('.sentence').forEach((s, idx) => {
+        if (s.classList.contains('selected')) selectedSentences.push(idx);
+      });
+
+      const data = {
+        grade: stu.grade,
+        name: stu.name,
+        phone: stu.phone,
+        unit: unitKey,
+        selectedSentences,
+        completedParagraphs: [...paragraphCompletedSet],
+        readingTime: {
+          start: readingStartTime ? readingStartTime.toISOString() : null,
+          duration: readingStartTime ? (Date.now() - readingStartTime.getTime()) : 0
+        }
+      };
+
+      try {
+        await fetch('/api/sentence-read/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } catch (err) {
+        console.error('[saveToServer] 저장 실패:', err);
+      }
+    };
+
+    // 서버에서 완독 상태 불러오기
+    const loadFromServer = async () => {
+      const stu = getStudentInfo();
+      if (!stu) {
+        console.log('[loadFromServer] 학생 정보 없음, 불러오기 건너뜀');
+        return null;
+      }
+
+      try {
+        const res = await fetch(`/api/sentence-read/load?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}&phone=${encodeURIComponent(stu.phone)}&unit=${encodeURIComponent(unitKey)}`);
+        const result = await res.json();
+        if (result.ok && result.data) {
+          return result.data;
+        }
+      } catch (err) {
+        console.error('[loadFromServer] 불러오기 실패:', err);
+      }
+      return null;
+    };
+
+    // 서버에서 저장된 상태 복원
+    const serverData = await loadFromServer();
+    const allSentences = passageBox.querySelectorAll('.sentence');
+
+    if (serverData) {
+      // 문장 선택 상태 복원
+      (serverData.selectedSentences || []).forEach(idx => {
+        if (allSentences[idx]) allSentences[idx].classList.add('selected');
+      });
+
+      // 문단 완료 상태 복원
+      paragraphCompletedSet = new Set(serverData.completedParagraphs || []);
+
+      // 읽기 시간 복원
+      if (serverData.readingTime) {
+        if (serverData.readingTime.start) {
+          readingStartTime = new Date(serverData.readingTime.start);
+        }
+        if (serverData.readingTime.duration) {
+          const clockMinutes = Math.floor(serverData.readingTime.duration / 60000);
+          const clockSeconds = Math.floor((serverData.readingTime.duration % 60000) / 1000);
+          const minInput = document.getElementById('minute-input');
+          const secInput = document.getElementById('second-input');
+          if (minInput) minInput.value = String(clockMinutes).padStart(2, '0');
+          if (secInput) secInput.value = String(clockSeconds).padStart(2, '0');
+        }
       }
     }
 
-    // 탁상시계 초기화 (00분 00초) - localStorage에 저장된 값이 없을 때
-    if (!savedTime || !JSON.parse(savedTime).duration) {
+    // 탁상시계 초기화 (서버 데이터 없을 때)
+    if (!serverData || !serverData.readingTime || !serverData.readingTime.duration) {
       const minInput = document.getElementById('minute-input');
       const secInput = document.getElementById('second-input');
       if (minInput) minInput.value = '00';
@@ -3817,12 +3876,6 @@ function applyContentPack(unitKey) {
       const seconds = totalSec % 60;
       return `${minutes}분 ${seconds}초`;
     };
-
-    // 문단별 완료 상태 추적
-    const paragraphs = passageBox.querySelectorAll('p');
-    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
-    const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
-    const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
     // 문단 중심 내용 팝업 스타일
     if (!document.getElementById('paragraph-popup-style')) {
@@ -3876,11 +3929,8 @@ function applyContentPack(unitKey) {
               if (currentParagraphs[paragraphIndex]) {
                 const sentencesInParagraph = currentParagraphs[paragraphIndex].querySelectorAll('.sentence');
                 sentencesInParagraph.forEach(s => s.classList.remove('selected'));
-                // localStorage 업데이트
-                const allSentences = passageBox.querySelectorAll('.sentence');
-                const selectedIndices = [];
-                allSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
-                localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
+                // 서버에 업데이트
+                saveToServer();
               }
               onWrong(paragraphIndex);
             }, 3000);
@@ -3892,7 +3942,7 @@ function applyContentPack(unitKey) {
     // 완독 축하 팝업 함수
     function showCompletionToast() {
       const endTime = new Date(); const duration = endTime - readingStartTime;
-      localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString(), end: endTime.toISOString(), duration: duration }));
+      saveToServer(); // 서버에 완독 상태 저장
       const stu = getCurrentStudentForReading(); if (stu) { const studentKey = buildStudentKeyForReading(stu); const unitKeyForSave = window.CUR_UNIT || 'unknown'; fetch('/api/reading-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentKey, unitKey: unitKeyForSave, duration, startTime: readingStartTime.toISOString(), endTime: endTime.toISOString() }) }).catch(err => console.error('독해시간 저장 실패:', err)); }
       const clockMinutes = Math.floor(duration / 60000); const clockSeconds = Math.floor((duration % 60000) / 1000); const minInputUpdate = document.getElementById('minute-input'); const secInputUpdate = document.getElementById('second-input'); if (minInputUpdate) minInputUpdate.value = String(clockMinutes).padStart(2, '0'); if (secInputUpdate) secInputUpdate.value = String(clockSeconds).padStart(2, '0');
       if (!document.getElementById('toast-style')) { const ts = document.createElement('style'); ts.id = 'toast-style'; ts.textContent = `.toast-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); background: linear-gradient(135deg, #ff9a56 0%, #ff6f35 100%); color: #fff; padding: 32px 60px; border-radius: 20px; font-size: 1.8rem; font-weight: bold; z-index: 9999; opacity: 0; animation: toastAnim 4s ease forwards; box-shadow: 0 10px 40px rgba(255,111,53,0.4); text-align: center; } @keyframes toastAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } }`; document.head.appendChild(ts); }
@@ -3905,15 +3955,16 @@ function applyContentPack(unitKey) {
 
     passageBox.addEventListener('click', e => {
       const span = e.target.closest('.sentence'); if (!span) return;
-      if (!readingStartTime) { readingStartTime = new Date(); localStorage.setItem(timeKey, JSON.stringify({ start: readingStartTime.toISOString() })); }
+      if (!readingStartTime) { readingStartTime = new Date(); }
       const currentSentences = passageBox.querySelectorAll('.sentence');
-      const idx = Array.from(currentSentences).indexOf(span);
       span.classList.toggle('selected');
-      const selectedIndices = []; currentSentences.forEach((s, i) => { if (s.classList.contains('selected')) selectedIndices.push(i); });
-      localStorage.setItem(storageKey, JSON.stringify(selectedIndices));
       const total = currentSentences.length;
       const selected = passageBox.querySelectorAll('.sentence.selected').length;
-      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; localStorage.removeItem(timeKey); paragraphCompletedSet.clear(); localStorage.removeItem(paragraphCompletedKey); }
+
+      // 서버에 상태 저장
+      saveToServer();
+
+      if (selected === 0) { const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = '00'; if (secInput) secInput.value = '00'; readingStartTime = null; paragraphCompletedSet.clear(); saveToServer(); }
 
       const currentParagraph = span.closest('p');
       const currentParagraphs = passageBox.querySelectorAll('p');
@@ -3921,17 +3972,17 @@ function applyContentPack(unitKey) {
 
       if (!span.classList.contains('selected') && paragraphCompletedSet.has(paragraphIdx)) {
         paragraphCompletedSet.delete(paragraphIdx);
-        localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+        saveToServer();
       }
       if (paragraphIdx >= 0 && !paragraphCompletedSet.has(paragraphIdx)) {
         const sentencesInParagraph = currentParagraph.querySelectorAll('.sentence');
         const selectedInParagraph = currentParagraph.querySelectorAll('.sentence.selected');
         if (sentencesInParagraph.length > 0 && sentencesInParagraph.length === selectedInParagraph.length) {
           paragraphCompletedSet.add(paragraphIdx);
-          localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet]));
+          saveToServer();
           const isLastParagraph = (paragraphIdx === currentParagraphs.length - 1);
           const isFullyCompleted = (total > 0 && total === selected);
-          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); localStorage.setItem(paragraphCompletedKey, JSON.stringify([...paragraphCompletedSet])); };
+          const handleWrong = (pIdx) => { paragraphCompletedSet.delete(pIdx); saveToServer(); };
           if (isLastParagraph && isFullyCompleted) {
             showParagraphPopup(paragraphIdx, () => { showCompletionToast(); }, handleWrong);
           } else {
