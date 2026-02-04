@@ -6755,10 +6755,20 @@
 
         async function gradeExam() {
             // 소요시간 계산 (타이머 멈추기 전에 먼저 계산)
-            // localStorage에서 현재 타이머 값을 직접 읽어옴 (더 정확함)
-            const savedTimer = localStorage.getItem(LS_KEY('examTimer'));
-            const currentRemaining = savedTimer ? parseInt(savedTimer) : remainingSeconds;
-            const elapsedSeconds = (80 * 60) - currentRemaining;
+            // examTimerStart를 사용해 실제 경과 시간 계산 (setInterval 오차 방지)
+            const startTime = localStorage.getItem(LS_KEY('examTimerStart'));
+            let elapsedSeconds;
+            if (startTime) {
+                // 실제 경과 시간 계산 (더 정확함)
+                elapsedSeconds = Math.floor((Date.now() - parseInt(startTime)) / 1000);
+                // 최대 80분으로 제한
+                if (elapsedSeconds > 80 * 60) elapsedSeconds = 80 * 60;
+            } else {
+                // fallback: 기존 방식
+                const savedTimer = localStorage.getItem(LS_KEY('examTimer'));
+                const currentRemaining = savedTimer ? parseInt(savedTimer) : remainingSeconds;
+                elapsedSeconds = (80 * 60) - currentRemaining;
+            }
             const elapsedTimeStr = formatElapsedTime(elapsedSeconds);
 
             // 타이머 중지 및 숨기기
