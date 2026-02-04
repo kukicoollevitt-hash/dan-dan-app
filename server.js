@@ -27735,10 +27735,10 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
 
     // 모의고사 목록 (현재는 하드코딩, 추후 DB에서 가져올 수 있음)
     const exams = [
-      { id: 'korean_mock_1', round: 1, title: '1월 AI 모의고사 1회' },
-      { id: 'korean_mock_2', round: 2, title: '1월 AI 모의고사 2회' },
-      { id: 'korean_mock_3', round: 3, title: '1월 AI 모의고사 3회' },
-      { id: 'korean_mock_4', round: 4, title: '1월 AI 모의고사 4회' }
+      { id: 'korean_mock_1', round: 1, title: 'AI 모의고사 1회차' },
+      { id: 'korean_mock_2', round: 2, title: 'AI 모의고사 2회차' },
+      { id: 'korean_mock_3', round: 3, title: 'AI 모의고사 3회차' },
+      { id: 'korean_mock_4', round: 4, title: 'AI 모의고사 4회차' }
     ];
 
     // 사용자의 시험 진행 상태와 완료된 결과 조회
