@@ -165,6 +165,52 @@ window.REMEDIAL_BANK = {
     #vocab-fill p + p::before {
       content: " ";
     }
+  /* === 정답 근거 하이라이트 스타일 === */
+  @keyframes badge-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+  .evidence-highlight {
+    padding: 1px 2px;
+    border-radius: 3px;
+    position: relative;
+    display: inline;
+    margin: 0 1px;
+  }
+  .evidence-highlight:hover {
+    animation: none;
+    filter: brightness(0.95);
+  }
+  .evidence-highlight .evidence-tag {
+    display: inline-block;
+    font-size: 10px;
+    color: white;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: 2px;
+    vertical-align: super;
+    animation: badge-bounce 1.5s ease-in-out infinite;
+    font-weight: bold;
+  }
+  .evidence-highlight:hover .evidence-tag {
+    animation: none;
+  }
+  .evidence-q1 { background: linear-gradient(180deg, transparent 60%, rgba(255, 182, 193, 0.6) 40%); }
+  .evidence-q1:hover { background: linear-gradient(180deg, transparent 40%, rgba(255, 150, 170, 0.8) 40%); }
+  .evidence-q1 .evidence-tag { background: #e91e63; }
+  .evidence-q2 { background: linear-gradient(180deg, transparent 60%, rgba(173, 216, 230, 0.6) 40%); }
+  .evidence-q2:hover { background: linear-gradient(180deg, transparent 40%, rgba(140, 190, 220, 0.8) 40%); }
+  .evidence-q2 .evidence-tag { background: #2196f3; }
+  .evidence-q3 { background: linear-gradient(180deg, transparent 60%, rgba(144, 238, 144, 0.6) 40%); }
+  .evidence-q3:hover { background: linear-gradient(180deg, transparent 40%, rgba(100, 210, 100, 0.8) 40%); }
+  .evidence-q3 .evidence-tag { background: #4caf50; }
+  .evidence-q4 { background: linear-gradient(180deg, transparent 60%, rgba(255, 218, 185, 0.6) 40%); }
+  .evidence-q4:hover { background: linear-gradient(180deg, transparent 40%, rgba(255, 190, 140, 0.8) 40%); }
+  .evidence-q4 .evidence-tag { background: #ff9800; }
+  .evidence-q5 { background: linear-gradient(180deg, transparent 60%, rgba(221, 160, 221, 0.6) 40%); }
+  .evidence-q5:hover { background: linear-gradient(180deg, transparent 40%, rgba(200, 130, 200, 0.8) 40%); }
+  .evidence-q5 .evidence-tag { background: #9c27b0; }
+
   /* === 어휘 탭 v1 디자인 (스코프 + 우선순위 강화) === */
   #tab-vocab .vocab-fill-text p { margin: 12px 0 16px; line-height: 1.9; }
 
@@ -3406,6 +3452,54 @@ document.addEventListener('click', function(e) {
   const container = document.querySelector('.webtoon-hint-container');
   if (container && !container.contains(e.target)) { closeWebtoonDropdown(); }
 });
+
+// ★ 정답 근거 하이라이트 기능
+function clearEvidenceHighlights() {
+  const areas = [document.querySelector('.passage-text'), document.getElementById('vocab-result')];
+  areas.forEach(area => {
+    if (!area) return;
+    const highlights = Array.from(area.querySelectorAll('.evidence-highlight'));
+    highlights.forEach(el => {
+      const text = el.textContent.replace(/\d번$/, '');
+      el.replaceWith(document.createTextNode(text));
+    });
+    area.normalize();
+  });
+}
+
+function highlightEvidence() {
+  const pack = window.CONTENTS?.[window.CUR_UNIT];
+  if (!pack || !pack.explain) return;
+  clearEvidenceHighlights();
+  const qLabels = { q1: '1번', q2: '2번', q3: '3번', q4: '4번', q5: '5번' };
+  const areas = [document.querySelector('.passage-text'), document.getElementById('vocab-result')];
+
+  ['q1', 'q2', 'q3', 'q4'].forEach(qKey => {
+    const evidenceText = pack.explain[qKey];
+    if (!evidenceText || evidenceText.length < 2) return;
+
+    const chars = Array.from(evidenceText);
+    const escapedChars = chars.map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const flexPattern = escapedChars.join('(?:<[^>]*>)*');
+
+    areas.forEach(area => {
+      if (!area) return;
+      try {
+        const regex = new RegExp(`(${flexPattern})`, 'g');
+        const html = area.innerHTML;
+        const newHtml = html.replace(regex,
+          `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
+        if (newHtml !== html) {
+          area.innerHTML = newHtml;
+        }
+      } catch (e) {
+        console.warn(`[highlightEvidence] ${qKey} 패턴 오류:`, e);
+      }
+    });
+  });
+}
+window.highlightEvidence = highlightEvidence;
+window.clearEvidenceHighlights = clearEvidenceHighlights;
 </script>
 
 
