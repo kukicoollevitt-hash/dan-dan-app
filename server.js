@@ -5609,10 +5609,20 @@ app.get("/admin/status", async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({
+    // 🔹 학원용/학교용 구분하여 검색
+    const filter = {
       $or: [{ id }, { phone: id }],
       deleted: { $ne: true },
-    });
+    };
+
+    // type 파라미터에 따라 userType 필터 추가
+    if (type === "academy") {
+      filter.userType = "academy";
+    } else if (type === "school") {
+      filter.userType = { $ne: "academy" };
+    }
+
+    const user = await User.findOne(filter);
 
     if (!user) {
       return res.status(404).send("상태를 변경할 사용자를 찾을 수 없습니다.");
