@@ -3999,7 +3999,7 @@ if (typeof _vocabFillRendered === "undefined") var _vocabFillRendered = false;
 window.renderVocabFill = function () {
   // 이미 렌더링되었으면 다시 렌더링하지 않음 (탭 전환 시 상태 유지)
   if (_vocabFillRendered) {
-    console.log(\'[renderVocabFill] 이미 렌더링됨, 건너뛰기\');
+    console.log('[renderVocabFill] 이미 렌더링됨, 건너뛰기');
     return;
   }
   const unit = window.CUR_UNIT || 'world2_01';
