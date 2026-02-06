@@ -441,7 +441,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '억울하게 덮어쓰는 죄나 허위 사실을 (      )이라 한다.', answer: '누명', initials: 'ㄴㅁ', aliases: ['누명'] },
         { no: 6, text: '시각 장애인들이 속해 국가 의례를 맡던 조선 시대 기관을 (      )라고 한다.', answer: '명통시', initials: 'ㅁㅌㅅ', aliases: ['명통시'] },
         { no: 7, text: '사람의 권리를 보호하고 확대하는 것을 (      )이라 한다.', answer: '인권 신장', initials: 'ㅇㄱㅅㅈ', aliases: ['인권 신장', '인권신장'] },
-        { no: 8, text: '세금을 내지 않도록 특별히 허락하는 제도를 (      )라고 한다.', answer: '세금 면제', initials: 'ㅅㄱㅁㅈ', aliases: ['세금 면제', '세금면제'] }
+        { no: 8, text: '세금을 내지 않도록 특별히 허락하는 제도를 (      )라고 한다.', answer: '세금 면제', initials: 'ㅅㄱ ㅁㅈ', aliases: ['세금 면제', '세금면제'] }
       ]
     },
     quiz: {
@@ -460,7 +460,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '4문단 : 상언, 격쟁, 삼복 제도'
       ],
       q3_1_ph: 'ㅅㅇ', q3_2_ph: 'ㄱㅈ',
-      q4_1_ph: 'ㅅㅂ', q4_2_ph: 'ㅅㄱㅁㅈ',
+      q4_1_ph: 'ㅅㅂ', q4_2_ph: 'ㅅㄱ ㅁㅈ',
       q5_text: '조선 시대의 인권 보호 제도 중 하나를 골라 오늘날과 비교하여 어떤 점이 비슷하고 다른지 자신의 생각을 써 보세요.'
     },
     answerKey: { q1:'3', q2:'1', q3_1:['상언'], q3_2:['격쟁'], q4_1:['삼복'], q4_2:['세금 면제', '세금면제'] },
