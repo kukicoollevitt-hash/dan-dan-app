@@ -461,7 +461,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '물·바람 등이 땅이나 암석을 깎아 내리는 과정을 (      )이라고 한다.', answer: '침식', initials: 'ㅊㅅ', aliases: ['침식'] },
         { no: 2, text: '흙·모래·자갈 등이 쌓이는 현상을 (      )이라고 한다.', answer: '퇴적', initials: 'ㅌㅈ', aliases: ['퇴적'] },
-        { no: 3, text: '물이 빠르게 흐르며 형성된 좁고 깊은 계곡을 (        )이라 한다.', answer: 'V자 계곡', initials: 'V ㄱㄱ', aliases: ['V자계곡','V자 계곡','브이자 계곡'] },
+        { no: 3, text: '물이 빠르게 흐르며 형성된 좁고 깊은 계곡을 (        )이라 한다.', answer: 'V자 계곡', initials: 'Vㅈ ㄱㄱ', aliases: ['V자계곡','V자 계곡','브이자 계곡'] },
         { no: 4, text: '산 아래 평지에 흙과 자갈이 부채꼴로 쌓인 지형을 (      )라 한다.', answer: '선상지', initials: 'ㅅㅅㅈ', aliases: ['선상지'] },
         { no: 5, text: 'S자 모양으로 굽이치며 흐르는 강을 (        )이라 한다.', answer: '곡류 하천', initials: 'ㄱㄹ ㅎㅊ', aliases: ['곡류하천','곡류 하천'] },
         { no: 6, text: '강이 바다와 가까운 아래쪽 지역을 (      )라고 한다.', answer: '하류', initials: 'ㅎㄹ', aliases: ['하류'] },
@@ -484,9 +484,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 강이 만드는 지형과 인간 생활',
         '4문단 : 침식과 퇴적의 개념'
       ],
-      q3_html: `경사가 급한 산에서는 물이 빠르게 흘러 <input class="inline-input" id="q3-1" type="text" placeholder="V ㄱㄱ">이 만들어지고, 산 아래 완만한 지역에서는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅅㅈ">가 형성됩니다.`,
+      q3_html: `경사가 급한 산에서는 물이 빠르게 흘러 <input class="inline-input" id="q3-1" type="text" placeholder="Vㅈ ㄱㄱ">이 만들어지고, 산 아래 완만한 지역에서는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅅㅈ">가 형성됩니다.`,
       q4_html: `강이 바다와 만나는 곳에서는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅌㅈ"> 작용이 활발하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱㅈ">가 만들어집니다.`,
-      q3_1_ph: 'V ㄱㄱ', q3_2_ph: 'ㅅㅅㅈ', q4_1_ph: 'ㅌㅈ', q4_2_ph: 'ㅅㄱㅈ',
+      q3_1_ph: 'Vㅈ ㄱㄱ', q3_2_ph: 'ㅅㅅㅈ', q4_1_ph: 'ㅌㅈ', q4_2_ph: 'ㅅㄱㅈ',
       q5_text: '침식 작용과 퇴적 작용이 일어나는 조건의 차이를 설명하고, 각각의 예를 들어 보세요.'
     },
     answerKey: { q1:'3', q2:'2', q3_1:['V자 계곡','V자계곡','브이자 계곡','V자계곡'], q3_2:['선상지'], q4_1:['퇴적'], q4_2:['삼각주'] },
