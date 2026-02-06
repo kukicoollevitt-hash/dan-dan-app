@@ -411,7 +411,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[동백꽃 어휘]',
       items: [
-        { no: 1, text: '성격이 순수하고 꾸밈없이 착한 것을 (      )라고 한다.', answer: '순박하다', initials: 'ㅅㅂㅎㄷ', aliases: ['순박하다','순박'] },
+        { no: 1, text: '성격이 순수하고 꾸밈없이 착한 것을 (      )라고 한다.', answer: '순박하다', initials: 'ㅅㅂㅎㄷ', aliases: ['순박하다','순박','순박한'] },
         { no: 2, text: '창피해서 얼굴 들기 어려운 것을 (      )라고 한다.', answer: '무안하다', initials: 'ㅁㅇㅎㄷ', aliases: ['무안하다','무안'] },
         { no: 3, text: '일부러 화나게 하거나 놀리는 것을 (         )라고 한다.', answer: '약을 올리다', initials: 'ㅇㅇㅇㄹㄷ', aliases: ['약을 올리다','약을올리다'] },
         { no: 4, text: '풀잎이나 나뭇잎으로 만든 피리를 (      )라고 한다.', answer: '호드기', initials: 'ㅎㄷㄱ', aliases: ['호드기'] },
@@ -436,11 +436,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 작품 해설 (동백꽃 작품 소개)',
         '4문단 : 닭싸움에서 지고 점순이네 수탉을 패대기침'
       ],
-      q3_html: '소년은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅂㅎㄷ"> 성격이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㄷㄱ">는 풀잎으로 만든 피리이다.',
+      q3_html: '소년은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅂㅎ"> 성격이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㄷㄱ">는 풀잎으로 만든 피리이다.',
       q4_html: '점순이 아버지는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㄹ">이고, 소년은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅈ">농의 아들이다.',
       q5_text: '점순이가 닭싸움을 시키고, 소년을 괴롭히는 행동을 한 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
-    answerKey: { q1:'1', q2:'1', q3_1:['순박하다','순박'], q3_2:['호드기'], q4_1:['마름'], q4_2:['소작'] },
+    answerKey: { q1:'1', q2:'1', q3_1:['순박한','순박'], q3_2:['호드기'], q4_1:['마름'], q4_2:['소작'] },
     essayKeywords: ['점순','좋아','관심','표현','순박','감자','닭싸움','동백꽃','소년','마름','소작','호감','무안','약을 올리다','호드기','수탉','패대기','울음','화해','노란','꽃향기','알싸하다','속삭이다','김유정','1930년대','강원도','산골','풋사랑','계층','해학','향토적','어머니','열일곱','거절','놀리다','당황','화','참다','달래다','넘어뜨리다','파묻히다','웃음','멋쩍다'],
     explain: {
       q1: '나는 왜 받아야 하는지도 모르고 거절해 버렸다',
