@@ -460,7 +460,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ]
     },
     quiz: {
-      q1_text: '[핵심이해력] 고체가 열을 받아 액체로 변하는 현상을 무엇이라고 하나요?',
+      q1_text: '고체가 열을 받아 액체로 변하는 현상을 무엇이라고 하나요?',
       q1_opts: [
         '응고',
         '증발',
@@ -488,7 +488,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '응고는 열을 받아 일어나는 현상이다.',
         '융해와 응고는 같은 현상이다.'
       ],
-      q5_text: '[비판적용력] 물이 얼음이나 수증기로 변해도 같은 물질인 이유를 본문 내용을 바탕으로 설명해 보세요.'
+      q5_text: '물이 얼음이나 수증기로 변해도 같은 물질인 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'3', q3:'3', q4:'2' },
     essayKeywords: ['물질','상태','변화','융해','응고','고체','액체','기체','온도','분자','얼음','물','수증기','녹다','얼다','굳다','열','차가운','따뜻한','형태','바뀌다','같은','동일','변하지 않다','유지','열전달','체온','냉동실','빵','버터','촛농','마그마','암석','빨래','마르다','비','서리','증발','압력','자연','현상'],
@@ -1866,7 +1866,14 @@ function getCurrentUnit() {
   return (window.CUR_UNIT || 'chem_01');
 }
 
+if (typeof _vocabFillRendered === "undefined") var _vocabFillRendered = false;
+
 window.renderVocabFill = function () {
+  // 이미 렌더링되었으면 다시 렌더링하지 않음 (탭 전환 시 상태 유지)
+  if (_vocabFillRendered) {
+    console.log(\'[renderVocabFill] 이미 렌더링됨, 건너뛰기\');
+    return;
+  }
   const unit = window.CUR_UNIT || 'chem_01';
   const pack = window.CONTENTS?.[unit];
   const root = document.getElementById('vocab-fill') 
@@ -1893,6 +1900,10 @@ window.renderVocabFill = function () {
     <div class="vocab-instruction">${pack.vocabFill.instructions || ''}</div>
     <div class="vocab-inline">${html}</div>
   `;
+
+
+  // 렌더링 완료 표시
+  _vocabFillRendered = true;
 
   (function ensureVocabInlineStyle(){
     if (document.getElementById('vocab-inline-style')) return;

@@ -1447,11 +1447,15 @@
           }, 1500);
         }
 
-        // 어휘학습 탭인 경우 지문 렌더링
+        // 어휘학습 탭인 경우 지문 렌더링 및 상태 복원
         if (tabName === 'vocab') {
           const fn = window.renderVocabFromContent || window.renderVocabFill;
           if (typeof fn === 'function') {
             fn();
+          }
+          // 탭 전환 시 어휘학습 상태 복원
+          if (typeof loadVocabState === 'function') {
+            loadVocabState();
           }
         }
       }
@@ -2438,7 +2442,8 @@
           value: input.value,
           isCorrect: bw.classList.contains('correct'),
           isWrong: bw.classList.contains('wrong'),
-          markText: mark ? mark.textContent : ''
+          markText: mark ? mark.textContent : '',
+          disabled: input.disabled
         });
       });
 
@@ -2491,6 +2496,7 @@
             if (data.isCorrect) bw.classList.add('correct');
             if (data.isWrong) bw.classList.add('wrong');
             if (mark) mark.textContent = data.markText;
+            if (data.disabled) input.disabled = true;
           }
         });
 

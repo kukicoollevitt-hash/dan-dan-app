@@ -4470,7 +4470,14 @@ function getCurrentUnit() {
   return (window.CUR_UNIT || 'classic_01');
 }
 
+if (typeof _vocabFillRendered === "undefined") var _vocabFillRendered = false;
+
 window.renderVocabFill = function () {
+  // 이미 렌더링되었으면 다시 렌더링하지 않음 (탭 전환 시 상태 유지)
+  if (_vocabFillRendered) {
+    console.log(\'[renderVocabFill] 이미 렌더링됨, 건너뛰기\');
+    return;
+  }
   const unit = window.CUR_UNIT || 'classic_01';
   const pack = window.CONTENTS?.[unit];
   const root = document.getElementById('vocab-fill')
@@ -4504,6 +4511,10 @@ window.renderVocabFill = function () {
     <div class="vocab-instruction">${pack.vocabFill.instructions || ''}</div>
     <div class="vocab-inline">${html}</div>
   `;
+
+
+  // 렌더링 완료 표시
+  _vocabFillRendered = true;
 
   (function ensureVocabInlineStyle(){
     if (document.getElementById('vocab-inline-style')) return;

@@ -2144,7 +2144,7 @@
           <div class="quiz-block">
             <div class="quiz-num">01<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">[핵심이해력] 고체가 열을 받아 액체로 변하는 현상을 무엇이라고 하나요?</p>
+              <p class="quiz-q">고체가 열을 받아 액체로 변하는 현상을 무엇이라고 하나요?</p>
               <ul class="quiz-options">
                 <li><label><input type="radio" name="q1" value="1"><span>응고</span></label></li>
                 <li><label><input type="radio" name="q1" value="2"><span>증발</span></label></li>
@@ -2158,7 +2158,7 @@
           <div class="quiz-block">
             <div class="quiz-num">02<div class="mark"></div></div>
             <div class="quiz-content">
-              <p class="quiz-q">[구조파악력] 이 글에서 설명하는 상태 변화의 순서로 알맞은 것은?</p>
+              <p class="quiz-q">이 글에서 설명하는 상태 변화의 순서로 알맞은 것은?</p>
               <ul class="quiz-options">
                 <li><label><input type="radio" name="q2" value="1"><span>기체 → 액체 → 고체</span></label></li>
                 <li><label><input type="radio" name="q2" value="2"><span>융해(고체→액체) → 응고(액체→고체) → 상태 변화의 정의</span></label></li>
@@ -2175,7 +2175,7 @@
             <div class="quiz-num">03<div class="mark"></div></div>
             <div class="quiz-content">
               <p class="quiz-q">
-                [어휘맥락력] 고체가 열을 받아 액체로 변하는 현상을
+                고체가 열을 받아 액체로 변하는 현상을
                 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅎ"> 라고 하고, 액체가 열을 잃어 고체가 되는 과정을
                 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㄱ"> 라고 합니다.
               </p>
@@ -2187,7 +2187,7 @@
             <div class="quiz-num">04<div class="mark"></div></div>
             <div class="quiz-content">
               <p class="quiz-q">
-                [추론통합력] 모양과 부피가 일정한 물질의 상태를
+                모양과 부피가 일정한 물질의 상태를
                 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅊ"> 라고 하고, 담는 그릇에 따라 모양이 달라지는 상태를
                 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅊ"> 라고 합니다.
               </p>
@@ -2200,7 +2200,7 @@
             <div class="quiz-num">05<div class="mark"></div></div>
             <div class="quiz-content">
               <p class="quiz-q">
-                [비판적용력] 물이 얼음이나 수증기로 변해도 같은 물질인 이유를
+                물이 얼음이나 수증기로 변해도 같은 물질인 이유를
                 본문 내용을 바탕으로 설명해 보세요.
               </p>
               <div class="answer-box">
@@ -2317,6 +2317,11 @@
           }
         };
 
+        // 탭 전환 시에도 채점 상태 유지를 위해 localStorage에 저장
+        if (typeof saveVocabState === 'function') {
+          saveVocabState();
+        }
+
         if (typeof window.saveUnitProgressToServer === 'function') {
           window.saveUnitProgressToServer(dataToSave).then(() => {
             return captureElementToPDF('capture-vocab', '단단국어_어휘학습.pdf', { withStudentInfo: true });
@@ -2352,6 +2357,11 @@
         vocabResultBox.style.display = 'none';
         vocabSaveBtn.style.display = 'inline-block';
         vocabResetBtn.style.display = 'none';
+
+        // 리셋 후 상태도 localStorage에 저장
+        if (typeof saveVocabState === 'function') {
+          saveVocabState();
+        }
       }
       </script>
     </div>
@@ -2536,11 +2546,15 @@
           refreshReportTab();
         }
 
-        // 어휘학습 탭인 경우 지문 렌더링
+        // 어휘학습 탭인 경우 지문 렌더링 및 상태 복원
         if (tabName === 'vocab') {
           const fn = window.renderVocabFromContent || window.renderVocabFill;
           if (typeof fn === 'function') {
             fn();
+          }
+          // 탭 전환 시 어휘학습 상태 복원
+          if (typeof loadVocabState === 'function') {
+            loadVocabState();
           }
         }
       }
@@ -3219,7 +3233,7 @@ function _norm(s){
 function _saveVocabInputs(unit){
   const key = _storeKey(unit);
   const inputs = [...document.querySelectorAll('#vocab-fill .vocab-input')].map(inp => ({
-    id: inp.id, v: inp.value
+    id: inp.id, v: inp.value, bg: inp.style.background || ''
   }));
   localStorage.setItem(key, JSON.stringify(inputs));
 }
@@ -3227,9 +3241,12 @@ function _loadVocabInputs(unit){
   const key = _storeKey(unit);
   try {
     const saved = JSON.parse(localStorage.getItem(key) || '[]');
-    saved.forEach(({id,v})=>{
+    saved.forEach(({id,v,bg})=>{
       const el = document.getElementById(id);
-      if (el) el.value = v || '';
+      if (el) {
+        el.value = v || '';
+        if (bg) el.style.background = bg;
+      }
     });
   } catch(e){}
 }
@@ -3261,6 +3278,12 @@ function renderVocabFill() {
   const data = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT] && window.CONTENTS[window.CUR_UNIT].vocabFill) || null;
   const container = document.getElementById('vocab-fill');
   if (!data || !container) return;
+
+  // 이미 렌더링되어 있으면 저장된 상태만 복원하고 스킵
+  if (container.querySelector('.vocab-input')) {
+    _loadVocabInputs(window.CUR_UNIT);
+    return;
+  }
 
   container.innerHTML = '';
 
@@ -3341,6 +3364,9 @@ function checkVocabFill() {
     input.style.background = correct ? '#d9f7be' : '#ffd6d6';
     if (correct) score++;
   });
+
+  // 채점 결과 저장
+  _saveVocabInputs(window.CUR_UNIT);
 
   alert(`정답 ${score}개 / 총 ${data.length}개`);
 }

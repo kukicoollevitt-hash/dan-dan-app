@@ -485,14 +485,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ]
     },
     quiz: {
-      q1_text: '[핵심이해력] 고체가 열을 받아 액체로 변하는 현상을 무엇이라고 하나요?',
+      q1_text: '고체가 열을 받아 액체로 변하는 현상을 무엇이라고 하나요?',
       q1_opts: [
         '응고',
         '증발',
         '융해',
         '승화'
       ],
-      q2_text: '[구조파악력] 이 글에서 설명하는 상태 변화의 순서로 알맞은 것은?',
+      q2_text: '이 글에서 설명하는 상태 변화의 순서로 알맞은 것은?',
       q2_opts: ['기체 → 액체 → 고체', '융해(고체→액체) → 응고(액체→고체) → 상태 변화의 정의', '응고 → 융해 → 증발', '액체 → 기체 → 고체'],
       q3_text: '다음 중 어휘와 그 뜻이 바르게 연결된 것은 무엇인가요?',
       q3_opts: [
@@ -508,7 +508,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '물질의 상태가 변하면 물질 자체도 함께 변한다.',
         '응고는 고체가 액체로 변하는 현상이다.'
       ],
-      q5_text: '[비판적용력] 물이 얼음이나 수증기로 변해도 같은 물질인 이유를 본문 내용을 바탕으로 설명해 보세요.'
+      q5_text: '물이 얼음이나 수증기로 변해도 같은 물질인 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'2', q3:'3', q4:'2' },
     essayKeywords: ['물질','상태','변화','융해','응고','고체','액체','기체','온도','분자','형태','바뀌','변하지 않','같은','물','얼음','수증기','자체','그대로','달라','열','에너지','흡수','방출'],
@@ -1897,7 +1897,14 @@ function getCurrentUnit() {
   return (window.CUR_UNIT || 'chem_01');
 }
 
+if (typeof _vocabFillRendered === "undefined") var _vocabFillRendered = false;
+
 window.renderVocabFill = function () {
+  // 이미 렌더링되었으면 다시 렌더링하지 않음 (탭 전환 시 상태 유지)
+  if (_vocabFillRendered) {
+    console.log(\'[renderVocabFill] 이미 렌더링됨, 건너뛰기\');
+    return;
+  }
   const unit = window.CUR_UNIT || 'chem_01';
   const pack = window.CONTENTS?.[unit];
   const root = document.getElementById('vocab-fill') 
@@ -1924,6 +1931,10 @@ window.renderVocabFill = function () {
     <div class="vocab-instruction">${pack.vocabFill.instructions || ''}</div>
     <div class="vocab-inline">${html}</div>
   `;
+
+
+  // 렌더링 완료 표시
+  _vocabFillRendered = true;
 
   (function ensureVocabInlineStyle(){
     if (document.getElementById('vocab-inline-style')) return;

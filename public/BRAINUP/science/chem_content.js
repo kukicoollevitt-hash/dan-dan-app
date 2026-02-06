@@ -429,7 +429,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ]
     },
     quiz: {
-      q1_text: '[핵심이해력] 고체가 열을 받아 액체로 변하는 현상을 무엇이라고 하나요?',
+      q1_text: '고체가 열을 받아 액체로 변하는 현상을 무엇이라고 하나요?',
       q1_opts: [
         '응고',
         '증발',
@@ -440,7 +440,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2_opts: ['1문단 : 상태 변화의 활용', '2문단 : 상태 변화의 정의', '3문단 : 상태 변화의 정의', '4문단 : 융해(고체→액체)'],
       q3_1_ph: 'ㅇㅎ', q3_2_ph: 'ㅇㄱ',
       q4_1_ph: 'ㄱㅊ', q4_2_ph: 'ㅇㅊ',
-      q5_text: '[비판적용력] 물이 얼음이나 수증기로 변해도 같은 물질인 이유를 본문 내용을 바탕으로 설명해 보세요.'
+      q5_text: '물이 얼음이나 수증기로 변해도 같은 물질인 이유를 본문 내용을 바탕으로 설명해 보세요.'
     },
     answerKey: { q1:'3', q2:'3', q3_1:['융해'], q3_2:['응고'], q4_1:['고체'], q4_2:['액체'] },
     essayKeywords: ['물질','상태','변화','융해','응고','고체','액체','기체','온도','분자','같','동일','바뀌','변하지 않','형태','얼음','물','수증기','열','에너지','자체','본질','성질'],
@@ -448,7 +448,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1:'이처럼 고체가 열을 받아 액체로 변하는 과정을',
       q2:'물질이 고체·액체·기체로 변하는 과정을 통틀어 물질의',
       q3:'이처럼 액체가 다시 고체가 되는 현상을',
-      q4:'뜨거운 마그마가 지표에서 식으며 암석이 되는 것도 모두 응고의 한 예입니다',
+      q4:'차가운 온도에서 얼음(고체)이 되기도 하지만',
       q5:'예시 답안: 물질의 형태(상태)만 바뀔 뿐 물질 자체는 변하지 않기 때문입니다. 얼음, 물, 수증기는 모두 같은 물이며, 상태만 달라질 뿐 서로 다른 물질로 변하는 것이 아닙니다.'
     },
     detail: {
@@ -1625,10 +1625,18 @@ function getCurrentUnit() {
   return (window.CUR_UNIT || 'chem_01');
 }
 
+if (typeof _vocabFillRendered === "undefined") var _vocabFillRendered = false;
+
 window.renderVocabFill = function () {
+  // 이미 렌더링되었으면 다시 렌더링하지 않음 (탭 전환 시 상태 유지)
+  if (_vocabFillRendered) {
+    console.log('[renderVocabFill] 이미 렌더링됨, 건너뛰기');
+    return;
+  }
+
   const unit = window.CUR_UNIT || 'chem_01';
   const pack = window.CONTENTS?.[unit];
-  const root = document.getElementById('vocab-fill') 
+  const root = document.getElementById('vocab-fill')
             || document.querySelector('.vocab-fill-text');
 
   if (!root || !pack?.vocabFill?.items?.length) {
@@ -1652,6 +1660,9 @@ window.renderVocabFill = function () {
     <div class="vocab-instruction">${pack.vocabFill.instructions || ''}</div>
     <div class="vocab-inline">${html}</div>
   `;
+
+  // 렌더링 완료 표시
+  _vocabFillRendered = true;
 
   (function ensureVocabInlineStyle(){
     if (document.getElementById('vocab-inline-style')) return;
