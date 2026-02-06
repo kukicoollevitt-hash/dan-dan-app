@@ -25,12 +25,14 @@ try {
   console.error('❌ unit_titles.json 로드 실패:', err.message);
 }
 
-// ===== Nodemailer 설정 =====
+// ===== Nodemailer 설정 (네이버) =====
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.naver.com',
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+    user: process.env.NAVER_EMAIL,
+    pass: process.env.NAVER_EMAIL_PASSWORD
   }
 });
 
@@ -29359,6 +29361,52 @@ app.get('/api/reading-time/:studentKey/:unitKey', async (req, res) => {
   } catch (err) {
     console.error('독해시간 조회 오류:', err);
     res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+// ===== 설명회 상담문의 API =====
+app.post("/api/consultation-inquiry", async (req, res) => {
+  try {
+    const { region, name, phone, purpose } = req.body;
+
+    if (!region || !name || !phone) {
+      return res.status(400).json({ success: false, error: "필수 항목을 입력해주세요." });
+    }
+
+    const mailOptions = {
+      from: process.env.NAVER_EMAIL,
+      to: process.env.NAVER_EMAIL,
+      subject: `[설명회 상담문의] ${name}님 - ${region}`,
+      html: `
+        <h2>📩 설명회 상담문의</h2>
+        <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">지역</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${region}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">성함</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연락처</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">목적</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${purpose || '미선택'}</td>
+          </tr>
+        </table>
+        <p style="color: #888; margin-top: 20px;">전송 시간: ${new Date().toLocaleString('ko-KR')}</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ 상담문의 메일 발송: ${name} (${region})`);
+    res.json({ success: true, message: "상담 문의가 접수되었습니다." });
+  } catch (err) {
+    console.error("상담문의 메일 발송 오류:", err);
+    res.status(500).json({ success: false, error: "메일 발송에 실패했습니다." });
   }
 });
 

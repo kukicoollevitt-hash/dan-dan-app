@@ -2964,9 +2964,59 @@
         </div>
     </section>
 
+    <!-- 상담문의 섹션 -->
+    <section id="consultation" style="padding: 80px 30px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+        <div style="max-width: 600px; margin: 0 auto;">
+            <h2 style="text-align: center; color: white; font-size: 36px; font-weight: 800; margin-bottom: 15px;">상담 문의하기</h2>
+            <p style="text-align: center; color: rgba(255,255,255,0.8); font-size: 18px; margin-bottom: 40px;">설명회 및 도입 상담을 원하시면 아래 정보를 남겨주세요</p>
+
+            <form id="consultationForm" style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px;">지역 <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="inquiryRegion" placeholder="예: 서울 강남구" required
+                        style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; transition: border-color 0.3s;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px;">성함 <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="inquiryName" placeholder="이름을 입력해주세요" required
+                        style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; transition: border-color 0.3s;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px;">연락처 <span style="color: #ef4444;">*</span></label>
+                    <input type="tel" id="inquiryPhone" placeholder="010-0000-0000" required
+                        style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; transition: border-color 0.3s;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px;">목적 (선택)</label>
+                    <select id="inquiryPurpose"
+                        style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; background: white; cursor: pointer;">
+                        <option value="">선택해주세요</option>
+                        <option value="설명회 참석">설명회 참석</option>
+                        <option value="학원 도입 문의">학원 도입 문의</option>
+                        <option value="공부방 도입 문의">공부방 도입 문의</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="submitBtn"
+                    style="width: 100%; padding: 16px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(37, 99, 235, 0.5)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(37, 99, 235, 0.4)'">
+                    제출하기
+                </button>
+            </form>
+        </div>
+    </section>
+
     <!-- 푸터 -->
     <footer class="footer">
-        <h2>AI 브레인 문해력과 함께하세요</h2>
+        <h2>AI 브레인 문해원과 함께하세요</h2>
         <p>진짜 문해력으로 아이들의 미래를 바꿉니다</p>
     </footer>
 
@@ -4093,6 +4143,46 @@
 
         document.addEventListener('mouseup', function() {
             chatIsDragging = false;
+        });
+
+        // 상담문의 폼 제출
+        document.getElementById('consultationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '전송 중...';
+            submitBtn.disabled = true;
+
+            const data = {
+                region: document.getElementById('inquiryRegion').value.trim(),
+                name: document.getElementById('inquiryName').value.trim(),
+                phone: document.getElementById('inquiryPhone').value.trim(),
+                purpose: document.getElementById('inquiryPurpose').value
+            };
+
+            try {
+                const response = await fetch('/api/consultation-inquiry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('상담 문의가 접수되었습니다.\n빠른 시일 내에 연락드리겠습니다.');
+                    document.getElementById('consultationForm').reset();
+                } else {
+                    alert('전송에 실패했습니다. 다시 시도해주세요.');
+                }
+            } catch (error) {
+                console.error('상담문의 오류:', error);
+                alert('오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
         });
     </script>
 </body>
