@@ -525,8 +525,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 주기율표의 구성과 원소 분류',
         '4문단 : 원소와 원소 기호'
       ],
-      q3_1_ph: 'ㅇㅅ', q3_2_ph: 'ㅈㄱㅇㅍ',
-      q4_1_ph: 'ㅈㄱ', q4_2_ph: 'ㅈ',
+      q3_html: `물질을 이루는 기본 성분으로 더 이상 쪼갤 수 없는 것을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅅ">라 하고, 원소를 원자 번호 순으로 배열한 표를 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㄱㅇㅍ">라고 합니다.`,
+      q4_html: `주기율표에서 가로줄을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㄱ">라 하고, 세로줄을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈ">이라고 합니다.`,
       q5_text: '주기율표에서 같은 족에 속한 원소들이 비슷한 성질을 갖는 이유를 원자 구조와 관련지어 설명해 보세요.'
     },
     answerKey: { q1: '2', q2: '3', q3_1: ['원소'], q3_2: ['주기율표'], q4_1: ['주기'], q4_2: ['족'] },
@@ -611,8 +611,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 전자껍질과 최외각 전자',
         '4문단 : 원자의 구조'
       ],
-      q3_1_ph: 'ㅇㅈㅎ', q3_2_ph: 'ㅈㅈ',
-      q4_1_ph: 'ㅇㅅㅈ', q4_2_ph: 'ㅈㅅㅈ',
+      q3_html: `원자의 중심에는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅈㅎ">이 있고, 그 주위를 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅈ">가 돌고 있습니다.`,
+      q4_html: `원자핵은 (+) 전하를 띠는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅅㅈ">와 전하가 없는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅅㅈ">로 구성되어 있습니다.`,
       q5_text: '비활성 기체가 다른 원소와 거의 반응하지 않는 이유를 전자껍질과 관련지어 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '3', q3_1: ['원자핵'], q3_2: ['전자'], q4_1: ['양성자'], q4_2: ['중성자'] },
@@ -697,8 +697,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 화학 결합의 활용',
         '4문단 : 이온 결합'
       ],
-      q3_1_ph: 'ㅇㅇ ㄱㅎ', q3_2_ph: 'ㄱㅇ ㄱㅎ',
-      q4_1_ph: 'ㅇㅇㅇ', q4_2_ph: 'ㅇㅇㅇ',
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅇ ㄱㅎ">은 금속과 비금속 사이에서 전자를 주고받아 결합하고, <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅇ ㄱㅎ">은 비금속끼리 전자쌍을 함께 사용하여 결합합니다.`,
+      q4_html: `금속 원자가 전자를 잃으면 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇㅇ">이 되고, 비금속 원자가 전자를 얻으면 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅇㅇ">이 됩니다.`,
       q5_text: '물(H₂O)이 공유 결합 물질인 이유를 전자의 공유 관점에서 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '1', q3_1: ['이온 결합', '이온결합'], q3_2: ['공유 결합', '공유결합'], q4_1: ['양이온'], q4_2: ['음이온'] },
@@ -783,8 +783,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 계수와 균형 맞추기',
         '4문단 : 질량 보존 법칙'
       ],
-      q3_1_ph: 'ㅂㅇㅁ', q3_2_ph: 'ㅅㅅㅁ',
-      q4_1_ph: 'ㄱㅅ', q4_2_ph: 'ㅈㄹ ㅂㅈ',
+      q3_html: `화학 반응에서 변화하기 전의 물질을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅇㅁ">이라 하고, 변화 후에 생성된 물질을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅅㅁ">이라고 합니다.`,
+      q4_html: `화학식 앞에 붙어 분자의 개수를 나타내는 숫자를 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅅ">라 하고, 반응 전후 총 질량이 같다는 법칙을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㄹ ㅂㅈ"> 법칙이라고 합니다.`,
       q5_text: '화학 반응 전후에 질량이 보존되는 이유를 원자의 관점에서 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '1', q3_1: ['반응물'], q3_2: ['생성물'], q4_1: ['계수'], q4_2: ['질량 보존', '질량보존'] },
@@ -869,8 +869,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 산과 염기의 발견 역사',
         '4문단 : 산과 염기의 정의'
       ],
-      q3_1_ph: 'ㅅ', q3_2_ph: 'ㅇㄱ',
-      q4_1_ph: 'ㅈㅎ ㅂㅇ', q4_2_ph: 'ㅇ',
+      q3_html: `신맛이 나는 물질을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅ">이라 하고, 쓴맛이 나고 미끈거리는 물질을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㄱ">라고 합니다.`,
+      q4_html: `산과 염기가 반응하여 물과 염을 생성하는 반응을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅎ ㅂㅇ">이라 하고, 이때 물과 함께 생성되는 물질을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇ">이라고 합니다.`,
       q5_text: '위산 과다로 속이 쓰릴 때 제산제를 복용하면 효과가 있는 이유를 중화 반응과 관련지어 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '2', q3_1: ['산'], q3_2: ['염기'], q4_1: ['중화 반응', '중화반응'], q4_2: ['염'] },
@@ -957,8 +957,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 산화의 개념과 예시',
         '4문단 : 배터리의 작동 원리'
       ],
-      q3_1_ph: 'ㅅㅎ', q3_2_ph: 'ㅎㅇ',
-      q4_1_ph: 'ㅇㅅ', q4_2_ph: 'ㄴ',
+      q3_html: `물질이 산소와 결합하는 반응을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅎ">라 하고, 산화물에서 산소가 빠져나가는 반응을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅇ">이라고 합니다.`,
+      q4_html: `물질이 빠르게 산화하며 열과 빛을 내는 것을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅅ">라 하고, 철이 산화되어 생긴 붉은색 부식 물질을 <input class="inline-input" id="q4-2" type="text" placeholder="ㄴ">이라고 합니다.`,
       q5_text: '산화와 환원이 항상 동시에 일어나는 이유를 산소의 이동 관점에서 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '2', q3_1: ['산화'], q3_2: ['환원'], q4_1: ['연소'], q4_2: ['녹'] },
@@ -1043,8 +1043,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 전기 분해의 원리',
         '4문단 : 화학 전지의 발명 역사'
       ],
-      q3_1_ph: 'ㅈㄱ ㅂㅎ', q3_2_ph: 'ㅎㅎ ㅈㅈ',
-      q4_1_ph: '1ㅊ ㅈㅈ', q4_2_ph: '2ㅊ ㅈㅈ',
+      q3_html: `전해질 용액에 전기를 흘려 화학 반응을 일으키는 것을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㄱ ㅂㅎ">라 하고, 화학 에너지를 전기 에너지로 바꾸는 장치를 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅎ ㅈㅈ">라고 합니다.`,
+      q4_html: `한 번 사용하면 충전할 수 없는 전지를 <input class="inline-input" id="q4-1" type="text" placeholder="1ㅊ ㅈㅈ">라 하고, 충전하여 여러 번 사용할 수 있는 전지를 <input class="inline-input" id="q4-2" type="text" placeholder="2ㅊ ㅈㅈ">라고 합니다.`,
       q5_text: '전기 분해와 화학 전지의 에너지 전환 방향이 어떻게 다른지 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '2', q3_1: ['전기 분해', '전기분해'], q3_2: ['화학 전지', '화학전지'], q4_1: ['1차 전지', '1차전지', '일차 전지'], q4_2: ['2차 전지', '2차전지', '이차 전지'] },
@@ -1129,8 +1129,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 용해의 정의와 용어',
         '4문단 : 퍼센트 농도의 계산법'
       ],
-      q3_1_ph: 'ㅇㅁ', q3_2_ph: 'ㅇㅈ',
-      q4_1_ph: 'ㄴㄷ', q4_2_ph: 'ㅇㅎㄷ',
+      q3_html: `다른 물질을 녹이는 물질을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅁ">라 하고, 용매에 녹는 물질을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅈ">이라고 합니다.`,
+      q4_html: `용액에 용질이 얼마나 녹아 있는지 나타내는 값을 <input class="inline-input" id="q4-1" type="text" placeholder="ㄴㄷ">라 하고, 일정 온도에서 녹을 수 있는 용질의 최대량을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅎㄷ">라고 합니다.`,
       q5_text: '탄산음료를 차갑게 보관해야 하는 이유를 기체의 용해도와 관련지어 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '2', q3_1: ['용매'], q3_2: ['용질'], q4_1: ['농도'], q4_2: ['용해도'] },
@@ -1215,8 +1215,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 기체의 기본 성질과 압력',
         '4문단 : 보일의 생애와 업적'
       ],
-      q3_1_ph: 'ㅂㅇ ㅂㅊ', q3_2_ph: 'ㅅㄹ ㅂㅊ',
-      q4_1_ph: 'ㅂㅂㄹ', q4_2_ph: 'ㅂㄹ',
+      q3_html: `온도가 일정할 때 압력과 부피가 반비례한다는 법칙을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅇ ㅂㅊ">이라 하고, 압력이 일정할 때 온도와 부피가 비례한다는 법칙을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㄹ ㅂㅊ">이라고 합니다.`,
+      q4_html: `보일 법칙에서 압력과 부피는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅂㄹ">하고, 샤를 법칙에서 온도와 부피는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㄹ">합니다.`,
       q5_text: '열기구가 뜨는 원리를 샤를 법칙과 관련지어 설명해 보세요.'
     },
     answerKey: { q1: '2', q2: '2', q3_1: ['보일 법칙', '보일법칙'], q3_2: ['샤를 법칙', '샤를법칙'], q4_1: ['반비례'], q4_2: ['비례'] },
@@ -1277,8 +1277,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1_opts:['발열 반응은 열에너지를 방출하며, 연소와 중화 반응이 대표적인 예이다','흡열 반응은 주변에서 열을 흡수하므로 반응 후 온도가 낮아진다','촉매는 활성화 에너지를 낮춰 반응 속도를 빠르게 하지만 자신은 변한다','에너지 보존 법칙에 따라 에너지는 형태만 바뀔 뿐 총량은 보존된다'],
       q2_text:'각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts:['1문단 : 발열 반응과 흡열 반응','2문단 : 화학 에너지의 활용','3문단 : 에너지 보존 법칙의 역사','4문단 : 활성화 에너지와 촉매'],
-      q3_1_ph:'ㅂㅇ ㅂㅇ',q3_2_ph:'ㅎㅇ ㅂㅇ',
-      q4_1_ph:'ㅎㅅㅎ ㅇㄴㅈ',q4_2_ph:'ㅊㅁ',
+      q3_html: `열에너지를 방출하는 반응을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅇ ㅂㅇ">이라 하고, 열에너지를 흡수하는 반응을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅇ ㅂㅇ">이라고 합니다.`,
+      q4_html: `반응을 시작하는 데 필요한 최소 에너지를 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅅㅎ ㅇㄴㅈ">라 하고, 이 에너지를 낮춰 반응 속도를 빠르게 하는 물질을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅁ">라고 합니다.`,
       q5_text:'발열 반응과 흡열 반응의 차이점을 설명하고, 일상생활에서 각각의 예를 들어 설명하시오.'
     },
     answerKey: {q1:'3',q2:'1',q3_1:['발열 반응','발열반응'],q3_2:['흡열 반응','흡열반응'],q4_1:['활성화 에너지','활성화에너지'],q4_2:['촉매']},
@@ -1339,8 +1339,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1_opts:['고분자는 단위체가 수천에서 수만 개 연결된 거대 분자이다','플라스틱은 가볍고 튼튼하며 가공이 쉬워 널리 사용된다','대부분의 플라스틱은 자연에서 빠르게 분해되어 환경에 무해하다','미세 플라스틱은 해양 생물에 피해를 주고 먹이 사슬을 통해 인간에게 돌아온다'],
       q2_text:'각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts:['1문단 : 고분자의 개념','2문단 : 환경 문제 해결 방안','3문단 : 플라스틱의 발명 역사','4문단 : 플라스틱의 장점과 환경 문제'],
-      q3_1_ph:'ㄱㅂㅈ',q3_2_ph:'ㅈㅎ',
-      q4_1_ph:'ㅁㅅ ㅍㄹㅅㅌ',q4_2_ph:'ㅈㅎㅇ',
+      q3_html: `단위체가 수천~수만 개 연결된 거대 분자를 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅂㅈ">라 하고, 단위체가 연결되어 고분자가 되는 반응을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅎ">이라고 합니다.`,
+      q4_html: `5mm 이하로 쪼개진 작은 플라스틱을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㅅ ㅍㄹㅅㅌ">이라 하고, 쓰던 물건을 다시 자원으로 사용하는 것을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅎㅇ">이라고 합니다.`,
       q5_text:'플라스틱 사용으로 인한 환경 문제와 이를 해결하기 위한 방안을 설명하시오.'
     },
     answerKey: {q1:'3',q2:'1',q3_1:['고분자'],q3_2:['중합'],q4_1:['미세 플라스틱','미세플라스틱'],q4_2:['재활용']},
@@ -1401,8 +1401,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1_opts:['금속은 열과 전기를 잘 전달하며, 연성과 전성을 가지고 있다','합금은 순수 금속보다 개선된 성질을 가지도록 만든 것이다','스테인리스강은 구리와 주석의 합금으로 녹이 잘 슨다','두랄루민은 가볍고 튼튼하여 항공기 제작에 사용된다'],
       q2_text:'각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts:['1문단 : 금속의 성질','2문단 : 황동과 두랄루민','3문단 : 금속의 발견 역사','4문단 : 합금의 개념과 종류'],
-      q3_1_ph:'ㅇㅅ',q3_2_ph:'ㅈㅅ',
-      q4_1_ph:'ㅎㄱ',q4_2_ph:'ㅊㄷ',
+      q3_html: `두드리면 얇게 펴지는 성질을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅅ">이라 하고, 잡아당기면 늘어나는 성질을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅅ">이라고 합니다.`,
+      q4_html: `두 가지 이상의 금속을 섞은 물질을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㄱ">이라 하고, 구리와 주석의 합금을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㄷ">이라고 합니다.`,
       q5_text:'합금을 만드는 이유와 일상생활에서 사용되는 합금의 예를 들어 설명하시오.'
     },
     answerKey: {q1:'3',q2:'1',q3_1:['연성'],q3_2:['전성'],q4_1:['합금'],q4_2:['청동']},
@@ -1463,8 +1463,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1_opts:['산성비는 이산화황, 질소 산화물 등이 빗물에 녹아 생긴다','부영양화는 물속 영양 물질 부족으로 조류가 줄어드는 현상이다','온실 효과는 이산화탄소 증가로 지구 온도가 올라가는 현상이다','녹색 화학은 오염 물질을 줄이고 에너지를 절약하는 화학이다'],
       q2_text:'각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts:['1문단 : 대기 오염과 산성비, 온실 효과','2문단 : 녹색 화학과 해결책','3문단 : 환경 오염의 발견 역사','4문단 : 수질 오염과 부영양화'],
-      q3_1_ph:'ㅅㅅㅂ',q3_2_ph:'ㅇㅅ ㅎㄱ',
-      q4_1_ph:'ㅂㅇㅇㅎ',q4_2_ph:'ㄴㅅ ㅎㅎ',
+      q3_html: `오염 물질이 녹아 산성이 된 비를 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅅㅂ">라 하고, 온실가스로 지구 온도가 올라가는 현상을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅ ㅎㄱ">라고 합니다.`,
+      q4_html: `영양 물질 과다로 조류가 번식하는 현상을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅇㅇㅎ">라 하고, 오염을 줄이고 에너지를 절약하는 화학을 <input class="inline-input" id="q4-2" type="text" placeholder="ㄴㅅ ㅎㅎ">이라고 합니다.`,
       q5_text:'환경 오염의 종류와 이를 줄이기 위한 녹색 화학의 노력을 설명하시오.'
     },
     answerKey: {q1:'2',q2:'1',q3_1:['산성비'],q3_2:['온실 효과','온실효과'],q4_1:['부영양화'],q4_2:['녹색 화학','녹색화학']},
@@ -1525,8 +1525,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1_opts:['계면활성제는 물을 좋아하는 부분과 기름을 좋아하는 부분을 가지고 있다','자외선 차단제는 피부에 수분을 공급하여 촉촉하게 유지시킨다','방부제는 화장품이나 식품에서 미생물 번식을 막는다','유화제는 물과 기름을 섞이게 하여 크림 형태의 제품을 만든다'],
       q2_text:'각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts:['1문단 : 비누와 세제, 계면활성제','2문단 : 식품 첨가물','3문단 : 세제의 발명 역사','4문단 : 화장품 속 화학 물질'],
-      q3_1_ph:'ㄱㅁㅎㅅㅈ',q3_2_ph:'ㅂㅅㅈ',
-      q4_1_ph:'ㅂㅂㅈ',q4_2_ph:'ㄱㅁㄹ',
+      q3_html: `물과 기름을 섞이게 하여 기름때를 제거하는 물질을 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅁㅎㅅㅈ">라 하고, 피부에 수분을 공급하는 물질을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㅅㅈ">라고 합니다.`,
+      q4_html: `화장품이나 식품에서 미생물 번식을 막는 물질을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅂㅈ">라 하고, 단맛을 내는 첨가물을 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅁㄹ">라고 합니다.`,
       q5_text:'계면활성제가 기름때를 제거하는 원리를 설명하시오.'
     },
     answerKey: {q1:'2',q2:'1',q3_1:['계면활성제'],q3_2:['보습제'],q4_1:['방부제'],q4_2:['감미료']},
@@ -1587,8 +1587,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1_opts:['나노 물질은 같은 물질이라도 크기에 따라 다른 성질을 보인다','수소 연료 전지는 부산물로 이산화탄소를 배출하여 환경을 오염시킨다','그래핀은 전기 전도성이 뛰어나 차세대 반도체 소재로 주목받는다','생체 적합성 소재는 인공 관절이나 치아 임플란트에 사용된다'],
       q2_text:'각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts:['1문단 : 나노 기술과 그래핀','2문단 : 의료 분야의 화학 응용','3문단 : 탄소 나노 튜브의 발명 역사','4문단 : 에너지 분야의 화학 응용'],
-      q3_1_ph:'ㅅㅅㅈ',q3_2_ph:'ㄱㄹㅍ',
-      q4_1_ph:'ㅅㅅ ㅇㄹ ㅈㅈ',q4_2_ph:'ㅅㅊ ㅈㅎㅅ',
+      q3_html: `새롭게 개발된 기능성 재료를 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅅㅈ">라 하고, 전기 전도성이 뛰어나 차세대 반도체 소재로 주목받는 물질을 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㄹㅍ">이라고 합니다.`,
+      q4_html: `수소와 산소 반응으로 전기를 생산하며 물만 배출하는 친환경 장치를 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅅ ㅇㄹ ㅈㅈ">라 하고, 인체와 조화롭게 작동하는 성질을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅊ ㅈㅎㅅ">이라고 합니다.`,
       q5_text:'미래 화학 기술이 우리 생활에 미칠 영향을 한 가지 분야를 선택하여 설명하시오.'
     },
     answerKey: {q1:'2',q2:'1',q3_1:['신소재'],q3_2:['그래핀'],q4_1:['수소 연료 전지','수소연료전지'],q4_2:['생체 적합성','생체적합성']},

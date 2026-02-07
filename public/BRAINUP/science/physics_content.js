@@ -565,11 +565,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 전압의 무게와 온도',
         '4문단 : 저항의 모양과 맛'
       ],
+      q3_html: `전자들이 도선을 따라 이동하는 것을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㄹ">라고 하며, 전류가 흐르려면 전자를 밀어주는 힘인 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇ">이 필요합니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅎ">은 전류의 흐름을 방해하는 정도를 말하며, 전압, 전류, 저항의 관계를 정리한 것을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅇ ㅂㅊ">이라 합니다.`,
       q3_1_ph: 'ㅈㄹ', q3_2_ph: 'ㅈㅇ',
       q4_1_ph: 'ㅈㅎ', q4_2_ph: 'ㅇㅇ ㅂㅊ',
       q5_text: '전압, 전류, 저항의 관계를 물의 흐름에 비유하여 설명해 보세요.'
     },
     answerKey: { q1:'2', q2:'1', q3_1:['전류'], q3_2:['전압'], q4_1:['저항'], q4_2:['옴의법칙','옴의 법칙'] },
+    evidence: {
+      q1: '220V의 전압을 가지고 있어서 작은 건전지보다 훨씬 강한 힘으로 전기를 밀어냅니다',
+      q2: '전류는 전자라는 아주 작은 입자들이 도선을 따라 이동하는 것이에요',
+      q3: '전압은 전기를 밀어내는 압력과 같아서, 전압이 높을수록 전류가 더 세게 흐릅니다',
+      q4: '이 크면 전류가 적게 흐르고, 저항이 작으면 전류가 많이 흐릅니다'
+    },
     essayKeywords: ['전류','전압','저항','물','파이프','압력','흐름','옴의 법칙','펌프','밀다','세기','양','좁다','넓다','높다','낮다','크다','작다','전자','이동','흐르다','방해','V=IR','비유','수도관','호스','밸브'],
     explain: {
       q1:'전류는 전자라는 아주 작은 입자들이 도선을 따라 이동하는 것이에요',
@@ -651,6 +659,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅈㄹ ㅇㄱ">은 전구를 한 줄로 이어서 연결하는 방식이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄹ ㅇㄱ">은 전구마다 따로 길을 만들어 연결하는 방식입니다.`,
+      q4_html: `전기 회로를 기호로 나타낸 그림을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㄹㄷ">라 하고, 각 부품을 간단히 표시하는 약속된 기호를 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㄱ ㄱㅎ">라 합니다.`,
       q3_1_ph: 'ㅈㄹ ㅇㄱ', q3_2_ph: 'ㅂㄹ ㅇㄱ',
       q4_1_ph: 'ㅎㄹㄷ', q4_2_ph: 'ㅈㄱ ㄱㅎ',
       q5_text: '집안의 전등이 직렬 연결이 아닌 병렬 연결로 되어 있는 이유를 설명해 보세요.'
@@ -737,6 +747,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `다른 극끼리 서로 끌어당기는 힘을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄹ">이라 하고, 같은 극끼리 서로 밀어내는 힘을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㄹ">이라 합니다.`,
+      q4_html: `자기장의 방향과 세기를 나타내는 가상의 선을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㄱㄹㅅ">이라 하고, 지구 내부에서 발생하는 자기장을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㄱ ㅈㄱㅈ">이라 합니다.`,
       q3_1_ph: 'ㅇㄹ', q3_2_ph: 'ㅊㄹ',
       q4_1_ph: 'ㅈㄱㄹㅅ', q4_2_ph: 'ㅈㄱ ㅈㄱㅈ',
       q5_text: '만약 지구 자기장이 사라진다면 어떤 일이 벌어질지 상상하여 설명해 보세요.'
@@ -823,6 +835,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅈㄱ">는 코일을 자석 사이에서 회전시켜 전류를 만들어내고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㄷㄱ">는 전기 에너지를 운동 에너지로 바꿉니다.`,
+      q4_html: `자기장의 변화로 전류가 발생하는 현상을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅈㄱ ㅇㄷ">라 하고, 전압을 높이거나 낮추는 장치를 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅇㄱ">라 합니다.`,
       q3_1_ph: 'ㅂㅈㄱ', q3_2_ph: 'ㅈㄷㄱ',
       q4_1_ph: 'ㅈㅈㄱ ㅇㄷ', q4_2_ph: 'ㅂㅇㄱ',
       q5_text: '만약 전자기 유도가 발견되지 않았다면 우리 생활이 어떻게 달라졌을지 상상해 보세요.'
@@ -909,6 +923,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅍ">는 진동 방향이 파동의 진행 방향과 수직인 파동이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅍ">는 진동 방향이 파동의 진행 방향과 같은 파동입니다.`,
+      q4_html: `마루에서 마루까지의 거리를 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㅈ">이라 하고, 파동이 1초에 진동하는 횟수를 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㄷㅅ">라 합니다.`,
       q3_1_ph: 'ㅎㅍ', q3_2_ph: 'ㅈㅍ',
       q4_1_ph: 'ㅍㅈ', q4_2_ph: 'ㅈㄷㅅ',
       q5_text: '소리와 빛이 각각 횡파와 종파 중 어느 것에 해당하는지 설명하고, 두 파동의 차이점을 써 보세요.'
@@ -997,6 +1013,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `빛은 균일한 매질 속에서 구부러지지 않고 똑바로 나아가는데, 이를 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅈ">이라 하고, 빛이 물체 표면에서 튕겨 나오는 현상을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㅅ">라 합니다.`,
+      q4_html: `빛이 표면에 들어오는 각도를 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅅㄱ">이라 하고, 튕겨 나가는 각도를 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅅㄱ">이라 하며, 이 둘은 항상 같습니다.`,
       q3_1_ph: 'ㅈㅈ', q3_2_ph: 'ㅂㅅ',
       q4_1_ph: 'ㅇㅅㄱ', q4_2_ph: 'ㅂㅅㄱ',
       q5_text: '거울에서 우리 모습이 보이는 원리를 빛의 반사와 관련지어 설명해 보세요.'
@@ -1083,6 +1101,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅂㄹ ㄹㅈ">는 가운데가 두꺼워 빛을 모으고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅁ ㄹㅈ">는 가운데가 얇아 빛을 퍼뜨립니다.`,
+      q4_html: `눈의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅈㅊ">는 볼록 렌즈 역할을 하여 빛을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅁ">에 모아 상을 맺게 합니다.`,
       q3_1_ph: 'ㅂㄹ ㄹㅈ', q3_2_ph: 'ㅇㅁ ㄹㅈ',
       q4_1_ph: 'ㅅㅈㅊ', q4_2_ph: 'ㅁㅁ',
       q5_text: '물속에 있는 빨대가 꺾여 보이는 이유를 빛의 굴절과 관련지어 설명해 보세요.'
@@ -1169,6 +1189,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄴㅇ">는 소리의 높고 낮음이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㄹ">는 소리의 크고 작음입니다.`,
+      q4_html: `소리가 벽이나 산에 부딪혀 되돌아오는 현상을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㅇㄹ">라 하고, 음파를 이용해 거리를 측정하는 장치를 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅍㅌㅈㄱ">라 합니다.`,
       q3_1_ph: 'ㅇㄴㅇ', q3_2_ph: 'ㅇㄹ',
       q4_1_ph: 'ㅁㅇㄹ', q4_2_ph: 'ㅇㅍㅌㅈㄱ',
       q5_text: '산에서 "야호!"라고 외치면 메아리가 들리는 원리를 설명해 보세요.'
@@ -1255,6 +1277,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅈㄷ">는 물질을 통해 열이 전달되는 현상이고, <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㄹ">는 액체나 기체가 움직이며 열을 옮기는 현상입니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅅ">는 물질 없이 전자기파로 열이 전달되는 현상이고, <input class="inline-input" id="q4-2" type="text" placeholder="ㄷㅇㅈ">는 열의 이동을 막는 재료입니다.`,
       q3_1_ph: 'ㅈㄷ', q3_2_ph: 'ㄷㄹ',
       q4_1_ph: 'ㅂㅅ', q4_2_ph: 'ㄷㅇㅈ',
       q5_text: '보온병이 음료를 오래 따뜻하게 유지하는 원리를 열의 이동 방법과 관련지어 설명해 보세요.'
@@ -1341,6 +1365,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `움직이는 물체가 가진 에너지를 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄷ ㅇㄴㅈ">라 하고, 높은 곳에 있는 물체가 가진 에너지를 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅊ ㅇㄴㅈ">라 합니다.`,
+      q4_html: `에너지가 한 형태에서 다른 형태로 바뀌는 것을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㄴㅈ ㅈㅎ">이라 하고, 투입 에너지 대비 유용한 에너지의 비율을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㅇ">이라 합니다.`,
       q3_1_ph: 'ㅇㄷ ㅇㄴㅈ', q3_2_ph: 'ㅇㅊ ㅇㄴㅈ',
       q4_1_ph: 'ㅇㄴㅈ ㅈㅎ', q4_2_ph: 'ㅎㅇ',
       q5_text: '롤러코스터가 높은 곳에서 내려올 때 에너지가 어떻게 변하는지 설명해 보세요.'
@@ -1427,6 +1453,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `원자의 중심에는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅈㅎ">이 있고, 그 주위를 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅈ">가 돌고 있습니다.`,
+      q4_html: `원자들이 결합하면 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅈ">가 되고, 원자들이 서로 연결되는 것을 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅎ">이라 합니다.`,
       q3_1_ph: 'ㅇㅈㅎ', q3_2_ph: 'ㅈㅈ',
       q4_1_ph: 'ㅂㅈ', q4_2_ph: 'ㄱㅎ',
       q5_text: '원자 대부분이 빈 공간인데도 우리가 물체를 통과할 수 없는 이유를 설명해 보세요.'
@@ -1513,6 +1541,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
+      q3_html: `물이 가하는 압력을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅇ">이라 하고, 공기가 가하는 압력을 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅇ">이라 합니다.`,
+      q4_html: `유체가 물체를 위로 밀어 올리는 힘을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㄹ">이라 하고, 단위 부피당 질량을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㄷ">라 합니다.`,
       q3_1_ph: 'ㅅㅇ', q3_2_ph: 'ㄱㅇ',
       q4_1_ph: 'ㅂㄹ', q4_2_ph: 'ㅁㄷ',
       q5_text: '스키가 눈에 잘 빠지지 않는 이유를 압력과 관련지어 설명해 보세요.'
@@ -1599,8 +1629,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
-      q3_1_ph: 'ㅎㅅ', q3_2_ph: 'ㄱㅂㅎ',
-      q4_1_ph: 'ㅍㅈ', q4_2_ph: 'ㅈㅈ',
+      q3_html: `전선의 피복이 벗겨져 전선끼리 직접 닿아 큰 전류가 흐르는 현상을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅅ">이라 하고, 하나의 콘센트에 너무 많은 전기 기구를 연결하면 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅂㅎ">가 발생합니다.`,
+      q4_html: `과전류가 흐르면 녹아서 회로를 끊어주는 장치를 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㅈ">라고 하고, 전기 기구의 금속 부분을 땅과 연결하는 것을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅈ">라고 합니다.`,
       q5_text: '문어발식 콘센트 사용이 위험한 이유를 전기 안전과 관련지어 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '1', q3_1: ['합선'], q3_2: ['과부하'], q4_1: ['퓨즈'], q4_2: ['접지'] },
@@ -1685,8 +1715,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
-      q3_1_ph: 'ㅎㅇㅎ', q3_2_ph: 'ㅍㅁ ㅇㄷ',
-      q4_1_ph: 'ㅇㅎ', q4_2_ph: 'ㅍㅊ',
+      q3_html: `별은 중심부에서 수소 원자핵이 합쳐져 헬륨으로 바뀌는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅇㅎ"> 반응으로 에너지를 만들며, 별의 색깔은 <input class="inline-input" id="q3-2" type="text" placeholder="ㅍㅁ ㅇㄷ">에 따라 달라집니다.`,
+      q4_html: `별들이 모여 이룬 거대한 집단을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅎ">라 하고, 빅뱅 이론에 따르면 우주는 지금도 계속 <input class="inline-input" id="q4-2" type="text" placeholder="ㅍㅊ">하고 있습니다.`,
       q5_text: '별이 다양한 색깔로 보이는 이유를 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '1', q3_1: ['핵융합'], q3_2: ['표면 온도', '표면온도'], q4_1: ['은하'], q4_2: ['팽창'] },
@@ -1771,8 +1801,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 무게와 온도',
         '4문단 : 모양과 크기'
       ],
-      q3_1_ph: 'ㅂㄷㅊ', q3_2_ph: 'ㄹㅇㅈ',
-      q4_1_ph: 'ㅋㅂㅌ', q4_2_ph: 'ㅇㄱㅈㄴ',
+      q3_html: `전기 전도성을 조절할 수 있는 물질인 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㄷㅊ">는 거의 모든 전자 기기에 사용되며, 빛을 한 방향으로 모아 강하게 만든 <input class="inline-input" id="q3-2" type="text" placeholder="ㄹㅇㅈ">는 의료와 통신에 쓰입니다.`,
+      q4_html: `양자 컴퓨터는 0과 1을 동시에 가질 수 있는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅋㅂㅌ">를 사용하고, 물리 법칙을 스스로 발견하는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄱㅈㄴ">이 과학 연구에 활용됩니다.`,
       q5_text: '물리학이 미래 기술 발전에 중요한 이유를 예를 들어 설명해 보세요.'
     },
     answerKey: { q1: '3', q2: '1', q3_1: ['반도체'], q3_2: ['레이저'], q4_1: ['큐비트'], q4_2: ['인공지능'] },

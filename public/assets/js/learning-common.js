@@ -1681,6 +1681,9 @@
     // 창의활동 버튼 초기화
     initCreativeButtons();
 
+    // 본문학습 & 어휘학습 입력 검증 초기화
+    initInputValidation();
+
     // 시작: 빈 레이더 (서버에서 복원한 경우 건너뜀)
     if (!hasServerReadingData) {
       drawRadarChart({ literal:0, structural:0, lexical:0, inferential:0, critical:0 });
@@ -2813,17 +2816,166 @@
 
   /* ===== 창의활동 제출 ===== */
   let creativeBtn, creativeCheckBtn, creativeTextarea;
+  const MIN_CHAR_COUNT = 150; // 최소 글자수
+
+  // 예쁜 커스텀 알림 팝업
+  function showCreativeAlert(message) {
+    // 이미 있으면 제거
+    const existing = document.getElementById('creative-alert-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'creative-alert-overlay';
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex; align-items: center;
+      justify-content: center; z-index: 99999;
+    `;
+
+    const box = document.createElement('div');
+    box.style.cssText = `
+      background: #fffdf8; border-radius: 16px; padding: 28px 36px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25); text-align: center;
+      max-width: 320px; animation: popIn 0.25s ease-out;
+    `;
+
+    box.innerHTML = `
+      <div style="font-size: 40px; margin-bottom: 12px;">✏️</div>
+      <div style="font-size: 17px; color: #333; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">${message}</div>
+      <button id="creative-alert-ok" style="
+        background: linear-gradient(135deg, #d16355 0%, #c04a3b 100%);
+        color: #fff; border: none; border-radius: 10px;
+        padding: 12px 32px; font-size: 15px; font-weight: 600;
+        cursor: pointer; box-shadow: 0 2px 8px rgba(193,74,59,0.3);
+      ">확인</button>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // 팝업 애니메이션 스타일 추가
+    if (!document.getElementById('creative-alert-style')) {
+      const style = document.createElement('style');
+      style.id = 'creative-alert-style';
+      style.textContent = `
+        @keyframes popIn {
+          0% { transform: scale(0.8); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // 확인 버튼 클릭 시 닫기
+    document.getElementById('creative-alert-ok').addEventListener('click', () => {
+      overlay.remove();
+      if (creativeTextarea) creativeTextarea.focus();
+    });
+
+    // 배경 클릭 시 닫기
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.remove();
+        if (creativeTextarea) creativeTextarea.focus();
+      }
+    });
+  }
+
+  // 전역으로 노출
+  window.showCreativeAlert = showCreativeAlert;
+
+  /* ===== 본문학습 & 어휘학습 입력 검증 ===== */
+  function initInputValidation() {
+    // 본문학습 채점 버튼 (save-progress-btn)
+    const readingBtn = document.getElementById('save-progress-btn');
+    if (readingBtn && !readingBtn._hasValidation) {
+      readingBtn._hasValidation = true;
+      readingBtn.addEventListener('click', (e) => {
+        // 객관식 체크 (q1, q2)
+        const q1 = document.querySelector('input[name="q1"]:checked');
+        const q2 = document.querySelector('input[name="q2"]:checked');
+
+        // 빈칸 체크 (q3, q4)
+        const q3_1 = document.getElementById('q3-1')?.value?.trim();
+        const q3_2 = document.getElementById('q3-2')?.value?.trim();
+        const q4_1 = document.getElementById('q4-1')?.value?.trim();
+        const q4_2 = document.getElementById('q4-2')?.value?.trim();
+
+        // 서술형 체크 (q5)
+        const q5 = document.getElementById('q5')?.value?.trim();
+
+        // 모든 문제가 입력되었는지 확인
+        if (!q1 || !q2 || !q3_1 || !q3_2 || !q4_1 || !q4_2 || !q5) {
+          e.stopImmediatePropagation();
+          showCreativeAlert('모든 문제의 정답을 입력해주세요.');
+          return false;
+        }
+      }, true); // capture phase로 먼저 실행
+    }
+
+    // 어휘학습 채점 버튼 (vocab-save)
+    const vocabBtn = document.getElementById('vocab-save');
+    if (vocabBtn && !vocabBtn._hasValidation) {
+      vocabBtn._hasValidation = true;
+      vocabBtn.addEventListener('click', (e) => {
+        const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+        let hasEmpty = false;
+
+        blanks.forEach(bw => {
+          const input = bw.querySelector('.blank-input');
+          if (input && !input.value.trim()) hasEmpty = true;
+        });
+
+        if (hasEmpty) {
+          e.stopImmediatePropagation();
+          showCreativeAlert('모든 어휘를 입력해주세요.');
+          return false;
+        }
+      }, true); // capture phase로 먼저 실행
+    }
+  }
 
   function initCreativeButtons() {
     creativeBtn = document.getElementById('creative-submit-btn');
     creativeCheckBtn = document.getElementById('creative-check-btn');
     creativeTextarea = document.getElementById('creative-input');
 
-    // 입력할 때마다 자동 저장
+    // 글자수 카운터 동적 생성
+    if (creativeTextarea && !document.getElementById('creative-char-counter')) {
+      const counterEl = document.createElement('div');
+      counterEl.id = 'creative-char-counter';
+      counterEl.style.cssText = 'text-align: right; font-size: 14px; color: #888; margin-top: 8px; margin-bottom: 4px;';
+      counterEl.innerHTML = '<span id="current-char-count">0</span> / <span style="color: #d16355; font-weight: 600;">' + MIN_CHAR_COUNT + '</span>자';
+      creativeTextarea.parentNode.insertBefore(counterEl, creativeTextarea.nextSibling);
+    }
+
+    // 글자수 업데이트 함수
+    function updateCharCount() {
+      const countEl = document.getElementById('current-char-count');
+      const counterEl = document.getElementById('creative-char-counter');
+      if (!countEl || !creativeTextarea) return;
+
+      const charCount = creativeTextarea.value.length;
+      countEl.textContent = charCount;
+
+      // 150자 이상이면 초록색, 미만이면 빨간색
+      if (charCount >= MIN_CHAR_COUNT) {
+        countEl.style.color = '#3a8755';
+        countEl.style.fontWeight = '600';
+      } else {
+        countEl.style.color = '#d16355';
+        countEl.style.fontWeight = '400';
+      }
+    }
+
+    // 입력할 때마다 자동 저장 + 글자수 업데이트
     if (creativeTextarea) {
       creativeTextarea.addEventListener('input', () => {
         saveCreativeState();
+        updateCharCount();
       });
+      // 초기 글자수 표시
+      updateCharCount();
     }
 
     // 맞춤법 검사 + AI 다듬기 버튼 클릭 시
@@ -2958,10 +3110,21 @@
     }
 
     if (creativeBtn) {
+      // 기존 이벤트 리스너 제거를 위해 버튼 복제 후 교체
+      const newBtn = creativeBtn.cloneNode(true);
+      creativeBtn.parentNode.replaceChild(newBtn, creativeBtn);
+      creativeBtn = newBtn;
+
       creativeBtn.addEventListener('click', async () => {
         if (!ensureStudentInfo()) { showSubmitOverlay('학년과 이름을 입력해주세요'); return; }
 
         const text = creativeTextarea ? creativeTextarea.value : '';
+
+        // 150자 미만 체크
+        if (text.length < MIN_CHAR_COUNT) {
+          showCreativeAlert(MIN_CHAR_COUNT + '자 이상 글쓰기를 완료해주세요.');
+          return;
+        }
 
         // localStorage 저장
         saveCreativeState();
