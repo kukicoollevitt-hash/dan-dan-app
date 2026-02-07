@@ -2945,7 +2945,7 @@
       const counterEl = document.createElement('div');
       counterEl.id = 'creative-char-counter';
       counterEl.style.cssText = 'text-align: right; font-size: 14px; color: #888; margin-top: 8px; margin-bottom: 4px;';
-      counterEl.innerHTML = '<span id="current-char-count">0</span> / <span style="color: #d16355; font-weight: 600;">' + MIN_CHAR_COUNT + '</span>자';
+      counterEl.innerHTML = '<span id="current-char-count">0</span> / <span style="color: #d16355; font-weight: 600;">' + MIN_CHAR_COUNT + '자 이상 입력해주세요</span>';
       creativeTextarea.parentNode.insertBefore(counterEl, creativeTextarea.nextSibling);
     }
 

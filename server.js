@@ -48,6 +48,7 @@ const MegaphoneMessage = require("./models/MegaphoneMessage");
 const Notice = require("./models/Notice");
 const SnackOrder = require("./models/SnackOrder");
 const SentenceRead = require("./models/SentenceRead");
+const SpeedVocabKing = require("./models/SpeedVocabKing");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -29407,6 +29408,86 @@ app.post("/api/consultation-inquiry", async (req, res) => {
   } catch (err) {
     console.error("상담문의 메일 발송 오류:", err);
     res.status(500).json({ success: false, error: "메일 발송에 실패했습니다." });
+  }
+});
+
+// ===== 월간 스피드 어휘왕 API =====
+
+// 중복 참가 체크 API (같은 이벤트 + 같은 사람 = 중복 참가 불가)
+app.get('/api/speed-vocab-king/check-event', async (req, res) => {
+  try {
+    const { eventName, grade, name, phone } = req.query;
+
+    if (!eventName || !grade || !name || !phone) {
+      return res.status(400).json({ ok: false, message: '필수 정보가 필요합니다.' });
+    }
+
+    // 같은 이벤트명 + 같은 사람(학년/이름/전화번호)으로 이미 참가했는지 확인
+    const existing = await SpeedVocabKing.findOne({
+      eventName,
+      grade,
+      name,
+      phone
+    }).lean();
+
+    res.json({
+      ok: true,
+      exists: !!existing,
+      message: existing ? '이미 해당 이벤트에 참가하셨습니다. 다른 이벤트명을 입력해주세요.' : ''
+    });
+  } catch (err) {
+    console.error('중복 참가 체크 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 결과 저장 API
+app.post('/api/speed-vocab-king/save', async (req, res) => {
+  try {
+    const { eventName, grade, name, phone, correctCount, totalTime, totalQuestions } = req.body;
+
+    if (!eventName || !grade || !name || !phone) {
+      return res.status(400).json({ ok: false, message: '필수 정보가 누락되었습니다.' });
+    }
+
+    const result = new SpeedVocabKing({
+      eventName,
+      grade,
+      name,
+      phone,
+      correctCount: correctCount || 0,
+      totalTime: totalTime || 0,
+      totalQuestions: totalQuestions || 10
+    });
+
+    await result.save();
+
+    res.json({ ok: true, message: '결과가 저장되었습니다.' });
+  } catch (err) {
+    console.error('스피드 어휘왕 결과 저장 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 순위 조회 API
+app.get('/api/speed-vocab-king/ranking', async (req, res) => {
+  try {
+    const { eventName } = req.query;
+
+    if (!eventName) {
+      return res.status(400).json({ ok: false, message: '이벤트명이 필요합니다.' });
+    }
+
+    // 이벤트별 순위 조회 (맞힌 개수 내림차순, 같으면 시간 오름차순)
+    const ranking = await SpeedVocabKing.find({ eventName })
+      .sort({ correctCount: -1, totalTime: 1 })
+      .limit(100)
+      .lean();
+
+    res.json({ ok: true, ranking });
+  } catch (err) {
+    console.error('스피드 어휘왕 순위 조회 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
   }
 });
 
