@@ -29369,18 +29369,49 @@ app.get('/api/reading-time/:studentKey/:unitKey', async (req, res) => {
 // ===== 설명회 상담문의 API =====
 app.post("/api/consultation-inquiry", async (req, res) => {
   try {
-    const { region, name, phone, purpose } = req.body;
+    const { region, name, phone, purpose, sessionDate, sessionTime, sessionPurpose } = req.body;
 
     if (!region || !name || !phone) {
       return res.status(400).json({ success: false, error: "필수 항목을 입력해주세요." });
     }
 
+    // 목적에 따라 제목 변경
+    let subjectPrefix = '브레인문해원 상담문의';
+    let titleEmoji = '📩 브레인문해원 상담문의';
+    if (purpose === '프리미엄 신청') {
+      subjectPrefix = '프리미엄 신청';
+      titleEmoji = '🏆 프리미엄 신청';
+    } else if (purpose === '스탠다드 신청') {
+      subjectPrefix = '스탠다드 신청';
+      titleEmoji = '📘 스탠다드 신청';
+    } else if (purpose === '설명회 신청') {
+      subjectPrefix = '설명회 신청';
+      titleEmoji = '📅 설명회 신청';
+    }
+
+    // 설명회 신청일 경우 일시 정보 및 도입 목적 추가
+    let sessionInfo = '';
+    if (purpose === '설명회 신청' && sessionDate && sessionTime) {
+      sessionInfo = `
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">희망 일시</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${sessionDate} ${sessionTime}</td>
+          </tr>`;
+      if (sessionPurpose) {
+        sessionInfo += `
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">도입 목적</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${sessionPurpose}</td>
+          </tr>`;
+      }
+    }
+
     const mailOptions = {
       from: process.env.NAVER_EMAIL,
       to: process.env.NAVER_EMAIL,
-      subject: `[설명회 상담문의] ${name}님 - ${region}`,
+      subject: `[${subjectPrefix}] ${name}님 - ${region}`,
       html: `
-        <h2>📩 설명회 상담문의</h2>
+        <h2>${titleEmoji}</h2>
         <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
           <tr>
             <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">지역</td>
@@ -29393,7 +29424,7 @@ app.post("/api/consultation-inquiry", async (req, res) => {
           <tr>
             <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연락처</td>
             <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
-          </tr>
+          </tr>${sessionInfo}
           <tr>
             <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">목적</td>
             <td style="padding: 10px; border: 1px solid #ddd;">${purpose || '미선택'}</td>
@@ -29405,9 +29436,111 @@ app.post("/api/consultation-inquiry", async (req, res) => {
 
     await transporter.sendMail(mailOptions);
     console.log(`✅ 상담문의 메일 발송: ${name} (${region})`);
+
+    // 설명회 신청일 경우 신청 인원 저장
+    if (purpose === '설명회 신청' && sessionDate && sessionTime) {
+      const db = mongoose.connection.db;
+      const sessionCollection = db.collection('session_applications');
+
+      await sessionCollection.insertOne({
+        region,
+        name,
+        phone,
+        sessionDate,
+        sessionTime,
+        sessionPurpose: sessionPurpose || '',
+        createdAt: new Date()
+      });
+      console.log(`✅ 설명회 신청 저장: ${name} - ${sessionDate} ${sessionTime}`);
+    }
+
     res.json({ success: true, message: "상담 문의가 접수되었습니다." });
   } catch (err) {
     console.error("상담문의 메일 발송 오류:", err);
+    res.status(500).json({ success: false, error: "메일 발송에 실패했습니다." });
+  }
+});
+
+// ===== 설명회 신청 인원 조회 API =====
+app.get("/api/session-count", async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    const sessionCollection = db.collection('session_applications');
+
+    // 각 일시별 신청 인원 집계
+    const counts = await sessionCollection.aggregate([
+      {
+        $group: {
+          _id: { date: "$sessionDate", time: "$sessionTime" },
+          count: { $sum: 1 }
+        }
+      }
+    ]).toArray();
+
+    // 결과를 쉽게 사용할 수 있는 형태로 변환
+    const result = {};
+    counts.forEach(item => {
+      const key = `${item._id.date}_${item._id.time}`;
+      result[key] = item.count;
+    });
+
+    res.json({ success: true, counts: result });
+  } catch (err) {
+    console.error("설명회 신청 인원 조회 오류:", err);
+    res.status(500).json({ success: false, error: "조회에 실패했습니다." });
+  }
+});
+
+// ===== CS 요청 API =====
+app.post("/api/cs-request", async (req, res) => {
+  try {
+    const { academy, name, phone, student, title, message } = req.body;
+
+    if (!academy || !name || !phone || !student || !title || !message) {
+      return res.status(400).json({ success: false, error: "필수 항목을 입력해주세요." });
+    }
+
+    const mailOptions = {
+      from: process.env.NAVER_EMAIL,
+      to: process.env.NAVER_EMAIL,
+      subject: `[CS 요청] ${academy} - ${title}`,
+      html: `
+        <h2>🛠️ CS 요청</h2>
+        <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">학원명</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${academy}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">성함</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연락처</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">해당학생</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${student}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">제목</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${title}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">메시지</td>
+            <td style="padding: 10px; border: 1px solid #ddd; white-space: pre-wrap;">${message}</td>
+          </tr>
+        </table>
+        <p style="color: #888; margin-top: 20px;">전송 시간: ${new Date().toLocaleString('ko-KR')}</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ CS 요청 메일 발송: ${academy} - ${title}`);
+    res.json({ success: true, message: "요청이 접수되었습니다." });
+  } catch (err) {
+    console.error("CS 요청 메일 발송 오류:", err);
     res.status(500).json({ success: false, error: "메일 발송에 실패했습니다." });
   }
 });
