@@ -287,6 +287,40 @@ app.post("/academy-admin-register", async (req, res) => {
     await newAdmin.save();
     console.log("✅ 학원 관리자 회원가입 완료 (승인 대기):", academyName, name);
 
+    // 회원가입 알림 이메일 발송
+    try {
+      const mailOptions = {
+        from: process.env.NAVER_EMAIL,
+        to: "kukikukilove@naver.com",
+        subject: `[학원용 선생님 회원가입] ${academyName} - ${name}`,
+        html: `
+          <h2>👨‍🏫 학원용 선생님 회원가입 알림</h2>
+          <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold; width: 100px;">학원명</td>
+              <td style="padding: 10px;">${academyName}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">이름</td>
+              <td style="padding: 10px;">${name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">전화번호</td>
+              <td style="padding: 10px;">${phone}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">가입일시</td>
+              <td style="padding: 10px;">${new Date().toLocaleString('ko-KR')}</td>
+            </tr>
+          </table>
+        `
+      };
+      await transporter.sendMail(mailOptions);
+      console.log("📧 학원용 선생님 회원가입 알림 이메일 발송 완료");
+    } catch (emailErr) {
+      console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
+    }
+
     return res.redirect("/academy-admin-login?success=registered");
   } catch (err) {
     console.error("❌ /academy-admin-register 에러:", err);
@@ -410,7 +444,53 @@ return res.redirect("/?loginError=pending");
 
     console.log("✅ [POST] 회원가입 DB 저장 완료:", created.name);
 
-    // 4) 회원가입 후 이동
+    // 4) 회원가입 알림 이메일 발송
+    try {
+      const mailOptions = {
+        from: process.env.NAVER_EMAIL,
+        to: "kukikukilove@naver.com",
+        subject: `[학교용 회원가입] ${academyName} - ${name}`,
+        html: `
+          <h2>🏫 학교용 회원가입 알림</h2>
+          <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold; width: 100px;">학교명</td>
+              <td style="padding: 10px;">${academyName}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">학년</td>
+              <td style="padding: 10px;">${grade}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">반</td>
+              <td style="padding: 10px;">${classNum || '-'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">번호</td>
+              <td style="padding: 10px;">${studentNum || '-'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">이름</td>
+              <td style="padding: 10px;">${name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">전화번호</td>
+              <td style="padding: 10px;">${cleanPhone}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">가입일시</td>
+              <td style="padding: 10px;">${new Date().toLocaleString('ko-KR')}</td>
+            </tr>
+          </table>
+        `
+      };
+      await transporter.sendMail(mailOptions);
+      console.log("📧 학교용 회원가입 알림 이메일 발송 완료");
+    } catch (emailErr) {
+      console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
+    }
+
+    // 5) 회원가입 후 이동
     //  - 지금 구조에서는 '승인 대기' 안내를 보여주는 게 자연스러우니까
     //    /login 으로 보내면서 pending 팝업 띄우도록 함
 return res.redirect("/brain_landing.html?signup=pending");
@@ -2012,6 +2092,53 @@ app.post("/admin-signup", async (req, res) => {
       name,
       isSuper ? "(슈퍼관리자)" : ""
     );
+
+    // 회원가입 알림 이메일 발송
+    try {
+      const mailOptions = {
+        from: process.env.NAVER_EMAIL,
+        to: "kukikukilove@naver.com",
+        subject: `[학교용 선생님 회원가입] ${academyName} - ${name}`,
+        html: `
+          <h2>👨‍🏫 학교용 선생님 회원가입 알림</h2>
+          <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold; width: 100px;">학교명</td>
+              <td style="padding: 10px;">${academyName}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">학년</td>
+              <td style="padding: 10px;">${grade}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">반</td>
+              <td style="padding: 10px;">${classNum}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">이름</td>
+              <td style="padding: 10px;">${name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">생년월일</td>
+              <td style="padding: 10px;">${birth}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">전화번호</td>
+              <td style="padding: 10px;">${phone}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">가입일시</td>
+              <td style="padding: 10px;">${new Date().toLocaleString('ko-KR')}</td>
+            </tr>
+          </table>
+        `
+      };
+      await transporter.sendMail(mailOptions);
+      console.log("📧 학교용 선생님 회원가입 알림 이메일 발송 완료");
+    } catch (emailErr) {
+      console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
+    }
+
     return res.redirect("/admin-login");
   } catch (err) {
     console.error("❌ /admin-signup 에러:", err);
@@ -19845,7 +19972,45 @@ app.post("/academy-register", async (req, res) => {
 
     console.log("✅ [POST] 학원용 회원가입 DB 저장 완료:", created.name, created.grade);
 
-    // 4) 회원가입 후 승인 대기 안내
+    // 4) 회원가입 알림 이메일 발송
+    try {
+      const mailOptions = {
+        from: process.env.NAVER_EMAIL,
+        to: "kukikukilove@naver.com",
+        subject: `[학원용 회원가입] ${academyName} - ${name}`,
+        html: `
+          <h2>🏫 학원용 회원가입 알림</h2>
+          <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold; width: 100px;">학원명</td>
+              <td style="padding: 10px;">${academyName}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">학년</td>
+              <td style="padding: 10px;">${grade}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">이름</td>
+              <td style="padding: 10px;">${name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px; font-weight: bold;">전화번호</td>
+              <td style="padding: 10px;">${cleanPhone}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">가입일시</td>
+              <td style="padding: 10px;">${new Date().toLocaleString('ko-KR')}</td>
+            </tr>
+          </table>
+        `
+      };
+      await transporter.sendMail(mailOptions);
+      console.log("📧 학원용 회원가입 알림 이메일 발송 완료");
+    } catch (emailErr) {
+      console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
+    }
+
+    // 5) 회원가입 후 승인 대기 안내
     return res.redirect("/academy.html?signup=pending");
   } catch (err) {
     console.error("❌ /academy-register 처리 중 오류:", err);
