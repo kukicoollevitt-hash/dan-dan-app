@@ -1108,8 +1108,13 @@
         const TOTAL_QUESTIONS = 8;
         const POINTS_PER_QUESTION = 12.5;
 
-        // localStorage 키
-        const LS_KEY = (key) => `supp_speech_tea_${key}`;
+        // 현재 사용자 ID (사용자별 데이터 분리)
+        let currentUserId = '';
+
+        // localStorage 키 (사용자별 분리)
+        function LS_KEY(key) {
+            return `supp_speech_tea_${currentUserId}_${key}`;
+        }
 
         // 정답 데이터
         const correctAnswers = {
@@ -1621,7 +1626,7 @@
         }
 
         // 선택지 클릭
-        function selectChoice(questionNum, choiceNum) {
+        function selectChoice(questionNum, choiceNum, skipServerSave = false) {
             if (isGraded) return;
 
             const questionEl = document.querySelector(`.question[data-question="${questionNum}"]`);
@@ -1634,7 +1639,40 @@
             }
 
             userAnswers[questionNum] = choiceNum;
-            localStorage.setItem(LS_KEY('answers'), JSON.stringify(userAnswers));
+            localStorage.setItem(LS_KEY(`question_${questionNum}`), choiceNum);
+
+            // 서버에 답안 저장 (복원 시에는 스킵)
+            if (!skipServerSave) {
+                saveAnswerToServer(questionNum, choiceNum);
+            }
+        }
+
+        // 서버에 답안 저장
+        async function saveAnswerToServer(questionNumber, answer) {
+            try {
+                const userData = localStorage.getItem('mockExamUser');
+                let userInfo = {};
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userInfo = {
+                        userId: user._id,
+                        phone: user.phone
+                    };
+                }
+
+                await fetch('/api/supplement-result/save-answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        questionNumber,
+                        answer,
+                        ...userInfo
+                    })
+                });
+            } catch (err) {
+                console.error('답안 저장 오류:', err);
+            }
         }
 
         // 채점
@@ -1811,7 +1849,7 @@
         }
 
         // 다시풀기
-        function resetExam() {
+        async function resetExam() {
             if (!confirm('모든 답안을 초기화하고 다시 풀겠습니까?')) return;
 
             userAnswers = {};
@@ -1830,9 +1868,31 @@
 
             document.getElementById('resultBanner').style.display = 'none';
 
-            localStorage.removeItem(LS_KEY('answers'));
-            localStorage.removeItem(LS_KEY('graded'));
-            localStorage.removeItem(LS_KEY('score'));
+            // localStorage 초기화
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                localStorage.removeItem(LS_KEY(`question_${i}`));
+            }
+            localStorage.removeItem(LS_KEY('isGraded'));
+
+            // 서버 데이터 삭제
+            try {
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`, {
+                    method: 'DELETE'
+                });
+            } catch (err) {
+                console.error('서버 데이터 삭제 오류:', err);
+            }
+
+            // 페이지 새로고침
+            window.location.reload();
         }
 
         // 뒤로가기
@@ -1840,50 +1900,73 @@
             window.location.href = '/mock_exam_dashboard.html';
         }
 
-        // 학생 정보 로드
-        async function loadStudentInfo() {
-            try {
-                const response = await fetch('/api/session');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.loggedIn && data.user) {
-                        document.getElementById('studentSchool').textContent = data.user.school || '-';
-                        document.getElementById('studentGrade').textContent = data.user.grade || '-';
-                        document.getElementById('studentName').textContent = data.user.name || '-';
-                    }
-                }
-            } catch (error) {
-                console.error('학생 정보 로드 실패:', error);
+        // ===== 초기화 =====
+        async function init() {
+            // 사용자 정보 로드
+            const userData = localStorage.getItem('mockExamUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                currentUserId = user._id || user.phone || ''; // 사용자 ID 설정
+                document.getElementById('studentSchool').textContent = user.school || '-';
+                document.getElementById('studentGrade').textContent = user.grade || '-';
+                document.getElementById('studentName').textContent = user.name || '-';
             }
-        }
 
-        // 저장된 답안 복원
-        function restoreAnswers() {
-            const saved = localStorage.getItem(LS_KEY('answers'));
-            if (saved) {
-                userAnswers = JSON.parse(saved);
-                for (const [q, choice] of Object.entries(userAnswers)) {
-                    const questionEl = document.querySelector(`.question[data-question="${q}"]`);
-                    if (questionEl) {
-                        const choiceEl = questionEl.querySelector(`.choice[data-choice="${choice}"]`);
-                        if (choiceEl) {
-                            choiceEl.classList.add('selected');
+            // 서버에서 저장된 답안 로드
+            try {
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData2 = localStorage.getItem('mockExamUser');
+                if (userData2) {
+                    const user = JSON.parse(userData2);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                const response = await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`);
+                const data = await response.json();
+
+                if (data.ok && data.result) {
+                    const serverResult = data.result;
+
+                    // 서버에서 답안 복원
+                    if (serverResult.answers) {
+                        for (const [questionId, answer] of Object.entries(serverResult.answers)) {
+                            localStorage.setItem(LS_KEY(`question_${questionId}`), answer);
+                            selectChoice(parseInt(questionId), answer, true);
+                        }
+                    }
+
+                    // 이미 채점 완료된 경우 채점 결과 표시
+                    if (serverResult.isGraded) {
+                        setTimeout(() => {
+                            gradeExam(true);
+                        }, 100);
+                    }
+                } else {
+                    // 서버에 데이터가 없으면 localStorage에서 복원
+                    for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                        const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                        if (saved) {
+                            selectChoice(i, parseInt(saved), true);
                         }
                     }
                 }
+            } catch (err) {
+                console.error('서버 데이터 로드 오류:', err);
+                // 서버 오류 시 localStorage에서 복원
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        selectChoice(i, parseInt(saved), true);
+                    }
+                }
             }
 
-            if (localStorage.getItem(LS_KEY('graded')) === 'true') {
-                gradeExam(true);  // skipServerSave = true (복원 시)
-            }
+            // 펜 도구 초기화
+            initDrawingCanvas();
         }
 
-        // 초기화
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStudentInfo();
-            restoreAnswers();
-            initDrawingCanvas();
-        });
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>

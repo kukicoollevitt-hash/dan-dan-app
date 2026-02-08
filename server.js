@@ -20322,19 +20322,24 @@ app.post("/api/polish-writing", async (req, res) => {
         {
           role: "system",
           content: `당신은 초등학생~중학생의 글쓰기를 도와주는 친절한 AI 선생님입니다.
-학생이 작성한 글을 다듬어주세요. 다음 사항을 지켜주세요:
+학생이 작성한 글을 다듬고, 더 풍성하게 확장해주세요. 다음 사항을 지켜주세요:
 
 1. 맞춤법과 띄어쓰기 오류를 수정합니다
 2. 문장이 자연스럽게 읽히도록 개선합니다
 3. 학생의 원래 의도와 표현을 최대한 살립니다
 4. 너무 어려운 단어는 피하고 학생 수준에 맞게 유지합니다
 5. 글의 구조가 논리적으로 흐르도록 개선합니다
+6. **중요: 학생의 글을 더 풍성하고 구체적으로 확장합니다**
+   - 짧은 문장은 이유, 예시, 감정, 구체적 상황을 덧붙여 확장합니다
+   - "~하고 싶다" → "왜 그렇게 하고 싶은지", "어떻게 할 것인지" 등을 추가합니다
+   - 단, 학생의 원래 생각을 크게 벗어나지 않도록 주의합니다
+   - 확장된 글은 원래 글의 1.5~2배 정도 분량이 되도록 합니다
 
 반드시 다음 JSON 형식으로만 응답하세요:
 {
-  "polished_text": "다듬어진 글 (전체 텍스트)",
+  "polished_text": "다듬어지고 확장된 글 (전체 텍스트)",
   "changes": [
-    {"before": "원래 표현", "after": "수정된 표현", "reason": "수정 이유"}
+    {"before": "원래 표현", "after": "수정/확장된 표현", "reason": "수정 또는 확장 이유"}
   ],
   "feedback": "전체적인 피드백 (칭찬과 개선점 포함, 2-3문장)"
 }`
@@ -27956,7 +27961,8 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
           elapsedTimeStr: directResult.elapsedTimeStr || '--:--',
           wrongAnswers: directResult.wrongAnswers || [],
           completedAt: directResult.completedAt,
-          attemptCount: attemptCount
+          attemptCount: attemptCount,
+          wrongReviewCompleted: examProg ? examProg.wrongReviewCompleted : false
         });
       } else if (examProg) {
         if (examProg.status === 'completed' && examProg.resultId) {
@@ -27972,14 +27978,16 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
               elapsedTimeStr: result.elapsedTimeStr || '--:--',
               wrongAnswers: result.wrongAnswers || [],
               completedAt: result.completedAt,
-              attemptCount: attemptCount
+              attemptCount: attemptCount,
+              wrongReviewCompleted: examProg.wrongReviewCompleted || false
             });
           } else {
             progress.push({
               examId: exam.id,
               status: examProg.status,
               remainingTime: examProg.remainingTime,
-              attemptCount: attemptCount
+              attemptCount: attemptCount,
+              wrongReviewCompleted: examProg.wrongReviewCompleted || false
             });
           }
         } else {
@@ -27987,7 +27995,8 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
             examId: exam.id,
             status: examProg.status,
             remainingTime: examProg.remainingTime,
-            attemptCount: attemptCount
+            attemptCount: attemptCount,
+            wrongReviewCompleted: examProg.wrongReviewCompleted || false
           });
         }
       } else {
@@ -28567,6 +28576,36 @@ app.post("/api/mock-exam/update-progress", async (req, res) => {
   } catch (err) {
     console.error("❌ [/api/mock-exam/update-progress] 오류:", err);
     res.status(500).json({ ok: false, error: "업데이트 중 오류가 발생했습니다." });
+  }
+});
+
+// 오답복습 완료 저장
+app.post("/api/mock-exam/wrong-review-complete/:examId", async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ ok: false, error: "사용자 정보가 없습니다." });
+    }
+
+    const user = await MockExamUser.findById(userId);
+    if (!user) {
+      return res.status(404).json({ ok: false, error: "사용자를 찾을 수 없습니다." });
+    }
+
+    // 해당 시험 진행 상태 찾기
+    const progressIdx = user.examProgress.findIndex(p => p.examId === examId);
+    if (progressIdx >= 0) {
+      user.examProgress[progressIdx].wrongReviewCompleted = true;
+      user.examProgress[progressIdx].wrongReviewCompletedAt = new Date();
+      await user.save();
+    }
+
+    res.json({ ok: true, message: "오답복습 완료 저장됨" });
+  } catch (err) {
+    console.error("❌ [/api/mock-exam/wrong-review-complete] 오류:", err);
+    res.status(500).json({ ok: false, error: "저장 중 오류가 발생했습니다." });
   }
 });
 

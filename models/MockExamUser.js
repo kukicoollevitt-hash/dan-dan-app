@@ -62,7 +62,11 @@ const mockExamUserSchema = new mongoose.Schema({
         startedAt: Date,
 
         // 완료된 경우의 결과 참조
-        resultId: { type: mongoose.Schema.Types.ObjectId, ref: 'MockExamResult' }
+        resultId: { type: mongoose.Schema.Types.ObjectId, ref: 'MockExamResult' },
+
+        // 오답복습 완료 여부
+        wrongReviewCompleted: { type: Boolean, default: false },
+        wrongReviewCompletedAt: Date
     }],
 
     lastLogin: Date,
