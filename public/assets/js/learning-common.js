@@ -2895,17 +2895,31 @@
         const q1 = document.querySelector('input[name="q1"]:checked');
         const q2 = document.querySelector('input[name="q2"]:checked');
 
-        // 빈칸 체크 (q3, q4)
-        const q3_1 = document.getElementById('q3-1')?.value?.trim();
-        const q3_2 = document.getElementById('q3-2')?.value?.trim();
-        const q4_1 = document.getElementById('q4-1')?.value?.trim();
-        const q4_2 = document.getElementById('q4-2')?.value?.trim();
+        // fit 계열인지 확인 (q3, q4가 객관식인 경우)
+        const isFitType = document.querySelector('input[name="q3"]') !== null;
+
+        let q3Valid = false;
+        let q4Valid = false;
+
+        if (isFitType) {
+          // fit 계열: q3, q4가 객관식
+          q3Valid = document.querySelector('input[name="q3"]:checked') !== null;
+          q4Valid = document.querySelector('input[name="q4"]:checked') !== null;
+        } else {
+          // 일반 계열: q3-1, q3-2, q4-1, q4-2가 빈칸 입력
+          const q3_1 = document.getElementById('q3-1')?.value?.trim();
+          const q3_2 = document.getElementById('q3-2')?.value?.trim();
+          const q4_1 = document.getElementById('q4-1')?.value?.trim();
+          const q4_2 = document.getElementById('q4-2')?.value?.trim();
+          q3Valid = q3_1 && q3_2;
+          q4Valid = q4_1 && q4_2;
+        }
 
         // 서술형 체크 (q5)
         const q5 = document.getElementById('q5')?.value?.trim();
 
         // 모든 문제가 입력되었는지 확인
-        if (!q1 || !q2 || !q3_1 || !q3_2 || !q4_1 || !q4_2 || !q5) {
+        if (!q1 || !q2 || !q3Valid || !q4Valid || !q5) {
           e.stopImmediatePropagation();
           showCreativeAlert('모든 문제의 정답을 입력해주세요.');
           return false;
