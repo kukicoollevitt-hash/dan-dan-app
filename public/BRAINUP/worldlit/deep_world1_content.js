@@ -324,7 +324,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['신념', '굳게 믿는 마음이나 생각']
     ],
     vocabFill: {
-      instructions: '[마술피리 어휘]',
+      instructions: '',
       items: [
         { no: 1, text: '능력이나 성품을 확인하기 위해 행하는 검사를 (      )이라 한다.', answer: '시험', initials: 'ㅅㅎ', aliases: ['시험'] },
         { no: 2, text: '말을 하지 않고 조용히 있는 상태를 (      )이라 한다.', answer: '침묵', initials: 'ㅊㅁ', aliases: ['침묵'] },
