@@ -4537,6 +4537,69 @@ canvas[id^="confetti-canvas"] {
       100% { transform: scale(1) rotate(0deg); opacity: 1; }
     }
 
+    /* 스피드 독서왕 알림 팝업 */
+    .speed-notice-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 10020;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .speed-notice-overlay.active {
+      display: flex;
+    }
+    .speed-notice-modal {
+      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+      border-radius: 24px;
+      padding: 40px 50px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      animation: noticePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 400px;
+      border: 3px solid #ffc107;
+    }
+    @keyframes noticePopIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .speed-notice-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    .speed-notice-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #f57c00;
+      margin-bottom: 16px;
+    }
+    .speed-notice-text {
+      font-size: 18px;
+      color: #5d4037;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .speed-notice-btn {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      color: white;
+      border: none;
+      padding: 14px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+      transition: all 0.3s;
+    }
+    .speed-notice-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+    }
+
     /* 스피드 독서왕 결과 오버레이 */
     .speed-reading-result-overlay {
       display: none;
@@ -5168,6 +5231,16 @@ canvas[id^="confetti-canvas"] {
   <!-- 엑스 표시 컨테이너 -->
   <div class="wrong-x-container" id="wrongXContainer">
     <div class="wrong-x">✖</div>
+  </div>
+
+  <!-- 📖 스피드 독서왕 알림 팝업 -->
+  <div class="speed-notice-overlay" id="speedNoticeOverlay">
+    <div class="speed-notice-modal">
+      <div class="speed-notice-icon">📚</div>
+      <div class="speed-notice-title">잠깐!</div>
+      <div class="speed-notice-text">도서를 끝까지 읽고<br>모든 파트의 중심 내용을 확인해야<br>문제풀이를 시작할 수 있습니다.</div>
+      <button class="speed-notice-btn" onclick="closeSpeedNotice()">확인</button>
+    </div>
   </div>
 
   <!-- 📢 활동 피드 롤링 배너 -->
@@ -19965,6 +20038,7 @@ ${content}
     // CU 상점 모달 닫기
     function closeCuStoreModal() {
       document.getElementById('cuStoreModal').classList.remove('active');
+      openBadgeMenu(); // 이벤트 리스트로 돌아가기
     }
 
     // 카테고리 필터
@@ -20189,6 +20263,7 @@ ${content}
     // 스피드 어휘왕 참가 모달 닫기
     function closeSpeedVocabModal() {
       document.getElementById('speedVocabModal').classList.remove('active');
+      openBadgeMenu(); // 이벤트 리스트로 돌아가기
     }
 
     // 스피드 어휘왕 퀴즈 시작
@@ -20518,8 +20593,22 @@ ${content}
       totalTime: 0,
       startTime: null,
       questions: [],
-      timerInterval: null
+      timerInterval: null,
+      readingComplete: false  // 완독 완료 여부
     };
+
+    // iframe에서 완독 완료 메시지 수신
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'readingComplete') {
+        speedReadingState.readingComplete = true;
+        // 문제풀이 버튼 활성화 표시
+        const quizBtn = document.getElementById('speedReadingQuizBtn');
+        if (quizBtn) {
+          quizBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+          quizBtn.innerHTML = '📝 문제풀이 시작';
+        }
+      }
+    });
 
     // 스피드 독서왕 참가 모달 열기
     function openSpeedReadingKing() {
@@ -20561,6 +20650,7 @@ ${content}
     // 스피드 독서왕 모달 닫기
     function closeSpeedReadingModal() {
       document.getElementById('speedReadingModal').classList.remove('active');
+      openBadgeMenu(); // 이벤트 리스트로 돌아가기
     }
 
     // 스피드 독서왕 시작
@@ -20640,7 +20730,8 @@ ${content}
         totalTime: 0,
         startTime: Date.now(),
         questions: shuffledQuestions,
-        timerInterval: null
+        timerInterval: null,
+        readingComplete: false  // 새 도서 시작 시 초기화
       };
 
       // 모달 닫기
@@ -20685,6 +20776,16 @@ ${content}
       if (quizTimerEl) quizTimerEl.textContent = timeStr;
     }
 
+    // 스피드 독서왕 알림 팝업 표시
+    function showSpeedNotice() {
+      document.getElementById('speedNoticeOverlay').classList.add('active');
+    }
+
+    // 스피드 독서왕 알림 팝업 닫기
+    function closeSpeedNotice() {
+      document.getElementById('speedNoticeOverlay').classList.remove('active');
+    }
+
     // 독서 종료 (나가기)
     function exitSpeedReading() {
       if (confirm('정말 나가시겠습니까? 진행 상황이 저장되지 않습니다.')) {
@@ -20698,6 +20799,12 @@ ${content}
 
     // 퀴즈 시작
     function startSpeedReadingQuiz() {
+      // 완독 여부 확인
+      if (!speedReadingState.readingComplete) {
+        showSpeedNotice();
+        return;
+      }
+
       // 독서 화면 닫기
       document.getElementById('speedReadingOverlay').classList.remove('active');
       document.getElementById('speedReadingIframe').src = '';
@@ -20999,16 +21106,17 @@ ${content}
       const submitBtn = document.getElementById('megaphoneSubmitBtn');
       if (megaphoneAvailableCoins < MEGAPHONE_COST) {
         submitBtn.disabled = true;
-        submitBtn.textContent = '코인 부족 (40코인 필요)';
+        submitBtn.textContent = '코인 부족 (200코인 필요)';
       } else {
         submitBtn.disabled = false;
-        submitBtn.textContent = '📢 응원 메시지 보내기 (40코인)';
+        submitBtn.textContent = '📢 응원 메시지 보내기 (200코인)';
       }
     }
 
     // 확성기 모달 닫기
     function closeMegaphoneModal() {
       document.getElementById('megaphoneModal').classList.remove('active');
+      openBadgeMenu(); // 이벤트 리스트로 돌아가기
     }
 
     // 확성기 메시지 전송
@@ -21023,7 +21131,7 @@ ${content}
       }
 
       if (megaphoneAvailableCoins < MEGAPHONE_COST) {
-        statusEl.innerHTML = '<div class="megaphone-error">코인이 부족합니다! (40코인 필요)</div>';
+        statusEl.innerHTML = '<div class="megaphone-error">코인이 부족합니다! (200코인 필요)</div>';
         return;
       }
 
@@ -21068,13 +21176,13 @@ ${content}
         } else {
           statusEl.innerHTML = `<div class="megaphone-error">${data.error || '전송에 실패했습니다.'}</div>`;
           submitBtn.disabled = false;
-          submitBtn.textContent = '📢 응원 메시지 보내기 (40코인)';
+          submitBtn.textContent = '📢 응원 메시지 보내기 (200코인)';
         }
       } catch (err) {
         console.error('확성기 전송 에러:', err);
         statusEl.innerHTML = '<div class="megaphone-error">서버 오류가 발생했습니다.</div>';
         submitBtn.disabled = false;
-        submitBtn.textContent = '📢 응원 메시지 보내기 (40코인)';
+        submitBtn.textContent = '📢 응원 메시지 보내기 (200코인)';
       }
     }
   </script>
