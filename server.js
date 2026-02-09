@@ -424,8 +424,8 @@ app.post("/register", async (req, res) => {
 
     if (existing) {
       console.log("⚠ 이미 가입된 학생입니다:", existing.name);
-      // 이미 있는 계정이면 그냥 로그인 페이지로
-return res.redirect("/?loginError=pending");
+      // 이미 있는 계정이면 중복 안내
+      return res.redirect("/?loginError=duplicate");
     }
 
     // 3) 새 학생 생성
