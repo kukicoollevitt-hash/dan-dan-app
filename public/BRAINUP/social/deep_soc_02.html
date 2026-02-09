@@ -403,7 +403,7 @@
         </div>
       </div>
 
-      <div class="vocab-fill-text">
+      <div id="vocab-fill" class="vocab-fill-text">
         
       </div>
 
@@ -1539,7 +1539,7 @@ function renderVocabFill() {
     const initials = item.initials || _initialsFromKorean(item.answer);
 
     const html = (item.text || '').replace(
-      '(      )',
+      /\(\s+\)/,
       `<input type="text" id="fill-${item.no}" data-ans="${item.answer}" data-alias='${JSON.stringify(item.aliases||[])}' placeholder="${initials}" class="vocab-input">`
     );
 
@@ -1594,6 +1594,22 @@ function renderVocabFill() {
 function checkVocabFill() {
   const unit = window.CUR_UNIT;
   const data = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT] && window.CONTENTS[window.CUR_UNIT].vocabFill && window.CONTENTS[window.CUR_UNIT].vocabFill.items) || [];
+
+      // ✅ 모든 빈칸이 채워졌는지 확인
+      let hasEmpty = false;
+      data.forEach((item) => {
+        const input = document.getElementById(`fill-${item.no}`);
+        if (input && !input.value.trim()) hasEmpty = true;
+      });
+
+      if (hasEmpty) {
+        if (typeof showCreativeAlert === 'function') {
+          showCreativeAlert('모든 어휘를 입력해주세요.');
+        } else {
+          alert('모든 어휘를 입력해주세요.');
+        }
+        return;
+      }
   let score = 0;
 
   data.forEach((item) => {
