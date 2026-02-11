@@ -40,7 +40,7 @@
         body.mobile-scale .exam-wrapper {
             width: 900px;
             margin: 0 auto;
-            transform: scale(var(--view-scale, 1));
+            transform: scale(var(--view-scale, 1)) translate(var(--pan-x, 0px), var(--pan-y, 0px));
             transform-origin: top left;
         }
         @media (max-width: 900px) {
@@ -4583,6 +4583,24 @@
         let isPanMode = false;
         let isPanning = false;
         let panStartX = 0, panStartY = 0;
+        let panTranslateX = 0, panTranslateY = 0; // CSS transform translate용
+
+        // 팬 이동 적용 함수
+        function applyPanTransform() {
+            document.documentElement.style.setProperty('--pan-x', panTranslateX + 'px');
+            document.documentElement.style.setProperty('--pan-y', panTranslateY + 'px');
+            // 펜 그림도 함께 이동
+            if (typeof redrawCanvas === 'function') {
+                redrawCanvas();
+            }
+        }
+
+        // 팬 위치 리셋
+        function resetPanPosition() {
+            panTranslateX = 0;
+            panTranslateY = 0;
+            applyPanTransform();
+        }
         let currentPenColor = '#e53935';
         let drawingPaths = [];
         let currentPath = null;
@@ -4617,8 +4635,10 @@
             if (!drawingCtx) return;
             drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
             const scale = getCurrentScale();
-            const offsetX = window.scrollX * scale;
-            const offsetY = window.scrollY * scale;
+            const panOffsetX = panTranslateX * scale;
+            const panOffsetY = panTranslateY * scale;
+            const offsetX = window.scrollX - panOffsetX;
+            const offsetY = window.scrollY - panOffsetY;
             drawingPaths.forEach(path => {
                 if (path.points.length < 2) return;
                 drawingCtx.beginPath();
@@ -4696,8 +4716,8 @@
             if (!isPenMode && !isEraserMode) return;
             isDrawing = true;
             const scale = getCurrentScale();
-            const docX = (e.clientX + window.scrollX * scale) / scale;
-            const docY = (e.clientY + window.scrollY * scale) / scale;
+            const docX = (e.clientX + window.scrollX - panTranslateX * scale) / scale;
+            const docY = (e.clientY + window.scrollY - panTranslateY * scale) / scale;
             if (isEraserMode) { eraseAtPoint(docX, docY); return; }
             currentPath = { color: currentPenColor, points: [{ x: docX, y: docY }] };
             drawingPaths.push(currentPath);
@@ -4710,11 +4730,11 @@
         }
 
         function bindDraw(e) {
-            if (isPanning) { const dx = e.clientX - panStartX, dy = e.clientY - panStartY; window.scrollBy(-dx, -dy); panStartX = e.clientX; panStartY = e.clientY; return; }
+            if (isPanning) { const dx = e.clientX - panStartX, dy = e.clientY - panStartY; panTranslateX += dx / getCurrentScale(); panTranslateY += dy / getCurrentScale(); applyPanTransform(); panStartX = e.clientX; panStartY = e.clientY; return; }
             if (!isDrawing) return;
             const scale = getCurrentScale();
-            const docX = (e.clientX + window.scrollX * scale) / scale;
-            const docY = (e.clientY + window.scrollY * scale) / scale;
+            const docX = (e.clientX + window.scrollX - panTranslateX * scale) / scale;
+            const docY = (e.clientY + window.scrollY - panTranslateY * scale) / scale;
             if (isEraserMode) { eraseAtPoint(docX, docY); return; }
             if (currentPath) currentPath.points.push({ x: docX, y: docY });
             drawingCtx.lineTo(e.clientX, e.clientY);
@@ -4748,7 +4768,7 @@
         }
 
         function handleTouchMove(e) {
-            if (isPanning) { e.preventDefault(); const touch = e.touches[0], dx = touch.clientX - panStartX, dy = touch.clientY - panStartY; window.scrollBy(-dx, -dy); panStartX = touch.clientX; panStartY = touch.clientY; return; }
+            if (isPanning) { e.preventDefault(); const touch = e.touches[0], dx = touch.clientX - panStartX, dy = touch.clientY - panStartY; panTranslateX += dx / getCurrentScale(); panTranslateY += dy / getCurrentScale(); applyPanTransform(); panStartX = touch.clientX; panStartY = touch.clientY; return; }
             if (!isDrawing) return;
             e.preventDefault();
             const touch = e.touches[0];
@@ -5122,6 +5142,7 @@
         function zoomReset() {
             currentZoom = 1;
             applyMobileScale();
+            resetPanPosition();
         }
 
         // 줌 레벨 표시 업데이트
