@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>시소 왕국의 대반란 — 작은 힘이 거인을 들어올린 날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리04/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #7E57C2 0%, #5E35B1 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(126, 87, 194, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(126, 87, 194, 0.15);
+      color: #5E35B1;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #7E57C2;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #5E35B1;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #B39DDB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(126, 87, 194, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(126, 87, 194, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(94, 53, 177, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(126, 87, 194, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚖️ 시소 왕국의 대반란 — 작은 힘이 거인을 들어올린 날</h1>
+        <p class="subtitle">
+          《시소 위의 비밀, 균형을 잡는 숨은 계산 이야기》<br>
+          교과기반 창작도서 · 물리 04
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>🐭 리틀:</strong> 작은 생쥐 소년, 몸무게 단 1킬로그램. 모두에게 무시당하지만, 지렛대의 원리를 깨달으며 영웅이 된다</p>
+          <p><strong>🐘 헤비:</strong> 거대한 코끼리 장군, 몸무게 5,000킬로그램. 힘이 곧 정의라고 믿는 오만하지만 선한 존재</p>
+          <p><strong>📐 풀크럼:</strong> 받침점 현자, 모든 균형의 비밀을 아는 삼각형 모양의 스승</p>
+          <p><strong>📏 암:</strong> 팔 길이의 측정사, 거리야말로 힘을 증폭시키는 열쇠라고 믿는 전문가</p>
+          <p><strong>🌀 모멘트:</strong> 회전력의 정령, 힘과 거리가 만나 탄생하는 신비로운 에너지</p>
+          <p><strong>⛓️ 그래비 대왕:</strong> 중력의 폭군, 무거운 것을 편애하는 시소 왕국의 지배자</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">놀이터의 시소</span>
+        <h2>🎪 기울어진 세상</h2>
+        <p>옛날 옛적, 거대한 놀이터 한가운데에 '시소 왕국'이라는 특별한 나라가 있었습니다. 이 왕국에서는 모든 것이 시소로 결정되었습니다. 누가 높이 올라가고 누가 아래로 내려가는지, 그것이 곧 이 나라의 질서였지요. 왕국을 지배하는 것은 그래비 대왕이었습니다. 중력의 화신인 그래비 대왕은 간단하고 잔인한 법칙을 세웠습니다. <span class="dialogue">"무거운 자가 아래로, 가벼운 자는 위로! 무거운 자가 땅을 밟고, 가벼운 자는 하늘에 매달려라!"</span></p>
+        <p>이 법칙 때문에 왕국의 시소는 항상 한쪽으로 기울어져 있었습니다. 무거운 코끼리 헤비 장군이 한쪽에 앉으면, 반대편의 모든 동물이 합쳐도 시소는 꿈쩍도 하지 않았습니다. 5,000킬로그램의 무게 앞에서, 다른 동물들은 속수무책이었지요.</p>
+        <p>가장 안타까운 존재는 리틀이었습니다. 몸무게 1킬로그램의 작은 생쥐 리틀은 시소에 앉아도 아무런 변화가 없었습니다. 다른 동물들이 킥킥거렸습니다. <span class="dialogue">"생쥐가 시소를 타겠다고? 깃털이 바위를 움직이겠다는 거랑 같은 소리야!"</span></p>
+        <p>리틀은 시소 끝에 앉아 하늘만 올려다보았습니다. 높이 올라간 채 내려올 수 없는 자신의 처지가 서글펐습니다. <span class="dialogue">"나는 정말 아무것도 할 수 없는 걸까? 가볍다는 것은 영원히 약하다는 뜻일까?"</span> 그때, 시소의 한가운데 받침점에서 작은 목소리가 들려왔습니다. <span class="highlight">"꼭 그렇지만은 않단다, 꼬마야."</span> 삼각형 모양의 작은 존재, 풀크럼 현자가 눈을 반짝이고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">중심점 발견</span>
+        <h2>📐 모든 것의 균형은 여기서 시작된다</h2>
+        <p>풀크럼 현자는 시소의 정확히 한가운데, 받침점 위에 살고 있었습니다. 이 위치는 시소에서 가장 중요한 곳이었지만, 아무도 관심을 갖지 않는 곳이기도 했습니다. 모두의 시선은 높이 올라가는 쪽이나 무겁게 내려가는 쪽에만 쏠려 있었으니까요.</p>
+        <p><span class="dialogue">"리틀, 이리 와보렴."</span> 풀크럼이 리틀을 불렀습니다. 리틀이 풀크럼 곁으로 다가가자, 현자가 시소를 손가락으로 가리켰습니다. <span class="dialogue">"시소가 움직이는 원리를 알고 싶으면, 먼저 이 받침점을 이해해야 한단다."</span></p>
+        <p>받침점, 영어로는 풀크럼(Fulcrum)이라고 합니다. 이것은 지렛대가 회전하는 중심축입니다. 시소뿐만 아니라 가위, 병따개, 펜치, 문의 경첩까지, 세상의 모든 지렛대에는 반드시 받침점이 있습니다. <span class="dialogue">"받침점이 왜 중요한데요?"</span> 리틀이 물었습니다.</p>
+        <p>풀크럼이 미소 지었습니다. <span class="dialogue">"받침점은 힘이 가해지는 방향을 바꿔주기 때문이야. 한쪽을 아래로 누르면 반대쪽이 위로 올라가지? 이것이 지렛대의 가장 기본적인 원리란다."</span> 풀크럼은 리틀에게 실험을 보여주었습니다. 시소의 한쪽에 10킬로그램 돌을 올리고, 받침점의 위치를 이리저리 옮겨보았습니다. 받침점이 돌에 가까울수록, 반대편에 작은 힘만 줘도 돌이 올라갔습니다. 받침점이 멀어질수록, 더 큰 힘이 필요했고요.</p>
+        <p><span class="dialogue">"보이니? 받침점의 위치가 바뀌면, 필요한 힘이 달라져."</span> 리틀의 눈이 커졌습니다. <span class="dialogue">"그러면 받침점의 위치만 바꾸면, 작은 힘으로도 무거운 걸 들어올릴 수 있다는 거예요?"</span> 풀크럼이 고개를 끄덕였습니다. <span class="highlight">"바로 그거야. 그것이 수천 년 전 아르키메데스가 발견한 비밀이란다."</span> 리틀의 가슴에 작은 희망의 불씨가 피어올랐습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">힘과 거리</span>
+        <h2>🤝 두 친구가 만나면 기적이 일어난다</h2>
+        <p>풀크럼이 리틀에게 소개시켜준 또 다른 존재가 있었습니다. 줄자를 항상 들고 다니는 측정사 암이었습니다. <span class="dialogue">"리틀, 이 친구가 바로 지렛대의 비밀을 푸는 열쇠야."</span> 암이 자를 펴며 설명했습니다. <span class="dialogue">"나는 '팔 길이'를 재는 전문가야. 지렛대에서 '팔'이란 받침점에서 힘이 가해지는 점까지의 거리를 뜻해. 이것을 '힘팔' 또는 '모멘트 팔'이라고 한단다."</span></p>
+        <p>여기서 핵심적인 물리학 개념이 등장합니다. 지렛대에서 물체를 들어올리는 능력은 단순히 힘의 크기만으로 결정되지 않습니다. <span class="highlight">힘의 크기와 받침점까지의 거리, 이 두 가지의 곱</span>으로 결정됩니다.</p>
+        <p>암이 시소 위에서 실험을 했습니다. <span class="dialogue">"봐, 리틀. 받침점에서 1미터 떨어진 곳에 10킬로그램을 올리면, 반대편 1미터 거리에도 10킬로그램이 있어야 균형이 맞아. 하지만 반대편에 2미터 떨어진 곳에 올리면? 5킬로그램만 있어도 균형이 맞지!"</span></p>
+        <p>리틀이 놀랐습니다. <span class="dialogue">"거리가 두 배면, 무게는 반만 있어도 된다고?"</span> <span class="dialogue">"정확해! 이것이 바로 힘과 거리의 관계야. 거리가 멀수록 작은 힘으로도 큰 효과를 낼 수 있어."</span></p>
+        <p>아르키메데스가 말한 유명한 문장이 떠올랐습니다. <span class="highlight">"나에게 충분히 긴 지렛대와 설 곳을 다오. 그러면 지구도 들어 올리겠다."</span> 이것은 과장이 아닙니다. 이론적으로, 충분히 긴 지렛대와 적절한 받침점이 있다면, 정말로 한 사람의 힘으로 지구를 들어올릴 수 있습니다. 물론 그 지렛대의 길이가 천문학적으로 길어야 하겠지만요! 리틀의 눈에 빛이 돌아왔습니다. <span class="dialogue">"그러면 나처럼 가벼운 존재도, 충분히 멀리서 힘을 가하면 코끼리를 들어올릴 수 있다는 거야?"</span> 암이 웃으며 대답했습니다. <span class="dialogue">"거리를 줘, 세상을 들어 올릴 테니!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">지렛대 원리</span>
+        <h2>🏛️ 아르키메데스의 유산</h2>
+        <p>풀크럼 현자가 리틀을 왕국의 대도서관으로 데려갔습니다. 먼지 쌓인 책장 한구석에서 아주 오래된 두루마리를 꺼냈습니다. <span class="dialogue">"이것은 약 2,300년 전, 고대 그리스의 과학자 아르키메데스가 남긴 기록이란다."</span></p>
+        <p>두루마리를 펼치자, 지렛대의 세 가지 요소가 그려져 있었습니다. 첫째는 <span class="highlight">'받침점'</span>, 즉 지렛대가 회전하는 중심. 둘째는 <span class="highlight">'힘점'</span>, 즉 힘을 가하는 곳. 셋째는 <span class="highlight">'작용점'</span>, 즉 물체를 들어올리거나 움직이려는 곳.</p>
+        <p>이 세 요소의 위치 관계에 따라 지렛대는 세 가지 종류로 나뉩니다. <span class="dialogue">"제1종 지렛대는 받침점이 힘점과 작용점 사이에 있어. 시소가 대표적이지. 가위, 집게, 펜치도 여기에 해당해."</span> 풀크럼이 설명했습니다.</p>
+        <p><span class="dialogue">"제2종 지렛대는 작용점이 받침점과 힘점 사이에 있어. 외바퀴 손수레를 생각해봐. 바퀴가 받침점이고, 짐이 중간에 있고, 네가 손잡이를 드는 거지. 병따개, 호두까기도 이 종류야."</span></p>
+        <p><span class="dialogue">"제3종 지렛대는 힘점이 받침점과 작용점 사이에 있어. 젓가락이 대표적이야. 손가락으로 젓가락 중간을 누르면 끝이 움직이지? 낚싯대, 야구 배트도 여기에 해당해."</span></p>
+        <p>리틀이 두루마리의 그림을 자세히 보며 물었습니다. <span class="dialogue">"세 종류의 차이가 뭐예요?"</span> 풀크럼이 대답했습니다. <span class="dialogue">"제1종과 제2종은 작은 힘으로 큰 무게를 움직일 수 있어. 힘을 절약해주지. 대신 움직이는 거리는 줄어들어. 제3종은 반대야. 더 많은 힘이 필요하지만, 대신 속도와 이동 거리가 커져."</span> 리틀은 깨달았습니다. 세상 곳곳에 지렛대가 숨어있었고, 아르키메데스의 원리는 수천 년이 지나도 여전히 세상을 움직이고 있었습니다. <span class="highlight">"이 원리를 쓰면, 정말로 헤비를 이길 수 있을까?"</span> 리틀의 눈에 결의가 차올랐습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">모멘트의 개념</span>
+        <h2>🌀 보이지 않는 회전의 힘</h2>
+        <p>리틀이 지렛대 원리를 배우고 있을 때, 시소 위에서 신비로운 빛이 피어오르더니 모멘트가 모습을 드러냈습니다. 소용돌이처럼 빙빙 도는 반투명한 존재였습니다. <span class="dialogue">"안녕, 리틀. 나는 모멘트. 네가 찾던 진짜 힘의 정체야."</span></p>
+        <p>모멘트는 물리학에서 '돌림힘' 또는 '토크'라고도 불리는 개념입니다. 물체를 회전시키려는 힘의 효과를 나타내는 물리량으로, 힘의 크기에 받침점까지의 수직 거리를 곱한 값입니다. <span class="highlight">모멘트(M) = 힘(F) × 거리(d)</span>. 단위는 N·m(뉴턴미터)입니다.</p>
+        <p><span class="dialogue">"쉽게 말하면 이런 거야."</span> 모멘트가 설명했습니다. <span class="dialogue">"문을 열 때 경첩에서 먼 쪽을 밀면 쉽게 열리지? 경첩 바로 옆을 밀면 엄청 힘들고. 같은 힘이라도 거리가 멀면 모멘트가 커져서 회전 효과가 강해지는 거야."</span></p>
+        <p>모멘트는 시소에서도 핵심적인 역할을 합니다. 시소의 한쪽에서 만들어지는 모멘트는 시계 방향으로 시소를 돌리려 하고, 반대쪽 모멘트는 반시계 방향으로 돌리려 합니다. 두 모멘트가 같으면 시소는 수평, 즉 균형 상태가 됩니다.</p>
+        <p><span class="dialogue">"예를 들어볼게."</span> 모멘트가 시소 위에서 숫자를 보여주었습니다. <span class="dialogue">"받침점 왼쪽 2미터에 30킬로그램, 오른쪽 3미터에 몇 킬로그램이 있어야 균형일까?"</span> 리틀이 계산했습니다. <span class="dialogue">"왼쪽 모멘트는 30 곱하기 2 해서 60. 오른쪽도 60이 되어야 하니까, 60 나누기 3은… 20킬로그램!"</span></p>
+        <p><span class="dialogue">"정답!"</span> 모멘트가 기뻐하며 빙글빙글 돌았습니다. 리틀은 마침내 핵심을 이해했습니다. <span class="highlight">무게가 적어도 거리가 충분히 멀면, 같은 모멘트를 만들어낼 수 있다는 것을.</span> 이것이야말로 작은 존재가 거인에게 맞설 수 있는 과학적 무기였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">무게 차이</span>
+        <h2>🐘 5,000 대 1의 불가능한 대결</h2>
+        <p>리틀이 지렛대의 비밀을 배우고 있다는 소문이 왕국 전체에 퍼졌습니다. 헤비 장군이 코웃음을 쳤습니다. <span class="dialogue">"하! 1킬로그램짜리 생쥐가 5,000킬로그램인 나를 들어올리겠다고? 웃기지도 않아!"</span> 그래비 대왕도 비웃었습니다. <span class="dialogue">"중력의 법칙은 절대적이다! 무거운 자가 내려가고 가벼운 자가 올라가는 것, 이것은 변하지 않는 진리다!"</span></p>
+        <p>숫자로 보면, 이 대결은 정말로 불가능해 보였습니다. 헤비의 무게는 리틀의 5,000배. 보통의 시소에서라면, 리틀이 한쪽 끝에 앉아도 시소는 1밀리미터도 움직이지 않을 것입니다.</p>
+        <p>하지만 리틀은 이제 비밀을 알고 있었습니다. 모멘트의 원리를요. 리틀이 암에게 물었습니다. <span class="dialogue">"5,000킬로그램의 코끼리를 들어올리려면, 나는 받침점에서 얼마나 멀리 앉아야 해?"</span></p>
+        <p>암이 계산했습니다. <span class="dialogue">"헤비가 받침점에서 1미터 거리에 앉으면, 헤비의 모멘트는 5,000 곱하기 1 해서 5,000이야. 리틀의 모멘트도 5,000이 되려면? 1 곱하기 5,000이니까, 받침점에서 5,000미터, 즉 5킬로미터 떨어진 곳에 앉아야 해!"</span></p>
+        <p>5킬로미터! 엄청난 길이의 시소가 필요했습니다. 불가능해 보였지만, 리틀은 포기하지 않았습니다. <span class="dialogue">"5킬로미터짜리 시소라… 보통은 불가능하지. 하지만 헤비를 받침점에 더 가깝게 유인하면?"</span> 풀크럼이 눈을 빛냈습니다. <span class="highlight">"똑똑하구나, 리틀! 헤비가 받침점에서 0.2미터 거리에 있다면, 모멘트는 1,000. 네가 받침점에서 1,000미터만 떨어지면 균형이 맞아!"</span> 전략이 형성되고 있었습니다. 순수한 무게 대결이 아니라, 거리와 위치를 이용한 지혜의 대결로 만드는 것. 리틀의 반란은 과학의 원리 위에 세워지고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">균형 조건</span>
+        <h2>⚖️ 시소가 수평이 되는 마법의 순간</h2>
+        <p>반란의 날이 다가오기 전, 리틀은 모멘트와 함께 균형의 조건을 완벽하게 익혀야 했습니다. <span class="dialogue">"시소가 완벽한 수평을 이루려면, 단 하나의 조건이 충족되어야 해."</span> 모멘트가 진지하게 말했습니다. <span class="dialogue">"왼쪽 모멘트의 합과 오른쪽 모멘트의 합이 정확히 같아야 해. 이것을 '모멘트의 평형 조건'이라고 한단다."</span></p>
+        <p>수식으로 표현하면 이렇습니다. <span class="highlight">시계 방향 모멘트의 합 = 반시계 방향 모멘트의 합</span>. 즉 F1 × d1 = F2 × d2. 이 단순하면서도 강력한 등식이 세상의 모든 균형을 지배하고 있습니다.</p>
+        <p>모멘트가 다양한 예를 보여주었습니다. <span class="dialogue">"시소에 한쪽만 앉는 게 아니라, 양쪽에 여러 명이 앉을 수도 있어. 그때는 각각의 모멘트를 다 더해야 해."</span></p>
+        <p>예를 들어 왼쪽에 20킬로그램이 3미터에, 10킬로그램이 2미터에 앉으면, 왼쪽 모멘트 합은 (20×3) + (10×2) = 60 + 20 = 80. 오른쪽에 40킬로그램이 있다면 80 ÷ 40 = 2미터 거리에 앉아야 균형이 맞습니다.</p>
+        <p>리틀은 연습 문제를 풀었습니다. 점점 복잡한 상황에서도 모멘트 계산을 해내자, 모멘트가 감탄했습니다. <span class="dialogue">"리틀, 너는 천재야! 무게는 가볍지만 머리는 무겁구나!"</span></p>
+        <p>풀크럼이 덧붙였습니다. <span class="highlight">"균형이란 양쪽이 똑같다는 뜻이 아니란다. 한쪽이 무거워도 다른 쪽이 더 멀리 있으면 균형이 맞아. 균형이란 다름 속에서 찾는 평등이지."</span> 이 말은 물리학을 넘어 삶의 지혜이기도 했습니다. 세상에서 똑같은 사람은 없지만, 각자의 위치에서 각자의 역할을 다하면 균형 잡힌 세상을 만들 수 있다는 것. 리틀은 공식을 외우는 것 이상의 것을 배우고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">생활 속 지렛대</span>
+        <h2>🔧 세상은 지렛대로 가득하다</h2>
+        <p>반란을 준비하면서, 리틀은 왕국 곳곳에서 지렛대의 원리가 이미 사용되고 있다는 것을 발견했습니다. 암이 리틀을 데리고 왕국 구석구석을 안내했습니다. <span class="dialogue">"봐, 리틀. 지렛대는 어디에나 있어!"</span></p>
+        <p>주방에서는 <span class="highlight">병따개</span>가 제2종 지렛대로 작동하고 있었습니다. 병뚜껑의 가장자리가 받침점, 뚜껑 중심이 작용점, 손잡이 끝이 힘점입니다. 작은 손의 힘이 긴 손잡이를 통해 증폭되어 단단한 병뚜껑을 열어냅니다.</p>
+        <p>공사장에서는 <span class="highlight">빠루</span>가 제1종 지렛대로 못을 뽑고 있었습니다. 긴 금속 막대의 구부러진 부분이 받침점이 되고, 한쪽 끝을 못 머리 밑에 넣은 뒤 다른 쪽을 아래로 누르면, 박힌 못이 빠져나옵니다.</p>
+        <p>놀이터에서는 시소 자체가 제1종 지렛대였고, 정원에서는 외바퀴 손수레가 제2종 지렛대로 무거운 흙을 운반했습니다. 식탁에서는 젓가락이 제3종 지렛대로 음식을 집었고, 낚시터에서는 낚싯대가 제3종 지렛대로 물고기를 들어올렸습니다.</p>
+        <p>심지어 우리 몸 자체도 지렛대 시스템입니다! 팔꿈치를 구부릴 때, 팔꿈치 관절이 받침점, 이두근이 힘을 가하는 힘점, 손에 든 물건이 작용점이 됩니다. 이것은 제3종 지렛대로, 힘은 더 필요하지만 빠르고 정밀한 움직임을 가능하게 합니다.</p>
+        <p><span class="dialogue">"세상이 전부 지렛대였어!"</span> 리틀이 감탄했습니다. 암이 웃었습니다. <span class="highlight">"아르키메데스가 '지렛대로 지구를 들어올리겠다'고 한 것은 단순한 허풍이 아니었어. 세상은 정말로 지렛대 위에서 돌아가고 있거든."</span> 리틀은 이 원리를 자신의 반란에 활용할 구체적인 계획을 세우기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">작은 힘의 승리</span>
+        <h2>⚡ 리틀의 대반란</h2>
+        <p>드디어 반란의 날이 왔습니다. 그래비 대왕이 매년 열리는 '무게 대회'에서, 리틀이 공식적으로 헤비에게 도전장을 내밀었습니다. <span class="dialogue">"나, 리틀이 헤비 장군에게 시소 대결을 신청합니다!"</span> 왕국 전체가 웃음을 터뜨렸습니다. 1킬로그램이 5,000킬로그램에게 도전하다니!</p>
+        <p>헤비도 어이없다는 듯 웃었습니다. <span class="dialogue">"좋아, 받아주지. 어차피 네가 앉아도 시소는 움직이지 않을 테니까."</span> 그래비 대왕이 선언했습니다. <span class="dialogue">"대결의 규칙은 간단하다. 시소의 양쪽에 앉아서, 상대방을 들어올리는 자가 승리한다!"</span></p>
+        <p>헤비가 시소의 한쪽에 쿵 하고 앉았습니다. 시소가 땅바닥에 철컹 박혔습니다. <span class="dialogue">"자, 앉아봐, 꼬마."</span> 하지만 리틀은 보통 시소에 앉지 않았습니다. 밤새 암과 풀크럼, 모멘트와 함께 준비한 특별한 시소를 가져왔습니다. <span class="highlight">받침점의 위치를 헤비 쪽으로 바짝 옮긴 것입니다!</span></p>
+        <p>헤비가 받침점에서 불과 0.2미터 거리에 앉게 되었고, 리틀의 쪽은 받침점에서 무려 1,000미터, 즉 1킬로미터나 되는 기다란 판이었습니다. 헤비의 모멘트: 5,000 × 0.2 = 1,000. 리틀의 모멘트: 1 × 1,000 = 1,000!</p>
+        <p>리틀이 긴 시소의 끝에 앉는 순간, 놀라운 일이 벌어졌습니다. 시소가 서서히 움직이기 시작한 것입니다! 5,000킬로그램의 코끼리가 천천히 올라갔습니다. <span class="dialogue">"뭐, 뭐야!"</span> 헤비가 당황했습니다. <span class="dialogue">"이것이… 불가능해!"</span></p>
+        <p>그래비 대왕이 분노했습니다. <span class="dialogue">"어떻게 1킬로그램이 5,000킬로그램을 들어올릴 수 있단 말이야!"</span> 모멘트가 빛나며 나타났습니다. <span class="dialogue">"가능합니다, 대왕이시여. 힘 곱하기 거리, 모멘트가 같으면 어떤 무게든 들어올릴 수 있습니다. 이것이 물리학의 법칙입니다."</span> 왕국 전체가 경악했습니다. <span class="highlight">가장 작은 자가 가장 큰 자를 들어올린, 역사적인 순간이었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리04/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">균형의 과학</span>
+        <h2>🌟 "작은 힘도 위치에 따라 강해진다"</h2>
+        <p>리틀의 승리 이후, 시소 왕국은 완전히 달라졌습니다. 그래비 대왕의 '무거운 자가 지배한다'는 법칙은 폐지되었습니다. 새로운 법칙이 선포되었습니다. <span class="dialogue">"이 왕국에서는 무게가 아니라 모멘트로 판단한다. 작은 힘도 올바른 위치에 있으면 세상을 움직일 수 있다."</span></p>
+        <p>헤비 장군이 리틀에게 다가왔습니다. 오만하던 눈빛 대신 진심 어린 존경이 담겨 있었습니다. <span class="dialogue">"미안하다, 리틀. 나는 무게만이 힘이라고 착각했어. 하지만 너는 나보다 5,000배나 가벼우면서도 나를 들어올렸지. 그것은 순전히 지혜의 힘이었어."</span></p>
+        <p>리틀이 고개를 저었습니다. <span class="dialogue">"아니야, 헤비. 나 혼자의 힘이 아니었어. 풀크럼이 받침점의 비밀을 알려주었고, 암이 거리의 중요성을 가르쳐주었고, 모멘트가 공식을 보여주었어. 과학의 힘이야."</span></p>
+        <p>그래비 대왕마저 인정했습니다. <span class="dialogue">"중력의 법칙은 변하지 않는다. 무거운 것은 여전히 더 세게 끌어당겨진다. 하지만 그것이 전부가 아니었구나. 지렛대의 원리 앞에서는 무게만으로 모든 것이 결정되지 않는다는 것을 배웠다."</span></p>
+        <p>풀크럼이 마지막으로 모두에게 말했습니다. <span class="highlight">"기억하렴. 작은 힘도 위치에 따라 강해진다. 이것은 시소 위의 법칙일 뿐 아니라, 삶의 법칙이기도 하단다. 아무리 작은 존재라도 올바른 자리에서 올바른 방법으로 힘을 쓰면, 세상을 바꿀 수 있어."</span></p>
+        <p>모멘트가 왕국 전체를 감싸며 빛났습니다. <span class="dialogue">"힘 곱하기 거리. 이 간단한 공식이 세상을 움직이는 비밀이야. 어디에 서느냐, 어떤 방향으로 힘을 쓰느냐, 그것이 크기보다 중요하단다."</span> 그날 이후 시소 왕국에서는 그 누구도 작다고 무시당하지 않았습니다. 모든 존재가 자신만의 위치에서, 자신만의 방식으로 왕국의 균형에 기여했습니다. 그리고 왕국의 시소는 마침내, 아름답게 수평을 이루었습니다.</p>
+        <p style="text-align: center; margin-top: 20px; font-weight: 600; color: #7E57C2;">— 끝 —</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">📚 목록으로</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

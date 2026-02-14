@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌋 펄펄! 지구의 심장이 뛰는 소리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #E64A19 0%, #BF360C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(230, 74, 25, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(230, 74, 25, 0.15);
+      color: #BF360C;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #E64A19;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #BF360C;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+      pointer-events: auto;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FF8A65;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      color: #FF8A65;
+      font-size: 14px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 교훈 박스 */
+    .moral-box {
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+      border-left: 4px solid #E64A19;
+      padding: 20px;
+      border-radius: 0 16px 16px 0;
+      margin-top: 20px;
+    }
+
+    .moral-box h3 {
+      color: #E64A19;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .moral-box p {
+      color: #5D4037;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    /* 닫기 버튼 */
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+      transform: scale(1.1);
+    }
+
+    /* 네비게이션 */
+    .nav-indicator {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-dot.active {
+      background: #FF5722;
+      transform: scale(1.3);
+    }
+
+    .nav-dot:hover {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .nav-indicator {
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 네비게이션 -->
+  <div class="nav-indicator">
+    <div class="nav-dot active" data-section="0"></div>
+    <div class="nav-dot" data-section="1"></div>
+    <div class="nav-dot" data-section="2"></div>
+    <div class="nav-dot" data-section="3"></div>
+    <div class="nav-dot" data-section="4"></div>
+    <div class="nav-dot" data-section="5"></div>
+    <div class="nav-dot" data-section="6"></div>
+    <div class="nav-dot" data-section="7"></div>
+    <div class="nav-dot" data-section="8"></div>
+    <div class="nav-dot" data-section="9"></div>
+    <div class="nav-dot" data-section="10"></div>
+  </div>
+
+  <!-- 콘텐츠 -->
+  <div id="content">
+
+    <!-- 인트로 -->
+    <section class="intro-section" data-bg="/images/창작도서/창작지구과학02/00.jpg">
+      <div class="intro-content">
+        <h1>🌋 펄펄! 지구의 심장이 뛰는 소리를 들어본 적 있나요?</h1>
+        <p class="subtitle">— 마그마가 속삭이는 뜨거운 지구의 심장 이야기 —</p>
+
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🔥 마그마 소녀 마기</strong> - "나는 영원히 갇혀 있을 수 없어! 저 넓은 세상을 꼭 보고 말 거야!" 온도 1200도의 불꽃 머리카락을 찰랑이는 호기심 많은 소녀. 지구 깊숙한 곳에서 태어나 지표면 밖 세상을 꿈꾸는 뜨거운 열정의 주인공입니다.</p>
+          <p><strong>🪨 크러스트 대장</strong> - "내가 버티는 한, 이 땅은 절대 흔들리지 않는다! 질서가 최고야!" 지구의 껍질인 지각을 지키는 단단하고 고집 센 수비대장. 변화를 두려워하지만, 사실 누구보다 지구를 아끼는 책임감 강한 바위 거인입니다.</p>
+          <p><strong>🌀 맨틀 어머니</strong> - "천천히, 하지만 반드시 흘러가는 것. 그것이 우주의 춤이란다." 거대한 몸으로 마기를 품어주는 대류의 여신. 느릿느릿 흐르는 꿀처럼 부드러운 마음을 가졌으며, 지구의 거대한 순환을 이끄는 지혜로운 어머니입니다.</p>
+          <p><strong>💎 코어 할아버지</strong> - "이 행성의 모든 에너지는 바로 내 심장 박동에서 시작되지." 지구의 가장 깊은 곳, 내핵에 사는 철과 니켈의 원로. 태양보다 뜨거운 열기를 간직한 채 수십억 년 동안 지구의 중심을 잡아온 과묵한 심장입니다.</p>
+          <p><strong>🏔️ 볼카노 형제</strong> - 형 분노: "다 비켜! 화끈하게 터뜨려줄 테니까! 뻥!" 동생 조용이: "형, 살살해. 나처럼 우아하게 흘러가는 게 멋진 거야. 스르르~" 마기가 지표면에 닿아 탄생한 쌍둥이 화산. 성격은 다르지만 새로운 땅을 만드는 조각가들입니다.</p>
+          <p><strong>🌫️ 애쉬 요정</strong> - "지금은 나를 미워해도 괜찮아. 언젠가 내가 피울 꽃을 보게 될 거야." 화산 폭발과 함께 태어난 회색빛 요정. 처음엔 하늘을 가려 미움받지만, 결국 대지를 비옥하게 만드는 반전의 매력을 가졌습니다.</p>
+        </div>
+
+        <p class="scroll-hint">▼ 스크롤하여 이야기를 시작하세요 ▼</p>
+      </div>
+    </section>
+
+    <!-- 1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🕳️ 코어 할아버지의 심장박동</span>
+        <h2>아무도 모르는 뜨거운 요람</h2>
+        <p>여러분이 딛고 서 있는 신발 아래, 아주 깊고 깊은 곳에 무엇이 있는지 상상해 본 적 있나요? 우리가 사는 땅은 사실 커다란 사과에 비유하면 껍질보다도 얇은 막에 불과하답니다. 그 얇은 껍질 아래, 상상조차 할 수 없는 뜨거운 세계의 중심에 코어 할아버지가 살고 계셨어요.</p>
+        <p><span class="dialogue">"허허, 오늘도 내 심장은 아주 힘차게 뛰고 있구나."</span> 할아버지의 몸은 단단한 철과 니켈로 이루어져 있었고, 온도는 무려 <span class="highlight">5,500도</span>나 되었어요. 하늘의 태양 표면만큼이나 뜨거운 열기였지요. 이 열기는 지구가 처음 태어날 때부터 할아버지가 소중히 간직해온 지구의 보물이었어요.</p>
+        <p>할아버지의 발치에서는 액체로 된 외핵이 출렁이며 노래를 불렀고, 그 위로는 끝이 보이지 않는 거대한 맨틀의 바다가 펼쳐져 있었습니다. 바로 그 뜨거운 경계선에서, 작고 붉은 불꽃 하나가 피어올랐습니다. <span class="dialogue">"아함~ 잘 잤다!"</span> 불꽃 머리카락을 찰랑이며 눈을 뜬 소녀, 마기였어요. 마기는 <span class="highlight">1,200도</span>의 뜨거운 열정을 품은 마그마 소녀였지요. <span class="dialogue">"할아버지, 저 위에는 뭐가 있어요? 여기는 너무 좁고 답답해요!"</span> 마기가 반짝이는 눈으로 묻자, 코어 할아버지는 나직하게 대답하셨습니다. <span class="dialogue">"저 위에는 맨틀 어머니의 너른 품이 있고, 그 너머엔 아주 차갑고 신비로운 세상이 있단다. 하지만 그곳에 가려면 아주 긴 여행을 견뎌야 해. 준비됐니?"</span> 마기는 주먹을 불끈 쥐었습니다. <span class="dialogue">"네! 전 절대 여기서 멈추지 않을 거예요!"</span></p>
+      </div>
+    </section>
+
+    <!-- 2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🌀 맨틀 어머니의 부드러운 손길</span>
+        <h2>느릿느릿 춤추는 여신</h2>
+        <p>마기가 여행을 시작한 곳은 지구에서 가장 넓은 정원, 맨틀이었어요. 이곳은 맨틀 어머니의 영토였지요. 어머니는 지구 부피의 <span class="highlight">84퍼센트</span>나 차지하는 커다란 몸을 가지고 계셨어요. 신기하게도 어머니의 몸은 딱딱한 바위 같으면서도, 아주 천천히 흐를 수 있는 부드러운 꿀 같기도 했답니다.</p>
+        <p><span class="dialogue">"어머니, 왜 자꾸 위로 올라가는 기분이 들죠?"</span> 마기가 묻자 맨틀 어머니는 우아하게 몸을 움직이며 대답하셨어요. <span class="dialogue">"이건 나의 춤이란다, 마기야. 아래에 계신 코어 할아버지의 열기가 나를 데우면 나는 가벼워져서 위로 올라가고, 저 위 차가운 땅 근처에서 식으면 다시 무거워져서 아래로 내려오는 거란다. 이걸 '맨틀 대류'라고 부르지."</span></p>
+        <p>어머니의 춤은 상상할 수 없을 만큼 느렸어요. 일 년에 고작 <span class="highlight">손톱이 자라는 속도</span>만큼만 움직이셨거든요. 하지만 그 느린 춤사위 속에는 대륙을 밀어내고 산맥을 들어 올리는 어마어마한 힘이 숨겨져 있었지요. 마기는 어머니의 따뜻한 흐름인 '플룸'을 타고 천천히, 아주 천천히 위로 떠올랐습니다. <span class="dialogue">"언젠가 나도 어머니처럼 위대한 힘을 가질 수 있을까요?"</span> <span class="dialogue">"그럼, 마기야. 너는 내 가장 뜨거운 숨결이니까. 하지만 조심하렴, 저 위에는 아주 완고한 파수꾼이 기다리고 있단다."</span></p>
+      </div>
+    </section>
+
+    <!-- 3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">🔥 크러스트 대장과의 대결</span>
+        <h2>갇힌 불꽃의 탈출 작전</h2>
+        <p>마기가 위로 올라갈수록 주변은 조금씩 차가워졌고 압력도 낮아졌습니다. 그러자 마기의 몸속에 녹아있던 가스들이 <span class="highlight">"보글보글"</span> 기포로 변하기 시작했어요. 마치 톡 쏘는 탄산음료의 뚜껑을 열기 직전처럼, 마기의 몸은 터질 듯한 에너지로 가득 찼습니다. <span class="dialogue">"조금만 더... 조금만 더 가면 빛이 보일 거야!"</span></p>
+        <p>하지만 그 길을 가로막는 커다란 그림자가 나타났습니다. 바로 지각 수비대장, 크러스트 대장이었어요. 대장은 두꺼운 화강암 갑옷을 입고 팔짱을 낀 채 서 있었습니다. <span class="dialogue">"어딜 감히 올라오느냐! 이 위는 나 크러스트 대장이 지키는 평화로운 땅이다. 너 같은 뜨거운 녀석이 올라오면 질서가 깨지고 만다. 어서 돌아가!"</span></p>
+        <p>마기는 지지 않고 외쳤습니다. <span class="dialogue">"대장님! 저도 세상을 보고 싶어요. 제 안의 열기가 자꾸 밖으로 나가라고 소리친단 말이에요!"</span> <span class="dialogue">"안 돼! 안정이야말로 지구의 미덕이다. 흔들리는 건 용납할 수 없어!"</span> 대장은 더 단단하게 바위 벽을 쌓았습니다. 마기는 좁은 바위 틈새를 찾아 비집고 들어가고, 대장은 그 틈을 메우며 치열한 숨바꼭질이 이어졌습니다. 하지만 마기의 몸속 기포들이 만들어내는 압력은 점점 더 강력해져, 단단한 지각판조차 부르르 떨게 만들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">🌋 "뻥!" 하고 터진 세상</span>
+        <h2>대지의 커다란 기침</h2>
+        <p>마침내 한계가 찾아왔습니다. 마기의 열정이 크러스트 대장의 고집을 넘어서는 순간이었지요. 마그마 방에 모인 마기의 압력이 암석의 강도를 이기지 못할 만큼 거세지자, 대장의 단단한 갑옷에 <span class="highlight">"쩍!"</span> 하고 커다란 금이 가기 시작했습니다. <span class="dialogue">"이, 이럴 수가! 내 갑옷이...!"</span> 대장이 당황하는 사이, 마기는 온 힘을 다해 그 틈을 뚫고 솟구쳤습니다.</p>
+        <p><span class="highlight">"쿠구구궁— 쾅!"</span></p>
+        <p>어마어마한 굉음과 함께 마기가 지표면 밖으로 튀어 올랐습니다. 그 순간 마기는 더 이상 마그마가 아니었어요. 공기와 처음 만난 마기는 <span class="highlight">'용암'</span>이라는 새로운 이름을 얻게 되었지요. 이때 마기에게서 두 명의 쌍둥이 동생이 태어났습니다. 바로 볼카노 형제였어요! 형 '분노'는 가스를 가득 품고 있다가 하늘 높이 화산재를 쏘아 올리며 <span class="dialogue">"뻥!"</span> 하고 화끈하게 등장했습니다. 반면 동생 '조용이'는 꿀처럼 매끄러운 몸으로 <span class="dialogue">"스르르~"</span> 흐르며 평화롭게 땅을 적셨지요. 크러스트 대장은 갈라진 갑옷 사이로 솟구치는 불꽃을 보며 멍하니 중얼거렸습니다. <span class="dialogue">"이게... 지구의 숨 쉬기였다고? 나는 그저 막는 게 정의인 줄 알았는데."</span></p>
+      </div>
+    </section>
+
+    <!-- 5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🔴 파괴 뒤에 숨은 창조의 손길</span>
+        <h2>붉은 강물의 행진</h2>
+        <p>지표면으로 나온 마기, 이제는 용암이 된 소녀는 생전 처음 보는 풍경에 입을 다물지 못했습니다. 눈부신 태양, 시원한 바람, 그리고 끝없이 펼쳐진 푸른 바다! 하지만 감탄도 잠시, 마기의 몸은 중력을 따라 산 아래로 흘러내려 가기 시작했습니다. <span class="highlight">1,200도</span>의 붉은 강물이 흐르는 길목마다 나무들은 불꽃이 되고 바위들은 녹아내렸습니다.</p>
+        <p><span class="dialogue">"아앗, 안 돼! 내가 지나가는 곳마다 다 타버리잖아!"</span> 마기는 자기가 의도치 않게 모든 것을 부수는 것 같아 슬퍼졌습니다. 그때 동생 조용이가 다정하게 말했습니다. <span class="dialogue">"누나, 슬퍼하지 마. 우리가 지금은 뜨겁지만, 식고 나면 새로운 땅이 될 거야."</span> 정말 그랬습니다. 형 분노가 만든 거칠고 뾰족한 <span class="highlight">'아아 용암'</span>과 동생 조용이가 만든 매끄러운 <span class="highlight">'파호이호이 용암'</span>이 바다에 닿는 순간, 엄청난 수증기와 함께 <span class="highlight">"치이익—"</span> 소리를 내며 굳어갔습니다.</p>
+        <p>바다 위로 새로운 땅이 솟아오르고, 제주도와 하와이 같은 아름다운 섬들이 마기의 발자취를 따라 만들어졌습니다. 마기는 깨달았습니다. <span class="dialogue">"아, 나는 파괴만 하는 게 아니었구나. 나는 낡은 것을 태우고 그 자리에 새로운 생명이 뿌리 내릴 단단한 터전을 만들고 있었어!"</span> 파괴와 창조는 마치 손등과 손바닥처럼 언제나 함께 다니는 단짝이었던 거예요.</p>
+      </div>
+    </section>
+
+    <!-- 6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🏔️ 볼카노 형제의 멋진 작품</span>
+        <h2>대지의 조각가들</h2>
+        <p>시간이 흐르며 마기가 지나간 자리에 멋진 조각 작품들이 생겨났습니다. 볼카노 형제는 각자의 성격대로 전혀 다른 모양의 산을 빚어냈지요. 형 분노는 화산재와 용암을 겹겹이 쌓아 올려, 일본의 후지산처럼 하늘을 찌를 듯 가파르고 아름다운 <span class="highlight">'성층 화산'</span>을 만들었습니다. <span class="dialogue">"내 작품은 강렬하고 웅장하지! 다들 나를 보며 경외감을 느낄 거야!"</span></p>
+        <p>동생 조용이는 넓고 완만한 방패 모양의 <span class="highlight">'순상 화산'</span>을 조각했습니다. 하와이의 산들처럼 부드러운 곡선을 가진 이 산은 세상에서 가장 큰 덩치를 자랑했지요. <span class="dialogue">"내 산은 누구나 편안하게 걸어 올라올 수 있어. 느리지만 거대한 평화지."</span> 하지만 가끔은 너무 많은 열정을 쏟아부어 마그마 방이 텅 비어버릴 때도 있었어요. 그럴 때면 산의 중심이 푹 꺼지며 커다란 솥 같은 <span class="highlight">'칼데라'</span>가 만들어졌습니다.</p>
+        <p>백두산의 천지나 한라산의 백록담처럼 그곳에 맑은 물이 고이자, 크러스트 대장도 감탄하며 말했습니다. <span class="dialogue">"내 몸이 부서진 자리에 이런 보석 같은 호수가 생기다니. 너희는 정말 훌륭한 조각가들이로구나."</span> 맨틀 어머니도 대견한 듯 바람을 보내 조각가들의 땀을 식혀주셨습니다. 지구의 표면은 그렇게 뜨거운 열정이 빚어낸 예술 작품들로 채워져 갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- 7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🌫️ 애쉬의 회색빛 마법</span>
+        <h2>미움받는 요정의 비밀</h2>
+        <p>화산이 폭발할 때, 먼지 구름 사이로 작은 요정 하나가 삐죽 고개를 내밀었습니다. 바로 화산재 요정, 애쉬였어요. 하지만 애쉬는 태어나자마자 모두의 미움을 샀습니다. 애쉬가 하늘을 덮으면 낮에도 밤처럼 어두워졌고, 동물들은 콜록대며 기침을 했거든요. <span class="dialogue">"저리 가, 이 회색 괴물아! 너 때문에 숨을 쉴 수가 없어!"</span></p>
+        <p>애쉬는 슬픔을 머금고 조용히 하늘을 떠다녔습니다. <span class="dialogue">"나는 왜 태어났을까? 나는 그저 세상을 어둡게 만드는 방해꾼일 뿐일까?"</span> 애쉬는 눈물을 훔치며 차가운 바람에 실려 멀리멀리 날아갔습니다. 그런데 며칠 뒤, 놀라운 일이 벌어졌습니다. 애쉬가 내려앉은 황량한 땅 위로, 이전보다 훨씬 더 푸르고 싱싱한 풀들이 돋아나기 시작한 거예요!</p>
+        <p><span class="dialogue">"애쉬야, 울지 마렴."</span> 코어 할아버지의 목소리가 들렸습니다. <span class="dialogue">"네 몸속에는 칼륨과 인처럼 식물들이 가장 좋아하는 맛있는 미네랄이 가득하단다. 네가 지금은 세상을 어둡게 하는 것 같지만, 너는 사실 대지를 가장 비옥하게 만드는 '지구의 영양제'란다."</span> 애쉬는 그제야 환하게 웃었습니다. 자기가 뿌린 회색 가루가 사실은 미래의 꽃을 피우는 마법의 가루였다는 것을 알게 되었으니까요.</p>
+      </div>
+    </section>
+
+    <!-- 8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">⚖️ 위험과 축복 사이에서</span>
+        <h2>두 얼굴의 화산</h2>
+        <p>마기의 가족들은 이제 세상 사람들에게 두 가지 모습으로 기억되었습니다. 하나는 무서운 <span class="highlight">'파괴자'</span>의 얼굴이었지요. 폼페이를 삼켜버린 베수비오 화산이나 거대한 해일을 일으킨 크라카타우 화산처럼, 화산의 분노는 때로 수많은 생명을 앗아가기도 했습니다. 뜨거운 가스와 재가 폭풍처럼 쏟아지는 <span class="highlight">'화쇄류'</span>는 지상의 모든 것을 멈춰 세우는 무시무시한 힘이었어요.</p>
+        <p>하지만 다른 한편으로, 화산은 지구의 <span class="highlight">'생명 유지 장치'</span>였습니다. 아주 먼 옛날, 화산이 뿜어낸 수증기가 비가 되어 바다를 만들었고, 이산화탄소와 질소가 모여 우리가 숨 쉬는 대기를 만들었거든요. 화산이 없었다면 지구는 화성처럼 메마르고 공기 없는 행성이 되었을 거예요.</p>
+        <p>뿐만 아니라, 화산은 깊은 땅속에 숨겨진 보물을 꺼내주기도 했습니다. 번쩍이는 금과 구리, 심지어 영롱한 다이아몬드까지도 화산의 통로를 타고 지표면으로 올라왔지요. 뜨거운 온천은 사람들의 피로를 풀어주었고, 지열 에너지는 전기를 만들어 도시를 밝혔습니다. 볼카노 형제는 나란히 서서 다짐했습니다. <span class="dialogue">"우리는 무섭지만 꼭 필요한 존재야. 지구의 심장이 살아 있다는 걸 보여주는 가장 화끈한 증거니까!"</span></p>
+      </div>
+    </section>
+
+    <!-- 9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">⚡ 코어 할아버지의 지혜</span>
+        <h2>멈추지 않는 지구 엔진</h2>
+        <p>긴 여행을 마친 마기가 다시 지구 깊숙한 곳으로 돌아왔습니다. 코어 할아버지는 여전히 뜨거운 심장을 두근대며 마기를 반겨주셨지요. <span class="dialogue">"할아버지, 세상은 정말 신기해요! 그런데 이 모든 힘은 대체 어디서 나오는 건가요? 어떻게 수십억 년 동안 식지 않고 계속 움직일 수 있죠?"</span></p>
+        <p>할아버지는 인자하게 웃으며 설명해주셨습니다. <span class="dialogue">"그건 내 몸속에 숨겨진 두 가지 엔진 덕분이란다. 하나는 지구가 태어날 때 소행성들과 부딪히며 얻은 '태고의 열기'고, 또 하나는 내 안의 방사성 원소들이 천천히 변하며 만들어내는 '붕괴열'이란다."</span> 이 두 에너지가 지구라는 거대한 자동차를 움직이는 연료였던 거예요.</p>
+        <p>이 열기 덕분에 외핵이 빙글빙글 돌며 지구를 감싸는 투명한 방패, <span class="highlight">'자기장'</span>을 만들어냅니다. 이 방패가 없다면 태양에서 날아오는 무서운 방사능 바람에 지구의 모든 생명은 타 죽고 말았을 거예요. 마기는 할아버지의 심장 소리에 귀를 기울였습니다. <span class="dialogue">"아, 지구의 생명을 지키는 방패도 결국 할아버지의 뜨거운 심장 소리에서 시작된 거네요?"</span> <span class="dialogue">"그렇단다. 이 뜨거운 심장이 뛰기를 멈추는 날, 지구도 화성처럼 차가운 침묵에 빠지게 되겠지. 하지만 걱정 마라. 내 심장은 아직 수십억 년은 더 거뜬히 뛸 테니까!"</span></p>
+      </div>
+    </section>
+
+    <!-- 10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌍 겉은 단단해도 속은 움직인다</span>
+        <h2>지구는 살아있다</h2>
+        <p>이제 지구의 모든 존재가 한자리에 모여 합창을 합니다. 지구의 가장 깊은 곳부터 가장 바깥쪽까지, 우리 모두는 하나의 거대한 생명체였어요.</p>
+        <p>크러스트 대장이 먼저 말했습니다. <span class="dialogue">"나는 변화가 나쁜 건 줄로만 알았어. 하지만 마기가 올라오고 땅이 흔들리는 건 지구가 숨을 쉬는 거였어. 덕분에 우리 지각은 항상 새롭고 단단해질 수 있었지."</span> 맨틀 어머니도 덧붙였습니다. <span class="dialogue">"느리지만 멈추지 않는 나의 대류가 지구의 물질을 순환시키고 있단다. 순환은 곧 생명이니까."</span> 애쉬 요정도 꽃밭 위에서 춤을 추며 속삭였습니다. <span class="dialogue">"나의 회색 가루가 세상의 초록을 더 진하게 만들고 있어!"</span></p>
+        <p>마기는 이제 압니다. 자신이 단순히 갇혀 있던 불꽃이 아니었다는 것을요. 마기는 지구의 열정을 전달하고, 대지를 빚고, 공기와 바다의 씨앗을 뿌리는 지구의 가장 역동적인 메신저였습니다. 여러분이 지금 딛고 서 있는 이 땅은 가만히 멈춰 있는 돌덩이가 아닙니다. 여러분의 발밑 수천 킬로미터 아래에서는 지금 이 순간에도 코어 할아버지의 심장이 뛰고 있고, 맨틀 어머니가 춤을 추며, 마기가 새로운 세상을 꿈꾸고 있습니다.</p>
+        <p><span class="highlight">"지구는 살아있어! 겉은 단단해 보여도 속은 끊임없이 움직이고 있단다!"</span></p>
+        <p>이 뜨거운 지구의 심장 소리를 기억하세요. 여러분은 지금, 살아 움직이는 거대한 기적 위에 서 있으니까요.</p>
+
+        <div class="moral-box">
+          <h3>🌱 이 이야기의 교훈</h3>
+          <p>"겉은 단단해 보여도 속은 끊임없이 움직인다." 지구의 화산 활동과 지각 변동은 단순한 재앙이 아니라 지구가 생명력을 유지하기 위한 '순환'의 과정입니다. 우리 또한 겉모습은 변함없어 보여도 마음속에는 언제나 마기처럼 뜨거운 꿈과 에너지가 흐르고 있다는 사실을 잊지 마세요.</p>
+          <p style="margin-top: 10px;">이 이야기는 우리 발밑에서 벌어지고 있는 진짜 지구의 이야기입니다. 지구는 죽은 돌덩어리가 아닙니다. 그 속에는 태양 표면 온도에 맞먹는 뜨거운 핵이 뛰고 있고, 맨틀이 수억 년째 쉬지 않고 순환하고 있으며, 그 에너지가 화산과 지진이라는 형태로 표현되고 있습니다.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const bgImages = [
+      '/images/창작도서/창작지구과학02/00.jpg',
+      '/images/창작도서/창작지구과학02/01.jpg',
+      '/images/창작도서/창작지구과학02/02.jpg',
+      '/images/창작도서/창작지구과학02/03.jpg',
+      '/images/창작도서/창작지구과학02/04.jpg',
+      '/images/창작도서/창작지구과학02/05.jpg',
+      '/images/창작도서/창작지구과학02/06.jpg',
+      '/images/창작도서/창작지구과학02/07.jpg',
+      '/images/창작도서/창작지구과학02/08.jpg',
+      '/images/창작도서/창작지구과학02/09.jpg',
+      '/images/창작도서/창작지구과학02/10.jpg'
+    ];
+
+    // 이미지 프리로드
+    bgImages.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section, .intro-section');
+    const navDots = document.querySelectorAll('.nav-dot');
+    let currentSection = 0;
+
+    // Intersection Observer 설정
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card, .intro-content');
+
+        if (entry.isIntersecting) {
+          // 카드 활성화
+          if (card) card.classList.add('active');
+
+          // 배경 이미지 변경
+          const sectionIndex = Array.from(sections).indexOf(entry.target);
+          if (sectionIndex !== -1 && sectionIndex !== currentSection) {
+            currentSection = sectionIndex;
+            mapContainer.style.backgroundImage = `url('${bgImages[sectionIndex]}')`;
+
+            // 네비게이션 업데이트
+            navDots.forEach((dot, i) => {
+              dot.classList.toggle('active', i === sectionIndex);
+            });
+          }
+        } else {
+          // 카드 비활성화 (화면 밖으로 나갈 때)
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+
+    // 네비게이션 클릭
+    navDots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        sections[index].scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // 닫기 함수
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // ESC 키로 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeStory();
+    });
+  </script>
+
+</body>
+</html>

@@ -12,6 +12,7 @@ const nodemailer = require("nodemailer");
 const cron = require("node-cron");
 const multer = require("multer");
 const compression = require("compression");
+const cookieParser = require("cookie-parser");
 
 // ===== 단원 제목 매핑 로드 =====
 let UNIT_TITLES = {};
@@ -142,6 +143,7 @@ const openai = new OpenAI({
 // ===== 미들웨어 =====
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
+app.use(cookieParser()); // 🔥 쿠키 파서 추가 (세션 만료 시 리다이렉트용)
 
 // ✅ 세션 미들웨어 (MongoDB 저장소 사용)
 app.use(
@@ -226,6 +228,9 @@ app.post("/academy-admin-login", async (req, res) => {
       userType: "academy",
       isSuper: isSuperAdmin
     };
+
+    // 🔥 학원용 관리자 쿠키 설정 (세션 만료 시 리다이렉트용)
+    res.cookie("adminType", "academy", { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
 
     console.log("✅ 학원 관리자 로그인 성공:", admin.academyName, admin.name, isSuperAdmin ? "(슈퍼관리자)" : "");
 
@@ -663,8 +668,10 @@ const LearningBehavior = mongoose.model("LearningBehavior", learningBehaviorSche
  * ==================================== */
 function requireAdminLogin(req, res, next) {
   if (!req.session.admin) {
-    console.log("⛔ 관리자 세션 없음 → /admin-login 리다이렉트");
-    return res.redirect("/admin-login");
+    // 🔥 학원용 관리자였는지 쿠키로 확인하여 적절한 로그인 페이지로 리다이렉트
+    const wasAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+    console.log("⛔ 관리자 세션 없음 →", wasAcademyAdmin ? "/academy-admin-login" : "/admin-login", "리다이렉트");
+    return res.redirect(wasAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
   next();
 }
@@ -2191,6 +2198,9 @@ app.post("/admin-login", async (req, res) => {
       classNum: admin.classNum || "", // ✅ 선생님 반 추가
       isSuper: isSuperLogin,   // ✅ 여기!
     };
+
+    // 🔥 학교용 관리자 쿠키 설정 (세션 만료 시 리다이렉트용)
+    res.cookie("adminType", "school", { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
 
     console.log(
       "✅ 관리자 로그인 성공:",
@@ -5262,7 +5272,10 @@ app.get("/admin/branch/logs", requireAdminLogin, (req, res) => {
 app.get("/admin/logout", (req, res) => {
   console.log("📤 [GET] /admin/logout 호출");
   if (!req.session) {
-    return res.redirect("/admin-login");
+    // 🔥 세션 없을 때도 쿠키로 학원용인지 확인
+    const wasAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+    res.clearCookie("adminType");
+    return res.redirect(wasAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
 
   // 🔥 학원용 관리자면 학원 로그인 페이지로 리다이렉트
@@ -5272,6 +5285,9 @@ app.get("/admin/logout", (req, res) => {
   req.session.superPinVerified = false; // 슈퍼관리자 PIN 인증 초기화
   req.session.adminPinVerified = false; // 브랜치 관리자 PIN 인증 초기화
   req.session.adminPinRequired = false;
+
+  // 🔥 로그아웃 시 adminType 쿠키 삭제
+  res.clearCookie("adminType");
 
   if (isAcademyAdmin) {
     return res.redirect("/academy-admin-login");

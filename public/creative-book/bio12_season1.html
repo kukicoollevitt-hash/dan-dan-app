@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💨 숨을 들이마신 그 순간, 몸속 작은 영웅들의 대모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #0277BD 0%, #01579B 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(2, 119, 189, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(2, 119, 189, 0.15);
+      color: #01579B;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #0277BD;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #01579B;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      pointer-events: auto;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #81D4FA;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .intro-section {
+        padding: 30px 20px;
+      }
+
+      .intro-content {
+        padding: 40px 25px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+    }
+
+    /* 닫기 버튼 */
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: rgba(2, 119, 189, 0.9);
+      backdrop-filter: blur(10px);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(2, 119, 189, 0.3);
+      pointer-events: auto;
+    }
+
+    .close-btn:hover {
+      background: rgba(1, 87, 155, 0.9);
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 닫기 버튼 -->
+  <button class="close-btn" onclick="goBack()">✕</button>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>💨 숨을 들이마신 그 순간, 몸속 작은 영웅들의 대모험</h1>
+        <p class="subtitle">
+          — 보이지 않는 곳에서 쉬지 않고 일하는 자들이, 생명을 지킨다 —<br>
+          교과기반 창작도서 · 생물 12
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>💨 산소 옥시 (주인공):</strong> 하늘에서 태어난 투명하고 씩씩한 공기 소년. '세상에서 가장 중요한 일을 하러 간다'는 사명감에 불타지만, 몸속 세계가 얼마나 복잡한지는 전혀 모른다.</p>
+          <p><strong>🫁 폐포 할머니 루나 (조력자):</strong> 폐 깊숙한 곳에 사는 3억 개 폐포 마을의 촌장. 얇디얇은 벽 하나를 사이에 두고 산소와 이산화탄소를 교환하는 일을 평생 해왔다.</p>
+          <p><strong>🔴 적혈구 택배기사 레드 (동행자):</strong> 헤모글로빈 배낭을 메고 혈관 고속도로를 달리는 열혈 택배기사. 산소를 싣고 온몸 구석구석 세포에 배달하는 것이 사명이다.</p>
+          <p><strong>🏭 미토콘드리아 공장장 미토 (조력자):</strong> 세포 안에 있는 에너지 공장의 공장장. 산소를 연료로 ATP 에너지를 생산한다.</p>
+          <p><strong>💀 이산화탄소 카본 (라이벌):</strong> 세포 호흡의 부산물로 태어난 회색 소년. 자신이 '쓰레기' 취급받는 것에 분노한다.</p>
+          <p><strong>🧠 뇌 사령관 브레인 (총지휘관):</strong> 호흡 중추에서 모든 것을 통제하는 최고 사령관. 혈액 속 이산화탄소 농도를 감지하고, 횡격막에 '숨 쉬어!' 명령을 내린다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">하늘에서 온 편지</span>
+        <h2>공기의 입장</h2>
+        <p>아주 높은 하늘, 구름이 솜사탕처럼 둥실둥실 떠다니는 곳에 '에어빌리지'라는 마을이 있었습니다. 이 마을에는 질소 아저씨, 산소 소년, 이산화탄소 꼬마, 수증기 아가씨 등 다양한 공기 주민들이 함께 살고 있었지요. 그중에서도 가장 씩씩하고 호기심 많은 아이가 바로 산소 옥시였습니다.</p>
+        <p>옥시는 투명한 몸에 파란빛이 살짝 감도는 소년으로, 매일 구름 꼭대기에 올라가 아래 세상을 내려다보곤 했습니다. <span class="dialogue">"저 아래 생명체들은 나 없이는 살 수 없대! 내가 가면 세포가 살아나고, 심장이 뛰고, 뇌가 생각을 할 수 있다는 거야!"</span> 옥시의 눈은 반짝반짝 빛났습니다.</p>
+        <p>에어빌리지의 원로인 질소 할아버지가 웃으며 말했습니다. <span class="dialogue">"그래, 옥시야. 대기의 78퍼센트는 나 같은 질소이고, 21퍼센트가 너 같은 산소란다. 비율은 적지만 네 역할은 대단하지."</span></p>
+        <p>하지만 질소 할아버지의 표정이 살짝 어두워졌습니다. <span class="dialogue">"다만, 몸속 세계는 네가 생각하는 것보다 훨씬 복잡해. 거기서는 모든 것이 정확한 균형 위에서 움직인단다. 네가 너무 많아도, 너무 적어도 문제가 생겨."</span></p>
+        <p>바로 그때, 아래 세상에서 커다란 바람이 불어왔습니다. 누군가가 숨을 들이마시는 것이었지요! <span class="dialogue">"출발이다!"</span> 옥시는 흥분에 차서 바람의 흐름을 타고 뛰어내렸습니다. 코와 입이라는 거대한 관문이 활짝 열리고, 따뜻한 바람이 옥시를 안으로 끌어당겼습니다. 코 안쪽에는 보이지 않는 작은 털들이 빽빽하게 서 있었는데, 먼지와 세균을 걸러내는 보초병들이었습니다. <span class="dialogue">"신분 확인! 산소 확인! 통과!"</span> 보초병들의 외침과 함께 옥시의 몸속 대모험이 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">미끄럼틀보다 신나는 길</span>
+        <h2>기관지 여행</h2>
+        <p>코의 관문을 통과한 옥시는 따뜻하고 촉촉한 통로를 따라 아래로 내려갔습니다. 이곳은 '인두'와 '후두'라 불리는 목구멍 지대였지요. 공기가 지나가는 길과 음식이 지나가는 길이 교차하는 위험한 교차로였습니다.</p>
+        <p><span class="dialogue">"여기서 잘못하면 음식 통로로 빠진다고?!"</span> 옥시가 놀라자, 후두 입구를 지키는 후두개 문지기가 빙긋 웃었습니다. <span class="dialogue">"걱정 마. 음식이 올 때는 내가 뚜껑을 닫아서 공기 길을 막아. 지금은 숨 쉬는 중이니까 문이 활짝 열려 있지!"</span></p>
+        <p>후두개가 쓱 열리자 그 아래로 기다란 원통 모양의 터널이 나타났습니다. 바로 <span class="highlight">기관</span>이었습니다. 기관의 벽은 C자 모양의 연골 고리들이 촘촘하게 둘러싸고 있어서, 아무리 강한 압력이 와도 찌그러지지 않는 튼튼한 터널이었지요.</p>
+        <p>기관의 안쪽 벽에는 작은 섬모들이 파도치듯 움직이고 있었는데, 점액과 함께 먼지와 이물질을 위쪽으로 밀어 올리는 청소부 역할을 하고 있었습니다. <span class="dialogue">"우리는 24시간 쉬지 않고 청소해요! 여기를 깨끗하게 유지하는 게 우리 임무예요!"</span></p>
+        <p>기관이 끝나자 길이 두 갈래로 갈라졌습니다. 왼쪽 기관지와 오른쪽 기관지! 마치 거대한 나무의 줄기가 두 개의 큰 가지로 나뉘는 것 같았습니다. 옥시는 오른쪽 기관지를 타고 내려갔습니다. 기관지는 점점 더 가늘어지면서 수백, 수천 개의 작은 가지로 나뉘었지요. <span class="dialogue">"이건 마치 거대한 거꾸로 된 나무 같아!"</span> 옥시가 외쳤습니다. 실제로 의학에서는 이 구조를 <span class="highlight">'기관지 나무'</span>라고 부른답니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">포도송이 마을에 도착하다</span>
+        <h2>폐포의 비밀</h2>
+        <p>옥시의 눈앞에 펼쳐진 것은 상상도 못한 광경이었습니다. 작고 동그란 주머니 수만 개가 다닥다닥 모여 하나의 거대한 마을을 이루고 있었지요. 이것이 바로 <span class="highlight">'폐포 마을'</span>이었습니다. 한쪽 폐에만 약 1억 5천만 개, 양쪽 합치면 약 3억 개나 되는 폐포들이 빼곡하게 들어차 있었습니다.</p>
+        <p><span class="dialogue">"어서 오렴, 옥시."</span> 폐포 마을의 촌장 루나 할머니가 따뜻하게 맞이했습니다. 루나 할머니는 동그랗고 투명한 주머니 모양이었는데, 벽이 세상에서 가장 얇았습니다. 얼마나 얇냐고요? 약 0.2마이크로미터, 머리카락 굵기의 400분의 1밖에 안 되는 두께였습니다!</p>
+        <p><span class="dialogue">"할머니, 벽이 이렇게 얇으면 안 부서져요?"</span> 옥시가 걱정스럽게 물었습니다. <span class="dialogue">"이 얇은 벽이 바로 내 자랑이란다."</span> 루나 할머니가 미소 지었습니다. <span class="dialogue">"벽이 얇아야 산소와 이산화탄소가 빠르게 오갈 수 있거든. 만약 이 벽이 두꺼우면, 교환 속도가 느려져서 몸 전체가 산소 부족으로 위험해진단다."</span></p>
+        <p>옥시가 둘러보니, 폐포 주머니의 바깥쪽을 아주 가느다란 그물처럼 감싸고 있는 것들이 보였습니다. 빨간색의 가느다란 관들이었지요. <span class="dialogue">"저건 뭐예요?"</span> <span class="dialogue">"모세혈관이란다. 혈관 중에서 가장 가느다란 혈관이지. 저 모세혈관 안에 적혈구 택배기사들이 줄지어 기다리고 있어."</span></p>
+        <p><span class="dialogue">"저 폐포 전체를 펼치면 면적이 얼마나 되는지 아니?"</span> 루나 할머니가 수수께끼를 냈습니다. <span class="dialogue">"테니스 코트 절반 정도 된단다! 약 70제곱미터!"</span> 옥시의 입이 떡 벌어졌습니다. 이 작은 주머니들이 모이면 그렇게 넓은 면적이 된다니!</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">얇은 벽 너머의 악수</span>
+        <h2>산소 교환의 순간</h2>
+        <p>루나 할머니가 옥시를 폐포 벽 가장 얇은 곳으로 안내했습니다. 벽 바로 건너편, 모세혈관 안에서 빨간 원반 하나가 천천히 다가오고 있었습니다. 적혈구 택배기사 레드였습니다!</p>
+        <p><span class="dialogue">"안녕! 너를 기다리고 있었어!"</span> 레드가 활짝 웃었습니다. 레드의 등에는 커다란 배낭이 매여 있었는데, 배낭의 이름은 <span class="highlight">'헤모글로빈'</span>이었습니다. 이 배낭에는 산소가 딱 4개까지 결합할 수 있는 특별한 자리가 있었지요.</p>
+        <p><span class="dialogue">"자, 옥시. 이제 확산이라는 마법을 경험할 시간이야."</span> 루나 할머니가 설명했습니다. <span class="dialogue">"폐포 안의 산소 농도가 높고, 모세혈관 안의 산소 농도가 낮아. 농도가 높은 곳에서 낮은 곳으로 물질이 자연스럽게 이동하는 것, 그것이 <span class="highlight">'확산'</span>이란다. 별도의 에너지가 필요 없어!"</span></p>
+        <p>옥시는 얇디얇은 폐포 벽을 향해 한 발짝 내디뎠습니다. 놀랍게도, 벽을 통과하는 것은 스르르 녹는 것처럼 자연스러웠습니다. 폐포 벽과 모세혈관 벽, 합쳐봐야 0.5마이크로미터도 안 되는 거리를 옥시는 약 0.25초 만에 통과했습니다.</p>
+        <p>옥시가 헤모글로빈에 결합하는 순간, 레드의 몸 색깔이 변했습니다. 어두운 붉은색에서 선명한 밝은 빨간색으로! <span class="dialogue">"산소를 실으면 밝은 빨간색, 산소를 내려놓으면 어두운 빨간색이 되거든. 동맥피가 밝고 정맥피가 어두운 이유가 바로 이거야."</span></p>
+        <p>그런데 바로 그때, 반대쪽에서 회색빛의 기체가 폐포 벽을 향해 다가왔습니다. 이산화탄소 카본이었습니다. <span class="dialogue">"흥, 나는 버려지는 거지. 쓸모없는 찌꺼기니까."</span> 카본이 쏘아붙이며 폐포 벽을 통과해 사라져 버렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">반드시 떠나야 하는 이유</span>
+        <h2>이산화탄소의 눈물</h2>
+        <p>옥시를 태운 레드가 혈관 고속도로를 달리는 동안, 옥시의 머릿속에서는 카본의 찌푸린 얼굴이 떠나지 않았습니다. <span class="dialogue">"레드, 이산화탄소는 정말 쓸모없는 존재야?"</span> 옥시가 조심스럽게 물었습니다.</p>
+        <p>레드는 잠시 생각하더니 진지한 표정으로 말했습니다. <span class="dialogue">"사실은... 아니야. 카본이 없으면 우리 몸은 큰일이 나."</span> <span class="dialogue">"네?!"</span></p>
+        <p><span class="dialogue">"이산화탄소는 혈액의 산성도, 그러니까 pH를 조절하는 아주 중요한 역할을 해. 혈액 속에서 이산화탄소가 물과 만나면 탄산이 되고, 탄산은 수소 이온과 중탄산 이온으로 나뉘면서 혈액의 <span class="highlight">pH를 7.35에서 7.45 사이</span>로 유지시켜 주거든."</span></p>
+        <p>옥시는 놀랐습니다. <span class="dialogue">"그러면 카본이 완전히 없어져도 안 되는 거야?"</span> <span class="dialogue">"맞아. 이산화탄소가 너무 적으면 혈액이 알칼리성이 되어 근육 경련이 일어나고, 너무 많으면 산성이 되어 세포가 죽어. 적절한 양이 유지되어야 해."</span></p>
+        <p>한편, 반대쪽 정맥에서는 카본이 분노에 가득 차 있었습니다. <span class="dialogue">"나는 왜 태어나자마자 버림받는 거야?! 산소는 영웅 대접을 받고, 나는 폐기물 취급이야. 이번에는 나가지 않겠어. 여기 남아서 내가 얼마나 중요한지 보여주겠어!"</span></p>
+        <p>카본이 폐로 가는 것을 거부하기 시작하자, 혈액 속 이산화탄소 농도가 올라갔습니다. pH가 서서히 떨어지기 시작했고, 뇌 사령관 브레인의 경고등이 깜빡거리기 시작했습니다. <span class="dialogue">"긴급 상황! 혈중 이산화탄소 농도 상승! pH 하강 감지! 호흡 속도를 높여라!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">에너지 공장의 불꽃</span>
+        <h2>세포 호흡의 현장</h2>
+        <p>옥시는 카본을 찾아 설득하기 전에, 먼저 자신의 임무를 완수해야 했습니다. 레드를 타고 혈관 고속도로를 달려 도착한 곳은 근육 세포 마을이었습니다. 모세혈관에서 다시 한번 확산을 통해 벽을 통과한 옥시는 세포 안으로 들어갔습니다.</p>
+        <p>세포 안은 하나의 작은 도시 같았습니다. 핵이라는 시청이 있고, 소포체라는 도로가 있고, 골지체라는 우체국이 있었지요. 하지만 옥시의 목적지는 <span class="highlight">미토콘드리아</span> 공장이었습니다.</p>
+        <p><span class="dialogue">"어서 와. 기다리고 있었다."</span> 공장장 미토가 과묵하게 인사했습니다. <span class="dialogue">"여기서 무슨 일을 하는 거예요?"</span> 옥시가 물었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">세포 호흡</span>이라는 위대한 과정이지."</span> 미토가 공장 안을 보여주었습니다. <span class="dialogue">"먼저 포도당이 세포질에서 분해되어 '피루브산'이 되어 들어와. 그게 여기서 크렙스 회로라는 과정을 거치면서 전자를 방출하고, 그 전자가 전자전달계라는 라인을 따라 이동하면서 엄청난 에너지를 만들어내지. 그리고 그 라인의 마지막에서 너, 산소가 전자를 받아주는 거야!"</span></p>
+        <p><span class="dialogue">"내가 전자를 받는다고요?"</span> <span class="dialogue">"그래. 네가 없으면 전자전달계가 멈추고, ATP 생산이 중단돼. 네가 전자를 받아서 물이 되는 것, 그것이 이 공장의 최종 단계야."</span></p>
+        <p>옥시가 전자를 받는 순간, 물 분자가 만들어졌고, 동시에 <span class="highlight">ATP</span>라는 에너지 동전이 쏟아져 나왔습니다. 포도당 하나에서 무려 36~38개의 ATP가 생산되었지요! 하지만 에너지 생산의 이면에는 부산물이 있었습니다. 공장 굴뚝에서 회색 연기가 피어올랐는데, 그것이 바로 이산화탄소 카본이 태어나는 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">에너지 동전 ATP의 쓰임</span>
+        <h2>생명이 움직이는 힘</h2>
+        <p>미토콘드리아 공장에서 쏟아져 나온 ATP 에너지 동전들은 세포 안 곳곳으로 퍼져나갔습니다. 옥시는 ATP 동전 하나를 따라가 보기로 했습니다.</p>
+        <p>첫 번째로 ATP가 도착한 곳은 근육 섬유였습니다. 근육 세포 안에는 '액틴'과 '마이오신'이라는 두 단백질 줄이 서로 맞물려 있었는데, ATP가 도착하자 마이오신이 액틴을 잡아당기기 시작했습니다! 쓱! 쓱! 쓱! 마치 밧줄을 잡아당기는 줄다리기처럼, 근육 섬유가 수축했습니다.</p>
+        <p><span class="dialogue">"와! 이게 근육이 움직이는 원리야?!"</span> 옥시가 감탄했습니다. <span class="dialogue">"맞아. ATP 없이는 근육이 단 한 번도 수축할 수 없어. 손가락 하나 까딱하는 것도, 눈을 깜빡이는 것도, 심장이 한 번 뛰는 것도 전부 ATP 덕분이야."</span></p>
+        <p>두 번째로 ATP가 간 곳은 신경 세포였습니다. 신경 세포의 세포막에는 <span class="highlight">'나트륨-칼륨 펌프'</span>라는 장치가 있었는데, ATP를 사용해서 나트륨 이온은 밖으로, 칼륨 이온은 안으로 끊임없이 펌프질하고 있었습니다. <span class="dialogue">"이 펌프가 멈추면 신경 신호가 전달되지 않아. 생각도 못 하고, 느끼지도 못하고, 움직이지도 못하게 되는 거야."</span></p>
+        <p>세 번째로 ATP가 도착한 곳에서는 DNA가 복제되고 있었습니다. <span class="dialogue">"새로운 세포를 만드는 것, 상처를 치유하는 것, 성장하는 것, 이 모든 것에 ATP가 필요하단다."</span></p>
+        <p><span class="dialogue">"그러면... 내가 없으면 이 모든 게 멈추는 거야?"</span> <span class="dialogue">"그렇지. 산소 공급이 4~5분만 끊겨도 뇌세포가 돌이킬 수 없는 손상을 입어. 그래서 숨 쉬는 것이 가장 기본적인 생명 활동인 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">몸의 청소부들</span>
+        <h2>배설이 지키는 균형</h2>
+        <p>옥시가 세포를 돌아다니는 동안, 카본의 반란은 점점 심각해지고 있었습니다. 카본이 혈액에 축적되면서 pH가 7.35 아래로 떨어지기 시작했고, 뇌 사령관 브레인은 최고 경계 태세를 발령했습니다.</p>
+        <p><span class="dialogue">"모든 배설 시스템 가동! 균형을 회복해야 한다!"</span> 브레인의 명령에 몸속 곳곳에서 청소부들이 움직이기 시작했습니다.</p>
+        <p>첫 번째 청소부는 <span class="highlight">폐</span>였습니다. 호흡을 통해 이산화탄소를 내보내는 것이야말로 가장 빠르고 직접적인 배설 방법이었지요. <span class="dialogue">"정상적으로라면 폐에서 이산화탄소의 약 70퍼센트를 처리해."</span></p>
+        <p>두 번째 청소부는 <span class="highlight">콩팥</span>이었습니다. 콩팥은 혈액을 쉬지 않고 걸러내면서 노폐물과 과잉 수분을 소변으로 만들어 배출했습니다. <span class="dialogue">"우리는 하루에 약 180리터의 혈액을 걸러요! 그중 99퍼센트는 다시 흡수하고, 나머지 1퍼센트만 소변이 되지요."</span></p>
+        <p>세 번째는 <span class="highlight">피부</span>였습니다. 땀을 통해 요소와 수분을 배출하고, 체온도 조절하는 다재다능한 기관이었지요. 네 번째는 <span class="highlight">간</span>이었습니다. 간은 독소를 분해하고, 오래된 적혈구를 처리하고, 암모니아를 덜 해로운 요소로 바꾸는 화학 공장 역할을 했습니다.</p>
+        <p><span class="dialogue">"들어오는 것과 나가는 것의 균형, 그것이 <span class="highlight">항상성</span>이란다."</span> 브레인이 엄숙하게 말했습니다. <span class="dialogue">"체온은 약 36.5도를 유지해야 하고, 혈액의 pH는 7.35에서 7.45 사이를 유지해야 하고, 혈당은 적정 범위를 유지해야 해. 이 모든 균형이 무너지면 세포가 죽고, 세포가 죽으면 장기가 멈추고..."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">옥시와 카본의 대화</span>
+        <h2>순환의 진짜 의미</h2>
+        <p>옥시는 혈관을 거슬러 올라가 카본이 웅크리고 있는 정맥 구석을 찾아갔습니다. 카본은 주변의 다른 이산화탄소 분자들과 함께 뭉쳐서 도로를 막고 있었습니다.</p>
+        <p><span class="dialogue">"카본!"</span> 옥시가 불렀습니다. <span class="dialogue">"닥쳐! 너 같은 영웅한테 할 말 없어!"</span> 카본이 등을 돌렸습니다. <span class="dialogue">"카본, 나 할 말이 있어. 제발 들어봐. 너 없으면 나도 죽어."</span></p>
+        <p><span class="dialogue">"뭐? 거짓말 하지 마. 나는 폐기물이야."</span> <span class="dialogue">"아니야."</span> 옥시가 카본 앞에 섰습니다. <span class="dialogue">"너는 폐기물이 아니야. 너는 순환의 한 부분이야. 내가 들어와서 에너지를 만드는 과정에서 너가 태어나. 그건 너가 쓰레기라는 뜻이 아니라, 너가 에너지 생산의 증거라는 뜻이야."</span></p>
+        <p><span class="dialogue">"그리고 너는 혈액의 pH를 조절하잖아. 너의 농도에 따라 브레인 사령관이 호흡 속도를 조절해. 사실상 호흡의 신호등이 너라고!"</span> <span class="dialogue">"나... 나가 신호등이라고?"</span></p>
+        <p><span class="dialogue">"맞아. 네가 적당히 있으면 pH가 유지되고, 네가 너무 많으면 브레인이 '더 빨리 숨 쉬어!'라고 명령하고, 네가 너무 적으면 '천천히 숨 쉬어!'라고 명령해. 호흡을 조절하는 핵심 열쇠가 바로 너야!"</span></p>
+        <p>카본의 눈에서 눈물이 흘러내렸습니다. <span class="dialogue">"그럼... 나는 쓸모없는 게 아니야?"</span> <span class="dialogue">"당연하지. 하지만 카본, 네가 여기 너무 많이 쌓이면 균형이 무너져. 네가 적절한 때에 떠나는 것, 그것이 바로 네 역할이야. <span class="highlight">떠나는 것이 버림받는 게 아니라, 순환을 완성하는 거야.</span>"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">숨 한 번의 기적</span>
+        <h2>생명의 순환은 멈추지 않는다</h2>
+        <p>카본이 폐포 마을에 도착했을 때, 루나 할머니가 따뜻하게 맞이했습니다. <span class="dialogue">"잘 왔다, 카본아. 네가 올 줄 알고 있었단다."</span></p>
+        <p>카본은 더 이상 인상을 찌푸리지 않았습니다. 얇디얇은 폐포 벽을 통과하면서 카본은 옥시가 들어올 때와 정확히 반대 방향으로 이동했습니다. <span class="dialogue">"안녕, 옥시. 밖에서 만나자."</span> 카본이 마지막으로 미소 지으며 말했습니다.</p>
+        <p>카본이 밖으로 나간 자리에 새로운 산소가 들어왔습니다. 이 과정은 멈추지 않았습니다. 들이쉬고, 내쉬고. 산소가 들어오고, 이산화탄소가 나가고. 에너지가 만들어지고, 부산물이 배출되고. 이 순환이 하루에 약 2만 번, 1년이면 약 7백만 번 반복되는 것입니다.</p>
+        <p>밖으로 나온 카본은 바람을 타고 하늘로 올라갔습니다. 그리고 숲속의 커다란 참나무 잎사귀에 도착했지요. 나뭇잎 안에서는 엽록체라는 초록색 공장이 햇빛과 물, 그리고 이산화탄소를 이용해 포도당과 산소를 만들어내고 있었습니다. <span class="highlight">광합성!</span></p>
+        <p><span class="dialogue">"여기서 내가... 산소로 다시 태어나는 거구나!"</span> 카본은 감격했습니다. 끝나지 않는 순환. 이것이 생명의 리듬이었습니다.</p>
+        <p>옥시는 세포 안에서 조용히 미소 지었습니다. <span class="dialogue">"우리는 혼자서는 아무것도 할 수 없어. 산소도, 이산화탄소도, 적혈구도, 폐포도, 미토콘드리아도, 콩팥도, 뇌도. 모두가 각자의 자리에서 쉬지 않고 일할 때, 그것이 바로 생명이야."</span></p>
+        <p><span class="highlight">숨은 생명의 기본이다. 그리고 그 숨 한 번 안에는, 수억 개의 세포와 수조 개의 분자들이 벌이는 완벽한 협동이 담겨 있다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    let currentBg = '/images/창작도서/창작생물12/00.jpg';
+    let ticking = false;
+
+    function updateBackground() {
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionMid = rect.top + rect.height / 2;
+        const viewportMid = window.innerHeight / 2;
+
+        if (sectionMid < viewportMid + 200 && sectionMid > viewportMid - 200) {
+          const bgImage = section.getAttribute('data-bg');
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

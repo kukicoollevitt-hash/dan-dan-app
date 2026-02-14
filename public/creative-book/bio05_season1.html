@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦋 초록이의 위대한 모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: block;
+      color: #2E7D32;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2d2d2d;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 17px;
+      line-height: 2;
+      color: #444;
+      margin-bottom: 15px;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .story-card .highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(46, 125, 50, 0.2) 60%);
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #2E7D32;
+      font-weight: 500;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFD700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 닫기 버튼 */
+    .close-btn {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .close-btn:hover {
+      transform: scale(1.1);
+      background: #fff;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .intro-section {
+        padding: 30px 20px;
+      }
+
+      .intro-content {
+        padding: 40px 25px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+
+      .story-section {
+        padding: 30px 20px;
+        justify-content: center !important;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-section:nth-child(odd) .story-card,
+      .story-section:nth-child(even) .story-card {
+        transform: translateY(50px);
+      }
+
+      .story-card.active {
+        transform: translateY(0);
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 15px;
+        line-height: 1.9;
+      }
+
+      .close-btn {
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🦋 초록이의 위대한 모험</h1>
+        <p class="subtitle">
+          — 나비가 되기로 결심한 애벌레 —<br>
+          완전변태의 신비로운 여정
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 초록이 → 하늘이 (주인공):</strong> 겁 많은 호랑나비 애벌레. 번데기를 거쳐 아름다운 나비 '하늘이'로 다시 태어난다.</p>
+          <p><strong>▸ 노랑이 (친구):</strong> 밝고 용감한 친구 애벌레. 초록이에게 번데기의 의미를 일깨워 준다.</p>
+          <p><strong>▸ 할멈 점박이 (조력자):</strong> 오래 산 늙은 무당벌레. 숲속의 현자이자 불완전변태 생물.</p>
+          <p><strong>▸ 울림이 (불완전변태 대표):</strong> 땅속에서 17년을 기다린 매미 유충. '변하지 않는 변태'를 대표.</p>
+          <p><strong>▸ 의심이 (내면의 갈등):</strong> 초록이 마음속에서 들리는 두려움의 목소리. 변화에 대한 공포를 상징.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">나뭇잎 위에서 태어난 생명</span>
+        <h2>탱자나무 위의 작은 알</h2>
+        <p>따스한 봄바람이 불던 날, 탱자나무 잎사귀 위에 작은 알 하나가 놓여 있었습니다. 동그랗고 노르스름한 그 알은, 마치 작은 보석처럼 햇살을 받아 반짝였죠.</p>
+        <p>며칠 뒤, 알 속에서 아주 작은 생명체가 깨어났습니다. 연둣빛 몸에 검은 줄무늬가 희미하게 보이는 아기 애벌레. 이름은 <span class="highlight">'초록이'</span>.</p>
+        <p><span class="dialogue">"여기가... 세상인가?"</span> 초록이는 눈을 깜빡이며 고개를 들었습니다. 사방은 거대한 초록빛으로 가득했고, 머리 위로 해가 따뜻하게 비추고 있었습니다.</p>
+        <p>하지만 초록이는 곧 두려움에 떨기 시작했습니다. 모든 것이 너무 컸거든요. 나뭇잎, 나뭇가지, 하늘, 그리고 저 멀리 날아다니는 알록달록한 날개 달린 생명체들...</p>
+        <p><span class="dialogue">"저건 뭐지? 무서워..."</span> 초록이는 자기 몸을 나뭇잎에 바짝 붙이며 숨었습니다. 그때, 옆에서 밝은 목소리가 들렸습니다.</p>
+        <p><span class="dialogue">"안녕! 넌 이제 막 태어났구나? 난 노랑이야!"</span></p>
+        <p>노란색 줄무늬가 선명한 애벌레 한 마리가 초록이에게 다가왔습니다. 노랑이는 초록이보다 조금 컸고, 눈이 반짝반짝 빛났습니다.</p>
+        <p><span class="dialogue">"무서워하지 마. 여기는 안전해. 그리고 저 날아다니는 건 '나비'야. 우리의 <span class="highlight">미래</span>라고 할 수 있지."</span></p>
+        <p><span class="dialogue">"미래...요?"</span> 초록이는 고개를 갸웃거렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">몸이 변하는 이상한 일</span>
+        <h2>첫 번째 허물벗기</h2>
+        <p>초록이는 노랑이와 함께 탱자나무에서 지내기 시작했습니다. 매일 맛있는 잎사귀를 먹고, 햇볕 아래서 낮잠을 자고, 이슬을 마시며 시간을 보냈죠.</p>
+        <p>그러던 어느 날, 초록이의 몸에 이상한 일이 일어났습니다.</p>
+        <p><span class="dialogue">"노랑이... 나 몸이 이상해. 피부가 너무 꽉 끼는 것 같아."</span></p>
+        <p>노랑이가 웃으며 말했습니다. <span class="dialogue">"아, 그건 <span class="highlight">허물벗기</span>가 시작된 거야! 우리 애벌레는 몸이 자라면 낡은 피부를 벗고 새로운 피부로 갈아입어. 걱정 마, 자연스러운 일이야."</span></p>
+        <p>초록이는 불안한 마음으로 며칠을 보냈습니다. 그리고 마침내, 등이 쩍 하고 갈라지면서 낡은 피부가 벗겨지기 시작했습니다!</p>
+        <p><span class="dialogue">"으으으... 힘들어...!"</span> 초록이는 온 힘을 다해 낡은 피부에서 빠져나왔습니다. 그리고 새 피부를 확인하고 깜짝 놀랐습니다.</p>
+        <p><span class="dialogue">"와! 몸이 커졌어! 그리고 줄무늬도 더 선명해졌어!"</span></p>
+        <p>노랑이가 옆에서 박수를 쳤습니다. <span class="dialogue">"축하해, 초록이! 이제 2령 유충이 된 거야. 앞으로 몇 번 더 허물을 벗으면 드디어 <span class="highlight">번데기</span>가 될 준비가 끝나!"</span></p>
+        <p><span class="dialogue">"번데기...?"</span> 초록이의 눈이 커졌습니다. 그 단어에서 왠지 모를 두려움이 느껴졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">숲속의 현자를 만나다</span>
+        <h2>할멈 점박이</h2>
+        <p>세 번째 허물벗기를 마친 어느 날, 초록이는 탱자나무를 벗어나 숲속을 탐험하기로 했습니다. 노랑이는 낮잠 중이었기에 혼자 모험을 떠났죠.</p>
+        <p>숲속은 신기한 것들로 가득했습니다. 거대한 버섯, 이끼 낀 바위, 이름 모를 꽃들... 하지만 초록이는 금세 길을 잃고 말았습니다.</p>
+        <p><span class="dialogue">"어... 어디로 가야 하지?"</span> 초록이가 두리번거리는데, 머리 위에서 느릿느릿한 목소리가 들렸습니다.</p>
+        <p><span class="dialogue">"젊은이, 길을 잃었나 보구나."</span></p>
+        <p>올려다보니, 나뭇잎 위에 빨간색 바탕에 검은 점이 박힌 둥근 벌레가 앉아 있었습니다. 나이가 많이 든 듯 움직임이 느렸습니다.</p>
+        <p><span class="dialogue">"저는... 초록이예요. 죄송한데, 누구세요?"</span></p>
+        <p><span class="dialogue">"나는 <span class="highlight">할멈 점박이</span>라고 한단다. 이 숲에서 오래오래 살았지. 무당벌레로서 말이야."</span></p>
+        <p>초록이는 무당벌레를 처음 보았습니다. <span class="dialogue">"할머니도 나비가 되시나요?"</span></p>
+        <p>할멈 점박이가 껄껄 웃었습니다. <span class="dialogue">"호호, 나는 나비가 되지 않는단다. 무당벌레는 <span class="highlight">'불완전변태'</span>를 하거든. 알에서 애벌레가 되고, 허물만 벗으면서 조금씩 어른이 되는 거지. 너희 나비처럼 번데기가 되어 완전히 다른 모습으로 변하지는 않아."</span></p>
+        <p><span class="dialogue">"완전히 다른 모습이요...?"</span> 초록이는 그 말이 무서웠습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">17년을 기다린 친구</span>
+        <h2>울림이의 이야기</h2>
+        <p>할멈 점박이와 이야기를 나누다 보니 어느새 해가 기울고 있었습니다. 돌아가는 길을 알려주시던 할멈이 갑자기 멈췄습니다.</p>
+        <p><span class="dialogue">"잠깐, 저기 울림이가 있구나. 소개해 줄게."</span></p>
+        <p>땅에서 무언가가 천천히 기어 나오고 있었습니다. 흙투성이의, 갈색 벌레... 아니, <span class="highlight">매미 유충</span>이었습니다.</p>
+        <p><span class="dialogue">"울림아, 이 친구는 초록이야. 나비가 될 애벌레지."</span></p>
+        <p>울림이가 힘겹게 눈을 들었습니다. <span class="dialogue">"반가워... 나는 울림이야. 땅속에서... 17년을 살았어."</span></p>
+        <p><span class="dialogue">"17년이요?!"</span> 초록이는 깜짝 놀랐습니다.</p>
+        <p><span class="dialogue">"그래. 나도 <span class="highlight">불완전변태</span>를 하지. 알에서 태어나 땅속에서 나무 뿌리의 즙을 먹으며 천천히 자랐어. 그리고 이제야 땅 위로 올라왔지. 곧 마지막 허물을 벗고 날개 달린 매미가 될 거야."</span></p>
+        <p><span class="dialogue">"하지만... 17년이나 어둠 속에서 기다렸잖아요. 무섭지 않았어요?"</span></p>
+        <p>울림이가 부드럽게 미소 지었습니다. <span class="dialogue">"무섭기도 했지. 하지만 <span class="highlight">기다림 끝에 무엇이 있을지 알았기 때문에</span> 견딜 수 있었어. 너도 곧 알게 될 거야, 초록이."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">마음속에서 들려오는 목소리</span>
+        <h2>의심이의 속삭임</h2>
+        <p>탱자나무로 돌아온 초록이는 이상한 기분이 들었습니다. 몸은 점점 커지고 있었고, 네 번째 허물벗기가 다가오고 있었습니다. 하지만 마음속에서 자꾸 이상한 목소리가 들렸습니다.</p>
+        <p><span class="dialogue">"번데기가 되면 어떡하지? 완전히 녹아버린다면서? 무서워..."</span></p>
+        <p>그 목소리는 점점 커졌습니다. 초록이는 이 목소리에 <span class="highlight">'의심이'</span>라는 이름을 붙였습니다.</p>
+        <p>의심이는 밤마다 초록이의 귀에 속삭였습니다. <span class="dialogue">"넌 지금 이대로도 괜찮아. 왜 굳이 변해야 해? 번데기 속에서 완전히 사라질 수도 있어. 그냥 애벌레로 살면 안 돼?"</span></p>
+        <p>노랑이가 걱정스럽게 물었습니다. <span class="dialogue">"초록이, 요즘 왜 그래? 밥도 안 먹고..."</span></p>
+        <p><span class="dialogue">"노랑이... 난 무서워. 번데기가 되면 정말 내가 사라지는 거 아냐? 지금의 나는 어디로 가는 거야?"</span></p>
+        <p>노랑이는 잠시 생각하더니 조용히 말했습니다. <span class="dialogue">"나도 무서워, 사실. 하지만 할멈 점박이 할머니가 말씀하셨잖아. <span class="highlight">'완전변태'</span>는 완전히 새로워지는 거래. 무섭지만... 우리가 될 수 있는 가장 아름다운 모습이 될 거래."</span></p>
+        <p>초록이는 고개를 떨궜습니다. 의심이의 목소리가 아직도 귓가에 맴돌았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">노랑이의 용기 있는 선택</span>
+        <h2>노랑이의 번데기</h2>
+        <p>다섯 번째 허물벗기를 마친 어느 날, 노랑이가 초록이에게 다가왔습니다. 노랑이의 몸이 이상하게 단단해 보였습니다.</p>
+        <p><span class="dialogue">"초록이... 나 이제 <span class="highlight">번데기</span>가 될 것 같아."</span></p>
+        <p>초록이의 눈이 커졌습니다. <span class="dialogue">"지금? 벌써?"</span></p>
+        <p><span class="dialogue">"응. 몸이 이상해. 뭔가가 나를 부르는 것 같아. 무섭지만... 가야 할 것 같아."</span></p>
+        <p>노랑이는 튼튼한 나뭇가지를 찾아 실을 뿜어 자신의 몸을 고정시켰습니다. 그리고 천천히 마지막 허물을 벗기 시작했습니다.</p>
+        <p>초록이는 숨을 죽이고 지켜보았습니다. 노랑이의 몸이 점점 딱딱해지고, 연둣빛 껍데기가 그녀를 감쌌습니다. 마침내 노랑이는 완전히 <span class="highlight">번데기</span>가 되었습니다.</p>
+        <p><span class="dialogue">"노랑이...?"</span> 초록이가 조심스럽게 불렀습니다. 하지만 대답이 없었습니다. 번데기는 그저 조용히 바람에 흔들릴 뿐이었습니다.</p>
+        <p>초록이는 울음을 터뜨렸습니다. <span class="dialogue">"노랑이가 사라졌어... 정말로..."</span></p>
+        <p>그때, 의심이의 목소리가 다시 들렸습니다. <span class="dialogue">"봤지? 노랑이는 사라진 거야. 넌 저렇게 되고 싶어?"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">번데기 속에서 일어나는 기적</span>
+        <h2>완전변태의 비밀</h2>
+        <p>노랑이가 번데기가 된 후, 초록이는 매일 그 옆에 앉아 있었습니다. 할멈 점박이가 찾아왔습니다.</p>
+        <p><span class="dialogue">"초록이, 네가 슬퍼하는 거 알아. 하지만 노랑이는 사라진 게 아니란다."</span></p>
+        <p><span class="dialogue">"하지만... 움직이지도 않고, 말하지도 않아요..."</span></p>
+        <p>할멈 점박이가 천천히 설명했습니다. <span class="dialogue">"번데기 속에서는 놀라운 일이 일어나고 있단다. 노랑이의 몸은 지금 <span class="highlight">완전히 새롭게 만들어지고 있어</span>. 애벌레의 세포들이 녹아서 특별한 세포인 '성충원기'를 중심으로 다시 모이는 거야. 날개, 더듬이, 긴 다리... 전혀 다른 몸이 만들어지는 중이지."</span></p>
+        <p><span class="dialogue">"그럼... 노랑이의 기억은요? 노랑이는 아직 노랑이인가요?"</span></p>
+        <p><span class="dialogue">"물론이지. 껍데기만 바뀌는 거야. 노랑이의 <span class="highlight">마음, 기억, 그리고 본질</span>은 그대로란다. 오히려 더 자유로워질 거야. 기어 다니던 아이가 하늘을 날게 되니까."</span></p>
+        <p>초록이는 번데기를 바라보았습니다. 처음으로, 의심이의 목소리가 조금 작아지는 것 같았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">변화의 시간이 다가오다</span>
+        <h2>초록이의 결심</h2>
+        <p>며칠 후, 초록이의 몸이 이상해지기 시작했습니다. 더 이상 배가 고프지 않았고, 몸이 무거워지며 움직이기 힘들어졌습니다.</p>
+        <p><span class="dialogue">"드디어... 내 차례가 온 건가."</span></p>
+        <p>의심이의 목소리가 다급해졌습니다. <span class="dialogue">"안 돼! 지금이라도 도망쳐! 변하지 않아도 돼!"</span></p>
+        <p>하지만 초록이는 깊은 숨을 쉬었습니다. 그리고 노랑이의 번데기를 바라보았습니다. 번데기는 조금씩 색이 변하고 있었습니다. 안에서 무언가가 움직이는 것처럼요.</p>
+        <p><span class="dialogue">"노랑이가 기다리고 있어. 나도... <span class="highlight">나비가 되고 싶어</span>."</span></p>
+        <p>초록이는 튼튼한 나뭇가지를 찾았습니다. 몸에서 실이 나와 자신을 고정시켰습니다. 두려웠지만, 동시에 이상한 평화가 찾아왔습니다.</p>
+        <p><span class="dialogue">"안녕, 의심아. 넌 내 일부였어. 하지만 이제 놓아줄게."</span></p>
+        <p>의심이의 목소리가 점점 희미해졌습니다. <span class="dialogue">"정말... 괜찮을까...?"</span></p>
+        <p><span class="dialogue">"모르겠어. 하지만 <span class="highlight">변하지 않으면 절대 알 수 없잖아</span>."</span></p>
+        <p>그리고 초록이는 눈을 감았습니다. 마지막 허물이 벗겨지고, 연둣빛 번데기가 초록이를 감쌌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">어둠 속에서 만난 빛</span>
+        <h2>번데기 속의 꿈</h2>
+        <p>번데기 속은 따뜻했습니다. 초록이는 어둠 속에 떠 있는 것 같았습니다.</p>
+        <p><span class="dialogue">'여기가... 번데기 속인가?'</span></p>
+        <p>처음에는 무서웠습니다. 자기 몸이 녹아내리는 느낌이 들었거든요. 하지만 곧 깨달았습니다. 사라지는 게 아니라, <span class="highlight">다시 만들어지고 있다</span>는 것을.</p>
+        <p>꿈속에서 초록이는 자신의 과거를 보았습니다. 알에서 태어나던 순간, 노랑이를 처음 만났을 때, 할멈 점박이와 나눈 이야기, 울림이의 17년 기다림...</p>
+        <p><span class="dialogue">'나는... 누구지?'</span></p>
+        <p>어둠 속에서 빛이 보이기 시작했습니다. 처음엔 작은 점이었지만, 점점 커졌습니다.</p>
+        <p><span class="dialogue">'저 빛이... 나를 부르고 있어.'</span></p>
+        <p>초록이는 빛을 향해 나아갔습니다. 그리고 깨달았습니다. 자신의 등에서 무언가가 자라나고 있다는 것을. 크고, 아름답고, 자유로운 그 무언가...</p>
+        <p><span class="highlight">날개</span>였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">하늘을 나는 새로운 나</span>
+        <h2>하늘이의 탄생</h2>
+        <p>햇살이 따스하게 비추던 어느 아침, 번데기에 금이 가기 시작했습니다.</p>
+        <p>쩍!</p>
+        <p>번데기가 열리고, 그 안에서 젖은 날개를 가진 나비가 천천히 나왔습니다. 검은 바탕에 노란 줄무늬, 그리고 뒷날개에 빨간 점이 아름답게 빛나는 <span class="highlight">호랑나비</span>.</p>
+        <p>나비는 잠시 나뭇가지에 앉아 날개를 말렸습니다. 그리고 처음으로 날개를 펼쳤습니다.</p>
+        <p><span class="dialogue">"내가... 날 수 있어!"</span></p>
+        <p>그때, 옆에서 익숙한 목소리가 들렸습니다. <span class="dialogue">"초록이! 아니, 이제는..."</span></p>
+        <p>돌아보니, 아름다운 노란 나비가 날아오고 있었습니다. 노랑이였습니다!</p>
+        <p><span class="dialogue">"노랑이!"</span></p>
+        <p><span class="dialogue">"우리 이제 나비니까, 새 이름이 필요하지 않을까? 난 '햇살이'라고 할래. 넌?"</span></p>
+        <p>나비가 된 초록이는 하늘을 올려다보았습니다. 끝없이 펼쳐진 푸른 하늘. 이제 자신의 것이 된 세계.</p>
+        <p><span class="dialogue">"난... <span class="highlight">'하늘이'</span>. 이제 저 하늘을 날 수 있으니까."</span></p>
+        <p>두 나비는 함께 날아올랐습니다. 바람을 타고, 구름 사이로, 꽃밭 위로. 세상은 기어 다니던 때와는 전혀 다르게 보였습니다.</p>
+        <p>하늘이는 깨달았습니다. 변화는 끝이 아니라 <span class="highlight">새로운 시작</span>이라는 것을. 그리고 두려움을 이겨내고 변화를 받아들였을 때, 자신이 상상하지 못했던 아름다운 모습이 될 수 있다는 것을.</p>
+        <p style="text-align: center; margin-top: 30px; font-weight: 700; color: #2E7D32;">— 🦋 끝 🦋 —</p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 스토리 닫기
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // IntersectionObserver로 스크롤 기반 배경 변경 및 카드 애니메이션
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0.3
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+
+        if (entry.isIntersecting) {
+          // 카드 활성화
+          if (card) card.classList.add('active');
+
+          // 배경 변경
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+        } else {
+          // 카드 비활성화
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 첫 번째 섹션 즉시 활성화
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) {
+        setTimeout(() => {
+          firstCard.classList.add('active');
+        }, 500);
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사과 뉴턴이와 청년 아이작의 우주를 바꾼 질문</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리03/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF7043 0%, #E64A19 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255, 112, 67, 0.15);
+      color: #E64A19;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #FF7043;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #E64A19;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFAB91;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(255, 112, 67, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(230, 74, 25, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 112, 67, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🍎 사과는 왜 하늘로 가지 않았을까, 중력이 들려준 이야기</h1>
+        <p class="subtitle">
+          《사과 뉴턴이와 청년 아이작의 우주를 바꾼 질문》<br>
+          교과기반 창작도서 · 물리 03
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>🍎 뉴턴이:</strong> 생각이 많은 빨간 사과, '왜 떨어지는가'를 고민하는 호기심 가득한 주인공</p>
+          <p><strong>🧑‍🔬 아이작:</strong> 스물세 살 대학생 (아이작 뉴턴), 사과의 낙하에서 우주의 법칙을 발견하는 천재 청년</p>
+          <p><strong>🟢 풋풋이:</strong> 사과나무의 초록 사과, '그냥 떨어지면 되지'라며 질문을 귀찮아하는 존재</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">세상을 바꾼 가을날 오후의 사건</span>
+        <h2>🍎 떨어진 사과</h2>
+        <p>1665년 영국, 울스소프 마을의 한 사과 농장에는 특별한 사과나무가 한 그루 서 있었습니다. 이 나무에 매달린 사과 중 유난히 빨갛고 탐스러운 녀석이 하나 있었는데, 이 사과의 이름은 '뉴턴이'였어요. 뉴턴이는 다른 사과들과 달리 생각이 아주 많은 사과였습니다. <span class="dialogue">"나는 왜 매일 아래로 아래로 끌려가는 느낌이 드는 걸까? 왜 위로 올라가지 못하고 아래로만 가야 하는 거지?"</span> 뉴턴이가 매일 중얼거렸지만, 다른 사과들은 관심이 없었어요.</p>
+        <p><span class="dialogue">"그냥 떨어지면 되는 거야. 사과는 다 떨어지게 되어 있잖아."</span> 옆의 초록 사과 '풋풋이'가 귀찮다는 듯 대답했습니다. 하지만 뉴턴이는 납득할 수 없었어요. <span class="dialogue">"다 떨어진다고? 왜? 누가 정한 거야? 왜 하늘로 올라가지 않는 건데?"</span></p>
+        <p>바로 그때, 나무 아래에서 한 청년이 책을 읽으며 앉아 있었습니다. 곱슬머리에 깊은 눈을 가진 이 청년의 이름은 아이작이었어요. 런던에 전염병이 돌아 대학이 문을 닫는 바람에 고향으로 돌아와 있던 스물세 살의 대학생이었지요. 아이작은 사과나무 그늘에서 빛과 수학에 대한 깊은 생각에 잠겨 있었습니다.</p>
+        <p>그 순간, 뉴턴이의 꼭지가 살짝 비틀어지면서 가지에서 떨어졌어요. 툭! 사과는 아이작의 머리 바로 옆 풀밭에 떨어졌습니다. 아이작이 흠칫 놀라 사과를 집어 들었어요. 그리고 한참 동안 사과를 바라보았습니다. <span class="dialogue">"사과는 왜 아래로 떨어졌을까? 옆으로도, 위로도 갈 수 있었을 텐데, 왜 반드시 아래로만?"</span> 뉴턴이는 자기가 떨어지면서 궁금했던 바로 그 질문을 아이작도 하고 있다는 것에 가슴이 뛰었습니다. 이 평범해 보이는 가을날 오후의 작은 사건이, <span class="highlight">인류 역사를 바꿀 위대한 발견의 씨앗</span>이 될 줄은 아무도 몰랐어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">당연한 것에 '왜?'를 묻는 용기</span>
+        <h2>❓ 의문의 시작</h2>
+        <p>뉴턴이가 땅에 떨어진 후, 신기한 일이 벌어졌습니다. 뉴턴이의 의식이 사라지지 않고, 아이작의 생각 속으로 들어간 거예요! 마치 사과와 청년의 마음이 연결된 것처럼, 뉴턴이는 아이작이 품는 모든 질문을 함께 느낄 수 있게 되었습니다.</p>
+        <p><span class="dialogue">"사과가 떨어지는 건 누구나 아는 사실이야. 하지만 '왜' 떨어지는지를 묻는 사람은 없었어."</span> 아이작이 밤하늘을 올려다보며 중얼거렸습니다. 그날 밤, 아이작의 머릿속에서 질문이 폭포처럼 쏟아지기 시작했어요. 뉴턴이도 함께 그 생각의 소용돌이 속에 빠져들었습니다.</p>
+        <p><span class="dialogue">"사과를 아래로 끌어당기는 힘이 있다면, 그 힘은 어디서 오는 걸까? 땅? 아니, 지구 전체에서 오는 건 아닐까?"</span> 아이작의 눈이 반짝였어요. <span class="dialogue">"만약 지구가 사과를 끌어당기는 거라면… 그 힘은 사과에만 작용하는 걸까? 나무에서 떨어지는 빗물에도? 공중에서 떨어지는 새 깃털에도?"</span></p>
+        <p>뉴턴이가 흥분했습니다. <span class="dialogue">"맞아! 나만 떨어지는 게 아니야. 모든 것이 아래로 떨어져!"</span> 아이작의 질문은 더 대담해졌어요. <span class="dialogue">"만약 이 힘이 산꼭대기에서도 작용하고, 구름 위에서도 작용한다면… 달에서도 작용하는 걸까?"</span></p>
+        <p>뉴턴이는 전율을 느꼈습니다. 사과 하나가 떨어지는 평범한 현상에서 시작된 질문이, 달과 우주를 향해 뻗어나가고 있었어요. 주변 사람들은 아이작을 이상하게 쳐다봤습니다. <span class="dialogue">"사과가 떨어지는 건 당연한 건데, 왜 저렇게 고민을 해?"</span> 하지만 아이작은 개의치 않았어요. 뉴턴이가 아이작의 마음속에서 속삭였습니다. <span class="highlight">"당연해 보이는 것에 '왜?'를 묻는 건 정말 용기가 필요한 일이야. 모두가 당연하다고 넘기는 것에 의문을 품는 순간, 세상이 달라지기 시작하는 거야."</span> 아이작과 뉴턴이의 위대한 탐구가 본격적으로 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">사과와 달을 연결한 놀라운 상상</span>
+        <h2>🌌 만유인력의 발견</h2>
+        <p>아이작은 밤마다 하늘의 달을 올려다보았습니다. 둥근 달이 지구 주위를 빙글빙글 돌고 있다는 것은 이미 알려진 사실이었어요. 하지만 아이작은 한 가지가 궁금했습니다. <span class="dialogue">"달은 왜 우주 멀리 날아가 버리지 않는 걸까? 무엇이 달을 붙잡고 있는 거지?"</span></p>
+        <p>그 순간, 아이작의 머릿속에서 번개가 쳤어요. 뉴턴이도 동시에 깨달음의 전율을 느꼈습니다. <span class="highlight">"사과를 아래로 끌어당기는 힘이 바로 달도 붙잡고 있는 거야!"</span></p>
+        <p>이것은 혁명적인 생각이었습니다. 당시 사람들은 하늘의 법칙과 땅의 법칙이 완전히 다르다고 믿었어요. 하늘은 신성한 영역이고, 땅은 세속적인 영역이라서 서로 다른 규칙이 적용된다고 생각했지요. 하지만 아이작은 과감하게 선언했습니다. <span class="dialogue">"아니야. 사과를 끌어당기는 힘과 달을 붙잡는 힘은 같은 힘이야!"</span></p>
+        <p>이것이 바로 <span class="highlight">'만유인력'</span>의 발견이었어요. '만유(萬有)'는 '모든 것'이라는 뜻이고, '인력(引力)'은 '끌어당기는 힘'이라는 뜻입니다. 즉, 이 우주의 모든 물체는 서로를 끌어당기고 있다는 것이지요.</p>
+        <p>뉴턴이가 감격에 떨며 말했어요. <span class="dialogue">"그러면 나도 지구를 끌어당기고 있는 거야? 작은 사과인 내가?"</span> <span class="dialogue">"그래! 지구가 너를 끌어당기는 동시에, 너도 지구를 끌어당기고 있어. 다만 네가 너무 작아서 지구가 느끼지 못할 뿐이지."</span> 아이작이 흥분해서 대답했어요. 뉴턴이는 자기가 우주의 모든 별과 행성과 연결되어 있다는 사실에 감동했습니다. 작은 사과 하나와 거대한 달, 그리고 태양과 별들이 모두 같은 힘으로 서로를 끌어당기고 있었습니다. 하늘과 땅은 분리된 것이 아니라, 하나의 법칙 아래 연결된 하나의 우주였던 것이에요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">끌어당기는 힘의 비밀 레시피</span>
+        <h2>⚖️ 질량과 거리</h2>
+        <p>만유인력의 존재를 깨달은 아이작은 다음 질문으로 넘어갔습니다. <span class="dialogue">"모든 물체가 서로 끌어당긴다면, 그 힘의 크기는 무엇이 결정하는 걸까?"</span> 뉴턴이도 궁금했어요. <span class="dialogue">"맞아. 내가 지구에 끌려가는 힘이랑 달이 지구에 끌리는 힘이 같을 리 없잖아. 뭔가 차이를 만드는 것이 있을 거야."</span></p>
+        <p>아이작은 수학적 계산을 시작했습니다. 연필과 종이 위에 수없이 많은 숫자와 기호가 적혔어요. 마침내 아이작이 환호했습니다. <span class="dialogue">"찾았어! 만유인력의 크기를 결정하는 것은 두 가지야. 바로 <span class="highlight">질량과 거리</span>!"</span></p>
+        <p>뉴턴이가 귀를 쫑긋 세웠어요. <span class="dialogue">"질량이 뭐야?"</span> <span class="dialogue">"질량은 물체에 들어 있는 물질의 양이야. 네가 가벼운 것은 질량이 작기 때문이고, 지구가 무거운 것은 질량이 어마어마하게 크기 때문이지."</span> 아이작이 설명했습니다.</p>
+        <p><span class="dialogue">"만유인력의 첫 번째 규칙은 이거야. <span class="highlight">질량이 클수록 끌어당기는 힘이 세진다.</span> 지구가 너를 강하게 끌어당기는 건, 지구의 질량이 너보다 어마어마하게 크기 때문이야."</span> 뉴턴이가 고개를 끄덕였어요. <span class="dialogue">"그러면 거리는요?"</span></p>
+        <p><span class="dialogue">"두 번째 규칙이 더 재미있어. <span class="highlight">거리가 멀어질수록 힘이 약해지는데, 그냥 약해지는 게 아니라 거리의 제곱에 반비례해서 약해져.</span>"</span> 뉴턴이가 어리둥절한 표정을 짓자, 아이작이 쉽게 풀어주었어요. <span class="dialogue">"예를 들어 거리가 두 배로 멀어지면 힘은 사분의 일로 줄고, 세 배로 멀어지면 구분의 일로 줄어드는 거야."</span></p>
+        <p>뉴턴이가 무릎을 쳤습니다. <span class="dialogue">"아! 그래서 달이 지구에서 멀리 있어도 떨어지지 않는 거구나! 끌어당기는 힘이 적당히 약해서 달이 빙글빙글 도는 거잖아!"</span> 아이작이 미소를 지었어요. 질량과 거리, 이 두 가지 변수가 우주의 모든 끌어당김을 지배하는 비밀 레시피였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">우리가 땅에 붙어 있는 진짜 이유</span>
+        <h2>🌏 지구의 끌어당김</h2>
+        <p>만유인력의 원리를 이해한 뉴턴이는 이제 자기가 왜 하늘로 올라가지 못하고 떨어졌는지 완벽하게 알게 되었습니다. 하지만 더 궁금한 것이 생겼어요. <span class="dialogue">"아이작, 지구가 나를 끌어당기는 건 알겠어. 그런데 사람들은 왜 지구 반대편에서도 떨어지지 않는 거야? 지구 아래쪽에 사는 사람들은 거꾸로 매달려 있는 거 아니야?"</span></p>
+        <p>아이작이 웃었습니다. <span class="dialogue">"좋은 질문이야! <span class="highlight">중력은 지구 중심을 향해 작용</span>하거든."</span> 이것은 중요한 개념이었어요. 중력은 단순히 '아래로' 향하는 것이 아니라, '지구 중심을 향해' 작용하는 것이었습니다. 그래서 지구 어디에 서 있든 발이 땅에 붙어 있을 수 있었지요. 호주에 사는 사람도, 브라질에 사는 사람도, 모두 지구 중심을 향해 끌리고 있으니 모두에게 '아래'가 존재하는 것이었어요.</p>
+        <p><span class="dialogue">"그러면 지구 중심에 가면 어떻게 돼요?"</span> 뉴턴이가 물었습니다. <span class="dialogue">"지구 중심에서는 사방에서 똑같이 끌어당기니까 힘이 상쇄되어 무중력 상태가 된단다."</span></p>
+        <p>아이작은 지구의 중력이 우리 생활에 미치는 영향도 설명해 주었어요. 중력이 있기 때문에 대기가 지구에 붙어 있을 수 있었고, 대기가 있으니 우리가 숨 쉴 수 있었습니다. 중력이 있기에 비가 내리고, 강이 흐르고, 바다가 제자리를 지킬 수 있었지요. 만약 중력이 갑자기 사라진다면 모든 것이 우주로 흩어져 버릴 거예요. 사람, 동물, 바닷물, 공기까지 모두요.</p>
+        <p><span class="dialogue">"중력이 없으면 지구라는 행성 자체가 존재할 수 없는 거네!"</span> 뉴턴이가 깨달았어요. 우리가 땅에 붙어 있는 것이 너무나 당연해서 감사를 잊고 있었지만, 그 '당연함'을 만들어주는 것이 바로 지구의 중력이었습니다. <span class="highlight">보이지 않는 손이 우리를 꼭 안아주고 있었던 거예요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">떨어지면서 도는 달의 놀라운 비밀</span>
+        <h2>🪐 행성의 공전</h2>
+        <p>아이작이 뉴턴이에게 가장 놀라운 이야기를 들려준 것은 달이 뜬 어느 밤이었습니다. <span class="dialogue">"뉴턴이야, 사실 달은 지금 이 순간에도 지구를 향해 떨어지고 있단다."</span> 뉴턴이가 펄쩍 뛰었어요. <span class="dialogue">"뭐라고요? 달이 떨어지고 있다고요? 그런데 왜 안 부딪쳐요?"</span> 아이작이 빙그레 웃었습니다. <span class="dialogue">"그게 바로 공전의 비밀이야."</span></p>
+        <p>아이작이 돌멩이를 하나 집어 들며 설명을 시작했어요. <span class="dialogue">"돌을 앞으로 던지면 포물선을 그리며 떨어지지? 더 세게 던지면 더 멀리까지 가서 떨어지고."</span> <span class="dialogue">"네, 그건 당연하죠."</span> <span class="dialogue">"그러면 만약 정말, 정말 세게 던져서 돌이 떨어지는 곡선이 지구의 둥근 표면과 같아진다면 어떻게 될까?"</span></p>
+        <p>뉴턴이의 눈이 커졌어요. <span class="dialogue">"어? 그러면… 돌은 계속 떨어지지만 지구가 둥그니까 영원히 땅에 닿지 못하고… 빙글빙글 돌겠네요!"</span> <span class="dialogue">"바로 그거야!"</span> 아이작이 손가락을 딱 부딪쳤어요.</p>
+        <p><span class="dialogue">"<span class="highlight">달이 하는 것이 정확히 그거란다. 달은 지구를 향해 계속 떨어지고 있어.</span> 하지만 동시에 옆으로도 빠르게 움직이고 있거든. 떨어지는 속도와 옆으로 가는 속도가 절묘하게 균형을 이루어서, 달은 지구 주위를 영원히 돌게 되는 거야."</span></p>
+        <p>뉴턴이는 감탄을 금할 수 없었습니다. 달뿐만이 아니었어요. 지구가 태양 주위를 도는 것도, 인공위성이 지구를 도는 것도 모두 같은 원리였습니다. 모두 '떨어지면서 도는 것'이었지요. 국제우주정거장의 우주인들이 둥둥 떠다니는 것도, 사실은 우주정거장과 함께 지구를 향해 떨어지고 있기 때문이었어요. 떨어지면서 동시에 옆으로 나아가니 무중력처럼 느껴지는 것이지요. <span class="dialogue">"떨어지는 게 이렇게 아름다운 거였다니!"</span> 뉴턴이가 달을 올려다보며 감동에 젖었습니다. 달은 오늘 밤도 조용히 지구를 향해 떨어지며, 동시에 빙글빙글 춤을 추고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">몸무게가 달에서 달라지는 마법</span>
+        <h2>📏 중력의 크기</h2>
+        <p>뉴턴이가 아이작에게 엉뚱한 질문을 던졌어요. <span class="dialogue">"아이작, 내가 달에 가면 더 가벼워져?"</span> 아이작이 눈을 빛내며 대답했습니다. <span class="dialogue">"아주 좋은 질문이야! 답은 '그렇다'야. 달에 가면 네 몸무게가 지구에서의 <span class="highlight">육분의 일</span>로 줄어든단다."</span></p>
+        <p><span class="dialogue">"우와! 그러면 내가 지구에서 백 그램이면 달에서는 십육 그램밖에 안 되는 거예요? 내가 날아다닐 수도 있겠네!"</span> 뉴턴이가 흥분했습니다. 아이작이 설명했어요. <span class="dialogue">"기억하지? 만유인력은 질량에 비례하고 거리의 제곱에 반비례한다고 했잖아. 달은 지구보다 질량이 훨씬 작아. 지구 질량의 약 팔십 분의 일밖에 안 돼. 게다가 달의 반지름도 지구보다 작지. 이 두 가지가 합쳐져서 달의 표면 중력이 지구의 육분의 일이 되는 거야."</span></p>
+        <p>뉴턴이는 다른 행성의 중력도 궁금해졌어요. <span class="dialogue">"목성에 가면요?"</span> <span class="dialogue">"목성은 지구보다 질량이 삼백십팔 배나 크기 때문에 중력도 약 두 점 오 배야. 지구에서 오십 킬로그램인 사람이 목성에 가면 약 백이십오 킬로그램이 되는 거지. 무거워서 제대로 걷기도 힘들 거야."</span></p>
+        <p>반대의 경우도 있었어요. <span class="dialogue">"만약 소행성처럼 아주 작은 천체에 가면 중력이 거의 없어서 살짝 점프해도 우주로 날아가 버릴 수 있단다."</span> 뉴턴이가 깔깔 웃었어요. <span class="dialogue">"나 같은 사과가 소행성에서 나무에서 떨어지면, 아래로 안 가고 위로 올라가 버릴 수도 있겠네!"</span></p>
+        <p>아이작도 웃었습니다. 같은 물체라도 어떤 천체에 있느냐에 따라 무게가 완전히 달라지는 것이었어요. <span class="highlight">질량은 변하지 않지만 무게는 중력에 따라 변하는 것</span>, 이것이 질량과 무게의 차이였습니다. 우주에서는 당연한 것이 당연하지 않았어요. 뉴턴이가 떨어졌던 그 '당연함'도 지구라는 특별한 행성이 있었기에 가능한 일이었던 거예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">눈에 보이지 않는 힘이 만드는 일상의 기적</span>
+        <h2>🎢 생활 속 중력</h2>
+        <p>아이작이 뉴턴이에게 말했어요. <span class="dialogue">"중력은 먼 우주에서만 중요한 것이 아니야. 네가 떨어진 이 평범한 농장에서도 중력은 수백 가지 일을 하고 있단다."</span> 뉴턴이가 주변을 둘러보았어요. 농장은 아주 평범해 보였습니다. 풀이 자라고, 닭이 모이를 쪼고, 우물에서 물을 긷고, 아이들이 공놀이를 하고 있었지요. <span class="dialogue">"이 풍경 속에 중력이 어디 있는 거예요?"</span></p>
+        <p>아이작이 하나하나 짚어 주었습니다. <span class="dialogue">"저 아이가 던진 공이 포물선을 그리며 날아가다 떨어지는 것, 중력이야. 우물에서 물을 끌어올리려면 힘이 드는 것, 중력이 물을 아래로 잡아당기기 때문이야. 비가 하늘에서 내리는 것, 강물이 높은 곳에서 낮은 곳으로 흐르는 것, 폭포가 떨어지는 것, 모두 중력의 작품이지."</span> 뉴턴이의 눈이 점점 커졌어요. 중력은 정말 어디에나 있었습니다.</p>
+        <p>아이작의 설명이 이어졌어요. <span class="dialogue">"물이 높은 곳에서 떨어지는 힘으로 물레방아를 돌리고, 그 힘으로 곡식을 빻기도 해. 시계의 추가 일정하게 왔다 갔다 하는 것도 중력 덕분이야. 심지어 네 몸속의 피가 심장으로 돌아오는 것에도 중력이 관여한단다."</span></p>
+        <p>하지만 중력이 늘 편리한 것만은 아니었어요. 산사태는 중력이 흙과 바위를 아래로 끌어내려 일어나는 것이고, 물건을 떨어뜨려 깨지는 것도 중력 때문이었지요. 비행기가 하늘에 뜨려면 중력을 이기는 양력이 필요했고, 로켓이 우주에 가려면 엄청난 에너지로 중력을 뚫고 나가야 했습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">중력은 축복이면서 도전이구나!</span>"</span> 뉴턴이가 깨달았어요. <span class="dialogue">"맞아. 중력을 이해하면 그것을 이용할 수도, 극복할 수도 있어. 그것이 과학의 힘이지."</span> 눈에 보이지 않는 이 조용한 힘이 일상의 모든 순간을 지배하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">별이 태어나고 죽는 힘의 무대</span>
+        <h2>🚀 우주 속 중력</h2>
+        <p>아이작의 탐구는 사과 농장을 넘어 우주 전체로 확장되었습니다. 뉴턴이도 함께 상상의 나래를 펼쳤어요. <span class="dialogue">"중력이 우주에서 하는 일은 정말 어마어마하단다."</span> 아이작이 밤하늘의 별을 가리키며 말했습니다. <span class="dialogue">"저 빛나는 별들, 그 별들이 태어나는 것도 중력 덕분이야."</span> <span class="dialogue">"별이 태어난다고요?"</span> 뉴턴이가 놀랐어요.</p>
+        <p><span class="dialogue">"우주에는 수소 가스로 이루어진 거대한 구름이 떠다니고 있어. 이 구름 속의 수소 분자들이 서로를 중력으로 끌어당기면서 점점 한곳으로 모여들지. 모이면 모일수록 중심부의 압력과 온도가 올라가고, 마침내 온도가 수천만 도에 이르면 수소 핵융합이 시작돼. 그 순간 별이 탄생하는 거야!"</span></p>
+        <p>뉴턴이가 숨을 죽이고 들었어요. 별의 일생은 중력과의 끊임없는 줄다리기였습니다. 핵융합으로 만들어지는 열과 압력은 별을 바깥으로 밀어내려 하고, 중력은 안으로 끌어당기려 해요. 이 두 힘이 균형을 이루는 동안 별은 안정적으로 빛났습니다.</p>
+        <p>하지만 핵융합 연료가 다 떨어지면 중력이 이기면서 별이 무너져 내렸어요. 작은 별은 조용히 식어가는 백색왜성이 되고, 아주 큰 별은 엄청난 폭발과 함께 초신성이 되어 터졌습니다. 그리고 가장 무거운 별은 중력이 모든 것을 삼켜 버리는 <span class="highlight">블랙홀</span>이 되었지요. <span class="dialogue">"블랙홀은 중력이 너무 강해서 빛조차 빠져나오지 못하는 곳이야."</span> 아이작이 말했어요.</p>
+        <p>뉴턴이는 자기를 땅으로 떨어뜨린 그 힘이 별을 태어나게 하고, 은하를 만들고, 블랙홀까지 만드는 우주의 건축가라는 사실에 경이로움을 느꼈습니다. <span class="dialogue">"사과를 떨어뜨리는 힘과 별을 만드는 힘이 같은 거라니! 이 세상에 이보다 더 놀라운 일이 있을까!"</span> 중력은 이 우주에서 가장 약한 힘이면서, 동시에 가장 거대한 구조를 만드는 힘이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리03/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">사과가 세상에 전하는 마지막 메시지</span>
+        <h2>🍎 끌어당김의 법칙</h2>
+        <p>아이작은 마침내 자신의 연구를 정리하여 한 권의 책으로 펴냈습니다. 《프린키피아(자연철학의 수학적 원리)》, 이 책은 인류 역사상 가장 위대한 과학 서적 중 하나가 되었어요. 사과 하나가 떨어지는 평범한 현상에서 시작된 질문이 우주 전체를 설명하는 법칙으로 완성된 것이었습니다. 뉴턴이는 아이작의 마음속에서 이 모든 과정을 함께하며 벅찬 감동을 느꼈어요.</p>
+        <p><span class="dialogue">"아이작, 고마워. 나는 그저 떨어진 사과일 뿐인데, 네 덕분에 우주의 비밀을 알게 되었어."</span> 뉴턴이가 말했습니다. 아이작이 미소 지었어요. <span class="dialogue">"아니야, 뉴턴이. 내가 너에게 고마워. 네가 떨어지지 않았다면 나는 이 질문을 시작하지 못했을 거야. <span class="highlight">위대한 발견은 항상 당연해 보이는 현상에 '왜?'를 묻는 것에서 시작</span>되거든."</span></p>
+        <p>뉴턴이가 마지막으로 깊은 생각에 잠겼어요. 만유인력의 법칙은 단순히 물리학 공식이 아니었습니다. 그것은 이 우주의 모든 것이 서로 연결되어 있다는 진실을 알려주는 것이었어요. 사과와 지구, 달과 태양, 별과 은하가 모두 같은 법칙 아래에서 서로를 끌어당기며 존재하고 있었습니다.</p>
+        <p>아이작이 저 유명한 말을 남겼어요. <span class="dialogue">"내가 더 멀리 볼 수 있었다면, 그것은 거인의 어깨 위에 서 있었기 때문이다."</span> 뉴턴이는 이 말의 의미를 이해했습니다. 아이작의 발견도 이전 과학자들의 연구 위에 세워진 것이었고, 아이작의 법칙 위에 훗날 아인슈타인의 상대성이론이 세워졌지요. 지식도 중력처럼 서로를 끌어당기며 점점 커져 갔습니다.</p>
+        <p>뉴턴이는 바람에 실려 세상에 메시지를 보냈어요. <span class="highlight">"당연해 보이는 모든 것에 의문을 품으세요. 사과가 떨어지는 이유를 물었을 때, 우주의 비밀이 열렸습니다. 여러분의 '왜?'가 다음 세상을 바꿀 겁니다."</span> 당연해 보이는 현상에도 법칙이 있습니다. 그 법칙을 발견하는 열쇠는 '왜?'라는 작은 질문입니다.</p>
+        <p style="text-align: center; margin-top: 20px; font-weight: 600; color: #FF7043;">— 끝 —</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">📚 목록으로</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>
