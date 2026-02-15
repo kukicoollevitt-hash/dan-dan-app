@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚂 시간을 먹는 괴물 '거리'를 무찌른 네 명의 발명가</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작사회문화04/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1976D2 0%, #0D47A1 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(25, 118, 210, 0.15);
+      color: #0D47A1;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #1976D2;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #0D47A1;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #64B5F6;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict-box {
+      text-align: left;
+      background: rgba(25, 118, 210, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #1976D2;
+    }
+
+    .intro-content .conflict-box h3 {
+      color: #64B5F6;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict-box p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(25, 118, 210, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(13, 71, 161, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+
+    /* 교훈 박스 */
+    .lesson-box {
+      background: linear-gradient(135deg, rgba(25, 118, 210, 0.15) 0%, rgba(13, 71, 161, 0.15) 100%);
+      border: 2px solid #1976D2;
+      border-radius: 16px;
+      padding: 25px;
+      margin-top: 20px;
+    }
+
+    .lesson-box h3 {
+      color: #1976D2;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .lesson-box p {
+      color: #2c3e50;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🚂 시간을 먹는 괴물 '거리'를 무찌른 네 명의 발명가</h1>
+        <p class="subtitle">
+          — 교통·통신의 역사에서 세계화를 배우다 —<br>
+          교통과 통신의 발달이 세계화를 이끌어왔음을 배우는 판타지 모험<br><br>
+          교과기반 창작도서 · 사회문화 04
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 🌍 지구 (10살, 주인공):</strong> 호기심 많고 탐험을 좋아하는 초등학생. 이름은 엄마가 지구를 사랑하라는 의미로 지어줬다. 할아버지의 낡은 세계지도 위에서 잠든 어느 날, 과거와 미래를 오가는 여행이 시작된다.</p>
+          <p><strong>▸ 👴 할아버지 (80대, 전 외교관):</strong> 젊은 시절 세계 곳곳을 다니며 외교관으로 활동한 분. 지금은 은퇴 후 손자에게 세계 이야기를 들려주는 것이 낙. "지구야, 세상은 점점 가까워지고 있단다"가 입버릇.</p>
+          <p><strong>▸ 👹 거리 괴물 (시간의 적):</strong> 세상 사람들이 서로 만나지 못하게 '거리'라는 무기로 가로막는 거대한 존재. 과거에는 세계를 지배했지만, 교통과 통신의 발달로 점점 힘을 잃어간다. "인간들이 아무리 발버둥 쳐도 거리는 영원하다"가 대사.</p>
+          <p><strong>▸ 🔧 발명가 영웅들 (와트, 스티븐슨, 벤츠, 라이트 형제):</strong> 각각 증기기관, 증기기관차, 자동차, 비행기를 발명하여 거리를 줄인 인류의 영웅들. 지구에게 열쇠(발명품)를 건네며 함께 '거리 괴물'과 싸운다.</p>
+          <p><strong>▸ 💻 미래의 동반자 (팀 버너스리, 스티브 잡스 정령):</strong> 인터넷과 스마트폰을 세상에 가져온 현대의 발명가 정령. 지구에게 '거리 없는 세상'의 의미를 알려주고, 정보화 사회의 빛과 그림자를 경고한다.</p>
+        </div>
+        <div class="conflict-box">
+          <h3>⚡ 갈등 구조</h3>
+          <p><strong>▸ 거리 괴물 vs 인류의 발명:</strong> 거리 괴물은 인류의 교류를 막는다. 발명가들은 기술로 이에 저항한다. 이 대결이 이야기의 주축.</p>
+          <p><strong>▸ 빠름과 연결의 가치:</strong> 거리가 줄어들수록 세계화는 진전되지만, 빠름만이 정답은 아니다. 어떤 연결이 진짜 가치 있는지 성찰.</p>
+          <p><strong>▸ 연결의 빛과 그림자:</strong> 연결이 많아진 현대, 정보 과잉과 사생활 침해 등 새로운 문제가 등장. 균형 잡힌 시각 필요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">증기기관</span>
+        <h2>🔥 끓는 물의 힘을 가둔 남자, 와트의 혁명</h2>
+        <p>아주 먼 옛날, '시간의 대륙'에는 <span class="highlight">'거리'</span>라는 이름의 거대한 괴물이 살고 있었습니다. 거리는 마을과 마을 사이, 나라와 나라 사이에 똬리를 틀고 앉아, 사람들이 만나는 것을 방해했습니다. 서울에서 부산까지 가려면 보름 이상 걸어야 했고, 유럽에서 아메리카까지는 배로 두 달이 넘게 걸렸습니다.</p>
+        <p>거리 괴물은 으스댔습니다. <span class="dialogue">"나를 이길 수 있는 자는 없다! 인간은 영원히 자기 마을에 갇혀 살 것이다!"</span> 사람들은 말과 마차를 이용했지만, 말도 지치면 쉬어야 했고, 바람이 없으면 범선도 멈췄습니다. 인간의 근육과 자연의 힘만으로는 거리 괴물을 이길 수 없었습니다.</p>
+        <p>그때 첫 번째 영웅이 나타났습니다. 1769년, 스코틀랜드의 <span class="highlight">'제임스 와트'</span>라는 발명가였지요. 와트는 끓는 물에서 올라오는 수증기를 바라보며 생각했습니다. <span class="dialogue">"저 수증기의 힘을 가둘 수 있다면, 말보다 강한 힘을 얻을 수 있지 않을까?"</span></p>
+        <p>와트는 토머스 뉴커먼이 만든 초기 증기기관을 개량하여, 훨씬 효율적인 증기기관을 발명했습니다. 밀폐된 실린더 안에서 수증기가 팽창하며 피스톤을 밀어내는 원리였지요. 석탄을 태워 물을 끓이면, 수증기의 압력이 기계를 움직였습니다.</p>
+        <p>증기기관은 처음에는 탄광의 물을 퍼내는 데 쓰였지만, 곧 공장의 기계를 돌리고, 방직기를 움직이는 동력원이 되었습니다. 이것이 바로 <span class="highlight">'산업혁명'</span>의 시작이었습니다.</p>
+        <p>거리 괴물이 처음으로 불안해했습니다. <span class="dialogue">"인간이 자연의 힘을 넘어서는 동력을 얻었다고? 하지만 증기기관은 공장에 박혀있을 뿐, 나를 직접 이기진 못할 거야."</span> 하지만 거리의 예상은 곧 빗나가게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">기차의 등장</span>
+        <h2>🚂 쇳길 위의 불을 뿜는 용, 스티븐슨의 로켓호</h2>
+        <p>증기기관이 공장을 바꾼 후, 한 가지 질문이 떠올랐습니다. <span class="dialogue">"이 힘을 바퀴에 연결하면 어떨까?"</span></p>
+        <p>두 번째 영웅이 등장했습니다. 영국의 <span class="highlight">'조지 스티븐슨'</span>이었지요. 스티븐슨은 탄광에서 일하는 광부 출신의 엔지니어였습니다. 그는 증기기관을 바퀴 달린 차에 올려, 철로 만든 길(레일) 위를 달리게 했습니다.</p>
+        <p>1825년, 세계 최초의 공공 철도인 '스톡턴-달링턴 철도'가 개통되었습니다. 사람들은 처음 보는 광경에 넋을 잃었습니다. 말도 없이, 바람도 없이, 거대한 철 덩어리가 연기를 뿜으며 달리고 있었으니까요.</p>
+        <p><span class="dialogue">"저것은 악마의 기계다!"</span> <span class="dialogue">"불을 뿜는 용이다!"</span> 사람들이 두려워했습니다. 하지만 1830년 리버풀-맨체스터 철도에서 스티븐슨의 '로켓호'가 시속 48킬로미터로 달리자, 두려움은 경탄으로 바뀌었습니다. 말이 달리는 속도의 두 배 이상이었으니까요!</p>
+        <p>거리 괴물이 비명을 질렀습니다. <span class="dialogue">"아니! 인간이 쇳길 위를 달리다니!"</span></p>
+        <p>기차는 급속히 확산되었습니다. 영국에서 시작된 철도는 유럽 전역으로, 미국으로, 아시아로 퍼져나갔습니다. 1869년 미국 대륙횡단철도가 완성되면서, 동부에서 서부까지 6개월 걸리던 여정이 일주일로 줄었습니다.</p>
+        <p>철도는 단순한 교통수단이 아니었습니다. 표준 시간대가 만들어졌고(기차 시간표를 통일하기 위해), 도시가 철도역 주변으로 성장했으며, 대량 물류가 가능해져 산업이 폭발적으로 발전했습니다.</p>
+        <p><span class="highlight">거리 괴물의 몸이 줄어들기 시작했습니다.</span> 보름 걸리던 길이 하루로, 두 달 걸리던 항해가 일주일로. 시간이 줄자, 세상이 넓어지기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">자동차와 비행기</span>
+        <h2>🚗✈️ 땅과 하늘을 정복한 두 형제의 꿈</h2>
+        <p>기차가 세상을 바꾸고 있었지만, 한 가지 한계가 있었습니다. 기차는 철로가 깔린 곳만 갈 수 있었던 것이지요. <span class="dialogue">"철로가 없는 곳은 어떻게 가지?"</span></p>
+        <p>세 번째 영웅이 등장합니다. 1886년 독일의 <span class="highlight">'카를 벤츠'</span>가 세계 최초의 가솔린 자동차를 발명한 것입니다. 내연기관이라는 새로운 엔진이 증기기관을 대체했습니다. 실린더 안에서 가솔린을 폭발시켜 피스톤을 움직이는, 더 작고 더 강력한 동력이었지요.</p>
+        <p>처음에 자동차는 부유층의 장난감이었습니다. 하지만 1908년 미국의 <span class="highlight">'헨리 포드'</span>가 모델 T를 컨베이어 벨트 방식(대량 생산)으로 만들면서, 일반 노동자도 자동차를 살 수 있게 되었습니다. 자동차의 가격이 10분의 1로 떨어진 것입니다!</p>
+        <p>자동차는 철로가 없는 곳도 갈 수 있었습니다. 개인이 원하는 때에 원하는 곳으로 이동할 수 있게 된 것이지요. 도로가 깔리고, 교외 주택이 생기고, 드라이브인 영화관과 쇼핑몰이 등장했습니다.</p>
+        <p>거리 괴물이 더 줄어들었습니다. 하지만 진짜 충격은 하늘에서 왔습니다.</p>
+        <p>1903년 미국의 <span class="highlight">'라이트 형제'</span>가 12초간의 첫 동력 비행에 성공한 것입니다. 인간이 하늘을 날았습니다! 이후 비행기 기술은 놀라운 속도로 발전하여, 1927년 린드버그가 대서양을 33시간 만에 횡단했고, 현대의 제트 여객기는 서울에서 뉴욕까지 14시간이면 갑니다. 범선으로 두 달 걸리던 거리를 반나절에 주파하게 된 것이지요.</p>
+        <p><span class="highlight">거리 괴물은 이제 땅에서도 하늘에서도 쫓기는 신세가 되었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">인터넷 혁명</span>
+        <h2>🌐 몸은 가만히, 마음은 지구 반대편으로</h2>
+        <p>거리 괴물은 궁지에 몰렸지만 아직 여유가 있었습니다. <span class="dialogue">"기차든 비행기든, 몸을 움직여야 하잖아. 내가 완전히 사라지려면 인간이 순간이동이라도 해야 할 텐데!"</span></p>
+        <p>그때 네 번째 영웅이, 아니 무수한 영웅들이 등장했습니다. 컴퓨터 과학자들이었습니다.</p>
+        <p>1969년, 미국 국방부의 프로젝트 <span class="highlight">'아르파넷(ARPANET)'</span>에서 컴퓨터와 컴퓨터를 전화선으로 연결하는 실험이 성공했습니다. 최초의 메시지 "LO"가 전송되었지요(원래 "LOGIN"을 보내려 했지만 두 글자 만에 시스템이 다운됨). 이 작은 실험이 인터넷의 씨앗이었습니다.</p>
+        <p>1991년, <span class="highlight">팀 버너스리</span>가 '월드 와이드 웹(WWW)'을 발명하면서, 인터넷은 과학자들의 도구에서 전 인류의 플랫폼으로 변모했습니다. 웹브라우저를 통해 누구나 정보를 올리고 찾을 수 있게 된 것이지요.</p>
+        <p>이메일이 편지를 대체했습니다. 서울에서 뉴욕으로 편지를 보내면 일주일이 걸렸지만, 이메일은 1초면 도착했습니다.</p>
+        <p>거리 괴물이 경악했습니다. <span class="dialogue">"1초? 지구 반대편까지 1초?"</span> <span class="dialogue">"맞아. 정보는 빛의 속도로 이동하거든. 광섬유 케이블을 통해 초속 약 20만 킬로미터로 데이터가 날아가."</span></p>
+        <p><span class="highlight">인터넷은 정보의 이동에서 거리를 사실상 제거했습니다.</span> 몸은 서울에 있으면서 런던의 도서관을 검색하고, 도쿄의 뉴스를 읽고, 브라질의 음악을 듣습니다. 물리적 거리는 여전히 존재하지만, 정보의 거리는 0이 된 것입니다.</p>
+        <p>거리 괴물의 몸이 투명해지기 시작했습니다. 보이지만 사실상 의미 없는 존재로 변하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">스마트폰 시대</span>
+        <h2>📱 주머니 속 세계, 손가락 하나로 지구를 누비다</h2>
+        <p>인터넷이 세상을 바꿨지만, 초기에는 집이나 사무실의 컴퓨터 앞에 앉아야만 접속할 수 있었습니다. 인터넷의 힘이 책상에 묶여있었던 것이지요.</p>
+        <p>2007년, 결정적인 변화가 왔습니다. <span class="highlight">'스티브 잡스'</span>가 아이폰을 발표한 것입니다. 전화기, 음악 플레이어, 인터넷 기기가 하나로 합쳐진 작은 상자. 이것이 바로 '스마트폰'이었습니다.</p>
+        <p>스마트폰은 인터넷을 주머니에 넣어주었습니다. 버스 안에서, 공원 벤치에서, 침대 위에서, 지구 어디에서든 세계와 연결될 수 있게 되었지요.</p>
+        <p>열두 살 소녀 <span class="highlight">'지구'</span>는 (이야기의 주인공이 드디어 등장합니다!) 이 모든 역사를 할아버지에게서 듣고 자란 아이였습니다.</p>
+        <p><span class="dialogue">"할아버지, 옛날에는 정말 편지가 일주일이나 걸렸어요?"</span> <span class="dialogue">"그럼. 할아버지가 어릴 때는 전화도 드물었어. 시외 전화는 교환원을 통해야 했고, 국제 전화는 돈이 많이 들어서 3분만 통화하곤 했지."</span></p>
+        <p>지구는 스마트폰으로 미국에 사는 사촌과 영상통화를 합니다. 일본의 만화를 실시간으로 봅니다. 프랑스 요리 레시피를 검색합니다. 브라질 축구 경기를 생중계로 봅니다. 이 모든 것이 손가락 몇 번의 터치로 이루어집니다.</p>
+        <p>현재 전 세계 스마트폰 사용자는 약 70억 명에 달합니다. <span class="highlight">지구 인구의 거의 전부가 주머니 속에 세계를 품고 다니는 시대.</span> 거리 괴물은 이제 유령처럼 희미해졌습니다. 하지만 완전히 사라진 것은 아닙니다. 물리적 거리는 여전히 존재하니까요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">이동 시간 단축</span>
+        <h2>📊 숫자로 보는 혁명, 서울에서 부산까지의 역사</h2>
+        <p>지구의 할아버지는 손녀에게 구체적인 숫자를 보여주었습니다. <span class="dialogue">"이 표를 보렴. 서울에서 부산까지 가는 데 걸린 시간의 변화야."</span></p>
+        <p>조선 시대(도보): 약 15일에서 20일.<br>
+        일제강점기(기차, 경부선 1905년): 약 11시간.<br>
+        1970년대(경부고속도로 자동차): 약 5시간에서 6시간.<br>
+        2004년(KTX 고속열차): 약 2시간 40분.<br>
+        현재(KTX-이음): 약 2시간 15분.</p>
+        <p><span class="dialogue">"15일이 2시간으로!"</span> 지구가 감탄했습니다. <span class="highlight">약 160배나 빨라진 것입니다.</span></p>
+        <p>세계적으로 보면 더 극적이었습니다. 서울에서 뉴욕까지의 시간 변화를 보면, 범선 시대에는 약 3개월에서 6개월이 걸렸습니다. 증기선(19세기 후반)으로 약 2주에서 3주, 프로펠러 비행기(1950년대)로 약 20시간에서 30시간, 현대 제트 여객기로 약 14시간이 됩니다.</p>
+        <p>정보의 전달은 더 극적이었습니다. 조선 시대 파발마가 서울에서 부산까지 급보를 전하는 데 약 3일이 걸렸지만, 전보(19세기)는 몇 분, 전화(20세기)는 몇 초, 인터넷(21세기)은 밀리초 단위입니다.</p>
+        <p><span class="dialogue">"시간이 줄어든다는 것은 단순히 빨라진다는 뜻이 아니야."</span> 할아버지가 말했습니다. <span class="dialogue">"생활의 범위가 넓어진다는 뜻이지. 옛날에는 태어난 마을에서 평생을 살았지만, 지금은 아침에 서울에서 출발해 점심을 부산에서, 저녁을 도쿄에서 먹을 수 있잖아."</span></p>
+        <p><span class="highlight">시간의 단축은 곧 세계의 확장이었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">생활권 확대</span>
+        <h2>🏠 1시간 생활권이 바꾼 사람들의 삶</h2>
+        <p>지구는 할아버지의 이야기를 듣고, 자기 주변을 돌아보았습니다. 아빠는 수원에서 서울까지 KTX로 출퇴근합니다. 30분이면 도착하지요. 엄마는 온라인으로 제주도 농장에서 직접 귤을 주문하고, 다음 날 받습니다.</p>
+        <p><span class="dialogue">"옛날이었으면 아빠가 서울에서 일하려면 서울에 살아야 했을 거야. 하지만 교통이 발달하면서 '1시간 생활권'이라는 개념이 생겼지. 집에서 1시간 이내에 갈 수 있는 곳이 생활 범위가 되는 거야."</span></p>
+        <p>KTX 덕분에 대전, 대구, 부산이 모두 서울에서 2시간에서 3시간 거리가 되었습니다. 사실상 전국이 반나절 생활권이 된 것이지요.</p>
+        <p>이것은 여러 변화를 가져왔습니다. 첫째, <span class="highlight">주거의 자유</span>. 직장은 서울에 있지만 집은 천안이나 광주에 둘 수 있게 되었습니다. 둘째, <span class="highlight">교육의 기회</span>. 지방에 살면서도 서울의 학원, 도서관, 박물관을 이용할 수 있게 되었습니다. 셋째, <span class="highlight">의료 접근성</span>. 응급 환자를 헬기로 대형 병원에 빠르게 이송할 수 있게 되었습니다. 넷째, <span class="highlight">관광과 여가</span>. 주말에 부산 해운대, 강원도 스키장, 전주 한옥마을을 당일치기로 다녀올 수 있게 되었습니다.</p>
+        <p>하지만 그림자도 있었습니다. 수도권 집중이 심해지고, 지방 소멸의 위기가 찾아왔습니다. 교통이 편리해지면서 오히려 지방 사람들이 서울로 빨려 들어가는 '빨대 효과'가 나타난 것입니다.</p>
+        <p><span class="dialogue">"기술은 양날의 검이야."</span> 할아버지가 말했습니다. <span class="dialogue">"교통이 발달하면 세상이 넓어지지만, 그 혜택이 공평하게 나뉘지 않으면 불균형이 생기지."</span></p>
+        <p><span class="highlight">생활권의 확대는 축복이었지만, 동시에 새로운 과제이기도 했습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">문화 교류</span>
+        <h2>🌊 한류에서 K-푸드까지, 국경을 넘는 문화의 물결</h2>
+        <p>거리 괴물이 줄어들면서 가장 극적으로 변한 것 중 하나는 '문화'였습니다. 교통과 통신의 발달로 서로 다른 나라의 문화가 국경을 넘어 흐르기 시작한 것이지요.</p>
+        <p>지구가 학교에서 경험하는 일상이 이를 보여줍니다. 아침에 일본 애니메이션을 보고, 점심에 베트남 쌀국수를 먹고, 오후에 미국 팝송을 듣고, 저녁에 이탈리아 파스타를 먹습니다. 이 모든 것이 한국에 살면서 가능합니다.</p>
+        <p>반대 방향도 마찬가지입니다. <span class="highlight">한국의 K-팝이 전 세계를 휩쓸고, 한국 드라마가 190개국에서 시청되며, 김치와 불고기가 세계인의 식탁에 오릅니다.</span></p>
+        <p><span class="dialogue">"할아버지 때는 외국 문화를 접하기 힘들었어요?"</span> <span class="dialogue">"그럼. 할아버지가 어릴 때는 외국 영화를 보려면 극장에 가야 했고, 외국 음식을 먹으려면 특별한 식당을 찾아야 했어. 외국 음악은 라디오에서 가끔 나오는 걸 녹음해서 들었지."</span></p>
+        <p>지금은 유튜브에서 전 세계의 음악, 영화, 교육 콘텐츠를 무료로 볼 수 있습니다. 넷플릭스에서 한국, 미국, 스페인, 일본의 드라마를 동시에 시청합니다. 인스타그램에서 파리의 패션과 방콕의 길거리 음식을 실시간으로 봅니다.</p>
+        <p>문화의 교류는 상호 이해를 깊게 합니다. 서로의 음식을 먹고, 음악을 듣고, 이야기를 나누면서 '다름'이 '틀림'이 아니라는 것을 자연스럽게 배우게 되지요.</p>
+        <p>하지만 문화의 획일화라는 우려도 있습니다. 강한 문화가 약한 문화를 삼키는 '문화 제국주의'의 위험도 존재합니다.</p>
+        <p><span class="dialogue">"중요한 건 다양성을 지키면서 교류하는 거야. 모두가 같아지는 것이 아니라, 서로를 알아가는 것이 진정한 문화 교류지."</span> 할아버지의 말에 지구는 고개를 끄덕였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">경제 변화</span>
+        <h2>☕ 글로벌 경제, 아침 커피 한 잔에 담긴 세계화</h2>
+        <p>지구는 아침마다 엄마가 내려주는 커피의 향기를 맡으며 깨어납니다. 어느 날 할아버지가 커피 한 잔을 들며 말했습니다. <span class="dialogue">"이 커피 한 잔에 세계 경제가 담겨있단다."</span></p>
+        <p>커피 원두는 에티오피아나 콜롬비아에서 재배됩니다. 원두를 담는 종이컵은 캐나다의 펄프로 만들어졌을 수 있고, 설탕은 브라질산, 우유는 뉴질랜드산일 수 있습니다. 커피를 내리는 기계는 이탈리아에서 설계되고 중국에서 조립되었을 것이고요.</p>
+        <p><span class="dialogue">"옛날에는 그 마을에서 나는 것만 먹고 입었어. 하지만 교통과 물류가 발달하면서, 지구 반대편의 물건도 저렴하게 가져올 수 있게 되었지. 이것이 <span class="highlight">'세계화(globalization)'</span>야."</span></p>
+        <p>컨테이너선이 바다를 건너고, 화물기가 하늘을 날며, 전 세계의 공장에서 만든 제품이 전 세계의 소비자에게 전달됩니다. 한국의 반도체가 미국의 스마트폰에 들어가고, 미국의 소프트웨어가 한국의 자동차에 탑재됩니다. 하나의 제품이 수십 개국의 부품으로 만들어지는 <span class="highlight">'글로벌 가치 사슬'</span>이 형성된 것이지요.</p>
+        <p>이커머스(전자상거래)의 발달로, 클릭 한 번에 미국의 책, 일본의 전자제품, 프랑스의 화장품을 주문할 수 있게 되었습니다. 국경은 있지만, 시장의 경계는 사라졌습니다.</p>
+        <p>하지만 세계화의 그림자도 있었습니다. 선진국과 개발도상국 사이의 경제적 격차, 지역 산업의 쇠퇴, 환경 문제(물류에 의한 탄소 배출) 등이 새로운 과제로 떠올랐습니다.</p>
+        <p><span class="dialogue">"기술이 세상을 연결할수록, 책임도 커지는 거야. 지구 반대편의 노동자가 만든 제품을 소비하는 우리는, 그들의 노동 환경에도 관심을 가져야 해."</span></p>
+        <p><span class="highlight">커피 한 잔의 무게가 달라지는 순간이었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화04/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">연결된 세계</span>
+        <h2>🌍 거리 괴물의 마지막, 그리고 지구의 새로운 질문</h2>
+        <p>이야기의 끝, 지구는 할아버지와 함께 지구본 앞에 앉았습니다. 할아버지가 지구본을 천천히 돌렸습니다.</p>
+        <p><span class="dialogue">"지구야, 거리 괴물은 어떻게 되었을까?"</span></p>
+        <p>지구가 대답했습니다. <span class="dialogue">"증기기관이 공장을 바꾸고, 기차가 도시를 연결하고, 자동차가 개인에게 자유를 주고, 비행기가 대륙을 이었고, 인터넷이 정보의 거리를 없앴고, 스마트폰이 모든 것을 주머니에 넣었으니까... 거리 괴물은 거의 사라진 거죠?"</span></p>
+        <p>할아버지가 미소 지었습니다. <span class="dialogue">"거의 맞아. 하지만 완전히 사라진 건 아니란다."</span></p>
+        <p>물리적 거리는 여전히 존재합니다. 친구를 직접 안아줄 수 없고, 가족과 함께 식사하려면 같은 공간에 있어야 합니다. 코로나19 팬데믹은 온라인이 오프라인을 완전히 대체할 수 없다는 것을 보여주었지요.</p>
+        <p>하지만 인류는 계속 도전하고 있습니다. 하이퍼루프(진공 튜브 열차)는 서울에서 부산까지 20분을, 우주 여행 회사들은 지구 어디든 1시간 이내 도달을 꿈꾸고 있습니다.</p>
+        <p><span class="dialogue">"그래서 내 질문은 이거예요."</span> 지구가 말했습니다. <span class="dialogue">"기술이 거리를 줄이는 건 좋지만, 우리가 진짜 가까워지고 있는 걸까요? 스마트폰으로 연결되어 있지만, 옆에 앉은 가족과는 대화하지 않는 사람도 있잖아요."</span></p>
+        <p>할아버지의 눈가에 주름이 잡혔습니다. <span class="dialogue">"지구야, 그것이 가장 중요한 질문이란다. 기술은 물리적 거리를 줄여주지만, 마음의 거리는 기술만으로 줄일 수 없어. <span class="highlight">마음의 거리를 줄이는 것은 관심, 대화, 그리고 사랑이야.</span>"</span></p>
+        <p>지구본이 천천히 돌아갔습니다. 이 작은 행성 위에서 80억 인류가 기차와 비행기와 인터넷과 스마트폰으로 연결되어 살아가고 있습니다. 거리 괴물은 거의 사라졌지만, 진정한 연결은 기술 너머에 있었습니다.</p>
+        <p><span class="highlight">기술은 삶의 범위를 넓혀주지만, 그 넓어진 세상을 따뜻하게 채우는 것은 결국 사람의 몫이었습니다.</span></p>
+        <div class="lesson-box">
+          <h3>🌱 교훈: 기술은 우리의 삶의 범위를 넓힌다</h3>
+          <p>증기기관에서 스마트폰까지, 인류는 거리라는 괴물과 싸워왔습니다. 그 결과 15일 걸리던 길이 2시간으로, 3개월 걸리던 항해가 14시간으로, 일주일 걸리던 편지가 1초의 이메일로 바뀌었습니다. 기술은 세상을 넓혀주었지만, 진정한 연결은 기술만으로 완성되지 않습니다. 넓어진 세상을 따뜻하게 채우는 것은 서로를 향한 관심과 소통입니다. 기술을 현명하게 사용하되, 옆에 있는 사람의 눈을 바라보는 것을 잊지 마세요.</p>
+        </div>
+        <p style="text-align: center; margin-top: 30px; font-style: italic; color: #1976D2;">— 끝 —</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">← 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경 함수
+    function updateBackground() {
+      const sections = document.querySelectorAll('.story-section[data-bg]');
+      const mapContainer = document.getElementById('map-container');
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+
+      let currentBg = '/images/창작도서/창작사회문화04/00.jpg';
+
+      sections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top;
+
+        if (sectionTop < windowHeight * 0.5) {
+          currentBg = section.dataset.bg;
+        }
+      });
+
+      if (mapContainer.style.backgroundImage !== `url("${currentBg}")`) {
+        mapContainer.style.backgroundImage = `url("${currentBg}")`;
+      }
+
+      requestAnimationFrame(updateBackground);
+    }
+
+    // 스크롤 애니메이션
+    function handleScroll() {
+      const cards = document.querySelectorAll('.story-card');
+
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+
+        if (rect.top < windowHeight * 0.8 && rect.bottom > 0) {
+          card.classList.add('active');
+        }
+      });
+    }
+
+    // 이벤트 리스너
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('load', () => {
+      handleScroll();
+      updateBackground();
+    });
+  </script>
+</body>
+</html>

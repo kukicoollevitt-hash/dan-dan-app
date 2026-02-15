@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐦 제비의 은혜, 박 속의 운명</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/고전문학05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #C2185B 0%, #880E4F 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(194, 24, 91, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(194, 24, 91, 0.15);
+      color: #880E4F;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #C2185B;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #880E4F;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFB6C1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(194, 24, 91, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #FFB6C1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(194, 24, 91, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(194, 24, 91, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(136, 14, 79, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(194, 24, 91, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐦 제비의 은혜, 박 속의 운명</h1>
+        <p class="subtitle">
+          착한 흥부와 욕심쟁이 놀부의 엇갈린 길<br>
+          — 선행은 복이 되고, 욕심은 화가 된다 —<br>
+          교과기반 창작도서 · 고전문학 05
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 흥부:</strong> 가난하지만 마음씨 착한 동생. 어려운 상황에서도 다른 생명을 돌보는 따뜻한 사람. 제비의 다리를 고쳐 주고 박씨를 받아 복을 얻게 된다.</p>
+          <p><strong>▸ 놀부:</strong> 재산은 많지만 욕심이 끝없는 형. 동생을 내쫓고, 제비 다리를 일부러 부러뜨리며 박씨를 얻으려 한다.</p>
+          <p><strong>▸ 제비(은비):</strong> 흥부네 처마에 둥지를 튼 작은 제비. 뱀에게 다리를 다치지만 흥부의 보살핌으로 회복해 강남으로 떠나고, 은혜를 갚기 위해 박씨를 물어온다.</p>
+          <p><strong>▸ 흥부 아내(복순이):</strong> 남편 흥부와 함께 가난 속에서도 아이들을 보살피며 희망을 잃지 않는 강인한 여성.</p>
+          <p><strong>▸ 놀부 아내(갈순이):</strong> 남편 놀부만큼이나 욕심이 많고, 흥부 가족에게 냉정하게 굴며 더 많은 재물을 원한다.</p>
+          <p><strong>▸ 박 할아버지:</strong> 박 속에서 나타나 흥부에겐 복을, 놀부에겐 벌을 내리는 신비한 존재. 공정하게 그들의 마음을 심판한다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 갈등 구조</h3>
+          <p><strong>▸ 흥부 vs 놀부:</strong> 착한 마음 vs 욕심 — 형제이지만 완전히 다른 삶의 태도가 운명을 가른다.</p>
+          <p><strong>▸ 흥부 가족 vs 가난:</strong> 하루하루 먹을 것이 없는 처절한 현실 속에서도 인간다움을 지키려는 고군분투.</p>
+          <p><strong>▸ 놀부 vs 운명의 심판:</strong> 탐욕의 끝이 어디인지, 욕심이 부른 재앙을 통해 깨닫게 되는 과정.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">😢 형에게 쫓겨난 흥부</span>
+        <h2>쫓겨난 동생 흥부</h2>
+        <p><strong>【중심 문장】</strong> 부모님이 돌아가신 뒤, 형 놀부는 동생 흥부를 빈손으로 내쫓고 모든 재산을 독차지한다.</p>
+        <p>옛날, 어느 마을에 흥부와 놀부라는 형제가 살고 있었어요. 부모님이 살아 계실 때는 온 가족이 함께 큰 기와집에서 오순도순 지냈지요. 그러나 부모님이 돌아가시자, 형 놀부의 본색이 드러났어요.</p>
+        <p><span class="dialogue">"이 집은 내 거다! 너는 나가라!"</span> 놀부가 버럭 소리쳤어요.</p>
+        <p><span class="dialogue">"형님, 저도 이 집에서 태어났어요. 부모님께서 남기신 것을 나누어야 하지 않을까요?"</span> 흥부가 조심스럽게 말했어요. 하지만 놀부는 코웃음을 쳤지요.</p>
+        <p><span class="dialogue">"나눠? 네가 뭘 했다고! 어서 꺼져!"</span></p>
+        <p>놀부 아내 갈순이도 거들었어요. <span class="dialogue">"맞아요. 빨리 나가요. 식구 많은 집은 밥만 축내지요."</span></p>
+        <p>결국 흥부는 아내 복순이와 아이들을 데리고 빈손으로 집을 떠났어요. 가진 거라곤 낡은 보따리 하나뿐이었지요. 뒤를 돌아보니 형이 대문을 쾅 닫아버렸어요.</p>
+        <p><span class="dialogue">"복순아, 미안해…"</span> 흥부가 고개를 떨구었어요.</p>
+        <p><span class="dialogue">"괜찮아요. 우리, 힘을 합치면 해낼 수 있어요."</span> 복순이가 아이들을 꼭 안으며 말했어요.</p>
+        <p><span class="highlight">빈손이었지만, 따뜻한 마음만은 변함이 없었어요.</span> 그들은 마을 끝 허름한 움막에 자리를 잡았어요. 가난한 삶이 시작되었지만, 흥부 가족은 서로를 의지하며 하루하루를 살아가기로 했답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🍚 쌀을 구하러 가는 흥부</span>
+        <h2>쌀 한 톨 얻으러 가는 길</h2>
+        <p><strong>【중심 문장】</strong> 아이들이 배고파 우는 모습을 보고, 흥부는 형 집에 쌀을 빌리러 가지만 오히려 밥주걱으로 뺨을 맞고 쫓겨난다.</p>
+        <p>움막 생활은 힘들었어요. 흥부는 낮에는 품을 팔고, 밤에는 짚신을 엮었지만, 아이들을 먹일 쌀이 늘 부족했어요. 어느 겨울밤, 막내가 울면서 말했어요.</p>
+        <p><span class="dialogue">"아빠, 배고파요…"</span></p>
+        <p>복순이가 빈 솥을 바라보며 한숨을 쉬었어요. 흥부는 망설이다가 결심했어요.</p>
+        <p><span class="dialogue">"복순아, 내가 형님 집에 가볼게. 조금만 빌려달라고 해볼게."</span></p>
+        <p>눈길을 걸어 형 집에 도착한 흥부. 대문 앞에서 머뭇거리다 용기를 냈어요.</p>
+        <p><span class="dialogue">"형님, 저 흥부입니다. 아이들이 배가 고파서요… 쌀 좀 빌려주시면 꼭 갚겠습니다."</span></p>
+        <p>대문이 열리고 놀부 아내 갈순이가 나왔어요. 손에는 밥주걱이 들려 있었지요.</p>
+        <p><span class="dialogue">"뭐? 쌀? 우리 쌀이 거저 생긴 줄 알아?"</span></p>
+        <p>갈순이는 밥주걱으로 흥부의 뺨을 세게 때렸어요. 철썩! 흥부의 볼에 밥풀 몇 개가 붙었어요.</p>
+        <p><span class="dialogue">"다시는 오지 마!"</span> 대문이 쾅 닫혔어요.</p>
+        <p>흥부는 뺨을 쓸어내리며 돌아섰어요. 그런데 볼에 붙은 밥풀을 보고 흥부는 웃음을 지었어요.</p>
+        <p><span class="dialogue">"그래도 밥풀이라도 있으니 다행이다!"</span></p>
+        <p><span class="highlight">가난은 흥부의 마음까지 가난하게 만들지 못했어요.</span> 그는 밥풀을 조심스럽게 손에 모아 아이들에게 가져다주었답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">🐍 제비와 뱀, 운명의 순간</span>
+        <h2>다친 제비를 구하다</h2>
+        <p><strong>【중심 문장】</strong> 봄이 오고 흥부네 처마에 둥지를 튼 제비 한 마리가 뱀에게 다리를 다치지만, 흥부는 제비를 정성껏 치료해 준다.</p>
+        <p>추운 겨울이 지나고 따뜻한 봄이 찾아왔어요. 어느 날, 흥부네 처마 밑에 제비 한 쌍이 둥지를 틀었어요. 작은 새끼들이 삐약삐약 울어대는 소리가 움막에 생기를 더해주었지요.</p>
+        <p><span class="dialogue">"아빠, 제비들 너무 귀여워요!"</span> 아이들이 둥지를 올려다보며 말했어요.</p>
+        <p>그런데 어느 날, 무시무시한 일이 벌어졌어요. 커다란 뱀 한 마리가 둥지를 향해 기어오르고 있었어요!</p>
+        <p><span class="dialogue">"큰일이다!"</span> 흥부가 황급히 달려갔어요.</p>
+        <p>뱀은 새끼 제비 한 마리를 물려고 했고, 어미 제비가 날개를 펄럭이며 막으려 했지만 역부족이었어요. 흥부는 막대기로 뱀을 쫓아냈지만, 새끼 제비 한 마리가 땅에 떨어졌어요. 다리가 부러져 버린 것이었어요.</p>
+        <p><span class="dialogue">"아이고, 불쌍해라…"</span></p>
+        <p>흥부는 제비를 조심스럽게 안아 올렸어요. 복순이와 함께 깨끗한 헝겊으로 다리를 감싸주고, 부목을 대어 고정해 주었지요.</p>
+        <p><span class="dialogue">"작은 목숨이라도 소중해. 어서 나아라."</span></p>
+        <p>아이들도 제비에게 이름을 지어주었어요. "은비"라고요. 은혜를 베풀었으니 은비라고 부르기로 한 거예요.</p>
+        <p><span class="highlight">은비는 흥부 가족의 보살핌 속에서 조금씩 건강을 회복해 갔어요.</span> 다리가 낫자, 은비는 하늘 높이 날아 가족들에게 인사를 하듯 빙글빙글 돌다가 따뜻한 남쪽 나라 강남으로 날아갔답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">🌱 은혜를 갚으러 온 제비</span>
+        <h2>박씨를 물어온 제비</h2>
+        <p><strong>【중심 문장】</strong> 이듬해 봄, 다 나은 제비 은비가 돌아와 흥부에게 박씨 한 알을 물어다 주며 은혜를 갚는다.</p>
+        <p>또 한 해가 지나고, 봄이 왔어요. 흥부는 처마를 바라보며 혼잣말을 했어요.</p>
+        <p><span class="dialogue">"은비야, 잘 지내고 있겠지?"</span></p>
+        <p>그때였어요. 삐약삐약! 익숙한 울음소리와 함께 한 마리 제비가 날아와 흥부 앞에 내려앉았어요. 자세히 보니, 다리에 작은 흉터가 있었어요.</p>
+        <p><span class="dialogue">"어, 은비 아니야?"</span></p>
+        <p>아이들이 환호했어요. <span class="dialogue">"은비다! 은비가 돌아왔어!"</span></p>
+        <p>은비는 부리에 무언가를 물고 있었어요. 조심스럽게 흥부의 손바닥 위에 내려놓은 것은 반짝반짝 빛나는 박씨 한 알이었어요.</p>
+        <p><span class="dialogue">"이게 뭐지? 박씨인가?"</span> 흥부가 고개를 갸우뚱했어요.</p>
+        <p>복순이가 눈을 동그랗게 뜨고 말했어요. <span class="dialogue">"은비가 선물을 가져온 거예요! 은혜를 갚으려고!"</span></p>
+        <p>흥부 가족은 박씨를 정성껏 뒷마당에 심었어요. 매일 물을 주고, 아이들은 "쑥쑥 자라라" 노래를 불러주었지요.</p>
+        <p><span class="highlight">박 넝쿨은 놀라운 속도로 자라났어요.</span> 줄기가 지붕 위까지 뻗어 올라가고, 잎사귀가 무성해지더니, 어느새 커다란 박이 주렁주렁 열렸답니다. 박 하나가 아이 키만 했어요!</p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">💰 흥부의 박에서 나온 보물</span>
+        <h2>흥부의 박을 타다</h2>
+        <p><strong>【중심 문장】</strong> 흥부 가족이 박을 타자, 그 안에서 금은보화와 비단, 그리고 복을 가져다주는 신비로운 존재들이 쏟아져 나온다.</p>
+        <p>가을이 되어 박이 노랗게 익었어요. 가족 모두 모여 박을 타기로 했어요.</p>
+        <p><span class="dialogue">"영차, 영차!"</span></p>
+        <p>흥부와 복순이가 톱으로 박을 타기 시작했어요. 삐걱, 삐걱… 박이 반으로 갈라지는 순간!</p>
+        <p>번쩍! 눈부신 빛이 쏟아졌어요.</p>
+        <p><span class="dialogue">"와아아아!"</span> 아이들이 환호했어요.</p>
+        <p>박 속에서 금은보화가 쏟아져 나왔어요. 금괴, 은괴, 진주, 비단, 옥으로 만든 장식품들이 끝없이 나왔지요. 거기다 도깨비들이 나타나 집까지 지어주었어요!</p>
+        <p><span class="dialogue">"이게… 꿈이야?"</span> 흥부가 눈을 비볐어요.</p>
+        <p>복순이가 흥부의 손을 꼭 잡았어요. <span class="dialogue">"꿈이 아니에요! 우리의 착한 마음이 가져온 복이에요!"</span></p>
+        <p>두 번째 박에서는 쌀가마니가 쏟아져 나왔고, 세 번째 박에서는 하인과 하녀들이 나와 흥부 가족을 도왔어요.</p>
+        <p><span class="highlight">가난했던 흥부 가족은 하루아침에 부자가 되었어요.</span> 그러나 흥부는 달라지지 않았어요.</p>
+        <p><span class="dialogue">"이 재산을 어려운 이웃과 나누자."</span></p>
+        <p>흥부는 마을 사람들에게 쌀을 나누어 주고, 헐벗은 이들에게 옷을 지어 주었어요. 마을 사람들은 흥부를 진심으로 존경하게 되었답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">😤 놀부의 시기와 탐욕</span>
+        <h2>놀부의 계략</h2>
+        <p><strong>【중심 문장】</strong> 흥부가 부자가 되었다는 소문을 들은 놀부는 시기심에 불타, 제비 다리를 일부러 부러뜨리고 박씨를 얻으려 한다.</p>
+        <p>흥부가 부자가 되었다는 소식은 금세 놀부의 귀에 들어갔어요.</p>
+        <p><span class="dialogue">"뭐라고? 그 거지 같던 놈이 나보다 부자가 됐다고?"</span></p>
+        <p>놀부의 얼굴이 시뻘겋게 달아올랐어요. 갈순이도 부채질을 했지요.</p>
+        <p><span class="dialogue">"제비가 박씨를 물어다 줬다면서요? 우리도 제비를 구하면 되겠네요!"</span></p>
+        <p>놀부는 탐욕스러운 눈을 번뜩였어요. <span class="dialogue">"그래! 나도 박씨를 얻어야겠다!"</span></p>
+        <p>하지만 놀부네 처마 밑 제비는 다친 적이 없었어요. 그래서 놀부는 끔찍한 계획을 세웠어요.</p>
+        <p>다음 날, 놀부는 둥지에서 새끼 제비 한 마리를 꺼냈어요. 그리고… 일부러 다리를 부러뜨렸어요!</p>
+        <p><span class="dialogue">"삐악!"</span> 제비가 고통스럽게 울었어요.</p>
+        <p>놀부는 능청스럽게 제비 다리를 감싸주었어요. <span class="dialogue">"자, 내가 고쳐줬으니 내년에 박씨 물어오는 거다. 알겠지?"</span></p>
+        <p>갈순이가 씩 웃으며 말했어요. <span class="dialogue">"호호호, 이제 우리도 금은보화가 쏟아지겠네요!"</span></p>
+        <p><span class="highlight">제비는 모든 것을 보고 있었어요.</span> 누가 진심으로 자신을 도왔는지, 누가 탐욕 때문에 해쳤는지, 제비는 다 알고 있었답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🌿 놀부의 박</span>
+        <h2>놀부에게 온 박씨</h2>
+        <p><strong>【중심 문장】</strong> 이듬해 봄, 제비가 놀부에게도 박씨를 물어오고, 놀부는 흥분하여 박이 자라기를 기다린다.</p>
+        <p>이듬해 봄, 제비가 놀부네로 날아왔어요. 부리에 박씨 한 알을 물고 있었지요. 놀부가 손뼉을 치며 좋아했어요.</p>
+        <p><span class="dialogue">"그래, 그래! 잘했다, 제비야!"</span></p>
+        <p>놀부는 박씨를 뒷마당 가장 좋은 자리에 심었어요. 매일매일 물을 주고, 퇴비도 듬뿍 주었지요. 놀부의 머릿속은 온통 금은보화 생각뿐이었어요.</p>
+        <p><span class="dialogue">"이 박만 열리면 나는 조선 제일의 부자가 되는 거야!"</span></p>
+        <p>갈순이도 흥분을 감추지 못했어요. <span class="dialogue">"비단은 열 필만 나와도 좋겠고, 금괴는 수레 하나 분량이면 되겠어요. 아, 진주 목걸이도!"</span></p>
+        <p>박 넝쿨은 무럭무럭 자랐어요. 흥부네 박보다 더 크고 화려해 보였지요. 박이 주렁주렁 열리자 놀부는 어깨를 으쓱했어요.</p>
+        <p><span class="dialogue">"봐라! 이건 흥부 것보다 크잖아! 더 많은 보물이 들어 있을 거야!"</span></p>
+        <p><span class="highlight">하지만 겉모습만 보고는 알 수 없는 법.</span> 박 속에 무엇이 들어 있을지, 놀부는 아직 몰랐어요. 그의 탐욕은 점점 더 커져만 갔답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">👹 박 속에서 나온 재앙</span>
+        <h2>놀부의 박을 타다</h2>
+        <p><strong>【중심 문장】</strong> 기대에 부풀어 박을 탄 놀부. 그러나 박 속에서는 보물이 아니라 도깨비, 똥물, 빚쟁이들이 쏟아져 나와 놀부를 벌한다.</p>
+        <p>드디어 박을 타는 날이 왔어요. 놀부와 갈순이는 톱을 들고 박 앞에 섰어요.</p>
+        <p><span class="dialogue">"금은보화야, 나와라!"</span></p>
+        <p>삐걱, 삐걱… 박이 반으로 갈라지는 순간!</p>
+        <p>퍼엉! 악취가 진동했어요. 박 속에서 똥물이 쏟아져 나왔어요!</p>
+        <p><span class="dialogue">"으악! 이게 뭐야!"</span> 놀부가 비명을 질렀어요.</p>
+        <p>두 번째 박을 탔어요. 이번에는 무서운 도깨비들이 튀어나왔어요!</p>
+        <p><span class="dialogue">"야, 놀부! 네가 제비 다리를 부러뜨렸지? 우리가 혼내주마!"</span></p>
+        <p>도깨비들이 방망이를 휘두르며 놀부를 쫓아다녔어요. 집이 부서지고, 창고가 무너졌어요.</p>
+        <p>세 번째 박에서는 빚쟁이들이 나타났어요. <span class="dialogue">"놀부! 빌린 돈 갚아라!"</span> 놀부가 빌린 적도 없는 빚 문서를 들이밀었어요.</p>
+        <p>네 번째, 다섯 번째 박에서도 재앙만 쏟아졌어요. 집은 완전히 폐허가 되었고, 재산은 모두 사라졌어요.</p>
+        <p><span class="dialogue">"이럴 수가… 다 내 거였는데…"</span></p>
+        <p><span class="highlight">놀부와 갈순이는 그제야 알았어요.</span> 탐욕의 끝에는 복이 아니라 벌이 기다리고 있다는 것을요.</p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">💕 형을 용서하는 흥부</span>
+        <h2>흥부의 용서</h2>
+        <p><strong>【중심 문장】</strong> 모든 것을 잃고 쫓겨난 놀부 가족. 흥부는 과거의 원한을 버리고 형을 따뜻하게 맞아들인다.</p>
+        <p>모든 것을 잃은 놀부는 갈 곳이 없었어요. 옛날 흥부를 쫓아낸 것처럼, 이제 자신이 쫓겨나는 신세가 된 거예요.</p>
+        <p><span class="dialogue">"어디로 가지…"</span> 놀부가 터덜터덜 길을 걸었어요.</p>
+        <p>갈순이가 울먹이며 말했어요. <span class="dialogue">"당신, 흥부네 가봐요. 그 집밖에 없어요."</span></p>
+        <p><span class="dialogue">"내가 어떻게… 그 애를 쫓아냈는데…"</span></p>
+        <p>하지만 선택의 여지가 없었어요. 놀부 부부는 흥부네 집 앞에 섰어요. 머리를 들 수가 없었지요.</p>
+        <p>흥부가 대문을 열고 나왔어요. 그리고 형을 보자마자 달려갔어요.</p>
+        <p><span class="dialogue">"형님!"</span></p>
+        <p>흥부는 놀부를 꼭 안아주었어요. <span class="dialogue">"형님, 어서 들어오세요. 이제 우리 함께 살아요."</span></p>
+        <p>놀부의 눈에서 눈물이 흘렀어요. <span class="dialogue">"흥부야… 미안하다. 내가 너무 못됐어…"</span></p>
+        <p><span class="dialogue">"괜찮아요, 형님. 지나간 일은 잊어요. 우리는 가족이잖아요."</span></p>
+        <p>복순이와 아이들도 놀부 가족을 반갑게 맞이했어요. 따뜻한 밥과 따뜻한 방이 그들을 기다리고 있었지요.</p>
+        <p><span class="highlight">원한을 갚는 것보다 용서하는 것이 더 어렵지만, 흥부는 해냈어요.</span> 진정한 부자는 재물이 많은 사람이 아니라 마음이 넓은 사람이라는 것을 보여주었답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌈 함께 행복하게</span>
+        <h2>모두 행복하게</h2>
+        <p><strong>【중심 문장】</strong> 놀부는 잘못을 뉘우치고 착하게 변하며, 두 형제 가족은 함께 행복하게 살아간다.</p>
+        <p>놀부는 흥부네에서 새 삶을 시작했어요. 처음에는 어색했지만, 흥부 가족의 따뜻함에 조금씩 마음이 녹아갔지요.</p>
+        <p><span class="dialogue">"흥부야, 내가 밭일을 도울게."</span> 놀부가 호미를 들고 나섰어요.</p>
+        <p><span class="dialogue">"고마워요, 형님!"</span> 흥부가 웃으며 대답했어요.</p>
+        <p>갈순이도 달라졌어요. 복순이에게 요리를 배우고, 아이들을 돌봐주었지요. <span class="dialogue">"복순아, 예전에 미안했어. 내가 너무 못됐지…"</span> <span class="dialogue">"이제 우리 사이좋게 지내요!"</span></p>
+        <p>놀부의 큰 변화에 마을 사람들도 놀랐어요. 예전의 욕심쟁이 놀부가 어려운 사람들을 돕기 시작한 거예요.</p>
+        <p><span class="dialogue">"놀부가 저렇게 변하다니!"</span> <span class="dialogue">"흥부의 마음이 형까지 바꿨구나."</span></p>
+        <p>어느 봄날, 은비가 새끼들을 데리고 흥부네 처마 밑에 다시 둥지를 틀었어요. 삐약삐약 새끼들이 우는 소리에 흥부와 놀부가 함께 올려다보았어요.</p>
+        <p><span class="dialogue">"은비야, 올해도 왔구나!"</span></p>
+        <p><span class="dialogue">"저 제비 덕분에 우리가 이렇게 됐네, 흥부야."</span></p>
+        <p>두 형제는 어깨를 나란히 하고 웃었어요.</p>
+        <p><span class="highlight">선행은 복이 되고, 욕심은 화가 된다.</span> 하지만 진심으로 뉘우친다면, 누구에게나 다시 시작할 기회가 온다는 것. 흥부와 놀부의 이야기는 그것을 우리에게 알려준답니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(194, 24, 91, 0.15); border-radius: 16px;">
+          <strong style="color: #880E4F; font-size: 20px;">🌱 「선행은 복이 되고, 욕심은 화가 된다. 그러나 진심으로 뉘우친다면, 누구에게나 다시 시작할 기회가 온다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

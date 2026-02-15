@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4억 년 전의 편지 — 별빛은 시간을 담아 여행한다</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #0a0a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리19/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5C6BC0 0%, #7E57C2 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, rgba(92, 107, 192, 0.15) 0%, rgba(126, 87, 194, 0.15) 100%);
+      color: #512DA8;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #512DA8;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #4527A0;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 38px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #B39DDB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 22px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, rgba(92, 107, 192, 0.9) 0%, rgba(126, 87, 194, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: linear-gradient(135deg, rgba(69, 90, 100, 0.9) 0%, rgba(103, 58, 183, 0.9) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(92, 107, 192, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>✨ 4억 년 전의 편지 — 별빛은 시간을 담아 여행한다</h1>
+        <p class="subtitle">
+          《별빛이 도착하기까지》<br>
+          밤하늘의 오래된 여행 이야기
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>✨ 루미 (광자 소녀)</strong> — 말 그대로 '빛 알갱이'에서 태어난 소녀. 호기심이 많고, 어느 별에서 왔는지를 기억하지 못해 늘 고민한다.</p>
+          <p><strong>🔭 갈릴 (망원경 소년)</strong> — 별을 사랑하는 천문대 탐험가. 밤마다 망원경으로 하늘을 관찰하며, 루미에게 "넌 어디서 왔을까?"라는 질문을 던진다.</p>
+          <p><strong>🌈 스펙트라 (무지개 해독사)</strong> — 빛의 색을 읽어 별의 성격을 알아내는 신비로운 존재. 루미의 출발지를 찾아줄 유일한 희망.</p>
+          <p><strong>🔴 레드시프트 (경고자)</strong> — 우주가 점점 빠르게 멀어지고 있다고 말하는 어두운 성격의 캐릭터. 별들이 영원하지 않음을 일깨워 준다.</p>
+          <p><strong>🌑 다크매터 (숨은 거인)</strong> — 아무도 눈으로 볼 수 없지만, 은하를 하나로 묶는 보이지 않는 힘의 존재. 루미에게 "빛이 전부가 아니야"라는 메시지를 전한다.</p>
+          <p><strong>👵 라이트이어 할머니</strong> — 수천 년간 빛의 여행을 지켜본 존재. 루미에게 '시간을 담은 빛'의 비밀을 알려준다.</p>
+        </div>
+        <p class="scroll-hint">⬇ 스크롤하여 이야기 시작 ⬇</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">💌 별의 빛</span>
+        <h2>별의 빛 — 수억 년 전에 보낸 편지</h2>
+        <p>갈릴은 매일 밤 옥상에 올라 낡은 망원경을 밤하늘에 갖다 댔습니다. 도시의 불빛이 닿지 않는 시골 마을이라 별이 쏟아질 듯 빛나는 밤이었습니다. 수천, 수만 개의 별이 까만 하늘에 박혀 반짝이고 있었지요. <span class="dialogue">"저 별들은 다 뭐라고 말하고 있는 걸까?"</span> 갈릴은 별빛이 단순한 장식이 아니라, 어떤 메시지를 담고 있다고 느꼈습니다. <span class="highlight">별은 스스로 빛을 내는 천체입니다. 별의 내부에서는 수소 원자핵이 융합하여 헬륨이 되는 핵융합 반응이 일어나고 있으며, 이 과정에서 어마어마한 에너지가 빛과 열의 형태로 방출됩니다.</span> 우리 태양도 매초 약 400만 톤의 질량을 에너지로 변환하고 있습니다. 아인슈타인의 유명한 공식 E=mc²에 의해서요.</p>
+        <p>어느 날 밤, 갈릴의 망원경에 유난히 밝은 별 하나가 잡혔습니다. 그 빛을 집중해서 바라보는 순간, 빛 속에서 작은 목소리가 들려왔습니다. <span class="dialogue">"안녕, 갈릴. 나는 루미. 너에게 도착하는 데 4억 년이 걸렸어."</span> 갈릴은 깜짝 놀랐습니다. <span class="dialogue">"4억 년? 그러면 지금 내가 보는 이 빛은…"</span> <span class="dialogue">"그래. 4억 년 전에 출발한 빛이야. 나를 보낸 별은 지금 어떤 모습인지 나도 몰라. 어쩌면 이미 사라졌을 수도 있어."</span> <span class="highlight">밤하늘의 별빛은 '지금'의 별이 아니라 '과거'의 별입니다. 우리가 보는 별빛은 수년 전, 수백 년 전, 수억 년 전에 출발한 빛이 이제야 도착한 것입니다.</span> 갈릴의 손이 떨렸습니다. 자신이 받은 것은 반짝임이 아니라 4억 년 전에 보낸 편지였던 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">⚡ 빛의 속도</span>
+        <h2>빛의 속도 — 우주에서 가장 빠른 것의 외로움</h2>
+        <p><span class="dialogue">"4억 년이나 여행했다고? 대체 얼마나 느리게 온 거야?"</span> 갈릴이 물었습니다. 루미가 웃었습니다. <span class="dialogue">"느리다고? 나는 우주에서 가장 빠른 존재야! 나보다 빠른 것은 없어!"</span> <span class="highlight">빛의 속도는 진공에서 초속 약 299,792,458미터, 약 초속 30만 킬로미터입니다. 1초에 지구를 일곱 바퀴 반 돌 수 있는 어마어마한 속도이지요.</span> 지구에서 달까지는 약 1.3초, 지구에서 태양까지는 약 8분 20초 만에 도달합니다. 아인슈타인의 특수 상대성 이론에 따르면, 빛의 속도는 우주의 최고 속도 제한입니다. 어떤 물질도, 어떤 정보도 빛보다 빠르게 이동할 수 없습니다. 이것은 단순한 기술의 한계가 아니라 우주의 근본 법칙입니다.</p>
+        <p><span class="dialogue">"그런데 그렇게 빠른데도 4억 년이 걸렸다고?"</span> 갈릴이 여전히 의아해했습니다. <span class="dialogue">"그만큼 우주가 넓다는 거야."</span> 루미가 조용히 말했습니다. <span class="dialogue">"나는 1초에 30만 킬로미터를 달려. 하지만 내가 출발한 별까지의 거리는 30만 킬로미터에 4억 년치의 초를 곱한 거야. 상상도 할 수 없는 거리지."</span> <span class="highlight">빛은 우주에서 가장 빠릅니다. 하지만 우주는 빛조차 감당할 수 없을 만큼 광활합니다. 가장 빠른 것이 수억 년을 달려야 도착하는 거리. 그것이 우주의 스케일이었습니다.</span> 루미의 목소리에 외로움이 묻어났습니다. <span class="dialogue">"가장 빠른 존재가 가장 오래 여행해야 한다는 것, 아이러니하지 않아? 나보다 빠른 건 없는데, 나도 이 우주를 다 횡단하지 못해."</span> 갈릴은 그 외로움을 이해했습니다. 가장 빠른 것의 한계가 곧 우주의 크기를 보여주는 것이니까요.</p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">📐 먼 거리</span>
+        <h2>먼 거리 — 킬로미터가 포기한 곳에서 광년이 시작된다</h2>
+        <p>우주의 거리를 이해하기 위해, 라이트이어 할머니가 나타났습니다. 은빛 머리카락이 은하수처럼 길게 늘어진 시간의 수호자였습니다. <span class="dialogue">"갈릴아, 우주에서는 킬로미터라는 단위가 쓸모없단다."</span> 할머니가 미소 지었습니다. <span class="dialogue">"지구에서 가장 가까운 별 프록시마 센타우리까지의 거리가 약 40조 킬로미터야. 40,000,000,000,000킬로미터. 이런 숫자를 매번 쓸 수는 없잖니?"</span> <span class="highlight">이 문제를 해결하기 위해 천문학자들은 '광년'이라는 단위를 사용합니다. 1광년은 빛이 1년 동안 여행하는 거리로, 약 9조 4,600억 킬로미터입니다.</span> 프록시마 센타우리까지는 약 4.24광년이지요. 우리가 지금 보는 프록시마의 빛은 4년 전에 출발한 것입니다.</p>
+        <p><span class="dialogue">"더 먼 곳도 알려줄까?"</span> 할머니가 계속했습니다. <span class="dialogue">"우리 은하의 지름은 약 10만 광년이야. 은하 한쪽 끝에서 다른 쪽 끝까지 빛이 10만 년을 달려야 한다는 뜻이지. 가장 가까운 대형 은하인 안드로메다 은하까지는 약 250만 광년. 지금 우리가 보는 안드로메다의 빛은 인류의 조상이 아프리카를 떠나기도 훨씬 전에 출발한 거야."</span> 갈릴의 머리가 어지러워졌습니다. <span class="dialogue">"그러면 루미가 4억 년을 여행했다는 것은, 루미를 보낸 별이 4억 광년 떨어져 있다는 뜻이에요?"</span> <span class="dialogue">"그래. 4억 광년. 빛의 속도로 4억 년을 쉬지 않고 달려야 하는 거리. 그 별에서 루미가 출발했을 때, 지구에서는 아직 공룡도 나타나지 않았단다."</span> 루미가 조용히 말했습니다. <span class="dialogue">"내가 출발했을 때 지구의 바다에는 물고기가 막 육지로 올라오기 시작했어. 그 긴 시간 동안 나는 쉬지 않고 달렸고, 마침내 네 망원경에 도착한 거야."</span> 숫자가 아닌 이야기로 느끼는 우주의 거리. 갈릴의 가슴이 뜨거워졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">🌈 스펙트럼</span>
+        <h2>스펙트럼 — 빛을 쪼개면 비밀이 쏟아진다</h2>
+        <p>루미의 메시지를 제대로 읽으려면, 빛을 더 자세히 분석해야 했습니다. 그때 스펙트라가 프리즘을 들고 나타났습니다. <span class="dialogue">"갈릴, 빛은 하나의 색이 아니야. 여러 색이 섞여있는 거야. 내가 분해해줄게."</span> 스펙트라가 루미의 빛을 프리즘에 통과시키자, 빨강에서 보라까지 무지개 색이 펼쳐졌습니다. 이것이 '스펙트럼'입니다. 뉴턴이 1666년에 프리즘으로 햇빛을 분해하여 발견한 이래, 스펙트럼은 천문학의 가장 강력한 도구가 되었습니다.</p>
+        <p><span class="dialogue">"하지만 잘 봐."</span> 스펙트라가 무지개 속을 가리켰습니다. <span class="dialogue">"여기저기에 검은 선이 보이지?"</span> 연속적인 무지개 속에 가느다란 검은 줄이 여러 개 나타나 있었습니다. <span class="highlight">이것이 '흡수 스펙트럼'의 흡수선입니다. 별에서 나온 빛이 별의 대기를 통과할 때, 대기 속의 원소가 특정 파장의 빛을 흡수하면서 그 부분이 검게 나타나는 것입니다.</span> <span class="dialogue">"이 검은 선의 위치는 원소마다 정확하게 정해져 있어."</span> 스펙트라가 설명했습니다. <span class="dialogue">"수소는 여기, 헬륨은 여기, 나트륨은 여기. 마치 원소의 지문과 같지. 이 지문을 읽으면 수십억 광년 떨어진 별이 무엇으로 이루어져 있는지 알 수 있어!"</span> 실제로 태양 스펙트럼의 흡수선을 분석하여 '헬륨'이라는 원소가 발견되었습니다. 헬륨이라는 이름 자체가 그리스어로 '태양'을 뜻하는 '헬리오스'에서 왔습니다. 지구에서 발견되기도 전에, 태양의 빛 속에서 먼저 발견된 원소인 것이죠. <span class="dialogue">"믿을 수 있어?"</span> 갈릴이 감탄했습니다. <span class="dialogue">"별에 가보지 않아도, 빛만 분석하면 별의 성분을 알 수 있다니!"</span> 스펙트라가 미소 지었습니다. <span class="dialogue">"빛을 쪼개면 별의 신분증이 나와. 이름, 나이, 온도, 성분까지."</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🌡️ 별의 온도</span>
+        <h2>별의 온도 — 색깔이 알려주는 뜨거움의 정도</h2>
+        <p>스펙트라의 분석은 계속되었습니다. <span class="dialogue">"스펙트럼은 별의 성분만 알려주는 게 아니야. 별의 온도도 알려줘."</span> 밤하늘을 자세히 보면, 별마다 색이 다릅니다. 어떤 별은 붉고, 어떤 별은 노랗고, 어떤 별은 푸릅니다. 이 색의 차이가 바로 온도의 차이입니다. <span class="highlight">직관과는 반대로, 붉은 별이 가장 차갑고 푸른 별이 가장 뜨겁습니다.</span></p>
+        <p><span class="dialogue">"뜨거운 것이 빨간색이 아니라고?"</span> 갈릴이 놀랐습니다. 스펙트라가 설명했습니다. <span class="dialogue">"모닥불을 생각해봐. 불꽃의 바깥쪽은 빨갛고 안쪽으로 갈수록 노랗다가 파랗게 변하지? 온도가 높을수록 파장이 짧은 빛, 즉 파란색 쪽의 빛을 더 많이 내보내는 거야."</span> 이것은 '빈의 변위 법칙'이라고 합니다. 물체의 온도가 높을수록 최대 복사 에너지의 파장이 짧아집니다. <span class="highlight">표면 온도 약 3,000도의 별은 붉게 빛나고, 6,000도인 우리 태양은 노란빛, 10,000도 이상의 별은 푸르게 빛납니다. 가장 뜨거운 별은 표면 온도가 5만 도에 달합니다.</span></p>
+        <p>스펙트라는 별의 분류 체계도 보여주었습니다. 천문학자들은 별을 온도에 따라 O, B, A, F, G, K, M으로 분류합니다. O형이 가장 뜨겁고 파란색, M형이 가장 차갑고 붉은색입니다. 우리 태양은 G형 별이지요. 이 분류를 외우기 위해 천문학자들이 만든 문장이 있습니다. "Oh Be A Fine Girl(Guy), Kiss Me." 루미가 자신의 색을 보여주었습니다. 약간 푸르스름한 빛이었습니다. <span class="dialogue">"나를 보낸 별은 꽤 뜨거운 별이었어. 표면 온도가 약 2만 도였지."</span> 별의 색깔 하나만으로 수억 광년 떨어진 별의 온도를 알 수 있다니. 빛은 정말로 우주의 메신저였습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🎨 색의 의미</span>
+        <h2>색의 의미 — 별의 일생이 색에 담기다</h2>
+        <p>별의 색은 온도만 알려주는 것이 아니었습니다. 스펙트라가 더 깊은 비밀을 밝혀주었습니다. <span class="dialogue">"별의 색과 밝기를 조합하면, 별이 지금 인생의 어느 단계에 있는지 알 수 있어."</span> 이것이 바로 '헤르츠스프룽-러셀 도표', 줄여서 HR도입니다. 가로축에 별의 색(온도)을, 세로축에 별의 밝기(절대등급)를 놓으면, 별들이 무작위로 흩어지지 않고 특정한 패턴을 이룹니다. <span class="highlight">대부분의 별은 왼쪽 위(뜨겁고 밝은)에서 오른쪽 아래(차갑고 어두운)로 이어지는 대각선 띠에 몰려 있는데, 이것을 '주계열'이라고 합니다.</span> 주계열은 별의 청년기에 해당합니다. 우리 태양도 현재 주계열에 있지요.</p>
+        <p><span class="dialogue">"하지만 별도 늙어."</span> 스펙트라가 말했습니다. <span class="dialogue">"수소 연료가 다하면, 별은 부풀어 올라 '적색 거성'이 돼. 크기는 커지지만 표면 온도가 낮아져서 붉게 변하지. 오리온자리의 베텔게우스가 대표적인 적색 거성이야."</span> 적색 거성 단계가 끝나면, 별의 질량에 따라 운명이 갈립니다. 태양 정도의 별은 외층을 벗어던지고 '백색 왜성'이 됩니다. 작고 뜨겁지만 어두운, 별의 잔해이지요. 태양보다 훨씬 무거운 별은 초신성 폭발을 일으킨 뒤 '중성자별'이나 '블랙홀'이 됩니다.</p>
+        <p>루미가 조용히 말했습니다. <span class="dialogue">"나를 보낸 별이 지금 어떤 상태인지는 모르겠어. 4억 년이 지났으니, 이미 적색 거성이 되었을 수도, 초신성으로 폭발했을 수도 있지. 내가 전하는 것은 4억 년 전의 모습이니까."</span> 갈릴은 가슴이 먹먹해졌습니다. 이미 사라졌을지 모르는 별이 보낸 빛. 그것은 별의 유언장이자 유산이었습니다. 밤하늘의 반짝임 하나하나가 별의 일생을 담은 초상화였던 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🌌 은하 구조</span>
+        <h2>은하 구조 — 별들의 거대한 도시</h2>
+        <p>갈릴이 밤하늘을 더 넓게 바라보자, 별들이 무작위로 흩어져 있는 것이 아니라는 것을 알게 되었습니다. 하늘을 가로지르는 희미한 빛의 띠, 은하수가 보였습니다. 다크매터가 어둠 속에서 모습을 드러냈습니다. <span class="dialogue">"저 빛의 띠가 바로 너희가 사는 은하, '우리은하'를 옆에서 본 모습이야."</span> <span class="highlight">우리은하는 약 2,000억 개의 별이 모여 이루는 거대한 나선 구조입니다. 지름이 약 10만 광년이며, 태양은 은하 중심에서 약 2만 6천 광년 떨어진 나선팔에 위치해 있습니다.</span> 태양계가 은하를 한 바퀴 도는 데 약 2억 3천만 년이 걸리는데, 이것을 '은하년'이라고 합니다.</p>
+        <p>은하에도 종류가 있습니다. 우리은하처럼 나선 모양인 나선은하, 동그란 타원 모양의 타원은하, 뚜렷한 형태가 없는 불규칙은하까지. 우주에는 이런 은하가 관측 가능한 범위 내에만 약 2조 개가 있습니다. <span class="dialogue">"그런데 은하가 형태를 유지하는 비결이 뭔지 아니?"</span> 다크매터가 물었습니다. <span class="dialogue">"나야. 보이지 않는 나."</span> 은하의 별들이 회전하는 속도를 계산하면, 보이는 물질만으로는 은하가 흩어져야 합니다. 하지만 은하는 멀쩡히 유지되고 있지요. 이것은 보이지 않는 물질, 즉 암흑 물질이 중력으로 은하를 붙잡아두고 있기 때문입니다. <span class="highlight">암흑 물질은 우주 전체 질량-에너지의 약 27퍼센트를 차지하지만, 빛을 내지도 반사하지도 않아서 직접 관측할 수 없습니다.</span> <span class="dialogue">"나는 보이지 않지만, 내가 없으면 은하는 존재할 수 없어. 너희가 보는 별, 행성, 모든 것이 내 중력 안에서 유지되는 거야."</span> 보이지 않는 것이 보이는 세상을 떠받치고 있다는 진실. 갈릴은 밤하늘을 다시 올려다보았습니다. 보이는 것 너머의 거대한 구조가 느껴졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">🎈 우주의 팽창</span>
+        <h2>우주의 팽창 — 별들이 도망치고 있다</h2>
+        <p>갈릴이 여러 은하의 빛을 스펙트라와 함께 분석하던 중, 이상한 점을 발견했습니다. <span class="dialogue">"이 은하의 흡수선 위치가 원래보다 붉은 쪽으로 밀려 있어!"</span> 그때 레드시프트가 나타났습니다. 온몸이 붉은빛으로 물든 신비로운 존재였습니다. <span class="dialogue">"안녕, 갈릴. 내 이름은 레드시프트. 네가 발견한 것은 '적색편이'야. 이것이 우주의 가장 놀라운 비밀을 밝혀줄 거야."</span></p>
+        <p>도플러 효과를 아시나요? 구급차가 다가올 때 사이렌 소리가 높아지고, 멀어질 때 낮아지는 현상이지요. 빛에서도 같은 현상이 일어납니다. <span class="highlight">빛을 내는 물체가 우리에게서 멀어지면, 빛의 파장이 길어져서 붉은 쪽으로 이동합니다. 이것이 적색편이입니다.</span> 반대로 다가오면 파장이 짧아져 푸른 쪽으로 이동하는 '청색편이'가 일어나지요. <span class="dialogue">"1929년, 에드윈 허블이 놀라운 사실을 발견했어."</span> 레드시프트가 말했습니다. <span class="dialogue">"거의 모든 은하가 우리에게서 멀어지고 있었고, 더 먼 은하일수록 더 빠르게 멀어지고 있었지. 이것은 한 가지만을 의미해."</span> <span class="dialogue">"우주가 팽창하고 있다는 거야!"</span> 갈릴이 외쳤습니다.</p>
+        <p>맞습니다. 우주 자체가 늘어나고 있는 것입니다. 풍선 표면에 점을 찍고 풍선을 불면, 어떤 점에서 보더라도 다른 모든 점이 멀어지는 것처럼요. 은하들이 도망치는 것이 아니라, 은하 사이의 공간 자체가 늘어나고 있는 것입니다. 이 발견을 역으로 되돌리면, 과거에는 우주가 훨씬 작았다는 결론에 이르고, 결국 약 138억 년 전 한 점에서 시작되었다는 '빅뱅 이론'으로 연결됩니다. <span class="dialogue">"내가 붉어질수록, 우주는 더 넓어지고 있다는 증거야."</span> 레드시프트가 말했습니다. 갈릴은 경외감에 말을 잃었습니다. 별빛의 색깔 변화 하나로 우주의 탄생과 운명을 알 수 있다니.</p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🔭 과거를 보는 망원경</span>
+        <h2>과거를 보는 망원경 — 시간 여행 기계</h2>
+        <p>모든 비밀을 배운 갈릴에게, 루미가 가장 중요한 이야기를 들려주었습니다. <span class="dialogue">"갈릴, 네 망원경은 단순한 관측 도구가 아니야. 시간 여행 기계야."</span> <span class="highlight">빛은 유한한 속도로 여행합니다. 따라서 먼 곳을 볼수록 더 오래된 과거를 보는 것입니다.</span> 달은 1.3초 전의 모습, 태양은 8분 20초 전의 모습, 목성은 약 40분 전의 모습을 보고 있습니다. 가장 가까운 별 프록시마 센타우리는 4년 전의 모습이고, 안드로메다 은하는 250만 년 전의 모습입니다.</p>
+        <p><span class="dialogue">"제임스 웹 우주 망원경은 134억 년 전의 빛을 포착했어."</span> 라이트이어 할머니가 말했습니다. <span class="dialogue">"빅뱅 직후 약 4억 년 뒤에 형성된 최초의 은하들이 보내온 빛이지. 그것은 우주의 유아기 사진이나 마찬가지야."</span> 이것은 시간 여행이 불가능하다는 상식을 뒤집는 개념입니다. 물리적으로 과거로 갈 수는 없지만, 과거를 볼 수는 있습니다. 먼 우주를 관측하는 것이 곧 과거를 관측하는 것이니까요. 더 강력한 망원경을 만들수록, 더 먼 과거를 볼 수 있습니다.</p>
+        <p><span class="dialogue">"그렇다면 우주의 끝에서 오는 빛은…"</span> 갈릴이 생각에 잠겼습니다. <span class="dialogue">"우주의 시작에서 오는 빛이에요!"</span> <span class="dialogue">"정확해!"</span> 루미가 빛났습니다. <span class="highlight">"실제로 우주에서 가장 오래된 빛이 있어. 빅뱅 후 약 38만 년 뒤에 방출된 '우주 마이크로파 배경복사'야. 이것은 우주가 처음으로 투명해진 순간의 빛으로, 지금은 마이크로파 형태로 우주 전체에 퍼져있지."</span> 갈릴은 자신의 낡은 망원경을 어루만졌습니다. 이 작은 도구가 시간의 벽을 넘어 과거의 우주를 보여주는 창이었다니. 모든 망원경은 타임머신이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리19/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌟 빛은 시간이다</span>
+        <h2>빛은 시간이다 — "우리는 과거의 빛을 보고 있다"</h2>
+        <p>여행의 끝에서, 갈릴의 옥상에 모든 존재가 모였습니다. 루미, 스펙트라, 레드시프트, 다크매터, 라이트이어 할머니. 밤하늘의 별이 그 어느 때보다 밝게 빛나고 있었습니다. 루미가 갈릴에게 마지막 인사를 했습니다. <span class="dialogue">"갈릴, 나는 4억 년을 달려서 너에게 왔어. 내 여행은 여기서 끝나지만, 내가 전하는 메시지는 영원히 남을 거야."</span> <span class="dialogue">"무슨 메시지인데?"</span> 갈릴이 물었습니다. <span class="dialogue">"별이 존재했다는 증거. 4억 년 전, 우주의 어느 구석에서 하나의 별이 빛나고 있었다는 사실. 그 별이 뜨거웠다는 것, 수소와 헬륨으로 이루어져 있었다는 것, 우리에게서 멀어지고 있었다는 것. 이 모든 정보가 나라는 작은 빛 한 알에 담겨 있어."</span></p>
+        <p>라이트이어 할머니가 말했습니다. <span class="dialogue">"빛은 시간이란다, 갈릴. 별빛을 본다는 것은 과거를 읽는다는 것이야. 밤하늘은 우주의 역사책이고, 별빛 하나하나가 그 책의 글자란다."</span> 다크매터가 조용히 덧붙였습니다. <span class="dialogue">"보이는 것만이 전부가 아니야. 보이지 않는 나도, 보이지 않는 시간도, 보이지 않는 에너지도 이 우주를 이루고 있어."</span> 레드시프트가 붉게 빛나며 말했습니다. <span class="dialogue">"그리고 우주는 지금 이 순간에도 팽창하고 있어. 내일 밤에 보는 별빛은 오늘 밤보다 아주 조금 더 붉을 거야."</span> 스펙트라가 마지막으로 프리즘을 들어올렸습니다. 별빛이 프리즘을 통과하며 무지개로 퍼졌습니다. <span class="dialogue">"이 무지개 속에 우주의 모든 비밀이 담겨 있어. 읽을 줄 아는 눈만 있다면."</span></p>
+        <p>갈릴은 눈물을 글썽이며 밤하늘을 올려다보았습니다. 수천 개의 별. 하나하나가 수년, 수백 년, 수억 년 전에 보낸 편지. <span class="highlight">우리는 과거의 빛을 보고 있었습니다.</span> 그리고 그 빛들은 지금도 우주 어딘가에서 출발하여, 수억 년 뒤 누군가의 망원경에 도착할 여행을 시작하고 있습니다. 갈릴은 속삭였습니다. <span class="dialogue">"고마워, 루미. 4억 년을 달려와줘서."</span> 그리고 내일 밤에도, 모레 밤에도, 갈릴은 옥상에 올라갈 것입니다. 과거의 편지를 읽기 위해. 별의 이야기를 듣기 위해. 우주의 시간을 느끼기 위해.</p>
+        <p style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(92, 107, 192, 0.1) 0%, rgba(126, 87, 194, 0.1) 100%); border-radius: 12px; border-left: 4px solid #5C6BC0;">
+          <strong>🌟 교훈: 밤하늘은 우주의 타임머신이다.</strong><br><br>
+          별빛은 시간을 담아 여행합니다. 우리가 밤하늘을 볼 때, 우리는 과거를 보고 있습니다. 빛은 1초에 30만 킬로미터를 달리지만, 우주는 너무나 넓어서 수억 년이 걸리기도 합니다. 별의 색은 온도를 알려주고, 스펙트럼은 별의 구성 원소를 말해줍니다. 우주는 지금도 팽창하고 있으며, 보이지 않는 다크매터가 은하를 하나로 묶고 있습니다. 밤하늘의 별빛 하나하나가 수백만 년 전에 쓰인 편지입니다. 우리는 매일 밤, 우주의 역사를 읽고 있는 것입니다.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">← 돌아가기</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+  </script>
+</body>
+</html>

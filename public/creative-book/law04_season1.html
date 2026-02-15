@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🛡️ 보이지 않는 상처를 막아라</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작법04/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(233, 30, 99, 0.15);
+      color: #C2185B;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #E91E63;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #C2185B;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #F8BBD9;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(233, 30, 99, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #F8BBD9;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(233, 30, 99, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(194, 24, 91, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🛡️ 보이지 않는 상처를 막아라</h1>
+        <p class="subtitle">
+          빛의 수호자들과 그림자 군단의 전쟁<br>
+          — 인권 보호의 최전선에서 벌어지는 열 가지 모험 이야기 —<br>
+          교과기반 창작도서 · 창작법 04
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🌟 하늘 (12세):</strong> "보이지 않는 상처를 볼 수 있는 눈"을 가진 소녀. 평범한 초등학생이었으나, 마을에 드리운 검은 안개를 보게 되면서 자신의 능력을 깨닫는다.</p>
+          <p><strong>⚔️ 수호 (13세):</strong> 정의감이 넘치는 소년. 과거 학교 폭력의 피해자였으나 그 경험을 딛고 일어선 강인한 마음의 소유자.</p>
+          <p><strong>🦉 지혜 할머니:</strong> 마을의 오래된 도서관을 지키는 신비로운 인물. '인권 헌장'이라는 고대 두루마리의 수호자.</p>
+          <p><strong>👿 그림자 군단장 무시:</strong> 사람들의 마음속 무관심과 편견을 먹고 자라는 어둠의 존재. "나와 상관없잖아"라는 말이 그의 힘의 원천.</p>
+          <p><strong>🐺 부하들:</strong> 폭언(말로 찌르는 가시), 차별(보이지 않는 벽을 세우는 거미), 침묵(도움의 목소리를 삼키는 검은 구름)</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p>◈ 외적 갈등: 하늘과 수호가 그림자 군단의 열 가지 어둠의 작전을 하나씩 무너뜨리며 마을을 지켜야 한다.</p>
+          <p>◈ 내적 갈등: "내가 나서면 나도 다칠 수 있다"는 두려움과 "누군가는 해야 한다"는 용기 사이에서 흔들린다.</p>
+          <p>◈ 사회적 갈등: 마을 어른들의 무관심이 그림자 군단의 가장 큰 무기이며, 아이들이 어른들의 마음을 깨우는 것이 궁극적 과제.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🌑 사이버 폭력</span>
+        <h2>검은 안개가 내려오다 — 사이버 폭력의 그림자</h2>
+        <p>어느 평화롭던 가을 저녁, 별빛 마을의 하늘 위로 기이한 검은 안개가 스멀스멀 내려오기 시작했다. 마을 사람들은 아무것도 느끼지 못했지만, 열두 살 소녀 하늘만은 달랐다. 하늘의 눈에는 그 안개가 또렷하게 보였고, 안개가 닿는 곳마다 아이들의 얼굴이 일그러지고, 눈물을 감추고, 혼자 방 안에 웅크리는 모습이 겹쳐 보였다. <span class="dialogue">"저게 뭐지?"</span> 하늘이 중얼거렸다.</p>
+        <p>안개의 정체는 사이버 폭력이라는 이름의 어둠이었다. 마을 아이들 사이에서 익명 메시지로 상처를 주고, 단체 채팅방에서 한 아이를 왕따시키고, 부끄러운 사진을 퍼뜨리는 일들이 은밀하게 번지고 있었다. 겉으로는 웃고 있지만 속으로는 무너지고 있는 아이들이 하나둘 늘어갔다.</p>
+        <p>하늘은 같은 반 친구 민지가 갑자기 학교에 나오지 않게 된 이유를 알 수 없었는데, 그날 밤 꿈속에서 검은 안개가 민지의 손에서 핸드폰을 통해 심장으로 파고드는 장면을 보고야 깨달았다. <span class="dialogue">"보이지 않는 상처... 이건 주먹으로 때리는 것보다 더 깊이 파고드는 거야."</span></p>
+        <p>하늘은 처음으로 두려움을 느꼈다. 자기가 본 것을 남들에게 말하면 미친 아이 취급을 받을지도 모른다는 공포, 그리고 이 거대한 어둠에 자기 혼자 맞서야 할지도 모른다는 외로움. 하지만 민지의 텅 빈 책상을 떠올릴 때마다 가슴 한가운데에서 작지만 뜨거운 불꽃이 타올랐다. <span class="highlight">"누군가는 이걸 봐야 해. 누군가는 이걸 막아야 해."</span> 하늘은 주먹을 꽉 쥐었다. 별빛 마을의 가장 긴 밤이 시작되고 있었다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">💔 아동 학대</span>
+        <h2>닫힌 문 너머의 비명 — 아동 학대를 마주하다</h2>
+        <p>다음 날 아침, 하늘은 마을 도서관으로 향했다. 검은 안개의 정체를 알아내려면 지혜가 필요했다. 그런데 도서관으로 가는 골목길에서 하늘은 이상한 소리를 들었다. 어떤 집의 닫힌 문 너머에서 아이의 울음소리가 새어나오고 있었다. 하늘의 눈에 비친 검은 안개는 그 집을 감싸고 있었고, 안개의 색깔은 사이버 폭력의 것과는 달랐다. 더 짙고, 더 끈적이고, 마치 쇠사슬처럼 아이를 꼼짝 못하게 옭아매고 있었다.</p>
+        <p><span class="dialogue">"도와줘요... 제발..."</span> 가느다란 목소리가 들렸지만, 지나가는 어른들은 아무도 멈추지 않았다. <span class="dialogue">"남의 집 일에 참견하면 안 되지"</span>라고 중얼거리는 아주머니, 고개를 돌리는 아저씨. 하늘의 가슴이 터질 것 같았다.</p>
+        <p>바로 그때, 뒤에서 누군가 하늘의 어깨를 잡았다. <span class="dialogue">"너도 보이는 거지? 그 검은 것."</span> 돌아보니 키가 훤칠하고 눈빛이 단단한 소년이 서 있었다. 수호였다. 수호는 하늘에게 자신의 이야기를 했다. 어린 시절, 자신도 저 문 뒤의 아이처럼 갇혀 있었다고. 도움을 요청했지만 아무도 귀 기울이지 않았던 그 절망의 시간들. 결국 용기를 내어 선생님에게 말한 것이 자신의 인생을 바꿨다고.</p>
+        <p><span class="dialogue">"아동 학대는 가정의 문제가 아니야. 사회 전체가 막아야 할 범죄야."</span> 수호의 목소리는 떨렸지만 확고했다. 두 아이는 함께 지혜 할머니를 찾아가기로 했다. <span class="highlight">닫힌 문 하나를 여는 것이 얼마나 큰 용기를 필요로 하는지, 그리고 그 용기가 한 아이의 인생 전체를 바꿀 수 있다는 것을</span> 이제 막 배우기 시작한 하늘은, 수호와 나란히 걸으며 처음으로 혼자가 아니라는 따뜻함을 느꼈다.</p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">🏫 학교 폭력</span>
+        <h2>운동장의 보이지 않는 벽 — 학교 폭력과의 대면</h2>
+        <p>지혜 할머니의 도서관에 도착한 하늘과 수호는 놀라운 광경을 목격했다. 도서관 한가운데 거대한 지도가 펼쳐져 있었는데, 별빛 마을의 지도 위에 검은 점들이 점점이 찍혀 있었다. <span class="dialogue">"저건 그림자 군단이 활동하는 지점들이란다."</span> 지혜 할머니가 조용히 말했다. 그중 가장 큰 검은 점은 마을 학교의 운동장에 찍혀 있었다.</p>
+        <p>하늘과 수호가 학교로 달려가 보니, 운동장 한가운데에 보이지 않는 벽이 세워져 있었다. 그 벽의 안쪽에는 혼자 고개를 숙인 아이가 있었고, 벽 바깥에서는 아이들이 그를 향해 조롱하고 밀어내고 있었다. 물건을 숨기고, 급식을 빼앗고, <span class="dialogue">"너 같은 애는 여기 없어도 돼"</span>라고 말하는 아이들.</p>
+        <p>하늘이 벽 안쪽의 아이에게 다가가려 하자, 그림자 군단의 부하 '폭언'이 나타났다. 폭언은 입에서 날카로운 가시를 뿜으며 말했다. <span class="dialogue">"가시 하나하나가 말이야. 한번 박히면 평생 빠지지 않지. 하하!"</span> 수호의 얼굴이 하얗게 변했다. 과거의 기억이 떠올랐기 때문이다. 하지만 수호는 이를 악물고 앞으로 나섰다. <span class="dialogue">"나는 그 가시에 찔려봤어. 그래서 알아. 이건 장난이 아니야. 폭력이야."</span></p>
+        <p>수호의 외침에 주변의 아이들이 멈칫했다. 하늘은 지혜 할머니에게 받은 '인권 헌장' 두루마리의 첫 번째 구절을 읽었다. <span class="dialogue">"모든 사람은 존엄하며, 누구도 타인의 존엄을 짓밟을 권리가 없다."</span> 그 순간, 보이지 않는 벽에 금이 가기 시작했다. 벽 안의 아이가 처음으로 고개를 들었다. <span class="highlight">아직 벽은 완전히 무너지지 않았지만, 금이 간다는 것은 희망이 생겼다는 뜻이었다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">🕸️ 차별과 혐오</span>
+        <h2>거미줄로 나눠진 세상 — 차별과 혐오를 넘어서</h2>
+        <p>보이지 않는 벽에 금을 낸 하늘과 수호 앞에 새로운 적이 나타났다. 그림자 군단의 부하 '차별'이었다. 차별은 거대한 거미의 형상을 하고 있었고, 마을 곳곳에 보이지 않는 거미줄을 쳤다. 거미줄은 사람들을 나누었다. 피부색이 다른 아이들, 장애가 있는 아이들, 다른 나라에서 온 아이들, 부모가 없는 아이들... 거미줄에 걸린 아이들은 서로를 볼 수 없었고, 볼 수 없으니 이해할 수 없었고, 이해할 수 없으니 두려워했고, 두려우니 미워했다.</p>
+        <p><span class="dialogue">"다르다는 건 틀린 거야!"</span> 차별 거미가 킥킥 웃으며 거미줄을 더 촘촘히 쳤다. 하늘의 반에도 전학 온 다문화 가정의 아이 '하나'가 있었다. 하나는 한국어를 잘 못해서 아이들에게 놀림을 받았고, <span class="dialogue">"너네 나라로 돌아가"</span>라는 말에 매일 혼자 울었다.</p>
+        <p>하늘은 하나에게 다가가 말했다. <span class="dialogue">"나는 보이지 않는 상처를 볼 수 있어. 네 가슴에 지금 수백 개의 거미줄이 감겨 있어. 내가 풀어줄게."</span> 수호도 나섰다. <span class="dialogue">"차별은 모르는 것에서 시작돼. 우리가 먼저 알려고 하면, 거미줄은 힘을 잃어."</span></p>
+        <p>두 아이는 하나와 함께 마을 광장에서 '다름 축제'를 열었다. 각자의 문화를 나누고, 각자의 음식을 맛보고, 각자의 노래를 부르는 축제. 처음에는 거미줄에 익숙해진 어른들이 냉소적이었지만, 아이들이 먼저 거미줄을 끊고 손을 잡자 어른들의 마음에도 변화가 일기 시작했다. 차별 거미는 사람들이 서로의 손을 잡을 때마다 거미줄이 끊어지며 조금씩 작아졌다. <span class="highlight">"다름은 틀림이 아니야. 다름은 풍요로움이야."</span> 하늘의 외침이 마을에 울려 퍼졌다.</p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">📞 신고 절차</span>
+        <h2>침묵을 깨는 전화 한 통 — 신고 절차를 배우다</h2>
+        <p>그림자 군단과의 싸움이 계속되면서, 하늘과 수호는 중요한 사실 하나를 깨달았다. 자기들 힘만으로는 모든 어둠을 물리칠 수 없다는 것. 지혜 할머니가 두 아이를 도서관의 비밀 지하실로 데려갔다. 그곳에는 '보호의 종'이라는 거대한 금빛 종이 있었다. <span class="dialogue">"이 종은 도움이 필요한 사람이 울리면, 마을의 수호자들이 달려오는 신비한 종이란다. 하지만 오랫동안 아무도 울리지 않아서 먼지가 쌓여 있구나."</span> 지혜 할머니의 목소리에 안타까움이 묻어났다.</p>
+        <p>현실 세계의 보호의 종은 바로 '신고'였다. 112, 117, 긴급전화 번호들, 그리고 아동보호전문기관과 학교 상담실. 하지만 아이들은 신고하는 것이 두려웠다. <span class="dialogue">"말하면 더 맞을 거야"</span>, <span class="dialogue">"괜히 참견하면 내가 당해"</span>, <span class="dialogue">"어른들이 믿어줄까"</span>... 그림자 군단의 세 번째 부하 '침묵'이 바로 이 두려움을 먹고 자라는 존재였다. 침묵은 검은 구름의 형태로 아이들의 목을 감싸, 도움을 요청하는 말을 삼켜버렸다.</p>
+        <p>하늘도 두려웠다. 하지만 수호가 말했다. <span class="dialogue">"내가 처음 선생님에게 말했을 때, 손이 떨렸어. 목소리가 나오지 않았어. 하지만 그 한마디가 나를 구했어."</span> 하늘은 용기를 냈다. 보호의 종 앞에 서서 있는 힘을 다해 종을 울렸다. 땡! 금빛 울림이 마을 전체에 퍼졌다. 침묵의 검은 구름이 갈라지고, 햇빛이 비집고 들어왔다.</p>
+        <p>종을 울리자 마을의 어른들 중 몇 명이 달려왔다. 경찰관, 상담사, 사회복지사. 하늘은 알게 되었다. <span class="highlight">신고는 고자질이 아니다. 신고는 누군가의 생명과 존엄을 지키는 가장 용감한 첫걸음이다. 침묵을 깨는 전화 한 통이 세상을 바꿀 수 있다는 진실을 말이다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🏰 보호 기관</span>
+        <h2>빛의 요새를 찾아서 — 보호 기관이라는 울타리</h2>
+        <p>보호의 종이 울린 뒤, 마을에 변화가 일어나기 시작했다. 하늘과 수호는 지혜 할머니의 안내로 마을 외곽에 숨겨진 '빛의 요새'를 찾아갔다. 요새 안에는 다양한 수호자들이 있었다. 아이들의 몸과 마음을 치료하는 치유사들, 위험에 처한 아이들을 안전한 곳으로 데려가는 호위대, 법의 힘으로 가해자를 처벌하는 재판관들.</p>
+        <p>현실에서 이 빛의 요새는 아동보호전문기관, 여성긴급전화 1366, 학교폭력 상담센터, 국가인권위원회 같은 기관들이었다. 하늘은 요새 안에서 이전에 구해진 아이들을 만났다. 한때 닫힌 문 뒤에서 울던 아이가 이제는 밝게 웃고 있었고, 운동장에서 고개를 숙이던 아이가 당당하게 그림을 그리고 있었다. <span class="dialogue">"이곳에 오면 안전해요. 아무도 우리를 다시 아프게 할 수 없어요."</span> 아이들의 말에 하늘의 눈시울이 붉어졌다.</p>
+        <p>하지만 그림자 군단장 무시가 요새 밖에서 비웃었다. <span class="dialogue">"이까짓 요새가 뭐 대수냐! 사람들이 관심을 끊으면 이 요새도 무너져!"</span> 무시의 말에는 아픈 진실이 담겨 있었다. 보호 기관은 사회의 관심과 지원이 없으면 제대로 작동할 수 없었다. 예산이 부족하면 상담사가 줄어들고, 관심이 없으면 신고가 묻히고, 사람들이 "남의 일"이라고 외면하면 요새의 벽은 점점 얇아졌다.</p>
+        <p>수호가 외쳤다. <span class="dialogue">"우리 모두가 이 요새의 벽돌이 되어야 해! 관심을 갖고, 후원하고, 목소리를 내는 것이 이 요새를 튼튼하게 만드는 거야!"</span> <span class="highlight">하늘도 깨달았다. 보호 기관이라는 울타리는 누군가가 세워주기만을 기다리는 것이 아니라, 우리 모두가 함께 쌓아가야 하는 것이었다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">⚖️ 법적 처벌</span>
+        <h2>정의의 저울이 기울 때 — 법적 처벌의 의미</h2>
+        <p>빛의 요새에서 힘을 얻은 하늘과 수호는 마을 광장에서 놀라운 장면을 목격했다. 하늘 높이 거대한 황금 저울이 떠 있었는데, 한쪽은 가해자의 행위가, 다른 한쪽은 피해자의 고통이 올려져 있었다. 그런데 저울이 기울어져 있었다. 가해자 쪽이 가볍게 올라가 있었던 것이다.</p>
+        <p><span class="dialogue">"왜 저울이 기울어져 있어요?"</span> 하늘이 물었다. 지혜 할머니가 대답했다. <span class="dialogue">"그건 법이 제대로 작동하지 않을 때, 가해자가 처벌받지 않을 때 일어나는 일이란다. 정의가 실현되지 않으면 세상의 균형이 무너지지."</span></p>
+        <p>현실에서도 마찬가지였다. 사이버 폭력 가해자가 "장난이었어"라고 빠져나가고, 아동 학대범이 "훈육이었다"라고 변명하고, 학교 폭력 가해자가 "피해자도 잘못했다"라고 책임을 회피할 때, 정의의 저울은 기울어졌다. 피해자는 두 번 상처받았고, 세상은 "나쁜 짓을 해도 괜찮다"는 잘못된 메시지를 보냈다.</p>
+        <p>하늘과 수호는 저울의 균형을 맞추기 위해 인권 헌장의 구절을 읽었다. <span class="dialogue">"타인의 인권을 침해한 자는 반드시 그에 합당한 책임을 진다."</span> 법적 처벌은 복수가 아니었다. 그것은 피해자에게 "당신의 고통은 정당하게 인정받았다"라고 말해주는 사회의 약속이었고, 가해자에게 "당신의 행동에는 결과가 따른다"라고 알려주는 경고였다. 저울의 균형이 맞춰지자 마을에 드리웠던 어둠이 한 겹 걷혔다. 그림자 군단장 무시의 얼굴에 처음으로 당혹감이 스쳤다. <span class="highlight">법은 단순한 벌이 아니라 사회의 약속이며, 그 약속이 지켜질 때 비로소 정의의 저울은 수평을 이룬다는 교훈이 마을에 울려 퍼졌다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">📖 예방 교육</span>
+        <h2>지식이라는 갑옷을 입다 — 예방 교육의 힘</h2>
+        <p>그림자 군단을 하나씩 물리치고 있었지만, 하늘에게는 고민이 있었다. <span class="dialogue">"우리가 물리쳐도, 새로운 그림자가 또 생기잖아요. 끝이 없어요."</span> 지혜 할머니가 미소를 지으며 도서관의 가장 깊은 곳으로 두 아이를 데려갔다. 그곳에는 수천 권의 책이 빛나고 있었고, 그 빛은 검은 안개를 태우고 있었다. <span class="dialogue">"이것이 가장 강력한 무기란다. 지식이야. 그림자를 없애는 것보다, 그림자가 생기지 않게 하는 것이 훨씬 강력하지."</span></p>
+        <p>할머니의 말은 예방 교육의 핵심이었다. 아이들에게 자신의 권리를 알려주는 것, 어디까지가 적절한 접촉이고 어디부터가 폭력인지 가르치는 것, 상처를 받았을 때 어떻게 도움을 요청하는지 연습하는 것. 이 모든 것이 그림자를 예방하는 빛의 갑옷이었다.</p>
+        <p>하늘과 수호는 마을 학교에서 인권 교육 수업을 시작했다. 처음에는 아이들이 지루해하고 장난쳤다. <span class="dialogue">"그런 건 나한테 안 일어나"</span>라며 무관심한 아이들도 있었다. 바로 그때 그림자 군단장 무시가 교실 창문 너머로 모습을 드러냈다. <span class="dialogue">"그래, 그래. 관심 없어도 돼. 네게는 절대 일어나지 않을 거야. 하하하!"</span></p>
+        <p>수호가 아이들을 돌아보며 말했다. <span class="dialogue">"나도 그렇게 생각했어. 나에게는 절대 안 일어날 거라고. 그런데 일어났어."</span> 교실이 조용해졌다. 수호의 눈에 맺힌 눈물이 어떤 교과서보다 강력한 교육이었다. 아이들은 하나둘 진지해졌고, 질문을 시작했고, 서로의 경험을 조심스럽게 나누었다. <span class="highlight">빛나는 책에서 나온 지식이 아이들의 마음을 갑옷처럼 감쌌다. 그날 교실에서 피어난 빛은 검은 안개를 밀어내기 시작했다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🤝 공동체의 역할</span>
+        <h2>함께라서 강하다 — 공동체의 역할을 깨닫다</h2>
+        <p>결전의 날이 다가오고 있었다. 그림자 군단장 무시가 마을 전체를 덮을 만큼 거대해졌기 때문이다. 사람들의 무관심을 먹고 자란 무시는 이제 하늘조차 캄캄하게 만들 정도로 강해졌다. 하늘과 수호, 단 두 명의 힘으로는 무시를 이길 수 없었다. <span class="dialogue">"어떡하지..."</span> 하늘이 절망했을 때, 지혜 할머니가 인권 헌장의 마지막 구절을 읽어주었다. <span class="dialogue">"인권은 홀로 지키는 것이 아니라, 함께 지키는 것이다."</span></p>
+        <p>그 순간 하늘은 깨달았다. 자신과 수호 둘만의 싸움이 아니었다. 마을 전체가 함께 일어나야 하는 싸움이었다. 하늘과 수호는 마을 곳곳을 돌아다니며 사람들의 마음의 문을 두드렸다. 처음에는 외면당했다. <span class="dialogue">"바빠서 못 해"</span>, <span class="dialogue">"내가 뭘 할 수 있겠어"</span>, <span class="dialogue">"그건 전문가들이 할 일이지."</span></p>
+        <p>하지만 포기하지 않았다. 닫힌 문 뒤에서 구해진 아이가 와서 자신의 이야기를 했다. 운동장 벽 안에 갇혔던 아이가 와서 증언했다. 다문화 가정의 하나가 와서 노래를 불렀다. 한 사람씩, 또 한 사람씩 마음이 움직였다. 빵집 아주머니가 나섰고, 경비원 아저씨가 합류했고, 은퇴한 선생님이 왔고, 소방관이 왔고, 학생회장이 왔고... 마을 광장은 사람들로 가득 찼다.</p>
+        <p>모두가 손을 잡고 원을 만들자, 각자의 가슴에서 작은 빛이 피어올랐다. 한 사람의 빛은 미약했지만, 백 명, 천 명의 빛이 모이자 마을 전체를 환하게 밝히는 거대한 빛의 방패가 되었다. 수호가 외쳤다. <span class="highlight">"우리는 혼자가 아니야! 함께일 때 우리는 어떤 어둠도 이길 수 있어!"</span> 공동체의 힘. 그것은 어떤 마법보다 강한 진짜 힘이었다.</p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법04/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌅 새로운 아침</span>
+        <h2>안전한 세상, 우리가 만드는 빛 — 새로운 아침</h2>
+        <p>마을 사람들이 만든 빛의 방패 앞에서, 그림자 군단장 무시는 처음으로 뒷걸음질쳤다. <span class="dialogue">"이, 이럴 수가! 사람들이 관심을 갖기 시작하면 나는 힘을 잃어!"</span> 무시가 비명을 질렀다. 하늘이 앞으로 나섰다. <span class="dialogue">"무시, 너는 우리 마음속의 무관심에서 태어났어. 그러니까 우리가 관심을 가지면 너는 사라져."</span></p>
+        <p>하늘이 인권 헌장 두루마리를 펼쳤다. 두루마리에서 찬란한 빛이 뿜어져 나왔고, 마을 사람들의 빛의 방패와 합쳐졌다. 사이버 폭력의 어둠이 사라지고 아이들이 화면 너머의 말에도 책임이 있다는 것을 배웠다. 닫힌 문이 열리고 학대받던 아이들이 안전한 품으로 돌아왔다. 운동장의 보이지 않는 벽이 완전히 무너지고, 아이들이 함께 공을 찼다. 거미줄이 모두 끊어지고, 다른 배경의 아이들이 서로의 어깨를 감쌌다.</p>
+        <p>무시는 점점 작아졌다. 최후의 순간, 무시는 말했다. <span class="dialogue">"나는... 완전히 사라지지 않아. 사람들이 다시 무관심해지면 돌아올 거야."</span> 하늘이 고개를 끄덕였다. <span class="dialogue">"알아. 그래서 우리는 매일 깨어 있을 거야. 매일 관심을 가질 거야. 매일 서로를 지킬 거야."</span> 무시는 먼지처럼 흩어졌다. 하지만 완전히 사라진 것은 아니었다. 아주 작은 그림자가 마을 어딘가에 남아 기회를 엿보고 있었다. 그래서 이 이야기는 끝이 아니다.</p>
+        <p>아침 햇살이 별빛 마을을 비추고, 하늘은 친구들과 함께 학교로 향했다. 수호가 웃으며 말했다. <span class="dialogue">"인권은 한 번 지키면 끝나는 게 아니야. 매일 지켜야 하는 거야."</span> 하늘이 대답했다. <span class="dialogue">"그래, 그래서 소중한 거야."</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(233, 30, 99, 0.15); border-radius: 16px;">
+          <strong style="color: #C2185B; font-size: 20px;">🌱 「인권은 지켜야 할 책임이다. 당신이 관심을 갖는 순간, 세상은 조금 더 밝아진다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>
