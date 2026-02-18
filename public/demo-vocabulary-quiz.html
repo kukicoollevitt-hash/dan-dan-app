@@ -6892,17 +6892,32 @@
     function generateChoicesForBrainfitVocab(vocabItem, allVocabData) {
       const correctMeaning = vocabItem.meaning;
 
-      // 같은 분야에서 오답 후보 추출 (정답 제외)
-      const wrongCandidates = allVocabData
-        .filter(v => v.meaning !== correctMeaning)
-        .map(v => v.meaning);
+      // 같은 분야에서 오답 후보 추출 (정답 제외, 중복 제거)
+      const wrongCandidates = [...new Set(
+        allVocabData
+          .filter(v => v.meaning !== correctMeaning)
+          .map(v => v.meaning)
+      )];
 
       // 셔플 후 3개 선택
       const shuffled = [...wrongCandidates].sort(() => Math.random() - 0.5);
       const wrongAnswers = shuffled.slice(0, 3);
 
+      // 최종 선지에서도 중복 확인 (정답과 오답이 같은 경우 방지)
+      const uniqueWrongAnswers = wrongAnswers.filter(ans => ans !== correctMeaning);
+
+      // 오답이 3개 미만이면 추가 확보
+      while (uniqueWrongAnswers.length < 3 && shuffled.length > uniqueWrongAnswers.length + 1) {
+        const nextCandidate = shuffled[uniqueWrongAnswers.length + 1];
+        if (nextCandidate && nextCandidate !== correctMeaning && !uniqueWrongAnswers.includes(nextCandidate)) {
+          uniqueWrongAnswers.push(nextCandidate);
+        } else {
+          break;
+        }
+      }
+
       // 정답 + 오답 섞기
-      const choices = [correctMeaning, ...wrongAnswers];
+      const choices = [correctMeaning, ...uniqueWrongAnswers];
       const shuffledChoices = choices.sort(() => Math.random() - 0.5);
 
       // 정답 인덱스 찾기
@@ -6978,9 +6993,19 @@
     function selectRandomQuestions(totalCount = 15) {
       const { data, field, label } = getTodayQuizData(totalCount);
 
+      // 데이터에서 word 기준 중복 제거 (같은 단어가 여러 번 있는 경우 방지)
+      const uniqueData = [];
+      const seenWords = new Set();
+      for (const item of data) {
+        if (!seenWords.has(item.word)) {
+          seenWords.add(item.word);
+          uniqueData.push(item);
+        }
+      }
+
       // 오늘 이미 푼 어휘 제외
       const usedWords = getTodayUsedWords();
-      const availableData = data.filter(item => !usedWords.includes(item.word));
+      const availableData = uniqueData.filter(item => !usedWords.includes(item.word));
 
       // 남은 어휘가 부족한 경우: 리셋하고 처음부터 요청한 개수만큼 출제
       let actualCount = totalCount;
@@ -6990,9 +7015,9 @@
         // 남은 어휘가 요청 개수보다 적으면 리셋하고 전체에서 출제
         console.log(`🔄 남은 어휘(${availableData.length}개)가 요청(${totalCount}개)보다 적어 리셋합니다.`);
         localStorage.removeItem(getTodayKey());
-        dataToUse = data;
-        actualCount = Math.min(totalCount, data.length);
-        console.log(`📚 리셋 완료! 전체 ${data.length}개 중 ${actualCount}개 출제`);
+        dataToUse = uniqueData;
+        actualCount = Math.min(totalCount, uniqueData.length);
+        console.log(`📚 리셋 완료! 전체 ${uniqueData.length}개 중 ${actualCount}개 출제`);
       }
 
       // 오늘의 분야 표시
@@ -7010,7 +7035,7 @@
         return shuffled;
       };
 
-      // 문제 선택
+      // 문제 선택 (셔플 후 필요한 개수만큼 선택)
       const selectedItems = shuffleArray(dataToUse).slice(0, actualCount);
 
       // BRAIN핏 어휘는 choices가 없으므로 동적 생성 필요
