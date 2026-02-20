@@ -3298,6 +3298,35 @@ body {
   line-height: 1.6;
 }
 
+/* 세분화된 독서감상문 섹션 스타일 */
+.form-group.report-section {
+  margin-bottom: 16px;
+}
+
+.form-group.report-section label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.form-group.report-section textarea {
+  min-height: 100px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.form-group.report-section textarea:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
 .form-actions {
   display: flex;
   gap: 12px;
@@ -14903,13 +14932,13 @@ async function performLogout() {
 
       list.appendChild(vocabItem);
 
-      // ========== 독서 감상문 월간 과제 섹션 ==========
+      // ========== 독서 감상문 주간 과제 섹션 ==========
       const readingReportHeader = document.createElement('li');
       readingReportHeader.className = 'study-room-divider';
       readingReportHeader.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0;">
           <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
-          <span style="color: #f59e0b; font-size: 13px; font-weight: 600; white-space: nowrap;">📝 독서 감상문 월간 과제</span>
+          <span style="color: #f59e0b; font-size: 13px; font-weight: 600; white-space: nowrap;">📝 독서 감상문 주간 과제</span>
           <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
         </div>
       `;
@@ -14976,12 +15005,40 @@ async function performLogout() {
               </div>
             `;
 
-            // 클릭 시 해당 슬라이드로 이동
+            // 클릭 시 해당 도서로 이동
             bookItem.addEventListener('click', () => {
               const studyRoomModal = document.getElementById('studyRoomModal');
               if (studyRoomModal) studyRoomModal.classList.remove('show');
 
-              // storyId를 슬라이드 인덱스로 매핑
+              // 교과기반 창작도서인지 확인 (bio01_34, earth01_56 등)
+              const eduBookMatch = book.id.match(/^([a-z]+\d+)_(34|56)$/);
+              if (eduBookMatch) {
+                const baseId = eduBookMatch[1]; // bio01, earth01 등
+                const gradeType = eduBookMatch[2]; // 34 또는 56
+
+                // 학습실에서 열었음을 표시
+                window.storyOpenedFrom = 'studyRoom';
+
+                // URL 매핑
+                const urls34 = window.grade34StoryUrls || {};
+                const urls56 = window.grade56StoryUrls || {};
+
+                let url;
+                if (gradeType === '34') {
+                  url = urls34[baseId] || `/creative-book/${baseId}_season1_34.html`;
+                } else {
+                  url = urls56[baseId] || `/creative-book/${baseId}_season1.html`;
+                }
+
+                // 스토리 콘텐츠 모달 열기
+                const storyModal = document.getElementById('storyContentModal');
+                const storyIframe = document.getElementById('storyContentIframe');
+                storyIframe.src = url;
+                storyModal.classList.add('show');
+                return;
+              }
+
+              // 일반 창작도서: storyId를 슬라이드 인덱스로 매핑
               const storyToSlideIndex = {
                 'whale_island': 0, 'whale_island_season2': 0, 'whale_island_season3': 0,
                 'jungle_journey': 1, 'jungle_journey_season2': 1, 'jungle_journey_season3': 1,
@@ -16644,7 +16701,13 @@ async function performLogout() {
       }, 300);
 
       // 어디서 열렸는지에 따라 다른 모달로 돌아가기
-      if (openedFrom === 'grade56') {
+      if (openedFrom === 'studyRoom') {
+        console.log('🔵 학습실 모달로 돌아가기');
+        const studyRoomModal = document.getElementById('studyRoomModal');
+        if (studyRoomModal) {
+          studyRoomModal.classList.add('show');
+        }
+      } else if (openedFrom === 'grade56') {
         console.log('🔵 grade56 모달로 돌아가기');
         const grade56Modal = document.getElementById('grade56NovelModal');
         if (grade56Modal) {
@@ -16993,183 +17056,778 @@ async function performLogout() {
           { id: 'yang_season1', season: 1, subtitle: '박지원 원작 - 양반 신분 매매의 풍자' }
         ]
       },
-      // === 교과기반 창작도서 (3-4학년/5-6학년용) ===
-      bio: {
-        title: '🌿 창작생물',
+      // === 교과기반 창작도서 (시즌1: 3-4학년, 시즌2: 5-6학년) ===
+      bio01: {
+        title: '🌱 바위의 눈물과 씨앗의 노래',
         seasons: [
-          { id: 'bio01', season: 1, subtitle: '바위의 눈물과 씨앗의 노래' },
-          { id: 'bio02', season: 2, subtitle: '몸이 뒤바뀐 그날' },
-          { id: 'bio03', season: 3, subtitle: '뼈 없는 기사들의 바다 대전쟁' },
-          { id: 'bio04', season: 4, subtitle: '개미 전쟁' },
-          { id: 'bio05', season: 5, subtitle: '콩팥 사이의 우정' },
-          { id: 'bio06', season: 6, subtitle: '모래알처럼 작은 배 속' },
-          { id: 'bio07', season: 7, subtitle: '흙 속의 보물찾기' },
-          { id: 'bio08', season: 8, subtitle: '세포마을 이야기' },
-          { id: 'bio09', season: 9, subtitle: '혈액배달원 리오' },
-          { id: 'bio10', season: 10, subtitle: '숲 속의 비밀 편지' },
-          { id: 'bio11', season: 11, subtitle: '붉은 강의 배달부' },
-          { id: 'bio12', season: 12, subtitle: '네 귀로 듣는 밤' },
-          { id: 'bio13', season: 13, subtitle: '뼛속까지 친구들' },
-          { id: 'bio14', season: 14, subtitle: '조용한 숲의 대화' },
-          { id: 'bio15', season: 15, subtitle: '작은 뼈의 큰 이야기' },
-          { id: 'bio16', season: 16, subtitle: '세포마을 대모험' },
-          { id: 'bio17', season: 17, subtitle: '반짝이는 뇌 속 친구들' },
-          { id: 'bio18', season: 18, subtitle: '날개 하나가 사라진 날' },
-          { id: 'bio19', season: 19, subtitle: '뜨거운 지구 SOS' },
-          { id: 'bio20', season: 20, subtitle: '미래의 생명 과학자' }
+          { id: 'bio01_34', season: 1, subtitle: '' },
+          { id: 'bio01_56', season: 2, subtitle: '' }
         ]
       },
-      earth: {
-        title: '🌍 창작지구과학',
+      bio02: {
+        title: '🦁 몸이 뒤바뀐 그날',
         seasons: [
-          { id: 'earth01', season: 1, subtitle: '태풍과 친해지기' },
-          { id: 'earth02', season: 2, subtitle: '비 오는 날의 비밀' },
-          { id: 'earth03', season: 3, subtitle: '바람의 집을 찾아서' },
-          { id: 'earth04', season: 4, subtitle: '눈꽃이 내리는 마을' },
-          { id: 'earth05', season: 5, subtitle: '지구 속 뜨거운 심장' },
-          { id: 'earth06', season: 6, subtitle: '흔들리는 땅의 비밀' },
-          { id: 'earth07', season: 7, subtitle: '하늘의 물 순환' },
-          { id: 'earth08', season: 8, subtitle: '대기의 층을 여행하다' },
-          { id: 'earth09', season: 9, subtitle: '우주의 탄생 이야기' },
-          { id: 'earth10', season: 10, subtitle: '달과 태양의 춤' },
-          { id: 'earth11', season: 11, subtitle: '별자리 탐험대' },
-          { id: 'earth12', season: 12, subtitle: '기후 변화의 메시지' }
+          { id: 'bio02_34', season: 1, subtitle: '' },
+          { id: 'bio02_56', season: 2, subtitle: '' }
         ]
       },
-      physics: {
-        title: '⚡ 창작물리',
+      bio03: {
+        title: '🐙 뼈 없는 기사들의 바다 대전쟁',
         seasons: [
-          { id: 'physics01', season: 1, subtitle: '빛의 마법사' },
-          { id: 'physics02', season: 2, subtitle: '소리의 비밀' },
-          { id: 'physics03', season: 3, subtitle: '전기의 모험' },
-          { id: 'physics04', season: 4, subtitle: '자석의 힘' },
-          { id: 'physics05', season: 5, subtitle: '열의 여행' },
-          { id: 'physics06', season: 6, subtitle: '힘과 운동' },
-          { id: 'physics07', season: 7, subtitle: '에너지의 변신' },
-          { id: 'physics08', season: 8, subtitle: '파동의 세계' },
-          { id: 'physics09', season: 9, subtitle: '중력의 비밀' },
-          { id: 'physics10', season: 10, subtitle: '원자의 춤' },
-          { id: 'physics11', season: 11, subtitle: '속도와 가속도' },
-          { id: 'physics12', season: 12, subtitle: '마찰의 세계' },
-          { id: 'physics13', season: 13, subtitle: '압력의 마법' },
-          { id: 'physics14', season: 14, subtitle: '렌즈의 비밀' },
-          { id: 'physics15', season: 15, subtitle: '회로의 모험' },
-          { id: 'physics16', season: 16, subtitle: '진동과 공명' },
-          { id: 'physics17', season: 17, subtitle: '유체의 흐름' },
-          { id: 'physics18', season: 18, subtitle: '핵의 에너지' },
-          { id: 'physics19', season: 19, subtitle: '상대성의 여행' },
-          { id: 'physics20', season: 20, subtitle: '양자의 세계' }
+          { id: 'bio03_34', season: 1, subtitle: '' },
+          { id: 'bio03_56', season: 2, subtitle: '' }
         ]
       },
-      chem: {
-        title: '🧪 창작화학',
+      bio04: {
+        title: '🐜 개미 전쟁',
         seasons: [
-          { id: 'chem01', season: 1, subtitle: '원소의 탄생' },
-          { id: 'chem02', season: 2, subtitle: '분자의 춤' },
-          { id: 'chem03', season: 3, subtitle: '화학 반응의 마법' },
-          { id: 'chem04', season: 4, subtitle: '산과 염기의 대결' },
-          { id: 'chem05', season: 5, subtitle: '물의 비밀' },
-          { id: 'chem06', season: 6, subtitle: '불꽃의 과학' },
-          { id: 'chem07', season: 7, subtitle: '금속의 세계' }
+          { id: 'bio04_34', season: 1, subtitle: '' },
+          { id: 'bio04_56', season: 2, subtitle: '' }
         ]
       },
-      classic: {
-        title: '📚 창작고전문학',
+      bio05: {
+        title: '🌿 초록이의 위대한 모험',
         seasons: [
-          { id: 'classic01', season: 1, subtitle: '고전문학 이야기 1' },
-          { id: 'classic02', season: 2, subtitle: '고전문학 이야기 2' },
-          { id: 'classic03', season: 3, subtitle: '고전문학 이야기 3' },
-          { id: 'classic04', season: 4, subtitle: '고전문학 이야기 4' },
-          { id: 'classic05', season: 5, subtitle: '고전문학 이야기 5' },
-          { id: 'classic06', season: 6, subtitle: '고전문학 이야기 6' }
+          { id: 'bio05_34', season: 1, subtitle: '' },
+          { id: 'bio05_56', season: 2, subtitle: '' }
         ]
       },
-      law: {
-        title: '⚖️ 창작법',
+      bio06: {
+        title: '🌳 도토리의 위대한 모험',
         seasons: [
-          { id: 'law01', season: 1, subtitle: '법과 정의 1' },
-          { id: 'law02', season: 2, subtitle: '법과 정의 2' },
-          { id: 'law03', season: 3, subtitle: '법과 정의 3' },
-          { id: 'law04', season: 4, subtitle: '법과 정의 4' },
-          { id: 'law05', season: 5, subtitle: '법과 정의 5' },
-          { id: 'law06', season: 6, subtitle: '법과 정의 6' }
+          { id: 'bio06_34', season: 1, subtitle: '' },
+          { id: 'bio06_56', season: 2, subtitle: '' }
         ]
       },
-      social: {
-        title: '🏛️ 창작사회문화',
+      bio07: {
+        title: '☀️ 빛의 소녀 솔라와 초록 심장의 전쟁',
         seasons: [
-          { id: 'social01', season: 1, subtitle: '사회문화 1' },
-          { id: 'social02', season: 2, subtitle: '사회문화 2' },
-          { id: 'social03', season: 3, subtitle: '사회문화 3' },
-          { id: 'social04', season: 4, subtitle: '사회문화 4' },
-          { id: 'social05', season: 5, subtitle: '사회문화 5' },
-          { id: 'social06', season: 6, subtitle: '사회문화 6' },
-          { id: 'social07', season: 7, subtitle: '사회문화 7' },
-          { id: 'social08', season: 8, subtitle: '사회문화 8' }
+          { id: 'bio07_34', season: 1, subtitle: '' },
+          { id: 'bio07_56', season: 2, subtitle: '' }
         ]
       },
-      geo: {
-        title: '🗺️ 창작지리',
+      bio08: {
+        title: '🧫 세포 도시의 위기',
         seasons: [
-          { id: 'geo01', season: 1, subtitle: '지리 탐험 1' },
-          { id: 'geo02', season: 2, subtitle: '지리 탐험 2' },
-          { id: 'geo03', season: 3, subtitle: '지리 탐험 3' },
-          { id: 'geo04', season: 4, subtitle: '지리 탐험 4' },
-          { id: 'geo05', season: 5, subtitle: '지리 탐험 5' },
-          { id: 'geo06', season: 6, subtitle: '지리 탐험 6' }
+          { id: 'bio08_34', season: 1, subtitle: '' },
+          { id: 'bio08_56', season: 2, subtitle: '' }
         ]
       },
-      politics: {
-        title: '🏛️ 창작정치경제',
+      bio09: {
+        title: '🩸 피의 고속도로',
         seasons: [
-          { id: 'politic01', season: 1, subtitle: '정치경제 1' },
-          { id: 'pol02', season: 2, subtitle: '정치경제 2' },
-          { id: 'politics03', season: 3, subtitle: '정치경제 3' },
-          { id: 'politics04', season: 4, subtitle: '정치경제 4' },
-          { id: 'politics05', season: 5, subtitle: '정치경제 5' },
-          { id: 'politics06', season: 6, subtitle: '정치경제 6' }
+          { id: 'bio09_34', season: 1, subtitle: '' },
+          { id: 'bio09_56', season: 2, subtitle: '' }
         ]
       },
-      worldlit: {
-        title: '🌍 창작세계문학',
+      bio10: {
+        title: '🍞 빵 조각 뽀미의 몸속 대모험',
         seasons: [
-          { id: 'worldlit01', season: 1, subtitle: '세계문학 1' },
-          { id: 'worldlit02', season: 2, subtitle: '세계문학 2' },
-          { id: 'worldlit03', season: 3, subtitle: '세계문학 3' },
-          { id: 'worldlit04', season: 4, subtitle: '세계문학 4' },
-          { id: 'worldlit05', season: 5, subtitle: '세계문학 5' },
-          { id: 'worldlit06', season: 6, subtitle: '세계문학 6' }
+          { id: 'bio10_34', season: 1, subtitle: '' },
+          { id: 'bio10_56', season: 2, subtitle: '' }
         ]
       },
-      korperson: {
-        title: '🇰🇷 창작한국인물',
+      bio11: {
+        title: '🩸 붉은 강의 배달부, 리오의 끝없는 여행',
         seasons: [
-          { id: 'korperson01', season: 1, subtitle: '한국인물 1' },
-          { id: 'korperson02', season: 2, subtitle: '한국인물 2' },
-          { id: 'korperson03', season: 3, subtitle: '한국인물 3' },
-          { id: 'korperson04', season: 4, subtitle: '한국인물 4' },
-          { id: 'korperson05', season: 5, subtitle: '한국인물 5' },
-          { id: 'korperson06', season: 6, subtitle: '한국인물 6' }
+          { id: 'bio11_34', season: 1, subtitle: '' },
+          { id: 'bio11_56', season: 2, subtitle: '' }
         ]
       },
-      worldperson: {
-        title: '🌐 창작세계인물',
+      bio12: {
+        title: '💨 숨을 들이마신 그 순간',
         seasons: [
-          { id: 'worldperson01', season: 1, subtitle: '세계인물 1' },
-          { id: 'worldperson02', season: 2, subtitle: '세계인물 2' }
+          { id: 'bio12_34', season: 1, subtitle: '' },
+          { id: 'bio12_56', season: 2, subtitle: '' }
+        ]
+      },
+      bio13: {
+        title: '⚡ 번쩍! 생각 배달부들의 대모험',
+        seasons: [
+          { id: 'bio13_34', season: 1, subtitle: '' },
+          { id: 'bio13_56', season: 2, subtitle: '' }
+        ]
+      },
+      bio14: {
+        title: '🦴 뼈와 근육의 대모험',
+        seasons: [
+          { id: 'bio14_34', season: 1, subtitle: '' },
+          { id: 'bio14_56', season: 2, subtitle: '' }
+        ]
+      },
+      bio15: {
+        title: '🪞 거울 속 수수께끼',
+        seasons: [
+          { id: 'bio15_34', season: 1, subtitle: '' },
+          { id: 'bio15_56', season: 2, subtitle: '' }
+        ]
+      },
+      bio16: {
+        title: '🌿 풀 한 포기가 사라지자',
+        seasons: [
+          { id: 'bio16_34', season: 1, subtitle: '' },
+          { id: 'bio16_56', season: 2, subtitle: '' }
+        ]
+      },
+      bio17: {
+        title: '🔥 연기가 피어오른 날',
+        seasons: [
+          { id: 'bio17_34', season: 1, subtitle: '' },
+          { id: 'bio17_56', season: 2, subtitle: '' }
+        ]
+      },
+      bio18: {
+        title: '🦋 날개 하나가 사라진 날',
+        seasons: [
+          { id: 'bio18_34', season: 1, subtitle: '' },
+          { id: 'bio18_56', season: 2, subtitle: '' }
+        ]
+      },
+      bio19: {
+        title: '🌡️ 뜨거운 지구 SOS',
+        seasons: [
+          { id: 'bio19_34', season: 1, subtitle: '' },
+          { id: 'bio19_56', season: 2, subtitle: '' }
+        ]
+      },
+      bio20: {
+        title: '🔬 미래의 생명 과학자가 되어',
+        seasons: [
+          { id: 'bio20_34', season: 1, subtitle: '' },
+          { id: 'bio20_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 지구과학
+      earth01: {
+        title: '⭐ 별들의 약속, 지구 이야기',
+        seasons: [
+          { id: 'earth01_34', season: 1, subtitle: '' },
+          { id: 'earth01_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth02: {
+        title: '🌋 펄펄! 지구의 심장이 뛰는 소리',
+        seasons: [
+          { id: 'earth02_34', season: 1, subtitle: '' },
+          { id: 'earth02_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth03: {
+        title: '🪨 돌멩이 삼총사: 46억 년의 비밀 여행',
+        seasons: [
+          { id: 'earth03_34', season: 1, subtitle: '' },
+          { id: 'earth03_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth04: {
+        title: '⛰️ 산꼭대기의 거인 바위턱이 한 줌 모래가 되기까지',
+        seasons: [
+          { id: 'earth04_34', season: 1, subtitle: '' },
+          { id: 'earth04_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth05: {
+        title: '💧 물방울 한울이의 산에서 바다까지, 지구를 조각하는 대모험',
+        seasons: [
+          { id: 'earth05_34', season: 1, subtitle: '' },
+          { id: 'earth05_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth06: {
+        title: '🌍 다온이와 할아버지의 흔들리는 지구 이야기',
+        seasons: [
+          { id: 'earth06_34', season: 1, subtitle: '' },
+          { id: 'earth06_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth07: {
+        title: '🏔️ 산은 솟아오르고 바다는 갈라진다',
+        seasons: [
+          { id: 'earth07_34', season: 1, subtitle: '' },
+          { id: 'earth07_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth08: {
+        title: '🪨 돌멩이 도서관',
+        seasons: [
+          { id: 'earth08_34', season: 1, subtitle: '' },
+          { id: 'earth08_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth09: {
+        title: '🦴 화석 탐정단',
+        seasons: [
+          { id: 'earth09_34', season: 1, subtitle: '' },
+          { id: 'earth09_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth10: {
+        title: '🧭 나침반 소녀 나나와 보이지 않는 방패',
+        seasons: [
+          { id: 'earth10_34', season: 1, subtitle: '' },
+          { id: 'earth10_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth11: {
+        title: '🌤️ 솔이의 열 가지 날씨 비밀',
+        seasons: [
+          { id: 'earth11_34', season: 1, subtitle: '' },
+          { id: 'earth11_56', season: 2, subtitle: '' }
+        ]
+      },
+      earth12: {
+        title: '☁️ 투명한 거인의 전쟁',
+        seasons: [
+          { id: 'earth12_34', season: 1, subtitle: '' },
+          { id: 'earth12_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 물리
+      physics01: {
+        title: '🏃 멈춰버린 세상을 다시 움직인 소년 뉴톤과 보이지 않는 손의 전설',
+        seasons: [
+          { id: 'physics01_34', season: 1, subtitle: '' },
+          { id: 'physics01_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics02: {
+        title: '🌙 달에서는 점프왕! 하율이의 우주 체중 모험',
+        seasons: [
+          { id: 'physics02_34', season: 1, subtitle: '' },
+          { id: 'physics02_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics03: {
+        title: '🍎 사과는 왜 하늘로 가지 않았을까, 중력이 들려준 이야기',
+        seasons: [
+          { id: 'physics03_34', season: 1, subtitle: '' },
+          { id: 'physics03_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics04: {
+        title: '⚖️ 시소 왕국의 대반란, 작은 힘이 거인을 들어올린 날',
+        seasons: [
+          { id: 'physics04_34', season: 1, subtitle: '' },
+          { id: 'physics04_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics05: {
+        title: '🏃 숫자로 달리는 아이들, 속력의 비밀을 풀어라!',
+        seasons: [
+          { id: 'physics05_34', season: 1, subtitle: '' },
+          { id: 'physics05_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics06: {
+        title: '⚡ 전자 마을 대모험, 보이지 않는 꼬마들이 세상의 불을 켜기까지',
+        seasons: [
+          { id: 'physics06_34', season: 1, subtitle: '' },
+          { id: 'physics06_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics07: {
+        title: '💡 빛을 잃은 마을을 구한 소녀 전지와 전기의 길 찾기 대모험',
+        seasons: [
+          { id: 'physics07_34', season: 1, subtitle: '' },
+          { id: 'physics07_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics08: {
+        title: '🧲 양치기 소년 마그와 자석 요정의 보이지 않는 힘의 모험',
+        seasons: [
+          { id: 'physics08_34', season: 1, subtitle: '' },
+          { id: 'physics08_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics09: {
+        title: '🔌 코일 마을에 불을 밝혀라! 볼트의 전자기 유도 모험',
+        seasons: [
+          { id: 'physics09_34', season: 1, subtitle: '' },
+          { id: 'physics09_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics10: {
+        title: '🌊 파동 우체국: 세상 끝까지 메시지를 전하는 보이지 않는 배달부',
+        seasons: [
+          { id: 'physics10_34', season: 1, subtitle: '' },
+          { id: 'physics10_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics11: {
+        title: '🪞 거울 나라에 빠진 소녀 빛나와 약속을 지키는 빛의 비밀',
+        seasons: [
+          { id: 'physics11_34', season: 1, subtitle: '' },
+          { id: 'physics11_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics12: {
+        title: '🌈 빛나와 든든이, 빛의 요정 프리즘과 떠나는 굴절의 대모험',
+        seasons: [
+          { id: 'physics12_34', season: 1, subtitle: '' },
+          { id: 'physics12_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics13: {
+        title: '🔊 소리가 사라진 마을, 소녀 도의 진동 모험',
+        seasons: [
+          { id: 'physics13_34', season: 1, subtitle: '' },
+          { id: 'physics13_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics14: {
+        title: '🔥 보이지 않는 춤꾼들 — 열은 어떻게 세상을 데울까?',
+        seasons: [
+          { id: 'physics14_34', season: 1, subtitle: '' },
+          { id: 'physics14_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics15: {
+        title: '🎪 에너지 변신 서커스단: 사라진 줄 알았지? 나는 옷만 갈아입은 거야!',
+        seasons: [
+          { id: 'physics15_34', season: 1, subtitle: '' },
+          { id: 'physics15_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics16: {
+        title: '⚛️ 원자 왕국의 세 용사: 양성이, 중성이, 전자의 끝없는 춤',
+        seasons: [
+          { id: 'physics16_34', season: 1, subtitle: '' },
+          { id: 'physics16_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics17: {
+        title: '🚢 항구 소년 떠돌이와 아르키메데스 할아버지의 부력 대모험',
+        seasons: [
+          { id: 'physics17_34', season: 1, subtitle: '' },
+          { id: 'physics17_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics18: {
+        title: '⚡ 감전을 피하라! — 번개마을 소녀 하나와 전기의 두 얼굴',
+        seasons: [
+          { id: 'physics18_34', season: 1, subtitle: '' },
+          { id: 'physics18_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics19: {
+        title: '✨ 4억 년 전의 편지 — 별빛은 시간을 담아 여행한다',
+        seasons: [
+          { id: 'physics19_34', season: 1, subtitle: '' },
+          { id: 'physics19_56', season: 2, subtitle: '' }
+        ]
+      },
+      physics20: {
+        title: '🚀 2075 미래 박람회 — 물리학이 열어준 내일의 문',
+        seasons: [
+          { id: 'physics20_34', season: 1, subtitle: '' },
+          { id: 'physics20_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 화학
+      chem01: {
+        title: '✏️ 연필의 두 얼굴',
+        seasons: [
+          { id: 'chem01_34', season: 1, subtitle: '' },
+          { id: 'chem01_56', season: 2, subtitle: '' }
+        ]
+      },
+      chem02: {
+        title: '🔍 설탕 탐정단',
+        seasons: [
+          { id: 'chem02_34', season: 1, subtitle: '' },
+          { id: 'chem02_56', season: 2, subtitle: '' }
+        ]
+      },
+      chem03: {
+        title: '💧 물의 나라 공주 아쿠아와 기름의 나라 왕자 올리',
+        seasons: [
+          { id: 'chem03_34', season: 1, subtitle: '' },
+          { id: 'chem03_56', season: 2, subtitle: '' }
+        ]
+      },
+      chem04: {
+        title: '🎈 바람이와 무게, 풍선 요정 펑이',
+        seasons: [
+          { id: 'chem04_34', season: 1, subtitle: '' },
+          { id: 'chem04_56', season: 2, subtitle: '' }
+        ]
+      },
+      chem05: {
+        title: '💎 세 얼굴의 아쿠아',
+        seasons: [
+          { id: 'chem05_34', season: 1, subtitle: '' },
+          { id: 'chem05_56', season: 2, subtitle: '' }
+        ]
+      },
+      chem06: {
+        title: '🧪 118명의 원소 용사가 사는 주기율표 왕국',
+        seasons: [
+          { id: 'chem06_34', season: 1, subtitle: '' },
+          { id: 'chem06_56', season: 2, subtitle: '' }
+        ]
+      },
+      chem07: {
+        title: '⏳ 고대 소년 아토의 이천오백 년 시간여행',
+        seasons: [
+          { id: 'chem07_34', season: 1, subtitle: '' },
+          { id: 'chem07_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 고전문학
+      classic01: {
+        title: '🌸 꺾이지 않는 꽃, 춘향',
+        seasons: [
+          { id: 'classic01_34', season: 1, subtitle: '' },
+          { id: 'classic01_56', season: 2, subtitle: '' }
+        ]
+      },
+      classic02: {
+        title: '⚔️ 칼을 든 꽃, 홍계월',
+        seasons: [
+          { id: 'classic02_34', season: 1, subtitle: '' },
+          { id: 'classic02_56', season: 2, subtitle: '' }
+        ]
+      },
+      classic03: {
+        title: '🌺 꽃잎 점을 가진 소녀, 숙향',
+        seasons: [
+          { id: 'classic03_34', season: 1, subtitle: '' },
+          { id: 'classic03_56', season: 2, subtitle: '' }
+        ]
+      },
+      classic04: {
+        title: '🪷 연꽃이 피는 바다, 심청',
+        seasons: [
+          { id: 'classic04_34', season: 1, subtitle: '' },
+          { id: 'classic04_56', season: 2, subtitle: '' }
+        ]
+      },
+      classic05: {
+        title: '🕊️ 제비의 은혜, 박 속의 운명',
+        seasons: [
+          { id: 'classic05_34', season: 1, subtitle: '' },
+          { id: 'classic05_56', season: 2, subtitle: '' }
+        ]
+      },
+      classic06: {
+        title: '🐢 간을 빼앗길 뻔한 토끼',
+        seasons: [
+          { id: 'classic06_34', season: 1, subtitle: '' },
+          { id: 'classic06_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 법
+      law01: {
+        title: '⭐ 별빛 마을의 열 가지 약속',
+        seasons: [
+          { id: 'law01_34', season: 1, subtitle: '' },
+          { id: 'law01_56', season: 2, subtitle: '' }
+        ]
+      },
+      law02: {
+        title: '🚪 열 개의 문을 여는 아이들',
+        seasons: [
+          { id: 'law02_34', season: 1, subtitle: '' },
+          { id: 'law02_56', season: 2, subtitle: '' }
+        ]
+      },
+      law03: {
+        title: '🛡️ 정의의 방패와 그림자 왕국',
+        seasons: [
+          { id: 'law03_34', season: 1, subtitle: '' },
+          { id: 'law03_56', season: 2, subtitle: '' }
+        ]
+      },
+      law04: {
+        title: '💜 보이지 않는 상처를 막아라',
+        seasons: [
+          { id: 'law04_34', season: 1, subtitle: '' },
+          { id: 'law04_56', season: 2, subtitle: '' }
+        ]
+      },
+      law05: {
+        title: '🔔 세 번의 종소리',
+        seasons: [
+          { id: 'law05_34', season: 1, subtitle: '' },
+          { id: 'law05_56', season: 2, subtitle: '' }
+        ]
+      },
+      law06: {
+        title: '📖 하늘 위의 황금 책',
+        seasons: [
+          { id: 'law06_34', season: 1, subtitle: '' },
+          { id: 'law06_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 사회문화
+      social01: {
+        title: '👨‍👩‍👧 우리는 어떻게 가족이 되었을까',
+        seasons: [
+          { id: 'social01_34', season: 1, subtitle: '' },
+          { id: 'social01_56', season: 2, subtitle: '' }
+        ]
+      },
+      social02: {
+        title: '📸 시간여행 가족앨범',
+        seasons: [
+          { id: 'social02_34', season: 1, subtitle: '' },
+          { id: 'social02_56', season: 2, subtitle: '' }
+        ]
+      },
+      social03: {
+        title: '🪞 마음 거울 교실',
+        seasons: [
+          { id: 'social03_34', season: 1, subtitle: '' },
+          { id: 'social03_56', season: 2, subtitle: '' }
+        ]
+      },
+      social04: {
+        title: '🚗 거리 괴물과 네 명의 발명가',
+        seasons: [
+          { id: 'social04_34', season: 1, subtitle: '' },
+          { id: 'social04_56', season: 2, subtitle: '' }
+        ]
+      },
+      social05: {
+        title: '🏛️ 다솜이의 민주주의 대모험',
+        seasons: [
+          { id: 'social05_34', season: 1, subtitle: '' },
+          { id: 'social05_56', season: 2, subtitle: '' }
+        ]
+      },
+      social06: {
+        title: '🎮 게임 속의 나와 현실의 나',
+        seasons: [
+          { id: 'social06_34', season: 1, subtitle: '' },
+          { id: 'social06_56', season: 2, subtitle: '' }
+        ]
+      },
+      social07: {
+        title: '👍 좋아요 왕국의 빛과 그림자',
+        seasons: [
+          { id: 'social07_34', season: 1, subtitle: '' },
+          { id: 'social07_56', season: 2, subtitle: '' }
+        ]
+      },
+      social08: {
+        title: '🤖 AI 친구 아리',
+        seasons: [
+          { id: 'social08_34', season: 1, subtitle: '' },
+          { id: 'social08_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 지리
+      geo01: {
+        title: '🗺️ 할아버지의 낡은 지도 한 장이 열어준 세계',
+        seasons: [
+          { id: 'geo01_34', season: 1, subtitle: '' },
+          { id: 'geo01_56', season: 2, subtitle: '' }
+        ]
+      },
+      geo02: {
+        title: '🧭 보물지도 소년 나침이와 맵이의 약속 대모험',
+        seasons: [
+          { id: 'geo02_34', season: 1, subtitle: '' },
+          { id: 'geo02_56', season: 2, subtitle: '' }
+        ]
+      },
+      geo03: {
+        title: '🔎 이름 탐정 소녀 나리와 지명 속 천 년의 비밀',
+        seasons: [
+          { id: 'geo03_34', season: 1, subtitle: '' },
+          { id: 'geo03_56', season: 2, subtitle: '' }
+        ]
+      },
+      geo04: {
+        title: '🏘️ 우리 동네 탐정단',
+        seasons: [
+          { id: 'geo04_34', season: 1, subtitle: '' },
+          { id: 'geo04_56', season: 2, subtitle: '' }
+        ]
+      },
+      geo05: {
+        title: '🌾 조용한 시골 마을이 달라지기 시작한 이유',
+        seasons: [
+          { id: 'geo05_34', season: 1, subtitle: '' },
+          { id: 'geo05_56', season: 2, subtitle: '' }
+        ]
+      },
+      geo06: {
+        title: '📍 꼼꼼이 좌표와 대충이, 좌표 요정 그리드의 위도경도 대모험',
+        seasons: [
+          { id: 'geo06_34', season: 1, subtitle: '' },
+          { id: 'geo06_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 정치경제
+      politic01: {
+        title: '🌲 푸른숲 마을 이야기',
+        seasons: [
+          { id: 'politic01_34', season: 1, subtitle: '' },
+          { id: 'politic01_56', season: 2, subtitle: '' }
+        ]
+      },
+      pol02: {
+        title: '👑 왕관을 벗은 나라',
+        seasons: [
+          { id: 'pol02_34', season: 1, subtitle: '' },
+          { id: 'pol02_56', season: 2, subtitle: '' }
+        ]
+      },
+      politics03: {
+        title: '🔥 돌담 위의 횃불',
+        seasons: [
+          { id: 'politics03_34', season: 1, subtitle: '' },
+          { id: 'politics03_56', season: 2, subtitle: '' }
+        ]
+      },
+      politics04: {
+        title: '🏛️ 하늘빛 마을 의회',
+        seasons: [
+          { id: 'politics04_34', season: 1, subtitle: '' },
+          { id: 'politics04_56', season: 2, subtitle: '' }
+        ]
+      },
+      politics05: {
+        title: '🗳️ 딱 한 표 차이로 뒤집어진 마을',
+        seasons: [
+          { id: 'politics05_34', season: 1, subtitle: '' },
+          { id: 'politics05_56', season: 2, subtitle: '' }
+        ]
+      },
+      politics06: {
+        title: '🔑 세 개의 열쇠와 황금 왕관의 비밀',
+        seasons: [
+          { id: 'politics06_34', season: 1, subtitle: '' },
+          { id: 'politics06_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 세계문학
+      worldlit01: {
+        title: '👧 실수투성이 빨간 머리 소녀',
+        seasons: [
+          { id: 'worldlit01_34', season: 1, subtitle: '' },
+          { id: 'worldlit01_56', season: 2, subtitle: '' }
+        ]
+      },
+      worldlit02: {
+        title: '💀 황금 해골의 바다',
+        seasons: [
+          { id: 'worldlit02_34', season: 1, subtitle: '' },
+          { id: 'worldlit02_56', season: 2, subtitle: '' }
+        ]
+      },
+      worldlit03: {
+        title: '🌸 꽃의 요정이 이룬 소원',
+        seasons: [
+          { id: 'worldlit03_34', season: 1, subtitle: '' },
+          { id: 'worldlit03_56', season: 2, subtitle: '' }
+        ]
+      },
+      worldlit04: {
+        title: '🌓 빛과 어둠 사이',
+        seasons: [
+          { id: 'worldlit04_34', season: 1, subtitle: '' },
+          { id: 'worldlit04_56', season: 2, subtitle: '' }
+        ]
+      },
+      worldlit05: {
+        title: '⭐ 별을 건너온 아이',
+        seasons: [
+          { id: 'worldlit05_34', season: 1, subtitle: '' },
+          { id: 'worldlit05_56', season: 2, subtitle: '' }
+        ]
+      },
+      worldlit06: {
+        title: '🌪️ 회오리바람을 타고 마법의 나라로',
+        seasons: [
+          { id: 'worldlit06_34', season: 1, subtitle: '' },
+          { id: 'worldlit06_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 한국인물
+      korperson01: {
+        title: '⚔️ 다짐으로 다시 태어난 김유신',
+        seasons: [
+          { id: 'korperson01_34', season: 1, subtitle: '' },
+          { id: 'korperson01_56', season: 2, subtitle: '' }
+        ]
+      },
+      korperson02: {
+        title: '🐉 용이 된 왕, 천 년의 파도를 깨우다',
+        seasons: [
+          { id: 'korperson02_34', season: 1, subtitle: '' },
+          { id: 'korperson02_56', season: 2, subtitle: '' }
+        ]
+      },
+      korperson03: {
+        title: '💀 해골 물을 마신 스님',
+        seasons: [
+          { id: 'korperson03_34', season: 1, subtitle: '' },
+          { id: 'korperson03_56', season: 2, subtitle: '' }
+        ]
+      },
+      korperson04: {
+        title: '⭐ 하늘의 별을 세던 종',
+        seasons: [
+          { id: 'korperson04_34', season: 1, subtitle: '' },
+          { id: 'korperson04_56', season: 2, subtitle: '' }
+        ]
+      },
+      korperson05: {
+        title: '🌊 바다의 별이 된 장군',
+        seasons: [
+          { id: 'korperson05_34', season: 1, subtitle: '' },
+          { id: 'korperson05_56', season: 2, subtitle: '' }
+        ]
+      },
+      korperson06: {
+        title: '👑 백성을 사랑한 임금',
+        seasons: [
+          { id: 'korperson06_34', season: 1, subtitle: '' },
+          { id: 'korperson06_56', season: 2, subtitle: '' }
+        ]
+      },
+      // 세계인물
+      worldperson01: {
+        title: '👀 눈으로 세상을 삼킨 소년',
+        seasons: [
+          { id: 'worldperson01_34', season: 1, subtitle: '' },
+          { id: 'worldperson01_56', season: 2, subtitle: '' }
+        ]
+      },
+      worldperson02: {
+        title: '✨ 빛을 훔치려 한 소년',
+        seasons: [
+          { id: 'worldperson02_34', season: 1, subtitle: '' },
+          { id: 'worldperson02_56', season: 2, subtitle: '' }
         ]
       }
     };
 
     // ========== 오늘의 추천 도서 기능 ==========
     // 매일 00:00시에 미완료 도서 중에서 2개 랜덤 추천
+    // 학년별로 다른 추천 (3-4학년 vs 5-6학년)
     function getMonthlyRecommendedBooks(completedStoryIds) {
       // KST 기준 오늘 날짜 키 생성 (매일 00:00시에 변경)
       const now = new Date();
       const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
       const kstDate = new Date(now.getTime() + kstOffset);
       const dateKey = `${kstDate.getUTCFullYear()}-${String(kstDate.getUTCMonth() + 1).padStart(2, '0')}-${String(kstDate.getUTCDate()).padStart(2, '0')}`;
-      const storageKey = 'daily-recommended-books';
+
+      // 학년 정보 가져오기
+      const userStr = sessionStorage.getItem('user');
+      let gradeGroup = '34'; // 기본값
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const gradeNum = parseInt(user.grade);
+        if (gradeNum === 5 || gradeNum === 6) {
+          gradeGroup = '56';
+        }
+      }
+
+      // 학년별 별도 저장 키 (v3: 실제 카드 제목 사용)
+      const storageKey = `daily-recommended-books-v3-${gradeGroup}`;
 
       // 저장된 추천 정보 확인
       const saved = localStorage.getItem(storageKey);
@@ -17244,39 +17902,71 @@ async function performLogout() {
     }
 
     // 랜덤 추천 도서 선택 함수 (날짜 기반 시드로 랜덤 셔플)
+    // 교과기반 창작도서만 추천 (bio01_34, earth01_56 등)
+    // 학생 학년에 맞춰 시즌 1(3-4학년) 또는 시즌 2(5-6학년) 추천
     function selectRecommendedBooksRandom(completedStoryIds, excludeIds, count, dateKey) {
-      // 추천 가능한 모든 도서 수집
+      // 로그인한 학생의 학년 확인
+      const userStr = sessionStorage.getItem('user');
+      let targetSeason = 1; // 기본값: 3-4학년
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const gradeNum = parseInt(user.grade);
+        // 5학년, 6학년은 시즌 2 (5-6학년용)
+        if (gradeNum === 5 || gradeNum === 6) {
+          targetSeason = 2;
+        }
+      }
+
+      // 추천 가능한 교과기반 도서만 수집
       const candidates = [];
       const storyKeys = Object.keys(STORY_DATA);
 
+      // 교과기반 도서 키 패턴 (bio01, earth01, physics01 등)
+      const eduBookPattern = /^(bio|earth|physics|chem|classic|law|social|geo|politic|pol|politics|worldlit|korperson|worldperson)\d+$/;
+
+      // 카드에서 실제 제목 가져오기
+      const gradeClass = targetSeason === 1 ? 'grade34' : 'grade56';
+      const cards = document.querySelectorAll(`.novel-category-card.${gradeClass}`);
+      const cardTitleMap = {};
+      cards.forEach(card => {
+        const onclick = card.getAttribute('onclick') || '';
+        const match = onclick.match(/openGrade(?:34|56)Story\(['"]([^'"]+)['"]\)/);
+        if (match && match[1]) {
+          const h3 = card.querySelector('h3');
+          const icon = card.querySelector('.novel-category-icon');
+          if (h3) {
+            cardTitleMap[match[1]] = (icon ? icon.textContent + ' ' : '') + h3.textContent;
+          }
+        }
+      });
+
       for (const key of storyKeys) {
+        // 교과기반 도서만 필터링
+        if (!eduBookPattern.test(key)) {
+          continue;
+        }
+
         const story = STORY_DATA[key];
         for (const season of story.seasons) {
+          // 학년에 맞는 시즌만 추천
+          if (season.season !== targetSeason) {
+            continue;
+          }
+
           // 이미 완료했거나 제외 목록에 있으면 스킵
           if (completedStoryIds.includes(season.id) || excludeIds.includes(season.id)) {
             continue;
           }
 
-          // 시즌 1이거나, 이전 시즌이 완료된 경우에만 추천 대상
-          if (season.season === 1) {
-            candidates.push({
-              id: season.id,
-              title: story.title,
-              season: season.season,
-              subtitle: season.subtitle
-            });
-          } else {
-            // 이전 시즌이 완료되었는지 확인
-            const prevSeason = story.seasons.find(s => s.season === season.season - 1);
-            if (prevSeason && completedStoryIds.includes(prevSeason.id)) {
-              candidates.push({
-                id: season.id,
-                title: story.title,
-                season: season.season,
-                subtitle: season.subtitle
-              });
-            }
-          }
+          // 카드에서 실제 제목 가져오기 (없으면 STORY_DATA 제목 사용)
+          const realTitle = cardTitleMap[key] || story.title;
+
+          candidates.push({
+            id: season.id,
+            title: realTitle,
+            season: season.season,
+            subtitle: season.season === 1 ? '3-4학년' : '5-6학년'
+          });
         }
       }
 
@@ -17325,9 +18015,23 @@ async function performLogout() {
       const completedStories = [];
       const uncompletedStories = [];
 
+      // 교과기반 도서 ID 패턴 (bio01_34, physics03_56 등)
+      const eduBookIdPattern = /^(bio|earth|physics|chem|classic|law|social|geo|politic|pol|politics|worldlit|korperson|worldperson)\d+_(34|56)$/;
+
       Object.values(STORY_DATA).forEach(story => {
         story.seasons.forEach(season => {
-          const baseTitle = `${story.title} 시즌 ${season.season}: ${season.subtitle}`;
+          let baseTitle;
+
+          // 교과기반 도서인지 확인 (ID 패턴으로 구분)
+          if (eduBookIdPattern.test(season.id)) {
+            // 교과기반 도서: 제목 + 시즌 표기
+            const seasonLabel = season.id.endsWith('_34') ? '시즌1' : '시즌2';
+            baseTitle = `${story.title} ${seasonLabel}`;
+          } else {
+            // 일반 창작도서: 기존 시즌 형식 유지
+            baseTitle = `${story.title} 시즌 ${season.season}: ${season.subtitle}`;
+          }
+
           const isCompleted = completedStoryIds.includes(season.id);
           const storyInfo = { id: season.id, title: baseTitle, isCompleted };
 
@@ -17625,11 +18329,92 @@ async function performLogout() {
       }
     }
 
+    // ========== 세분화된 독서감상문 헬퍼 함수 ==========
+    // 5개 섹션 내용을 하나로 합치기
+    function getCombinedContent() {
+      const summary = document.getElementById('reportSummary')?.value?.trim() || '';
+      const character = document.getElementById('reportCharacter')?.value?.trim() || '';
+      const ifIWere = document.getElementById('reportIfIWere')?.value?.trim() || '';
+      const funScene = document.getElementById('reportFunScene')?.value?.trim() || '';
+      const feeling = document.getElementById('reportFeeling')?.value?.trim() || '';
+
+      // 합쳐서 반환 (섹션 구분 포함)
+      let combined = '';
+      if (summary) combined += `📚 줄거리\n${summary}\n\n`;
+      if (character) combined += `👤 주인공 성격 & 주인공에게 배울 점\n${character}\n\n`;
+      if (ifIWere) combined += `🎭 내가 만약 주인공이라면\n${ifIWere}\n\n`;
+      if (funScene) combined += `🎬 재미있었던 장면\n${funScene}\n\n`;
+      if (feeling) combined += `💭 책을 읽고 느낀 점\n${feeling}`;
+
+      return combined.trim();
+    }
+
+    // 합쳐진 내용을 5개 섹션으로 분리해서 로드
+    function loadContentToSections(content) {
+      if (!content) return;
+
+      // 섹션별로 파싱 시도
+      const sections = {
+        summary: '',
+        character: '',
+        ifIWere: '',
+        funScene: '',
+        feeling: ''
+      };
+
+      // 정규식으로 각 섹션 추출
+      const summaryMatch = content.match(/📚 줄거리\n([\s\S]*?)(?=👤 주인공|🎭 내가|🎬 재미|💭 책을|$)/);
+      const characterMatch = content.match(/👤 주인공 성격 & 주인공에게 배울 점\n([\s\S]*?)(?=🎭 내가|🎬 재미|💭 책을|$)/);
+      const ifIWereMatch = content.match(/🎭 내가 만약 주인공이라면\n([\s\S]*?)(?=🎬 재미|💭 책을|$)/);
+      const funSceneMatch = content.match(/🎬 재미있었던 장면\n([\s\S]*?)(?=💭 책을|$)/);
+      const feelingMatch = content.match(/💭 책을 읽고 느낀 점\n([\s\S]*?)$/);
+
+      if (summaryMatch) sections.summary = summaryMatch[1].trim();
+      if (characterMatch) sections.character = characterMatch[1].trim();
+      if (ifIWereMatch) sections.ifIWere = ifIWereMatch[1].trim();
+      if (funSceneMatch) sections.funScene = funSceneMatch[1].trim();
+      if (feelingMatch) sections.feeling = feelingMatch[1].trim();
+
+      // 섹션 구분이 없는 기존 데이터인 경우 느낀 점에 전체 내용 로드
+      if (!summaryMatch && !characterMatch && !ifIWereMatch && !funSceneMatch && !feelingMatch) {
+        sections.feeling = content;
+      }
+
+      // 각 입력 필드에 값 설정
+      if (document.getElementById('reportSummary')) document.getElementById('reportSummary').value = sections.summary;
+      if (document.getElementById('reportCharacter')) document.getElementById('reportCharacter').value = sections.character;
+      if (document.getElementById('reportIfIWere')) document.getElementById('reportIfIWere').value = sections.ifIWere;
+      if (document.getElementById('reportFunScene')) document.getElementById('reportFunScene').value = sections.funScene;
+      if (document.getElementById('reportFeeling')) document.getElementById('reportFeeling').value = sections.feeling;
+    }
+
+    // 모든 섹션이 비어있는지 확인
+    function isAllSectionsEmpty() {
+      const summary = document.getElementById('reportSummary')?.value?.trim() || '';
+      const character = document.getElementById('reportCharacter')?.value?.trim() || '';
+      const ifIWere = document.getElementById('reportIfIWere')?.value?.trim() || '';
+      const funScene = document.getElementById('reportFunScene')?.value?.trim() || '';
+      const feeling = document.getElementById('reportFeeling')?.value?.trim() || '';
+
+      return !summary && !character && !ifIWere && !funScene && !feeling;
+    }
+
+    // 모든 섹션 초기화
+    function clearAllSections() {
+      if (document.getElementById('reportSummary')) document.getElementById('reportSummary').value = '';
+      if (document.getElementById('reportCharacter')) document.getElementById('reportCharacter').value = '';
+      if (document.getElementById('reportIfIWere')) document.getElementById('reportIfIWere').value = '';
+      if (document.getElementById('reportFunScene')) document.getElementById('reportFunScene').value = '';
+      if (document.getElementById('reportFeeling')) document.getElementById('reportFeeling').value = '';
+    }
+
     // 리포트 로드 (편집/재공유용)
     function loadReport(report) {
       // 검색 가능한 드롭다운에 스토리 설정
       setStoryValue(report.storyId || 'whale_island');
       document.getElementById('reportTitle').value = report.title;
+      // 세분화된 섹션으로 로드
+      loadContentToSections(report.content);
       document.getElementById('reportContent').value = report.content;
       currentEditingReport = report._id;
     }
@@ -17642,7 +18427,15 @@ async function performLogout() {
       const user = JSON.parse(userStr);
       const draft = {
         title: document.getElementById('reportTitle').value,
-        content: document.getElementById('reportContent').value,
+        content: getCombinedContent(),
+        // 개별 섹션도 저장 (불러올 때 사용)
+        sections: {
+          summary: document.getElementById('reportSummary')?.value || '',
+          character: document.getElementById('reportCharacter')?.value || '',
+          ifIWere: document.getElementById('reportIfIWere')?.value || '',
+          funScene: document.getElementById('reportFunScene')?.value || '',
+          feeling: document.getElementById('reportFeeling')?.value || ''
+        },
         timestamp: new Date().toISOString()
       };
 
@@ -17669,6 +18462,18 @@ async function performLogout() {
       if (draftStr) {
         const draft = JSON.parse(draftStr);
         document.getElementById('reportTitle').value = draft.title || '';
+
+        // 개별 섹션이 저장되어 있으면 그대로 로드
+        if (draft.sections) {
+          if (document.getElementById('reportSummary')) document.getElementById('reportSummary').value = draft.sections.summary || '';
+          if (document.getElementById('reportCharacter')) document.getElementById('reportCharacter').value = draft.sections.character || '';
+          if (document.getElementById('reportIfIWere')) document.getElementById('reportIfIWere').value = draft.sections.ifIWere || '';
+          if (document.getElementById('reportFunScene')) document.getElementById('reportFunScene').value = draft.sections.funScene || '';
+          if (document.getElementById('reportFeeling')) document.getElementById('reportFeeling').value = draft.sections.feeling || '';
+        } else {
+          // 기존 형식이면 파싱해서 로드
+          loadContentToSections(draft.content || '');
+        }
         document.getElementById('reportContent').value = draft.content || '';
       }
     }
@@ -17676,19 +18481,35 @@ async function performLogout() {
     // 자동 저장 시작
     function startAutoSave() {
       const titleInput = document.getElementById('reportTitle');
-      const contentInput = document.getElementById('reportContent');
+      const sectionInputs = [
+        document.getElementById('reportSummary'),
+        document.getElementById('reportCharacter'),
+        document.getElementById('reportIfIWere'),
+        document.getElementById('reportFunScene'),
+        document.getElementById('reportFeeling')
+      ];
 
       titleInput.addEventListener('input', saveDraft);
-      contentInput.addEventListener('input', saveDraft);
+      sectionInputs.forEach(input => {
+        if (input) input.addEventListener('input', saveDraft);
+      });
     }
 
     // 자동 저장 중지
     function stopAutoSave() {
       const titleInput = document.getElementById('reportTitle');
-      const contentInput = document.getElementById('reportContent');
+      const sectionInputs = [
+        document.getElementById('reportSummary'),
+        document.getElementById('reportCharacter'),
+        document.getElementById('reportIfIWere'),
+        document.getElementById('reportFunScene'),
+        document.getElementById('reportFeeling')
+      ];
 
       titleInput.removeEventListener('input', saveDraft);
-      contentInput.removeEventListener('input', saveDraft);
+      sectionInputs.forEach(input => {
+        if (input) input.removeEventListener('input', saveDraft);
+      });
     }
 
     // 폼 초기화
@@ -17699,6 +18520,7 @@ async function performLogout() {
 
       document.getElementById('reportStory').value = '';
       document.getElementById('reportTitle').value = '';
+      clearAllSections();
       document.getElementById('reportContent').value = '';
       currentEditingReport = null;
 
@@ -17715,14 +18537,14 @@ async function performLogout() {
     async function downloadPDF() {
       const storySelect = document.getElementById('reportStory');
       const title = document.getElementById('reportTitle').value.trim();
-      const content = document.getElementById('reportContent').value.trim();
+      const content = getCombinedContent();
 
       if (!storySelect.value) {
         alert('이야기를 선택해주세요.');
         return;
       }
 
-      if (!title || !content) {
+      if (!title || isAllSectionsEmpty()) {
         alert('제목과 내용을 모두 입력해주세요.');
         return;
       }
@@ -17736,7 +18558,7 @@ async function performLogout() {
     async function submitFinal() {
       const storySelect = document.getElementById('reportStory');
       const title = document.getElementById('reportTitle').value.trim();
-      const content = document.getElementById('reportContent').value.trim();
+      const content = getCombinedContent();
 
       // 유효성 검사
       if (!storySelect.value) {
@@ -17744,7 +18566,7 @@ async function performLogout() {
         return;
       }
 
-      if (!title || !content) {
+      if (!title || isAllSectionsEmpty()) {
         alert('제목과 내용을 모두 입력해주세요.');
         return;
       }
@@ -18094,9 +18916,9 @@ ${content}
 
     // 맞춤법 검사 버튼용 함수 (자동 제출 없이 결과만 표시)
     async function checkSpellingOnly() {
-      const content = document.getElementById('reportContent').value.trim();
+      const content = getCombinedContent();
 
-      if (!content) {
+      if (!content || isAllSectionsEmpty()) {
         alert('내용을 입력해주세요.');
         return;
       }
@@ -21530,11 +22352,35 @@ ${content}
             <input type="text" id="reportTitle" placeholder="감상문 제목을 입력하세요" required>
           </div>
 
-          <div class="form-group" style="position: relative;">
-            <label for="reportContent">내용</label>
-            <textarea id="reportContent" placeholder="고래도서관 이야기를 읽고 느낀 점을 자유롭게 작성해보세요..." required></textarea>
+          <!-- 📖 세분화된 독서감상문 입력 섹션 -->
+          <div class="form-group report-section">
+            <label for="reportSummary">📚 줄거리</label>
+            <textarea id="reportSummary" placeholder="이 책의 줄거리를 간단히 요약해보세요..." required></textarea>
+          </div>
+
+          <div class="form-group report-section">
+            <label for="reportCharacter">👤 주인공 성격 & 주인공에게 배울 점</label>
+            <textarea id="reportCharacter" placeholder="주인공은 어떤 성격인가요? 주인공에게 배울 점은 무엇인가요?" required></textarea>
+          </div>
+
+          <div class="form-group report-section">
+            <label for="reportIfIWere">🎭 내가 만약 주인공이라면</label>
+            <textarea id="reportIfIWere" placeholder="내가 만약 주인공이라면 어떻게 했을까요?" required></textarea>
+          </div>
+
+          <div class="form-group report-section">
+            <label for="reportFunScene">🎬 재미있었던 장면</label>
+            <textarea id="reportFunScene" placeholder="가장 재미있었거나 인상 깊었던 장면은 무엇인가요?" required></textarea>
+          </div>
+
+          <div class="form-group report-section" style="position: relative;">
+            <label for="reportFeeling">💭 책을 읽고 느낀 점</label>
+            <textarea id="reportFeeling" placeholder="책을 읽고 느낀 점을 자유롭게 작성해보세요..." required></textarea>
             <button type="button" onclick="checkSpellingOnly()" style="position: absolute; right: 8px; bottom: 8px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; opacity: 0.9;">🔍 맞춤법 검사</button>
           </div>
+
+          <!-- 기존 reportContent는 숨김 처리 (호환성 유지) -->
+          <textarea id="reportContent" style="display: none;"></textarea>
 
           <!-- 맞춤법 검사 로딩 -->
           <div class="spell-check-loading" id="spellCheckLoading" style="display: none;">
@@ -24546,10 +25392,13 @@ ${content}
       eduCards.forEach(card => {
         // onclick에서 storyId 추출 (예: openGrade34Story('bio01') -> bio01)
         const onclickAttr = card.getAttribute('onclick') || '';
-        const match = onclickAttr.match(/openGrade(?:34|56)Story\(['"]([^'"]+)['"]\)/);
+        const match = onclickAttr.match(/openGrade(34|56)Story\(['"]([^'"]+)['"]\)/);
 
-        if (match && match[1]) {
-          const storyId = match[1];
+        if (match && match[1] && match[2]) {
+          const gradeType = match[1]; // '34' 또는 '56'
+          const baseStoryId = match[2]; // 'bio01' 등
+          // 시즌1: 3-4학년(_34), 시즌2: 5-6학년(_56)
+          const storyIdWithGrade = baseStoryId + '_' + gradeType;
 
           // 이미 버튼이 있으면 건너뛰기
           if (card.querySelector('.novel-report-btn')) return;
@@ -24560,7 +25409,7 @@ ${content}
           btn.innerHTML = '📝 독서감상문';
           btn.onclick = function(e) {
             e.stopPropagation(); // 카드 클릭 이벤트 방지
-            openBookReportModal(storyId);
+            openBookReportModal(storyIdWithGrade);
           };
 
           card.appendChild(btn);

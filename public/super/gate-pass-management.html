@@ -504,6 +504,10 @@
           </tbody>
         </table>
       </div>
+      <!-- 더보기 버튼 -->
+      <div style="display: flex; justify-content: center; margin-top: 20px;">
+        <button id="behaviorLoadMoreBtn" onclick="loadMoreBehaviorData()" style="display: none; padding: 12px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">더보기</button>
+      </div>
     </div>
   </div>
 
@@ -992,6 +996,7 @@
     let behaviorFilteredData = [];
     let behaviorSelectedIds = new Set();
     let subjectAverages = {}; // 과목별 평균 소요시간
+    let behaviorDisplayCount = 10; // 현재 표시할 개수
 
     // 단원명에서 과목코드 추출 (on_chem_04 → chem)
     function getSubjectCode(unitName) {
@@ -1018,8 +1023,8 @@
         'eco': '경제',
         'geo': '지리',
         'eth': '윤리',
-        'world1': '세계사1',
-        'world2': '세계사2',
+        'world1': '세계문학1',
+        'world2': '세계문학2',
         'kor1': '한국사1',
         'kor2': '한국사2',
         'classic': '고전문학',
@@ -1102,10 +1107,16 @@
 
       if (behaviorFilteredData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="12" class="no-data">학습 행동 데이터가 없습니다.</td></tr>';
+        // 더보기 버튼 숨기기
+        const loadMoreBtn = document.getElementById('behaviorLoadMoreBtn');
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
         return;
       }
 
-      tbody.innerHTML = behaviorFilteredData.map((item, index) => {
+      // 현재 표시할 데이터만 추출
+      const displayData = behaviorFilteredData.slice(0, behaviorDisplayCount);
+
+      tbody.innerHTML = displayData.map((item, index) => {
         const isSelected = behaviorSelectedIds.has(item._id);
         const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('ko-KR', {
           year: 'numeric',
@@ -1163,6 +1174,23 @@
           updateBehaviorSelection();
         });
       });
+
+      // 더보기 버튼 표시/숨기기
+      const loadMoreBtn = document.getElementById('behaviorLoadMoreBtn');
+      if (loadMoreBtn) {
+        if (behaviorDisplayCount < behaviorFilteredData.length) {
+          loadMoreBtn.style.display = 'block';
+          loadMoreBtn.textContent = `더보기 (${behaviorDisplayCount}/${behaviorFilteredData.length})`;
+        } else {
+          loadMoreBtn.style.display = 'none';
+        }
+      }
+    }
+
+    // 더보기 버튼 클릭 시
+    function loadMoreBehaviorData() {
+      behaviorDisplayCount += 10;
+      renderBehaviorTable();
     }
 
     function updateBehaviorSelection() {
@@ -1221,6 +1249,7 @@
         );
       }
       behaviorSelectedIds.clear();
+      behaviorDisplayCount = 10; // 검색 시 표시 개수 초기화
       renderBehaviorTable();
       updateBehaviorCounts();
     });
