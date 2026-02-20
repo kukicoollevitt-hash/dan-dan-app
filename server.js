@@ -30740,6 +30740,111 @@ app.get("/api/mock-exam-activity-feed", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// ===== 교과기반 창작도서 관문평가 API =====
+
+// 창작도서 관문평가 결과 스키마
+const creativeQuizResultSchema = new mongoose.Schema({
+  grade: String,                  // 학년
+  name: String,                   // 이름
+  storyId: String,                // 스토리 ID (예: bio01)
+  season: String,                 // 시즌 (season1 = 5-6학년)
+  scores: {                       // 영역별 점수 (각 10점 만점)
+    인물파악: { type: Number, default: 0 },
+    내용일치: { type: Number, default: 0 },
+    내용구조: { type: Number, default: 0 },
+    내용어휘: { type: Number, default: 0 },
+    내용추론: { type: Number, default: 0 }
+  },
+  totalScore: { type: Number, default: 0 },  // 총점 (100점 만점)
+  completedAt: { type: Date, default: Date.now }
+});
+const CreativeQuizResult = mongoose.model("CreativeQuizResult", creativeQuizResultSchema);
+
+// 창작도서 관문평가 결과 저장 API
+app.post("/api/creative-quiz/save", async (req, res) => {
+  try {
+    const { grade, name, storyId, season, scores, totalScore } = req.body;
+
+    console.log(`[creative-quiz/save] grade=${grade}, name=${name}, storyId=${storyId}, season=${season}, totalScore=${totalScore}`);
+
+    if (!grade || !name || !storyId) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    // 기존 기록이 있으면 업데이트, 없으면 생성
+    const existing = await CreativeQuizResult.findOne({ grade, name, storyId, season });
+
+    if (existing) {
+      // 더 높은 점수일 경우에만 업데이트
+      if (totalScore > existing.totalScore) {
+        existing.scores = scores;
+        existing.totalScore = totalScore;
+        existing.completedAt = new Date();
+        await existing.save();
+        console.log(`[creative-quiz/save] 기록 업데이트 (이전: ${existing.totalScore} → 현재: ${totalScore})`);
+      } else {
+        console.log(`[creative-quiz/save] 기존 점수가 더 높음 (기존: ${existing.totalScore}, 현재: ${totalScore})`);
+      }
+      return res.json({ ok: true, message: "저장 완료", data: existing });
+    }
+
+    // 새 기록 생성
+    const newResult = new CreativeQuizResult({
+      grade,
+      name,
+      storyId,
+      season,
+      scores,
+      totalScore
+    });
+    await newResult.save();
+
+    console.log(`[creative-quiz/save] 새 기록 저장 완료`);
+    res.json({ ok: true, message: "저장 완료", data: newResult });
+
+  } catch (err) {
+    console.error("[creative-quiz/save] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 창작도서 관문평가 결과 조회 API (학생별)
+app.get("/api/creative-quiz/results", async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    const results = await CreativeQuizResult.find({ grade, name }).sort({ completedAt: -1 }).lean();
+
+    res.json({ ok: true, data: results });
+  } catch (err) {
+    console.error("[creative-quiz/results] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 창작도서 관문평가 결과 조회 API (특정 스토리)
+app.get("/api/creative-quiz/result", async (req, res) => {
+  try {
+    const { grade, name, storyId, season } = req.query;
+
+    if (!grade || !name || !storyId) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    const result = await CreativeQuizResult.findOne({ grade, name, storyId, season }).lean();
+
+    res.json({ ok: true, data: result });
+  } catch (err) {
+    console.error("[creative-quiz/result] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
   })
   .catch((err) => {
     console.error("❌ MongoDB 연결 실패:", err);
