@@ -3490,7 +3490,7 @@
                         </tr>
                         <tr>
                             <td>가맹비</td>
-                            <td><strong id="premium-franchise-fee">500만원</strong> <span class="count-control"><button class="count-btn" onclick="togglePremiumFranchiseFee()">−</button></span><br><small style="color:#64748b;">세대지역권 최소 설정</small></td>
+                            <td><strong id="premium-franchise-fee">500만원</strong> <span class="count-control"><button class="count-btn" onclick="decreasePremiumFranchiseFee()">−</button><button class="count-btn" onclick="increasePremiumFranchiseFee()">+</button></span><br><small style="color:#64748b;">세대지역권 최소 설정</small></td>
                         </tr>
                         <tr>
                             <td>도입비</td>
@@ -3526,7 +3526,7 @@
                         </tr>
                         <tr>
                             <td>교과 창작 도서 세트</td>
-                            <td><span class="paid-text">별도</span> 세트당 240,000원 <span class="count-control"><button class="count-btn" onclick="updatePremiumBookset(-1)">−</button><span class="count-value" id="premium-bookset-count">5</span><button class="count-btn" onclick="updatePremiumBookset(1)">+</button></span><br><small style="color:#64748b;">*시즌별 12종/권당 20,000원 = 세트당 240,000원*</small></td>
+                            <td><span class="paid-text">별도</span> 세트당 300,000원 <span class="count-control"><button class="count-btn" onclick="updatePremiumBookset(-1)">−</button><span class="count-value" id="premium-bookset-count">5</span><button class="count-btn" onclick="updatePremiumBookset(1)">+</button></span><br><small style="color:#64748b;">*시즌별 12종/권당 25,000원 = 세트당 300,000원*</small></td>
                         </tr>
                     </table>
                     <div class="pricing-total">
@@ -3589,7 +3589,7 @@
                         </tr>
                         <tr>
                             <td>교과 창작 도서 세트</td>
-                            <td><span class="paid-text">별도</span> 세트당 240,000원 <span class="count-control"><button class="count-btn" onclick="updateCount('std-bookset', -1)">−</button><span class="count-value" id="std-bookset-count">0</span><button class="count-btn" onclick="updateCount('std-bookset', 1)">+</button></span><br><small style="color:#64748b;">*시즌별 12종/권당 20,000원 = 세트당 240,000원*</small></td>
+                            <td><span class="paid-text">별도</span> 세트당 300,000원 <span class="count-control"><button class="count-btn" onclick="updateCount('std-bookset', -1)">−</button><span class="count-value" id="std-bookset-count">0</span><button class="count-btn" onclick="updateCount('std-bookset', 1)">+</button></span><br><small style="color:#64748b;">*시즌별 12종/권당 25,000원 = 세트당 300,000원*</small></td>
                         </tr>
                     </table>
                     <div class="pricing-total">
@@ -4360,7 +4360,7 @@
             'std-momcafe': { count: 0, price: 5 },     // 맘카페 회당 5만원
             'std-promo': { count: 0, price: 50 },      // 홍보 셋트 세트당 50만원
             'std-textbook': { count: 0, price: 26 }, // 문해력 교재 세트당 26만원
-            'std-bookset': { count: 0, price: 24 }     // 교과 창작 도서 세트당 24만원
+            'std-bookset': { count: 0, price: 30 }     // 교과 창작 도서 세트당 30만원
         };
 
         // 프리미엄 교재 세트 카운트 (기본값: 문해력 15세트, 창작도서 5세트)
@@ -4379,20 +4379,29 @@
             calculatePremiumTotal();
         }
 
-        // 프리미엄 가맹비 토글 (0: 100%, 1: 50%, 2: 0%)
-        let premiumFranchiseFeeState = 0;
+        // 프리미엄 가맹비 (500만원 단위 조절)
+        let premiumFranchiseFeeValue = 500;
 
-        function togglePremiumFranchiseFee() {
-            premiumFranchiseFeeState = (premiumFranchiseFeeState + 1) % 3;
+        function updatePremiumFranchiseFeeDisplay() {
             const el = document.getElementById('premium-franchise-fee');
-            if (premiumFranchiseFeeState === 0) {
+            if (premiumFranchiseFeeValue === 500) {
                 el.textContent = '500만원';
-            } else if (premiumFranchiseFeeState === 1) {
-                el.innerHTML = '<span style="text-decoration: line-through; color:#94a3b8;">500만원</span> → <span style="color:#ef4444;">250만원</span>';
-            } else {
+            } else if (premiumFranchiseFeeValue === 0) {
                 el.innerHTML = '<span style="text-decoration: line-through; color:#94a3b8;">500만원</span> → <span style="color:#ef4444;">0원</span>';
+            } else {
+                el.textContent = premiumFranchiseFeeValue + '만원';
             }
             calculatePremiumTotal();
+        }
+
+        function decreasePremiumFranchiseFee() {
+            premiumFranchiseFeeValue = Math.max(0, premiumFranchiseFeeValue - 500);
+            updatePremiumFranchiseFeeDisplay();
+        }
+
+        function increasePremiumFranchiseFee() {
+            premiumFranchiseFeeValue = premiumFranchiseFeeValue + 500;
+            updatePremiumFranchiseFeeDisplay();
         }
 
         // 프리미엄 도입비 토글
@@ -4456,28 +4465,34 @@
         }
 
         function calculatePremiumTotal() {
-            // 기본 금액 (할인 전)
-            const baseTotal = 1400; // 500 + 300 + 600
-
             // 현재 적용된 금액
-            // 가맹비: state 0=500, 1=250, 2=0
-            const franchiseFee = premiumFranchiseFeeState === 0 ? 500 : (premiumFranchiseFeeState === 1 ? 250 : 0);
+            // 가맹비: 현재 값 사용
+            const franchiseFee = premiumFranchiseFeeValue;
             const setupFee = premiumSetupFeeEnabled ? 300 : 0;
             // 연이용료: state 0=600, 1=300, 2=0
             const annualFee = premiumAnnualFeeState === 0 ? 600 : (premiumAnnualFeeState === 1 ? 300 : 0);
             const base = franchiseFee + setupFee + annualFee; // 가맹비 + 도입비 + 연이용료
             const textbookCost = premiumTextbookCount * 26; // 세트당 26만원
-            const booksetCost = premiumBooksetCount * 24; // 세트당 24만원
+            const booksetCost = premiumBooksetCount * 30; // 세트당 30만원
             const total = base + textbookCost + booksetCost;
 
-            // 할인 금액 계산
-            const discount = baseTotal - base;
+            // 기본 금액 (할인 전): 가맹비 기준값 500 + 도입비 300 + 연이용료 600
+            const baseTotal = 500 + 300 + 600;
+            // 할인 계산 (가맹비는 기준값 500에서만 할인, 추가분은 할인 대상 아님)
+            const franchiseDiscount = Math.max(0, 500 - Math.min(franchiseFee, 500));
+            const setupDiscount = premiumSetupFeeEnabled ? 0 : 300;
+            const annualDiscount = premiumAnnualFeeState === 0 ? 0 : (premiumAnnualFeeState === 1 ? 300 : 600);
+            const discount = franchiseDiscount + setupDiscount + annualDiscount;
 
             // 할인 표시 업데이트
             const discountEl = document.getElementById('premiumDiscountDisplay');
-            const totalWithExtras = baseTotal + textbookCost + booksetCost;
-            const totalStr = totalWithExtras % 1 === 0 ? totalWithExtras.toLocaleString() : totalWithExtras.toFixed(1);
-            discountEl.innerHTML = totalStr + '만원 <span style="color: #ef4444;">- ' + discount + '만원</span>';
+            if (discount > 0) {
+                const totalWithExtras = baseTotal + textbookCost + booksetCost + Math.max(0, franchiseFee - 500);
+                const totalStr = totalWithExtras % 1 === 0 ? totalWithExtras.toLocaleString() : totalWithExtras.toFixed(1);
+                discountEl.innerHTML = totalStr + '만원 <span style="color: #ef4444;">- ' + discount + '만원</span>';
+            } else {
+                discountEl.innerHTML = '';
+            }
 
             // 총합 표시
             const finalStr = total % 1 === 0 ? total.toLocaleString() : total.toFixed(1);
@@ -4539,9 +4554,13 @@
 
             // 할인 표시 업데이트
             const discountEl = document.getElementById('standardDiscountDisplay');
-            const totalWithExtras = baseTotal + franchiseFee + additionalCost;
-            const totalWithExtrasStr = totalWithExtras % 1 === 0 ? totalWithExtras.toLocaleString() : totalWithExtras.toFixed(1);
-            discountEl.innerHTML = totalWithExtrasStr + '만원 <span style="color: #ef4444;">- ' + discount + '만원</span>';
+            if (discount > 0) {
+                const totalWithExtras = baseTotal + franchiseFee + additionalCost;
+                const totalWithExtrasStr = totalWithExtras % 1 === 0 ? totalWithExtras.toLocaleString() : totalWithExtras.toFixed(1);
+                discountEl.innerHTML = totalWithExtrasStr + '만원 <span style="color: #ef4444;">- ' + discount + '만원</span>';
+            } else {
+                discountEl.innerHTML = '';
+            }
 
             // 총합 표시
             const totalStr = total % 1 === 0 ? total.toLocaleString() : total.toFixed(1);

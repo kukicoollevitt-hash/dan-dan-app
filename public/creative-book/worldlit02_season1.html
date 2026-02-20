@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏴‍☠️ 황금 해골의 바다 — 소년 짐과 은빛 악마의 항해</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a2e;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0d2137 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(30, 58, 95, 0.15);
+      color: #1e3a5f;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1e3a5f;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #c9a227;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #1e3a5f;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #ffd700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(201, 162, 39, 0.15);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #ffd700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .lesson {
+      background: rgba(30, 58, 95, 0.3);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .lesson p {
+      color: #87ceeb;
+      font-size: 15px;
+      line-height: 1.8;
+      font-style: italic;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 엔딩 섹션 */
+    .ending-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .ending-content {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+    }
+
+    .ending-content h2 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 30px;
+    }
+
+    .ending-content .lesson-box {
+      background: rgba(30, 58, 95, 0.4);
+      padding: 30px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .ending-content .lesson-box h3 {
+      color: #ffd700;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .ending-content .lesson-box p {
+      color: #e0e0e0;
+      font-size: 16px;
+      line-height: 1.9;
+    }
+
+    .ending-content .themes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .ending-content .theme-tag {
+      padding: 10px 20px;
+      background: rgba(201, 162, 39, 0.2);
+      border: 1px solid #c9a227;
+      color: #ffd700;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+
+      .ending-content {
+        padding: 40px 30px;
+      }
+
+      .ending-content h2 {
+        font-size: 28px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(30, 58, 95, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(13, 33, 55, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(30, 58, 95, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏴‍☠️ 황금 해골의 바다 — 소년 짐과 은빛 악마의 항해</h1>
+        <p class="subtitle">
+          📖 원작: 『보물섬(Treasure Island)』 – R.L. 스티븐슨<br>
+          교과기반 창작도서 · 세계문학 02
+        </p>
+        <div class="characters">
+          <h3>⚓ 등장인물 소개</h3>
+          <p><strong>◆ 짐 호킨스 (Jim Hawkins):</strong> 주인공. 항구 마을의 작은 여관 '벤보 제독'을 운영하는 가정의 외아들. 호기심이 많고 순수하지만, 결정적 순간에 어른보다 빠른 판단력을 보여주는 소년. 이야기가 진행되며 두려움을 용기로 바꾸는 법을 배운다.</p>
+          <p><strong>◆ 롱 존 실버 (Long John Silver):</strong> 핵심 갈등 인물. 한쪽 다리에 목발을 짚고 다니는 전직 해적. 온화한 미소와 요리 솜씨로 모두의 신뢰를 얻지만, 그 이면에 치밀한 야망과 냉혹한 지략을 감추고 있다. 짐에게는 아버지 같은 존재이면서 동시에 가장 위험한 적.</p>
+          <p><strong>◆ 스몰렛 선장 (Captain Smollett):</strong> 히스패니올라 호의 정직한 선장. 원칙을 중시하고 위험을 본능적으로 감지하는 노련한 항해사. 실버의 선원 구성에 처음부터 불신을 품는다.</p>
+          <p><strong>◆ 트릴로니 향사 (Squire Trelawney):</strong> 짐의 후원자이자 탐험의 자금을 대는 부유한 신사. 낙천적이고 호탕하나, 비밀을 지키지 못하는 치명적 약점이 있어 해적들에게 항해 계획이 새어나가는 원인이 된다.</p>
+          <p><strong>◆ 리브지 의사 (Dr. Livesey):</strong> 냉철한 판단력의 의사이자 치안판사. 짐의 조언자 역할을 하며, 위기 상황에서도 이성을 잃지 않는 인물.</p>
+          <p><strong>◆ 벤 건 (Ben Gunn):</strong> 3년간 무인도에 버려진 전직 해적. 외로움에 반쯤 미쳐 있지만, 섬의 비밀을 누구보다 잘 알고 있으며, 짐 일행에게 결정적 도움을 준다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 외적 갈등:</strong> 짐 일행 vs. 롱 존 실버 해적단: 보물을 차지하기 위한 생존 대결</p>
+          <p><strong>② 내적 갈등:</strong> 짐의 마음속 갈등: 실버를 믿고 싶은 마음 vs. 그가 적이라는 현실</p>
+          <p><strong>③ 신뢰의 갈등:</strong> 트릴로니의 허영이 부른 정보 유출 → 해적의 잠입이라는 위기</p>
+          <p><strong>④ 도덕적 갈등:</strong> 실버의 이중성: 악인이되 완전한 악은 아닌, 회색 인물의 선택</p>
+          <p><strong>⑤ 성장의 갈등:</strong> 어른들의 보호 아래 있던 소년이 스스로 선택하고 책임져야 하는 순간들</p>
+        </div>
+        <div class="lesson">
+          <p>🌱 <strong>교훈:</strong> 진정한 모험은 미지의 땅을 밟는 것이 아니라, 두려움 앞에서 스스로 판단하고 행동하는 용기를 갖는 것이다. 세상에는 선과 악이 명확히 나뉘지 않으며, 사람을 꿰뚫어 보는 눈과 자기 자신을 믿는 힘이야말로 가장 큰 보물이다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">모험의 시작</span>
+        <h2>짐 호킨스의 평범한 일상</h2>
+        <p>📌 <em>중심 문장: 모험은 가장 평범한 일상의 균열에서 시작된다.</em></p>
+        <p>영국 서남부 해안, 바닷바람이 끊이지 않는 작은 항구 마을. 짐 호킨스는 어머니와 함께 '벤보 제독'이라는 낡은 여관을 운영하며 하루하루를 보내고 있었습니다. 아버지는 오래전부터 병상에 누워 계셨고, 여관의 살림은 오로지 어린 짐과 어머니의 몫이었습니다. 매일 아침이면 짐은 나무 양동이를 들고 우물로 물을 길으러 갔고, 오후에는 투숙객들의 식사를 나르며 구석진 부엌에서 접시를 닦았습니다. 손님이라곤 근처 어부들과 가끔 지나가는 마부 정도였고, 여관은 언제나 조용했습니다.</p>
+        <p>그러나 짐의 마음속에는 언제나 바다 너머에 대한 막연한 동경이 있었습니다. 항구에 정박한 배들의 돛대가 석양에 물드는 모습을 볼 때면, 짐은 저 배가 어디서 왔을까, 어디로 갈까 상상에 빠지곤 했습니다. 아버지의 책장 한 구석에 꽂혀 있던 낡은 항해 서적을 몰래 꺼내 읽는 것이 짐의 유일한 즐거움이었습니다. 그 책에는 먼 바다의 섬들과 이국적인 동물들, 그리고 전설 속 해적들의 이야기가 담겨 있었습니다. 짐은 그 이야기들이 자신과는 아무 상관없는 먼 세계의 일이라고 생각했습니다.</p>
+        <p>하지만 운명은 종종 가장 예상치 못한 순간에 문을 두드립니다. 짐이 평범함에 지쳐가던 그 겨울, 벤보 제독 여관의 문이 거칠게 열리며 한 남자가 들어섰습니다. 그 순간이 짐 호킨스의 삶 전체를 뒤바꿀 줄은, 아직 아무도 몰랐습니다. 바다 냄새를 진하게 풍기는 그 낯선 사내의 등장은, 고요하던 여관에 폭풍의 전조와도 같았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">의문의 선원</span>
+        <h2>의문의 선원, 빌리 본즈의 등장</h2>
+        <p>📌 <em>중심 문장: 낯선 존재의 침입은 일상을 파괴하는 동시에 새로운 가능성을 연다.</em></p>
+        <p>그 남자는 스스로를 '선장'이라고만 불러달라고 했습니다. 커다란 해군용 트렁크를 끌고, 얼굴에 칼자국이 선명한 그는 빌리 본즈라는 이름의 전직 선원이었습니다. 그는 짐에게 은화 한 닢을 쥐어주며 낮은 목소리로 말했습니다. <span class="dialogue">"한 다리 없는 선원이 오거든, 반드시 나에게 알려라."</span> 짐은 그 말의 의미를 알 수 없었지만, 빌리 본즈의 눈에 서린 두려움만은 분명하게 느꼈습니다.</p>
+        <p>빌리 본즈는 여관에 눌러앉으며 매일 럼주를 퍼마셨습니다. 취하면 소리를 질러 끔찍한 뱃노래를 불렀고, 다른 손님들은 하나둘 여관을 떠났습니다. 그러나 짐의 가족은 그가 내는 숙박비가 아쉬워 내쫓지 못했습니다. 빌리 본즈는 절벽 위에 올라 바다를 감시하듯 망원경을 들이대며 시간을 보냈고, 누군가 자기를 추적하고 있다는 강박에 사로잡혀 있었습니다.</p>
+        <p>어느 날 '검은 개'라 불리는 수상한 사내가 여관을 찾아와 빌리 본즈와 격렬하게 다투었습니다. 칼부림이 벌어졌고, 검은 개는 피를 흘리며 달아났습니다. 뒤이어 장님 퓨라는 인물이 짐의 손을 붙잡고 빌리 본즈에게 <span class="highlight">'검은 반점'</span> — 해적들의 사형 선고 — 을 전달했습니다. 그날 밤, 빌리 본즈는 뇌졸중으로 쓰러져 숨을 거두었습니다. 짐은 공포에 떨면서도, 죽은 선원의 트렁크 속에 무엇이 있는지 모르는 채 넘길 수 없었습니다. 그것이 모든 것의 시작이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">운명의 양피지</span>
+        <h2>보물 지도의 발견 — 운명의 양피지</h2>
+        <p>📌 <em>중심 문장: 한 장의 지도가 소년의 세계를 무한대로 확장시킨다.</em></p>
+        <p>해적단이 여관으로 쳐들어올 것을 직감한 짐은 어머니와 함께 빌리 본즈의 트렁크를 급히 열었습니다. 트렁크 안에는 낡은 옷가지, 외국 화폐 몇 닢, 그리고 기름종이에 싸인 봉투가 하나 있었습니다. 짐은 그 봉투를 호주머니에 쑤셔 넣었고, 마침 밖에서 해적들의 발소리가 들려왔습니다. 짐과 어머니는 간신히 여관을 빠져나와 다리 밑에 숨었습니다. 해적들이 여관을 뒤집어엎는 소리가 어둠 속에서 들려왔고, 짐은 숨을 죽인 채 봉투를 꽉 쥐었습니다.</p>
+        <p>위기를 넘긴 짐은 마을의 리브지 의사와 트릴로니 향사를 찾아갔습니다. 봉투를 열자 그 안에는 정교하게 그려진 한 장의 지도가 들어 있었습니다. 지도에는 <span class="highlight">'X' 표시</span>와 함께 경도와 위도가 적혀 있었고, 모서리에는 악명 높은 해적 플린트 선장의 서명이 있었습니다. 이것은 바로 플린트 선장이 <span class="highlight">70만 파운드어치의 보물</span>을 숨긴 섬의 위치를 나타내는 보물 지도였습니다!</p>
+        <p>트릴로니 향사의 눈이 탐욕과 흥분으로 번뜩였고, 리브지 의사는 냉정하게 상황을 분석했습니다. 둘은 즉시 항해를 결심했고, 짐도 함께 가겠다고 나섰습니다. 이 순간 짐은 알지 못했습니다 — 이 지도가 자신에게 상상 이상의 모험을 안겨줄 것이란 사실을, 그리고 이 지도를 노리는 자들이 이미 그림자처럼 가까이 다가와 있다는 사실을. 양피지 한 장이 소년의 운명을 송두리째 바꿔놓으려 하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">항해의 시작</span>
+        <h2>히스패니올라 호, 항해의 시작</h2>
+        <p>📌 <em>중심 문장: 출항은 돌이킬 수 없는 선택이며, 미지의 바다는 사람의 본성을 드러낸다.</em></p>
+        <p>트릴로니 향사는 브리스틀 항구에서 <span class="highlight">'히스패니올라'</span>라는 이름의 범선을 구입하고, 항해에 필요한 모든 것을 준비했습니다. 문제는 선원 모집이었는데, 이때 트릴로니가 우연히 만난 인물이 바로 <span class="highlight">롱 존 실버</span>였습니다. 실버는 한쪽 다리가 없어 목발을 짚고 다녔지만, 브리스틀에서 '스파이글래스'라는 선술집을 운영하는 정직하고 유능한 요리사로 알려져 있었습니다. 실버는 능숙한 말솜씨로 트릴로니의 완전한 신뢰를 얻었고, 나머지 선원들의 모집까지 도맡았습니다.</p>
+        <p>짐은 처음 실버를 만났을 때 빌리 본즈가 경고했던 '한 다리 없는 선원'이 떠올라 가슴이 철렁했습니다. 하지만 실버의 따뜻한 미소와 친절한 태도에 곧 그런 의심은 사라졌습니다. 실버는 짐에게 바다 이야기를 들려주었고, 요리를 가르쳐주었으며, 마치 잃어버린 아버지처럼 다정했습니다. 스몰렛 선장만이 유일하게 의심의 눈초리를 거두지 않았습니다. 그는 선원들의 구성이 마음에 들지 않는다고 트릴로니에게 직언했지만, 향사는 대수롭지 않게 넘겼습니다.</p>
+        <p>마침내 히스패니올라 호는 닻을 올렸습니다. 브리스틀 항구를 빠져나가는 순간, 짐은 난생처음 느끼는 자유와 흥분에 온몸이 떨렸습니다. 돛이 바람을 가득 품고, 갈매기들이 배 위를 선회하며, 끝없는 수평선이 짐의 눈앞에 펼쳐졌습니다. 그러나 이 아름다운 출항의 이면에, 배 안에는 이미 거대한 위험이 씨앗을 틔우고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">충격의 진실</span>
+        <h2>롱 존 실버의 진짜 얼굴</h2>
+        <p>📌 <em>중심 문장: 가장 가까운 사람이 가장 위험한 적일 수 있다는 것을 아는 순간, 세상이 달라진다.</em></p>
+        <p>항해가 순조롭게 이어지던 어느 밤, 짐은 뱃멀미를 달래려 갑판 위의 사과통 속에 들어가 사과를 하나 집어 먹고 있었습니다. 그때 사과통 바로 옆에서 낮은 목소리들이 들려왔습니다. 실버의 목소리였습니다. 짐은 숨을 죽이고 귀를 기울였습니다. 실버는 젊은 선원에게 속삭이고 있었습니다. <span class="dialogue">"플린트 선장 밑에서 나는 쿼터마스터였어. 이 배의 선원 대부분이 내 편이야. 보물을 찾고 나면... 그때가 우리가 움직일 때다."</span></p>
+        <p>짐의 심장이 멎는 듯했습니다. 그토록 다정했던 실버가, 아버지처럼 느꼈던 그 사람이, 실은 <span class="highlight">해적단의 두목</span>이었던 것입니다. 실버는 플린트 선장의 전 부하였으며, 보물 지도의 존재를 알고 일부러 이 항해에 잠입한 것이었습니다. 선원 서른 명 중 열아홉 명이 실버의 수하였고, 그들은 보물을 손에 넣은 뒤 짐 일행을 모두 처치할 계획이었습니다.</p>
+        <p>사과통 속에서 온몸이 얼어붙은 짐은, 그러나 이를 악물고 공포를 삼켰습니다. 울고 싶었지만 울 수 없었습니다. 지금 자기가 들은 것을 리브지 의사와 선장에게 알려야 합니다. 짐은 해적들이 자리를 뜬 후 사과통에서 빠져나와, 떨리는 다리로 선장실을 찾아갔습니다. 이 순간, 짐은 더 이상 보호받는 아이가 아니었습니다. 그는 어른들과 함께 전쟁을 준비해야 하는 전사가 되어야 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">반란의 조짐</span>
+        <h2>바다 위의 폭풍 — 반란의 조짐</h2>
+        <p>📌 <em>중심 문장: 폭풍은 바다에서만 오는 것이 아니라, 사람의 마음속에서도 몰아친다.</em></p>
+        <p>짐의 보고를 받은 스몰렛 선장, 리브지 의사, 트릴로니 향사는 충격에 빠졌지만, 곧 냉정을 되찾았습니다. 배 안에서 믿을 수 있는 인원은 짐을 포함해 고작 <span class="highlight">일곱 명</span>. 반면 실버 편은 <span class="highlight">열아홉 명</span>이었습니다. 정면 충돌은 자살행위였습니다. 선장은 섬에 도착할 때까지 아무것도 모르는 척 행동하되, 무기고의 총과 화약을 미리 확보할 계획을 세웠습니다.</p>
+        <p>배 위의 분위기는 점점 험악해졌습니다. 실버는 여전히 웃음을 잃지 않았지만, 그의 부하들은 참을성이 바닥나고 있었습니다. 술에 취한 선원들이 밤마다 은밀히 모여 수군거렸고, 한 선원은 짐을 의미심장하게 노려보며 칼을 갈았습니다. 짐은 등골이 서늘해졌지만, 겉으로는 평소처럼 요리를 돕고 갑판을 청소하며 아무렇지 않은 듯 행동했습니다. 이것은 짐 인생에서 가장 긴 연기였습니다.</p>
+        <p>한편 바다는 마치 이 갈등을 반영하듯 점점 거칠어졌습니다. 하늘이 먹구름으로 뒤덮이고, 파도가 배를 집어삼킬 듯 덮쳤습니다. 폭풍우 속에서 돛대가 흔들리고 밧줄이 끊어졌습니다. 해적들과 충성파 선원 모두 살아남기 위해 함께 폭풍과 싸워야 했습니다. 아이러니하게도, 바다의 폭풍이 배 안의 폭풍을 잠시 미뤄준 셈이었습니다. 그리고 폭풍이 지나간 후, 수평선 너머로 짙은 녹색 윤곽이 나타났습니다 — <span class="highlight">보물섬</span>이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">녹색 지옥</span>
+        <h2>무인도 상륙 — 녹색 지옥의 시작</h2>
+        <p>📌 <em>중심 문장: 꿈꾸던 목적지에 도착했을 때, 진짜 시련이 시작된다.</em></p>
+        <p>보물섬은 짐이 상상했던 낭만적인 섬과는 전혀 달랐습니다. 짙은 안개가 섬을 감싸고 있었고, 숲에서 뿜어져 나오는 습한 공기는 썩은 듯한 악취를 품고 있었습니다. 선원들의 표정이 일그러졌고, 스몰렛 선장은 이 섬의 공기가 열병을 품고 있을 수 있다고 경고했습니다. 그러나 해적들의 눈은 보물에 대한 욕망으로 이글거렸고, 실버는 상륙을 제안하며 선원들의 사기를 북돋웠습니다.</p>
+        <p>실버는 선원들 일부를 데리고 섬에 내렸고, 짐은 충동적으로 그 보트에 함께 올라타 섬으로 건너갔습니다. 이것은 계획에 없던 행동이었고, 짐 스스로도 왜 그랬는지 설명할 수 없었습니다. 하지만 이 본능적 결정이 이후 모든 상황을 바꾸게 됩니다. 섬에 내린 짐은 실버가 충성을 거부하는 선원을 냉정하게 살해하는 장면을 목격했습니다. 다정했던 요리사의 얼굴이 순식간에 차가운 살인자로 변하는 모습에, 짐은 구역질이 치밀며 숲 속으로 달아났습니다.</p>
+        <p>숲 깊은 곳에서 짐은 뜻밖의 인물을 만났습니다. 누더기 옷에 해에 그을린 피부, 반쯤 미친 눈을 한 남자 — <span class="highlight">벤 건</span>이었습니다. 3년 전 해적 동료들에게 버림받고 홀로 이 섬에서 살아온 벤 건은 짐에게 말했습니다. <span class="dialogue">"나를 여기서 데려가 준다면, 내가 너희를 도와주겠다."</span> 적대적 상황 속에서 뜻밖의 동맹이 태어난 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">피로 물든 충성</span>
+        <h2>생존과 배신 — 피로 물든 충성</h2>
+        <p>📌 <em>중심 문장: 극한의 상황에서 진정한 본성이 드러나고, 충성과 배신의 경계가 허물어진다.</em></p>
+        <p>선장 일행은 섬의 옛 요새에 바리케이드를 치고 해적단에 맞서 농성전을 시작했습니다. 통나무로 둘러싼 작은 성채 안에는 총과 화약, 며칠 치 식량이 전부였습니다. 해적들은 수적 우위를 앞세워 여러 차례 공격을 감행했고, 양쪽 모두 사상자가 발생했습니다. 총탄이 통나무 벽을 뚫고 날아오는 속에서, 짐은 총을 장전하고 부상자를 돌보며 어른들과 어깨를 나란히 했습니다.</p>
+        <p>실버는 백기를 들고 협상을 시도했습니다. <span class="dialogue">"지도를 넘기시오. 그러면 목숨은 살려드리겠소."</span> 하지만 스몰렛 선장은 단호히 거절했습니다. 실버의 눈에 차가운 분노가 스쳤지만, 그는 여전히 미소를 잃지 않으며 돌아갔습니다. 그날 밤, 짐은 또 한 번의 충동적 결심을 합니다. 모두가 잠든 틈을 타 혼자 요새를 빠져나가, 해안에 묶여 있는 히스패니올라 호를 탈환하기로 한 것입니다.</p>
+        <p>어둠 속에서 짐은 벤 건이 만들어둔 작은 가죽 보트를 타고 히스패니올라 호에 접근했습니다. 배에는 해적 두 명만이 남아 있었는데, 둘은 술에 취해 싸우다 서로를 해쳤습니다. 짐은 밧줄을 끊어 배를 표류시켰고, 가까스로 배를 조종해 은밀한 만(灣)에 숨겼습니다. 소년의 무모함이 천운을 만나 기적적인 성과를 거둔 것입니다. 하지만 요새로 돌아온 짐을 기다리고 있었던 것은 뜻밖에도 실버와 해적들이었습니다 — 선장 일행은 이미 요새를 버리고 이동한 뒤였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">황금의 무게</span>
+        <h2>보물의 진실 — 황금의 무게</h2>
+        <p>📌 <em>중심 문장: 진정한 보물은 금화가 아니라, 살아 돌아오는 것 그 자체이다.</em></p>
+        <p>짐은 실버의 포로가 되었습니다. 해적들은 짐을 죽이려 했지만, 실버만은 짐을 보호했습니다. 실버는 이미 상황이 자기 편에 불리해지고 있음을 감지하고 있었고, 짐을 인질이자 보험으로 삼으려 했던 것입니다. 동시에, 실버의 마음 한구석에는 이 용감한 소년에 대한 진심 어린 애정이 있었습니다. 악당이되 완전한 악인이 아닌, <span class="highlight">실버의 복잡한 인간성</span>이 드러나는 순간이었습니다.</p>
+        <p>이튿날 아침, 실버는 지도를 손에 넣어 의기양양하게 보물을 찾아 나섰습니다. 해적들은 정글을 헤치며 지도의 X 표시를 향해 전진했습니다. 그러나 마침내 도착한 보물 매장지에는 <span class="highlight">거대한 구덩이만 있을 뿐</span>, 보물은 흔적도 없었습니다. 해적들이 분노로 폭발하려는 순간, 숲 속에서 총성이 울렸습니다. 리브지 의사와 벤 건이 매복하고 있었던 것입니다!</p>
+        <p>사실 벤 건은 3년의 세월 동안 이미 보물을 발견하여 자신의 동굴로 옮겨놓은 상태였습니다. 리브지 의사는 이 사실을 알고 일부러 실버에게 쓸모없어진 지도를 넘긴 것이었습니다. 해적들이 빈 구덩이 앞에서 혼란에 빠진 틈을 타, 짐 일행은 해적단을 제압했습니다. 벤 건의 동굴에는 금화와 금괴, 보석이 산처럼 쌓여 있었습니다. 그러나 그 황금빛 앞에서 짐이 느낀 감정은 기쁨이 아니었습니다. 이 보물을 위해 흘러야 했던 피와 눈물이, 금화보다 무거웠기 때문입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">진짜 보물</span>
+        <h2>소년의 귀환 — 진짜 보물을 안고</h2>
+        <p>📌 <em>중심 문장: 진정한 성장은 집으로 돌아왔을 때, 떠나기 전의 자신과 달라져 있음을 아는 것이다.</em></p>
+        <p>짐 일행은 보물을 히스패니올라 호에 싣고, 살아남은 해적 셋을 섬에 남겨둔 채 귀항길에 올랐습니다. 롱 존 실버도 항해에 동행했는데, 그는 포로의 몸이면서도 여전히 능글맞은 미소를 잃지 않았습니다. 짐은 실버를 바라보며 복잡한 감정에 빠졌습니다. 이 남자는 분명 해적이고 살인자이며 배신자였지만, 동시에 짐의 목숨을 두 번이나 구해준 사람이기도 했습니다. <span class="highlight">선과 악이 한 사람 안에 공존할 수 있다</span>는 사실을 짐은 이 항해를 통해 배웠습니다.</p>
+        <p>중간 기항지에서 실버는 금화 자루를 들고 밤중에 사라졌습니다. 아무도 그를 막지 않았고, 리브지 의사는 <span class="dialogue">"차라리 잘 됐다"</span>고 중얼거렸습니다. 실버의 행방은 그 후로 알 수 없었습니다. 짐은 실버가 어딘가에서 다시 선술집을 열고 앵무새 '플린트 선장'과 함께 살아가고 있을 것이라 상상했습니다. 미움과 그리움이 뒤섞인 기묘한 감정이었습니다.</p>
+        <p>영국에 돌아온 짐은 보물의 분배금으로 어머니의 여관을 새로 단장하고, 자신은 공부를 시작했습니다. 밤이면 꿈속에서 파도 소리가 들렸고, 보물섬의 녹색 숲과 해적들의 함성이 떠올랐습니다. 그러나 짐은 다시는 보물을 찾아 항해하지 않겠다고 다짐했습니다. 금은보화보다 소중한 것 — <span class="highlight">살아 돌아올 수 있었다는 것, 사람을 보는 눈을 갖게 되었다는 것, 두려움 앞에서 도망치지 않는 자신이 되었다는 것</span> — 이것이 짐 호킨스가 보물섬에서 진짜로 가져온 보물이었습니다. 소년은 바다를 건너며 어른이 되었고, 그 성장이야말로 어떤 황금보다 값진 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="ending-section">
+      <div class="ending-content">
+        <h2>🏴‍☠️ 이야기를 마치며</h2>
+        <div class="lesson-box">
+          <h3>📖 이 이야기가 전하는 메시지</h3>
+          <p>진정한 모험은 미지의 땅을 밟는 것이 아니라, 두려움 앞에서 스스로 판단하고 행동하는 용기를 갖는 것입니다. 세상에는 선과 악이 명확히 나뉘지 않으며, 사람을 꿰뚫어 보는 눈과 자기 자신을 믿는 힘이야말로 가장 큰 보물입니다. 짐 호킨스처럼, 우리도 삶의 폭풍 속에서 흔들리더라도 끝까지 자신의 선택을 믿고 나아갈 용기를 가질 수 있습니다.</p>
+        </div>
+        <div class="themes">
+          <span class="theme-tag">⚓ 모험과 성장</span>
+          <span class="theme-tag">🏴‍☠️ 선과 악의 공존</span>
+          <span class="theme-tag">💎 진정한 보물</span>
+          <span class="theme-tag">⚔️ 용기와 판단력</span>
+          <span class="theme-tag">🌊 두려움의 극복</span>
+        </div>
+        <p style="color: #87ceeb; font-size: 14px;">원작: 『보물섬(Treasure Island)』 – R.L. 스티븐슨</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="window.parent.postMessage({type: 'closeStory'}, '*')">목록으로</button>
+  </div>
+
+  <script>
+    // 배경 이미지 전환 및 카드 애니메이션
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // 배경 이미지 전환
+          const bgImage = entry.target.getAttribute('data-bg');
+          if (bgImage) {
+            mapContainer.style.backgroundImage = `url('${bgImage}')`;
+          }
+          // 카드 활성화
+          const card = entry.target.querySelector('.story-card');
+          if (card) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }, {
+      threshold: 0.5
+    });
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 인트로 섹션 관찰
+    const introSection = document.querySelector('.intro-section');
+    const introObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          mapContainer.style.backgroundImage = "url('/images/창작도서/창작세계문학02/00.jpg')";
+        }
+      });
+    }, {
+      threshold: 0.5
+    });
+
+    if (introSection) {
+      introObserver.observe(introSection);
+    }
+
+    // 엔딩 섹션 관찰
+    const endingSection = document.querySelector('.ending-section');
+    const endingObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          mapContainer.style.backgroundImage = "url('/images/창작도서/창작세계문학02/00.jpg')";
+        }
+      });
+    }, {
+      threshold: 0.5
+    });
+
+    if (endingSection) {
+      endingObserver.observe(endingSection);
+    }
+  </script>
+</body>
+</html>

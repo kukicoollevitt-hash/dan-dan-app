@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧊 세 얼굴의 아쿠아 — 나는 변해도 나야!</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 210, 255, 0.15);
+      color: #0088cc;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #0088cc;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #2980b9;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #87CEEB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 210, 255, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(58, 123, 213, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🧊 세 얼굴의 아쿠아 — 나는 변해도 나야!</h1>
+        <p class="subtitle">
+          — 얼음에서 구름까지, 물의 세 가지 얼굴 이야기 —<br>
+          교과기반 창작도서 · 화학 05
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>💧 아쿠아 (물 분자 소녀):</strong> H₂O라는 이름을 가진 물 분자. 얼음이 되었다가, 물이 되었다가, 수증기가 되는 세 가지 변신을 겪으면서 자신이 누구인지 혼란에 빠진다.</p>
+          <p><strong>🧊 글라시 (얼음 왕자):</strong> 단단하고 차가운 고체 상태의 물을 대표하는 존재. 분자들이 규칙적인 육각형 결정 구조로 정렬되어 있어 질서를 극도로 중시한다.</p>
+          <p><strong>🌊 리퀴드 (물 기사):</strong> 자유롭게 흐르는 액체 상태의 물. 활발하고 유연하며, 어떤 그릇에든 맞춰 형태를 바꿀 수 있는 적응력의 달인.</p>
+          <p><strong>☁️ 스팀 (수증기 마법사):</strong> 눈에 보이지 않는 기체 상태의 물. 가장 자유로운 존재이지만 형체가 없어 외롭다.</p>
+          <p><strong>🔥 칼로 (열에너지 대장):</strong> 물의 상태를 바꾸는 핵심 열쇠. 열에너지를 주면 분자가 빨라지고, 빼앗으면 분자가 느려진다.</p>
+          <p><strong>🪞 본질 할머니:</strong> 물이 어떤 상태이든 H₂O라는 화학식은 변하지 않는다는 진리를 지키는 현자.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">단단한 감옥에 갇힌 분자들</span>
+        <h2>🧊 차가운 얼음</h2>
+        <p>겨울 아침, 연못 위에 투명한 얼음이 얇게 얼어 있었습니다. 얼음 결정 하나 속에서, 아쿠아가 눈을 떴습니다. 주위를 둘러보니 모든 것이 질서정연했습니다. 수조 개의 물 분자가 육각형 패턴으로 완벽하게 정렬되어 있었고, 모두가 제자리에서 조금씩 진동할 뿐 움직이지 않았습니다.</p>
+        <p><span class="dialogue">"여기가 어디지? 왜 이렇게 꽉 막혀 있어?"</span> 아쿠아가 두리번거렸을 때, 글라시 왕자가 모습을 드러냈습니다. 투명하고 단단한 왕관을 쓴 당당한 모습이었습니다. <span class="dialogue">"여기는 얼음 왕국이야. 나, 글라시가 다스리는 곳이지. 모든 분자는 정해진 자리에서 정해진 만큼만 진동해. 이것이 완벽한 질서야."</span></p>
+        <p>얼음의 과학적 비밀은 이렇습니다. 물 분자(H₂O)는 수소 원자 두 개와 산소 원자 한 개로 이루어져 있습니다. 이 분자들이 <span class="highlight">수소 결합</span>이라는 특별한 힘으로 서로 연결되어 규칙적인 <span class="highlight">육각형 결정 구조</span>를 형성합니다. 이 육각형 구조 때문에 눈 결정이 육각형으로 나타나는 것이지요.</p>
+        <p>흥미로운 점은, 이 육각형 구조에는 빈 공간이 있다는 것입니다. 분자들이 규칙적으로 배열되면서 사이사이에 틈이 생기는데, 이 때문에 얼음은 액체 물보다 부피가 약 9퍼센트 더 큽니다. 다시 말해, <span class="highlight">얼음은 물보다 가볍습니다!</span> 이것이 바로 얼음이 물 위에 뜨는 이유입니다.</p>
+        <p><span class="dialogue">"이 질서가 영원히 계속되면 좋겠어."</span> 글라시가 말했습니다. 하지만 아쿠아는 단단한 결정 구조 안에서 답답함을 느끼고 있었습니다. <span class="dialogue">"나는 이것보다 더 자유로울 수 있을 것 같은데…"</span> 그때 멀리서 따뜻한 빛이 다가오고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">0도, 질서가 무너지는 경계선</span>
+        <h2>💫 녹는 순간</h2>
+        <p>따뜻한 빛의 정체는 칼로, 열에너지 대장이었습니다. 봄 햇살을 타고 연못 위에 내려앉은 칼로가 얼음 표면에 에너지를 불어넣기 시작했습니다. <span class="dialogue">"일어나! 움직여! 에너지를 줄 테니까 더 빨리 진동해!"</span></p>
+        <p>칼로가 에너지를 주자, 얼음 표면의 분자들이 점점 격렬하게 진동하기 시작했습니다. 글라시가 다급해졌습니다. <span class="dialogue">"안 돼! 질서를 유지해! 자리를 이탈하면 안 돼!"</span> 하지만 온도가 <span class="highlight">섭씨 0도</span>에 이르자, 놀라운 일이 벌어졌습니다. 분자들의 진동이 수소 결합을 끊을 만큼 강해진 것입니다. 규칙적이던 육각형 구조가 하나둘 깨지기 시작했습니다.</p>
+        <p>이것이 바로 <span class="highlight">'융해'</span>, 즉 녹는 현상입니다. 물의 녹는점(융해점)은 1기압에서 정확히 섭씨 0도입니다. 이 온도는 분자의 운동 에너지가 수소 결합의 힘을 이기는 정확한 경계선입니다.</p>
+        <p>그런데 여기서 신비로운 일이 일어납니다. 얼음이 녹는 동안, 칼로가 에너지를 계속 공급하는데도 온도가 올라가지 않는 것입니다! 온도계는 꿈쩍도 않고 0도를 가리키고 있었습니다. <span class="dialogue">"왜 온도가 안 올라가지?"</span> 아쿠아가 놀랐습니다.</p>
+        <p>본질 할머니가 나타나 설명했습니다. <span class="dialogue">"이 에너지는 분자를 빨리 움직이게 하는 데 쓰이는 것이 아니라, 분자 사이의 결합을 끊는 데 쓰이고 있단다. 이것을 <span class="highlight">'융해열'</span> 또는 '숨은열'이라고 해. 물 1그램의 얼음을 녹이는 데 약 80칼로리의 에너지가 필요하지."</span> 글라시가 비명을 질렀습니다. <span class="dialogue">"안 돼! 내 왕국이 무너지고 있어!"</span> 완벽한 결정 구조가 허물어지면서, 글라시의 왕관이 녹아내렸습니다. 하지만 아쿠아는 두려움 대신 해방감을 느꼈습니다. 자유가 시작되고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">자유롭게 흐르는 춤꾼들</span>
+        <h2>🌊 액체 물</h2>
+        <p>얼음이 완전히 녹자, 아쿠아는 전혀 다른 세계에 있었습니다. 분자들이 더 이상 제자리에 고정되어 있지 않고, 자유롭게 이동하면서 이리저리 미끄러지고 있었습니다. 수소 결합은 아직 남아있었지만, 끊어졌다 다시 연결되기를 반복하며 분자들의 이동을 허용했습니다.</p>
+        <p>리퀴드 기사가 물결을 타고 나타났습니다. 유연하고 활기 넘치는 모습이었습니다. <span class="dialogue">"환영해, 아쿠아! 여기가 액체의 세계야. 여기서는 모든 분자가 서로 가까이 있으면서도 자유롭게 움직여!"</span></p>
+        <p>액체 물의 특성은 독특합니다. 분자들 사이의 거리는 얼음보다 오히려 가깝습니다. 얼음의 육각형 구조가 무너지면서 빈 공간이 사라지기 때문이지요. 그래서 <span class="highlight">물은 얼음보다 밀도가 높고</span>, 같은 질량이면 부피가 더 작습니다. 이것이 얼음이 물 위에 뜨는 또 다른 이유입니다.</p>
+        <p>리퀴드가 자신의 능력을 보여주었습니다. <span class="dialogue">"나는 어떤 모양의 그릇에든 맞출 수 있어. 둥근 컵에 넣으면 둥글어지고, 네모 상자에 넣으면 네모가 되지. 하지만 부피는 일정하게 유지돼. 이것이 액체의 성질이야."</span></p>
+        <p><span class="highlight">일정한 부피를 가지지만 일정한 모양은 없다.</span> 이것이 액체의 핵심 특성입니다. 고체는 일정한 모양과 부피를 모두 가지지만, 액체는 모양만 자유롭게 바뀝니다. 물의 액체 상태는 생명에게 가장 중요합니다. 지구 생명의 모든 화학 반응은 액체 물 속에서 일어나고, 우리 몸의 약 60퍼센트가 물입니다. 리퀴드가 자랑스럽게 말했습니다. <span class="dialogue">"나 없이는 생명도 없어. 피도 물이고, 세포 안도 물이고, 바다도 물이야!"</span> 아쿠아는 자유롭게 흐르는 것이 좋았습니다. 하지만 칼로가 더 많은 에너지를 불어넣고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">100도, 탈출의 순간</span>
+        <h2>🫧 끓는점</h2>
+        <p>칼로가 에너지를 계속 공급하자, 물의 온도가 점점 올라갔습니다. 10도, 30도, 50도, 70도… 분자들의 운동이 점점 격렬해졌습니다. 아쿠아와 주변 분자들은 점점 빠르게 움직이며 서로 부딪쳤습니다.</p>
+        <p>그리고 마침내 <span class="highlight">100도</span>. 물 전체에서 격렬한 소동이 벌어졌습니다. 물 내부에서 큰 거품이 보글보글 올라오기 시작한 것입니다. 끓기 시작한 것이지요!</p>
+        <p><span class="dialogue">"끓는점이야!"</span> 칼로가 외쳤습니다. <span class="dialogue">"1기압에서 물의 끓는점은 정확히 섭씨 100도! 이 온도에서 물 분자들은 수소 결합을 완전히 끊고 기체로 탈출할 수 있어!"</span></p>
+        <p>끓는점은 액체의 증기압이 대기압과 같아지는 온도입니다. 이 온도 이하에서도 표면의 분자는 증발할 수 있지만, 끓는점에서는 액체 내부에서도 기화가 일어나면서 기포가 형성됩니다.</p>
+        <p>리퀴드가 걱정스러운 얼굴로 말했습니다. <span class="dialogue">"아쿠아, 여기서 더 에너지를 받으면 너는 기체가 돼. 형체가 사라지는 거야. 정말 괜찮겠어?"</span></p>
+        <p>그리고 녹을 때와 마찬가지로, 끓는 동안에도 온도가 올라가지 않는 현상이 나타났습니다. 100도에서 멈춘 채, 칼로가 공급하는 모든 에너지는 분자 간의 결합을 끊는 데 사용됩니다. 이것이 <span class="highlight">'기화열'</span>입니다. 물 1그램을 100도에서 수증기로 바꾸는 데 필요한 에너지는 무려 539칼로리! 융해열 80칼로리의 약 6.7배입니다. <span class="dialogue">"기화열이 이렇게 큰 이유는, 기체가 되려면 분자 사이의 결합을 완전히 끊어야 하기 때문이야."</span> 본질 할머니가 설명했습니다. 아쿠아는 결심했습니다. <span class="dialogue">"가볼게. 기체의 세계로!"</span> 그리고 격렬한 에너지와 함께 액체의 표면을 뚫고 하늘로 솟아올랐습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">보이지 않는 자유, 형체 없는 존재</span>
+        <h2>☁️ 수증기</h2>
+        <p>아쿠아가 기체가 된 순간, 세상이 완전히 달라졌습니다. 주위에 다른 분자가 거의 없었습니다. 액체일 때는 수조 개의 분자가 바글바글했는데, 기체가 되니 분자 사이의 거리가 엄청나게 벌어진 것입니다. 기체 상태에서 분자 간 거리는 액체의 약 10배, 부피로 따지면 약 1,000배나 됩니다.</p>
+        <p>스팀 마법사가 안개처럼 피어오르며 나타났습니다. <span class="dialogue">"환영해, 아쿠아. 여기가 기체의 세계야. 가장 자유로운 곳."</span></p>
+        <p>수증기의 특성은 놀랍습니다. 우선, <span class="highlight">진짜 수증기는 눈에 보이지 않습니다!</span> 주전자에서 나오는 하얀 김은 사실 수증기가 아니라, 수증기가 공기 중에서 냉각되어 다시 작은 물방울로 변한 것입니다. 진짜 수증기는 주전자 주둥이 바로 위의 투명한 부분에 있습니다.</p>
+        <p><span class="dialogue">"나는 보이지 않아."</span> 스팀이 쓸쓸하게 말했습니다. <span class="dialogue">"형체도 없고, 모양도 없어. 컵에 담을 수도, 손으로 잡을 수도 없지. 가장 자유롭지만 가장 외로운 존재야."</span></p>
+        <p>기체는 <span class="highlight">일정한 모양도, 일정한 부피도 없습니다.</span> 담는 용기의 모양과 크기에 따라 퍼져나갑니다. 분자들이 사방으로 날아다니며 용기의 벽에 부딪히는데, 이 부딪힘이 바로 '기압'의 원인입니다.</p>
+        <p>아쿠아는 자유로웠지만, 스팀의 외로움도 느꼈습니다. <span class="dialogue">"얼음일 때는 너무 꽉 막혀있었고, 물일 때는 적당히 좋았고, 수증기는 너무 자유로워서 외로워. 진짜 나는 어떤 모습이 맞는 걸까?"</span> 이 질문에 하늘 저 높은 곳에서 본질 할머니의 목소리가 들려왔습니다. <span class="dialogue">"세 모습 모두 진짜 너란다, 아쿠아."</span> 하지만 아쿠아는 아직 완전히 이해하지 못했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">여섯 가지 변신의 이름</span>
+        <h2>🔄 상태 변화</h2>
+        <p>본질 할머니가 아쿠아를 특별한 곳으로 데려갔습니다. 거대한 삼각형 모양의 방이었는데, 꼭짓점 세 곳에 각각 글라시, 리퀴드, 스팀이 서 있었습니다. 그리고 그들을 연결하는 여섯 개의 길이 있었습니다.</p>
+        <p><span class="dialogue">"물의 상태 변화에는 여섯 가지 이름이 있단다."</span> 할머니가 설명하기 시작했습니다. 고체에서 액체로 변하는 것이 <span class="highlight">'융해(녹음)'</span>, 액체에서 고체로 변하는 것이 <span class="highlight">'응고(얼음)'</span>. 액체에서 기체로 변하는 것이 <span class="highlight">'기화(증발·끓음)'</span>, 기체에서 액체로 변하는 것이 <span class="highlight">'액화(응결)'</span>. 고체에서 바로 기체로 변하는 것이 <span class="highlight">'승화'</span>, 기체에서 바로 고체로 변하는 것도 '승화'라고 합니다.</p>
+        <p><span class="dialogue">"승화?"</span> 아쿠아가 놀랐습니다. <span class="dialogue">"액체를 거치지 않고 바로 변한다고?"</span> <span class="dialogue">"그래. 겨울에 빨래를 밖에 널면 얼었다가 마르는 것, 그것이 승화야. 얼음이 액체 물을 거치지 않고 바로 수증기가 되는 거지. 냉동실의 얼음이 시간이 지나면 작아지는 것도 승화 때문이야."</span></p>
+        <p>칼로가 여섯 갈래 길 사이를 바쁘게 오가며 설명했습니다. <span class="dialogue">"융해, 기화, 승화는 내가 에너지를 줄 때 일어나. 분자를 더 빠르게 움직이게 하는 거지. 반대로 응고, 액화, 승화(기체→고체)는 내가 에너지를 빼앗을 때 일어나. 분자를 느리게 만드는 거야."</span></p>
+        <p>핵심은 이것입니다. <span class="highlight">열에너지를 흡수하면 고체→액체→기체 방향으로, 열에너지를 방출하면 기체→액체→고체 방향으로 상태가 변합니다.</span> 모든 상태 변화는 에너지의 출입으로 설명됩니다. 글라시가 조용히 물었습니다. <span class="dialogue">"그러면 녹는 것은 죽는 것이 아니라, 다른 모습으로 변하는 것일 뿐인 거야?"</span> 본질 할머니가 미소 지었습니다. <span class="dialogue">"바로 그거란다, 글라시."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">같은 분자, 다른 춤</span>
+        <h2>💃 분자의 배열</h2>
+        <p>상태 변화의 이름을 배운 아쿠아에게, 본질 할머니가 더 깊은 비밀을 보여주었습니다. <span class="dialogue">"아쿠아, 세 가지 상태에서 달라지는 것은 네 모습만이 아니야. 너와 친구들이 춤추는 방식이 달라지는 거란다."</span></p>
+        <p>할머니가 마법의 현미경을 꺼내 세 가지 상태를 보여주었습니다. <span class="highlight">고체 상태의 얼음</span>에서, 분자들은 규칙적인 격자 구조로 배열되어 있었습니다. 각 분자가 정해진 자리에서 작게 진동하고 있을 뿐, 자리를 이탈하지 않았습니다. 마치 교실에서 자기 자리에 앉아 조금씩 몸을 흔드는 학생들처럼요. 분자 사이의 간격은 넓고(육각형 구조의 빈 공간 때문에), 배열은 규칙적이었습니다.</p>
+        <p><span class="highlight">액체 상태의 물</span>에서, 분자들은 규칙적 배열이 깨지고 무질서하게 섞여 있었습니다. 하지만 분자 사이의 거리는 오히려 가까워졌습니다. 분자들은 서로 미끄러지듯 이동하면서도 적당한 거리를 유지했습니다. 댄스 파티에서 파트너를 계속 바꾸며 춤추는 것과 비슷하지요.</p>
+        <p><span class="highlight">기체 상태의 수증기</span>에서, 분자들은 완전히 흩어져서 사방으로 빠르게 날아다녔습니다. 분자 사이의 거리가 매우 멀고, 서로 부딪힐 때만 잠깐 상호작용합니다. 운동장에서 제각각 달려다니는 아이들처럼요.</p>
+        <p><span class="dialogue">"보이지, 아쿠아?"</span> 할머니가 말했습니다. <span class="dialogue">"세 상태에서 달라지는 것은 분자 자체가 아니라 분자의 배열과 운동 방식이야. <span class="highlight">H₂O라는 분자는 완전히 동일해.</span> 달라지는 것은 분자들이 얼마나 가까이 있고, 얼마나 빠르게 움직이느냐뿐이야."</span> 아쿠아의 눈에서 비늘이 떨어지는 듯했습니다. <span class="dialogue">"나는 변하지 않았어. 내 주변의 배열이 변한 거야!"</span> 진짜 변화의 비밀은 분자 자체가 아니라 분자 사이의 관계에 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">열을 주고받는 숨겨진 거래</span>
+        <h2>⚡ 에너지의 이동</h2>
+        <p>칼로가 아쿠아에게 마지막으로 중요한 비밀을 알려주었습니다. <span class="dialogue">"아쿠아, 모든 상태 변화의 뒤에는 에너지의 거래가 있어."</span></p>
+        <p>상태 변화 과정에서의 에너지 이동은 매우 정확한 법칙을 따릅니다. <span class="highlight">에너지를 흡수하는 과정</span>은 융해, 기화, 승화이고, <span class="highlight">에너지를 방출하는 과정</span>은 응고, 액화, 승화(기체에서 고체)입니다.</p>
+        <p><span class="dialogue">"중요한 것은, 상태 변화 중에는 온도가 일정하게 유지된다는 거야."</span> 칼로가 그래프를 보여주었습니다. 가로축은 공급한 열에너지, 세로축은 온도. 얼음에 열을 주면 온도가 올라가다가 0도에서 멈춥니다. 이 구간이 융해 구간으로, 얼음이 모두 녹을 때까지 온도는 0도를 유지합니다. 녹은 뒤 다시 온도가 올라가다가 100도에서 또 멈춥니다. 물이 모두 끓어 수증기가 될 때까지 100도를 유지하지요.</p>
+        <p><span class="dialogue">"이 평평한 구간의 에너지는 어디로 가는 걸까?"</span> 아쿠아가 물었습니다. <span class="dialogue">"분자 간 결합을 끊는 데 쓰이는 거야. 온도를 올리는 것이 아니라, 상태를 바꾸는 데 사용되는 에너지지."</span></p>
+        <p>이것이 바로 <span class="highlight">'잠열'</span>의 개념입니다. 겉으로는 온도 변화가 없어 보이지만, 내부에서는 분자 배열의 거대한 변혁이 일어나고 있는 것입니다. 이 원리는 실생활에서 매우 중요합니다. 여름에 물을 뿌리면 시원한 이유는, 물이 증발하면서 주변의 열을 빼앗기 때문이고, 한겨울에 과수원에 물을 뿌리면 물이 얼면서 응고열을 방출하여 과일을 보호하는 것도 같은 원리입니다. <span class="dialogue">"에너지는 사라지지 않아."</span> 칼로가 말했습니다. <span class="dialogue">"이동할 뿐이지. 내가 주면 변하고, 빼앗으면 돌아오고. 에너지 보존 법칙은 절대 깨지지 않는단다."</span> 변화의 이면에는 항상 에너지의 정확한 계산이 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">보이지 않던 것이 다시 보인다</span>
+        <h2>🪟 응결 현상</h2>
+        <p>여행의 마지막에 가까워질 무렵, 아쿠아는 수증기 상태에서 신비로운 경험을 했습니다. 따뜻한 실내에서 수증기로 떠다니다가, 차가운 유리창에 닿는 순간이었습니다. 갑자기 온도가 뚝 떨어지면서, 아쿠아의 움직임이 느려졌습니다. 칼로가 에너지를 빼앗아간 것이지요.</p>
+        <p>분자들의 운동이 약해지면서, 서로 다시 가까워지기 시작했습니다. 수소 결합이 다시 형성되었습니다. 그리고 아쿠아는 다시 작은 물방울이 되어 유리창에 맺혔습니다. 이것이 바로 <span class="highlight">'응결'</span>입니다. <span class="dialogue">"유리창의 물방울은 바로 나였어!"</span> 아쿠아가 깨달았습니다.</p>
+        <p>응결은 기체 상태의 수증기가 냉각되어 액체 물로 변하는 현상입니다. 차가운 음료수병 표면에 물방울이 맺히는 것, 안경이 김이 서리는 것, 아침 풀잎의 이슬, 욕실 거울에 김이 서리는 것, 이 모든 것이 응결 현상입니다.</p>
+        <p><span class="highlight">구름의 형성도 응결입니다!</span> 태양열에 의해 바다와 호수에서 증발한 수증기가 상공으로 올라갑니다. 높은 곳은 온도가 낮으므로, 수증기가 냉각되어 아주 작은 물방울이나 얼음 결정으로 변합니다. 이것이 모여 구름이 되고, 물방울이 충분히 커지면 비가 되어 내립니다.</p>
+        <p><span class="dialogue">"나는 바다에서 증발하여 구름이 되고, 비가 되어 강으로 흐르고, 다시 바다로 돌아가. 이것이 <span class="highlight">'물의 순환'</span>이야!"</span> 리퀴드가 자랑스럽게 말했습니다. 물의 순환은 태양 에너지가 구동하는 거대한 시스템입니다. 증발, 응결, 강수, 유출이 끊임없이 반복되면서, 지구의 물은 약 46억 년 동안 같은 물을 돌려 쓰고 있습니다. 스팀이 미소 지었습니다. <span class="dialogue">"보이지 않던 내가, 응결을 통해 다시 보이게 되었어. 사라진 게 아니었어. 형태만 바뀌었을 뿐이야."</span> 사라짐은 없었습니다. 변신만 있었을 뿐.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">"모습은 변해도 본질은 같다"</span>
+        <h2>🌟 변해도 물이다</h2>
+        <p>모든 여행이 끝나고, 삼각형 방의 한가운데에 글라시, 리퀴드, 스팀, 칼로, 그리고 아쿠아가 모였습니다. 본질 할머니가 마지막 이야기를 들려줄 차례였습니다.</p>
+        <p><span class="dialogue">"자, 이제 처음 질문으로 돌아가자."</span> 할머니가 아쿠아를 바라보았습니다. <span class="dialogue">"넌 여행을 시작할 때 물었지. '변해도 나인 걸까?'라고."</span> 아쿠아가 고개를 끄덕였습니다.</p>
+        <p>할머니가 마법의 거울을 꺼냈습니다. 거울 속에 세 가지 모습이 동시에 비쳤습니다. 투명한 육각형 결정, 자유롭게 흐르는 물방울, 보이지 않는 기체. 형태는 완전히 달랐지만, 거울의 가장 깊은 곳에 비친 것은 동일했습니다. <span class="highlight">H₂O. 수소 두 개와 산소 하나의 결합.</span></p>
+        <p><span class="dialogue">"봐, 아쿠아. 네가 얼음이든 물이든 수증기이든, H₂O라는 네 화학식은 단 한 번도 변한 적이 없어."</span> 글라시가 처음으로 미소 지었습니다. <span class="dialogue">"녹는 것은 죽는 것이 아니었어. 다른 모습으로 사는 것이었구나."</span> 리퀴드가 고개를 끄덕였습니다. <span class="dialogue">"고체, 액체, 기체는 적이 아니라 같은 존재의 세 얼굴이야."</span> 스팀이 눈물을 흘렸습니다. <span class="dialogue">"보이지 않아도 나는 여기 있었어. 사라진 게 아니라 변한 것뿐이야."</span></p>
+        <p>칼로가 정리했습니다. <span class="dialogue">"상태 변화는 물질의 변화가 아니라 에너지의 변화야. 내가 에너지를 주면 분자가 더 자유로워지고, 빼앗으면 다시 질서가 생기지. 하지만 분자 자체는 변하지 않아."</span> 본질 할머니가 마지막으로 모두를 감싸 안으며 말했습니다. <span class="dialogue">"기억하렴. <span class="highlight">모습은 변해도 본질은 같다.</span> 이것은 물의 이야기이자 우리 모두의 이야기란다. 성장하면서 겉모습이 바뀌고, 환경에 따라 역할이 달라져도, 네 안의 본질은 변하지 않아. 얼음처럼 단단할 때도, 물처럼 유연할 때도, 수증기처럼 보이지 않을 때도, 너는 여전히 너란다."</span></p>
+        <p>아쿠아가 활짝 웃었습니다. <span class="dialogue">"이제 알겠어. 나는 변하는 것이 아니라, 세 가지 모습을 가진 하나의 존재야. 변해도 나야. 어떤 모습이든, 나는 H₂O야!"</span> 그날 이후 아쿠아는 더 이상 변화를 두려워하지 않았습니다. 얼어도 괜찮고, 녹아도 괜찮고, 증발해도 괜찮습니다. 어떤 모습이든, 본질은 변하지 않으니까요.</p>
+      </div>
+    </section>
+
+    <!-- 교훈 섹션 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/00.jpg">
+      <div class="story-card">
+        <span class="chapter">🌱 교훈</span>
+        <span class="theme">모습은 변해도 본질은 같다</span>
+        <h2>이야기 속 교훈</h2>
+        <p>이 이야기는 우리가 매일 마시고, 씻고, 요리하는 물의 과학적 비밀입니다. 물은 <span class="highlight">고체(얼음), 액체(물), 기체(수증기)</span> 세 가지 상태로 존재하며, 열에너지의 출입에 따라 상태가 변합니다. 하지만 어떤 상태이든 <span class="highlight">H₂O라는 화학식</span>, 즉 분자의 본질은 변하지 않습니다.</p>
+        <p><span class="highlight">모습은 변해도 본질은 같습니다.</span> 이것은 물의 진리이자 삶의 진리입니다. 환경이 바뀌고, 역할이 달라지고, 겉모습이 변해도, 자신의 본질을 아는 사람은 흔들리지 않습니다.</p>
+        <p>오늘 물 한 잔을 마실 때 기억해주세요. 그 물은 구름이었고, 비였고, 강이었고, 바다였고, 수증기였고, 다시 물이 된 것입니다. 46억 년 동안 변하면서도 변하지 않은, 가장 오래된 여행자입니다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">← 돌아가기</button>
+  </div>
+
+  <script>
+    // 배경 이미지 변경 및 카드 애니메이션 스크립트
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // 배경 이미지 변경
+          const bg = entry.target.getAttribute('data-bg');
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          // 카드 활성화
+          const card = entry.target.querySelector('.story-card');
+          if (card) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }, {
+      threshold: 0.5
+    });
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+  </script>
+</body>
+</html>

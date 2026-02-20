@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📚 실수투성이 빨간 머리 소녀, 두려움을 넘어 가족을 찾다</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학01/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(211, 47, 47, 0.15);
+      color: #b71c1c;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #d32f2f;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #b71c1c;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #ef9a9a;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(211, 47, 47, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(239, 154, 154, 0.3);
+    }
+
+    .intro-content .conflict h3 {
+      color: #ef9a9a;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(211, 47, 47, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(183, 28, 28, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+
+    /* 엔딩 섹션 */
+    .ending-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .ending-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+    }
+
+    .ending-content h2 {
+      font-size: 36px;
+      color: #ef9a9a;
+      margin-bottom: 30px;
+    }
+
+    .ending-content .lesson {
+      background: rgba(211, 47, 47, 0.2);
+      padding: 30px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(239, 154, 154, 0.3);
+    }
+
+    .ending-content .lesson h3 {
+      color: #ef9a9a;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .ending-content .lesson p {
+      color: #e0e0e0;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .ending-content .themes {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+    }
+
+    .ending-content .themes h3 {
+      color: #ef9a9a;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .ending-content .themes p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .ending-content {
+        padding: 40px 30px;
+      }
+
+      .ending-content h2 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📚 실수투성이 빨간 머리 소녀,<br>두려움을 넘어 가족을 찾다</h1>
+        <p class="subtitle">
+          원작: L.M. 몽고메리 『빨간 머리 앤』 (Anne of Green Gables)<br>
+          교과기반 창작도서 · 세계문학 01
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>▸ 앤 셜리:</strong> 주인공. 고아 출신의 빨간 머리 소녀. 상상력이 풍부하고 말이 많으며, 실수를 반복하지만 결코 포기하지 않는 강인한 마음의 소유자.</p>
+          <p><strong>▸ 매튜 커스버트:</strong> 마릴라의 오빠. 과묵하고 수줍지만 따뜻한 마음의 노인. 앤의 가장 든든한 지지자이자 정서적 아버지.</p>
+          <p><strong>▸ 마릴라 커스버트:</strong> 매튜의 여동생. 엄격하고 현실적이지만 속 깊은 사랑을 품고 있다. 앤과의 갈등을 통해 스스로도 변화한다.</p>
+          <p><strong>▸ 다이애나 배리:</strong> 앤의 영혼의 단짝. 다정하고 충실한 친구로, 우정의 시련을 함께 이겨낸다.</p>
+          <p><strong>▸ 길버트 블라이스:</strong> 앤의 라이벌이자 숨은 조력자. 앤을 놀렸다가 평생의 경쟁과 우정의 관계가 시작된다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 핵심 갈등 구조</h3>
+          <p><strong>▸ 내면 갈등:</strong> 앤 vs 자기 자신 — 버림받은 상처, 자존심, 열등감과의 싸움</p>
+          <p><strong>▸ 관계 갈등:</strong> 앤 vs 마릴라 — 규칙과 자유, 현실과 상상의 충돌</p>
+          <p><strong>▸ 라이벌 갈등:</strong> 앤 vs 길버트 — 자존심에서 시작된 경쟁이 성장의 동력이 됨</p>
+          <p><strong>▸ 사회 갈등:</strong> 앤 vs 에이번리 사회 — 고아라는 편견, 외모에 대한 놀림</p>
+          <p><strong>▸ 운명 갈등:</strong> 앤 vs 현실 — 매튜의 죽음, 꿈과 책임 사이의 선택</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">세상 끝에서 온 아이</span>
+        <h2>빈 마차 위의 작은 소녀</h2>
+        <p>📌 <span class="highlight">중심 문장: 버림받은 아이에게도 하늘은 꽃을 피울 장소를 준비해둔다.</span></p>
+        <p>봄바람이 프린스에드워드 섬의 붉은 흙길 위를 쓸고 지나가던 어느 오후, 브라이트리버 역에 홀로 앉아 있는 소녀가 있었다. 이름은 앤 셜리. 나이는 열한 살. 머리카락은 당근처럼 붉고, 얼굴에는 주근깨가 별자리처럼 흩뿌려져 있었다. 앤은 낡은 가방 하나를 무릎 위에 올려놓고, 세상에서 가장 큰 눈으로 하늘을 올려다보고 있었다.</p>
+        <p>고아원에서 보낸 세월은 길고 외로웠다. 밤마다 천장의 얼룩을 친구 삼아 이야기를 지어내고, 창문 너머 나무에게 이름을 붙여주며 버텼다. <span class="dialogue">"넌 보니야, 그리고 저 큰 나무는 눈의 여왕이야."</span> 아무도 들어주지 않는 이야기를 앤은 혼자서 수백 번 되풀이했다.</p>
+        <p>그러던 어느 날, 한 통의 편지가 도착했다. 에이번리라는 마을에서 한 남매가 고아 소년을 데려오고 싶다는 내용이었다. 고아원 원장은 앤을 내보내며 말했다. <span class="dialogue">"운이 좋은 거야, 앤. 잘해봐."</span> 하지만 앤은 알지 못했다. 그 집에서 원한 것은 '소녀'가 아니라 '소년'이었다는 사실을.</p>
+        <p>기차에서 내린 앤은 역에서 자신을 마중 나온 매튜 커스버트를 보았다. 키가 크고 말이 없는 노인이었다. 매튜는 앤을 보자마자 당황했지만, 차마 아무 말도 하지 못하고 마차에 태웠다. 마차가 붉은 흙길을 따라 달릴 때, 앤은 길가의 벚꽃나무를 보고 외쳤다. <span class="dialogue">"저 나무는 '환영의 여왕'이라고 불러야 해요! 세상에서 가장 아름다운 나무예요!"</span></p>
+        <p>매튜는 처음으로 살짝 미소 지었다. 아무도 원하지 않았던 아이가, 세상에서 가장 아름다운 것들을 발견하며 새로운 집을 향해 가고 있었다. 하늘은 그 아이에게도 분명히 꽃 피울 자리를 마련해두고 있었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">소년 대신 온 소녀</span>
+        <h2>실수로 시작된 인연</h2>
+        <p>📌 <span class="highlight">중심 문장: 때로는 실수가 운명보다 더 아름다운 시작이 된다.</span></p>
+        <p>그린게이블즈에 도착했을 때, 앞마당에 팔짱을 끼고 서 있던 마릴라 커스버트는 앤을 보자마자 인상을 찌푸렸다. <span class="dialogue">"매튜, 이건 소년이 아니잖아. 우리가 필요한 건 밭일을 도울 소년이었어."</span> 마릴라의 목소리는 칼날처럼 단호했다.</p>
+        <p>앤은 그 말을 듣는 순간, 가슴이 쿵 내려앉았다. 또다시 버림받는 것이다. 고아원에서도, 맡겨졌던 집에서도 늘 같은 말을 들었다. <span class="dialogue">"넌 필요 없어."</span></p>
+        <p>그날 밤, 앤은 다락방 침대에 누워 소리 없이 울었다. 베개에 얼굴을 묻고 <span class="dialogue">"나를 원하는 사람은 세상에 아무도 없나 봐"</span> 하고 중얼거렸다. 하지만 매튜는 달랐다. 그는 마릴라에게 조심스럽게 말했다. <span class="dialogue">"마릴라, 그 아이를 다시 보내는 건... 너무 가혹하지 않겠나. 저렇게 열심히 말하는 아이는 처음 봤어."</span></p>
+        <p>마릴라는 한숨을 쉬었다. 사실 마릴라도 앤의 눈빛이 마음에 걸렸다. 세상에 대한 두려움과 간절한 기대가 동시에 담긴 눈이었다.</p>
+        <p>다음 날 아침, 마릴라는 앤에게 시험 기간을 주기로 했다. <span class="dialogue">"일단 며칠 있어봐. 하지만 말이 너무 많으면 안 돼."</span> 앤은 눈물을 글썽이며 대답했다. <span class="dialogue">"정말요? 저... 정말 여기 있어도 되는 거예요? 아, 마릴라 아줌마! 이건 제 인생에서 가장 멋진 날이에요! 아니, 멋진 날이 될 거예요!"</span></p>
+        <p>실수로 시작된 만남이었지만, 그 실수 속에 운명의 씨앗이 이미 심어져 있었다. 마릴라는 아직 몰랐다. 이 수다스러운 소녀가 자신의 삶을 얼마나 크게 바꾸어놓을지를.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">앤의 마법 같은 말들</span>
+        <h2>상상의 날개를 펼치다</h2>
+        <p>📌 <span class="highlight">중심 문장: 상상력은 외로운 아이가 세상과 대화하는 유일한 언어이다.</span></p>
+        <p>앤에게는 특별한 능력이 있었다. 세상의 모든 것에 이름을 붙이고, 평범한 풍경을 동화 속 왕국으로 바꾸는 능력이었다. 그린게이블즈 앞의 작은 연못을 보고 앤은 외쳤다. <span class="dialogue">"저건 '빛나는 호수'라고 불러야 해요! 저녁 햇살이 비치면 호수 위에 다이아몬드가 수천 개 뿌려진 것 같잖아요!"</span></p>
+        <p>벚나무 길은 '환희의 하얀 길'이 되었고, 숲속 오솔길은 '연인의 산책로'가 되었다. 마릴라는 처음에 이런 앤의 습관이 못마땅했다. <span class="dialogue">"쓸데없는 소리 좀 그만해라, 앤. 연못은 그냥 연못이야."</span></p>
+        <p>하지만 앤은 멈추지 않았다. <span class="dialogue">"마릴라 아줌마, 상상하지 않으면 세상이 너무 슬퍼요. 저는 고아원에서 벽 얼룩을 보며 그 안에 공주님이 사는 성을 그렸어요. 그게 없었으면 저는 너무 외로워서 견딜 수 없었을 거예요."</span></p>
+        <p>그 말을 듣는 순간, 마릴라의 표정이 미세하게 흔들렸다. 어린 시절 자신도 몰래 들판에 누워 구름 속에서 이야기를 찾았던 기억이 떠올랐기 때문이다.</p>
+        <p>매튜는 앤의 이야기를 들을 때마다 조용히 미소 지었다. 밭에서 돌아와 저녁 식탁에 앉으면, 앤이 오늘 학교 가는 길에 본 나비와 대화한 이야기를 들려주었다. <span class="dialogue">"그 나비는 분명 먼 나라에서 편지를 가져온 전령이었을 거예요, 매튜 아저씨!"</span></p>
+        <p>앤의 상상력은 단순한 꿈이 아니었다. 그것은 상처받은 마음이 스스로를 치유하는 방법이었고, 차가운 세상에 따뜻한 색을 입히는 마법이었다. 그리고 그 마법은 조금씩, 그린게이블즈의 딱딱한 공기마저 부드럽게 녹이기 시작했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">케이크 사건과 머리 염색 소동</span>
+        <h2>폭풍 같은 실수들</h2>
+        <p>📌 <span class="highlight">중심 문장: 실수는 부끄러운 것이 아니라, 성장이 시작되는 출발선이다.</span></p>
+        <p>앤의 그린게이블즈 생활은 사고의 연속이었다. 가장 유명한 것은 '링컨 부인의 케이크 사건'이었다. 마릴라의 오랜 친구인 앨런 부인을 초대한 날, 앤은 특별한 케이크를 굽겠다고 자원했다. <span class="dialogue">"마릴라 아줌마, 제가 세상에서 가장 맛있는 케이크를 만들 거예요!"</span></p>
+        <p>앤은 자신만만하게 반죽을 만들고 오븐에 넣었다. 그런데 케이크를 한 입 먹은 앨런 부인의 표정이 일그러졌다. 앤이 바닐라 대신 진통제 연고를 넣어버린 것이다!</p>
+        <p>앤은 너무 창피해서 다락방으로 뛰어 올라가 이불을 뒤집어쓰고 울었다. <span class="dialogue">"저는 이 세상에서 가장 불행한 소녀예요! 다시는 부엌에 들어가지 않을 거예요!"</span> 마릴라는 한숨을 쉬면서도 속으로 웃음이 나왔다.</p>
+        <p>그 사건이 채 잊히기도 전에, 이번에는 머리 염색 사건이 터졌다. 앤은 자신의 빨간 머리카락이 늘 싫었다. 어느 날, 떠돌이 상인에게서 "머리를 까만색으로 바꿔준다"는 염색약을 샀다. 결과는 참담했다. 머리가 까만색은커녕 끔찍한 초록색으로 변해버린 것이다! 결국 마릴라가 앤의 머리카락을 아주 짧게 잘라주어야 했다.</p>
+        <p>앤은 거울을 보며 눈물을 흘렸다. <span class="dialogue">"이건 제 허영심에 대한 벌이에요."</span> 마릴라가 조용히 말했다. <span class="dialogue">"그래, 이게 교훈이야, 앤. 겉모습을 바꾸려고 하지 말고 속을 채워라."</span> 앤은 고개를 끄덕였다.</p>
+        <p>매번 실수할 때마다 앤은 울고, 반성하고, 다시 일어섰다. 실수는 앤을 무너뜨리는 것이 아니라, 한 걸음씩 더 단단한 아이로 만들어가고 있었다. 매튜는 그런 앤을 볼 때마다 조용히 생각했다. '저 아이는 분명 괜찮은 어른이 될 거야.'</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">학교에서의 첫날</span>
+        <h2>낯선 교실, 낯선 눈빛들</h2>
+        <p>📌 <span class="highlight">중심 문장: 새로운 세상에 발을 들이는 용기가 진짜 모험의 시작이다.</span></p>
+        <p>에이번리 학교의 첫날, 앤은 마릴라가 만들어준 소박한 원피스를 입고 학교 문 앞에 섰다. 심장이 쿵쿵 뛰었다. 제대로 된 학교에 다녀본 적이 없었기 때문이다.</p>
+        <p>교실에 들어서자 스무 개가 넘는 눈이 일제히 앤을 향했다. 수군거리는 소리가 들렸다. <span class="dialogue">"쟤 누구야?" "고아원에서 왔대." "머리 좀 봐, 완전 당근이다."</span> 앤은 얼굴이 뜨거워졌지만 꾹 참고 빈자리에 앉았다. 필립스 선생님은 앤에게 별 관심이 없었고, 아이들은 호기심과 경계심이 뒤섞인 눈으로 앤을 바라보았다.</p>
+        <p>하지만 앤에게는 숨겨진 무기가 있었다. 바로 독서와 공부에 대한 열정이었다. 고아원에서 손에 닿는 책이란 책은 모두 읽었던 앤은, 수업 시간에 선생님의 질문에 막힘없이 대답했다. 특히 영어 낭독 시간에 앤이 시를 읽자 교실이 조용해졌다. 앤의 목소리에는 진심이 담겨 있었고, 단어 하나하나가 살아서 춤을 추는 것 같았다.</p>
+        <p>그날 이후 몇몇 아이들이 앤에게 다가왔다. 하지만 모든 것이 순탄하지만은 않았다. 반에서 가장 잘난 척하는 소년 길버트 블라이스가 앤의 머리를 보고 <span class="dialogue">"당근!"</span>이라고 놀렸을 때, 앤은 분노에 눈이 번쩍 뒤집혔다. 손에 들고 있던 석판을 들어 길버트의 머리 위에 쾅 내리쳤다!</p>
+        <p>교실은 순식간에 난리가 났다. 필립스 선생님에게 벌을 받고 교실 앞에 서야 했지만, 앤은 뉘우치지 않았다. <span class="dialogue">"그 사람이 먼저 제 머리카락을 모욕했어요!"</span></p>
+        <p>첫날부터 폭풍 같은 시작이었지만, 앤은 이미 이 낯선 세상에 자신만의 발자국을 찍기 시작했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">다이애나와의 우정</span>
+        <h2>영혼의 단짝</h2>
+        <p>📌 <span class="highlight">중심 문장: 진정한 친구는 마음의 빈자리를 채워주는 또 하나의 가족이다.</span></p>
+        <p>앤이 그린게이블즈에서 얻은 가장 큰 선물은 바로 다이애나 배리였다. 검은 머리에 장밋빛 볼을 가진 다이애나는 앤의 이웃집 소녀였다. 두 사람이 처음 만난 날, 앤은 다이애나의 손을 잡고 진지하게 말했다. <span class="dialogue">"다이애나, 우리 영혼의 단짝이 되자. 나는 평생 너를 사랑하겠다고 맹세할 수 있어."</span></p>
+        <p>다이애나는 처음에 어리둥절했지만, 앤의 진심 어린 눈을 보고 웃으며 고개를 끄덕였다. <span class="dialogue">"그래, 앤. 우리 영혼의 단짝이야."</span></p>
+        <p>그날부터 두 사람은 그야말로 한 몸처럼 지냈다. 학교에 같이 걸어가고, 숲속에서 비밀 요정 클럽을 만들고, 시냇가에서 발을 담그며 미래의 꿈을 이야기했다. 앤은 다이애나에게 자신이 고아원에서 겪었던 외로운 이야기들을 들려주었고, 다이애나는 조용히 듣고 앤의 손을 꼭 잡아주었다.</p>
+        <p>하지만 이 우정에도 폭풍이 찾아왔다. 어느 날 앤이 다이애나를 집에 초대해서 차를 대접했는데, 실수로 포도주스 대신 포도주를 따라준 것이다! 다이애나는 취해서 비틀거리며 집에 돌아갔고, 다이애나의 어머니 배리 부인은 격노했다. <span class="dialogue">"다시는 그 앤이라는 아이와 놀지 마!"</span></p>
+        <p>앤은 절망에 빠졌다. <span class="dialogue">"제 유일한 친구를 잃었어요, 마릴라 아줌마. 이제 저는 영원히 혼자예요."</span></p>
+        <p>하지만 우정의 끈은 그리 쉽게 끊어지지 않았다. 며칠 후 다이애나의 여동생이 심하게 아팠을 때, 앤이 달려가서 응급처치를 하여 아이를 살린 것이다. 배리 부인은 앤에게 감사하며 마침내 두 소녀의 우정을 허락했다.</p>
+        <p>진짜 친구란 시련 속에서 더 단단해지는 법이다. 앤과 다이애나는 그날 부둥켜안고 울었고, 그 눈물은 우정이라는 꽃에 내리는 가장 따뜻한 봄비였다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">길버트와의 전쟁</span>
+        <h2>자존심과 분노 사이</h2>
+        <p>📌 <span class="highlight">중심 문장: 자존심은 성장의 갑옷이지만, 때로는 마음을 가두는 감옥이 된다.</span></p>
+        <p>길버트 블라이스. 에이번리 학교에서 가장 똑똑하고 잘생긴 소년이었다. 누구와도 잘 어울리는 인기 많은 아이. 하지만 앤에게 길버트는 세상에서 가장 미운 사람이었다. 그 이유는 단 한마디 때문이었다. <span class="dialogue">"당근!"</span></p>
+        <p>석판으로 머리를 맞은 뒤, 길버트는 앤에게 진심으로 사과했다. <span class="dialogue">"앤, 미안해. 정말 장난이었어. 화내지 마."</span> 하지만 앤은 코를 높이 들고 대답했다. <span class="dialogue">"길버트 블라이스, 나는 당신을 절대 용서하지 않을 거예요. 절대로!"</span></p>
+        <p>앤의 자존심은 바위처럼 단단했다. 길버트가 아무리 친절하게 대해도, 앤은 그를 철저히 무시했다. 이 갈등은 흥미로운 결과를 낳았다. 앤과 길버트는 학교에서 치열한 학업 경쟁을 벌이기 시작한 것이다. 수학 시험에서 길버트가 1등을 하면, 다음 영어 시험에서 앤이 반드시 1등을 차지했다. 두 사람의 경쟁은 반 전체를 들썩이게 했고, 선생님조차 흥미롭게 지켜보았다.</p>
+        <p>앤은 밤늦게까지 책을 읽으며 이를 악물었다. <span class="dialogue">"길버트 블라이스에게 절대 지지 않을 거야!"</span></p>
+        <p>그런데 마릴라는 이미 알아차리고 있었다. 앤이 길버트를 미워하는 것이 아니라, 실은 그에게 인정받고 싶어 한다는 것을. 어느 날 마릴라가 물었다. <span class="dialogue">"앤, 너 그 소년한테 진짜 화가 난 거야, 아니면 네 자존심이 화가 난 거야?"</span></p>
+        <p>앤은 대답하지 못했다. 길버트와의 전쟁은 앤이 자기 자신과 벌이는 싸움이기도 했다. 자존심이라는 갑옷 안에 숨어, 정작 따뜻한 마음을 받아들이지 못하는 자신과의 싸움. 그 갑옷을 벗기까지는 아직 시간이 더 필요했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">앤이 변해가다</span>
+        <h2>시련의 봄, 성장의 여름</h2>
+        <p>📌 <span class="highlight">중심 문장: 사람은 실패할 때 무너지는 것이 아니라, 다시 일어설 때 자라난다.</span></p>
+        <p>세월이 흐르면서 앤은 조금씩 변해갔다. 여전히 상상력이 넘치고 말이 많았지만, 이제는 생각하고 말하는 법을 배우기 시작했다. 예전의 앤이 감정이 터지면 주체하지 못하고 폭발하는 아이였다면, 이제는 한 번 숨을 고르고 자신을 돌아보는 아이가 되어가고 있었다.</p>
+        <p>가장 큰 변화는 마릴라와의 관계에서 나타났다. 처음에 마릴라는 앤을 다루기 어려운 아이로만 보았다. 하지만 어느 날 마릴라가 심하게 아팠을 때, 앤이 밤새 간호하며 곁을 지킨 일이 있었다. <span class="dialogue">"마릴라 아줌마, 절대 아프시면 안 돼요. 아줌마는 제가 세상에서 가장 사랑하는 사람이에요."</span></p>
+        <p>마릴라는 눈물을 감추며 돌아누웠다. 자신도 모르는 사이에 이 수다스러운 소녀가 마음 깊은 곳에 자리 잡고 있었다.</p>
+        <p>학교에서도 앤은 성장했다. 수업 중 실수를 하면 예전에는 <span class="dialogue">"저는 세상에서 가장 불행한 소녀"</span>라며 과장되게 슬퍼했지만, 이제는 <span class="dialogue">"다음엔 더 잘하면 돼"</span>라고 스스로를 다독였다. 선생님이 바뀌고 새로운 과목이 생기면서 앤은 점점 더 넓은 세계를 만나기 시작했다.</p>
+        <p>특히 문학 수업에서 앤은 빛을 발했다. 시를 쓰고, 이야기를 짓고, 발표할 때 앤의 눈은 반짝반짝 빛났다. 친구들도 앤을 인정하기 시작했다. 처음에 <span class="dialogue">"빨간 머리 고아"</span>라고 수군거리던 아이들이 이제는 <span class="dialogue">"앤 셜리, 너 정말 대단해!"</span>라고 말했다.</p>
+        <p>앤은 미소 지으며 생각했다. '나는 여전히 실수투성이야. 하지만 예전의 나보다는 조금 나아졌어. 그리고 내일은 오늘보다 더 나아질 거야.'</p>
+        <p>성장은 하루아침에 일어나지 않는다. 작은 실패와 작은 용기가 매일매일 쌓여, 어느새 한 뼘 더 큰 사람을 만드는 것이다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">책임을 배우다</span>
+        <h2>매튜의 선물, 마릴라의 눈물</h2>
+        <p>📌 <span class="highlight">중심 문장: 사랑하는 사람을 위해 꿈을 내려놓을 줄 아는 것, 그것이 진짜 어른이다.</span></p>
+        <p>앤이 열여섯이 되던 해, 인생의 가장 큰 시험이 찾아왔다. 퀸 학원 입학시험이었다. 앤은 에이번리를 떠나 도시에서 공부할 수 있는 기회를 얻기 위해 밤낮으로 공부했다.</p>
+        <p>매튜는 앤을 위해 특별한 선물을 준비했다. 부풀어 오른 소매가 달린 예쁜 드레스였다. 앤은 세상에서 그 소매 달린 드레스를 가장 갖고 싶어했었다. 드레스를 받은 앤은 감격에 눈물을 흘렸다. <span class="dialogue">"매튜 아저씨, 이건 제 인생에서 가장 아름다운 선물이에요!"</span></p>
+        <p>시험 당일, 앤은 떨리는 손으로 답안지를 채워 나갔다. 결과는 놀라웠다. 앤은 전체 수석으로 합격한 것이다! 길버트도 높은 성적으로 합격했다. 에이번리 마을 전체가 축제 분위기였다.</p>
+        <p>하지만 기쁨도 잠시, 비극이 찾아왔다. 매튜가 심장마비로 갑자기 세상을 떠난 것이다. 앤은 매튜의 침대 곁에서 하염없이 울었다. <span class="dialogue">"아저씨, 저한테 처음으로 말 걸어준 사람이잖아요. 아저씨가 제 옆에 없으면 어떡해요..."</span></p>
+        <p>마릴라도 무너졌다. 오빠를 잃은 슬픔, 그리고 시력이 나빠져 혼자서는 농장을 지킬 수 없다는 현실. 마릴라는 그린게이블즈를 팔겠다고 말했다.</p>
+        <p>그 순간, 앤은 결심했다. <span class="dialogue">"저는 퀸 학원에 가지 않겠어요. 여기서 마릴라 아줌마와 함께 살면서 에이번리 학교에서 가르치겠어요."</span></p>
+        <p>마릴라는 놀라서 앤을 바라보았다. <span class="dialogue">"앤, 네 꿈은 어떡하고..."</span> <span class="dialogue">"제 꿈은 달라지지 않아요. 장소가 바뀔 뿐이에요. 그리고 마릴라 아줌마, 아줌마는 제 가족이에요. 가족을 두고 떠날 수는 없어요."</span></p>
+        <p>앤은 미소를 지었지만, 그 미소 안에는 어른이 되어가는 아이의 결연한 빛이 담겨 있었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학01/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">앤의 새로운 아침</span>
+        <h2>두려움의 끝, 진짜 가족의 시작</h2>
+        <p>📌 <span class="highlight">중심 문장: 진짜 가족은 피가 아니라, 함께 울고 웃으며 쌓아온 시간이 만든다.</span></p>
+        <p>마릴라 곁에 남기로 한 앤의 결정은 에이번리 사람들을 감동시켰다. 그리고 놀라운 일이 하나 더 있었다. 길버트 블라이스가 에이번리 학교 교사 자리를 앤에게 양보한 것이다. 길버트는 원래 그 자리를 받을 예정이었지만, 앤의 사정을 듣고 스스로 다른 학교로 옮기겠다고 나선 것이다.</p>
+        <p>앤은 길버트를 마주쳤을 때, 처음으로 진심을 담아 말했다. <span class="dialogue">"고마워, 길버트. 정말 고마워."</span> 길버트는 웃었다. <span class="dialogue">"당연히 해야 할 일이야, 앤."</span></p>
+        <p>그날 저녁, 앤은 그린게이블즈 앞 길을 걸었다. 해가 지는 하늘은 주홍빛과 보랏빛이 뒤섞여 세상에서 가장 아름다운 그림을 그리고 있었다. 앤은 처음 이 길을 달려왔던 날을 떠올렸다. 아무도 원하지 않았던, 빨간 머리의 말 많은 고아 소녀. 그 소녀가 이제 이 집을 지키는 사람이 되었다.</p>
+        <p><span class="dialogue">"매튜 아저씨, 저 잘하고 있는 거죠?"</span> 앤은 하늘을 올려다보며 속삭였다. 바람이 앤의 머리카락을 부드럽게 흔들었다. 마치 매튜가 <span class="dialogue">"잘하고 있어"</span>라고 대답하는 것 같았다.</p>
+        <p>집 안에서 마릴라가 창문 너머로 앤을 지켜보고 있었다. 마릴라의 눈가에 눈물이 맺혔지만, 입가에는 미소가 번지고 있었다. '저 아이가 왔을 때 돌려보낼 뻔했지. 그때 그랬다면 이 집은 얼마나 쓸쓸했을까.'</p>
+        <p>앤이 집 안으로 들어오며 말했다. <span class="dialogue">"마릴라 아줌마, 내일은 더 좋은 날이 될 거예요. 아니, 반드시 그렇게 만들 거예요."</span> 마릴라가 대답했다. <span class="dialogue">"그래, 앤. 넌 늘 그래왔잖니."</span></p>
+        <p>두려움을 넘어 진짜 가족이 된 두 사람. 피 한 방울 섞이지 않았지만, 함께 울고 웃으며 쌓아온 시간이 그 어떤 혈연보다 단단한 가족을 만들었다. 그리고 앤의 새로운 아침이, 그린게이블즈의 지붕 위로 환하게 떠오르고 있었다.</p>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="ending-section">
+      <div class="ending-content">
+        <h2>🌱 교훈 — 서사와 연결된 메시지</h2>
+        <div class="lesson">
+          <h3>실수해도 괜찮다. 넘어져도 괜찮다.</h3>
+          <p>성장은 완벽함에서 오는 것이 아니라, 다시 일어서는 용기에서 시작된다. 그리고 진짜 가족은 함께 울고 웃으며 쌓아온 시간이 만든다.</p>
+        </div>
+        <div class="themes">
+          <h3>📖 이야기 속 교훈</h3>
+          <p><strong>▸ 앤의 상상력:</strong> 상처를 치유하는 힘은 자기 안에 있다</p>
+          <p><strong>▸ 실수의 연속:</strong> 실패는 끝이 아니라 배움의 시작이다</p>
+          <p><strong>▸ 다이애나와의 우정:</strong> 진심은 시련을 이기고 더 단단해진다</p>
+          <p><strong>▸ 길버트와의 경쟁:</strong> 자존심을 내려놓을 때 진짜 성장이 온다</p>
+          <p><strong>▸ 매튜의 죽음과 선택:</strong> 사랑하는 사람을 위한 희생이 어른의 시작이다</p>
+          <p><strong>▸ 그린게이블즈의 가족:</strong> 가족은 피가 아니라 마음으로 만드는 것이다</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='/novel_category.html'">목록으로</button>
+  </div>
+
+  <script>
+    // 배경 이미지 전환 시스템
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const storyCards = document.querySelectorAll('.story-card');
+
+    // Intersection Observer로 섹션 감지
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const section = entry.target;
+          const newBg = section.dataset.bg;
+
+          if (newBg) {
+            mapContainer.style.backgroundImage = `url('${newBg}')`;
+          }
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      sectionObserver.observe(section);
+    });
+
+    // 스토리 카드 애니메이션
+    const cardObserverOptions = {
+      root: null,
+      rootMargin: '-10% 0px -10% 0px',
+      threshold: 0.1
+    };
+
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, cardObserverOptions);
+
+    storyCards.forEach(card => {
+      cardObserver.observe(card);
+    });
+  </script>
+</body>
+</html>

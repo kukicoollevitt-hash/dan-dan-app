@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우리 동네 탐정단 - 불편한 동네를 바꾸는 작은 질문</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 배경 컨테이너 - 고정 */
+    .background-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      transition: background-image 0.5s ease-in-out;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .background-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
+    }
+
+    /* 콘텐츠 영역 */
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+      padding: 20px;
+      padding-bottom: 100px;
+    }
+
+    /* 헤더 */
+    .header {
+      text-align: center;
+      padding: 40px 20px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      max-width: 900px;
+      margin: 0 auto 40px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .intro-section h2 {
+      color: #16a085;
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .character-card {
+      background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+      border-radius: 15px;
+      padding: 15px;
+      color: white;
+    }
+
+    .character-card h4 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .character-card p {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      line-height: 1.5;
+    }
+
+    .conflict {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      border-radius: 15px;
+      padding: 20px;
+      color: white;
+    }
+
+    .conflict h3 {
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+
+    .conflict p {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    /* 카드 컨테이너 */
+    .cards-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    /* 스토리 카드 */
+    .story-card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 20px;
+      padding: 25px 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-left: 5px solid #16a085;
+    }
+
+    .story-card:nth-child(odd) {
+      margin-left: 0;
+      margin-right: auto;
+      width: 85%;
+    }
+
+    .story-card:nth-child(even) {
+      margin-left: auto;
+      margin-right: 0;
+      width: 85%;
+      border-left: none;
+      border-right: 5px solid #1abc9c;
+    }
+
+    .story-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+    }
+
+    .story-card.active {
+      background: rgba(255,255,255,1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .part-number {
+      background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .expand-icon {
+      font-size: 1.5rem;
+      color: #16a085;
+      transition: transform 0.3s ease;
+    }
+
+    .story-card.active .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .card-preview {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .card-content {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .story-card.active .card-content {
+      display: block;
+    }
+
+    .card-content p {
+      color: #444;
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+
+    /* 푸터 네비게이션 */
+    .footer-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(22, 160, 133, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background: white;
+      color: #16a085;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 25px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+
+    .progress-indicator {
+      color: white;
+      font-weight: 600;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .story-card:nth-child(odd),
+      .story-card:nth-child(even) {
+        width: 100%;
+        margin: 0;
+      }
+
+      .card-title {
+        font-size: 1.2rem;
+      }
+
+      .character-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background-container" id="bgContainer"></div>
+
+  <div class="content-wrapper">
+    <header class="header">
+      <h1>🏙️ 우리 동네 탐정단</h1>
+      <p>불편한 동네를 바꾸는 작은 질문 — 어린이 탐정단이 바꾼 마을, 참여가 만든 기적</p>
+    </header>
+
+    <!-- 인트로 섹션 -->
+    <section class="intro-section">
+      <h2>🎭 등장인물 소개</h2>
+      <div class="character-grid">
+        <div class="character-card">
+          <h4>🔍 지호 (동네 탐정단장)</h4>
+          <p>관찰력이 뛰어나고 호기심이 많은 초등학교 5학년 소년. 매일 걷는 등굣길에서 '왜 이 길은 불편하지?'라는 작은 질문을 던지며, 동네 문제를 발견하고 해결해가는 주인공. 입버릇: "이상하다… 왜 아무도 이 문제를 말하지 않는 거지?"</p>
+        </div>
+        <div class="character-card">
+          <h4>📊 다인 (데이터 분석가)</h4>
+          <p>숫자와 통계를 사랑하는 소녀. 지호의 관찰을 데이터로 바꿔주는 핵심 참모. 설문조사를 설계하고, 통계를 분석하여 문제의 심각성을 객관적으로 증명한다. 입버릇: "느낌이 아니라 숫자로 말해야 어른들이 들어!"</p>
+        </div>
+        <div class="character-card">
+          <h4>🗺️ 준서 (지도 제작자)</h4>
+          <p>지도 그리기를 좋아하는 소년. 동네의 문제 지점을 지도 위에 표시하여 한눈에 볼 수 있게 만든다. GIS(지리정보시스템)에 관심이 많으며, 공간 분석의 중요성을 보여준다. 입버릇: "지도 위에 그려보면 패턴이 보여!"</p>
+        </div>
+        <div class="character-card">
+          <h4>🏛️ 이장님 (행정의 문지기)</h4>
+          <p>동네의 통장(이장)이자 주민자치회 회장. 처음에는 아이들의 의견을 가볍게 여기지만, 체계적인 자료를 보고 생각이 바뀐다. 행정 시스템과 주민을 연결하는 다리 역할. 입버릇: "어린이가 무슨 민원이야… 어? 이 자료 대단한데?"</p>
+        </div>
+        <div class="character-card">
+          <h4>😤 무관심 아저씨 (무관심의 화신)</h4>
+          <p>동네 문제를 알면서도 '누군가 하겠지', '어차피 안 바뀌어'라며 행동하지 않는 존재. 대부분의 주민이 가진 무관심과 냉소를 상징한다. 아이들의 열정에 서서히 마음이 변한다. 입버릇: "에이, 그런 거 말해봤자 뭐가 달라져?"</p>
+        </div>
+        <div class="character-card">
+          <h4>🌟 참여 요정 (시민 참여의 힘)</h4>
+          <p>주민이 목소리를 낼 때마다 조금씩 밝아지는 마법의 존재. 한 사람이 참여하면 촛불 하나, 백 명이 참여하면 태양처럼 빛난다. 참여의 힘이 곧 민주주의의 힘임을 보여준다. 입버릇: "한 목소리는 촛불, 백 목소리는 태양이야!"</p>
+        </div>
+      </div>
+
+      <div class="conflict">
+        <h3>⚔️ 갈등 구조</h3>
+        <p><strong>🚗 교통 안전 vs 무관심:</strong> 학교 앞 사거리에 신호등이 없어 위험하지만, 어른들은 "원래 그래왔어"라며 방치하는 현실...</p>
+        <p><strong>🗑️ 환경 오염:</strong> 놀이터였던 곳이 쓰레기장으로 변하고, 하천이 오염되어도 아무도 나서지 않는 무력감...</p>
+        <p><strong>😤 무관심의 벽:</strong> "나 하나쯤이야", "말해봤자 뭐가 달라져"라는 냉소와 맞서 싸우는 아이들의 도전!</p>
+      </div>
+    </section>
+
+    <div class="cards-container">
+      <!-- Part 1 -->
+      <article class="story-card" data-part="1" data-bg="/images/창작도서/창작지리04/01.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 1</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">🚗 교통 문제 — 매일 걷는 길이 위험한 이유</h3>
+        <p class="card-preview">월요일 아침, 지호가 집에서 학교까지 걸어갑니다. 왕복 20분 거리. 매일 걷는 익숙한 길이지만...</p>
+        <div class="card-content">
+          <p>월요일 아침, 지호가 집에서 학교까지 걸어갑니다. 왕복 20분 거리. 매일 걷는 익숙한 길이지만, 오늘따라 이상한 점이 눈에 들어왔습니다. 학교 앞 사거리에 횡단보도가 있지만, 신호등이 없습니다. 등교 시간에 차들이 쌩쌩 달려 아이들이 언제 건너야 할지 눈치를 봐야 합니다. 좁은 골목에는 불법 주차된 차들이 줄지어 있어, 보행자가 차도로 걸어야 합니다. 자전거 도로는 아예 없고, 자전거를 타는 학생들은 차와 뒤섞여 달립니다.</p>
+          <p>"이상하다. 왜 학교 앞에 신호등이 없지? 왜 이 골목은 항상 차가 막혀있지?" 지호의 질문은 단순하지만, 그 뒤에는 심각한 문제가 숨어 있었습니다.</p>
+          <p>교통 문제는 도시 지리학의 핵심 주제입니다. 도로의 폭, 교통량, 보행자 안전 시설, 대중교통 접근성은 주민의 생활 질에 직접적인 영향을 미칩니다. 특히 어린이 보호구역(스쿨존)의 안전은 매우 중요합니다. 한국은 2020년 '민식이법'이 시행되면서 스쿨존 내 과속과 신호 위반에 대한 처벌이 강화되었지만, 여전히 많은 학교 주변에 신호등이 없거나 과속 방지턱이 부족한 곳이 있습니다.</p>
+          <p>지호가 친구 다인에게 말했습니다. "다인아, 우리 학교 앞 사거리, 위험한 거 알지? 이거 우리가 바꿀 수 없을까?" 다인이 눈을 빛냈습니다. "데이터를 모아보자! 며칠 동안 교통량과 위험 상황을 기록하면, 문제가 얼마나 심각한지 보여줄 수 있어!" 준서가 합류했습니다. "나는 위험한 지점을 지도에 표시할게!"</p>
+          <p>이렇게 '우리 동네 탐정단'이 결성되었습니다. 작은 질문 하나가 큰 변화의 시작이었습니다.</p>
+        </div>
+      </article>
+
+      <!-- Part 2 -->
+      <article class="story-card" data-part="2" data-bg="/images/창작도서/창작지리04/02.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 2</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">🗑️ 환경 문제 — 놀이터였던 곳이 쓰레기장으로</h3>
+        <p class="card-preview">탐정단이 동네를 조사하기 시작하자, 교통 문제 외에도 다양한 문제가 보이기 시작했습니다...</p>
+        <div class="card-content">
+          <p>탐정단이 동네를 조사하기 시작하자, 교통 문제 외에도 다양한 문제가 보이기 시작했습니다. 특히 환경 문제가 심각했습니다.</p>
+          <p>동네 뒷산 입구의 작은 공터. 3년 전까지만 해도 아이들이 뛰어놀던 곳이었는데, 지금은 불법 투기된 쓰레기가 산처럼 쌓여 있었습니다. 음식물 쓰레기 냄새가 진동하고, 여름에는 파리와 모기가 들끓었습니다. "여기서 놀았는데…" 지호가 슬프게 말했습니다.</p>
+          <p>동네를 흐르는 작은 하천도 문제였습니다. 한때 물고기가 살던 깨끗한 하천이었지만, 상류의 공장과 가정에서 나오는 오·폐수로 물이 탁해지고 악취가 났습니다. 하천 양옆의 산책로도 관리되지 않아 풀이 무성하고, 주민들이 이용하지 않게 되었습니다.</p>
+          <p>대기 환경도 좋지 않았습니다. 동네 한쪽에 위치한 작은 공장에서 간간이 매캐한 연기가 나왔고, 인근 주민들은 두통과 기침을 호소했습니다.</p>
+          <p>준서가 지도에 문제 지점을 표시했습니다. 빨간 점(교통 위험), 주황 점(환경 오염), 노란 점(시설 부족). 지도를 보니, 동네 남쪽 지역에 문제가 집중되어 있었습니다. "패턴이 보여!" 준서가 외쳤습니다. "남쪽은 오래된 주택가고 관리가 덜 된 지역이야. 북쪽 신축 아파트 단지와 확연히 차이가 나!"</p>
+          <p>이것은 도시 내 공간적 불평등의 전형적인 사례입니다. 같은 동네 안에서도 개발 시기, 소득 수준, 행정적 관심에 따라 생활 환경의 질이 크게 다를 수 있습니다.</p>
+          <p>다인이 말했습니다. "이 문제들을 숫자로 정리해서 보여줘야 해. 그래야 어른들이 진지하게 받아들이지."</p>
+        </div>
+      </article>
+
+      <!-- Part 3 -->
+      <article class="story-card" data-part="3" data-bg="/images/창작도서/창작지리04/03.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 3</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">🏥 생활 시설 부족 — 없어서 불편한 것들</h3>
+        <p class="card-preview">탐정단의 조사가 깊어지면서, 생활 시설의 부족 문제도 드러났습니다...</p>
+        <div class="card-content">
+          <p>탐정단의 조사가 깊어지면서, 생활 시설의 부족 문제도 드러났습니다.</p>
+          <p>동네에는 초등학교가 하나 있지만, 공공 도서관은 없었습니다. 가장 가까운 도서관은 버스로 30분 거리. 방과 후 갈 수 있는 학습 공간이 부족하여, 아이들은 편의점이나 PC방에서 시간을 보내곤 했습니다.</p>
+          <p>어린이 놀이터도 문제였습니다. 동네에 놀이터가 세 곳 있지만, 두 곳은 10년 넘게 보수되지 않아 그네가 녹슬고 미끄럼틀이 깨져 위험했습니다. 안전 기준에 미달하여 사실상 사용이 불가능한 상태였지요.</p>
+          <p>노인 복지 시설도 부족했습니다. 고령 인구가 많은 동네인데도, 경로당은 하나뿐이고 그마저도 비좁았습니다. 어르신들이 앉아 쉴 벤치도, 운동할 수 있는 공간도 부족했습니다.</p>
+          <p>"생활 시설의 분포는 주민의 삶의 질을 결정해." 다인이 분석했습니다. "도서관, 병원, 공원, 놀이터, 체육시설 등이 적절하게 배치되어 있어야 주민이 편리하게 생활할 수 있지."</p>
+          <p>이것을 '생활 인프라'라고 합니다. 도시 계획에서는 '생활권 계획'을 통해 주민이 도보 10분(약 500미터) 이내에 기본적인 생활 시설에 접근할 수 있도록 하는 것을 목표로 합니다. 하지만 현실에서는 지역 간 편차가 큽니다.</p>
+          <p>지호가 주먹을 쥐었습니다. "우리 동네에는 없는 것이 너무 많아. 하지만 불평만 하면 안 돼. 어떻게 바꿀 수 있는지 알아봐야 해!"</p>
+          <p>무관심 아저씨가 지나가며 중얼거렸습니다. "에이, 그런 거 말해봤자 뭐가 달라져?"</p>
+          <p>지호가 단호하게 대답했습니다. "말하지 않으면 절대 달라지지 않아요!"</p>
+        </div>
+      </article>
+
+      <!-- Part 4 -->
+      <article class="story-card" data-part="4" data-bg="/images/창작도서/창작지리04/04.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 4</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">🎤 주민 의견 — 모든 사람의 목소리를 듣다</h3>
+        <p class="card-preview">탐정단은 자신들의 관찰만으로는 부족하다는 것을 깨달았습니다. 동네 사람들이 실제로 어떤 불편을 겪고 있는지...</p>
+        <div class="card-content">
+          <p>탐정단은 자신들의 관찰만으로는 부족하다는 것을 깨달았습니다. 동네 사람들이 실제로 어떤 불편을 겪고 있는지, 직접 물어봐야 했습니다.</p>
+          <p>다인이 설문조사를 설계했습니다. "우리 동네에서 가장 불편한 점은 무엇인가요?" "가장 시급히 개선해야 할 것은?" "동네 발전을 위해 참여할 의향이 있으신가요?"</p>
+          <p>탐정단은 일주일 동안 동네를 돌며 주민 150명에게 설문을 실시했습니다. 편의점 앞에서, 경로당에서, 아파트 놀이터에서, 학교 앞에서. 어른, 어린이, 노인, 장애인 등 다양한 주민의 목소리를 모았습니다.</p>
+          <p>결과는 놀라웠습니다. 1위 교통 안전(34퍼센트), 2위 주차 문제(22퍼센트), 3위 환경 오염(18퍼센트), 4위 생활 시설 부족(15퍼센트), 5위 소음(11퍼센트).</p>
+          <p>흥미로운 것은, 연령대에 따라 우선순위가 달랐다는 것입니다. 학부모와 아이들은 교통 안전을, 노인들은 의료 시설 접근성을, 청년들은 주차와 소음을 가장 시급한 문제로 꼽았습니다.</p>
+          <p>"같은 동네에 살아도 느끼는 불편이 다르구나." 지호가 깨달았습니다.</p>
+          <p>이것은 매우 중요한 교훈입니다. 지역 문제를 해결할 때는 특정 집단의 목소리만 듣는 것이 아니라, 다양한 주민의 의견을 균형 있게 수렴해야 합니다. 어린이, 노인, 장애인, 외국인 주민 등 소수자의 목소리도 놓치지 않아야 하지요.</p>
+          <p>참여 요정이 조금 밝아졌습니다. "한 사람이 말할 때마다 나는 밝아져. 150명이 말했으니, 꽤 환해졌지?"</p>
+          <p>주민의 목소리가 모이기 시작했습니다.</p>
+        </div>
+      </article>
+
+      <!-- Part 5 -->
+      <article class="story-card" data-part="5" data-bg="/images/창작도서/창작지리04/05.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 5</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">📊 자료 조사 — 느낌을 데이터로 바꾸다</h3>
+        <p class="card-preview">설문조사 결과를 얻은 탐정단은, 이제 문제의 심각성을 객관적 데이터로 증명하기로 했습니다...</p>
+        <div class="card-content">
+          <p>설문조사 결과를 얻은 탐정단은, 이제 문제의 심각성을 객관적 데이터로 증명하기로 했습니다. 다인이 주도하여 체계적인 자료 조사를 시작했습니다.</p>
+          <p>교통 조사: 일주일간 등교 시간(오전 7시 30분부터 8시 30분)과 하교 시간(오후 2시부터 4시)에 학교 앞 사거리의 교통량을 기록했습니다. 차량 통과 대수, 과속 차량 수, 보행자가 위험을 느낀 횟수를 꼼꼼히 세었지요. 결과: 등교 시간 1시간 동안 평균 320대의 차량이 통과하고, 그 중 약 15퍼센트가 속도 제한(30km/h)을 초과했습니다.</p>
+          <p>환경 조사: 불법 투기 지점의 사진을 찍고, 쓰레기 종류(일반 쓰레기, 건설 폐기물, 가전제품 등)를 분류했습니다. 하천의 수질을 간이 수질검사 키트로 측정하기도 했습니다.</p>
+          <p>시설 조사: 동네의 공공시설 위치를 지도에 표시하고, 가장 가까운 도서관·병원·공원까지의 거리와 소요 시간을 계산했습니다.</p>
+          <p>준서의 지도가 완성되었습니다. 교통 위험 지점, 환경 오염 지점, 시설 부족 지역이 색깔별로 표시된, 한눈에 보이는 '동네 문제 지도'였습니다.</p>
+          <p>"이것이 GIS(지리정보시스템)의 기본 원리야." 준서가 자랑스럽게 말했습니다. "공간 데이터를 시각화하면, 글로 설명할 때보다 훨씬 설득력이 있어!"</p>
+          <p>다인이 설문 결과와 현장 데이터를 합쳐 보고서를 만들었습니다. 그래프, 표, 지도, 사진이 포함된 체계적인 보고서.</p>
+          <p>"이 정도면 어른들도 무시할 수 없을 거야." 다인이 자신 있게 말했습니다.</p>
+          <p>데이터는 감정이 아니라 사실로 말합니다.</p>
+        </div>
+      </article>
+
+      <!-- Part 6 -->
+      <article class="story-card" data-part="6" data-bg="/images/창작도서/창작지리04/06.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 6</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">💡 해결 방안 찾기 — 문제에 맞는 열쇠를 찾다</h3>
+        <p class="card-preview">문제를 정확히 파악한 탐정단은 이제 해결 방안을 모색했습니다...</p>
+        <div class="card-content">
+          <p>문제를 정확히 파악한 탐정단은 이제 해결 방안을 모색했습니다.</p>
+          <p>지호가 말했습니다. "불평만 하면 안 돼. 구체적인 해결책을 같이 제시해야 어른들이 움직여."</p>
+          <p>탐정단은 각 문제에 대한 해결 방안을 브레인스토밍했습니다.</p>
+          <p>교통 문제 해결안: 학교 앞 사거리에 보행자 신호등 설치 요청, 어린이 보호구역 내 과속 단속 카메라 추가, 불법 주차 단속 강화, 등하교 시간 자원봉사 교통 지도.</p>
+          <p>환경 문제 해결안: 불법 투기 지점 CCTV 설치 및 정기 단속, 하천 정화 활동 정기화, 공장 배출 가스 모니터링 요청, 마을 환경 정화의 날 운영.</p>
+          <p>시설 부족 해결안: 유휴 공간을 활용한 작은 도서관 조성, 노후 놀이터 리모델링, 마을 커뮤니티 센터 건립 건의, 어르신 쉼터 벤치 설치.</p>
+          <p>"하지만 이것들을 다 한꺼번에 할 수는 없어." 다인이 현실적으로 분석했습니다. "우선순위를 정해야 해. 시급성, 실현 가능성, 예산을 고려해서."</p>
+          <p>탐정단은 해결 방안을 단기(즉시 실행 가능), 중기(예산 확보 후 실행), 장기(계획 수립 후 추진)로 나누었습니다. 단기로는 교통 안전 캠페인과 환경 정화 활동, 중기로는 신호등 설치와 놀이터 보수, 장기로는 도서관과 커뮤니티 센터 건립.</p>
+          <p>"문제를 발견하는 것도 중요하지만, 현실적인 해결 방안을 제시하는 것이 더 중요하구나." 지호가 깨달았습니다.</p>
+          <p>무관심 아저씨가 슬쩍 엿듣고 있었습니다. "흠… 저 아이들이 제법인데?" 표정에 변화가 생기기 시작했습니다.</p>
+        </div>
+      </article>
+
+      <!-- Part 7 -->
+      <article class="story-card" data-part="7" data-bg="/images/창작도서/창작지리04/07.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 7</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">🏛️ 행정 참여 — 주민의 목소리가 구청에 닿다</h3>
+        <p class="card-preview">보고서와 해결 방안을 완성한 탐정단은, 이것을 실제로 전달해야 했습니다. 하지만 어디에, 어떻게?</p>
+        <div class="card-content">
+          <p>보고서와 해결 방안을 완성한 탐정단은, 이것을 실제로 전달해야 했습니다. 하지만 어디에, 어떻게?</p>
+          <p>이장님을 먼저 찾아갔습니다. "이장님, 저희가 동네 문제를 조사했어요. 봐주세요!"</p>
+          <p>이장님이 처음에는 가볍게 여겼습니다. "어린이가 무슨 민원이야…" 하지만 보고서를 펼치는 순간, 표정이 변했습니다. 체계적인 데이터, 지도, 설문 결과, 구체적 해결 방안. "어? 이 자료 대단한데? 어른들도 이렇게 못 만들어!"</p>
+          <p>이장님이 아이들을 주민자치회 회의에 초대했습니다. 그리고 구청의 '주민 참여 예산제'를 알려주었습니다.</p>
+          <p>주민 참여 예산제는 지방자치단체의 예산 편성 과정에 주민이 직접 참여하는 제도입니다. 주민이 지역에 필요한 사업을 제안하고, 주민 투표를 통해 우선순위를 정하여 실제 예산에 반영하는 것이지요. 한국에서는 2011년 지방재정법 개정으로 의무화되었습니다.</p>
+          <p>"우리도 제안할 수 있어요?" 지호가 눈을 빛냈습니다. "물론이지! 나이 제한은 없어. 주민이면 누구나 제안할 수 있어."</p>
+          <p>탐정단은 주민 참여 예산제에 세 가지 사업을 제안했습니다. 학교 앞 보행자 신호등 설치, 노후 놀이터 리모델링, 하천 산책로 정비.</p>
+          <p>동시에 구청 홈페이지의 민원 게시판에도 교통 안전 관련 민원을 정식으로 접수했습니다.</p>
+          <p>참여 요정이 환하게 빛났습니다. "아이들의 목소리가 행정 시스템에 닿았어! 한 목소리가 제도와 만나면, 변화의 힘이 열 배가 돼!"</p>
+          <p>주민 참여는 거창한 것이 아니었습니다. 민원 접수, 주민 회의 참석, 예산 제안. 누구나 할 수 있는 작은 행동이 제도를 통해 큰 변화가 되는 것이었습니다.</p>
+        </div>
+      </article>
+
+      <!-- Part 8 -->
+      <article class="story-card" data-part="8" data-bg="/images/창작도서/창작지리04/08.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 8</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">📐 계획 수립 — 꿈을 설계도로 바꾸다</h3>
+        <p class="card-preview">탐정단의 제안이 주민 참여 예산 심사에 올랐습니다. 하지만 예산은 한정되어 있고...</p>
+        <div class="card-content">
+          <p>탐정단의 제안이 주민 참여 예산 심사에 올랐습니다. 하지만 예산은 한정되어 있고, 여러 지역에서 제안이 올라왔기 때문에 경쟁이 있었습니다.</p>
+          <p>다인이 발표 자료를 준비했습니다. 단순히 "불편해요"가 아니라, "이 사업에 얼마의 예산이 필요하고, 몇 명의 주민이 혜택을 받으며, 기대 효과는 이것이다"라는 구체적인 계획이 담긴 발표였습니다.</p>
+          <p>좋은 계획에는 여러 요소가 필요합니다. 현황 분석은 현재 상태를 정확히 파악하는 것입니다. 목표 설정은 바꾸고 싶은 미래 상태를 정하는 것이고, 실행 전략은 목표에 도달하기 위한 구체적 방법입니다. 예산 계획은 필요한 비용과 재원 확보 방안이고, 일정 계획은 언제까지 무엇을 할 것인지에 대한 타임라인입니다. 성과 지표는 사업이 성공했는지 평가하는 기준이지요.</p>
+          <p>준서가 놀이터 리모델링의 설계 아이디어를 시각적으로 표현했습니다. 안전한 바닥재, 다양한 연령대가 이용 가능한 놀이 기구, 어르신 벤치, 그늘막, 무장애 접근로까지 포함한 유니버설 디자인이었습니다.</p>
+          <p>"유니버설 디자인은 장애인, 노인, 어린이, 임산부 등 모든 사람이 편리하게 이용할 수 있도록 설계하는 것이야." 준서가 설명했습니다.</p>
+          <p>주민 투표 날, 탐정단의 제안은 높은 지지를 받았습니다. 학교 앞 신호등 설치와 놀이터 리모델링이 주민 참여 예산 사업으로 선정된 것입니다!</p>
+          <p>"우리가 해냈어!" 탐정단이 환호했습니다.</p>
+          <p>무관심 아저씨도 투표에 참여했습니다. "솔직히 저 아이들 보고 부끄러웠어. 나도 한 표 냈다고."</p>
+          <p>작은 설계도가 현실이 되기 시작했습니다.</p>
+        </div>
+      </article>
+
+      <!-- Part 9 -->
+      <article class="story-card" data-part="9" data-bg="/images/창작도서/창작지리04/09.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 9</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">🔨 실행 과정 — 계획이 현실이 되는 순간</h3>
+        <p class="card-preview">예산이 확보된 후, 실제 사업이 시작되었습니다. 하지만 실행 과정은 계획만큼 순탄하지 않았습니다...</p>
+        <div class="card-content">
+          <p>예산이 확보된 후, 실제 사업이 시작되었습니다. 하지만 실행 과정은 계획만큼 순탄하지 않았습니다.</p>
+          <p>학교 앞 신호등 설치는 비교적 빠르게 진행되었습니다. 구청 교통과에서 현장 조사를 실시하고, 교통 영향 평가를 거쳐, 3개월 만에 보행자 신호등이 설치되었습니다. 함께 과속 방지턱과 어린이 보호구역 표시도 새로 칠해졌습니다.</p>
+          <p>하지만 놀이터 리모델링은 예상치 못한 문제에 부딪혔습니다. 일부 주민이 "놀이터에서 아이들 소리가 시끄럽다"며 반대한 것입니다. 또 다른 주민은 "놀이터 대신 주차장을 만들어달라"고 요구했습니다.</p>
+          <p>"이런 갈등은 당연한 거야." 이장님이 말했습니다. "같은 공간에 대해 서로 다른 요구가 있으면 충돌이 생기지. 중요한 것은 대화를 통해 합의점을 찾는 거야."</p>
+          <p>주민 설명회가 열렸습니다. 탐정단이 조사한 데이터를 보여주고, 놀이터의 필요성을 설명했습니다. 소음 문제는 방음 식재(나무 심기)로 완화하고, 주차 문제는 이면 도로 정비로 해결하기로 합의했습니다.</p>
+          <p>3개월의 공사 끝에 놀이터가 완성되었습니다.</p>
+          <p>하천 정화 활동도 진행되었습니다. 탐정단이 주축이 되어 매월 첫째 토요일 하천 정화 봉사활동을 조직했습니다. 첫 달에는 15명이 참여했지만, 넷째 달에는 80명으로 늘어났습니다.</p>
+          <p>참여 요정이 눈부시게 빛났습니다. "15명에서 80명으로! 참여는 전염되는 거야. 한 사람이 시작하면, 주변이 따라오게 돼!"</p>
+          <p>실행 과정에서 도윤이 배운 것은, 계획은 종이 위에서 완성되지 않는다는 것이었습니다. 현실에서 부딪히고, 조정하고, 타협하면서 완성되는 것이었습니다.</p>
+        </div>
+      </article>
+
+      <!-- Part 10 -->
+      <article class="story-card" data-part="10" data-bg="/images/창작도서/창작지리04/10.jpg">
+        <div class="card-header">
+          <span class="part-number">PART 10</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <h3 class="card-title">🌟 달라진 우리 동네 — "지역 문제는 참여로 해결된다"</h3>
+        <p class="card-preview">6개월이 지났습니다. 지호가 다시 등굣길을 걸었습니다...</p>
+        <div class="card-content">
+          <p>6개월이 지났습니다. 지호가 다시 등굣길을 걸었습니다.</p>
+          <p>학교 앞 사거리에는 보행자 신호등이 깜빡이고 있었습니다. 과속 방지턱 위로 차들이 천천히 지나갔습니다. 아이들이 안전하게 횡단보도를 건넜습니다.</p>
+          <p>공터의 쓰레기는 치워지고, 그 자리에 작은 꽃밭과 벤치가 놓였습니다. 노후 놀이터는 알록달록 새 놀이 기구로 가득 찼고, 방과 후 아이들의 웃음소리가 울려 퍼졌습니다. 어르신들은 놀이터 옆 벤치에서 손주들을 바라보며 쉬고 계셨습니다.</p>
+          <p>하천에는 아직 물고기가 돌아오지 않았지만, 물이 맑아지기 시작했고, 산책로에 주민들이 다시 걸었습니다.</p>
+          <p>무관심 아저씨가 하천 정화 활동에 정기적으로 참여하게 되었습니다. "처음에는 저 아이들이 뭘 바꿀 수 있겠나 싶었어." 아저씨가 쑥스럽게 웃었습니다. "하지만 행동하는 아이들을 보니, 가만히 있는 내가 부끄러워지더라고. 이제는 내가 먼저 쓰레기를 줍게 됐어."</p>
+          <p>참여 요정이 태양처럼 빛나며 말했습니다. "처음에 나는 촛불 하나였어. 지호 한 명이 질문을 던졌을 때. 하지만 다인, 준서가 합류하고, 150명의 주민이 설문에 응하고, 이장님이 도와주고, 구청이 움직이고, 80명이 봉사활동에 나오면서 나는 태양이 됐어. 참여의 힘이 이런 거야."</p>
+          <p>지호가 마지막으로 모두에게 말했습니다. "우리 동네의 문제는 하늘에서 뚝 떨어진 것이 아니야. 사람이 만든 것이고, 사람이 해결할 수 있어. 그 시작은 거창한 것이 아니라 '왜 이 길은 불편하지?'라는 작은 질문이었어."</p>
+          <p>"지역 문제는 참여로 해결된다. 나 하나쯤이야 하면 아무것도 변하지 않지만, 나부터 시작하면 모든 것이 변할 수 있어."</p>
+          <p>오늘도 어딘가에서 작은 질문을 던지는 아이가 있을 것입니다. 그 질문이 동네를 바꾸고, 도시를 바꾸고, 세상을 바꾸는 시작이 됩니다.</p>
+          <p style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); border-radius: 15px; color: white;">
+            <strong>🌱 이야기 속 교훈</strong><br><br>
+            이 이야기는 우리가 매일 사는 동네에서 시작되는 시민 참여의 이야기입니다. 교통 위험, 환경 오염, 시설 부족 같은 지역 문제는 멀리 있는 것이 아니라 바로 우리 발밑에 있습니다.<br><br>
+            지역 문제는 참여로 해결됩니다. 관찰하고, 데이터를 모으고, 주민 의견을 듣고, 해결 방안을 제시하고, 행정에 참여하는 것. 거창하지 않은 이 과정이 동네를 바꿉니다.<br><br>
+            '나 하나쯤이야'가 아니라 '나부터 시작하자'로 생각을 바꾸는 순간, 변화가 시작됩니다.
+          </p>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <nav class="footer-nav">
+    <button class="nav-btn" onclick="closeStory()">← 목록으로</button>
+    <span class="progress-indicator" id="progressIndicator">1 / 10</span>
+    <button class="nav-btn" onclick="scrollToNext()">다음 →</button>
+  </nav>
+
+  <script>
+    // 배경 이미지 설정
+    const bgContainer = document.getElementById('bgContainer');
+    const defaultBg = '/images/창작도서/창작지리04/00.jpg';
+    bgContainer.style.backgroundImage = `url('${defaultBg}')`;
+
+    // 카드 클릭 이벤트
+    const cards = document.querySelectorAll('.story-card');
+    cards.forEach(card => {
+      card.addEventListener('click', function() {
+        const wasActive = this.classList.contains('active');
+
+        // 모든 카드 비활성화
+        cards.forEach(c => c.classList.remove('active'));
+
+        // 클릭한 카드 토글
+        if (!wasActive) {
+          this.classList.add('active');
+          // 배경 이미지 변경
+          const bg = this.dataset.bg;
+          if (bg) {
+            bgContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          // 진행 상태 업데이트
+          const part = this.dataset.part;
+          document.getElementById('progressIndicator').textContent = `${part} / 10`;
+        } else {
+          bgContainer.style.backgroundImage = `url('${defaultBg}')`;
+        }
+      });
+    });
+
+    // 다음 카드로 스크롤
+    function scrollToNext() {
+      const activeCard = document.querySelector('.story-card.active');
+      if (activeCard) {
+        const nextCard = activeCard.nextElementSibling;
+        if (nextCard && nextCard.classList.contains('story-card')) {
+          activeCard.classList.remove('active');
+          nextCard.classList.add('active');
+          nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const bg = nextCard.dataset.bg;
+          if (bg) {
+            bgContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          const part = nextCard.dataset.part;
+          document.getElementById('progressIndicator').textContent = `${part} / 10`;
+        }
+      } else {
+        // 첫 번째 카드 활성화
+        const firstCard = document.querySelector('.story-card');
+        if (firstCard) {
+          firstCard.classList.add('active');
+          firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const bg = firstCard.dataset.bg;
+          if (bg) {
+            bgContainer.style.backgroundImage = `url('${bg}')`;
+          }
+        }
+      }
+    }
+
+    // 목록으로 돌아가기
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

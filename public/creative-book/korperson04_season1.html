@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하늘의 별을 세던 종, 장영실</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Serif KR', serif;
+      background: #1a1510;
+      color: #e8e0d5;
+      overflow-x: hidden;
+    }
+
+    /* 배경 이미지 컨테이너 - bio01 구조 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 0;
+      background-image: url('/images/창작도서/창작한국인물04/00.jpg');
+      background-size: cover;
+      background-position: center;
+      transition: background-image 0.8s ease-in-out;
+    }
+
+    #map-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom,
+        rgba(26, 21, 16, 0.3) 0%,
+        rgba(26, 21, 16, 0.5) 50%,
+        rgba(26, 21, 16, 0.85) 100%);
+    }
+
+    /* 콘텐츠 영역 */
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 히어로 섹션 */
+    .hero-section {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #d4a84b, #8b6914);
+      color: #fff;
+      padding: 0.5rem 1.5rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: 2px;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      line-height: 1.3;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      color: #d4a84b;
+      margin-bottom: 0.5rem;
+      font-weight: 400;
+    }
+
+    .hero-lesson {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.8);
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: rgba(212, 168, 75, 0.15);
+      border: 1px solid rgba(212, 168, 75, 0.3);
+      border-radius: 12px;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: rgba(255,255,255,0.7);
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+      40% { transform: translateX(-50%) translateY(-10px); }
+      60% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      padding: 4rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: linear-gradient(to bottom,
+        rgba(26, 21, 16, 0.9),
+        rgba(40, 35, 25, 0.95));
+    }
+
+    .intro-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      display: inline-block;
+      background: linear-gradient(135deg, #d4a84b, #8b6914);
+      color: #fff;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .intro-title {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 700;
+      color: #d4a84b;
+      margin-bottom: 2rem;
+    }
+
+    /* 등장인물 카드 */
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .character-card {
+      background: rgba(212, 168, 75, 0.08);
+      border: 1px solid rgba(212, 168, 75, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .character-card:hover {
+      background: rgba(212, 168, 75, 0.12);
+      transform: translateY(-3px);
+    }
+
+    .character-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #d4a84b;
+      margin-bottom: 0.5rem;
+    }
+
+    .character-role {
+      font-size: 0.95rem;
+      color: rgba(232, 224, 213, 0.85);
+      line-height: 1.6;
+    }
+
+    /* 갈등 구조 */
+    .conflict-box {
+      background: linear-gradient(135deg, rgba(212, 168, 75, 0.1), rgba(139, 105, 20, 0.1));
+      border: 1px solid rgba(212, 168, 75, 0.25);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+
+    .conflict-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #d4a84b;
+      margin-bottom: 1rem;
+    }
+
+    .conflict-text {
+      font-size: 1rem;
+      color: rgba(232, 224, 213, 0.9);
+      line-height: 1.8;
+    }
+
+    /* 스토리 섹션 */
+    .story-section {
+      min-height: 100vh;
+      padding: 4rem 2rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      max-width: 600px;
+      background: rgba(26, 21, 16, 0.92);
+      border: 1px solid rgba(212, 168, 75, 0.2);
+      border-radius: 20px;
+      padding: 2.5rem;
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s ease;
+    }
+
+    .story-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .story-section:nth-child(odd) .story-card {
+      margin-left: 5%;
+      border-left: 4px solid #d4a84b;
+    }
+
+    .story-section:nth-child(even) .story-card {
+      margin-right: 5%;
+      border-right: 4px solid #d4a84b;
+    }
+
+    .story-chapter {
+      display: inline-block;
+      background: linear-gradient(135deg, #d4a84b, #8b6914);
+      color: #fff;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .story-title {
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 700;
+      color: #d4a84b;
+      margin-bottom: 0.8rem;
+    }
+
+    .story-summary {
+      font-size: 0.95rem;
+      color: rgba(212, 168, 75, 0.8);
+      margin-bottom: 1.5rem;
+      padding: 0.8rem 1rem;
+      background: rgba(212, 168, 75, 0.1);
+      border-radius: 8px;
+      border-left: 3px solid #d4a84b;
+    }
+
+    .story-content {
+      font-size: 1.05rem;
+      color: rgba(232, 224, 213, 0.9);
+      line-height: 1.9;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .story-content p {
+      margin-bottom: 1.2rem;
+    }
+
+    .story-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 엔딩 섹션 */
+    .ending-section {
+      min-height: 100vh;
+      padding: 4rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(to bottom,
+        rgba(26, 21, 16, 0.9),
+        rgba(40, 35, 25, 0.98));
+    }
+
+    .ending-icon {
+      font-size: 4rem;
+      margin-bottom: 2rem;
+    }
+
+    .ending-title {
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      font-weight: 700;
+      color: #d4a84b;
+      margin-bottom: 1.5rem;
+    }
+
+    .ending-lesson {
+      max-width: 700px;
+      font-size: 1.2rem;
+      color: rgba(232, 224, 213, 0.9);
+      line-height: 1.8;
+      padding: 2rem;
+      background: rgba(212, 168, 75, 0.1);
+      border: 1px solid rgba(212, 168, 75, 0.3);
+      border-radius: 16px;
+      margin-bottom: 2rem;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #d4a84b, #8b6914);
+      color: #fff;
+      padding: 1rem 2rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(212, 168, 75, 0.3);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section:nth-child(odd) .story-card,
+      .story-section:nth-child(even) .story-card {
+        margin-left: 0;
+        margin-right: 0;
+        border-left: 4px solid #d4a84b;
+        border-right: none;
+      }
+
+      .story-card {
+        padding: 1.5rem;
+      }
+
+      .character-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 배경 이미지 컨테이너 -->
+  <div id="map-container"></div>
+
+  <!-- 콘텐츠 -->
+  <div class="content-wrapper">
+    <!-- 히어로 섹션 -->
+    <section class="hero-section" data-bg="/images/창작도서/창작한국인물04/00.jpg">
+      <div class="hero-badge">한국 인물 이야기</div>
+      <h1 class="hero-title">하늘의 별을 세던 종, 장영실</h1>
+      <p class="hero-subtitle">쇠사슬을 끊고 하늘을 읽은 노비 천재 과학자의 서사 동화</p>
+      <div class="hero-lesson">🌱 재능은 신분을 뛰어넘는다</div>
+      <div class="scroll-indicator">
+        <span>아래로 스크롤</span>
+        <span>↓</span>
+      </div>
+    </section>
+
+    <!-- 인트로: 등장인물 & 갈등 -->
+    <section class="intro-section">
+      <div class="intro-container">
+        <span class="section-label">🎭 등장인물 소개</span>
+        <h2 class="intro-title">이야기의 주인공들</h2>
+
+        <div class="character-grid">
+          <div class="character-card">
+            <div class="character-name">장영실</div>
+            <div class="character-role">동래현 관노 출신, 하늘의 이치를 읽는 천재 기술자. 낮에는 대장간에서 쇠를 두드리고, 밤에는 별을 올려다보며 세상의 비밀을 풀어내는 꿈을 품은 청년.</div>
+          </div>
+          <div class="character-card">
+            <div class="character-name">세종대왕</div>
+            <div class="character-role">백성을 사랑하는 성군. 신분이 아닌 재능을 보는 눈을 가졌으나, 조정의 거센 반대 속에서도 영실을 지켜야 하는 무거운 짐을 진 임금.</div>
+          </div>
+          <div class="character-card">
+            <div class="character-name">이천 장군</div>
+            <div class="character-role">세종의 명을 받아 과학 사업을 총괄하는 무관. 처음에는 노비 출신 영실을 의심하지만, 차츰 그의 진가를 인정하게 되는 인물.</div>
+          </div>
+          <div class="character-card">
+            <div class="character-name">조말생</div>
+            <div class="character-role">양반 가문의 자존심을 대변하는 대신. '노비가 어찌 관직에 오르느냐'며 끝없이 영실을 탄핵하는 갈등의 핵심 인물.</div>
+          </div>
+          <div class="character-card">
+            <div class="character-name">영실의 어머니</div>
+            <div class="character-role">관기 출신으로 아들의 재능을 일찌감치 알아보았으나, 신분의 벽 앞에서 눈물을 삼키는 어머니.</div>
+          </div>
+        </div>
+
+        <div class="conflict-box">
+          <h3 class="conflict-title">⚔️ 갈등 구조</h3>
+          <p class="conflict-text">
+            이 이야기에는 세 가지 갈등이 흐릅니다. 첫째, 재능과 신분 사이의 갈등 — 하늘을 읽을 수 있는 머리를 가졌으나 종의 몸으로 태어난 영실의 내면적 고통. 둘째, 개혁과 전통 사이의 갈등 — 능력 중심의 인재 등용을 꿈꾸는 세종과, 신분 질서를 지키려는 조정 대신들 사이의 정치적 충돌. 셋째, 성공과 추락 사이의 갈등 — 눈부신 업적을 쌓아 올린 영실이 한 번의 사고로 모든 것을 잃게 되는 운명의 아이러니. 이 세 줄기의 갈등이 얽히고 풀리며, 독자에게 '재능은 신분을 뛰어넘는다'는 교훈을 전합니다.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/01.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제1장</span>
+        <h2 class="story-title">쇠사슬에 묶인 별 — 노비 신분</h2>
+        <div class="story-summary">📌 중심 내용: 동래현 관노로 태어난 소년 영실은 대장간에서 쇠를 두드리며 자라지만, 밤마다 별을 올려다보며 세상의 이치를 꿈꿉니다.</div>
+        <div class="story-content">
+          <p>옛날 옛적, 조선의 남쪽 끝자락 동래현에 한 소년이 살고 있었습니다. 그 소년의 이름은 영실이었지요. 영실의 어머니는 관아에 딸린 기생이었고, 아버지는 일찍이 세상을 떠났습니다. 조선의 법에 따라 어머니가 관노비이면 그 자식도 관노비가 되었으니, 영실은 태어나는 순간부터 쇠사슬에 묶인 운명이었습니다.</p>
+          <p>하지만 어린 영실에게는 남다른 구석이 있었습니다. 대장간에서 쇠를 달구고 망치를 내리칠 때면, 다른 아이들은 힘들어 울상을 짓는데 영실만은 쇠가 달궈지는 온도와 색깔의 변화를 유심히 살폈습니다. "어머니, 쇠가 빨갛게 되었을 때 두드리면 모양이 잘 잡히는데, 노랗게 될 때까지 기다리면 더 얇게 펼 수 있어요!" 어머니는 그런 아들을 바라보며 한숨과 미소를 동시에 지었습니다. "이 아이가 양반집 도련님으로 태어났더라면…" 밤이 되면 영실은 관아 뒷마당에 누워 별을 올려다보았습니다.</p>
+          <p>북극성은 언제나 같은 자리에 있고, 계절마다 다른 별자리가 하늘을 수놓는 것이 신기했습니다. 영실은 나뭇가지로 땅바닥에 별의 위치를 그리고, 매일 밤 달라지는 것과 달라지지 않는 것을 구분하기 시작했습니다. 아무도 가르쳐 주지 않았지만, 소년은 혼자서 하늘의 규칙을 찾아가고 있었습니다. 그러나 아침이 되면 현실은 냉혹했습니다.</p>
+          <p>"이놈! 노비 주제에 멍하니 하늘만 쳐다보고 있으면 누가 일을 하느냐!" 관리의 호통에 영실은 고개를 숙이고 다시 대장간으로 향했습니다. 쇠를 두드리는 영실의 손은 거칠게 갈라져 있었지만, 그 눈만은 언제나 별빛처럼 맑게 빛나고 있었습니다. 어린 영실은 아직 알지 못했습니다.</p>
+          <p>먼 훗날, 자신이 하늘의 비밀을 풀어 조선 전체를 놀라게 할 것이라는 사실을요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/02.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제2장</span>
+        <h2 class="story-title">임금의 눈에 든 종 — 세종의 발탁</h2>
+        <div class="story-summary">📌 중심 내용: 영실의 재능에 대한 소문이 한양까지 닿고, 세종대왕은 조정의 맹렬한 반대를 무릅쓰고 노비 영실을 궁궐로 불러올립니다.</div>
+        <div class="story-content">
+          <p>영실의 재주는 동래현에서 점차 소문이 퍼져 나갔습니다. 영실이 만든 농기구는 다른 대장장이가 만든 것보다 두 배는 튼튼했고, 그가 고안한 물레방아는 적은 물로도 곡식을 빻을 수 있었습니다. 현감은 이 신기한 노비의 이야기를 장계에 적어 올렸고, 그 보고서는 여러 사람의 손을 거쳐 마침내 한양 궁궐, 세종대왕의 어전에 닿았습니다. "동래현에 노비 중에 기이한 재주를 가진 자가 있사옵니다.</p>
+          <p>쇠붙이를 다루는 솜씨가 신기에 가까우며, 천문의 이치를 스스로 깨우쳤다 하옵니다." 세종은 눈을 빛냈습니다. 백성을 위한 과학 기구를 만들 인재를 목말라하던 참이었지요. "당장 그를 한양으로 올려보내라!" 그러나 이 명령이 조정에 알려지자 폭풍이 일었습니다. 대신 조말생이 가장 먼저 나섰습니다.</p>
+          <p>"전하! 천한 노비를 궁궐에 들이시다니, 이는 조종의 법도를 어기는 것이옵니다! 양반의 자제 중에도 재주 있는 자가 넘치거늘, 어찌 종놈에게 나라의 일을 맡기시려 하십니까!" 조정의 반대는 거셌습니다. 선비들은 상소를 올렸고, 사간원에서는 연일 임금의 결정을 비판했습니다.</p>
+          <p>하지만 세종은 뜻을 굽히지 않았습니다. "내가 보는 것은 그의 신분이 아니라 그의 재능이다. 백성을 이롭게 할 수 있는 자라면, 그가 노비든 양반이든 무엇이 중요하단 말이냐!" 이윽고 영실은 한양으로 올라왔습니다. 난생처음 보는 궁궐의 웅장함에 다리가 후들거렸지만, 세종이 친히 내전으로 불러 따뜻하게 맞이하자 영실의 눈에 뜨거운 눈물이 고였습니다.</p>
+          <p>"전하, 미천한 종의 몸으로 어찌 이런 은혜를…" "영실아, 하늘의 별은 양반의 별, 노비의 별 따로 있느냐? 재능에 귀천이 없다. 네 솜씨로 백성을 도우라." 그날 밤, 영실은 궁궐 뒤뜰에서 한양의 밤하늘을 올려다보았습니다. 같은 별이었지만, 그날의 별은 유난히 밝았습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/03.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제3장</span>
+        <h2 class="story-title">물로 시간을 새기다 — 자격루 제작</h2>
+        <div class="story-summary">📌 중심 내용: 영실은 세종의 명을 받아 스스로 시각을 알리는 물시계 '자격루'를 만들어내며 조선 과학사의 새 장을 엽니다.</div>
+        <div class="story-content">
+          <p>궁궐에 들어온 영실에게 세종이 내린 첫 번째 과제는 시간을 정확히 알려주는 기구를 만드는 것이었습니다. "영실아, 지금 우리 조선은 중국에서 들여온 낡은 물시계에 의지하고 있다. 그러나 그것은 사람이 계속 옆에서 물을 채우고 지켜봐야 한단다. 사람의 손을 빌리지 않고도 스스로 시각을 알리는 물시계를 만들 수 있겠느냐?" 영실은 무릎을 꿇고 대답했습니다.</p>
+          <p>"반드시 해내겠사옵니다, 전하." 그러나 말은 쉬워도 실천은 어려웠습니다. 영실은 밤낮으로 연구에 매달렸습니다. 물이 일정한 속도로 흐르게 하려면 수위가 항상 같아야 했고, 시간에 맞춰 자동으로 종과 북과 징을 울리게 하려면 정교한 기계 장치가 필요했습니다. 수십 번의 실패가 이어졌습니다.</p>
+          <p>물이 너무 빨리 흘러 시간이 맞지 않기도 했고, 구슬이 제때 굴러가지 않아 종이 울리지 않기도 했습니다. 이천 장군은 처음에는 의심의 눈으로 영실을 바라보았습니다. "노비의 재주라는 것이 겨우 이 정도란 말인가?" 하지만 영실은 포기하지 않았습니다. 실패할 때마다 원인을 꼼꼼히 기록하고, 한 가지씩 문제를 해결해 나갔습니다.</p>
+          <p>물의 온도에 따라 흐르는 속도가 달라진다는 것을 발견하고 보정 장치를 만들었으며, 구슬의 무게와 경사면의 각도를 수백 번 조정했습니다. 마침내, 1434년, '스스로 치는 물시계'라는 뜻의 자격루가 완성되었습니다. 물이 일정하게 흘러내려 수수깡 모양의 부전을 띄우면, 그 힘으로 구슬이 굴러가 지렛대를 건드리고, 나무 인형이 종과 북과 징을 차례로 쳤습니다. 경복궁에서 자격루가 처음 울리던 날, 세종은 감탄했고, 이천 장군은 고개를 깊이 숙였습니다.</p>
+          <p>"내가 이 사람을 잘못 보았구나." 조말생조차 그날만큼은 할 말을 잃었습니다. 영실은 조용히 자격루를 바라보며 미소 지었습니다. 물 한 방울 한 방울이 모여 시간을 새기듯, 그의 노력도 마침내 결실을 맺은 것이었습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/04.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제4장</span>
+        <h2 class="story-title">해그림자로 하루를 읽다 — 앙부일구</h2>
+        <div class="story-summary">📌 중심 내용: 영실은 백성 누구나 쉽게 시간을 알 수 있도록 해시계 '앙부일구'를 만들어 종로 네거리에 세웁니다.</div>
+        <div class="story-content">
+          <p>자격루의 성공 이후, 세종은 영실에게 더 큰 꿈을 이야기했습니다. "영실아, 자격루는 궁궐 안에서만 쓸 수 있으니, 궁궐 밖의 백성들은 여전히 시간을 알 길이 없구나. 글을 모르는 백성도, 시골의 농부도 한눈에 시간을 알 수 있는 기구를 만들 수 있겠느냐?" 영실은 깊이 생각에 잠겼습니다. 궁궐 밖에 놓을 시계라면 물이나 복잡한 기계 장치 없이도 작동해야 했습니다.</p>
+          <p>영실의 시선이 하늘로 향했습니다. 태양! 매일 뜨고 지는 태양의 그림자를 이용하면 되지 않을까! 영실은 솥을 뒤집어 놓은 듯한 오목한 반구 모양을 떠올렸습니다.</p>
+          <p>하늘을 우러러보는 듯한 모양이라 하여 '앙부일구(仰釜日晷)'라 이름 지었습니다. 가운데 영침이라는 바늘을 세우면 태양의 움직임에 따라 그림자가 이동하며 시각을 가리키는 원리였습니다. 그런데 영실은 한 가지를 더 고민했습니다. '백성들은 글을 모르는 이가 많다.</p>
+          <p>숫자 대신 무엇으로 시각을 표시하면 좋을까?' 영실은 십이지신의 동물 그림을 새겨 넣기로 했습니다. 쥐, 소, 호랑이, 토끼… 누구나 아는 동물 그림이 시각을 대신했지요. 글을 모르는 농부도 "아, 지금은 말(午) 시각이구나!" 하고 알 수 있게 된 것입니다. 앙부일구가 종로 네거리에 설치되던 날, 수많은 백성이 몰려들었습니다.</p>
+          <p>"야, 이거 보게! 그림자가 움직이면서 시간을 알려주네!" "호랑이 쪽에 그림자가 있으니 지금은 인시(寅時)인 거야!" 아이들은 신기해서 앙부일구 주위를 빙빙 돌았고, 어른들은 감탄을 금치 못했습니다. 어떤 노인은 눈물을 글썽이며 말했습니다. "임금님이 우리 같은 백성까지 생각해 주시다니…" 영실은 멀리서 그 모습을 바라보며 가슴이 뜨거워졌습니다.</p>
+          <p>자격루가 궁궐의 시계였다면, 앙부일구는 백성의 시계였습니다. 세종이 꿈꾸던 '백성을 위한 과학'이 비로소 백성의 손에 닿은 순간이었습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/05.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제5장</span>
+        <h2 class="story-title">하늘의 눈물을 재다 — 측우기</h2>
+        <div class="story-summary">📌 중심 내용: 영실은 비의 양을 정확히 측정하는 '측우기'를 발명하여, 조선 농업의 혁명을 이끌어냅니다.</div>
+        <div class="story-content">
+          <p>조선은 농업의 나라였습니다. 백성의 삶은 하늘에서 내리는 비에 달려 있었지요. 비가 너무 적으면 가뭄으로 농사가 망했고, 비가 너무 많으면 홍수로 마을이 잠겼습니다. 세종은 늘 걱정이었습니다.</p>
+          <p>"각 고을의 비가 얼마나 왔는지 정확히 알 수만 있다면, 미리 대비할 수 있을 텐데…" 그때까지 비의 양을 측정하는 방법은 매우 원시적이었습니다. 관리들이 땅이 젖은 깊이를 자로 재어 보고하는 것이 전부였으니, 땅의 종류에 따라 결과가 들쭉날쭉할 수밖에 없었습니다. 영실은 이 문제를 곰곰이 생각했습니다. '땅은 매번 다르지만, 같은 크기의 그릇에 받은 빗물의 높이는 언제나 정확하지 않을까?' 이 단순하지만 혁명적인 발상에서 측우기가 탄생했습니다.</p>
+          <p>영실은 원통형 그릇을 만들고, 그 안에 고인 빗물의 높이를 자로 재는 방식을 고안했습니다. 원리는 간단했지만, 실용화하기까지는 수많은 시행착오가 있었습니다. 그릇의 크기가 너무 작으면 폭우 때 넘쳤고, 너무 크면 이슬비를 잴 수 없었습니다. 영실은 수십 가지 크기의 그릇을 만들어 시험했고, 마침내 최적의 규격을 찾아냈습니다.</p>
+          <p>측우기가 전국 각 고을에 배치되자 놀라운 변화가 일어났습니다. 각 지역의 강우량이 정확한 숫자로 보고되기 시작한 것입니다. 관리들은 이 자료를 바탕으로 가뭄이 예상되는 지역에 미리 구호 물자를 보낼 수 있었고, 홍수가 잦은 지역에는 제방을 쌓았습니다. 세종은 기뻐하며 말했습니다.</p>
+          <p>"영실이 만든 것은 단순한 그릇이 아니라, 백성의 생명을 지키는 그릇이로다!" 이 측우기는 서양보다 약 이백 년이나 앞선 발명이었습니다. 이탈리아에서 처음 비의 양을 재기 시작한 것이 1639년이었으니, 조선의 측우기는 무려 1441년에 세상에 나온 것입니다. 영실의 머릿속에서 태어난 작은 그릇 하나가 세계 과학사를 바꾼 셈이었습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/06.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제6장</span>
+        <h2 class="story-title">조선의 하늘을 열다 — 과학 혁신</h2>
+        <div class="story-summary">📌 중심 내용: 영실은 자격루, 앙부일구, 측우기에 이어 혼천의, 간의 등 수많은 과학 기구를 발명하며 조선을 동아시아 과학의 중심으로 끌어올립니다.</div>
+        <div class="story-content">
+          <p>자격루, 앙부일구, 측우기의 연이은 성공으로 영실의 이름은 조선 팔도에 울려 퍼졌습니다. 세종은 영실에게 더 많은 과제를 맡겼고, 영실은 그때마다 기대 이상의 결과물을 내놓았습니다. 하늘의 별과 해, 달의 움직임을 관측하는 혼천의를 만들었고, 이를 더 간편하게 개량한 간의도 제작했습니다. 혼천의는 여러 개의 고리가 겹겹이 연결된 복잡한 구조물이었는데, 이 고리들이 하늘의 적도, 황도, 지평선을 나타내며 천체의 위치를 정밀하게 측정할 수 있었습니다.</p>
+          <p>영실은 기존 중국의 설계를 그대로 베끼지 않았습니다. 조선의 위도와 기후에 맞게 완전히 새로 설계했지요. "중국의 하늘과 조선의 하늘은 다릅니다. 우리 하늘은 우리 손으로 읽어야 합니다." 이 말은 단순한 기술적 자부심을 넘어, 과학적 독립 선언이나 다름없었습니다.</p>
+          <p>영실의 작업실은 이제 궁궐에서 가장 활기 넘치는 곳이 되었습니다. 젊은 기술자들이 모여들어 영실에게 배움을 청했고, 영실은 자신의 지식을 아낌없이 나누었습니다. "나 혼자서는 조선의 과학을 바꿀 수 없소. 우리 모두가 함께 연구하고, 함께 만들어야 합니다." 이천 장군은 이제 영실의 가장 든든한 후원자가 되어 있었습니다.</p>
+          <p>처음의 의심은 온데간데없이 사라지고, 진심 어린 존경으로 바뀌었지요. "영실, 자네를 처음 만났을 때 내가 편견을 가졌던 것을 부끄러워하네. 자네는 내가 만난 어떤 양반 학자보다도 뛰어나오." 그러나 모든 사람이 영실을 인정한 것은 아니었습니다. 조말생을 비롯한 보수적인 대신들은 여전히 영실의 출세를 못마땅해했습니다.</p>
+          <p>"노비가 관직을 받고, 양반들 위에 서는 꼴을 언제까지 참으란 말이냐!" 영실의 성공이 클수록, 그를 향한 시기와 견제의 칼날도 날카로워지고 있었습니다. 빛이 밝을수록 그림자도 짙어지는 법이었지요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/07.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제7장</span>
+        <h2 class="story-title">부서진 가마, 무너진 하늘 — 사고와 실각</h2>
+        <div class="story-summary">📌 중심 내용: 영실이 제작을 감독한 임금의 가마가 부서지는 사고가 일어나고, 적들은 이 기회를 놓치지 않아 영실은 모든 것을 잃게 됩니다.</div>
+        <div class="story-content">
+          <p>1442년, 영실의 인생에서 가장 어두운 날이 찾아왔습니다. 세종이 타는 가마, 즉 어가(御駕)를 새로 만드는 프로젝트에 영실이 감독관으로 참여하게 된 것이 화근이었습니다. 가마는 과학 기구가 아니라 의례용 물건이었으니, 영실의 전문 분야와는 거리가 있었습니다. 그런데도 영실에게 이 일이 맡겨진 데에는 조정 내부의 복잡한 정치적 계산이 숨어 있었다는 이야기가 있습니다.</p>
+          <p>새로 만든 어가가 임금을 태우고 나가는 날, 사람들이 지켜보는 가운데 가마의 연결 부위가 '우두둑' 소리를 내며 부서졌습니다. 다행히 세종은 크게 다치지 않았지만, 이 사건은 조정에 엄청난 파문을 일으켰습니다. "노비 출신 따위에게 어가를 맡기니 이런 변을 당하는 것입니다!" 조말생이 기다렸다는 듯이 목소리를 높였습니다. 그간 쌓아 두었던 불만이 한꺼번에 터져 나왔고, 수많은 대신이 영실의 처벌을 요구했습니다.</p>
+          <p>영실은 곤장 백 대의 형벌을 받았습니다. 등이 찢어지고 피가 흐르는 고통 속에서도 영실은 신음 한마디 내지 않았다고 합니다. 그가 더 아팠던 것은 몸의 상처가 아니라, 자신을 믿어 준 세종에게 누를 끼쳤다는 마음의 상처였습니다. "전하, 신의 불찰이옵니다.</p>
+          <p>전하의 은혜를 저버렸사옵니다…" 세종은 영실을 살리고 싶었으나, 조정의 여론을 완전히 무시할 수는 없었습니다. 결국 영실은 관직을 빼앗기고 궁궐에서 쫓겨났습니다. 궁궐을 나서는 영실의 뒷모습을 세종은 먼 곳에서 바라보았다고 합니다. 임금의 눈에도 눈물이 맺혀 있었지요.</p>
+          <p>이날 이후 영실이 어디에서 어떻게 살았는지, 역사의 기록은 침묵합니다. 천재 과학자는 마치 별똥별처럼 찬란하게 빛나다 어둠 속으로 사라져 버렸습니다. 그날 밤 하늘에는 구름이 잔뜩 끼어 별이 보이지 않았다고, 훗날 궁녀들 사이에서 전해지는 이야기가 있습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/08.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제8장</span>
+        <h2 class="story-title">백성의 가슴에 남은 별빛 — 백성을 위한 과학</h2>
+        <div class="story-summary">📌 중심 내용: 영실은 사라졌지만, 그가 남긴 발명품들은 백성의 삶 속에 깊이 스며들어 조선을 밝히는 등불이 됩니다.</div>
+        <div class="story-content">
+          <p>영실이 궁궐을 떠난 뒤에도, 그가 만든 것들은 하루도 쉬지 않고 조선을 위해 일했습니다. 경복궁의 자격루는 여전히 정확하게 시각을 알렸고, 종로의 앙부일구 앞에는 날마다 백성들이 모여들었습니다. 전국 각 고을에 세워진 측우기는 해마다 비의 양을 재어 농사에 보탬이 되었지요. 어떤 농부는 아들에게 이렇게 말했습니다.</p>
+          <p>"얘야, 이 측우기를 만든 분이 누군지 아느냐? 노비 출신이었단다. 하지만 그분 덕에 우리가 가뭄을 미리 알고 대비할 수 있게 되었지." "노비요? 정말요?" "그래, 사람의 가치는 태어난 신분이 아니라 무엇을 하느냐에 달린 거란다." 영실의 과학은 처음부터 끝까지 백성을 향해 있었습니다.</p>
+          <p>자격루는 궁궐의 시간을 바로잡아 나라의 질서를 세웠고, 앙부일구는 글 모르는 백성도 해그림자 하나로 시간을 읽게 했으며, 측우기는 농부의 땀과 수고를 헛되지 않게 지켜 주었습니다. 세종은 영실이 떠난 뒤에도 종종 자격루 앞에 서서 생각에 잠겼다고 합니다. "영실이 만든 이 물시계처럼, 좋은 것은 만든 사람이 떠나도 남아서 세상을 이롭게 하는구나." 영실의 발명품들은 단순한 기계가 아니었습니다. 그것은 '과학은 백성을 위해 존재해야 한다'는 철학의 결정체였습니다.</p>
+          <p>조선 시대의 다른 과학자들이 대부분 왕실이나 지배층을 위한 연구에 머물렀던 것과 달리, 영실의 발명은 언제나 가장 낮은 곳에 있는 사람들을 향했습니다. 궁궐에서 쫓겨난 뒤 영실이 어디에서 무엇을 했는지는 아무도 모릅니다. 하지만 혹시 어느 시골 마을에서 조용히 농기구를 고치고, 아이들에게 별자리를 알려 주며 살지 않았을까요? 영실의 몸은 사라졌지만, 그의 정신은 조선의 하늘과 땅 사이에 별빛처럼 남아 있었습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/09.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제9장</span>
+        <h2 class="story-title">넘을 수 없었던 벽 — 신분의 한계</h2>
+        <div class="story-summary">📌 중심 내용: 천재의 능력으로도 결국 넘지 못한 신분의 벽, 영실의 비극은 조선 사회의 구조적 모순을 적나라하게 드러냅니다.</div>
+        <div class="story-content">
+          <p>영실의 이야기를 되돌아보면, 가슴 한편이 먹먹해지는 것은 그가 아무리 뛰어난 재능을 가졌어도 끝내 '노비'라는 꼬리표를 완전히 떼어내지 못했다는 사실 때문입니다. 세종이라는 위대한 임금의 보호 아래에서만 영실의 재능은 빛을 발할 수 있었고, 그 보호막에 작은 균열이 생기자 모든 것이 무너져 내렸습니다. 이것이 바로 신분제라는 벽의 잔인함이었습니다. 조선 사회는 양반, 중인, 상민, 천민으로 나뉜 엄격한 신분 사회였습니다.</p>
+          <p>태어날 때 정해진 신분은 평생 바뀌지 않았고, 아무리 뛰어난 능력을 가져도 신분이 낮으면 그 능력을 인정받기 어려웠습니다. 영실은 세종의 특별한 배려로 종오품 관직까지 올랐지만, 이는 극히 예외적인 사례였으며 조정의 반대는 한시도 멈추지 않았습니다. 어가 사건 이후 영실이 그토록 쉽게 무너진 것도 결국은 신분 때문이었습니다. 양반 출신 관리가 같은 실수를 했다면 가벼운 처벌로 끝났을 수도 있었지만, 노비 출신 영실에게 그런 관대함은 허락되지 않았습니다.</p>
+          <p>"보거라, 노비를 높은 자리에 앉히면 결국 이런 변이 생기는 법이다!" 조말생의 이 한마디에 영실의 모든 업적은 힘없이 빛을 잃었습니다. 영실의 비극은 개인의 비극을 넘어 조선 사회 전체의 비극이었습니다. 영실 같은 천재가 얼마나 더 많았을까요? 노비의 몸으로 태어나 재능을 펼치지도 못하고 스러져 간 숨은 천재들이 얼마나 많았을까요?</p>
+          <p>신분의 벽이 가로막지 않았더라면, 조선의 과학은 얼마나 더 높이 날아올랐을까요? 이 아픈 질문들은 수백 년이 지난 오늘날에도 여전히 울림이 있습니다. 우리 사회에도 보이지 않는 벽 — 학벌, 지역, 성별, 경제적 배경 — 이 누군가의 재능을 가로막고 있지는 않은지, 영실의 이야기는 조용히 묻고 있습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물04/10.jpg">
+      <div class="story-card">
+        <span class="story-chapter">제10장</span>
+        <h2 class="story-title">별은 지지 않는다 — 능력의 가치</h2>
+        <div class="story-summary">📌 중심 내용: 영실의 삶은 끝났지만, 그의 이야기는 '재능은 신분을 뛰어넘는다'는 영원한 교훈을 남기며 지금도 우리에게 별빛처럼 빛나고 있습니다.</div>
+        <div class="story-content">
+          <p>수백 년의 세월이 흐른 지금, 장영실이라는 이름은 대한민국에서 가장 존경받는 과학자의 이름 중 하나가 되었습니다. 그의 이름을 딴 과학상이 만들어졌고, 우리나라 최초의 다목적 실용위성에도 '아리랑호'와 함께 그의 이름이 거론되었습니다. 과학 교과서에는 자격루와 측우기의 원리가 실려 있고, 전국의 과학관에는 그가 만든 기구들의 복제품이 전시되어 있습니다. 노비로 태어나 온갖 차별과 멸시를 받았던 한 사람이, 이제는 온 나라의 자랑이 되었습니다.</p>
+          <p>영실의 이야기가 우리에게 전하는 교훈은 명확합니다. 재능은 신분을 뛰어넘는다는 것. 사람의 가치는 태어난 곳이 아니라 이루어 낸 것으로 결정된다는 것. 그리고 진정한 과학은 높은 곳이 아니라 낮은 곳을 향해야 한다는 것입니다.</p>
+          <p>세종대왕이 영실에게 말했던 "하늘의 별은 양반의 별, 노비의 별 따로 있느냐?"라는 물음은, 시대를 초월한 진리를 담고 있습니다. 오늘날 우리 아이들은 꿈꿀 수 있습니다. 어떤 환경에서 태어나든, 어떤 어려움이 앞을 가로막든, 노력하고 배우면 세상을 바꿀 수 있다고. 영실이 대장간의 불꽃 속에서 과학의 꿈을 키웠듯이, 지금 이 순간에도 어딘가에서 별을 올려다보며 큰 꿈을 꾸는 아이가 있을 것입니다.</p>
+          <p>영실이 우리에게 남긴 가장 큰 선물은 자격루도, 앙부일구도, 측우기도 아닙니다. 그것은 '어떤 쇠사슬도 진정한 재능을 묶어 둘 수 없다'는 희망의 메시지입니다. 비록 영실의 몸은 역사의 어둠 속으로 사라졌지만, 그의 정신은 별처럼 영원히 빛나고 있습니다. 별은 구름에 가려질 수는 있어도, 결코 지지 않으니까요.</p>
+          <p>자, 이것이 노비 출신 천재 과학자 장영실의 이야기입니다. 여러분도 오늘 밤, 하늘을 올려다보세요. 그 별빛 속에 영실의 미소가 보일지도 모릅니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="ending-section">
+      <div class="ending-icon">⭐</div>
+      <h2 class="ending-title">하늘의 별을 세던 종, 장영실</h2>
+      <div class="ending-lesson">
+        🌱 <strong>교훈</strong><br><br>
+        재능은 신분을 뛰어넘는다. 사람의 가치는 태어난 곳이 아니라, 자신이 이루어 낸 것으로 결정됩니다. 장영실처럼, 어떤 쇠사슬도 진정한 재능과 노력을 묶어 둘 수는 없습니다.
+      </div>
+      <a href="/menu.html" class="back-btn">
+        <span>←</span>
+        <span>도서관으로 돌아가기</span>
+      </a>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 전환 (Intersection Observer)
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('[data-bg]');
+
+    const bgObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const newBg = entry.target.getAttribute('data-bg');
+          mapContainer.style.backgroundImage = `url('${newBg}')`;
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => bgObserver.observe(section));
+
+    // 스토리 카드 애니메이션
+    const storyCards = document.querySelectorAll('.story-card');
+
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.2
+    });
+
+    storyCards.forEach(card => cardObserver.observe(card));
+  </script>
+</body>
+</html>

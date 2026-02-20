@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚛️ 고대 소년 아토의 이천오백 년 시간여행 — 원자를 찾아서</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(231, 76, 60, 0.15);
+      color: #c0392b;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #e74c3c;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #c0392b;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #ff6b6b;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(231, 76, 60, 0.2);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      border-left: 4px solid #e74c3c;
+    }
+
+    .intro-content .conflict h3 {
+      color: #ff6b6b;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(231, 76, 60, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(192, 57, 43, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(192, 57, 43, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚛️ 고대 소년 아토의 이천오백 년 시간여행 — 원자를 찾아서</h1>
+        <p class="subtitle">
+          — 눈에 안 보이는 작은 알갱이의 정체 —<br>
+          교과기반 창작도서 · 화학 07
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>⚛️ 아토:</strong> 열두 살 고대 그리스 소년, '물질을 끝없이 쪼개면?'이라는 질문으로 이천오백 년을 시간여행하는 주인공</p>
+          <p><strong>🧙 데모크리토스 선생님:</strong> '아토모스(쪼갤 수 없는 것)'를 처음 상상한 고대 철학자, 아토의 스승</p>
+          <p><strong>🔴 연속이:</strong> '물질은 끝없이 쪼갤 수 있다'고 주장하는 회의론자, 과학적 증거 앞에서 변화하는 라이벌</p>
+          <p><strong>🔬 과학자들:</strong> 돌턴, 톰슨, 러더퍼드, 보어, 슈뢰딩거 등 원자 모형을 발전시킨 시대별 안내인</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 갈등 구조</h3>
+          <p>"쪼갤 수 없는 알갱이가 있다"(아토) vs "물질은 끝없이 쪼갤 수 있다"(연속이) — 이천오백 년에 걸친 논쟁이 실험과 증거를 통해 풀려가며, 보이지 않는 세계가 보이는 세계의 진짜 기초임을 깨달아가는 성장 이야기입니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">고대의 추측</span>
+        <h2>🏛️ 모래알을 끝없이 쪼개면 무엇이 남을까</h2>
+        <p>이천오백 년 전 그리스, 에게해가 내려다보이는 작은 언덕에서 한 소년이 모래알을 들여다보고 있었습니다. 소년의 이름은 <span class="highlight">'아토'</span>였어요. 열두 살의 아토는 유난히 생각이 많은 아이였습니다. 다른 아이들이 바닷가에서 물장구를 치며 놀 때, 아토는 모래 한 줌을 움켜쥐고 끝없는 질문에 빠져들곤 했지요.</p>
+        <p><span class="dialogue">"이 모래알을 반으로 쪼개면 더 작은 모래가 되겠지. 그걸 또 반으로 쪼개면 더더 작아지겠지. 그런데 계속 쪼개면… 끝이 있을까, 없을까?"</span></p>
+        <p>아토는 스승인 철학자 '데모크리토스' 선생님을 찾아갔습니다. 수염이 덥수룩한 선생님은 올리브 나무 아래에서 제자들을 가르치고 있었어요.</p>
+        <p><span class="dialogue">"선생님, 물질을 끝없이 쪼개면 어떻게 될까요? 영원히 쪼갤 수 있는 건가요?"</span></p>
+        <p>선생님의 눈이 반짝였습니다. <span class="dialogue">"아토야, 아주 좋은 질문이다. 나는 이렇게 생각한다. 물질을 계속 쪼개다 보면, 더 이상 쪼갤 수 없는 가장 작은 알갱이에 도달하게 될 거야. 나는 그것을 <span class="highlight">'아토모스'</span>라고 부르겠다. '쪼갤 수 없는 것'이라는 뜻이지."</span></p>
+        <p>아토는 전율을 느꼈어요. 세상 모든 것을 이루는 가장 작은 조각이 있다니!</p>
+        <p>하지만 동네의 다른 철학자 '연속이'가 비웃었습니다. <span class="dialogue">"말도 안 돼! 물질은 끝없이 쪼갤 수 있어. 네가 말하는 '아토모스' 따위는 존재하지 않아!"</span></p>
+        <p>연속이는 물질이 끊김 없이 이어져 있다고 주장하는 사람이었어요. 아토의 마음이 흔들렸습니다. 누구 말이 맞는 걸까? 눈으로 볼 수도, 만질 수도 없는 가장 작은 알갱이가 정말 존재하는 걸까?</p>
+        <p>이 질문은 이천 년이 넘도록 답을 찾지 못한 채 인류의 마음속에 남아 있었습니다. 그리고 아토는 그 답을 찾기 위한 기나긴 여행을 시작하게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">원자의 개념</span>
+        <h2>⚛️ 이천 년 후 되살아난 고대의 꿈</h2>
+        <p>아토의 질문은 시간을 뛰어넘었습니다. 이천 년이 지난 십구 세기 초, 영국의 과학자 존 돌턴이라는 사람이 마침내 '아토모스'의 존재를 과학적으로 주장한 것이에요.</p>
+        <p>아토가 시간여행을 하듯 돌턴의 실험실로 날아가자, 그곳에서 '돌턴 선생님'이 화학 실험을 하고 있었습니다.</p>
+        <p><span class="dialogue">"어서 오게, 젊은이. 나는 실험 결과를 통해 네 스승의 생각이 옳았음을 증명했단다."</span></p>
+        <p>돌턴 선생님이 실험 데이터를 보여주었어요. <span class="dialogue">"화학 반응에서 물질은 항상 일정한 비율로 결합한단다. 예를 들어 물을 만들 때 수소와 산소는 항상 일 대 팔의 무게 비율로 결합하지. 이것은 물질이 쪼갤 수 없는 작은 단위, 즉 <span class="highlight">'원자'</span>로 이루어져 있기 때문이야."</span></p>
+        <p>아토가 물었어요. <span class="dialogue">"원자는 어떻게 생겼나요?"</span></p>
+        <p>돌턴 선생님이 작은 공 모형을 보여주었습니다. <span class="dialogue">"나는 원자가 딱딱한 공처럼 생겼다고 생각해. 각 원소마다 크기와 무게가 다른 공이 있고, 이 공들이 서로 결합해서 다양한 물질을 만드는 거지."</span></p>
+        <p>연속이가 다시 나타나 반박했어요. <span class="dialogue">"원자를 본 사람이 있어? 없잖아! 아무도 본 적 없는 것을 어떻게 믿을 수 있지?"</span></p>
+        <p>돌턴 선생님이 미소를 지었어요. <span class="dialogue">"직접 보지 못해도 증거로 존재를 추론할 수 있단다. 화학 반응의 정확한 비율이 바로 그 증거야. 물질이 원자로 이루어져 있지 않다면, 이렇게 정확한 비율이 나올 수 없어."</span></p>
+        <p>아토는 흥분했습니다. 스승 데모크리토스의 직관이 이천 년 후 과학적 증거로 뒷받침되고 있었어요! 하지만 아토의 여행은 여기서 끝이 아니었습니다. 돌턴의 '딱딱한 공' 모델은 시작에 불과했거든요. 원자의 진짜 정체는 훨씬 더 놀라운 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">핵의 발견</span>
+        <h2>💥 원자 속에 숨어 있던 놀라운 심장</h2>
+        <p>아토의 시간여행은 이십 세기 초로 이어졌습니다. 영국 맨체스터의 어니스트 러더퍼드 연구실. 러더퍼드 선생님은 호기심 가득한 눈을 가진 뉴질랜드 출신의 과학자였어요.</p>
+        <p><span class="dialogue">"아토야, 돌턴은 원자가 딱딱한 공이라고 했지? 하지만 나는 그게 아닐 거라고 생각했어. 그래서 실험을 했단다."</span></p>
+        <p>러더퍼드 선생님이 유명한 <span class="highlight">'금박 실험'</span>을 보여주었어요. 얇디얇은 금박에 알파 입자라는 작은 총알을 쏘는 실험이었습니다. 만약 원자가 꽉 찬 공이라면 알파 입자가 대부분 막히거나 튕겨 나와야 했어요.</p>
+        <p><span class="dialogue">"그런데 결과가 어땠는지 아니?"</span> 러더퍼드 선생님이 물었습니다. <span class="dialogue">"대부분의 알파 입자가 금박을 그냥 통과해 버렸어!"</span></p>
+        <p>아토가 깜짝 놀랐어요. <span class="dialogue">"통과했다고요? 그러면 금박 안에 아무것도 없는 거예요?"</span></p>
+        <p><span class="dialogue">"아니, 극히 일부의 알파 입자가 크게 튕겨 나갔어. 어떤 것은 거의 정반대 방향으로 돌아왔지. 나는 이것을 보고 소리쳤단다. '종잇장에 대포알을 쐈는데 되돌아 온 것과 같다!'"</span></p>
+        <p>러더퍼드 선생님이 그려 준 그림을 보고 아토는 이해했습니다. 원자의 중심에 아주 작지만 엄청나게 무겁고 단단한 덩어리가 있었어요. 이것이 <span class="highlight">'원자핵'</span>이었습니다. 원자의 거의 모든 질량이 이 작은 핵에 집중되어 있었고, 나머지 공간은 거의 비어 있었던 거예요.</p>
+        <p><span class="dialogue">"원자핵은 양전하를 띤 '양성자'와 전하가 없는 '중성자'로 이루어져 있어. 양성자의 수가 원소의 종류를 결정하지. 양성자가 하나면 수소, 여섯 개면 탄소, 스물여섯 개면 철이야."</span></p>
+        <p>연속이가 침묵했습니다. 실험이라는 부인할 수 없는 증거 앞에서 더 이상 반박할 수 없었거든요. 원자는 딱딱한 공이 아니라, 중심에 작은 심장을 품고 있는 신비로운 존재였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전자의 움직임</span>
+        <h2>⚡ 핵 주위를 춤추는 유령 같은 구름</h2>
+        <p>원자핵을 발견한 후, 아토에게 새로운 의문이 생겼어요. <span class="dialogue">"원자핵이 원자의 중심에 있다면, 나머지 공간에는 뭐가 있는 거예요?"</span></p>
+        <p>러더퍼드 선생님이 대답했어요. <span class="dialogue">"전자가 있단다. 음전하를 띤 아주 가벼운 입자지. 양전하를 띤 핵과 음전하를 띤 전자가 서로 끌어당기면서, 전자가 핵 주변에 머무르는 거야."</span></p>
+        <p>하지만 전자의 행동은 상상 이상으로 기이했습니다. 아토가 전자를 찾으려 핵 주변을 돌아다녔지만, 전자를 '볼' 수가 없었어요. 전자가 한 곳에 있는 것 같다가 순간 다른 곳에 나타나고, 잡으려 하면 사라져 버렸습니다.</p>
+        <p><span class="dialogue">"전자는 행성처럼 깔끔한 궤도를 도는 게 아니야."</span> 새로운 안내인이 나타났어요. 덴마크의 물리학자 닐스 보어와 오스트리아의 에르빈 슈뢰딩거였습니다.</p>
+        <p>슈뢰딩거 선생님이 설명했어요. <span class="dialogue">"전자는 특정한 위치에 있는 것이 아니라, 핵 주변에 <span class="highlight">'존재할 확률'</span>이 퍼져 있어. 마치 구름처럼."</span></p>
+        <p>아토의 눈앞에 원자핵 주변으로 흐릿한 구름이 펼쳐졌어요. 구름이 짙은 곳은 전자가 발견될 확률이 높고, 옅은 곳은 낮았습니다.</p>
+        <p><span class="dialogue">"이것을 <span class="highlight">'전자 구름'</span> 또는 '오비탈'이라고 한단다."</span></p>
+        <p>아토가 당혹스러워했어요. <span class="dialogue">"정확한 위치를 알 수 없다고요? 그럼 어디 있는 건지 어떻게 알아요?"</span></p>
+        <p>슈뢰딩거 선생님이 미소를 지었어요. <span class="dialogue">"그것이 양자역학의 세계야. 아주 작은 세계에서는 우리가 일상에서 경험하는 규칙이 통하지 않아. 전자는 입자이면서 동시에 파동이고, 관측하기 전까지는 모든 곳에 동시에 존재할 수 있단다."</span></p>
+        <p>연속이도, 아토도 입을 다물지 못했습니다. 원자의 세계는 인간의 상식을 완전히 뒤엎는 곳이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">원자 모형 변화</span>
+        <h2>🔄 과학이 실수하고 고치며 자라는 법</h2>
+        <p>아토는 여행하면서 원자의 모습이 시대마다 전혀 다르게 그려졌다는 것을 깨달았습니다.</p>
+        <p><span class="dialogue">"어떤 건 딱딱한 공이고, 어떤 건 건포도 빵 같고, 어떤 건 태양계 같고, 어떤 건 구름 같아요. 도대체 진짜 모습은 뭐예요?"</span></p>
+        <p>아토가 혼란스러워하자, 모든 시대의 선생님들이 모여 원자 모형의 역사를 정리해 주었어요.</p>
+        <p><span class="dialogue">"처음에 돌턴이 원자를 단단한 구슬이라고 했지. 이것이 <span class="highlight">'돌턴 모형'</span>이야."</span> 돌턴 선생님이 말했어요.</p>
+        <p><span class="dialogue">"그 다음 톰슨이라는 과학자가 전자를 발견했어. 톰슨은 양전하 덩어리 속에 전자가 박혀 있다고 생각했지. 마치 건포도가 박힌 푸딩처럼. 이것이 <span class="highlight">'톰슨 모형'</span>이야."</span></p>
+        <p><span class="dialogue">"그 다음이 나지."</span> 러더퍼드 선생님이 말했어요. <span class="dialogue">"나는 핵을 발견하고, 전자가 핵 주위를 돈다고 했어. 마치 행성이 태양 주위를 도는 것처럼. <span class="highlight">'러더퍼드 모형'</span>이야."</span></p>
+        <p>보어 선생님이 이어갔어요. <span class="dialogue">"나는 전자가 아무 궤도나 도는 것이 아니라, 특정한 에너지 준위의 궤도만 돈다고 수정했지. <span class="highlight">'보어 모형'</span>이야."</span></p>
+        <p>마지막으로 슈뢰딩거 선생님이 말했어요. <span class="dialogue">"나는 전자가 궤도를 도는 것이 아니라 확률적인 구름으로 존재한다고 했어. 이것이 현재 가장 정확한 <span class="highlight">'양자역학 모형'</span>이야."</span></p>
+        <p>아토가 물었어요. <span class="dialogue">"그러면 이전 모형들은 다 틀린 건가요?"</span></p>
+        <p>슈뢰딩거 선생님이 고개를 가로저었어요. <span class="dialogue">"틀린 것이 아니라 발전한 거야. 각 모형은 당시의 실험 결과를 설명하기 위해 최선을 다한 것이지. 새로운 증거가 나오면 모형을 수정하고 더 정확하게 만드는 것, 그것이 바로 과학이 성장하는 방법이란다."</span></p>
+        <p>과학은 한 번에 완벽한 답을 내는 것이 아니었습니다. 틀리고, 고치고, 다시 시도하며 진실에 다가가는 것이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">입자의 세계</span>
+        <h2>🔬 양성자, 중성자, 전자의 삼총사</h2>
+        <p>아토는 이제 원자를 이루는 세 가지 입자를 자세히 알아보기로 했습니다. 원자핵 속으로 들어가니, 두 종류의 입자가 꽉 붙어 있었어요. 빨간빛을 내며 양전하를 가진 <span class="highlight">'양성자'</span>와, 회색빛으로 전하가 없는 <span class="highlight">'중성자'</span>였습니다. 그리고 핵 바깥의 구름 속에서 파란빛으로 빠르게 춤추는 <span class="highlight">'전자'</span>가 있었지요.</p>
+        <p><span class="dialogue">"안녕! 나는 양성자야!"</span> 빨간 입자가 밝게 인사했어요. <span class="dialogue">"나의 수가 원소의 정체를 결정해. 양성자가 하나면 수소, 여덟 개면 산소, 스물여섯 개면 철이지. 나를 '원자 번호'라고도 불러."</span></p>
+        <p>회색 입자가 조용히 말했어요. <span class="dialogue">"나는 중성자야. 전하가 없어서 조용한 편이지. 하지만 내가 없으면 양성자들이 서로 밀어내서 핵이 뭉쳐 있을 수 없어. 내가 양성자들 사이에서 접착제 역할을 하는 거야."</span></p>
+        <p>파란 입자가 구름 속에서 빠르게 날아다니며 말했어요. <span class="dialogue">"나는 전자! 나는 양성자보다 약 천팔백사십 배나 가벼워. 하지만 화학 반응에서는 내가 주인공이야. 원자들이 결합하거나 분리되는 것은 전부 나, 전자의 움직임 때문이거든!"</span></p>
+        <p>아토가 놀랐어요. <span class="dialogue">"가장 가벼운 전자가 가장 중요하다고?"</span></p>
+        <p><span class="dialogue">"맞아! 원자핵은 화학 반응에서 거의 변하지 않아. 하지만 전자는 원자 사이를 오가며 결합을 만들고 끊지. 물이 만들어지는 것도, 불이 타는 것도, 녹이 스는 것도 전부 전자의 일이야."</span></p>
+        <p>세 입자는 성격이 전혀 달랐지만, 하나라도 없으면 원자가 존재할 수 없었어요. 양성자가 정체를, 중성자가 안정을, 전자가 활동성을 담당하며 완벽한 팀을 이루고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">크기의 비교</span>
+        <h2>📏 상상할 수 없는 작음의 세계</h2>
+        <p>아토가 원자의 크기에 대해 물었어요. <span class="dialogue">"원자가 아주 작다는 건 알겠는데, 정확히 얼마나 작은 거예요?"</span></p>
+        <p>슈뢰딩거 선생님이 비유를 들어 설명해 주었습니다. <span class="dialogue">"원자 한 개의 지름은 약 일억 분의 일 센티미터야. 숫자로 쓰면 영 점 영영영영영영영일 센티미터지."</span></p>
+        <p>아토가 눈을 껌벅였어요. 상상이 되지 않았거든요.</p>
+        <p><span class="dialogue">"이렇게 비유해 볼까?"</span> 선생님이 말했어요. <span class="dialogue">"탁구공 하나를 원자라고 하면, 원자를 그만큼 확대했을 때 탁구공은 지구 크기가 돼. 즉 <span class="highlight">원자와 탁구공의 크기 차이가, 탁구공과 지구의 크기 차이와 같다</span>는 뜻이야."</span></p>
+        <p>아토의 입이 벌어졌습니다.</p>
+        <p><span class="dialogue">"그러면 원자핵은요?"</span></p>
+        <p><span class="dialogue">"원자핵은 원자보다 약 십만 배 작아. 만약 원자를 축구장 크기로 확대하면, 원자핵은 축구장 한가운데에 놓인 쌀알 한 톨 정도야."</span></p>
+        <p>바로 이것이 러더퍼드의 금박 실험에서 알파 입자가 대부분 통과한 이유였어요. 원자는 거의 텅 빈 공간이었고, 그 한가운데에 쌀알만 한 핵이 있을 뿐이었습니다.</p>
+        <p><span class="dialogue">"그러면 전자는요?"</span></p>
+        <p><span class="dialogue">"전자의 크기는 측정 자체가 불가능할 정도로 작아. 현재까지 알려진 바로는 전자는 크기가 없는 '점 입자'일 수도 있단다."</span></p>
+        <p>연속이가 처음으로 감탄했어요. <span class="dialogue">"세상이… 이렇게 작은 것들로 이루어져 있었다니. 그리고 그 작은 것들 사이에 이렇게 넓은 빈 공간이 있었다니!"</span></p>
+        <p>아토도 전율했습니다. 우리가 '단단하다'고 느끼는 모든 물체는 사실 대부분 빈 공간이었어요. 원자 세계의 스케일은 인간의 상상력 너머에 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">빈 공간의 비밀</span>
+        <h2>🕳️ 단단한 세상이 사실 텅 비어 있다는 충격</h2>
+        <p>아토는 원자의 대부분이 빈 공간이라는 사실에 충격을 받았습니다.</p>
+        <p><span class="dialogue">"잠깐, 그러면 내 손도 대부분 빈 공간이고, 이 바위도 대부분 빈 공간이라는 거예요? 그런데 왜 내 손이 바위를 통과하지 못하는 거예요?"</span></p>
+        <p>이것은 정말 좋은 질문이었어요. 슈뢰딩거 선생님이 미소를 지으며 대답했습니다.</p>
+        <p><span class="dialogue">"그건 전자 구름 때문이야. 원자 바깥쪽에 전자 구름이 있지? 두 원자가 가까이 다가가면, 각 원자의 전자 구름이 서로 밀어내는 힘이 작용해. 전자는 음전하를 띠고 있으니까, 같은 전하끼리 밀어내는 거지. 이 <span class="highlight">전기적 밀어냄이 너무 강해서 원자끼리 겹칠 수 없는 거야.</span>"</span></p>
+        <p>아토가 이해했어요. <span class="dialogue">"아! 원자 자체는 거의 빈 공간이지만, 전자 구름의 전기적 힘이 보이지 않는 벽을 만들어 주는 거구나!"</span></p>
+        <p><span class="dialogue">"맞아. 네가 의자에 앉았을 때, 네 몸의 원자와 의자의 원자가 실제로 접촉하는 것이 아니야. 전자 구름들 사이의 전기적 반발력이 너를 받쳐주고 있는 거지."</span></p>
+        <p>연속이가 머리를 감싸 쥐며 말했어요. <span class="dialogue">"그러면 나는 지금 의자에 앉아 있는 게 아니라… 의자 위에 떠 있는 거야?"</span></p>
+        <p><span class="dialogue">"과학적으로 말하면 그렇지. 아주 미세한 거리지만, 네 원자와 의자의 원자 사이에는 빈 공간이 있어."</span></p>
+        <p>아토는 주변의 모든 것을 새로운 눈으로 보았습니다. 단단해 보이는 벽, 차가운 금속, 따뜻한 피부. 이 모든 것이 사실 대부분 텅 빈 공간으로 이루어져 있으면서, 전자라는 작은 입자의 전기적 힘으로 형태를 유지하고 있었습니다.</p>
+        <p>보이지 않는 세계의 규칙이 보이는 세계의 모든 것을 만들고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">과학의 발전</span>
+        <h2>🚀 보이지 않는 것을 보려는 인류의 끝없는 도전</h2>
+        <p>여행의 끝이 가까워지자, 아토는 하나의 질문이 남았어요. <span class="dialogue">"인류는 정말 원자를 본 적이 있나요?"</span></p>
+        <p>슈뢰딩거 선생님이 현대의 과학 실험실로 아토를 데려갔습니다. 거기에는 어마어마하게 큰 기계가 있었어요.</p>
+        <p><span class="dialogue">"이것은 <span class="highlight">'주사 터널링 현미경'</span>이라고 해. 일구팔일년에 발명되었지. 이 현미경은 빛 대신 전자를 이용해서 원자 표면의 모습을 볼 수 있어."</span></p>
+        <p>화면에 울퉁불퉁한 지형이 나타났습니다. 마치 산맥의 항공 사진처럼 보이는 것이 사실은 개별 원자의 모습이었어요!</p>
+        <p><span class="dialogue">"이것이… 원자야?"</span> 아토의 눈에서 눈물이 흘렀습니다. 이천오백 년 전 스승 데모크리토스가 상상으로만 그렸던 것이, 마침내 눈앞에 나타난 거예요.</p>
+        <p>슈뢰딩거 선생님이 말했어요. <span class="dialogue">"그뿐만이 아니야. 입자 가속기라는 장치는 양성자를 빛에 가까운 속도로 충돌시켜서 원자핵 내부, 심지어 양성자와 중성자 내부까지 들여다볼 수 있어. 양성자와 중성자도 더 작은 입자인 <span class="highlight">'쿼크'</span>로 이루어져 있다는 것을 알아냈지."</span></p>
+        <p>아토가 놀랐어요. <span class="dialogue">"원자보다 더 작은 게 또 있어요?!"</span></p>
+        <p><span class="dialogue">"그래. 쿼크, 렙톤, 보손… 물질의 가장 기본적인 입자들을 '기본 입자'라고 해. 과학자들은 지금도 더 근본적인 것이 있는지 연구하고 있단다."</span></p>
+        <p>연속이가 조용히 말했어요. <span class="dialogue">"나는… 틀렸어. 물질은 끝없이 이어진 것이 아니라, 작은 알갱이로 이루어져 있었어. 데모크리토스가 옳았고, 이천오백 년에 걸친 과학자들이 그것을 증명했구나."</span></p>
+        <p>보이지 않는 것을 보려는 인류의 도전은 한 번도 멈춘 적이 없었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">작은 것이 전부다</span>
+        <h2>🌌 원자가 세상에 전하는 마지막 비밀</h2>
+        <p>모든 여행을 마친 아토는 다시 에게해가 보이는 언덕 위에 서 있었습니다. 손에는 여전히 모래 한 줌이 쥐어져 있었어요. 하지만 이제 이 모래가 완전히 다르게 보였습니다. 모래알 하나에 수조 개의 원자가 들어 있고, 각 원자 안에는 양성자, 중성자, 전자라는 경이로운 입자들이 춤추고 있었어요. 그 입자들 사이의 거의 텅 빈 공간에서 전기적 힘이 작용하여 세상의 모든 것을 만들어내고 있었습니다.</p>
+        <p>데모크리토스 선생님이 다가왔어요. <span class="dialogue">"아토야, 여행은 어땠니?"</span></p>
+        <p>아토가 감격에 젖어 대답했습니다. <span class="dialogue">"선생님, 선생님의 직관은 옳았어요! 물질을 계속 쪼개면 더 이상 쪼갤 수 없는 기본 입자에 도달해요. 원자가 있고, 그 안에 핵이 있고, 핵 안에 양성자와 중성자가 있고, 더 안에 쿼크가 있어요!"</span></p>
+        <p>연속이도 옆에 서 있었습니다. <span class="dialogue">"아토야, 나도 배웠어. 보이지 않는다고 존재하지 않는 것이 아니었어. 오히려 <span class="highlight">보이지 않는 세계가 보이는 세계의 진짜 기초</span>였던 거야."</span></p>
+        <p>아토가 마지막으로 모래알을 하늘에 대고 들어 올렸어요. 석양빛이 모래알을 통과하며 반짝였습니다.</p>
+        <p><span class="dialogue">"이 작은 모래알 하나에 우주의 비밀이 담겨 있어. 원자핵의 힘이 별을 태우고, 전자의 춤이 생명을 만들어. <span class="highlight">작은 것이 전부야.</span> 가장 작은 것을 이해하면, 가장 큰 것도 이해할 수 있어."</span></p>
+        <p>보이지 않는 세계가 진짜 기초입니다. 원자라는 상상할 수 없이 작은 존재가 별과 바다와 생명과 당신을 만들었습니다. 가장 작은 것에 가장 큰 비밀이 숨어 있습니다. 그 비밀을 풀어가는 여정이 바로 과학이고, 그 시작은 언제나 '왜?'라는 작은 질문입니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(231, 76, 60, 0.15); border-radius: 16px;">
+          <strong style="color: #c0392b; font-size: 18px;">🌱 교훈 — 보이지 않는 세계가 진짜 기초다</strong><br><br>
+          <span style="font-size: 14px; color: #34495e; line-height: 1.8;">이 이야기를 통해 우리는 눈에 보이지 않는 원자의 세계가 보이는 세상의 진짜 기초라는 것을 배웠습니다. 이천오백 년 전 데모크리토스의 직관에서 시작된 원자의 개념은, 돌턴의 화학 실험, 러더퍼드의 금박 실험, 보어와 슈뢰딩거의 양자역학을 거치며 점점 더 정확해졌습니다. 원자는 양성자, 중성자, 전자로 이루어져 있고, 그 대부분은 놀랍게도 텅 빈 공간입니다.<br><br>과학은 한 번에 완벽한 답을 내는 것이 아닙니다. 틀리고, 수정하고, 다시 도전하며 진실에 다가가는 과정 자체가 과학입니다. 돌턴의 공 모형이 틀렸다고 해서 돌턴이 실패한 것이 아니듯, 실수는 발전의 디딤돌입니다.<br><br>보이지 않는다고 존재하지 않는 것이 아닙니다. 가장 작은 것 안에 가장 큰 비밀이 숨어 있습니다. 여러분의 '왜?'라는 질문이 다음 발견의 씨앗이 됩니다.</span>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎈 바람이와 무게, 풍선 요정 펑이와 떠나는 보이지 않는 분자의 대모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학04/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(102, 126, 234, 0.15);
+      color: #5a4fcf;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #5a4fcf;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a8d8ea;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(102, 126, 234, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(118, 75, 162, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎈 바람이와 무게, 풍선 요정 펑이와 떠나는 보이지 않는 분자의 대모험</h1>
+        <p class="subtitle">
+          — 풍선 속에 숨은 공기의 힘 —<br>
+          교과기반 창작도서 · 화학 04
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>🌬️ 바람이:</strong> 열한 살 호기심 소녀, 풍선을 불며 '보이지 않는 힘'을 탐구하는 주인공</p>
+          <p><strong>⚖️ 무게:</strong> 같은 반 과학 일등, '보이지 않으면 없는 것'이라 믿는 고집쟁이 회의론자</p>
+          <p><strong>🎈 펑이:</strong> 풍선 속 공기의 수호자 요정, 분자와 압력의 비밀을 보여주는 안내자</p>
+          <p><strong>⚡ 갈등 구조:</strong> "보이지 않으면 없는 거야"라는 무게의 선언에 분노한 펑이가, 바람이와 무게를 풍선 속 분자의 세계로 데려갑니다. 보이지 않는 것이 정말 존재하는지, 눈에 보이지 않는 입자가 정말 힘을 가지는지를 직접 목격하며 깨달아가는 성장 이야기입니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">한 입의 숨결이 만든 작은 우주</span>
+        <h2>🎈 풍선 불기</h2>
+        <p>과학 축제가 열린 날, 열한 살 소녀 '바람이'는 풍선 부스 앞에서 풍선을 불고 있었습니다. 볼을 부풀리고 후우 하고 불면, 납작했던 풍선이 조금씩 커졌어요. 한 번, 두 번, 세 번… 풍선은 점점 둥글고 탱탱해졌습니다. 빨간 풍선이 탐스럽게 부풀어 오르자, 바람이는 풍선 입구를 묶고 하늘을 향해 톡 쳐 올렸어요. 풍선이 둥실둥실 떠다니며 느릿하게 내려왔습니다. <span class="dialogue">"예쁘다!"</span> 바람이가 웃었어요.</p>
+        <p>그때, 옆에 서 있던 같은 반 친구 '무게'가 시큰둥하게 말했습니다. 무게는 과학 시간에 항상 일등을 하는 아이였지만, 직접 느끼지 못하는 것은 잘 믿지 않는 고집쟁이였어요. <span class="dialogue">"풍선 안에 뭐가 있다고 그렇게 커지는 건데?"</span> 바람이가 당연하다는 듯 대답했어요. <span class="dialogue">"공기가 들어 있으니까 커지는 거지!"</span> <span class="dialogue">"공기? 공기가 뭔데? 보이지도 않고, 냄새도 없고, 만질 수도 없잖아. 정말 뭔가가 들어 있는 거 맞아?"</span></p>
+        <p>바람이는 입을 벌렸다 다물었습니다. 생각해 보니 맞는 말이었어요. 풍선 안을 들여다보면 아무것도 보이지 않았습니다. 정말 뭔가가 들어 있는 걸까, 아니면 그냥 고무가 늘어난 것일까? <span class="dialogue">"보여줄 수 없으면 없는 거야."</span> 무게가 팔짱을 끼며 선언했어요.</p>
+        <p>바로 그 순간, 풍선이 반짝 빛나더니 풍선 표면에 작은 얼굴이 나타났습니다! <span class="dialogue">"없다고? 내가 없다고 했어?!"</span> 풍선이 분노에 찬 목소리로 말했어요. 바람이와 무게가 깜짝 놀라 뒷걸음질쳤습니다. <span class="dialogue">"나는 '펑이'야. 풍선 속 공기의 수호자지. 네가 보이지 않는다고 없다고 한 거, 절대 용서할 수 없어! 지금부터 내 안에 뭐가 있는지 직접 보여줄 테니까!"</span> 펑이가 눈을 번쩍이며 바람이와 무게를 풍선 속으로 빨아들였습니다. 보이지 않는 세계의 모험이 시작된 것이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">비어 있다고 생각한 곳에 가득 찬 것</span>
+        <h2>💨 기체의 존재</h2>
+        <p>풍선 안으로 빨려 들어간 바람이와 무게는 눈을 비볐습니다. 풍선 밖에서는 텅 비어 보였는데, 안에 들어오니 전혀 달랐어요! 사방에서 투명한 공들이 엄청난 속도로 날아다니고 있었습니다. 위에서 아래로, 왼쪽에서 오른쪽으로, 대각선으로, 어지러울 정도로 빠르게 움직이며 서로 부딪치고 튀어나가고 있었어요. <span class="dialogue">"이게 뭐야?!"</span> 무게가 소리쳤습니다. 투명한 공 하나가 무게의 코를 쳐 지나갔어요.</p>
+        <p>펑이가 나타나 팔짱을 끼며 말했어요. <span class="dialogue">"이것이 바로 네가 '없다'고 한 것들이야. 공기를 이루고 있는 분자들이지. 주로 질소 분자와 산소 분자야."</span> 바람이가 눈을 크게 뜨고 둘러보았어요. 분자들은 셀 수 없이 많았습니다. <span class="dialogue">"이게 다 분자라고? 풍선 안에 몇 개나 있는 거야?"</span> <span class="dialogue">"이 작은 풍선 하나에 약 이십오의 이십삼 제곱 개, 그러니까 <span class="highlight">수백해 개</span>가 들어 있어."</span></p>
+        <p>무게가 멍한 표정을 지었어요. <span class="dialogue">"수백해? 그게 얼마나 큰 수인데?"</span> <span class="dialogue">"만약 이 분자들을 한 줄로 세우면 지구에서 태양까지 수백억 번을 왕복할 수 있는 길이야."</span> 바람이도 무게도 할 말을 잃었습니다. 텅 비어 보이던 풍선 안에 이렇게 어마어마한 수의 분자가 있었다니!</p>
+        <p>펑이가 으스대며 말했어요. <span class="dialogue">"이제 알겠어, 무게? <span class="highlight">'보이지 않는다'고 '없는 것'이 아니야.</span> 너희 인간의 눈은 분자를 볼 수 없을 뿐이지, 이 세상은 분자로 가득 차 있어. 네가 숨 쉬는 공기, 바람, 냄새, 심지어 네 몸을 감싸고 있는 대기까지 모두 이 분자들이야."</span> 무게의 얼굴이 붉어졌습니다. 자기가 '없다'고 한 것들이 이렇게 압도적인 숫자로 존재하고 있었다니. 보이지 않는 것이 없는 것이 아니라는 사실을 직접 눈으로 확인한 순간이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">쉬지 않고 달리는 보이지 않는 선수들</span>
+        <h2>🏃 분자의 운동</h2>
+        <p>바람이가 분자 하나를 자세히 관찰하려 했지만, 너무 빨라서 눈으로 따라갈 수가 없었어요. <span class="dialogue">"얘네 왜 이렇게 빨라?!"</span> <span class="dialogue">"기체 분자는 항상 운동하고 있어. 한순간도 쉬지 않아."</span> 펑이가 설명했어요. <span class="dialogue">"공기 분자 하나의 평균 속도가 <span class="highlight">초속 약 오백 미터</span>야. 총알 속도에 가까운 거지!"</span></p>
+        <p>무게가 허를 찔렸어요. <span class="dialogue">"총알 속도? 그런데 왜 나한테 아무 느낌이 없어?"</span> 펑이가 킥킥 웃었습니다. <span class="dialogue">"분자 하나는 너무 작으니까 네가 느끼지 못하는 거야. 하지만 이 수백해 개의 분자가 동시에 네 몸에 부딪치고 있어. 다만 사방에서 골고루 부딪치니까 어느 한 방향으로 밀리는 느낌이 없을 뿐이지."</span></p>
+        <p>펑이가 분자의 운동을 천천히 보여주는 마법을 걸었어요. 슬로 모션으로 보니, 분자들의 움직임이 선명하게 보였습니다. 분자 하나가 직선으로 날아가다가 다른 분자와 충돌하면 방향을 바꾸어 또 직선으로 날아갔어요. 또 충돌, 또 방향 전환. 끊임없이 부딪치고 튀어나가는 것을 반복하고 있었습니다.</p>
+        <p><span class="dialogue">"이것을 <span class="highlight">'무작위 운동'</span>이라고 해. 분자 하나하나의 움직임은 예측할 수 없지만, 전체적인 행동은 수학으로 설명할 수 있어."</span> 바람이가 물었어요. <span class="dialogue">"얘네는 왜 쉬지 않고 움직이는 거야? 피곤하지 않아?"</span> 펑이가 대답했습니다. <span class="dialogue">"분자의 운동은 온도와 관련이 있어. 온도는 사실 분자 운동의 격렬함을 나타내는 거야. 온도가 높을수록 분자가 빠르게 움직이고, 온도가 낮을수록 느리게 움직이지. 만약 분자가 완전히 멈추는 온도가 있다면 그것이 '절대 영도'인 영하 이백칠십삼 점 일오 도야. 하지만 현실에서 절대 영도에 도달하는 건 불가능하단다."</span> 분자들은 영원한 마라톤 선수였습니다. 결코 쉬지 않는, 보이지 않는 선수들이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">풍선 벽을 두드리는 수백해 개의 주먹</span>
+        <h2>👊 압력의 발생</h2>
+        <p><span class="dialogue">"자, 이제 가장 중요한 비밀을 보여줄게."</span> 펑이가 바람이와 무게를 풍선의 안쪽 벽으로 데려갔습니다. 고무 벽에 가까이 다가가니, 놀라운 광경이 펼쳐졌어요. 수없이 많은 분자들이 고무 벽에 부딪치고 튀어나가고 있었습니다. 탕! 탕! 탕! 마치 수백해 개의 작은 주먹이 동시에 벽을 두드리는 것 같았어요.</p>
+        <p><span class="dialogue">"이게 바로 <span class="highlight">'압력'</span>이야!"</span> 펑이가 외쳤습니다. <span class="dialogue">"분자들이 풍선 벽에 충돌할 때마다 작은 힘이 가해지지. 분자 하나의 힘은 아무것도 아니지만, 수백해 개가 매 순간 부딪치면 그 힘이 합쳐져서 어마어마한 압력이 되는 거야. 이 압력이 풍선을 안에서 밖으로 밀어내서 풍선이 부풀어 있는 거지!"</span></p>
+        <p>무게의 눈이 커졌어요. <span class="dialogue">"그러면 풍선이 둥글게 부풀어 있는 건 공기 분자들이 안에서 밀어내고 있기 때문이야?"</span> <span class="dialogue">"맞아! 풍선의 고무가 안으로 줄어들려는 힘과 분자들이 밖으로 밀어내는 압력이 균형을 이루고 있는 거야. 만약 분자가 없어지면 풍선은 쪼그라들겠지."</span></p>
+        <p>바람이가 손을 풍선 벽에 대 보았어요. 분자들이 부딪치는 진동이 미세하게 느껴졌습니다. <span class="dialogue">"풍선을 손으로 눌러 보면 탄력이 느껴지잖아? 그 탄력이 바로 안에서 분자들이 밀어내는 압력이야."</span> 펑이가 덧붙였어요. 무게가 처음으로 고개를 숙였습니다. <span class="dialogue">"보이지 않는 분자들이… 이렇게 큰 힘을 만들어내고 있었구나."</span> <span class="dialogue">"맞아. <span class="highlight">보이지 않는 입자도 힘을 가진다.</span> 그리고 그 힘은 우리가 상상하는 것보다 훨씬 강력해."</span> 풍선이 부풀어 있는 이유, 그것은 마법이 아니라 수백해 개의 분자가 만들어내는 압력의 과학이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">분자를 미치게 만드는 열의 마법</span>
+        <h2>🌡️ 온도 변화</h2>
+        <p>펑이가 바람이와 무게에게 특별한 실험을 보여주었어요. <span class="dialogue">"이제 온도가 분자에게 어떤 영향을 미치는지 직접 봐."</span> 펑이가 손짓하자, 풍선 주변에 따뜻한 바람이 불어왔습니다. 풍선 안의 온도가 올라가기 시작했어요. 그러자 놀라운 변화가 일어났습니다. 분자들의 속도가 눈에 띄게 빨라진 거예요! 천천히 돌아다니던 분자가 마치 불이 붙은 것처럼 사방으로 질주하기 시작했습니다.</p>
+        <p><span class="dialogue">"와! 얘네 갑자기 왜 이렇게 빨라진 거야!"</span> 바람이가 소리쳤어요. <span class="dialogue">"온도가 올라가면 분자의 운동 에너지가 커져서 더 빠르게 움직이거든. 더 빠르게 움직이면 풍선 벽에 더 세게, 더 자주 부딪치지. 그러면 압력이 올라가는 거야!"</span> 펑이가 설명했어요. 실제로 풍선이 조금씩 부풀어 오르고 있었습니다. 분자들이 더 세게 벽을 밀어내니 풍선이 커진 것이지요.</p>
+        <p><span class="dialogue">"여름에 차 안에 두었던 풍선이 커지거나 터지는 이유가 바로 이거야. 차 안 온도가 올라가면 분자가 더 빠르게 움직이면서 압력이 높아지거든."</span></p>
+        <p>이번에는 반대로 찬 바람이 불어왔어요. 온도가 떨어지자 분자들의 속도가 느려지며 움직임이 둔해졌습니다. 풍선 벽에 부딪치는 힘도 약해졌고, 풍선이 쪼그라들기 시작했어요. <span class="dialogue">"겨울에 풍선이 쪼그라드는 것도 이 원리구나!"</span> 무게가 드디어 자발적으로 연결 짓기 시작했어요. 바람이가 웃었습니다. <span class="dialogue">"온도가 분자의 기분을 결정하는 거네! 뜨거우면 신나서 난리 치고, 차가우면 기운 없이 축 처지는 거잖아!"</span> 펑이도 웃었어요. <span class="dialogue">"비유가 아주 적절한데? 과학적으로 말하면, <span class="highlight">온도는 분자의 평균 운동 에너지를 나타내는 물리량</span>이란다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">분자들의 밀당이 만드는 크기 변화</span>
+        <h2>📏 팽창과 수축</h2>
+        <p>온도에 따른 분자의 변화를 본 바람이에게 또 다른 궁금증이 생겼어요. <span class="dialogue">"펑이, 그러면 기체는 얼마나 커질 수 있는 거야? 계속 데우면 끝없이 팽창하는 거야?"</span> 펑이가 고개를 끄덕이며 대답했어요. <span class="dialogue">"이론적으로는 온도가 올라가면 계속 팽창해. 하지만 현실에서는 풍선이 견딜 수 있는 한계가 있지. 그 한계를 넘으면 펑!"</span></p>
+        <p>펑이가 풍선 팽창 실험을 보여주었습니다. 풍선을 따뜻한 물에 넣자 풍선이 부풀었고, 찬물에 넣자 쪼그라들었어요. 다시 따뜻한 물, 다시 부풀고. 찬물, 다시 줄고. <span class="dialogue">"기체의 팽창과 수축은 완전히 가역적이야. 온도를 높이면 팽창하고, 낮추면 수축하지. 다시 높이면 또 팽창하고."</span></p>
+        <p>펑이가 흥미로운 사실도 알려주었어요. <span class="dialogue">"기체는 고체나 액체보다 팽창하는 정도가 훨씬 커. 섭씨 일 도 올라갈 때마다 부피가 약 삼백 분의 일씩 늘어나거든. 섭씨 영 도에서 백 도로 올라가면 부피가 약 삼분의 일이나 커지는 거야!"</span></p>
+        <p>무게가 계산을 했어요. <span class="dialogue">"그러면 뜨거운 여름날 풍선이 왜 터지는지 이해가 돼. 공기가 팽창해서 풍선 고무가 견딜 수 있는 한계를 넘으니까!"</span> <span class="dialogue">"맞아! 그리고 이 원리가 <span class="highlight">열기구</span>에도 쓰여."</span> 바람이가 끼어들었어요. <span class="dialogue">"열기구 안의 공기를 가열하면 팽창해서 밀도가 낮아지고, 그래서 뜨는 거잖아!"</span> 펑이가 감탄했습니다. <span class="dialogue">"벌써 연결 짓는구나! 팽창과 수축은 일상 곳곳에 숨어 있어. 여름에 도로가 울퉁불퉁해지는 것, 전깃줄이 여름에 늘어지고 겨울에 팽팽해지는 것, 다리에 이음새를 두는 것. 모두 물질의 열팽창을 고려한 설계란다."</span> 분자들의 밀당, 즉 온도에 따른 팽창과 수축은 과학 실험실만의 이야기가 아니라 도시 전체를 설계하는 데 필요한 핵심 원리였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">과학자들이 풍선에서 발견한 수학의 아름다움</span>
+        <h2>📜 기체 법칙</h2>
+        <p><span class="dialogue">"자, 이제 내가 가장 자랑스러워하는 이야기를 해 줄게."</span> 펑이가 어깨를 으쓱했어요. <span class="dialogue">"수백 년 전, 인간 과학자들이 기체의 행동을 수학 공식으로 정리했거든. 그것이 바로 <span class="highlight">'기체 법칙'</span>이야."</span></p>
+        <p>펑이가 첫 번째 법칙을 소개했어요. <span class="dialogue">"<span class="highlight">보일의 법칙</span>이야. 온도가 일정할 때, 기체의 부피와 압력은 반비례해. 즉 압력을 두 배로 높이면 부피는 반으로 줄어들지."</span> 바람이가 풍선을 양손으로 꾹 눌러 보았어요. 풍선이 작아지는 대신 더 단단해졌습니다. <span class="dialogue">"맞아! 누르면 부피가 줄고 압력이 올라가는 거네!"</span></p>
+        <p><span class="dialogue">"두 번째는 <span class="highlight">샤를의 법칙</span>이야. 압력이 일정할 때, 온도가 올라가면 부피도 올라가. 정비례 관계지."</span> 이것은 이미 본 것이었어요. 따뜻하면 풍선이 커지고 차가우면 작아지는 것.</p>
+        <p><span class="dialogue">"세 번째는 <span class="highlight">아보가드로의 법칙</span>이야. 같은 온도와 압력에서 같은 부피의 기체에는 같은 수의 분자가 들어 있어. 기체의 종류와 상관없이!"</span> 무게가 감동한 표정을 지었어요. <span class="dialogue">"그게 정말이야? 산소든 질소든 헬륨이든, 같은 조건이면 분자 수가 같다고?"</span> <span class="dialogue">"맞아. 이 세 가지 법칙을 합치면 '이상 기체 법칙'이라는 하나의 통합 공식이 나와. <span class="highlight">PV=nRT</span> 라는 공식인데, P는 압력, V는 부피, n은 분자 수, R은 상수, T는 온도야."</span></p>
+        <p>바람이가 눈을 빛냈어요. <span class="dialogue">"공식 하나로 풍선이 왜 부풀고 왜 줄고 왜 터지는지 다 설명할 수 있는 거네!"</span> 펑이가 자부심에 가득 차서 말했어요. <span class="dialogue">"이것이 과학의 아름다움이야. 복잡해 보이는 세상을 단순한 공식 하나로 설명할 수 있다는 것. 수백해 개의 분자가 제각각 움직이지만, 전체 행동은 하나의 법칙으로 예측할 수 있단다."</span> 과학자들은 보이지 않는 분자의 세계에서 수학이라는 보편 언어를 발견한 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">풍선의 한계와 압력의 경고</span>
+        <h2>💥 터지는 순간</h2>
+        <p>펑이가 갑자기 심각한 표정을 지었어요. <span class="dialogue">"이제 내가 가장 두려워하는 순간을 보여줘야 할 것 같아."</span> <span class="dialogue">"두려운 순간?"</span> 바람이가 걱정스럽게 물었습니다. 펑이가 풍선 벽의 한 부분을 가리켰어요. 고무가 얇아진 곳이 있었습니다. 분자들이 거세게 부딪치는 부분이었지요. <span class="dialogue">"풍선의 고무는 탄성이 있어서 늘어나지만, 한계가 있어. 분자들이 만드는 압력이 고무의 탄성 한계를 넘어서면… 풍선은 터져."</span></p>
+        <p>펑이가 시뮬레이션을 보여주었어요. 풍선에 공기를 계속 불어넣는 장면이었습니다. 분자가 늘어날수록 같은 공간에 더 많은 분자가 들어갔고, 벽에 부딪치는 횟수와 힘이 점점 커졌어요. 고무가 최대한 늘어나 투명해질 정도로 얇아지더니, 결국 '펑!' 하고 터졌습니다. <span class="dialogue">"아!"</span> 바람이가 깜짝 놀랐어요.</p>
+        <p>무게가 물었습니다. <span class="dialogue">"그런데 풍선이 터지는 건 그냥 놀래키는 것뿐이잖아. 왜 그걸 두려워해?"</span> 펑이의 표정이 더 심각해졌어요. <span class="dialogue">"풍선이야 작으니까 괜찮지. 하지만 <span class="highlight">기체 압력이 위험해지는 경우</span>가 현실에는 많아. 압력 밥솥의 안전 밸브가 고장 나면 폭발할 수 있고, 스쿠버 다이빙에서 너무 빨리 올라오면 혈액 속 질소 기체가 팽창해서 위험해지지. 가스 누출 사고도 기체 압력과 관련이 있어."</span></p>
+        <p>바람이가 고개를 끄덕였습니다. <span class="dialogue">"기체의 힘을 무시하면 안 되는 거구나."</span> <span class="dialogue">"맞아. 보이지 않는다고 위험하지 않은 게 아니야. 오히려 보이지 않기 때문에 더 조심해야 해. 압력 밥솥에 안전 밸브가 있는 것, 타이어에 적정 공기압이 있는 것, 모두 기체의 압력을 존중하는 안전 설계야."</span> 보이지 않는 힘을 이해하고 존중하는 것, 그것이 과학을 아는 사람의 책임이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">네 어깨 위에 올려진 일 톤의 담요</span>
+        <h2>⚖️ 공기의 무게</h2>
+        <p><span class="dialogue">"마지막으로 한 가지 더 보여줄 게 있어."</span> 펑이가 바람이와 무게를 풍선 밖으로 데리고 나왔어요. 다시 과학 축제장으로 돌아온 거예요. 하지만 이번에는 세상이 다르게 보였습니다. 펑이의 마법으로 공기 분자들이 희미하게 보이게 되었거든요! 사방에서 투명한 분자들이 날아다니고, 모든 물체 위에 공기가 층층이 쌓여 있는 것이 보였습니다.</p>
+        <p><span class="dialogue">"이 모든 공기에 무게가 있다는 것, 알고 있었어?"</span> 펑이가 물었어요. 무게가 입을 벌렸습니다. <span class="dialogue">"공기에 무게가 있다고?"</span> <span class="dialogue">"당연하지! 공기도 분자로 이루어져 있고, 분자에는 질량이 있으니까 무게가 있어. 네 머리 위에서 대기권 꼭대기까지 쌓인 공기 기둥의 무게가 <span class="highlight">약 일 톤</span>이야."</span> 바람이가 소리쳤어요. <span class="dialogue">"일 톤?! 그게 내 머리 위에 올려져 있다고?!"</span> <span class="dialogue">"맞아. 하지만 사방에서 균등하게 누르니까 느끼지 못하는 거야."</span></p>
+        <p>펑이가 재미있는 실험을 보여주었어요. 컵에 물을 가득 채우고 종이를 덮은 후 뒤집자, 종이가 떨어지지 않고 물을 받치고 있었습니다. <span class="dialogue">"공기가 아래에서 종이를 밀어 올리는 거야. <span class="highlight">대기압</span>이 물의 무게보다 크기 때문이지."</span></p>
+        <p>무게가 진심으로 감탄했어요. <span class="dialogue">"대기압이라는 게 이렇게 강한 힘이었구나!"</span> 펑이가 고개를 끄덕였어요. <span class="dialogue">"해수면에서의 대기압은 평방센티미터당 약 일 킬로그램의 힘이야. 네 손바닥 넓이만 해도 수십 킬로그램의 공기가 누르고 있는 거지. 우리는 태어나는 순간부터 이 압력 속에서 살고 있어서 느끼지 못할 뿐이야."</span> 바람이는 주위를 둘러보았습니다. 보이지 않는 공기가 모든 것을 감싸고 누르고 있었어요. 우리는 공기라는 보이지 않는 바다의 바닥에서 살고 있는 것이었습니다. 물고기가 수압을 느끼지 못하듯, 우리도 기압을 느끼지 못하며 살고 있었던 거예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">풍선이 세상에 전하는 마지막 숨결</span>
+        <h2>🌬️ 보이지 않는 압력</h2>
+        <p>모든 모험을 마치고 바람이와 무게는 과학 축제장에 서 있었습니다. 펑이의 마법이 풀리면서 공기 분자는 다시 보이지 않게 되었어요. 하지만 두 사람의 눈에는 세상이 완전히 달라 보였습니다. 빨간 풍선을 바라보는 바람이의 눈에는 수백해 개의 분자가 쉬지 않고 풍선 벽을 두드리는 모습이 떠올랐고, 바람이 부는 것을 느끼는 무게의 피부에는 분자 수십억 개가 동시에 부딪치는 감촉이 느껴졌어요.</p>
+        <p><span class="dialogue">"무게야, 이제 공기가 있다는 거 믿어?"</span> 바람이가 웃으며 물었습니다. 무게가 머리를 긁으며 대답했어요. <span class="dialogue">"믿는 정도가 아니야. 공기가 이렇게 대단한 존재인 줄 몰랐어. 보이지 않는다고 없는 게 아니라, <span class="highlight">보이지 않기 때문에 더 놀라운 거</span>였어."</span></p>
+        <p>펑이가 풍선 표면에서 마지막으로 모습을 드러냈어요. <span class="dialogue">"너희에게 하나만 기억해 달라고 부탁할게. 세상에는 눈에 보이지 않는 것들이 아주 많아. 공기의 분자, 기체의 압력, 온도의 에너지. 하지만 보이지 않는다고 무시하면 안 돼. <span class="highlight">보이지 않는 입자도 힘을 가지고 있으니까.</span>"</span></p>
+        <p>바람이가 풍선을 가슴에 안으며 말했어요. <span class="dialogue">"알겠어, 펑이. 보이지 않는 것을 이해하려고 노력하는 것, 그게 바로 과학이지?"</span> 펑이가 환하게 웃었어요. <span class="dialogue">"바로 그거야!"</span> 바람이 불었습니다. 축제장의 풍선들이 하늘하늘 흔들렸어요. 바람은 보이지 않았지만, 풍선들의 춤사위가 바람의 존재를 증명하고 있었습니다. 무게가 바람이에게 말했어요. <span class="dialogue">"바람이야, 다음에는 우리가 직접 실험해 보자. 보이지 않는 것을 눈에 보이게 만드는 실험!"</span> 바람이가 웃으며 고개를 끄덕였습니다. <span class="highlight">보이지 않는 입자도 힘을 가집니다. 그 힘을 이해하는 순간, 보이지 않던 세상이 눈앞에 펼쳐집니다.</span></p>
+      </div>
+    </section>
+
+    <!-- 교훈 섹션 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/00.jpg">
+      <div class="story-card">
+        <span class="chapter">🌱 교훈</span>
+        <span class="theme">보이지 않는 입자도 힘을 가진다</span>
+        <h2>우리가 배운 것</h2>
+        <p>이 이야기를 통해 우리는 풍선 속 보이지 않는 공기의 비밀을 배웠습니다. 공기는 수백해 개의 분자로 이루어져 있으며, 이 분자들은 쉬지 않고 움직이며 풍선 벽에 부딪쳐 압력을 만듭니다. 온도가 올라가면 분자가 빠르게 움직여 압력이 높아지고 기체가 팽창하며, 온도가 내려가면 느려지면서 수축합니다.</p>
+        <p>이 관계는 <span class="highlight">보일, 샤를, 아보가드로의 법칙</span>으로 정리되어 하나의 공식 <span class="highlight">PV=nRT</span>로 통합됩니다.</p>
+        <p>보이지 않는다고 존재하지 않는 것이 아닙니다. 공기의 분자는 보이지 않지만 풍선을 부풀리고, 대기압은 느껴지지 않지만 일 톤의 무게로 우리를 감싸고 있습니다.</p>
+        <p><span class="highlight">과학은 보이지 않는 것을 이해하는 도구입니다.</span> 눈에 보이는 것만 믿지 말고, 보이지 않는 것까지 탐구하세요. 그 순간, 세상은 놀라움으로 가득 찬 곳이 됩니다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">← 돌아가기</button>
+  </div>
+
+  <script>
+    // 배경 이미지 변경 및 카드 애니메이션 스크립트
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // 배경 이미지 변경
+          const bg = entry.target.getAttribute('data-bg');
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          // 카드 활성화
+          const card = entry.target.querySelector('.story-card');
+          if (card) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }, {
+      threshold: 0.5
+    });
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+  </script>
+</body>
+</html>
