@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌡️ 뜨거운 지구 SOS: 동물 회의가 열리던 날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물19/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1976D2 0%, #0D47A1 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(25, 118, 210, 0.15);
+      color: #0D47A1;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #1976D2;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #0D47A1;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 38px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #64B5F6;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(25, 118, 210, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(13, 71, 161, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌡️ 뜨거운 지구 SOS: 동물 회의가 열리던 날</h1>
+        <p class="subtitle">
+          — 선택이 미래를 만든다 —<br>
+          교과기반 창작도서 · 생물 19
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🐻‍❄️ 눈꽃 (북극곰 소녀):</strong> 북극에서 태어난 어린 북극곰이에요. 녹아가는 고향을 지키려고 여행을 떠나요.</p>
+          <p><strong>🐸 초록이 (황금두꺼비):</strong> 종족의 마지막 한 마리예요. 슬프지만 포기하지 않아요.</p>
+          <p><strong>🦅 하늘바람 (북극제비갈매기):</strong> 매년 7만 km를 날아다니는 철새예요. 지구의 변화를 하늘에서 봤어요.</p>
+          <p><strong>🌳 할아버지 나무 (800년 참나무):</strong> 800년을 살아온 지혜로운 나무예요. 기후 역사를 기억해요.</p>
+          <p><strong>🏭 탄소괴물 (이산화탄소의 화신):</strong> 공장과 자동차에서 태어난 회색 괴물이에요.</p>
+          <p><strong>👧 소율 (인간 소녀, 10살):</strong> 동물의 말을 알아듣는 특별한 아이예요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">기온 상승</span>
+        <h2>🌡️ 녹아내리는 세상의 시작</h2>
+        <p>북극의 아침은 원래 고요하고 차가운 것이었어요. 적어도 눈꽃의 엄마는 그렇게 말씀하셨어요. 하지만 눈꽃이 태어난 세상은 달랐어요. 잠에서 깬 눈꽃이 굴 밖으로 나왔을 때, 발밑의 얼음에서 '쩍' 하는 소리가 들렸어요.</p>
+        <p>요즘 그 소리가 너무 자주 들렸어요. 하루에 열 번, 스무 번, 때로는 밤새도록. 그리고 어제는 눈꽃이 가장 좋아하던 놀이터, 큰 얼음 언덕이 바다 속으로 무너져 내렸어요. 쿠르르릉, 콰광! 하얀 얼음이 파란 바다로 쓰러지는 소리는 천둥보다 무서웠어요.</p>
+        <p><span class="dialogue">"엄마, 왜 이렇게 따뜻해진 거예요?"</span> 눈꽃이 물었어요. 엄마가 설명해주셨어요. 지구를 둘러싼 공기 속에 이산화탄소라는 기체가 점점 많아지고 있대요. 이 기체가 마치 두꺼운 이불처럼 지구를 감싸서 열이 빠져나가지 못하게 막고 있는 거예요.</p>
+        <p><span class="dialogue">"겨우 1도나 2도 올랐을 뿐인데요?"</span> 눈꽃이 고개를 갸우뚱했어요. <span class="dialogue">"<span class="highlight">1도</span>가 얼마나 무서운 건지, 너는 아직 모른단다."</span> 엄마의 목소리가 떨렸어요. 지구 온도가 1도만 올라도 북극의 얼음이 많이 녹고, 바다가 높아지고, 폭풍이 더 세지고, 가뭄과 홍수가 생겨요.</p>
+        <p>그날 밤, 비가 내렸어요. 북극에 비라니! 원래 이곳에는 눈만 내리는 것이었는데. 차가운 빗방울이 눈꽃의 하얀 털 위로 떨어지는 것을 느끼며, 눈꽃은 처음으로 두려움을 느꼈어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">북극의 위기</span>
+        <h2>🧊 엄마의 옛날이야기</h2>
+        <p>비가 그친 다음 날, 눈꽃은 엄마에게 옛날이야기를 해달라고 졸랐어요. <span class="dialogue">"옛날에는 말이야..."</span> 엄마가 먼 곳을 바라보며 이야기를 시작했어요.</p>
+        <p><span class="dialogue">"이 북극은 정말로 끝이 없는 얼음 나라였단다. 네 할머니의 할머니 시절에는, 여름에도 얼음이 녹지 않았어. 물범들이 얼음 위에서 낮잠을 자고, 우리 북극곰은 그 얼음 위를 걸어 다니며 사냥을 했지."</span></p>
+        <p>눈꽃은 그 풍경을 상상해보았어요. 하지만 눈꽃이 아는 북극은 달랐어요. 얼음은 해마다 줄어들고, 여름이면 바다가 시커멓게 드러났어요. 물범을 찾으려면 예전보다 세 배나 멀리 헤엄쳐야 했어요.</p>
+        <p>바로 그때, 하늘에서 날카로운 울음소리가 들렸어요. 북극제비갈매기 하늘바람이었어요! <span class="dialogue">"눈꽃! 큰일이야! 남쪽에서 거대한 빙하가 바다로 떨어져 나갔어!"</span></p>
+        <p>눈꽃은 결심했어요. 여기서 가만히 녹아내리는 얼음을 바라보고만 있을 수 없다고요. <span class="dialogue">"하늘바람, 나를 다른 동물들에게 데려다줘. 모두를 만나고 싶어. 함께 방법을 찾아야 해."</span> 눈꽃의 위대한 여행이 시작되었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">이동하는 동물</span>
+        <h2>🦌 고향을 떠나는 동물들</h2>
+        <p>하늘바람의 안내로 남쪽을 향해 떠난 눈꽃은 놀라운 광경을 보았어요. 수만 마리의 순록 떼가 끝없는 행렬을 이루며 이동하고 있었어요.</p>
+        <p>순록 어른이 눈꽃에게 설명해주었어요. <span class="dialogue">"예전에는 봄이 오면 북쪽으로 갔어. 풀이 자라는 시기에 맞춰서. 그런데 이제는 봄이 너무 일찍 와. 우리가 도착하기도 전에 풀이 자라고 시들어버려."</span> 기온이 변하면서 식물과 동물의 시간표가 어긋나버린 거예요.</p>
+        <p>아프리카에서는 코끼리 할머니 마투를 만났어요. <span class="dialogue">"물웅덩이가 말라가고 있어. 우리 가족은 물을 찾아 예전보다 두 배나 먼 거리를 걸어야 해."</span></p>
+        <p>호주에서는 코알라가 산불로 타버린 벌판에 앉아 있었어요. <span class="dialogue">"먹을 잎이 없어. 산불이 해마다 더 심해지거든. 기온이 올라가면 숲이 마르고, 불은 더 크게 번져."</span></p>
+        <p>바다에서는 산호초가 하얗게 변해가고 있었어요. 바닷물 온도가 올라가면 산호가 색을 잃고 죽어가는 거예요. 이것을 <span class="highlight">'백화 현상'</span>이라고 해요. 눈꽃은 가는 곳마다 같은 이야기를 들었어요. <span class="dialogue">"덥다. 마르다. 사라진다."</span> 지구 위 많은 생명이 같은 고통을 겪고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">멸종 위기</span>
+        <h2>🐸 초록이, 마지막 한 마리</h2>
+        <p>중앙아메리카의 안개 숲에 도착했을 때, 눈꽃은 가장 슬픈 만남을 하게 되었어요. 작은 황금빛 두꺼비 하나가 축축한 이끼 위에 앉아 있었어요. 초록이였어요.</p>
+        <p><span class="dialogue">"안녕, 넌 누구니?"</span> 눈꽃이 조심스럽게 물었어요. <span class="dialogue">"나는... 마지막이야."</span> 초록이의 목소리는 작고 떨렸어요. <span class="dialogue">"마지막이라니?"</span> <span class="dialogue">"내 종족의 마지막 한 마리라는 뜻이야."</span></p>
+        <p>초록이가 슬픈 이야기를 들려주었어요. 황금두꺼비는 한때 수천 마리가 살았어요. 하지만 기온이 오르면서 숲의 안개가 사라졌어요. 두꺼비는 피부로 숨을 쉬어서 습도가 줄면 살 수 없었어요. 게다가 따뜻해진 기후 속에서 무서운 병이 퍼지면서 두꺼비들이 하나둘 쓰러졌어요.</p>
+        <p><span class="dialogue">"처음에는 노래 소리가 줄었어. 그 다음엔 아침에 만나는 얼굴이 줄었어. 그리고 어느 날... 나 혼자만 남았어."</span> 초록이의 눈에서 눈물이 떨어졌어요.</p>
+        <p>눈꽃은 아무 말도 할 수 없었어요. 그저 커다란 앞발로 초록이를 조심스럽게 감싸 안아주었어요. <span class="dialogue">"초록이, 혼자 두지 않을게. 나랑 같이 가자."</span> 초록이가 눈꽃의 등에 올라타며 말했어요. <span class="dialogue">"고마워... 나도 포기하고 싶지 않았어."</span> 멸종은 숫자가 줄어드는 것이 아니에요. 노래가 사라지는 거예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">적응 전략</span>
+        <h2>🦎 살아남기 위한 변화들</h2>
+        <p>여행을 계속하면서 눈꽃과 초록이는 슬픈 이야기만 들은 것은 아니었어요. 놀랍게도, 어떤 동물들은 변해가는 환경에 맞서 스스로를 바꾸고 있었어요.</p>
+        <p>갈라파고스 섬에서 만난 바다이구아나 '이구'가 첫 번째 사례였어요. <span class="dialogue">"예전에 우리는 이만큼 컸어."</span> 이구가 큰 이구아나를 가리켰어요. <span class="dialogue">"하지만 바닷물이 따뜻해지면서 우리가 먹는 해조류가 줄었어. 그래서 우리 중 일부는 몸집을 줄여서 적은 먹이로도 살 수 있게 된 거야."</span> 이것이 바로 <span class="highlight">적응</span>이에요.</p>
+        <p>영국에서는 큰박새라는 새가 알을 낳는 시기를 앞당겼어요. 봄이 일찍 오면서 애벌레가 일찍 나타나기 시작했고, 그에 맞춰 새들도 알을 더 일찍 낳아서 새끼들이 먹이를 먹을 수 있게 했어요.</p>
+        <p>하지만 할아버지 나무가 보내온 메시지는 경고였어요. <span class="dialogue">"적응에는 한계가 있단다. 지금의 변화 속도는 자연의 적응 속도보다 훨씬 빠르거든. 수백만 년에 걸쳐 천천히 일어나야 할 변화가 겨우 수십 년 만에 일어나고 있어."</span></p>
+        <p>초록이가 조용히 고개를 끄덕였어요. 자기 동족이 바로 그 증거였으니까요. 적응은 희망이지만, 적응만으로는 충분하지 않았어요. 근본적인 원인을 해결해야 해요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">인간의 영향</span>
+        <h2>👧 소율, 동물의 말을 듣는 아이</h2>
+        <p>눈꽃 일행이 한국의 작은 해안 마을에 도착했을 때, 예상치 못한 만남이 기다리고 있었어요. 해변에서 쓰레기를 줍고 있는 열 살짜리 소녀, 소율이었어요.</p>
+        <p>소율은 눈꽃을 보고 달려와 말했어요. <span class="dialogue">"북극곰이다! 여기까지 어떻게 온 거야?"</span> 더 놀라운 것은 소율이 눈꽃의 대답을 알아들었다는 거예요! <span class="dialogue">"너... 내 말을 알아듣는 거야?"</span> <span class="dialogue">"응, 나는 어릴 때부터 동물 말을 알아들었어."</span></p>
+        <p>소율은 눈꽃에게 인간 세계의 이야기를 들려주었어요. 공장에서 물건을 만들고, 자동차를 타고, 전기를 쓰는 모든 과정에서 <span class="highlight">온실가스</span>가 나온다는 것. 인간이 석유와 석탄을 태우면서 지구의 온도가 올라가고 있다는 것.</p>
+        <p><span class="dialogue">"하지만 모든 인간이 나쁜 건 아니야!"</span> 소율이 말했어요. <span class="dialogue">"우리 마을에서도 할아버지는 태양열 발전기를 쓰시고, 언니는 자전거를 타고 학교에 가. 엄마는 장바구니를 들고 시장에 가시고."</span></p>
+        <p>초록이가 조용히 말했어요. <span class="dialogue">"눈꽃아, 미워해서 바뀌는 건 없어. 미움보다 함께하는 게 필요해."</span> 소율이 눈꽃의 큰 발을 잡았어요. <span class="dialogue">"내가 도울게. 동물들의 이야기를 인간들에게 전해줄게."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">탄소 문제</span>
+        <h2>🏭 보이지 않는 괴물과의 만남</h2>
+        <p>소율이 눈꽃 일행을 데리고 간 곳은 마을 뒤편의 거대한 화력발전소였어요. 굴뚝에서 끝없이 뿜어져 나오는 회색 연기를 올려다보던 눈꽃의 털이 곤두섰어요. 그 연기 속에서 거대한 형체가 모습을 드러냈어요. <span class="highlight">탄소괴물</span>이었어요.</p>
+        <p><span class="dialogue">"너, 너 때문에 내 고향이 녹고 있는 거야!"</span> 눈꽃이 외쳤어요. 탄소괴물은 의외로 슬픈 목소리로 대답했어요. <span class="dialogue">"나를 탓하지 마. 나는 그냥 만들어진 대로 있을 뿐이야."</span></p>
+        <p>탄소괴물의 이야기는 뜻밖이었어요. 이산화탄소는 원래 지구에 꼭 필요한 존재였어요. 식물이 광합성을 하려면 이산화탄소가 있어야 하고, 적당한 양이 있어야 지구가 따뜻해요. <span class="dialogue">"200년 전까지만 해도 나는 적당한 양으로 있었어. 숲이 나를 흡수하고, 바다가 나를 녹이고, 균형이 잡혀 있었지."</span></p>
+        <p>하지만 인간이 석유와 석탄을 많이 태우면서 탄소괴물은 너무 많아졌어요. 숲은 잘려나가서 흡수 능력이 줄었고요. <span class="dialogue">"이제 나는 너무 많아. 나도 이렇게 커지고 싶지 않았어."</span></p>
+        <p><span class="dialogue">"그럼 어떻게 해야 너를 줄일 수 있어?"</span> 눈꽃이 물었어요. <span class="dialogue">"나를 만드는 것을 줄이고, 나를 흡수하는 것을 늘리면 돼. 단순하지만 인간에게는 어려운 선택이지."</span> 탄소괴물이 연기 속으로 사라졌어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">보호 정책</span>
+        <h2>🌳 할아버지 나무의 800년 지혜</h2>
+        <p>눈꽃 일행은 유럽의 깊은 숲속에 있는 할아버지 나무를 찾아갔어요. 800년 된 거대한 참나무예요. 나뭇가지 사이로 스며드는 햇살이 지혜의 빛처럼 반짝였어요.</p>
+        <p><span class="dialogue">"할아버지, 지구를 구할 방법이 있나요?"</span> 눈꽃이 물었어요. 할아버지 나무가 대답했어요. <span class="dialogue">"내 나이테를 보렴."</span> 나이테의 넓은 부분은 따뜻하고 비가 많았던 해, 좁은 부분은 춥고 건조했던 해를 보여줘요. <span class="dialogue">"800년의 기후 역사가 여기 담겨 있단다."</span></p>
+        <p><span class="dialogue">"지구는 예전에도 변했어. 하지만 그때는 수천 년에 걸쳐 천천히 변했지. 지금의 문제는 속도야. 너무 빠르단다."</span></p>
+        <p>그리고 할아버지 나무는 인간들이 시작한 노력도 들려주었어요. <span class="highlight">파리기후협약</span>이라는 약속을 통해 세계 나라들이 온도 상승을 1.5도 이내로 막겠다고 한 것, 멸종 위기 동물을 보호하는 법을 만든 것, 태양광 같은 깨끗한 에너지를 늘리고 있는 것.</p>
+        <p><span class="dialogue">"희망이 없는 건 아니란다. 인간은 문제를 만들었지만, 해결할 능력도 가지고 있어."</span> 초록이가 물었어요. <span class="dialogue">"정말로 아직 늦지 않은 건가요?"</span> 할아버지 나무의 잎이 따뜻하게 흔들렸어요. <span class="dialogue">"나무는 절대 포기하지 않는단다. 800년을 살면서 배운 건, 봄은 반드시 다시 온다는 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">희망의 행동</span>
+        <h2>✊ 전 세계 동물 회의</h2>
+        <p>눈꽃 일행은 역사적인 '전 세계 동물 회의'를 열기로 했어요. 하늘바람이 지구 곳곳으로 날아가 초대장을 전달했어요. 북극의 물범, 아프리카의 코끼리, 호주의 코알라, 남극의 펭귄... 모든 대륙에서 동물들이 모여들었어요.</p>
+        <p>회의는 뜨거웠어요. <span class="dialogue">"인간들을 벌해야 해!"</span> <span class="dialogue">"도망가야 해!"</span> <span class="dialogue">"포기하자..."</span> 여러 목소리가 나왔어요.</p>
+        <p>그때, 소율이 일어났어요. <span class="dialogue">"저는 인간이에요. 여러분을 이렇게 만든 존재예요. 하지만 저도 이 지구에서 태어났어요. 그리고 저는 선택할 수 있어요."</span></p>
+        <p>소율은 자기가 할 수 있는 것들을 말했어요. 가까운 거리는 걷기, 안 쓰는 전기 끄기, 일회용 대신 다회용 쓰기, 나무 심기, 그리고 더 많은 사람에게 이 이야기 전하기. <span class="dialogue">"하나하나는 작아 보여요. 하지만 수십억 명이 작은 것 하나씩을 바꾸면 그것은 파도가 돼요."</span></p>
+        <p>초록이가 작은 박수를 쳤어요. 눈꽃이 하늘을 향해 울음소리를 냈어요. 동물들이 하나둘 함께 소리를 내기 시작했어요. 세상에서 가장 큰 합창이 울려 퍼졌어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">미래의 선택</span>
+        <h2>🌍 눈꽃이 본 두 개의 내일</h2>
+        <p>동물 회의가 끝난 밤, 눈꽃은 할아버지 나무 아래에서 깊은 잠에 빠졌어요. 그리고 놀라운 꿈을 꾸었어요. 할아버지 나무가 보여준 '두 개의 미래'였어요.</p>
+        <p>첫 번째 미래는 회색 세상이었어요. 아무것도 바꾸지 않은 미래. 북극의 얼음은 사라지고, 북극곰도 없었어요. 바다는 뜨거워져 산호초가 모두 죽었고, 도시는 홍수에 잠기고, 폭풍은 해마다 더 거세졌어요.</p>
+        <p>그리고 두 번째 미래가 펼쳐졌어요. 많은 사람이 작은 선택을 바꾼 미래. 지붕마다 태양광 패널이 반짝이고, 전기 버스가 달리고, 공장 굴뚝에서 연기가 나오지 않았어요. 숲에는 새 나무가 심어졌고, 북극에는 여전히 얼음이 있었어요. 그 위에서 새끼 북극곰이 놀고 있었어요.</p>
+        <p>눈꽃은 꿈에서 깨어났어요. <span class="dialogue">"두 번째 미래가 가능한 거지?"</span> 소율이 대답했어요. <span class="dialogue">"우리가 만들면 가능해."</span></p>
+        <p>그날 아침, 소율은 학교에서 발표를 했어요. 눈꽃의 이야기, 초록이의 노래, 동물들의 외침을 전했어요. 한 아이가 듣고, 열 아이가 듣고, 백 아이가 들었어요. 작은 파도가 바다를 건넜어요. 미래는 아직 정해지지 않았어요. 이 이야기를 읽고 있는 여러분이 미래를 선택하는 사람이에요.</p>
+        <p style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(25, 118, 210, 0.1); border-radius: 12px;">
+          <span class="highlight" style="font-size: 18px;">🌍🌡️ "선택이 미래를 만든다. 오늘의 한 걸음이 내일의 지구를 결정한다." 🌡️🌍</span>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <script>
+    // 배경 이미지 전환
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-30% 0px -30% 0px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+
+    // 초기 인트로 카드 활성화
+    document.addEventListener('DOMContentLoaded', () => {
+      const introContent = document.querySelector('.intro-content');
+      if (introContent) {
+        introContent.style.opacity = '1';
+      }
+    });
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

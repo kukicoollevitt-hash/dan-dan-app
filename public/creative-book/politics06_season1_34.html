@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세 개의 열쇠와 황금 왕관의 비밀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작정치경제06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #bf8c00 0%, #8b6914 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(191, 140, 0, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(191, 140, 0, 0.15);
+      color: #8b6914;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #bf8c00;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #8b6914;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #ffd54f;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(191, 140, 0, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 213, 79, 0.3);
+    }
+
+    .intro-content .conflict h3 {
+      color: #ffd54f;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(191, 140, 0, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(191, 140, 0, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(139, 105, 20, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(191, 140, 0, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+
+    /* 엔딩 섹션 */
+    .ending-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .ending-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+    }
+
+    .ending-content h2 {
+      font-size: 36px;
+      color: #ffd54f;
+      margin-bottom: 30px;
+    }
+
+    .ending-content .lesson {
+      background: rgba(191, 140, 0, 0.2);
+      padding: 30px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 213, 79, 0.3);
+    }
+
+    .ending-content .lesson h3 {
+      color: #ffd54f;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .ending-content .lesson p {
+      color: #e0e0e0;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 768px) {
+      .ending-content {
+        padding: 40px 30px;
+      }
+
+      .ending-content h2 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>세 개의 열쇠와 황금 왕관의 비밀</h1>
+        <p class="subtitle">
+          — 힘이 한 곳에 모이면 안 되는 이유 —<br>
+          교과기반 창작도서 · 정치경제 06
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>레오 왕:</strong> 사자 왕. 처음엔 좋은 왕이었지만, 아무도 '아니오'라고 말하지 않자 점점 변해가요.</p>
+          <p><strong>루나:</strong> 부엉이. 규칙을 만드는 역할을 해요. '입법부'를 뜻해요.</p>
+          <p><strong>다온:</strong> 사슴. 규칙을 실행하는 역할을 해요. '행정부'를 뜻해요.</p>
+          <p><strong>하은:</strong> 두루미. 잘잘못을 가리는 역할을 해요. '사법부'를 뜻해요.</p>
+          <p><strong>키키:</strong> 어린 원숭이. 호기심이 많고 질문을 많이 해요.</p>
+          <p><strong>노아:</strong> 여우. 왕에게 아첨하며 힘을 이용하려는 나쁜 동물이에요.</p>
+        </div>
+        <div class="conflict">
+          <h3>이야기 속 갈등</h3>
+          <p>힘을 혼자 가지면 빠르지만 위험해요. 힘을 나누면 느리지만 안전해요. 어떤 게 더 좋을까요?</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">힘이 한 곳에 모이면</span>
+        <h2>사자 왕의 황금 왕관</h2>
+        <p>아주 먼 옛날, 은빛 숲에 동물 왕국이 있었어요. 이 왕국에는 '황금 왕관'이라는 특별한 보물이 있었는데, 이걸 쓰는 사람이 모든 것을 결정할 수 있었어요. 규칙도 만들고, 일도 시키고, 벌도 줄 수 있었지요.</p>
+        <p>사자 레오는 큰 폭풍에서 동물들을 구한 영웅이었어요. 모두가 고마워하며 레오에게 왕관을 씌워줬어요. <span class="dialogue">"레오 님이라면 믿을 수 있어!"</span></p>
+        <p>처음에 레오는 정말 좋은 왕이었어요. 아픈 동물을 돌보고, 먹이를 공평하게 나눴어요. 하지만 시간이 지나면서 이상해졌어요. 레오가 만든 규칙에 아무도 <span class="dialogue">"그건 좀 이상한데요?"</span>라고 말하지 않았거든요.</p>
+        <p>여우 노아가 매일 속삭였어요. <span class="dialogue">"왕님, 왕님 결정은 항상 완벽해요. 다른 동물 말은 안 들어도 돼요."</span> 레오는 점점 다른 동물 이야기를 안 듣게 됐어요. 어린 원숭이 키키가 걱정스럽게 바라봤어요. <span class="dialogue">"옛날엔 저렇게 무섭지 않았는데... 왕관이 레오 님을 변하게 한 걸까?"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">규칙 만드는 곳</span>
+        <h2>지혜로운 부엉이 루나</h2>
+        <p>레오 왕이 혼자 규칙을 만들기 시작하면서 이상한 법들이 생겼어요. <span class="dialogue">"모든 동물은 사자에게 먼저 인사해야 한다!" "도토리 절반은 왕에게 바쳐라!"</span> 작은 동물들은 먹이 절반을 빼앗겨 배가 고팠어요.</p>
+        <p>부엉이 루나가 오래된 책을 찾았어요. <span class="dialogue">"여기 봐요. 옛날에는 '규칙 회의'가 있었대요. 여러 동물이 모여서 규칙을 함께 만들었던 거예요."</span></p>
+        <p><span class="dialogue">"그게 뭔데요, 루나 선생님?"</span> 키키가 물었어요. <span class="dialogue">"규칙 만드는 곳, '입법부'라고 해. 왕 혼자 법을 만들면 자기한테만 좋은 법을 만들기 쉬워. 하지만 여러 동물이 모여서 '이게 정말 공평한가?' 따져보면 나쁜 법이 생기기 어렵지."</span></p>
+        <p>루나는 조심스럽게 동물들을 모았어요. 다람쥐, 토끼, 새, 물고기 대표들이 모여 '숲의 규칙 회의'를 다시 만들었어요. <span class="dialogue">"왕이 만든 규칙이 정말 공평한지 함께 살펴보자는 거예요."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">일 실행하는 곳</span>
+        <h2>부지런한 사슴 다온</h2>
+        <p>루나의 규칙 회의에서 좋은 법들이 만들어졌어요. <span class="dialogue">"밤에 활동하는 동물을 위해 달빛 길을 만들자!" "먹이는 공평하게 나누자!"</span> 그런데 문제가 있었어요. 규칙은 만들어졌는데, 실제로 일하는 사람이 없었어요!</p>
+        <p>사슴 다온이 앞으로 나섰어요. <span class="dialogue">"제가 할게요! 규칙이 정해지면 제가 팀을 만들어서 실행할게요!"</span> 다온은 두더지에게 길을 파달라고 하고, 다람쥐에게 먹이 창고를 관리하게 했어요.</p>
+        <p>하지만 다온이 너무 급해졌어요. <span class="dialogue">"이건 급하니까 회의 안 기다릴래! 내가 알아서 할게!"</span> 규칙 회의 허락 없이 혼자 결정하기 시작했어요. 강을 막으려고 물고기 의견도 안 물어보고 공사를 시작했지요.</p>
+        <p><span class="dialogue">"잠깐, 다온! 규칙을 실행하는 건 좋지만, 규칙에 없는 일을 맘대로 하면 안 돼!"</span> 루나가 말했어요. 키키가 물었어요. <span class="dialogue">"규칙 만드는 것과 실행하는 것은 다른 거네요?"</span> <span class="dialogue">"그래. 규칙 실행하는 곳을 '행정부'라고 해. 규칙 안에서 열심히 일하는 곳이야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">잘잘못 가리는 곳</span>
+        <h2>공정한 두루미 하은</h2>
+        <p>어느 날 큰 사건이 벌어졌어요. 다온이 강을 막는 공사를 하다가 물고기 마을이 물에 잠겨버렸어요! <span class="dialogue">"우리 집이 다 잠겼어요!"</span> 물고기들이 울었어요.</p>
+        <p>누가 옳고 누가 그른지 판단해야 했어요. 하지만 레오 왕이 판단하면? 레오는 다온에게 공사를 시킨 사람이에요. 루나가 판단하면? 루나는 규칙을 만든 사람이에요. 자기가 자기 잘못을 판단할 수는 없어요.</p>
+        <p>그때 두루미 하은이 날아왔어요. 하은은 숲에서 가장 공정한 동물이에요. 누구 편도 안 들고, 사실만 보고 판단해요. <span class="dialogue">"제가 살펴볼게요."</span></p>
+        <p>하은은 양쪽 이야기를 다 들었어요. 그리고 말했어요. <span class="dialogue">"다온은 허락 없이 공사한 잘못이 있어요. 물고기 마을 복구를 도와야 해요. 동시에 새 위치를 회의에서 정해야 해요."</span></p>
+        <p>키키가 감탄했어요. <span class="dialogue">"어느 쪽 편도 안 들고 공평하게 판단했어!"</span> <span class="dialogue">"이게 '사법부'야. 잘잘못을 가리는 곳은 다른 곳과 완전히 떨어져 있어야 해."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">서로 지켜보기</span>
+        <h2>세 개의 열쇠</h2>
+        <p>루나, 다온, 하은. 세 동물은 각각 다른 역할을 맡게 됐어요. 그런데 중요한 게 남았어요. 이 셋 중 누구도 너무 큰 힘을 갖지 않으려면 어떻게 해야 할까요?</p>
+        <p>늙은 거북이 솔이가 기어와서 세 개의 열쇠를 꺼냈어요. 금빛, 은빛, 동빛 열쇠. <span class="dialogue">"이 열쇠들은 황금 왕관과 연결돼 있단다. 원래 왕관은 한 사람이 쓰는 게 아니라 세 조각으로 나뉘어야 했어."</span></p>
+        <p>키키 입이 딱 벌어졌어요. <span class="dialogue">"왕관이 세 조각이요?"</span> <span class="dialogue">"그래. 금빛 열쇠는 규칙 만드는 힘, 은빛 열쇠는 실행하는 힘, 동빛 열쇠는 판단하는 힘이야. 세 힘이 한 곳에 모이면 위험하지만, 나뉘면 서로 지켜볼 수 있어."</span></p>
+        <p><span class="dialogue">"마치 가위바위보 같아요!"</span> 키키가 외쳤어요. <span class="dialogue">"가위는 보를, 보는 바위를, 바위는 가위를 이기니까 하나가 다 이길 수 없잖아요!"</span> <span class="dialogue">"맞아, 키키. 이걸 '견제와 균형'이라고 해."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">나쁜 유혹</span>
+        <h2>여우 노아의 나쁜 계획</h2>
+        <p>세 개의 열쇠 체계가 만들어지자 여우 노아가 불안해졌어요. 노아는 그동안 왕 옆에서 아첨하며 좋은 것만 챙겼거든요. 이제 그런 짓이 안 통했어요.</p>
+        <p>노아는 나쁜 계획을 세웠어요. <span class="dialogue">"세 동물 사이를 갈라놓으면 돼!"</span> 노아는 다온에게 갔어요. <span class="dialogue">"루나가 뒤에서 욕하던데요? 생각 없이 달린다고요."</span> 루나에게도 갔어요. <span class="dialogue">"다온이 회의를 무시하겠다던데요."</span></p>
+        <p>셋 사이에 의심이 생겼어요. 회의에서 작은 다툼이 커졌어요. 노아는 혼란 속에서 열쇠를 훔치려 했어요.</p>
+        <p>하지만 키키가 나무 위에서 다 보고 있었어요! <span class="dialogue">"잠깐! 노아가 이상한 짓 해요!"</span> 하은이 조사해서 노아가 이간질한 게 밝혀졌어요. 노아는 숲에서 쫓겨났어요.</p>
+        <p>레오가 한숨을 쉬었어요. <span class="dialogue">"나도 노아에게 속았구나. 힘 곁에는 그걸 이용하려는 사람이 항상 있어."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">가장 높은 약속</span>
+        <h2>바위에 새긴 약속</h2>
+        <p>노아 사건 후 동물들이 깨달았어요. 세 열쇠 체계가 좋아도, 누가 <span class="dialogue">"이걸 없애자!"</span>고 하면 어떡하지? 힘센 동물이 <span class="dialogue">"난 안 따를래!"</span>라고 하면?</p>
+        <p>루나가 말했어요. <span class="dialogue">"다른 모든 규칙 위에 있는 가장 높은 약속이 필요해요. 누구도 함부로 못 바꾸는 약속이요."</span> <span class="dialogue">"그게 뭔데요?"</span> 키키가 물었어요. <span class="dialogue">"'헌법'이라고 해. 나라의 뼈대 같은 거야."</span> 솔이 거북이 말했어요.</p>
+        <p>동물들은 마을 광장의 큰 바위에 약속을 새겼어요. 오랜 토론 끝에 다섯 가지를 정했어요.</p>
+        <p><span class="highlight">첫째, 모든 동물은 평등해요. 둘째, 만드는 힘, 실행하는 힘, 판단하는 힘은 나뉘어야 해요. 셋째, 아무도 다른 동물의 기본 권리를 빼앗을 수 없어요. 넷째, 힘 가진 자는 책임을 져야 해요. 다섯째, 이 약속 바꾸려면 동물 4분의 3 이상이 동의해야 해요.</span></p>
+        <p>레오가 바위에 발자국을 찍으며 말했어요. <span class="dialogue">"내가 왕일 때 이런 약속이 있었으면 길을 안 잃었을 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">눈치 안 보는 용기</span>
+        <h2>흔들리지 않는 마음</h2>
+        <p>바위에 약속을 새긴 뒤에도 시험이 있었어요. 어느 겨울, 숲에 엄청 추운 날이 왔어요. 먹이가 부족해지자 동물들이 싸웠어요.</p>
+        <p>다온이 급하게 말했어요. <span class="dialogue">"비상이야! 회의 기다릴 시간 없어. 큰 동물에게 먹이 더 주고 작은 동물은 참으라고 하자."</span> 루나에게 압력을 넣었어요. <span class="dialogue">"루나, 이번만 빨리 통과시켜."</span></p>
+        <p>루나는 고민했어요. 급하긴 하지만, 공평한 토론 없이 큰 동물에게만 좋은 규칙을 만들 순 없었어요. <span class="dialogue">"안 돼. 급해도 공평한 절차는 건너뛸 수 없어."</span></p>
+        <p>다온이 하은에게도 갔어요. <span class="dialogue">"루나에게 압력 좀 넣어줘."</span> 하은이 차갑게 말했어요. <span class="dialogue">"난 누구 편도 못 들어요. 그게 내 역할이에요."</span></p>
+        <p>키키가 물었어요. <span class="dialogue">"무섭지 않아요?"</span> <span class="dialogue">"무섭지. 하지만 두려움에 지면 공평함도 잃어. 판단하는 사람이 눈치 보면 그건 정의가 아니야."</span> 결국 공평한 방법으로 비상 규칙을 만들었어요. 용기 덕분에 공정함을 지켰어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">느리지만 안전해요</span>
+        <h2>브레이크가 있는 마차</h2>
+        <p>봄이 오고 위기가 지나갔어요. 하지만 일부 동물이 불평했어요. <span class="dialogue">"회의하고, 실행하고, 판단하고... 너무 느려! 옛날에 레오 왕 혼자 할 때는 빨랐는데."</span></p>
+        <p>레오가 쓴웃음을 지었어요. <span class="dialogue">"내가 혼자 할 때 빨랐어. 하지만 그 빠른 결정 때문에 얼마나 많이 상처받았는지 기억해?"</span></p>
+        <p>키키가 물었어요. <span class="dialogue">"빠른 것과 좋은 것은 다른 건가요?"</span> <span class="dialogue">"그래. 마차를 생각해봐. 마차가 빠르면 좋아 보이지만, 브레이크가 없으면?"</span> <span class="dialogue">"절벽에서 떨어지겠죠!"</span></p>
+        <p><span class="dialogue">"맞아. 힘을 나누는 건 마차에 브레이크 다는 것과 같아. 느려지지만 절벽에서 안 떨어져. 내가 왕일 때 나한테 브레이크가 없었어. 아무도 '아니오'라고 안 했거든. 그래서 절벽을 향해 달렸어."</span></p>
+        <p>동물들이 고개를 끄덕였어요. 빠른 독재보다 느린 합의가 더 안전해요. 천천히 토론하고 서로 살펴보면서 실수를 줄이는 게 진짜 지혜예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">균형의 지혜</span>
+        <h2>세 열쇠가 지키는 아름다운 숲</h2>
+        <p>시간이 흘러 은빛 숲이 달라졌어요. 광장에 세 개의 건물이 나란히 섰어요. 루나의 '규칙의 집', 다온의 '실행의 집', 하은의 '정의의 집'. 가운데에는 약속이 새겨진 바위가 있었어요.</p>
+        <p>따뜻한 봄날, 키키가 바위에 앉아 물었어요. <span class="dialogue">"세 개의 열쇠가 왜 중요해요?"</span></p>
+        <p>레오가 대답했어요. <span class="dialogue">"한때 난 세 열쇠를 다 가졌어. 모든 걸 혼자 정할 수 있었지. 하지만 그 힘이 나를 눈멀게 했어."</span></p>
+        <p>루나가 말했어요. <span class="dialogue">"힘은 물과 같아요. 한곳에 고이면 썩지만, 여러 갈래로 흐르면 온 숲을 적시지요."</span> 다온도 말했어요. <span class="dialogue">"난 빨리 달리고 싶었는데, 루나와 하은이 '잠깐, 방향 확인해'라고 해줘서 절벽에서 안 떨어졌어."</span></p>
+        <p>키키가 웃으며 말했어요. <span class="dialogue">"세 열쇠는 따로따로일 때 각자 멋지지만, 함께 있을 때 가장 강하네요!"</span></p>
+        <p>솔이 거북이 말했어요. <span class="dialogue">"기억해. 힘은 나눠야 안전해. 그 균형을 지키는 건 모든 동물의 책임이야."</span> 은빛 숲에 무지개가 떴어요. 금빛, 은빛, 동빛... 세 열쇠처럼 다른 색이 모여 하나의 아름다운 무지개가 됐어요.</p>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="ending-section">
+      <div class="ending-content">
+        <h2>이야기에서 배운 것</h2>
+        <div class="lesson">
+          <h3>힘은 나눠야 안전해요</h3>
+          <p>규칙 만드는 힘, 실행하는 힘, 판단하는 힘이 서로 지켜보고 균형을 이룰 때, 모두가 안전하고 자유로운 세상이 만들어져요.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='/novel_category.html'">목록으로</button>
+  </div>
+
+  <script>
+    // 배경 이미지 전환 시스템
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const storyCards = document.querySelectorAll('.story-card');
+
+    // Intersection Observer로 섹션 감지
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const section = entry.target;
+          const newBg = section.dataset.bg;
+
+          if (newBg) {
+            mapContainer.style.backgroundImage = `url('${newBg}')`;
+          }
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      sectionObserver.observe(section);
+    });
+
+    // 스토리 카드 애니메이션
+    const cardObserverOptions = {
+      root: null,
+      rootMargin: '-10% 0px -10% 0px',
+      threshold: 0.1
+    };
+
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, cardObserverOptions);
+
+    storyCards.forEach(card => {
+      cardObserver.observe(card);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚛️ 118명의 원소 용사가 사는 주기율표 왕국</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(106, 17, 203, 0.15);
+      color: #6a11cb;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6a11cb;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #2575fc;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a78bfa;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(106, 17, 203, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(37, 117, 252, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 117, 252, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚛️ 118명의 원소 용사가 사는 주기율표 왕국</h1>
+        <p class="subtitle">
+          — 눈에 보이는 모든 것은 원소로 이루어져 있어! —<br>
+          교과기반 창작도서 · 화학 06 · 3-4학년
+        </p>
+        <div class="characters">
+          <h3>⚛️ 등장인물 소개</h3>
+          <p><strong>▸ 멘델:</strong> 열두 살 소년. 원소에 대해 알고 싶어 하는 호기심 많은 아이예요.</p>
+          <p><strong>▸ 라부아 할머니:</strong> 도서관 사서. 옛날 이야기를 많이 알려주세요.</p>
+          <p><strong>▸ 주기 선생님:</strong> 원소 광장을 관리하는 선생님이에요.</p>
+          <p><strong>▸ 금이 (Au):</strong> 반짝반짝 빛나는 황금빛 원소예요.</p>
+          <p><strong>▸ 산소 (O):</strong> 보이지 않지만 숨을 쉬게 해주는 원소예요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">원소의 발견</span>
+        <h2>옛날 사람들의 원소 찾기 여행</h2>
+        <p>화학 왕국 한가운데에 <span class="highlight">'원소 광장'</span>이 있었어요. 이곳에는 118개의 의자가 줄지어 있었지만, 아직 빈자리가 많았어요.</p>
+        <p>호기심 많은 소년 <span class="highlight">'멘델'</span>은 이 광장 옆 도서관에서 일했어요. 멘델의 꿈은 세상을 이루는 기본 재료, 원소를 모두 찾아내는 것이었죠.</p>
+        <p><span class="dialogue">"옛날 사람들은 세상이 물, 불, 흙, 공기 네 가지로 만들어졌다고 생각했단다."</span> 라부아 할머니가 말씀하셨어요.</p>
+        <p>중세 시대의 연금술사들은 납을 금으로 바꾸려고 했어요. 실패했지만, 그 과정에서 새로운 원소들을 발견했답니다.</p>
+        <p><span class="dialogue">"연금술사들의 꿈은 이루어지지 않았지만, 그들의 실험이 화학의 씨앗이 되었단다."</span></p>
+        <p><span class="highlight">'원소'</span>란 더 이상 쪼갤 수 없는 기본 물질이에요. 과학자들이 하나씩 원소를 찾아내면서 원소 광장의 의자가 채워지기 시작했어요.</p>
+        <p>멘델은 빈 의자들을 바라보며 말했어요. <span class="dialogue">"나는 이 의자를 모두 채울 거야!"</span> 118개 의자에 숨겨진 비밀을 찾는 탐험이 시작되었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">주기율표</span>
+        <h2>원소 카드 놀이에서 찾은 신기한 규칙</h2>
+        <p><span class="highlight">'주기 선생님'</span>은 원소 광장을 관리하는 분이에요. 선생님이 멘델에게 카드 뭉치를 보여주셨어요.</p>
+        <p><span class="dialogue">"이 카드에는 원소의 이름과 무게가 적혀 있어. 무게 순서대로 나열해 볼래?"</span></p>
+        <p>멘델이 카드를 정리하기 시작했어요. 수소, 리튬, 베릴륨, 탄소, 산소... 그런데 놀라운 것을 발견했어요!</p>
+        <p><span class="dialogue">"어? 리튬이랑 나트륨이랑 비슷해요! 둘 다 무른 금속이고, 물과 잘 반응해요!"</span></p>
+        <p><span class="dialogue">"그래! 비슷한 성질의 원소가 일정한 간격으로 반복되는 거야. 이것을 <span class="highlight">'주기율'</span>이라고 해."</span></p>
+        <p>과학자 멘델레예프는 이 규칙대로 원소를 표로 정리했어요. 빈칸이 있으면 "여기에 아직 못 찾은 원소가 있을 거야"라고 예언했고, 그 예언이 모두 맞았답니다!</p>
+        <p><span class="dialogue">"주기율표는 원소의 지도야. 아직 발견하지 못한 원소도 찾을 수 있는 신비한 지도지."</span></p>
+        <p>멘델은 주기율표를 보며 깜짝 놀랐어요. 118개 의자에는 우주의 비밀이 담겨 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">금과 산소</span>
+        <h2>번쩍이는 금과 보이지 않는 산소</h2>
+        <p>멘델이 원소 광장에서 처음 만난 원소는 <span class="highlight">'금이'</span>와 <span class="highlight">'산소'</span>였어요.</p>
+        <p>금이는 반짝반짝 빛나는 황금빛 옷을 입고 있었어요. 산소는 투명해서 거의 보이지 않았지요.</p>
+        <p><span class="dialogue">"나를 봐! 나는 금이야! 수천 년이 지나도 녹슬지 않고 빛이 나지!"</span> 금이가 자랑했어요.</p>
+        <p>산소가 조용히 말했어요. <span class="dialogue">"나는 보이지 않아. 하지만 네가 숨 쉴 수 있는 건 나 덕분이야."</span></p>
+        <p><span class="dialogue">"둘 다 원소인데 왜 이렇게 다른 거예요?"</span> 멘델이 물었어요.</p>
+        <p>주기 선생님이 설명해 주셨어요. <span class="dialogue">"<span class="highlight">양성자 수</span>가 다르기 때문이야. 산소는 양성자가 8개, 금은 79개야. 양성자 수가 다르면 성질이 완전히 달라져."</span></p>
+        <p>금은 변하지 않는 원소이고, 산소는 다른 원소와 잘 결합하는 활발한 원소예요. 둘 다 세상에 꼭 필요한 원소랍니다.</p>
+        <p>양성자 수라는 작은 차이가 완전히 다른 원소를 만들어내고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">원자 번호</span>
+        <h2>원소의 주민등록번호, 양성자 수</h2>
+        <p>멘델은 원소 광장의 의자 번호가 어떤 규칙으로 매겨져 있는지 궁금했어요.</p>
+        <p>주기 선생님이 큰 소리로 외쳤어요. <span class="dialogue">"원소들, 자기 번호를 말해 보세요!"</span></p>
+        <p>1번 수소가 먼저 말했어요. <span class="dialogue">"나는 수소! 양성자 1개!"</span> 2번 헬륨이 이었어요. <span class="dialogue">"헬륨! 양성자 2개!"</span></p>
+        <p>3번 리튬, 4번 베릴륨... 118번까지 모든 원소가 자기의 양성자 수를 외쳤어요.</p>
+        <p><span class="dialogue">"이 양성자 수가 바로 <span class="highlight">'원자번호'</span>야. 원소의 주민등록번호 같은 거지."</span></p>
+        <p>양성자가 1개면 반드시 수소이고, 26개면 반드시 철이에요. 우주 어디에서든 똑같은 규칙이에요.</p>
+        <p><span class="dialogue">"양성자 하나가 다르면 완전히 다른 원소가 되는 거예요?"</span> 멘델이 물었어요.</p>
+        <p><span class="dialogue">"맞아! 양성자 하나가 세상을 바꾸는 거야."</span> 선생님이 웃으며 대답하셨어요. 양성자 하나의 차이로 원소가 바뀐다니, 정말 신기했어요!</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">성질의 반복</span>
+        <h2>같은 세로줄 원소는 닮은 가족</h2>
+        <p>멘델이 주기율표를 세로로 읽기 시작하자, 놀라운 것을 발견했어요.</p>
+        <p>첫 번째 세로줄에는 리튬, 나트륨, 칼륨이 나란히 앉아 있었어요.</p>
+        <p><span class="dialogue">"우리는 <span class="highlight">'알칼리 금속'</span> 가족이야!"</span> 나트륨이 인사했어요. <span class="dialogue">"우리는 모두 물과 잘 반응해!"</span></p>
+        <p>나트륨이 물 위에 올라가자, 치직치직 소리를 내며 불꽃이 피어올랐어요. 정말 신기했어요!</p>
+        <p>반대편 끝에는 <span class="highlight">'비활성 기체'</span> 가족이 있었어요. 헬륨, 네온, 아르곤 같은 원소들이에요.</p>
+        <p><span class="dialogue">"우리는 다른 원소와 거의 반응하지 않아. 우리는 이미 완벽하거든!"</span> 네온이 말했어요.</p>
+        <p>같은 세로줄의 원소들은 성질이 비슷해요. 그래서 가족처럼 묶을 수 있답니다.</p>
+        <p>멘델은 깨달았어요. 주기율표는 그냥 목록이 아니라, 원소 가족의 초상화라는 것을요!</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">금속과 비금속</span>
+        <h2>왼쪽 원소와 오른쪽 원소의 대결</h2>
+        <p>원소 광장에서 작은 소동이 벌어졌어요. 왼쪽과 오른쪽 원소들이 "누가 더 중요해?"라고 말다툼을 했거든요.</p>
+        <p>왼쪽의 <span class="highlight">'철이'</span>가 말했어요. <span class="dialogue">"우리 금속이 없으면 건물도 못 짓고, 자동차도 못 만들어!"</span></p>
+        <p>오른쪽의 <span class="highlight">'산소'</span>가 말했어요. <span class="dialogue">"우리 비금속이 없으면 숨도 못 쉬어!"</span></p>
+        <p>멘델이 물었어요. <span class="dialogue">"금속과 비금속은 뭐가 다른 거예요?"</span></p>
+        <p>선생님이 설명해 주셨어요. <span class="dialogue">"<span class="highlight">금속</span>은 반짝반짝 빛나고, 전기가 잘 통해. <span class="highlight">비금속</span>은 빛나지 않고, 전기가 잘 안 통해."</span></p>
+        <p>주기율표의 왼쪽은 금속, 오른쪽은 비금속이에요. 가운데에는 둘의 성질을 모두 가진 원소도 있어요.</p>
+        <p>철이와 산소가 서로를 바라보며 웃었어요. <span class="dialogue">"사실 우리는 결합해서 녹을 만드잖아. 서로 필요한 사이야!"</span></p>
+        <p>금속과 비금속은 서로 다르지만, 함께 결합해서 새로운 물질을 만들어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">희귀 원소</span>
+        <h2>별의 폭발에서 태어난 귀한 원소들</h2>
+        <p>원소 광장 뒷줄에는 좀처럼 나타나지 않는 원소들이 있었어요. 먼지가 쌓인 빈 의자들이 보였어요.</p>
+        <p><span class="dialogue">"이 자리의 원소들은 어디 있어요?"</span> 멘델이 물었어요.</p>
+        <p><span class="dialogue">"저 자리들은 아주 희귀한 원소들의 자리야. 자연에서 거의 찾을 수 없어."</span></p>
+        <p><span class="dialogue">"왜요?"</span></p>
+        <p><span class="dialogue">"이 원소들은 불안정해서 금방 다른 원소로 바뀌어 버려. 그래서 오래 있지 못하는 거야."</span></p>
+        <p>가장 무거운 원소들은 과학자들이 실험실에서 직접 만들어냈어요. 아주 잠깐만 존재하다가 사라지는 원소들이에요.</p>
+        <p><span class="dialogue">"철보다 무거운 원소는 어디서 만들어져요?"</span></p>
+        <p><span class="dialogue">"<span class="highlight">별이 폭발할 때</span> 만들어져! 엄청난 에너지 속에서 새로운 원소가 태어나지."</span></p>
+        <p>멘델은 자기 손가락의 반지를 바라보았어요. 이 은도 먼 옛날 별이 폭발하면서 만들어진 거예요. 우리 몸의 원소도 모두 별에서 왔답니다!</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">결합의 가능성</span>
+        <h2>118개의 레고 블록으로 만드는 세상</h2>
+        <p>멘델이 물었어요. <span class="dialogue">"원소가 118개뿐인데, 왜 세상에는 물질이 이렇게 많아요?"</span></p>
+        <p>주기 선생님이 레고 블록을 꺼내셨어요. <span class="dialogue">"네 가지 색의 블록으로 뭘 만들 수 있을까?"</span></p>
+        <p>멘델이 블록을 조립했어요. 집, 자동차, 비행기, 동물... 같은 블록으로 수백 가지를 만들 수 있었어요!</p>
+        <p><span class="dialogue">"원소도 마찬가지야. 118개의 원소가 서로 결합하면 무한히 많은 물질이 만들어져."</span></p>
+        <p><span class="highlight">탄소</span> 하나만 해도 다이아몬드, 연필심, 숯이 될 수 있어요. 같은 탄소인데 배열만 다른 거예요.</p>
+        <p><span class="dialogue">"탄소에 수소, 산소, 질소가 합쳐지면 생명의 재료가 돼!"</span></p>
+        <p>멘델이 깜짝 놀랐어요. <span class="dialogue">"겨우 네 가지 원소로 생명이 만들어진다고요?"</span></p>
+        <p><span class="dialogue">"그래! 원소는 알파벳이고, 물질은 그 알파벳으로 쓴 이야기야."</span> 118개의 레고 블록으로 우주의 모든 것을 만들 수 있다니, 정말 놀라웠어요!</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">물질의 다양성</span>
+        <h2>같은 블록으로 만든 다양한 작품들</h2>
+        <p>멘델은 <span class="highlight">'만물의 갤러리'</span>를 방문했어요. 원소들이 만들어낸 신기한 물질들이 전시되어 있었어요.</p>
+        <p>첫 번째 방은 <span class="highlight">'생명의 방'</span>이었어요. 탄소, 수소, 산소, 질소가 만든 물질들이 있었죠. 설탕, DNA, 단백질... 모두 우리 몸에 필요한 것들이에요.</p>
+        <p>두 번째 방은 <span class="highlight">'문명의 방'</span>이었어요. 철로 만든 빌딩, 구리로 만든 전선, 유리로 만든 창문이 있었어요.</p>
+        <p>세 번째 방은 <span class="highlight">'예술의 방'</span>이었어요. 에메랄드, 루비, 다이아몬드가 반짝이고 있었어요.</p>
+        <p><span class="dialogue">"같은 탄소인데 숯이 다이아몬드가 된다니, 마법 같아요!"</span></p>
+        <p>네 번째 방은 <span class="highlight">'미래의 방'</span>이었어요. 전기차 배터리, LED 불빛, 태양광 패널이 있었어요.</p>
+        <p>멘델은 갤러리를 나오며 생각했어요. 이 모든 다양한 물질이 118개의 원소로 만들어졌다는 게 정말 신기했어요.</p>
+        <p>기본이 탄탄하면 무한한 것을 만들 수 있다는 걸 배웠어요!</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">우주의 기본 단위</span>
+        <h2>멘델의 깨달음, 모든 것은 기본에서 시작해</h2>
+        <p>모든 탐험을 마친 멘델은 원소 광장 한가운데에 섰어요. 118개의 의자가 모두 채워져 있었어요.</p>
+        <p><span class="dialogue">"멘델, 우주에서 가장 많은 원소가 뭔지 알아?"</span> 선생님이 물었어요.</p>
+        <p><span class="dialogue">"금이요? 철이요?"</span></p>
+        <p><span class="dialogue">"아니, <span class="highlight">수소</span>야! 우주의 대부분이 수소란다."</span></p>
+        <p>빅뱅, 우주가 처음 생겼을 때 만들어진 게 수소예요. 나머지 원소는 별에서 만들어졌어요.</p>
+        <p><span class="dialogue">"우리 몸의 탄소도 별에서 만들어진 거예요?"</span></p>
+        <p><span class="dialogue">"맞아. 우리는 별의 먼지야."</span></p>
+        <p>멘델은 밤하늘을 올려다보았어요. 저 별들 안에서 지금도 새로운 원소가 만들어지고 있어요.</p>
+        <p>양성자 하나가 원소를 결정하고, 원소가 물질을 만들고, 물질이 세상을 만들어요. <span class="highlight">모든 것은 기본에서 시작해요.</span></p>
+        <p>멘델은 1번 의자의 수소 앞에서 말했어요. <span class="dialogue">"고마워, 수소. 네가 없었으면 이 모든 게 없었을 거야."</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(106, 17, 203, 0.15); border-radius: 16px;">
+          <strong style="color: #6a11cb; font-size: 18px;">🌱 교훈: 모든 것은 기본에서 시작해요!</strong><br><br>
+          <span style="font-size: 14px; color: #34495e; line-height: 1.8;">우주의 모든 것은 118개의 원소로 이루어져 있어요. 별도, 바다도, 우리 몸도 같은 원소의 조합이에요. 가장 간단한 수소 원자가 모여 별을 만들고, 별이 폭발해서 더 무거운 원소를 만들어요. 기본을 잘 알면 무한한 가능성이 열려요. 덧셈을 모르면 곱셈을 할 수 없고, 글자를 모르면 책을 읽을 수 없어요. 기본을 소중히 하세요!</span>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

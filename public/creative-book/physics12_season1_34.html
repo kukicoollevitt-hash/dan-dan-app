@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>빛나와 프리즘의 굴절 모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF6B6B 0%, #00BCD4 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(0, 188, 212, 0.15) 100%);
+      color: #E91E63;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      background: linear-gradient(135deg, #FF6B6B 0%, #E91E63 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #00838F;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      background: linear-gradient(135deg, #FF6B6B 0%, #00BCD4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.9) 0%, rgba(0, 188, 212, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: linear-gradient(135deg, rgba(233, 30, 99, 0.9) 0%, rgba(0, 131, 143, 0.9) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>빛나와 프리즘의 굴절 모험</h1>
+        <p class="subtitle">
+          《물속 막대가 왜 꺾여 보일까?》<br>
+          빛이 꺾이는 신기한 세계로 떠나는 모험
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>빛나</strong> — 호기심 많은 소녀, 빛의 굴절 세계를 탐험하는 주인공</p>
+          <p><strong>든든이</strong> — 빛나의 사촌 오빠, 과학을 좋아하는 든든한 조력자</p>
+          <p><strong>프리즘</strong> — 무지갯빛 빛의 요정, 굴절의 비밀을 알려주는 안내자</p>
+        </div>
+        <p class="scroll-hint">아래로 스크롤하여 이야기 시작</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">꺾인 막대</span>
+        <h2>물에 담근 막대가 꺾여 보여요!</h2>
+        <p>투명 호수 마을에 '빛나'라는 소녀가 살았어요. 어느 여름날, 빛나는 사촌 오빠 '든든이'와 호숫가에서 놀고 있었어요.</p>
+        <p>빛나가 막대를 물에 담갔다가 깜짝 놀랐어요. <span class="dialogue">"오빠! 막대가 꺾였어!"</span> 든든이가 웃으며 말했어요. <span class="dialogue">"꺼내봐."</span> 막대를 꺼내니 멀쩡했어요!</p>
+        <p><span class="dialogue">"왜 이런 거야?"</span> 그때, 무지갯빛 요정이 나타났어요. <span class="dialogue">"안녕! 나는 프리즘이야. <span class="highlight">'굴절'</span>이라는 빛의 마법을 알려줄게!"</span></p>
+        <p><span class="dialogue">"빛이 물로 들어갈 때 방향이 꺾이는 거야. 그래서 막대가 꺾여 보이는 거지!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">굴절이란</span>
+        <h2>빛이 꺾이는 이유</h2>
+        <p>프리즘이 빛나를 호수 얕은 곳으로 데려갔어요. <span class="dialogue">"빛의 굴절을 직접 보여줄게!"</span></p>
+        <p>프리즘이 손가락을 튕기자, 햇빛 한 줄기가 보였어요. 빛이 공기에서 물로 들어가는 순간, 방향이 살짝 꺾였어요!</p>
+        <p><span class="dialogue">"<span class="highlight">빛은 같은 물질에서는 직진해.</span> 하지만 다른 물질로 넘어가면 속도가 바뀌고, 방향도 꺾여!"</span></p>
+        <p>든든이가 고개를 끄덕였어요. <span class="dialogue">"빛이 물에서 느려지면서 꺾이는 거구나!"</span> 막대가 꺾여 보이는 비밀이 풀렸어요!</p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">매질의 변화</span>
+        <h2>공기, 물, 유리를 지나는 빛</h2>
+        <p>프리즘이 유리 가게로 아이들을 데려갔어요. 유리 조각들이 햇빛을 받아 반짝였어요.</p>
+        <p><span class="dialogue">"<span class="highlight">'매질'</span>은 빛이 지나가는 물질이야. 공기, 물, 유리 모두 매질이지!"</span></p>
+        <p>프리즘이 유리 조각에 빛을 비췄어요. 빛이 유리로 들어갈 때 꺾이고, 나올 때 또 꺾였어요!</p>
+        <p><span class="dialogue">"<span class="highlight">빛이 더 느리게 가는 물질에서 더 많이 꺾여.</span> 그래서 다이아몬드가 그렇게 반짝이는 거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">굴절각</span>
+        <h2>빛이 꺾이는 규칙</h2>
+        <p>프리즘이 분수대 앞으로 아이들을 이끌었어요. <span class="dialogue">"굴절에도 규칙이 있어!"</span></p>
+        <p>빛이 물로 들어가자, 더 수직 방향으로 꺾였어요. <span class="dialogue">"<span class="highlight">느린 물질로 들어가면 안쪽으로 꺾여.</span>"</span></p>
+        <p>이번에는 물에서 공기로 빛이 나왔어요. 빛이 바깥쪽으로 벌어졌어요! <span class="dialogue">"<span class="highlight">빠른 물질로 나가면 바깥쪽으로 꺾여!</span>"</span></p>
+        <p>빛나가 말했어요. <span class="dialogue">"그래서 물속 다리가 위로 꺾여 보이는 거구나!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">렌즈의 비밀</span>
+        <h2>빛을 모으고 퍼뜨리는 렌즈</h2>
+        <p>프리즘이 안경점으로 아이들을 데려갔어요. 여러 가지 렌즈가 있었어요.</p>
+        <p><span class="dialogue">"<span class="highlight">렌즈는 빛을 굴절시키는 도구</span>야. 가운데가 두꺼운 것은 볼록 렌즈!"</span></p>
+        <p>볼록 렌즈로 햇빛을 모으자, 한 점에 빛이 모였어요! <span class="dialogue">"<span class="highlight">볼록 렌즈는 빛을 모아.</span> 돋보기가 바로 이거야!"</span></p>
+        <p><span class="dialogue">"가운데가 얇은 <span class="highlight">오목 렌즈는 빛을 퍼뜨려.</span> 근시 안경에 쓰이지!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">돋보기</span>
+        <h2>빛을 모아 불을 붙이다</h2>
+        <p>프리즘이 큰 돋보기를 들고 정원으로 갔어요. <span class="dialogue">"볼록 렌즈의 힘을 보여줄게!"</span></p>
+        <p>돋보기로 햇빛을 모아 마른 나뭇잎에 비췄어요. 잠시 후 연기가 나더니 불이 붙었어요!</p>
+        <p><span class="dialogue">"<span class="highlight">햇빛을 한 점에 모으면 엄청 뜨거워져!</span>"</span> 든든이가 말했어요. <span class="dialogue">"그래서 물병을 차 안에 두면 위험한 거구나!"</span></p>
+        <p>프리즘이 말했어요. <span class="dialogue">"맞아. 하지만 <span class="highlight">태양열 발전소</span>에서는 이 힘으로 전기를 만들어!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">눈의 구조</span>
+        <h2>우리 눈 속의 렌즈</h2>
+        <p>프리즘이 눈 그림이 있는 책을 펼쳤어요. <span class="dialogue">"우리 눈은 <span class="highlight">살아있는 카메라</span>야!"</span></p>
+        <p><span class="dialogue">"눈의 '<span class="highlight">수정체</span>'가 볼록 렌즈야. 빛을 모아서 망막에 그림을 만들지."</span></p>
+        <p><span class="dialogue">"<span class="highlight">근시</span>는 빛이 너무 앞에서 모이는 거야. 오목 렌즈 안경이 도와줘!"</span></p>
+        <p>빛나가 감탄했어요. <span class="dialogue">"<span class="highlight">우리가 보는 것도 굴절 덕분</span>이구나!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">무지개</span>
+        <h2>빗방울 속 일곱 빛깔</h2>
+        <p>비가 그치고 하늘에 무지개가 떴어요. 프리즘이 말했어요. <span class="dialogue">"저게 바로 나야!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">무지개는 굴절이 만든 작품</span>이야. 빗방울이 프리즘처럼 빛을 나눠!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">흰색 빛은 빨주노초파남보 일곱 색</span>이 섞인 거야. 빗방울에서 각 색이 다르게 꺾이면서 분리돼!"</span></p>
+        <p>든든이가 말했어요. <span class="dialogue">"<span class="highlight">무지개는 굴절의 가장 아름다운 증거</span>네!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">빛의 속도</span>
+        <h2>물에서 빛이 느려지는 이유</h2>
+        <p>빛나가 물었어요. <span class="dialogue">"빛은 가장 빠른데 왜 물에서 느려져?"</span></p>
+        <p>프리즘이 설명했어요. <span class="dialogue">"<span class="highlight">진공에서 빛은 초속 30만 km로 가장 빨라.</span>"</span></p>
+        <p><span class="dialogue">"하지만 물이나 유리에서는 <span class="highlight">원자들과 부딪히면서 느려져.</span> 사람 많은 복도를 지나는 것처럼!"</span></p>
+        <p>빛나가 말했어요. <span class="dialogue">"<span class="highlight">다이아몬드에서 빛이 많이 느려지니까 많이 꺾이고 반짝이는 거구나!</span>"</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">굴절의 비밀</span>
+        <h2>빛이 알려준 진실</h2>
+        <p>모험을 마친 저녁, 빛나가 자신 있게 말했어요. <span class="dialogue">"막대가 꺾여 보이는 건 <span class="highlight">빛이 물에서 공기로 나오면서 꺾이기 때문</span>이야!"</span></p>
+        <p><span class="dialogue">"완벽해!"</span> 프리즘이 칭찬했어요. <span class="dialogue">"그래서 수영장 바닥도 얕아 보이고, 물고기도 위에 있는 것처럼 보여!"</span></p>
+        <p>프리즘이 작은 무지개를 만들어줬어요. <span class="dialogue">"<span class="highlight">굴절은 세상을 아름답게 하는 빛의 마법</span>이야."</span></p>
+        <p style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(0, 188, 212, 0.1) 100%); border-radius: 12px; border-left: 4px solid #FF6B6B;">
+          <strong>교훈:</strong> 때로는 방향을 바꾸는 것이 더 아름다운 결과를 만들어요. 빛의 굴절처럼요!
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">돌아가기</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+  </script>
+</body>
+</html>

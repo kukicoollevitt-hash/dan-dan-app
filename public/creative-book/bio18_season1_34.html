@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦋 날개 하나가 사라진 날, 숲이 울었다</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물18/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF6F00 0%, #E65100 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(255, 111, 0, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255, 111, 0, 0.15);
+      color: #E65100;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #FF6F00;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #E65100;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFB74D;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(255, 111, 0, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 111, 0, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(230, 81, 0, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 111, 0, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🦋 날개 하나가 사라진 날, 숲이 울었다</h1>
+        <p class="subtitle">
+          — 이름 모를 작은 생명이 사라지면 세상은 어떻게 될까 —<br>
+          교과기반 창작도서 · 생물 18
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🐝 비비 (꿀벌 우체부):</strong> 꽃과 꽃 사이를 오가며 꽃가루를 배달하는 작은 우체부예요.</p>
+          <p><strong>🦋 파피용 (나비 화가):</strong> 꽃밭 위를 날며 색을 퍼뜨리는 아름다운 나비예요. 비비의 가장 친한 친구예요.</p>
+          <p><strong>🌳 그랜 오크 (떡갈나무 원로):</strong> 초록숲에서 500년을 살아온 가장 오래된 나무 할아버지예요.</p>
+          <p><strong>🦅 이글 장군 (독수리 사냥꾼):</strong> 숲에서 가장 높이 나는 독수리예요. 처음엔 작은 동물들을 무시했어요.</p>
+          <p><strong>🏭 그레이스모그 (회색 안개):</strong> 숲 밖에서 밀려오는 오염의 안개예요. 자연을 망가뜨려요.</p>
+          <p><strong>🌱 씨앗 (어린 새싹):</strong> 숲에서 가장 어린 존재예요. 미래의 희망이에요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">작은 곤충</span>
+        <h2>🐝 아무도 모르는 가장 중요한 일꾼</h2>
+        <p>옛날 옛적, 아주 아름다운 '초록숲'이 있었어요. 이 숲에는 키 큰 나무들이 하늘 높이 솟아 있었고, 형형색색의 예쁜 꽃들이 가득했어요. 맑은 시냇물이 졸졸 흐르고, 새들이 노래하는 행복한 숲이었지요.</p>
+        <p>그런데 이 숲에는 비밀이 있었어요. 숲을 진짜로 움직이게 하는 건 큰 나무나 멋진 독수리가 아니었어요. 바로 눈에 잘 안 보이는 <span class="highlight">작은 곤충들</span>이었답니다.</p>
+        <p>매일 아침 해가 뜨면, 꿀벌 우체부 비비가 가장 먼저 일어났어요. 비비는 꽃에서 꽃으로 꽃가루를 옮겨주었어요. 이렇게 꽃가루가 옮겨지면 꽃이 열매를 맺고, 씨앗이 생겨서 새로운 식물이 태어나요. 세상의 많은 식물들이 곤충의 도움으로 열매를 맺어요.</p>
+        <p>나비 화가 파피용도 비비와 함께 꽃밭을 날아다녔어요. 지렁이는 땅속에서 흙을 갈아주었고, 딱정벌레는 죽은 나뭇잎을 치워주었어요. 하지만 아무도 이 작은 일꾼들에게 고마워하지 않았어요.</p>
+        <p>이글 장군은 높은 바위 위에서 비웃었어요. <span class="dialogue">"벌이 뭘 한다고? 이 숲은 나 같은 강한 자가 지키는 거야."</span> 작은 존재들의 일은 눈에 보이지 않았기 때문에, 그 소중함도 보이지 않았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">사라진 흔적</span>
+        <h2>🔇 어느 날 윙윙거림이 멈추다</h2>
+        <p>변화는 아주 천천히 찾아왔어요. 숲 바깥에서 회색 안개 '그레이스모그'가 조금씩 다가오고 있었어요. 그레이스모그는 오염과 파괴를 가져오는 무서운 안개였어요.</p>
+        <p>처음에는 숲 가장자리의 꽃 몇 송이가 시들었어요. 그다음에는 작은 풀밭이 사라졌어요. 하지만 아무도 신경 쓰지 않았어요. <span class="dialogue">"풀이야 다시 자라겠지."</span></p>
+        <p>그런데 진짜 문제는 그다음이었어요. 어느 날 아침, 비비의 친구 열 마리가 둥지로 돌아오지 않았어요. 다음 날은 스무 마리, 그다음 날은 서른 마리. 꿀벌들이 하나둘씩 사라지기 시작한 거예요.</p>
+        <p>파피용도 갈 곳이 줄어들었어요. 나비 애벌레가 먹어야 할 식물이 없어지면서, 나비의 수도 줄어들었거든요. 나비 한 종류가 사라지면, 그 나비가 도와주던 꽃도 위험해지고, 연결된 다른 생물들도 영향을 받아요.</p>
+        <p>비비가 그랜 오크 할아버지를 찾아갔어요. <span class="dialogue">"할아버지, 제 친구들이 자꾸 사라져요. 무서워요."</span> 500년 된 떡갈나무가 슬프게 잎을 흔들었어요. <span class="dialogue">"가장 무서운 건 아무도 관심을 갖지 않을 때 조용히 찾아오는 변화란다."</span> 숲은 겉으로는 멀쩡해 보였지만, 보이지 않는 곳에서 문제가 커지고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">꽃의 변화</span>
+        <h2>🥀 색이 사라진 꽃밭</h2>
+        <p>꿀벌과 나비가 줄어들자, 가장 먼저 변한 것은 꽃이었어요. 전에는 숲의 꽃밭이 빨강, 노랑, 보라, 파랑으로 아주 화려했어요. 물감을 쏟아놓은 것처럼 예뻤지요.</p>
+        <p>하지만 꽃가루를 옮겨줄 곤충이 사라지자, 꽃들은 씨앗을 만들 수 없게 되었어요. 꽃은 곤충을 부르려고 예쁜 색과 향기를 가지고 있는 거예요. 그런데 부를 곤충이 없다면요? 꽃은 예쁜 색을 유지할 이유가 없어지는 거예요.</p>
+        <p>시간이 지나면서 꽃들의 색이 점점 옅어지기 시작했어요. 빨간 꽃이 분홍색이 되고, 보라색 꽃이 회색에 가까워졌어요. 향기도 사라졌어요.</p>
+        <p>파피용이 울면서 말했어요. <span class="dialogue">"색이 사라지고 있어! 내가 그림을 그릴 꽃이 없어!"</span> 파피용의 말은 그냥 슬픈 게 아니었어요. 꽃의 색과 향기가 사라진다는 건 <span class="highlight">식물이 새로운 생명을 만들지 못한다</span>는 뜻이었어요.</p>
+        <p>그랜 오크 할아버지가 한숨을 쉬었어요. <span class="dialogue">"꽃은 숲의 말이란다. 꽃이 사라지면 숲은 말을 잃는 거야."</span> 아직도 이글 장군은 높은 곳에서 이 변화를 대수롭지 않게 바라보고 있었어요. <span class="dialogue">"꽃이 좀 줄었다고 뭐가 달라져?"</span> 하지만 곧, 그도 달라지게 돼요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">먹이 감소</span>
+        <h2>🍽️ 텅 빈 식탁의 경고</h2>
+        <p>꽃이 줄어들자 열매가 줄었어요. 열매가 줄자 그것을 먹고 사는 동물들이 배가 고파지기 시작했어요. 생태계의 먹이 사슬은 거대한 도미노와 같아요. 맨 아래의 작은 조각 하나가 쓰러지면, 위쪽의 큰 조각들도 차례로 무너져요.</p>
+        <p>가장 먼저 힘들어진 건 곤충을 먹고 사는 작은 새들이었어요. 박새, 딱새 같은 작은 새들의 먹이인 곤충이 줄어들었거든요. <span class="highlight">새 한 마리를 키우려면 하루에 수백 마리의 곤충이 필요해요.</span> 곤충이 사라지면 새도 힘들어져요.</p>
+        <p>다음으로 영향받은 건 열매를 먹는 다람쥐, 토끼, 사슴 같은 동물들이었어요. 열매와 씨앗이 줄어들자 이들도 먹이를 찾아 숲 밖으로 나가야 했어요.</p>
+        <p>그리고 마침내, 이글 장군의 식탁에도 변화가 찾아왔어요. 어느 날 사냥에 나선 이글 장군은 먹잇감을 찾을 수가 없었어요. 토끼가 사라졌고, 작은 새도 보이지 않았어요. <span class="dialogue">"뭐야, 다들 어디 간 거야?"</span> 이글 장군이 처음으로 당황했어요.</p>
+        <p>이글 장군이 그랜 오크 할아버지를 찾아왔어요. <span class="dialogue">"대체 왜 먹잇감이 없어진 거야?"</span> 그랜 오크가 대답했어요. <span class="dialogue">"네가 무시했던 작은 벌과 나비가 사라졌기 때문이란다. 그들이 없으니 꽃이 열매를 못 맺고, 열매가 없으니 작은 동물이 굶고, 작은 동물이 없으니 결국 너도 굶는 거야."</span> 이글 장군의 얼굴이 창백해졌어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">생태계 충격</span>
+        <h2>💔 연결이 끊어진 숲의 비명</h2>
+        <p>먹이 사슬이 무너지는 건 배고픔만의 문제가 아니었어요. 숲 전체의 시스템이 망가지기 시작한 거예요. 곤충이 줄어들자 죽은 나뭇잎을 분해하는 딱정벌레와 작은 벌레들도 줄었어요. 숲 바닥에 낙엽이 쌓이고 또 쌓였지만 분해되지 않았어요.</p>
+        <p>분해가 되지 않으면 영양분이 땅으로 돌아가지 못해요. 그러면 나무도 새 잎을 틔울 수 없어요. 시냇물도 변했어요. 물속 곤충이 사라지자 물이 초록색 진흙탕이 되었어요. 물고기가 죽어갔어요.</p>
+        <p>그레이스모그는 점점 더 깊이 숲 안으로 밀려왔어요. <span class="dialogue">"보아라, 연결 고리 하나만 끊으면 모든 것이 무너진다!"</span> 그레이스모그가 무섭게 웃었어요.</p>
+        <p>이것이 바로 <span class="highlight">'생태계 연쇄 붕괴'</span>예요. 하나의 생물이 사라지면 그 생물과 연결된 모든 관계가 흔들리고, 그 흔들림이 파도처럼 퍼져나가 전체 생태계를 뒤흔드는 거예요.</p>
+        <p>그랜 오크의 잎사귀가 노랗게 변하기 시작했어요. 500년을 버텨온 위대한 나무마저 힘들어하고 있었어요. <span class="dialogue">"이 숲은 거미줄처럼 연결되어 있단다. 거미줄에서 실 하나를 잡아당기면 전체가 흔들리듯이. 우리는 모두 보이지 않는 실로 연결되어 있어."</span> 숲이 소리 없이 비명을 지르고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">다양성의 의미</span>
+        <h2>🌈 왜 '다르다'가 중요한가</h2>
+        <p>숲이 무너져가는 모습을 지켜보던 그랜 오크 할아버지가 남은 동물들을 모두 불러 모았어요. <span class="dialogue">"내가 500년 동안 이 숲에서 배운 가장 중요한 것을 이야기해줄게."</span> 모두가 귀를 기울였어요.</p>
+        <p><span class="dialogue">"이 숲에는 한때 아주 많은 종류의 생물이 살았어. 나무만 해도 200종, 곤충은 3만 종이 넘었지. 그 많은 종류가 왜 필요했을까?"</span></p>
+        <p><span class="highlight">생물 다양성</span>이란 한 곳에 얼마나 다양한 종류의 생물이 살고 있는지를 말해요. 다양성이 높을수록 생태계는 튼튼해요. 왜일까요? 다리를 지을 때 기둥이 하나보다 여러 개가 더 안전한 것과 같아요. 한 종류의 벌이 사라져도 다른 벌이 일을 대신할 수 있거든요.</p>
+        <p><span class="dialogue">"다르다는 것은 약점이 아니란다."</span> 그랜 오크가 말했어요. <span class="dialogue">"벌은 꽃가루를 나르고, 지렁이는 흙을 갈고, 곰팡이는 낙엽을 분해하고, 독수리는 죽은 동물을 정리해. 모두 다른 일을 하지만, 그 다름이 모여 건강한 숲을 만드는 거야."</span></p>
+        <p>이글 장군이 고개를 숙였어요. <span class="dialogue">"내가 틀렸어. 강한 것만 중요한 줄 알았는데, 강한 것도 약한 것이 있어야 존재할 수 있었구나."</span> 비비가 조용히 물었어요. <span class="dialogue">"그러면 아직 희망이 있는 건가요?"</span> 그랜 오크의 눈에 작은 빛이 돌아왔어요. <span class="dialogue">"있단다. 하지만 지금 당장 움직여야 해."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">복원 노력</span>
+        <h2>🌿 다시 심고, 다시 잇다</h2>
+        <p>그랜 오크의 말에 숲의 모든 생물이 일어섰어요. 가장 먼저 나선 것은 놀랍게도 이글 장군이었어요. <span class="dialogue">"내가 가장 높이 날 수 있으니, 내가 숲 바깥에서 살아있는 야생화 씨앗을 찾아오겠어!"</span> 먹이 사슬 꼭대기에 있던 포식자가 가장 작은 것들을 위해 움직인 역사적인 순간이었어요.</p>
+        <p>복원의 첫 단계는 서식지를 되살리는 것이었어요. 비비와 파피용이 남아있는 야생화 지역을 지도로 만들었어요. 어디에 어떤 식물이 남아있는지 파악하는 것이 출발점이었어요.</p>
+        <p>다람쥐 팀은 숲 곳곳에 씨앗을 묻었어요. 다람쥐가 묻어두고 잊어버린 도토리에서 새 참나무가 자라는 것처럼, 자연의 씨앗 배달부들이 복원의 핵심 역할을 한 거예요. 지렁이 팀은 오염된 흙을 갈아엎어 영양분을 되살렸어요.</p>
+        <p>가장 감동적이었던 건 이글 장군이 먼 산 너머에서 물어온 야생 벌집이었어요. <span class="dialogue">"새로운 벌 가족이야. 부디 여기서 잘 살아다오."</span> 이글 장군이 조심스럽게 벌집을 나무에 걸어주는 모습을 본 비비의 눈에서 눈물이 흘렀어요. 자신을 무시했던 존재가 자신의 가족을 위해 움직여준 거니까요.</p>
+        <p>복원은 하루아침에 이루어지지 않았어요. 하지만 멈추지 않았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">보호 구역</span>
+        <h2>🏞️ 안전한 울타리, 살아있는 약속</h2>
+        <p>복원 작업이 진행되는 동안, 새로운 문제가 생겼어요. 아무리 다시 심고 되살려도, 그레이스모그가 계속 밀려오면 다시 망가질 게 뻔했어요. <span class="dialogue">"울타리가 필요해."</span> 이글 장군이 말했어요. <span class="dialogue">"숲을 지키겠다는 약속의 울타리."</span></p>
+        <p>이것이 바로 <span class="highlight">'생태 보호 구역'</span>이에요. 국립공원이나 야생 동물 보호 구역이 이런 역할을 해요. 보호 구역은 생태계가 자연스럽게 회복할 수 있도록 해주는 안전한 공간이에요.</p>
+        <p>초록숲의 생물들은 함께 '생명의 경계선'을 만들었어요. 숲 가장자리에 빽빽하게 나무를 심어 자연 방벽을 만들었고, 그 안쪽에 야생화 초원과 곤충 서식지를 나누어 만들었어요.</p>
+        <p>특별히 감동적이었던 것은 <span class="highlight">'곤충 호텔'</span>이었어요. 빈 나무줄기와 대나무 통을 쌓아 만든 구조물로, 벌과 나비가 둥지를 틀 수 있는 안전한 집이에요.</p>
+        <p>비비가 새 곤충 호텔에 들어가보며 감격했어요. <span class="dialogue">"내 집이야! 나만의 안전한 집!"</span> 파피용은 야생화 초원 위를 날며 오랜만에 환한 미소를 지었어요. <span class="dialogue">"색이 돌아오고 있어! 조금씩이지만, 확실히!"</span> 보호 구역은 자연이 스스로 치유할 시간을 주는 거예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">공존의 방법</span>
+        <h2>🤝 함께 살아가는 기술</h2>
+        <p>보호 구역이 만들어지고 시간이 흐르자, 숲은 천천히 살아나기 시작했어요. 하지만 그랜 오크는 한 가지를 더 가르쳐야 했어요. <span class="dialogue">"보호만으로는 부족해. 공존의 방법을 배워야 해."</span></p>
+        <p>공존이란 서로 다른 존재들이 함께 살면서 각자의 역할을 존중하는 거예요. 숲에서는 이것이 <span class="highlight">'공생 관계'</span>로 나타나요. 곰팡이와 나무 뿌리의 관계를 알고 있나요? 곰팡이는 나무 뿌리에 붙어 물과 영양분을 주고, 나무는 곰팡이에게 당분을 나눠줘요. 서로 도우며 사는 거예요.</p>
+        <p>이글 장군도 공존의 방법을 배워나갔어요. 더 이상 약한 자를 무시하지 않았고, 자신의 사냥이 숲 전체에 어떤 영향을 미치는지 생각하게 되었어요.</p>
+        <p>비비는 새로 온 벌 가족에게 어떤 꽃에서 꿀을 모으면 좋은지 가르쳐주었어요. 파피용은 어린 나비들에게 어떤 식물에 알을 낳아야 하는지 알려주었어요. 씨앗은 이 모든 것을 옆에서 보며 조금씩 자라고 있었어요.</p>
+        <p><span class="dialogue">"할아버지, 공존이란 뭐예요?"</span> 씨앗이 물었어요. <span class="dialogue">"서로 다른 악기가 하나의 오케스트라를 만드는 것과 같단다. 바이올린만으로는 교향곡을 연주할 수 없어. 각자 다른 소리를 내지만, 함께 연주할 때 가장 아름다운 음악이 만들어지는 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물18/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">생명의 가치</span>
+        <h2>🌍 "다양성은 생명의 힘이다"</h2>
+        <p>계절이 몇 번 바뀌고, 초록숲은 놀라운 변화를 이루었어요. 야생화가 다시 피어나 꽃밭이 알록달록해졌고, 벌과 나비가 꽃 사이를 분주히 오갔어요. 새들이 돌아와 노래를 불렀고, 시냇물은 맑게 흘렀어요.</p>
+        <p>그레이스모그는 숲 가장자리에서 더 이상 안으로 들어오지 못하고 있었어요. 건강한 숲이 만들어내는 생명의 에너지가 회색 안개를 밀어내고 있었거든요. 그리고 이 모든 변화의 한가운데에, 작은 씨앗이 마침내 새싹을 틔우고 있었어요.</p>
+        <p><span class="dialogue">"나도 자라고 있어!"</span> 씨앗이 감격해서 말했어요. 흙 위로 연두색 떡잎 두 장이 나왔어요. 그 작은 떡잎 위에 비비가 앉았고, 파피용이 주위를 날았어요. 이글 장군이 하늘에서 내려다보며 미소 지었고, 그랜 오크의 넓은 가지가 어린 새싹에게 그늘을 드리웠어요.</p>
+        <p>그랜 오크가 마지막으로 모든 숲의 생물에게 말했어요. <span class="dialogue">"기억하렴. 가장 작은 벌이 없으면 가장 큰 나무도 열매를 맺지 못한단다. 모든 생명은 연결되어 있고, 모든 다름은 필요해. <span class="highlight">다양성은 생명의 힘이야.</span> 이것을 잊으면 우리는 다시 숲을 잃게 될 거야."</span></p>
+        <p>숲의 모든 생물이 한목소리로 외쳤어요. <span class="dialogue">"다양성은 생명의 힘이다!"</span> 작은 씨앗은 그날의 약속을 품은 채, 하늘을 향해 자라기 시작했어요. 언젠가 그랜 오크처럼 위대한 나무가 되어, 다음 세대에게 같은 이야기를 들려줄 그날을 꿈꾸면서요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(255, 111, 0, 0.15); border-radius: 16px;">
+          <strong style="color: #E65100; font-size: 20px;">🦋 「다양성은 생명의 힘이다. 서로 다른 존재들이 각자의 역할을 하며 연결될 때, 생태계는 건강하고 강해진다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

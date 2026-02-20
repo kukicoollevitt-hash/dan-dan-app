@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>분자들의 신나는 춤 - 열의 비밀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리14/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255, 87, 34, 0.15);
+      color: #E64A19;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #FF5722;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #E64A19;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFAB91;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(255, 87, 34, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(230, 74, 25, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 87, 34, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>분자들의 신나는 춤 - 열의 비밀</h1>
+        <p class="subtitle">
+          《뜨거움의 정체를 찾아서》<br>
+          열은 어떻게 세상을 데울까요?
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>몰리</strong> — 춤추는 분자 소녀, 열의 정체를 알려줘요</p>
+          <p><strong>써모</strong> — 온도를 재는 탐정, 정확한 숫자로 말해요</p>
+          <p><strong>히트플로</strong> — 열의 여행자, 뜨거운 곳에서 차가운 곳으로 이동해요</p>
+        </div>
+        <p class="scroll-hint">아래로 스크롤하여 이야기 시작</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">온도 측정</span>
+        <h2>뜨겁다? 차갑다? 몇 도인데?</h2>
+        <p>분자 소녀 몰리가 이상한 장면을 봤어요. 두 아이가 같은 물에 손을 넣었는데 한 아이는 "차가워!", 다른 아이는 "따뜻해!"라고 했어요.</p>
+        <p><span class="dialogue">"이건 감각의 한계야."</span> 써모가 나타났어요. <span class="dialogue">"피부는 온도 변화를 느끼는 거야. 같은 물도 다르게 느낄 수 있지!"</span></p>
+        <p><span class="dialogue">"그래서 <span class="highlight">온도계</span>가 필요해. 온도계는 정확한 숫자로 알려주거든!"</span></p>
+        <p>온도의 단위는 <span class="highlight">섭씨(℃)</span>예요. 물이 어는 온도가 0도, 끓는 온도가 100도지요!</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">분자의 운동</span>
+        <h2>뜨거움의 진짜 정체</h2>
+        <p>몰리가 비밀을 알려줬어요. <span class="dialogue">"뜨거움의 정체는... 바로 나의 춤이야!"</span></p>
+        <p>모든 물질은 아주 작은 <span class="highlight">분자</span>로 이루어져 있어요. 분자들은 항상 움직이고 있지요!</p>
+        <p>몰리가 빠르게 춤추자 주변이 뜨거워졌어요. 천천히 춤추자 차가워졌어요!</p>
+        <p><span class="dialogue">"<span class="highlight">분자가 빠르게 움직이면 뜨겁고, 느리게 움직이면 차가워!</span> 이것이 열의 비밀이야!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">열 전달</span>
+        <h2>열은 왜 퍼져나갈까?</h2>
+        <p>히트플로가 여행 가방을 들고 나타났어요. <span class="dialogue">"열은 항상 뜨거운 곳에서 차가운 곳으로 이동해!"</span></p>
+        <p><span class="dialogue">"뜨거운 커피를 테이블에 놓으면 왜 식을까? <span class="highlight">열이 공기로 이동</span>하기 때문이야!"</span></p>
+        <p>열은 커피와 공기 온도가 같아질 때까지 이동해요. 이것을 '<span class="highlight">열평형</span>'이라 해요!</p>
+        <p><span class="dialogue">"나는 세 가지 방법으로 여행해. 전도, 대류, 복사!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전도</span>
+        <h2>만져서 전하는 열</h2>
+        <p><span class="dialogue">"<span class="highlight">전도</span>는 분자가 옆 분자에 부딪혀서 열을 전하는 거야!"</span></p>
+        <p>쇠 막대 한쪽 끝을 불에 가까이 대면, 열이 막대를 따라 전달돼요. 마치 릴레이 경주 같아요!</p>
+        <p><span class="dialogue">"금속은 열을 잘 전달해. 나무와 플라스틱은 열을 잘 못 전달하지!"</span></p>
+        <p>그래서 <span class="highlight">냄비 손잡이</span>는 플라스틱이나 나무로 만들어요. 뜨거운 열이 손에 안 오니까요!</p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">대류</span>
+        <h2>물질이 움직여 전하는 열</h2>
+        <p><span class="dialogue">"<span class="highlight">대류</span>는 물이나 공기가 직접 이동하면서 열을 나르는 거야!"</span></p>
+        <p>냄비 바닥의 물이 데워지면 가벼워져서 위로 올라가요. 위의 찬물은 무거워서 아래로 내려오지요.</p>
+        <p><span class="dialogue">"끓는 물이 빙글빙글 도는 것 본 적 있지? 그것이 <span class="highlight">대류</span>야!"</span></p>
+        <p>히터는 아래에, 에어컨은 위에 설치하는 이유도 대류 때문이에요!</p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">복사</span>
+        <h2>만지지 않아도 전해지는 열</h2>
+        <p><span class="dialogue">"<span class="highlight">복사</span>는 가장 신기해. 만지지도, 바람도 없이 열이 전달돼!"</span></p>
+        <p>태양과 지구 사이에는 공기가 없어요. 그런데 지구가 따뜻한 이유는? <span class="highlight">빛으로 열이 전달</span>되기 때문이에요!</p>
+        <p>모닥불 옆에 서면 따뜻한 것도 복사예요. 빛처럼 열이 날아오는 거지요!</p>
+        <p><span class="highlight">검은색 옷은 열을 잘 흡수</span>하고, 흰색 옷은 열을 반사해요. 그래서 여름엔 밝은 옷이 시원해요!</p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">상태 변화</span>
+        <h2>열이 마법을 부려요</h2>
+        <p>페이즈가 나타났어요. 얼음에서 물로, 물에서 수증기로 변하면서요!</p>
+        <p><span class="dialogue">"열을 주면 <span class="highlight">고체가 녹아 액체</span>가 되고, 더 주면 <span class="highlight">기체</span>가 돼!"</span></p>
+        <p><span class="dialogue">"신기한 점은, 얼음이 녹는 동안 열을 줘도 <span class="highlight">온도는 0도 그대로</span>야!"</span></p>
+        <p>열이 온도를 올리는 대신, 분자를 풀어주는 데 쓰이기 때문이에요. 이것을 '<span class="highlight">숨은 열</span>'이라 해요!</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">비열의 차이</span>
+        <h2>왜 바다는 천천히 뜨거워질까?</h2>
+        <p>써모가 질문했어요. <span class="dialogue">"같은 열을 줘도 물질마다 온도가 다르게 올라가는 거 알아?"</span></p>
+        <p>기름은 물보다 빨리 뜨거워져요. 물은 데우기 어렵지만, 한번 뜨거워지면 오래 가요!</p>
+        <p><span class="dialogue">"이것을 '<span class="highlight">비열</span>'이라 해. 물의 비열이 커서 온도 변화가 느려!"</span></p>
+        <p>그래서 <span class="highlight">바다 근처는 여름에 덜 덥고 겨울에 덜 추워요.</span> 바다가 온도를 조절해 주거든요!</p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">일상 속 열</span>
+        <h2>부엌에서 우주까지</h2>
+        <p>일상에서 열이 어떻게 쓰이는지 알아봤어요.</p>
+        <p><span class="highlight">냄비</span>: 바닥은 전도로, 안의 물은 대류로 열이 전달돼요!</p>
+        <p><span class="highlight">보온병</span>: 전도, 대류, 복사를 모두 막아서 뜨거운 것은 뜨겁게, 차가운 것은 차갑게 유지해요!</p>
+        <p><span class="highlight">우주정거장</span>: 우주에는 공기가 없어서 복사로만 열을 내보내요. 큰 방열판이 필요하지요!</p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리14/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">열의 정체</span>
+        <h2>보이지 않는 춤이 만드는 따뜻함</h2>
+        <p>몰리가 마지막으로 정리했어요. <span class="dialogue">"<span class="highlight">온도는 분자가 얼마나 빠르게 움직이는지</span>를 나타내!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">열은 뜨거운 곳에서 차가운 곳으로 이동하는 에너지</span>야. 전도, 대류, 복사로 전달돼!"</span></p>
+        <p>몰리가 춤추며 말했어요. <span class="dialogue">"따뜻함을 느낄 때마다, 분자들이 신나게 춤추고 있다는 뜻이야!"</span></p>
+        <p style="margin-top: 15px; padding: 15px; background: rgba(255, 87, 34, 0.1); border-radius: 12px; border-left: 4px solid #FF5722;">
+          <strong style="color: #E64A19;">교훈:</strong> 보이지 않는 분자들의 춤이 세상의 모든 따뜻함을 만들어요!
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">돌아가기</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+  </script>
+</body>
+</html>

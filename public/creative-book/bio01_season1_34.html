@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌿 바위의 눈물과 씨앗의 노래</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물01/생물01_표지.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(45, 106, 79, 0.15);
+      color: #1b4332;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #2d6a4f;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #1b4332;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #90EE90;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(45, 106, 79, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(27, 67, 50, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(45, 106, 79, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌿 바위의 눈물과 씨앗의 노래</h1>
+        <p class="subtitle">
+          — 숨 쉬지 않는 돌이 들려준, 살아 있다는 것의 진짜 의미 —<br>
+          교과기반 창작도서 · 생물 01 (3·4학년)
+        </p>
+        <div class="characters">
+          <h3>🌿 등장인물 소개</h3>
+          <p><strong>▸ 하늘:</strong> 호기심 많은 여덟 살 소녀. "왜?"라고 묻는 게 입버릇이에요.</p>
+          <p><strong>▸ 돌멩이 바위:</strong> 숲에서 수백 년을 살아온 말하는 돌. 살아 있지 않지만 마음이 따뜻해요.</p>
+          <p><strong>▸ 씨앗이:</strong> 바위 옆에서 싹을 틔운 작은 씨앗. 생명의 증거가 돼요.</p>
+          <p><strong>▸ 숲의 정령들:</strong> 햇빛, 물, 바람, 온도를 담당하는 네 친구예요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">호기심의 시작</span>
+        <h2>숲 속의 이상한 돌</h2>
+        <p>어느 봄날 아침, 여덟 살 소녀 하늘은 할머니 댁 뒷산으로 산책을 나갔어요. 하늘은 호기심이 아주 많은 아이였어요. 개미를 보면 <span class="dialogue">"왜 줄을 서서 가?"</span> 하고 물었고, 나뭇잎이 흔들리면 <span class="dialogue">"간지러운 거야?"</span> 하고 걱정했지요.</p>
+        <p>하늘은 나비를 따라 걷다가 숲 속 작은 빈터에 도착했어요. 그곳에 <span class="highlight">반짝반짝 빛나는 돌</span>이 하나 있었어요. 양손에 쏙 들어오는 크기였고, 동글동글한 무늬가 있었어요.</p>
+        <p><span class="dialogue">"이 돌, 뭔가 특별해."</span> 하늘은 무릎을 꿇고 돌을 바라봤어요. 바람이 스치자 돌에서 따뜻함이 느껴졌어요. 하늘은 돌을 품에 안았어요. 이 돌에게는 분명 이야기가 있을 것 같았거든요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">불가능한 대화의 시작</span>
+        <h2>돌이 말을 건네다</h2>
+        <p>하늘이 돌을 바라보고 있을 때였어요. <span class="dialogue">"꽤 오래 나를 보는구나."</span> 어디선가 목소리가 들렸어요. 하늘은 깜짝 놀라 주위를 둘러봤어요. 그런데 목소리는 손 안의 돌에서 나오고 있었어요!</p>
+        <p><span class="dialogue">"설마... 돌이 말하는 거야?"</span> 하늘이 눈을 동그랗게 떴어요. 돌이 대답했어요. <span class="dialogue">"놀랐니? 나는 이 숲에서 아주 오래 있었단다. 수백 년 동안 비도 맞고, 눈도 맞았지."</span></p>
+        <p>이상하게 하늘은 무섭지 않았어요. 돌의 목소리가 할아버지처럼 따뜻했거든요. <span class="dialogue">"돌이 어떻게 말해? 입도 없잖아."</span> 하늘이 물었어요. 돌이 웃으며 대답했어요. <span class="dialogue">"말하는 방법은 여러 가지란다. 바람은 소리로, 꽃은 향기로, 나는 기억으로 말하지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">바위의 고백</span>
+        <h2>살아 있지 않지만 소중해</h2>
+        <p><span class="dialogue">"바위야, 너는 살아 있는 거야?"</span> 하늘이 물었어요. 바위는 잠시 조용했어요. 그리고 대답했지요. <span class="dialogue">"아니, 나는 살아 있지 않아."</span></p>
+        <p>하늘은 마음이 짠해졌어요. 바위가 말했어요. <span class="dialogue">"살아 있지 않다는 건, 내가 자라지 못한다는 뜻이야. 밥도 안 먹고, 숨도 안 쉬지. 아기를 낳을 수도 없어."</span></p>
+        <p><span class="dialogue">"그럼 아무것도 안 하는 거야?"</span> 하늘이 작은 목소리로 물었어요. 바위가 웃으며 대답했어요. <span class="dialogue">"아니! 나는 이 숲의 흙을 잡아주고 있어. 비가 와도 흙이 쓸려가지 않게 버티지. 내 품에서 이끼가 자라고, 벌레들이 쉬어 가. <span class="highlight">나는 살아 있지 않지만, 살아 있는 것들이 살 수 있게 돕고 있단다.</span>"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">살아 있다는 건?</span>
+        <h2>여정의 시작</h2>
+        <p><span class="dialogue">"바위야, 살아 있다는 건 뭐야? 나랑 너는 뭐가 달라?"</span> 하늘이 물었어요. 바위가 대답했어요. <span class="dialogue">"좋은 질문이야. 직접 보여줄게. 나와 함께 숲을 여행하자."</span></p>
+        <p>하늘은 눈이 반짝였어요. 돌과 함께하는 여행이라니! 하늘은 바위를 배낭에 넣었어요. 바위가 <span class="dialogue">"꽉 조이지 마, 나도 편한 게 좋아"</span> 하고 투덜거려서 하늘은 웃음이 났어요.</p>
+        <p>바위가 설명했어요. <span class="dialogue">"살아 있는 것은 <span class="highlight">'생물'</span>, 살아 있지 않은 것은 <span class="highlight">'무생물'</span>이라고 해. 생물은 스스로 먹고, 자라고, 아기를 낳을 수 있어. 무생물은 그런 걸 못 하지."</span> 하늘이 물었어요. <span class="dialogue">"저 나무는 생물이고, 물은 무생물이야?"</span> <span class="dialogue">"맞아! 자, 첫 번째 수업을 시작하자."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">씨앗이 깨어나다</span>
+        <h2>흙 속의 기적</h2>
+        <p>바위가 하늘을 데려간 곳은 부드러운 흙이 있는 작은 언덕이었어요. <span class="dialogue">"여기를 자세히 봐."</span> 바위가 말했어요.</p>
+        <p>하늘은 무릎을 꿇고 흙을 봤어요. 처음엔 그냥 흙뿐이었어요. 그런데 자세히 보니, 흙 위로 <span class="highlight">연한 초록색 싹</span>이 고개를 내밀고 있었어요!</p>
+        <p><span class="dialogue">"이거 싹이야?"</span> 하늘이 숨을 죽이며 물었어요. <span class="dialogue">"그래, 이 아이가 씨앗이야. 겨울을 보내고 이제 막 깨어난 거야."</span> 바위가 자랑스럽게 말했어요.</p>
+        <p><span class="dialogue">"누가 밀어준 거야?"</span> <span class="dialogue">"아무도 안 밀어줬어. 씨앗이 스스로 한 거야. 씨앗 안에는 아기 식물이 있는데, 물을 빨아들이면 부풀어서 껍질을 뚫고 나와. 이걸 <span class="highlight">'발아'</span>라고 해."</span> 하늘은 감탄했어요. 작은 씨앗이 혼자 힘으로 세상에 나온 거예요!</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">정령들의 다툼</span>
+        <h2>물과 햇빛의 정령</h2>
+        <p><span class="dialogue">"싹이 더 크려면 뭐가 필요해?"</span> 하늘이 물었어요. 그때 갑자기 눈부신 빛이 쏟아지더니 황금빛 정령이 나타났어요! <span class="dialogue">"내가 필요하지! 나 없으면 못 자라!"</span> 햇빛의 정령 <span class="highlight">'솔라'</span>였어요.</p>
+        <p>그때 옆 개울에서 파란 정령이 나타났어요. <span class="dialogue">"잠깐! 물 없이는 뿌리도 못 뻗어!"</span> 물의 정령 <span class="highlight">'아쿠아'</span>였어요.</p>
+        <p><span class="dialogue">"내가 더 중요해!"</span> <span class="dialogue">"아니야, 내가 더 중요해!"</span> 두 정령이 다투기 시작했어요. 바위가 한숨을 쉬었어요. <span class="dialogue">"또 시작이구나..."</span> 하늘은 킥킥 웃으며 두 정령을 지켜봤어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">모두가 필요해</span>
+        <h2>바람과 온도의 등장</h2>
+        <p>솔라와 아쿠아가 다툴 때, 쌩! 바람이 불었어요. 하얀 머플러를 두른 정령이 나타났어요. <span class="dialogue">"시끄러워! 둘 다 나 없으면 소용없어."</span> 바람의 정령 <span class="highlight">'에어'</span>였어요. <span class="dialogue">"식물도 숨을 쉬어. 공기를 옮기는 게 나야."</span></p>
+        <p>그때 땅에서 빨간 망토의 정령이 올라왔어요. <span class="dialogue">"나도 빼면 안 돼!"</span> 온도의 정령 <span class="highlight">'떰프'</span>였어요. <span class="dialogue">"씨앗이 싹트려면 따뜻해야 해. 너무 춥거나 뜨거우면 안 돼."</span></p>
+        <p>네 정령이 하늘을 둘러쌌어요. 하늘은 깨달았어요. <span class="highlight">물도, 빛도, 공기도, 온도도 - 하나라도 없으면 생명은 시작할 수 없다</span>는 것을요. 바위가 말했어요. <span class="dialogue">"보이지? 생명은 혼자 만들어지는 게 아니야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">생물의 특별한 능력</span>
+        <h2>자라고, 반응하고, 퍼져나가다</h2>
+        <p>정령들 덕분에 싹은 쑥쑥 자랐어요. 손톱만 하던 싹이 손바닥만 한 잎사귀 두 장을 펼쳤어요! <span class="dialogue">"와, 진짜 자란다!"</span> 하늘이 감탄했어요.</p>
+        <p>바위가 말했어요. <span class="dialogue">"이게 생물의 첫 번째 특징 - <span class="highlight">'성장'</span>이야. 살아 있는 건 스스로 커질 수 있어. 나는 수백 년이 지나도 같은 크기지만, 저 싹은 며칠 만에 달라졌지?"</span></p>
+        <p>하늘이 손을 뻗자, 잎사귀가 빛이 있는 쪽으로 움직였어요. <span class="dialogue">"어? 내 손 피한 거야?"</span> <span class="dialogue">"두 번째 특징 - <span class="highlight">'반응'</span>이야. 생물은 주변에 반응해. 해바라기가 해를 따라 도는 것도 반응이야."</span></p>
+        <p><span class="dialogue">"세 번째는 <span class="highlight">'번식'</span>이야. 이 싹이 자라서 꽃을 피우면 씨앗이 생기고, 그 씨앗이 또 새 생명이 되지."</span> 하늘은 고개를 끄덕였어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">바위의 눈물</span>
+        <h2>무생물의 소중한 역할</h2>
+        <p>하늘은 문득 바위가 걱정됐어요. 바위는 자라지도, 반응하지도, 번식하지도 못하니까요. <span class="dialogue">"바위야... 너는 슬프지 않아?"</span></p>
+        <p>바위는 한동안 말이 없었어요. <span class="dialogue">"...솔직히, 가끔은 외로워. 나무가 자라는 게 부럽고, 새가 아기를 품는 게 마음 아프지."</span></p>
+        <p>바위의 목소리가 다시 단단해졌어요. <span class="dialogue">"하지만 나 없이 이 숲이 있을 수 있었을까? 내가 흙을 잡지 않았다면 다 쓸려갔을 거야. 내 품이 없었다면 씨앗이 뿌리내릴 곳도 없었지."</span></p>
+        <p>네 정령이 바위 앞에 모였어요. 솔라가 빛을 비추고, 아쿠아가 물을 주고, 에어가 감싸 안고, 떰프가 온기를 줬어요. 하늘의 눈에 눈물이 맺혔어요. <span class="dialogue">"바위야, 너는 <span class="highlight">이 숲에서 가장 소중한 존재야</span>."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물01/생물01_10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">연결된 세상</span>
+        <h2>다시 바라본 돌</h2>
+        <p>해가 기울었어요. 하늘은 바위를 원래 자리에 내려놓았어요. <span class="dialogue">"바위야, 고마워. 오늘 정말 많이 배웠어."</span></p>
+        <p><span class="dialogue">"뭘 배웠니?"</span> 바위가 물었어요. 하늘이 대답했어요. <span class="dialogue">"살아 있는 건 스스로 자라고, 반응하고, 번식할 수 있어. 정말 특별한 거야. 하지만..."</span></p>
+        <p><span class="dialogue">"<span class="highlight">살아 있지 않은 것도 똑같이 소중해.</span> 흙, 물, 공기, 햇빛, 그리고 바위 같은 게 없으면 생명은 시작도 못 하니까."</span></p>
+        <p>작은 무당벌레가 하늘의 손에 내려앉았어요. 숲의 나무들이 바람에 흔들리며 박수를 치는 것 같았어요. 하늘은 바위를 안아 주었어요. <span class="dialogue">"다시 올게. 약속해."</span> <span class="dialogue">"기다릴게. 나는 언제나 여기 있으니까."</span></p>
+        <p>노을 아래 바위가 금빛으로 빛났어요. 하늘은 알았어요. <span class="highlight">생명은 특별하지만, 모든 존재는 서로 연결되어 있다</span>는 것을요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(45, 106, 79, 0.15); border-radius: 16px;">
+          <strong style="color: #1b4332; font-size: 20px;">🌱 「생명은 특별하지만, 모든 존재는 서로 연결되어 있다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

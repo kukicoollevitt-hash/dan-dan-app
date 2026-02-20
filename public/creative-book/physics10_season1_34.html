@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>파동 우체국: 보이지 않는 배달부</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00BCD4 0%, #009688 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 188, 212, 0.15);
+      color: #00838F;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00BCD4;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #009688;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #80DEEA;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 188, 212, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 150, 136, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌊 파동 우체국: 보이지 않는 배달부</h1>
+        <p class="subtitle">
+          《움직임은 이어지고 전달된다》<br>
+          파동의 원리, 파장과 진동수, 반사와 간섭의 비밀
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>파루</strong> — 물결파 소년. 물 위를 달리는 동심원의 첫 물결이에요.</p>
+          <p><strong>소나</strong> — 소리파 소녀. 공기 사이를 밀고 당기며 여행해요.</p>
+          <p><strong>루멘</strong> — 빛파 소녀. 매질 없이 우주를 달려요.</p>
+          <p><strong>진동 할머니</strong> — 모든 파동의 어머니예요.</p>
+          <p><strong>파도</strong> — 열한 살 소년. 파루를 만나 파동의 세계로 초대돼요.</p>
+        </div>
+        <p class="scroll-hint">⬇ 스크롤하여 이야기 시작 ⬇</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🪨 물결 관찰</span>
+        <h2>돌멩이가 만든 동심원</h2>
+        <p>열한 살 소년 파도는 물가에서 돌멩이 던지는 것을 좋아했어요. 풍덩! 돌이 물에 빠지면 동그란 원이 퍼져나가요. 작은 원이 점점 커지면서 연못 가장자리까지 가는 모습이 아름다웠어요.</p>
+        <p><span class="dialogue">"왜 항상 동그라미일까? 세모나 네모는 안 될까?"</span> 파도는 늘 궁금했어요.</p>
+        <p>어느 날, 파도가 연못에 돌을 던졌어요. 풍덩! 그 순간, 놀라운 일이 벌어졌어요. 첫 번째 물결에서 작은 목소리가 들렸어요.</p>
+        <p><span class="dialogue">"우와, 태어났어!"</span></p>
+        <p>물결 위에 투명한 소년이 서 있었어요. 물로 이루어진 작은 소년이 신나게 달리고 있었어요.</p>
+        <p><span class="dialogue">"나는 파루! 네가 던진 돌에서 태어난 물결파야!"</span></p>
+        <p><span class="dialogue">"물결이... 말을 해?"</span></p>
+        <p><span class="dialogue">"모든 물결은 이야기가 있어. 들을 수 있는 귀가 필요할 뿐이야."</span> 파루가 웃으며 동심원을 따라 퍼져나갔어요.</p>
+        <p><span class="dialogue">"어디 가?"</span> <span class="dialogue">"멀리! 연못 끝까지, 아니 그 너머까지!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">〰️ 진동</span>
+        <h2>왔다 갔다, 모든 파동의 어머니</h2>
+        <p>파루를 따라가던 파도는 연못 가운데에서 무언가를 봤어요. 물 자체가 할머니 모양을 하고 있었어요. 위로 올라갔다 내려갔다를 반복하며 느긋하게 흔들리고 있었죠.</p>
+        <p><span class="dialogue">"어머, 새 손자가 왔구나."</span> 진동 할머니였어요.</p>
+        <p><span class="dialogue">"모든 파동은 나에게서 시작돼. 나는 '진동'이야. 제자리에서 왔다 갔다, 위로 아래로 반복하는 움직임이지."</span></p>
+        <p><span class="dialogue">"돌이 물에 빠지면, 물 분자가 위로 튀었다가 내려와. 그 물 분자가 옆 분자를 밀어올리고, 또 옆으로... <span class="highlight">진동이 옆으로 전달되는 것이 파동</span>이란다."</span></p>
+        <p><span class="dialogue">"진동이 없으면 파동도 없어요?"</span></p>
+        <p><span class="dialogue">"그래. 진동은 파동의 씨앗이야. 기타줄을 튕기면 줄이 진동하고 소리가 퍼지고, 지진이 나면 땅이 진동하고 지진파가 퍼지지."</span></p>
+        <p>진동의 중심을 <span class="highlight">'평형점'</span>이라 하고, 가장 멀리 벗어난 거리를 <span class="highlight">'진폭'</span>이라 해요. 진폭이 클수록 에너지가 커요.</p>
+        <p><span class="dialogue">"돌을 세게 던지면 물결이 높아지잖아? 그게 진폭이 큰 거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">🌊 파동의 전파</span>
+        <h2>에너지만 달리고 물은 제자리</h2>
+        <p>파루를 쫓아가며 파도가 물었어요. <span class="dialogue">"파루, 네가 연못 끝까지 가면, 물도 끝까지 밀려가?"</span></p>
+        <p><span class="dialogue">"좋은 질문이야! 그게 파동의 가장 놀라운 비밀이거든."</span></p>
+        <p>파루가 실험을 제안했어요. <span class="dialogue">"나뭇잎을 물에 띄워봐."</span></p>
+        <p>파도가 나뭇잎을 물에 올렸어요. 파루가 지나가자, 나뭇잎은 위로 올라갔다가 내려왔어요. 그런데 나뭇잎은 원래 자리에 그대로 있었어요!</p>
+        <p><span class="dialogue">"봤지? <span class="highlight">파동이 전달될 때, 물 자체는 이동 안 해. 물 분자는 제자리에서 위아래로 흔들릴 뿐이야. 이동하는 건 '에너지'야!</span>"</span></p>
+        <p><span class="dialogue">"물결이 지나가는 것처럼 보이지만, 달려가는 건 물이 아니라 에너지라고?"</span></p>
+        <p><span class="dialogue">"맞아! 축구장에서 파도타기처럼! 관중들이 차례로 일어났다 앉잖아? 파도처럼 보이지만 사람은 자기 자리에 있지."</span></p>
+        <p><span class="dialogue">"너는 에너지를 전달하는 배달부구나!"</span></p>
+        <p><span class="dialogue">"나는 '파동 우체국'의 배달부야. 물길 위를 달리지만, 전하는 건 에너지라는 편지지!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">📏 파장과 진동수</span>
+        <h2>파동의 이름표</h2>
+        <p>진동 할머니가 중요한 수업을 했어요. <span class="dialogue">"파루야, 모든 파동에는 이름표가 있어. 세 가지가 적혀 있지."</span></p>
+        <p>첫 번째는 <span class="highlight">'파장'</span>이에요. 물결 꼭대기(마루)에서 다음 꼭대기까지의 거리예요. <span class="dialogue">"파장이 길면 느긋한 파동, 짧으면 에너지가 높은 파동이야."</span></p>
+        <p>두 번째는 <span class="highlight">'진동수'</span>예요. 1초 동안 진동하는 횟수로, 단위는 헤르츠(Hz)예요. <span class="dialogue">"진동수가 높으면 1초에 많이 흔들리는 거야."</span></p>
+        <p>파도가 물었어요. <span class="dialogue">"파장이랑 진동수는 어떤 관계예요?"</span></p>
+        <p><span class="dialogue">"<span class="highlight">파동 속도 = 파장 × 진동수</span>야. 같은 속도에서 파장이 길면 진동수가 낮고, 파장이 짧으면 진동수가 높아."</span></p>
+        <p>세 번째는 <span class="highlight">'진폭'</span>이에요. 평형점에서 가장 멀리 벗어난 거리예요. 큰 돌을 던지면 높은 물결, 작은 돌이면 작은 물결이에요.</p>
+        <p><span class="dialogue">"나는 파장 5센티미터, 진동수 초당 6번, 진폭 2센티미터야!"</span> 파루가 자기 이름표를 자랑했어요.</p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🔊 소리의 전달</span>
+        <h2>공기를 밀고 당기는 소나</h2>
+        <p>파루가 달리고 있을 때, 하늘에서 목소리가 들렸어요. <span class="dialogue">"야호! 나도 파동이야!"</span></p>
+        <p>소리의 정령 소나가 나타났어요. 투명한 공기 방울들로 된 소녀로, 몸이 앞뒤로 밀렸다 당겼다를 반복했어요.</p>
+        <p><span class="dialogue">"나는 소나! 소리파! 너랑은 좀 달라!"</span></p>
+        <p><span class="dialogue">"달라? 둘 다 파동 아니야?"</span></p>
+        <p><span class="dialogue">"맞아, 하지만 움직이는 방향이 달라!"</span></p>
+        <p>파루는 위아래로 흔들리며 옆으로 가요. 진행 방향과 진동 방향이 수직인 <span class="highlight">'횡파(가로파)'</span>예요.</p>
+        <p>소나는 앞뒤로 밀고 당기며 밀린 방향으로 가요. 진행 방향과 진동 방향이 같은 <span class="highlight">'종파(세로파)'</span>예요.</p>
+        <p><span class="dialogue">"공기 분자가 밀려서 촘촘해지는 부분을 '밀', 벌어지는 부분을 '소'라고 해. 밀-소-밀-소가 반복되면서 소리가 전달돼!"</span></p>
+        <p><span class="dialogue">"나는 공기에서 초속 340미터로 달려. 하지만... <span class="highlight">매질이 없으면 달릴 수 없어</span>. 우주는 진공이라 소리가 안 들려."</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">✨ 빛의 파동</span>
+        <h2>매질 없이 달리는 루멘</h2>
+        <p>눈부신 빛이 내려왔어요. 황금빛과 무지개빛이 섞인 존재가 빛의 속도로 내려앉았어요.</p>
+        <p><span class="dialogue">"진공이 무서워? 나는 진공에서 가장 빛나는 걸."</span></p>
+        <p>루멘이었어요. <span class="dialogue">"나는 전자기파야. 빛, 전파, X선... 다 내 가족이지."</span></p>
+        <p><span class="highlight">전자기파는 전기장과 자기장이 서로를 만들며 나아가는 파동이에요. 매질이 필요 없어요!</span></p>
+        <p><span class="dialogue">"전기장 변화가 자기장을 만들고, 자기장 변화가 전기장을 만들어. 둘이 서로 밀어주면서 영원히 달릴 수 있어!"</span></p>
+        <p>루멘 가족을 소개하면: 전파(라디오), 마이크로파(전자레인지), 적외선(리모컨), 가시광선(눈에 보이는 빛), 자외선, X선, 감마선. 모두 같은 전자기파이고 파장만 달라요.</p>
+        <p><span class="dialogue">"내 속도는 <span class="highlight">초속 30만 킬로미터</span>. 1초에 지구를 일곱 바퀴 반 돌 수 있어."</span></p>
+        <p><span class="dialogue">"하지만... 나는 멈출 수 없어. 태어나면 빛의 속도로 달려야 하고, 어디에도 머물 수 없어."</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">⚡ 에너지 이동</span>
+        <h2>파동이 전하는 진짜 선물</h2>
+        <p>진동 할머니가 가장 중요한 수업을 했어요.</p>
+        <p><span class="dialogue">"<span class="highlight">파동이 전달하는 것은 물질이 아니라 에너지야.</span> 이것만 기억하면 파동의 모든 걸 이해할 수 있어."</span></p>
+        <p>파루가 말했어요. <span class="dialogue">"맞아요! 나는 물을 옮기는 게 아니라 에너지를 옮기는 거잖아요!"</span></p>
+        <p>할머니가 예를 들어줬어요. 태양에서 출발한 빛(루멘 가족)은 1억 5천만 킬로미터를 달려 지구에 에너지를 전달해요. 이 에너지가 식물을 자라게 하고, 물을 증발시키고, 생명을 지탱해요.</p>
+        <p><span class="dialogue">"소리 파동은 에너지를 귀의 고막에 전달해. 고막이 진동하면 뇌가 '소리'로 느끼는 거야."</span></p>
+        <p>지진파도 에너지를 전달해요. 진원지에서 발생한 에너지가 파동으로 퍼져 건물을 흔들어요.</p>
+        <p><span class="dialogue">"세상의 거의 모든 에너지 전달이 파동을 통해 이루어져!"</span> 파도가 깨달았어요.</p>
+        <p><span class="dialogue">"<span class="highlight">파동은 우주의 택배 시스템</span>이야. 에너지를 한 곳에서 다른 곳으로 전달하는 방법이지."</span></p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">🧱 매질의 역할</span>
+        <h2>파동이 타고 가는 길</h2>
+        <p>여행 중에 세 명의 형제가 나타났어요. 매질 형제들이었어요.</p>
+        <p>물 형이 말했어요. <span class="dialogue">"나는 물 매질이야. 파루 같은 물결파가 내 위를 달리지."</span></p>
+        <p>소나가 공기 형 옆에 섰어요. <span class="dialogue">"나는 공기 매질 속에서 달려. 초속 340미터야."</span></p>
+        <p>쇠 형이 자랑했어요. <span class="dialogue">"내 안에서 소리는 <span class="highlight">초속 5,000미터 이상</span>으로 달려! 공기보다 열다섯 배 빨라!"</span></p>
+        <p><span class="dialogue">"같은 소리인데 매질에 따라 속도가 이렇게 달라?"</span> 파도가 놀랐어요.</p>
+        <p><span class="dialogue">"매질의 밀도와 탄성이 속도를 결정해. 분자들이 가까이 붙어 있는 고체에서는 진동이 빨리 전달돼."</span></p>
+        <p>매질 형제들이 중요한 것을 알려줬어요. <span class="dialogue">"<span class="highlight">우리는 길이지만, 우리 자신은 이동 안 해.</span> 물 분자는 제자리에서 흔들리고, 공기 분자도 제자리에서 밀렸다 돌아와. 파동만 지나가는 거야."</span></p>
+        <p><span class="dialogue">"우리가 없으면 너는 달릴 수 없고, 너가 없으면 우리는 그냥 고요한 물일 뿐이야. 서로 필요한 거지."</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🌈 반사와 간섭</span>
+        <h2>메아리와 무지개의 비밀</h2>
+        <p>파루가 연못 가장자리 돌벽에 도착했어요. <span class="dialogue">"벽이다!"</span> 파루가 돌벽에 부딪혔어요.</p>
+        <p>그런데 파루가 사라지지 않고 되돌아왔어요! 이것이 <span class="highlight">'반사'</span>예요!</p>
+        <p>소나가 외쳤어요. <span class="dialogue">"나도 반사해! 산에서 '야호!' 하면 메아리가 돌아오잖아? 소리가 절벽에 부딪혀 돌아오는 거야!"</span></p>
+        <p>루멘도 말했어요. <span class="dialogue">"거울이 빛을 반사하는 것도 같은 원리야."</span></p>
+        <p>더 놀라운 것은 <span class="highlight">'간섭'</span>이었어요. 파루가 돌아오면서 다른 물결과 만났어요.</p>
+        <p><span class="dialogue">"두 파동의 마루와 마루가 만나면 더 큰 파동이 돼. <span class="highlight">'보강 간섭'</span>이야. 마루와 골이 만나면 서로 사라져. <span class="highlight">'상쇄 간섭'</span>이야."</span></p>
+        <p>파루가 직접 해봤어요. 마루끼리 만나니 물이 더 높이 솟았고, 마루와 골이 만나니 수면이 평평해졌어요.</p>
+        <p><span class="dialogue">"무지개도 간섭 때문이야!"</span> 루멘이 하늘을 가리켰어요. <span class="dialogue">"빗방울이 빛을 파장별로 나누고, 각 파장의 빛이 간섭해서 다양한 색이 보여!"</span></p>
+        <p><span class="dialogue">"반사와 간섭이 메아리도, 무지개도, 비눗방울 색깔도 만드는 거구나!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌟 퍼져나가는 힘</span>
+        <h2>파루의 마지막 물결</h2>
+        <p>모든 모험을 마치고, 파루는 점점 약해지고 있었어요. 높았던 물결이 거의 보이지 않을 만큼 낮아졌어요.</p>
+        <p><span class="dialogue">"파루!"</span> 파도가 불렀어요.</p>
+        <p><span class="dialogue">"나 괜찮아."</span> 파루가 미소 지었어요. <span class="dialogue">"멀리 가면 에너지가 퍼져서 약해져. 막을 수 없는 운명이야."</span></p>
+        <p><span class="dialogue">"사라지는 거야?"</span></p>
+        <p><span class="dialogue">"아니, 사라지는 게 아니야. <span class="highlight">파동이 약해진다는 건 에너지가 더 넓게 퍼진다는 뜻</span>이야. 내 에너지는 연못 전체에 고르게 전달된 거야."</span></p>
+        <p>파도의 눈에 눈물이 고였어요. <span class="dialogue">"너의 메시지가 연못 구석구석에 도착한 거잖아."</span></p>
+        <p><span class="dialogue">"맞아. 파도야, 기억해. 네가 던진 돌멩이 하나가 나를 만들었어. <span class="highlight">작은 행동 하나가 파동이 되어 세상 끝까지 퍼져나갈 수 있어.</span>"</span></p>
+        <p>파루의 마지막 물결이 연못 가장자리에 닿았어요. 풀잎을 흔들고, 잠자리가 날아올랐어요. 파루는 사라진 게 아니라 연못 전체에 스며든 거예요.</p>
+        <p>파도는 또 다른 돌을 던졌어요. 풍덩. 새로운 파루가 태어났어요. 움직임은 이어지고, 전달돼요. 영원히.</p>
+        <p style="margin-top: 30px; padding: 20px; background: rgba(0, 188, 212, 0.1); border-radius: 12px; border-left: 4px solid #00BCD4;">
+          <strong>🌱 교훈: 움직임은 이어지고 전달돼요.</strong><br><br>
+          진동이 옆으로 전달되는 게 파동이에요. 파동은 물질이 아니라 에너지를 전달해요. 파장, 진동수, 진폭이 파동의 이름표예요. 반사와 간섭이 메아리와 무지개를 만들어요. 작은 떨림 하나가 세상 끝까지 메시지를 보낼 수 있어요!
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">← 돌아가기</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+  </script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌋 마그마 소녀 마기의 지구 속 여행</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #E64A19 0%, #BF360C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(230, 74, 25, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(230, 74, 25, 0.15);
+      color: #BF360C;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #E64A19;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #BF360C;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+      pointer-events: auto;
+    }
+
+    .intro-content h1 {
+      font-size: 34px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 17px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FF8A65;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      color: #FF8A65;
+      font-size: 14px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 교훈 박스 */
+    .moral-box {
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+      border-left: 4px solid #E64A19;
+      padding: 20px;
+      border-radius: 0 16px 16px 0;
+      margin-top: 20px;
+    }
+
+    .moral-box h3 {
+      color: #E64A19;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .moral-box p {
+      color: #5D4037;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    /* 닫기 버튼 */
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+      transform: scale(1.1);
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(230, 74, 25, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(230, 74, 25, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(191, 54, 12, 0.9);
+      transform: translateY(-2px);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="goBack()">×</button>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 콘텐츠 -->
+  <div id="content">
+
+    <!-- 인트로 -->
+    <section class="intro-section" data-bg="/images/창작도서/창작지구과학02/00.jpg">
+      <div class="intro-content">
+        <h1>🌋 마그마 소녀 마기의 지구 속 여행</h1>
+        <p class="subtitle">— 지구의 심장이 두근두근 뛰는 소리를 들어봐요 —<br>교과기반 창작도서 · 지구과학 02 (3·4학년)</p>
+
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🔥 마기:</strong> 호기심 많은 마그마 소녀. 지구 깊은 곳에서 태어나 바깥 세상을 꿈꿔요.</p>
+          <p><strong>🪨 크러스트 대장:</strong> 지구의 껍질을 지키는 바위 거인. 변화를 무서워하지만 마음은 따뜻해요.</p>
+          <p><strong>🌀 맨틀 어머니:</strong> 거대한 몸으로 마기를 품어주는 지혜로운 어머니예요.</p>
+          <p><strong>💎 코어 할아버지:</strong> 지구 중심에 사는 뜨거운 심장. 태양보다 더 뜨거워요.</p>
+          <p><strong>🏔️ 볼카노 형제:</strong> 형 '분노'와 동생 '조용이'. 화산을 만드는 쌍둥이예요.</p>
+        </div>
+
+        <p class="scroll-hint">▼ 스크롤하여 이야기를 시작하세요 ▼</p>
+      </div>
+    </section>
+
+    <!-- 1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">🕳️ 지구의 심장</span>
+        <h2>아주 깊고 뜨거운 곳</h2>
+        <p>우리가 밟고 서 있는 땅 아래, 아주 깊은 곳에 무엇이 있을까요? 지구의 가장 깊은 곳에는 코어 할아버지가 살고 있어요. 할아버지는 철로 이루어져 있고, 온도가 무려 <span class="highlight">5,500도</span>나 돼요!</p>
+        <p>할아버지 발치에서 작은 불꽃이 피어올랐어요. <span class="dialogue">"아함~ 잘 잤다!"</span> 불꽃 머리카락을 가진 소녀, 마기가 눈을 떴어요. 마기는 <span class="highlight">1,200도</span>의 뜨거운 마그마예요.</p>
+        <p><span class="dialogue">"할아버지, 저 위에는 뭐가 있어요? 여기는 너무 답답해요!"</span> 마기가 물었어요. 코어 할아버지가 대답했어요. <span class="dialogue">"저 위에는 아주 신기한 세상이 있단다. 하지만 그곳에 가려면 긴 여행을 해야 해. 준비됐니?"</span> 마기는 주먹을 불끈 쥐었어요. <span class="dialogue">"네! 전 꼭 갈 거예요!"</span></p>
+      </div>
+    </section>
+
+    <!-- 2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">🌀 맨틀 어머니</span>
+        <h2>느리게 춤추는 거인</h2>
+        <p>마기가 여행을 시작한 곳은 맨틀이었어요. 맨틀 어머니는 지구의 <span class="highlight">84퍼센트</span>나 차지하는 아주 큰 분이에요. 신기하게도 어머니의 몸은 딱딱하면서도 아주 천천히 흐를 수 있어요.</p>
+        <p><span class="dialogue">"어머니, 왜 자꾸 위로 올라가는 느낌이 들죠?"</span> 마기가 물었어요. 맨틀 어머니가 우아하게 말했어요. <span class="dialogue">"이건 나의 춤이란다. 아래에서 열을 받으면 가벼워져서 올라가고, 위에서 식으면 무거워져서 내려와. 이걸 '맨틀 대류'라고 해."</span></p>
+        <p>어머니의 춤은 엄청 느렸어요. 1년에 손톱이 자라는 만큼만 움직였거든요. 하지만 그 느린 춤에는 대륙을 밀어내는 엄청난 힘이 숨어 있었어요. 마기는 어머니의 흐름을 타고 천천히 위로 떠올랐어요.</p>
+      </div>
+    </section>
+
+    <!-- 3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">🔥 크러스트 대장</span>
+        <h2>단단한 껍질의 파수꾼</h2>
+        <p>마기가 위로 올라갈수록 주변이 조금씩 차가워졌어요. 그러자 마기 몸속의 가스들이 <span class="highlight">"보글보글"</span> 거품으로 변하기 시작했어요. 마치 사이다 뚜껑을 열기 직전처럼요!</p>
+        <p>그때 길을 막는 거대한 그림자가 나타났어요. 지각 수비대장, 크러스트 대장이었어요! <span class="dialogue">"어딜 올라오느냐! 이 위는 내가 지키는 평화로운 땅이다!"</span></p>
+        <p>마기가 말했어요. <span class="dialogue">"저도 바깥 세상을 보고 싶어요! 제 안의 열기가 자꾸 밖으로 나가라고 해요!"</span> 하지만 대장은 더 단단하게 벽을 쌓았어요. 마기와 대장의 숨바꼭질이 시작됐어요. 마기의 압력이 점점 세지면서 단단한 바위도 부르르 떨기 시작했어요.</p>
+      </div>
+    </section>
+
+    <!-- 4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">🌋 화산 폭발</span>
+        <h2>뻥! 세상 밖으로</h2>
+        <p>드디어 한계가 왔어요. 마기의 힘이 크러스트 대장의 갑옷보다 세졌거든요. <span class="highlight">"쩍!"</span> 갑옷에 금이 갔어요. <span class="dialogue">"이럴 수가...!"</span> 대장이 당황한 사이, 마기가 틈을 뚫고 솟구쳤어요.</p>
+        <p><span class="highlight">"쾅!"</span> 엄청난 소리와 함께 마기가 지표면 밖으로 나왔어요! 공기와 만난 마기는 이제 <span class="highlight">'용암'</span>이라는 새 이름을 얻었어요.</p>
+        <p>이때 마기에게서 쌍둥이 동생이 태어났어요. 형 '분노'는 <span class="dialogue">"뻥!"</span> 하고 화끈하게 터졌고, 동생 '조용이'는 <span class="dialogue">"스르르~"</span> 조용히 흘러갔어요. 크러스트 대장이 중얼거렸어요. <span class="dialogue">"이게... 지구가 숨 쉬는 거였구나. 막는 게 답이 아니었어."</span></p>
+      </div>
+    </section>
+
+    <!-- 5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">🔴 붉은 강물</span>
+        <h2>파괴 뒤에 숨은 창조</h2>
+        <p>세상에 나온 마기는 깜짝 놀랐어요. 눈부신 태양, 시원한 바람, 푸른 바다! 하지만 마기가 흐르는 곳마다 나무가 타고 바위가 녹았어요.</p>
+        <p><span class="dialogue">"안 돼! 내가 지나가면 다 타버려!"</span> 마기가 슬퍼했어요. 동생 조용이가 말했어요. <span class="dialogue">"누나, 슬퍼하지 마. 우리가 식으면 새로운 땅이 되거든."</span></p>
+        <p>정말 그랬어요! 용암이 바다에 닿자 <span class="highlight">"치이익—"</span> 소리와 함께 굳어졌어요. 제주도와 하와이 같은 아름다운 섬들이 마기의 발자취를 따라 만들어졌어요. <span class="dialogue">"아, 나는 파괴만 하는 게 아니었구나. 새로운 땅을 만들고 있었어!"</span> 마기가 깨달았어요.</p>
+      </div>
+    </section>
+
+    <!-- 6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">🏔️ 볼카노 형제</span>
+        <h2>산을 조각하는 예술가</h2>
+        <p>시간이 흐르며 마기가 지나간 자리에 멋진 산들이 생겼어요. 볼카노 형제는 각자 다른 모양의 산을 만들었어요.</p>
+        <p>형 분노는 화산재와 용암을 쌓아 높고 가파른 <span class="highlight">'성층 화산'</span>을 만들었어요. 일본의 후지산처럼요! <span class="dialogue">"내 작품은 강렬하지!"</span></p>
+        <p>동생 조용이는 넓고 완만한 <span class="highlight">'순상 화산'</span>을 만들었어요. 하와이 산들처럼요! <span class="dialogue">"내 산은 부드러워서 걷기 편해."</span></p>
+        <p>가끔 마그마가 다 빠져나가면 산 중심이 푹 꺼져서 <span class="highlight">'칼데라'</span>가 됐어요. 거기에 물이 고이면 백두산 천지처럼 예쁜 호수가 생겼지요. 크러스트 대장도 감탄했어요. <span class="dialogue">"너희는 정말 훌륭한 조각가구나."</span></p>
+      </div>
+    </section>
+
+    <!-- 7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">🌫️ 회색 요정</span>
+        <h2>미움받던 애쉬의 비밀</h2>
+        <p>화산이 터질 때 먼지 구름에서 작은 요정이 나왔어요. 화산재 요정, 애쉬였어요. 하지만 애쉬가 하늘을 덮으면 어두워지고, 동물들이 기침을 했어요. <span class="dialogue">"저리 가, 회색 괴물아!"</span></p>
+        <p>애쉬는 슬펐어요. <span class="dialogue">"나는 왜 태어났을까?"</span> 그런데 며칠 뒤, 애쉬가 내려앉은 땅에서 더 푸르고 싱싱한 풀들이 자라났어요!</p>
+        <p>코어 할아버지가 말했어요. <span class="dialogue">"애쉬야, 네 몸속에는 식물들이 좋아하는 영양분이 가득해. 지금은 어둡게 보여도, 넌 사실 '지구의 영양제'란다."</span> 애쉬가 웃었어요. 자기의 회색 가루가 미래의 꽃을 피우는 마법 가루였던 거예요!</p>
+      </div>
+    </section>
+
+    <!-- 8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">⚖️ 두 얼굴</span>
+        <h2>무섭지만 고마운 화산</h2>
+        <p>마기의 가족들은 두 가지 모습이 있었어요. 하나는 무서운 <span class="highlight">'파괴자'</span>예요. 옛날 폼페이라는 도시를 삼킨 화산처럼요.</p>
+        <p>하지만 또 하나는 <span class="highlight">'생명의 친구'</span>예요. 아주 옛날 화산이 뿜은 수증기가 비가 되어 바다를 만들었거든요. 우리가 숨 쉬는 공기도 화산에서 나왔어요.</p>
+        <p>화산은 반짝이는 금과 다이아몬드도 땅 위로 올려줘요. 뜨거운 온천은 사람들의 피로를 풀어주고, 지열은 전기를 만들어요. 볼카노 형제가 말했어요. <span class="dialogue">"우리는 무섭지만 꼭 필요한 존재야. 지구의 심장이 살아 있다는 증거니까!"</span></p>
+      </div>
+    </section>
+
+    <!-- 9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">⚡ 멈추지 않는 심장</span>
+        <h2>코어 할아버지의 비밀</h2>
+        <p>긴 여행을 마친 마기가 다시 지구 깊은 곳으로 돌아왔어요. <span class="dialogue">"할아버지, 이 모든 힘은 어디서 나오는 거예요? 어떻게 수십억 년 동안 안 식어요?"</span></p>
+        <p>할아버지가 설명했어요. <span class="dialogue">"내 안에는 두 가지 엔진이 있단다. 하나는 지구가 태어날 때 받은 '태초의 열기'고, 다른 하나는 내 안의 특별한 원소들이 만드는 열이야."</span></p>
+        <p>이 열 덕분에 외핵이 빙글빙글 돌며 보이지 않는 방패, <span class="highlight">'자기장'</span>을 만들어요. 이 방패가 없으면 태양의 무서운 바람에 모든 생명이 사라졌을 거예요. <span class="dialogue">"내 심장이 뛰기를 멈추면 지구도 죽어. 하지만 걱정 마, 아직 수십억 년은 더 뛸 거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- 10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">🌍 살아 있는 지구</span>
+        <h2>지금 이 순간에도</h2>
+        <p>지구의 모든 존재가 한자리에 모여 노래했어요. 크러스트 대장이 말했어요. <span class="dialogue">"변화가 무섭다고 생각했는데, 그게 지구가 숨 쉬는 거였어."</span></p>
+        <p>맨틀 어머니가 덧붙였어요. <span class="dialogue">"내 느린 춤이 지구를 순환시키고 있단다. 순환이 곧 생명이야."</span> 애쉬도 춤추며 말했어요. <span class="dialogue">"내 회색 가루가 세상을 더 푸르게 해!"</span></p>
+        <p>마기는 깨달았어요. 자기가 단순한 불꽃이 아니라 <span class="highlight">지구의 열정을 전하는 메신저</span>라는 것을요. 지금 이 순간에도 우리 발밑 깊은 곳에서는 코어 할아버지의 심장이 뛰고, 맨틀 어머니가 춤추고, 마기가 새로운 세상을 꿈꾸고 있어요.</p>
+
+        <div class="moral-box">
+          <h3>🌱 이 이야기의 교훈</h3>
+          <p><span class="highlight">"겉은 단단해 보여도 속은 끊임없이 움직인다."</span> 지구는 살아 있어요. 우리 마음속에도 마기처럼 뜨거운 꿈과 에너지가 있다는 걸 기억하세요!</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <script>
+    const bgImages = [
+      '/images/창작도서/창작지구과학02/00.jpg',
+      '/images/창작도서/창작지구과학02/01.jpg',
+      '/images/창작도서/창작지구과학02/02.jpg',
+      '/images/창작도서/창작지구과학02/03.jpg',
+      '/images/창작도서/창작지구과학02/04.jpg',
+      '/images/창작도서/창작지구과학02/05.jpg',
+      '/images/창작도서/창작지구과학02/06.jpg',
+      '/images/창작도서/창작지구과학02/07.jpg',
+      '/images/창작도서/창작지구과학02/08.jpg',
+      '/images/창작도서/창작지구과학02/09.jpg',
+      '/images/창작도서/창작지구과학02/10.jpg'
+    ];
+
+    bgImages.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section, .intro-section');
+    let currentSection = 0;
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card, .intro-content');
+
+        if (entry.isIntersecting) {
+          if (card) card.classList.add('active');
+
+          const sectionIndex = Array.from(sections).indexOf(entry.target);
+          if (sectionIndex !== -1 && sectionIndex !== currentSection) {
+            currentSection = sectionIndex;
+            mapContainer.style.backgroundImage = `url('${bgImages[sectionIndex]}')`;
+          }
+        } else {
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+
+    function goBack() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') goBack();
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>꽃잎 점을 가진 소녀 — 숙향, 일곱 번 죽고 일곱 번 피어나다</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #0d0d0d;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* 배경 고정 컨테이너 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 0.8s ease-in-out;
+    }
+
+    #map-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+    }
+
+    /* 스크롤 콘텐츠 */
+    .scroll-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 히어로 섹션 */
+    .hero-section {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .hero-section h1 {
+      font-size: 2.8em;
+      font-weight: 900;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+      line-height: 1.3;
+    }
+
+    .hero-section .subtitle {
+      font-size: 1.2em;
+      opacity: 0.9;
+      margin-bottom: 30px;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: bounce 2s infinite;
+    }
+
+    .scroll-indicator span {
+      display: block;
+      width: 30px;
+      height: 50px;
+      border: 2px solid rgba(255,255,255,0.8);
+      border-radius: 15px;
+      position: relative;
+    }
+
+    .scroll-indicator span::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      animation: scrollDown 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(10px); }
+    }
+
+    @keyframes scrollDown {
+      0% { opacity: 1; top: 8px; }
+      100% { opacity: 0; top: 30px; }
+    }
+
+    /* 스토리 섹션 */
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 60px 20px;
+    }
+
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      max-width: 600px;
+      background: rgba(255,255,255,0.95);
+      color: #333;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      transform: translateY(50px);
+      opacity: 0;
+      transition: all 0.8s ease-out;
+    }
+
+    .story-card.active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .story-section:nth-child(odd) .story-card {
+      margin-left: 10%;
+    }
+
+    .story-section:nth-child(even) .story-card {
+      margin-right: 10%;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      background: linear-gradient(135deg, #00695C, #004D40);
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .story-card .theme {
+      display: block;
+      color: #00695C;
+      font-size: 0.95em;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+
+    .story-card h2 {
+      font-size: 1.8em;
+      font-weight: 900;
+      color: #004D40;
+      margin-bottom: 12px;
+    }
+
+    .story-card .key-sentence {
+      background: linear-gradient(135deg, #E0F2F1, #B2DFDB);
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #00695C;
+      border-left: 4px solid #00695C;
+    }
+
+    .story-card .content {
+      font-size: 1.05em;
+      line-height: 2;
+      color: #444;
+      text-align: justify;
+    }
+
+    /* 교훈 섹션 */
+    .lesson-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .lesson-card {
+      max-width: 700px;
+      background: rgba(255,255,255,0.95);
+      color: #333;
+      border-radius: 24px;
+      padding: 50px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    }
+
+    .lesson-card h2 {
+      font-size: 2em;
+      font-weight: 900;
+      color: #004D40;
+      margin-bottom: 25px;
+    }
+
+    .lesson-card .lesson-icon {
+      font-size: 4em;
+      margin-bottom: 20px;
+    }
+
+    .lesson-card .content {
+      font-size: 1.1em;
+      line-height: 2;
+      color: #444;
+      text-align: justify;
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      border: none;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.95em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn:hover {
+      background: rgba(255,255,255,0.35);
+      transform: translateX(-3px);
+    }
+
+    /* 프로그레스 바 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00695C, #26A69A);
+      z-index: 1000;
+      transition: width 0.1s ease-out;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .hero-section h1 {
+        font-size: 1.8em;
+      }
+
+      .story-card {
+        padding: 25px;
+        margin: 0 5% !important;
+      }
+
+      .story-card h2 {
+        font-size: 1.4em;
+      }
+
+      .story-card .content {
+        font-size: 0.95em;
+        line-height: 1.9;
+      }
+
+      .lesson-card {
+        padding: 30px;
+        margin: 0 20px;
+      }
+
+      .back-btn {
+        padding: 10px 18px;
+        font-size: 0.85em;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <button class="back-btn" onclick="history.back()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    돌아가기
+  </button>
+
+  <div id="map-container"></div>
+
+  <div class="scroll-content">
+
+    <!-- 히어로 섹션 -->
+    <section class="hero-section" data-bg="/images/창작도서/고전문학03/00.jpg">
+      <h1>꽃잎 점을 가진 소녀<br>— 숙향, 일곱 번 죽고 일곱 번 피어나다</h1>
+      <p class="subtitle">운명과 고난, 사랑과 회복의 이야기</p>
+      <div class="scroll-indicator">
+        <span></span>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🌸 기이한 탄생: 하늘에서 떨어진 꽃잎</span>
+        <h2>하늘나라에서 내려온 아이</h2>
+        <div class="key-sentence">숙향은 하늘나라에서 내려온 특별한 아이로, 태어날 때부터 신비한 일이 가득했어요.</div>
+        <div class="content">
+          아주 먼 옛날, 하늘나라에서 큰 잔치가 열렸어요. 선녀들이 구름 위에서 춤을 추었지요. 그런데 한 선녀가 실수로 예쁜 꽃병을 깨뜨리고 말았어요. 옥황상제가 화를 내며 말했어요. "너는 인간 세상에 내려가 고생을 해야 한다!" 선녀는 눈물을 흘리며 하늘에서 떨어졌어요. 그 선녀가 바로 숙향이에요.<br><br>
+          어느 봄날 밤, 김전이라는 착한 선비의 집에 신기한 일이 생겼어요. 부인이 꿈을 꾸었는데, 무지개가 방 안으로 들어오더니 하얀 꽃 한 송이를 놓고 사라졌어요. 그날 밤 아기가 태어났어요. 방 안에 꽃 향기가 가득했고, 아기 이마에는 꽃잎 모양의 점이 있었어요. "이 아이는 특별한 아이야." 부부는 아기에게 '숙향'이라는 이름을 지어주었어요. 맑고 고운 향기라는 뜻이었지요. 그런데 마을 점쟁이가 무서운 말을 했어요. "이 아이는 많은 고생을 할 거예요." 부모님은 걱정이 되었지만, 숙향은 새근새근 잠들어 있었어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🔥 부모와 이별: 불길 속에 사라진 가족</span>
+        <h2>전쟁의 밤, 헤어진 손</h2>
+        <div class="key-sentence">전쟁의 불길 속에서 어린 숙향은 부모님과 헤어지게 되었어요.</div>
+        <div class="content">
+          숙향이 다섯 살이 되었을 때, 나라에 큰 난리가 났어요. 나쁜 사람들이 마을을 공격했고, 여기저기서 불이 났어요. 밤하늘이 빨갛게 타올랐고, 사람들은 소리를 지르며 도망쳤어요. 아버지는 어머니와 숙향을 데리고 열심히 달렸어요. 하지만 연기가 너무 많아서 앞이 보이지 않았어요.<br><br>
+          그때 숙향의 손이 아버지 손에서 빠져버렸어요. "숙향아!" 아버지가 외쳤지만, 숙향은 사람들 틈에서 멀리 떠밀려 갔어요. "아버지! 어머니!" 어린 숙향의 울음소리는 시끄러운 소리에 묻혀버렸어요. 어머니는 너무 슬퍼서 울다가 눈이 보이지 않게 되었어요. 어린 숙향은 강가에 쓰러져서 울었어요. 배도 고프고, 무서웠어요. 그때 신기한 일이 생겼어요. 연꽃 한 송이가 물 위에 떠서 숙향에게 다가왔어요. 따뜻한 기운이 느껴졌어요. 하늘이 아직 이 아이를 지켜주고 있다는 뜻이었어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">💪 고난의 성장: 일곱 번 죽을 고비</span>
+        <h2>넘어져도 다시 일어서다</h2>
+        <div class="key-sentence">숙향은 힘든 일을 겪을 때마다 신비한 도움을 받으며 강해졌어요.</div>
+        <div class="content">
+          부모님을 잃은 숙향의 어린 시절은 눈물이 많았어요. 어떤 마을에서는 착한 사람이 숙향을 키워주었지만, 그 집에 불이 나서 다시 쫓겨났어요. 추운 겨울밤, 숙향은 빈 절간에서 벌벌 떨었어요. 다섯 살, 여섯 살, 일곱 살... 숙향은 일곱 번이나 죽을 뻔했어요. 물에 빠지고, 산짐승을 만나고, 배가 고프고, 병에 걸렸어요.<br><br>
+          하지만 이상한 일이 있었어요. 위험할 때마다 누군가 도와주었어요. 강물에 빠졌을 때는 큰 물고기가 등에 태워주었어요. 산에서 길을 잃었을 때는 학이 하늘에서 내려와 길을 알려주었어요. 가장 추운 겨울밤, 마고할미가 나타났어요. "불쌍한 아이야. 하늘이 너를 이 세상에 보낸 데는 다 이유가 있단다." 할머니는 숙향에게 따뜻한 죽을 먹여주었어요. "할머니, 왜 저만 이렇게 힘들어요?" "지금의 고생이 나중에 씨앗이 된단다. 눈물이 마를 때, 너는 아주 강한 사람이 되어 있을 거야." 숙향은 다시 일어섰어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">💫 천상의 인연: 꿈에서 만난 얼굴</span>
+        <h2>하늘이 맺어준 두 사람</h2>
+        <div class="key-sentence">하늘이 정해준 인연은 꿈속에서도 이어져요.</div>
+        <div class="content">
+          숙향이 열여섯 살이 되었어요. 많은 고생을 겪으며 자란 숙향은 남루한 옷을 입고 있었지만, 눈빛은 맑고 단단했어요. 어느 봄날 밤, 숙향은 이상한 꿈을 꾸었어요. 하늘나라 연꽃 정원에서 한 젊은이가 악기를 연주하고 있었어요. 그 얼굴을 보는 순간, 숙향의 가슴이 두근두근 뛰었어요. 젊은이도 숙향을 보며 웃었어요. "당신을 기다리고 있었어요."<br><br>
+          같은 밤, 멀리 떨어진 곳에서 이선이라는 젊은 선비도 같은 꿈을 꾸고 있었어요. 연꽃 정원에서 어떤 소녀를 만났어요. 이선은 잠에서 깨어나 가슴을 두드렸어요. "저 소녀는 누구지? 왜 이렇게 마음이 아프지?" 마고할미가 숙향에게 말했어요. "그 꿈은 하늘이 정해준 인연을 보여준 거란다. 너와 그 젊은이는 하늘나라에서 이미 맺어진 사이야. 하지만 다시 만나려면 더 많은 시련을 견뎌야 해." 숙향은 설레면서도 두려웠어요. 하지만 꿈에서 본 따뜻한 미소를 생각하면 뭐든 견딜 수 있을 것 같았어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">💔 재회와 이별: 만남은 짧고 이별은 길다</span>
+        <h2>세상의 벽 앞에 서다</h2>
+        <div class="key-sentence">운명처럼 만난 두 사람은 세상의 벽 때문에 다시 헤어지게 돼요.</div>
+        <div class="content">
+          마고할미의 도움으로 숙향은 한 선비의 집에서 일하게 되었어요. 그 집에 공부하러 온 젊은 선비가 있었는데, 바로 이선이었어요. 어느 날 이선이 마당에서 책을 읽고 있을 때, 숙향이 꽃에 물을 주며 지나갔어요. 둘의 눈이 마주쳤어요. 동시에 가슴이 두근두근 뛰었어요. "꿈에서 본 그 사람이다!"<br><br>
+          이선은 숙향에게 다가가 말했어요. "혹시 연꽃 정원 꿈을 기억해요?" 숙향의 눈이 커졌어요. "당신도 그 꿈을?" 둘은 밤하늘 아래에서 서로 이야기를 나누었어요. 이선은 숙향의 손을 잡고 말했어요. "나와 함께 가요. 내가 지켜줄게요." 하지만 행복은 오래가지 않았어요. 이선의 어머니가 숙향을 알게 되었어요. "뭐라고? 부모도 없이 떠돌던 가난한 아이를 데려왔다고?" 어머니는 화를 내며 숙향을 내쫓았어요. "우리 집에는 못 들여!" 이선이 말려도 소용없었어요. 숙향은 다시 길 위에 서야 했어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">⛓️ 시련: 억울한 누명과 감옥</span>
+        <h2>가장 어두운 곳에서</h2>
+        <div class="key-sentence">가장 어두운 순간에도 진실은 빛을 잃지 않아요.</div>
+        <div class="content">
+          이선과 헤어진 숙향에게 더 큰 시련이 찾아왔어요. 이선의 어머니는 하인을 시켜 숙향에게 도둑 누명을 씌웠어요. "저 아이가 우리 집 물건을 훔쳤어!" 관아의 사람들이 숙향을 잡아갔어요. 숙향은 억울해서 울었지만, 아무도 말을 들어주지 않았어요. 차가운 감옥에 갇힌 숙향은 하늘을 원망했어요.<br><br>
+          "왜 저한테만 이런 일이 생기는 거예요?" 감옥은 어둡고 축축했어요. 쥐가 돌아다니고, 찬바람이 불었어요. 그때 작은 빛이 보였어요. 마고할미의 목소리가 들렸어요. "숙향아, 포기하지 마. 하늘은 진실을 알고 있어. 가장 어두운 밤이 지나면 반드시 아침이 와." 숙향은 두 손을 모아 기도했어요. 한편 이선은 숙향이 잡혀갔다는 소식을 듣고 뛰쳐나갔어요. "숙향이 도둑질을 할 사람이 아니야!" 이선은 진실을 밝히기 위해 열심히 뛰어다녔어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">📜 신분 상승: 과거에 급제한 이선</span>
+        <h2>세상이 인정하는 힘을 얻다</h2>
+        <div class="key-sentence">이선은 숙향을 지키기 위해 열심히 공부해서 과거에 합격했어요.</div>
+        <div class="content">
+          이선은 깨달았어요. 지금 자신으로는 어머니를 설득할 수도, 숙향을 구할 수도 없다는 것을. "힘이 있어야 해. 세상이 인정하는 힘이." 이선은 밤낮으로 공부에 매달렸어요. 책을 읽고, 글을 쓰고, 밤이 깊도록 붓을 놓지 않았어요. 숙향이 감옥에서 고생하고 있다는 생각에 눈물이 났지만, 이선은 참았어요. "합격해야 해. 그래야 숙향을 구할 수 있어."<br><br>
+          드디어 과거 시험 날이 왔어요. 전국에서 수천 명의 선비가 모여들었어요. 이선의 손은 떨렸지만 마음은 단단했어요. 이선은 붓을 들어 거침없이 써내려갔어요. 그 글 속에는 사랑하는 사람을 지키고 싶은 마음이 담겨 있었어요. 결과가 발표되는 날, 이선의 이름이 첫 번째에 올랐어요. "장원 급제!" 사람들이 환호했어요. 이선은 이제 높은 관직을 가진 사람이 되었어요. 하지만 이선에게 관직보다 중요한 것이 있었어요. "이제 숙향을 구할 수 있어." 이선은 곧바로 숙향이 갇힌 곳으로 달려갔어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">❤️ 운명적 만남: 다시 이어진 붉은 실</span>
+        <h2>끊어지지 않는 인연</h2>
+        <div class="key-sentence">하늘이 맺어준 인연은 어떤 어려움도 끊을 수 없었어요.</div>
+        <div class="content">
+          장원 급제한 이선이 관아에 가서 숙향의 사건을 다시 조사하라고 했어요. 조사가 시작되자 숙향에게 씌워진 누명이 거짓이라는 증거가 나왔어요. 물건은 하인이 일부러 숙향의 짐에 넣어둔 것이었어요. 사또가 판결을 내렸어요. "숙향은 무죄다! 누명을 씌운 자를 벌하라!" 감옥 문이 열리고 숙향이 밖으로 나왔어요. 햇빛이 너무 눈부셨어요.<br><br>
+          눈을 떠보니 이선이 서 있었어요. "숙향, 다시 만났어." 이선의 눈에 눈물이 맺혀 있었어요. 숙향도 울었어요. 기쁨과 그동안의 고통이 한꺼번에 쏟아졌어요. "이선 도련님... 정말 오셨군요." 두 사람은 서로의 손을 잡았어요. 하늘에서 맺어진 인연의 실이 끊어지지 않았다는 것을 확인하는 순간이었어요. 이선은 말했어요. "이번에는 아무도 우리를 떼어놓지 못해." 하지만 숙향은 고개를 저었어요. "아직 하나 남았어요. 제 부모님을 찾아야 해요." 이선은 고개를 끄덕였어요. "함께 찾자."
+        </div>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🔍 진실이 밝혀지다: 잃어버린 가족을 찾다</span>
+        <h2>스무 해 만의 재회</h2>
+        <div class="key-sentence">흩어진 가족의 진실이 밝혀지고, 숙향은 자신이 누구인지 알게 되었어요.</div>
+        <div class="content">
+          이선과 숙향은 전국을 돌며 숙향의 부모님을 찾아 나섰어요. 숙향의 이마에 있는 꽃잎 모양 점이 유일한 표시였어요. 마고할미가 마지막으로 나타나 길을 알려주었어요. "남쪽 바닷가 마을에 눈이 안 보이는 부인과 남편이 살고 있단다. 잃어버린 딸을 찾고 있지." 숙향의 가슴이 두근두근 뛰었어요.<br><br>
+          남쪽 바닷가 마을에 도착했어요. 작은 집 앞에 흰 머리 노인이 앉아 있었어요. 그 옆에 눈이 안 보이는 부인이 바느질을 하고 있었어요. 숙향이 한 걸음 다가갔을 때, 부인이 고개를 들었어요. "이... 이 향기는... 내 아이에게서 나던 꽃 향기..." 숙향이 울면서 말했어요. "어머니... 저예요. 숙향이에요." 아버지가 숙향의 얼굴을 들여다보았어요. 이마 위의 꽃잎 모양 점. "숙향아!" 어머니가 손을 뻗어 숙향의 얼굴을 만졌어요. 그 순간 기적이 일어났어요. 어머니의 눈에서 빛이 돌아온 거예요. 가장 먼저 본 것은 딸의 얼굴이었어요. 스무 해의 기다림이 끝났어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학03/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌺 가정 회복: 꽃잎이 다시 피다</span>
+        <h2>진정한 행복을 찾다</h2>
+        <div class="key-sentence">모든 고난을 이겨낸 끝에 흩어진 가족은 하나가 되고, 진정한 행복이 찾아왔어요.</div>
+        <div class="content">
+          숙향과 부모님의 재회 소식은 온 나라에 퍼졌어요. 이선은 임금님에게 숙향의 이야기를 전했어요. 임금님도 감동했어요. "그 마음이 대단하구나. 숙향에게 높은 직위를 내리겠노라." 가난하다고 무시당하던 숙향이 나라에서 인정받는 순간이었어요.<br><br>
+          이선의 어머니는 부끄러워서 고개를 들지 못했어요. 자신이 내쫓고 누명을 씌운 소녀가 임금님의 인정을 받은 거예요. 이선이 어머니에게 말했어요. "어머니, 사람의 가치는 태어난 곳이 아니라 어떻게 살았느냐로 정해져요." 어머니는 오래 생각한 끝에 숙향 앞에 섰어요. "내가 잘못했다. 용서해주겠니?" 숙향은 눈물을 흘리며 어머니의 손을 잡았어요. "어머니라 불러도 될까요?" 봄날, 이선과 숙향의 결혼식이 열렸어요. 하늘에서 꽃잎이 비처럼 내려왔어요. 마고할미의 목소리가 바람에 실려왔어요. "고난은 끝났단다. 이제부터는 행복을 만드는 시간이야." 숙향은 하늘을 올려다보며 미소 지었어요. 꽃잎 점을 가진 아이가 마침내 다시 꽃을 피웠어요.
+        </div>
+      </div>
+    </section>
+
+    <!-- 교훈 섹션 -->
+    <section class="lesson-section" data-bg="/images/창작도서/고전문학03/00.jpg">
+      <div class="lesson-card">
+        <div class="lesson-icon">🌱</div>
+        <h2>고난은 성장의 과정이에요</h2>
+        <div class="content">
+          숙향의 이야기는 우리에게 물어요. 왜 힘든 일이 찾아오는 걸까요? 숙향은 부모님을 잃고, 배고프고, 추웠고, 억울한 누명을 썼어요. 정말 불공평한 일들이었지요. 하지만 그 모든 어려움을 이겨낸 뒤 숙향은 누구보다 강하고 따뜻한 사람이 되었어요.<br><br>
+          아픔을 아는 사람이 다른 사람의 아픔을 이해할 수 있어요. 외로움을 겪은 사람이 만남의 소중함을 알아요. 지금 어려움을 겪고 있는 친구에게 이 이야기는 말해요. "포기하지 마세요. 지금의 눈물이 내일의 꽃을 피우는 물이 돼요." 마고할미의 말처럼, 가장 어두운 밤이 지나면 반드시 아침이 찾아와요.
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('[data-bg]');
+    const storyCards = document.querySelectorAll('.story-card');
+    const progressBar = document.getElementById('progressBar');
+
+    // 초기 배경 설정
+    if (sections.length > 0) {
+      mapContainer.style.backgroundImage = `url('${sections[0].dataset.bg}')`;
+    }
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+      progressBar.style.width = scrollPercent + '%';
+
+      // 현재 보이는 섹션 찾기
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.5 && rect.bottom > window.innerHeight * 0.5) {
+          mapContainer.style.backgroundImage = `url('${section.dataset.bg}')`;
+        }
+      });
+    });
+
+    // 카드 애니메이션
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    storyCards.forEach(card => observer.observe(card));
+
+    // 교훈 카드도 애니메이션
+    const lessonCard = document.querySelector('.lesson-card');
+    if (lessonCard) {
+      lessonCard.style.transform = 'translateY(50px)';
+      lessonCard.style.opacity = '0';
+      lessonCard.style.transition = 'all 0.8s ease-out';
+
+      const lessonObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.transform = 'translateY(0)';
+            entry.target.style.opacity = '1';
+          }
+        });
+      }, observerOptions);
+
+      lessonObserver.observe(lessonCard);
+    }
+  </script>
+
+</body>
+</html>

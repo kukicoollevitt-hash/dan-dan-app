@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧬 거울 속 수수께끼</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물15/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6A1B9A 0%, #4A148C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(106, 27, 154, 0.15);
+      color: #4A148C;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6A1B9A;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #4A148C;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #CE93D8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(106, 27, 154, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(74, 20, 140, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(106, 27, 154, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🧬 거울 속 수수께끼</h1>
+        <p class="subtitle">
+          — 나는 왜 엄마를 닮았을까? —<br>
+          유전자 마을에서 벌어진, '다름'을 찾아 떠난 소녀의 모험<br>
+          교과기반 창작도서 · 생물 15
+        </p>
+        <div class="characters">
+          <h3>🧬 등장인물 소개</h3>
+          <p><strong>▸ 다온:</strong> 거울 속 자기 얼굴에서 '닮음'의 수수께끼를 발견하고 모험을 떠나는 소녀예요.</p>
+          <p><strong>▸ 크로미:</strong> 염색체 요정이에요. 반짝이는 안경을 쓴 명랑한 도서관 관리인이자 다온의 안내자예요.</p>
+          <p><strong>▸ 뮤타:</strong> 돌연변이 도둑이라 불리지만, 사실은 진화의 원동력이에요.</p>
+          <p><strong>▸ 새별:</strong> 다온의 단짝 친구예요. 가족 누구에게도 없는 주근깨를 가진 소녀예요.</p>
+          <p><strong>▸ 도미 & 레세:</strong> 우성 기사와 열성 기사예요. 유전의 원리를 보여줘요.</p>
+          <p><strong>▸ 지놈 박사:</strong> 다양성 축제의 사회자예요. 유전적 다양성의 중요성을 알려줘요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">가족의 닮음</span>
+        <h2>거울 앞에 선 소녀, 하나의 질문</h2>
+        <p>'유전자 마을'이라는 특별한 마을이 있었어요. 이 마을에는 모든 가족이 서로 닮은 것으로 유명했어요. 김씨네 가족은 모두 눈이 초롱초롱했고, 박씨네 가족은 모두 보조개가 깊었으며, 이씨네 가족은 모두 곱슬머리였어요.</p>
+        <p>이 마을에 '다온'이라는 소녀가 살고 있었어요. 다온이는 어느 날 아침 거울 속 자신의 얼굴을 유심히 들여다봤어요. 동그란 눈은 엄마와 똑같았고, 오똑한 코는 아빠를 꼭 빼닮았어요. 턱선은 할머니와 비슷했고, 웃을 때 나타나는 보조개는 외할아버지에게서 온 것이라고 했어요.</p>
+        <p><span class="dialogue">"이상하다... 나는 나인데, 왜 내 얼굴에 다른 사람들이 들어있는 걸까?"</span> 다온이는 학교에서 친구 '새별'이에게 물었어요. <span class="dialogue">"너는 누구를 닮았어?"</span> 새별이는 씩 웃으며 말했어요. <span class="dialogue">"나? 나는 아무도 안 닮았어. 우리 가족 중에 나처럼 주근깨 있는 사람은 없거든."</span></p>
+        <p>다온이는 더 궁금해졌어요. 어떤 아이는 부모를 쏙 빼닮고, 어떤 아이는 가족 누구와도 닮지 않은 이유가 뭘까요? 그날 밤, 침대 밑에서 희미한 빛이 새어나왔어요. 빛을 따라가자, 작은 문이 하나 있었어요. 문 위에는 이렇게 쓰여 있었어요. <span class="highlight">"네가 누구인지 알고 싶다면, 들어오렴."</span> 다온이는 떨리는 손으로 그 문을 열었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">염색체의 비밀</span>
+        <h2>23쌍의 실타래가 숨겨진 도서관</h2>
+        <p>작은 문을 열고 들어간 다온이는 눈을 의심했어요. 그곳에는 세상에서 가장 거대한 도서관이 펼쳐져 있었어요. 천장이 보이지 않을 만큼 높은 책장들이 끝없이 늘어서 있었고, 각 책장에는 실타래처럼 꼬여있는 기다란 끈이 정리되어 있었어요.</p>
+        <p><span class="dialogue">"여기가 어디야?"</span> 다온이가 중얼거리자, 등 뒤에서 밝은 목소리가 들려왔어요. <span class="dialogue">"여기는 '<span class="highlight">염색체 도서관</span>'이야! 네 몸의 설계도가 보관된 곳이지."</span> 돌아보니 반짝이는 안경을 쓴 작은 요정이 서 있었어요. 이름은 '크로미'였어요.</p>
+        <p>크로미가 설명했어요. <span class="dialogue">"이 도서관에는 책장이 정확히 <span class="highlight">23쌍</span>, 그러니까 46개가 있어. 이게 바로 너의 '염색체'야. 23개는 네 엄마에게서, 나머지 23개는 네 아빠에게서 받은 거란다."</span></p>
+        <p>다온이가 놀라서 물었어요. <span class="dialogue">"엄마와 아빠가 반반씩 준 거야?"</span> <span class="dialogue">"그럼! 난자에 23개, 정자에 23개. 둘이 만나서 46개가 된 거지. 그래서 네가 엄마도 닮고 아빠도 닮은 거야."</span> 다온이가 한 책장을 만지자, 실타래가 풀리며 빛나는 끈이 나타났어요. <span class="dialogue">"이 끈이 뭐야?"</span> <span class="dialogue">"<span class="highlight">DNA</span>라고 해. 다음 방에서 자세히 보여줄게."</span> 다온이는 자신의 몸속에 이런 거대한 도서관이 숨겨져 있었다는 사실에 입이 떡 벌어졌어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">DNA 구조</span>
+        <h2>나선 계단을 오르다, 생명의 이중나선</h2>
+        <p>크로미가 다온이를 데려간 곳에는 하늘 높이 솟아오른 나선형 계단이 있었어요. 두 줄기 난간이 서로 꼬이며 위로 올라가는 모양이었는데, 계단의 각 디딤판에는 알록달록한 글자가 새겨져 있었어요. <span class="highlight">A, T, G, C</span>. 딱 네 종류의 글자만 반복되고 있었어요.</p>
+        <p><span class="dialogue">"이게 바로 DNA의 구조야!"</span> 크로미가 자랑스럽게 말했어요. <span class="dialogue">"두 줄이 서로 감겨 올라가는 <span class="highlight">이중나선</span> 구조지."</span></p>
+        <p>다온이가 계단을 올라가며 물었어요. <span class="dialogue">"이 글자들은 뭐야?"</span> <span class="dialogue">"이건 '<span class="highlight">염기</span>'라고 해. A는 아데닌, T는 티민, G는 구아닌, C는 시토신. 이 네 글자가 조합을 이루어서 모든 생명의 정보를 기록하는 거야. 마치 알파벳 26개로 모든 이야기를 쓸 수 있는 것처럼!"</span></p>
+        <p>다온이가 A 계단을 밟자, 건너편 난간에서 T가 빛났어요. G를 밟자 C가 반응했어요. <span class="dialogue">"A는 항상 T와 짝을 이루고, G는 항상 C와 짝이야. 절대로 다른 짝과는 붙지 않아."</span></p>
+        <p><span class="dialogue">"마치 단짝 친구처럼?"</span> <span class="dialogue">"맞아! 그래서 DNA가 복제될 때도 정확하게 같은 정보를 만들 수 있는 거야."</span> 다온이는 나선 계단을 돌고 돌며 올라갔어요. 단 네 글자로 모든 생명의 이야기가 쓰여있다니 정말 놀라웠어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">유전 정보</span>
+        <h2>레시피 책을 훔쳐간 도둑, 유전자</h2>
+        <p>나선 계단 꼭대기에 도착하자, 커다란 부엌이 나타났어요. 그런데 이 부엌은 음식을 만드는 곳이 아니었어요. '<span class="highlight">단백질 공장</span>'이라는 간판이 붙어 있었어요. 부엌 한가운데에는 DNA 줄기에서 떼어낸 한 조각이 놓여 있었고, 요리사 모자를 쓴 작은 생물체가 분주하게 움직이고 있었어요.</p>
+        <p><span class="dialogue">"저건 뭐야?"</span> 다온이가 물었어요. <span class="dialogue">"저건 '<span class="highlight">RNA 메신저</span>'야. DNA에서 유전 정보를 복사해서 단백질 공장으로 전달하는 배달부 같은 존재지."</span></p>
+        <p>이때, 부엌 구석에서 수상한 그림자가 움직였어요. 검은 망토를 두른 작은 존재가 레시피 카드를 몰래 바꾸치기하려 하고 있었어요! <span class="dialogue">"잡아! 저건 '돌연변이 도둑 뮤타'야!"</span> 크로미가 소리쳤어요.</p>
+        <p>다온이와 크로미가 뮤타를 쫓았지만, 뮤타는 재빠르게 도망치며 외쳤어요. <span class="dialogue">"나는 나쁜 놈이 아니야! 레시피를 바꾸면 더 맛있는 요리가 나올 수도 있다고!"</span></p>
+        <p>크로미가 설명했어요. <span class="dialogue">"뮤타 말도 완전히 틀린 건 아니야. 유전 정보가 바뀌면 대부분은 문제가 생기지만, 아주 가끔은 더 좋은 결과가 나오기도 해. 그게 바로 <span class="highlight">진화의 원동력</span>이거든."</span> 유전 정보란 DNA에 써있는 레시피이고, 그 레시피대로 단백질이 만들어져서 우리 몸의 모든 것이 결정돼요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">형질 표현</span>
+        <h2>같은 악보, 다른 연주: 표현형의 무대</h2>
+        <p>단백질 공장을 지나자, 거대한 콘서트홀이 나타났어요. 무대 위에는 두 명의 피아니스트가 같은 악보를 보며 연주하고 있었는데, 두 연주의 느낌이 완전히 달랐어요. 한 명은 경쾌하고 밝게, 다른 한 명은 느리고 깊게 연주했어요.</p>
+        <p><span class="dialogue">"어떻게 같은 악보인데 이렇게 다를 수 있어?"</span> 다온이가 물었어요. <span class="dialogue">"이게 바로 '<span class="highlight">유전형</span>'과 '<span class="highlight">표현형</span>'의 차이야. 유전형은 악보, 즉 DNA에 적힌 정보고, 표현형은 실제로 눈에 보이는 결과야. 같은 유전자를 가져도 환경에 따라 다르게 나타날 수 있어."</span></p>
+        <p>무대 옆에서 똑같이 생긴 쌍둥이 고양이 두 마리가 걸어왔어요. <span class="dialogue">"안녕? 나는 '같이'고, 이쪽은 내 일란성 쌍둥이 '같이두'야."</span> 두 고양이는 똑같은 유전자를 가지고 있었지만, 한 마리는 통통하고 한 마리는 날씬했어요.</p>
+        <p><span class="dialogue">"우리 유전자는 100% 같아. 하지만 나는 맛있는 것만 먹고 자랐고, 같이두는 매일 뛰어다니며 자랐거든."</span></p>
+        <p>다온이가 눈을 동그랗게 떴어요. <span class="dialogue">"그러니까 유전자만으로 모든 게 결정되는 건 아니라는 거야?"</span> <span class="dialogue">"맞아. 유전자는 가능성이야. 네가 어떤 환경에서, 무엇을 먹고, 어떻게 사느냐에 따라 같은 유전자도 다르게 나타나지."</span> 다온이는 깨달았어요. 자신의 미래는 유전자라는 악보 위에서 자기 자신이 연주하는 거예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">우성과 열성</span>
+        <h2>왕좌를 놓고 싸우는 두 유전자 기사</h2>
+        <p>콘서트홀을 나서자, 다온이는 중세 성 같은 곳에 도착했어요. 성 안의 원형 경기장에서 두 명의 기사가 결투를 벌이고 있었어요. 금빛 갑옷을 입은 기사는 '<span class="highlight">우성 기사 도미</span>', 은빛 갑옷을 입은 기사는 '<span class="highlight">열성 기사 레세</span>'였어요.</p>
+        <p><span class="dialogue">"저건 형질의 표현을 놓고 벌어지는 '<span class="highlight">대립유전자</span>의 결투'야!"</span> 도미가 칼을 높이 치켜들며 외쳤어요. <span class="dialogue">"내가 있으면 내 형질이 나타난다! 보조개가 있는 것은 내 힘이야!"</span> 레세가 방패를 들며 반격했어요. <span class="dialogue">"나도 여기 있어! 나는 그저 숨어있을 뿐이지 사라진 게 아니야!"</span></p>
+        <p>크로미가 설명했어요. <span class="dialogue">"<span class="highlight">멘델</span>이라는 과학자가 완두콩 실험으로 알아낸 법칙이야. 우성이 하나라도 있으면 우성 형질이 나타나고, 열성은 두 개 모두 열성일 때만 나타나."</span></p>
+        <p>다온이가 물었어요. <span class="dialogue">"그러면 열성이 나쁜 거야?"</span> 크로미가 단호하게 말했어요. <span class="dialogue">"절대 아니야! 우성과 열성은 '강하다, 약하다'의 의미가 아니야. 그저 '눈에 보이느냐, 숨어있느냐'의 차이일 뿐이야."</span> 레세가 외쳤어요. <span class="dialogue">"맞아! 나는 숨어있다가 다음 세대에서 다시 나타날 수 있어. 할아버지의 형질이 손자에게서 갑자기 나타나는 것도 나 때문이지!"</span> 다온이는 친구 새별이의 주근깨가 떠올랐어요. 숨어있던 열성 유전자 덕분이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">변이의 의미</span>
+        <h2>돌연변이 도둑 뮤타의 고백</h2>
+        <p>경기장을 떠나 숲길을 걷던 다온이는 나무 위에 쪼그려 앉아 울고 있는 뮤타를 발견했어요. 아까 레시피를 바꾸려던 그 검은 망토의 도둑이었어요. <span class="dialogue">"뮤타? 왜 울고 있어?"</span> 다온이가 조심스럽게 물었어요. 뮤타가 훌쩍이며 대답했어요. <span class="dialogue">"다들 나를 싫어해. 유전 정보를 망치는 도둑이라고... 하지만 나는 일부러 그러는 게 아니야."</span></p>
+        <p>크로미가 조용히 다가와 앉으며 말했어요. <span class="dialogue">"뮤타는 '<span class="highlight">돌연변이</span>'를 일으키는 존재야. DNA 복제 과정에서 실수로 염기 하나가 바뀌거나, 빠지거나, 추가되면 변이가 생기지."</span></p>
+        <p>뮤타가 고개를 들며 말했어요. <span class="dialogue">"하지만 나 때문에 좋은 일이 생긴 적도 있어! 어떤 변이는 말라리아에 강한 저항력을 주기도 했어."</span></p>
+        <p>다온이가 물었어요. <span class="dialogue">"그러면 변이는 좋은 거야, 나쁜 거야?"</span> 크로미가 대답했어요. <span class="dialogue">"둘 다야. 대부분의 변이는 해롭거나 아무 영향이 없어. 하지만 아주 가끔, 환경에 유리한 변이가 생기면 그것이 퍼지면서 종 전체가 진화하게 돼. 변이가 없었다면 지구의 모든 생물은 아직도 똑같은 단세포 생물이었을 거야."</span></p>
+        <p>다온이는 뮤타에게 손을 내밀었어요. <span class="dialogue">"너는 도둑이 아니야. 너는 변화를 만드는 존재야."</span> 변이란 실수가 아니라, 생명이 미래를 향해 던지는 주사위예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">다양성</span>
+        <h2>유전자 마을 축제, 모두가 다르기에 아름다운 밤</h2>
+        <p>뮤타와 화해한 다온이가 마을 중심으로 돌아오자, 유전자 마을에서는 '<span class="highlight">다양성 축제</span>'가 한창이었어요. 축제 광장에는 온갖 다른 모습의 존재들이 모여 있었어요. 키가 큰 해바라기 가족, 점박이 무늬 달마시안 일곱 마리, 날개 무늬가 각기 다른 나비 무용단까지.</p>
+        <p>무대 위에서 '지놈' 박사가 마이크를 잡았어요. <span class="dialogue">"여러분! <span class="highlight">유전적 다양성</span>이란 같은 종 안에서 개체마다 유전자 구성이 다른 것을 말해요. 이것이 왜 중요할까요?"</span></p>
+        <p>한쪽에서 감자 가족이 손을 들었어요. <span class="dialogue">"저희 아일랜드 감자는 유전적 다양성이 부족했어요. 모두 똑같은 품종이었기 때문에, 감자 역병이 돌았을 때 한꺼번에 전멸할 뻔했어요."</span></p>
+        <p>지놈 박사가 끄덕였어요. <span class="dialogue">"맞아요. 모두 똑같으면 한 가지 위험에 전부 무너져요. 하지만 다양하면, 어떤 개체는 살아남아 종을 이어갈 수 있지요."</span></p>
+        <p>다온이 옆에 앉은 새별이가 속삭였어요. <span class="dialogue">"그러면 내 주근깨도 다양성의 일부인 거네?"</span> <span class="dialogue">"당연하지!"</span> 축제의 불꽃놀이가 밤하늘을 수놓았어요. 빨강, 파랑, 초록, 금색의 불꽃이 각기 다른 궤적을 그리며 터졌어요. 다양성이란 것은 마치 불꽃놀이와 같았어요. 모든 불꽃이 같은 색이었다면 아무도 감탄하지 않았을 거예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">유전 질환</span>
+        <h2>깨진 레시피, 그래도 괜찮아</h2>
+        <p>축제가 끝난 다음 날, 다온이는 마을 외곽의 조용한 정원에서 한 소년을 만났어요. 소년의 이름은 '시온'이었어요. 시온이는 <span class="highlight">색맹</span>이었어요. 빨간색과 초록색을 구분하지 못했어요. <span class="dialogue">"나는 레시피가 잘못된 아이야."</span> 시온이가 쓸쓸하게 말했어요.</p>
+        <p>크로미가 조심스럽게 설명했어요. <span class="dialogue">"<span class="highlight">유전 질환</span>이란 유전자에 변이가 생겨서 특정 단백질이 제대로 만들어지지 않는 것을 말해. 색맹은 색각 유전자의 변이 때문에 생기지."</span></p>
+        <p>시온이가 고개를 숙였어요. <span class="dialogue">"나는 결함이 있는 거잖아..."</span> 그때 뮤타가 나타나 시온이 앞에 무릎을 꿇었어요. <span class="dialogue">"시온아, 미안해. 하지만 들어봐. 색맹인 사람들은 위장색을 더 잘 구분할 수 있어서 오히려 뛰어난 경우도 있어."</span></p>
+        <p>다온이가 시온이의 손을 잡았어요. <span class="dialogue">"시온아, 너의 레시피가 깨진 게 아니야. 다른 레시피로 쓰여 있을 뿐이야."</span></p>
+        <p>지놈 박사가 다가와 따뜻하게 말했어요. <span class="dialogue">"과학자들은 유전 질환을 치료하기 위해 '<span class="highlight">유전자 치료</span>' 기술을 연구하고 있어. 언젠가는 깨진 레시피를 고칠 수 있을 거야. 하지만 그 전에 가장 중요한 것은, 어떤 레시피로 태어났든 네가 소중한 존재라는 사실이야."</span> 시온이의 눈에 눈물이 고였지만, 이번에는 위로의 눈물이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물15/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">나만의 특별함</span>
+        <h2>거울 앞에 다시 선 다온이의 대답</h2>
+        <p>모든 모험을 마치고 작은 문을 다시 통과한 다온이는 자기 방 침대 위에 누워 있었어요. 아침 햇살이 창문으로 쏟아져 들어왔고, 엄마의 목소리가 들렸어요. <span class="dialogue">"다온아, 일어나! 학교 갈 시간이야!"</span></p>
+        <p>다온이는 세수를 하러 화장실로 갔어요. 거울 앞에 섰어요. 어제 아침과 같은 거울, 같은 얼굴이었어요. 하지만 다온이의 눈에 비친 자신은 전혀 달랐어요. 엄마에게서 받은 동그란 눈 속에는 <span class="highlight">23개의 염색체</span>가 담겨 있었고, 아빠에게서 받은 오똑한 코에는 수만 개의 유전자가 설계한 단백질들이 있었어요.</p>
+        <p><span class="dialogue">"나는 나야."</span> 다온이가 거울 속 자신에게 말했어요. <span class="dialogue">"엄마를 닮았고, 아빠를 닮았지만, 세상에 나와 똑같은 사람은 단 한 명도 없어. 나의 46개 염색체, 나의 DNA 서열, 나의 유전자 조합은 우주에서 단 하나뿐이야."</span></p>
+        <p>학교에 간 다온이는 새별이에게 달려가 말했어요. <span class="dialogue">"새별아, 네 주근깨 있잖아. 그거 정말 특별한 거야. 네 안에 숨어있던 유전자가 너만의 방식으로 표현된 거거든!"</span> 새별이가 웃으며 물었어요. <span class="dialogue">"무슨 꿈이라도 꾼 거야?"</span></p>
+        <p>다온이는 고개를 끄덕이며 대답했어요. <span class="dialogue">"응, 정말 긴 꿈. 그리고 그 꿈에서 배웠어. 다름은 결함이 아니라 선물이라는 것을. 우리 모두는 세상에서 단 하나뿐인 특별한 존재라는 것을."</span></p>
+        <p style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed #6A1B9A; text-align: center; font-weight: 600; color: #4A148C;">🧬 "다름은 결함이 아니라 선물이다. 우리 모두는 세상에서 단 하나뿐인 특별한 존재." 🧬</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const sectionCenter = rect.top + rect.height / 2;
+        const viewportCenter = window.innerHeight / 2;
+
+        if (Math.abs(sectionCenter - viewportCenter) < rect.height / 2) {
+          const bgImage = section.getAttribute('data-bg');
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

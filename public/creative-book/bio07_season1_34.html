@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>☀️ 빛의 소녀 솔라와 초록 심장의 전쟁</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작생물07/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #map-canvas { display: none; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; justify-content: flex-start; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 600px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: block; color: #2E7D32; font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+    .story-card h2 { font-size: 28px; font-weight: 800; color: #2d2d2d; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 17px; line-height: 2; color: #444; margin-bottom: 15px; text-align: justify; }
+    .story-card .highlight { background: linear-gradient(180deg, transparent 60%, rgba(46, 125, 50, 0.2) 60%); font-weight: 600; }
+    .story-card .dialogue { color: #2E7D32; font-weight: 500; }
+    .intro-section { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px; pointer-events: none; }
+    .intro-content { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 850px; pointer-events: auto; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 44px; font-weight: 700; color: #ffffff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .characters { text-align: center; background: rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #FFD700; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #ffffff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .close-btn { position: fixed; top: 30px; right: 30px; width: 50px; height: 50px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 50%; font-size: 28px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; pointer-events: auto; }
+    .close-btn:hover { transform: scale(1.1); background: #fff; }
+    @media (max-width: 768px) { .intro-section { padding: 30px 20px; } .intro-content { padding: 40px 25px; } .intro-content h1 { font-size: 28px; } .story-section { padding: 30px 20px; justify-content: center !important; } .story-card { max-width: 100%; padding: 30px; } .story-section:nth-child(odd) .story-card, .story-section:nth-child(even) .story-card { transform: translateY(50px); } .story-card.active { transform: translateY(0); } .story-card h2 { font-size: 22px; } .story-card p { font-size: 15px; line-height: 1.9; } .close-btn { top: 15px; right: 15px; width: 40px; height: 40px; font-size: 22px; } }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>☀️ 빛의 소녀 솔라와 초록 심장의 전쟁</h1>
+        <p class="subtitle">
+          — 광합성이 멈춘 날, 지구는 숨을 쉴 수 없었어요 —<br>
+          태양의 딸 솔라와 친구들의 위대한 전투
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 솔라:</strong> 태양의 딸, 빛을 가져다주는 소녀예요.</p>
+          <p><strong>▸ 초록이 할아버지:</strong> 가장 오래된 엽록체 수호자예요.</p>
+          <p><strong>▸ 탄소:</strong> 이산화탄소 소년, 겁 많지만 용감해요.</p>
+          <p><strong>▸ 물방울:</strong> 뿌리에서 온 물 소녀예요.</p>
+          <p><strong>▸ 어둠왕 그림자:</strong> 빛을 삼키려는 나쁜 존재예요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">어둠왕의 공격</span>
+        <h2>빛이 사라진 날</h2>
+        <p>아주 오래전, 하늘에서 가장 빛나는 존재가 있었어요. 바로 태양이에요. 태양에게는 막내딸 <span class="highlight">'솔라'</span>가 있었어요.</p>
+        <p>솔라는 매일 아침 지구로 내려와 식물들에게 빛을 선물했어요. 빛을 받은 나뭇잎들은 반짝반짝 빛나며 마법을 부렸어요. 이 마법이 바로 <span class="highlight">광합성</span>이에요.</p>
+        <p>그런데 어느 날, 하늘에서 검은 그림자가 다가왔어요. <span class="dialogue">"크크크, 빛나는 것들이 눈 아파! 모든 빛을 삼켜버리겠다!"</span> 그건 <span class="highlight">어둠왕 그림자</span>였어요.</p>
+        <p>어둠왕은 검은 망토로 하늘을 덮기 시작했어요. 태양빛이 점점 사라지자, 나뭇잎의 빛도 꺼지기 시작했어요. <span class="dialogue">"이제 광합성은 끝이다! 세상은 영원한 어둠에 빠질 거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">엽록체의 비밀</span>
+        <h2>잎 속 초록 마을</h2>
+        <p>솔라는 급히 떡갈나무 잎 속으로 들어갔어요. 그곳에는 <span class="highlight">엽록체</span>라는 초록색 마을이 있었어요. 마을에서 가장 나이 많은 <span class="highlight">초록이 할아버지</span>가 솔라를 맞이했어요.</p>
+        <p><span class="dialogue">"솔라야, 잘 왔구나. 빛이 없으면 우리는 일을 할 수가 없단다."</span> 할아버지 목소리가 떨렸어요.</p>
+        <p>솔라가 주위를 둘러보니 납작한 초록색 주머니들이 쌓여 있었어요. <span class="dialogue">"저건 뭐예요?"</span></p>
+        <p><span class="dialogue">"저건 <span class="highlight">틸라코이드</span>야. 우리 요리 주방이란다. 네가 가져다주는 빛 에너지를 저 안에서 화학 에너지로 바꾸는 거야. 햇살을 요리해서 당분을 만드는 것처럼 말이야."</span></p>
+        <p>그런데 지금 틸라코이드들이 모두 멈춰 있었어요. 빛이 없으니 요리를 못 했거든요. 솔라가 결심했어요. <span class="dialogue">"제가 어둠왕을 물리치고 빛을 되찾아 올게요!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">이산화탄소의 역할</span>
+        <h2>겁쟁이 탄소의 용기</h2>
+        <p>솔라가 마을을 나서려는데 작고 동그란 친구가 쫓아왔어요. 투명한 몸에 검은 점 하나와 빨간 점 두 개가 보였어요.</p>
+        <p><span class="dialogue">"저, 저도 함께 가도 될까요?"</span> 떨리는 목소리로 말하는 친구는 <span class="highlight">탄소</span>, 이산화탄소 소년이었어요.</p>
+        <p><span class="dialogue">"저는 나쁜 애라고 불려요. 공기를 더럽힌대요. 하지만 저도 도움이 되고 싶어요!"</span> 탄소 눈에 눈물이 글썽였어요.</p>
+        <p>초록이 할아버지가 부드럽게 말했어요. <span class="dialogue">"탄소야, 너는 나쁜 존재가 아니야. <span class="highlight">광합성의 가장 중요한 재료</span>가 바로 너란다. 포도당을 만들려면 네 몸 안에 있는 탄소 원자가 꼭 필요하거든."</span></p>
+        <p>솔라가 탄소 손을 잡았어요. <span class="dialogue">"함께 가자! 우리가 힘을 합치면 어둠왕을 물리칠 수 있어."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">물의 역할</span>
+        <h2>뿌리에서 온 전령</h2>
+        <p>솔라와 탄소가 떠나려는 순간, 땅에서 시원한 기운이 솟아올랐어요. 파란 눈에 투명한 몸을 가진 소녀가 나타났어요.</p>
+        <p><span class="dialogue">"안녕! 나는 <span class="highlight">물방울</span>이야. 뿌리에서 왔어. 모험 떠난다는 소식 듣고 급히 올라왔어!"</span></p>
+        <p>물방울은 뿌리에서 물관을 타고 잎까지 긴 여행을 해 온 거예요. <span class="dialogue">"광합성은 빛과 이산화탄소만으론 안 돼. <span class="highlight">물도 꼭 필요해!</span> 물이 쪼개지면서 산소가 만들어지고, 수소는 포도당 만드는 데 쓰이거든."</span></p>
+        <p>초록이 할아버지가 고개를 끄덕였어요. <span class="dialogue">"그래. 광합성 비밀 공식을 기억해라. <span class="highlight">빛 + 물 + 이산화탄소 = 포도당 + 산소</span>. 이 세 가지가 모여야 마법이 완성돼."</span></p>
+        <p>이제 솔라, 탄소, 물방울 세 친구가 모였어요. <span class="dialogue">"자, 어둠왕을 만나러 가자!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">그림자 성의 비밀</span>
+        <h2>어둠의 성을 향하여</h2>
+        <p>세 친구는 점점 어두워지는 하늘을 향해 나아갔어요. 어둠왕의 성은 검은 구름 위에 높이 떠 있었어요. 가까이 갈수록 추워졌어요.</p>
+        <p><span class="dialogue">"빛이 없으니 이렇게 추운 거야."</span> 솔라가 설명했어요. <span class="dialogue">"<span class="highlight">태양 에너지가 지구를 따뜻하게 해 주거든.</span> 광합성뿐 아니라 모든 생명이 태양에 기대고 있어."</span></p>
+        <p>탄소가 걱정스럽게 물었어요. <span class="dialogue">"광합성이 멈추면 어떻게 돼?"</span></p>
+        <p>물방울이 심각하게 대답했어요. <span class="dialogue">"식물이 포도당을 못 만들면 죽어. 식물을 먹는 동물도 굶고, 그 동물을 먹는 동물도 굶어. <span class="highlight">결국 모든 생명이 사라져.</span>"</span></p>
+        <p><span class="dialogue">"산소도!"</span> 솔라가 덧붙였어요. <span class="dialogue">"광합성이 멈추면 새 산소가 안 만들어져. 모든 생물이 숨을 못 쉬게 돼."</span> 세 친구는 더욱 굳은 마음으로 어둠의 성을 향해 날아갔어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">빛과 어둠의 전쟁</span>
+        <h2>어둠왕과의 대결</h2>
+        <p>드디어 어둠왕의 성에 도착했어요. 거대한 검은 왕좌에 어둠왕이 앉아 있었어요. 그의 망토가 하늘 전체를 덮고 있었어요.</p>
+        <p><span class="dialogue">"크하하! 작은 빛 조각이 나를 찾아오다니!"</span> 어둠왕이 비웃었어요. <span class="dialogue">"빛은 어둠 앞에서 무릎 꿇을 거야!"</span></p>
+        <p>솔라가 앞으로 나섰어요. <span class="dialogue">"어둠왕, 왜 빛을 미워해?"</span></p>
+        <p>어둠왕 눈이 슬프게 흔들렸어요. <span class="dialogue">"빛이 있으면 나는 사라지거든. <span class="highlight">빛이 있는 곳에 그림자는 존재할 수 없어.</span> 그래서 빛을 없애면 영원히 살 거라 생각했어."</span></p>
+        <p>솔라가 부드럽게 말했어요. <span class="dialogue">"하지만 빛이 없으면 그림자도 없어. 그림자는 빛이 있어야 생기잖아. <span class="highlight">빛과 그림자는 적이 아니라 짝꿍</span>이야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">광합성의 마법</span>
+        <h2>세 가지 재료의 힘</h2>
+        <p>어둠왕이 망설이는 사이, 솔라가 외쳤어요. <span class="dialogue">"친구들, 지금이야! 광합성 마법을 보여주자!"</span></p>
+        <p>솔라가 온 힘을 다해 빛을 내뿜었어요. 황금빛 에너지가 퍼져나갔어요. 탄소가 빛 속으로 뛰어들었고, 물방울도 따라갔어요.</p>
+        <p><span class="highlight">빛 에너지가 물을 쪼갰어요.</span> 물방울 몸에서 산소 거품이 피어올랐어요. 남은 수소와 탄소가 합쳐지기 시작했어요.</p>
+        <p><span class="dialogue">"이게 바로 <span class="highlight">광합성</span>이야!"</span> 초록이 할아버지 목소리가 들렸어요. <span class="dialogue">"빛이 물을 깨고, 그 조각들이 이산화탄소와 만나 포도당을 만들어 내는 거란다!"</span></p>
+        <p>눈부신 빛 속에서 새로운 존재가 태어났어요. 투명하고 활기찬 소년, 바로 <span class="highlight">산소</span>예요!</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">산소의 탄생</span>
+        <h2>지구의 숨결</h2>
+        <p><span class="dialogue">"와! 내가 태어났어!"</span> 새로 태어난 산소가 기뻐하며 외쳤어요. <span class="dialogue">"나는 산소야! <span class="highlight">모든 생물이 숨 쉴 수 있게 해 주는 존재</span>라고!"</span></p>
+        <p>산소가 빠르게 늘어났어요. 수천, 수만 개의 산소가 태어나며 어둠왕의 성 주변을 밝은 기운으로 채웠어요.</p>
+        <p>어둠왕이 비명을 질렀어요. <span class="dialogue">"으악! 이 빛과 생명의 기운! 나를 밀어내고 있어!"</span></p>
+        <p>솔라가 말했어요. <span class="dialogue">"어둠왕, 이제 알겠어? 광합성은 그냥 요리가 아니야. <span class="highlight">태양 에너지를 생명 에너지로 바꾸는 마법</span>이야. 이 마법 덕분에 지구의 모든 생물이 살 수 있어."</span></p>
+        <p>새로 만들어진 포도당이 황금빛으로 빛나며 모든 식물에게 에너지를 보냈어요. 시들던 나뭇잎들이 다시 초록빛을 되찾았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">어둠과의 화해</span>
+        <h2>밤의 새로운 의미</h2>
+        <p>놀라운 일이 일어났어요. 어둠왕 몸이 작아지기 시작했어요. 하지만 완전히 사라지지는 않았어요.</p>
+        <p>솔라가 어둠왕에게 다가갔어요. <span class="dialogue">"어둠왕, 너도 세상에 필요해. 모든 게 빛이면 생물들이 쉴 수 없거든. <span class="highlight">밤이 있어야 낮의 소중함을 알고, 쉬어야 다시 일할 힘이 생겨.</span>"</span></p>
+        <p>어둠왕 눈에서 눈물이 흘렀어요. <span class="dialogue">"정말? 나도 필요해?"</span></p>
+        <p>초록이 할아버지 목소리가 들렸어요. <span class="dialogue">"당연하지. 식물도 밤에는 광합성 대신 <span class="highlight">호흡</span>을 하며 쉰단다. 낮에 만든 포도당으로 에너지를 얻고, 다음 날 준비를 하는 거야."</span></p>
+        <p>어둠왕이 고개를 끄덕였어요. <span class="dialogue">"알겠어. 더 이상 빛을 삼키지 않을게. 밤을 지키며 모든 생물에게 편안한 쉼을 줄게."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">빛과 생명의 순환</span>
+        <h2>영원히 이어지는 생명의 노래</h2>
+        <p>다음 날 아침, 태양이 다시 떠올랐어요. 솔라는 평소처럼 빛을 가지고 지구로 내려왔어요. 모든 나뭇잎이 반갑게 맞이했어요.</p>
+        <p>엽록체 마을에서 초록이 할아버지가 웃었어요. <span class="dialogue">"자, 다들 준비됐지? <span class="highlight">오늘도 빛을 받아 생명을 만들자!</span>"</span></p>
+        <p>틸라코이드 요리사들이 바쁘게 움직이기 시작했어요. 물방울이 오고, 탄소가 날아들고, 솔라의 빛이 모든 걸 가동시켰어요. 산소 거품이 피어오르고, 황금빛 포도당이 만들어졌어요.</p>
+        <p>탄소는 더 이상 나쁜 존재로 불리지 않았어요. 물방울은 땅과 하늘을 오가며 전령 역할을 했고, 산소는 모든 생물에게 숨결을 선물했어요.</p>
+        <p>밤이 되면 어둠왕이 찾아와 부드러운 어둠으로 세상을 감싸 줬고, 모든 생물은 평화롭게 잠들었어요.</p>
+        <p><span class="highlight">빛과 어둠, 낮과 밤, 광합성과 호흡.</span> 모든 게 조화롭게 어우러져 지구는 영원히 숨 쉬는 아름다운 별이 됐어요.</p>
+        <p style="text-align: center; margin-top: 30px; font-weight: 700; color: #2E7D32;">— ☀️ 끝 ☀️ —</p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+        if (entry.isIntersecting) {
+          if (card) card.classList.add('active');
+          const bg = entry.target.dataset.bg;
+          if (bg) mapContainer.style.backgroundImage = `url('${bg}')`;
+        } else {
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, { root: null, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
+
+    sections.forEach(section => observer.observe(section));
+
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) setTimeout(() => firstCard.classList.add('active'), 500);
+    });
+  </script>
+
+</body>
+</html>

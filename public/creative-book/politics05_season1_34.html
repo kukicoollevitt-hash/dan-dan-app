@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>딱 한 표 차이로 뒤집어진 마을</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작정치경제05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(106, 27, 154, 0.15);
+      color: #4a148c;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6a1b9a;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #4a148c;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #ce93d8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(106, 27, 154, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(206, 147, 216, 0.3);
+    }
+
+    .intro-content .conflict h3 {
+      color: #ce93d8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(106, 27, 154, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(74, 20, 140, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(106, 27, 154, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+
+    /* 엔딩 섹션 */
+    .ending-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .ending-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+    }
+
+    .ending-content h2 {
+      font-size: 36px;
+      color: #ce93d8;
+      margin-bottom: 30px;
+    }
+
+    .ending-content .lesson {
+      background: rgba(106, 27, 154, 0.2);
+      padding: 30px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(206, 147, 216, 0.3);
+    }
+
+    .ending-content .lesson h3 {
+      color: #ce93d8;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .ending-content .lesson p {
+      color: #e0e0e0;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .ending-content .structure {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .ending-content .structure h3 {
+      color: #ce93d8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .ending-content .structure p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .ending-content {
+        padding: 40px 30px;
+      }
+
+      .ending-content h2 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>딱 한 표 차이로 뒤집어진 마을</h1>
+        <p class="subtitle">
+          — 꼬마 시장 선거 대소동 —<br>
+          교과기반 창작도서 · 정치경제 05
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>하늘이:</strong> 호기심 많은 소녀. 마을 어린이 선거 감시단 단장이에요. 뭐든 기록하는 습관이 있어요.</p>
+          <p><strong>도담이:</strong> 하늘이의 단짝 친구. 부끄러움이 많지만, 마지막에 중요한 한 표를 던져요.</p>
+          <p><strong>별곰 아저씨:</strong> 마을 이장 후보. '놀이터를 만들겠다'고 약속해요. 마음은 따뜻하지만 계획이 부족해요.</p>
+          <p><strong>은여우 아주머니:</strong> 또 다른 후보. '도서관을 24시간 열겠다'고 해요. 능력은 있지만 남의 말을 잘 안 들어요.</p>
+          <p><strong>두꺼비 할아버지:</strong> 마을 어른. 60년 동안 한 번도 투표를 빠진 적 없는 분이에요.</p>
+        </div>
+        <div class="conflict">
+          <h3>이야기 속 갈등</h3>
+          <p>별곰 아저씨의 따뜻한 마음과 은여우 아주머니의 뛰어난 능력, 마을 사람들은 누구를 뽑을까요? 그리고 투표를 망설이는 도담이의 '한 표'가 결과를 바꿀 수 있을까요?</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">선거 공고</span>
+        <h2>마을 광장에 울린 종소리</h2>
+        <p>달빛 마을은 언제나 평화로운 곳이었어요. 아침엔 참새가 노래하고, 저녁엔 반딧불이 날아다녔지요. 그런데 어느 날 아침, 광장의 종이 울렸어요. 땡! 땡! 땡! 세 번의 종소리는 '선거가 열린다'는 뜻이에요.</p>
+        <p>게시판에 큰 종이가 붙었어요. '제37대 달빛 마을 이장 선거! 선거일: 보름달이 뜨는 날.' 하늘이는 눈이 휘둥그레졌어요. <span class="dialogue">"도담아, 봐! 드디어 선거래!"</span></p>
+        <p>도담이는 별로 관심 없는 표정이었어요. <span class="dialogue">"선거가 뭐 어때? 어른들이 알아서 하겠지."</span> 하늘이는 마음이 좀 아팠지만 생각했어요. '선거는 모두의 일이야. 도담이도 꼭 알게 해줄 거야.'</p>
+        <p>저녁에 두꺼비 할아버지가 말씀하셨어요. <span class="dialogue">"선거가 열린다는 건, 우리 모두가 주인이 된다는 뜻이란다."</span> 하늘이는 수첩에 꾹꾹 적었어요. 마을의 운명을 바꿀 이야기가 시작됐어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">후보의 약속</span>
+        <h2>두 사람, 두 개의 꿈</h2>
+        <p>후보 등록 마감일, 두 사람이 나란히 섰어요. 별곰 아저씨와 은여우 아주머니예요. 별곰 아저씨가 먼저 말했어요. <span class="dialogue">"저는 모든 아이들을 위한 무지개 놀이터를 만들겠습니다!"</span> 아이들이 환호했어요.</p>
+        <p>은여우 아주머니가 나섰어요. <span class="dialogue">"놀이터도 좋지만, 마을의 미래는 책이에요. 저는 도서관을 24시간 열겠습니다!"</span> 학부모들이 고개를 끄덕였어요.</p>
+        <p>하늘이는 두 사람 말을 수첩에 적었어요. '별곰 아저씨 — 놀이터, 마음 따뜻함. 하지만 계획은?' / '은여우 아주머니 — 도서관, 능력 있음. 하지만 사람들 말을 들을까?'</p>
+        <p>도담이가 중얼거렸어요. <span class="dialogue">"둘 다 괜찮은 것 같은데, 둘 다 좀 부족한 것 같기도 하고..."</span> 마을은 '놀이터파'와 '도서관파'로 나뉘기 시작했어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">공약 검증</span>
+        <h2>하늘이의 탐정 노트</h2>
+        <p>하늘이는 가만히 있을 아이가 아니었어요. '어린이 선거 감시단' 팔찌를 차고 직접 조사에 나섰어요. 먼저 별곰 아저씨 집에 갔어요. <span class="dialogue">"아저씨, 놀이터 만드는 데 돈이 얼마나 들어요?"</span></p>
+        <p>별곰 아저씨가 머리를 긁적였어요. <span class="dialogue">"음... 어떻게든 될 거야!"</span> 하늘이는 적었어요. '구체적 계획 없음.'</p>
+        <p>다음은 은여우 아주머니. <span class="dialogue">"24시간 도서관이면 밤에 누가 지켜요?"</span> 은여우 아주머니가 대답했어요. <span class="dialogue">"자원봉사자가 할 거야."</span> 하늘이가 물었어요. <span class="dialogue">"그런데 어르신들은 놀이터를 더 원하시는 것 같던데요?"</span> 아주머니 표정이 굳었어요. <span class="dialogue">"내 계획이 더 좋다는 걸 설명하면 돼."</span> 하늘이는 적었어요. '다른 사람 말 잘 안 들음.'</p>
+        <p>하늘이는 큰 종이에 두 후보의 장단점을 정리해서 게시판에 붙였어요. 어른들도 읽고 고개를 끄덕였어요. <span class="dialogue">"이런 걸 아이가 조사했다고? 대단하네!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">투표의 날</span>
+        <h2>망설이는 한 걸음</h2>
+        <p>보름달이 뜬 날, 드디어 선거일이 왔어요. 마을 회관은 아침부터 북적였어요. 두꺼비 할아버지는 누구보다 일찍 오셨어요. <span class="dialogue">"60년째 한 번도 빠진 적 없단다."</span></p>
+        <p>하늘이도 부모님과 함께 왔어요. 아직 투표권은 없지만, 감시단으로 기록을 했어요. 그런데 도담이가 안 보여요!</p>
+        <p>하늘이가 도담이 집에 달려갔어요. 도담이는 계단에 앉아 있었어요. <span class="dialogue">"도담아, 왜 안 가?"</span> <span class="dialogue">"엄마 아빠는 갔어. 근데... 내 한 표가 뭘 바꿀 수 있겠어?"</span></p>
+        <p>하늘이가 옆에 앉았어요. <span class="dialogue">"두꺼비 할아버지가 그랬어. 빗방울이 모여서 강이 된대. 네 한 표가 그 빗방울이야."</span> 도담이가 하늘이를 바라봤지만, 아직 일어나지 못했어요. 해가 점점 지고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">개표 순간</span>
+        <h2>숨 멈추는 밤</h2>
+        <p>투표가 끝나고 개표가 시작됐어요. 마을 사람 거의 전부가 모였어요. 부엉이 선생님이 말했어요. <span class="dialogue">"지금부터 개표를 시작합니다."</span></p>
+        <p>투표함 뚜껑이 열리자 조용해졌어요. 한 장씩 펼칠 때마다 칠판에 표시가 되었어요. 별곰, 은여우, 별곰, 별곰, 은여우... 처음엔 별곰 아저씨가 앞섰어요. 하지만 점점 은여우 아주머니가 따라잡았어요.</p>
+        <p>하늘이는 숫자를 적으며 손이 떨렸어요. <span class="dialogue">"정말 한 표 차이가 될 수도 있어."</span></p>
+        <p>마지막 투표지 한 장이 남았어요. 모두 숨을 멈췄어요. 부엉이 선생님이 천천히 펼쳤어요. 하늘이가 옆을 보니, 도담이가 두 손을 꼭 모으고 눈을 감고 있었어요. '도담이가... 온 거야?'</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">당선과 낙선</span>
+        <h2>웃음과 눈물 사이</h2>
+        <p>부엉이 선생님이 마지막 투표지를 높이 들었어요. <span class="dialogue">"마지막 한 표는... 별곰 후보입니다!"</span></p>
+        <p>최종 결과: 별곰 아저씨 127표, 은여우 아주머니 126표. 정확히 한 표 차이! 별곰 아저씨 눈에 눈물이 글썽였어요. <span class="dialogue">"이 한 표 한 표의 무게를 절대 잊지 않겠습니다."</span></p>
+        <p>은여우 아주머니는 화내지 않고 악수를 청했어요. <span class="dialogue">"축하해요. 마을 사람들의 선택을 존중합니다. 하지만 저도 포기 안 해요. 다음엔 더 열심히 들을게요."</span></p>
+        <p>도담이가 조용히 하늘이 손을 잡았어요. <span class="dialogue">"그 마지막 표, 나야."</span> 하늘이 눈이 커졌어요. <span class="dialogue">"문 닫기 5분 전에 뛰어갔어. 네가 해준 말 때문에."</span> 두 친구는 보름달 아래 손을 꼭 잡았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">책임 정치</span>
+        <h2>약속은 지켜야 하니까</h2>
+        <p>선거가 끝나고 일주일이 지났어요. 사람들은 놀이터가 금방 생길 줄 알았어요. 하지만 별곰 아저씨는 걱정이 가득했어요. <span class="dialogue">"놀이터 만들려면 돈이 많이 드는데, 마을 돈이 부족해..."</span></p>
+        <p>별곰 아저씨는 주민 회의를 열었어요. <span class="dialogue">"솔직히 말씀드릴게요. 약속한 놀이터, 당장은 어려워요."</span> 사람들이 웅성거렸어요. <span class="dialogue">"거짓말한 거야?"</span></p>
+        <p><span class="dialogue">"아니에요. 제가 준비가 부족했어요. 그래서 작은 놀이터부터 만들고, 함께 돈을 모아서 키워가겠습니다."</span></p>
+        <p>그때 은여우 아주머니가 손을 들었어요. <span class="dialogue">"제가 도와드릴까요?"</span> 모두 놀랐어요. 경쟁자였던 사람이 돕겠다니! 별곰 아저씨가 고개를 숙였어요. <span class="dialogue">"감사합니다."</span> 하늘이는 적었어요. '책임 정치란, 잘못을 인정하고 함께 고치는 것.'</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">시민 감시</span>
+        <h2>우리가 지켜보고 있어요</h2>
+        <p>하늘이의 감시단은 선거 후에도 해산하지 않았어요. 이름을 '달빛 마을 시민 감시단'으로 바꾸고, 매주 이장님 일을 기록했어요.</p>
+        <p>첫 점검일, 하늘이가 물었어요. <span class="dialogue">"놀이터 공사는 언제 시작해요?"</span> <span class="dialogue">"다음 주에 시작해. 자원봉사자가 스무 명이나 모였단다."</span> 하늘이가 적었어요. '1단계 진행 중.'</p>
+        <p>두 번째 점검 때 문제가 나왔어요. 놀이터 땅 주인이 반대한 거예요. 별곰 아저씨가 미리 이야기를 안 했거든요. 하늘이가 마을 신문에 실었어요. '이장님, 주민 의견을 더 들어주세요!'</p>
+        <p>기사가 나가자 별곰 아저씨가 바로 간담회를 열었어요. 땅 주인 할머니가 말했어요. <span class="dialogue">"미리 말했으면 좋았을 텐데."</span> 별곰 아저씨가 사과하자, 할머니가 오히려 땅을 주기로 했어요. 도담이가 속삭였어요. <span class="dialogue">"네가 기사를 안 썼으면 몰랐을 거야."</span> 하늘이가 웃었어요. <span class="dialogue">"그게 시민 감시야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">재신임</span>
+        <h2>다시 묻는 마을의 목소리</h2>
+        <p>1년이 지나고 마을에 다시 종이 울렸어요. 이번엔 '재신임 투표'예요. 1년 동안 이장이 약속을 잘 지켰는지 평가하는 날이에요.</p>
+        <p>광장에 현수막이 걸렸어요. '별곰 이장 1년, 약속은 지켜졌을까?' 하늘이가 1년 동안 모은 기록을 정리했어요. '공약 70% 지켜짐. 작은 놀이터 완성, 기금 모금 중. 아직 큰 놀이터는 안 됨.'</p>
+        <p>투표 결과, 찬성 98표 반대 55표. 별곰 아저씨가 다시 인정받았지만, 반대표가 적지 않았어요. <span class="dialogue">"55분이 아직 부족하다 하셨어요. 그 목소리를 귀담아듣겠습니다."</span></p>
+        <p>두꺼비 할아버지가 말씀하셨어요. <span class="dialogue">"이것이 민주주의란다. 뽑는 것도 중요하지만, 뽑은 뒤에 살펴보고, 평가하고, 다시 결정하는 것. 그게 진짜 정치야."</span> 도담이가 웃으며 말했어요. <span class="dialogue">"다음 투표도 꼭 할 거야. 이번엔 내가 먼저 갈게!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">한 표의 가치</span>
+        <h2>네 선택이 역사가 되는 순간</h2>
+        <p>세월이 흘러 하늘이와 도담이는 어른이 됐어요. 달빛 마을의 무지개 놀이터는 완성됐고, 아이들 웃음소리가 가득해요. 놀이터 옆에는 작은 도서관도 생겼는데, 은여우 아주머니가 부이장이 된 뒤 함께 만든 거예요.</p>
+        <p>어느 날, 두 친구가 놀이터 벤치에 앉았어요. <span class="dialogue">"기억나? 네가 투표 안 가려고 했던 날."</span> 하늘이가 말했어요. 도담이가 웃었어요. <span class="dialogue">"그때 몰랐어. 내 한 표가 진짜로 바꿀 줄은."</span></p>
+        <p><span class="dialogue">"한 표 차이였으니까. 네가 안 갔으면 동점이었을 거야."</span></p>
+        <p>두꺼비 할아버지가 천천히 걸어오시며 말씀하셨어요. <span class="dialogue">"마을이 좋아진 건 영웅 때문이 아니야. 비가 오나 눈이 오나 한 표를 던진 평범한 사람들 덕분이란다."</span></p>
+        <p>하늘이가 오래된 수첩을 꺼냈어요. 첫 페이지에는 어릴 때 적은 글씨가 있었어요. '한 사람의 선택이 역사를 만든다.' 보름달이 다시 떠올랐어요. 네 한 표도, 언젠가 누군가의 세상을 바꿀 거예요.</p>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="ending-section">
+      <div class="ending-content">
+        <h2>이야기에서 배운 것</h2>
+        <div class="lesson">
+          <h3>교훈</h3>
+          <p>한 사람의 선택이 역사를 만들어요. 투표는 그냥 종이 한 장이 아니에요. 우리 모두의 미래를 결정하는 힘이에요. 관심을 갖고, 잘 살펴보고, 참여하고, 지켜보는 것. 그게 진짜 민주 시민이에요.</p>
+        </div>
+        <div class="structure">
+          <h3>이야기 흐름</h3>
+          <p><strong>시작(1~2화)</strong> → <strong>갈등(3~4화)</strong> → <strong>절정(5~6화)</strong> → <strong>성장(7~8화)</strong> → <strong>깨달음(9~10화)</strong></p>
+          <p><strong>중요한 것:</strong> 무관심 vs 참여 | 약속 vs 실행 | 나 vs 우리</p>
+          <p><strong>도담이의 변화:</strong> 관심 없음 → 망설임 → 참여 → 스스로 나서는 시민</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='/novel_category.html'">목록으로</button>
+  </div>
+
+  <script>
+    // 배경 이미지 전환 시스템
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const storyCards = document.querySelectorAll('.story-card');
+
+    // Intersection Observer로 섹션 감지
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const section = entry.target;
+          const newBg = section.dataset.bg;
+
+          if (newBg) {
+            mapContainer.style.backgroundImage = `url('${newBg}')`;
+          }
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      sectionObserver.observe(section);
+    });
+
+    // 스토리 카드 애니메이션
+    const cardObserverOptions = {
+      root: null,
+      rootMargin: '-10% 0px -10% 0px',
+      threshold: 0.1
+    };
+
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, cardObserverOptions);
+
+    storyCards.forEach(card => {
+      cardObserver.observe(card);
+    });
+  </script>
+</body>
+</html>

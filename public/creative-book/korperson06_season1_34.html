@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>백성을 사랑한 임금, 세종대왕</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Serif KR', serif;
+      background: #1a1508;
+      color: #e8e0d5;
+      overflow-x: hidden;
+    }
+
+    /* 배경 이미지 컨테이너 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 0;
+      background-image: url('/images/창작도서/창작한국인물06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      transition: background-image 0.8s ease-in-out;
+    }
+
+    #map-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom,
+        rgba(26, 21, 8, 0.3) 0%,
+        rgba(26, 21, 8, 0.5) 50%,
+        rgba(26, 21, 8, 0.85) 100%);
+    }
+
+    /* 콘텐츠 영역 */
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 히어로 섹션 */
+    .hero-section {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      color: #1a1508;
+      padding: 0.5rem 1.5rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: 2px;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      line-height: 1.3;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      color: #ffd700;
+      margin-bottom: 0.5rem;
+      font-weight: 400;
+    }
+
+    .hero-lesson {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.8);
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: rgba(255, 215, 0, 0.15);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: rgba(255,255,255,0.7);
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+      40% { transform: translateX(-50%) translateY(-10px); }
+      60% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      padding: 4rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: linear-gradient(to bottom,
+        rgba(26, 21, 8, 0.9),
+        rgba(40, 35, 15, 0.95));
+    }
+
+    .intro-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      color: #1a1508;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .intro-title {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 2rem;
+    }
+
+    /* 등장인물 카드 */
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .character-card {
+      background: rgba(255, 215, 0, 0.08);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .character-card:hover {
+      background: rgba(255, 215, 0, 0.12);
+      transform: translateY(-3px);
+    }
+
+    .character-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 0.5rem;
+    }
+
+    .character-role {
+      font-size: 0.95rem;
+      color: rgba(232, 224, 213, 0.85);
+      line-height: 1.6;
+    }
+
+    /* 스토리 섹션 */
+    .story-section {
+      min-height: 100vh;
+      padding: 4rem 2rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      max-width: 600px;
+      background: rgba(26, 21, 8, 0.92);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      border-radius: 20px;
+      padding: 2.5rem;
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s ease;
+    }
+
+    .story-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .story-section:nth-child(odd) .story-card {
+      margin-left: 5%;
+      border-left: 4px solid #ffd700;
+    }
+
+    .story-section:nth-child(even) .story-card {
+      margin-right: 5%;
+      border-right: 4px solid #ffd700;
+    }
+
+    .story-chapter {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      color: #1a1508;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .story-title {
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 0.8rem;
+    }
+
+    .story-summary {
+      font-size: 0.95rem;
+      color: rgba(255, 215, 0, 0.8);
+      margin-bottom: 1.5rem;
+      padding: 0.8rem 1rem;
+      background: rgba(255, 215, 0, 0.1);
+      border-radius: 8px;
+      border-left: 3px solid #ffd700;
+    }
+
+    .story-content {
+      font-size: 1.05rem;
+      color: rgba(232, 224, 213, 0.9);
+      line-height: 1.9;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .story-content p {
+      margin-bottom: 1.2rem;
+    }
+
+    .story-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 엔딩 섹션 */
+    .ending-section {
+      min-height: 100vh;
+      padding: 4rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(to bottom,
+        rgba(26, 21, 8, 0.9),
+        rgba(40, 35, 15, 0.98));
+    }
+
+    .ending-icon {
+      font-size: 4rem;
+      margin-bottom: 2rem;
+    }
+
+    .ending-title {
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 1.5rem;
+    }
+
+    .ending-lesson {
+      max-width: 700px;
+      font-size: 1.2rem;
+      color: rgba(232, 224, 213, 0.9);
+      line-height: 1.8;
+      padding: 2rem;
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 16px;
+      margin-bottom: 2rem;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      color: #1a1508;
+      padding: 1rem 2rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section:nth-child(odd) .story-card,
+      .story-section:nth-child(even) .story-card {
+        margin-left: 0;
+        margin-right: 0;
+        border-left: 4px solid #ffd700;
+        border-right: none;
+      }
+
+      .story-card {
+        padding: 1.5rem;
+      }
+
+      .character-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 배경 이미지 컨테이너 -->
+  <div id="map-container"></div>
+
+  <!-- 콘텐츠 -->
+  <div class="content-wrapper">
+    <!-- 히어로 섹션 -->
+    <section class="hero-section" data-bg="/images/창작도서/창작한국인물06/00.jpg">
+      <div class="hero-badge">한국 인물 · 세종대왕 · 3-4학년</div>
+      <h1 class="hero-title">백성을 사랑한 임금, 세종대왕</h1>
+      <p class="hero-subtitle">한글을 만들어 백성에게 선물한 왕</p>
+      <div class="hero-lesson">📚 좋은 지도자는 백성을 먼저 생각해요</div>
+      <div class="scroll-indicator">
+        <span>아래로 스크롤</span>
+        <span>↓</span>
+      </div>
+    </section>
+
+    <!-- 인트로: 등장인물 -->
+    <section class="intro-section">
+      <div class="intro-container">
+        <span class="section-label">🎭 등장인물 소개</span>
+        <h2 class="intro-title">이야기의 주인공들</h2>
+
+        <div class="character-grid">
+          <div class="character-card">
+            <div class="character-name">▸ 세종대왕</div>
+            <div class="character-role">조선의 네 번째 임금이에요. 책을 정말 좋아하고, 백성들의 어려움을 늘 걱정했어요. 우리나라 글자 '한글'을 만든 위대한 분이에요.</div>
+          </div>
+          <div class="character-card">
+            <div class="character-name">▸ 집현전 학자들</div>
+            <div class="character-role">세종대왕과 함께 연구하고 공부한 똑똑한 학자들이에요. 정인지, 성삼문 같은 분들이 한글을 만드는 것을 도왔어요.</div>
+          </div>
+          <div class="character-card">
+            <div class="character-name">▸ 장영실</div>
+            <div class="character-role">노비 출신이지만 뛰어난 과학자였어요. 세종대왕이 그의 재능을 알아보고 벼슬을 주었어요. 물시계, 해시계 등을 만들었어요.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/01.jpg">
+      <div class="story-card">
+        <span class="story-chapter">📒 제1장</span>
+        <h2 class="story-title">책을 사랑한 왕자</h2>
+        <div class="story-summary">📌 중심 내용: 셋째 왕자 충녕은 어릴 때부터 유난히 책을 사랑하고 백성의 아픔에 마음 아파하는 아이였다.</div>
+        <div class="story-content">
+          <p>조선의 궁궐에 세 명의 왕자가 살고 있었어요. 맏형은 활쏘기를 좋아하고, 둘째는 불경을 좋아했어요. 그런데 셋째 충녕대군은 좀 달랐어요. 아침에 눈을 뜨면 책을 펼치고, 밤에 잠들 때까지 책을 놓지 않았어요.</p>
+          <p>아버지 태종이 "네가 책만 읽다가 눈이 멀겠다!" 하며 방에서 책을 다 치워버린 적도 있어요. 그러자 충녕은 어떻게 했을까요? 병풍 뒤에 숨겨둔 책을 꺼내 몰래 읽었대요!</p>
+          <p>어느 겨울날, 충녕은 궁궐 밖을 내다보다가 추위에 떠는 백성들을 보았어요. 너덜너덜한 옷, 맨발로 눈길을 걷는 아이를 보며 눈물이 났어요. "어머니, 저 사람들은 왜 추운데 옷이 없나요?" 어머니가 말했어요. "세상에는 가난한 사람이 많단다." 충녕은 이불 속에서 생각했어요. '내가 무언가를 할 수 있다면, 저 사람들을 꼭 도울 거야.'</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/02.jpg">
+      <div class="story-card">
+        <span class="story-chapter">👑 제2장</span>
+        <h2 class="story-title">임금이 되다</h2>
+        <div class="story-summary">📌 중심 내용: 형 양녕대군의 폐위 후, 예상치 못하게 왕위에 오른 충녕은 무거운 왕관의 무게를 느꼈다.</div>
+        <div class="story-content">
+          <p>충녕의 조용한 생활이 갑자기 바뀌었어요. 맏형 양녕대군이 세자에서 쫓겨났거든요. 양녕은 공부는 안 하고 사냥만 다녔어요. 아버지 태종은 고민 끝에 셋째 아들 충녕을 세자로 뽑았어요.</p>
+          <p>충녕은 기뻐하기는커녕 땅바닥에 엎드려 울었어요. "아바마마, 저는 형님을 대신할 그릇이 못 됩니다!" 하지만 태종은 말했어요. "충녕아, 왕은 똑똑한 사람이 아니라 백성을 사랑하는 사람이 하는 것이다."</p>
+          <p>1418년, 스물한 살의 충녕은 조선의 네 번째 임금, 세종이 되었어요. 하지만 왕관은 무거웠어요. 충녕은 형에게 미안한 마음이 컸어요. '형 대신 이 자리에 앉았으니, 나는 반드시 모든 백성을 행복하게 만들어야 해.' 세종은 이렇게 다짐했어요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/03.jpg">
+      <div class="story-card">
+        <span class="story-chapter">🏛️ 제3장</span>
+        <h2 class="story-title">집현전 — 똑똑한 사람들을 모으다</h2>
+        <div class="story-summary">📌 중심 내용: 세종은 집현전을 설치하여 조선 최고의 두뇌들을 모으고, 학문의 꽃을 피울 토대를 만들었다.</div>
+        <div class="story-content">
+          <p>왕이 된 세종이 가장 먼저 한 일은 뭘까요? '집현전'이라는 연구소를 크게 만든 거예요. '현자를 모은다'는 뜻이에요. 전국에서 가장 똑똑하고 열정적인 젊은 학자들을 불러모았어요.</p>
+          <p>세종은 학자들에게 특별한 혜택을 주었어요. 월급도 넉넉히 주고, 집에서 마음껏 책만 읽을 수 있게 했어요. 다른 신하들이 "공무원이 놀고 있으니 돈 낭비"라며 불평했지만, 세종은 웃으며 말했어요. "지금 심는 씨앗이 나중에 큰 나무가 될 거예요."</p>
+          <p>정인지, 성삼문, 신숙주 같은 훗날 역사에 남을 천재들이 바로 이 집현전에서 자라났어요. 세종은 이들과 밤늦도록 이야기하고, 함께 고민했어요. "내가 모든 것을 알 수는 없어. 하지만 함께라면 못 할 것이 없어!" 집현전에서 세종의 꿈이 자라고 있었어요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/04.jpg">
+      <div class="story-card">
+        <span class="story-chapter">🔤 제4장</span>
+        <h2 class="story-title">한글을 만들다</h2>
+        <div class="story-summary">📌 중심 내용: 세종은 글을 모르는 백성을 위해 누구나 쉽게 배울 수 있는 새로운 문자, 훈민정음을 만들었다.</div>
+        <div class="story-content">
+          <p>세종의 가장 큰 고민은 백성들이 글을 모른다는 거였어요. 그때 쓰던 한자는 너무 어려워서 양반들만 배울 수 있었어요. 농부나 장사꾼은 글을 배울 수 없었어요.</p>
+          <p>억울한 일을 당해도 글로 말할 수 없었어요. 어느 날 세종은 늙은 농부가 우는 것을 보았어요. 이웃에게 땅을 빼앗겼는데, 문서를 읽을 수 없어서 아무것도 못 한다는 거예요. 세종의 마음이 아팠어요. "내 백성이 말하고 싶어도 글로 쓸 수 없다니, 이것이 임금으로서 가장 부끄러운 일이다."</p>
+          <p>세종은 비밀 프로젝트를 시작했어요. 새로운 글자를 만드는 것! 사람의 입, 혀, 이, 목구멍 모양을 보고 자음을 만들었어요. 'ㄱ'은 혀가 목을 막는 모양, 'ㅁ'은 입 모양, 'ㅇ'은 목구멍 모양이에요. 1443년, 드디어 스물여덟 글자가 완성되었어요. 이름은 '훈민정음'. '백성을 가르치는 바른 소리'라는 뜻이에요. 아침에 배우면 저녁에 쓸 수 있는 기적의 글자였어요!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/05.jpg">
+      <div class="story-card">
+        <span class="story-chapter">🔬 제5장</span>
+        <h2 class="story-title">과학을 발전시키다</h2>
+        <div class="story-summary">📌 중심 내용: 세종은 과학 기술을 발전시켜 백성의 생활을 실질적으로 개선하고자 했다.</div>
+        <div class="story-content">
+          <p>세종은 글자뿐 아니라 과학에도 관심이 많았어요. "하늘을 읽고 땅을 알아야 백성의 삶이 나아진다." 세종은 장영실이라는 천재 과학자를 발견했어요.</p>
+          <p>장영실은 노비였어요. 조선에서 가장 낮은 신분이었어요. 하지만 세종은 그의 재능을 알아보았어요. "이 사람에게 종의 신분을 벗겨주어라. 재능 앞에 신분이 무슨 의미가 있느냐!" 대신들이 반대했지만, 세종은 뜻을 굽히지 않았어요.</p>
+          <p>장영실은 '자격루'라는 물시계를 만들었어요. 물의 힘으로 인형이 움직이며 북을 치고 종을 울려 시간을 알려주었어요. 또 '앙부일구'라는 해시계를 만들어 길거리에 설치했어요. 글을 모르는 백성도 그림자를 보고 시간을 알 수 있었어요. '측우기'도 발명해서 비의 양을 재었어요. 세계 최초의 강수량 측정 기구였어요!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/06.jpg">
+      <div class="story-card">
+        <span class="story-chapter">🎵 제6장</span>
+        <h2 class="story-title">음악도 발전시키다</h2>
+        <div class="story-summary">📌 중심 내용: 세종은 아악을 정비하고 정간보를 창안하여 조선의 음악 문화를 꽃피웠다.</div>
+        <div class="story-content">
+          <p>세종의 재능은 음악에서도 빛났어요. 왕이 직접 음악을 만들고, 악보 체계까지 새로 만들었어요! 당시 음악을 기록하는 방법이 없었어요. 좋은 곡을 만들어도 정확히 전할 수 없었어요. 선생님이 돌아가시면 그 음악도 사라졌어요.</p>
+          <p>세종은 직접 악기를 연주해 보며 음정을 확인했어요. 신하들이 "임금께서 직접 그런 일을 하실 필요가 있겠습니까?"라고 말하자, 세종은 말했어요. "내가 직접 듣지 않고 어찌 바른 소리를 알겠느냐?"</p>
+          <p>세종은 '정간보'를 만들었어요. 네모난 칸 안에 음의 높낮이와 길이를 표시하는 악보예요. 정간보 덕분에 음악이 기록되고 전해질 수 있게 되었어요. 세종이 만든 곡 중 '여민락'이 있어요. '백성과 함께 즐긴다'는 뜻이에요. 왕 혼자 즐기는 게 아니라 백성과 나누는 음악이에요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/07.jpg">
+      <div class="story-card">
+        <span class="story-chapter">🌾 제7장</span>
+        <h2 class="story-title">농사법을 연구하다</h2>
+        <div class="story-summary">📌 중심 내용: 세종은 농사직설 편찬 등 실용적인 농업 정책으로 백성의 밥상을 풍요롭게 만들었다.</div>
+        <div class="story-content">
+          <p>세종이 가장 자주 물었던 말이 있어요. "올해 농사는 어떠하냐?" 조선은 농사가 중요한 나라였어요. 농사가 망하면 백성이 굶어요. 세종은 백성의 밥그릇을 가장 걱정했어요.</p>
+          <p>그런데 문제가 있었어요. 농사책이 다 중국 책이었어요. 중국 날씨와 조선 날씨는 달랐어요. 중국 농법을 따라 하면 농사가 망하기도 했어요. 세종은 결단을 내렸어요. "전국의 경험 많은 농부들에게 직접 물어라!"</p>
+          <p>관리들이 전국을 돌아다니며 농부들의 경험을 모았어요. 이렇게 만든 책이 '농사직설'이에요. 조선 최초의 우리 농사책이었어요. 씨 뿌리는 시기, 물 대는 방법을 지역별로 자세히 설명했어요. 세종은 가뭄이 들면 세금을 깎아주고, 홍수가 나면 구호 곡식을 보냈어요. "백성의 밥그릇이 비었다면 그것이 가장 부끄러운 일이다."</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/08.jpg">
+      <div class="story-card">
+        <span class="story-chapter">❤️ 제8장</span>
+        <h2 class="story-title">약한 사람을 지키다</h2>
+        <div class="story-summary">📌 중심 내용: 세종은 법과 제도를 통해 약자를 보호하고, 백성을 진심으로 아끼는 마음을 실천으로 보여주었다.</div>
+        <div class="story-content">
+          <p>세종이 만든 업적 중 가장 빛나는 것은 약한 사람을 지킨 것이에요. 세종은 노비에게도 출산 휴가를 주었어요. 당시 노비는 사람 취급도 못 받았어요. 그런데 세종은 말했어요. "아이를 낳는 여종에게 100일 휴가를 주어라!"</p>
+          <p>놀라운 건 남편인 남종에게도 30일 휴가를 주었다는 거예요. 600년 전에 남성 출산 휴가가 있었어요! 대신들이 반대하자 세종은 말했어요. "노비라 해도 같은 사람이다. 어머니가 편해야 아이도 건강하다."</p>
+          <p>세종은 억울한 백성이 왕에게 직접 호소할 수 있게 '신문고'를 활성화했어요. 관청에서 부당한 일을 당하면 큰 북을 울려서 왕에게 말할 수 있었어요. 흉년이 들면 세종은 자기 밥상의 반찬 수를 줄였어요. "백성이 굶는데, 임금이 어찌 배불리 먹겠느냐." 백성들은 눈물을 흘리며 말했어요. "우리 임금님은 정말 우리를 사랑하시는구나."</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/09.jpg">
+      <div class="story-card">
+        <span class="story-chapter">🛡️ 제9장</span>
+        <h2 class="story-title">반대를 이겨내다</h2>
+        <div class="story-summary">📌 중심 내용: 훈민정음 반포를 둘러싼 격렬한 반대에 맞서, 세종은 흔들리지 않는 신념으로 끝내 뜻을 이루었다.</div>
+        <div class="story-content">
+          <p>세종이 한글을 세상에 내놓으려 할 때, 거센 반대가 있었어요. 최만리라는 신하가 앞장서서 반대했어요. "전하, 새 문자를 만드는 것은 스스로 오랑캐가 되는 것입니다!" 많은 신하들이 최만리 편을 들었어요.</p>
+          <p>하지만 세종은 물러서지 않았어요. 세종이 최만리에게 말했어요. "최만리, 그대는 글을 아니 편하지 않은가? 그런데 저 백성들은 어떠한가? 억울해도 글로 쓰지 못하고, 알아야 할 것도 읽지 못하는 것이 그대 눈에는 안 보이느냐?"</p>
+          <p>세종은 더 강하게 말했어요. "내가 이 글자를 만든 것은 백성이 하고 싶은 말을 할 수 있게 하기 위함이다. 그것이 오랑캐 일이라면, 나는 기꺼이 오랑캐 왕이 되겠다!" 1446년, 세종은 마침내 훈민정음을 세상에 내놓았어요. "똑똒한 사람은 하루 만에 배우고, 어리석은 사람도 열흘이면 배울 수 있다." 백성을 향한 사랑의 편지였어요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물06/10.jpg">
+      <div class="story-card">
+        <span class="story-chapter">⭐ 제10장</span>
+        <h2 class="story-title">영원한 선물</h2>
+        <div class="story-summary">📌 중심 내용: 세종은 세상을 떠났지만, 그가 남긴 한글과 업적은 수백 년이 지난 오늘날까지 빛나고 있다.</div>
+        <div class="story-content">
+          <p>세종대왕은 평생 백성을 위해 일했어요. 밤새 책을 읽고 연구하느라 눈이 점점 나빠졌어요. 몸도 아팠어요. 신하들이 "전하, 몸을 쉬세요"라고 했지만, 세종은 웃으며 말했어요. "내 한 몸이 편한 것과 만 백성이 편한 것, 어느 쪽이 더 중요하겠느냐?"</p>
+          <p>1450년, 세종은 54살에 세상을 떠났어요. 모든 백성이 울었어요. 한 할머니가 말했어요. "우리에게 글을 주신 임금님이 가셨구나. 이제 누가 우리를 생각해 줄까."</p>
+          <p>600년이 지난 지금, 세종이 만든 한글은 대한민국의 글자가 되었어요. 전 세계 언어학자들이 감탄하는 과학적인 글자예요. 매년 10월 9일 한글날에 온 국민이 세종을 기억해요. 만원짜리 지폐에 세종의 얼굴이 있어요. 세종이 남긴 진짜 선물은 한글만이 아니에요. '좋은 지도자는 백성을 먼저 생각한다'는 살아있는 교훈이에요.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="ending-section">
+      <div class="ending-icon">📚</div>
+      <h2 class="ending-title">백성을 사랑한 임금, 세종대왕</h2>
+      <div class="ending-lesson">
+        🌱 <strong>교훈</strong><br><br>
+        좋은 지도자는 백성을 먼저 생각해요. 세종대왕은 자기 건강을 희생하면서까지 백성을 위한 글자를 만들고, 과학을 발전시키고, 약한 사람을 보호했어요. 지도자가 된다면 가장 먼저 누구를 생각하겠어요?
+      </div>
+      <a href="/menu.html" class="back-btn">
+        <span>←</span>
+        <span>도서관으로 돌아가기</span>
+      </a>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 전환 (Intersection Observer)
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('[data-bg]');
+
+    const bgObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const newBg = entry.target.getAttribute('data-bg');
+          mapContainer.style.backgroundImage = `url('${newBg}')`;
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => bgObserver.observe(section));
+
+    // 스토리 카드 애니메이션
+    const storyCards = document.querySelectorAll('.story-card');
+
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.2
+    });
+
+    storyCards.forEach(card => cardObserver.observe(card));
+  </script>
+</body>
+</html>

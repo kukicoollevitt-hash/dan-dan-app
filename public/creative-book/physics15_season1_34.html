@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>에너지의 변신 마술쇼</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리15/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #9C27B0 0%, #FFD600 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, rgba(156, 39, 176, 0.15) 0%, rgba(255, 214, 0, 0.15) 100%);
+      color: #7B1FA2;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #9C27B0;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #7B1FA2;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 38px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #CE93D8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 22px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, rgba(156, 39, 176, 0.9) 0%, rgba(255, 214, 0, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: linear-gradient(135deg, rgba(123, 31, 162, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>에너지의 변신 마술쇼</h1>
+        <p class="subtitle">
+          《에너지는 사라지지 않아요》<br>
+          옷만 갈아입는 에너지의 신기한 비밀
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>에너</strong> — 에너지의 본체, 여러 옷으로 변신해요</p>
+          <p><strong>포텐</strong> — 높은 곳에 있는 위치 에너지</p>
+          <p><strong>키네</strong> — 달리는 운동 에너지</p>
+          <p><strong>율</strong> — 호기심 많은 소녀</p>
+        </div>
+        <p class="scroll-hint">아래로 스크롤하여 이야기 시작</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">위치 에너지</span>
+        <h2>롤러코스터 꼭대기의 비밀</h2>
+        <p>소녀 율이 놀이공원 롤러코스터를 탔어요. 천천히 꼭대기로 올라갔어요.</p>
+        <p>꼭대기에서 멈추자, 파란빛 존재가 나타났어요. <span class="dialogue">"안녕, 나는 포텐. 위치 에너지야!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">나는 높은 곳에 있을 때 있어.</span> 지금 롤러코스터가 높이 있잖아? 그것이 바로 나야!"</span></p>
+        <p>포텐이 미소 지었어요. <span class="dialogue">"곧 떨어지면 나는 옷을 갈아입을 거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">운동 에너지</span>
+        <h2>쏜살같이 달리는 키네</h2>
+        <p>쿠아아앙! 롤러코스터가 떨어지기 시작했어요. 빠르게, 더 빠르게!</p>
+        <p>빨간빛 존재가 나타났어요. <span class="dialogue">"와하하! 나야, 키네! 운동 에너지!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">포텐 형이 가진 에너지가 나로 변한 거야!</span> 높이가 줄면 내가 커져!"</span></p>
+        <p>율이 감탄했어요. <span class="dialogue">"시소 같다! 한쪽이 줄면 다른 쪽이 느는 거구나!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전기 에너지</span>
+        <h2>반짝이는 놀이공원의 불빛</h2>
+        <p>저녁이 되자 놀이공원에 수만 개의 불빛이 켜졌어요!</p>
+        <p>에너가 나타났어요. <span class="dialogue">"지금 나는 '전기' 옷을 입고 있어!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">전기 에너지</span>는 빛도 되고, 소리도 되고, 움직임도 돼!"</span></p>
+        <p>범퍼카는 전기로 달리고, 전구는 전기로 빛나요. 전기는 어디든 변할 수 있어요!</p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">열 에너지</span>
+        <h2>따뜻한 솜사탕 기계</h2>
+        <p>솜사탕 기계에서 따뜻한 바람이 올라왔어요. 주황빛 존재가 나타났어요.</p>
+        <p><span class="dialogue">"안녕, 나는 써멀, 열 에너지야."</span></p>
+        <p><span class="dialogue">"<span class="highlight">열은 분자가 떨리는 거야.</span> 많이 떨리면 뜨겁고, 조금 떨리면 차가워!"</span></p>
+        <p>전기가 열로 바뀌어 설탕을 녹였어요. 그래서 솜사탕이 만들어지는 거예요!</p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">화학 에너지</span>
+        <h2>핫도그 속의 숨은 힘</h2>
+        <p>율이 핫도그를 한 입 먹자, 초록빛 존재가 깨어났어요!</p>
+        <p><span class="dialogue">"나는 케미, 화학 에너지야. 음식 속에 잠들어 있었어!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">음식을 먹으면 내가 풀려나서 네가 뛰고 생각할 수 있게 해!</span>"</span></p>
+        <p>하늘에 불꽃놀이가 펑! <span class="dialogue">"저것도 화약의 화학 에너지가 빛으로 바뀐 거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">에너지 변신</span>
+        <h2>대관람차 위의 변신 쇼</h2>
+        <p>대관람차에서 에너가 변신 쇼를 보여줬어요!</p>
+        <p>태양의 빛 에너지가 식물에서 화학 에너지로! 사과를 먹으면 내 몸의 에너지로!</p>
+        <p>에너가 여러 옷을 갈아입었어요. 빛, 열, 움직임, 소리...</p>
+        <p><span class="dialogue">"<span class="highlight">내가 옷을 갈아입어도 '나'는 변하지 않아.</span> 양도 똑같아!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">에너지 보존</span>
+        <h2>에너지는 사라지지 않아요</h2>
+        <p>율이 물었어요. <span class="dialogue">"롤러코스터가 멈추면 에너지는 어디로 가?"</span></p>
+        <p><span class="dialogue">"레일과 바퀴가 문질러지면서 <span class="highlight">열 에너지로 바뀐 거야!</span>"</span></p>
+        <p><span class="dialogue">"배터리도 마찬가지야. 화학 에너지가 전기로, 전기가 빛과 열로 바뀐 거지!"</span></p>
+        <p><span class="highlight">"에너지는 사라지지 않아. 형태만 바뀔 뿐이야!"</span> 이것이 에너지 보존 법칙이에요.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">에너지 절약</span>
+        <h2>에너지를 소중히 써요</h2>
+        <p>써멀이 말했어요. <span class="dialogue">"에너지가 열로 퍼지면 다시 모으기 어려워."</span></p>
+        <p><span class="dialogue">"자동차가 달릴 때 75%가 열로 퍼져버려. 실제로 바퀴를 굴리는 건 25%뿐이야."</span></p>
+        <p>그래서 <span class="highlight">에너지 절약</span>이 중요해요. LED 전구는 열을 적게 내고 빛을 많이 내요!</p>
+        <p>율은 에너지를 아껴 쓰기로 다짐했어요.</p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">재생 에너지</span>
+        <h2>태양과 바람의 선물</h2>
+        <p>놀이공원 '그린 존'에 태양광 패널과 풍력발전기가 있었어요.</p>
+        <p><span class="dialogue">"<span class="highlight">태양은 매일 엄청난 에너지를 보내줘!</span> 태양광 패널이 빛을 전기로 바꿔!"</span></p>
+        <p><span class="dialogue">"바람으로 발전기를 돌리면 전기가 나와. 이것도 태양 덕분이야!"</span></p>
+        <p>율이 자전거 페달을 밟으니 전구가 켜졌어요! <span class="dialogue">"내가 에너지를 변신시켰어!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">영원한 에너지</span>
+        <h2>변해도 사라지지 않는 힘</h2>
+        <p>놀이공원 문이 닫히고, 율은 에너와 마지막 대화를 나눴어요.</p>
+        <p>포텐, 키네, 써멀, 케미가 모두 말했어요. <span class="dialogue">"우리는 다 에너의 옷이야!"</span></p>
+        <p>에너가 말했어요. <span class="dialogue">"<span class="highlight">형태는 바뀌어도 양은 그대로야. 우주의 에너지는 영원해!</span>"</span></p>
+        <p style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(255, 214, 0, 0.1) 100%); border-radius: 12px; border-left: 4px solid #9C27B0;">
+          <strong style="color: #7B1FA2;">교훈:</strong> 에너지는 사라지지 않아요. 옷만 갈아입을 뿐, 영원히 살아 있어요!
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">돌아가기</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+  </script>
+</body>
+</html>

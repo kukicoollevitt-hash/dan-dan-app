@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐙 뼈 없는 기사들의 바다 대전쟁</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물03/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: block;
+      color: #0077b6;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+
+    .story-card h2 {
+      font-size: 1.8em;
+      color: #023e8a;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .story-card p {
+      font-size: 1.05em;
+      line-height: 1.9;
+      color: #333;
+      margin-bottom: 15px;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .story-card .dialogue {
+      color: #0077b6;
+      font-weight: 500;
+    }
+
+    .story-card .highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(0, 119, 182, 0.2) 60%);
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      pointer-events: auto;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFD700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .intro-section {
+        padding: 30px 20px;
+      }
+
+      .intro-content {
+        padding: 40px 25px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+
+      .story-section {
+        padding: 30px 20px;
+      }
+
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
+      }
+
+      .story-card h2 {
+        font-size: 1.4em;
+      }
+
+      .story-card p {
+        font-size: 0.95em;
+      }
+    }
+
+    /* 닫기 버튼 */
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .close-btn:hover {
+      background: white;
+      transform: scale(1.1);
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 119, 182, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 119, 182, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(2, 62, 138, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 119, 182, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐙 뼈 없는 기사들의 바다 대전쟁</h1>
+        <p class="subtitle">
+          — 겉모습이 아닌 능력이 진짜 힘이다 —<br>
+          무척추동물들의 바닷속 모험 이야기
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물</h3>
+          <p><strong>▸ 옥토 (문어):</strong> 여덟 개 팔로 여러 일을 동시에 하는 똑똑한 리더</p>
+          <p><strong>▸ 젤리 (해파리):</strong> 투명하지만 독침이 있는 비밀 무기</p>
+          <p><strong>▸ 슬로 (달팽이):</strong> 느리지만 단단한 껍데기로 막는 방어왕</p>
+          <p><strong>▸ 카멜 (오징어):</strong> 몸 색깔을 바꿔 숨는 위장의 달인</p>
+          <p><strong>▸ 샤크 장군:</strong> 뼈와 이빨이 강한 척추동물 리더</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">바다 왕국에 위기가 찾아오다</span>
+        <h2>🌊 아쿠아리움 왕국의 어둠</h2>
+        <p>푸른 바다 한가운데 '아쿠아리움'이라는 바다 왕국이 있었어요. 산호와 해초가 무지개빛으로 빛나고, 물고기들이 행복하게 살았지요. 왕국의 왕은 현명한 거북 할아버지 '그랜파 터틀'이었어요.</p>
+        <p>그런데 어느 날, 바다 깊은 곳에서 이상한 일이 일어났어요. 바닥이 갈라지더니 시커먼 연기가 올라왔어요. 무섭고 차가운 기운이 왕국 전체를 덮기 시작했지요.</p>
+        <p>그랜파 터틀이 급히 회의를 열었어요. <span class="dialogue">"무서운 괴물 '다크시드'가 깨어나고 있단다. 왕국을 지킬 용감한 기사들을 모집해야 해."</span></p>
+        <p>곧 바다 전체에 기사 모집 소식이 퍼졌어요. 과연 누가 왕국을 지킬 영웅이 될까요?</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">겉보기엔 약해 보이는 무척추 기사단</span>
+        <h2>⚔️ 뼈 없는 친구들의 등장</h2>
+        <p>기사 모집에 많은 바다 생물들이 모였어요. 맨 먼저 온 건 상어 '샤크 장군'이 이끄는 팀이었어요. 돌고래, 참치 등 빠르고 강한 친구들이 줄지어 나타나자 모두 환호했어요.</p>
+        <p><span class="dialogue">"역시 뼈 있는 친구들이 지켜야지!"</span></p>
+        <p>그때 광장 한쪽에서 조용히 네 친구가 걸어왔어요. 팔이 여덟 개인 문어 옥토, 투명한 해파리 젤리, 느릿느릿한 달팽이 슬로, 색이 자꾸 바뀌는 오징어 카멜이었어요.</p>
+        <p>샤크 장군이 비웃었어요. <span class="dialogue">"뼈도 없는 애들이 기사가 되겠다고?"</span></p>
+        <p>하지만 옥토는 차분하게 말했어요. <span class="dialogue">"우리에게는 뼈 대신 다른 특별한 것이 있어요. 기회를 주세요."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">문어 옥토의 놀라운 지능</span>
+        <h2>🧠 여덟 개의 팔로 미로를 풀다</h2>
+        <p>첫 번째 시험은 '미로 탈출'이었어요. 해저 동굴에 만든 산호 미로를 빠져나와야 했지요. 미로 안에는 함정과 잠긴 문이 많았어요.</p>
+        <p>샤크 장군이 먼저 들어갔어요. 힘차게 헤엄쳤지만 이리저리 헤매기만 했어요.</p>
+        <p>다음은 옥토 차례였어요. 옥토는 여덟 개 팔을 각각 다른 방향으로 뻗었어요. <span class="highlight">문어의 팔에는 각각 작은 뇌 같은 신경이 있어서, 여덟 방향을 동시에 살필 수 있거든요!</span></p>
+        <p>잠긴 문 앞에서도 걱정 없었어요. 부드러운 몸으로 문 틈으로 스르르 빠져나갔지요.</p>
+        <p>놀랍게도 옥토는 샤크 장군보다 세 배나 빨리 미로를 통과했어요. 힘이 아니라 <span class="highlight">머리를 쓴 것</span>이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">해파리 젤리의 비밀 무기</span>
+        <h2>⚡ 투명하지만 강한 독침</h2>
+        <p>두 번째 시험은 '전투 훈련'이었어요. 젤리의 상대는 덩치 큰 참치 '썬더'였어요.</p>
+        <p>썬더가 웃었어요. <span class="dialogue">"비닐봉지처럼 생긴 게 내 상대라고?"</span></p>
+        <p>시합이 시작되자 썬더가 젤리를 향해 돌진했어요. 그 순간 젤리가 촉수를 펼쳤어요.</p>
+        <p><span class="highlight">해파리의 촉수에는 '자포'라는 아주 작은 독침이 수천 개나 숨어 있어요. 이 독침은 총알보다 빠르게 발사되지요!</span></p>
+        <p>썬더가 촉수에 닿는 순간, 독침들이 퍼졌어요. 강한 근육도 단단한 뼈도 소용없었어요.</p>
+        <p>젤리가 말했어요. <span class="dialogue">"보이지 않는다고 없는 게 아니야. 내 촉수 안에는 수천 개의 무기가 있단다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">달팽이 슬로의 철벽 방어</span>
+        <h2>🛡️ 느림의 힘</h2>
+        <p>세 번째 시험은 '방어력 테스트'였어요. 화산에서 뜨거운 물과 날카로운 돌이 쏟아지는 시험이었지요.</p>
+        <p>척추동물 기사들은 빨리 피해 다녔지만 많이 다쳤어요.</p>
+        <p>슬로 차례가 되자 모두 한숨을 쉬었어요. <span class="dialogue">"저렇게 느린데 어떻게 피해?"</span></p>
+        <p>그런데 슬로는 피할 생각이 없었어요. 뜨거운 물이 쏟아지자 껍데기 안으로 쏙 들어갔지요.</p>
+        <p><span class="highlight">달팽이 껍데기는 아주 단단한 탄산칼슘으로 만들어져서 충격을 잘 막아요.</span> 슬로는 점액으로 입구까지 막아버렸어요.</p>
+        <p>시험이 끝나고 나오니 상처가 하나도 없었어요. <span class="dialogue">"빨리 도망치는 것만 방어가 아니야. 가만히 버티는 것도 좋은 방어란다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">오징어 카멜의 위장술</span>
+        <h2>🎨 눈앞에 있어도 안 보여요</h2>
+        <p>네 번째 시험은 '정찰 임무'였어요. 적의 기지에 몰래 들어가 정보를 알아와야 했어요.</p>
+        <p>돌고래 기사가 먼저 들어갔지만 은빛 몸이 너무 눈에 띄어서 바로 들켰어요.</p>
+        <p>카멜이 기지에 다가가자 신기한 일이 일어났어요. 카멜의 몸이 주변과 똑같이 변한 거예요!</p>
+        <p><span class="highlight">오징어의 피부에는 '색소포'라는 세포가 수백만 개 있어요. 이 세포들이 색깔과 무늬를 자유롭게 바꿔요!</span></p>
+        <p>카멜은 바위 옆에선 바위가 되고, 해초 사이에선 해초가 되었어요. 적의 기지 한가운데까지 들어가 모든 정보를 알아냈지요.</p>
+        <p><span class="dialogue">"가장 무서운 적은 눈에 보이지 않는 적이야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">기사단 사이의 갈등</span>
+        <h2>💥 뼈 있는 친구와 뼈 없는 친구</h2>
+        <p>시험이 끝나고 무척추 기사단이 좋은 성적을 거뒀어요. 하지만 샤크 장군은 인정하지 않았어요.</p>
+        <p><span class="dialogue">"시험일 뿐이야! 진짜 싸움에선 힘이 최고야!"</span></p>
+        <p>두 팀 사이가 나빠졌어요. 척추동물 기사들은 같이 훈련하기를 싫어했고, 밥도 따로 먹었어요.</p>
+        <p>젤리는 슬퍼했고, 슬로는 껍데기에서 안 나왔어요. 카멜은 자꾸 우울한 회색으로 변했어요. 옥토만 혼자 묵묵히 훈련했지요.</p>
+        <p>그때 그랜파 터틀이 모두를 불렀어요. <span class="dialogue">"싸워야 할 적은 서로가 아니란다. 다크시드가 점점 강해지는데 왜 싸우고 있니?"</span></p>
+        <p>바로 그 순간, 왕국이 크게 흔들렸어요. 다크시드가 드디어 공격을 시작한 거예요!</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">무척추동물의 진짜 능력</span>
+        <h2>✨ 뼈 없는 영웅들의 반격</h2>
+        <p>다크시드의 공격은 정말 무서웠어요. 거대한 어둠의 촉수가 왕국을 휘감았고, 검은 안개가 바다를 덮었어요.</p>
+        <p>샤크 장군이 용감하게 싸웠어요. 이빨로 촉수를 물어뜯었지만 잘라도 잘라도 다시 자랐어요.</p>
+        <p><span class="dialogue">"힘으로는 안 돼!"</span> 샤크 장군이 외쳤어요.</p>
+        <p>옥토가 앞으로 나왔어요. <span class="dialogue">"저희에게 맡겨 주세요."</span></p>
+        <p>옥토의 작전이 시작됐어요. 카멜이 위장술로 적의 약점을 찾고, 젤리가 독침으로 촉수를 마비시키고, 슬로가 껍데기 가루로 빛의 결정을 만들어 검은 안개를 없앴어요.</p>
+        <p><span class="highlight">뼈 없는 기사들이 각자의 특별한 능력으로 해내고 있었어요!</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">두 기사단이 힘을 합치다</span>
+        <h2>🤝 다름이 하나가 될 때</h2>
+        <p>촉수는 마비됐지만 다크시드 본체는 남아 있었어요. 옥토는 알았어요. 무척추 기사단만으론 부족하다는 걸요.</p>
+        <p>옥토가 샤크 장군에게 말했어요. <span class="dialogue">"우리 전략과 장군님의 힘을 합치면 이길 수 있어요."</span></p>
+        <p>샤크 장군이 고개를 끄덕였어요. <span class="dialogue">"좋아. 네 말을 따르겠다."</span></p>
+        <p><span class="highlight">드디어 뼈 있는 친구와 뼈 없는 친구가 한 팀이 된 거예요!</span></p>
+        <p>젤리가 길을 열고, 샤크 장군이 달렸어요. 카멜이 설치한 빛의 결정 위로 샤크 장군의 강한 꼬리가 내려쳤어요!</p>
+        <p>빛이 폭발하며 다크시드를 물리쳤어요. 어둠이 걷히고 바다에 다시 빛이 돌아왔어요. 이건 한쪽만의 승리가 아니었어요. 서로 다른 두 힘이 하나가 된 기적이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물03/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">"강함은 뼈가 아니라 능력이다"</span>
+        <h2>👑 새로운 왕국</h2>
+        <p>전투가 끝나고 그랜파 터틀이 큰 축하식을 열었어요. 두 기사단 모두 최고의 훈장을 받았어요.</p>
+        <p>샤크 장군이 옥토에게 다가왔어요. 오만하던 눈은 사라지고 진심 어린 눈으로 팔을 잡았어요.</p>
+        <p><span class="dialogue">"미안해, 옥토. 뼈가 있다고 강한 줄 알았어."</span></p>
+        <p>옥토가 고개를 저었어요. <span class="dialogue">"장군님 힘이 없어도 안 됐어요. 우리가 달랐기에 함께하니 완벽해진 거예요."</span></p>
+        <p>그랜파 터틀이 역사책에 이렇게 적었어요.</p>
+        <p><span class="highlight">"강함이란 뼈가 아니라, 자기만의 방식으로 힘을 쓰는 것이다. 겉모습이 아니라 능력이 진짜 힘이다."</span></p>
+        <p>그 뒤로 왕국에서는 누구도 겉모습으로 친구를 판단하지 않았어요. 모두가 서로의 다름을 존중하는 아름다운 세상이 되었답니다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <script>
+    // 배경 이미지 매핑
+    const sectionBackgrounds = {};
+
+    // 스크롤 기반 배경 변경 및 카드 애니메이션
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    // data-bg 속성에서 배경 이미지 가져오기
+    sections.forEach((section, index) => {
+      const bg = section.getAttribute('data-bg');
+      if (bg) {
+        sectionBackgrounds[index] = bg;
+      }
+    });
+
+    // IntersectionObserver for sections
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0.3
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+        if (entry.isIntersecting) {
+          if (card) card.classList.add('active');
+
+          // 배경 이미지 변경
+          const sectionIndex = Array.from(sections).indexOf(entry.target);
+          if (sectionBackgrounds[sectionIndex]) {
+            mapContainer.style.backgroundImage = `url('${sectionBackgrounds[sectionIndex]}')`;
+          }
+        } else {
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      sectionObserver.observe(section);
+    });
+
+    // 초기 배경 설정
+    function updateBackground() {
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+
+      // 인트로 섹션일 때
+      if (scrollPosition < windowHeight * 0.5) {
+        mapContainer.style.backgroundImage = "url('/images/창작도서/창작생물03/00.jpg')";
+        return;
+      }
+
+      // 각 섹션별 배경
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < windowHeight * 0.5 && rect.bottom > windowHeight * 0.5) {
+          if (sectionBackgrounds[index]) {
+            mapContainer.style.backgroundImage = `url('${sectionBackgrounds[index]}')`;
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateBackground);
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

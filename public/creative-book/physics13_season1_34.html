@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>소리가 사라진 마을, 도의 모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리13/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #4f46e5;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6366f1;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #4f46e5;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a5b4fc;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(99, 102, 241, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(79, 70, 229, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>소리가 사라진 마을, 도의 모험</h1>
+        <p class="subtitle">
+          《공기를 흔들어 전해지는 소리의 비밀》<br>
+          진동이 만드는 소리 세계로 떠나는 여행
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>도</strong> — 노래를 좋아하는 소녀, 목소리가 작아 고민이에요</p>
+          <p><strong>헤르츠 할아버지</strong> — 소리의 비밀을 알려주는 따뜻한 스승</p>
+          <p><strong>울림 마을</strong> — 노래하는 마을, 어느 날 소리가 사라져요</p>
+        </div>
+        <p class="scroll-hint">아래로 스크롤하여 이야기 시작</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">소리가 사라졌어요</span>
+        <h2>고요해진 마을</h2>
+        <p>울림 마을은 노래하는 마을이었어요. 새소리, 사람들의 목소리, 할머니의 해금 소리로 가득했지요.</p>
+        <p>소녀 '도'는 노래를 좋아했지만 목소리가 작아 고민이었어요. <span class="dialogue">"네 목소리는 좋은데, 너무 작아."</span> 선생님이 말했어요.</p>
+        <p>그런데 어느 날 아침, 세상이 조용해졌어요. 새소리도 안 들리고, 엄마가 말해도 소리가 안 났어요!</p>
+        <p>도는 헤르츠 할아버지를 찾아갔어요. 할아버지가 종이에 적었어요. <span class="dialogue">"<span class="highlight">소리는 진동에서 시작</span>해. 진동이 없으면 소리도 없어!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">공기의 밀고 당기기</span>
+        <h2>소리가 전달되는 방법</h2>
+        <p>할아버지가 스프링 장난감을 꺼냈어요. 한쪽을 밀자, 눌린 부분이 반대쪽으로 쭉 달려갔어요!</p>
+        <p><span class="dialogue">"<span class="highlight">소리도 이렇게 전달돼.</span> 공기를 밀면 옆 공기에게, 또 그 옆에게 전달되지!"</span></p>
+        <p>도가 물었어요. '공기가 움직이는 거예요?' <span class="dialogue">"공기는 제자리에서 앞뒤로 흔들릴 뿐이야. 하지만 그 흔들림이 도미노처럼 전달돼!"</span></p>
+        <p>소리는 마법이 아니라, <span class="highlight">공기의 밀고 당기기</span>였어요. 소리의 속도는 1초에 340미터나 돼요!</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">파동의 세계</span>
+        <h2>물결처럼 퍼지는 소리</h2>
+        <p>할아버지가 물통에 돌을 떨어뜨렸어요. 동그란 물결이 퍼져나갔어요!</p>
+        <p><span class="dialogue">"소리도 이 물결처럼 퍼져나가. 이것을 <span class="highlight">파동</span>이라고 해!"</span></p>
+        <p>할아버지가 물결 모양을 그렸어요. 가장 높은 곳이 '<span class="highlight">마루</span>', 가장 낮은 곳이 '<span class="highlight">골</span>'이에요.</p>
+        <p><span class="dialogue">"마루에서 다음 마루까지 거리를 '<span class="highlight">파장</span>'이라 해. 파장이 짧으면 높은 소리, 길면 낮은 소리야!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">높은 소리, 낮은 소리</span>
+        <h2>진동수의 비밀</h2>
+        <p>할아버지가 소리굽쇠 두 개를 보여줬어요. 큰 것과 작은 것이요.</p>
+        <p><span class="dialogue">"<span class="highlight">진동수</span>는 1초에 몇 번 흔들리는지야. 많이 흔들리면 높은 소리!"</span></p>
+        <p>작은 소리굽쇠는 빠르게 흔들려요. 높은 '도' 소리가 나요! 큰 것은 천천히 흔들려서 낮은 '도' 소리가 나요.</p>
+        <p><span class="dialogue">"사람은 20에서 20,000번 진동하는 소리를 들을 수 있어. 박쥐는 100,000번까지 들어!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">큰 소리, 작은 소리</span>
+        <h2>진폭의 비밀</h2>
+        <p>할아버지가 북을 두드렸어요. 살짝 치니 작은 소리, 세게 치니 큰 소리!</p>
+        <p><span class="dialogue">"파동의 높이를 '<span class="highlight">진폭</span>'이라 해. 진폭이 크면 큰 소리야!"</span></p>
+        <p>도는 생각했어요. '내 목소리가 작은 건 진폭이 작아서구나!'</p>
+        <p>할아버지가 말했어요. <span class="dialogue">"<span class="highlight">이어폰을 너무 크게 들으면 귀가 다칠 수 있어.</span> 조심해야 해!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">공명의 힘</span>
+        <h2>작은 힘이 큰 힘으로</h2>
+        <p>할아버지가 유리잔 두 개를 놓았어요. 하나를 울리자, 멀리 있는 다른 잔도 떨렸어요!</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">공명</span>이야. 같은 빠르기로 흔들리면 점점 커지는 거야!"</span></p>
+        <p><span class="dialogue">"그네 탈 때 타이밍 맞춰 밀면 점점 높이 올라가지? 그것도 공명이야!"</span></p>
+        <p>하지만 공명으로 다리가 무너진 적도 있어요. <span class="highlight">작은 힘도 쌓이면 무서운 힘</span>이 돼요!</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">악기의 소리</span>
+        <h2>현과 관의 노래</h2>
+        <p>할아버지가 기타를 보여줬어요. <span class="dialogue">"줄이 짧을수록, 팽팽할수록 높은 소리가 나!"</span></p>
+        <p>플루트는 관 안의 공기가 흔들려요. <span class="dialogue">"구멍을 막으면 낮은 소리, 열면 높은 소리!"</span></p>
+        <p>도가 물었어요. '같은 '도' 음인데 왜 기타와 피아노 소리가 달라요?'</p>
+        <p><span class="dialogue">"그것이 '<span class="highlight">음색</span>'이야. 진동이 섞이는 방법이 달라서 소리도 달라!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">귀의 비밀</span>
+        <h2>고막의 떨림</h2>
+        <p>할아버지가 귀 모형을 보여줬어요. <span class="dialogue">"소리가 귓바퀴에 모여서 귓구멍으로 들어가!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">고막</span>이라는 얇은 막이 소리에 맞춰 떨려. 그 떨림이 작은 뼈들을 흔들어!"</span></p>
+        <p>뼈의 떨림이 달팽이관으로 가고, 거기서 <span class="highlight">전기 신호로 바뀌어 뇌로 전달</span>돼요!</p>
+        <p>도는 감동했어요. 공기 떨림이 감정이 되다니!</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">소음과 건강</span>
+        <h2>소리의 그림자</h2>
+        <p>할아버지 표정이 어두워졌어요. <span class="dialogue">"소리는 아름답지만, 잘못 쓰면 해로워."</span></p>
+        <p><span class="dialogue">"<span class="highlight">너무 큰 소리를 오래 들으면 귀가 상해.</span> 이어폰 조심해야 해!"</span></p>
+        <p>소음을 줄이는 방법도 배웠어요. 방음벽, 흡음재, 노이즈 캔슬링!</p>
+        <p><span class="dialogue">"노이즈 캔슬링은 <span class="highlight">반대 파동을 보내서 소리를 지우는</span> 거야. 신기하지?"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">다시 울리는 마을</span>
+        <h2>작은 진동이 감정을 만들어요</h2>
+        <p>도는 드디어 원인을 알았어요. 마을 중앙 공명탑의 흡음 장치가 고장 나서 모든 소리를 흡수하고 있었어요!</p>
+        <p>도가 장치를 고치자... <span class="dialogue">"들려!"</span> 세상에 소리가 돌아왔어요! 새소리, 바람 소리, 사람들의 환호!</p>
+        <p>그날 저녁, 도는 마이크 앞에 섰어요. 작은 목소리로 노래했지만, 공명탑이 소리를 마을 전체에 퍼뜨렸어요.</p>
+        <p style="margin-top: 15px; padding: 15px; background: rgba(99, 102, 241, 0.15); border-radius: 12px;">
+          <strong style="color: #4f46e5;"><span class="highlight">작은 진동이 감정을 만들어요.</span> 목소리의 작은 떨림이 누군가의 마음을 움직이기도 해요.</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">돌아가기</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

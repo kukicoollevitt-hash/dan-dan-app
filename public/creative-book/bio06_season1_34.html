@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌳 도토리의 위대한 모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas { display: none; }
+
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5D4037 0%, #3E2723 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: block;
+      color: #5D4037;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2d2d2d;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 17px;
+      line-height: 2;
+      color: #444;
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+
+    .story-card .highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(93, 64, 55, 0.2) 60%);
+      font-weight: 600;
+    }
+
+    .story-card .dialogue { color: #5D4037; font-weight: 500; }
+
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      pointer-events: auto;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 { color: #FFD700; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .close-btn {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .close-btn:hover { transform: scale(1.1); background: #fff; }
+
+    @media (max-width: 768px) {
+      .intro-section { padding: 30px 20px; }
+      .intro-content { padding: 40px 25px; }
+      .intro-content h1 { font-size: 28px; }
+      .story-section { padding: 30px 20px; justify-content: center !important; }
+      .story-card { max-width: 100%; padding: 30px; }
+      .story-section:nth-child(odd) .story-card,
+      .story-section:nth-child(even) .story-card { transform: translateY(50px); }
+      .story-card.active { transform: translateY(0); }
+      .story-card h2 { font-size: 22px; }
+      .story-card p { font-size: 15px; line-height: 1.9; }
+      .close-btn { top: 15px; right: 15px; width: 40px; height: 40px; font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌳 도토리의 위대한 모험</h1>
+        <p class="subtitle">
+          — 움직이지 못해도 누구보다 멀리 여행하는 나무의 비밀 —<br>
+          떡갈나무 할아버지와 작은 씨앗 도토리의 모험 이야기
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 떡갈나무 할아버지:</strong> 300살 된 지혜로운 나무예요.</p>
+          <p><strong>▸ 도토리:</strong> 호기심 가득한 아기 씨앗이에요.</p>
+          <p><strong>▸ 바람돌이:</strong> 씨앗의 여행을 도와주는 바람 요정이에요.</p>
+          <p><strong>▸ 햇살이:</strong> 광합성을 도와주는 빛의 요정이에요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">말하는 나무</span>
+        <h2>뿌리마을의 떡갈나무 할아버지</h2>
+        <p>깊은 숲속에 '뿌리마을'이라는 작은 세계가 있었어요. 이 마을에서 가장 크고 오래된 나무는 <span class="highlight">떡갈나무 할아버지</span>였어요. 할아버지는 무려 300년이나 그 자리에 서 있었답니다.</p>
+        <p>비가 오면 비를 맞고, 눈이 오면 눈을 맞으며, 바람이 불면 가지를 흔들어 인사했어요. <span class="dialogue">"얘들아, 오늘 바람 방향이 바뀌었구나. 내일은 비가 올 거야."</span> 할아버지는 매일 아침 숲의 날씨를 알려줬어요.</p>
+        <p>그런데 할아버지 가지 끝에는 불만이 가득한 아기 <span class="highlight">도토리</span>가 있었어요. <span class="dialogue">"할아버지, 저는 왜 움직일 수가 없어요? 새처럼 날고 싶고, 토끼처럼 뛰고 싶단 말이에요!"</span></p>
+        <p>할아버지가 웃으며 말했어요. <span class="dialogue">"허허, 우리 나무야말로 이 세상에서 <span class="highlight">가장 멀리 여행하는 존재</span>란다. 네가 아직 모를 뿐이지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">뿌리의 전략</span>
+        <h2>땅속의 비밀 세계</h2>
+        <p>도토리의 첫 번째 수업은 땅속에서 시작됐어요. 떡갈나무 할아버지는 도토리에게 자신의 뿌리를 보여줬어요.</p>
+        <p>땅 위에서 보면 그냥 커다란 기둥이었지만, 땅속은 완전히 달랐어요! 할아버지의 뿌리는 사방으로 수십 미터나 뻗어 있었고, 가는 실뿌리까지 합치면 길이가 엄청났어요.</p>
+        <p><span class="dialogue">"이건 마치 지하 도시 같아요!"</span> 도토리가 감탄했어요. <span class="dialogue">"뿌리는 그냥 물 빨아들이는 빨대가 아니란다. 이건 나의 <span class="highlight">작전 본부</span>야."</span></p>
+        <p>더 놀라운 게 있었어요. 할아버지 뿌리는 옆에 있는 소나무 아저씨 뿌리와 연결되어 있었어요. <span class="dialogue">"지난번에 벌레가 소나무 아저씨를 공격했을 때, 나는 뿌리를 통해 먼저 알았단다."</span> 뿌리는 <span class="highlight">'나무의 인터넷'</span>이었어요!</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">줄기의 역할</span>
+        <h2>하늘과 땅을 잇는 다리</h2>
+        <p>다음 날, 할아버지는 자신의 줄기에 대해 알려줬어요. <span class="dialogue">"도토리야, 내 몸통을 자세히 봐. 겉으로는 그냥 나무 기둥 같지만, 안에 엄청난 비밀이 있단다."</span></p>
+        <p>도토리가 자세히 보니 껍질 안에 여러 층이 있었어요. 가장 바깥에는 두꺼운 껍질이 갑옷처럼 감싸고, 그 안에 물이 올라가는 관과 양분이 내려가는 관이 있었어요.</p>
+        <p><span class="dialogue">"이 관들은 <span class="highlight">엘리베이터</span> 같은 거야. 뿌리에서 빨아올린 물은 꼭대기까지 올라가고, 잎에서 만든 양분은 뿌리까지 내려간단다."</span></p>
+        <p>줄기 한가운데에는 <span class="highlight">나이테</span>가 있었어요. <span class="dialogue">"이건 내 일기장이야. 넓은 나이테는 비가 많이 온 해, 좁은 나이테는 가뭄이 든 해란다."</span> 할아버지는 300개의 나이테에 300년의 이야기를 담고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">잎의 구조</span>
+        <h2>초록빛 요리사의 마법</h2>
+        <p><span class="dialogue">"자, 이제 내 가장 자랑스러운 부분을 보여줄게!"</span> 할아버지가 잎사귀를 살랑살랑 흔들며 말했어요.</p>
+        <p>그때 반짝반짝 빛나는 작은 존재가 날아왔어요. 에너지 요정 <span class="highlight">'햇살이'</span>였어요! <span class="dialogue">"안녕, 도토리! 나는 매일 할아버지 잎에 와서 요리를 도와주는 요정이야."</span></p>
+        <p>햇살이가 잎 위에 앉자, 초록색 알갱이 <span class="highlight">'엽록체'</span>가 반짝이기 시작했어요. <span class="dialogue">"이 요리사들은 햇빛, 물, 이산화탄소로 포도당이라는 맛있는 음식을 만들어 내. 이걸 <span class="highlight">광합성</span>이라고 해."</span></p>
+        <p>잎 뒷면에는 작은 구멍들이 있었어요. <span class="dialogue">"그건 기공이야. 숨 쉬는 코라고 생각하면 돼. 이 구멍으로 이산화탄소를 마시고 산소를 내뱉는단다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">가시의 보호</span>
+        <h2>가시장군의 용감한 싸움</h2>
+        <p>어느 날, 배고픈 사슴이 어린 나무들의 잎을 먹기 시작했어요. 어린 나무들이 비명을 질렀어요!</p>
+        <p>그때, 용감하게 나선 이가 있었어요. 바로 <span class="highlight">'가시장군'</span>! 가시장군은 온몸이 날카로운 가시로 덮인 탱자나무였어요. <span class="dialogue">"이리 와! 내 가시를 뚫을 수 있으면 와 봐!"</span></p>
+        <p>사슴은 가시에 코를 찔리고 황급히 도망갔어요. 도토리가 물었어요. <span class="dialogue">"가시장군, 가시가 아프지 않아요?"</span></p>
+        <p>할아버지가 대답했어요. <span class="dialogue">"가시는 원래 <span class="highlight">잎이 변한 거</span>란다. 가시장군은 자기 잎 일부를 포기하고 무기로 바꾼 거야. 광합성을 덜 해도 자신과 이웃을 지키겠다는 결심이지."</span> 우리 식물은 도망칠 수 없으니까, 그 자리에서 싸우는 법을 배웠어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">씨앗의 여행</span>
+        <h2>드디어 떠나는 여행</h2>
+        <p>가을이 왔어요. 떡갈나무 할아버지 가지마다 통통한 도토리들이 매달려 있었어요.</p>
+        <p><span class="dialogue">"도토리야, 드디어 네가 여행을 떠날 때가 됐구나."</span> 할아버지 목소리에 감동과 아쉬움이 담겨 있었어요.</p>
+        <p>그때 휭 하고 바람이 불었어요. <span class="dialogue">"야호! 나 <span class="highlight">바람돌이</span>야! 내가 너를 데려다줄게!"</span> 장난꾸러기 바람 요정이 나타났어요.</p>
+        <p><span class="dialogue">"씨앗이 여행하는 방법은 여러 가지야. 민들레 씨앗은 솜털 낙하산을 타고 날아가고, 단풍나무 씨앗은 프로펠러 날개로 빙글빙글 돌면서 멀리 가지."</span></p>
+        <p><span class="dialogue">"저는 어떻게요?"</span> <span class="dialogue">"너는 다람쥐가 겨울 대비로 땅에 묻어둘 거야. 그런데 깜빡하고 못 찾는 도토리가 있거든. <span class="highlight">그 도토리가 봄에 싹을 틔우는 거야!</span>"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">계절의 변화</span>
+        <h2>숲이 갈아입는 네 벌의 옷</h2>
+        <p>바람돌이 도움으로 숲속 빈터에 떨어진 도토리는 처음으로 사계절을 겪게 됐어요.</p>
+        <p>봄이 오자 연두색 새잎이 돋아났어요. <span class="dialogue">"봄은 모든 나무가 에너지를 폭발시키는 계절이야. 겨울 동안 모아둔 영양분으로 잎과 꽃을 만들어 내는 거란다."</span></p>
+        <p>여름에는 잎이 빽빽해지고 숲이 짙은 녹색으로 가득 찼어요. 햇살이 요정은 가장 바쁜 시기를 보냈어요.</p>
+        <p>가을이 되자 초록 잎이 노랑, 주황, 빨강으로 변했어요. <span class="dialogue">"할아버지, 잎이 아파서 색이 변하는 거예요?"</span> <span class="dialogue">"아니야. 겨울에는 햇빛이 약해져서 광합성이 힘들어. 그래서 <span class="highlight">우리는 스스로 잎을 떨어뜨리는 거야.</span>"</span></p>
+        <p>계절마다 옷을 갈아입는 건 포기가 아니라 살아남기 위한 지혜로운 선택이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">건조 환경 적응</span>
+        <h2>사막에서 온 편지</h2>
+        <p>어느 날, 바람돌이가 먼 곳에서 편지를 가져왔어요. 보낸 사람은 사막에 사는 <span class="highlight">선인장 이모</span>였어요.</p>
+        <p><span class="dialogue">"안녕, 뿌리마을 친구들! 나는 뜨겁고 메마른 사막에서 잘 살고 있어. 비가 1년에 한두 번밖에 안 오지만, 내 방식대로 잘 버티고 있단다."</span></p>
+        <p>선인장 이모는 잎을 모두 가시로 바꿔서 물이 날아가는 걸 막았어요. 대신 통통한 줄기에 물을 잔뜩 저장했어요. <span class="dialogue">"내 줄기는 <span class="highlight">물탱크</span> 같은 거야. 비 올 때 물을 모아두고, 가물 때 조금씩 꺼내 쓰는 거지."</span></p>
+        <p>사막에는 신기한 식물이 더 있었어요. 바오밥 나무는 몸통에 수천 리터의 물을 저장했고, 부활초는 완전히 마른 것처럼 보이다가 물을 만나면 살아났어요.</p>
+        <p>할아버지가 미소 지었어요. <span class="dialogue">"환경을 탓하지 않고 자신을 바꾸는 것, <span class="highlight">그게 진짜 강함</span>이란다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">생존 전략</span>
+        <h2>조용한 전사들의 전쟁</h2>
+        <p>도토리가 땅속에서 겨울을 보내는 동안, 숲에서는 조용하지만 치열한 전쟁이 벌어지고 있었어요.</p>
+        <p>첫 번째 전쟁은 <span class="highlight">빛을 차지하는 경쟁</span>이었어요. 키 큰 나무들은 서로 더 높이 자라려 했고, 그늘에 갇힌 작은 식물들은 넓은 잎을 만들어 빛을 받으려 했어요.</p>
+        <p>두 번째는 <span class="highlight">화학 전쟁</span>이었어요. 호두나무는 뿌리에서 독 물질을 내보내 주변 식물이 자라지 못하게 했어요.</p>
+        <p>세 번째는 <span class="highlight">협력 전략</span>이었어요. 많은 나무는 곰팡이와 손을 잡았어요. 나무는 당분을 주고, 곰팡이는 영양분을 모아 나무에게 줬어요.</p>
+        <p><span class="dialogue">"할아버지도 저한테 영양분 보내줬어요?"</span> <span class="dialogue">"그럼! 네가 혼자 싹 틔울 힘이 부족할까 봐 곰팡이 친구를 통해 보내줬단다."</span> 경쟁하면서도 돕는 게 숲의 비밀이에요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">조용한 모험가</span>
+        <h2>위대한 여행의 시작</h2>
+        <p>봄이 왔어요. 땅속에서 준비하던 도토리에게 드디어 변화가 찾아왔어요. 딱딱한 껍질이 갈라지면서 하얀 뿌리가 아래로 내려가고, 연둣빛 싹이 세상 밖으로 나왔어요.</p>
+        <p><span class="dialogue">"나, 나왔다!"</span> 이제 도토리가 아니라 <span class="highlight">'어린 떡갈나무'</span>가 된 거예요!</p>
+        <p>바람에 실려 할아버지 목소리가 들려왔어요. <span class="dialogue">"잘했다, 도토리야. 이제 알겠지? 우리 나무는 한자리에 서 있지만 절대 멈춰 있는 게 아니란다."</span></p>
+        <p>뿌리는 세상을 연결하고, 줄기는 하늘과 땅을 이어주고, 잎은 빛으로 생명을 만들어요. 가시는 이웃을 지키고, 씨앗은 바다 건너까지 여행해요.</p>
+        <p><span class="dialogue">"할아버지, 저도 300년 동안 제 이야기를 쓸 거예요!"</span> 바람이 나무들의 잎을 흔들었어요. 숲 전체의 박수 소리였어요. <span class="highlight">조용한 존재도 위대해요. 움직이지 않아도 세상을 바꿀 수 있어요.</span></p>
+        <p style="text-align: center; margin-top: 30px; font-weight: 700; color: #5D4037;">— 🌳 끝 🌳 —</p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+        if (entry.isIntersecting) {
+          if (card) card.classList.add('active');
+          const bg = entry.target.dataset.bg;
+          if (bg) mapContainer.style.backgroundImage = `url('${bg}')`;
+        } else {
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, { root: null, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
+
+    sections.forEach(section => observer.observe(section));
+
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) setTimeout(() => firstCard.classList.add('active'), 500);
+    });
+  </script>
+
+</body>
+</html>

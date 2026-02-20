@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>다온이와 할아버지의 흔들리는 지구 이야기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #E65100 0%, #BF360C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(230, 81, 0, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(230, 81, 0, 0.15);
+      color: #BF360C;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #E65100;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #BF360C;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FF8A65;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(230, 81, 0, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(230, 81, 0, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(191, 54, 12, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(230, 81, 0, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>다온이와 할아버지의 흔들리는 지구 이야기</h1>
+        <p class="subtitle">
+          — 땅이 흔들리고 불이 솟는 날, 지구가 보내는 신호 —<br>
+          교과기반 창작도서 · 지구과학 06
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>▸ 다온:</strong> 지진이 무서운 초등학생. 지진을 겪은 후 두려움을 품고 있어요.</p>
+          <p><strong>▸ 석진 할아버지:</strong> 지진과 화산을 연구하는 과학자예요.</p>
+          <p><strong>▸ 지구:</strong> 46억 년 동안 움직여 온 살아 있는 행성이에요.</p>
+          <p><strong>▸ P파와 S파:</strong> 지진이 보내는 두 종류의 파동이에요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">잠들지 않는 땅</span>
+        <h2>지각판이라는 거대한 퍼즐</h2>
+        <p>다온이는 지진이 무서웠어요. 작년 겨울, 새벽에 침대가 흔들려 잠에서 깬 적이 있었거든요. 그날 이후 다온이는 밤마다 불안했어요. 혹시 또 땅이 흔들리면 어쩌지?</p>
+        <p><span class="dialogue">"다온아, 이번 방학에 할아버지 연구소에 가 볼래?"</span> 아빠가 말했어요. 다온이의 할아버지 '석진 박사'는 지진과 화산을 연구하는 과학자였어요.</p>
+        <p>연구소에 도착한 다온이는 깜짝 놀랐어요. 거대한 지구 모형이 있었거든요! <span class="dialogue">"이게 지구 속이야?"</span> 할아버지가 설명했어요. <span class="dialogue">"지구는 지각, 맨틀, 핵으로 나뉘어. 우리가 서 있는 '지각'은 하나가 아니야. 깨진 달걀 껍데기처럼 여러 조각으로 나뉘어 있지. 이 조각들을 <span class="highlight">'지각판'</span>이라고 해."</span></p>
+        <p>할아버지가 모형의 조각들을 움직이자, 판들이 서로 부딪치고 벌어졌어요. <span class="dialogue">"이 판들이 움직여?"</span> <span class="dialogue">"1년에 손톱이 자라는 만큼, 아주 천천히. 하지만 오랜 시간이 지나면 대륙이 이동하고 산이 솟아."</span> 다온이는 자기가 서 있는 땅이 거대한 퍼즐 조각이라는 사실에 놀랐어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">판들의 만남</span>
+        <h2>부딪치고, 벌어지고, 스쳐 지나가다</h2>
+        <p>할아버지가 화면을 보여줬어요. 지구 표면이 여러 개의 판으로 나뉘어 있었어요. 판들이 만나는 곳은 빨간색으로 빛나고 있었지요.</p>
+        <p><span class="dialogue">"다온아, 판들이 만나는 방식은 세 가지야."</span> 첫 번째 화면에서 두 판이 부딪쳤어요. 한쪽 판이 다른 판 아래로 파고들면서 산이 솟았어요. <span class="dialogue">"이건 <span class="highlight">'수렴 경계'</span>야. 히말라야 산맥이 이렇게 만들어졌어."</span></p>
+        <p>두 번째 화면에서는 두 판이 벌어졌어요. 그 틈으로 마그마가 올라와 새 땅이 만들어졌어요. <span class="dialogue">"이건 <span class="highlight">'발산 경계'</span>야. 바다 한가운데 해령이 이런 곳이야."</span></p>
+        <p>세 번째 화면에서는 두 판이 옆으로 스쳐 지나갔어요. 끼이이익 소리와 함께 땅이 흔들렸어요. <span class="dialogue">"이건 <span class="highlight">'보존 경계'</span>야."</span> 다온이가 물었어요. <span class="dialogue">"그러면 지진이랑 화산은 이 빨간 선 근처에서 일어나?"</span> <span class="dialogue">"정확해! 판의 경계에서 에너지가 쌓이고, 한꺼번에 풀릴 때 지진이 일어나."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">쌓이고 터지다</span>
+        <h2>지진이 일어나는 순간</h2>
+        <p>할아버지가 다온이에게 나무 막대를 건네줬어요. <span class="dialogue">"이걸 양손으로 잡고, 천천히 구부려 봐."</span> 다온이가 막대를 구부리자 막대가 휘었어요. 조금 더 힘을 주자 더 많이 휘었지요.</p>
+        <p><span class="dialogue">"지금 네가 주는 힘이 바로 판이 움직이면서 쌓이는 <span class="highlight">'응력'</span>이야. 판들은 움직이려 하는데, 마찰 때문에 쉽게 못 움직여. 그래서 힘이 쌓여."</span></p>
+        <p>다온이가 계속 힘을 주자 <span class="highlight">딱!</span> 막대가 부러졌어요. 손에 충격이 전해졌어요. <span class="dialogue">"바로 그거야! 막대가 부러진 순간이 지진이 일어나는 순간이야. 쌓인 힘이 한계를 넘으면, 암석이 부러지면서 에너지가 한꺼번에 나와."</span></p>
+        <p>다온이는 이해했어요. 지진은 갑자기 오는 게 아니라, 오랫동안 쌓인 힘이 터지는 거였어요. <span class="dialogue">"몇 년, 몇십 년 동안 쌓인 힘이 몇 초 만에 폭발하는 거야."</span> 다온이의 마음속 두려움에 조금 균열이 생겼어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">진앙과 규모</span>
+        <h2>지진의 크기를 재는 방법</h2>
+        <p>할아버지가 다온이를 지진 관측실로 데려갔어요. 화면마다 물결 모양의 선이 그려지고 있었어요. <span class="dialogue">"이게 <span class="highlight">'지진계'</span>가 기록하는 지진파야. 어딘가에서 지진이 나면 여기까지 전달돼."</span></p>
+        <p><span class="dialogue">"다온아, 지진이 시작되는 지점을 뭐라고 할까?"</span> <span class="dialogue">"땅속에서 암석이 부러지는 곳을 <span class="highlight">'진원'</span>이라 하고, 그 바로 위 땅 표면을 <span class="highlight">'진앙'</span>이라고 해. 진앙에 가까울수록 흔들림이 세."</span></p>
+        <p><span class="dialogue">"지진이 얼마나 센지는 어떻게 알아?"</span> <span class="dialogue">"지진 크기를 나타내는 건 두 가지야. <span class="highlight">'규모'</span>는 지진 에너지의 크기야. 규모가 1 올라가면 에너지는 약 32배나 커져!"</span> 다온이가 놀랐어요. <span class="dialogue">"32배나?!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">'진도'</span>는 사람이 느끼는 흔들림이야. 같은 지진이라도 가까우면 진도가 크고, 멀면 작아."</span> 다온이는 깨달았어요. 지진은 무서운 흔들림이 아니라, 측정하고 이해할 수 있는 현상이라는 걸요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">불의 산</span>
+        <h2>화산과 지진의 연결</h2>
+        <p>다온이는 복도에 걸린 화산 폭발 사진 앞에 멈췄어요. 시뻘건 용암이 하늘로 솟고, 검은 연기가 뒤덮은 모습이었어요. <span class="dialogue">"무섭지?"</span> 할아버지가 물었어요. <span class="dialogue">"할아버지, 화산은 왜 터지는 거야?"</span></p>
+        <p><span class="dialogue">"지구 안쪽에는 뜨겁게 녹은 암석인 <span class="highlight">'마그마'</span>가 있어. 이 마그마가 지각의 약한 부분을 뚫고 올라오면 '화산 폭발'이야. 땅 위로 나온 마그마를 <span class="highlight">'용암'</span>이라고 해."</span></p>
+        <p>판이 부딪치는 곳에서 한 판이 다른 판 아래로 가라앉으면 마그마가 생겨요. 이 마그마가 올라와 화산이 돼요. 태평양을 둘러싼 <span class="highlight">'불의 고리'</span>가 바로 이런 곳이에요.</p>
+        <p><span class="dialogue">"화산이랑 지진은 같은 곳에서 일어나?"</span> <span class="dialogue">"대부분 그래. 둘 다 판의 경계에서 일어나거든."</span> 할아버지가 두 지도를 겹치자, 빨간 점들이 거의 같은 곳에 있었어요. 지진과 화산은 지구가 살아 있다는 증거였어요!</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">무너지는 세상</span>
+        <h2>지진과 화산이 남기는 상처</h2>
+        <p>할아버지가 기록 영상을 보여줬어요. 2011년 일본 대지진 영상이었어요. 엄청 큰 지진 후에 높이 15미터가 넘는 <span class="highlight">쓰나미</span>가 마을을 삼키는 장면. 다온이 눈에 눈물이 맺혔어요.</p>
+        <p><span class="dialogue">"쓰나미는 바다 밑에서 지진이 일어날 때 생겨. 바닷물이 갑자기 솟구치면서 만들어져."</span> 다음은 화산 영상이었어요. 산이 무너지고 화산재가 하늘을 뒤덮어 낮인데도 밤처럼 어두운 도시.</p>
+        <p><span class="dialogue">"너무 무서워..."</span> 다온이가 말했어요. 할아버지가 다온이 어깨를 감싸 안았어요. <span class="dialogue">"무서운 게 당연해. 자연의 힘은 정말 크거든. 하지만 다온아, 여기서 멈추면 안 돼. 무서움에서 멈추면 두려움만 남아. 하지만 이해하고 대비하면 생명을 지킬 수 있어."</span></p>
+        <p>다온이는 할아버지 손을 꼭 잡았어요. 두려움 속에서 도망치지 않고 마주하는 용기. 그게 할아버지가 보여주고 싶은 거였어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">대비의 힘</span>
+        <h2>지진이 와도 무너지지 않는 방법</h2>
+        <p>할아버지가 연구소 옥상으로 데려갔어요. 건물 아래에 큰 고무 패드 같은 게 있었어요. <span class="dialogue">"저게 뭐야?"</span> <span class="dialogue">"저건 <span class="highlight">'내진 설계'</span> 중 하나인 '면진 장치'야. 지진이 오면 저 고무가 흔들림을 흡수해서 건물은 덜 흔들려."</span></p>
+        <p>건물을 튼튼하게 만드는 <span class="highlight">'내진 구조'</span>, 건물 위에 추를 달아 반대로 흔들리게 하는 <span class="highlight">'제진 장치'</span>도 있었어요. <span class="dialogue">"일본에서는 큰 지진이 와도 건물이 안 무너지는 경우가 많아. 내진 설계가 잘 되어 있거든."</span></p>
+        <p>할아버지가 비상 가방을 보여줬어요. 손전등, 호루라기, 물, 비상식량, 담요가 있었어요. <span class="dialogue">"지진이 나면 처음 10초가 중요해. 탁자 아래로 들어가 머리를 보호하고, 흔들림이 멈추면 계단으로 대피해. 엘리베이터는 절대 타면 안 돼."</span></p>
+        <p>다온이는 대피 가방을 싸 봤어요. 준비물을 챙길 때마다 두려움이 조금씩 작아지는 걸 느꼈어요. 모를 때는 엄청 커 보였던 공포가, 알고 준비하니 감당할 수 있게 됐어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">30초의 기적</span>
+        <h2>지진 조기 경보 시스템</h2>
+        <p>할아버지가 퀴즈를 냈어요. <span class="dialogue">"지진파에는 두 종류가 있어. 빠르지만 약한 파, 느리지만 강한 파. 이름을 알아?"</span></p>
+        <p><span class="dialogue">"빠른 파를 <span class="highlight">'P파'</span>라고 하고, 느린 파를 <span class="highlight">'S파'</span>라고 해. P파는 위아래로 흔들리면서 빠르게 오고, S파는 옆으로 흔들리면서 느리게 오지만 건물을 무너뜨려."</span></p>
+        <p><span class="dialogue">"중요한 건 P파와 S파 사이에 시간차가 있어. P파가 먼저 오고, 몇 초에서 몇십 초 뒤에 S파가 와. 이 시간차로 <span class="highlight">'조기 경보 시스템'</span>을 만들었어."</span></p>
+        <p>다온이 눈이 반짝였어요. <span class="dialogue">"P파가 오면 S파 전에 경고를 보내는 거야?"</span> <span class="dialogue">"정확해! 이 시간이 10초에서 30초 정도야."</span> 짧아 보이지만, 사람들이 탁자 아래로 들어가고, 공장 기계가 멈추고, 가스관이 닫히고, 기차가 속도를 줄일 수 있어요. <span class="dialogue">"30초가 사람을 살릴 수 있다니!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">용기를 꺼내다</span>
+        <h2>다온이의 대피 훈련</h2>
+        <p><span class="dialogue">"다온아, 오늘 연구소에서 지진 대피 훈련이 있어. 같이 해 볼래?"</span> 다온이는 망설였어요. 사이렌 소리가 무서울 것 같았거든요. 하지만 할아버지 말이 떠올랐어요. '무서움에서 멈추면 두려움만 남지만, 대비하면 생명을 지킬 수 있어.' <span class="dialogue">"...할게요."</span></p>
+        <p><span class="highlight">위이이잉—</span> 사이렌이 울렸어요. <span class="dialogue">"지진입니다! 대피하세요!"</span> 다온이 심장이 쿵쿵 뛰었어요. 할아버지가 침착하게 말했어요. <span class="dialogue">"다온아, 첫째, 탁자 아래로. 머리를 보호해."</span></p>
+        <p>다온이는 탁자 아래로 들어갔어요. 한 손으로 탁자 다리를 잡고, 다른 손으로 머리를 감쌌어요. <span class="dialogue">"좋아. 둘째, 흔들림이 멈추면 계단으로 대피해."</span> 다온이는 할아버지를 따라 비상계단으로 갔어요. 뛰지 않고 침착하게.</p>
+        <p>대피 장소에 도착했을 때, 다온이는 놀라운 걸 발견했어요. 자기가 웃고 있다는 걸요. <span class="dialogue">"할아버지, 나... 할 수 있었어!"</span> 할아버지가 머리를 쓰다듬었어요. <span class="dialogue">"용기는 두려움이 없는 게 아니야. 두려워도 행동할 수 있는 거야. 오늘 다온이는 정말 용감했어."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">지구의 편지</span>
+        <h2>두려움은 이해로 줄어든다</h2>
+        <p>방학 마지막 날, 다온이는 할아버지와 마지막 이야기를 나눴어요. <span class="dialogue">"할아버지, 나 처음에 지진이 너무 무서웠어. 그런데 이제는 예전처럼 마냥 두렵지는 않아."</span></p>
+        <p><span class="dialogue">"왜 그럴까?"</span> <span class="dialogue">"지진이 왜 일어나는지 알게 됐으니까. 어떻게 준비하면 되는지도 알았고. 모를 때는 지진이 괴물 같았는데, 이제는 지구가 살아 있다는 증거로 보여."</span></p>
+        <p>할아버지가 말했어요. <span class="dialogue">"지구는 46억 년 동안 움직여 왔어. 판이 부딪혀 산이 솟고, 화산이 터져 새 땅이 만들어지고. 지진과 화산은 재앙이기도 하지만, 동시에 <span class="highlight">지구가 살아 있다는 증거</span>야."</span></p>
+        <p>다온이가 말했어요. <span class="dialogue">"<span class="highlight">두려움은 이해로 줄어들어.</span>"</span> 할아버지가 놀랐어요. <span class="dialogue">"그거 내가 해 주려던 말인데!"</span> 다온이가 웃었어요. <span class="dialogue">"할아버지한테 배웠으니까요."</span></p>
+        <p>집으로 가는 차 안에서 다온이는 적었어요. '지구는 무서운 곳이 아니라, 이해해야 할 곳이야.' 밤에 비가 왔어요. 예전 같으면 이불을 뒤집어쓰고 울었을 다온이가, 오늘은 빗소리를 조용히 들었어요. 지구의 자장가 같다고 생각하면서요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(230, 81, 0, 0.15); border-radius: 16px;">
+          <strong style="color: #BF360C; font-size: 18px;">「두려움은 이해로 줄어들어요. 알면 준비할 수 있고, 준비하면 이겨낼 수 있어요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

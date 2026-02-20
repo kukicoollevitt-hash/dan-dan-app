@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍬 설탕 탐정단: 물컵 속 실종 사건</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00B4DB 0%, #0083B0 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 180, 219, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 180, 219, 0.15);
+      color: #0083B0;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #0083B0;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #00B4DB;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #7dd3fc;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 180, 219, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 180, 219, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 131, 176, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 180, 219, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🍬 설탕 탐정단: 물컵 속 실종 사건</h1>
+        <p class="subtitle">
+          — 보이지 않아도 사라진 게 아니야 —<br>
+          교과기반 창작도서 · 화학 02 · 3-4학년
+        </p>
+        <div class="characters">
+          <h3>🔬 등장인물 소개</h3>
+          <p><strong>▸ 다은:</strong> 호기심 많은 초등학생. 설탕이 사라지는 걸 보고 탐정처럼 조사하기 시작해요.</p>
+          <p><strong>▸ 수크:</strong> 설탕 분자. 물에 녹으면 친구들과 흩어지지만, 사라지는 건 아니에요.</p>
+          <p><strong>▸ 아쿠아:</strong> 물 분자. 다정해서 누구에게든 다가가요.</p>
+          <p><strong>▸ 분자경 박사:</strong> 눈에 안 보이는 분자 세계를 보여주는 마법 렌즈.</p>
+          <p><strong>▸ 결정 대장:</strong> 설탕 알갱이 속에서 분자들을 정렬시키는 수호자.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">☕ 컵 속 설탕</span>
+        <h2>코코아에서 시작된 실종 사건</h2>
+        <p>일요일 아침, <span class="highlight">다은</span>이는 주방에서 코코아를 만들고 있었어요. 따뜻한 우유에 코코아 가루를 넣고, 설탕 한 스푼을 톡 넣었어요. 설탕 알갱이가 갈색 코코아 위에 눈처럼 쌓였어요.</p>
+        <p>다은이가 스푼으로 빙글빙글 세 바퀴 저었어요. 그런데 놀라운 일이 생겼어요. 설탕이 사라진 거예요! 하얀 알갱이는 흔적도 없이 사라지고, 코코아는 그대로 갈색이었어요.</p>
+        <p><span class="dialogue">"어? 설탕이 어디 갔지?"</span> 다은이가 컵 안을 들여다봤어요. 바닥에도, 벽에도 설탕이 없었어요. 한 모금 마셔봤어요. 달았어요! <span class="dialogue">"달긴 한데... 설탕은 어디 간 거야?"</span></p>
+        <p>다은이는 생각했어요. 분명히 설탕을 넣었고, 단맛도 나는데, 설탕은 안 보여요. <span class="dialogue">"이건 실종 사건이야!"</span></p>
+        <p>다은이는 탐정 노트를 가져왔어요. <span class="highlight">'사건: 설탕 실종. 스푼으로 세 바퀴 젓자 사라짐. 단서: 코코아가 달아짐.'</span></p>
+        <p><span class="dialogue">"설탕은 분명히 어딘가 있어. 그런데 어디에?"</span> 다은이의 탐정 본능이 불타올랐어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">🔬 녹는 순간</span>
+        <h2>물컵 속으로 들어가다!</h2>
+        <p>다은이가 돋보기로 코코아를 들여다볼 때, 돋보기가 보라빛으로 빛났어요. 렌즈 안에서 작은 존재가 나타났어요.</p>
+        <p><span class="dialogue">"안녕, 다은! 나는 <span class="highlight">분자경 박사</span>야. 네 호기심이 나를 깨웠어."</span></p>
+        <p><span class="dialogue">"설탕이 어디 갔는지 알고 싶어요!"</span> <span class="dialogue">"그럼 직접 보여줄게. 하지만 설탕 분자는 너무 작아서 눈으로 못 봐. 너를 작게 만들어줄게!"</span></p>
+        <p>분자경 박사가 렌즈를 돌리자, 다은이 몸에서 빛이 났어요. 방이 점점 거대해졌어요. 아니, 다은이가 작아지고 있었어요! 코코아 컵이 거대한 호수처럼 보였어요.</p>
+        <p><span class="dialogue">"자, 뛰어들어!"</span> 풍덩! 코코아 속으로 들어가자 세상이 달라졌어요. 주변에 구슬 같은 것들이 빠르게 돌아다녔어요. 빨간 구슬 하나에 하얀 구슬 둘이 붙어 있었어요.</p>
+        <p><span class="dialogue">"이게 뭐예요?"</span> <span class="dialogue">"<span class="highlight">물 분자</span>야! 산소 1개에 수소 2개가 붙은 거야. 우리 지금 물 분자들 사이에 있어!"</span></p>
+        <p>저 멀리 빛나는 큰 성 같은 게 보였어요. <span class="dialogue">"저건 설탕 결정이야. 가보자!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">🏰 용해의 의미</span>
+        <h2>결정 대장의 마지막 저항</h2>
+        <p>다은이가 다가간 큰 성은 <span class="highlight">설탕 결정</span>이었어요. 설탕 분자들이 벽돌처럼 쌓여 만든 거예요. 보석처럼 반짝이고 있었어요.</p>
+        <p>성 꼭대기에 갑옷 입은 존재가 있었어요. <span class="highlight">결정 대장</span>이에요. <span class="dialogue">"물러서라! 내가 이 아름다운 결정을 지킨다!"</span></p>
+        <p>하지만 결정 대장이 걱정스러운 표정을 지었어요. 성 아래에서 물 분자들, <span class="highlight">아쿠아 군단</span>이 다가오고 있었거든요! <span class="dialogue">"안녕! 우리는 아쿠아! 친구 하고 싶어!"</span></p>
+        <p>아쿠아들이 결정 표면에 달라붙기 시작했어요. 물 분자는 설탕 분자를 잡아당기는 힘이 있어요. 이걸 <span class="highlight">'수소 결합'</span>이라고 해요.</p>
+        <p><span class="dialogue">"안 돼! 내 벽돌을 가져가지 마!"</span> 결정 대장이 소리쳤어요. 하지만 아쿠아들은 설탕 분자를 하나씩 떼어냈어요.</p>
+        <p>이것이 바로 <span class="highlight">'용해'</span>예요. 설탕(용질)이 물(용매)에 녹는 거예요. 물 분자가 설탕 분자를 끌어당기는 힘이 더 세서 결정이 무너지는 거예요.</p>
+        <p>다은이는 이것이 자연의 법칙이라는 걸 이해하기 시작했어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">🏊 분자의 이동</span>
+        <h2>수크의 여행</h2>
+        <p>결정에서 떨어져 나온 설탕 분자가 다은이 앞에 왔어요. <span class="dialogue">"안녕, 나는 <span class="highlight">수크</span>! 설탕 분자야!"</span></p>
+        <p>수크는 동그란 고리 두 개가 이어진 모습이었어요. 몸에 작은 팔 같은 것들이 달려 있었어요.</p>
+        <p><span class="dialogue">"방금 결정에서 나왔어. 솔직히 무서워."</span> 수크가 말했어요. <span class="dialogue">"결정 안에서는 친구들이랑 같이 있어서 따뜻했거든. 지금은 혼자야."</span></p>
+        <p>하지만 수크는 혼자가 아니었어요! 아쿠아들이 다가와 수크를 둘러쌌어요. <span class="dialogue">"혼자 아니야! 우리가 있잖아!"</span> 물 분자들이 수크를 감싸 따뜻한 담요처럼 보호했어요.</p>
+        <p><span class="dialogue">"이것을 '수화'라고 해."</span> 분자경 박사가 말했어요. <span class="dialogue">"설탕 분자 주변을 물 분자가 둘러싸는 거야. 이래서 설탕이 물속에서 잘 있을 수 있어."</span></p>
+        <p>수크가 물속을 떠다니기 시작했어요. <span class="dialogue">"와, 날아가는 것 같아!"</span> 물 분자들이 수크를 이리저리 밀고 당겼어요.</p>
+        <p>다은이가 봤어요. 설탕이 '사라진' 게 아니라, 물 분자 사이에서 여행하고 있었어요!</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">🌀 균일한 혼합</span>
+        <h2>컵 전체로 퍼지는 설탕</h2>
+        <p>수크를 따라다니던 다은이가 신기한 걸 발견했어요. 처음에 설탕 결정이 있던 컵 바닥에는 수크가 많았는데, 위쪽으로 갈수록 수크가 적었어요. 그런데 시간이 지나면서 수크들이 점점 위로 퍼져 올라갔어요!</p>
+        <p><span class="dialogue">"왜 위로 올라가요?"</span> <span class="dialogue">"이것이 <span class="highlight">'확산'</span>이야. 분자가 많은 곳에서 적은 곳으로 자연히 퍼지는 거야."</span></p>
+        <p>컵 바닥에 설탕이 많고, 윗부분에 적으니까, 설탕이 위로 퍼지는 거예요. 마치 만원 버스에서 문이 열리면 사람들이 빈 곳으로 가는 것처럼요!</p>
+        <p>시간이 지나자 컵 전체에 설탕이 고르게 퍼졌어요. <span class="dialogue">"결국 컵 전체가 똑같이 달아지네!"</span></p>
+        <p><span class="dialogue">"맞아! 이것을 <span class="highlight">'균일한 혼합물'</span>, 즉 '용액'이라 해. 어느 부분을 마셔도 같은 단맛이야."</span></p>
+        <p><span class="highlight">열이</span>가 나타났어요. <span class="dialogue">"물이 뜨거우면 분자들이 더 빨리 움직여! 그래서 뜨거운 물에 설탕을 넣으면 빨리 녹아!"</span></p>
+        <p>다은이가 깨달았어요. <span class="dialogue">"그래서 따뜻한 코코아에 설탕이 빨리 녹았구나!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">👅 보이지 않는 존재</span>
+        <h2>단맛이라는 증거</h2>
+        <p>물컵 속 탐험을 마치고 원래 크기로 돌아온 다은이는 코코아를 마셨어요. 달았어요! <span class="dialogue">"이 단맛이 수크가 있다는 증거야!"</span></p>
+        <p>다은이가 탐정 노트에 적었어요. <span class="highlight">'증거 1: 단맛. 설탕을 넣기 전엔 안 달았는데, 넣고 저으니 달아짐. 설탕이 물속에 있다는 증거!'</span></p>
+        <p>분자경 박사가 말했어요. <span class="dialogue">"우리 혀에는 맛을 느끼는 <span class="highlight">'미뢰'</span>가 있어. 설탕 분자가 미뢰에 닿으면 뇌에 신호가 가서 '달다!'라고 느껴."</span></p>
+        <p>설탕이 사라졌으면 혀에 닿을 수 없으니 맛이 안 나야 해요. 그런데 달잖아요? 수크가 물속에 있다는 증거예요!</p>
+        <p>다은이는 다른 증거도 찾았어요. <span class="highlight">'증거 2: 무게. 물 + 설탕 = 설탕물 무게! 설탕이 사라졌으면 무게가 줄어야 하는데, 안 줄어!'</span></p>
+        <p><span class="highlight">'증거 3: 물이 더 뜨거워야 끓음. 순수한 물은 100도에서 끓는데, 설탕물은 그보다 높은 온도에서 끓어!'</span></p>
+        <p>증거가 쌓여갔어요. <span class="dialogue">"눈에 안 보인다고 없다고 생각한 내가 틀렸어."</span> 다은이가 깨달았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">🔥 증발 실험</span>
+        <h2>물을 날려보내면?</h2>
+        <p>다은이는 실험을 하기로 했어요. <span class="dialogue">"설탕이 정말 물속에 있다면, 물을 없애면 설탕이 나타나야 해!"</span></p>
+        <p>엄마 허락을 받고 주방에서 실험을 시작했어요. 작은 냄비에 설탕물을 붓고 약한 불로 가열했어요.</p>
+        <p><span class="highlight">열이</span>가 나타났어요. <span class="dialogue">"열을 받으면 물 분자가 빨리 움직여. 어떤 물 분자는 공기 중으로 튀어 올라가! 이것이 <span class="highlight">'증발'</span>이야!"</span></p>
+        <p>냄비 위로 김이 올라갔어요. 물이 수증기가 되어 날아가는 거예요.</p>
+        <p>분자경 박사가 말했어요. <span class="dialogue">"물 분자는 가벼워서 날아갈 수 있어. 하지만 설탕 분자는 물보다 19배나 무거워서 못 날아가!"</span></p>
+        <p>시간이 지나자 냄비 안의 물이 줄었어요. 설탕물이 점점 걸쭉해지고 색이 변했어요. <span class="dialogue">"물이 줄면서 설탕이 더 진해지는 거야. 이것을 <span class="highlight">'농축'</span>이라 해."</span></p>
+        <p>다은이는 접시에 설탕물을 조금 덜어 창가에 놓았어요. 자연스럽게 마르게 하려고요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">✨ 다시 나타난 설탕</span>
+        <h2>하얀 결정이 돌아왔다!</h2>
+        <p>이틀이 지났어요. 학교 갔다 온 다은이가 접시를 봤어요. 물은 다 마르고, 바닥에 하얀 게 남아 있었어요. 반짝이는 하얀 결정!</p>
+        <p><span class="dialogue">"설탕이다! 설탕이 돌아왔어!"</span> 다은이가 소리쳤어요. 손가락으로 찍어 맛봤어요. 달았어요! 분명히 설탕이에요!</p>
+        <p>분자경 박사가 미소 지었어요. <span class="dialogue">"물이 증발하면 물 분자만 날아가. 설탕 분자는 남아. 물이 다 마르면 설탕 분자들이 다시 모여 결정을 만들어. 이것을 <span class="highlight">'재결정화'</span>라고 해!"</span></p>
+        <p>다은이가 다시 작아져서 보니, 수크 분자들이 다시 만나 기뻐하고 있었어요. <span class="highlight">결정 대장</span>이 돌아왔어요! <span class="dialogue">"전원 모여! 결정을 다시 만들자!"</span></p>
+        <p>수크 분자들이 벽돌처럼 쌓여 새 결정이 만들어졌어요.</p>
+        <p><span class="dialogue">"결정 대장님, 돌아오셨네요!"</span> <span class="dialogue">"그래. 흩어졌지만, 사라진 건 없었어."</span></p>
+        <p>다은이 눈에 눈물이 맺혔어요. 사라진 것처럼 보였지만, 설탕은 한 분자도 사라지지 않았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">🔄 상태 변화</span>
+        <h2>녹고, 얼고, 증발해도</h2>
+        <p>분자경 박사가 더 넓은 세계를 보여줬어요. <span class="dialogue">"설탕이 녹고 다시 나타난 것은 더 큰 원리의 일부야. 물질은 형태를 바꿀 뿐, 사라지지 않아."</span></p>
+        <p>물을 예로 들었어요. <span class="highlight">얼음(단단함) → 물(흐름) → 수증기(날아감)</span>. 물 분자는 어떤 상태에서든 그대로예요! 다만 분자들이 모여 있는 방식이 달라질 뿐이에요.</p>
+        <p>단단한 얼음에서는 분자가 제자리에 있고, 물에서는 자유롭게 움직이고, 수증기에서는 아주 빠르게 날아다녀요.</p>
+        <p><span class="dialogue">"소금도 마찬가지야."</span> 박사가 말했어요. <span class="dialogue">"소금을 물에 넣으면 녹아. 물을 마르게 하면 소금이 다시 나타나!"</span></p>
+        <p>다은이가 정리했어요. <span class="dialogue">"설탕도, 소금도, 물에 녹아도 사라지는 게 아니구나!"</span></p>
+        <p><span class="dialogue">"맞아. 이것을 <span class="highlight">'질량 보존의 법칙'</span>이라고 해. 물질이 변해도 전체 무게는 그대로야."</span></p>
+        <p>이것은 설탕만의 이야기가 아니에요. 세상 모든 물질에 적용되는 법칙이에요!</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">🌟 사라진 게 아니었다</span>
+        <h2>보이지 않아도 있다!</h2>
+        <p>탐험을 마친 다은이는 주방 식탁에 앉아 있었어요. 코코아는 식어 있었지만, 다은이의 세계는 달라져 있었어요.</p>
+        <p>탐정 노트 마지막 페이지에 적었어요. <span class="highlight">'결론: 설탕은 실종된 게 아니었다. 물 분자 사이에 있었다. 물을 없애면 설탕이 다시 나타난다. 한 분자도 사라지지 않았다.'</span></p>
+        <p>그 아래에 큰 글씨로 적었어요. <span class="highlight">'배운 것: 보이지 않는다고 없는 게 아니다.'</span></p>
+        <p>다은이는 코코아를 데워 마셨어요. 달콤했어요. 이제 이 단맛이 다르게 느껴졌어요. 수억 개의 설탕 분자가 혀에 닿아 <span class="dialogue">"나 여기 있어!"</span>라고 말하는 거예요.</p>
+        <p>분자경 박사의 목소리가 들렸어요. <span class="dialogue">"다은아, 과학은 보이지 않는 것을 보는 눈을 주는 거야. 공기 속 산소도, 우리 몸의 원자도, 눈에 안 보이지만 있어. 세상의 중요한 것들은 대부분 눈에 안 보여."</span></p>
+        <p>다음 날 과학 시간, 선생님이 물었어요. <span class="dialogue">"설탕을 물에 넣으면 어디로 갈까요?"</span> 다은이가 손을 들었어요. <span class="dialogue">"사라지는 게 아니에요! 물 분자 사이에 숨어 있는 거예요!"</span></p>
+        <p>탐정 다은의 눈이 반짝였어요. 보이지 않아도, 사라지지 않아요.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">목록으로</button>
+  </div>
+
+  <script>
+    // 섹션별 배경 이미지 데이터
+    const sectionBackgrounds = {
+      0: '/images/창작도서/창작화학02/00.jpg',
+      1: '/images/창작도서/창작화학02/01.jpg',
+      2: '/images/창작도서/창작화학02/02.jpg',
+      3: '/images/창작도서/창작화학02/03.jpg',
+      4: '/images/창작도서/창작화학02/04.jpg',
+      5: '/images/창작도서/창작화학02/05.jpg',
+      6: '/images/창작도서/창작화학02/06.jpg',
+      7: '/images/창작도서/창작화학02/07.jpg',
+      8: '/images/창작도서/창작화학02/08.jpg',
+      9: '/images/창작도서/창작화학02/09.jpg',
+      10: '/images/창작도서/창작화학02/10.jpg'
+    };
+
+    // 이미지 프리로드
+    Object.values(sectionBackgrounds).forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const storyCards = document.querySelectorAll('.story-card');
+    let currentBg = 0;
+
+    // 스크롤 이벤트 핸들러
+    function handleScroll() {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+
+      // 각 섹션의 위치 확인
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top;
+        const sectionHeight = rect.height;
+
+        // 섹션이 화면 중앙에 있을 때 배경 변경
+        if (sectionTop < windowHeight * 0.5 && sectionTop > -sectionHeight * 0.5) {
+          const bgIndex = section.dataset.bg ?
+            Object.keys(sectionBackgrounds).find(key => sectionBackgrounds[key] === section.dataset.bg) :
+            index;
+
+          if (section.dataset.bg && currentBg !== section.dataset.bg) {
+            currentBg = section.dataset.bg;
+            mapContainer.style.backgroundImage = `url('${section.dataset.bg}')`;
+          }
+        }
+
+        // 스토리 카드 애니메이션
+        const card = section.querySelector('.story-card');
+        if (card) {
+          if (sectionTop < windowHeight * 0.75) {
+            card.classList.add('active');
+          }
+        }
+      });
+
+      // 인트로 섹션 체크
+      const introSection = document.querySelector('.intro-section');
+      if (introSection) {
+        const introRect = introSection.getBoundingClientRect();
+        if (introRect.top < windowHeight * 0.5 && introRect.top > -introRect.height * 0.5) {
+          mapContainer.style.backgroundImage = `url('${sectionBackgrounds[0]}')`;
+        }
+      }
+    }
+
+    // 스크롤 이벤트 리스너
+    window.addEventListener('scroll', handleScroll);
+
+    // 초기 실행
+    handleScroll();
+  </script>
+</body>
+</html>

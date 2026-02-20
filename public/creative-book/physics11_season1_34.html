@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>거울 나라에 빠진 소녀 '빛나'와 빛의 비밀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(156, 39, 176, 0.15);
+      color: #7B1FA2;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #9C27B0;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #7B1FA2;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #CE93D8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(156, 39, 176, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(123, 31, 162, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🪞 거울 나라에 빠진 소녀 '빛나'</h1>
+        <p class="subtitle">
+          《거울 속 또 다른 세상, 빛이 돌아오는 길》<br>
+          빛의 직진, 반사의 법칙, 거울의 비밀을 밝히는 이야기
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>빛나</strong> — 열한 살 소녀. 거울 속 자기 모습이 궁금해요.</p>
+          <p><strong>나빛</strong> — 거울 속 빛나의 반대 모습. 빛이 만든 허상이에요.</p>
+          <p><strong>레이 선생님</strong> — 과학 선생님. 빛의 원리를 알려줘요.</p>
+          <p><strong>프리즘이</strong> — 빛나의 단짝 친구예요.</p>
+        </div>
+        <p class="scroll-hint">⬇ 스크롤하여 이야기 시작 ⬇</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🪞 거울 앞 아이</span>
+        <h2>거울 속 '나'는 진짜 나일까?</h2>
+        <p>맑은 호수가 있는 마을에 '빛나'라는 열한 살 소녀가 살았어요. 빛나는 매일 아침 거울 앞에 서서 머리를 빗는 것을 좋아했어요.</p>
+        <p>어느 날 아침, 놀라운 일이 벌어졌어요. 거울 속의 빛나가 먼저 말을 건 거예요!</p>
+        <p><span class="dialogue">"안녕, 나는 '나빛'이야. 거울 이쪽에 사는 너의 반대 모습이야."</span></p>
+        <p><span class="dialogue">"뭐야? 거울이 말을 해?"</span> 빛나가 깜짝 놀랐어요.</p>
+        <p><span class="dialogue">"나는 네가 오른손을 들면 왼손을 들어. 왜 그런지 궁금하지 않아?"</span></p>
+        <p>빛나가 오른손을 들어봤어요. 거울 속 나빛은 왼손을 들었어요. 글씨가 적힌 책을 거울 앞에 대보니, 글씨가 좌우 반전되어 보였어요.</p>
+        <p><span class="dialogue">"왜 위아래는 그대로인데 좌우만 바뀌는 거야?"</span></p>
+        <p><span class="dialogue">"그 답을 알고 싶으면 나를 따라와. 빛이 어떻게 여행하는지 알면, 거울의 모든 비밀을 풀 수 있어."</span></p>
+        <p>그날부터 빛나의 빛에 대한 탐험이 시작되었어요!</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">➡️ 빛의 직진</span>
+        <h2>빛은 절대 구부러지지 않아</h2>
+        <p>빛나의 첫 번째 선생님은 '레이 선생님'이었어요. 선생님은 항상 레이저 포인터를 들고 다녔어요.</p>
+        <p><span class="dialogue">"빛나야, 거울을 이해하려면 먼저 빛의 성격을 알아야 해."</span></p>
+        <p>선생님이 어두운 교실에서 레이저를 켰어요. 빨간 빛줄기가 일직선으로 나갔어요. 빛나가 손으로 가로막자, 빛은 피해가지 않고 그냥 막혀서 그림자를 만들었어요.</p>
+        <p><span class="dialogue">"<span class="highlight">빛은 곧장 직진해. 장애물을 만나면 피해가지 않아.</span> 돌아가거나, 반사되거나, 흡수되거나 셋 중 하나야."</span></p>
+        <p>이것이 <span class="highlight">'빛의 직진성'</span>이에요. 빛은 항상 직선으로 나아가요.</p>
+        <p><span class="dialogue">"빛의 속도는 초속 30만 킬로미터야. 1초에 지구를 일곱 바퀴 반 돌 수 있어. 우주에서 가장 빨라!"</span></p>
+        <p><span class="dialogue">"빛은 빠르기만 한 게 아니라 정직하기도 하네요. 딴 길로 새지 않으니까요."</span></p>
+        <p><span class="dialogue">"맞아. 그래서 빛이 거울에 부딪히면 어떻게 되는지 정확히 계산할 수 있어."</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">📐 반사의 법칙</span>
+        <h2>빛과 거울의 약속</h2>
+        <p>레이 선생님이 빛나를 실험대 앞으로 데려갔어요. 평면 거울과 각도기가 있었어요.</p>
+        <p><span class="dialogue">"빛과 거울 사이의 가장 중요한 약속을 보여줄게."</span></p>
+        <p>선생님이 레이저를 거울에 쐈어요. 빛이 거울에 부딪히자, 정확히 반대쪽으로 튀어나갔어요!</p>
+        <p><span class="dialogue">"빛이 돌아왔어요!"</span></p>
+        <p><span class="dialogue">"이것을 '반사'라고 해. 반사에는 절대 깨지지 않는 법칙이 있어."</span></p>
+        <p>선생님이 설명했어요. <span class="dialogue">"거울 표면에 수직인 가상의 선을 <span class="highlight">'법선'</span>이라고 해. 빛이 들어오는 각도가 <span class="highlight">'입사각'</span>, 나가는 각도가 <span class="highlight">'반사각'</span>이야."</span></p>
+        <p>입사각을 30도로 하면 반사각도 30도. 45도면 45도. 60도면 60도.</p>
+        <p><span class="dialogue">"<span class="highlight">입사각은 반사각과 같아.</span> 이것이 '반사의 법칙'이야. 빛은 이 약속을 우주가 생긴 후 138억 년 동안 한 번도 어긴 적이 없어!"</span></p>
+        <p>나빛은 환상이 아니었어요. 빛의 약속이 만들어낸 과학이었어요!</p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">⚖️ 입사각과 반사각</span>
+        <h2>법선이라는 심판관</h2>
+        <p>빛나가 물었어요. <span class="dialogue">"왜 각도를 거울이 아니라 법선을 기준으로 재요?"</span></p>
+        <p><span class="dialogue">"좋은 질문이야. 평면 거울에서는 상관없지만, 거울이 휘어져 있으면 표면 방향이 지점마다 달라지잖아? 그래서 표면에 수직인 법선을 기준으로 잡는 거야."</span></p>
+        <p><span class="dialogue">"<span class="highlight">법선은 심판관 같은 거네요!</span> 거울이 평평하든 휘어져 있든, 법선만 그으면 각도를 정확하게 잴 수 있어요."</span></p>
+        <p>빛나는 여러 실험을 했어요. 입사각 0도(거울에 수직)면 반사각도 0도, 빛이 왔던 길로 돌아갔어요.</p>
+        <p>그날 밤, 나빛이 말했어요. <span class="dialogue">"이제 알겠어? 내가 네 반대 모습인 이유를. 빛이 네 몸에서 출발해서 거울에서 반사되어 네 눈에 들어와. 그 빛들이 모여서 나를 만들어."</span></p>
+        <p><span class="dialogue">"그런데 왜 좌우만 바뀌어?"</span></p>
+        <p><span class="dialogue">"사실 좌우가 바뀌는 게 아니야. <span class="highlight">'앞뒤'가 바뀌는 거야.</span> 거울은 빛의 진행 방향을 뒤집어. 네가 거울을 향해 서면, 나는 너를 향해 서 있지. 그래서 오른손과 왼손이 바뀌어 보여."</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">▭ 평면 거울</span>
+        <h2>세상에서 가장 정직한 거울</h2>
+        <p>빛나가 집에서 보는 화장대 거울, 이것이 '평면 거울'이에요.</p>
+        <p><span class="dialogue">"<span class="highlight">평면 거울은 거짓말을 하지 않아.</span> 물체와 같은 크기, 같은 모양의 상을 만들어. 네가 160센티미터면, 거울 속의 너도 160센티미터야."</span></p>
+        <p><span class="dialogue">"거울 속의 나는 어디에 있어요? 거울 안이요?"</span></p>
+        <p><span class="dialogue">"거울 속의 상은 <span class="highlight">'허상'</span>이야. 빛이 실제로 그곳에 모이는 게 아니라, 그곳에서 오는 것처럼 보이는 거야."</span></p>
+        <p>선생님이 그림을 그렸어요. 빛나에서 출발한 빛이 거울에서 반사되어 빛나의 눈으로 들어와요. 뇌는 이 빛을 직선으로 연장해서, 거울 뒤쪽에 빛나가 있다고 생각해요.</p>
+        <p><span class="dialogue">"거울에서 물체까지의 거리와, 거울에서 상까지의 거리는 같아. 네가 거울에서 1미터 떨어지면, 상은 거울 뒤 1미터에 있는 것처럼 보여."</span></p>
+        <p>나빛이 말했어요. <span class="dialogue">"나는 허상이야. 빛이 실제로 거울 뒤에 모인 게 아니거든. 하지만 가짜는 아니야. 반사의 법칙이 만든 과학적 존재니까!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🔍 오목 거울</span>
+        <h2>빛을 모으는 거울</h2>
+        <p>레이 선생님이 빛나를 천문대로 데려갔어요. 거대한 망원경 안에 접시 모양으로 파인 거울이 있었어요.</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">'오목 거울'</span>이야. 안쪽이 오목하게 파여서 빛을 모으는 성질이 있어."</span></p>
+        <p>선생님이 멀리서 손전등을 비추자, 거울에 반사된 빛이 한 점에 모였어요!</p>
+        <p><span class="dialogue">"저 점이 <span class="highlight">'초점'</span>이야. 멀리서 들어온 빛이 오목 거울에서 반사되면 한 점으로 모여. 망원경이 먼 별의 약한 빛을 모아 밝게 볼 수 있는 이유야."</span></p>
+        <p>빛나가 오목 거울 앞에서 여러 위치에 섰어요. 초점보다 가까이 서면 자기 모습이 크게 확대됐고, 초점보다 멀리 서면 뒤집혀 보였어요!</p>
+        <p><span class="dialogue">"왜 뒤집혀요?"</span></p>
+        <p><span class="dialogue">"초점 바깥에서는 빛이 한 점에 모인 후 교차해서 <span class="highlight">'실상'</span>이 생겨. 종이를 대면 상이 비쳐."</span></p>
+        <p>화장할 때 쓰는 확대 거울이 오목 거울이었어요. 가까이 대면 얼굴이 크게 보이는 이유가 이거였어요!</p>
+        <p><span class="dialogue">"오목 거울은 빛을 모으는 포옹 같은 거울이에요!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🔎 볼록 거울</span>
+        <h2>넓게 보는 거울</h2>
+        <p>나빛이 도전장을 내밀었어요. <span class="dialogue">"빛나, 볼록 거울 앞에 서봐."</span></p>
+        <p>빛나는 골목 모퉁이에 설치된 둥근 거울을 찾았어요. 바깥쪽으로 볼록 튀어나온 거울이었어요.</p>
+        <p>거울을 보니 빛나 모습이 작게 보였어요. 하지만 놀라운 것은 주변 풍경이 아주 넓게 비친다는 거였어요! 골목 양쪽, 멀리 오는 사람, 모퉁이 뒤까지 한눈에 보였어요.</p>
+        <p><span class="dialogue">"<span class="highlight">볼록 거울은 빛을 퍼뜨려.</span> 오목 거울이 빛을 모으는 것과 반대야."</span></p>
+        <p><span class="dialogue">"작게 보이면 안 좋은 거 아닌가요?"</span></p>
+        <p><span class="dialogue">"아니! 작게 보이지만 넓은 범위를 볼 수 있어. 자동차 사이드미러가 볼록 거울인 이유야. 옆과 뒤를 넓게 볼 수 있거든."</span></p>
+        <p>나빛이 말했어요. <span class="dialogue">"<span class="highlight">오목 거울이 집중이라면, 볼록 거울은 시야야.</span> 크게 보는 것도 중요하지만, 넓게 보는 것도 중요해."</span></p>
+        <p>오목 거울은 빛을 모아 크고 밝게, 볼록 거울은 빛을 퍼뜨려 작지만 넓게. 쓰임에 따라 선택하는 거예요.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">👁️ 실상과 허상</span>
+        <h2>빛이 진짜 모이는 곳</h2>
+        <p><span class="dialogue">"선생님, 실상이랑 허상이 뭐예요? 둘 다 보이잖아요."</span></p>
+        <p>선생님이 초를 켜고 오목 거울 앞에 놨어요. 초점보다 멀리 두자, 흰 종이에 뒤집힌 초 모습이 비쳤어요.</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">실상</span>이야. 빛이 실제로 모여서 만들어진 상이야. 스크린에 비출 수 있어."</span></p>
+        <p>초를 초점보다 가까이 놓으면, 종이에 상이 비치지 않았어요. 하지만 거울을 보면 초가 크게 확대되어 보였어요.</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">허상</span>이야. 빛이 실제로 모이는 게 아니라, 거울 뒤쪽에 있는 것처럼 보이는 거야."</span></p>
+        <p><span class="dialogue">"실상은 빛이 진짜 만나는 곳, 허상은 빛이 만나는 척하는 곳이요!"</span></p>
+        <p>나빛이 손을 흔들었어요. <span class="dialogue">"나는 허상이야. 하지만 네 눈에는 진짜처럼 보이지?"</span></p>
+        <p><span class="dialogue">"평면 거울은 항상 허상. 볼록 거울도 항상 허상. 오목 거울은 위치에 따라 실상 또는 허상을 만들어."</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🚗 생활 속 거울</span>
+        <h2>세상은 거울로 가득해</h2>
+        <p>빛나는 세상을 새로운 눈으로 보기 시작했어요. 거울이 곳곳에 있었어요!</p>
+        <p>아빠 차에는 세 가지 거울이 있었어요. 차 안 <span class="highlight">룸미러는 평면 거울</span>로, 뒤 차를 실제 크기로 보여줬어요. 양쪽 <span class="highlight">사이드미러는 볼록 거울</span>로, 넓은 범위를 보여줬어요. "사물이 거울에 보이는 것보다 가까이 있음"이라는 경고문이 적혀 있었어요.</p>
+        <p>치과에서 의사 선생님이 입안에 넣은 작은 거울은 <span class="highlight">오목 거울</span>이었어요. 치아를 크게 확대해서 충치를 찾는 거예요.</p>
+        <p>자동차 헤드라이트 안에도 오목 거울이 있어요. 전구 뒤에서 빛을 모아 앞을 환하게 비춰요.</p>
+        <p>프리즘이가 물었어요. <span class="dialogue">"태양광 발전소도 거울을 써?"</span></p>
+        <p><span class="dialogue">"응! 거대한 오목 거울들이 태양빛을 한 점에 모아서 열을 만들어. 그 열로 물을 끓여 터빈을 돌려."</span></p>
+        <p>빛나는 주변을 봤어요. 유리창에 반사되는 빛, 호수에 비치는 하늘, 숟가락 안쪽에 뒤집혀 보이는 얼굴. <span class="highlight">세상은 반사와 거울로 가득했어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">💫 빛의 귀환</span>
+        <h2>나빛과의 작별</h2>
+        <p>탐험을 마친 어느 저녁, 빛나는 다시 거울 앞에 섰어요. 나빛이 조용히 말했어요.</p>
+        <p><span class="dialogue">"빛나, 이제 내 정체를 알겠지?"</span></p>
+        <p><span class="dialogue">"응. 너는 내 몸에서 출발한 빛이 거울에서 반사되어 만든 허상이야. 입사각과 반사각이 항상 같으니까 너는 정확한 내 모습이지."</span></p>
+        <p><span class="dialogue">"맞아. 나는 빛의 약속이 만든 존재야. <span class="highlight">빛이 138억 년 동안 한 번도 약속을 어기지 않았어.</span> 그래서 나는 항상 정확한 네 모습이야."</span></p>
+        <p>빛나가 말했어요. <span class="dialogue">"나빛, 고마워. 빛이 얼마나 정직한지 알게 됐어."</span></p>
+        <p><span class="dialogue">"빛나, 기억해. 빛은 직진하고, 부딪히면 반사하고, 반사할 때는 법칙을 지켜. 이 약속 덕분에 그림자가 있고, 거울이 작동하고, 우리가 서로를 볼 수 있어."</span></p>
+        <p>빛나가 거울에 손을 대자, 나빛도 손을 대었어요. <span class="dialogue">"안녕, 나빛. 내일도 만나자."</span> <span class="dialogue">"빛이 있는 한, 나는 항상 여기 있어."</span></p>
+        <p>불을 끄자 거울은 어두워졌어요. 하지만 빛나는 알았어요. 내일 빛이 돌아오면 나빛도 돌아올 거라는 걸. 빛은 약속을 지키니까요.</p>
+        <p style="margin-top: 30px; padding: 20px; background: rgba(156, 39, 176, 0.1); border-radius: 12px; border-left: 4px solid #9C27B0;">
+          <strong>🌱 교훈: 빛은 약속을 지켜요.</strong><br><br>
+          빛은 138억 년 동안 반사의 법칙을 지켰어요. 입사각과 반사각은 항상 같아요. 이 약속 덕분에 거울이 작동하고, 망원경이 별을 보고, 우리가 세상을 봐요. 약속을 지키는 것은 세상을 지탱하는 힘이에요!
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="history.back()">← 돌아가기</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+  </script>
+</body>
+</html>
