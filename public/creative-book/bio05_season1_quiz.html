@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦋 초록이의 위대한 모험 - 관문평가</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #388E3C 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .quiz-header h1 {
+      font-size: 28px;
+      color: #1B5E20;
+      margin-bottom: 10px;
+    }
+
+    .quiz-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2E7D32, #4CAF50);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .question-number {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .category-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(46, 125, 50, 0.1);
+      color: #2E7D32;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+
+    .question-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option {
+      padding: 16px 20px;
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 15px;
+      color: #444;
+    }
+
+    .option:hover {
+      border-color: #2E7D32;
+      background: rgba(46, 125, 50, 0.05);
+    }
+
+    .option.selected {
+      border-color: #2E7D32;
+      background: rgba(46, 125, 50, 0.1);
+      color: #1B5E20;
+      font-weight: 600;
+    }
+
+    .option.correct {
+      border-color: #27ae60;
+      background: rgba(39, 174, 96, 0.15);
+      color: #1e8449;
+    }
+
+    .option.wrong {
+      border-color: #e74c3c;
+      background: rgba(231, 76, 60, 0.15);
+      color: #c0392b;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      gap: 15px;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn.prev {
+      background: #e9ecef;
+      color: #666;
+    }
+
+    .nav-btn.next {
+      background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+      color: white;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 결과 화면 */
+    .result-container {
+      display: none;
+      text-align: center;
+    }
+
+    .result-container.show {
+      display: block;
+    }
+
+    .result-title {
+      font-size: 32px;
+      color: #1B5E20;
+      margin-bottom: 10px;
+    }
+
+    .result-score {
+      font-size: 64px;
+      font-weight: 700;
+      color: #2E7D32;
+      margin: 20px 0;
+    }
+
+    .result-message {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .radar-container {
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 30px;
+    }
+
+    .category-scores {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .category-score {
+      padding: 8px 16px;
+      background: rgba(46, 125, 50, 0.1);
+      border-radius: 20px;
+      font-size: 13px;
+      color: #1B5E20;
+    }
+
+    .restart-btn {
+      padding: 16px 40px;
+      background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .restart-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 768px) {
+      .quiz-container {
+        padding: 25px;
+        margin: 10px;
+      }
+
+      .quiz-header h1 {
+        font-size: 22px;
+      }
+
+      .question-text {
+        font-size: 16px;
+      }
+
+      .option {
+        padding: 14px 16px;
+        font-size: 14px;
+      }
+
+      .result-score {
+        font-size: 48px;
+      }
+
+      .radar-container {
+        width: 250px;
+        height: 250px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeQuiz()">×</button>
+
+  <div class="quiz-container">
+    <!-- 퀴즈 화면 -->
+    <div id="quiz-screen">
+      <div class="quiz-header">
+        <h1>🦋 초록이의 위대한 모험</h1>
+        <p>관문평가 - 이야기를 잘 이해했는지 확인해 보세요!</p>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+
+      <div id="question-container">
+        <span class="question-number" id="question-number">1/10</span>
+        <span class="category-tag" id="category-tag">인물파악</span>
+        <p class="question-text" id="question-text"></p>
+        <div class="options" id="options"></div>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="nav-btn prev" id="prev-btn" onclick="prevQuestion()">이전</button>
+        <button class="nav-btn next" id="next-btn" onclick="nextQuestion()">다음</button>
+      </div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div class="result-container" id="result-screen">
+      <h2 class="result-title">🎉 평가 완료!</h2>
+      <div class="result-score" id="result-score">0점</div>
+      <p class="result-message" id="result-message"></p>
+
+      <div class="radar-container">
+        <canvas id="radar-chart" width="300" height="300"></canvas>
+      </div>
+
+      <div class="category-scores" id="category-scores"></div>
+
+      <button class="restart-btn" onclick="closeQuiz()">돌아가기</button>
+    </div>
+  </div>
+
+  <script>
+    // 퀴즈 데이터 - 5개 영역, 각 2문제씩 (총 10문제)
+    const quizData = [
+      // 인물파악 (2문제)
+      {
+        category: "인물파악",
+        question: "초록이가 나비가 된 후 스스로 지은 새 이름은 무엇인가요?",
+        options: ["햇살이", "하늘이", "날개이", "푸름이"],
+        answer: 1
+      },
+      {
+        category: "인물파악",
+        question: "땅속에서 17년을 기다린 후 올라온 매미 유충의 이름은 무엇인가요?",
+        options: ["노랑이", "점박이", "울림이", "의심이"],
+        answer: 2
+      },
+      // 내용일치 (2문제)
+      {
+        category: "내용일치",
+        question: "초록이는 어떤 나무 잎사귀 위에서 태어났나요?",
+        options: ["느티나무", "탱자나무", "소나무", "벚나무"],
+        answer: 1
+      },
+      {
+        category: "내용일치",
+        question: "할멈 점박이는 어떤 종류의 곤충인가요?",
+        options: ["매미", "나비", "무당벌레", "풍뎅이"],
+        answer: 2
+      },
+      // 내용구조 (2문제)
+      {
+        category: "내용구조",
+        question: "이야기에서 초록이가 변화를 두려워하게 만드는 내면의 목소리는 무엇을 상징하나요?",
+        options: ["용기", "희망", "두려움과 갈등", "기쁨"],
+        answer: 2
+      },
+      {
+        category: "내용구조",
+        question: "이 이야기의 핵심 주제로 가장 적절한 것은 무엇인가요?",
+        options: ["변화는 끝이 아닌 새로운 시작이다", "애벌레는 나비보다 행복하다", "두려움을 피해야 한다", "혼자서 모든 것을 해결해야 한다"],
+        answer: 0
+      },
+      // 내용어휘 (2문제)
+      {
+        category: "내용어휘",
+        question: "'완전변태'란 무엇을 의미하나요?",
+        options: ["허물만 벗으면서 조금씩 자라는 것", "알에서 바로 성충이 되는 것", "알→애벌레→번데기→성충으로 완전히 다른 모습으로 변하는 것", "변하지 않고 그대로 사는 것"],
+        answer: 2
+      },
+      {
+        category: "내용어휘",
+        question: "번데기 속에서 나비의 몸을 새롭게 만드는 특별한 세포를 무엇이라고 하나요?",
+        options: ["줄기세포", "성충원기", "변태세포", "날개세포"],
+        answer: 1
+      },
+      // 내용추론 (2문제)
+      {
+        category: "내용추론",
+        question: "노랑이가 번데기가 되었을 때 초록이가 울음을 터뜨린 이유로 가장 적절한 것은?",
+        options: ["노랑이가 미웠기 때문에", "노랑이가 사라진 것 같아 슬펐기 때문에", "자신도 빨리 번데기가 되고 싶어서", "할멈 점박이가 떠나서"],
+        answer: 1
+      },
+      {
+        category: "내용추론",
+        question: "초록이가 '안녕, 의심아. 넌 내 일부였어. 하지만 이제 놓아줄게.'라고 말한 것의 의미로 가장 적절한 것은?",
+        options: ["의심이라는 친구와 이별한다", "두려움을 극복하고 변화를 받아들이기로 결심했다", "번데기가 되지 않기로 했다", "애벌레로 살기로 결정했다"],
+        answer: 1
+      }
+    ];
+
+    let currentQuestion = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
+    let answered = new Array(quizData.length).fill(false);
+
+    // 카테고리별 점수 추적
+    const categoryScores = {
+      "인물파악": { correct: 0, total: 2 },
+      "내용일치": { correct: 0, total: 2 },
+      "내용구조": { correct: 0, total: 2 },
+      "내용어휘": { correct: 0, total: 2 },
+      "내용추론": { correct: 0, total: 2 }
+    };
+
+    function renderQuestion() {
+      const q = quizData[currentQuestion];
+      document.getElementById('question-number').textContent = `${currentQuestion + 1}/${quizData.length}`;
+      document.getElementById('category-tag').textContent = q.category;
+      document.getElementById('question-text').textContent = q.question;
+      document.getElementById('progress-fill').style.width = `${((currentQuestion + 1) / quizData.length) * 100}%`;
+
+      const optionsContainer = document.getElementById('options');
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((opt, idx) => {
+        const optDiv = document.createElement('div');
+        optDiv.className = 'option';
+        if (userAnswers[currentQuestion] === idx) {
+          optDiv.classList.add('selected');
+        }
+        if (answered[currentQuestion]) {
+          if (idx === q.answer) {
+            optDiv.classList.add('correct');
+          } else if (userAnswers[currentQuestion] === idx) {
+            optDiv.classList.add('wrong');
+          }
+        }
+        optDiv.textContent = opt;
+        optDiv.onclick = () => selectOption(idx);
+        optionsContainer.appendChild(optDiv);
+      });
+
+      document.getElementById('prev-btn').disabled = currentQuestion === 0;
+      const nextBtn = document.getElementById('next-btn');
+      if (currentQuestion === quizData.length - 1) {
+        nextBtn.textContent = '결과 보기';
+      } else {
+        nextBtn.textContent = '다음';
+      }
+    }
+
+    function selectOption(idx) {
+      if (answered[currentQuestion]) return;
+
+      userAnswers[currentQuestion] = idx;
+      answered[currentQuestion] = true;
+
+      const q = quizData[currentQuestion];
+      if (idx === q.answer) {
+        categoryScores[q.category].correct++;
+      }
+
+      renderQuestion();
+    }
+
+    function prevQuestion() {
+      if (currentQuestion > 0) {
+        currentQuestion--;
+        renderQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      if (userAnswers[currentQuestion] === null) {
+        alert('답을 선택해주세요!');
+        return;
+      }
+
+      if (currentQuestion < quizData.length - 1) {
+        currentQuestion++;
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function convertToRadarScore(correct) {
+      // 2문제 중: 2개 맞으면 10점, 1개 맞으면 5점, 0개 맞으면 1점
+      if (correct === 2) return 10;
+      if (correct === 1) return 5;
+      return 1;
+    }
+
+    function showResult() {
+      document.getElementById('quiz-screen').style.display = 'none';
+      document.getElementById('result-screen').classList.add('show');
+
+      // 총점 계산 (100점 만점 변환)
+      let totalCorrect = 0;
+      Object.values(categoryScores).forEach(cat => {
+        totalCorrect += cat.correct;
+      });
+
+      // 각 카테고리별 레이더 점수 계산
+      const radarScores = {
+        "인물파악": convertToRadarScore(categoryScores["인물파악"].correct),
+        "내용일치": convertToRadarScore(categoryScores["내용일치"].correct),
+        "내용구조": convertToRadarScore(categoryScores["내용구조"].correct),
+        "내용어휘": convertToRadarScore(categoryScores["내용어휘"].correct),
+        "내용추론": convertToRadarScore(categoryScores["내용추론"].correct)
+      };
+
+      // 총점 = 5개 영역 레이더 점수 합 * 2 (최대 50점 -> 100점)
+      const totalScore = Object.values(radarScores).reduce((a, b) => a + b, 0) * 2;
+
+      document.getElementById('result-score').textContent = `${totalScore}점`;
+
+      let message = '';
+      if (totalScore >= 90) message = '🌟 완벽해요! 나비처럼 훌륭하게 성장했어요!';
+      else if (totalScore >= 70) message = '👍 잘했어요! 조금만 더 노력하면 완벽해질 거예요!';
+      else if (totalScore >= 50) message = '📚 괜찮아요! 이야기를 다시 읽어보면 더 잘 이해할 수 있어요!';
+      else message = '💪 힘내세요! 다시 도전해 보아요!';
+
+      document.getElementById('result-message').textContent = message;
+
+      // 카테고리 점수 표시
+      const scoresContainer = document.getElementById('category-scores');
+      scoresContainer.innerHTML = '';
+      Object.entries(radarScores).forEach(([cat, score]) => {
+        const span = document.createElement('span');
+        span.className = 'category-score';
+        span.textContent = `${cat}: ${score}점`;
+        scoresContainer.appendChild(span);
+      });
+
+      // 레이더 차트 그리기
+      drawRadarChart(radarScores);
+
+      // 결과 저장
+      saveQuizResult(totalScore, radarScores);
+    }
+
+    function drawRadarChart(scores) {
+      const canvas = document.getElementById('radar-chart');
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = 100;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const categories = ["인물파악", "내용일치", "내용구조", "내용어휘", "내용추론"];
+      const numCategories = categories.length;
+
+      // 배경 그리드 (5각형)
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      for (let level = 1; level <= 5; level++) {
+        ctx.beginPath();
+        for (let i = 0; i < numCategories; i++) {
+          const angle = (Math.PI * 2 * i / numCategories) - Math.PI / 2;
+          const r = (radius * level) / 5;
+          const x = centerX + r * Math.cos(angle);
+          const y = centerY + r * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      // 축 그리기
+      ctx.strokeStyle = '#ccc';
+      for (let i = 0; i < numCategories; i++) {
+        const angle = (Math.PI * 2 * i / numCategories) - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + radius * Math.cos(angle), centerY + radius * Math.sin(angle));
+        ctx.stroke();
+      }
+
+      // 데이터 영역 그리기
+      ctx.fillStyle = 'rgba(46, 125, 50, 0.3)';
+      ctx.strokeStyle = '#2E7D32';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      categories.forEach((cat, i) => {
+        const angle = (Math.PI * 2 * i / numCategories) - Math.PI / 2;
+        const value = scores[cat] / 10;
+        const r = radius * value;
+        const x = centerX + r * Math.cos(angle);
+        const y = centerY + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 레이블 그리기
+      ctx.fillStyle = '#333';
+      ctx.font = '12px "Noto Sans KR", sans-serif';
+      ctx.textAlign = 'center';
+      categories.forEach((cat, i) => {
+        const angle = (Math.PI * 2 * i / numCategories) - Math.PI / 2;
+        const x = centerX + (radius + 25) * Math.cos(angle);
+        const y = centerY + (radius + 25) * Math.sin(angle);
+        ctx.fillText(cat, x, y + 4);
+      });
+    }
+
+    async function saveQuizResult(totalScore, radarScores) {
+      try {
+        // 로그인 정보 가져오기 (sessionStorage 'user' 키 사용)
+        const userInfo = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+        const grade = userInfo.grade || '';
+        const name = userInfo.name || '';
+
+        if (!grade || !name) {
+          console.log('[saveQuizResult] 로그인 정보 없음 - 저장 건너뜀');
+          return;
+        }
+
+        // URL 파라미터에서 시즌 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const season = urlParams.get('season') || 'season1';
+
+        const response = await fetch('/api/creative-quiz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade,
+            name,
+            storyId: 'bio05',
+            season,
+            scores: radarScores,
+            totalScore
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          console.log('[saveQuizResult] 저장 완료:', result);
+        } else {
+          console.error('[saveQuizResult] 저장 실패:', result.message);
+        }
+      } catch (err) {
+        console.error('[saveQuizResult] 오류:', err);
+      }
+    }
+
+    function closeQuiz() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // 초기화
+    renderQuestion();
+  </script>
+
+</body>
+</html>

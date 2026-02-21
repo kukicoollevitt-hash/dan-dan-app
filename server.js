@@ -14,6 +14,19 @@ const multer = require("multer");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
 
+// ===== 형성평가 대상 단원 필터링 헬퍼 함수 =====
+// 교과기반 창작도서(grade3_, grade4_ 등)는 형성평가 대상에서 제외
+function isGateQuizTargetUnit(unitCode) {
+  // 창작도서 시리즈는 'grade'로 시작 (예: grade3_social_01, grade4_science_02)
+  if (unitCode.startsWith('grade')) return false;
+  return true;
+}
+
+// 완료 단원 목록에서 형성평가 대상만 필터링
+function filterGateQuizTargetUnits(unitCodes) {
+  return unitCodes.filter(isGateQuizTargetUnit);
+}
+
 // ===== 단원 제목 매핑 로드 =====
 let UNIT_TITLES = {};
 try {
@@ -26484,9 +26497,11 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
     }).select('unit timestamp').sort({ timestamp: 1 }).lean();
 
     // 중복 제거 (첫 번째 완료 기록만 유지, 완료 순서 보존)
+    // 교과기반 창작도서는 형성평가 대상에서 제외 (isGateQuizTargetUnit 헬퍼 사용)
     const seen = new Set();
     const allCompletedUnits = [];
     for (const log of completedLogs) {
+      if (!isGateQuizTargetUnit(log.unit)) continue;
       if (!seen.has(log.unit)) {
         seen.add(log.unit);
         allCompletedUnits.push(log.unit);
@@ -27194,6 +27209,7 @@ app.get("/api/gate-quiz/status", async (req, res) => {
     }
 
     // 완료된 단원 목록 (grade + name 조합으로만 검색, 동명이인 문제 방지)
+    // 교과기반 창작도서는 형성평가 대상에서 제외 (isGateQuizTargetUnit 헬퍼 사용)
     const completedLogs = await LearningLog.find({
       grade,
       name,
@@ -27201,7 +27217,7 @@ app.get("/api/gate-quiz/status", async (req, res) => {
       deleted: { $ne: true }
     }).select('unit').lean();
 
-    const completedUnitIds = [...new Set(completedLogs.map(log => log.unit))];
+    const completedUnitIds = filterGateQuizTargetUnits([...new Set(completedLogs.map(log => log.unit))]);
     const completedCount = completedUnitIds.length;
 
     // 통과한 관문들 (grade + name 조합으로만 검색, 동명이인 문제 방지)

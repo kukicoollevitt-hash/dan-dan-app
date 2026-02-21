@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💧 물방울 한울이의 대모험 - 관문평가</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #0288D1 0%, #01579B 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .quiz-header { text-align: center; margin-bottom: 30px; }
+    .quiz-header h1 { font-size: 28px; color: #0288D1; margin-bottom: 10px; }
+    .quiz-header p { color: #666; font-size: 14px; }
+    .progress-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; margin-bottom: 30px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #0288D1, #01579B); border-radius: 4px; transition: width 0.3s ease; }
+    .question-number { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, #0288D1 0%, #01579B 100%); color: white; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 15px; }
+    .category-tag { display: inline-block; padding: 4px 12px; background: rgba(2, 136, 209, 0.1); color: #0288D1; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+    .question-text { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 25px; line-height: 1.6; }
+    .options { display: flex; flex-direction: column; gap: 12px; }
+    .option { padding: 16px 20px; background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; font-size: 15px; color: #444; }
+    .option:hover { border-color: #0288D1; background: rgba(2, 136, 209, 0.05); }
+    .option.selected { border-color: #0288D1; background: rgba(2, 136, 209, 0.1); color: #01579B; font-weight: 600; }
+    .option.correct { border-color: #27ae60; background: rgba(39, 174, 96, 0.15); color: #1e8449; }
+    .option.wrong { border-color: #e74c3c; background: rgba(231, 76, 60, 0.15); color: #c0392b; }
+    .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; gap: 15px; }
+    .nav-btn { flex: 1; padding: 14px 24px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .nav-btn.prev { background: #e9ecef; color: #666; }
+    .nav-btn.next { background: linear-gradient(135deg, #0288D1 0%, #01579B 100%); color: white; }
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .result-container { display: none; text-align: center; }
+    .result-container.show { display: block; }
+    .result-title { font-size: 32px; color: #0288D1; margin-bottom: 10px; }
+    .result-score { font-size: 64px; font-weight: 700; color: #01579B; margin: 20px 0; }
+    .result-message { font-size: 18px; color: #666; margin-bottom: 30px; }
+    .radar-container { width: 300px; height: 300px; margin: 0 auto 30px; }
+    .category-scores { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 30px; }
+    .category-score { padding: 8px 16px; background: rgba(2, 136, 209, 0.1); border-radius: 20px; font-size: 13px; color: #01579B; }
+    .restart-btn { padding: 16px 40px; background: linear-gradient(135deg, #0288D1 0%, #01579B 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .restart-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+    .close-btn { position: fixed; top: 20px; right: 20px; width: 44px; height: 44px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 50%; font-size: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+    @media (max-width: 768px) {
+      .quiz-container { padding: 25px; margin: 10px; }
+      .quiz-header h1 { font-size: 22px; }
+      .question-text { font-size: 16px; }
+      .option { padding: 14px 16px; font-size: 14px; }
+      .result-score { font-size: 48px; }
+      .radar-container { width: 250px; height: 250px; }
+    }
+  </style>
+</head>
+<body>
+  <button class="close-btn" onclick="closeQuiz()">×</button>
+  <div class="quiz-container">
+    <div id="quiz-screen">
+      <div class="quiz-header">
+        <h1>💧 물방울 한울이의 대모험</h1>
+        <p>관문평가 - 이야기를 잘 이해했는지 확인해 보세요!</p>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div id="question-container">
+        <span class="question-number" id="question-number">1/10</span>
+        <span class="category-tag" id="category-tag">인물파악</span>
+        <p class="question-text" id="question-text"></p>
+        <div class="options" id="options"></div>
+      </div>
+      <div class="nav-buttons">
+        <button class="nav-btn prev" id="prev-btn" onclick="prevQuestion()">이전</button>
+        <button class="nav-btn next" id="next-btn" onclick="nextQuestion()">다음</button>
+      </div>
+    </div>
+    <div class="result-container" id="result-screen">
+      <h2 class="result-title">🎉 평가 완료!</h2>
+      <div class="result-score" id="result-score">0점</div>
+      <p class="result-message" id="result-message"></p>
+      <div class="radar-container"><canvas id="radar-chart" width="300" height="300"></canvas></div>
+      <div class="category-scores" id="category-scores"></div>
+      <button class="restart-btn" onclick="closeQuiz()">돌아가기</button>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      // 인물파악 (2문제)
+      { category: "인물파악", question: "바다에서 태어나 구름이 되고, 비가 되어 다시 바다로 돌아가는 주인공은?", options: ["바람이", "햇님", "물방울 한울이", "구름 뭉게"], answer: 2 },
+      { category: "인물파악", question: "한울이가 하늘로 올라갈 수 있게 도와주는 따뜻한 존재는?", options: ["달님", "태양", "바람", "구름"], answer: 1 },
+      // 내용일치 (2문제)
+      { category: "내용일치", question: "물이 수증기로 변해 하늘로 올라가는 현상을 무엇이라 하나요?", options: ["응결", "강수", "증발", "침투"], answer: 2 },
+      { category: "내용일치", question: "구름 속 물방울들이 모여 무거워지면 어떻게 되나요?", options: ["하늘로 더 올라간다", "비나 눈이 되어 내린다", "사라진다", "바람이 된다"], answer: 1 },
+      // 내용구조 (2문제)
+      { category: "내용구조", question: "물의 순환 과정 순서로 올바른 것은?", options: ["증발 → 응결 → 강수 → 유출/침투", "강수 → 증발 → 유출 → 응결", "응결 → 강수 → 증발 → 침투", "유출 → 응결 → 증발 → 강수"], answer: 0 },
+      { category: "내용구조", question: "물의 순환에 대한 설명으로 올바른 것은?", options: ["물은 한 번 사용되면 사라진다", "물은 바다에서만 증발한다", "물은 끊임없이 순환하며 형태를 바꾼다", "물은 땅에만 있다"], answer: 2 },
+      // 내용어휘 (2문제)
+      { category: "내용어휘", question: "'응결'의 의미로 올바른 것은?", options: ["물이 얼어붙는 것", "수증기가 물방울로 변하는 것", "물이 땅속으로 스며드는 것", "물이 증기로 변하는 것"], answer: 1 },
+      { category: "내용어휘", question: "'유출'의 의미로 올바른 것은?", options: ["물이 증발하는 것", "물이 땅 위로 흘러가는 것", "물이 얼어붙는 것", "물이 하늘로 올라가는 것"], answer: 1 },
+      // 내용추론 (2문제)
+      { category: "내용추론", question: "지금 마시는 물이 공룡 시대의 물일 수 있는 이유는?", options: ["물이 계속 새로 만들어져서", "물이 순환하며 재사용되기 때문에", "공룡이 물을 남겨서", "시간 여행이 가능해서"], answer: 1 },
+      { category: "내용추론", question: "산 정상에 눈이 쌓여있다가 봄에 녹으면 어떻게 되나요?", options: ["그대로 사라진다", "강과 하천을 통해 바다로 흘러간다", "다시 눈이 된다", "구름이 된다"], answer: 1 }
+    ];
+
+    let currentQuestion = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
+    let answered = new Array(quizData.length).fill(false);
+    const categoryScores = { "인물파악": { correct: 0, total: 2 }, "내용일치": { correct: 0, total: 2 }, "내용구조": { correct: 0, total: 2 }, "내용어휘": { correct: 0, total: 2 }, "내용추론": { correct: 0, total: 2 } };
+
+    function renderQuestion() {
+      const q = quizData[currentQuestion];
+      document.getElementById('question-number').textContent = `${currentQuestion + 1}/${quizData.length}`;
+      document.getElementById('category-tag').textContent = q.category;
+      document.getElementById('question-text').textContent = q.question;
+      document.getElementById('progress-fill').style.width = `${((currentQuestion + 1) / quizData.length) * 100}%`;
+      const optionsContainer = document.getElementById('options');
+      optionsContainer.innerHTML = '';
+      q.options.forEach((opt, idx) => {
+        const optDiv = document.createElement('div');
+        optDiv.className = 'option';
+        if (userAnswers[currentQuestion] === idx) optDiv.classList.add('selected');
+        if (answered[currentQuestion]) {
+          if (idx === q.answer) optDiv.classList.add('correct');
+          else if (userAnswers[currentQuestion] === idx) optDiv.classList.add('wrong');
+        }
+        optDiv.textContent = opt;
+        optDiv.onclick = () => selectOption(idx);
+        optionsContainer.appendChild(optDiv);
+      });
+      document.getElementById('prev-btn').disabled = currentQuestion === 0;
+      document.getElementById('next-btn').textContent = currentQuestion === quizData.length - 1 ? '결과 보기' : '다음';
+    }
+
+    function selectOption(idx) {
+      if (answered[currentQuestion]) return;
+      userAnswers[currentQuestion] = idx;
+      answered[currentQuestion] = true;
+      const q = quizData[currentQuestion];
+      if (idx === q.answer) categoryScores[q.category].correct++;
+      renderQuestion();
+    }
+
+    function nextQuestion() {
+      if (userAnswers[currentQuestion] === null) { alert('답을 선택해주세요!'); return; }
+      if (currentQuestion < quizData.length - 1) { currentQuestion++; renderQuestion(); }
+      else showResult();
+    }
+
+    function prevQuestion() {
+      if (currentQuestion > 0) { currentQuestion--; renderQuestion(); }
+    }
+
+    function showResult() {
+      document.getElementById('quiz-screen').style.display = 'none';
+      document.getElementById('result-screen').classList.add('show');
+      let totalScore = 0;
+      const scores = [];
+      for (const cat in categoryScores) {
+        const s = categoryScores[cat];
+        let score = s.correct === 2 ? 10 : s.correct === 1 ? 5 : 1;
+        scores.push(score);
+        totalScore += score;
+      }
+      document.getElementById('result-score').textContent = totalScore + '점';
+      let msg = totalScore >= 40 ? '훌륭해요! 물의 순환 박사!' : totalScore >= 25 ? '잘했어요! 조금만 더 노력하면 완벽!' : '다시 한번 이야기를 읽어볼까요?';
+      document.getElementById('result-message').textContent = msg;
+      const scoresDiv = document.getElementById('category-scores');
+      scoresDiv.innerHTML = '';
+      const categories = Object.keys(categoryScores);
+      categories.forEach((cat, i) => {
+        const span = document.createElement('span');
+        span.className = 'category-score';
+        span.textContent = `${cat}: ${scores[i]}점`;
+        scoresDiv.appendChild(span);
+      });
+      drawRadar(scores);
+      saveResult(totalScore, scores);
+    }
+
+    function drawRadar(scores) {
+      const canvas = document.getElementById('radar-chart');
+      const ctx = canvas.getContext('2d');
+      const cx = 150, cy = 150, r = 100;
+      ctx.clearRect(0, 0, 300, 300);
+      const labels = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      for (let level = 1; level <= 5; level++) {
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          const angle = (Math.PI * 2 * i / 5) - Math.PI / 2;
+          const x = cx + Math.cos(angle) * (r * level / 5);
+          const y = cy + Math.sin(angle) * (r * level / 5);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+      for (let i = 0; i < 5; i++) {
+        const angle = (Math.PI * 2 * i / 5) - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+        ctx.stroke();
+        const labelX = cx + Math.cos(angle) * (r + 25);
+        const labelY = cy + Math.sin(angle) * (r + 25);
+        ctx.fillStyle = '#333';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(labels[i], labelX, labelY);
+      }
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(2, 136, 209, 0.3)';
+      ctx.strokeStyle = '#0288D1';
+      ctx.lineWidth = 2;
+      for (let i = 0; i <= 5; i++) {
+        const angle = (Math.PI * 2 * (i % 5) / 5) - Math.PI / 2;
+        const val = scores[i % 5] / 10;
+        const x = cx + Math.cos(angle) * r * val;
+        const y = cy + Math.sin(angle) * r * val;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    async function saveResult(totalScore, scores) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const season = urlParams.get('season') || 'season1';
+      const grade = localStorage.getItem('selectedGrade') || '';
+      const name = localStorage.getItem('selectedStudent') || '';
+      try {
+        await fetch('/api/creative-quiz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grade, name, storyId: 'earth05', season, scores: { 인물파악: scores[0], 내용일치: scores[1], 내용구조: scores[2], 내용어휘: scores[3], 내용추론: scores[4] }, totalScore })
+        });
+      } catch (e) { console.error('저장 실패:', e); }
+    }
+
+    function closeQuiz() {
+      if (window.opener) window.close();
+      else if (window.parent !== window) window.parent.postMessage({ action: 'closeQuiz' }, '*');
+      else window.history.back();
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>

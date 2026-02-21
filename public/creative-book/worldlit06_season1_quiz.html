@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오즈의 마법사 - 독해력 퀴즈</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #1a3a1a 0%, #2e7d32 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .quiz-header h1 {
+      color: #4caf50;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .quiz-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* 입력 폼 스타일 */
+    .input-form {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .input-form h2 {
+      color: #2e7d32;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #1b5e20;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #81c784;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: #4caf50;
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+    }
+
+    .start-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #4caf50, #2e7d32);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+    }
+
+    /* 퀴즈 영역 */
+    .quiz-content {
+      display: none;
+    }
+
+    .category-section {
+      margin-bottom: 30px;
+      background: #fafafa;
+      border-radius: 16px;
+      padding: 25px;
+      border-left: 4px solid #4caf50;
+    }
+
+    .category-title {
+      color: #2e7d32;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .question-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .question-text {
+      color: #333;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option {
+      padding: 12px 16px;
+      background: #f5f5f5;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 15px;
+    }
+
+    .option:hover {
+      background: #e8f5e9;
+      border-color: #81c784;
+    }
+
+    .option.selected {
+      background: #c8e6c9;
+      border-color: #4caf50;
+      color: #1b5e20;
+      font-weight: 600;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #4caf50, #2e7d32);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+    }
+
+    /* 결과 영역 */
+    .result-section {
+      display: none;
+      text-align: center;
+    }
+
+    .result-title {
+      font-size: 28px;
+      color: #4caf50;
+      margin-bottom: 30px;
+    }
+
+    .score-display {
+      font-size: 72px;
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 20px;
+    }
+
+    .score-display span {
+      font-size: 24px;
+      color: #999;
+    }
+
+    .radar-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 30px auto;
+    }
+
+    .category-scores {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 30px 0;
+    }
+
+    .category-score-item {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .category-score-item .label {
+      font-size: 14px;
+      color: #2e7d32;
+      margin-bottom: 5px;
+    }
+
+    .category-score-item .score {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1b5e20;
+    }
+
+    .back-btn {
+      padding: 15px 40px;
+      background: #9e9e9e;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+
+    .back-btn:hover {
+      background: #757575;
+    }
+
+    @media (max-width: 600px) {
+      .quiz-container {
+        padding: 20px;
+      }
+
+      .quiz-header h1 {
+        font-size: 22px;
+      }
+
+      .score-display {
+        font-size: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="quiz-header">
+      <h1>🌪️ 오즈의 마법사 - 독해력 퀴즈</h1>
+      <p>회오리바람을 타고 마법의 나라로 — 이미 내 안에 있던 것들</p>
+    </div>
+
+    <!-- 입력 폼 -->
+    <div class="input-form" id="inputForm">
+      <h2>📝 정보 입력</h2>
+      <div class="form-group">
+        <label for="grade">학년 선택</label>
+        <select id="grade">
+          <option value="">학년을 선택하세요</option>
+          <option value="초3">초등 3학년</option>
+          <option value="초4">초등 4학년</option>
+          <option value="초5">초등 5학년</option>
+          <option value="초6">초등 6학년</option>
+          <option value="중1">중등 1학년</option>
+          <option value="중2">중등 2학년</option>
+          <option value="중3">중등 3학년</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="name">이름</label>
+        <input type="text" id="name" placeholder="이름을 입력하세요">
+      </div>
+      <button class="start-btn" onclick="startQuiz()">퀴즈 시작하기</button>
+    </div>
+
+    <!-- 퀴즈 콘텐츠 -->
+    <div class="quiz-content" id="quizContent">
+      <!-- 인물파악 -->
+      <div class="category-section">
+        <div class="category-title">👤 인물파악</div>
+        <div class="question-box">
+          <div class="question-text">1. 허수아비가 자신에게 없다고 생각한 것은 무엇인가요?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q1')">① 용기</div>
+            <div class="option" onclick="selectOption(this, 'q1')">② 심장</div>
+            <div class="option" onclick="selectOption(this, 'q1')">③ 뇌(지혜)</div>
+            <div class="option" onclick="selectOption(this, 'q1')">④ 친구</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">2. 오즈의 진짜 정체는 무엇이었나요?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q2')">① 위대한 마법사</div>
+            <div class="option" onclick="selectOption(this, 'q2')">② 오마하 출신의 평범한 서커스 단원</div>
+            <div class="option" onclick="selectOption(this, 'q2')">③ 착한 마녀의 동생</div>
+            <div class="option" onclick="selectOption(this, 'q2')">④ 다른 세계에서 온 왕</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 내용일치 -->
+      <div class="category-section">
+        <div class="category-title">📖 내용일치</div>
+        <div class="question-box">
+          <div class="question-text">3. 도로시가 서쪽 마녀를 물리친 방법은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q3')">① 마술피리를 불어서</div>
+            <div class="option" onclick="selectOption(this, 'q3')">② 은빛 구두의 마법을 사용해서</div>
+            <div class="option" onclick="selectOption(this, 'q3')">③ 물 양동이로 물을 끼얹어서</div>
+            <div class="option" onclick="selectOption(this, 'q3')">④ 친구들과 함께 싸워서</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">4. 에메랄드 시가 온통 초록빛으로 보인 진짜 이유는?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q4')">① 모든 것이 에메랄드로 만들어져서</div>
+            <div class="option" onclick="selectOption(this, 'q4')">② 마법의 빛이 비추고 있어서</div>
+            <div class="option" onclick="selectOption(this, 'q4')">③ 모두에게 초록색 안경을 씌웠기 때문</div>
+            <div class="option" onclick="selectOption(this, 'q4')">④ 오즈의 마법 때문에</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 내용구조 -->
+      <div class="category-section">
+        <div class="category-title">🔗 내용구조</div>
+        <div class="question-box">
+          <div class="question-text">5. 이 이야기의 핵심 갈등 중 "내면 갈등"에 해당하는 것은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q5')">① 도로시 vs 서쪽 마녀</div>
+            <div class="option" onclick="selectOption(this, 'q5')">② 허수아비·양철 나무꾼·사자가 이미 가진 것을 믿지 못하는 자기 불신</div>
+            <div class="option" onclick="selectOption(this, 'q5')">③ 도로시 vs 낯선 세계</div>
+            <div class="option" onclick="selectOption(this, 'q5')">④ 일행 vs 오즈의 거짓</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">6. 도로시의 여정에서 "성장 갈등"이 해결되는 순간은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q6')">① 서쪽 마녀를 물리쳤을 때</div>
+            <div class="option" onclick="selectOption(this, 'q6')">② 오즈의 정체를 알았을 때</div>
+            <div class="option" onclick="selectOption(this, 'q6')">③ 집에 돌아와 집의 소중함을 깨달았을 때</div>
+            <div class="option" onclick="selectOption(this, 'q6')">④ 친구들을 만났을 때</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 내용어휘 -->
+      <div class="category-section">
+        <div class="category-title">📚 내용어휘</div>
+        <div class="question-box">
+          <div class="question-text">7. "용기"에 대한 이 이야기의 정의로 가장 적절한 것은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q7')">① 두려움이 전혀 없는 상태</div>
+            <div class="option" onclick="selectOption(this, 'q7')">② 두려우면서도 나아가는 것</div>
+            <div class="option" onclick="selectOption(this, 'q7')">③ 강한 힘을 가진 것</div>
+            <div class="option" onclick="selectOption(this, 'q7')">④ 싸움에서 이기는 것</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">8. "심장이 없다고 말하는 자가 가장 깊이 슬퍼한다면"이 의미하는 것은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q8')">① 심장이 없으면 슬퍼할 수 없다</div>
+            <div class="option" onclick="selectOption(this, 'q8')">② 슬퍼한다는 것 자체가 이미 심장(감정)을 가지고 있다는 증거</div>
+            <div class="option" onclick="selectOption(this, 'q8')">③ 양철로 된 심장이 필요하다</div>
+            <div class="option" onclick="selectOption(this, 'q8')">④ 슬픔은 약함의 표시이다</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 내용추론 -->
+      <div class="category-section">
+        <div class="category-title">🔍 내용추론</div>
+        <div class="question-box">
+          <div class="question-text">9. 오즈가 세 친구에게 겨 대신 바늘, 비단 심장, 용기 약병을 준 것의 의미는?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q9')">① 진짜 마법의 물건을 주었다</div>
+            <div class="option" onclick="selectOption(this, 'q9')">② 스스로를 믿게 하는 것이 진짜 마법이다</div>
+            <div class="option" onclick="selectOption(this, 'q9')">③ 오즈는 사기꾼이므로 의미가 없다</div>
+            <div class="option" onclick="selectOption(this, 'q9')">④ 친구들을 속이기 위한 것이다</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">10. 이 이야기가 전하는 핵심 교훈은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q10')">① 마법사를 찾아가면 소원이 이루어진다</div>
+            <div class="option" onclick="selectOption(this, 'q10')">② 원하던 것은 이미 내 안에 있다</div>
+            <div class="option" onclick="selectOption(this, 'q10')">③ 여행을 하면 친구를 사귈 수 있다</div>
+            <div class="option" onclick="selectOption(this, 'q10')">④ 집보다 모험이 더 중요하다</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitQuiz()">결과 확인하기</button>
+    </div>
+
+    <!-- 결과 섹션 -->
+    <div class="result-section" id="resultSection">
+      <h2 class="result-title">🌪️ 퀴즈 결과</h2>
+      <div class="score-display"><span id="totalScore">0</span><span>/50점</span></div>
+
+      <div class="radar-container">
+        <canvas id="radarChart" width="400" height="400"></canvas>
+      </div>
+
+      <div class="category-scores">
+        <div class="category-score-item">
+          <div class="label">인물파악</div>
+          <div class="score" id="score1">0</div>
+        </div>
+        <div class="category-score-item">
+          <div class="label">내용일치</div>
+          <div class="score" id="score2">0</div>
+        </div>
+        <div class="category-score-item">
+          <div class="label">내용구조</div>
+          <div class="score" id="score3">0</div>
+        </div>
+        <div class="category-score-item">
+          <div class="label">내용어휘</div>
+          <div class="score" id="score4">0</div>
+        </div>
+        <div class="category-score-item">
+          <div class="label">내용추론</div>
+          <div class="score" id="score5">0</div>
+        </div>
+      </div>
+
+      <button class="back-btn" onclick="goBack()">돌아가기</button>
+    </div>
+  </div>
+
+  <script>
+    const answers = {
+      q1: '③ 뇌(지혜)',
+      q2: '② 오마하 출신의 평범한 서커스 단원',
+      q3: '③ 물 양동이로 물을 끼얹어서',
+      q4: '③ 모두에게 초록색 안경을 씌웠기 때문',
+      q5: '② 허수아비·양철 나무꾼·사자가 이미 가진 것을 믿지 못하는 자기 불신',
+      q6: '③ 집에 돌아와 집의 소중함을 깨달았을 때',
+      q7: '② 두려우면서도 나아가는 것',
+      q8: '② 슬퍼한다는 것 자체가 이미 심장(감정)을 가지고 있다는 증거',
+      q9: '② 스스로를 믿게 하는 것이 진짜 마법이다',
+      q10: '② 원하던 것은 이미 내 안에 있다'
+    };
+
+    const userAnswers = {};
+    let userName = '';
+    let userGrade = '';
+
+    function selectOption(element, questionId) {
+      const options = element.parentElement.querySelectorAll('.option');
+      options.forEach(opt => opt.classList.remove('selected'));
+      element.classList.add('selected');
+      userAnswers[questionId] = element.textContent;
+    }
+
+    function startQuiz() {
+      const grade = document.getElementById('grade').value;
+      const name = document.getElementById('name').value.trim();
+
+      if (!grade) {
+        alert('학년을 선택해주세요.');
+        return;
+      }
+      if (!name) {
+        alert('이름을 입력해주세요.');
+        return;
+      }
+
+      userName = name;
+      userGrade = grade;
+
+      document.getElementById('inputForm').style.display = 'none';
+      document.getElementById('quizContent').style.display = 'block';
+    }
+
+    function submitQuiz() {
+      const totalQuestions = Object.keys(answers).length;
+      const answeredQuestions = Object.keys(userAnswers).length;
+
+      if (answeredQuestions < totalQuestions) {
+        alert('모든 문제에 답해주세요.');
+        return;
+      }
+
+      // 카테고리별 점수 계산
+      const categoryScores = [0, 0, 0, 0, 0];
+
+      // 인물파악 (q1, q2)
+      if (userAnswers.q1 === answers.q1) categoryScores[0]++;
+      if (userAnswers.q2 === answers.q2) categoryScores[0]++;
+
+      // 내용일치 (q3, q4)
+      if (userAnswers.q3 === answers.q3) categoryScores[1]++;
+      if (userAnswers.q4 === answers.q4) categoryScores[1]++;
+
+      // 내용구조 (q5, q6)
+      if (userAnswers.q5 === answers.q5) categoryScores[2]++;
+      if (userAnswers.q6 === answers.q6) categoryScores[2]++;
+
+      // 내용어휘 (q7, q8)
+      if (userAnswers.q7 === answers.q7) categoryScores[3]++;
+      if (userAnswers.q8 === answers.q8) categoryScores[3]++;
+
+      // 내용추론 (q9, q10)
+      if (userAnswers.q9 === answers.q9) categoryScores[4]++;
+      if (userAnswers.q10 === answers.q10) categoryScores[4]++;
+
+      // 점수 변환 (2개 맞음=10점, 1개 맞음=5점, 0개 맞음=1점)
+      const convertedScores = categoryScores.map(score => {
+        if (score === 2) return 10;
+        if (score === 1) return 5;
+        return 1;
+      });
+
+      const totalScore = convertedScores.reduce((a, b) => a + b, 0);
+
+      // 결과 표시
+      document.getElementById('quizContent').style.display = 'none';
+      document.getElementById('resultSection').style.display = 'block';
+
+      document.getElementById('totalScore').textContent = totalScore;
+      document.getElementById('score1').textContent = convertedScores[0] + '점';
+      document.getElementById('score2').textContent = convertedScores[1] + '점';
+      document.getElementById('score3').textContent = convertedScores[2] + '점';
+      document.getElementById('score4').textContent = convertedScores[3] + '점';
+      document.getElementById('score5').textContent = convertedScores[4] + '점';
+
+      // 레이더 차트 그리기
+      drawRadarChart(convertedScores);
+
+      // 결과 저장
+      saveResult(convertedScores, totalScore);
+    }
+
+    function drawRadarChart(scores) {
+      const canvas = document.getElementById('radarChart');
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const maxRadius = 150;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const categories = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      const numCategories = categories.length;
+      const angleStep = (2 * Math.PI) / numCategories;
+      const startAngle = -Math.PI / 2;
+
+      // 배경 그리드
+      for (let level = 1; level <= 5; level++) {
+        const radius = (maxRadius / 5) * level;
+        ctx.beginPath();
+        for (let i = 0; i <= numCategories; i++) {
+          const angle = startAngle + i * angleStep;
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.stroke();
+      }
+
+      // 축 그리기
+      for (let i = 0; i < numCategories; i++) {
+        const angle = startAngle + i * angleStep;
+        const x = centerX + maxRadius * Math.cos(angle);
+        const y = centerY + maxRadius * Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = '#ccc';
+        ctx.stroke();
+
+        // 카테고리 라벨
+        const labelRadius = maxRadius + 25;
+        const labelX = centerX + labelRadius * Math.cos(angle);
+        const labelY = centerY + labelRadius * Math.sin(angle);
+        ctx.fillStyle = '#2e7d32';
+        ctx.font = 'bold 14px Noto Sans KR';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(categories[i], labelX, labelY);
+      }
+
+      // 데이터 영역
+      ctx.beginPath();
+      for (let i = 0; i <= numCategories; i++) {
+        const idx = i % numCategories;
+        const angle = startAngle + idx * angleStep;
+        const radius = (scores[idx] / 10) * maxRadius;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
+      ctx.fill();
+      ctx.strokeStyle = '#4caf50';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 데이터 포인트
+      for (let i = 0; i < numCategories; i++) {
+        const angle = startAngle + i * angleStep;
+        const radius = (scores[i] / 10) * maxRadius;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = '#2e7d32';
+        ctx.fill();
+      }
+    }
+
+    async function saveResult(scores, totalScore) {
+      try {
+        const response = await fetch('/api/creative-quiz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: userGrade,
+            name: userName,
+            storyId: 'worldlit06',
+            season: 'season1',
+            scores: scores,
+            totalScore: totalScore
+          })
+        });
+        const data = await response.json();
+        console.log('저장 완료:', data);
+      } catch (error) {
+        console.error('저장 실패:', error);
+      }
+    }
+
+    function goBack() {
+      window.location.href = 'worldlit06_season1.html';
+    }
+  </script>
+</body>
+</html>

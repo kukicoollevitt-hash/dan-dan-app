@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚛️ 118명의 원소 용사 - 관문평가</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .quiz-header { text-align: center; margin-bottom: 30px; }
+    .quiz-header h1 { font-size: 28px; color: #6a11cb; margin-bottom: 10px; }
+    .quiz-header p { color: #666; font-size: 14px; }
+    .progress-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; margin-bottom: 30px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #6a11cb, #2575fc); border-radius: 4px; transition: width 0.3s ease; }
+    .question-number { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 15px; }
+    .category-tag { display: inline-block; padding: 4px 12px; background: rgba(106, 17, 203, 0.1); color: #6a11cb; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+    .question-text { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 25px; line-height: 1.6; }
+    .options { display: flex; flex-direction: column; gap: 12px; }
+    .option { padding: 16px 20px; background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; font-size: 15px; color: #444; }
+    .option:hover { border-color: #6a11cb; background: rgba(106, 17, 203, 0.05); }
+    .option.selected { border-color: #6a11cb; background: rgba(106, 17, 203, 0.1); color: #5a0cb0; font-weight: 600; }
+    .option.correct { border-color: #27ae60; background: rgba(39, 174, 96, 0.15); color: #1e8449; }
+    .option.wrong { border-color: #e74c3c; background: rgba(231, 76, 60, 0.15); color: #c0392b; }
+    .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; gap: 15px; }
+    .nav-btn { flex: 1; padding: 14px 24px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .nav-btn.prev { background: #e9ecef; color: #666; }
+    .nav-btn.next { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; }
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .result-container { display: none; text-align: center; }
+    .result-container.show { display: block; }
+    .result-title { font-size: 32px; color: #6a11cb; margin-bottom: 10px; }
+    .result-score { font-size: 64px; font-weight: 700; color: #2575fc; margin: 20px 0; }
+    .result-message { font-size: 18px; color: #666; margin-bottom: 30px; }
+    .radar-container { width: 300px; height: 300px; margin: 0 auto 30px; }
+    .category-scores { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 30px; }
+    .category-score { padding: 8px 16px; background: rgba(106, 17, 203, 0.1); border-radius: 20px; font-size: 13px; color: #5a0cb0; }
+    .restart-btn { padding: 16px 40px; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .restart-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+    .close-btn { position: fixed; top: 20px; right: 20px; width: 44px; height: 44px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 50%; font-size: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+    @media (max-width: 768px) {
+      .quiz-container { padding: 25px; margin: 10px; }
+      .quiz-header h1 { font-size: 22px; }
+      .question-text { font-size: 16px; }
+      .option { padding: 14px 16px; font-size: 14px; }
+      .result-score { font-size: 48px; }
+      .radar-container { width: 250px; height: 250px; }
+    }
+  </style>
+</head>
+<body>
+  <button class="close-btn" onclick="closeQuiz()">×</button>
+  <div class="quiz-container">
+    <div id="quiz-screen">
+      <div class="quiz-header">
+        <h1>⚛️ 118명의 원소 용사</h1>
+        <p>관문평가 - 이야기를 잘 이해했는지 확인해 보세요!</p>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div id="question-container">
+        <span class="question-number" id="question-number">1/10</span>
+        <span class="category-tag" id="category-tag">인물파악</span>
+        <p class="question-text" id="question-text"></p>
+        <div class="options" id="options"></div>
+      </div>
+      <div class="nav-buttons">
+        <button class="nav-btn prev" id="prev-btn" onclick="prevQuestion()">이전</button>
+        <button class="nav-btn next" id="next-btn" onclick="nextQuestion()">다음</button>
+      </div>
+    </div>
+    <div class="result-container" id="result-screen">
+      <h2 class="result-title">🎉 평가 완료!</h2>
+      <div class="result-score" id="result-score">0점</div>
+      <p class="result-message" id="result-message"></p>
+      <div class="radar-container"><canvas id="radar-chart" width="300" height="300"></canvas></div>
+      <div class="category-scores" id="category-scores"></div>
+      <button class="restart-btn" onclick="closeQuiz()">돌아가기</button>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      // 인물파악 (2문제)
+      { category: "인물파악", question: "원소 광장의 관리인으로, 118개 좌석의 배치를 누구보다 잘 아는 캐릭터는?", options: ["멘델", "라부아 할머니", "주기 선생님", "금이"], answer: 2 },
+      { category: "인물파악", question: "79번 좌석에 앉아있으며, 황금빛 갑옷을 입은 위풍당당한 원소 용사는?", options: ["철이", "산소", "금이", "나트륨"], answer: 2 },
+      // 내용일치 (2문제)
+      { category: "내용일치", question: "원소의 '원자번호'를 결정하는 것은 무엇인가요?", options: ["전자 수", "양성자 수", "중성자 수", "원자량"], answer: 1 },
+      { category: "내용일치", question: "우주에서 가장 많은 원소는 무엇인가요?", options: ["산소", "금", "철", "수소"], answer: 3 },
+      // 내용구조 (2문제)
+      { category: "내용구조", question: "주기율표에서 '같은 세로줄(족)'에 있는 원소들의 공통점은?", options: ["원자량이 같다", "최외각 전자 수가 같아 화학적 성질이 비슷하다", "색깔이 같다", "녹는점이 같다"], answer: 1 },
+      { category: "내용구조", question: "이 이야기의 핵심 주제로 가장 적절한 것은?", options: ["금을 만드는 방법", "모든 것은 기본(원소)에서 시작된다", "별의 폭발 과정", "연금술사의 생활"], answer: 1 },
+      // 내용어휘 (2문제)
+      { category: "내용어휘", question: "'동소체'의 의미로 가장 적절한 것은?", options: ["다른 원소로 이루어진 물질", "같은 원소로 이루어졌지만 배열이 달라 다른 성질을 가진 물질", "원자번호가 같은 물질", "전자 수가 같은 물질"], answer: 1 },
+      { category: "내용어휘", question: "'비활성 기체'의 특징으로 맞는 것은?", options: ["물과 격렬하게 반응한다", "전자를 쉽게 잃는다", "최외각 전자 껍질이 꽉 차 있어 거의 반응하지 않는다", "녹이 잘 슨다"], answer: 2 },
+      // 내용추론 (2문제)
+      { category: "내용추론", question: "철보다 무거운 원소(금, 백금, 우라늄 등)가 만들어지는 곳으로 가장 적절한 것은?", options: ["지구 내부", "초신성 폭발", "바다 속", "화산"], answer: 1 },
+      { category: "내용추론", question: "같은 원소 118개로 무한에 가까운 물질이 만들어지는 이유로 가장 적절한 것은?", options: ["원소들이 계속 새로 생겨나서", "원소들이 결합하는 방식이 다양하기 때문에", "원소의 색깔이 변하기 때문에", "원소가 저절로 분열하기 때문에"], answer: 1 }
+    ];
+
+    let currentQuestion = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
+    let answered = new Array(quizData.length).fill(false);
+    const categoryScores = { "인물파악": { correct: 0, total: 2 }, "내용일치": { correct: 0, total: 2 }, "내용구조": { correct: 0, total: 2 }, "내용어휘": { correct: 0, total: 2 }, "내용추론": { correct: 0, total: 2 } };
+
+    function renderQuestion() {
+      const q = quizData[currentQuestion];
+      document.getElementById('question-number').textContent = `${currentQuestion + 1}/${quizData.length}`;
+      document.getElementById('category-tag').textContent = q.category;
+      document.getElementById('question-text').textContent = q.question;
+      document.getElementById('progress-fill').style.width = `${((currentQuestion + 1) / quizData.length) * 100}%`;
+      const optionsContainer = document.getElementById('options');
+      optionsContainer.innerHTML = '';
+      q.options.forEach((opt, idx) => {
+        const optDiv = document.createElement('div');
+        optDiv.className = 'option';
+        if (userAnswers[currentQuestion] === idx) optDiv.classList.add('selected');
+        if (answered[currentQuestion]) {
+          if (idx === q.answer) optDiv.classList.add('correct');
+          else if (userAnswers[currentQuestion] === idx) optDiv.classList.add('wrong');
+        }
+        optDiv.textContent = opt;
+        optDiv.onclick = () => selectOption(idx);
+        optionsContainer.appendChild(optDiv);
+      });
+      document.getElementById('prev-btn').disabled = currentQuestion === 0;
+      document.getElementById('next-btn').textContent = currentQuestion === quizData.length - 1 ? '결과 보기' : '다음';
+    }
+
+    function selectOption(idx) {
+      if (answered[currentQuestion]) return;
+      userAnswers[currentQuestion] = idx;
+      answered[currentQuestion] = true;
+      const q = quizData[currentQuestion];
+      if (idx === q.answer) categoryScores[q.category].correct++;
+      renderQuestion();
+    }
+
+    function prevQuestion() { if (currentQuestion > 0) { currentQuestion--; renderQuestion(); } }
+    function nextQuestion() {
+      if (userAnswers[currentQuestion] === null) { alert('답을 선택해주세요!'); return; }
+      if (currentQuestion < quizData.length - 1) { currentQuestion++; renderQuestion(); } else { showResult(); }
+    }
+
+    function convertToRadarScore(correct) { if (correct === 2) return 10; if (correct === 1) return 5; return 1; }
+
+    function showResult() {
+      document.getElementById('quiz-screen').style.display = 'none';
+      document.getElementById('result-screen').classList.add('show');
+      const radarScores = { "인물파악": convertToRadarScore(categoryScores["인물파악"].correct), "내용일치": convertToRadarScore(categoryScores["내용일치"].correct), "내용구조": convertToRadarScore(categoryScores["내용구조"].correct), "내용어휘": convertToRadarScore(categoryScores["내용어휘"].correct), "내용추론": convertToRadarScore(categoryScores["내용추론"].correct) };
+      const totalScore = Object.values(radarScores).reduce((a, b) => a + b, 0) * 2;
+      document.getElementById('result-score').textContent = `${totalScore}점`;
+      let message = '';
+      if (totalScore >= 90) message = '🌟 완벽해요! 주기율표 왕국의 비밀을 완전히 이해했어요!';
+      else if (totalScore >= 70) message = '👍 잘했어요! 원소 용사들의 세계를 잘 이해하고 있어요!';
+      else if (totalScore >= 50) message = '📚 괜찮아요! 이야기를 다시 읽어보면 더 잘 이해할 수 있어요!';
+      else message = '💪 힘내세요! 다시 도전해 보아요!';
+      document.getElementById('result-message').textContent = message;
+      const scoresContainer = document.getElementById('category-scores');
+      scoresContainer.innerHTML = '';
+      Object.entries(radarScores).forEach(([cat, score]) => { const span = document.createElement('span'); span.className = 'category-score'; span.textContent = `${cat}: ${score}점`; scoresContainer.appendChild(span); });
+      drawRadarChart(radarScores);
+      saveQuizResult(totalScore, radarScores);
+    }
+
+    function drawRadarChart(scores) {
+      const canvas = document.getElementById('radar-chart');
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2, centerY = canvas.height / 2, radius = 100;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const categories = ["인물파악", "내용일치", "내용구조", "내용어휘", "내용추론"];
+      const numCategories = categories.length;
+      ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1;
+      for (let level = 1; level <= 5; level++) { ctx.beginPath(); for (let i = 0; i < numCategories; i++) { const angle = (Math.PI * 2 * i / numCategories) - Math.PI / 2; const r = (radius * level) / 5; const x = centerX + r * Math.cos(angle); const y = centerY + r * Math.sin(angle); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.closePath(); ctx.stroke(); }
+      ctx.strokeStyle = '#ccc'; for (let i = 0; i < numCategories; i++) { const angle = (Math.PI * 2 * i / numCategories) - Math.PI / 2; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX + radius * Math.cos(angle), centerY + radius * Math.sin(angle)); ctx.stroke(); }
+      ctx.fillStyle = 'rgba(106, 17, 203, 0.3)'; ctx.strokeStyle = '#6a11cb'; ctx.lineWidth = 2; ctx.beginPath();
+      categories.forEach((cat, i) => { const angle = (Math.PI * 2 * i / numCategories) - Math.PI / 2; const value = scores[cat] / 10; const r = radius * value; const x = centerX + r * Math.cos(angle); const y = centerY + r * Math.sin(angle); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#333'; ctx.font = '12px "Noto Sans KR", sans-serif'; ctx.textAlign = 'center';
+      categories.forEach((cat, i) => { const angle = (Math.PI * 2 * i / numCategories) - Math.PI / 2; const x = centerX + (radius + 25) * Math.cos(angle); const y = centerY + (radius + 25) * Math.sin(angle); ctx.fillText(cat, x, y + 4); });
+    }
+
+    async function saveQuizResult(totalScore, radarScores) {
+      try {
+        const userInfo = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+        const grade = userInfo.grade || '';
+        const name = userInfo.name || '';
+        if (!grade || !name) { console.log('[saveQuizResult] 로그인 정보 없음 - 저장 건너뜀'); return; }
+        const urlParams = new URLSearchParams(window.location.search);
+        const season = urlParams.get('season') || 'season1';
+        const response = await fetch('/api/creative-quiz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grade, name, storyId: 'chem06', season, scores: radarScores, totalScore })
+        });
+        const result = await response.json();
+        if (result.ok) console.log('[saveQuizResult] 저장 완료:', result);
+        else console.error('[saveQuizResult] 저장 실패:', result.message);
+      } catch (err) { console.error('[saveQuizResult] 오류:', err); }
+    }
+
+    function closeQuiz() { if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'closeStory' }, '*'); else window.history.back(); }
+    renderQuestion();
+  </script>
+</body>
+</html>

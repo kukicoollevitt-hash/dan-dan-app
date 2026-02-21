@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>창작사회문화07 퀴즈</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .quiz-container { max-width: 600px; margin: 0 auto; }
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, #1DA1F2, #0D47A1);
+      border-radius: 20px;
+      color: white;
+      box-shadow: 0 4px 15px rgba(29, 161, 242, 0.3);
+    }
+    .quiz-header h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    .quiz-header p { font-size: 0.95rem; opacity: 0.95; }
+    .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin-top: 15px; overflow: hidden; }
+    .progress-fill { height: 100%; background: white; border-radius: 4px; transition: width 0.3s ease; }
+    .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .question-number { display: inline-block; background: linear-gradient(135deg, #1DA1F2, #0D47A1); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 15px; }
+    .question-text { font-size: 1.1rem; line-height: 1.7; color: #333; margin-bottom: 20px; word-break: keep-all; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn { width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 12px; background: #fafafa; font-size: 1rem; text-align: left; cursor: pointer; transition: all 0.2s ease; }
+    .option-btn:hover { border-color: #1DA1F2; background: #e8f5fe; }
+    .option-btn.selected { border-color: #1DA1F2; background: linear-gradient(135deg, #1DA1F2, #0D47A1); color: white; }
+    .nav-buttons { display: flex; justify-content: space-between; gap: 15px; margin-top: 20px; }
+    .nav-btn { flex: 1; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .nav-btn.prev { background: #e0e0e0; color: #666; }
+    .nav-btn.next { background: linear-gradient(135deg, #1DA1F2, #0D47A1); color: white; }
+    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .result-container { display: none; text-align: center; padding: 30px; background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .result-container h2 { font-size: 1.8rem; color: #1DA1F2; margin-bottom: 20px; }
+    .score-display { font-size: 3rem; font-weight: 700; color: #1DA1F2; margin: 20px 0; }
+    .score-breakdown { background: #e8f5fe; border-radius: 15px; padding: 20px; margin: 20px 0; text-align: left; }
+    .score-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #b0d8f5; }
+    .score-row:last-child { border-bottom: none; }
+    .retry-btn { padding: 15px 40px; background: linear-gradient(135deg, #1DA1F2, #0D47A1); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 20px; }
+    .back-btn { padding: 15px 40px; background: #95a5a6; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; margin-left: 10px; }
+    .category-tag { display: inline-block; background: #e8f5fe; color: #0D47A1; padding: 3px 10px; border-radius: 10px; font-size: 0.8rem; margin-left: 10px; }
+    .radar-container { margin: 30px auto; max-width: 350px; }
+    .radar-title { text-align: center; font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 20px; }
+    #radarChart { width: 100%; max-width: 350px; margin: 0 auto; display: block; }
+    .input-form { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .input-form h2 { font-size: 1.3rem; color: #1DA1F2; margin-bottom: 20px; text-align: center; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: 500; }
+    .form-group select, .form-group input { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; transition: border-color 0.2s; }
+    .form-group select:focus, .form-group input:focus { outline: none; border-color: #1DA1F2; }
+    .start-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #1DA1F2, #0D47A1); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .quiz-content { display: none; }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="input-form" id="inputForm">
+      <h2>📱 창작사회문화07 퀴즈</h2>
+      <p style="text-align: center; color: #666; margin-bottom: 20px;">좋아요 왕국의 빛과 그림자 — SNS, 연결인가 감옥인가</p>
+      <div class="form-group">
+        <label for="gradeSelect">학년 선택</label>
+        <select id="gradeSelect">
+          <option value="">학년을 선택하세요</option>
+          <option value="5">5학년</option>
+          <option value="6">6학년</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="nameInput">이름 입력</label>
+        <input type="text" id="nameInput" placeholder="이름을 입력하세요">
+      </div>
+      <button class="start-btn" id="startBtn" disabled>퀴즈 시작하기</button>
+    </div>
+
+    <div class="quiz-content" id="quizContent">
+      <div class="quiz-header">
+        <h1>📱 창작사회문화07 퀴즈</h1>
+        <p>좋아요 왕국의 빛과 그림자</p>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+      <div id="questionContainer"></div>
+      <div class="nav-buttons">
+        <button class="nav-btn prev" id="prevBtn" disabled>이전</button>
+        <button class="nav-btn next" id="nextBtn">다음</button>
+      </div>
+    </div>
+
+    <div class="result-container" id="resultContainer">
+      <h2>🎉 퀴즈 완료!</h2>
+      <div class="score-display" id="totalScore">0점</div>
+      <div class="radar-container">
+        <div class="radar-title">영역별 성취도</div>
+        <canvas id="radarChart" width="350" height="350"></canvas>
+      </div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div>
+        <button class="retry-btn" onclick="retryQuiz()">다시 풀기</button>
+        <button class="back-btn" onclick="goBack()">목록으로</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      { category: "인물파악", question: "열두 번째 생일에 스마트폰을 받고 SNS를 시작하는 초등학교 6학년 소녀의 이름은?", options: ["하린", "예린", "수아", "서연"], answer: 2 },
+      { category: "인물파악", question: "SNS의 건강한 사용법과 개인정보 보호를 가르쳐주는 '디지털 시민성의 수호자' 캐릭터의 이름은?", options: ["라이키", "커넥트", "아논", "가디언"], answer: 3 },
+      { category: "내용일치", question: "이야기에서 SNS의 긍정적인 면으로 설명된 것은?", options: ["모든 정보가 항상 정확하다", "물리적 거리를 뛰어넘어 관심사 기반으로 사람들을 연결한다", "익명이라 책임이 없다", "팔로워 수가 인간의 가치를 결정한다"], answer: 1 },
+      { category: "내용일치", question: "'하이라이트 릴 효과(highlight reel effect)'가 이야기에서 의미하는 것은?", options: ["SNS에서 재미있는 영상만 보는 것", "SNS에는 사람들의 가장 좋은 순간만 올라와서 비교하면 자신이 부족해 보이는 현상", "좋아요를 많이 받는 게시물이 상위에 노출되는 것", "광고가 많이 뜨는 현상"], answer: 1 },
+      { category: "내용구조", question: "수아가 SNS의 빛과 그림자를 경험하는 순서로 올바른 것은?", options: ["악플 → 가입 → 친구 확장 → 정보 활용", "가입과 연결의 기쁨 → 악플 피해 → 비교 문화 → 디지털 시민성 배움", "비교 → 가입 → 악플 → 연결", "디지털 시민성 → 악플 → 연결 → 가입"], answer: 1 },
+      { category: "내용구조", question: "이야기에서 '디지털 시민 헌장'에 포함된 원칙의 순서는?", options: ["익명성 → 비교 → 연결 → 개인정보", "존중 → 책임 → 비판적 사고 → 사생활 존중 → 균형", "균형 → 존중 → 책임 → 연결 → 비교", "연결 → 악플 → 팔로워 → 좋아요"], answer: 1 },
+      { category: "내용어휘", question: "'미디어 리터러시'가 이야기에서 의미하는 것은?", options: ["미디어를 많이 사용하는 능력", "정보의 바다에서 진짜와 가짜를 구별하는 능력", "사진을 예쁘게 편집하는 능력", "팔로워를 늘리는 능력"], answer: 1 },
+      { category: "내용어휘", question: "'탈억제 효과(online disinhibition effect)'가 이야기에서 설명하는 것은?", options: ["온라인에서 더 예의 바르게 행동하는 것", "익명 상황에서 자기 통제력이 약해지고 공격적 행동을 하기 쉬워지는 것", "온라인에서 친구가 많아지는 것", "스마트폰을 오래 사용하는 것"], answer: 1 },
+      { category: "내용추론", question: "수아가 악플 사건 후 SNS를 그만두지 않고 더 현명하게 사용하기로 결심한 이유는?", options: ["팔로워가 많아서", "SNS에는 어두운 면도 있지만 밝은 힘도 있고, 안전하게 사용하는 방법을 배웠기 때문", "부모님이 계속 하라고 해서", "친구들이 모두 하니까"], answer: 1 },
+      { category: "내용추론", question: "이 이야기가 전하는 핵심 메시지는?", options: ["SNS는 무조건 해롭다", "팔로워 수가 많을수록 행복하다", "기술은 사용하는 사람에 따라 달라지며, SNS의 주인은 기술이 아니라 우리 자신이다", "익명이면 뭐든 해도 된다"], answer: 2 }
+    ];
+
+    let currentQuestion = 0;
+    let answers = new Array(quizData.length).fill(null);
+    let userName = '';
+    let userGrade = '';
+
+    const gradeSelect = document.getElementById('gradeSelect');
+    const nameInput = document.getElementById('nameInput');
+    const startBtn = document.getElementById('startBtn');
+
+    function checkFormValid() { startBtn.disabled = !(gradeSelect.value && nameInput.value.trim()); }
+    gradeSelect.addEventListener('change', checkFormValid);
+    nameInput.addEventListener('input', checkFormValid);
+
+    startBtn.addEventListener('click', function() {
+      userGrade = gradeSelect.value;
+      userName = nameInput.value.trim();
+      document.getElementById('inputForm').style.display = 'none';
+      document.getElementById('quizContent').style.display = 'block';
+      renderQuestion();
+    });
+
+    function renderQuestion() {
+      const q = quizData[currentQuestion];
+      document.getElementById('questionContainer').innerHTML = `
+        <div class="question-card">
+          <div><span class="question-number">문제 ${currentQuestion + 1}/${quizData.length}</span><span class="category-tag">${q.category}</span></div>
+          <p class="question-text">${q.question}</p>
+          <div class="options">${q.options.map((opt, idx) => `<button class="option-btn ${answers[currentQuestion] === idx ? 'selected' : ''}" onclick="selectAnswer(${idx})">${idx + 1}. ${opt}</button>`).join('')}</div>
+        </div>`;
+      document.getElementById('progressFill').style.width = `${((currentQuestion + 1) / quizData.length) * 100}%`;
+      document.getElementById('prevBtn').disabled = currentQuestion === 0;
+      document.getElementById('nextBtn').textContent = currentQuestion === quizData.length - 1 ? '결과 보기' : '다음';
+    }
+
+    function selectAnswer(idx) { answers[currentQuestion] = idx; renderQuestion(); }
+
+    document.getElementById('prevBtn').addEventListener('click', () => { if (currentQuestion > 0) { currentQuestion--; renderQuestion(); } });
+    document.getElementById('nextBtn').addEventListener('click', () => { if (currentQuestion < quizData.length - 1) { currentQuestion++; renderQuestion(); } else { showResult(); } });
+
+    function showResult() {
+      document.getElementById('quizContent').style.display = 'none';
+      document.getElementById('resultContainer').style.display = 'block';
+      const categories = ["인물파악", "내용일치", "내용구조", "내용어휘", "내용추론"];
+      const categoryScores = {}, categoryCorrect = {};
+      categories.forEach(cat => { categoryCorrect[cat] = 0; });
+      quizData.forEach((q, idx) => { if (answers[idx] === q.answer) categoryCorrect[q.category]++; });
+      categories.forEach(cat => { const c = categoryCorrect[cat]; categoryScores[cat] = c === 2 ? 10 : c === 1 ? 5 : 1; });
+      const totalScore = Object.values(categoryScores).reduce((a, b) => a + b, 0);
+      document.getElementById('totalScore').textContent = `${totalScore}점`;
+      let breakdownHTML = '';
+      categories.forEach(cat => { breakdownHTML += `<div class="score-row"><span>${cat}</span><span>${categoryCorrect[cat]}/2 정답 → ${categoryScores[cat]}점</span></div>`; });
+      document.getElementById('scoreBreakdown').innerHTML = breakdownHTML;
+      drawRadarChart(categories, categoryScores);
+      saveQuizResult(categoryScores, totalScore);
+    }
+
+    function drawRadarChart(categories, scores) {
+      const canvas = document.getElementById('radarChart');
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2, centerY = canvas.height / 2, radius = 120;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const numCategories = categories.length, angleStep = (2 * Math.PI) / numCategories, startAngle = -Math.PI / 2;
+      [0.1, 0.5, 1].forEach(scale => { ctx.beginPath(); for (let j = 0; j <= numCategories; j++) { const angle = startAngle + j * angleStep; const x = centerX + radius * scale * Math.cos(angle); const y = centerY + radius * scale * Math.sin(angle); if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.closePath(); ctx.strokeStyle = '#ddd'; ctx.stroke(); });
+      for (let i = 0; i < numCategories; i++) { const angle = startAngle + i * angleStep; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX + radius * Math.cos(angle), centerY + radius * Math.sin(angle)); ctx.strokeStyle = '#ccc'; ctx.stroke(); }
+      ctx.beginPath();
+      for (let i = 0; i <= numCategories; i++) { const idx = i % numCategories; const angle = startAngle + idx * angleStep; const value = scores[categories[idx]] / 10; const x = centerX + radius * value * Math.cos(angle); const y = centerY + radius * value * Math.sin(angle); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+      ctx.closePath(); ctx.fillStyle = 'rgba(29, 161, 242, 0.3)'; ctx.fill(); ctx.strokeStyle = '#1DA1F2'; ctx.lineWidth = 2; ctx.stroke();
+      for (let i = 0; i < numCategories; i++) { const angle = startAngle + i * angleStep; const value = scores[categories[i]] / 10; const x = centerX + radius * value * Math.cos(angle); const y = centerY + radius * value * Math.sin(angle); ctx.beginPath(); ctx.arc(x, y, 5, 0, 2 * Math.PI); ctx.fillStyle = '#1DA1F2'; ctx.fill(); }
+      ctx.font = '13px Pretendard, sans-serif'; ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+      for (let i = 0; i < numCategories; i++) { const angle = startAngle + i * angleStep; const x = centerX + (radius + 30) * Math.cos(angle); const y = centerY + (radius + 30) * Math.sin(angle); ctx.fillText(categories[i], x, y + 4); }
+    }
+
+    async function saveQuizResult(categoryScores, totalScore) {
+      try { await fetch('/api/creative-quiz/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: userGrade, name: userName, storyId: 'social07', season: 'season2', scores: categoryScores, totalScore: totalScore }) }); } catch (error) { console.error('Failed to save:', error); }
+    }
+
+    function retryQuiz() { currentQuestion = 0; answers = new Array(quizData.length).fill(null); document.getElementById('resultContainer').style.display = 'none'; document.getElementById('quizContent').style.display = 'block'; renderQuestion(); }
+    function goBack() { window.location.href = 'social07_season1.html'; }
+  </script>
+</body>
+</html>

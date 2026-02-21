@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>창작한국인물05 퀴즈</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Pretendard', -apple-system, sans-serif; background: linear-gradient(135deg, #0a1628 0%, #1a3352 100%); min-height: 100vh; padding: 20px; }
+    .quiz-container { max-width: 600px; margin: 0 auto; }
+    .quiz-header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #1e88e5, #0d47a1); border-radius: 20px; color: white; box-shadow: 0 4px 15px rgba(30, 136, 229, 0.3); }
+    .quiz-header h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    .quiz-header p { font-size: 0.95rem; opacity: 0.95; }
+    .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin-top: 15px; overflow: hidden; }
+    .progress-fill { height: 100%; background: white; border-radius: 4px; transition: width 0.3s ease; }
+    .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+    .question-number { display: inline-block; background: linear-gradient(135deg, #1e88e5, #0d47a1); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 15px; }
+    .question-text { font-size: 1.1rem; line-height: 1.7; color: #333; margin-bottom: 20px; word-break: keep-all; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn { width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 12px; background: #fafafa; font-size: 1rem; text-align: left; cursor: pointer; transition: all 0.2s ease; }
+    .option-btn:hover { border-color: #1e88e5; background: #e3f2fd; }
+    .option-btn.selected { border-color: #1e88e5; background: linear-gradient(135deg, #1e88e5, #0d47a1); color: white; }
+    .nav-buttons { display: flex; justify-content: space-between; gap: 15px; margin-top: 20px; }
+    .nav-btn { flex: 1; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .nav-btn.prev { background: #e0e0e0; color: #666; }
+    .nav-btn.next { background: linear-gradient(135deg, #1e88e5, #0d47a1); color: white; }
+    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .result-container { display: none; text-align: center; padding: 30px; background: white; border-radius: 20px; }
+    .result-container h2 { font-size: 1.8rem; color: #1e88e5; margin-bottom: 20px; }
+    .score-display { font-size: 3rem; font-weight: 700; color: #1e88e5; margin: 20px 0; }
+    .score-breakdown { background: #e3f2fd; border-radius: 15px; padding: 20px; margin: 20px 0; text-align: left; }
+    .score-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #bbdefb; }
+    .score-row:last-child { border-bottom: none; }
+    .retry-btn { padding: 15px 40px; background: linear-gradient(135deg, #1e88e5, #0d47a1); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 20px; }
+    .back-btn { padding: 15px 40px; background: #95a5a6; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; margin-left: 10px; }
+    .category-tag { display: inline-block; background: #e3f2fd; color: #1e88e5; padding: 3px 10px; border-radius: 10px; font-size: 0.8rem; margin-left: 10px; }
+    .radar-container { margin: 30px auto; max-width: 350px; }
+    .radar-title { text-align: center; font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 20px; }
+    #radarChart { width: 100%; max-width: 350px; margin: 0 auto; display: block; }
+    .input-form { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+    .input-form h2 { font-size: 1.3rem; color: #1e88e5; margin-bottom: 20px; text-align: center; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: 500; }
+    .form-group select, .form-group input { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; }
+    .form-group select:focus, .form-group input:focus { outline: none; border-color: #1e88e5; }
+    .start-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #1e88e5, #0d47a1); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .quiz-content { display: none; }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="input-form" id="inputForm">
+      <h2>⚓ 창작한국인물05 퀴즈</h2>
+      <p style="text-align: center; color: #666; margin-bottom: 20px;">바다의 별이 된 장군, 이순신</p>
+      <div class="form-group"><label for="gradeSelect">학년 선택</label><select id="gradeSelect"><option value="">학년을 선택하세요</option><option value="5">5학년</option><option value="6">6학년</option></select></div>
+      <div class="form-group"><label for="nameInput">이름 입력</label><input type="text" id="nameInput" placeholder="이름을 입력하세요"></div>
+      <button class="start-btn" id="startBtn" disabled>퀴즈 시작하기</button>
+    </div>
+    <div class="quiz-content" id="quizContent">
+      <div class="quiz-header"><h1>⚓ 창작한국인물05 퀴즈</h1><p>바다의 별이 된 장군, 이순신</p><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div></div>
+      <div id="questionContainer"></div>
+      <div class="nav-buttons"><button class="nav-btn prev" id="prevBtn" disabled>이전</button><button class="nav-btn next" id="nextBtn">다음</button></div>
+    </div>
+    <div class="result-container" id="resultContainer">
+      <h2>🎉 퀴즈 완료!</h2>
+      <div class="score-display" id="totalScore">0점</div>
+      <div class="radar-container"><div class="radar-title">영역별 성취도</div><canvas id="radarChart" width="350" height="350"></canvas></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div><button class="retry-btn" onclick="retryQuiz()">다시 풀기</button><button class="back-btn" onclick="goBack()">목록으로</button></div>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      { category: "인물파악", question: "임진왜란 때 조선 수군을 이끌고 일본 수군을 크게 무찌른 장군은?", options: ["김유신", "이순신", "을지문덕", "강감찬"], answer: 1 },
+      { category: "인물파악", question: "이순신 장군이 발명하여 해전에서 크게 활약한 배의 이름은?", options: ["판옥선", "거북선", "조운선", "병선"], answer: 1 },
+      { category: "내용일치", question: "이순신 장군이 크게 승리한 해전으로 '학익진' 전술을 펼친 곳은?", options: ["한산도", "명량", "노량", "부산포"], answer: 0 },
+      { category: "내용일치", question: "이순신 장군이 12척의 배로 133척의 적선을 물리친 해전은?", options: ["한산도대첩", "명량대첩", "노량해전", "옥포해전"], answer: 1 },
+      { category: "내용구조", question: "이순신 장군이 '난중일기'를 쓴 이유로 가장 적절한 것은?", options: ["자랑하려고", "전쟁 중 상황과 마음을 기록하기 위해", "돈을 벌려고", "왕에게 보여주려고"], answer: 1 },
+      { category: "내용구조", question: "이순신 장군의 이야기가 주는 핵심 교훈은?", options: ["힘이 최고다", "충성과 책임, 철저한 준비의 중요성", "도망가는 것도 방법이다", "혼자 싸워야 한다"], answer: 1 },
+      { category: "내용어휘", question: "'학익진(鶴翼陣)'에서 '학익'이 의미하는 것은?", options: ["학의 다리", "학의 날개", "학의 부리", "학의 깃털"], answer: 1 },
+      { category: "내용어휘", question: "'난중일기(亂中日記)'에서 '난(亂)'이 의미하는 것은?", options: ["평화", "전쟁/어지러움", "기쁨", "슬픔"], answer: 1 },
+      { category: "내용추론", question: "이순신 장군이 '나의 죽음을 적에게 알리지 말라'고 유언한 이유는?", options: ["부끄러워서", "병사들의 사기가 떨어질까 봐", "비밀이라서", "적에게 항복하려고"], answer: 1 },
+      { category: "내용추론", question: "이순신 장군이 현대에도 존경받는 가장 큰 이유는?", options: ["돈을 많이 벌어서", "나라와 백성을 위해 목숨 바쳐 싸운 충성심과 리더십", "키가 커서", "말을 잘해서"], answer: 1 }
+    ];
+
+    let currentQuestion = 0, answers = new Array(quizData.length).fill(null), userName = '', userGrade = '';
+    const gradeSelect = document.getElementById('gradeSelect'), nameInput = document.getElementById('nameInput'), startBtn = document.getElementById('startBtn');
+    function checkFormValid() { startBtn.disabled = !(gradeSelect.value && nameInput.value.trim()); }
+    gradeSelect.addEventListener('change', checkFormValid); nameInput.addEventListener('input', checkFormValid);
+    startBtn.addEventListener('click', function() { userGrade = gradeSelect.value; userName = nameInput.value.trim(); document.getElementById('inputForm').style.display = 'none'; document.getElementById('quizContent').style.display = 'block'; renderQuestion(); });
+
+    function renderQuestion() {
+      const q = quizData[currentQuestion];
+      document.getElementById('questionContainer').innerHTML = `<div class="question-card"><div><span class="question-number">문제 ${currentQuestion + 1}/${quizData.length}</span><span class="category-tag">${q.category}</span></div><p class="question-text">${q.question}</p><div class="options">${q.options.map((opt, idx) => `<button class="option-btn ${answers[currentQuestion] === idx ? 'selected' : ''}" onclick="selectAnswer(${idx})">${idx + 1}. ${opt}</button>`).join('')}</div></div>`;
+      document.getElementById('progressFill').style.width = `${((currentQuestion + 1) / quizData.length) * 100}%`;
+      document.getElementById('prevBtn').disabled = currentQuestion === 0;
+      document.getElementById('nextBtn').textContent = currentQuestion === quizData.length - 1 ? '결과 보기' : '다음';
+    }
+    function selectAnswer(idx) { answers[currentQuestion] = idx; renderQuestion(); }
+    document.getElementById('prevBtn').addEventListener('click', () => { if (currentQuestion > 0) { currentQuestion--; renderQuestion(); } });
+    document.getElementById('nextBtn').addEventListener('click', () => { if (currentQuestion < quizData.length - 1) { currentQuestion++; renderQuestion(); } else { showResult(); } });
+
+    function showResult() {
+      document.getElementById('quizContent').style.display = 'none'; document.getElementById('resultContainer').style.display = 'block';
+      const categories = ["인물파악", "내용일치", "내용구조", "내용어휘", "내용추론"], categoryScores = {}, categoryCorrect = {};
+      categories.forEach(cat => { categoryCorrect[cat] = 0; });
+      quizData.forEach((q, idx) => { if (answers[idx] === q.answer) categoryCorrect[q.category]++; });
+      categories.forEach(cat => { const c = categoryCorrect[cat]; categoryScores[cat] = c === 2 ? 10 : c === 1 ? 5 : 1; });
+      const totalScore = Object.values(categoryScores).reduce((a, b) => a + b, 0);
+      document.getElementById('totalScore').textContent = `${totalScore}점`;
+      let html = ''; categories.forEach(cat => { html += `<div class="score-row"><span>${cat}</span><span>${categoryCorrect[cat]}/2 정답 → ${categoryScores[cat]}점</span></div>`; });
+      document.getElementById('scoreBreakdown').innerHTML = html;
+      drawRadarChart(categories, categoryScores); saveQuizResult(categoryScores, totalScore);
+    }
+
+    function drawRadarChart(categories, scores) {
+      const canvas = document.getElementById('radarChart'), ctx = canvas.getContext('2d'), centerX = canvas.width / 2, centerY = canvas.height / 2, radius = 120;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const n = categories.length, step = (2 * Math.PI) / n, start = -Math.PI / 2;
+      [0.1, 0.5, 1].forEach(s => { ctx.beginPath(); for (let j = 0; j <= n; j++) { const a = start + j * step, x = centerX + radius * s * Math.cos(a), y = centerY + radius * s * Math.sin(a); j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.closePath(); ctx.strokeStyle = '#ddd'; ctx.stroke(); });
+      for (let i = 0; i < n; i++) { const a = start + i * step; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX + radius * Math.cos(a), centerY + radius * Math.sin(a)); ctx.strokeStyle = '#ccc'; ctx.stroke(); }
+      ctx.beginPath(); for (let i = 0; i <= n; i++) { const idx = i % n, a = start + idx * step, v = scores[categories[idx]] / 10, x = centerX + radius * v * Math.cos(a), y = centerY + radius * v * Math.sin(a); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.closePath(); ctx.fillStyle = 'rgba(30, 136, 229, 0.3)'; ctx.fill(); ctx.strokeStyle = '#1e88e5'; ctx.lineWidth = 2; ctx.stroke();
+      for (let i = 0; i < n; i++) { const a = start + i * step, v = scores[categories[i]] / 10, x = centerX + radius * v * Math.cos(a), y = centerY + radius * v * Math.sin(a); ctx.beginPath(); ctx.arc(x, y, 5, 0, 2 * Math.PI); ctx.fillStyle = '#1e88e5'; ctx.fill(); }
+      ctx.font = '13px Pretendard'; ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+      for (let i = 0; i < n; i++) { const a = start + i * step, x = centerX + (radius + 30) * Math.cos(a), y = centerY + (radius + 30) * Math.sin(a); ctx.fillText(categories[i], x, y + 4); }
+    }
+    async function saveQuizResult(scores, total) { try { await fetch('/api/creative-quiz/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: userGrade, name: userName, storyId: 'korperson05', season: 'season2', scores, totalScore: total }) }); } catch (e) { console.error(e); } }
+    function retryQuiz() { currentQuestion = 0; answers = new Array(quizData.length).fill(null); document.getElementById('resultContainer').style.display = 'none'; document.getElementById('quizContent').style.display = 'block'; renderQuestion(); }
+    function goBack() { window.location.href = 'korperson05_season1.html'; }
+  </script>
+</body>
+</html>

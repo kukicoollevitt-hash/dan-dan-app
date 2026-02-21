@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>창작한국인물03 퀴즈</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Pretendard', -apple-system, sans-serif; background: linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 100%); min-height: 100vh; padding: 20px; }
+    .quiz-container { max-width: 600px; margin: 0 auto; }
+    .quiz-header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #8e44ad, #5b2c6f); border-radius: 20px; color: white; box-shadow: 0 4px 15px rgba(142, 68, 173, 0.3); }
+    .quiz-header h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    .quiz-header p { font-size: 0.95rem; opacity: 0.95; }
+    .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin-top: 15px; overflow: hidden; }
+    .progress-fill { height: 100%; background: white; border-radius: 4px; transition: width 0.3s ease; }
+    .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .question-number { display: inline-block; background: linear-gradient(135deg, #8e44ad, #5b2c6f); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 15px; }
+    .question-text { font-size: 1.1rem; line-height: 1.7; color: #333; margin-bottom: 20px; word-break: keep-all; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn { width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 12px; background: #fafafa; font-size: 1rem; text-align: left; cursor: pointer; transition: all 0.2s ease; }
+    .option-btn:hover { border-color: #8e44ad; background: #f5eef8; }
+    .option-btn.selected { border-color: #8e44ad; background: linear-gradient(135deg, #8e44ad, #5b2c6f); color: white; }
+    .nav-buttons { display: flex; justify-content: space-between; gap: 15px; margin-top: 20px; }
+    .nav-btn { flex: 1; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .nav-btn.prev { background: #e0e0e0; color: #666; }
+    .nav-btn.next { background: linear-gradient(135deg, #8e44ad, #5b2c6f); color: white; }
+    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .result-container { display: none; text-align: center; padding: 30px; background: white; border-radius: 20px; }
+    .result-container h2 { font-size: 1.8rem; color: #8e44ad; margin-bottom: 20px; }
+    .score-display { font-size: 3rem; font-weight: 700; color: #8e44ad; margin: 20px 0; }
+    .score-breakdown { background: #f5eef8; border-radius: 15px; padding: 20px; margin: 20px 0; text-align: left; }
+    .score-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e8daef; }
+    .score-row:last-child { border-bottom: none; }
+    .retry-btn { padding: 15px 40px; background: linear-gradient(135deg, #8e44ad, #5b2c6f); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 20px; }
+    .back-btn { padding: 15px 40px; background: #95a5a6; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; margin-left: 10px; }
+    .category-tag { display: inline-block; background: #f5eef8; color: #8e44ad; padding: 3px 10px; border-radius: 10px; font-size: 0.8rem; margin-left: 10px; }
+    .radar-container { margin: 30px auto; max-width: 350px; }
+    .radar-title { text-align: center; font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 20px; }
+    #radarChart { width: 100%; max-width: 350px; margin: 0 auto; display: block; }
+    .input-form { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+    .input-form h2 { font-size: 1.3rem; color: #8e44ad; margin-bottom: 20px; text-align: center; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: 500; }
+    .form-group select, .form-group input { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; }
+    .form-group select:focus, .form-group input:focus { outline: none; border-color: #8e44ad; }
+    .start-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #8e44ad, #5b2c6f); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .quiz-content { display: none; }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="input-form" id="inputForm">
+      <h2>💀 창작한국인물03 퀴즈</h2>
+      <p style="text-align: center; color: #666; margin-bottom: 20px;">해골 물을 마신 스님, 원효</p>
+      <div class="form-group"><label for="gradeSelect">학년 선택</label><select id="gradeSelect"><option value="">학년을 선택하세요</option><option value="5">5학년</option><option value="6">6학년</option></select></div>
+      <div class="form-group"><label for="nameInput">이름 입력</label><input type="text" id="nameInput" placeholder="이름을 입력하세요"></div>
+      <button class="start-btn" id="startBtn" disabled>퀴즈 시작하기</button>
+    </div>
+    <div class="quiz-content" id="quizContent">
+      <div class="quiz-header"><h1>💀 창작한국인물03 퀴즈</h1><p>해골 물을 마신 스님, 원효</p><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div></div>
+      <div id="questionContainer"></div>
+      <div class="nav-buttons"><button class="nav-btn prev" id="prevBtn" disabled>이전</button><button class="nav-btn next" id="nextBtn">다음</button></div>
+    </div>
+    <div class="result-container" id="resultContainer">
+      <h2>🎉 퀴즈 완료!</h2>
+      <div class="score-display" id="totalScore">0점</div>
+      <div class="radar-container"><div class="radar-title">영역별 성취도</div><canvas id="radarChart" width="350" height="350"></canvas></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div><button class="retry-btn" onclick="retryQuiz()">다시 풀기</button><button class="back-btn" onclick="goBack()">목록으로</button></div>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      { category: "인물파악", question: "당나라 유학길에 해골 물을 마시고 깨달음을 얻은 신라의 스님은?", options: ["의상", "원효", "혜초", "자장"], answer: 1 },
+      { category: "인물파악", question: "원효와 함께 당나라로 유학을 떠났던 절친한 동행 스님은?", options: ["의상", "지눌", "원측", "혜능"], answer: 0 },
+      { category: "내용일치", question: "원효가 어둠 속에서 '감로수'라며 맛있게 마신 물의 정체는?", options: ["맑은 샘물", "빗물", "해골에 고인 물", "약수"], answer: 2 },
+      { category: "내용일치", question: "해골 물을 마신 후 원효가 내린 결론은?", options: ["당나라에 꼭 가야 한다", "마음이 만들어내면 부처요, 마음이 사라지면 해골도 사라진다", "더 좋은 물을 찾아야 한다", "동굴에서 살아야 한다"], answer: 1 },
+      { category: "내용구조", question: "원효가 깨달은 '일체유심조(一切唯心造)'의 뜻은?", options: ["모든 것은 돈으로 해결된다", "모든 것은 마음이 만들어낸다", "모든 것은 하늘이 정한다", "모든 것은 책에 있다"], answer: 1 },
+      { category: "내용구조", question: "원효가 신라로 돌아온 후 한 일로 가장 적절한 것은?", options: ["궁궐에서 호화롭게 살았다", "거리에서 백성들에게 쉬운 말로 불교를 전파했다", "다시 당나라로 떠났다", "산속에 숨어 지냈다"], answer: 1 },
+      { category: "내용어휘", question: "'일체유심조'에서 '심(心)'이 의미하는 것은?", options: ["심장", "마음", "생각", "감정"], answer: 1 },
+      { category: "내용어휘", question: "'감로수(甘露水)'의 뜻은?", options: ["짠 물", "달콤한 이슬처럼 맛있는 물", "뜨거운 물", "흙탕물"], answer: 1 },
+      { category: "내용추론", question: "같은 물이 어젯밤에는 맛있고 아침에는 역겨웠던 이유는?", options: ["물이 변해서", "마음(생각)이 달라졌기 때문", "온도가 변해서", "시간이 지나서"], answer: 1 },
+      { category: "내용추론", question: "원효의 이야기가 우리에게 주는 교훈은?", options: ["진리는 먼 곳에 있다", "진리는 마음속에 있으며 생각에 따라 세상이 달라 보인다", "공부만이 답이다", "여행을 많이 해야 한다"], answer: 1 }
+    ];
+
+    let currentQuestion = 0, answers = new Array(quizData.length).fill(null), userName = '', userGrade = '';
+    const gradeSelect = document.getElementById('gradeSelect'), nameInput = document.getElementById('nameInput'), startBtn = document.getElementById('startBtn');
+    function checkFormValid() { startBtn.disabled = !(gradeSelect.value && nameInput.value.trim()); }
+    gradeSelect.addEventListener('change', checkFormValid); nameInput.addEventListener('input', checkFormValid);
+    startBtn.addEventListener('click', function() { userGrade = gradeSelect.value; userName = nameInput.value.trim(); document.getElementById('inputForm').style.display = 'none'; document.getElementById('quizContent').style.display = 'block'; renderQuestion(); });
+
+    function renderQuestion() {
+      const q = quizData[currentQuestion];
+      document.getElementById('questionContainer').innerHTML = `<div class="question-card"><div><span class="question-number">문제 ${currentQuestion + 1}/${quizData.length}</span><span class="category-tag">${q.category}</span></div><p class="question-text">${q.question}</p><div class="options">${q.options.map((opt, idx) => `<button class="option-btn ${answers[currentQuestion] === idx ? 'selected' : ''}" onclick="selectAnswer(${idx})">${idx + 1}. ${opt}</button>`).join('')}</div></div>`;
+      document.getElementById('progressFill').style.width = `${((currentQuestion + 1) / quizData.length) * 100}%`;
+      document.getElementById('prevBtn').disabled = currentQuestion === 0;
+      document.getElementById('nextBtn').textContent = currentQuestion === quizData.length - 1 ? '결과 보기' : '다음';
+    }
+    function selectAnswer(idx) { answers[currentQuestion] = idx; renderQuestion(); }
+    document.getElementById('prevBtn').addEventListener('click', () => { if (currentQuestion > 0) { currentQuestion--; renderQuestion(); } });
+    document.getElementById('nextBtn').addEventListener('click', () => { if (currentQuestion < quizData.length - 1) { currentQuestion++; renderQuestion(); } else { showResult(); } });
+
+    function showResult() {
+      document.getElementById('quizContent').style.display = 'none'; document.getElementById('resultContainer').style.display = 'block';
+      const categories = ["인물파악", "내용일치", "내용구조", "내용어휘", "내용추론"], categoryScores = {}, categoryCorrect = {};
+      categories.forEach(cat => { categoryCorrect[cat] = 0; });
+      quizData.forEach((q, idx) => { if (answers[idx] === q.answer) categoryCorrect[q.category]++; });
+      categories.forEach(cat => { const c = categoryCorrect[cat]; categoryScores[cat] = c === 2 ? 10 : c === 1 ? 5 : 1; });
+      const totalScore = Object.values(categoryScores).reduce((a, b) => a + b, 0);
+      document.getElementById('totalScore').textContent = `${totalScore}점`;
+      let html = ''; categories.forEach(cat => { html += `<div class="score-row"><span>${cat}</span><span>${categoryCorrect[cat]}/2 정답 → ${categoryScores[cat]}점</span></div>`; });
+      document.getElementById('scoreBreakdown').innerHTML = html;
+      drawRadarChart(categories, categoryScores); saveQuizResult(categoryScores, totalScore);
+    }
+
+    function drawRadarChart(categories, scores) {
+      const canvas = document.getElementById('radarChart'), ctx = canvas.getContext('2d'), centerX = canvas.width / 2, centerY = canvas.height / 2, radius = 120;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const n = categories.length, step = (2 * Math.PI) / n, start = -Math.PI / 2;
+      [0.1, 0.5, 1].forEach(s => { ctx.beginPath(); for (let j = 0; j <= n; j++) { const a = start + j * step, x = centerX + radius * s * Math.cos(a), y = centerY + radius * s * Math.sin(a); j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.closePath(); ctx.strokeStyle = '#ddd'; ctx.stroke(); });
+      for (let i = 0; i < n; i++) { const a = start + i * step; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX + radius * Math.cos(a), centerY + radius * Math.sin(a)); ctx.strokeStyle = '#ccc'; ctx.stroke(); }
+      ctx.beginPath(); for (let i = 0; i <= n; i++) { const idx = i % n, a = start + idx * step, v = scores[categories[idx]] / 10, x = centerX + radius * v * Math.cos(a), y = centerY + radius * v * Math.sin(a); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.closePath(); ctx.fillStyle = 'rgba(142, 68, 173, 0.3)'; ctx.fill(); ctx.strokeStyle = '#8e44ad'; ctx.lineWidth = 2; ctx.stroke();
+      for (let i = 0; i < n; i++) { const a = start + i * step, v = scores[categories[i]] / 10, x = centerX + radius * v * Math.cos(a), y = centerY + radius * v * Math.sin(a); ctx.beginPath(); ctx.arc(x, y, 5, 0, 2 * Math.PI); ctx.fillStyle = '#8e44ad'; ctx.fill(); }
+      ctx.font = '13px Pretendard'; ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+      for (let i = 0; i < n; i++) { const a = start + i * step, x = centerX + (radius + 30) * Math.cos(a), y = centerY + (radius + 30) * Math.sin(a); ctx.fillText(categories[i], x, y + 4); }
+    }
+    async function saveQuizResult(scores, total) { try { await fetch('/api/creative-quiz/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: userGrade, name: userName, storyId: 'korperson03', season: 'season2', scores, totalScore: total }) }); } catch (e) { console.error(e); } }
+    function retryQuiz() { currentQuestion = 0; answers = new Array(quizData.length).fill(null); document.getElementById('resultContainer').style.display = 'none'; document.getElementById('quizContent').style.display = 'block'; renderQuestion(); }
+    function goBack() { window.location.href = 'korperson03_season1.html'; }
+  </script>
+</body>
+</html>

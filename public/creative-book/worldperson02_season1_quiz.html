@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>알베르트 아인슈타인 - 독해력 퀴즈</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #1a237e 0%, #3f51b5 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .quiz-header h1 {
+      color: #3f51b5;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .quiz-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* 입력 폼 스타일 */
+    .input-form {
+      background: linear-gradient(135deg, #e8eaf6, #c5cae9);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .input-form h2 {
+      color: #3f51b5;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #1a237e;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #7986cb;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: #3f51b5;
+      box-shadow: 0 0 10px rgba(63, 81, 181, 0.3);
+    }
+
+    .start-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #3f51b5, #1a237e);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(63, 81, 181, 0.4);
+    }
+
+    /* 퀴즈 영역 */
+    .quiz-content {
+      display: none;
+    }
+
+    .category-section {
+      margin-bottom: 30px;
+      background: #fafafa;
+      border-radius: 16px;
+      padding: 25px;
+      border-left: 4px solid #3f51b5;
+    }
+
+    .category-title {
+      color: #3f51b5;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .question-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .question-text {
+      color: #333;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option {
+      padding: 12px 16px;
+      background: #f5f5f5;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 15px;
+    }
+
+    .option:hover {
+      background: #e8eaf6;
+      border-color: #7986cb;
+    }
+
+    .option.selected {
+      background: #c5cae9;
+      border-color: #3f51b5;
+      color: #1a237e;
+      font-weight: 600;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #3f51b5, #1a237e);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(63, 81, 181, 0.4);
+    }
+
+    /* 결과 영역 */
+    .result-section {
+      display: none;
+      text-align: center;
+    }
+
+    .result-title {
+      font-size: 28px;
+      color: #3f51b5;
+      margin-bottom: 30px;
+    }
+
+    .score-display {
+      font-size: 72px;
+      font-weight: 700;
+      color: #1a237e;
+      margin-bottom: 20px;
+    }
+
+    .score-display span {
+      font-size: 24px;
+      color: #999;
+    }
+
+    .radar-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 30px auto;
+    }
+
+    .category-scores {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 30px 0;
+    }
+
+    .category-score-item {
+      background: linear-gradient(135deg, #e8eaf6, #c5cae9);
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .category-score-item .label {
+      font-size: 14px;
+      color: #3f51b5;
+      margin-bottom: 5px;
+    }
+
+    .category-score-item .score {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a237e;
+    }
+
+    .back-btn {
+      padding: 15px 40px;
+      background: #9e9e9e;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+
+    .back-btn:hover {
+      background: #757575;
+    }
+
+    @media (max-width: 600px) {
+      .quiz-container {
+        padding: 20px;
+      }
+
+      .quiz-header h1 {
+        font-size: 22px;
+      }
+
+      .score-display {
+        font-size: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="quiz-header">
+      <h1>🔬 알베르트 아인슈타인 - 독해력 퀴즈</h1>
+      <p>빛을 훔치려 한 소년, 느림보가 우주의 비밀을 풀기까지</p>
+    </div>
+
+    <!-- 입력 폼 -->
+    <div class="input-form" id="inputForm">
+      <h2>📝 정보 입력</h2>
+      <div class="form-group">
+        <label for="grade">학년 선택</label>
+        <select id="grade">
+          <option value="">학년을 선택하세요</option>
+          <option value="초3">초등 3학년</option>
+          <option value="초4">초등 4학년</option>
+          <option value="초5">초등 5학년</option>
+          <option value="초6">초등 6학년</option>
+          <option value="중1">중등 1학년</option>
+          <option value="중2">중등 2학년</option>
+          <option value="중3">중등 3학년</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="name">이름</label>
+        <input type="text" id="name" placeholder="이름을 입력하세요">
+      </div>
+      <button class="start-btn" onclick="startQuiz()">퀴즈 시작하기</button>
+    </div>
+
+    <!-- 퀴즈 콘텐츠 -->
+    <div class="quiz-content" id="quizContent">
+      <!-- 인물파악 -->
+      <div class="category-section">
+        <div class="category-title">👤 인물파악</div>
+        <div class="question-box">
+          <div class="question-text">1. 어린 알베르트의 호기심에 불을 지핀 물건은 무엇인가요?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q1')">① 망원경</div>
+            <div class="option" onclick="selectOption(this, 'q1')">② 나침반</div>
+            <div class="option" onclick="selectOption(this, 'q1')">③ 시계</div>
+            <div class="option" onclick="selectOption(this, 'q1')">④ 돋보기</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">2. 알베르트가 대학 졸업 후 처음 얻은 직업은 무엇인가요?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q2')">① 대학 교수</div>
+            <div class="option" onclick="selectOption(this, 'q2')">② 특허청 3등급 심사관</div>
+            <div class="option" onclick="selectOption(this, 'q2')">③ 연구소 과학자</div>
+            <div class="option" onclick="selectOption(this, 'q2')">④ 고등학교 교사</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 내용일치 -->
+      <div class="category-section">
+        <div class="category-title">📖 내용일치</div>
+        <div class="question-box">
+          <div class="question-text">3. 특수 상대성 이론의 핵심 내용으로 맞는 것은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q3')">① 시간은 모든 사람에게 똑같이 흐른다</div>
+            <div class="option" onclick="selectOption(this, 'q3')">② 빠르게 움직이는 사람에게는 시간이 느리게 흐른다</div>
+            <div class="option" onclick="selectOption(this, 'q3')">③ 빛의 속도는 변할 수 있다</div>
+            <div class="option" onclick="selectOption(this, 'q3')">④ 공간은 절대적이다</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">4. E=mc² 공식이 의미하는 것은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q4')">① 물질과 에너지는 완전히 다르다</div>
+            <div class="option" onclick="selectOption(this, 'q4')">② 물질은 곧 에너지이고, 에너지는 곧 물질이다</div>
+            <div class="option" onclick="selectOption(this, 'q4')">③ 빛의 속도는 무한하다</div>
+            <div class="option" onclick="selectOption(this, 'q4')">④ 질량은 변하지 않는다</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 내용구조 -->
+      <div class="category-section">
+        <div class="category-title">🔗 내용구조</div>
+        <div class="question-box">
+          <div class="question-text">5. 이 이야기의 세 가지 갈등 중 '윤리적 갈등'에 해당하는 것은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q5')">① 느린 아이라는 편견과 자신만의 방식</div>
+            <div class="option" onclick="selectOption(this, 'q5')">② 기존 물리학과 혁명적 이론 사이의 대립</div>
+            <div class="option" onclick="selectOption(this, 'q5')">③ 핵무기의 파괴적 결과와 평화를 향한 양심 사이</div>
+            <div class="option" onclick="selectOption(this, 'q5')">④ 학교 성적과 재능 사이의 갈등</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">6. 1905년이 '기적의 해'라 불리는 이유는?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q6')">① 아인슈타인이 태어난 해</div>
+            <div class="option" onclick="selectOption(this, 'q6')">② 노벨상을 받은 해</div>
+            <div class="option" onclick="selectOption(this, 'q6')">③ 네 편의 혁명적 논문을 발표한 해</div>
+            <div class="option" onclick="selectOption(this, 'q6')">④ 특허청에 취직한 해</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 내용어휘 -->
+      <div class="category-section">
+        <div class="category-title">📚 내용어휘</div>
+        <div class="question-box">
+          <div class="question-text">7. "상상력은 지식보다 중요하다"라는 말의 의미로 적절한 것은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q7')">① 공부를 하지 않아도 된다</div>
+            <div class="option" onclick="selectOption(this, 'q7')">② 지식은 한계가 있지만 상상력은 세상의 모든 것을 품을 수 있다</div>
+            <div class="option" onclick="selectOption(this, 'q7')">③ 상상만 하면 모든 것을 이룰 수 있다</div>
+            <div class="option" onclick="selectOption(this, 'q7')">④ 과학자에게 상상력은 필요 없다</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">8. "신은 주사위를 던지지 않는다"라는 아인슈타인의 말이 반대한 것은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q8')">① 상대성 이론</div>
+            <div class="option" onclick="selectOption(this, 'q8')">② 양자역학의 불확정성 원리</div>
+            <div class="option" onclick="selectOption(this, 'q8')">③ 뉴턴의 역학</div>
+            <div class="option" onclick="selectOption(this, 'q8')">④ 중력의 존재</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 내용추론 -->
+      <div class="category-section">
+        <div class="category-title">🔍 내용추론</div>
+        <div class="question-box">
+          <div class="question-text">9. 아인슈타인이 루스벨트 대통령에게 편지를 쓴 이유와 그 결과는?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q9')">① 평화를 위해 → 노벨 평화상 수상</div>
+            <div class="option" onclick="selectOption(this, 'q9')">② 나치가 먼저 핵무기를 갖는 것을 막기 위해 → 맨해튼 프로젝트의 시발점</div>
+            <div class="option" onclick="selectOption(this, 'q9')">③ 연구 자금을 요청하기 위해 → 프린스턴 연구소 설립</div>
+            <div class="option" onclick="selectOption(this, 'q9')">④ 미국 시민권을 얻기 위해 → 시민권 취득</div>
+          </div>
+        </div>
+        <div class="question-box">
+          <div class="question-text">10. 아인슈타인이 인류에게 남긴 가장 위대한 유산은?</div>
+          <div class="options">
+            <div class="option" onclick="selectOption(this, 'q10')">① E=mc² 공식 자체</div>
+            <div class="option" onclick="selectOption(this, 'q10')">② '질문하는 용기'와 호기심</div>
+            <div class="option" onclick="selectOption(this, 'q10')">③ 원자폭탄 개발</div>
+            <div class="option" onclick="selectOption(this, 'q10')">④ 노벨상 상금</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitQuiz()">결과 확인하기</button>
+    </div>
+
+    <!-- 결과 섹션 -->
+    <div class="result-section" id="resultSection">
+      <h2 class="result-title">🔬 퀴즈 결과</h2>
+      <div class="score-display"><span id="totalScore">0</span><span>/50점</span></div>
+
+      <div class="radar-container">
+        <canvas id="radarChart" width="400" height="400"></canvas>
+      </div>
+
+      <div class="category-scores">
+        <div class="category-score-item">
+          <div class="label">인물파악</div>
+          <div class="score" id="score1">0</div>
+        </div>
+        <div class="category-score-item">
+          <div class="label">내용일치</div>
+          <div class="score" id="score2">0</div>
+        </div>
+        <div class="category-score-item">
+          <div class="label">내용구조</div>
+          <div class="score" id="score3">0</div>
+        </div>
+        <div class="category-score-item">
+          <div class="label">내용어휘</div>
+          <div class="score" id="score4">0</div>
+        </div>
+        <div class="category-score-item">
+          <div class="label">내용추론</div>
+          <div class="score" id="score5">0</div>
+        </div>
+      </div>
+
+      <button class="back-btn" onclick="goBack()">돌아가기</button>
+    </div>
+  </div>
+
+  <script>
+    const answers = {
+      q1: '② 나침반',
+      q2: '② 특허청 3등급 심사관',
+      q3: '② 빠르게 움직이는 사람에게는 시간이 느리게 흐른다',
+      q4: '② 물질은 곧 에너지이고, 에너지는 곧 물질이다',
+      q5: '③ 핵무기의 파괴적 결과와 평화를 향한 양심 사이',
+      q6: '③ 네 편의 혁명적 논문을 발표한 해',
+      q7: '② 지식은 한계가 있지만 상상력은 세상의 모든 것을 품을 수 있다',
+      q8: '② 양자역학의 불확정성 원리',
+      q9: '② 나치가 먼저 핵무기를 갖는 것을 막기 위해 → 맨해튼 프로젝트의 시발점',
+      q10: '② '질문하는 용기'와 호기심'
+    };
+
+    const userAnswers = {};
+    let userName = '';
+    let userGrade = '';
+
+    function selectOption(element, questionId) {
+      const options = element.parentElement.querySelectorAll('.option');
+      options.forEach(opt => opt.classList.remove('selected'));
+      element.classList.add('selected');
+      userAnswers[questionId] = element.textContent;
+    }
+
+    function startQuiz() {
+      const grade = document.getElementById('grade').value;
+      const name = document.getElementById('name').value.trim();
+
+      if (!grade) {
+        alert('학년을 선택해주세요.');
+        return;
+      }
+      if (!name) {
+        alert('이름을 입력해주세요.');
+        return;
+      }
+
+      userName = name;
+      userGrade = grade;
+
+      document.getElementById('inputForm').style.display = 'none';
+      document.getElementById('quizContent').style.display = 'block';
+    }
+
+    function submitQuiz() {
+      const totalQuestions = Object.keys(answers).length;
+      const answeredQuestions = Object.keys(userAnswers).length;
+
+      if (answeredQuestions < totalQuestions) {
+        alert('모든 문제에 답해주세요.');
+        return;
+      }
+
+      const categoryScores = [0, 0, 0, 0, 0];
+
+      if (userAnswers.q1 === answers.q1) categoryScores[0]++;
+      if (userAnswers.q2 === answers.q2) categoryScores[0]++;
+      if (userAnswers.q3 === answers.q3) categoryScores[1]++;
+      if (userAnswers.q4 === answers.q4) categoryScores[1]++;
+      if (userAnswers.q5 === answers.q5) categoryScores[2]++;
+      if (userAnswers.q6 === answers.q6) categoryScores[2]++;
+      if (userAnswers.q7 === answers.q7) categoryScores[3]++;
+      if (userAnswers.q8 === answers.q8) categoryScores[3]++;
+      if (userAnswers.q9 === answers.q9) categoryScores[4]++;
+      if (userAnswers.q10 === answers.q10) categoryScores[4]++;
+
+      const convertedScores = categoryScores.map(score => {
+        if (score === 2) return 10;
+        if (score === 1) return 5;
+        return 1;
+      });
+
+      const totalScore = convertedScores.reduce((a, b) => a + b, 0);
+
+      document.getElementById('quizContent').style.display = 'none';
+      document.getElementById('resultSection').style.display = 'block';
+
+      document.getElementById('totalScore').textContent = totalScore;
+      document.getElementById('score1').textContent = convertedScores[0] + '점';
+      document.getElementById('score2').textContent = convertedScores[1] + '점';
+      document.getElementById('score3').textContent = convertedScores[2] + '점';
+      document.getElementById('score4').textContent = convertedScores[3] + '점';
+      document.getElementById('score5').textContent = convertedScores[4] + '점';
+
+      drawRadarChart(convertedScores);
+      saveResult(convertedScores, totalScore);
+    }
+
+    function drawRadarChart(scores) {
+      const canvas = document.getElementById('radarChart');
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const maxRadius = 150;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const categories = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      const numCategories = categories.length;
+      const angleStep = (2 * Math.PI) / numCategories;
+      const startAngle = -Math.PI / 2;
+
+      for (let level = 1; level <= 5; level++) {
+        const radius = (maxRadius / 5) * level;
+        ctx.beginPath();
+        for (let i = 0; i <= numCategories; i++) {
+          const angle = startAngle + i * angleStep;
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < numCategories; i++) {
+        const angle = startAngle + i * angleStep;
+        const x = centerX + maxRadius * Math.cos(angle);
+        const y = centerY + maxRadius * Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = '#ccc';
+        ctx.stroke();
+
+        const labelRadius = maxRadius + 25;
+        const labelX = centerX + labelRadius * Math.cos(angle);
+        const labelY = centerY + labelRadius * Math.sin(angle);
+        ctx.fillStyle = '#3f51b5';
+        ctx.font = 'bold 14px Noto Sans KR';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(categories[i], labelX, labelY);
+      }
+
+      ctx.beginPath();
+      for (let i = 0; i <= numCategories; i++) {
+        const idx = i % numCategories;
+        const angle = startAngle + idx * angleStep;
+        const radius = (scores[idx] / 10) * maxRadius;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(63, 81, 181, 0.3)';
+      ctx.fill();
+      ctx.strokeStyle = '#3f51b5';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      for (let i = 0; i < numCategories; i++) {
+        const angle = startAngle + i * angleStep;
+        const radius = (scores[i] / 10) * maxRadius;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = '#1a237e';
+        ctx.fill();
+      }
+    }
+
+    async function saveResult(scores, totalScore) {
+      try {
+        const response = await fetch('/api/creative-quiz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: userGrade,
+            name: userName,
+            storyId: 'worldperson02',
+            season: 'season1',
+            scores: scores,
+            totalScore: totalScore
+          })
+        });
+        const data = await response.json();
+        console.log('저장 완료:', data);
+      } catch (error) {
+        console.error('저장 실패:', error);
+      }
+    }
+
+    function goBack() {
+      window.location.href = 'worldperson02_season1.html';
+    }
+  </script>
+</body>
+</html>

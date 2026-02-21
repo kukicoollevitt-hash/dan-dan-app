@@ -269,6 +269,19 @@ body {
       background: #aef3ae;
       color: #18622e;
     }
+    /* 준비중 단원 - 🔒 준비중 */
+    .status-preparing {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+    /* 준비중 단원 스타일 */
+    .unit-item.unit-preparing {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .unit-item.unit-preparing:hover {
+      background: transparent;
+    }
     /* AI 과제 - 🔄 학습필요 */
     .status-ai-pending {
       background: #e9d5ff;
@@ -8920,6 +8933,16 @@ if (logoutConfirmBtn) {
         // ✅ world2_XX, people2_XX 형식 그대로 사용 (서버 API와 동일하게)
         // 서버에서 world2_XX 형식 그대로 저장하므로 변환하지 않음
 
+        // 🔒 40단원 시리즈의 21~40번 단원은 "준비중" 처리
+        const is40UnitSeries = /^(modern|classic|world1|world2|people1|people2|on_modern|on_classic|on_world1|on_world2|on_people1|on_people2|fit_modern|fit_classic|fit_world1|fit_world2|fit_people1|fit_people2|deep_modern|deep_classic|deep_world1|deep_world2|deep_people1|deep_people2)_\d+$/.test(unitId);
+        const unitNumMatch = unitId.match(/_(\d+)$/);
+        const unitNum = unitNumMatch ? parseInt(unitNumMatch[1], 10) : 0;
+        const isPreparing = is40UnitSeries && unitNum >= 21 && unitNum <= 40;
+
+        if (isPreparing) {
+          li.classList.add('unit-preparing');
+        }
+
         // 해당 단원의 등급 정보 가져오기
         const gradeInfo = unitGradesData[unitId];
         const stars = gradeInfo ? getStarsForGrade(gradeInfo.grade) : '';
@@ -8932,7 +8955,10 @@ if (logoutConfirmBtn) {
           <span>${u.label}</span>
           <span class="unit-right">
             ${stars ? `<span class="unit-stars">${stars}</span>` : ''}
-            <span class="status-badge status-default" draggable="true">✏️ 미완료</span>
+            ${isPreparing
+              ? `<span class="status-badge status-preparing">🔒 준비중</span>`
+              : `<span class="status-badge status-default" draggable="true">✏️ 미완료</span>`
+            }
           </span>
         `;
 
@@ -8940,6 +8966,12 @@ if (logoutConfirmBtn) {
         li.addEventListener("click", async (e) => {
           // 상태 뱃지 클릭 시에는 단원 열기 방지
           if (e.target.classList.contains('status-badge')) {
+            return;
+          }
+
+          // 🔒 준비중 단원은 클릭 불가
+          if (isPreparing) {
+            showPendingModal();
             return;
           }
 
@@ -16042,8 +16074,9 @@ async function performLogout() {
         korperson04: '/creative-book/korperson04_season1_34.html',
         korperson05: '/creative-book/korperson05_season1_34.html',
         korperson06: '/creative-book/korperson06_season1_34.html',
-        worldperson01: '/creative-book/worldperson01_season1_34.html',
-        worldperson02: '/creative-book/worldperson02_season1_34.html'
+        worldperson01: '/creative-book/worldperson01_season1.html',
+        worldperson02: '/creative-book/worldperson02_season1.html',
+        worldperson03: '/creative-book/worldperson03_season1.html'
       };
 
       if (urls[storyType]) {
@@ -16170,7 +16203,8 @@ async function performLogout() {
         korperson05: '/creative-book/korperson05_season1.html',
         korperson06: '/creative-book/korperson06_season1.html',
         worldperson01: '/creative-book/worldperson01_season1.html',
-        worldperson02: '/creative-book/worldperson02_season1.html'
+        worldperson02: '/creative-book/worldperson02_season1.html',
+        worldperson03: '/creative-book/worldperson03_season1.html'
       };
 
       if (urls[storyType]) {
@@ -16443,7 +16477,8 @@ async function performLogout() {
       { index: 101, storyId: 'korperson05', emoji: '⚓', badge: '한국인물', title: '바다의 별이 된 장군, 이순신' },
       { index: 102, storyId: 'korperson06', emoji: '👑', badge: '한국인물', title: '백성을 사랑한 임금, 세종대왕' },
       { index: 103, storyId: 'worldperson01', emoji: '🎨', badge: '세계인물', title: '눈으로 세상을 삼킨 소년, 레오나르도' },
-      { index: 104, storyId: 'worldperson02', emoji: '🔬', badge: '세계인물', title: '빛을 훔치려 한 소년, 아인슈타인' }
+      { index: 104, storyId: 'worldperson02', emoji: '🔬', badge: '세계인물', title: '빛을 훔치려 한 소년, 아인슈타인' },
+      { index: 105, storyId: 'worldperson03', emoji: '⚗️', badge: '세계인물', title: '빛나는 돌을 찾은 여인, 마리 퀴리' }
     ];
 
     // 5-6학년도 동일한 도서 목록 사용
@@ -18195,6 +18230,9 @@ async function performLogout() {
       // 히스토리 로드
       await loadReadingHistory();
 
+      // 관문평가 결과 로드
+      await loadQuizResults();
+
       // 자동 저장 시작
       startAutoSave();
     }
@@ -18327,6 +18365,181 @@ async function performLogout() {
       } catch (error) {
         console.error('히스토리 로드 오류:', error);
       }
+    }
+
+    // 관문평가 결과 로드
+    async function loadQuizResults() {
+      try {
+        const userStr = sessionStorage.getItem('user');
+        if (!userStr) return;
+
+        const user = JSON.parse(userStr);
+        const response = await fetch(
+          `/api/creative-quiz/results?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`
+        );
+
+        const result = await response.json();
+        if (!result.ok) return;
+
+        const quizList = document.getElementById('quizResultList');
+        if (!quizList) return;
+
+        quizList.innerHTML = '';
+
+        const quizResults = result.data || [];
+
+        if (quizResults.length === 0) {
+          quizList.innerHTML = '<div style="padding: 15px; color: #868e96; font-size: 13px; text-align: center;">아직 관문평가 결과가 없습니다</div>';
+          return;
+        }
+
+        // 스토리 제목 매핑
+        const storyTitles = {
+          'bio01': '바위의 눈물과 씨앗의 노래',
+          'bio02': '몸이 뒤바뀐 그날',
+          'bio03': '뼈 없는 기사들의 바다 대전쟁',
+          'bio04': '개미 전쟁',
+          'bio05': '초록이의 위대한 모험',
+          'bio06': '도토리의 위대한 모험',
+          'chem01': '원소들의 결혼식',
+          'chem02': '설탕 탐정단: 물컵 속 실종 사건',
+          'chem03': '물의 나라 공주 아쿠아와 기름의 나라 왕자 올리',
+          'chem04': '바람이와 무게, 풍선 요정 펑이',
+          'chem05': '세 얼굴의 아쿠아 — 나는 변해도 나야!',
+          'chem06': '118명의 원소 용사가 사는 주기율표 왕국',
+          'chem07': '고대 소년 아토의 이천오백 년 시간여행',
+          'classic01': '콩쥐팥쥐',
+          'classic02': '홍계월전',
+          'classic03': '숙향전',
+          'classic04': '심청전',
+          'classic05': '흥부전',
+          'classic06': '토끼전',
+          'earth01': '별의 먼지에서 태어난 푸른 행성',
+          'earth02': '펄펄! 지구의 심장이 뛰는 소리',
+          'earth03': '돌멩이 삼총사: 46억 년의 비밀 여행',
+          'earth04': '산꼭대기의 거인 바위턱',
+          'earth05': '물방울 한울이의 대모험',
+          'earth06': '다온이와 할아버지의 흔들리는 지구 이야기',
+          'geo01': '할아버지의 낡은 지도 한 장이 열어준 세계',
+          'geo02': '보물지도 소년 나침이와 지도 요정 맵이의 약속 대모험',
+          'geo03': '이름 탐정 소녀 나리와 지명 속 천 년의 비밀',
+          'geo04': '우리 동네 탐정단',
+          'geo05': '조용한 시골 마을이 달라지기 시작한 이유',
+          'geo06': '꼼꼼이 좌표와 대충이, 좌표 요정 그리드의 위도경도 대모험',
+          'korperson01': '다짐으로 다시 태어난 김유신',
+          'korperson02': '용이 된 왕, 천 년의 파도를 깨우다',
+          'korperson03': '해골 물을 마신 스님 — 원효',
+          'korperson04': '하늘의 별을 세던 종, 장영실',
+          'korperson05': '바다의 별이 된 장군 — 이순신',
+          'korperson06': '백성을 사랑한 임금, 세종대왕',
+          'law01': '별빛 마을의 열 가지 약속',
+          'law02': '열 개의 문을 여는 아이들',
+          'law03': '정의의 방패와 그림자 왕국',
+          'law04': '보이지 않는 상처를 막아라',
+          'law05': '세 번의 종소리',
+          'law06': '하늘 위의 황금 책',
+        };
+
+        quizResults.forEach(quiz => {
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          item.style.cursor = 'pointer';
+
+          const date = new Date(quiz.completedAt);
+          const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+
+          const storyTitle = storyTitles[quiz.storyId] || quiz.storyId;
+          const seasonLabel = quiz.season === 'season2' ? '시즌2 (5-6학년)' : '시즌1 (3-4학년)';
+
+          // 점수에 따른 색상
+          let scoreColor = '#e74c3c'; // 빨강 (60점 미만)
+          if (quiz.totalScore >= 80) scoreColor = '#27ae60'; // 초록 (80점 이상)
+          else if (quiz.totalScore >= 60) scoreColor = '#f39c12'; // 주황 (60~79점)
+
+          item.innerHTML = `
+            <div class="history-item-title" style="display: flex; justify-content: space-between; align-items: center;">
+              <span>${storyTitle}</span>
+              <span style="font-weight: 700; color: ${scoreColor}; font-size: 14px;">${quiz.totalScore}점</span>
+            </div>
+            <div class="history-item-date">${dateStr}</div>
+            <div class="history-item-story">${seasonLabel}</div>
+          `;
+
+          // 클릭 시 상세 결과 모달 표시
+          item.addEventListener('click', () => showQuizResultDetail(quiz, storyTitle));
+
+          quizList.appendChild(item);
+        });
+      } catch (error) {
+        console.error('관문평가 결과 로드 오류:', error);
+      }
+    }
+
+    // 관문평가 상세 결과 모달
+    function showQuizResultDetail(quiz, storyTitle) {
+      const seasonLabel = quiz.season === 'season1' ? '시즌1 (5-6학년)' : '시즌2 (3-4학년)';
+      const date = new Date(quiz.completedAt);
+      const dateStr = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+
+      const scores = quiz.scores || {};
+
+      // 기존 모달이 있으면 제거
+      const existingModal = document.getElementById('quizDetailModal');
+      if (existingModal) existingModal.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'quizDetailModal';
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center;
+        z-index: 10010;
+      `;
+
+      modal.innerHTML = `
+        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 400px; width: 90%; position: relative; animation: slideIn 0.3s ease;">
+          <button onclick="this.closest('#quizDetailModal').remove()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+
+          <h3 style="text-align: center; margin-bottom: 5px; color: #2d6a4f;">📊 관문평가 결과</h3>
+          <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 20px;">${storyTitle} (${seasonLabel})</p>
+
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 48px; font-weight: 700; color: #1b4332;">${quiz.totalScore}<span style="font-size: 24px;">점</span></div>
+            <div style="color: #868e96; font-size: 13px;">${dateStr}</div>
+          </div>
+
+          <div style="background: #f8f9fa; border-radius: 12px; padding: 15px;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+              <span>👤 인물파악</span>
+              <span style="font-weight: 600; color: #2d6a4f;">${scores['인물파악'] || 0} / 10</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+              <span>✅ 내용일치</span>
+              <span style="font-weight: 600; color: #2d6a4f;">${scores['내용일치'] || 0} / 10</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+              <span>🏗️ 내용구조</span>
+              <span style="font-weight: 600; color: #2d6a4f;">${scores['내용구조'] || 0} / 10</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+              <span>📚 내용어휘</span>
+              <span style="font-weight: 600; color: #2d6a4f;">${scores['내용어휘'] || 0} / 10</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+              <span>🔍 내용추론</span>
+              <span style="font-weight: 600; color: #2d6a4f;">${scores['내용추론'] || 0} / 10</span>
+            </div>
+          </div>
+
+          <button onclick="this.closest('#quizDetailModal').remove()" style="width: 100%; margin-top: 20px; padding: 12px; background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;">닫기</button>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      // 모달 외부 클릭 시 닫기
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
     }
 
     // ========== 세분화된 독서감상문 헬퍼 함수 ==========
@@ -19313,7 +19526,7 @@ ${content}
           <div class="novel-category-badge">3-4학년</div>
           <h3>교과기반 창작도서</h3>
           <p>3~4학년 교과 내용을 바탕으로 한 재미있는 창작 이야기</p>
-          <div class="novel-category-count">시리즈 <span>103개</span></div>
+          <div class="novel-category-count">시리즈 <span>104개</span></div>
         </div>
 
         <!-- 교과기반 창작도서 5-6학년 -->
@@ -19322,7 +19535,7 @@ ${content}
           <div class="novel-category-badge">5-6학년</div>
           <h3>교과기반 창작도서</h3>
           <p>5~6학년 교과 내용을 바탕으로 한 심화 창작 이야기</p>
-          <div class="novel-category-count">시리즈 <span>103개</span></div>
+          <div class="novel-category-count">시리즈 <span>104개</span></div>
         </div>
       </div>
     </div>
@@ -20290,6 +20503,15 @@ ${content}
             <div class="novel-category-badge">세계인물</div>
             <h3>빛을 훔치려 한 소년</h3>
             <p>아인슈타인, 우주의 비밀을 풀다</p>
+            <div class="novel-category-count">총 <span>10화</span></div>
+          </div>
+
+          <!-- 세계인물03: 마리 퀴리 -->
+          <div class="novel-category-card grade34" data-bg="/images/창작도서/창작세계인물03/00.jpg" onclick="openGrade34Story('worldperson03')">
+            <div class="novel-category-icon">⚗️</div>
+            <div class="novel-category-badge">세계인물</div>
+            <h3>빛나는 돌을 찾은 여인</h3>
+            <p>마리 퀴리, 과학의 역사를 바꾸다</p>
             <div class="novel-category-count">총 <span>10화</span></div>
           </div>
         </div>
@@ -21331,6 +21553,15 @@ ${content}
             <p>아인슈타인, 우주의 비밀을 풀다</p>
             <div class="novel-category-count">총 <span>10화</span></div>
           </div>
+
+          <!-- 세계인물03: 마리 퀴리 -->
+          <div class="novel-category-card grade56" data-bg="/images/창작도서/창작세계인물03/00.jpg" onclick="openGrade56Story('worldperson03')">
+            <div class="novel-category-icon">⚗️</div>
+            <div class="novel-category-badge">세계인물</div>
+            <h3>빛나는 돌을 찾은 여인</h3>
+            <p>마리 퀴리, 과학의 역사를 바꾸다</p>
+            <div class="novel-category-count">총 <span>10화</span></div>
+          </div>
         </div>
 
         <div class="novel-slide-indicators" id="grade56Indicators">
@@ -22315,6 +22546,14 @@ ${content}
         </div>
         <div class="history-list" id="readingHistoryList">
           <!-- 히스토리 항목들이 여기에 동적으로 추가됩니다 -->
+        </div>
+
+        <!-- 관문평가 결과 섹션 -->
+        <div class="history-header" style="margin-top: 20px; border-top: 1px solid #e0e0e0; padding-top: 15px;">
+          📊 관문평가 결과
+        </div>
+        <div class="history-list" id="quizResultList">
+          <!-- 관문평가 결과들이 여기에 동적으로 추가됩니다 -->
         </div>
       </div>
 
