@@ -437,14 +437,15 @@
             <th>번호</th>
             <th>학년</th>
             <th>이름</th>
-            <th>학교명</th>
+            <th style="cursor:pointer;" onclick="sortGateTable('school')">학교명 ↕</th>
+            <th style="cursor:pointer;" onclick="sortGateTable('academyName')">학원명 ↕</th>
             <th>관문</th>
             <th>관문 통과 날짜</th>
           </tr>
         </thead>
         <tbody id="tableBody">
           <tr>
-            <td colspan="7" class="loading">데이터를 불러오는 중...</td>
+            <td colspan="8" class="loading">데이터를 불러오는 중...</td>
           </tr>
         </tbody>
       </table>
@@ -485,7 +486,8 @@
             <tr>
               <th></th>
               <th>번호</th>
-              <th>학교명</th>
+              <th style="cursor:pointer;" onclick="sortBehaviorTable('school')">학교명 ↕</th>
+              <th style="cursor:pointer;" onclick="sortBehaviorTable('academyName')">학원명 ↕</th>
               <th>학년</th>
               <th>이름</th>
               <th>과목명</th>
@@ -499,7 +501,7 @@
           </thead>
           <tbody id="behaviorTableBody">
             <tr>
-              <td colspan="12" class="loading">데이터를 불러오는 중...</td>
+              <td colspan="13" class="loading">데이터를 불러오는 중...</td>
             </tr>
           </tbody>
         </table>
@@ -572,7 +574,7 @@
       const tbody = document.getElementById('tableBody');
 
       if (filteredData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="no-data">관문 통과 기록이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data">관문 통과 기록이 없습니다.</td></tr>';
         return;
       }
 
@@ -599,6 +601,7 @@
             <td>${item.grade || '-'}</td>
             <td>${item.name || '-'}</td>
             <td>${item.school || '-'}</td>
+            <td>${item.academyName || '-'}</td>
             <td><span class="gate-badge" onclick="openGateDetail('${item.grade}', '${item.name}', ${item.gate})">관문 ${item.gate}</span></td>
             <td class="date-cell">${passedDate}</td>
           </tr>
@@ -609,7 +612,7 @@
       if (hasMore) {
         html += `
           <tr>
-            <td colspan="7" style="text-align:center; padding:20px;">
+            <td colspan="8" style="text-align:center; padding:20px;">
               <button onclick="toggleGateShowAll()" style="
                 background: linear-gradient(135deg, #495057 0%, #212529 100%);
                 color: #fff;
@@ -629,7 +632,7 @@
       } else if (gateShowAll && filteredData.length > GATE_INITIAL_COUNT) {
         html += `
           <tr>
-            <td colspan="7" style="text-align:center; padding:20px;">
+            <td colspan="8" style="text-align:center; padding:20px;">
               <button onclick="toggleGateShowAll()" style="
                 background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
                 color: #fff;
@@ -1106,7 +1109,7 @@
       const tbody = document.getElementById('behaviorTableBody');
 
       if (behaviorFilteredData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="12" class="no-data">학습 행동 데이터가 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="no-data">학습 행동 데이터가 없습니다.</td></tr>';
         // 더보기 버튼 숨기기
         const loadMoreBtn = document.getElementById('behaviorLoadMoreBtn');
         if (loadMoreBtn) loadMoreBtn.style.display = 'none';
@@ -1141,6 +1144,7 @@
             </td>
             <td>${index + 1}</td>
             <td>${item.school || '-'}</td>
+            <td>${item.academyName || '-'}</td>
             <td>${item.grade || '-'}</td>
             <td>${item.name || '-'}</td>
             <td>${item.subject || getSubjectName(unitName)}</td>
@@ -1397,6 +1401,68 @@
         closeBehaviorModal();
       }
     });
+
+    // ========== 정렬 기능 ==========
+    let gateSortField = null;
+    let gateSortOrder = 'asc';
+    let behaviorSortField = null;
+    let behaviorSortOrder = 'asc';
+
+    // 관문학습 테이블 정렬
+    function sortGateTable(field) {
+      if (gateSortField === field) {
+        gateSortOrder = gateSortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        gateSortField = field;
+        gateSortOrder = 'asc';
+      }
+
+      filteredData.sort((a, b) => {
+        const aVal = (a[field] || '-').toLowerCase();
+        const bVal = (b[field] || '-').toLowerCase();
+
+        // '-'는 항상 맨 뒤로
+        if (aVal === '-' && bVal !== '-') return 1;
+        if (aVal !== '-' && bVal === '-') return -1;
+
+        if (gateSortOrder === 'asc') {
+          return aVal.localeCompare(bVal, 'ko');
+        } else {
+          return bVal.localeCompare(aVal, 'ko');
+        }
+      });
+
+      renderTable();
+      showToast(`${field === 'school' ? '학교명' : '학원명'} ${gateSortOrder === 'asc' ? '오름차순' : '내림차순'} 정렬`);
+    }
+
+    // 본문학습 행동 데이터 테이블 정렬
+    function sortBehaviorTable(field) {
+      if (behaviorSortField === field) {
+        behaviorSortOrder = behaviorSortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        behaviorSortField = field;
+        behaviorSortOrder = 'asc';
+      }
+
+      behaviorFilteredData.sort((a, b) => {
+        const aVal = (a[field] || '-').toLowerCase();
+        const bVal = (b[field] || '-').toLowerCase();
+
+        // '-'는 항상 맨 뒤로
+        if (aVal === '-' && bVal !== '-') return 1;
+        if (aVal !== '-' && bVal === '-') return -1;
+
+        if (behaviorSortOrder === 'asc') {
+          return aVal.localeCompare(bVal, 'ko');
+        } else {
+          return bVal.localeCompare(aVal, 'ko');
+        }
+      });
+
+      renderBehaviorTable();
+      showToast(`${field === 'school' ? '학교명' : '학원명'} ${behaviorSortOrder === 'asc' ? '오름차순' : '내림차순'} 정렬`);
+    }
   </script>
 </body>
 </html>

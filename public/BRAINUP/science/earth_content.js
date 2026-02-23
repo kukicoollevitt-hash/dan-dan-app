@@ -1937,8 +1937,10 @@ function applyContentPack(unitKey) {
       document.head.appendChild(style);
     }
 
-    // localStorage 키
-    const storageKey = `passage_read_${unitKey}`;
+    // localStorage 키 - 학생별로 구분하여 다른 학생과 데이터가 섞이지 않게 함
+    const stuForStorage = getCurrentStudentForReading();
+    const studentSuffix = stuForStorage ? `_${stuForStorage.grade}_${stuForStorage.name}` : '';
+    const storageKey = `passage_read_${unitKey}${studentSuffix}`;
 
     // 저장된 선택 상태 복원
     const savedSelection = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -1956,8 +1958,8 @@ function applyContentPack(unitKey) {
       localStorage.setItem(storageKey, JSON.stringify(selected));
     };
 
-    // 읽기 시간 기록용
-    const timeKey = `passage_time_${unitKey}`;
+    // 읽기 시간 기록용 - 학생별로 구분
+    const timeKey = `passage_time_${unitKey}${studentSuffix}`;
     let readingStartTime = null;
     const savedTime = localStorage.getItem(timeKey);
     if (savedTime) {
@@ -2000,7 +2002,7 @@ function applyContentPack(unitKey) {
 
     // 문단별 완료 상태 추적
     const paragraphs = passageBox.querySelectorAll('p');
-    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}${studentSuffix}`;
     const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
     const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 

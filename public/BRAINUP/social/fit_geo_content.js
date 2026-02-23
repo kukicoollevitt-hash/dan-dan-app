@@ -2175,13 +2175,15 @@ function applyContentPack(unitKey) {
     }
 
     const unitKey = window.CUR_UNIT || 'fit_geo_01';
-    const storageKey = `passage_read_${unitKey}`;
+    const stuForStorage = getCurrentStudentForReading();
+    const studentSuffix = stuForStorage ? `_${stuForStorage.grade}_${stuForStorage.name}` : '';
+    const storageKey = `passage_read_${unitKey}${studentSuffix}`;
     const savedSelections = JSON.parse(localStorage.getItem(storageKey) || '[]');
     const sentences = passageBox.querySelectorAll('.sentence');
     sentences.forEach((span, idx) => { if (savedSelections.includes(idx)) span.classList.add('selected'); });
 
-    // 읽기 시간 기록용
-    const timeKey = `passage_time_${unitKey}`;
+    // 읽기 시간 기록용 - 학생별로 구분
+    const timeKey = `passage_time_${unitKey}${studentSuffix}`;
     let readingStartTime = null;
     const savedTime = localStorage.getItem(timeKey);
     if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
@@ -2190,7 +2192,7 @@ function applyContentPack(unitKey) {
 
     // 문단별 완료 상태 추적
     const paragraphs = passageBox.querySelectorAll('p');
-    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}${studentSuffix}`;
     const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
     const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 

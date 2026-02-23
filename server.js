@@ -1280,6 +1280,208 @@ app.get("/super/academy-supplement-exam-management", requireSuperAdmin, (req, re
   res.send(html);
 });
 
+// ✅ 학원 관리자: 행동예측 AI 데이터 관리 페이지
+app.get("/academy/behavior-data", requireAdminLogin, (req, res) => {
+  console.log("✅ [GET] /academy/behavior-data");
+  res.sendFile(path.join(__dirname, "public", "academy", "behavior-data.html"));
+});
+
+// ✅ 학원 관리자: 관문 통과 기록 API (학원명 필터)
+app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
+  try {
+    const academyName = req.session.admin?.academyName;
+    if (!academyName) {
+      return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
+    }
+
+    const GatePassModel = mongoose.model("GatePass");
+    const gatePasses = await GatePassModel.find({}).sort({ passedAt: -1 }).lean();
+
+    // 학원명이 일치하는 학생만 필터링
+    const enrichedData = [];
+    for (const gp of gatePasses) {
+      const user = await User.findOne({ grade: gp.grade, name: gp.name }).lean();
+      if (user?.academyName === academyName) {
+        let units = gp.units || [];
+
+        // units가 비어있으면 LearningLog에서 해당 관문 범위의 단원 가져오기
+        if (units.length === 0 && gp.gate) {
+          const completedLogs = await LearningLog.find({
+            grade: gp.grade,
+            name: gp.name,
+            completed: true,
+            deleted: { $ne: true }
+          }).sort({ completedAt: 1 }).lean();
+
+          // 관문 범위 계산 (관문 1: 1~5번째, 관문 2: 6~10번째, ...)
+          const startIdx = (gp.gate - 1) * 5;
+          const endIdx = gp.gate * 5;
+          const gateUnits = completedLogs.slice(startIdx, endIdx).map(log => log.unit);
+          units = gateUnits;
+        }
+
+        enrichedData.push({
+          _id: gp._id,
+          grade: gp.grade,
+          name: gp.name,
+          gate: gp.gate,
+          passedAt: gp.passedAt,
+          units: units
+        });
+      }
+    }
+
+    res.json({ ok: true, data: enrichedData });
+  } catch (err) {
+    console.error("❌ 학원 관문 통과 기록 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 학원 관리자: 관문 상세 정보 API
+app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) => {
+  try {
+    const academyName = req.session.admin?.academyName;
+    if (!academyName) {
+      return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
+    }
+
+    const { grade, name, gate } = req.query;
+
+    if (!grade || !name || !gate) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    // 학원 소속 학생인지 확인
+    const user = await User.findOne({ grade, name }).lean();
+    if (!user || user.academyName !== academyName) {
+      return res.json({ ok: false, message: "해당 학생 정보를 찾을 수 없습니다." });
+    }
+
+    // GateAttempt, GatePass 모델 가져오기
+    const GateAttempt = mongoose.model("GateAttempt");
+    const GatePass = mongoose.model("GatePass");
+
+    // 해당 관문의 모든 시도 기록 조회
+    const attempts = await GateAttempt.find({
+      grade,
+      name,
+      gate: parseInt(gate)
+    }).sort({ attemptAt: 1 }).lean();
+
+    // 통과 기록 조회
+    const passRecord = await GatePass.findOne({
+      grade,
+      name,
+      gate: parseInt(gate)
+    }).lean();
+
+    // 재도전 횟수 계산 (통과 전 시도 횟수)
+    const retryCount = attempts.filter(a => !a.passed).length;
+
+    // 누적 데이터 계산
+    let totalTimeAll = 0;
+    let totalWrongClicksAll = 0;
+    const questionTimeMap = {};  // 문항별 누적 시간
+    const questionWrongMap = {}; // 문항별 누적 오답
+
+    attempts.forEach(attempt => {
+      totalTimeAll += attempt.totalTime || 0;
+      totalWrongClicksAll += attempt.totalWrongClicks || 0;
+
+      if (attempt.questionDetails) {
+        attempt.questionDetails.forEach(q => {
+          if (q.questionNo == null || isNaN(q.questionNo)) return;
+
+          const key = q.questionNo;
+          if (!questionTimeMap[key]) {
+            questionTimeMap[key] = {
+              time: 0,
+              wrongs: 0,
+              unitCode: q.unitCode,
+              unitTitle: q.unitTitle || '',
+              qType: q.qType || 'q1'
+            };
+          }
+          questionTimeMap[key].time += q.timeSpent || 0;
+          questionTimeMap[key].wrongs += q.wrongClicks || 0;
+          if (q.unitTitle) questionTimeMap[key].unitTitle = q.unitTitle;
+          if (q.qType) questionTimeMap[key].qType = q.qType;
+        });
+      }
+    });
+
+    // 최종 시도 (통과한 시도) 데이터
+    const passedAttempt = attempts.find(a => a.passed);
+    const lastAttemptTime = passedAttempt?.totalTime || 0;
+    const lastAttemptWrongs = passedAttempt?.totalWrongClicks || 0;
+
+    // 문항별 상세 데이터 배열로 변환
+    const questionDetails = Object.keys(questionTimeMap).map(key => ({
+      questionNo: parseInt(key),
+      unitCode: questionTimeMap[key].unitCode,
+      unitTitle: questionTimeMap[key].unitTitle,
+      qType: questionTimeMap[key].qType,
+      cumulativeTime: questionTimeMap[key].time,
+      cumulativeWrongClicks: questionTimeMap[key].wrongs
+    }));
+
+    res.json({
+      ok: true,
+      data: {
+        totalAttempts: attempts.length,
+        retryCount,
+        cumulativeTime: totalTimeAll,
+        cumulativeWrongClicks: totalWrongClicksAll,
+        lastAttemptTime,
+        lastAttemptWrongs,
+        passedAt: passRecord?.passedAt,
+        questionDetails
+      }
+    });
+  } catch (err) {
+    console.error("❌ 학원 관문 상세 정보 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 학원 관리자: 학습 행동 데이터 API (학원명 필터)
+app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) => {
+  try {
+    const academyName = req.session.admin?.academyName;
+    if (!academyName) {
+      return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
+    }
+
+    const LearningBehaviorModel = mongoose.model("LearningBehavior");
+    const behaviors = await LearningBehaviorModel.find({}).sort({ createdAt: -1 }).lean();
+
+    // 학원명이 일치하는 학생만 필터링
+    const enrichedData = [];
+    for (const item of behaviors) {
+      const user = await User.findOne({ grade: item.grade, name: item.name }).lean();
+      if (user?.academyName === academyName) {
+        enrichedData.push({
+          _id: item._id,
+          grade: item.grade,
+          name: item.name,
+          unit: item.unit,
+          unitTitle: item.unitTitle || item.unit,
+          readingTime: item.readingTime || 0,
+          paragraphQuizErrors: item.paragraphQuizErrors || { total: 0, details: [] },
+          problemErrors: item.problemErrors || { total: 0, details: [] },
+          createdAt: item.createdAt
+        });
+      }
+    }
+
+    res.json({ ok: true, data: enrichedData });
+  } catch (err) {
+    console.error("❌ 학원 학습 행동 데이터 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 // ✅ 슈퍼관리자: 학원용 형성평가 관문 AI 관리
 app.get("/super/academy-gate-pass-management", requireSuperAdmin, (req, res) => {
   console.log("✅ [GET] /super/academy-gate-pass-management");
@@ -1439,7 +1641,7 @@ app.get("/api/super/gate-passes", requireSuperAdmin, async (req, res) => {
     // 모든 관문 통과 기록 조회
     const gatePasses = await GatePassModel.find({}).sort({ passedAt: -1 }).lean();
 
-    // 학교명을 가져오기 위해 User 정보와 매칭
+    // 학교명/학원명을 가져오기 위해 User 정보와 매칭
     const enrichedData = await Promise.all(gatePasses.map(async (gp, index) => {
       // User 컬렉션에서 해당 학생 찾기
       const user = await User.findOne({ grade: gp.grade, name: gp.name }).lean();
@@ -1448,7 +1650,8 @@ app.get("/api/super/gate-passes", requireSuperAdmin, async (req, res) => {
         no: index + 1,
         grade: gp.grade,
         name: gp.name,
-        school: user?.school || user?.academyName || '-',
+        school: user?.school || '-',
+        academyName: user?.academyName || '-',
         gate: gp.gate,
         passedAt: gp.passedAt,
         units: gp.units || []
@@ -1490,7 +1693,7 @@ app.get("/api/super/learning-behaviors", requireSuperAdmin, async (req, res) => 
     // 모든 학습 행동 데이터 조회
     const behaviors = await LearningBehaviorModel.find({}).sort({ createdAt: -1 }).lean();
 
-    // 학교명을 가져오기 위해 User 정보와 매칭
+    // 학교명/학원명을 가져오기 위해 User 정보와 매칭
     const enrichedData = await Promise.all(behaviors.map(async (item, index) => {
       const user = await User.findOne({ grade: item.grade, name: item.name }).lean();
       return {
@@ -1498,7 +1701,8 @@ app.get("/api/super/learning-behaviors", requireSuperAdmin, async (req, res) => 
         no: index + 1,
         grade: item.grade,
         name: item.name,
-        school: user?.school || user?.academyName || item.school || '-',
+        school: user?.school || item.school || '-',
+        academyName: user?.academyName || '-',
         unit: item.unit,
         unitTitle: item.unitTitle || item.unit,
         readingTime: item.readingTime || 0,
@@ -4165,19 +4369,41 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
 // 🔹 학원용 지점 목록 페이지
 app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
   try {
-    // 학원용 학생만 가져오기 (userType === 'academy')
+    // 1) 학원 선생님 계정에서 학원 목록 먼저 가져오기 (승인된 계정만)
+    const academyAdmins = await Admin.find({
+      deleted: { $ne: true },
+      status: "approved",
+      userType: "academy"
+    }).lean();
+
+    // 2) 학원용 학생 가져오기 (userType === 'academy')
     const users = await User.find({
       deleted: { $ne: true },
       userType: "academy"
     }).lean();
 
-    // 학원명별로 묶기
+    // 3) 학원명별로 묶기 - 먼저 AcademyAdmin에서 학원 목록 초기화
     const branchMap = {};
 
+    academyAdmins.forEach((admin) => {
+      const academyName = admin.academyName || "학원명 미입력";
+      if (!branchMap[academyName]) {
+        branchMap[academyName] = {
+          academyName: academyName,
+          studentCount: 0,
+          approvedCount: 0,
+          pendingCount: 0,
+          grades: new Set(),
+        };
+      }
+    });
+
+    // 4) 학생 데이터로 학원별 학생 수 계산
     users.forEach((u) => {
       const academyName = u.academyName || "학원명 미입력";
 
       if (!branchMap[academyName]) {
+        // 학원 선생님 계정 없이 학생만 있는 경우도 처리
         branchMap[academyName] = {
           academyName: academyName,
           studentCount: 0,
@@ -5715,10 +5941,15 @@ app.get("/trash-user", async (req, res) => {
   console.log("🗑 /trash-user 호출, id =", id);
 
   try {
-    const user = await User.findOne({
-      $or: [{ id }, { phone: id }],
-      deleted: { $ne: true }, // active 회원만
-    });
+    // MongoDB ObjectId 형식인지 확인
+    const mongoose = require('mongoose');
+    const isObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
+
+    const query = isObjectId
+      ? { $or: [{ _id: id }, { id }, { phone: id }], deleted: { $ne: true } }
+      : { $or: [{ id }, { phone: id }], deleted: { $ne: true } };
+
+    const user = await User.findOne(query);
 
     if (!user) {
       return res
@@ -24411,6 +24642,7 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
       name: name.trim(),
       phone: phone,
       academyName: adminAcademyName,  // 학원명 필드 사용
+      userType: "academy",  // 학원용 학생 타입 필수!
       status: "approved",
       createdAt: new Date()
     });

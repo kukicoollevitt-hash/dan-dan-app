@@ -5421,13 +5421,16 @@ function applyContentPack(unitKey) {
       style.textContent = `.passage-text .sentence { cursor: pointer; transition: background-color 0.15s ease, font-weight 0.15s ease; border-radius: 3px; padding: 1px 0; } .passage-text .sentence:hover { background-color: rgba(211, 90, 26, 0.12); font-weight: 600; } .passage-text .sentence.selected { background-color: rgba(211, 90, 26, 0.2); font-weight: 600; }`;
       document.head.appendChild(style);
     }
-    const unitKey = window.CUR_UNIT || 'deep_people1_01'; const storageKey = `passage_read_${unitKey}`;
+    const unitKey = window.CUR_UNIT || 'deep_people1_01';
+    const stuForStorage = getCurrentStudentForReading();
+    const studentSuffix = stuForStorage ? `_${stuForStorage.grade}_${stuForStorage.name}` : '';
+    const storageKey = `passage_read_${unitKey}${studentSuffix}`;
     const saved = localStorage.getItem(storageKey); const selectedSet = new Set(saved ? JSON.parse(saved) : []);
     const allSentences = passageBox.querySelectorAll('.sentence');
     allSentences.forEach((span, idx) => { if (selectedSet.has(idx)) span.classList.add('selected'); });
 
-    // 읽기 시간 기록용
-    const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
+    // 읽기 시간 기록용 - 학생별로 구분
+    const timeKey = `passage_time_${unitKey}${studentSuffix}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
     if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     // 🔐 현재 로그인 학생 정보 가져오기
     function getCurrentStudentForReading() { const saved = localStorage.getItem('currentStudent'); if (!saved) return null; try { return JSON.parse(saved); } catch (e) { return null; } }
@@ -5438,7 +5441,7 @@ function applyContentPack(unitKey) {
 
     // 문단별 완료 상태 추적
     const paragraphs = passageBox.querySelectorAll('p');
-    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}${studentSuffix}`;
     const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
     const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 

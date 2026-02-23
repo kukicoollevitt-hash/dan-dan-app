@@ -3739,20 +3739,23 @@ function applyContentPack(unitKey) {
       style.textContent = `.passage-text .sentence { cursor: pointer; transition: background-color 0.15s ease, font-weight 0.15s ease; border-radius: 3px; padding: 1px 0; } .passage-text .sentence:hover { background-color: rgba(211, 90, 26, 0.12); font-weight: 600; } .passage-text .sentence.selected { background-color: rgba(211, 90, 26, 0.2); font-weight: 600; }`;
       document.head.appendChild(style);
     }
-    const unitKey = window.CUR_UNIT || 'fit_world2_01'; const storageKey = `passage_read_${unitKey}`;
+    const unitKey = window.CUR_UNIT || 'fit_world2_01';
+    const stuForStorage = getCurrentStudentForReading();
+    const studentSuffix = stuForStorage ? `_${stuForStorage.grade}_${stuForStorage.name}` : '';
+    const storageKey = `passage_read_${unitKey}${studentSuffix}`;
     const savedSelections = JSON.parse(localStorage.getItem(storageKey) || '[]');
     const sentences = passageBox.querySelectorAll('.sentence');
     sentences.forEach((span, idx) => { if (savedSelections.includes(idx)) span.classList.add('selected'); });
 
-    // 읽기 시간 기록용
-    const timeKey = `passage_time_${unitKey}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
+    // 읽기 시간 기록용 - 학생별로 구분
+    const timeKey = `passage_time_${unitKey}${studentSuffix}`; let readingStartTime = null; const savedTime = localStorage.getItem(timeKey);
     if (savedTime) { const parsed = JSON.parse(savedTime); readingStartTime = parsed.start ? new Date(parsed.start) : null; if (parsed.duration) { const clockMinutes = Math.floor(parsed.duration / 60000); const clockSeconds = Math.floor((parsed.duration % 60000) / 1000); const minInput = document.getElementById('minute-input'); const secInput = document.getElementById('second-input'); if (minInput) minInput.value = String(clockMinutes).padStart(2, '0'); if (secInput) secInput.value = String(clockSeconds).padStart(2, '0'); } }
     const formatDateTime = (date) => { const m = date.getMonth() + 1; const d = date.getDate(); const h = date.getHours(); const min = date.getMinutes().toString().padStart(2, '0'); return `${m}월 ${d}일 ${h}:${min}`; };
     const formatDuration = (ms) => { const totalSec = Math.floor(ms / 1000); const minutes = Math.floor(totalSec / 60); const seconds = totalSec % 60; return `${minutes}분 ${seconds}초`; };
 
     // 문단별 완료 상태 추적
     const paragraphs = passageBox.querySelectorAll('p');
-    const paragraphCompletedKey = `paragraph_completed_${unitKey}`;
+    const paragraphCompletedKey = `paragraph_completed_${unitKey}${studentSuffix}`;
     const savedParagraphCompleted = localStorage.getItem(paragraphCompletedKey);
     const paragraphCompletedSet = new Set(savedParagraphCompleted ? JSON.parse(savedParagraphCompleted) : []);
 
