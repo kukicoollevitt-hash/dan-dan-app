@@ -216,7 +216,7 @@
       transition: max-height 0.3s ease;
     }
     .unit-accordion.open .unit-content {
-      max-height: 3000px;
+      max-height: 10000px;
     }
     .unit-body {
       padding: 16px 18px;
@@ -928,9 +928,23 @@
     }
 
     function extractField(block, fieldName) {
-      const regex = new RegExp(`${fieldName}:\\s*['"\`]([^'"\`]*)['"\`]`);
-      const match = block.match(regex);
-      return match ? match[1] : '';
+      // 여러 줄 지원을 위해 [\s\S] 사용, 하지만 greedy하지 않게 *? 사용
+      // 먼저 작은따옴표 시도
+      let regex = new RegExp(`${fieldName}:\\s*'([^']*)'`);
+      let match = block.match(regex);
+      if (match) return match[1];
+
+      // 큰따옴표 시도
+      regex = new RegExp(`${fieldName}:\\s*"([^"]*)"`);
+      match = block.match(regex);
+      if (match) return match[1];
+
+      // 백틱 시도 (여러 줄 가능)
+      regex = new RegExp(`${fieldName}:\\s*\`([^\`]*)\``);
+      match = block.match(regex);
+      if (match) return match[1];
+
+      return '';
     }
 
     function extractArray(block, fieldName) {
@@ -987,10 +1001,40 @@
       if (endIdx === -1) return null;
 
       const creativeBlock = afterCreative.substring(startIdx, endIdx);
+
+      // topic 또는 title 필드 추출 (일부 파일은 title 사용)
+      let topic = extractField(creativeBlock, 'topic');
+      if (!topic) {
+        topic = extractField(creativeBlock, 'title');
+      }
+
+      // hint 또는 instruction 필드 추출
+      let hint = extractField(creativeBlock, 'hint');
+      if (!hint) {
+        hint = extractField(creativeBlock, 'instruction');
+      }
+
+      // examples 배열 추출
+      let examples = extractArray(creativeBlock, 'examples');
+
+      // examples가 없으면 steps에서 example 추출 시도
+      if (examples.length === 0) {
+        // steps 배열에서 example 필드들 추출
+        const stepsMatch = creativeBlock.match(/steps:\s*\[([\s\S]*?)\]\s*$/);
+        if (stepsMatch) {
+          const stepsContent = stepsMatch[1];
+          const exampleRegex = /example:\s*['"`]([^'"`]+)['"`]/g;
+          let exMatch;
+          while ((exMatch = exampleRegex.exec(stepsContent)) !== null) {
+            examples.push(exMatch[1]);
+          }
+        }
+      }
+
       return {
-        topic: extractField(creativeBlock, 'topic'),
-        hint: extractField(creativeBlock, 'hint'),
-        examples: extractArray(creativeBlock, 'examples')
+        topic,
+        hint,
+        examples
       };
     }
 

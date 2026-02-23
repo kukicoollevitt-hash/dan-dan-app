@@ -681,10 +681,24 @@ const LearningBehavior = mongoose.model("LearningBehavior", learningBehaviorSche
  * ==================================== */
 function requireAdminLogin(req, res, next) {
   if (!req.session.admin) {
-    // 🔥 학원용 관리자였는지 쿠키로 확인하여 적절한 로그인 페이지로 리다이렉트
-    const wasAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
-    console.log("⛔ 관리자 세션 없음 →", wasAcademyAdmin ? "/academy-admin-login" : "/admin-login", "리다이렉트");
-    return res.redirect(wasAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+    // 🔥 학원용 관리자인지 판단 (3단계 체크)
+    // 1순위: 요청 URL에 "academy"가 포함되어 있으면 학원용
+    // 2순위: Referer 헤더에 "academy"가 포함되어 있으면 학원용
+    // 3순위: adminType 쿠키로 확인
+    const requestPath = req.originalUrl || req.url || "";
+    const referer = req.headers.referer || req.headers.referrer || "";
+    const cookieType = req.cookies && req.cookies.adminType;
+
+    const isAcademyPath = requestPath.toLowerCase().includes("academy");
+    const isAcademyReferer = referer.toLowerCase().includes("academy");
+    const isAcademyCookie = cookieType === "academy";
+
+    const isAcademyAdmin = isAcademyPath || isAcademyReferer || isAcademyCookie;
+
+    console.log("⛔ 관리자 세션 없음 → 판단:", { requestPath, referer, cookieType, isAcademyAdmin });
+    console.log("  → 리다이렉트:", isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+
+    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
   next();
 }
