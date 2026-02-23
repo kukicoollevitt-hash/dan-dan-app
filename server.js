@@ -1300,7 +1300,7 @@ app.get("/academy/behavior-data", requireAdminLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "academy", "behavior-data.html"));
 });
 
-// ✅ 학원 관리자: 관문 통과 기록 API (학원명 필터)
+// ✅ 학원 관리자: 관문 통과 기록 API (학원명 필터) - 최적화 버전
 app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
   try {
     const academyName = req.session.admin?.academyName;
@@ -1308,41 +1308,48 @@ app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
 
+    // 1. 해당 학원 학생 목록을 먼저 조회 (한 번만 DB 호출)
+    const academyUsers = await User.find({ academyName }).select('grade name').lean();
+
+    // 2. grade+name 조합으로 Set 생성 (빠른 검색용)
+    const studentKeys = new Set(academyUsers.map(u => `${u.grade}||${u.name}`));
+
+    // 3. 모든 관문 데이터 조회
     const GatePassModel = mongoose.model("GatePass");
     const gatePasses = await GatePassModel.find({}).sort({ passedAt: -1 }).lean();
 
-    // 학원명이 일치하는 학생만 필터링
+    // 4. Set을 이용해 빠르게 필터링 (학원 학생만)
+    const filteredPasses = gatePasses.filter(gp => studentKeys.has(`${gp.grade}||${gp.name}`));
+
+    // 5. units가 비어있는 항목만 LearningLog 조회 (필요한 경우만)
     const enrichedData = [];
-    for (const gp of gatePasses) {
-      const user = await User.findOne({ grade: gp.grade, name: gp.name }).lean();
-      if (user?.academyName === academyName) {
-        let units = gp.units || [];
+    for (const gp of filteredPasses) {
+      let units = gp.units || [];
 
-        // units가 비어있으면 LearningLog에서 해당 관문 범위의 단원 가져오기
-        if (units.length === 0 && gp.gate) {
-          const completedLogs = await LearningLog.find({
-            grade: gp.grade,
-            name: gp.name,
-            completed: true,
-            deleted: { $ne: true }
-          }).sort({ completedAt: 1 }).lean();
-
-          // 관문 범위 계산 (관문 1: 1~5번째, 관문 2: 6~10번째, ...)
-          const startIdx = (gp.gate - 1) * 5;
-          const endIdx = gp.gate * 5;
-          const gateUnits = completedLogs.slice(startIdx, endIdx).map(log => log.unit);
-          units = gateUnits;
-        }
-
-        enrichedData.push({
-          _id: gp._id,
+      // units가 비어있으면 LearningLog에서 해당 관문 범위의 단원 가져오기
+      if (units.length === 0 && gp.gate) {
+        const completedLogs = await LearningLog.find({
           grade: gp.grade,
           name: gp.name,
-          gate: gp.gate,
-          passedAt: gp.passedAt,
-          units: units
-        });
+          completed: true,
+          deleted: { $ne: true }
+        }).sort({ completedAt: 1 }).lean();
+
+        // 관문 범위 계산 (관문 1: 1~5번째, 관문 2: 6~10번째, ...)
+        const startIdx = (gp.gate - 1) * 5;
+        const endIdx = gp.gate * 5;
+        const gateUnits = completedLogs.slice(startIdx, endIdx).map(log => log.unit);
+        units = gateUnits;
       }
+
+      enrichedData.push({
+        _id: gp._id,
+        grade: gp.grade,
+        name: gp.name,
+        gate: gp.gate,
+        passedAt: gp.passedAt,
+        units: units
+      });
     }
 
     res.json({ ok: true, data: enrichedData });
@@ -1459,7 +1466,7 @@ app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) =>
   }
 });
 
-// ✅ 학원 관리자: 학습 행동 데이터 API (학원명 필터)
+// ✅ 학원 관리자: 학습 행동 데이터 API (학원명 필터) - 최적화 버전
 app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) => {
   try {
     const academyName = req.session.admin?.academyName;
@@ -1467,27 +1474,30 @@ app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) =
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
 
+    // 1. 해당 학원 학생 목록을 먼저 조회 (한 번만 DB 호출)
+    const academyUsers = await User.find({ academyName }).select('grade name').lean();
+
+    // 2. grade+name 조합으로 Set 생성 (빠른 검색용)
+    const studentKeys = new Set(academyUsers.map(u => `${u.grade}||${u.name}`));
+
+    // 3. 모든 행동 데이터 조회
     const LearningBehaviorModel = mongoose.model("LearningBehavior");
     const behaviors = await LearningBehaviorModel.find({}).sort({ createdAt: -1 }).lean();
 
-    // 학원명이 일치하는 학생만 필터링
-    const enrichedData = [];
-    for (const item of behaviors) {
-      const user = await User.findOne({ grade: item.grade, name: item.name }).lean();
-      if (user?.academyName === academyName) {
-        enrichedData.push({
-          _id: item._id,
-          grade: item.grade,
-          name: item.name,
-          unit: item.unit,
-          unitTitle: item.unitTitle || item.unit,
-          readingTime: item.readingTime || 0,
-          paragraphQuizErrors: item.paragraphQuizErrors || { total: 0, details: [] },
-          problemErrors: item.problemErrors || { total: 0, details: [] },
-          createdAt: item.createdAt
-        });
-      }
-    }
+    // 4. Set을 이용해 빠르게 필터링 (추가 DB 호출 없음)
+    const enrichedData = behaviors
+      .filter(item => studentKeys.has(`${item.grade}||${item.name}`))
+      .map(item => ({
+        _id: item._id,
+        grade: item.grade,
+        name: item.name,
+        unit: item.unit,
+        unitTitle: item.unitTitle || item.unit,
+        readingTime: item.readingTime || 0,
+        paragraphQuizErrors: item.paragraphQuizErrors || { total: 0, details: [] },
+        problemErrors: item.problemErrors || { total: 0, details: [] },
+        createdAt: item.createdAt
+      }));
 
     res.json({ ok: true, data: enrichedData });
   } catch (err) {
