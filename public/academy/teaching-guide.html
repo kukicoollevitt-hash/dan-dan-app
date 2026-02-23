@@ -949,14 +949,48 @@
     }
 
     function extractCreative(block) {
-      const creativeMatch = block.match(/creative:\s*\{([\s\S]*?)\n\s*\}/);
-      if (!creativeMatch) return null;
+      // creative 블록 찾기 - examples 배열의 닫는 ] 이후 } 찾기
+      const creativeStart = block.indexOf('creative:');
+      if (creativeStart === -1) return null;
 
-      const creativeBlock = creativeMatch[1];
+      // creative: { 이후의 내용 추출
+      const afterCreative = block.substring(creativeStart);
+      let braceCount = 0;
+      let startIdx = afterCreative.indexOf('{');
+      let endIdx = -1;
+      let inString = false;
+      let stringChar = '';
+
+      for (let i = startIdx; i < afterCreative.length; i++) {
+        const char = afterCreative[i];
+
+        if (!inString) {
+          if (char === "'" || char === '"' || char === '`') {
+            inString = true;
+            stringChar = char;
+          } else if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              endIdx = i + 1;
+              break;
+            }
+          }
+        } else {
+          if (char === stringChar && afterCreative[i-1] !== '\\') {
+            inString = false;
+          }
+        }
+      }
+
+      if (endIdx === -1) return null;
+
+      const creativeBlock = afterCreative.substring(startIdx, endIdx);
       return {
-        topic: extractField('{' + creativeBlock + '}', 'topic'),
-        hint: extractField('{' + creativeBlock + '}', 'hint'),
-        examples: extractArray('{' + creativeBlock + '}', 'examples')
+        topic: extractField(creativeBlock, 'topic'),
+        hint: extractField(creativeBlock, 'hint'),
+        examples: extractArray(creativeBlock, 'examples')
       };
     }
 
