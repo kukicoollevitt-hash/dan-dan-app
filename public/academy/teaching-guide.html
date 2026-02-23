@@ -364,6 +364,129 @@
       font-style: italic;
     }
 
+    /* 문제풀이 정답 및 해설 */
+    .quiz-section {
+      background: #f0f9ff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 8px;
+    }
+    .quiz-item {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #bae6fd;
+    }
+    .quiz-item:last-child {
+      margin-bottom: 0;
+    }
+    .quiz-item-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .quiz-index-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .quiz-index-name {
+      font-size: 13px;
+      color: #0369a1;
+      font-weight: 600;
+    }
+    .quiz-question {
+      background: #f8fafc;
+      border-left: 3px solid #0284c7;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #1e293b;
+      line-height: 1.6;
+    }
+    .quiz-options {
+      margin-bottom: 12px;
+    }
+    .quiz-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #475569;
+      transition: all 0.2s ease;
+    }
+    .quiz-option.correct {
+      background: #dcfce7;
+      color: #166534;
+      font-weight: 600;
+    }
+    .quiz-option.correct::before {
+      content: '✓';
+      color: #16a34a;
+      font-weight: 700;
+    }
+    .quiz-option-num {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e2e8f0;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .quiz-option.correct .quiz-option-num {
+      background: #16a34a;
+      color: #fff;
+    }
+    .quiz-detail {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #78350f;
+    }
+    .quiz-detail-title {
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .quiz-essay {
+      background: #faf5ff;
+      border: 1px solid #e9d5ff;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #581c87;
+    }
+    .quiz-essay-title {
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 8px;
+    }
+    .quiz-no-data {
+      text-align: center;
+      padding: 30px;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
     /* 로딩 스피너 */
     .loading {
       text-align: center;
@@ -786,12 +909,18 @@
         const title = extractField(unitBlock, 'title');
         const paragraphMain = extractArray(unitBlock, 'paragraphMain');
         const creative = extractCreative(unitBlock);
+        const quiz = extractQuiz(unitBlock);
+        const answerKey = extractAnswerKey(unitBlock);
+        const detail = extractDetail(unitBlock);
 
         contents[unitKey] = {
           labelNo,
           title,
           paragraphMain,
-          creative
+          creative,
+          quiz,
+          answerKey,
+          detail
         };
       }
 
@@ -829,6 +958,80 @@
         hint: extractField('{' + creativeBlock + '}', 'hint'),
         examples: extractArray('{' + creativeBlock + '}', 'examples')
       };
+    }
+
+    // quiz 객체 추출 (q1_text, q1_opts, q2_text, q2_opts, ... q5_text)
+    function extractQuiz(block) {
+      const quizMatch = block.match(/quiz:\s*\{([\s\S]*?)\n\s*\},?\s*\n/);
+      if (!quizMatch) return null;
+
+      const quizBlock = quizMatch[1];
+      const quiz = {};
+
+      // q1~q5의 text와 opts 추출
+      for (let i = 1; i <= 5; i++) {
+        // q{i}_text 추출
+        const textRegex = new RegExp(`q${i}_text:\\s*['"\`]([\\s\\S]*?)['"\`]\\s*,`);
+        const textMatch = quizBlock.match(textRegex);
+        if (textMatch) {
+          quiz[`q${i}_text`] = textMatch[1];
+        }
+
+        // q{i}_opts 추출 (배열)
+        const optsRegex = new RegExp(`q${i}_opts:\\s*\\[([\\s\\S]*?)\\]`);
+        const optsMatch = quizBlock.match(optsRegex);
+        if (optsMatch) {
+          const optsContent = optsMatch[1];
+          const opts = [];
+          const optRegex = /['"`]([^'"`]+)['"`]/g;
+          let optMatch;
+          while ((optMatch = optRegex.exec(optsContent)) !== null) {
+            opts.push(optMatch[1]);
+          }
+          quiz[`q${i}_opts`] = opts;
+        }
+      }
+
+      return quiz;
+    }
+
+    // answerKey 객체 추출 { q1:'3', q2:'3', ... }
+    function extractAnswerKey(block) {
+      const answerMatch = block.match(/answerKey:\s*\{([^}]*)\}/);
+      if (!answerMatch) return null;
+
+      const answerBlock = answerMatch[1];
+      const answerKey = {};
+
+      for (let i = 1; i <= 5; i++) {
+        const regex = new RegExp(`q${i}:\\s*['"\`]([^'"\`]*)['"\`]`);
+        const match = answerBlock.match(regex);
+        if (match) {
+          answerKey[`q${i}`] = match[1];
+        }
+      }
+
+      return answerKey;
+    }
+
+    // detail 객체 추출 { q1:'해설...', q2:'해설...', ... }
+    function extractDetail(block) {
+      const detailMatch = block.match(/detail:\s*\{([\s\S]*?)\n\s*\},?\s*\n/);
+      if (!detailMatch) return null;
+
+      const detailBlock = detailMatch[1];
+      const detail = {};
+
+      for (let i = 1; i <= 5; i++) {
+        // 여러 줄 문자열을 지원하기 위해 백틱도 고려
+        const regex = new RegExp(`q${i}:\\s*['"\`]([\\s\\S]*?)['"\`]\\s*,?\\s*(?=q\\d|$)`);
+        const match = detailBlock.match(regex);
+        if (match) {
+          detail[`q${i}`] = match[1].trim();
+        }
+      }
+
+      return detail;
     }
 
     // =============================================
@@ -1056,7 +1259,84 @@
       }
       html += `</ul></div>`;
 
-      // 2. 교사용 지도 가이드
+      // 2. 5개 지수 문제풀이 정답 및 해설
+      html += `<div class="detail-section">
+        <h4>📝 5개 지수 문제풀이 정답 및 해설</h4>
+      `;
+
+      if (data.quiz && data.answerKey) {
+        html += `<div class="quiz-section">`;
+
+        const indexNames = {
+          1: '사실적 이해',
+          2: '구조적 이해',
+          3: '어휘력',
+          4: '추론적 이해',
+          5: '비판적 이해(서술형)'
+        };
+
+        for (let i = 1; i <= 5; i++) {
+          const qText = data.quiz[`q${i}_text`];
+          const qOpts = data.quiz[`q${i}_opts`];
+          const answer = data.answerKey[`q${i}`];
+          const detail = data.detail ? data.detail[`q${i}`] : null;
+
+          if (!qText) continue;
+
+          html += `
+            <div class="quiz-item">
+              <div class="quiz-item-header">
+                <span class="quiz-index-badge">Q${i}</span>
+                <span class="quiz-index-name">${indexNames[i] || ''}</span>
+              </div>
+              <div class="quiz-question">${qText}</div>
+          `;
+
+          // 객관식 (Q1~Q4)
+          if (qOpts && qOpts.length > 0) {
+            html += `<div class="quiz-options">`;
+            qOpts.forEach((opt, idx) => {
+              const optNum = idx + 1;
+              const isCorrect = answer === String(optNum);
+              html += `
+                <div class="quiz-option ${isCorrect ? 'correct' : ''}">
+                  <span class="quiz-option-num">${optNum}</span>
+                  <span>${opt}</span>
+                </div>
+              `;
+            });
+            html += `</div>`;
+          }
+
+          // 해설
+          if (detail) {
+            if (i === 5) {
+              // 서술형 문제는 예시 답안
+              html += `
+                <div class="quiz-essay">
+                  <div class="quiz-essay-title">💡 예시 답안</div>
+                  ${detail.replace(/\\n/g, '<br>')}
+                </div>
+              `;
+            } else {
+              html += `
+                <div class="quiz-detail">
+                  <div class="quiz-detail-title">📖 해설</div>
+                  ${detail.replace(/\\n/g, '<br>')}
+                </div>
+              `;
+            }
+          }
+
+          html += `</div>`;
+        }
+        html += `</div>`;
+      } else {
+        html += `<div class="quiz-no-data">(문제풀이 데이터가 없습니다)</div>`;
+      }
+      html += `</div>`;
+
+      // 3. 교사용 지도 가이드
       if (guideData && guideData.teacherGuide) {
         html += `
           <div class="detail-section">
@@ -1083,7 +1363,7 @@
         `;
       }
 
-      // 3. 창의활동 예시답안
+      // 4. 창의활동 예시답안
       html += `<div class="detail-section">
         <h4>✍️ 창의활동 예시답안</h4>
       `;
