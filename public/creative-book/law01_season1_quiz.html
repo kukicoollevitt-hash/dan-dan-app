@@ -3,206 +3,852 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>창작법01 퀴즈</title>
+  <title>창작법01 퀴즈 - 시즌1 관문평가</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
-      min-height: 100vh;
-      padding: 20px;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .quiz-container { max-width: 600px; margin: 0 auto; }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: url('/images/창작도서/창작법01/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 0;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 50px;
+      max-width: 750px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.5s ease-out;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .quiz-header {
       text-align: center;
-      margin-bottom: 30px;
-      padding: 20px;
-      background: linear-gradient(135deg, #5C6BC0, #3949AB);
-      border-radius: 20px;
-      color: white;
-      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+      margin-bottom: 40px;
     }
-    .quiz-header h1 { font-size: 1.5rem; margin-bottom: 8px; }
-    .quiz-header p { font-size: 0.95rem; opacity: 0.95; }
-    .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin-top: 15px; overflow: hidden; }
-    .progress-fill { height: 100%; background: white; border-radius: 4px; transition: width 0.3s ease; }
-    .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .question-number { display: inline-block; background: linear-gradient(135deg, #5C6BC0, #3949AB); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 15px; }
-    .question-text { font-size: 1.1rem; line-height: 1.7; color: #333; margin-bottom: 20px; word-break: keep-all; }
-    .options { display: flex; flex-direction: column; gap: 10px; }
-    .option-btn { width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 12px; background: #fafafa; font-size: 1rem; text-align: left; cursor: pointer; transition: all 0.2s ease; }
-    .option-btn:hover { border-color: #5C6BC0; background: #f0f2ff; }
-    .option-btn.selected { border-color: #5C6BC0; background: linear-gradient(135deg, #5C6BC0, #3949AB); color: white; }
-    .nav-buttons { display: flex; justify-content: space-between; gap: 15px; margin-top: 20px; }
-    .nav-btn { flex: 1; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
-    .nav-btn.prev { background: #e0e0e0; color: #666; }
-    .nav-btn.next { background: linear-gradient(135deg, #5C6BC0, #3949AB); color: white; }
-    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .result-container { display: none; text-align: center; padding: 30px; background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .result-container h2 { font-size: 1.8rem; color: #5C6BC0; margin-bottom: 20px; }
-    .score-display { font-size: 3rem; font-weight: 700; color: #5C6BC0; margin: 20px 0; }
-    .score-breakdown { background: #f0f2ff; border-radius: 15px; padding: 20px; margin: 20px 0; text-align: left; }
-    .score-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #d0d5f0; }
-    .score-row:last-child { border-bottom: none; }
-    .retry-btn { padding: 15px 40px; background: linear-gradient(135deg, #5C6BC0, #3949AB); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 20px; }
-    .back-btn { padding: 15px 40px; background: #95a5a6; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; margin-left: 10px; }
-    .category-tag { display: inline-block; background: #f0f2ff; color: #5C6BC0; padding: 3px 10px; border-radius: 10px; font-size: 0.8rem; margin-left: 10px; }
-    .radar-container { margin: 30px auto; max-width: 350px; }
-    .radar-title { text-align: center; font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 20px; }
-    #radarChart { width: 100%; max-width: 350px; margin: 0 auto; display: block; }
-    .input-form { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .input-form h2 { font-size: 1.3rem; color: #5C6BC0; margin-bottom: 20px; text-align: center; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: 500; }
-    .form-group select, .form-group input { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; transition: border-color 0.2s; }
-    .form-group select:focus, .form-group input:focus { outline: none; border-color: #5C6BC0; }
-    .start-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #5C6BC0, #3949AB); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
-    .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .quiz-content { display: none; }
+
+    .quiz-header h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .quiz-header .gate-number {
+      font-size: 18px;
+      color: #2d6a4f;
+      font-weight: 600;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .quiz-header .category-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #2d6a4f 0%, #1b4332 100%);
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .question-box {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      border-left: 5px solid #2d6a4f;
+    }
+
+    .question-text {
+      font-size: 20px;
+      color: #2c3e50;
+      font-weight: 600;
+      line-height: 1.7;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .option-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 20px 25px;
+      border-radius: 15px;
+      font-size: 17px;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .option-btn:hover {
+      border-color: #2d6a4f;
+      background: #f0fff4;
+      transform: translateX(5px);
+    }
+
+    .option-btn.selected {
+      border-color: #2d6a4f;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+    }
+
+    .option-btn.correct {
+      border-color: #27ae60;
+      background: #27ae60;
+      color: white;
+    }
+
+    .option-btn.wrong {
+      border-color: #e74c3c;
+      background: #e74c3c;
+      color: white;
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(45, 106, 79, 0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .result-message.correct {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #28a745;
+    }
+
+    .result-message.wrong {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #dc3545;
+    }
+
+    .congrats-container {
+      text-align: center;
+      animation: scaleIn 0.6s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .congrats-container h2 {
+      font-size: 44px;
+      margin-bottom: 20px;
+    }
+
+    .congrats-container p {
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+
+    .score-summary {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 16px;
+      margin: 25px 0;
+      text-align: left;
+    }
+
+    .score-summary h3 {
+      font-size: 18px;
+      color: #2d6a4f;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .score-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .score-item:last-child {
+      border-bottom: none;
+    }
+
+    .score-item .category {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .score-item .score {
+      font-weight: 700;
+      color: #2d6a4f;
+    }
+
+    .back-btn {
+      background: white;
+      border: 2px solid #2d6a4f;
+      color: #2d6a4f;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 10px;
+    }
+
+    .back-btn:hover {
+      background: #2d6a4f;
+      color: white;
+    }
+
+    /* 레이더 차트 */
+    .radar-container {
+      display: flex;
+      justify-content: center;
+      margin: 25px 0;
+    }
+
+    .radar-chart {
+      position: relative;
+      width: 280px;
+      height: 280px;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .quiz-container {
+        padding: 30px 20px;
+      }
+      .quiz-header h1 {
+        font-size: 24px;
+      }
+      .question-text {
+        font-size: 17px;
+      }
+      .option-btn {
+        font-size: 15px;
+        padding: 15px 20px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="quiz-container">
-    <div class="input-form" id="inputForm">
-      <h2>⭐ 창작법01 퀴즈</h2>
-      <p style="text-align: center; color: #666; margin-bottom: 20px;">별빛 마을의 열 가지 약속</p>
-      <div class="form-group">
-        <label for="gradeSelect">학년 선택</label>
-        <select id="gradeSelect">
-          <option value="">학년을 선택하세요</option>
-          <option value="5">5학년</option>
-          <option value="6">6학년</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="nameInput">이름 입력</label>
-        <input type="text" id="nameInput" placeholder="이름을 입력하세요">
-      </div>
-      <button class="start-btn" id="startBtn" disabled>퀴즈 시작하기</button>
-    </div>
-
-    <div class="quiz-content" id="quizContent">
-      <div class="quiz-header">
-        <h1>⭐ 창작법01 퀴즈</h1>
-        <p>별빛 마을의 열 가지 약속</p>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-      </div>
-      <div id="questionContainer"></div>
-      <div class="nav-buttons">
-        <button class="nav-btn prev" id="prevBtn" disabled>이전</button>
-        <button class="nav-btn next" id="nextBtn">다음</button>
-      </div>
-    </div>
-
-    <div class="result-container" id="resultContainer">
-      <h2>🎉 퀴즈 완료!</h2>
-      <div class="score-display" id="totalScore">0점</div>
-      <div class="radar-container">
-        <div class="radar-title">영역별 성취도</div>
-        <canvas id="radarChart" width="350" height="350"></canvas>
-      </div>
-      <div class="score-breakdown" id="scoreBreakdown"></div>
-      <div>
-        <button class="retry-btn" onclick="retryQuiz()">다시 풀기</button>
-        <button class="back-btn" onclick="goBack()">목록으로</button>
-      </div>
-    </div>
+  <div class="quiz-container" id="quizContainer">
+    <!-- 퀴즈 내용이 여기에 동적으로 생성됩니다 -->
   </div>
 
   <script>
+    // 퀴즈 문제 데이터 - 5가지 카테고리별 2문제씩 총 10문제
+    // 카테고리: 인물파악, 내용일치, 내용구조, 내용어휘, 내용추론
     const quizData = [
-      { category: "인물파악", question: "별빛 마을을 지키기 위해 모험을 떠나는 두 주인공의 이름은?", options: ["하늘이와 별이", "라온이와 별무리", "소라와 민수", "지우와 하나"], answer: 1 },
-      { category: "인물파악", question: "별빛 마을의 아이들에게 인권에 대해 알려주는 지혜로운 존재는?", options: ["숲의 정령", "달빛 할머니", "별무리", "마을 이장"], answer: 1 },
-      { category: "내용일치", question: "별빛 마을에 어둠이 찾아온 이유는 무엇인가?", options: ["날씨가 나빠서", "사람들이 서로의 권리를 무시하기 시작해서", "전쟁이 일어나서", "별이 사라져서"], answer: 1 },
-      { category: "내용일치", question: "라온이와 별무리가 마을을 구하기 위해 찾아야 했던 것은?", options: ["황금 열쇠", "인권의 열 가지 별", "마법 지팡이", "비밀 지도"], answer: 1 },
-      { category: "내용구조", question: "이야기가 전개되는 순서로 올바른 것은?", options: ["마을 구원 → 어둠 도래 → 별 찾기", "어둠 도래 → 별 찾기 모험 → 마을 복원", "별 찾기 → 어둠 도래 → 마을 건설", "마을 건설 → 별 찾기 → 어둠 도래"], answer: 1 },
-      { category: "내용구조", question: "이 이야기에서 '인권의 별'이 상징하는 것은?", options: ["재물", "모든 사람이 지켜야 할 권리와 존엄", "마법의 힘", "왕의 권위"], answer: 1 },
-      { category: "내용어휘", question: "'인권'의 의미로 가장 적절한 것은?", options: ["인기 있는 권리", "사람이라면 누구나 가지는 기본적인 권리", "어른만의 권리", "나라를 다스릴 권리"], answer: 1 },
-      { category: "내용어휘", question: "'존엄'이라는 말의 뜻은?", options: ["높고 귀하여 함부로 할 수 없음", "매우 부유함", "힘이 셈", "유명함"], answer: 0 },
-      { category: "내용추론", question: "마을에 다시 빛이 돌아온 까닭으로 가장 적절한 것은?", options: ["새 왕이 등장해서", "사람들이 서로의 인권을 존중하기 시작해서", "마법사가 주문을 걸어서", "비가 그쳐서"], answer: 1 },
-      { category: "내용추론", question: "이 이야기가 우리에게 전하고자 하는 메시지는?", options: ["힘센 사람이 이긴다", "인권은 모든 사람이 함께 지켜야 할 소중한 가치이다", "어린이는 권리가 없다", "약속은 지키지 않아도 된다"], answer: 1 }
+      // 인물파악 (1번째)
+      {
+        gate: 1,
+        category: "인물파악",
+        question: "별빛 마을을 지키기 위해 모험을 떠나는 두 주인공의 이름은?",
+        options: [
+          "하늘이와 별이",
+          "라온이와 별무리",
+          "소라와 민수",
+          "지우와 하나"
+        ],
+        correct: 1
+      },
+      // 인물파악 (2번째)
+      {
+        gate: 2,
+        category: "인물파악",
+        question: "별빛 마을의 아이들에게 인권에 대해 알려주는 지혜로운 존재는?",
+        options: [
+          "숲의 정령",
+          "달빛 할머니",
+          "별무리",
+          "마을 이장"
+        ],
+        correct: 1
+      },
+      // 내용일치 (3번째)
+      {
+        gate: 3,
+        category: "내용일치",
+        question: "별빛 마을에 어둠이 찾아온 이유는 무엇인가?",
+        options: [
+          "날씨가 나빠서",
+          "사람들이 서로의 권리를 무시하기 시작해서",
+          "전쟁이 일어나서",
+          "별이 사라져서"
+        ],
+        correct: 1
+      },
+      // 내용일치 (4번째)
+      {
+        gate: 4,
+        category: "내용일치",
+        question: "라온이와 별무리가 마을을 구하기 위해 찾아야 했던 것은?",
+        options: [
+          "황금 열쇠",
+          "인권의 열 가지 별",
+          "마법 지팡이",
+          "비밀 지도"
+        ],
+        correct: 1
+      },
+      // 내용구조 (5번째)
+      {
+        gate: 5,
+        category: "내용구조",
+        question: "이야기가 전개되는 순서로 올바른 것은?",
+        options: [
+          "마을 구원 → 어둠 도래 → 별 찾기",
+          "어둠 도래 → 별 찾기 모험 → 마을 복원",
+          "별 찾기 → 어둠 도래 → 마을 건설",
+          "마을 건설 → 별 찾기 → 어둠 도래"
+        ],
+        correct: 1
+      },
+      // 내용구조 (6번째)
+      {
+        gate: 6,
+        category: "내용구조",
+        question: "이 이야기에서 '인권의 별'이 상징하는 것은?",
+        options: [
+          "재물",
+          "모든 사람이 지켜야 할 권리와 존엄",
+          "마법의 힘",
+          "왕의 권위"
+        ],
+        correct: 1
+      },
+      // 내용어휘 (7번째)
+      {
+        gate: 7,
+        category: "내용어휘",
+        question: "'인권'의 의미로 가장 적절한 것은?",
+        options: [
+          "인기 있는 권리",
+          "사람이라면 누구나 가지는 기본적인 권리",
+          "어른만의 권리",
+          "나라를 다스릴 권리"
+        ],
+        correct: 1
+      },
+      // 내용어휘 (8번째)
+      {
+        gate: 8,
+        category: "내용어휘",
+        question: "'존엄'이라는 말의 뜻은?",
+        options: [
+          "높고 귀하여 함부로 할 수 없음",
+          "매우 부유함",
+          "힘이 셈",
+          "유명함"
+        ],
+        correct: 0
+      },
+      // 내용추론 (9번째)
+      {
+        gate: 9,
+        category: "내용추론",
+        question: "마을에 다시 빛이 돌아온 까닭으로 가장 적절한 것은?",
+        options: [
+          "새 왕이 등장해서",
+          "사람들이 서로의 인권을 존중하기 시작해서",
+          "마법사가 주문을 걸어서",
+          "비가 그쳐서"
+        ],
+        correct: 1
+      },
+      // 내용추론 (10번째)
+      {
+        gate: 10,
+        category: "내용추론",
+        question: "이 이야기가 우리에게 전하고자 하는 메시지는?",
+        options: [
+          "힘센 사람이 이긴다",
+          "인권은 모든 사람이 함께 지켜야 할 소중한 가치이다",
+          "어린이는 권리가 없다",
+          "약속은 지키지 않아도 된다"
+        ],
+        correct: 1
+      }
     ];
 
-    let currentQuestion = 0;
-    let answers = new Array(quizData.length).fill(null);
-    let userName = '';
-    let userGrade = '';
+    let currentGate = 0;
+    let selectedAnswer = null;
+    let categoryScores = {
+      "인물파악": 0,
+      "내용일치": 0,
+      "내용구조": 0,
+      "내용어휘": 0,
+      "내용추론": 0
+    };
 
-    const gradeSelect = document.getElementById('gradeSelect');
-    const nameInput = document.getElementById('nameInput');
-    const startBtn = document.getElementById('startBtn');
+    function renderQuiz() {
+      const container = document.getElementById('quizContainer');
+      const quiz = quizData[currentGate];
 
-    function checkFormValid() { startBtn.disabled = !(gradeSelect.value && nameInput.value.trim()); }
-    gradeSelect.addEventListener('change', checkFormValid);
-    nameInput.addEventListener('input', checkFormValid);
+      container.innerHTML = `
+        <div class="quiz-header">
+          <h1>🌿 관문평가</h1>
+          <p class="gate-number">10개 관문 중 ${quiz.gate}번째</p>
+          <span class="category-badge">${quiz.category}</span>
+        </div>
 
-    startBtn.addEventListener('click', function() {
-      userGrade = gradeSelect.value;
-      userName = nameInput.value.trim();
-      document.getElementById('inputForm').style.display = 'none';
-      document.getElementById('quizContent').style.display = 'block';
-      renderQuestion();
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: ${(quiz.gate / 10) * 100}%"></div>
+        </div>
+
+        <div class="question-box">
+          <p class="question-text">${quiz.question}</p>
+        </div>
+
+        <div class="options-container">
+          ${quiz.options.map((option, index) => `
+            <button class="option-btn" onclick="selectAnswer(${index})">
+              ${index + 1}. ${option}
+            </button>
+          `).join('')}
+        </div>
+
+        <button class="submit-btn" onclick="submitAnswer()" disabled>
+          답안 제출
+        </button>
+      `;
+    }
+
+    function selectAnswer(index) {
+      selectedAnswer = index;
+
+      // 모든 버튼 선택 해제
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => btn.classList.remove('selected'));
+
+      // 선택한 버튼 표시
+      buttons[index].classList.add('selected');
+
+      // 제출 버튼 활성화
+      document.querySelector('.submit-btn').disabled = false;
+    }
+
+    function submitAnswer() {
+      const quiz = quizData[currentGate];
+      const buttons = document.querySelectorAll('.option-btn');
+      const submitBtn = document.querySelector('.submit-btn');
+
+      // 버튼 비활성화
+      buttons.forEach(btn => btn.disabled = true);
+      submitBtn.disabled = true;
+
+      const isCorrect = selectedAnswer === quiz.correct;
+
+      if (isCorrect) {
+        // 정답 - 카테고리 점수 추가
+        categoryScores[quiz.category]++;
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('correct');
+        showResult(true);
+      } else {
+        // 오답 - 정답 표시
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('wrong');
+        buttons[quiz.correct].classList.add('correct');
+        showResult(false);
+      }
+    }
+
+    function showResult(isCorrect) {
+      const container = document.getElementById('quizContainer');
+
+      // 결과 메시지 추가
+      const resultMsg = document.createElement('div');
+      if (isCorrect) {
+        resultMsg.className = 'result-message correct';
+        resultMsg.innerHTML = '🎉 정답입니다! 다음 관문으로 이동합니다...';
+      } else {
+        resultMsg.className = 'result-message wrong';
+        resultMsg.innerHTML = '❌ 틀렸습니다. 다음 관문으로 이동합니다...';
+      }
+      container.insertBefore(resultMsg, container.firstChild);
+
+      // 1.5초 후 다음 문제로
+      setTimeout(() => {
+        currentGate++;
+        selectedAnswer = null;
+
+        if (currentGate >= quizData.length) {
+          // 모든 관문 완료!
+          showCongratulations();
+        } else {
+          renderQuiz();
+        }
+      }, 1500);
+    }
+
+    // 영역별 점수를 10점 만점으로 환산 (2문제=10점, 1문제=5점, 0문제=1점)
+    function convertToRadarScore(correctCount) {
+      if (correctCount === 2) return 10;
+      if (correctCount === 1) return 5;
+      return 1;
+    }
+
+    // 레이더 차트 그리기
+    function drawRadarChart(scores) {
+      const canvas = document.getElementById('radarCanvas');
+      const ctx = canvas.getContext('2d');
+      const centerX = 140;
+      const centerY = 140;
+      const maxRadius = 100;
+
+      // 5각형 좌표 계산 (상단부터 시계방향)
+      const angles = [];
+      for (let i = 0; i < 5; i++) {
+        angles.push((Math.PI * 2 * i / 5) - Math.PI / 2);
+      }
+
+      // 배경 격자 그리기 (10, 5, 1 레벨)
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1;
+
+      [1, 0.5, 0.1].forEach(ratio => {
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          const angle = angles[i % 5];
+          const x = centerX + Math.cos(angle) * maxRadius * ratio;
+          const y = centerY + Math.sin(angle) * maxRadius * ratio;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      });
+
+      // 축 그리기
+      ctx.strokeStyle = '#d0d0d0';
+      angles.forEach(angle => {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(angle) * maxRadius, centerY + Math.sin(angle) * maxRadius);
+        ctx.stroke();
+      });
+
+      // 데이터 영역 그리기
+      const categories = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(45, 106, 79, 0.3)';
+      ctx.strokeStyle = '#2d6a4f';
+      ctx.lineWidth = 2;
+
+      categories.forEach((cat, i) => {
+        const score = scores[cat];
+        const ratio = score / 10;
+        const x = centerX + Math.cos(angles[i]) * maxRadius * ratio;
+        const y = centerY + Math.sin(angles[i]) * maxRadius * ratio;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 데이터 포인트 그리기
+      ctx.fillStyle = '#1b4332';
+      categories.forEach((cat, i) => {
+        const score = scores[cat];
+        const ratio = score / 10;
+        const x = centerX + Math.cos(angles[i]) * maxRadius * ratio;
+        const y = centerY + Math.sin(angles[i]) * maxRadius * ratio;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 라벨 그리기
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+      ctx.textAlign = 'center';
+
+      const labelOffset = 18;
+      const labels = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      labels.forEach((label, i) => {
+        const x = centerX + Math.cos(angles[i]) * (maxRadius + labelOffset);
+        const y = centerY + Math.sin(angles[i]) * (maxRadius + labelOffset);
+        ctx.fillText(label, x, y + 4);
+      });
+    }
+
+    function showCongratulations() {
+      const container = document.getElementById('quizContainer');
+
+      // 영역별 레이더 점수 계산 (10점 만점)
+      const radarScores = {
+        "인물파악": convertToRadarScore(categoryScores["인물파악"]),
+        "내용일치": convertToRadarScore(categoryScores["내용일치"]),
+        "내용구조": convertToRadarScore(categoryScores["내용구조"]),
+        "내용어휘": convertToRadarScore(categoryScores["내용어휘"]),
+        "내용추론": convertToRadarScore(categoryScores["내용추론"])
+      };
+
+      // 총점 계산 (100점 만점)
+      const totalRadarScore = Object.values(radarScores).reduce((a, b) => a + b, 0);
+      const totalScore100 = totalRadarScore * 2; // 50점 만점 → 100점 만점으로 환산
+
+      container.innerHTML = `
+        <div class="congrats-container">
+          <h2>🎊 관문평가 완료! 🎊</h2>
+          <p>
+            10개의 관문을 모두 완료했습니다!<br>
+            '창작법01 퀴즈' 이야기를 잘 이해하셨네요.
+          </p>
+
+          <div class="radar-container">
+            <canvas id="radarCanvas" width="280" height="280"></canvas>
+          </div>
+
+          <div class="score-summary">
+            <h3>📊 영역별 점수 (각 10점 만점)</h3>
+            <div class="score-item">
+              <span class="category">👤 인물파악</span>
+              <span class="score">${radarScores["인물파악"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">✅ 내용일치</span>
+              <span class="score">${radarScores["내용일치"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">🏗️ 내용구조</span>
+              <span class="score">${radarScores["내용구조"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">📚 내용어휘</span>
+              <span class="score">${radarScores["내용어휘"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">🔍 내용추론</span>
+              <span class="score">${radarScores["내용추론"]} / 10</span>
+            </div>
+            <div class="score-item" style="border-top: 2px solid #2d6a4f; margin-top: 10px; padding-top: 15px;">
+              <span class="category" style="font-size: 18px;">총점</span>
+              <span class="score" style="font-size: 22px; color: #1b4332;">${totalScore100}점</span>
+            </div>
+          </div>
+
+          <button class="back-btn" onclick="goBack()">
+            ← 목록으로 돌아가기
+          </button>
+          <button class="submit-btn" onclick="retryQuiz()" style="margin-top: 10px;">
+            🔄 다시 풀기
+          </button>
+        </div>
+      `;
+
+      // 레이더 차트 그리기
+      setTimeout(() => {
+        drawRadarChart(radarScores);
+      }, 100);
+
+      // 결과 저장 (서버 API 호출)
+      saveQuizResult(radarScores, totalScore100);
+
+      // 결과 저장 (부모 창에 전달)
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          action: 'quizComplete',
+          storyId: 'law01',
+          season: getSeasonFromUrl(),
+          scores: radarScores,
+          totalScore: totalScore100
+        }, '*');
+      }
+    }
+
+    // URL 파라미터에서 시즌 정보 가져오기
+    function getSeasonFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('season') || 'season2'; // 기본값 season2
+    }
+
+    // 서버에 결과 저장
+    async function saveQuizResult(scores, totalScore) {
+      try {
+        // 로그인 정보 가져오기 (sessionStorage 'user' 키 사용)
+        const userInfo = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+        const grade = userInfo.grade || '';
+        const name = userInfo.name || '';
+
+        if (!grade || !name) {
+          console.log('[saveQuizResult] 로그인 정보 없음 - 저장 건너뜀');
+          return;
+        }
+
+        // URL 파라미터에서 시즌 가져오기
+        const season = getSeasonFromUrl();
+
+        const response = await fetch('/api/creative-quiz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade,
+            name,
+            storyId: 'law01',
+            season,
+            scores,
+            totalScore
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          console.log('[saveQuizResult] 저장 완료:', result);
+        } else {
+          console.error('[saveQuizResult] 저장 실패:', result.message);
+        }
+      } catch (err) {
+        console.error('[saveQuizResult] 오류:', err);
+      }
+    }
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function retryQuiz() {
+      currentGate = 0;
+      selectedAnswer = null;
+      categoryScores = {
+        "인물파악": 0,
+        "내용일치": 0,
+        "내용구조": 0,
+        "내용어휘": 0,
+        "내용추론": 0
+      };
+      renderQuiz();
+    }
+
+    // 페이지 로드 시 첫 번째 퀴즈 표시
+    window.addEventListener('DOMContentLoaded', () => {
+      renderQuiz();
     });
 
-    function renderQuestion() {
-      const q = quizData[currentQuestion];
-      document.getElementById('questionContainer').innerHTML = `
-        <div class="question-card">
-          <div><span class="question-number">문제 ${currentQuestion + 1}/${quizData.length}</span><span class="category-tag">${q.category}</span></div>
-          <p class="question-text">${q.question}</p>
-          <div class="options">${q.options.map((opt, idx) => `<button class="option-btn ${answers[currentQuestion] === idx ? 'selected' : ''}" onclick="selectAnswer(${idx})">${idx + 1}. ${opt}</button>`).join('')}</div>
-        </div>`;
-      document.getElementById('progressFill').style.width = `${((currentQuestion + 1) / quizData.length) * 100}%`;
-      document.getElementById('prevBtn').disabled = currentQuestion === 0;
-      document.getElementById('nextBtn').textContent = currentQuestion === quizData.length - 1 ? '결과 보기' : '다음';
-    }
-
-    function selectAnswer(idx) { answers[currentQuestion] = idx; renderQuestion(); }
-
-    document.getElementById('prevBtn').addEventListener('click', () => { if (currentQuestion > 0) { currentQuestion--; renderQuestion(); } });
-    document.getElementById('nextBtn').addEventListener('click', () => { if (currentQuestion < quizData.length - 1) { currentQuestion++; renderQuestion(); } else { showResult(); } });
-
-    function showResult() {
-      document.getElementById('quizContent').style.display = 'none';
-      document.getElementById('resultContainer').style.display = 'block';
-      const categories = ["인물파악", "내용일치", "내용구조", "내용어휘", "내용추론"];
-      const categoryScores = {}, categoryCorrect = {};
-      categories.forEach(cat => { categoryCorrect[cat] = 0; });
-      quizData.forEach((q, idx) => { if (answers[idx] === q.answer) categoryCorrect[q.category]++; });
-      categories.forEach(cat => { const c = categoryCorrect[cat]; categoryScores[cat] = c === 2 ? 10 : c === 1 ? 5 : 1; });
-      const totalScore = Object.values(categoryScores).reduce((a, b) => a + b, 0);
-      document.getElementById('totalScore').textContent = `${totalScore}점`;
-      let breakdownHTML = '';
-      categories.forEach(cat => { breakdownHTML += `<div class="score-row"><span>${cat}</span><span>${categoryCorrect[cat]}/2 정답 → ${categoryScores[cat]}점</span></div>`; });
-      document.getElementById('scoreBreakdown').innerHTML = breakdownHTML;
-      drawRadarChart(categories, categoryScores);
-      saveQuizResult(categoryScores, totalScore);
-    }
-
-    function drawRadarChart(categories, scores) {
-      const canvas = document.getElementById('radarChart');
-      const ctx = canvas.getContext('2d');
-      const centerX = canvas.width / 2, centerY = canvas.height / 2, radius = 120;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const numCategories = categories.length, angleStep = (2 * Math.PI) / numCategories, startAngle = -Math.PI / 2;
-      [0.1, 0.5, 1].forEach(scale => { ctx.beginPath(); for (let j = 0; j <= numCategories; j++) { const angle = startAngle + j * angleStep; const x = centerX + radius * scale * Math.cos(angle); const y = centerY + radius * scale * Math.sin(angle); if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.closePath(); ctx.strokeStyle = '#ddd'; ctx.stroke(); });
-      for (let i = 0; i < numCategories; i++) { const angle = startAngle + i * angleStep; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX + radius * Math.cos(angle), centerY + radius * Math.sin(angle)); ctx.strokeStyle = '#ccc'; ctx.stroke(); }
-      ctx.beginPath();
-      for (let i = 0; i <= numCategories; i++) { const idx = i % numCategories; const angle = startAngle + idx * angleStep; const value = scores[categories[idx]] / 10; const x = centerX + radius * value * Math.cos(angle); const y = centerY + radius * value * Math.sin(angle); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
-      ctx.closePath(); ctx.fillStyle = 'rgba(92, 107, 192, 0.3)'; ctx.fill(); ctx.strokeStyle = '#5C6BC0'; ctx.lineWidth = 2; ctx.stroke();
-      for (let i = 0; i < numCategories; i++) { const angle = startAngle + i * angleStep; const value = scores[categories[i]] / 10; const x = centerX + radius * value * Math.cos(angle); const y = centerY + radius * value * Math.sin(angle); ctx.beginPath(); ctx.arc(x, y, 5, 0, 2 * Math.PI); ctx.fillStyle = '#5C6BC0'; ctx.fill(); }
-      ctx.font = '13px Pretendard, sans-serif'; ctx.fillStyle = '#333'; ctx.textAlign = 'center';
-      for (let i = 0; i < numCategories; i++) { const angle = startAngle + i * angleStep; const x = centerX + (radius + 30) * Math.cos(angle); const y = centerY + (radius + 30) * Math.sin(angle); ctx.fillText(categories[i], x, y + 4); }
-    }
-
-    async function saveQuizResult(categoryScores, totalScore) {
-      try { await fetch('/api/creative-quiz/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: userGrade, name: userName, storyId: 'law01', season: 'season2', scores: categoryScores, totalScore: totalScore }) }); } catch (error) { console.error('Failed to save:', error); }
-    }
-
-    function retryQuiz() { currentQuestion = 0; answers = new Array(quizData.length).fill(null); document.getElementById('resultContainer').style.display = 'none'; document.getElementById('quizContent').style.display = 'block'; renderQuestion(); }
-    function goBack() { window.location.href = 'law01_season1.html'; }
+    // ESC 키로 뒤로가기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (confirm('퀴즈를 종료하고 목록으로 돌아가시겠습니까?')) {
+          goBack();
+        }
+      }
+    });
   </script>
 </body>
 </html>

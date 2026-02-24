@@ -135,6 +135,39 @@ const userProgressSchema = new mongoose.Schema({
     }
   }],
 
+  // 공유된 독서 감상문 (카카오톡 공유용)
+  sharedReports: [{
+    shareId: {
+      type: String,
+      required: true,
+      index: true
+    },
+    title: {
+      type: String,
+      required: true
+    },
+    content: {
+      type: String,
+      required: true
+    },
+    storyId: {
+      type: String,
+      default: 'whale_island'
+    },
+    storyTitle: {
+      type: String,
+      default: ''
+    },
+    sharedAt: {
+      type: Date,
+      default: Date.now
+    },
+    expiresAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30일 후 만료
+    }
+  }],
+
   // 학습실 과제 데이터
   studyRoom: {
     assignedTasks: [{

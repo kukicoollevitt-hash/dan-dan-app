@@ -2,129 +2,311 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>🗺️ 할아버지의 낡은 지도</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { font-family: 'Noto Sans KR', sans-serif; background: #000; color: #fff; }
+    html, body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #000;
+      color: #fff;
+      overflow-x: hidden;
+    }
 
-    .background-container {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background-size: cover; background-position: center;
+    #map-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image: url('/images/창작도서/창작지리01/geo01_01.png');
+      background-size: cover;
+      background-position: center;
       transition: background-image 0.8s ease-in-out;
       z-index: 0;
     }
-    .background-container::after {
-      content: ''; position: absolute; inset: 0;
+    #map-container::after {
+      content: '';
+      position: absolute;
+      inset: 0;
       background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
     }
 
-    .content { position: relative; z-index: 1; padding: 60px 20px 100px; max-width: 700px; margin: auto; }
-
-    .intro {
-      min-height: 100vh; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; text-align: center;
+    #content {
+      position: relative;
+      z-index: 1;
     }
-    .intro h1 { font-size: 2rem; margin-bottom: 12px; text-shadow: 2px 2px 6px rgba(0,0,0,0.6); }
-    .intro p { font-size: 1rem; opacity: 0.85; }
 
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+    .intro-content {
+      max-width: 500px;
+    }
+    .intro-content h1 {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+    }
+    .intro-content .subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin-bottom: 30px;
+    }
+    .characters-box {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .characters-box h3 {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: #5dade2;
+    }
+    .characters-box p {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #ddd;
+    }
+
+    /* 스토리 섹션 */
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 60px 20px;
+    }
     .story-card {
-      background: rgba(255,255,255,0.07); backdrop-filter: blur(10px);
-      border-radius: 20px; padding: 28px 24px; margin-bottom: 50px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-      opacity: 0; transform: translateY(40px);
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 30px 24px;
+      max-width: 440px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      opacity: 0;
+      transform: translateX(-30px);
       transition: opacity 0.8s ease, transform 0.8s ease;
     }
-    .story-card.visible { opacity: 1; transform: translateY(0); }
-    .story-card h2 { font-size: 1.25rem; margin-bottom: 14px; color: #5dade2; }
-    .story-card p { font-size: 1rem; line-height: 1.9; color: #ddd; }
-
-    .end-card {
-      text-align: center; padding: 60px 20px;
-      font-size: 1.1rem; color: #aaa;
+    .story-card.active {
+      opacity: 1;
+      transform: translateX(0);
     }
-  </style>
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+      padding-left: 5%;
+    }
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+      padding-right: 5%;
+    }
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(30px);
+    }
+    .story-section:nth-child(even) .story-card.active {
+      transform: translateX(0);
+    }
+    .story-card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 14px;
+      color: #5dade2;
+    }
+    .story-card p {
+      font-size: 0.95rem;
+      line-height: 1.9;
+      color: #e0e0e0;
+    }
+
+    /* 엔딩 섹션 */
+    .ending-section {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .ending-section p {
+      font-size: 1.1rem;
+      color: #aaa;
+      margin-bottom: 30px;
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .nav-btn {
+      padding: 14px 28px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .nav-btn.back {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .nav-btn.quiz {
+      background: linear-gradient(135deg, #5dade2, #3498db);
+      color: #fff;
+    }
+  
+    .dialogue {
+      color: #1b4332;
+      font-weight: 600;
+    }
+</style>
 </head>
 <body>
-  <div class="background-container" id="bg"></div>
+  <div id="map-container"></div>
 
-  <div class="content">
-    <section class="intro" data-bg="/images/창작도서/창작지리01/geo01_01.png">
-      <h1>🗺️ 할아버지의 낡은 지도</h1>
-      <p>한 장의 지도가 열어준 세계</p>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🗺️ 할아버지의 낡은 지도</h1>
+        <p class="subtitle">한 장의 지도가 열어준 세계</p>
+        <div class="characters-box">
+          <h3>등장인물</h3>
+          <p><strong>나침이</strong> - 열한 살 초등학생. 지도 읽는 법을 배우며 세상을 탐험하는 소년</p>
+          <p><strong>할아버지</strong> - 젊었을 때 지형도로 어디든 찾아다니셨던 탐험가</p>
+        </div>
+      </div>
     </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_01.png">
-      <h2>1화. 낡은 지도의 등장</h2>
-      <p>나침이는 열한 살 초등학생이에요. 어느 날, 할아버지 집 다락방에서 낡고 오래된 지도 한 장을 발견했어요. 지도는 가장자리가 누렇게 바래 있었고, 여기저기 작은 글씨와 그림이 가득했어요. "할아버지, 이건 뭐예요?" 나침이가 물었어요. 할아버지는 지도를 살펴보시며 말씀하셨어요. "오, 이건 할아버지가 젊었을 때 쓰던 지형도란다. 이 지도 한 장이면 어디든 찾아갈 수 있었지." 나침이는 신기했어요. 휴대폰 지도 앱만 쓰던 나침이에게, 종이 지도는 옛날 보물 같아 보였어요. "근데 이걸 어떻게 읽어요? 글씨도 많고 선도 복잡해요." 할아버지가 웃으시며 대답했어요. "좋아, 할아버지가 지도 읽는 법을 알려줄게. 이 지도와 함께라면 세상 어디든 갈 수 있단다." 그렇게 나침이의 지도 여행이 시작되었어요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_01.png">
+      <div class="story-card">
+        <h2>1화. 낡은 지도의 등장</h2>
+        <p>나침이는 열한 살 초등학생이에요. 어느 날, 할아버지 집 다락방에서 낡고 오래된 지도 한 장을 발견했어요. 지도는 가장자리가 누렇게 바래 있었고, 여기저기 작은 글씨와 그림이 가득했어요. <br><br><span class="dialogue">"할아버지, 이건 뭐예요?"</span><br><br> 나침이가 물었어요. 할아버지는 지도를 살펴보시며 말씀하셨어요. <br><br><span class="dialogue">"오, 이건 할아버지가 젊었을 때 쓰던 지형도란다. 이 지도 한 장이면 어디든 찾아갈 수 있었지."</span><br><br> 나침이는 신기했어요. 휴대폰 지도 앱만 쓰던 나침이에게, 종이 지도는 옛날 보물 같아 보였어요. <br><br><span class="dialogue">"근데 이걸 어떻게 읽어요? 글씨도 많고 선도 복잡해요."</span><br><br> 할아버지가 웃으시며 대답했어요. <br><br><span class="dialogue">"좋아, 할아버지가 지도 읽는 법을 알려줄게. 이 지도와 함께라면 세상 어디든 갈 수 있단다."</span><br><br> 그렇게 나침이의 지도 여행이 시작되었어요.</p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_02.png">
-      <h2>2화. 축척이 뭐예요?</h2>
-      <p>할아버지가 지도의 한쪽 구석을 가리켰어요. "여기 보이니? '1:25000'이라고 써 있지? 이게 바로 축척이란다." 나침이가 고개를 갸웃했어요. "축척요? 그게 뭐예요?" 할아버지가 쉽게 설명해 주셨어요. "지도는 실제 땅을 작게 줄여서 그린 거야. 1:25000이란, 지도에서 1센티미터가 실제로는 25000센티미터, 그러니까 250미터라는 뜻이야." 나침이가 눈을 동그랗게 떴어요. "와, 그럼 이 작은 지도로 진짜 거리를 알 수 있어요?" 할아버지가 고개를 끄덕이셨어요. "그럼. 지도에서 자로 재면 진짜 거리를 알 수 있지. 나침아, 축척은 지도를 읽는 가장 기본이란다. 이걸 모르면 지도를 제대로 쓸 수 없어." 나침이는 고개를 끄덕였어요. "이제 알겠어요! 축척은 지도와 실제 크기의 비율이에요!" 나침이가 지도 읽기의 첫 번째 비밀을 알게 된 순간이었어요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_02.png">
+      <div class="story-card">
+        <h2>2화. 축척이 뭐예요?</h2>
+        <p>할아버지가 지도의 한쪽 구석을 가리켰어요. <br><br><span class="dialogue">"여기 보이니? '1:25000'이라고 써 있지? 이게 바로 축척이란다."</span><br><br> 나침이가 고개를 갸웃했어요. <br><br><span class="dialogue">"축척요? 그게 뭐예요?"</span><br><br> 할아버지가 쉽게 설명해 주셨어요. <br><br><span class="dialogue">"지도는 실제 땅을 작게 줄여서 그린 거야. 1:25000이란, 지도에서 1센티미터가 실제로는 25000센티미터, 그러니까 250미터라는 뜻이야."</span><br><br> 나침이가 눈을 동그랗게 떴어요. <br><br><span class="dialogue">"와, 그럼 이 작은 지도로 진짜 거리를 알 수 있어요?"</span><br><br> 할아버지가 고개를 끄덕이셨어요. <br><br><span class="dialogue">"그럼. 지도에서 자로 재면 진짜 거리를 알 수 있지. 나침아, 축척은 지도를 읽는 가장 기본이란다. 이걸 모르면 지도를 제대로 쓸 수 없어."</span><br><br> 나침이는 고개를 끄덕였어요. <br><br><span class="dialogue">"이제 알겠어요! 축척은 지도와 실제 크기의 비율이에요!"</span><br><br> 나침이가 지도 읽기의 첫 번째 비밀을 알게 된 순간이었어요.</p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_03.png">
-      <h2>3화. 기호와 색깔의 비밀</h2>
-      <p>할아버지가 지도를 펼쳐 여러 가지 그림과 색깔을 보여 주셨어요. "나침아, 지도에는 다양한 기호가 있단다. 이 작은 그림들이 각각 무엇을 뜻하는지 알면 지도를 쉽게 읽을 수 있어." 나침이가 손가락으로 지도를 가리켰어요. "이 삼각형은 뭐예요?" 할아버지가 답했어요. "그건 산봉우리란다. 그리고 파란 선은 강이나 시내를 뜻해." 나침이가 또 물었어요. "그럼 초록색은요?" 할아버지가 미소 지으며 말씀하셨어요. "초록색은 숲이나 나무가 많은 곳이야. 갈색은 높은 산지를 나타내지." 나침이가 지도를 유심히 살펴보았어요. 파랑, 초록, 갈색, 노랑… 색깔마다 의미가 있었어요. "와, 지도는 정말 그림 언어 같아요!" 나침이가 신나서 말했어요. 할아버지가 고개를 끄덕이셨어요. "맞아, 기호와 색을 알면 지도가 들려주는 이야기를 읽을 수 있단다."</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_03.png">
+      <div class="story-card">
+        <h2>3화. 기호와 색깔의 비밀</h2>
+        <p>할아버지가 지도를 펼쳐 여러 가지 그림과 색깔을 보여 주셨어요. <br><br><span class="dialogue">"나침아, 지도에는 다양한 기호가 있단다. 이 작은 그림들이 각각 무엇을 뜻하는지 알면 지도를 쉽게 읽을 수 있어."</span><br><br> 나침이가 손가락으로 지도를 가리켰어요. <br><br><span class="dialogue">"이 삼각형은 뭐예요?"</span><br><br> 할아버지가 답했어요. <br><br><span class="dialogue">"그건 산봉우리란다. 그리고 파란 선은 강이나 시내를 뜻해."</span><br><br> 나침이가 또 물었어요. <br><br><span class="dialogue">"그럼 초록색은요?"</span><br><br> 할아버지가 미소 지으며 말씀하셨어요. <br><br><span class="dialogue">"초록색은 숲이나 나무가 많은 곳이야. 갈색은 높은 산지를 나타내지."</span><br><br> 나침이가 지도를 유심히 살펴보았어요. 파랑, 초록, 갈색, 노랑… 색깔마다 의미가 있었어요. <br><br><span class="dialogue">"와, 지도는 정말 그림 언어 같아요!"</span><br><br> 나침이가 신나서 말했어요. 할아버지가 고개를 끄덕이셨어요. <br><br><span class="dialogue">"맞아, 기호와 색을 알면 지도가 들려주는 이야기를 읽을 수 있단다."</span></p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_04.png">
-      <h2>4화. 거리를 계산해 보자</h2>
-      <p>할아버지가 자와 연필을 꺼내셨어요. "자, 이제 축척을 이용해서 실제 거리를 계산해 볼까?" 나침이는 자를 들고 지도 위에 대어 보았어요. "학교에서 도서관까지 재어 볼게요!" 나침이가 조심스럽게 자로 재어 보니 지도에서 4센티미터였어요. "할아버지, 4센티미터예요!" 할아버지가 물으셨어요. "축척이 얼마였지?" 나침이가 생각했어요. "1:25000이요!" 할아버지가 고개를 끄덕이셨어요. "그러면 4 곱하기 250미터는?" 나침이가 계산했어요. "1000미터요! 아, 1킬로미터네요!" 할아버지가 박수를 치셨어요. "잘했어! 이렇게 지도를 보면 진짜 거리를 알 수 있단다." 나침이는 뿌듯했어요. 자와 숫자만으로 진짜 거리를 알아낸 거예요! "지도가 정말 신기해요. 숫자와 자만 있으면 멀리 떨어진 곳의 거리도 알 수 있잖아요!" 나침이가 환하게 웃었어요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_04.png">
+      <div class="story-card">
+        <h2>4화. 거리를 계산해 보자</h2>
+        <p>할아버지가 자와 연필을 꺼내셨어요. <br><br><span class="dialogue">"자, 이제 축척을 이용해서 실제 거리를 계산해 볼까?"</span><br><br> 나침이는 자를 들고 지도 위에 대어 보았어요. <br><br><span class="dialogue">"학교에서 도서관까지 재어 볼게요!"</span><br><br> 나침이가 조심스럽게 자로 재어 보니 지도에서 4센티미터였어요. <br><br><span class="dialogue">"할아버지, 4센티미터예요!"</span><br><br> 할아버지가 물으셨어요. <br><br><span class="dialogue">"축척이 얼마였지?"</span><br><br> 나침이가 생각했어요. <br><br><span class="dialogue">"1:25000이요!"</span><br><br> 할아버지가 고개를 끄덕이셨어요. <br><br><span class="dialogue">"그러면 4 곱하기 250미터는?"</span><br><br> 나침이가 계산했어요. <br><br><span class="dialogue">"1000미터요! 아, 1킬로미터네요!"</span><br><br> 할아버지가 박수를 치셨어요. <br><br><span class="dialogue">"잘했어! 이렇게 지도를 보면 진짜 거리를 알 수 있단다."</span><br><br> 나침이는 뿌듯했어요. 자와 숫자만으로 진짜 거리를 알아낸 거예요! <br><br><span class="dialogue">"지도가 정말 신기해요. 숫자와 자만 있으면 멀리 떨어진 곳의 거리도 알 수 있잖아요!"</span><br><br> 나침이가 환하게 웃었어요.</p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_05.png">
-      <h2>5화. 위도와 경도의 세계</h2>
-      <p>할아버지가 지도에 그어진 가로세로 선을 가리키셨어요. "이 줄들이 보이니? 이건 위도와 경도란다." 나침이가 고개를 갸웃했어요. "위도랑 경도요? 어렵게 생겼어요." 할아버지가 웃으며 설명하셨어요. "쉽게 말하면, 위도는 적도를 기준으로 위아래를 나타내는 거야. 경도는 영국의 그리니치를 기준으로 좌우를 나타내지." 나침이가 손가락으로 선을 따라가 보았어요. "아, 가로선이 위도, 세로선이 경도예요!" 할아버지가 고개를 끄덕이셨어요. "맞아. 이 두 숫자를 알면 지구 어디에 있는지 정확히 알 수 있단다. 이걸 좌표라고 해." 나침이가 신기해했어요. "그럼 '북위 37도, 동경 127도'는 우리나라 어딘가인 거예요?" 할아버지가 웃으셨어요. "정확해! 그건 서울 근처 위치란다." 나침이는 이제 지도에 그려진 선들이 마법의 좌표라는 걸 알게 되었어요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_05.png">
+      <div class="story-card">
+        <h2>5화. 위도와 경도의 세계</h2>
+        <p>할아버지가 지도에 그어진 가로세로 선을 가리키셨어요. <br><br><span class="dialogue">"이 줄들이 보이니? 이건 위도와 경도란다."</span><br><br> 나침이가 고개를 갸웃했어요. <br><br><span class="dialogue">"위도랑 경도요? 어렵게 생겼어요."</span><br><br> 할아버지가 웃으며 설명하셨어요. <br><br><span class="dialogue">"쉽게 말하면, 위도는 적도를 기준으로 위아래를 나타내는 거야. 경도는 영국의 그리니치를 기준으로 좌우를 나타내지."</span><br><br> 나침이가 손가락으로 선을 따라가 보았어요. <br><br><span class="dialogue">"아, 가로선이 위도, 세로선이 경도예요!"</span><br><br> 할아버지가 고개를 끄덕이셨어요. <br><br><span class="dialogue">"맞아. 이 두 숫자를 알면 지구 어디에 있는지 정확히 알 수 있단다. 이걸 좌표라고 해."</span><br><br> 나침이가 신기해했어요. <br><br><span class="dialogue">"그럼 '북위 37도, 동경 127도'는 우리나라 어딘가인 거예요?"</span><br><br> 할아버지가 웃으셨어요. <br><br><span class="dialogue">"정확해! 그건 서울 근처 위치란다."</span><br><br> 나침이는 이제 지도에 그려진 선들이 마법의 좌표라는 걸 알게 되었어요.</p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_06.png">
-      <h2>6화. 방향을 읽어 보자</h2>
-      <p>할아버지가 오래된 나침반을 꺼내셨어요. 나침반의 바늘이 살짝 흔들리다가 한쪽을 가리켰어요. "이게 바로 북쪽이란다." 나침이가 나침반을 신기하게 바라보았어요. "와, 이 바늘이 항상 북쪽을 가리켜요?" 할아버지가 고개를 끄덕이셨어요. "지구에는 자기장이라는 게 있어서 나침반 바늘이 항상 북쪽을 향하지. 지도에서도 위쪽이 보통 북쪽이란다." 나침이가 지도와 나침반을 비교했어요. "그럼 지도를 북쪽에 맞춰서 놓으면 되겠네요!" 할아버지가 웃으며 말씀하셨어요. "맞아. 이걸 '정치'라고 하는데, 지도를 바르게 놓는다는 뜻이야." 나침이는 지도를 돌려 나침반에 맞췄어요. "와, 이제 진짜 방향을 알 수 있어요! 이쪽이 동쪽이고, 저쪽이 서쪽이네요!" 나침이가 신나서 말했어요. 나침반 하나면 길을 잃지 않을 것 같았어요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_06.png">
+      <div class="story-card">
+        <h2>6화. 방향을 읽어 보자</h2>
+        <p>할아버지가 오래된 나침반을 꺼내셨어요. 나침반의 바늘이 살짝 흔들리다가 한쪽을 가리켰어요. <br><br><span class="dialogue">"이게 바로 북쪽이란다."</span><br><br> 나침이가 나침반을 신기하게 바라보았어요. <br><br><span class="dialogue">"와, 이 바늘이 항상 북쪽을 가리켜요?"</span><br><br> 할아버지가 고개를 끄덕이셨어요. <br><br><span class="dialogue">"지구에는 자기장이라는 게 있어서 나침반 바늘이 항상 북쪽을 향하지. 지도에서도 위쪽이 보통 북쪽이란다."</span><br><br> 나침이가 지도와 나침반을 비교했어요. <br><br><span class="dialogue">"그럼 지도를 북쪽에 맞춰서 놓으면 되겠네요!"</span><br><br> 할아버지가 웃으며 말씀하셨어요. <br><br><span class="dialogue">"맞아. 이걸 '정치'라고 하는데, 지도를 바르게 놓는다는 뜻이야."</span><br><br> 나침이는 지도를 돌려 나침반에 맞췄어요. <br><br><span class="dialogue">"와, 이제 진짜 방향을 알 수 있어요! 이쪽이 동쪽이고, 저쪽이 서쪽이네요!"</span><br><br> 나침이가 신나서 말했어요. 나침반 하나면 길을 잃지 않을 것 같았어요.</p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_07.png">
-      <h2>7화. 지도의 찌그러짐</h2>
-      <p>나침이가 세계 지도를 보다가 물었어요. "할아버지, 그린란드가 왜 이렇게 커요? 아프리카보다 큰 것 같은데요?" 할아버지가 웃으시며 대답하셨어요. "좋은 질문이야! 그건 지도를 만들 때 생기는 왜곡 때문이란다." 나침이가 궁금해했어요. "왜곡이요?" 할아버지가 설명해 주셨어요. "지구는 둥근 공 모양인데, 지도는 평평한 종이잖아. 둥근 걸 평평하게 펴면 어딘가는 늘어나거나 줄어들 수밖에 없어." 나침이가 고개를 끄덕였어요. "아, 그래서 북쪽 나라들이 실제보다 커 보이는 거예요?" 할아버지가 미소 지으셨어요. "맞아. 실제로 그린란드는 아프리카보다 훨씬 작단다. 지도를 볼 때는 이런 왜곡을 알고 있어야 해." 나침이는 새로운 사실을 알게 되었어요. 지도가 완벽하지 않다는 것, 그래서 지도를 읽을 줄 알아야 한다는 것이었어요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_07.png">
+      <div class="story-card">
+        <h2>7화. 지도의 찌그러짐</h2>
+        <p>나침이가 세계 지도를 보다가 물었어요. <br><br><span class="dialogue">"할아버지, 그린란드가 왜 이렇게 커요? 아프리카보다 큰 것 같은데요?"</span><br><br> 할아버지가 웃으시며 대답하셨어요. <br><br><span class="dialogue">"좋은 질문이야! 그건 지도를 만들 때 생기는 왜곡 때문이란다."</span><br><br> 나침이가 궁금해했어요. <br><br><span class="dialogue">"왜곡이요?"</span><br><br> 할아버지가 설명해 주셨어요. <br><br><span class="dialogue">"지구는 둥근 공 모양인데, 지도는 평평한 종이잖아. 둥근 걸 평평하게 펴면 어딘가는 늘어나거나 줄어들 수밖에 없어."</span><br><br> 나침이가 고개를 끄덕였어요. <br><br><span class="dialogue">"아, 그래서 북쪽 나라들이 실제보다 커 보이는 거예요?"</span><br><br> 할아버지가 미소 지으셨어요. <br><br><span class="dialogue">"맞아. 실제로 그린란드는 아프리카보다 훨씬 작단다. 지도를 볼 때는 이런 왜곡을 알고 있어야 해."</span><br><br> 나침이는 새로운 사실을 알게 되었어요. 지도가 완벽하지 않다는 것, 그래서 지도를 읽을 줄 알아야 한다는 것이었어요.</p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_08.png">
-      <h2>8화. 보물찾기 도전</h2>
-      <p>할아버지가 깜짝 도전을 제안하셨어요. "나침아, 오늘 배운 걸로 보물찾기 해 볼까?" 나침이의 눈이 반짝였어요. "보물찾기요? 좋아요!" 할아버지가 쪽지를 건네주셨어요. 쪽지에는 이렇게 적혀 있었어요. '집에서 북쪽으로 100미터, 다리를 건너서 동쪽으로 50미터.' 나침이는 지도와 나침반을 들고 밖으로 나갔어요. "먼저 북쪽을 확인해야지." 나침반으로 북쪽을 찾고, 걸음 수를 세며 100미터를 갔어요. 작은 다리가 나타났어요. "맞다! 지도에도 이 다리가 있어!" 다리를 건너서 동쪽으로 50미터를 걸었어요. 거기에는 큰 나무가 있었고, 나무 밑에 작은 상자가 있었어요. "찾았다!" 상자 안에는 할아버지가 좋아하시는 사탕과 메모가 있었어요. '나침아, 네가 지도 읽기를 배웠구나. 대단해!' 나침이는 기뻐서 펄쩍 뛰었어요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_08.png">
+      <div class="story-card">
+        <h2>8화. 보물찾기 도전</h2>
+        <p>할아버지가 깜짝 도전을 제안하셨어요. <br><br><span class="dialogue">"나침아, 오늘 배운 걸로 보물찾기 해 볼까?"</span><br><br> 나침이의 눈이 반짝였어요. <br><br><span class="dialogue">"보물찾기요? 좋아요!"</span><br><br> 할아버지가 쪽지를 건네주셨어요. 쪽지에는 이렇게 적혀 있었어요. '집에서 북쪽으로 100미터, 다리를 건너서 동쪽으로 50미터.' 나침이는 지도와 나침반을 들고 밖으로 나갔어요. <br><br><span class="dialogue">"먼저 북쪽을 확인해야지."</span><br><br> 나침반으로 북쪽을 찾고, 걸음 수를 세며 100미터를 갔어요. 작은 다리가 나타났어요. <br><br><span class="dialogue">"맞다! 지도에도 이 다리가 있어!"</span><br><br> 다리를 건너서 동쪽으로 50미터를 걸었어요. 거기에는 큰 나무가 있었고, 나무 밑에 작은 상자가 있었어요. <br><br><span class="dialogue">"찾았다!"</span><br><br> 상자 안에는 할아버지가 좋아하시는 사탕과 메모가 있었어요. '나침아, 네가 지도 읽기를 배웠구나. 대단해!' 나침이는 기뻐서 펄쩍 뛰었어요.</p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_09.png">
-      <h2>9화. 지도의 역사</h2>
-      <p>저녁 식사 후, 할아버지가 옛날이야기를 들려주셨어요. "나침아, 지도는 아주 오래전부터 있었단다." 나침이가 귀를 쫑긋 세웠어요. "옛날 사람들은 어떻게 지도를 만들었어요?" 할아버지가 말씀하셨어요. "처음에는 땅 위에 막대기로 그렸어. 나중에는 양가죽이나 나무껍질에 그림을 그렸지. 그리고 종이가 생기면서 더 정확한 지도를 만들 수 있게 됐단다." 나침이가 감탄했어요. "와, 옛날 사람들도 지도가 필요했군요!" 할아버지가 고개를 끄덕이셨어요. "그럼. 사냥터를 기억하거나, 다른 마을로 가는 길을 알려주기 위해 지도를 그렸어. 바다를 건너는 항해사들에게 지도는 생명과 같았지." 나침이는 지도의 긴 역사가 놀라웠어요. "지도는 정말 오랫동안 사람들을 도와준 친구네요!" 나침이가 지도를 꼭 안으며 말했어요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_09.png">
+      <div class="story-card">
+        <h2>9화. 지도의 역사</h2>
+        <p>저녁 식사 후, 할아버지가 옛날이야기를 들려주셨어요. <br><br><span class="dialogue">"나침아, 지도는 아주 오래전부터 있었단다."</span><br><br> 나침이가 귀를 쫑긋 세웠어요. <br><br><span class="dialogue">"옛날 사람들은 어떻게 지도를 만들었어요?"</span><br><br> 할아버지가 말씀하셨어요. <br><br><span class="dialogue">"처음에는 땅 위에 막대기로 그렸어. 나중에는 양가죽이나 나무껍질에 그림을 그렸지. 그리고 종이가 생기면서 더 정확한 지도를 만들 수 있게 됐단다."</span><br><br> 나침이가 감탄했어요. <br><br><span class="dialogue">"와, 옛날 사람들도 지도가 필요했군요!"</span><br><br> 할아버지가 고개를 끄덕이셨어요. <br><br><span class="dialogue">"그럼. 사냥터를 기억하거나, 다른 마을로 가는 길을 알려주기 위해 지도를 그렸어. 바다를 건너는 항해사들에게 지도는 생명과 같았지."</span><br><br> 나침이는 지도의 긴 역사가 놀라웠어요. <br><br><span class="dialogue">"지도는 정말 오랫동안 사람들을 도와준 친구네요!"</span><br><br> 나침이가 지도를 꼭 안으며 말했어요.</p>
+      </div>
+    </section>
 
-    <div class="story-card" data-bg="/images/창작도서/창작지리01/geo01_10.png">
-      <h2>10화. 지도로 보는 세상</h2>
-      <p>여행이 끝나갈 무렵, 나침이는 할아버지의 낡은 지도를 다시 살펴보았어요. 이제 지도의 모든 것이 다르게 보였어요. 축척, 기호, 색깔, 위도와 경도, 방향… 모든 것이 이해됐어요. "할아버지, 이제 저도 지도를 읽을 수 있어요!" 나침이가 자랑스럽게 말했어요. 할아버지가 따뜻하게 웃으셨어요. "나침아, 지도는 단순한 종이가 아니란다. 지도를 읽을 줄 알면 세상을 이해할 수 있어." 나침이가 고개를 끄덕였어요. "맞아요. 지도로 거리도 알고, 방향도 알고, 어떤 땅인지도 알 수 있어요!" 할아버지가 낡은 지도를 나침이에게 건네주셨어요. "이 지도를 네게 줄게. 이젠 네가 세상을 탐험할 차례야." 나침이는 지도를 소중히 받아 들었어요. 한 장의 지도와 함께, 나침이의 새로운 모험이 시작될 거예요.</p>
-    </div>
+    <section class="story-section" data-bg="/images/창작도서/창작지리01/geo01_10.png">
+      <div class="story-card">
+        <h2>10화. 지도로 보는 세상</h2>
+        <p>여행이 끝나갈 무렵, 나침이는 할아버지의 낡은 지도를 다시 살펴보았어요. 이제 지도의 모든 것이 다르게 보였어요. 축척, 기호, 색깔, 위도와 경도, 방향… 모든 것이 이해됐어요. <br><br><span class="dialogue">"할아버지, 이제 저도 지도를 읽을 수 있어요!"</span><br><br> 나침이가 자랑스럽게 말했어요. 할아버지가 따뜻하게 웃으셨어요. <br><br><span class="dialogue">"나침아, 지도는 단순한 종이가 아니란다. 지도를 읽을 줄 알면 세상을 이해할 수 있어."</span><br><br> 나침이가 고개를 끄덕였어요. <br><br><span class="dialogue">"맞아요. 지도로 거리도 알고, 방향도 알고, 어떤 땅인지도 알 수 있어요!"</span><br><br> 할아버지가 낡은 지도를 나침이에게 건네주셨어요. <br><br><span class="dialogue">"이 지도를 네게 줄게. 이젠 네가 세상을 탐험할 차례야."</span><br><br> 나침이는 지도를 소중히 받아 들었어요. 한 장의 지도와 함께, 나침이의 새로운 모험이 시작될 거예요.</p>
+      </div>
+    </section>
 
-    <div class="end-card">
+    <section class="ending-section">
       <p>🧭 나침이의 지도 여행, 끝 🧭</p>
-    </div>
+      <div class="nav-buttons">
+        <a href="/creative-book.html?grade=34&category=social" class="nav-btn back">← 목록으로</a>
+        <a href="/creative-book/geo01_season1_quiz.html?season=season1" class="nav-btn quiz">📝 관문평가</a>
+      </div>
+    </section>
   </div>
 
   <script>
-    const bg = document.getElementById('bg');
-    const sections = document.querySelectorAll('[data-bg]');
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '/images/창작도서/창작지리01/geo01_01.png';
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          bg.style.backgroundImage = `url('${entry.target.dataset.bg}')`;
-          entry.target.classList.add('visible');
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
         }
       });
-    }, { threshold: 0.4 });
+    }
 
-    sections.forEach(sec => observer.observe(sec));
+    window.addEventListener('scroll', updateBackground);
+    window.addEventListener('load', () => {
+      updateBackground();
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) {
+        setTimeout(() => firstCard.classList.add('active'), 500);
+      }
+    });
   </script>
 </body>
 </html>

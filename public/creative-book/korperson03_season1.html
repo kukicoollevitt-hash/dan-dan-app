@@ -4,770 +4,522 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>해골 물을 마신 스님 — 원효</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Noto Serif KR', serif;
-      background: #1a1a1a;
-      color: #e8e0d5;
-      overflow-x: hidden;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    /* 배경 이미지 컨테이너 - bio01 구조 */
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
     #map-container {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100vh;
-      z-index: 0;
-      background-image: url('/images/창작도서/창작한국인물03/00.jpg');
+      background: url('/images/창작도서/창작한국인물03/00.jpg');
       background-size: cover;
       background-position: center;
-      transition: background-image 0.8s ease-in-out;
-    }
-
-    #map-container::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to bottom,
-        rgba(26, 26, 26, 0.3) 0%,
-        rgba(26, 26, 26, 0.5) 50%,
-        rgba(26, 26, 26, 0.85) 100%);
-    }
-
-    /* 콘텐츠 영역 */
-    .content-wrapper {
-      position: relative;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
       z-index: 1;
     }
 
-    /* 히어로 섹션 */
-    .hero-section {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 2rem;
+    #map-canvas {
+      display: none;
     }
 
-    .hero-badge {
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
       display: inline-block;
-      background: linear-gradient(135deg, #8e44ad, #5b2c6f);
-      color: #fff;
-      padding: 0.5rem 1.5rem;
-      border-radius: 30px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      letter-spacing: 2px;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #c9a227 0%, #8b6914 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
-    .hero-title {
-      font-size: clamp(2rem, 6vw, 3.5rem);
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 1rem;
-      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      line-height: 1.3;
-    }
-
-    .hero-subtitle {
-      font-size: clamp(1rem, 3vw, 1.4rem);
-      color: #bb8fce;
-      margin-bottom: 0.5rem;
-      font-weight: 400;
-    }
-
-    .hero-lesson {
-      font-size: 1.1rem;
-      color: rgba(255,255,255,0.8);
-      margin-top: 1.5rem;
-      padding: 1rem 2rem;
-      background: rgba(142, 68, 173, 0.15);
-      border: 1px solid rgba(142, 68, 173, 0.3);
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 0, 0, 0.1);
+      color: #8b6914;
       border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
     }
 
-    .scroll-indicator {
-      position: absolute;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-      color: rgba(255,255,255,0.7);
-      animation: bounce 2s infinite;
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
     }
 
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-      40% { transform: translateX(-50%) translateY(-10px); }
-      60% { transform: translateX(-50%) translateY(-5px); }
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #c9a227;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #8b6914;
+      font-weight: 600;
     }
 
     /* 인트로 섹션 */
     .intro-section {
       min-height: 100vh;
-      padding: 4rem 2rem;
       display: flex;
       flex-direction: column;
+      align-items: center;
       justify-content: center;
-      background: linear-gradient(to bottom,
-        rgba(26, 26, 26, 0.9),
-        rgba(40, 30, 50, 0.95));
-    }
-
-    .intro-container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .section-label {
-      display: inline-block;
-      background: linear-gradient(135deg, #8e44ad, #5b2c6f);
-      color: #fff;
-      padding: 0.4rem 1rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-    }
-
-    .intro-title {
-      font-size: clamp(1.5rem, 4vw, 2.2rem);
-      color: #fff;
-      margin-bottom: 2rem;
-      line-height: 1.4;
-    }
-
-    /* 캐릭터 그리드 */
-    .character-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-    .character-card {
-      background: rgba(142, 68, 173, 0.1);
-      border: 1px solid rgba(142, 68, 173, 0.3);
-      border-radius: 16px;
-      padding: 1.5rem;
-      transition: all 0.3s ease;
-    }
-
-    .character-card:hover {
-      transform: translateY(-5px);
-      background: rgba(142, 68, 173, 0.15);
-      box-shadow: 0 10px 30px rgba(142, 68, 173, 0.2);
-    }
-
-    .character-name {
-      font-size: 1.2rem;
-      color: #bb8fce;
-      margin-bottom: 0.8rem;
-      font-weight: 700;
-    }
-
-    .character-desc {
-      font-size: 0.95rem;
-      color: rgba(255,255,255,0.85);
-      line-height: 1.7;
-    }
-
-    /* 갈등 구조 */
-    .conflict-section {
-      margin-top: 2rem;
-    }
-
-    .conflict-title {
-      font-size: 1.3rem;
-      color: #fff;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .conflict-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-    }
-
-    .conflict-card {
-      background: rgba(231, 76, 60, 0.15);
-      border-left: 4px solid #e74c3c;
-      padding: 1.2rem;
-      border-radius: 0 12px 12px 0;
-    }
-
-    .conflict-type {
-      font-size: 0.9rem;
-      color: #f1948a;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .conflict-desc {
-      font-size: 0.95rem;
-      color: rgba(255,255,255,0.85);
-      line-height: 1.6;
-    }
-
-    /* 챕터 섹션 */
-    .chapter-section {
-      min-height: 100vh;
-      padding: 4rem 2rem;
-      display: flex;
-      align-items: center;
-    }
-
-    .chapter-container {
-      max-width: 800px;
-      width: 100%;
-    }
-
-    .chapter-section:nth-child(odd) .chapter-container {
-      margin-left: 5%;
-    }
-
-    .chapter-section:nth-child(even) .chapter-container {
-      margin-left: auto;
-      margin-right: 5%;
-    }
-
-    .chapter-card {
-      background: rgba(26, 26, 26, 0.9);
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      padding: 2.5rem;
-      border: 1px solid rgba(142, 68, 173, 0.3);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-      opacity: 0;
-      transform: translateY(50px);
-      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .chapter-card.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .chapter-number {
-      display: inline-block;
-      background: linear-gradient(135deg, #8e44ad, #5b2c6f);
-      color: #fff;
-      padding: 0.5rem 1.2rem;
-      border-radius: 30px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-
-    .chapter-title {
-      font-size: clamp(1.4rem, 4vw, 1.8rem);
-      color: #fff;
-      margin-bottom: 1rem;
-      line-height: 1.3;
-    }
-
-    .chapter-key-sentence {
-      background: rgba(142, 68, 173, 0.15);
-      border-left: 4px solid #8e44ad;
-      padding: 1rem 1.2rem;
-      margin-bottom: 1.5rem;
-      border-radius: 0 12px 12px 0;
-    }
-
-    .chapter-key-sentence p {
-      color: #bb8fce;
-      font-size: 1rem;
-      font-weight: 500;
-      line-height: 1.6;
-    }
-
-    .chapter-content {
-      font-size: 1.05rem;
-      line-height: 2;
-      color: rgba(255,255,255,0.9);
-      text-align: justify;
-      word-break: keep-all;
-    }
-
-    .chapter-content p {
-      margin-bottom: 1rem;
-    }
-
-    .chapter-content p:last-child {
-      margin-bottom: 0;
-    }
-
-    /* 엔딩 섹션 */
-    .ending-section {
-      min-height: 100vh;
-      padding: 4rem 2rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      padding: 60px 30px;
+      pointer-events: auto;
       text-align: center;
-      background: linear-gradient(to bottom,
-        rgba(26, 26, 26, 0.9),
-        rgba(40, 30, 50, 0.95));
     }
 
-    .ending-container {
-      max-width: 900px;
+    .intro-content {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      padding: 50px;
+      border-radius: 30px;
+      max-width: 800px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
     }
 
-    .ending-title {
-      font-size: clamp(1.8rem, 5vw, 2.5rem);
-      color: #fff;
-      margin-bottom: 2rem;
+    .intro-content h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 15px;
     }
 
-    .lesson-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-      text-align: left;
-    }
-
-    .lesson-card {
-      background: rgba(142, 68, 173, 0.1);
-      border: 1px solid rgba(142, 68, 173, 0.3);
-      border-radius: 16px;
-      padding: 1.5rem;
-    }
-
-    .lesson-label {
-      font-size: 0.85rem;
-      color: #bb8fce;
-      font-weight: 700;
-      margin-bottom: 0.8rem;
-    }
-
-    .lesson-content {
-      font-size: 1rem;
-      color: rgba(255,255,255,0.9);
-      line-height: 1.7;
-    }
-
-    .final-quote {
-      background: linear-gradient(135deg, rgba(142, 68, 173, 0.2), rgba(91, 44, 111, 0.15));
-      border: 2px solid rgba(142, 68, 173, 0.4);
-      border-radius: 20px;
-      padding: 2rem;
-      margin: 2rem auto;
-      max-width: 700px;
-    }
-
-    .final-quote p {
-      font-size: clamp(1.1rem, 3vw, 1.4rem);
-      color: #bb8fce;
-      font-style: italic;
+    .intro-content .subtitle {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin-bottom: 30px;
       line-height: 1.6;
     }
 
-    /* 닫기 버튼 */
-    .close-btn {
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+    }
+
+    .intro-content .characters h3 {
+      color: #c9a227;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      font-size: 14px;
+      color: #34495e;
+      line-height: 1.8;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .scroll-hint {
+      color: #c9a227;
+      font-size: 14px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
       position: fixed;
-      top: 1.5rem;
-      right: 1.5rem;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
       width: 50px;
       height: 50px;
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 50%;
-      background: rgba(142, 68, 173, 0.2);
-      border: 2px solid rgba(142, 68, 173, 0.5);
-      color: #bb8fce;
-      font-size: 1.5rem;
-      cursor: pointer;
-      z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      animation: bounce 2s infinite;
+      z-index: 100;
     }
 
-    .close-btn:hover {
-      background: #8e44ad;
-      color: #fff;
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+
+    .scroll-indicator svg {
+      width: 24px;
+      height: 24px;
       transform: rotate(90deg);
     }
 
-    /* 진행 바 */
-    .progress-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #8e44ad, #5b2c6f);
-      z-index: 1001;
-      transition: width 0.1s ease;
-    }
-
-    /* 반응형 */
     @media (max-width: 768px) {
-      .chapter-section:nth-child(odd) .chapter-container,
-      .chapter-section:nth-child(even) .chapter-container {
-        margin: 0 auto;
+      .story-section {
+        padding: 30px 20px;
       }
 
-      .chapter-card {
-        padding: 1.5rem;
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
       }
 
-      .character-grid {
-        grid-template-columns: 1fr;
+      .intro-content {
+        padding: 30px 20px;
+      }
+
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="progress-bar" id="progressBar"></div>
-  <button class="close-btn" onclick="window.parent.postMessage({type:'closeStory'}, '*')">✕</button>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
 
-  <div id="map-container"></div>
-
-  <div class="content-wrapper">
-    <!-- 히어로 섹션 -->
-    <section class="hero-section" data-bg="/images/창작도서/창작한국인물03/00.jpg">
-      <div class="hero-badge">한국인물 · 원효</div>
-      <h1 class="hero-title">💀 해골 물을 마신 스님 💀</h1>
-      <p class="hero-subtitle">— 원효, 어둠 속에서 진리를 깨우다 —</p>
-      <div class="hero-lesson">🌱 교훈: 진리는 먼 곳에 있지 않다. 네가 마시는 물 한 모금, 네가 품는 생각 하나에 이미 진리가 깃들어 있다.</div>
-      <div class="scroll-indicator">
-        <span>스크롤하여 시작하기</span>
-        <span>↓</span>
-      </div>
-    </section>
-
-    <!-- 인트로 섹션 -->
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
     <section class="intro-section">
-      <div class="intro-container">
-        <span class="section-label">🎭 등장인물 소개</span>
-        <h2 class="intro-title">깨달음을 찾아 나선 사람들</h2>
-
-        <div class="character-grid">
-          <div class="character-card">
-            <h3 class="character-name">▸ 원효</h3>
-            <p class="character-desc">신라의 젊은 스님. 호기심과 열정이 넘치지만, "진짜 깨달음은 당나라 큰 스승에게서만 얻을 수 있다"는 집착에 사로잡혀 있다. 따뜻한 마음씨와 유머를 지녔으나, 자신이 아직 부족하다는 불안에 늘 시달린다.</p>
-          </div>
-          <div class="character-card">
-            <h3 class="character-name">▸ 의상</h3>
-            <p class="character-desc">원효의 절친이자 동행. 과묵하고 신중한 성격. 원효와 달리 말보다 행동으로 수행하는 스타일이다. 원효가 흔들릴 때 묵묵히 옆을 지키는 든든한 벗이지만, 둘 사이에는 "깨달음이란 무엇인가"를 두고 보이지 않는 긴장이 흐른다.</p>
-          </div>
-          <div class="character-card">
-            <h3 class="character-name">▸ 해골</h3>
-            <p class="character-desc">말 한마디 하지 않지만 이야기의 진정한 전환점을 만드는 '침묵의 스승'. 동굴 바닥에 엎어진 채 고인 빗물을 담고 있었던 오래된 해골이다.</p>
-          </div>
-          <div class="character-card">
-            <h3 class="character-name">▸ 마을 백성들</h3>
-            <p class="character-desc">불경의 한 글자도 읽지 못하지만, 살아가면서 겪는 고통과 두려움 앞에서 진짜 가르침을 갈망하는 사람들. 원효가 돌아온 뒤 가장 먼저 그의 말에 귀 기울이는 존재들이다.</p>
-          </div>
+      <div class="intro-content">
+        <h1>💀 해골 물을 마신 스님 💀</h1>
+        <p class="subtitle">
+          — 원효, 어둠 속에서 진리를 깨우다 —<br>
+          교과기반 창작도서
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>▸ 원효:</strong> 신라의 젊은 스님. 호기심과 열정이 넘치지만, "진짜 깨달음은 당나라 큰 스승에게서만 얻을 수 있다"는 집착에 사로잡혀 있다. 따뜻한 마음씨와 유머를 지녔으나, 자신이 아직 부족하다는 불안에 늘 시달린다.</p>
+          <p><strong>▸ 의상:</strong> 원효의 절친이자 동행. 과묵하고 신중한 성격. 원효와 달리 말보다 행동으로 수행하는 스타일이다. 원효가 흔들릴 때 묵묵히 옆을 지키는 든든한 벗이지만, 둘 사이에는 "깨달음이란 무엇인가"를 두고 보이지 않는 긴장이 흐른다.</p>
+          <p><strong>▸ 해골:</strong> 말 한마디 하지 않지만 이야기의 진정한 전환점을 만드는 '침묵의 스승'. 동굴 바닥에 엎어진 채 고인 빗물을 담고 있었던 오래된 해골이다.</p>
+          <p><strong>▸ 마을 백성들:</strong> 불경의 한 글자도 읽지 못하지만, 살아가면서 겪는 고통과 두려움 앞에서 진짜 가르침을 갈망하는 사람들. 원효가 돌아온 뒤 가장 먼저 그의 말에 귀 기울이는 존재들이다.</p>
         </div>
-
-        <div class="conflict-section">
-          <h3 class="conflict-title">⚡ 갈등 구조</h3>
-          <div class="conflict-grid">
-            <div class="conflict-card">
-              <p class="conflict-type">① 외적 갈등</p>
-              <p class="conflict-desc">험난한 유학길: 국경 수비대, 사막과 황야, 도적의 위협</p>
-            </div>
-            <div class="conflict-card">
-              <p class="conflict-type">② 내적 갈등</p>
-              <p class="conflict-desc">"나는 아직 부족하다"는 원효의 자기 의심 vs. 이미 마음속에 답이 있다는 진실</p>
-            </div>
-            <div class="conflict-card">
-              <p class="conflict-type">③ 관계 갈등</p>
-              <p class="conflict-desc">원효와 의상의 수행관 차이: 밖에서 구하느냐, 안에서 찾느냐</p>
-            </div>
-            <div class="conflict-card">
-              <p class="conflict-type">④ 사회적 갈등</p>
-              <p class="conflict-desc">귀족 중심 불교 vs. 백성을 위한 불교, 원효의 파격적 행보에 대한 기존 승단의 반발</p>
-            </div>
-          </div>
-        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
       </div>
     </section>
 
-    <!-- 제1장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/01.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제1장</span>
-          <h2 class="chapter-title">꿈의 시작 — 당나라를 향한 두 스님의 출발</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 원효와 의상, 당나라 유학을 결심하다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>신라 서라벌의 새벽은 아직 어둠에 잠겨 있었다. 절 마당에 놓인 석등 하나만이 희미한 빛을 내뿜고 있었고, 그 빛 아래 두 사람의 그림자가 길게 드리워져 있었다. 한 사람은 원효, 또 한 사람은 의상이었다. 두 스님은 오래전부터 같은 꿈을 품어 왔다. 바다 건너 당나라에는 천하의 큰 스승들이 있고, 그들의 가르침을 받아야만 비로소 진정한 부처의 도를 깨칠 수 있으리라는 꿈이었다. 원효는 가슴이 터질 듯 설레었다. 그는 밤새 잠을 이루지 못하고 보따리를 풀었다 쌌다를 반복했다. "의상, 이번에는 꼭 당나라에 닿아야 해. 현장 법사의 제자들이 새로운 경전을 번역하고 있다지 않은가. 그 가르침을 직접 듣고 돌아와 신라의 백성들에게 전해야 해." 원효의 눈이 반짝였다. 그에게 당나라는 단순한 나라가 아니라, 깨달음이라는 보물이 잠든 보물섬이었다.</p>
-            <p>그러나 의상은 원효와는 사뭇 달랐다. 그는 고개를 끄덕이면서도 입술을 꾹 다물고 있었다. 한참 뒤에야 나직한 목소리로 말했다. "원효, 깨달음이 정말 당나라에만 있다고 생각하나?" 원효는 그 질문을 무심히 흘려보냈다. 아니, 흘려보내려 애를 썼다고 하는 편이 맞을 것이다. 사실 원효의 마음 한구석에는 끊임없이 자신을 갉아먹는 불안이 살고 있었다. '나는 아직 부족하다. 더 큰 스승을 만나야 한다. 이 신라 땅에서는 결코 완전한 깨달음에 이를 수 없다.' 이 생각은 원효를 밤마다 괴롭히는 가시 같았다.</p>
-            <p>두 스님은 마침내 절 문을 나섰다. 지팡이를 짚고, 남루한 행장 하나씩을 어깨에 멘 채, 아직 별이 빛나는 하늘 아래 서쪽으로 첫 발을 내디뎠다. 바람이 불어왔고, 어딘가에서 닭이 울었다. 기나긴 여정이 시작된 것이다. 그들은 아직 알지 못했다. 진짜 가르침은 당나라 사원의 화려한 법당이 아니라, 이름 없는 어느 언덕 아래 어두운 동굴 속에서 그들을 기다리고 있다는 것을.</p>
-          </div>
-        </div>
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">꿈의 시작</span>
+        <h2>당나라를 향한 두 스님의 출발</h2>
+        <p>신라 서라벌의 새벽은 아직 어둠에 잠겨 있었다. 절 마당에 놓인 석등 하나만이 희미한 빛을 내뿜고 있었고, 그 빛 아래 두 사람의 그림자가 길게 드리워져 있었다. 한 사람은 원효, 또 한 사람은 의상이었다. 두 스님은 오래전부터 같은 꿈을 품어 왔다. 바다 건너 당나라에는 천하의 큰 스승들이 있고, 그들의 가르침을 받아야만 비로소 진정한 부처의 도를 깨칠 수 있으리라는 꿈이었다. 원효는 가슴이 터질 듯 설레었다. 그는 밤새 잠을 이루지 못하고 보따리를 풀었다 쌌다를 반복했다. "의상, 이번에는 꼭 당나라에 닿아야 해. 현장 법사의 제자들이 새로운 경전을 번역하고 있다지 않은가. 그 가르침을 직접 듣고 돌아와 신라의 백성들에게 전해야 해." 원효의 눈이 반짝였다. 그에게 당나라는 단순한 나라가 아니라, 깨달음이라는 보물이 잠든 보물섬이었다.</p>
+        <p>그러나 의상은 원효와는 사뭇 달랐다. 그는 고개를 끄덕이면서도 입술을 꾹 다물고 있었다. 한참 뒤에야 나직한 목소리로 말했다. "원효, 깨달음이 정말 당나라에만 있다고 생각하나?" 원효는 그 질문을 무심히 흘려보냈다. 아니, 흘려보내려 애를 썼다고 하는 편이 맞을 것이다. 사실 원효의 마음 한구석에는 끊임없이 자신을 갉아먹는 불안이 살고 있었다. '나는 아직 부족하다. 더 큰 스승을 만나야 한다. 이 신라 땅에서는 결코 완전한 깨달음에 이를 수 없다.' 이 생각은 원효를 밤마다 괴롭히는 가시 같았다.</p>
+        <p>두 스님은 마침내 절 문을 나섰다. 지팡이를 짚고, 남루한 행장 하나씩을 어깨에 멘 채, 아직 별이 빛나는 하늘 아래 서쪽으로 첫 발을 내디뎠다. 바람이 불어왔고, 어딘가에서 닭이 울었다. 기나긴 여정이 시작된 것이다. 그들은 아직 알지 못했다. 진짜 가르침은 당나라 사원의 화려한 법당이 아니라, 이름 없는 어느 언덕 아래 어두운 동굴 속에서 그들을 기다리고 있다는 것을.</p>
       </div>
     </section>
 
-    <!-- 제2장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/02.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제2장</span>
-          <h2 class="chapter-title">어둠 속의 피난처 — 폭풍우와 동굴</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 폭풍우 속에서 동굴을 발견하다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>며칠이 지나고, 또 며칠이 흘렀다. 신라의 들판을 지나 산길에 접어든 두 스님의 발은 이미 물집으로 뒤덮여 있었다. 한낮의 태양은 사정없이 내리쬐었고, 밤이면 바람이 뼈 속까지 파고들었다. 그래도 원효의 발걸음에는 기운이 넘쳤다. 그는 길 위에서 만나는 모든 것에 호기심을 보였다. 길가의 풀꽃 한 송이를 보고도 "이 꽃 안에도 부처의 법이 있을까?" 하고 혼잣말을 했다. 의상은 묵묵히 걸으면서도 미소를 지었다. 그런 원효가 좋았기 때문이다.</p>
-            <p>그러나 여정 열흘째 되던 날, 하늘이 갑자기 무섭게 변했다. 서쪽에서 검은 구름이 산을 삼킬 듯 몰려왔고, 번개가 하늘을 갈랐다. 천둥소리가 산 전체를 흔들었고, 곧이어 장대비가 쏟아지기 시작했다. 빗줄기가 어찌나 거센지, 한 걸음 앞도 보이지 않았다. 원효는 소리쳤다. "의상! 어디든 피할 곳을 찾아야 해!" 두 사람은 비를 맞으며 비틀거렸다. 짊어진 보따리는 물을 먹어 어깨를 짓눌렀고, 진흙길은 발목까지 빠졌다. 한참을 헤매던 끝에, 의상의 손이 원효의 팔을 잡아당겼다. "여기! 입구가 있어!"</p>
-            <p>그것은 낮은 언덕 아래 반쯤 가려진 작은 동굴이었다. 두 사람은 허겁지겁 기어들어갔다. 동굴 안은 칠흑 같은 어둠이었다. 손가락 하나 보이지 않았다. 차가운 돌바닥이었지만, 비바람을 피할 수 있다는 사실만으로 두 사람은 안도의 숨을 내쉬었다. 원효는 젖은 옷을 쥐어짜며 웃었다. "하하, 부처님이 우리에게 쉬어가라고 마련해 주신 방이로구나." 의상도 작게 웃었다. 바깥에서는 여전히 천둥이 우르르 울렸고, 빗소리가 마치 수천 개의 북을 치는 듯 동굴 안을 울렸다. 두 스님은 젖은 몸을 끌어안듯 웅크리고 앉아, 이 폭풍이 지나가기를 기다렸다. 그때까지만 해도, 이 동굴이 자신들의 운명을 송두리째 바꿔 놓을 장소가 되리라고는 꿈에도 생각하지 못했다.</p>
-          </div>
-        </div>
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">어둠 속의 피난처</span>
+        <h2>폭풍우와 동굴</h2>
+        <p>며칠이 지나고, 또 며칠이 흘렀다. 신라의 들판을 지나 산길에 접어든 두 스님의 발은 이미 물집으로 뒤덮여 있었다. 한낮의 태양은 사정없이 내리쬐었고, 밤이면 바람이 뼈 속까지 파고들었다. 그래도 원효의 발걸음에는 기운이 넘쳤다. 그는 길 위에서 만나는 모든 것에 호기심을 보였다. 길가의 풀꽃 한 송이를 보고도 "이 꽃 안에도 부처의 법이 있을까?" 하고 혼잣말을 했다. 의상은 묵묵히 걸으면서도 미소를 지었다. 그런 원효가 좋았기 때문이다.</p>
+        <p>그러나 여정 열흘째 되던 날, 하늘이 갑자기 무섭게 변했다. 서쪽에서 검은 구름이 산을 삼킬 듯 몰려왔고, 번개가 하늘을 갈랐다. 천둥소리가 산 전체를 흔들었고, 곧이어 장대비가 쏟아지기 시작했다. 빗줄기가 어찌나 거센지, 한 걸음 앞도 보이지 않았다. 원효는 소리쳤다. "의상! 어디든 피할 곳을 찾아야 해!" 두 사람은 비를 맞으며 비틀거렸다. 짊어진 보따리는 물을 먹어 어깨를 짓눌렀고, 진흙길은 발목까지 빠졌다. 한참을 헤매던 끝에, 의상의 손이 원효의 팔을 잡아당겼다. "여기! 입구가 있어!"</p>
+        <p>그것은 낮은 언덕 아래 반쯤 가려진 작은 동굴이었다. 두 사람은 허겁지겁 기어들어갔다. 동굴 안은 칠흑 같은 어둠이었다. 손가락 하나 보이지 않았다. 차가운 돌바닥이었지만, 비바람을 피할 수 있다는 사실만으로 두 사람은 안도의 숨을 내쉬었다. 원효는 젖은 옷을 쥐어짜며 웃었다. "하하, 부처님이 우리에게 쉬어가라고 마련해 주신 방이로구나." 의상도 작게 웃었다. 바깥에서는 여전히 천둥이 우르르 울렸고, 빗소리가 마치 수천 개의 북을 치는 듯 동굴 안을 울렸다. 두 스님은 젖은 몸을 끌어안듯 웅크리고 앉아, 이 폭풍이 지나가기를 기다렸다. 그때까지만 해도, 이 동굴이 자신들의 운명을 송두리째 바꿔 놓을 장소가 되리라고는 꿈에도 생각하지 못했다.</p>
       </div>
     </section>
 
-    <!-- 제3장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/03.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제3장</span>
-          <h2 class="chapter-title">감로수 한 모금 — 어둠 속의 축복</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 칠흑 같은 어둠 속에서 시원한 물을 마시다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>폭풍은 좀처럼 그치지 않았다. 동굴 안에 웅크린 채 시간이 얼마나 흘렀을까. 원효는 지독한 갈증을 느꼈다. 비를 맞으며 달려오느라 목이 바싹 말라 있었는데, 물통은 어디선가 빠뜨린 모양이었다. 혀가 입천장에 딱 달라붙는 듯했다. 의상은 이미 기진맥진하여 벽에 등을 기댄 채 얕은 잠에 빠져 있었다.</p>
-            <p>원효는 어둠 속에서 손을 더듬거렸다. 동굴 바닥을 이리저리 짚다가, 문득 손끝에 무언가가 닿았다. 차가운 표면, 그리고 그 안에 고여 있는 액체의 감촉. 오목한 형태의 그릇 같은 것이었다. 원효의 심장이 뛰었다. '물이다!' 그는 두 손으로 조심스럽게 그것을 감싸 들었다. 그리고 입을 가까이 대고 한 모금 마셨다.</p>
-            <p>순간, 온몸에 전율이 흘렀다. 차갑고 깨끗한 물이 타들어가는 목을 적셔 내려갔다. 이보다 시원하고, 이보다 달콤한 물은 세상에 없을 것 같았다. 원효는 감격에 겨워 중얼거렸다. "아, 이것이 감로수가 아니고 무엇이랴! 부처님이 이 어둠 속에 물을 준비해 두셨구나." 그는 연거푸 몇 모금을 더 마셨다. 한 모금 한 모금이 온몸의 세포를 깨우는 듯했다. 갈증이 가시자 마음까지 평안해졌다. 원효는 동굴 바닥에 누우며 생각했다. '이 험난한 길 위에서도 이렇게 은혜로운 물 한 모금이 있다니. 당나라에 가면 분명 이보다 더 큰 은혜가 기다리고 있으리라.' 그 생각에 미소가 번지며 원효는 편안한 잠에 빠져들었다. 빗소리는 점점 작아지고 있었고, 동굴 밖 어딘가에서 바람이 나뭇잎을 스치는 부드러운 소리가 들렸다. 그 밤, 원효는 깊고 달콤한 꿈을 꾸었다. 거대한 연꽃이 피어나는 꿈, 그 연꽃 한가운데 맑은 물이 솟아오르는 꿈이었다. 그러나 아침이 오면, 그 아름다운 꿈은 산산이 부서질 운명이었다.</p>
-          </div>
-        </div>
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">감로수 한 모금</span>
+        <h2>어둠 속의 축복</h2>
+        <p>폭풍은 좀처럼 그치지 않았다. 동굴 안에 웅크린 채 시간이 얼마나 흘렀을까. 원효는 지독한 갈증을 느꼈다. 비를 맞으며 달려오느라 목이 바싹 말라 있었는데, 물통은 어디선가 빠뜨린 모양이었다. 혀가 입천장에 딱 달라붙는 듯했다. 의상은 이미 기진맥진하여 벽에 등을 기댄 채 얕은 잠에 빠져 있었다.</p>
+        <p>원효는 어둠 속에서 손을 더듬거렸다. 동굴 바닥을 이리저리 짚다가, 문득 손끝에 무언가가 닿았다. 차가운 표면, 그리고 그 안에 고여 있는 액체의 감촉. 오목한 형태의 그릇 같은 것이었다. 원효의 심장이 뛰었다. '물이다!' 그는 두 손으로 조심스럽게 그것을 감싸 들었다. 그리고 입을 가까이 대고 한 모금 마셨다.</p>
+        <p>순간, 온몸에 전율이 흘렀다. 차갑고 깨끗한 물이 타들어가는 목을 적셔 내려갔다. 이보다 시원하고, 이보다 달콤한 물은 세상에 없을 것 같았다. 원효는 감격에 겨워 중얼거렸다. "아, 이것이 감로수가 아니고 무엇이랴! 부처님이 이 어둠 속에 물을 준비해 두셨구나." 그는 연거푸 몇 모금을 더 마셨다. 한 모금 한 모금이 온몸의 세포를 깨우는 듯했다. 갈증이 가시자 마음까지 평안해졌다. 원효는 동굴 바닥에 누우며 생각했다. '이 험난한 길 위에서도 이렇게 은혜로운 물 한 모금이 있다니. 당나라에 가면 분명 이보다 더 큰 은혜가 기다리고 있으리라.' 그 생각에 미소가 번지며 원효는 편안한 잠에 빠져들었다. 빗소리는 점점 작아지고 있었고, 동굴 밖 어딘가에서 바람이 나뭇잎을 스치는 부드러운 소리가 들렸다. 그 밤, 원효는 깊고 달콤한 꿈을 꾸었다. 거대한 연꽃이 피어나는 꿈, 그 연꽃 한가운데 맑은 물이 솟아오르는 꿈이었다. 그러나 아침이 오면, 그 아름다운 꿈은 산산이 부서질 운명이었다.</p>
       </div>
     </section>
 
-    <!-- 제4장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/04.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제4장</span>
-          <h2 class="chapter-title">아침이 보여준 진실 — 해골과의 대면</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 해골에 고인 물이었음을 알게 되다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>새벽빛이 동굴 입구를 통해 스며들었다. 폭풍은 지나갔고, 세상은 비에 씻겨 새롭게 태어난 듯 맑고 고요했다. 새소리가 청아하게 울렸고, 축축한 흙 냄새가 코끝을 간지럽혔다. 원효는 기지개를 켜며 눈을 떴다. 그리고 무심코 옆을 보았다.</p>
-            <p>그 순간, 원효의 눈이 커졌다. 입이 벌어졌다. 온몸의 피가 얼어붙는 듯했다. 어젯밤 자신이 두 손으로 감싸 안고 그토록 감격하며 마셨던 '감로수'의 그릇. 그것은 그릇이 아니었다. 사람의 해골이었다. 오래되어 누렇게 변색된 해골 안에 빗물이 고여 있었고, 그 안에는 이름 모를 벌레들이 떠다니고 있었다. 풀잎 찌꺼기와 흙, 그리고 시간이 만든 온갖 불순물이 뒤섞인 물. 그것이 원효가 '세상에서 가장 달콤하다'고 느꼈던 물의 정체였다.</p>
-            <p>"으악!" 원효는 비명을 질렀다. 그의 위장이 뒤집혔다. 참을 수 없는 구역질이 밀려왔고, 원효는 동굴 밖으로 기어나가 있는 대로 토해냈다. 밤새 위장에 들어가 있던 해골 물이, 그 '달콤하던' 감로수가 전부 쏟아져 나왔다. 의상이 놀라 달려왔다. "원효! 괜찮은가?" 원효는 땅에 손을 짚은 채 거칠게 숨을 몰아쉬었다. 해골의 빈 눈구멍이 아직도 눈앞에 아른거렸다. 그런데 바로 그 순간, 구토로 고통스러운 몸과는 정반대로, 원효의 머릿속에서 무언가가 번쩍 빛났다. 한 줄기 번개가 어둠을 가르듯, 거대한 깨달음의 빛이 그의 정신을 관통한 것이다. 원효는 구토를 멈추고 천천히 고개를 들었다. 그의 눈에는 더 이상 공포도, 혐오도 없었다. 그 대신, 처음 보는 종류의 광채가 번지고 있었다. 해골은 여전히 동굴 안에 엎어져 있었고, 원효는 그것을 물끄러미 바라보았다.</p>
-          </div>
-        </div>
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">아침이 보여준 진실</span>
+        <h2>해골과의 대면</h2>
+        <p>새벽빛이 동굴 입구를 통해 스며들었다. 폭풍은 지나갔고, 세상은 비에 씻겨 새롭게 태어난 듯 맑고 고요했다. 새소리가 청아하게 울렸고, 축축한 흙 냄새가 코끝을 간지럽혔다. 원효는 기지개를 켜며 눈을 떴다. 그리고 무심코 옆을 보았다.</p>
+        <p>그 순간, 원효의 눈이 커졌다. 입이 벌어졌다. 온몸의 피가 얼어붙는 듯했다. 어젯밤 자신이 두 손으로 감싸 안고 그토록 감격하며 마셨던 '감로수'의 그릇. 그것은 그릇이 아니었다. 사람의 해골이었다. 오래되어 누렇게 변색된 해골 안에 빗물이 고여 있었고, 그 안에는 이름 모를 벌레들이 떠다니고 있었다. 풀잎 찌꺼기와 흙, 그리고 시간이 만든 온갖 불순물이 뒤섞인 물. 그것이 원효가 '세상에서 가장 달콤하다'고 느꼈던 물의 정체였다.</p>
+        <p>"으악!" 원효는 비명을 질렀다. 그의 위장이 뒤집혔다. 참을 수 없는 구역질이 밀려왔고, 원효는 동굴 밖으로 기어나가 있는 대로 토해냈다. 밤새 위장에 들어가 있던 해골 물이, 그 '달콤하던' 감로수가 전부 쏟아져 나왔다. 의상이 놀라 달려왔다. "원효! 괜찮은가?" 원효는 땅에 손을 짚은 채 거칠게 숨을 몰아쉬었다. 해골의 빈 눈구멍이 아직도 눈앞에 아른거렸다. 그런데 바로 그 순간, 구토로 고통스러운 몸과는 정반대로, 원효의 머릿속에서 무언가가 번쩍 빛났다. 한 줄기 번개가 어둠을 가르듯, 거대한 깨달음의 빛이 그의 정신을 관통한 것이다. 원효는 구토를 멈추고 천천히 고개를 들었다. 그의 눈에는 더 이상 공포도, 혐오도 없었다. 그 대신, 처음 보는 종류의 광채가 번지고 있었다. 해골은 여전히 동굴 안에 엎어져 있었고, 원효는 그것을 물끄러미 바라보았다.</p>
       </div>
     </section>
 
-    <!-- 제5장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/05.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제5장</span>
-          <h2 class="chapter-title">위장이 뒤집히고, 마음이 뒤집히다 — 깨달음의 폭풍</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 구토와 함께 거대한 깨달음이 밀려오다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>원효는 한동안 말이 없었다. 입가에 남은 쓴맛을 느끼며, 그는 스스로에게 물었다. '어젯밤의 나와 오늘 아침의 나는 같은 사람이다. 마신 물도 같은 물이다. 그런데 어젯밤에는 세상에서 가장 달콤한 물이었고, 오늘 아침에는 세상에서 가장 역겨운 물이 되었다. 무엇이 달라진 것인가?'</p>
-            <p>답은 명확했다. 물은 처음부터 끝까지 똑같았다. 달라진 것은 오직 하나, 원효 자신의 마음이었다. 어둠 속에서 '깨끗한 물'이라고 믿었을 때, 그 물은 감로수가 되었다. 아침 빛 속에서 '해골 물'이라고 알게 되었을 때, 같은 물이 독이 되었다. 물이 변한 것이 아니라 마음이 변한 것이다.</p>
-            <p>원효의 두 눈에서 눈물이 흘러내렸다. 그것은 슬픔의 눈물이 아니었다. 마치 오랫동안 닫혀 있던 문이 활짝 열리며 눈부신 빛이 쏟아져 들어오는 것 같은, 벅찬 감동의 눈물이었다. "의상, 나는 알겠네." 원효의 목소리는 떨리고 있었지만, 그 안에는 묵직한 확신이 담겨 있었다. "지금껏 나는 깨달음을 얻기 위해 당나라로 가야 한다고 생각했네. 먼 곳에 있는 위대한 스승만이 나에게 진리를 줄 수 있다고 믿었지. 하지만 이 해골 물 한 모금이 나에게 가르쳐 주었네. 모든 것은 마음이 만드는 것이라는 걸."</p>
-            <p>의상은 조용히 원효를 바라보았다. 원효의 얼굴에는 어제까지 그를 괴롭히던 불안이 사라져 있었다. '나는 부족하다'는 그 집요한 속삭임이 더 이상 들리지 않는 듯했다. 의상은 아무 말 없이 고개를 끄덕였다. 그는 이미 알고 있었는지도 모른다. 원효가 이 순간에 도달하리라는 것을. 해골이라는 침묵의 스승이 건넨 가르침은, 당나라의 어떤 고승도 이보다 더 강렬하게 전하기 어려울 만큼 뼈를 때리는 것이었다.</p>
-          </div>
-        </div>
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">위장이 뒤집히고, 마음이 뒤집히다</span>
+        <h2>깨달음의 폭풍</h2>
+        <p>원효는 한동안 말이 없었다. 입가에 남은 쓴맛을 느끼며, 그는 스스로에게 물었다. '어젯밤의 나와 오늘 아침의 나는 같은 사람이다. 마신 물도 같은 물이다. 그런데 어젯밤에는 세상에서 가장 달콤한 물이었고, 오늘 아침에는 세상에서 가장 역겨운 물이 되었다. 무엇이 달라진 것인가?'</p>
+        <p>답은 명확했다. 물은 처음부터 끝까지 똑같았다. 달라진 것은 오직 하나, 원효 자신의 마음이었다. 어둠 속에서 '깨끗한 물'이라고 믿었을 때, 그 물은 감로수가 되었다. 아침 빛 속에서 '해골 물'이라고 알게 되었을 때, 같은 물이 독이 되었다. 물이 변한 것이 아니라 마음이 변한 것이다.</p>
+        <p>원효의 두 눈에서 눈물이 흘러내렸다. 그것은 슬픔의 눈물이 아니었다. 마치 오랫동안 닫혀 있던 문이 활짝 열리며 눈부신 빛이 쏟아져 들어오는 것 같은, 벅찬 감동의 눈물이었다. "의상, 나는 알겠네." 원효의 목소리는 떨리고 있었지만, 그 안에는 묵직한 확신이 담겨 있었다. "지금껏 나는 깨달음을 얻기 위해 당나라로 가야 한다고 생각했네. 먼 곳에 있는 위대한 스승만이 나에게 진리를 줄 수 있다고 믿었지. 하지만 이 해골 물 한 모금이 나에게 가르쳐 주었네. 모든 것은 마음이 만드는 것이라는 걸."</p>
+        <p>의상은 조용히 원효를 바라보았다. 원효의 얼굴에는 어제까지 그를 괴롭히던 불안이 사라져 있었다. '나는 부족하다'는 그 집요한 속삭임이 더 이상 들리지 않는 듯했다. 의상은 아무 말 없이 고개를 끄덕였다. 그는 이미 알고 있었는지도 모른다. 원효가 이 순간에 도달하리라는 것을. 해골이라는 침묵의 스승이 건넨 가르침은, 당나라의 어떤 고승도 이보다 더 강렬하게 전하기 어려울 만큼 뼈를 때리는 것이었다.</p>
       </div>
     </section>
 
-    <!-- 제6장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/06.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제6장</span>
-          <h2 class="chapter-title">일체유심조 — 마음이 곧 세상이다</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 마음이 만들어낸 세상의 비밀을 꿰뚫다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>원효는 동굴 입구에 앉아 떠오르는 해를 바라보았다. 갓 씻긴 산은 금빛으로 물들고 있었고, 풀잎마다 빗방울이 보석처럼 매달려 있었다. 그 풍경은 어제와 다를 것이 없었다. 하지만 원효의 눈에 비치는 세상은 완전히 달랐다. 그는 조용히 입을 열었다. "일체유심조(一切唯心造)." 모든 것은 오직 마음이 만든다. 이 네 글자가 원효의 온 존재를 관통했다. 해골 물 사건은 단순히 더러운 물을 마신 해프닝이 아니었다. 그것은 우주의 비밀을 압축한 한 편의 가르침이었다.</p>
-            <p>원효는 깊이 생각에 잠겼다. 사람들이 무언가를 '좋다' 혹은 '나쁘다'고 판단하는 것, '아름답다' 혹은 '추하다'고 느끼는 것, '행복하다' 혹은 '불행하다'고 여기는 것. 이 모든 것이 실은 대상 자체에 있는 것이 아니라, 그것을 바라보는 마음이 만들어내는 그림자라는 사실. 같은 비가 내려도 농부는 기뻐하고 나그네는 괴로워한다. 같은 꽃이 피어도 연인은 설레고 이별하는 사람은 슬퍼한다. 세상은 하나인데, 마음이 만드는 세상은 사람의 수만큼 많다.</p>
-            <p>"그렇다면…" 원효가 중얼거렸다. "진리도 마찬가지가 아닌가? 진리가 당나라에만 있다고 생각한 것은, 어둠 속에서 해골 물을 감로수라고 믿은 것과 무엇이 다른가? 진리는 장소에 있는 것이 아니라, 그것을 깨닫는 마음에 있는 것이다!" 이 깨달음은 원효를 자유롭게 했다. 더 이상 '여기가 아닌 다른 곳'에서 답을 찾을 필요가 없어졌다. 지금 이 순간, 지금 이 자리, 지금 이 마음이 바로 수행의 장이었다. 발밑의 돌멩이 하나, 머리 위의 구름 한 점, 귓가에 스치는 바람 한 줄기에도 부처의 법이 살아 숨 쉬고 있었다. 원효는 처음으로 '부족한 자신'이 아니라 '이미 온전한 자신'을 만났다.</p>
-          </div>
-        </div>
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">일체유심조</span>
+        <h2>마음이 곧 세상이다</h2>
+        <p>원효는 동굴 입구에 앉아 떠오르는 해를 바라보았다. 갓 씻긴 산은 금빛으로 물들고 있었고, 풀잎마다 빗방울이 보석처럼 매달려 있었다. 그 풍경은 어제와 다를 것이 없었다. 하지만 원효의 눈에 비치는 세상은 완전히 달랐다. 그는 조용히 입을 열었다. "일체유심조(一切唯心造)." 모든 것은 오직 마음이 만든다. 이 네 글자가 원효의 온 존재를 관통했다. 해골 물 사건은 단순히 더러운 물을 마신 해프닝이 아니었다. 그것은 우주의 비밀을 압축한 한 편의 가르침이었다.</p>
+        <p>원효는 깊이 생각에 잠겼다. 사람들이 무언가를 '좋다' 혹은 '나쁘다'고 판단하는 것, '아름답다' 혹은 '추하다'고 느끼는 것, '행복하다' 혹은 '불행하다'고 여기는 것. 이 모든 것이 실은 대상 자체에 있는 것이 아니라, 그것을 바라보는 마음이 만들어내는 그림자라는 사실. 같은 비가 내려도 농부는 기뻐하고 나그네는 괴로워한다. 같은 꽃이 피어도 연인은 설레고 이별하는 사람은 슬퍼한다. 세상은 하나인데, 마음이 만드는 세상은 사람의 수만큼 많다.</p>
+        <p>"그렇다면…" 원효가 중얼거렸다. "진리도 마찬가지가 아닌가? 진리가 당나라에만 있다고 생각한 것은, 어둠 속에서 해골 물을 감로수라고 믿은 것과 무엇이 다른가? 진리는 장소에 있는 것이 아니라, 그것을 깨닫는 마음에 있는 것이다!" 이 깨달음은 원효를 자유롭게 했다. 더 이상 '여기가 아닌 다른 곳'에서 답을 찾을 필요가 없어졌다. 지금 이 순간, 지금 이 자리, 지금 이 마음이 바로 수행의 장이었다. 발밑의 돌멩이 하나, 머리 위의 구름 한 점, 귓가에 스치는 바람 한 줄기에도 부처의 법이 살아 숨 쉬고 있었다. 원효는 처음으로 '부족한 자신'이 아니라 '이미 온전한 자신'을 만났다.</p>
       </div>
     </section>
 
-    <!-- 제7장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/07.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제7장</span>
-          <h2 class="chapter-title">되돌아가는 발걸음 — 신라를 향한 역주행</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 당나라행을 포기하고 신라로 돌아가다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>의상은 원효의 결심을 예감하고 있었지만, 직접 그 말을 듣는 것은 또 다른 일이었다. "나는 돌아가겠네, 의상." 원효의 목소리는 단호했지만 따뜻했다. "당나라에 가지 않겠다는 말인가?" 의상이 물었다. 그의 눈에는 놀라움보다 이해에 가까운 빛이 서려 있었다.</p>
-            <p>"그래. 마음 밖에서 진리를 찾는 것은, 제 그림자를 쫓아 달리는 것과 같네. 아무리 빨리 달려도 그림자는 잡히지 않지. 하지만 몸을 돌려 해를 마주보면, 그림자는 저절로 뒤로 물러나지 않는가." 의상은 한참 동안 원효를 바라보다가, 조용히 미소 지었다. "자네의 길은 자네가 가장 잘 알겠지. 나는 당나라로 가겠네. 그곳에서 배울 것이 있다면 배우고 오겠네."</p>
-            <p>이것이 두 벗의 갈림길이었다. 같은 꿈을 안고 출발했으나, 같은 동굴에서 다른 길을 택했다. 의상은 서쪽으로, 원효는 동쪽으로. 그러나 이 갈림길에는 쓸쓸함만 있지 않았다. 각자의 길이 모두 진실한 것이었기 때문이다. 원효는 왔던 길을 되짚어 걸었다. 놀라운 것은, 불과 며칠 전에 걸었던 똑같은 길인데 세상이 완전히 다르게 보인다는 것이었다. 길가의 돌멩이가 빛나 보였다. 논밭에서 일하는 농부의 구부린 등이 부처의 모습으로 보였다. 이전에는 '아직 먼 길'이 남았다는 초조함이 있었는데, 이제는 걸음 하나하나가 이미 도착인 듯 평화로웠다. 원효의 발걸음은 가벼웠다. 아니, 발걸음만이 아니었다. 그의 마음 전체가 가벼워져 있었다. 무거운 짐을 내려놓은 사람의 홀가분함, 오랜 병이 나은 사람의 상쾌함이 온몸에 퍼져 있었다. 돌아가는 길은 떠나온 길보다 훨씬 짧게 느껴졌다.</p>
-          </div>
-        </div>
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">되돌아가는 발걸음</span>
+        <h2>신라를 향한 역주행</h2>
+        <p>의상은 원효의 결심을 예감하고 있었지만, 직접 그 말을 듣는 것은 또 다른 일이었다. "나는 돌아가겠네, 의상." 원효의 목소리는 단호했지만 따뜻했다. "당나라에 가지 않겠다는 말인가?" 의상이 물었다. 그의 눈에는 놀라움보다 이해에 가까운 빛이 서려 있었다.</p>
+        <p>"그래. 마음 밖에서 진리를 찾는 것은, 제 그림자를 쫓아 달리는 것과 같네. 아무리 빨리 달려도 그림자는 잡히지 않지. 하지만 몸을 돌려 해를 마주보면, 그림자는 저절로 뒤로 물러나지 않는가." 의상은 한참 동안 원효를 바라보다가, 조용히 미소 지었다. "자네의 길은 자네가 가장 잘 알겠지. 나는 당나라로 가겠네. 그곳에서 배울 것이 있다면 배우고 오겠네."</p>
+        <p>이것이 두 벗의 갈림길이었다. 같은 꿈을 안고 출발했으나, 같은 동굴에서 다른 길을 택했다. 의상은 서쪽으로, 원효는 동쪽으로. 그러나 이 갈림길에는 쓸쓸함만 있지 않았다. 각자의 길이 모두 진실한 것이었기 때문이다. 원효는 왔던 길을 되짚어 걸었다. 놀라운 것은, 불과 며칠 전에 걸었던 똑같은 길인데 세상이 완전히 다르게 보인다는 것이었다. 길가의 돌멩이가 빛나 보였다. 논밭에서 일하는 농부의 구부린 등이 부처의 모습으로 보였다. 이전에는 '아직 먼 길'이 남았다는 초조함이 있었는데, 이제는 걸음 하나하나가 이미 도착인 듯 평화로웠다. 원효의 발걸음은 가벼웠다. 아니, 발걸음만이 아니었다. 그의 마음 전체가 가벼워져 있었다. 무거운 짐을 내려놓은 사람의 홀가분함, 오랜 병이 나은 사람의 상쾌함이 온몸에 퍼져 있었다. 돌아가는 길은 떠나온 길보다 훨씬 짧게 느껴졌다.</p>
       </div>
     </section>
 
-    <!-- 제8장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/08.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제8장</span>
-          <h2 class="chapter-title">화쟁, 싸우는 진리를 화해시키다</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 대립하는 불교 종파를 하나로 아우르다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>신라로 돌아온 원효는 곧장 수행에 들어갔다. 그러나 그의 수행은 다른 스님들의 것과 사뭇 달랐다. 그는 산속 암자에 틀어박혀 혼자 경전을 읽는 대신, 세상 속으로 뛰어들었다. 당시 신라의 불교계는 복잡한 갈등에 빠져 있었다. 여러 종파가 제각기 "우리의 해석만이 옳다"고 주장하며 서로를 비난하고 있었다. 유식학을 따르는 이들은 중관학을 얕보았고, 중관학을 따르는 이들은 유식학을 무시했다. 마치 장님들이 코끼리의 각기 다른 부분을 만지고 "코끼리는 이렇게 생겼다!"고 싸우는 것과 같았다.</p>
-            <p>원효는 이 싸움을 지켜보며 해골 물의 교훈을 떠올렸다. 같은 물인데 마음에 따라 감로수도 되고 독이도 되듯이, 같은 부처의 가르침인데 관점에 따라 서로 다른 진리가 된 것이다. 문제는 부처의 가르침이 아니라, 그것을 해석하는 사람들의 좁은 마음이었다.</p>
-            <p>원효는 이 깨달음을 '화쟁(和諍)'이라는 거대한 사상으로 펼쳐 보였다. 화쟁이란 '다투는 것을 화해시킨다'는 뜻이다. 모든 주장에는 옳은 면이 있고, 모든 주장에는 놓치는 면이 있다. 하나의 주장만 붙잡고 나머지를 배척하는 것은, 달을 가리키는 손가락만 보고 달을 보지 못하는 것과 같다. 원효는 수십 권의 저술을 통해 대립하는 종파들의 핵심을 하나하나 분석하고, 그것들이 사실은 하나의 진리를 서로 다른 각도에서 비춘 것임을 논증했다. 이것은 단순한 절충이 아니었다. 모든 것을 아우르면서도 어떤 것도 깎아내리지 않는, 놀라운 지적 용기와 따뜻한 포용의 산물이었다. 기존 승단의 권위 있는 스님들은 원효를 경계했다. "어떻게 감히 모든 종파가 다 옳다고 말하는가? 그것은 아무것도 믿지 않는 것과 같다!" 그러나 원효의 논리는 흠잡을 데가 없었고, 그의 열정은 어떤 비난도 꺾을 수 없었다.</p>
-          </div>
-        </div>
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme"></span>
+        <h2>화쟁, 싸우는 진리를 화해시키다</h2>
+        <p>신라로 돌아온 원효는 곧장 수행에 들어갔다. 그러나 그의 수행은 다른 스님들의 것과 사뭇 달랐다. 그는 산속 암자에 틀어박혀 혼자 경전을 읽는 대신, 세상 속으로 뛰어들었다. 당시 신라의 불교계는 복잡한 갈등에 빠져 있었다. 여러 종파가 제각기 "우리의 해석만이 옳다"고 주장하며 서로를 비난하고 있었다. 유식학을 따르는 이들은 중관학을 얕보았고, 중관학을 따르는 이들은 유식학을 무시했다. 마치 장님들이 코끼리의 각기 다른 부분을 만지고 "코끼리는 이렇게 생겼다!"고 싸우는 것과 같았다.</p>
+        <p>원효는 이 싸움을 지켜보며 해골 물의 교훈을 떠올렸다. 같은 물인데 마음에 따라 감로수도 되고 독이도 되듯이, 같은 부처의 가르침인데 관점에 따라 서로 다른 진리가 된 것이다. 문제는 부처의 가르침이 아니라, 그것을 해석하는 사람들의 좁은 마음이었다.</p>
+        <p>원효는 이 깨달음을 '화쟁(和諍)'이라는 거대한 사상으로 펼쳐 보였다. 화쟁이란 '다투는 것을 화해시킨다'는 뜻이다. 모든 주장에는 옳은 면이 있고, 모든 주장에는 놓치는 면이 있다. 하나의 주장만 붙잡고 나머지를 배척하는 것은, 달을 가리키는 손가락만 보고 달을 보지 못하는 것과 같다. 원효는 수십 권의 저술을 통해 대립하는 종파들의 핵심을 하나하나 분석하고, 그것들이 사실은 하나의 진리를 서로 다른 각도에서 비춘 것임을 논증했다. 이것은 단순한 절충이 아니었다. 모든 것을 아우르면서도 어떤 것도 깎아내리지 않는, 놀라운 지적 용기와 따뜻한 포용의 산물이었다. 기존 승단의 권위 있는 스님들은 원효를 경계했다. "어떻게 감히 모든 종파가 다 옳다고 말하는가? 그것은 아무것도 믿지 않는 것과 같다!" 그러나 원효의 논리는 흠잡을 데가 없었고, 그의 열정은 어떤 비난도 꺾을 수 없었다.</p>
       </div>
     </section>
 
-    <!-- 제9장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/09.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제9장</span>
-          <h2 class="chapter-title">거리의 스님 — 바가지를 두드리며 백성 속으로</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 바가지를 두드리며 백성 속으로 들어가다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>원효의 가장 파격적인 행보는 그 다음에 벌어졌다. 그는 어느 날 스님의 격식을 내려놓고, 호리병박으로 만든 바가지를 손에 들었다. 그리고 시장 거리로 나섰다. 당시 불교는 대부분 귀족과 왕실의 것이었다. 경전은 어려운 한문으로 쓰여 있었고, 법회는 높은 사원에서 열렸다. 평범한 백성들 — 논에서 일하는 농부, 시장에서 물건을 파는 상인, 아이를 업고 빨래하는 아낙네 — 에게 부처의 가르침은 먼 세상 이야기였다.</p>
-            <p>원효는 이것이 잘못되었다고 생각했다. 해골 물이 가르쳐준 것처럼, 진리는 화려한 사원에만 있는 것이 아니다. 흙먼지 나는 거리에도, 구수한 된장 냄새가 나는 부엌에도, 아이의 울음소리가 울리는 오두막에도 진리는 있다. 원효는 바가지를 두드리며 노래를 불렀다. "나무아미타불!" 어려운 교리 대신 백성들이 따라 부를 수 있는 간결한 노래. 무거운 경전 대신 몸을 움직이며 느낄 수 있는 리듬. 원효는 춤을 추었고, 이야기를 들려주었고, 때로는 광대처럼 우스꽝스러운 행동을 하기도 했다.</p>
-            <p>사람들은 처음에 어리둥절했다. "저 스님이 미친 것 아닌가?" 수군거리는 소리가 들렸다. 기존 승단에서는 노골적으로 비난했다. "승려의 체통을 무너뜨리는 자"라고. 그러나 원효는 개의치 않았다. 시간이 지나면서 놀라운 일이 벌어졌다. 한 글자도 읽지 못하던 할머니가 "나무아미타불"을 외우기 시작했다. 시장의 떡장수가 손님에게 떡을 건네며 미소 짓는 것이 수행이라는 것을 알게 되었다. 아이들이 원효의 노래를 따라 부르며 뛰어다녔다. 불교가, 진리가, 처음으로 백성들의 삶 속으로 걸어 들어간 것이다. 원효는 사원의 높은 담을 허물고, 깨달음의 문턱을 낮추었다. 해골 물이 그에게 가르쳐준 것을 그대로 세상에 전한 것이다. 진리는 높은 곳에 있지 않다. 진리는 지금, 여기, 너의 삶 속에 있다.</p>
-          </div>
-        </div>
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">거리의 스님</span>
+        <h2>바가지를 두드리며 백성 속으로</h2>
+        <p>원효의 가장 파격적인 행보는 그 다음에 벌어졌다. 그는 어느 날 스님의 격식을 내려놓고, 호리병박으로 만든 바가지를 손에 들었다. 그리고 시장 거리로 나섰다. 당시 불교는 대부분 귀족과 왕실의 것이었다. 경전은 어려운 한문으로 쓰여 있었고, 법회는 높은 사원에서 열렸다. 평범한 백성들 — 논에서 일하는 농부, 시장에서 물건을 파는 상인, 아이를 업고 빨래하는 아낙네 — 에게 부처의 가르침은 먼 세상 이야기였다.</p>
+        <p>원효는 이것이 잘못되었다고 생각했다. 해골 물이 가르쳐준 것처럼, 진리는 화려한 사원에만 있는 것이 아니다. 흙먼지 나는 거리에도, 구수한 된장 냄새가 나는 부엌에도, 아이의 울음소리가 울리는 오두막에도 진리는 있다. 원효는 바가지를 두드리며 노래를 불렀다. "나무아미타불!" 어려운 교리 대신 백성들이 따라 부를 수 있는 간결한 노래. 무거운 경전 대신 몸을 움직이며 느낄 수 있는 리듬. 원효는 춤을 추었고, 이야기를 들려주었고, 때로는 광대처럼 우스꽝스러운 행동을 하기도 했다.</p>
+        <p>사람들은 처음에 어리둥절했다. "저 스님이 미친 것 아닌가?" 수군거리는 소리가 들렸다. 기존 승단에서는 노골적으로 비난했다. "승려의 체통을 무너뜨리는 자"라고. 그러나 원효는 개의치 않았다. 시간이 지나면서 놀라운 일이 벌어졌다. 한 글자도 읽지 못하던 할머니가 "나무아미타불"을 외우기 시작했다. 시장의 떡장수가 손님에게 떡을 건네며 미소 짓는 것이 수행이라는 것을 알게 되었다. 아이들이 원효의 노래를 따라 부르며 뛰어다녔다. 불교가, 진리가, 처음으로 백성들의 삶 속으로 걸어 들어간 것이다. 원효는 사원의 높은 담을 허물고, 깨달음의 문턱을 낮추었다. 해골 물이 그에게 가르쳐준 것을 그대로 세상에 전한 것이다. 진리는 높은 곳에 있지 않다. 진리는 지금, 여기, 너의 삶 속에 있다.</p>
       </div>
     </section>
 
-    <!-- 제10장 -->
-    <section class="chapter-section" data-bg="/images/창작도서/창작한국인물03/10.jpg">
-      <div class="chapter-container">
-        <div class="chapter-card">
-          <span class="chapter-number">제10장</span>
-          <h2 class="chapter-title">해골이 남긴 씨앗 — 천 년을 건너온 깨달음</h2>
-          <div class="chapter-key-sentence">
-            <p>📌 중심 내용: 깨달음의 파문이 천 년을 건너오다.</p>
-          </div>
-          <div class="chapter-content">
-            <p>세월은 흘러 원효도 이 세상을 떠났다. 그러나 그가 심은 씨앗은 죽지 않았다. 해골 물 한 모금에서 시작된 깨달음은 물결처럼 퍼져 나가, 신라를 넘어 고려로, 고려를 넘어 조선으로, 그리고 마침내 오늘날 우리에게까지 도달했다. 천 년이 넘는 시간 동안, 이 이야기를 들은 수많은 사람들이 각자의 삶 속에서 '해골 물의 순간'을 경험했다.</p>
-            <p>누군가에게 그것은 미워하던 사람에게서 갑자기 따뜻함을 발견하는 순간이었을 것이다. 누군가에게 그것은 실패라고 생각했던 일이 사실은 가장 소중한 배움이었음을 깨닫는 순간이었을 것이다. 또 누군가에게 그것은 먼 곳을 향해 달려가다가 문득 멈춰 서서, 지금 자신의 발이 딛고 있는 이 땅의 아름다움을 비로소 보게 되는 순간이었을 것이다.</p>
-            <p>원효의 이야기가 우리에게 던지는 물음은 이것이다. "지금 당신은 무엇을 쫓고 있는가? 그것은 정말 밖에 있는가, 아니면 이미 당신 안에 있는 것은 아닌가?" 우리는 모두 각자의 '당나라'를 향해 달리고 있다. 더 좋은 학교, 더 높은 직장, 더 많은 돈, 더 큰 인정. 그것들이 나쁜 것은 아니다. 하지만 그것을 얻어야만 비로소 행복해질 수 있다고 믿는 순간, 우리는 어둠 속에서 해골 물을 감로수로 착각하는 원효와 같아진다. 행복은, 평화는, 진리는 이미 여기에 있다. 아침에 눈을 뜨는 그 순간에, 사랑하는 사람의 목소리를 듣는 그 순간에, 따뜻한 밥 한 그릇을 먹는 그 순간에 이미 깨달음은 와 있다. 다만 우리의 마음이 그것을 보지 못할 뿐이다. 원효는 천 년 전 동굴에서 해골을 만난 뒤, 온 세상이 달라 보였다고 했다. 어쩌면 우리도 이 이야기를 읽은 지금, 조금은 달라진 눈으로 세상을 바라볼 수 있지 않을까. 해골 물은 오래전에 말랐지만, 그 깨달음의 씨앗은 지금 이 순간에도 싹을 틔우고 있다.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 엔딩 섹션 -->
-    <section class="ending-section">
-      <div class="ending-container">
-        <span class="section-label">📖 서사 연결 구조</span>
-        <h2 class="ending-title">원효의 깨달음 여정</h2>
-
-        <div class="lesson-grid">
-          <div class="lesson-card">
-            <p class="lesson-label">1~2장 [출발]</p>
-            <p class="lesson-content">원효와 의상, 당나라 유학길에 오르다. 폭풍우 속에서 동굴을 발견하다.</p>
-          </div>
-          <div class="lesson-card">
-            <p class="lesson-label">3~4장 [전환점]</p>
-            <p class="lesson-content">어둠 속 감로수의 축복, 아침이 보여준 해골의 진실.</p>
-          </div>
-          <div class="lesson-card">
-            <p class="lesson-label">5~6장 [깨달음]</p>
-            <p class="lesson-content">구토와 함께 밀려온 거대한 깨달음, 일체유심조의 진리.</p>
-          </div>
-          <div class="lesson-card">
-            <p class="lesson-label">7~8장 [실천]</p>
-            <p class="lesson-content">신라로 돌아가는 발걸음, 화쟁 사상으로 종파를 아우르다.</p>
-          </div>
-          <div class="lesson-card">
-            <p class="lesson-label">9~10장 [완성]</p>
-            <p class="lesson-content">거리의 스님이 되어 백성 속으로, 천 년을 건너온 깨달음의 씨앗.</p>
-          </div>
-        </div>
-
-        <div class="final-quote">
-          <p>🌱 교훈: 진리는 먼 곳에 있지 않다. 네가 마시는 물 한 모금, 네가 품는 생각 하나에 이미 진리가 깃들어 있다.</p>
-        </div>
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">해골이 남긴 씨앗</span>
+        <h2>천 년을 건너온 깨달음</h2>
+        <p>세월은 흘러 원효도 이 세상을 떠났다. 그러나 그가 심은 씨앗은 죽지 않았다. 해골 물 한 모금에서 시작된 깨달음은 물결처럼 퍼져 나가, 신라를 넘어 고려로, 고려를 넘어 조선으로, 그리고 마침내 오늘날 우리에게까지 도달했다. 천 년이 넘는 시간 동안, 이 이야기를 들은 수많은 사람들이 각자의 삶 속에서 '해골 물의 순간'을 경험했다.</p>
+        <p>누군가에게 그것은 미워하던 사람에게서 갑자기 따뜻함을 발견하는 순간이었을 것이다. 누군가에게 그것은 실패라고 생각했던 일이 사실은 가장 소중한 배움이었음을 깨닫는 순간이었을 것이다. 또 누군가에게 그것은 먼 곳을 향해 달려가다가 문득 멈춰 서서, 지금 자신의 발이 딛고 있는 이 땅의 아름다움을 비로소 보게 되는 순간이었을 것이다.</p>
+        <p>원효의 이야기가 우리에게 던지는 물음은 이것이다. "지금 당신은 무엇을 쫓고 있는가? 그것은 정말 밖에 있는가, 아니면 이미 당신 안에 있는 것은 아닌가?" 우리는 모두 각자의 '당나라'를 향해 달리고 있다. 더 좋은 학교, 더 높은 직장, 더 많은 돈, 더 큰 인정. 그것들이 나쁜 것은 아니다. 하지만 그것을 얻어야만 비로소 행복해질 수 있다고 믿는 순간, 우리는 어둠 속에서 해골 물을 감로수로 착각하는 원효와 같아진다. 행복은, 평화는, 진리는 이미 여기에 있다. 아침에 눈을 뜨는 그 순간에, 사랑하는 사람의 목소리를 듣는 그 순간에, 따뜻한 밥 한 그릇을 먹는 그 순간에 이미 깨달음은 와 있다. 다만 우리의 마음이 그것을 보지 못할 뿐이다. 원효는 천 년 전 동굴에서 해골을 만난 뒤, 온 세상이 달라 보였다고 했다. 어쩌면 우리도 이 이야기를 읽은 지금, 조금은 달라진 눈으로 세상을 바라볼 수 있지 않을까. 해골 물은 오래전에 말랐지만, 그 깨달음의 씨앗은 지금 이 순간에도 싹을 틔우고 있다.</p>
       </div>
     </section>
   </div>
 
-  <!-- 하단 네비게이션 버튼 -->
-  <div class="nav-buttons" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 15px;">
-    <button class="nav-btn" onclick="history.back()" style="padding: 12px 24px; border: none; border-radius: 25px; font-size: 14px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.95); color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;">← 목록으로</button>
-    <button class="nav-btn quiz-btn" onclick="location.href='korperson03_season1_quiz.html'" style="padding: 12px 24px; border: none; border-radius: 25px; font-size: 14px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, #8e44ad, #a569bd); color: white; box-shadow: 0 4px 15px rgba(142,68,173,0.4); transition: all 0.3s ease;">📝 퀴즈 풀기</button>
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="#c9a227">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
   </div>
 
   <script>
-    // 배경 이미지 전환
     const mapContainer = document.getElementById('map-container');
-    const sections = document.querySelectorAll('[data-bg]');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
 
-    const bgObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const bg = entry.target.dataset.bg;
-          if (bg) {
-            mapContainer.style.backgroundImage = `url('${bg}')`;
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
           }
         }
       });
-    }, { threshold: 0.3 });
+    }
 
-    sections.forEach(section => bgObserver.observe(section));
-
-    // 챕터 카드 애니메이션
-    const chapterCards = document.querySelectorAll('.chapter-card');
-
-    const cardObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.2 });
-
-    chapterCards.forEach(card => cardObserver.observe(card));
-
-    // 진행 바
     window.addEventListener('scroll', () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercent = (scrollTop / docHeight) * 100;
-      document.getElementById('progressBar').style.width = scrollPercent + '%';
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
     });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'korperson03_season1_quiz.html';
+    }
   </script>
 </body>
 </html>

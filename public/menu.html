@@ -3056,7 +3056,7 @@ body {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.95);
-  z-index: 10000;
+  z-index: 100010;
   align-items: center;
   justify-content: center;
   animation: fadeIn 0.3s ease;
@@ -3138,7 +3138,7 @@ body {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 10004;
+  z-index: 100020;
 }
 
 .reading-report-modal.show {
@@ -17136,6 +17136,21 @@ async function performLogout() {
       }
     }
 
+    // iframe 내부 close-btn 숨기기
+    function hideIframeCloseBtn() {
+      try {
+        const iframe = document.getElementById('storyContentIframe');
+        if (iframe && iframe.contentDocument) {
+          const closeBtn = iframe.contentDocument.querySelector('.close-btn');
+          if (closeBtn) {
+            closeBtn.style.display = 'none';
+          }
+        }
+      } catch (e) {
+        console.log('iframe close-btn 숨기기 실패 (cross-origin):', e);
+      }
+    }
+
     // 스토리 콘텐츠 모달 닫기 함수
     function closeStoryModal() {
       const storyModal = document.getElementById('storyContentModal');
@@ -18693,7 +18708,311 @@ async function performLogout() {
       const hiddenInput = document.getElementById('reportStory');
       if (searchInput) searchInput.value = '';
       if (hiddenInput) hiddenInput.value = '';
+
+      // URL에서 reportShare 파라미터 제거
+      const url = new URL(window.location);
+      if (url.searchParams.has('reportShare')) {
+        url.searchParams.delete('reportShare');
+        window.history.replaceState({}, '', url);
+      }
     }
+
+    // 공유된 독서 감상문 표시 (URL 파라미터로 접근 시)
+    async function openSharedReportModal(shareId) {
+      try {
+        // 공유된 감상문 데이터 가져오기
+        const response = await fetch(`/api/reading-report/shared/${shareId}`);
+        const data = await response.json();
+
+        if (!data.ok) {
+          alert(data.message || '공유된 감상문을 찾을 수 없습니다.');
+          return;
+        }
+
+        const report = data.report;
+
+        // 모달 열기
+        const modal = document.getElementById('readingReportModal');
+        modal.classList.add('show');
+
+        // 스토리 드롭다운 초기화
+        await initStoryDropdown();
+
+        // 작성자 정보 표시 (읽기 전용)
+        document.getElementById('reportGrade').value = report.authorGrade || '';
+        document.getElementById('reportName').value = report.authorName || '';
+
+        // 제목 채우기
+        document.getElementById('reportTitle').value = report.title || '';
+
+        // 내용 파싱 및 채우기
+        parseAndFillContent(report.content);
+
+        // 이야기 선택 (있으면)
+        if (report.storyId) {
+          setTimeout(() => {
+            setStoryValue(report.storyId);
+          }, 100);
+        }
+
+        // 히스토리 로드 (공유된 감상문 작성자 기준)
+        await loadSharedReportHistory(report.authorGrade, report.authorName);
+
+        // 관문평가 결과 로드 (공유된 감상문 작성자 기준)
+        await loadSharedQuizResults(report.authorGrade, report.authorName);
+
+        // 읽기 전용 모드 표시
+        showReadOnlyMode(report.authorGrade, report.authorName);
+
+      } catch (error) {
+        console.error('공유된 감상문 로드 오류:', error);
+        alert('감상문을 불러오는 중 오류가 발생했습니다.');
+      }
+    }
+
+    // 공유된 감상문 내용을 섹션별로 파싱하여 채우기
+    function parseAndFillContent(content) {
+      if (!content) return;
+
+      // 섹션별 파싱
+      const sections = {
+        summary: '',
+        character: '',
+        ifIWere: '',
+        funScene: '',
+        feeling: ''
+      };
+
+      const patterns = [
+        { key: 'summary', pattern: /📚\s*줄거리\n?([\s\S]*?)(?=👤|🎭|🎬|💭|$)/ },
+        { key: 'character', pattern: /👤\s*주인공.*\n?([\s\S]*?)(?=📚|🎭|🎬|💭|$)/ },
+        { key: 'ifIWere', pattern: /🎭\s*내가 만약.*\n?([\s\S]*?)(?=📚|👤|🎬|💭|$)/ },
+        { key: 'funScene', pattern: /🎬\s*재미있었던.*\n?([\s\S]*?)(?=📚|👤|🎭|💭|$)/ },
+        { key: 'feeling', pattern: /💭\s*책을 읽고.*\n?([\s\S]*?)(?=📚|👤|🎭|🎬|$)/ }
+      ];
+
+      patterns.forEach(({ key, pattern }) => {
+        const match = content.match(pattern);
+        if (match && match[1]) {
+          sections[key] = match[1].trim();
+        }
+      });
+
+      // 섹션이 하나도 없으면 전체 내용을 줄거리에 넣기
+      const hasAnySection = Object.values(sections).some(v => v);
+      if (!hasAnySection) {
+        sections.summary = content;
+      }
+
+      // 각 필드에 채우기
+      const fieldMap = {
+        summary: 'reportSummary',
+        character: 'reportCharacter',
+        ifIWere: 'reportIfIWere',
+        funScene: 'reportFunScene',
+        feeling: 'reportFeeling'
+      };
+
+      Object.entries(fieldMap).forEach(([key, fieldId]) => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.value = sections[key];
+        }
+      });
+    }
+
+    // 공유된 감상문 작성자의 히스토리 로드
+    async function loadSharedReportHistory(grade, name) {
+      try {
+        const response = await fetch(
+          `/api/user-progress/reading-reports/history?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`
+        );
+
+        const result = await response.json();
+        if (!result.ok) return;
+
+        const historyList = document.getElementById('readingHistoryList');
+        historyList.innerHTML = '';
+
+        const reports = result.reports || [];
+        const displayReports = reports.slice(0, 5);
+
+        displayReports.forEach(report => {
+          const item = document.createElement('div');
+          item.className = 'history-item';
+
+          const date = new Date(report.submittedAt);
+          const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+          const timeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+          const monthStr = `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+
+          item.innerHTML = `
+            <div class="history-title">${report.title}</div>
+            <div class="history-date">${dateStr} ${timeStr}</div>
+            <div class="history-month">${monthStr}</div>
+            ${report.storyTitle ? `<div class="history-story">${getStoryEmoji(report.storyId)} ${report.storyTitle}</div>` : ''}
+          `;
+
+          historyList.appendChild(item);
+        });
+
+      } catch (error) {
+        console.error('공유된 감상문 히스토리 로드 오류:', error);
+      }
+    }
+
+    // 공유된 감상문 작성자의 관문평가 결과 로드
+    async function loadSharedQuizResults(grade, name) {
+      try {
+        const response = await fetch(
+          `/api/creative-quiz/results?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`
+        );
+
+        const result = await response.json();
+        if (!result.ok) return;
+
+        const quizList = document.getElementById('quizResultList');
+        if (!quizList) return;
+
+        quizList.innerHTML = '';
+
+        const quizResults = result.data || [];
+
+        if (quizResults.length === 0) {
+          quizList.innerHTML = '<div style="padding: 15px; color: #868e96; font-size: 13px; text-align: center;">아직 관문평가 결과가 없습니다</div>';
+          return;
+        }
+
+        // 스토리 제목 매핑
+        const storyTitles = {
+          'bio01': '바위의 눈물과 씨앗의 노래',
+          'bio02': '몸이 뒤바뀐 그날',
+          'bio03': '뼈 없는 기사들의 바다 대전쟁',
+          'bio04': '개미 전쟁',
+          'bio05': '초록이의 위대한 모험',
+          'bio06': '도토리의 위대한 모험',
+          'chem01': '원소들의 결혼식',
+          'chem02': '설탕 탐정단: 물컵 속 실종 사건',
+          'classic01': '콩쥐팥쥐',
+          'classic02': '홍계월전',
+          'earth01': '별의 먼지에서 태어난 푸른 행성',
+          'physics01': '원자들의 숨바꼭질',
+          'geo01': '지도를 잘 읽는 사람은 길을 잃지 않아',
+          'law01': '진짜 시민이 되는 법',
+          'pol01': '선생님이 대통령이 된다면',
+          'social01': '우리 동네 사회학자',
+          'korperson01': '세종대왕',
+          'worldperson01': '레오나르도 다빈치',
+          'worldlit01': '오즈의 마법사'
+        };
+
+        // 표시할 개수 제한
+        const quizDisplayLimit = 5;
+        const showAll = quizList.dataset.showAll === 'true';
+        const displayResults = showAll ? quizResults : quizResults.slice(0, quizDisplayLimit);
+
+        // grade, name 저장 (더보기 클릭 시 사용)
+        quizList.dataset.grade = grade;
+        quizList.dataset.name = name;
+
+        displayResults.forEach(quiz => {
+          const item = document.createElement('div');
+          item.className = 'quiz-result-item';
+          item.style.cssText = 'padding: 12px; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 10px; background: white;';
+
+          const date = new Date(quiz.completedAt);
+          const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+          const timeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+          const seasonLabel = quiz.season === 'season1' ? '시즌2 (5-6학년)' : '시즌1 (3-4학년)';
+          const storyTitle = storyTitles[quiz.storyId] || quiz.storyId;
+
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="font-weight: 600; color: #2c3e50; font-size: 14px;">${storyTitle}</div>
+              <div style="font-size: 18px; font-weight: 700; color: ${quiz.totalScore >= 80 ? '#27ae60' : quiz.totalScore >= 60 ? '#f39c12' : '#e74c3c'};">${quiz.totalScore}점</div>
+            </div>
+            <div style="font-size: 12px; color: #868e96;">${dateStr} ${timeStr}</div>
+            <div style="display: inline-block; margin-top: 6px; padding: 3px 8px; background: #e8f5e9; color: #2d6a4f; border-radius: 10px; font-size: 11px;">${seasonLabel}</div>
+          `;
+
+          // 클릭 시 상세 결과 표시
+          item.style.cursor = 'pointer';
+          item.onclick = () => showQuizResultDetail(quiz, storyTitle);
+
+          quizList.appendChild(item);
+        });
+
+        // "더보기" 버튼 추가
+        if (!showAll && quizResults.length > quizDisplayLimit) {
+          const loadMoreBtn = document.createElement('button');
+          loadMoreBtn.className = 'history-load-more';
+          loadMoreBtn.textContent = `더보기 (${quizResults.length - quizDisplayLimit}개 더)`;
+          loadMoreBtn.onclick = () => {
+            quizList.dataset.showAll = 'true';
+            loadSharedQuizResults(grade, name);
+          };
+          quizList.appendChild(loadMoreBtn);
+        }
+
+      } catch (error) {
+        console.error('공유된 감상문 관문평가 결과 로드 오류:', error);
+      }
+    }
+
+    // 읽기 전용 모드 표시
+    function showReadOnlyMode(authorGrade, authorName) {
+      // 제출 버튼 영역 숨기기 및 안내 메시지 표시
+      const submitArea = document.querySelector('.reading-report-submit');
+      if (submitArea) {
+        submitArea.innerHTML = `
+          <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 12px; margin-top: 20px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🐋</div>
+            <div style="font-size: 16px; font-weight: 600; color: #2d6a4f; margin-bottom: 5px;">
+              ${authorGrade} ${authorName}님의 감상문
+            </div>
+            <div style="font-size: 13px; color: #666;">
+              카카오톡으로 공유된 독서 감상문입니다
+            </div>
+            <a href="https://brainmoon.co.kr" style="display: inline-block; margin-top: 15px; padding: 10px 25px; background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%); color: white; text-decoration: none; border-radius: 25px; font-size: 14px; font-weight: 600;">
+              브레인문해력 바로가기
+            </a>
+          </div>
+        `;
+      }
+
+      // 입력 필드 읽기 전용으로 변경
+      const readonlyFields = ['reportGrade', 'reportName', 'reportTitle', 'reportSummary', 'reportCharacter', 'reportIfIWere', 'reportFunScene', 'reportFeeling'];
+      readonlyFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.readOnly = true;
+          field.style.backgroundColor = '#f8f9fa';
+        }
+      });
+
+      // 스토리 검색 비활성화
+      const searchInput = document.getElementById('storySearchInput');
+      if (searchInput) {
+        searchInput.disabled = true;
+        searchInput.style.backgroundColor = '#f8f9fa';
+      }
+    }
+
+    // 페이지 로드 시 공유 파라미터 확인
+    function checkSharedReportParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const shareId = urlParams.get('reportShare');
+
+      if (shareId) {
+        // 약간의 딜레이 후 모달 열기 (페이지 초기화 완료 대기)
+        setTimeout(() => {
+          openSharedReportModal(shareId);
+        }, 500);
+      }
+    }
+
+    // DOMContentLoaded에서 호출
+    document.addEventListener('DOMContentLoaded', checkSharedReportParam);
 
     // 독서 감상문 모달 열기 (이야기별 바로가기 버튼용)
     async function openBookReportModal(storyType) {
@@ -18776,6 +19095,7 @@ async function performLogout() {
 
           const date = new Date(report.submittedAt);
           const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+          const timeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
           const monthStr = `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
 
           // 스토리 정보 가져오기 (기본값: 시즌1)
@@ -18786,7 +19106,7 @@ async function performLogout() {
 
           item.innerHTML = `
             <div class="history-item-title">${report.title}</div>
-            <div class="history-item-date">${dateStr}</div>
+            <div class="history-item-date">${dateStr} ${timeStr}</div>
             <div class="history-item-month">${monthStr}</div>
             <div class="history-item-story">${storyInfo}</div>
           `;
@@ -18883,13 +19203,19 @@ async function performLogout() {
           'law06': '하늘 위의 황금 책',
         };
 
-        quizResults.forEach(quiz => {
+        // 표시할 개수 제한 (showAll 파라미터에 따라)
+        const quizDisplayLimit = 5;
+        const showAll = quizList.dataset.showAll === 'true';
+        const displayResults = showAll ? quizResults : quizResults.slice(0, quizDisplayLimit);
+
+        displayResults.forEach(quiz => {
           const item = document.createElement('div');
           item.className = 'history-item';
           item.style.cursor = 'pointer';
 
           const date = new Date(quiz.completedAt);
           const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+          const timeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 
           const storyTitle = storyTitles[quiz.storyId] || quiz.storyId;
           const seasonLabel = quiz.season === 'season2' ? '시즌2 (5-6학년)' : '시즌1 (3-4학년)';
@@ -18904,7 +19230,7 @@ async function performLogout() {
               <span>${storyTitle}</span>
               <span style="font-weight: 700; color: ${scoreColor}; font-size: 14px;">${quiz.totalScore}점</span>
             </div>
-            <div class="history-item-date">${dateStr}</div>
+            <div class="history-item-date">${dateStr} ${timeStr}</div>
             <div class="history-item-story">${seasonLabel}</div>
           `;
 
@@ -18913,6 +19239,18 @@ async function performLogout() {
 
           quizList.appendChild(item);
         });
+
+        // "더보기" 버튼 추가
+        if (!showAll && quizResults.length > quizDisplayLimit) {
+          const loadMoreBtn = document.createElement('button');
+          loadMoreBtn.className = 'history-load-more';
+          loadMoreBtn.textContent = `더보기 (${quizResults.length - quizDisplayLimit}개 더)`;
+          loadMoreBtn.onclick = () => {
+            quizList.dataset.showAll = 'true';
+            loadQuizResults();
+          };
+          quizList.appendChild(loadMoreBtn);
+        }
       } catch (error) {
         console.error('관문평가 결과 로드 오류:', error);
       }
@@ -18935,53 +19273,150 @@ async function performLogout() {
       modal.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center;
-        z-index: 10010;
+        z-index: 100030;
       `;
 
       modal.innerHTML = `
-        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 400px; width: 90%; position: relative; animation: slideIn 0.3s ease;">
+        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 420px; width: 90%; position: relative; animation: slideIn 0.3s ease; max-height: 90vh; overflow-y: auto;">
           <button onclick="this.closest('#quizDetailModal').remove()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
 
           <h3 style="text-align: center; margin-bottom: 5px; color: #2d6a4f;">📊 관문평가 결과</h3>
-          <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 20px;">${storyTitle} (${seasonLabel})</p>
+          <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 15px;">${storyTitle} (${seasonLabel})</p>
 
-          <div style="text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 48px; font-weight: 700; color: #1b4332;">${quiz.totalScore}<span style="font-size: 24px;">점</span></div>
+          <div style="text-align: center; margin-bottom: 15px;">
+            <div style="font-size: 42px; font-weight: 700; color: #1b4332;">${quiz.totalScore}<span style="font-size: 22px;">점</span></div>
             <div style="color: #868e96; font-size: 13px;">${dateStr}</div>
           </div>
 
-          <div style="background: #f8f9fa; border-radius: 12px; padding: 15px;">
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+          <!-- 레이더 차트 -->
+          <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+            <canvas id="quizDetailRadarCanvas" width="240" height="240"></canvas>
+          </div>
+
+          <div style="background: #f8f9fa; border-radius: 12px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0; font-size: 14px;">
               <span>👤 인물파악</span>
               <span style="font-weight: 600; color: #2d6a4f;">${scores['인물파악'] || 0} / 10</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0; font-size: 14px;">
               <span>✅ 내용일치</span>
               <span style="font-weight: 600; color: #2d6a4f;">${scores['내용일치'] || 0} / 10</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0; font-size: 14px;">
               <span>🏗️ 내용구조</span>
               <span style="font-weight: 600; color: #2d6a4f;">${scores['내용구조'] || 0} / 10</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e0e0e0; font-size: 14px;">
               <span>📚 내용어휘</span>
               <span style="font-weight: 600; color: #2d6a4f;">${scores['내용어휘'] || 0} / 10</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px;">
               <span>🔍 내용추론</span>
               <span style="font-weight: 600; color: #2d6a4f;">${scores['내용추론'] || 0} / 10</span>
             </div>
           </div>
 
-          <button onclick="this.closest('#quizDetailModal').remove()" style="width: 100%; margin-top: 20px; padding: 12px; background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;">닫기</button>
+          <button onclick="this.closest('#quizDetailModal').remove()" style="width: 100%; margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;">닫기</button>
         </div>
       `;
 
       document.body.appendChild(modal);
 
+      // 레이더 차트 그리기
+      setTimeout(() => {
+        drawQuizDetailRadarChart(scores);
+      }, 50);
+
       // 모달 외부 클릭 시 닫기
       modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.remove();
+      });
+    }
+
+    // 관문평가 결과 레이더 차트 그리기
+    function drawQuizDetailRadarChart(scores) {
+      const canvas = document.getElementById('quizDetailRadarCanvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const centerX = 120;
+      const centerY = 120;
+      const maxRadius = 85;
+
+      // 5각형 좌표 계산 (상단부터 시계방향)
+      const angles = [];
+      for (let i = 0; i < 5; i++) {
+        angles.push((Math.PI * 2 * i / 5) - Math.PI / 2);
+      }
+
+      // 배경 격자 그리기 (10, 5, 1 레벨)
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1;
+
+      [1, 0.5, 0.1].forEach(ratio => {
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          const angle = angles[i % 5];
+          const x = centerX + Math.cos(angle) * maxRadius * ratio;
+          const y = centerY + Math.sin(angle) * maxRadius * ratio;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      });
+
+      // 축 그리기
+      ctx.strokeStyle = '#d0d0d0';
+      angles.forEach(angle => {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(angle) * maxRadius, centerY + Math.sin(angle) * maxRadius);
+        ctx.stroke();
+      });
+
+      // 데이터 영역 그리기
+      const categories = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(45, 106, 79, 0.3)';
+      ctx.strokeStyle = '#2d6a4f';
+      ctx.lineWidth = 2;
+
+      categories.forEach((cat, i) => {
+        const score = scores[cat] || 0;
+        const ratio = score / 10;
+        const x = centerX + Math.cos(angles[i]) * maxRadius * ratio;
+        const y = centerY + Math.sin(angles[i]) * maxRadius * ratio;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 데이터 포인트 그리기
+      ctx.fillStyle = '#1b4332';
+      categories.forEach((cat, i) => {
+        const score = scores[cat] || 0;
+        const ratio = score / 10;
+        const x = centerX + Math.cos(angles[i]) * maxRadius * ratio;
+        const y = centerY + Math.sin(angles[i]) * maxRadius * ratio;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 라벨 그리기
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = 'bold 11px "Noto Sans KR", sans-serif';
+      ctx.textAlign = 'center';
+
+      const labelOffset = 15;
+      const labels = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      labels.forEach((label, i) => {
+        const x = centerX + Math.cos(angles[i]) * (maxRadius + labelOffset);
+        const y = centerY + Math.sin(angles[i]) * (maxRadius + labelOffset);
+        ctx.fillText(label, x, y + 4);
       });
     }
 
@@ -19353,11 +19788,11 @@ ${content}
       }
     }
 
-    // 카카오톡 공유 (이미지로 공유)
+    // 카카오톡 공유 (링크로 공유 - 클릭 시 감상문 팝업 열림)
     async function shareKakao() {
       const storySelect = document.getElementById('reportStory');
       const title = document.getElementById('reportTitle').value.trim();
-      const content = document.getElementById('reportContent').value.trim();
+      const content = getCombinedContent(); // 세분화된 섹션 내용 합치기
 
       if (!storySelect.value) {
         alert('이야기를 선택해주세요.');
@@ -19380,155 +19815,135 @@ ${content}
       }
 
       const user = JSON.parse(userStr);
-      const today = new Date();
-      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-      // 임시 이미지 템플릿 생성 (PDF와 동일)
-      const imageTemplate = document.createElement('div');
-      imageTemplate.style.cssText = `
-        width: 794px;
-        min-height: 1123px;
-        background: #fcfaf5;
-        padding: 60px;
-        font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-        position: absolute;
-        left: -9999px;
-        top: 0;
-      `;
-
-      imageTemplate.innerHTML = `
-        <div style="text-align: center; margin-bottom: 40px;">
-          <img src="https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/rudolph.png" style="width: 80px; height: 80px; margin-bottom: 20px;" crossorigin="anonymous">
-          <h1 style="font-size: 32px; color: #2c3e50; margin: 0 0 10px 0;">고래 도서관 독서 감상문</h1>
-          <p style="font-size: 18px; color: #6b7280; margin: 0;">${user.grade} ${user.name}</p>
-          <p style="font-size: 14px; color: #9ca3af; margin: 5px 0 0 0;">${dateStr}</p>
-        </div>
-
-        <div style="margin-bottom: 30px;">
-          <h2 style="font-size: 24px; color: #2c3e50; text-align: center; margin: 0 0 20px 0; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">${title}</h2>
-        </div>
-
-        <div style="background: white; padding: 30px; border-radius: 10px; position: relative; min-height: 600px;">
-          <!-- 원고지 선 -->
-          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
-            ${Array.from({length: 40}, (_, i) => `<div style="position: absolute; left: 30px; right: 30px; top: ${30 + i * 20}px; height: 1px; background: #e9ecef;"></div>`).join('')}
-          </div>
-
-          <!-- 내용 -->
-          <div style="position: relative; z-index: 1; line-height: 2; font-size: 16px; color: #2c3e50; white-space: pre-wrap; word-wrap: break-word;">
-${content}
-          </div>
-
-          <!-- 워터마크 -->
-          <img src="https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/rudolph.png" style="position: absolute; bottom: 50px; right: 50px; width: 200px; height: 200px; opacity: 0.05; z-index: 0;" crossorigin="anonymous">
-        </div>
-      `;
-
-      document.body.appendChild(imageTemplate);
 
       try {
-        // html2canvas로 이미지 생성
+        // 1. 공유용 ID 생성 및 저장
+        const shareResponse = await fetch('/api/reading-report/share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: user.grade,
+            name: user.name,
+            title: title,
+            content: content,
+            storyId: storyId,
+            storyTitle: storyTitle
+          })
+        });
+
+        const shareData = await shareResponse.json();
+
+        if (!shareData.ok) {
+          throw new Error(shareData.message || '공유 링크 생성 실패');
+        }
+
+        const shareUrl = shareData.shareUrl;
+        console.log('📤 공유 URL 생성:', shareUrl);
+
+        // 2. 썸네일 이미지 생성
+        const imageTemplate = document.createElement('div');
+        imageTemplate.style.cssText = `
+          width: 600px;
+          height: 315px;
+          background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+          padding: 40px;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+          position: absolute;
+          left: -9999px;
+          top: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        `;
+
+        imageTemplate.innerHTML = `
+          <img src="https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/rudolph.png" style="width: 60px; height: 60px; margin-bottom: 15px;" crossorigin="anonymous">
+          <div style="color: white; font-size: 14px; opacity: 0.8; margin-bottom: 8px;">🐋 고래 도서관 독서 감상문</div>
+          <div style="color: white; font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 15px; max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${title}</div>
+          <div style="color: rgba(255,255,255,0.7); font-size: 16px;">${user.grade} ${user.name}</div>
+          <div style="color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 20px;">클릭하여 감상문 전체 보기 →</div>
+        `;
+
+        document.body.appendChild(imageTemplate);
+
         const canvas = await html2canvas(imageTemplate, {
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          backgroundColor: '#fcfaf5'
+          backgroundColor: null
         });
 
-        // 이미지를 Blob으로 변환
-        canvas.toBlob(async (blob) => {
-          // 임시 요소 제거
-          document.body.removeChild(imageTemplate);
+        document.body.removeChild(imageTemplate);
 
-          if (!blob) {
-            alert('이미지 생성에 실패했습니다.');
-            return;
-          }
+        // 3. 썸네일 이미지 업로드
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const formData = new FormData();
+        formData.append('image', blob, `reading-report-thumb-${Date.now()}.png`);
 
-          // 이미지를 서버에 업로드 (임시 저장소)
-          const formData = new FormData();
-          formData.append('image', blob, `reading-report-${user.name}-${Date.now()}.png`);
+        const uploadResponse = await fetch('/api/upload-temp-image', {
+          method: 'POST',
+          body: formData
+        });
 
-          try {
-            const uploadResponse = await fetch('/api/upload-temp-image', {
-              method: 'POST',
-              body: formData
-            });
+        let imageUrl = 'https://brainmoon.co.kr/images/rudolph.png'; // 기본 이미지
+        if (uploadResponse.ok) {
+          const uploadData = await uploadResponse.json();
+          imageUrl = uploadData.imageUrl;
+        }
 
-            if (!uploadResponse.ok) {
-              throw new Error('이미지 업로드 실패');
-            }
-
-            const { imageUrl } = await uploadResponse.json();
-
-            // 카카오톡으로 이미지 공유 (이미지만 공유, 링크 없음)
-            if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
-              Kakao.Share.sendDefault({
-                objectType: 'feed',
-                content: {
-                  title: `📖 ${title}`,
-                  description: `${user.name}님의 독서 감상문`,
-                  imageUrl: imageUrl,
-                  link: {
-                    mobileWebUrl: imageUrl,
-                    webUrl: imageUrl
-                  }
-                }
-              });
-              console.log('✅ 카카오톡 이미지 공유 성공');
-
-              // 서버에 제출 기록 저장
-              console.log('📝 감상문 제출 시작...');
-              const saved = await saveReportToServer({
-                grade: user.grade,
-                name: user.name,
-                title: title,
-                content: content,
-                type: 'kakao',
-                storyId: storyId,
-                storyTitle: storyTitle
-              });
-
-              console.log('📝 제출 결과:', saved);
-
-              if (saved) {
-                alert('카카오톡으로 감상문 이미지가 공유되었습니다!');
-
-                // 히스토리 새로고침
-                console.log('📝 히스토리 새로고침 시작...');
-                await loadReadingHistory();
-                console.log('📝 히스토리 새로고침 완료');
-
-                // 학습실 새로고침
-                console.log('📝 학습실 새로고침 시작...');
-                await renderStudyRoomList();
-                console.log('📝 학습실 새로고침 완료');
-              } else {
-                alert('카카오톡 공유는 성공했으나 제출 기록 저장에 실패했습니다.');
+        // 4. 카카오톡으로 링크 공유
+        if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
+          Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+              title: `📖 ${title}`,
+              description: `${user.name}님의 독서 감상문을 확인해보세요!`,
+              imageUrl: imageUrl,
+              link: {
+                mobileWebUrl: shareUrl,
+                webUrl: shareUrl
               }
-            } else {
-              // Fallback: 이미지 다운로드
-              const link = document.createElement('a');
-              link.href = URL.createObjectURL(blob);
-              link.download = `고래도서관_감상문_${user.name}_${dateStr}.png`;
-              link.click();
-              alert('카카오톡 SDK를 찾을 수 없어 이미지를 다운로드했습니다.');
+            },
+            buttons: [
+              {
+                title: '감상문 보기',
+                link: {
+                  mobileWebUrl: shareUrl,
+                  webUrl: shareUrl
+                }
+              }
+            ]
+          });
+          console.log('✅ 카카오톡 공유 팝업 호출됨');
+
+          // 5. 서버에 제출 기록 저장 (카카오톡 공유 팝업과 별개로 진행)
+          saveReportToServer({
+            grade: user.grade,
+            name: user.name,
+            title: title,
+            content: content,
+            type: 'kakao',
+            storyId: storyId,
+            storyTitle: storyTitle
+          }).then(saved => {
+            if (saved) {
+              console.log('📝 감상문 제출 기록 저장 완료');
+              loadReadingHistory();
+              renderStudyRoomList();
             }
-          } catch (uploadError) {
-            console.error('이미지 업로드 오류:', uploadError);
-            // Fallback: 이미지 다운로드
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `고래도서관_감상문_${user.name}_${dateStr}.png`;
-            link.click();
-            alert('서버 업로드에 실패하여 이미지를 다운로드했습니다.');
-          }
-        }, 'image/png');
+          });
+
+          // alert 제거 - 카카오톡 공유 팝업이 자체적으로 표시됨
+        } else {
+          // Fallback: 링크 복사
+          await navigator.clipboard.writeText(shareUrl);
+          alert(`카카오톡 SDK를 찾을 수 없어 링크를 복사했습니다.\n\n${shareUrl}`);
+        }
 
       } catch (error) {
-        console.error('이미지 생성 오류:', error);
-        document.body.removeChild(imageTemplate);
-        alert('이미지 생성 중 오류가 발생했습니다.');
+        console.error('카카오톡 공유 오류:', error);
+        alert('공유 중 오류가 발생했습니다: ' + error.message);
       }
     }
 
@@ -19980,6 +20395,28 @@ ${content}
           <p>5~6학년 교과 내용을 바탕으로 한 심화 창작 이야기</p>
           <div class="novel-category-count">시리즈 <span>104개</span></div>
         </div>
+      </div>
+
+      <!-- 독서감상문 바로가기 버튼 -->
+      <div style="text-align: center; margin-top: 25px;">
+        <button onclick="closeNovelCategoryModal(); openReadingReportModal();" style="
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 14px 30px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          border-radius: 30px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+          transition: all 0.3s ease;
+        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.4)';">
+          <span style="font-size: 20px;">📝</span>
+          <span>독서감상문 바로가기</span>
+        </button>
       </div>
     </div>
   </div>
@@ -22991,7 +23428,7 @@ ${content}
   <div class="story-content-modal" id="storyContentModal">
     <div class="story-content-modal-inner">
       <button class="story-content-close" id="closeStoryContentModal" onclick="closeStoryModal()" type="button">&times;</button>
-      <iframe class="story-content-iframe" id="storyContentIframe"></iframe>
+      <iframe class="story-content-iframe" id="storyContentIframe" onload="hideIframeCloseBtn()"></iframe>
     </div>
   </div>
 

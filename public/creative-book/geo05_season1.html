@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>조용한 시골 마을이 달라지기 시작한 이유 - 논밭마을 소년 도윤과 할아버지의 들판이 깨어나는 이야기</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -14,566 +12,514 @@
     }
 
     body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: #1a1a2e;
-      min-height: 100vh;
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
       overflow-x: hidden;
+      background: #1a1a1a;
     }
 
-    /* 배경 컨테이너 - 고정 */
-    .background-container {
+    /* 고정 지도 캔버스 */
+    #map-container {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      height: 100%;
-      z-index: 0;
-      transition: background-image 0.5s ease-in-out;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리05/00.jpg');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-    }
-
-    .background-container::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
-    }
-
-    /* 콘텐츠 영역 */
-    .content-wrapper {
-      position: relative;
+      transition: background-image 1s ease-in-out;
       z-index: 1;
-      padding: 20px;
-      padding-bottom: 100px;
     }
 
-    /* 헤더 */
-    .header {
-      text-align: center;
-      padding: 40px 20px;
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #2980b9 0%, #1a5276 100%);
       color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
     }
 
-    .header h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(41, 128, 185, 0.15);
+      color: #1a5276;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
     }
 
-    .header p {
-      font-size: 1.1rem;
-      opacity: 0.9;
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #2980b9;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #1a5276;
+      font-weight: 600;
     }
 
     /* 인트로 섹션 */
     .intro-section {
-      max-width: 900px;
-      margin: 0 auto 40px;
-      background: rgba(255,255,255,0.95);
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    }
-
-    .intro-section h2 {
-      color: #8d6e63;
-      font-size: 1.8rem;
-      margin-bottom: 20px;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      padding: 60px 30px;
+      pointer-events: auto;
+      text-align: center;
     }
 
-    .character-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 15px;
+    .intro-content {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      padding: 50px;
+      border-radius: 30px;
+      max-width: 800px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+    }
+
+    .intro-content h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .subtitle {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(41, 128, 185, 0.08);
+      padding: 25px;
+      border-radius: 16px;
       margin-bottom: 25px;
     }
 
-    .character-card {
-      background: linear-gradient(135deg, #8d6e63 0%, #a1887f 100%);
-      border-radius: 15px;
-      padding: 15px;
-      color: white;
-    }
-
-    .character-card h4 {
-      font-size: 1.1rem;
-      margin-bottom: 8px;
-    }
-
-    .character-card p {
-      font-size: 0.9rem;
-      opacity: 0.95;
-      line-height: 1.5;
-    }
-
-    .conflict {
-      background: linear-gradient(135deg, #558b2f 0%, #7cb342 100%);
-      border-radius: 15px;
-      padding: 20px;
-      color: white;
-    }
-
-    .conflict h3 {
-      margin-bottom: 15px;
-      font-size: 1.3rem;
-    }
-
-    .conflict p {
-      margin-bottom: 10px;
-      line-height: 1.6;
-    }
-
-    /* 카드 컨테이너 */
-    .cards-container {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 25px;
-    }
-
-    /* 스토리 카드 */
-    .story-card {
-      background: rgba(255,255,255,0.95);
-      border-radius: 20px;
-      padding: 25px 30px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border-left: 5px solid #8d6e63;
-    }
-
-    .story-card:nth-child(odd) {
-      margin-left: 0;
-      margin-right: auto;
-      width: 85%;
-    }
-
-    .story-card:nth-child(even) {
-      margin-left: auto;
-      margin-right: 0;
-      width: 85%;
-      border-left: none;
-      border-right: 5px solid #a1887f;
-    }
-
-    .story-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 50px rgba(0,0,0,0.4);
-    }
-
-    .story-card.active {
-      background: rgba(255,255,255,1);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .intro-content .characters h3 {
+      color: #2980b9;
+      font-size: 18px;
       margin-bottom: 15px;
     }
 
-    .part-number {
-      background: linear-gradient(135deg, #8d6e63 0%, #a1887f 100%);
-      color: white;
-      padding: 5px 15px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .expand-icon {
-      font-size: 1.5rem;
-      color: #8d6e63;
-      transition: transform 0.3s ease;
-    }
-
-    .story-card.active .expand-icon {
-      transform: rotate(180deg);
-    }
-
-    .card-title {
-      font-size: 1.4rem;
-      color: #2c3e50;
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-
-    .card-preview {
-      color: #666;
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-
-    .card-content {
-      display: none;
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-    }
-
-    .story-card.active .card-content {
-      display: block;
-    }
-
-    .card-content p {
-      color: #444;
-      font-size: 1rem;
+    .intro-content .characters p {
+      font-size: 14px;
+      color: #34495e;
       line-height: 1.8;
-      margin-bottom: 15px;
-      text-align: justify;
+      margin-bottom: 10px;
     }
 
-    /* 푸터 네비게이션 */
-    .footer-nav {
+    .intro-content .scroll-hint {
+      color: #2980b9;
+      font-size: 14px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: rgba(141, 110, 99, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 15px 20px;
+      bottom: 30px;
+      right: 30px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 100;
+      gap: 15px;
+      z-index: 1000;
     }
 
     .nav-btn {
-      background: white;
-      color: #8d6e63;
+      padding: 15px 30px;
+      background: rgba(41, 128, 185, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
       border: none;
-      padding: 10px 25px;
-      border-radius: 25px;
-      font-size: 0.95rem;
+      border-radius: 12px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
     }
 
     .nav-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      background: rgba(26, 82, 118, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(41, 128, 185, 0.4);
     }
 
-    .progress-indicator {
-      color: white;
-      font-weight: 600;
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      animation: bounce 2s infinite;
+      z-index: 100;
     }
 
-    /* 반응형 */
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+
+    .scroll-indicator svg {
+      width: 24px;
+      height: 24px;
+      transform: rotate(90deg);
+    }
+
     @media (max-width: 768px) {
-      .header h1 {
-        font-size: 1.8rem;
+      .story-section {
+        padding: 30px 20px;
       }
 
-      .story-card:nth-child(odd),
-      .story-card:nth-child(even) {
-        width: 100%;
-        margin: 0;
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
       }
 
-      .card-title {
-        font-size: 1.2rem;
+      .intro-content {
+        padding: 30px 20px;
       }
 
-      .character-grid {
-        grid-template-columns: 1fr;
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="background-container" id="bgContainer"></div>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
 
-  <div class="content-wrapper">
-    <header class="header">
-      <h1>🌾 조용한 시골 마을이 달라지기 시작한 이유</h1>
-      <p>논밭마을 소년 '도윤'과 할아버지의 들판이 깨어나는 이야기 — 농촌 변화와 지속 가능한 발전</p>
-    </header>
-
-    <!-- 인트로 섹션 -->
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
     <section class="intro-section">
-      <h2>🎭 등장인물 소개</h2>
-      <div class="character-grid">
-        <div class="character-card">
-          <h4>🧑 도윤 (주인공)</h4>
-          <p>열네 살 농촌 소년. 논밭마을에서 태어나 자랐지만 '이런 시골에 미래가 있을까'라며 도시로 떠나고 싶어 한다. 마을의 변화를 직접 경험하며 시골의 가능성을 재발견하는 여정의 중심.</p>
+      <div class="intro-content">
+        <h1>🌾 조용한 시골 마을이 달라지기 시작한 이유</h1>
+        <p class="subtitle">
+          논밭마을 소년 '도윤'과 할아버지의 들판이 깨어나는 이야기 — 농촌 변화와 지속 가능한 발전<br>
+          교과기반 창작도서
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🧑 도윤 (주인공):</strong> 열네 살 농촌 소년. 논밭마을에서 태어나 자랐지만 '이런 시골에 미래가 있을까'라며 도시로 떠나고 싶어 한다. 마을의 변화를 직접 경험하며 시골의 가능성을 재발견하는 여정의 중심.</p>
+          <p><strong>👴 할아버지 (전통 농부):</strong> 50년간 논밭마을에서 벼농사를 지어온 도윤의 할아버지. 손으로 모를 심고 낫으로 벼를 베는 전통 방식을 고수한다. 변화를 두려워하면서도 마을의 미래를 걱정하는 인물.</p>
+          <p><strong>👩‍💻 하나 누나 (귀농 청년):</strong> 서울에서 IT 회사를 다니다 논밭마을로 귀농한 스물여섯 살 청년. 드론과 센서로 스마트팜을 운영하며, 전통과 기술의 융합을 시도한다. 할아버지와 갈등하면서도 존경하는 인물.</p>
+          <p><strong>🏛️ 이장님 (마을 리더):</strong> 논밭마을 이장. 인구 감소와 고령화로 마을이 소멸할 위기에 처한 현실을 직시하며, 관광 산업과 도시 연결 프로젝트를 추진한다. 현실주의적이면서도 희망을 잃지 않는 리더.</p>
+          <p><strong>👧 서연 (도시 방문객):</strong> 서울에서 농촌 체험을 하러 온 도윤과 같은 나이의 소녀. 처음엔 시골을 답답해하지만, 마을의 매력에 빠져 매달 찾아오게 된다. 도시와 농촌을 잇는 다리 역할.</p>
+          <p><strong>🏘️ 논밭마을 자체 (변화의 무대):</strong> 충청도 어딘가의 작은 농촌 마을. 전성기 300가구에서 47가구로 줄었고, 평균 연령 68세. 소멸 직전이지만, 스마트 농업과 관광으로 새 생명을 얻어가는 살아있는 공간.</p>
         </div>
-        <div class="character-card">
-          <h4>👴 할아버지 (전통 농부)</h4>
-          <p>50년간 논밭마을에서 벼농사를 지어온 도윤의 할아버지. 손으로 모를 심고 낫으로 벼를 베는 전통 방식을 고수한다. 변화를 두려워하면서도 마을의 미래를 걱정하는 인물.</p>
-        </div>
-        <div class="character-card">
-          <h4>👩‍💻 하나 누나 (귀농 청년)</h4>
-          <p>서울에서 IT 회사를 다니다 논밭마을로 귀농한 스물여섯 살 청년. 드론과 센서로 스마트팜을 운영하며, 전통과 기술의 융합을 시도한다. 할아버지와 갈등하면서도 존경하는 인물.</p>
-        </div>
-        <div class="character-card">
-          <h4>🏛️ 이장님 (마을 리더)</h4>
-          <p>논밭마을 이장. 인구 감소와 고령화로 마을이 소멸할 위기에 처한 현실을 직시하며, 관광 산업과 도시 연결 프로젝트를 추진한다. 현실주의적이면서도 희망을 잃지 않는 리더.</p>
-        </div>
-        <div class="character-card">
-          <h4>👧 서연 (도시 방문객)</h4>
-          <p>서울에서 농촌 체험을 하러 온 도윤과 같은 나이의 소녀. 처음엔 시골을 답답해하지만, 마을의 매력에 빠져 매달 찾아오게 된다. 도시와 농촌을 잇는 다리 역할.</p>
-        </div>
-        <div class="character-card">
-          <h4>🏘️ 논밭마을 자체 (변화의 무대)</h4>
-          <p>충청도 어딘가의 작은 농촌 마을. 전성기 300가구에서 47가구로 줄었고, 평균 연령 68세. 소멸 직전이지만, 스마트 농업과 관광으로 새 생명을 얻어가는 살아있는 공간.</p>
-        </div>
-      </div>
-
-      <div class="conflict">
-        <h3>⚔️ 갈등 구조</h3>
-        <p><strong>🌾 전통 vs 혁신:</strong> 낫으로 벼 베는 할아버지 vs 드론으로 농약 뿌리는 하나 누나의 세대 갈등</p>
-        <p><strong>🏃 떠남 vs 남음:</strong> '시골에 미래 없다'며 도시로 떠나려는 도윤의 내면 갈등</p>
-        <p><strong>📉 소멸 위기:</strong> 300가구에서 47가구로 줄어든 마을, 폐교 직전의 학교, 빈집의 적막</p>
-        <p><strong>🛣️ 빨대 효과:</strong> 고속도로가 기회를 가져오면서 동시에 마을의 자원을 도시로 빼앗아가는 역설</p>
-        <p><strong>🤝 개인 농사 vs 공동체 경제:</strong> 각자 생존에서 협동조합 공동 운영으로 전환하는 과정의 갈등</p>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
       </div>
     </section>
 
-    <div class="cards-container">
-      <!-- Part 1 -->
-      <article class="story-card" data-part="1" data-bg="/images/창작도서/창작지리05/01.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 1</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">🌾 전통 농업 — 할아버지의 논에서 일어나는 새벽 네 시의 기적</h3>
-        <p class="card-preview">논밭마을의 새벽은 네 시에 시작되었습니다. 할아버지가 마당에서 기지개를 켜고, 고무 장화를 신고...</p>
-        <div class="card-content">
-          <p>논밭마을의 새벽은 네 시에 시작되었습니다. 할아버지가 마당에서 기지개를 켜고, 고무 장화를 신고, 논으로 향하는 소리에 도윤은 매일 잠에서 깼습니다. 할아버지는 50년 동안 이 논에서 벼를 길렀습니다. 봄에 씨앗을 뿌리고 모판을 만들고, 초여름에 모내기를 하고, 여름 내내 물 관리와 잡초를 잡고, 가을에 황금빛 벼를 거두는 한 해의 순환. 그것이 할아버지의 삶 전부였습니다. "도윤아, 논에 물이 제대로 들어가는지 확인 좀 해라." 할아버지의 목소리에 도윤은 귀찮은 표정으로 논둑을 걸었습니다.</p>
-          <p>발밑의 진흙이 질척거렸고, 모기가 윙윙거렸습니다. 도윤에게 농사란 힘들고, 더럽고, 돈이 안 되는 일이었습니다. "할아버지, 쌀 한 가마 팔면 얼마 받으세요?" "올해는 한 가마에 이십만 원쯤 될까..." 도윤은 계산을 해보았습니다. 할아버지의 논에서 나오는 벼는 약 60가마. 일 년 수입이 1,200만 원 남짓이었습니다. 비료값, 농약값, 농기계 유지비를 빼면 남는 것은 더 줄었지요. "이렇게 힘들게 일해서 이것밖에 안 되는 거예요?" 할아버지는 묵묵히 논을 바라보며 말했습니다.</p>
-          <p>"돈으로만 따지면 그렇지. 하지만 이 논에서 나는 쌀로 우리 가족이 먹고, 동네 사람들이 먹고, 도시 사람들이 밥을 짓는단다. 농사는 생명을 기르는 일이야." 할아버지의 말에는 자부심이 있었지만, 도윤의 눈에는 피곤함만 보였습니다. 동네 친구들은 하나둘 도시로 떠났고, 남은 것은 텅 빈 교실과 늙어가는 어른들뿐이었습니다. 도윤도 빨리 이 마을을 떠나고 싶었습니다. 하지만 아직 모르고 있었습니다. 이 조용한 마을이 곧 크게 달라지리라는 것을.</p>
-        </div>
-      </article>
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">🌾 전통 농업</span>
+        <h2>할아버지의 논에서 일어나는 새벽 네 시의 기적</h2>
+        <p>논밭마을의 새벽은 네 시에 시작되었습니다. 할아버지가 마당에서 기지개를 켜고, 고무 장화를 신고, 논으로 향하는 소리에 도윤은 매일 잠에서 깼습니다. 할아버지는 50년 동안 이 논에서 벼를 길렀습니다. 봄에 씨앗을 뿌리고 모판을 만들고, 초여름에 모내기를 하고, 여름 내내 물 관리와 잡초를 잡고, 가을에 황금빛 벼를 거두는 한 해의 순환. 그것이 할아버지의 삶 전부였습니다. "도윤아, 논에 물이 제대로 들어가는지 확인 좀 해라." 할아버지의 목소리에 도윤은 귀찮은 표정으로 논둑을 걸었습니다.</p>
+        <p>발밑의 진흙이 질척거렸고, 모기가 윙윙거렸습니다. 도윤에게 농사란 힘들고, 더럽고, 돈이 안 되는 일이었습니다. "할아버지, 쌀 한 가마 팔면 얼마 받으세요?" "올해는 한 가마에 이십만 원쯤 될까..." 도윤은 계산을 해보았습니다. 할아버지의 논에서 나오는 벼는 약 60가마. 일 년 수입이 1,200만 원 남짓이었습니다. 비료값, 농약값, 농기계 유지비를 빼면 남는 것은 더 줄었지요. "이렇게 힘들게 일해서 이것밖에 안 되는 거예요?" 할아버지는 묵묵히 논을 바라보며 말했습니다.</p>
+        <p>"돈으로만 따지면 그렇지. 하지만 이 논에서 나는 쌀로 우리 가족이 먹고, 동네 사람들이 먹고, 도시 사람들이 밥을 짓는단다. 농사는 생명을 기르는 일이야." 할아버지의 말에는 자부심이 있었지만, 도윤의 눈에는 피곤함만 보였습니다. 동네 친구들은 하나둘 도시로 떠났고, 남은 것은 텅 빈 교실과 늙어가는 어른들뿐이었습니다. 도윤도 빨리 이 마을을 떠나고 싶었습니다. 하지만 아직 모르고 있었습니다. 이 조용한 마을이 곧 크게 달라지리라는 것을.</p>
+      </div>
+    </section>
 
-      <!-- Part 2 -->
-      <article class="story-card" data-part="2" data-bg="/images/창작도서/창작지리05/02.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 2</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">📉 인구 감소 — 마을에서 아이 울음소리가 사라진 날</h3>
-        <p class="card-preview">도윤이 다니는 논밭초등학교에는 전교생이 12명뿐이었습니다. 도윤의 반은 학생이 3명이었고...</p>
-        <div class="card-content">
-          <p>도윤이 다니는 논밭초등학교에는 전교생이 12명뿐이었습니다. 도윤의 반은 학생이 3명이었고, 6학년은 아예 0명이라 반 자체가 없었습니다. 올해 입학식에는 신입생이 단 1명이었고, 그마저도 다음 해에는 0명이 될 거라는 소문이 돌았습니다. "내년에 신입생이 없으면 학교가 폐교될 수도 있어." 담임선생님이 조회 시간에 말씀하셨을 때, 아이들의 눈이 동그래졌습니다. 논밭마을의 인구 변화는 충격적이었습니다. 1970년대에는 300가구, 약 1,500명이 살았습니다. 마을에는 이발소, 약국, 목욕탕, 정미소, 잡화점이 모두 있었지요.</p>
-          <p>하지만 산업화가 시작되면서 젊은이들이 공장이 있는 도시로 떠나기 시작했습니다. 1990년대에는 150가구로 줄었고, 2000년대에는 80가구, 현재는 47가구에 128명만 남았습니다. 주민의 평균 연령은 68세. 마을에서 가장 젊은 어른이 쉰두 살이었습니다. 이장님이 마을 회관에서 한숨을 쉬며 말했습니다. "전국의 읍면 지역 중 30퍼센트 이상이 소멸 위험 지역으로 분류되어 있어. 우리 마을도 그중 하나지.</p>
-          <p>이대로 가면 20년 후에는 이 마을이 지도에서 사라질 수도 있어." 도윤은 자신이 태어나고 자란 마을이 '소멸'한다는 말에 이상한 감정을 느꼈습니다. 떠나고 싶다고 생각했으면서도, 마을이 사라진다고 하니 가슴 한구석이 쓸렸습니다. 빈집이 늘어나고, 논이 황무지로 변하고, 학교가 문을 닫는 시골의 현실. 그것은 단순한 통계가 아니라, 도윤의 일상이 사라지는 것을 의미했습니다. 아이 울음소리가 사라진 마을, 그 적막함 속에서 무언가 달라져야 한다는 절박함이 자라고 있었습니다.</p>
-        </div>
-      </article>
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">📉 인구 감소</span>
+        <h2>마을에서 아이 울음소리가 사라진 날</h2>
+        <p>도윤이 다니는 논밭초등학교에는 전교생이 12명뿐이었습니다. 도윤의 반은 학생이 3명이었고, 6학년은 아예 0명이라 반 자체가 없었습니다. 올해 입학식에는 신입생이 단 1명이었고, 그마저도 다음 해에는 0명이 될 거라는 소문이 돌았습니다. "내년에 신입생이 없으면 학교가 폐교될 수도 있어." 담임선생님이 조회 시간에 말씀하셨을 때, 아이들의 눈이 동그래졌습니다. 논밭마을의 인구 변화는 충격적이었습니다. 1970년대에는 300가구, 약 1,500명이 살았습니다. 마을에는 이발소, 약국, 목욕탕, 정미소, 잡화점이 모두 있었지요.</p>
+        <p>하지만 산업화가 시작되면서 젊은이들이 공장이 있는 도시로 떠나기 시작했습니다. 1990년대에는 150가구로 줄었고, 2000년대에는 80가구, 현재는 47가구에 128명만 남았습니다. 주민의 평균 연령은 68세. 마을에서 가장 젊은 어른이 쉰두 살이었습니다. 이장님이 마을 회관에서 한숨을 쉬며 말했습니다. "전국의 읍면 지역 중 30퍼센트 이상이 소멸 위험 지역으로 분류되어 있어. 우리 마을도 그중 하나지.</p>
+        <p>이대로 가면 20년 후에는 이 마을이 지도에서 사라질 수도 있어." 도윤은 자신이 태어나고 자란 마을이 '소멸'한다는 말에 이상한 감정을 느꼈습니다. 떠나고 싶다고 생각했으면서도, 마을이 사라진다고 하니 가슴 한구석이 쓸렸습니다. 빈집이 늘어나고, 논이 황무지로 변하고, 학교가 문을 닫는 시골의 현실. 그것은 단순한 통계가 아니라, 도윤의 일상이 사라지는 것을 의미했습니다. 아이 울음소리가 사라진 마을, 그 적막함 속에서 무언가 달라져야 한다는 절박함이 자라고 있었습니다.</p>
+      </div>
+    </section>
 
-      <!-- Part 3 -->
-      <article class="story-card" data-part="3" data-bg="/images/창작도서/창작지리05/03.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 3</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">🍓 산업 변화 — 논에서 딸기를, 밭에서 카페를</h3>
-        <p class="card-preview">봄이 오자, 마을에 작은 변화가 나타나기 시작했습니다. 오랫동안 비어 있던 마을 입구의 빈 밭에...</p>
-        <div class="card-content">
-          <p>봄이 오자, 마을에 작은 변화가 나타나기 시작했습니다. 오랫동안 비어 있던 마을 입구의 빈 밭에 유리 온실이 세워진 것입니다. 이장님의 주도로 시작된 '딸기 체험 농장'이었습니다. "벼농사만으로는 안 된다는 걸 다들 알잖아." 이장님이 마을 회의에서 말했습니다. "쌀 소비량은 매년 줄고 있어. 1인당 연간 쌀 소비량이 1970년에 136킬로그램이었는데, 지금은 57킬로그램이야. 절반 이하로 줄었지. 쌀값은 떨어지는데 비용은 오르고, 이대로는 농사가 성립이 안 돼." 그래서 이장님은 고부가가치 작물로의 전환을 제안했습니다.</p>
-          <p>벼 대신 딸기, 블루베리, 토마토 같은 과일 농사를 짓고, 도시 사람들이 직접 따먹을 수 있는 체험형 농장으로 만드는 것이었습니다. 할아버지는 반대했습니다. "논에서 벼를 기르지 않으면 그게 무슨 농사야. 조상 대대로 이어온 것을 바꾸다니." 할아버지와 이장님 사이에 긴장감이 흘렀습니다. 전통을 지키려는 마음과 변해야 살아남는다는 현실 사이의 갈등이었습니다. 한편, 마을의 빈집 한 채가 감각적인 카페로 변신했습니다.</p>
-          <p>이장님의 딸이 도시에서 바리스타 경험을 살려 오픈한 '논밭 카페'였습니다. 한옥 구조를 살리면서 내부를 현대적으로 꾸민 이 카페는 SNS에서 입소문을 타기 시작했습니다. 도윤은 마을이 변하는 모습을 신기하게 바라보았습니다. 논에서 딸기가 자라고, 빈집에서 커피 향이 나고, 낯선 사람들이 마을을 찾아오기 시작한 것입니다. 산업의 변화는 마을의 표정을 바꾸고 있었습니다. 물론 그 변화가 모두에게 환영받는 것은 아니었지만요.</p>
-        </div>
-      </article>
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">🍓 산업 변화</span>
+        <h2>논에서 딸기를, 밭에서 카페를</h2>
+        <p>봄이 오자, 마을에 작은 변화가 나타나기 시작했습니다. 오랫동안 비어 있던 마을 입구의 빈 밭에 유리 온실이 세워진 것입니다. 이장님의 주도로 시작된 '딸기 체험 농장'이었습니다. "벼농사만으로는 안 된다는 걸 다들 알잖아." 이장님이 마을 회의에서 말했습니다. "쌀 소비량은 매년 줄고 있어. 1인당 연간 쌀 소비량이 1970년에 136킬로그램이었는데, 지금은 57킬로그램이야. 절반 이하로 줄었지. 쌀값은 떨어지는데 비용은 오르고, 이대로는 농사가 성립이 안 돼." 그래서 이장님은 고부가가치 작물로의 전환을 제안했습니다.</p>
+        <p>벼 대신 딸기, 블루베리, 토마토 같은 과일 농사를 짓고, 도시 사람들이 직접 따먹을 수 있는 체험형 농장으로 만드는 것이었습니다. 할아버지는 반대했습니다. "논에서 벼를 기르지 않으면 그게 무슨 농사야. 조상 대대로 이어온 것을 바꾸다니." 할아버지와 이장님 사이에 긴장감이 흘렀습니다. 전통을 지키려는 마음과 변해야 살아남는다는 현실 사이의 갈등이었습니다. 한편, 마을의 빈집 한 채가 감각적인 카페로 변신했습니다.</p>
+        <p>이장님의 딸이 도시에서 바리스타 경험을 살려 오픈한 '논밭 카페'였습니다. 한옥 구조를 살리면서 내부를 현대적으로 꾸민 이 카페는 SNS에서 입소문을 타기 시작했습니다. 도윤은 마을이 변하는 모습을 신기하게 바라보았습니다. 논에서 딸기가 자라고, 빈집에서 커피 향이 나고, 낯선 사람들이 마을을 찾아오기 시작한 것입니다. 산업의 변화는 마을의 표정을 바꾸고 있었습니다. 물론 그 변화가 모두에게 환영받는 것은 아니었지만요.</p>
+      </div>
+    </section>
 
-      <!-- Part 4 -->
-      <article class="story-card" data-part="4" data-bg="/images/창작도서/창작지리05/04.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 4</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">🛣️ 교통 발달 — 고속도로가 뚫리자, 세상이 가까워졌다</h3>
-        <p class="card-preview">논밭마을이 변하기 시작한 결정적 계기는 교통의 변화였습니다. 2년 전, 마을에서 20분 거리에...</p>
-        <div class="card-content">
-          <p>논밭마을이 변하기 시작한 결정적 계기는 교통의 변화였습니다. 2년 전, 마을에서 20분 거리에 고속도로 나들목이 새로 생겼습니다. 서울에서 논밭마을까지 4시간이 걸리던 것이 1시간 40분으로 줄어든 것입니다. "예전에는 이 마을에 오려면 꼬불꼬불한 국도를 몇 시간이나 달려야 했어." 이장님이 말했습니다. "그러니 누가 시골에 오겠어. 하지만 고속도로가 뚫리면서 상황이 달라졌지." 교통의 발달은 마을의 '접근성'을 바꿨습니다. 접근성이란 한 장소에 얼마나 쉽게 도달할 수 있느냐의 척도였습니다.</p>
-          <p>고속도로 나들목이 생기면서 논밭마을의 접근성은 극적으로 향상되었고, 이것이 도시 사람들의 방문으로 이어진 것입니다. 하지만 교통 발달에는 양면이 있었습니다. 도시 사람들이 시골에 올 수 있게 된 만큼, 시골 사람들도 도시로 더 쉽게 떠날 수 있게 된 것입니다. 마을의 젊은 어머니 한 분이 말했습니다. "도로가 좋아져서 좋지만, 우리 마을 대형 마트가 문을 닫았어요. 다들 도시 마트로 가버리니까." 이것을 '빨대 효과'라고 했습니다.</p>
-          <p>교통이 발달하면 작은 지역의 소비와 인구가 큰 도시로 빨려 나가는 현상이었습니다. 도윤은 학교 수업에서 이 개념을 배우며 복잡한 심정이 되었습니다. 고속도로는 마을에 기회를 가져다주기도 했지만, 동시에 마을의 것을 빼앗아가기도 했습니다. 칼날의 양면 같은 교통 발달. 중요한 것은 도로가 뚫린다는 사실 자체가 아니라, 그 도로를 어떻게 활용하느냐였습니다. 마을로 들어오는 차보다 나가는 차가 더 많다면, 고속도로는 축복이 아니라 유출의 통로가 될 수 있었습니다.</p>
-        </div>
-      </article>
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">🛣️ 교통 발달</span>
+        <h2>고속도로가 뚫리자, 세상이 가까워졌다</h2>
+        <p>논밭마을이 변하기 시작한 결정적 계기는 교통의 변화였습니다. 2년 전, 마을에서 20분 거리에 고속도로 나들목이 새로 생겼습니다. 서울에서 논밭마을까지 4시간이 걸리던 것이 1시간 40분으로 줄어든 것입니다. "예전에는 이 마을에 오려면 꼬불꼬불한 국도를 몇 시간이나 달려야 했어." 이장님이 말했습니다. "그러니 누가 시골에 오겠어. 하지만 고속도로가 뚫리면서 상황이 달라졌지." 교통의 발달은 마을의 '접근성'을 바꿨습니다. 접근성이란 한 장소에 얼마나 쉽게 도달할 수 있느냐의 척도였습니다.</p>
+        <p>고속도로 나들목이 생기면서 논밭마을의 접근성은 극적으로 향상되었고, 이것이 도시 사람들의 방문으로 이어진 것입니다. 하지만 교통 발달에는 양면이 있었습니다. 도시 사람들이 시골에 올 수 있게 된 만큼, 시골 사람들도 도시로 더 쉽게 떠날 수 있게 된 것입니다. 마을의 젊은 어머니 한 분이 말했습니다. "도로가 좋아져서 좋지만, 우리 마을 대형 마트가 문을 닫았어요. 다들 도시 마트로 가버리니까." 이것을 '빨대 효과'라고 했습니다.</p>
+        <p>교통이 발달하면 작은 지역의 소비와 인구가 큰 도시로 빨려 나가는 현상이었습니다. 도윤은 학교 수업에서 이 개념을 배우며 복잡한 심정이 되었습니다. 고속도로는 마을에 기회를 가져다주기도 했지만, 동시에 마을의 것을 빼앗아가기도 했습니다. 칼날의 양면 같은 교통 발달. 중요한 것은 도로가 뚫린다는 사실 자체가 아니라, 그 도로를 어떻게 활용하느냐였습니다. 마을로 들어오는 차보다 나가는 차가 더 많다면, 고속도로는 축복이 아니라 유출의 통로가 될 수 있었습니다.</p>
+      </div>
+    </section>
 
-      <!-- Part 5 -->
-      <article class="story-card" data-part="5" data-bg="/images/창작도서/창작지리05/05.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 5</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">🎪 관광 산업 — 도시 소녀 서연이가 '또 올게요'라고 한 이유</h3>
-        <p class="card-preview">주말, 논밭마을에 관광 버스 한 대가 도착했습니다. 서울에서 온 '농촌 체험 프로그램' 참가자 30명이었습니다...</p>
-        <div class="card-content">
-          <p>주말, 논밭마을에 관광 버스 한 대가 도착했습니다. 서울에서 온 '농촌 체험 프로그램' 참가자 30명이었습니다. 그중에 도윤과 같은 나이의 소녀 서연이가 있었습니다. 서연이는 내리자마자 얼굴을 찡그렸습니다. "냄새... 이게 무슨 냄새야?" "퇴비 냄새야. 농촌이니까." 도윤이 무뚝뚝하게 대답했습니다. 첫인상은 최악이었지만, 체험이 시작되자 서연이의 표정이 바뀌기 시작했습니다. 직접 딸기를 따먹을 때, 빨갛게 익은 딸기의 달콤함에 탄성을 질렀습니다. 논에 들어가 맨발로 진흙을 밟을 때, 시원한 감촉에 깔깔 웃었습니다.</p>
-          <p>두부를 직접 만들고, 가마솥에 밥을 짓고, 별이 쏟아지는 밤하늘을 올려다볼 때, 서연이의 눈에서 처음 보는 빛이 반짝였습니다. "서울에서는 별이 안 보이거든. 이렇게 많은 별은 처음이야." 이장님은 관광 산업의 전략을 설명해 주었습니다. "농촌 관광은 단순히 경치를 보러 오는 게 아니야. 도시 사람들이 경험할 수 없는 것을 제공하는 거지. 직접 농사 체험, 전통 음식 만들기, 자연 속 힐링. 이것을 '체험 경제'라고 해." 논밭마을의 관광 수입은 첫해에 2천만 원이었지만, 2년 만에 1억 원을 넘었습니다.</p>
-          <p>논밭 카페는 주말마다 줄을 서야 했고, 딸기 체험 농장은 예약이 두 달 치가 밀려 있었습니다. 서연이가 돌아가며 말했습니다. "또 올게요. 진짜로!" 그 말에 도윤은 뜻밖의 뿌듯함을 느꼈습니다. 자신이 시시하다고 생각했던 마을이, 다른 누군가에게는 특별한 경험이었던 것입니다. 관광은 마을에 돈만 가져다준 것이 아니라, 마을에 대한 자부심도 함께 가져다주었습니다.</p>
-        </div>
-      </article>
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">🎪 관광 산업</span>
+        <h2>도시 소녀 서연이가 '또 올게요'라고 한 이유</h2>
+        <p>주말, 논밭마을에 관광 버스 한 대가 도착했습니다. 서울에서 온 '농촌 체험 프로그램' 참가자 30명이었습니다. 그중에 도윤과 같은 나이의 소녀 서연이가 있었습니다. 서연이는 내리자마자 얼굴을 찡그렸습니다. "냄새... 이게 무슨 냄새야?" "퇴비 냄새야. 농촌이니까." 도윤이 무뚝뚝하게 대답했습니다. 첫인상은 최악이었지만, 체험이 시작되자 서연이의 표정이 바뀌기 시작했습니다. 직접 딸기를 따먹을 때, 빨갛게 익은 딸기의 달콤함에 탄성을 질렀습니다. 논에 들어가 맨발로 진흙을 밟을 때, 시원한 감촉에 깔깔 웃었습니다.</p>
+        <p>두부를 직접 만들고, 가마솥에 밥을 짓고, 별이 쏟아지는 밤하늘을 올려다볼 때, 서연이의 눈에서 처음 보는 빛이 반짝였습니다. "서울에서는 별이 안 보이거든. 이렇게 많은 별은 처음이야." 이장님은 관광 산업의 전략을 설명해 주었습니다. "농촌 관광은 단순히 경치를 보러 오는 게 아니야. 도시 사람들이 경험할 수 없는 것을 제공하는 거지. 직접 농사 체험, 전통 음식 만들기, 자연 속 힐링. 이것을 '체험 경제'라고 해." 논밭마을의 관광 수입은 첫해에 2천만 원이었지만, 2년 만에 1억 원을 넘었습니다.</p>
+        <p>논밭 카페는 주말마다 줄을 서야 했고, 딸기 체험 농장은 예약이 두 달 치가 밀려 있었습니다. 서연이가 돌아가며 말했습니다. "또 올게요. 진짜로!" 그 말에 도윤은 뜻밖의 뿌듯함을 느꼈습니다. 자신이 시시하다고 생각했던 마을이, 다른 누군가에게는 특별한 경험이었던 것입니다. 관광은 마을에 돈만 가져다준 것이 아니라, 마을에 대한 자부심도 함께 가져다주었습니다.</p>
+      </div>
+    </section>
 
-      <!-- Part 6 -->
-      <article class="story-card" data-part="6" data-bg="/images/창작도서/창작지리05/06.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 6</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">🤖 스마트 농업 — 드론이 논 위를 날고, 센서가 흙을 읽다</h3>
-        <p class="card-preview">어느 아침, 도윤은 논에서 이상한 소리를 들었습니다. 윙윙거리는 기계음. 논 위로 하얀 드론이...</p>
-        <div class="card-content">
-          <p>어느 아침, 도윤은 논에서 이상한 소리를 들었습니다. 윙윙거리는 기계음. 논 위로 하얀 드론이 날아다니며 무언가를 뿌리고 있었습니다. "저건 뭐야?" 도윤이 달려갔을 때, 드론의 조종기를 들고 있는 사람은 하나 누나였습니다. 하나 누나는 3개월 전 논밭마을에 귀농한 젊은 여성이었습니다. 서울의 IT 회사에서 프로그래머로 일하다가, 기술을 농업에 접목하겠다는 꿈을 품고 시골로 온 것입니다. "이건 농약 살포 드론이야. 사람이 배낭식 분무기를 지고 논을 돌아다니면 하루 종일 걸리는 일을, 드론은 30분이면 해." 도윤은 눈이 동그래졌습니다.</p>
-          <p>누나의 농장에는 더 놀라운 것들이 있었습니다. 논에 설치된 토양 수분 센서가 실시간으로 데이터를 보내 스마트폰으로 물 관리를 했습니다. 온실에는 자동 환기 시스템과 양액 공급 장치가 달려 있었고, 작물의 성장 상태를 카메라가 모니터링했습니다. "이것이 스마트팜이야. 사물인터넷(IoT), 인공지능(AI), 빅데이터를 농업에 적용하는 거지. 기온, 습도, 토양 상태를 데이터로 분석해서 최적의 농사를 짓는 거야." 할아버지는 드론을 올려다보며 불편한 표정이었습니다.</p>
-          <p>"저런 기계가 농사를 짓는다고? 땅에 발을 딛고 흙을 만져봐야 진짜 농사지." 하나 누나가 조심스럽게 다가갔습니다. "할아버지, 기계가 농사를 대신하는 게 아니에요. 할아버지 50년의 경험에 기술을 더하는 거예요. 할아버지가 하늘을 보고 비 올 날을 아시잖아요. 저는 그 감각을 데이터로 보충하는 거예요." 전통과 기술, 경험과 데이터. 둘은 대립하는 것이 아니라 함께할 때 더 강해질 수 있었습니다.</p>
-        </div>
-      </article>
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">🤖 스마트 농업</span>
+        <h2>드론이 논 위를 날고, 센서가 흙을 읽다</h2>
+        <p>어느 아침, 도윤은 논에서 이상한 소리를 들었습니다. 윙윙거리는 기계음. 논 위로 하얀 드론이 날아다니며 무언가를 뿌리고 있었습니다. "저건 뭐야?" 도윤이 달려갔을 때, 드론의 조종기를 들고 있는 사람은 하나 누나였습니다. 하나 누나는 3개월 전 논밭마을에 귀농한 젊은 여성이었습니다. 서울의 IT 회사에서 프로그래머로 일하다가, 기술을 농업에 접목하겠다는 꿈을 품고 시골로 온 것입니다. "이건 농약 살포 드론이야. 사람이 배낭식 분무기를 지고 논을 돌아다니면 하루 종일 걸리는 일을, 드론은 30분이면 해." 도윤은 눈이 동그래졌습니다.</p>
+        <p>누나의 농장에는 더 놀라운 것들이 있었습니다. 논에 설치된 토양 수분 센서가 실시간으로 데이터를 보내 스마트폰으로 물 관리를 했습니다. 온실에는 자동 환기 시스템과 양액 공급 장치가 달려 있었고, 작물의 성장 상태를 카메라가 모니터링했습니다. "이것이 스마트팜이야. 사물인터넷(IoT), 인공지능(AI), 빅데이터를 농업에 적용하는 거지. 기온, 습도, 토양 상태를 데이터로 분석해서 최적의 농사를 짓는 거야." 할아버지는 드론을 올려다보며 불편한 표정이었습니다.</p>
+        <p>"저런 기계가 농사를 짓는다고? 땅에 발을 딛고 흙을 만져봐야 진짜 농사지." 하나 누나가 조심스럽게 다가갔습니다. "할아버지, 기계가 농사를 대신하는 게 아니에요. 할아버지 50년의 경험에 기술을 더하는 거예요. 할아버지가 하늘을 보고 비 올 날을 아시잖아요. 저는 그 감각을 데이터로 보충하는 거예요." 전통과 기술, 경험과 데이터. 둘은 대립하는 것이 아니라 함께할 때 더 강해질 수 있었습니다.</p>
+      </div>
+    </section>
 
-      <!-- Part 7 -->
-      <article class="story-card" data-part="7" data-bg="/images/창작도서/창작지리05/07.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 7</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">🤝 공동체 변화 — 사라지는 두레, 새로 태어나는 협동조합</h3>
-        <p class="card-preview">할아버지는 가끔 옛날이야기를 해주셨습니다. "예전에는 모내기 철이면 마을 전체가 함께 일했단다..."</p>
-        <div class="card-content">
-          <p>할아버지는 가끔 옛날이야기를 해주셨습니다. "예전에는 모내기 철이면 마을 전체가 함께 일했단다. '두레'라고 해서, 온 마을 사람들이 논을 돌아가며 함께 심고, 함께 거두었지. 일이 끝나면 풍물을 치며 잔치를 벌이기도 했어." 두레는 한국 농촌의 전통적인 공동 노동 조직이었습니다. 혼자서는 할 수 없는 큰 일을 마을 공동체가 힘을 합쳐 해내는 상부상조의 정신이었지요. 하지만 기계화와 인구 감소로 두레는 사라진 지 오래였습니다. "이제는 각자 기계로 농사짓고, 서로 만날 일도 별로 없어." 할아버지의 목소리에 쓸쓸함이 묻어났습니다.</p>
-          <p>하지만 공동체의 정신이 완전히 사라진 것은 아니었습니다. 이장님과 하나 누나가 '논밭마을 영농 협동조합'을 설립한 것입니다. 마을 주민들이 출자하여 만든 이 조합은 개인이 따로 농사짓는 것이 아니라, 함께 작물을 재배하고 공동 브랜드로 판매하는 구조였습니다. "쌀을 개인이 따로 팔면 협상력이 없어요. 하지만 마을 전체가 하나의 브랜드로 팔면 가격 경쟁력이 생기지요." 하나 누나가 설명했습니다. 협동조합은 딸기 체험 농장과 논밭 카페도 공동 운영했고, 수익은 마을 공동기금으로 활용되었습니다.</p>
-          <p>마을 경로당 리모델링, 어르신 건강 관리, 마을 축제 운영까지. 돈이 마을 안에서 순환하기 시작한 것입니다. "옛날 두레가 노동을 나눈 거라면, 협동조합은 경제를 나누는 거야." 이장님이 말했습니다. 형태는 달라졌지만, 함께한다는 정신은 같았습니다. 사라진 두레의 정신이 협동조합이라는 새 옷을 입고 부활한 것이었습니다. 도윤은 마을 사람들이 다시 모여 웃고 떠드는 모습을 보며, 공동체가 살아 있는 한 마을도 살아 있다는 것을 느꼈습니다.</p>
-        </div>
-      </article>
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">🤝 공동체 변화</span>
+        <h2>사라지는 두레, 새로 태어나는 협동조합</h2>
+        <p>할아버지는 가끔 옛날이야기를 해주셨습니다. "예전에는 모내기 철이면 마을 전체가 함께 일했단다. '두레'라고 해서, 온 마을 사람들이 논을 돌아가며 함께 심고, 함께 거두었지. 일이 끝나면 풍물을 치며 잔치를 벌이기도 했어." 두레는 한국 농촌의 전통적인 공동 노동 조직이었습니다. 혼자서는 할 수 없는 큰 일을 마을 공동체가 힘을 합쳐 해내는 상부상조의 정신이었지요. 하지만 기계화와 인구 감소로 두레는 사라진 지 오래였습니다. "이제는 각자 기계로 농사짓고, 서로 만날 일도 별로 없어." 할아버지의 목소리에 쓸쓸함이 묻어났습니다.</p>
+        <p>하지만 공동체의 정신이 완전히 사라진 것은 아니었습니다. 이장님과 하나 누나가 '논밭마을 영농 협동조합'을 설립한 것입니다. 마을 주민들이 출자하여 만든 이 조합은 개인이 따로 농사짓는 것이 아니라, 함께 작물을 재배하고 공동 브랜드로 판매하는 구조였습니다. "쌀을 개인이 따로 팔면 협상력이 없어요. 하지만 마을 전체가 하나의 브랜드로 팔면 가격 경쟁력이 생기지요." 하나 누나가 설명했습니다. 협동조합은 딸기 체험 농장과 논밭 카페도 공동 운영했고, 수익은 마을 공동기금으로 활용되었습니다.</p>
+        <p>마을 경로당 리모델링, 어르신 건강 관리, 마을 축제 운영까지. 돈이 마을 안에서 순환하기 시작한 것입니다. "옛날 두레가 노동을 나눈 거라면, 협동조합은 경제를 나누는 거야." 이장님이 말했습니다. 형태는 달라졌지만, 함께한다는 정신은 같았습니다. 사라진 두레의 정신이 협동조합이라는 새 옷을 입고 부활한 것이었습니다. 도윤은 마을 사람들이 다시 모여 웃고 떠드는 모습을 보며, 공동체가 살아 있는 한 마을도 살아 있다는 것을 느꼈습니다.</p>
+      </div>
+    </section>
 
-      <!-- Part 8 -->
-      <article class="story-card" data-part="8" data-bg="/images/창작도서/창작지리05/08.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 8</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">📦 도시와 연결 — 택배 한 상자가 만드는 천 킬로미터의 인연</h3>
-        <p class="card-preview">하나 누나의 제안으로 논밭마을은 온라인 직거래를 시작했습니다. '논밭마을 꾸러미'라는 이름으로...</p>
-        <div class="card-content">
-          <p>하나 누나의 제안으로 논밭마을은 온라인 직거래를 시작했습니다. '논밭마을 꾸러미'라는 이름으로, 매달 제철 농산물을 상자에 담아 도시 소비자에게 직접 보내는 것이었습니다. 첫 달에는 딸기와 쌀, 두부를 담았고, 여름에는 토마토와 옥수수, 가을에는 햅쌀과 고구마가 들어갔습니다. "도시 마트에서 우리 쌀을 팔면 농가에 돌아오는 돈은 판매 가격의 30퍼센트도 안 돼요." 하나 누나가 설명했습니다. "유통 과정에서 중간 상인, 물류 비용, 마진이 빠지니까요.</p>
-          <p>하지만 직거래를 하면 90퍼센트 이상이 농가에 돌아와요." 할아버지가 정성껏 키운 쌀이 예쁜 상자에 담겨 서울의 아파트로 배달되었습니다. 상자 안에는 할아버지의 손 편지도 함께 넣었습니다. '이 쌀은 논밭마을 이종태가 50년 경력으로 지은 쌀입니다. 맛있게 드십시오.' 서울의 한 가정에서 답장이 왔습니다. '할아버지, 이렇게 맛있는 쌀은 처음이에요. 다음 달 꾸러미도 기다리겠습니다.' 할아버지의 눈이 젖었습니다.</p>
-          <p>자신의 쌀을 먹고 행복해하는 사람이 있다는 것, 이름 모를 도시의 누군가와 쌀 한 포대로 연결되어 있다는 것. 그것은 택배 상자 하나가 만들어 준 천 킬로미터의 인연이었습니다. 서연이도 꾸러미를 신청했고, 매달 편지를 동봉했습니다. 도윤은 서연이의 편지를 읽으며 웃음 짓는 할아버지를 보았습니다. 도시와 농촌은 멀리 떨어져 있지만, 기술과 마음이 연결하면 이웃이 될 수 있었습니다. 인터넷과 택배가 만든 새로운 시대의 상부상조였습니다.</p>
-        </div>
-      </article>
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">📦 도시와 연결</span>
+        <h2>택배 한 상자가 만드는 천 킬로미터의 인연</h2>
+        <p>하나 누나의 제안으로 논밭마을은 온라인 직거래를 시작했습니다. '논밭마을 꾸러미'라는 이름으로, 매달 제철 농산물을 상자에 담아 도시 소비자에게 직접 보내는 것이었습니다. 첫 달에는 딸기와 쌀, 두부를 담았고, 여름에는 토마토와 옥수수, 가을에는 햅쌀과 고구마가 들어갔습니다. "도시 마트에서 우리 쌀을 팔면 농가에 돌아오는 돈은 판매 가격의 30퍼센트도 안 돼요." 하나 누나가 설명했습니다. "유통 과정에서 중간 상인, 물류 비용, 마진이 빠지니까요.</p>
+        <p>하지만 직거래를 하면 90퍼센트 이상이 농가에 돌아와요." 할아버지가 정성껏 키운 쌀이 예쁜 상자에 담겨 서울의 아파트로 배달되었습니다. 상자 안에는 할아버지의 손 편지도 함께 넣었습니다. '이 쌀은 논밭마을 이종태가 50년 경력으로 지은 쌀입니다. 맛있게 드십시오.' 서울의 한 가정에서 답장이 왔습니다. '할아버지, 이렇게 맛있는 쌀은 처음이에요. 다음 달 꾸러미도 기다리겠습니다.' 할아버지의 눈이 젖었습니다.</p>
+        <p>자신의 쌀을 먹고 행복해하는 사람이 있다는 것, 이름 모를 도시의 누군가와 쌀 한 포대로 연결되어 있다는 것. 그것은 택배 상자 하나가 만들어 준 천 킬로미터의 인연이었습니다. 서연이도 꾸러미를 신청했고, 매달 편지를 동봉했습니다. 도윤은 서연이의 편지를 읽으며 웃음 짓는 할아버지를 보았습니다. 도시와 농촌은 멀리 떨어져 있지만, 기술과 마음이 연결하면 이웃이 될 수 있었습니다. 인터넷과 택배가 만든 새로운 시대의 상부상조였습니다.</p>
+      </div>
+    </section>
 
-      <!-- Part 9 -->
-      <article class="story-card" data-part="9" data-bg="/images/창작도서/창작지리05/09.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 9</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">🌟 새로운 기회 — 귀농 청년이 열어주는 시골의 미래</h3>
-        <p class="card-preview">하나 누나가 논밭마을에 온 지 1년이 지나자, 놀라운 일이 벌어지기 시작했습니다...</p>
-        <div class="card-content">
-          <p>하나 누나가 논밭마을에 온 지 1년이 지나자, 놀라운 일이 벌어지기 시작했습니다. 하나 누나의 SNS를 보고 청년 두 명이 더 귀농한 것입니다. 한 명은 유기농 치즈를 만드는 청년이었고, 다른 한 명은 시골 풍경을 촬영하는 유튜브 크리에이터였습니다. "시골에 젊은 사람이 온다고?" 마을 어르신들은 처음에 믿지 않았습니다. 하지만 청년들이 하나둘 자리를 잡고, 빈집을 수리하고, 새로운 사업을 시작하자, 마을 분위기가 달라졌습니다. 이장님은 이 흐름을 더 키우기 위해 '귀농 지원 프로그램'을 신청했습니다.</p>
-          <p>정부와 지자체에서 운영하는 이 프로그램은 귀농 청년에게 주거 지원, 영농 정착금, 기술 교육을 제공하는 것이었습니다. 빈집을 리모델링하여 셰어하우스로 만들고, 공동 작업 공간도 마련했습니다. "시골의 위기는 기회이기도 해요." 하나 누나가 마을 청년 간담회에서 말했습니다. "도시의 높은 집값, 경쟁 스트레스, 환경 오염에 지친 사람들이 시골의 공간과 자연을 원하고 있어요. 우리가 그 수요를 받아들일 준비만 하면 돼요." 도윤에게 가장 큰 충격은 하나 누나의 수입이었습니다.</p>
-          <p>스마트팜 농산물과 온라인 직거래, 체험 프로그램 수입을 합치면, 누나의 연수입은 서울에서 회사를 다닐 때보다 오히려 많았습니다. "시골이라고 돈을 못 버는 게 아니에요. 방식을 바꾸면 가능성은 무궁무진해요." 도윤은 처음으로 생각이 바뀌기 시작했습니다. 시골을 떠나는 것만이 답이 아닐 수도 있다고. 시골에 남아서, 아니 시골을 바꿔서 살아갈 수도 있다고. 새로운 기회는 언제나 새로운 시각에서 시작되었습니다.</p>
-        </div>
-      </article>
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">🌟 새로운 기회</span>
+        <h2>귀농 청년이 열어주는 시골의 미래</h2>
+        <p>하나 누나가 논밭마을에 온 지 1년이 지나자, 놀라운 일이 벌어지기 시작했습니다. 하나 누나의 SNS를 보고 청년 두 명이 더 귀농한 것입니다. 한 명은 유기농 치즈를 만드는 청년이었고, 다른 한 명은 시골 풍경을 촬영하는 유튜브 크리에이터였습니다. "시골에 젊은 사람이 온다고?" 마을 어르신들은 처음에 믿지 않았습니다. 하지만 청년들이 하나둘 자리를 잡고, 빈집을 수리하고, 새로운 사업을 시작하자, 마을 분위기가 달라졌습니다. 이장님은 이 흐름을 더 키우기 위해 '귀농 지원 프로그램'을 신청했습니다.</p>
+        <p>정부와 지자체에서 운영하는 이 프로그램은 귀농 청년에게 주거 지원, 영농 정착금, 기술 교육을 제공하는 것이었습니다. 빈집을 리모델링하여 셰어하우스로 만들고, 공동 작업 공간도 마련했습니다. "시골의 위기는 기회이기도 해요." 하나 누나가 마을 청년 간담회에서 말했습니다. "도시의 높은 집값, 경쟁 스트레스, 환경 오염에 지친 사람들이 시골의 공간과 자연을 원하고 있어요. 우리가 그 수요를 받아들일 준비만 하면 돼요." 도윤에게 가장 큰 충격은 하나 누나의 수입이었습니다.</p>
+        <p>스마트팜 농산물과 온라인 직거래, 체험 프로그램 수입을 합치면, 누나의 연수입은 서울에서 회사를 다닐 때보다 오히려 많았습니다. "시골이라고 돈을 못 버는 게 아니에요. 방식을 바꾸면 가능성은 무궁무진해요." 도윤은 처음으로 생각이 바뀌기 시작했습니다. 시골을 떠나는 것만이 답이 아닐 수도 있다고. 시골에 남아서, 아니 시골을 바꿔서 살아갈 수도 있다고. 새로운 기회는 언제나 새로운 시각에서 시작되었습니다.</p>
+      </div>
+    </section>
 
-      <!-- Part 10 -->
-      <article class="story-card" data-part="10" data-bg="/images/창작도서/창작지리05/10.jpg">
-        <div class="card-header">
-          <span class="part-number">PART 10</span>
-          <span class="expand-icon">▼</span>
-        </div>
-        <h3 class="card-title">🌅 지속 가능한 발전 — 할아버지의 논과 드론이 함께 나는 하늘</h3>
-        <p class="card-preview">가을이 왔습니다. 황금빛 벼가 바람에 출렁이는 논밭마을의 가장 아름다운 계절이었습니다...</p>
-        <div class="card-content">
-          <p>가을이 왔습니다. 황금빛 벼가 바람에 출렁이는 논밭마을의 가장 아름다운 계절이었습니다. 올해 수확은 특별했습니다. 할아버지의 전통 방식 논과 하나 누나의 스마트팜 논에서 동시에 벼를 거두었기 때문입니다. 할아버지는 낫을 들고, 하나 누나는 드론을 띄웠습니다. 서로 다른 방식이었지만, 같은 황금빛 들판 위에서 같은 벼를 거두는 모습은 아름다운 조화였습니다. 할아버지가 처음으로 하나 누나의 어깨를 두드렸습니다. "기계로 하니까 확실히 빠르구나. 하지만 내 손으로 벤 벼도 맛은 기가 막히지." 누나가 웃으며 대답했습니다. "그럼요. 할아버지 쌀이 최고예요. 저는 할아버지한테 아직 배울 게 산더미예요." 마을에서 '수확 감사제'가 열렸습니다.</p>
-          <p>도윤이 기획한 이 축제에는 마을 주민뿐 아니라 도시에서 온 방문객, 꾸러미 고객, 서연이와 친구들까지 참여했습니다. 도윤이 무대에 올라 말했습니다. "저는 이 마을이 시시하다고 생각했어요. 빨리 떠나고 싶었어요." 솔직한 고백에 어르신들이 쓴웃음을 지었습니다. "하지만 올해 저는 이 마을이 달라지는 것을 봤어요. 할아버지의 50년 경험과 하나 누나의 기술이 만나고, 이장님의 리더십으로 관광과 직거래가 시작되고, 도시 사람들과 연결되면서 마을이 살아났어요." 도윤의 목소리에 힘이 실렸습니다. "지속 가능한 발전이란, 오늘만 잘 사는 게 아니라 내일도 살 수 있도록 만드는 것이래요.</p>
-          <p>전통을 지키면서도 변화를 받아들이고, 환경을 보존하면서도 경제를 살리는 것. 이 마을이 바로 그것을 해내고 있어요." 할아버지가 미소 지었습니다. 축제가 끝나고, 도윤은 저녁노을이 물든 논두렁에 앉아 노트에 적었습니다. "지역은 시대와 함께 성장한다. 변하지 않으면 사라지지만, 자신의 뿌리를 잊으면 길을 잃는다. 전통과 혁신이 함께할 때, 시골은 시골만의 미래를 만들 수 있다." 바람이 불었습니다. 황금빛 벼가 출렁였고, 그 위로 드론 한 대가 조용히 날았습니다. 할아버지의 논과 드론이 함께 나는 하늘. 그것이 논밭마을의 내일이었습니다.</p>
-          <p style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #558b2f 0%, #7cb342 100%); border-radius: 15px; color: white;">
-            <strong>🌱 교훈</strong><br><br>
-            지역은 시대와 함께 성장한다.<br>
-            전통과 혁신이 함께할 때, 시골은 시골만의 미래를 만들 수 있습니다.
-          </p>
-        </div>
-      </article>
-    </div>
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">🌅 지속 가능한 발전</span>
+        <h2>할아버지의 논과 드론이 함께 나는 하늘</h2>
+        <p>가을이 왔습니다. 황금빛 벼가 바람에 출렁이는 논밭마을의 가장 아름다운 계절이었습니다. 올해 수확은 특별했습니다. 할아버지의 전통 방식 논과 하나 누나의 스마트팜 논에서 동시에 벼를 거두었기 때문입니다. 할아버지는 낫을 들고, 하나 누나는 드론을 띄웠습니다. 서로 다른 방식이었지만, 같은 황금빛 들판 위에서 같은 벼를 거두는 모습은 아름다운 조화였습니다. 할아버지가 처음으로 하나 누나의 어깨를 두드렸습니다. "기계로 하니까 확실히 빠르구나. 하지만 내 손으로 벤 벼도 맛은 기가 막히지." 누나가 웃으며 대답했습니다. "그럼요. 할아버지 쌀이 최고예요. 저는 할아버지한테 아직 배울 게 산더미예요." 마을에서 '수확 감사제'가 열렸습니다.</p>
+        <p>도윤이 기획한 이 축제에는 마을 주민뿐 아니라 도시에서 온 방문객, 꾸러미 고객, 서연이와 친구들까지 참여했습니다. 도윤이 무대에 올라 말했습니다. "저는 이 마을이 시시하다고 생각했어요. 빨리 떠나고 싶었어요." 솔직한 고백에 어르신들이 쓴웃음을 지었습니다. "하지만 올해 저는 이 마을이 달라지는 것을 봤어요. 할아버지의 50년 경험과 하나 누나의 기술이 만나고, 이장님의 리더십으로 관광과 직거래가 시작되고, 도시 사람들과 연결되면서 마을이 살아났어요." 도윤의 목소리에 힘이 실렸습니다. "지속 가능한 발전이란, 오늘만 잘 사는 게 아니라 내일도 살 수 있도록 만드는 것이래요.</p>
+        <p>전통을 지키면서도 변화를 받아들이고, 환경을 보존하면서도 경제를 살리는 것. 이 마을이 바로 그것을 해내고 있어요." 할아버지가 미소 지었습니다. 축제가 끝나고, 도윤은 저녁노을이 물든 논두렁에 앉아 노트에 적었습니다. "지역은 시대와 함께 성장한다. 변하지 않으면 사라지지만, 자신의 뿌리를 잊으면 길을 잃는다. 전통과 혁신이 함께할 때, 시골은 시골만의 미래를 만들 수 있다." 바람이 불었습니다. 황금빛 벼가 출렁였고, 그 위로 드론 한 대가 조용히 날았습니다. 할아버지의 논과 드론이 함께 나는 하늘. 그것이 논밭마을의 내일이었습니다.</p>
+      </div>
+    </section>
   </div>
 
-  <nav class="footer-nav">
-    <button class="nav-btn" onclick="closeStory()">← 목록으로</button>
-    <span class="progress-indicator" id="progressIndicator">1 / 10</span>
-    <button class="nav-btn" onclick="location.href='geo05_season1_quiz.html'">📝 퀴즈</button>
-    <button class="nav-btn" onclick="scrollToNext()">다음 →</button>
-  </nav>
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="#2980b9">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
 
   <script>
-    // 배경 이미지 설정
-    const bgContainer = document.getElementById('bgContainer');
-    const defaultBg = '/images/창작도서/창작지리05/00.jpg';
-    bgContainer.style.backgroundImage = `url('${defaultBg}')`;
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
 
-    // 카드 클릭 이벤트
-    const cards = document.querySelectorAll('.story-card');
-    cards.forEach(card => {
-      card.addEventListener('click', function() {
-        const wasActive = this.classList.contains('active');
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
 
-        // 모든 카드 비활성화
-        cards.forEach(c => c.classList.remove('active'));
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
 
-        // 클릭한 카드 토글
-        if (!wasActive) {
-          this.classList.add('active');
-          // 배경 이미지 변경
-          const bg = this.dataset.bg;
-          if (bg) {
-            bgContainer.style.backgroundImage = `url('${bg}')`;
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
           }
-          // 진행 상태 업데이트
-          const part = this.dataset.part;
-          document.getElementById('progressIndicator').textContent = `${part} / 10`;
-        } else {
-          bgContainer.style.backgroundImage = `url('${defaultBg}')`;
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
         }
       });
-    });
-
-    // 다음 카드로 스크롤
-    function scrollToNext() {
-      const activeCard = document.querySelector('.story-card.active');
-      if (activeCard) {
-        const nextCard = activeCard.nextElementSibling;
-        if (nextCard && nextCard.classList.contains('story-card')) {
-          activeCard.classList.remove('active');
-          nextCard.classList.add('active');
-          nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          const bg = nextCard.dataset.bg;
-          if (bg) {
-            bgContainer.style.backgroundImage = `url('${bg}')`;
-          }
-          const part = nextCard.dataset.part;
-          document.getElementById('progressIndicator').textContent = `${part} / 10`;
-        }
-      } else {
-        // 첫 번째 카드 활성화
-        const firstCard = document.querySelector('.story-card');
-        if (firstCard) {
-          firstCard.classList.add('active');
-          firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          const bg = firstCard.dataset.bg;
-          if (bg) {
-            bgContainer.style.backgroundImage = `url('${bg}')`;
-          }
-        }
-      }
     }
 
-    // 목록으로 돌아가기
-    function closeStory() {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'closeStory' }, '*');
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
       } else {
         window.history.back();
       }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'geo05_season1_quiz.html';
     }
   </script>
 </body>

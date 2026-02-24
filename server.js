@@ -22040,6 +22040,128 @@ app.post('/api/upload-temp-image', upload.single('image'), (req, res) => {
   }
 });
 
+// 독서 감상문 공유용 ID 생성 및 저장
+app.post('/api/reading-report/share', async (req, res) => {
+  try {
+    const { grade, name, title, content, storyId, storyTitle } = req.body;
+
+    if (!grade || !name || !title || !content) {
+      return res.status(400).json({
+        ok: false,
+        message: '필수 정보가 누락되었습니다'
+      });
+    }
+
+    // 고유 공유 ID 생성 (짧은 해시)
+    const crypto = require('crypto');
+    const shareId = crypto.randomBytes(8).toString('hex');
+
+    let progress = await UserProgress.findOne({ grade, name });
+
+    if (!progress) {
+      progress = new UserProgress({
+        grade,
+        name,
+        sharedReports: []
+      });
+    }
+
+    if (!progress.sharedReports) {
+      progress.sharedReports = [];
+    }
+
+    // 공유용 리포트 저장
+    progress.sharedReports.push({
+      shareId,
+      title,
+      content,
+      storyId: storyId || 'whale_island',
+      storyTitle: storyTitle || '',
+      sharedAt: new Date(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30일 후 만료
+    });
+
+    await progress.save();
+
+    const shareUrl = `${req.protocol}://${req.get('host')}/reading-report/view/${shareId}`;
+
+    res.json({
+      ok: true,
+      shareId,
+      shareUrl
+    });
+  } catch (error) {
+    console.error('독서 감상문 공유 ID 생성 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류',
+      error: error.message
+    });
+  }
+});
+
+// 공유된 독서 감상문 조회
+app.get('/api/reading-report/shared/:shareId', async (req, res) => {
+  try {
+    const { shareId } = req.params;
+
+    // 모든 사용자에서 해당 shareId 찾기
+    const progress = await UserProgress.findOne({
+      'sharedReports.shareId': shareId
+    });
+
+    if (!progress) {
+      return res.status(404).json({
+        ok: false,
+        message: '공유된 감상문을 찾을 수 없습니다'
+      });
+    }
+
+    const report = progress.sharedReports.find(r => r.shareId === shareId);
+
+    if (!report) {
+      return res.status(404).json({
+        ok: false,
+        message: '공유된 감상문을 찾을 수 없습니다'
+      });
+    }
+
+    // 만료 확인
+    if (report.expiresAt && new Date() > new Date(report.expiresAt)) {
+      return res.status(410).json({
+        ok: false,
+        message: '공유 링크가 만료되었습니다'
+      });
+    }
+
+    res.json({
+      ok: true,
+      report: {
+        title: report.title,
+        content: report.content,
+        storyId: report.storyId,
+        storyTitle: report.storyTitle,
+        sharedAt: report.sharedAt,
+        authorGrade: progress.grade,
+        authorName: progress.name
+      }
+    });
+  } catch (error) {
+    console.error('공유된 감상문 조회 오류:', error);
+    res.status(500).json({
+      ok: false,
+      message: '서버 오류',
+      error: error.message
+    });
+  }
+});
+
+// 공유된 독서 감상문 페이지 라우팅 - menu.html로 리다이렉트하여 팝업 표시
+app.get('/reading-report/view/:shareId', (req, res) => {
+  const { shareId } = req.params;
+  res.redirect(`/menu?reportShare=${shareId}`);
+});
+
 // 창의활동 데이터 조회 (unitProgress에서 creativeState 추출)
 app.get('/api/user-progress/creative-activities', async (req, res) => {
   try {
