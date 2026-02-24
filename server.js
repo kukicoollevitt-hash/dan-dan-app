@@ -528,7 +528,9 @@ app.use((req, res, next) => {
   if (req.path === '/super_admin_dashboard.html' ||
       (req.path.startsWith('/super/') && req.path.endsWith('.html'))) {
     console.log("⛔ 슈퍼관리자 파일 직접 접근 차단:", req.path);
-    return res.redirect("/admin-login");
+    // 학원용 관리자인지 확인 후 적절한 로그인 페이지로
+    const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
   next();
 });
@@ -721,7 +723,9 @@ function requireSuperAdmin(req, res, next) {
     if (req.path.startsWith('/api/')) {
       return res.status(401).json({ ok: false, message: '슈퍼관리자 권한이 필요합니다.' });
     }
-    return res.redirect("/admin-login");
+    // 학원용 관리자인지 확인 후 적절한 로그인 페이지로
+    const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
 
   // PIN 인증 확인
@@ -759,7 +763,8 @@ app.get("/admin/login", (req, res) => {
 app.get("/super/pin", (req, res) => {
   // 슈퍼관리자가 아니면 로그인 페이지로
   if (!req.session.admin || !req.session.admin.isSuper) {
-    return res.redirect("/admin-login");
+    const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
   // 이미 PIN 인증 완료면 대시보드로
   if (req.session.superPinVerified) {
@@ -932,7 +937,8 @@ app.get("/super/pin", (req, res) => {
 app.post("/super/pin/verify", (req, res) => {
   // 슈퍼관리자가 아니면 로그인 페이지로
   if (!req.session.admin || !req.session.admin.isSuper) {
-    return res.redirect("/admin-login");
+    const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
 
   const { pin } = req.body;
@@ -955,7 +961,8 @@ app.post("/super/pin/verify", (req, res) => {
 app.get("/admin/pin", (req, res) => {
   // 관리자가 아니면 로그인 페이지로
   if (!req.session.admin) {
-    return res.redirect("/admin-login");
+    const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
   // PIN 필요 없으면 대시보드로
   if (!req.session.adminPinRequired || req.session.adminPinVerified) {
@@ -1137,7 +1144,8 @@ app.get("/admin/pin", (req, res) => {
 app.post("/admin/pin/verify", async (req, res) => {
   // 관리자가 아니면 로그인 페이지로
   if (!req.session.admin) {
-    return res.redirect("/admin-login");
+    const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
   }
 
   const { pin } = req.body;
@@ -2310,7 +2318,8 @@ app.post("/admin-signup", async (req, res) => {
     const exists = await Admin.findOne({ academyName, grade, classNum, name, phone });
     if (exists) {
       console.log("⛔ 이미 존재하는 관리자:", academyName, grade, classNum, name, phone);
-      return res.redirect("/admin-login");
+      const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
+      return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
     }
 
     // 🔥 어드민(슈퍼관리자) 계정인지 확인
@@ -2393,6 +2402,7 @@ app.post("/admin-signup", async (req, res) => {
       console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
     }
 
+    // 학교용 회원가입이므로 /admin-login으로 리다이렉트
     return res.redirect("/admin-login");
   } catch (err) {
     console.error("❌ /admin-signup 에러:", err);
@@ -2400,7 +2410,7 @@ app.post("/admin-signup", async (req, res) => {
   }
 });
 
-// 관리자 로그인 처리 (POST)
+// 관리자 로그인 처리 (POST) - 학교용
 app.post("/admin-login", async (req, res) => {
   try {
     const { academyName, grade, classNum, name, birth, phone } = req.body;
