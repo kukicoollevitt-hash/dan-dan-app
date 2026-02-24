@@ -3253,6 +3253,28 @@ body {
   display: inline-block;
 }
 
+.history-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.2s, transform 0.2s;
+  padding: 4px;
+}
+
+.history-delete-btn:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.history-item {
+  position: relative;
+}
+
 .history-load-more {
   width: 100%;
   padding: 12px;
@@ -19107,8 +19129,8 @@ async function performLogout() {
           item.innerHTML = `
             <div class="history-item-title">${report.title}</div>
             <div class="history-item-date">${dateStr} ${timeStr}</div>
-            <div class="history-item-month">${monthStr}</div>
             <div class="history-item-story">${storyInfo}</div>
+            <button class="history-delete-btn" onclick="event.stopPropagation(); deleteReport('${report._id}')" title="삭제">🗑️</button>
           `;
 
           // 클릭 시 해당 리포트 로드
@@ -19499,6 +19521,43 @@ async function performLogout() {
       if (document.getElementById('reportFeeling')) document.getElementById('reportFeeling').value = '';
     }
 
+    // 리포트 삭제
+    async function deleteReport(reportId) {
+      if (!confirm('이 감상문을 삭제하시겠습니까?')) {
+        return;
+      }
+
+      try {
+        const userStr = sessionStorage.getItem('user');
+        if (!userStr) {
+          alert('로그인이 필요합니다.');
+          return;
+        }
+        const user = JSON.parse(userStr);
+
+        const response = await fetch('/api/reading-report/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: user.grade,
+            name: user.name,
+            reportId: reportId
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          alert('삭제되었습니다.');
+          loadReadingHistory(); // 목록 새로고침
+        } else {
+          alert(result.message || '삭제에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('삭제 오류:', error);
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
     // 리포트 로드 (편집/재공유용)
     function loadReport(report) {
       // 검색 가능한 드롭다운에 스토리 설정
@@ -19624,7 +19683,7 @@ async function performLogout() {
       }
     }
 
-    // PDF 다운로드 (html2canvas 사용하여 한글 지원)
+// PDF 다운로드 (html2canvas 사용하여 한글 지원)
     async function downloadPDF() {
       const storySelect = document.getElementById('reportStory');
       const title = document.getElementById('reportTitle').value.trim();
@@ -23513,7 +23572,7 @@ ${content}
           <div class="form-group report-section" style="position: relative;">
             <label for="reportFeeling">💭 책을 읽고 느낀 점</label>
             <textarea id="reportFeeling" placeholder="책을 읽고 느낀 점을 자유롭게 작성해보세요..." required></textarea>
-            <button type="button" onclick="checkSpellingOnly()" style="position: absolute; right: 8px; bottom: 8px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; opacity: 0.9;">🔍 맞춤법 검사</button>
+            <button type="button" onclick="checkSpellingOnly()" style="display: none; position: absolute; right: 8px; bottom: 8px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; opacity: 0.9;">🔍 맞춤법 검사</button>
           </div>
 
           <!-- 기존 reportContent는 숨김 처리 (호환성 유지) -->

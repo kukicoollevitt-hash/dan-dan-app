@@ -22162,6 +22162,39 @@ app.get('/reading-report/view/:shareId', (req, res) => {
   res.redirect(`/menu?reportShare=${shareId}`);
 });
 
+// 독서 감상문 삭제
+app.post('/api/reading-report/delete', async (req, res) => {
+  try {
+    const { grade, name, reportId } = req.body;
+
+    if (!grade || !name || !reportId) {
+      return res.status(400).json({ ok: false, message: '필수 정보가 누락되었습니다.' });
+    }
+
+    const progress = await UserProgress.findOne({ grade, name });
+    if (!progress) {
+      return res.status(404).json({ ok: false, message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // readingReports 배열에서 해당 리포트 제거
+    const originalLength = progress.readingReports?.length || 0;
+    progress.readingReports = (progress.readingReports || []).filter(
+      r => r._id.toString() !== reportId
+    );
+
+    if (progress.readingReports.length === originalLength) {
+      return res.status(404).json({ ok: false, message: '감상문을 찾을 수 없습니다.' });
+    }
+
+    await progress.save();
+
+    res.json({ ok: true, message: '삭제되었습니다.' });
+  } catch (error) {
+    console.error('독서 감상문 삭제 오류:', error);
+    res.status(500).json({ ok: false, message: '서버 오류', error: error.message });
+  }
+});
+
 // 창의활동 데이터 조회 (unitProgress에서 creativeState 추출)
 app.get('/api/user-progress/creative-activities', async (req, res) => {
   try {
