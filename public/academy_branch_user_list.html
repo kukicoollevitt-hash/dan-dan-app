@@ -967,6 +967,7 @@
     let deleteTargetId = "";
     let deleteTargetName = "";
     let deleteTargetPhone = "";
+    let seriesApproved = false; // 🔹 시리즈 권한 승인 여부 (슈퍼관리자가 승인)
 
     // 삭제 모달 열기
     function openDeleteModal(userId, userName, userPhone) {
@@ -1197,15 +1198,19 @@
             </a>
           </td>
           <td class="center">
-            ${(u.assignedSeries && u.assignedSeries.length > 0)
-              ? `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
-                   style="display: inline-block; padding: 4px 10px; background: #10b981; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
-                  부여됨 (${u.assignedSeries.length})
-                 </a>`
-              : `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
-                   style="display: inline-block; padding: 4px 10px; background: #9ca3af; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
-                  미부여
-                 </a>`
+            ${seriesApproved
+              ? ((u.assignedSeries && u.assignedSeries.length > 0)
+                ? `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
+                     style="display: inline-block; padding: 4px 10px; background: #10b981; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
+                    부여됨 (${u.assignedSeries.length})
+                   </a>`
+                : `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
+                     style="display: inline-block; padding: 4px 10px; background: #9ca3af; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
+                    미부여
+                   </a>`)
+              : `<span style="display: inline-block; padding: 4px 10px; background: #e5e7eb; color: #9ca3af; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: not-allowed;" title="시리즈 권한이 필요합니다. 본사에 문의하세요.">
+                  🔒 권한없음
+                 </span>`
             }
           </td>
           <td class="center">
@@ -1310,7 +1315,19 @@
         (q ? "&q=" + encodeURIComponent(q) : "");
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", async function () {
+      // 🔹 관리자 세션에서 시리즈 승인 상태 확인
+      try {
+        const sessionRes = await fetch('/api/admin-session');
+        const sessionData = await sessionRes.json();
+        if (sessionData.ok && sessionData.admin) {
+          seriesApproved = sessionData.admin.seriesApproved || false;
+          console.log('🔒 시리즈 권한 승인 상태:', seriesApproved);
+        }
+      } catch (err) {
+        console.error('세션 조회 실패:', err);
+      }
+
       const input = document.getElementById("search-input");
       const btnSearch = document.getElementById("search-btn");
       const btnRefresh = document.getElementById("refresh-btn");

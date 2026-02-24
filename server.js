@@ -646,6 +646,12 @@ const adminSchema = new mongoose.Schema({
     enum: ["school", "academy"],
     default: "school"
   },
+
+  // 🔹 시리즈 사용 권한 승인 여부 (슈퍼관리자가 승인)
+  seriesApproved: {
+    type: Boolean,
+    default: false
+  },
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
@@ -3472,6 +3478,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
                 <th>이름</th>
                 <th>전화번호(ID)</th>
                 <th>상태</th>
+                <th>시리즈</th>
                 <th>가입일</th>
                 <th>마지막 로그인</th>
                 <th>수정</th>
@@ -3514,11 +3521,34 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
 
       const deleteCell = `
         <a class="link-danger"
-           href="/super/academy-admin-trash?id=${a._id}"
-           onclick="return confirm('이 관리자 계정을 휴지통으로 보낼까요?\\n[${a.academyName} / ${a.name}]');">
-          휴지통
+           href="/super/academy-admin-delete?id=${a._id}"
+           onclick="return confirm('⚠️ 이 관리자 계정을 완전히 삭제할까요?\\n\\n[${a.academyName} / ${a.name}]\\n\\n삭제된 데이터는 복구할 수 없습니다!');">
+          삭제
         </a>
       `;
+
+      // 🔹 시리즈 승인 상태
+      const seriesApproved = a.seriesApproved || false;
+      const seriesLabel = seriesApproved ? "승인" : "미승인";
+      const seriesClass = seriesApproved ? "badge-approved" : "badge-pending";
+      let seriesToggleLink = "";
+      if (seriesApproved) {
+        seriesToggleLink = `
+          <a class="link"
+             href="/super/academy-admin-series?id=${a._id}&approved=false"
+             onclick="return confirm('시리즈 권한을 미승인으로 변경할까요?\\n미승인 시 학생에게 시리즈 부여가 불가합니다.');">
+             미승인 전환
+          </a>
+        `;
+      } else {
+        seriesToggleLink = `
+          <a class="link"
+             href="/super/academy-admin-series?id=${a._id}&approved=true"
+             onclick="return confirm('시리즈 권한을 승인할까요?\\n승인 시 학생에게 시리즈 부여가 가능합니다.');">
+             승인하기
+          </a>
+        `;
+      }
 
       html += `
         <tr>
@@ -3529,6 +3559,10 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           <td>
             <span class="badge ${statusClass}">${statusLabel}</span>
             ${statusToggleLink}
+          </td>
+          <td>
+            <span class="badge ${seriesClass}">${seriesLabel}</span>
+            ${seriesToggleLink}
           </td>
           <td>${createdAt}</td>
           <td>${lastLogin}</td>
@@ -3657,6 +3691,25 @@ app.get("/super/academy-admin-status", requireSuperAdmin, async (req, res) => {
   }
 });
 
+// 🔹 학원용 관리자 시리즈 승인 상태 변경
+app.get("/super/academy-admin-series", requireSuperAdmin, async (req, res) => {
+  const { id, approved } = req.query;
+
+  if (!id || (approved !== "true" && approved !== "false")) {
+    return res.status(400).send("잘못된 요청입니다.");
+  }
+
+  try {
+    const seriesApproved = approved === "true";
+    await Admin.findByIdAndUpdate(id, { seriesApproved });
+    console.log("✅ 학원 관리자 시리즈 승인 상태 변경:", id, "→", seriesApproved);
+    res.redirect("/super/academy-admins");
+  } catch (err) {
+    console.error("❌ /super/academy-admin-series 에러:", err);
+    res.status(500).send("시리즈 승인 상태 변경 중 오류가 발생했습니다.");
+  }
+});
+
 // 🔹 학원용 관리자 휴지통 이동
 app.get("/super/academy-admin-trash", requireSuperAdmin, async (req, res) => {
   const { id } = req.query;
@@ -3672,6 +3725,24 @@ app.get("/super/academy-admin-trash", requireSuperAdmin, async (req, res) => {
   } catch (err) {
     console.error("❌ /super/academy-admin-trash 에러:", err);
     res.status(500).send("휴지통 이동 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 학원용 관리자 완전 삭제
+app.get("/super/academy-admin-delete", requireSuperAdmin, async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).send("id 파라미터가 필요합니다.");
+
+  try {
+    const admin = await Admin.findById(id);
+    if (!admin) return res.status(404).send("관리자 계정을 찾을 수 없습니다.");
+
+    await Admin.findByIdAndDelete(id);
+    console.log("🗑 학원 관리자 완전 삭제:", id, admin.academyName, admin.name);
+    res.redirect("/super/academy-admins");
+  } catch (err) {
+    console.error("❌ /super/academy-admin-delete 에러:", err);
+    res.status(500).send("삭제 중 오류가 발생했습니다.");
   }
 });
 
@@ -20372,7 +20443,11 @@ app.post("/academy-login", async (req, res) => {
     console.log("✅ 학원용 로그인 성공:", user.name, user.grade, user.academyName);
 
     // 학원용도 동일한 메뉴 페이지로 이동
-    const NEXT_URL = "/menu.html";
+    // brain_library에서 로그인한 경우 창작 도서관 팝업 자동 오픈
+    const { loginSource } = req.body;
+    const NEXT_URL = loginSource === "brain_library"
+      ? "/menu.html?popup=creative-library"
+      : "/menu.html";
     return res.redirect(
       "/loading.html?to=" + encodeURIComponent(NEXT_URL)
     );
@@ -20388,6 +20463,33 @@ app.get("/api/session", (req, res) => {
     return res.json({ ok: true, user: req.session.user });
   } else {
     return res.json({ ok: false, user: null });
+  }
+});
+
+// ✅ 관리자(admin) 세션 정보 조회 API
+app.get("/api/admin-session", async (req, res) => {
+  if (req.session && req.session.admin) {
+    // DB에서 최신 seriesApproved 정보 가져오기
+    try {
+      const admin = await Admin.findById(req.session.admin.id).lean();
+      return res.json({
+        ok: true,
+        admin: {
+          ...req.session.admin,
+          seriesApproved: admin ? admin.seriesApproved : false
+        }
+      });
+    } catch (err) {
+      return res.json({
+        ok: true,
+        admin: {
+          ...req.session.admin,
+          seriesApproved: false
+        }
+      });
+    }
+  } else {
+    return res.json({ ok: false, admin: null });
   }
 });
 
