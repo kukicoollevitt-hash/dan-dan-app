@@ -24202,34 +24202,12 @@ async function executeAutoTaskAssignment() {
           }
         }
 
-        // 과제 부여
+        // 과제 부여 (Atomic Operation으로 중복 방지)
         if (tasksToAssign.length > 0) {
-          let progress = userProgress;
-          if (!progress) {
-            progress = new UserProgress({
-              grade: setting.grade,
-              name: setting.name,
-              studyRoom: { assignedTasks: [] }
-            });
-          }
+          let addedCount = 0;
 
-          if (!progress.studyRoom) {
-            progress.studyRoom = { assignedTasks: [] };
-          }
-
-          // 저장 직전 중복 체크 (동시 실행 방지)
-          const existingUnitIds = new Set(
-            progress.studyRoom.assignedTasks.map(t => t.unitId).filter(Boolean)
-          );
-          const filteredTasks = tasksToAssign.filter(task => !existingUnitIds.has(task.unitId));
-
-          if (filteredTasks.length === 0) {
-            console.log(`⏭️ [${setting.grade} ${setting.name}] 이미 동일한 과제가 존재합니다. 스킵합니다.`);
-            continue;
-          }
-
-          // 새 과제 추가
-          for (const task of filteredTasks) {
+          // 각 과제를 개별적으로 atomic하게 추가 (중복 방지)
+          for (const task of tasksToAssign) {
             const newTask = {
               unitId: task.unitId,
               unitTitle: task.unitTitle,
@@ -24237,15 +24215,62 @@ async function executeAutoTaskAssignment() {
               fieldName: task.fieldName,
               subjectName: task.subjectName,
               assignedAt: task.assignedAt,
-              isAutoAssigned: true
+              isAutoAssigned: true,
+              isAI: false,
+              status: 'pending',
+              progress: 0
             };
-            console.log(`    📦 저장할 과제: ${JSON.stringify(newTask)}`);
-            progress.studyRoom.assignedTasks.push(newTask);
+
+            // findOneAndUpdate with $push + 조건으로 atomic하게 중복 방지
+            // 해당 unitId가 없을 때만 추가
+            const result = await UserProgress.findOneAndUpdate(
+              {
+                grade: setting.grade,
+                name: setting.name,
+                'studyRoom.assignedTasks.unitId': { $ne: task.unitId }  // unitId가 없을 때만
+              },
+              {
+                $push: { 'studyRoom.assignedTasks': newTask },
+                $setOnInsert: {
+                  grade: setting.grade,
+                  name: setting.name
+                }
+              },
+              {
+                upsert: false,  // 기존 문서만 업데이트
+                new: true
+              }
+            );
+
+            // 문서가 없으면 새로 생성 (upsert 별도 처리)
+            if (!result) {
+              // 기존 문서가 없거나 이미 해당 unitId가 존재하는 경우
+              const existingDoc = await UserProgress.findOne({ grade: setting.grade, name: setting.name });
+
+              if (!existingDoc) {
+                // 문서 자체가 없으면 새로 생성
+                await UserProgress.create({
+                  grade: setting.grade,
+                  name: setting.name,
+                  studyRoom: { assignedTasks: [newTask] }
+                });
+                addedCount++;
+                console.log(`    📦 [신규생성] ${task.unitId}`);
+              } else {
+                // 문서는 있지만 unitId가 이미 존재 (중복) - 스킵
+                console.log(`    ⏭️ [중복스킵] ${task.unitId}`);
+              }
+            } else {
+              addedCount++;
+              console.log(`    📦 [추가완료] ${task.unitId}`);
+            }
           }
 
-          await progress.save();
-          console.log(`✅ [${setting.grade} ${setting.name}] ${filteredTasks.length}개 과제 부여 완료`);
-          filteredTasks.forEach(t => console.log(`   - ${t.seriesName} > ${t.subjectName} ${t.unitTitle.split(' ')[1]}`));
+          if (addedCount > 0) {
+            console.log(`✅ [${setting.grade} ${setting.name}] ${addedCount}개 과제 부여 완료`);
+          } else {
+            console.log(`⏭️ [${setting.grade} ${setting.name}] 모든 과제가 이미 존재합니다. 스킵합니다.`);
+          }
         } else {
           console.log(`ℹ️ [${setting.grade} ${setting.name}] 부여할 미완료 과제가 없습니다`);
         }
