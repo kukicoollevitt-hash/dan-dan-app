@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>브레인 웨이브 창의노트</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Black+Han+Sans&family=Gaegu:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+  }
+
+  body {
+    background: #080e1a;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+
+  .canvas {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    background: linear-gradient(160deg, #080e1a 0%, #0b1a30 30%, #0e2240 60%, #080e1a 100%);
+    overflow: hidden;
+  }
+
+  .canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 42% 50%, rgba(30, 120, 180, 0.07) 0%, transparent 60%),
+      radial-gradient(ellipse at 20% 80%, rgba(20, 80, 140, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(40, 140, 200, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* Particles */
+  .particles { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .particle {
+    position: absolute; width: 2px; height: 2px;
+    background: rgba(100, 200, 255, 0.25); border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+    50% { transform: translateY(-15px) scale(1.5); opacity: 0.5; }
+  }
+
+  /* Header */
+  .header {
+    position: absolute;
+    top: 14px; left: 24px; right: 24px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .brand-icon { font-size: 48px; filter: drop-shadow(0 0 8px rgba(80,180,255,0.4)); }
+  .brand-text {
+    font-family: 'Black Han Sans', sans-serif; font-size: 36px; color: #5bc0f8;
+    letter-spacing: 3px; text-shadow: 0 0 20px rgba(91,192,248,0.3);
+  }
+  .brand-sub { font-size: 16px; color: rgba(150,200,240,0.6); letter-spacing: 3px; margin-top: 4px; }
+  .unit-badge {
+    background: linear-gradient(135deg, rgba(91,192,248,0.12), rgba(91,192,248,0.04));
+    border: 1px solid rgba(91,192,248,0.2); border-radius: 20px;
+    padding: 8px 20px; color: #7dd3fc; font-size: 16px; font-weight: 500; letter-spacing: 1px;
+  }
+
+  /* Score Display */
+  .score-display {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 25;
+  }
+  .score-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .score-label {
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+  }
+  .score-value {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 24px;
+    color: #fbbf24;
+  }
+  .score-value.correct { color: #22c55e; }
+  .score-value.wrong { color: #ef4444; }
+
+  /* Wave Rings */
+  .wave-center {
+    position: absolute;
+    left: 38%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+  }
+  .wave-ring {
+    position: absolute; border-radius: 50%; border: 2px solid;
+    transform: translate(-50%, -50%);
+  }
+  .wave-4 {
+    width: 680px; height: 680px;
+    border-color: rgba(168,85,247,0.15);
+    animation: waveGlow4 3s ease-in-out infinite;
+  }
+  .wave-3 {
+    width: 520px; height: 520px;
+    border-color: rgba(59,130,246,0.2);
+    animation: waveGlow3 3s ease-in-out infinite;
+    animation-delay: 0.3s;
+  }
+  .wave-2 {
+    width: 360px; height: 360px;
+    border-color: rgba(34,197,94,0.25);
+    animation: waveGlow2 3s ease-in-out infinite;
+    animation-delay: 0.6s;
+  }
+  .wave-1 {
+    width: 210px; height: 210px;
+    border-color: rgba(251,191,36,0.3);
+    animation: waveGlow1 3s ease-in-out infinite;
+    animation-delay: 0.9s;
+  }
+  @keyframes waveGlow1 {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(251,191,36,0.2), inset 0 0 5px rgba(251,191,36,0.1);
+      border-color: rgba(251,191,36,0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(251,191,36,0.5), inset 0 0 15px rgba(251,191,36,0.2);
+      border-color: rgba(251,191,36,0.6);
+    }
+  }
+  @keyframes waveGlow2 {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(34,197,94,0.2), inset 0 0 5px rgba(34,197,94,0.1);
+      border-color: rgba(34,197,94,0.25);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(34,197,94,0.5), inset 0 0 15px rgba(34,197,94,0.2);
+      border-color: rgba(34,197,94,0.5);
+    }
+  }
+  @keyframes waveGlow3 {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(59,130,246,0.2), inset 0 0 5px rgba(59,130,246,0.1);
+      border-color: rgba(59,130,246,0.2);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(59,130,246,0.5), inset 0 0 15px rgba(59,130,246,0.2);
+      border-color: rgba(59,130,246,0.5);
+    }
+  }
+  @keyframes waveGlow4 {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(168,85,247,0.2), inset 0 0 5px rgba(168,85,247,0.1);
+      border-color: rgba(168,85,247,0.15);
+    }
+    50% {
+      box-shadow: 0 0 35px rgba(168,85,247,0.5), inset 0 0 15px rgba(168,85,247,0.2);
+      border-color: rgba(168,85,247,0.5);
+    }
+  }
+
+  /* Core */
+  .core {
+    position: absolute; width: 150px; height: 150px;
+    transform: translate(-50%,-50%);
+    background: radial-gradient(circle, rgba(91,192,248,0.18), rgba(91,192,248,0.04));
+    border: 3px solid rgba(91,192,248,0.35); border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 5;
+    box-shadow: 0 0 45px rgba(91,192,248,0.15), inset 0 0 30px rgba(91,192,248,0.1);
+  }
+  .core-whale { font-size: 44px; margin-bottom: 4px; }
+  .core-text { font-family: 'Black Han Sans', sans-serif; font-size: 18px; color: #7dd3fc; }
+
+  /* SVG Lines */
+  .conn-svg { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .conn-line { stroke-dasharray: 3 5; animation: dash 25s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -150; } }
+
+  /* Node Cards */
+  .node {
+    position: absolute;
+    border-radius: 14px;
+    padding: 12px 16px;
+    backdrop-filter: blur(6px);
+    z-index: 10;
+  }
+  .node-title {
+    font-size: 14px; font-weight: 700; letter-spacing: 1.5px;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .node-content { font-size: 15px; line-height: 1.8; font-weight: 400; }
+  .node-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* Wave Colors */
+  .n-w1 { background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.22); }
+  .n-w1 .node-title { color: #fbbf24; }
+  .n-w1 .node-content { color: rgba(255,225,150,0.85); }
+  .n-w1 .node-num { background: rgba(251,191,36,0.2); color: #fbbf24; }
+
+  .n-w2 { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.22); }
+  .n-w2 .node-title { color: #22c55e; }
+  .n-w2 .node-content { color: rgba(150,255,180,0.85); }
+  .n-w2 .node-num { background: rgba(34,197,94,0.2); color: #22c55e; }
+
+  .n-w3 { background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.22); }
+  .n-w3 .node-title { color: #3b82f6; }
+  .n-w3 .node-content { color: rgba(150,200,255,0.85); }
+  .n-w3 .node-num { background: rgba(59,130,246,0.2); color: #3b82f6; }
+
+  .n-w4 { background: rgba(168,85,247,0.07); border: 1px solid rgba(168,85,247,0.22); }
+  .n-w4 .node-title { color: #a855f7; }
+  .n-w4 .node-content { color: rgba(210,170,255,0.85); }
+  .n-w4 .node-num { background: rgba(168,85,247,0.2); color: #a855f7; }
+
+  /* Keywords */
+  .kw { font-weight: 700; }
+  .kw-y { color: #fde68a; }
+  .kw-g { color: #86efac; }
+  .kw-b { color: #93c5fd; }
+  .kw-p { color: #c4b5fd; }
+
+  /* Node Positions - 고정 템플릿 */
+  .node-1a { left: 293px; top: 312px; width: 240px; }   /* 개념 정의 */
+  .node-1b { left: 557px; top: 559px; width: 240px; }   /* 분류 예시 */
+  .node-2a { left: 652px; top: 233px; width: 250px; }   /* 영양분 섭취 */
+  .node-2b { left: 181px; top: 463px; width: 250px; }   /* 번식 */
+  .node-3a { left: 268px; top: 667px; width: 250px; }   /* 상호 관계 */
+  .node-3b { left: 805px; top: 405px; width: 250px; }   /* 분해와 순환 */
+  .node-4a { left: 827px; top: 617px; width: 250px; }   /* 생태계 순환 */
+  .node-4b { left: 63px; top: 184px; width: 250px; }   /* 핵심 메시지 */
+
+  /* ======================== */
+  /* BLANK SLOTS (빈칸)       */
+  /* ======================== */
+  .blank-slot {
+    display: inline-block;
+    min-width: 80px;
+    min-height: 32px;
+    padding: 6px 18px;
+    background: rgba(255,255,255,0.15);
+    border: 2px dashed rgba(255,255,255,0.6);
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: pulseGlow 1.5s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(91,192,248,0.4), inset 0 0 8px rgba(91,192,248,0.1);
+    position: relative;
+  }
+  .blank-slot.filled::before {
+    display: none;
+  }
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 12px rgba(91,192,248,0.4), inset 0 0 8px rgba(91,192,248,0.1);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(91,192,248,0.7), inset 0 0 12px rgba(91,192,248,0.2);
+      transform: scale(1.03);
+    }
+  }
+  .blank-slot:hover {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.6);
+    transform: scale(1.05);
+  }
+  .blank-slot.drag-over {
+    background: rgba(91,192,248,0.25);
+    border-color: #5bc0f8;
+    transform: scale(1.08);
+    box-shadow: 0 0 20px rgba(91,192,248,0.5);
+    animation: none;
+  }
+  .blank-slot.filled {
+    background: rgba(34,197,94,0.25);
+    border: 2px solid rgba(34,197,94,0.6);
+    cursor: default;
+    animation: none;
+    box-shadow: 0 0 12px rgba(34,197,94,0.4);
+  }
+  .blank-slot.filled .answer-text {
+    color: #86efac;
+  }
+
+  /* 개념 구조도용 작은 빈칸 */
+  .blank-slot.blank-sm {
+    min-width: 75px;
+    min-height: 32px;
+    padding: 6px 16px;
+    font-size: 14px;
+    border-radius: 8px;
+    vertical-align: middle;
+  }
+  .blank-slot.blank-sm::before {
+    font-size: 12px;
+  }
+  .summary-card .blank-slot {
+    border-color: rgba(91,192,248,0.7);
+    background: rgba(91,192,248,0.2);
+    animation: pulseGlowSm 1.5s ease-in-out infinite;
+  }
+  .summary-card .blank-slot::before { color: rgba(91,192,248,0.7); }
+  @keyframes pulseGlowSm {
+    0%, 100% { box-shadow: 0 0 10px rgba(91,192,248,0.5), inset 0 0 6px rgba(91,192,248,0.15); transform: scale(1); }
+    50% { box-shadow: 0 0 20px rgba(91,192,248,0.8), inset 0 0 10px rgba(91,192,248,0.25); transform: scale(1.02); }
+  }
+  .summary-card .blank-slot.filled {
+    background: rgba(34,197,94,0.25);
+    border-color: rgba(34,197,94,0.6);
+    box-shadow: 0 0 12px rgba(34,197,94,0.4);
+    animation: none;
+  }
+  .summary-card .blank-slot.filled .answer-text {
+    color: #86efac;
+    font-size: 12px;
+  }
+
+  /* Wave-specific blank colors */
+  .n-w1 .blank-slot {
+    border-color: rgba(251,191,36,0.7);
+    background: rgba(251,191,36,0.2);
+    animation: pulseGlowY 1.5s ease-in-out infinite;
+  }
+  .n-w1 .blank-slot::before { color: rgba(251,191,36,0.6); }
+  @keyframes pulseGlowY {
+    0%, 100% { box-shadow: 0 0 15px rgba(251,191,36,0.5), inset 0 0 8px rgba(251,191,36,0.15); transform: scale(1); }
+    50% { box-shadow: 0 0 28px rgba(251,191,36,0.8), inset 0 0 12px rgba(251,191,36,0.25); transform: scale(1.03); }
+  }
+  .n-w1 .blank-slot.filled { background: rgba(251,191,36,0.3); border-color: #fbbf24; box-shadow: 0 0 15px rgba(251,191,36,0.5); animation: none; }
+  .n-w1 .blank-slot.filled .answer-text { color: #fde68a; }
+
+  .n-w2 .blank-slot {
+    border-color: rgba(34,197,94,0.7);
+    background: rgba(34,197,94,0.2);
+    animation: pulseGlowG 1.5s ease-in-out infinite;
+  }
+  .n-w2 .blank-slot::before { color: rgba(34,197,94,0.6); }
+  @keyframes pulseGlowG {
+    0%, 100% { box-shadow: 0 0 15px rgba(34,197,94,0.5), inset 0 0 8px rgba(34,197,94,0.15); transform: scale(1); }
+    50% { box-shadow: 0 0 28px rgba(34,197,94,0.8), inset 0 0 12px rgba(34,197,94,0.25); transform: scale(1.03); }
+  }
+  .n-w2 .blank-slot.filled { background: rgba(34,197,94,0.3); border-color: #22c55e; box-shadow: 0 0 15px rgba(34,197,94,0.5); animation: none; }
+  .n-w2 .blank-slot.filled .answer-text { color: #86efac; }
+
+  .n-w3 .blank-slot {
+    border-color: rgba(59,130,246,0.7);
+    background: rgba(59,130,246,0.2);
+    animation: pulseGlowB 1.5s ease-in-out infinite;
+  }
+  .n-w3 .blank-slot::before { color: rgba(59,130,246,0.6); }
+  @keyframes pulseGlowB {
+    0%, 100% { box-shadow: 0 0 15px rgba(59,130,246,0.5), inset 0 0 8px rgba(59,130,246,0.15); transform: scale(1); }
+    50% { box-shadow: 0 0 28px rgba(59,130,246,0.8), inset 0 0 12px rgba(59,130,246,0.25); transform: scale(1.03); }
+  }
+  .n-w3 .blank-slot.filled { background: rgba(59,130,246,0.3); border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.5); animation: none; }
+  .n-w3 .blank-slot.filled .answer-text { color: #93c5fd; }
+
+  .n-w4 .blank-slot {
+    border-color: rgba(168,85,247,0.7);
+    background: rgba(168,85,247,0.2);
+    animation: pulseGlowP 1.5s ease-in-out infinite;
+  }
+  .n-w4 .blank-slot::before { color: rgba(168,85,247,0.6); }
+  @keyframes pulseGlowP {
+    0%, 100% { box-shadow: 0 0 15px rgba(168,85,247,0.5), inset 0 0 8px rgba(168,85,247,0.15); transform: scale(1); }
+    50% { box-shadow: 0 0 28px rgba(168,85,247,0.8), inset 0 0 12px rgba(168,85,247,0.25); transform: scale(1.03); }
+  }
+  .n-w4 .blank-slot.filled { background: rgba(168,85,247,0.3); border-color: #a855f7; box-shadow: 0 0 15px rgba(168,85,247,0.5); animation: none; }
+  .n-w4 .blank-slot.filled .answer-text { color: #c4b5fd; }
+
+  /* ======================== */
+  /* WORD BANK (단어 박스)    */
+  /* ======================== */
+  .word-bank {
+    position: absolute;
+    bottom: 14px;
+    left: 24px;
+    right: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 30;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+  }
+  .word-bank-title {
+    font-size: 15px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 600;
+    text-align: center;
+  }
+  .word-chips {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .word-chip {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(91,192,248,0.15), rgba(91,192,248,0.05));
+    border: 1px solid rgba(91,192,248,0.3);
+    border-radius: 18px;
+    color: #7dd3fc;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: grab;
+    transition: all 0.2s ease;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .word-chip:hover {
+    background: linear-gradient(135deg, rgba(91,192,248,0.25), rgba(91,192,248,0.1));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(91,192,248,0.3);
+  }
+  .word-chip:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+  }
+  .word-chip.dragging {
+    opacity: 0.5;
+  }
+  .word-chip.used {
+    opacity: 0.3;
+    pointer-events: none;
+    text-decoration: line-through;
+  }
+
+  /* ======================== */
+  /* FEEDBACK EFFECTS         */
+  /* ======================== */
+  /* Wrong X mark */
+  .wrong-mark {
+    position: fixed;
+    font-size: 60px;
+    color: #ef4444;
+    pointer-events: none;
+    z-index: 1000;
+    animation: wrongPop 0.6s ease-out forwards;
+    text-shadow: 0 0 20px rgba(239,68,68,0.8);
+  }
+  @keyframes wrongPop {
+    0% { transform: scale(0) rotate(-20deg); opacity: 1; }
+    50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+    100% { transform: scale(0.8) rotate(0deg); opacity: 0; }
+  }
+
+  /* Confetti Canvas */
+  #confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* Completion Modal */
+  .completion-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .completion-modal.show {
+    display: flex;
+  }
+  .completion-card {
+    background: linear-gradient(145deg, #1a2a4a, #0e1a30);
+    border: 2px solid rgba(91,192,248,0.3);
+    border-radius: 24px;
+    padding: 40px 50px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .completion-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    animation: bounce 1s ease infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .completion-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 32px;
+    color: #fbbf24;
+    margin-bottom: 10px;
+  }
+  .completion-score {
+    font-size: 18px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 30px;
+  }
+  .completion-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .completion-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #5bc0f8, #3b82f6);
+    border: none;
+    border-radius: 25px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .completion-btn:hover {
+    transform: scale(1.05);
+  }
+  .completion-btn.btn-pdf {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+  }
+
+  /* Wave Zone Labels */
+  .wz {
+    position: absolute; z-index: 12;
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    padding: 4px 12px; border-radius: 8px; white-space: nowrap;
+    pointer-events: none;
+    transform: translateX(-50%);
+  }
+  /* 각 링 위쪽 중앙에 배치 (wave-center 기준 상대 위치) */
+  .wz-1 { left: 0; top: -120px; }  /* wave-1 위 */
+  .wz-2 { left: 0; top: -195px; }  /* wave-2 위 */
+  .wz-3 { left: 0; top: -275px; }  /* wave-3 위 */
+  .wz-4 { left: 0; top: -355px; }  /* wave-4 위 */
+  .wz-1 { color: #fbbf24; background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3); }
+  .wz-2 { color: #22c55e; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); }
+  .wz-3 { color: #3b82f6; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); }
+  .wz-4 { color: #a855f7; background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); }
+
+  /* ======================== */
+  /* Right Panel              */
+  /* ======================== */
+  .right-panel {
+    position: absolute;
+    right: 24px; top: 80px;
+    width: 360px; bottom: 50px;
+    display: flex; flex-direction: column; gap: 14px;
+    z-index: 15;
+  }
+  .summary-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 16px 18px;
+    backdrop-filter: blur(10px);
+  }
+  .summary-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 18px; color: #e2e8f0;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .summary-title span { font-size: 20px; }
+  .concept-map { display: flex; flex-direction: column; gap: 6px; }
+  .concept-row { display: flex; align-items: center; gap: 8px; }
+  .concept-box {
+    padding: 6px 12px; border-radius: 10px;
+    font-size: 14px; font-weight: 500; text-align: center; flex: 1;
+  }
+  .cb-primary { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); color: #7dd3fc; }
+  .cb-secondary { background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); color: #c4b5fd; }
+  .cb-feature { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); color: #86efac; font-size: 13px; }
+  .cb-cycle { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); color: #fde68a; font-size: 13px; }
+  .arrow-down { color: rgba(255,255,255,0.25); font-size: 14px; text-align: center; }
+  .arrow-right { color: rgba(255,255,255,0.2); font-size: 12px; flex-shrink: 0; }
+  .vs-badge {
+    background: rgba(255,255,255,0.06); border-radius: 6px;
+    padding: 3px 10px; font-size: 11px; color: rgba(255,255,255,0.35); flex-shrink: 0;
+  }
+  .examples-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .example-tag { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+  .et-primary { background: rgba(59,130,246,0.1); color: rgba(125,211,252,0.8); border: 1px solid rgba(59,130,246,0.15); }
+  .et-secondary { background: rgba(168,85,247,0.1); color: rgba(196,181,253,0.8); border: 1px solid rgba(168,85,247,0.15); }
+
+  /* ======================== */
+  /* Question Card            */
+  /* ======================== */
+  .question-card {
+    background: linear-gradient(135deg, rgba(251,191,36,0.06), rgba(251,191,36,0.02));
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 16px; padding: 18px 20px;
+    backdrop-filter: blur(10px);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .q-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .q-icon { font-size: 22px; }
+  .q-title { font-family: 'Black Han Sans', sans-serif; font-size: 16px; color: #fbbf24; }
+  .q-badge {
+    font-size: 11px; background: rgba(251,191,36,0.15); color: #fbbf24;
+    padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; font-weight: 700; margin-left: auto;
+  }
+  .q-text {
+    font-size: 14px; color: rgba(253,230,138,0.85);
+    line-height: 1.7; font-weight: 400;
+    padding-left: 10px; border-left: 3px solid rgba(251,191,36,0.3);
+    margin-bottom: 14px;
+  }
+  .q-write {
+    flex: 1;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 14px 16px;
+    background: rgba(251,191,36,0.04);
+    border: 1px dashed rgba(251,191,36,0.18);
+    border-radius: 12px;
+    min-height: 100px;
+  }
+  .q-write-header {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .q-write-icon { font-size: 16px; }
+  .q-write-label { font-family: 'Black Han Sans', sans-serif; font-size: 13px; color: rgba(251,191,36,0.6); }
+  .q-write-area {
+    flex: 1;
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Gaegu', cursive;
+    font-size: 16px;
+    color: rgba(253,230,138,0.9);
+    line-height: 1.6;
+  }
+  .q-write-area::placeholder {
+    color: rgba(251,191,36,0.35);
+  }
+
+  /* ======================== */
+  /* 편집 모드 (노드 배치용)  */
+  /* ======================== */
+  .edit-mode-btn {
+    position: absolute;
+    top: 110px;
+    left: 24px;
+    padding: 6px 14px;
+    background: rgba(168,85,247,0.2);
+    border: 1px solid rgba(168,85,247,0.4);
+    border-radius: 8px;
+    color: #c4b5fd;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.2s;
+  }
+  .edit-mode-btn:hover {
+    background: rgba(168,85,247,0.3);
+  }
+  .edit-mode-btn.active {
+    background: rgba(34,197,94,0.3);
+    border-color: rgba(34,197,94,0.5);
+    color: #86efac;
+  }
+
+  .save-positions-btn {
+    position: absolute;
+    top: 110px;
+    left: 130px;
+    padding: 6px 14px;
+    background: rgba(59,130,246,0.2);
+    border: 1px solid rgba(59,130,246,0.4);
+    border-radius: 8px;
+    color: #93c5fd;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 100;
+    display: none;
+    transition: all 0.2s;
+  }
+  .save-positions-btn:hover {
+    background: rgba(59,130,246,0.3);
+  }
+  .save-positions-btn.show {
+    display: block;
+  }
+
+  /* 편집 모드 노드 스타일 */
+  .canvas.edit-mode .node {
+    cursor: move;
+    border: 2px dashed rgba(168,85,247,0.6) !important;
+  }
+  .canvas.edit-mode .node:hover {
+    box-shadow: 0 0 20px rgba(168,85,247,0.4);
+  }
+  .canvas.edit-mode .node.dragging-node {
+    opacity: 0.8;
+    z-index: 1000;
+  }
+
+  /* 위치 복사 토스트 */
+  .copy-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: rgba(34,197,94,0.9);
+    color: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .copy-toast.show {
+    opacity: 1;
+  }
+
+  /* ======================== */
+  /* 반응형 - 태블릿/모바일       */
+  /* ======================== */
+  @media (max-width: 1280px) {
+    body {
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+
+    .canvas {
+      width: 1300px;
+      min-height: 100vh;
+      overflow: visible;
+    }
+
+    .edit-mode-btn,
+    .save-positions-btn {
+      display: none;
+    }
+  }
+
+
+</style>
+<!-- PDF 생성용 라이브러리 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="canvas" id="canvas">
+
+<!-- 편집 모드 버튼 -->
+<button class="edit-mode-btn" id="editModeBtn">🎨 편집 모드</button>
+<button class="save-positions-btn" id="savePositionsBtn">📋 위치 저장 (CSS 복사)</button>
+
+  <!-- Particles -->
+  <div class="particles">
+    <div class="particle" style="left:8%;top:25%;animation-delay:0s"></div>
+    <div class="particle" style="left:22%;top:62%;animation-delay:1.5s"></div>
+    <div class="particle" style="left:38%;top:15%;animation-delay:3s"></div>
+    <div class="particle" style="left:55%;top:80%;animation-delay:0.8s"></div>
+    <div class="particle" style="left:72%;top:28%;animation-delay:2.2s"></div>
+    <div class="particle" style="left:85%;top:55%;animation-delay:4s"></div>
+  </div>
+
+  <!-- SVG Lines -->
+  <svg class="conn-svg" viewBox="0 0 1280 720">
+    <line x1="422" y1="270" x2="538" y2="360" class="conn-line" stroke="rgba(251,191,36,0.12)" stroke-width="1"/>
+    <line x1="622" y1="452" x2="538" y2="360" class="conn-line" stroke="rgba(251,191,36,0.12)" stroke-width="1"/>
+    <line x1="647" y1="192" x2="538" y2="360" class="conn-line" stroke="rgba(34,197,94,0.10)" stroke-width="1"/>
+    <line x1="357" y1="465" x2="538" y2="360" class="conn-line" stroke="rgba(34,197,94,0.10)" stroke-width="1"/>
+    <line x1="195" y1="180" x2="538" y2="360" class="conn-line" stroke="rgba(59,130,246,0.08)" stroke-width="1"/>
+    <line x1="755" y1="335" x2="538" y2="360" class="conn-line" stroke="rgba(59,130,246,0.08)" stroke-width="1"/>
+    <line x1="190" y1="445" x2="538" y2="360" class="conn-line" stroke="rgba(168,85,247,0.07)" stroke-width="1"/>
+    <line x1="717" y1="570" x2="538" y2="360" class="conn-line" stroke="rgba(168,85,247,0.07)" stroke-width="1"/>
+  </svg>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">🐋</div>
+      <div>
+        <div class="brand-text">BRAIN WAVE 창의노트</div>
+        <div class="brand-sub">확장형 사고 구조 훈련 흐름</div>
+      </div>
+    </div>
+    <div class="unit-badge">📘 과학 · 생물 1단원</div>
+  </div>
+
+  <!-- Score Display -->
+  <div class="score-display">
+    <div class="score-item">
+      <span class="score-label">정답</span>
+      <span class="score-value correct" id="correctCount">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">오답</span>
+      <span class="score-value wrong" id="wrongCount">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">남은 문제</span>
+      <span class="score-value" id="remainCount">13</span>
+    </div>
+  </div>
+
+  <!-- Wave Rings + Core -->
+  <div class="wave-center">
+    <div class="wave-ring wave-4"></div>
+    <div class="wave-ring wave-3"></div>
+    <div class="wave-ring wave-2"></div>
+    <div class="wave-ring wave-1"></div>
+    <div class="core">
+      <div class="core-whale">🐋</div>
+      <div class="core-text">생물과 무생물</div>
+    </div>
+    <!-- Wave Zone Labels (각 링 위쪽 중앙) -->
+    <div class="wz wz-1">1차 지식</div>
+    <div class="wz wz-2">2차 이해</div>
+    <div class="wz wz-3">3차 적용</div>
+    <div class="wz wz-4">4차 확장</div>
+  </div>
+
+
+  <!-- 8 Node Cards with Blanks -->
+  <div class="node n-w1 node-1a">
+    <div class="node-title"><span class="node-num">1</span>개념 정의</div>
+    <div class="node-content">
+      <span class="blank-slot" data-answer="생물"></span> = 살아 있는 것<br>
+      <span class="kw kw-y">무생물</span> = 살아 있지 않은 것
+    </div>
+  </div>
+
+  <div class="node n-w1 node-1b">
+    <div class="node-title"><span class="node-num">1</span>분류 예시</div>
+    <div class="node-content">
+      생물: 강아지, 꽃, 나무<br>
+      무생물: <span class="blank-slot" data-answer="돌"></span>, 물, 공기
+    </div>
+  </div>
+
+  <div class="node n-w2 node-2a">
+    <div class="node-title"><span class="node-num">2</span>영양분 섭취</div>
+    <div class="node-content">
+      · 식물: <span class="blank-slot" data-answer="광합성"></span>으로 양분 생성<br>
+      · 동물: 다른 생물 섭취
+    </div>
+  </div>
+
+  <div class="node n-w2 node-2b">
+    <div class="node-title"><span class="node-num">2</span>번식</div>
+    <div class="node-content">
+      <span class="blank-slot" data-answer="번식"></span> = 자손을 남기는 활동<br>
+      종족을 이어 나가기 위한 과정
+    </div>
+  </div>
+
+  <div class="node n-w3 node-3a">
+    <div class="node-title"><span class="node-num">3</span>상호 관계</div>
+    <div class="node-content">
+      생물·무생물은 <span class="blank-slot" data-answer="밀접하게"></span> 연결<br>
+      · 식물 → 흙·물에서 성장
+    </div>
+  </div>
+
+  <div class="node n-w3 node-3b">
+    <div class="node-title"><span class="node-num">3</span>분해와 순환</div>
+    <div class="node-content">
+      죽은 생물 → <span class="blank-slot" data-answer="세균"></span>이 분해<br>
+      → 흙 속 양분 → 식물 성장
+    </div>
+  </div>
+
+  <div class="node n-w4 node-4a">
+    <div class="node-title"><span class="node-num">4</span>생태계 순환</div>
+    <div class="node-content">
+      태어남 → 성장 → 죽음<br>
+      → <span class="blank-slot" data-answer="자연"></span>으로 회귀
+    </div>
+  </div>
+
+  <div class="node n-w4 node-4b">
+    <div class="node-title"><span class="node-num">4</span>핵심 메시지</div>
+    <div class="node-content">
+      생물 + 무생물 = <span class="blank-slot" data-answer="조화"></span><br>
+      → 건강한 지구 환경
+    </div>
+  </div>
+
+  <!-- ======================== -->
+  <!-- Right Panel              -->
+  <!-- ======================== -->
+  <div class="right-panel">
+
+    <!-- 개념 구조도 -->
+    <div class="summary-card">
+      <div class="summary-title"><span>🗺️</span> 개념 구조도</div>
+      <div class="concept-map">
+        <div class="concept-row">
+          <div class="concept-box cb-primary">🌱 <span class="blank-slot blank-sm" data-answer="생물"></span></div>
+          <div class="vs-badge">VS</div>
+          <div class="concept-box cb-secondary">🪨 <span class="blank-slot blank-sm" data-answer="무생물"></span></div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="examples-row">
+          <span class="example-tag et-primary">🐕 강아지</span>
+          <span class="example-tag et-primary">🌸 꽃</span>
+          <span class="example-tag et-primary">🌳 나무</span>
+          <span class="example-tag et-primary">🦠 세균</span>
+        </div>
+        <div class="examples-row" style="margin-top:3px;">
+          <span class="example-tag et-secondary">🪨 돌</span>
+          <span class="example-tag et-secondary">💧 물</span>
+          <span class="example-tag et-secondary">💨 공기</span>
+          <span class="example-tag et-secondary">🪑 책상</span>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="concept-row">
+          <div class="concept-box cb-feature"><span class="blank-slot blank-sm" data-answer="영양분"></span></div>
+          <div class="arrow-right">→</div>
+          <div class="concept-box cb-feature"><span class="blank-slot blank-sm" data-answer="성장"></span></div>
+          <div class="arrow-right">→</div>
+          <div class="concept-box cb-feature">번식</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="concept-box cb-cycle" style="text-align:center;">
+          🔄 <span class="blank-slot blank-sm" data-answer="순환"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 사고 확장 질문 -->
+    <div class="question-card">
+      <div class="q-header">
+        <span class="q-icon">❓</span>
+        <span class="q-title">사고 확장 질문</span>
+        <span class="q-badge">WAVE 5</span>
+      </div>
+      <div class="q-text">
+        만약 지구에서 모든 세균이 사라진다면, 생태계 순환에 어떤 변화가 생길까?
+      </div>
+      <div class="q-write">
+        <div class="q-write-header">
+          <span class="q-write-icon">✏️</span>
+          <span class="q-write-label">나만의 답변 쓰기</span>
+        </div>
+        <textarea class="q-write-area" placeholder="여기에 나만의 답변을 써보세요..."></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Word Bank -->
+  <div class="word-bank" id="wordBank">
+    <div class="word-bank-title">🎯 아래 단어를 드래그해서 빈칸에 넣어보세요!</div>
+    <div class="word-chips" id="wordChips">
+      <!-- Words will be added by JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- Confetti Canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Completion Modal -->
+<div class="completion-modal" id="completionModal">
+  <div class="completion-card">
+    <div class="completion-icon">🎉</div>
+    <div class="completion-title">축하합니다!</div>
+    <div class="completion-score" id="finalScore">모든 문제를 완료했어요!</div>
+    <div class="completion-btns">
+      <button class="completion-btn" onclick="location.reload()">다시 하기</button>
+      <button class="completion-btn btn-pdf" onclick="downloadPDF()">📄 PDF 다운로드</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================
+// 게임 데이터 및 상태
+// ================================
+const GAME_DATA = {
+  // 정답 단어들 (노드 빈칸 8개 + 개념 구조도 5개 = 13개)
+  answers: [
+    // 노드 빈칸
+    '생물', '돌', '광합성', '번식', '밀접하게', '세균', '자연', '조화',
+    // 개념 구조도 빈칸 (생물 2개, 무생물 1개)
+    '생물', '무생물', '영양분', '성장', '순환'
+  ],
+  // 오답 없음 - 모든 단어가 정답
+  decoys: []
+};
+
+let correctCount = 0;
+let wrongCount = 0;
+let remainCount = 13; // 노드 8개 + 개념 구조도 5개
+let draggedWord = null;
+let draggedChipId = null; // 드래그 중인 칩의 고유 ID
+
+// ================================
+// 초기화
+// ================================
+document.addEventListener('DOMContentLoaded', () => {
+  initWordBank();
+  initDragAndDrop();
+});
+
+// 단어 뱅크 초기화
+function initWordBank() {
+  const wordChips = document.getElementById('wordChips');
+  // 정답 단어만 사용 (decoys 없음)
+  const allWords = [...GAME_DATA.answers];
+
+  // 단어 섞기
+  shuffleArray(allWords);
+
+  allWords.forEach((word, index) => {
+    const chip = document.createElement('div');
+    chip.className = 'word-chip';
+    chip.textContent = word;
+    chip.draggable = true;
+    chip.dataset.word = word;
+    chip.dataset.chipId = `chip-${index}`; // 고유 ID 부여
+    wordChips.appendChild(chip);
+  });
+}
+
+// 배열 섞기
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+// ================================
+// 드래그 앤 드롭
+// ================================
+function initDragAndDrop() {
+  const wordChips = document.querySelectorAll('.word-chip');
+  const blankSlots = document.querySelectorAll('.blank-slot');
+
+  // 드래그 시작
+  wordChips.forEach(chip => {
+    chip.addEventListener('dragstart', (e) => {
+      draggedWord = e.target.dataset.word;
+      draggedChipId = e.target.dataset.chipId; // 칩 고유 ID 저장
+      e.target.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    chip.addEventListener('dragend', (e) => {
+      e.target.classList.remove('dragging');
+      draggedWord = null;
+      draggedChipId = null;
+    });
+  });
+
+  // 드롭 영역 (빈칸)
+  blankSlots.forEach(slot => {
+    slot.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!slot.classList.contains('filled')) {
+        slot.classList.add('drag-over');
+      }
+    });
+
+    slot.addEventListener('dragleave', (e) => {
+      slot.classList.remove('drag-over');
+    });
+
+    slot.addEventListener('drop', (e) => {
+      e.preventDefault();
+      slot.classList.remove('drag-over');
+
+      if (slot.classList.contains('filled')) return;
+
+      const answer = slot.dataset.answer;
+      const slotRect = slot.getBoundingClientRect();
+
+      if (draggedWord === answer) {
+        // 정답!
+        handleCorrect(slot, draggedWord, draggedChipId, slotRect);
+      } else {
+        // 오답!
+        handleWrong(slotRect);
+      }
+    });
+  });
+}
+
+// ================================
+// 정답 처리
+// ================================
+function handleCorrect(slot, word, chipId, rect) {
+  // 슬롯 업데이트
+  slot.classList.add('filled');
+  slot.innerHTML = `<span class="answer-text">${word}</span>`;
+
+  // 사용된 단어 표시 (고유 ID로 정확히 해당 칩만 찾기)
+  const usedChip = document.querySelector(`.word-chip[data-chip-id="${chipId}"]`);
+  if (usedChip) {
+    usedChip.classList.add('used');
+  }
+
+  // 점수 업데이트
+  correctCount++;
+  remainCount--;
+  updateScore();
+
+  // 폭죽 효과
+  createConfetti(rect.left + rect.width / 2, rect.top);
+
+  // 완료 체크
+  if (remainCount === 0) {
+    setTimeout(showCompletion, 1000);
+  }
+}
+
+// ================================
+// 오답 처리
+// ================================
+function handleWrong(rect) {
+  wrongCount++;
+  updateScore();
+
+  // X 마크 표시
+  const wrongMark = document.createElement('div');
+  wrongMark.className = 'wrong-mark';
+  wrongMark.textContent = '❌';
+  wrongMark.style.left = `${rect.left + rect.width / 2 - 30}px`;
+  wrongMark.style.top = `${rect.top - 30}px`;
+  document.body.appendChild(wrongMark);
+
+  setTimeout(() => wrongMark.remove(), 600);
+}
+
+// ================================
+// 점수 업데이트
+// ================================
+function updateScore() {
+  document.getElementById('correctCount').textContent = correctCount;
+  document.getElementById('wrongCount').textContent = wrongCount;
+  document.getElementById('remainCount').textContent = remainCount;
+}
+
+// ================================
+// 폭죽 효과 (Confetti)
+// ================================
+function createConfetti(x, y) {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = [];
+  const colors = ['#fbbf24', '#22c55e', '#3b82f6', '#a855f7', '#ef4444', '#ec4899'];
+
+  // 파티클 생성
+  for (let i = 0; i < 50; i++) {
+    particles.push({
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 15,
+      vy: (Math.random() - 0.5) * 15 - 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 8 + 4,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 10,
+      gravity: 0.3,
+      opacity: 1
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let activeParticles = 0;
+
+    particles.forEach(p => {
+      if (p.opacity <= 0) return;
+      activeParticles++;
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.rotation += p.rotationSpeed;
+      p.opacity -= 0.015;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.opacity;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.restore();
+    });
+
+    if (activeParticles > 0) {
+      requestAnimationFrame(animate);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  animate();
+}
+
+// ================================
+// 완료 모달
+// ================================
+function showCompletion() {
+  const modal = document.getElementById('completionModal');
+  const scoreText = document.getElementById('finalScore');
+
+  const accuracy = Math.round((correctCount / (correctCount + wrongCount)) * 100);
+  scoreText.textContent = `정답 ${correctCount}개 / 오답 ${wrongCount}개 (정확도: ${accuracy}%)`;
+
+  modal.classList.add('show');
+
+  // 대형 폭죽
+  createConfetti(window.innerWidth / 2, window.innerHeight / 2);
+  setTimeout(() => createConfetti(window.innerWidth / 3, window.innerHeight / 2), 200);
+  setTimeout(() => createConfetti(window.innerWidth * 2 / 3, window.innerHeight / 2), 400);
+}
+
+// ================================
+// 편집 모드 (노드 드래그 배치)
+// ================================
+let isEditMode = false;
+let dragNode = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+document.getElementById('editModeBtn').addEventListener('click', toggleEditMode);
+document.getElementById('savePositionsBtn').addEventListener('click', savePositions);
+
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  const canvas = document.getElementById('canvas');
+  const editBtn = document.getElementById('editModeBtn');
+  const saveBtn = document.getElementById('savePositionsBtn');
+
+  if (isEditMode) {
+    canvas.classList.add('edit-mode');
+    editBtn.classList.add('active');
+    editBtn.textContent = '✅ 편집 중';
+    saveBtn.classList.add('show');
+    initNodeDrag();
+  } else {
+    canvas.classList.remove('edit-mode');
+    editBtn.classList.remove('active');
+    editBtn.textContent = '🎨 편집 모드';
+    saveBtn.classList.remove('show');
+    removeNodeDrag();
+  }
+}
+
+function initNodeDrag() {
+  const nodes = document.querySelectorAll('.node');
+  const canvas = document.getElementById('canvas');
+
+  nodes.forEach(node => {
+    node.addEventListener('mousedown', startNodeDrag);
+  });
+
+  canvas.addEventListener('mousemove', moveNode);
+  canvas.addEventListener('mouseup', stopNodeDrag);
+  canvas.addEventListener('mouseleave', stopNodeDrag);
+}
+
+function removeNodeDrag() {
+  const nodes = document.querySelectorAll('.node');
+  const canvas = document.getElementById('canvas');
+
+  nodes.forEach(node => {
+    node.removeEventListener('mousedown', startNodeDrag);
+  });
+
+  canvas.removeEventListener('mousemove', moveNode);
+  canvas.removeEventListener('mouseup', stopNodeDrag);
+  canvas.removeEventListener('mouseleave', stopNodeDrag);
+}
+
+function startNodeDrag(e) {
+  if (!isEditMode) return;
+  e.preventDefault();
+
+  dragNode = e.currentTarget;
+  dragNode.classList.add('dragging-node');
+
+  const rect = dragNode.getBoundingClientRect();
+  const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+
+  dragOffsetX = e.clientX - rect.left;
+  dragOffsetY = e.clientY - rect.top;
+}
+
+function moveNode(e) {
+  if (!dragNode || !isEditMode) return;
+
+  const canvas = document.getElementById('canvas');
+  const canvasRect = canvas.getBoundingClientRect();
+
+  let newLeft = e.clientX - canvasRect.left - dragOffsetX;
+  let newTop = e.clientY - canvasRect.top - dragOffsetY;
+
+  // 경계 체크
+  newLeft = Math.max(0, Math.min(newLeft, canvasRect.width - dragNode.offsetWidth));
+  newTop = Math.max(0, Math.min(newTop, canvasRect.height - dragNode.offsetHeight));
+
+  dragNode.style.left = newLeft + 'px';
+  dragNode.style.top = newTop + 'px';
+}
+
+function stopNodeDrag() {
+  if (dragNode) {
+    dragNode.classList.remove('dragging-node');
+    dragNode = null;
+  }
+}
+
+function savePositions() {
+  const nodes = document.querySelectorAll('.node');
+  let css = '/* Node Positions - 고정 템플릿 */\n';
+
+  const nodeNames = {
+    'node-1a': '개념 정의',
+    'node-1b': '분류 예시',
+    'node-2a': '영양분 섭취',
+    'node-2b': '번식',
+    'node-3a': '상호 관계',
+    'node-3b': '분해와 순환',
+    'node-4a': '생태계 순환',
+    'node-4b': '핵심 메시지'
+  };
+
+  nodes.forEach(node => {
+    const classList = Array.from(node.classList);
+    const nodeClass = classList.find(c => c.startsWith('node-'));
+    if (nodeClass) {
+      const left = parseInt(node.style.left) || parseInt(getComputedStyle(node).left);
+      const top = parseInt(node.style.top) || parseInt(getComputedStyle(node).top);
+      const width = parseInt(getComputedStyle(node).width);
+      const name = nodeNames[nodeClass] || nodeClass;
+      css += `.${nodeClass} { left: ${left}px; top: ${top}px; width: ${width}px; }   /* ${name} */\n`;
+    }
+  });
+
+  // 클립보드에 복사
+  navigator.clipboard.writeText(css).then(() => {
+    showCopyToast('CSS가 클립보드에 복사되었습니다!');
+  }).catch(() => {
+    // 폴백: 텍스트 영역에 표시
+    console.log(css);
+    showCopyToast('콘솔에 CSS가 출력되었습니다!');
+  });
+}
+
+function showCopyToast(msg) {
+  let toast = document.querySelector('.copy-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'copy-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ================================
+// PDF 다운로드
+// ================================
+async function downloadPDF() {
+  const pdfBtn = document.querySelector('.btn-pdf');
+  const originalText = pdfBtn.textContent;
+  pdfBtn.textContent = '⏳ 생성 중...';
+  pdfBtn.disabled = true;
+
+  try {
+    // 모달 숨기기
+    const modal = document.getElementById('completionModal');
+    modal.style.display = 'none';
+
+    // 편집 모드 버튼들 숨기기
+    const editBtn = document.getElementById('editModeBtn');
+    const saveBtn = document.getElementById('savePositionsBtn');
+    const wordBank = document.getElementById('wordBank');
+    const scoreDisplay = document.querySelector('.score-display');
+
+    editBtn.style.display = 'none';
+    saveBtn.style.display = 'none';
+    wordBank.style.display = 'none';
+    scoreDisplay.style.display = 'none';
+
+    // 캔버스 캡처
+    const canvas = document.getElementById('canvas');
+    const capturedCanvas = await html2canvas(canvas, {
+      scale: 2,
+      backgroundColor: '#080e1a',
+      useCORS: true,
+      logging: false
+    });
+
+    // PDF 생성
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const imgData = capturedCanvas.toDataURL('image/png');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    // 이미지 비율 계산
+    const imgWidth = capturedCanvas.width;
+    const imgHeight = capturedCanvas.height;
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+    const finalWidth = imgWidth * ratio;
+    const finalHeight = imgHeight * ratio;
+    const offsetX = (pdfWidth - finalWidth) / 2;
+    const offsetY = (pdfHeight - finalHeight) / 2;
+
+    pdf.addImage(imgData, 'PNG', offsetX, offsetY, finalWidth, finalHeight);
+    pdf.save('브레인웨이브_창의노트.pdf');
+
+    // 요소들 다시 표시
+    editBtn.style.display = '';
+    wordBank.style.display = '';
+    scoreDisplay.style.display = '';
+    modal.style.display = '';
+    modal.classList.add('show');
+
+  } catch (error) {
+    console.error('PDF 생성 오류:', error);
+    alert('PDF 생성 중 오류가 발생했습니다.');
+  }
+
+  pdfBtn.textContent = originalText;
+  pdfBtn.disabled = false;
+}
+</script>
+</body>
+</html>

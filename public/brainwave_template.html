@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>브레인 웨이브 창의노트</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Black+Han+Sans&family=Gaegu:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #080e1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+
+  .canvas {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    background: linear-gradient(160deg, #080e1a 0%, #0b1a30 30%, #0e2240 60%, #080e1a 100%);
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  .canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 42% 50%, rgba(30, 120, 180, 0.07) 0%, transparent 60%),
+      radial-gradient(ellipse at 20% 80%, rgba(20, 80, 140, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(40, 140, 200, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* ======================== */
+  /* Particles                */
+  /* ======================== */
+  .particles { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .particle {
+    position: absolute; width: 2px; height: 2px;
+    background: rgba(100, 200, 255, 0.25); border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+    50% { transform: translateY(-15px) scale(1.5); opacity: 0.5; }
+  }
+
+  /* ======================== */
+  /* Header                   */
+  /* ======================== */
+  .header {
+    position: absolute;
+    top: 14px; left: 24px; right: 24px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-icon { font-size: 36px; filter: drop-shadow(0 0 8px rgba(80,180,255,0.4)); }
+  .brand-text {
+    font-family: 'Black Han Sans', sans-serif; font-size: 28px; color: #5bc0f8;
+    letter-spacing: 3px; text-shadow: 0 0 20px rgba(91,192,248,0.3);
+  }
+  .brand-sub { font-size: 13px; color: rgba(150,200,240,0.6); letter-spacing: 3px; margin-top: 2px; }
+  .unit-badge {
+    background: linear-gradient(135deg, rgba(91,192,248,0.12), rgba(91,192,248,0.04));
+    border: 1px solid rgba(91,192,248,0.2); border-radius: 20px;
+    padding: 6px 16px; color: #7dd3fc; font-size: 13px; font-weight: 500; letter-spacing: 1px;
+  }
+
+  /* ======================== */
+  /* Wave Rings (center)      */
+  /* ======================== */
+  .wave-center {
+    position: absolute;
+    left: 42%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+  }
+
+  .wave-ring {
+    position: absolute; border-radius: 50%; border: 1px solid;
+    transform: translate(-50%, -50%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  .wave-4 {
+    width: 520px; height: 520px;
+    border-color: rgba(168,85,247,0.12);
+    background: radial-gradient(ellipse, transparent 88%, rgba(168,85,247,0.018));
+    animation-delay: 0s;
+  }
+  .wave-3 {
+    width: 390px; height: 390px;
+    border-color: rgba(59,130,246,0.16);
+    background: radial-gradient(ellipse, transparent 85%, rgba(59,130,246,0.025));
+    animation-delay: 0.5s;
+  }
+  .wave-2 {
+    width: 265px; height: 265px;
+    border-color: rgba(34,197,94,0.2);
+    background: radial-gradient(ellipse, transparent 80%, rgba(34,197,94,0.03));
+    animation-delay: 1s;
+  }
+  .wave-1 {
+    width: 155px; height: 155px;
+    border-color: rgba(251,191,36,0.25);
+    background: radial-gradient(ellipse, transparent 65%, rgba(251,191,36,0.04));
+    animation-delay: 1.5s;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%,-50%) scale(1.012); opacity: 0.85; }
+  }
+
+  /* ======================== */
+  /* Core (whale brain)       */
+  /* ======================== */
+  .core {
+    position: absolute; width: 94px; height: 94px;
+    transform: translate(-50%,-50%);
+    background: radial-gradient(circle, rgba(91,192,248,0.18), rgba(91,192,248,0.04));
+    border: 2px solid rgba(91,192,248,0.35); border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 5;
+    box-shadow: 0 0 35px rgba(91,192,248,0.12), inset 0 0 25px rgba(91,192,248,0.08);
+    animation: corePulse 3s ease-in-out infinite;
+  }
+  @keyframes corePulse {
+    0%, 100% { box-shadow: 0 0 35px rgba(91,192,248,0.12), inset 0 0 25px rgba(91,192,248,0.08); }
+    50% { box-shadow: 0 0 55px rgba(91,192,248,0.22), inset 0 0 35px rgba(91,192,248,0.12); }
+  }
+  .core-whale { font-size: 28px; margin-bottom: 1px; filter: drop-shadow(0 0 8px rgba(91,192,248,0.5)); }
+  .core-text { font-family: 'Black Han Sans', sans-serif; font-size: 14px; color: #7dd3fc; }
+  .core-sub { font-size: 9px; color: rgba(150,210,255,0.5); letter-spacing: 1px; }
+
+  /* ======================== */
+  /* SVG Connection Lines     */
+  /* ======================== */
+  .conn-svg {
+    position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  }
+  .conn-line {
+    stroke-dasharray: 3 5;
+    animation: dash 25s linear infinite;
+  }
+  @keyframes dash { to { stroke-dashoffset: -150; } }
+
+  /* ======================== */
+  /* Content Nodes            */
+  /* ======================== */
+  .node {
+    position: absolute;
+    border-radius: 11px;
+    padding: 9px 12px;
+    backdrop-filter: blur(6px);
+    z-index: 10;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .node:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 18px rgba(255,255,255,0.06);
+  }
+  .node-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    margin-bottom: 5px; display: flex; align-items: center; gap: 5px;
+  }
+  .node-content { font-size: 13px; line-height: 1.7; font-weight: 400; }
+  .node-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: 9px; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* Wave 1 - Yellow */
+  .n-w1 { background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.22); }
+  .n-w1 .node-title { color: #fbbf24; }
+  .n-w1 .node-content { color: rgba(255,225,150,0.85); }
+  .n-w1 .node-num { background: rgba(251,191,36,0.2); color: #fbbf24; }
+
+  /* Wave 2 - Green */
+  .n-w2 { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.22); }
+  .n-w2 .node-title { color: #22c55e; }
+  .n-w2 .node-content { color: rgba(150,255,180,0.85); }
+  .n-w2 .node-num { background: rgba(34,197,94,0.2); color: #22c55e; }
+
+  /* Wave 3 - Blue */
+  .n-w3 { background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.22); }
+  .n-w3 .node-title { color: #3b82f6; }
+  .n-w3 .node-content { color: rgba(150,200,255,0.85); }
+  .n-w3 .node-num { background: rgba(59,130,246,0.2); color: #3b82f6; }
+
+  /* Wave 4 - Purple */
+  .n-w4 { background: rgba(168,85,247,0.07); border: 1px solid rgba(168,85,247,0.22); }
+  .n-w4 .node-title { color: #a855f7; }
+  .n-w4 .node-content { color: rgba(210,170,255,0.85); }
+  .n-w4 .node-num { background: rgba(168,85,247,0.2); color: #a855f7; }
+
+  /* Keywords & References */
+  .kw { font-weight: 700; }
+  .kw-y { color: #fde68a; }
+  .kw-g { color: #86efac; }
+  .kw-b { color: #93c5fd; }
+  .kw-p { color: #c4b5fd; }
+  .ref-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 50%;
+    font-size: 9px; font-weight: 700;
+    background: rgba(91,192,248,0.2); color: #7dd3fc;
+    border: 1px solid rgba(91,192,248,0.3);
+    margin-left: 3px; vertical-align: middle;
+  }
+
+  /* ======================== */
+  /* Node Positions           */
+  /* ======================== */
+  .node-1a { left: 300px; top: 220px; width: 180px; }
+  .node-1b { left: 550px; top: 440px; width: 180px; }
+  .node-2a { left: 570px; top: 120px; width: 190px; }
+  .node-2b { left: 220px; top: 460px; width: 190px; }
+  .node-3a { left: 60px; top: 100px; width: 200px; }
+  .node-3b { left: 680px; top: 270px; width: 200px; }
+  .node-4a { left: 55px;  top: 320px; width: 200px; }
+  .node-4b { left: 640px; top: 550px; width: 200px; }
+
+  /* ======================== */
+  /* Right Panel              */
+  /* ======================== */
+  .right-panel {
+    position: absolute;
+    right: 18px; top: 54px;
+    width: 260px; bottom: 42px;
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 15;
+  }
+  .summary-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 12px 14px;
+    backdrop-filter: blur(10px);
+  }
+  .summary-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 14px; color: #e2e8f0;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
+  .summary-title span { font-size: 16px; }
+  .concept-map { display: flex; flex-direction: column; gap: 5px; }
+  .concept-row { display: flex; align-items: center; gap: 6px; }
+  .concept-box {
+    padding: 5px 10px; border-radius: 8px;
+    font-size: 12px; font-weight: 500; text-align: center; flex: 1;
+  }
+  .cb-primary { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); color: #7dd3fc; }
+  .cb-secondary { background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); color: #c4b5fd; }
+  .cb-feature { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); color: #86efac; font-size: 11px; }
+  .cb-cycle { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); color: #fde68a; font-size: 11px; }
+  .arrow-down { color: rgba(255,255,255,0.25); font-size: 11px; text-align: center; }
+  .arrow-right { color: rgba(255,255,255,0.2); font-size: 10px; flex-shrink: 0; }
+  .vs-badge {
+    background: rgba(255,255,255,0.06); border-radius: 5px;
+    padding: 2px 7px; font-size: 9px; color: rgba(255,255,255,0.35); flex-shrink: 0;
+  }
+  .examples-row { display: flex; gap: 5px; flex-wrap: wrap; }
+  .example-tag { padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: 500; }
+  .et-primary { background: rgba(59,130,246,0.1); color: rgba(125,211,252,0.8); border: 1px solid rgba(59,130,246,0.15); }
+  .et-secondary { background: rgba(168,85,247,0.1); color: rgba(196,181,253,0.8); border: 1px solid rgba(168,85,247,0.15); }
+
+  /* ======================== */
+  /* Question Card            */
+  /* ======================== */
+  .question-card {
+    background: linear-gradient(135deg, rgba(251,191,36,0.06), rgba(251,191,36,0.02));
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 14px; padding: 14px 16px;
+    backdrop-filter: blur(10px);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .q-header { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .q-icon { font-size: 18px; }
+  .q-title { font-family: 'Black Han Sans', sans-serif; font-size: 13px; color: #fbbf24; }
+  .q-badge {
+    font-size: 9px; background: rgba(251,191,36,0.15); color: #fbbf24;
+    padding: 3px 7px; border-radius: 5px; letter-spacing: 1px; font-weight: 700; margin-left: auto;
+  }
+  .q-text {
+    font-size: 12px; color: rgba(253,230,138,0.85);
+    line-height: 1.6; font-weight: 400;
+    padding-left: 8px; border-left: 2px solid rgba(251,191,36,0.3);
+    margin-bottom: 12px;
+  }
+  .q-write {
+    flex: 1;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 12px 14px;
+    background: rgba(251,191,36,0.04);
+    border: 1px dashed rgba(251,191,36,0.18);
+    border-radius: 10px;
+    min-height: 80px;
+  }
+  .q-write-header {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .q-write-icon { font-size: 14px; }
+  .q-write-label { font-family: 'Black Han Sans', sans-serif; font-size: 11px; color: rgba(251,191,36,0.6); }
+  .q-write-area {
+    flex: 1;
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Gaegu', cursive;
+    font-size: 14px;
+    color: rgba(253,230,138,0.9);
+    line-height: 1.5;
+  }
+  .q-write-area::placeholder {
+    color: rgba(251,191,36,0.35);
+  }
+
+  /* ======================== */
+  /* Bottom Legend             */
+  /* ======================== */
+  .bottom-bar {
+    position: absolute; bottom: 14px; left: 24px;
+    display: flex; gap: 18px; align-items: center; z-index: 15;
+  }
+  .step-dot { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-y { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,0.5); }
+  .dot-g { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+  .dot-b { background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.5); }
+  .dot-p { background: #a855f7; box-shadow: 0 0 6px rgba(168,85,247,0.5); }
+  .step-dot span { color: rgba(200,220,240,0.6); }
+  .flow-arrow { color: rgba(255,255,255,0.18); font-size: 13px; }
+
+  /* ======================== */
+  /* Wave Zone Labels         */
+  /* ======================== */
+  .wz {
+    position: absolute; z-index: 12;
+    font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+    padding: 3px 9px; border-radius: 6px; white-space: nowrap;
+    pointer-events: none;
+  }
+  .wz-1 { color: #fbbf24; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.18); }
+  .wz-2 { color: #22c55e; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.18); }
+  .wz-3 { color: #3b82f6; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.18); }
+  .wz-4 { color: #a855f7; background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.18); }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <!-- Particles -->
+  <div class="particles">
+    <div class="particle" style="left:8%;top:25%;animation-delay:0s"></div>
+    <div class="particle" style="left:22%;top:62%;animation-delay:1.5s"></div>
+    <div class="particle" style="left:38%;top:15%;animation-delay:3s"></div>
+    <div class="particle" style="left:55%;top:80%;animation-delay:0.8s"></div>
+    <div class="particle" style="left:72%;top:28%;animation-delay:2.2s"></div>
+    <div class="particle" style="left:85%;top:55%;animation-delay:4s"></div>
+    <div class="particle" style="left:15%;top:78%;animation-delay:1s"></div>
+    <div class="particle" style="left:62%;top:42%;animation-delay:2.8s"></div>
+    <div class="particle" style="left:48%;top:68%;animation-delay:3.5s"></div>
+  </div>
+
+  <!-- SVG Connection Lines -->
+  <svg class="conn-svg" viewBox="0 0 1280 720">
+    <line x1="422" y1="270" x2="538" y2="360" class="conn-line" stroke="rgba(251,191,36,0.12)" stroke-width="1"/>
+    <line x1="622" y1="452" x2="538" y2="360" class="conn-line" stroke="rgba(251,191,36,0.12)" stroke-width="1"/>
+    <line x1="647" y1="192" x2="538" y2="360" class="conn-line" stroke="rgba(34,197,94,0.10)" stroke-width="1"/>
+    <line x1="357" y1="465" x2="538" y2="360" class="conn-line" stroke="rgba(34,197,94,0.10)" stroke-width="1"/>
+    <line x1="195" y1="180" x2="538" y2="360" class="conn-line" stroke="rgba(59,130,246,0.08)" stroke-width="1"/>
+    <line x1="755" y1="335" x2="538" y2="360" class="conn-line" stroke="rgba(59,130,246,0.08)" stroke-width="1"/>
+    <line x1="190" y1="445" x2="538" y2="360" class="conn-line" stroke="rgba(168,85,247,0.07)" stroke-width="1"/>
+    <line x1="717" y1="570" x2="538" y2="360" class="conn-line" stroke="rgba(168,85,247,0.07)" stroke-width="1"/>
+  </svg>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">🐋</div>
+      <div>
+        <div class="brand-text">BRAIN WAVE 창의노트</div>
+        <div class="brand-sub">질문 기반 확장형 사고 루틴</div>
+      </div>
+    </div>
+    <!-- ✏️ 단원 배지: 과목과 단원명 수정 -->
+    <div class="unit-badge" id="unitBadge">📘 과학 · 생물 1단원</div>
+  </div>
+
+  <!-- Wave Rings + Core -->
+  <div class="wave-center">
+    <div class="wave-ring wave-4"></div>
+    <div class="wave-ring wave-3"></div>
+    <div class="wave-ring wave-2"></div>
+    <div class="wave-ring wave-1"></div>
+    <div class="core">
+      <div class="core-whale">🧠</div>
+      <!-- ✏️ 핵심 개념 제목 -->
+      <div class="core-text" id="coreText">핵심 개념</div>
+      <div class="core-sub">핵심 개념</div>
+    </div>
+  </div>
+
+  <!-- Wave Zone Labels -->
+  <div class="wz wz-1" style="left:528px; top:278px;">1차 지식</div>
+  <div class="wz wz-2" style="left:500px; top:222px;">2차 이해</div>
+  <div class="wz wz-3" style="left:470px; top:160px;">3차 적용</div>
+  <div class="wz wz-4" style="left:435px; top:95px;">4차 확장</div>
+
+  <!-- ======================== -->
+  <!-- 8개 Node Cards           -->
+  <!-- ✏️ 각 노드의 제목과 내용 수정 -->
+  <!-- ======================== -->
+
+  <!-- W1-A: 1차 지식 - 카드1 -->
+  <div class="node n-w1 node-1a">
+    <div class="node-title"><span class="node-num">1</span>개념 정의</div>
+    <div class="node-content">
+      <span class="kw kw-y">핵심용어1</span> = 정의<br>
+      <span class="kw kw-y">핵심용어2</span> = 정의
+    </div>
+  </div>
+
+  <!-- W1-B: 1차 지식 - 카드2 -->
+  <div class="node n-w1 node-1b">
+    <div class="node-title"><span class="node-num">1</span>분류/예시</div>
+    <div class="node-content">
+      예시1: 항목1, 항목2<br>
+      예시2: 항목3, 항목4
+    </div>
+  </div>
+
+  <!-- W2-A: 2차 이해 - 카드1 -->
+  <div class="node n-w2 node-2a">
+    <div class="node-title"><span class="node-num">2</span>원리/과정</div>
+    <div class="node-content">
+      · 과정1: <span class="kw kw-g">핵심내용</span><span class="ref-num">1</span><br>
+      · 과정2: 설명<br>
+      · 과정3: 설명<span class="ref-num">2</span>
+    </div>
+  </div>
+
+  <!-- W2-B: 2차 이해 - 카드2 -->
+  <div class="node n-w2 node-2b">
+    <div class="node-title"><span class="node-num">2</span>특징/기능</div>
+    <div class="node-content">
+      <span class="kw kw-g">특징</span> = 설명<br>
+      중요한 의미나 역할 설명
+    </div>
+  </div>
+
+  <!-- W3-A: 3차 적용 - 카드1 -->
+  <div class="node n-w3 node-3a">
+    <div class="node-title"><span class="node-num">3</span>관계/연결</div>
+    <div class="node-content">
+      개념들의 <span class="kw kw-b">상호 연결</span><span class="ref-num">3</span><br>
+      · 관계1 설명<br>
+      · 관계2 설명
+    </div>
+  </div>
+
+  <!-- W3-B: 3차 적용 - 카드2 -->
+  <div class="node n-w3 node-3b">
+    <div class="node-title"><span class="node-num">3</span>적용/활용</div>
+    <div class="node-content">
+      실생활 <span class="kw kw-b">적용 사례</span><span class="ref-num">4</span><br>
+      → 결과나 효과<br>
+      → 의미나 중요성
+    </div>
+  </div>
+
+  <!-- W4-A: 4차 확장 - 카드1 -->
+  <div class="node n-w4 node-4a">
+    <div class="node-title"><span class="node-num">4</span>확장/심화</div>
+    <div class="node-content">
+      더 넓은 관점 → <span class="kw kw-p">확장된 개념</span><br>
+      심화 내용이나 연결된 큰 주제
+    </div>
+  </div>
+
+  <!-- W4-B: 4차 확장 - 카드2 -->
+  <div class="node n-w4 node-4b">
+    <div class="node-title"><span class="node-num">4</span>핵심 메시지</div>
+    <div class="node-content">
+      핵심 키워드 = <span class="kw kw-p">의미</span><br>
+      → 전체 학습 내용의 요약
+    </div>
+  </div>
+
+  <!-- ======================== -->
+  <!-- Right Panel              -->
+  <!-- ✏️ 개념 구조도 내용 수정 -->
+  <!-- ======================== -->
+  <div class="right-panel">
+
+    <!-- 개념 구조도 -->
+    <div class="summary-card">
+      <div class="summary-title"><span>🗺️</span> 개념 구조도</div>
+      <div class="concept-map">
+        <div class="concept-row">
+          <div class="concept-box cb-primary">🌱 생물</div>
+          <div class="vs-badge">VS</div>
+          <div class="concept-box cb-secondary">🪨 무생물</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="examples-row">
+          <span class="example-tag et-primary">🐕 강아지</span>
+          <span class="example-tag et-primary">🌸 꽃</span>
+          <span class="example-tag et-primary">🌳 나무</span>
+          <span class="example-tag et-primary">🦠 세균</span>
+        </div>
+        <div class="examples-row" style="margin-top:3px;">
+          <span class="example-tag et-secondary">🪨 돌</span>
+          <span class="example-tag et-secondary">💧 물</span>
+          <span class="example-tag et-secondary">💨 공기</span>
+          <span class="example-tag et-secondary">🪑 책상</span>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="concept-row">
+          <div class="concept-box cb-feature">영양분</div>
+          <div class="arrow-right">→</div>
+          <div class="concept-box cb-feature">번식</div>
+          <div class="arrow-right">→</div>
+          <div class="concept-box cb-feature">성장</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="concept-box cb-cycle" style="text-align:center;">
+          🔄 생물 ↔ 무생물 → 생태계 순환
+        </div>
+      </div>
+    </div>
+
+    <!-- 사고 확장 질문 -->
+    <div class="question-card">
+      <div class="q-header">
+        <span class="q-icon">❓</span>
+        <span class="q-title">사고 확장 질문</span>
+        <span class="q-badge">WAVE 5</span>
+      </div>
+      <!-- ✏️ 확장 질문 내용 수정 -->
+      <div class="q-text" id="expandQuestion">
+        만약 ~한다면, 어떤 변화가 생길까?
+      </div>
+      <div class="q-write">
+        <div class="q-write-header">
+          <span class="q-write-icon">✏️</span>
+          <span class="q-write-label">나만의 질문 쓰기</span>
+        </div>
+        <textarea class="q-write-area" placeholder="여기에 나만의 질문을 써보세요..."></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Legend -->
+  <div class="bottom-bar">
+    <div class="step-dot"><div class="dot dot-y"></div><span>1차 지식</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="step-dot"><div class="dot dot-g"></div><span>2차 이해</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="step-dot"><div class="dot dot-b"></div><span>3차 적용</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="step-dot"><div class="dot dot-p"></div><span>4차 확장</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="step-dot" style="color:rgba(251,191,36,0.5);">❓ <span>5차 창의질문</span></div>
+  </div>
+
+</div>
+
+<script>
+  // ================================
+  // 브레인 웨이브 창의노트 데이터 설정
+  // ================================
+  // 이 부분만 수정하면 전체 내용이 변경됩니다
+
+  const WAVE_DATA = {
+    // 단원 정보
+    subject: '과학',
+    unit: '생물 1단원',
+    icon: '📘',
+
+    // 핵심 개념 (중앙 코어)
+    coreTitle: '생물과 무생물',
+
+    // 8개 노드 카드 내용
+    nodes: {
+      // 1차 지식 (Yellow)
+      w1a: {
+        title: '개념 정의',
+        content: '<span class="kw kw-y">생물</span> = 살아 있는 것<br><span class="kw kw-y">무생물</span> = 살아 있지 않은 것'
+      },
+      w1b: {
+        title: '분류 예시',
+        content: '생물: 강아지, 꽃, 나무, 세균<br>무생물: 돌, 물, 공기, 책상'
+      },
+      // 2차 이해 (Green)
+      w2a: {
+        title: '영양분 섭취',
+        content: '· 식물: <span class="kw kw-g">광합성</span>으로 양분 생성<span class="ref-num">1</span><br>· 동물: 다른 생물 섭취<br>· 세균: 유기물 분해 흡수<span class="ref-num">3</span>'
+      },
+      w2b: {
+        title: '번식',
+        content: '<span class="kw kw-g">번식</span> = 자손을 남기는 활동<br>종족을 이어 나가기 위한 중요한 과정'
+      },
+      // 3차 적용 (Blue)
+      w3a: {
+        title: '상호 관계',
+        content: '생물·무생물은 <span class="kw kw-b">밀접하게 연결</span><span class="ref-num">2</span><br>· 식물 → 흙·물에서 성장<br>· 동물 → 물·공기로 생존'
+      },
+      w3b: {
+        title: '분해와 순환',
+        content: '죽은 생물 → <span class="kw kw-b">세균·곰팡이</span>가 분해<span class="ref-num">4</span><br>→ 흙 속 양분 → 식물 성장<br>→ 환경의 균형 유지'
+      },
+      // 4차 확장 (Purple)
+      w4a: {
+        title: '생태계 순환',
+        content: '태어남 → 성장 → 죽음 → <span class="kw kw-p">자연으로 회귀</span><br>이 순환이 지구 생태계의 균형을 유지'
+      },
+      w4b: {
+        title: '핵심 메시지',
+        content: '생물 + 무생물 = <span class="kw kw-p">조화</span><br>→ 건강한 지구 환경 · 자연 보호의 이유'
+      }
+    },
+
+    // 사고 확장 질문
+    expandQuestion: '만약 지구에서 모든 세균이 사라진다면, 생태계 순환에 어떤 변화가 생길까?'
+  };
+
+  // 페이지 로드 시 데이터 적용
+  document.addEventListener('DOMContentLoaded', () => {
+    // 단원 배지
+    document.getElementById('unitBadge').innerHTML =
+      `${WAVE_DATA.icon} ${WAVE_DATA.subject} · ${WAVE_DATA.unit}`;
+
+    // 핵심 개념
+    document.getElementById('coreText').textContent = WAVE_DATA.coreTitle;
+
+    // 8개 노드 카드
+    const nodeMapping = {
+      'w1a': '.node-1a',
+      'w1b': '.node-1b',
+      'w2a': '.node-2a',
+      'w2b': '.node-2b',
+      'w3a': '.node-3a',
+      'w3b': '.node-3b',
+      'w4a': '.node-4a',
+      'w4b': '.node-4b'
+    };
+
+    for (const [key, selector] of Object.entries(nodeMapping)) {
+      const node = document.querySelector(selector);
+      if (node && WAVE_DATA.nodes[key]) {
+        const titleEl = node.querySelector('.node-title');
+        const contentEl = node.querySelector('.node-content');
+        const numEl = titleEl.querySelector('.node-num');
+
+        // 제목 업데이트 (번호 유지)
+        titleEl.innerHTML = '';
+        titleEl.appendChild(numEl);
+        titleEl.appendChild(document.createTextNode(WAVE_DATA.nodes[key].title));
+
+        // 내용 업데이트
+        contentEl.innerHTML = WAVE_DATA.nodes[key].content;
+      }
+    }
+
+    // 확장 질문
+    document.getElementById('expandQuestion').textContent = WAVE_DATA.expandQuestion;
+  });
+</script>
+</body>
+</html>
