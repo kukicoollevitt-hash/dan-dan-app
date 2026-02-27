@@ -30492,7 +30492,12 @@ app.get('/api/speed-reading-king/ranking', async (req, res) => {
   }
 });
 
-// ===== 서버 시작 =====
+// ===== 서버 시작 (MongoDB와 독립적으로) =====
+app.listen(PORT, () => {
+  console.log(`✅ 서버 실행 중: ${PORT}`);
+});
+
+// MongoDB 연결 (비동기)
 mongoose
   .connect(MONGO_URI, {
     minPoolSize: 5,                    // 최소 5개 연결 유지 (Cold Start 방지)
@@ -30510,10 +30515,6 @@ mongoose
     } catch (indexErr) {
       console.error("⚠️ 인덱스 동기화 오류:", indexErr.message);
     }
-
-    app.listen(PORT, () => {
-      console.log(`✅ 서버 실행 중: ${PORT}`);
-    });
 
 // ============================================
 // 📢 활동 피드 API (롤링 배너용)

@@ -3293,3 +3293,179 @@
     }
   });
 })();
+
+/* =========================================================
+   다시 풀기 확인 팝업 (전체 단원 공통)
+========================================================= */
+(function initResetConfirmPopup() {
+  // CSS 스타일 삽입
+  const style = document.createElement('style');
+  style.textContent = `
+    .reset-confirm-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      animation: rcFadeIn 0.2s ease;
+    }
+    .reset-confirm-overlay.active {
+      display: flex;
+    }
+    @keyframes rcFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .reset-confirm-modal {
+      background: linear-gradient(145deg, #fff9f0 0%, #fff5e6 100%);
+      border-radius: 20px;
+      padding: 32px 28px;
+      max-width: 340px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      text-align: center;
+      animation: rcPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes rcPopIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .reset-confirm-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .reset-confirm-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #5a4a3a;
+      margin-bottom: 16px;
+    }
+    .reset-confirm-message {
+      font-size: 14px;
+      color: #7a6a5a;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    .reset-confirm-message strong {
+      color: #d97706;
+      font-weight: 600;
+    }
+    .reset-confirm-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .reset-confirm-btn {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    .reset-confirm-btn.cancel {
+      background: #e8ddd0;
+      color: #6a5a4a;
+    }
+    .reset-confirm-btn.cancel:hover {
+      background: #d8cdc0;
+    }
+    .reset-confirm-btn.confirm {
+      background: linear-gradient(135deg, #ff7b54 0%, #ff6b3d 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 107, 61, 0.4);
+    }
+    .reset-confirm-btn.confirm:hover {
+      background: linear-gradient(135deg, #ff6b3d 0%, #ff5722 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 61, 0.5);
+    }
+  `;
+  document.head.appendChild(style);
+
+  // HTML 팝업 요소 삽입
+  document.addEventListener('DOMContentLoaded', function() {
+    // 이미 존재하면 스킵
+    if (document.getElementById('reset-confirm-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'reset-confirm-overlay';
+    overlay.className = 'reset-confirm-overlay';
+    overlay.innerHTML = `
+      <div class="reset-confirm-modal">
+        <div class="reset-confirm-icon">🔄</div>
+        <div class="reset-confirm-title">다시 풀기</div>
+        <div class="reset-confirm-message">
+          <strong>모든 데이터가 초기화</strong>되며,<br>
+          <strong>지문 완독 학습</strong>부터 다시 시작됩니다.<br><br>
+          다시 풀기를 진행하시겠습니까?
+        </div>
+        <div class="reset-confirm-buttons">
+          <button class="reset-confirm-btn cancel" onclick="closeResetConfirm()">취소</button>
+          <button class="reset-confirm-btn confirm" onclick="confirmReset()">확인</button>
+        </div>
+      </div>
+    `;
+    document.body.insertBefore(overlay, document.body.firstChild);
+  });
+
+  // 전역 함수 등록
+  window.showResetConfirm = function() {
+    const overlay = document.getElementById('reset-confirm-overlay');
+    if (overlay) overlay.classList.add('active');
+  };
+
+  window.closeResetConfirm = function() {
+    const overlay = document.getElementById('reset-confirm-overlay');
+    if (overlay) overlay.classList.remove('active');
+  };
+
+  window.confirmReset = function() {
+    closeResetConfirm();
+
+    // 기존 resetQuiz 함수 호출
+    if (typeof resetQuiz === 'function') {
+      resetQuiz();
+    }
+
+    // 추가 초기화: 지문 완독 상태
+    const unitKey = window.CUR_UNIT || 'unknown';
+    localStorage.removeItem('passage_read_' + unitKey);
+
+    // 지문 문장 선택 상태 초기화
+    document.querySelectorAll('.passage-text .sentence.selected').forEach(function(s) {
+      s.classList.remove('selected');
+    });
+
+    // 어휘학습 렌더링 플래그 초기화
+    if (typeof window._vocabFillRendered !== 'undefined') {
+      window._vocabFillRendered = false;
+    }
+
+    // 어휘 입력값 초기화
+    document.querySelectorAll('#vocab-fill input[type="text"]').forEach(function(inp) {
+      inp.value = '';
+      inp.style.color = '';
+      inp.style.backgroundColor = '';
+      inp.disabled = false;
+    });
+
+    // 창의활동 초기화
+    const creativeTextarea = document.querySelector('.creative-input');
+    if (creativeTextarea) {
+      creativeTextarea.value = '';
+      creativeTextarea.disabled = false;
+    }
+
+    // 지문 완독 탭으로 이동
+    setTimeout(function() {
+      const passageTab = document.querySelector('.tab-btn[data-tab="tab-passage"]');
+      if (passageTab) {
+        passageTab.click();
+      }
+    }, 100);
+  };
+})();
