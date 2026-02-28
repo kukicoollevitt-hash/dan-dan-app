@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚗️ 빛나는 돌을 찾은 여인 — 마리 퀴리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물03/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict-box {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      border-left: 4px solid #00897b;
+      padding: 20px;
+      border-radius: 0 16px 16px 0;
+      margin-bottom: 25px;
+    }
+
+    .intro-content .conflict-box h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .intro-content .conflict-box p {
+      color: #d0d0d0;
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚗️ 빛나는 돌을 찾은 여인</h1>
+        <p class="subtitle">
+          — 세상이 두려워한 진실을 밝힌 마리 퀴리 —<br>
+          교과기반 창작도서 · 세계인물 03 · 중1-2
+        </p>
+        <div class="characters">
+          <h3>⚗️ 등장인물 소개</h3>
+          <p><strong>★ 마리 스크워도프스카 퀴리(Marie Skłodowska-Curie, 1867-1934):</strong> 폴란드 바르샤바 출신의 물리학자·화학자. 19세기 말 여성의 고등교육이 제한되던 시대에 프랑스로 건너가, 방사능(radioactivity) 연구로 노벨상을 두 차례 수상한 최초의 인물. 과학사에서 젠더 장벽(gender barrier)을 돌파한 선구자.</p>
+          <p><strong>★ 피에르 퀴리(Pierre Curie, 1859-1906):</strong> 프랑스의 결정학(crystallography) 및 물리학자. 조용하고 사색적인 성품으로, 마리의 과학적 능력을 동등하게 인정한 연구 동반자이자 남편. 압전효과(piezoelectric effect)를 발견한 인물.</p>
+          <p><strong>★ 브로니스와바 스크워도프스카(Bronisława Skłodowska):</strong> 마리의 언니. 먼저 파리 소르본에서 의학을 수학하며, 마리의 유학길을 열어준 인물. 자매 간의 상호 지원 약정(mutual support pact)이 마리의 인생을 전환시킨 결정적 계기.</p>
+          <p><strong>★ 라듐(Radium, Ra):</strong> 원소번호 88. 마리가 발견한 방사성 원소로, 현대 핵물리학의 새 장을 열었으나 동시에 마리의 건강을 서서히 파괴한 양날의 검. 과학적 영광과 비극의 이중적 상징.</p>
+        </div>
+        <div class="conflict-box">
+          <h3>📖 서사 구조: 장벽의 돌파와 헌신의 대가</h3>
+          <p><strong>▸ 구조적 장벽:</strong> 19세기 유럽의 젠더 불평등 — 여성에게 폐쇄된 고등교육 및 학술계의 '유리천장(glass ceiling)'과의 투쟁.</p>
+          <p><strong>▸ 과학적 도전:</strong> 미지의 방사성 원소 탐구 — 기존 물리학 패러다임을 전복시키는 발견의 여정과 그에 수반되는 육체적 희생.</p>
+          <p><strong>▸ 윤리적 선택:</strong> 라듐 특허 포기 — 개인적 경제적 이익을 포기하고 인류 공동의 지적 재산으로 환원하는 선택의 의미.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">배움을 갈망한 소녀</span>
+        <h2>바르샤바의 작은 불꽃</h2>
+        <span class="key-sentence">📌 구조적 장벽 앞에서도, 내면의 지적 열정이 꺼지지 않는 한 돌파구는 반드시 존재한다.</span>
+        <p>1867년, 폴란드 바르샤바(Warszawa)의 한 지식인 가정에서 다섯째 아이가 태어났습니다. 부친 블라디슬라프 스크워도프스키(Władysław Skłodowski)는 물리학과 수학을 교수하는 중등학교 교사였고, 모친 브로니스와바(Bronisława)는 명문 여학교의 교장 출신이었습니다. 이 아이의 이름은 마리아 살로메아 스크워도프스카(Maria Salomea Skłodowska), 훗날 세계가 '마리 퀴리'로 기억하게 될 인물이었습니다.</p>
+        <p>마리는 유년기부터 비범한 지적 호기심을 보였습니다. 다른 아이들이 유희에 몰두할 때, 마리는 부친의 서재에 비치된 실험 기구들 — 검류계(galvanometer), 분광기(spectroscope), 기압계(barometer) — 에 매료되었습니다.<br><br><span class="dialogue">"아버지, 이 기구들은 무엇에 사용되는 건가요?"</span><br><br>부친은 미소 지으며 답했습니다.<br><br><span class="dialogue">"이것들은 자연의 비밀을 탐구하는 도구란다, 마리아."</span></p>
+        <p>그러나 당시 폴란드는 러시아 제국의 지배하에 있었습니다. 폴란드어 교육은 금지되었고, '러시아화(Russification)' 정책이 강요되었습니다. 더욱이 19세기 유럽에서 여성의 대학 진학은 대부분의 국가에서 법적·관습적으로 봉쇄되어 있었습니다. 제도적 장벽은 견고했습니다. 학교에서 어떤 교사가 말했습니다.<br><br><span class="dialogue">"여성이 과학을 한다고? 그것은 남성의 영역이야."</span><br><br>마리는 굴욕감을 느꼈지만, 그 말에 굴복하지 않았습니다.</p>
+        <p>열다섯 살이 되던 해, 마리에게 더 큰 시련이 도래했습니다. 모친이 결핵(tuberculosis)으로 세상을 떠난 것입니다. 마리는 밤마다 비통에 잠겼습니다. 그러나 모친이 최종적으로 남긴 말이 마리의 의식에 각인되어 있었습니다.<br><br><span class="dialogue">"마리아, 절대 학문을 포기하지 마렴. 네 안의 빛은 누구도 소멸시킬 수 없단다."</span></p>
+        <p>마리는 결의했습니다. 반드시 대학에 진학하겠다고. 폴란드에서는 여성에게 대학의 문이 봉쇄되어 있었기에, 마리는 언니 브로니스와바와 상호 지원 약정을 체결합니다.<br><br><span class="dialogue">"언니가 먼저 파리에서 의학을 수학하면, 내가 경제적으로 지원하겠어. 그다음엔 내 차례야."</span><br><br>이 약정을 가슴에 품고, 마리는 부유층 가정의 가정교사(governess)로 취직하여 고된 나날을 보냈습니다. 주간에는 아동들을 교육하고, 야간에는 촛불 아래서 독학으로 수학과 물리학을 탐구했습니다. 바르샤바의 혹한이 마리의 볼을 얼렸지만, <span class="highlight">마리의 내면에서 타오르는 지적 열정만큼은 결코 꺼지지 않았습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">추위와 배고픔을 이긴 열정</span>
+        <h2>파리의 다락방</h2>
+        <span class="key-sentence">📌 진정한 열정은 물질적 결핍 속에서도 그 빛을 잃지 않는다.</span>
+        <p>1891년, 스물넷의 마리는 마침내 파리행 기차에 승차했습니다. 소지품이라곤 낡은 트렁크 하나와, 주머니에는 겨우 몇 개월을 버틸 수 있는 빈약한 자금이 전부였습니다. 기차가 폴란드 국경을 통과하는 순간, 마리의 눈에서 눈물이 흘렀습니다. 그것은 환희(歡喜)의 눈물이었습니다.<br><br><span class="dialogue">"드디어, 내가 학문을 탐구할 수 있는 곳으로 가는 거야."</span></p>
+        <p>파리의 소르본 대학(Université de Paris-Sorbonne)은 마리에게 지식의 전당(殿堂) 같은 곳이었습니다. 그러나 현실은 이상과 괴리가 있었습니다. 마리가 거주하게 된 곳은 라탱 지구(Quartier Latin)의 6층 다락방(mansarde)이었습니다. 승강기는커녕 난방 시설도 부재한 협소한 공간이었습니다. 동절기에는 수돗물이 결빙되었고, 마리는 보유한 의복을 모두 겹쳐 입고도 한기에 떨어야 했습니다.</p>
+        <p>경제적 결핍으로 마리는 하루에 빵 한 조각과 초콜릿 한 쪽으로 연명하는 날이 빈번했습니다. 어느 날은 극심한 영양실조로 기절하기도 했습니다. 동급생이 우려하며 물었습니다.<br><br><span class="dialogue">"마리, 오늘도 식사를 거른 거야?"</span><br><br>마리는 웃으며 응답했습니다.<br><br><span class="dialogue">"괜찮아. 오늘 물리학 강의가 너무 흥미로워서 공복감을 인지하지 못했어."</span></p>
+        <p>소르본 대학의 강의실에서 마리는 유일한 여학생인 경우가 상례였습니다. 남학생들은 마리를 기이한 시선으로 관찰하거나, 때로는 조소하기도 했습니다.<br><br><span class="dialogue">"여자가 물리학을 한다고? 어차피 중도에 포기할 거야."</span><br><br>그러나 마리는 그러한 시선에 개의치 않고 강의실 최전방 좌석에 착석하여 단 한 음절도 누락하지 않으려 집중했습니다.</p>
+        <p>혹한의 다락방에서 손이 동상에 걸려도, 마리는 서적을 놓지 않았습니다. 촛불이 소진되면 월광 아래서 공식을 암기했고, 도서관이 폐관하면 복도에서 서적을 탐독했습니다. 그러한 마리의 노력은 마침내 결실을 맺었습니다. 1893년, 마리는 물리학 학위 시험에서 <span class="highlight">전체 수석</span>을 달성했습니다. 수백 명의 남학생들을 모두 상회하고 말입니다.</p>
+        <p><span class="dialogue">"마리 스크워도프스카, 1등."</span><br><br>성적표를 확인한 마리의 손이 전율했습니다. 그날 야간, 마리는 혹한의 다락방에서 홀로 조용히 눈물을 흘렸습니다.<br><br><span class="dialogue">"어머니, 내가 성취했어요."</span><br><br>혹한도, 공복도, 차별도 마리의 열정을 좌절시키지 못했습니다. 파리의 다락방은 한랭하고 암울했지만, 마리의 내면만큼은 세계 어느 곳보다 명료하고 온화했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">피에르와의 만남</span>
+        <h2>운명의 실험실</h2>
+        <span class="key-sentence">📌 진정한 동반자란 꿈을 공유하고, 동등하게 함께 걸어가는 존재이다.</span>
+        <p>1894년 춘계, 마리의 생애에 결정적 전환점이 도래했습니다. 마리는 자성체(magnetic materials)의 특성에 관한 연구를 위해 더 광범위한 실험 시설이 필요했고, 폴란드 출신의 지인이 한 프랑스 과학자를 소개해 주었습니다. 그의 이름은 피에르 퀴리(Pierre Curie). 결정학(crystallography)과 압전효과(piezoelectric effect)를 연구하는 젊은 물리학자였습니다.</p>
+        <p>두 사람의 최초 조우는 통상적인 로맨스와는 상이했습니다. 화훼나 감미로운 언어 대신, 두 사람은 조우하자마자 자성(magnetism)과 결정구조(crystal structure)에 관해 토론하기 시작했습니다.<br><br><span class="dialogue">"스크워도프스카 양, 당신의 자기장 측정 방법론이 실로 독창적이군요."</span><br><br>피에르의 안광(眼光)이 빛났습니다. 마리도 경이로웠습니다. 지금까지 조우한 남성들 중에서, 자신의 과학적 역량을 진심으로 인정해 주는 인물은 최초였기 때문입니다.</p>
+        <p>그러나 마리는 용이하게 심문(心門)을 개방하지 않았습니다. 마리에게는 폴란드로 귀국하여 조국의 교육에 헌신하겠다는 포부가 있었기 때문입니다.<br><br><span class="dialogue">"저는 프랑스에 영구히 체류할 의향이 없어요."</span><br><br>마리는 단호하게 진술했습니다. 피에르는 실망했지만, 포기하지 않았습니다. 그는 서한을 작성했습니다.<br><br><span class="dialogue">"마리, 당신이 폴란드에서 과학을 추구하겠다면 나도 동반하겠습니다. 과학을 탐구할 수 있는 곳이라면 지리적 위치는 무관합니다."</span></p>
+        <p>이 서한을 열람한 마리의 심경이 동요했습니다. 자신의 포부를 위해 모든 것을 포기하겠다는 인물, 자신을 여성이 아닌 과학자로 존중해 주는 인물. 마리는 각성했습니다. <span class="highlight">피에르야말로 자신이 평생 함께할 수 있는 진정한 학문적 동반자(academic partner)</span>라는 것을.</p>
+        <p>1895년 7월, 두 사람은 결혼했습니다. 결혼식은 소박하기 그지없었습니다. 웨딩드레스 대신 마리는 진한 감색(紺色) 원피스를 착용했습니다. 그 의복은 이후 실험실에서 착용하는 작업복이 되었습니다. 마리는 웃으며 말했습니다.<br><br><span class="dialogue">"최적의 의복은 실험실에서도 착용 가능한 것이에요."</span><br><br>결혼 후 두 사람은 공동 연구를 개시했습니다. 과학이라는 명목으로 조우한 두 사람은, 과학이라는 명목으로 가장 아름다운 학문적 동반자 관계를 구축해 나가고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">라듐의 발견</span>
+        <h2>빛나는 돌의 비밀</h2>
+        <span class="key-sentence">📌 위대한 발견은 '왜?'라는 단순한 질문에서 기원한다.</span>
+        <p>1897년, 마리는 박사학위 논문 주제를 모색하고 있었습니다. 그때 마리의 주목을 끈 것은 앙리 베크렐(Henri Becquerel)이 우연히 발견한 신비로운 현상이었습니다. 우라늄(uranium)이 함유된 광석이 사진 건판(photographic plate)을 감광시킨 것입니다. 대다수의 과학자들은 이 현상을 경시했습니다. 그러나 마리의 관점은 상이했습니다.</p>
+        <p><span class="dialogue">"왜 우라늄은 자발적으로 에너지를 방출하는 것일까?"</span><br><br>이 단순한 질문이 마리의 연구를 촉발시켰습니다. 마리는 피에르가 발명한 전위계(electrometer)를 활용하여 다양한 광물의 방사능(radioactivity)을 정밀 측정하기 시작했습니다. 실로 '방사능'이라는 용어 자체가 마리가 창안한 것이었습니다. 수십, 수백 종의 광물을 하나하나 면밀하게 측정해 나갔습니다. 그런데 이상 현상이 탐지되었습니다.</p>
+        <p><span class="dialogue">"피에르, 이것을 확인해 봐요!"</span><br><br>마리가 흥분하며 남편을 호출했습니다.<br><br><span class="dialogue">"피치블렌드(pitchblende) 광석에서 방출되는 방사능이 순수 우라늄보다 현저히 강력해요. 이것은 우라늄만으로는 설명 불가능해요!"</span><br><br>피에르도 데이터를 검토하고 경악했습니다.<br><br><span class="dialogue">"그렇다면... 이 광석 내부에 아직 미발견된 신규 원소가 존재한다는 의미인가?"</span></p>
+        <p>마리와 피에르는 흥분을 억제하지 못했습니다. 두 사람은 즉각 피치블렌드의 화학적 분석을 개시했습니다. 광석을 화학적으로 분획(fractionation)하고, 각 성분의 방사능을 측정하는 지루하고 고된 작업이었습니다. 1898년 7월, 마리는 최초의 신규 원소를 발견하고, 조국 폴란드(Polska)의 명칭을 따서 <span class="highlight">'폴로늄(Polonium)'</span>이라 명명했습니다.</p>
+        <p>그러나 마리는 여기서 중단하지 않았습니다. 폴로늄을 분리한 후에도 잔여 물질에서 여전히 강력한 방사능이 탐지되었기 때문입니다.<br><br><span class="dialogue">"또 다른 원소가 잠복해 있어!"</span><br><br>마리는 확신했습니다. 그리고 1898년 12월, 마리와 피에르는 마침내 제2의 원소를 발견했습니다. 라틴어로 '광선(radius)'을 의미하는 <span class="highlight">'라듐(Radium)'</span>이라 명명한 이 원소는, 암흑 속에서 청록색의 신비로운 발광(發光)을 방출했습니다. 그것은 마치 항성의 파편 같았습니다. 그러나 그 미려한 발광이 얼마나 위험한 것인지, 두 사람은 아직 인지하지 못하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">빛나는 독을 다루는 손</span>
+        <h2>고통의 실험실</h2>
+        <span class="key-sentence">📌 진정한 용기는 두려움의 부재가 아니라, 두려움 속에서도 전진하는 것이다.</span>
+        <p>라듐의 존재를 입증하기 위해, 마리는 순수한 라듐을 분리해 내야만 했습니다. 그러나 라듐은 피치블렌드 광석 내에 극미량만 존재했습니다. 1톤의 광석에서 겨우 0.1그램의 라듐밖에 추출할 수 없었던 것입니다. 마리와 피에르에게 배정된 실험실은 소르본 대학 후방의 노후한 헛간(shed)이었습니다. 지붕은 누수되었고, 동절기에는 칼바람이 침투했습니다.</p>
+        <p>마리는 매일 조조(早朝)에 그 열악한 헛간으로 출근했습니다. 거대한 가마솥에 피치블렌드를 투입하여 가열하고, 여과하고, 결정을 석출시키는 작업을 반복했습니다. 중량물인 솥을 교반하는 작업은 체력적으로도 혹독했습니다. 마리의 수부(手部)는 화학약품에 균열이 가고, 방사능에 피폭된 지두(指頭)는 홍반(紅斑)으로 궤양이 생겼습니다. 그러나 마리는 단 하루도 휴식하지 않았습니다.</p>
+        <p><span class="dialogue">"마리, 좀 휴식해야 해. 수부가 이 지경인데..."</span><br><br>피에르가 우려하며 진언했습니다. 마리는 붕대를 감은 수부를 내려다보며 정온하게 응답했습니다.<br><br><span class="dialogue">"이 정도는 괜찮아요. 라듐이 곧 그 모습을 드러낼 거예요. 포기할 수 없어요."</span><br><br>마리의 안광에는 피로 대신 굳건한 결의가 있었습니다.</p>
+        <p>사실 마리의 신체는 이미 방사능의 영향을 받기 시작하고 있었습니다. 당시에는 방사능의 유해성이 과학적으로 규명되지 않았습니다. 마리는 라듐 시료를 포켓에 휴대하고 다니기도 했고, 발광하는 라듐을 침상 곁 탁자에 배치하고 취침하기도 했습니다. 방사성 물질을 맨손으로 접촉하는 것이 일상이었습니다. <span class="highlight">후일 마리의 연구 노트에서는 100년이 경과한 후에도 방사능이 검출되었습니다.</span></p>
+        <p>4년이라는 장기간에 걸쳐 수 톤의 피치블렌드를 처리한 끝에, 1902년, 마리는 마침내 순수한 라듐 0.1그램을 분리해 내는 데 성공했습니다. 소형 시험관에 담긴 그 미량의 백색 결정이 마리가 4년간 유출한 땀과 눈물의 결정체였습니다.<br><br><span class="dialogue">"성취했어요, 피에르. 우리가 해냈어요."</span><br><br>그날 야간, 두 사람은 암흑의 헛간 실험실로 귀환했습니다. 시험관들 위에 배치된 라듐이 암흑 속에서 청록색으로 발광하고 있었습니다. 그것은 미려했지만, 동시에 마리의 생명을 점진적으로 잠식하고 있는 광선이기도 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">두 번의 노벨상</span>
+        <h2>세계가 놀란 날</h2>
+        <span class="key-sentence">📌 진정한 업적은 수상을 위한 것이 아니라, 인류에 대한 헌신에서 탄생한다.</span>
+        <p>1903년, 경이로운 소식이 전달되었습니다. 마리와 피에르 퀴리, 그리고 앙리 베크렐이 노벨 물리학상을 공동 수상한다는 것이었습니다. 방사능 현상의 연구에 대한 공적이었습니다. 그러나 이 영예로운 소식의 이면에는 불쾌한 사실이 잠복해 있었습니다.</p>
+        <p>사실 최초에 노벨 위원회는 피에르 퀴리와 베크렐만을 수상자로 지명하려 했습니다. 마리는 배제되어 있었습니다. 여성이라는 이유였습니다. 이 소식을 청취한 피에르는 격분했습니다.<br><br><span class="dialogue">"마리 없이는 이 연구가 존재하지 않습니다. 마리를 포함하지 않는다면, 나도 수상을 거부하겠습니다."</span><br><br>피에르의 강력한 항의 끝에, 마리의 명칭이 수상자 명단에 추가되었습니다.</p>
+        <p><span class="highlight">마리 퀴리는 노벨상을 수상한 최초의 여성</span>이 되었습니다. 그러나 시상식에 참석한 마리를 향한 시선은 온화하지만은 않았습니다. 일부 언론은 마리의 과학적 업적 대신 외모와 복장을 다루었고, 일부 학자들은 여전히 "피에르의 조수에 불과하다"고 폄하했습니다. 마리는 이를 묵묵히 감내했습니다.</p>
+        <p>1906년, 비극이 도래했습니다. 사랑하는 남편 피에르가 마차 사고로 돌연 서거한 것입니다. 마리는 깊은 비탄에 빠졌습니다. 일기장에 이렇게 기록했습니다.<br><br><span class="dialogue">"피에르, 당신이 부재한 실험실은 너무 정적이에요."</span><br><br>그러나 마리는 붕괴하지 않았습니다. 피에르가 유산으로 남긴 연구를 계승하는 것이 그에 대한 최대의 사랑이라고 확신했기 때문입니다.</p>
+        <p>마리는 소르본 대학 최초의 여성 교수로 취임하여 피에르의 직위를 계승했습니다. 그리고 연구를 중단하지 않았습니다. 순수한 금속 라듐을 분리하는 데 성공했고, 라듐의 원자량을 정밀하게 측정했습니다. 그 결과, 1911년, 마리 퀴리는 <span class="highlight">노벨 화학상을 단독으로 수상</span>했습니다.</p>
+        <p>두 개의 노벨상. 물리학과 화학이라는 상이한 분야에서 노벨상을 수상한 것은 역사상 마리 퀴리가 최초였습니다. 수상 소식을 청취한 마리는 담담하게 진술했습니다.<br><br><span class="dialogue">"상은 중요하지 않아요. 중요한 것은 과학이 인류에게 어떤 공헌을 할 수 있느냐는 것이에요."</span><br><br>그것은 진심이었습니다. 마리는 라듐의 특허를 신청하지 않았습니다. 누구나 자유롭게 연구하고 활용할 수 있도록, 자신의 발견을 세계에 무상으로 개방한 것입니다. 이것은 지적재산권(intellectual property rights)을 포기하고 인류 공동의 지식 자산으로 환원하는 윤리적 선택이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">여성 과학자의 고독한 싸움</span>
+        <h2>보이지 않는 벽</h2>
+        <span class="key-sentence">📌 편견이라는 장벽은 실력만으로는 붕괴되지 않지만, 포기하지 않는 자 앞에서는 결국 균열이 간다.</span>
+        <p>마리 퀴리가 두 차례의 노벨상을 수상했다고 해서 사회의 편견이 소멸한 것은 아니었습니다. 오히려 마리의 명성이 상승할수록, 그녀를 향한 질투와 공격도 동시에 증대했습니다. 프랑스 과학 아카데미(Académie des Sciences) 회원 선거에 마리가 후보로 지명되었을 때, 격렬한 반대가 분출했습니다.</p>
+        <p><span class="dialogue">"여성이 아카데미에 입회한 선례는 존재하지 않는다! 전통을 파괴할 수 없다!"</span><br><br>한 원로 학자가 고함쳤습니다. 마리의 연구 업적은 아카데미의 어떤 남성 회원보다도 탁월했지만, 투표 결과는 겨우 2표 차이로 낙선이었습니다. 마리는 무언(無言)으로 퇴장했지만, 그날 야간 홀로 실험실에서 장시간 앉아 있었습니다.</p>
+        <p>언론의 공격은 더욱 잔혹했습니다. 피에르가 서거한 후, 마리의 사생활에 대한 악의적인 기사들이 범람했습니다. 한 신문은 마리를 "프랑스의 수치"라고 칭했고, 군중들이 마리의 자택 앞에 집결하여 투석하기까지 했습니다. 두 딸을 동반하여 인접 가옥으로 피신해야 했던 야간, 마리는 처음으로 프랑스를 이탈하고 싶다는 생각을 했습니다.</p>
+        <p><span class="dialogue">"나는 단지 과학을 추구하고 싶었을 뿐인데..."</span><br><br>마리의 일기에는 이러한 문장이 기록되어 있었습니다. 두 차례의 노벨상도, 수년간의 연구 업적도, 여성이라는 이유 하나로 경시당하는 현실 앞에서는 무력했습니다. 그러나 마리는 포기하지 않았습니다. 실험실로 귀환하여 연구를 계속했습니다. <span class="highlight">마리에게 과학은 세계의 편견으로부터 자신을 방어하는 방패이자, 유일한 위안이었습니다.</span></p>
+        <p>마리는 결코 자신만을 위해 투쟁한 것이 아니었습니다. 마리는 우수한 여학생들에게 장학금을 지원하고, 여성 과학자들의 연구를 적극적으로 후원했습니다.<br><br><span class="dialogue">"나 개인의 성공이 중요한 것이 아니에요. 내 후속 세대의 여성들이 더 평탄한 경로를 걸을 수 있다면, 그것으로 충분해요."</span><br><br>마리의 이 언명은 후일 현실이 되었습니다. 마리의 장녀 이렌 졸리오퀴리(Irène Joliot-Curie)는 모친의 뒤를 이어 방사능 연구를 계속했고, 1935년에 노벨 화학상을 수상했습니다. 모녀가 모두 노벨상을 수상한 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">죽음의 전장을 누빈 과학자</span>
+        <h2>전쟁의 천사</h2>
+        <span class="key-sentence">📌 과학의 진정한 가치는 시험관 속이 아니라, 인명을 구원하는 현장에서 빛난다.</span>
+        <p>1914년, 제1차 세계대전(World War I)이 발발했습니다. 유럽 전역이 전쟁의 화염에 휩싸였고, 매일 수천 명의 부상병들이 야전병원으로 후송되었습니다. 총탄과 포탄 파편이 체내에 박혀 있는데, 그 위치를 파악할 수 없어 수술도 적절히 시행할 수 없는 상황이었습니다.</p>
+        <p>마리는 실험실에 체류할 수 없었습니다.<br><br><span class="dialogue">"과학이 인명을 구원할 수 있다면, 지금이 바로 그 시점이에요."</span><br><br>마리는 즉각 행동에 착수했습니다. 당시 엑스레이(X-ray) 장비는 대형 병원에만 배치되어 있었고, 전선(前線)의 야전병원에는 부재했습니다. 마리는 혁신적인 아이디어를 구상했습니다. 자동차에 엑스레이 장비를 탑재하여 전장으로 직접 운반하는 것이었습니다.</p>
+        <p>마리는 적십자사와 프랑스 정부를 설득하고, 자신의 연구 자금까지 투입하여 이동식 엑스레이 차량(mobile radiological unit)을 제작했습니다. 인들은 이 차량에 <span class="highlight">'작은 퀴리(petites Curies)'</span>라는 별칭을 부여했습니다. 마리는 직접 운전면허를 취득하고, 자동차 정비까지 습득했습니다. 57세의 노벨상 수상자가 군용 트럭 하부에 누워 엔진을 수리하는 장면에 사람들은 경탄을 금치 못했습니다.</p>
+        <p><span class="dialogue">"어머니, 제가 동반하겠어요."</span><br><br>십칠 세가 된 장녀 이렌이 진언했습니다. 마리는 잠시 망설였지만, 딸의 굳건한 결의를 확인하고 수긍했습니다. 모녀는 함께 전선으로 향했습니다. 포탄이 낙하하는 음향이 청취되는 전장에서, 두 모녀는 부상병들의 체내를 엑스레이로 촬영하며 군의관들을 지원했습니다.</p>
+        <p><span class="dialogue">"여기, 좌측 폐하부에 파편이 있어요!"</span><br><br>마리가 엑스레이 사진을 판독하며 호출했습니다. 군의관은 그 정확한 좌표 정보 덕분에 신속하게 수술을 시행할 수 있었습니다. 한 부상병이 수술 후 마리의 수부를 잡고 눈물을 흘렸습니다.<br><br><span class="dialogue">"당신 덕분에 생존했습니다. 감사합니다."</span><br><br><span class="highlight">마리가 지원한 엑스레이 촬영 건수는 100만 건을 상회했습니다.</span> 그러나 마리는 이 공적에 대해 어떤 보상도 요구하지 않았습니다. 전쟁 중 축적된 방사능 피폭은 마리의 건강을 더욱 악화시켰지만, 마리는 단 한 번도 후회하지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">연구는 삶 그 자체</span>
+        <h2>꺼지지 않는 불꽃</h2>
+        <span class="key-sentence">📌 열정이 곧 삶인 인간에게는, 정지란 존재하지 않는다.</span>
+        <p>전쟁이 종결된 후, 마리는 다시 연구실로 귀환했습니다. 그러나 이제 마리의 신체는 종전과 같지 않았습니다. 수십 년간 방사능에 피폭된 대가가 서서히 현현하기 시작한 것입니다. 지두(指頭)는 만성적으로 화상(radiation burns)을 입은 상태였고, 시력은 점진적으로 저하되었습니다. 의료진은 경고했습니다.<br><br><span class="dialogue">"퀴리 부인, 더 이상 연구를 계속하시면 안 됩니다."</span></p>
+        <p>그러나 마리는 의료진의 권고를 수용하지 않았습니다. 조조(早朝)이면 여전히 실험실로 보행했고, 심야까지 연구에 몰두했습니다. 마리에게 과학을 박탈하는 것은 호흡을 정지하라는 언명과 동등했습니다.<br><br><span class="dialogue">"나는 실험실에서 탄생했고, 실험실에서 서거할 거예요."</span><br><br>마리는 농담처럼 언급했지만, 그것은 진심이었습니다.</p>
+        <p>마리는 파리에 라듐 연구소(Institut du Radium)를 설립하고, 세계 각국에서 도래한 젊은 과학자들을 교육했습니다. 마리의 연구실에서는 여성이든 남성이든, 어느 국적 출신이든 차별 없이 연구할 수 있었습니다.<br><br><span class="dialogue">"과학에는 국경도 성별도 없어요. 오직 진리만이 있을 뿐이에요."</span><br><br>마리의 이 원칙은 연구소의 정신이 되었습니다.</p>
+        <p>1920년대, 미국의 한 여성 기자가 마리를 취재하러 도래했습니다.<br><br><span class="dialogue">"퀴리 부인, 세계에서 가장 소유하고 싶은 것이 무엇인가요?"</span><br><br>마리는 잠시 숙고하더니 응답했습니다.<br><br><span class="dialogue">"1그램의 라듐이요."</span><br><br>기자는 경악했습니다. 두 차례의 노벨상을 수상한 과학자가 연구에 활용할 라듐조차 구매할 경제력이 부재하다는 것이 신뢰하기 어려웠기 때문입니다. <span class="highlight">마리는 라듐의 특허를 포기했기에, 그 막대한 경제적 이익은 모두 타인의 몫이 되었던 것입니다.</span></p>
+        <p>이 일화가 미국 전역에 알려지자, 미국 여성들이 모금 운동을 전개했습니다. 그리고 하딩(Harding) 대통령이 직접 백악관에서 마리에게 1그램의 라듐을 증정했습니다. 마리는 감사의 말과 함께 이렇게 부언했습니다.<br><br><span class="dialogue">"이 라듐은 나를 위한 것이 아니라, 과학을 위한 것입니다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">세상을 바꾼 한 여인의 이야기</span>
+        <h2>영원히 빛나는 유산</h2>
+        <span class="key-sentence">📌 한 인간의 열정과 헌신은, 시간이 경과해도 결코 소멸하지 않는 빛이 된다.</span>
+        <p>1934년 7월 4일, 마리 퀴리는 프랑스 오트사부아(Haute-Savoie)의 한 요양원에서 정온하게 서거했습니다. 사인(死因)은 재생불량성 빈혈(aplastic anemia). 수십 년간 방사능에 피폭된 결과였습니다. 66년의 생애, 그중 거의 40년을 마리는 실험실에서 보냈습니다.</p>
+        <p>마리의 장례식은 소박했습니다. 마리가 그러했듯이. 폴란드에서 공수된 한 줌의 토양이 관 위에 살포되었습니다. 마리가 평생 그리워했던 조국의 토양이었습니다. 장례식에 참석한 인원 중에는 마리의 두 딸 이렌과 에브(Ève)가 있었습니다. 이렌은 모친의 뒤를 이어 과학자의 경로를 걸었고, 에브는 모친의 생애를 세계에 알리는 전기 작가가 되었습니다.</p>
+        <p>세월이 유전(流轉)하여 1995년, 프랑스 정부는 마리와 피에르 퀴리의 유해를 파리의 팡테옹(Panthéon)으로 이장했습니다. 팡테옹은 프랑스가 가장 존경하는 위인들을 안치하는 곳입니다. <span class="highlight">마리 퀴리는 자신의 업적으로 이곳에 안장된 최초의 여성</span>이 되었습니다. 관을 이송하는 날, 수많은 인원이 파리의 가로에 운집하여 마리에게 최종 경의를 표했습니다.</p>
+        <p>마리가 유산으로 남긴 것은 단순히 라듐이나 폴로늄의 발견에 한정되지 않습니다. 마리의 방사능 연구는 오늘날 암 치료의 방사선 요법(radiation therapy), 의료용 엑스레이, 원자력 에너지 등 수많은 분야의 기반이 되었습니다. 마리가 특허를 포기하고 세계에 개방한 지식 덕분에, 전 세계 수백만 명의 환자들이 치료를 받을 수 있게 되었습니다.</p>
+        <p>그러나 마리 퀴리가 세계에 유산으로 남긴 가장 위대한 것은 과학적 발견이 아닐지도 모릅니다. 그것은 바로 <span class="highlight">'포기하지 않는 것'</span>의 의미입니다. 여성이라서 대학에 진학할 수 없다는 말을 청취해도, 혹한의 다락방에서 공복에 시달리며 학습해야 할 때에도, 남성 중심 사회에서 끊임없이 차별받을 때에도, 마리는 단 한 번도 포기하지 않았습니다.</p>
+        <p><span class="dialogue">"인생에서 두려워해야 할 것은 아무것도 없습니다. 다만 이해해야 할 것이 있을 뿐입니다."</span><br><br>마리 퀴리가 유산으로 남긴 이 언명은, 100년이 경과한 오늘날에도 전 세계 수많은 인원에게 용기를 부여하고 있습니다. 바르샤바의 작은 소녀가 품었던 그 불꽃은 결코 소멸하지 않았습니다. 암흑 속에서 발광하는 라듐처럼, 마리 퀴리의 이야기는 영원히 빛나고 있습니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(0, 137, 123, 0.15); border-radius: 16px;">
+          <strong style="color: #004d40; font-size: 20px;">⚗️ 「한 인간의 열정과 헌신은, 시간이 경과해도 결코 소멸하지 않는 빛이 된다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+    function goToQuiz() { window.location.href = '/creative-book/worldperson03_season1_quiz_78.html'; }
+  </script>
+</body>
+</html>

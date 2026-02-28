@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌊 파동의 세계 - 중등편</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작물리10/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 680px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165,0.84,0.44,1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #00BCD4 0%, #009688 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(0,188,212,0.15); color: #009688; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.95; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #009688; font-weight: 600; }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #009688;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(0, 150, 136, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #00695C;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #00695C;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+    .story-card .dialogue { color: #00BCD4; font-weight: 600; }
+    .story-card .science-box { background: linear-gradient(135deg, rgba(0,188,212,0.08), rgba(0,150,136,0.05)); border-left: 4px solid #00BCD4; padding: 16px 20px; border-radius: 0 12px 12px 0; margin: 16px 0; font-size: 14px; }
+    .story-card .science-box strong { color: #00796B; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 900px; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .grade-badge { display: inline-block; background: linear-gradient(135deg, #00BCD4, #009688); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+    .intro-content .characters { text-align: left; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #80DEEA; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #fff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(0,188,212,0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(0,150,136,0.9); transform: translateY(-2px); }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <h1>🌊 파동의 세계</h1>
+        <p class="subtitle">— 파동의 성질, 중첩, 간섭, 정상파와 공명 —<br>교과기반 창작도서 · 물리 10</p>
+        <div class="characters">
+          <h3>🔬 핵심 개념</h3>
+          <p><strong>▸ 파동:</strong> 에너지가 매질을 통해 전달되는 현상</p>
+          <p><strong>▸ 파동 공식:</strong> v = fλ (속력 = 진동수 × 파장)</p>
+          <p><strong>▸ 중첩 원리:</strong> 두 파동이 만나면 변위가 합쳐짐</p>
+          <p><strong>▸ 정상파:</strong> 진행하지 않고 제자리에서 진동하는 파동</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span><span class="theme">파동이란</span>
+        <h2>🌊 에너지를 전달하는 물결</h2>
+        <p>연못에 돌을 던지면 물결이 퍼져나갑니다. 하지만 물 자체가 이동하는 건 아닙니다. 이것이 바로 <span class="highlight">파동</span>입니다.</p>
+        <div class="science-box">
+          <strong>📖 파동(Wave)의 정의:</strong><br>
+          • 진동이 매질을 따라 퍼져나가는 현상<br>
+          • <strong>에너지는 전달되지만, 매질은 이동하지 않음</strong><br>
+          • 매질: 파동을 전달하는 물질 (공기, 물, 고체 등)<br><br>
+          <strong>파동의 예:</strong><br>
+          • 수면파, 음파, 지진파, 줄의 파동<br>
+          • 빛(전자기파)은 매질 없이도 전달!
+        </div>
+        <p>파도 위의 배는 위아래로 출렁일 뿐, 파도와 함께 이동하지 않습니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span><span class="theme">파동의 요소</span>
+        <h2>📏 파동을 설명하는 용어들</h2>
+        <div class="science-box">
+          <strong>🔬 파동의 기본 요소:</strong><br>
+          • <strong>진폭(A):</strong> 평형 위치에서 최대 변위까지의 거리<br>
+          • <strong>파장(λ):</strong> 한 파동의 길이 (마루~마루 또는 골~골)<br>
+          • <strong>주기(T):</strong> 한 번 진동하는 데 걸리는 시간 (초)<br>
+          • <strong>진동수(f):</strong> 1초 동안의 진동 횟수 (Hz)<br>
+          • <strong>속력(v):</strong> 파동이 전파되는 속도 (m/s)<br><br>
+          <strong>관계식:</strong> f = 1/T, v = fλ = λ/T
+        </div>
+        <p><span class="highlight">마루</span>: 파동의 가장 높은 점<br>
+        <span class="highlight">골</span>: 파동의 가장 낮은 점</p>
+        <p>진폭이 클수록 에너지가 크고, 진동수가 높을수록 빠르게 진동합니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span><span class="theme">파동 공식</span>
+        <h2>🧮 v = fλ 마스터하기</h2>
+        <div class="science-box">
+          <strong>📖 파동의 기본 공식:</strong><br><br>
+          <strong>v = fλ = λ/T</strong><br><br>
+          • v: 파동 속력 (m/s)<br>
+          • f: 진동수 (Hz)<br>
+          • λ: 파장 (m)<br>
+          • T: 주기 (s)<br><br>
+          <strong>변형 공식:</strong><br>
+          • λ = v/f = vT<br>
+          • f = v/λ
+        </div>
+        <p>예제: 진동수 500Hz, 파장 0.68m인 음파의 속력은?</p>
+        <p>v = fλ = 500 × 0.68 = <span class="highlight">340 m/s</span></p>
+        <p>예제2: 속력 340m/s, 진동수 170Hz인 파동의 파장은?</p>
+        <p>λ = v/f = 340/170 = <span class="highlight">2 m</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span><span class="theme">횡파와 종파</span>
+        <h2>↔️ 두 가지 파동의 형태</h2>
+        <div class="science-box">
+          <strong>📖 횡파(Transverse Wave):</strong><br>
+          • 진동 방향 ⊥ 파동 진행 방향<br>
+          • 마루와 골이 번갈아 나타남<br>
+          • 예: 빛, 줄의 파동, 지진의 S파<br><br>
+          <strong>종파(Longitudinal Wave):</strong><br>
+          • 진동 방향 ∥ 파동 진행 방향<br>
+          • 밀(압축)과 소(팽창)가 번갈아 나타남<br>
+          • 예: 소리, 용수철 파동, 지진의 P파
+        </div>
+        <p><span class="highlight">소리</span>는 대표적인 종파입니다. 공기 분자가 앞뒤로 진동하면서 압축과 팽창이 전달됩니다.</p>
+        <p><span class="highlight">빛</span>은 횡파입니다. 전기장과 자기장이 진행 방향에 수직으로 진동합니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span><span class="theme">중첩 원리</span>
+        <h2>➕ 파동이 만나면 어떻게 될까?</h2>
+        <div class="science-box">
+          <strong>🔬 중첩 원리(Superposition Principle):</strong><br>
+          • 두 파동이 만나면 각 점의 변위가 <strong>합쳐짐</strong><br>
+          • 만난 후에는 서로 영향 없이 원래대로 진행<br><br>
+          <strong>보강 간섭 (Constructive):</strong><br>
+          • 마루 + 마루 = 더 큰 마루<br>
+          • 골 + 골 = 더 깊은 골<br>
+          • 진폭 증가<br><br>
+          <strong>상쇄 간섭 (Destructive):</strong><br>
+          • 마루 + 골 = 상쇄<br>
+          • 진폭 감소 또는 0
+        </div>
+        <p>노이즈 캔슬링 이어폰의 원리: 외부 소음과 <span class="highlight">상쇄 간섭</span>하는 파동을 발생시켜 소음을 없앱니다!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span><span class="theme">간섭</span>
+        <h2>🎯 두 파원의 간섭 무늬</h2>
+        <div class="science-box">
+          <strong>📖 두 파원의 간섭:</strong><br>
+          • 같은 진동수의 두 파원이 파동을 발생<br>
+          • 공간에 보강/상쇄 지점이 교대로 나타남<br><br>
+          <strong>보강 간섭 조건:</strong><br>
+          경로차 = nλ (n = 0, 1, 2, ...)<br><br>
+          <strong>상쇄 간섭 조건:</strong><br>
+          경로차 = (n + ½)λ (n = 0, 1, 2, ...)<br><br>
+          ※ 경로차: 두 파원에서 관측점까지의 거리 차이
+        </div>
+        <p>물탱크에서 두 점이 동시에 진동하면, 수면에 <span class="highlight">간섭 무늬</span>가 나타납니다.</p>
+        <p>밝은 띠(보강)와 어두운 띠(상쇄)가 번갈아 나타나요!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span><span class="theme">반사</span>
+        <h2>🔄 파동의 반사</h2>
+        <div class="science-box">
+          <strong>📖 파동의 반사 법칙:</strong><br>
+          • 입사각 = 반사각 (법선 기준)<br>
+          • 파장, 진동수, 속력은 변하지 않음<br><br>
+          <strong>고정단 반사:</strong><br>
+          • 끝이 고정된 경우<br>
+          • 반사파가 <strong>위상 반전</strong> (마루↔골)<br><br>
+          <strong>자유단 반사:</strong><br>
+          • 끝이 자유로운 경우<br>
+          • 반사파가 위상 유지 (마루→마루)
+        </div>
+        <p>줄의 한쪽 끝이 벽에 고정되어 있으면: 마루가 반사되어 골로 돌아옵니다.</p>
+        <p>줄의 한쪽 끝이 자유롭게 움직이면: 마루가 반사되어 마루로 돌아옵니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span><span class="theme">정상파</span>
+        <h2>🎸 제자리에서 진동하는 파동</h2>
+        <div class="science-box">
+          <strong>🔬 정상파(Standing Wave):</strong><br>
+          • 진행하지 않고 제자리에서 진동하는 파동<br>
+          • 진행파와 반사파의 중첩으로 형성<br><br>
+          <strong>정상파의 특징:</strong><br>
+          • <strong>배(Antinode):</strong> 최대 진폭으로 진동하는 점<br>
+          • <strong>마디(Node):</strong> 진동하지 않는 점 (변위 항상 0)<br>
+          • 배와 마디 사이 거리 = λ/4<br>
+          • 인접한 마디 사이 거리 = λ/2
+        </div>
+        <p>기타 줄을 튕기면 정상파가 생깁니다. 양 끝이 고정되어 있으므로 특정 파장만 가능해요!</p>
+        <p><span class="dialogue">"정상파 = 진행파 + 반사파의 합작품!"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span><span class="theme">공명</span>
+        <h2>🔔 진동이 증폭되는 순간</h2>
+        <div class="science-box">
+          <strong>📖 공명(Resonance):</strong><br>
+          • 외부 진동수가 물체의 고유 진동수와 일치할 때<br>
+          • 진폭이 급격히 증가하는 현상<br><br>
+          <strong>고유 진동수:</strong><br>
+          • 물체가 자연스럽게 진동하는 진동수<br>
+          • 크기, 모양, 재질에 따라 결정<br><br>
+          <strong>공명의 예:</strong><br>
+          • 그네를 타이밍 맞춰 밀기<br>
+          • 와인잔을 목소리로 깨기<br>
+          • 다리의 공진 (타코마 다리 붕괴)
+        </div>
+        <p><span class="highlight">공명</span>은 에너지가 효율적으로 전달되어 진폭이 커지는 현상입니다.</p>
+        <p>군인들이 다리를 건널 때 발을 맞추지 않는 이유: 공명으로 다리가 무너질 수 있어서!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span><span class="theme">파동의 응용</span>
+        <h2>📡 일상 속 파동 기술</h2>
+        <div class="science-box">
+          <strong>📖 파동의 실생활 응용:</strong><br>
+          • <strong>라디오/TV:</strong> 전자기파로 정보 전송<br>
+          • <strong>초음파 검사:</strong> 반사파로 내부 영상 생성<br>
+          • <strong>지진계:</strong> 지진파 분석으로 진원 위치 파악<br>
+          • <strong>악기:</strong> 정상파와 공명으로 소리 발생<br>
+          • <strong>전자레인지:</strong> 마이크로파로 물 분자 진동<br>
+          • <strong>와이파이:</strong> 전자기파로 무선 통신
+        </div>
+        <p>휴대폰 통화가 가능한 이유: <span class="highlight">전자기파</span>가 기지국과 정보를 주고받기 때문!</p>
+        <p>의료 초음파: 초음파가 조직에서 반사되는 패턴을 분석해 영상을 만듭니다.</p>
+        <p><span class="dialogue">"보이지 않는 파동이 현대 문명을 움직인다!"</span></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='/creative-book/physics10_season1_quiz.html?season=season3'">퀴즈 풀기</button>
+    <button class="nav-btn" onclick="location.href='/book-list.html'">목록으로</button>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelector('.story-card')?.classList.add('active');
+          const bg = entry.target.dataset.bg;
+          if (bg) mapContainer.style.backgroundImage = `url('${bg}')`;
+        }
+      });
+    }, { threshold: 0.3 });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

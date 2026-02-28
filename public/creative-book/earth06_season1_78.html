@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>다온이와 할아버지의 흔들리는 지구 이야기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #E65100 0%, #BF360C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(230, 81, 0, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(230, 81, 0, 0.15);
+      color: #BF360C;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #E65100;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #E65100;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(230, 81, 0, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #BF360C;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #BF360C;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #BF360C;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FF8A65;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(230, 81, 0, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(230, 81, 0, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(191, 54, 12, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(230, 81, 0, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>다온이와 할아버지의 흔들리는 지구 이야기</h1>
+        <p class="subtitle">
+          — 땅이 흔들리고 불이 솟는 날, 지구가 보내는 신호 —<br>
+          교과기반 창작도서 · 지구과학 06 · 중1,2
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>▸ 다온 (주인공):</strong> 열한 살 소녀. 작년 겨울 지진을 경험한 후 지진에 대한 극심한 두려움을 품고 있다. 호기심은 많지만 겁이 많고, 비가 세게 오는 날이면 이불을 뒤집어쓰고 우는 아이.</p>
+          <p><strong>▸ 석진 박사 (할아버지/멘토):</strong> 한국지질자원연구원의 지진·화산 전문가. 평생을 지구의 움직임을 연구하며 보낸 과학자로, 따뜻하고 진지하며 다온에게 '이해로 두려움을 줄이는 법'을 가르친다.</p>
+          <p><strong>▸ 지구 (보이지 않는 화자):</strong> 46억 년 동안 끊임없이 움직여 온 살아 있는 행성. 지진과 화산은 지구가 살아 있다는 증거이자, 때로는 파괴적인 메시지를 보내는 거대한 존재.</p>
+          <p><strong>▸ 지각판 형제들 (보조 캐릭터):</strong> 태평양판, 유라시아판, 인도판 등 지구의 지각을 이루는 거대한 판들. 서로 충돌하고, 벌어지고, 스치며 끊임없는 긴장을 만들어낸다.</p>
+          <p><strong>▸ P파와 S파 (쌍둥이 파동):</strong> 지진파의 두 종류. 빠르지만 약한 P파와, 느리지만 강력한 S파. 이 둘의 시간차가 조기 경보 시스템의 핵심 원리가 된다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">잠들지 않는 땅</span>
+        <h2>지각판이라는 거대한 퍼즐</h2>
+        <p>열한 살 소녀 다온은 지진이 무서웠습니다. 작년 겨울, 새벽에 침대가 흔들려 잠에서 깬 적이 있었거든요. 그날 이후 다온은 밤마다 불안했습니다. 혹시 또 땅이 흔들리면 어쩌지? 그 두려움은 점점 커져서, 비가 세게 오는 날이면 이불을 뒤집어쓰고 울기도 했습니다.</p>
+        <p><span class="dialogue">"다온아, 이번 방학에 할아버지 연구소에 가 보지 않겠니?"</span></p>
+        <p>다온의 할아버지 '석진 박사'는 한국지질자원연구원에서 평생 <span class="highlight">지진학</span>과 <span class="highlight">화산학</span>을 연구한 과학자였습니다. 연구소에 도착한 다온의 눈이 휘둥그레졌습니다. 거대한 <span class="highlight">지구 단면 모형</span>이 방 한가운데 놓여 있었습니다.</p>
+        <p>모형에는 <span class="highlight">지각</span>이라 불리는 껍질처럼 얇은 바깥층, 주황빛으로 빛나는 <span class="highlight">맨틀</span>, 액체 상태의 <span class="highlight">외핵</span>, 그리고 고체 상태의 <span class="highlight">내핵</span>이 표시되어 있었습니다. 지각의 두께는 대륙에서 약 30~70km, 해양에서 약 5~10km에 불과합니다.</p>
+        <p><span class="dialogue">"이게 지구 속이야?"</span></p>
+        <p><span class="dialogue">"그래. 우리가 밟고 서 있는 이 땅, '지각'은 사실 하나의 덩어리가 아니야. 마치 깨진 달걀 껍데기처럼 여러 조각으로 나뉘어 있지. 이 조각들을 <span class="highlight">지각판</span> 또는 <span class="highlight">암석권</span>이라고 해. 암석권은 지각과 맨틀 최상부의 단단한 부분을 포함하지."</span></p>
+        <p>할아버지가 <span class="highlight">연약권</span>에 대해서도 설명했습니다. 암석권 아래에는 부분적으로 용융된 연약권이 있어서, 마치 뜨거운 물 위에 떠 있는 얼음처럼 암석권이 그 위를 미끄러지듯 움직입니다.</p>
+        <p><span class="dialogue">"이 판들이 움직이는 거야?"</span></p>
+        <p><span class="dialogue">"1년에 약 1~10cm, 손톱이 자라는 속도와 비슷하게. 하지만 수백만 년이 쌓이면 대륙이 이동하고, 산맥이 솟고, 바다가 열린단다. 이것이 <span class="highlight">판 구조론</span>이야. 1960년대에 정립된 지구과학의 핵심 패러다임이지."</span></p>
+        <p>다온은 자기가 밟고 있는 땅이 사실은 거대한 <span class="highlight">지구동역학</span>의 퍼즐 조각이라는 사실에 소름이 돋았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">판들의 전쟁</span>
+        <h2>충돌하고, 벌어지고, 스쳐 지나가다</h2>
+        <p>할아버지는 다온을 커다란 시뮬레이션 화면 앞으로 데려갔습니다. 화면에는 지구 표면이 7개의 주요 판(<span class="highlight">major plates</span>)과 여러 <span class="highlight">소판</span>으로 나뉘어 표시되어 있었습니다. 판들은 각각 <span class="highlight">GPS</span>로 측정된 이동 방향과 속도가 화살표로 표시되어 있었고, 판과 판이 만나는 <span class="highlight">판 경계</span>는 빨간색으로 빛나고 있었습니다.</p>
+        <p><span class="dialogue">"다온아, <span class="highlight">판 경계</span>에는 크게 세 가지 유형이 있어."</span></p>
+        <p>첫 번째 화면에서 두 판이 정면으로 부딪쳤습니다. 한쪽 판이 다른 판 아래로 파고드는 <span class="highlight">섭입</span>이 일어나면서 거대한 산맥이 솟아올랐습니다.</p>
+        <p><span class="dialogue">"이건 <span class="highlight">수렴형 경계</span>야. <span class="highlight">대륙-대륙 충돌</span>에서는 히말라야 산맥처럼 <span class="highlight">습곡 산맥</span>이 형성되고, <span class="highlight">해양-대륙 수렴</span>에서는 안데스 산맥처럼 <span class="highlight">화산호</span>가 만들어지지. 해양-해양 수렴에서는 <span class="highlight">해구</span>와 <span class="highlight">도호</span>가 형성돼."</span></p>
+        <p>두 번째 화면에서는 두 판이 반대쪽으로 벌어졌습니다. 그 틈 사이로 붉은 <span class="highlight">마그마</span>가 솟아올라 새로운 <span class="highlight">해양 지각</span>이 만들어졌습니다.</p>
+        <p><span class="dialogue">"이건 <span class="highlight">발산형 경계</span>야. <span class="highlight">해령</span>에서 <span class="highlight">해저 확장</span>이 일어나지. 대서양 중앙 해령이 대표적이야. 대륙 내에서 발산이 일어나면 <span class="highlight">열곡대</span>가 형성돼. 동아프리카 열곡대처럼."</span></p>
+        <p>세 번째 화면에서는 두 판이 서로 옆으로 스쳐 지나갔습니다. 끼이이익 하는 소리와 함께 땅이 요동쳤습니다.</p>
+        <p><span class="dialogue">"이건 <span class="highlight">보존형 경계</span> 또는 <span class="highlight">변환 단층</span>이야. 판이 수평으로 어긋나면서 엄청난 <span class="highlight">전단 응력</span>이 생기지. 미국의 <span class="highlight">샌앤드리어스 단층</span>이 대표적인 예야. 여기서는 연간 약 5cm씩 이동하면서 대지진의 가능성을 축적하고 있어."</span></p>
+        <p>다온의 두려움 속에 조금씩 <span class="highlight">과학적 이해</span>의 빛이 스며들기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">쌓이고 또 쌓이다가</span>
+        <h2>지진이 터지는 순간</h2>
+        <p>할아버지는 다온에게 두꺼운 나무 막대를 하나 건네주었습니다.</p>
+        <p><span class="dialogue">"이걸 양손으로 잡고, 천천히 구부려 봐."</span></p>
+        <p>다온은 막대를 양쪽에서 힘을 줘 구부리기 시작했습니다. 처음에는 막대가 약간 휘었습니다(<span class="highlight">탄성 변형, elastic deformation</span>). 조금 더 힘을 주자 막대가 더 많이 휘었습니다. 막대 내부에 <span class="highlight">응력</span>이 축적되고 있었습니다.</p>
+        <p><span class="dialogue">"지금 네가 주는 힘이 바로 판이 움직이면서 쌓이는 <span class="highlight">탄성 변형 에너지</span>야. <span class="highlight">맨틀 대류</span>와 <span class="highlight">섭입판 당김</span>, <span class="highlight">해령 밀기</span> 등의 힘 때문에 판들은 끊임없이 움직이는데, 판의 경계에서는 <span class="highlight">마찰력</span> 때문에 쉽게 움직이지 못해. 그래서 힘이 쌓이는 거지."</span></p>
+        <p>다온이 계속 힘을 주자, 막대가 <span class="highlight">항복점</span>을 넘어 심하게 휘어졌습니다. 그리고 <span class="highlight">딱!</span> 하는 소리와 함께 막대가 부러졌습니다(<span class="highlight">취성 파괴, brittle fracture</span>). 다온의 손에 충격이 전해졌습니다.</p>
+        <p><span class="dialogue">"바로 그거야! 막대가 부러진 순간이 바로 <span class="highlight">지진</span>이 발생하는 순간이야. 쌓이고 쌓인 탄성 에너지가 암석이 견딜 수 있는 <span class="highlight">파괴 강도</span>를 넘어서면, 암석이 갑자기 부러지거나 <span class="highlight">단층</span>을 따라 어긋나면서 에너지가 한꺼번에 방출되지. 이것이 <span class="highlight">탄성 반발설</span>이라는 지진 발생의 기본 원리야. 1906년 샌프란시스코 대지진 이후 해리 필딩 리드(Harry Fielding Reid)가 제안했지."</span></p>
+        <p>다온은 부러진 막대를 바라보았습니다. 그 짧은 순간에 손에 전해진 충격—그것이 <span class="highlight">지진파</span>라는 것이었습니다. 지진은 갑작스러운 재앙이 아니라, 지구가 오랫동안 <span class="highlight">지구조 응력</span>을 축적한 결과의 폭발이라는 것을 이해했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">진앙과 규모</span>
+        <h2>지진의 크기를 재는 방법</h2>
+        <p>할아버지가 다온을 지진 관측실로 데려갔습니다. 방 안에는 여러 대의 모니터가 있었고, 화면마다 물결 모양의 <span class="highlight">지진파형</span>이 쉬지 않고 그려지고 있었습니다.</p>
+        <p><span class="dialogue">"이게 <span class="highlight">지진계</span>가 기록하는 지진파야. 지구 어딘가에서 지진이 일어나면, 그 파동이 여기까지 전달돼서 기록되는 거지. 현대의 <span class="highlight">광대역 지진계</span>는 극히 미세한 지각 변동까지 감지할 수 있어."</span></p>
+        <p><span class="dialogue">"다온아, 지진이 시작되는 지점을 뭐라고 부를까? 땅속에서 실제로 암석이 파괴되는 곳을 <span class="highlight">진원</span>이라 하고, 진원 바로 위 지표면의 지점을 <span class="highlight">진앙</span>이라고 해. 진원의 깊이(<span class="highlight">진원 심도, focal depth</span>)에 따라 <span class="highlight">천발 지진</span>, <span class="highlight">중발 지진</span>, <span class="highlight">심발 지진</span>으로 분류하지."</span></p>
+        <p><span class="dialogue">"그러면 지진이 얼마나 센지는 어떻게 알아?"</span></p>
+        <p><span class="dialogue">"좋은 질문이야. 지진의 크기를 나타내는 데는 두 가지 척도가 있어. 하나는 <span class="highlight">규모</span>인데, 지진 자체가 방출한 <span class="highlight">지진 에너지</span>의 크기를 나타내. 1935년 찰스 리히터(Charles Richter)가 개발한 <span class="highlight">리히터 규모</span>가 유명하지. 현재는 더 정확한 <span class="highlight">모멘트 규모</span>를 주로 사용해. 규모가 1 올라가면 <span class="highlight">지진파 진폭</span>은 10배, <span class="highlight">방출 에너지</span>는 약 31.6배(10^1.5)나 커져."</span></p>
+        <p><span class="dialogue">"31.6배나?!"</span></p>
+        <p><span class="dialogue">"그래. 규모 5와 규모 6은 숫자로는 1 차이지만, 에너지는 31.6배 차이야. 또 하나는 <span class="highlight">진도</span>인데, 이건 사람이 느끼는 흔들림의 정도와 건물 피해를 기준으로 해. <span class="highlight">수정 메르칼리 진도</span>가 대표적이야. 같은 규모의 지진이라도 진앙에서 가까우면 진도가 크고, 멀면 작아. 또한 <span class="highlight">지반 조건</span>에 따라 같은 거리라도 진도가 달라질 수 있지."</span></p>
+        <p>다온은 지진이 정확하게 <span class="highlight">정량화</span>할 수 있는 현상이라는 것을 깨달았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">불의 산이 깨어나다</span>
+        <h2>화산과 지진의 비밀스러운 연결</h2>
+        <p>관측실을 나온 다온은 복도에 걸린 거대한 사진 앞에 멈춰 섰습니다. 시뻘건 <span class="highlight">용암</span>이 하늘로 치솟고, 검은 <span class="highlight">화산재</span>가 구름을 뒤덮은 화산 폭발 사진이었습니다.</p>
+        <p><span class="dialogue">"할아버지, 화산은 왜 터지는 거야?"</span></p>
+        <p><span class="dialogue">"지구 안쪽, 맨틀에는 부분적으로 녹은 암석인 <span class="highlight">마그마</span>가 있어. 마그마는 <span class="highlight">감압 용융</span>, <span class="highlight">함수 용융</span>, <span class="highlight">열점</span> 등 여러 메커니즘으로 생성돼. 이 마그마가 지각의 약한 부분을 뚫고 지표면으로 올라오면, 그것이 <span class="highlight">화산 분화</span>야. 지표면에 나온 마그마를 <span class="highlight">용암</span>이라고 하지."</span></p>
+        <p>할아버지가 <span class="highlight">섭입대</span>에서의 화산 형성을 시뮬레이션으로 보여 주었습니다. 해양판이 대륙판 아래로 섭입되면, 섭입판에 포함된 물이 <span class="highlight">맨틀 쐐기</span>의 용융점을 낮춰 마그마를 생성합니다. 이 마그마가 상승하여 <span class="highlight">화산호</span>를 형성합니다.</p>
+        <p><span class="dialogue">"<span class="highlight">환태평양 조산대</span>, 이른바 <span class="highlight">불의 고리</span>가 바로 이런 곳이야. 전 세계 화산의 약 75%, 지진의 약 90%가 이 지역에서 발생하지."</span></p>
+        <p>화산의 분화 양상은 <span class="highlight">마그마의 점성</span>과 <span class="highlight">가스 함량</span>에 따라 달라집니다. <span class="highlight">현무암질 마그마</span>는 점성이 낮아 <span class="highlight">용암 분출</span>을, <span class="highlight">유문암질 마그마</span>는 점성이 높아 <span class="highlight">폭발적 분화</span>를 일으킵니다.</p>
+        <p>할아버지가 세계 지진 분포도와 화산 분포도를 겹치자, 빨간 점들이 거의 정확히 포개졌습니다. 지진과 화산은 별개의 재앙이 아니라, <span class="highlight">판 구조론</span>이라는 같은 원인에서 비롯된 쌍둥이 현상이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">무너지는 세상</span>
+        <h2>지진과 화산이 남기는 상처</h2>
+        <p>할아버지는 다온을 연구소의 기록실로 데려갔습니다. 그곳에는 전 세계에서 일어난 지진과 화산 재해의 기록 영상과 사진들이 보관되어 있었습니다.</p>
+        <p>2011년 <span class="highlight">도호쿠 대지진</span>의 영상이 화면에 나왔습니다. <span class="highlight">모멘트 규모 9.0</span>의 <span class="highlight">메가스러스트 지진</span> 이후, 높이 15미터가 넘는 <span class="highlight">지진 해일</span>이 해안 마을을 삼키는 장면. 집이, 차가, 배가 물에 떠내려가고 있었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">쓰나미</span>는 해저에서 지진이 일어나 해저면이 급격히 변형될 때 발생해. <span class="highlight">단층 변위</span>가 바닷물을 위로 밀어올리는 거야. 먼바다에서는 파고가 낮고 파장이 수백 km에 달하지만, 해안에 가까워지면 <span class="highlight">천해 효과</span>로 파고가 수십 미터까지 높아질 수 있어."</span></p>
+        <p>다음은 화산 피해 영상이었습니다. 1980년 <span class="highlight">세인트헬렌스 화산</span> 폭발. 산의 측면이 <span class="highlight">산사태</span>로 무너지고, <span class="highlight">화쇄류</span>가 시속 수백 km로 산을 내려갔습니다. <span class="highlight">화산재</span>가 <span class="highlight">성층권</span>까지 올라가 전 세계 기후에 영향을 미쳤습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">화쇄류</span>는 뜨거운 가스, 화산재, 암석 조각이 뒤섞여 초고속으로 흐르는 치명적인 현상이야. 온도가 700℃ 이상, 속도가 시속 700km에 달하기도 해. 탈출이 거의 불가능하지. 79년 <span class="highlight">베수비오 화산</span> 폭발로 폼페이가 매몰된 것도 화쇄류 때문이야."</span></p>
+        <p>다온의 눈에 눈물이 맺혔습니다. 할아버지가 다온의 어깨를 감싸 안았습니다.</p>
+        <p><span class="dialogue">"무서운 게 당연해. 자연의 힘은 정말 거대하거든. 하지만 다온아, <span class="highlight">과학적 이해</span>와 <span class="highlight">재난 대비</span>로 피해를 최소화할 수 있어. 그래서 과학자들이 존재하는 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">대비의 설계도</span>
+        <h2>지진이 와도 무너지지 않는 방법</h2>
+        <p>할아버지는 다온을 연구소 옥상으로 데려갔습니다. 옥상에서 내려다보니, 연구소 건물 아래에 거대한 고무 패드 같은 것들이 받치고 있는 것이 보였습니다.</p>
+        <p><span class="dialogue">"저건 <span class="highlight">내진 설계</span>의 하나인 <span class="highlight">면진 장치</span>야. <span class="highlight">납-고무 베어링</span>이나 <span class="highlight">마찰 진자 시스템</span>이 지진파의 <span class="highlight">주기</span>를 연장시켜, 건물에 전달되는 <span class="highlight">가속도</span>를 크게 줄여주지."</span></p>
+        <p><span class="highlight">내진 구조</span>에는 여러 방법이 있었습니다. 건물의 <span class="highlight">연성</span>을 높여 지진 에너지를 흡수하는 <span class="highlight">내진 설계</span>, 건물 꼭대기에 <span class="highlight">동조 질량 댐퍼</span>를 설치하여 진동을 상쇄시키는 <span class="highlight">제진 설계</span>, 그리고 방금 본 <span class="highlight">면진 설계</span>가 있습니다.</p>
+        <p><span class="dialogue">"일본에서는 규모 7이 넘는 지진이 와도 현대 건물이 안 무너지는 경우가 많아. <span class="highlight">내진 기준</span>이 잘 정립되어 있거든. 한국도 2016년 경주 지진 이후 <span class="highlight">내진 보강</span>을 강화하고 있어."</span></p>
+        <p>다음으로 할아버지는 <span class="highlight">비상 대피 가방</span>을 보여주었습니다. 손전등, 호루라기, 물, 비상식량, 구급약, 보온담요, 배터리 라디오, 마스크.</p>
+        <p><span class="dialogue">"지진이 나면 <span class="highlight">초기 대응</span>이 중요해. <span class="highlight">엎드려, 가려, 잡아</span>—탁자 아래로 들어가 머리를 보호하고, 흔들림이 멈추면 계단으로 대피하는 거야. <span class="highlight">액상화</span> 위험 지역, <span class="highlight">사면 붕괴</span> 위험 지역은 피해야 해."</span></p>
+        <p>다온은 대피 가방을 직접 싸 보았습니다. 신기하게도, 준비물을 하나씩 챙길 때마다 가슴속의 두려움이 조금씩 작아지는 것을 느꼈습니다. <span class="highlight">재난 대비</span>는 두려움을 감당할 수 있는 크기로 줄여주고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">30초의 기적</span>
+        <h2>지진 조기 경보 시스템</h2>
+        <p>할아버지가 다온에게 퀴즈를 냈습니다.</p>
+        <p><span class="dialogue">"다온아, <span class="highlight">지진파</span>에는 여러 종류가 있어. <span class="highlight">실체파</span>에는 빠르지만 피해가 적은 파, 느리지만 피해가 큰 파가 있지. 이 둘의 이름이 뭔지 알아?"</span></p>
+        <p><span class="dialogue">"빠른 파를 <span class="highlight">P파</span>라고 하고, 느린 파를 <span class="highlight">S파</span>라고 해. P파는 <span class="highlight">종파</span>로 매질의 진동 방향과 파동 전파 방향이 같아. 압축과 팽창을 반복하면서 초당 약 5~8km 속도로 전파되지. S파는 <span class="highlight">횡파</span>로 옆으로 흔들리면서 초당 약 3~5km로 더 느리게 와. 하지만 S파가 건물을 무너뜨리는 주범이야."</span></p>
+        <p>또한 <span class="highlight">표면파</span>도 있었습니다. <span class="highlight">러브파</span>와 <span class="highlight">레일리파</span>는 지표면을 따라 전파되며, 진폭이 크고 주기가 길어 <span class="highlight">장주기 구조물</span>에 특히 위험합니다.</p>
+        <p><span class="dialogue">"여기서 중요한 게 뭐냐면, P파와 S파 사이에 <span class="highlight">시간차</span>가 있다는 거야. P파가 먼저 도착하고, 몇 초에서 몇십 초 뒤에 S파가 와. 이 시간차를 이용해서 <span class="highlight">지진 조기 경보 시스템</span>을 만든 거야."</span></p>
+        <p><span class="dialogue">"P파를 감지하면 S파가 오기 전에 경고를 보내는 거야?"</span></p>
+        <p><span class="dialogue">"정확해! 진앙 근처의 <span class="highlight">지진 관측소</span>가 P파를 감지한 순간, 컴퓨터가 <span class="highlight">진원, 규모, 예상 진도</span>를 자동으로 계산해서 전국에 경보를 보내. 이 <span class="highlight">경보 시간</span>이 보통 수 초에서 수십 초 정도야."</span></p>
+        <p>짧아 보이지만, 이 시간 안에 <span class="highlight">가스 자동 차단</span>, <span class="highlight">고속열차 자동 감속</span>, <span class="highlight">엘리베이터 최근접 층 정지</span>, <span class="highlight">공장 가동 중단</span> 등이 자동으로 이루어집니다.</p>
+        <p><span class="dialogue">"30초가 사람의 목숨을 살릴 수 있다니…. 과학은 지진을 막을 수는 없지만, <span class="highlight">피해 경감</span>은 할 수 있구나!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">용기를 꺼내는 시간</span>
+        <h2>다온이의 지진 대피 훈련</h2>
+        <p>할아버지가 다온에게 말했습니다.</p>
+        <p><span class="dialogue">"다온아, 오늘 연구소에서 <span class="highlight">지진 대피 모의훈련</span>이 있어. 같이 해볼래?"</span></p>
+        <p>다온은 망설였습니다. 훈련이라 해도 사이렌 소리가 울리고 사람들이 뛰는 것은 무서울 것 같았습니다. 하지만 할아버지의 말이 떠올랐습니다. '무서움에서 멈추면 두려움만 남지만, 이해하고 대비하면 생명을 지킬 수 있어.'</p>
+        <p><span class="dialogue">"…할게요."</span></p>
+        <p><span class="highlight">위이이잉—</span> <span class="highlight">지진 경보 사이렌</span>이 울렸습니다.</p>
+        <p><span class="dialogue">"지진입니다! 즉시 대피하세요!"</span></p>
+        <p>다온의 심장이 쿵쿵 뛰었습니다. 하지만 할아버지가 침착하게 말했습니다.</p>
+        <p><span class="dialogue">"다온아, 첫째, <span class="highlight">엎드려, 가려, 잡아</span>. 탁자 아래로 들어가서 머리와 목을 보호해. <span class="highlight">삼각형 생존 공간</span> 이론은 과학적 근거가 없어. 공식적인 대응 지침을 따르는 게 중요해."</span></p>
+        <p>다온은 연구실 탁자 아래로 재빨리 들어갔습니다. 한 손으로 탁자 다리를 잡고(<span class="highlight">Hold on</span>), 다른 손으로 머리를 감쌌습니다.</p>
+        <p><span class="dialogue">"좋아. 둘째, 흔들림이 멈추면 <span class="highlight">2차 재해</span>를 경계하며 대피해. <span class="highlight">여진</span>에 주의하고, <span class="highlight">비상계단</span>으로 이동해."</span></p>
+        <p>사이렌이 바뀌자, 다온은 탁자에서 나와 할아버지를 따라 비상계단으로 향했습니다. 뛰지 않고, 당황하지 않고, 침착하게. 건물 밖 지정된 <span class="highlight">대피 장소</span>에 도착했을 때, 다온은 자기가 웃고 있다는 것을 발견했습니다.</p>
+        <p><span class="dialogue">"할아버지, 나… 할 수 있었어!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">용기</span>는 두려움이 없는 게 아니야. 두려워도 행동할 수 있는 거야. 오늘 다온이는 정말 용감했어."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">지구의 편지</span>
+        <h2>두려움은 이해로 줄어든다</h2>
+        <p>방학 마지막 날, 다온은 연구소를 떠나기 전 할아버지의 방에서 마지막 이야기를 나누었습니다.</p>
+        <p><span class="dialogue">"할아버지, 나 처음에 지진이 너무 무서웠어. 그런데 이제는… 여전히 무섭긴 하지만, 예전처럼 마냥 두렵지는 않아."</span></p>
+        <p><span class="dialogue">"왜 그럴까?"</span></p>
+        <p><span class="dialogue">"<span class="highlight">판 구조론</span>으로 지진이 왜 일어나는지 알게 됐으니까. <span class="highlight">탄성 반발설</span>로 에너지가 어떻게 축적되고 방출되는지도 이해했고. <span class="highlight">P파와 S파</span>의 특성, <span class="highlight">조기 경보 시스템</span>의 원리, <span class="highlight">내진 설계</span>의 방법도 배웠어. 모를 때는 지진이 마치 괴물 같았는데, 이제는 <span class="highlight">지구가 동적 평형</span>을 유지하며 살아 있다는 증거로 보여."</span></p>
+        <p>할아버지가 고개를 끄덕였습니다.</p>
+        <p><span class="dialogue">"다온아, 지구는 <span class="highlight">46억 년</span> 동안 끊임없이 움직여 왔어. 판이 충돌해서 <span class="highlight">조산 운동</span>이 일어나고, 화산이 터져서 새 땅이 만들어지고, <span class="highlight">탄소 순환</span>이 기후를 조절하고. 이 과정이 없었다면 지금의 대륙도, 바다도, <span class="highlight">생명권</span>도 없었을 거야. 지진과 화산은 재앙이기도 하지만, 동시에 <span class="highlight">지구가 살아 있는 행성</span>이라는 증거야."</span></p>
+        <p>다온은 창밖을 바라보았습니다. 단단한 땅 아래에서 <span class="highlight">지각판</span>이 조용히 움직이고, <span class="highlight">맨틀 대류</span>가 천천히 순환하고, <span class="highlight">지자기</span>를 만드는 <span class="highlight">외핵</span>이 흐르고, <span class="highlight">내핵</span>이 6,000℃로 빛나고 있을 것입니다.</p>
+        <p><span class="dialogue">"<span class="highlight">두려움은 이해로 줄어든다(Fear decreases with understanding).</span>"</span></p>
+        <p>다온이 조용히 말했습니다. 집으로 돌아가는 차 안에서, 다온은 작은 노트에 적었습니다. '지구는 무서운 곳이 아니라, <span class="highlight">지구 시스템 과학</span>으로 이해해야 할 곳이다. 그리고 이해하면 함께 살아갈 수 있다.'</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(230, 81, 0, 0.15); border-radius: 16px;">
+          <strong style="color: #BF360C; font-size: 20px;">「두려움은 이해로 줄어든다. 알면 준비할 수 있고, 준비하면 이겨낼 수 있다. — 지구과학의 힘」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth06_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

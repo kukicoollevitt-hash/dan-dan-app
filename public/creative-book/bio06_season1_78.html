@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌳 도토리의 위대한 모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5D4037 0%, #3E2723 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: block;
+      color: #5D4037;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2d2d2d;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 17px;
+      line-height: 2;
+      color: #444;
+      margin-bottom: 15px;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .story-card .highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(93, 64, 55, 0.2) 60%);
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #5D4037;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(93, 64, 55, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #3E2723;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #3E2723;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #5D4037;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      pointer-events: auto;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFD700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 닫기 버튼 */
+    .close-btn { display: none;
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .close-btn:hover {
+      transform: scale(1.1);
+      background: #fff;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .intro-section {
+        padding: 30px 20px;
+      }
+
+      .intro-content {
+        padding: 40px 25px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+
+      .story-section {
+        padding: 30px 20px;
+        justify-content: center !important;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-section:nth-child(odd) .story-card,
+      .story-section:nth-child(even) .story-card {
+        transform: translateY(50px);
+      }
+
+      .story-card.active {
+        transform: translateY(0);
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 15px;
+        line-height: 1.9;
+      }
+
+      .close-btn { display: none;
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌳 도토리의 위대한 모험</h1>
+        <p class="subtitle">
+          — 움직일 수 없지만 누구보다 멀리 여행하는 나무의 비밀 —<br>
+          뿌리마을의 떡갈나무 할아버지와 작은 씨앗 도토리의 대모험
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 떡갈나무 할아버지:</strong> 300살 현자, 참나무과 식물로 숲의 지혜를 전하는 이야기꾼. 관다발식물의 구조를 체현한 존재.</p>
+          <p><strong>▸ 도토리:</strong> 호기심 가득한 주인공, 나무의 삶이 지루하다고 생각하는 아기 씨앗. 떡갈나무의 열매(견과).</p>
+          <p><strong>▸ 바람돌이:</strong> 장난꾸러기 바람 요정, 풍매(風媒) 종자 산포를 돕는 조력자.</p>
+          <p><strong>▸ 가시장군:</strong> 탱자나무 수호자, 변형된 가지(경침)로 이웃을 지키는 전사.</p>
+          <p><strong>▸ 햇살이:</strong> 에너지 요정, 광합성의 광반응에서 빛 에너지를 ATP와 NADPH로 전환시키는 빛의 존재.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">뿌리마을에서 가장 오래된 목소리</span>
+        <h2>말하는 나무와 식물 신호 전달</h2>
+        <p>깊고 깊은 숲속, 사람의 발길이 좀처럼 닿지 않는 곳에 '뿌리마을'이라는 작은 세계가 있었습니다. 이 마을에서 가장 높고 가장 오래된 나무는 바로 <span class="highlight">떡갈나무 할아버지</span>였지요. 참나무과 참나무속에 속하는 떡갈나무 할아버지는 무려 삼백 년이 넘는 세월 동안 그 자리를 지키고 서 있었습니다. 그의 <span class="highlight">직경은 2미터가 넘었고, 높이는 25미터</span>에 달했습니다.</p>
+        <p>비가 오면 비를 맞고, 눈이 오면 눈을 맞으며, 바람이 불면 가지를 흔들어 인사했습니다. 마을의 모든 생물들은 할아버지의 '목소리'를 들을 수 있었어요. 물론 이것은 실제 소리가 아니라 <span class="highlight" data-tooltip="화학적 신호(phytochemical signal): 식물이 휘발성 유기 화합물을 분비하여 다른 식물이나 생물과 소통하는 방법">화학적 신호</span>였습니다. 식물은 휘발성 유기 화합물(VOC)을 공기 중으로 방출하고, 뿌리를 통해 화학 물질을 토양으로 분비하여 주변 식물과 소통합니다.</p>
+        <p><span class="dialogue">"얘들아, 오늘 바람의 방향이 바뀌었구나. 대기압이 낮아지고 있어. 내 기공의 개폐 패턴으로 알 수 있지. 내일은 비가 올 거야."</span><br><br>할아버지는 매일 아침 숲의 날씨를 알려주었습니다. 실제로 식물은 <span class="highlight" data-tooltip="기공(stomata): 잎 뒷면에 있는 작은 구멍으로 기체 교환과 증산작용을 담당하며, 공변세포가 개폐를 조절함">기공(stomata)의 개폐를 통해 대기 중 습도와 기압 변화를 감지</span>할 수 있습니다.</p>
+        <p>그런데 할아버지 곁에는 늘 불만이 가득한 작은 존재가 하나 있었습니다. 바로 할아버지의 가지 끝에 매달린 아기 도토리, <span class="highlight">'도토리'</span>였어요. 도토리는 <span class="highlight">견과(堅果, nut)</span>의 일종으로, 단단한 과피 안에 씨앗이 들어 있었습니다.</p>
+        <p><span class="dialogue">"할아버지, 저는 왜 움직일 수가 없는 거예요? 새들처럼 하늘을 날고 싶고, 토끼처럼 뛰어다니고 싶단 말이에요! 동물들은 신경계가 있어서 자유롭게 움직이잖아요!"</span></p>
+        <p>할아버지는 빙그레 웃으며 말했습니다.<br><br><span class="dialogue">"허허, 하지만 우리 나무들이야말로 이 세상에서 <span class="highlight">가장 멀리 여행하는 존재</span>란다. 너의 조상은 바다 건너 대륙에서 왔고, 너의 후손은 이 숲을 넘어 수백 킬로미터 밖까지 퍼져나갈 거야. 네가 아직 <span class="highlight">종자 산포</span>의 비밀을 모를 뿐이지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">보이지 않는 곳에서 벌어지는 전쟁</span>
+        <h2>뿌리의 구조와 균근 네트워크</h2>
+        <p>도토리의 모험 첫 번째 수업은 땅속에서 시작되었습니다. 떡갈나무 할아버지는 도토리에게 자신의 뿌리계를 보여주었어요.</p>
+        <p>땅 위에서 보면 할아버지는 그저 커다란 기둥 하나에 불과했지만, 땅속은 전혀 다른 세계였습니다. 할아버지의 <span class="highlight" data-tooltip="주근(main root): 종자의 유근에서 발달한 뿌리의 중심축으로 땅속 깊이 뻗어 식물을 고정시킴">주근</span>은 땅속 깊이 5미터 이상 내려갔고, <span class="highlight" data-tooltip="측근(lateral root): 주근에서 옆으로 뻗어나가는 곁뿌리로 영양분과 수분 흡수 면적을 넓힘">측근</span>은 사방으로 30미터 이상 뻗어 있었습니다. 가는 <span class="highlight" data-tooltip="세근(fine root): 가는 실뿌리로 표면적이 넓어 수분과 무기양분 흡수에 효율적">세근</span>과 <span class="highlight" data-tooltip="근모(root hair): 표피세포가 돌출되어 형성된 미세한 털로 흡수 표면적을 수백 배 증가시킴">근모</span>까지 합치면 그 총 표면적은 수백 제곱미터에 달했습니다.</p>
+        <p><span class="dialogue">"이건 마치 지하 도시 같아요! 뿌리의 표면적이 잎의 표면적보다 훨씬 넓네요!"</span><br><br>도토리가 감탄했습니다.</p>
+        <p><span class="dialogue">"뿌리는 단순히 물을 빨아들이는 빨대가 아니란다. 이것은 나의 <span class="highlight">전략 본부</span>야."</span><br><br>실제로 뿌리 끝에는 <span class="highlight">근관</span>이 있어 토양을 뚫고 나아갔고, 그 바로 뒤의 <span class="highlight">생장점</span>에서는 세포분열이 활발하게 일어났습니다. 뿌리는 <span class="highlight">중력굴성</span>에 의해 아래로 자라고, <span class="highlight">수분굴성</span>에 의해 물이 있는 방향으로 뻗어갔습니다.</p>
+        <p>더 놀라운 사실도 있었어요. 할아버지의 뿌리는 옆에 있는 소나무 아저씨의 뿌리와 <span class="highlight" data-tooltip="균근(mycorrhiza): 식물 뿌리와 곰팡이가 공생하는 구조로 식물은 당분을, 균류는 무기영양분과 물을 교환">균근</span>을 통해 연결되어 있었습니다.<br><br><span class="dialogue">"지난번에 벌레가 소나무 아저씨를 공격했을 때, 나는 균사 네트워크를 통해 화학 경고 신호를 받았단다. <span class="highlight" data-tooltip="자스몬산(jasmonic acid): 식물이 상처나 병원균 공격 시 합성하는 방어 호르몬으로 방어 유전자 발현을 촉진">자스몬산(jasmonic acid)과 살리실산</span> 같은 방어 호르몬을 미리 합성해서 준비할 수 있었지."</span></p>
+        <p>이 지하 연결망은 과학자들이 <span class="highlight">'우드 와이드 웹'</span>이라고 부르는 것으로, 실제로 나무들이 탄소, 질소, 인, 물, 심지어 방어 신호까지 공유하는 거대한 네트워크입니다. 뿌리는 단순한 지지대가 아니라, <span class="highlight">소통하고 자원을 공유하는 '나무의 인터넷'</span>이었던 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">하늘과 땅을 잇는 거대한 다리</span>
+        <h2>줄기의 관다발 구조와 물 수송</h2>
+        <p>다음 날, 할아버지는 도토리에게 자신의 줄기에 대해 알려주었습니다.<br><br><span class="dialogue">"도토리야, 내 몸통을 한번 잘 들여다보렴. 겉으로는 그저 딱딱한 나무 기둥처럼 보이지만, 그 안에는 엄청난 비밀이 숨어 있단다."</span></p>
+        <p>도토리가 할아버지의 줄기 단면을 자세히 살펴보니, 겉껍질 안쪽으로 여러 겹의 층이 보였습니다. 가장 바깥에는 <span class="highlight" data-tooltip="코르크층(cork layer): 죽은 세포로 이루어진 보호층으로 수분 증발을 막고 병원균 침입을 방지">코르크층</span>이 갑옷처럼 둘러싸고 있었고, 그 안쪽에 <span class="highlight" data-tooltip="체관부(phloem): 잎에서 광합성으로 만든 유기물을 식물 전체로 수송하는 관">체관부</span>, <span class="highlight" data-tooltip="형성층(cambium): 분열 조직으로 안쪽으로는 물관부를, 바깥쪽으로는 체관부를 만들어 줄기가 두꺼워지게 함">형성층</span>, <span class="highlight" data-tooltip="물관부(xylem): 뿌리에서 흡수한 물과 무기양분을 위로 수송하는 관으로 죽은 세포로 구성됨">물관부</span>가 동심원처럼 배열되어 있었습니다.</p>
+        <p><span class="dialogue">"이 관들은 <span class="highlight">관다발</span>이라고 해. 두 종류의 엘리베이터 같은 거야. 물관은 뿌리에서 빨아올린 물과 무기 양분을 위로 올려보내는 '상승 엘리베이터'이고, 체관은 잎에서 만든 당(포도당, 설탕)을 아래로 내려보내는 '하강 엘리베이터'란다."</span></p>
+        <p>도토리는 고개를 들어 할아버지의 꼭대기를 올려다보았습니다. 무려 25미터가 넘는 높이였어요!<br><br><span class="dialogue">"어떻게 물이 그 높은 곳까지 올라가요? 중력이 방해하잖아요!"</span></p>
+        <p><span class="dialogue">"좋은 질문이야! 물은 <span class="highlight">세 가지 힘</span>의 조합으로 올라간단다. 첫째, 뿌리에서의 <span class="highlight">근압</span>이 물을 밀어올려. 둘째, 물 분자끼리 서로 끌어당기는 <span class="highlight">응집력</span>이 있지. 셋째, 그리고 가장 중요한 건 잎에서 물이 증발하면서 생기는 <span class="highlight">증산작용</span>이야. 잎의 기공에서 물이 증발하면 그 당기는 힘이 물관을 타고 내려와서 물을 끌어올리는 거야. 이걸 <span class="highlight">응집력-장력 이론</span>이라고 해."</span></p>
+        <p>줄기의 한가운데에는 <span class="highlight">나이테</span>가 새겨져 있었습니다. 할아버지는 그것을 자신의 일기장이라고 불렀어요.<br><br><span class="dialogue">"이 넓은 나이테는 형성층의 세포분열이 활발했던, 비가 많이 와서 내가 쑥쑥 자랐던 해고, 이 좁은 나이테는 가뭄이 들어 힘들었던 해란다. 나이테를 세면 내 나이가 정확히 나온단다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">초록빛 요리사의 마법 레시피</span>
+        <h2>잎의 구조와 광합성</h2>
+        <p><span class="dialogue">"자, 이제 내 가장 자랑스러운 부분을 보여줄 차례구나!"</span><br><br>할아버지가 자신의 잎사귀 하나를 살랑살랑 흔들며 말했습니다. 떡갈나무의 잎은 깃 모양으로 깊게 갈라진 <span class="highlight">우상복엽</span>의 변형으로, 표면적을 최대화하여 빛을 효율적으로 받도록 진화했습니다.</p>
+        <p>그때 어디선가 반짝반짝 빛나는 작은 존재가 날아왔어요. 바로 에너지 요정 <span class="highlight">'햇살이'</span>였습니다.<br><br><span class="dialogue">"안녕, 도토리! 나는 매일 아침 떡갈나무 할아버지의 잎에 찾아와서 광합성을 도와주는 요정이야. 내가 가진 <span class="highlight" data-tooltip="광자(photon): 빛 에너지를 운반하는 입자로 광합성에서 엽록소가 흡수하여 화학 에너지로 전환">광자</span>가 에너지원이거든!"</span></p>
+        <p>햇살이가 잎 위에 앉자, 신기한 일이 벌어졌습니다. 잎 내부의 <span class="highlight" data-tooltip="엽육세포(mesophyll cell): 잎의 광합성 조직을 구성하는 세포로 엽록체가 풍부하게 들어있음">엽육세포</span> 안에 있는 작은 초록색 구조물들, 바로 <span class="highlight" data-tooltip="엽록체(chloroplast): 광합성이 일어나는 세포소기관으로 이중막과 틸라코이드 구조를 가짐">엽록체</span>가 일제히 활성화되기 시작한 거예요. 엽록체 내부의 <span class="highlight" data-tooltip="틸라코이드 막: 엽록체 내부의 주머니 모양 막 구조로 광합성의 명반응이 일어나는 장소">틸라코이드 막</span>에서 빛이 흡수되고 있었습니다.</p>
+        <p><span class="dialogue">"이 엽록체들은 햇살이가 가져다주는 빛 에너지를 흡수해. 먼저 <span class="highlight">광반응</span>이 틸라코이드에서 일어나는데, 빛 에너지로 물 분자를 분해해서 ATP와 NADPH를 만들어 내지. 이때 산소가 부산물로 나와. 그다음 <span class="highlight">암반응</span>이 엽록체의 스트로마에서 일어나. 여기서 ATP와 NADPH를 이용해 이산화탄소를 고정하여 포도당(C₆H₁₂O₆)을 합성하는 거야. 이 전체 과정을 <span class="highlight">광합성</span>이라고 해."</span></p>
+        <p>도토리가 잎 뒷면을 살펴보니 수많은 작은 구멍들이 보였습니다. 현미경으로 보면 <span class="highlight">공변세포</span> 두 개가 구멍을 둘러싸고 있었습니다.<br><br><span class="dialogue">"그것은 <span class="highlight">기공</span>이라고 해. 숨을 쉬는 코라고 생각하면 돼. 이 구멍으로 이산화탄소(CO₂)를 들이마시고 산소(O₂)를 내뱉는단다. 공변세포가 팽압 변화에 따라 부풀거나 쪼그라들면서 기공의 개폐를 조절해. 수분이 부족하면 기공을 닫아 증산을 줄이고, 충분하면 열어서 가스 교환을 활발하게 하지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">가시장군의 결투와 헌신</span>
+        <h2>식물의 방어 전략과 변형 기관</h2>
+        <p>어느 날, 숲에 불청객이 찾아왔습니다. 배고픈 사슴 한 마리가 어린 나무들의 잎을 마구 뜯어먹기 시작한 거예요. 뿌리마을의 어린 나무들이 <span class="highlight">에틸렌과 자스몬산</span>을 방출하며 화학적 비명을 질렀습니다.</p>
+        <p>그때, 용감하게 나선 이가 있었으니 바로 <span class="highlight">'가시장군'</span>이었습니다. 가시장군은 떡갈나무 할아버지 옆에 서 있는 탱자나무(Poncirus trifoliata)였는데, 온몸이 날카로운 가시로 뒤덮여 있었어요. 이 가시는 <span class="highlight">경침</span>으로, 줄기가 변형된 것이었습니다.</p>
+        <p><span class="dialogue">"이리 오너라! 내 경침을 뚫고 지나갈 수 있으면 한번 와 보아라! 이 가시의 목질부는 강철처럼 단단하다!"</span><br><br>가시장군이 호통을 쳤습니다. 사슴은 가시장군에게 다가갔다가 코를 찔리고 황급히 물러났지요.</p>
+        <p><span class="dialogue">"할아버지, 가시도 원래는 잎이었어요?"</span><br><br>도토리가 물었습니다.</p>
+        <p>할아버지가 부드럽게 대답했어요.<br><br><span class="dialogue">"식물의 가시에는 여러 종류가 있단다. <span class="highlight">엽침</span>은 잎이 변한 것으로 선인장의 가시가 대표적이야. <span class="highlight">경침</span>은 줄기가 변한 것으로 가시장군의 가시가 이것이지. 그리고 <span class="highlight">피침</span>은 표피가 변한 것으로 장미의 가시가 해당돼. 가시장군은 자기 줄기의 일부를 포기하고 그것을 날카로운 무기로 바꾼 거야. <span class="highlight">영양 기관의 일부를 방어에 투자한 진화적 트레이드오프</span>인 거지."</span></p>
+        <p>식물의 방어 전략은 가시만 있는 게 아니었습니다. 어떤 식물은 <span class="highlight">타닌</span>이나 <span class="highlight">알칼로이드</span> 같은 2차 대사산물을 만들어 잎의 맛을 쓰게 만들거나 독성을 부여했습니다. <span class="highlight">쐐기풀</span>은 자침털에 포름산과 히스타민을 담아 만지면 따끔거리게 만들었죠.</p>
+        <p><span class="dialogue">"모두 각자의 방식으로 싸우고 있는 거란다. 우리 식물은 도망칠 수 없으니까, 그 자리에서 버티며 <span class="highlight">화학적, 물리적 방어 체계</span>를 발전시킨 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">움직이지 못하는 나무의 가장 먼 여행</span>
+        <h2>종자 산포와 동물매</h2>
+        <p>드디어 가을이 찾아왔습니다. 떡갈나무 할아버지의 가지마다 통통하게 살이 오른 도토리들이 주렁주렁 매달려 있었어요. 각 도토리 안에는 <span class="highlight" data-tooltip="배(embryo): 수정 후 발생한 어린 식물체로 유근, 유아, 자엽으로 구성됨">배</span>와 <span class="highlight" data-tooltip="자엽(cotyledon): 씨앗 내에서 영양분을 저장하는 떡잎으로 발아 시 양분을 공급">자엽</span>에 저장된 녹말이 가득했습니다.</p>
+        <p><span class="dialogue">"도토리야, 드디어 네가 여행을 떠날 때가 됐구나. 너의 <span class="highlight">휴면</span>이 끝나고 발아 준비가 시작될 거야."</span><br><br>할아버지의 목소리에 감동과 아쉬움이 함께 담겨 있었습니다.</p>
+        <p>바로 그때, 어디선가 휭 하고 바람이 불어왔습니다.<br><br><span class="dialogue">"야호! 나 <span class="highlight">바람돌이</span>야! 풍매 종자들은 내가 데려다줄게!"</span><br><br>바람돌이는 장난꾸러기 바람의 요정이었어요.</p>
+        <p>할아버지가 설명해 주었습니다.<br><br><span class="dialogue">"종자 산포에는 여러 방법이 있단다. <span class="highlight">풍매</span>는 바람을 이용하는 거야. 민들레의 씨앗에는 <span class="highlight">관모</span>라는 솜털 낙하산이 달려 있어서 수 킬로미터를 날아가지. 단풍나무의 열매에는 <span class="highlight">시과</span>라는 프로펠러 날개가 달려 있어서 빙글빙글 돌면서 먼 곳까지 갈 수 있고."</span></p>
+        <p><span class="dialogue">"그럼 저는 어떻게 여행하나요? 제가 너무 무거워서 바람에 날릴 것 같지 않은데..."</span></p>
+        <p><span class="dialogue">"너는 <span class="highlight">동물매</span>의 도움을 받는단다. 다람쥐와 청설모 같은 <span class="highlight">저장 산포자</span>가 겨울을 대비해 너를 땅속에 묻어 두거든. 한 마리의 다람쥐가 가을에 수천 개의 도토리를 저장하지만, 그중 상당수를 찾지 못해. 바로 <span class="highlight">그 잊힌 도토리들이 봄에 발아해서 새로운 떡갈나무가 되는 거야!</span> 이건 우리 나무와 설치류 사이의 <span class="highlight">공진화</span>란다."</span></p>
+        <p>이 외에도 <span class="highlight">수매</span>로 물을 따라 이동하는 코코넛, <span class="highlight">자동산포</span>로 열매가 터지면서 씨앗을 튕겨내는 봉숭아 등 다양한 전략이 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">숲이 갈아입는 네 벌의 옷</span>
+        <h2>낙엽과 식물 호르몬</h2>
+        <p>바람돌이의 도움으로 다람쥐에게 물려가 숲속 빈터에 묻힌 도토리는 처음으로 사계절의 변화를 직접 겪게 되었습니다.</p>
+        <p>봄이 오자 할아버지의 가지에서 연두색 새잎이 돋아났어요. 이것은 <span class="highlight">정아</span>와 <span class="highlight">측아</span>에 저장되어 있던 미분화 세포들이 분열을 시작한 것이었습니다.<br><br><span class="dialogue">"봄은 모든 나무가 에너지를 폭발시키는 계절이야. 겨울 동안 뿌리에 저장해 둔 <span class="highlight">녹말</span>을 당으로 분해해서 새잎과 꽃을 만드는 데 쏟아붓는 거란다. <span class="highlight">옥신</span>과 <span class="highlight">사이토키닌</span> 같은 호르몬이 세포분열을 촉진시키지."</span></p>
+        <p>여름이 되자 잎이 빽빽해지고 숲은 깊고 짙은 녹음으로 가득 찼습니다. 햇살이 요정은 가장 바쁜 시기를 보냈지요. <span class="highlight">광합성 효율이 최고조</span>에 달했습니다.</p>
+        <p>그런데 가을이 되자 놀라운 변화가 일어났어요. 초록빛 잎들이 하나둘 노란색, 주황색, 빨간색으로 변하기 시작한 겁니다.</p>
+        <p><span class="dialogue">"할아버지, 잎이 아파서 색이 변하는 거예요?"</span></p>
+        <p><span class="dialogue">"아니란다. 이것은 나무의 지혜로운 전략이야. 겨울에는 일조 시간이 짧아지고 기온이 떨어져서 광합성 효율이 급격히 떨어지거든. 잎을 유지하는 데 드는 에너지가 잎이 만드는 에너지보다 커지는 거야. 그래서 <span class="highlight">우리는 스스로 잎을 떨어뜨리는 '낙엽'을 선택한단다.</span>"</span></p>
+        <p>낙엽 과정에서는 <span class="highlight">엽록소가 분해</span>되면서 평소에 숨어 있던 <span class="highlight">카로티노이드(노란색, 주황색)</span>와 새로 합성된 <span class="highlight">안토시아닌(빨간색, 보라색)</span>이 드러났습니다. 그리고 잎자루 밑부분에 <span class="highlight">이층</span>이 형성되어 잎이 떨어질 준비를 했습니다. 이 모든 과정은 <span class="highlight">에틸렌</span>과 <span class="highlight">앱시스산</span>이라는 호르몬이 조절했습니다.</p>
+        <p>계절마다 옷을 갈아입는 <span class="highlight">낙엽수</span>의 변화는 포기가 아니라 생존을 위한 가장 현명한 자원 배분 전략이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">사막에서 온 편지</span>
+        <h2>건조 환경 적응과 CAM 식물</h2>
+        <p>어느 날, 바람돌이가 아주 먼 곳에서 편지 한 통을 가져왔습니다. 보낸 이는 사막에 사는 <span class="highlight">선인장 이모</span>였어요.</p>
+        <p><span class="dialogue">"안녕, 뿌리마을 친구들! 나는 여기 뜨겁고 메마른 사막에서 잘 살고 있단다. 비가 일 년에 50밀리미터도 안 오고, 낮 기온이 섭씨 40도를 넘지만, 나는 내 방식대로 잘 버티고 있어."</span></p>
+        <p>선인장 이모는 <span class="highlight">잎을 모두 가시(엽침)로 바꿔</span> 표면적을 최소화하고 수분 증발을 막았습니다. 대신 두껍고 통통한 <span class="highlight">다육질 줄기</span>에 물을 잔뜩 저장했습니다. 줄기 표면에는 <span class="highlight">왁스층</span>이 두껍게 발달해 수분 손실을 최소화했습니다.</p>
+        <p><span class="dialogue">"나의 줄기는 <span class="highlight">물탱크</span>같은 거야. 비가 올 때 최대한 많은 물을 빨아들여 저장해 두고, 건조할 때 조금씩 꺼내 쓰는 거지. 그리고 나는 <span class="highlight">CAM</span>이라는 특별한 광합성 방식을 사용해. 밤에 기공을 열어 이산화탄소를 흡수하고 유기산 형태로 저장해 뒀다가, 낮에 기공을 닫은 상태에서 그 이산화탄소를 사용해 광합성을 하는 거야. 이렇게 하면 뜨거운 낮에 기공을 열지 않아도 되니까 수분 손실을 극적으로 줄일 수 있지!"</span></p>
+        <p>사막에는 선인장 말고도 놀라운 식물들이 있었습니다. <span class="highlight">바오밥나무</span>는 통통한 몸통에 수천 리터의 물을 저장했고, <span class="highlight">부활초</span>는 세포 내 수분이 5%까지 떨어져도 생존하다가 물을 만나면 몇 시간 만에 광합성을 재개했습니다.</p>
+        <p>할아버지가 미소지었습니다.<br><br><span class="dialogue">"환경을 탓하지 않고 자신의 생리 메커니즘을 변화시키는 것, <span class="highlight">그것이 진정한 적응</span>이야. 진화는 환경에 맞는 가장 효율적인 해결책을 찾아낸단다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">조용한 전사들의 보이지 않는 전쟁</span>
+        <h2>식물 간 경쟁과 타감작용</h2>
+        <p>도토리가 땅속에서 겨울을 보내는 동안, 숲에서는 조용하지만 치열한 전쟁이 벌어지고 있었습니다.</p>
+        <p>첫 번째 전쟁은 <span class="highlight">빛을 차지하기 위한 경쟁</span>이었습니다. 키 큰 나무들은 <span class="highlight">정단분열조직</span>에서 옥신을 분비하며 서로 더 높이 자라려 했고, 그늘에 갇힌 작은 식물들은 <span class="highlight">음지 적응</span> 전략으로 넓고 얇은 잎을 만들어 한 줄기의 빛이라도 더 받으려 안간힘을 썼지요. 어떤 식물들은 <span class="highlight">덩굴</span> 전략으로 다른 나무를 타고 올라갔습니다.</p>
+        <p>두 번째 전쟁은 보이지 않는 <span class="highlight">화학전, 타감작용</span>이었습니다. 호두나무는 뿌리에서 <span class="highlight">유글론</span>이라는 독성 물질을 분비해 주변 식물의 세포 호흡을 방해하고 성장을 억제했습니다. 유칼립투스는 잎에서 <span class="highlight">시네올</span>을 방출해 다른 식물의 발아를 막았습니다.</p>
+        <p>세 번째는 <span class="highlight">동맹 전략, 상리공생</span>이었어요. 대부분의 나무는 <span class="highlight">균근균</span>과 협력 관계를 맺었습니다. 나무는 광합성으로 만든 당분의 10-30%를 균에게 주고, 균은 가느다란 <span class="highlight">균사</span>로 토양 속 인산과 질소를 모아 나무에게 전달해 주었지요. 균사의 표면적은 뿌리의 수백 배에 달했습니다.</p>
+        <p><span class="dialogue">"할아버지도 저한테 영양분을 보내주신 거예요?"</span><br><br><span class="dialogue">"그럼, 당연하지! 네가 혼자 발아할 때 자엽의 영양분만으로는 부족할 수 있으니까, 균근 네트워크를 통해 당분을 보내주었단다. <span class="highlight">어미 나무</span>가 어린 묘목에게 자원을 이전하는 거지."</span></p>
+        <p>경쟁 속에서도 협력하고, 싸우면서도 돕는 것. <span class="highlight">경쟁과 협력의 균형</span>이 숲이 수만 년 동안 유지될 수 있었던 진짜 비밀이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">가장 위대한 여행의 끝과 시작</span>
+        <h2>발아와 새로운 세대</h2>
+        <p>봄이 왔습니다. 겨울 동안 땅속에서 조용히 <span class="highlight">휴면</span> 상태에 있던 도토리에게 마침내 변화가 찾아왔어요. 땅의 온도가 섭씨 10도 이상으로 올라가고, 충분한 수분이 공급되자 <span class="highlight">지베렐린</span> 호르몬이 분비되기 시작했습니다.</p>
+        <p>딱딱한 종피가 갈라지면서 하얀 <span class="highlight">유근</span>이 조심스럽게 아래로 내려갔습니다. 중력굴성에 의해 뿌리는 아래로 향했고, 동시에 <span class="highlight">유아</span>가 빛굴성에 의해 위로 뻗어 세상 밖으로 나왔습니다. 자엽에 저장된 녹말은 <span class="highlight">아밀레이스</span> 효소에 의해 분해되어 성장 에너지로 전환되었습니다.</p>
+        <p><span class="dialogue">"나, 나왔다! 발아에 성공했어!"</span><br><br>도토리, 아니 이제는 <span class="highlight">'어린 떡갈나무'</span>가 환호했습니다. 연두색 첫 잎이 햇빛을 받아 광합성을 시작했습니다.</p>
+        <p>바람에 실려 할아버지의 화학 신호가 전해져 왔어요.<br><br><span class="dialogue">"잘했다, 도토리야. 너는 이제 이해했겠지? 우리 나무는 한 자리에 서 있지만 결코 멈춰 있는 것이 아니란다. 우리의 DNA는 수억 년의 역사를 담고 있고, 우리의 씨앗은 대륙을 건너 퍼져나갔으며, 우리의 세포 안에서는 매 순간 수천 가지 화학 반응이 일어나고 있어."</span></p>
+        <p>뿌리는 균근과 함께 보이지 않는 곳에서 세상을 연결하고, 줄기의 관다발은 하늘과 땅을 이어주며, 잎의 엽록체는 빛으로 유기물을 합성해냈습니다. 가시는 물리적 방어로 이웃을 지켰고, 2차 대사산물은 화학적 방어를 담당했습니다. 씨앗은 동물, 바람, 물의 도움으로 바다 건너까지 여행했습니다.</p>
+        <p><span class="dialogue">"할아버지, 저도 삼백 년 동안 이 자리에서 제 이야기를 쓸 거예요. 수만 개의 도토리를 만들고, 균근 네트워크로 이웃과 연결되고, <span class="highlight">탄소를 고정해서 대기의 이산화탄소를 줄이는</span> 데 기여할 거예요!"</span></p>
+        <p>바람이 숲을 지나가며 모든 나무들의 잎을 흔들었습니다. 그것은 <span class="highlight">휘발성 유기 화합물</span>로 전달되는 숲 전체의 축하 메시지였습니다. <span class="highlight">조용한 존재도 위대합니다. 움직이지 않아도 세상의 탄소 순환과 산소 생산에 핵심적인 역할을 합니다.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(93, 64, 55, 0.15); border-radius: 16px;">
+          <strong style="color: #3E2723; font-size: 18px;">🌳 「움직이지 않는 것은 멈춰 있는 것이 아니다. 식물은 제자리에서 가장 멀리 여행하고, 가장 오래 역사를 기록하는 존재다.」</strong>
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 스토리 닫기
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // IntersectionObserver로 스크롤 기반 배경 변경 및 카드 애니메이션
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0.3
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+
+        if (entry.isIntersecting) {
+          // 카드 활성화
+          if (card) card.classList.add('active');
+
+          // 배경 변경
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+        } else {
+          // 카드 비활성화
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 첫 번째 섹션 즉시 활성화
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) {
+        setTimeout(() => {
+          firstCard.classList.add('active');
+        }, 500);
+      }
+    });
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/bio06_season1_quiz.html?season=season2';
+    }
+  </script>
+
+  <div class="nav-buttons" style="position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 1000; pointer-events: auto;">
+    <button onclick="closeStory()" style="padding: 15px 30px; background: rgba(93, 64, 55, 0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(93, 64, 55, 0.3);">← 목록으로</button>
+    <button onclick="goToQuiz()" style="padding: 15px 30px; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4);">🏆 관문평가</button>
+  </div>
+
+</body>
+</html>

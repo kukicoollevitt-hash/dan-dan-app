@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌍 별의 먼지에서 태어난 푸른 행성</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학01/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #3F51B5 0%, #1A237E 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(63, 81, 181, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(63, 81, 181, 0.15);
+      color: #1A237E;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #3F51B5;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #3F51B5;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(63, 81, 181, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #1A237E;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #1A237E;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #1A237E;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 34px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 17px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #7986CB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(63, 81, 181, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(63, 81, 181, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(26, 35, 126, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(63, 81, 181, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌍 별의 먼지에서 태어난 푸른 행성, 46억 년의 대서사시</h1>
+        <p class="subtitle">
+          — 우주의 먼지 한 톨이 기적이 되기까지, 지구는 얼마나 많은 폭풍을 견뎌야 했을까 —<br>
+          교과기반 창작도서 · 지구과학 01 · 중1-2
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>✨ 별먼지 소녀 스텔라:</strong> "혼자가 편해. 부딪히면 아프잖아." 아주 먼 옛날, 별이 흩뿌린 조각에서 태어난 아이. 작고 여리지만, 온 우주의 기억을 품고 행성이 될 운명을 타고났습니다.</p>
+          <p><strong>☀️ 태양 솔:</strong> "나의 빛이 너희의 길이 되어줄게." 황금빛 머리칼을 휘날리며 어둠을 밝히는 태양계의 아버지. 엄격해 보이지만 누구보다 따뜻한 심장을 가졌습니다.</p>
+          <p><strong>💫 중력 할아버지 그래비:</strong> "사랑은 서로를 끌어당기는 힘이란다." 보이지 않는 손으로 먼지들을 다독여 하나로 모으는 지혜로운 노인.</p>
+          <p><strong>🔥 마그마 소년 이그니스:</strong> "뜨겁게 타올라야 진짜 세상이 열리는 거야!" 지구의 깊은 곳에서 태어난 불꽃의 소년.</p>
+          <p><strong>💧 물방울 아쿠아:</strong> "기다림 끝에 가장 푸른 꿈이 피어날 거야." 혜성의 꼬리를 타고 온 신비로운 소녀.</p>
+          <p><strong>🌙 달 루나:</strong> "언제나 네 곁에서 밤을 지켜줄게." 지구의 아픔 속에서 태어난 은빛 위성.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">우주의 시작</span>
+        <h2>✨ 끝없는 어둠 속, 길을 잃은 작은 빛</h2>
+        <p>아주 오래전, 약 138억 년 전, 우주는 칠흑 같은 어둠조차 없는 '무(無)'의 상태에 잠겨 있었습니다. 시간도, 공간도 존재하지 않던 그때, 우주가 갑자기 거대한 폭발과 함께 태어났습니다. 과학자들은 이것을 '<span class="highlight" data-tooltip="빅뱅(Big Bang): 약 138억 년 전 우주의 탄생을 설명하는 이론. 모든 물질과 에너지가 한 점에서 급격히 팽창하며 우주가 시작됨">빅뱅</span>'이라 부릅니다. 빅뱅 이후 우주는 급격히 팽창했고, 이 팽창은 지금도 계속되고 있지요. '<span class="highlight">허블의 법칙</span>'에 따르면 먼 은하일수록 더 빠르게 우리로부터 멀어지고 있답니다. 빅뱅 직후 우주는 상상할 수 없이 뜨거웠습니다. 온도가 수조 도에 달했지요. 이 극한의 열기 속에서 가장 단순한 원소인 '<span class="highlight" data-tooltip="수소(Hydrogen, H): 우주에서 가장 흔한 원소. 원자번호 1번으로, 우주 질량의 약 75%를 차지">수소</span>'와 '<span class="highlight" data-tooltip="헬륨(Helium, He): 우주에서 두 번째로 흔한 원소. 별의 핵융합 연료이며 우주 질량의 약 24%를 차지">헬륨</span>'이 탄생했습니다. 이 두 원소는 지금도 우주 질량의 대부분을 차지하고 있어요.</p>
+        <p>수억 년의 세월이 흐르며, 수소와 헬륨 가스들이 중력의 힘으로 뭉쳐 거대한 '<span class="highlight">항성</span>'들이 태어났습니다. 항성의 중심에서는 '<span class="highlight" data-tooltip="핵융합(Nuclear Fusion): 가벼운 원자핵들이 합쳐져 무거운 원자핵을 만드는 반응. 별이 빛나는 에너지원">핵융합</span>'이 일어나 수소가 헬륨으로 변환되면서 엄청난 에너지를 방출했지요. 이것이 바로 별이 빛나는 이유입니다. 거대한 별들은 수명이 다하면 격렬하게 폭발하는데, 이것을 '<span class="highlight" data-tooltip="초신성 폭발(Supernova): 거대한 별이 수명을 다해 대폭발하는 현상. 철보다 무거운 원소들이 만들어지는 우주의 연금술">초신성 폭발</span>'이라고 합니다. 초신성 폭발은 우주에서 가장 밝고 격렬한 현상 중 하나로, 잠깐 동안 은하 전체보다 더 밝게 빛납니다. 이 폭발 속에서 철(Fe), 금(Au), 우라늄(U) 같은 무거운 원소들이 탄생하고 우주 공간으로 흩뿌려졌습니다. 우리 몸을 이루는 탄소(C), 산소(O), 질소(N)도 모두 옛날 별들의 핵에서 만들어진 것이에요.<br><br><span class="dialogue">"우리는 모두 별의 먼지에서 왔다(We are all made of stardust)."</span><br><br>유명한 천문학자 칼 세이건의 말처럼, 당신의 몸속에도 수십억 년 전 죽은 별의 원소들이 흐르고 있습니다.</p>
+        <p>그 반짝이는 별먼지 속에서 작은 소녀, 스텔라가 눈을 떴습니다. 스텔라는 철 원자와 규소 원자로 이루어진 아주 작은 '<span class="highlight">성간 먼지</span>' 한 톨이었어요. 성간 먼지의 크기는 보통 0.1~1 마이크로미터(μm) 정도로, 머리카락 굵기의 100분의 1도 안 되는 극미세 입자입니다. 그녀가 처음 본 우주는 너무나 넓고 차가웠습니다. 절대온도 3K, 즉 영하 270도에 가까운 우주 공간에서 스텔라는 벌벌 떨었지요.<br><br><span class="dialogue">"무서워... 나는 너무 작은데, 여긴 끝이 없어."</span><br><br>스텔라는 차가운 '<span class="highlight">분자 구름</span>' 속에서 몸을 웅크렸습니다. 분자 구름은 성간 물질이 밀집된 거대한 가스 덩어리로, 새로운 별이 탄생하는 곳이에요. 가끔 옆으로 덩치 큰 바위들이 지나가면 깜짝 놀라 도망치기 일쑤였지요.<br><br><span class="dialogue">"부딪히면 내 몸이 부서질지도 몰라. 그냥 이렇게 혼자 조용히 떠다니는 게 나아."</span></p>
+        <p>하지만 어둠 속에서 따뜻한 웃음소리가 들려왔습니다. 보이지 않는 거인, 그래비 할아버지였지요. 그래비는 '<span class="highlight">중력</span>'의 의인화로, 아이작 뉴턴이 발견한 '<span class="highlight">만유인력의 법칙</span>'에 따르면 모든 물체는 질량에 비례하고 거리의 제곱에 반비례하는 힘으로 서로를 끌어당깁니다.<br><br><span class="dialogue">"작은 별먼지야, 왜 그렇게 혼자 숨어 있니?"</span><br><br>스텔라는 겁먹은 목소리로 대답했어요.<br><br><span class="dialogue">"부딪히는 게 무서워요. 아플 것 같거든요."</span><br><br>할아버지는 다정하게 스텔라의 머리를 쓰다듬듯 중력의 실을 보냈습니다.<br><br><span class="dialogue">"얘야, 혼자 있으면 너는 그저 어두운 우주의 조각일 뿐이란다. 하지만 다른 친구들과 손을 잡으면, 너는 꽃이 피고 나비가 날아다니는 아름다운 세상이 될 수 있어. 중력은 파괴가 아니라 연결의 힘이란다. 두려워하지 말고 네 곁으로 다가오는 친구의 손을 잡아보렴."</span><br><br>스텔라는 할아버지의 따뜻한 목소리에 고개를 들었습니다. 저 멀리서 수많은 먼지 친구들이 반짝이며 다가오고 있었거든요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">태양의 탄생</span>
+        <h2>☀️ 황금빛 아버지, 솔의 따뜻한 부름</h2>
+        <p>스텔라가 살던 분자 구름에 커다란 '<span class="highlight">충격파</span>'가 전해져 왔습니다. 아마도 가까운 초신성 폭발이나 다른 별들의 '<span class="highlight">항성풍</span>'에서 비롯된 것이었을 거예요. 이 충격파가 구름의 안정을 깨뜨리며 먼지들을 한곳으로 꾹꾹 누르기 시작했습니다. 이것을 '<span class="highlight">중력 붕괴</span>'라고 합니다.<br><br><span class="dialogue">"어머, 자꾸만 한가운데로 빨려 들어가!"</span><br><br>스텔라는 당황했지만, 왠지 모를 설렘이 느껴졌습니다. 구름의 중심은 '<span class="highlight">각운동량 보존 법칙</span>'에 따라 회전하며 납작한 원반 모양으로 변해갔습니다. 마치 피자 반죽을 던지면 원반 모양이 되듯이요. 중심부는 점점 뜨거워졌고, 이 단계의 천체를 '<span class="highlight">원시별</span>'이라고 부릅니다.</p>
+        <p>먼지들이 서로 엉켜 거대한 '<span class="highlight">원시 행성계 원반</span>'을 만들었습니다. 원반의 지름은 무려 수백 AU(천문단위)에 달했는데, 1AU는 지구와 태양 사이 거리인 약 1억 5천만 킬로미터입니다. 그리고 마침내, 중심부에서 눈부신 황금빛이 폭발하듯 피어올랐습니다. 중심부의 온도가 약 1천만 도(10⁷ K)에 도달하자 '<span class="highlight" data-tooltip="수소 핵융합(Hydrogen Fusion): 별의 중심에서 4개의 수소 원자핵이 융합하여 헬륨이 되는 반응. 태양 에너지의 원천">수소 핵융합</span>'이 시작된 것이에요. 네 개의 수소 원자핵이 융합하여 하나의 헬륨 원자핵이 되는 과정에서 질량의 일부가 아인슈타인의 유명한 공식 E=mc²에 따라 에너지로 변환됩니다. 바로 태양계의 아버지, 솔이 탄생한 것이었습니다. 약 46억 년 전의 일이에요.<br><br><span class="dialogue">"모두 기상! 이제 새로운 하루가 시작된다!"</span><br><br>솔은 거대한 불꽃 갈기를 휘날리며 크게 외쳤습니다.</p>
+        <p>솔의 가슴 속에서는 매초 약 6억 톤의 수소가 헬륨으로 핵융합되며 엄청난 에너지를 우주로 방출했습니다. 태양의 '<span class="highlight" data-tooltip="광도(Luminosity): 별이 단위 시간당 방출하는 총 에너지량. 별의 밝기를 나타내는 물리량">광도</span>'는 약 3.8×10²⁶ 와트로, 이는 100와트 전구 3.8×10²⁴ 개를 동시에 켠 것과 같은 밝기입니다. 솔이 내뿜은 뜨거운 '<span class="highlight">태양풍</span>'에 가벼운 가스 친구들(수소, 헬륨)은 외곽으로 밀려났지만, 스텔라처럼 단단한 '<span class="highlight">암석질 물질</span>'들은 솔의 곁을 지키며 빙글빙글 '<span class="highlight">공전</span>'을 시작했습니다.<br><br><span class="dialogue">"우와, 정말 눈부셔!"</span><br><br>스텔라는 솔의 따뜻한 품 안에서 처음으로 안도감을 느꼈습니다. 태양에서 가까운 내행성 영역(수성, 금성, 지구, 화성)은 암석으로, 먼 외행성 영역(목성, 토성, 천왕성, 해왕성)은 가스와 얼음으로 이루어진 행성들이 형성될 터전이 마련된 것이지요.</p>
+        <p>솔은 아이들에게 자상하게 말했습니다.<br><br><span class="dialogue">"나의 중력이 너희가 길을 잃지 않게 붙잡아줄게. 나의 빛이 너희의 추위를 녹여줄게. 태양에서 적당한 거리에 자리 잡으면 너희는 물이 액체로 존재할 수 있는 온도를 가질 거야. 그곳을 '<span class="highlight">생명가능지대</span>' 또는 '<span class="highlight">골디락스 존</span>'이라고 부른단다. 이제 이 빛나는 원반 속에서 너희만의 집을 지어보렴."</span><br><br>생명가능지대는 물이 너무 뜨거워 증발하지도 않고, 너무 차가워 얼지도 않는, '적당히 따뜻한' 영역을 말합니다. 동화 《골디락스와 세 마리 곰》에서 골디락스가 '적당한' 것을 고른 데서 이름이 유래했지요. 지구는 바로 이 특별한 영역에 자리 잡게 됩니다. 스텔라는 솔의 황금빛 햇살 아래에서 이제 더 이상 도망치지 않기로 마음먹었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">행성의 형성</span>
+        <h2>💫 "우리, 친구가 될 수 있을까?" — 첫 번째 포옹</h2>
+        <p>태양 솔의 주변은 먼지 친구들의 무도회장이 되었습니다. 수조 개의 먼지들이 초속 수 킬로미터의 속도로 쌩쌩 달리기 시합을 하고 있었죠. 이 먼지들이 서로 충돌하고 달라붙어 점점 커지는 과정을 '<span class="highlight">강착</span>'이라고 합니다. 처음에는 '<span class="highlight" data-tooltip="정전기력(Electrostatic Force): 전하를 띤 입자들 사이에 작용하는 힘. 미세 먼지가 처음 뭉치게 하는 힘">정전기력</span>'으로 미세 먼지들이 뭉쳤고, 크기가 커지면서 '<span class="highlight">중력</span>'이 주된 역할을 하게 되었지요. 그때, 스텔라의 곁으로 한 입자가 다가왔습니다. 규소(Si)와 산소(O)로 이루어진 예쁜 아이, '실리'였어요. 실리는 '<span class="highlight">규산염 광물</span>'의 기본 구성 요소로, 지각을 이루는 주요 성분이 될 친구였습니다.<br><br><span class="dialogue">"안녕? 우리 같이 손잡고 달려볼래?"</span><br><br>스텔라는 움찔했지만, 이번에는 피하지 않았습니다.<br><br><span class="dialogue">"그치만... 부딪히면 아프지 않을까?"</span><br><br>실리는 생긋 웃으며 손을 내밀었습니다.<br><br><span class="dialogue">"조금 아플 수도 있어. 하지만 그만큼 우리는 더 단단해질 거야."</span></p>
+        <p>그래비 할아버지가 슬쩍 두 아이를 밀어주었습니다. 마침내 스텔라와 실리의 손이 "톡!" 하고 맞닿았습니다. 표면의 '<span class="highlight">반데르발스 힘</span>'이 작용해 두 아이는 자석같이 서로를 꽉 끌어안았습니다. 이것이 '<span class="highlight">먼지 강착</span>'의 첫 단계입니다.<br><br><span class="dialogue">"어머, 정말 하나도 안 아파! 오히려 든든해!"</span><br><br>스텔라는 신이 나서 외쳤습니다. 두 아이가 하나가 되자 몸집이 조금 더 커졌고, 중력도 미세하게 증가했습니다. 이제는 더 많은 먼지 친구들이 "나도 같이 놀자!" 하며 달려왔습니다. 마이크로미터 크기의 먼지가 밀리미터, 센티미터, 미터 크기로 점점 자라났어요.</p>
+        <p>먼지에서 모래알로, 모래알에서 조약돌로, 스텔라는 점점 커져갔습니다. 수백만 년 동안 친구들을 한 명 한 명 끌어안을 때마다 스텔라의 덩치는 산더미처럼 커졌습니다. 크기가 약 1km를 넘어서자 스텔라는 '<span class="highlight">미행성체</span>'라고 불리게 되었어요. 미행성체는 그리스어로 '아주 작은 행성'이라는 뜻입니다. 이 미행성체들이 서로 충돌하고 합쳐지면서 더 큰 '<span class="highlight">원시행성</span>'으로 성장했지요. 때로는 커다란 바위와 부딪혀 아픈 적도 있었고, 몸의 일부가 깨져 나가기도 했습니다. 과학자들은 이 격렬한 충돌 시기를 '<span class="highlight">후기 대폭격기</span>'라고 부릅니다.</p>
+        <p>하지만 그럴 때마다 스텔라는 이를 악물고 생각했습니다.<br><br><span class="dialogue">'이건 성장통이야. 나는 더 큰 행성이 될 거니까!'</span><br><br>이 과정에서 '<span class="highlight">분화</span>'도 일어났습니다. 무거운 물질(철, 니켈)은 중력에 의해 중심으로 가라앉고, 가벼운 물질(규산염)은 위로 떠오르는 현상이지요. 이로 인해 지구는 내부 구조를 갖추기 시작했습니다. 이제 스텔라는 지름 수천 킬로미터의 거대한 원시행성이 되어, 솔의 주변을 당당히 공전하는 용감한 아이가 되었습니다. 태양에서 약 1AU 떨어진 위치, 바로 '<span class="highlight">골디락스 존</span>'의 한가운데에 자리를 잡았지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">마그마의 바다</span>
+        <h2>🔥 불꽃 소년 이그니스와 마그마의 춤</h2>
+        <p>이제 스텔라와 친구들은 지름이 약 6,400킬로미터나 되는 거대한 '<span class="highlight">원시 지구</span>'를 만들었습니다. 현재 지구 반지름과 거의 비슷한 크기지요. 태양 솔 아저씨가 가장 좋아하는 '<span class="highlight">골디락스 존</span>'에 예쁘게 자리도 잡았습니다. 하지만 집을 다 지었다고 안심한 순간, 지구가 뜨거운 불덩이로 변하기 시작했습니다. 원인은 세 가지였어요. 첫째, 하늘에서 끊임없이 쏟아지는 운석들의 '<span class="highlight">충돌 에너지</span>'가 열로 변환되었습니다. 매일 수천 개의 운석이 빗줄기처럼 쏟아졌고, 충돌할 때마다 충격파가 지구 전체를 데웠지요. 둘째, 지구 내부의 '<span class="highlight">방사성 동위원소</span>'인 우라늄(²³⁸U), 토륨(²³²Th), 칼륨(⁴⁰K)이 붕괴하면서 열을 발생시켰습니다. 셋째, 무거운 철이 중심으로 가라앉으면서 '<span class="highlight">중력 위치 에너지</span>'가 열로 바뀌었어요.</p>
+        <p>이 세 가지 열원으로 인해 지구 전체가 '<span class="highlight">마그마의 바다</span>'로 변했습니다. 깊이가 수백 킬로미터에 달하는 용암의 바다가 지구 전체를 뒤덮은 것이에요. 그 뜨거운 불길 속에서 개구쟁이 소년, 이그니스가 솟아올랐습니다.<br><br><span class="dialogue">"와하하! 이제 진짜 축제가 시작됐어!"</span><br><br>이그니스는 주황빛 마그마 파도를 타며 신나게 춤을 췄습니다. 마그마의 온도는 약 1,200~1,500°C로, 철도 녹일 수 있는 무시무시한 열기였습니다. 스텔라는 뜨거운 열기에 숨이 막힐 것 같았어요.<br><br><span class="dialogue">"이그니스! 너무 뜨거워, 우리를 다 녹여버리면 어떡해!"</span><br><br>그러자 이그니스가 반짝이는 눈으로 대답했습니다.<br><br><span class="dialogue">"걱정 마, 스텔라! 이건 파괴가 아니라 '정리'를 하는 거야. 다 같이 녹아야만 '<span class="highlight">분화</span>'가 일어나서 제자리를 찾아갈 수 있거든."</span></p>
+        <p>이그니스의 마법이 시작되었습니다. 마그마 바다 속에서 '<span class="highlight">밀도 차이</span>'에 따른 분리가 일어났어요. 밀도가 높은(무거운) 철(Fe)과 니켈(Ni) 친구들은 "우리는 튼튼한 중심이 될게!" 하며 지구의 가장 깊은 곳으로 내려가 '<span class="highlight">핵</span>'을 만들었습니다. 외핵(outer core)은 액체 상태의 철-니켈 합금으로, 내핵(inner core)은 고체 상태입니다. 내핵의 온도는 약 5,000~6,000°C로 태양 표면 온도와 비슷하지만, 엄청난 압력(약 360만 기압) 때문에 고체로 존재합니다.<br><br><span class="dialogue">"봤지? 이제 네 가슴 속엔 튼튼한 심장이 생겼어. 이 철의 심장이 나중에 너를 지켜줄 거란다."</span></p>
+        <p>가벼운 '<span class="highlight">규산염</span>' 친구들은 "우리는 넓은 마당이 될게!" 하며 위로 떠올라 '<span class="highlight">맨틀</span>'이 되었지요. 맨틀은 지구 부피의 약 84%를 차지하는 가장 두꺼운 층으로, 주로 감람석(olivine)과 휘석(pyroxene) 같은 광물로 이루어져 있습니다. 맨틀 아래는 약 2,900°C, 핵 경계면 근처는 약 4,000°C에 달합니다. 뒤섞여 있던 지구의 속살이 '<span class="highlight">층상 구조</span>'로 예쁘게 나뉘기 시작했습니다. 지각(crust), 맨틀(mantle), 외핵(outer core), 내핵(inner core)의 4개 층이 형성된 것이에요.<br><br><span class="dialogue">"봤지? 이제 네 가슴 속엔 튼튼한 심장이 생겼어. 이 심장이 나중에 '<span class="highlight">지구 자기장</span>'을 만들어서 너를 지켜줄 거란다."</span><br><br>이그니스의 말에 스텔라는 뜨거운 마그마 속에서도 묘한 평온함을 느꼈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">달의 탄생</span>
+        <h2>🌙 붉은 손님 테이아와 은빛 단짝 루나</h2>
+        <p>지구가 자리를 잡아가던 약 45억 년 전의 어느 평화로운 오후였습니다. 저 멀리서 화성만 한 크기의 붉은 행성, '<span class="highlight" data-tooltip="테이아(Theia): 약 45억 년 전 원시 지구와 충돌한 화성 크기의 천체. 이 충돌로 달이 탄생했다는 가설">테이아</span>'가 빠른 속도로 지구를 향해 다가오고 있었어요. 테이아는 그리스 신화에서 달의 여신 셀레네의 어머니 이름에서 따온 것입니다. 테이아의 지름은 약 6,000km로, 현재 화성과 비슷한 크기였습니다.<br><br><span class="dialogue">"어머나, 저 행성은 왜 우리 쪽으로 오는 거지? 피할 수 없어!"</span><br><br>스텔라가 불안해하며 물었습니다. 그래비 할아버지가 슬픈 표정으로 말씀하셨습니다.<br><br><span class="dialogue">"얘야, 태양계 초기에는 이런 '<span class="highlight">거대 충돌</span>'이 자주 일어났단다. 때로는 거대한 아픔을 겪어야만 소중한 것을 얻을 수 있어. 겁내지 마라."</span></p>
+        <p><span class="dialogue">"쾅—!"</span><br><br>테이아가 지구의 옆구리를 약 45도 각도로 세게 들이받았습니다. 충돌 속도는 초속 약 10km, 이는 총알 속도의 10배가 넘는 엄청난 것이었어요. 이 충돌의 에너지는 현재 인류가 보유한 모든 핵무기를 동시에 터뜨린 것의 수십억 배에 달했습니다. 그 충격으로 지구의 일부분과 테이아의 맨틀 물질이 떨어져 나가 우주로 흩어졌고, 지구의 '<span class="highlight" data-tooltip="자전축(Rotation Axis): 행성이 회전하는 가상의 축. 지구는 23.5도 기울어져 있어 계절 변화가 생김">자전축</span>'은 원래 거의 수직이었는데 약 <span class="highlight">23.5도</span>로 기울어졌습니다. 과학자들은 이것을 '<span class="highlight">거대충돌가설</span>' 또는 '<span class="highlight">테이아 충돌 이론</span>'이라고 부릅니다. 이 가설은 1970년대에 제안되어 현재 달의 기원을 설명하는 가장 유력한 이론으로 받아들여지고 있어요.<br><br>스텔라는 정신이 아득해졌습니다.<br><br><span class="dialogue">"이게 끝인 걸까...?"</span></p>
+        <p>하지만 그때, 우주로 흩어졌던 파편들이 지구의 '<span class="highlight">로슈 한계</span>' 바깥에서 다시 뭉치기 시작했습니다. 로슈 한계란 위성이 모행성의 중력에 의해 조각나지 않고 존재할 수 있는 최소 거리를 말합니다. 불과 1,000년도 안 되는 짧은 시간 안에, 파편들은 하나의 천체로 합쳐졌어요. 그리고 그 속에서 은은한 빛을 띠는 소녀, 루나가 나타났습니다.<br><br><span class="dialogue">"안녕, 스텔라. 나는 네 아픔에서 태어난 네 절반이야."</span><br><br>루나는 방긋 웃으며 지구 주위를 맴돌기 시작했습니다. 달이 탄생한 직후에는 지구에서 불과 2만 km 정도 떨어져 있었지만(현재는 약 38만 km), 지금도 매년 약 3.8cm씩 지구로부터 멀어지고 있습니다.</p>
+        <p>루나는 지구에게 세 가지 큰 선물을 주었습니다. 첫째, '<span class="highlight">자전축 안정화</span>'입니다. 달의 중력이 지구의 자전축을 약 23.5도 기울기로 안정시켜 '<span class="highlight">계절</span>'이라는 예쁜 옷을 입혀주었어요. 만약 달이 없었다면 자전축이 혼란스럽게 흔들려 기후가 극심하게 변했을 겁니다. 둘째, '<span class="highlight">조석 현상</span>'입니다. 달의 중력이 바닷물을 끌어당겨 밀물과 썰물을 만들어냅니다. 조수간만의 차이는 해안 생태계에 풍부한 환경을 제공하고, 초기 생명체가 바다에서 육지로 올라오는 데 중요한 역할을 했을 것으로 추정됩니다. 셋째, 밤마다 은빛 자장가를 불러주며 지구의 밤을 밝혀주었지요.<br><br><span class="dialogue">"난 네 곁을 절대 떠나지 않을게. 우리가 부딪혔던 그 아픔이 우리를 영원한 단짝으로 만들어줬으니까."</span><br><br>스텔라는 루나의 손을 꼭 잡았습니다. 이제 지구는 밤하늘이 외롭지 않은, 아름다운 동반자를 가진 행성이 되었습니다. 지구-달 시스템은 태양계에서 가장 특별한 행성-위성 쌍 중 하나입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">자기장의 탄생</span>
+        <h2>🛡️ 이그니스가 선물한 투명한 갑옷</h2>
+        <p>루나가 태어난 뒤에도 지구는 여전히 뜨거웠습니다. 하지만 이그니스는 이번엔 아주 중요한 일을 준비하고 있었지요.<br><br><span class="dialogue">"스텔라, 저기 솔 아저씨의 바람을 봐. 너무 강해서 네 얼굴이 따가울 정도야!"</span><br><br>정말 그랬습니다. '<span class="highlight">태양풍</span>'이라는 강력한 입자 바람이 지구를 위협하고 있었거든요. 태양풍은 태양의 '<span class="highlight">코로나</span>'에서 방출되는 하전 입자(주로 양성자와 전자)의 흐름으로, 초속 400~800km의 속도로 태양계 전체를 휩쓸어갑니다. 태양풍에 직접 노출되면 대기가 우주로 날아가버리고, 강한 '<span class="highlight">자외선</span>'과 '<span class="highlight">우주선</span>'이 지표면을 직접 타격해 생명체가 살 수 없게 됩니다. 실제로 화성은 자기장이 약해서 태양풍에 대기 대부분을 잃어버렸다고 추정돼요. 그때 이그니스가 발을 구르자, 지구의 깊은 핵에서 거대한 힘이 솟구쳤습니다.</p>
+        <p>지구의 심장인 '<span class="highlight">외핵</span>'이 빙글빙글 돌면서 보이지 않는 투명한 갑옷, '<span class="highlight">지구 자기장</span>'을 만들어낸 것이었습니다. 이 현상을 '<span class="highlight">지구 다이나모 이론</span>'이라고 합니다. 외핵은 액체 상태의 철-니켈 합금으로, 지구 자전과 내핵과의 온도 차이에 의한 '<span class="highlight">대류</span>'로 인해 끊임없이 움직입니다. 이 전도성 액체의 운동이 '<span class="highlight">전자기 유도</span>'를 일으켜 자기장을 생성하는 것이에요. 마치 거대한 발전기가 지구 중심에서 작동하는 것과 같지요.<br><br><span class="dialogue">"이건 내가 주는 선물이야. 이 '<span class="highlight">자기권</span>'이 솔 아저씨의 장난꾸러기 바람이 네 공기와 물을 뺏어가지 못하게 막아줄 거야."</span><br><br>자기권은 지구에서 약 6만~7만 km까지 뻗어 있으며, 태양풍의 하전 입자들을 막아내는 방패 역할을 합니다. 태양 쪽은 눌려서 짧고, 반대쪽은 꼬리처럼 길게 늘어납니다.</p>
+        <p>이그니스의 말대로 자기장 갑옷은 지구를 포근하게 감싸 안았습니다. 태양풍의 하전 입자들은 자기장에 의해 휘어져 지구 양쪽 극지방의 '<span class="highlight">밴앨런대</span>'에 갇히거나 대기권 상층부로 유도됩니다. 이때 입자들이 대기 분자와 충돌하여 빛을 내는 현상이 바로 '<span class="highlight">오로라</span>'예요. 북극 근처에서 보이는 것을 북극광(aurora borealis), 남극 근처에서 보이는 것을 남극광(aurora australis)이라고 합니다. 뿐만 아니라, 화산들이 "푸우, 푸우!" 하며 연기를 내뿜어 하늘을 덮었습니다. 화산에서 분출된 기체는 주로 '<span class="highlight">수증기</span>', '<span class="highlight">이산화탄소</span>', '<span class="highlight">질소</span>', 그리고 소량의 '<span class="highlight">황화수소</span>', 암모니아(NH₃) 등이었어요.</p>
+        <p><span class="dialogue">"이 연기들이 나중에 네가 숨 쉴 수 있는 '<span class="highlight">대기</span>'가 될 거야. 지금은 좀 매캐하겠지만 참아봐."</span><br><br>이그니스는 화산 입구를 열어 대기를 차곡차곡 채워주었습니다. 이 초기 대기를 '<span class="highlight">원시대기</span>'라고 합니다. 산소(O₂)는 거의 없었고, 이산화탄소와 질소가 대부분이었지요. 산소는 나중에 생명체, 특히 '<span class="highlight">시아노박테리아</span>'의 광합성에 의해 축적됩니다. 스텔라는 이제 보이지 않는 자기장 갑옷과 포근한 공기 담요를 갖게 되었습니다.<br><br><span class="dialogue">"고마워, 이그니스. 너의 뜨거운 마음이 나를 이렇게 단단하게 지켜주는구나."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">지각의 형성</span>
+        <h2>🏔️ 지구가 입은 첫 번째 딱딱한 옷 — 대지의 탄생</h2>
+        <p>시간이 흐르자 지표면의 마그마가 서서히 '<span class="highlight">복사 냉각</span>'을 통해 식기 시작했습니다. 마치 펄펄 끓는 죽이 식으면 얇은 막이 생기듯, 지구 표면에도 단단한 '<span class="highlight">지각</span>'이 만들어졌습니다. 초기 지각은 주로 '<span class="highlight">현무암</span>'으로 이루어진 '<span class="highlight">해양 지각</span>'이었어요. 현무암은 마그마가 빠르게 식어 형성된 '<span class="highlight">화성암</span>'으로, 밀도가 약 3.0 g/cm³입니다. 해양 지각의 두께는 평균 약 7km로 비교적 얇습니다.<br><br><span class="dialogue">"와! 이제 나도 튼튼한 껍질이 생겼어!"</span><br><br>스텔라는 처음으로 자기 몸을 덮은 단단한 땅을 만져보았습니다. 비록 어둡고 거친 현무암 바닥이었지만, 스텔라는 이 땅이 너무나 소중했습니다.</p>
+        <p>하지만 땅은 가만히 있지 않았습니다. 이그니스의 뜨거운 기운이 맨틀에서 '<span class="highlight">대류</span>'를 일으키자, 지각판들이 "우드득" 소리를 내며 갈라지고 부딪혔습니다. 이것이 '<span class="highlight">판 구조론</span>'의 시작이에요. 지구 표면은 크고 작은 십여 개의 '<span class="highlight">판</span>'으로 나뉘어 있고, 이 판들이 맨틀 대류에 의해 연간 몇 센티미터씩 이동합니다. 어떤 곳은 판이 충돌하여 높은 '<span class="highlight">습곡 산맥</span>'이 되었고(예: 히말라야), 어떤 곳은 판이 벌어지며 '<span class="highlight">열곡대</span>'나 '<span class="highlight">해령</span>'이 형성되었습니다. 판이 서로 스쳐 지나가는 곳에서는 '<span class="highlight">지진</span>'이 발생하고, 판의 경계에서 마그마가 올라오면 '<span class="highlight">화산</span>'이 폭발합니다.<br><br><span class="dialogue">"지구는 살아있는 아이니까, 가만히 있으면 안 되지!"</span><br><br>이그니스가 장난스럽게 웃으며 대륙들을 밀어냈습니다.</p>
+        <p>나중에는 가벼운 '<span class="highlight">화강암</span>'(밀도 약 2.7 g/cm³)이 많은 '<span class="highlight">대륙 지각</span>'도 형성되었습니다. 대륙 지각은 해양 지각보다 밀도가 낮아서 마그마 위에 얼음처럼 둥둥 떠다닙니다. 이것이 '<span class="highlight">지각 평형</span>'의 원리예요. 대륙 지각의 평균 두께는 약 35km로 해양 지각보다 훨씬 두껍습니다. 이 대륙들이 모여 '<span class="highlight">크라톤</span>'이라 불리는 안정적인 대륙핵을 형성했고, 시간이 지나며 여러 번 합쳐지고 분리되어 '<span class="highlight">초대륙</span>'을 만들었다가 다시 쪼개지기를 반복했습니다. 이 순환을 '<span class="highlight">윌슨 순환</span>'이라고 합니다. 가장 최근의 초대륙은 약 3억 년 전의 '<span class="highlight">판게아</span>'입니다.</p>
+        <p>스텔라는 지각의 일부가 되어 땅의 맥박을 느꼈습니다. 지진파가 전해질 때마다 지구가 살아 숨 쉬는 것 같았어요.<br><br><span class="dialogue">"언젠가 이곳에 나무도 심고 꽃도 피울 수 있을까?"</span><br><br>그래비 할아버지가 곁에서 말씀하셨습니다.<br><br><span class="dialogue">"그럼, 이제 가장 중요한 손님이 올 차례란다. 하늘을 봐, 곧 기적이 시작될 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">바다의 탄생</span>
+        <h2>💧 하늘이 흘린 기쁨의 눈물 — 아쿠아의 등장</h2>
+        <p>지구의 온도가 점차 내려가자 대기 중의 '<span class="highlight">수증기</span>'들이 '<span class="highlight">응결</span>'되어 구름으로 모여들었습니다. 대기의 온도가 물의 '<span class="highlight">끓는점</span>' 아래로 내려가자, 억겁의 세월 동안 참아왔던 빗줄기가 드디어 쏟아지기 시작했습니다.<br><br><span class="dialogue">"쏴아아아—!"</span><br><br>이 비는 하루 이틀 내리는 비가 아니었습니다. 과학자들은 이 시기를 '<span class="highlight">원시 비</span>' 또는 '<span class="highlight">대호우 시대</span>'라고 부릅니다. 수천 년, 어쩌면 수백만 년 동안 쉬지 않고 내리는 축복의 세례였지요. 원시 대기에 있던 거의 모든 수증기가 응결되어 지표면으로 떨어졌습니다. 낮은 땅들이 물로 채워졌고, 거친 바위들은 빗물에 씻겨 '<span class="highlight">풍화</span>'되어 부드러워졌습니다.</p>
+        <p>물의 기원은 두 가지로 추정됩니다. 첫째, 지구 형성 시 내부에 갇혀 있던 물이 화산 활동을 통해 '<span class="highlight">탈가스</span>'로 방출되었습니다. 둘째, '<span class="highlight">혜성</span>'과 '<span class="highlight">소행성</span>'이 지구에 충돌하며 물을 가져다주었어요. 특히 목성 궤도 너머의 '<span class="highlight">소행성대</span>'에서 온 '<span class="highlight">탄소질 콘드라이트</span>' 운석들은 상당량의 물을 함유하고 있습니다. 그 물줄기를 타고 신비로운 소녀, 아쿠아가 내려왔습니다.<br><br><span class="dialogue">"안녕, 스텔라. 너무 오래 기다렸지? 지구가 식기만을 기다렸어."</span><br><br>아쿠아는 차갑고 맑은 미소로 지구를 감싸 안았습니다.</p>
+        <p>빗물은 깊은 '<span class="highlight">해분</span>'을 채워 푸른 '<span class="highlight">바다</span>'가 되었습니다. 약 40억 년 전, 지구 최초의 바다가 탄생한 것이에요. 바다는 대기의 독한 '<span class="highlight">이산화탄소</span>'를 흡수해 '<span class="highlight">탄산염 암석</span>'으로 침전시켜 지구의 열을 식혀주는 '<span class="highlight">온도 조절기</span>' 역할을 했습니다. 이것을 '<span class="highlight">탄소 순환</span>'이라고 합니다. 또한 바다는 땅에서 씻겨 내려온 '<span class="highlight">염류</span>'와 '<span class="highlight">미네랄</span>'을 품었습니다. 바닷물의 염분은 약 3.5%이며, 그 주성분은 염화나트륨(NaCl), 즉 소금입니다. 바다의 부피는 약 13.7억 km³로, 지구 표면의 약 71%를 덮고 있습니다.</p>
+        <p>루나가 중력으로 바다를 끌어당기자 물결이 찰랑이며 춤을 추었습니다. 이것이 '<span class="highlight">조석</span>'입니다. 달의 중력이 강한 쪽과 반대쪽에서 바닷물이 부풀어 올라 하루에 두 번 밀물과 썰물이 생깁니다.<br><br><span class="dialogue">"물은 모든 생명의 자궁이란다. 이제 여기서 놀라운 생명이 깨어날 거야."</span><br><br>아쿠아의 속삭임에 스텔라는 깊은 바다 밑바닥에 누워 귀를 기울였습니다. 파도 소리는 자장가처럼 지구를 달랬고, 거칠었던 불의 세상은 이제 평화롭고 푸른 물의 세상으로 바뀌어갔습니다. 물은 '<span class="highlight">용해력</span>'이 뛰어나 "보편 용매(universal solvent)"라 불리며, 화학 반응이 일어나기 위한 최적의 환경을 제공합니다. 생명 탄생의 무대가 마련된 것이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">생명의 탄생</span>
+        <h2>🌱 생명이라는 이름의 가장 아름다운 꽃</h2>
+        <p>바다가 태어난 지 수억 년, 약 38억 년 전, 지구는 이제 완벽한 '생명의 요람'이 되었습니다. 다섯 명의 친구들이 모여 만든 기적이었지요. 솔 아저씨의 '<span class="highlight">태양 에너지</span>'(광합성의 동력원), 이그니스의 '<span class="highlight">자기장 방패</span>'(우주선 차단), 루나의 '<span class="highlight">자전축 안정</span>'(기후 안정), 아쿠아의 '<span class="highlight">액체 상태의 물</span>'(화학 반응의 용매), 그리고 그래비 할아버지의 보이지 않는 '<span class="highlight">중력 질서</span>'까지. 이 모든 것이 조화를 이루던 어느 날, 바다 깊은 곳 '<span class="highlight">열수구</span>' 근처에서 작은 움직임이 포착되었습니다. 열수구는 해저에서 뜨거운 미네랄이 풍부한 물이 솟아나는 곳으로, 현재도 독특한 생태계가 번성하고 있습니다.</p>
+        <p>아쿠아의 품속에서 작은 분자들이 서로 뭉치고 흩어지더니, '<span class="highlight">자기 복제</span>'를 할 수 있는 '<span class="highlight">RNA</span>' 분자가 나타났습니다. 과학자들은 이 시기를 '<span class="highlight">RNA 세계 가설</span>'로 설명합니다. RNA는 유전 정보를 저장하면서 동시에 촉매(효소) 역할도 할 수 있어서, 최초의 생명체에서 중심적인 역할을 했을 것으로 추정됩니다. 그리고 마침내 스스로 물질대사를 하고, 복제하고, '<span class="highlight">세포막</span>'으로 둘러싸인 <span class="highlight">최초의 세포</span>가 태어났습니다. 이것이 '<span class="highlight">원핵생물</span>'의 시작이에요.<br><br><span class="dialogue">"어머! 이게 뭐야? 살아서 움직여!"</span><br><br>스텔라는 감격하여 눈물을 흘렸습니다. 자신이 별먼지였을 때부터 품고 있던 철(Fe) 원자가 '<span class="highlight">헤모글로빈</span>'의 구성요소가 되어 생명의 피 속에서 산소를 운반하게 될 것이고, 산소(O) 원자가 그들의 호흡이 될 것을 예감했거든요.</p>
+        <p>작은 세포는 바다를 유영하며 점점 더 복잡하고 아름다운 생명체들로 진화했습니다. 약 27억 년 전, '<span class="highlight">시아노박테리아</span>'가 '<span class="highlight">산소 발생 광합성</span>'을 시작하며 대기에 산소를 축적하기 시작했어요. 이것이 '<span class="highlight">대산화 사건</span>'입니다. 산소는 초기에 철과 반응하여 '<span class="highlight">띠 모양 철광층</span>'을 형성했고, 나중에는 대기에 축적되어 현재의 산소 농도(약 21%)에 이르게 됩니다.<br><br><span class="dialogue">"내가 이 아이들을 지켜줄 수 있을까?"</span><br><br>스텔라가 묻자, 친구들이 일제히 대답했습니다.<br><br><span class="dialogue">"그럼! 우리가 함께 46억 년 동안 준비해온 걸."</span></p>
+        <p>스텔라는 이제 단순한 돌덩이 행성이 아니었습니다. 수천만 가지의 생명을 품고 사랑을 키워내는 위대한 어머니, '지구'가 된 것이었습니다. '<span class="highlight">지구 시스템</span>'은 '<span class="highlight">암석권</span>', '<span class="highlight">수권</span>', '<span class="highlight">대기권</span>', '<span class="highlight">생물권</span>'이 상호작용하는 복잡한 시스템입니다. 지구는 단순히 생명을 '담고 있는' 것이 아니라, 생명과 함께 공진화하고 있습니다. 어떤 과학자들은 지구 전체를 하나의 살아있는 유기체로 보는 '<span class="highlight">가이아 가설</span>'을 제안하기도 했어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학01/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">우주의 기적</span>
+        <h2>⭐ 별이의 꿈속에서 빛나는 스텔라</h2>
+        <p>긴 시간이 흘러 오늘 밤, 대한민국의 어느 작은 마을. 열두 살 소녀 별이가 창가에 앉아 밤하늘을 봅니다. 오늘 과학 시간에 선생님은 "우리 몸속에는 46억 년 전 우주의 역사가 흐르고 있단다"라고 말씀하셨죠. 별이는 자기 손등을 가만히 어루만져 봅니다. 이 부드러운 살결 속에 정말 스텔라와 이그니스, 아쿠아의 흔적이 남아있는 걸까요? 과학적으로 보면 그렇습니다. 우리 몸의 '<span class="highlight">탄소</span>', '<span class="highlight">산소</span>', '<span class="highlight">질소</span>', '<span class="highlight">칼슘</span>', '<span class="highlight">철</span>' 같은 원소들은 모두 옛날 별들의 핵에서 만들어져 초신성 폭발로 흩뿌려진 것들입니다. 당신의 왼손에 있는 원자와 오른손에 있는 원자가 서로 다른 별에서 왔을 수도 있어요.</p>
+        <p>별이가 스르르 잠이 들자, 꿈속에서 스텔라가 나타나 손을 잡아줍니다.<br><br><span class="dialogue">"안녕, 별이야. 내 몸속에 있던 철이 네 심장을 뛰게 하고 있어. 헤모글로빈 분자 하나하나에 철 원자 네 개가 들어있지. 내가 견뎠던 그 뜨거운 마그마의 열기는 네 가슴 속 열정이 되었단다. '<span class="highlight">생명</span>'이라는 것은 단순히 살아있는 것이 아니라, 우주의 138억 년 역사와 지구의 46억 년 역사가 응축된 기적이야."</span><br><br>루나는 창밖에서 은은한 빛을 비추며 고개를 끄덕입니다. 별이는 꿈결에 미소를 짓습니다.</p>
+        <p>우리는 모두 '<span class="highlight">별의 먼지</span>'에서 왔습니다. 46억 년 전, 작고 외로웠던 스텔라가 용기를 내어 친구들과 손을 잡았기에 오늘날 우리가 존재할 수 있는 것이지요. '<span class="highlight">천문학</span>'을 공부하면 우리가 얼마나 작은 존재인지 알게 되고, 동시에 얼마나 경이로운 존재인지도 깨닫게 됩니다. 우주에는 약 2천억 개의 은하가 있고, 각 은하에는 수천억 개의 별이 있습니다. 그 수많은 별들 중에서 우리 태양계가 형성되고, 지구가 골디락스 존에 자리 잡고, 물이 액체로 존재하고, 자기장이 생명을 보호하고, 달이 자전축을 안정시키고, 그 모든 조건이 맞아떨어져 생명이 탄생하고 진화하여 우리가 여기 앉아 이 이야기를 읽고 있는 것입니다.</p>
+        <p>별이는 이제 압니다. 자신이 얼마나 소중한 우주의 선물인지, 그리고 자신의 몸속에서 얼마나 많은 별들이 반짝이고 있는지를 말이죠. 46억 년의 대서사시는 끝난 것이 아닙니다. 지구는 여전히 '<span class="highlight">판 구조 운동</span>'으로 움직이고, 자기장은 여전히 우리를 보호하며, 탄소 순환과 물 순환은 계속되고 있습니다. 바로 지금, 이 글을 읽는 당신의 심장 소리와 함께 지구의 역사는 계속되고 있으니까요. 그리고 언젠가, 우리 후손들이 다른 행성을 탐험하거나, 다른 별에서 생명을 발견할 때, 그들은 스텔라의 이야기를 기억하며 말할 것입니다: "우리는 모두 별의 자녀들이다."</p>
+        <p style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(63, 81, 181, 0.1); border-radius: 12px;">
+          <span class="highlight" style="font-size: 18px;">🌍 "우리는 모두 별의 먼지에서 시작되었다. 당신의 존재는 138억 년 우주 역사의 기적입니다." 🌍</span>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <script>
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth01_season1_quiz.html?season=season2';
+    }
+    // 배경 이미지 전환
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-30% 0px -30% 0px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+
+    // 초기 인트로 카드 활성화
+    document.addEventListener('DOMContentLoaded', () => {
+      const introContent = document.querySelector('.intro-content');
+      if (introContent) {
+        introContent.style.opacity = '1';
+      }
+    });
+  </script>
+</body>
+</html>

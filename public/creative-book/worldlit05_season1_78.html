@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>어린 왕자 - 고래도서관</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #f4c430 0%, #daa520 100%);
+      color: #1a1a2e;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(244, 196, 48, 0.15);
+      color: #b8860b;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card .highlight { color: #daa520; font-weight: 600; }
+
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #daa520;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(244, 196, 48, 0.15);
+      border-radius: 3px;
+    }
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #b8860b;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #b8860b;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+    .story-card .dialogue { color: #b8860b; font-weight: 600; }
+
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 { color: #f4c430; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(244, 196, 48, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(244, 196, 48, 0.3);
+    }
+
+    .intro-content .conflict h3 { color: #f4c430; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .conflict p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @media (max-width: 768px) {
+      .story-section { padding: 40px 20px; }
+      .story-card { max-width: 100%; padding: 30px; }
+      .story-card h2 { font-size: 22px; }
+      .story-card p { font-size: 14px; }
+      .intro-content { padding: 40px 30px; }
+      .intro-content h1 { font-size: 26px; }
+    }
+
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(244, 196, 48, 0.9);
+      color: #1a1a2e;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      background: rgba(218, 165, 32, 0.9);
+      transform: translateY(-2px);
+    }
+
+    .ending-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .ending-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 800px;
+    }
+
+    .ending-content h2 { font-size: 36px; color: #f4c430; margin-bottom: 30px; }
+
+    .ending-content .lesson {
+      background: rgba(244, 196, 48, 0.2);
+      padding: 30px;
+      border-radius: 16px;
+      border: 1px solid rgba(244, 196, 48, 0.3);
+      margin-bottom: 20px;
+    }
+
+    .ending-content .lesson h3 { color: #f4c430; font-size: 18px; margin-bottom: 15px; }
+    .ending-content .lesson p { color: #e0e0e0; font-size: 16px; line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>어린 왕자</h1>
+        <p class="subtitle">
+          별에서 온 아이, 여우에게 마음을 배우다<br>
+          원작: 앙투안 드 생텍쥐페리 『어린 왕자』
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>【어린 왕자】:</strong> 아주 작은 별에서 온 순수한 아이예요. 장미와 헤어지고 별을 떠나 여행해요.</p>
+          <p><strong>【여우】:</strong> 밀밭 근처에 사는 외로운 여우예요. 친구가 되는 방법을 알려 줘요.</p>
+          <p><strong>【장미】:</strong> 어린 왕자의 별에 핀 꽃이에요. 까다롭지만 사실 왕자를 사랑해요.</p>
+          <p><strong>【뱀】:</strong> 지구에서 처음 만난 동물이에요. 별로 돌아가는 방법을 알아요.</p>
+        </div>
+        <div class="conflict">
+          <h3>이야기 속 갈등</h3>
+          <p>◆ 왕자의 고민: 장미를 떠난 게 잘한 일일까요? 왕자는 계속 생각해요.</p>
+          <p>◆ 친구와의 이별: 여우와 친해졌지만, 언젠가 헤어져야 해요.</p>
+          <p>◆ 소중한 것 찾기: 진짜 중요한 게 뭔지 찾아가는 여행이에요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">여행의 시작</span>
+        <h2>작은 별을 떠난 아이</h2>
+        <p>아주 먼 우주에 집 한 채만 겨우 들어갈 작은 별이 있었어요. 거기에 어린 왕자가 살았어요. 이 별은 너무 작아서 의자를 조금만 옮기면 하루에도 여러 번 해 지는 걸 볼 수 있었지요.</p>
+        <p>왕자의 별에는 장미꽃 한 송이가 피어 있었어요. 장미는 예뻤지만 까다로웠어요. <span class="dialogue">"바람막이를 세워 줘"</span>, <span class="dialogue">"물을 줘"</span>, <span class="dialogue">"유리 덮개를 씌워 줘"</span> 하며 계속 부탁했어요.</p>
+        <p>왕자는 장미를 사랑했지만, 장미의 행동이 이해되지 않아 지쳤어요. 어느 날 아침, 왕자는 철새들이 이동하는 걸 봤어요. <span class="dialogue">"나도 떠나 볼까?"</span></p>
+        <p>왕자는 장미에게 작별 인사를 했어요. 장미가 마지막으로 말했어요. <span class="dialogue">"내가 바보였어. 행복해야 해."</span> 하지만 왕자는 그 말의 뜻을 잘 몰랐어요. 가슴이 왜 무거운지도 몰랐어요. 그게 '그리움'이라는 걸 왕자는 아직 몰랐거든요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">이상한 어른들</span>
+        <h2>이상한 어른들의 별</h2>
+        <p>어린 왕자는 여섯 개의 별을 여행했어요. 첫 번째 별에는 왕이 살았어요. 아무도 없는 별에서 혼자 명령을 내리고 있었어요.</p>
+        <p>두 번째 별에는 <span class="dialogue">"박수 쳐 줘!"</span>라고 계속 말하는 남자가 있었어요. 세 번째 별에는 술꾼이 있었는데, 부끄러워서 술을 마시고, 술 마시는 게 또 부끄럽다고 했어요.</p>
+        <p>네 번째 별의 사업가는 별을 세며 <span class="dialogue">"이건 내 거야!"</span>라고 했어요. 다섯 번째 별의 가로등지기는 1분마다 불을 켜고 끄느라 쉬지도 못했어요. 여섯 번째 별의 지리학자는 자기 별도 안 가 보고 남의 이야기만 적었어요.</p>
+        <p>왕자는 점점 슬퍼졌어요. <span class="dialogue">"어른들은 정말 이상해."</span> 어른들은 중요하지 않은 것에만 빠져 있었어요. 지리학자가 말했어요. <span class="dialogue">"지구에 가 봐, 사람이 많대."</span> 왕자는 마지막 별 지구로 향했어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">지구 도착</span>
+        <h2>지구에 도착하다</h2>
+        <p>지구는 왕자가 생각한 것보다 훨씬 크고 외로운 곳이었어요. 왕자가 처음 내린 곳은 아프리카의 사막이었어요. 끝없이 펼쳐진 모래밖에 없었어요. <span class="dialogue">"여기엔 아무도 없나?"</span></p>
+        <p>왕자가 말하자, 모래 위에서 금빛 뱀이 다가왔어요. <span class="dialogue">"사람들 사이에 있어도 외로운 건 마찬가지야."</span> 뱀이 말했어요. 왕자는 이상하지만 마음에 와닿는 말이라고 느꼈어요.</p>
+        <p>뱀은 또 말했어요. <span class="dialogue">"나는 누구든 원래 있던 곳으로 돌려보낼 수 있어."</span> 왕자는 그 말의 뜻을 아직 몰랐어요.</p>
+        <p>사막을 걸어가던 왕자는 높은 산에 올랐어요. <span class="dialogue">"안녕!"</span> 하고 외치자 <span class="dialogue">"안녕... 안녕..."</span> 메아리가 돌아왔어요. <span class="dialogue">"이 별 사람들은 남의 말만 따라 하네."</span> 얼마를 더 걸었을까, 장미가 가득 핀 정원을 찾았어요. 수천 송이 장미! <span class="dialogue">"내 별 장미가 하나뿐인 줄 알았는데..."</span> 왕자는 슬퍼졌어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">여우와의 만남</span>
+        <h2>밀밭 가의 여우</h2>
+        <p>장미 정원을 떠나 슬픈 마음으로 걷던 왕자 앞에 작은 여우가 나타났어요. 여우는 사과나무 아래에 앉아 있었는데, 털이 가을 밀밭처럼 황금빛이었어요.</p>
+        <p><span class="dialogue">"안녕!"</span> 왕자가 인사했어요. <span class="dialogue">"안녕."</span> 여우가 대답했어요. <span class="dialogue">"같이 놀자!"</span> 왕자가 말했지만, 여우는 고개를 저었어요. <span class="dialogue">"나는 너와 놀 수 없어. 아직 친구가 안 됐거든."</span></p>
+        <p><span class="dialogue">"친구가 된다는 게 뭐야?"</span> 왕자가 물었어요. 여우가 설명했어요. <span class="dialogue">"지금 너는 나에게 다른 소년들과 똑같아. 나도 너에게 다른 여우들과 똑같고. 하지만 우리가 친구가 되면, 서로 세상에서 하나뿐인 존재가 돼."</span></p>
+        <p>여우가 밀밭을 바라보며 말했어요. <span class="dialogue">"저 밀밭 봐. 난 빵을 안 먹으니까 밀은 나한테 의미가 없어. 하지만 네가 내 친구가 되면, 밀밭의 황금빛이 네 머리카락을 떠올리게 해. 바람에 밀이 흔들리는 소리도 좋아지게 될 거야."</span> 왕자의 눈에 눈물이 고였어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">친구가 되는 법</span>
+        <h2>친구가 되는 방법</h2>
+        <p><span class="dialogue">"나랑 친구 해 줘!"</span> 여우가 말했어요. 왕자는 좋다고 했지만, 여우는 서두르지 말라고 했어요. <span class="dialogue">"친구가 되려면 시간과 참을성이 필요해. 처음엔 좀 떨어져 앉아. 나는 곁눈질로 너를 볼 거야. 하지만 날마다 조금씩 더 가까이 앉을 수 있어."</span></p>
+        <p>여우가 중요한 말을 더했어요. <span class="dialogue">"매일 같은 시간에 와야 해. 네가 오후 네 시에 오면, 나는 세 시부터 행복해지기 시작해. 시간이 다가올수록 더 설레겠지. 네 시가 되면 두근두근할 거야. 행복이 뭔지 알게 되는 거지!"</span></p>
+        <p><span class="dialogue">"하지만 아무 때나 오면, 언제 마음 준비를 해야 할지 모르잖아."</span> 왕자가 물었어요. <span class="dialogue">"그게 무슨 뜻이야?"</span> <span class="dialogue">"어떤 하루를 다른 날과 다르게 만드는 거야."</span></p>
+        <p>그날부터 왕자는 매일 오후 네 시에 여우를 찾아갔어요. 처음엔 열 걸음 떨어져 앉았고, 다음 날은 아홉 걸음, 그 다음엔 여덟 걸음. 말없이도 마음으로 대화하며 둘은 점점 가까워졌어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">책임</span>
+        <h2>친구에 대한 책임</h2>
+        <p>여우와 왕자의 우정은 날마다 깊어졌어요. 왕자가 언덕 너머로 보이기만 해도 여우의 심장은 콩닥콩닥 뛰었고, 여우의 황금빛 털이 바람에 흔들리면 왕자는 웃었어요.</p>
+        <p>하지만 여우는 가끔 진지한 얼굴을 했어요. <span class="dialogue">"왕자야, 너는 지금 나랑 있지만, 언젠가 떠나겠지?"</span> 왕자는 대답하지 못했어요.</p>
+        <p>여우가 조용히 말했어요. <span class="dialogue">"괜찮아. 하지만 꼭 기억해. 네가 친구로 삼은 것에 대해 넌 책임이 있어. 너는 네 장미에 대해 책임이 있어."</span></p>
+        <p>왕자 가슴이 뛰었어요. '나의 장미.' 그 말이 전과 다르게 들렸어요. 여우가 계속 말했어요. <span class="dialogue">"사람들은 이걸 잊어버려. 하지만 넌 잊으면 안 돼. 친구가 된다는 건, 떨어져 있을 때도 상대를 생각하는 거야."</span> 왕자는 떠올렸어요. 바람막이 세워 달라던 장미, 물 달라던 장미. 그 모든 게 사실은 <span class="dialogue">"나를 사랑해 줘"</span>라는 말이었어요. 왕자 눈에서 눈물이 흘렀어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">깨달음</span>
+        <h2>오천 송이 장미와 한 송이</h2>
+        <p>여우의 말을 곰곰이 생각하며, 왕자는 다시 오천 송이 장미가 핀 정원에 갔어요. 처음 이 정원을 봤을 때, 왕자는 자기 장미가 특별하지 않다고 생각해서 울었어요. 하지만 지금은 달랐어요.</p>
+        <p>왕자가 장미들에게 말했어요. <span class="dialogue">"너희는 예쁘지만, 텅 비어 있어. 아무도 너희를 위해 애쓰지 않잖아. 너희는 내 장미와 닮았지만, 내 장미와는 완전 달라."</span></p>
+        <p>왕자의 목소리는 떨리지 않았어요. <span class="dialogue">"내가 물 주고, 바람막이 세워 주고, 벌레 잡아 주고, 투정 들어 준 그 장미야말로 내 장미니까."</span></p>
+        <p>왕자는 이제 알았어요. 소중한 건 귀한 물건이라서가 아니에요. 내가 시간과 마음을 쏟았기 때문에 소중해지는 거예요. 오천 송이 완벽한 장미보다, 내가 아침마다 물 준 한 송이가 더 귀한 이유는 그 장미를 위해 보낸 시간이 있기 때문이에요. 여우의 가르침이 가슴에 스며들었어요. <span class="dialogue">"가장 중요한 건 눈에 보이지 않아."</span> 왕자는 그 말을 소리 내어 말했어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">이별</span>
+        <h2>이별의 눈물, 우정의 선물</h2>
+        <p>떠날 시간이 왔어요. 왕자는 자기 별로, 장미에게 돌아가야 했어요. 밀밭 언덕에서 여우와 마주 앉은 왕자는 입술을 깨물었어요. <span class="dialogue">"이별은 싫어."</span> 여우도 고개를 숙였어요. <span class="dialogue">"나도 울 것 같아."</span></p>
+        <p>왕자가 물었어요. <span class="dialogue">"그러면 친구가 된 게 무슨 소용이야? 아프기만 한 걸."</span></p>
+        <p>여우가 고개를 들어 밀밭을 바라봤어요. 황금빛 밀이 바람에 물결쳤어요. <span class="dialogue">"밀빛 때문이야. 전에는 밀이 나한테 아무 의미가 없었어. 하지만 이제 네 금빛 머리카락 때문에 밀밭을 사랑하게 됐잖아. 바람이 밀밭을 흔들 때마다 너를 떠올릴 거야. 그게 나한테 남는 아름다운 거야."</span></p>
+        <p>왕자 눈에서 큰 눈물방울이 굴러떨어졌어요. 여우가 마지막 비밀을 알려줬어요. <span class="dialogue">"자, 내 비밀 말해 줄게. 아주 간단해. 잘 보려면 마음으로 봐야 해. 가장 중요한 건 눈에 보이지 않거든."</span> 왕자는 가슴 깊이 새겼어요. <span class="dialogue">"가장 중요한 건 눈에 보이지 않아."</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">돌아가는 길</span>
+        <h2>별로 돌아가는 길</h2>
+        <p>왕자는 사막을 다시 걸었어요. 가슴에는 여우의 비밀과 장미에 대한 그리움이 가득했어요. 모래 위에 긴 그림자를 드리우며 걷는 왕자 얼굴에는 슬픔과 용기가 함께 있었어요.</p>
+        <p>드디어 왕자는 처음 지구에 도착한 곳에 다다랐어요. 거기에 금빛 뱀이 다시 나타났어요. <span class="dialogue">"돌아갈 준비가 됐구나."</span> 뱀이 말했어요.</p>
+        <p>왕자는 고개를 끄덕였어요. <span class="dialogue">"내 별은 아주 멀어. 이 몸으로는 갈 수 없어. 너무 무거우니까."</span> 왕자는 떨렸지만 말했어요. <span class="dialogue">"괜찮아. 나는 내 장미에게 돌아가야 해. 내가 친구로 삼은 것에 책임을 져야 하니까."</span></p>
+        <p>하늘에는 수만 개의 별이 떠 있었어요. 왕자는 그중 하나를 올려다보며 웃었어요. <span class="dialogue">"나중에 밤하늘을 올려다보면, 별들이 모두 웃는 것처럼 보일 거야. 그중 하나에 내 웃음이 있을 테니까."</span> 바람이 모래를 어루만지듯 불어왔어요. 왕자는 눈을 감았어요. 이건 끝이 아니라 새로운 시작이었어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">마음으로 보기</span>
+        <h2>눈에 보이지 않는 가장 소중한 것</h2>
+        <p>어린 왕자가 떠난 사막에는 아무것도 없는 것처럼 보였어요. 모래뿐인 벌판. 하지만 그곳을 걸었던 비행사는 알았어요. 이 사막이 세상에서 가장 아름다운 곳이라는 걸. 왜냐하면 어딘가에 왕자가 마신 우물이 숨어 있으니까요.</p>
+        <p>사막이 아름다운 건 어딘가에 우물을 숨기고 있기 때문이에요. 사람이 아름다운 건 마음속에 사랑을 품고 있기 때문이에요.</p>
+        <p>여우가 알려 준 비밀은 간단하지만 영원한 거예요. <span class="dialogue">"가장 중요한 건 눈에 보이지 않아."</span></p>
+        <p>우리는 매일 뭔가를 보고, 듣고, 만져요. 하지만 진짜 우리를 살게 하는 건 눈에 안 보이는 것들이에요. 누가 나를 기다려 주는 마음, 함께 보낸 시간의 따뜻함, 헤어진 뒤에도 사라지지 않는 그리움. 어린 왕자 이야기는 끝났지만, 밤하늘을 올려다보면 다시 시작돼요. 별 하나가 유난히 반짝이면, 어린 왕자가 장미에게 물 주며 웃고 있기 때문일 거예요. 친구가 된다는 건 책임과 사랑이에요. 이게 어린 왕자가 우리에게 전하는, 눈에 보이지 않는 소중한 진실이에요.</p>
+      </div>
+    </section>
+
+    <section class="ending-section">
+      <div class="ending-content">
+        <h2>이야기에서 배운 것</h2>
+        <div class="lesson">
+          <h3>이야기 흐름</h3>
+          <p>떠남 → 여행 → 만남 → 깨달음 → 이별 → 돌아감</p>
+        </div>
+        <div class="lesson">
+          <h3>교훈 ①</h3>
+          <p>"가장 중요한 건 눈에 보이지 않아." — 마음으로 봐야 진짜가 보여요.</p>
+        </div>
+        <div class="lesson">
+          <h3>교훈 ②</h3>
+          <p>"친구에 대해 책임이 있어." — 친구가 되면 책임과 사랑이 생겨요.</p>
+        </div>
+        <div class="lesson">
+          <h3>교훈 ③</h3>
+          <p>소중한 건 비싸서가 아니에요. 내가 마음을 쏟았기 때문에 소중해져요.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100;">
+    <button class="nav-btn" style="padding: 12px 24px; border-radius: 25px; border: none; background: rgba(255,255,255,0.9); color: #333; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="padding: 12px 24px; border-radius: 25px; border: none; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const storyCards = document.querySelectorAll('.story-card');
+
+    const observerOptions = { root: null, rootMargin: '-20% 0px -20% 0px', threshold: 0 };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const newBg = entry.target.dataset.bg;
+          if (newBg) mapContainer.style.backgroundImage = `url('${newBg}')`;
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => sectionObserver.observe(section));
+
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('active');
+      });
+    }, { root: null, rootMargin: '-10% 0px -10% 0px', threshold: 0.1 });
+
+    storyCards.forEach(card => cardObserver.observe(card));
+
+    function goBack() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/worldlit05_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

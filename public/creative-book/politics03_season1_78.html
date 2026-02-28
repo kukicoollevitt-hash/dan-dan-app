@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>돌담 위의 횃불</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 배경 이미지 컨테이너 */
+    .bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 0.8s ease-in-out;
+    }
+
+    .bg-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(26, 26, 46, 0.3) 0%, rgba(26, 26, 46, 0.7) 100%);
+    }
+
+    /* 스크롤 콘텐츠 */
+    .scroll-container {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .book-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 15px;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+      line-height: 1.3;
+    }
+
+    .book-subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      color: #ffab91;
+      margin-bottom: 50px;
+      font-weight: 400;
+    }
+
+    .intro-content {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 1000px;
+    }
+
+    .intro-box {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      width: 300px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .intro-box h3 {
+      color: #ffab91;
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .intro-box p {
+      color: rgba(255,255,255,0.9);
+      font-size: 0.95rem;
+      line-height: 1.8;
+      text-align: left;
+    }
+
+    .conflict {
+      background: rgba(183, 28, 28, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      width: 100%;
+      max-width: 630px;
+      border: 1px solid rgba(183, 28, 28, 0.4);
+      margin-top: 10px;
+    }
+
+    .conflict h3 {
+      color: #ef9a9a;
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
+
+    .conflict p {
+      color: rgba(255,255,255,0.9);
+      font-size: 0.95rem;
+      line-height: 1.9;
+      text-align: left;
+      margin-bottom: 8px;
+    }
+
+    .scroll-indicator {
+      margin-top: 50px;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(10px); }
+    }
+
+    /* 챕터 카드 */
+    .chapter-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 60px 20px;
+    }
+
+    .chapter-card {
+      max-width: 600px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .chapter-section:nth-child(odd) {
+      justify-content: flex-start;
+      padding-left: 5%;
+    }
+
+    .chapter-section:nth-child(even) {
+      justify-content: flex-end;
+      padding-right: 5%;
+    }
+
+    .chapter-number {
+      display: inline-block;
+      background: linear-gradient(135deg, #b71c1c, #e53935);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 20px;
+      margin-bottom: 15px;
+    }
+
+    .chapter-title {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #b71c1c;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .chapter-text {
+      font-size: 1.05rem;
+      color: #333;
+      line-height: 2;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .chapter-text .highlight {
+      color: #b71c1c;
+      font-weight: 600;
+    }
+
+    /* 엔딩 섹션 */
+    .ending-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .ending-card {
+      max-width: 700px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 24px;
+      padding: 50px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .ending-title {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #b71c1c;
+      margin-bottom: 25px;
+    }
+
+    .ending-text {
+      font-size: 1.05rem;
+      color: #333;
+      line-height: 2;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .ending-text .highlight {
+      color: #b71c1c;
+      font-weight: 600;
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      z-index: 100;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn:hover {
+      background: rgba(255,255,255,0.25);
+      transform: translateX(-5px);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .chapter-section:nth-child(odd),
+      .chapter-section:nth-child(even) {
+        justify-content: center;
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+
+      .chapter-card {
+        padding: 30px;
+      }
+
+      .intro-box {
+        width: 100%;
+      }
+
+      .back-btn {
+        top: 15px;
+        left: 15px;
+        padding: 10px 18px;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal; else history.back;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    돌아가기
+  </button>
+
+  <div class="bg-container" id="bgContainer"></div>
+
+  <div class="scroll-container">
+    <!-- 인트로 -->
+    <section class="intro-section" data-bg="/images/창작도서/창작정치경제03/00.jpg">
+      <h1 class="book-title">돌담 위의 횃불</h1>
+      <p class="book-subtitle">교과기반 창작도서 · 정치경제 03 · 중1-2</p>
+
+      <div class="intro-content">
+        <div class="intro-box">
+          <h3>등장인물</h3>
+          <p>
+            <strong>할아버지 '종호'</strong> — 4·19 혁명 당시 대학생으로 <span class="highlight">시민 저항</span>에 참여했던 민주화 1세대. <span class="highlight">정치적 기억</span>의 전달자<br><br>
+            <strong>아버지 '민수'</strong> — 6월 항쟁 세대. <span class="highlight">민주화 운동</span>에 직접 참여하며 <span class="highlight">직접행동</span>의 의미를 체득<br><br>
+            <strong>딸 '하늘'</strong> — 민주주의가 당연한 시대에 태어난 현세대. <span class="highlight">역사적 기억의 계승</span>을 통해 각성<br><br>
+            <strong>그림자 장군 '철권'</strong> — <span class="highlight">권위주의 체제</span>와 <span class="highlight">독재 권력</span>을 상징
+          </p>
+        </div>
+
+        <div class="conflict">
+          <h3>핵심 갈등 구조</h3>
+          <p><strong>시민 vs. 독재</strong> — <span class="highlight">국민주권</span>을 요구하는 시민들과 <span class="highlight">억압 통치</span>를 유지하려는 독재 권력의 대립</p>
+          <p><strong>기억의 전달</strong> — <span class="highlight">민주주의의 역사화</span>와 세대 간 <span class="highlight">정치적 유산</span> 계승의 중요성</p>
+        </div>
+      </div>
+
+      <div class="scroll-indicator">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12l7 7 7-7"/>
+        </svg>
+        <p>스크롤해서 이야기 시작</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/01.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제1장</span>
+        <h2 class="chapter-title">억압의 시대: 입을 다문 마을</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 자유를 잃은 사람들은 침묵 속에서도 마음속 횃불을 끄지 않았다.</strong><br><br>
+          옛날, 지금과는 사뭇 다른 시절이 있었습니다. 그때 이 땅에는 '철권'이라 불리는 그림자 장군이 높은 성 위에서 나라를 다스리고 있었습니다. 철권 장군의 통치는 <span class="highlight">권위주의 체제</span>의 전형이었습니다. "세 사람 이상 모이면 안 된다!" 이러한 <span class="highlight">집회 금지</span>는 시민들의 <span class="highlight">결사의 자유</span>를 철저히 억압했습니다. 신문에는 장군이 원하는 말만 실렸고, 라디오에서는 장군을 칭송하는 노래만 흘러나왔습니다. 이는 전형적인 <span class="highlight">언론 통제</span>이자 <span class="highlight">선전 정치</span>의 모습이었습니다.<br><br>
+          학교에서 선생님은 아이들에게 "왜?"라는 질문을 하지 말라고 가르쳤습니다. 질문은 곧 반항이었고, 반항은 곧 감옥이었기 때문입니다. 이러한 <span class="highlight">사상의 억압</span>은 <span class="highlight">비판적 시민의식</span>의 형성을 원천적으로 차단하는 것이었습니다. 어린 종호는 그때 열여섯 살이었습니다. 종호의 아버지는 진실을 보도하려던 신문기자였는데, 어느 날 갑자기 사라졌습니다. 종호는 다락방에서 아버지가 숨겨둔 낡은 일기장을 발견했습니다. 거기에는 이렇게 적혀 있었습니다. "자유는 공기와 같다. 없어지고 나서야 그것이 얼마나 소중한지 알게 된다." 마을은 조용했지만 사람들의 마음속에는 작은 불씨가 꺼지지 않고 타오르고 있었습니다. 이것이 바로 <span class="highlight">잠재적 저항의식</span>이었습니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/02.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제2장</span>
+        <h2 class="chapter-title">4·19 혁명: 학생들이 일어선 날</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 불의 앞에서 가장 먼저 일어선 것은 순수한 젊음이었다.</strong><br><br>
+          해가 바뀌고 종호는 스무 살 대학생이 되었습니다. 그즈음 나라의 상황은 더욱 나빠졌습니다. 철권 장군의 부하들은 <span class="highlight">부정선거</span>를 자행하여 자기들이 원하는 결과를 만들어냈습니다. 이러한 <span class="highlight">선거 조작</span>은 민주주의의 근간인 <span class="highlight">공정한 선거</span> 원칙을 정면으로 위반하는 것이었습니다. 사람들은 분노했지만, 어른들은 여전히 "참아라, 괜히 나서면 다친다"고 말했습니다.<br><br>
+          1960년 봄, 마산 바다에서 한 학생의 시신이 떠올랐습니다. 눈에 최루탄이 박힌 채였습니다. 이 사건은 <span class="highlight">국가 폭력</span>의 실체를 만천하에 드러냈습니다. "더 이상 참을 수 없다!" 종호는 동료 대학생들과 함께 거리로 나갔습니다. 이것이 바로 역사적인 <span class="highlight">4·19 혁명</span>의 시작이었습니다. 수백 명이 수천 명이 되고, 수천 명이 수만 명이 되었습니다. "독재 타도! 민주주의 만세!" 거리는 함성으로 가득 찼습니다. 이러한 <span class="highlight">대중 봉기</span>는 <span class="highlight">시민 불복종</span>의 가장 극적인 형태였습니다. 총소리가 울렸고, 친구 영식이가 쓰러졌습니다. 종호는 영식이를 업고 달렸습니다. 마침내 시민들의 거센 물결을 이기지 못한 독재자 이승만은 하야했습니다. <span class="highlight">시민 혁명</span>이 독재를 무너뜨린 것입니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/03.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제3장</span>
+        <h2 class="chapter-title">군사 정권: 다시 드리운 어둠</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 민주주의의 봄은 짧았고, 군홧발 소리와 함께 다시 겨울이 찾아왔다.</strong><br><br>
+          4·19 혁명의 감격도 잠시, 이듬해 새벽 어둠 속에서 탱크 소리가 울려 퍼졌습니다. 이것이 바로 <span class="highlight">5·16 군사정변</span>이었습니다. 군인들이 총칼을 들고 <span class="highlight">헌정 질서</span>를 전복한 것입니다. 새로운 철권 장군이 나타났습니다. 그들은 "나라를 발전시키겠다"고 했지만, 그 발전의 대가는 시민의 자유였습니다. 이것이 <span class="highlight">개발독재</span>의 논리였습니다. <span class="highlight">야간 통행금지</span>가 내려졌고, 노동자들은 <span class="highlight">저임금 장시간 노동</span>에 시달려야 했습니다.<br><br>
+          <span class="highlight">유신 체제</span>가 선포되면서 대통령이 국회를 해산하고 헌법을 정지시킬 수 있는 <span class="highlight">긴급조치권</span>이 남용되었습니다. 대학에서는 학생들이 감시당했고, 책을 읽는 것조차 죄가 되는 시대가 돌아왔습니다. 종호는 그 세월 동안 결혼을 하고 아들 민수를 낳았습니다. 종호는 밤마다 아들에게 조용히 이야기했습니다. "아버지가 젊었을 때 친구들과 거리에 나갔단다. 자유를 위해서." 이것은 <span class="highlight">저항의 기억</span>을 다음 세대에 전달하는 행위였습니다. 교과서에는 장군이 영웅이라고 적혀 있었지만, 아버지의 눈에는 슬픔이 서려 있었습니다. <span class="highlight">공식 역사</span>와 <span class="highlight">민중의 기억</span> 사이의 간극은 그토록 컸습니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/04.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제4장</span>
+        <h2 class="chapter-title">시민의 저항: 어둠 속의 작은 등불들</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 한 사람의 용기가 수만 명의 용기를 깨웠다.</strong><br><br>
+          군사 정권의 그늘 아래서도 저항의 불씨는 꺼지지 않았습니다. 1980년 5월, 광주에서 시민들이 들고일어났습니다. 전두환이 <span class="highlight">계엄령</span>을 선포하자 광주의 학생들과 시민들은 "독재를 끝내라!"고 외쳤습니다. 이것이 바로 <span class="highlight">5·18 민주화운동</span>입니다. 하지만 군인들은 무자비했습니다. 열흘 동안 광주는 고립되었고, 수많은 사람이 <span class="highlight">국가 폭력</span>의 희생양이 되었습니다. <span class="highlight">언론 봉쇄</span>로 인해 바깥세상은 광주에서 무슨 일이 벌어지는지 알 수 없었습니다.<br><br>
+          청년이 된 민수는 몰래 돌아다니는 <span class="highlight">지하 유인물</span>을 통해 광주의 진실을 알게 되었습니다. 민수는 친구들과 함께 <span class="highlight">지하 독서 모임</span>을 만들었습니다. <span class="highlight">금서</span>를 읽고, 세상이 어떻게 돌아가는지 토론했습니다. 이러한 <span class="highlight">사회의식화 활동</span>은 위험한 일이었습니다. 그래도 민수와 친구들은 멈추지 않았습니다. 노동자들과 손을 잡고, 농민들과 연대하고, 종교인들과 함께 기도했습니다. 이것이 바로 <span class="highlight">민중연대</span>의 형성 과정이었습니다. 어둠이 짙을수록 작은 등불 하나의 빛은 더욱 눈부셨습니다. <span class="highlight">풀뿌리 저항</span>은 곳곳에서 타오르고 있었습니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/05.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제5장</span>
+        <h2 class="chapter-title">6월 항쟁: 백만의 함성이 하늘을 뒤흔들다</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 최루탄 연기 속에서도 시민들은 내일의 자유를 향해 걸었다.</strong><br><br>
+          1987년 6월, 드디어 역사의 물꼬가 트이는 순간이 왔습니다. 서울대학교 학생 박종철이 경찰에 끌려간 뒤 <span class="highlight">고문</span>으로 숨졌다는 소식이 전해졌습니다. 경찰은 "탁 치니 억 하고 죽었다"라고 거짓말을 했지만, 진실은 결국 세상에 알려졌습니다. 이것은 <span class="highlight">국가 범죄</span>의 은폐가 실패한 순간이었습니다. 이어서 연세대학교 학생 이한열이 시위 도중 최루탄에 맞아 쓰러졌습니다. 이 두 사건은 <span class="highlight">6월 민주항쟁</span>의 기폭제가 되었습니다.<br><br>
+          민수는 서른 살, 어린 딸 하늘을 둔 가장이었습니다. 아내의 걱정에 민수는 말했습니다. "하늘이가 자라서 살아갈 세상이 이래서는 안 되니까." 민수는 넥타이를 매고 거리로 나갔습니다. 이것은 <span class="highlight">넥타이 부대</span>라 불린 <span class="highlight">중산층의 정치 참여</span>를 상징합니다. 회사원, 택시기사, 의사, 간호사, 수녀, 노점상 할머니까지 전국 방방곡곡에서 백만 명이 넘는 시민들이 외쳤습니다. "독재 타도! 호헌 철폐!" <span class="highlight">호헌 철폐</span>란 독재 정권이 유지하려던 간선제 헌법을 폐지하라는 요구였습니다. 최루탄 가스가 눈을 찔렀지만 아무도 돌아서지 않았습니다. 이것이 <span class="highlight">범국민적 저항</span>의 장엄한 모습이었습니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/06.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제6장</span>
+        <h2 class="chapter-title">직선제 쟁취: 시민이 이긴 날</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 국민이 직접 대통령을 뽑는 권리, 그것은 거저 얻어진 것이 아니었다.</strong><br><br>
+          백만 시민의 함성 앞에서 철권의 성은 마침내 흔들리기 시작했습니다. 더 이상 시민들의 목소리를 무시할 수 없게 된 정권은 결단을 내려야 했습니다. 1987년 6월 29일, 당시 여당 대표 노태우가 마침내 선언했습니다. "국민이 직접 대통령을 선출하는 직선제를 받아들이겠습니다." 이것이 역사적인 <span class="highlight">6·29 선언</span>입니다. <span class="highlight">대통령 직선제</span>의 쟁취는 <span class="highlight">민주화 이행</span>의 결정적 전환점이었습니다.<br><br>
+          그 순간 온 나라가 환호했습니다. 민수는 집으로 돌아와 아버지 종호에게 전화했습니다. "아버지, 해냈어요. 직선제를 쟁취했어요!" 전화기 너머로 종호의 울음소리가 들려왔습니다. 종호는 1960년에 함께 거리에 나갔던 친구 영식이를 떠올렸습니다. 민수는 잠든 딸 하늘의 방에 가서 조용히 이마에 입을 맞추었습니다. "하늘아, 네가 자라면 직접 투표할 수 있어. 네가 원하는 사람을 네 손으로 뽑을 수 있는 거야." 이것은 <span class="highlight">참정권</span>의 완전한 회복을 의미했습니다. 시민이 이긴 것입니다. 총과 탱크가 아니라 함성과 연대가 역사를 바꾸었습니다. <span class="highlight">비폭력 저항</span>이 승리한 것입니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/07.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제7장</span>
+        <h2 class="chapter-title">희생과 용기: 이름 없는 영웅들</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 역사책에 이름이 남지 않은 수많은 사람이 민주주의의 벽돌이 되었다.</strong><br><br>
+          민주주의는 화려한 승리의 순간만으로 이루어진 것이 아닙니다. 그 뒤에는 <span class="highlight">익명의 영웅들</span>의 희생이 있었습니다. 감옥에서 고문을 당하면서도 입을 열지 않은 노동자들, 자식을 잃고도 <span class="highlight">진실 규명</span>을 위해 수십 년을 싸운 어머니들, <span class="highlight">해직</span>되고 쫓겨나면서도 부당한 권력에 저항한 교사들과 기자들. 이들의 이름은 역사책에 한 줄도 남지 않았지만, 이들이 없었다면 민주주의라는 나무는 자라지 못했을 것입니다.<br><br>
+          종호의 아내 순옥 할머니는 남편이 시위에 나갈 때마다 밤새 기도하며 기다렸습니다. 이것도 <span class="highlight">저항의 일상</span>이었습니다. 종호는 손녀 하늘에게 이야기했습니다. "용기에는 여러 가지 모양이 있단다. 거리에서 소리치는 것도 용기지만, 진실을 기록하는 것, 상처받은 사람을 돌보는 것, 포기하지 않고 기다리는 것도 모두 용기란다." 이것은 <span class="highlight">시민적 덕성</span>의 다양한 형태를 말하는 것이었습니다. 민주주의는 영웅 한 사람이 만든 것이 아니라, 이름 없는 수만 명의 평범한 사람들이 한 뼘씩 쌓아 올린 <span class="highlight">집합적 성취</span>였습니다. 이것이 바로 <span class="highlight">민중사관</span>의 핵심입니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/08.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제8장</span>
+        <h2 class="chapter-title">헌법 개정: 새로운 약속을 새기다</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 국민의 권리는 마음속에만 있으면 안 되고, 반드시 글로 새겨야 한다.</strong><br><br>
+          6월 항쟁의 결실로 1987년 10월, 대한민국 <span class="highlight">제9차 헌법 개정(9th Constitutional Amendment)</span>이 이루어졌습니다. 새 헌법에는 국민이 직접 대통령을 뽑는 <span class="highlight">직선제</span>가 명시되었고, 대통령의 임기는 <span class="highlight">5년 단임제</span>로 정해졌습니다. 이는 <span class="highlight">권력의 집중과 장기화</span>를 방지하기 위한 <span class="highlight">제도적 장치</span>였습니다. 또한 <span class="highlight">기본권</span>이 대폭 강화되었습니다. <span class="highlight">표현의 자유</span>, <span class="highlight">집회의 자유</span>, <span class="highlight">언론의 자유</span>가 헌법 조문 위에 또렷하게 새겨졌습니다.<br><br>
+          종호는 텔레비전에서 <span class="highlight">헌법 개정 국민투표</span> 소식을 지켜보며 민수에게 말했습니다. "이 약속이 글로만 남아서는 안 된다. 사람들이 이 약속을 기억하고 지켜야 한다." 이것은 <span class="highlight">헌법의 규범력</span>이 시민의 감시와 참여를 통해 유지되어야 함을 말하는 것이었습니다. 새 헌법 아래 첫 번째 대통령 선거가 실시되었습니다. 종호는 투표소에 가서 투표용지에 도장을 찍었습니다. 스무 살에 거리에서 외쳤던 그 꿈이 마침내 현실이 되었습니다. <span class="highlight">주권 행사</span>의 감격은 눈물로 표현되었습니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/09.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제9장</span>
+        <h2 class="chapter-title">민주주의의 확장: 더 넓은 세상으로</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 민주주의는 한 번 이루면 끝이 아니라, 계속 넓혀가야 하는 것이다.</strong><br><br>
+          직선제 쟁취 이후에도 민주주의의 여정은 계속되었습니다. 이것을 <span class="highlight">민주주의의 공고화</span>라고 합니다. 노동자들은 정당한 임금과 안전한 일터를 요구하며 <span class="highlight">노동권 신장</span>을 위해 싸웠습니다. 여성들은 <span class="highlight">성평등</span>을 위해 목소리를 높였습니다. 장애인들은 <span class="highlight">이동권</span>과 <span class="highlight">접근성</span>을 요구했고, 이주노동자들도 <span class="highlight">인권</span> 보장을 주장하기 시작했습니다. 민주주의는 선거로만 완성되는 것이 아니었습니다. <span class="highlight">실질적 민주주의</span>는 사회의 모든 구석에서 "나도 존중받을 권리가 있다"는 목소리가 울려야 완성됩니다.<br><br>
+          하늘은 고등학생이 되었습니다. 학교에서 민주주의를 배웠지만 솔직히 실감이 나지 않았습니다. 이것이 <span class="highlight">민주주의의 일상화</span>가 가져온 역설이었습니다. 어느 날 할아버지 종호가 입원했습니다. 병원에서 할아버지의 손을 잡고 있는데 할아버지가 말했습니다. "하늘아, 네가 지금 자유롭게 공부하고, 하고 싶은 말을 하고, 꿈을 꿀 수 있는 건 당연한 게 아니란다." 하늘의 눈에서 눈물이 흘렀습니다. 교과서에서는 느낄 수 없었던 무게가 할아버지의 떨리는 목소리를 통해 가슴 깊이 전해졌습니다. 이것이 바로 <span class="highlight">역사 교육</span>의 진정한 의미였습니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="chapter-section" data-bg="/images/창작도서/창작정치경제03/10.jpg">
+      <div class="chapter-card">
+        <span class="chapter-number">제10장</span>
+        <h2 class="chapter-title">기억과 계승: 횃불을 이어받다</h2>
+        <p class="chapter-text">
+          <strong>【중심 문장】 기억하는 사람이 있는 한, 민주주의는 절대 죽지 않는다.</strong><br><br>
+          할아버지 종호가 세상을 떠난 날, 하늘은 다락방에서 낡은 일기장 하나를 발견했습니다. 증조할아버지가 쓴 것이었습니다. "자유는 공기와 같다. 없어지고 나서야 그것이 얼마나 소중한지 알게 된다." 네 세대를 관통하는 그 한 줄의 문장이 하늘의 가슴에 깊이 박혔습니다. 이것이 바로 <span class="highlight">세대 간 기억의 전승</span>입니다. 증조할아버지에서 할아버지로, 할아버지에서 아버지로, 그리고 이제 자신에게로 전해진 <span class="highlight">민주주의의 횃불</span>의 무게를 느꼈습니다.<br><br>
+          아버지 민수가 하늘의 어깨를 감쌌습니다. "할아버지가 늘 말씀하셨지. 민주주의는 한 번 얻으면 끝나는 게 아니라 매일매일 지켜내는 거라고." 이것이 <span class="highlight">민주주의의 일상적 실천</span>의 의미입니다. 하늘은 학교에 돌아가 친구들 앞에서 발표했습니다. 처음에 무심하던 친구들의 눈이 점점 진지해졌습니다. 누군가는 울었고, 누군가는 주먹을 꽉 쥐었습니다. 하늘은 깨달았습니다. 기억하는 것, 그리고 그 기억을 전하는 것이야말로 민주주의를 지키는 첫걸음이라는 것을. 이것이 <span class="highlight">역사의식</span>의 각성입니다. 할아버지가 켠 횃불은 꺼지지 않았습니다. 하늘의 손에서 다시 활활 타오르고 있었습니다. 거리의 함성은 멈추지 않습니다. <span class="highlight">민주 시민</span>이 있는 한, 그 함성은 영원히 울려 퍼질 것입니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 엔딩 -->
+    <section class="ending-section" data-bg="/images/창작도서/창작정치경제03/10.jpg">
+      <div class="ending-card">
+        <h2 class="ending-title">핵심 주제 — 민주주의는 지켜내는 것이다</h2>
+        <p class="ending-text">
+          민주주의는 한 번 얻으면 영원한 것이 아닙니다. 공기처럼, 잃어버리고 나서야 소중함을 알게 됩니다. <span class="highlight">4·19 혁명</span>의 젊은이들, <span class="highlight">5·18 민주화운동</span>의 광주 시민들, <span class="highlight">6월 민주항쟁</span>의 백만 시민들이 피와 땀으로 일궈낸 민주주의를 우리는 기억하고 가르치고 실천해야 합니다.<br><br>
+          <span class="highlight">투표권</span>을 행사하는 것, 잘못된 것에 <span class="highlight">시민적 목소리</span>를 내는 것, 서로의 <span class="highlight">인권</span>을 존중하는 것, <span class="highlight">소수자의 권리</span>를 지지하는 것. 이 모든 것이 민주주의를 지키는 행동입니다. 오늘 우리가 누리는 <span class="highlight">자유민주주의</span>는 '당연한 것'이 아닙니다. 누군가의 <span class="highlight">시민적 용기</span>와 희생 위에 있고, <span class="highlight">미래 세대</span>에게 전해줘야 할 소중한 <span class="highlight">민주적 유산</span>입니다.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100;">
+    <button class="nav-btn" style="padding: 12px 24px; border-radius: 25px; border: none; background: rgba(255,255,255,0.9); color: #333; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="padding: 12px 24px; border-radius: 25px; border: none; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <script>
+    const bgContainer = document.getElementById('bgContainer');
+    const sections = document.querySelectorAll('section[data-bg]');
+    let currentBg = '';
+
+    function updateBackground() {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const sectionMiddle = rect.top + rect.height / 2;
+
+        if (sectionMiddle > 0 && sectionMiddle < windowHeight) {
+          const newBg = section.dataset.bg;
+          if (newBg !== currentBg) {
+            currentBg = newBg;
+            bgContainer.style.backgroundImage = `url('${newBg}')`;
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll');
+    window.addEventListener('load');
+    updateBackground();
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'politics03_season1_quiz.html';
+    }
+  </script>
+</body>
+</html>

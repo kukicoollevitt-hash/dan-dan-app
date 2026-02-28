@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎈 풍선 요정 펑이와 기체의 대모험 - 중등편</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작화학04/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 680px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165,0.84,0.44,1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(14,165,233,0.15); color: #0284C7; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.95; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #0284C7; font-weight: 600; }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #0284C7;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(2, 132, 199, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #0369A1;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #0369A1;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue { color: #0EA5E9; font-weight: 600; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 900px; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 40px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .grade-badge { display: inline-block; background: linear-gradient(135deg, #0EA5E9, #0284C7); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+    .intro-content .characters { text-align: left; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #7DD3FC; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #fff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(14,165,233,0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(2,132,199,0.9); transform: translateY(-2px); }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <h1>🎈 풍선 요정 펑이와 기체의 대모험</h1>
+        <p class="subtitle">— 보일, 샤를, 아보가드로, 이상 기체 상태 방정식 —<br>교과기반 창작도서 · 화학 04</p>
+        <div class="characters">
+          <h3>🔬 등장인물 소개</h3>
+          <p><strong>▸ 바람이:</strong> 열한 살 호기심 소녀. 풍선을 불며 '보이지 않는 힘'을 탐구하는 주인공</p>
+          <p><strong>▸ 무게:</strong> 같은 반 과학 일등. '보이지 않으면 없는 것'이라 믿는 회의론자</p>
+          <p><strong>▸ 펑이:</strong> 풍선 속 공기의 수호자 요정. 기체 법칙의 안내자</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1: 기체의 특성 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">기체의 특성</span>
+        <h2>보이지 않는 입자들의 세계</h2>
+        <p>과학 축제가 열린 날, 바람이는 빨간 풍선을 불고 있었습니다. 납작했던 풍선이 한 번 불 때마다 조금씩 커졌어요. 옆에 있던 무게가 시큰둥하게 말했습니다.</p>
+        <p><span class="dialogue">"풍선 안에 뭐가 있다고 그렇게 커지는 건데? 보이지도 않잖아."</span></p>
+        <p>바로 그 순간, 풍선이 반짝이더니 작은 얼굴이 나타났습니다! <span class="dialogue">"없다고? 내가 없다고 했어?!"</span> 풍선 요정 펑이가 분노하며 두 아이를 풍선 속으로 빨아들였습니다.</p>
+        <p>풍선 안에 들어간 바람이와 무게는 눈을 의심했습니다. 투명한 공들이 약 500m/s, 음속의 1.5배 속도로 사방에서 날아다니고 있었어요!</p>
+        <p>펑이가 설명했습니다. <span class="dialogue">"이것이 바로 <span class="highlight">기체 분자</span>야. 이 작은 풍선에만 약 10²³개, 그러니까 수백해 개가 들어 있어! 기체는 일정한 모양이 없어서 용기 모양에 맞추고, 일정한 부피도 없어서 용기 전체를 채우지. 그리고 분자 사이 간격이 넓어서 <span class="highlight">압축</span>이 가능해."</span></p>
+        <p><span class="dialogue">"분자들이 벽에 부딪칠 때마다 작은 힘이 가해지는데, 이걸 합치면 <span class="highlight" data-tooltip="압력(pressure): 단위 면적당 작용하는 힘. P = F/A. 단위: Pa, atm, mmHg">압력</span>이 돼. 압력 P는 힘 F를 면적 A로 나눈 거야. 단위는 Pa(파스칼), atm, mmHg 등이 있어. 1 atm은 101,325 Pa, 760 mmHg와 같지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2: 보일의 법칙 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">보일의 법칙</span>
+        <h2>압력과 부피의 반비례</h2>
+        <p>펑이가 풍선을 꾹 눌렀습니다. 분자들이 더 좁은 공간에 갇히면서 벽에 더 자주, 더 세게 부딪치기 시작했어요!</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">보일의 법칙</span>이야!"</span> 펑이가 설명했습니다. <span class="dialogue">"1662년에 로버트 보일이 발견했지. 온도가 일정할 때, 기체의 압력과 부피는 반비례해."</span></p>
+        <p>바람이가 물었습니다. <span class="dialogue">"반비례가 무슨 뜻이에요?"</span></p>
+        <p><span class="dialogue">"압력을 2배로 높이면 부피가 1/2로 줄어든다는 거야. 수식으로 쓰면 <span class="highlight">P₁V₁ = P₂V₂ = k(상수)</span>지."</span></p>
+        <p>무게가 계산해보았습니다. <span class="dialogue">"그러면 1 atm에서 10 L인 기체를 2 atm으로 압축하면... P₁V₁ = P₂V₂니까, 1 × 10 = 2 × V₂. V₂ = 5 L네요!"</span></p>
+        <p>펑이가 고개를 끄덕였습니다. <span class="dialogue">"분자 수가 그대로인데 공간이 줄어드니까 단위 부피당 분자 수, 즉 농도가 증가해. 그래서 벽에 부딪치는 횟수가 늘어나고 압력이 올라가는 거야. 주사기, 자전거 펌프, 잠수할 때 폐가 압축되는 것 모두 보일의 법칙이야!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3: 샤를의 법칙 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">샤를의 법칙</span>
+        <h2>온도와 부피의 정비례</h2>
+        <p>펑이가 풍선에 열을 가했습니다. 분자들이 미친 듯이 빨라지면서 풍선이 부풀어 올랐어요!</p>
+        <p><span class="dialogue">"이것이 <span class="highlight" data-tooltip="샤를의 법칙(Charles's Law): 압력 일정 시 기체 부피는 절대온도에 정비례. V₁/T₁ = V₂/T₂">샤를의 법칙</span>이야!"</span> 펑이가 말했습니다. <span class="dialogue">"1787년에 자크 샤를이 발견했지. 압력이 일정할 때, 기체의 부피는 <span class="highlight" data-tooltip="절대온도(absolute temperature): 켈빈 온도(K). T(K) = t(°C) + 273.15">절대온도</span>에 비례해."</span></p>
+        <p>바람이가 물었습니다. <span class="dialogue">"절대온도가 뭐예요?"</span></p>
+        <p><span class="dialogue">"섭씨 온도에 273.15를 더한 값이야. 단위는 K(켈빈)이지. T(K) = t(°C) + 273.15. 반드시 절대온도를 사용해야 해!"</span></p>
+        <p>무게가 예제를 풀어보았습니다. <span class="dialogue">"27°C, 즉 300 K에서 3 L인 기체를 127°C, 즉 400 K로 가열하면... V₁/T₁ = V₂/T₂니까, 3/300 = V₂/400. V₂ = 4 L!"</span></p>
+        <p><span class="dialogue">"온도가 높아지면 분자의 평균 운동 에너지가 커져. 수식으로는 Eₖ = (3/2)kT야. 더 빠르게 움직이는 분자들이 용기 벽을 더 세게 밀어서 부피가 팽창하는 거지."</span> 펑이가 덧붙였습니다. <span class="dialogue">"0 K, 즉 -273.15°C가 <span class="highlight">절대 영도</span>야. 이론적으로 분자 운동이 멈추는 온도지만, 기체가 먼저 액화되어서 실제로는 도달할 수 없어."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4: 아보가드로 법칙 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">아보가드로 법칙</span>
+        <h2>분자 수와 부피의 관계</h2>
+        <p>펑이가 신기한 사실을 알려주었습니다. <span class="dialogue">"같은 온도와 압력에서 모든 기체는 같은 부피에 같은 수의 분자를 포함해. 이것이 <span class="highlight" data-tooltip="아보가드로의 법칙(Avogadro's Law): 같은 온도·압력에서 기체 부피는 분자 수에 비례. V/n = k">아보가드로의 법칙</span>이야!"</span></p>
+        <p>무게가 의아해했습니다. <span class="dialogue">"기체 종류와 상관없이요? 수소든 산소든 이산화탄소든?"</span></p>
+        <p><span class="dialogue">"맞아! 1811년에 아메데오 아보가드로가 발견했지. 수식으로 쓰면 <span class="highlight">V₁/n₁ = V₂/n₂ = k(상수)</span>야. n은 몰수(mol)를 뜻해."</span></p>
+        <p>펑이가 구체적인 숫자를 알려주었습니다. <span class="dialogue">"<span class="highlight">표준 상태</span>, 즉 0°C(273 K)와 1 atm에서 1 mol의 기체 부피는 <span class="highlight">22.4 L</span>야. 그리고 1 mol에는 6.022 × 10²³개의 분자가 있어. 이 숫자가 바로 <span class="highlight">아보가드로 수</span>야."</span></p>
+        <p>바람이가 감탄했습니다. <span class="dialogue">"그러면 수소 22.4 L와 산소 22.4 L에 같은 수의 분자가 들어 있는 거네요! 질량은 수소가 2g이고 산소가 32g으로 다르지만요."</span></p>
+        <p><span class="dialogue">"바로 그거야! 그래서 <span class="highlight">기체 반응의 부피비 = 몰비</span>가 성립해. 예를 들어 2H₂ + O₂ → 2H₂O 반응에서 부피비도 2:1:2야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5: 이상 기체 방정식 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">이상 기체 방정식</span>
+        <h2>모든 법칙의 통합: PV = nRT</h2>
+        <p>펑이가 자랑스럽게 말했습니다. <span class="dialogue">"보일, 샤를, 아보가드로를 하나로 합친 공식이 있어! 바로 <span class="highlight">이상 기체 상태 방정식</span>이야."</span></p>
+        <p><span class="dialogue">"<span class="highlight">PV = nRT</span>! 여기서 P는 압력(atm), V는 부피(L), n은 몰수(mol), R은 기체 상수(0.0821 L·atm/mol·K), T는 절대온도(K)야."</span></p>
+        <p>무게가 눈을 빛냈습니다. <span class="dialogue">"그러면 세 가지 법칙이 어떻게 유도되는 거예요?"</span></p>
+        <p>펑이가 설명했습니다. <span class="dialogue">"T와 n이 일정하면 PV = nRT = k, 즉 보일 법칙이 돼. P와 n이 일정하면 V = (nR/P)T라서 V ∝ T, 즉 샤를 법칙이 되지. T와 P가 일정하면 V = (RT/P)n이라서 V ∝ n, 즉 아보가드로 법칙이 돼."</span></p>
+        <p>바람이가 예제를 풀어보았습니다. <span class="dialogue">"STP에서 2 mol의 기체 부피를 구해볼게요. PV = nRT니까, 1 × V = 2 × 0.0821 × 273. V = 44.8 L! 22.4 L의 두 배네요!"</span></p>
+        <p><span class="dialogue">"이 하나의 공식으로 풍선이 왜 부풀고, 왜 줄고, 왜 터지는지 다 설명할 수 있어."</span> 펑이가 환하게 웃었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6: 기체의 밀도 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">기체의 밀도</span>
+        <h2>밀도와 분자량의 관계</h2>
+        <p>바람이가 궁금해했습니다. <span class="dialogue">"헬륨 풍선은 왜 하늘로 뜨고, 이산화탄소는 왜 바닥에 깔려요?"</span></p>
+        <p>펑이가 대답했습니다. <span class="dialogue">"그건 <span class="highlight">밀도</span> 때문이야. 이상 기체 방정식에서 밀도 공식을 유도할 수 있어."</span></p>
+        <p><span class="dialogue">"PV = nRT에서 n = m/M이니까(m은 질량, M은 몰질량), PV = (m/M)RT가 돼. 여기서 밀도 d = m/V이므로, <span class="highlight">d = PM/RT</span>야. 같은 조건에서 몰질량 M이 클수록 밀도가 높아!"</span></p>
+        <p>무게가 계산해보았습니다. <span class="dialogue">"STP에서 기체 밀도를 비교해볼게요. 수소(M=2): d = 2/22.4 = 0.089 g/L. 공기(M≈29): d = 29/22.4 = 1.29 g/L. 산소(M=32): d = 32/22.4 = 1.43 g/L. 이산화탄소(M=44): d = 44/22.4 = 1.96 g/L!"</span></p>
+        <p><span class="dialogue">"헬륨(M=4)은 0.18 g/L로 공기(1.29 g/L)보다 훨씬 가벼워서 풍선이 뜨는 거야. 반대로 이산화탄소는 공기보다 무거워서 바닥에 깔리지."</span></p>
+        <p>펑이가 응용 문제를 냈습니다. <span class="dialogue">"미지 기체의 분자량을 측정할 때는 이 공식을 뒤집어서 <span class="highlight">M = dRT/P</span>를 쓰면 돼!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7: 돌턴의 분압 법칙 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">돌턴의 분압 법칙</span>
+        <h2>혼합 기체의 압력</h2>
+        <p>펑이가 풍선 밖의 공기를 보여주었습니다. 질소, 산소, 아르곤, 이산화탄소 분자들이 섞여 있었어요.</p>
+        <p><span class="dialogue">"공기는 여러 기체의 혼합물이야. 각 기체가 어떻게 전체 압력에 기여하는지 <span class="highlight">돌턴의 분압 법칙</span>이 설명해줘. 1801년에 존 돌턴이 발견했지."</span></p>
+        <p><span class="dialogue">"혼합 기체의 전체 압력은 각 성분 기체의 <span class="highlight">부분 압력(분압, partial pressure)</span>의 합과 같아. <span class="highlight">P_total = P₁ + P₂ + P₃ + ...</span>. 각 기체의 분압은 Pᵢ = Xᵢ × P_total로 계산해. Xᵢ는 몰분율(mole fraction)로, nᵢ/n_total이야."</span></p>
+        <p>무게가 공기의 분압을 계산했습니다. <span class="dialogue">"대기압 1 atm 기준으로, 질소(78%)는 0.78 atm, 산소(21%)는 0.21 atm, 아르곤(0.9%)은 0.009 atm, 이산화탄소(0.04%)는 0.0004 atm이네요!"</span></p>
+        <p>펑이가 흥미로운 사실을 알려주었습니다. <span class="dialogue">"에베레스트 정상의 기압은 약 0.3 atm이야. 그러면 산소 분압은 0.3 × 0.21 = 0.063 atm! 해수면(0.21 atm)의 1/3 수준이라서 산소 부족을 느끼는 거지."</span></p>
+        <p>바람이가 이해했습니다. <span class="dialogue">"높은 산에서 숨쉬기 힘든 이유가 분압 때문이었군요!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8: 그레이엄의 법칙 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">그레이엄의 법칙</span>
+        <h2>기체의 확산과 분출</h2>
+        <p><span class="dialogue">"향수 냄새가 왜 빠르게 퍼지는지 알아?"</span> 펑이가 물었습니다. <span class="dialogue">"가벼운 분자가 더 빨리 움직이기 때문이야!"</span></p>
+        <p><span class="dialogue">"1846년에 토마스 그레이엄이 발견한 <span class="highlight">그레이엄의 확산/분출 법칙</span>에 따르면, 같은 온도와 압력에서 기체의 확산 속도는 분자량의 제곱근에 반비례해. <span class="highlight">v₁/v₂ = √</span>."</span></p>
+        <p>무게가 계산했습니다. <span class="dialogue">"수소(M=2)와 산소(M=32)를 비교하면... v_H₂/v_O₂ = √(32/2) = √16 = 4. 수소가 산소보다 4배 빠르네요!"</span></p>
+        <p>펑이가 실험을 보여주었습니다. <span class="dialogue">"암모니아(M=17)와 염산(M=36.5)을 긴 관 양 끝에서 동시에 방출하면 어디서 만날까? v_NH₃/v_HCl = √(36.5/17) ≈ 1.46. 암모니아가 1.46배 빠르니까 중간보다 염산 쪽에서 염화암모늄(NH₄Cl) 흰 연기가 생겨!"</span></p>
+        <p>바람이가 응용을 물었습니다. <span class="dialogue">"이 법칙은 어디에 쓰여요?"</span></p>
+        <p><span class="dialogue">"우라늄 농축에 쓰여! ²³⁵UF₆와 ²³⁸UF₆의 미세한 속도 차이를 이용해서 동위원소를 분리하거든."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9: 실제 기체 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">실제 기체</span>
+        <h2>이상 기체 vs 실제 기체</h2>
+        <p>무게가 의문을 제기했습니다. <span class="dialogue">"이상 기체 방정식은 정말 모든 상황에서 정확해요?"</span></p>
+        <p>펑이가 솔직하게 대답했습니다. <span class="dialogue">"사실 <span class="highlight">'이상 기체(ideal gas)'</span>는 두 가지를 가정해. 첫째, 분자 자체의 부피가 0이다. 둘째, 분자 간 인력이 없다. 하지만 <span class="highlight">실제 기체</span>는 분자가 유한한 부피를 가지고, 분자 간에 반 데르 발스 힘이 존재해."</span></p>
+        <p>바람이가 물었습니다. <span class="dialogue">"그러면 언제 이상 기체 방정식이 잘 맞아요?"</span></p>
+        <p><span class="dialogue">"<span class="highlight">고온</span>과 <span class="highlight">저압</span> 조건이야! 고온에서는 운동 에너지가 커서 분자간 인력 영향이 줄어들고, 저압에서는 분자 간 거리가 멀어서 부피와 인력 영향이 줄어들지."</span></p>
+        <p>펑이가 더 정확한 공식을 알려주었습니다. <span class="dialogue">"실제 기체를 더 정확히 설명하는 <span class="highlight">반 데르 발스 방정식</span>이 있어. (P + an²/V²)(V - nb) = nRT. 여기서 a는 분자간 인력 보정 상수, b는 분자 부피 보정 상수야."</span></p>
+        <p><span class="dialogue">"헬륨(He)이나 수소(H₂)처럼 작고 인력이 약한 기체가 이상 기체에 가까워!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10: 핵심 정리 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학04/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">깨달음</span>
+        <h2>보이지 않는 입자도 힘을 가진다</h2>
+        <p>모든 모험을 마친 바람이와 무게는 과학 축제장으로 돌아왔습니다. 펑이의 마법이 풀리면서 분자는 다시 보이지 않게 되었지만, 두 사람의 눈에는 세상이 완전히 달라 보였습니다.</p>
+        <p><span class="dialogue">"무게야, 이제 공기가 있다는 거 믿어?"</span> 바람이가 웃으며 물었습니다.</p>
+        <p><span class="dialogue">"믿는 정도가 아니야. 보일 법칙(PV=k), 샤를 법칙(V/T=k), 아보가드로 법칙(V/n=k), 그리고 이걸 하나로 합친 <span class="highlight">이상 기체 방정식 PV=nRT</span>까지. 보이지 않는 분자들이 이 모든 법칙을 따르고 있었어."</span></p>
+        <p>펑이가 마지막으로 모습을 드러냈습니다. <span class="dialogue">"기체 법칙은 <span class="highlight">분자 운동론</span>으로 설명돼. 기체 분자는 끊임없이 무작위 운동하고, 평균 운동 에너지는 절대온도에 비례하고(Eₖ = (3/2)kT), 벽과의 충돌로 압력이 발생하고, 분자 간 충돌은 탄성 충돌이야."</span></p>
+        <p><span class="dialogue">"보이지 않는다고 없는 게 아니야. 수백해 개의 분자가 만드는 압력이 풍선을 부풀리고 있어. <span class="highlight">보이지 않는 입자도 힘을 가진다.</span> 그 힘을 이해하는 순간, 보이지 않던 세상이 눈앞에 펼쳐져!"</span></p>
+        <p>바람이가 빨간 풍선을 하늘로 띄워 보내며 말했습니다. <span class="dialogue">"과학은 보이지 않는 것을 이해하는 도구야. 눈에 보이는 것만 믿지 말고, 보이지 않는 것까지 탐구하자!"</span></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" onclick="location.href='/creative-book/chem04_season1_quiz.html?season=season3'" style="background: linear-gradient(135deg, #FFD700, #FFA500);">🏆 관문평가</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    function handleScroll() {
+      const wh = window.innerHeight;
+      sections.forEach(s => {
+        const r = s.getBoundingClientRect(), c = s.querySelector('.story-card');
+        if (r.top < wh*0.5 && r.top > -r.height*0.5 && s.dataset.bg) mapContainer.style.backgroundImage = `url('${s.dataset.bg}')`;
+        if (c && r.top < wh*0.75) c.classList.add('active');
+      });
+    }
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+  </script>
+</body>
+</html>

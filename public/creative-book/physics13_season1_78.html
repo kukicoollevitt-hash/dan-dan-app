@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔊 소리와 파동의 세계 - 중등편</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작물리13/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 680px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165,0.84,0.44,1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(245,158,11,0.15); color: #D97706; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.95; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #D97706; font-weight: 600; }
+    .story-card .dialogue { color: #F59E0B; font-weight: 600; }
+    .story-card .science-box { background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.05)); border-left: 4px solid #F59E0B; padding: 16px 20px; border-radius: 0 12px 12px 0; margin: 16px 0; font-size: 14px; }
+    .story-card .science-box strong { color: #B45309; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 900px; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .grade-badge { display: inline-block; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+    .intro-content .characters { text-align: left; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #FCD34D; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #fff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(245,158,11,0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(217,119,6,0.9); transform: translateY(-2px); }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <h1>🔊 소리와 파동의 세계</h1>
+        <p class="subtitle">— 진동, 파동의 성질, 음파의 특성과 도플러 효과 —<br>교과기반 창작도서 · 물리 13</p>
+        <div class="characters">
+          <h3>🔬 핵심 개념</h3>
+          <p><strong>▸ 파동:</strong> 진동이 매질을 따라 퍼져나가는 현상</p>
+          <p><strong>▸ 파동 공식:</strong> v = fλ (속력 = 진동수 × 파장)</p>
+          <p><strong>▸ 소리:</strong> 공기의 압축과 팽창으로 전달되는 종파</p>
+          <p><strong>▸ 소리의 3요소:</strong> 높낮이(진동수), 크기(진폭), 맵시(파형)</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span><span class="theme">진동</span>
+        <h2>🎸 진동이란 무엇일까?</h2>
+        <p>기타 줄을 튕기면 줄이 떨립니다. 이 떨림이 바로 <span class="highlight">진동</span>입니다.</p>
+        <div class="science-box">
+          <strong>📖 진동의 기본 용어:</strong><br>
+          • <strong>진동:</strong> 물체가 중심 위치를 기준으로 반복 운동<br>
+          • <strong>주기(T):</strong> 한 번 진동하는 데 걸리는 시간 (초)<br>
+          • <strong>진동수(f):</strong> 1초 동안 진동 횟수 (Hz)<br>
+          • <strong>진폭(A):</strong> 중심에서 최대 변위까지 거리<br><br>
+          <strong>관계식: f = 1/T</strong>
+        </div>
+        <p>예: 진동수가 440Hz인 소리 = 1초에 440번 진동<br>
+        주기 T = 1/440 ≈ 0.00227초</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span><span class="theme">파동</span>
+        <h2>🌊 파동은 어떻게 퍼질까?</h2>
+        <div class="science-box">
+          <strong>🔬 파동(Wave)이란:</strong><br>
+          • 진동이 매질을 통해 에너지를 전달하는 현상<br>
+          • <strong>매질은 이동하지 않고, 에너지만 전달!</strong><br><br>
+          <strong>파동의 요소:</strong><br>
+          • 파장(λ): 한 파동의 길이 (마루~마루 또는 골~골)<br>
+          • 진폭(A): 진동의 최대 변위<br>
+          • 속력(v): 파동이 퍼지는 속도
+        </div>
+        <p>물에 돌을 던지면 물결이 퍼져나갑니다. 하지만 물 자체가 이동하는 건 아니에요!</p>
+        <p><span class="highlight">파동 공식: v = fλ = λ/T</span></p>
+        <p>예: 진동수 500Hz, 파장 0.68m인 소리의 속력<br>
+        v = 500 × 0.68 = <span class="highlight">340 m/s</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span><span class="theme">횡파와 종파</span>
+        <h2>↔️ 두 가지 파동의 형태</h2>
+        <div class="science-box">
+          <strong>📖 횡파 vs 종파:</strong><br><br>
+          <strong>횡파(Transverse Wave):</strong><br>
+          • 진동 방향 ⊥ 파동 진행 방향<br>
+          • 예: 빛, 전자기파, 줄의 파동<br>
+          • 마루(crest)와 골(trough)<br><br>
+          <strong>종파(Longitudinal Wave):</strong><br>
+          • 진동 방향 ∥ 파동 진행 방향<br>
+          • 예: 소리, 지진의 P파<br>
+          • 압축(밀)과 팽창(소)
+        </div>
+        <p><span class="highlight">소리</span>는 종파입니다. 공기 분자가 앞뒤로 진동하면서 압축과 팽창이 전달됩니다.</p>
+        <p><span class="highlight">빛</span>은 횡파입니다. 전기장과 자기장이 수직으로 진동합니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span><span class="theme">소리의 발생</span>
+        <h2>🎵 소리는 어떻게 만들어질까?</h2>
+        <div class="science-box">
+          <strong>📖 소리의 발생과 전달:</strong><br>
+          • 발생: 물체의 진동 → 공기 압축/팽창<br>
+          • 전달: 종파 형태로 매질을 통해 전파<br>
+          • 속력: 공기 중 약 340m/s (20°C)<br><br>
+          <strong>매질에 따른 소리 속력:</strong><br>
+          • 공기: ~340 m/s<br>
+          • 물: ~1,500 m/s<br>
+          • 철: ~5,000 m/s
+        </div>
+        <p>소리가 고체에서 가장 빠른 이유: 분자들이 밀집해 있어 진동이 빠르게 전달됩니다.</p>
+        <p><span class="highlight">진공에서는 소리가 전달되지 않습니다!</span> 매질이 없으니까요.</p>
+        <p>우주에서 폭발음이 안 들리는 이유가 바로 이것!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span><span class="theme">음높이</span>
+        <h2>🎹 높은 음과 낮은 음</h2>
+        <div class="science-box">
+          <strong>🔬 소리의 높낮이(Pitch):</strong><br>
+          • 결정 요인: <strong>진동수(Hz)</strong><br>
+          • 진동수 높음 → 높은 음 (가는 줄, 짧은 줄)<br>
+          • 진동수 낮음 → 낮은 음 (굵은 줄, 긴 줄)<br><br>
+          <strong>가청 주파수:</strong><br>
+          • 사람: 20Hz ~ 20,000Hz<br>
+          • 초음파: 20,000Hz 이상<br>
+          • 초저주파: 20Hz 이하
+        </div>
+        <p>피아노의 '도' 음: 약 262Hz<br>
+        한 옥타브 위 '도': 약 524Hz (2배!)</p>
+        <p><span class="highlight">옥타브 = 진동수 2배</span></p>
+        <p>박쥐는 초음파(100,000Hz 이상)로 소통하고, 코끼리는 초저주파로 수 km 떨어진 동료와 대화합니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span><span class="theme">음량</span>
+        <h2>📢 큰 소리와 작은 소리</h2>
+        <div class="science-box">
+          <strong>📖 소리의 크기(Loudness):</strong><br>
+          • 결정 요인: <strong>진폭</strong><br>
+          • 진폭 큼 → 큰 소리 (에너지 큼)<br>
+          • 진폭 작음 → 작은 소리 (에너지 작음)<br><br>
+          <strong>소리 세기 단위: 데시벨(dB)</strong><br>
+          • 0dB: 들을 수 있는 최소 소리<br>
+          • 60dB: 일상 대화<br>
+          • 85dB 이상: 장시간 노출 시 청력 손상<br>
+          • 120dB: 통증 느낌
+        </div>
+        <p>데시벨은 <span class="highlight">로그 스케일</span>입니다. 10dB 증가 = 소리 세기 10배!</p>
+        <p>• 70dB는 60dB보다 10배 강함<br>
+        • 80dB는 60dB보다 100배 강함</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span><span class="theme">음색</span>
+        <h2>🎻 같은 음인데 왜 다르게 들릴까?</h2>
+        <div class="science-box">
+          <strong>📖 소리의 맵시(Timbre):</strong><br>
+          • 같은 높이, 같은 크기라도 악기마다 다른 느낌<br>
+          • 결정 요인: <strong>파형(Waveform)</strong><br><br>
+          <strong>배음(Overtone):</strong><br>
+          • 기본 진동수 외에 정수배 진동수도 함께 발생<br>
+          • 배음의 조합이 악기 특유의 음색 결정<br>
+          • 예: 440Hz + 880Hz + 1320Hz + ...
+        </div>
+        <p>피아노와 바이올린이 같은 '라' 음(440Hz)을 내도 다르게 들리는 이유: <span class="highlight">배음의 조합</span>이 다르기 때문!</p>
+        <p>순수한 단일 진동수 소리: 소리굽쇠<br>
+        복잡한 배음 조합: 실제 악기 소리</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span><span class="theme">소리의 반사</span>
+        <h2>🏔️ 메아리의 과학</h2>
+        <div class="science-box">
+          <strong>🔬 소리의 반사와 메아리:</strong><br>
+          • 반사: 소리가 장애물에 부딪혀 되돌아옴<br>
+          • 메아리: 반사된 소리가 원음과 구별되어 들림<br>
+          • 조건: 반사면까지 거리 약 17m 이상<br>
+          • 이유: 0.1초 이상 차이 나야 구별 가능<br><br>
+          <strong>거리 계산: d = v × t / 2</strong>
+        </div>
+        <p>절벽을 향해 소리 지르고 2초 후 메아리가 들렸다면:</p>
+        <p>d = 340 × 2 / 2 = <span class="highlight">340m</span> 떨어져 있음!</p>
+        <p>초음파 탐지기, 박쥐의 반향정위도 같은 원리입니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span><span class="theme">도플러 효과</span>
+        <h2>🚑 왜 구급차 소리가 변할까?</h2>
+        <div class="science-box">
+          <strong>📖 도플러 효과(Doppler Effect):</strong><br>
+          • 음원과 관측자의 상대 운동에 의해 진동수가 변함<br><br>
+          <strong>다가올 때:</strong><br>
+          • 파장 압축 → 진동수 증가 → 높은 음<br><br>
+          <strong>멀어질 때:</strong><br>
+          • 파장 늘어남 → 진동수 감소 → 낮은 음<br><br>
+          f' = f × (v ± v관측자) / (v ∓ v음원)
+        </div>
+        <p>구급차가 다가올 때는 <span class="highlight">높은 음</span>, 멀어질 때는 <span class="highlight">낮은 음</span>으로 들립니다.</p>
+        <p>빛에서도 도플러 효과 발생:<br>
+        • 다가오면: 청색편이(blue shift)<br>
+        • 멀어지면: 적색편이(red shift) → 우주 팽창 증거!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리13/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span><span class="theme">초음파 활용</span>
+        <h2>🩺 소리로 보는 세상</h2>
+        <div class="science-box">
+          <strong>📖 초음파의 활용:</strong><br>
+          • 의료: 초음파 검사 (태아, 내장 기관 영상)<br>
+          • 공업: 금속 내부 결함 탐지<br>
+          • 해양: 소나(SONAR)로 수심 측정, 물고기 탐지<br>
+          • 세척: 초음파 세척기 (미세 진동으로 오염 제거)<br>
+          • 동물: 박쥐, 돌고래의 반향정위
+        </div>
+        <p><span class="highlight">초음파</span>는 20,000Hz 이상의 고주파 소리입니다.</p>
+        <p>특징:<br>
+        • 파장이 짧아 직진성 좋음<br>
+        • 물체 표면에서 잘 반사<br>
+        • 정밀한 거리 측정 가능</p>
+        <p><span class="dialogue">"귀에 안 들리는 소리로 세상을 탐험한다!"</span></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='/creative-book/physics13_season1_quiz.html?season=season3'">퀴즈 풀기</button>
+    <button class="nav-btn" onclick="location.href='/book-list.html'">목록으로</button>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelector('.story-card')?.classList.add('active');
+          const bg = entry.target.dataset.bg;
+          if (bg) mapContainer.style.backgroundImage = `url('${bg}')`;
+        }
+      });
+    }, { threshold: 0.3 });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

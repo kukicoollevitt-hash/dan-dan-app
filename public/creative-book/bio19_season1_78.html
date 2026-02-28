@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌡️ 뜨거운 지구 SOS: 동물 회의가 열리던 날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물19/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1976D2 0%, #0D47A1 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(25, 118, 210, 0.15);
+      color: #0D47A1;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #1976D2;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #1976D2;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(25, 118, 210, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #0D47A1;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #0D47A1;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #0D47A1;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 38px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #64B5F6;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(25, 118, 210, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(13, 71, 161, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌡️ 뜨거운 지구 SOS: 동물 회의가 열리던 날</h1>
+        <p class="subtitle">
+          — 선택이 미래를 만든다 —<br>
+          교과기반 창작도서 · 생물 19 · 중1-2
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🐻‍❄️ 눈꽃 (북극곰 소녀):</strong> 북극에서 태어난 어린 북극곰. 해빙 감소로 서식지를 잃어가는 기후 변화의 상징적 피해자</p>
+          <p><strong>🐸 초록이 (황금두꺼비):</strong> 중앙아메리카 운무림의 마지막 황금두꺼비. 기후 변화로 인한 멸종의 실제 사례</p>
+          <p><strong>🦅 하늘바람 (북극제비갈매기):</strong> 북극에서 남극까지 7만 km를 이동하는 철새. 지구 전체의 기후 변화를 목격하는 증인</p>
+          <p><strong>🌳 할아버지 나무 (수령 800년 참나무):</strong> 800년의 나이테에 기후 역사가 기록된 연륜기후학의 살아있는 증거</p>
+          <p><strong>🏭 탄소괴물 (CO₂의 화신):</strong> 온실가스의 의인화. 원래는 필요하지만 과잉 배출이 문제</p>
+          <p><strong>👧 소율 (인간 소녀, 10살):</strong> 동물의 말을 듣는 아이. 인간과 자연의 중재자이자 해결책의 실천자</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">온실 효과</span>
+        <h2>🌡️ 녹아내리는 세상의 시작</h2>
+        <p>북극의 아침은 원래 고요하고 차가운 것이었습니다. 적어도 눈꽃의 엄마는 그렇게 말씀하셨습니다. 하지만 눈꽃이 태어난 이 세상의 아침은 달랐습니다. 잠에서 깬 눈꽃이 굴 밖으로 나왔을 때, 발밑의 <span class="highlight" data-tooltip="해빙(Sea ice): 바닷물이 얼어서 형성된 얼음">해빙</span>에서 '쩍' 하는 소리가 들렸습니다. 해빙이란 바닷물이 얼어서 형성된 얼음으로, 북극곰이 사냥하고 이동하는 필수적인 플랫폼입니다. 처음에는 대수롭지 않게 여겼습니다. 얼음이 가끔 소리를 내는 건 자연스러운 일이니까요. 하지만 요즘 그 소리가 너무 자주 들렸습니다. 하루에 열 번, 스무 번, 때로는 밤새도록. 그리고 어제는 눈꽃이 가장 좋아하던 놀이터, 큰 얼음 언덕이 바다 속으로 무너져 내렸습니다. 이것을 <span class="highlight">빙붕 붕괴</span>라고 합니다.</p>
+        <p><span class="dialogue">"엄마, 왜 이렇게 따뜻해진 거예요?"</span> 눈꽃이 물었습니다. 엄마 곰의 표정이 어두워졌습니다. <span class="dialogue">"지구가 열이 나고 있단다, 눈꽃아. 이것을 <span class="highlight" data-tooltip="지구 온난화(Global warming): 지구 평균 기온이 지속적으로 상승하는 현상">지구 온난화</span>라고 해."</span> 엄마가 설명해주셨습니다. 지구를 둘러싼 대기 속에 <span class="highlight" data-tooltip="온실가스(Greenhouse gas): 지구의 열을 가두어 온난화를 일으키는 기체">온실가스</span>라는 기체가 점점 많아지고 있다고요. 대표적인 온실가스로는 <span class="highlight" data-tooltip="이산화탄소(CO₂): 탄소와 산소로 이루어진 주요 온실가스">이산화탄소</span>, <span class="highlight">메탄</span>, <span class="highlight">아산화질소</span>, <span class="highlight">수증기</span> 등이 있습니다. 이 기체들이 마치 온실의 유리처럼 지구를 감싸서 <span class="highlight">적외선 복사</span>가 우주로 빠져나가지 못하게 막고 있다는 거예요. 이것이 바로 <span class="highlight" data-tooltip="온실 효과(Greenhouse effect): 대기 중 온실가스가 지구 열을 가두는 현상">온실 효과</span>입니다.</p>
+        <p>사실 온실 효과 자체는 나쁜 것이 아닙니다. 온실 효과가 없다면 지구의 평균 온도는 현재 약 15°C가 아니라 영하 18°C 정도가 되어 생명이 살기 어려운 곳이 될 거예요. 문제는 인간 활동으로 인해 온실가스 농도가 너무 빠르게 증가하여 <span class="highlight">강화된 온실 효과</span>가 발생한다는 것입니다. <span class="highlight">산업혁명</span> 이전 대기 중 CO₂ 농도는 약 280ppm이었는데, 현재는 420ppm을 넘어섰습니다. 이것은 지난 80만 년 중 가장 높은 수치예요!</p>
+        <p><span class="dialogue">"겨우 1도나 2도 올랐을 뿐인데?"</span> 눈꽃이 고개를 갸우뚱했습니다. <span class="dialogue">"1도가 얼마나 무서운 건지, 너는 아직 모른단다."</span> 엄마의 목소리가 떨렸습니다. <span class="highlight">지구 평균 기온</span>이 1°C 오르면, 북극의 <span class="highlight">다년빙</span> 수백만 톤이 녹고, <span class="highlight">해수면</span>이 올라가고, <span class="highlight">열대 저기압</span>은 더 거세지고, 가뭄과 홍수가 동시에 일어납니다. <span class="highlight">IPCC(기후변화에 관한 정부 간 협의체)</span>에 따르면, 산업화 이전 대비 이미 약 1.1°C 상승했고, 1.5°C를 넘으면 <span class="highlight">티핑 포인트</span>를 지나 돌이킬 수 없는 변화가 시작될 수 있습니다.</p>
+        <p>그날 밤, 비가 내렸습니다. 북극에 비라니! 원래 이곳에는 눈만 내리는 것이었는데. 이것을 <span class="highlight">북극 증폭</span>이라고 하는데, 북극은 지구 평균보다 2~3배 빠르게 온난화되고 있습니다. 그 이유는 <span class="highlight">빙설 알베도 피드백</span> 때문이에요. 하얀 얼음은 태양 복사를 반사하지만, 얼음이 녹아 어두운 바다가 드러나면 더 많은 열을 흡수하고, 이것이 다시 더 많은 얼음을 녹이는 <span class="highlight">양성 피드백</span> 순환이 발생합니다. 차가운 빗방울이 눈꽃의 하얀 털 위로 떨어지는 것을 느끼며, 눈꽃은 처음으로 '기후 위기'라는 감정을 알게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">빙하 융해</span>
+        <h2>🧊 엄마의 옛날이야기와 사라진 대륙</h2>
+        <p>비가 그친 다음 날, 눈꽃은 엄마에게 옛날이야기를 해달라고 졸랐습니다. 엄마 곰이 가장 좋아하는 이야기, '하얀 끝없는 나라' 이야기를요. <span class="dialogue">"옛날에는 말이야..."</span> 엄마가 먼 곳을 바라보며 이야기를 시작했습니다. <span class="dialogue">"이 북극은 정말로 끝이 없는 얼음 나라였단다. 네 할머니의 할머니 시절에는, 여름에도 <span class="highlight">다년빙</span>이 녹지 않았어. 다년빙이란 두 번 이상의 여름을 녹지 않고 버틴 두꺼운 얼음이야. 물범들이 얼음 위에서 낮잠을 자고, 우리 북극곰은 <span class="highlight">빙연</span> 위를 걸어 다니며 사냥을 했지."</span></p>
+        <p>눈꽃은 그 풍경을 상상해보았습니다. 하지만 눈꽃이 아는 북극은 달랐습니다. <span class="highlight">북극 해빙 면적</span>은 1979년 위성 관측이 시작된 이래 매 10년마다 약 13%씩 감소하고 있습니다. 여름 최소 해빙 면적은 1980년대 약 750만 km²에서 현재 약 400만 km²로 거의 절반이 줄었어요. 일부 과학자들은 2050년 이전에 <span class="highlight">북극이 여름에 완전히 얼음 없는 상태</span>가 될 수 있다고 경고합니다. 물범을 찾으려면 예전보다 세 배나 멀리 헤엄쳐야 했고, 어떤 곰 가족은 먹이를 찾지 못해 점점 마른 몸으로 떠돌았습니다.</p>
+        <p><span class="dialogue">"엄마, 그 하얀 나라를 되찾을 수는 없는 건가요?"</span> 엄마가 대답하지 못했습니다. 바로 그때, 하늘에서 날카로운 울음소리가 들렸습니다. <span class="highlight">북극제비갈매기</span> 하늘바람이었습니다! 북극제비갈매기는 연간 약 7만 km를 이동하는 세계 최장거리 <span class="highlight">철새</span>로, 북극의 여름과 남극의 여름을 모두 경험합니다. 하늘바람은 숨을 헐떡이며 내려앉았습니다.</p>
+        <p><span class="dialogue">"눈꽃! 큰일이야! 남극 <span class="highlight">빙상</span>에서 거대한 <span class="highlight">빙붕</span>이 떨어져 나갔어! 서울 면적의 열 배나 되는 얼음이 바다로 미끄러졌다고!"</span> 이것을 <span class="highlight">빙하 분리</span>라고 합니다. 2021년 남극에서 분리된 A-76 빙산은 면적이 약 4,320 km²로, 제주도의 2배가 넘었어요. 빙붕이 분리되면 육지의 <span class="highlight">빙하</span>가 바다로 흘러드는 속도가 빨라져 <span class="highlight">해수면 상승</span>이 가속화됩니다. 현재 해수면은 연간 약 3.3mm씩 상승하고 있으며, 21세기 말까지 최대 1m 이상 상승할 수 있다고 예측됩니다.</p>
+        <p>눈꽃의 심장이 쿵쾅거렸습니다. <span class="dialogue">"하늘바람, 우리만 이런 건 아니지? 다른 동물들도 어려운 거지?"</span> <span class="dialogue">"어디서부터 말해야 할지 모르겠어. 세상 곳곳에서 동물들이 <span class="highlight">서식지 손실</span>을 겪고 있어."</span> 눈꽃은 결심했습니다. 여기서 가만히 녹아내리는 얼음을 바라보고만 있을 수는 없다고. <span class="dialogue">"하늘바람, 나를 그 동물들에게 데려가줘. 모두를 만나고 싶어. 함께 방법을 찾아야 해."</span> 눈꽃의 위대한 여행이 시작되는 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">생태계 교란</span>
+        <h2>🦌 고향을 등진 자들의 행렬</h2>
+        <p>하늘바람의 안내로 남쪽을 향해 떠난 눈꽃은 놀라운 광경을 목격했습니다. 캐나다 북부의 <span class="highlight">툰드라</span> 지대에서, 수만 마리의 순록 떼가 끝없는 행렬을 이루며 이동하고 있었습니다. 순록(caribou 또는 reindeer)은 계절마다 정해진 <span class="highlight">이동 경로</span>를 따라 이동하는 동물이지만, 올해의 이동은 달랐습니다. 순록 어른이 눈꽃에게 설명해주었습니다. <span class="dialogue">"예전에는 봄이 오면 북쪽으로 갔어. <span class="highlight">목초지</span>의 풀이 자라는 시기에 맞춰서. 그런데 이제는 <span class="highlight">식물 생육기</span>가 너무 일찍 와. 우리가 도착하기도 전에 풀이 자라고 시들어버리지."</span></p>
+        <p>이것을 과학자들은 <span class="highlight">'물후학적 불일치'</span>라고 부릅니다. <span class="highlight">물후학</span>은 생물의 계절적 현상(개화, 번식, 이동 등)을 연구하는 학문인데, 기온 변화로 식물의 성장 시기가 바뀌면서 동물들의 이동이나 번식 시기와 맞지 않게 된 것이지요. 예를 들어, 어떤 새가 알에서 부화하는 시기와 애벌레가 가장 풍부한 시기가 어긋나면 새끼 새들이 충분한 먹이를 얻지 못하게 됩니다. 기후 변화로 인한 <span class="highlight">생태계 교란</span>의 대표적인 예입니다.</p>
+        <p>더 남쪽으로 내려가자, 아프리카의 <span class="highlight">아프리카코끼리</span> 가족을 만났습니다. 할머니 코끼리 마투가 슬픈 눈으로 말했습니다. <span class="dialogue">"<span class="highlight">물웅덩이</span>가 말라가고 있어. 우리 가족은 물을 찾아 예전보다 두 배나 먼 거리를 걸어야 해."</span> 기후 변화로 인해 아프리카의 많은 지역에서 <span class="highlight">가뭄</span>이 심화되고 있습니다. <span class="highlight">강수 패턴</span>의 변화로 건기가 길어지고 우기가 불규칙해지면서 야생동물과 인간 모두 물 부족에 시달리고 있어요.</p>
+        <p>호주에서는 <span class="highlight">코알라</span>가 <span class="highlight">유칼립투스</span> 나무가 산불로 타버린 벌판에 멍하니 앉아 있었습니다. <span class="dialogue">"먹을 잎이 없어. <span class="highlight">산불</span>이 해마다 더 심해지거든. 기온이 올라가면 숲이 더 건조해지고, 불은 더 쉽게 붙고 더 크게 번져."</span> 2019-2020년 호주 산불 시즌에는 약 30억 마리의 동물이 피해를 입거나 죽은 것으로 추정됩니다. 바다에서는 <span class="highlight">산호초</span>가 하얗게 변해가고 있었습니다. 바닷물 온도가 올라가면 산호 속에 공생하는 <span class="highlight">주산텔라</span>라는 작은 조류가 떠나버리고, 산호는 색을 잃고 죽어가는 것입니다. 이것이 <span class="highlight">'산호 백화 현상'</span>이에요. 대보초는 지난 30년간 산호의 절반 이상을 잃었습니다.</p>
+        <p>눈꽃은 가는 곳마다 같은 이야기를 들었습니다. <span class="dialogue">"덥다. 마르다. 사라진다."</span> 지구 위 수많은 생명이 <span class="highlight">기후 변화</span>라는 같은 원인으로 고통받고 있었습니다. 눈꽃의 눈에서 눈물이 흘렀지만, 동시에 가슴속에서 <span class="highlight">연대의식</span>이 단단해지는 것을 느꼈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">기후 멸종</span>
+        <h2>🐸 초록이, 마지막 한 마리의 노래</h2>
+        <p>중앙아메리카 코스타리카의 <span class="highlight">운무림</span>에 도착했을 때, 눈꽃은 가장 가슴 아픈 만남을 하게 됩니다. 운무림이란 산악 지대에서 구름이 숲을 감싸 높은 습도를 유지하는 독특한 생태계입니다. 안개가 자욱한 숲속에서, 작은 황금빛 두꺼비 하나가 축축한 이끼 위에 앉아 있었습니다. 초록이였습니다. 사실 초록이는 <span class="highlight">황금두꺼비</span>라서 초록색이 아니라 눈부신 금빛이었지만, 함께 살던 초록빛 이끼 숲을 그리워하며 스스로를 '초록이'라 불렀습니다.</p>
+        <p><span class="dialogue">"안녕, 넌 누구니?"</span> 눈꽃이 조심스럽게 물었습니다. <span class="dialogue">"나는... 마지막이야."</span> 초록이의 목소리는 작고 떨렸습니다. <span class="dialogue">"마지막이라니?"</span> <span class="dialogue">"내 종족의 <span class="highlight">마지막 한 마리</span>라는 뜻이야. 과학자들은 이런 개체를 <span class="highlight">'엔드링'</span>이라고 부른대."</span> 초록이가 들려준 이야기는 동화라기보다 비극에 가까웠습니다. 황금두꺼비는 한때 이 운무림에 수천 마리가 살았습니다. 번식기가 되면 금빛 물결처럼 숲 바닥을 뒤덮었지요.</p>
+        <p>하지만 기온이 오르면서 <span class="highlight">운무 기저 고도</span>가 상승했고, 운무림의 안개가 걷히기 시작했습니다. 두꺼비는 <span class="highlight">양서류</span>로서 <span class="highlight">피부 호흡</span>을 하는 동물이라 습도가 줄면 살 수가 없었어요. 양서류의 피부는 <span class="highlight">반투과성 막</span>으로 수분을 쉽게 잃기 때문에 습한 환경이 필수적입니다. 게다가 따뜻해진 기후 속에서 <span class="highlight">항아리곰팡이병</span>을 일으키는 <span class="highlight">Batrachochytrium dendrobatidis</span>라는 병원균이 퍼지면서 두꺼비들이 하나둘 쓰러져갔습니다. 이 곰팡이는 기온이 17-25°C 사이일 때 가장 치명적인데, 온난화로 인해 고지대가 이 온도 범위에 들어오게 된 것이지요.</p>
+        <p><span class="dialogue">"처음에는 <span class="highlight">교미 울음</span> 소리가 줄었어. 우리 두꺼비는 번식기에 노래를 부르거든. 그 다음엔 아침에 만나는 얼굴이 줄었어. 그리고 어느 날... 나 혼자만 남았어."</span> 초록이의 눈에서 투명한 눈물이 떨어졌습니다. 황금두꺼비는 1989년을 마지막으로 공식적으로 목격되지 않아 <span class="highlight">멸종</span>이 선언된 종입니다. 이 이야기 속의 초록이는 우리가 잃어버린 모든 종을 상징합니다. 눈꽃은 아무 말도 할 수 없었습니다. 그저 커다란 앞발로 초록이를 조심스럽게 감싸 안아주었습니다.</p>
+        <p><span class="dialogue">"초록이, 혼자 두지 않을게. 나랑 같이 가자. 이 세상을 바꿀 방법을 찾을 거야."</span> 초록이는 한참을 울다가, 눈꽃의 등에 올라타며 작게 말했습니다. <span class="dialogue">"고마워... 나도 포기하고 싶지 않았어."</span> 가장 작고 가장 슬픈 존재가, 가장 강한 <span class="highlight">생존 의지</span>를 품은 순간이었습니다. <span class="highlight">멸종은 숫자가 줄어드는 것이 아닙니다. 노래가 사라지는 것입니다.</span> 과학자들은 현재 <span class="highlight">제6차 대멸종</span>이 진행 중이라고 경고합니다. 기후 변화는 서식지 파괴, 오염과 함께 이 위기의 주요 원인입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">적응과 진화</span>
+        <h2>🦎 살아남기 위한 놀라운 변화들</h2>
+        <p>여행을 계속하면서 눈꽃과 초록이는 슬픈 이야기만 들은 것은 아니었습니다. 놀랍게도, 어떤 동물들은 변해가는 환경에 맞서 스스로를 바꾸고 있었습니다. <span class="highlight">갈라파고스 제도</span>에서 만난 <span class="highlight">바다이구아나</span> '이구'가 그 첫 번째 사례였습니다. 갈라파고스 제도는 <span class="highlight">찰스 다윈</span>이 <span class="highlight">진화론</span>의 영감을 얻은 곳으로 유명하지요.</p>
+        <p><span class="dialogue">"예전에 우리는 이만큼 컸어."</span> 이구가 바위 위에 선 큰 이구아나를 가리켰습니다. <span class="dialogue">"하지만 바닷물이 따뜻해지면서 우리가 먹는 <span class="highlight">해조류</span>가 줄었거든. 그래서 우리 중 일부는 몸집을 줄여서 적은 먹이로도 살 수 있게 된 거야."</span> 이것이 바로 <span class="highlight">적응</span>이었습니다. 몸집이 작아지면 <span class="highlight">기초 대사량</span>이 줄어들어 적은 먹이로 버틸 수 있는 것이지요. 실제로 연구에 따르면 갈라파고스 바다이구아나는 <span class="highlight">엘니뇨</span> 현상으로 먹이가 부족할 때 몸길이가 최대 20%까지 줄어들 수 있습니다! 이것은 <span class="highlight">표현형 가소성</span>의 놀라운 예입니다.</p>
+        <p>영국에서는 더 놀라운 이야기를 들었습니다. <span class="highlight">큰박새</span>라는 새가 <span class="highlight">산란 시기</span>를 앞당긴 것입니다! 봄이 일찍 오면서 <span class="highlight">겨울자나방 애벌레</span>가 일찍 나타나기 시작했고, 그에 맞춰 새들도 알을 더 일찍 낳아 새끼들이 애벌레가 풍부한 시기에 부화하도록 <span class="highlight">번식 생물학</span>을 조정한 것이에요. 이것은 <span class="highlight">유전적 적응</span>과 <span class="highlight">행동적 유연성</span>의 결합입니다. 도시에서는 <span class="highlight">검은머리딱새</span>가 원래 겨울에 남쪽으로 <span class="highlight">철새 이동</span>을 하던 것을 멈추고, 따뜻해진 도시에서 겨울을 나기 시작했습니다. 이것은 불과 수십 세대 만에 일어난 <span class="highlight">급속 진화</span>의 예입니다.</p>
+        <p>하지만 할아버지 나무가 보내온 메시지는 경고를 담고 있었습니다. <span class="dialogue">"적응에는 한계가 있단다. 지금의 변화 속도는 자연의 적응 속도보다 훨씬 빠르거든. 자연선택에 의한 <span class="highlight">진화</span>는 보통 수천에서 수백만 년이 걸리는데, 현재의 기후 변화는 겨우 수십에서 수백 년 만에 일어나고 있어. 대부분의 생물은 이 <span class="highlight">적응 속도</span>를 따라잡을 수 없단다."</span> 특히 <span class="highlight">세대 시간</span>이 긴 대형 포유류, 나무, 산호 등은 빠른 진화가 불가능합니다.</p>
+        <p>초록이가 조용히 고개를 끄덕였습니다. 자기 동족이 바로 그 <span class="highlight">적응 실패</span>의 증거였으니까요. 적응은 희망이지만, 적응만으로는 충분하지 않았습니다. 근본적인 원인인 <span class="highlight">온실가스 배출</span>을 해결하지 않는 한, 아무리 뛰어난 적응도 결국 한계에 부딪힐 것입니다. 눈꽃은 그 근본 원인을 찾아 나서기로 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">인류세</span>
+        <h2>👧 소율, 동물의 말을 듣는 아이</h2>
+        <p>눈꽃 일행이 한국의 작은 해안 마을에 도착했을 때, 예상치 못한 만남이 기다리고 있었습니다. 해변에서 <span class="highlight">해양 폐기물</span>을 줍고 있는 열 살짜리 소녀, 소율이었습니다. 소율은 눈꽃을 보고 놀라기는커녕 달려와 말했습니다. <span class="dialogue">"북극곰이다! 여기까지 어떻게 온 거야? 너 배고프지?"</span> 더 놀라운 것은, 소율이 눈꽃의 대답을 알아들었다는 것입니다! <span class="dialogue">"너... 내 말을 알아듣는 거야?"</span> 눈꽃이 깜짝 놀라자, 소율이 수줍게 웃었습니다. <span class="dialogue">"응, 나는 어릴 때부터 동물 말을 알아들었어. 아무도 안 믿어줬지만."</span></p>
+        <p>소율은 눈꽃에게 <span class="highlight">인간 활동</span>의 이야기를 들려주었습니다. 공장에서 물건을 만들고, 자동차를 타고, 전기를 쓰고, 고기를 먹기 위해 소를 키우는 모든 과정에서 <span class="highlight">온실가스</span>가 나온다는 것. 인간이 편리한 생활을 위해 <span class="highlight">화석 연료</span>인 석유, 석탄, 천연가스를 태우면서 대기 중 CO₂ 농도가 급증하고 있다는 것. 현재 전 세계 <span class="highlight">탄소 배출량</span>은 연간 약 400억 톤에 달하며, 그중 에너지 부문이 73%, 농업이 12%, 산업 공정이 5.6%를 차지합니다.</p>
+        <p>소율은 <span class="highlight">탄소 발자국</span> 개념도 설명해주었습니다. <span class="dialogue">"개인이나 조직의 활동이 배출하는 CO₂의 총량을 탄소 발자국이라고 해. 한국인 1인당 연간 탄소 발자국은 약 12톤인데, 이건 세계 평균의 2배가 넘어."</span> 과학자들은 현재의 시대를 <span class="highlight">'인류세'</span>라고 부릅니다. 인간이 지구 시스템에 미치는 영향이 너무 커서 지질학적 시대 구분에 새로운 이름이 필요해진 것이지요.</p>
+        <p><span class="dialogue">"하지만 모든 인간이 나쁜 건 아니야!"</span> 소율이 서둘러 말했습니다. <span class="dialogue">"우리 마을에서도 할아버지는 <span class="highlight">태양광 발전</span>기를 설치하셨고, 언니는 매일 자전거를 타고 학교에 가. 엄마는 장바구니를 들고 시장에 가시고. 이런 작은 실천들이 모이면 <span class="highlight">탄소 중립</span>에 가까워질 수 있어."</span> 눈꽃은 복잡한 마음이 들었습니다. 인간을 미워해야 할까, 아니면 함께해야 할까?</p>
+        <p>초록이가 조용히 말했습니다. <span class="dialogue">"눈꽃아, 미워해서 바뀌는 건 없어. 나는 그걸 혼자 남겨진 숲에서 배웠어. 분노보다 <span class="highlight">협력</span>이 필요해."</span> 소율이 눈꽃의 커다란 발을 잡았습니다. <span class="dialogue">"내가 도울게. 동물들의 이야기를 인간들에게 전해줄게. 우리도 몰라서 그런 거야. <span class="highlight">환경 교육</span>을 통해 알면 달라질 거야."</span> 세 친구의 눈이 마주쳤습니다. 북극곰, 두꺼비, 인간 소녀. 전혀 다른 세계에서 온 셋이 <span class="highlight">기후 정의</span>라는 하나의 목표로 손을 잡은 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">탄소 순환</span>
+        <h2>🏭 보이지 않는 괴물과의 대면</h2>
+        <p>소율이 눈꽃 일행을 데리고 간 곳은 마을 뒤편의 거대한 <span class="highlight">화력발전소</span>였습니다. 굴뚝에서 끝없이 뿜어져 나오는 회색 연기를 올려다보던 눈꽃의 털이 곤두섰습니다. 그 연기 속에서, 거대한 형체가 서서히 모습을 드러냈기 때문입니다. <span class="highlight">탄소괴물</span>이었습니다. 투명에 가까운 회색 몸체에 구름 같은 외형, 눈도 입도 없는 것 같으면서도 분명히 살아 있는 기이한 존재. 이것은 <span class="highlight">이산화탄소</span>의 의인화였습니다.</p>
+        <p><span class="dialogue">"너, 너 때문에 내 고향이 녹고 있는 거야!"</span> 눈꽃이 용기를 내어 외쳤습니다. 탄소괴물은 천천히 몸을 웅크리며 의외로 슬픈 목소리로 대답했습니다. <span class="dialogue">"나를 탓하지 마. 나는 <span class="highlight" data-tooltip="탄소 순환(Carbon cycle): 탄소가 생물권과 무기환경 사이를 순환하는 과정">탄소 순환</span>의 일부로 존재할 뿐이야."</span> 탄소괴물의 이야기는 충격적이었습니다. <span class="highlight">이산화탄소</span>는 원래 지구에 꼭 필요한 존재였습니다. 식물이 <span class="highlight" data-tooltip="광합성(Photosynthesis): 식물이 빛 에너지로 포도당을 합성하는 과정">광합성</span>을 하려면 CO₂가 있어야 하고, 적당한 양의 온실가스가 있어야 지구가 얼어붙지 않는 따뜻한 온도를 유지할 수 있습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">산업혁명</span> 전까지만 해도 나는 <span class="highlight">동적 평형</span> 상태로 존재했어. 숲이 <span class="highlight">탄소 흡수원</span>으로서 나를 흡수하고, 바다가 나를 녹이고, <span class="highlight">생지화학적 순환</span> 속에서 균형이 잡혀 있었지."</span> 탄소 순환에서, CO₂는 대기 → 식물(광합성) → 동물/토양(호흡/분해) → 대기로 순환합니다. 또한 대기 ↔ 해양 사이에서도 용해와 방출이 균형을 이루었습니다. 화석 연료 속의 탄소는 수백만 년 동안 땅속에 갇혀 있던 것인데, 인간이 이것을 단기간에 대기로 방출하면서 균형이 깨진 것이지요.</p>
+        <p>하지만 인간이 <span class="highlight">화석 연료</span>를 엄청나게 태우면서 탄소괴물은 폭발적으로 불어났습니다. <span class="highlight">삼림 벌채</span>로 <span class="highlight">탄소 저장고</span>인 숲이 잘려나가 흡수 능력이 줄었고, 바다도 <span class="highlight">산성화</span>로 흡수 한계에 다다랐습니다. 바다가 CO₂를 흡수하면 <span class="highlight">탄산</span>이 형성되어 pH가 낮아지는데, 이것이 산호와 조개류의 <span class="highlight">탄산칼슘</span> 껍데기 형성을 방해합니다.</p>
+        <p><span class="dialogue">"이제 나는 너무 많아. <span class="highlight">대기 중 CO₂ 농도</span>가 420ppm을 넘었어. 나도 이렇게까지 <span class="highlight">복사 강제력</span>을 높이고 싶지 않았어. 하지만 인간들이 계속 나를 만들어내니까..."</span> 눈꽃은 뜻밖의 감정을 느꼈습니다. 분노가 아닌 이해. 탄소괴물은 악당이 아니라, <span class="highlight">시스템적 문제</span>가 만들어낸 결과물이었습니다. <span class="dialogue">"그럼 어떻게 해야 너를 줄일 수 있어?"</span> 눈꽃이 물었습니다. <span class="dialogue">"<span class="highlight">배출</span>을 줄이고, <span class="highlight">흡수</span>를 늘리면 돼. 단순하지만... <span class="highlight">경제 시스템</span>을 바꿔야 하는 거라 인간에게는 가장 어려운 선택이지."</span> 탄소괴물이 사라지듯 연기 속으로 흩어졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">기후 협약</span>
+        <h2>🌳 할아버지 나무의 800년 지혜</h2>
+        <p>탄소괴물과의 만남 이후, 눈꽃 일행은 유럽의 깊은 숲속에 있는 할아버지 나무를 찾아갔습니다. 수령 800년의 거대한 <span class="highlight">참나무</span>, 할아버지 나무는 몸통 둘레만 해도 열 명이 손을 잡고 감싸야 할 정도로 거대했습니다. 나뭇가지 사이로 스며드는 햇살이 마치 지혜의 빛처럼 반짝였습니다. <span class="dialogue">"할아버지, 지구를 구할 방법이 있나요?"</span> 눈꽃이 간절한 목소리로 물었습니다. 할아버지 나무는 천천히, 나뭇잎이 바람에 흔들리는 소리로 대답했습니다.</p>
+        <p><span class="dialogue">"내 <span class="highlight">나이테</span>를 보렴."</span> 소율이 할아버지 나무 옆에 쓰러진 가지의 단면을 들여다보았습니다. 수백 개의 동심원이 촘촘히 새겨져 있었습니다. <span class="dialogue">"이것을 <span class="highlight">연륜기후학</span>이라고 한단다. 이 넓은 나이테는 따뜻하고 비가 많았던 해, 이 좁은 나이테는 춥고 건조했던 해를 나타내지. 800년의 <span class="highlight">고기후</span> 기록이 여기 담겨 있어."</span> 나이테 분석을 통해 과학자들은 수천 년 전의 기후까지 복원할 수 있습니다. <span class="highlight">빙하 코어</span>, <span class="highlight">산호 코어</span>, <span class="highlight">해양 퇴적물</span>과 함께 고기후 연구의 핵심 자료입니다.</p>
+        <p>할아버지 나무는 계속했습니다. <span class="dialogue">"지구는 예전에도 <span class="highlight">기후 변동</span>을 겪었단다. <span class="highlight">빙하기</span>와 <span class="highlight">간빙기</span>가 수만 년 주기로 반복되었지. 하지만 그때는 <span class="highlight">밀란코비치 주기</span>에 따라 수천 년에 걸쳐 천천히 변했어. 생물들은 그 속도에 맞춰 <span class="highlight">범위 이동</span>을 하며 적응할 시간이 있었지. 지금의 문제는 속도야. <span class="highlight">변화율</span>이 너무 빠르단다."</span></p>
+        <p>그리고 할아버지 나무는 인간들이 시작한 <span class="highlight">기후 거버넌스</span>의 노력에 대해서도 들려주었습니다. <span class="highlight">파리협정</span>이라는 2015년의 국제 조약을 통해 197개국이 <span class="highlight">지구 평균 기온 상승을 산업화 이전 대비 2°C, 가능하면 1.5°C 이내로 제한</span>하겠다고 약속한 것, <span class="highlight">국가 온실가스 감축 목표</span>를 제출하기로 한 것, <span class="highlight">탄소 중립</span> 또는 <span class="highlight">넷제로</span>를 선언한 국가가 늘고 있는 것. 많은 나라가 2050년까지 넷제로를 달성하겠다고 약속했습니다.</p>
+        <p><span class="dialogue">"희망이 없는 건 아니란다. 인간은 <span class="highlight">문제의 원인</span>이지만, <span class="highlight">해결책</span>도 가지고 있어. <span class="highlight">재생 에너지</span>인 태양광, 풍력, 수력의 비용이 급격히 낮아지고 있고, <span class="highlight">전기차</span>가 보급되고, <span class="highlight">에너지 효율</span>이 개선되고 있지. 다만 <span class="highlight">2030년까지 배출량을 43% 감축</span>해야 1.5°C 목표를 달성할 수 있는데, 더 빨리, 더 많이 행동해야 해."</span> 초록이가 떨리는 목소리로 물었습니다. <span class="dialogue">"정말로... 아직 늦지 않은 건가요?"</span> 할아버지 나무의 잎사귀가 따뜻하게 흔들렸습니다. <span class="dialogue">"나무는 절대 포기하지 않는단다. 800년을 살면서 배운 단 한 가지가 있다면, <span class="highlight">봄은 반드시 다시 온다</span>는 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">기후 행동</span>
+        <h2>✊ 소율의 선택과 전 세계 동물 회의</h2>
+        <p>할아버지 나무의 지혜를 품에 안고 돌아온 눈꽃 일행은, 드디어 역사적인 '전 세계 동물 회의'를 열기로 했습니다. 하늘바람이 지구 곳곳으로 날아가 초대장을 전달했습니다. 북극의 <span class="highlight">고리무늬물범</span>, 아프리카의 코끼리, 호주의 코알라, 바다의 산호, 갈라파고스의 이구아나, 캐나다의 순록, 아마존의 <span class="highlight">재규어</span>, 남극의 <span class="highlight">황제펭귄</span>... 지구의 모든 <span class="highlight">생물군계</span>에서 대표 동물들이 모여들었습니다. 회의 장소는 할아버지 나무 아래, 그 넓은 나뭇가지가 만든 천연 회의장이었습니다.</p>
+        <p>회의는 뜨거웠습니다. <span class="dialogue">"인간들에게 <span class="highlight">기후 피해 배상</span>을 요구해야 해!"</span> 아프리카 코끼리 마투가 코를 흔들며 외쳤습니다. <span class="dialogue">"<span class="highlight">범위 이동</span>을 해야 해, 더 높은 곳으로, 더 추운 곳으로!"</span> 순록 무리의 의견이었습니다. <span class="dialogue">"포기하자... <span class="highlight">티핑 포인트</span>는 이미 넘었어."</span> 힘없는 목소리도 들렸습니다. 그때, 소율이 일어났습니다. 수백 마리 동물들의 시선이 열 살짜리 인간 소녀에게 쏠렸습니다.</p>
+        <p><span class="dialogue">"저는 인간이에요. 여러분을 이렇게 만든 <span class="highlight">인류세</span>의 존재예요."</span> 소율의 목소리가 떨렸지만, 멈추지 않았습니다. <span class="dialogue">"하지만 저도 여러분처럼 이 지구에서 태어났어요. 그리고 저는 <span class="highlight">선택</span>할 수 있어요."</span> 소율은 개인이 실천할 수 있는 <span class="highlight">기후 행동</span>을 하나하나 말했습니다.</p>
+        <p><span class="dialogue">"가까운 거리는 걷거나 <span class="highlight">대중교통</span> 이용하기, 안 쓰는 전기 끄기, <span class="highlight">일회용 플라스틱</span> 대신 다회용 쓰기, <span class="highlight">채식 위주 식단</span>으로 <span class="highlight">식품 탄소 발자국</span> 줄이기, 나무 한 그루 심기. 그리고 가장 중요한 것—정치인들에게 <span class="highlight">기후 정책</span>을 요구하고, 더 많은 사람에게 이 <span class="highlight">기후 위기</span>를 알리기."</span> <span class="dialogue">"하나하나는 작아 보여요. 하지만 개미 한 마리가 흙 한 알을 나르듯, <span class="highlight">80억 명이 작은 것 하나씩을 바꾸면 그것은 <span class="highlight">시스템 변화</span>가 돼요.</span>"</span></p>
+        <p>초록이가 소율의 어깨 위에서 작은 박수를 쳤습니다. 눈꽃이 하늘을 향해 포효했습니다. 그 울음소리는 바람을 타고 지구 전체로 퍼져나갔습니다. 동물들이 하나둘 함께 소리를 내기 시작했습니다. 세상에서 가장 큰 <span class="highlight">종간 연대</span>의 합창이 울려 퍼졌습니다. <span class="highlight">기후 변화는 인류가 만든 문제이지만, 함께 해결할 수 있는 문제이기도 합니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물19/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">두 개의 미래</span>
+        <h2>🌍 눈꽃이 본 두 개의 내일</h2>
+        <p>동물 회의가 끝난 밤, 눈꽃은 할아버지 나무 아래에서 깊은 잠에 빠졌습니다. 그리고 놀라운 꿈을 꾸었습니다. 할아버지 나무가 뿌리를 통해 보여준 <span class="highlight">'두 개의 미래 시나리오'</span>였습니다. 이것은 <span class="highlight">IPCC</span>가 제시하는 <span class="highlight">대표 농도 경로</span> 또는 <span class="highlight">공유 사회경제 경로</span>와 유사한 개념입니다.</p>
+        <p>첫 번째 미래는 <span class="highlight">SSP5-8.5 시나리오(고배출 경로)</span>였습니다. 아무것도 바꾸지 않은 미래. 2100년까지 <span class="highlight">지구 평균 기온이 4.4°C 상승</span>한 세계. 북극의 해빙은 완전히 사라지고, 눈꽃 같은 북극곰은 <span class="highlight">멸종</span>했습니다. <span class="highlight">해수면은 1m 이상 상승</span>하여 방글라데시, 네덜란드, 태평양 섬나라 등이 물에 잠겼습니다. <span class="highlight">산호초가 99% 이상 백화</span>되었고, <span class="highlight">아마존 열대우림이 사바나로 전환</span>되었습니다. 극단적 기상 현상—<span class="highlight">폭염</span>, <span class="highlight">홍수</span>, <span class="highlight">가뭄</span>, <span class="highlight">산불</span>—이 일상이 되었고, 수억 명의 <span class="highlight">기후 난민</span>이 발생했습니다.</p>
+        <p>그리고 두 번째 미래가 펼쳐졌습니다. <span class="highlight">SSP1-1.9 시나리오(저배출, 지속가능 경로)</span>. 수십억 명의 인간이 각자의 자리에서 작은 선택을 바꾸고, 각국 정부가 야심 찬 <span class="highlight">기후 정책</span>을 실행한 미래. 2100년까지 <span class="highlight">온도 상승을 1.5°C 이내로 제한</span>한 세계. 지붕마다 <span class="highlight">태양광 패널</span>이 반짝이고, 도로에는 <span class="highlight">전기 버스</span>와 <span class="highlight">수소 트럭</span>이 조용히 달리며, 공장은 <span class="highlight">탄소 포집 및 저장</span> 기술로 배출을 최소화했습니다. <span class="highlight">재조림</span>과 <span class="highlight">자연 기반 해결책</span>으로 숲이 회복되고, 바다에는 <span class="highlight">해양 보호 구역</span>이 늘어 산호초가 다시 색을 되찾기 시작했습니다. 북극에는 여전히 해빙이 있었고, 그 위에서 새끼 북극곰이 어미 곁에서 장난치며 놀고 있었습니다.</p>
+        <p>눈꽃은 꿈에서 깨어났습니다. 눈물이 볼을 타고 흘러내렸습니다. 옆에서 초록이가 작은 손으로 눈물을 닦아주었고, 소율이 따뜻하게 안아주었습니다. <span class="dialogue">"두 번째 미래가 가능한 거지?"</span> 눈꽃이 물었습니다. 소율이 단호하게 대답했습니다. <span class="dialogue">"<span class="highlight">우리가 만들면 가능해.</span> 과학자들은 아직 1.5°C 목표가 물리적으로 가능하다고 말해. 다만 <span class="highlight">이번 10년이 결정적</span>이야."</span></p>
+        <p>그날 아침, 소율은 학교에서 발표를 했습니다. 눈꽃의 이야기, 초록이의 노래, 동물들의 외침을 전 세계 아이들에게 전했습니다. 한 아이가 듣고, 열 아이가 듣고, 백 아이가, 천 아이가... 작은 파도가 <span class="highlight">집단 행동</span>의 바다를 건넜습니다. <span class="highlight">미래는 아직 정해지지 않았습니다.</span> 이 이야기를 읽고 있는 바로 여러분이, 지금 이 순간, 미래를 선택하는 사람입니다. <span class="highlight">"선택이 미래를 만든다. 오늘의 한 걸음이 내일의 지구를 결정한다."</span></p>
+        <p style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(25, 118, 210, 0.1); border-radius: 12px;">
+          <span class="highlight" style="font-size: 18px;">🌍🌡️ "기후 변화는 우리 시대의 가장 큰 도전이지만, 함께 행동하면 가장 큰 기회가 될 수 있다." — IPCC 🌡️🌍</span>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <script>
+    // 배경 이미지 전환
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-30% 0px -30% 0px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+
+    // 초기 인트로 카드 활성화
+    document.addEventListener('DOMContentLoaded', () => {
+      const introContent = document.querySelector('.intro-content');
+      if (introContent) {
+        introContent.style.opacity = '1';
+      }
+    });
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/bio19_season1_quiz.html?season=season1';
+    }
+  </script>
+
+</body>
+</html>

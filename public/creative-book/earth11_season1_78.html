@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하늘 마을 견습 기상캐스터 솔이의 열 가지 날씨 비밀 - 창작지구과학</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #0a1628;
+      color: #e0e0e0;
+      overflow-x: hidden;
+    }
+
+    /* 고정 배경 컨테이너 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.8s ease;
+    }
+
+    #map-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom,
+        rgba(10, 22, 40, 0.3) 0%,
+        rgba(10, 22, 40, 0.5) 50%,
+        rgba(10, 22, 40, 0.8) 100%);
+    }
+
+    /* 콘텐츠 영역 */
+    #content {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .intro-section h1 {
+      font-size: 2.8em;
+      font-weight: 900;
+      color: #87CEEB;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 30px rgba(135, 206, 235, 0.5);
+      line-height: 1.3;
+    }
+
+    .intro-section .subtitle {
+      font-size: 1.3em;
+      color: #a8c8dc;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+
+    .intro-section .description {
+      max-width: 600px;
+      font-size: 1.1em;
+      line-height: 1.8;
+      color: #ccc;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: bounce 2s infinite;
+    }
+
+    .scroll-indicator span {
+      display: block;
+      width: 30px;
+      height: 50px;
+      border: 2px solid rgba(135, 206, 235, 0.5);
+      border-radius: 15px;
+      position: relative;
+    }
+
+    .scroll-indicator span::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background: #87CEEB;
+      border-radius: 50%;
+      animation: scrollDown 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+      40% { transform: translateX(-50%) translateY(-10px); }
+      60% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    @keyframes scrollDown {
+      0% { opacity: 1; top: 8px; }
+      100% { opacity: 0; top: 30px; }
+    }
+
+    /* 스토리 섹션 */
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 80px 20px;
+    }
+
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      max-width: 600px;
+      background: rgba(20, 35, 60, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 40px;
+      margin: 0 5%;
+      border: 1px solid rgba(135, 206, 235, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      transform: translateX(-100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-size: 0.9em;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      background: rgba(135, 206, 235, 0.2);
+      color: #87CEEB;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      margin-left: 10px;
+      margin-bottom: 15px;
+    }
+
+    .story-card h2 {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 1.05em;
+      line-height: 2;
+      color: #d0d0d0;
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+
+    .story-card .highlight {
+      color: #87CEEB;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #87CEEB;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(135, 206, 235, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #4682B4;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #4682B4;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #FFD93D;
+      font-style: italic;
+    }
+
+    /* 배움 섹션 */
+    .lesson-section {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 80px 20px;
+      background: linear-gradient(to top, rgba(10, 22, 40, 1) 0%, rgba(10, 22, 40, 0.8) 100%);
+    }
+
+    .lesson-card {
+      max-width: 700px;
+      background: linear-gradient(135deg, rgba(135, 206, 235, 0.15) 0%, rgba(70, 130, 180, 0.15) 100%);
+      border: 2px solid rgba(135, 206, 235, 0.3);
+      border-radius: 24px;
+      padding: 50px;
+      text-align: center;
+    }
+
+    .lesson-card h3 {
+      font-size: 1.8em;
+      color: #87CEEB;
+      margin-bottom: 25px;
+    }
+
+    .lesson-card p {
+      font-size: 1.15em;
+      line-height: 1.9;
+      color: #e0e0e0;
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn { display: none;
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      z-index: 100;
+      background: rgba(135, 206, 235, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(135, 206, 235, 0.3);
+      color: #87CEEB;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.95em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn:hover {
+      background: rgba(135, 206, 235, 0.3);
+      transform: translateX(-5px);
+    }
+
+    .quiz-btn { display: none;
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      z-index: 100;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      border: none;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.95em;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+    }
+
+    .quiz-btn:hover {
+      transform: translateX(5px);
+      box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .intro-section h1 {
+        font-size: 1.8em;
+      }
+
+      .intro-section .subtitle {
+        font-size: 1em;
+      }
+
+      .story-card {
+        margin: 0 15px;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 1.4em;
+      }
+
+      .story-card p {
+        font-size: 0.95em;
+      }
+
+      .back-btn { display: none;
+        top: 15px;
+        left: 15px;
+        padding: 10px 18px;
+        font-size: 0.85em;
+      }
+
+      .story-section {
+        justify-content: center !important;
+      }
+
+      .story-section:nth-child(even) .story-card,
+      .story-card {
+        transform: translateY(50px);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="back-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    돌아가기
+  </button>
+
+  <button class="quiz-btn" onclick="goToQuiz()">🏆 관문평가</button>
+
+  <!-- 고정 배경 -->
+  <div id="map-container">
+    <img id="map-canvas" src="/images/창작도서/창작지구과학11/00.jpg" alt="배경">
+    <div id="map-overlay"></div>
+  </div>
+
+  <!-- 콘텐츠 -->
+  <div id="content">
+
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <h1>하늘 마을 견습 기상캐스터<br>솔이의 열 가지 날씨 비밀</h1>
+      <p class="subtitle">— 오늘은 맑고 내일은 비, 날씨는 왜 변할까 —</p>
+      <p class="description">
+        열두 살 견습 기상캐스터 솔이는 날씨가 왜 변덕스러운지 궁금했습니다.<br>
+        청명 할아버지, 돌풍이, 뭉게 아주머니와 함께 하늘 마을에서<br>
+        날씨의 열 가지 비밀을 배우며 성장하는 이야기입니다.
+      </p>
+      <div class="scroll-indicator">
+        <span></span>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">기온 변화</span>
+        <h2>하늘 마을의 온도계 소동</h2>
+        <p>구름 위 아주 높은 곳에 <span class="highlight">'하늘 마을'</span>이라는 특별한 세계가 있었습니다. 이 마을에는 날씨를 만들어내는 요정들이 살고 있었어요. 해님 요정, 바람 요정, 구름 요정, 비 요정, 눈 요정까지. 이 요정들이 힘을 합쳐야 땅 위의 사람들에게 적절한 날씨가 찾아가는 것이었지요. 그런데 하늘 마을에는 걱정거리가 하나 있었습니다. 마을 광장 한가운데 서 있는 커다란 '하늘 온도계'가 요즘 들어 자꾸만 요동치고 있었거든요. 이 온도계는 <span class="highlight">대기</span>의 상태를 실시간으로 보여주는 장치였어요.</p>
+        <p><span class="dialogue">"또 올라간다! 또 내려간다! 도대체 왜 이렇게 변덕이 심한 거야!"</span> 열두 살짜리 견습 기상캐스터 <span class="highlight">'솔이'</span>가 온도계를 올려다보며 투덜거렸습니다. 솔이는 하늘 마을에서 가장 어린 기상 견습생이었어요. 솔이의 꿈은 하늘 마을 최고의 <span class="highlight">기상캐스터</span>가 되어 땅 위 사람들에게 정확한 날씨를 알려주는 것이었습니다. 기상캐스터는 단순히 날씨를 전달하는 사람이 아니라, <span class="highlight">기상학</span>이라는 과학을 기반으로 대기 현상을 분석하고 예측하는 전문가였지요.</p>
+        <p>하지만 솔이에게는 큰 고민이 있었어요. 날씨가 왜 변하는지 도통 이해할 수가 없었던 것이지요. <span class="dialogue">"어제는 맑았는데 오늘은 비가 오고, 아침에는 추웠는데 낮에는 덥고. 날씨는 왜 이렇게 변덕스러운 거예요?"</span> 솔이가 하늘 마을의 원로 기상학자 <span class="highlight">'청명 할아버지'</span>에게 물었습니다. 청명 할아버지는 수천 년 동안 날씨를 관찰해온 전설적인 존재였어요. 할아버지는 <span class="highlight">열역학</span>과 <span class="highlight">유체역학</span>의 원리로 대기 현상을 꿰뚫어 보는 분이셨지요.</p>
+        <p>할아버지가 하얀 수염을 쓰다듬으며 말했습니다. <span class="dialogue">"솔아, 날씨가 변덕스러워 보이는 건 네가 아직 그 이유를 모르기 때문이란다. 날씨의 모든 변화에는 반드시 이유가 있어. 그 이유를 알면 변덕이 아니라 약속이라는 걸 알게 될 거야."</span> 솔이의 눈이 반짝였습니다. <span class="dialogue">"약속이요?"</span> <span class="dialogue">"그래. 내가 열 가지 비밀을 알려줄 테니, 이것을 모두 이해하면 너는 최고의 기상캐스터가 될 수 있을 거야. 첫 번째 비밀은 바로 <span class="highlight">기온</span>이란다. 모든 날씨 변화의 시작은 온도의 차이에서 비롯되거든. 대기 중의 열에너지가 어떻게 분포하느냐에 따라 날씨가 결정되는 거야."</span> 그렇게 솔이의 날씨 탐험이 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">공기의 이동</span>
+        <h2>보이지 않는 바람의 비밀 고속도로</h2>
+        <p>청명 할아버지가 솔이를 데리고 간 곳은 하늘 마을의 전망대였습니다. 전망대에서 내려다보니 지구의 표면이 한눈에 들어왔어요. <span class="highlight">적도</span> 근처는 붉은 빛으로 이글이글 타오르고 있었고, <span class="highlight">극지방</span>은 하얀 얼음으로 뒤덮여 차갑게 빛나고 있었습니다. 이것은 태양의 <span class="highlight">복사 에너지</span>가 지표면에 도달하는 각도가 다르기 때문이었어요. 적도에서는 태양이 거의 수직으로 비추어 단위 면적당 많은 에너지를 받지만, 극지방에서는 비스듬히 비추어 같은 에너지가 넓은 면적에 퍼지게 되지요.</p>
+        <p><span class="dialogue">"솔아, 저 적도와 극지방의 온도 차이가 보이니?"</span> 할아버지가 물었어요. <span class="dialogue">"네! 적도는 뜨겁고 극지방은 차가워요."</span> <span class="dialogue">"바로 그 온도 차이가 바람을 만든단다. 이것을 <span class="highlight">대류</span>라고 해."</span> 솔이가 고개를 갸웃거리자, 할아버지가 설명을 이어갔습니다. <span class="dialogue">"따뜻한 공기는 <span class="highlight">밀도</span>가 낮아 가볍기 때문에 위로 올라가고, 차가운 공기는 밀도가 높아 무겁기 때문에 아래로 내려오지. 적도에서 데워진 공기가 올라가면, 그 빈자리를 채우려고 주변의 차가운 공기가 밀려들어 와. 이 공기의 이동이 바로 <span class="highlight">바람</span>이야."</span></p>
+        <p>그때, 어디선가 휘이이잉 하는 소리와 함께 장난꾸러기 바람 요정 <span class="highlight">'돌풍이'</span>가 날아왔습니다. <span class="dialogue">"야호! 누가 날 불렀어?"</span> 돌풍이는 머리카락이 사방으로 뻗쳐 있고, 한 순간도 가만히 있지 못하는 성격이었어요. <span class="dialogue">"돌풍아, 솔이에게 네가 어떻게 움직이는지 보여줘 보렴."</span> 할아버지가 말했어요. 돌풍이가 씩 웃더니 지구 위를 빠르게 날아다니기 시작했습니다. 적도에서 올라간 뜨거운 공기를 타고 위로 솟았다가, 찬 공기를 만나 다시 내려오고, 지구의 자전 때문에 오른쪽으로 휘어지며 소용돌이를 그렸지요.</p>
+        <p><span class="dialogue">"지구가 돌고 있으니까 바람이 직선으로 가지 못하고 휘어지는 거야. 이것을 <span class="highlight">전향력</span>이라고 한단다. 북반구에서는 바람이 진행 방향의 오른쪽으로, 남반구에서는 왼쪽으로 휘어지지."</span> 할아버지가 설명했어요. 전향력은 실제 힘이 아니라 회전하는 좌표계에서 나타나는 <span class="highlight">겉보기 힘</span>이었습니다. 이 힘 때문에 지구에는 <span class="highlight">무역풍</span>, <span class="highlight">편서풍</span>, <span class="highlight">극동풍</span>이라는 세 가지 주요 풍계가 형성되어 있었어요. 솔이는 감탄했습니다. <span class="dialogue">"바람에도 고속도로가 있었네요! 보이지 않을 뿐이지, 모든 바람은 정해진 길을 따라 달리고 있는 거잖아요!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">기압 차이</span>
+        <h2>공기가 누르는 무게의 숨바꼭질</h2>
+        <p><span class="dialogue">"자, 이제 두 번째 비밀을 알려줄 차례구나."</span> 청명 할아버지가 솔이에게 특별한 도구를 건넸습니다. 동그란 시계처럼 생겼는데, 바늘이 '높음'과 '낮음' 사이를 오가고 있었어요. <span class="dialogue">"이것은 <span class="highlight">기압계</span>란다. 공기가 땅을 누르는 힘, 즉 <span class="highlight">기압</span>을 재는 도구야. 1643년 이탈리아의 과학자 토리첼리가 수은 기압계를 발명했는데, 해수면에서의 평균 기압은 약 1기압, 즉 1013.25 <span class="highlight">헥토파스칼</span>이란다."</span></p>
+        <p>솔이가 기압계를 들여다보며 물었어요. <span class="dialogue">"공기도 무게가 있어요?"</span> <span class="dialogue">"물론이지! 네 머리 위에 하늘 꼭대기까지 쌓인 공기의 무게가 약 일 톤이나 된단다. 공기 분자들이 사방에서 너를 누르고 있는 거야."</span> 솔이가 깜짝 놀라 머리를 감싸 쥐었습니다. <span class="dialogue">"일 톤이요? 왜 안 눌리는 거예요?"</span> 할아버지가 웃었어요. <span class="dialogue">"사방에서 똑같이 누르고 있으니까 느끼지 못하는 거야. 마치 깊은 물속에 있는 물고기가 <span class="highlight">수압</span>을 느끼지 못하는 것과 같지. 그리고 네 몸 안에서도 같은 압력으로 밀어내고 있어서 균형이 맞는 거란다."</span></p>
+        <p>할아버지는 기압의 차이가 날씨를 결정하는 핵심 열쇠라고 설명했습니다. 땅이 햇볕에 뜨겁게 달구어지면 그 위의 공기도 따뜻해져서 위로 올라갔어요. 공기가 올라가면 그 자리의 기압이 낮아지는데, 이것을 <span class="highlight">저기압</span>이라 했지요. 저기압 지역에서는 공기가 상승하면서 <span class="highlight">단열 팽창</span>을 하고, 이 과정에서 기온이 낮아져 구름이 생기고 날씨가 흐려졌어요. 반대로 차가운 공기가 내려앉으면 기압이 높아져 <span class="highlight">고기압</span>이 되었습니다. 고기압에서는 공기가 하강하면서 <span class="highlight">단열 압축</span>되어 기온이 올라가고 구름이 사라지며 맑은 날씨가 되었지요.</p>
+        <p><span class="dialogue">"기압이 높은 곳에서 낮은 곳으로 공기가 이동하는 거야. 마치 물이 높은 곳에서 낮은 곳으로 흐르는 것처럼. 이 기압 차이를 <span class="highlight">기압 경도</span>라고 하고, 이것이 바람을 일으키는 직접적인 힘이지."</span> 돌풍이가 신나서 끼어들었어요. <span class="dialogue">"맞아! 내가 부는 것도 기압 차이 때문이야. 고기압 형이 '가!' 하고 밀면, 나는 저기압 동생한테 달려가는 거지!"</span> 솔이가 무릎을 탁 쳤습니다. <span class="dialogue">"아! 그래서 일기예보에서 고기압이면 맑고 저기압이면 흐리다고 하는 거군요!"</span> 기압이라는 보이지 않는 힘이 바람을 일으키고 날씨를 바꾸는 거대한 엔진이었던 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">구름 형성</span>
+        <h2>하늘 위 솜사탕 공장의 비밀 레시피</h2>
+        <p>솔이가 다음으로 찾아간 곳은 하늘 마을에서 가장 분주한 장소, '구름 공장'이었습니다. 구름 공장을 운영하는 것은 통통하고 포근한 성격의 <span class="highlight">'뭉게 아주머니'</span>였어요. 뭉게 아주머니는 매일 수백 개의 구름을 만들어 하늘에 띄워 보내고 있었습니다. <span class="dialogue">"어서 와, 솔이! 오늘 구름이 어떻게 만들어지는지 배우러 왔구나?"</span> 뭉게 아주머니가 환하게 웃으며 솔이를 맞았어요. <span class="dialogue">"네! 구름은 솜사탕처럼 생겼는데, 진짜 솜사탕으로 만드는 거예요?"</span></p>
+        <p>아주머니가 깔깔 웃었어요. <span class="dialogue">"허허, 아니란다. 구름의 재료는 아주 작은 물방울이야. 그리고 그 물방울이 만들어지는 과정이 정말 신기하단다."</span> 아주머니가 구름 제조 과정을 보여주었어요. 먼저, 땅에서 <span class="highlight">증발</span>한 <span class="highlight">수증기</span>가 따뜻한 공기를 타고 하늘 위로 올라갔습니다. 위로 올라갈수록 기온이 낮아졌는데, 보통 고도가 1km 상승할 때마다 약 6.5°C씩 떨어졌어요. 이것을 <span class="highlight">기온감률</span>이라고 했지요. 수증기는 점점 차가워졌고, 그러다 어느 높이에서 공기가 더 이상 수증기를 품고 있지 못할 만큼 차가워지는 순간이 왔습니다.</p>
+        <p><span class="dialogue">"이 순간을 <span class="highlight">이슬점</span>이라고 해. 이슬점에 도달하면 공기가 <span class="highlight">포화</span> 상태가 되어 수증기가 작은 물방울로 변하는데, 이것을 <span class="highlight">응결</span>이라고 하지. 이때 <span class="highlight">숨은열</span>이 방출되어 주변 공기를 데우기도 한단다."</span> 하지만 수증기가 물방울로 변하려면 한 가지가 더 필요했어요. 바로 <span class="highlight">응결핵</span>이었습니다. 먼지, 꽃가루, 바다 소금 입자, 화산재, 심지어 박테리아까지 아주 작은 알갱이 주위에 수증기가 달라붙어야 물방울이 만들어지는 것이었지요.</p>
+        <p><span class="dialogue">"먼지가 없으면 구름도 없다니!"</span> 솔이가 놀랐어요. <span class="dialogue">"그렇단다. 새하얀 구름 속에 먼지가 숨어 있다니 의외이지? 하지만 그 먼지가 있어야 수증기가 물방울이 될 수 있어."</span> 구름의 모양도 다양했습니다. 높이 떠 있는 <span class="highlight">권운</span>은 새털처럼 가늘고, <span class="highlight">층운</span>은 하늘을 회색 담요처럼 덮었으며, <span class="highlight">적운</span>은 뭉게뭉게 솟아올랐어요. 특히 수직으로 거대하게 발달한 <span class="highlight">적란운</span>은 소나기와 천둥번개를 동반하는 무시무시한 구름이었지요. 구름을 분류한 사람은 1803년 영국의 <span class="highlight">루크 하워드</span>였는데, 그는 구름의 모양과 높이에 따라 10가지 기본 형태로 분류했습니다. 솔이는 하늘을 올려다보며 중얼거렸습니다. <span class="dialogue">"구름아, 이제 네가 뭘로 만들어졌는지 알겠어!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">강수 발생</span>
+        <h2>구름이 더 이상 참지 못하는 순간</h2>
+        <p>구름 공장에서 구름이 만들어지는 비밀을 배운 솔이에게, 뭉게 아주머니가 다음 단계를 보여주겠다고 했습니다. <span class="dialogue">"구름이 만들어졌다고 바로 비가 오는 건 아니란다. 비가 되려면 특별한 조건이 필요해."</span> 아주머니가 솔이를 거대한 구름 속으로 데려갔어요. 구름 안은 안개처럼 뿌연 세계였습니다. 수억 개의 작은 물방울이 공중에 떠다니고 있었지요. <span class="dialogue">"이 물방울 하나의 크기가 얼마나 될까?"</span> 아주머니가 물었어요. <span class="dialogue">"음… 모래알 정도요?"</span></p>
+        <p><span class="dialogue">"그것보다 훨씬 작단다. 구름 속 물방울은 지름이 약 10~20<span class="highlight">마이크로미터</span>, 머리카락 굵기의 백분의 일 정도야. 이렇게 작으면 공기의 저항 때문에 떨어지지 않고 공중에 떠 있을 수 있지. 이것이 <span class="highlight">구름입자</span>야."</span> 그런데 가끔 이 작은 물방울들이 서로 합쳐져 점점 커지는 일이 벌어졌습니다. 이 과정을 <span class="highlight">병합 성장</span>이라고 했어요. 큰 물방울이 작은 물방울을 흡수하면서 빗방울 크기까지 자라면, 마침내 공기가 물방울을 떠받칠 수 없게 되어 아래로 떨어지는 것이었어요. 이것이 바로 <span class="highlight">비</span>였습니다.</p>
+        <p><span class="dialogue">"구름 속 물방울이 빗방울이 되려면 약 백만 개가 합쳐져야 해! 빗방울의 지름은 약 2mm로, 구름입자보다 백 배나 크고 부피는 백만 배나 되거든."</span> 아주머니가 말했어요. 솔이가 입을 벌렸습니다. <span class="dialogue">"백만 개나요?"</span> 더 신기한 것도 있었어요. 높은 구름 속에서는 물방울이 얼어서 작은 <span class="highlight">빙정</span>이 되었는데, 이 결정이 주변의 수증기를 끌어모으며 무거워져 떨어지는 방식으로도 비가 만들어졌습니다. 이것을 <span class="highlight">빙정설</span>이라고 했어요. 빙정 표면의 <span class="highlight">포화수증기압</span>이 물방울보다 낮아서, 물방울에서 증발한 수증기가 빙정으로 이동해 빙정이 빠르게 성장하는 원리였지요.</p>
+        <p>얼음 결정이 떨어지다가 따뜻한 공기층을 지나면 녹아서 비가 되고, 녹지 않으면 <span class="highlight">눈</span>이 되었지요. 도중에 녹았다가 다시 얼면 <span class="highlight">진눈깨비</span>가 되고, 적란운 속에서 강한 상승기류에 의해 여러 번 오르내리며 얼음층이 겹겹이 쌓이면 <span class="highlight">우박</span>이 되었어요. 우박의 단면을 자르면 양파처럼 여러 겹의 얼음층이 보인답니다. <span class="dialogue">"비, 눈, 우박이 모두 같은 원리에서 시작되는 거구나!"</span> 솔이가 감탄했습니다. 뭉게 아주머니가 웃으며 말했어요. <span class="dialogue">"그렇단다. 하늘에서 내리는 모든 것을 <span class="highlight">강수</span>라고 통틀어 부르지. 구름이 더 이상 물방울을 품고 있지 못할 때, 비로소 땅에 선물을 내려보내는 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전선의 이동</span>
+        <h2>따뜻한 군대와 차가운 군대의 대결</h2>
+        <p>청명 할아버지가 솔이를 데리고 간 다음 장소는 하늘 마을의 '전략 지도실'이었습니다. 거대한 지도 위에 빨간 화살표와 파란 화살표가 마치 전쟁 작전처럼 그려져 있었어요. <span class="dialogue">"이건 뭐예요? 전쟁 지도 같아요!"</span> 솔이가 물었습니다. 할아버지가 진지한 표정으로 대답했어요. <span class="dialogue">"맞단다. 이것은 실제로 전쟁이야. 따뜻한 공기 덩어리와 차가운 공기 덩어리가 벌이는 대기의 전쟁이지. 이 두 공기 덩어리가 만나는 경계선을 <span class="highlight">전선</span>이라고 한단다."</span></p>
+        <p>할아버지가 지도 위의 빨간 화살표를 가리켰어요. <span class="dialogue">"이것은 따뜻한 공기 덩어리, 즉 <span class="highlight">온난 기단</span>이야. 보통 적도 근처나 열대 해양에서 형성되어 남쪽에서 올라오지. 그리고 이 파란 화살표는 차가운 공기 덩어리인 <span class="highlight">한랭 기단</span>으로 시베리아나 북극에서 형성되어 북쪽에서 내려온단다. <span class="highlight">기단</span>이란 넓은 지역에 걸쳐 온도와 습도가 비슷한 거대한 공기 덩어리를 말해."</span></p>
+        <p>두 기단이 만나면 가만히 섞이는 것이 아니라, 서로 밀어내며 충돌했습니다. 무거운 찬 공기가 따뜻한 공기 아래로 파고들면, 따뜻한 공기가 급하게 밀려 올라가면서 거대한 <span class="highlight">적란운</span>과 함께 강한 비가 쏟아졌어요. 이것이 <span class="highlight">한랭 전선</span>이었습니다. 한랭 전선은 기울기가 급해서 빠르게 지나가고, 좁은 지역에 집중적인 소나기와 돌풍, 때로는 뇌우를 동반했어요. 반대로 따뜻한 공기가 찬 공기 위로 서서히 올라타면, 넓은 지역에 걸쳐 <span class="highlight">층운</span>이 형성되고 가랑비가 오래도록 내렸지요. 이것은 <span class="highlight">온난 전선</span>이었어요. 온난 전선은 기울기가 완만해서 천천히 지나갔습니다.</p>
+        <p><span class="dialogue">"한랭 전선이 지나가면 소나기가 우르르 쏟아지다가 갑자기 맑아지고 기온이 뚝 떨어지며, 온난 전선이 지나가면 보슬보슬 비가 오래 온 뒤 기온이 올라가는 거군요!"</span> 솔이가 정리했습니다. 할아버지가 덧붙였어요. <span class="dialogue">"한랭 전선이 온난 전선을 따라잡아 합쳐지면 <span class="highlight">폐색 전선</span>이 되고, 두 기단이 힘의 균형을 이루어 움직이지 않으면 <span class="highlight">정체 전선</span>이 되지. 장마철에 비가 오래 내리는 것은 이 정체 전선 때문이란다."</span> 돌풍이가 신나서 끼어들었어요. <span class="dialogue">"나는 전선이 지나갈 때가 제일 신나! 두 기단이 충돌하면 바람이 엄청 세져서 마음껏 달릴 수 있거든!"</span> 솔이는 일기예보의 비밀이 하나씩 풀리는 기분이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">계절 변화</span>
+        <h2>지구가 기울어져 만들어진 사계절의 선물</h2>
+        <p>솔이가 가장 궁금했던 것 중 하나는 계절이 왜 바뀌는지였습니다. <span class="dialogue">"할아버지, 여름에는 왜 덥고 겨울에는 왜 추운 거예요? 태양이 여름에 더 가까워지는 거예요?"</span> 청명 할아버지가 고개를 가로저었습니다. <span class="dialogue">"아니란다. 많은 사람이 그렇게 생각하지만, 실은 지구와 태양 사이의 거리는 계절과 큰 관계가 없어. 오히려 지구는 1월에 태양에 가장 가깝고(<span class="highlight">근일점, Perihelion</span>), 7월에 가장 멀단다(<span class="highlight">원일점, Aphelion</span>). 비밀은 지구의 기울기에 있어."</span></p>
+        <p>할아버지가 하늘 마을의 천문대로 솔이를 데려갔어요. 거기에는 태양 주위를 도는 지구의 모형이 있었습니다. 지구는 <span class="highlight">자전축</span>이 <span class="highlight">공전 궤도면</span>에 대해 약 23.5도 기울어진 채로 태양 주위를 돌고 있었어요. 이것을 <span class="highlight">황도 경사</span>라고 했지요. <span class="dialogue">"이 기울기 때문에 여름에는 북반구가 태양 쪽으로 기울어져 햇빛을 더 많이 받고, 겨울에는 반대쪽으로 기울어져 햇빛을 적게 받는 거야. 이것이 <span class="highlight">계절</span>의 원인이란다."</span></p>
+        <p>솔이가 모형을 빙글빙글 돌려보았어요. 정말이었습니다. 지구가 공전 궤도의 한쪽에 있을 때 북반구는 태양을 향해 고개를 숙이고 있었고(<span class="highlight">하지, Summer Solstice</span>), 반대편에 있을 때는 태양에서 고개를 돌리고 있었지요(<span class="highlight">동지, Winter Solstice</span>). 그 사이에는 지구 전체가 태양을 똑같이 받는 <span class="highlight">춘분</span>과 <span class="highlight">추분</span>이 있었어요. <span class="dialogue">"여름에 낮이 긴 것도 이 때문이야. 태양을 향해 기울어져 있으니 해가 높이 뜨고 오래 머물지. 태양의 <span class="highlight">남중 고도</span>가 높을수록 같은 면적에 더 많은 열에너지가 집중되거든. 겨울에는 반대로 해가 낮게 뜨고 빨리 지는 거고."</span></p>
+        <p>돌풍이가 투덜거렸어요. <span class="dialogue">"나는 봄바람이 제일 좋은데! 겨울에서 봄으로 바뀔 때 따뜻한 공기와 차가운 공기가 자주 싸우니까 바람이 많이 불어서 신나거든!"</span> 뭉게 아주머니도 한마디 했어요. <span class="dialogue">"나는 여름이 좋아! 바다에서 증발하는 수증기가 많아지니까 구름을 듬뿍 만들 수 있으니까."</span> 솔이는 깨달았습니다. 계절의 변화는 지구의 기울기라는 단 하나의 원인에서 시작되었지만, 그것이 <span class="highlight">일조 시간</span>, 태양 에너지의 강도, 기온, 바람, 구름, 비 등 모든 날씨 요소에 영향을 미치며 거대한 변화의 물결을 만들어내고 있었던 것이에요. <span class="highlight">사계절</span>은 지구가 살짝 비스듬히 서 있어서 받은 가장 아름다운 선물이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">일기 예보</span>
+        <h2>하늘의 비밀을 해독하는 탐정들</h2>
+        <p><span class="dialogue">"자, 이제 이 모든 지식을 어떻게 활용하는지 보여줄 차례구나."</span> 청명 할아버지가 솔이를 하늘 마을의 '예보 센터'로 데려갔습니다. 예보 센터에는 수십 개의 화면이 벽면을 가득 채우고 있었어요. <span class="highlight">위성 영상</span>, 기온 분포도, 기압 배치도, 바람 지도, 구름 이동 경로 등이 실시간으로 업데이트되고 있었습니다. 솔이의 눈이 휘둥그레졌어요. <span class="dialogue">"와! 이렇게 많은 정보가 필요한 거예요?"</span></p>
+        <p><span class="dialogue">"그렇단다. <span class="highlight">일기 예보</span>는 단순히 하늘을 올려다보고 짐작하는 것이 아니야. 전 세계 수천 개의 관측소에서 보내오는 데이터를 수집하고 분석하는 과학이지."</span> 할아버지가 하나씩 설명해 주었어요. 지상 <span class="highlight">기상 관측소</span>에서는 기온, 기압, <span class="highlight">상대 습도</span>, <span class="highlight">풍속</span>, <span class="highlight">풍향</span>을 측정했고, <span class="highlight">기상 레이더</span>는 비구름의 위치와 이동 속도, 강수 강도를 추적했습니다. 레이더는 전파를 발사하여 구름 속 물방울이나 빙정에 반사되어 돌아오는 신호를 분석하는 원리였어요.</p>
+        <p><span class="highlight">기상 위성</span>은 우주에서 지구 전체의 구름 분포를 촬영했는데, <span class="highlight">정지 궤도 위성</span>은 적도 상공 36,000km에서 지구와 같은 속도로 돌며 한 지역을 계속 관측하고, <span class="highlight">극궤도 위성</span>은 극지방을 지나며 전 지구를 스캔했어요. <span class="highlight">라디오존데</span>라는 풍선에 달린 장비는 높은 하늘의 기온, 습도, 기압, 풍속을 측정하며 올라가 30km 상공까지의 <span class="highlight">고층 기상 관측</span> 데이터를 보내주었지요.</p>
+        <p><span class="dialogue">"이 모든 데이터가 <span class="highlight">슈퍼컴퓨터</span>로 모아진단다. 컴퓨터가 대기의 물리 법칙에 따라 미래의 날씨를 계산하는 것을 <span class="highlight">수치 예보</span>라고 해. 대기를 수백만 개의 격자로 나누고, 각 격자에서 <span class="highlight">나비에-스토크스 방정식</span> 같은 유체역학 방정식을 풀어서 공기의 움직임을 예측하는 거지."</span> 솔이가 물었어요. <span class="dialogue">"그러면 컴퓨터가 알아서 다 해주는 거예요?"</span> <span class="dialogue">"데이터 분석은 컴퓨터가 하지만, 그 결과를 해석하고 판단하는 것은 <span class="highlight">예보관</span>이야. 같은 데이터를 보더라도 경험 많은 기상학자는 컴퓨터가 놓치는 미세한 패턴을 찾아낼 수 있거든. 일기 예보관은 마치 탐정과 같단다. 수많은 단서를 모아 퍼즐을 맞추듯 내일의 날씨를 추리하는 거지."</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">예측의 과학</span>
+        <h2>틀릴 수도 있지만 도전하는 이유</h2>
+        <p>어느 날, 하늘 마을에 큰 소동이 벌어졌습니다. 솔이가 처음으로 맡은 일기 예보에서 큰 실수를 한 거예요. 솔이는 데이터를 분석해 "내일 맑음"이라고 예보했는데, 실제로는 갑작스러운 폭우가 쏟아진 것이었습니다. 땅 위 사람들이 우산도 없이 비를 맞으며 "일기예보를 못 믿겠다!"고 불평했어요. 솔이는 눈물이 핑 돌았습니다. <span class="dialogue">"저는 분명 데이터를 잘 분석했는데… 왜 틀린 거예요?"</span></p>
+        <p>청명 할아버지가 솔이의 어깨를 감싸며 말했어요. <span class="dialogue">"솔아, 일기 예보가 틀리는 것은 과학자의 잘못이 아니란다. 대기는 이 세상에서 가장 복잡한 <span class="highlight">비선형 역학 시스템</span>이야. 1963년 기상학자 <span class="highlight">에드워드 로렌츠</span>가 발견한 것처럼, 브라질에서 나비 한 마리가 날갯짓을 하면, 그 작은 공기의 변화가 연쇄적으로 커져 텍사스에 토네이도를 일으킬 수도 있다는 말이 있단다. 이것을 <span class="highlight">나비 효과</span>라고 해. 대기의 <span class="highlight">초기 조건</span>에 아주 작은 차이만 있어도 결과가 완전히 달라질 수 있지."</span></p>
+        <p>솔이가 코를 훌쩍이며 물었어요. <span class="dialogue">"그러면 날씨를 정확하게 예측하는 건 불가능한 거예요?"</span> <span class="dialogue">"완벽하게 정확한 예측은 불가능하단다. 이것을 <span class="highlight">결정론적 예측 가능성의 한계</span>라고 해. 현재 기술로는 약 2주가 이론적인 한계로 알려져 있지. 하지만 그렇다고 예측을 포기하면 안 돼."</span> 할아버지가 진지하게 말했어요. <span class="dialogue">"현재 기술로 삼 일 이내의 일기 예보는 약 구십 퍼센트의 정확도를 가지고 있어. 오십 년 전에 비하면 놀라운 발전이지. 과학자들은 <span class="highlight">앙상블 예보</span>라는 방법을 사용해 여러 가지 시나리오를 동시에 계산하고 확률적으로 예측하고 있단다."</span></p>
+        <p>돌풍이가 다가와 솔이를 위로했어요. <span class="dialogue">"솔아, 나도 가끔 예상 못 한 방향으로 불어버릴 때가 있어. 자연은 완벽하게 예측할 수 없어. 하지만 예측을 시도하기 때문에 수많은 사람이 <span class="highlight">태풍</span>과 홍수에서 미리 대피할 수 있는 거야. <span class="highlight">조기 경보 시스템</span> 덕분에 얼마나 많은 생명이 구해졌는지 몰라."</span> 솔이는 눈물을 닦았습니다. 한 번 틀렸다고 포기하면 안 된다는 것을 깨달았어요. 과학은 완벽함이 아니라 더 나은 것을 향한 끊임없는 도전이었습니다. 틀릴 수도 있지만 도전하는 것, 그것이 바로 <span class="highlight">과학의 용기</span>였지요. <span class="highlight">불확실성</span> 속에서도 최선의 예측을 제공하는 것이 기상학의 사명이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">자연의 변덕</span>
+        <h2>변화에는 이유가 있다, 모든 날씨를 사랑하는 법</h2>
+        <p>열 가지 비밀을 모두 배운 날, 솔이는 하늘 마을의 전망대에 다시 올랐습니다. 이번에는 혼자였어요. 해가 지고 있었고, 서쪽 하늘이 주황빛과 분홍빛으로 물들어 있었습니다. 이것은 태양빛이 대기를 통과하면서 <span class="highlight">레일리 산란</span>에 의해 파란빛은 흩어지고 붉은빛만 남아서 나타나는 현상이었어요. 낮 동안 흩어져 있던 구름들이 석양빛을 받아 금빛으로 빛나고 있었지요. 그런데 동쪽 하늘에서는 먹구름이 밀려오고 있었고, 구름 사이로 번개가 번쩍였습니다. 서쪽은 찬란한 노을, 동쪽은 거센 폭풍. 두 개의 하늘이 동시에 펼쳐져 있었어요.</p>
+        <p>솔이는 더 이상 두렵지 않았습니다. 동쪽의 먹구름이 <span class="highlight">한랭 전선</span>이 지나가고 있다는 뜻이고, 전선이 지나간 후에는 맑고 시원한 날씨가 올 것이라는 걸 알고 있었으니까요. 번개는 구름 속에서 <span class="highlight">전하 분리</span>가 일어나 양전하와 음전하 사이에서 방전되는 현상이었고, 뒤따르는 천둥은 번개의 열로 공기가 급격히 팽창하면서 나는 <span class="highlight">충격파</span>의 소리였어요. 그때 청명 할아버지, 뭉게 아주머니, 돌풍이가 다가왔습니다.</p>
+        <p><span class="dialogue">"솔아, 이제 날씨가 왜 변하는지 알겠니?"</span> 할아버지가 물었어요. 솔이가 환하게 웃었습니다. <span class="dialogue">"네! 기온 차이가 바람을 만들고, 기압 차이가 공기를 움직이게 하고, 수증기가 올라가 구름이 되고, 구름 속 물방울이 커져 비가 되고, 따뜻한 공기와 차가운 공기가 만나 전선을 이루고, 지구의 기울기가 계절을 만드는 거잖아요. 모든 변화에는 이유가 있었어요! <span class="highlight">지구 시스템</span>은 끊임없이 에너지를 순환시키며 균형을 찾아가고 있는 거예요."</span> 뭉게 아주머니가 눈시울을 붉혔어요. <span class="dialogue">"우리 솔이가 다 컸구나!"</span></p>
+        <p>솔이는 전망대 난간에 서서 아래 세상을 내려다보았어요. 비가 오는 곳에서는 농부가 감사하게 웃고 있었고, 맑은 곳에서는 아이들이 뛰어놀고 있었습니다. 눈이 오는 곳에서는 온 세상이 하얀 이불을 덮고 있었고, 바람이 부는 곳에서는 풍력발전기가 돌아가고 있었지요. 솔이는 <span class="highlight">기후</span>와 <span class="highlight">날씨</span>의 차이도 이해하게 되었어요. 날씨는 짧은 시간의 대기 상태이고, 기후는 오랜 기간에 걸친 평균적인 대기 상태였지요. 솔이는 수첩에 자신의 첫 번째 일기예보를 적었어요. <span class="dialogue">"내일의 날씨: 변화무쌍. 하지만 걱정하지 마세요. 변화에는 이유가 있고, 모든 날씨에는 의미가 있습니다. 맑은 날도, 비 오는 날도, 바람 부는 날도 모두 지구가 <span class="highlight">복사 평형</span>을 유지하려는 노력입니다."</span> 자연은 변덕스러운 것이 아니라, 끊임없이 균형을 찾아가는 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 배움 섹션 -->
+    <section class="lesson-section">
+      <div class="lesson-card">
+        <h3>변화에는 이유가 있다</h3>
+        <p>
+          이 이야기를 통해 우리는 날씨의 변화가 결코 변덕이 아니라,<br>
+          정확한 과학적 원리에 따른 자연의 움직임이라는 것을 배웠습니다.<br><br>
+          기온의 차이가 대류를 일으키고, 기압의 차이가 공기를 이동시키며,<br>
+          수증기의 응결이 구름을 만들고, 전선의 이동이 비와 맑음을 결정합니다.<br>
+          지구의 기울기 하나가 아름다운 사계절을 만들어내고,<br>
+          과학자들은 이 모든 원리를 분석하여 내일의 날씨를 예측합니다.<br><br>
+          날씨뿐만 아니라 우리 삶의 모든 변화에도 이유가 있습니다.<br>
+          변화를 두려워하지 마세요. 변화의 이유를 이해하려 노력하세요.<br>
+          그러면 비 오는 날도, 바람 부는 날도, 모두 의미 있는 하루가 될 것입니다.
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 배경 이미지 전환
+    const sections = document.querySelectorAll('.story-section');
+    const mapCanvas = document.getElementById('map-canvas');
+    let currentBg = mapCanvas.src;
+
+    function updateBackground() {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const sectionMiddle = rect.top + rect.height / 2;
+
+        if (sectionMiddle > 0 && sectionMiddle < windowHeight) {
+          const newBg = section.dataset.bg;
+          if (newBg && newBg !== currentBg) {
+            mapCanvas.style.opacity = 0;
+            setTimeout(() => {
+              mapCanvas.src = newBg;
+              mapCanvas.style.opacity = 1;
+              currentBg = newBg;
+            }, 400);
+          }
+        }
+      });
+    }
+
+    // 카드 애니메이션
+    function animateCards() {
+      const cards = document.querySelectorAll('.story-card');
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+
+        if (rect.top < windowHeight * 0.8) {
+          card.classList.add('visible');
+        }
+      });
+    }
+
+    // 스크롤 이벤트
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          animateCards();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    animateCards();
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth11_season1_quiz.html?season=season1';
+    }
+  </script>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons" style="position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 1000; pointer-events: auto;">
+    <button onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();" style="padding: 15px 30px; background: rgba(45, 106, 79, 0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);">← 목록으로</button>
+    <button onclick="goToQuiz()" style="padding: 15px 30px; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4);">📝 관문평가</button>
+  </div>
+</body>
+</html>

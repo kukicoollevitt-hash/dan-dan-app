@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 꺾이지 않는 꽃, 춘향</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/고전문학01/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #C2185B 0%, #880E4F 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(194, 24, 91, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(194, 24, 91, 0.15);
+      color: #880E4F;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #C2185B;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #C2185B;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(194, 24, 91, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #880E4F;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #880E4F;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #880E4F;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFB6C1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(194, 24, 91, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #FFB6C1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(194, 24, 91, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(194, 24, 91, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(136, 14, 79, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(194, 24, 91, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌸 꺾이지 않는 꽃, 춘향</h1>
+        <p class="subtitle">
+          춘향과 몽룡의 약속, 춘향전(春香傳)<br>
+          — 사랑과 절개는 권력 앞에서도 꺾이지 않는다 —<br>
+          조선 후기 판소리계 소설 · 작자 미상<br>
+          교과기반 창작도서 · 고전문학 01
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 성춘향(成春香):</strong> 남원 퇴기(退妓) 월매의 딸이지만, 빼어난 미모와 굳은 절개(節槪)를 지닌 여인. 신분의 벽 앞에서도 사랑을 지키려 목숨까지 걸며, 권력의 횡포에 끝까지 굴하지 않는 '열녀(烈女)'의 전형. 페미니즘 비평에서는 가부장제에 저항하는 주체적 여성상으로 재해석된다.</p>
+          <p><strong>▸ 이몽룡(李夢龍):</strong> 남원 부사의 아들로, 총명하고 의로운 청년. 춘향과 깊은 사랑에 빠지지만 아버지를 따라 한양으로 떠나야 하는 운명. 과거에 급제하여 암행어사(暗行御史)가 되어 돌아온다. 유교적 '입신양명(立身揚名)'의 가치와 개인적 사랑의 조화를 보여주는 인물.</p>
+          <p><strong>▸ 변학도(卞學道):</strong> 새로 부임한 남원 부사. 탐욕스럽고 잔인하며, 권력을 이용해 백성을 괴롭힌다. 조선 후기 '탐관오리(貪官汚吏)'의 전형으로, 부패한 관료 체제의 상징.</p>
+          <p><strong>▸ 월매(月梅):</strong> 춘향의 어머니이자 전직 기생(퇴기). 딸의 행복을 누구보다 바라지만, 신분의 한계를 누구보다 잘 알기에 사랑과 현실 사이에서 갈등하는 인물. '현실주의적 조언자'의 역할.</p>
+          <p><strong>▸ 방자(房子):</strong> 이몽룡의 하인이자 이야기의 활력소. 유머와 재치로 긴장감을 풀어주며, 몽룡과 춘향 사이를 이어주는 '중개자(mediator)' 역할. 판소리에서 '재담(才談)'을 담당하는 해학적 인물.</p>
+          <p><strong>▸ 향단(香丹):</strong> 춘향의 충실한 몸종이자 벗. 춘향이 옥에 갇힌 뒤에도 끝까지 곁을 지키며, 우정과 충성의 가치를 보여주는 인물. 주종(主從) 관계를 넘어선 인간적 유대의 상징.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 서사 구조(Narrative Structure)</h3>
+          <p><strong>◆ 춘향 vs 변학도 [선악 갈등]:</strong> 절개(節槪)와 사랑 vs 권력과 탐욕 — '차라리 죽을지언정 두 남편을 섬기지 않겠나이다!' vs '감히 관장의 명을 거역하느냐!' 이것은 유교적 '열녀불경이부(烈女不更二夫)'의 윤리와 봉건적 권력 남용의 충돌이다.</p>
+          <p><strong>◆ 몽룡의 내면 갈등 [의무 vs 사랑]:</strong> 부자유친(父子有親)의 유교적 의무와 남녀 간의 사랑(私愛) 사이의 갈등. 그는 '효(孝)'를 선택하되, '신(信)'을 저버리지 않기 위해 과거 급제라는 우회로를 택한다.</p>
+          <p><strong>◆ 사회 구조적 갈등 [신분제의 모순]:</strong> 양반(兩班)과 천민(賤民)의 신분 차별 — 사랑은 평등하지만 세상은 평등하지 않은 시대의 비극. 이것은 조선 후기 신분제 해체기의 사회적 긴장을 반영한다.</p>
+          <p><strong>◆ 문학사적 의의:</strong> 춘향전은 '판소리계 소설'의 대표작으로, 구비문학(口碑文學)과 기록문학의 교차점에 있다. 100여 종의 이본(異本)이 존재하며, 이는 '열린 텍스트(open text)'로서의 성격을 보여준다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🌸 봄바람에 운명이 실려 오다</span>
+        <h2>남원에서의 만남</h2>
+        <p><strong>【중심 문장】</strong> 남원의 아름다운 봄날, 이몽룡과 성춘향은 운명처럼 만나 서로에게 한눈에 빠져든다.</p>
+        <p>때는 조선 숙종(肅宗) 임금 시절, 전라도 남원(南原)은 봄꽃이 만발한 아름다운 고을이었습니다. 남원 부사 이한림(李翰林)의 아들 이몽룡은 열여섯 살, 글 읽기를 좋아하고 의로운 마음을 가진 총명한 도령이었지요. 단오날(端午日)이 다가오자 남원의 온 백성이 들뜬 마음으로 축제를 준비했습니다. 몽룡도 하인 방자와 함께 구경을 나섰지요. 단오는 음력 5월 5일로, 조선시대 최대의 명절 중 하나였습니다 — 이날은 <span class="highlight" data-tooltip="단오 세시풍속: 음력 5월 5일에 그네뛰기, 씨름 등을 즐기며 창포물로 머리를 감아 더위를 쫓는 조선시대 전통 명절 풍습">그네뛰기, 씨름, 창포물에 머리 감기</span> 등 다양한 민속 놀이가 행해졌습니다.</p>
+        <p><span class="dialogue">"도련님, 오늘은 책 좀 놓으시고 바깥 구경이나 하세요. 광한루가 얼마나 아름다운데요!"</span><br><br>방자가 신이 나서 앞장섰습니다.</p>
+        <p>광한루(廣寒樓)는 남원에서 가장 아름다운 누각(樓閣)이었습니다. 광한루는 '달 속의 선녀가 사는 궁전'이라는 뜻으로, 조선 세종 때 황희 정승이 이름을 지었다고 전해집니다. 연못에는 연꽃이 피어 있고, 버드나무가 하늘거리며, 봄바람에 꽃잎이 날리고 있었지요. 이 연못은 은하수(銀河水)를 상징하며, 그 위에 놓인 오작교(烏鵲橋)는 견우와 직녀가 만나는 다리를 본떠 만든 것입니다 — 이러한 <span class="highlight" data-tooltip="공간적 상징(Spatial Symbolism): 문학 작품에서 특정 공간이 단순한 배경을 넘어 서사적 의미를 전달하는 장치. 광한루는 천상의 공간을 상징하여 춘향과 몽룡의 만남을 숙명적 인연으로 승화시킴">공간적 상징</span>은 이후 춘향과 몽룡의 만남을 '하늘이 정한 인연'으로 격상시킵니다.</p>
+        <p>몽룡이 광한루에 올라 경치를 감상하고 있을 때, 멀리 그네 뛰는 소리가 들려왔습니다.<br><br><span class="dialogue">"방자야, 저기 그네 뛰는 처자가 누구냐?"</span><br><br>몽룡의 눈이 한곳에 멈추었습니다. 그네 위에서 하늘로 치솟았다 내려오는 한 처자. 바로 성춘향이었습니다. 붉은 치마가 봄바람에 나부끼고, 까만 머리카락이 하늘에서 춤을 추는 것 같았지요. 이 장면은 <span class="highlight" data-tooltip="일견종정(一見鍾情, Love at First Sight): 한눈에 사랑에 빠지는 것을 뜻하는 고전문학의 전형적 모티프. '한 번 보고 마음이 쏠리다'라는 의미로 운명적 사랑을 표현함">'일견종정(一見鍾情)'</span> — 한눈에 사랑에 빠지는 것 — 의 전형적 모티프입니다.</p>
+        <p>춘향은 퇴기 월매의 딸이었지만, 그 고운 얼굴과 맑은 눈빛은 어떤 양반집 규수(閨秀)보다도 빼어났습니다.<br><br><span class="dialogue">"저 분은… 누구시지?"</span><br><br>몽룡의 가슴이 두근두근 뛰기 시작했습니다. 봄바람에 실려 온 운명. 이 만남이 두 사람의 인생을, 그리고 남원 전체를 뒤흔들 커다란 이야기의 시작이 될 줄은 아직 아무도 몰랐답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">💕 신분의 벽을 넘은 약속</span>
+        <h2>광한루에서 맺어진 사랑</h2>
+        <p><strong>【중심 문장】</strong> 양반의 아들과 기생의 딸, 신분의 벽을 넘어 두 사람은 서로에게 영원한 사랑을 맹세한다.</p>
+        <p>몽룡은 방자를 시켜 춘향을 불러오게 했습니다.<br><br><span class="dialogue">"방자야, 가서 저 처자에게 도련님이 뵙고 싶다 전해라."</span><br><br>방자는 투덜거리면서도 달려갔지요.</p>
+        <p><span class="dialogue">"아씨, 우리 도련님이 만나뵙고 싶다 하십니다."</span><br><br>춘향은 처음에 고개를 저었습니다.<br><br><span class="dialogue">"양반집 도련님이 천한 기생의 딸을 왜 만나겠다 하시나요. 놀리시려는 것이겠지요."</span><br><br>춘향의 이러한 반응은 당대 <span class="highlight">신분제 사회의 내면화된 위계 의식</span>을 보여줍니다. 동시에 그녀가 단순히 순종적인 여성이 아님을 암시하기도 합니다.</p>
+        <p>하지만 방자의 끈질긴 부탁에 춘향은 광한루로 갔습니다. 몽룡과 춘향이 처음 눈을 마주친 순간, 세상이 멈춘 것 같았습니다. 몽룡이 먼저 말을 건넸지요.<br><br><span class="dialogue">"소생은 이몽룡이라 하오. 낭자(娘子)의 이름은 무엇이오?"</span><br><br><span class="dialogue">"성춘향이옵니다."</span><br><br>춘향이 고개를 숙이며 대답했습니다.</p>
+        <p>두 사람은 오래오래 이야기를 나누었습니다. 몽룡은 춘향의 지혜와 기품에 놀랐고, 춘향은 몽룡의 진심 어린 눈빛에 마음이 움직였지요. 그날 밤, 몽룡은 춘향의 집을 찾아갔습니다. 월매는 걱정이 앞섰습니다.<br><br><span class="dialogue">"춘향아, 양반 도련님과의 인연이 무슨 좋은 결과를 가져오겠니? 양반은 양반끼리, 우리는 우리끼리 사는 것이 세상의 법도란다."</span><br><br>이것은 <span class="highlight" data-tooltip="양천제(良賤制): 조선시대 신분제도로 양인(良人, 자유민)과 천민(賤民, 노비·기생 등)을 법적으로 구분. 신분 간 혼인이 제한되어 사랑보다 신분이 우선시되던 사회 구조">조선시대 양천제(良賤制)</span>의 엄격한 현실을 반영합니다. 기생의 딸인 춘향은 법적으로 '천민(賤民)'에 속했으며, 양반과의 정식 혼인은 거의 불가능했습니다.</p>
+        <p>하지만 춘향은 몽룡의 눈에서 거짓 없는 진심을 보았습니다. 몽룡은 무릎을 꿇고 말했습니다.<br><br><span class="dialogue">"춘향아, 나는 너를 잠깐의 놀이로 만나는 것이 아니다. 백년가약(百年佳約)을 맺겠노라. 하늘이 두 쪽이 나도 너를 버리지 않겠다."</span><br><br>'백년가약'은 평생을 함께하겠다는 혼인의 약속입니다. 두 사람은 이날 밤 <span class="highlight" data-tooltip="사실혼(事實婚, Common-law Marriage): 법적 혼인 절차 없이 부부로서 실질적 생활을 하는 관계. 조선시대에는 신분 차이로 정식 혼례를 올릴 수 없을 때 사실혼 형태로 관계를 맺기도 함">사실혼(事實婚)</span>의 관계를 맺게 됩니다.</p>
+        <p><span class="highlight">달빛 아래 두 사람은 영원한 사랑을 맹세했습니다.</span><br><br>비록 세상이 신분으로 사람을 나누지만, 사랑만큼은 그 벽을 넘을 수 있다고 믿으며. 하지만 이 아름다운 약속 위에 곧 거대한 시련의 그림자가 드리우고 있었답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">💔 찢어지는 이별</span>
+        <h2>몽룡의 한양 떠남</h2>
+        <p><strong>【중심 문장】</strong> 아버지를 따라 한양으로 떠나야 하는 몽룡, 남겨지는 춘향. 이별의 고통 속에서도 재회의 약속을 굳게 다진다.</p>
+        <p>행복한 날들은 너무 빨리 지나갔습니다. 어느 날, 몽룡에게 벼락 같은 소식이 전해졌지요. 아버지 이한림이 한양으로 전근(轉勤)을 가게 된 것입니다. 조선시대 관리는 '상피제(相避制)'에 따라 본인 출신지에는 부임할 수 없었고, 일정 기간이 지나면 다른 곳으로 이동해야 했습니다.</p>
+        <p><span class="dialogue">"아버지, 저는 남원에 남겠습니다!"</span><br><br>몽룡이 간청했지만, 아버지는 단호했습니다.<br><br><span class="dialogue">"무슨 소리냐. 아들이 아비를 따르는 것은 하늘의 도리다. 더구나 네가 과거 공부를 해야 할 때 아니더냐."</span><br><br>이것은 <span class="highlight" data-tooltip="부자유친(父子有親): 유교 오륜(五倫) 중 하나로 '아버지와 아들 사이에는 친밀함이 있어야 한다'는 뜻. 효(孝)를 강조하여 자식이 부모 명령에 절대 복종해야 함을 의미">'부자유친(父子有親)'</span>이라는 유교 윤리의 핵심 덕목을 보여줍니다. 조선시대에 아들이 아버지의 명을 거역하는 것은 있을 수 없는 일이었습니다.</p>
+        <p>몽룡은 무거운 발걸음으로 춘향에게 이별을 알리러 갔습니다. 춘향의 집 앞에 서서 차마 입을 열지 못하는 몽룡. 하지만 춘향은 몽룡의 표정만 보고도 모든 것을 알아차렸습니다.</p>
+        <p><span class="dialogue">"도련님, 떠나시는 거지요?"</span><br><br>춘향의 눈에서 눈물이 주르르 흘러내렸습니다.<br><br><span class="dialogue">"춘향아, 나는 반드시 과거에 급제하여 다시 돌아오마. 이 약속만은 하늘에 두고 맹세한다."</span><br><br>몽룡의 목소리가 떨렸습니다.</p>
+        <p><span class="dialogue">"도련님, 저는 믿사옵니다. 천 년을 기다리라 하셔도 기다리겠나이다. 다만 한 가지만 약속해주세요. 한양에 가시거든 저를 잊지 말아주세요."</span><br><br>춘향이 고이 간직하던 옥반지(玉班指)를 몽룡에게 건넸습니다. 몽룡은 자신의 거울을 춘향에게 주었지요. 이러한 <span class="highlight" data-tooltip="신표(信標, Token): 약속의 증거로 주고받는 물건. 고전소설에서 반지·거울·비녀 등을 교환하여 재회를 약속하고 신분을 증명하는 서사적 장치로 자주 등장함">신표(信標) 교환</span>은 고전소설에서 재회를 약속하는 전형적인 모티프입니다.<br><br><span class="dialogue">"이 거울에 내 얼굴을 비추며 내가 돌아올 날을 기다려주오."</span></p>
+        <p>이별의 날, 오작교 위에서 두 사람은 마지막으로 손을 맞잡았습니다. 오작교에서의 이별은 견우와 직녀의 이별을 상기시키며, 두 사람의 사랑이 '천상의 인연'임을 다시 한번 암시합니다. 몽룡의 말이 한 걸음 한 걸음 멀어질 때마다 춘향의 가슴은 천 갈래 만 갈래로 찢어지는 것 같았지요. 하지만 춘향은 이를 악물었습니다.<br><br><span class="dialogue">"울지 마라, 춘향아. 도련님은 반드시 돌아오신다."</span> <span class="highlight">남겨진 약속 하나가 춘향의 긴 겨울을 버티는 유일한 불빛이 되었답니다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">⛈️ 먹구름이 몰려오다</span>
+        <h2>변학도의 부임</h2>
+        <p><strong>【중심 문장】</strong> 탐욕스럽고 잔인한 새 부사 변학도가 남원에 부임하면서, 평화롭던 마을에 공포의 그림자가 드리운다.</p>
+        <p>몽룡이 떠난 뒤, 남원에는 조용한 나날이 이어졌습니다. 춘향은 매일 몽룡이 준 거울을 닦으며 돌아올 날만을 기다렸지요. 그런데 어느 날, 남원에 새로운 부사(府使)가 부임한다는 소식이 전해졌습니다.</p>
+        <p><span class="dialogue">"새 사또가 온대!"</span><br><br><span class="dialogue">"어떤 분이실까?"</span><br><br>마을 사람들은 기대 반 걱정 반이었습니다.</p>
+        <p>하지만 새 부사 변학도(卞學道)가 남원에 들어서는 순간, 사람들의 표정이 굳어졌습니다. 변학도는 커다란 가마 위에 거드름을 피우며 앉아 있었고, 그의 눈빛은 차갑고 탐욕스러웠지요. 변학도라는 이름 자체가 흥미롭습니다 — '학도(學道)'는 '도를 배운다'는 뜻인데, 실제 행동은 정반대입니다. 이것은 <span class="highlight" data-tooltip="반어적 명명법(Ironic Naming): 인물 이름과 성격이 정반대인 문학적 기법. 변학도는 '도를 배운다'는 뜻이지만 실제로는 탐욕스럽고 부패한 인물로 작가의 풍자 의도를 담음">반어적 명명법</span>으로, 인물의 위선을 풍자합니다.</p>
+        <p><span class="dialogue">"이 고을의 재물이 얼마나 되느냐? 이 고을의 미녀(美女)는 누가 있느냐?"</span><br><br>부임 첫날부터 변학도가 묻는 것은 백성의 안녕이 아니라 재물과 미녀였습니다. 이것은 <span class="highlight">'목민관(牧民官)'</span>으로서의 책무를 완전히 망각한 행태입니다. '목민'이란 '백성을 기른다'는 뜻으로, 관리는 목자(牧者)처럼 백성을 돌봐야 한다는 유교적 이상을 담고 있습니다.<br><br><span class="dialogue">"사또, 이 고을에서 가장 아름다운 여인은 성춘향이라 하옵니다. 전 부사의 아드님과 인연을 맺었으나 지금은 혼자 살고 있사옵니다."</span></p>
+        <p>변학도의 눈이 번쩍 빛났습니다.<br><br><span class="dialogue">"오호, 성춘향이라. 기생의 딸이라면서? 기생의 딸이면 관장(官長)의 수청(守廳)을 드는 것이 당연하지 않느냐. 당장 불러들여라!"</span><br><br>'수청'이란 관리의 시중을 드는 것으로, 기생에게는 법적 의무로 강제되었습니다. 그러나 춘향은 기생이 아니라 '기생의 딸'로, 그녀가 기적(妓籍)에 올라 있는지는 논란의 여지가 있습니다 — 이것이 이후 서사적 긴장의 핵심이 됩니다.</p>
+        <p>소식을 전해들은 월매의 얼굴이 새하얗게 변했습니다.<br><br><span class="dialogue">"이를 어찌하나, 춘향아. 큰일 났다."</span><br><br>하지만 춘향은 거울을 꼭 쥐며 조용히 말했습니다.<br><br><span class="dialogue">"어머니, 저는 이미 도련님께 마음을 드린 사람이에요. 변 사또가 아무리 높은 분이라 해도 제 마음까지 빼앗을 수는 없어요."</span></p>
+        <p><span class="highlight">먹구름이 남원 하늘을 뒤덮기 시작했습니다. 가장 무서운 시련이 춘향 앞에 다가오고 있었답니다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🔥 차라리 죽을지언정</span>
+        <h2>수청 요구와 춘향의 거절</h2>
+        <p><strong>【중심 문장】</strong> 변학도의 수청 요구 앞에서 춘향은 목숨을 걸고 거절하며, 권력 앞에서도 꺾이지 않는 절개를 보여준다.</p>
+        <p>변학도의 부름을 받고 관아(官衙)에 끌려간 춘향. 화려한 관아 안에서 변학도는 거만하게 앉아 있었습니다.<br><br><span class="dialogue">"네가 성춘향이냐? 과연 소문대로 고운 얼굴이로구나. 오늘부터 내 수청을 들어라."</span><br><br>변학도가 음흉한 미소를 지었습니다.</p>
+        <p>춘향은 두 무릎을 꿇고 있었지만, 그 눈빛만큼은 하늘의 별처럼 맑고 단단했습니다.<br><br><span class="dialogue">"사또, 소녀는 이미 이 도령과 백년가약을 맺은 사람이옵니다. <span class="highlight" data-tooltip="열녀불경이부(烈女不更二夫): '열녀는 두 남편을 섬기지 않는다'는 유교 윤리. 여성에게 일부종사(一夫從事)를 강요했으나, 춘향은 이를 역으로 이용해 권력에 저항하는 무기로 삼음">열녀불경이부(烈女不更二夫)</span>, 충신은 두 임금을 섬기지 아니하고, 열녀는 두 남편을 섬기지 아니하는 법이옵니다."</span><br><br>이 대사는 춘향전의 <span class="highlight" data-tooltip="핵심 명제(Core Proposition): 작품 전체를 관통하는 중심 사상이나 주제. 춘향전에서는 '열녀불경이부'가 사랑과 절개, 신분 저항의 핵심 논리로 작용함">핵심 명제</span>입니다. '열녀불경이부'는 유교 윤리의 핵심으로, 이것을 기생의 딸인 춘향이 양반 사또에게 선언하는 것은 당대로서는 매우 전복적(subversive)인 행위였습니다.</p>
+        <p><span class="dialogue">"뭐라? 기생의 딸이 감히! 이 도령이 어디 있더냐? 한양에 가서 양반집 규수와 혼인할 것이 뻔한데, 네가 무엇을 기다리느냐!"</span><br><br>변학도가 버럭 화를 냈습니다.</p>
+        <p><span class="dialogue">"그래도 소녀는 기다리겠나이다. 설령 도련님이 돌아오지 않는다 해도, 제 마음은 변하지 않사옵니다."</span><br><br>춘향의 목소리는 작지만 흔들림이 없었습니다. 이것은 <span class="highlight">'신(信)'</span>의 유교적 덕목 — 한번 맺은 약속은 반드시 지킨다 — 의 실천입니다.<br><br><span class="dialogue">"차라리 이 목숨을 가져가실지언정, 절개를 꺾을 수는 없나이다!"</span></p>
+        <p>변학도의 얼굴이 시뻘겋게 달아올랐습니다.<br><br><span class="dialogue">"좋다! 네 고집대로 해보아라. 매를 쳐라! 열 대, 스무 대, 서른 대!"</span><br><br>곤장(棍杖)은 조선시대 형벌 중 하나로, 무거운 나무 몽둥이로 죄인의 다리나 엉덩이를 때리는 것이었습니다.</p>
+        <p>곤장이 춘향의 몸 위로 내려쳤습니다. 한 대, 두 대… 살이 찢어지고 피가 흘러도 춘향은 이를 악물었습니다.<br><br><span class="dialogue">"<span class="highlight" data-tooltip="일편단심(一片丹心): '한 조각의 붉은 마음'이라는 뜻으로 변치 않는 충성심과 절개를 의미. 춘향이 목숨을 걸고 몽룡에 대한 사랑을 지키는 정신을 상징">일편단심(一片丹心)</span> 굳은 마음, <span class="highlight" data-tooltip="일부종사(一夫從事): 한 남편만을 섬긴다는 뜻. 유교 사회에서 여성에게 요구되던 덕목이었으나, 춘향은 이를 자발적으로 선택하여 주체성을 드러냄">일부종사(一夫從事)</span> 뜻을 세워… 맞아 죽을지언정 항복은 못 하겠나이다!"</span><br><br>'일편단심'은 '한 조각의 붉은 마음', 즉 변치 않는 충성심을 뜻합니다. 판소리 춘향가에서 이 대목은 <span class="highlight" data-tooltip="십장가(十杖歌): 판소리 춘향가에서 춘향이 곤장 열 대씩 맞으며 부르는 노래. 극적 긴장감이 절정에 달하는 명창면(名唱面)으로 소리꾼의 기량이 드러나는 대목">'십장가(十杖歌)'</span>로 불리며, 가장 애절하고 극적인 장면 중 하나입니다.</p>
+        <p>향단이가 울부짖고, 월매가 기절했지만, 춘향의 입에서 나온 것은 항복이 아니라 노래였습니다. 마을 사람들은 먼 발치에서 그 광경을 보며 눈물을 흘렸지요. <span class="highlight">권력은 몸을 꺾을 수 있어도 마음까지 꺾을 수는 없다는 것을, 춘향은 온몸으로 증명하고 있었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🌺 꺾이지 않는 꽃</span>
+        <h2>옥에 갇힌 춘향</h2>
+        <p><strong>【중심 문장】</strong> 옥에 갇힌 춘향은 고통과 절망 속에서도 사랑의 약속을 놓지 않으며, 그 절개가 마을 사람들의 마음을 움직인다.</p>
+        <p>곤장을 맞고도 굴하지 않는 춘향을 변학도는 옥(獄)에 가두어버렸습니다.<br><br><span class="dialogue">"그 고집이 얼마나 가나 두고 보자! 옥에서 썩으면 마음이 바뀌겠지."</span><br><br>변학도가 이를 갈며 말했습니다.</p>
+        <p>남원 감옥(監獄)은 춥고 어두웠습니다. 돌바닥은 얼음장 같았고, 쥐들이 이리저리 뛰어다녔지요. 곤장에 맞은 상처는 쉬이 낫지 않아 온몸이 욱신거렸습니다. 조선시대 옥은 오늘날의 교도소와 달리 매우 열악했습니다 — 기본적인 <span class="highlight" data-tooltip="의식주(衣食住): 옷(衣), 음식(食), 거처(住)를 뜻하는 인간 생활의 기본 세 요소. 조선시대 감옥에서는 이조차 보장되지 않아 재판 전 사망하는 일이 빈번했음">의식주(衣食住)</span>조차 보장되지 않았고, 많은 죄수가 재판 전에 질병이나 굶주림으로 사망하기도 했습니다.</p>
+        <p>하지만 춘향은 몽룡이 준 거울을 품에 꼭 안고 있었습니다. 사실 거울은 관아에서 빼앗겼지만, 그 대신 마음속 거울에 몽룡의 얼굴을 비추며 버텼지요.<br><br><span class="dialogue">"도련님, 저는 아직 여기 있어요. 약속을 지키고 있어요. 부디 무사하시고, 부디 돌아와주세요…"</span><br><br>춘향은 밤마다 남쪽 하늘을 향해 속삭였습니다. 이 장면은 <span class="highlight">'망부석(望夫石)' 설화</span>의 모티프를 연상시킵니다 — 돌아오지 않는 남편을 기다리다 돌이 된 여인의 이야기.</p>
+        <p>충직한 향단이만이 매일 옥을 찾아왔습니다. 옥졸(獄卒)의 눈을 피해 밥을 가져다주고, 상처에 약을 발라주었지요.<br><br><span class="dialogue">"아씨, 제가 여기 있어요. 혼자가 아니에요."</span><br><br>향단이가 울면서 말했습니다.<br><br><span class="dialogue">"향단아, 고맙다. 네가 있어 내가 버틸 수 있어."</span><br><br>춘향이 향단의 손을 꼭 잡았습니다. 향단의 충성심은 <span class="highlight">주종(主從) 관계를 넘어선 인간적 유대</span>를 보여주며, 신분제 사회 내에서도 진정한 우정이 가능함을 증명합니다.</p>
+        <p>소식을 들은 마을 사람들은 처음에는 "기생의 딸이 양반에게 대들다니"라며 수군거렸지만, 시간이 지나면서 마음이 바뀌기 시작했습니다.<br><br><span class="dialogue">"저 아이가 권력 앞에서 저렇게 당당하게 서 있다니… 우리는 왜 변 사또의 횡포 앞에서 아무 말도 못 했을까?"</span><br><br>이것은 <span class="highlight">민중 의식의 각성</span>을 암시합니다. 춘향의 저항은 개인적 사랑의 문제를 넘어 사회적 정의의 문제로 확장되고 있는 것입니다.</p>
+        <p><span class="highlight">춘향의 절개는 차가운 감옥 안에서 피어나는 한 송이 꽃과 같았습니다. 꺾으려 할수록 더 곧게 피어나는 꺾이지 않는 꽃이었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">📚 약속을 지키기 위한 날개</span>
+        <h2>몽룡의 과거 급제</h2>
+        <p><strong>【중심 문장】</strong> 한양에서 밤낮으로 공부한 몽룡이 마침내 과거에 장원 급제하니, 이는 입신양명뿐 아니라 춘향을 구하기 위한 날개였다.</p>
+        <p>한양으로 올라간 몽룡은 하루도 춘향을 잊은 적이 없었습니다. 춘향이 준 옥반지를 손가락에 끼고, 매일 남쪽 하늘을 바라보며 마음속으로 약속을 되새겼지요.<br><br><span class="dialogue">"춘향아, 반드시 돌아가마. 그러려면 내가 힘을 가져야 해."</span></p>
+        <p>몽룡은 이를 악물고 공부에 매진했습니다. 밤에는 촛불이 녹아내릴 때까지 책을 읽었고, 새벽에는 닭이 울기 전에 일어나 글을 썼지요. 이것은 <span class="highlight" data-tooltip="주경야독(晝耕夜讀): '낮에는 밭을 갈고 밤에는 글을 읽는다'는 뜻으로 어려운 환경에서도 학업에 전념하는 고학(苦學)의 자세를 나타내는 성어">'주경야독(晝耕夜讀)'</span>의 전형적 모습입니다 — 비록 몽룡은 양반이라 밭을 갈지는 않았지만, 그 열정만큼은 어떤 고학생(苦學生)에게도 뒤지지 않았습니다.</p>
+        <p><span class="dialogue">"몽룡아, 네가 왜 그렇게 공부에 미쳐 있느냐? 혹시 남원에 두고 온 기생의 딸 때문이냐?"</span><br><br>친구가 놀리듯 물었습니다. 몽룡은 담담하게 대답했습니다.<br><br><span class="dialogue">"그 사람은 기생의 딸이기 전에, 이 세상에서 가장 아름다운 마음을 가진 사람이다. 나는 그 사람과의 약속을 지킬 것이다."</span><br><br>이 대사는 몽룡이 <span class="highlight">신분(身分)보다 인격(人格)</span>을 중시하는 진보적 인물임을 보여줍니다.</p>
+        <p>드디어 과거(科擧) 시험날이 왔습니다. 과거제도는 조선시대 관리 선발 시스템으로, 문과(文科), 무과(武科), 잡과(雜科)로 나뉘었습니다. 몽룡이 응시한 것은 문과로, 여기서 장원(壯元)은 1등 합격자를 뜻합니다. 수많은 선비 중에서 몽룡의 글은 유독 빛이 났지요. 나라를 바로세우고 백성을 아끼는 마음이 글 속에 가득했거든요.</p>
+        <p><span class="dialogue">"장원 급제, 이몽룡!"</span><br><br>방(榜)이 붙는 순간, 몽룡의 눈에 눈물이 흘렀습니다. 기쁨의 눈물이 아니었습니다. 안도의 눈물이었지요.<br><br><span class="dialogue">"이제 갈 수 있다. 춘향에게 돌아갈 수 있다!"</span></p>
+        <p>하지만 몽룡은 곧바로 남원으로 달려가지 않았습니다. 임금님으로부터 특별한 임무를 받았거든요. <span class="highlight">전라도 암행어사(暗行御史).</span><br><br>암행어사는 임금이 지방관의 비리를 조사하기 위해 비밀리에 파견하는 관리입니다. '암행(暗行)'은 '몰래 다닌다'는 뜻으로, 신분을 숨기고 조사해야 했습니다. 변학도의 횡포 소문은 이미 한양까지 퍼져 있었고, 임금은 몽룡에게 숨어서 진실을 파악하라 명했습니다. 약속을 지키기 위한 날개가 비로소 몽룡의 등에 달린 순간이었답니다.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">🎭 거지 행색으로 돌아온 도련님</span>
+        <h2>남원으로의 귀환</h2>
+        <p><strong>【중심 문장】</strong> 암행어사 몽룡은 신분을 숨기고 남원으로 돌아와, 변학도의 횡포와 춘향의 고통을 자신의 눈으로 확인한다.</p>
+        <p>몽룡은 남루한 옷을 입고, 먼지를 뒤집어쓰고, 마치 떠돌이 거지처럼 남원에 들어섰습니다. 암행어사는 신분을 숨겨야 했거든요. 이러한 <span class="highlight">'변장(變裝)' 모티프</span>는 고전소설에서 자주 등장하며, 진실을 밝히기 위한 서사적 장치로 기능합니다.</p>
+        <p><span class="dialogue">"여보게, 남원에 새 사또가 부임한 뒤로 백성들 살림이 어떤가?"</span><br><br>몽룡이 길가의 노인에게 물었습니다. 노인이 한숨을 푹 내쉬었습니다.<br><br><span class="dialogue">"말도 마시오. 변 사또라는 자가 백성의 재물을 빼앗고, 곡식을 착취(搾取)하고, 조금이라도 반항하면 곤장을 치니 살 수가 없소이다."</span></p>
+        <p><span class="dialogue">"혹시… 성춘향이라는 처자의 소식은 들었소?"</span><br><br>몽룡의 목소리가 떨렸습니다.<br><br><span class="dialogue">"아이고, 춘향이 말이오? 불쌍한 것. 변 사또의 수청을 거절하고 옥에 갇혀 반 년이 넘었소. 곧 변 사또의 생신(生辰) 잔치 날에 목숨을 잃게 될 것이라는 소문이오."</span><br><br>몽룡의 주먹이 하얗게 쥐어졌습니다.</p>
+        <p>몽룡은 곧장 감옥을 찾아갔습니다. 거지 행색의 남자를 본 옥졸이 코웃음을 쳤지만, 향단이가 알아보았지요.<br><br><span class="dialogue">"도, 도련님?!"</span><br><br><span class="dialogue">"쉿, 조용히 해라."</span><br><br>몽룡이 향단의 입을 막았습니다.</p>
+        <p>격자 사이로 춘향을 보았습니다. 한때 봄꽃처럼 아름답던 춘향은 뼈만 앙상하게 남아 있었지요. 상처투성이 몸에, 헝클어진 머리카락. 하지만 그 눈빛만은 여전히 맑고 단단했습니다. 이 장면은 <span class="highlight">'옥중화(獄中花)'</span> — 감옥 속의 꽃 — 라는 이미지로 형상화됩니다. 육체적 고통 속에서도 정신적 순결을 유지하는 인물의 상징입니다.</p>
+        <p><span class="dialogue">"춘향아…"</span><br><br>몽룡이 격자 사이로 손을 내밀었습니다. 춘향이 고개를 들었지요. 거지 행색의 남자. 하지만 그 목소리, 그 눈빛.<br><br><span class="dialogue">"도, 도련님… 정말 도련님이세요?"</span><br><br><span class="dialogue">"미안하다, 춘향아. 늦었다."</span><br><br><span class="dialogue">"아니에요, 오셨잖아요. 살아서 오셨잖아요."</span></p>
+        <p><span class="highlight">두 사람의 눈물이 차가운 감옥 바닥 위에 떨어졌습니다. 약속은 지켜지고 있었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🍷 탐욕의 극치, 폭풍 전야</span>
+        <h2>변학도의 잔치</h2>
+        <p><strong>【중심 문장】</strong> 자신의 생일 잔치에서 온갖 사치를 부리는 변학도, 그 잔치 속에 심판의 시간이 다가오고 있다.</p>
+        <p>변학도의 생신(生辰) 잔치가 열리는 날이 왔습니다. 남원 관아는 온갖 산해진미(山海珍味)로 가득 찼지요. 비단 장막이 드리워지고, 기생들의 노래가 울려 퍼졌습니다. 변학도는 거만하게 상좌(上座)에 앉아 술잔을 기울이고 있었지요.</p>
+        <p><span class="dialogue">"오늘은 나의 잔치다! 먹고 마시며 즐겨라!"</span><br><br>변학도가 큰 소리로 외쳤습니다. 하지만 잔치에 쓰인 음식과 술은 모두 백성들에게서 빼앗은 것이었습니다. 마을의 소와 돼지를 강제로 가져오고, 쌀과 곡식을 빼앗고, 심지어 아이들의 간식거리까지 뺏어온 것이지요. 이것은 <span class="highlight">'무진취식(武進取食)'</span> — 무력으로 빼앗아 먹는 것 — 의 전형적 사례입니다.</p>
+        <p>백성들은 배를 곯으며 잔칫집 담 너머를 바라보고 있었습니다.<br><br><span class="dialogue">"배고파, 엄마…"</span><br><br>아이가 울었지만, 엄마도 줄 것이 없었습니다.</p>
+        <p>잔치가 무르익을 무렵, 초라한 행색의 남자 하나가 잔치 자리에 나타났습니다. 바로 거지 행색의 몽룡이었지요.<br><br><span class="dialogue">"여보시오, 사또! 이 가난한 선비도 밥 한 술 얻어먹을 수 있겠소?"</span></p>
+        <p>변학도가 코웃음을 쳤습니다.<br><br><span class="dialogue">"거지 같은 놈이 감히! 그래, 맛이나 보아라."</span><br><br>밥 한 그릇을 툭 던져주었지요. 몽룡은 담담하게 밥을 먹으며 주위를 둘러보았습니다. 백성의 곡식으로 채운 상, 백성의 피로 적신 비단. 그리고 잔치 한쪽에서는 "오늘 밤 춘향을 처형하라"는 명령이 전달되고 있었습니다.</p>
+        <p>몽룡이 숟가락을 내려놓았습니다. 고요한 눈빛 속에 불꽃이 타올랐지요.<br><br><span class="dialogue">"시(詩)가 하나 떠오르는구나."</span><br><br>몽룡이 붓을 들었습니다.</p>
+        <p><span class="highlight">'금준미주는 천인혈이요, 옥반가효는 만성고라.'<br>(金樽美酒千人血 玉盤佳肴萬姓膏)</span><br>금잔의 아름다운 술은 천 사람의 피요, 옥쟁반의 맛있는 안주는 만 백성의 기름이라. 이 시는 <span class="highlight">당나라 시인 이신(李紳)</span>의 '민농(憫農)'에서 영향을 받은 것으로, 위정자의 탐욕이 곧 백성의 고통임을 비유한 것입니다.</p>
+        <p>변학도는 시의 뜻도 모르고 "허, 글 좀 아는 거지로군" 하며 웃었지요. <span class="highlight">폭풍 전야의 고요함. 심판의 시간이 코앞에 다가와 있었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학01/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">⚖️ 정의가 마침내 꽃피우다</span>
+        <h2>어사의 등장</h2>
+        <p><strong>【중심 문장】</strong> 암행어사 이몽룡이 정체를 밝히며, 탐관오리 변학도를 처벌하고 춘향을 구해내니, 사랑과 절개가 마침내 보상받는다.</p>
+        <p>잔치가 절정에 달한 그 순간, 밖에서 우렁찬 소리가 울려 퍼졌습니다.<br><br><span class="dialogue">"<span class="highlight" data-tooltip="암행어사 출두요: 암행어사가 신분을 밝히는 외침. '출두(出頭)'는 나타난다는 뜻으로, 이 장면은 고전소설에서 억울함이 풀리고 악인이 처벌받는 통쾌한 반전의 순간">암행어사 출두요!</span>"</span><br><br>이 외침은 <span class="highlight" data-tooltip="카타르시스(Catharsis): 그리스어로 '정화'를 뜻하며, 문학작품을 통해 독자가 느끼는 감정적 해소와 정화. 춘향전에서는 어사출두 장면이 억압된 감정이 폭발적으로 해소되는 카타르시스의 정점">고전소설 최고의 카타르시스</span> 장면 중 하나입니다. '출두(出頭)'는 '나타나다'라는 뜻으로, 숨어 있던 어사가 정체를 드러내는 순간입니다.</p>
+        <p>관아의 대문이 쾅 열리고, 어사의 마패(馬牌)를 높이 든 군관(軍官)들이 밀려들어왔습니다. 마패는 암행어사의 신분을 증명하는 물건으로, 이것을 보이면 누구도 거역할 수 없었습니다. 변학도의 얼굴이 새하얗게 질렸지요.<br><br><span class="dialogue">"어, 어사라고? 그, 그게 무슨…"</span></p>
+        <p><span class="dialogue">"네 이놈 변학도! 임금님의 명(命)을 받들어 네 죄를 묻노라!"</span><br><br>거지 행색의 그 남자가 어사의 관복(官服)을 걸치고 당당하게 서 있었습니다. 바로 이몽룡이었지요.</p>
+        <p>관아 안이 발칵 뒤집어졌습니다. 변학도는 벌벌 떨며 바닥에 엎드렸지만, 이미 때는 늦었습니다.<br><br><span class="dialogue">"첫째, 백성의 재물을 빼앗은 죄! 둘째, 무고한 백성에게 곤장을 친 죄! 셋째, 관장의 권력으로 양민(良民)을 괴롭힌 죄! 이 모든 죄를 물어 파직(罷職)하고 귀양(歸鄕)을 보내노라!"</span><br><br>몽룡의 목소리가 관아를 울렸습니다. 변학도와 그의 일당들은 모두 줄줄이 묶여 끌려나갔지요. 이것은 <span class="highlight">'권선징악(勸善懲惡)'</span> — 선을 권하고 악을 징계한다 — 의 전형적 실현입니다.</p>
+        <p>그리고 몽룡은 곧장 감옥으로 달려갔습니다.<br><br><span class="dialogue">"춘향아, 이제 나왔다. 너를 데리러 왔다."</span><br><br>감옥 문이 열리고, 몽룡이 손을 내밀었습니다. 춘향은 믿을 수 없다는 듯 몽룡을 바라보았습니다. 거지가 아닌, 어사의 관복을 입은 몽룡. 그 눈빛은 광한루에서 처음 만났던 그날과 똑같이 진실하고 따뜻했지요.</p>
+        <p><span class="dialogue">"도련님… 약속을 지키셨군요."</span><br><br><span class="dialogue">"네가 약속을 지켰으니, 나도 지킨 것이다."</span><br><br>두 사람은 뜨거운 눈물 속에서 서로를 꼭 안았습니다.</p>
+        <p>마을 사람들은 환호했고, 월매는 기쁨의 눈물을 쏟았고, 향단이는 방방 뛰며 울다 웃었지요. 몽룡과 춘향은 마침내 정식으로 혼례(婚禮)를 올리고 백년해로(百年偕老)했습니다. 춘향은 '정렬부인(貞烈夫人)'의 작호(爵號)를 받았다고 전해집니다 — 이것은 <span class="highlight">신분 상승의 서사</span>로, 조선 후기 민중의 꿈을 반영합니다. <span class="highlight">사랑과 절개는 권력 앞에서도 꺾이지 않았고, 정의는 늦게 올지라도 반드시 찾아온다는 것을 온 세상에 보여주었지요.</span></p>
+        <p>남원의 봄꽃은 그 어느 해보다 아름답게 피어났고, 광한루의 바람은 두 사람의 사랑 이야기를 오래오래 전해주었답니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(194, 24, 91, 0.15); border-radius: 16px;">
+          <strong style="color: #880E4F; font-size: 20px;">🌱 「사랑과 절개는 권력 앞에서도 꺾이지 않는다. 진심으로 맺은 약속은 어떤 시련 속에서도 빛을 잃지 않으며, 정의(正義)는 반드시 찾아온다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/classic01_season1_quiz_78.html?season=season2';
+    }
+  </script>
+</body>
+</html>

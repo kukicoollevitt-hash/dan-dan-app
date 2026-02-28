@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>원자 왕국의 세 용사 — 양성이, 중성이, 전자의 끝없는 춤 · 중1-2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리16/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1E88E5 0%, #00BCD4 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(30, 136, 229, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, rgba(30, 136, 229, 0.15) 0%, rgba(0, 188, 212, 0.15) 100%);
+      color: #1565C0;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #1E88E5;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #0277BD;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 38px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4FC3F7;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 22px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, rgba(30, 136, 229, 0.9) 0%, rgba(0, 188, 212, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(30, 136, 229, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: linear-gradient(135deg, rgba(21, 101, 192, 0.9) 0%, rgba(0, 151, 167, 0.9) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(30, 136, 229, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚛️ 원자 왕국의 세 용사 — 양성이, 중성이, 전자의 끝없는 춤 · 중1-2</h1>
+        <p class="subtitle">
+          《눈에 보이지 않는 세계》<br>
+          원자 속의 작은 우주, 모든 물질의 근원을 탐험하는 이야기
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>👧 아토 (12살 소녀)</strong> — "만약 모든 걸 계속 쪼개면 뭐가 남을까?"라는 질문을 품고 원자 세계로 모험을 떠나는 호기심 가득한 소녀.</p>
+          <p><strong>➕ 양성이 (양성자)</strong> — 원자핵 안에 살며, (+) 전하를 가진 씩씩한 용사. 원소의 정체성을 결정하는 핵심 존재.</p>
+          <p><strong>⚪ 중성이 (중성자)</strong> — 전하가 없는 조용한 용사. 양성이와 함께 핵에 살며, 핵의 안정성을 담당한다.</p>
+          <p><strong>⚡ 전자 (구름 속 정령들)</strong> — (−) 전하를 가진 가볍고 빠른 존재들. 핵 주위를 확률의 구름처럼 감싸며 화학 반응의 주역이다.</p>
+          <p><strong>🔬 톰슨 · 러더퍼드 학자</strong> — 원자 모델의 역사를 들려주는 과학자들의 영혼.</p>
+          <p><strong>🔹 쿼크 삼형제</strong> — 양성자와 중성자를 구성하는 더 작은 입자들. 업(Up)과 다운(Down)의 조합으로 존재.</p>
+        </div>
+        <p class="scroll-hint">⬇ 스크롤하여 이야기 시작 ⬇</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🔍 원자의 발견</span>
+        <h2>원자의 발견 — "쪼개고 쪼개면 뭐가 남을까?"</h2>
+        <p>열두 살 소녀 아토는 이상한 질문을 좋아하는 아이였습니다. 오늘도 아토는 연필을 바라보며 생각에 빠졌습니다. <span class="dialogue">"이 연필을 반으로 자르면 두 개가 되잖아. 또 반으로 자르면 네 개. 계속 자르면... 어디까지 작아질 수 있는 거지?"</span> 그 순간, 아토의 방에 파란 빛이 번쩍였습니다. 빛 속에서 작은 목소리가 들렸습니다. <span class="dialogue">"좋은 질문이야, 아토. 바로 그 질문이 과학의 시작이었거든!"</span></p>
+        <p>빛이 사라지자 아토는 눈을 의심했습니다. 몸이 엄청나게 작아져 있었습니다! 연필 심의 <span class="highlight">탄소 원자</span> 하나가 집채만큼 거대하게 보였습니다. 아토는 약 10⁻¹⁰미터, 즉 1옹스트롬(Å) 정도의 크기로 줄어든 것입니다. <span class="dialogue">"여기가 어디야?"</span> <span class="dialogue">"<span class="highlight">원자</span>의 세계야. 나는 양성이, <span class="highlight">양성자</span>라고 불러."</span> 빨간빛을 내는 작고 강해 보이는 존재가 아토 앞에 나타났습니다.</p>
+        <p>양성이가 설명을 시작했습니다. <span class="dialogue">"아토, 네 질문에 대답해줄게. <span class="highlight">모든 물질을 계속 쪼개면, 더 이상 쪼갤 수 없는 가장 작은 단위가 나와. 그것이 바로 '원자'야.</span>"</span> 고대 그리스 철학자 <span class="highlight">데모크리토스</span>가 기원전 400년경에 처음 원자의 개념을 제안했지만, 실제로 과학적으로 증명된 것은 19세기 영국의 화학자 <span class="highlight">존 돌턴</span>에 의해서였습니다. 돌턴은 1803년 <span class="highlight">원자론</span>을 발표하여 각 원소는 고유한 질량을 가진 원자로 이루어져 있다고 주장했습니다.</p>
+        <p>아토는 주변을 둘러보았습니다. 거대한 구름처럼 보이는 것이 원자핵 주위를 감싸고 있었고, 가끔 번개처럼 반짝이는 빛이 지나갔습니다. <span class="dialogue">"저건 뭐야?"</span> <span class="dialogue">"저건 <span class="highlight">전자</span>야. 우리 세 용사가 힘을 합쳐 원자를 만드는 거지!"</span> 원자의 지름은 약 10⁻¹⁰m이지만, 원자핵의 지름은 그보다 10만 배 작은 약 10⁻¹⁵m입니다. 만약 원자를 축구장 크기로 확대하면, 원자핵은 축구장 한가운데 놓인 작은 구슬에 불과합니다. 아토의 원자 세계 모험이 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">⚡ 전자의 발견</span>
+        <h2>전자의 발견 — 톰슨 박사의 건포도 푸딩</h2>
+        <p>양성이와 중성이가 아토를 데리고 간 곳은 '역사의 방'이었습니다. 벽에는 과학자들의 초상화가 걸려 있었습니다. 첫 번째 초상화에서 영국 신사처럼 생긴 사람이 걸어 나왔습니다. <span class="dialogue">"안녕! 나는 <span class="highlight">조지프 존 톰슨</span>이야. 1897년에 내가 전자를 발견했지!"</span> 톰슨 박사가 실험 장면을 보여주었습니다. <span class="highlight">음극선관</span> 안에서 빛나는 빔이 나오고 있었습니다.</p>
+        <p><span class="dialogue">"이건 음극선관이야. 여기서 나오는 빔이 전기장과 자기장에 휘어지는 걸 보고 깨달았지. <span class="highlight">'원자 안에 마이너스(−) 전하를 가진 아주 작은 입자가 있구나!'</span>"</span> 톰슨은 전자의 <span class="highlight">전하 대 질량비</span>를 측정하여, 전자가 수소 원자보다 약 1,800배 가볍다는 것을 알아냈습니다. 이것은 원자가 더 작은 입자로 이루어져 있다는 최초의 실험적 증거였습니다. 톰슨 박사가 푸딩을 하나 꺼냈습니다. <span class="dialogue">"나는 처음에 원자가 이 푸딩 같다고 생각했어. 플러스(+) 전하를 가진 푸딩 반죽 안에, 마이너스(−) 전하를 가진 전자가 건포도처럼 박혀 있다고!"</span></p>
+        <p>톰슨 박사가 사라지자, 다음 초상화에서 또 다른 과학자가 나왔습니다. <span class="dialogue">"나는 <span class="highlight">어니스트 러더퍼드</span>야. 톰슨 모델이 틀렸다는 걸 증명했지!"</span> 1911년, 러더퍼드는 유명한 <span class="highlight">금박 실험</span>을 수행했습니다. 그는 금박에 <span class="highlight">알파 입자(α particle)</span>를 쏘았는데, 대부분은 금박을 통과했지만 일부는 큰 각도로 튕겨 나왔습니다.</p>
+        <p><span class="dialogue">"만약 원자가 푸딩처럼 부드러우면 튕겨 나올 리가 없잖아? <span class="highlight">원자 중심에 아주 작고 단단하고 무거운 '원자핵(Nucleus)'이 있다는 증거였지!</span>"</span> 러더퍼드는 원자의 양전하와 질량 대부분이 중심의 작은 핵에 집중되어 있고, 전자는 그 주위를 돌고 있다는 <span class="highlight">핵 모델</span>을 제안했습니다. 이것은 마치 태양 주위를 도는 행성과 같은 구조였습니다. 양성이가 끼어들었습니다. <span class="dialogue">"바로 우리가 사는 곳이야!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">⚛️ 양성자와 중성자</span>
+        <h2>양성자와 중성자 — 핵 속의 두 용사</h2>
+        <p>아토는 양성이와 중성이를 따라 원자의 중심, <span class="highlight">원자핵</span>으로 들어갔습니다. 엄청나게 밀도가 높은 공간이었습니다. 원자핵의 밀도는 약 10¹⁴g/cm³로, 이것은 설탕 1큰술 정도 부피에 에베레스트 산 전체 무게가 담긴 것과 같습니다! <span class="dialogue">"나, 양성자는 플러스(+) 전하를 가지고 있어. <span class="highlight">원자에 양성자가 몇 개 있느냐에 따라 그 원자가 무슨 원소인지 결정돼! 이것을 원자번호(Atomic Number)라고 해.</span>"</span></p>
+        <p><span class="dialogue">"예를 들어, 양성자가 1개면 <span class="highlight">수소</span>, 6개면 <span class="highlight">탄소</span>, 8개면 <span class="highlight">산소</span>, 79개면 <span class="highlight">금</span>이야!"</span> 중성이가 조용히 말했습니다. <span class="dialogue">"나, <span class="highlight">중성자</span>는 전하가 없어. 그래서 '중성'이야. 나는 1932년 영국의 <span class="highlight">제임스 채드윅</span>에 의해 발견되었지."</span></p>
+        <p>중성이가 중요한 역할을 설명했습니다. <span class="dialogue">"양성자들은 모두 플러스 전하잖아? 같은 전하끼리는 밀어내는 <span class="highlight">전기적 척력</span>이 작용해. 그러면 핵이 깨질 수도 있어. 내가 그 사이에 끼어서 <span class="highlight">강한 핵력</span>으로 붙들어주는 거야."</span> 강한 핵력은 자연계의 네 가지 기본 힘(중력, 전자기력, 약한 핵력, 강한 핵력) 중 가장 강한 힘이지만, 10⁻¹⁵m 이내의 매우 짧은 거리에서만 작용합니다.</p>
+        <p>양성자와 중성자의 질량은 거의 같습니다. 양성자의 질량은 약 1.673×10⁻²⁷kg이고, 중성자는 약간 더 무거운 1.675×10⁻²⁷kg입니다. 이 둘을 합쳐서 <span class="highlight">핵자</span>라고 부릅니다. <span class="highlight">질량수</span>는 양성자 수와 중성자 수의 합으로, 원자핵의 전체 핵자 수를 나타냅니다. 예를 들어 탄소-12는 양성자 6개와 중성자 6개로 이루어져 있어서 질량수가 12입니다.</p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">☁️ 전자 구름</span>
+        <h2>전자의 춤 — 핵 주위를 도는 확률의 구름</h2>
+        <p>핵에서 나온 아토는 이번엔 핵 바깥을 탐험했습니다. 멀리서 봤을 때 구름처럼 보였던 것이 가까이서 보니 수많은 빛의 점들이 빠르게 움직이는 것이었습니다. 전자 하나가 다가왔습니다. <span class="dialogue">"안녕! 나는 <span class="highlight">전자</span>. 내 질량은 양성자의 약 1/1836밖에 안 되지만, 화학 반응에서는 내가 주인공이야!"</span> 전자의 전하량은 −1.602×10⁻¹⁹C(쿨롬)으로, 양성자와 크기는 같고 부호만 반대입니다.</p>
+        <p>아토가 물었습니다. <span class="dialogue">"마치 지구가 태양 주위를 도는 것처럼 궤도를 따라 도는 거야?"</span> 전자가 웃었습니다. <span class="dialogue">"그렇게 생각했던 때도 있었어. 덴마크의 <span class="highlight">닐스 보어</span> 박사가 1913년에 '전자가 특정 궤도를 따라 돈다'고 했거든. 하지만 진짜 모습은 좀 달라!"</span> 보어 모델은 전자가 특정 에너지 준위(Energy Level)에서만 존재할 수 있다고 설명했고, 이것은 <span class="highlight">양자화</span>라는 개념을 도입한 것이었습니다.</p>
+        <p>전자가 갑자기 사라졌다가 다른 곳에 나타났습니다. <span class="dialogue">"우리 전자는 정확한 위치와 운동량을 동시에 알 수 없어. <span class="highlight">하이젠베르크의 불확정성 원리</span>라고 해."</span> 이 원리에 따르면 Δx·Δp ≥ ℏ/2로, 위치의 불확정성(Δx)과 운동량의 불확정성(Δp)의 곱은 플랑크 상수를 4π로 나눈 값(ℏ/2)보다 클 수밖에 없습니다.</p>
+        <p>현대 양자역학에서는 전자가 특정 궤도를 '도는' 것이 아니라, 핵 주위 어딘가에 '있을 확률'로 존재합니다. 이것을 <span class="highlight">오비탈</span> 또는 <span class="highlight">전자 구름</span>이라고 합니다. 오비탈의 모양은 s, p, d, f 등으로 분류되는데, s 오비탈은 구형이고, p 오비탈은 아령 모양입니다. <span class="highlight">슈뢰딩거</span>의 파동 방정식을 풀면 이 오비탈의 모양과 전자가 발견될 확률 분포를 알 수 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🌍 물질의 구성</span>
+        <h2>모든 물질의 조합 — 원자가 모이면 세상이 된다</h2>
+        <p>양성이가 아토를 원자 세계의 '전망대'로 데려갔습니다. 거기서 보니, 수많은 원자들이 손을 잡고 모여 있었습니다. <span class="dialogue">"저게 뭐야?"</span> <span class="dialogue">"<span class="highlight">분자</span>야! 원자들이 결합해서 만든 더 큰 단위지."</span> 물 분자 H₂O가 보였습니다. 산소 원자 1개와 수소 원자 2개가 약 104.5°의 각도로 결합해 있었습니다. 이 독특한 구조 때문에 물은 <span class="highlight">극성 분자</span>가 되어 많은 물질을 녹일 수 있는 것입니다.</p>
+        <p><span class="dialogue">"물 한 잔(약 200mL)에도 약 6.7×10²⁴개의 물 분자가 들어 있어!"</span> 이 숫자는 <span class="highlight">아보가드로 수</span>와 관련이 있습니다. 아보가드로 수는 6.022×10²³으로, 1몰(mol)의 입자 수를 나타냅니다. 이것은 화학에서 물질의 양을 다루는 기본 단위입니다.</p>
+        <p>더 멀리 보니, 분자들이 모여 세포가 되고, 세포가 모여 조직이 되고, 조직이 모여 장기가 되고, 장기가 모여 사람이 되는 것이 보였습니다. <span class="dialogue">"아토 네 몸에는 대략 7×10²⁷개의 원자가 있어. 그중 가장 많은 것은 산소(65%), 탄소(18%), 수소(10%), 질소(3%)야."</span></p>
+        <p>더 놀라운 이야기도 있었습니다. <span class="dialogue">"네 몸의 탄소 원자는 수십억 년 전 별에서 만들어졌어. <span class="highlight">항성 핵합성</span>이라고 하지."</span> 별 내부에서 수소가 헬륨으로, 헬륨이 탄소로 융합되고, 초신성 폭발 때 더 무거운 원소들이 우주로 퍼졌습니다. 유명한 천문학자 칼 세이건의 말처럼, <span class="highlight">"우리는 별의 먼지로 만들어졌다(We are made of star stuff)."</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">📊 원소의 차이</span>
+        <h2>원소의 차이 — 양성자 수가 모든 것을 결정한다</h2>
+        <p>아토는 '원소의 거리'로 안내받았습니다. 거기에는 118개의 집이 줄지어 있었습니다. <span class="dialogue">"여기가 <span class="highlight">주기율표</span> 마을이야!"</span> 주기율표는 1869년 러시아의 화학자 <span class="highlight">드미트리 멘델레예프</span>가 처음 만들었습니다. 그는 원소들을 원자량 순서로 배열했을 때 비슷한 성질이 주기적으로 반복된다는 것을 발견했습니다.</p>
+        <p>현대 주기율표는 원소를 <span class="highlight">원자번호</span> 순서로 배열합니다. 가로줄을 <span class="highlight">주기</span>라고 하고, 같은 주기의 원소들은 같은 수의 전자껍질을 가집니다. 세로줄을 <span class="highlight">족</span>이라고 하고, 같은 족의 원소들은 비슷한 화학적 성질을 보입니다. 예를 들어 1족 원소(리튬, 나트륨, 칼륨 등)는 모두 물과 격렬하게 반응하고, 18족 원소(헬륨, 네온, 아르곤 등)는 다른 원소와 거의 반응하지 않는 <span class="highlight">비활성 기체</span>입니다.</p>
+        <p>중성이가 덧붙였습니다. <span class="dialogue">"나(중성자)의 수는 같은 원소 안에서도 다를 수 있어. 그걸 <span class="highlight">동위원소</span>라고 해."</span> 예를 들어 수소에는 세 가지 동위원소가 있습니다: 보통 수소(¹H, 중성자 0개), <span class="highlight">중수소</span>, <span class="highlight">삼중수소</span>. 탄소-14(¹⁴C)는 방사성 동위원소로, <span class="highlight">방사성 연대 측정</span>에 사용되어 고고학 유물의 나이를 알아내는 데 쓰입니다.</p>
+        <p>전자도 끼어들었습니다. <span class="dialogue">"나(전자)의 수가 달라지면 <span class="highlight">이온</span>이 돼! 전자를 잃으면 <span class="highlight">양이온</span>, 얻으면 <span class="highlight">음이온</span>이 되지."</span> 예를 들어 나트륨 원자(Na)가 전자 1개를 잃으면 나트륨 이온(Na⁺)이 되고, 염소 원자(Cl)가 전자 1개를 얻으면 염화 이온(Cl⁻)이 됩니다. 이온은 전하를 띠기 때문에 전기장에서 이동할 수 있고, 이것이 <span class="highlight">전해질</span>이 전기를 전도하는 원리입니다.</p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🤝 화학 결합</span>
+        <h2>화학 결합 — 전자의 손잡기가 세상을 만든다</h2>
+        <p>아토는 원자들이 어떻게 결합하는지 직접 보게 되었습니다. <span class="highlight">나트륨</span> 원자와 <span class="highlight">염소</span> 원자가 마주 서 있었습니다. 나트륨의 최외각 전자 하나가 염소에게로 뛰어갔습니다. 나트륨은 전자를 잃어 양이온(Na⁺)이 되고, 염소는 전자를 얻어 음이온(Cl⁻)이 되었습니다. 양이온과 음이온이 <span class="highlight">쿨롬의 법칙</span>에 의해 서로 끌어당겨 붙었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">이것이 이온 결합(Ionic Bond)이야!</span> 서로 다른 전하가 끌어당기는 정전기적 인력으로 결합하는 거지."</span> 이온 결합 물질은 일반적으로 높은 녹는점을 가지고, 고체 상태에서는 전기를 통하지 않지만 용융되거나 물에 녹으면 전기를 통합니다. 소금(NaCl)이 대표적인 예입니다. 소금 결정에서 각 나트륨 이온은 6개의 염화 이온으로 둘러싸여 있고, 그 반대도 마찬가지입니다.</p>
+        <p>다른 곳에서는 산소 원자 2개가 만나고 있었습니다. 이번엔 전자를 주고받는 게 아니라, 전자를 '공유'하고 있었습니다. <span class="dialogue">"<span class="highlight">이것이 공유 결합(Covalent Bond)이야!</span> 전자를 함께 나눠 쓰면서 결합하는 거지."</span> 산소 분자(O₂)에서는 각 산소 원자가 전자 2개씩을 공유하여 <span class="highlight">이중 결합</span>을 형성합니다. 질소 분자(N₂)는 전자 3쌍을 공유하는 <span class="highlight">삼중 결합</span>을 가지고 있어서 매우 안정적이며, 이것이 질소가 대기의 78%를 차지하면서도 반응성이 낮은 이유입니다.</p>
+        <p>금속 원자들이 모여 있는 곳도 있었습니다. 전자들이 특정 원자에 속하지 않고 자유롭게 돌아다니고 있었습니다. <span class="dialogue">"<span class="highlight">금속 결합</span>이야! 전자들이 '바다'처럼 금속 양이온들 사이를 자유롭게 흘러다녀."</span> 이 <span class="highlight">자유 전자</span> 또는 전자의 바다 모델 덕분에 금속은 전기와 열을 잘 전도하고, 망치로 두드려도 깨지지 않고 펴지는 <span class="highlight">전성</span>과 가늘게 늘어나는 <span class="highlight">연성</span>을 가지며, 특유의 광택을 냅니다.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">🔹 쿼크의 세계</span>
+        <h2>쿼크 삼형제 — 양성자와 중성자 안의 더 작은 세계</h2>
+        <p>아토가 물었습니다. <span class="dialogue">"양성이, 중성이, 너희도 더 작은 것으로 만들어진 거야?"</span> 양성이의 몸 안으로 들어가자, 아토는 더더욱 작은 세계를 보았습니다. 세 개의 알갱이가 빙글빙글 돌고 있었습니다! <span class="dialogue">"우리는 <span class="highlight">쿼크</span>야!"</span> 쿼크는 1964년 물리학자 <span class="highlight">머리 겔만</span>과 조지 츠바이크가 독립적으로 제안한 입자입니다.</p>
+        <p><span class="dialogue">"나는 <span class="highlight">업 쿼크</span>, +⅔ 전하를 가졌어. 나도 업 쿼크! 나는 <span class="highlight">다운 쿼크</span>, −⅓ 전하야."</span> 양성이가 설명했습니다. <span class="dialogue">"<span class="highlight">양성자는 업 쿼크 2개와 다운 쿼크 1개로 이루어져 있어.</span> +⅔ + ⅔ − ⅓ = +1이지? 중성자는 업 쿼크 1개와 다운 쿼크 2개야. +⅔ − ⅓ − ⅓ = 0!"</span></p>
+        <p>쿼크에는 6가지 종류, 즉 <span class="highlight">'맛(Flavor)'</span>이 있습니다: 업(up), 다운(down), 참(charm), 기묘(strange), 꼭대기(top), 바닥(bottom). 일상 물질은 가장 가벼운 업과 다운 쿼크로만 이루어져 있고, 나머지는 고에너지 충돌에서만 잠깐 생성됩니다. 또한 쿼크는 <span class="highlight">'색(Color Charge)'</span>이라는 특성도 가지는데, 빨강, 초록, 파랑의 세 가지가 있습니다. 이것은 실제 색깔이 아니라 강한 상호작용의 전하 종류를 나타내는 비유적 표현입니다.</p>
+        <p><span class="dialogue">"쿼크를 꺼내서 볼 수 있어?"</span> <span class="dialogue">"아니, <span class="highlight">쿼크는 절대 혼자 존재할 수 없어. '색 가둠(Color Confinement)'</span>이라는 법칙 때문에 항상 2개(메손)나 3개(바리온)가 묶여 있어야 해."</span> 쿼크들을 붙들어 놓는 힘은 <span class="highlight">글루온</span>이라는 입자가 매개합니다. 놀랍게도, 쿼크를 떼어내려고 에너지를 가하면, 그 에너지가 새로운 쿼크-반쿼크 쌍을 생성해버려서 결국 쿼크를 분리할 수 없습니다. 이것은 <span class="highlight">양자색역학</span>으로 설명됩니다.</p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🔭 현대 물리학</span>
+        <h2>현대 물리학 — 원자를 이해하며 세상을 바꾸다</h2>
+        <p>아토는 '응용의 방'으로 안내받았습니다. <span class="dialogue">"첫 번째, 의료 분야."</span> <span class="highlight">X선</span> 기계, <span class="highlight">MRI(자기공명영상)</span>, 방사선 치료 장비가 보였습니다. X선은 1895년 뢴트겐이 발견했으며, 고속 전자가 금속 표적에 부딪힐 때 방출됩니다. MRI는 수소 원자핵의 <span class="highlight">핵자기공명</span> 현상을 이용하여 인체 내부를 영상화합니다. <span class="highlight">양성자 치료</span>는 암세포만 정확히 파괴하는 최첨단 방사선 치료법입니다.</p>
+        <p><span class="dialogue">"두 번째, 에너지."</span> 거대한 원자력 발전소가 보였습니다. <span class="dialogue">"<span class="highlight">원자핵이 쪼개지면(핵분열, Nuclear Fission)</span> 엄청난 에너지가 나와. 우라늄-235 1g의 핵분열로 석탄 3톤을 태운 것과 같은 에너지를 얻을 수 있어!"</span> 반대로 가벼운 원자핵이 합쳐지는 <span class="highlight">핵융합</span>은 태양의 에너지원이며, 인류가 꿈꾸는 청정 에너지입니다. 아인슈타인의 유명한 공식 E=mc²이 질량과 에너지의 등가성을 보여줍니다.</p>
+        <p><span class="dialogue">"세 번째, 전자기기."</span> 스마트폰, 컴퓨터, TV가 보였습니다. <span class="highlight">반도체</span>는 실리콘 같은 물질로, 조건에 따라 전기를 통하기도 하고 안 통하기도 합니다. <span class="highlight">트랜지스터</span>는 반도체를 이용한 스위치로, 현대 컴퓨터 칩 하나에 수십억 개가 들어갑니다. 2나노미터 공정의 칩에서 트랜지스터 하나는 겨우 수백 개의 원자 두께입니다!</p>
+        <p><span class="dialogue">"네 번째, 신소재."</span> <span class="highlight">탄소 나노튜브</span>와 <span class="highlight">그래핀</span>이 보였습니다. 그래핀은 탄소 원자가 육각형 벌집 구조로 배열된 2차원 물질로, 강철보다 200배 강하고 구리보다 전기를 잘 통하며 거의 투명합니다. 탄소 원자의 배열만 다르게 해서 다이아몬드(단단함), 흑연(부드러움), 그래핀(초강력), 풀러렌(공 모양)이 모두 만들어집니다. 이것을 <span class="highlight">동소체</span>라고 합니다.</p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리16/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">✨ 작은 것이 큰 세상</span>
+        <h2>작은 것이 큰 세상 — 우주는 원자로 이루어졌다</h2>
+        <p>모험이 끝나가고 있었습니다. 아토는 양성이, 중성이, 전자와 함께 원자 세계의 출구에 섰습니다. <span class="dialogue">"이제 돌아가야 해, 아토."</span> 중성이가 조용히 말했습니다. <span class="dialogue">"네 몸을 이루는 모든 원자 속에 우리가 있어. 네가 숨 쉴 때, 밥 먹을 때, 생각할 때, 우리는 춤추고 있지."</span> 실제로 인간의 뇌에서 생각이 일어날 때 뉴런 사이로 이온(나트륨, 칼륨, 칼슘 등)이 이동하며 전기 신호를 전달합니다.</p>
+        <p>양성이가 아토의 손을 잡았습니다. <span class="dialogue">"<span class="highlight">기억해, 아토. 이 우주의 모든 것은 원자로 이루어져 있어.</span> 별도, 행성도, 바다도, 산도, 네 친구도, 네 가족도. 우리는 모두 같은 재료로 만들어진 형제야."</span> 과학자들의 추정에 따르면, 관측 가능한 우주에는 약 10⁸⁰개의 원자가 있습니다. 그리고 그 모든 원자의 99.9999%는 텅 빈 공간입니다!</p>
+        <p>아토가 물었습니다. <span class="dialogue">"우리 몸의 원자는 영원히 내 것일까?"</span> <span class="dialogue">"아니야. 네가 숨 쉬면 산소 원자가 들어오고 이산화탄소로 나가. <span class="highlight">인체의 원자는 약 7~10년 주기로 거의 완전히 교체돼.</span> 지금 네 몸에 있는 원자 중 일부는 옛날에 공룡의 몸에 있었을 수도 있어!"</span> 원자는 창조되거나 파괴되지 않고 끊임없이 <span class="highlight">순환</span>합니다. 이것이 <span class="highlight">물질 보존의 법칙</span>입니다.</p>
+        <p>빛이 아토를 감싸기 시작했습니다. <span class="dialogue">"고마워, 양성이, 중성이, 전자! 나 이제 세상을 다르게 볼 거야!"</span> 눈을 떠보니 아토는 자기 방에 앉아 있었습니다. 손에는 연필이 들려 있었습니다. 아토는 연필을 바라보았습니다. 이제 연필 속 탄소 원자들이 보이는 것 같았습니다. 약 10²³개의 원자가 sp² 혼성 오비탈로 결합하여 흑연 층을 이루고 있다는 것을, 각 층 사이가 판데르발스 힘으로 약하게 붙어 있어서 글씨를 쓸 때 떨어져 나온다는 것을. 작은 세계가 큰 세상을 만든다. 아토는 미소 지으며 일기장을 펼쳤습니다.</p>
+        <p style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(0, 188, 212, 0.1) 100%); border-radius: 12px; border-left: 4px solid #1E88E5;">
+          <strong>🌟 교훈: 모든 것은 원자로 이루어져 있다.</strong><br><br>
+          우주의 모든 물질은 원자로 이루어져 있습니다. 원자는 양성자, 중성자, 전자로 구성되며, 양성자와 중성자 안에는 더 작은 쿼크가 있습니다. 양성자의 수(원자번호)가 원소의 정체를 결정하고, 전자의 배열과 움직임이 화학 반응과 물질의 성질을 결정합니다. 원자를 이해하는 것은 우주를 이해하는 열쇠이며, 현대 과학기술의 근간입니다. 우리 몸의 원자는 수십억 년 전 별에서 만들어졌고, 끊임없이 순환합니다. 작은 원자가 모여 이 거대한 우주를 만든 것입니다.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+
+    function goBack() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/physics16_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>빛을 잃은 마을을 구한 소녀 '전지'와 전기의 길 찾기 대모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00BFA5 0%, #009688 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 191, 165, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 191, 165, 0.15);
+      color: #00897B;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00BFA5;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #00BFA5;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(0, 191, 165, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #009688;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #009688;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #00897B;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A7FFEB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 191, 165, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 191, 165, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 150, 136, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 191, 165, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🔌 빛을 잃은 마을을 구한 소녀 '전지'와 전기의 길 찾기 대모험</h1>
+        <p class="subtitle">
+          《전기가 길을 찾으면 불이 켜진다》<br>
+          회로, 직렬과 병렬, 옴의 법칙을 배우는 전기 모험 이야기
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>전지</strong> — 열한 살 소녀. 양손에 양극(+)과 음극(−)의 힘을 타고난 아이. 깜깜촌에 빛을 되돌리기 위해 모험을 떠나는 주인공.</p>
+          <p><strong>도선이</strong> — 구리빛 소년. 전선(도체)의 화신으로, 전기가 지나가는 길을 만드는 역할. 자유 전자가 풍부한 충실한 조력자.</p>
+          <p><strong>스위치</strong> — 도도하고 신중한 소년. 회로의 문지기로 전기 흐름을 제어한다. 합선 사고의 트라우마를 극복하며 성장한다.</p>
+          <p><strong>단락이</strong> — 마을의 욕심쟁이. 지름길을 택해 합선 사고를 일으키지만 반성 후 안전장치 담당으로 변신한다.</p>
+          <p><strong>전지의 할머니</strong> — 전기의 원리를 알고 있는 지혜로운 어른. 대단절 이전의 역사를 기억하는 유일한 인물.</p>
+        </div>
+        <p class="scroll-hint">⬇ 스크롤하여 이야기 시작 ⬇</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🔋 건전지</span>
+        <h2>건전지의 시작 — 빛이 사라진 마을, '깜깜촌'의 절망</h2>
+        <p>물리 왕국의 동쪽 끝자락에 '깜깜촌'이라는 마을이 있었습니다. 이 마을에는 오래된 전설이 내려오고 있었습니다.<br><br><span class="dialogue">"옛날에는 마을 곳곳에 따뜻한 빛이 있었다. 하지만 '대단절(大斷絶)'이 일어난 후, 모든 빛이 사라졌다."</span></p>
+        <p>지금의 깜깜촌은 이름 그대로 늘 어두웠습니다. 아이들은 햇빛이 있는 낮에만 놀 수 있었고, 해가 지면 모든 것이 멈추었습니다. 촛불 하나에 의지해 밤을 보내는 마을 사람들의 얼굴에는 늘 그림자가 드리워져 있었지요. 마을 어른들은 아이들에게 '대단절'의 이야기를 들려주곤 했지만, 아무도 그 원인을 정확히 알지 못했습니다.</p>
+        <p>이 마을에 '전지'라는 열한 살 소녀가 살고 있었습니다. 전지는 빨간 머리띠를 하고 다니는 활발한 아이였는데, 남다른 특징이 하나 있었습니다. 전지의 양손에서는 미세하게 따뜻한 기운이 흘러나왔던 것입니다. 오른손에서는 무언가를 밀어내는 힘이, 왼손에서는 끌어당기는 힘이 느껴졌지요. 이것은 마치 <span class="highlight">전하</span>가 만들어내는 힘과 같았습니다. 양전하(+)는 서로 밀어내고, 음전하(−)는 양전하를 끌어당기는 것처럼요.</p>
+        <p>마을 사람들은 그것을 이상하게 여겼지만, 전지의 할머니만은 달랐습니다.<br><br><span class="dialogue">"전지야, 네 오른손은 양극(+)이고, 왼손은 음극(−)이란다. 너는 태어날 때부터 전기 에너지를 가지고 태어난 아이야. 마치 건전지처럼 말이야."</span></p>
+        <p>전지가 물었습니다.<br><br><span class="dialogue">"건전지가 뭐예요, 할머니?"</span></p>
+        <p><span class="dialogue">"건전지는 <span class="highlight">화학 에너지(Chemical Energy)를 전기 에너지로 바꿔주는 장치</span>란다. 1800년 이탈리아의 과학자 알레산드로 볼타(Alessandro Volta)가 최초의 전지인 '볼타 전지'를 발명했지. 아연판과 구리판 사이에 소금물에 적신 종이를 넣어 전류를 만들어낸 거야. 양극과 음극 사이에는 <span class="highlight">전위차</span>, 그러니까 '전압(Voltage)'이 생기는데, 마치 높은 곳의 물이 낮은 곳으로 흐르듯, 전압이 있으면 전기가 흐를 수 있어."</span></p>
+        <p>할머니는 덧붙였습니다.<br><br><span class="dialogue">"전압의 단위는 볼타의 이름을 딴 <span class="highlight">볼트</span>를 쓴단다. 우리가 쓰는 건전지는 보통 1.5V이고, 전압이 높을수록 전기를 흐르게 하는 힘이 세지."</span></p>
+        <p>전지는 자기 양손을 번갈아 바라보았습니다. 오른손(+)과 왼손(−). 이 두 손 사이에 무언가를 연결하면 전기가 흐를 수 있다는 뜻이었습니다. 할머니의 말에 따르면, 전지 안에서는 <span class="highlight">산화-환원 반응</span>이라는 화학 반응이 일어나며, 이 반응이 전자를 이동시켜 전류를 만들어낸다고 했습니다.</p>
+        <p><span class="dialogue">"할머니, 그러면 내가 이 마을에 다시 빛을 켤 수 있는 거예요?"</span></p>
+        <p>깜깜촌의 운명을 바꿀 모험이, 소녀 전지의 작은 손에서 시작되려 하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🔌 전선 연결</span>
+        <h2>전선 연결 — 전기의 길을 만드는 구리빛 소년, '도선이'</h2>
+        <p>전지가 빛을 되찾겠다고 결심한 다음 날, 마을 뒷산의 폐광에서 한 소년이 나타났습니다. 온몸이 구리빛으로 반짝이는 소년이었는데, 이름은 '도선이'였습니다. 그의 피부는 마치 잘 닦인 구리처럼 붉은 금빛으로 빛났고, 햇빛을 받으면 눈이 부실 정도였습니다.</p>
+        <p><span class="dialogue">"나는 구리로 만들어진 전선이야. 전기가 지나가는 길, 그러니까 <span class="highlight">'도체(Conductor)'</span>의 화신이지."</span><br><br>도선이가 자기소개를 했습니다.</p>
+        <p>전지가 물었습니다.<br><br><span class="dialogue">"도체가 뭐야? 왜 구리가 전선으로 쓰이는 거야?"</span></p>
+        <p><span class="dialogue">"도체는 <span class="highlight">원자 속에서 자유롭게 움직일 수 있는 전자, 즉 '자유 전자(Free Electron)'를 가진 물질</span>이야. 구리, 은, 알루미늄 같은 금속이 대표적이지. 금속 원자들은 가장 바깥 껍질의 전자를 쉽게 내놓는데, 이 전자들이 금속 전체를 떠돌아다니며 <span class="highlight">'전자 바다(Electron Sea)'</span>를 형성해. 자유 전자가 많을수록 전기가 잘 흘러."</span></p>
+        <p>도선이는 자신의 팔을 내밀며 말했습니다.<br><br><span class="dialogue">"나 같은 구리는 자유 전자가 아주 풍부해서 전기의 고속도로라고 할 수 있어. 실제로 구리의 <span class="highlight">비저항</span>은 약 1.7×10⁻⁸ Ω·m로, 은 다음으로 전기가 잘 통하지. 은이 더 좋지만 비싸서 대부분 구리를 쓰는 거야."</span></p>
+        <p>도선이는 전지의 양손 사이를 연결하는 역할을 할 수 있었습니다. 하지만 문제가 있었습니다.</p>
+        <p><span class="dialogue">"전지야, 네 양손을 그냥 내가 연결하면 전기가 흐르긴 하겠지만, 그 전기가 아무 일도 안 하고 그냥 돌아오기만 해. 빛을 내려면 전구 같은 <span class="highlight">'부하(Load)'</span>가 필요해. 부하란 전기 에너지를 다른 에너지로 바꿔주는 장치를 말해."</span></p>
+        <p>마을의 창고를 뒤지자, 먼지 쌓인 유리 전구 하나가 나왔습니다. 전구 안에는 가느다란 <span class="highlight">텅스텐 필라멘트</span>가 감겨있었지요.</p>
+        <p><span class="dialogue">"이 전구의 필라멘트는 저항이 큰 물질이야. 전기가 지나가면 <span class="highlight">줄 열</span> 때문에 열이 나고, 온도가 약 2,500°C까지 올라가면서 빛을 내는 거야. 이것을 <span class="highlight">'백열(Incandescence)'</span>이라고 해. 텅스텐은 녹는점이 3,422°C로 금속 중 가장 높아서 필라멘트로 쓰이지."</span><br><br>도선이가 설명했습니다.</p>
+        <p>전지의 오른손(+극)에서 도선이를 통해 전구로, 전구에서 다시 도선이를 통해 전지의 왼손(−극)으로 돌아오는 길. 이것이 바로 <span class="highlight">'회로(Circuit)', 돌아오는 길</span>이었습니다.</p>
+        <p><span class="dialogue">"회로라는 이름 자체가 '돌아오는 길'이라는 뜻이야. 영어 Circuit도 '순환하다'는 의미의 라틴어에서 왔어. <span class="highlight">전기는 반드시 닫힌 경로(Closed Path)를 통해 출발점으로 돌아와야 흘러</span>. 이것을 '폐회로'라고 해."</span></p>
+        <p>도선이의 말에 전지는 고개를 끄덕였습니다. 전기의 길이 완성되려면, 끊어지지 않는 연결이 필요했습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">🚪 스위치</span>
+        <h2>스위치의 역할 — 문지기 '스위치', 열고 닫는 자의 권력</h2>
+        <p>전지와 도선이가 전구를 연결하려 할 때, 한 소년이 팔짱을 끼고 길을 가로막았습니다. 그의 어깨에는 작은 경첩이 달려 있었고, 팔에는 금속 접점이 반짝이고 있었습니다.</p>
+        <p><span class="dialogue">"잠깐! 아무 때나 전기를 흘리면 어떡해? 필요할 때만 켜고, 필요 없으면 꺼야지!"</span></p>
+        <p>이 소년의 이름은 '스위치'였습니다. 스위치는 회로에서 전기의 흐름을 제어하는 <span class="highlight">개폐기</span> 역할을 하는 아이였지요. 스위치가 팔을 벌리면(열림 상태, Open) 회로가 끊어져 전기가 흐르지 않고, 팔을 모으면(닫힘 상태, Closed) 금속 접점이 연결되어 전기가 흘렀습니다.</p>
+        <p><span class="dialogue">"나 없이는 전기를 제어할 수 없어! 전기가 계속 흐르면 건전지가 금방 닳아버린다고! 게다가 <span class="highlight">'개로(Open Circuit)'</span> 상태에서는 전류가 0이야. 회로가 열려있으면 아무리 전압이 있어도 전류는 흐르지 않아."</span><br><br>스위치는 도도하게 말했습니다.</p>
+        <p>전지가 반박했습니다.<br><br><span class="dialogue">"하지만 네가 항상 열려있으면 영원히 빛을 켤 수 없잖아!"</span></p>
+        <p>두 사람 사이에 팽팽한 긴장이 흘렀습니다. 도선이가 중재에 나섰습니다.</p>
+        <p><span class="dialogue">"둘 다 맞아. 스위치가 없으면 전기를 제어할 수 없고, 스위치가 항상 열려있으면 회로가 쓸모없어져. 핵심은 <span class="highlight">'필요할 때 닫고(Close), 필요 없을 때 여는(Open) 것'</span>이야. 이것이 <span class="highlight">전기 제어</span>의 기본이지."</span></p>
+        <p>도선이는 덧붙였습니다.<br><br><span class="dialogue">"실제로 스위치에는 여러 종류가 있어. <span class="highlight">토글 스위치</span>는 레버를 올리고 내리는 방식이고, <span class="highlight">푸시 버튼</span>은 누르면 켜지는 방식이야. <span class="highlight">릴레이</span>는 전자석을 이용해 자동으로 회로를 열고 닫는 장치이고, <span class="highlight">트랜지스터</span>는 전자 신호로 스위칭하는 반도체 소자야."</span></p>
+        <p>스위치는 마지못해 고개를 끄덕였습니다. 사실 스위치에게는 아픈 과거가 있었습니다. 대단절이 일어나기 전, 스위치의 선조가 실수로 회로를 잘못 연결해 <span class="highlight">합선</span>이 일어난 것이 마을의 빛이 사라진 원인이었거든요. 그 이후로 스위치 일족은 '절대 회로를 닫지 말라'는 가훈을 지켜왔던 것입니다.</p>
+        <p><span class="dialogue">"이번에는 다를 거야. 올바른 회로를 만들면 합선은 일어나지 않아. <span class="highlight">적절한 저항이 있는 부하를 연결하면 안전하게 전류가 흘러</span>."</span><br><br>전지가 스위치의 손을 잡았습니다.</p>
+        <p>스위치는 오랜 두려움과 싸우며 천천히 팔을 모았습니다. 딸깍. 접점이 연결되고 회로가 닫혔습니다. 제어와 연결, 두 가지가 모두 있어야 안전한 전기가 흐를 수 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">➡️ 직렬 회로</span>
+        <h2>직렬 회로 — 한 줄로 서! 전구 세 개의 외나무다리</h2>
+        <p>전지, 도선이, 스위치 세 친구는 마을 광장에서 첫 번째 회로를 만들기로 했습니다. 전지의 오른손(+극)에서 도선이가 나와 스위치를 지나고, 전구 하나를 거쳐 다시 전지의 왼손(−극)으로 돌아오는 길.</p>
+        <p>스위치가 딸깍 닫히자, 전구에 주황빛이 켜졌습니다!</p>
+        <p><span class="dialogue">"불이 켜졌어!"</span><br><br>마을 사람들이 모여들었습니다. 수십 년 만에 보는 전기 불빛에 모두가 환호했습니다.</p>
+        <p>하지만 전구 하나로는 마을 전체를 밝힐 수 없었습니다.<br><br><span class="dialogue">"전구를 더 달자!"</span><br><br>누군가가 외쳤습니다.</p>
+        <p>전지는 전구 세 개를 한 줄로 연결했습니다. 전지에서 나온 전기가 첫 번째 전구, 두 번째 전구, 세 번째 전구를 차례로 지나가는 방식이었지요. 이것이 <span class="highlight">'직렬 회로(Series Circuit)'</span>였습니다.</p>
+        <p>하지만 전구에 불이 들어오자 아이들이 실망했습니다.<br><br><span class="dialogue">"어? 하나만 있을 때보다 어두워!"</span></p>
+        <p>맞았습니다. 도선이가 설명했습니다.<br><br><span class="dialogue">"직렬 회로에서 <span class="highlight">전체 저항(Total Resistance)은 각 저항의 합</span>이야. R₁ + R₂ + R₃ = R_total. 전구 하나의 저항이 R이면, 세 개를 직렬로 연결하면 저항이 3R이 되지. <span class="highlight">옴의 법칙(Ohm's Law) V = IR</span>에 따르면, 전압 V가 같을 때 저항 R이 커지면 전류 I는 작아져."</span></p>
+        <p>도선이는 계속 설명했습니다.<br><br><span class="dialogue">"게다가 직렬 회로에서는 <span class="highlight">전압이 각 저항에 분배</span>돼. 전지의 전압이 6V이고 전구 3개가 직렬이면, 각 전구에 2V씩 걸려. 이것을 <span class="highlight">키르히호프의 전압 법칙</span>이라고 해: 회로를 한 바퀴 돌면 전압 상승과 전압 강하의 합은 0이야."</span></p>
+        <p>설상가상으로 더 큰 문제가 벌어졌습니다. 두 번째 전구의 필라멘트가 끊어진 것입니다. 순간, 세 전구가 모두 꺼졌습니다!</p>
+        <p><span class="dialogue">"왜 다 꺼진 거야!"</span><br><br>스위치가 당황했습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">직렬 회로에서는 전기가 지나가는 경로가 하나뿐</span>이야. 하나가 끊어지면 회로 전체가 개로(Open)가 되는 거야. 마치 외나무다리에서 한 사람이 쓰러지면 뒤에 있는 사람 모두 건너지 못하는 것처럼. 직렬 회로에서 <span class="highlight">전류(Current)는 어느 지점에서나 동일</span>해. I₁ = I₂ = I₃. 그래서 하나가 끊어지면 전류가 0이 돼."</span><br><br>도선이가 설명했습니다.</p>
+        <p>직렬 회로는 간단하지만, 하나의 고장이 전체를 멈추게 하는 치명적 약점이 있었습니다. 전지는 고민에 빠졌습니다.<br><br><span class="dialogue">"다른 방법이 있을 텐데..."</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🔀 병렬 회로</span>
+        <h2>병렬 회로 — 갈림길의 지혜, 전구마다 자기만의 길을 갖다</h2>
+        <p>직렬 회로의 한계에 부딪힌 전지에게 도선이가 새로운 아이디어를 가져왔습니다.</p>
+        <p><span class="dialogue">"전지야, 전구를 한 줄로 세우지 말고, 각각에게 독립된 길을 만들어주면 어떨까?"</span></p>
+        <p>도선이는 땅에 그림을 그렸습니다. 전지의 양극에서 나온 전선이 갈림길처럼 여러 갈래로 나뉘어 각 전구로 향하고, 전구를 지난 후 다시 합쳐져서 전지의 음극으로 돌아오는 그림이었습니다.</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">'병렬 회로(Parallel Circuit)'</span>야! 각 전구가 독립적인 경로(Branch)를 가지는 구조지."</span></p>
+        <p>전지가 세 개의 전구를 병렬로 연결하고 스위치를 닫자, 놀라운 일이 벌어졌습니다. 세 전구 모두 밝게 빛났습니다! 직렬일 때보다 훨씬 밝았습니다.</p>
+        <p><span class="dialogue">"왜 이렇게 밝아진 거야?"</span><br><br>스위치가 놀라 물었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">병렬 회로에서는 각 분기(Branch)에 전지의 전체 전압이 그대로 걸려</span>. V₁ = V₂ = V₃ = V_전지. 전압이 나뉘지 않으니까 전구 하나하나가 최대 밝기로 빛날 수 있지."</span><br><br>도선이가 설명했습니다.</p>
+        <p>도선이는 병렬 회로의 저항에 대해서도 설명했습니다.<br><br><span class="dialogue">"병렬 회로에서 <span class="highlight">합성 저항(Equivalent Resistance)의 역수</span>는 각 저항 역수의 합이야. 1/R_total = 1/R₁ + 1/R₂ + 1/R₃. 같은 저항 R인 전구 3개를 병렬로 연결하면 합성 저항은 R/3이 돼. 저항이 줄어드니까 전체 전류는 오히려 증가해!"</span></p>
+        <p>그리고 결정적인 테스트가 이어졌습니다. 전지가 일부러 두 번째 전구를 빼보았습니다. 직렬이었다면 모든 전구가 꺼졌겠지만, 이번에는 나머지 두 전구가 여전히 밝게 빛나고 있었습니다!</p>
+        <p><span class="dialogue">"<span class="highlight">키르히호프의 전류 법칙</span>에 따르면, 분기점으로 들어오는 전류와 나가는 전류의 합은 같아. I_total = I₁ + I₂ + I₃. 한 분기가 끊어져도 다른 분기로는 여전히 전류가 흘러!"</span></p>
+        <p>마을 사람들이 환호했습니다. 병렬 회로의 장점은 명확했습니다. 각 부하에 동일한 전압이 걸리고, 하나가 고장 나도 나머지가 정상 작동합니다. 우리 집의 콘센트가 병렬로 연결되어 있는 이유가 바로 이것이지요.</p>
+        <p>전지는 깨달았습니다. 모두가 같은 한 줄에 매여 있을 필요는 없다는 것을. 각자의 길을 가지면서도 하나로 연결될 수 있다는 것을. 그것이 병렬의 지혜였습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">💧 전류의 경로</span>
+        <h2>전류의 경로 — 물의 흐름처럼, 전자들의 대행진</h2>
+        <p>마을에 빛이 하나둘 켜지기 시작하자, 아이들이 궁금해하기 시작했습니다.</p>
+        <p><span class="dialogue">"전기가 흐른다는 게 정확히 뭐야? 전선 안에서 뭐가 움직이는 거야?"</span></p>
+        <p>전지가 아이들을 모아놓고 할머니에게서 배운 것을 설명했습니다.</p>
+        <p><span class="dialogue">"전선 안에는 아주 작은 알갱이들이 있어. <span class="highlight">'자유 전자(Free Electron)'</span>라고 하는데, 이 전자들이 한쪽에서 다른 쪽으로 이동하면서 전기가 흐르는 거야. 마치 수도관 안의 물 분자들이 이동하면서 물이 흐르는 것처럼. 이것을 <span class="highlight">'물-회로 비유(Water-Circuit Analogy)'</span>라고 해."</span></p>
+        <p>도선이가 자기 몸을 투명하게 바꾸어 안을 보여주었습니다. 수억 개의 반짝이는 점들이 일정한 방향으로 천천히 이동하고 있었습니다.</p>
+        <p><span class="dialogue">"저것이 자유 전자야. 흥미로운 사실은, <span class="highlight">전자의 실제 이동 속도</span>는 매우 느려. 대략 초속 1mm 정도야! 하지만 전기 신호는 빛의 속도에 가깝게 전달돼. 이것은 전자 하나가 빨리 달려서가 아니라, 전자들이 연쇄적으로 밀어주기 때문이야. 마치 도미노처럼 말이지."</span></p>
+        <p>전지가 덧붙였습니다.<br><br><span class="dialogue">"재미있는 건, <span class="highlight">전자는 음극(−)에서 양극(+)으로 이동하지만, 과학에서 '전류(Current)의 방향'은 양극(+)에서 음극(−)으로 정했다</span>는 거야. 이것을 <span class="highlight">'전류의 관습적 방향(Conventional Current)'</span>이라고 해."</span></p>
+        <p>스위치가 고개를 갸우뚱했습니다.<br><br><span class="dialogue">"왜 반대로 정한 거야?"</span></p>
+        <p><span class="dialogue">"전자가 발견되기 전인 18세기에 벤저민 프랭클린(Benjamin Franklin)이 전류의 방향을 먼저 정했거든. 그는 '양의 유체'가 흐른다고 생각했어. 나중에 J.J. 톰슨(J.J. Thomson)이 1897년 전자를 발견하고, 실제 전자의 이동 방향이 반대라는 것을 알았지만, 이미 전 세계가 쓰고 있는 약속이라 그대로 쓰고 있어."</span></p>
+        <p><span class="highlight">전류의 세기</span>는 단위 시간당 흐르는 전하량으로, <span class="highlight">I = Q/t</span>로 나타내. 단위는 <span class="highlight">'암페어(A)'</span>를 사용하는데, 프랑스의 과학자 앙드레-마리 앙페르(André-Marie Ampère)의 이름에서 따왔어. 1암페어는 1초에 약 6.25×10¹⁸개, 즉 625경 개의 전자가 어떤 단면을 지나가는 양이야.</p>
+        <p>전지는 물의 비유를 들었습니다.<br><br><span class="dialogue">"<span class="highlight">전압(Voltage)은 물탱크의 높이 차이(수압), 전류(Current)는 흐르는 물의 양(유량), 저항은 수도관의 좁은 부분</span>이야. 높이 차이가 크면 물이 세게 흐르고, 관이 좁으면 물이 적게 흐르지. 이 관계가 바로 옴의 법칙 V = IR이야!"</span></p>
+        <p>이 비유는 전기의 강물을 이해하는 데 완벽했습니다. 보이지 않는 전자들의 흐름에도 정확한 수학적 법칙이 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">⚠️ 합선 위험</span>
+        <h2>합선 위험 — 금지된 길, 전기의 지름길이 불을 부르다</h2>
+        <p>마을에 빛이 돌아오면서 사람들은 점점 욕심이 생기기 시작했습니다.<br><br><span class="dialogue">"전구를 더 달아! 더 밝게!"</span></p>
+        <p>마을의 욕심쟁이 '단락이'가 전지에게 찾아왔습니다.</p>
+        <p><span class="dialogue">"전지야, 전구를 거치지 않고 전선을 바로 연결하면 전기가 더 빨리 흐르지 않을까? 그러면 더 많은 일을 할 수 있잖아!"</span></p>
+        <p>전지의 얼굴이 하얘졌습니다.<br><br><span class="dialogue">"안 돼! 그건 <span class="highlight">'합선(Short Circuit)'</span>이야! 절대 하면 안 돼! 'Short'는 '짧은 지름길'이라는 뜻인데, 전기가 저항을 피해 가장 짧은 길로 돌아가는 현상이야."</span></p>
+        <p>하지만 단락이는 듣지 않았습니다. 몰래 밤에 전지의 양극과 음극을 전구 없이 구리 전선으로 직접 연결해버린 것입니다.</p>
+        <p>순간, 엄청난 일이 벌어졌습니다. 전구라는 저항이 없이 전선만 연결되자, 저항이 거의 0에 가까워졌습니다. <span class="highlight">옴의 법칙 I = V/R</span>에 따라 저항 R이 0에 가까우면 전류 I는 이론상 무한대에 가깝게 커집니다!</p>
+        <p>어마어마한 전류가 가느다란 전선을 통해 흐르면서 전선이 붉게 달아올랐습니다. <span class="highlight">줄 열</span>은 P = I²R로 계산되는데, 저항 R이 작아도 전류 I가 엄청나게 커지면 발열량이 급격히 증가합니다.</p>
+        <p><span class="dialogue">"불이야!"</span><br><br>전선에서 불꽃이 튀고, 전선을 감싸던 <span class="highlight">피복</span>이 녹아내렸습니다. 전지의 에너지가 순식간에 방전되면서 전지도 쓰러졌습니다. 이것이 <span class="highlight">'전기 화재(Electrical Fire)'</span>의 원인입니다.</p>
+        <p>도선이가 재빨리 회로를 끊어 불을 껐지만, 깜깜촌은 다시 어둠에 빠졌습니다.</p>
+        <p>마을 사람들이 두려움에 떨었습니다.<br><br><span class="dialogue">"역시 전기는 위험해! 쓰면 안 돼!"</span></p>
+        <p>하지만 전지의 할머니가 나서서 말했습니다.<br><br><span class="dialogue">"전기가 위험한 게 아니란다. 잘못된 연결이 위험한 거야. 그래서 <span class="highlight">'퓨즈(Fuse)'와 '차단기(Circuit Breaker)'</span>라는 안전장치가 필요해. 퓨즈는 녹는점이 낮은 금속으로 만들어져서, 과전류가 흐르면 열에 의해 녹아 회로를 끊어줘. 차단기는 전자석이나 바이메탈을 이용해 자동으로 회로를 차단하고, 퓨즈와 달리 재사용이 가능하지."</span></p>
+        <p>할머니는 덧붙였습니다.<br><br><span class="dialogue">"현대에는 <span class="highlight">누전차단기</span>도 사용해. 이것은 들어가는 전류와 나오는 전류의 차이를 감지해서, 전류가 새는 것(누전)을 막아주지. 욕실같이 물이 있는 곳에서 특히 중요한 안전장치야."</span></p>
+        <p>합선 사고는 전기의 무서움을 알려주었지만, 동시에 안전의 중요성도 가르쳐주었습니다. 전기는 올바르게 연결하면 빛이 되고, 잘못 연결하면 불이 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">💡 전구의 밝기</span>
+        <h2>전구의 밝기 — 밝기의 비밀, 전압과 저항이 만드는 빛의 세기</h2>
+        <p>합선 사고에서 회복한 전지는 더욱 신중하게 회로를 설계하기 시작했습니다. 이번에는 마을의 구역별로 다른 밝기가 필요했습니다. 광장은 환하게, 골목은 은은하게, 집 안은 아늑하게.</p>
+        <p><span class="dialogue">"전구의 밝기를 어떻게 조절하지?"</span><br><br>전지가 고민하자 도선이가 설명했습니다.</p>
+        <p><span class="dialogue">"전구의 밝기는 전구가 소비하는 <span class="highlight">'전력(Power)'</span>에 비례해. 전력은 <span class="highlight">P = VI</span>로 계산해. 전압 V와 전류 I의 곱이지. 단위는 <span class="highlight">와트</span>를 써. 이 단위는 증기기관을 개량한 제임스 와트(James Watt)의 이름에서 따왔어."</span></p>
+        <p>도선이는 전력 공식을 더 자세히 설명했습니다.<br><br><span class="dialogue">"옴의 법칙 V = IR을 전력 공식에 대입하면 여러 형태가 나와. <span class="highlight">P = VI = I²R = V²/R</span>. 저항 R이 정해진 전구에서 전압 V를 높이면 전류도 증가하고 밝기가 세지지. 반대로 전압을 낮추면 어두워져."</span></p>
+        <p>전지가 실험해보았습니다. 같은 전구에 전압을 높이면 전류가 증가하고 밝기가 세졌습니다. 반대로 전구의 저항이 큰 것을 사용하면 전류가 줄어들어 밝기가 약해졌지요.</p>
+        <p><span class="dialogue">"그러면 직렬 회로에서 전구가 어두웠던 이유도 이거 때문이야?"</span><br><br>스위치가 물었습니다.</p>
+        <p><span class="dialogue">"맞아! <span class="highlight">직렬에서는 전압이 각 전구에 분배</span>되니까, 각 전구에 걸리는 전압이 작아져. P = V²/R 공식에서 V가 작아지면 전력 P도 줄어서 어두워지는 거야. 반면 병렬에서는 각 전구에 전체 전압이 걸리니까 밝기가 유지되지."</span></p>
+        <p>전지는 구역별로 다른 저항값의 전구를 사용하기로 했습니다. 광장에는 저항이 작은 전구(전류가 많이 흘러 밝음), 골목에는 저항이 큰 전구(전류가 적게 흘러 은은함), 집 안에는 중간 저항의 전구를 배치했습니다.</p>
+        <p>도선이가 덧붙였습니다.<br><br><span class="dialogue">"실제로 전구의 밝기를 나타낼 때는 <span class="highlight">루멘</span>이라는 단위를 써. 이것은 <span class="highlight">광속</span>, 즉 빛의 총량을 나타내. 60W 백열전구는 약 800루멘을 내고, 같은 밝기의 LED는 약 10W만 소비해. <span class="highlight">발광 효율</span>이 LED가 훨씬 높은 거지."</span></p>
+        <p>밤이 되자, 마을은 마치 별빛이 내려앉은 것처럼 각 구역마다 다른 온기의 빛으로 물들었습니다.</p>
+        <p>아이들이 탄성을 질렀습니다.<br><br><span class="dialogue">"마을이 보석함 같아!"</span></p>
+        <p>같은 전기라도 회로 설계에 따라 전혀 다른 결과를 만들어낼 수 있었습니다. 전기의 예술은 연결의 방식에 달려있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">📐 회로 설계</span>
+        <h2>회로 설계 — 깜깜촌의 청사진, 전지가 그린 빛의 지도</h2>
+        <p>마을 전체에 빛을 되돌리기 위해 전지는 정식으로 '회로 설계도'를 그리기 시작했습니다. 이것을 <span class="highlight">'회로도(Circuit Diagram)'</span> 또는 <span class="highlight">'회로 스키매틱(Schematic)'</span>이라고 합니다.</p>
+        <p>도선이가 회로도의 기호를 가르쳐주었습니다.<br><br><span class="dialogue">"<span class="highlight">전지는 긴 선과 짧은 선으로 그려. 긴 쪽이 양극(+), 짧은 쪽이 음극(−)</span>이야. 여러 개의 셀을 연결한 것을 배터리(Battery)라고 해. 전구는 동그라미 안에 X 표시, <span class="highlight">저항</span>은 지그재그 선이나 직사각형으로 그려. 스위치는 열린 문 모양, 전선은 직선으로 그리면 돼. 전선이 교차하지만 연결되지 않은 경우는 호를 그려서 표시해."</span></p>
+        <p>전지는 마을 지도 위에 회로를 그려나갔습니다. 마을의 중심 발전소(전지 역할)에서 주 전선이 나가고, 각 구역으로 병렬 분기하며, 각 집과 가로등에 개별 스위치를 달았습니다. 병렬로 연결하되, 각 분기마다 퓨즈를 넣어 과전류를 방지했지요.</p>
+        <p><span class="dialogue">"여기에 <span class="highlight">전류계(Ammeter)를 달아서 얼마나 전류가 흐르는지 확인하고, 전압계(Voltmeter)로 각 구역의 전압을 점검</span>해야 해."</span><br><br>전지가 꼼꼼하게 측정 장치를 추가했습니다.</p>
+        <p>스위치가 감탄했습니다.<br><br><span class="dialogue">"전류계는 회로에 직렬로, 전압계는 병렬로 연결한다는 거지?"</span></p>
+        <p><span class="dialogue">"정확해! <span class="highlight">전류계가 직렬인 이유</span>는 흐르는 전류를 직접 측정해야 하니까야. 전류계 자체의 내부 저항은 매우 작아서 회로에 거의 영향을 주지 않아. <span class="highlight">전압계가 병렬인 이유</span>는 두 점 사이의 전위차를 측정해야 하니까야. 전압계의 내부 저항은 매우 커서 거의 전류를 빼앗지 않아."</span><br><br>전지가 설명했습니다.</p>
+        <p>도선이가 덧붙였습니다.<br><br><span class="dialogue">"회로를 분석할 때는 <span class="highlight">옴의 법칙</span>과 <span class="highlight">키르히호프의 법칙들</span>을 사용해. KVL은 '회로를 한 바퀴 돌면 전압의 합이 0', KCL은 '한 점에서 들어오는 전류와 나가는 전류의 합이 같다'야. 이 세 가지만 알면 어떤 복잡한 회로도 분석할 수 있어!"</span></p>
+        <p>회로 설계도가 완성되었을 때, 그것은 단순한 전기 도면이 아니었습니다. 깜깜촌의 모든 집, 모든 골목, 모든 광장을 빛으로 연결하는 '빛의 지도'였습니다.</p>
+        <p>마을 사람들은 설계도를 보며 희망에 들떠 있었습니다. 합선의 교훈을 잊지 않고, 안전하면서도 효율적인 회로. 올바른 설계가 있으면, 전기는 위험이 아니라 축복이 될 수 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌟 연결의 완성</span>
+        <h2>연결의 완성 — 깜깜촌에 빛이 돌아온 날, 전지의 마지막 선물</h2>
+        <p>공사가 시작되었습니다. 도선이가 마을 곳곳에 구리 전선을 깔았고, 스위치가 각 구역마다 개폐기를 설치했습니다. 단락이까지 힘을 보탰습니다. 합선 사고 이후 깊이 반성한 단락이는 이번에는 퓨즈와 차단기 설치를 맡았습니다.</p>
+        <p>해가 지기 시작했습니다. 마을 광장에 모든 사람이 모였습니다. 전지가 중앙 발전소 앞에 섰습니다. 손이 떨렸습니다. <span class="highlight">대단절</span> 이후 수십 년 만에 마을 전체의 회로가 연결되는 순간이었습니다.</p>
+        <p><span class="dialogue">"다들 준비됐어?"</span><br><br>전지가 물었습니다. 도선이, 스위치, 마을 사람들이 고개를 끄덕였습니다.</p>
+        <p>전지가 깊은 숨을 들이쉬고, 중앙 스위치에 손을 대었습니다. 이 순간, 전지는 할머니의 말을 떠올렸습니다. <span class="dialogue">"전기는 <span class="highlight">닫힌 회로</span>가 있어야 흐른단다. 출발점에서 시작해 다시 돌아오는 완전한 길이 있어야 해."</span></p>
+        <p>딸깍. 스위치가 닫혔습니다.</p>
+        <p>그 순간, <span class="highlight">빛이 터져 나왔습니다.</span></p>
+        <p>광장의 대형 전구가 환하게 켜졌고, 그 빛이 주 전선을 타고 동쪽 구역으로, 서쪽 구역으로, 남쪽과 북쪽으로 퍼져나갔습니다. 하나, 둘, 셋... 마을 전체에 별빛처럼 불이 켜졌습니다. 병렬로 연결된 각 분기에 전지의 전압이 그대로 전달되었습니다.</p>
+        <p>광장은 대낮처럼 환했고, 골목은 은은한 주황빛으로 물들었으며, 각 집의 창문에서 따뜻한 빛이 새어 나왔습니다.</p>
+        <p>사람들이 울었습니다. 아이들이 뛰어다니며 환호했습니다. 마을 촌장도 눈물을 흘렸습니다.<br><br><span class="dialogue">"빛이 돌아왔어... 우리 마을에 빛이 돌아왔어..."</span></p>
+        <p>전지는 자신의 양손을 바라보았습니다. 양극과 음극. 이 두 극이 올바르게 연결되었을 때 세상에 빛이 켜진다는 것을. <span class="highlight">전압(전위차)이 있어야 전류가 흐르고, 전류가 있어야 전력이 생기고, 전력이 있어야 빛이 난다</span>는 것을. V = IR, P = VI. 이 단순한 공식들이 세상의 어둠을 밝히는 원리였습니다.</p>
+        <p>전지는 하늘을 올려다보며 속삭였습니다.<br><br><span class="dialogue">"빛은 혼자 만드는 게 아니야. 연결이 만드는 거야. <span class="highlight">전지, 도체, 스위치, 부하</span>. 이 모든 요소가 올바르게 연결되어야 비로소 빛이 탄생해."</span></p>
+        <p>깜깜촌은 그날부터 새 이름을 얻었습니다. '빛마을'. 그리고 그 빛은 오늘도 꺼지지 않고 있습니다. 전기의 법칙을 이해하고, 안전하게 사용하며, 서로 연결된 마을. 그것이 진정한 문명의 빛이었습니다.</p>
+        <p style="margin-top: 30px; padding: 20px; background: rgba(0, 191, 165, 0.1); border-radius: 12px; border-left: 4px solid #00BFA5;">
+          <strong>🌱 교훈: 연결이 있어야 흐름이 생긴다.</strong><br><br>
+          전지 혼자서는 빛을 만들 수 없었습니다. 도선이가 전도체의 길을 만들고, 스위치가 제어의 문을 열고, 전구가 저항으로 빛을 내고, 퓨즈가 과전류로부터 안전을 지켜야 비로소 빛이 탄생했습니다. 직렬과 병렬의 장단점을 이해하고, 옴의 법칙(V=IR)으로 전압·전류·저항의 관계를 계산하며, 키르히호프의 법칙으로 복잡한 회로를 분석할 수 있습니다. 우리의 삶도 마찬가지입니다. 혼자서는 완성할 수 없는 것들이 있습니다. 가족, 친구, 선생님, 이웃. 이 모든 연결이 있어야 사랑이 흐르고, 지식이 흐르고, 희망이 흐릅니다. 끊어진 회로에는 전기가 흐르지 않듯, 단절된 관계에는 마음이 흐르지 않습니다. 오늘, 당신의 회로를 점검해보세요. 누군가와의 연결이 끊어져 있지는 않나요?
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+      function goToQuiz() { window.location.href = '/creative-book/physics07_season1_quiz.html'; }
+  </script>
+</body>
+</html>

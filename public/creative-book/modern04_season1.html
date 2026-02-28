@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚗 운수 좋은 날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학04/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #78909C 0%, #546E7A 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(120, 144, 156, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(120, 144, 156, 0.15);
+      color: #37474F;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #37474F;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #546E7A;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #B0BEC5;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(120, 144, 156, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #B0BEC5;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(120, 144, 156, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(120, 144, 156, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(84, 110, 122, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(120, 144, 156, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🚗 운수 좋은 날</h1>
+        <p class="subtitle">
+          현진건 · 1924년 발표<br>
+          — 행운의 하루가 가장 슬픈 날이 되기까지 —<br>
+          교과기반 창작도서 · 현대문학 04
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 김 첨지:</strong> 서울에서 인력거를 끄는 가난한 인력거꾼. 병든 아내의 약값과 생활비를 벌기 위해 매일 인력거를 끌지만, 손님이 없는 날이 많아 늘 빈털터리로 지낸다. 아내를 사랑하지만, 가난 때문에 곁에 있어 주지 못하는 안타까운 가장.</p>
+          <p><strong>▸ 김 첨지의 아내:</strong> 오랜 병으로 방 안에 누워 지내는 여인. 남편이 나가기 전 "오늘은 나가지 말아요. 곁에 있어 줘요"라고 애원하지만, 남편은 약값을 벌러 나간다. 마지막 순간에 남편의 온기를 원했던 비극적 인물.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 갈등 구조</h3>
+          <p><strong>▸ 돈 vs 사랑:</strong> 약값을 벌어야 한다 vs 아내 곁에 있어야 한다 — 가난이 강요하는 잔인한 선택</p>
+          <p><strong>▸ 행운 vs 비극:</strong> 돈을 많이 번 운수 좋은 날 vs 아내를 잃은 가장 슬픈 날 — 아이러니한 운명</p>
+          <p><strong>▸ 김 첨지의 내면 갈등:</strong> 돈을 벌며 느끼는 기쁨 vs 떨쳐지지 않는 불안감 — 예감과 현실 사이</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🏠 가난한 인력거꾼</span>
+        <h2>김 첨지의 하루</h2>
+        <p><strong>【중심 문장】</strong> 김 첨지는 서울에서 인력거를 끄는 가난한 인력거꾼으로, 병든 아내의 약값을 벌기 위해 매일 거리를 달린다.</p>
+        <p>1920년대 서울. 김 첨지는 인력거를 끄는 가난한 인력거꾼이었어요. 인력거란 사람이 직접 끌어서 손님을 태워 이동시키는 수레예요. 요즘의 택시 같은 거지요.</p>
+        <p>김 첨지의 아내는 오랫동안 병을 앓고 있었어요. 방 안에 누워 지내는 신세였지요. 약값이 필요했지만, 손님이 없는 날이 많아서 김 첨지는 늘 빈털터리였어요.</p>
+        <p><span class="dialogue">"오늘은 손님 좀 잡혔으면…"</span><br><br>김 첨지는 매일 아침 이런 바람을 품고 집을 나섰어요. 하지만 하루 종일 인력거를 끌어도 벌이가 시원찮은 날이 많았지요.</p>
+        <p>아내의 얼굴이 떠올랐어요. 창백하게 누워 있던 아내. 설렁탕 한 그릇이라도 끓여 먹이고 싶었지만, 그마저도 쉽지 않았어요.</p>
+        <p><span class="highlight">가난은 사람의 선택을 빼앗았어요. 곁에 있고 싶어도, 돈을 벌러 나가야만 했지요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🙏 아내의 애원</span>
+        <h2>오늘은 나가지 말아요</h2>
+        <p><strong>【중심 문장】</strong> 그날 아침, 아내는 "오늘은 나가지 말아요. 곁에 있어 줘요"라고 애원하지만, 김 첨지는 약값을 벌러 나간다.</p>
+        <p>그날 아침, 김 첨지가 인력거를 끌러 나가려 할 때였어요. 방 안에서 아내의 목소리가 들려왔지요.<br><br><span class="dialogue">"여보… 오늘은 나가지 말아요."</span></p>
+        <p>김 첨지가 돌아보았어요. 아내가 힘겹게 몸을 일으키며 말했어요.<br><br><span class="dialogue">"제발 오늘만큼은 집에 있어요. 곁에 있어 줘요."</span></p>
+        <p>아내의 눈에 눈물이 고여 있었어요. 김 첨지의 마음이 흔들렸지요. 하지만 약값을 생각하면 나가지 않을 수가 없었어요.</p>
+        <p><span class="dialogue">"여보, 약값을 벌어야 해요. 설렁탕도 사다 줄 테니 좀만 참아요."</span><br><br>김 첨지는 아내를 달래고 집을 나섰어요.</p>
+        <p>문을 나서면서 뒤를 돌아보았어요. 아내가 힘없이 손을 흔들고 있었지요. 그 모습이 왠지 마음에 걸렸지만, 김 첨지는 발걸음을 옮겼어요.</p>
+        <p><span class="highlight">아내의 말이 자꾸 머릿속에서 맴돌았어요. "곁에 있어 줘요…"</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">💰 첫 번째 손님</span>
+        <h2>운수가 트이다</h2>
+        <p><strong>【중심 문장】</strong> 그날따라 손님이 바로 잡히고, 첫 손님에게서 큰돈을 받은 김 첨지는 신이 난다.</p>
+        <p>거리로 나온 김 첨지. 한참을 기다려도 손님이 없는 날이 많았는데, 그날은 달랐어요.<br><br><span class="dialogue">"여보, 인력거!"</span><br><br>나오자마자 손님이 불렀어요.</p>
+        <p>첫 손님은 급한 볼일이 있다며 먼 곳까지 데려다 달라고 했어요. 김 첨지는 힘껏 인력거를 끌었지요. 목적지에 도착하자 손님이 큰돈을 건네주었어요.</p>
+        <p><span class="dialogue">"수고했소. 거스름돈은 됐소."</span><br><br>평소보다 훨씬 많은 돈이었어요. 김 첨지의 얼굴에 환한 웃음이 번졌지요.</p>
+        <p><span class="dialogue">"오늘은 운수가 좋구나!"</span><br><br>김 첨지는 신이 났어요. 이 정도면 아내에게 설렁탕도 사다 줄 수 있을 것 같았어요.</p>
+        <p><span class="highlight">그동안 굶주린 배를 채워 줄 뜨끈한 설렁탕. 아내의 얼굴이 떠올랐어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">🎯 연달아 잡히는 손님</span>
+        <h2>반나절의 대박</h2>
+        <p><strong>【중심 문장】</strong> 두 번째, 세 번째 손님까지 연달아 잡혀 평소에는 하루 종일 벌기 힘든 돈을 반나절 만에 벌게 된다.</p>
+        <p>첫 손님을 내려주고 돌아오는 길. 또 손님이 불렀어요.<br><br><span class="dialogue">"인력거! 저쪽까지 얼마요?"</span><br><br>두 번째 손님도 잡은 거예요.</p>
+        <p>그리고 또. 세 번째 손님까지 연달아 태웠어요. 평소에는 하루 종일 끌어도 벌기 힘든 돈을 반나절 만에 벌게 된 거지요.</p>
+        <p><span class="dialogue">"오늘은 정말 운수 좋은 날이야!"</span><br><br>김 첨지는 혼잣말을 하며 기뻐했어요. 손에 쥔 돈을 세어 보니 제법 두둑했지요.</p>
+        <p><span class="dialogue">"이러면 약값도 내고, 설렁탕도 사고, 쌀도 살 수 있겠어!"</span><br><br>김 첨지의 발걸음이 가벼워졌어요.</p>
+        <p>하지만 마음 한쪽에 무언가 걸렸어요. 아내의 말이 자꾸 떠올랐거든요.<br><br><span class="highlight">"오늘은 나가지 말아요…" 그 말이 왜 자꾸 생각나는 걸까요?</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">😰 떨쳐지지 않는 불안</span>
+        <h2>무거워지는 마음</h2>
+        <p><strong>【중심 문장】</strong> 돈을 벌면 벌수록 김 첨지의 마음은 오히려 더 무거워지고, 아내에게 무슨 일이 생긴 건 아닌지 걱정이 된다.</p>
+        <p>이상했어요. 돈을 벌면 기뻐야 하는데, 김 첨지의 마음은 오히려 더 무거워졌어요.</p>
+        <p><span class="dialogue">"혹시 아내에게 무슨 일이 생긴 건 아닐까…"</span><br><br>그 생각이 떠나질 않았어요. 손님을 태우고 달리는 내내 아내의 말이 자꾸만 떠올랐지요.</p>
+        <p>"곁에 있어 줘요." 아내의 그 말이 왜 그렇게 절박하게 들렸을까요? 평소와 다른 무언가가 있었던 것 같았어요.</p>
+        <p><span class="dialogue">"에이, 무슨 일이 있겠어. 괜한 걱정이야."</span><br><br>김 첨지는 고개를 저으며 불안한 마음을 떨쳐 내려 했어요.</p>
+        <p>하지만 돈을 벌면 벌수록 마음은 더 무거웠어요. 기쁨보다 불안이 더 컸지요.</p>
+        <p><span class="highlight">무언가 잘못되었다는 느낌. 그것이 예감이라는 걸 김 첨지는 아직 몰랐어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🍶 선술집에서</span>
+        <h2>술로도 달래지지 않는 마음</h2>
+        <p><strong>【중심 문장】</strong> 김 첨지는 불안한 마음을 달래려고 선술집에 들러 막걸리를 마시지만, 마음은 진정되지 않는다.</p>
+        <p>김 첨지는 선술집에 들렀어요. 선술집은 서서 술을 마시는 싸구려 술집이에요. 막걸리 한 사발을 들이켰지요.</p>
+        <p><span class="dialogue">"아, 시원하다."</span><br><br>하지만 술을 마셔도 마음이 진정되지 않았어요. 오히려 아내 생각이 더 났지요.</p>
+        <p><span class="dialogue">"지금쯤 뭘 하고 있을까? 배가 고프진 않을까?"</span><br><br>김 첨지는 설렁탕집을 찾아가 뜨끈한 설렁탕을 샀어요. 아내에게 사다 주려고요.</p>
+        <p><span class="dialogue">"설렁탕 먹으면 기운이 날 거야. 어서 집에 가자."</span><br><br>설렁탕을 손에 들고 집으로 향했어요.</p>
+        <p>그런데 걸음이 빨라졌어요. 어느새 뛰고 있었지요. 가슴이 두근거렸어요. 불안한 마음을 더는 참을 수가 없었어요.</p>
+        <p><span class="highlight">비가 내리기 시작했어요. 빗줄기 사이로 김 첨지는 집을 향해 달렸어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🌧️ 빗속을 달리다</span>
+        <h2>집으로, 집으로</h2>
+        <p><strong>【중심 문장】</strong> 비가 쏟아지는 거리를 뛰어가며 김 첨지는 아내 걱정에 더욱 발걸음을 재촉한다.</p>
+        <p>비가 점점 세차게 내렸어요. 김 첨지는 설렁탕을 품에 안고 달렸지요. 옷이 흠뻑 젖었지만 신경 쓸 겨를이 없었어요.</p>
+        <p><span class="dialogue">"제발 아무 일도 없어야 할 텐데…"</span><br><br>김 첨지의 마음은 급했어요. 아내가 걱정되어 더는 참을 수가 없었던 거지요.</p>
+        <p>거리를 달리는 동안 온갖 생각이 스쳐 지나갔어요. 아내가 아침에 했던 말, 눈물이 고인 눈, 힘없이 손을 흔들던 모습…</p>
+        <p><span class="dialogue">"왜 그랬을까? 왜 그렇게 절박하게 말했을까?"</span><br><br>이제야 아내의 말이 단순한 투정이 아니었다는 걸 깨달았어요.</p>
+        <p>빗물이 얼굴을 적셨어요. 눈물인지 빗물인지 모를 것이 볼을 타고 흘렀지요.</p>
+        <p><span class="highlight">집이 점점 가까워졌어요. 심장이 터질 것 같았어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">💔 싸늘한 방 안에서</span>
+        <h2>돌아오지 않는 온기</h2>
+        <p><strong>【중심 문장】</strong> 집에 도착한 김 첨지는 방문을 열고, 싸늘하게 식어 있는 아내를 발견한다.</p>
+        <p>드디어 집에 도착했어요. 김 첨지는 헐레벌떡 대문을 열고 들어섰지요.<br><br><span class="dialogue">"여보! 나 왔어!"</span><br><br>대답이 없었어요.</p>
+        <p>방문을 열었어요. 방 안은 고요했어요. 아내가 누워 있었지요. 하지만 무언가 이상했어요.</p>
+        <p><span class="dialogue">"여보…?"</span><br><br>김 첨지가 다가가 아내의 손을 잡았어요. 차가웠어요. 싸늘하게 식어 있었지요.</p>
+        <p>아내는 이미 세상을 떠난 뒤였어요. 김 첨지가 돈을 벌어오는 사이, 아내는 혼자서 마지막 순간을 맞이한 거예요.</p>
+        <p><span class="dialogue">"아니… 아니야…"</span><br><br>김 첨지는 믿을 수가 없었어요. 손에 들린 설렁탕이 바닥에 떨어졌지요.</p>
+        <p><span class="highlight">아내가 원했던 건 설렁탕이 아니었어요. 마지막 순간, 남편의 온기였던 거예요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">😭 울부짖음</span>
+        <h2>왜 먹지를 못하니</h2>
+        <p><strong>【중심 문장】</strong> 김 첨지는 아내의 시신을 끌어안고 "설렁탕을 사다 놓았는데, 왜 먹지를 못하니"라고 울부짖는다.</p>
+        <p>김 첨지는 아내의 시신을 끌어안았어요. 차가운 몸에서 온기는 사라진 지 오래였지요.</p>
+        <p><span class="dialogue">"설렁탕을 사다 놓았는데… 왜 먹지를 못하니, 왜 먹지를 못하니!"</span><br><br>김 첨지가 울부짖었어요. 큰 소리로 슬프게 울며 외쳤지요.</p>
+        <p>바닥에 쏟아진 설렁탕이 흥건했어요. 그토록 사다 주고 싶었던 설렁탕. 하지만 이제 먹어줄 사람이 없었어요.</p>
+        <p><span class="dialogue">"내가 곁에 있었어야 했는데… 내가 곁에…"</span><br><br>후회가 밀려왔어요. 약값을 벌러 나가는 대신 아내 곁에 있었더라면. 마지막 순간 손이라도 잡아 주었더라면.</p>
+        <p>아내가 아침에 했던 말이 떠올랐어요. "곁에 있어 줘요." 그 말의 진정한 의미를 이제야 알게 되었어요.</p>
+        <p><span class="highlight">돈을 벌어도 사랑하는 사람이 없으면 무슨 소용인가. 김 첨지의 울음소리가 빗소리에 섞여 흩어졌어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌧️ 가장 슬픈 날</span>
+        <h2>운수 좋은 날의 비극</h2>
+        <p><strong>【중심 문장】</strong> 운수 좋은 날이라 여겼던 하루가 가장 비극적인 날이 되어버리며, 가난한 서민의 슬픈 현실이 드러난다.</p>
+        <p>밖에서는 비가 계속 쏟아지고 있었어요. 빗줄기가 김 첨지의 눈물처럼 거리를 적시고 있었지요.</p>
+        <p>김 첨지는 아내의 시신을 끌어안고 하염없이 울었어요. 그동안 약값을 벌기 위해 아내 곁을 떠나 인력거를 끌었던 날들이 주마등처럼 스쳐 갔지요.</p>
+        <p>운수 좋은 날이라 여겼던 하루. 손님이 연달아 잡히고, 큰돈을 벌고, 설렁탕까지 사 왔는데. 그런 날이 가장 비극적인 날이 되어버렸어요.</p>
+        <p>아내가 마지막으로 원했던 것은 돈이 아니었어요. 남편의 온기, 함께하는 시간, 곁에 있어 주는 것. 그것이 전부였지요.</p>
+        <p>가난이 사람의 선택을 빼앗았어요. 곁에 있고 싶어도 돈을 벌러 나가야만 했던 김 첨지. 그의 운수 좋은 날은 이렇게 가장 슬픈 날로 끝나고 말았어요.</p>
+        <p><span class="highlight">행운과 비극은 종이 한 장 차이. 가장 좋은 날이 가장 슬픈 날이 되는 아이러니. 이것이 가난한 서민들의 현실이었어요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(120, 144, 156, 0.15); border-radius: 16px;">
+          <strong style="color: #37474F; font-size: 20px;">🌱 「돈보다 소중한 것이 있다. 사랑하는 사람의 곁에 있어 주는 것, 함께하는 시간, 그리고 따뜻한 온기. 그것을 잃고 나서야 비로소 깨닫는 것이 인생의 아이러니다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/modern04_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

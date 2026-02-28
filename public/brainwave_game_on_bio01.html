@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>브레인 웨이브 창의노트</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Black+Han+Sans&family=Gaegu:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #f5f0e6;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  /* 스케일 컨테이너 */
+  .scale-container {
+    width: 1024px;
+    height: 768px;
+    transform-origin: top left;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .canvas {
+    width: 1024px;
+    height: 768px;
+    position: relative;
+    background: #f5f0e6;
+    overflow: hidden;
+  }
+
+  .canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  /* Particles */
+  .particles { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .particle {
+    position: absolute; width: 3px; height: 3px;
+    background: rgba(91, 192, 248, 0.4); border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+    50% { transform: translateY(-15px) scale(1.5); opacity: 0.5; }
+  }
+
+  /* Header - 컴팩트 */
+  .header {
+    position: absolute;
+    top: 10px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-icon { font-size: 36px; filter: drop-shadow(0 0 8px rgba(80,180,255,0.4)); }
+  .brand-text {
+    font-family: 'Black Han Sans', sans-serif; font-size: 26px; color: #0284c7;
+    letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .brand-sub { font-size: 12px; color: #64748b; letter-spacing: 2px; margin-top: 2px; }
+  .unit-badge {
+    background: linear-gradient(135deg, rgba(91,192,248,0.15), rgba(91,192,248,0.08));
+    border: 1px solid rgba(91,192,248,0.4); border-radius: 16px;
+    padding: 6px 14px; color: #0369a1; font-size: 13px; font-weight: 500; letter-spacing: 1px;
+  }
+
+  /* Score Display - 좌측 상단에 배치 */
+  .score-display {
+    position: absolute;
+    top: 50px;
+    left: 320px;
+    display: flex;
+    gap: 12px;
+    z-index: 25;
+  }
+  .score-item {
+    background: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .score-label {
+    font-size: 11px;
+    color: #64748b;
+  }
+  .score-value {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 18px;
+    color: #fbbf24;
+  }
+  .score-value.correct { color: #22c55e; }
+  .score-value.wrong { color: #ef4444; }
+
+  /* Wave Rings - 좌측 60% 영역 */
+  .wave-center {
+    position: absolute;
+    left: 32%;
+    top: 45%;
+    transform: translate(-50%, -50%) scale(0.85);
+    z-index: 1;
+  }
+  .wave-ring {
+    position: absolute; border-radius: 50%; border: 2px solid;
+    transform: translate(-50%, -50%);
+  }
+  .wave-4 {
+    width: 500px; height: 500px;
+    border-color: #c4b5fd;
+    border-width: 2px;
+    background: rgba(237,233,254,0.15);
+    box-shadow: 0 0 15px rgba(196,181,253,0.3);
+    animation: pulse4 2.5s ease-in-out infinite 0.9s;
+  }
+  .wave-3 {
+    width: 380px; height: 380px;
+    border-color: #93c5fd;
+    border-width: 2px;
+    background: rgba(219,234,254,0.2);
+    box-shadow: 0 0 15px rgba(147,197,253,0.3);
+    animation: pulse3 2.5s ease-in-out infinite 0.6s;
+  }
+  .wave-2 {
+    width: 270px; height: 270px;
+    border-color: #86efac;
+    border-width: 2px;
+    background: rgba(220,252,231,0.25);
+    box-shadow: 0 0 15px rgba(134,239,172,0.3);
+    animation: pulse2 2.5s ease-in-out infinite 0.3s;
+  }
+  .wave-1 {
+    width: 160px; height: 160px;
+    border-color: #fcd34d;
+    border-width: 2px;
+    background: rgba(254,249,195,0.3);
+    box-shadow: 0 0 15px rgba(252,211,77,0.3);
+    animation: pulse1 2.5s ease-in-out infinite 0s;
+  }
+
+  @keyframes pulse1 {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      box-shadow: 0 0 15px rgba(252,211,77,0.3);
+      background: rgba(254,249,195,0.3);
+      border-width: 2px;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.03);
+      box-shadow: 0 0 40px rgba(252,211,77,0.7);
+      background: rgba(254,249,195,0.55);
+      border-width: 4px;
+    }
+  }
+  @keyframes pulse2 {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      box-shadow: 0 0 15px rgba(134,239,172,0.3);
+      background: rgba(220,252,231,0.25);
+      border-width: 2px;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.03);
+      box-shadow: 0 0 40px rgba(134,239,172,0.7);
+      background: rgba(220,252,231,0.5);
+      border-width: 4px;
+    }
+  }
+  @keyframes pulse3 {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      box-shadow: 0 0 15px rgba(147,197,253,0.3);
+      background: rgba(219,234,254,0.2);
+      border-width: 2px;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.025);
+      box-shadow: 0 0 40px rgba(147,197,253,0.7);
+      background: rgba(219,234,254,0.45);
+      border-width: 4px;
+    }
+  }
+  @keyframes pulse4 {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      box-shadow: 0 0 15px rgba(196,181,253,0.3);
+      background: rgba(237,233,254,0.15);
+      border-width: 2px;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.02);
+      box-shadow: 0 0 40px rgba(196,181,253,0.7);
+      background: rgba(237,233,254,0.4);
+      border-width: 3px;
+    }
+  }
+
+  /* Core */
+  .core {
+    position: absolute; width: 110px; height: 110px;
+    transform: translate(-50%,-50%);
+    background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+    border: 3px solid #38bdf8; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 5;
+    box-shadow: 0 4px 20px rgba(56,189,248,0.3);
+  }
+  .core-whale { font-size: 32px; margin-bottom: 2px; }
+  .core-text { font-family: 'Black Han Sans', sans-serif; font-size: 13px; color: #0284c7; font-weight: 700; }
+
+  /* SVG Lines */
+  .conn-svg { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .conn-line { stroke-dasharray: 3 5; animation: dash 25s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -150; } }
+
+  /* Node Cards */
+  .node {
+    position: absolute;
+    border-radius: 14px;
+    padding: 12px 16px;
+    backdrop-filter: blur(6px);
+    z-index: 10;
+  }
+  .node-title {
+    font-size: 14px; font-weight: 700; letter-spacing: 1.5px;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .node-content { font-size: 15px; line-height: 1.8; font-weight: 400; }
+  .node-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* Wave Colors */
+  .n-w1 { background: #fef9c3; border: 2px solid #facc15; box-shadow: 0 2px 8px rgba(250,204,21,0.2); }
+  .n-w1 .node-title { color: #a16207; }
+  .n-w1 .node-content { color: #713f12; }
+  .n-w1 .node-num { background: #fde047; color: #a16207; }
+
+  .n-w2 { background: #dcfce7; border: 2px solid #4ade80; box-shadow: 0 2px 8px rgba(74,222,128,0.2); }
+  .n-w2 .node-title { color: #166534; }
+  .n-w2 .node-content { color: #14532d; }
+  .n-w2 .node-num { background: #86efac; color: #166534; }
+
+  .n-w3 { background: #dbeafe; border: 2px solid #60a5fa; box-shadow: 0 2px 8px rgba(96,165,250,0.2); }
+  .n-w3 .node-title { color: #1d4ed8; }
+  .n-w3 .node-content { color: #1e3a8a; }
+  .n-w3 .node-num { background: #93c5fd; color: #1d4ed8; }
+
+  .n-w4 { background: #ede9fe; border: 2px solid #a78bfa; box-shadow: 0 2px 8px rgba(167,139,250,0.2); }
+  .n-w4 .node-title { color: #6d28d9; }
+  .n-w4 .node-content { color: #4c1d95; }
+  .n-w4 .node-num { background: #c4b5fd; color: #6d28d9; }
+
+  /* Keywords */
+  .kw { font-weight: 700; }
+  .kw-y { color: #a16207; }
+  .kw-g { color: #166534; }
+  .kw-b { color: #1d4ed8; }
+  .kw-p { color: #6d28d9; }
+
+  /* Node Positions - 좌측 60% 영역에 맞게 조정 */
+  .node { font-size: 11px; padding: 8px 10px; border-radius: 10px; }
+  .node-title { font-size: 11px; margin-bottom: 3px; }
+  .node-content { font-size: 12px; line-height: 1.5; }
+  .node-num { width: 18px; height: 18px; font-size: 10px; }
+
+  /* 원형 파동 중심 기준으로 8방향 배치 */
+  .node-1a { left: 110px; top: 250px; width: 170px; }  /* 중앙 좌측 */
+  .node-1b { left: 370px; top: 390px; width: 200px; }  /* 하단 중앙 */
+  .node-2a { left: 390px; top: 180px; width: 200px; }  /* 상단 우측 */
+  .node-2b { left: 50px; top: 370px; width: 200px; }   /* 좌측 하단 */
+  .node-3a { left: 120px; top: 490px; width: 190px; }  /* 하단 좌측 */
+  .node-3b { left: 480px; top: 280px; width: 190px; }  /* 우측 중앙 */
+  .node-4a { left: 400px; top: 520px; width: 200px; }  /* 하단 우측 */
+  .node-4b { left: 50px; top: 140px; width: 180px; }   /* 상단 좌측 */
+
+  /* BLANK SLOTS */
+  .blank-slot {
+    display: inline-block;
+    min-width: 60px;
+    min-height: 26px;
+    padding: 4px 10px;
+    background: #ffffff;
+    border: 2px dashed #7dd3fc;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .blank-slot.filled::before {
+    display: none;
+  }
+  .blank-slot:hover, .blank-slot.touch-hover {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    transform: scale(1.02);
+  }
+  .blank-slot.drag-over {
+    background: #bae6fd;
+    border-color: #0ea5e9;
+    transform: scale(1.05);
+  }
+  .blank-slot.filled {
+    background: #dcfce7;
+    border: 2px solid #4ade80;
+    cursor: default;
+  }
+  .blank-slot.filled .answer-text {
+    color: #166534;
+    font-weight: 700;
+  }
+
+  /* 개념 구조도용 작은 빈칸 */
+  .blank-slot.blank-sm {
+    min-width: 65px;
+    min-height: 28px;
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    vertical-align: middle;
+  }
+  .summary-card .blank-slot {
+    border-color: #7dd3fc;
+    background: #ffffff;
+  }
+  .summary-card .blank-slot:hover {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+  }
+  .summary-card .blank-slot.filled {
+    background: #dcfce7;
+    border-color: #4ade80;
+  }
+  .summary-card .blank-slot.filled .answer-text {
+    color: #166534;
+    font-size: 12px;
+  }
+
+  /* Wave-specific blank colors */
+  .n-w1 .blank-slot { border-color: #fcd34d; background: #ffffff; }
+  .n-w1 .blank-slot:hover { background: #fef9c3; border-color: #facc15; }
+  .n-w1 .blank-slot.filled { background: #fef08a; border-color: #facc15; }
+  .n-w1 .blank-slot.filled .answer-text { color: #a16207; }
+
+  .n-w2 .blank-slot { border-color: #86efac; background: #ffffff; }
+  .n-w2 .blank-slot:hover { background: #dcfce7; border-color: #4ade80; }
+  .n-w2 .blank-slot.filled { background: #bbf7d0; border-color: #4ade80; }
+  .n-w2 .blank-slot.filled .answer-text { color: #166534; }
+
+  .n-w3 .blank-slot { border-color: #93c5fd; background: #ffffff; }
+  .n-w3 .blank-slot:hover { background: #dbeafe; border-color: #60a5fa; }
+  .n-w3 .blank-slot.filled { background: #bfdbfe; border-color: #60a5fa; }
+  .n-w3 .blank-slot.filled .answer-text { color: #1d4ed8; }
+
+  .n-w4 .blank-slot { border-color: #c4b5fd; background: #ffffff; }
+  .n-w4 .blank-slot:hover { background: #ede9fe; border-color: #a78bfa; }
+  .n-w4 .blank-slot.filled { background: #ddd6fe; border-color: #a78bfa; }
+  .n-w4 .blank-slot.filled .answer-text { color: #6d28d9; }
+
+  /* WORD BANK - 하단 좌측 60% 영역 */
+  .word-bank {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    width: 660px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 30;
+    padding: 10px 14px;
+    background: #fffef9;
+    border: 2px solid #d4c9a8;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .word-bank-title {
+    font-size: 13px;
+    color: #0369a1;
+    font-weight: 700;
+    text-align: center;
+  }
+  .word-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .word-chip {
+    padding: 6px 12px;
+    background: #e0f2fe;
+    border: 2px solid #7dd3fc;
+    border-radius: 16px;
+    color: #0369a1;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: grab;
+    transition: all 0.2s ease;
+    -webkit-user-select: none;
+    user-select: none;
+    white-space: nowrap;
+    touch-action: none;
+  }
+  .word-chip:hover, .word-chip.touch-active {
+    background: #bae6fd;
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+  }
+  .word-chip:active {
+    cursor: grabbing;
+    transform: scale(1.03);
+  }
+  .word-chip.dragging {
+    opacity: 0.5;
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .word-chip.used {
+    opacity: 0.3;
+    pointer-events: none;
+    text-decoration: line-through;
+  }
+
+  /* 드래그 고스트 (터치용) */
+  .drag-ghost {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    padding: 8px 16px;
+    background: #bae6fd;
+    border: 2px solid #38bdf8;
+    border-radius: 20px;
+    color: #0369a1;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transform: translate(-50%, -50%);
+  }
+
+  /* FEEDBACK EFFECTS */
+  .wrong-mark {
+    position: fixed;
+    font-size: 60px;
+    color: #ef4444;
+    pointer-events: none;
+    z-index: 1000;
+    animation: wrongPop 0.6s ease-out forwards;
+    text-shadow: 0 0 20px rgba(239,68,68,0.8);
+  }
+  @keyframes wrongPop {
+    0% { transform: scale(0) rotate(-20deg); opacity: 1; }
+    50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+    100% { transform: scale(0.8) rotate(0deg); opacity: 0; }
+  }
+
+  /* Confetti Canvas */
+  #confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* Completion Modal */
+  .completion-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .completion-modal.show {
+    display: flex;
+  }
+  .completion-card {
+    background: #ffffff;
+    border: 3px solid #38bdf8;
+    border-radius: 24px;
+    padding: 40px 50px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  }
+  .completion-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    animation: bounce 1s ease infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .completion-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 32px;
+    color: #b45309;
+    margin-bottom: 10px;
+  }
+  .completion-score {
+    font-size: 18px;
+    color: #475569;
+    margin-bottom: 30px;
+  }
+  .completion-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .completion-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #5bc0f8, #3b82f6);
+    border: none;
+    border-radius: 25px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .completion-btn:hover {
+    transform: scale(1.05);
+  }
+  .completion-btn.btn-pdf {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+  }
+
+  /* Wave Zone Labels */
+  .wz {
+    position: absolute; z-index: 12;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+    pointer-events: none;
+    transform: translateX(-50%);
+  }
+  .wz-1 { left: 0; top: -90px; color: #a16207; background: #fef9c3; border: 2px solid #fcd34d; }
+  .wz-2 { left: 0; top: -145px; color: #166534; background: #dcfce7; border: 2px solid #86efac; }
+  .wz-3 { left: 0; top: -200px; color: #1d4ed8; background: #dbeafe; border: 2px solid #93c5fd; }
+  .wz-4 { left: 0; top: -260px; color: #6d28d9; background: #ede9fe; border: 2px solid #c4b5fd; }
+
+  /* Right Panel - 우측 40% 영역 */
+  .right-panel {
+    position: absolute;
+    right: 16px; top: 70px;
+    width: 320px; bottom: 100px;
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 15;
+  }
+  .summary-card {
+    background: #fffef9;
+    border: 2px solid #d4c9a8;
+    border-radius: 14px; padding: 12px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .summary-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 15px; color: #0f172a;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
+  .summary-title span { font-size: 16px; }
+  .concept-map { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .concept-row { display: flex; align-items: center; gap: 8px; justify-content: center; }
+  .concept-box {
+    padding: 6px 10px; border-radius: 8px;
+    font-size: 12px; font-weight: 700; text-align: center; flex: 1;
+  }
+  .cb-primary { background: #dbeafe; border: 2px solid #60a5fa; color: #1d4ed8; }
+  .cb-secondary { background: #ede9fe; border: 2px solid #a78bfa; color: #6d28d9; }
+  .cb-feature { background: #dcfce7; border: 2px solid #4ade80; color: #166534; font-size: 11px; }
+  .cb-cycle { background: #fef9c3; border: 2px solid #facc15; color: #a16207; font-size: 11px; }
+  .arrow-down { color: #475569; font-size: 16px; text-align: center; font-weight: 900; }
+  .arrow-right { color: #475569; font-size: 14px; flex-shrink: 0; font-weight: 900; }
+  .vs-badge {
+    background: #f1f5f9; border: 1px solid #94a3b8; border-radius: 6px;
+    padding: 4px 12px; font-size: 11px; color: #334155; flex-shrink: 0; font-weight: 800;
+  }
+  .examples-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .example-tag { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+  .et-primary { background: #bfdbfe; color: #1d4ed8; border: 1px solid #60a5fa; }
+  .et-secondary { background: #ddd6fe; color: #6d28d9; border: 1px solid #a78bfa; }
+
+  /* Question Card */
+  .question-card {
+    background: #fef9c3;
+    border: 2px solid #facc15;
+    border-radius: 14px; padding: 14px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .q-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .q-icon { font-size: 18px; }
+  .q-title { font-family: 'Black Han Sans', sans-serif; font-size: 14px; color: #d97706; }
+  .q-badge {
+    font-size: 10px; background: rgba(251,191,36,0.35); color: #d97706;
+    padding: 3px 8px; border-radius: 5px; letter-spacing: 1px; font-weight: 700; margin-left: auto;
+  }
+  .q-text {
+    font-size: 12px; color: #92400e;
+    line-height: 1.6; font-weight: 500;
+    padding-left: 8px; border-left: 3px solid rgba(251,191,36,0.7);
+    margin-bottom: 10px;
+  }
+  .q-write {
+    flex: 1;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 12px;
+    background: #fef08a;
+    border: 2px dashed #fcd34d;
+    border-radius: 10px;
+    min-height: 120px;
+  }
+  .q-write-header {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .q-write-icon { font-size: 14px; }
+  .q-write-label { font-family: 'Black Han Sans', sans-serif; font-size: 11px; color: #d97706; }
+  .q-write-area {
+    flex: 1;
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Gaegu', cursive;
+    font-size: 14px;
+    color: #92400e;
+    line-height: 1.5;
+  }
+  .q-write-area::placeholder {
+    color: #d97706;
+    opacity: 0.6;
+  }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="scale-container" id="scaleContainer">
+<div class="canvas" id="canvas">
+
+  <!-- Particles -->
+  <div class="particles">
+    <div class="particle" style="left:8%;top:25%;animation-delay:0s"></div>
+    <div class="particle" style="left:22%;top:62%;animation-delay:1.5s"></div>
+    <div class="particle" style="left:38%;top:15%;animation-delay:3s"></div>
+    <div class="particle" style="left:55%;top:80%;animation-delay:0.8s"></div>
+    <div class="particle" style="left:72%;top:28%;animation-delay:2.2s"></div>
+    <div class="particle" style="left:85%;top:55%;animation-delay:4s"></div>
+  </div>
+
+  <!-- SVG Lines -->
+  <svg class="conn-svg" viewBox="0 0 1280 720">
+    <line x1="422" y1="270" x2="538" y2="360" class="conn-line" stroke="rgba(251,191,36,0.12)" stroke-width="1"/>
+    <line x1="622" y1="452" x2="538" y2="360" class="conn-line" stroke="rgba(251,191,36,0.12)" stroke-width="1"/>
+    <line x1="647" y1="192" x2="538" y2="360" class="conn-line" stroke="rgba(34,197,94,0.10)" stroke-width="1"/>
+    <line x1="357" y1="465" x2="538" y2="360" class="conn-line" stroke="rgba(34,197,94,0.10)" stroke-width="1"/>
+    <line x1="195" y1="180" x2="538" y2="360" class="conn-line" stroke="rgba(59,130,246,0.08)" stroke-width="1"/>
+    <line x1="755" y1="335" x2="538" y2="360" class="conn-line" stroke="rgba(59,130,246,0.08)" stroke-width="1"/>
+    <line x1="190" y1="445" x2="538" y2="360" class="conn-line" stroke="rgba(168,85,247,0.07)" stroke-width="1"/>
+    <line x1="717" y1="570" x2="538" y2="360" class="conn-line" stroke="rgba(168,85,247,0.07)" stroke-width="1"/>
+  </svg>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">🐋</div>
+      <div>
+        <div class="brand-text">BRAIN WAVE 창의노트</div>
+        <div class="brand-sub">확장형 사고 구조 훈련 흐름</div>
+      </div>
+    </div>
+    <div class="unit-badge">📘 과학 · 생물 1단원</div>
+  </div>
+
+  <!-- Score Display -->
+  <div class="score-display">
+    <div class="score-item">
+      <span class="score-label">정답</span>
+      <span class="score-value correct" id="correctCount">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">오답</span>
+      <span class="score-value wrong" id="wrongCount">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">남은 문제</span>
+      <span class="score-value" id="remainCount">13</span>
+    </div>
+  </div>
+
+  <!-- Wave Rings + Core -->
+  <div class="wave-center">
+    <div class="wave-ring wave-4"></div>
+    <div class="wave-ring wave-3"></div>
+    <div class="wave-ring wave-2"></div>
+    <div class="wave-ring wave-1"></div>
+    <div class="core">
+      <div class="core-whale">🐋</div>
+      <div class="core-text">생물과 무생물</div>
+    </div>
+    <div class="wz wz-1">1차 지식</div>
+    <div class="wz wz-2">2차 이해</div>
+    <div class="wz wz-3">3차 적용</div>
+    <div class="wz wz-4">4차 확장</div>
+  </div>
+
+  <!-- 8 Node Cards with Blanks -->
+  <div class="node n-w1 node-1a">
+    <div class="node-title"><span class="node-num">1</span>개념 정의</div>
+    <div class="node-content">
+      <span class="blank-slot" data-answer="생물"></span> = 살아 있는 것<br>
+      <span class="kw kw-y">무생물</span> = 살아 있지 않은 것
+    </div>
+  </div>
+
+  <div class="node n-w1 node-1b">
+    <div class="node-title"><span class="node-num">1</span>분류 예시</div>
+    <div class="node-content">
+      생물: 강아지, 꽃, 나무<br>
+      무생물: <span class="blank-slot" data-answer="돌"></span>, 물, 공기
+    </div>
+  </div>
+
+  <div class="node n-w2 node-2a">
+    <div class="node-title"><span class="node-num">2</span>영양분 섭취</div>
+    <div class="node-content">
+      · 식물: <span class="blank-slot" data-answer="광합성"></span>으로 양분 생성<br>
+      · 동물: 다른 생물 섭취
+    </div>
+  </div>
+
+  <div class="node n-w2 node-2b">
+    <div class="node-title"><span class="node-num">2</span>번식</div>
+    <div class="node-content">
+      <span class="blank-slot" data-answer="번식"></span> = 자손을 남기는 활동<br>
+      종족을 이어 나가기 위한 과정
+    </div>
+  </div>
+
+  <div class="node n-w3 node-3a">
+    <div class="node-title"><span class="node-num">3</span>상호 관계</div>
+    <div class="node-content">
+      생물·무생물은 <span class="blank-slot" data-answer="밀접하게"></span> 연결<br>
+      · 식물 → 흙·물에서 성장
+    </div>
+  </div>
+
+  <div class="node n-w3 node-3b">
+    <div class="node-title"><span class="node-num">3</span>분해와 순환</div>
+    <div class="node-content">
+      죽은 생물 → <span class="blank-slot" data-answer="세균"></span>이 분해<br>
+      → 흙 속 양분 → 식물 성장
+    </div>
+  </div>
+
+  <div class="node n-w4 node-4a">
+    <div class="node-title"><span class="node-num">4</span>생태계 순환</div>
+    <div class="node-content">
+      태어남 → 성장 → 죽음<br>
+      → <span class="blank-slot" data-answer="자연"></span>으로 회귀
+    </div>
+  </div>
+
+  <div class="node n-w4 node-4b">
+    <div class="node-title"><span class="node-num">4</span>핵심 메시지</div>
+    <div class="node-content">
+      생물 + 무생물 = <span class="blank-slot" data-answer="조화"></span><br>
+      → 건강한 지구 환경
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <div class="summary-card">
+      <div class="summary-title"><span>🗺️</span> 개념 구조도</div>
+      <div class="concept-map">
+        <div class="concept-row">
+          <div class="concept-box cb-primary">🌱 <span class="blank-slot blank-sm" data-answer="생물"></span></div>
+          <div class="vs-badge">VS</div>
+          <div class="concept-box cb-secondary">🪨 <span class="blank-slot blank-sm" data-answer="무생물"></span></div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="examples-row">
+          <span class="example-tag et-primary">🐕 강아지</span>
+          <span class="example-tag et-primary">🌸 꽃</span>
+          <span class="example-tag et-primary">🌳 나무</span>
+          <span class="example-tag et-primary">🦠 세균</span>
+        </div>
+        <div class="examples-row" style="margin-top:3px;">
+          <span class="example-tag et-secondary">🪨 돌</span>
+          <span class="example-tag et-secondary">💧 물</span>
+          <span class="example-tag et-secondary">💨 공기</span>
+          <span class="example-tag et-secondary">🪑 책상</span>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="concept-row">
+          <div class="concept-box cb-feature"><span class="blank-slot blank-sm" data-answer="영양분"></span></div>
+          <div class="arrow-right">→</div>
+          <div class="concept-box cb-feature"><span class="blank-slot blank-sm" data-answer="성장"></span></div>
+          <div class="arrow-right">→</div>
+          <div class="concept-box cb-feature">번식</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="concept-box cb-cycle" style="text-align:center;">
+          🔄 <span class="blank-slot blank-sm" data-answer="순환"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-header">
+        <span class="q-icon">❓</span>
+        <span class="q-title">사고 확장 질문</span>
+        <span class="q-badge">WAVE 5</span>
+      </div>
+      <div class="q-text">
+        만약 지구에서 모든 세균이 사라진다면, 생태계 순환에 어떤 변화가 생길까?
+      </div>
+      <div class="q-write">
+        <div class="q-write-header">
+          <span class="q-write-icon">✏️</span>
+          <span class="q-write-label">나만의 답변 쓰기</span>
+        </div>
+        <textarea class="q-write-area" placeholder="여기에 나만의 답변을 써보세요..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Word Bank -->
+  <div class="word-bank" id="wordBank">
+    <div class="word-bank-title">🎯 단어를 터치해서 빈칸에 넣어보세요!</div>
+    <div class="word-chips" id="wordChips"></div>
+  </div>
+
+</div>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="completion-modal" id="completionModal">
+  <div class="completion-card">
+    <div class="completion-icon">🎉</div>
+    <div class="completion-title">축하합니다!</div>
+    <div class="completion-score" id="finalScore">모든 문제를 완료했어요!</div>
+    <div class="completion-btns">
+      <button class="completion-btn" onclick="location.reload()">다시 하기</button>
+      <button class="completion-btn btn-pdf" onclick="downloadPDF()">📄 PDF 다운로드</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================
+// 스케일 조정 (반응형)
+// ================================
+const BASE_WIDTH = 1024;
+const BASE_HEIGHT = 768;
+let currentScale = 1;
+
+function adjustScale() {
+  const container = document.getElementById('scaleContainer');
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const scaleX = vw / BASE_WIDTH;
+  const scaleY = vh / BASE_HEIGHT;
+  currentScale = Math.min(scaleX, scaleY);
+
+  container.style.transform = `scale(${currentScale})`;
+
+  // 중앙 정렬
+  const scaledWidth = BASE_WIDTH * currentScale;
+  const scaledHeight = BASE_HEIGHT * currentScale;
+  const offsetX = (vw - scaledWidth) / 2;
+  const offsetY = (vh - scaledHeight) / 2;
+
+  container.style.left = offsetX + 'px';
+  container.style.top = offsetY + 'px';
+}
+
+window.addEventListener('load', adjustScale);
+window.addEventListener('resize', adjustScale);
+
+// ================================
+// 게임 데이터 및 상태
+// ================================
+const GAME_DATA = {
+  answers: [
+    '생물', '돌', '광합성', '번식', '밀접하게', '세균', '자연', '조화',
+    '생물', '무생물', '영양분', '성장', '순환'
+  ],
+  decoys: []
+};
+
+let correctCount = 0;
+let wrongCount = 0;
+let remainCount = 13;
+let selectedChip = null;
+let selectedChipId = null;
+
+// ================================
+// 초기화
+// ================================
+document.addEventListener('DOMContentLoaded', () => {
+  initWordBank();
+  initTouchDragAndDrop();
+});
+
+function initWordBank() {
+  const wordChips = document.getElementById('wordChips');
+  const allWords = [...GAME_DATA.answers];
+  shuffleArray(allWords);
+
+  allWords.forEach((word, index) => {
+    const chip = document.createElement('div');
+    chip.className = 'word-chip';
+    chip.textContent = word;
+    chip.dataset.word = word;
+    chip.dataset.chipId = `chip-${index}`;
+    wordChips.appendChild(chip);
+  });
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+// ================================
+// 터치 드래그 앤 드롭
+// ================================
+let dragGhost = null;
+let isDragging = false;
+
+function initTouchDragAndDrop() {
+  const wordChips = document.querySelectorAll('.word-chip');
+  const blankSlots = document.querySelectorAll('.blank-slot');
+
+  // 터치 시작
+  wordChips.forEach(chip => {
+    chip.addEventListener('touchstart', handleTouchStart, { passive: false });
+    chip.addEventListener('mousedown', handleMouseDown);
+  });
+
+  // 터치 이동 및 종료
+  document.addEventListener('touchmove', handleTouchMove, { passive: false });
+  document.addEventListener('touchend', handleTouchEnd);
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+
+  // 빈칸 클릭/터치
+  blankSlots.forEach(slot => {
+    slot.addEventListener('click', handleSlotClick);
+    slot.addEventListener('touchend', handleSlotTouch);
+  });
+}
+
+function handleTouchStart(e) {
+  if (e.target.classList.contains('used')) return;
+  e.preventDefault();
+
+  const chip = e.target;
+  const touch = e.touches[0];
+
+  startDrag(chip, touch.clientX, touch.clientY);
+}
+
+function handleMouseDown(e) {
+  if (e.target.classList.contains('used')) return;
+
+  const chip = e.target;
+  startDrag(chip, e.clientX, e.clientY);
+}
+
+function startDrag(chip, x, y) {
+  selectedChip = chip;
+  selectedChipId = chip.dataset.chipId;
+  isDragging = true;
+
+  chip.classList.add('touch-active');
+
+  // 고스트 생성
+  dragGhost = document.createElement('div');
+  dragGhost.className = 'drag-ghost';
+  dragGhost.textContent = chip.textContent;
+  dragGhost.style.left = x + 'px';
+  dragGhost.style.top = y + 'px';
+  document.body.appendChild(dragGhost);
+}
+
+function handleTouchMove(e) {
+  if (!isDragging || !dragGhost) return;
+  e.preventDefault();
+
+  const touch = e.touches[0];
+  dragGhost.style.left = touch.clientX + 'px';
+  dragGhost.style.top = touch.clientY + 'px';
+
+  // 빈칸 하이라이트
+  highlightSlotUnderPoint(touch.clientX, touch.clientY);
+}
+
+function handleMouseMove(e) {
+  if (!isDragging || !dragGhost) return;
+
+  dragGhost.style.left = e.clientX + 'px';
+  dragGhost.style.top = e.clientY + 'px';
+
+  highlightSlotUnderPoint(e.clientX, e.clientY);
+}
+
+function highlightSlotUnderPoint(x, y) {
+  const slots = document.querySelectorAll('.blank-slot:not(.filled)');
+  slots.forEach(slot => slot.classList.remove('drag-over'));
+
+  const element = document.elementFromPoint(x, y);
+  if (element && element.classList.contains('blank-slot') && !element.classList.contains('filled')) {
+    element.classList.add('drag-over');
+  }
+}
+
+function handleTouchEnd(e) {
+  if (!isDragging) return;
+
+  const touch = e.changedTouches[0];
+  endDrag(touch.clientX, touch.clientY);
+}
+
+function handleMouseUp(e) {
+  if (!isDragging) return;
+  endDrag(e.clientX, e.clientY);
+}
+
+function endDrag(x, y) {
+  if (selectedChip) {
+    selectedChip.classList.remove('touch-active');
+  }
+
+  // 드롭 위치 확인
+  const element = document.elementFromPoint(x, y);
+  if (element && element.classList.contains('blank-slot') && !element.classList.contains('filled')) {
+    const answer = element.dataset.answer;
+    const word = selectedChip.dataset.word;
+
+    if (word === answer) {
+      handleCorrect(element, word, selectedChipId, element.getBoundingClientRect());
+    } else {
+      handleWrong(element.getBoundingClientRect());
+    }
+  }
+
+  // 하이라이트 제거
+  document.querySelectorAll('.blank-slot').forEach(slot => slot.classList.remove('drag-over'));
+
+  // 고스트 제거
+  if (dragGhost) {
+    dragGhost.remove();
+    dragGhost = null;
+  }
+
+  isDragging = false;
+  selectedChip = null;
+  selectedChipId = null;
+}
+
+function handleSlotClick(e) {
+  // 선택 모드용 (드래그 없이 터치)
+}
+
+function handleSlotTouch(e) {
+  // 터치 종료 시 처리됨
+}
+
+// ================================
+// 정답/오답 처리
+// ================================
+function handleCorrect(slot, word, chipId, rect) {
+  slot.classList.add('filled');
+  slot.innerHTML = `<span class="answer-text">${word}</span>`;
+
+  const usedChip = document.querySelector(`.word-chip[data-chip-id="${chipId}"]`);
+  if (usedChip) {
+    usedChip.classList.add('used');
+  }
+
+  correctCount++;
+  remainCount--;
+  updateScore();
+  createConfetti(rect.left + rect.width / 2, rect.top);
+
+  if (remainCount === 0) {
+    setTimeout(showCompletion, 1000);
+  }
+}
+
+function handleWrong(rect) {
+  wrongCount++;
+  updateScore();
+
+  const wrongMark = document.createElement('div');
+  wrongMark.className = 'wrong-mark';
+  wrongMark.textContent = '❌';
+  wrongMark.style.left = `${rect.left + rect.width / 2 - 30}px`;
+  wrongMark.style.top = `${rect.top - 30}px`;
+  document.body.appendChild(wrongMark);
+
+  setTimeout(() => wrongMark.remove(), 600);
+}
+
+function updateScore() {
+  document.getElementById('correctCount').textContent = correctCount;
+  document.getElementById('wrongCount').textContent = wrongCount;
+  document.getElementById('remainCount').textContent = remainCount;
+}
+
+// ================================
+// 폭죽 효과
+// ================================
+function createConfetti(x, y) {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = [];
+  const colors = ['#fbbf24', '#22c55e', '#3b82f6', '#a855f7', '#ef4444', '#ec4899'];
+
+  for (let i = 0; i < 50; i++) {
+    particles.push({
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 15,
+      vy: (Math.random() - 0.5) * 15 - 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 8 + 4,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 10,
+      gravity: 0.3,
+      opacity: 1
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let activeParticles = 0;
+
+    particles.forEach(p => {
+      if (p.opacity <= 0) return;
+      activeParticles++;
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.rotation += p.rotationSpeed;
+      p.opacity -= 0.015;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.opacity;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.restore();
+    });
+
+    if (activeParticles > 0) {
+      requestAnimationFrame(animate);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  animate();
+}
+
+// ================================
+// 완료 모달
+// ================================
+function showCompletion() {
+  const modal = document.getElementById('completionModal');
+  const scoreText = document.getElementById('finalScore');
+
+  const accuracy = Math.round((correctCount / (correctCount + wrongCount)) * 100);
+  scoreText.textContent = `정답 ${correctCount}개 / 오답 ${wrongCount}개 (정확도: ${accuracy}%)`;
+
+  modal.classList.add('show');
+
+  createConfetti(window.innerWidth / 2, window.innerHeight / 2);
+  setTimeout(() => createConfetti(window.innerWidth / 3, window.innerHeight / 2), 200);
+  setTimeout(() => createConfetti(window.innerWidth * 2 / 3, window.innerHeight / 2), 400);
+}
+
+// ================================
+// PDF 다운로드
+// ================================
+async function downloadPDF() {
+  const pdfBtn = document.querySelector('.btn-pdf');
+  const originalText = pdfBtn.textContent;
+  pdfBtn.textContent = '⏳ 생성 중...';
+  pdfBtn.disabled = true;
+
+  try {
+    const modal = document.getElementById('completionModal');
+    modal.style.display = 'none';
+
+    const wordBank = document.getElementById('wordBank');
+    const scoreDisplay = document.querySelector('.score-display');
+
+    wordBank.style.display = 'none';
+    scoreDisplay.style.display = 'none';
+
+    const canvas = document.getElementById('canvas');
+    const capturedCanvas = await html2canvas(canvas, {
+      scale: 2,
+      backgroundColor: '#f5f0e6',
+      useCORS: true,
+      logging: false
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const imgData = capturedCanvas.toDataURL('image/png');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = capturedCanvas.width;
+    const imgHeight = capturedCanvas.height;
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+    const finalWidth = imgWidth * ratio;
+    const finalHeight = imgHeight * ratio;
+    const offsetX = (pdfWidth - finalWidth) / 2;
+    const offsetY = (pdfHeight - finalHeight) / 2;
+
+    pdf.addImage(imgData, 'PNG', offsetX, offsetY, finalWidth, finalHeight);
+    pdf.save('브레인웨이브_창의노트.pdf');
+
+    wordBank.style.display = '';
+    scoreDisplay.style.display = '';
+    modal.style.display = '';
+    modal.classList.add('show');
+
+  } catch (error) {
+    console.error('PDF 생성 오류:', error);
+    alert('PDF 생성 중 오류가 발생했습니다.');
+  }
+
+  pdfBtn.textContent = originalText;
+  pdfBtn.disabled = false;
+}
+</script>
+</body>
+</html>

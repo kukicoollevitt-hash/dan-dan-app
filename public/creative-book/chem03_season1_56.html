@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💧 물의 나라 공주 아쿠아와 기름의 나라 왕자 올리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학03/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(102, 126, 234, 0.15);
+      color: #667eea;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #764ba2;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a78bfa;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(102, 126, 234, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(118, 75, 162, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>💧 물의 나라 공주 아쿠아와<br>기름의 나라 왕자 올리의 금지된 우정</h1>
+        <p class="subtitle">
+          — 물과 기름은 왜 서로를 밀어낼까 —<br>
+          교과기반 창작도서 · 화학 03
+        </p>
+        <div class="characters">
+          <h3>🔬 등장인물 소개</h3>
+          <p><strong>▸ 미셀 (주인공):</strong> 열한 살 소녀. 요리를 사랑하며 샐러드 드레싱의 비밀에서 출발해 화학 세계를 탐험하는 주인공. 이름이 미셀 구조와 같다!</p>
+          <p><strong>▸ 아쿠아 (물 분자):</strong> 물의 나라 공주. V자 모양의 극성 분자로, 수소 결합으로 동료들과 강하게 연결된다. 올리와 친해지고 싶지만 자연법칙이 허락하지 않는다.</p>
+          <p><strong>▸ 올리 (기름 분자):</strong> 기름의 나라 왕자. 긴 탄화수소 사슬의 무극성 분자. 느긋하고 조용한 성격으로, 아쿠아의 세계를 동경하지만 들어갈 수 없다.</p>
+          <p><strong>▸ 사폰 (계면활성제):</strong> 두 세계를 잇는 기사. 한쪽은 친수기(극성), 다른 쪽은 소수기(무극성)를 가진 매개자.</p>
+          <p><strong>▸ 반데르 박사:</strong> 분자 연구소의 과학자. 마법의 현미경으로 분자 세계를 보여주며, 극성과 무극성의 비밀을 가르쳐준다.</p>
+          <p><strong>▸ 에타 (에탄올 분자):</strong> 극성과 무극성을 모두 가진 양면적 분자. 양쪽 세계에서 환영받는 존재.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🥗 샐러드 드레싱</span>
+        <h2>흔들면 섞이고, 놓으면 갈라지는 수수께끼</h2>
+        <p>화학 왕국의 서쪽, 맛있는 음식으로 유명한 '요리 마을'에 열한 살 소녀 <span class="highlight">'미셀'</span><br><br>이 살고 있었습니다. 미셀은 요리를 사랑하는 아이였는데, 특히 샐러드 드레싱 만들기를 좋아했습니다. 올리브 오일에 식초를 넣고, 소금과 후추를 뿌린 뒤 병을 세차게 흔들면 맛있는 드레싱이 완성되었지요.</p>
+        <p>그런데 어느 날, 미셀은 이상한 것을 발견했습니다. 열심히 흔들어서 뿌옇게 섞인 드레싱을 식탁 위에 올려놓고 잠깐 딴짓을 했는데, 돌아와 보니 드레싱이 두 층으로 깨끗하게 갈라져 있었던 것입니다. 위쪽은 노란 올리브 오일, 아래쪽은 투명한 식초.</p>
+        <p><span class="dialogue">"왜 다시 갈라지는 거야? 분명 열심히 흔들었는데!"</span><br><br>미셀은 속상했습니다. 다시 흔들었습니다. 뿌옇게 섞였습니다. 잠시 기다렸습니다. 또 갈라졌습니다. 아무리 세게 흔들어도, 아무리 오래 흔들어도 결과는 같았습니다.</p>
+        <p><span class="dialogue">"혹시 내가 잘못 만든 건가?"</span><br><br>미셀은 엄마에게 물었습니다. 엄마가 웃으며 대답했습니다.<br><br><span class="dialogue">"아니야, 미셀. 네가 잘못한 게 아니야. 물과 기름은 원래 섞이지 않거든."</span><br><br><span class="dialogue">"왜요? 왜 섞이지 않는 거예요?"</span></p>
+        <p>엄마는 대답 대신 미셀의 손에 병 하나를 쥐여주었습니다.<br><br><span class="dialogue">"이 질문의 답을 찾고 싶으면, 마을 뒷산의 '분자 연구소'를 찾아가렴. 그곳에서 물과 기름이 왜 서로를 밀어내는지 알 수 있을 거야."</span></p>
+        <p>미셀은 병을 들고 문을 나섰습니다. 물과 기름. 같은 병 안에 있으면서도 절대 하나가 되지 못하는 두 물질. 그 비밀을 풀기 위한 미셀의 화학 모험이 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🌍 섞이지 않는 이유</span>
+        <h2>물의 나라와 기름의 나라, 보이지 않는 국경선</h2>
+        <p>분자 연구소에 도착한 미셀을 맞이한 것은 <span class="highlight">'반데르 박사'</span><br><br>였습니다. 하얀 코트에 분자 모형 목걸이를 한 친근한 과학자였지요.</p>
+        <p><span class="dialogue">"미셀, 물과 기름이 왜 섞이지 않는지 알려면, 먼저 이 두 물질의 세계를 직접 들여다봐야 해."</span><br><br>박사가 마법의 현미경을 꺼냈습니다. 이 현미경은 분자 세계를 동화처럼 보여주는 특별한 장치였습니다.</p>
+        <p>현미경을 들여다보자, 놀라운 광경이 펼쳐졌습니다. 물의 세계에는 수많은 물 분자들이 서로 손을 꼭 잡고 옹기종기 모여있었습니다.<br><br><span class="dialogue">"나는 물의 나라 공주 <span class="highlight">'아쿠아'</span><br><br>야!"</span><br><br>물 분자 하나가 인사했습니다. 아쿠아는 산소 원자 하나에 수소 원자 두 개가 붙어있는 V자 모양이었는데, 묘하게도 한쪽은 파란빛(음전하), 다른 쪽은 빨간빛(양전하)으로 빛나고 있었습니다.</p>
+        <p>반대편에는 기름 분자들의 세계가 있었습니다. 긴 사슬 모양의 분자들이 느긋하게 미끄러지듯 움직이고 있었습니다.<br><br><span class="dialogue">"나는 기름의 나라 왕자 <span class="highlight">'올리'</span><br><br>야."</span><br><br>기름 분자가 인사했습니다. 올리는 탄소와 수소가 길게 연결된 사슬 모양이었는데, 아쿠아와 달리 어느 쪽도 특별히 빛나지 않았습니다.</p>
+        <p>미셀이 눈을 크게 떴습니다.<br><br><span class="dialogue">"아쿠아는 빛나는데, 올리는 안 빛나? 왜 그런 거예요?"</span></p>
+        <p>반데르 박사가 미소 지었습니다.<br><br><span class="dialogue">"바로 그 차이가 핵심이란다. 아쿠아의 빛남을 <span class="highlight">'극성'</span>, 올리의 빛나지 않음을 <span class="highlight">'무극성'</span><br><br>이라고 해. 이 차이 때문에 둘은 영원히 섞일 수 없는 거야."</span></p>
+        <p>물의 나라와 기름의 나라 사이에는 눈에 보이지 않는 국경선이 존재했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">⚡ 극성과 무극성</span>
+        <h2>아쿠아의 비밀, 왜 물은 한쪽이 더 끌리는가</h2>
+        <p><span class="dialogue">"극성이 뭔지 정확히 알려주세요!"</span><br><br>미셀이 간절하게 물었습니다. 반데르 박사가 물 분자 모형을 꺼내 보여주었습니다. 산소(O) 원자 하나에 수소(H) 원자 두 개가 약 104.5도의 각도로 붙어있는 V자 구조였습니다.</p>
+        <p><span class="dialogue">"산소는 전자를 끌어당기는 힘, 즉 <span class="highlight">'전기음성도'</span><br><br>가 수소보다 훨씬 높아. 그래서 공유하고 있는 전자가 산소 쪽으로 치우치게 되지."</span></p>
+        <p>미셀이 고개를 갸우뚱했습니다.<br><br><span class="dialogue">"전자가 한쪽으로 치우친다고요?"</span><br><br><span class="dialogue">"그래. 마치 줄다리기에서 힘센 쪽으로 밧줄이 끌려가듯, 전자가 산소 쪽으로 쏠리는 거야. 그 결과 산소 쪽은 전자가 많아져서 부분적 음전하(δ−)를 띠고, 수소 쪽은 전자가 부족해져서 부분적 양전하(δ+)를 띠게 돼."</span></p>
+        <p>이것이 바로 <span class="highlight">'극성'</span><br><br>이었습니다. 분자 안에서 전하의 분포가 고르지 않아 한쪽은 양, 다른 쪽은 음을 띠는 성질. 물 분자는 대표적인 극성 분자였습니다.</p>
+        <p><span class="dialogue">"반면에 기름 분자를 봐."</span><br><br>박사가 올리의 구조를 보여주었습니다. 탄소-수소로 이루어진 긴 사슬에서 탄소와 수소의 전기음성도 차이가 매우 작았습니다. 전자가 한쪽으로 쏠리지 않으니, 분자 전체적으로 전하의 쏠림이 없었습니다.</p>
+        <p><span class="dialogue">"올리는 어느 쪽도 양전하나 음전하를 띠지 않아. 이것이 <span class="highlight">'무극성'</span><br><br>이야."</span></p>
+        <p>아쿠아가 속삭였습니다.<br><br><span class="dialogue">"나는 한쪽이 플러스, 다른 쪽이 마이너스야. 그래서 나와 같은 극성 친구에게는 끌리지만, 극성이 없는 올리에게는 끌리지 않아."</span></p>
+        <p>극성은 분자의 성격이었습니다. 그리고 이 성격의 차이가 물과 기름의 운명을 갈라놓고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">🔬 분자의 구조</span>
+        <h2>물의 V자 춤과 기름의 긴 사슬 행진</h2>
+        <p>미셀은 물과 기름의 분자 구조를 더 자세히 관찰하기 시작했습니다. 반데르 박사의 마법 현미경으로 물의 세계에 들어가보니, 물 분자들은 마치 군무를 추는 무용수들처럼 아름다운 질서를 이루고 있었습니다.</p>
+        <p>아쿠아가 설명했습니다.<br><br><span class="dialogue">"내 모양을 잘 봐. 산소 원자가 가운데에 있고, 수소 원자 두 개가 양쪽에 붙어있어. 마치 미키마우스 귀처럼 V자를 이루고 있지. 이 모양이 아주 중요해!"</span></p>
+        <p><span class="dialogue">"왜 중요한데요?"</span><br><br><span class="dialogue">"만약 물 분자가 일직선이었다면, 산소 쪽의 음전하와 수소 쪽의 양전하가 상쇄되어서 극성이 사라졌을 거야. 하지만 V자로 꺾여있기 때문에 전하가 상쇄되지 않고 극성이 유지되는 거지!"</span></p>
+        <p>미셀은 감탄했습니다. 분자의 모양이 성격을 결정하다니!</p>
+        <p>이번에는 기름의 세계를 들여다보았습니다. 올리가 자랑스럽게 자기 몸을 보여주었습니다. 탄소 원자들이 길게 사슬처럼 연결되어 있고, 각 탄소에 수소가 두 개씩 붙어있었습니다.</p>
+        <p><span class="dialogue">"나는 <span class="highlight">'탄화수소'</span><br><br>라고 해. 탄소 사슬이 길면 길수록 더 끈적끈적해지지. 짧으면 가스(메테인, 프로페인), 중간이면 액체(기름), 길면 고체(파라핀 왁스)가 돼."</span></p>
+        <p><span class="dialogue">"그런데 왜 극성이 없어?"</span><br><br><span class="dialogue">"탄소와 수소의 전기음성도가 비슷하거든. 전자가 어느 쪽으로도 치우치지 않으니 분자 전체가 균일해. 중립적이고 조용한 게 내 성격이야."</span></p>
+        <p>미셀은 두 분자를 비교했습니다. 아쿠아는 작고 극성이 강한 V자 무용수. 올리는 길고 무극성인 사슬 행진자. 구조가 성질을 만들고, 성질이 관계를 결정했습니다. 분자의 모양은 단순한 형태가 아니라, 그 분자의 운명을 담은 설계도였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🤝 인력의 차이</span>
+        <h2>'같은 것끼리 끌린다', 수소 결합의 강력한 손잡기</h2>
+        <p><span class="dialogue">"미셀, 이제 가장 핵심적인 비밀을 알려줄게."</span><br><br>반데르 박사가 진지한 표정으로 말했습니다.<br><br><span class="dialogue">"물 분자끼리 끌어당기는 힘과, 기름 분자끼리 끌어당기는 힘이 완전히 다르단다."</span></p>
+        <p>박사가 물의 세계를 다시 보여주었습니다. 물 분자들이 서로 손을 잡고 있었는데, 그 손잡기가 아주 특별했습니다. 한 물 분자의 수소(δ+)가 이웃 물 분자의 산소(δ−) 쪽으로 끌려가며 결합을 이루고 있었습니다.</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">'수소 결합'</span><br><br>이야! 물 분자 사이의 가장 강력한 분자 간 인력이지. 수소 결합은 일반적인 분자 간 힘(반데르발스 힘)보다 훨씬 강해."</span></p>
+        <p>아쿠아가 이웃 물 분자와 손을 꽉 잡으며 말했습니다.<br><br><span class="dialogue">"우리 물 분자들은 수소 결합으로 아주 단단하게 연결되어 있어. 이 결합이 물의 끓는점이 높은 이유이기도 해. 비슷한 크기의 분자인 메테인(CH₄)은 영하 161도에서 끓지만, 물은 100도까지 버티지. 수소 결합의 힘이야."</span></p>
+        <p>반면 기름 분자들 사이에는 수소 결합이 없었습니다. 올리와 이웃 기름 분자들은 약한 <span class="highlight">'런던 분산력'</span><br><br>이라는 힘으로만 연결되어 있었습니다.<br><br><span class="dialogue">"우리 사이의 힘은 물에 비하면 약해. 하지만 사슬이 길어서 접촉면이 넓으니까, 총합은 꽤 되지."</span><br><br>올리가 설명했습니다.</p>
+        <p>문제는 이것이었습니다. 물 분자들의 수소 결합은 너무 강해서, 끼어드는 기름 분자를 밀어냈습니다. 물 분자들은 자기들끼리 손을 잡는 것이 기름과 손잡는 것보다 훨씬 유리했기 때문이지요.</p>
+        <p>화학에서 이것을 <span class="highlight">'같은 것은 같은 것을 녹인다(Like dissolves like)'</span><br><br>라고 표현합니다. 극성은 극성끼리, 무극성은 무극성끼리.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">⚖️ 층이 나뉘는 순간</span>
+        <h2>밀도의 심판, 왜 기름은 항상 위로 뜨는가</h2>
+        <p>미셀은 또 하나의 궁금증이 생겼습니다.<br><br><span class="dialogue">"물과 기름이 섞이지 않는 건 알겠는데, 왜 항상 기름이 위에, 물이 아래에 있어요? 반대로 되면 안 돼요?"</span></p>
+        <p>반데르 박사가 고개를 끄덕였습니다.<br><br><span class="dialogue">"좋은 관찰이야! 그 답은 <span class="highlight">'밀도'</span><br><br>에 있어."</span></p>
+        <p>밀도란 같은 부피에 얼마나 많은 질량이 들어있는지를 나타내는 값입니다. 물의 밀도는 1세제곱센티미터당 약 1그램이고, 올리브 오일의 밀도는 약 0.91그램입니다. 기름이 물보다 가볍기 때문에 위로 뜨는 것이지요.</p>
+        <p><span class="dialogue">"만약 물보다 무거운 액체가 있다면, 그 액체는 물 아래로 가라앉을 거야. 예를 들어 수은은 밀도가 물의 13.6배나 돼서, 쇠공도 수은 위에 뜰 수 있어."</span></p>
+        <p>미셀이 실험해보았습니다. 투명한 유리병에 꿀(밀도 약 1.4), 물(1.0), 식용유(0.92), 알코올(0.79)을 차례로 넣었더니, 밀도순으로 네 개의 층이 깨끗하게 나뉘었습니다!<br><br><span class="dialogue">"무지개 같다!"</span><br><br>미셀이 환호했습니다.</p>
+        <p>아쿠아와 올리가 유리병 속에서 서로를 바라보았습니다. 둘 사이에는 선명한 경계선이 있었습니다. 올리가 쓸쓸하게 말했습니다.<br><br><span class="dialogue">"나는 너보다 가벼우니까 항상 위에 있어. 만질 수 있을 만큼 가까이 있는데, 절대 섞일 수 없어."</span></p>
+        <p>아쿠아도 슬픈 표정이었습니다.<br><br><span class="dialogue">"내가 수소 결합을 놓을 수 있다면 너와 섞일 수 있을 텐데... 하지만 그러면 내가 물이 아니게 돼."</span></p>
+        <p>극성과 무극성, 밀도의 차이. 자연법칙이 만든 국경선은 단단했습니다. 하지만 이 세상에는 국경을 넘게 해주는 존재가 있었으니...</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🧼 비누의 등장</span>
+        <h2>두 세계를 잇는 다리, '비누 기사' 사폰의 등장</h2>
+        <p>아쿠아와 올리가 서로 만날 수 없어 슬퍼하고 있을 때, 먼지를 뿌리며 한 기사가 말을 타고 달려왔습니다.</p>
+        <p><span class="dialogue">"내가 왔다! 두 세계를 연결하는 다리, 비누 기사 <span class="highlight">'사폰'</span><br><br>이 왔다!"</span></p>
+        <p>사폰은 이상한 모양의 기사였습니다. 몸의 한쪽은 물처럼 파랗게 빛나고(극성), 다른 쪽은 기름처럼 빛나지 않았습니다(무극성). 마치 반은 물의 나라, 반은 기름의 나라 사람인 것 같았지요.</p>
+        <p><span class="dialogue">"나는 <span class="highlight">'계면활성제'</span><br><br>야. 비누, 세제의 핵심 성분이지. 내 몸의 한쪽 끝은 '친수기(親水基)'라고 해서 물을 좋아하고, 반대쪽 끝은 '소수기(疎水基)' 또는 '친유기'라고 해서 기름을 좋아해."</span></p>
+        <p>미셀이 놀라 물었습니다.<br><br><span class="dialogue">"한 분자가 물도 좋아하고 기름도 좋아할 수 있어요?"</span><br><br><span class="dialogue">"그래! 나의 친수기는 이온성을 띠어서 극성인 물과 잘 어울리고, 소수기는 긴 탄화수소 사슬이어서 무극성인 기름과 잘 어울려."</span></p>
+        <p>사폰이 아쿠아에게 친수기 손을 내밀고, 올리에게 소수기 손을 내밀었습니다. 아쿠아가 친수기를 잡았습니다. 올리가 소수기를 잡았습니다. 순간, 물과 기름 사이의 경계선이 흔들리기 시작했습니다!</p>
+        <p><span class="dialogue">"드디어... 올리의 손이 느껴져!"</span><br><br>아쿠아가 눈물을 글썽였습니다.<br><br><span class="dialogue">"나도! 아쿠아의 온기가 전해져!"</span><br><br>올리가 환호했습니다.</p>
+        <p>사폰은 두 세계 사이에 서서, 양쪽의 손을 잡은 채 다리가 되어주었습니다. 직접 만날 수 없는 두 존재를 이어주는 매개자. 그것이 계면활성제의 역할이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">🔮 계면활성제 역할</span>
+        <h2>미셀 구조의 마법, 기름을 감싸 물에 띄우다</h2>
+        <p>사폰 기사가 물과 기름 사이에 뛰어들자, 놀라운 현상이 벌어졌습니다. 수많은 사폰 분자(계면활성제)가 기름 방울 주위로 모여들었습니다. 소수기(기름을 좋아하는 꼬리)는 기름 방울 안으로 파고들고, 친수기(물을 좋아하는 머리)는 바깥쪽 물을 향해 나왔습니다.</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">'미셀(micelle)'</span><br><br>구조야!"</span><br><br>반데르 박사가 흥분하여 외쳤습니다. 미셀이 깜짝 놀랐습니다.<br><br><span class="dialogue">"미셀이요? 제 이름이랑 같아요!"</span><br><br><span class="dialogue">"우연이 아니란다! 미셀이라는 이름은 바로 이 구조에서 따온 거야."</span> (물론 동화 속 설정이었지만, 미셀은 기분이 좋았습니다.)</p>
+        <p>미셀 구조에서 기름 방울은 계면활성제에 의해 완전히 감싸집니다. 바깥은 친수기로 둘러싸여 있으니 물에게는 "나도 극성이야"라고 보이게 되지요. 물 분자들은 미셀의 친수기를 보고 "우리 친구네!" 하고 받아들입니다.</p>
+        <p>결과적으로, 기름이 아주 작은 방울로 쪼개져 물속에 골고루 퍼지게 됩니다.<br><br><span class="dialogue">"이것을 <span class="highlight">'유화(emulsification)'</span><br><br>라고 해. 기름이 물에 녹은 것은 아니지만, 아주 작은 방울로 분산되어 섞인 것처럼 보이는 거야."</span></p>
+        <p>미셀은 우리가 손을 씻을 때 일어나는 일의 비밀을 알게 되었습니다. 손에 묻은 기름때가 비누의 소수기에 붙잡히고, 물이 비누의 친수기를 끌어당겨 기름때를 떼어내는 것이었지요.</p>
+        <p><span class="dialogue">"비누로 손을 씻는 게 이렇게 복잡한 화학이었다니!"</span><br><br>미셀은 감탄했습니다. 극성과 무극성 사이의 벽을 무너뜨리는 것은 힘이 아니라, 양쪽을 이해하는 매개자의 존재였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🧪 혼합의 과학</span>
+        <h2>섞이는 것과 섞이지 않는 것, 용해의 다양한 얼굴</h2>
+        <p>미셀은 물과 기름의 비밀을 알게 된 후, 세상의 모든 혼합이 궁금해졌습니다. 반데르 박사가 여러 가지 실험을 보여주었습니다.</p>
+        <p>먼저 물에 소금을 넣었습니다. 소금(NaCl)은 나트륨 양이온(Na⁺)과 염소 음이온(Cl⁻)으로 이루어진 이온 결정입니다. 물 분자의 극성이 이온들을 하나씩 떼어내 감쌌습니다.<br><br><span class="dialogue">"극성인 물이 이온성인 소금을 녹이는 거야. 극성은 극성과 어울리지!"</span></p>
+        <p>물에 설탕을 넣어도 녹았습니다. 설탕 분자에는 수산기(−OH)가 많아서 물과 수소 결합을 형성할 수 있었거든요. 하지만 물에 모래를 넣으면 녹지 않았습니다. 모래(SiO₂)는 매우 강한 공유 결합 네트워크여서 물이 뚫고 들어갈 수 없었지요.</p>
+        <p>반대로 기름에 버터를 넣으면 잘 섞였습니다. 둘 다 무극성 분자로 이루어져 있으니까요. 매니큐어를 지우는 아세톤에 매니큐어가 녹는 것도 같은 원리였습니다.</p>
+        <p><span class="dialogue">"그러면 모든 물질이 물 아니면 기름에 녹아요?"</span><br><br>미셀이 물었습니다.<br><br><span class="dialogue">"대부분은 그렇지만, 예외도 있어. 알코올(에탄올)은 극성 부분과 무극성 부분을 둘 다 가지고 있어서 물에도 섞이고, 어느 정도는 기름과도 친해. 분자 세계에는 다양한 성격이 있는 거야."</span></p>
+        <p>아쿠아와 올리가 알코올 분자 <span class="highlight">'에타'</span><br><br>를 바라보며 부러워했습니다.<br><br><span class="dialogue">"에타는 양쪽 세계에서 모두 환영받는구나."</span><br><br>에타가 웃으며 말했습니다.<br><br><span class="dialogue">"양쪽을 이해하면 어디서든 어울릴 수 있어."</span></p>
+        <p>혼합의 과학은 단순한 섞기가 아니라, 분자 사이의 관계학이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학03/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">💜 친함의 조건</span>
+        <h2>아쿠아와 올리의 깨달음, 다름을 인정하는 우정</h2>
+        <p>모든 모험이 끝나갈 무렵, 미셀은 마지막으로 아쿠아와 올리를 만나러 갔습니다. 두 사람은 여전히 경계선을 사이에 두고 서 있었지만, 표정이 처음과 달랐습니다.</p>
+        <p><span class="dialogue">"미셀, 고마워."</span><br><br>아쿠아가 먼저 말했습니다.<br><br><span class="dialogue">"네 덕분에 올리와 내가 왜 섞일 수 없는지 이해하게 되었어. 나는 극성이고, 올리는 무극성이야. 우리의 분자 간 힘이 다르고, 구조가 다르고, 성질이 다르지. 이건 누구의 잘못도 아니야."</span></p>
+        <p>올리도 고개를 끄덕였습니다.<br><br><span class="dialogue">"맞아. 예전에는 아쿠아가 나를 밀어낸다고 생각해서 서운했어. 하지만 이제 알아. 아쿠아가 자기 친구들(극성 분자들)과 수소 결합을 유지하는 것이 자연스러운 거라는 걸. 내가 끼어들면 오히려 아쿠아의 세계를 불안정하게 만드는 거였어."</span></p>
+        <p>미셀이 물었습니다.<br><br><span class="dialogue">"그러면 둘은 영원히 친구가 될 수 없는 거예요?"</span></p>
+        <p>사폰 기사가 나타나 말했습니다.<br><br><span class="dialogue">"직접 손잡을 수는 없어도, 나 같은 매개자를 통해 함께할 수 있어. 마요네즈, 우유, 로션, 아이스크림... 이 모든 것이 물과 기름이 계면활성제를 통해 함께 만들어낸 작품이야."</span></p>
+        <p>아쿠아와 올리가 미소 지었습니다.<br><br><span class="dialogue">"우리는 다르지만, 다르기 때문에 각자의 역할이 있어. 물이 없으면 생명이 없고, 기름이 없으면 에너지 저장도, 세포막도, 요리도 없지."</span></p>
+        <p>미셀은 집으로 돌아와 샐러드 드레싱을 다시 만들었습니다. 올리브 오일, 식초, 그리고 이번에는 겨자(천연 유화제)를 넣었습니다. 세차게 흔들자, 이번에는 드레싱이 오래도록 분리되지 않았습니다.</p>
+        <p>미셀은 웃으며 중얼거렸습니다.<br><br><span class="dialogue">"성질이 달라도 연결고리가 있으면 함께할 수 있구나."</span><br><br>그것이 화학이 가르쳐준 우정의 조건이었습니다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <script>
+    function goToQuiz() {
+      window.location.href = '/creative-book/chem03_season1_quiz.html?season=season2';
+    }
+    // 섹션별 배경 이미지 데이터
+    const sectionBackgrounds = {
+      0: '/images/창작도서/창작화학03/00.jpg',
+      1: '/images/창작도서/창작화학03/01.jpg',
+      2: '/images/창작도서/창작화학03/02.jpg',
+      3: '/images/창작도서/창작화학03/03.jpg',
+      4: '/images/창작도서/창작화학03/04.jpg',
+      5: '/images/창작도서/창작화학03/05.jpg',
+      6: '/images/창작도서/창작화학03/06.jpg',
+      7: '/images/창작도서/창작화학03/07.jpg',
+      8: '/images/창작도서/창작화학03/08.jpg',
+      9: '/images/창작도서/창작화학03/09.jpg',
+      10: '/images/창작도서/창작화학03/10.jpg'
+    };
+
+    // 이미지 프리로드
+    Object.values(sectionBackgrounds).forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const storyCards = document.querySelectorAll('.story-card');
+    let currentBg = 0;
+
+    // 스크롤 이벤트 핸들러
+    function handleScroll() {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+
+      // 각 섹션의 위치 확인
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top;
+        const sectionHeight = rect.height;
+
+        // 섹션이 화면 중앙에 있을 때 배경 변경
+        if (sectionTop < windowHeight * 0.5 && sectionTop > -sectionHeight * 0.5) {
+          const bgIndex = section.dataset.bg ?
+            Object.keys(sectionBackgrounds).find(key => sectionBackgrounds[key] === section.dataset.bg) :
+            index;
+
+          if (section.dataset.bg && currentBg !== section.dataset.bg) {
+            currentBg = section.dataset.bg;
+            mapContainer.style.backgroundImage = `url('${section.dataset.bg}')`;
+          }
+        }
+
+        // 스토리 카드 애니메이션
+        const card = section.querySelector('.story-card');
+        if (card) {
+          if (sectionTop < windowHeight * 0.75) {
+            card.classList.add('active');
+          }
+        }
+      });
+
+      // 인트로 섹션 체크
+      const introSection = document.querySelector('.intro-section');
+      if (introSection) {
+        const introRect = introSection.getBoundingClientRect();
+        if (introRect.top < windowHeight * 0.5 && introRect.top > -introRect.height * 0.5) {
+          mapContainer.style.backgroundImage = `url('${sectionBackgrounds[0]}')`;
+        }
+      }
+    }
+
+    // 스크롤 이벤트 리스너
+    window.addEventListener('scroll', handleScroll);
+
+    // 초기 실행
+    handleScroll();
+  </script>
+</body>
+</html>

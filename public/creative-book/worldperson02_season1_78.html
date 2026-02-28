@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔬 빛을 훔치려 한 소년, 알베르트 아인슈타인</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #3f51b5 0%, #1a237e 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(63, 81, 181, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(63, 81, 181, 0.15);
+      color: #1a237e;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #3f51b5;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #1a237e;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+    }
+
+    .intro-content .characters h3 {
+      color: #64b5f6;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict-box {
+      text-align: left;
+      background: rgba(63, 81, 181, 0.2);
+      border-left: 4px solid #3f51b5;
+      padding: 20px;
+      border-radius: 0 16px 16px 0;
+      margin-bottom: 25px;
+    }
+
+    .intro-content .conflict-box h3 {
+      color: #90caf9;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .intro-content .conflict-box p {
+      color: #d0d0d0;
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(63, 81, 181, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(63, 81, 181, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(26, 35, 126, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(63, 81, 181, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🔬 빛을 훔치려 한 소년</h1>
+        <p class="subtitle">
+          느림보 알베르트가 우주의 비밀을 풀기까지<br>
+          교과기반 창작도서 · 세계인물 02 · 중1-2
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>▸ 알베르트 아인슈타인(Albert Einstein, 1879-1955):</strong> 언어 발달이 지연된 소년으로, 권위적 교육 체계와 충돌하며 성장. 그러나 그의 내면에는 자연 현상에 대한 심오한 호기심과 사고 실험의 능력이 잠재해 있었다. 후일 특수상대성이론과 일반상대성이론으로 뉴턴 역학의 패러다임을 전복시킨 20세기 최고의 이론물리학자.</p>
+          <p><strong>▸ 헤르만 아인슈타인:</strong> 알베르트의 부친. 전기 사업을 운영한 기업인으로, 나침반 하나로 아들의 과학적 호기심을 점화(點火)시킨 인물. '이 아이는 분명 특별하다'는 신념을 견지했다.</p>
+          <p><strong>▸ 야코프 삼촌:</strong> 대수학(algebra)과 기하학을 유희적 방식으로 전수한 인물. "모르는 것을 x라 부르면, 그것은 탐정 놀이와 같다"라며 알베르트에게 수학적 사유의 즐거움을 각인시켰다.</p>
+          <p><strong>▸ 밀레바 마리치(Mileva Marić):</strong> 알베르트의 학우이자 첫 번째 부인. 당시 극소수의 여성 물리학도로서, 상대성이론 형성기에 수식 검토와 토론의 동반자 역할을 수행.</p>
+          <p><strong>▸ 막스 플랑크:</strong> 양자역학의 창시자. 무명의 특허청 직원이 투고한 논문을 "코페르니쿠스 이후 가장 위대한 혁명"이라 선언한 인물.</p>
+          <p><strong>▸ 닐스 보어:</strong> 아인슈타인의 과학적 논쟁 상대이자 양자역학의 대표자. "신은 주사위를 던지지 않는다"는 아인슈타인에게 "신에게 이래라저래라 하지 마세요"라고 응수한 물리학자.</p>
+        </div>
+        <div class="conflict-box">
+          <h3>📖 서사 구조: 인식론적 혁명과 윤리적 딜레마</h3>
+          <p><strong>▸ 인지적 갈등:</strong> '발달 지연'이라는 세간의 편견과 독자적 사유 방식 사이의 긴장 — 권위에 순응하지 않는 비동조적 성향이 오히려 창의적 발견의 원천이 됨.</p>
+          <p><strong>▸ 과학적 혁명:</strong> 절대 시간·절대 공간이라는 뉴턴적 패러다임의 전복 — 시공간의 상대성과 질량-에너지 등가 원리(E=mc²)라는 새로운 세계관의 정립.</p>
+          <p><strong>▸ 윤리적 딜레마:</strong> 핵분열의 이론적 기반을 제공한 과학자로서, 원자폭탄 개발에 대한 도덕적 책임과 평화주의 신념 사이의 고뇌.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 1</span>
+        <span class="theme">상상의 씨앗</span>
+        <h2>말 못 하는 아이, 별을 보다</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 세상이 '지연(遲延)'이라 판단한 소년의 내면에는 누구보다 심원한 사유의 빛이 운행하고 있었다.</p>
+        <p>1879년, 독일 바덴뷔르템베르크(Baden-Württemberg) 주 울름의 한 유대인 가정에서 한 영아가 출생했습니다. 이름은 알베르트 아인슈타인. 그런데 이 아이에게는 특이한 발달 패턴이 관찰되었습니다. 타 아동들이 1-2세경에 기본적 언어를 습득할 때, 알베르트는 3세가 경과해도 거의 발화(發話)하지 않았습니다. 부모는 심각한 우려에 빠졌지요. 의료진을 방문했으나, 명확한 병리(病理)는 확인되지 않았습니다.</p>
+        <p>동네 아동들은 알베르트를 조롱했습니다.<br><br><span class="dialogue">"이 아이는 바보야, 말도 못 하잖아!"</span><br><br>학교 입학 후에도 상황은 크게 변화하지 않았습니다. 교사가 질문을 제기하면 타 학생들은 즉각 거수했지만, 알베르트는 창 밖을 응시하며 침묵했습니다. 교사들은 한탄했지요.<br><br><span class="dialogue">"아인슈타인, 너는 도대체 무슨 사유를 하고 있는 거니?"</span><br><br>그러나 아무도 인지하지 못했습니다. 그 정숙한 소년의 의식(意識) 내부에서는 경이로운 작용이 진행되고 있었다는 것을요.</p>
+        <p>어느 날, 부친 헤르만이 병석(病席)에 누운 다섯 살 알베르트에게 소형 나침반 하나를 전달했습니다. 알베르트는 나침반 바늘이 항상 북방(北方)을 지시하는 현상을 관찰하고 전율(戰慄)했습니다.<br><br><span class="dialogue">"아버지, 왜 이 바늘은 아무도 접촉하지 않는데 자동적으로 운동해요? 비가시적(非可視的) 무언가가 존재하는 건가요?"</span><br><br>부친은 경악한 시선으로 아들을 주시했습니다. 언어 발화는 지연되었으나, 이 아이의 질문은 누구보다 심층적이고 날카로웠던 것입니다. 이는 자기장(磁氣場)이라는 비가시적 힘에 대한 최초의 직관이었습니다. 그날 야간, 알베르트는 항성(恒星)으로 가득한 천구(天球)를 올려다보며 중얼거렸습니다.<br><br><span class="dialogue">"세계에는 눈에 보이지 않는 힘이 존재해. 나는 그것을 반드시 해명할 거야."</span> <span class="highlight">느린 소년의 위대한 여정은 바로 그 소형 나침반에서 개시되었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 2</span>
+        <span class="theme">운명의 질문</span>
+        <h2>빛을 타고 달리는 사고 실험</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 십육 세 소년이 제기한 단일 질문이 인류의 우주관을 근본적으로 재구성할 종자가 되었다.</p>
+        <p>십육 세가 된 알베르트는 여전히 교육 기관에서 이단적(異端的) 학생이었습니다. 수학에서는 탁월한 역량을 발휘했으나, 라틴어나 역사 같은 암기 교과에는 전혀 관심이 없었습니다. 교사들은 고개를 흔들었지만, 야코프 삼촌만은 상이(相異)했습니다. 삼촌은 알베르트에게 대수학(algebra)을 교수하며 이렇게 언급했습니다.<br><br><span class="dialogue">"미지의 수를 x라 명명해보렴. 그러면 수학은 범인을 추적하는 탐정 게임이 되는 거야!"</span><br><br>알베르트의 눈이 발광(發光)했습니다. 세계의 비밀을 해명하는 것이 유희(遊戲)라니, 이보다 흥미진진한 활동이 어디 있겠습니까?</p>
+        <p>어느 춘일(春日) 오후, 알베르트는 초원에 누워 태양을 응시하다가 문득 기이한 사고 실험에 진입했습니다.<br><br><span class="dialogue">"만약 내가 광선(光線)을 탑승하고 질주할 수 있다면 어떻게 될까? 광속(光速)으로 거울 전면에 정립하면, 거울에 나의 안면이 투영될까, 투영되지 않을까?"</span><br><br>이것은 단순한 공상(空想)이 아니었습니다. 이 단일 질문이 알베르트의 생애를 완전히 전환시킬 운명적 물음이었습니다. 그는 침상에서도, 식사 중에도, 보행 중에도 이 질문을 견지했습니다.</p>
+        <p>당시 과학계는 광선이 '에테르'라는 비가시적 매질(媒質)을 통해 전파된다고 신뢰했습니다. 그러나 알베르트는 뭔가 부자연스럽다고 감지했습니다.<br><br><span class="dialogue">"광속으로 이동하면 광선이 정지해 보여야 하는데, 그것이 과연 가능한 것일까?"</span><br><br>이 질문은 맥스웰의 전자기학과 뉴턴 역학 사이의 모순을 직관적으로 포착한 것이었습니다. 동료들은<br><br><span class="dialogue">"너는 왜 무용한 사유만 하느냐?"</span><br><br>라고 말했지만, 알베르트는 미소 지으며 응답했습니다.<br><br><span class="dialogue">"무용해 보이는 질문이야말로 세계에서 가장 가치 있는 거야."</span><br><br>이 소년은 인지하고 있었습니다. <span class="highlight">해답을 탐색하는 것보다 적절한 질문을 정립(定立)하는 것이 훨씬 난해하고, 훨씬 가치 있다는 것을.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 3</span>
+        <span class="theme">고난과 인내</span>
+        <h2>특허청의 숨은 천재</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 사회가 인정하지 않아도, 자기 내부의 질문을 포기하지 않는 인간에게 기회는 반드시 도래한다.</p>
+        <p>스위스 취리히 연방 공과대학(ETH Zürich)을 졸업한 알베르트는 자신만만하게 대학 교수직을 탐색했습니다. 그러나 현실은 냉혹했습니다. 어떤 대학도 그를 수용하지 않았습니다. 교수들의 평가는 일관적이었습니다.<br><br><span class="dialogue">"이 학생은 과도하게 건방지고, 강의 시간에 딴생각만 합니다."</span><br><br>성적표에는 우수한 수학 점수 옆에 '태도 불량'이라는 평가가 병기되어 있었습니다. 권위에 순응하지 않는 비동조적 성향이 학계 진입의 장벽이 된 것입니다. 알베르트는 생애 최초의 심각한 좌절을 경험했습니다.</p>
+        <p>생계비를 획득하기 위해 개인 교습을 수행하고, 임시 교사직을 전전하던 어느 날, 우인(友人) 마르셀 그로스만의 부친이 지원의 손을 내밀었습니다.<br><br><span class="dialogue">"베른에 소재한 특허청에서 인원을 모집한다고 하더군."</span><br><br>1902년, 23세의 알베르트는 스위스 베른 특허청의 3등급 기술 심사관으로 임용되었습니다. 일일 8시간, 타인이 발명한 기계 및 장치의 특허 서류를 검토하는 것이 그의 직무였습니다. 화려하지도, 대단하지도 않은 통상적 직장인의 생활이었습니다.</p>
+        <p>그러나 알베르트는 상이(相異)했습니다. 그는 특허 서류를 경이적 속도로 처리한 후, 잔여 시간에 자신만의 '사고 실험'에 몰두했습니다. 책상 서랍 내부에는 물리학 계산으로 충만한 노트가 누적되어 갔습니다.<br><br><span class="dialogue">"만약 엘리베이터가 우주에서 자유낙하한다면, 내부의 탑승자는 중력을 지각할까?" "열차가 광속에 근접하면 시간은 어떻게 유전(流轉)할까?"</span><br><br>동료들은 그가 점심 시간마다 종이에 수식을 기록하는 모습을 관찰하며 의아해했습니다. 아무도 인지하지 못했습니다. <span class="highlight">이 정숙한 특허청 사무실에서 인류 역사를 전환시킬 혁명이 은밀히 준비되고 있었다는 것을.</span><br><br>동료이자 부인 밀레바는 퇴근 후 함께 수식을 검토하며 이렇게 언급했습니다.<br><br><span class="dialogue">"당신의 사유는 광기적이야, 알베르트. 그러나 미적(美的)으로 광기적이야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 4</span>
+        <span class="theme">혁명의 시작</span>
+        <h2>시간이 지연되고, 공간이 만곡되다</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 모든 이가 '절대적'이라 확신하던 시간과 공간을 한 청년이 용감하게 전복시켰다.</p>
+        <p>1905년, 26세의 알베르트는 마침내 장기간의 사고 실험 결과를 세계에 발표했습니다. 그 해는 후일 과학사에서 <span class="highlight">'기적의 해'</span>라 칭해지게 됩니다. 그는 무려 4편의 혁명적 논문을 발표했는데, 그중 가장 충격적인 것이 바로 '특수 상대성 이론'이었습니다. 이 논문의 핵심 내용은 경천동지(驚天動地)했습니다.<br><br><span class="dialogue">"시간은 절대적이지 않다. 고속으로 운동하는 관찰자에게는 시간이 지연된다!"</span></p>
+        <p>이것이 의미하는 바는 무엇일까요? 쌍둥이 역설(twin paradox)을 예로 들어봅시다. 쌍둥이 형제가 있는데, 형은 광속에 근접하는 우주선으로 우주 여행을 떠나고, 동생은 지구에 잔류한다고 가정합시다. 형이 귀환했을 때, 경이롭게도 형은 동생보다 현저히 젊은 상태일 것입니다. 형에게는 1년이 경과했으나, 지구의 동생에게는 10년이 경과했을 수 있습니다. 시간 팽창(time dilation)이라 불리는 이 현상은 실험적으로도 검증되었습니다.</p>
+        <p>당시 과학계는 경악했습니다. 아이작 뉴턴 이후 200년 이상 '절대적 진리'로 신봉되던 절대 시간(absolute time)과 절대 공간(absolute space)의 개념이 통째로 전복된 것입니다. 다수의 과학자들이 격분했습니다.<br><br><span class="dialogue">"특허청 말단 직원이 뉴턴을 부정하다니, 건방하기 짝이 없다!"</span><br><br>그러나 일부 선구적 과학자들은 이 논문의 위대함을 간파했습니다. 양자역학의 창시자 막스 플랑크는 논문을 열람하고 자리에서 발기(勃起)하여 외쳤습니다.<br><br><span class="dialogue">"이것은 코페르니쿠스 이후 가장 위대한 혁명이다!"</span> <span class="highlight">느린 소년의 상상이 마침내 세계의 문을 타격하기 시작한 것입니다.</span><br><br>거부와 조소 속에서도 진리는 결국 발광(發光)하는 법입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 5</span>
+        <span class="theme">우주의 공식</span>
+        <h2>세상에서 가장 유명한 공식, E=mc²</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 간결한 공식 하나가 물질과 에너지의 경계를 해체하고, 우주의 비밀을 개방했다.</p>
+        <p>알베르트의 논문들 중에는 세계에서 가장 유명한 공식이 내포되어 있었습니다. 바로 <span class="highlight">E=mc²!</span><br><br>이 간결한 공식은 무엇을 의미할까요? E는 에너지, m은 질량(mass), c는 광속(speed of light, 약 3×10⁸ m/s)을 지시합니다. 즉, "물질은 곧 에너지이고, 에너지는 곧 물질이다" — 질량-에너지 등가 원리(mass-energy equivalence)입니다. 극미량의 물질이라도 그 내부에는 광속의 제곱에 비례하는 막대한 에너지가 잠재(潛在)해 있다는 것입니다.</p>
+        <p>이를 수치적으로 예시하면: 1킬로그램의 물질이 완전히 에너지로 변환되면, 약 9×10¹⁶ 줄의 에너지가 방출됩니다. 이는 히로시마에 투하된 원자폭탄의 1,000배 이상의 에너지입니다. 손바닥 위의 각설탕 하나에 잠재된 에너지를 모두 추출할 수 있다면, 대도시 전체에 하루 동안 전력을 공급할 수 있습니다. 물질 내부에는 우리가 상상하지 못할 만큼 거대한 에너지가 휴면(休眠)하고 있는 것입니다.</p>
+        <p>최초에 다수의 인원은 이 공식을 이해하지 못했습니다.<br><br><span class="dialogue">"질량이 에너지로 변환된다고? 그것이 물리적으로 가능한가?"</span><br><br>그러나 시간이 경과하면서 이 공식은 우주의 작동 원리를 설명하는 열쇠가 되었습니다. 태양이 왜 수십억 년간 광(光)과 열(熱)을 방출하는지, 항성(恒星)이 어떻게 탄생하고 소멸하는지, 그 모든 것이 E=mc²로 설명됩니다. 태양의 중심부에서는 매 초마다 약 6억 톤의 수소가 헬륨으로 융합(核融合)되면서, 소멸된 질량이 막대한 에너지로 변환되어 광선이 됩니다. <span class="highlight">알베르트가 책상 위에서 펜 하나로 기술한 이 간결한 공식이 우주의 엔진을 설명한 것입니다.</span><br><br>그러나 이 미려한 공식에는 어두운 그림자도 잠재해 있었습니다. 그 이야기는 추후에 다루기로 합시다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 6</span>
+        <span class="theme">별이 되다</span>
+        <h2>별이 된 특허청 직원</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 진정한 천재는 세계의 인정을 대기하지 않고, 진리를 향해 묵묵히 보행한 인간이다.</p>
+        <p>1905년의 논문들이 발표된 후, 과학계에 서서히 지각 변동이 발생했습니다. 최초에는 대다수의 물리학자들이 무시하거나 조소했습니다.<br><br><span class="dialogue">"특허청 3등급 심사관이 작성한 논문이라고? 열람할 가치도 없다."</span><br><br>그러나 막스 플랑크가 이 논문을 자신이 편집하는 학술지 『물리학 연보』에 직접 게재하면서 상황이 전환되기 시작했습니다. 유럽 각지의 젊은 물리학자들이 알베르트의 이론에 주목하기 시작한 것입니다.</p>
+        <p>1908년, 알베르트는 드디어 대학 강사 직위를 획득했습니다. 특허청을 이탈하여 학술 세계로 진입한 것입니다. 그리고 그의 명성은 급속히 증대했습니다. 1911년에는 프라하 대학 교수, 1912년에는 모교인 취리히 공과대학 교수, 그리고 1914년에는 당대 최고의 학술 기관인 베를린 프로이센 과학 아카데미(Preußische Akademie der Wissenschaften)의 교수로 초빙되었습니다. 불과 수년 만에 '무명의 특허청 직원'에서 '유럽 최고의 물리학자'로 부상한 것입니다.</p>
+        <p>그러나 알베르트는 명성에 도취되지 않았습니다. 그에게는 아직 해결해야 할 더 거대한 퍼즐이 잔존해 있었습니다. 특수상대성이론은 '등속 운동'에만 적용되었는데, 그는 이것을 가속 운동(acceleration)과 중력(gravity)까지 포괄하는 '일반상대성이론'으로 확장하고자 했습니다.<br><br><span class="dialogue">"중력은 힘(force)이 아니라, 거대한 질량이 시공간(spacetime)을 만곡(彎曲)시키는 현상이다!"</span><br><br>이 대담한 아이디어를 수학적으로 입증하는 데 무려 10년이 소요되었습니다. 리만 기하학이라는 고등 수학을 동원해야 했습니다. 동료 과학자 닐스 보어는 이렇게 언급했습니다.<br><br><span class="dialogue">"아인슈타인은 우리 시대에서 가장 용감한 사유를 하는 인물이다."</span> <span class="highlight">특허청의 숨은 천재는 이제 전 세계가 주목하는 항성이 되었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 7</span>
+        <span class="theme">영예와 논쟁</span>
+        <h2>노벨상, 그런데 상대성이론이 아니라고?</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 위대한 업적은 때로 그 시대가 아닌, 후속 시대에서야 비로소 인정받는다.</p>
+        <p>1921년, 마침내 알베르트 아인슈타인에게 노벨 물리학상이 수여되었습니다. 전 세계가 축하했습니다. 그런데 여기에 흥미로운 반전(反轉)이 있습니다. 노벨상의 수상 사유가 그 유명한 상대성이론이 아니었다는 것입니다! 노벨 위원회는 '광전 효과(photoelectric effect)에 대한 이론적 설명'을 수상 사유로 제시했습니다. 왜냐고요? 당시 노벨 위원회의 보수적 위원들은 상대성이론을 아직 완전히 이해하지 못했기 때문입니다.</p>
+        <p>광전 효과란 무엇일까요? 금속에 특정 주파수 이상의 광선을 조사(照射)하면 전자(electron)가 방출되는 현상입니다. 알베르트는 광선이 파동(wave)처럼 연속적인 것이 아니라, '광자'라는 양자화된 에너지 입자로 구성되어 있다고 설명했습니다. 이것은 양자역학의 문을 개방하는 결정적 발견이었습니다. 아이러니한 것은, 알베르트 본인은 후일 양자역학의 핵심 원리인 '불확정성 원리'를 종신토록 수용하지 않았다는 것입니다. 그는<br><br><span class="dialogue">"신은 주사위를 던지지 않는다"</span><br><br>라고 주장하며 반대했고, 닐스 보어는<br><br><span class="dialogue">"신에게 무엇을 하라고 지시하지 마세요, 아인슈타인!"</span><br><br>이라고 응수했습니다.</p>
+        <p>이 위대한 논쟁은 물리학 역사에서 가장 유명한 지적 대결 중 하나입니다. 양자(兩者) 모두 천재였고, 양자 모두 진리를 향해 진심이었습니다. 알베르트는 노벨상 상금을 전(前) 부인 밀레바에게 송금했습니다. 이미 이혼한 상태였지만, 함께 꿈꾸던 시절을 망각하지 않았던 것입니다. <span class="highlight">세상은 그에게 최고의 영예를 수여했지만, 알베르트의 내면에는 여전히 해결되지 않은 우주의 수수께끼가 잔존해 있었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 8</span>
+        <span class="theme">어둠과 양심</span>
+        <h2>판도라의 상자 — 과학자의 가장 어두운 밤</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 과학은 도구에 불과하며, 그것을 어떻게 활용할지 결정하는 것은 인간의 양심이다.</p>
+        <p>1933년, 독일에 암흑의 그림자가 강림했습니다. 아돌프 히틀러가 권력을 장악했고, 유대인에 대한 박해가 개시되었습니다. 유대인이었던 알베르트는 일조(一朝)에 '독일의 적'으로 지목되었습니다. 나치는 그의 저서를 소각했고, 그의 재산을 몰수했으며, 현상금까지 책정했습니다.<br><br><span class="dialogue">"이 자의 두개(頭蓋)에 2만 마르크!"</span><br><br>알베르트는 유럽을 이탈하여 미국 프린스턴으로 망명해야 했습니다. 심장이 찢어지는 이별이었습니다.</p>
+        <p>미국에 정착한 알베르트에게 1939년, 충격적 소식이 전달되었습니다. 독일의 과학자들이 원자핵 분열(nuclear fission)에 성공했다는 것입니다. 이것은 E=mc²의 원리가 현실에서 실현되었다는 의미였습니다. 질량이 에너지로 변환되는 원리를 활용하면, 상상 불가능한 파괴력의 무기를 제조할 수 있다는 의미이기도 했습니다. 동료 물리학자 레오 실라르드(Leó Szilárd)가 방문하여 언급했습니다.<br><br><span class="dialogue">"히틀러가 선제적으로 원자폭탄을 제조하면 세계는 종말입니다. 대통령에게 서한을 작성해야 합니다."</span></p>
+        <p>알베르트는 생애에서 가장 고통스러운 결정을 내려야 했습니다. 평화를 애호하는 그였지만, 나치가 선제적으로 핵무기를 보유하게 되는 것은 더욱 참혹한 사태였기 때문입니다. 결국 그는 프랭클린 D. 루스벨트 대통령에게 서한을 작성했고, 이 서한은 '맨해튼 프로젝트', 즉 미국의 원자폭탄 개발 계획의 촉발점이 되었습니다. 1945년, 히로시마와 나가사키에 원자폭탄이 투하되었다는 소식을 청취한 알베르트는 고개를 숙이고 통곡했습니다.<br><br><span class="dialogue">"내가 그 서한에 서명한 것이 내 생애 최대의 과오다."</span> <span class="highlight">그의 미려한 공식 E=mc²가 수십만 명의 생명을 앗아간 무기가 된 것입니다.</span><br><br>과학자에게 이보다 더 잔혹한 아이러니가 있을까요?</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 9</span>
+        <span class="theme">평화의 전사</span>
+        <h2>칼 대신 올리브 가지를 든 과학자</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 진정한 용기는 무기를 제조하는 것이 아니라, 무기를 하기(下記)하자고 외치는 것이다.</p>
+        <p>전쟁이 종결된 후, 알베르트는 잔여 생애를 평화를 위해 헌신했습니다. 핵무기의 참혹한 결과를 누구보다 숙지했기에, 그의 목소리에는 무게가 실렸습니다.<br><br><span class="dialogue">"핵전쟁이 발발하면 제3차 세계대전의 무기는 핵폭탄이겠지만, 제4차 세계대전의 무기는 돌과 막대기가 될 것입니다."</span><br><br>이 언명은 핵전쟁이 인류 문명을 완전히 파괴할 것이라는 심각한 경고였습니다.</p>
+        <p>알베르트는 세계 정부 수립을 주장했습니다. 각 국가가 개별적으로 핵무기를 보유하고 대립하는 대신, 단일한 세계 기구가 무기를 관리하자는 것이었습니다. 다수의 정치인들이<br><br><span class="dialogue">"순진한 과학자의 몽상"</span><br><br>이라고 조소했지만, 알베르트는 후퇴하지 않았습니다.<br><br><span class="dialogue">"전쟁을 방지하는 것은 정치인의 직무가 아니라, 모든 인간의 의무입니다."</span><br><br>그는 미국에서 흑인 민권 운동도 지지했고, 이스라엘 건국에 기여하면서도 무력 충돌을 반대했습니다.</p>
+        <p>1955년, 알베르트는 서거하기 직전까지 '러셀-아인슈타인 선언문(Russell-Einstein Manifesto)'에 서명했습니다. 이것은 핵무기 폐기를 호소하는 역사적 문서였습니다. 버트런드 러셀과 공동 작성한 이 선언문은 세계의 과학자들에게 핵전쟁 위험에 대해 경고하고, 분쟁의 평화적 해결을 촉구했습니다. 침상에 누워서도 그는 통일장 이론, 즉 우주의 모든 힘을 단일 방정식으로 설명하는 이론을 완성하려고 수식을 기술했습니다. 최종 순간까지 질문을 중단하지 않았던 것입니다. 알베르트가 서거한 날, 그의 책상 위에는 완성되지 못한 계산 노트가 배치되어 있었습니다. 그 노트는 마치 이렇게 언급하는 듯했습니다.<br><br><span class="dialogue">"나의 여정은 아직 종결되지 않았어. 후속 세대의 몽상가들이 계승할 거야."</span> <span class="highlight">칼 대신 올리브 가지를 파지(把持)한 노과학자의 최후는 비탄에 젖어 있었으나, 한없이 숭고했습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">Part 10</span>
+        <span class="theme">영원한 유산</span>
+        <h2>상상하는 자만이 세상을 변혁한다</h2>
+        <p>💡 <span class="highlight">중심 명제:</span> 아인슈타인이 유산으로 남긴 가장 위대한 것은 공식이 아니라, '질문하는 용기'다.</p>
+        <p>알베르트 아인슈타인은 이러한 명언을 남겼습니다.<br><br><span class="dialogue">"상상력은 지식보다 중요하다. 지식은 한계가 있지만, 상상력은 세계의 모든 것을 포용할 수 있기 때문이다."</span><br><br>언어 발달이 지연된 소년, 학교에서 '바보' 취급받던 아동, 대학에서 축출당하다시피 한 졸업생. 그 모든 좌절과 역경 속에서도 그가 견지(堅持)했던 단 하나는 바로 '질문하는 역량'이었습니다.</p>
+        <p>나침반 바늘이 왜 운동하는지 질문했던 5세의 호기심이 특수상대성이론을 산출했고, 광선을 추적하여 질주해보겠다는 16세의 엉뚱한 상상이 E=mc²를 산출했습니다. 특허청 서랍 속 낡은 노트에서 개시된 사고 실험은 시간과 공간의 비밀을 해명했습니다. 그가 위대했던 이유는 지적 능력이 탁월해서가 아닙니다. <span class="highlight">타인들이 당연하다고 여기는 것에 "왜?"라고 질문했고, 그 질문을 종신토록 견지했기 때문입니다.</span></p>
+        <p>우리 모두의 내면에도 작은 알베르트가 거주하고 있습니다. 야간 하늘의 항성을 관찰하며<br><br><span class="dialogue">"저 광선은 얼마나 장구(長久)한 시간을 주행했을까?"</span><br><br>궁금해하는 아이, 초엽(草葉) 위의 이슬을 관찰하며<br><br><span class="dialogue">"왜 구형(球形)인 것일까?"</span><br><br>의아해하는 아이,<br><br><span class="dialogue">"왜 하늘은 청색인 거야?"</span><br><br>라고 열 번째 동일 질문을 제기하는 아이. 그 호기심이야말로 세계를 변혁할 수 있는 가장 강력한 역량입니다. 알베르트는 우리에게 교시(敎示)했습니다. 우매한 질문은 존재하지 않는다고, 질문을 중단하는 것만이 진정한 우매라고요. 오늘 야간, 여러분도 항성을 올려다보며 단 하나의 질문을 제기해보세요. 그 미소한 질문이 언젠가 우주의 비밀을 개방하는 열쇠가 될지도 모르니까요.</p>
+        <p>🌱 <span class="highlight">궁극의 교훈: 상상력은 과학의 가장 강력한 도구다. 그러나 그 상상력은 호기심에서 기원하고, 용기로 보전되며, 양심으로 완성된다. 질문을 두려워하지 마세요. 세계의 모든 위대한 발견은 "왜?"라는 미소한 물음표에서 기원했으니까요.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='worldperson02_season1_quiz_78.html'">📝 관문평가</button>
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <script>
+    // 배경 이미지 배열
+    const bgImages = [
+      '/images/창작도서/창작세계인물02/00.jpg',
+      '/images/창작도서/창작세계인물02/01.jpg',
+      '/images/창작도서/창작세계인물02/02.jpg',
+      '/images/창작도서/창작세계인물02/03.jpg',
+      '/images/창작도서/창작세계인물02/04.jpg',
+      '/images/창작도서/창작세계인물02/05.jpg',
+      '/images/창작도서/창작세계인물02/06.jpg',
+      '/images/창작도서/창작세계인물02/07.jpg',
+      '/images/창작도서/창작세계인물02/08.jpg',
+      '/images/창작도서/창작세계인물02/09.jpg',
+      '/images/창작도서/창작세계인물02/10.jpg'
+    ];
+
+    // 이미지 프리로드
+    bgImages.forEach(src => {
+      const img = new Image;
+      img.src = src;
+    });
+
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+
+    // Intersection Observer로 섹션 감지
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const card = entry.target.querySelector('.story-card');
+          if (card) {
+            card.classList.add('active');
+          }
+
+          // 배경 이미지 변경
+          const bgUrl = entry.target.getAttribute('data-bg');
+          if (bgUrl) {
+            mapContainer.style.backgroundImage = `url('${bgUrl}')`;
+          }
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 인트로 섹션 감지
+    const introSection = document.querySelector('.intro-section');
+    const introObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          mapContainer.style.backgroundImage = `url('${bgImages[0]}')`;
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    introObserver.observe(introSection);
+
+    // 뒤로가기 함수
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

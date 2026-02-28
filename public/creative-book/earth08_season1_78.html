@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🪨 돌멩이 도서관</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5D4E37 0%, #3E2723 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(93, 78, 55, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(93, 78, 55, 0.15);
+      color: #3E2723;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #5D4E37;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #5D4E37;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(93, 78, 55, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #3E2723;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #3E2723;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #3E2723;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #C4B39A;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(93, 78, 55, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(93, 78, 55, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(62, 39, 35, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(93, 78, 55, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🪨 돌멩이 도서관</h1>
+        <p class="subtitle">
+          수억 년의 비밀을 읽는 아이<br>
+          — 돌멩이 속에 숨겨진 수억 년의 시간 이야기 —<br>
+          교과기반 창작도서 · 지구과학 08
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>▸ 리나 (호기심 많은 소녀):</strong> 산골 마을에 사는 열두 살 소녀. 남들이 그냥 지나치는 돌멩이 하나에서 이상한 무늬를 발견하고, 그 순간부터 수억 년의 시간 여행에 빠져든다. 질문이 끝없고, 포기를 모른다. 입버릇: "이 돌은 무슨 이야기를 하고 있는 걸까?"</p>
+          <p><strong>▸ 페트로 (살아있는 암석 정령):</strong> 리나가 발견한 돌멩이 속에 잠들어 있던 암석 정령. 4억 5천만 년의 기억을 가지고 있는 지구의 기록자. 투박하고 무뚝뚝하지만, 자신의 이야기를 들어줄 사람을 수억 년째 기다려왔다. 입버릇: "나는 기억한다. 네가 잊은 모든 것을."</p>
+          <p><strong>▸ 포실 (화석 탐정):</strong> 페트로의 몸속에 새겨진 고대 생물의 흔적으로부터 태어난 화석 탐정. 수억 년 전 생물의 삶과 죽음을 추리하는 것이 특기. 돋보기를 항상 들고 다니며 과거의 단서를 찾는다. 입버릇: "모든 화석은 사건의 증거야!"</p>
+          <p><strong>▸ 크로노스 (시간의 수호자):</strong> 지질학적 시간을 관장하는 신비로운 존재. 인간에게는 1초가 길지만, 크로노스에게는 100만 년이 눈 깜짝할 새. 리나에게 '깊은 시간'의 개념을 알려주는 스승 역할. 입버릇: "네가 느끼는 시간은 진짜 시간의 먼지 한 톨이란다."</p>
+          <p><strong>▸ 에로전 (침식의 파괴자):</strong> 바람과 물의 힘으로 모든 것을 깎아내고 부수는 침식의 화신. 지층의 기록을 지워버리려는 자연의 힘을 상징한다. 입버릇: "영원한 것은 없어. 나는 모든 것을 평평하게 만들 뿐이야."</p>
+          <p><strong>▸ 스트라타 할머니 (지층의 이야기꾼):</strong> 수천 겹의 지층으로 이루어진 거대한 절벽에 사는 현자. 각 층이 하나의 시대를 담고 있으며, 할머니는 그 모든 층의 이야기를 읊을 수 있다. 입버릇: "한 겹 한 겹이 하나의 세계란다."</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">암석 표본 발견</span>
+        <h2>🔍 평범한 돌멩이의 비범한 비밀</h2>
+        <p>산골 마을의 열두 살 소녀 리나는 학교에서 돌아오는 길에 항상 개울가를 지나갔습니다. 다른 아이들은 돌멩이를 물수제비 뜨는 데나 썼지만, 리나는 달랐습니다. 돌멩이를 주워 올려다보고, 뒤집어보고, 햇빛에 비춰보며 암석의 <span class="highlight">조직</span>과 <span class="highlight">구조</span>를 관찰하는 이상한 습관이 있었지요. 조직은 암석을 구성하는 광물 입자의 크기, 모양, 배열을 말하고, 구조는 암석 전체에 나타나는 특징적인 형태를 의미합니다.</p>
+        <p>그런데 그날, 정말로 특별한 돌을 발견했습니다. 개울 한쪽에 반쯤 묻혀 있던 납작한 돌 하나. 손바닥만 한 크기의 그 돌에는 이상한 줄무늬가 가로로 새겨져 있었고, 한쪽 면에는 나선형 무늬가 선명하게 박혀 있었습니다. 리나는 그것이 단순한 무늬가 아니라 <span class="highlight">화석</span>—과거 생물의 유해나 흔적이 암석 속에 보존된 것—임을 직감했습니다. 돌을 손에 쥐는 순간, 희미하게 따뜻해졌고, 작고 투박한 목소리가 들려왔습니다.<br><br><span class="dialogue">"드디어… 누군가 나를 들어 올렸구나."</span></p>
+        <p>돌 속에서 작은 빛이 피어오르더니, 투박한 얼굴의 정령이 모습을 드러냈습니다.<br><br><span class="dialogue">"나는 페트로. <span class="highlight">오르도비스기(Ordovician Period)에 태어난 암석 정령</span>이야. 약 4억 5천만 년 전, 지금과는 완전히 다른 세상에서 만들어졌지. 당시 한반도는 적도 부근 얕은 바다였고, 삼엽충이 헤엄치던 곳이란다."</span><br><br>리나는 두려움보다 호기심이 더 컸습니다. 페트로가 말하는 오르도비스기는 <span class="highlight">고생대</span>의 두 번째 기로, 최초의 어류가 등장하고 해양 무척추동물이 번성했던 시대입니다. 리나가 고개를 끄덕이자, 평범한 돌멩이 하나에서 시작된 수억 년의 모험이 막을 올렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">층리 관찰</span>
+        <h2>📏 줄무늬가 들려주는 옛날이야기</h2>
+        <p>페트로가 리나를 데려간 첫 번째 장소는 마을 뒤편의 거대한 절벽이었습니다. 평소에는 그냥 큰 바위덩어리로만 보이던 그 절벽이, 페트로의 마법으로 빛나자 전혀 다른 모습이 드러났습니다. 절벽 면에 수십, 수백 개의 가로줄이 켜켜이 쌓여 있었던 것입니다. 마치 거대한 책의 페이지처럼요. 이것이 바로 <span class="highlight">층리</span>—퇴적암에 나타나는 평행한 줄무늬 구조입니다.</p>
+        <p><span class="dialogue">"층리는 퇴적물이 쌓일 때 형성되는 1차 구조(Primary Sedimentary Structure)란다."</span><br><br>절벽 꼭대기에서 스트라타 할머니의 목소리가 울려 퍼졌습니다. 스트라타 할머니는 수천 겹의 지층 자체가 몸인 존재로, 각 층마다 다른 색과 질감을 가지고 있었습니다.<br><br><span class="dialogue">"강물이 <span class="highlight">모래</span>를 운반해 와서 쌓고, 그 위에 <span class="highlight">진흙</span>이 쌓이고, 또 그 위에 <span class="highlight">자갈</span>이 쌓이지. 입자 크기에 따라 층의 색과 질감이 달라지고, 이것이 <span class="highlight">급변 층리</span>나 <span class="highlight">점이 층리</span>를 만든단다."</span></p>
+        <p>리나가 절벽에 가까이 다가가 손으로 만져보았습니다. 아래쪽 층은 거칠고 어두운 색이었고, 위쪽으로 갈수록 밝고 고운 입자로 바뀌었습니다. 이런 구조를 <span class="highlight">정점이 층리</span>라고 하며, 물의 에너지가 점점 약해질 때 형성됩니다. 반대로 위로 갈수록 입자가 커지면 <span class="highlight">역점이 층리</span>라 합니다.<br><br><span class="dialogue">"또한 <span class="highlight">사층리</span>도 있어. 물이나 바람의 흐름 방향이 바뀔 때 경사진 층이 만들어지지. 사막의 사구, 하천의 삼각주, 해안의 모래톱에서 잘 관찰된단다."</span><br><br>리나는 감탄했습니다. 층리 하나에도 이렇게 많은 정보가 담겨 있다니!</p>
+        <p><span class="highlight">퇴적암의 층리는 지구의 고환경 기록</span>입니다. 각 층은 당시의 기후, 해수면 높이, 물의 흐름, 심지어 계절까지 기록하고 있습니다. 과학자들은 이 층리를 읽어서 수억 년 전의 지구 환경을 복원할 수 있습니다. 특히 <span class="highlight">연흔</span>은 물결의 흔적을, <span class="highlight">건열</span>은 건조 환경을, <span class="highlight">우흔</span>은 빗방울 흔적을 보여줍니다. 리나가 말했습니다.<br><br><span class="dialogue">"그러면 이 절벽은 책인 거네요! 돌로 쓴 책, <span class="highlight">지질 기록</span>!"</span><br><br>스트라타 할머니가 웃었습니다.<br><br><span class="dialogue">"그래, 가장 오래된 책이란다. 그리고 가장 정직한 책이기도 하지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">지층의 원리</span>
+        <h2>📚 아래가 먼저, 위가 나중</h2>
+        <p>리나가 지층의 줄무늬에 매료되어 있을 때, 페트로가 중요한 질문을 던졌습니다.<br><br><span class="dialogue">"리나, 이 층들 중에서 어느 것이 가장 오래된 걸까?"</span><br><br>리나는 잠시 생각했습니다.<br><br><span class="dialogue">"음… 아래쪽?"</span><br><br><span class="dialogue">"정답이야! 그게 바로 <span class="highlight">'지층 누중의 법칙(Law of Superposition)'</span>이란다. 1669년 덴마크의 과학자 니콜라우스 스테노(Nicolas Steno)가 정립한 지질학의 기본 원리지."</span></p>
+        <p>스테노가 발견한 또 다른 중요한 원리들도 있습니다. <span class="highlight">지층 수평의 법칙</span>은 퇴적물이 처음 쌓일 때 거의 수평을 이룬다는 원리입니다. 만약 지층이 기울어져 있다면, 그것은 퇴적 이후의 지각 변동 때문입니다. <span class="highlight">지층 연속의 법칙</span>은 같은 시기에 형성된 지층이 옆으로 연속된다는 원리로, 지금 떨어져 있는 두 지역의 지층이 원래 연결되어 있었음을 알 수 있게 해줍니다.</p>
+        <p>하지만 그때 땅이 크게 흔들리더니, 절벽 한쪽에서 거친 바람이 불어왔습니다. 에로전이 나타난 것입니다.<br><br><span class="dialogue">"하하! 층이 아무리 쌓여도 나한테는 소용없어! <span class="highlight">풍화</span>와 <span class="highlight">침식</span>이 모든 것을 깎아 평평하게 만들지!"</span><br><br>에로전이 절벽의 위쪽 층을 깎아내기 시작했습니다. 실제로 침식은 지층의 기록을 지워버리는 자연의 과정입니다. 이로 인해 <span class="highlight">부정합</span>이 형성됩니다.</p>
+        <p>부정합에는 세 가지 유형이 있습니다. <span class="highlight">평행 부정합</span>은 상하 지층이 평행하지만 시간 간극이 있는 경우, <span class="highlight">경사 부정합</span>은 기울어진 지층 위에 수평 지층이 쌓인 경우, <span class="highlight">난정합</span>은 변성암이나 화성암 위에 퇴적암이 쌓인 경우입니다. 크로노스가 나타나 에로전을 막아섰습니다.<br><br><span class="dialogue">"네가 지우는 것도 시간의 일부다, 에로전. 하지만 <span class="highlight">부정합면</span> 자체가 침식의 증거로 남는단다. 지워도 흔적은 남아."</span><br><br>리나는 부정합의 경계선을 손으로 만지며 깨달았습니다.<br><br><span class="dialogue">"기록이 없다는 것도 하나의 기록이네요. <span class="highlight">결측 기록</span>!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">화석 발견</span>
+        <h2>🦴 돌 속에 잠든 생명</h2>
+        <p>에로전이 물러간 뒤, 페트로가 리나를 자신의 몸속 깊은 곳으로 안내했습니다. 돌의 표면을 지나 내부로 들어가자, 놀라운 광경이 펼쳐졌습니다. 돌 속에 수많은 생물의 흔적이 새겨져 있었던 것입니다. 나선형 껍데기, 양치식물의 잎맥, 심지어 작은 물고기의 뼈까지! 이것들이 <span class="highlight">화석</span>입니다. 화석은 형성 방식에 따라 여러 종류로 나뉩니다.</p>
+        <p>돋보기를 든 포실이 어둠 속에서 나타났습니다.<br><br><span class="dialogue">"화석 탐정 포실이라고 해. <span class="highlight">체화석</span>은 생물의 몸체 일부가 보존된 것이야. 뼈, 껍데기, 이빨, 잎 같은 것들이지. 반면 <span class="highlight">흔적 화석</span>은 생물의 활동 흔적이야. 발자국, 굴, 배설물 등이 여기 속해."</span><br><br>포실이 돋보기로 나선형 화석을 가리켰습니다.<br><br><span class="dialogue">"이것은 <span class="highlight">암모나이트</span>의 화석이야. 약 4억 년 전부터 6,600만 년 전 백악기 말까지 바다에 살았던 <span class="highlight">두족류</span>지. 소라처럼 생겼지만 사실 오징어와 문어의 먼 친척이야. 암모나이트의 봉합선(Suture) 패턴으로 종을 구분한단다."</span></p>
+        <p>화석이 만들어지는 과정—<span class="highlight">화석화 작용</span>—은 기적에 가깝습니다. 생물이 죽으면 보통은 분해되어 사라지지만, 특수한 조건에서 빠르게 퇴적물에 묻히면 보존됩니다. <span class="highlight">광물 치환</span>은 빈 공간에 광물이 침전되는 과정이고, <span class="highlight">탄화</span>는 생물 조직이 탄소막으로 남는 것입니다. <span class="highlight">주형</span>은 생물체가 녹아 남긴 빈 공간이고, <span class="highlight">주조</span>는 그 공간이 광물로 채워진 것입니다. 드물게 <span class="highlight">호박</span> 속에 곤충이 그대로 보존되기도 합니다.</p>
+        <p>리나가 양치식물 화석을 만지며 물었습니다.<br><br><span class="dialogue">"이 식물은 살아있을 때 어떤 모습이었을까?"</span><br><br>포실이 미소 지었습니다.<br><br><span class="dialogue">"이 <span class="highlight">석송류</span>와 <span class="highlight">속새류</span>는 석탄기, 약 3억 년 전의 것이야. 당시 대기의 산소 농도는 35%나 되었고(현재 21%), 이 지역은 뜨겁고 습한 <span class="highlight">석탄 습지</span>였단다. 이 식물들이 쌓여 오늘날의 석탄이 되었지."</span><br><br><span class="highlight">화석은 과거 생명이 미래에 보내는 편지</span>입니다. 리나는 돌 속에 잠든 수억 년 전의 생명들에게 조용히 인사했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">연대 추정</span>
+        <h2>🔢 이 돌은 대체 몇 살일까?</h2>
+        <p>화석을 발견한 리나에게 자연스러운 질문이 떠올랐습니다.<br><br><span class="dialogue">"이 돌이 정확히 몇 살인지 어떻게 아는 거예요?"</span><br><br>크로노스가 모래시계를 돌리며 나타났습니다.<br><br><span class="dialogue">"좋은 질문이야. <span class="highlight">지질 연대 측정</span>은 지질학에서 가장 중요하고 어려운 분야란다. 크게 두 가지 방법이 있어: <span class="highlight">상대 연령</span>과 <span class="highlight">절대 연령</span>이지."</span></p>
+        <p>크로노스는 리나를 거대한 시계탑 앞으로 데려갔습니다. 하나는 '상대 시계', 다른 하나는 '절대 시계'였습니다.<br><br><span class="dialogue">"상대 연령은 '무엇이 먼저인가'를 알려주지만 정확한 숫자는 모른단다. 앞서 배운 지층 누중의 법칙이 대표적이야. 또한 <span class="highlight">화석 연속의 법칙</span>도 중요해. 영국의 지질학자 윌리엄 스미스(William Smith)가 발견한 원리로, 특정 화석이 특정 시대에만 발견되기 때문에 같은 화석을 포함한 지층은 같은 시대에 형성된 것으로 판단할 수 있지."</span></p>
+        <p>이렇게 넓은 지역에서 시대를 지시하는 화석을 <span class="highlight">표준 화석</span>이라고 합니다. 좋은 표준 화석의 조건은 짧은 생존 기간, 넓은 분포 범위, 풍부한 개체 수, 쉬운 식별입니다. 대표적인 예로 삼엽충(캄브리아기~페름기), 암모나이트(데본기~백악기), 공룡(트라이아스기~백악기) 등이 있습니다.</p>
+        <p><span class="dialogue">"그런데 '약 3억 년 전'이라는 숫자는 어디서 나오는 거예요?"</span><br><br>리나가 물었습니다.<br><br><span class="dialogue">"그것은 절대 연령의 영역이지. <span class="highlight">방사성 동위원소 연대 측정법</span>을 사용해. 암석 속의 방사성 원소가 일정한 속도로 붕괴하는 성질을 이용하는 거야."</span><br><br><span class="highlight">방사성 붕괴</span>에서 원래의 원소를 <span class="highlight">모원소</span>, 붕괴 후 생성된 원소를 <span class="highlight">자원소</span>라고 합니다. 모원소의 절반이 자원소로 바뀌는 데 걸리는 시간이 <span class="highlight">반감기</span>입니다. 이 값은 온도, 압력, 화학적 상태에 관계없이 항상 일정합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">상대 연령</span>
+        <h2>👫 누가 형이고 누가 동생일까</h2>
+        <p>크로노스는 리나를 더 깊이 이해시키기 위해, 지층 속으로 시간 여행을 떠났습니다. 첫 번째로 도착한 곳은 거대한 퇴적암 절벽 앞이었습니다. 여섯 겹의 서로 다른 색깔 지층이 쌓여 있었고, 한가운데를 관통하는 검은 <span class="highlight">암맥</span>이 보였습니다. 암맥은 마그마가 기존 암석의 틈을 뚫고 올라와 굳은 판상 <span class="highlight">관입 화성암체</span>입니다.</p>
+        <p><span class="dialogue">"자, 리나. 여기서 탐정 게임을 해볼까?"</span><br><br>포실이 돋보기를 들며 말했습니다. 리나는 배운 것을 떠올렸습니다.<br><br><span class="dialogue">"지층 누중의 법칙으로 보면, 가장 아래 빨간 층이 가장 오래됐고, 그 위에 주황, 노랑, 초록, 파랑 순서로 쌓였으니까 맨 위 보라색 층이 가장 젊어요!"</span><br><br><span class="dialogue">"잘했어! 그러면 이 검은 암맥은?"</span><br><br>리나는 잠시 생각했습니다.<br><br><span class="dialogue">"암맥은 다른 층을 뚫고 들어온 거니까… 뚫린 층보다 나중에 만들어진 거예요! 이것을 <span class="highlight">'관입의 법칙(Law of Cross-cutting Relationships)'</span>이라고 하죠?"</span></p>
+        <p>크로노스가 박수를 쳤습니다.<br><br><span class="dialogue">"완벽해! <span class="highlight">포획의 법칙</span>도 있단다. 한 암석 안에 다른 암석 조각이 포함되어 있으면, 포함된 조각(포획암, Xenolith)이 더 오래된 거야."</span><br><br>노란 층과 초록 층 사이에 울퉁불퉁한 경계면이 있었습니다. 다른 경계면은 매끄러운데 이곳만 침식된 흔적이 있었죠.<br><br><span class="dialogue">"여기! 노란 층이 쌓인 뒤 침식되었다가, 다시 초록 층이 쌓인 거예요. 사이에 시간이 빠져있어요!"</span></p>
+        <p><span class="dialogue">"훌륭하다, 리나. 이것이 <span class="highlight">경사 부정합</span>이야."</span><br><br>스트라타 할머니가 감탄했습니다. 이 부정합은 18세기 스코틀랜드의 <span class="highlight">제임스 허튼</span>이 시카 포인트에서 발견한 것으로 유명합니다. 허튼은 이 발견을 통해 지구의 나이가 성경에 기록된 것보다 훨씬 오래되었음을 처음 주장했고, <span class="highlight">'지질학의 아버지'</span>로 불리게 되었습니다. 그의 <span class="highlight">동일과정설</span>—"현재는 과거의 열쇠"—은 현대 지질학의 기초가 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">절대 연령</span>
+        <h2>🎂 돌의 진짜 생일을 찾아서</h2>
+        <p>상대 연령으로 순서를 알았으니, 이제 진짜 나이를 알아볼 차례였습니다. 크로노스가 리나를 특별한 방으로 안내했습니다. 방 한가운데에는 거대한 모래시계가 놓여 있었는데, 보통 모래시계와 달리 모래알 하나하나가 빛나고 있었습니다.<br><br><span class="dialogue">"이것이 <span class="highlight">방사성 동위원소 시계</span>란다. 위쪽의 빛나는 모래가 모원소, 아래로 떨어진 모래가 자원소야."</span></p>
+        <p>다양한 동위원소 시스템이 있습니다. <span class="highlight">탄소-14(¹⁴C) → 질소-14</span>의 반감기는 약 5,730년으로, 유기물의 연대 측정에 사용되며 약 5만 년까지 측정 가능합니다. 살아있는 생물은 대기의 이산화탄소를 통해 ¹⁴C를 흡수하지만, 죽으면 흡수가 멈추고 ¹⁴C가 붕괴를 시작합니다.<br><br><span class="dialogue">"하지만 탄소-14로는 5만 년까지만 측정할 수 있어. 수억 년 된 암석의 나이를 재려면?"</span></p>
+        <p><span class="dialogue">"그때는 반감기가 긴 동위원소를 쓰지."</span><br><br>포실이 설명했습니다. <span class="highlight">칼륨-40(⁴⁰K) → 아르곤-40</span>의 반감기는 12.5억 년, <span class="highlight">우라늄-238(²³⁸U) → 납-206</span>의 반감기는 44.7억 년입니다. 특히 <span class="highlight">지르콘</span>이라는 광물은 우라늄을 포함하면서 매우 안정적이어서, 지구에서 가장 오래된 광물—약 44억 년 전 서호주 잭힐스의 지르콘—의 연대 측정에 사용되었습니다.</p>
+        <p>에로전이 밖에서 외쳤습니다.<br><br><span class="dialogue">"아무리 나이를 재봐야 뭐해? 결국 다 부서질 텐데!"</span><br><br>크로노스가 차분하게 대답했습니다.<br><br><span class="dialogue">"부서져도 원자는 사라지지 않아. <span class="highlight">방사성 붕괴는 원자핵 내부의 과정</span>이라 외부 조건의 영향을 받지 않는단다. 네가 암석을 아무리 깎아도, 원자 안의 시계는 멈추지 않아."</span><br><br>리나는 경이로움에 빠졌습니다. <span class="highlight">동위원소 지화학</span>이라는 학문 분야는 이 원자 시계를 읽어 지구와 태양계의 역사를 밝히고 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">지질 기록</span>
+        <h2>📖 지구의 자서전을 읽다</h2>
+        <p>이제 리나는 지층을 읽고, 화석을 해석하고, 연대를 측정하는 방법을 모두 배웠습니다. 크로노스가 마지막 여행지로 리나를 데려간 곳은 '지질 시대 도서관'이었습니다. 거대한 원형 도서관의 벽면이 바닥부터 천장까지 시대별로 나뉘어 있었습니다. 이것이 <span class="highlight">지질 연대표</span>입니다.</p>
+        <p><span class="dialogue">"가장 아래가 지구가 탄생한 약 46억 년 전, <span class="highlight">명왕누대</span>란다."</span><br><br>크로노스가 설명했습니다. 지질 시대는 크게 <span class="highlight">이언(Eon) → 대(Era) → 기(Period) → 세</span>로 나뉩니다. 명왕누대(46억~40억 년 전)에는 마그마 바다가 지구를 덮었고, <span class="highlight">시생누대</span>에 최초의 단세포 생물이 등장했습니다. <span class="highlight">원생누대</span>에는 광합성 세균이 산소를 만들어 대기를 바꾸었습니다.</p>
+        <p>그리고 <span class="highlight">현생누대</span>—'눈에 보이는 생물의 시대'—가 약 5억 4천만 년 전에 시작됩니다. <span class="highlight">고생대</span>에는 캄브리아기 대폭발, 어류와 양서류의 등장, 최초의 육상 식물이 있었습니다. <span class="highlight">중생대</span>는 공룡의 시대였고, <span class="highlight">신생대</span>에 포유류와 인류가 번성했습니다.</p>
+        <p>포실이 각 시대의 대표 화석을 보여주었습니다.<br><br><span class="dialogue">"지구 역사에는 <span class="highlight">다섯 번의 대멸종</span>이 있었어. 오르도비스기 말(86% 멸종), 데본기 후기(75%), <span class="highlight">페름기 말</span>—역사상 최대의 멸종, 트라이아스기 말(80%), 그리고 <span class="highlight">백악기 말</span>—소행성 충돌로 공룡이 사라진 사건. 하지만 대멸종 이후에는 항상 <span class="highlight">적응 방산</span>이 일어나 새로운 생물이 폭발적으로 진화했어."</span><br><br>스트라타 할머니가 도서관 전체를 감싸 안으며 말했습니다.<br><br><span class="dialogue">"<span class="highlight">지질 기록은 지구의 자서전</span>이란다. 끝이 곧 새로운 시작이었던 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">시간의 깊이</span>
+        <h2>🌌 상상할 수 없는 시간을 상상하다</h2>
+        <p>지질 시대 도서관을 나온 리나는 한동안 말이 없었습니다. 수억 년, 수십억 년이라는 시간이 너무 커서 도무지 실감이 나지 않았던 것입니다. 크로노스가 <span class="highlight">깊은 시간</span>의 개념을 이해시키기 위해 특별한 비유를 들어주었습니다.<br><br><span class="dialogue">"리나, 지구의 46억 년 역사를 하루 24시간으로 압축해 볼까? 이것을 <span class="highlight">지질학적 시계</span>라고 해."</span></p>
+        <p>자정 00:00에 지구가 탄생합니다. 새벽 04:00쯤 최초의 생명체(원핵생물)가 나타납니다. 오전 내내 단세포 생물만 존재합니다. 정오쯤 광합성이 시작되어 산소가 축적됩니다. <span class="highlight">오후 18:00</span>가 되어야 다세포 생물이 등장합니다. <span class="highlight">21:00쯤</span> 캄브리아기 대폭발. <span class="highlight">22:30쯤</span> 최초의 육상 식물. <span class="highlight">22:50쯤</span> 공룡 등장. <span class="highlight">23:39쯤</span> 공룡 멸종. 그리고 <span class="highlight">현생 인류는 자정 직전 23:59:59에 등장</span>합니다.</p>
+        <p><span class="dialogue">"1초?"</span><br><br>리나가 눈을 크게 떴습니다. 인류의 역사는 하루로 치면 고작 1초, 더 정확히는 0.2초에 불과합니다. <span class="highlight">호모 사피엔스</span>가 등장한 것은 약 30만 년 전이고, 이것은 지구 나이의 0.007%에 해당합니다.<br><br><span class="dialogue">"이것이 '깊은 시간'이란다. 18세기 지질학자 제임스 허튼이 처음 제안한 개념이야. 그는 지층을 연구하며 '시작의 흔적도 없고, 끝의 전망도 없다'고 표현했지."</span></p>
+        <p>에로전마저 조용해졌습니다. 페트로가 조용히 말했습니다.<br><br><span class="dialogue">"나는 4억 5천만 년 동안 이 자리에 있었어. 대륙이 합쳐지고 갈라지는 <span class="highlight">초대륙 주기</span>를 보았고, 다섯 번의 대멸종을 겪었고, 기후가 극심하게 변하는 것을 보았지. 하지만 네가 나를 들어올린 오늘, 이 순간이 내게는 가장 특별해."</span><br><br>리나의 눈에 눈물이 맺혔습니다. <span class="highlight">시간의 깊이를 느끼는 것은, 존재의 소중함을 느끼는 것</span>이기도 했습니다. 스티븐 제이 굴드(Stephen Jay Gould)가 말했듯, 깊은 시간의 발견은 인류가 우주에서 차지하는 위치를 완전히 재정립하게 만들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">돌은 기록자다</span>
+        <h2>🌟 "보이지 않는 시간도 존재한다"</h2>
+        <p>모든 여행이 끝나고, 리나는 개울가로 돌아왔습니다. 손에는 여전히 페트로가 있었습니다. 줄무늬와 나선 무늬가 새겨진 그 작은 돌멩이. 하지만 이제 리나의 눈에 그 돌은 전혀 다르게 보였습니다. 줄무늬는 <span class="highlight">층리</span>, 나선 무늬는 <span class="highlight">암모나이트 화석</span>, 암석 조직은 4억 5천만 년 전 오르도비스기 얕은 바다의 기록이었습니다.<br><br><span class="dialogue">"너는 그냥 돌이 아니야. 너는 지구의 <span class="highlight">기록자</span>야."</span></p>
+        <p>페트로가 따뜻하게 빛났습니다.<br><br><span class="dialogue">"그래. 그리고 나만 기록자가 아니란다. 네가 밟고 서 있는 이 땅, 개울의 자갈, 산의 바위, 모래 한 알까지. 모든 암석이 <span class="highlight">지구 시스템의 기억</span>을 품고 있어."</span><br><br>이것이 <span class="highlight">지구사</span>를 연구하는 <span class="highlight">지사학</span>의 핵심입니다. 지층 누중의 법칙, 화석 연속의 법칙, 방사성 동위원소 연대 측정—이 모든 도구를 종합하여 지질학자들은 46억 년의 지구 역사를 복원합니다.</p>
+        <p>크로노스가 마지막으로 나타나 리나에게 말했습니다.<br><br><span class="dialogue">"리나, 오늘 네가 배운 것 중 가장 중요한 것은 무엇이니?"</span><br><br>리나는 잠시 생각한 뒤 대답했습니다.<br><br><span class="dialogue">"<span class="highlight">보이지 않는 시간도 존재한다</span>는 거요. 우리 눈에는 그냥 돌멩이로 보이지만, 그 안에는 수억 년의 시간이 흐르고 있어요. <span class="highlight">시간은 물질에 기록되고, 우리는 그 기록을 읽을 수 있어요.</span>"</span><br><br>크로노스가 미소 지었습니다.<br><br><span class="dialogue">"바로 그거야. 층리의 줄무늬 속에, 화석의 형태 속에, 원자의 붕괴 속에. 우리가 읽을 줄만 알면, 돌은 수억 년의 이야기를 들려준단다."</span></p>
+        <p>스트라타 할머니가 마지막으로 말했습니다.<br><br><span class="dialogue">"그리고 오늘 이 순간도 언젠가는 기록이 될 거야. <span class="highlight">인류세</span>—인간 활동이 지구에 기록되는 시대. 리나, 우리가 어떤 기록을 남길지는 우리에게 달려 있단다."</span><br><br>리나는 페트로를 소중히 주머니에 넣었습니다. 그리고 개울가의 돌멩이들을 새로운 눈으로 바라보았습니다. 하나하나가 수억 년의 이야기를 품은 도서관. 하나하나가 지구가 살아온 시간의 증인. 그날 이후 리나는 <span class="highlight">'지구의 기록을 읽는 사람—지질학자(Geologist)'</span>가 되기로 결심했습니다. 보이지 않는 시간의 목소리를 세상에 전해주는 사람이 되기로요.</p>
+      </div>
+    </section>
+
+    <!-- 교훈 섹션 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학08/00.jpg">
+      <div class="story-card">
+        <span class="chapter">🌱 이야기 속 교훈</span>
+        <h2>세상에 하찮은 것은 없습니다</h2>
+        <p>이 이야기는 우리 발밑에 있는 모든 돌멩이에 대한 이야기입니다. 우리가 무심코 지나치는 돌 하나에도 수억 년의 역사가 담겨 있습니다. <span class="highlight">층리</span>는 고대의 환경을, <span class="highlight">화석</span>은 사라진 생명을, <span class="highlight">방사성 동위원소</span>는 정확한 시간을 기록하고 있습니다.</p>
+        <p><span class="highlight">보이지 않는 시간도 존재합니다.</span> 눈에 보이지 않는다고 없는 것이 아닙니다. 깊은 시간(Deep Time)의 관점에서 보면, 인류의 역사는 지구 역사의 찰나에 불과합니다. 우리가 관심을 갖고 읽으려 할 때, 수억 년의 침묵이 비로소 이야기가 됩니다.</p>
+        <p>세상에 하찮은 것은 없습니다. 모든 것에는 시간이 담겨 있고, 그 시간은 우리에게 말을 걸고 있습니다. 지질학은 이 침묵의 언어를 해독하는 학문이며, 과거를 이해함으로써 미래를 준비하게 해줍니다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+      <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
+    </svg>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <script>
+    // 배경 이미지 변경 및 카드 애니메이션
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+    const cards = document.querySelectorAll('.story-card');
+
+    // 초기 배경 이미지 프리로딩
+    const bgImages = [];
+    sections.forEach(section => {
+      const bg = section.getAttribute('data-bg');
+      if (bg) {
+        const img = new Image();
+        img.src = bg;
+        bgImages.push(img);
+      }
+    });
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollPosition = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section, index) => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+        const card = section.querySelector('.story-card');
+
+        // 카드 활성화
+        if (scrollPosition > sectionTop && scrollPosition < sectionTop + sectionHeight) {
+          if (card) card.classList.add('active');
+
+          // 배경 이미지 변경
+          const bg = section.getAttribute('data-bg');
+          if (bg && mapContainer.style.backgroundImage !== `url("${bg}")`) {
+            mapContainer.style.backgroundImage = `url("${bg}")`;
+          }
+        } else {
+          if (card) card.classList.remove('active');
+        }
+      });
+
+      // 스크롤 인디케이터 숨기기
+      const indicator = document.querySelector('.scroll-indicator');
+      if (window.scrollY > 300) {
+        indicator.style.opacity = '0';
+      } else {
+        indicator.style.opacity = '1';
+      }
+    });
+
+    // 초기 상태 설정
+    window.dispatchEvent(new Event('scroll'));
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth08_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

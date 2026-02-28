@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏜️ 산꼭대기의 거인 '바위턱'이 한 줌 모래가 되기까지</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학04/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #8D6E63 0%, #5D4037 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(141, 110, 99, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(141, 110, 99, 0.15);
+      color: #5D4037;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #8D6E63;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #8D6E63;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(141, 110, 99, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #6D4C41;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #6D4C41;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #5D4037;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #D7CCC8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(141, 110, 99, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(141, 110, 99, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(93, 64, 55, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(141, 110, 99, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏜️ 산꼭대기의 거인 '바위턱'이<br>한 줌 모래가 되기까지</h1>
+        <p class="subtitle">
+          — 단단한 바위가 모래가 되기까지, 암석의 긴 모험 —<br>
+          교과기반 창작도서 · 지구과학 04 · 중1,2
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 바위턱:</strong> 태백산맥 꼭대기의 거대한 화강암 바위. 오만하고 자신이 영원할 것이라 믿지만, 풍화를 통해 겸손과 순환의 진리를 배운다.</p>
+          <p><strong>▸ 꼬마돌:</strong> 바위턱에게서 떨어져 나온 작은 돌 조각. 강물 여행을 거쳐 사암, 규암으로 다시 태어나는 성장형 캐릭터.</p>
+          <p><strong>▸ 할배돌:</strong> 바위턱 옆의 늙은 편마암 바위. 변성암으로서 이미 순환을 경험한 지혜로운 조언자.</p>
+          <p><strong>▸ 비올:</strong> 물의 정령. 한 방울의 힘은 약하지만, 시간을 무기로 바위를 깎는 끈기의 상징.</p>
+          <p><strong>▸ 바라미:</strong> 바람의 정령. 비올의 남매로, 모래를 품고 바위를 다듬는 사식 작용의 주인공.</p>
+          <p><strong>▸ 동글이:</strong> 산 아래 개울가의 작은 조약돌. 바위턱을 존경하며, 이야기의 관찰자이자 화자 역할.</p>
+          <p><strong>▸ 지층 할아버지:</strong> 암석의 순환을 설명해주는 해설자. 수십억 년의 지질학적 지식을 지닌 현자.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">거대한 바위</span>
+        <h2>세상에서 가장 오만한 거인, 바위턱</h2>
+        <p>아주아주 먼 옛날, 하늘을 찌를 듯 솟은 태백산맥(Taebaek Mountains) 꼭대기에 '바위턱'이라는 이름의 거대한 화강암(granite) 바위가 서 있었습니다. 화강암은 <span class="highlight">심성암</span>의 대표적인 예로, 지하 깊은 곳에서 마그마가 천천히 식으면서 결정이 크게 자란 암석입니다. 바위턱은 높이가 무려 열다섯 길이나 되었고, 폭은 마을 하나를 품을 만큼 넓었습니다.</p>
+        <p><span class="dialogue">"하하하! 나는 화강암이다! 내 몸은 <span class="highlight">석영(quartz), 장석(feldspar), 운모</span>라는 세 가지 주요 광물로 이루어져 있지. 석영은 모스 굳기(Mohs hardness scale) 7의 단단함을 자랑하고, 장석은 분홍빛과 회백색의 아름다움을, 운모는 반짝이는 광택을 선사한단다!"</span></p>
+        <p>바위턱은 매일 아침 해가 뜨면 큰 소리로 자랑했습니다. 지구 내부에서 약 700~1,200℃의 <span class="highlight">마그마</span>가 지각 아래 수 킬로미터 깊이에서 수십만 년에 걸쳐 서서히 냉각되어 태어난 자신을 세상에서 가장 완벽한 존재라 믿었습니다. 산 아래의 작은 조약돌 '동글이'가 올려다보며 물었습니다.</p>
+        <p><span class="dialogue">"바위턱 형, 정말 아무것도 형을 변하게 할 수 없어?"</span></p>
+        <p><span class="dialogue">"당연하지! <span class="highlight">등립질</span>의 완벽한 결정 구조를 봐. 수억 년을 이 자리에 서 있었고, 앞으로도 영원히 여기 있을 거야."</span></p>
+        <p>옆에 서 있던 늙은 편마암(gneiss) 바위 '할배돌'이 조용히 한마디 했습니다. 편마암은 화강암이 <span class="highlight">고온고압</span> 환경에서 <span class="highlight">엽리</span>라는 줄무늬 구조를 갖게 된 변성암입니다.</p>
+        <p><span class="dialogue">"바위턱아, 나도 젊었을 때 너처럼 화강암이었단다. 하지만 지각 변동(tectonic activity)을 겪으며 변성되었지. 이 세상에 <span class="highlight">평형 상태</span>를 영원히 유지하는 것은 없어."</span></p>
+        <p>바위턱은 콧웃음을 쳤습니다. 하지만 바로 그 순간에도, <span class="highlight">일교차</span>에 의한 <span class="highlight">열팽창</span>과 수축이 그의 표면에 미세한 균열(microcrack)을 만들어가고 있었습니다. 자연은 이미 바위턱을 향한 위대한 조각을 시작하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">풍화 시작</span>
+        <h2>보이지 않는 적의 첫 번째 공격</h2>
+        <p>바위턱에게 첫 번째 변화가 찾아온 것은 어느 겨울밤이었습니다. 낮 동안 따뜻했던 햇볕이 사라지고, 밤공기가 매섭게 차가워졌습니다. 바위턱의 표면 균열에 고여 있던 빗물이 꽁꽁 얼기 시작했습니다. 물이 얼면서 부피가 약 9퍼센트나 늘어나는 <span class="highlight">이상팽창</span> 현상이 일어났습니다.</p>
+        <p><span class="dialogue">"으응? 뭔가 틈이 벌어지는 느낌이..."</span></p>
+        <p>이것이 바로 <span class="highlight">동결 풍화</span> 또는 <span class="highlight">쐐기 작용</span>의 시작이었습니다. 물의 <span class="highlight">결정 구조</span>가 육각형으로 배열되면서 액체일 때보다 더 큰 공간을 차지하고, 이 팽창력은 1평방센티미터당 약 2,000킬로그램의 압력을 가합니다. 낮에는 녹고(융해, melting) 밤에는 어는(응고, freezing) 과정이 수백 번, 수천 번 반복되자, 바위턱의 표면에 실금 같은 <span class="highlight">절리</span>가 점점 깊어졌습니다.</p>
+        <p>그뿐만이 아니었습니다. 비가 올 때마다 빗물 속에 녹아있는 <span class="highlight">이산화탄소</span>가 <span class="highlight">탄산</span>을 형성하여 약한 산성(pH 약 5.6)을 띠었습니다. 이 약산이 화강암의 장석 성분과 반응하여 <span class="highlight">점토 광물</span>인 <span class="highlight">카올리나이트</span>로 분해시키고 있었습니다. 이것은 <span class="highlight">화학적 풍화</span>였지요.</p>
+        <p><span class="dialogue">"이상해... 내 피부가 예전 같지 않아. 반짝이던 광택이 사라지고 거칠어지고 있어."</span></p>
+        <p>할배돌이 조용히 말했습니다.</p>
+        <p><span class="dialogue">"그것이 <span class="highlight">풍화</span>란다. 풍화는 크게 <span class="highlight">기계적 풍화</span>와 <span class="highlight">화학적 풍화</span>로 나뉘지. 기계적 풍화는 암석을 물리적으로 잘게 부수고, 화학적 풍화는 광물의 화학 조성을 변화시킨단다. 기온, 강수량, 식생에 따라 우세한 풍화 유형이 달라지지. <span class="highlight">한대 기후</span>에서는 동결 풍화가, <span class="highlight">열대 기후</span>에서는 화학적 풍화가 더 활발하단다."</span></p>
+        <p>바위턱은 처음으로 자신이 영원하지 않을 수도 있다는 두려움을 느꼈습니다. <span class="highlight">표면적</span>이 증가할수록 풍화 속도는 더욱 빨라진다는 사실, 이제 되돌릴 수 없는 변화가 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">물과 바람의 작용</span>
+        <h2>끈질긴 조각가, 비바람 남매</h2>
+        <p>바위턱을 변화시키는 데 가장 큰 역할을 한 것은 '비올'과 '바라미'라는 이름의 남매였습니다. 비올은 물의 정령이었고, 바라미는 바람의 정령이었지요. 이들의 사명은 <span class="highlight">지형 형성 작용</span>의 핵심인 깎고, 다듬고, 운반하는 것이었습니다.</p>
+        <p>비올은 비가 될 때마다 바위턱의 몸 위를 흘러내렸습니다. 물은 <span class="highlight">용해 작용</span>을 통해 암석의 가용성 광물을 녹이고, <span class="highlight">수력 작용</span>으로 균열에 압력을 가했습니다. 처음에는 아무런 흔적도 남기지 못하는 것 같았지만, 수십 년이 지나자 바위턱의 표면에 작은 물길이 파였습니다.</p>
+        <p><span class="dialogue">"나는 절대 서두르지 않아. 하지만 <span class="highlight">지질학적 시간</span> 앞에서는 가장 단단한 암석도 무력해지지."</span></p>
+        <p>비올의 힘은 시간이 만드는 것이었습니다. 한 방울 한 방울의 물이 가진 <span class="highlight">운동 에너지</span>는 보잘것없지만, 백 년, 천 년, 만 년이 쌓이면 단단한 화강암도 파낼 수 있습니다. 실제로 미국의 <span class="highlight">그랜드 캐니언</span>은 콜로라도 강의 물이 약 5~6백만 년 동안 <span class="highlight">하방 침식</span>을 통해 깊이 약 1,800미터의 협곡을 만든 것입니다.</p>
+        <p>바라미도 뒤지지 않았습니다. 바라미는 모래 알갱이를 품에 안고 바위턱에게 끊임없이 부딪쳤습니다. 모래를 머금은 바람이 바위 표면을 갈아내는 <span class="highlight">사식 작용</span> 또는 <span class="highlight">마식 작용</span>이었지요. 사막 지역에서 흔히 볼 수 있는 <span class="highlight">버섯바위</span>나 <span class="highlight">야르당</span>은 이 작용으로 만들어집니다.</p>
+        <p><span class="dialogue">"내 각진 모서리가! <span class="highlight">차별 침식</span>이라고? 더 약한 부분이 먼저 깎여나가다니!"</span></p>
+        <p>바위턱이 한탄했습니다. 자연의 조각가들에게 휴일은 없었습니다. 그들은 소리 없이, 그러나 <span class="highlight">누적 효과</span>를 통해 확실하게 일합니다. <span class="highlight">질량 보존 법칙</span>에 따라 바위턱에서 깎여나간 물질은 사라지는 것이 아니라, 어딘가로 이동하여 새로운 형태를 취할 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">알갱이로 부서짐</span>
+        <h2>거인의 첫 번째 눈물, 떨어져나간 파편들</h2>
+        <p>수만 년이 흐른 어느 날, 바위턱의 몸에서 '딱!' 하는 소리와 함께 커다란 조각 하나가 떨어져 나갔습니다. 이것은 <span class="highlight">박리</span> 또는 <span class="highlight">판상 절리</span>라 불리는 현상으로, 지하 깊은 곳에서 형성된 암석이 지표로 노출되면서 <span class="highlight">하중 제거</span>로 인해 압력이 감소하고, 양파 껍질처럼 층층이 벗겨지는 것입니다.</p>
+        <p>바위턱은 생전 처음 울었습니다.</p>
+        <p><span class="dialogue">"내 몸이... 내 몸의 일부가 떨어져 나갔어..."</span></p>
+        <p>풍화가 계속되면서 바위턱의 몸 곳곳에서 조각들이 떨어져 나갔습니다. 지질학에서는 이러한 <span class="highlight">쇄설물</span>을 크기에 따라 분류합니다. 지름 256밀리미터 이상이면 <span class="highlight">전석</span>, 64~256밀리미터면 <span class="highlight">왕자갈</span>, 2~64밀리미터면 <span class="highlight">자갈</span>, 0.0625~2밀리미터면 <span class="highlight">모래</span>, 0.004~0.0625밀리미터면 <span class="highlight">실트</span>, 그보다 작으면 <span class="highlight">점토</span>가 됩니다.</p>
+        <p>이 분류 체계는 <span class="highlight">웬트워스 척도</span>라 불리며, 퇴적물 연구의 기초가 됩니다. 입자 크기는 <span class="highlight">로그 스케일</span>로 표현하기도 하는데, 이를 <span class="highlight">파이 스케일</span>이라 합니다.</p>
+        <p>떨어져 나간 조각 중 하나가 말했습니다.</p>
+        <p><span class="dialogue">"바위턱 형, 나 이제 어떡해?"</span></p>
+        <p>그 작은 돌의 이름은 '꼬마돌'이었습니다. 바위턱은 담담하게 말했습니다.</p>
+        <p><span class="dialogue">"무서워하지 마. <span class="highlight">광물 조성</span>은 여전히 같잖아. 우리는 같은 화강암이야."</span></p>
+        <p>꼬마돌은 비탈길 아래 개울가에 멈춰 섰습니다. 그곳에는 이미 수많은 돌과 자갈과 모래가 모여있었습니다. <span class="highlight">분급</span>과 <span class="highlight">원마도</span>가 다양한, 각자의 여정을 거친 알갱이들이었습니다. 부서진다는 것은 사라지는 것이 아니라, 자신의 일부를 세상 곳곳에 보내는 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">침식 작용</span>
+        <h2>여행을 떠나는 돌멩이들, 강물의 대행진</h2>
+        <p>바위턱에게서 떨어져 나온 꼬마돌과 수많은 알갱이들은 이제 새로운 여정을 시작했습니다. 비가 내리면 빗물이 산비탈을 따라 <span class="highlight">면상류</span>와 <span class="highlight">세류</span>를 형성하며 알갱이들을 데려갔습니다. 풍화가 암석을 <span class="highlight">'제자리에서 분해(in-situ breakdown)'</span>하는 것이라면, <span class="highlight">침식</span>은 분해된 물질을 <span class="highlight">'이동(transportation)'</span>시키는 것입니다.</p>
+        <p>꼬마돌은 처음에 작은 실개울에 실려갔습니다.</p>
+        <p><span class="dialogue">"와, 세상이 이렇게 넓었어? 이게 <span class="highlight">유수 시스템</span>이구나!"</span></p>
+        <p>실개울은 개울이 되고, 개울은 시내가 되고, 시내는 강이 되었습니다. 강물의 <span class="highlight">유속</span>이 빨라지자 꼬마돌은 다른 돌들과 부딪히며 점점 작아지고 둥글어졌습니다. 이것이 <span class="highlight">마식</span>입니다. 상류에서 하류로 갈수록 자갈의 평균 크기가 작아지고 원마도가 높아지는 <span class="highlight">하류 세립화</span> 현상이 일어납니다.</p>
+        <p>강물은 알갱이들을 운반하는 방법이 세 가지였습니다. 큰 돌은 바닥을 굴러가거나 미끄러지는 <span class="highlight">소류사</span>, 중간 크기는 통통 튕기며 이동하는 <span class="highlight">도약</span>, 그리고 아주 작은 입자는 물속에 떠서 이동하는 <span class="highlight">부유사</span>였지요. 완전히 녹아서 이동하는 <span class="highlight">용존 하중</span>도 있습니다.</p>
+        <p><span class="highlight">율름 다이어그램</span>은 유속과 입자 크기에 따른 침식, 운반, 퇴적의 관계를 보여줍니다. 흥미롭게도, 아주 작은 점토 입자는 <span class="highlight">응집력</span> 때문에 침식시키려면 오히려 더 빠른 유속이 필요합니다.</p>
+        <p>한편, 바라미(바람)도 사막에서 <span class="highlight">풍성 작용</span>을 통해 모래를 날려 먼 곳까지 운반했고, <span class="highlight">빙하</span>는 <span class="highlight">빙퇴석</span>으로 거대한 전석을 수백 킬로미터나 옮기기도 했습니다. 침식은 파괴가 아니라 여행이었고, 자연은 모든 알갱이에게 새로운 목적지를 선물하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">퇴적</span>
+        <h2>긴 여행의 끝, 알갱이들의 새 보금자리</h2>
+        <p>강물을 따라 수백 킬로미터를 여행한 꼬마돌은 이제 동전만 한 납작한 조약돌이 되어 있었습니다. 강의 흐름이 점점 느려지는 곳, 바로 강이 바다와 만나는 <span class="highlight">하구</span>에서 <span class="highlight">삼각주</span>가 형성되는 지점에 다다랐을 때, 꼬마돌은 천천히 강바닥에 내려앉았습니다.</p>
+        <p><span class="dialogue">"아, 여기가 내 새 보금자리인 건가?"</span></p>
+        <p>이것이 바로 <span class="highlight">퇴적</span>이었습니다. 유수의 <span class="highlight">운반 능력</span>과 <span class="highlight">운반 용량</span>은 유속의 함수입니다. 유속이 느려지면 무거운 입자부터 바닥에 가라앉고(<span class="highlight">침강, settling</span>), 가벼운 입자는 더 멀리 운반됩니다. 이것이 <span class="highlight">점이 층리</span>를 만드는 원리입니다.</p>
+        <p>그래서 강 상류의 <span class="highlight">선상지</span>에는 큰 자갈이, <span class="highlight">범람원</span>에는 실트가, 삼각주와 바다 깊은 곳에는 아주 미세한 점토가 쌓입니다. 삼각주는 <span class="highlight">전적층</span>, <span class="highlight">전면층</span>, <span class="highlight">상면층</span>의 세 가지 층으로 구성됩니다.</p>
+        <p>꼬마돌 주위에는 이미 셀 수 없이 많은 알갱이들이 모여있었습니다. 산에서 온 화강암 알갱이, 사막에서 날아온 <span class="highlight">황사</span>, 화산에서 분출된 <span class="highlight">화산쇄설물</span>, 바다 생물의 껍데기인 <span class="highlight">생물 기원 퇴적물</span>까지.</p>
+        <p><span class="dialogue">"너는 어디서 왔어?"</span></p>
+        <p><span class="dialogue">"나는 원래 <span class="highlight">유공충</span>의 석회질 껍질이었어. 바다 생물이 죽으면서 껍데기가 해저에 쌓여 <span class="highlight">석회 연니</span>가 된 거지."</span></p>
+        <p>알갱이들은 서로의 이야기를 나누며 <span class="highlight">층리</span>를 형성하며 쌓여갔습니다. 1년에 밀리미터 단위로 쌓이지만, 수만 년이 지나면 수십 미터의 두꺼운 <span class="highlight">퇴적층</span>이 됩니다. 여행은 끝났지만, 이건 새로운 시작이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">새로운 암석 형성</span>
+        <h2>압력과 시간이 빚은 두 번째 탄생</h2>
+        <p>퇴적층 아래 깊이 묻힌 꼬마돌에게 새로운 변화가 찾아왔습니다. 위로 쌓이는 퇴적물의 <span class="highlight">정암압</span>이 점점 커지면서 어마어마한 힘이 가해지기 시작한 것입니다. 깊이 1킬로미터당 약 25메가파스칼(MPa)의 압력이 증가합니다.</p>
+        <p><span class="dialogue">"으으으, 무거워... <span class="highlight">공극률</span>이 줄어들고 있어!"</span></p>
+        <p>이 과정은 <span class="highlight">속성 작용</span>이라고 합니다. 속성 작용은 크게 두 단계로 나뉩니다. 첫째는 <span class="highlight">다짐</span>으로, 퇴적물에 압력이 가해져 입자 사이의 <span class="highlight">공극수</span>가 빠져나가고 부피가 줄어드는 과정입니다. 초기 공극률 50~70%가 10~20%로 감소할 수 있습니다.</p>
+        <p>둘째는 <span class="highlight">교결</span>으로, <span class="highlight">실리카</span>, <span class="highlight">방해석</span>, <span class="highlight">산화철</span> 등의 광물이 입자 사이사이를 채워 단단하게 굳히는 과정입니다. 이 광물들은 지하수에 녹아있다가 침전됩니다.</p>
+        <p>꼬마돌은 주변의 모래, 자갈, 점토 알갱이들과 서서히 하나가 되어갔습니다.</p>
+        <p><span class="dialogue">"내 몸이 옆의 알갱이와 <span class="highlight">속성 조직</span>으로 결합되고 있어!"</span></p>
+        <p>꼬마돌이 태어난 화강암은 <span class="highlight">화성암</span>이었지만, 지금 만들어지고 있는 것은 <span class="highlight">퇴적암</span>이었습니다. 모래가 굳으면 <span class="highlight">사암</span>, 자갈이 굳으면 <span class="highlight">역암</span>, 실트가 굳으면 <span class="highlight">실트암</span>, 점토가 굳으면 <span class="highlight">셰일/이암</span>, 석회질 알갱이가 굳으면 <span class="highlight">석회암</span>이 됩니다.</p>
+        <p><span class="dialogue">"나는 더 이상 꼬마돌이 아니야. 나는 '사암'이야!"</span></p>
+        <p>기나긴 여행과 퇴적과 속성 작용의 시간을 거쳐, 전혀 다른 종류의 바위로 다시 태어난 것입니다. 끝이라고 생각한 곳에서 만난 두 번째 탄생, 그것이 자연의 위대한 <span class="highlight">암석 순환</span>이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">반복되는 순환</span>
+        <h2>암석의 윤회, 끝없는 돌림노래</h2>
+        <p>사암이 된 꼬마돌의 이야기는 여기서 끝이 아니었습니다. 지구 깊은 곳에서는 <span class="highlight">판 구조 운동</span>이라는 거대한 힘이 움직이고 있었거든요. <span class="highlight">수렴형 경계</span>에서 지각판이 충돌하면서, 사암이 묻혀있던 지층이 엄청난 열과 압력을 받기 시작했습니다.</p>
+        <p>온도가 <span class="highlight">변성 등온선</span>을 넘어 수백 도까지 올라가고, 압력이 수천 기압에 달하자, 사암의 광물 구조가 <span class="highlight">재결정</span>되기 시작했습니다. 이때 암석은 녹지 않고 <span class="highlight">고체 상태</span>에서 변합니다.</p>
+        <p><span class="dialogue">"내 몸이... 또 변하고 있어! <span class="highlight">변성도</span>가 높아지고 있어!"</span></p>
+        <p>이것이 바로 <span class="highlight">변성 작용</span>이었습니다. 사암의 석영 입자들이 서로 결합하여 더 단단하고 치밀한 <span class="highlight">규암</span>으로 변했습니다. 퇴적암이 <span class="highlight">변성암</span>으로 다시 태어난 것이지요. 변성 작용의 유형에는 <span class="highlight">접촉 변성</span>과 <span class="highlight">광역 변성</span>이 있습니다.</p>
+        <p>할배돌이 바로 이런 과정을 거쳐 만들어진 편마암이었습니다. 화강암이 광역 변성 작용을 받아 <span class="highlight">엽리 구조</span>가 발달한 것이 편마암이니까요. 셰일은 <span class="highlight">점판암(slate) → 천매암(phyllite) → 편암(schist) → 편마암</span>의 순서로 변성도가 높아집니다.</p>
+        <p>'지층 할아버지'가 설명합니다.</p>
+        <p><span class="dialogue">"이것이 바로 <span class="highlight">암석의 순환</span>이란다. 18세기 스코틀랜드의 지질학자 <span class="highlight">제임스 허튼</span>이 처음 제안한 개념이지. 화성암이 풍화되어 퇴적암이 되고, 퇴적암이 열과 압력을 받아 변성암이 되고, 변성암이 다시 녹아 <span class="highlight">마그마</span>가 되면 또다시 화성암이 되지. 이 순환에는 <span class="highlight">단일 순환 경로</span>만 있는 것이 아니라, 여러 <span class="highlight">지름길</span>도 존재한단다."</span></p>
+        <p>자연에는 진정한 의미의 '끝'이 없습니다. 모든 끝은 새로운 시작이고, <span class="highlight">물질 순환</span>은 영원히 계속됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">작은 알갱이의 의미</span>
+        <h2>한 줌 모래가 품은 수억 년의 이야기</h2>
+        <p>이야기의 현재로 돌아옵시다. 태백산맥의 바위턱은 이제 옛날의 거대한 모습이 아닙니다. 수백만 년의 풍화와 침식을 거치며, 바위턱은 본래 크기의 절반도 안 되게 줄어들어 있었습니다. 이것이 <span class="highlight">지형의 평탄화</span> 과정입니다.</p>
+        <p>하지만 바위턱의 얼굴에는 더 이상 오만함이 없었습니다. 대신 <span class="highlight">타포니</span>와 같은 깊은 풍화 구멍 사이로 잔잔한 미소가 새겨져 있었습니다.</p>
+        <p>어느 날, 어린 소녀가 산을 오르다가 바위턱 아래의 모래밭에서 한 줌의 모래를 집어 들었습니다.</p>
+        <p><span class="dialogue">"와, 이 모래알 하나하나가 반짝반짝 빛나!"</span></p>
+        <p>소녀의 손바닥 위 모래알들은 <span class="highlight">석영 결정</span>이 햇빛에 반사되어 보석처럼 빛나고 있었습니다. <span class="highlight">현미경</span>으로 관찰하면 각 알갱이의 <span class="highlight">표면 조직</span>에서 그것이 겪어온 환경을 읽을 수 있습니다. <span class="highlight">V자형 충격 흔적</span>은 하천 운반을, <span class="highlight">곡면</span>은 빙하 환경을, <span class="highlight">젖빛 표면</span>은 사막 풍성 환경을 나타냅니다.</p>
+        <p>바위턱이 조용히 말했습니다.</p>
+        <p><span class="dialogue">"그래, 그 한 알 한 알이 모두 내 몸의 일부란다. 저 반짝이는 알갱이는 약 2억 년 전 <span class="highlight">중생대</span> 마그마가 식을 때 결정화된 석영이야. 저 하얀 알갱이는 <span class="highlight">정장석</span>이 <span class="highlight">가수분해</span>되어 <span class="highlight">카올린</span>이 되기 직전의 모습이지."</span></p>
+        <p>모래 한 줌에는 지구의 역사가 담겨있습니다. <span class="highlight">쇄설성 지르콘</span>의 <span class="highlight">U-Pb 연대 측정</span>을 통해 모래알의 기원 암석과 나이를 추적할 수 있습니다. 한 알의 모래는 화산 폭발, 산맥의 <span class="highlight">조산 운동</span>, 빙하의 <span class="highlight">빙식 작용</span>, 강물의 침식, 바람의 운반을 모두 겪어낸 여행자입니다. 작다고 하찮은 것이 아닙니다. 작은 것 안에 우주가 들어있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학04/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">자연은 멈추지 않는다</span>
+        <h2>바위턱의 마지막 인사, 그리고 새로운 시작</h2>
+        <p>또다시 수백만 년이 흐른 먼 미래의 이야기입니다. 바위턱은 이제 사라졌습니다. 아니, 정확히 말하면 '형태가 변했습니다'. <span class="highlight">물질 보존 법칙</span>에 따라 바위턱이었던 물질은 지금 이 순간에도 지구 곳곳에서 새로운 역할을 하고 있습니다.</p>
+        <p>일부는 강 하구의 <span class="highlight">모래톱</span>이 되어 철새들의 쉼터가 되었습니다. 일부는 바다 밑에서 사암이 되어 <span class="highlight">저류층</span>으로서 석유를 품는 저장소가 되었습니다. 사암의 높은 <span class="highlight">투과율</span>이 유체의 이동과 저장을 가능하게 합니다. 일부는 해변의 하얀 모래가 되어 아이들의 모래성 재료가 되었습니다.</p>
+        <p>또 일부는 <span class="highlight">섭입대</span>에서 지구 깊은 곳으로 내려가 다시 마그마에 녹아들었고, 언젠가 화산이 폭발할 때 새로운 화성암으로 태어날 것입니다. 이것이 지구의 <span class="highlight">물질 재순환</span>입니다.</p>
+        <p>동글이가 이제는 늙은 조약돌이 되어 강가에서 말합니다.</p>
+        <p><span class="dialogue">"바위턱 형은 사라진 게 아니야. <span class="highlight">엔트로피</span>가 증가하며 분산되었을 뿐, 온 세상에 퍼져서 모든 곳에 있는 거야."</span></p>
+        <p>할배돌도 이제는 거의 풍화되어 납작한 돌이 되었지만, 여전히 지혜로운 목소리로 말합니다.</p>
+        <p><span class="dialogue">"자연은 멈추지 않는단다. <span class="highlight">지구 시스템</span>은 <span class="highlight">동적 평형</span> 상태를 유지하며 끊임없이 순환하지. 산이 솟아오르는 <span class="highlight">융기</span>와 깎여나가는 <span class="highlight">삭박</span>이 경쟁하고, 이 순환 속에서 사라지는 것은 아무것도 없어. 변할 뿐이지."</span></p>
+        <p>바라미와 비올은 오늘도 <span class="highlight">지형 평형</span>을 향해 일합니다. 그리고 지금 이 순간에도 어딘가의 거대한 바위 위에서 물 한 방울이 스며들며, 수백만 년 후의 모래 한 알을 준비하고 있습니다. <span class="highlight">지질학적 시간</span>의 관점에서, 우리가 영원하다고 믿는 산도 결국 한 줄기 모래가 됩니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(141, 110, 99, 0.15); border-radius: 16px;">
+          <strong style="color: #5D4037; font-size: 20px;">🏜️ 「변화는 끝이 아니라 과정이며, 자연의 이야기에는 마침표가 없습니다. 오직 쉼표만이 있을 뿐입니다. — 제임스 허튼의 '무한한 시간' 개념」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth04_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

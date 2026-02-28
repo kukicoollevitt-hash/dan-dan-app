@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦁 몸이 뒤바뀐 그날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 650px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #d4a017 0%, #8b6914 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(212, 160, 23, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(212, 160, 23, 0.15);
+      color: #8b6914;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #d4a017;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #d4a017;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(212, 160, 23, 0.1);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #5c4a1f;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #5c4a1f;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #8b6914;
+      font-weight: 600;
+    }
+
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFD700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+      40% { transform: translateX(-50%) translateY(-20px); }
+      60% { transform: translateX(-50%) translateY(-10px); }
+    }
+
+    @media (max-width: 768px) {
+      .story-section { padding: 40px 20px; }
+      .story-card { max-width: 100%; padding: 30px; }
+      .story-card h2 { font-size: 22px; }
+      .story-card p { font-size: 14px; }
+      .intro-content { padding: 40px 30px; }
+      .intro-content h1 { font-size: 28px; }
+      .intro-content .subtitle { font-size: 15px; }
+    }
+
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(212, 160, 23, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(212, 160, 23, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(139, 105, 20, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 160, 23, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons { bottom: 20px; right: 20px; flex-direction: column; }
+      .nav-btn { padding: 12px 24px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🦁 몸이 뒤바뀐 그날</h1>
+        <p class="subtitle">
+          — 사자 레오와 토끼 루루가 서로의 심장으로 세상을 본 이야기 —<br>
+          다름은 약점이 아니라, 환경이 빚어낸 생존의 예술이다<br>
+          교과기반 창작도서 · 생물 02 · 중1-2
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 사자 레오 (주인공):</strong> 동물 왕국의 자존심 강한 왕. 힘과 위엄으로 모두를 다스리지만, 약한 동물들의 삶을 이해하지 못한다. 육식동물의 정점에 선 포식자로서 먹이사슬의 최상위에 위치한다.</p>
+          <p><strong>▸ 토끼 루루 (주인공):</strong> 숲속 마을의 재빠른 전령. 늘 도망치는 삶에 지쳐 있지만, 그것이 수백만 년 진화의 산물인 자신만의 생존 방식임을 깨닫지 못한다.</p>
+          <p><strong>▸ 올빼미 현자 오울:</strong> 마법의 숲을 관장하는 천 년 된 올빼미. 레오와 루루의 갈등을 지켜보다 '진짜 이해'를 위해 몸 바꿈 마법을 건다. 야행성 동물의 대표이다.</p>
+          <p><strong>▸ 기린 지노 & 펭귄 피피:</strong> 진화와 적응의 비밀을 알려주는 특별한 친구들. 각자 극단적 환경에 적응한 신체 구조를 가지고 있다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">평화로운 가면 아래</span>
+        <h2>동물 왕국의 숨겨진 갈등</h2>
+        <p>아주 먼 옛날, 하늘과 땅이 맞닿은 곳에 '하모니아'라는 이름의 동물 왕국이 있었습니다. 이 왕국에는 사자부터 개미까지, 고래부터 벌새까지 온갖 동물이 함께 살아가고 있었지요. 생태학에서 말하는 <span class="highlight" data-tooltip="생태계(Ecosystem): 생물(동식물, 미생물)과 비생물(물, 공기, 토양) 요소가 서로 영향을 주고받으며 하나의 시스템을 이루는 자연의 단위">'생태계'</span>가 바로 이런 모습일 것입니다. 생물적 요소와 비생물적 요소가 서로 영향을 주고받으며 하나의 시스템을 이루고 있었으니까요.</p>
+        <p>겉으로 보기에 하모니아는 더없이 평화로운 곳이었습니다. 매일 아침 새들이 노래하고, 강물은 맑게 흐르고, 초원에는 바람이 살랑살랑 불었으니까요. 하지만 그 평화로운 겉모습 아래에는 오래된 갈등이 숨어 있었습니다. 그것은 바로 <span class="highlight" data-tooltip="먹이사슬(Food chain): 생태계에서 먹고 먹히는 관계가 사슬처럼 연결된 것. 생산자→1차소비자→2차소비자→최종소비자 순으로 에너지가 이동함">'먹이사슬'</span>에 따른 위계였습니다. 포식자와 피식자, 강자와 약자 사이에는 보이지 않는 벽이 있었지요.</p>
+        <p>왕국의 왕인 사자 레오는 드넓은 사바나의 바위 왕좌에 앉아 매일같이 이렇게 말했습니다. <span class="dialogue">"힘이 있어야 진짜 살아 있는 거야. 도망치기만 하는 녀석들은 삶을 사는 게 아니라 삶에 끌려다니는 거지. 나처럼 날카로운 송곳니와 강인한 근육을 가진 존재만이 이 세상의 주인이 될 자격이 있어."</span> 레오의 송곳니는 고기를 찢기에 완벽하게 설계된 육식동물의 상징이었습니다.</p>
+        <p>한편 토끼 루루는 숲속 깊은 곳 자신의 작은 굴에서 조용히 눈물을 삼켰습니다. <span class="dialogue">"난 왜 이렇게 작고 약하게 태어났을까. 사자처럼 강하게 태어났으면 아무도 날 무시하지 못할 텐데. 이 긴 귀, 작은 몸, 뒷다리만 큰 이상한 체형... 모두 부끄러운 것만 같아."</span> 루루는 자신의 신체 구조가 왜 그렇게 생겼는지, 그것이 어떤 의미를 가지는지 전혀 알지 못했습니다. 진화가 빚어낸 생존의 걸작이 자신의 몸 안에 있다는 사실을.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">금지된 마법</span>
+        <h2>올빼미 현자의 영혼 교환</h2>
+        <p>천 년 묵은 떡갈나무 꼭대기에 사는 올빼미 현자 오울은 세상의 모든 것을 내려다보는 눈을 가지고 있었습니다. 올빼미의 눈은 야간 시력에 특화되어 있어서 어두운 밤에도 작은 움직임을 포착할 수 있습니다. 레오의 거만한 포효도, 루루의 조용한 한숨도 모두 오울의 귀에 닿았습니다. 올빼미의 청각은 양쪽 귀의 위치가 비대칭이어서 소리의 방향을 정밀하게 파악할 수 있지요.</p>
+        <p><span class="dialogue">"이대로 가면 하모니아는 무너지고 말 거야. 포식자와 피식자가 서로를 이해하지 못하면 생태계의 균형도 무너진다."</span> 오울은 깊은 한숨을 내쉬며 먼지 쌓인 마법 서고를 열었습니다. 그가 꺼낸 것은 <span class="highlight">'영혼 교환의 서'</span>였습니다. 천 년 동안 단 세 번만 사용된 금지된 마법이었지요.</p>
+        <p>보름달이 뜬 다음 날 새벽, 오울은 레오와 루루를 마법의 숲 한가운데로 불러 모았습니다. 은빛 안개가 피어오르는 신비로운 공간이었습니다. <span class="dialogue">"이 왕국이 진정한 평화를 이루려면, 너희가 먼저 서로를 이해해야 한다. 말로는 절대 전달할 수 없는 것들이 있어. 몸으로 직접 겪어봐야만 알 수 있는 진실들이."</span></p>
+        <p>오울의 눈이 달빛처럼 환하게 빛나더니, 은빛 가루가 두 동물을 감쌌습니다. 그 순간 세상이 빙글빙글 돌았고, 의식이 아득해졌습니다. 눈을 떠보니 — 레오는 토끼의 몸에, 루루는 사자의 몸에 갇혀 있었습니다! <span class="dialogue">"너희는 해가 질 때까지 서로의 몸으로 살아야 한다. 그래야만 마법이 풀린다. 이것은 저주가 아니라 선물이다. 서로의 <span class="highlight" data-tooltip="생태적 지위: 생태계 내에서 특정 생물이 차지하는 역할과 위치. 먹이, 서식지, 행동 양식 등을 모두 포함하는 개념">'생태적 지위'</span>를 직접 경험해 보아라."</span> 하모니아 왕국 역사상 가장 기이한 하루가 시작된 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">공포를 체험하다</span>
+        <h2>레오, 도망치는 삶을 살다</h2>
+        <p>토끼의 몸에 갇힌 레오는 처음으로 세상이 이렇게 크게 느껴진다는 것을 깨달았습니다. 풀잎 하나하나가 나무처럼 높았고, 작은 돌멩이 하나가 바위산처럼 보였습니다. <span class="dialogue">"이게 루루가 보는 세상이란 말인가? 모든 것이 거대하고 위협적으로 느껴져..."</span> 몸의 크기가 세상을 인식하는 방식을 완전히 바꿔놓은 것입니다.</p>
+        <p>그때 귀가 팽팽하게 서더니 미세한 진동이 느껴졌습니다. 토끼의 긴 귀는 단순한 장식이 아니었습니다. <span class="highlight" data-tooltip="토끼의 귀(Rabbit Ears): 독립적으로 움직이며 360도 방향의 소리를 탐지. 포식자를 조기에 감지하여 도주할 시간을 확보하는 생존 기관">360도 방향에서 오는 소리를 탐지하는 고성능 레이더</span>였던 것입니다. 발소리! 하이에나 세 마리가 날카로운 이빨을 드러내며 다가오고 있었습니다. 레오가 사자였을 때는 하이에나 따위는 상대도 되지 않았습니다. 하지만 지금은 달랐습니다.</p>
+        <p>레오의 — 아니, 토끼의 — 몸이 본능적으로 반응했습니다. <span class="highlight">심장 박동수가 분당 300회 이상으로 치솟았고, 아드레날린이 온몸에 퍼졌습니다. 뒷다리에 순간적으로 엄청난 힘이 모였습니다.</span> 토끼의 뒷다리 근육은 체중 대비 폭발적인 힘을 낼 수 있도록 특화되어 있었습니다. <span class="dialogue">"이게 뭐야?! 내가 왜 이렇게 떨리는 거지?! 이 심장 소리는 뭐고?!"</span> 레오는 생전 처음 '공포'라는 감정을 온몸으로 느꼈습니다.</p>
+        <p>레오는 생애 처음으로 전속력으로 도망쳤습니다. 지그재그로 방향을 바꾸는 것은 본능이었습니다 — 포식자의 예측을 빗나가게 하는 생존 전략이었지요. 좁은 구멍 사이로 몸을 집어넣고, 가시덤불 아래로 납작하게 엎드렸습니다. 토끼의 작은 몸은 사자가 절대 들어갈 수 없는 공간에 숨을 수 있었습니다. 겨우 하이에나를 따돌린 레오는 작은 굴속에서 거친 숨을 몰아쉬었습니다. <span class="dialogue">"이게... 루루의 매일이었단 말이야? 이 공포, 이 긴장, 이 끊임없는 경계... 비겁한 게 아니라 생존이었구나."</span> 레오의 눈에서 뜨거운 눈물이 흘러내렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">책임의 무게</span>
+        <h2>루루, 사냥의 무게를 짊어지다</h2>
+        <p>한편 사자의 몸을 가지게 된 루루는 완전히 다른 종류의 충격을 받고 있었습니다. 처음에 루루는 감격했습니다. <span class="dialogue">"세상이... 이렇게 작게 보이다니! 모든 것이 내 발아래 있어!"</span> 사자의 눈으로 본 세상은 토끼 때와 전혀 달랐습니다. 사자의 눈은 정면을 향해 있어서 <span class="highlight" data-tooltip="양안시(Binocular Vision): 두 눈이 정면을 향해 사물을 동시에 보면서 입체감과 거리를 정확히 파악. 포식자에게 필수적인 사냥 능력">입체적인 거리 감각</span>을 제공했습니다. 이것은 사냥에 필수적인 특성이었지요.</p>
+        <p>하지만 그 기쁨은 오래가지 않았습니다. 오전이 지나자 사자의 거대한 몸이 보내는 신호가 왔습니다. <span class="highlight">배고픔.</span> 단순한 배고픔이 아니었습니다. 당근이나 풀잎으로는 절대 채울 수 없는, 깊고 원초적인 굶주림이었습니다. 사자는 육식동물입니다. 장의 길이가 초식동물보다 짧아서 식물을 소화할 수 없고, 반드시 동물성 단백질을 섭취해야 합니다.</p>
+        <p><span class="dialogue">"이 배고픔은 뭐지? 풀을 먹어도 전혀 채워지지 않아..."</span> 루루는 본능적으로 영양 떼를 바라보게 되었습니다. 하지만 문제는 지금부터였습니다. 사냥이란 것을 해본 적이 없었던 것입니다. 영양 떼를 발견한 루루는 사자의 몸으로 다가가 보았지만, 발소리가 너무 크고, 몸을 숨길 곳이 없었습니다. 바람의 방향도 읽지 못했습니다 — 자신의 냄새가 영양들에게 전달되고 있다는 것을. 세 번, 네 번, 다섯 번 실패했습니다.</p>
+        <p>루루는 나무 그늘 아래 털썩 주저앉았습니다. 연구에 따르면 사자의 사냥 성공률은 약 20-30%에 불과합니다. 열 번 시도해서 두세 번만 성공한다는 뜻이지요. <span class="dialogue">"레오는... 매번 이런 실패와 굶주림 속에서 가족을 먹여 살려야 했구나. 강한 것은 편한 것이 아니었어. <span class="highlight">강함에는 강함만의 무게가 있었던 거야.</span> 실패의 무게, 책임의 무게, 굶주림의 무게..."</span> 루루는 포식자의 삶이 결코 쉽지 않다는 것을 깨달았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">서로의 눈물</span>
+        <h2>마법의 숲에서의 만남</h2>
+        <p>해가 중천에 떴을 무렵, 토끼의 몸을 한 레오와 사자의 몸을 한 루루는 은빛 연못가에서 우연히 마주쳤습니다. 그것은 하모니아에서 가장 신비로운 장소였습니다. 물에 자신의 진짜 모습이 비친다는 전설이 있는 곳이었지요. 실제로 연못에는 두 동물의 현재 모습과 함께, 희미하게 원래 모습의 그림자도 비치고 있었습니다.</p>
+        <p>둘은 한동안 서로를 바라보았습니다. 연못에 비친 두 모습 — 사자의 몸속에 담긴 토끼의 영혼, 토끼의 몸속에 담긴 사자의 영혼. 그 모습이 너무나 기이하면서도 어딘가 슬퍼 보였습니다. 같은 상황을 겪고 있으면서도, 전혀 다른 고통을 느끼고 있었던 것입니다.</p>
+        <p>레오가 먼저 입을 열었습니다. 토끼의 작은 목소리로. <span class="dialogue">"루루, 나... 미안해. 네가 비겁하다고 생각했어. 도망만 치니까 한심하다고, 살아 있는 게 아니라고. 근데... 아니었어. 네 몸은 <span class="highlight">도망치기 위해 완벽하게 설계된 생존 기계</span>였어. 360도로 듣는 귀, 폭발적인 힘의 뒷다리, 작고 빠른 몸... 전부 살아남기 위한 진화의 결과물이었던 거야."</span></p>
+        <p>루루도 눈물을 흘렸습니다. 사자의 큰 눈에서 굵은 눈물이 떨어졌습니다. <span class="dialogue">"나도 미안해, 레오. 네가 잔인한 폭군이라고만 생각했어. 약한 동물들을 괴롭히는 게 즐거워서 사냥하는 줄 알았어. 근데 사냥이... 이렇게 힘든 거였을 줄 몰랐어. <span class="highlight">실패하고, 굶주리고, 그래도 포기하지 않아야 하는 삶</span>이었을 줄."</span></p>
+        <p>두 동물은 은빛 연못가에 나란히 앉았습니다. 토끼의 몸을 한 사자와 사자의 몸을 한 토끼. 자연에서는 절대 나란히 앉을 수 없는 두 존재가. <span class="dialogue">"우리 둘 다... 자기만의 전쟁을 하고 있었던 거야."</span> <span class="highlight">은빛 연못에 비친 두 그림자가 햇빛에 반짝였고, 처음으로 두 영혼은 서로의 생태적 무게를 이해하게 되었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">뜻밖의 동행자들</span>
+        <h2>기린 지노와 펭귄 피피</h2>
+        <p>두 동물이 은빛 연못가에서 대화를 나누고 있을 때, 숲 너머에서 특이한 소리가 들려왔습니다. 발소리치고는 너무 높은 곳에서 나뭇가지가 부러지는 소리였습니다. <span class="dialogue">"안녕하세요! 혹시 마법의 숲 어디쯤 와 있는 건지 아시나요? 길을 좀 잃어서요."</span> 나무 위로 쑥 올라온 긴 목의 주인공은 기린 지노였습니다.</p>
+        <p>지노의 목은 무려 2미터가 넘었습니다. <span class="highlight">기린의 목에는 다른 포유류와 마찬가지로 7개의 경추(목뼈)만 있지만, 각 경추가 25cm 이상으로 길어서 이렇게 긴 목이 가능한 것입니다.</span> 수백만 년의 진화가 빚어낸 걸작이었지요.</p>
+        <p><span class="dialogue">"그리고 저도요! 위쪽이 아니라 아래쪽도 좀 봐주세요!"</span> 지노의 발 아래에서 뒤뚱뒤뚱 걸어온 것은 펭귄 피피였습니다. 남극에서 온 교환학생이었지요. 피피는 하모니아의 더운 날씨에 힘들어하면서도 호기심 가득한 눈으로 주변을 둘러보고 있었습니다.</p>
+        <p>지노는 레오와 루루의 이상한 상황을 듣고 깊은 생각에 잠겼습니다. <span class="dialogue">"몸이 바뀌었다고요? 아, 그럼 아주 중요한 것을 깨달을 수 있는 기회네요. 생물학에서 가장 아름다운 진실 말이에요."</span> <span class="dialogue">"뭔데요?"</span> 레오와 루루가 동시에 물었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">모든 생명체의 몸은 이유 없이 만들어진 게 아니라는 것!</span> 모든 신체 구조에는 진화적 이유가 있어요. 환경에 적응하기 위해, 생존하기 위해, 수백만 년에 걸쳐 다듬어진 결과물이지요. 이것을 '적응'이라고 해요."</span> 이렇게 네 동물 — 토끼 몸의 사자, 사자 몸의 토끼, 철학자 기린, 유쾌한 펭귄 — 은 세상에서 가장 특별한 여행 동반자가 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">진화의 비밀</span>
+        <h2>몸은 환경이 쓴 편지다</h2>
+        <p>네 동물은 마법의 숲을 걸으며 지노의 '진화 수업'을 듣게 되었습니다. 지노는 걸으면서 높은 나뭇잎을 따 먹으며 설명을 시작했습니다.</p>
+        <p><span class="dialogue">"자, 여러분. 제 목이 왜 이렇게 긴지 아세요? 단순히 높은 데 있는 잎을 먹으려고요? 그것도 맞지만, 더 깊은 이유가 있어요."</span> 지노가 물었습니다. <span class="dialogue">"아프리카 초원에서는 건기에 풀이 부족할 때가 많아요. 그때 높은 나무의 잎사귀를 먹을 수 있었던 기린들이 살아남았지요. <span class="highlight">같은 종 내에서도 목이 조금 더 긴 개체들이 더 많이 살아남아 자손을 남겼고, 그 자손들도 긴 목 유전자를 물려받았어요. 수만 년, 수백만 년에 걸쳐 이 과정이 반복되면서</span> 우리 기린은 이렇게 멋진 목을 갖게 된 거예요. 이것이 바로 자연선택이에요."</span></p>
+        <p>피피도 신이 나서 끼어들었습니다. <span class="dialogue">"저는 새인데 날지 못해요. 슬프냐고요? 전혀요! 남극에서는 하늘을 나는 것보다 바다를 헤엄치는 게 백만 배 더 중요해요! 제 날개는 세상에서 가장 완벽한 지느러미예요! <span class="highlight" data-tooltip="펭귄의 적응(Penguin Adaptation): 유선형 몸은 물속 저항 감소, 방수 깃털은 체온 유지, 지방층은 단열재 역할. 극한 환경에 적응한 진화의 결과">유선형 몸, 방수 깃털, 지방층</span> — 모두 영하 40도의 바다에서 물고기를 잡기 위한 완벽한 설계지요."</span></p>
+        <p>지노가 빙긋 웃으며 레오를 바라보았습니다. <span class="dialogue">"자, 이제 토끼의 몸을 가진 친구에게 말해줄게요. <span class="highlight">토끼의 긴 귀는 사방의 소리를 듣는 고성능 레이더이고, 강한 뒷다리는 포식자를 순간적으로 따돌리는 로켓 엔진이며, 작은 몸은 좁은 곳에 숨을 수 있는 은신 장치예요.</span> 또한 옆을 향한 눈은 거의 360도 시야를 제공하지요. 모든 것이 '도망치는 삶'을 위해 완벽하게 설계된 거예요. 비겁함이 아니라 정교한 생존 전략이에요."</span></p>
+        <p>루루는 사자의 몸이면서도 코끝이 찡했습니다. 자신이 그토록 부끄러워했던 자기 몸이, 사실은 자연이 수백만 년에 걸쳐 빚어낸 걸작이었다는 것을 깨달은 순간이었습니다. <span class="dialogue">"내 몸이... 걸작이었구나."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">몸의 지도, 삶의 나침반</span>
+        <h2>구조와 기능이 만나는 곳</h2>
+        <p>네 동물은 마법의 숲을 돌아다니며 다른 동물 친구들의 이야기도 듣기로 했습니다. 지노는 이것을 <span class="highlight" data-tooltip="구조와 기능의 관계(Structure-Function Relationship): 생물의 신체 구조는 그 생물이 살아가는 환경과 생활 방식에 맞게 진화함. 형태가 기능을 결정한다는 생물학의 핵심 원리">'구조와 기능의 관계'</span>라고 불렀습니다. 생물의 몸 구조는 그 생물이 어떻게 살아가는지와 밀접하게 연결되어 있다는 뜻이었지요.</p>
+        <p>두더지 모리가 땅속에서 얼굴을 내밀며 말했습니다. <span class="dialogue">"제 눈이요? 거의 안 보여요. 퇴화했다고 하지요. 하지만 괜찮아요! 땅속에서 눈이 무슨 소용이에요? 어차피 깜깜한데. 대신 제 코와 수염은 땅속의 진동을 읽을 수 있어요. <span class="highlight">앞발은 삽처럼 생겨서 하루에 제 몸길이의 50배 이상을 파낼 수 있지요.</span> 보이지 않아도 땅속의 모든 것을 '느낄' 수 있어요."</span></p>
+        <p>카멜레온 카미도 나뭇가지에서 끼어들었습니다. <span class="dialogue">"제 눈은 각각 따로 움직여요. 왼쪽 눈으로 앞을 보면서 오른쪽 눈으로 뒤를 볼 수 있지요. 동시에 거의 360도를 볼 수 있어요. 느리지만, 모든 것을 보면서 정확한 순간에 혀를 쏴서 벌레를 잡아요. <span class="highlight">제 혀는 몸길이의 두 배나 되고, 0.07초 만에 발사되지요.</span> 빠름에도 여러 종류가 있는 거예요."</span></p>
+        <p>나무늘보 슬로가 나무에 거꾸로 매달린 채 느릿느릿 말했습니다. <span class="dialogue">"게으르다고요? 아니에요. 저는 <span class="highlight">에너지 절약의 달인</span>이에요. 하루에 고작 잎사귀 몇 장만 먹어도 살 수 있어요. 느린 게 아니라, 최소한의 에너지로 최대한 오래 사는 전략이지요. 근육이 적어서 포식자들이 저를 먹어도 영양가가 별로 없어요. 그래서 굳이 저를 사냥하려 하지 않지요."</span></p>
+        <p>토끼 몸의 레오는 하나하나 들을 때마다 감탄이 터져 나왔습니다. <span class="dialogue">"모든 동물이... 자기만의 전략이 있구나. 빠른 것만이 답이 아니고, 강한 것만이 답이 아닌 거야. 모든 생존 방식에는 그만의 가치가 있어."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">마법이 풀리다</span>
+        <h2>원래의 나로 돌아가는 순간</h2>
+        <p>하늘이 주황빛과 보랏빛으로 물드는 해 질 녘이 되었습니다. 하루 동안 네 동물은 마법의 숲 구석구석을 돌아다니며 수많은 동물들을 만났습니다. 각자의 환경에 맞게 적응한 놀라운 신체 구조들을 보았지요. 은빛 연못 위에 첫 번째 별이 떠오르자 연못이 환하게 빛나기 시작했습니다. 마법이 풀릴 시간이 다가온 것입니다.</p>
+        <p>오울이 떡갈나무에서 소리 없이 날아 내려왔습니다. 올빼미의 깃털은 특수한 구조로 되어 있어서 날 때 거의 소리가 나지 않습니다. <span class="dialogue">"때가 되었구나. 하루가 어땠니? 서로의 몸으로 살아본 느낌이."</span></p>
+        <p>토끼 몸의 레오가 먼저 말했습니다. <span class="dialogue">"무서웠어요. 정말 무서웠어요. 모든 소리가 위협으로 느껴지고, 모든 그림자가 포식자로 보였어요. 하지만 그 무서움 속에서 살아남는 법을 배운 것 같아요. 루루의 몸은... 약한 게 아니라, <span class="highlight">살아남기 위해 수백만 년에 걸쳐 완벽하게 다듬어진 거였어요.</span> 피식자의 삶에도 위대함이 있었어요."</span></p>
+        <p>사자 몸의 루루도 입을 열었습니다. <span class="dialogue">"무거웠어요. 힘이 센 만큼, 그 힘을 유지하기 위해 감당해야 하는 것들이 정말 많았어요. 사냥의 실패, 굶주림, 가족을 먹여 살려야 하는 책임... <span class="highlight">포식자의 삶도 결코 쉽지 않았어요.</span> 강함의 무게를 처음 알게 되었어요."</span></p>
+        <p>오울의 눈에서 다시 한번 은빛 가루가 쏟아져 나왔습니다. 따뜻한 빛이 두 동물을 감싸 안았고, 세상이 다시 빙글빙글 돌았습니다. 눈을 떴을 때 레오는 자신의 황금빛 갈기와 묵직한 앞발을, 루루는 자신의 부드러운 하얀 털과 긴 귀를 확인할 수 있었습니다. <span class="dialogue">"고마워, 오울 현자님."</span> 두 동물이 동시에 말했습니다. 오울이 눈을 찡긋하며 웃었습니다. <span class="dialogue">"고마워해야 할 건 서로에게 하렴. 너희는 오늘 생물학에서 가장 중요한 교훈을 배웠단다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">다름이 만드는 완전한 세상</span>
+        <h2>새로운 하모니아</h2>
+        <p>다음 날 아침, 하모니아 왕국에는 이전과는 다른 바람이 불었습니다. 하늘이 유난히 맑았고, 모든 동물들이 뭔가 변화를 느끼고 있었습니다. 사자 레오가 바위 왕좌 위에서 선언했습니다. 하지만 그 목소리는 예전의 거만함 대신 따뜻함이 담겨 있었습니다.</p>
+        <p><span class="dialogue">"하모니아의 모든 동물들이여! 오늘부터 이 왕국에는 새로운 법이 세워진다! <span class="highlight">이 왕국에는 강한 동물도, 약한 동물도 없다. 오직 자기만의 방식으로 살아남는 지혜로운 동물들만 있을 뿐이다!</span> 모든 신체 구조에는 이유가 있고, 모든 생존 전략에는 가치가 있다!"</span></p>
+        <p>루루도 레오 옆에 당당하게 서서 말했습니다. 예전 같았으면 상상도 못했을 일이었지요. <span class="dialogue">"저의 긴 귀는 세상의 모든 소리를 듣는 고성능 레이더이고, 저의 뒷다리는 위험을 순식간에 벗어나는 로켓 엔진이에요. <span class="highlight">이 몸은 자연이 수백만 년에 걸쳐 저에게 준 최고의 선물이에요!</span> 저는 더 이상 제 몸을 부끄러워하지 않을 거예요."</span></p>
+        <p>지노가 긴 목을 흔들며 덧붙였습니다. <span class="dialogue">"다름은 약점이 아니에요. <span class="highlight">환경이 빚어낸 생존의 예술</span>이지요! 기린의 긴 목, 펭귄의 지느러미 날개, 두더지의 삽 같은 앞발, 카멜레온의 독립적인 눈... 모두가 자신만의 환경에서 살아남기 위한 최적의 설계예요."</span></p>
+        <p>그날 저녁, 하모니아의 하늘에는 유난히 많은 별이 떴습니다. 떡갈나무 위에서 오울이 웃으며 중얼거렸습니다. <span class="dialogue">"이것이 바로 하모니아 — 다름이 만들어내는 진짜 조화란다. 먹이사슬은 계급이 아니라 연결이고, 포식과 피식은 적대가 아니라 순환이야. 모든 생명은 서로 연결되어 있고, 그 연결 속에서 각자의 역할을 수행하지."</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(212, 160, 23, 0.15); border-radius: 16px;">
+          <strong style="color: #8b6914; font-size: 20px;">🦁 「다름은 약점이 아니라, 환경에 맞춘 생존 전략이다. 그리고 그 전략을 이해하는 것이, 진정한 존중의 시작이다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <script>
+    const sectionBackgrounds = {};
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    sections.forEach((section, index) => {
+      const bg = section.getAttribute('data-bg');
+      if (bg) {
+        sectionBackgrounds[index] = bg;
+      }
+    });
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0.3
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+        if (entry.isIntersecting) {
+          if (card) card.classList.add('active');
+          const sectionIndex = Array.from(sections).indexOf(entry.target);
+          if (sectionBackgrounds[sectionIndex]) {
+            mapContainer.style.backgroundImage = `url('${sectionBackgrounds[sectionIndex]}')`;
+          }
+        } else {
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      sectionObserver.observe(section);
+    });
+
+    function updateBackground() {
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+      if (scrollPosition < windowHeight * 0.5) {
+        mapContainer.style.backgroundImage = "url('/images/창작도서/창작생물02/00.jpg')";
+        return;
+      }
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < windowHeight * 0.5 && rect.bottom > windowHeight * 0.5) {
+          if (sectionBackgrounds[index]) {
+            mapContainer.style.backgroundImage = `url('${sectionBackgrounds[index]}')`;
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateBackground);
+    updateBackground();
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/bio02_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

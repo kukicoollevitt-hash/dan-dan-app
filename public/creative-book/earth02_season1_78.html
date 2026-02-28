@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌋 펄펄! 지구의 심장이 뛰는 소리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #E64A19 0%, #BF360C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(230, 74, 25, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(230, 74, 25, 0.15);
+      color: #BF360C;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #E64A19;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #E64A19;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(230, 74, 25, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #BF360C;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #BF360C;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #BF360C;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+      pointer-events: auto;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FF8A65;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      color: #FF8A65;
+      font-size: 14px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 교훈 박스 */
+    .moral-box {
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+      border-left: 4px solid #E64A19;
+      padding: 20px;
+      border-radius: 0 16px 16px 0;
+      margin-top: 20px;
+    }
+
+    .moral-box h3 {
+      color: #E64A19;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .moral-box p {
+      color: #5D4037;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    /* 닫기 버튼 */
+    .close-btn { display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+      transform: scale(1.1);
+    }
+
+    /* 네비게이션 */
+    .nav-indicator {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-dot.active {
+      background: #FF5722;
+      transform: scale(1.3);
+    }
+
+    .nav-dot:hover {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .nav-indicator {
+        right: 10px;
+      }
+    }
+
+    /* 네비게이션 버튼 스타일 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .nav-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 네비게이션 -->
+  <div class="nav-indicator">
+    <div class="nav-dot active" data-section="0"></div>
+    <div class="nav-dot" data-section="1"></div>
+    <div class="nav-dot" data-section="2"></div>
+    <div class="nav-dot" data-section="3"></div>
+    <div class="nav-dot" data-section="4"></div>
+    <div class="nav-dot" data-section="5"></div>
+    <div class="nav-dot" data-section="6"></div>
+    <div class="nav-dot" data-section="7"></div>
+    <div class="nav-dot" data-section="8"></div>
+    <div class="nav-dot" data-section="9"></div>
+    <div class="nav-dot" data-section="10"></div>
+  </div>
+
+  <!-- 콘텐츠 -->
+  <div id="content">
+
+    <!-- 인트로 -->
+    <section class="intro-section" data-bg="/images/창작도서/창작지구과학02/00.jpg">
+      <div class="intro-content">
+        <h1>🌋 펄펄! 지구의 심장이 뛰는 소리를 들어본 적 있나요?</h1>
+        <p class="subtitle">— 마그마가 속삭이는 뜨거운 지구의 심장 이야기 —<br>교과기반 창작도서 · 지구과학 02 · 중1-2</p>
+
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🔥 마그마 소녀 마기</strong> - "나는 영원히 갇혀 있을 수 없어! 저 넓은 세상을 꼭 보고 말 거야!" 온도 1200도의 불꽃 머리카락을 찰랑이는 호기심 많은 소녀. 지구 깊숙한 곳에서 태어나 지표면 밖 세상을 꿈꾸는 뜨거운 열정의 주인공입니다.</p>
+          <p><strong>🪨 크러스트 대장</strong> - "내가 버티는 한, 이 땅은 절대 흔들리지 않는다! 질서가 최고야!" 지구의 껍질인 지각을 지키는 단단하고 고집 센 수비대장. 변화를 두려워하지만, 사실 누구보다 지구를 아끼는 책임감 강한 바위 거인입니다.</p>
+          <p><strong>🌀 맨틀 어머니</strong> - "천천히, 하지만 반드시 흘러가는 것. 그것이 우주의 춤이란다." 거대한 몸으로 마기를 품어주는 대류의 여신. 느릿느릿 흐르는 꿀처럼 부드러운 마음을 가졌으며, 지구의 거대한 순환을 이끄는 지혜로운 어머니입니다.</p>
+          <p><strong>💎 코어 할아버지</strong> - "이 행성의 모든 에너지는 바로 내 심장 박동에서 시작되지." 지구의 가장 깊은 곳, 내핵에 사는 철과 니켈의 원로. 태양보다 뜨거운 열기를 간직한 채 수십억 년 동안 지구의 중심을 잡아온 과묵한 심장입니다.</p>
+          <p><strong>🏔️ 볼카노 형제</strong> - 형 분노: "다 비켜! 화끈하게 터뜨려줄 테니까! 뻥!" 동생 조용이: "형, 살살해. 나처럼 우아하게 흘러가는 게 멋진 거야. 스르르~" 마기가 지표면에 닿아 탄생한 쌍둥이 화산. 성격은 다르지만 새로운 땅을 만드는 조각가들입니다.</p>
+          <p><strong>🌫️ 애쉬 요정</strong> - "지금은 나를 미워해도 괜찮아. 언젠가 내가 피울 꽃을 보게 될 거야." 화산 폭발과 함께 태어난 회색빛 요정. 처음엔 하늘을 가려 미움받지만, 결국 대지를 비옥하게 만드는 반전의 매력을 가졌습니다.</p>
+        </div>
+
+        <p class="scroll-hint">▼ 스크롤하여 이야기를 시작하세요 ▼</p>
+      </div>
+    </section>
+
+    <!-- 1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🕳️ 코어 할아버지의 심장박동</span>
+        <h2>아무도 모르는 뜨거운 요람</h2>
+        <p>여러분이 딛고 서 있는 신발 아래, 아주 깊고 깊은 곳에 무엇이 있는지 상상해 본 적 있나요? 우리가 사는 땅은 사실 커다란 사과에 비유하면 껍질보다도 얇은 막에 불과하답니다. 평균 두께가 약 35km인 대륙 지각이나 7km인 해양 지각은 지구 반지름 6,371km에 비하면 정말 얇디얇은 껍데기에요. 과학자들은 지구 내부를 직접 파고 들어갈 수 없기 때문에 '<span class="highlight">지진파</span>'를 이용해 지구 내부 구조를 연구합니다. 지진파가 지구 내부를 통과하면서 속도와 방향이 바뀌는 것을 분석하면 마치 초음파로 뱃속 아기를 보듯 지구 내부를 들여다볼 수 있지요. 지진파에는 '<span class="highlight">P파</span>'와 '<span class="highlight">S파</span>'가 있는데, 특히 S파는 액체를 통과하지 못한다는 특성이 있어서 외핵이 액체임을 알 수 있었습니다.</p>
+        <p>그 얇은 껍질 아래, 상상조차 할 수 없는 뜨거운 세계의 중심에 코어 할아버지가 살고 계셨어요.<br><br><span class="dialogue">"허허, 오늘도 내 심장은 아주 힘차게 뛰고 있구나."</span><br><br>할아버지의 몸은 단단한 '<span class="highlight">철</span>'과 '<span class="highlight">니켈</span>'로 이루어져 있었고, 온도는 무려 <span class="highlight">5,500~6,000도</span>나 되었어요. 이것은 태양 표면 온도(약 5,500°C)와 비슷하거나 더 뜨거운 열기입니다. 하지만 지구 중심의 압력은 약 360만 기압(360 GPa)에 달해서, 이렇게 뜨거운 온도에서도 '<span class="highlight">내핵</span>'은 고체 상태를 유지합니다. 이 열기는 지구가 처음 태어날 때 소행성 충돌과 '<span class="highlight">중력 분화</span>' 과정에서 발생한 '<span class="highlight">원시열</span>'과, 우라늄(²³⁸U), 토륨(²³²Th), 칼륨(⁴⁰K) 같은 '<span class="highlight">방사성 동위원소</span>'의 '<span class="highlight">붕괴열</span>'이 합쳐진 것입니다.</p>
+        <p>할아버지의 발치에서는 액체로 된 '<span class="highlight">외핵</span>'이 출렁이며 노래를 불렀습니다. 외핵의 두께는 약 2,260km이며, 액체 상태의 철-니켈 합금이 '<span class="highlight">대류</span>'하면서 빙글빙글 돌고 있어요. 이 전도성 액체의 운동이 '<span class="highlight">지구 다이나모</span>' 효과를 일으켜 '<span class="highlight">지구 자기장</span>'을 만들어냅니다. 그 위로는 끝이 보이지 않는 거대한 맨틀의 바다가 펼쳐져 있었습니다. 바로 그 뜨거운 경계선, '<span class="highlight">핵-맨틀 경계</span>'에서 작고 붉은 불꽃 하나가 피어올랐습니다.<br><br><span class="dialogue">"아함~ 잘 잤다!"</span><br><br>불꽃 머리카락을 찰랑이며 눈을 뜬 소녀, 마기였어요. 마기는 <span class="highlight">1,200도</span>의 뜨거운 열정을 품은 '<span class="highlight">마그마</span>' 소녀였지요. 마그마는 지하 깊은 곳에서 암석이 녹아 형성된 고온의 용융 물질입니다.</p>
+        <p><span class="dialogue">"할아버지, 저 위에는 뭐가 있어요? 여기는 너무 좁고 답답해요!"</span><br><br>마기가 반짝이는 눈으로 묻자, 코어 할아버지는 나직하게 대답하셨습니다.<br><br><span class="dialogue">"저 위에는 맨틀 어머니의 너른 품이 있고, 그 너머엔 아주 차갑고 신비로운 세상이 있단다. 우리는 직접 볼 수 없지만, '<span class="highlight">불연속면</span>'이라는 경계를 지나면 물질의 성질이 확 바뀐단다. 외핵과 맨틀 사이의 '<span class="highlight">구텐베르크 불연속면</span>'을 지나면 물질이 액체에서 고체로 바뀌지. 하지만 그곳에 가려면 아주 긴 여행을 견뎌야 해. 준비됐니?"</span><br><br>마기는 주먹을 불끈 쥐었습니다.<br><br><span class="dialogue">"네! 전 절대 여기서 멈추지 않을 거예요!"</span></p>
+      </div>
+    </section>
+
+    <!-- 2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🌀 맨틀 어머니의 부드러운 손길</span>
+        <h2>느릿느릿 춤추는 여신</h2>
+        <p>마기가 여행을 시작한 곳은 지구에서 가장 넓은 정원, '<span class="highlight">맨틀</span>'이었어요. 이곳은 맨틀 어머니의 영토였지요. 어머니는 지구 부피의 약 <span class="highlight">84퍼센트</span>나 차지하는 커다란 몸을 가지고 계셨어요. 맨틀의 두께는 약 2,900km이며, 주로 '<span class="highlight">감람석</span>', '<span class="highlight">휘석</span>', '<span class="highlight">석류석</span>' 같은 '<span class="highlight">규산염 광물</span>'로 이루어져 있습니다. 신기하게도 어머니의 몸은 딱딱한 바위 같으면서도, 아주 천천히 흐를 수 있는 부드러운 꿀 같기도 했답니다. 이것은 맨틀이 '<span class="highlight">고체</span>'이지만 지질학적 시간 규모에서는 마치 '<span class="highlight">플라스틱</span>'처럼 변형될 수 있기 때문이에요. 이런 성질을 '<span class="highlight">점탄성</span>'이라고 합니다.</p>
+        <p><span class="dialogue">"어머니, 왜 자꾸 위로 올라가는 기분이 들죠?"</span><br><br>마기가 묻자 맨틀 어머니는 우아하게 몸을 움직이며 대답하셨어요.<br><br><span class="dialogue">"이건 나의 춤이란다, 마기야. 아래에 계신 코어 할아버지의 열기가 나를 데우면 나는 '<span class="highlight">밀도</span>'가 낮아져서(열팽창) 가벼워지고, 그래서 위로 올라가게 되지. 저 위 차가운 땅 근처에서 식으면 다시 밀도가 높아져서 무거워지고 아래로 내려오는 거란다. 이것을 '<span class="highlight">맨틀 대류</span>'라고 부르지. '<span class="highlight">열대류</span>'의 원리야."</span><br><br>맨틀 대류는 냄비에서 물을 끓일 때 일어나는 대류와 같은 원리입니다. 뜨거운 물질이 올라가고 차가운 물질이 내려오는 순환이지요.</p>
+        <p>어머니의 춤은 상상할 수 없을 만큼 느렸어요. 맨틀의 유동 속도는 연간 약 1~10cm로, <span class="highlight">손톱이 자라는 속도</span>(연간 약 3cm)와 비슷합니다. 그러나 이 느린 흐름이 수억 년에 걸쳐 축적되면 대륙을 수천 킬로미터 이동시킬 수 있어요. 이것이 '<span class="highlight">판 구조론</span>'의 원동력입니다. 맨틀의 상부, 특히 깊이 100~200km 부근에는 '<span class="highlight">연약권</span>'이라 불리는 비교적 부드러운 층이 있어서 그 위의 '<span class="highlight">암석권</span>'이 미끄러지듯 움직일 수 있습니다. 마기는 어머니의 따뜻한 흐름인 '<span class="highlight">맨틀 플룸</span>'을 타고 천천히, 아주 천천히 위로 떠올랐습니다. 맨틀 플룸은 핵-맨틀 경계에서 시작해 버섯 모양으로 올라오는 뜨거운 물질의 기둥이에요.<br><br><span class="dialogue">"언젠가 나도 어머니처럼 위대한 힘을 가질 수 있을까요?"</span><br><br><span class="dialogue">"그럼, 마기야. 너는 내 가장 뜨거운 숨결이니까. 하지만 조심하렴, 저 위에는 아주 완고한 파수꾼이 기다리고 있단다."</span></p>
+      </div>
+    </section>
+
+    <!-- 3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">🔥 크러스트 대장과의 대결</span>
+        <h2>갇힌 불꽃의 탈출 작전</h2>
+        <p>마기가 위로 올라갈수록 주변 '<span class="highlight">압력</span>'이 낮아지고 온도도 조금씩 변화했습니다. 지구 내부에서 압력은 깊이 1km당 약 30MPa(약 300기압)씩 증가하므로, 위로 올라갈수록 압력이 줄어들지요. 압력이 감소하면 암석의 '<span class="highlight">융점</span>'도 낮아집니다. 이것을 '<span class="highlight">감압 융융</span>'이라고 해요. 평소에는 녹지 않던 맨틀 암석이 위로 올라오면서 압력이 줄어들자 부분적으로 녹아 마그마가 되는 것입니다. 또한 마그마 속에 녹아있던 '<span class="highlight">휘발 성분</span>'들, 주로 '<span class="highlight">수증기</span>', '<span class="highlight">이산화탄소</span>', '<span class="highlight">이산화황</span>' 같은 가스들이 압력 감소에 따라 <span class="highlight">"보글보글"</span> 기포로 변하기 시작했어요. 마치 톡 쏘는 탄산음료의 뚜껑을 열기 직전처럼, 마기의 몸은 터질 듯한 에너지로 가득 찼습니다.<br><br><span class="dialogue">"조금만 더... 조금만 더 가면 빛이 보일 거야!"</span></p>
+        <p>마그마가 지각 근처에 도달하면 '<span class="highlight">마그마 방</span>'이라는 공간에 모이게 됩니다. 마그마 방은 지하 수 km 깊이에 있는 커다란 용융 물질 저장소예요. 이곳에서 마그마는 천천히 식으면서 결정이 자라기도 하고, 가스가 축적되기도 합니다. 마그마의 '<span class="highlight">점성</span>'에 따라 성질이 달라지는데, 점성이 높은(끈적한) 마그마는 가스가 쉽게 빠져나가지 못해 압력이 크게 쌓이고, 점성이 낮은(묽은) 마그마는 가스가 쉽게 빠져나갑니다. 점성은 마그마의 '<span class="highlight">화학 조성</span>', 특히 '<span class="highlight">이산화규소</span>' 함량과 관련이 깊습니다. SiO₂ 함량이 높은 '<span class="highlight">규장질</span>' 마그마는 점성이 높고, SiO₂ 함량이 낮은 '<span class="highlight">고철질</span>' 마그마는 점성이 낮습니다.</p>
+        <p>하지만 그 길을 가로막는 커다란 그림자가 나타났습니다. 바로 지각 수비대장, 크러스트 대장이었어요. 대장은 두꺼운 '<span class="highlight">화강암</span>' 갑옷을 입고 팔짱을 낀 채 서 있었습니다. 화강암은 SiO₂ 함량이 약 70%로 높은 '<span class="highlight">심성암</span>'이에요.<br><br><span class="dialogue">"어딜 감히 올라오느냐! 이 위는 나 크러스트 대장이 지키는 평화로운 땅이다. 너 같은 뜨거운 녀석이 올라오면 '<span class="highlight">지각 균열</span>'이 생기고 질서가 깨지고 만다. 어서 돌아가!"</span><br><br>마기는 지지 않고 외쳤습니다.<br><br><span class="dialogue">"대장님! 저도 세상을 보고 싶어요. 제 안의 열기가 자꾸 밖으로 나가라고 소리친단 말이에요! 이것은 자연의 섭리예요!"</span><br><br><span class="dialogue">"안 돼! 안정이야말로 지구의 미덕이다. 흔들리는 건 용납할 수 없어!"</span><br><br>대장은 더 단단하게 바위 벽을 쌓았습니다. 마기는 좁은 바위 틈새를 찾아 비집고 들어가고, 대장은 그 틈을 메우며 치열한 숨바꼭질이 이어졌습니다. 하지만 마기의 몸속 가스들이 만들어내는 '<span class="highlight">마그마 압력</span>'은 점점 더 강력해져, 단단한 지각판조차 부르르 떨게 만들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">🌋 "뻥!" 하고 터진 세상</span>
+        <h2>대지의 커다란 기침</h2>
+        <p>마침내 한계가 찾아왔습니다. 마기의 열정이 크러스트 대장의 고집을 넘어서는 순간이었지요. 마그마 방에 모인 마그마와 가스의 압력이 상부 암석의 '<span class="highlight">암석 강도</span>'를 초과하자, 대장의 단단한 갑옷에 <span class="highlight">"쩍!"</span> 하고 커다란 금이 가기 시작했습니다. 이 금들이 연결되어 '<span class="highlight">화산 통로</span>' 또는 '<span class="highlight">화도</span>'가 형성됩니다. 화산 폭발은 이 화도를 통해 마그마, 가스, 화산쇄설물이 지표로 분출되는 현상이에요.<br><br><span class="dialogue">"이, 이럴 수가! 내 갑옷이...! '<span class="highlight">인장 강도</span>'가 버티지 못하고 있어!"</span><br><br>대장이 당황하는 사이, 마기는 온 힘을 다해 그 틈을 뚫고 솟구쳤습니다.</p>
+        <p><span class="highlight">"쿠구구궁— 쾅!"</span><br><br>어마어마한 굉음과 함께 마기가 지표면 밖으로 튀어 올랐습니다. 화산 폭발의 '<span class="highlight" data-tooltip="화산폭발지수(VEI): 화산 폭발의 강도를 0~8 단계로 나타낸 지수. 분출량과 높이를 기준으로 함">화산폭발지수</span>'는 0에서 8까지로 분류되는데, 작은 분출은 VEI 1, 역사상 가장 큰 폭발인 토바 화산은 VEI 8에 해당합니다. 그 순간 마기는 더 이상 '<span class="highlight">마그마</span>'가 아니었어요. 지표면에 도달해 공기와 처음 만난 마기는 '<span class="highlight">용암</span>'이라는 새로운 이름을 얻게 되었지요. 마그마가 지표에 나오면 용암이라 부르고, 그 차이는 단순히 위치(지하 vs 지표)의 차이입니다.</p>
+        <p>이때 마기에게서 두 명의 쌍둥이 동생이 태어났습니다. 바로 볼카노 형제였어요! 형 '분노'는 SiO₂ 함량이 높은 '<span class="highlight">규장질 마그마</span>'로, 점성이 높아 가스가 갇혀 있다가 "<span class="highlight">폭발성 분화</span>"를 일으켰습니다. 화산재, '<span class="highlight">화산탄</span>', '<span class="highlight">화산력</span>' 같은 '<span class="highlight">화산쇄설물</span>'을 하늘 높이 쏘아 올리며<br><br><span class="dialogue">"뻥!"</span><br><br>하고 화끈하게 등장했습니다. 반면 동생 '조용이'는 SiO₂ 함량이 낮은 '<span class="highlight">고철질 마그마</span>'로, 점성이 낮아 가스가 쉽게 빠져나가며 '<span class="highlight">비폭발성 분화</span>'를 일으켰어요. 꿀처럼 매끄러운 몸으로<br><br><span class="dialogue">"스르르~"</span><br><br>흐르며 평화롭게 땅을 적셨지요. 크러스트 대장은 갈라진 갑옷 사이로 솟구치는 불꽃을 보며 멍하니 중얼거렸습니다.<br><br><span class="dialogue">"이게... 지구의 숨 쉬기였다고? '<span class="highlight">탈가스</span>'라는 자연스러운 과정이었어? 나는 그저 막는 게 정의인 줄 알았는데."</span></p>
+      </div>
+    </section>
+
+    <!-- 5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🔴 파괴 뒤에 숨은 창조의 손길</span>
+        <h2>붉은 강물의 행진</h2>
+        <p>지표면으로 나온 마기, 이제는 용암이 된 소녀는 생전 처음 보는 풍경에 입을 다물지 못했습니다. 눈부신 태양, 시원한 바람, 그리고 끝없이 펼쳐진 푸른 바다! 하지만 감탄도 잠시, 마기의 몸은 '<span class="highlight">중력</span>'을 따라 산 아래로 흘러내려 가기 시작했습니다. <span class="highlight">약 1,100~1,200°C</span>의 붉은 강물이 흐르는 길목마다 나무들은 불꽃이 되고 바위들은 녹아내렸습니다. 용암류의 속도는 점성에 따라 다른데, 점성이 낮은 현무암질 용암은 시속 수십 km까지 흐를 수 있고, 점성이 높은 유문암질 용암은 거의 움직이지 않습니다.</p>
+        <p><span class="dialogue">"아앗, 안 돼! 내가 지나가는 곳마다 다 타버리잖아!"</span><br><br>마기는 자기가 의도치 않게 모든 것을 부수는 것 같아 슬퍼졌습니다. 그때 동생 조용이가 다정하게 말했습니다.<br><br><span class="dialogue">"누나, 슬퍼하지 마. 우리가 지금은 뜨겁지만, '<span class="highlight">냉각</span>'되고 '<span class="highlight">고화</span>'되면 새로운 땅이 될 거야. '<span class="highlight">화성암</span>'이라는 단단한 바위가 되는 거지."</span><br><br>정말 그랬습니다. 형 분노가 만든 거칠고 뾰족한 <span class="highlight">'아아 용암(aa lava)'</span>과 동생 조용이가 만든 매끄러운 <span class="highlight">'파호이호이 용암(pahoehoe lava)'</span>이 바다에 닿는 순간, 엄청난 수증기와 함께 <span class="highlight">"치이익—"</span> 소리를 내며 급격히 냉각되어 굳어갔습니다. 이렇게 용암이 물에서 빠르게 식으면 '<span class="highlight">베개 용암</span>'이라는 독특한 둥근 구조가 형성됩니다.</p>
+        <p>바다 위로 새로운 땅이 솟아오르고, '<span class="highlight">화산섬</span>'이 만들어졌습니다. 제주도, 하와이, 아이슬란드 같은 아름다운 섬들이 모두 화산 활동으로 탄생한 것입니다. 특히 하와이 같은 섬은 '<span class="highlight">열점</span>' 위를 '<span class="highlight">판</span>'이 이동하면서 화산이 차례로 형성되어 섬의 사슬을 만듭니다. 마기는 깨달았습니다.<br><br><span class="dialogue">"아, 나는 파괴만 하는 게 아니었구나. 나는 낡은 것을 태우고 그 자리에 새로운 생명이 뿌리 내릴 단단한 터전을 만들고 있었어! '<span class="highlight">현무암</span>'으로 이루어진 새 땅이 탄생하고 있어!"</span><br><br>파괴와 창조는 마치 손등과 손바닥처럼 언제나 함께 다니는 단짝이었던 거예요. 지질학에서는 이것을 '<span class="highlight">지각 재순환</span>'이라고 합니다.</p>
+      </div>
+    </section>
+
+    <!-- 6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🏔️ 볼카노 형제의 멋진 작품</span>
+        <h2>대지의 조각가들</h2>
+        <p>시간이 흐르며 마기가 지나간 자리에 멋진 조각 작품들이 생겨났습니다. 화산의 형태는 마그마의 성질에 따라 결정됩니다. 볼카노 형제는 각자의 성격(점성)대로 전혀 다른 모양의 산을 빚어냈지요. 형 분노는 점성이 높은 마그마에서 나온 화산재, 용암, '<span class="highlight">화산력</span>' 등을 겹겹이 쌓아 올려, 일본의 후지산처럼 하늘을 찌를 듯 가파르고 아름다운 <span class="highlight">'성층 화산(stratovolcano)'</span> 또는 '<span class="highlight">복성 화산</span>'을 만들었습니다. 성층 화산은 경사가 30~40도로 가파르고, 폭발성 분화와 용암 분출이 번갈아 일어납니다.<br><br><span class="dialogue">"내 작품은 강렬하고 웅장하지! 다들 나를 보며 경외감을 느낄 거야! 베수비오, 후지산, 피나투보... 모두 내 작품이야!"</span></p>
+        <p>동생 조용이는 점성이 낮은 현무암질 용암이 넓게 퍼지며 쌓여 만들어지는 <span class="highlight">'순상 화산(shield volcano)'</span>을 조각했습니다. 하와이의 마우나로아, 마우나케아처럼 완만한 경사(약 5~10도)를 가진 이 산은 세상에서 가장 큰 덩치를 자랑했지요. 마우나로아는 해저면부터 측정하면 높이가 약 10,000m로, 에베레스트보다 높습니다.<br><br><span class="dialogue">"내 산은 누구나 편안하게 걸어 올라올 수 있어. 느리지만 거대한 평화지. 하와이 사람들은 나를 '<span class="highlight">킬라우에아</span>'라고 부르며 늘 찾아와."</span><br><br>또한 가끔 마그마 방의 마그마가 분출된 후 천장이 지탱되지 못해 푹 꺼지며 커다란 솥 같은 <span class="highlight">'칼데라(caldera)'</span>가 만들어졌습니다. 칼데라는 직경이 수 km에서 수십 km에 달하는 거대한 분화구입니다.</p>
+        <p>백두산의 '<span class="highlight">천지</span>'나 한라산의 '<span class="highlight">백록담</span>'처럼 칼데라에 맑은 물이 고이자 '<span class="highlight">칼데라 호</span>'가 형성되었습니다. 크러스트 대장도 감탄하며 말했습니다.<br><br><span class="dialogue">"내 몸이 부서진 자리에 이런 보석 같은 호수가 생기다니. 너희는 정말 훌륭한 조각가들이로구나. '<span class="highlight">분석구</span>'라는 작은 원뿔형 화산도, '<span class="highlight">용암 대지</span>'도, 모두 너희 작품이야."</span><br><br>화산 지형은 정말 다양합니다. '<span class="highlight">화산 돔</span>'은 점성 높은 용암이 화구 위에 둥글게 쌓인 것이고, '<span class="highlight">화구호</span>'는 화구에 물이 고인 것이며, '<span class="highlight">용암 동굴</span>'은 용암이 흐르면서 만들어진 터널입니다. 제주도의 만장굴이 대표적인 용암 동굴이지요. 맨틀 어머니도 대견한 듯 바람을 보내 조각가들의 땀을 식혀주셨습니다. 지구의 표면은 그렇게 뜨거운 열정이 빚어낸 예술 작품들로 채워져 갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- 7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🌫️ 애쉬의 회색빛 마법</span>
+        <h2>미움받는 요정의 비밀</h2>
+        <p>화산이 폭발할 때, 먼지 구름 사이로 작은 요정 하나가 삐죽 고개를 내밀었습니다. 바로 '<span class="highlight">화산재</span>' 요정, 애쉬였어요. 화산재는 직경 2mm 이하의 작은 입자로, 마그마가 폭발할 때 산산이 부서진 암석과 유리 조각들이에요. 하지만 애쉬는 태어나자마자 모두의 미움을 샀습니다. 애쉬가 하늘을 덮으면 '<span class="highlight">태양 복사</span>'를 차단해 낮에도 밤처럼 어두워졌고, 동물들은 미세한 유리 입자가 폐로 들어가 콜록대며 기침을 했거든요. 화산재가 두껍게 쌓이면 건물 지붕이 무너지고, 비행기 엔진이 고장나기도 합니다.<br><br><span class="dialogue">"저리 가, 이 회색 괴물아! 너 때문에 숨을 쉴 수가 없어!"</span></p>
+        <p>애쉬는 슬픔을 머금고 조용히 하늘을 떠다녔습니다. 화산재는 '<span class="highlight">제트 기류</span>'를 타고 수천 km 이상 이동할 수 있어요. 1991년 피나투보 화산 폭발 때 화산재는 지구 전체에 퍼져 약 2년간 지구 평균 기온을 0.5도 낮추기도 했습니다.<br><br><span class="dialogue">"나는 왜 태어났을까? 나는 그저 세상을 어둡게 만드는 방해꾼일 뿐일까?"</span><br><br>애쉬는 눈물을 훔치며 차가운 바람에 실려 멀리멀리 날아갔습니다. 그런데 며칠 뒤, 놀라운 일이 벌어졌습니다. 애쉬가 내려앉은 황량한 땅 위로, 이전보다 훨씬 더 푸르고 싱싱한 풀들이 돋아나기 시작한 거예요!</p>
+        <p><span class="dialogue">"애쉬야, 울지 마렴."</span><br><br>코어 할아버지의 목소리가 들렸습니다.<br><br><span class="dialogue">"네 몸속에는 '<span class="highlight">칼륨</span>', '<span class="highlight">인</span>', '<span class="highlight">칼슘</span>', '<span class="highlight">마그네슘</span>'처럼 식물들이 가장 좋아하는 '<span class="highlight">필수 영양소</span>'가 가득하단다. 화산재가 '<span class="highlight">풍화</span>'되면 토양에 미네랄이 공급되어 농업에 최적의 땅이 되지. 네가 지금은 세상을 어둡게 하는 것 같지만, 너는 사실 대지를 가장 '<span class="highlight">비옥</span>'하게 만드는 '지구의 영양제'란다."</span><br><br>실제로 화산 지역의 토양은 놀랄 만큼 비옥합니다. 이탈리아의 나폴리, 인도네시아의 자바, 일본의 규슈 등 활화산 근처에서 농업이 번성하는 이유가 바로 이것이에요. 애쉬는 그제야 환하게 웃었습니다. 자기가 뿌린 회색 가루가 사실은 미래의 꽃을 피우는 마법의 가루였다는 것을 알게 되었으니까요.</p>
+      </div>
+    </section>
+
+    <!-- 8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">⚖️ 위험과 축복 사이에서</span>
+        <h2>두 얼굴의 화산</h2>
+        <p>마기의 가족들은 이제 세상 사람들에게 두 가지 모습으로 기억되었습니다. 하나는 무서운 <span class="highlight">'파괴자'</span>의 얼굴이었지요. 기원후 79년 폼페이를 삼켜버린 '<span class="highlight">베수비오 화산</span>'이나, 1883년 거대한 해일('<span class="highlight">쓰나미, tsunami</span>')을 일으킨 '<span class="highlight">크라카타우 화산</span>'처럼, 화산의 분노는 때로 수만 명의 생명을 앗아가기도 했습니다. 특히 <span class="highlight">'화쇄류(pyroclastic flow)'</span>는 뜨거운 가스와 화산재가 시속 200~700km로 산비탈을 쏟아져 내려오는 현상으로, 폼페이의 주민들은 이것에 의해 순식간에 목숨을 잃었습니다. 화쇄류의 온도는 700°C 이상이며, 모든 것을 태워버리는 무시무시한 힘을 가지고 있어요. '<span class="highlight">라하르</span>'라 불리는 화산 이류(진흙 흐름)도 큰 피해를 줍니다.</p>
+        <p>하지만 다른 한편으로, 화산은 지구의 <span class="highlight">'생명 유지 장치'</span>였습니다. 아주 먼 옛날, 약 40억 년 전, 화산이 뿜어낸 '<span class="highlight">수증기</span>'가 응결되어 비가 되어 바다를 만들었고, '<span class="highlight">이산화탄소</span>'와 '<span class="highlight">질소</span>'가 모여 우리가 숨 쉬는 '<span class="highlight">원시 대기</span>'를 만들었거든요. 화산이 없었다면 지구는 화성처럼 메마르고 공기 없는 행성이 되었을 거예요. 화산 활동은 '<span class="highlight">탄소 순환</span>'의 중요한 부분으로, CO₂를 대기로 방출하여 장기적인 기후 조절에 기여합니다.</p>
+        <p>뿐만 아니라, 화산은 깊은 땅속에 숨겨진 보물을 꺼내주기도 했습니다. '<span class="highlight">열수 광상</span>'에서 만들어진 번쩍이는 '<span class="highlight">금</span>'과 '<span class="highlight">구리</span>', '<span class="highlight">은</span>', 심지어 영롱한 '<span class="highlight">다이아몬드</span>'까지도 '<span class="highlight">킴벌라이트</span>' 화산관을 타고 지표면으로 올라왔지요. 뜨거운 '<span class="highlight">온천</span>'은 사람들의 피로를 풀어주었고, '<span class="highlight">지열 에너지</span>'는 전기를 만들어 도시를 밝혔습니다. 아이슬란드는 전력의 약 25%를 지열 발전으로 생산합니다. 볼카노 형제는 나란히 서서 다짐했습니다.<br><br><span class="dialogue">"우리는 무섭지만 꼭 필요한 존재야. 지구의 심장이 살아 있다는 걸 보여주는 가장 화끈한 증거니까! '<span class="highlight">화산 모니터링</span>'을 통해 인간들이 우리를 예측하고 대비할 수 있다면, 공존이 가능해!"</span></p>
+      </div>
+    </section>
+
+    <!-- 9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">⚡ 코어 할아버지의 지혜</span>
+        <h2>멈추지 않는 지구 엔진</h2>
+        <p>긴 여행을 마친 마기가 다시 지구 깊숙한 곳으로 돌아왔습니다. 마그마는 식어서 암석이 되고 결국 '<span class="highlight">침강</span>'하는 판을 따라 다시 맨틀로 돌아가는 '<span class="highlight">암석 순환</span>'을 따릅니다. 코어 할아버지는 여전히 뜨거운 심장을 두근대며 마기를 반겨주셨지요.<br><br><span class="dialogue">"할아버지, 세상은 정말 신기해요! 그런데 이 모든 힘은 대체 어디서 나오는 건가요? 어떻게 수십억 년 동안 식지 않고 계속 움직일 수 있죠?"</span></p>
+        <p>할아버지는 인자하게 웃으며 설명해주셨습니다.<br><br><span class="dialogue">"그건 내 몸속에 숨겨진 두 가지 에너지 원천 덕분이란다. 하나는 지구가 태어날 때 소행성들과 부딪히며 얻은 '<span class="highlight">원시열</span>'이고, 또 하나는 내 안의 '<span class="highlight">방사성 원소</span>'들인 우라늄-238(반감기 45억 년), 토륨-232(반감기 140억 년), 칼륨-40(반감기 13억 년)이 '<span class="highlight">방사성 붕괴</span>'를 하며 만들어내는 '<span class="highlight">붕괴열</span>'이란다."</span><br><br>현재 지구 내부 열의 약 50%는 방사성 붕괴열, 나머지는 원시열로 추정됩니다. 이 두 에너지가 지구라는 거대한 '열기관(heat engine)'을 가동시키는 연료였던 거예요.</p>
+        <p>이 열기 덕분에 외핵이 빙글빙글 '<span class="highlight">대류</span>'하며 지구를 감싸는 투명한 방패, '<span class="highlight">지구 자기장</span>'을 만들어냅니다. 이것이 '<span class="highlight">지구 다이나모 이론</span>'입니다. 자기장은 태양에서 날아오는 '<span class="highlight">태양풍</span>'과 '<span class="highlight">우주선</span>'을 막아 생명을 보호합니다. 이 방패가 없다면 대기가 벗겨지고 모든 생명은 방사선에 노출되어 살아남을 수 없어요. 화성이 생명이 없는 불모지가 된 이유 중 하나가 바로 자기장의 상실입니다. 마기는 할아버지의 심장 소리에 귀를 기울였습니다.<br><br><span class="dialogue">"아, 지구의 생명을 지키는 방패도 결국 할아버지의 뜨거운 심장 박동에서 시작된 거네요? 화산도, 자기장도, 판의 이동도, 모두 연결되어 있어요!"</span><br><br><span class="dialogue">"그렇단다. 이것이 '<span class="highlight">지구 시스템</span>'의 아름다움이야. 핵, 맨틀, 지각, 대기, 수권, 생물권이 모두 상호작용하며 하나의 거대한 유기체처럼 작동하지. 이 뜨거운 심장이 뛰기를 멈추는 날, 지구도 화성처럼 차가운 침묵에 빠지게 되겠지. 하지만 걱정 마라. 내 심장은 아직 수십억 년은 더 거뜬히 뛸 테니까!"</span></p>
+      </div>
+    </section>
+
+    <!-- 10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌍 겉은 단단해도 속은 움직인다</span>
+        <h2>지구는 살아있다</h2>
+        <p>이제 지구의 모든 존재가 한자리에 모여 합창을 합니다. 지구의 가장 깊은 곳부터 가장 바깥쪽까지, 우리 모두는 하나의 거대한 '<span class="highlight">역동적 시스템</span>'이었어요. 과학자들은 이것을 '<span class="highlight">판 구조론</span>'과 '<span class="highlight">맨틀 대류</span>'라는 이론으로 설명합니다. 지구 표면은 십여 개의 '<span class="highlight">판</span>'으로 나뉘어 있고, 이 판들이 맨틀 대류에 의해 움직이며 화산, 지진, 산맥, 해구 같은 지형을 만들어냅니다.</p>
+        <p>크러스트 대장이 먼저 말했습니다.<br><br><span class="dialogue">"나는 변화가 나쁜 건 줄로만 알았어. 하지만 마기가 올라오고 땅이 흔들리는 건 지구가 숨을 쉬고 열을 방출하는 거였어. 덕분에 우리 지각은 '<span class="highlight">해령</span>'에서 새로 만들어지고, '<span class="highlight">해구</span>'에서 재활용되며, 항상 새롭게 유지될 수 있었지. 이것이 '<span class="highlight">해저 확장</span>'과 '<span class="highlight">섭입</span>'이야."</span><br><br>맨틀 어머니도 덧붙였습니다.<br><br><span class="dialogue">"느리지만 멈추지 않는 나의 대류가 지구의 물질과 에너지를 순환시키고 있단다. 순환은 곧 생명이니까. '<span class="highlight">윌슨 순환</span>'에 따라 초대륙이 형성되었다가 분열되고, 수억 년에 걸쳐 대륙이 이동하지."</span><br><br>애쉬 요정도 꽃밭 위에서 춤을 추며 속삭였습니다.<br><br><span class="dialogue">"나의 회색 가루가 세상의 초록을 더 진하게 만들고 있어! '<span class="highlight">풍화</span>'와 '<span class="highlight">토양 형성</span>'의 첫 단계가 바로 나야!"</span></p>
+        <p>마기는 이제 압니다. 자신이 단순히 갇혀 있던 불꽃이 아니었다는 것을요. 마기는 지구의 열정을 전달하고, 대지를 빚고, 대기와 바다의 씨앗을 뿌리는 지구의 가장 역동적인 메신저였습니다. 현재 지구에는 약 1,500개의 '<span class="highlight">활화산</span>'이 있고, 매년 약 50개가 분화합니다. '<span class="highlight">환태평양 조산대</span>'에 대부분이 집중되어 있지요. 여러분이 지금 딛고 서 있는 이 땅은 가만히 멈춰 있는 돌덩이가 아닙니다. 여러분의 발밑 수천 킬로미터 아래에서는 지금 이 순간에도 코어 할아버지의 심장이 뛰고 있고, 맨틀 어머니가 춤을 추며, 마기가 새로운 세상을 꿈꾸고 있습니다.</p>
+        <p><span class="highlight">"지구는 살아있어! 겉은 단단해 보여도 속은 끊임없이 움직이고 있단다!"</span><br><br>이 뜨거운 지구의 심장 소리를 기억하세요. 여러분은 지금, 살아 움직이는 거대한 기적 위에 서 있으니까요. '<span class="highlight">지질학</span>'은 바로 이 살아있는 지구의 이야기를 연구하는 학문입니다.</p>
+
+        <div class="moral-box">
+          <h3>🌱 이 이야기의 교훈</h3>
+          <p>"겉은 단단해 보여도 속은 끊임없이 움직인다." 지구의 화산 활동과 지각 변동은 단순한 재앙이 아니라 지구가 생명력을 유지하기 위한 '열 방출'과 '물질 순환'의 과정입니다. 맨틀 대류가 판을 움직이고, 화산이 새 땅을 만들며, 자기장이 생명을 보호합니다. 우리 또한 겉모습은 변함없어 보여도 마음속에는 언제나 마기처럼 뜨거운 꿈과 에너지가 흐르고 있다는 사실을 잊지 마세요.</p>
+          <p style="margin-top: 10px;">이 이야기는 우리 발밑에서 벌어지고 있는 진짜 지구의 이야기입니다. 지구는 죽은 돌덩어리가 아닙니다. 그 속에는 태양 표면 온도에 맞먹는 뜨거운 핵이 뛰고 있고, 맨틀이 수십억 년째 쉬지 않고 대류하고 있으며, 그 에너지가 화산과 지진이라는 형태로 표현되고 있습니다. 지구는 하나의 거대한 열기관이자 살아있는 시스템입니다.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const bgImages = [
+      '/images/창작도서/창작지구과학02/00.jpg',
+      '/images/창작도서/창작지구과학02/01.jpg',
+      '/images/창작도서/창작지구과학02/02.jpg',
+      '/images/창작도서/창작지구과학02/03.jpg',
+      '/images/창작도서/창작지구과학02/04.jpg',
+      '/images/창작도서/창작지구과학02/05.jpg',
+      '/images/창작도서/창작지구과학02/06.jpg',
+      '/images/창작도서/창작지구과학02/07.jpg',
+      '/images/창작도서/창작지구과학02/08.jpg',
+      '/images/창작도서/창작지구과학02/09.jpg',
+      '/images/창작도서/창작지구과학02/10.jpg'
+    ];
+
+    // 이미지 프리로드
+    bgImages.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section, .intro-section');
+    const navDots = document.querySelectorAll('.nav-dot');
+    let currentSection = 0;
+
+    // Intersection Observer 설정
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card, .intro-content');
+
+        if (entry.isIntersecting) {
+          // 카드 활성화
+          if (card) card.classList.add('active');
+
+          // 배경 이미지 변경
+          const sectionIndex = Array.from(sections).indexOf(entry.target);
+          if (sectionIndex !== -1 && sectionIndex !== currentSection) {
+            currentSection = sectionIndex;
+            mapContainer.style.backgroundImage = `url('${bgImages[sectionIndex]}')`;
+
+            // 네비게이션 업데이트
+            navDots.forEach((dot, i) => {
+              dot.classList.toggle('active', i === sectionIndex);
+            });
+          }
+        } else {
+          // 카드 비활성화 (화면 밖으로 나갈 때)
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+
+    // 네비게이션 클릭
+    navDots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        sections[index].scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // 닫기 함수
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // ESC 키로 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeStory();
+    });
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth02_season1_quiz.html?season=season2';
+    }
+  </script>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+</body>
+</html>

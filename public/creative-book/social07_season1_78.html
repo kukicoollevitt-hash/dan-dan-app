@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>좋아요 왕국의 빛과 그림자 - 창작사회문화07 (중1-2)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: #0a0a0a; }
+
+    .back-btn {
+      position: fixed; top: 15px; left: 15px; width: 40px; height: 40px;
+      border-radius: 50%; background: rgba(255,255,255,0.2); border: none;
+      color: #fff; font-size: 1.2em; cursor: pointer; z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    #map-container {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-size: cover; background-position: center;
+      transition: background-image 0.8s ease-in-out; z-index: 0;
+    }
+    #map-container::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(29,161,242,0.7), rgba(13,71,161,0.8));
+    }
+
+    #content { position: relative; z-index: 1; }
+
+    .intro-section {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 60px 20px; text-align: center;
+    }
+    .intro-content { max-width: 700px; }
+    .intro-content h1 { color: #1DA1F2; font-size: 2em; font-weight: 900; margin-bottom: 10px; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+    .intro-content .subtitle { color: rgba(255,255,255,0.9); font-size: 1.1em; margin-bottom: 30px; }
+
+    .characters-box {
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 16px; padding: 20px; text-align: left;
+      border: 1px solid rgba(255,255,255,0.2); margin-bottom: 30px;
+    }
+    .characters-box h3 { color: #64B5F6; font-size: 1em; margin-bottom: 12px; }
+    .characters-box p { color: rgba(255,255,255,0.9); font-size: 0.9em; line-height: 1.8; margin-bottom: 8px; }
+    .characters-box .char-name { color: #64B5F6; font-weight: 700; }
+
+    .scroll-hint { color: rgba(255,255,255,0.6); font-size: 0.9em; }
+
+    .story-section {
+      min-height: 100vh; display: flex; padding: 60px 20px;
+    }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+
+    .story-card {
+      max-width: 700px; width: 100%;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(15px);
+      border-radius: 20px; padding: 30px;
+      border: 1px solid rgba(255,255,255,0.2);
+      opacity: 0; transform: translateX(-30px);
+      transition: opacity 0.6s, transform 0.6s;
+    }
+    .story-section:nth-child(even) .story-card { transform: translateX(30px); }
+    .story-card.active { opacity: 1; transform: translateX(0); }
+
+    .chapter-badge {
+      display: inline-block; background: linear-gradient(135deg, #1DA1F2, #0D47A1);
+      color: #fff; padding: 6px 16px; border-radius: 20px;
+      font-size: 0.85em; font-weight: 700; margin-bottom: 12px;
+    }
+    .story-card h2 { color: #fff; font-size: 1.4em; font-weight: 900; margin-bottom: 16px; line-height: 1.3; }
+    .story-card p { color: rgba(255,255,255,0.9); font-size: 0.95em; line-height: 2; text-align: justify; word-break: keep-all; }
+
+    .ending-section {
+      min-height: 50vh; display: flex; align-items: center; justify-content: center;
+      padding: 60px 20px;
+    }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .nav-btn {
+      padding: 14px 28px; border-radius: 30px; font-size: 1em; font-weight: 700;
+      cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; border: none;
+    }
+    .nav-btn.back { background: rgba(255,255,255,0.2); color: #fff; backdrop-filter: blur(10px); }
+    .nav-btn.quiz { background: linear-gradient(135deg, #1DA1F2, #0D47A1); color: #fff; }
+    .nav-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+    .highlight {
+      background: linear-gradient(120deg, rgba(100,181,246,0.3), rgba(29,161,242,0.3));
+      padding: 2px 6px; border-radius: 4px; font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .intro-content h1 { font-size: 1.6em; }
+      .story-card h2 { font-size: 1.2em; }
+      .story-card p { font-size: 0.9em; }
+      .story-section:nth-child(odd), .story-section:nth-child(even) { justify-content: center; }
+      .story-card, .story-section:nth-child(even) .story-card { transform: translateY(30px); }
+      .story-card.active { transform: translateY(0); }
+    }
+
+    .dialogue {
+      color: #1b4332;
+      font-weight: 600;
+    }
+</style>
+</head>
+<body>
+  <button class="back-btn" onclick="goBack()">←</button>
+
+  <div id="map-container" style="background-image: url('/images/창작도서/창작사회문화07/00.jpg')"></div>
+
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📱 좋아요 왕국의 빛과 그림자</h1>
+        <p class="subtitle">교과기반 창작도서 · 사회문화 07 · 중1-2</p>
+        <div class="characters-box">
+          <h3>👥 등장인물</h3>
+          <p><span class="char-name">👧 수아</span> - <span class="highlight">디지털 네이티브</span> 세대의 열두 살 소녀. SNS를 통해 <span class="highlight">온라인 정체성</span>과 <span class="highlight">오프라인 정체성</span> 사이에서 성장하는 주인공.</p>
+          <p><span class="char-name">👍 라이키</span> - 좋아요 버튼에서 태어난 요정. <span class="highlight">사회적 승인</span>과 <span class="highlight">인정 욕구</span>를 상징하는 존재.</p>
+          <p><span class="char-name">🕶️ 아논</span> - <span class="highlight">익명성</span>의 어두운 면을 대표하는 그림자. <span class="highlight">탈억제 효과</span>의 화신.</p>
+          <p><span class="char-name">🔗 커넥트</span> - <span class="highlight">네트워크 효과</span>와 <span class="highlight">사회적 자본</span>을 연결해주는 밝은 존재.</p>
+          <p><span class="char-name">🪞 미러</span> - <span class="highlight">사회적 비교</span>를 유발하는 왜곡된 거울. <span class="highlight">하이라이트 릴 효과</span>를 보여줌.</p>
+          <p><span class="char-name">🛡️ 가디언</span> - <span class="highlight">디지털 시민성</span>과 <span class="highlight">미디어 리터러시</span>를 가르치는 수호자.</p>
+        </div>
+        <p class="scroll-hint">▼ 아래로 스크롤하여 이야기 시작</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/01.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제1장</span>
+        <h2>🚪 좋아요 왕국에 들어가다</h2>
+        <p>수아의 열두 번째 생일, 엄마가 스마트폰을 선물해 주셨어요. 친구들이 모두 하는 <span class="highlight">SNS</span> 앱을 깔고, 생일 케이크 사진을 처음 올렸지요. <span class="dialogue">"열두 살이 되었어요!"</span> 1분, 5분, 10분. 좋아요가 하나둘 늘어났어요. 친구들의 축하 댓글도 달렸지요. 수아의 가슴이 두근거렸어요. 그때 화면에서 작은 빛이 피어났어요. 엄지 모양의 귀여운 요정 라이키가 나타났지요. <span class="dialogue">"환영해, 수아! 나는 라이키야. 좋아요 왕국의 안내자야!"</span> 라이키가 수아의 손을 잡고 반짝이는 세상의 문을 열었어요. 예쁜 사진들, 웃는 얼굴들이 끝없이 펼쳐졌어요. 심리학에서 이런 현상을 <span class="highlight">가변 보상 시스템</span>이라고 불러요. 카지노의 슬롯머신처럼, 언제 좋아요가 올지 모르는 불확실성이 뇌의 <span class="highlight">도파민</span> 분비를 자극하지요. 수아는 이 화려한 세상에 푹 빠져버렸어요. SNS의 역사는 비교적 짧아요. 2004년 페이스북, 2006년 트위터, 2010년 인스타그램, 2016년 틱톡이 차례로 등장했지요. 한국에서는 싸이월드(1999년)가 선구자였고, 이후 카카오스토리, 네이버 밴드 등이 나타났어요. 2024년 기준 전 세계 SNS 이용자는 약 50억 명, 세계 인구의 60퍼센트 이상이 어떤 형태로든 SNS를 사용하고 있답니다. 한국의 SNS 이용률은 약 89퍼센트로 세계 최상위권이에요. 하지만 라이키의 눈 한구석에 불안이 스쳐 지나갔어요. <span class="dialogue">"이 왕국에는 빛만 있는 게 아니야…"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/02.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제2장</span>
+        <h2>🌐 세상이 넓어지다</h2>
+        <p>SNS를 시작한 지 한 달. 수아의 세계가 놀라울 만큼 넓어졌어요. 커넥트가 보이지 않는 다리를 놓아주었거든요. <span class="dialogue">"수아, 봐! 너와 같은 취미를 가진 친구가 부산에도, 제주에도, 심지어 일본에도 있어!"</span> 수아는 그림 그리기를 좋아했어요. SNS에 그림을 올리자 같은 취미를 가진 친구들이 모여들었어요. 서울에 사는 수아가 부산의 민지, 대구의 준호, 일본의 유키와 온라인 그림 모임을 만들었지요. 이것이 바로 <span class="highlight">관심사 기반 커뮤니티</span>의 힘이에요. 학교에서는 같은 반 30명이 전부였지만, SNS에서는 수백 명과 연결될 수 있었어요. 사회학자 마크 그래노베터는 이런 느슨한 관계를 <span class="highlight">약한 유대</span>라고 불렀어요. 약한 유대는 새로운 정보와 기회를 가져다주지요. 가까운 친구들은 나와 비슷한 것을 알지만, 느슨하게 연결된 사람들은 내가 모르는 세계를 보여줘요. <span class="dialogue">"SNS가 없었으면 유키를 절대 만나지 못했을 거야. 나는 국경도, 언어도, 시간대도 뛰어넘을 수 있어!"</span> 커넥트가 기뻐하며 말했어요. 이것을 <span class="highlight">초국적 연결</span>이라고 해요. SNS는 또한 <span class="highlight">사회적 자본</span>을 확장시켜요. 이사를 자주 다니는 아이가 옛 친구와 관계를 유지하고, 같은 병을 가진 환자들이 서로 위로하고 정보를 나누며, 소수의 관심사를 가진 사람들이 <span class="highlight">틈새 커뮤니티</span>를 형성해요. 수아는 행복했어요. 세상이 넓어지고, 친구가 늘어나고, 자신의 그림을 인정받는 경험. 하지만 좋아요 왕국의 모든 것이 밝지만은 않았답니다. 라이키가 조용히 속삭였어요. <span class="dialogue">"수아, 다음 방도 볼래? 조금 어두울 수 있어."</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/03.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제3장</span>
+        <h2>📰 가짜 뉴스를 조심해</h2>
+        <p>커넥트가 수아에게 SNS의 또 다른 힘을 보여주었어요. <span class="dialogue">"SNS는 사람만 연결하는 게 아니야. 정보도 빠르게 전해주지."</span> SNS는 21세기의 가장 강력한 <span class="highlight">정보 유통 플랫폼</span> 중 하나예요. 전통적 미디어(신문, TV, 라디오)가 정보를 '일 대 다수'로 전달하는 <span class="highlight">일방향 구조</span>였다면, SNS는 누구나 정보를 생산하고 공유할 수 있는 <span class="highlight">양방향 구조</span>예요. 이것은 <span class="highlight">정보의 민주화</span>라는 혁명적 변화를 가져왔어요. 하지만 가디언이 진지하게 나타났어요. <span class="dialogue">"문제도 있어. 가짜 뉴스, 즉 <span class="highlight">허위 정보</span>가 진짜처럼 퍼질 수 있거든."</span> MIT의 연구에 따르면, 가짜 뉴스는 진짜 뉴스보다 6배 빠르게 확산돼요. 자극적이고 감정적인 내용일수록 더 많이 공유되기 때문이지요. 이것을 <span class="highlight">감정적 전염</span>이라고 해요. 수아도 경험한 적이 있었어요. '어떤 음식을 먹으면 키가 20센티미터 자란다'는 글을 보고 믿었다가, 나중에 거짓이었다는 걸 알았지요. 가디언이 중요한 교훈을 알려주었어요. <span class="dialogue">"정보를 믿기 전에 <span class="highlight">출처 확인</span>을 해. 여러 곳에서 같은 이야기를 하는지 <span class="highlight">교차 검증</span>을 해봐. 너무 자극적인 내용은 의심해봐. 이것을 <span class="highlight">미디어 리터러시</span>라고 해. 정보의 바다에서 진짜와 가짜를 구별하는 능력이야."</span> 또한 <span class="highlight">확증 편향</span>을 주의해야 해요. 사람들은 자기가 믿고 싶은 정보만 선택적으로 받아들이는 경향이 있거든요. SNS의 <span class="highlight">알고리즘</span>은 사용자가 좋아할 만한 콘텐츠를 계속 보여주기 때문에, 자신과 다른 의견을 접하기 어려운 <span class="highlight">필터 버블</span>에 갇힐 수 있어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/04.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제4장</span>
+        <h2>🕶️ 이름을 숨기면 뭐든 해도 될까?</h2>
+        <p>좋아요 왕국의 밝은 거리를 지나자 어두운 골목이 나타났어요. 그곳에서 아논이 모습을 드러냈어요. 후드를 뒤집어쓰고 선글라스를 낀, 얼굴이 보이지 않는 존재였지요. <span class="dialogue">"안녕, 수아. 나는 아논. <span class="highlight">익명성</span>이라고도 불려."</span> 익명성은 자신의 정체를 밝히지 않고 활동할 수 있는 특성이에요. 인터넷과 SNS에서 익명성은 양날의 검이지요. 긍정적으로는 <span class="highlight">내부고발자</span>가 부정을 알리고, 억압받는 사람이 자유롭게 의견을 표현하며, 민감한 주제에 대해 솔직하게 이야기할 수 있게 해줘요. 하지만 아논의 어두운 면이 드러났어요. <span class="dialogue">"이름을 숨기면 책임도 숨길 수 있어. 현실에서 못 할 말도 온라인에서는 거침없이 할 수 있지. 누가 나인지 아무도 모르니까."</span> 심리학에서 이것을 <span class="highlight">탈억제 효과</span>라고 해요. 익명 상황에서 사람들은 자기 통제력이 약해지고, 공격적이거나 비윤리적인 행동을 하기 쉬워져요. 얼굴을 마주하는 <span class="highlight">대면 상황</span>에서는 상대방의 표정과 감정을 읽을 수 있지만, 화면 뒤에서는 그 <span class="highlight">비언어적 피드백</span>이 차단되기 때문이에요. 수아가 두려워졌어요. <span class="dialogue">"이름을 숨기면 뭐든 해도 되는 거야?"</span> 가디언이 단호하게 말했어요. <span class="dialogue">"절대 아니야. 온라인에서도 현실과 똑같이 <span class="highlight">윤리적 책임</span>을 져야 해. <span class="highlight">사이버 모욕</span>, <span class="highlight">명예훼손</span>, <span class="highlight">스토킹</span>은 모두 법적 처벌 대상이야. <span class="highlight">IP 추적</span>으로 익명도 밝혀질 수 있어."</span> <span class="dialogue">"그리고 가장 중요한 건,"</span> 가디언이 수아의 눈을 바라보며 말했어요. <span class="dialogue">"화면 너머에도 마음을 가진 사람이 있다는 거야. 그걸 잊지 않는 게 기본 <span class="highlight">네티켓</span>이란다."</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/05.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제5장</span>
+        <h2>💔 악플이 심장을 찌르다</h2>
+        <p>어느 날, 끔찍한 일이 벌어졌어요. 수아가 올린 그림에 모르는 사람이 나쁜 댓글을 단 거예요. <span class="dialogue">"이런 그림은 쓰레기통에 버려라."</span> <span class="dialogue">"재능도 없으면서 왜 올리냐."</span> 수아의 손이 떨렸어요. 눈물이 났지요. 좋아하는 그림을 세상과 나누고 싶었을 뿐인데, 날카로운 말들이 가슴을 아프게 했어요. 아논이 어둠 속에서 킥킥 웃고 있었어요. <span class="highlight">악성 댓글</span>과 <span class="highlight">사이버 불링</span>은 SNS의 가장 심각한 문제 중 하나예요. 한국 청소년의 사이버 폭력 경험률은 약 30퍼센트에 달하며, 피해 유형으로는 악플, 개인정보 유출, 따돌림, 허위 사실 유포 등이 있어요. 사이버 폭력의 피해는 현실의 폭력 못지않게 심각해요. <span class="highlight">우울</span>, <span class="highlight">불안</span>, <span class="highlight">자존감 저하</span>, <span class="highlight">수면 장애</span>, 학교 기피, 극단적인 경우 자해까지 이어질 수 있어요. 온라인의 글은 삭제하기 전까지 계속 남아있고, 스크린샷으로 퍼져나가면 회수가 불가능하기 때문에 오프라인 괴롭힘보다 <span class="highlight">도피 불가능성</span>이라는 특징이 있어요. 라이키가 슬프게 말했어요. <span class="dialogue">"나는 마음을 전하려고 태어났는데, 어떤 사람들은 가시를 던져..."</span> 가디언이 수아에게 다가왔어요. <span class="dialogue">"수아, 기억해. 악플은 네 가치를 말해주는 게 아니야. 그건 쓴 사람의 <span class="highlight">투사</span>이지, 네 문제가 아니야."</span> 가디언이 대처 방법을 알려주었어요. 증거를 캡처하고, 신고하고, 차단하고, 믿을 수 있는 어른에게 알리기. 이것을 <span class="highlight">대처 전략</span>이라고 해요. 수아는 엄마에게 이야기했고, 그 계정은 신고되어 제재를 받았어요. 혼자 견디지 않아도 된다는 걸 배웠답니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/06.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제6장</span>
+        <h2>📢 좋은 변화를 만드는 힘</h2>
+        <p>악플의 상처가 아물어가면서 수아는 SNS를 그만둘까 고민했어요. 그때 커넥트가 다른 면을 보여주었어요. <span class="dialogue">"수아, SNS에는 어두운 면도 있지만, 세상을 바꾸는 밝은 힘도 있어."</span> 커넥트가 보여준 것은 SNS로 좋은 일을 한 사람들의 이야기였어요. 장애인 접근성 개선을 요청하는 <span class="highlight">해시태그 운동</span>, 학교 급식 개선을 요구한 학생들의 <span class="highlight">온라인 청원</span>, 유기 동물 입양 캠페인, 환경 보호 <span class="highlight">챌린지</span>. 이 모든 것이 SNS에서 시작되어 진짜 변화를 만들어낸 사례들이었어요. SNS는 전통적으로 목소리를 낼 기회가 적었던 사람들에게 <span class="highlight">디지털 광장</span>을 제공해요. 청소년, 소수자, 지역 주민, 소규모 예술가 등이 자신의 이야기를 세상에 알릴 수 있게 되었지요. 이것을 <span class="highlight">미디어 민주화</span>라고 해요. 특히 위기 상황에서 SNS의 힘은 놀라워요. 2010년 아랍의 봄에서 SNS는 시민들의 <span class="highlight">연대 도구</span>가 되었고, 재난 상황에서는 실시간 구조 요청과 안전 확인의 창구가 돼요. 이것을 <span class="highlight">위기 소통</span>이라고 하지요. 수아도 SNS의 긍정적 힘을 느꼈어요. 그림 실력을 응원해주는 친구들, 어려운 문제를 함께 풀어주는 학습 커뮤니티, 좋아하는 작가와 직접 소통할 수 있는 <span class="highlight">팬덤</span>. <span class="dialogue">"나쁜 사람도 있지만, 좋은 사람이 훨씬 많았어."</span> 수아가 깨달았어요. 커넥트가 미소 지었어요. <span class="dialogue">"SNS는 도로와 같아. 도로에서 사고가 나기도 하지만, 도로 없이는 어디에도 갈 수 없잖아. 중요한 건 안전하게 이용하는 <span class="highlight">디지털 역량</span>을 기르는 거야."</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/07.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제7장</span>
+        <h2>🪞 나만 불행한 것 같은 착각</h2>
+        <p>수아가 악플 문제를 이겨낸 뒤에도 또 다른 문제가 다가왔어요. 미러, 비교의 거울이었지요. SNS를 보면 볼수록 다른 사람들의 삶이 너무 완벽해 보였어요. 친구 지은이는 유럽 여행, 서연이는 새 운동화, 하늘이는 수학 100점 인증샷. 미러가 속삭였어요. <span class="dialogue">"봐, 다들 너보다 행복하고 잘 나가지?"</span> 수아의 마음이 무거워졌어요. 자기 일상이 초라해 보이기 시작했지요. 이것이 바로 SNS의 <span class="highlight">사회적 비교</span> 문제예요. 심리학자 레온 페스팅거가 제시한 <span class="highlight">사회비교이론</span>에 따르면, 인간은 본능적으로 자신을 타인과 비교해요. 특히 <span class="highlight">상향 비교</span> - 자신보다 나아 보이는 사람과 비교하는 것 - 는 열등감과 불만족을 유발해요. 사람들은 SNS에 자신의 가장 좋은 순간만 올려요. 여행 사진 100장 중 가장 잘 나온 1장, 필터로 보정된 얼굴, 편집된 일상. 현실은 기쁨과 슬픔이 섞여 있는데, SNS에는 기쁨만 보이는 거예요. 이것을 <span class="highlight">하이라이트 릴 효과</span>라고 해요. 영국 왕립공중보건학회의 연구에 따르면, SNS 사용은 청소년의 불안, 우울, 외로움, <span class="highlight">부정적 신체 이미지</span>와 상관관계가 있어요. 특히 사진 중심 플랫폼이 청소년 정신건강에 부정적인 영향을 미치는 것으로 나타났지요. 가디언이 미러를 밀어내며 말했어요. <span class="dialogue">"미러가 보여주는 건 <span class="highlight">편집된 현실</span>이야. 다른 사람의 하이라이트와 네 일상의 비하인드를 비교하면 당연히 네가 부족해 보여."</span> 수아가 깨달았어요. <span class="dialogue">"지은이도 비행기에서 힘들었을 수 있고, 하늘이도 시험공부로 밤을 새웠을 수 있잖아. 그 부분은 안 올렸을 뿐이야!"</span> 비교의 함정에서 벗어나는 열쇠는 SNS가 현실의 일부만 보여준다는 <span class="highlight">메타인지</span>를 갖는 것이었어요.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/08.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제8장</span>
+        <h2>🔒 한번 올린 것은 오래 남아</h2>
+        <p>가디언이 수아에게 중요한 경고를 했어요. <span class="dialogue">"수아, SNS에서 가장 조심해야 할 것 중 하나가 <span class="highlight">개인정보 보호</span>야."</span> 수아는 자기도 모르게 많은 정보를 SNS에 올리고 있었어요. 학교 이름, 단골 카페 위치, 집 앞 풍경. 이걸 모으면 수아의 <span class="highlight">신원 확인</span>과 일상 동선을 파악할 수 있었지요. <span class="dialogue">"인터넷에 올린 정보는 완전히 지우기 어려워."</span> 가디언이 경고했어요. <span class="dialogue">"누군가 캡처하면 네가 지워도 남아있거든. 검색 엔진의 <span class="highlight">캐시</span>에 저장될 수도 있어."</span> <span class="highlight">디지털 발자국</span>이라는 개념이 있어요. 우리가 온라인에서 하는 모든 활동은 흔적을 남겨요. 게시물, 댓글, 좋아요, 검색 기록, 위치 정보. 이것들이 모여 '디지털 나'를 형성해요. 미래의 입학사정관이나 고용주가 SNS를 확인할 수도 있고, 과거의 부주의한 게시물이 수년 후 문제가 될 수도 있어요. 이것을 <span class="highlight">디지털 평판</span>이라고 하지요. <span class="highlight">'잊힐 권리'</span>라는 개념이 있지만, 현실에서는 한번 퍼진 정보를 완전히 회수하는 것은 거의 불가능해요. 가디언이 구체적인 <span class="highlight">보호 전략</span>을 알려주었어요. 계정을 비공개로 설정하기, 모르는 사람의 팔로우 요청은 거절하기, <span class="highlight">위치 태그</span>는 끄기, 학교나 집, 전화번호는 올리지 않기, <span class="highlight">비밀번호</span>를 정기적으로 변경하기, 수상한 링크는 클릭하지 않기(<span class="highlight">피싱</span> 주의). <span class="dialogue">"올리기 전에 한 번만 생각해봐. 이것을 모르는 사람이 봐도 안전한 내용인가? 10년 후에도 괜찮을 내용인가? 대답이 '아니요'면 올리지 마."</span> 수아가 고개를 끄덕였어요. <span class="dialogue">"내 정보는 내가 지켜야 하는 거구나."</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/09.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제9장</span>
+        <h2>🏛️ 온라인에도 규칙이 있어</h2>
+        <p>가디언이 수아를 좋아요 왕국의 중심 광장으로 데려갔어요. 광장에는 커다란 비석이 있었고, 그 위에 '<span class="highlight">디지털 시민 헌장</span>'이 새겨져 있었어요. <span class="dialogue">"온라인 세상도 현실 세상처럼 시민이 지켜야 할 규칙이 있어."</span> <span class="highlight">디지털 시민성</span>이란 디지털 환경에서 책임감 있고 윤리적으로 행동하는 능력을 말해요. 현실에서 좋은 시민이 법을 지키고, 이웃을 존중하고, 공동체에 기여하듯이, 온라인에서도 동일한 원칙이 적용돼요. 비석에 새겨진 약속들을 읽어보았어요. 첫째, <span class="highlight">존중</span>. 화면 너머에도 마음을 가진 사람이 있다. 면전에서 못 할 말은 온라인에서도 하지 않는다. 둘째, <span class="highlight">책임</span>. 내가 올리는 모든 글과 사진에 책임을 진다. 익명이라도 윤리적 기준은 동일하다. 셋째, <span class="highlight">비판적 사고</span>. 모든 정보를 그냥 믿지 않는다. 출처를 확인하고, 사실과 의견을 구별한다. 넷째, <span class="highlight">프라이버시 존중</span>. 타인의 사진이나 개인정보를 동의 없이 공유하지 않는다. 다섯째, <span class="highlight">디지털 균형</span>. 온라인과 현실 생활의 균형을 맞춘다. <span class="highlight">디지털 웰빙</span>을 실천한다. <span class="dialogue">"이 약속들은 어렵지 않아."</span> 가디언이 말했어요. <span class="dialogue">"현실에서의 <span class="highlight">시민 윤리</span>와 똑같거든. 상대방을 존중하고, 책임지고, 생각하고 행동하기. 다만 온라인에서는 상대의 표정이 보이지 않고, 결과가 바로 나타나지 않기 때문에 더 의식적으로 <span class="highlight">자기 조절</span>을 실천해야 해."</span> 수아가 약속들을 마음에 새기며 말했어요. <span class="dialogue">"현실의 나와 온라인의 내가 같은 사람이 되어야 하는 거네요. <span class="highlight">일관된 정체성</span>을 유지하는 거죠!"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화07/10.jpg">
+      <div class="story-card">
+        <span class="chapter-badge">제10장</span>
+        <h2>🌟 SNS의 주인은 바로 나</h2>
+        <p>모든 여정이 끝나고 좋아요 왕국의 광장에서 모든 존재가 모였어요. 라이키, 커넥트, 아논, 미러, 가디언. 그리고 중앙에 수아가 서 있었지요. 라이키가 말했어요. <span class="dialogue">"나는 마음을 전하는 도구로 태어났어. 하지만 사람들이 나를 숫자로만 보면 <span class="highlight">좋아요 중독</span>이 돼. 나를 어떻게 쓸지는 사람이 정하는 거야."</span> 커넥트가 말했어요. <span class="dialogue">"나는 세상을 가깝게 만들고 <span class="highlight">사회적 연결</span>을 제공해. 하지만 현실의 <span class="highlight">대면 관계</span>를 소홀히 하면 <span class="highlight">관계의 역설</span>에 빠져. 온라인으로 연결되어 있으면서도 외로움을 느끼는 현상이지."</span> 미러가 깨지며 말했어요. <span class="dialogue">"SNS의 화려한 모습은 <span class="highlight">연출된 자아</span>야. 네 <span class="highlight">진정한 자아</span>와 평범한 일상의 소중함을 잊지 마."</span> 아논이 후드를 벗으며 말했어요. <span class="dialogue">"나는 자유로운 표현을 가능하게 하지만, <span class="highlight">책임 없는 공격</span>도 가능하게 해. 가면 뒤에서도 <span class="highlight">인간성</span>을 잃지 않는 것이 진짜 용기야."</span> 가디언이 마지막으로 수아에게 말했어요. <span class="dialogue">"기억해. <span class="highlight">기술 결정론</span>에 빠지지 마. 기술이 우리를 지배하는 게 아니라, 우리가 기술을 어떻게 사용할지 선택하는 거야. 같은 SNS가 누군가에게는 세상을 넓히는 창이 되고, 누군가에게는 마음을 아프게 하는 감옥이 돼. 차이를 만드는 건 기술이 아니라 <span class="highlight">인간의 선택</span>이야."</span> 수아가 스마트폰을 주머니에 넣고 옆에 있는 할머니의 손을 잡았어요. 화면 밖의 따뜻함, <span class="highlight">실제적 연결</span>이 좋아요 백만 개보다 소중했답니다. <span class="dialogue">"나는 SNS의 주인이야. SNS가 나의 주인이 아니라. <span class="highlight">디지털 주체성</span>을 가진 시민이 되는 거야!"</span></p>
+      </div>
+    </section>
+
+    <section class="ending-section">
+      <div class="nav-buttons">
+        <button class="nav-btn back" onclick="goBack()">← 목록으로</button>
+        <button class="nav-btn quiz" onclick="location.href='social07_season1_quiz.html'">📝 관문평가</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function goBack() {
+      if (document.referrer && document.referrer.includes(location.hostname)) history.back();
+      else location.href = '/menu.html';
+    }
+
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '/images/창작도서/창작사회문화07/00.jpg';
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateBackground);
+    window.addEventListener('load', updateBackground);
+  </script>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗺️ 나침이와 맵이의 약속 대모험 - 중1-2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .grade-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #2980b9 0%, #1a5276 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(41, 128, 185, 0.15);
+      color: #1a5276;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #2980b9;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #2980b9;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(41, 128, 185, 0.15);
+      border-radius: 3px;
+    }
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #1a5276;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #1a5276;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #1a5276;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .grade-info {
+      display: inline-block;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #74b9ff;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #f39c12;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(41, 128, 185, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
+      text-decoration: none;
+    }
+
+    .nav-btn:hover {
+      background: rgba(26, 82, 118, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(41, 128, 185, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <div class="grade-info">📚 중1-2 심화편</div>
+        <h1>🗺️ 나침이와 맵이의 약속 대모험</h1>
+        <p class="subtitle">
+          기호 하나에 숨겨진 약속, 지도는 왜 약속일까<br>
+          교과기반 창작도서 · 한국지리 02
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>🧭 나침이:</strong> 열한 살 모험 소년, 보물지도를 그렸지만 '약속' 없이 소통에 실패한 주인공</p>
+          <p><strong>⭐ 별이:</strong> 나침이의 단짝 친구, 약속 없는 지도를 읽지 못해 좌절하는 독자 대리인</p>
+          <p><strong>🗺️ 맵이:</strong> 지도의 수호자 요정, 나침반 모자를 쓰고 범례·축척·방향의 약속을 알려주는 안내자</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 갈등 구조</h3>
+          <p>"내 지도를 왜 못 읽어?!" — 나침이가 그린 보물지도를 별이가 읽지 못하면서 시작됩니다. 범례·색·축척·방향이라는 '약속'이 없었기 때문입니다. 지도의 왜곡 한계와 약속이 깨졌을 때의 재앙을 배우며, '약속이 이해를 가능하게 한다'는 깨달음에 도달하는 성장 이야기입니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/01.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제1장</span>
+        <span class="theme">소통 실패의 시작</span>
+        <h2>🗺️ 지도 속 기호 — 두 친구의 대모험</h2>
+        <p>열한 살 나침이는 모험을 좋아하는 소년이에요. 어느 날, 학교 뒷산에 숨겨둔 보물 상자를 친구 별이에게 찾게 해주고 싶어서 직접 보물지도를 그려 카카오톡으로 보냈어요. 별표로 보물 위치를 표시하고, 구불구불한 선으로 개울을 그리고, 세모로 나무를 표시했죠.</p>
+        <p><span class="dialogue">"별이야! 내 지도 보고 보물 찾아봐! 완벽하게 그렸어!"</span> 나침이는 뿌듯했어요.</p>
+        <p>그런데 30분 후, 별이에게서 화가 잔뜩 난 전화가 왔어요. <span class="dialogue">"나침이! 이 별 표시가 뭐야? 보물이야, 아니면 그냥 목표 지점이야? 구불구불한 선은 길이야, 개울이야? 세모는 나무야, 산이야? 나 진짜 하나도 모르겠어!"</span></p>
+        <p>나침이는 멍해졌어요. 자기는 분명히 알아볼 수 있게 그렸는데, 왜 별이는 못 읽는 걸까요? 그때 신기한 일이 일어났어요. 방 벽에 붙어있던 세계 지도에서 눈부신 빛이 나더니, 작은 요정이 나타났어요. 나침반 모양의 모자를 쓴 귀여운 요정이었죠.</p>
+        <p><span class="dialogue">"안녕! 나는 지도의 요정 맵이야."</span> 요정이 밝게 웃었어요. <span class="dialogue">"네 지도에 '약속'이 빠져 있어서 그래. 지도의 모든 요소는 <span class="highlight" data-tooltip="기호학(Semiotics): 기호의 의미를 연구하는 학문. 지도는 기호로 의미를 전달하며, 제작자와 이용자가 의미를 공유해야 소통이 가능함">기호</span>로서 의미를 전달하는데, 그 의미가 만드는 사람과 읽는 사람 사이에 공유되어야만 소통이 가능하거든. 지도 제작자가 보내는 메시지가 읽는 사람에게 제대로 전달되려면 '약속'이 있어야 해. 지도가 왜 약속 덩어리인지 내가 알려줄게!"</span></p>
+        <p>나침이의 눈이 반짝였어요. 지도의 세계로 떠나는 신비로운 모험이 시작되려 하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/02.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제2장</span>
+        <span class="theme">모든 기호에는 이름이 있다</span>
+        <h2>📋 범례의 의미 — 지도의 사전</h2>
+        <p>맵이가 나침이의 손을 잡고 휙 하고 날아올랐어요. 어느새 둘은 거대한 지도 세계 위에 서 있었죠. 발 아래로 산은 삼각형으로, 강은 파란 선으로, 도시는 빨간 점으로 그려져 있었어요. 마치 거인의 그림 위를 걷는 기분이었어요.</p>
+        <p><span class="dialogue">"맵이, 이 기호들이 무슨 뜻인지 어떻게 알아요?"</span> 나침이가 발 아래의 삼각형을 가리키며 물었어요.</p>
+        <p>맵이가 지도 구석의 작은 상자를 가리켰어요. 그 안에는 기호와 뜻이 짝지어 적혀 있었죠. 삼각형(△) 옆에 '산', 파란 선(~) 옆에 '강', 빨간 점(●) 옆에 '도시'라고요.</p>
+        <p><span class="dialogue">"이게 바로 '<span class="highlight" data-tooltip="범례(Legend): 지도에 사용된 기호와 색의 의미를 설명하는 부분. 지도를 읽는 '사전' 역할을 함">범례</span>'야. 지도의 사전이자 번역표지. 국토지리정보원에서 만드는 1:25,000 지형도에는 무려 200개 이상의 기호가 범례에 들어 있어. 등고선 간격, 도로 등급, 건물 유형까지 아주 세밀하게 구분되지."</span></p>
+        <p>맵이가 설명을 이었어요. <span class="dialogue">"기호는 세 종류로 나뉘어. <span class="highlight" data-tooltip="점·선·면 기호: 점 기호는 위치(학교, 병원), 선 기호는 연결(도로, 하천), 면 기호는 영역(숲, 호수)을 나타냄">점 기호</span>는 학교나 병원처럼 위치를 나타내고, 선 기호는 도로나 하천처럼 연결을 나타내고, 면 기호는 숲이나 호수처럼 영역을 나타내지."</span></p>
+        <p>나침이가 무릎을 탁 쳤어요. <span class="dialogue">"아! 내 지도에는 범례가 없었구나! 별 표시가 보물이라는 설명이 어디에도 없었어! 그래서 별이가 못 읽은 거구나!"</span></p>
+        <p>맵이가 고개를 끄덕였어요. <span class="dialogue">"맞아. 범례가 없으면 기호는 그냥 의미 없는 그림일 뿐이야. 약속이 공유되어야 소통이 되는 거지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/03.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제3장</span>
+        <span class="theme">파란색은 왜 물이고 초록색은 왜 숲일까</span>
+        <h2>🎨 색의 약속 — 오랜 세월의 합의</h2>
+        <p>지도 세계를 걷던 나침이가 발 아래 펼쳐진 파란색 영역을 보며 물었어요. <span class="dialogue">"맵이, 지도에서 파란색이 물인 건 누가 정한 거야? 법으로 정해져 있어?"</span></p>
+        <p>맵이가 미소 지으며 대답했어요. <span class="dialogue">"법이 아니라 <span class="highlight" data-tooltip="관습(Convention): 오랜 시간에 걸쳐 자연스럽게 형성된 사회적 약속. 법적 강제력은 없지만 널리 통용됨">관습</span>이야. 오랜 시간에 걸쳐 자연스럽게 정해진 약속이지. 하늘과 바다가 우리 눈에 파랗게 보이니까, 지도에서도 물을 파란색으로 표시하게 된 거야."</span></p>
+        <p>맵이가 지도 위를 걸으며 색의 관습적 의미를 알려줬어요. <span class="dialogue">"파란색은 바다, 강, 호수 같은 물을 뜻해. 초록색은 숲, 풀밭, 식물이 자라는 곳이고. 갈색은 높은 산이나 등고선을 나타내지. 노란색이나 베이지색은 사막이나 초원, 흰색은 눈 덮인 빙하 지대야."</span></p>
+        <p>나침이가 고개를 끄덕이다가 물었어요. <span class="dialogue">"그러면 파란색은 항상 물인 거예요?"</span></p>
+        <p>맵이가 손을 저었어요. <span class="dialogue">"아니야, 조심해야 해! 같은 색이라도 지도 종류에 따라 의미가 달라질 수 있어. 지형도에서 파란색은 물이지만, <span class="highlight" data-tooltip="기온 분포도: 지역별 기온을 색으로 표현한 지도. 파란색은 추운 지역, 빨간색은 더운 지역을 나타냄">기온 분포도</span>에서 파란색은 추운 지역을 뜻해. <span class="highlight" data-tooltip="단계구분도(Choropleth Map): 인구 밀도, 소득 수준 등을 색의 농담으로 표현하는 지도. 진한 색일수록 수치가 높음">단계구분도</span>라고 해서 인구 밀도나 소득 수준 같은 걸 색의 농담으로 표현하는 지도도 있어. 진한 색일수록 수치가 높지."</span></p>
+        <p>나침이가 눈을 동그랗게 떴어요. <span class="dialogue">"와, 그러면 색의 의미도 범례에서 꼭 확인해야겠네요!"</span></p>
+        <p><span class="dialogue">"정확해! 색도 결국 약속이야. 그 약속이 무엇인지 범례에서 확인하는 게 지도를 제대로 읽는 첫걸음이지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/04.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제4장</span>
+        <span class="theme">지도 위 1cm가 현실의 몇 km일까</span>
+        <h2>📏 축척의 기준 — 거리의 비율</h2>
+        <p>맵이가 허공에서 두 장의 지도를 펼쳤어요. 하나는 세계 지도, 다른 하나는 서울 상세 지도였죠. 나침이가 두 지도를 번갈아 보며 신기해했어요.</p>
+        <p><span class="dialogue">"어? 서울이 세계 지도에서는 점만큼 작은데, 서울 지도에서는 골목길까지 보여요! 어떻게 같은 곳이 이렇게 다르게 보이죠?"</span></p>
+        <p><span class="dialogue">"그건 '<span class="highlight" data-tooltip="축척(Scale): 지도 위 거리와 실제 거리의 비율. 1:25,000은 지도 1cm가 실제 250m임을 의미">축척</span>'이 다르기 때문이야. 축척은 지도 위 거리와 실제 거리의 비율을 나타내는 약속이지."</span> 맵이가 설명했어요.</p>
+        <p><span class="dialogue">"예를 들어볼게. '1:25,000'은 지도의 1센티미터가 실제 25,000센티미터, 그러니까 250미터라는 뜻이야. '1:1,000,000'은 지도 1센티미터가 실제 10킬로미터(1,000,000센티미터)를 의미하고."</span></p>
+        <p>나침이가 머리를 굴리며 계산해봤어요. <span class="dialogue">"아, 알겠다! 그러면 뒤의 숫자가 작을수록 자세하게 보이고, 클수록 넓게 보이는 거네요?"</span></p>
+        <p><span class="dialogue">"똑똑한데! 숫자가 작은 걸 '<span class="highlight" data-tooltip="대축척(Large Scale): 1:5,000, 1:25,000 등. 좁은 지역을 상세히 표현하며 토지 이용도, 도시 계획도에 사용">대축척</span>'이라고 하고, 큰 걸 '<span class="highlight" data-tooltip="소축척(Small Scale): 1:250,000, 1:1,000,000 등. 넓은 지역을 한눈에 보여주며 세계 지도, 대륙 지도에 사용">소축척</span>'이라고 해. 대축척 지도는 좁은 지역을 상세히 보여줘서 토지 이용도나 도시 계획에 쓰이고, 소축척 지도는 넓은 지역을 한눈에 보여줘서 세계 지도나 대륙 지도에 쓰이지."</span></p>
+        <p>나침이가 손가락으로 거리를 재며 물었어요. <span class="dialogue">"지도에서 거리를 재면 실제 거리도 알 수 있어요?"</span></p>
+        <p><span class="dialogue">"물론이지! 지도 거리에 축척 분모를 곱하면 돼. 지도에서 4센티미터인데 축척이 1:25,000이면? 4 곱하기 25,000은 100,000센티미터, 즉 1킬로미터야!"</span> 나침이의 눈이 반짝였어요. 축척이라는 약속 덕분에 지도 위의 거리가 현실의 거리로 바뀌는 마법이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/05.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제5장</span>
+        <span class="theme">위쪽이 항상 북쪽인 이유</span>
+        <h2>🧭 방향 표시 — 그것도 약속이다</h2>
+        <p>지도 세계를 걷던 나침이가 문득 고개를 들어 하늘을 보았어요. 지도 세계에도 태양이 있었는데, 어디가 동쪽이고 어디가 서쪽인지 헷갈렸어요.</p>
+        <p><span class="dialogue">"맵이, 지도에서 위쪽이 항상 북쪽이잖아. 그것도 약속이야?"</span></p>
+        <p>맵이가 나침반 모자를 톡톡 만지며 말했어요. <span class="dialogue">"좋은 질문이야! 사실 지구는 둥글어서 절대적인 '위'와 '아래'가 없어. 우주에서 보면 지구에는 위아래가 없지. 하지만 지도를 그리고 읽으려면 기준이 필요하니까, 전 세계가 '<span class="highlight">북쪽을 위로</span>' 놓기로 정한 거야."</span></p>
+        <p>나침이가 궁금해했어요. <span class="dialogue">"그러면 옛날에도 항상 북쪽이 위였어요?"</span></p>
+        <p><span class="dialogue">"아니, 아주 다양했어! 중세 아랍 지도에서는 남쪽이 위였어. 중세 유럽의 T-O 지도에서는 동쪽, 그러니까 예루살렘 방향이 위였고. '<span class="highlight" data-tooltip="Orientation: '방향 잡기'라는 뜻의 영어 단어. 'orient(동쪽)'에서 유래했으며, 동쪽을 기준으로 방향을 잡았던 역사를 반영">오리엔테이션</span>'이라는 영어 단어가 '오리엔트', 즉 동쪽에서 왔을 정도야."</span></p>
+        <p>맵이가 지도 위에 <span class="highlight" data-tooltip="방위 표시: 8방위(N, NE, E, SE, S, SW, W, NW) 또는 16방위로 표현. 항해도에서는 32방위까지 사용">방위 표시</span>를 그리며 설명했어요. <span class="dialogue">"방위는 8방위, 16방위로 나눠. 항해도에서는 32방위까지 쓰지. 그리고 중요한 게 있어. 지도의 북쪽인 '<span class="highlight" data-tooltip="진북(True North): 지리적 북극. 지구 자전축의 끝점으로 지도의 위쪽 방향">진북</span>'과 나침반이 가리키는 '<span class="highlight" data-tooltip="자북(Magnetic North): 나침반이 가리키는 북쪽. 지구 자기장의 북극으로 진북과 약간 차이가 있음">자북</span>'은 약간 달라. 이 차이를 '<span class="highlight" data-tooltip="편각(Magnetic Declination): 자북과 진북 사이의 각도 차이. 한반도에서는 약 7~8° 서편">편각</span>'이라고 하는데, 한반도에서는 약 7~8도야."</span></p>
+        <p>나침이가 고개를 끄덕였어요. <span class="dialogue">"방향도 약속이 필요하구나! 그래야 모두가 같은 방향을 바라볼 수 있으니까요."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/06.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제6장</span>
+        <span class="theme">둥근 지구를 네모난 종이에 담을 수 없는 고민</span>
+        <h2>🌍 왜곡의 문제 — 완벽한 지도는 없다</h2>
+        <p>맵이가 갑자기 허공에서 오렌지 하나를 꺼내 나침이에게 건넸어요. <span class="dialogue">"이 오렌지 껍질을 벗겨서 찢지 않고 평평하게 펴봐."</span></p>
+        <p>나침이가 조심조심 껍질을 벗겼어요. 하지만 아무리 노력해도 껍질은 찢어지거나 겹치지 않고는 절대 평평해지지 않았어요. <span class="dialogue">"안 돼요! 어떻게 해도 평평하게 안 펴져요!"</span></p>
+        <p>맵이가 고개를 끄덕였어요. <span class="dialogue">"바로 이게 <span class="highlight">지도 제작의 근본적 딜레마</span>야! 지구는 3차원 구체야. 하지만 지도는 2차원 평면에 그려야 하잖아. 3차원을 2차원으로 바꾸면 무언가는 반드시 왜곡돼."</span></p>
+        <p>맵이가 <span class="highlight" data-tooltip="메르카토르 도법(Mercator Projection): 16세기 네덜란드의 메르카토르가 개발. 각도와 방향이 정확해 항해에 유용하지만 고위도 면적이 확대됨">메르카토르 도법</span> 세계 지도를 보여줬어요. <span class="dialogue">"이 지도에서 그린란드와 아프리카 크기를 비교해봐."</span></p>
+        <p>나침이가 자세히 보았어요. 두 대륙이 비슷해 보였어요. 하지만 맵이가 진실을 알려줬어요. <span class="dialogue">"실제로 아프리카는 그린란드보다 14배나 커! 이 지도는 각도와 방향은 정확하지만, 면적은 엄청나게 왜곡된 거야."</span></p>
+        <p>나침이가 놀랐어요. <span class="dialogue">"그럼 정확한 지도는 없는 건가요?"</span></p>
+        <p><span class="dialogue">"완벽한 지도는 수학적으로 존재할 수 없어. 그래서 목적에 맞는 <span class="highlight" data-tooltip="투영법(Projection): 구형인 지구를 평면 지도로 변환하는 방법. 메르카토르(방향 정확), 몰바이데(면적 정확), 정거방위(거리 정확) 등이 있음">투영법</span>을 선택하는 거야. <span class="highlight" data-tooltip="몰바이데 도법(Mollweide Projection): 면적이 정확한 정적도법. 대륙별 면적 비교에 적합하지만 가장자리 형태가 왜곡됨">몰바이데 도법</span>은 면적이 정확해서 대륙 비교에 좋고, <span class="highlight" data-tooltip="정거방위도법: 중심점에서의 거리와 방위가 정확. 항공 노선도에 사용">정거방위도법</span>은 거리가 정확해서 항공 노선도에 써. 지도를 읽을 때는 어떤 왜곡이 있는지 알고 읽어야 해."</span> 나침이는 지도에도 한계가 있다는 걸 배웠어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/07.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제7장</span>
+        <span class="theme">잘못된 지도가 만든 재앙의 역사</span>
+        <h2>⚠️ 약속이 깨지면 — 위험의 역사</h2>
+        <p>맵이의 표정이 갑자기 심각해졌어요. <span class="dialogue">"나침아, 지도의 약속이 깨지면 어떤 일이 생기는지 보여줄게. 무서울 수도 있지만, 꼭 알아야 해."</span></p>
+        <p>맵이가 손을 휘젓자, 눈앞에 과거의 장면이 펼쳐졌어요. 1707년 영국 해군 함대가 실리 제도의 암초에 좌초하는 장면이었어요. 배가 부서지고, 파도에 휩쓸리는 사람들. 그날 2,000명이 목숨을 잃었대요.</p>
+        <p><span class="dialogue">"해도의 경도 계산이 틀렸던 거야. 대항해 시대에는 '<span class="highlight" data-tooltip="경도 문제(Longitude Problem): 대항해 시대에 위도는 북극성 고도로 측정 가능했지만 경도는 측정이 불가능해 수많은 배가 좌초하고 수만 명이 목숨을 잃음">경도 문제</span>'라고 해서, 바다에서 동서 위치를 정확히 알 수 없었거든. 그래서 수많은 배가 좌초하고 수만 명이 죽었어."</span></p>
+        <p>나침이가 물었어요. <span class="dialogue">"그 문제는 어떻게 해결됐어요?"</span></p>
+        <p><span class="dialogue">"1761년에 <span class="highlight" data-tooltip="해리슨의 해상 시계(H4): 존 해리슨이 발명한 정밀 시계. 출발지 시간과 현지 시간의 차이로 경도를 계산할 수 있게 함">존 해리슨</span>이라는 시계공이 정밀한 해상 시계를 발명했어. 출발지 시간과 현지 시간의 차이로 경도를 계산할 수 있게 된 거야. 시간이 거리가 되고, 거리가 위치가 된 거지. 현대의 GPS도 같은 원리야. 위성 신호가 도달하는 시간 차이로 위치를 측정하지."</span></p>
+        <p>다른 장면도 보여줬어요. 걸프전에서 아군 오인 사격 사고가 여러 번 일어났대요. 지도에서 아군과 적군 위치 표시가 혼란스러웠던 게 한 원인이었죠.</p>
+        <p><span class="dialogue">"<span class="highlight">기호의 약속이 모호하면 생사가 갈릴 수 있어</span>. 지도의 약속은 그냥 편의가 아니라, 사람의 생명이 걸린 문제일 수도 있단다."</span> 나침이는 지도의 무게를 새삼 느꼈어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/08.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제8장</span>
+        <span class="theme">기호 하나, 선 하나에 담긴 무게</span>
+        <h2>🎯 정확성의 중요성 — 책임의 무게</h2>
+        <p>역사의 비극을 본 나침이가 물었어요. <span class="dialogue">"지도를 정확하게 만들려면 어떻게 해요?"</span></p>
+        <p>맵이가 나침이를 현대의 국토지리정보원 같은 지도 제작 기관으로 데려갔어요. 거대한 컴퓨터 화면에 위성 사진과 데이터가 가득했어요.</p>
+        <p><span class="dialogue">"옛날에는 측량사가 직접 땅을 걸으며 거리를 쟀어. 체인과 삼각측량으로 지형을 기록했지."</span> 맵이가 옛 사진을 보여줬어요. 무거운 장비를 지고 산을 오르는 측량사들의 모습이었죠.</p>
+        <p><span class="dialogue">"하지만 지금은 달라. <span class="highlight" data-tooltip="GNSS(위성항법시스템): GPS(미국), GLONASS(러시아), Galileo(유럽), BeiDou(중국) 등 다중 위성 시스템으로 센티미터 단위 정밀 측위 가능">인공위성</span>이 지구를 촬영하고, 항공 사진이 정밀한 이미지를 제공하고, GPS가 센티미터 단위로 위치를 측정해."</span></p>
+        <p>맵이가 신기한 기술을 보여줬어요. <span class="dialogue">"이건 <span class="highlight" data-tooltip="LiDAR(Light Detection And Ranging): 초당 수십만 발의 레이저 펄스로 3D 점군 데이터를 생성. 마야 문명의 잃어버린 도시가 이 기술로 발견됨">라이다</span>라고 해. 레이저를 쏴서 지형을 3D로 스캔하는 거야. 초당 수십만 발의 레이저 펄스를 발사해서 정밀한 데이터를 만들어. 울창한 숲 아래 숨겨진 지형까지 측정할 수 있어."</span></p>
+        <p>나침이가 눈을 반짝였어요. <span class="dialogue">"마야 문명의 잃어버린 도시를 그렇게 찾았다고 들었어요!"</span></p>
+        <p><span class="dialogue">"맞아! 그리고 이 모든 데이터를 통합해서 분석하는 게 <span class="highlight" data-tooltip="GIS(Geographic Information System): 다양한 지리 데이터를 통합·분석하는 시스템. 도시 계획, 재난 관리, 환경 분석에 필수">GIS</span>, 지리정보시스템이야. 도시 계획, 재난 관리, 환경 분석에 필수적이지. 기호 하나, 선 하나가 이렇게 엄청난 기술과 책임 위에 만들어지는 거야."</span> 나침이는 지도가 얼마나 정교한 작업인지 깨달았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/09.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제9장</span>
+        <span class="theme">전 세계가 같은 지도를 읽을 수 있는 기적의 비밀</span>
+        <h2>🌐 공통 규칙 — 인류의 아름다운 합의</h2>
+        <p>나침이가 문득 궁금해졌어요. <span class="dialogue">"맵이, 한국 사람이 그린 지도를 미국 사람이나 브라질 사람도 읽을 수 있어요? 언어가 다른데?"</span></p>
+        <p>맵이가 환하게 웃었어요. <span class="dialogue">"물론이지! 그게 바로 지도의 놀라운 점이야. 말과 글자가 달라도, 지도의 기본 약속은 전 세계가 거의 같거든."</span></p>
+        <p>맵이가 여러 나라의 지도를 보여줬어요. 한국어, 영어, 아랍어, 중국어로 된 지도들. 글씨는 완전히 달랐지만, 파란색은 모두 물을, 초록색은 모두 숲을, 위쪽은 모두 북쪽을 나타내고 있었어요.</p>
+        <p><span class="dialogue">"<span class="highlight" data-tooltip="IHO(국제수로기구): 1921년 설립. 해도의 기호, 색상, 표기법을 국제적으로 통일하여 어느 나라 선박이든 어느 나라 해도를 읽을 수 있게 함">국제수로기구</span>가 해도의 국제 표준을 정하고, <span class="highlight" data-tooltip="ICAO(국제민간항공기구): 항공 지도와 공항 차트의 표준을 정함. 어느 나라 조종사든 어느 나라 공항에서든 차트를 읽을 수 있음">국제민간항공기구</span>가 항공 지도 표준을 정해. 덕분에 한국 선박이 브라질 해도를 읽을 수 있고, 한국 조종사가 미국 공항 차트를 읽을 수 있지."</span></p>
+        <p>나침이가 고개를 끄덕였어요. <span class="dialogue">"그래서 비행기 안전 표시나 비상구 표시가 전 세계 다 비슷한 거군요!"</span></p>
+        <p><span class="dialogue">"맞아! 그런 그림 기호를 '<span class="highlight" data-tooltip="픽토그램(Pictogram): 언어 없이 의미를 전달하는 그림 기호. 올림픽 경기 종목 기호, 공항 안내 기호, 비상구 표시 등. 1964년 도쿄 올림픽에서 체계화됨">픽토그램</span>'이라고 해. 1964년 도쿄 올림픽에서 체계화됐어. 언어가 달라도 누구나 이해할 수 있는 그림의 언어지. 지도의 기호도 마찬가지야. 전 세계가 같은 약속을 공유하니까, 70억 인류가 같은 지도를 읽을 수 있는 거야."</span></p>
+        <p>나침이는 지도가 인류의 아름다운 합의라는 것을 느꼈어요. 서로 다른 언어를 쓰는 사람들이 같은 약속을 지켜서 소통할 수 있다니, 정말 멋진 일이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리02/10.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제10장</span>
+        <span class="theme">약속은 이해를 가능하게 한다</span>
+        <h2>🤝 신뢰의 지도 — 나침이의 새 보물지도</h2>
+        <p>모험을 마친 나침이는 집으로 돌아왔어요. 책상 위에 놓인 처음 그렸던 보물지도를 보니 웃음이 났어요. 범례도 없고, 축척도 없고, 방향 표시도 없는 지도. 이건 지도가 아니라, 자기 머릿속에서만 통하는 낙서였어요.</p>
+        <p><span class="dialogue">"다시 그려야지! 이번에는 제대로!"</span></p>
+        <p>나침이가 새 종이를 꺼내 체계적으로 작업을 시작했어요. 첫째, 오른쪽 위에 <span class="highlight">방위 표시</span>를 그렸어요. 화살표가 위를 가리키고 'N'이라고 써서 북쪽을 표시했죠. 둘째, 아래에 <span class="highlight">축척</span>을 적었어요. '1cm = 5m'. 셋째, 왼쪽 아래에 <span class="highlight">범례 상자</span>를 그렸어요. 별표(☆) = 보물, 구불선(~) = 개울, 세모(△) = 나무.</p>
+        <p>완성된 지도를 찍어서 별이에게 보냈어요. 떨리는 마음으로 기다렸죠. 20분 후, 별이에게서 환호 메시지가 왔어요.</p>
+        <p><span class="dialogue">"찾았어!!! 보물 상자 찾았어! 나침아 고마워!"</span></p>
+        <p>나침이의 얼굴에 활짝 웃음꽃이 폈어요. 그때 맵이가 마지막으로 나타났어요.</p>
+        <p><span class="dialogue">"나침아, 잘했어. 기억해. <span class="highlight">범례</span>는 기호의 의미를 약속하는 지도의 사전이야. <span class="highlight">축척</span>은 거리의 비율을 약속해서 지도와 현실을 연결하지. <span class="highlight">방위</span>는 방향의 기준을 약속해. 그리고 <span class="highlight">투영법</span>은 왜곡의 방식을 결정하지. 완벽한 지도는 없지만, 목적에 맞는 선택이 필요해."</span></p>
+        <p>맵이가 사라지기 전 마지막으로 말했어요. <span class="dialogue">"<span class="highlight">약속이 명확할 때 이해가 가능하고, 이해가 될 때 함께 할 수 있어.</span> 그게 지도의 비밀이자, 모든 소통의 비밀이야."</span> 나침이는 고개를 끄덕였어요. 지도는 약속이고, 약속은 서로를 이해하게 만드는 다리였어요.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <a href="/creative-book.html?grade=78&category=social" class="nav-btn">← 목록으로</a>
+    <a href="/creative-book/geo02_season1_quiz.html?season=season3" class="nav-btn">📝 관문평가</a>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '/images/창작도서/창작지리02/00.jpg';
+
+    // IntersectionObserver를 사용한 스크롤 애니메이션
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.3
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const card = entry.target.querySelector('.story-card');
+          if (card) {
+            card.classList.add('active');
+          }
+
+          const bgImage = entry.target.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 초기 로드 시 첫 번째 카드 활성화
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) {
+        setTimeout(() => firstCard.classList.add('active'), 500);
+      }
+    });
+  </script>
+</body>
+</html>

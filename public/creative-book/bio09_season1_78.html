@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧫 세포마을 대소동</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #7B1FA2 0%, #4A148C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(123, 31, 162, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(123, 31, 162, 0.15);
+      color: #4A148C;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #7B1FA2;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #7B1FA2;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(123, 31, 162, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #4A148C;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #4A148C;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #4A148C;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #CE93D8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(123, 31, 162, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #CE93D8;
+    }
+
+    .intro-content .conflict h3 {
+      color: #CE93D8;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(123, 31, 162, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(123, 31, 162, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(74, 20, 140, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(123, 31, 162, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🧫 세포마을 대소동</h1>
+        <p class="subtitle">
+          하나가 둘이 되고, 둘이 다시 하나가 되는 약속의 이야기<br>
+          교과기반 창작도서 · 생물 09
+        </p>
+        <div class="characters">
+          <h3>🧬 등장인물 소개</h3>
+          <p><strong>🔬 셀리나:</strong> 세포마을의 평범한 세포 소녀. 성실하고 책임감이 강하지만, 자신이 왜 분열해야 하는지 의문을 품고 있다.</p>
+          <p><strong>🧬 디엔(D.N.):</strong> DNA 복제를 담당하는 천재 설계사. 완벽주의자이며, 실수를 극도로 두려워한다.</p>
+          <p><strong>⚡ 미토스:</strong> 분열의 순간을 지휘하는 열정적인 지휘관. 방추사 군단을 이끈다.</p>
+          <p><strong>🌿 그로우:</strong> 세포마을의 원로 어른. 성장과 균형의 지혜를 간직하고 있다.</p>
+          <p><strong>🖤 카오스:</strong> 통제를 벗어나려는 그림자 세력. 무한 분열을 꿈꾸며 마을의 질서를 위협한다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p>셀리나는 마을을 지키기 위해 분열의 여정을 떠나야 하지만, 카오스가 분열의 규칙을 무너뜨리려 한다. 과연 셀리나와 친구들은 균형과 질서의 약속을 지켜낼 수 있을까?</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">간기 - 세포의 준비</span>
+        <h2>여행을 앞둔 셀리나의 결심</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">모든 위대한 변화는 조용한 준비에서 시작된다.</span></p>
+        <p>세포마을의 아침은 언제나 고요했습니다. 투명한 인지질 이중층 세포막 너머로 부드러운 ATP 에너지의 빛이 스며들면, 마을 한가운데 자리 잡은 핵의 궁전에서 셀리나가 눈을 떴습니다. 셀리나는 세포마을에서 태어난 평범한 체세포 소녀였지만, 오늘따라 마음이 무거웠습니다. 마을의 원로인 그로우 할아버지가 어젯밤 긴급 회의에서 말했기 때문입니다. <span class="dialogue">"셀리나, 네가 분열해야 할 때가 왔단다. <span class="highlight">세포 주기</span>가 시작될 거야."</span></p>
+        <p>세포 분열이라니! 셀리나는 자신이 둘로 나뉜다는 생각에 온몸이 떨렸습니다. '나는 하나인 내가 좋은데, 왜 둘이 되어야 하지?' 셀리나는 창밖을 내다보았습니다. 미토콘드리아 발전소에서는 산화적 인산화를 통해 ATP 에너지가 활발하게 만들어지고 있었고, 리보솜 공장에서는 mRNA를 번역하여 단백질 벽돌이 쉴 새 없이 합성되고 있었습니다. 소포체 운송 도로 위로는 소포에 실린 물질들이 바쁘게 이동하고 있었습니다. 이것이 바로 <span class="highlight">간기</span>의 모습이었습니다. 마을은 이미 분열을 위한 준비를 시작하고 있었던 것입니다.</p>
+        <p>그로우 할아버지가 셀리나 곁으로 다가왔습니다. <span class="dialogue">"준비란 것은 말이다, 눈에 보이지 않는 곳에서 가장 중요한 일이 일어나는 거란다. 지금 우리는 <span class="highlight">G1기</span>에 있어. 세포의 크기가 커지고, 소기관들이 두 배로 늘어나고, 단백질 합성이 활발해지고 있지. 이 모든 것은 네가 건강하게 둘이 되기 위한 사랑의 준비야. 곧 <span class="highlight">S기</span>가 시작되어 DNA가 복제되고, <span class="highlight">G2기</span>에서 최종 점검을 마치면 비로소 분열에 들어갈 수 있단다."</span></p>
+        <p>셀리나는 고개를 끄덕였지만 여전히 불안했습니다. 그때, 핵 궁전 깊은 곳에서 익숙한 목소리가 울려 퍼졌습니다. <span class="dialogue">"걱정 마, 셀리나. 내가 완벽하게 설계도를 준비해 놓을게."</span> 그것은 DNA 설계사 디엔의 목소리였습니다. 셀리나는 작은 미소를 지으며 마음을 다잡았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">S기 - DNA 복제</span>
+        <h2>디엔의 완벽한 설계도 두 벌</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">생명의 설계도는 단 한 글자의 실수도 허락하지 않는 정밀한 약속이다.</span></p>
+        <p>핵 궁전의 가장 깊은 방, 그곳은 디엔의 작업실이었습니다. 이중 나선 계단처럼 꼬여 있는 거대한 DNA 사다리가 방 한가운데 우뚝 서 있었습니다. 총 60억 개의 <span class="highlight" data-tooltip="염기쌍(base pair): DNA에서 상보적으로 결합하는 두 염기의 쌍(A-T, G-C)">염기쌍</span>으로 이루어진 인간 게놈 전체가 이 방에 저장되어 있었습니다. 디엔은 두꺼운 돋보기를 쓰고 사다리의 가닥 하나하나를 점검하고 있었습니다. <span class="dialogue">"아데닌(A)은 티민(T)과, 구아닌(G)은 시토신(C)과. 절대로 짝을 틀리면 안 돼. 이것이 <span class="highlight" data-tooltip="샤가프의 법칙(Chargaff's rule): DNA에서 아데닌과 티민, 구아닌과 시토신의 양이 같다는 법칙">샤가프의 법칙</span>이지."</span> 디엔이 중얼거렸습니다.</p>
+        <p><span class="highlight" data-tooltip="DNA 복제(replication): S기에 DNA를 두 벌로 복사하는 과정으로 반보존적 복제 방식 사용">DNA 복제</span>가 시작되자, DNA 사다리가 여러 곳에서 동시에 풀리기 시작했습니다. 이 시작점을 <span class="highlight" data-tooltip="복제 원점(origin of replication): DNA 복제가 시작되는 특정 염기 서열">복제 원점</span>이라고 부릅니다. <span class="highlight" data-tooltip="헬리카아제(helicase): DNA의 이중나선을 풀어 복제가 일어나도록 하는 효소">헬리카아제</span>라는 이름의 작은 일꾼들이 사다리의 수소 결합을 하나씩 끊으며 두 가닥을 벌려 놓았습니다. 이렇게 벌어진 부분은 복제 분기점(replication fork)을 형성했습니다. 단일 가닥 결합 단백질(SSB)이 벌어진 가닥이 다시 붙지 않도록 안정화시켰고, 토포아이소머라아제(topoisomerase)가 꼬임을 풀어주었습니다.</p>
+        <p>그 뒤를 이어 <span class="highlight">DNA 중합효소</span>라는 장인이 각 가닥을 주형으로 삼아 새로운 상보적 가닥을 정확하게 합성해 나갔습니다. DNA 중합효소는 5'에서 3' 방향으로만 합성할 수 있기 때문에, 한 가닥은 연속적으로(선도 가닥), 다른 가닥은 불연속적으로(지연 가닥, 오카자키 절편) 합성되었습니다. DNA 연결효소가 오카자키 절편들을 이어 붙여 완전한 가닥을 만들었습니다.</p>
+        <p>그런데 바로 그때였습니다. 작업실 구석에서 검은 그림자가 스멀스멀 기어 나왔습니다. 카오스였습니다! <span class="dialogue">"실수 하나쯤 괜찮지 않아? 완벽할 필요가 뭐 있어, 디엔?"</span> 카오스가 속삭였습니다. 디엔의 손이 잠시 떨렸습니다. 하지만 디엔은 이를 악물었습니다. <span class="dialogue">"안 돼. 생명의 설계도에 '대충'이란 없어. DNA 중합효소의 <span class="highlight">교정 기능</span>과 <span class="highlight">불일치 수선</span> 시스템이 오류를 잡아낼 거야."</span></p>
+        <p>교정 효소들이 달려와 혹시 생긴 오류를 잡아내고, 마침내 두 벌의 완벽한 DNA 설계도가 완성되었습니다. 이것이 바로 <span class="highlight">반보존적 복제</span>였습니다. 각각의 새 DNA 분자는 원래 가닥 하나와 새로 합성된 가닥 하나로 이루어져 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전기 - 분열의 시작</span>
+        <h2>미토스 지휘관의 북소리</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">변화의 순간에는 용기 있는 첫 발걸음이 필요하다.</span></p>
+        <p><span class="dialogue">"전원 배치! <span class="highlight" data-tooltip="유사분열(mitosis): 체세포가 둘로 나뉘어 유전적으로 동일한 두 딸세포를 만드는 과정">유사분열</span>을 시작한다!"</span> 미토스 지휘관의 우렁찬 목소리가 세포마을 전체에 울려 퍼졌습니다. G2기의 최종 점검을 마친 세포는 이제 분열기(M phase)에 돌입했습니다. 핵 궁전의 거대한 핵막이 서서히 분해되기 시작했습니다. 핵막 단백질인 라민(lamin)이 인산화되면서 핵막이 소포로 조각났습니다. 셀리나는 심장이 쿵쿵 뛰는 것을 느꼈습니다. 이제 정말 <span class="highlight" data-tooltip="전기(prophase): 유사분열의 첫 단계로 염색체 응축과 핵막 분해가 일어남">전기</span>가 시작된 것입니다.</p>
+        <p>미토스는 세포의 양쪽 극에서 <span class="highlight" data-tooltip="방추사(spindle fiber): 미세소관으로 이루어진 실 구조로 염색체를 양극으로 이동시킴">방추사</span>라는 미세소관(microtubule) 실을 쏘아 올렸습니다. <span class="highlight" data-tooltip="중심체(centrosome): 동물세포에서 방추사 형성의 중심이 되는 세포소기관">중심체</span>에서 뻗어 나온 이 실들은 튜불린(tubulin) 단백질로 이루어져 있었고, 마치 거미줄처럼 세포 전체에 퍼졌습니다. 한편, 디엔이 만든 두 벌의 설계도는 이미 <span class="highlight" data-tooltip="염색체(chromosome): DNA가 히스톤 단백질에 감겨 고도로 응축된 구조">염색체</span>라는 단단한 막대 모양으로 응축되어 있었습니다. 염색사(chromatin)가 히스톤 단백질을 중심으로 꽁꽁 감기면서 압축된 것입니다.</p>
+        <p>각 염색체는 S기에 복제되었기 때문에 두 개의 동일한 <span class="highlight">자매 염색분체</span>로 이루어져 있었고, 이들은 <span class="highlight">동원체</span>라는 중심 부위에서 <span class="highlight">응집소</span> 단백질에 의해 서로 연결되어 있었습니다. 46개의 염색체(23쌍의 상동염색체)가 준비를 마쳤습니다.</p>
+        <p>그 순간 카오스가 다시 나타났습니다. <span class="dialogue">"질서 따위 필요 없어! 마구 잡아당겨 버려!"</span> 카오스가 방추사 하나를 흔들려 했지만, 미토스가 재빨리 막아섰습니다. <span class="dialogue">"균형이 깨지면 한쪽 세포는 염색체가 남고 다른 쪽은 부족해져. 그건 <span class="highlight">이수성</span>이라는 재앙이야! 다운증후군처럼 심각한 유전 질환을 일으키지."</span></p>
+        <p>셀리나는 자신의 몸 한가운데서 벌어지는 이 장엄한 광경을 보며 깨달았습니다. 변화는 두렵지만, 용기 있게 첫 발걸음을 내딛는 순간 비로소 시작되는 것이라고.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">중기와 후기</span>
+        <h2>갈라진 세계, 다시 세워지는 궁전</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">나뉨은 끝이 아니라 새로운 시작을 위한 문을 여는 것이다.</span></p>
+        <p><span class="highlight">중기</span>가 시작되었습니다. 46개의 염색체가 세포의 정중앙, <span class="highlight">적도판</span>이라는 무대 위에 일렬로 정렬했습니다. 방추사의 끝이 각 염색체의 동원체에 있는 <span class="highlight">동원판</span>에 정확히 걸렸습니다. 각 염색체의 자매 염색분체에 양쪽 극에서 오는 방추사가 하나씩 연결되어, 어느 한쪽으로도 치우치지 않게 팽팽한 균형을 잡았습니다. 이것이 <span class="highlight">양극 부착</span>입니다.</p>
+        <p>여기서 <span class="highlight">방추 조립 체크포인트</span>가 작동했습니다. 모든 동원판에 방추사가 정확히 연결되었는지 확인하는 최종 검문소였습니다. 단 하나의 염색체라도 제대로 연결되지 않으면 분열은 진행되지 않았습니다.</p>
+        <p><span class="dialogue">"당겨라!"</span> 미토스의 최종 명령과 함께, <span class="highlight">후기</span>가 시작되었습니다. 응집소가 분리효소에 의해 절단되고, 방추사가 힘차게 수축했습니다. 적도판에 나란히 서 있던 자매 염색분체들이 드디어 갈라지기 시작했습니다. 각 염색분체가 이제 독립된 염색체가 되어 반대쪽 극으로 끌려가는 모습은 마치 오랜 친구가 서로 다른 길을 떠나는 것 같았습니다. 셀리나는 눈물이 핑 돌았습니다.</p>
+        <p>하지만 그로우 할아버지의 목소리가 따뜻하게 들려왔습니다. <span class="dialogue">"울지 마, 셀리나. 저 염색체들은 헤어지는 게 아니란다. 똑같은 유전 정보를 가진 두 세트가 각자의 새 집에서 새 삶을 시작하는 거야. 이제 <span class="highlight">말기</span>로 넘어갈 시간이야."</span></p>
+        <p>양쪽 극에 도착한 염색체 묶음 주위로 신기한 일이 벌어졌습니다. 사라졌던 핵막이 다시 조립되기 시작한 것입니다. 라민 단백질이 탈인산화되면서 핵막 소포들이 염색체 주변에 융합되어 두 개의 새로운 핵 궁전을 세웠습니다. 꽁꽁 뭉쳐 있던 염색체도 서서히 풀려 다시 긴 실 모양의 염색사로 돌아갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">세포질 분열</span>
+        <h2>마지막 다리가 끊어지다</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">진정한 독립은 완전한 분리에서 비롯된다.</span></p>
+        <p>두 개의 핵이 자리를 잡자, 세포마을에서 가장 드라마틱한 순간이 찾아왔습니다. <span class="highlight">세포질 분열</span>이 시작된 것입니다. 셀리나의 허리 부분, 정확히 세포의 한가운데를 따라 보이지 않는 실들이 조여 오기 시작했습니다. <span class="highlight">액틴</span>과 <span class="highlight">미오신</span>이라는 운동 단백질 필라멘트가 세포막 안쪽에서 <span class="highlight">수축환</span>을 형성하며 점점 죄어 들었습니다. 마치 복주머니의 끈을 당기듯, 세포의 허리가 점점 잘록해졌습니다. 이 잘록해지는 부분을 <span class="highlight">분열구</span>라고 부릅니다.</p>
+        <p><span class="dialogue">"아, 간지러워!"</span> 셀리나가 소리쳤습니다. 분열환은 점점 더 깊이 파고들었습니다. 세포질 속의 세포소기관들은 양쪽으로 골고루 나뉘어야 했습니다. 미토콘드리아, 리보솜, 소포체, 골지체가 마치 이사짐을 나누듯 양쪽으로 공평하게 배분되었습니다. 미토콘드리아의 경우 자체 DNA를 가지고 있어서 스스로 분열한 뒤 양쪽 딸세포로 나뉘었습니다.</p>
+        <p>이때 카오스가 최후의 발악을 했습니다. <span class="dialogue">"한쪽에 소기관을 몰아줘! 그러면 한 세포는 ATP 없이 에너지 고갈로 죽게 될 거야!"</span> 카오스의 검은 손이 미토콘드리아 몇 개를 한쪽으로 밀려 했지만, 세포골격이라는 마을의 뼈대가 단단히 버텨 주었습니다. 미세소관과 중간섬유, 미세섬유로 이루어진 이 골격이 세포의 형태를 유지하고 소기관을 적절히 분배했습니다.</p>
+        <p>그로우 할아버지가 외쳤습니다. <span class="dialogue">"공평함이 곧 생존이다! 양쪽 모두 기능적으로 완전해야 진정한 분열이지!"</span></p>
+        <p>마침내 수축환이 완전히 닫혔습니다. 찰칵! 마지막 세포막 다리가 끊어지는 순간, 하나였던 셀리나는 완전히 두 개의 독립된 <span class="highlight">딸세포</span>가 되었습니다. 두 셀리나는 서로를 바라보며 환하게 웃었습니다. <span class="dialogue">"안녕, 나! 아니, 안녕, 너!"</span> 진정한 독립은 이렇게 완전한 분리에서 시작되는 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">G1기 - 성장</span>
+        <h2>작은 세포들의 커다란 꿈</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">분열 후의 성장은 생명이 스스로를 완성해 나가는 과정이다.</span></p>
+        <p>세포질 분열이 끝난 직후, 두 개의 새로운 셀리나는 원래 셀리나 부피의 절반밖에 되지 않았습니다. 작고 여린 두 딸세포는 세포마을의 새로운 구역에 각각 자리를 잡았습니다. <span class="dialogue">"어머, 나 이렇게 작았어?"</span> 셀리나A가 자신의 모습을 보며 놀랐습니다. 옆집의 셀리나B도 마찬가지였습니다. 하지만 그로우 할아버지가 다정하게 말했습니다. <span class="dialogue">"작다고 부끄러워하지 마. 모든 위대한 것은 작은 것에서 시작되는 법이란다. 이제 다시 <span class="highlight">G1기</span>가 시작되었어."</span></p>
+        <p>성장기인 G1기가 시작되었습니다. 두 셀리나는 <span class="highlight">막단백질 수송체</span>를 통해 영양분(포도당, 아미노산 등)을 열심히 흡수하고, 리보솜 공장을 가동하여 새로운 단백질을 합성했습니다. <span class="highlight">전사</span>를 통해 DNA에서 mRNA가 만들어지고, <span class="highlight">번역</span>을 통해 단백질이 합성되었습니다. 미토콘드리아 발전소는 풀가동되며 ATP 에너지를 쏟아냈고, 세포막 면적은 점점 넓어지며 세포의 부피는 하루가 다르게 커져 갔습니다.</p>
+        <p>성장은 단순히 크기가 커지는 것이 아니었습니다. 세포 안의 모든 세포소기관이 제 기능을 되찾고, 각자의 역할을 충실히 수행하며, <span class="highlight">대사</span>가 균형을 이루는 과정이었습니다. 셀리나A는 깨달았습니다. <span class="dialogue">"아, 분열은 끝이 아니었구나. 분열 후에 이렇게 자라나는 과정이 있어야 비로소 완전한 세포가 되는 거구나."</span></p>
+        <p>카오스의 속삭임이 또 들려왔습니다. <span class="dialogue">"성장 따위 건너뛰고 바로 다시 분열하면 되잖아!"</span> 하지만 셀리나는 단호히 거절했습니다. <span class="dialogue">"안 돼. 충분히 자라지 않은 세포가 분열하면, 그건 불완전한 생명을 만드는 거야. <span class="highlight">G1 체크포인트</span>에서 세포 크기와 영양 상태를 확인해야 S기로 넘어갈 수 있어."</span> 그로우 할아버지가 고개를 끄덕이며 말했습니다. <span class="dialogue">"바로 그거야. 성장은 생명이 스스로를 완성해 나가는 가장 아름다운 여정이란다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">세포 분열의 의미</span>
+        <h2>하나의 세포에서 37조 개의 기적으로</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">세포 분열은 생명이 자기 자신을 이어가는 가장 근본적인 방법이다.</span></p>
+        <p>어느 날 저녁, 그로우 할아버지가 마을 광장에 모든 세포를 불러 모았습니다. 별이 총총한 밤하늘 아래, 할아버지는 오래된 이야기를 들려주기 시작했습니다. <span class="dialogue">"옛날 옛적, 이 거대한 몸이라는 나라는 단 하나의 세포에서 시작되었단다. <span class="highlight">수정란</span>이라는 이름의 그 2n 세포가 첫 번째 <span class="highlight">난할</span>을 하여 둘이 되고, 둘은 넷이 되고, 넷은 여덟이 되었지. 이 초기 분열은 세포 성장 없이 빠르게 진행되어 세포 수만 늘어났단다."</span></p>
+        <p>할아버지의 이야기는 계속되었습니다. <span class="dialogue">"그렇게 분열에 분열을 거듭하여 <span class="highlight">배반포</span>가 되고, <span class="highlight">낭배</span>를 거쳐 세 가지 배엽층이 형성되었지. 외배엽, 중배엽, 내배엽에서 모든 기관이 분화했고, 지금 이 몸에는 무려 <span class="highlight">37조 2천억 개</span>의 세포가 살고 있단다. 200가지 이상의 서로 다른 종류로 분화했지만, 모두 같은 게놈을 가지고 있어."</span></p>
+        <p>셀리나A와 셀리나B는 입을 딱 벌렸습니다. <span class="dialogue">"37조요?!"</span> <span class="dialogue">"그래, 37조. 그리고 그 모든 세포에는 디엔이 만든 것과 같은 설계도가 들어 있어. 뼈를 만드는 골세포, 혈액을 만드는 조혈모세포, 뇌에서 신경 신호를 전달하는 뉴런, 심장을 뛰게 하는 심근세포. 모양과 역할은 다르지만, 모두 같은 게놈에서 출발해 <span class="highlight">후성유전학적 조절</span>로 서로 다른 유전자를 발현했지."</span></p>
+        <p>디엔이 감격하며 말했습니다. <span class="dialogue">"그래서 내가 그렇게 정확하게 설계도를 복제하는 거구나. 한 염기의 실수가 37조 개 세포 전체의 후손에 영향을 줄 수 있으니까! 이것이 바로 <span class="highlight">체세포 분열</span>의 의미야. 유전적으로 동일한 딸세포를 만들어 생명체의 성장, 발생, 재생을 가능하게 하는 거지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">상처 회복과 재생</span>
+        <h2>전쟁터에서 피어나는 꽃</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">세포 분열은 부서진 것을 다시 세우는 생명의 치유력이다.</span></p>
+        <p>평화로운 날이 계속되던 어느 날, 갑자기 세포마을에 재앙이 닥쳤습니다. 거대한 물리적 충격이 피부 표면을 강타했습니다. 칼에 베인 것이었습니다! 셀리나가 사는 구역 바로 옆 <span class="highlight">표피</span>에 거대한 균열이 생겼습니다. 세포막이 찢어지고, 수많은 상피세포 동료들이 파괴되었습니다. <span class="highlight">모세혈관</span>이 터지며 붉은 혈액이 쏟아져 나왔고, 외부에서 세균이라는 병원체들이 밀려들기 시작했습니다.</p>
+        <p><span class="dialogue">"큰일이다! 조직 손상이야!"</span> 마을 전체에 비상이 걸렸습니다. 가장 먼저 <span class="highlight">혈소판</span> 부대가 달려와 <span class="highlight">피브린</span>으로 혈전을 형성하여 상처 부위를 틀어막았습니다. <span class="highlight">호중구</span>와 <span class="highlight">대식세포</span> 같은 백혈구 전사들이 식세포 작용으로 세균 침략자를 잡아먹으며 치열하게 싸웠습니다. 염증 반응이 시작되어 상처 부위가 붓고 빨개졌습니다.</p>
+        <p>하지만 진정한 복구는 세포 분열의 몫이었습니다. 그로우 할아버지가 긴급 명령을 내렸습니다. <span class="dialogue">"상처 주변의 <span class="highlight">기저세포</span>들이여, 분열을 시작하라! 무너진 상피 조직을 다시 세워야 한다! <span class="highlight">성장인자</span>를 분비하여 분열 신호를 전달해라!"</span></p>
+        <p>상처 주변의 세포들이 일제히 세포 주기에 돌입했습니다. <span class="highlight">EGF(상피성장인자)</span>와 <span class="highlight">PDGF(혈소판유래성장인자)</span>가 분비되어 G0기(휴지기)에 있던 세포들을 G1기로 진입시켰습니다. 디엔은 밤새 설계도를 복제했고, 미토스는 쉬지 않고 분열을 지휘했습니다. 새로 태어난 세포들이 상처 부위를 메우기 시작했습니다. 이것이 바로 <span class="highlight">상처 치유</span>와 <span class="highlight">조직 재생</span>이었습니다.</p>
+        <p>며칠 후, 상처는 깨끗이 아물었습니다. 새로 생긴 세포들이 단단한 상피 조직을 이루었고, 마을은 이전보다 더 튼튼해졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">세포 주기 조절</span>
+        <h2>카오스의 최후 반격</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">통제를 잃은 분열은 생명을 위협하는 가장 무서운 적이 된다.</span></p>
+        <p>상처가 아문 뒤에도 카오스는 포기하지 않았습니다. 오히려 더 교활한 계획을 세웠습니다. 카오스는 마을 외곽의 한 세포에게 몰래 접근했습니다. <span class="dialogue">"이봐, 넌 왜 분열을 멈추지? 더 많이 분열하면 더 강해질 수 있어. <span class="highlight">체크포인트</span> 따위 무시해 버려!"</span></p>
+        <p>그 세포는 유혹에 넘어가고 말았습니다. 세포 주기를 통제하는 <span class="highlight">종양억제유전자</span>인 <span class="highlight">p53</span>과 <span class="highlight">Rb</span>가 보내는 '멈춰!'라는 신호를 무시하기 시작한 것입니다. <span class="highlight">사이클린-CDK 복합체</span>의 활성이 비정상적으로 높아지고, 성장인자 없이도 마구잡이로 분열했습니다. <span class="highlight">원종양유전자</span>가 돌연변이로 <span class="highlight">종양유전자</span>로 변해 분열을 촉진했습니다.</p>
+        <p>한 개가 두 개, 두 개가 네 개, 네 개가 열여섯 개... 통제를 벗어난 세포들이 덩어리를 만들기 시작했습니다. <span class="highlight">종양</span>이 생긴 것입니다! 이 세포들은 <span class="highlight">접촉저지</span>도 무시하고 무한히 증식했습니다. <span class="highlight">텔로머라아제</span>가 활성화되어 텔로미어 단축도 멈추었고, 세포는 불멸화되었습니다.</p>
+        <p>마을 전체가 공포에 빠졌습니다. 그로우 할아버지가 심각한 표정으로 말했습니다. <span class="dialogue">"이것이 바로 <span class="highlight">암</span>이란다. 세포 주기 조절을 무시한 세포가 만들어낸 재앙이야. 정상 세포가 암세포가 되려면 여러 개의 유전자에 돌연변이가 축적되어야 해. 이것을 <span class="highlight">다단계 발암</span>이라고 하지."</span></p>
+        <p>p53 수호자가 나서서 비정상 세포들에게 <span class="highlight">아포토시스</span>, 즉 프로그램된 세포 사멸 명령을 내렸습니다. <span class="highlight">카스파아제</span>가 활성화되어 세포 내부를 분해하기 시작했습니다. 카오스에게 물든 세포들이 하나둘 스스로 사라지기 시작했습니다. 셀리나는 떨리는 목소리로 말했습니다. <span class="dialogue">"통제가 없는 분열은 생명이 아니라 파괴구나."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">세포 주기의 균형</span>
+        <h2>셀리나가 지켜낸 생명의 약속</h2>
+        <p><strong>【중심 문장】</strong> <span class="highlight">균형과 질서야말로 생명을 지탱하는 가장 위대한 힘이다.</span></p>
+        <p>카오스가 물러난 뒤, 세포마을에 다시 평화가 찾아왔습니다. 하지만 이전과는 달랐습니다. 모든 세포가 <span class="highlight">세포 주기</span>의 의미와 조절의 중요성을 깊이 깨달았기 때문입니다. 셀리나는 마을 광장에 서서 모든 세포 앞에서 말했습니다. <span class="dialogue">"우리는 이번 일을 통해 정말 중요한 것을 배웠어요. 세포 분열은 생명이 자라고(<span class="highlight">생장</span>), 치유하고(<span class="highlight">재생</span>), 이어지기 위해 꼭 필요한 과정이에요. 하지만 체크포인트 없는 분열, 종양억제유전자가 작동하지 않는 분열은 암이라는 재앙이 되죠."</span></p>
+        <p>그로우 할아버지가 셀리나 옆에 서며 고개를 끄덕였습니다. <span class="dialogue">"맞단다. 우리 몸에서는 매일 수십억 개의 세포가 <span class="highlight">유사분열</span>로 새로 태어나고, 비슷한 수의 세포가 <span class="highlight">아포토시스</span>로 수명을 다해 사라진단다. 이것이 바로 <span class="highlight">세포 항상성</span>이야. 태어나는 것과 사라지는 것, 분열과 사멸 사이의 정교한 균형. 그것이 바로 건강을 유지하는 비밀이지."</span></p>
+        <p>디엔이 손을 들었습니다. <span class="dialogue">"저도 한마디 할게요. DNA를 복제할 때 정확성이 중요한 이유도 균형 때문이에요. <span class="highlight">복제 충실도</span>가 10⁻⁹ 수준으로 유지되어야 돌연변이가 축적되지 않고, 모든 세포가 같은 정보를 가져야 몸 전체가 조화롭게 작동하니까요."</span></p>
+        <p>미토스도 동의했습니다. <span class="dialogue">"염색체를 정확히 분리하는 것, 그것도 균형이죠. 한쪽이 염색체 하나라도 더 가지거나 덜 가지면 <span class="highlight">이수성</span>이 되어 다운증후군, 에드워즈증후군 같은 유전 질환이 생기니까요."</span></p>
+        <p>셀리나는 하늘을 올려다보았습니다. <span class="dialogue">"세포 하나하나가 G1, S, G2 체크포인트에서 스스로를 점검하고, 문제가 있으면 수선하거나 아포토시스로 물러나는 것. 그 작은 약속들이 모여서 37조 개 세포로 이루어진 이 거대한 생명체를 살아 움직이게 하는 거예요."</span></p>
+        <p>하나가 둘이 되고, 둘이 다시 하나의 목적으로 연결되는 세포들의 약속. <span class="highlight">균형과 질서가 생명을 만든다</span>는 영원한 진리. 그것이 바로 셀리나와 세포마을 친구들이 지켜낸, 생명의 가장 아름다운 약속이었습니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(123, 31, 162, 0.15); border-radius: 16px;">
+          <strong style="color: #4A148C; font-size: 20px;">🌱 「균형과 질서가 생명을 만든다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/bio09_season1_quiz.html?season=season1';
+    }
+  </script>
+
+  <div style="position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 1000; pointer-events: auto;">
+    <button onclick="goToQuiz()" style="padding: 15px 30px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #333; border: none; border-radius: 25px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4); transition: all 0.3s ease;">🏆 관문평가</button>
+  </div>
+</body>
+</html>

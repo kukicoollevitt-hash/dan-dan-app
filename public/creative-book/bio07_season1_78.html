@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>☀️ 빛의 소녀 솔라와 초록 심장의 전쟁</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: block;
+      color: #2E7D32;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2d2d2d;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 17px;
+      line-height: 2;
+      color: #444;
+      margin-bottom: 15px;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .story-card .highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(46, 125, 50, 0.2) 60%);
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #2E7D32;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(46, 125, 50, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #1B5E20;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #1B5E20;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #2E7D32;
+      font-weight: 500;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      pointer-events: auto;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFD700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 닫기 버튼 */
+    .close-btn { display: none;
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .close-btn:hover {
+      transform: scale(1.1);
+      background: #fff;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .intro-section {
+        padding: 30px 20px;
+      }
+
+      .intro-content {
+        padding: 40px 25px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+
+      .story-section {
+        padding: 30px 20px;
+        justify-content: center !important;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-section:nth-child(odd) .story-card,
+      .story-section:nth-child(even) .story-card {
+        transform: translateY(50px);
+      }
+
+      .story-card.active {
+        transform: translateY(0);
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 15px;
+        line-height: 1.9;
+      }
+
+      .close-btn { display: none;
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>☀️ 빛의 소녀 솔라와 초록 심장의 전쟁</h1>
+        <p class="subtitle">
+          — 광합성이 멈춘 날, 지구는 숨을 쉴 수 없었다 —<br>
+          태양의 마지막 딸과 엽록체 수호자들의 위대한 전투
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 솔라:</strong> 태양의 마지막 딸, 빛 에너지를 다루는 빛의 소녀</p>
+          <p><strong>▸ 초록이 할아버지:</strong> 가장 오래된 엽록체 수호자, 숲의 현자</p>
+          <p><strong>▸ 탄소:</strong> 이산화탄소 소년, 겁많지만 용감한 작은 분자</p>
+          <p><strong>▸ 물방울:</strong> 뿌리에서 온 물 소녀, 시원하고 상냥한 존재</p>
+          <p><strong>▸ 산소:</strong> 광합성으로 새로 태어난 소년, 지구의 숨결</p>
+          <p><strong>▸ 어둠왕 그림자:</strong> 빛을 삼키려는 악당, 광합성을 멈추게 하려는 적</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">빛이 사라진 날</span>
+        <h2>어둠왕의 공격</h2>
+        <p>아주 오랜 옛날, 지구가 아직 젊고 생명이 막 피어나던 시절, 하늘에서 가장 빛나는 존재가 있었습니다. 바로 태양이었지요. 태양은 핵융합이라는 거대한 반응을 통해 매 초 수소 원자 6억 톤을 헬륨으로 바꾸며 어마어마한 에너지를 뿜어내고 있었습니다. 태양에게는 수많은 빛의 자녀들이 있었는데, 그중 막내딸의 이름은 <span class="highlight">'솔라'</span>였습니다.</p>
+        <p>솔라는 매일 아침 지구로 내려와 식물들에게 빛을 선물했어요. 그녀가 가져오는 것은 단순한 빛이 아니라 <span class="highlight" data-tooltip="광자(photon): 빛 에너지의 최소 단위로 광합성에서 엽록소가 흡수하여 화학 에너지로 전환">광자</span>라는 에너지 알갱이였습니다. 이 광자들은 초속 30만 킬로미터의 속도로 날아와 나뭇잎 속 엽록소에 도달하면 전자를 들뜨게 만들었지요. 그녀의 빛을 받은 나뭇잎들은 반짝반짝 빛나며 신비로운 마법을 부렸습니다. 그것은 바로 <span class="highlight" data-tooltip="광합성(photosynthesis): 빛 에너지를 이용해 이산화탄소와 물로 포도당을 합성하고 산소를 방출하는 과정">광합성</span>이라는 마법이었지요.</p>
+        <p>그런데 어느 날, 하늘 저편에서 거대한 검은 그림자가 다가왔습니다. <span class="dialogue">"크크크, 저 빛나는 것들이 눈이 부시군. 모든 빛을 삼켜버리겠다!"</span> 그것은 바로 <span class="highlight">어둠왕 그림자</span>였습니다. 어둠왕은 거대한 검은 망토로 하늘을 덮기 시작했어요. 태양빛이 점점 희미해지자, 나뭇잎들의 엽록소가 에너지를 잃고 창백해지기 시작했습니다. 광합성에 필요한 광자가 차단되면서 식물들의 대사 활동이 급격히 느려지고 있었던 것입니다.</p>
+        <p><span class="dialogue">"이제 광합성은 끝이다! 광합성이 멈추면 지구의 모든 산소 생산이 중단되고, 이 세상은 영원한 어둠과 질식 속에 잠기게 될 것이다!"</span> 어둠왕의 선언에 모든 생물이 두려움에 떨었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">잎 속 초록 마을</span>
+        <h2>엽록체의 비밀</h2>
+        <p>솔라는 서둘러 가장 큰 떡갈나무의 잎 속으로 들어갔습니다. 잎의 표피 세포를 지나 울타리 조직을 통과하자, 그곳에는 <span class="highlight">엽록체</span>라는 작은 초록색 마을이 있었어요. 엽록체는 이중막으로 둘러싸인 세포소기관으로, 약 27억 년 전 광합성 세균이 다른 세포 안으로 들어가 공생하면서 생겨난 것이었습니다. 마을에서 가장 나이 많은 <span class="highlight">초록이 할아버지</span>가 솔라를 맞이했습니다.</p>
+        <p><span class="dialogue">"솔라야, 잘 왔구나. 빛이 없으면 우리는 일을 할 수 없단다. 명반응이 멈추면 모든 것이 정지하고 마는 거야."</span> 초록이 할아버지의 목소리는 걱정으로 떨리고 있었어요.</p>
+        <p>솔라가 주위를 둘러보니, 엽록체 마을 안에는 납작한 초록색 주머니들이 켜켜이 쌓여 동전 더미처럼 보이는 구조물이 있었습니다. <span class="dialogue">"저것이 뭐예요, 할아버지?"</span></p>
+        <p><span class="dialogue">"저것은 <span class="highlight" data-tooltip="틸라코이드(thylakoid): 엽록체 내부의 주머니 모양 막 구조로 광합성의 명반응이 일어나는 장소">틸라코이드</span>라고 한단다. 저 막 속에는 엽록소 a와 엽록소 b가 빼곡히 박혀 있어서 빛을 흡수하지. 특히 빨간색과 파란색 빛을 잘 흡수하고 초록색은 반사하기 때문에 우리가 초록색으로 보이는 거야. 저 틸라코이드가 쌓인 것을 <span class="highlight" data-tooltip="그라나(grana): 틸라코이드가 동전처럼 쌓여 있는 구조로 명반응 효율을 높임">그라나</span>라고 부르고, 그 주변의 액체 공간은 <span class="highlight" data-tooltip="스트로마(stroma): 엽록체의 액체 기질로 캘빈 회로(암반응)가 일어나는 장소">스트로마</span>라고 해. 우리의 요리 주방이지. 네가 가져다주는 빛 에너지를 저 안에서 화학 에너지인 ATP와 NADPH로 바꾸는 거야."</span></p>
+        <p>그런데 지금 틸라코이드들은 모두 멈춰 있었습니다. 빛이 없으니 전자전달계가 작동하지 않고, ATP 합성효소도 돌아가지 않았던 것이에요. 솔라는 결심했습니다. <span class="dialogue">"제가 어둠왕을 물리치고 빛을 되찾아 올게요!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">겁쟁이 탄소의 용기</span>
+        <h2>이산화탄소의 역할</h2>
+        <p>솔라가 마을을 나서려는 순간, 작고 동그란 분자 하나가 쫓아왔습니다. 온몸이 투명하고 그 안에 검은 점 하나와 빨간 점 두 개가 보였어요. 분자식 CO₂의 구조 그대로, 중앙의 탄소 원자 양옆에 산소 원자가 이중결합으로 단단히 연결된 직선형 분자였습니다.</p>
+        <p><span class="dialogue">"저, 저도 함께 가도 될까요?"</span> 떨리는 목소리로 말하는 그 분자는 바로 <span class="highlight">탄소</span>, 이산화탄소 소년이었습니다. <span class="dialogue">"저는 나쁜 애라고 불려요. 대기 중에 너무 많아지면 온실효과를 일으켜서 지구를 뜨겁게 만드는 존재라고요. 하지만 저도 도움이 되고 싶어요!"</span> 탄소의 눈에 눈물이 글썽였습니다.</p>
+        <p>초록이 할아버지가 부드럽게 말했어요. <span class="dialogue">"탄소야, 너는 나쁜 존재가 아니란다. <span class="highlight">광합성의 가장 중요한 재료</span>가 바로 너야. 캘빈 회로라고 불리는 암반응에서 너의 탄소 원자가 RuBisCO라는 효소의 도움을 받아 유기물의 뼈대가 되거든. 우리가 포도당(C₆H₁₂O₆)을 만들려면 빛 에너지도 필요하지만, 6개의 이산화탄소 분자에서 나온 탄소 원자들이 반드시 필요한 거야. 탄소 고정이라고 부르는 이 과정이 없으면 유기물이 만들어질 수 없단다."</span></p>
+        <p>솔라가 탄소의 손을 잡았습니다. <span class="dialogue">"함께 가자, 탄소! 너와 내가 힘을 합치면 분명 어둠왕을 물리칠 수 있을 거야. 너는 온실가스로 욕먹기도 하지만, 사실 생명의 근본이 되는 원소잖아!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">뿌리에서 온 전령</span>
+        <h2>물의 역할과 물분해</h2>
+        <p>솔라와 탄소가 길을 떠나려는 순간, 땅속에서 시원한 기운이 솟아올랐습니다. 파란 눈동자에 투명한 몸을 가진 소녀가 나타났어요. H₂O의 구조 그대로, 산소 원자를 중심으로 두 개의 수소 원자가 104.5도의 각도로 연결된 극성 분자였습니다.</p>
+        <p><span class="dialogue">"안녕! 나는 <span class="highlight">물방울</span>이야. 뿌리에서 왔어. 삼투압의 힘과 증산작용의 당김으로 물관을 타고 잎까지 긴 여행을 해 온 거지!"</span> 물방울이 활기차게 말했습니다.</p>
+        <p>물방울이 과학적으로 설명했어요. <span class="dialogue">"광합성이 일어나려면 빛과 이산화탄소만으로는 부족해. <span class="highlight">물도 꼭 필요하거든!</span> 틸라코이드 막에서 일어나는 <span class="highlight" data-tooltip="광분해(photolysis): 빛 에너지로 물 분자를 분해하여 산소, 수소 이온, 전자를 생성하는 과정">광분해</span>라는 과정에서 물이 분해되면서 전자와 수소 이온, 그리고 산소가 만들어져. 화학식으로 쓰면 2H₂O → 4H⁺ + 4e⁻ + O₂ 이지. 이 전자들이 전자전달계를 따라 이동하면서 ATP가 만들어지고, 수소 이온은 NADP⁺와 결합해서 NADPH가 되는 거야."</span></p>
+        <p>초록이 할아버지가 고개를 끄덕였습니다. <span class="dialogue">"그렇단다. 광합성의 총괄 반응식을 기억해 두렴. <span class="highlight">6CO₂ + 6H₂O + 빛 에너지 → C₆H₁₂O₆ + 6O₂</span>. 이산화탄소 6분자와 물 6분자가 빛 에너지를 받아 포도당 1분자와 산소 6분자가 되는 거야. 이 세 가지 재료가 모두 모여야 마법이 완성되는 거란다."</span></p>
+        <p>이제 솔라, 탄소, 물방울. 세 친구가 모였습니다. <span class="dialogue">"자, 이제 어둠왕을 만나러 가자!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">어둠의 성을 향하여</span>
+        <h2>생태계와 에너지 흐름</h2>
+        <p>세 친구는 점점 어두워지는 하늘을 향해 나아갔습니다. 어둠왕의 성은 하늘 높이 검은 구름 위에 떠 있었어요. 가까이 갈수록 추위가 느껴졌습니다. 태양 에너지가 차단되자 지구의 표면 온도가 급격히 떨어지고 있었던 것입니다.</p>
+        <p><span class="dialogue">"빛이 없으니까 이렇게 추운 거야."</span> 솔라가 설명했어요. <span class="dialogue">"<span class="highlight">태양 에너지는 지구를 따뜻하게 해 주거든.</span> 지구에 도달하는 태양 에너지는 매 초 약 1,366와트/m²나 되는데, 이 에너지가 대기와 바다를 데우고, 물의 순환을 일으키고, 바람을 만들어. 광합성만이 아니라 지구의 거의 모든 에너지 흐름이 태양에서 시작하는 거야."</span></p>
+        <p>탄소가 걱정스럽게 물었어요. <span class="dialogue">"광합성이 멈추면 어떻게 되는 거야?"</span></p>
+        <p>물방울이 심각한 표정으로 대답했습니다. <span class="dialogue">"식물은 <span class="highlight">생산자</span>야. 태양 에너지를 화학 에너지로 바꿔서 유기물의 형태로 저장하는 유일한 존재들이지. 식물이 포도당을 만들지 못하면 식물은 죽어. 그러면 식물을 먹는 <span class="highlight">1차 소비자</span>인 초식동물이 굶주리게 되고, 그 초식동물을 먹는 <span class="highlight">2차 소비자</span>인 육식동물도 굶주려. <span class="highlight">결국 먹이사슬 전체가 붕괴하고 지구의 모든 생명이 사라질 거야.</span>"</span></p>
+        <p><span class="dialogue">"그리고 산소도!"</span> 솔라가 덧붙였어요. <span class="dialogue">"광합성이 멈추면 새로운 산소가 만들어지지 않아. 지구 대기의 산소 21%를 유지하는 것도 광합성 덕분이야. 호흡으로 계속 산소를 쓰기만 하면 결국 지구의 모든 생물이 숨을 쉴 수 없게 되는 거지."</span> 세 친구는 더욱 굳은 결심으로 어둠의 성을 향해 날아올랐습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">어둠왕과의 대결</span>
+        <h2>빛과 어둠의 전쟁</h2>
+        <p>드디어 어둠왕의 성에 도착했습니다. 거대한 검은 왕좌에 어둠왕 그림자가 앉아 있었어요. 그의 망토는 하늘 전체를 뒤덮고 있었고, 가시광선의 모든 파장을 흡수하여 아무것도 보이지 않게 만들고 있었습니다.</p>
+        <p><span class="dialogue">"크하하하! 작은 빛 조각이 감히 나를 찾아오다니!"</span> 어둠왕이 비웃었습니다. <span class="dialogue">"빛 따위는 어둠 앞에 무릎 꿇을 운명이다! 나는 모든 광자를 삼켜버릴 것이다!"</span></p>
+        <p>솔라가 앞으로 나섰습니다. <span class="dialogue">"어둠왕, 너는 왜 빛을 미워하는 거야? 빛과 어둠은 서로 대립하는 것 같지만, 실은 서로를 정의해 주는 존재잖아."</span></p>
+        <p>어둠왕의 눈이 슬프게 흔들렸습니다. <span class="dialogue">"빛이 있으면 나는 사라지거든. <span class="highlight">빛이 있는 곳에 그림자는 존재할 수 없어.</span> 그래서 모든 빛을 없애면 나는 영원히, 우주의 끝까지 존재할 수 있을 거라고 생각했어. 더 이상 빛에 쫓기지 않고, 더 이상 두려워하지 않아도 되겠지."</span></p>
+        <p>솔라가 부드럽게 말했어요. <span class="dialogue">"하지만 빛이 없으면 그림자도 없어. 그림자는 물체가 빛을 차단할 때만 생기잖아. <span class="highlight">빛과 그림자는 적이 아니라 서로를 만들어 주는 짝꿍</span>이야. 마치 양전하와 음전하, 산화와 환원, 음과 양처럼 서로가 있어야만 존재할 수 있는 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">세 가지 재료의 힘</span>
+        <h2>광합성의 명반응</h2>
+        <p>어둠왕이 잠시 망설이는 사이, 솔라가 외쳤습니다. <span class="dialogue">"친구들, 지금이야! 광합성의 마법을 보여주자! 명반응을 시작해!"</span></p>
+        <p>솔라가 온 힘을 다해 빛을 내뿜었습니다. 680nm와 700nm 파장의 빛 에너지가 사방으로 퍼져나갔어요. 이것은 <span class="highlight">광계 II</span>와 <span class="highlight">광계 I</span>을 동시에 활성화시키는 파장이었습니다. 물방울이 솔라의 빛 속으로 뛰어들었고, 그녀의 몸이 광계 II의 반응 중심에서 분해되기 시작했습니다.</p>
+        <p><span class="highlight">빛 에너지가 물을 분해했습니다.</span> 물방울의 몸에서 산소 거품이 피어올랐어요. 이것이 바로 광분해였습니다. 동시에 방출된 전자들이 전자전달계를 따라 이동하며, 플라스토퀴논, 시토크롬 복합체, 플라스토시아닌을 거쳐 광계 I으로 전달되었습니다. 이 과정에서 수소 이온이 틸라코이드 내부로 펌핑되어 농도 기울기가 형성되었고, ATP 합성효소가 돌아가며 ADP와 인산이 결합해 ATP가 만들어졌습니다.</p>
+        <p><span class="dialogue">"이것이 바로 <span class="highlight">광인산화</span>야!"</span> 초록이 할아버지의 목소리가 어디선가 들려왔습니다. <span class="dialogue">"빛 에너지가 물을 분해하고, 전자의 흐름이 ATP와 NADPH라는 에너지 화폐를 만들어 내는 거란다! 이 에너지들이 곧 암반응에서 쓰일 거야!"</span></p>
+        <p>눈부신 빛 속에서 황금빛 ATP 분자들과 NADPH 분자들이 빛나며 생성되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">지구의 숨결</span>
+        <h2>캘빈 회로와 탄소 고정</h2>
+        <p><span class="dialogue">"이제 내 차례야!"</span> 탄소가 용기 내어 외쳤습니다. <span class="dialogue">"<span class="highlight" data-tooltip="캘빈 회로(Calvin cycle): 스트로마에서 일어나는 암반응으로 CO2를 고정하여 포도당을 합성하는 순환 과정">캘빈 회로</span>가 시작된다!"</span></p>
+        <p>스트로마에서 <span class="highlight" data-tooltip="RuBisCO: 지구상에서 가장 풍부한 효소로 CO2를 RuBP에 결합시켜 탄소 고정을 수행">RuBisCO</span>라는 효소가 깨어났습니다. 이 효소는 지구상에서 가장 풍부한 효소로, 탄소의 몸에서 탄소 원자를 받아 5탄당인 RuBP(리불로오스 1,5-이인산)와 결합시켰습니다. 이것이 바로 <span class="highlight" data-tooltip="탄소 고정(carbon fixation): CO2를 유기물로 전환하는 과정으로 RuBisCO가 촉매 역할">탄소 고정</span>이었어요.</p>
+        <p>탄소 고정으로 만들어진 불안정한 6탄 화합물은 즉시 3탄 화합물인 <span class="highlight" data-tooltip="3-PGA: 3-포스포글리세르산으로 탄소 고정 후 생성되는 최초의 안정한 화합물">3-PGA(3-포스포글리세르산)</span> 두 분자로 분해되었습니다. 명반응에서 만들어진 <span class="highlight" data-tooltip="ATP와 NADPH: 명반응에서 생성된 에너지 화폐와 환원력으로 암반응에 사용됨">ATP와 NADPH</span>가 이 3-PGA를 환원시켜 G3P(글리세르알데하이드 3-인산)로 바꾸었고, 이 G3P들이 모여 최종적으로 포도당이 합성되었습니다.</p>
+        <p><span class="dialogue">"와아, 내가 포도당의 일부가 됐어!"</span> 탄소가 환하게 웃었습니다. 동시에 물방울의 분해에서 나온 산소 원자들이 모여 새로운 존재가 태어났습니다. 투명하고 활기찬 소년, 바로 <span class="highlight">산소</span>였어요! <span class="dialogue">"나는 산소야! <span class="highlight">모든 생물이 숨 쉴 수 있게 해 주는 존재</span>라고! 광합성의 부산물이지만, 생명에게는 가장 소중한 선물이지!"</span></p>
+        <p>수천, 수만 개의 산소 분자들이 탄생하며 어둠왕의 성 주변을 밝은 생명의 기운으로 채웠습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">밤의 새로운 의미</span>
+        <h2>호흡과 광합성의 균형</h2>
+        <p>놀라운 일이 일어났습니다. 어둠왕의 몸이 작아지기 시작했어요. 광합성의 빛과 생명의 에너지에 밀려나고 있었던 것입니다. 하지만 완전히 사라지지는 않았습니다.</p>
+        <p>솔라가 어둠왕에게 다가갔습니다. <span class="dialogue">"어둠왕, 너도 이 세상에 필요한 존재야. 모든 것이 빛으로만 이루어지면 생물들은 쉴 수가 없어. <span class="highlight">밤이 있어야 낮의 소중함을 알고, 쉼이 있어야 다시 일할 힘이 생기거든.</span> 그리고 과학적으로도 어둠은 중요해. 식물의 개화 호르몬인 플로리젠 생성은 밤의 길이에 따라 조절되고, 많은 생물들의 일주기 리듬도 낮과 밤의 변화에 의존하거든."</span></p>
+        <p>어둠왕의 눈에서 눈물이 흘렀습니다. <span class="dialogue">"정말? 나도 필요한 존재야?"</span></p>
+        <p>초록이 할아버지의 목소리가 들려왔어요. <span class="dialogue">"그럼, 당연하지. 식물도 밤에는 광합성 대신 <span class="highlight">세포 호흡</span>을 하며 쉰단다. 낮에 만든 포도당을 미토콘드리아에서 분해해서 ATP 형태의 에너지를 얻고, 이 과정에서 이산화탄소와 물을 배출하지. 화학식으로 쓰면 C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP야. 광합성의 정반대 반응이지. 이렇게 낮과 밤, 광합성과 호흡이 균형을 이루며 생명은 유지되는 거란다."</span></p>
+        <p>어둠왕이 천천히 고개를 끄덕였습니다. <span class="dialogue">"알겠어. 나는 더 이상 빛을 삼키지 않을게. 대신 밤을 지키며 모든 생물에게 편안한 쉼을 선물할게."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">영원히 반복되는 생명의 노래</span>
+        <h2>탄소 순환과 생명의 연결</h2>
+        <p>다음 날 아침, 태양이 다시 떠올랐습니다. 솔라는 평소처럼 광자를 가지고 지구로 내려왔어요. 모든 나뭇잎의 엽록소가 그녀의 빛을 반갑게 흡수하며 전자를 들뜨게 만들었습니다. 엽록체 마을에서 초록이 할아버지가 만족스럽게 웃었습니다.</p>
+        <p><span class="dialogue">"자, 다들 일할 준비됐지? <span class="highlight">오늘도 빛을 받아 생명을 만들자!</span>"</span></p>
+        <p>틸라코이드의 광계들이 분주하게 작동하기 시작했습니다. 물방울이 뿌리에서 물관을 타고 도착하고, 탄소가 기공을 통해 날아들고, 솔라의 빛이 명반응을 가동시켰어요. 광분해로 산소 거품이 피어오르고, 전자전달계에서 ATP와 NADPH가 만들어지고, 캘빈 회로에서 황금빛 포도당이 합성되었습니다.</p>
+        <p>이제 탄소는 더 이상 나쁜 존재로 불리지 않았습니다. 그는 <span class="highlight">탄소 순환</span>의 핵심 주인공이었어요. 대기의 이산화탄소가 광합성으로 식물에 고정되고, 식물이 죽으면 분해자에 의해 다시 이산화탄소로 돌아가고, 이것이 다시 광합성에 쓰이는 순환. 물방울은 <span class="highlight">물의 순환</span>을 따라 땅과 하늘을 오가며 생명의 메신저 역할을 했고, 산소는 모든 생물의 세포 호흡에 참여해 생명 활동을 가능하게 해 주었습니다.</p>
+        <p>밤이 되면 어둠왕이 찾아와 부드러운 어둠으로 세상을 감싸 주었고, 모든 생물은 미토콘드리아에서 포도당을 분해하며 평화롭게 에너지를 얻었습니다.</p>
+        <p><span class="highlight">빛과 어둠, 낮과 밤, 광합성과 호흡, 산소와 이산화탄소.</span> 모든 것이 조화롭게 순환하며 지구는 영원히 숨 쉬는 아름다운 별로 남게 되었습니다. 우리가 들이쉬는 산소 분자 하나하나에는 솔라와 친구들의 이야기가 담겨 있답니다.</p>
+        <p style="text-align: center; margin-top: 30px; font-weight: 700; color: #2E7D32;">— ☀️ 끝 ☀️ —</p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 스토리 닫기
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // IntersectionObserver로 스크롤 기반 배경 변경 및 카드 애니메이션
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0.3
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+
+        if (entry.isIntersecting) {
+          // 카드 활성화
+          if (card) card.classList.add('active');
+
+          // 배경 변경
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+        } else {
+          // 카드 비활성화
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 첫 번째 섹션 즉시 활성화
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) {
+        setTimeout(() => {
+          firstCard.classList.add('active');
+        }, 500);
+      }
+    });
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/bio07_season1_quiz.html?season=season1';
+    }
+  </script>
+
+  <div class="nav-buttons" style="position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 1000; pointer-events: auto;">
+    <button onclick="closeStory()" style="padding: 15px 30px; background: rgba(45, 106, 79, 0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);">← 목록으로</button>
+    <button onclick="goToQuiz()" style="padding: 15px 30px; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4);">📝 관문평가</button>
+  </div>
+
+</body>
+</html>

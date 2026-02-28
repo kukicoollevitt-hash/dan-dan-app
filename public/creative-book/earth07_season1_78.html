@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏔️ 산은 솟아오르고 바다는 갈라진다</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5D4E37 0%, #3E2723 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(93, 78, 55, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(93, 78, 55, 0.15);
+      color: #3E2723;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #5D4E37;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #5D4E37;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(93, 78, 55, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #3E2723;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #3E2723;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #3E2723;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFD700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(255, 100, 100, 0.15);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #FF6B6B;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 14px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(93, 78, 55, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(93, 78, 55, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(62, 39, 35, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(93, 78, 55, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏔️ 산은 솟아오르고 바다는 갈라진다</h1>
+        <p class="subtitle">
+          — 멈춰 있는 것처럼 보이는 땅 아래에서, 수억 년의 전쟁과 포옹이 벌어지고 있다 —<br>
+          교과기반 창작도서 · 지구과학 07 · 중1,2
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>🧩 태평양판 태평 (주인공):</strong> 지구에서 가장 큰 판. 태평양 바닥 아래 누워 있는 거대한 존재. 느리지만 묵묵하고 성실하며, 자신이 움직이면 위의 나라들이 흔들릴까 봐 조심스럽다.</p>
+          <p><strong>🗻 유라시아판 유라 (라이벌/동반자):</strong> 유럽과 아시아를 등에 지고 있는 거대 대륙판. 태평과는 경계에서 수천만 년 동안 밀고 밀리는 관계.</p>
+          <p><strong>🌋 맨틀 대류 장인 마그마 (보이지 않는 조종자):</strong> 지각 아래 맨틀에서 느릿느릿 대류하며 판을 움직이는 보이지 않는 힘.</p>
+          <p><strong>⛰️ 히말라야 산맥 히말 (충돌의 산물):</strong> 인도판과 유라시아판이 충돌해 솟아오른 지구에서 가장 높은 산맥.</p>
+          <p><strong>🌊 대서양 해령 리프트 (창조의 틈):</strong> 대서양 한복판에 있는 지구에서 가장 긴 해저 산맥(6만 5천km).</p>
+          <p><strong>🖤 마리아나 해구 트렌치 (순환의 심연):</strong> 지구에서 가장 깊은 바다 속 골짜기(10,994m).</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 갈등 구조</h3>
+          <p>태평양판 태평은 느리지만 묵묵히 움직이며 자신의 길을 가지만, 유라시아판 유라는 태평이 자신의 영역으로 밀고 들어온다며 분노합니다. 둘이 부딪히면 산이 솟고, 빠지면 바다가 갈라집니다. 하지만 진짜 조종자는 맨틀 대류 장인 마그마입니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">판 구조론의 등장</span>
+        <h2>땅은 한 덩어리가 아니었다</h2>
+        <p>오래전부터 사람들은 땅이 단단하고 영원히 멈춰 있다고 믿었습니다. 하지만 지구의 가장 깊은 곳에서는 아무도 모르는 비밀이 숨겨져 있었습니다. 지구의 가장 바깥층인 <span class="highlight">지각</span>은 하나의 단단한 껍질이 아니었습니다. 그것은 마치 거대한 직소 퍼즐처럼 여러 조각으로 나뉘어 있었지요. 이 조각들을 <span class="highlight">판</span> 또는 <span class="highlight">지각판</span>이라고 부릅니다.</p>
+        <p>더 정확히 말하면, 판은 지각만이 아니라 <span class="highlight">암석권</span> 전체를 포함합니다. 암석권은 지각과 맨틀 최상부의 단단한 부분을 합친 것으로, 두께가 약 100km에 달합니다. 이 암석권 아래에는 <span class="highlight">연약권</span>이라 불리는 부분적으로 <span class="highlight">용융</span>된 층이 있어서, 마치 뜨거운 물 위에 떠 있는 얼음처럼 암석권이 그 위를 <span class="highlight">점성 유동</span>하며 움직입니다.</p>
+        <p><span class="dialogue">"나는 태평이야."</span></p>
+        <p>태평양 바닥 아래에 누워 있는 거대한 존재가 처음으로 입을 열었습니다. 태평의 몸은 약 1억 400만 km²로, 지구 표면의 약 20%를 차지합니다. 지구에는 7개의 <span class="highlight">주요 판</span>—태평양판, 유라시아판, 북아메리카판, 남아메리카판, 아프리카판, 남극판, 인도-호주판—과 수십 개의 <span class="highlight">소판</span>이 있습니다.</p>
+        <p>바로 그때, 발밑에서 느릿느릿 올라오는 뜨거운 에너지가 느껴졌습니다. <span class="highlight">맨틀 대류</span> 장인 마그마가 천천히 모습을 드러냈습니다.</p>
+        <p><span class="dialogue">"너희가 나뉘어 있는 것이 아니라, 내가 너희를 움직이고 있는 거란다. <span class="highlight">열 대류</span>로 말이야."</span></p>
+        <p>뜨거운 물질이 위로 올라가고(<span class="highlight">상승류, upwelling</span>), 식은 물질이 아래로 내려오는(<span class="highlight">하강류, downwelling</span>) 느린 순환. 1년에 불과 1~10cm. 하지만 <span class="highlight">지질학적 시간</span>이 모이면, 대륙이 갈라지고, 바다가 생겨나고, 산이 솟아오르는 것이었습니다. 이것이 바로 <span class="highlight">판 구조론</span>—1960년대에 정립된 지구과학의 <span class="highlight">패러다임</span>이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">대륙의 여행</span>
+        <h2>한때는 모두 하나였다</h2>
+        <p>마그마가 오래된 <span class="highlight">고지자기 기록</span>과 <span class="highlight">지질 연대표</span>를 열었습니다. 그 안에는 수억 년에 걸친 지구 표면의 변화가 기록되어 있었지요.</p>
+        <p><span class="dialogue">"약 3억 3,500만~1억 7,500만 년 전(<span class="highlight">고생대 후기~중생대 초기</span>)을 봐봐. 그때는 모든 대륙이 하나로 붙어 있었단다."</span></p>
+        <p>마그마가 보여준 <span class="highlight">고지리 복원도</span>에는 거대한 한 덩어리의 땅이 그려져 있었습니다. <span class="highlight">판게아</span>라는 이름의 <span class="highlight">초대륙</span>. 그 주위를 거대한 하나의 바다 <span class="highlight">판탈라사</span>가 둘러싸고 있었습니다.</p>
+        <p>1912년 독일의 기상학자 <span class="highlight">알프레드 베게너</span>가 처음 <span class="highlight">대륙 이동설</span>을 제안했을 때, 그의 증거는 여러 가지였습니다. 첫째, <span class="highlight">해안선 일치</span>—남아메리카의 동쪽 해안선과 아프리카의 서쪽 해안선이 퍼즐처럼 맞아떨어집니다.</p>
+        <p>둘째, <span class="highlight">화석 분포</span>—<span class="highlight">메소사우루스</span>, <span class="highlight">글로소프테리스</span> 등의 화석이 바다 건너 여러 대륙에서 동시에 발견되었습니다. 이 생물들은 대양을 헤엄쳐 건너갈 수 없었으니, 한때 땅이 연결되어 있었다는 증거였지요.</p>
+        <p>셋째, <span class="highlight">고기후 증거</span>—현재 적도 근처인 인도와 아프리카에서 <span class="highlight">빙퇴석</span>과 <span class="highlight">빙하 찰흔</span>이 발견되었습니다. 이는 이 대륙들이 한때 <span class="highlight">남극 부근</span>에 있었다가 이동했다는 뜻입니다.</p>
+        <p>넷째, <span class="highlight">지질 구조 연속성</span>—대서양 양쪽의 산맥과 암석층이 연속적으로 이어집니다. 애팔래치아 산맥과 스코틀랜드 칼레도니아 산맥이 그 예입니다.</p>
+        <p><span class="dialogue">"약 2억 년 전부터 판게아는 천천히 <span class="highlight">분리</span>되기 시작했어. 그리고 수천만 년에 걸쳐 오늘날의 일곱 개 대륙과 다섯 개 대양이 만들어진 거지. 그리고 이 여행은 아직 <span class="highlight">진행 중</span>이야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">히말라야가 솟아오른 날</span>
+        <h2>부딪히면 올라간다</h2>
+        <p>판게아가 갈라지고 대륙들이 이동하는 과정에서, 가장 극적인 사건이 벌어진 곳은 <span class="highlight">인도판</span>과 <span class="highlight">유라시아판</span>이 만나는 경계였습니다. 약 5천만 년 전(<span class="highlight">시신세, Eocene</span>), 인도 대륙을 싣고 북쪽으로 연간 약 15cm의 속도로 올라오던 인도판이 유라시아판과 정면으로 <span class="highlight">충돌</span>하기 시작했습니다.</p>
+        <p>이것이 <span class="highlight">수렴형 경계</span>에서의 <span class="highlight">대륙-대륙 충돌</span>이었습니다. 두 대륙 지각은 밀도가 비슷해서(약 2.7g/cm³) 어느 쪽도 <span class="highlight">섭입</span>되지 않고, 대신 <span class="highlight">지각 단축</span>과 <span class="highlight">지각 비후</span>가 일어납니다.</p>
+        <p>두 판이 부딪히는 <span class="highlight">응력</span>으로 인해 <span class="highlight">습곡</span>과 <span class="highlight">역단층</span>이 형성되고, 그 사이에 낀 <span class="highlight">테티스 해</span>의 퇴적물이 접혀서 위로 밀려 올라갔습니다. 이렇게 태어난 것이 바로 <span class="highlight">히말라야 산맥</span>이었습니다!</p>
+        <p><span class="dialogue">"나는 히말이야! <span class="highlight">조산 운동</span>이 나를 하늘로 밀어 올렸어! 나는 충돌이 빚어낸 <span class="highlight">습곡 산맥</span>이야!"</span></p>
+        <p>히말은 지구에서 가장 <span class="highlight">젊은 산맥</span> 중 하나입니다. 에베레스트 8,849m, K2 8,611m, 칸첸중가 8,586m... 이 모든 봉우리가 두 판의 충돌로 솟아오른 것입니다. 더 놀라운 것은 히말이 아직도 자라고 있다는 사실이었습니다. <span class="highlight">GPS 측정</span>에 따르면 인도판은 여전히 연간 약 4~5cm로 북쪽으로 밀고 있으며, 히말라야는 해마다 약 5mm씩 <span class="highlight">융기</span>하고 있습니다.</p>
+        <p>비슷한 원리로 <span class="highlight">알프스 산맥</span>은 아프리카판과 유라시아판의 충돌로, <span class="highlight">안데스 산맥</span>은 <span class="highlight">나스카판</span>이 남아메리카판 아래로 섭입되면서 형성되었습니다. 충돌은 파괴가 아니라, 지구가 새로운 <span class="highlight">지형</span>을 빚어내는 방식이었던 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">해령의 비밀</span>
+        <h2>바다 밑에서 태어나는 땅</h2>
+        <p>태평은 산이 솟아오르는 곳만 있는 것이 아니라, 땅이 새로 태어나는 곳도 있다는 것을 알게 되었습니다. 마그마가 태평을 대서양의 한복판으로 데려갔습니다. 바다 깊은 곳, 약 2,500m 수심에 길게 뻗어 있는 거대한 산맥이 바다 밑에 있었습니다. <span class="highlight">대서양 중앙 해령</span>, 리프트였지요.</p>
+        <p><span class="dialogue">"나는 지구에서 가장 긴 <span class="highlight">해저 산맥 시스템</span>의 일부야. 전 세계 해령의 총 길이는 무려 약 65,000km나 돼!"</span></p>
+        <p>리프트의 한복판에서는 놀라운 일이 벌어지고 있었습니다. 산맥의 정중앙을 따라 길게 갈라진 <span class="highlight">열곡</span> 사이로, 빨갛게 달구어진 <span class="highlight">마그마</span>가 천천히 솟아올라오고 있었습니다. 솟아오른 마그마는 바닷물에 닿자마자 급냉(<span class="highlight">quenching</span>)되어 <span class="highlight">필로 용암</span> 형태로 굳으면서 새로운 <span class="highlight">해양 지각</span>이 되었지요.</p>
+        <p><span class="dialogue">"이것이 바로 <span class="highlight">해저 확장</span>이야."</span></p>
+        <p>마그마가 설명했습니다. 1960년대 <span class="highlight">해리 헤스</span>가 제안한 이 개념은 판 구조론의 핵심입니다. 새로운 마그마가 올라와 굳으면서 새로운 바닥이 만들어지고, 이 새 바닥이 양쪽으로 판을 밀어내는 <span class="highlight">해령 밀기</span>가 발생합니다.</p>
+        <p>해저 확장의 결정적 증거는 <span class="highlight">해저 자기 줄무늬</span>입니다. 지구의 <span class="highlight">자기장</span>은 수십만 년 주기로 <span class="highlight">역전</span>되는데, 해령에서 새로 형성된 암석은 당시의 자기장 방향을 기록합니다. 이로 인해 해령을 중심으로 대칭적인 자기 줄무늬 패턴이 나타납니다.</p>
+        <p>해령 주변에는 <span class="highlight">열수구</span>도 있었습니다. 섭씨 300~400℃의 물과 함께 <span class="highlight">황화물</span>이 솟아져 나오는 <span class="highlight">블랙 스모커</span>. 놀랍게도 이 극한 환경에서 <span class="highlight">화학 합성</span>에 의존하는 특별한 <span class="highlight">심해 생태계</span>가 번성하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">해구가 삼킨 땅</span>
+        <h2>가장 깊은 침묵</h2>
+        <p>태평은 리프트에서 태어난 새로운 바닥을 발밑에 느껴보며 뿌듯해했지만, 마그마가 심각한 표정으로 말했습니다.</p>
+        <p><span class="dialogue">"태평아, 한쪽에서 땅이 태어나면, 다른 한쪽에서는 땅이 사라져야 해. 지구의 <span class="highlight">표면적</span>은 일정하게 유지되니까. 이것이 <span class="highlight">질량 보존</span>의 원리야."</span></p>
+        <p>마그마가 태평을 서쪽 태평양 가장자리, <span class="highlight">마리아나 해구</span> 근처로 데려갔습니다. 그곳에서 태평은 충격적인 광경을 목격했습니다. 자신의 가장자리가 <span class="highlight">필리핀판</span> 아래로 휘어져 들어가고 있었던 것입니다!</p>
+        <p>이것이 바로 <span class="highlight">섭입</span>이었습니다. <span class="highlight">해양판</span>은 <span class="highlight">밀도</span>가 약 3.0g/cm³로 대륙판(약 2.7g/cm³)보다 높아서, 두 판이 만나면 무거운 해양판이 가벼운 대륙판 아래로 파고들어 <span class="highlight">맨틀</span>로 되돌아갑니다. 이 과정에서 <span class="highlight">섭입판 당김</span>이라는 가장 강력한 판 구동력이 발생합니다.</p>
+        <p>섭입이 일어나는 곳에는 바다 밑에 깊고 긴 <span class="highlight">해구</span>가 형성됩니다. 마리아나 해구의 <span class="highlight">챌린저 해연</span>은 수심 10,994m로 지구에서 가장 깊은 곳입니다.</p>
+        <p><span class="dialogue">"나는 트렌치. 에베레스트를 뒤집어서 여기 넣어도 꼭대기가 물속에 잠길 만큼 깊어."</span></p>
+        <p>트렌치가 조용히 말했습니다.</p>
+        <p><span class="dialogue">"두려워하지 마. 이것은 파괴가 아니야. 오래된 <span class="highlight">해양 암석권</span>이 지구 속으로 되돌아가 다시 맨틀의 일부가 되는 <span class="highlight">재순환</span>이야. <span class="highlight">윌슨 주기</span>의 일부지. 모든 것은 돌아와."</span></p>
+        <p>섭입된 판은 약 660km 깊이의 <span class="highlight">하부 맨틀 경계</span>까지 내려가며, 일부는 녹아 <span class="highlight">마그마</span>를 생성하고, 이 마그마가 상승하여 <span class="highlight">화산호</span>를 형성합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">화산대와 지진대의 비밀</span>
+        <h2>불의 고리</h2>
+        <p>마그마가 태평을 하늘로 데려가 지구 전체를 내려다보게 했습니다. 그러자 놀라운 <span class="highlight">공간적 패턴</span>이 보였습니다. 태평양을 둘러싼 가장자리를 따라 <span class="highlight">화산</span>과 <span class="highlight">지진</span>이 줄줄이 발생하고 있었던 것입니다!</p>
+        <p>이 <span class="highlight">환태평양 화산대</span> 또는 <span class="highlight">불의 고리</span>는 약 40,000km에 걸쳐 뻗어 있으며, 전 세계 <span class="highlight">활화산</span>의 약 75%, <span class="highlight">지진</span>의 약 90%가 이 지역에서 발생합니다.</p>
+        <p><span class="dialogue">"이 불의 고리는 우연이 아니야."</span></p>
+        <p>마그마가 설명했습니다.</p>
+        <p><span class="dialogue">"태평양판이 주변 판들 아래로 <span class="highlight">섭입</span>되는 곳에서 판이 맨틀 속으로 내려가면서 <span class="highlight">탈수 반응</span>이 일어나. 섭입판에 포함된 물이 방출되면서 맨틀 쐐기의 <span class="highlight">용융점</span>을 낮추고, 이로 인해 <span class="highlight">부분 용융</span>이 발생해서 마그마가 생성되지. 이 마그마가 상승하여 <span class="highlight">화산호</span>를 형성하는 거야."</span></p>
+        <p>일본의 <span class="highlight">후지산</span>, 인도네시아의 <span class="highlight">크라카타우</span>, 필리핀의 <span class="highlight">피나투보</span>, 미국의 <span class="highlight">세인트헬렌스</span>—모두 환태평양 화산대에 위치합니다.</p>
+        <p><span class="dialogue">"하지만 판의 경계가 아닌 곳에서도 화산이 생기는 경우가 있어. <span class="highlight">하와이</span>처럼 말이야."</span></p>
+        <p>하와이는 <span class="highlight">판내 화산</span>으로, <span class="highlight">열점</span>에 의해 형성되었습니다. 맨틀 깊은 곳에서 <span class="highlight">맨틀 플룸</span>이라는 비정상적으로 뜨거운 물질이 기둥처럼 올라오는 곳입니다. 판이 열점 위를 <span class="highlight">연간 약 9cm</span>로 지나가면서 화산섬들이 줄지어 만들어지는데, <span class="highlight">화산열도</span>의 연령이 북서쪽으로 갈수록 오래되는 것이 이를 증명합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">느리지만 멈추지 않는 힘</span>
+        <h2>수억 년의 인내</h2>
+        <p>태평은 이제 지구의 변화가 얼마나 느린지 이해하게 되었습니다. 하지만 동시에 그 느림이 얼마나 강력한지도 깨달았지요.</p>
+        <p><span class="dialogue">"나는 1년에 몇 센티미터밖에 못 움직여. <span class="highlight">GPS 측정</span>에 따르면 정확히 약 5~10cm/year 정도지. 손톱이 자라는 속도라고 하던데..."</span></p>
+        <p>마그마가 미소 지었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">지질학적 시간</span>의 힘을 과소평가하면 안 돼. 1년에 5cm를 움직인다고 치자. 100만 년이면 50km, 1억 년이면 5,000km를 움직인 거야. 서울에서 부산까지 거리의 10배가 넘지!"</span></p>
+        <p>마그마는 <span class="highlight">초대륙 주기</span>의 역사를 보여주었습니다:</p>
+        <p>- 약 27억 년 전: <span class="highlight">케노르랜드</span> (최초의 추정 초대륙)<br>
+        - 약 18억~15억 년 전: <span class="highlight">콜럼비아</span> 또는 <span class="highlight">누나</span><br>
+        - 약 11억~7억 5천만 년 전: <span class="highlight">로디니아</span><br>
+        - 약 6억~5억 4천만 년 전: <span class="highlight">판노티아</span><br>
+        - 약 3억 3,500만~1억 7,500만 년 전: <span class="highlight">판게아</span></p>
+        <p><span class="dialogue">"과학자들은 약 2억~2억 5천만 년 후에 <span class="highlight">아마시아</span> 또는 <span class="highlight">판게아 울티마</span>라는 차기 초대륙이 다시 형성될 것으로 예측하고 있단다. 북극해가 닫히거나 대서양이 닫히면서 대륙들이 다시 모이게 될 거야."</span></p>
+        <p>태평은 깨달았습니다. <span class="highlight">느림</span>은 약함이 아니었습니다. 미세한 힘도 <span class="highlight">누적 효과</span>와 함께하면 산을 만들고 바다를 갈라놓을 수 있었으니까요. 이것이 <span class="highlight">동일과정설</span>의 핵심 원리였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">지형 변화의 예술</span>
+        <h2>땅의 얼굴은 계속 바뀐다</h2>
+        <p>태평은 이제 <span class="highlight">판 구조론</span>을 넓은 눈으로 바라보게 되었습니다. <span class="highlight">판 경계</span>에서 벌어지는 세 가지 유형의 상호작용이 지구 표면의 모든 <span class="highlight">지구조 지형</span>을 만들어낸다는 것을 이해하게 된 것이지요.</p>
+        <p>마그마가 세계 지도를 펼쳐 보여주며 설명했습니다.</p>
+        <p><span class="dialogue">"첫째, <span class="highlight">수렴형 경계</span>에서는 세 가지 시나리오가 가능해:<br>
+        • <span class="highlight">대륙-대륙 충돌</span>: 히말라야, 알프스 같은 <span class="highlight">습곡 산맥</span> 형성<br>
+        • <span class="highlight">해양-대륙 섭입</span>: 안데스 산맥, <span class="highlight">대륙 화산호</span> 형성<br>
+        • <span class="highlight">해양-해양 섭입</span>: 마리아나 해구, <span class="highlight">도호</span> 형성"</span></p>
+        <p><span class="dialogue">"둘째, <span class="highlight">발산형 경계</span>에서는:<br>
+        • <span class="highlight">해양 발산</span>: 대서양 중앙 해령 같은 <span class="highlight">해저 확장</span><br>
+        • <span class="highlight">대륙 발산</span>: 동아프리카 <span class="highlight">대지구대</span>, 결국 새로운 바다 형성"</span></p>
+        <p><span class="dialogue">"셋째, <span class="highlight">보존형 경계</span>에서는:<br>
+        • <span class="highlight">산안드레아스 단층</span> 같은 <span class="highlight">주향이동 단층</span><br>
+        • <span class="highlight">지진</span>은 발생하지만 <span class="highlight">화산</span>이나 <span class="highlight">산맥</span>은 형성되지 않아."</span></p>
+        <p>유라가 조용히 끼어들었습니다.</p>
+        <p><span class="dialogue">"제 등 위에 있는 <span class="highlight">지중해</span>, 보이시죠? 저건 <span class="highlight">테티스 해</span>의 잔재로, 아프리카판이 유라시아판을 향해 북쪽으로 연간 약 2cm로 밀고 올라오면서 점점 <span class="highlight">소멸</span>되고 있어요. <span class="highlight">지브롤터 해협</span>도 결국 닫힐 거예요."</span></p>
+        <p>히말이 활짝 웃었습니다.</p>
+        <p><span class="dialogue">"맞아! 나도 영원히 이 모습은 아닐 거야. 수억 년이 지나면 <span class="highlight">침식</span>에 깎여 낮아질 수도 있어. <span class="highlight">애팔래치아 산맥</span>은 한때 히말라야만큼 높았지만, 약 4억 8천만 년 전 형성된 후 현재는 <span class="highlight">준평원</span>에 가까워졌거든."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">멈추지 않는 행성</span>
+        <h2>지금 이 순간의 지구</h2>
+        <p>마그마는 태평에게 <span class="highlight">현재</span>의 지구를 보여주었습니다. 오늘날에도 지구의 판들은 여전히 쉬지 않고 움직이고 있었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">위성 측지학</span>과 <span class="highlight">GPS</span>로 실시간 측정한 결과를 보여줄게."</span></p>
+        <p>마그마가 현재 진행 중인 <span class="highlight">지구조 운동</span>을 설명했습니다:</p>
+        <p>• <span class="highlight">대서양 확장</span>: 연간 약 2.5cm 확장 중. 유럽-아메리카 간 거리 증가<br>
+        • <span class="highlight">태평양 수축</span>: 연간 약 5~9cm 수축 중. 섭입에 의해 사라지는 중<br>
+        • <span class="highlight">히말라야 융기</span>: 연간 약 5mm 상승 중. 인도판이 여전히 북상 중<br>
+        • <span class="highlight">동아프리카 열곡</span>: 연간 약 6~7mm 분리 중. 약 천만 년 후 새 바다 형성 예상<br>
+        • <span class="highlight">호주판 이동</span>: 연간 약 7cm 북진 중. 가장 빠르게 움직이는 대륙판</p>
+        <p><span class="dialogue">"이런 움직임 때문에 지진과 화산이 일어나는 거야. 2011년 <span class="highlight">도호쿠 대지진</span>은 태평양판이 북아메리카판 아래로 섭입되면서 축적된 <span class="highlight">탄성 변형 에너지</span>가 한꺼번에 방출된 것이었고, 2010년 <span class="highlight">아이슬란드 에이야프얄라요쿨 화산</span> 폭발은 대서양 해령 위에 위치한 <span class="highlight">열점</span>에서 일어난 것이었지."</span></p>
+        <p>유라가 무거운 표정으로 말했습니다.</p>
+        <p><span class="dialogue">"우리의 움직임은 때로 인간에게 <span class="highlight">지질 재해</span>가 되기도 해요. 하지만..."</span></p>
+        <p><span class="dialogue">"하지만 그 움직임이 없으면 지구는 <span class="highlight">지질학적으로 죽은 행성</span>이 돼."</span></p>
+        <p>마그마가 단호하게 말했습니다.</p>
+        <p><span class="dialogue">"화산이 <span class="highlight">휘발성 물질</span>을 분출해서 <span class="highlight">대기</span>를 유지하고, 판의 순환이 <span class="highlight">탄소</span>를 재순환시켜 <span class="highlight">장기 탄소 순환</span>으로 기후를 안정시키고, 해저 열수구가 <span class="highlight">생명 기원</span>의 화학 반응을 일으켰을 수도 있지. <span class="highlight">살아 있는 행성</span>이기 때문에 생명이 존재할 수 있는 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">멈춤 없는 행성의 노래</span>
+        <h2>지구는 살아 움직인다</h2>
+        <p>여행을 마친 태평은 다시 태평양 바닥에 누워 조용히 생각에 잠겼습니다. <span class="highlight">해령</span>에서 태어나 <span class="highlight">해구</span>에서 돌아가는 <span class="highlight">판 순환</span>, 충돌해서 솟아오르는 <span class="highlight">조산대</span>, 벌어져서 태어나는 바다. 이 모든 것이 하나의 거대한 <span class="highlight">지구동역학 시스템</span>이었습니다.</p>
+        <p><span class="dialogue">"처음에는 무서웠어. 내가 움직이면 위의 사람들이 흔들릴까 봐. 해구에서 내 몸이 <span class="highlight">섭입</span>되는 것도 두려웠고. 하지만 이제 알아. 내 움직임이 멈추면, <span class="highlight">맨틀 대류</span>가 멈추고, <span class="highlight">지자기장</span>도 약해지고, <span class="highlight">화산 가스 분출</span>도 없어져서 대기가 사라질 거야."</span></p>
+        <p>유라가 태평에게 다가왔습니다. 수천만 년 동안 밀고 밀리며 경쟁해 온 <span class="highlight">라이벌</span>이었지만, 이제는 서로의 역할을 이해하는 <span class="highlight">동반자</span>였습니다.</p>
+        <p><span class="dialogue">"우리가 <span class="highlight">수렴</span>해서 히말라야가 태어났잖아. 그건 우리 둘 다 없으면 불가능한 <span class="highlight">협력</span>이었어."</span></p>
+        <p>마그마가 마지막으로 모든 판에게 말했습니다.</p>
+        <p><span class="dialogue">"세상은 <span class="highlight">정적 평형</span>이 아니야. <span class="highlight">동적 평형</span>이지. 너희의 발밑에서 나는 쉬지 않고 <span class="highlight">대류</span>하고 있고, 그 흐름 위에서 너희는 <span class="highlight">판 구조적 춤</span>을 추고 있어. 때로는 <span class="highlight">충돌</span>하고, 때로는 <span class="highlight">벌어지고</span>, 때로는 <span class="highlight">스쳐 지나가면서</span>. 그 춤이 만들어내는 것이 산이고, 바다이고, 화산이고, 지진이야."</span></p>
+        <p>지금 이 순간에도 여러분의 발밑에서는 판들이 조용히 움직이고 있습니다. 1년에 몇 센티미터, <span class="highlight">손톱이 자라는 속도</span>로. 그 느린 춤이 수억 년에 걸쳐 대륙을 갈라놓고, 산을 세우고, 바다를 열어왔습니다. 세상은 멈춰 있지 않습니다. 오늘의 세계 지도는 내일의 세계 지도와 다를 것이고, 수억 년 후의 지구는 지금과 전혀 다른 모습일 것입니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(93, 78, 55, 0.15); border-radius: 16px;">
+          <strong style="color: #3E2723; font-size: 20px;">🌱 「세상은 멈춰 있지 않다. 변화야말로 살아 있다는 가장 확실한 증거이다. — 판 구조론의 교훈」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth07_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

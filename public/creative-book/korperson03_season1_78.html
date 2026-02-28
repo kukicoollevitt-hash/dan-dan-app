@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>해골 물을 마신 스님 — 원효</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작한국인물03/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 620px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #c9a227 0%, #8b6914 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 0, 0, 0.1);
+      color: #8b6914;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #c9a227;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #8b6914;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 30px;
+      pointer-events: auto;
+      text-align: center;
+    }
+
+    .intro-content {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      padding: 50px;
+      border-radius: 30px;
+      max-width: 850px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+    }
+
+    .intro-content h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .subtitle {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+    }
+
+    .intro-content .characters h3 {
+      color: #c9a227;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      font-size: 14px;
+      color: #34495e;
+      line-height: 1.8;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict-box {
+      text-align: left;
+      background: linear-gradient(135deg, rgba(201, 162, 39, 0.1), rgba(139, 105, 20, 0.1));
+      padding: 25px;
+      border-radius: 16px;
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      margin-bottom: 25px;
+    }
+
+    .intro-content .conflict-box h3 {
+      color: #c9a227;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict-box p {
+      font-size: 14px;
+      color: #34495e;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      color: #c9a227;
+      font-size: 14px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      animation: bounce 2s infinite;
+      z-index: 100;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+
+    .scroll-indicator svg {
+      width: 24px;
+      height: 24px;
+      transform: rotate(90deg);
+    }
+
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 30px 20px;
+      }
+
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
+      }
+
+      .intro-content {
+        padding: 30px 20px;
+      }
+
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>💀 해골 물을 마신 스님 💀</h1>
+        <p class="subtitle">
+          — 원효(元曉), 어둠 속에서 진리를 깨우다 —<br>
+          교과기반 창작도서 | 중1-2
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>▸ 원효(元曉, 617-686):</strong> 신라 불교의 거장(巨匠)이자 사상가. 뛰어난 지적 역량과 열정을 지녔으나, "진정한 깨달음은 외부의 권위 있는 스승에게서만 획득할 수 있다"는 관념적 집착에 사로잡혀 있었다. 경직된 불교계의 문턱을 낮추고 대중 속으로 들어간 혁신적 종교인으로, 화쟁(和諍) 사상과 무애(無礙) 행으로 한국 불교사에 불멸의 족적을 남겼다.</p>
+          <p><strong>▸ 의상(義湘, 625-702):</strong> 원효의 도반(道伴)이자 평생의 벗. 과묵하고 신중한 성격으로, 말보다 행동으로 수행하는 스타일이다. 원효와 함께 당나라 유학을 꿈꾸었으나, 원효가 귀환한 후에도 홀로 당에 건너가 화엄학(華嚴學)을 수학하여 신라 화엄종의 개창자가 되었다. 원효와는 수행 방법론에서 보이지 않는 긴장관계가 존재했다.</p>
+          <p><strong>▸ 해골(髑髏):</strong> 말 한마디 하지 않지만 서사의 진정한 전환점(turning point)을 만드는 '침묵의 스승'. 이름 모를 무덤 동굴 바닥에 엎어진 채 고인 빗물을 담고 있던 오래된 해골로, 원효에게 일체유심조(一切唯心造)의 진리를 체험적으로 각인시킨 존재이다.</p>
+          <p><strong>▸ 민초(民草)들:</strong> 불경(佛經)의 한 글자도 해독하지 못하나, 생로병사(生老病死)의 고통 앞에서 진정한 가르침을 갈망하는 신라의 하층 백성들. 원효가 당에서 돌아온 뒤 가장 먼저 그의 말에 귀 기울인 존재들이자, 원효 대중 불교의 수혜자들이다.</p>
+        </div>
+        <div class="conflict-box">
+          <h3>⚔️ 서사 구조: 다층적 갈등의 역학</h3>
+          <p>이 서사에는 세 가지 핵심 갈등 축이 존재한다. <strong>첫째, 내면적 차원</strong>—원효의 자기 부정과 외부 의존적 태도로, "나는 아직 부족하다, 먼 곳의 스승이 필요하다"는 불안에 사로잡힌 내적 갈등이다. <strong>둘째, 관계적 차원</strong>—원효와 의상 사이의 암묵적 긴장으로, "깨달음은 어디에서 오는가"라는 근본적 물음에 대한 상이한 입장이다. <strong>셋째, 사회적 차원</strong>—귀족 중심의 경직된 불교계와 대중화를 추구하는 원효 사이의 구조적 대립이다. 해골 물 사건은 첫 번째 갈등의 해소를 통해 세 번째 갈등 해결의 단초를 제공하며, '일체유심조(一切唯心造)'라는 주제 의식을 심화한다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">구도(求道)의 출발</span>
+        <h2>당나라를 향한 두 스님의 여정</h2>
+        <p>신라 서라벌(徐羅伐)의 새벽은 아직 어둠에 잠겨 있었다. 사찰(寺刹) 마당에 놓인 석등(石燈) 하나만이 희미한 빛을 내뿜고, 그 빛 아래 두 사람의 그림자가 길게 드리워져 있었다. 한 사람은 원효(元曉), 또 한 사람은 의상(義湘)이었다. 두 스님은 오래전부터 동일한 꿈을 품어 왔다. 해동(海東)을 넘어 당(唐)나라에는 현장(玄奘) 법사의 제자들이 새로운 경전을 번역하고 있으며, 그들의 가르침을 직접 수학(修學)해야만 비로소 진정한 부처의 도(道)를 깨칠 수 있으리라는 확신이었다.</p>
+        <p>원효는 가슴이 터질 듯 설레었다. 밤새 잠을 이루지 못하고 보따리를 풀었다 쌌다를 반복한 그에게, 당나라는 단순한 이국(異國)이 아니라 깨달음이라는 보물이 잠든 보물섬이었다. "의상, 이번에는 반드시 당에 도달해야 하네. 유식학(唯識學)의 진수를 직접 듣고 돌아와, 이 신라 땅의 중생들에게 전해야 하지 않겠는가." 원효의 안광(眼光)이 번뜩였다. 그러나 의상은 원효와 사뭇 달랐다. 그는 고개를 끄덕이면서도 입술을 꾹 다물고 있었다. 한참 뒤에야 나직한 목소리로 물었다. "원효, 깨달음이 정녕 당나라에만 있다고 생각하는가?"</p>
+        <p>원효는 그 질문을 무심히 흘려보냈다. 아니, 흘려보내려 애를 썼다고 하는 편이 정확할 것이다. 사실 원효의 마음 한구석에는 끊임없이 자신을 갉아먹는 불안이 서식하고 있었다. '나는 아직 부족하다. 더 큰 스승을 배알(拜謁)해야 한다. 이 신라 땅에서는 결코 완전한 깨달음에 이를 수 없다.' 이 강박적 사유는 원효를 밤마다 괴롭히는 가시 같은 것이었다. 두 스님은 마침내 산문(山門)을 나섰다. 지팡이를 짚고, 남루한 행장(行裝) 하나씩을 어깨에 멘 채, 아직 성신(星辰)이 빛나는 천공 아래 서쪽으로 첫 발을 내디뎠다. 그들은 아직 알지 못했다. 진정한 가르침은 당나라 대찰(大刹)의 화려한 법당이 아니라, 이름 없는 어느 언덕 아래 어두운 동굴 속에서 그들을 기다리고 있다는 것을.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">어둠 속의 피난처</span>
+        <h2>폭풍우와 동굴</h2>
+        <p>며칠이 지나고, 또 며칠이 경과했다. 신라의 들판을 횡단하여 산로(山路)에 접어든 두 스님의 족저(足底)는 이미 물집으로 뒤덮여 있었다. 주간의 태양은 사정없이 내리쬐었고, 야간에는 한풍(寒風)이 골수(骨髓)까지 파고들었다. 그래도 원효의 보행에는 활력이 넘쳤다. 그는 도상(途上)에서 조우하는 모든 것에 호기심을 발현했다. 노변(路邊)의 야화(野花) 한 송이를 보고도 "이 화훼(花卉) 안에도 불법(佛法)이 내재(內在)해 있을까?" 하고 자문자답했다. 의상은 묵묵히 보행하면서도 미소를 지었다. 그런 원효가 가상(嘉尙)했기 때문이다.</p>
+        <p>그러나 여정 열흘째 되던 날, 천공(天空)이 돌연 흉흉(洶洶)하게 변모했다. 서방(西方)에서 흑운(黑雲)이 산악을 삼킬 듯 몰려왔고, 전광(電光)이 창천(蒼天)을 갈랐다. 뇌성(雷聲)이 산 전체를 진동시켰고, 곧이어 호우(豪雨)가 쏟아지기 시작했다. 우맥(雨脈)이 어찌나 맹렬한지, 일보(一步) 전방도 시인(視認)되지 않았다. 원효는 고성(高聲)으로 외쳤다. "의상! 어디든 피신할 장소를 탐색해야 하네!" 두 사람은 비를 맞으며 비틀거렸다. 지척의 보따리는 수분을 함유하여 견갑(肩甲)을 압박했고, 이수(泥水)의 노면은 족근(足根)까지 함몰시켰다.</p>
+        <p>한참을 배회하던 끝에, 의상의 수장(手掌)이 원효의 완부(腕部)를 견인했다. "여기! 입구가 있네!" 그것은 저구(低丘) 하방에 반쯤 은폐된 협소한 동굴이었다. 두 사람은 허겁지겁 기어들어갔다. 동굴 내부는 칠흑(漆黑) 같은 암흑이었다. 지두(指頭) 하나 시인되지 않았다. 냉랭한 석면(石面)이었으나, 풍우(風雨)를 피신할 수 있다는 사실만으로 두 사람은 안도의 호흡을 내쉬었다. 원효는 습윤한 의복을 교축(絞縮)하며 소음(笑音)을 냈다. "하하, 부처님이 우리에게 휴식하라고 마련해 주신 거처(居處)로구나." 외부에서는 여전히 뇌성이 우르르 울렸고, 우성(雨聲)이 마치 천 개의 고(鼓)를 타격하는 듯 동굴 내부를 공진(共振)시켰다. 그때까지만 해도, 이 동굴이 자신들의 운명을 송두리째 전환시킬 장소가 되리라고는 몽상(夢想)에도 예기(豫期)하지 못했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">감로수 한 모금</span>
+        <h2>어둠 속의 축복</h2>
+        <p>폭풍은 좀처럼 소강(小康)되지 않았다. 동굴 내부에 웅거(蹲踞)한 채 시간이 얼마나 경과했을까. 원효는 극심한 갈증을 자각했다. 우박(雨霸)을 맞으며 질주해 오느라 인후(咽喉)가 바싹 건조해져 있었는데, 수통(水筒)은 어디선가 유실한 모양이었다. 설(舌)이 구개(口蓋)에 딱 부착되는 듯했다. 의상은 이미 기진맥진하여 벽면에 배부(背部)를 기댄 채 천면(淺眠)에 빠져 있었다.</p>
+        <p>원효는 암흑 속에서 수장을 더듬거렸다. 동굴 저면(底面)을 이리저리 촉지(觸知)하다가, 문득 지두(指頭)에 무언가가 접촉되었다. 냉랭한 표면, 그리고 그 내부에 저류(貯溜)되어 있는 액체의 촉감. 요함(凹陷)된 형태의 용기(容器) 같은 것이었다. 원효의 심장이 고동쳤다. '수분이다!' 그는 양수(兩手)로 조심스럽게 그것을 감싸 거양(擧揚)했다. 그리고 구순(口脣)을 근접시켜 일구(一口) 음용(飮用)했다.</p>
+        <p>순간, 전신(全身)에 전율(戰慄)이 파급(波及)되었다. 냉청(冷淸)하고 청정(淸淨)한 수액(水液)이 작열(灼熱)하는 인후를 윤택(潤澤)하게 하강시켰다. 이보다 청량(淸涼)하고, 이보다 감미(甘美)로운 수분은 세상에 부재(不在)할 것 같았다. 원효는 감격에 겨워 중얼거렸다. "아, 이것이 감로수(甘露水)가 아니고 무엇이랴! 부처님이 이 암흑 속에 수분을 준비해 두셨구나." 그는 연거푸 수구(數口)를 추가 음용했다. 일구 일구가 전신의 세포를 각성시키는 듯했다. 갈증이 해소되자 심리까지 평안해졌다. 원효는 동굴 저면에 횡와(橫臥)하며 사유했다. '이 험난한 행로(行路) 위에서도 이렇게 은혜로운 수분 일구가 존재하다니. 당나라에 도달하면 분명 이보다 더 거대한 은혜가 대기하고 있으리라.' 그 사유에 미소가 번지며 원효는 평안한 수면(睡眠)에 함몰되었다. 그 야(夜), 원효는 심심(深深)하고 감미로운 몽상(夢想)을 경험했다. 그러나 조조(朝朝)가 도래하면, 그 아름다운 몽상은 분쇄될 운명이었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">조조(朝朝)의 진실</span>
+        <h2>해골과의 대면</h2>
+        <p>여명(黎明)의 광휘(光輝)가 동굴 입구를 통해 삼투(滲透)했다. 폭풍은 통과했고, 세계는 우세(雨洗)되어 신생(新生)한 듯 청명(淸明)하고 정적(靜寂)했다. 조음(鳥音)이 청아(淸雅)하게 명동(鳴動)했고, 습윤한 토양의 향취(香臭)가 비강(鼻腔)을 자극했다. 원효는 신전(伸展)하며 개안(開眼)했다. 그리고 무심코 측방(側方)을 응시했다.</p>
+        <p>그 순간, 원효의 안구(眼球)가 확대되었다. 구강(口腔)이 개방되었다. 전신의 혈액이 응고(凝固)되는 듯했다. 전야(前夜) 자신이 양수로 감싸 안고 그토록 감격하며 음용했던 '감로수'의 용기. 그것은 용기가 아니었다. 인간의 두개골(頭蓋骨)—해골(骸骨)—이었다. 오래되어 황변(黃變)된 해골 내부에 우수(雨水)가 저류되어 있었고, 그 내부에는 정체 불명의 충류(蟲類)가 부유(浮遊)하고 있었다. 초엽(草葉) 잔재와 토양, 그리고 시간이 생성한 온갖 불순물이 혼합된 수액. 그것이 원효가 '세상에서 가장 감미롭다'고 지각했던 수분의 정체(正體)였다.</p>
+        <p>"으악!" 원효는 비명을 발했다. 그의 위장(胃腸)이 반전(反轉)되었다. 억제 불가능한 구역(嘔逆)이 쇄도했고, 원효는 동굴 외부로 기어나가 있는 대로 토사(吐瀉)했다. 전야 위장 내부에 섭취되어 있던 해골 수분이, 그 '감미롭던' 감로수가 전량 분출되었다. 의상이 경악하여 질주해 왔다. "원효! 무탈한가?" 원효는 지면에 수장을 지탱한 채 거칠게 호흡을 몰아쉬었다. 해골의 공허한 안와(眼窩)가 아직도 안전(眼前)에 잔상(殘像)으로 아른거렸다. 그런데 바로 그 순간, 토사로 고통스러운 육신과는 정반대로, 원효의 두뇌 내부에서 무언가가 번쩍 발광(發光)했다. 일조(一條)의 전광(電光)이 암흑을 분단(分斷)하듯, 거대한 각성(覺醒)의 광휘가 그의 정신을 관통(貫通)한 것이다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">위장의 반전, 심식(心識)의 반전</span>
+        <h2>깨달음의 폭풍</h2>
+        <p>원효는 한동안 무언(無言)이었다. 구각(口角)에 잔류한 고미(苦味)를 지각하며, 그는 자기 자신에게 질문했다. '전야의 나와 금조(今朝)의 나는 동일 인물이다. 음용한 수분도 동일 수분이다. 그런데 전야에는 세상에서 가장 감미로운 수분이었고, 금조에는 세상에서 가장 혐오(嫌惡)스러운 수분이 되었다. 무엇이 변이(變異)한 것인가?'</p>
+        <p>해답은 명확했다. 수분은 시종일관 동일했다. 변이한 것은 오직 하나, 원효 자신의 심식(心識)이었다. 암흑 속에서 '청정한 수분'이라고 신앙(信仰)했을 때, 그 수분은 감로수가 되었다. 조조의 광명 속에서 '해골 수분'이라고 인지(認知)했을 때, 동일 수분이 독(毒)이 되었다. 수분이 변이한 것이 아니라 심식이 변이한 것이다.</p>
+        <p>원효의 양안(兩眼)에서 누액(淚液)이 유하(流下)했다. 그것은 비애(悲哀)의 누액이 아니었다. 마치 장구(長久)하게 폐쇄되어 있던 문호(門戶)가 활짝 개방되며 눈부신 광휘가 쇄도하는 것 같은, 벅찬 감동의 누액이었다. "의상, 나는 이해하게 되었네." 원효의 음성은 진동하고 있었으나, 그 내부에는 묵직한 확신이 내포되어 있었다. "지금껏 나는 깨달음을 획득하기 위해 당나라로 도항(渡航)해야 한다고 사유했네. 원방(遠方)에 존재하는 위대한 스승만이 나에게 진리를 수여(授與)할 수 있다고 신앙했지. 하지만 이 해골 수분 일구가 나에게 교시(敎示)해 주었네. 모든 것은 심식이 조작(造作)하는 것이라는 것을."</p>
+        <p>의상은 정적(靜寂) 속에 원효를 응시했다. 원효의 안면(顔面)에는 전일(前日)까지 그를 괴롭히던 불안이 소실되어 있었다. '나는 부족하다'는 그 집요한 속삭임이 더 이상 청취되지 않는 듯했다. 해골이라는 묵언(默言)의 스승이 전달한 가르침은, 당나라의 어떤 고승(高僧)도 이보다 더 강렬하게 전달하기 곤난(困難)할 만큼 골수를 타격하는 것이었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">일체유심조(一切唯心造)</span>
+        <h2>심식이 곧 세계이다</h2>
+        <p>원효는 동굴 입구에 좌정(坐定)하여 상승(上昇)하는 일륜(日輪)을 응시했다. 갓 우세(雨洗)된 산악은 금빛으로 염색(染色)되어 있었고, 초엽마다 우적(雨滴)이 보석처럼 현수(懸垂)되어 있었다. 그 풍경은 전일과 상이할 것이 전무했다. 그러나 원효의 안구에 투영되는 세계는 완전히 별개였다. 그는 정적 속에 입술을 개방했다. "일체유심조(一切唯心造)." 모든 것은 오직 심식이 조작한다. 이 사자(四字)가 원효의 전 존재를 관통했다.</p>
+        <p>해골 수분 사건은 단순히 오염된 수분을 음용한 해프닝이 아니었다. 그것은 우주의 비의(秘義)를 압축한 일편(一篇)의 가르침이었다. 원효는 심심(深深)히 사색에 침잠(沈潛)했다. 인간이 무언가를 '호(好)'혹은 '악(惡)'이라고 판단하는 것, '미(美)' 혹은 '추(醜)'라고 지각하는 것, '행복' 혹은 '불행'이라고 여기는 것. 이 모든 것이 실은 대상 자체에 내재하는 것이 아니라, 그것을 응시하는 심식이 생성하는 영자(影子)라는 사실. 동일 우량(雨量)이 강하(降下)해도 농부는 환희(歡喜)하고 행려(行旅)는 고통스러워한다. 동일 화훼가 개화(開花)해도 연인은 설레고 이별하는 자는 비탄(悲歎)한다. 세계는 하나인데, 심식이 조작하는 세계는 인간의 수효(數效)만큼 다양하다.</p>
+        <p>"그렇다면…" 원효가 저어(低語)했다. "진리도 동일하지 않은가? 진리가 당나라에만 존재한다고 사유한 것은, 암흑 속에서 해골 수분을 감로수라고 신앙한 것과 무엇이 상이한가? 진리는 장소(場所)에 존재하는 것이 아니라, 그것을 각성(覺醒)하는 심식에 존재하는 것이다!" 이 각성은 원효를 해방시켰다. 더 이상 '여기가 아닌 타처(他處)'에서 해답을 탐색할 필요가 소멸되었다. 지금 이 순간, 지금 이 장소, 지금 이 심식이 바로 수행의 도량(道場)이었다. 족하(足下)의 석자(石子) 하나, 두상(頭上)의 운편(雲片) 하나, 이변(耳邊)에 접촉하는 풍선(風線) 일조에도 불법(佛法)이 생동(生動) 호흡하고 있었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">회귀(回歸)의 보행</span>
+        <h2>신라를 향한 역주행</h2>
+        <p>의상은 원효의 결심을 예감하고 있었으나, 직접 그 언사(言辭)를 청취하는 것은 별개의 사안이었다. "나는 귀환하겠네, 의상." 원효의 음성은 단호했으나 온화했다. "당나라로 도항하지 않겠다는 의미인가?" 의상이 질문했다. 그의 안구에는 경악보다 이해에 근접한 광채가 서려 있었다.</p>
+        <p>"그러하네. 심외(心外)에서 진리를 탐색하는 것은, 자신의 영자(影子)를 추적하여 질주하는 것과 동일하네. 아무리 신속히 질주해도 영자는 포착되지 않지. 그러나 신체를 회전시켜 일륜을 직면(直面)하면, 영자는 저절로 후방으로 퇴거(退去)하지 않는가." 의상은 장시간 원효를 응시하다가, 정적 속에 미소 지었다. "자네의 도로(道路)는 자네가 가장 명료(明瞭)히 인지하겠지. 나는 당나라로 도항하겠네. 그곳에서 수학할 것이 존재한다면 수학하고 귀환하겠네."</p>
+        <p>이것이 두 도반(道伴)의 분기점(分岐點)이었다. 동일 몽상을 포착하고 출발했으나, 동일 동굴에서 상이한 도로를 선택했다. 의상은 서방(西方)으로, 원효는 동방(東方)으로. 그러나 이 분기점에는 적막(寂寞)만 존재하지 않았다. 각자의 도로가 모두 진실한 것이었기 때문이다. 원효는 내래(來)의 도로를 역추적하며 보행했다. 경이로운 것은, 불과 수일 전에 보행했던 동일 도로인데 세계가 완전히 별개로 시인된다는 것이었다. 노변의 석자가 발광하여 보였다. 논전(論田)에서 노동하는 농부의 만곡된 배부(背部)가 불상(佛像)으로 보였다. 이전에는 '아직 원로(遠路)'가 잔여한다는 조급(躁急)이 존재했는데, 이제는 일보 일보가 이미 도착인 듯 평화로웠다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">화쟁(和諍)</span>
+        <h2>쟁론(爭論)하는 진리를 화해시키다</h2>
+        <p>신라로 귀환한 원효는 직행(直行)하여 수행에 입문했다. 그러나 그의 수행은 타 승려의 것과 사뭇 상이했다. 그는 산중(山中) 암자에 은거하여 독자적으로 경전을 독송하는 대신, 세속(世俗) 속으로 투신(投身)했다. 당시 신라의 불교계는 복잡한 갈등에 함몰되어 있었다. 다양한 종파가 제각기 "우리의 해석만이 정당(正當)하다"고 주장하며 상호 비난하고 있었다. 유식학(唯識學)을 추종하는 자들은 중관학(中觀學)을 경시했고, 중관학을 추종하는 자들은 유식학을 무시했다. 마치 맹인(盲人)들이 코끼리의 각 부위를 촉지하고 "코끼리는 이렇게 생겼다!"고 쟁론하는 것과 유사했다.</p>
+        <p>원효는 이 쟁론을 관찰하며 해골 수분의 교훈을 환기했다. 동일 수분인데 심식에 따라 감로수도 되고 독(毒)이도 되듯이, 동일 불타(佛陀)의 가르침인데 관점에 따라 상이한 진리가 된 것이다. 문제는 불타의 가르침이 아니라, 그것을 해석하는 인간의 협소(狹小)한 심식이었다.</p>
+        <p>원효는 이 각성을 '화쟁(和諍)'이라는 거대한 사상 체계로 전개했다. 화쟁이란 '쟁론하는 것을 화해시킨다'는 의미이다. 모든 주장에는 정당한 측면이 존재하고, 모든 주장에는 간과하는 측면이 존재한다. 하나의 주장만 파지(把持)하고 잔여를 배척하는 것은, 월(月)을 지시하는 지두(指頭)만 응시하고 월을 응시하지 못하는 것과 동일하다. 원효는 수십 권의 저술을 통해 대립하는 종파들의 핵심을 일일이 분석하고, 그것들이 사실은 하나의 진리를 상이한 각도에서 조명(照明)한 것임을 논증(論證)했다. 이것은 단순한 절충주의(折衷主義)가 아니었다. 모든 것을 포용하면서도 어떤 것도 훼손하지 않는, 경이로운 지적 용기와 온화한 포용의 산물이었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">무애행(無礙行)</span>
+        <h2>표주박을 타격하며 민초 속으로</h2>
+        <p>원효의 가장 파격적인 행보(行步)는 그 다음에 전개되었다. 그는 어느 날 승려의 격식(格式)을 하강시키고, 호리병박으로 제작된 표주박을 수중(手中)에 거양했다. 그리고 시전(市廛) 거리로 진출했다. 당시 불교는 대부분 귀족과 왕실의 소유물이었다. 경전은 난해한 한문으로 기술되어 있었고, 법회(法會)는 고준(高峻)한 사원에서 개최되었다. 평범한 민초들—논전에서 노동하는 농부, 시전에서 물화(物貨)를 판매하는 상인, 영아(嬰兒)를 업고 세탁하는 부녀—에게 불타의 가르침은 원방(遠方) 세계의 이야기였다.</p>
+        <p>원효는 이것이 오류(誤謬)라고 사유했다. 해골 수분이 교시해 준 것처럼, 진리는 화려한 사원에만 존재하는 것이 아니다. 진애(塵埃)가 비산(飛散)하는 거리에도, 구수한 장류(醬類) 향취가 발산되는 주방(廚房)에도, 영아의 곡성(哭聲)이 공진하는 초가(草家)에도 진리는 존재한다. 원효는 표주박을 타격하며 가요(歌謠)를 창송(唱誦)했다. "나무아미타불(南無阿彌陀佛)!" 난해한 교리 대신 민초들이 따라 창송할 수 있는 간결한 염불(念佛). 중량(重量)의 경전 대신 신체를 운동시키며 체감할 수 있는 율동(律動). 원효는 무도(舞蹈)했고, 담화를 전달했고, 때로는 광대처럼 해학적(諧謔的) 행동을 시연하기도 했다.</p>
+        <p>인간들은 초반에는 당혹해했다. "저 스님이 광인(狂人)이 아닌가?" 수군(竊竊)거리는 음성이 청취되었다. 기존 승단(僧團)에서는 노골적으로 비난했다. "승려의 체통을 붕괴시키는 자"라고. 그러나 원효는 개의(介意)하지 않았다. 시간이 경과하면서 경이로운 일이 발생했다. 일자(一字)도 독해하지 못하던 노모(老母)가 "나무아미타불"을 암송하기 시작했다. 시전의 병판(餠販)이 고객에게 병(餠)을 전달하며 미소 짓는 것이 수행이라는 것을 인지하게 되었다. 영아들이 원효의 가요를 따라 창송하며 질주했다. 불교가, 진리가, 처음으로 민초의 생활 속으로 보행(步行)해 들어간 것이다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물03/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">천 년을 관통한 종자(種子)</span>
+        <h2>해골이 유증(遺贈)한 깨달음</h2>
+        <p>세월은 유수(流水)처럼 흘러 원효도 이 세계를 퇴장(退場)했다. 그러나 그가 파종(播種)한 종자는 소멸하지 않았다. 해골 수분 일구에서 기원한 각성은 파문(波紋)처럼 확산되어, 신라를 초월하여 고려로, 고려를 초월하여 조선으로, 그리고 마침내 금일(今日) 우리에게까지 도달했다. 천 년을 초과하는 시간 동안, 이 서사를 청취한 무수한 인간들이 각자의 생활 속에서 '해골 수분의 순간'을 경험했다.</p>
+        <p>어떤 인간에게 그것은 혐오하던 타인에게서 갑자기 온기(溫氣)를 발견하는 순간이었을 것이다. 어떤 인간에게 그것은 실패라고 사유했던 사안이 사실은 가장 귀중한 학습이었음을 각성하는 순간이었을 것이다. 또 어떤 인간에게 그것은 원방을 향해 질주하다가 문득 정지하여, 지금 자신의 족부(足部)가 답(踏)하고 있는 이 토지의 미려(美麗)함을 비로소 시인하게 되는 순간이었을 것이다.</p>
+        <p>원효의 서사가 우리에게 투척(投擲)하는 질문은 이것이다. "지금 당신은 무엇을 추적하고 있는가? 그것은 정녕 외부에 존재하는가, 아니면 이미 당신 내부에 존재하는 것은 아닌가?" 우리는 모두 각자의 '당나라'를 향해 질주하고 있다. 더 우수(優秀)한 학교, 더 고준한 직장, 더 다량(多量)의 재화(財貨), 더 거대한 인정(認定). 그것들이 악(惡)한 것은 아니다. 그러나 그것을 획득해야만 비로소 행복해질 수 있다고 신앙하는 순간, 우리는 암흑 속에서 해골 수분을 감로수로 착각하는 원효와 동일해진다. 행복은, 평화는, 진리는 이미 여기에 존재한다. 원효는 천 년 전 동굴에서 해골을 조우한 뒤, 전 세계가 별개로 시인되었다고 했다. 어쩌면 우리도 이 서사를 독해한 금일, 조금은 별개의 안광으로 세계를 응시할 수 있지 않을까. 해골 수분은 오래전에 증발했으나, 그 각성의 종자는 지금 이 순간에도 발아(發芽)하고 있다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="#c9a227">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'korperson03_season1_quiz_78.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 동백꽃</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #F06292 0%, #E91E63 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(240, 98, 146, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(240, 98, 146, 0.15);
+      color: #C2185B;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #C2185B;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #F06292;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #F8BBD9;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(240, 98, 146, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #F8BBD9;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(240, 98, 146, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(240, 98, 146, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(233, 30, 99, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(240, 98, 146, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌸 동백꽃</h1>
+        <p class="subtitle">
+          김유정 · 1936년 발표<br>
+          — 닭싸움으로 시작해 노란 꽃밭에서 피어난 풋사랑 —<br>
+          교과기반 창작도서 · 현대문학 05
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 나(소년):</strong> 열일곱 살, 아버지 없이 어머니와 살며 남의 집 일을 도와주는 순박한 소년. 점순이의 마음을 전혀 알아차리지 못하는 둔감하고 순진한 인물. 감자를 왜 받아야 하는지도 모르고 거절해 버린다.</p>
+          <p><strong>▸ 점순이:</strong> 마름 딸로, 소년에게 호감을 품고 있는 처녀. 감자를 거절당해 무안해진 후, 닭싸움을 시키고 약을 올리며 소년의 관심을 끌려 한다. 영악하면서도 순수한 마음을 가진 인물.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 갈등 구조</h3>
+          <p><strong>▸ 소년 vs 점순이:</strong> 순박한 소년 vs 속마음을 숨긴 소녀 — 감자 거절로 시작된 티격태격</p>
+          <p><strong>▸ 닭싸움:</strong> 점순이네 수탉 vs 소년네 암탉 — 두 사람 마음의 대리전</p>
+          <p><strong>▸ 신분 차이:</strong> 마름네 집 vs 소작농 집 — 형편이 다른 두 집안</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🥔 감자 선물</span>
+        <h2>점순이의 마음</h2>
+        <p><strong>【중심 문장】</strong> 마름 딸인 점순이가 소년에게 감자를 건네지만, 순박한 소년은 왜 받아야 하는지 몰라 거절해 버린다.</p>
+        <p>나는 열일곱 살, 강원도 산골에서 어머니와 둘이 사는 소년이에요. 아버지는 일찍 돌아가셨고, 우리 집은 남의 땅을 빌려 농사짓는 소작농이지요. 순박하다고 알려진 나는 마을에서 착하기로 소문났어요.</p>
+        <p>어느 봄날, 마름 집 딸인 점순이가 나에게 다가왔어요.<br><br><span class="dialogue">"야, 이거 먹어봐."</span><br><br>점순이가 손에 든 감자를 내밀었어요.</p>
+        <p>나는 어리둥절했어요. 왜 갑자기 감자를 주는 거지? 받아야 하는 건가? 나는 아무 생각 없이 고개를 저었어요.<br><br><span class="dialogue">"아니, 됐어."</span></p>
+        <p>점순이의 얼굴이 순간 벌겋게 달아올랐어요. 무안했던 거지요. 점순이는 감자를 도로 집어던지며 소리쳤어요.<br><br><span class="dialogue">"이건 먹어!"</span><br><br>그리고 훌쩍 가버렸어요.</p>
+        <p><span class="highlight">나는 점순이가 왜 화가 났는지 도통 알 수가 없었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">😤 약 올리기 시작</span>
+        <h2>점순이의 복수</h2>
+        <p><strong>【중심 문장】</strong> 감자를 거절당해 무안해진 점순이는 소년에게 계속 약을 올리며 괴롭히기 시작한다.</p>
+        <p>그 후로 점순이가 이상해졌어요. 나만 보면 일부러 약을 올렸지요. 약을 올린다는 건 일부러 화나게 하거나 놀린다는 뜻이에요.</p>
+        <p><span class="dialogue">"야, 바보야! 니네 닭 왜 이렇게 못생겼어?"</span><br><br>점순이가 우리 집 닭을 놀렸어요. 나는 억울했지만 마름 집 딸이니 대꾸하기가 어려웠지요.</p>
+        <p>점순이는 호드기를 불며 빙빙 돌다가 내 앞에서 씩 웃곤 했어요. 호드기는 풀잎이나 나뭇잎으로 만든 피리예요. 삐익 삐익 거슬리는 소리를 내며 나를 놀렸지요.</p>
+        <p><span class="dialogue">"왜 자꾸 그래?"</span><br><br>내가 물어도 점순이는 킬킬대며 도망갔어요.</p>
+        <p>나는 점순이가 왜 저러는지 전혀 몰랐어요. 그냥 나를 싫어하는 줄만 알았지요.</p>
+        <p><span class="highlight">순박한 나는 점순이의 진짜 마음을 전혀 눈치채지 못했어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">🐓 닭싸움의 시작</span>
+        <h2>수탉과 암탉</h2>
+        <p><strong>【중심 문장】</strong> 점순이는 자신의 집 큰 수탉으로 소년네 닭을 괴롭히며 닭싸움을 시키기 시작한다.</p>
+        <p>점순이의 약 올리기는 점점 심해졌어요. 급기야 닭싸움까지 시켰지요.</p>
+        <p>점순이네 집에는 크고 힘센 수탉이 있었어요. 우리 집 닭은 작은 암탉이었지요. 점순이는 일부러 자기 집 수탉을 우리 집 쪽으로 몰았어요.</p>
+        <p><span class="dialogue">"구구구, 가서 한판 붙어봐!"</span><br><br>큰 수탉이 우리 집 닭을 쪼아대기 시작했어요. 우리 닭은 꼬꼬꼬 울며 도망쳤지요.</p>
+        <p>나는 몹시 당황했어요. 예상치 못한 일에 어쩔 줄 몰랐지요. 우리 집 닭은 점순이네 닭에게 늘 지는 처지였으니까요.</p>
+        <p><span class="dialogue">"야, 니네 닭 왜 이렇게 못 싸워? 킬킬킬."</span><br><br>점순이가 놀렸어요.</p>
+        <p>나는 속이 부글부글 끓었지만 어떻게 할 수가 없었어요.</p>
+        <p><span class="highlight">점순이네 수탉이 우리 닭을 쪼아댈 때마다 나는 속수무책이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">😡 참을 수 없는 분노</span>
+        <h2>수탉을 패대기치다</h2>
+        <p><strong>【중심 문장】</strong> 어느 날 점순이네 수탉이 또 우리 닭을 물자, 화가 치민 소년은 수탉을 확 잡아 패대기친다.</p>
+        <p>며칠이 지났어요. 점순이는 여전히 닭싸움을 시키며 나를 괴롭혔지요. 나는 참고 또 참았어요.</p>
+        <p>그런데 어느 날, 점순이네 수탉이 우리 닭을 세게 쪼았어요. 우리 닭 머리에서 피가 났지요. 그 순간 내 안에서 무언가가 터졌어요.</p>
+        <p><span class="dialogue">"이 못된 것!"</span><br><br>나는 확 달려들어 그 큰 수탉을 붙잡았어요. 그리고 땅에 세게 패대기쳤지요.</p>
+        <p>쿠당탕! 수탉이 꿱꿱거리며 뒹굴었어요. 점순이의 눈이 휘둥그레졌지요.</p>
+        <p>그런데 다음 순간, 예상치 못한 일이 벌어졌어요. 점순이가 갑자기 울음을 터뜨린 거예요.<br><br><span class="dialogue">"으앙~ 으앙~"</span></p>
+        <p>나는 너무 놀라서 어쩔 줄 몰랐어요.</p>
+        <p><span class="highlight">점순이가 왜 우는 건지 전혀 알 수 없었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">😢 울음을 그치지 않는 점순이</span>
+        <h2>안절부절못하다</h2>
+        <p><strong>【중심 문장】</strong> 점순이가 울음을 그치지 않자 소년은 안절부절못하며 달래려 한다.</p>
+        <p>점순이의 울음은 그칠 줄 몰랐어요.<br><br><span class="dialogue">"으앙~ 으앙~"</span><br><br>어떻게 해야 할지 모르겠어요. 나는 안절부절못했지요.</p>
+        <p><span class="dialogue">"점순아, 왜 그래? 울지 마."</span><br><br>나는 점순이를 달래려 했어요. 하지만 점순이는 더 크게 울었지요.</p>
+        <p><span class="dialogue">"미안해. 수탉 패대기친 거 미안해."</span><br><br>내가 사과해도 소용이 없었어요.</p>
+        <p>마름 집 딸을 울렸으니 큰일이었어요. 이 일이 점순이네 아버지 귀에 들어가면 우리 집은 쫓겨날지도 몰랐거든요. 우리 집은 점순이네 집에서 땅을 빌려 농사짓는 소작농이었으니까요.</p>
+        <p><span class="dialogue">"제발 울지 마. 응? 내가 잘못했어."</span><br><br>나는 점순이 앞에서 쩔쩔맸어요.</p>
+        <p><span class="highlight">점순이의 울음은 쉽게 멈출 것 같지 않았어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🌼 노란 동백꽃 속으로</span>
+        <h2>넘어지다</h2>
+        <p><strong>【중심 문장】</strong> 울음을 그치라고 달래는 사이, 점순이가 소년을 확 잡아끌어 넘어뜨리고, 둘은 노란 동백꽃 속에 파묻힌다.</p>
+        <p>나는 점순이를 달래느라 정신이 없었어요. 그런데 갑자기 점순이가 내 손목을 확 잡아끌었어요.</p>
+        <p><span class="dialogue">"어, 어?"</span><br><br>중심을 잃고 비틀거렸지요. 그대로 뒤로 넘어지고 말았어요.</p>
+        <p>쿵! 등이 땅에 닿는 줄 알았는데, 이상하게 푹신했어요. 정신을 차려 보니 우리 둘은 노란 동백꽃 속에 흐드러지게 파묻혀 있었어요.</p>
+        <p>동백꽃이 한껏 활짝 피어 있었지요. 노란 꽃잎이 온 세상을 뒤덮은 것 같았어요. 알싸한 꽃향기가 코를 찔렀지요. 톡 쏘는 듯하면서도 달콤한 향기였어요.</p>
+        <p>점순이도 바로 옆에 누워 있었어요. 어느새 울음을 그친 점순이가 나를 바라보고 있었지요.</p>
+        <p><span class="highlight">노란 동백꽃 사이로, 점순이의 얼굴이 빨갛게 물들어 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">💕 속삭임</span>
+        <h2>"그래도 너 날 좋지?"</h2>
+        <p><strong>【중심 문장】</strong> 점순이가 소년의 귀에다 대고 "그래도 너 날 좋지?"라고 속삭이고, 소년은 얼떨결에 "그럼"이라고 대답한다.</p>
+        <p>노란 동백꽃 속에 나란히 누워 있었어요. 알싸한 꽃향기가 코를 간질였지요. 점순이가 몸을 돌려 내 쪽으로 다가왔어요.</p>
+        <p>그리고 내 귀에다 입을 대고 속삭였어요.<br><br><span class="dialogue">"그래도 너 날 좋지?"</span></p>
+        <p>심장이 쿵 내려앉았어요. 점순이의 따뜻한 숨결이 귓가에 느껴졌지요. 머릿속이 하얘졌어요. 무슨 말을 해야 할지 몰랐어요.</p>
+        <p>나는 얼떨결에 대답하고 말았어요.<br><br><span class="dialogue">"그, 그럼."</span></p>
+        <p>그 순간, 세상이 노랗게 물들어 버린 것 같았어요. 동백꽃 향기가 더 진해졌고, 하늘이 빙글빙글 도는 것 같았지요.</p>
+        <p><span class="highlight">점순이가 킬킬 웃었어요. 하지만 이번에는 약 올리는 웃음이 아니었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">💡 깨달음</span>
+        <h2>모든 것이 이해되다</h2>
+        <p><strong>【중심 문장】</strong> 소년은 비로소 점순이가 자신을 좋아해서 그동안 괴롭힌 것임을 깨닫는다.</p>
+        <p>동백꽃 밭에서 일어나 집으로 돌아오면서, 나는 곰곰이 생각했어요.</p>
+        <p>감자를 건넨 것, 약을 올린 것, 닭싸움을 시킨 것, 울음을 터뜨린 것… 모든 것이 이해되기 시작했어요.</p>
+        <p><span class="dialogue">"그러니까… 점순이가 나를 좋아했던 거야?"</span><br><br>나는 혼자 중얼거렸어요. 감자를 거절당해 무안해서 약을 올린 거였어요. 관심을 끌고 싶어서 닭싸움을 시킨 거였지요.</p>
+        <p>그토록 순박한 나도 이제야 알게 된 거예요. 점순이의 괴롭힘은 사실 관심의 표현이었다는 걸.</p>
+        <p>얼굴이 뜨거워졌어요. 부끄러웠지요. 왜 진작 몰랐을까? 왜 감자를 받지 않았을까?</p>
+        <p><span class="highlight">그날 밤, 나는 잠이 오지 않았어요. 동백꽃 향기가 자꾸만 코끝에 맴돌았지요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">😊 달라진 사이</span>
+        <h2>더 이상 약 올리지 않는 점순이</h2>
+        <p><strong>【중심 문장】</strong> 그날 이후 점순이는 더 이상 닭싸움을 시키지 않고, 멀리서 소년을 보며 빙긋 웃기만 한다.</p>
+        <p>그날 이후로 모든 것이 달라졌어요. 점순이는 더 이상 닭싸움을 시키지 않았지요. 약 올리기도 멈췄어요.</p>
+        <p>점순이를 마주치면, 점순이는 멀리서 나를 보고 빙긋 웃기만 했어요. 호드기를 불며 약을 올리던 그 점순이가요.</p>
+        <p>나도 달라졌어요. 점순이를 볼 때마다 얼굴이 뜨거워졌지요. 괜히 눈을 피하게 되었어요.</p>
+        <p><span class="dialogue">"야."</span><br><br>점순이가 불렀어요. 나는 심장이 쿵쾅거렸지요.<br><br><span class="dialogue">"…뭐?"</span><br><br>점순이가 손에 든 것을 내밀었어요. 감자였어요.<br><br><span class="dialogue">"이번엔 먹어."</span></p>
+        <p>나는 이번에는 받았어요. 점순이가 환하게 웃었지요.</p>
+        <p><span class="highlight">우리 집은 소작농이고 점순이네 집은 마름이었지만, 점순이는 그런 걸 전혀 개의치 않는 것 같았어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌸 잊을 수 없는 향기</span>
+        <h2>봄이 깊어가다</h2>
+        <p><strong>【중심 문장】</strong> 봄이 깊어가고 동백꽃이 지기 시작하자, 소년은 알싸한 동백꽃 향기와 함께 그날의 기억을 평생 잊지 못할 것이라 느낀다.</p>
+        <p>봄이 깊어갔어요. 노란 동백꽃이 하나둘 지기 시작했지요. 산등성이에는 점순이가 호드기를 불며 앉아 있는 모습이 자주 보였어요.</p>
+        <p>나는 멀리서 그 모습을 바라보았어요. 점순이의 호드기 소리가 바람을 타고 들려왔지요. 예전에는 거슬렸던 그 소리가 이제는 달콤하게 느껴졌어요.</p>
+        <p>우리 집은 형편이 못해 마름네 집과는 비교도 안 되었지만, 그런 건 상관없었어요. 점순이가 나를 좋아한다는 것, 그것만으로 충분했지요.</p>
+        <p>바람이 불어 동백꽃잎이 날렸어요. 알싸한 향기가 코끝에 스쳤지요. 그 순간, 그날의 기억이 떠올랐어요. 노란 꽃밭에 파묻혀 누웠던 일, 점순이의 속삭임, "그럼"이라고 대답했던 순간.</p>
+        <p><span class="highlight">나는 알싸한 동백꽃 향기와 함께 그날의 기억을 평생 잊지 못할 것 같았어요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(240, 98, 146, 0.15); border-radius: 16px;">
+          <strong style="color: #C2185B; font-size: 20px;">🌱 「풋사랑은 때로 놀림으로, 때로 괴롭힘으로 표현된다. 하지만 그 서툰 표현 속에 담긴 진심은 노란 동백꽃처럼 향기롭고 따스하다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/modern05_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

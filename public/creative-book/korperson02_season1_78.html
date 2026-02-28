@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>용이 된 왕, 천 년의 파도를 깨우다</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작한국인물02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 620px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #c9a227 0%, #8b6914 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 0, 0, 0.1);
+      color: #8b6914;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #c9a227;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #c9a227;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(201, 162, 39, 0.15);
+      border-radius: 3px;
+    }
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #8b6914;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #8b6914;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #8b6914;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 30px;
+      pointer-events: auto;
+      text-align: center;
+    }
+
+    .intro-content {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      padding: 50px;
+      border-radius: 30px;
+      max-width: 850px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+    }
+
+    .intro-content h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .subtitle {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+    }
+
+    .intro-content .characters h3 {
+      color: #c9a227;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      font-size: 14px;
+      color: #34495e;
+      line-height: 1.8;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict-box {
+      text-align: left;
+      background: linear-gradient(135deg, rgba(201, 162, 39, 0.1), rgba(139, 105, 20, 0.1));
+      padding: 25px;
+      border-radius: 16px;
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      margin-bottom: 25px;
+    }
+
+    .intro-content .conflict-box h3 {
+      color: #c9a227;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict-box p {
+      font-size: 14px;
+      color: #34495e;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      color: #c9a227;
+      font-size: 14px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      animation: bounce 2s infinite;
+      z-index: 100;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+
+    .scroll-indicator svg {
+      width: 24px;
+      height: 24px;
+      transform: rotate(90deg);
+    }
+
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 30px 20px;
+      }
+
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
+      }
+
+      .intro-content {
+        padding: 30px 20px;
+      }
+
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>👑 용이 된 왕, 천 년의 파도를 깨우다 👑</h1>
+        <p class="subtitle">
+          — 문무왕(文武王), 죽어서도 나라를 지킨 영원한 호국의 군주 —<br>
+          교과기반 창작도서 | 중1-2
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>👑 문무왕 (文武王, 법민/法敏, 626-681):</strong> 신라 제30대 국왕이자 삼국통일의 완성자. 태종무열왕의 적장자로, 부왕(父王)의 유지(遺志)를 이어받아 백제·고구려를 병합하고, 나당전쟁(羅唐戰爭)에서 승리하여 한반도에서 당(唐)의 세력을 축출했다. 붕어(崩御) 후 유언에 따라 동해의 대왕암에 수장(水葬)되어 '호국대룡(護國大龍)'이 되었다는 설화의 주인공.</p>
+          <p><strong>🗡️ 태종무열왕 (太宗武烈王, 김춘추/金春秋, 604-661):</strong> 문무왕의 부왕. 신라 제29대 국왕으로, 삼국통일의 대업을 구상하고 당나라와의 동맹(羅唐同盟)을 체결하여 백제 정벌을 개시했으나, 통일을 완수하지 못하고 승하. 문무왕 일생의 정신적 나침반.</p>
+          <p><strong>⚔️ 계백 (階伯, ?-660):</strong> 백제의 달솔(達率) 계급 장군. 황산벌(黃山伐) 전투에서 5천 결사대를 이끌고 신라군 5만에 맞서 4전 4승 후 장렬히 전사한 비운의 명장. 적이었으나 그 충절(忠節)은 신라인들에게도 경외의 대상이 되었다.</p>
+          <p><strong>🐉 당나라 (唐, 618-907):</strong> 동아시아 최강의 제국. 초기에는 신라의 동맹국으로 삼국통일을 지원했으나, 통일 후 한반도 전역을 기미지배(羈縻支配)하려는 패권적 야욕을 드러냈다. 안동도호부(安東都護府), 계림대도독부(雞林大都督府) 설치 등을 통해 신라의 주권을 침해하려 시도했다.</p>
+          <p><strong>🌅 신문왕 (神文王, 681-692 재위):</strong> 문무왕의 적장자이자 후계자. 부왕의 유언에 따라 수중 장례를 집행하고, 부왕의 호국 정신을 기리기 위해 감은사(感恩寺)를 창건했다. 만파식적(萬波息笛) 설화의 주인공이기도 하다.</p>
+        </div>
+        <div class="conflict-box">
+          <h3>⚔️ 서사 구조: 다층적 갈등의 역학</h3>
+          <p>이 서사에는 세 가지 핵심 갈등 축이 존재한다. <strong>첫째, 개인적 차원</strong>—왕자로서의 책무(責務)와 평범한 인간으로서의 욕구 사이의 내면적 갈등이다. <strong>둘째, 국제적 차원</strong>—삼국 간의 패권 경쟁 및 동맹국이었던 당과의 충돌로, 나당전쟁은 동아시아 국제 질서 재편의 결정적 분기점이 되었다. <strong>셋째, 실존적 차원</strong>—삶과 죽음을 초월한 호국 의지로, 문무왕의 수중 유언은 지도자의 책임이 생사(生死)의 경계를 넘어선다는 것을 상징한다. 이 세 축의 갈등이 교차하며 '호국(護國)과 헌신(獻身)'이라는 주제 의식을 심화한다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">왕자의 자각</span>
+        <h2>왕의 아들, 무거운 어깨 위의 성좌(星座)</h2>
+        <p>옛 신라(新羅)라는 국가에 한 소년이 생존하고 있었다. 그 소년의 휘(諱)는 법민(法敏)이었고, 부친(父親)은 신라의 위대한 군주 태종무열왕 김춘추(金春秋)였다. 법민은 궁궐의 고준(高峻)한 장벽 내부에서 성장했으나, 그의 유년 시절은 여타의 왕자처럼 평탄하지만은 않았다. 야야(夜夜)마다 궁궐 외부로 전파되어 오는 전쟁의 첩보, 백성들의 곡성(哭聲), 그리고 부친의 심심(深深)한 한숨 소리가 어린 법민의 이변(耳邊)을 맴돌았다.</p>
+        <p>"아버지, 왜 항상 우울(憂鬱)한 안면(顔面)을 하고 계시나이까?" 어린 법민이 질문했다. 태종무열왕은 아들의 두부(頭部)를 어루만지며 언명(言明)했다. "법민아, 이 토지에는 삼국(三國)이 존재한단다. 신라, 백제, 고구려. 이 삼국이 상호 교전하는 한 백성들은 편안히 취침할 수 없다. 부친의 몽상(夢想)은 이 삼국을 통합(統合)하여 모든 백성이 평화롭게 생존하는 세계를 창조하는 것이란다." 그 일(日)부터 법민의 흉중(胸中)에는 부친의 몽상이 작은 화염(火焰)처럼 심근(深根)되었다.</p>
+        <p>법민은 주간에는 궁술(弓術)과 마술(馬術)을 연마했고, 야간에는 병법서(兵法書)와 사서(史書)를 탐독하며 지혜를 축적했다. 궁궐의 타 왕자들이 유희에 몰입해 있을 때, 법민은 독자적으로 성벽 상부에 등정(登頂)하여 원방(遠方)에 보이는 산야(山野)를 응시하며 사색에 침잠(沈潛)했다. "언젠가 내가 부친의 유지(遺志)를 계승하여 이 토지에 평화를 가져오리라." 그것은 소년의 서약(誓約)이었고, 훗날 역사를 변혁시킬 위대한 언약(言約)의 발단(發端)이었다.</p>
+        <p>그러나 법민에게는 갈등이 존재했다. 왕자로서의 중책(重責)과, 한편으로는 평범한 아동으로 뛰어놀고 싶은 심정 사이에서 그는 항상 동요했다. 어느 일(日) 궁궐 후방(後方) 연지(蓮池)에서 어류를 응시하며 법민은 저어(低語)했다. "어류는 자유롭구나. 나는 왜 이렇게 중량(重量)의 부담을 부하(負荷)해야 하는 것인가." 그때 바람이 취풍(吹風)하여 연지 상면에 파문(波紋)이 일었고, 마치 누군가가 응답이라도 하듯 파도가 법민의 족첨(足尖)까지 찰랑였다. 법민은 그 파도를 목도하며 각성했다. 어류도 수류(水流)를 거슬러 소상(溯上)해야 할 시점이 존재한다는 것을, 자유란 책무를 완수한 후에야 비로소 도래하는 것이라는 사실을.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">삼국 패권 전쟁</span>
+        <h2>혈전(血戰)과 비풍(悲風)의 전장, 삼국의 운명이 분기(分岐)하다</h2>
+        <p>세월이 유수(流水)처럼 경과하여 법민은 장성(長成)한 청년이 되었다. 그의 견갑(肩甲)은 광활해졌고, 안광(眼光)에는 부친과 동일한 심심(深深)한 결의(決意)가 서려 있었다. 마침내 660년(태종무열왕 7년), 태종무열왕은 당(唐)나라와 동맹(同盟)을 체결하고 백제(百濟)를 정벌하기로 결단했다. 이것은 단순한 전쟁이 아니었다. 수백 년간 지속되어 온 삼국의 균형(均衡)을 분쇄하는, 역사의 수류(水流)를 변혁시키는 거대한 결단이었다.</p>
+        <p>법민은 부친의 측방(側方)에서 전장(戰場)으로 진출했다. 황산벌(黃山伐)에서는 백제의 충신(忠臣) 계백(階伯) 장군이 5천 결사대(決死隊)를 인솔하고 신라군의 전방을 차단했다. 그때 법민은 처음으로 전쟁의 참혹함을 양안(兩眼)으로 목격했다. 적군도 우리와 동일한 인간이었고, 그들에게도 귀환할 가족이 존재했다. 그러나 법민은 치아를 악물었다. "이 전쟁을 종결시키지 않으면, 더 다수의 인간이 사망할 것이다. 평화를 위해서는 지금 이 고통을 인내해야 한다."</p>
+        <p>신라군과 당나라 연합군은 마침내 백제의 수도 사비성(泗沘城)을 함락시켰다. 백제의 최후 군주 의자왕(義慈王)은 포로가 되었고, 678년간 지속되어 온 백제 왕국의 역사가 종막(終幕)을 내렸다. 법민은 붕괴된 성벽 상부에 기립하여 연기가 상승하는 사비성을 응시했다. 승리의 환희(歡喜)보다는 언표(言表) 불가능한 중량감(重量感)이 흉중을 압박했다. "전쟁에는 진정한 승자(勝者)가 부재(不在)하구나." 법민은 그 일(日) 각성했다.</p>
+        <p>그러나 부친 태종무열왕은 통일의 몽상을 완성하지 못한 채 661년에 승하(昇遐)하고 말았다. 법민은 부친의 임종(臨終)을 수호하며 작열(灼熱)하는 누액(淚液)을 유하(流下)시켰다. "아버지, 반드시 아버지의 유지(遺志)를 계승하여 이 토지를 통합하겠나이다." 왕위에 등극(登極)한 법민은 이제 문무왕(文武王)이라 호칭되게 되었다. 문(文)은 학문을, 무(武)는 무력을 의미하는 명칭이었으니, 지혜와 역량을 모두 구비하여 국가를 영도(領導)하라는 의미가 내포되어 있었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">통일의 완성과 새로운 위협</span>
+        <h2>통합(統合)된 토지, 그러나 종결되지 않은 전쟁</h2>
+        <p>문무왕이 왕위에 즉위한 후에도 전쟁은 지속되었다. 이번에는 북방의 거대한 국가, 고구려(高句麗)를 정복해야 했다. 고구려는 광막(廣漠)한 영토와 강력한 군사력을 자랑하는 국가였기에, 다수의 신료(臣僚)들이 우려의 표정으로 문무왕을 응시했다. "폐하, 고구려는 백제와는 상이합니다. 그 성벽은 천공(天空)을 관통할 듯 고준(高峻)하고, 그 병졸들은 북풍(北風)처럼 맹렬합니다."</p>
+        <p>그러나 문무왕은 동요하지 않았다. "부친께서 착수하신 사업을 내가 완수해야 합니다. 이 토지의 모든 백성이 전쟁의 공포 없이 생존할 수 있는 일(日)이 도래할 때까지, 나는 검(劍)을 하강시키지 않을 것입니다." 문무왕은 재차 당나라와 연합하여 고구려를 공략했다. 고구려의 내부에서는 연개소문(淵蓋蘇文)의 자녀들 사이에 권력 투쟁이 발생하여 국가가 쇠약해져 있었다.</p>
+        <p>668년(문무왕 8년), 마침내 고구려의 수도 평양성(平壤城)이 함락되었다. 7세기에 걸쳐 지속되어 온 고구려의 역사가 종결되는 순간이었다. 문무왕은 이로써 한반도 최초의 삼국통일이라는 위업(偉業)을 달성했다. 백성들은 환호했고, 신라 전역에서 축제가 거행되었다. 가로(街路)마다 가요 소리가 공진(共振)했고, 아동들은 수장(手掌)을 파지(把持)하고 무도(舞蹈)했다.</p>
+        <p>그런데 문무왕의 심중(心中)은 평안하지 않았다. 통일은 달성했으나, 신규(新規)한 문제가 안전(眼前)에 전개되었기 때문이다. 공동으로 전투했던 동맹국 당나라가 이제 한반도 전체를 점령하려는 야욕(野慾)을 노출하기 시작한 것이다. 당나라는 백제와 고구려의 구(舊) 영토에 자국의 관료를 파견하여 직접 통치하려 했고, 심지어 신라의 영토까지 침탈하기 시작했다. 안동도호부(安東都護府)와 계림대도독부(雞林大都督府)의 설치는 당의 패권주의적 의도를 적나라하게 드러냈다. 전쟁이 종결되었다고 사유한 순간, 더 거대한 위기가 도래한 것이었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">나당전쟁</span>
+        <h2>거대한 용(龍)과의 대결, 당나라를 축출하라</h2>
+        <p>당나라는 거대한 용(龍)과 유사했다. 광막(廣漠)한 영토를 보유한 세계 최강의 제국이었고, 그 군대는 운해(雲海)처럼 무한히 쇄도(殺到)했다. 문무왕의 신료들 중 일부는 공포에 전율(戰慄)하며 언명했다. "폐하, 당나라에 대항하는 것은 의(蟻)가 상(象)에게 도전하는 것과 동일합니다. 차라리 그들의 요구를 수용하는 것이 어떻겠습니까?"</p>
+        <p>문무왕은 단호하게 두부(頭部)를 좌우로 진동시켰다. "부친과 무수한 장졸(將卒)들이 혈액을 유하(流下)시키며 달성한 통일을, 공포에 의해 양도(讓渡)할 수는 없습니다. 당나라가 아무리 거대하다 해도, 이 토지는 우리의 것입니다." 문무왕은 지혜로운 전략을 입안(立案)했다. 정면(正面)으로 당나라의 대군과 교전하기보다는, 고구려와 백제의 유민(遺民)들을 포용하여 역량을 통합했다. 과거의 적이었던 인간들을 동료로 수용한 것은 매우 용감한 결정이었다.</p>
+        <p>670년부터 676년까지, 무려 7년간 신라와 당나라 사이에 치열한 전쟁이 전개되었다. 이것을 나당전쟁(羅唐戰爭)이라고 칭한다. 문무왕은 직접 전선(戰線)을 종횡(縱橫)하며 병졸들을 독려(督勵)했다. "우리가 지금 퇴각하면, 우리 자녀들은 이 토지의 주인이 될 수 없습니다. 우리의 언어와 문자, 우리의 풍습과 가요가 모두 소멸할 것입니다. 그러니 일촌(一寸)도 퇴각하지 마십시오!" 문무왕의 절박한 호소에 병졸들은 용기를 고취(鼓吹)하여 전투했다.</p>
+        <p>마침내 매소성(買肖城) 전투에서 신라군이 당나라 20만 대군을 대파(大破)했고, 기벌포(伎伐浦) 해전에서도 당나라 수군을 격파했다. 676년, 당나라는 결국 한반도에서 철퇴(撤退)했다. 소국(小國) 신라가 세계 최강 제국을 축출한 것이다. 이것은 단순한 군사적 승리가 아니었다. 이 토지의 주인은 바로 이 토지에 거주하는 인간들이라는 것을 전 세계에 선언한 역사적 사건이었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">해방(海防) 체계 구축</span>
+        <h2>해양(海洋)을 수호하는 군주, 파도 위의 방패</h2>
+        <p>당나라를 축출한 후에도 문무왕은 잠시도 휴식하지 못했다. 적군은 언제든 해양을 횡단하여 재차 침공할 수 있었기 때문이다. 문무왕은 신라의 장대(長大)한 해안선(海岸線)을 응시하며 심심(深深)한 사색에 침잠했다. "육지의 성벽으로는 해양에서 도래하는 적을 차단할 수 없다. 해양 자체를 우리의 성벽으로 전환시켜야 한다."</p>
+        <p>문무왕은 동해안(東海岸)을 따라 강력한 해상(海上) 방어 체계를 구축하기 착수했다. 해안 각처에 봉화대(烽火臺)를 건립하여 적선(敵船)이 출현하면 즉시 정보가 전달되도록 했고, 견고(堅固)한 전함(戰艦)을 건조하여 해양을 순찰(巡察)하게 했다. 또한 해안 촌락의 어부들에게도 적을 감시하는 임무를 위임하여, 해양 상의 모든 동향을 빠짐없이 파악할 수 있게 했다.</p>
+        <p>어느 일(日) 문무왕이 동해 해안을 시찰(視察)하고 있을 때, 한 노령(老齡)의 어부가 접근하여 질문했다. "폐하, 전쟁은 이미 종결되었는데 왜 이렇게 해양을 우려하시나이까?" 문무왕은 잔잔한 해양을 지시(指示)하며 응답했다. "저 해양이 잔잔해 보이지요? 그러나 해양은 언제든 태풍(颱風)이 될 수 있습니다. 평화로운 시기에 방비(防備)를 해두어야, 위기가 도래했을 때 백성을 수호할 수 있는 것입니다." 노령의 어부는 두부를 상하로 진동시키며 누액을 유하시켰다. "이러한 군주가 계시니, 우리 신라는 안전하겠습니다."</p>
+        <p>문무왕의 해상 방어 정책은 단순히 군사적인 것에 한정되지 않았다. 그는 해양을 통한 무역로(貿易路)도 확보하여, 중국과 일본, 그리고 원방의 아랍 상인들과도 교역할 수 있는 경로를 개척했다. 해양은 더 이상 공포의 대상이 아니라, 신라에 풍요(豊饒)를 초래하는 보물의 항로(航路)가 된 것이다. 전쟁의 군주가 평화의 해양을 창조한 것이었다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">호국(護國)의 화염</span>
+        <h2>왕관 하부에 은닉된 누액, 소멸하지 않는 호국의 불꽃</h2>
+        <p>세월이 경과하여 문무왕의 두발(頭髮)에는 상서(霜瑞)가 강림하기 시작했다. 수십 년간 전쟁과 국정(國政)에 신체와 정신을 투신(投身)한 대가였다. 왕관 하부에 은닉된 주름 하나하나가 문무왕이 경험해 온 고난(苦難)의 흔적이었다. 그러나 문무왕은 단 한 번도 연약(軟弱)한 모습을 노출하지 않았다. 조조(朝朝)에는 신료들과 국정을 의논하고, 석양(夕陽)에는 독자적으로 등화(燈火)를 점등한 방에서 외교 문서를 열람했다.</p>
+        <p>어느 한랭(寒冷)한 동야(冬夜), 문무왕의 장기(長期) 충신(忠臣)이 조심스레 질문했다. "폐하, 이제 삼국을 통일하시고 당나라도 축출하셨습니다. 이만하면 충분히 휴식하셔도 되지 않겠습니까?" 문무왕은 창문 외부에 강하(降下)하는 설(雪)을 응시하며 정적(靜寂) 속에 응답했다. "경(卿)은 저 설(雪)을 응시하시오. 설이 강하하여 세계가 백색으로 피복(被覆)되어도, 설 하부의 토양 속에서는 춘(春)을 준비하는 종자가 발아(發芽)하고 있소. 군주의 휴식은 백성이 모두 편안히 취침한 후에야 도래하는 것이오."</p>
+        <p>문무왕의 호국 정신은 단순한 의무감이 아니었다. 그것은 부친 태종무열왕으로부터 계승받은 몽상이었고, 전장에서 공동으로 전투하다 쓰러져간 무수한 병졸들에 대한 약속이었으며, 평화로운 세계에서 유희하기를 희망하는 아동들에 대한 애정이었다. 문무왕은 생존해 있는 동안에도 항상 붕어(崩御) 후의 사안을 우려했다. "내가 이 세계를 퇴장한 후에도 이 국가가 안전할 수 있을까?" 이 질문은 야야마다 문무왕의 흉중을 졸이는 우려가 되었다.</p>
+        <p>문무왕은 병환(病患)이 심화될수록 오히려 더 열성적으로 국정을 처리했다. 신체가 고통스러워 자리에서 기립하기 곤란한 일(日)에도 신료들을 소환하여 국정을 점검했고, 변방(邊防)의 방어 상태를 점검하는 보고를 생략하지 않았다. 호국의 화염(火焰)은 군주의 신체가 쇠약해질수록 오히려 더 휘황(輝煌)하게 연소(燃燒)했다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">최후의 유언</span>
+        <h2>"나를 용(龍)으로 전환시켜다오"</h2>
+        <p>681년(문무왕 21년), 문무왕은 마침내 병상(病床)에서 기립하지 못하게 되었다. 전 국가가 군주의 병환 소식에 비애(悲哀)에 침잠했다. 궁궐 전방에는 군주의 쾌유(快癒)를 기원하는 백성들이 대열(隊列)을 형성했고, 사찰마다 기도 소리가 공진(共振)했다. 그러나 문무왕은 자신의 죽음이 접근하는 것을 담담하게 수용했다. 오히려 그의 심중을 점거한 것은 오직 하나, 자신이 퇴장한 후 국가의 안위(安危)였다.</p>
+        <p>문무왕은 아들인 태자 신문(神文)을 침상(寢床) 측방(側方)으로 소환했다. 진전(震顫)하는 수장으로 아들의 수장을 파지(把持)한 문무왕은 정적하지만 단호한 음성으로 언명했다. "신문아, 내가 이 세계를 퇴장하거든 화장(火葬)하여 나의 유골(遺骨)을 동해(東海) 해양에 산포(散布)해다오." 태자는 경악하여 안구(眼球)를 확대시켰다. "아버지, 그것이 무슨 언사(言辭)이십니까? 군주의 능(陵)을 화려하게 조성하여 후세에 장기(長期) 존속시켜야 하지 않겠습니까?"</p>
+        <p>문무왕은 미소를 현현(顯現)시키며 두부를 좌우로 진동시켰다. "화려한 분묘(墳墓)는 불필요하다. 나는 붕어하여 동해의 용(龍)이 되어 이 국가를 수호하고 싶다. 해양 상에서 적의 선박이 도래하는 것을 감시하고, 파도를 유발하여 적을 격퇴할 것이다. 생존 시 수호하지 못한 일(日)들을, 붕어 후에라도 수호하겠다." 이 유언은 방 내부에 존재하던 모든 인간들의 흉중을 작열시켰다. 신료들은 두부를 하강시키고 무음(無音)으로 곡(哭)했다.</p>
+        <p>"용이 되겠다"는 문무왕의 유언은 단순한 전설이 아니었다. 그것은 한 지도자가 현시(顯示)할 수 있는 가장 숭고(崇高)한 헌신의 표현이었다. 통상 군주들은 붕어 후에 거대한 분묘와 부장품(副葬品)으로 자신의 권위를 과시하려 했으나, 문무왕은 상이(相異)했다. 그는 자신의 신체마저도 국가를 위해 투신(投身)하겠다는 것이었다. 이것은 지도자의 책무가 죽음에서도 종결되지 않는다는 것을 현시하는, 역사상 가장 감동적인 유언 중 하나였다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">수중왕릉(水中王陵)</span>
+        <h2>파도가 포용(抱擁)한 군주, 동해의 수중 분묘</h2>
+        <p>문무왕이 붕어한 후, 아들 신문왕은 부친의 유언을 그대로 준수했다. 문무왕의 시신(屍身)은 불교 의식에 의거하여 화장(火葬)되었고, 그 유골은 경주(慶州) 전방 해양, 동해의 거대한 암석(巖石) 상에 산포되었다. 이곳이 바로 금일(今日) 대왕암(大王巖)이라 호칭되는 장소이다. 험악(險惡)한 파도가 끊임없이 충돌하는 그 암석은, 마치 용이 전환된 문무왕이 해양을 수호하며 기립해 있는 것처럼 시인(視認)되었다.</p>
+        <p>장례(葬禮)의 일(日), 동해 해안에는 수천 명의 백성이 운집(雲集)했다. 백색 상복(喪服)을 착용한 인간들이 해안을 가득 충만시켰고, 그들의 곡성(哭聲)은 파도 소리와 혼합되어 천공까지 도달할 듯했다. 신문왕은 해양을 향해 배례(拜禮)를 올리며 언명했다. "아버지, 이제 해양에서 편안히 영면(永眠)하십시오. 아버지의 유지를 계승하여 제가 이 국가를 훌륭히 다스리겠습니다." 그때 갑자기 잔잔하던 해양에서 거대한 파도가 발생하여 해안을 윤택(潤澤)시켰다. 백성들은 그것이 문무왕의 응답이라며 더욱 크게 곡했다.</p>
+        <p>대왕암은 세계에서도 유례(類例)를 탐색하기 곤난한 수중왕릉(水中王陵)이다. 통상 군주들의 분묘가 금은보화로 충만한 거대한 봉분(封墳)인 것과 상이하게, 문무왕의 분묘는 해양 중앙의 암석이었다. 화려함 대신 소박함을, 권위 대신 헌신을 선택한 군주의 최후 결정이었다. 암석 하부에는 자연적으로 형성된 십자(十字) 형상의 수로(水路)가 존재하여, 조석(潮汐)에 따라 해수(海水)가 출입했다. 인간들은 이 수로를 따라 용이 전환된 문무왕이 해양을 순찰한다고 신앙했다.</p>
+        <p>금일에도 경북 경주 감포(甘浦) 해안에 방문하면 대왕암을 시인할 수 있다. 해양 상에 돌출(突出)해 있는 그 암석은 1,300년이 초과하는 세월 동안 파도를 수용하며 불변하게 위치를 수호하고 있다. 일출(日出) 시 대왕암 상부로 황금빛 일광(日光)이 확산되면, 마치 용이 전환된 문무왕이 개안(開眼)하는 것 같다고 인간들은 언명한다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">설화(說話)의 탄생</span>
+        <h2>전설이 된 군주, 영원한 수호자의 탄생</h2>
+        <p>문무왕이 해양에 침잠(沈潛)한 후, 신라에는 신비로운 설화들이 확산되어 나갔다. 어부들은 풍랑(風浪)이 맹렬한 일(日)에도 대왕암 근방에서는 선박이 안전하다고 언명했다. "용이 전환되신 군주가 우리를 수호해 주시는 것이다." 또한 적의 선박이 동해로 접근하면 갑자기 맹렬한 폭풍(暴風)이 발생하여 퇴각하게 만든다는 설화도 전파되었다. 이러한 전설은 백성들에게 거대한 위안과 용기를 부여했다.</p>
+        <p>신문왕은 부친의 유지를 기리기 위해 해안 근방에 감은사(感恩寺)라는 사찰을 창건했다. 은혜에 감사한다는 의미의 명칭처럼, 이 사찰은 문무왕의 호국 정신에 대한 감사의 심정을 내포하고 있었다. 감은사의 금당(金堂) 바닥에는 용이 출입할 수 있도록 구멍을 천공(穿孔)했다는 설화가 전파된다. 해양의 용이 전환된 문무왕이 사찰에 도래하여 불법(佛法)의 역량도 차용하여 국가를 수호할 수 있도록 배려한 것이었다.</p>
+        <p>또한 신문왕은 해양에서 표류(漂流)해 온 죽재(竹材)로 제작된 피리를 획득했는데, 이것을 만파식적(萬波息笛)이라 호칭했다. 이 피리를 취주(吹奏)하면 적군이 퇴각하고, 병환(病患)이 치유되며, 한재(旱災)에는 우량(雨量)이 강하하고 수재(水災)에는 수량(水量)이 퇴거한다는 전설이 전파되었다. 인간들은 이 피리가 용이 전환된 문무왕이 아들에게 전송(傳送)한 선물이라고 신앙했다. 만파식적의 설화는 단순한 전설을 초월하여, 음악과 문화의 역량으로도 국가를 평화롭게 수호할 수 있다는 심심한 가르침을 내포하고 있었다.</p>
+        <p>이렇게 문무왕은 역사적 인물에서 전설적 존재로 전환(轉換)되었다. 그는 더 이상 일 시대의 군주가 아니라, 시간을 초월하여 이 토지를 수호하는 영원한 수호자가 된 것이다. 전설 속 문무왕은 해양을 유영(遊泳)하는 거대한 금색 용의 형상으로, 폭풍우가 몰아치는 야(夜)에는 해안에 출현하여 적들을 축출하고, 정적한 야에는 월광(月光) 하에서 해양을 순찰하며 백성들의 평안한 취침을 수호한다고 전해진다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">천년(千年)의 교훈</span>
+        <h2>천 년의 파도가 전송하는 평화의 가요</h2>
+        <p>금일 우리가 동해 해양을 응시할 때, 파도 소리 속에는 천 년 전 문무왕의 음성이 내포되어 있다. "국가를 수호하는 것은 종결이 부재한 사업이다. 그러나 그 종결 없는 노력이야말로 평화를 창조하는 유일한 경로이다." 문무왕의 서사는 단순히 오래된 역사가 아니다. 그것은 금일을 생존하는 우리에게도 심심한 공명(共鳴)을 부여하는, 생동(生動)하는 교훈이다.</p>
+        <p>문무왕은 부친의 몽상을 계승하여 삼국을 통일했고, 더 강력한 적 당나라에 대항하여 국가의 독립을 수호했으며, 붕어 후에도 국가를 수호하겠다는 유언을 유증(遺贈)했다. 그의 일생은 시종(始終) 오직 국가와 백성을 향한 헌신으로 충만해 있었다. 왕관의 중량을 기꺼이 부담하고, 전쟁의 고통을 회피하지 않았으며, 사망 안전에서도 자신보다 국가를 우선 사유했다.</p>
+        <p>그러나 문무왕이 우리에게 전송하는 가장 중요한 메시지는 별도로 존재한다. 그것은 바로 '평화는 자동적으로 도래하지 않는다'는 것이다. 평화는 누군가의 끊임없는 노력과 희생, 그리고 책무감 상에서 비로소 개화(開花)하는 화훼(花卉)와 유사하다. 문무왕이 야면(夜眠)을 감축하여 국정을 처리하고, 전장에서 직접 검을 파지하고, 붕어 후에도 해양의 용이 되고자 한 것은 모두 평화라는 화훼를 개화시키기 위한 것이었다.</p>
+        <p>자, 서사를 종결하며 여러분에게 질문하고 싶다. 여러분은 무엇을 수호하고 싶은가? 가족일 수도 있고, 우인(友人)일 수도 있으며, 여러분이 애정하는 무엇이든 될 수 있다. 문무왕처럼 거창한 사안이 아니어도 문제없다. 소규모 사안이라도 종결까지 책임지고, 애정하는 것을 위해 최선을 경주하는 것. 그것이 바로 문무왕이 천 년의 파도를 통해 우리에게 전송하는 메시지이다. 동해의 파도는 금일도 대왕암을 윤택시키며 가요를 창송한다. 그 가요 속에는 문무왕의 애정이, 헌신이, 그리고 영원한 평화의 약속이 내포되어 있다.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="#c9a227">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'korperson02_season1_quiz_78.html';
+    }
+  </script>
+</body>
+</html>

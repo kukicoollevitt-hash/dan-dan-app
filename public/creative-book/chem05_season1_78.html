@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧊 세 얼굴의 아쿠아 — 나는 변해도 나야! (중등편)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작화학05/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 680px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165,0.84,0.44,1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(0,210,255,0.15); color: #0088cc; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.95; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #0088cc; font-weight: 600; }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #0088cc;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(0, 136, 204, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #006FA3;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #006FA3;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue { color: #2980b9; font-weight: 600; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 900px; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .grade-badge { display: inline-block; background: linear-gradient(135deg, #00d2ff, #3a7bd5); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+    .intro-content .characters { text-align: left; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #87CEEB; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #fff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(0,210,255,0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(58,123,213,0.9); transform: translateY(-2px); }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <h1>🧊 세 얼굴의 아쿠아 — 나는 변해도 나야!</h1>
+        <p class="subtitle">— 물질의 상태 변화, 잠열, 상평형 그림 —<br>교과기반 창작도서 · 화학 05</p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>💧 아쿠아:</strong> H₂O 물 분자. 고체, 액체, 기체를 오가며 정체성을 고민하는 주인공</p>
+          <p><strong>🧊 글라시:</strong> 고체 상태의 물. 분자가 규칙적 결정 구조로 배열된 얼음 왕국의 왕자</p>
+          <p><strong>🌊 리퀴드:</strong> 액체 상태의 물. 자유롭게 흐르며 어떤 용기에든 맞추는 적응의 달인</p>
+          <p><strong>☁️ 스팀:</strong> 기체 상태의 물. 눈에 보이지 않지만 가장 자유로운 존재</p>
+          <p><strong>🔥 칼로:</strong> 열에너지의 화신. 상태 변화를 일으키는 핵심 열쇠</p>
+          <p><strong>🪞 본질 할머니:</strong> "모습은 변해도 분자는 같다"는 진리를 가르치는 현자</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1: 고체 상태 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">고체 상태</span>
+        <h2>차가운 얼음 왕국</h2>
+        <p>겨울 아침, 얼어붙은 연못 속에서 아쿠아가 눈을 떴습니다. 주위를 둘러보니 수억 개의 물 분자가 <span class="highlight">육각형 결정 구조</span>로 완벽하게 정렬되어 있었습니다. 모든 분자가 제자리에서 조금씩 <span class="highlight">진동</span>할 뿐, 위치를 이탈하지 않았습니다.</p>
+        <p><span class="dialogue">"여기서는 누구도 자유롭게 움직일 수 없어."</span> 글라시 왕자가 말했습니다. <span class="dialogue">"이것이 고체의 질서야. 분자간 인력(intermolecular force)이 분자의 운동 에너지(kinetic energy)보다 크기 때문에 우리는 제자리에 묶여 있지."</span></p>
+        <p>아쿠아가 궁금해했습니다. <span class="dialogue">"왜 이렇게 규칙적인 모양을 하고 있어?"</span></p>
+        <p><span class="dialogue">"<span class="highlight">수소 결합</span> 때문이야. 물 분자의 산소(δ⁻)와 이웃 분자의 수소(δ⁺)가 서로 끌어당기면서 육각형 격자를 만들어. 눈 결정이 육각형인 것도 이 구조 때문이지."</span></p>
+        <p>흥미롭게도, 이 육각형 구조에는 빈 공간이 있었습니다. <span class="dialogue">"그래서 <span class="highlight">얼음의 밀도(density)는 약 0.92 g/cm³</span>로, 물(1.00 g/cm³)보다 낮아. 이것이 얼음이 물 위에 뜨는 이유야!"</span></p>
+        <p>아쿠아는 단단한 결정 속에서 답답함을 느꼈습니다. 그때 저 멀리서 따뜻한 빛이 다가오고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2: 융해 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">융해</span>
+        <h2>녹는점, 0°C의 경계선</h2>
+        <p>따뜻한 빛의 정체는 칼로, 열에너지(thermal energy)의 화신이었습니다. 칼로가 얼음 표면에 에너지를 불어넣자, 분자들의 진동이 점점 격렬해졌습니다.</p>
+        <p><span class="dialogue">"순물질이 고체에서 액체로 변하는 온도를 <span class="highlight">녹는점</span> 또는 <span class="highlight">융점</span>이라고 해."</span> 칼로가 설명했습니다. <span class="dialogue">"물의 녹는점은 1기압(1 atm)에서 정확히 <span class="highlight">0°C(273.15 K)</span>야!"</span></p>
+        <p>온도가 0°C에 도달하자, 규칙적이던 결정 구조가 하나둘 무너지기 시작했습니다. 이것이 바로 <span class="highlight">융해</span>입니다. 하지만 이상한 일이 벌어졌습니다. 칼로가 계속 에너지를 공급하는데도 온도가 올라가지 않는 것입니다!</p>
+        <p><span class="dialogue">"왜 온도가 0°C에서 멈춰 있지?"</span> 아쿠아가 물었습니다.</p>
+        <p>본질 할머니가 나타나 설명했습니다. <span class="dialogue">"이 에너지는 분자를 빨리 움직이게 하는 것이 아니라, 분자 사이의 결합을 끊는 데 사용되고 있단다. 이것을 <span class="highlight">융해열</span> 또는 <span class="highlight">잠열</span>이라고 해. 물의 융해열은 <span class="highlight">334 J/g</span>이야."</span></p>
+        <p>글라시의 왕관이 녹아내렸습니다. 하지만 아쿠아는 자유가 시작되고 있음을 느꼈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3: 액체 상태 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">액체 상태</span>
+        <h2>자유롭게 흐르는 물</h2>
+        <p>얼음이 모두 녹자, 아쿠아는 전혀 다른 세계에 있었습니다. 분자들이 더 이상 제자리에 고정되어 있지 않고, 서로 미끄러지듯 이동하면서 자유롭게 흘러다녔습니다. 리퀴드 기사가 물결을 타고 나타났습니다.</p>
+        <p><span class="dialogue">"환영해, 아쿠아! 여기가 액체의 세계야."</span> 리퀴드가 활기차게 말했습니다. <span class="dialogue">"액체 상태에서 입자들은 무질서하게 배열되어 있지만 서로 가까이 있어. 그래서 <span class="highlight">일정한 부피</span>는 가지지만 <span class="highlight">일정한 모양</span>은 없지. 용기 모양에 따라 형태가 변해!"</span></p>
+        <p>아쿠아가 물었습니다. <span class="dialogue">"수소 결합은 어떻게 된 거야?"</span></p>
+        <p><span class="dialogue">"아직 있어! 하지만 끊어졌다 다시 연결되기를 반복하면서 우리의 <span class="highlight">유동</span>을 허용하지. 분자들이 자유롭게 움직여도 서로 가까이 있는 거야."</span></p>
+        <p>놀라운 사실은, 액체 물의 분자 사이 거리가 얼음보다 오히려 <span class="highlight">가깝다</span>는 것입니다. 얼음의 육각형 구조가 무너지면서 빈 공간이 사라지기 때문입니다. 그래서 물은 4°C에서 <span class="highlight">밀도가 최대(약 1.00 g/cm³)</span>가 됩니다.</p>
+        <p><span class="dialogue">"이 성질 덕분에 겨울에 호수가 표면부터 얼고, 바닥의 물고기는 살아남을 수 있어!"</span> 리퀴드가 자랑스럽게 말했습니다. 하지만 칼로가 더 많은 에너지를 불어넣고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4: 기화 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">기화</span>
+        <h2>끓는점, 100°C의 탈출</h2>
+        <p>칼로가 에너지를 계속 공급하자, 물의 온도가 점점 올라갔습니다. 50°C, 70°C, 90°C… 분자들의 운동이 점점 격렬해졌습니다. 그리고 마침내 100°C. 물 내부에서 큰 기포가 보글보글 올라오기 시작했습니다!</p>
+        <p><span class="dialogue">"이것이 <span class="highlight">끓는점</span>이야!"</span> 칼로가 외쳤습니다. <span class="dialogue">"액체 내부에서 기화가 일어나는 온도지. 끓는점은 <span class="highlight">증기압(vapor pressure) = 외부 기압</span>이 되는 온도야. 물의 끓는점은 1기압에서 <span class="highlight">100°C(373.15 K)</span>!"</span></p>
+        <p>아쿠아가 물었습니다. <span class="dialogue">"끓는 동안에도 온도가 멈춰 있는 이유는 뭐야?"</span></p>
+        <p><span class="dialogue">"열에너지가 <span class="highlight">기화열</span>로 사용되기 때문이야. 분자 간 결합을 완전히 끊는 데 쓰이지. 물의 기화열은 무려 <span class="highlight">2260 J/g</span>! 융해열 334 J/g의 약 6.8배야."</span></p>
+        <p>리퀴드가 걱정스럽게 말했습니다. <span class="dialogue">"기체가 되면 형체가 사라지는 거야. 정말 괜찮겠어?"</span></p>
+        <p>아쿠아는 결심했습니다. <span class="dialogue">"기체의 세계로 가볼게!"</span> 격렬한 에너지와 함께 액체의 표면을 뚫고 하늘로 솟아올랐습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5: 기체 상태 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">기체 상태</span>
+        <h2>수증기, 보이지 않는 자유</h2>
+        <p>아쿠아가 기체가 된 순간, 세상이 완전히 달라졌습니다. 주위에 다른 분자가 거의 없었습니다. 액체일 때는 분자들이 빽빽했는데, 기체가 되니 분자 간 거리가 엄청나게 벌어진 것입니다. 스팀 마법사가 안개처럼 피어오르며 나타났습니다.</p>
+        <p><span class="dialogue">"환영해, 아쿠아. 여기가 기체의 세계야."</span> 스팀이 말했습니다. <span class="dialogue">"기체 상태에서 입자들은 <span class="highlight">매우 멀리 떨어져</span> 있으며 <span class="highlight">자유롭게 빠르게 운동</span>해. 분자 간 거리는 액체의 약 10배, 부피로 따지면 약 1000배야."</span></p>
+        <p><span class="dialogue">"그런데 넌 왜 보이지 않아?"</span> 아쿠아가 물었습니다.</p>
+        <p><span class="dialogue">"진짜 <span class="highlight">수증기</span>는 눈에 보이지 않아! 주전자에서 나오는 하얀 김은 수증기가 냉각되어 다시 작은 물방울로 변한 거야. 진짜 수증기는 투명해."</span></p>
+        <p>기체는 <span class="highlight">일정한 모양도 부피도 없습니다</span>. 담는 용기 전체로 퍼져나갑니다. 기체 분자들은 사방으로 날아다니며 용기 벽에 부딪히는데, 이 충돌이 바로 <span class="highlight">기압</span>의 원인입니다.</p>
+        <p>아쿠아는 자유로웠지만, 형체가 없어 외로움도 느꼈습니다. <span class="dialogue">"얼음일 때는 답답했고, 물일 때는 좋았고, 수증기는 너무 자유로워서 외로워. 진짜 나는 뭐지?"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6: 6가지 상태 변화 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">6가지 상태 변화</span>
+        <h2>여섯 가지 변신의 이름</h2>
+        <p>본질 할머니가 아쿠아를 특별한 곳으로 데려갔습니다. 거대한 삼각형 방의 꼭짓점에 글라시, 리퀴드, 스팀이 서 있었고, 그들을 연결하는 여섯 개의 길이 있었습니다.</p>
+        <p><span class="dialogue">"상태 변화에는 여섯 가지 이름이 있단다."</span> 할머니가 설명하기 시작했습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">흡열 과정</span>(에너지 흡수)에는 세 가지가 있어. <span class="highlight">융해</span>: 고체→액체. <span class="highlight">기화</span>: 액체→기체. <span class="highlight">승화</span>: 고체→기체."</span></p>
+        <p><span class="dialogue">"<span class="highlight">발열 과정</span>(에너지 방출)에도 세 가지가 있어. <span class="highlight">응고</span>: 액체→고체. <span class="highlight">액화/응결</span>: 기체→액체. <span class="highlight">승화</span>: 기체→고체."</span></p>
+        <p><span class="dialogue">"승화?"</span> 아쿠아가 놀랐습니다. <span class="dialogue">"액체를 거치지 않고 바로 변한다고?"</span></p>
+        <p><span class="dialogue">"그래. 겨울에 빨래를 밖에 널면 얼었다가 마르는 것, 그것이 승화야. <span class="highlight">드라이아이스</span>가 연기처럼 사라지는 것도 승화지. 반대로 서리나 성에는 기체가 바로 고체가 되는 역승화야."</span></p>
+        <p>핵심은 이것입니다: <span class="highlight">열에너지를 흡수하면 고체→액체→기체 방향으로, 열에너지를 방출하면 기체→액체→고체 방향으로</span> 상태가 변합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7: 가열 곡선 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">가열 곡선</span>
+        <h2>온도-시간 그래프 읽기</h2>
+        <p>칼로가 아쿠아에게 특별한 그래프를 보여주었습니다. 가로축은 시간(또는 공급한 열에너지), 세로축은 온도. 이것이 바로 <span class="highlight">가열 곡선</span>입니다.</p>
+        <p><span class="dialogue">"물의 가열 곡선을 분석해볼게."</span> 칼로가 설명했습니다. <span class="dialogue">"첫째, 얼음을 가열하면 온도가 올라가. 기울기는 1/(질량×비열)에 비례해. 둘째, <span class="highlight">0°C 수평 구간</span>에서는 융해가 진행되고 융해열을 흡수해. 셋째, 물을 가열하면 다시 온도가 올라가. 넷째, <span class="highlight">100°C 수평 구간</span>에서는 기화가 진행되고 기화열을 흡수해. 다섯째, 수증기를 가열하면 또 온도가 올라가."</span></p>
+        <p><span class="dialogue">"수평 구간이 왜 생기는 거야?"</span> 아쿠아가 물었습니다.</p>
+        <p><span class="dialogue">"열에너지가 온도를 올리는 대신 분자 간 결합을 끊는 데 사용되기 때문이야. 이것이 <span class="highlight">잠열</span>의 의미야. 겉으로는 온도 변화가 없지만, 내부에서는 분자 배열의 거대한 변혁이 일어나고 있지."</span></p>
+        <p>그래프의 기울기도 중요합니다. <span class="highlight">비열</span>이 큰 물질일수록 기울기가 작습니다. 물의 비열(4.18 J/g·°C)은 얼음(2.09)이나 수증기(2.01)보다 크므로, 물 구간의 기울기가 가장 완만합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8: 상평형 그림 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">상평형 그림</span>
+        <h2>압력-온도 그래프</h2>
+        <p>본질 할머니가 또 다른 그래프를 꺼냈습니다. 이번에는 가로축이 온도, 세로축이 압력인 <span class="highlight">상평형 그림</span>이었습니다.</p>
+        <p><span class="dialogue">"이 그래프에는 세 영역이 있어. 고체, 액체, 기체가 존재할 수 있는 온도와 압력 범위야."</span> 할머니가 설명했습니다. <span class="dialogue">"<span class="highlight">경계선</span>은 두 상태가 평형을 이루며 공존하는 조건을 나타내지."</span></p>
+        <p><span class="dialogue">"<span class="highlight">삼중점</span>이란 게 있어. 세 상태가 동시에 공존하는 유일한 온도와 압력이야. 물의 삼중점은 0.01°C, 0.006 atm이지."</span></p>
+        <p><span class="dialogue">"<span class="highlight">임계점</span>도 있어. 이 위에서는 기체와 액체를 구분할 수 없어. 물의 임계점은 374°C, 218 atm이야."</span></p>
+        <p>아쿠아가 신기한 점을 발견했습니다. <span class="dialogue">"물의 고체-액체 경계선이 기울어진 방향이 다른 물질과 반대야!"</span></p>
+        <p><span class="dialogue">"맞아! 물의 융해 곡선은 <span class="highlight">음의 기울기</span>를 가져. 이것은 압력이 높아지면 얼음의 녹는점이 <span class="highlight">낮아진다</span>는 뜻이야. 스케이트 날 아래 얼음이 살짝 녹는 것, 빙하가 천천히 흐르는 것이 이 원리지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9: 증발과 끓음 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">증발과 끓음</span>
+        <h2>표면 기화 vs 전체 기화</h2>
+        <p>리퀴드가 아쿠아에게 중요한 차이를 알려주었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight">증발</span>과 <span class="highlight">끓음</span>은 둘 다 기화지만 다른 현상이야."</span></p>
+        <p><span class="dialogue">"증발은 액체 <span class="highlight">표면에서만</span> 일어나고, <span class="highlight">모든 온도</span>에서 일어나. 표면의 에너지 높은 분자가 탈출하는 거야. 그래서 남은 액체 온도가 내려가지. 기화열을 흡수하니까."</span></p>
+        <p><span class="dialogue">"끓음은 액체 <span class="highlight">내부 전체</span>에서 일어나고, <span class="highlight">끓는점에서만</span> 일어나. 증기압이 외부 기압과 같아질 때 시작돼."</span></p>
+        <p><span class="dialogue">"그래서 여름에 물을 뿌리면 시원한 거야?"</span> 아쿠아가 물었습니다.</p>
+        <p><span class="dialogue">"맞아! 물이 증발하면서 주변의 열을 빼앗아 가기 때문이야. 우리 몸이 땀을 흘리는 것도 같은 원리지."</span></p>
+        <p>끓는점은 외부 압력에 따라 변합니다. <span class="dialogue">"높은 산에서는 기압이 낮아서 물이 100°C보다 낮은 온도에서 끓어. 반대로 <span class="highlight">압력밥솥</span>은 내부 압력을 높여 끓는점을 올리고, 더 높은 온도에서 조리해 음식을 빨리 익히지!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10: 물질의 보존 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">깨달음</span>
+        <h2>변해도 나는 H₂O!</h2>
+        <p>모든 여행이 끝나고, 삼각형 방의 한가운데에 모두가 모였습니다. 본질 할머니가 마법의 거울을 꺼냈습니다. 거울 속에 세 가지 모습이 동시에 비쳤습니다. 육각형 결정, 흐르는 물방울, 보이지 않는 기체. 형태는 완전히 달랐지만, 거울의 가장 깊은 곳에 비친 것은 동일했습니다: <span class="highlight">H₂O</span>.</p>
+        <p><span class="dialogue">"봐, 아쿠아."</span> 할머니가 말했습니다. <span class="dialogue">"네가 얼음이든 물이든 수증기이든, H₂O라는 네 화학식은 단 한 번도 변한 적이 없어. <span class="highlight">상태 변화</span>는 분자 배열과 운동이 변하는 것이지, <span class="highlight">분자 자체는 불변</span>이란다."</span></p>
+        <p>글라시가 처음으로 미소 지었습니다. <span class="dialogue">"녹는 것은 죽는 것이 아니었어. 다른 모습으로 사는 것이었구나."</span></p>
+        <p>스팀이 눈물을 흘렸습니다. <span class="dialogue">"보이지 않아도 나는 여기 있었어. 사라진 게 아니라 변한 것뿐이야."</span></p>
+        <p>아쿠아가 활짝 웃었습니다. <span class="dialogue">"이제 알겠어. 나는 변하는 것이 아니라, 세 가지 모습을 가진 하나의 존재야. 흡열(융해, 기화, 승화)로 자유로워지고, 발열(응고, 액화, 역승화)로 질서를 찾아. 어떤 상태든, 나는 여전히 H₂O야!"</span></p>
+        <p><span class="dialogue">"<span class="highlight">모습은 변해도 본질은 같단다.</span>"</span> 본질 할머니가 마지막으로 말했습니다. 그날 이후 아쿠아는 더 이상 변화를 두려워하지 않았습니다.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" onclick="location.href='/creative-book/chem05_season1_quiz.html?season=season3'" style="background: linear-gradient(135deg, #FFD700, #FFA500);">🏆 관문평가</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    function handleScroll() {
+      const wh = window.innerHeight;
+      sections.forEach(s => {
+        const r = s.getBoundingClientRect(), c = s.querySelector('.story-card');
+        if (r.top < wh*0.5 && r.top > -r.height*0.5 && s.dataset.bg) mapContainer.style.backgroundImage = `url('${s.dataset.bg}')`;
+        if (c && r.top < wh*0.75) c.classList.add('active');
+      });
+    }
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+  </script>
+</body>
+</html>
