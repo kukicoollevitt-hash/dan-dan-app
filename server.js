@@ -19074,6 +19074,15 @@ app.get("/my-learning", async (req, res) => {
           currentSelectedSeries = 'BRAIN딥';
         } else if (initialSeries === 'on') {
           currentSelectedSeries = 'BRAIN온';
+        } else if (initialSeries === 'all' || !initialSeries) {
+          // series=all 또는 series 파라미터 없음: 가장 최근 학습한 시리즈로 설정
+          if (logsForChart.length > 0) {
+            const recentUnit = logsForChart[0].unit || '';
+            if (recentUnit.includes('on_')) currentSelectedSeries = 'BRAIN온';
+            else if (recentUnit.includes('fit_')) currentSelectedSeries = 'BRAIN핏';
+            else if (recentUnit.includes('deep_')) currentSelectedSeries = 'BRAIN딥';
+            else currentSelectedSeries = 'BRAIN업';
+          }
         }
 
         allLogs = logsForChart;
@@ -19709,18 +19718,8 @@ app.get("/my-learning", async (req, res) => {
           console.log('📚 html2canvas:', typeof html2canvas);
           console.log('📚 jsPDF:', typeof window.jspdf);
 
-          // ✅ URL 파라미터로 전달된 시리즈가 있으면 우선 사용
-          let defaultSeries = currentSelectedSeries; // 이미 URL 파라미터에서 설정됨
-
-          // URL 파라미터가 없으면 가장 최근 학습한 시리즈 찾기
-          if (defaultSeries === 'all' && logsForChart.length > 0) {
-            // 가장 최근 로그의 시리즈 (이미 timestamp 내림차순 정렬되어 있음)
-            const recentSeries = logsForChart[0].series;
-            if (recentSeries) {
-              defaultSeries = recentSeries;
-              currentSelectedSeries = recentSeries;
-            }
-          }
+          // 시리즈 값 사용
+          let defaultSeries = currentSelectedSeries;
 
           // UI 업데이트 (URL 파라미터 또는 최근 시리즈)
           if (defaultSeries !== 'all') {

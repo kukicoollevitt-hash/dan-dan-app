@@ -6,10 +6,13 @@
   
   <!-- 공통 CSS -->
   <link rel="stylesheet" href="/assets/css/learning-common.css">
-  
+
   <!-- 파비콘 404 방지 -->
   <link rel="icon" href="data:,">
-  
+
+  <!-- 콘텐츠 데이터 (learning-common.js보다 먼저 로드) -->
+  <script src="./earth_content.js?v=20260228" defer></script>
+
   <!-- 공통 JavaScript -->
   <script src="/assets/js/learning-common.js?v=20251128"></script>
 
@@ -2219,6 +2222,35 @@
                 </div>`;
             }
 
+            // ★ vocabScoreRatio 설정 (레이더 어휘맥락력 반영)
+            const mainQ3Correct = window.reportState && window.reportState.q3ok ? 1 : 0;
+            const totalCorrect = correctCnt + mainQ3Correct;
+            const totalQuestions = total + 1;
+            if (!window.reportState) window.reportState = { q1ok:false, q2ok:false, q3ok:false, q4ok:false, q5ok:false, vocabScoreRatio:0 };
+            window.reportState.vocabScoreRatio = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
+            console.log('[vocabSaveToServer] vocabScoreRatio 설정:', window.reportState.vocabScoreRatio, '(정답:', totalCorrect, '/', totalQuestions, ')');
+
+            // ★ 레이더 차트 즉시 업데이트 (어휘학습 채점 후)
+            const lexicalScore = Math.round((window.reportState.vocabScoreRatio || 0) * 10);
+            if (typeof drawRadarChart === 'function') {
+              drawRadarChart({
+                literal: window.reportState.q1ok ? 10 : 6,
+                structural: window.reportState.q2ok ? 10 : 6,
+                lexical: lexicalScore,
+                inferential: window.reportState.q4ok ? 10 : 6,
+                critical: window.reportState.q5ok ? 10 : 6
+              });
+            }
+            if (typeof renderFeedback === 'function') {
+              renderFeedback({
+                literal: window.reportState.q1ok ? 10 : 6,
+                structural: window.reportState.q2ok ? 10 : 6,
+                lexical: lexicalScore,
+                inferential: window.reportState.q4ok ? 10 : 6,
+                critical: window.reportState.q5ok ? 10 : 6
+              });
+            }
+
             // 3. PDF 다운로드
             if (typeof captureElementToPDF === 'function') {
               await captureElementToPDF('capture-vocab', '단단국어_어휘학습.pdf', { withStudentInfo: true });
@@ -2793,10 +2825,15 @@
       reportState.q3ok = q3ok;
       reportState.q4ok = q4ok;
       reportState.q5ok = q5ok;
+      // ★ vocabScoreRatio 기반 어휘맥락력 점수 계산 (window.reportState에서 가져옴)
+      const lexicalRatio = (typeof window.reportState?.vocabScoreRatio === "number") ? window.reportState.vocabScoreRatio : 0;
+      const lexicalFromRatio = Math.round(lexicalRatio * 10);
+      const lexicalOk = lexicalRatio >= 0.7;
+
       reportState.radarScores = {
         literal:     q1ok ? 10 : 6,
         structural:  q2ok ? 10 : 6,
-        lexical:     q3ok ? 10 : 6,
+        lexical:     lexicalFromRatio,
         inferential: q4ok ? 10 : 6,
         critical:    q5ok ? 10 : 6
       };
@@ -2808,31 +2845,25 @@
         q3ok: reportState.q3ok,
         q4ok: reportState.q4ok,
         q5ok: reportState.q5ok,
-        messages: (function(){
-          const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
-          const lexicalOk = lexicalRatio >= 0.7;
-          return [
-            "핵심 이해력(객관식): " + (reportState.q1ok ? "핵심 이해력이 좋아요! ✅" : "보완 필요해요 ❗"),
-            "구조 파악력(객관식): " + (reportState.q2ok ? "구조 파악력이 좋아요! ✅" : "보완 필요해요 ❗"),
-            "어휘 맥락력(빈칸): " + (lexicalOk ? "어휘 맥락력이 좋아요! ✅" : "어휘 복습이 필요해요 ❗"),
-            "추론·통합력(빈칸): " + (reportState.q4ok ? "추론·통합력이 좋아요! ✅" : "보완 필요해요 ❗"),
-            "비판·적용력(서술형): " + (reportState.q5ok ? "비판·적용력이 좋아요! ✅" : "보완 필요해요 ❗")
-          ];
-        })()
+        messages: [
+          "핵심 이해력(객관식): " + (reportState.q1ok ? "핵심 이해력이 좋아요! ✅" : "보완 필요해요 ❗"),
+          "구조 파악력(객관식): " + (reportState.q2ok ? "구조 파악력이 좋아요! ✅" : "보완 필요해요 ❗"),
+          "어휘 맥락력(빈칸): " + (lexicalOk ? "어휘 맥락력이 좋아요! ✅" : "어휘 복습이 필요해요 ❗"),
+          "추론·통합력(빈칸): " + (reportState.q4ok ? "추론·통합력이 좋아요! ✅" : "보완 필요해요 ❗"),
+          "비판·적용력(서술형): " + (reportState.q5ok ? "비판·적용력이 좋아요! ✅" : "보완 필요해요 ❗")
+        ]
       });
 
       // 레이더 차트
       drawRadarChart({
         literal:     reportState.q1ok ? 10 : 6,
         structural:  reportState.q2ok ? 10 : 6,
-        lexical:     reportState.q3ok ? 10 : 6,
+        lexical:     lexicalFromRatio,
         inferential: reportState.q4ok ? 10 : 6,
         critical:    reportState.q5ok ? 10 : 6
       });
 
       // 어휘 피드백 반영
-      const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
-      const lexicalFromRatio = Math.round(lexicalRatio * 10);
       renderFeedback({
         literal:    reportState.q1ok ? 10 : 6,
         structural: reportState.q2ok ? 10 : 6,
@@ -2849,7 +2880,7 @@
         q3ok: reportState.q3ok,
         q4ok: reportState.q4ok,
         q5ok: reportState.q5ok,
-        vocabScoreRatio: reportState.vocabScoreRatio,
+        vocabScoreRatio: window.reportState?.vocabScoreRatio || 0,
         literal: reportState.q1ok ? 10 : 6,
         structural: reportState.q2ok ? 10 : 6,
         lexical: lexicalFromRatio,
@@ -2877,7 +2908,7 @@
           q5: document.getElementById("q5")?.value || ''
         };
 
-        const lexicalRatio = (typeof reportState.vocabScoreRatio === "number") ? reportState.vocabScoreRatio : 0;
+        const lexicalRatio = (typeof window.reportState?.vocabScoreRatio === "number") ? window.reportState.vocabScoreRatio : 0;
         const lexicalFromRatio = Math.round(lexicalRatio * 10);
 
         saveFn({
@@ -2887,7 +2918,7 @@
             q3ok: reportState.q3ok,
             q4ok: reportState.q4ok,
             q5ok: reportState.q5ok,
-            vocabScoreRatio: reportState.vocabScoreRatio || 0,
+            vocabScoreRatio: window.reportState?.vocabScoreRatio || 0,
             literal: reportState.q1ok ? 10 : 6,
             structural: reportState.q2ok ? 10 : 6,
             lexical: lexicalFromRatio,
@@ -3091,149 +3122,7 @@ function _loadVocabInputs(unit){
   } catch(e){}
 }
 
-// ✅ 초성 자동 생성
-function _initialsFromKorean(word){
-  const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-  const base = '가'.charCodeAt(0);
-  const choUnit = 588;
-  let out = '';
-  for (const ch of (word||'')) {
-    const code = ch.charCodeAt(0);
-    if (code >= 0xAC00 && code <= 0xD7A3) {
-      const idx = Math.floor((code - base) / choUnit);
-      out += CHO[idx] || ch;
-    } else if (/\s/.test(ch)) {
-      out += ' ';
-    } else {
-      out += ch;
-    }
-  }
-  return out.replace(/\s+/g,'');
-}
-
-/* =========================================================
-   📘 렌더링
-========================================================= */
-function renderVocabFill() {
-  const data = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT] && window.CONTENTS[window.CUR_UNIT].vocabFill) || null;
-  const container = document.getElementById('vocab-fill');
-  if (!data || !container) return;
-
-  container.innerHTML = '';
-
-  const inst = document.createElement('p');
-  inst.className = 'vocab-instruction';
-  inst.textContent = data.instructions || '빈칸에 알맞은 낱말을 쓰세요.';
-  container.appendChild(inst);
-
-  (data.items || []).forEach((item) => {
-    const row = document.createElement('div');
-    row.className = 'vocab-item';
-    const initials = item.initials || _initialsFromKorean(item.answer);
-
-    const html = (item.text || '').replace(
-      /\(\s+\)/,
-      `<input type="text" id="fill-${item.no}" data-ans="${item.answer}" data-alias='${JSON.stringify(item.aliases||[])}' placeholder="${initials}" class="vocab-input">`
-    );
-
-    row.innerHTML = `<span class="vocab-num">${item.no}.</span> ${html}`;
-    container.appendChild(row);
-  });
-
-  const btnWrap = document.createElement('div');
-  btnWrap.style.marginTop = '12px';
-
-  const btnCheck = document.createElement('button');
-  btnCheck.textContent = '채점하기';
-  btnCheck.className = 'check-btn';
-  btnCheck.onclick = checkVocabFill;
-  btnWrap.appendChild(btnCheck);
-
-  const btnReset = document.createElement('button');
-  btnReset.textContent = '초기화';
-  btnReset.className = 'check-btn';
-  btnReset.style.marginLeft = '8px';
-  btnReset.onclick = () => {
-    [...container.querySelectorAll('.vocab-input')].forEach(inp => {
-      inp.value = '';
-      inp.style.background = '';
-    });
-    _saveVocabInputs(unit);
-  };
-  btnWrap.appendChild(btnReset);
-  container.appendChild(btnWrap);
-
-  _loadVocabInputs(unit);
-  container.addEventListener('input', (e)=>{
-    if (e.target && e.target.classList.contains('vocab-input')) {
-      e.target.style.background = '';
-      _saveVocabInputs(unit);
-    }
-  });
-
-  container.addEventListener('keydown', (e)=>{
-    if (e.key === 'Enter' && e.target.classList.contains('vocab-input')) {
-      const inputs = [...container.querySelectorAll('.vocab-input')];
-      const idx = inputs.indexOf(e.target);
-      const next = inputs[idx+1];
-      if (next) next.focus();
-    }
-  });
-}
-
-/* =========================================================
-   🧮 채점
-========================================================= */
-function checkVocabFill() {
-  const data = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT] && window.CONTENTS[window.CUR_UNIT].vocabFill && window.CONTENTS[window.CUR_UNIT].vocabFill.items) || [];
-
-      // ✅ 모든 빈칸이 채워졌는지 확인
-      let hasEmpty = false;
-      data.forEach((item) => {
-        const input = document.getElementById(`fill-${item.no}`);
-        if (input && !input.value.trim()) hasEmpty = true;
-      });
-
-      if (hasEmpty) {
-        if (typeof showCreativeAlert === 'function') {
-          showCreativeAlert('모든 어휘를 입력해주세요.');
-        } else {
-          alert('모든 어휘를 입력해주세요.');
-        }
-        return;
-      }
-  let score = 0;
-
-  data.forEach((item) => {
-    const input = document.getElementById(`fill-${item.no}`);
-    if (!input) return;
-    const user = _norm(input.value);
-    const answers = [item.answer, ...(item.aliases||[])].map(_norm);
-    const correct = answers.some(v => v === user);
-
-    input.style.background = correct ? '#d9f7be' : '#ffd6d6';
-    if (correct) score++;
-  });
-
-  alert(`정답 ${score}개 / 총 ${data.length}개`);
-}
-
-/* =========================================================
-   탭 전환 시 자동 렌더링
-========================================================= */
-function _bindTabEvents() {
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-tab]');
-    if (!btn) return;
-    var tab = btn.getAttribute('data-tab');
-
-    // data-tab 값이 'vocab'일 때만 렌더
-    if (tab === 'vocab') {
-      var fn = window.renderVocabFromContent || window.renderVocabFill;
-      if (typeof fn === 'function') fn();
-    }
-  });
-}
+// ✅ renderVocabFill, checkVocabFill, _bindTabEvents는 earth_content.js에서 제공
 
 function disableQuizInputs() {
   document.querySelectorAll('#tab-reading input[type="radio"]').forEach(r => r.disabled = true);
@@ -3396,9 +3285,6 @@ document.addEventListener('click', function(e) {
   if (container && !container.contains(e.target)) closeWebtoonDropdown();
 });
 </script>
-
-<!-- 외부 JS: 단원 콘텐츠 로드 (geo_02.html과 같은 폴더) -->
-<script src="./earth_content.js?v=20251113" defer></script>
 
 <!-- 달력 팝업 -->
 <div class="calendar-overlay" id="calendar-overlay"></div>
