@@ -96,6 +96,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '결심 → 화랑이 됨 → 장군으로 성장 → 어머니의 꾸중'
       ],
       /* 03. 어휘 맥락력 (빈칸 2개) */
+      q3_html: '김유신은 새벽마다 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅇ">를 연습하고 밤에는 학문을 익히며 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅅ">하게 자신을 단련했습니다.',
+      q4_html: '김유신은 자신의 잘못을 깨닫고 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅅ">을 굳혔으며, 꾸준한 <input class="inline-input" id="q4-2" type="text" placeholder="ㄴㄹ">으로 변화했습니다.',
       q3_1_ph: 'ㅁㅇ', q3_2_ph: 'ㅅㅅ',
       /* 04. 추론·통합력 (빈칸 2개) */
       q4_1_ph: 'ㄱㅅ', q4_2_ph: 'ㄴㄹ',
@@ -115,7 +117,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q1: '부끄러움과 실망감 속에서 스스로의 마음이 아직 완전히 바로서지 않았음을 깨달았어요',
       q2: '이 되어 큰 기대를 받았지만',
       q3: '하게 자신을 단련했어요',
-      q4: '노력',
+      q4: '결심을 행동으로 옮겼어요',
       q5: '예시 답안: 김유신이 변화할 수 있었던 이유는 자신의 잘못을 스스로 깨닫고 진심으로 반성했기 때문입니다. 어머니의 꾸중도 계기가 되었지만, 말이 여인의 집으로 갔을 때 스스로 부끄러움을 느끼고 결심을 행동으로 옮긴 점이 중요합니다.'
     },
     detail: {
@@ -193,6 +195,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '김유신 사망 → 문무왕 즉위 → 고구려 멸망 → 당나라군 격퇴'
       ],
       /* 03. 어휘 맥락력 (빈칸 2개) */
+      q3_html: '668년 평양성이 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㄹ">되며 고구려가 멸망했고, 문무왕은 고구려 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅂ">에 나섰습니다.',
+      q4_html: '문무왕은 삼국 <input class="inline-input" id="q4-1" type="text" placeholder="ㅌㅇ">의 뜻을 이루기 위해 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅇ">를 다잡고 전쟁을 이어갔습니다.',
       q3_1_ph: 'ㅎㄹ', q3_2_ph: 'ㅈㅂ',
       /* 04. 추론·통합력 (빈칸 2개) */
       q4_1_ph: 'ㅌㅇ', q4_2_ph: 'ㄱㅇ',

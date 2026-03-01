@@ -14233,19 +14233,26 @@ async function performLogout() {
         // 서버에서 학습실 데이터 조회 (캐시 사용)
         const result = await ApiCache.fetch(`/api/user-progress/study-room?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
 
-        if (result.ok && result.data?.studyRoom?.assignedTasks) {
-          console.log('✅ 서버에서 학습실 데이터 로드:', result.data.studyRoom.assignedTasks.length, '개');
-          return result.data.studyRoom.assignedTasks;
+        // 서버 응답 성공 시 (ok: true)
+        if (result.ok) {
+          const tasks = result.data?.studyRoom?.assignedTasks || [];
+          console.log('✅ 서버에서 학습실 데이터 로드:', tasks.length, '개');
+
+          // 서버 데이터로 localStorage 동기화 (빈 배열이어도 동기화)
+          const key = getStudyRoomKey();
+          localStorage.setItem(key, JSON.stringify(tasks));
+
+          return tasks;
         }
 
-        // 서버에 데이터 없으면 localStorage fallback
-        console.log('⚠️ 서버 데이터 없음 - localStorage 사용');
+        // 서버 응답 실패 시 (ok: false) localStorage fallback
+        console.log('⚠️ 서버 응답 실패 - localStorage fallback');
         const key = getStudyRoomKey();
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : [];
       } catch (error) {
         console.error('❌ 학습실 데이터 로드 오류:', error);
-        // 오류 시 localStorage fallback
+        // 네트워크 오류 시 localStorage fallback
         const key = getStudyRoomKey();
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : [];
@@ -15994,22 +16001,9 @@ async function performLogout() {
         unitCode = match[1];
       }
 
-      // ✅ fit_, on_, deep_ prefix 제거하여 기본 unitCode도 생성
-      // fit_bio_02 -> bio_02, on_soc_01 -> soc_01 등
-      let baseUnitCode = unitCode;
-      if (unitCode.startsWith('fit_')) {
-        baseUnitCode = unitCode.slice(4); // fit_ 제거
-      } else if (unitCode.startsWith('on_')) {
-        baseUnitCode = unitCode.slice(3); // on_ 제거
-      } else if (unitCode.startsWith('deep_')) {
-        baseUnitCode = unitCode.slice(5); // deep_ 제거
-      }
-
-      // ✅ 확인할 unitCode 목록 (원본 + prefix 제거 버전)
+      // ✅ 시리즈별 prefix(fit_, on_, deep_)를 유지하여 정확한 완료 체크
+      // fit_bio_01과 bio_01은 별개의 과제로 취급
       const codesToCheck = [unitCode];
-      if (baseUnitCode !== unitCode) {
-        codesToCheck.push(baseUnitCode);
-      }
 
       // ✅ 1. 서버에서 가져온 unitGradesData 먼저 확인 (가장 신뢰할 수 있는 데이터)
       if (unitGradesData && Object.keys(unitGradesData).length > 0) {

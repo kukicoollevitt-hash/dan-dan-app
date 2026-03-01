@@ -93,8 +93,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 변화와 성장, 낯선 사람에게 인사',
         '4문단 : 데미안 책 발견, 알을 깨는 깨달음'
       ],
-      q3_1_ph: 'ㅁㅅㅇㄷ', q3_2_ph: 'ㄱㅂㅎㄱㄹ',
-      q4_1_ph: 'ㅇㅇㅎ', q4_2_ph: 'ㄱㅂㅎㄱ',
+      q3_html: '글쓴이는 새로운 사람을 만나면 무슨 말을 해야 할지 몰라 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅅㅇㄷ"> 결국 민호에게 용기를 내어 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅂㅎㄷ"> 마음먹었습니다.',
+      q4_html: '글쓴이는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇㅎ"> 도서관에서 데미안을 발견하고, 두려움을 조금씩 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅂㅎㄷ"> 시작했습니다.',
+      q3_1_ph: 'ㅁㅅㅇㄷ', q3_2_ph: 'ㄱㅂㅎㄷ',
+      q4_1_ph: 'ㅇㅇㅎ', q4_2_ph: 'ㄱㅂㅎㄷ',
       q5_text: '데미안이 싱클레어에게 "새는 알에서 나오려고 투쟁한다"라고 말한 이유를 본문 내용과 연결하여 설명해 보세요.'
     },
     answerKey: { q1:'2', q2:'1', q3_1:['망설이다','망설임'], q3_2:['고백하기로','고백'], q4_1:['우연히','우연'], q4_2:['극복하기','극복'] },
@@ -174,9 +176,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: [
         '1문단 : 케이트의 사연, 소년들의 2년 생존',
-        '2문단 : 케이트의 사연, 소년들의 2년 생존',
+        '2문단 : 드니팬 일행과의 갈등, 위험한 방향으로 떠남',
         '3문단 : 섬의 위험 상황, 무법자들 존재',
-        '4문단 : 작품 소개 (15소년 표류기)'
+        '4문단 : 브리앙의 귀국 준비, 배 수리'
       ],
       q3_html: `「15소년 표류기」는 열다섯 명의 소년이 어른 없이 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅇㄷ">에서 2년간 생존하며 협력하는 이야기입니다. 소년들은 무법자들이 자신들의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅㅊ">를 찾아낼까 봐 걱정했습니다.`,
       q4_html: `브리앙이 드니팬 일행을 데리러 가기로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅅ">하자, 고든은 언제 떠날 것인지 물었습니다. 브리앙은 악당들에게 들키지 않으려면 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂ">을 기다리는 수밖에 없다고 대답했습니다.`,
