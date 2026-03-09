@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚛️ 118명의 원소 용사가 사는 주기율표 왕국 (중등편)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작화학06/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 680px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165,0.84,0.44,1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(106,17,203,0.15); color: #6a11cb; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.95; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #6a11cb; font-weight: 600; }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #6a11cb;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(106, 17, 203, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #5A0EA3;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #5A0EA3;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue { color: #2575fc; font-weight: 600; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 900px; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .grade-badge { display: inline-block; background: linear-gradient(135deg, #6a11cb, #2575fc); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+    .intro-content .characters { text-align: left; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #a78bfa; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #fff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(106,17,203,0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(37,117,252,0.9); transform: translateY(-2px); }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">중1-2 심화편</span>
+        <h1>⚛️ 118명의 원소 용사가 사는 주기율표 왕국</h1>
+        <p class="subtitle">— 원자번호, 전자 배치, 주기적 성질 —<br>교과기반 창작도서 · 화학 06</p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>▸ 멘델:</strong> 열두 살 소년. 원소 광장에서 118개 원소의 비밀을 탐구하는 호기심 많은 탐험가.</p>
+          <p><strong>▸ 라부아 할머니:</strong> 도서관 사서. 4원소설부터 연금술까지 화학의 역사를 들려주는 현자.</p>
+          <p><strong>▸ 주기 선생님:</strong> 원소 광장 관리인. 주기율표의 구조와 원리를 가르쳐주는 안내자.</p>
+          <p><strong>▸ 금이 (Au, 79번):</strong> 황금빛 갑옷의 위풍당당한 용사. 전이금속의 대표.</p>
+          <p><strong>▸ 산소 (O, 8번):</strong> 투명하고 조용하지만 생명에 필수적인 비금속 원소.</p>
+          <p><strong>▸ 나트륨 (Na, 11번):</strong> 물과 격렬히 반응하는 1족 알칼리 금속의 대표.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span><span class="theme">원소의 발견</span>
+        <h2>연금술에서 주기율표까지</h2>
+        <p>화학 왕국의 중심부에 <span class="highlight">'원소 광장'</span>이라는 거대한 광장이 있었습니다. 이 광장에는 118개의 빈 좌석이 정해진 순서대로 배치되어 있었는데, 아직 모든 좌석이 채워지지 않은 시대의 이야기입니다.</p>
+        <p>열두 살 소년 <span class="highlight">'멘델'</span>은 원소 광장 옆 도서관에서 일하는 호기심 많은 아이였습니다. 그의 꿈은 세상을 이루는 기본 재료, 즉 <span class="highlight">원소</span>를 모두 찾아내는 것이었습니다.</p>
+        <p><span class="dialogue">"옛날 사람들은 세상이 네 가지로 이루어져 있다고 믿었단다. 물, 불, 흙, 공기."</span> 라부아 할머니가 고대 그리스 철학자 엠페도클레스의 <span class="highlight">4원소설</span>을 설명해주었습니다.</p>
+        <p><span class="dialogue">"중세의 연금술사들은 납을 금으로 바꾸려 했지. 물론 실패했지만, 그 과정에서 인(P), 비소(As), 비스무트(Bi) 같은 원소를 우연히 발견했단다."</span></p>
+        <p>1661년 로버트 보일은 원소의 현대적 정의를 내렸습니다. <span class="dialogue">"<span class="highlight">원소란 더 이상 다른 물질로 분해할 수 없는 기본 물질</span>이라고 했지."</span> 1789년 라부아지에는 33종의 원소 목록을 발표했고, 19세기에는 <span class="highlight">전기분해</span> 기술로 나트륨, 칼륨, 칼슘 등이 줄줄이 발견되었습니다.</p>
+        <p>멘델은 원소 광장의 빈 좌석을 바라보며 결심했습니다. <span class="dialogue">"나는 이 좌석을 모두 채울 거야. 그리고 좌석의 배치 규칙도 알아낼 거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span><span class="theme">주기율표의 탄생</span>
+        <h2>멘델레예프의 카드 놀이</h2>
+        <p>멘델의 탐험을 도와줄 첫 번째 조력자는 <span class="highlight">'주기 선생님'</span>이었습니다. 선생님이 카드 뭉치를 꺼냈습니다. 각 카드에는 당시까지 알려진 63종의 원소 이름, <span class="highlight">원자량</span>, 성질이 적혀있었습니다.</p>
+        <p><span class="dialogue">"1869년, 러시아의 드미트리 멘델레예프라는 과학자가 이 카드들을 원자량 순서대로 나열해봤어."</span> 멘델이 카드를 정리하기 시작하자, 놀라운 패턴이 보였습니다!</p>
+        <p><span class="dialogue">"어? 리튬이랑 나트륨이랑 성질이 비슷해요! 둘 다 무른 금속이고, 물과 격렬하게 반응하잖아요!"</span></p>
+        <p>이것이 바로 <span class="highlight">주기율</span>입니다. 원소를 원자번호 순으로 나열하면, 비슷한 화학적 성질이 일정한 간격으로 반복된다는 법칙이지요.</p>
+        <p><span class="dialogue">"멘델레예프는 이 규칙에 따라 빈칸을 남겼어. '여기에 아직 발견되지 않은 원소가 있을 것'이라고 예언했지."</span> 주기 선생님이 설명했습니다. <span class="dialogue">"그가 예측한 <span class="highlight">에카실리콘</span>은 나중에 게르마늄으로 발견되었는데, 원자량 72, 밀도 5.5 g/cm³라는 예측이 거의 정확히 맞아떨어졌어!"</span></p>
+        <p>현대에는 원자량 대신 <span class="highlight">원자번호</span>로 배열합니다. 1913년 모즐리가 X선 스펙트럼을 분석해서 원자번호 개념을 확립했기 때문이지요. 멘델은 주기율표가 단순한 목록이 아니라 원소의 지도이자 예언서임을 깨달았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span><span class="theme">원자번호</span>
+        <h2>양성자가 원소를 결정한다</h2>
+        <p>멘델은 원소 광장의 좌석 번호가 어떤 규칙으로 매겨져 있는지 궁금했습니다. 주기 선생님이 큰 소리로 외쳤습니다. <span class="dialogue">"원소 용사들, 자기 번호를 외쳐보시오!"</span></p>
+        <p>1번 좌석의 수소가 소리쳤습니다. <span class="dialogue">"나는 수소! 양성자 1개!"</span> 2번 헬륨이 이었습니다. <span class="dialogue">"헬륨! 양성자 2개!"</span> 118번 오가네손까지 모든 원소가 자기의 <span class="highlight">양성자</span> 수를 외쳤습니다.</p>
+        <p><span class="dialogue">"이 양성자 수가 바로 <span class="highlight">원자번호</span>야."</span> 주기 선생님이 설명했습니다. <span class="dialogue">"양성자가 1개면 반드시 수소이고, 6개면 탄소, 26개면 철이야. 이것은 우주 어디에서든 변하지 않는 절대적인 규칙이야. 중성 원자에서는 양성자 수와 전자 수가 같지."</span></p>
+        <p>멘델이 물었습니다. <span class="dialogue">"중성자 수가 달라도 같은 원소예요?"</span></p>
+        <p><span class="dialogue">"그래! 탄소-12는 양성자 6개, 중성자 6개이고, 탄소-14는 양성자 6개, 중성자 8개야. 둘 다 탄소지. 이런 것을 <span class="highlight">동위원소</span>라고 해."</span></p>
+        <p><span class="dialogue">"<span class="highlight">질량수</span>는 양성자 수와 중성자 수를 더한 거야. 탄소-12의 질량수는 12, 탄소-14의 질량수는 14지. 하지만 원자번호는 둘 다 6이야."</span> 양성자 수만 같으면 같은 원소라는 것, 이것이 원소의 정체성을 결정하는 핵심이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span><span class="theme">주기와 족</span>
+        <h2>가로줄과 세로줄의 비밀</h2>
+        <p>주기 선생님이 칠판에 주기율표를 그렸습니다. 가로줄과 세로줄 각각에 특별한 의미가 있었습니다.</p>
+        <p><span class="dialogue">"가로줄을 <span class="highlight">주기</span>라고 해. 같은 주기의 원소는 <span class="highlight">같은 전자 껍질 수</span>를 가지고 있어."</span> 주기 선생님이 설명했습니다. <span class="dialogue">"1주기는 K껍질만 있고 최대 2개의 전자를 담을 수 있어. 2주기는 K껍질과 L껍질, L껍질에는 최대 8개의 전자가 들어가지. 3주기의 M껍질에는 최대 18개가 들어갈 수 있어."</span></p>
+        <p><span class="dialogue">"세로줄은요?"</span> 멘델이 물었습니다.</p>
+        <p><span class="dialogue">"세로줄을 <span class="highlight">족</span>이라고 해. 같은 족의 원소는 <span class="highlight">원자가 전자</span> 수가 같아. 1족은 원자가 전자가 1개, 17족은 7개지."</span></p>
+        <p>예를 들어 1족 <span class="highlight">알칼리 금속</span>인 리튬(Li), 나트륨(Na), 칼륨(K), 루비듐(Rb), 세슘(Cs)은 모두 최외각 전자가 1개입니다. 그래서 모두 물과 격렬히 반응하고, +1 가의 양이온을 형성합니다.</p>
+        <p>반대편 18족 <span class="highlight">비활성 기체</span>인 헬륨(He), 네온(Ne), 아르곤(Ar)은 최외각 전자 껍질이 꽉 차 있어서 다른 원소와 거의 반응하지 않습니다.</p>
+        <p><span class="dialogue">"같은 족 원소는 최외각 전자 수가 같기 때문에 <span class="highlight">화학적 성질이 비슷해!</span>"</span> 멘델은 주기율표가 원소들의 가족 초상화임을 깨달았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span><span class="theme">전자 배치</span>
+        <h2>전자 껍질과 옥텟 규칙</h2>
+        <p>주기 선생님이 나트륨(Na, 원자번호 11)과 염소(Cl, 원자번호 17)를 불러냈습니다. 둘의 <span class="highlight">전자 배치</span>를 비교해보기로 했습니다.</p>
+        <p><span class="dialogue">"나트륨의 전자 배치는 2, 8, 1이야."</span> 나트륨이 자기 소개를 했습니다. <span class="dialogue">"K껍질에 2개, L껍질에 8개, M껍질에 1개의 전자가 있지. 내 <span class="highlight">원자가 전자</span>는 M껍질의 1개야."</span></p>
+        <p><span class="dialogue">"염소의 전자 배치는 2, 8, 7이야."</span> 염소가 대답했습니다. <span class="dialogue">"K껍질에 2개, L껍질에 8개, M껍질에 7개. 내 원자가 전자는 7개지."</span></p>
+        <p><span class="dialogue">"나트륨은 전자를 1개 잃으면 어떻게 돼?"</span> 주기 선생님이 물었습니다.</p>
+        <p><span class="dialogue">"Na → Na⁺ + e⁻가 되면, 전자 배치가 2, 8이 되어서 네온과 같아져요! 매우 안정해지죠."</span></p>
+        <p>염소가 덧붙였습니다. <span class="dialogue">"나는 전자를 1개 얻으면 Cl + e⁻ → Cl⁻가 되고, 전자 배치가 2, 8, 8이 되어서 아르곤과 같아져. 역시 매우 안정해!"</span></p>
+        <p>이것이 바로 <span class="highlight">옥텟 규칙</span>입니다. 원자는 최외각 전자를 8개(또는 헬륨처럼 2개)로 만들어 안정해지려 합니다. 나트륨이 전자를 주고, 염소가 전자를 받으면 Na⁺와 Cl⁻가 되어 <span class="highlight">이온 결합</span>으로 NaCl(염화나트륨, 소금)이 형성됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span><span class="theme">원자 반지름</span>
+        <h2>원자 크기의 주기적 경향</h2>
+        <p>멘델은 원소들의 크기가 다르다는 것을 발견했습니다. 왜 어떤 원소는 크고 어떤 원소는 작을까요?</p>
+        <p><span class="dialogue">"같은 주기에서 오른쪽으로 갈수록 <span class="highlight">원자 반지름</span>이 작아져."</span> 주기 선생님이 설명했습니다. <span class="dialogue">"2주기의 반지름을 보면, 리튬(152pm) > 베릴륨(111pm) > 붕소(88pm) > 탄소(77pm) > 질소(74pm) > 산소(73pm) > 플루오린(72pm)이야."</span></p>
+        <p><span class="dialogue">"왜 오른쪽으로 갈수록 작아지나요?"</span> 멘델이 물었습니다.</p>
+        <p><span class="dialogue">"양성자 수가 증가하면서 핵의 양전하가 커지지. 하지만 전자는 같은 껍질에 추가돼. 핵의 당기는 힘이 강해지면서 전자구름이 <span class="highlight">핵 쪽으로 수축</span>하는 거야. 이것을 <span class="highlight">유효 핵전하</span>가 증가한다고 해."</span></p>
+        <p><span class="dialogue">"같은 족에서는요?"</span></p>
+        <p><span class="dialogue">"같은 족에서 아래로 갈수록 <span class="highlight">원자 반지름이 증가</span>해. 전자 껍질 수가 늘어나니까 당연히 커지지. 리튬(152pm) < 나트륨(186pm) < 칼륨(227pm) < 루비듐(248pm)처럼."</span></p>
+        <p>이온이 되면 크기도 변합니다. <span class="highlight">양이온</span>은 원자보다 작습니다. 전자를 잃어서 껍질이 줄어들기 때문이지요. 반면 <span class="highlight">음이온</span>은 원자보다 큽니다. 전자가 늘어나 전자 사이의 반발이 증가하기 때문입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span><span class="theme">이온화 에너지</span>
+        <h2>전자를 떼어내는 에너지</h2>
+        <p>주기 선생님이 새로운 개념을 꺼냈습니다. <span class="dialogue">"전자를 떼어내는 것이 쉬운 원소가 있고, 어려운 원소가 있어."</span></p>
+        <p><span class="dialogue">"<span class="highlight">이온화 에너지</span>란 기체 상태 원자에서 전자 1개를 떼어내는 데 필요한 에너지야."</span> 주기 선생님이 정의를 알려주었습니다.</p>
+        <p><span class="dialogue">"같은 주기에서 오른쪽으로 갈수록 이온화 에너지가 <span class="highlight">증가</span>해. 핵 전하가 커져서 전자를 강하게 붙잡기 때문이지. 2주기를 보면 Li(520 kJ/mol) < B(801) < C(1086) < N(1402) < F(1681) < Ne(2081)야."</span></p>
+        <p>나트륨이 자기 전자를 툭 던지며 말했습니다. <span class="dialogue">"나는 이온화 에너지가 낮아서 전자를 쉽게 잃어. 전자 하나를 버리고 싶어서 안달이야!"</span></p>
+        <p>반면 네온이 자부심을 가지고 말했습니다. <span class="dialogue">"나는 비활성 기체야. 이온화 에너지가 매우 높아서 전자를 뺏기지 않아. 나는 완벽해!"</span></p>
+        <p><span class="dialogue">"같은 족에서 아래로 갈수록 이온화 에너지가 <span class="highlight">감소</span>해."</span> 주기 선생님이 덧붙였습니다. <span class="dialogue">"원자 반지름이 커지면서 최외각 전자가 핵에서 멀어지고, 핵의 인력이 약해지기 때문이야. 그래서 세슘이 리튬보다 전자를 더 쉽게 잃지."</span></p>
+        <p>멘델은 원자 반지름과 이온화 에너지가 서로 반대 경향을 가진다는 것을 깨달았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span><span class="theme">전기음성도</span>
+        <h2>전자를 끌어당기는 힘</h2>
+        <p>금이(Au)와 산소(O)가 마주 섰습니다. 둘이 결합하면 누가 전자를 더 많이 끌어당길까요?</p>
+        <p><span class="dialogue">"<span class="highlight">전기음성도</span>란 화학 결합에서 공유 전자쌍을 끌어당기는 능력이야."</span> 주기 선생님이 폴링 척도를 설명했습니다. <span class="dialogue">"플루오린(F)이 가장 높아서 4.0이야. 그 다음이 산소(3.5), 염소와 질소(3.0), 브로민(2.8), 탄소와 황(2.5), 수소(2.1) 순이지."</span></p>
+        <p><span class="dialogue">"비활성 기체는요?"</span> 멘델이 물었습니다.</p>
+        <p><span class="dialogue">"비활성 기체는 결합을 거의 하지 않아서 전기음성도를 정의하지 않아."</span></p>
+        <p>전기음성도 차이로 결합 유형을 예측할 수 있습니다. <span class="dialogue">"차이가 0.5 미만이면 <span class="highlight">비극성 공유결합</span>이야. H-H나 Cl-Cl처럼. 0.5 이상 1.7 미만이면 <span class="highlight">극성 공유결합</span>이고, H-Cl이나 H-O가 여기에 해당해. 1.7 이상이면 <span class="highlight">이온결합</span>이야."</span></p>
+        <p><span class="dialogue">"Na(0.9)와 Cl(3.0)의 차이는 2.1이니까 이온결합이네요!"</span> 멘델이 계산했습니다.</p>
+        <p><span class="dialogue">"같은 주기에서 오른쪽으로 갈수록, 같은 족에서 위로 갈수록 전기음성도가 증가해. 그래서 플루오린이 가장 높은 거야."</span> 전기음성도는 결합의 성질을 예측하는 강력한 도구였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span><span class="theme">금속과 비금속</span>
+        <h2>계단선의 양쪽</h2>
+        <p>원소 광장에서 한바탕 소동이 벌어졌습니다. 왼쪽에 앉은 금속들과 오른쪽에 앉은 비금속들이 논쟁을 벌인 것입니다.</p>
+        <p>철이(Fe)가 일어섰습니다. <span class="dialogue">"우리 <span class="highlight">금속</span>이 없으면 문명이 없어! 철로 건물을 짓고, 구리로 전선을 만들고, 알루미늄으로 비행기를 만들잖아!"</span></p>
+        <p>산소(O)가 반박했습니다. <span class="dialogue">"우리 <span class="highlight">비금속</span>이 없으면 생명이 없어! 산소로 숨 쉬고, 탄소로 유기물을 만들고, 질소로 단백질을 구성하잖아!"</span></p>
+        <p>주기 선생님이 칠판에 대각선 계단 모양의 선을 그었습니다. <span class="dialogue">"계단선 왼쪽이 금속, 오른쪽이 비금속이야. 금속은 광택이 있고, 열과 전기를 잘 전도하며, 연성과 전성이 있고, 전자를 잃어 양이온이 되려 해. 비금속은 광택이 없고, 대부분 부도체이며, 전자를 얻어 음이온이 되려 하지."</span></p>
+        <p><span class="dialogue">"경계에 있는 원소는요?"</span> 멘델이 물었습니다.</p>
+        <p><span class="dialogue">"붕소(B), 규소(Si), 저마늄(Ge), 비소(As) 같은 원소들은 금속과 비금속의 성질을 모두 가지고 있어. <span class="highlight">준금속</span> 또는 반금속이라고 부르지. 규소가 <span class="highlight">반도체</span>의 핵심 재료인 이유가 바로 이 양면적 성질 때문이야."</span></p>
+        <p>철이와 산소가 서로를 바라보다 웃었습니다. <span class="dialogue">"사실 우리는 서로 결합해서 산화철(녹)을 만들잖아!"</span> 금속이 전자를 주고 비금속이 전자를 받으면 이온 결합이 탄생합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span><span class="theme">우주의 기본 단위</span>
+        <h2>별에서 온 원소들</h2>
+        <p>모든 탐험을 마친 멘델은 원소 광장 한가운데에 서서 118개의 좌석을 바라보았습니다. 이제 모든 좌석이 채워져 있었습니다.</p>
+        <p><span class="dialogue">"우주에서 가장 많은 원소가 뭔지 알아?"</span> 주기 선생님이 물었습니다. <span class="dialogue">"수소야. 우주 전체 원소의 약 75%가 수소이고, 약 24%가 헬륨이야. 나머지 116개 원소를 다 합쳐도 1%가 안 돼."</span></p>
+        <p>멘델이 놀랐습니다. <span class="dialogue">"빅뱅 직후에 만들어진 것이 수소와 헬륨이기 때문이에요?"</span></p>
+        <p><span class="dialogue">"맞아. 그 후 별 내부에서 <span class="highlight">핵융합</span>이 일어나면서 헬륨이 탄소로, 탄소가 산소로 바뀌며 더 무거운 원소가 만들어졌어. 하지만 별 내부에서 만들 수 있는 가장 무거운 원소는 철까지야."</span></p>
+        <p><span class="dialogue">"철보다 무거운 원소는요?"</span></p>
+        <p><span class="dialogue">"별이 폭발할 때, 즉 <span class="highlight">초신성 폭발</span>이나 <span class="highlight">중성자별 충돌</span>에서 만들어져. 금, 백금, 우라늄 같은 무거운 원소는 모두 별의 죽음에서 탄생한 거야. 네 몸의 칼슘, 피의 철분도 옛날 어딘가의 별에서 만들어져 우주에 뿌려진 거란다."</span></p>
+        <p>멘델은 밤하늘을 올려다보며 속삭였습니다. <span class="dialogue">"우리는 별의 먼지예요."</span></p>
+        <p><span class="highlight">모든 것은 기본에서 시작됩니다.</span> 양성자 하나가 원소를 결정하고, 원소가 물질을 만들고, 물질이 별을 짓고, 별이 우주를 수놓습니다. 주기율표는 그 우주의 설계도였습니다.</p>
+        <p style="text-align: center; margin-top: 20px; font-style: italic; color: #6a11cb;">— 기본이 탄탄하면 가능성은 무한하다 —</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" onclick="location.href='/creative-book/chem06_season1_quiz.html?season=season3'" style="background: linear-gradient(135deg, #FFD700, #FFA500);">🏆 관문평가</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    function handleScroll() {
+      const wh = window.innerHeight;
+      sections.forEach(s => {
+        const r = s.getBoundingClientRect(), c = s.querySelector('.story-card');
+        if (r.top < wh*0.5 && r.top > -r.height*0.5 && s.dataset.bg) mapContainer.style.backgroundImage = `url('${s.dataset.bg}')`;
+        if (c && r.top < wh*0.75) c.classList.add('active');
+      });
+    }
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+  </script>
+</body>
+</html>

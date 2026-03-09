@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>사랑손님과 어머니 - 브레인파도 창작도서</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      overflow-x: hidden;
+    }
+    /* ===== 배경 전환 ===== */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 0;
+      background-size: cover; background-position: center;
+      transition: opacity 0.8s ease-in-out;
+      opacity: 0;
+    }
+    .bg-layer.active { opacity: 1; }
+    /* 인트로 배경 */
+    #bg-intro { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%); }
+
+    /* ===== 공통 섹션 ===== */
+    section {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 60px 20px;
+    }
+    .card {
+      background: rgba(22, 27, 34, 0.9);
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      max-width: 720px; width: 100%;
+      padding: 40px 32px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .chapter-num {
+      display: inline-block;
+      background: linear-gradient(135deg, #EC407A, #D81B60);
+      color: #fff;
+      font-size: 0.75rem; font-weight: 700;
+      padding: 4px 12px; border-radius: 20px;
+      margin-bottom: 12px; letter-spacing: 1px;
+    }
+    .theme-tag {
+      font-size: 0.85rem; color: #F48FB1; margin-bottom: 8px;
+    }
+    .card h2 {
+      font-size: 1.6rem; color: #fff; margin-bottom: 16px;
+    }
+    .key-sentence {
+      background: rgba(236, 64, 122, 0.1);
+      border-left: 4px solid #EC407A;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-weight: 500;
+      color: #F48FB1;
+    }
+    .card p { line-height: 1.9; margin-bottom: 14px; font-size: 1.05rem; }
+    .highlight { color: #F48FB1; font-weight: 600; }
+    .dialogue {
+      color: #F8BBD9;
+      font-style: italic;
+      border-left: 3px solid #EC407A;
+      padding-left: 12px;
+      margin: 12px 0;
+    }
+    /* ===== 인트로 ===== */
+    .intro-card {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(236,64,122,0.15), rgba(22,27,34,0.95));
+    }
+    .intro-card h1 {
+      font-size: 2.4rem; color: #fff; margin-bottom: 8px;
+    }
+    .intro-card .subtitle {
+      font-size: 1rem; color: #F8BBD9; margin-bottom: 24px;
+    }
+    .meta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+    .meta span {
+      background: rgba(236,64,122,0.2);
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 0.85rem; color: #F48FB1;
+    }
+    .summary-box {
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .summary-box h3 { color: #EC407A; margin-bottom: 10px; font-size: 1rem; }
+    .summary-box ul { list-style: none; }
+    .summary-box li { padding: 6px 0; border-bottom: 1px solid rgba(236,64,122,0.2); font-size: 0.95rem; }
+    .summary-box li:last-child { border-bottom: none; }
+    .characters { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+    .char-chip {
+      background: rgba(236,64,122,0.2);
+      border: 1px solid #EC407A;
+      padding: 8px 16px; border-radius: 24px;
+      font-size: 0.9rem; color: #F8BBD9;
+    }
+    /* ===== 네비게이션 ===== */
+    .nav-btn {
+      position: fixed; bottom: 30px;
+      background: #EC407A; color: #fff;
+      border: none; padding: 14px 28px;
+      border-radius: 30px; font-size: 1rem;
+      cursor: pointer; z-index: 100;
+      box-shadow: 0 4px 15px rgba(236,64,122,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(236,64,122,0.5); }
+    #prevBtn { left: 30px; }
+    #nextBtn { right: 30px; }
+    .btn-start {
+      display: inline-block;
+      background: linear-gradient(135deg, #EC407A, #D81B60);
+      color: #fff; font-weight: 700;
+      padding: 14px 36px; border-radius: 30px;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(236,64,122,0.4);
+      transition: transform 0.2s;
+    }
+    .btn-start:hover { transform: scale(1.05); }
+    .btn-quiz {
+      display: inline-block;
+      background: linear-gradient(135deg, #00C853, #00E676);
+      color: #0d1117; font-weight: 700;
+      padding: 14px 36px; border-radius: 30px;
+      text-decoration: none;
+      margin-top: 20px;
+      box-shadow: 0 4px 15px rgba(0,200,83,0.4);
+    }
+  </style>
+</head>
+<body>
+
+<!-- 배경 레이어 -->
+<div class="bg-layer active" id="bg-intro"></div>
+<div class="bg-layer" id="bg-00" style="background-image:url('/images/창작도서/현대문학06/00.jpg')"></div>
+<div class="bg-layer" id="bg-01" style="background-image:url('/images/창작도서/현대문학06/01.jpg')"></div>
+<div class="bg-layer" id="bg-02" style="background-image:url('/images/창작도서/현대문학06/02.jpg')"></div>
+<div class="bg-layer" id="bg-03" style="background-image:url('/images/창작도서/현대문학06/03.jpg')"></div>
+<div class="bg-layer" id="bg-04" style="background-image:url('/images/창작도서/현대문학06/04.jpg')"></div>
+<div class="bg-layer" id="bg-05" style="background-image:url('/images/창작도서/현대문학06/05.jpg')"></div>
+<div class="bg-layer" id="bg-06" style="background-image:url('/images/창작도서/현대문학06/06.jpg')"></div>
+<div class="bg-layer" id="bg-07" style="background-image:url('/images/창작도서/현대문학06/07.jpg')"></div>
+<div class="bg-layer" id="bg-08" style="background-image:url('/images/창작도서/현대문학06/08.jpg')"></div>
+<div class="bg-layer" id="bg-09" style="background-image:url('/images/창작도서/현대문학06/09.jpg')"></div>
+<div class="bg-layer" id="bg-10" style="background-image:url('/images/창작도서/현대문학06/10.jpg')"></div>
+
+<!-- 인트로 섹션 -->
+<section id="intro" data-bg="intro">
+  <div class="card intro-card">
+    <h1>💕 사랑손님과 어머니</h1>
+    <p class="subtitle">옥희 눈에 비친 어른들의 숨겨진 마음</p>
+    <div class="meta">
+      <span>✍️ 주요섭</span>
+      <span>📅 1935년</span>
+      <span>📚 현대소설</span>
+    </div>
+    <div class="summary-box">
+      <h3>🎭 등장인물</h3>
+      <div class="characters">
+        <span class="char-chip">👧 옥희 (6살 화자)</span>
+        <span class="char-chip">👩 어머니 (젊은 과부)</span>
+        <span class="char-chip">👴 외할머니</span>
+        <span class="char-chip">👨‍🏫 사랑손님</span>
+      </div>
+    </div>
+    <div class="summary-box">
+      <h3>⚡ 갈등 구조</h3>
+      <ul>
+        <li>💔 어머니 vs 사회 — 과부로서의 체면과 마음 사이의 갈등</li>
+        <li>👀 옥희 vs 이해 — 어른들의 세계를 이해하려는 어린 시선</li>
+        <li>💭 마음 vs 표현 — 사랑하지만 표현할 수 없는 슬픔</li>
+      </ul>
+    </div>
+    <a href="#chapter1" class="btn-start">이야기 시작하기 →</a>
+  </div>
+</section>
+
+<!-- Chapter 1 -->
+<section id="chapter1" class="story-section" data-bg="01">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 1</span>
+    <p class="theme-tag">🏠 새로운 손님</p>
+    <h2>사랑방에 온 선생님</h2>
+    <div class="key-sentence">📌 중심 문장: 어느 날 우리 집 사랑방에 새 손님이 들어왔다.</div>
+    <p>나는 <span class="highlight">여섯 살</span> 난 옥희이다. 우리 집에는 어머니와 외할머니, 그리고 나, 이렇게 셋이 산다. 아버지는 내가 네 살 때 <span class="highlight">돌아가셨다</span>고 한다. 아버지 얼굴은 사진으로만 알고 있다.</p>
+    <p>어느 날, 우리 집 <span class="highlight">사랑방</span>에 새 손님이 들어왔다. 어머니는 그분을 "사랑손님"이라고 불렀다.</p>
+    <p class="dialogue">"옥희야, 사랑손님한테 인사드려라."</p>
+    <p>나는 고개를 꾸벅 숙여 인사했다. 사랑손님은 젊은 남자 선생님이었다. 웃을 때 눈이 초승달처럼 휘어졌다.</p>
+  </div>
+</section>
+
+<!-- Chapter 2 -->
+<section id="chapter2" class="story-section" data-bg="02">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 2</span>
+    <p class="theme-tag">🍬 따뜻한 마음</p>
+    <h2>사랑손님의 친절</h2>
+    <div class="key-sentence">📌 중심 문장: 사랑손님은 나에게 참 잘해 주셨다.</div>
+    <p>사랑손님은 나에게 참 잘해 주셨다. 과자도 사 주시고, 재미있는 이야기도 해 주셨다.</p>
+    <p class="dialogue">"옥희야, 이것 좀 선생님 방에 갖다 주렴."</p>
+    <p>어머니 심부름을 하면, 사랑손님은 꼭 <span class="highlight">삯</span>을 주셨다. 동전을 쥐어 주시며 살짝 웃어 주셨다.</p>
+    <p>나는 사랑손님이 참 좋았다. 집에 아버지가 없어서 그런지, 선생님이 계시니 뭔가 <span class="highlight">든든했다</span>.</p>
+    <p class="dialogue">"선생님, 내일도 이야기해 주세요!"</p>
+    <p>사랑손님은 고개를 끄덕이셨다.</p>
+  </div>
+</section>
+
+<!-- Chapter 3 -->
+<section id="chapter3" class="story-section" data-bg="03">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 3</span>
+    <p class="theme-tag">🤔 이상한 행동</p>
+    <h2>어머니의 피하기</h2>
+    <div class="key-sentence">📌 중심 문장: 이상하게도 어머니는 사랑손님을 피하는 것 같았다.</div>
+    <p>그런데 <span class="highlight">이상하게도</span> 어머니는 사랑손님을 피하는 것 같았다. 사랑손님이 마당에 나오시면, 어머니는 얼른 부엌으로 들어가 버리셨다.</p>
+    <p class="dialogue">"어머니, 왜 선생님 오시면 들어가세요?"</p>
+    <p class="dialogue">"아이고, 할 일이 많아서 그래."</p>
+    <p>어머니의 대답이 이상했다. 나는 왜 그러시는지 <span class="highlight">이해할 수가 없었다</span>.</p>
+    <p>사랑손님과 어머니가 마주치면, 둘 다 얼굴이 빨개지는 것 같았다. 어른들은 참 신기했다.</p>
+  </div>
+</section>
+
+<!-- Chapter 4 -->
+<section id="chapter4" class="story-section" data-bg="04">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 4</span>
+    <p class="theme-tag">🐔 닭 선물</p>
+    <h2>사랑손님의 닭</h2>
+    <div class="key-sentence">📌 중심 문장: 사랑손님이 내게 닭 두 마리를 사 오셨다.</div>
+    <p>어느 날, 사랑손님이 내게 <span class="highlight">닭 두 마리</span>를 사 오셨다.</p>
+    <p class="dialogue">"옥희야, 이 닭 예쁘지? 네가 잘 키워 봐."</p>
+    <p>나는 너무 기뻐서 마당에서 닭을 쫓아다녔다. 하얀 닭과 누런 닭이 꼬꼬댁 소리를 내며 뛰어다녔다.</p>
+    <p class="dialogue">"어머니! 선생님이 닭 사 주셨어요!"</p>
+    <p>어머니는 멀리서 닭을 보시더니 <span class="highlight">말없이</span> 고개를 돌리셨다. 그때 외할머니가 마당으로 나오셨다.</p>
+  </div>
+</section>
+
+<!-- Chapter 5 -->
+<section id="chapter5" class="story-section" data-bg="05">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 5</span>
+    <p class="theme-tag">😤 외할머니의 잔소리</p>
+    <h2>체면이 있지, 체면이!</h2>
+    <div class="key-sentence">📌 중심 문장: 외할머니가 어머니에게 잔소리를 하셨다.</div>
+    <p>외할머니가 닭을 보시고는 어머니에게 뭐라고 <span class="highlight">잔소리</span>를 하셨다.</p>
+    <p class="dialogue">"젊은 <span class="highlight">과부</span>가 젊은 남자한테 닭을 받아? <span class="highlight">체면</span>이 있지, 체면이!"</p>
+    <p>나는 그 말이 무슨 뜻인지 몰랐다. 과부가 뭐지? 왜 닭을 받으면 안 되는 거지?</p>
+    <p>어머니는 고개를 푹 숙이고 계셨다. 그 모습이 <span class="highlight">안쓰러웠다</span>.</p>
+    <p class="dialogue">"알겠습니다, 어머니..."</p>
+    <p>어머니의 목소리가 작게 떨렸다.</p>
+  </div>
+</section>
+
+<!-- Chapter 6 -->
+<section id="chapter6" class="story-section" data-bg="06">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 6</span>
+    <p class="theme-tag">💔 돌아간 닭</p>
+    <h2>닭을 돌려보내다</h2>
+    <div class="key-sentence">📌 중심 문장: 그날 밤 어머니는 닭을 사랑손님에게 돌려보내셨다.</div>
+    <p>그날 밤, 어머니는 닭을 사랑손님에게 <span class="highlight">돌려보내셨다</span>.</p>
+    <p class="dialogue">"옥희야, 닭은 선생님이 다시 가져가셨단다."</p>
+    <p class="dialogue">"왜요? 왜 닭을 돌려보내요?"</p>
+    <p>나는 울고 싶었다. 하지만 어머니 얼굴을 보니, 어머니가 더 슬퍼 보였다.</p>
+    <p>다음 날 아침, 사랑손님은 짐을 싸서 <span class="highlight">떠나셨다</span>. 어머니는 바느질을 하다가 자꾸 바깥을 내다보셨다.</p>
+    <p>나는 사랑손님이 어디로 가셨는지 궁금했다.</p>
+  </div>
+</section>
+
+<!-- Chapter 7 -->
+<section id="chapter7" class="story-section" data-bg="07">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 7</span>
+    <p class="theme-tag">🌧️ 비 오는 날의 재회</p>
+    <h2>골목에서 만난 사랑손님</h2>
+    <div class="key-sentence">📌 중심 문장: 비가 오는 날, 나는 골목에서 사랑손님을 다시 만났다.</div>
+    <p>비가 오는 날이었다. 나는 우산을 쓰고 골목을 지나가다가 사랑손님을 <span class="highlight">다시 만났다</span>.</p>
+    <p class="dialogue">"옥희야! 어디 가니?"</p>
+    <p>사랑손님은 나를 보고 반가워하시며 과자를 사 주셨다. 예전처럼 따뜻하게 웃으셨다.</p>
+    <p class="dialogue">"선생님, 우리 집에 언제 다시 오세요?"</p>
+    <p>사랑손님은 잠시 말없이 나를 바라보셨다.</p>
+    <p class="dialogue">"글쎄... 옥희 어머니한테 안부 전해 주렴."</p>
+    <p>선생님 눈이 조금 <span class="highlight">슬퍼 보였다</span>.</p>
+  </div>
+</section>
+
+<!-- Chapter 8 -->
+<section id="chapter8" class="story-section" data-bg="08">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 8</span>
+    <p class="theme-tag">😢 어머니의 눈물</p>
+    <h2>글썽이는 눈</h2>
+    <div class="key-sentence">📌 중심 문장: 어머니는 갑자기 눈물을 글썽이셨다.</div>
+    <p>집에 돌아와 어머니에게 사랑손님을 만났다고 말씀드렸다.</p>
+    <p class="dialogue">"어머니, 오늘 선생님 만났어요. 안부 전해 달래요!"</p>
+    <p>그러자 어머니는 갑자기 눈물을 <span class="highlight">글썽이셨다</span>. 외할머니가 들어오시자 어머니는 얼른 고개를 돌리셨다.</p>
+    <p>나는 어머니가 왜 우시는지 알 것 같으면서도 모르겠다. 아버지가 살아 계셨으면 어머니도 저렇게 <span class="highlight">외롭지</span> 않으셨을까.</p>
+    <p>어머니 손을 잡으니, 손이 차가웠다.</p>
+  </div>
+</section>
+
+<!-- Chapter 9 -->
+<section id="chapter9" class="story-section" data-bg="09">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 9</span>
+    <p class="theme-tag">💭 옥희의 바람</p>
+    <h2>아버지가 되어 주세요</h2>
+    <div class="key-sentence">📌 중심 문장: 나는 사랑손님이 우리 아버지가 되었으면 좋겠다고 생각했다.</div>
+    <p>나는 사랑손님이 우리 <span class="highlight">아버지가 되었으면</span> 좋겠다고 생각했다.</p>
+    <p>선생님이 계시면 어머니도 덜 외로울 것 같았다. 나도 다른 아이들처럼 "아빠"라고 부를 수 있을 것 같았다.</p>
+    <p>하지만 그 말은 차마 어머니에게 할 수가 없었다. 어머니가 또 우실 것 같았으니까.</p>
+    <p class="dialogue">"어머니, 선생님 좋으시죠?"</p>
+    <p>어머니는 대답 없이 바느질만 하셨다. 손이 조금 <span class="highlight">떨리고</span> 있었다.</p>
+  </div>
+</section>
+
+<!-- Chapter 10 -->
+<section id="chapter10" class="story-section" data-bg="10">
+  <div class="card">
+    <span class="chapter-num">CHAPTER 10</span>
+    <p class="theme-tag">🌙 어머니 곁에서</p>
+    <h2>우리 옥희만 있으면 돼</h2>
+    <div class="key-sentence">📌 중심 문장: "우리 옥희만 있으면 돼"라고 말씀하셨다.</div>
+    <p>어느 날 밤, 어머니가 <span class="highlight">흐느끼는</span> 소리에 잠이 깼다. 어머니는 아버지 사진을 보며 울고 계셨다.</p>
+    <p>나는 어머니 옆에 <span class="highlight">살금살금</span> 다가가 손을 잡아 드렸다.</p>
+    <p class="dialogue">"어머니, 안 울어요."</p>
+    <p>어머니는 나를 꼭 안아 주시며 말씀하셨다.</p>
+    <p class="dialogue">"우리 옥희만 있으면 돼."</p>
+    <p>나는 어머니가 사랑손님을 좋아하셨다는 걸 <span class="highlight">어렴풋이</span> 느꼈다. 세상이 어머니에게 너무 가혹한 것 같았다.</p>
+    <p>하지만 여섯 살인 나는 어머니를 위해 해 줄 수 있는 게 없었다. 그저 어머니 곁에서 조용히 잠이 들 뿐이었다.</p>
+    <br/>
+    <a href="modern06_season1_quiz.html" class="btn-quiz">📝 퀴즈 풀러 가기</a>
+  </div>
+</section>
+
+<!-- 네비게이션 버튼 -->
+<button id="prevBtn" class="nav-btn" style="display:none;">← 이전</button>
+<button id="nextBtn" class="nav-btn">다음 →</button>
+
+<script>
+  const sections = document.querySelectorAll('section');
+  const bgLayers = document.querySelectorAll('.bg-layer');
+  let currentIndex = 0;
+
+  function updateBg() {
+    const target = sections[currentIndex].dataset.bg;
+    bgLayers.forEach(layer => layer.classList.remove('active'));
+    const activeLayer = document.getElementById('bg-' + target);
+    if (activeLayer) activeLayer.classList.add('active');
+  }
+
+  function scrollToSection(index) {
+    sections[index].scrollIntoView({ behavior: 'smooth' });
+    currentIndex = index;
+    updateBg();
+    updateButtons();
+  }
+
+  function updateButtons() {
+    document.getElementById('prevBtn').style.display = currentIndex === 0 ? 'none' : 'block';
+    document.getElementById('nextBtn').style.display = currentIndex === sections.length - 1 ? 'none' : 'block';
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if (currentIndex > 0) scrollToSection(currentIndex - 1);
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (currentIndex < sections.length - 1) scrollToSection(currentIndex + 1);
+  });
+
+  // Intersection Observer로 스크롤 감지
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        currentIndex = Array.from(sections).indexOf(entry.target);
+        updateBg();
+        updateButtons();
+      }
+    });
+  }, { threshold: 0.5 });
+
+  sections.forEach(section => observer.observe(section));
+
+  // 초기 상태
+  updateBg();
+  updateButtons();
+</script>
+
+</body>
+</html>

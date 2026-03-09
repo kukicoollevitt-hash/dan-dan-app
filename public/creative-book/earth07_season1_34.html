@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌍 지구의 숨소리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지구과학07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1E3A5F 0%, #2E5077 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(30, 58, 95, 0.15);
+      color: #1E3A5F;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #1E3A5F;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #2E5077;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #87CEEB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(30, 58, 95, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(46, 80, 119, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(30, 58, 95, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌍 지구의 숨소리</h1>
+        <p class="subtitle">
+          — 대기의 비밀을 찾아 떠나는 여행 —<br>
+          교과기반 창작도서 · 지구과학 07 (3·4학년)
+        </p>
+        <div class="characters">
+          <h3>🌍 등장인물 소개</h3>
+          <p><strong>▸ 하늘이:</strong> 호기심 많은 열한 살 소녀. 하늘의 비밀이 궁금해요.</p>
+          <p><strong>▸ 바람이:</strong> 자유로운 바람 요정. 세상을 돌아다니며 소식을 전해요.</p>
+          <p><strong>▸ 구름이:</strong> 부드러운 구름 요정. 물방울을 모아 비를 만들어요.</p>
+          <p><strong>▸ 온도 박사:</strong> 대기층의 비밀을 알려주는 현명한 안내자.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">대기의 발견</span>
+        <h2>지구를 감싸는 보이지 않는 이불</h2>
+        <p>열한 살 하늘이는 밤하늘을 올려다보는 것을 좋아해요. 별이 반짝반짝 빛나는 밤, 하늘이는 궁금해졌어요. <br><br><span class="dialogue">"우주는 깜깜한데, 낮에 하늘은 왜 파란색일까?"</span></p>
+        <p>그때 살랑살랑 바람이 불더니, 작은 요정이 나타났어요. <br><br><span class="dialogue">"안녕, 나는 바람이야! 네 궁금증을 풀어줄게."</span><br><br>바람이가 하늘이의 손을 잡고 하늘 위로 날아올랐어요.</p>
+        <p>지구 위에는 두꺼운 공기 층이 감싸고 있었어요. <span class="dialogue">"이게 바로 <span class="highlight">'대기'</span><br><br>야. 지구를 따뜻하게 감싸는 이불 같은 거야."</span><br><br>대기가 없다면 낮에는 너무 뜨겁고 밤에는 너무 추울 거예요. 달처럼요!</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">대기의 구조</span>
+        <h2>대기의 층층 케이크</h2>
+        <p>바람이가 하늘이를 더 높이 데려갔어요. 그런데 신기하게도 올라갈수록 공기가 달라졌어요. 온도 박사가 나타나 설명해 주었어요. <br><br><span class="dialogue">"대기는 케이크처럼 여러 층으로 나뉘어 있단다."</span></p>
+        <p>가장 아래층은 <span class="highlight">'대류권'</span><br><br>이에요. 우리가 숨 쉬는 공기가 있고, 구름과 비가 만들어지는 곳이에요. 그 위는 <span class="highlight">'성층권'</span><br><br>이에요. 비행기가 다니는 곳이지요. 여기에는 오존층이 있어서 태양의 나쁜 자외선을 막아줘요.</p>
+        <p>더 위로 가면 <span class="highlight">'중간권'</span><br><br>이 있어요. 별똥별이 타서 빛나는 곳이에요. 그리고 가장 높은 곳은 <span class="highlight">'열권'</span><br><br>이에요. 오로라가 춤추는 신비로운 곳이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">기압의 비밀</span>
+        <h2>공기도 무겁다고?</h2>
+        <p>하늘이가 지상으로 돌아오자, 온도 박사가 물었어요. <br><br><span class="dialogue">"하늘아, 공기에 무게가 있다는 거 알아?"</span><br><br><span class="dialogue">"공기가요? 느껴지지 않는데요?"</span></p>
+        <p>온도 박사가 웃었어요. <br><br><span class="dialogue">"네 머리 위에서 하늘 끝까지 쌓인 공기의 무게가 약 1톤이나 된단다!"</span><br><br>하늘이가 깜짝 놀랐어요. <br><br><span class="dialogue">"1톤이요? 코끼리 한 마리만큼이요?"</span></p>
+        <p><span class="dialogue">"맞아. 하지만 사방에서 똑같이 누르니까 느끼지 못하는 거야."</span><br><br>이 공기가 누르는 힘을 <span class="highlight">'기압'</span><br><br>이라고 해요. 높은 산에 올라가면 공기가 적어져서 기압이 낮아지고, 숨쉬기가 힘들어져요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">대류의 원리</span>
+        <h2>따뜻한 공기가 올라가요</h2>
+        <p>햇살이 따뜻한 오후, 하늘이는 운동장에서 뛰어놀았어요. <br><br><span class="dialogue">"왜 아스팔트는 이렇게 뜨겁고, 그늘은 시원할까?"</span></p>
+        <p>바람이가 설명해 주었어요. <br><br><span class="dialogue">"태양이 땅을 데우면, 땅 위의 공기도 뜨거워져. 뜨거워진 공기는 가벼워져서 위로 올라가지."</span><br><br>이것을 <span class="highlight">'대류'</span><br><br>라고 해요.</p>
+        <p>따뜻한 공기가 올라가면, 그 빈자리를 채우려고 옆에서 차가운 공기가 밀려와요. 이것이 바로 바람이에요! 구름이도 나타났어요. <br><br><span class="dialogue">"따뜻한 공기가 올라오면 나를 만들어줘요!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">구름의 탄생</span>
+        <h2>구름은 어떻게 만들어질까?</h2>
+        <p>구름이가 하늘이를 구름 공장으로 초대했어요. <br><br><span class="dialogue">"구름이 어떻게 만들어지는지 보여줄게!"</span></p>
+        <p>먼저, 바다와 강에서 물이 증발해요. 눈에 보이지 않는 수증기가 되어 하늘로 올라가지요. 수증기가 높이 올라가면, 공기가 차가워져요. 그래서 수증기가 작은 물방울로 변해요. 이것을 <span class="highlight">'응결'</span><br><br>이라고 해요.</p>
+        <p><span class="dialogue">"그런데 물방울이 되려면 뭔가에 붙어야 해요. 먼지, 꽃가루, 소금 알갱이 같은 거요."</span><br><br>이것을 <span class="highlight">'응결핵'</span><br><br>이라고 해요. 아주 작은 먼지가 구름을 만드는 데 꼭 필요한 거예요!</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">비의 원리</span>
+        <h2>비야 비야 내려라</h2>
+        <p><span class="dialogue">"구름이 있다고 바로 비가 오는 건 아니야."</span><br><br>구름이가 설명했어요. 구름 속 물방울은 머리카락보다 100배나 작아요. 너무 가벼워서 공중에 둥둥 떠 있을 수 있어요.</p>
+        <p>비가 되려면 물방울이 커져야 해요. 작은 물방울들이 서로 합쳐져서 점점 커지면, 마침내 공기가 떠받칠 수 없을 만큼 무거워져요. 그러면 아래로 떨어지는데, 이것이 비예요!</p>
+        <p><span class="dialogue">"빗방울 하나가 되려면 구름 물방울 약 백만 개가 합쳐져야 한단다."</span><br><br>높은 곳에서는 물방울이 얼음이 되기도 해요. 이 얼음이 떨어지다가 녹으면 비, 안 녹으면 눈이에요!</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">오존층의 역할</span>
+        <h2>보이지 않는 방패, 오존층</h2>
+        <p>성층권에 도착하자, 푸른 빛이 은은하게 감싸고 있었어요. <span class="dialogue">"이것이 <span class="highlight">오존층</span><br><br>이야. 지구의 선글라스라고 할 수 있지."</span></p>
+        <p>오존은 산소 원자 세 개가 모인 특별한 기체예요. 이 오존층이 태양에서 오는 나쁜 자외선을 막아줘요. 자외선은 피부암이나 눈병을 일으킬 수 있거든요.</p>
+        <p><span class="dialogue">"그런데 한때 오존층에 구멍이 뚫렸었어."</span><br><br>사람들이 만든 프레온 가스 때문이었어요. 다행히 사람들이 프레온 가스 사용을 줄이기로 약속해서 오존층이 천천히 회복되고 있답니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">지구 온난화</span>
+        <h2>지구가 뜨거워지고 있어요</h2>
+        <p>온도 박사가 걱정스러운 얼굴로 말했어요. <br><br><span class="dialogue">"요즘 지구의 온도가 점점 올라가고 있단다."</span><br><br>이것을 <span class="highlight">'지구 온난화'</span><br><br>라고 해요.</p>
+        <p>태양에서 온 열이 지구를 데우면, 그 열의 일부는 우주로 나가야 해요. 그런데 대기 중의 이산화탄소가 열을 붙잡아두는 거예요. 마치 두꺼운 이불을 덮고 자면 더운 것처럼요.</p>
+        <p><span class="dialogue">"어떻게 하면 될까요?"</span><br><br><span class="dialogue">"에너지를 아끼고, 나무를 심고, 재활용을 열심히 하면 도움이 된단다."</span><br><br>하늘이는 작은 실천부터 시작하기로 마음먹었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">빛의 마법</span>
+        <h2>대기가 만드는 빛의 마법</h2>
+        <p>비가 그치고 해가 나왔어요. 하늘에 아름다운 무지개가 떴어요! <br><br><span class="dialogue">"우와! 무지개다!"</span></p>
+        <p>바람이가 설명해 주었어요. <br><br><span class="dialogue">"햇빛이 빗방울 속을 지나갈 때, 여러 색깔로 나뉘는 거야."</span><br><br>햇빛은 사실 빨주노초파남보 일곱 색깔이 합쳐진 거예요. 빗방울이 프리즘처럼 햇빛을 나눠서 우리 눈에 무지개로 보이는 거지요.</p>
+        <p><span class="dialogue">"석양이 빨갛게 물드는 것도 대기 때문이야."</span><br><br>밤하늘의 오로라도 대기가 만드는 빛이에요. <span class="highlight">대기가 이렇게 아름다운 것도 만들어내는구나!</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">지구와의 약속</span>
+        <h2>지구의 숨소리를 들어요</h2>
+        <p>모든 여행을 마친 하늘이는 다시 마당에 섰어요. 바람이 살랑살랑 불었어요. <br><br><span class="dialogue">"바람은 지구가 숨 쉬는 거야. 공기가 이리저리 움직이면서 열과 수분을 나눠주거든."</span></p>
+        <p>하늘이는 눈을 감았어요. 뺨에 닿는 바람이 느껴졌어요. <br><br><span class="dialogue">"지구의 대기는 살아 있는 것 같아요. 숨 쉬고, 움직이고, 우리를 보호하고 있어요."</span></p>
+        <p>하늘이는 약속했어요. 공기를 깨끗하게 지키고, 지구를 아끼겠다고요. <span class="highlight">「대기는 지구의 생명을 지키는 소중한 존재입니다.」</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(30, 58, 95, 0.15); border-radius: 16px;">
+          <strong style="color: #1E3A5F; font-size: 20px;">🌍 「고마워, 지구의 숨소리야.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth07_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

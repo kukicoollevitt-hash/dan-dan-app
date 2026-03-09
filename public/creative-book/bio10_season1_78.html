@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍞 빵 조각 뽀미의 몸속 대모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #E65100 0%, #BF360C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: block;
+      color: #E65100;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2d2d2d;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 17px;
+      line-height: 2;
+      color: #444;
+      margin-bottom: 15px;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .story-card .highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(230, 81, 0, 0.2) 60%);
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #E65100;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(230, 81, 0, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #BF360C;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #BF360C;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #E65100;
+      font-weight: 500;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      pointer-events: auto;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFD700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 닫기 버튼 */
+    .close-btn { display: none;
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .close-btn:hover {
+      transform: scale(1.1);
+      background: #fff;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .intro-section {
+        padding: 30px 20px;
+      }
+
+      .intro-content {
+        padding: 40px 25px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+
+      .story-section {
+        padding: 30px 20px;
+        justify-content: center !important;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-section:nth-child(odd) .story-card,
+      .story-section:nth-child(even) .story-card {
+        transform: translateY(50px);
+      }
+
+      .story-card.active {
+        transform: translateY(0);
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 15px;
+        line-height: 1.9;
+      }
+
+      .close-btn { display: none;
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🍞 빵 조각 뽀미의 몸속 대모험</h1>
+        <p class="subtitle">
+          — 소화 기관 대탐험 —<br>
+          "음식이 어떻게 몸의 일부가 될까?"
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 🍞 뽀미:</strong> 호기심 많은 빵 조각. 어느 날 아침, 인간의 입속으로 들어가 대모험을 시작한다.</p>
+          <p><strong>▸ 🥖 빵울이:</strong> 뽀미의 충실한 친구이자 동행. 겁이 많지만 용감하게 따라간다.</p>
+          <p><strong>▸ 💧 아밀레이스:</strong> 입속 효소 요정. 녹말을 달콤한 당으로 바꾸는 마법을 부린다.</p>
+          <p><strong>▸ 🧪 펩시노:</strong> 위장의 산성 늪 대장. 단백질을 분해하는 강력한 전사.</p>
+          <p><strong>▸ 🌿 빌리:</strong> 소장 융털 마을의 촌장. 영양분을 혈관으로 안내한다.</p>
+          <p><strong>▸ 🦠 비피:</strong> 대장 미생물 마을의 유익균 대표. 뽀미의 마지막 여정을 돕는다.</p>
+          <p><strong>▸ 💪 영양소 삼총사 (카보·프로틴·리피):</strong> 탄수화물, 단백질, 지방의 의인화 캐릭터.</p>
+          <p><strong>▸ 👦 준이:</strong> 뽀미를 먹은 초등학생. 뽀미의 대모험이 그의 몸 안에서 펼쳐진다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1화</span>
+        <span class="theme">구강 — 기계적 소화의 시작</span>
+        <h2>🍞 뽀미의 운명이 바뀌다</h2>
+        <p>따뜻한 오후, 열두 살 소년 준이가 갓 구운 식빵 한 조각을 한 입 베어 물었습니다. 바로 그 순간, 빵의 한 조각인 '뽀미'의 운명이 바뀌었습니다. 뽀미는 빵 속에서 폭신하고 편안하게 지내던 평범한 <span class="highlight">녹말</span> 덩어리였습니다. 녹말은 포도당이 수천 개 연결된 <span class="highlight">다당류</span>로, 식물이 에너지를 저장하는 형태입니다. 그런데 갑자기 세상이 어두워지더니, 뜨겁고 축축한 동굴 같은 곳으로 빨려 들어갔습니다.</p>
+        <p><span class="dialogue">"으아아아! 여기가 어디야?!"</span> 뽀미가 비명을 지르는 순간, 위에서 하얗고 거대한 바위가 쿵! 하고 내려찍었습니다. 그것은 바위가 아니라 <span class="highlight">'어금니'</span>였습니다. 뽀미의 몸이 쩍 갈라졌습니다. 오른쪽에서도 왼쪽에서도, 아래에서도 위에서도 어금니가 으드득으드득 씹어 댔습니다. 옆에서 같이 부서지고 있던 빵 조각 '빵울이'가 말했습니다. <span class="dialogue">"울지 마, 뽀미. 이건 <span class="highlight">'저작'</span>이라고 해. 이빨이 음식을 잘게 부수는 <span class="highlight">기계적 소화</span>야. 표면적을 넓혀서 뒤에 있는 효소들이 일을 쉽게 할 수 있게 하는 거지."</span></p>
+        <p>입안에는 <span class="highlight">절치(앞니), 견치(송곳니), 소구치, 대구치(어금니)</span>가 역할을 나누어 일하고 있었습니다. 성인의 치아 32개가 마치 공장의 기계들처럼 체계적으로 배치되어 있었습니다. 앞니(8개)가 음식을 자르고, 송곳니(4개)가 찢고, 어금니(20개)가 으깨는 것이었습니다. <span class="highlight">저작근</span>이 턱을 움직여 분당 약 70~120번의 저작 운동을 일으켰습니다.</p>
+        <p><span class="highlight">혀</span>가 뽀미를 이리저리 굴리며 이빨 사이로 정확하게 밀어 넣었습니다. 혀는 맛을 느끼는 <span class="highlight">미뢰</span>가 약 10,000개나 있어 단맛, 짠맛, 신맛, 쓴맛, 감칠맛을 감지할 뿐 아니라, 8개의 근육으로 이루어져 음식을 고르게 씹히도록 위치를 잡아주는 일도 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2화</span>
+        <span class="theme">침샘 — 화학적 소화의 시작</span>
+        <h2>💧 아밀레이스의 마법</h2>
+        <p>이빨에 의해 잘게 부서진 뽀미는 이제 죽처럼 흐물흐물한 <span class="highlight">식괴</span> 상태가 되었습니다. 그런데 이상한 일이 벌어졌습니다. 입안 사방에서 투명한 액체가 콸콸 쏟아져 나오는 것이었습니다.</p>
+        <p><span class="dialogue">"비가 온다! 입안에서 비가 와!"</span> 뽀미가 놀라 외쳤습니다. 이 투명한 액체는 바로 <span class="highlight">타액</span>, 즉 침이었습니다. 침은 세 쌍의 <span class="highlight">타액선</span>—귀밑샘(이하선), 턱밑샘(악하선), 혀밑샘(설하선)—에서 분비됩니다. 사람은 하루에 약 <span class="highlight">1~1.5리터</span>의 침을 분비하며, 침은 99.5%가 물이고 나머지는 효소, 점액, 항체 등으로 구성됩니다.</p>
+        <p>투명한 액체 속에서 작은 요술사가 나타났습니다. 반짝이는 모자를 쓰고 지팡이를 들고 있었습니다. <span class="dialogue">"나는 <span class="highlight">'타액 아밀라아제'</span>야! 침 속에 사는 소화 효소라고 해. 네 몸을 분해하러 왔어."</span></p>
+        <p>아밀레이스가 빙긋 웃으며 설명했습니다. <span class="dialogue">"진정해. 네 몸은 녹말로 되어 있는데, 녹말은 분자량이 너무 커서 소장에서 흡수할 수 없어. 그래서 나 같은 효소가 녹말 사슬의 <span class="highlight">α-1,4 글리코시드 결합</span>을 가수분해하여 <span class="highlight">'엿당'</span>이라는 이당류로 잘라 주는 거야. 이걸 <span class="highlight">'화학적 소화'</span>라고 해."</span></p>
+        <p>아밀레이스가 지팡이를 휘두르자, 뽀미의 녹말 사슬이 톡톡 끊어지며 작은 조각들로 변하기 시작했습니다. 효소는 <span class="highlight">기질 특이성</span>이 있어서 아밀레이스는 오직 녹말만 분해합니다. 한편, 침에는 <span class="highlight">뮤신</span>이라는 점액 단백질이 있어 음식을 촉촉하게 적셔 삼키기 쉽게 만들고, <span class="highlight">라이소자임</span>이라는 항균 효소가 세균의 세포벽을 분해합니다. 이빨이 물리적으로 부수고, 효소가 화학적으로 분해하는—이 두 가지가 합쳐져야 진짜 소화가 시작되는 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3화</span>
+        <span class="theme">식도와 위 — 산성 환경의 소화</span>
+        <h2>🌋 펩시노의 산성 늪</h2>
+        <p>침과 이빨의 작업이 끝나자, 혀가 뽀미를 입 뒤쪽인 <span class="highlight">인두</span>로 밀었습니다. <span class="highlight">연하</span> 반사가 일어나며 <span class="highlight">후두개</span>가 기관을 막아 음식이 폐로 들어가는 것을 방지했습니다. 뽀미는 미끄럼틀 같은 <span class="highlight">'식도'</span>로 떨어졌습니다. 식도는 약 25cm 길이의 근육 관으로, <span class="highlight">연동운동</span>이라는 파도 같은 근육 수축으로 음식을 아래로 밀어냅니다. 윤상근과 종주근이 교대로 수축과 이완을 반복하여, 거꾸로 서 있어도 음식이 위로 가는 것이 바로 이 연동운동 덕분입니다.</p>
+        <p>약 8~10초 후, 뽀미는 <span class="highlight">분문</span>이라는 괄약근을 통과해 커다란 주머니 같은 공간에 떨어졌습니다. 그 순간 코를 찌르는 시큼한 냄새와 함께 뜨거운 액체가 사방에서 쏟아져 나왔습니다. <span class="dialogue">"뜨거워! 따가워!"</span> 뽀미가 비명을 질렀습니다.</p>
+        <p><span class="dialogue">"여기는 <span class="highlight" data-tooltip="위(stomach): 음식물을 저장하고 위액으로 소화하는 주머니 모양의 소화 기관">위</span>야. 그리고 이 액체는 <span class="highlight" data-tooltip="위액(gastric juice): 염산과 펩신을 포함하여 단백질을 분해하는 강산성 소화액">위액</span>이지."</span> 위 벽에서 나타난 엄격한 표정의 경비대장 '펩시노'가 말했습니다. 위액은 하루에 약 2~3리터 분비되며, <span class="highlight" data-tooltip="벽세포(parietal cell): 위벽에서 염산과 내인성 인자를 분비하는 세포">벽세포</span>에서 분비되는 <span class="highlight" data-tooltip="염산(HCl): pH 1~2의 강산으로 단백질 분해를 돕고 세균을 죽임">염산</span>으로 인해 pH가 1~2에 달하는 강산성 환경입니다. 펩시노의 정체는 <span class="highlight" data-tooltip="펩시노겐(pepsinogen): 펩신의 불활성 전구체로 염산에 의해 활성화됨">펩시노겐</span>이라는 불활성 전구효소로, 염산에 의해 활성화되어 <span class="highlight" data-tooltip="펩신(pepsin): 단백질을 폴리펩티드로 분해하는 위의 주요 소화 효소">펩신</span>이 됩니다. 펩신은 <span class="highlight">단백질</span>의 펩티드 결합을 끊어 <span class="highlight">폴리펩티드</span>로 분해합니다.</p>
+        <p><span class="dialogue">"이 위산이 왜 위장 자체를 녹이지 않냐고? <span class="highlight">점액세포</span>가 끈적한 <span class="highlight">점액층</span>과 <span class="highlight">중탄산이온</span>을 분비해서 자기 자신은 보호하거든."</span> 위의 세 겹 근육층이 수축하며 뽀미를 반죽하듯 으깨고 비볐습니다. 뽀미의 형태는 완전히 사라지고, <span class="highlight">'미즙'</span>이라는 걸쭉한 죽 상태가 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4화</span>
+        <span class="theme">소장 — 소화와 흡수의 중심</span>
+        <h2>🌿 빌리 촌장의 융털 마을</h2>
+        <p>위에서 죽처럼 변한 뽀미(이제는 미즙)는 위의 출구인 <span class="highlight">'유문'</span>을 통과해 다음 관으로 밀려 들어갔습니다. 그곳은 상상을 초월하는 곳이었습니다. 길이가 무려 약 <span class="highlight">6~7미터</span>나 되는 구불구불한 터널! 바로 <span class="highlight">'소장'</span>이었습니다. 소장은 <span class="highlight">십이지장</span>, <span class="highlight">공장</span>, <span class="highlight">회장</span>으로 나뉩니다.</p>
+        <p>하지만 더 놀라운 것은 소장의 벽이었습니다. 먼저 <span class="highlight">윤상주름</span>이 장벽을 주름지게 만들고, 그 위에 솜털 같은 작은 돌기들이 빼곡하게 나 있었습니다. 수백만 개의 손가락 모양 돌기—바로 <span class="highlight">'융털'</span>이었습니다. 각 융털의 상피세포 표면에는 더 작은 <span class="highlight">미세융털</span>이 솔처럼 나 있어 <span class="highlight">솔가장자리</span>를 형성했습니다. 이 모든 구조 덕분에 소장 내면의 총 표면적은 약 <span class="highlight">200~300m²</span>, 테니스 코트 크기에 달합니다!</p>
+        <p><span class="dialogue">"여기가 진짜 흡수가 일어나는 곳이야!"</span> 융털 하나에서 안내원이 나타났습니다. 소장 안내원 '빌리'였습니다. 빌리는 뽀미에게 설명했습니다. <span class="dialogue">"십이지장에 들어오면 먼저 <span class="highlight" data-tooltip="이자액(pancreatic juice): 이자에서 분비되는 소화액으로 다양한 소화 효소 포함">이자액</span>과 <span class="highlight" data-tooltip="담즙(bile): 간에서 생성되어 담낭에 저장되며 지방 유화를 돕는 액체">담즙</span>이 합류해. <span class="highlight" data-tooltip="이자(췌장): 소화 효소를 분비하고 인슐린을 생산하는 이중 기능의 기관">이자(췌장)</span>에서 나온 효소들—<span class="highlight" data-tooltip="트립신(trypsin): 단백질을 아미노산으로 분해하는 이자 효소">트립신</span>(단백질 분해), <span class="highlight" data-tooltip="리파아제(lipase): 지방을 지방산과 글리세롤로 분해하는 효소">리파아제</span>(지방 분해), <span class="highlight" data-tooltip="아밀라아제(amylase): 녹말을 이당류로 분해하는 소화 효소">아밀라아제</span>(녹말 분해)—이 영양소를 최종적으로 분해하지. <span class="highlight">간</span>에서 만들어져 <span class="highlight">담낭</span>에 저장된 담즙은 <span class="highlight">담즙산염</span>으로 지방을 <span class="highlight" data-tooltip="유화(emulsification): 지방을 작은 방울로 분산시켜 효소가 작용하기 쉽게 만드는 과정">유화</span>시켜 리파아제가 작용하기 쉽게 만들어."</span></p>
+        <p>뽀미의 녹말은 이미 <span class="highlight">포도당</span>이라는 <span class="highlight">단당류</span>로 분해된 상태였습니다. 빌리가 손짓하자, 융털의 상피세포에 있는 <span class="highlight">Na⁺-포도당 공동수송체</span>가 포도당을 <span class="highlight">능동수송</span>으로 빨아들이기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5화</span>
+        <span class="theme">영양소 흡수와 혈액 수송</span>
+        <h2>🩸 혈액의 일부가 되다</h2>
+        <p>융털 속으로 빨려 들어간 뽀미는 완전히 다른 존재가 되어 있었습니다. 빵 조각이었던 뽀미는 이제 <span class="highlight" data-tooltip="포도당(glucose): 분자식 C₆H₁₂O₆의 단당류로 세포 호흡의 주요 에너지원">포도당</span>이라는 분자량 180의 작은 분자가 된 것입니다. 반짝이는 육각형 모양의 투명한 고리 구조—그것이 새로운 뽀미의 모습이었습니다.</p>
+        <p>융털 안에는 가느다란 혈관이 거미줄처럼 퍼져 있었습니다. <span class="highlight">모세혈관</span>이었습니다. 포도당과 아미노산 같은 <span class="highlight">수용성 영양소</span>는 융털 내부의 모세혈관으로 흡수됩니다. 반면, 지방산과 글리세롤은 상피세포 안에서 다시 <span class="highlight">트리글리세리드(중성지방)</span>로 합성되어 <span class="highlight">킬로미크론</span>이라는 지단백 입자로 포장된 뒤 <span class="highlight">암죽관</span>이라는 림프관으로 들어갑니다.</p>
+        <p>뽀미는 모세혈관 속으로 스르르 빨려 들어갔습니다. 순간, 뽀미는 붉은 강물 속에 있었습니다. <span class="highlight">적혈구</span>가 빠르게 흘러가고 있었고, 뽀미는 혈장에 녹아 그 흐름에 합류했습니다. <span class="dialogue">"여기는 혈관이야! 너는 이제 혈액의 일부가 된 거야."</span> 옆을 지나가던 적혈구가 말했습니다.</p>
+        <p>소장에서 흡수된 영양소는 모세혈관이 합쳐져 형성되는 <span class="highlight">'간문맥'</span>이라는 특별한 혈관을 타고 먼저 <span class="highlight">'간'</span>으로 향합니다. 간은 몸의 대사 중추로, 약 500가지 이상의 기능을 수행합니다. 뽀미가 간에 도착하자, <span class="highlight">간세포</span>들이 분주하게 움직이고 있었습니다. <span class="dialogue">"포도당이 왔구나! 혈당 조절이 필요해. <span class="highlight">인슐린</span> 신호가 오면 포도당을 <span class="highlight">'글리코겐'</span>으로 중합하여 저장할게. 나중에 <span class="highlight">글루카곤</span> 신호가 오면 다시 포도당으로 분해해서 내보낼 거야."</span></p>
+        <p>뽀미의 일부는 즉시 <span class="highlight">하대정맥</span>을 통해 심장으로, 그리고 온몸으로 출발했고, 일부는 글리코겐이라는 형태로 간에 차곡차곡 저장되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6화</span>
+        <span class="theme">세포 호흡 — 에너지 생산</span>
+        <h2>⚡ ATP로 변신하다</h2>
+        <p>혈액을 타고 여행하던 뽀미(포도당)는 한 <span class="highlight">골격근 세포</span> 앞에 도착했습니다. 세포막에 있는 <span class="highlight">GLUT4 수송체</span>라는 통로가 인슐린 신호에 반응하여 세포막으로 이동하고, 뽀미를 <span class="highlight">촉진확산</span>으로 세포 안으로 들였습니다.</p>
+        <p>세포 안은 마치 작은 도시 같았습니다. 핵이라는 사령부가 있고, 소포체라는 공장이 있고, 그리고 뽀미가 향하는 곳—<span class="highlight">'미토콘드리아'</span>라는 발전소가 있었습니다. 미토콘드리아 안에서 관리자 '미토'가 나타났습니다. <span class="dialogue">"여기는 세포의 에너지 발전소야. 네가 여기서 산소와 만나면, 놀라운 일이 벌어져."</span></p>
+        <p>먼저 세포질에서 <span class="highlight">해당</span>이 일어났습니다. 포도당 1분자가 2분자의 <span class="highlight">피루브산</span>으로 분해되며 2 ATP와 2 NADH가 생성되었습니다. 피루브산은 미토콘드리아 기질로 들어가 <span class="highlight">아세틸-CoA</span>로 전환된 뒤 <span class="highlight">시트르산 회로</span>에 진입했습니다. 여기서 NADH와 FADH₂ 형태로 전자가 수집되었습니다.</p>
+        <p>미토의 말이 끝나기도 전에, <span class="highlight">헤모글로빈</span>에 실려 온 산소 분자가 뽀미 옆에 도착했습니다. <span class="dialogue">"준비됐어?"</span> 산소가 물었습니다. 뽀미가 고개를 끄덕이자, 둘은 미토콘드리아 내막의 <span class="highlight">전자전달계</span>로 들어갔습니다. NADH와 FADH₂에서 방출된 전자가 4개의 복합체를 거치며 수소 이온을 막간 공간으로 펌핑했고, 이 <span class="highlight">양성자 기울기</span>가 <span class="highlight">ATP 합성효소</span>를 돌려 대량의 ATP를 생산했습니다. 산소는 최종 전자 수용체로서 전자와 수소 이온을 받아 물이 되었습니다.</p>
+        <p>이것이 바로 <span class="highlight">'세포 호흡'</span>입니다: <span class="highlight">C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + 약 36~38 ATP</span>. 뽀미는 더 이상 포도당이 아니었습니다. <span class="highlight">'ATP(adenosine triphosphate)'</span>라는 에너지 화폐로 변신한 것입니다!</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7화</span>
+        <span class="theme">대장 — 수분 흡수와 장내 미생물</span>
+        <h2>🦠 비피의 미생물 마을</h2>
+        <p>뽀미의 대부분은 포도당이 되어 흡수되었지만, 소장을 통과하면서도 흡수되지 못한 것들이 있었습니다. <span class="highlight">셀룰로스</span> 같은 <span class="highlight">식이섬유</span>와 소화되지 않은 찌꺼기들이었습니다. 인간은 셀룰로스의 β-1,4 글리코시드 결합을 끊는 <span class="highlight">셀룰라아제</span>가 없어서 식이섬유를 소화하지 못합니다. 이들은 소장의 끝에서 <span class="highlight">'회맹판'</span>을 통과해 <span class="highlight">'대장'</span>이라는 새로운 공간으로 넘어갔습니다.</p>
+        <p>대장은 소장보다 굵고 짧았습니다. 약 <span class="highlight">1.5미터</span> 길이의 이 관은 <span class="highlight">맹장</span>, <span class="highlight">결장</span>—상행, 횡행, 하행, S상결장—, <span class="highlight">직장</span>, <span class="highlight">항문관</span>으로 구성됩니다. 찌꺼기들을 맞이한 것은 어마어마한 수의 미생물이었습니다.</p>
+        <p><span class="dialogue">"어서 와! 나는 장내 세균 <span class="highlight" data-tooltip="비피도박테리움(Bifidobacterium): 대장에 서식하는 유익균으로 장 건강을 돕고 면역력을 높임">비피도박테리움</span>이야!"</span> 작고 통통한 세균이 반갑게 인사했습니다. 대장에는 약 <span class="highlight">100조(10¹⁴) 마리</span>의 장내 세균이 살고 있습니다. 이들을 총칭하여 <span class="highlight" data-tooltip="장내 미생물총(gut microbiota): 소화관에 서식하는 미생물 군집으로 소화, 면역, 영양소 합성을 돕음">장내 미생물총</span>이라 부르며, 무게로 따지면 약 1~2kg이나 됩니다. 1,000종 이상의 세균이 <span class="highlight">장내 생태계</span>를 이루고 있습니다.</p>
+        <p><span class="dialogue">"우리가 하는 일은 아주 많아. 너희 찌꺼기 속에 있는 식이섬유를 <span class="highlight">발효</span>시켜서 <span class="highlight">단쇄지방산</span>—아세트산, 프로피온산, 부티르산—을 만들어 내지. 이것은 대장 상피세포의 에너지원이 되고 장 건강을 촉진해. 또 <span class="highlight">비타민 K</span>, <span class="highlight">비타민 B12</span>, <span class="highlight">비오틴</span> 같은 영양소를 합성하고, <span class="highlight">면역계</span>를 자극하여 면역력을 높여주고, 병원성 세균이 정착하는 것을 <span class="highlight">경쟁적 배제</span>로 막기도 해."</span></p>
+        <p>한편, 대장의 벽은 부지런히 수분과 전해질을 흡수하고 있었습니다. 하루 약 1.5~2리터의 물이 대장에서 재흡수됩니다. 들어올 때 물처럼 질척했던 찌꺼기가 점점 단단해지며 <span class="highlight">'대변'</span>이 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8화</span>
+        <span class="theme">3대 영양소 — 탄수화물, 단백질, 지방</span>
+        <h2>💪 누가 가장 중요한가</h2>
+        <p>뽀미가 에너지가 되어 활약하고 있을 때, 준이의 몸속에서는 다른 영양소들도 각자의 일을 하고 있었습니다. 그런데 어느 날, 세 <span class="highlight">다량 영양소</span>가 모여 논쟁을 벌이기 시작했습니다.</p>
+        <p><span class="dialogue">"내가 가장 중요해!"</span> <span class="highlight">탄수화물</span> 대표 '카보'가 외쳤습니다. <span class="dialogue">"나는 몸이 가장 빨리, 가장 쉽게 쓸 수 있는 에너지원이야. 1g당 <span class="highlight">4kcal</span>를 제공하지. 뇌는 거의 나, 특히 <span class="highlight">포도당</span>만 사용해. 혈당이 떨어지면 집중력이 흐려지고 어지러워지거든. 공부할 때, 운동할 때, 다 내 덕분이야!"</span></p>
+        <p><span class="highlight">단백질</span> 대표 '프로틴'이 코웃음을 쳤습니다. <span class="dialogue">"에너지만 있으면 뭘 하나? 나는 20종의 <span class="highlight">아미노산</span>으로 이루어져 있어. 근육, 뼈, 피부, 머리카락의 <span class="highlight">구조 단백질(콜라겐, 케라틴)</span>, 화학 반응을 촉매하는 <span class="highlight">효소</span>, 면역을 담당하는 <span class="highlight">항체</span>, 신호를 전달하는 <span class="highlight">호르몬</span>—몸의 구조를 만들고 기능을 수행하는 건 다 나라고! 1g당 4kcal의 에너지도 낼 수 있지만, 주로 합성에 쓰여."</span></p>
+        <p><span class="highlight">지방</span> 대표 '리피'가 느긋하게 나섰습니다. <span class="dialogue">"둘 다 참 시끄럽네. 나는 1g당 <span class="highlight">9kcal</span>나 내는 최고 효율의 에너지 저장고야. <span class="highlight">피하지방</span>으로 체온을 유지하고, <span class="highlight">내장지방</span>으로 장기를 완충 보호하지. 게다가 <span class="highlight">인지질</span>은 세포막의 핵심 구성요소이고, <span class="highlight">스테로이드 호르몬</span>(에스트로겐, 테스토스테론)의 원료도 나야. <span class="highlight">지용성 비타민 A, D, E, K</span>는 나 없이는 흡수도 안 돼."</span></p>
+        <p>세 영양소의 논쟁은 점점 뜨거워졌습니다. 그때, 작은 <span class="highlight">비타민</span> '비타'가 끼어들었습니다. <span class="dialogue">"그만들 해! 너희 셋 중 하나라도 없으면 몸은 제대로 작동 못 해. 탄수화물은 빠른 에너지를, 단백질은 구조와 기능을, 지방은 저장과 보호를 담당하잖아. 거기에 우리 비타민과 무기질이 <span class="highlight">보조인자</span>로 대사 조절 역할을 하고. <span class="highlight">균형 잡힌 식단</span>이 필요한 이유가 바로 이거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9화</span>
+        <span class="theme">건강한 식습관 — 소화 기관의 호소</span>
+        <h2>🍔 몸속 기관들의 호소</h2>
+        <p>어느 날, 준이는 학교 앞 패스트푸드 가게에서 번쩍이는 메뉴판을 바라보고 있었습니다. 치즈버거, 감자튀김, 탄산음료 세트. 침이 꼴깍 넘어갔습니다. <span class="dialogue">"오늘은 이거 먹을까…."</span> 바로 그 순간, 준이의 몸속에서 비상회의가 열렸습니다.</p>
+        <p><span class="dialogue">"또 <span class="highlight">포화지방</span>과 <span class="highlight">트랜스지방</span> 범벅인 거 먹으면 나 진짜 못 버텨!"</span> 간이 비명을 질렀습니다. <span class="dialogue">"지방이 너무 많이 들어오면 <span class="highlight">지방간</span>이 생기고, 결국 <span class="highlight">간경변</span>까지 갈 수 있어. 게다가 <span class="highlight">LDL 콜레스테롤</span>이 높아지면 <span class="highlight">동맥경화</span> 위험도 올라가고!"</span></p>
+        <p>위도 울상이었습니다. <span class="dialogue">"매운 소스랑 <span class="highlight">탄산</span>이 또 오면 내 점막이 타들어 가. <span class="highlight">위산 역류</span>, <span class="highlight">위염</span>, 심하면 <span class="highlight">위궤양</span>까지... 속이 쓰려서 죽겠어."</span></p>
+        <p>대장의 비피도 걱정했습니다. <span class="dialogue">"<span class="highlight">식이섬유</span>가 하나도 없으면 나는 일을 못 해. <span class="highlight">변비</span>가 생기고, 장내 세균 균형이 무너져서 <span class="highlight">유해균</span>이 득세하게 된단 말이야. 장기적으로 <span class="highlight">대장암</span> 위험까지 높아져."</span></p>
+        <p>하지만 준이의 뇌 <span class="highlight">보상 회로</span>에서는 <span class="highlight">도파민</span>이 속삭이고 있었습니다. <span class="dialogue">"맛있으면 행복한 거야~ 한 번쯤 괜찮아~"</span> 이것이 바로 고열량 음식이 '중독성'을 갖는 이유입니다. 당분과 지방은 도파민 분비를 자극하여 쾌락을 느끼게 하지만, 영양 불균형과 만성 질환을 초래합니다.</p>
+        <p>준이의 손이 주문 버튼으로 향하는 순간, 심장이 쿵 하고 강하게 뛰었습니다. <span class="dialogue">"준이야, 네가 먹는 것이 곧 너야. 'You are what you eat.' 지금 잠깐의 맛이 네 몸을 오랫동안 아프게 할 수도 있어."</span></p>
+        <p>준이는 손을 멈추었습니다. 그리고 가게를 나와 집으로 향했습니다. 오늘 저녁은 현미밥, 된장찌개, 시금치나물—복합탄수화물, 단백질, 비타민, 식이섬유가 골고루 담긴 <span class="highlight">균형 잡힌 식단</span>이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10화</span>
+        <span class="theme">소화계의 협력 — 통합된 기관계</span>
+        <h2>💌 몸은 협력 시스템</h2>
+        <p>그날 밤, 건강한 저녁을 먹은 준이는 이불 속에서 스르르 잠이 들었습니다. 꿈속에서 준이는 이상한 편지를 받았습니다. 하얀 봉투에 '준이에게'라고 적혀 있었습니다. 편지를 열자, 준이 <span class="highlight">소화계</span> 기관들이 한 줄씩 감사의 말을 적어 놓은 것이었습니다.</p>
+        <p><span class="dialogue">"준이야, 나는 <span class="highlight">구강</span>이야. 네가 꼭꼭 씹어 먹어줘서 고마워. 저작이 충분해야 아밀라아제가 일을 잘 하고, 위와 소장의 부담이 줄어."</span></p>
+        <p><span class="dialogue">"나는 <span class="highlight">위</span>야. 오늘은 자극적인 음식 대신 부드러운 된장찌개가 와서 정말 편했어. 내 <span class="highlight">점막</span>과 <span class="highlight">벽세포</span>가 감사하다고 전해 달래."</span></p>
+        <p><span class="dialogue">"나는 <span class="highlight">소장</span>이야. 시금치에 있던 <span class="highlight">철분</span>과 <span class="highlight">엽산</span>, <span class="highlight">비타민 C</span> 덕분에 오늘 흡수가 아주 잘됐어. 특히 비타민 C가 철분 흡수를 3배나 높여줬어. 네 <span class="highlight">적혈구 생성</span>이 더 활발해질 거야."</span></p>
+        <p><span class="dialogue">"나는 <span class="highlight">대장</span>이야. 현미밥의 식이섬유 덕분에 <span class="highlight">장내 미생물</span>들이 축제를 열었어. <span class="highlight">단쇄지방산</span>이 충분히 생산되어서 내 상피세포가 건강해졌고, 내일 아침 배변이 편할 거야."</span></p>
+        <p><span class="dialogue">"나는 <span class="highlight">간</span>이야. 오늘은 기름 범벅이 아니라서 <span class="highlight">해독</span>과 <span class="highlight">지방 대사</span> 작업이 수월했어. 이렇게만 해 주면 나는 50년이고 100년이고 잘 일할 수 있어."</span></p>
+        <p><span class="dialogue">"나는 <span class="highlight">이자(췌장)</span>야. 규칙적인 식사와 적당한 탄수화물 덕분에 <span class="highlight">인슐린</span> 분비가 안정적이었어. <span class="highlight">혈당 조절</span>이 원활했지."</span></p>
+        <p>편지 마지막에는 모든 기관이 함께 쓴 한 문장이 있었습니다. <span class="highlight">"준이야, 소화계는 구강에서 항문까지 약 9미터의 긴 관이지만, 우리는 따로 일하는 게 아니야. 신경계와 호르몬의 조절 아래 <span class="highlight">정교하게 협력하는 하나의 시스템</span>이지. 네가 먹는 한 끼가 우리 모두에게 영향을 줘. 몸은 협력 시스템이야."</span></p>
+        <p>뽀미의 여행은 끝났지만, 준이의 건강한 선택은 이제 시작입니다.</p>
+        <p style="text-align: center; margin-top: 30px; font-weight: 700; color: #E65100;">— 🍞 끝 🍞 —</p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 스토리 닫기
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // IntersectionObserver로 스크롤 기반 배경 변경 및 카드 애니메이션
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0.3
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+
+        if (entry.isIntersecting) {
+          // 카드 활성화
+          if (card) card.classList.add('active');
+
+          // 배경 변경
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+        } else {
+          // 카드 비활성화
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 첫 번째 섹션 즉시 활성화
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) {
+        setTimeout(() => {
+          firstCard.classList.add('active');
+        }, 500);
+      }
+    });
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/bio10_season1_quiz.html?season=season1';
+    }
+  </script>
+
+  <div class="nav-buttons" style="position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 1000; pointer-events: auto;">
+    <button onclick="closeStory()" style="padding: 15px 30px; background: rgba(45, 106, 79, 0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);">← 목록으로</button>
+    <button onclick="goToQuiz()" style="padding: 15px 30px; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4);">📝 관문평가</button>
+  </div>
+
+</body>
+</html>

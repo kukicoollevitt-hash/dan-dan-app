@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>좌표와 대충이의 위도경도 대모험 - 지구 좌표계와 측지학의 세계 · 중1-2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .grade-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(52, 152, 219, 0.15);
+      color: #2980b9;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #3498db;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #3498db;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(52, 152, 219, 0.15);
+      border-radius: 3px;
+    }
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #2874a6;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #2874a6;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #2980b9;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 30px;
+      pointer-events: auto;
+      text-align: center;
+    }
+
+    .intro-content {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 50px;
+      border-radius: 30px;
+      max-width: 800px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+    }
+
+    .intro-content h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .subtitle {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(52, 152, 219, 0.08);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+    }
+
+    .intro-content .characters h3 {
+      color: #3498db;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      font-size: 14px;
+      color: #34495e;
+      line-height: 1.8;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .scroll-hint {
+      color: #3498db;
+      font-size: 14px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(52, 152, 219, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+      text-decoration: none;
+    }
+
+    .nav-btn:hover {
+      background: rgba(41, 128, 185, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .nav-btn.quiz {
+      background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);
+    }
+
+    .nav-btn.quiz:hover {
+      background: linear-gradient(135deg, #e67e22 0%, #c0392b 100%);
+    }
+
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 30px 20px;
+      }
+
+      .story-card {
+        padding: 25px;
+        max-width: 100%;
+      }
+
+      .intro-content {
+        padding: 30px 20px;
+      }
+
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <h1>🌍 좌표와 대충이의 위도경도 대모험</h1>
+        <p class="subtitle">
+          지구 좌표계와 측지학의 세계<br>
+          중학교 1-2학년 심화 · 교과기반 창작도서
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>📌 좌표 (주인공):</strong> 중학교 1학년 소녀. 정확한 것을 사랑하며, 위도와 경도의 수학적 원리에 매료된다.</p>
+          <p><strong>😴 대충이 (좌표의 친구):</strong> '그쯤에서' 만나자는 대충주의자. 좌표 체계의 중요성을 깨닫고 성장하는 캐릭터.</p>
+          <p><strong>🌐 그리드 (좌표 요정):</strong> 위도와 경도의 수호자. 지구본에서 나타나 측지학과 좌표 체계의 비밀을 안내한다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/01.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제1화</span>
+        <span class="theme">🌐 측지학</span>
+        <h2>지구 표면의 주소 체계</h2>
+        <p>중학교 1학년 소녀 '좌표'는 정확한 것을 사랑하는 아이였습니다. <span class="dialogue">"몇 시에 만나?"</span> 하면 <span class="dialogue">"15시 23분"</span>, <span class="dialogue">"어디서?"</span> 하면 <span class="dialogue">"학교 정문 왼쪽 세 번째 벤치"</span>라고 대답하지요.</p>
+        <p>지리 시간에 선생님이 지구본을 보여주셨습니다. 가로줄과 세로줄이 촘촘히 그려져 있었어요.</p>
+        <p><span class="dialogue">"선생님, 이 선들은 뭐예요?"</span></p>
+        <p><span class="dialogue">"그건 <span class="highlight" data-tooltip="경위선: 지구 표면의 위치를 나타내기 위해 그린 가상의 선. 가로선은 위선(위도선), 세로선은 경선(경도선)">경위선</span>이야. 실제 지구에는 없지만, 사람들이 위치를 표현하기 위해 약속한 '보이지 않는 좌표계'지."</span></p>
+        <p>좌표가 눈을 빛냈어요. <span class="dialogue">"그러면 지구 어디든 정확히 표시할 수 있어요?"</span></p>
+        <p><span class="dialogue">"그렇지. 이것이 <span class="highlight" data-tooltip="측지학(Geodesy): 지구의 정확한 형태(지오이드)와 크기를 측정하고, 지표면의 위치를 수학적으로 결정하는 학문. 고대 그리스 에라토스테네스가 기원전 240년경 지구 둘레를 최초로 측정">측지학</span>의 핵심이야. 지구의 형태, 크기, 중력장을 측정하고, 표면의 위치를 정밀하게 결정하는 학문이지."</span></p>
+        <p>그때 지구본이 빛을 내며 작은 요정이 나타났습니다. <span class="dialogue">"안녕! 나는 '그리드'야. 위도와 경도의 수호자! <span class="highlight" data-tooltip="좌표 기준계: 위치를 정의하기 위한 기준점과 기준선의 체계. 지구 좌표계에서는 적도와 본초자오선이 기준">좌표 기준계</span>의 비밀을 보여줄게!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/02.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제2화</span>
+        <span class="theme">🌡️ 위도</span>
+        <h2>위도와 적도</h2>
+        <p>그리드가 두 사람을 우주로 데려갔습니다. 지구가 파란 구슬처럼 떠 있었어요.</p>
+        <p><span class="dialogue">"와, 지구가 이렇게 예쁘구나!"</span> 대충이가 감탄했습니다.</p>
+        <p><span class="dialogue">"지구 정중앙을 가로지르는 선이 보이지?"</span> 지구 허리에 빛나는 가로줄이 나타났어요. <span class="dialogue">"이것이 <span class="highlight" data-tooltip="적도(Equator): 지구를 북반구와 남반구로 이등분하는 가상의 선. 위도 0°이며, 지구 중심을 지나는 평면이 지구 표면과 만나는 대권">적도</span>야. 지구를 북반구와 남반구로 이등분하는 <span class="highlight" data-tooltip="대권(Great Circle): 지구 중심을 지나는 평면이 지구 표면과 만나는 원. 적도와 모든 경선이 대권에 해당">대권</span>이지."</span></p>
+        <p>좌표가 물었어요. <span class="dialogue">"그러면 위도는 뭐예요?"</span></p>
+        <p><span class="dialogue">"<span class="highlight" data-tooltip="위도(Latitude): 적도를 기준(0°)으로 북쪽 또는 남쪽으로 얼마나 떨어져 있는지를 각도로 나타낸 것. 북극점은 북위 90°, 남극점은 남위 90°. 위도 1°의 거리는 약 111km">위도</span>는 적도를 기준으로 북쪽 또는 남쪽으로 얼마나 떨어져 있는지를 각도로 나타낸 거야. 북극점은 북위 90°, 남극점은 남위 90°지."</span></p>
+        <p>그리드가 중요한 위도선들을 보여줬어요. <span class="dialogue">"이건 <span class="highlight" data-tooltip="북회귀선(Tropic of Cancer): 북위 약 23.5°. 하지(6월 21일경)에 태양이 머리 위에 오는 최북단">북회귀선</span>(북위 23.5°), <span class="highlight" data-tooltip="남회귀선(Tropic of Capricorn): 남위 약 23.5°. 동지(12월 21일경)에 태양이 머리 위에 오는 최남단">남회귀선</span>(남위 23.5°), <span class="highlight" data-tooltip="북극권(Arctic Circle): 북위 약 66.5°. 하지에 백야, 동지에 극야가 나타나는 경계선">북극권</span>(북위 66.5°), <span class="highlight" data-tooltip="남극권(Antarctic Circle): 남위 약 66.5°. 동지에 백야, 하지에 극야가 나타나는 경계선">남극권</span>(남위 66.5°)이야. 지구의 자전축 기울기 때문에 이런 특별한 선들이 생기는 거지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/03.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제3화</span>
+        <span class="theme">🧭 경도</span>
+        <h2>경도와 본초자오선</h2>
+        <p><span class="dialogue">"가로줄이 위도라면, 세로줄은 뭐예요?"</span> 대충이가 처음으로 호기심을 보였습니다.</p>
+        <p><span class="dialogue">"그것이 <span class="highlight" data-tooltip="경도(Longitude): 본초자오선을 기준(0°)으로 동쪽 또는 서쪽으로 얼마나 떨어져 있는지를 각도로 나타낸 것. 동경과 서경 각각 180°까지">경도</span>야!"</span></p>
+        <p>북극에서 남극으로 이어지는 세로줄들이 나타났어요. <span class="dialogue">"이 선들을 <span class="highlight" data-tooltip="자오선(Meridian): 북극에서 남극까지 이어지는 세로선. 경도선이라고도 함. 모든 자오선은 같은 길이의 대권">자오선</span>이라고 해. 위도에는 적도라는 자연적 기준이 있지만, 경도에는 자연적 기준이 없어. 그래서 인위적으로 정했지."</span></p>
+        <p>좌표가 물었어요. <span class="dialogue">"어떻게 정했어요?"</span></p>
+        <p><span class="dialogue">"1884년 워싱턴에서 열린 <span class="highlight" data-tooltip="국제자오선회의(1884): 25개국 대표가 모여 본초자오선을 결정한 국제회의. 당시 세계 해운의 72%가 이미 그리니치 기준 해도를 사용했음">국제자오선회의</span>에서 영국 런던의 <span class="highlight" data-tooltip="그리니치 천문대: 영국 런던 그리니치에 있는 천문대. 1675년 설립. 본초자오선이 지나는 경도 0° 지점">그리니치 천문대</span>를 지나는 자오선이 경도 0°, 즉 <span class="highlight" data-tooltip="본초자오선(Prime Meridian): 경도의 기준선(0°). 영국 그리니치 천문대를 지나도록 국제적으로 합의됨">본초자오선</span>으로 결정됐어."</span></p>
+        <p>그리드가 지구를 돌리며 보여줬어요. <span class="dialogue">"본초자오선을 기준으로 동쪽은 <span class="highlight" data-tooltip="동경(East Longitude): 본초자오선 동쪽의 경도. E 또는 동경으로 표시. 0°~180°">동경</span>, 서쪽은 <span class="highlight" data-tooltip="서경(West Longitude): 본초자오선 서쪽의 경도. W 또는 서경으로 표시. 0°~180°">서경</span>으로 각각 180°까지 표시해. 동경 180°와 서경 180°가 만나는 곳이 <span class="highlight" data-tooltip="날짜변경선(International Date Line): 동경 180°와 서경 180°가 만나는 선. 이 선을 서쪽에서 동쪽으로 넘으면 하루 전, 반대로 넘으면 하루 후가 됨">날짜변경선</span>이야. 이 선을 넘으면 날짜가 바뀌지!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/04.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제4화</span>
+        <span class="theme">📐 좌표 원점</span>
+        <h2>좌표계의 원점</h2>
+        <p>그리드가 적도와 본초자오선이 교차하는 지점으로 안내했습니다. 아프리카 서쪽 기니만의 바다 위였어요.</p>
+        <p><span class="dialogue">"여기가 위도 0°, 경도 0°. 지구 좌표계의 <span class="highlight" data-tooltip="원점(Origin): 좌표계에서 모든 좌표의 기준이 되는 점. 지구 좌표계에서는 적도와 본초자오선이 만나는 점(위도 0°, 경도 0°)">원점</span>이야."</span></p>
+        <p>좌표가 눈을 빛냈어요. <span class="dialogue">"수학의 <span class="highlight" data-tooltip="직교 좌표계: x축과 y축이 직각으로 만나는 좌표계. 원점(0,0)을 기준으로 모든 점의 위치를 표현">직교 좌표계</span>처럼요! x축과 y축이 만나는 원점에서 모든 좌표가 시작되듯이!"</span></p>
+        <p><span class="dialogue">"정확해! 하지만 중요한 차이가 있어. 지구는 평면이 아니라 <span class="highlight" data-tooltip="타원체(Ellipsoid): 완전한 구가 아니라 적도 방향으로 약간 부푼 회전 타원체. 지구의 적도 반지름(약 6,378km)이 극 반지름(약 6,357km)보다 약 21km 김">타원체</span>야. 완전한 구가 아니라 적도 방향으로 약간 부푼 회전 타원체지."</span></p>
+        <p>대충이가 물었어요. <span class="dialogue">"그러면 전 세계가 같은 기준을 쓰나요?"</span></p>
+        <p><span class="dialogue">"현재 전 세계적으로 사용되는 표준은 <span class="highlight" data-tooltip="WGS84: GPS 위성이 사용하는 세계 측지 기준계. 지구를 장반경 6,378,137m, 편평률 1/298.257223563인 타원체로 정의. 전 세계 모든 GPS 기기의 위치 기준">WGS84</span>야. GPS 위성이 사용하는 세계 측지 기준계지. 적도 반지름 약 6,378km, 극 반지름 약 6,357km로 정의해. 전 세계 모든 GPS 기기가 이 기준을 따르기 때문에 어디서든 위치를 정확히 알 수 있는 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/05.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제5화</span>
+        <span class="theme">📝 좌표 표기법</span>
+        <h2>좌표 표기법</h2>
+        <p>그리드가 좌표 표기 방법을 설명했습니다. <span class="dialogue">"위도와 경도를 표기하는 방법에는 여러 가지가 있어."</span></p>
+        <p><span class="dialogue">"첫 번째는 <span class="highlight" data-tooltip="도분초(DMS) 표기법: 도(°), 분('), 초('')로 표기. 1도는 60분, 1분은 60초. 항공과 해양에서 주로 사용. 예: N 37° 34' 08''">도분초</span> 표기법이야. 예를 들어 서울 광화문은 N 37° 34' 08", E 126° 58' 37"로 표시해. 1도는 60분, 1분은 60초지."</span></p>
+        <p><span class="dialogue">"두 번째는 <span class="highlight" data-tooltip="십진도(DD) 표기법: 도를 소수점으로 표기. 컴퓨터 계산에 편리하여 GPS와 지도 앱에서 주로 사용. 예: 37.5689°, 126.9769°">십진도</span> 표기법이야. 같은 광화문을 37.5689°, 126.9769°로 표시해. 컴퓨터 계산에 편리해서 GPS와 지도 앱에서 많이 쓰지."</span></p>
+        <p>좌표가 변환을 시도했어요. <span class="dialogue">"N 37° 34' 08"를 십진도로 바꾸면... 37 + 34/60 + 8/3600 = 37.5689°!"</span></p>
+        <p><span class="dialogue">"정확해! 그 공식을 기억해둬. DD = D + M/60 + S/3600 이야."</span></p>
+        <p>대충이가 감탄했습니다. <span class="dialogue">"숫자 두 개로 지구 위 어느 점이든 정확히 가리킬 수 있다니. 이건 진짜 지구의 <span class="highlight" data-tooltip="글로벌 주소 체계: 위도와 경도 두 숫자로 지구상 어느 점이든 정확히 가리킬 수 있는 전 세계 공통의 위치 표현 시스템">글로벌 주소 체계</span>네!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/06.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제6화</span>
+        <span class="theme">☀️ 기후대</span>
+        <h2>위도와 기후</h2>
+        <p>그리드가 위도와 기후의 관계를 보여주었어요. <span class="dialogue">"서울과 같은 위도(약 37°N)에 어떤 도시가 있을까?"</span></p>
+        <p>북위 37° 선을 따라가니 워싱턴 D.C., 아테네, 이스탄불, 도쿄가 나타났습니다. <span class="dialogue">"이 도시들은 <span class="highlight" data-tooltip="중위도: 위도 약 30°~60° 사이의 지역. 온대 기후가 나타나며 사계절이 뚜렷한 지역이 많음">중위도</span> 지역이라 <span class="highlight" data-tooltip="온대 기후: 사계절이 뚜렷한 기후. 여름은 덥고 겨울은 추우며, 강수량이 적당한 지역. 쾨펜 기후 분류에서 C 기후">온대 기후</span>를 보여. 사계절이 뚜렷하지."</span></p>
+        <p>좌표가 물었어요. <span class="dialogue">"위도별로 기후가 어떻게 달라요?"</span></p>
+        <p><span class="dialogue">"<span class="highlight" data-tooltip="위도별 기후대: 적도 부근(0°-23.5°)은 열대, 회귀선-극권(23.5°-66.5°)은 온대와 냉대, 극권 이상(66.5°-90°)은 한대로 구분">위도별 기후대</span>를 정리하면, 적도 부근(0°-23.5°)은 <span class="highlight" data-tooltip="열대 기후: 연중 기온이 높고 강수량이 많은 기후. 적도 부근에 분포. 쾨펜 기후 분류에서 A 기후">열대</span>, 회귀선에서 극권(23.5°-66.5°)은 온대와 냉대, 극권 이상(66.5°-90°)은 <span class="highlight" data-tooltip="한대 기후: 연중 기온이 낮은 기후. 극지방에 분포. 쾨펜 기후 분류에서 E 기후">한대</span>야."</span></p>
+        <p><span class="dialogue">"왜 위도가 기후를 결정하는 거예요?"</span></p>
+        <p><span class="dialogue">"<span class="highlight" data-tooltip="태양 고도: 태양 광선이 지표면과 이루는 각도. 적도에서는 거의 수직(높은 고도), 고위도로 갈수록 비스듬히(낮은 고도) 비춤. 태양 고도가 높을수록 일사량이 많음">태양 고도</span> 때문이야. 적도에서는 태양이 거의 수직으로 비추지만, 고위도로 갈수록 비스듬히 비추거든. 적도에서 <span class="highlight" data-tooltip="일사량(Insolation): 지표면이 받는 태양 복사 에너지. 위도에 따라 크게 달라지며, 적도에서 1이라면 위도 60°에서는 약 0.5에 불과">일사량</span>을 1이라 하면, 위도 60°에서는 약 0.5밖에 안 돼."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/07.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제7화</span>
+        <span class="theme">🕐 시간대</span>
+        <h2>경도와 시간대</h2>
+        <p><span class="dialogue">"그리드, 왜 나라마다 시간이 달라요?"</span> 좌표가 물었습니다.</p>
+        <p><span class="dialogue">"그건 지구의 <span class="highlight" data-tooltip="자전(Rotation): 지구가 자기 축을 중심으로 도는 운동. 24시간에 360° 회전하며, 이로 인해 낮과 밤이 생김">자전</span>과 경도의 관계 때문이야. 지구는 24시간에 360° 회전해. 360°를 24시간으로 나누면?"</span></p>
+        <p>좌표가 계산했어요. <span class="dialogue">"15°요! 경도 <span class="highlight" data-tooltip="15°/시간: 지구가 1시간에 자전하는 각도. 경도 15°마다 1시간의 시차가 발생하는 원리의 기초">15°</span>마다 1시간의 시차가 생기는 거군요."</span></p>
+        <p><span class="dialogue">"바로 그거야! 이걸 기반으로 <span class="highlight" data-tooltip="표준시(Standard Time): 특정 경도를 기준으로 정한 지역의 공식 시간. 혼란을 방지하기 위해 국가나 지역 단위로 통일된 시간을 사용">표준시</span> 체계가 만들어졌어. 세계는 대략 24개의 <span class="highlight" data-tooltip="시간대(Time Zone): 같은 표준시를 사용하는 지역. 이론적으로 경도 15° 단위로 나뉘지만, 실제로는 국경이나 행정구역에 따라 조정됨">시간대</span>로 나뉘지. 모든 시간대는 <span class="highlight" data-tooltip="UTC(협정 세계시): 국제 표준 시간. 국제원자시(TAI)에 윤초를 더해 지구 자전과 동기화. 영국 그리니치 기준 시간(GMT)과 거의 같음">UTC</span>를 기준으로 표시해."</span></p>
+        <p>대충이가 물었어요. <span class="dialogue">"한국은요?"</span></p>
+        <p><span class="dialogue">"한국 표준시(KST)는 <span class="highlight" data-tooltip="UTC+9: 협정 세계시보다 9시간 빠른 시간대. 한국, 일본 등이 사용. 동경 135°를 기준으로 함">UTC+9</span>야. 영국보다 9시간 빨라."</span></p>
+        <p>좌표가 손가락으로 계산했어요. <span class="dialogue">"서울(동경 127°)과 뉴욕(서경 74°)의 경도 차이가 약 201°... 201 ÷ 15 ≈ 13.4시간. 실제 시차가 13-14시간인 것과 맞네요!"</span></p>
+        <p><span class="dialogue">"재미있는 건, 시간대가 이론대로만 정해지진 않아. 중국은 동서 5,000km에 걸쳐 있는데도 단일 시간대(UTC+8)를 써. 네팔은 <span class="highlight" data-tooltip="UTC+5:45: 네팔의 독특한 시간대. 인도(UTC+5:30)와 차별화하면서도 지리적 위치를 반영한 절충안">UTC+5:45</span>라는 독특한 시간을 쓰고. 국경이나 정치적 이유로 시간대가 조정되기도 해."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/08.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제8화</span>
+        <span class="theme">✈️ 항법</span>
+        <h2>항법과 좌표</h2>
+        <p>그리드가 비행기 조종석으로 안내했습니다. 계기판에 "N35°42'15", E139°45'52""가 표시되어 있었어요.</p>
+        <p><span class="dialogue">"도쿄 상공이에요!"</span> 좌표가 외쳤습니다.</p>
+        <p><span class="dialogue">"<span class="highlight" data-tooltip="항공 항법(Air Navigation): 비행기가 출발지에서 목적지까지 안전하게 이동하는 기술. 좌표, 레이더, 무선 신호 등을 활용">항공 항법</span>에서 좌표는 생명선이야. 비행기는 출발지에서 목적지까지의 경로를 <span class="highlight" data-tooltip="웨이포인트(Waypoint): 비행이나 항해 경로상의 중간 지점. 각 웨이포인트는 위도와 경도로 정의되며, 순서대로 통과함">웨이포인트</span>로 설정해. 각 웨이포인트가 위도와 경도로 정의되지."</span></p>
+        <p>장면이 바다 위 선박으로 바뀌었습니다. 망망대해에 배 한 척이 떠 있었어요.</p>
+        <p><span class="dialogue">"<span class="highlight" data-tooltip="해상 항법(Marine Navigation): 선박이 바다에서 위치를 파악하고 경로를 찾아가는 기술. 역사적으로 천문 관측과 나침반을 사용">해상 항법</span>에서 좌표는 더 중요해. 바다에는 표지물이 없으니까."</span></p>
+        <p>대충이가 물었어요. <span class="dialogue">"옛날에는 어떻게 바다에서 위치를 알았어요?"</span></p>
+        <p><span class="dialogue">"위도는 비교적 쉬웠어. 밤에는 북극성 고도, 낮에는 태양 고도를 측정하면 됐거든. 하지만 경도는 18세기까지 엄청난 난제였어. <span class="highlight" data-tooltip="경도 문제(Longitude Problem): 18세기 최대 과학 난제. 바다에서 경도를 정확히 측정하는 방법을 찾는 것이 목표였음">경도 문제</span>라고 불렸지."</span></p>
+        <p><span class="dialogue">"어떻게 해결됐어요?"</span></p>
+        <p><span class="dialogue">"영국 의회가 1714년에 2만 파운드라는 거액의 상금을 걸었어. <span class="highlight" data-tooltip="존 해리슨(John Harrison): 영국의 시계공(1693-1776). 정밀 항해용 시계인 H4 크로노미터를 발명하여 경도 문제를 해결">존 해리슨</span>이라는 시계공이 <span class="highlight" data-tooltip="크로노미터(Chronometer): 흔들리는 배 위에서도 정확한 시간을 유지하는 정밀 시계. 출발지 시간과 현지 시간의 차이로 경도를 계산할 수 있음">크로노미터</span>를 발명해서 해결했지. 출발지 시간과 현지 태양 시간의 차이로 경도를 알 수 있거든. 1773년 H4 크로노미터는 해상에서 경도 오차를 30해리(약 55km) 이내로 줄였어."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/09.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제9화</span>
+        <span class="theme">🛰️ GPS</span>
+        <h2>GPS와 삼변측량</h2>
+        <p><span class="dialogue">"내 스마트폰은 내 위치를 어떻게 알아요?"</span> 대충이가 물었습니다.</p>
+        <p><span class="dialogue">"<span class="highlight" data-tooltip="GPS(Global Positioning System): 미국이 운용하는 위성 항법 시스템. 약 30개의 위성이 고도 20,200km에서 지구를 돌며 위치 신호를 송출">GPS</span>가 작동하는 원리를 알려줄게."</span> 그리드가 지구 궤도로 올라갔습니다. 약 30개의 GPS 위성이 고도 약 20,200km에서 지구를 돌고 있었어요.</p>
+        <p><span class="dialogue">"각 위성은 자신의 위치와 정확한 시각을 담은 신호를 끊임없이 보내. 네 스마트폰이 이 신호를 받으면, 신호가 도달하는 데 걸린 시간을 측정해서 위성까지의 거리를 계산해."</span></p>
+        <p>좌표가 눈을 빛냈어요. <span class="dialogue">"아! 그러면 여러 위성에서의 거리를 알면..."</span></p>
+        <p><span class="dialogue">"맞아! 그게 바로 <span class="highlight" data-tooltip="삼변측량(Trilateration): 세 개 이상의 기준점으로부터의 거리를 이용해 위치를 결정하는 방법. GPS에서는 위성이 기준점 역할을 함">삼변측량</span>이야. 위성 A에서 1만 km, 위성 B에서 1만 2천 km, 위성 C에서 9천 km 떨어져 있다면, 이 세 거리가 교차하는 점이 바로 네 위치야."</span></p>
+        <p><span class="dialogue">"근데 왜 위성이 네 개 이상 필요해요?"</span></p>
+        <p><span class="dialogue">"스마트폰 시계는 위성의 <span class="highlight" data-tooltip="원자시계(Atomic Clock): 세슘이나 루비듐 원자의 진동을 이용한 초정밀 시계. GPS 위성에 탑재되어 나노초(10억분의 1초) 수준 정확도 유지">원자시계</span>만큼 정확하지 않거든. 네 번째 위성으로 시계 오차를 보정하는 거야. 최신 GPS의 정밀도는 <span class="highlight" data-tooltip="GPS 정밀도: 일반 스마트폰은 3-5m, RTK(실시간 운동학) 기술을 사용하면 cm 수준까지 가능">30cm 이내</span>까지 가능해!"</span></p>
+        <p>대충이가 감탄했어요. <span class="dialogue">"대단하다! 다른 나라도 이런 시스템이 있어요?"</span></p>
+        <p><span class="dialogue">"물론이지. GPS 외에도 <span class="highlight" data-tooltip="GNSS(Global Navigation Satellite System): 전 세계 위성 항법 시스템의 총칭. GPS(미국), GLONASS(러시아), Galileo(EU), BeiDou(중국) 등이 있음">GNSS</span>라고 총칭하는데, 러시아의 GLONASS, 유럽연합의 Galileo, 중국의 BeiDou가 있어. 요즘 스마트폰은 이들을 모두 활용해서 더 정확한 위치를 찾지."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리06/10.jpg">
+      <div class="story-card">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <span class="chapter">제10화</span>
+        <span class="theme">🌍 표준의 힘</span>
+        <h2>표준과 협력의 힘</h2>
+        <p>모험을 마치고 교실로 돌아왔습니다. 그리드가 마지막으로 물었어요.</p>
+        <p><span class="dialogue">"대충이, '학교 앞 그쯤'과 'N37.5800°, E126.9769°', 뭐가 더 정확할까?"</span></p>
+        <p>대충이가 웃으며 대답했습니다. <span class="dialogue">"당연히 좌표요! '그쯤'은 사람마다 다르게 해석하지만, 좌표는 전 세계 누구에게나 같은 한 점을 가리키니까요."</span></p>
+        <p>좌표가 깊은 깨달음을 나눴어요. <span class="dialogue">"위도와 경도가 작동하려면 <span class="highlight" data-tooltip="국제적 합의(International Agreement): 전 세계가 같은 기준을 따르기로 약속하는 것. 본초자오선, 표준시, 측지 기준계 등이 모두 국제 합의의 결과">국제적 합의</span>가 필요해요. 적도라는 자연 기준, 본초자오선이라는 약속된 기준, WGS84라는 표준 타원체... 전 세계가 같은 규칙을 따르기로 합의했기에 좌표 체계가 작동하는 거예요."</span></p>
+        <p>그리드가 환하게 웃었습니다. <span class="dialogue">"바로 그거야! <span class="highlight" data-tooltip="표준(Standard): 모두가 따르기로 합의한 규칙이나 기준. 표준이 없으면 국제 협력이 불가능함">표준</span>은 단순한 약속이 아니라, 협력을 가능하게 하는 기반이야. <span class="highlight" data-tooltip="ISO(국제표준화기구): 국제 표준을 제정하는 비정부 기구. 측정, 품질, 안전 등 다양한 분야의 표준을 관리">ISO</span>, <span class="highlight" data-tooltip="ITU(국제전기통신연합): 통신과 전파 관련 국제 표준을 담당하는 UN 산하 기구. 주파수 할당, 시간 신호 등을 관리">ITU</span>, <span class="highlight" data-tooltip="ICAO(국제민간항공기구): 국제 항공 운송의 안전과 표준을 담당하는 UN 산하 기구. 항공 좌표, 공항 코드 등을 관리">ICAO</span> 같은 국제 기구들이 좌표, 시간, 통신 규격을 관리하지."</span></p>
+        <p><span class="dialogue">"표준이 없다면요?"</span> 대충이가 물었어요.</p>
+        <p><span class="dialogue">"국제 항공, 해운, GPS, 인터넷... 모두 작동할 수 없어. 비행기가 다른 나라 공항에 착륙하려면 같은 좌표 체계를 써야 하고, 화상 통화를 하려면 같은 통신 규격을 따라야 하니까."</span></p>
+        <p>대충이가 진지하게 말했습니다. <span class="dialogue">"저도 이제 정확하게 말할게요. '그쯤' 말고 좌표로요. 정확한 기준이 사람들을 연결하는 힘이라는 걸 알았으니까요!"</span></p>
+        <p>좌표, 대충이, 그리드 세 친구는 오늘의 모험을 마무리하며 활짝 웃었습니다. 위도와 경도라는 단순한 숫자 두 개가 전 세계를 하나로 연결하는 마법이라는 것을, 이제 모두가 알게 되었어요.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <a href="/creative-book.html?grade=78&category=social" class="nav-btn">← 목록으로</a>
+    <a href="/creative-book/geo06_season1_quiz.html?season=season3" class="nav-btn quiz">📝 관문평가</a>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '';
+
+    // IntersectionObserver로 카드 활성화
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const card = entry.target.querySelector('.story-card');
+          if (card) {
+            card.classList.add('active');
+          }
+
+          // 배경 이미지 변경
+          const bgImage = entry.target.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+        }
+      });
+    }, {
+      threshold: 0.3,
+      rootMargin: '-10% 0px -10% 0px'
+    });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

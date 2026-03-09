@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>모의고사 관리</title>
+  <!-- 카카오 SDK -->
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #667eea;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #7f8c8d;
+      font-size: 16px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-bottom: 30px;
+    }
+
+    .back-btn:hover {
+      background: #764ba2;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .section {
+      margin-bottom: 50px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ecf0f1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .count-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #ecf0f1;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 40px;
+      color: #95a5a6;
+      font-size: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #667eea;
+    }
+
+    .view-btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .view-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+    }
+
+    .edit-btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .edit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(243, 156, 18, 0.4);
+    }
+
+    .delete-btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: 8px;
+    }
+
+    .delete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+    }
+
+    .grade-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+    }
+
+    /* 1등급 - 하늘색 계열 */
+    .grade-1 {
+      background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 30%, #0284c7 70%, #0369a1 100%);
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+    }
+    /* 2등급 - 노란색/금색 계열 */
+    .grade-2 {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 30%, #b45309 70%, #92400e 100%);
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+    }
+    /* 3등급 - 연두색 계열 */
+    .grade-3 {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 30%, #15803d 70%, #166534 100%);
+      box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4);
+    }
+    /* 4등급 - 주황색 계열 */
+    .grade-4 {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 30%, #c2410c 70%, #9a3412 100%);
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.4);
+    }
+    /* 5등급 - 핑크색 계열 */
+    .grade-5 {
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 30%, #be185d 70%, #9d174d 100%);
+      box-shadow: 0 2px 8px rgba(219, 39, 119, 0.4);
+    }
+
+    .score-text {
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    /* 정렬 가능한 헤더 */
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    .sortable:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sortable::after {
+      content: '⇅';
+      margin-left: 6px;
+      opacity: 0.6;
+      font-size: 12px;
+    }
+
+    .sortable.asc::after {
+      content: '▲';
+      opacity: 1;
+    }
+
+    .sortable.desc::after {
+      content: '▼';
+      opacity: 1;
+    }
+
+    /* 모달 스타일 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 35px 40px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: scale(0.8);
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: scale(1);
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .modal-form .input-group {
+      margin-bottom: 16px;
+    }
+
+    .modal-form label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    .modal-form input, .modal-form select {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .modal-form input:focus, .modal-form select:focus {
+      border-color: #667eea;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 25px;
+    }
+
+    .modal-btn {
+      padding: 12px 30px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .modal-btn-cancel {
+      background: #f1f1f1;
+      color: #666;
+    }
+
+    .modal-btn-save {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .filter-section {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-section input, .filter-section select {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    .filter-section input:focus, .filter-section select:focus {
+      border-color: #667eea;
+    }
+
+    .search-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .add-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .add-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(17, 153, 142, 0.4);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-inactive {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-suspended {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* AI과제 배지 스타일 */
+    .ai-task-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ai-task-none {
+      background: #f1f3f4;
+      color: #9aa0a6;
+    }
+
+    .ai-task-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .ai-task-progress {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .ai-task-complete {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+    }
+
+    .status-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-right: 4px;
+    }
+
+    .status-btn-activate {
+      background: #28a745;
+      color: white;
+    }
+
+    .status-btn-suspend {
+      background: #ffc107;
+      color: #333;
+    }
+
+    /* 이용권 버튼 스타일 */
+    .ticket-btn {
+      display: inline-block;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ticket-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .user-name-link {
+      color: #6366f1;
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .user-name-link:hover {
+      color: #8b5cf6;
+    }
+
+    /* 이용권 모달 */
+    .ticket-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .ticket-modal-overlay.active {
+      display: flex;
+    }
+
+    .ticket-modal {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .ticket-modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .ticket-modal-subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .ticket-input-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .ticket-input-group label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .ticket-input-group input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .ticket-input-group input:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .ticket-modal-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .ticket-modal-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ticket-modal-btn.cancel {
+      background: #f3f4f6;
+      color: #666;
+    }
+
+    .ticket-modal-btn.cancel:hover {
+      background: #e5e7eb;
+    }
+
+    .ticket-modal-btn.save {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+
+    .ticket-modal-btn.save:hover {
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    /* 체크박스 스타일 */
+    .checkbox-cell {
+      width: 40px;
+      text-align: center;
+    }
+
+    .user-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #667eea;
+    }
+
+    /* 일괄 처리 버튼 영역 */
+    .bulk-actions {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .bulk-actions.active {
+      display: flex;
+    }
+
+    .bulk-actions .selected-count {
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .bulk-ticket-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .bulk-ticket-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .bulk-cancel-btn {
+      padding: 10px 16px;
+      background: #f1f1f1;
+      color: #666;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .bulk-cancel-btn:hover {
+      background: #e0e0e0;
+    }
+
+    /* 상담 상태 배지 */
+    .consult-status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .consult-status-contacted {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .consult-status-completed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .consult-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-right: 4px;
+    }
+
+    .consult-btn-contact {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .consult-btn-complete {
+      background: #28a745;
+      color: white;
+    }
+
+    .consult-btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.9;
+    }
+
+    /* 일괄 삭제 버튼 */
+    .bulk-delete-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .bulk-delete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+    }
+
+    /* 더보기 버튼 */
+    .show-more-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .show-more-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/super/dashboard" class="back-btn">← 대시보드로 돌아가기</a>
+
+    <div class="header">
+      <h1>📝 모의고사 관리</h1>
+      <p>모의고사 회원 관리와 응시자 목록, 채점 결과를 확인하고 관리합니다.</p>
+    </div>
+
+    <!-- 줌 수업 링크 관리 섹션 -->
+    <div class="section">
+      <div class="section-title">
+        <span>📺 줌 수업 링크 관리</span>
+      </div>
+      <div class="zoom-link-section" style="padding: 20px; background: #f8fafc; border-radius: 12px; margin-top: 15px;">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="zoomLinkInput" placeholder="줌 링크를 입력하세요 (예: https://zoom.us/j/...)"
+            style="flex: 1; min-width: 300px; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+          <button onclick="saveZoomLink()"
+            style="padding: 12px 24px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+            링크 저장
+          </button>
+        </div>
+        <div id="currentZoomLink" style="margin-top: 12px; font-size: 13px; color: #64748b;">
+          현재 설정된 링크: <span id="savedZoomLinkDisplay">없음</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 상담 신청 관리 섹션 -->
+    <div class="section">
+      <div class="section-title">
+        <span>📞 상담 신청 목록</span>
+        <span class="count-badge" id="consultCount">총 0명</span>
+      </div>
+
+      <div class="filter-section">
+        <select id="consultSearchGrade" onchange="filterConsultations()">
+          <option value="">전체 학년</option>
+          <option value="초4">초4</option>
+          <option value="초5">초5</option>
+          <option value="초6">초6</option>
+          <option value="중1">중1</option>
+          <option value="중2">중2</option>
+          <option value="중3">중3</option>
+          <option value="고1">고1</option>
+          <option value="고2">고2</option>
+          <option value="고3">고3</option>
+        </select>
+        <input type="text" id="consultSearchName" placeholder="이름 검색" oninput="filterConsultations()">
+        <select id="consultSearchStatus" onchange="filterConsultations()">
+          <option value="">전체 상태</option>
+          <option value="pending">대기</option>
+          <option value="contacted">연락완료</option>
+          <option value="completed">상담완료</option>
+        </select>
+      </div>
+
+      <!-- 상담 일괄 처리 버튼 -->
+      <div class="bulk-actions" id="consultBulkActions">
+        <span class="selected-count"><span id="consultSelectedCount">0</span>명 선택됨</span>
+        <button class="bulk-delete-btn" onclick="bulkDeleteConsultations()">🗑️ 일괄 삭제</button>
+        <button class="bulk-cancel-btn" onclick="clearConsultSelection()">선택 취소</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="checkbox-cell"><input type="checkbox" id="consultSelectAll" class="user-checkbox" onchange="toggleConsultSelectAll()"></th>
+              <th>번호</th>
+              <th>이름</th>
+              <th>학교(학원)</th>
+              <th>학년</th>
+              <th>연락처</th>
+              <th>상태</th>
+              <th>신청일</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="consultTableBody">
+            <tr>
+              <td colspan="9" class="loading">데이터를 불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="show-more-btn" id="consultShowMoreBtn" style="display: none;" onclick="showMoreConsultations()">더보기 (<span id="consultRemainingCount">0</span>명 더)</button>
+    </div>
+
+    <!-- 모의고사 회원 관리 섹션 -->
+    <div class="section">
+      <div class="section-title">
+        <span>👤 모의고사 회원 관리</span>
+        <span class="count-badge" id="userCount">총 0명</span>
+      </div>
+
+      <div class="filter-section">
+        <select id="userSearchGrade" onchange="filterUsers()">
+          <option value="">전체 학년</option>
+          <option value="중1">중1</option>
+          <option value="중2">중2</option>
+          <option value="중3">중3</option>
+          <option value="고1">고1</option>
+          <option value="고2">고2</option>
+          <option value="고3">고3</option>
+          <option value="N수">N수</option>
+        </select>
+        <input type="text" id="userSearchSchool" placeholder="학교명 검색" oninput="filterUsers()">
+        <input type="text" id="userSearchName" placeholder="이름 검색" oninput="filterUsers()">
+        <button class="add-btn" onclick="openAddUserModal()">+ 회원 추가</button>
+      </div>
+
+      <!-- 일괄 처리 버튼 영역 -->
+      <div class="bulk-actions" id="bulkActions">
+        <span class="selected-count"><span id="selectedCount">0</span>명 선택됨</span>
+        <button class="bulk-ticket-btn" onclick="openBulkTicketModal()">🎫 일괄 이용권 부여</button>
+        <button class="bulk-delete-btn" onclick="bulkDeleteUsers()">🗑️ 일괄 삭제</button>
+        <button class="bulk-cancel-btn" onclick="clearSelection()">선택 취소</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="checkbox-cell"><input type="checkbox" id="selectAll" class="user-checkbox" onchange="toggleSelectAll()"></th>
+              <th>번호</th>
+              <th>이름</th>
+              <th>학교(학원)</th>
+              <th>학년</th>
+              <th>전화번호</th>
+              <th>이용권</th>
+              <th>상태</th>
+              <th class="sortable" id="sortAiTask" onclick="toggleAiTaskSort()">AI과제</th>
+              <th>가입일</th>
+              <th>최근 로그인</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr>
+              <td colspan="12" class="loading">데이터를 불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="show-more-btn" id="userShowMoreBtn" style="display: none;" onclick="showMoreUsers()">더보기 (<span id="userRemainingCount">0</span>명 더)</button>
+    </div>
+
+    <!-- 모의고사 응시 결과 섹션 -->
+    <div class="section">
+      <div class="section-title">
+        <span>📊 모의고사 응시 목록</span>
+        <span class="count-badge" id="totalCount">총 0명</span>
+      </div>
+
+      <div class="filter-section">
+        <select id="searchRound" onchange="filterResults()">
+          <option value="">전체 회차</option>
+          <option value="korean_mock_1">1회</option>
+          <option value="korean_mock_2">2회</option>
+          <option value="korean_mock_3">3회</option>
+          <option value="korean_mock_4">4회</option>
+        </select>
+        <input type="text" id="searchSchool" placeholder="학교명 검색" oninput="filterResults()">
+        <select id="searchGrade" onchange="filterResults()">
+          <option value="">전체 학년</option>
+          <option value="초4">초4</option>
+          <option value="초5">초5</option>
+          <option value="초6">초6</option>
+          <option value="중1">중1</option>
+          <option value="중2">중2</option>
+          <option value="중3">중3</option>
+          <option value="고1">고1</option>
+          <option value="고2">고2</option>
+          <option value="고3">고3</option>
+        </select>
+        <input type="text" id="searchName" placeholder="이름 검색" oninput="filterResults()">
+      </div>
+
+      <!-- 응시결과 일괄 처리 버튼 -->
+      <div class="bulk-actions" id="resultBulkActions">
+        <span class="selected-count"><span id="resultSelectedCount">0</span>명 선택됨</span>
+        <button class="bulk-delete-btn" onclick="bulkDeleteResults()">🗑️ 일괄 삭제</button>
+        <button class="bulk-cancel-btn" onclick="clearResultSelection()">선택 취소</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="checkbox-cell"><input type="checkbox" id="resultSelectAll" class="user-checkbox" onchange="toggleResultSelectAll()"></th>
+              <th>번호</th>
+              <th>회차</th>
+              <th>학교명(학원명)</th>
+              <th>학년</th>
+              <th>이름</th>
+              <th>전화번호</th>
+              <th>점수</th>
+              <th>등급</th>
+              <th class="sortable" id="sortRank" onclick="toggleRankSort()">순위</th>
+              <th>응시일</th>
+              <th>시험지 보기</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="resultTableBody">
+            <tr>
+              <td colspan="13" class="loading">데이터를 불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="show-more-btn" id="resultShowMoreBtn" style="display: none;" onclick="showMoreResults()">더보기 (<span id="resultRemainingCount">0</span>명 더)</button>
+    </div>
+  </div>
+
+  <!-- 회원 추가/수정 모달 -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal-box">
+      <div class="modal-title" id="userModalTitle">회원 추가</div>
+      <form class="modal-form" id="userForm">
+        <input type="hidden" id="userId">
+        <div class="input-group">
+          <label>이름</label>
+          <input type="text" id="userName" required placeholder="이름 입력">
+        </div>
+        <div class="input-group">
+          <label>학교</label>
+          <input type="text" id="userSchool" required placeholder="예: ○○고등학교">
+        </div>
+        <div class="input-group">
+          <label>학년</label>
+          <select id="userGrade" required>
+            <option value="">학년 선택</option>
+            <option value="중1">중1</option>
+            <option value="중2">중2</option>
+            <option value="중3">중3</option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+            <option value="N수">N수</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>전화번호 <span style="font-weight: 400; color: #888;">(비밀번호로 사용)</span></label>
+          <input type="tel" id="userPhone" required placeholder="010-0000-0000">
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeUserModal()">취소</button>
+          <button type="submit" class="modal-btn modal-btn-save">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 응시결과 수정 모달 -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+      <div class="modal-title">학생 정보 수정</div>
+      <form class="modal-form" id="editForm">
+        <input type="hidden" id="editId">
+        <div class="input-group">
+          <label>학교명</label>
+          <input type="text" id="editSchool" required>
+        </div>
+        <div class="input-group">
+          <label>학년</label>
+          <select id="editGradeLevel" required>
+            <option value="초4">초4</option>
+            <option value="초5">초5</option>
+            <option value="초6">초6</option>
+            <option value="중1">중1</option>
+            <option value="중2">중2</option>
+            <option value="중3">중3</option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>이름</label>
+          <input type="text" id="editName" required>
+        </div>
+        <div class="input-group">
+          <label>전화번호</label>
+          <input type="tel" id="editPhone" required>
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeEditModal()">취소</button>
+          <button type="submit" class="modal-btn modal-btn-save">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let allResults = [];
+    let allUsers = [];
+    let allConsultations = [];
+    let rankSortOrder = null; // null, 'asc', 'desc'
+    let aiTaskSortOrder = null; // null, 'asc', 'desc' (asc: 미완료 순)
+
+    // 페이지당 표시 개수
+    const ITEMS_PER_PAGE = 10;
+
+    // 현재 표시 개수
+    let consultDisplayCount = ITEMS_PER_PAGE;
+    let userDisplayCount = ITEMS_PER_PAGE;
+    let resultDisplayCount = ITEMS_PER_PAGE;
+
+    // 선택된 ID들
+    let selectedConsultIds = [];
+    let selectedResultIds = [];
+
+    // 페이지 로드 시 데이터 가져오기
+    document.addEventListener('DOMContentLoaded', function() {
+      loadConsultations();
+      loadUsers();
+      loadResults();
+      loadZoomLink();
+    });
+
+    // ===== 줌 링크 관리 함수들 =====
+    async function loadZoomLink() {
+      try {
+        const response = await fetch('/api/zoom-link');
+        const data = await response.json();
+        if (data.success && data.zoomLink) {
+          document.getElementById('zoomLinkInput').value = data.zoomLink;
+          document.getElementById('savedZoomLinkDisplay').innerHTML =
+            `<a href="${data.zoomLink}" target="_blank" style="color: #2563eb;">${data.zoomLink}</a>`;
+        }
+      } catch (error) {
+        console.error('줌 링크 로드 오류:', error);
+      }
+    }
+
+    async function saveZoomLink() {
+      const zoomLink = document.getElementById('zoomLinkInput').value.trim();
+      if (!zoomLink) {
+        alert('줌 링크를 입력해주세요.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/zoom-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ zoomLink })
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert('줌 링크가 저장되었습니다.');
+          document.getElementById('savedZoomLinkDisplay').innerHTML =
+            `<a href="${zoomLink}" target="_blank" style="color: #2563eb;">${zoomLink}</a>`;
+        } else {
+          alert('저장 실패: ' + data.message);
+        }
+      } catch (error) {
+        console.error('줌 링크 저장 오류:', error);
+        alert('저장 중 오류가 발생했습니다.');
+      }
+    }
+
+    // ===== 상담 신청 관리 함수들 =====
+    let filteredConsultations = [];
+
+    async function loadConsultations() {
+      const searchGrade = document.getElementById('consultSearchGrade').value;
+      const searchName = document.getElementById('consultSearchName').value.trim();
+      const searchStatus = document.getElementById('consultSearchStatus').value;
+
+      // 검색 시 표시 개수 초기화
+      consultDisplayCount = ITEMS_PER_PAGE;
+      selectedConsultIds = [];
+      clearConsultSelection();
+
+      try {
+        const response = await fetch('/api/mock-exam/admin/consultations');
+        const data = await response.json();
+
+        if (data.ok) {
+          allConsultations = data.consultations || [];
+
+          // 필터링
+          filteredConsultations = allConsultations;
+          if (searchGrade) {
+            filteredConsultations = filteredConsultations.filter(c => c.grade === searchGrade);
+          }
+          if (searchName) {
+            filteredConsultations = filteredConsultations.filter(c => c.name?.includes(searchName));
+          }
+          if (searchStatus) {
+            filteredConsultations = filteredConsultations.filter(c => c.status === searchStatus);
+          }
+
+          renderConsultTable(filteredConsultations);
+          document.getElementById('consultCount').textContent = `총 ${filteredConsultations.length}명`;
+        } else {
+          showConsultError('데이터를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showConsultError('서버 연결에 실패했습니다.');
+      }
+    }
+
+    // 상담 실시간 필터링 함수
+    function filterConsultations() {
+      const searchGrade = document.getElementById('consultSearchGrade').value;
+      const searchName = document.getElementById('consultSearchName').value.trim().toLowerCase();
+      const searchStatus = document.getElementById('consultSearchStatus').value;
+
+      filteredConsultations = allConsultations.filter(c => {
+        const gradeMatch = !searchGrade || c.grade === searchGrade;
+        const nameMatch = !searchName || (c.name && c.name.toLowerCase().includes(searchName));
+        const statusMatch = !searchStatus || c.status === searchStatus;
+        return gradeMatch && nameMatch && statusMatch;
+      });
+
+      consultDisplayCount = ITEMS_PER_PAGE;
+      renderConsultTable(filteredConsultations);
+      document.getElementById('consultCount').textContent = `총 ${filteredConsultations.length}명`;
+    }
+
+    function renderConsultTable(consultations) {
+      const tbody = document.getElementById('consultTableBody');
+      const showMoreBtn = document.getElementById('consultShowMoreBtn');
+
+      if (consultations.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-message">상담 신청이 없습니다.</td></tr>';
+        showMoreBtn.style.display = 'none';
+        return;
+      }
+
+      // 표시할 데이터만 추출
+      const displayData = consultations.slice(0, consultDisplayCount);
+      const remaining = consultations.length - consultDisplayCount;
+
+      tbody.innerHTML = displayData.map((c, idx) => {
+        const statusClass = c.status === 'pending' ? 'consult-status-pending' :
+                           c.status === 'contacted' ? 'consult-status-contacted' : 'consult-status-completed';
+        const statusText = c.status === 'pending' ? '대기' :
+                          c.status === 'contacted' ? '연락완료' : '상담완료';
+        const isChecked = selectedConsultIds.includes(c._id) ? 'checked' : '';
+
+        return `
+        <tr>
+          <td class="checkbox-cell"><input type="checkbox" class="user-checkbox consult-row-checkbox" data-consult-id="${c._id}" ${isChecked} onchange="updateConsultSelection()"></td>
+          <td>${idx + 1}</td>
+          <td>${c.name || '-'}</td>
+          <td>${c.school || '-'}</td>
+          <td>${c.grade || '-'}</td>
+          <td>${c.phone || '-'}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td>${formatDate(c.createdAt)}</td>
+          <td>
+            ${c.status === 'pending' ?
+              `<button class="consult-btn consult-btn-contact" onclick="updateConsultStatus('${c._id}', 'contacted')">연락완료</button>` : ''}
+            ${c.status !== 'completed' ?
+              `<button class="consult-btn consult-btn-complete" onclick="updateConsultStatus('${c._id}', 'completed')">상담완료</button>` : ''}
+            <button class="delete-btn" onclick="deleteConsultation('${c._id}')">삭제</button>
+          </td>
+        </tr>
+      `}).join('');
+
+      // 더보기 버튼 표시
+      if (remaining > 0) {
+        document.getElementById('consultRemainingCount').textContent = remaining;
+        showMoreBtn.style.display = 'block';
+      } else {
+        showMoreBtn.style.display = 'none';
+      }
+
+      // 전체 선택 체크박스 초기화
+      document.getElementById('consultSelectAll').checked = false;
+    }
+
+    function showMoreConsultations() {
+      consultDisplayCount += ITEMS_PER_PAGE;
+      renderConsultTable(filteredConsultations);
+    }
+
+    function showConsultError(msg) {
+      document.getElementById('consultTableBody').innerHTML = `<tr><td colspan="9" class="empty-message">${msg}</td></tr>`;
+    }
+
+    // 상담 체크박스 관련
+    function toggleConsultSelectAll() {
+      const selectAllCheckbox = document.getElementById('consultSelectAll');
+      const rowCheckboxes = document.querySelectorAll('.consult-row-checkbox');
+
+      rowCheckboxes.forEach(cb => {
+        cb.checked = selectAllCheckbox.checked;
+      });
+
+      updateConsultSelection();
+    }
+
+    function updateConsultSelection() {
+      const rowCheckboxes = document.querySelectorAll('.consult-row-checkbox');
+      selectedConsultIds = [];
+
+      rowCheckboxes.forEach(cb => {
+        if (cb.checked) {
+          selectedConsultIds.push(cb.getAttribute('data-consult-id'));
+        }
+      });
+
+      document.getElementById('consultSelectedCount').textContent = selectedConsultIds.length;
+
+      const bulkActions = document.getElementById('consultBulkActions');
+      if (selectedConsultIds.length > 0) {
+        bulkActions.classList.add('active');
+      } else {
+        bulkActions.classList.remove('active');
+      }
+
+      // 전체 선택 체크박스 상태
+      const selectAllCheckbox = document.getElementById('consultSelectAll');
+      if (selectedConsultIds.length === rowCheckboxes.length && rowCheckboxes.length > 0) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+      } else if (selectedConsultIds.length > 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+      } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      }
+    }
+
+    function clearConsultSelection() {
+      const rowCheckboxes = document.querySelectorAll('.consult-row-checkbox');
+      rowCheckboxes.forEach(cb => cb.checked = false);
+
+      selectedConsultIds = [];
+      document.getElementById('consultSelectedCount').textContent = 0;
+      document.getElementById('consultBulkActions').classList.remove('active');
+      document.getElementById('consultSelectAll').checked = false;
+      document.getElementById('consultSelectAll').indeterminate = false;
+    }
+
+    async function bulkDeleteConsultations() {
+      if (selectedConsultIds.length === 0) {
+        alert('삭제할 상담을 선택해주세요.');
+        return;
+      }
+
+      if (!confirm(`선택한 ${selectedConsultIds.length}개의 상담 신청을 삭제하시겠습니까?`)) return;
+
+      try {
+        let successCount = 0;
+        for (const id of selectedConsultIds) {
+          const response = await fetch(`/api/mock-exam/admin/consultations/${id}`, { method: 'DELETE' });
+          const data = await response.json();
+          if (data.ok) successCount++;
+        }
+
+        alert(`${successCount}개의 상담이 삭제되었습니다.`);
+        selectedConsultIds = [];
+        loadConsultations();
+      } catch (err) {
+        console.error(err);
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    async function updateConsultStatus(id, status) {
+      const statusText = status === 'contacted' ? '연락완료' : '상담완료';
+      if (!confirm(`${statusText} 처리하시겠습니까?`)) return;
+
+      try {
+        const response = await fetch(`/api/mock-exam/admin/consultations/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+          alert(`${statusText} 처리되었습니다.`);
+          loadConsultations();
+        } else {
+          alert('처리에 실패했습니다: ' + (data.error || data.message));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('서버 연결에 실패했습니다.');
+      }
+    }
+
+    async function deleteConsultation(id) {
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+
+      try {
+        const response = await fetch(`/api/mock-exam/admin/consultations/${id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+          alert('삭제되었습니다.');
+          loadConsultations();
+        } else {
+          alert('삭제에 실패했습니다: ' + (data.error || data.message));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('서버 연결에 실패했습니다.');
+      }
+    }
+
+    // ===== 회원 관리 함수들 =====
+    let filteredUsers = [];
+
+    async function loadUsers() {
+      const searchGrade = document.getElementById('userSearchGrade').value;
+      const searchSchool = document.getElementById('userSearchSchool').value.trim();
+      const searchName = document.getElementById('userSearchName').value.trim();
+
+      // 검색 시 표시 개수 초기화
+      userDisplayCount = ITEMS_PER_PAGE;
+      selectedUserIds = [];
+      clearSelection();
+
+      try {
+        const response = await fetch('/api/mock-exam/admin/users');
+        const data = await response.json();
+
+        if (data.ok) {
+          allUsers = data.users;
+
+          // 필터링
+          filteredUsers = allUsers;
+          if (searchGrade) {
+            filteredUsers = filteredUsers.filter(u => u.grade === searchGrade);
+          }
+          if (searchSchool) {
+            filteredUsers = filteredUsers.filter(u => u.school?.includes(searchSchool));
+          }
+          if (searchName) {
+            filteredUsers = filteredUsers.filter(u => u.name?.includes(searchName));
+          }
+
+          renderUserTable(filteredUsers);
+          document.getElementById('userCount').textContent = `총 ${filteredUsers.length}명`;
+        } else {
+          showUserError('데이터를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showUserError('서버 연결에 실패했습니다.');
+      }
+    }
+
+    // 회원 실시간 필터링 함수
+    function filterUsers() {
+      const searchGrade = document.getElementById('userSearchGrade').value;
+      const searchSchool = document.getElementById('userSearchSchool').value.trim().toLowerCase();
+      const searchName = document.getElementById('userSearchName').value.trim().toLowerCase();
+
+      filteredUsers = allUsers.filter(u => {
+        const gradeMatch = !searchGrade || u.grade === searchGrade;
+        const schoolMatch = !searchSchool || (u.school && u.school.toLowerCase().includes(searchSchool));
+        const nameMatch = !searchName || (u.name && u.name.toLowerCase().includes(searchName));
+        return gradeMatch && schoolMatch && nameMatch;
+      });
+
+      userDisplayCount = ITEMS_PER_PAGE;
+      renderUserTable(filteredUsers);
+      document.getElementById('userCount').textContent = `총 ${filteredUsers.length}명`;
+    }
+
+    function renderUserTable(users) {
+      const tbody = document.getElementById('userTableBody');
+      const showMoreBtn = document.getElementById('userShowMoreBtn');
+
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="empty-message">등록된 회원이 없습니다.</td></tr>';
+        showMoreBtn.style.display = 'none';
+        return;
+      }
+
+      // 표시할 데이터만 추출
+      const displayData = users.slice(0, userDisplayCount);
+      const remaining = users.length - userDisplayCount;
+
+      tbody.innerHTML = displayData.map((u, idx) => {
+        const statusClass = u.status === 'active' ? 'status-active' :
+                           u.status === 'suspended' ? 'status-suspended' : 'status-inactive';
+        const statusText = u.status === 'active' ? '활성' :
+                          u.status === 'suspended' ? '정지' : '비활성';
+        const isChecked = selectedUserIds.includes(u._id) ? 'checked' : '';
+
+        // AI과제 배지 색상 결정
+        const aiCompleted = u.aiTaskCompleted || 0;
+        const aiTotal = u.aiTaskTotal || 0;
+        let aiTaskBadgeClass = 'ai-task-none';
+        if (aiTotal > 0) {
+          if (aiCompleted === aiTotal) {
+            aiTaskBadgeClass = 'ai-task-complete';
+          } else if (aiCompleted > 0) {
+            aiTaskBadgeClass = 'ai-task-progress';
+          } else {
+            aiTaskBadgeClass = 'ai-task-pending';
+          }
+        }
+
+        return `
+        <tr>
+          <td class="checkbox-cell"><input type="checkbox" class="user-checkbox user-row-checkbox" data-user-id="${u._id}" ${isChecked} onchange="updateSelection()"></td>
+          <td>${idx + 1}</td>
+          <td><span class="user-name-link" onclick="goToStudentDashboard('${u._id}', '${u.name}')">${u.name || '-'}</span></td>
+          <td>${u.school || '-'}</td>
+          <td>${u.grade || '-'}</td>
+          <td>${u.phone || '-'}</td>
+          <td><span class="ticket-btn" onclick="openTicketModal('${u._id}', '${u.name}', ${u.tickets || 0})">${u.tickets || 0}회</span></td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td><span class="ai-task-badge ${aiTaskBadgeClass}" onclick="shareAiTaskKakao('${u._id}', '${u.name}', ${aiCompleted}, ${aiTotal})" style="cursor: pointer;" title="클릭하여 카카오톡으로 공유">${aiTotal > 0 ? `${aiCompleted}/${aiTotal}` : '-'}</span></td>
+          <td>${formatDate(u.createdAt)}</td>
+          <td>${u.lastLogin ? formatDate(u.lastLogin) : '-'}</td>
+          <td>
+            <button class="edit-btn" onclick="openEditUserModal('${u._id}')">수정</button>
+            ${u.status === 'active' ?
+              `<button class="status-btn status-btn-suspend" onclick="changeUserStatus('${u._id}', 'suspended')">정지</button>` :
+              `<button class="status-btn status-btn-activate" onclick="changeUserStatus('${u._id}', 'active')">활성화</button>`
+            }
+            <button class="delete-btn" onclick="deleteUser('${u._id}')">삭제</button>
+          </td>
+        </tr>
+      `}).join('');
+
+      // 더보기 버튼 표시
+      if (remaining > 0) {
+        document.getElementById('userRemainingCount').textContent = remaining;
+        showMoreBtn.style.display = 'block';
+      } else {
+        showMoreBtn.style.display = 'none';
+      }
+
+      // 전체 선택 체크박스 상태 초기화
+      document.getElementById('selectAll').checked = false;
+    }
+
+    function showMoreUsers() {
+      userDisplayCount += ITEMS_PER_PAGE;
+      renderUserTable(filteredUsers);
+    }
+
+    // AI과제 정렬 토글
+    function toggleAiTaskSort() {
+      const sortBtn = document.getElementById('sortAiTask');
+
+      if (aiTaskSortOrder === null || aiTaskSortOrder === 'desc') {
+        aiTaskSortOrder = 'asc';
+        sortBtn.className = 'sortable asc';
+      } else {
+        aiTaskSortOrder = 'desc';
+        sortBtn.className = 'sortable desc';
+      }
+
+      // 미완료 과제가 많은 순으로 정렬 (asc: 미완료 순)
+      if (aiTaskSortOrder === 'asc') {
+        // 미완료 순: 과제가 있고 완료율이 낮은 순
+        filteredUsers = [...filteredUsers].sort((a, b) => {
+          const aTotal = a.aiTaskTotal || 0;
+          const bTotal = b.aiTaskTotal || 0;
+          const aCompleted = a.aiTaskCompleted || 0;
+          const bCompleted = b.aiTaskCompleted || 0;
+          const aRemaining = aTotal - aCompleted;
+          const bRemaining = bTotal - bCompleted;
+
+          // 과제가 있는 사람 우선
+          if (aTotal > 0 && bTotal === 0) return -1;
+          if (aTotal === 0 && bTotal > 0) return 1;
+          if (aTotal === 0 && bTotal === 0) return 0;
+
+          // 미완료 개수가 많은 순
+          return bRemaining - aRemaining;
+        });
+      } else {
+        // 완료 순: 완료율이 높은 순
+        filteredUsers = [...filteredUsers].sort((a, b) => {
+          const aTotal = a.aiTaskTotal || 0;
+          const bTotal = b.aiTaskTotal || 0;
+          const aCompleted = a.aiTaskCompleted || 0;
+          const bCompleted = b.aiTaskCompleted || 0;
+
+          // 과제가 있는 사람 우선
+          if (aTotal > 0 && bTotal === 0) return -1;
+          if (aTotal === 0 && bTotal > 0) return 1;
+          if (aTotal === 0 && bTotal === 0) return 0;
+
+          // 완료 개수가 많은 순
+          return bCompleted - aCompleted;
+        });
+      }
+
+      userDisplayCount = ITEMS_PER_PAGE;
+      renderUserTable(filteredUsers);
+    }
+
+    function showUserError(msg) {
+      document.getElementById('userTableBody').innerHTML = `<tr><td colspan="12" class="empty-message">${msg}</td></tr>`;
+    }
+
+    // 회원 일괄 삭제
+    async function bulkDeleteUsers() {
+      if (selectedUserIds.length === 0) {
+        alert('삭제할 회원을 선택해주세요.');
+        return;
+      }
+
+      if (!confirm(`선택한 ${selectedUserIds.length}명의 회원을 삭제하시겠습니까?\n삭제된 회원은 복구할 수 없습니다.`)) return;
+
+      try {
+        let successCount = 0;
+        for (const id of selectedUserIds) {
+          const response = await fetch(`/api/mock-exam/admin/users/${id}`, { method: 'DELETE' });
+          const data = await response.json();
+          if (data.ok) successCount++;
+        }
+
+        alert(`${successCount}명의 회원이 삭제되었습니다.`);
+        selectedUserIds = [];
+        loadUsers();
+      } catch (err) {
+        console.error(err);
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    function openAddUserModal() {
+      document.getElementById('userModalTitle').textContent = '회원 추가';
+      document.getElementById('userId').value = '';
+      document.getElementById('userName').value = '';
+      document.getElementById('userSchool').value = '';
+      document.getElementById('userGrade').value = '';
+      document.getElementById('userPhone').value = '';
+      document.getElementById('userModal').classList.add('active');
+    }
+
+    function openEditUserModal(id) {
+      const user = allUsers.find(u => u._id === id);
+      if (!user) return;
+
+      document.getElementById('userModalTitle').textContent = '회원 정보 수정';
+      document.getElementById('userId').value = id;
+      document.getElementById('userName').value = user.name || '';
+      document.getElementById('userSchool').value = user.school || '';
+      document.getElementById('userGrade').value = user.grade || '';
+      document.getElementById('userPhone').value = user.phone || '';
+      document.getElementById('userModal').classList.add('active');
+    }
+
+    function closeUserModal() {
+      document.getElementById('userModal').classList.remove('active');
+    }
+
+    // 전화번호 포맷팅
+    function formatPhoneInput(input) {
+      let value = input.value.replace(/[^0-9]/g, '');
+      if (value.length > 3 && value.length <= 7) {
+        value = value.slice(0, 3) + '-' + value.slice(3);
+      } else if (value.length > 7) {
+        value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+      }
+      input.value = value;
+    }
+
+    document.getElementById('userPhone').addEventListener('input', function() { formatPhoneInput(this); });
+
+    document.getElementById('userForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('userId').value;
+      const userData = {
+        name: document.getElementById('userName').value.trim(),
+        school: document.getElementById('userSchool').value.trim(),
+        grade: document.getElementById('userGrade').value,
+        phone: document.getElementById('userPhone').value.trim()
+      };
+
+      try {
+        let response;
+        if (id) {
+          // 수정
+          response = await fetch(`/api/mock-exam/admin/users/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+          });
+        } else {
+          // 추가 (회원가입 API 사용)
+          response = await fetch('/api/mock-exam/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+          });
+        }
+
+        const data = await response.json();
+        if (data.ok) {
+          alert(id ? '수정되었습니다.' : '회원이 추가되었습니다.');
+          closeUserModal();
+          loadUsers();
+        } else {
+          alert((id ? '수정' : '추가') + '에 실패했습니다: ' + (data.error || data.message));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('서버 연결에 실패했습니다.');
+      }
+    });
+
+    async function changeUserStatus(id, status) {
+      const statusText = status === 'active' ? '활성화' : '정지';
+      if (!confirm(`정말 ${statusText} 처리하시겠습니까?`)) return;
+
+      try {
+        const response = await fetch(`/api/mock-exam/admin/users/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+          alert(`${statusText} 처리되었습니다.`);
+          loadUsers();
+        } else {
+          alert('처리에 실패했습니다: ' + (data.error || data.message));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('서버 연결에 실패했습니다.');
+      }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('정말 삭제하시겠습니까?\n삭제된 회원은 복구할 수 없습니다.')) return;
+
+      try {
+        const response = await fetch(`/api/mock-exam/admin/users/${id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+          alert('삭제되었습니다.');
+          loadUsers();
+        } else {
+          alert('삭제에 실패했습니다: ' + (data.error || data.message));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('서버 연결에 실패했습니다.');
+      }
+    }
+
+    // 모달 바깥 클릭 시 닫기
+    document.getElementById('userModal').addEventListener('click', function(e) {
+      if (e.target === this) closeUserModal();
+    });
+
+    // ===== 응시 결과 관리 함수들 =====
+    let filteredResults = [];
+
+    // 순위 정렬 토글
+    function toggleRankSort() {
+      const sortBtn = document.getElementById('sortRank');
+
+      if (rankSortOrder === null || rankSortOrder === 'desc') {
+        rankSortOrder = 'asc';
+        sortBtn.className = 'sortable asc';
+      } else {
+        rankSortOrder = 'desc';
+        sortBtn.className = 'sortable desc';
+      }
+
+      // 점수 기준 정렬 (순위 = 점수 역순)
+      if (rankSortOrder === 'asc') {
+        filteredResults = [...filteredResults].sort((a, b) => (b.score || 0) - (a.score || 0));
+      } else {
+        filteredResults = [...filteredResults].sort((a, b) => (a.score || 0) - (b.score || 0));
+      }
+
+      renderTable(filteredResults);
+    }
+
+    async function loadResults() {
+      const searchRound = document.getElementById('searchRound').value;
+      const searchSchool = document.getElementById('searchSchool').value.trim();
+      const searchGrade = document.getElementById('searchGrade').value;
+      const searchName = document.getElementById('searchName').value.trim();
+
+      // 검색 시 표시 개수 초기화
+      resultDisplayCount = ITEMS_PER_PAGE;
+      selectedResultIds = [];
+      clearResultSelection();
+
+      try {
+        const response = await fetch('/api/mock-exam/admin/results');
+        const data = await response.json();
+
+        if (data.ok) {
+          allResults = data.results;
+
+          // 필터링
+          filteredResults = allResults;
+          if (searchRound) {
+            filteredResults = filteredResults.filter(r => r.examId === searchRound);
+          }
+          if (searchSchool) {
+            filteredResults = filteredResults.filter(r => r.studentInfo?.schoolName?.includes(searchSchool));
+          }
+          if (searchGrade) {
+            filteredResults = filteredResults.filter(r => r.studentInfo?.grade === searchGrade);
+          }
+          if (searchName) {
+            filteredResults = filteredResults.filter(r => r.studentInfo?.studentName?.includes(searchName));
+          }
+
+          renderTable(filteredResults);
+          document.getElementById('totalCount').textContent = `총 ${filteredResults.length}명`;
+        } else {
+          showError('데이터를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showError('서버 연결에 실패했습니다.');
+      }
+    }
+
+    // 응시 결과 실시간 필터링 함수
+    function filterResults() {
+      const searchRound = document.getElementById('searchRound').value;
+      const searchSchool = document.getElementById('searchSchool').value.trim().toLowerCase();
+      const searchGrade = document.getElementById('searchGrade').value;
+      const searchName = document.getElementById('searchName').value.trim().toLowerCase();
+
+      filteredResults = allResults.filter(r => {
+        const roundMatch = !searchRound || r.examId === searchRound;
+        const schoolMatch = !searchSchool || (r.studentInfo?.schoolName && r.studentInfo.schoolName.toLowerCase().includes(searchSchool));
+        const gradeMatch = !searchGrade || r.studentInfo?.grade === searchGrade;
+        const nameMatch = !searchName || (r.studentInfo?.studentName && r.studentInfo.studentName.toLowerCase().includes(searchName));
+        return roundMatch && schoolMatch && gradeMatch && nameMatch;
+      });
+
+      resultDisplayCount = ITEMS_PER_PAGE;
+      renderTable(filteredResults);
+      document.getElementById('totalCount').textContent = `총 ${filteredResults.length}명`;
+    }
+
+    // 점수 기준 등급 계산 함수 - 1회차 기준: 전체 4점 하향
+    function calculateGradeRound1(score) {
+      if (score >= 93) return { grade: 1, text: '1등급 상' };
+      if (score >= 90) return { grade: 1, text: '1등급 중' };
+      if (score >= 87) return { grade: 1, text: '1등급 하' };
+      if (score >= 84) return { grade: 2, text: '2등급 상' };
+      if (score >= 81) return { grade: 2, text: '2등급 중' };
+      if (score >= 78) return { grade: 2, text: '2등급 하' };
+      if (score >= 74) return { grade: 3, text: '3등급 상' };
+      if (score >= 70) return { grade: 3, text: '3등급 중' };
+      if (score >= 66) return { grade: 3, text: '3등급 하' };
+      if (score >= 63) return { grade: 4, text: '4등급 상' };
+      if (score >= 59) return { grade: 4, text: '4등급 중' };
+      if (score >= 55) return { grade: 4, text: '4등급 하' };
+      return { grade: 5, text: '5등급' };
+    }
+
+    // 2회차, 3회차 등급 계산 함수 - 1회차 대비 6점씩 하향 (난이도 상향으로 인한 조정)
+    function calculateGradeRound2(score) {
+      if (score >= 91) return { grade: 1, text: '1등급 상' };
+      if (score >= 88) return { grade: 1, text: '1등급 중' };
+      if (score >= 85) return { grade: 1, text: '1등급 하' };
+      if (score >= 82) return { grade: 2, text: '2등급 상' };
+      if (score >= 79) return { grade: 2, text: '2등급 중' };
+      if (score >= 76) return { grade: 2, text: '2등급 하' };
+      if (score >= 72) return { grade: 3, text: '3등급 상' };
+      if (score >= 68) return { grade: 3, text: '3등급 중' };
+      if (score >= 64) return { grade: 3, text: '3등급 하' };
+      if (score >= 61) return { grade: 4, text: '4등급 상' };
+      if (score >= 57) return { grade: 4, text: '4등급 중' };
+      if (score >= 53) return { grade: 4, text: '4등급 하' };
+      return { grade: 5, text: '5등급' };
+    }
+
+    // 회차별 등급 계산 분기
+    function calculateGrade(score, examId) {
+      if (examId === 'korean_mock_2' || examId === 'korean_mock_3' || examId === 'korean_mock_4') {
+        return calculateGradeRound2(score);
+      }
+      return calculateGradeRound1(score);
+    }
+
+    // 회차별 시험지 URL 반환
+    function getExamUrl(examId) {
+      const examUrls = {
+        'korean_mock_1': '/mock_exam_korean.html',
+        'korean_mock_2': '/mock_exam_korean2.html',
+        'korean_mock_3': '/mock_exam_korean3.html',
+        'korean_mock_4': '/mock_exam_korean4.html'
+      };
+      return examUrls[examId] || '/mock_exam_korean.html';
+    }
+
+    function renderTable(results) {
+      const tbody = document.getElementById('resultTableBody');
+      const showMoreBtn = document.getElementById('resultShowMoreBtn');
+
+      if (results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="13" class="empty-message">등록된 응시자가 없습니다.</td></tr>';
+        showMoreBtn.style.display = 'none';
+        return;
+      }
+
+      // 회차별 순위 계산
+      const rankByExam = {};
+
+      // 회차별로 그룹화하고 점수 순으로 정렬하여 순위 부여
+      results.forEach(r => {
+        const examId = r.examId || 'korean_mock_1';
+        if (!rankByExam[examId]) {
+          rankByExam[examId] = [];
+        }
+        rankByExam[examId].push({ id: r._id, score: r.score || 0 });
+      });
+
+      // 각 회차별로 점수 순 정렬 후 순위 부여
+      const rankMap = {};
+      Object.keys(rankByExam).forEach(examId => {
+        const sorted = rankByExam[examId].sort((a, b) => b.score - a.score);
+        sorted.forEach((item, idx) => {
+          // 동점자 처리: 같은 점수면 같은 순위
+          if (idx > 0 && sorted[idx - 1].score === item.score) {
+            rankMap[item.id] = rankMap[sorted[idx - 1].id];
+          } else {
+            rankMap[item.id] = idx + 1;
+          }
+        });
+      });
+
+      // 회차별 총 인원수
+      const totalByExam = {};
+      Object.keys(rankByExam).forEach(examId => {
+        totalByExam[examId] = rankByExam[examId].length;
+      });
+
+      // 표시할 데이터만 추출
+      const displayData = results.slice(0, resultDisplayCount);
+      const remaining = results.length - resultDisplayCount;
+
+      tbody.innerHTML = displayData.map((r, idx) => {
+        // examId에서 회차 추출 (korean_mock_1 -> 1회)
+        const examId = r.examId || 'korean_mock_1';
+        const gradeInfo = calculateGrade(r.score || 0, examId);
+        const examRound = examId.replace(/[^0-9]/g, '') + '회';
+        const rank = rankMap[r._id] || '-';
+        const total = totalByExam[examId] || 0;
+        const isChecked = selectedResultIds.includes(r._id) ? 'checked' : '';
+        return `
+        <tr>
+          <td class="checkbox-cell"><input type="checkbox" class="user-checkbox result-row-checkbox" data-result-id="${r._id}" ${isChecked} onchange="updateResultSelection()"></td>
+          <td>${idx + 1}</td>
+          <td>${examRound}</td>
+          <td>${r.studentInfo?.schoolName || '-'}</td>
+          <td>${r.studentInfo?.grade || '-'}</td>
+          <td><span class="user-name-link" onclick="goToStudentDashboardByPhone('${r.studentInfo?.phoneNumber || ''}', '${r.studentInfo?.studentName || ''}')">${r.studentInfo?.studentName || '-'}</span></td>
+          <td>${r.studentInfo?.phoneNumber || '-'}</td>
+          <td class="score-text">${r.score || 0}점 (${r.correctCount || 0}/45)</td>
+          <td><span class="grade-badge grade-${gradeInfo.grade}">${gradeInfo.text}</span></td>
+          <td><strong>${rank}</strong> / ${total}</td>
+          <td>${formatDate(r.completedAt)}</td>
+          <td><a href="${getExamUrl(examId)}?view=${r._id}" target="_blank" class="view-btn">시험지 보기</a></td>
+          <td>
+            <button class="edit-btn" onclick="openEditModal('${r._id}')">수정</button>
+            <button class="delete-btn" onclick="deleteResult('${r._id}')">삭제</button>
+          </td>
+        </tr>
+      `}).join('');
+
+      // 더보기 버튼 표시
+      if (remaining > 0) {
+        document.getElementById('resultRemainingCount').textContent = remaining;
+        showMoreBtn.style.display = 'block';
+      } else {
+        showMoreBtn.style.display = 'none';
+      }
+
+      // 전체 선택 체크박스 초기화
+      document.getElementById('resultSelectAll').checked = false;
+    }
+
+    function showMoreResults() {
+      resultDisplayCount += ITEMS_PER_PAGE;
+      renderTable(filteredResults);
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function showError(msg) {
+      document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="13" class="empty-message">${msg}</td></tr>`;
+    }
+
+    // 응시 결과 체크박스 관련
+    function toggleResultSelectAll() {
+      const selectAllCheckbox = document.getElementById('resultSelectAll');
+      const rowCheckboxes = document.querySelectorAll('.result-row-checkbox');
+
+      rowCheckboxes.forEach(cb => {
+        cb.checked = selectAllCheckbox.checked;
+      });
+
+      updateResultSelection();
+    }
+
+    function updateResultSelection() {
+      const rowCheckboxes = document.querySelectorAll('.result-row-checkbox');
+      selectedResultIds = [];
+
+      rowCheckboxes.forEach(cb => {
+        if (cb.checked) {
+          selectedResultIds.push(cb.getAttribute('data-result-id'));
+        }
+      });
+
+      document.getElementById('resultSelectedCount').textContent = selectedResultIds.length;
+
+      const bulkActions = document.getElementById('resultBulkActions');
+      if (selectedResultIds.length > 0) {
+        bulkActions.classList.add('active');
+      } else {
+        bulkActions.classList.remove('active');
+      }
+
+      // 전체 선택 체크박스 상태
+      const selectAllCheckbox = document.getElementById('resultSelectAll');
+      if (selectedResultIds.length === rowCheckboxes.length && rowCheckboxes.length > 0) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+      } else if (selectedResultIds.length > 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+      } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      }
+    }
+
+    function clearResultSelection() {
+      const rowCheckboxes = document.querySelectorAll('.result-row-checkbox');
+      rowCheckboxes.forEach(cb => cb.checked = false);
+
+      selectedResultIds = [];
+      document.getElementById('resultSelectedCount').textContent = 0;
+      document.getElementById('resultBulkActions').classList.remove('active');
+      document.getElementById('resultSelectAll').checked = false;
+      document.getElementById('resultSelectAll').indeterminate = false;
+    }
+
+    async function bulkDeleteResults() {
+      if (selectedResultIds.length === 0) {
+        alert('삭제할 응시 결과를 선택해주세요.');
+        return;
+      }
+
+      if (!confirm(`선택한 ${selectedResultIds.length}개의 응시 결과를 삭제하시겠습니까?`)) return;
+
+      try {
+        let successCount = 0;
+        for (const id of selectedResultIds) {
+          const response = await fetch(`/api/mock-exam/admin/delete/${id}`, { method: 'DELETE' });
+          const data = await response.json();
+          if (data.ok) successCount++;
+        }
+
+        alert(`${successCount}개의 응시 결과가 삭제되었습니다.`);
+        selectedResultIds = [];
+        loadResults();
+      } catch (err) {
+        console.error(err);
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    function openEditModal(id) {
+      const result = allResults.find(r => r._id === id);
+      if (!result) return;
+
+      document.getElementById('editId').value = id;
+      document.getElementById('editSchool').value = result.studentInfo?.schoolName || '';
+      document.getElementById('editGradeLevel').value = result.studentInfo?.grade || '1';
+      document.getElementById('editName').value = result.studentInfo?.studentName || '';
+      document.getElementById('editPhone').value = result.studentInfo?.phoneNumber || '';
+
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('editId').value;
+      const studentInfo = {
+        schoolName: document.getElementById('editSchool').value,
+        grade: document.getElementById('editGradeLevel').value,
+        studentName: document.getElementById('editName').value,
+        phoneNumber: document.getElementById('editPhone').value
+      };
+
+      try {
+        const response = await fetch(`/api/mock-exam/admin/update/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentInfo })
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+          alert('수정되었습니다.');
+          closeEditModal();
+          loadResults();
+        } else {
+          alert('수정에 실패했습니다: ' + data.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('서버 연결에 실패했습니다.');
+      }
+    });
+
+    async function deleteResult(id) {
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+
+      try {
+        const response = await fetch(`/api/mock-exam/admin/delete/${id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+          alert('삭제되었습니다.');
+          loadResults();
+        } else {
+          alert('삭제에 실패했습니다: ' + data.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('서버 연결에 실패했습니다.');
+      }
+    }
+
+    // 모달 바깥 클릭 시 닫기
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) closeEditModal();
+    });
+
+    // ========== 체크박스 선택 관련 ==========
+    let selectedUserIds = [];
+
+    function toggleSelectAll() {
+      const selectAllCheckbox = document.getElementById('selectAll');
+      const rowCheckboxes = document.querySelectorAll('.user-row-checkbox');
+
+      rowCheckboxes.forEach(cb => {
+        cb.checked = selectAllCheckbox.checked;
+      });
+
+      updateSelection();
+    }
+
+    function updateSelection() {
+      const rowCheckboxes = document.querySelectorAll('.user-row-checkbox');
+      selectedUserIds = [];
+
+      rowCheckboxes.forEach(cb => {
+        if (cb.checked) {
+          selectedUserIds.push(cb.getAttribute('data-user-id'));
+        }
+      });
+
+      // 선택된 수 업데이트
+      document.getElementById('selectedCount').textContent = selectedUserIds.length;
+
+      // 일괄 처리 버튼 영역 표시/숨김
+      const bulkActions = document.getElementById('bulkActions');
+      if (selectedUserIds.length > 0) {
+        bulkActions.classList.add('active');
+      } else {
+        bulkActions.classList.remove('active');
+      }
+
+      // 전체 선택 체크박스 상태 업데이트
+      const selectAllCheckbox = document.getElementById('selectAll');
+      if (selectedUserIds.length === rowCheckboxes.length && rowCheckboxes.length > 0) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+      } else if (selectedUserIds.length > 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+      } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      }
+    }
+
+    function clearSelection() {
+      const rowCheckboxes = document.querySelectorAll('.user-row-checkbox');
+      rowCheckboxes.forEach(cb => {
+        cb.checked = false;
+      });
+
+      selectedUserIds = [];
+      document.getElementById('selectedCount').textContent = 0;
+      document.getElementById('bulkActions').classList.remove('active');
+      document.getElementById('selectAll').checked = false;
+      document.getElementById('selectAll').indeterminate = false;
+    }
+
+    // ========== 일괄 이용권 부여 ==========
+    function openBulkTicketModal() {
+      if (selectedUserIds.length === 0) {
+        alert('이용권을 부여할 회원을 선택해주세요.');
+        return;
+      }
+
+      document.getElementById('bulkTicketCount').textContent = selectedUserIds.length;
+      document.getElementById('bulkTicketInput').value = 1;
+      document.getElementById('bulkTicketModal').classList.add('active');
+      document.getElementById('bulkTicketInput').focus();
+    }
+
+    function closeBulkTicketModal() {
+      document.getElementById('bulkTicketModal').classList.remove('active');
+    }
+
+    async function saveBulkTickets() {
+      const addTickets = parseInt(document.getElementById('bulkTicketInput').value) || 0;
+
+      if (addTickets <= 0) {
+        alert('부여할 이용권 수를 1 이상으로 입력해주세요.');
+        return;
+      }
+
+      if (selectedUserIds.length === 0) {
+        alert('선택된 회원이 없습니다.');
+        return;
+      }
+
+      if (!confirm(`${selectedUserIds.length}명에게 이용권 ${addTickets}회를 추가 부여하시겠습니까?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/mock-exam/admin/users/bulk-tickets', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userIds: selectedUserIds,
+            addTickets: addTickets
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+          alert(`${data.updatedCount}명에게 이용권이 부여되었습니다.`);
+          closeBulkTicketModal();
+          clearSelection();
+          loadUsers();
+        } else {
+          alert(data.error || '이용권 부여에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('일괄 이용권 부여 오류:', error);
+        alert('이용권 부여 중 오류가 발생했습니다.');
+      }
+    }
+
+    // ========== 이용권 부여 기능 (개별) ==========
+    let ticketUserId = null;
+
+    function openTicketModal(userId, userName, currentTickets) {
+      ticketUserId = userId;
+      document.getElementById('ticketUserName').textContent = userName;
+      document.getElementById('ticketInput').value = currentTickets;
+      document.getElementById('ticketModal').classList.add('active');
+      document.getElementById('ticketInput').focus();
+    }
+
+    function closeTicketModal() {
+      document.getElementById('ticketModal').classList.remove('active');
+      ticketUserId = null;
+    }
+
+    async function saveTickets() {
+      if (!ticketUserId) return;
+
+      const tickets = parseInt(document.getElementById('ticketInput').value) || 0;
+
+      if (tickets < 0) {
+        alert('이용권은 0 이상이어야 합니다.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/mock-exam/admin/users/${ticketUserId}/tickets`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tickets })
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+          alert('이용권이 저장되었습니다.');
+          closeTicketModal();
+          loadUsers();
+        } else {
+          alert(data.error || '이용권 저장에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('이용권 저장 오류:', error);
+        alert('이용권 저장 중 오류가 발생했습니다.');
+      }
+    }
+
+    // 이용권 모달 이벤트는 DOMContentLoaded에서 설정
+    document.addEventListener('DOMContentLoaded', function() {
+      // 이용권 모달 바깥 클릭 시 닫기
+      const ticketModalEl = document.getElementById('ticketModal');
+      if (ticketModalEl) {
+        ticketModalEl.addEventListener('click', function(e) {
+          if (e.target === this) closeTicketModal();
+        });
+      }
+
+      // Enter 키로 저장
+      const ticketInputEl = document.getElementById('ticketInput');
+      if (ticketInputEl) {
+        ticketInputEl.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') saveTickets();
+        });
+      }
+    });
+
+    // 학생 대시보드로 이동 (로그인 없이)
+    function goToStudentDashboard(userId, userName) {
+      const dashboardUrl = `/mock_exam_dashboard.html?userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(userName)}`;
+      window.open(dashboardUrl, '_blank');
+    }
+
+    // 전화번호로 MockExamUser를 찾아서 대시보드로 이동 (응시 목록용)
+    async function goToStudentDashboardByPhone(phone, userName) {
+      if (!phone) {
+        alert('전화번호 정보가 없습니다.');
+        return;
+      }
+
+      // allUsers에서 전화번호로 사용자 찾기
+      const user = allUsers.find(u => u.phone === phone);
+      if (user) {
+        // MockExamUser가 있으면 그 _id 사용
+        goToStudentDashboard(user._id, user.name);
+      } else {
+        // MockExamUser가 없으면 전화번호를 userId로 사용
+        const dashboardUrl = `/mock_exam_dashboard.html?phone=${encodeURIComponent(phone)}&name=${encodeURIComponent(userName)}`;
+        window.open(dashboardUrl, '_blank');
+      }
+    }
+
+    // 카카오 SDK 초기화
+    if (window.Kakao && !Kakao.isInitialized()) {
+      Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
+    }
+
+    // AI과제 카카오톡 공유
+    function shareAiTaskKakao(userId, userName, completed, total) {
+      const remaining = total - completed;
+      const baseUrl = 'https://brainmoon.kr/mock_exam_dashboard.html';
+      const shareUrl = `${baseUrl}?userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(userName)}`;
+
+      // 이름에서 성 제외 (김미소 -> 미소 학생)
+      const displayName = userName && userName.length >= 2 ? userName.slice(1) + ' 학생' : userName + ' 학생';
+
+      if (window.Kakao && Kakao.isInitialized()) {
+        Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `${displayName}, AI 추천 과제를 확인해주세요!`,
+            description: `📚 미완료 과제: ${remaining}개 (${completed}/${total} 완료)\n\n아래 버튼을 눌러 과제를 확인하세요.`,
+            imageUrl: 'https://brainmoon.kr/images/ai-task-reminder.png',
+            link: {
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl
+            }
+          },
+          buttons: [
+            {
+              title: 'AI 과제 확인하기',
+              link: {
+                mobileWebUrl: shareUrl,
+                webUrl: shareUrl
+              }
+            }
+          ]
+        });
+      } else {
+        alert('카카오톡 공유 기능을 사용할 수 없습니다.');
+      }
+    }
+  </script>
+
+  <!-- 일괄 이용권 부여 모달 -->
+  <div class="ticket-modal-overlay" id="bulkTicketModal">
+    <div class="ticket-modal">
+      <h3 class="ticket-modal-title">🎫 일괄 이용권 부여</h3>
+      <p class="ticket-modal-subtitle"><strong id="bulkTicketCount">0</strong>명에게 이용권을 부여합니다.</p>
+      <div class="ticket-input-group">
+        <label>추가할 이용권</label>
+        <input type="number" id="bulkTicketInput" min="1" value="1">
+        <span>회</span>
+      </div>
+      <p style="font-size: 13px; color: #888; margin-bottom: 15px; text-align: center;">※ 기존 이용권에 추가됩니다</p>
+      <div class="ticket-modal-buttons">
+        <button class="ticket-modal-btn cancel" onclick="closeBulkTicketModal()">취소</button>
+        <button class="ticket-modal-btn save" onclick="saveBulkTickets()">부여하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이용권 부여 모달 (개별) -->
+  <div class="ticket-modal-overlay" id="ticketModal">
+    <div class="ticket-modal">
+      <h3 class="ticket-modal-title">이용권 부여</h3>
+      <p class="ticket-modal-subtitle"><strong id="ticketUserName">-</strong>님의 이용권을 설정합니다.</p>
+      <div class="ticket-input-group">
+        <label>이용권 개수</label>
+        <input type="number" id="ticketInput" min="0" value="0">
+        <span>회</span>
+      </div>
+      <div class="ticket-modal-buttons">
+        <button class="ticket-modal-btn cancel" onclick="closeTicketModal()">취소</button>
+        <button class="ticket-modal-btn save" onclick="saveTickets()">저장</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

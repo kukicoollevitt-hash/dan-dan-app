@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚛️ 고대 소년 아토의 이천오백 년 시간여행 (중등편)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작화학07/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 680px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165,0.84,0.44,1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(231,76,60,0.15); color: #c0392b; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.95; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #e74c3c; font-weight: 600; }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #e74c3c;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(231, 76, 60, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #C0392B;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #C0392B;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue { color: #c0392b; font-weight: 600; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 900px; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 40px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .grade-badge { display: inline-block; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+    .intro-content .characters { text-align: left; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #ff6b6b; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #fff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(231,76,60,0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(192,57,43,0.9); transform: translateY(-2px); }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 26px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">중1-2 심화편</span>
+        <h1>⚛️ 고대 소년 아토의 이천오백 년 시간여행</h1>
+        <p class="subtitle">— 원자 모형의 발전: 데모크리토스에서 전자구름까지 —<br>교과기반 창작도서 · 화학 07</p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>⚛️ 아토:</strong> 열두 살 고대 그리스 소년. "물질을 끝없이 쪼개면?"이라는 질문으로 2500년을 시간여행.</p>
+          <p><strong>🧙 데모크리토스:</strong> 기원전 400년경, "원자(atomos)"를 처음 상상한 철학자.</p>
+          <p><strong>🔴 연속이:</strong> "물질은 끝없이 쪼갤 수 있다"는 회의론자, 아토의 라이벌.</p>
+          <p><strong>🔬 과학자들:</strong> 돌턴, 톰슨, 러더퍼드, 보어, 슈뢰딩거 등 원자 모형을 발전시킨 안내인들.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span><span class="theme">고대 그리스</span>
+        <h2>데모크리토스의 원자 개념</h2>
+        <p>기원전 400년경 그리스, 에게해가 내려다보이는 언덕에서 소년 <span class="highlight">'아토'</span>가 모래알을 들여다보고 있었습니다. <span class="dialogue">"이 모래알을 반으로 쪼개고, 또 쪼개고… 끝이 있을까, 없을까?"</span></p>
+        <p>아토는 스승인 철학자 데모크리토스를 찾아갔습니다. <span class="dialogue">"선생님, 물질을 끝없이 쪼개면 어떻게 될까요?"</span></p>
+        <p>데모크리토스가 대답했습니다. <span class="dialogue">"아토야, 아주 좋은 질문이다. 물질을 계속 쪼개다 보면, 더 이상 쪼갤 수 없는 가장 작은 알갱이에 도달하게 될 거야. 나는 그것을 <span class="highlight">'아토모스'</span>라고 부르겠다. '자를 수 없는'이라는 뜻이지."</span></p>
+        <p>데모크리토스는 모든 물질이 이 아토모스로 구성되어 있고, 빈 공간(진공) 속에서 아토모스가 운동한다고 주장했습니다. 이것이 기원전 5세기에 탄생한 최초의 <span class="highlight">원자론</span>입니다.</p>
+        <p>하지만 연속이가 비웃었습니다. <span class="dialogue">"말도 안 돼! 물질은 끝없이 쪼갤 수 있어. 네가 말하는 '아토모스' 따위는 존재하지 않아!"</span></p>
+        <p>아리스토텔레스도 원자론을 부정했습니다. 그는 물질이 물, 불, 흙, 공기 네 가지 원소의 조합이라고 주장했고, 이 견해가 2000년 넘게 서양 과학을 지배했습니다. 원자의 존재를 증명할 실험적 방법이 없었기 때문이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span><span class="theme">돌턴의 원자론</span>
+        <h2>근대 원자론의 탄생 (1803)</h2>
+        <p>아토가 시간여행을 하듯 1803년 영국으로 날아갔습니다. 과학자 존 돌턴(John Dalton)이 화학 실험을 하고 있었습니다.</p>
+        <p><span class="dialogue">"어서 오게, 젊은이. 나는 실험 결과를 통해 네 스승의 생각이 옳았음을 증명했단다."</span> 돌턴이 데이터를 보여주었습니다.</p>
+        <p><span class="dialogue">"화학 반응에서 물질은 항상 일정한 비율로 결합해. 물을 만들 때 수소와 산소는 항상 1:8의 질량비로 결합하지. 이것은 물질이 쪼갤 수 없는 작은 단위, 즉 <span class="highlight">원자</span>로 이루어져 있기 때문이야."</span></p>
+        <p>이것이 <span class="highlight">정비례의 법칙</span>입니다. 또한 돌턴은 일산화탄소(CO)와 이산화탄소(CO₂)에서 탄소에 대한 산소의 질량비가 1:2의 간단한 정수비를 이루는 것을 발견했습니다. 이것이 <span class="highlight">배수 비례의 법칙</span>입니다.</p>
+        <p>돌턴의 원자론 핵심은 이랬습니다: 모든 물질은 원자로 구성되고, 같은 원소의 원자는 모두 같은 질량과 성질을 가지며, 다른 원소의 원자는 질량과 성질이 다릅니다. 화학 반응은 원자의 재배열이며 원자는 생성되거나 소멸되지 않습니다.</p>
+        <p>연속이가 반박했습니다. <span class="dialogue">"원자를 본 사람이 있어?"</span> 돌턴이 미소 지었습니다. <span class="dialogue">"직접 보지 못해도 증거로 존재를 추론할 수 있단다. 화학 반응의 정확한 비율이 바로 그 증거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span><span class="theme">전자의 발견</span>
+        <h2>톰슨의 음극선 실험 (1897)</h2>
+        <p>아토가 1897년 영국 케임브리지로 이동했습니다. J.J. 톰슨(Thomson)이 <span class="highlight">음극선관</span> 실험을 하고 있었습니다.</p>
+        <p><span class="dialogue">"진공관에 고전압을 가하면 음극에서 빛이 방출돼. 이것을 음극선이라고 하지."</span> 톰슨이 설명했습니다. <span class="dialogue">"내가 이 음극선 옆에 자석과 전기장을 놓으면 어떻게 될 것 같아?"</span></p>
+        <p>아토가 지켜보자, 음극선이 양극 쪽으로 휘어졌습니다!</p>
+        <p><span class="dialogue">"양극 쪽으로 휜다는 것은 음극선이 <span class="highlight">음전하</span>를 띠고 있다는 뜻이야."</span> 톰슨이 계속했습니다. <span class="dialogue">"나는 질량 대 전하 비(m/e)를 측정했어. 그 결과 이 입자가 수소 원자보다 약 1840배나 가볍다는 것을 알아냈지!"</span></p>
+        <p>더 놀라운 것은, 어떤 금속으로 음극을 만들어도 같은 결과가 나온다는 것이었습니다. 이것은 이 입자가 모든 원자 안에 존재한다는 뜻이었습니다!</p>
+        <p><span class="dialogue">"나는 이 입자를 <span class="highlight">'전자(electron)'</span>라고 부르겠다."</span> 톰슨이 선언했습니다. 전자의 질량은 약 9.11 × 10⁻³¹ kg, 전하는 -1.6 × 10⁻¹⁹ C로 측정되었습니다.</p>
+        <p>아토가 깜짝 놀랐습니다. <span class="dialogue">"원자가 더 이상 쪼갤 수 없다고 했는데, 그 안에 더 작은 입자가 있었어요?!"</span> <span class="highlight">"원자는 더 이상 쪼갤 수 없다"</span>는 2000년간의 믿음이 무너지는 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span><span class="theme">푸딩 모형</span>
+        <h2>톰슨의 원자 모형</h2>
+        <p>전자를 발견한 톰슨은 원자의 구조를 상상했습니다. 원자가 전체적으로 전기적 중성이라면, 음전하인 전자가 있는 만큼 양전하도 있어야 합니다.</p>
+        <p><span class="dialogue">"나는 양전하가 원자 전체에 고르게 퍼져 있고, 그 안에 전자가 박혀 있다고 생각해."</span> 톰슨이 영국 푸딩을 가리키며 말했습니다. <span class="dialogue">"마치 건포도가 박힌 푸딩처럼. 그래서 이것을 <span class="highlight">'푸딩 모형(plum pudding model)'</span>이라고 부르지."</span></p>
+        <p>톰슨의 푸딩 모형에서 양전하는 원자 전체에 고르게 퍼져 있고(푸딩), 전자(음전하)가 그 안에 박혀 있습니다(건포도). 양전하와 음전하를 합하면 전기적으로 중성이 됩니다. 이 모형에서 원자 대부분은 양전하 물질로 <span class="highlight">꽉 차 있다</span>고 가정했습니다.</p>
+        <p>톰슨의 모형은 당시로서는 합리적이었습니다. 전자의 존재를 설명하고, 원자의 전기적 중성을 설명하며, 원자에서 전자가 튀어나올 수 있음을 설명했습니다.</p>
+        <p>하지만 연속이가 의심했습니다. <span class="dialogue">"정말 원자가 푸딩처럼 꽉 차 있을까?"</span></p>
+        <p>이 의문은 14년 후, 러더퍼드의 놀라운 실험으로 답을 얻게 됩니다. 원자의 진짜 모습은 푸딩과는 완전히 달랐습니다!</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span><span class="theme">금박 실험</span>
+        <h2>러더퍼드의 알파 입자 산란 실험 (1911)</h2>
+        <p>아토가 1911년 영국 맨체스터의 러더퍼드(Rutherford) 연구실로 이동했습니다. 역사상 가장 유명한 실험 중 하나가 진행 중이었습니다.</p>
+        <p><span class="dialogue">"나는 얇은 금박에 <span class="highlight">알파 입자</span>를 쏴볼 거야."</span> 러더퍼드가 설명했습니다. <span class="dialogue">"알파 입자는 양전하를 띤 헬륨 원자핵이야. 두께 약 0.00004cm의 금박에 이 작은 총알을 쏘는 거지."</span></p>
+        <p>만약 톰슨의 푸딩 모형이 맞다면, 양전하가 원자 전체에 퍼져 있으므로 모든 알파 입자가 약간만 휘며 통과해야 했습니다.</p>
+        <p><span class="dialogue">"그런데 결과가 어땠는지 아니?"</span> 러더퍼드가 흥분했습니다. <span class="dialogue">"대부분, 무려 99% 이상의 알파 입자가 그냥 직진해서 통과해 버렸어! 하지만 소수가 크게 휘었고, 극소수, 약 8000개 중 1개 정도가 <span class="highlight">되튕겨 나왔어!</span>"</span></p>
+        <p>러더퍼드의 유명한 말이 있습니다: <span class="dialogue">"마치 15인치 포탄을 종이에 쐈는데 되튕겨 온 것과 같다! 이것은 내 인생에서 가장 놀라운 일이었다."</span></p>
+        <p>이 결과가 의미하는 것은 충격적이었습니다. 양전하가 원자 전체에 퍼져 있지 않았습니다. 양전하가 아주 작은 영역에 집중되어 있었고, 원자 대부분은 <span class="highlight">빈 공간</span>이었습니다!</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span><span class="theme">원자핵 발견</span>
+        <h2>러더퍼드의 유핵 원자 모형</h2>
+        <p>러더퍼드는 금박 실험 결과를 분석하여 새로운 원자 모형을 제안했습니다.</p>
+        <p><span class="dialogue">"원자의 중심에 아주 작지만 매우 무겁고 양전하를 띤 덩어리가 있어. 나는 이것을 <span class="highlight">'원자핵(nucleus)'</span>이라고 부르겠다."</span> 러더퍼드가 그림을 그렸습니다. <span class="dialogue">"전자는 이 핵 주위의 빈 공간을 돌고 있어. 마치 태양 주위를 도는 행성처럼."</span></p>
+        <p>그래서 이 모형을 <span class="highlight">유핵 모형</span> 또는 <span class="highlight">행성 모형</span>이라고 부릅니다.</p>
+        <p>크기를 비교하면, 원자의 크기는 약 10⁻¹⁰ m (0.1 나노미터)이고, 원자핵의 크기는 약 10⁻¹⁵ m입니다. 원자핵은 원자의 약 10만 분의 1 크기입니다. <span class="dialogue">"축구장 한가운데 놓인 쌀알 하나가 원자핵이고, 축구장 전체가 원자라고 생각하면 돼."</span></p>
+        <p>원자핵에는 <span class="highlight">양성자</span>와 <span class="highlight">중성자</span>가 있습니다. 양성자는 양전하(+1)를 가지며 질량이 약 1.67 × 10⁻²⁷ kg이고, 중성자는 전하가 없으며(0) 질량은 양성자와 거의 같습니다.</p>
+        <p>하지만 러더퍼드 모형에는 문제가 있었습니다. 고전 전자기학에 따르면, 가속 운동하는 전하는 전자기파를 방출하며 에너지를 잃어야 합니다. 그렇다면 전자는 핵 주위를 돌면서 에너지를 잃고 결국 핵으로 떨어져야 합니다. 하지만 실제로 그런 일은 일어나지 않습니다!</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span><span class="theme">보어 모형</span>
+        <h2>양자화된 궤도 (1913)</h2>
+        <p>아토가 1913년 덴마크 코펜하겐으로 이동했습니다. 닐스 보어(Niels Bohr)가 혁명적인 아이디어를 제안하고 있었습니다.</p>
+        <p><span class="dialogue">"러더퍼드 모형의 문제를 해결했어."</span> 보어가 말했습니다. <span class="dialogue">"전자는 아무 곳에나 있을 수 없어. 전자는 <span class="highlight">특정 에너지의 궤도에서만</span> 존재할 수 있어. 이것을 <span class="highlight">양자화</span>라고 해."</span></p>
+        <p>보어의 원자 모형의 핵심은 이랬습니다. 전자는 특정 에너지 준위의 궤도에서만 존재할 수 있고, 그 궤도에 있을 때는 에너지를 방출하지 않습니다(정상 상태). 전자가 궤도를 이동할 때만 에너지를 흡수하거나 방출합니다.</p>
+        <p><span class="dialogue">"흡수하거나 방출하는 에너지는 <span class="highlight">E = hν</span>야."</span> 보어가 설명했습니다. <span class="dialogue">"h는 플랑크 상수(6.63 × 10⁻³⁴ J·s)이고, ν(뉴)는 빛의 진동수야."</span></p>
+        <p>수소 원자의 전자 에너지 준위는 Eₙ = -13.6/n² eV로 계산됩니다(n = 1, 2, 3...). n=1(K껍질)은 -13.6 eV로 가장 안정한 바닥 상태이고, n=2(L껍질)는 -3.4 eV, n=3(M껍질)은 -1.51 eV입니다.</p>
+        <p>전자가 n=3에서 n=2로 떨어지면, ΔE = -1.51 - (-3.4) = <span class="highlight">1.89 eV</span>의 에너지가 빨간빛으로 방출됩니다!</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span><span class="theme">선 스펙트럼</span>
+        <h2>수소의 선 스펙트럼</h2>
+        <p>보어 모형은 수소 <span class="highlight">스펙트럼</span>을 완벽하게 설명했습니다. 수소 기체에 전기를 흘리면 특정 색깔의 빛만 방출됩니다. 이것을 <span class="highlight">선 스펙트럼</span>이라고 합니다.</p>
+        <p><span class="dialogue">"전자가 높은 궤도에서 낮은 궤도로 떨어질 때 특정 에너지, 즉 특정 파장의 빛을 방출해."</span> 보어가 설명했습니다. <span class="dialogue">"에너지 준위가 양자화되어 있으니까 방출되는 빛의 파장도 특정 값만 가능하지."</span></p>
+        <p>수소 스펙트럼에는 여러 계열이 있습니다. n → 1 전이는 <span class="highlight">라이먼 계열</span>로 자외선 영역입니다. n → 2 전이는 <span class="highlight">발머 계열</span>로 가시광선 영역입니다. n → 3 전이는 <span class="highlight">파셴 계열</span>로 적외선 영역입니다.</p>
+        <p>발머 계열(가시광선) 파장을 보면, 656 nm(빨강)는 3→2 전이, 486 nm(청록)는 4→2 전이, 434 nm(파랑)는 5→2 전이, 410 nm(보라)는 6→2 전이입니다.</p>
+        <p>원소마다 고유한 선 스펙트럼을 가집니다. 이것은 원소의 "지문"과 같아서, <span class="highlight">불꽃 반응</span>으로 원소를 확인하거나, <span class="highlight">분광 분석</span>으로 물질 성분을 분석하거나, 별의 구성 원소를 알아내는 데 사용합니다.</p>
+        <p>하지만 보어 모형에도 한계가 있었습니다. 수소 외 다전자 원자는 정확히 설명하지 못했고, 전자의 파동성을 설명할 수 없었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span><span class="theme">현대 원자 모형</span>
+        <h2>전자 구름(오비탈) 모형</h2>
+        <p>아토가 현대로 이동했습니다. 에르빈 슈뢰딩거(Erwin Schrödinger)가 혁명적인 방정식을 풀고 있었습니다.</p>
+        <p><span class="dialogue">"전자는 행성처럼 깔끔한 궤도를 도는 것이 아니야."</span> 슈뢰딩거가 설명했습니다. <span class="dialogue">"<span class="highlight">불확정성 원리</span>에 따르면, 전자의 정확한 위치와 운동량을 동시에 알 수 없어. 우리가 알 수 있는 것은 전자가 발견될 <span class="highlight">확률</span>뿐이야."</span></p>
+        <p>아토의 눈앞에 원자핵 주변으로 흐릿한 구름이 펼쳐졌습니다. 구름이 짙은 곳은 전자가 발견될 확률이 높고, 옅은 곳은 낮았습니다.</p>
+        <p><span class="dialogue">"이것을 <span class="highlight">'전자 구름(electron cloud)'</span> 또는 <span class="highlight">'오비탈(orbital)'</span>이라고 해. 오비탈은 전자가 발견될 확률이 90% 이상인 공간이야."</span></p>
+        <p>오비탈에는 여러 모양이 있습니다. <span class="highlight">s 오비탈</span>은 구형이고 1개, <span class="highlight">p 오비탈</span>은 아령형이고 3개(px, py, pz), <span class="highlight">d 오비탈</span>은 더 복잡한 형태로 5개, <span class="highlight">f 오비탈</span>은 가장 복잡하고 7개입니다.</p>
+        <p>아토가 당혹스러워했습니다. <span class="dialogue">"정확한 위치를 알 수 없다고요?"</span></p>
+        <p><span class="dialogue">"그것이 양자역학의 세계야. 아주 작은 세계에서는 우리가 일상에서 경험하는 규칙이 통하지 않아. 전자는 입자이면서 동시에 파동이고, 관측하기 전까지는 어느 한 곳에 있다고 말할 수 없단다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span><span class="theme">원자 모형의 발전</span>
+        <h2>과학은 더 나은 설명을 향한 여정</h2>
+        <p>모든 여행을 마친 아토는 다시 에게해가 보이는 그리스 언덕 위에 서 있었습니다. 손에는 여전히 모래 한 줌이 있었지만, 이제 완전히 다르게 보였습니다.</p>
+        <p>아토가 원자 모형의 발전 과정을 정리했습니다. 기원전 400년경 데모크리토스가 철학적 원자 개념을 제시했고, 1803년 돌턴이 근대 원자론과 단단한 구 모형을 주장했습니다. 1897년 톰슨이 전자를 발견하고 푸딩 모형을 제안했으며, 1911년 러더퍼드가 원자핵을 발견하고 유핵(행성) 모형을 만들었습니다. 1913년 보어가 양자화된 궤도 모형을 제시했고, 1926년 이후 현대 양자역학에 기반한 전자 구름(오비탈) 모형이 확립되었습니다.</p>
+        <p>연속이가 조용히 말했습니다. <span class="dialogue">"나는 틀렸어. 물질은 끝없이 이어진 것이 아니라, 작은 알갱이로 이루어져 있었어. 데모크리토스가 옳았고, 2500년에 걸친 과학자들이 그것을 증명했구나."</span></p>
+        <p>아토가 마지막으로 말했습니다. <span class="dialogue">"과학은 한 번에 완벽한 답을 내는 것이 아니야. 틀리고, 수정하고, 다시 도전하며 진실에 다가가는 것이 과학이야. 돌턴의 공 모형이 수정되었다고 해서 돌턴이 실패한 것이 아니야. 각 모형은 당시의 실험 결과를 설명하기 위해 최선을 다한 것이지."</span></p>
+        <p><span class="highlight">보이지 않는 세계가 보이는 세계의 진짜 기초</span>였습니다. 원자라는 상상할 수 없이 작은 존재가 별과 바다와 생명을 만들었습니다. 가장 작은 것에 가장 큰 비밀이 숨어 있습니다.</p>
+        <p style="text-align: center; margin-top: 20px; font-style: italic; color: #c0392b;">— 과학은 완벽한 정답이 아니라, 더 나은 설명을 향한 여정이다 —</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" onclick="location.href='/creative-book/chem07_season1_quiz.html?season=season3'" style="background: linear-gradient(135deg, #FFD700, #FFA500);">🏆 관문평가</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    function handleScroll() {
+      const wh = window.innerHeight;
+      sections.forEach(s => {
+        const r = s.getBoundingClientRect(), c = s.querySelector('.story-card');
+        if (r.top < wh*0.5 && r.top > -r.height*0.5 && s.dataset.bg) mapContainer.style.backgroundImage = `url('${s.dataset.bg}')`;
+        if (c && r.top < wh*0.75) c.classList.add('active');
+      });
+    }
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+  </script>
+</body>
+</html>

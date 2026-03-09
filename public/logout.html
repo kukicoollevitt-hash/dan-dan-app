@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta charset="UTF-8" />
+  <title>로그아웃 중...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --bg: #f4eee3;
+      --card: #fffaf3;
+      --accent: #8b2f2f;
+      --text-main: #5b3a2a;
+      --text-sub: #8d6f51;
+      --border-soft: #e4d3c1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #f9f3e9 0, var(--bg) 55%);
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .logout-wrap {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 28px 32px 30px;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border-soft);
+      max-width: 360px;
+      width: calc(100% - 40px);
+      text-align: center;
+      animation: floatIn 0.5s ease-out forwards;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .logout-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin: 0 auto 14px;
+      background: rgba(139, 47, 47, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .logout-title {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+    }
+
+    .logout-text {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-sub);
+    }
+
+    .spinner {
+      margin: 20px auto 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 3px solid rgba(139, 47, 47, 0.18);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+    }
+
+    .hint-text {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #a3896b;
+    }
+
+    @keyframes floatIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="logout-wrap">
+    <div class="logout-icon">🔐</div>
+    <h2 class="logout-title">로그아웃 중입니다…</h2>
+    <p class="logout-text">잠시만 기다려 주세요 🙌</p>
+    <div class="spinner"></div>
+    <div class="hint-text">안전하게 세션을 정리하고 있어요.</div>
+  </div>
+
+  <script>
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      let target = params.get("target");
+
+      // ✅ 1) URL에 target이 없으면 referrer로 판단
+      if (!target) {
+        const ref = document.referrer || "";
+
+        // admin 쪽에서 왔으면 관리자 로그인으로
+        if (ref.includes("/admin")) {
+          target = "/admin/login";
+        } else {
+          // 그 외에는 랜딩 페이지로
+          target = "/brain_landing.html";
+        }
+      }
+
+      console.log("logout target =>", target);
+
+      try {
+        // ✅ 서버에 실제 로그아웃 요청
+        await fetch("/logout", {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (e) {
+        console.error("logout error:", e);
+      }
+
+      // ✅ 글자 크기 설정 초기화
+      localStorage.removeItem('passageFontLevel');
+      localStorage.removeItem('quizFontLevel');
+
+      // ✅ 1.2초 후 지정된 페이지로 이동
+      setTimeout(() => {
+        window.location.href = target;
+      }, 1200);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌙 메밀꽃 필 무렵</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학01/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(92, 107, 192, 0.15);
+      color: #3949AB;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #3949AB;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #5C6BC0;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #B39DDB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(92, 107, 192, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #B39DDB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(92, 107, 192, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(57, 73, 171, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(92, 107, 192, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌙 메밀꽃 필 무렵</h1>
+        <p class="subtitle">
+          이효석 · 1936년 발표<br>
+          — 달빛 아래 메밀꽃처럼 피어난 인연의 비밀 —<br>
+          교과기반 창작도서 · 현대문학 01
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 허생원:</strong> 얼굴에 얼금자국이 있고 왼손잡이인 중년의 장돌뱅이. 젊은 시절 봉평에서 성 서방네 처녀와 짧은 인연을 맺었지만, 그 이후로 평생 떠돌이 장사꾼으로 살아왔다. 과거의 기억을 가슴에 품고 살아가는 인물.</p>
+          <p><strong>▸ 동이:</strong> 열일곱 살의 어린 장돌뱅이. 아버지의 성도, 얼굴도 모른 채 어머니와 새아버지 밑에서 자랐다. 왼손잡이이며, 봉평 출신 어머니를 둔 신비로운 소년.</p>
+          <p><strong>▸ 조 선달:</strong> 허생원의 오랜 친구이자 동료 장돌뱅이. 허생원의 과거 이야기를 들어주는 유일한 벗으로, 함께 장터를 떠돌며 동고동락하는 인물.</p>
+          <p><strong>▸ 성 서방네 처녀:</strong> 허생원의 젊은 시절 인연. 물레방앗간에서 울고 있던 처녀로, 허생원과 하룻밤의 인연을 맺고 사라진 비밀스러운 여인.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 갈등 구조</h3>
+          <p><strong>▸ 허생원의 내면 갈등:</strong> 과거의 기억 vs 현재의 떠돌이 삶 — 잊지 못하는 하룻밤의 인연과 평생을 떠도는 외로움 사이의 괴로움</p>
+          <p><strong>▸ 동이의 정체성:</strong> 아버지 없는 자식의 설움 — 아버지의 얼굴도, 성도 모르는 채 살아온 삶의 비밀</p>
+          <p><strong>▸ 운명과 우연:</strong> 메밀꽃 핀 달밤에 우연히 만난 두 사람 — 혈육인지 아닌지 모르는 채 이어지는 묘한 정</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🌾 봉평 장날의 만남</span>
+        <h2>장돌뱅이 허생원</h2>
+        <p><strong>【중심 문장】</strong> 봉평 장날, 허생원은 동료 조 선달과 함께 장사를 마치고 주막에서 쉬던 중 처음으로 동이를 만난다.</p>
+        <p>때는 여름이 막 지나가고 가을이 서서히 찾아오는 시절이었어요. 강원도 봉평에서는 닷새마다 장이 섰지요. 허생원은 얼굴에 얼금자국이 있고, 왼손잡이였어요. 한때는 장사 밑천으로 제법 재산을 모았지만, 모두 잃고 지금은 장터를 떠돌며 물건을 파는 장돌뱅이가 되어 살고 있었답니다.</p>
+        <p><span class="dialogue">"허 생원, 오늘 장사는 어떠했나?"</span><br><br>동료 조 선달이 물었어요.<br><br><span class="dialogue">"그저 그렇지 뭐. 시원치 않네."</span><br><br>허생원은 대꾸하며 충주집 주막으로 발걸음을 옮겼어요.</p>
+        <p>주막에서 막걸리 한 사발을 기울이고 있을 때였어요. 문이 벌컥 열리더니 열일곱 살쯤 되어 보이는 소년이 헐레벌떡 뛰어들어왔지요.<br><br><span class="dialogue">"허 생원님! 나귀가 밧줄을 끊고 난리를 피우고 있어요!"</span></p>
+        <p>허생원이 부리나케 달려가 보니, 나귀가 밧줄을 끊고 이리저리 날뛰고 있었어요. 겨우 나귀를 진정시킨 허생원은 소년에게 고마움을 표했지요.<br><br><span class="dialogue">"고맙다, 네 덕에 큰일 날 뻔했구나. 네 이름이 뭐냐?"</span><br><br><span class="dialogue">"동이라고 합니다."</span></p>
+        <p>허생원은 동이의 눈매가 어딘가 낯익다는 느낌을 받았지만, 그 이유를 알 수 없었어요. <span class="highlight">왠지 모르게 정이 갔지요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🌙 달빛 아래 떠나는 밤길</span>
+        <h2>대화에서 걸어 나온 길</h2>
+        <p><strong>【중심 문장】</strong> 봉평 장이 파하고, 허생원과 조 선달, 동이는 함께 다음 장터가 있는 대화로 향하며 밤길을 걷는다.</p>
+        <p>장이 파하자 허생원은 조 선달과 함께 다음 장터인 대화로 향했어요. 달이 환하게 떠올랐지요. 메밀밭 사이로 난 좁은 길이 달빛을 받아 하얗게 빛났어요.</p>
+        <p><span class="dialogue">"허 생원, 저기 저 동이라는 아이도 대화로 간다더군."</span><br><br>조 선달이 말했어요. 뒤를 돌아보니 동이가 나귀를 끌고 멀찌감치 따라오고 있었지요.<br><br><span class="dialogue">"어린 것이 혼자 밤길을 가다니, 함께 가자고 하게."</span><br><br>허생원의 말에 조 선달이 동이를 불러왔어요.</p>
+        <p>셋이 함께 걷기 시작했어요. 산 너머로 달이 높이 떠오르고, 메밀밭에서는 달빛을 받아 하얀 꽃들이 물결치듯 일렁였지요.<br><br><span class="dialogue">"와, 메밀꽃이 소금 뿌린 것 같아요!"</span><br><br>동이가 감탄했어요.</p>
+        <p>허생원은 그 풍경을 보며 가슴이 뜨거워졌어요. 이십여 년 전, 이와 똑같은 밤이 있었지요. 바로 그날 밤, 물레방앗간에서…<br><br><span class="dialogue">"허 생원, 무슨 생각을 그리 하나?"</span><br><br>조 선달이 물었지만, 허생원은 대답 대신 깊은 한숨만 내쉬었어요.</p>
+        <p><span class="highlight">달빛 아래 걷는 밤길, 허생원의 마음속에서 오래된 기억이 서서히 깨어나고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">💭 물레방앗간의 기억</span>
+        <h2>이십 년 전 그날 밤</h2>
+        <p><strong>【중심 문장】</strong> 달빛이 은은히 비추는 밤길에서 허생원은 조 선달에게 젊은 시절의 이야기를 꺼낸다.</p>
+        <p>달빛이 은은히 비추던 밤길, 허생원은 조 선달에게 옛날 이야기를 꺼냈어요.<br><br><span class="dialogue">"조 선달, 자네 내가 왜 이 봉평 장만 오면 가슴이 먹먹한지 아나?"</span></p>
+        <p><span class="dialogue">"글쎄, 무슨 사연이 있나?"</span><br><br>조 선달이 물었어요.</p>
+        <p><span class="dialogue">"이십 년 전 일이야. 그때 나도 젊었지. 봉평 장날이 끝나고 달밤에 이 길을 걷고 있었어. 그런데 물레방앗간에서 누가 훌쩍훌쩍 울고 있는 거야."</span><br><br>허생원의 눈이 멀리 과거를 응시했어요.</p>
+        <p><span class="dialogue">"울고 있던 이가 성 서방네 처녀였어. 무슨 사연인지는 모르겠지만, 슬프게 울고 있더군. 나는 그 처녀를 위로해 주었고… 그날 밤 우리는…"</span><br><br>허생원은 말끝을 흐렸어요.</p>
+        <p>그날 밤 달빛 아래 핀 메밀꽃은 마치 소금을 뿌린 듯 하얗게 빛났고, 처녀의 울음소리는 물레방아 돌아가는 소리에 섞여 들렸지요. 허생원은 그 밤의 기억을 평생 잊지 못했어요.</p>
+        <p><span class="dialogue">"그 뒤로 그 처녀를 다시 만났나?"</span><br><br><span class="dialogue">"아니. 다음 장날에 찾아갔지만 처녀는 온데간데없이 사라져 버렸어."</span></p>
+        <p><span class="highlight">허생원은 이십 년이 지난 지금도 그 밤을 잊지 못하고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">👤 동이의 신세</span>
+        <h2>아버지를 모르는 아이</h2>
+        <p><strong>【중심 문장】</strong> 동이는 자신의 신세를 털어놓으며, 아버지의 성도 얼굴도 모른다고 말한다.</p>
+        <p>셋이 나란히 길을 걸으며 이런저런 이야기를 나누었어요. 허생원이 동이에게 물었지요.<br><br><span class="dialogue">"동이야, 너는 어디서 왔느냐? 부모님은 계시고?"</span></p>
+        <p>동이는 잠시 침묵하다가 입을 열었어요.<br><br><span class="dialogue">"저는 아버지가 누군지 몰라요. 성도, 얼굴도요."</span><br><br>허생원과 조 선달이 깜짝 놀랐어요.</p>
+        <p><span class="dialogue">"어머니는 아이를 낳고 친정에서 쫓겨났대요. 그래서 새아버지랑 살았는데, 지금은 따로 살고 계세요."</span><br><br>동이의 목소리에는 담담함과 쓸쓸함이 함께 묻어났어요.</p>
+        <p><span class="dialogue">"어머니가 어디 사람이시냐?"</span><br><br>허생원이 조심스럽게 물었어요.<br><br><span class="dialogue">"봉평이요. 원래 봉평 사람이래요."</span></p>
+        <p>허생원의 심장이 쿵 내려앉았어요. 봉평… 이십 년 전… 성 서방네 처녀…<br><br><span class="highlight">우연의 일치일까, 아니면 운명일까. 허생원의 머릿속이 복잡해지기 시작했어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">💦 냇물을 건너며</span>
+        <h2>왼손잡이의 발견</h2>
+        <p><strong>【중심 문장】</strong> 냇물을 건너다 발을 헛디딘 허생원을 동이가 업어주는데, 그때 허생원은 동이가 왼손잡이라는 것을 발견한다.</p>
+        <p>한참을 걷다가 개울을 만났어요. 징검다리가 있었지만, 달빛 아래서는 어두워서 잘 보이지 않았지요. 허생원이 먼저 건너려다 그만 발을 헛디뎠어요.<br><br><span class="dialogue">"아이고!"</span><br><br>첨벙! 허생원이 물에 빠지고 말았어요.</p>
+        <p><span class="dialogue">"허 생원님!"</span><br><br>동이가 재빨리 물에 들어가 허생원을 부축했어요.<br><br><span class="dialogue">"제가 업어드릴게요."</span><br><br>동이는 허생원을 등에 업고 냇물을 건넜어요.</p>
+        <p>그때였어요. 허생원은 동이가 나귀 채찍을 왼손에 쥐고 있는 것을 보았지요.<br><br><span class="dialogue">"동이야, 너 혹시… 왼손잡이냐?"</span><br><br><span class="dialogue">"네, 어릴 때부터 왼손을 썼어요."</span></p>
+        <p>허생원의 가슴이 쿵쾅거렸어요. 동이의 어머니가 봉평 출신이라는 사실, 그리고 동이가 자신과 똑같이 왼손잡이라는 점. 이 모든 것이 한꺼번에 머릿속에 떠올랐지요.</p>
+        <p><span class="highlight">혹시 동이가 자신의 아들이 아닐까 하는 생각이 스멀스멀 피어올랐어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">❓ 의심과 설렘</span>
+        <h2>복잡해지는 마음</h2>
+        <p><strong>【중심 문장】</strong> 허생원은 동이가 혹시 자신의 아들이 아닐까 하는 의심을 품기 시작하며 복잡한 감정에 휩싸인다.</p>
+        <p>냇물을 건넌 후, 허생원은 깊은 생각에 빠졌어요. 조 선달이 옆에서 물었지요.<br><br><span class="dialogue">"허 생원, 왜 그러나? 안색이 좋지 않네."</span></p>
+        <p><span class="dialogue">"조 선달, 내가 미친 소리를 하는 것 같지만… 저 동이 말이야."</span><br><br>허생원은 낮은 목소리로 말을 이었어요.<br><br><span class="dialogue">"저 아이가 혹시… 내 아들이 아닐까?"</span></p>
+        <p>조 선달이 눈을 동그랗게 떴어요.<br><br><span class="dialogue">"무슨 소리야? 그게 말이 되나?"</span><br><br><span class="dialogue">"봉평 출신 어머니, 아버지 얼굴을 모른다는 것, 그리고 저 아이도 나처럼 왼손잡이야."</span></p>
+        <p>허생원은 떨리는 목소리로 말했어요.<br><br><span class="dialogue">"이십 년 전 그 처녀가 아이를 가졌다면… 그 아이가 지금 열일곱쯤 되었을 거야."</span></p>
+        <p>조 선달도 할 말을 잃었어요. 달빛 아래에서 옛 기억이 밀려오며, 허생원의 마음은 점점 더 복잡해져 갔지요.<br><br><span class="highlight">확신할 수는 없었지만, 무언가 보이지 않는 끈이 두 사람을 잇고 있는 것 같았어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🛤️ 제천으로 향하는 길</span>
+        <h2>동이의 어머니를 찾아서</h2>
+        <p><strong>【중심 문장】</strong> 허생원은 동이에게 어머니가 어디 사는지 묻고, 함께 제천으로 가기로 결심한다.</p>
+        <p>허생원은 용기를 내어 동이에게 물었어요.<br><br><span class="dialogue">"동이야, 네 어머니는 지금 어디 계시느냐?"</span><br><br><span class="dialogue">"제천이요. 제천에서 작은 가게를 하신대요."</span></p>
+        <p>제천. 그리 멀지 않은 곳이었어요. 허생원의 마음이 급해졌지요.<br><br><span class="dialogue">"동이야, 너 제천에 가 본 적 있니?"</span><br><br><span class="dialogue">"아니요, 어머니가 자주 편지를 보내시긴 하는데, 직접 찾아간 적은 없어요."</span></p>
+        <p>허생원은 잠시 망설이다가 말했어요.<br><br><span class="dialogue">"동이야, 우리 제천으로 가 보지 않겠느냐? 내가… 네 어머니를 만나 뵙고 싶구나."</span></p>
+        <p>동이가 의아하다는 눈빛으로 바라보았지만, 허생원의 진지한 표정에 고개를 끄덕였어요.<br><br><span class="dialogue">"좋아요. 사실 저도 어머니가 보고 싶었어요."</span></p>
+        <p>조 선달은 대화 장터에 먼저 가기로 하고, 허생원과 동이는 제천으로 방향을 틀었어요.<br><br><span class="highlight">달빛 아래 메밀밭 사이로, 두 사람은 운명의 실타래를 풀기 위해 걸음을 옮겼어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">🌸 메밀꽃과 달빛</span>
+        <h2>이십 년 전과 똑같은 밤</h2>
+        <p><strong>【중심 문장】</strong> 제천으로 가는 길, 메밀밭 사이로 달빛이 쏟아지며 허생원은 이십 년 전 그날 밤을 생생히 떠올린다.</p>
+        <p>제천으로 가는 길, 메밀밭 사이로 달빛이 쏟아졌어요. 허생원은 이십 년 전 그날 밤과 똑같은 풍경에 가슴이 뛰었지요.</p>
+        <p><span class="dialogue">"허 생원님, 정말 아름다운 밤이에요."</span><br><br>동이가 감탄하며 말했어요.<br><br><span class="dialogue">"그래, 마치 소금을 뿌려 놓은 것 같구나."</span></p>
+        <p>허생원은 이십 년 전 그 처녀에게도 똑같은 말을 했었어요. 메밀꽃이 소금을 뿌린 것 같다고. 그때 처녀는 울음을 그치고 미소를 지었지요.</p>
+        <p><span class="dialogue">"허 생원님, 혹시 저희 어머니를 아시는 건가요?"</span><br><br>동이가 조심스럽게 물었어요.<br><br><span class="dialogue">"글쎄다… 확실히는 모르겠지만, 혹시 그럴지도 모른다."</span></p>
+        <p>허생원은 진실을 말할 수가 없었어요. 아직 확신이 없었으니까요. 하지만 가슴 한구석에서는 이미 무언가를 알고 있었어요.</p>
+        <p><span class="highlight">달빛 아래 흐드러지게 핀 메밀꽃처럼, 허생원의 마음에도 희망의 꽃이 피어나고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">💫 머뭇거리는 마음</span>
+        <h2>제천 앞에서</h2>
+        <p><strong>【중심 문장】</strong> 제천에 거의 도착한 두 사람은 각자 다른 이유로 머뭇거리며, 미래에 대한 기대와 두려움을 느낀다.</p>
+        <p>제천이 가까워지자, 동이가 걸음을 멈추었어요.<br><br><span class="dialogue">"허 생원님, 저… 어머니를 만나면 무슨 말을 해야 할지 모르겠어요."</span><br><br>동이가 머뭇거렸어요.</p>
+        <p><span class="dialogue">"왜 그러느냐?"</span><br><br><span class="dialogue">"한 번도 직접 찾아간 적이 없었거든요. 어머니가 반가워하실지, 아니면…"</span></p>
+        <p>허생원도 마찬가지였어요. 만약 동이가 정말 자신의 아들이라면, 이십 년이나 함께하지 못한 세월이 너무나 아깝고 미안할 것 같았지요. 그 처녀는… 아니, 동이의 어머니는 자신을 원망하고 있을까요?</p>
+        <p><span class="dialogue">"동이야, 어머니는 분명 반가워하실 거다. 그리고…"</span><br><br>허생원은 말을 멈추었다가 이었어요.<br><br><span class="dialogue">"무슨 일이 있더라도, 내가 옆에 있마."</span></p>
+        <p>동이가 고개를 끄덕이며 다시 걸음을 옮겼어요.<br><br><span class="highlight">두 사람의 발걸음은 무거웠지만, 희망의 빛을 향해 한 발 한 발 나아가고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학01/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌙 달빛 아래 피어난 희망</span>
+        <h2>새로운 인연의 시작</h2>
+        <p><strong>【중심 문장】</strong> 제천에 도착한 허생원과 동이 앞에 새로운 만남이 기다리고 있으며, 달빛 아래 메밀꽃처럼 희망이 피어난다.</p>
+        <p>마침내 제천에 도착했어요. 동이가 어머니의 가게를 찾아 좁은 골목길을 걸어갔지요. 허생원의 심장은 터질 것 같았어요.</p>
+        <p>작은 가게 앞에 섰을 때, 문이 열리고 한 여인이 나타났어요. 머리에는 서리가 내린 듯 흰 머리카락이 섞여 있었지만, 그 얼굴은… 이십 년 전 물레방앗간에서 울고 있던 그 처녀의 얼굴이었어요.</p>
+        <p><span class="dialogue">"동이야!"</span><br><br>여인이 달려와 동이를 끌어안았어요. 그리고 허생원을 보았지요. 두 사람의 눈이 마주쳤어요.</p>
+        <p>잠시 침묵이 흘렀어요. 여인의 눈에 눈물이 고였지요.<br><br><span class="dialogue">"당신은… 혹시…"</span><br><br>허생원은 아무 말도 할 수 없었어요. 그저 고개를 끄덕일 뿐이었지요.</p>
+        <p>밤하늘에는 달이 환하게 떠 있었고, 어디선가 메밀꽃 향기가 바람에 실려 왔어요. 잃어버린 시간을 되찾을 수는 없지만, 늦게라도 인연을 찾게 된 것에 감사한 마음이 들었어요.</p>
+        <p><span class="highlight">달빛 아래 흐드러지게 핀 메밀꽃처럼, 세 사람의 마음에도 새로운 희망의 꽃이 피어나고 있었답니다.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(92, 107, 192, 0.15); border-radius: 16px;">
+          <strong style="color: #3949AB; font-size: 20px;">🌱 「우연한 만남이 운명이 되고, 흩어졌던 인연이 다시 이어진다. 달빛 아래 메밀꽃처럼, 희망은 가장 어두운 밤에도 하얗게 피어난다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/modern01_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

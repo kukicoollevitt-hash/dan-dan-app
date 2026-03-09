@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 보완학습 - 고전시가</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nanum Myeongjo', '바탕', Batang, serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+            padding-top: 45px;
+        }
+
+        /* 상단 학생 정보 바 */
+        .student-info-display {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .student-info-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 5px;
+        }
+
+        .info-item strong {
+            color: #bdc3c7;
+        }
+
+        /* 타이머 */
+        .exam-timer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .exam-timer.warning {
+            background: rgba(255, 193, 7, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        .exam-timer.danger {
+            background: rgba(244, 67, 54, 0.4);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* 페이지 */
+        .page {
+            width: 100%;
+            max-width: 900px;
+            min-height: auto;
+            padding: 12mm 10mm 15mm 10mm;
+            margin: 0 auto;
+            background: #fff;
+            position: relative;
+        }
+
+        .page-footer {
+            text-align: center;
+            font-size: 10pt;
+            color: #333;
+            margin-top: 10mm;
+            padding-top: 5mm;
+        }
+
+        /* 헤더 */
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8mm;
+            position: relative;
+        }
+
+        .session-badge {
+            position: absolute;
+            left: 0;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 11pt;
+            font-weight: 600;
+        }
+
+        .title {
+            font-size: 22pt;
+            font-weight: 700;
+            letter-spacing: 4px;
+        }
+
+        .page-number {
+            position: absolute;
+            right: 0;
+            font-size: 18pt;
+            font-weight: 700;
+        }
+
+        .header-divider {
+            border-top: 1px solid #000;
+            margin-bottom: 5mm;
+        }
+
+        /* 2단 레이아웃 */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .column {
+            text-align: justify;
+            padding: 0 4mm;
+        }
+
+        .column:first-child {
+            border-right: 1px solid #000;
+            padding-left: 0;
+        }
+
+        .column:last-child {
+            padding-right: 0;
+        }
+
+        /* 문제 범위 안내 */
+        .question-range {
+            background: #f0f0f0;
+            padding: 3mm 4mm;
+            margin-bottom: 5mm;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+
+        /* 지문 박스 */
+        .passage-box {
+            border: 1px solid #000;
+            padding: 4mm;
+            margin-bottom: 5mm;
+            text-align: justify;
+            font-size: 9.5pt;
+            line-height: 1.7;
+        }
+
+        .passage-box .label {
+            font-weight: 700;
+            margin-bottom: 2mm;
+        }
+
+        .passage-box p {
+            margin-bottom: 2mm;
+            text-indent: 0;
+        }
+
+        .passage-box .poem-line {
+            margin-bottom: 0.5mm;
+        }
+
+        .passage-box .poem-line.bold {
+            font-weight: 700;
+        }
+
+        .passage-box .note {
+            font-size: 8.5pt;
+            margin-top: 3mm;
+            padding-top: 2mm;
+            border-top: 1px dashed #999;
+        }
+
+        .passage-box .note-item {
+            margin-bottom: 1mm;
+        }
+
+        /* 문제 */
+        .question {
+            margin-bottom: 5mm;
+        }
+
+        .question-number {
+            font-size: 13pt;
+            font-weight: 900;
+            margin-right: 2mm;
+        }
+
+        .question-text {
+            margin-bottom: 3mm;
+            font-weight: 700;
+        }
+
+        /* 선택지 */
+        .choices {
+            margin-left: 4mm;
+        }
+
+        .choice {
+            display: flex;
+            margin-bottom: 1.5mm;
+            text-align: justify;
+            padding: 2mm 3mm;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .choice:hover {
+            background-color: rgba(0, 100, 255, 0.08);
+        }
+
+        .choice.selected {
+            background-color: rgba(0, 100, 255, 0.35);
+        }
+
+        .choice-number {
+            min-width: 1.5em;
+            margin-right: 1mm;
+        }
+
+        /* 밑줄 */
+        .underline {
+            text-decoration: underline;
+        }
+
+        /* 동그라미 문자 */
+        .circled {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.3em;
+            height: 1.3em;
+            border: 1px solid #000;
+            border-radius: 50%;
+            font-size: 0.85em;
+            margin: 0 1px;
+        }
+
+        /* 채점 결과 배너 */
+        .exam-result-banner {
+            display: none;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin: 10px 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .result-banner-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 25px;
+        }
+
+        .result-banner-score {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .result-banner-score span {
+            color: #f093fb;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .result-banner-correct {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .result-banner-time {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .result-banner-time span {
+            color: #4facfe;
+            font-weight: 700;
+        }
+
+        /* 하단 고정 버튼 */
+        .bottom-fixed-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .bottom-fixed-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 180px;
+        }
+
+        .btn-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .btn-grade:hover {
+            opacity: 0.9;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+        }
+
+        .bottom-spacer {
+            height: 80px;
+        }
+
+        /* 정답 표시 스타일 */
+        .choice.correct-answer {
+            background-color: #c8f7c5 !important;
+        }
+
+        .choice.wrong-answer {
+            background-color: #ffcdd2 !important;
+        }
+
+        .correct-mark {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 채점 완료 시 선지 클릭 비활성화 */
+        body.graded .choice {
+            pointer-events: none;
+        }
+        body.graded .choice.correct-answer {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* 해설 팝업 */
+        .explanation-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+
+        .explanation-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .explanation-popup-header {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explanation-popup-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .explanation-popup-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .explanation-popup-body {
+            padding: 20px;
+        }
+
+        .explanation-correct {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .explanation-correct-label {
+            color: #2E7D32;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .explanation-correct-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* 확대/축소 컨트롤 */
+        .zoom-controls {
+            position: fixed;
+            top: 60px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover {
+            background: #f0f0f0;
+        }
+        .zoom-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.95);
+        }
+        .zoom-level {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+            padding: 2px 0;
+        }
+        .zoom-btn-reset {
+            font-size: 12px;
+            background: #667eea;
+            color: #fff;
+        }
+        .zoom-btn-reset:hover {
+            background: #5a6fd6;
+        }
+
+        /* 펜 도구 컨트롤 */
+        .pen-controls {
+            position: fixed;
+            top: 220px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .pen-tools {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        .pen-controls.collapsed .pen-tools {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .pen-toggle-collapse {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-toggle-collapse:hover {
+            background: #5a6fd6;
+        }
+        .pen-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-btn:hover {
+            background: #f0f0f0;
+        }
+        .pen-btn:active {
+            transform: scale(0.95);
+        }
+        .pen-btn.active {
+            background: #667eea;
+            color: #fff;
+        }
+        .pen-btn.eraser-btn.active {
+            background: #ff6b6b;
+            color: #fff;
+        }
+        .pen-color-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            margin: 2px auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pen-color-btn:hover {
+            transform: scale(1.1);
+        }
+        .pen-color-btn.active {
+            border-color: #333;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+        }
+        .pen-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 0;
+        }
+
+        /* 드로잉 캔버스 */
+        #drawingCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 500;
+            pointer-events: none;
+            touch-action: none;
+        }
+        #drawingCanvas.drawing-mode {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        #drawingCanvas.eraser-mode {
+            pointer-events: auto;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="white" stroke="gray" stroke-width="2"/></svg>') 10 10, auto;
+        }
+        #drawingCanvas.pan-mode {
+            pointer-events: auto;
+            cursor: grab;
+        }
+        #drawingCanvas.pan-mode.panning {
+            cursor: grabbing;
+        }
+        .pen-btn.pan-btn.active {
+            background: #43a047;
+            color: #fff;
+        }
+
+        /* 시조 스타일 */
+        .sijo-verse {
+            margin-bottom: 3mm;
+        }
+        .sijo-title {
+            font-weight: 700;
+            margin-bottom: 1mm;
+        }
+        .bracket-section {
+            display: inline-block;
+            border-left: 2px solid #000;
+            padding-left: 3mm;
+            margin-left: 2mm;
+        }
+    </style>
+</head>
+<body>
+    <!-- 드로잉 캔버스 -->
+    <canvas id="drawingCanvas"></canvas>
+
+    <!-- 펜 도구 컨트롤 -->
+    <div class="pen-controls" id="penControls">
+        <button class="pen-toggle-collapse" id="penCollapseBtn" onclick="togglePenCollapse()" title="펜 도구 접기/펼치기">▲</button>
+        <div class="pen-tools">
+            <div class="pen-divider"></div>
+            <button class="pen-btn" id="penToggleBtn" onclick="togglePenMode()" title="펜 모드">🖊️</button>
+            <div class="pen-divider"></div>
+            <div class="pen-color-btn active" style="background: #e53935;" data-color="#e53935" onclick="setPenColor('#e53935')"></div>
+            <div class="pen-color-btn" style="background: #1e88e5;" data-color="#1e88e5" onclick="setPenColor('#1e88e5')"></div>
+            <div class="pen-color-btn" style="background: #333;" data-color="#333" onclick="setPenColor('#333')"></div>
+            <div class="pen-divider"></div>
+            <button class="pen-btn eraser-btn" id="eraserBtn" onclick="toggleEraserMode()" title="지우개">🧹</button>
+            <button class="pen-btn pan-btn" id="panBtn" onclick="togglePanMode()" title="손으로 이동">🖐️</button>
+            <div class="pen-divider"></div>
+            <button class="pen-btn" onclick="clearCanvas()" title="전체 지우기">🗑️</button>
+        </div>
+    </div>
+
+    <!-- 확대/축소 컨트롤 -->
+    <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+        <button class="zoom-btn zoom-btn-reset" onclick="zoomReset()">맞춤</button>
+    </div>
+
+    <!-- 상단 학생 정보 바 -->
+    <div class="student-info-display">
+        <div class="student-info-left">
+            <button class="home-btn" onclick="goBack()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <div class="info-item">
+                <strong>학교:</strong>
+                <span id="studentSchool">-</span>
+            </div>
+            <div class="info-item">
+                <strong>학년:</strong>
+                <span id="studentGrade">-</span>
+            </div>
+            <div class="info-item">
+                <strong>이름:</strong>
+                <span id="studentName">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 채점 결과 배너 -->
+    <div class="exam-result-banner" id="resultBanner">
+        <div class="result-banner-content">
+            <div class="result-banner-grade">채점 완료</div>
+            <div class="result-banner-score"><span id="bannerScore">0</span>점</div>
+            <div class="result-banner-correct">(<span id="bannerCorrect">0</span>/5 정답)</div>
+        </div>
+    </div>
+
+    <div class="exam-wrapper">
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">고전시가</div>
+                <div class="page-number">1</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <div class="question-range">【1~5】 다음 글을 읽고 물음에 답하시오.</div>
+
+            <!-- 통합 지문 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <div class="label">(가)</div>
+                    <p class="poem-line">어버이 낳으시고 임금이 먹이시니</p>
+                    <p class="poem-line">낳은 덕 <b>먹인 은을 다 갚고자</b> 하였더니</p>
+                    <p class="poem-line">숙연히 <b>철심이 넘</b>으니 할 일 없어 하노라</p>
+                    <p class="poem-line" style="text-align: right;">&lt;제1수&gt;</p>
+
+                    <p class="poem-line" style="margin-top: 3mm;">연하에 깊이 곤 병 약이 효험 없어</p>
+                    <p class="poem-line">강호에 버리언저 <b>십 년</b> 밖이 되었어라</p>
+                    <p class="poem-line">그러나 <b>이제 다 못 죽음</b>도 그 성은인가 하노라</p>
+                    <p class="poem-line" style="text-align: right;">&lt;제3수&gt;</p>
+
+                    <p class="poem-line" style="margin-top: 3mm;">달 밝고 바람 자니 물결이 비단일다</p>
+                    <p class="poem-line">단정*을 비껴 놓아 오락가락 하는 흥을</p>
+                    <p class="poem-line">ⓐ <b>백구</b>야 아 즐겨 말고려 세상 알까 하노라</p>
+                    <p class="poem-line" style="text-align: right;">&lt;제5수&gt;</p>
+
+                    <p class="poem-line" style="margin-top: 3mm;">피 소주 무우저리* 우습다 어른 대접</p>
+                    <p class="poem-line">남은서 이른 말이 <b>초초타*</b> 하건마는</p>
+                    <p class="poem-line">두어라 이도 <b>내 분</b>이니 분내사*인가 하노라</p>
+                    <p class="poem-line" style="text-align: right;">&lt;제8수&gt;</p>
+                    <p class="poem-line" style="text-align: right; margin-top: 2mm;">－ 나위소, 「강호구가」</p>
+
+                    <div class="note">
+                        <div class="note-item">* 단정: 작은 배.</div>
+                        <div class="note-item">* 피 소주 무우저리: 풀로 만든 소주와 무절임. 소박한 음식.</div>
+                        <div class="note-item">* 초초타: 보잘것없이 초라하다.</div>
+                        <div class="note-item">* 분내사: 분수에 맞는 일.</div>
+                    </div>
+
+                    <div class="label" style="margin-top: 5mm;">(나)</div>
+                    <p class="poem-line">들은 지 오래더니 보았구나 백상루</p>
+                    <p class="poem-line">아속하다 강산이 날 기다리고 있었던가</p>
+                    <p class="poem-line">처음으로 만나보고 예전 본 듯 반기니</p>
+                    <p class="poem-line">유정한 너인가 인연 있는 나이던가</p>
+                    <p class="poem-line">[A]<span style="display: inline-block; border-left: 2px solid #000; padding-left: 3mm; margin-left: 2mm;">고려 엣터를 어느 해에 고쳤기에<br>웅장한 누각이 어찌 새로 듯하구나</span></p>
+                    <p class="poem-line" style="margin-left: 8mm;">처마가 높이 솟아 공중에 들렸으니</p>
+                    <p class="poem-line" style="margin-left: 8mm;">금빛 푸른빛 밝게 빛나 그림자가 물가에 뻗쳤네</p>
+                    <p class="poem-line" style="margin-left: 8mm;">높은 난간 비껴 앉아 취하여 돌아보니</p>
+                    <p class="poem-line">[B]<span style="display: inline-block; border-left: 2px solid #000; padding-left: 3mm; margin-left: 2mm;">좌우 현판의 옛사람들 지은 시는<br>풍경이 보채어 조화를 얻었으니<br>생각이 막혀 보탤 것이 전혀 없다</span></p>
+                    <p class="poem-line" style="margin-left: 8mm;">수많은 푸른 산 흰 구름 사이에 솟아나</p>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div style="padding-left: 4mm;">
+                    <p class="poem-line">[C]<span style="display: inline-block; border-left: 2px solid #000; padding-left: 3mm; margin-left: 2mm;">높으니 낮으니 넓으니 좁으니 흩어져 있는 것은<br>묘향산이 마주보여 푸른 병풍을 둘렀도다</span></p>
+                    <p class="poem-line" style="margin-left: 8mm;">높다란 성곽이 산허리를 에돌러</p>
+                    <p class="poem-line" style="margin-left: 8mm;">굽거니 펴거니 숨거니 뛰거니</p>
+                    <p class="poem-line" style="margin-left: 8mm;">변방의 방비는 철옹성에 가깝도다</p>
+                    <p class="poem-line" style="margin-left: 8mm;">약산동대에 늦은 구름 다 걷히고</p>
+                    <p class="poem-line" style="margin-left: 8mm;"><b>향로봉</b> 어깨에 자줏빛 노을 비꼈을 때</p>
+                    <p class="poem-line">[D]<span style="display: inline-block; border-left: 2px solid #000; padding-left: 3mm; margin-left: 2mm;"><b>창문을 열</b>젖히고 <b>베개에 기대</b>니<br>번잡한 마음에 늦은 겨를 없다</span></p>
+                    <p class="poem-line" style="margin-left: 8mm;">두 갈래로 내린 물이 누각 앞에 와 모아져</p>
+                    <p class="poem-line" style="margin-left: 8mm;">세 갈래 물줄기 되어 섞여 도로 감도니</p>
+                    <p class="poem-line" style="margin-left: 8mm;">쌍룡이 뒤틀며 여의주를 다투다가</p>
+                    <p class="poem-line" style="margin-left: 8mm;">산성을 가로 품어 갈라 나온 모양이로다</p>
+                    <p class="poem-line" style="text-align: center;">(중략)</p>
+                    <p class="poem-line" style="margin-left: 8mm;">어울에 썰물 되어 물가가 얼어졌으니</p>
+                    <p class="poem-line" style="margin-left: 8mm;"><b>마름 캐</b>는 <b>동자</b>와 <b>빨래하</b>는 <b>아녀자</b>는</p>
+                    <p class="poem-line" style="margin-left: 8mm;">갯벌을 만나서 웃으며 가는가</p>
+                    <p class="poem-line">[E]<span style="display: inline-block; border-left: 2px solid #000; padding-left: 3mm; margin-left: 2mm;">아침 물결 잔잔하여 수면이 맑으니<br>눈앞이 어른어른 정신이 표연하니<br>열자*가 바람을 타고 공중에 떠 있는 듯</span></p>
+                    <p class="poem-line" style="text-align: right; margin-top: 2mm;">－ 이현, 「백상루별곡」</p>
+
+                    <div class="note">
+                        <div class="note-item">* 열자: 중국 전국시대의 사상가로, 바람을 타고서 속세의 시비를 떠났다가 15일이 지난 후에 돌아왔다는 이야기가 전해짐.</div>
+                    </div>
+
+                    <div class="label" style="margin-top: 4mm;">(다)</div>
+                    <p style="text-indent: 1em; margin-bottom: 2mm; font-size: 9pt;">나의 고향은 저 강원도 산골이다. 춘천읍에서 한 20리가량 산을 끼고 꼬불꼬불 돌아 들어가면 내닫는 조그마한 마을이다. 앞뒤 좌우에 굽직굽직한 산들이 빽 둘러섰고 그 속에 묻힌 아늑한 마을이다. 그 속에 묻힌 모양이 마치 옴폭한 떡시루 같다고 해서 동명을 '실레'라고 부른다. 집이라야 대부분 <b>쓰러질 듯한 헌 초가</b>요, 그나마도 50여 호밖에 안 되는 말하자면 아주 작은 촌락이다. 그러나 <b>산천의 풍경</b>으로 따지면 <b>하나 흠잡을 데 없는 귀여운 전원</b>이다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm; font-size: 9pt;">(중략)</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm; font-size: 9pt;">산골에는 초목의 냄새까지도 특수하다. 더욱이 새로 난 잎이 한창 흐드러질 임시하야 바람에 풍기는 그 향취는 일필로 형용하기 어렵다. 말하자면 개운한 그리고 졸음을 청하는 듯한 그런 나른한 향기다. 일종의 선정적 매력을 느끼게 하는 짙은 향기다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm; font-size: 9pt;">ⓑ 뻐꾸기도 이 냄새에는 민감한 모양이다. 이때</p>
+                </div>
+            </div>
+            <div class="page-footer">- 1 -</div>
+        </div>
+
+        <!-- 2페이지 -->
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">고전시가</div>
+                <div class="page-number">2</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <!-- 2페이지 통합 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼: (다) 지문 계속 + 1번 문제 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <p style="text-indent: 0; margin-bottom: 2mm; font-size: 9pt;">부터 하나둘 울기 시작하기 때문이다. 한 해 만에 뻐꾸기 울음을 처음 들을 때처럼 반가운 일은 없다. 우울하고 구슬픈 그 울음을 들으면 가득이나 한적한 마음이 더욱 느러지게 보인다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm; font-size: 9pt;">다른 곳은 논이나 밭을 갈 때 노래가 없다고 한다. 그러나 산골에는 소 모는 노래가 따로 있어 <b>논밭 일에 소를 부릴 때면 으레 그 노래를 부</b>른다. 소들도 세련이 되어 주인이 부르는 그 노래를 잘 이해하고 있다. 그래서 노래대로 좌우로 방향을 바꾸기도 하고, 또는 보조 속도를 느리고 주리고 순종하기도 한다. 먼발치에서 소 몰며 처량히 부르는 그 노래도 좋다. 이것이 모두 산골이 홀로 가질 수 있는 성스러운 음악이다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm; font-size: 9pt;">산골의 음악으로 치면 물소리도 뺄 수 없으리라. 졸졸 내솟는 <b>샘물</b> 소리도 좋고, 촐랑촐랑 흘러내리는 시내도 좋다. 그러나 세차게 콸콸 쏟려 내리는 <b>큰 내</b>를 대하면 정신이 번쩍 든다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm; font-size: 9pt;"><b>논에 모를 내는 것</b>도 이맘때다. 시골에서는 모를 낼 때면 새로운 희망으로 가득하다. 그들은 <b>즐거운 노래를</b> 불러가며 한 포기 모를 심고 가을의 수확을 연상한다. 농군에게 있어 모는 그야말로 자식과 같이 귀중한 물건이다. 모를 내고 나면 그들은 그것만으로도 한 해의 농사를 다 지은 듯싶다.</p>
+                    <p style="text-indent: 0; margin-bottom: 2mm; font-size: 9pt; text-align: right;">－ 김유정, 「오월의 산골짜기」</p>
+
+                    <!-- 문제 1번 -->
+                    <div class="question" data-question="1" style="margin-top: 5mm;">
+                        <div class="question-text">
+                            <span class="question-number">1.</span> (가)~(다)에 대한 설명으로 적절하지 <span class="underline">않은</span> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(1, 1)">
+                                <span class="choice-number">①</span>
+                                <span>(가)는 색채 이미지를 사용하여 대상을 생생하게 제시하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(1, 2)">
+                                <span class="choice-number">②</span>
+                                <span>(나)는 감탄형 어미를 통해 대상에 대한 화자의 정서를 표현하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(1, 3)">
+                                <span class="choice-number">③</span>
+                                <span>(다)는 자문자답의 방식으로 화자의 태도를 강조하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(1, 4)">
+                                <span class="choice-number">④</span>
+                                <span>(다)는 대조의 방법을 사용하여 주제 의식을 부각하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(1, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>(가)와 (다)는 비유적 표현을 통해 대상의 속성을 드러내고 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼: 문제 2, 3번 -->
+                <div style="padding-left: 4mm;">
+                    <!-- 문제 2번 -->
+                    <div class="question" data-question="2">
+                        <div class="question-text">
+                            <span class="question-number">2.</span> [A]~[E]에 대한 설명으로 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(2, 1)">
+                                <span class="choice-number">①</span>
+                                <span>[A]: 누각의 모습을 보며 왕조의 번영을 기원하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(2, 2)">
+                                <span class="choice-number">②</span>
+                                <span>[B]: 옛사람들이 지은 시를 부정적으로 평가하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(2, 3)">
+                                <span class="choice-number">③</span>
+                                <span>[C]: 백상루에서 본 푸른 병풍을 구름과 어우러진 산의 모습에 비유하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(2, 4)">
+                                <span class="choice-number">④</span>
+                                <span>[D]: 성곽의 모습을 보고 변방 수비에 대해 우려하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(2, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>[E]: 아침 풍경을 보는 화자의 내면을 열자와 연관 지어 표현하고 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 문제 3번 -->
+                    <div class="question" data-question="3" style="margin-top: 5mm;">
+                        <div class="question-text">
+                            <span class="question-number">3.</span> &lt;보기&gt;를 참고하여 (가), (나)를 감상한 내용으로 적절한 것은?
+                        </div>
+                        <div class="passage-box" style="margin: 3mm 0; padding: 3mm; font-size: 8.5pt; display: block;">
+                            <div style="text-align: center; margin-bottom: 2mm;">&lt;보기&gt;</div>
+                            <div style="text-indent: 1em; line-height: 1.6;">
+                                (가)와 (나)에서 자연은 화자의 상황에 따라서로 다른 의미로 나타난다. (가)에서 자연은 만년에 관직에서 물러난 화자가 머물렀던 노후의 안식처이자 자족의 공간이며 임금에 대한 충성심이 유지되는 공간이다. (나)에서 자연은 화자가 백상루에 올라 바라보며 감흥을 느끼는 대상으로, 아름다운 풍광을 품고 있으며 사람들의 소박한 생활이 드러나는 공간이다.
+                            </div>
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(3, 1)">
+                                <span class="choice-number">①</span>
+                                <span>(가)에서 '먹인 은을 다 갚고자' 했던 화자가 '이제 다 못 죽음'을 '성은'으로 여기는 것에서, 자연에서도 임금에 대한 충성심을 지니고 있다고 볼 수 있겠군.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(3, 2)">
+                                <span class="choice-number">②</span>
+                                <span>(가)에서 '철심이 넘'은 화자가 '강호'에서 '십 년' 넘게 살았다는 것에서, 자연에서 속세로 돌아올 때가 되었다고 여기는 것으로 볼 수 있겠군.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(3, 3)">
+                                <span class="choice-number">③</span>
+                                <span>(가)에서 남이 '초초타 하'는 것을 '내 분'으로 여긴다는 것에서, 화자가 은퇴 후 속세에서의 삶을 그리워하는 것으로 볼 수 있겠군.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(3, 4)">
+                                <span class="choice-number">④</span>
+                                <span>(나)에서 '향로봉'에 노을이 질 때 '창문을 열'고 '베개에 기대'는 것에서, 화자의 번잡한 마음이 아름다운 자연 풍광을 통해 해소되었다고 볼 수 있겠군.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(3, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>(나)에서 '동자'가 '마름 캐'고 '아녀자'가 '빨래하'는 것에서, 화자가 바라보는 자연은 화자가 생각하는 이상향이라고 볼 수 있겠군.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 2 -</div>
+        </div>
+
+        <!-- 3페이지 -->
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">고전시가</div>
+                <div class="page-number">3</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <!-- 3페이지 통합 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼: 4번 문제 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <!-- 문제 4번 -->
+                    <div class="question" data-question="4">
+                        <div class="question-text">
+                            <span class="question-number">4.</span> ⓐ와 ⓑ에 대한 설명으로 가장 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(4, 1)">
+                                <span class="choice-number">①</span>
+                                <span>ⓐ는 화자의 외로움이 투영된, ⓑ는 글쓴이의 동정심을 유발하는 대상이다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(4, 2)">
+                                <span class="choice-number">②</span>
+                                <span>ⓐ는 화자의 과거 경험을 환기하는, ⓑ는 글쓴이의 내적 성찰을 유도하는 대상이다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(4, 3)">
+                                <span class="choice-number">③</span>
+                                <span>ⓐ는 화자에게 만족감을, ⓑ는 글쓴이에게 우울한 과거를 떠올리게 하는 대상이다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(4, 4)">
+                                <span class="choice-number">④</span>
+                                <span>ⓐ는 화자의 한가로운 삶의 태도를, ⓑ는 산골에 대한 글쓴이의 우호적 태도를 드러낸다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(4, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>ⓐ는 세상에 대한 화자의 비판적 태도를, ⓑ는 산골에 대한 글쓴이의 도피적인 태도를 보여 준다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼: 5번 문제 -->
+                <div style="padding-left: 4mm;">
+                    <!-- 문제 5번 -->
+                    <div class="question" data-question="5">
+                        <div class="question-text">
+                            <span class="question-number">5.</span> &lt;보기&gt;를 참고하여 (다)를 감상한 내용으로 가장 적절한 것은?
+                        </div>
+                        <div class="passage-box" style="margin: 3mm 0; padding: 3mm; font-size: 8.5pt; display: block;">
+                            <div style="text-align: center; margin-bottom: 2mm;">&lt;보기&gt;</div>
+                            <div style="text-indent: 1em; line-height: 1.6;">
+                                1930년대의 문학 작품에서 향토는 현실적 삶을 배제한 낭만적인 전원으로 그려지는 경우가 많았다. (다)에서 글쓴이는 이러한 경향을 받아들이되, 산골 사람들의 생활 모습까지 그려냄으로써 일상이 깃들어 있는 산골의 모습을 보여 주고 있다. 특히 산골의 자연은 세밀한 묘사를 통해 구체성을 획득하며 생동감 있게 그려지고 있다.
+                            </div>
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(5, 1)">
+                                <span class="choice-number">①</span>
+                                <span>집 대부분이 '쓰러질 듯한 헌 초가'라는 것에서 산골 사람들의 절망적 삶의 모습이 짐작되는군.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(5, 2)">
+                                <span class="choice-number">②</span>
+                                <span>'산천의 풍경'을 '하나 흠잡을 데 없는 귀여운 전원'이라고 한 것은 산골을 낭만적인 전원으로 제시한 것이군.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(5, 3)">
+                                <span class="choice-number">③</span>
+                                <span>'논밭 일에 소를 부릴 때면 으레 그 노래를 부'르는 것에서 현실적 삶을 배제한 산골의 모습이 드러나는군.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(5, 4)">
+                                <span class="choice-number">④</span>
+                                <span>'샘물', '시내', '큰 내'의 물소리를 하나하나 묘사한 것에서 산골 자연의 파괴적인 이면을 드러내고 있군.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(5, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>농군이 '즐거운 노래를' 부르며 '논에 모를 내는 것'에서 도시에서 산골로 이주한 사람들의 건강한 생활이 확인되는군.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 3 -</div>
+        </div>
+
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <!-- 하단 버튼 -->
+    <div class="bottom-fixed-buttons" id="bottomButtons">
+        <button class="bottom-fixed-btn btn-back" onclick="resetExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+            </svg>
+            다시풀기
+        </button>
+        <button class="bottom-fixed-btn btn-grade" onclick="gradeExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            채점하기
+        </button>
+    </div>
+
+    <!-- 해설 팝업 -->
+    <div class="explanation-overlay" id="explanationOverlay" onclick="closeExplanation()"></div>
+    <div class="explanation-popup" id="explanationPopup">
+        <div class="explanation-popup-header">
+            <h3 id="explanationTitle">문제 해설</h3>
+            <button class="explanation-popup-close" onclick="closeExplanation()">×</button>
+        </div>
+        <div class="explanation-popup-body" id="explanationBody"></div>
+    </div>
+
+    <script>
+        // ===== 펜 도구 관련 변수 =====
+        let isPenMode = false;
+        let isEraserMode = false;
+        let isPanMode = false;
+        let isPanning = false;
+        let panStartX = 0, panStartY = 0;
+        let isDrawing = false;
+        let penColor = '#e53935';
+        let penSize = 3;
+        let eraserSize = 20;
+        let drawingCanvas, drawingCtx;
+        let lastX = 0, lastY = 0;
+
+        // 그림 데이터 저장 (문서 좌표계)
+        let drawingPaths = [];
+        let currentPath = null;
+        let lastScrollX = 0, lastScrollY = 0;
+        let currentScale = 1;
+
+        // 줌 관련 변수
+        let currentZoom = 1;
+        const minZoom = 0.3;
+        const maxZoom = 1.5;
+        const zoomStep = 0.1;
+        let autoScale = 1;
+
+        // 현재 적용된 스케일 가져오기
+        function getCurrentScale() {
+            return autoScale * currentZoom;
+        }
+
+        // 펜 도구 초기화
+        function initDrawingCanvas() {
+            drawingCanvas = document.getElementById('drawingCanvas');
+            drawingCtx = drawingCanvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('scroll', redrawCanvas);
+
+            drawingCanvas.addEventListener('mousedown', startDrawing);
+            drawingCanvas.addEventListener('mousemove', bindDraw);
+            drawingCanvas.addEventListener('mouseup', stopDrawing);
+            drawingCanvas.addEventListener('mouseout', stopDrawing);
+
+            drawingCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            drawingCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            drawingCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function resizeCanvas() {
+            const canvas = document.getElementById('drawingCanvas');
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            lastScrollX = window.scrollX;
+            lastScrollY = window.scrollY;
+            redrawCanvas();
+        }
+
+        function redrawCanvas() {
+            if (!drawingCtx || !drawingCanvas) return;
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            const scale = getCurrentScale();
+
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+            drawingPaths.forEach(path => {
+                if (path.points.length < 2) return;
+                drawingCtx.beginPath();
+                drawingCtx.strokeStyle = path.color;
+                drawingCtx.lineWidth = path.size * scale;
+                drawingCtx.lineCap = 'round';
+                drawingCtx.lineJoin = 'round';
+                drawingCtx.globalCompositeOperation = 'source-over';
+
+                const firstPoint = path.points[0];
+                drawingCtx.moveTo(firstPoint.x * scale - scrollX, firstPoint.y * scale - scrollY);
+
+                for (let i = 1; i < path.points.length; i++) {
+                    const point = path.points[i];
+                    drawingCtx.lineTo(point.x * scale - scrollX, point.y * scale - scrollY);
+                }
+                drawingCtx.stroke();
+            });
+
+            lastScrollX = scrollX;
+            lastScrollY = scrollY;
+            currentScale = scale;
+        }
+
+        let isPenCollapsed = false;
+        function togglePenCollapse() {
+            isPenCollapsed = !isPenCollapsed;
+            const penControls = document.getElementById('penControls');
+            const collapseBtn = document.getElementById('penCollapseBtn');
+            if (isPenCollapsed) {
+                penControls.classList.add('collapsed');
+                collapseBtn.innerHTML = '▼';
+            } else {
+                penControls.classList.remove('collapsed');
+                collapseBtn.innerHTML = '▲';
+            }
+        }
+
+        function togglePenMode() {
+            isPenMode = !isPenMode;
+            isEraserMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isPenMode) {
+                penBtn.classList.add('active');
+                eraserBtn.classList.remove('active');
+                canvas.classList.add('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            } else {
+                penBtn.classList.remove('active');
+                canvas.classList.remove('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            }
+        }
+
+        function toggleEraserMode() {
+            isEraserMode = !isEraserMode;
+            isPenMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isEraserMode) {
+                eraserBtn.classList.add('active');
+                penBtn.classList.remove('active');
+                canvas.classList.add('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            } else {
+                eraserBtn.classList.remove('active');
+                canvas.classList.remove('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            }
+        }
+
+        function togglePanMode() {
+            isPanMode = !isPanMode;
+            isPenMode = false;
+            isEraserMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            penBtn.classList.remove('active');
+            eraserBtn.classList.remove('active');
+            canvas.classList.remove('drawing-mode');
+            canvas.classList.remove('eraser-mode');
+
+            if (isPanMode) {
+                panBtn.classList.add('active');
+                canvas.classList.add('pan-mode');
+            } else {
+                panBtn.classList.remove('active');
+                canvas.classList.remove('pan-mode');
+            }
+        }
+
+        function setPenColor(color) {
+            penColor = color;
+            document.querySelectorAll('.pen-color-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.color === color) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (!isPenMode) {
+                togglePenMode();
+            }
+            isEraserMode = false;
+            document.getElementById('eraserBtn').classList.remove('active');
+            document.getElementById('drawingCanvas').classList.remove('eraser-mode');
+            document.getElementById('drawingCanvas').classList.add('drawing-mode');
+        }
+
+        function startDrawing(e) {
+            if (isPanMode) {
+                isPanning = true;
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (e.clientX + window.scrollX) / scale;
+            const docY = (e.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = e.clientX;
+                lastY = e.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = e.clientX;
+            lastY = e.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function bindDraw(e) {
+            if (isPanning) {
+                const dx = e.clientX - panStartX;
+                const dy = e.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+
+            const x = e.clientX;
+            const y = e.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function stopDrawing() {
+            if (isPanning) {
+                isPanning = false;
+                drawingCanvas.classList.remove('panning');
+                return;
+            }
+
+            if (isDrawing && currentPath && currentPath.points.length > 1) {
+                drawingPaths.push(currentPath);
+            }
+            isDrawing = false;
+            currentPath = null;
+        }
+
+        function eraseAtPoint(docX, docY) {
+            const eraseRadius = eraserSize / getCurrentScale();
+            let needsRedraw = false;
+
+            for (let i = drawingPaths.length - 1; i >= 0; i--) {
+                const path = drawingPaths[i];
+                const newPoints = [];
+                let segmentStart = 0;
+
+                for (let j = 0; j < path.points.length; j++) {
+                    const point = path.points[j];
+                    const dist = Math.sqrt(Math.pow(point.x - docX, 2) + Math.pow(point.y - docY, 2));
+
+                    if (dist <= eraseRadius) {
+                        if (j > segmentStart && newPoints.length > 1) {
+                            const newPath = {
+                                color: path.color,
+                                size: path.size,
+                                points: newPoints.slice()
+                            };
+                            if (newPath.points.length > 1) {
+                                drawingPaths.push(newPath);
+                            }
+                            newPoints.length = 0;
+                        } else {
+                            newPoints.length = 0;
+                        }
+                        segmentStart = j + 1;
+                        needsRedraw = true;
+                    } else {
+                        newPoints.push(point);
+                    }
+                }
+
+                if (newPoints.length > 1) {
+                    path.points = newPoints;
+                } else {
+                    drawingPaths.splice(i, 1);
+                    needsRedraw = true;
+                }
+            }
+
+            if (needsRedraw) {
+                redrawCanvas();
+            }
+        }
+
+        function handleTouchStart(e) {
+            if (isPanMode) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                isPanning = true;
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (touch.clientX + window.scrollX) / scale;
+            const docY = (touch.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = touch.clientX;
+                lastY = touch.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function handleTouchMove(e) {
+            if (isPanning) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const dx = touch.clientX - panStartX;
+                const dy = touch.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const x = touch.clientX;
+            const y = touch.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function clearCanvas() {
+            if (confirm('그린 내용을 모두 지우시겠습니까?')) {
+                drawingPaths = [];
+                currentPath = null;
+                drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+        }
+
+        // 모바일 스케일 적용 함수
+        function applyMobileScale() {
+            const wrapper = document.querySelector('.exam-wrapper');
+            if (!wrapper) return;
+
+            const baseWidth = 900;
+            const screenWidth = window.innerWidth;
+
+            if (screenWidth < baseWidth) {
+                autoScale = screenWidth / baseWidth;
+            } else {
+                autoScale = 1;
+            }
+
+            const finalScale = autoScale * currentZoom;
+            wrapper.style.transform = `scale(${finalScale})`;
+            wrapper.style.transformOrigin = 'top center';
+
+            updateZoomDisplay();
+
+            if (typeof redrawCanvas === 'function') {
+                setTimeout(redrawCanvas, 50);
+            }
+        }
+
+        // 줌 인
+        function zoomIn() {
+            if (currentZoom < maxZoom) {
+                currentZoom = Math.min(maxZoom, currentZoom + zoomStep);
+                applyMobileScale();
+            }
+        }
+
+        // 줌 아웃
+        function zoomOut() {
+            if (currentZoom > minZoom) {
+                currentZoom = Math.max(minZoom, currentZoom - zoomStep);
+                applyMobileScale();
+            }
+        }
+
+        // 줌 리셋 (화면 맞춤)
+        function zoomReset() {
+            currentZoom = 1;
+            applyMobileScale();
+        }
+
+        // 줌 레벨 표시 업데이트
+        function updateZoomDisplay() {
+            const zoomLevelEl = document.getElementById('zoomLevel');
+            if (zoomLevelEl) {
+                const displayPercent = Math.round(currentZoom * 100);
+                zoomLevelEl.textContent = displayPercent + '%';
+            }
+        }
+
+        // 페이지 로드 시 캔버스 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initDrawingCanvas();
+            applyMobileScale();
+            window.addEventListener('resize', applyMobileScale);
+        });
+
+        // ===== 설정 =====
+        const EXAM_ID = 'supplement_classic_poem_gangho';
+        const TOTAL_QUESTIONS = 5;
+        const TOTAL_TIME = 20 * 60; // 20분
+
+        // 현재 사용자 ID (사용자별 데이터 분리)
+        let currentUserId = '';
+
+        // localStorage 키 (다른 시험과 겹치지 않게 + 사용자별 분리)
+        function LS_KEY(key) {
+            return `supp_classic_poem_gangho_${currentUserId}_${key}`;
+        }
+
+        // 정답 데이터
+        const correctAnswers = {
+            1: 3, 2: 5, 3: 1, 4: 4, 5: 2
+        };
+
+        // 배점 (5문항 = 총 100점 기준)
+        function getQuestionScore(questionNum) {
+            return 20; // 균등 배점
+        }
+
+        // 해설 데이터
+        const explanations = {
+            1: {
+                correct: "정답: ③",
+                text: "(다)는 자문자답의 방식을 사용하고 있지 않다. (다)는 산골의 자연과 농촌 생활의 모습을 서술하고 있을 뿐, 스스로 묻고 답하는 자문자답의 방식은 나타나지 않는다.<br><br>① (가)는 '금빛 푸른빛', '자줏빛 노을' 등 색채 이미지를 사용하여 대상을 생생하게 제시하고 있다.<br>② (나)는 '보았구나 백상루', '어찌 새로 듯하구나' 등 감탄형 어미를 통해 대상에 대한 화자의 정서를 표현하고 있다.<br>④ (다)는 산골의 다양한 소리(소 모는 노래, 샘물 소리, 시내 소리, 큰 내 소리)를 대조적으로 제시하여 주제 의식을 부각하고 있다.<br>⑤ (가)는 '쌍룡이 뒤틀며 여의주를 다투다가' 등의 비유적 표현을, (다)는 '모는 그야말로 자식과 같이 귀중한 물건' 등의 비유적 표현을 통해 대상의 속성을 드러내고 있다."
+            },
+            2: {
+                correct: "정답: ⑤",
+                text: "[E]에서 화자는 '아침 물결 잔잔하여 수면이 맑으니 / 눈앞이 어른어른 정신이 표연하니 / 열자가 바람을 타고 공중에 떠 있는 듯'이라고 하여, 아침 풍경을 보는 화자의 내면을 열자와 연관 지어 표현하고 있다.<br><br>① [A]는 고려 옛터를 고쳐 지은 누각의 웅장함을 묘사하고 있으며, 왕조의 번영을 기원하는 내용은 나타나지 않는다.<br>② [B]는 옛사람들이 지은 시가 풍경과 조화를 이루어 자신이 보탤 것이 없다고 하여 긍정적으로 평가하고 있다.<br>③ [C]는 묘향산이 푸른 병풍처럼 둘렸다고 하여, 산의 모습을 푸른 병풍에 비유한 것이지, 푸른 병풍을 산에 비유한 것이 아니다.<br>④ [D]는 '창문을 열젖히고 베개에 기대니 번잡한 마음에 늦은 겨를 없다'라고 하여, 화자가 여유롭게 경치를 감상하는 모습이 나타날 뿐 변방 수비에 대한 우려는 드러나지 않는다."
+            },
+            3: {
+                correct: "정답: ①",
+                text: "(가)에서 화자는 '먹인 은을 다 갚고자' 했으나 뜻대로 되지 않았고, '이제 다 못 죽음도 그 성은인가 하노라'라고 하여 강호에서 살아 있는 것도 임금의 은혜라고 여기고 있다. 이를 통해 자연에서도 임금에 대한 충성심을 지니고 있음을 확인할 수 있다.<br><br>② '철심이 넘'은 '나이가 들었다'는 의미이며, 화자가 속세로 돌아올 때가 되었다고 여기는 것이 아니라 나이가 들어 할 일이 없다고 한탄하는 것이다.<br>③ 남이 '초초타 하'는 것을 '내 분'으로 여긴다는 것은 보잘것없는 소박한 삶을 분수에 맞는 일로 받아들인다는 의미이지, 속세를 그리워하는 것이 아니다.<br>④ [D]에서 '번잡한 마음에 늦은 겨를 없다'는 것은 번잡한 마음이 해소되었다는 의미가 아니라, 번잡한 마음 때문에 늦은 시간에도 쉴 겨를이 없다는 뜻이다.<br>⑤ (나)에서 '동자'와 '아녀자'의 모습은 화자가 백상루에서 바라본 일상적인 풍경일 뿐, 화자가 생각하는 이상향이라고 보기 어렵다."
+            },
+            4: {
+                correct: "정답: ④",
+                text: "ⓐ '백구'는 화자가 강호에서 한가로운 삶을 즐기는 벗으로, 화자의 한가로운 삶의 태도를 드러내는 대상이다. ⓑ '뻐꾸기'는 산골의 정취를 느끼게 하는 대상으로, 글쓴이가 산골에 대해 우호적인 태도를 갖고 있음을 드러낸다.<br><br>① ⓐ는 화자의 외로움이 아니라 한가로운 삶의 정취가 투영된 대상이며, ⓑ는 동정심이 아니라 친근감을 유발하는 대상이다.<br>② ⓐ는 현재의 한가로운 삶과 관련된 대상이지 과거 경험을 환기하는 것이 아니며, ⓑ는 내적 성찰보다는 산골의 정취를 느끼게 하는 대상이다.<br>③ ⓐ는 화자에게 만족감을 주는 대상이지만, ⓑ는 우울한 과거가 아니라 산골의 정겨운 분위기를 떠올리게 하는 대상이다.<br>⑤ ⓐ는 화자가 세상을 알까 염려하는 대상이지 세상에 대한 비판적 태도를 드러내는 것이 아니며, ⓑ는 도피적 태도가 아니라 산골에 대한 애정을 드러내는 대상이다."
+            },
+            5: {
+                correct: "정답: ②",
+                text: "'산천의 풍경'을 '하나 흠잡을 데 없는 귀여운 전원'이라고 표현한 것은 1930년대 문학에서 나타난 향토를 낭만적인 전원으로 제시하는 경향을 보여준다.<br><br>① '쓰러질 듯한 헌 초가'는 산골의 가난한 모습을 보여주지만, 글쓴이는 이를 절망적으로 보지 않고 담담하게 서술하고 있다.<br>③ '논밭 일에 소를 부릴 때면 으레 그 노래를 부'르는 것은 현실적 삶을 배제한 것이 아니라 일상이 깃든 산골의 모습을 보여주는 것이다.<br>④ '샘물', '시내', '큰 내'의 물소리 묘사는 산골 자연의 파괴적 이면이 아니라 세밀한 묘사를 통해 자연의 생동감을 구체적으로 드러낸 것이다.<br>⑤ 농군이 '즐거운 노래를' 부르며 '논에 모를 내는 것'은 도시에서 이주한 사람이 아니라 원래 산골에 살던 농군의 일상적인 생활 모습이다."
+            }
+        };
+
+        // ===== 타이머 =====
+        let remainingSeconds = TOTAL_TIME;
+        let timerInterval = null;
+
+        function startTimer() {
+            const saved = localStorage.getItem(LS_KEY('examTimer'));
+            if (saved) {
+                remainingSeconds = parseInt(saved);
+            }
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                if (remainingSeconds <= 0) {
+                    remainingSeconds = 0;
+                    stopTimer();
+                    alert('시간이 종료되었습니다. 자동으로 채점합니다.');
+                    gradeExam();
+                }
+                localStorage.setItem(LS_KEY('examTimer'), remainingSeconds);
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            const timerEl = document.getElementById('timerValue');
+            if (timerEl) {
+                timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            const timerContainer = document.getElementById('examTimer');
+            if (timerContainer) {
+                if (remainingSeconds <= 60) {
+                    timerContainer.className = 'exam-timer danger';
+                } else if (remainingSeconds <= 300) {
+                    timerContainer.className = 'exam-timer warning';
+                } else {
+                    timerContainer.className = 'exam-timer';
+                }
+            }
+        }
+
+        // ===== 선택지 클릭 =====
+        function selectChoice(questionId, choiceNum, skipServerSave = false) {
+            const questionEl = document.querySelector(`[data-question="${questionId}"]`);
+            if (!questionEl) return;
+
+            questionEl.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+            const selectedChoice = questionEl.querySelector(`.choice[data-choice="${choiceNum}"]`);
+            if (selectedChoice) {
+                selectedChoice.classList.add('selected');
+            }
+            localStorage.setItem(LS_KEY(`question_${questionId}`), choiceNum);
+
+            // 서버에 답안 저장 (초기 로드 시에는 스킵)
+            if (!skipServerSave) {
+                saveAnswerToServer(questionId, choiceNum);
+            }
+        }
+
+        // 서버에 답안 저장
+        async function saveAnswerToServer(questionNumber, answer) {
+            try {
+                await fetch('/api/supplement-result/save-answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        questionNumber,
+                        answer
+                    })
+                });
+            } catch (err) {
+                console.error('답안 저장 오류:', err);
+            }
+        }
+
+        // ===== 채점 =====
+        function gradeExam(skipServerSave = false) {
+            const elapsedSeconds = TOTAL_TIME - remainingSeconds;
+            const elapsedMin = Math.floor(elapsedSeconds / 60);
+            const elapsedSec = elapsedSeconds % 60;
+            const elapsedTimeStr = `${String(elapsedMin).padStart(2, '0')}:${String(elapsedSec).padStart(2, '0')}`;
+
+            stopTimer();
+            const timerEl = document.getElementById('examTimer');
+            if (timerEl) timerEl.style.display = 'none';
+
+            // 기존 채점 마크 제거
+            document.querySelectorAll('.grade-mark').forEach(el => el.remove());
+
+            let correctCount = 0;
+            let totalScore = 0;
+
+            // 모든 문제 번호 요소 찾기
+            const questionNumbers = document.querySelectorAll('.question-number');
+
+            questionNumbers.forEach((qNum) => {
+                const questionText = qNum.textContent.replace(/[○✓⭕✔]/g, '').trim();
+                const questionId = parseInt(questionText.replace('.', ''));
+                if (isNaN(questionId) || questionId < 1 || questionId > TOTAL_QUESTIONS) return;
+
+                const userAnswer = localStorage.getItem(LS_KEY(`question_${questionId}`));
+                const correctAnswer = correctAnswers[questionId];
+
+                // 문제 번호의 부모 요소에 position: relative 추가
+                qNum.style.position = 'relative';
+
+                // 정답 선지에 연녹색 배경 표시
+                const questionEl = qNum.closest('.question');
+                if (questionEl) {
+                    const choices = questionEl.querySelectorAll('.choice');
+                    if (choices[correctAnswer - 1]) {
+                        choices[correctAnswer - 1].style.backgroundColor = '#c8f7c5';
+                        choices[correctAnswer - 1].style.position = 'relative';
+                        choices[correctAnswer - 1].classList.add('correct-answer');
+
+                        // 해설 버튼 추가
+                        const correctMark = document.createElement('span');
+                        correctMark.className = 'correct-mark';
+                        correctMark.textContent = '해설';
+                        correctMark.onclick = (e) => {
+                            e.stopPropagation();
+                            showExplanation(questionId);
+                        };
+                        choices[correctAnswer - 1].appendChild(correctMark);
+                    }
+
+                    // 틀린 답안에 표시
+                    if (userAnswer && parseInt(userAnswer) !== correctAnswer) {
+                        const userChoiceIdx = parseInt(userAnswer) - 1;
+                        if (choices[userChoiceIdx]) {
+                            choices[userChoiceIdx].classList.add('wrong-answer');
+                        }
+                    }
+                }
+
+                // 채점 마크 생성
+                const mark = document.createElement('span');
+                mark.className = 'grade-mark';
+
+                if (userAnswer && parseInt(userAnswer) === correctAnswer) {
+                    // 정답 - 빨간 동그라미
+                    correctCount++;
+                    totalScore += getQuestionScore(questionId);
+                    mark.innerHTML = '⭕';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 72px;
+                        position: absolute;
+                        left: -20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        opacity: 0.75;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                } else {
+                    // 오답 또는 미응답 - 빨간 체크 (V 표시)
+                    mark.innerHTML = '✔';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 60px;
+                        position: absolute;
+                        left: -15px;
+                        top: 50%;
+                        transform: translateY(-50%) rotate(-15deg);
+                        opacity: 0.8;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                }
+
+                qNum.appendChild(mark);
+            });
+
+            // 결과 배너 표시
+            document.getElementById('bannerScore').textContent = totalScore;
+            document.getElementById('bannerCorrect').textContent = correctCount;
+            document.getElementById('resultBanner').style.display = 'block';
+
+            document.body.classList.add('graded');
+
+            // localStorage 정리
+            localStorage.removeItem(LS_KEY('examTimer'));
+
+            // 서버에 채점 결과 저장 (복원 시에는 스킵)
+            if (!skipServerSave) {
+                saveGradeToServer(correctCount, totalScore);
+            }
+        }
+
+        // 서버에 채점 결과 저장
+        async function saveGradeToServer(correctCount, score) {
+            try {
+                // 모든 답안 수집
+                const answers = {};
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        answers[i] = parseInt(saved);
+                    }
+                }
+
+                // localStorage에서 사용자 정보 가져오기 (세션 만료 대비)
+                const userData = localStorage.getItem('mockExamUser');
+                let userInfo = {};
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userInfo = {
+                        userId: user._id,
+                        phone: user.phone,
+                        studentInfo: {
+                            name: user.name,
+                            school: user.school,
+                            grade: user.grade
+                        }
+                    };
+                }
+
+                await fetch('/api/supplement-result/save-grade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        answers,
+                        correctCount,
+                        totalQuestions: TOTAL_QUESTIONS,
+                        score,
+                        ...userInfo
+                    })
+                });
+                console.log('채점 결과 저장 완료');
+            } catch (err) {
+                console.error('채점 결과 저장 오류:', err);
+            }
+        }
+
+        // ===== 해설 =====
+        function showExplanation(questionId) {
+            const exp = explanations[questionId];
+            if (!exp) return;
+
+            document.getElementById('explanationTitle').textContent = `${questionId}번 문제 해설`;
+            document.getElementById('explanationBody').innerHTML = `
+                <div class="explanation-correct">
+                    <div class="explanation-correct-label">${exp.correct}</div>
+                    <div class="explanation-correct-text">${exp.text}</div>
+                </div>
+            `;
+            document.getElementById('explanationOverlay').style.display = 'block';
+            document.getElementById('explanationPopup').style.display = 'block';
+        }
+
+        function closeExplanation() {
+            document.getElementById('explanationOverlay').style.display = 'none';
+            document.getElementById('explanationPopup').style.display = 'none';
+        }
+
+        // ===== 뒤로가기 (대시보드로 이동) =====
+        function goBack() {
+            window.location.href = '/mock_exam_dashboard.html';
+        }
+
+        // ===== 다시풀기 =====
+        async function resetExam() {
+            if (!confirm('모든 답안과 채점 결과가 초기화됩니다. 다시 풀겠습니까?')) {
+                return;
+            }
+
+            // localStorage 초기화
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                localStorage.removeItem(LS_KEY(`question_${i}`));
+            }
+            localStorage.removeItem(LS_KEY('isGraded'));
+
+            // 서버 데이터 삭제
+            try {
+                // 쿼리 파라미터로 사용자 정보 전달 (세션 만료 대비)
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`, {
+                    method: 'DELETE'
+                });
+            } catch (err) {
+                console.error('서버 데이터 삭제 오류:', err);
+            }
+
+            // 페이지 새로고침
+            window.location.reload();
+        }
+
+        // ===== 초기화 =====
+        async function init() {
+            // 사용자 정보 로드
+            const userData = localStorage.getItem('mockExamUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                currentUserId = user._id || user.phone || ''; // 사용자 ID 설정
+                document.getElementById('studentSchool').textContent = user.school || '-';
+                document.getElementById('studentGrade').textContent = user.grade || '-';
+                document.getElementById('studentName').textContent = user.name || '-';
+            }
+
+            // 서버에서 저장된 답안 로드
+            try {
+                // 쿼리 파라미터로 사용자 정보 전달 (세션 만료 대비)
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                const response = await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`);
+                const data = await response.json();
+
+                if (data.ok && data.result) {
+                    const serverResult = data.result;
+
+                    // 서버에서 답안 복원
+                    if (serverResult.answers) {
+                        for (const [questionId, answer] of Object.entries(serverResult.answers)) {
+                            // localStorage에도 저장하고 UI 업데이트 (서버 저장은 스킵)
+                            localStorage.setItem(LS_KEY(`question_${questionId}`), answer);
+                            selectChoice(parseInt(questionId), answer, true);
+                        }
+                    }
+
+                    // 이미 채점 완료된 경우 채점 결과 표시 (서버 저장 스킵)
+                    if (serverResult.isGraded) {
+                        setTimeout(() => {
+                            gradeExam(true);
+                        }, 100);
+                    }
+                } else {
+                    // 서버에 데이터가 없으면 localStorage에서 복원
+                    for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                        const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                        if (saved) {
+                            selectChoice(i, parseInt(saved), true);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('서버 데이터 로드 오류:', err);
+                // 서버 오류 시 localStorage에서 복원
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        selectChoice(i, parseInt(saved), true);
+                    }
+                }
+            }
+
+            // 타이머 시작 (보완학습은 타이머 없음)
+            // startTimer();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

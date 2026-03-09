@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏰 세포 도시의 위기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6A1B9A 0%, #4A148C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: block;
+      color: #6A1B9A;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .story-card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2d2d2d;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 17px;
+      line-height: 2;
+      color: #444;
+      margin-bottom: 15px;
+      text-align: justify;
+      word-break: keep-all;
+    }
+
+    .story-card .highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(106, 27, 154, 0.2) 60%);
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #6A1B9A;
+      font-weight: 500;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      pointer-events: none;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      pointer-events: auto;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #FFD700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 닫기 버튼 */
+    .close-btn { display: none;
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .close-btn:hover {
+      transform: scale(1.1);
+      background: #fff;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .intro-section {
+        padding: 30px 20px;
+      }
+
+      .intro-content {
+        padding: 40px 25px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+
+      .story-section {
+        padding: 30px 20px;
+        justify-content: center !important;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-section:nth-child(odd) .story-card,
+      .story-section:nth-child(even) .story-card {
+        transform: translateY(50px);
+      }
+
+      .story-card.active {
+        transform: translateY(0);
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 15px;
+        line-height: 1.9;
+      }
+
+      .close-btn { display: none;
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="close-btn" onclick="closeStory()">×</button>
+
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏰 세포 도시의 위기</h1>
+        <p class="subtitle">
+          — 작은 시민들이 지켜낸 생명의 왕국 —<br>
+          "가장 작은 질서가 가장 큰 생명을 지킨다."
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>▸ 👑 핵 시장:</strong> 도시의 최고 지도자. DNA 설계도를 보관하고 모든 명령을 총괄한다.</p>
+          <p><strong>▸ 🛡️ 멤브라 (세포막 경비대장):</strong> 성벽을 지키는 충직한 경비대장. 선택적 투과성으로 적을 가려낸다.</p>
+          <p><strong>▸ ⚙️ 미토 (세포질 공장장):</strong> 미토콘드리아 발전소의 책임자. ATP 에너지를 24시간 생산한다.</p>
+          <p><strong>▸ 📡 호르몬 & 뉴런:</strong> 느리지만 확실한 화학 전령과, 번개처럼 빠른 전기 전사.</p>
+          <p><strong>▸ ⚖️ 항상성 재판관:</strong> 도시의 균형을 감시하는 최고 감독관. 체온·혈당 등을 조절한다.</p>
+          <p><strong>▸ 🦠 바이러스 군단:</strong> DNA 설계도를 노리는 외부 침입자. 위장과 기만이 특기.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">보이지 않는 왕국의 아침</span>
+        <h2>🌍 세포 도시의 아침</h2>
+        <p>아주 먼 옛날, 아니 사실은 바로 지금 이 순간에도, 우리 몸속 깊은 곳에는 눈에 보이지 않는 거대한 도시가 존재합니다. 사람들은 그 도시를 <span class="highlight">'세포 도시'</span><br><br>라고 불렀습니다. 세포 도시는 상상할 수 없을 만큼 넓고, 셀 수 없을 만큼 많은 시민들이 살고 있는 곳이었지요.</p>
+        <p>이 도시의 가장 놀라운 점은 바깥에서는 절대로 볼 수 없다는 것이었습니다. 하지만 도시 안에서는 매 순간 놀라운 일들이 벌어지고 있었어요. 해가 뜨면 에너지 공장이 돌아가기 시작하고, 영양분을 실은 수송 열차가 구석구석을 달렸습니다. 밤이 되면 복구 부대가 출동하여 낮 동안 지친 건물과 도로를 말끔히 수리했지요.</p>
+        <p>이 도시에는 왕도 있고, 경비병도 있고, 과학자도 있었습니다. 그들 모두는 단 하나의 목표를 위해 살았는데, 그것은 바로 <span class="highlight">'도시 전체의 생명을 지키는 것'</span><br><br>이었습니다.</p>
+        <p>세포 도시의 시민 수는 무려 <span class="highlight">37조 명</span><br><br>이 넘었고, 그들은 서로를 한 번도 만난 적 없으면서도 완벽하게 협력했습니다. 마치 보이지 않는 실로 모두가 연결된 것처럼요. 자, 이제 이 신비로운 도시 속으로 함께 들어가 볼까요?</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">37조 시민의 정체</span>
+        <h2>🧬 세포들의 정체를 밝히다</h2>
+        <p>세포 도시의 시민, 즉 '세포'는 생김새도 성격도 저마다 달랐습니다. 어떤 세포는 둥글고 부드러웠고, 어떤 세포는 길쭉하고 단단했습니다. <span class="highlight">근육 세포</span><br><br>는 늘 힘이 넘쳐서 무거운 것을 들어 올리는 일을 맡았고, <span class="highlight">신경 세포</span><br><br>는 가늘고 긴 팔을 뻗어 먼 곳의 소식을 번개처럼 전달했습니다.</p>
+        <p><span class="highlight">적혈구</span><br><br>시민은 빨간 모자를 쓰고 산소 배달부로 일했으며, <span class="highlight">백혈구</span><br><br>시민은 강인한 전사로서 도시를 침입자로부터 지켰습니다.</p>
+        <p>이렇게 종류가 다양한데도 모든 세포에게는 공통점이 하나 있었어요. 바로 <span class="highlight">'핵'</span><br><br>이라는 지휘본부, <span class="highlight">'세포막'</span><br><br>이라는 성벽, 그리고 <span class="highlight">'세포질'</span><br><br>이라는 작업 공간을 가지고 있다는 것이었습니다. 이 세 가지는 모든 시민이 태어날 때부터 갖추고 있는 기본 장비였지요.</p>
+        <p>세포들은 크기가 너무나 작아서 현미경 없이는 볼 수 없었지만, 그들의 일은 결코 작지 않았습니다. 심장을 뛰게 하고, 생각을 만들어내고, 음식을 소화시키고, 상처를 아물게 하는 것이 모두 이 작은 시민들의 일이었으니까요.</p>
+        <p>그래서 세포 도시의 격언은 이것이었습니다.<br><br><span class="dialogue">"작다고 하찮은 것은 없다. 모든 시민이 곧 생명이다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">핵 시장님의 비밀 금고</span>
+        <h2>👑 DNA 설계도</h2>
+        <p>세포 도시의 한가운데에는 '핵'이라 불리는 시청 건물이 우뚝 서 있었습니다. 이 시청의 시장님은 도시에서 가장 중요한 인물이었는데, 그 이유는 시장님이 도시의 모든 설계도를 보관하고 있었기 때문입니다. 그 설계도의 이름은 바로 <span class="highlight">'DNA'</span><br><br>였습니다.</p>
+        <p>DNA는 아주 긴 나선형 사다리 모양으로, 그 안에는 도시의 모든 비밀이 기록되어 있었어요. 어떤 건물을 어디에 세울지, 어떤 단백질을 얼마나 만들지, 심지어 시민들의 생김새와 수명까지도 이 설계도에 적혀 있었습니다.</p>
+        <p>시장님은 이 설계도를 절대로 밖으로 내보내지 않았습니다. 대신 필요한 부분만 복사하여 <span class="highlight">'RNA 전령'</span><br><br>에게 건네주었지요. RNA 전령은 복사본을 들고 세포질 공장으로 달려가<br><br><span class="dialogue">"이 부분을 만들어 주세요!"</span><br><br>라고 외쳤습니다.</p>
+        <p>그런데 어느 날, 무시무시한 소문이 돌기 시작했어요. 정체불명의 <span class="highlight">바이러스 군단</span><br><br>이 도시 밖에서 다가오고 있다는 것이었습니다. 바이러스는 핵 시장의 DNA 설계도를 훔쳐서 자신들의 복제 공장에 사용하려는 음모를 꾸미고 있었습니다.</p>
+        <p>시장님은 즉시 비상회의를 소집했습니다.<br><br><span class="dialogue">"설계도가 탈취되면 도시는 끝이다. 모든 부서는 전투 태세에 돌입하라!"</span><br><br>이렇게 세포 도시의 첫 번째 위기가 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">성벽 위의 결단</span>
+        <h2>🛡️ 세포막 경비대장 '멤브라'</h2>
+        <p>세포 도시를 둘러싸고 있는 거대한 성벽, 그것이 바로 <span class="highlight">세포막</span><br><br>이었습니다. 세포막 경비대의 대장 이름은 '멤브라'였습니다. 멤브라는 태어날 때부터 성벽 위에서 자랐고, 단 한 번도 성벽을 떠난 적이 없는 충직한 경비대장이었지요.</p>
+        <p>세포막은 단순한 벽이 아니었습니다. 그것은 <span class="highlight">'선택적 투과성'</span><br><br>이라는 마법의 능력을 가지고 있었어요. 즉, 도시에 필요한 물질만 통과시키고, 위험한 물질은 절대 들여보내지 않는 지능형 문이었던 것입니다. 영양분과 산소가 도착하면 멤브라는 문을 활짝 열었지만, 정체불명의 물질이 다가오면 단호하게 문을 닫았습니다.</p>
+        <p>바이러스 군단이 접근하자 멤브라는 경비병들을 총동원했습니다.<br><br><span class="dialogue">"성벽 모든 구간에 감시를 두 배로 늘려라! 수상한 분자는 한 놈도 들여보내지 마라!"</span></p>
+        <p>바이러스는 교활했습니다. 영양분으로 위장하여 문을 통과하려 했고, 멤브라의 경비병 중 일부를 매수하려고도 했습니다. 하지만 멤브라는 결코 속지 않았어요. 그녀는 <span class="highlight">수용체</span><br><br>라는 특수 감지기를 통해 다가오는 모든 물질의 '신분증'을 확인했습니다. 신분증이 맞지 않으면, 아무리 겉모습이 그럴듯해도 절대 통과시키지 않았습니다.</p>
+        <p>멤브라는 이렇게 외쳤습니다.<br><br><span class="dialogue">"경계를 늦추면 도시가 무너진다. 내가 서 있는 한, 이 성벽은 절대 뚫리지 않는다!"</span><br><br>그녀의 결단이 도시의 첫 번째 방어선을 지켜냈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">에너지 전쟁의 서막</span>
+        <h2>⚙️ 세포질 공장장 '미토'</h2>
+        <p>성벽 안쪽, 세포질이라 불리는 넓은 공간에는 수많은 공장이 가동되고 있었습니다. 그중에서도 가장 중요한 공장은 <span class="highlight">'미토콘드리아 발전소'</span><br><br>였고, 그곳의 공장장 이름은 '미토'였습니다. 미토는 뚱뚱하고 느려 보였지만, 사실 도시에서 가장 부지런한 일꾼이었어요.</p>
+        <p>미토의 임무는 영양분을 <span class="highlight">'ATP'</span><br><br>라는 에너지 화폐로 바꾸는 것이었습니다. ATP가 없으면 경비병도, 전령도, 복구 부대도 움직일 수 없었기에 미토의 공장은 24시간 쉬지 않고 돌아갔습니다.</p>
+        <p>바이러스의 공격이 시작되자 에너지 수요가 폭발적으로 늘어났습니다. 백혈구 전사들이 전투를 벌이려면 엄청난 양의 ATP가 필요했고, 손상된 성벽을 복구하는 데에도 에너지가 필요했습니다. 미토는 잠을 포기하고 공장의 생산 라인을 세 배로 늘렸습니다.</p>
+        <p><span class="highlight">리보솜 공장</span><br><br>에서는 RNA 전령이 가져온 설계도를 바탕으로 항체와 방어 단백질을 쉬지 않고 만들어냈습니다. <span class="highlight">골지체 택배 센터</span><br><br>는 완성된 단백질을 포장하여 필요한 곳으로 급히 배달했습니다. 세포질 전체가 마치 전시 체제의 군수 공장처럼 돌아갔습니다.</p>
+        <p>미토는 지친 몸을 이끌며 동료들에게 말했습니다.<br><br><span class="dialogue">"에너지가 바닥나면 모든 것이 멈춘다. 우리가 멈추는 순간, 도시도 멈추는 거야. 그러니 조금만 더 힘을 내자!"</span><br><br>그의 열정이 도시의 심장을 뛰게 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">이웃이 모여 마을이 되다</span>
+        <h2>🏘️ 조직의 탄생</h2>
+        <p>전투가 계속되면서 세포 도시의 시민들은 중요한 사실을 깨달았습니다. 혼자서는 바이러스를 막을 수 없다는 것이었지요. 같은 일을 하는 세포들이 모여 <span class="highlight">'조직'</span><br><br>이라는 마을을 형성하기 시작했습니다.</p>
+        <p>근육 세포들이 모이니 '근육 조직 마을'이 생겼습니다. 이 마을의 세포들은 동시에 수축하고 이완하여 어마어마한 힘을 만들어냈어요. 신경 세포들이 모인 '신경 조직 마을'은 도시 전체에 통신망을 깔았습니다. 한쪽 성벽에서 바이러스가 발견되면 0.001초 만에 도시 반대편까지 경보가 전달되었지요.</p>
+        <p><span class="highlight">상피 조직 마을</span><br><br>은 도시의 외벽과 내벽을 단단하게 이어 붙여 빈틈없는 방어막을 만들었고, <span class="highlight">결합 조직 마을</span><br><br>은 모든 마을 사이를 연결하는 도로와 다리를 놓았습니다.</p>
+        <p>마을이 형성되자 효율이 놀랍도록 높아졌습니다. 혼자 일할 때 열 시간 걸리던 작업이 마을 단위로 협력하니 한 시간 만에 끝났습니다. 세포들은 비로소 깨달았어요.<br><br><span class="dialogue">"나 하나의 힘은 작지만, 같은 마음을 가진 이웃이 모이면 산도 옮길 수 있구나!"</span></p>
+        <p>조직의 형성은 도시에 질서를 가져왔고, 그 질서 속에서 각자의 역할이 더욱 빛나기 시작했습니다. 바이러스 군단은 이렇게 조직적으로 단결한 세포들을 보며 처음으로 두려움을 느꼈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">연합군의 결성</span>
+        <h2>🏰 기관들의 대협력 작전</h2>
+        <p>마을, 즉 조직이 형성된 후에도 바이러스의 공격은 멈추지 않았습니다. 오히려 더 교활하고 강력해졌지요. 이에 도시 지도자들은 역사적인 결정을 내렸습니다. 여러 종류의 조직 마을이 힘을 합쳐 <span class="highlight">'기관'</span><br><br>이라는 연합군을 만드는 것이었습니다.</p>
+        <p><span class="highlight">심장 기관</span><br><br>은 근육 조직, 신경 조직, 결합 조직, 상피 조직이 하나로 뭉쳐 만들어졌습니다. 심장은 쉬지 않고 뛰며 혈액이라는 보급 열차를 온 도시에 보냈습니다. <span class="highlight">폐 기관</span><br><br>은 바깥 세상에서 신선한 산소를 들여와 이산화탄소를 내보내는 환기 시스템이 되었어요.</p>
+        <p><span class="highlight">위장 기관</span><br><br>은 외부에서 들어온 음식을 분해하여 영양분으로 바꾸는 거대한 정제 시설이었습니다. 면역 기관인 <span class="highlight">림프계</span><br><br>는 백혈구 전사들의 총사령부가 되어 바이러스와의 전면전을 지휘했습니다.</p>
+        <p>각 기관이 제 역할을 완벽하게 수행하자, 도시는 마치 거대한 하나의 생명체처럼 움직이기 시작했습니다. 심장이 혈액을 보내면 폐가 산소를 채워 넣고, 위장이 영양분을 공급하면 미토의 공장이 에너지로 바꾸고, 면역 기관이 전선에서 바이러스와 싸우는 동안 신경계가 모든 전투 상황을 실시간으로 통제했습니다.</p>
+        <p>완벽한 연합 작전이었습니다. 도시 전체가 하나의 교향곡처럼 조화를 이루었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">소통의 두 영웅</span>
+        <h2>📡 전령 '호르몬'과 번개 전사 '뉴런'</h2>
+        <p>기관들의 연합 작전이 성공할 수 있었던 비밀에는 두 명의 숨은 영웅이 있었습니다. 바로 화학 전령 <span class="highlight">'호르몬'</span><br><br>과 전기 전사 <span class="highlight">'뉴런'</span><br><br>이었습니다.</p>
+        <p>호르몬은 느리지만 확실한 메신저였습니다. 그는 혈액 열차에 올라타 온 도시를 순회하며 중요한 명령을 전달했어요.<br><br><span class="dialogue">"성장하라!", "에너지를 아껴라!", "전투 모드로 전환하라!"</span><br><br>같은 명령이 호르몬의 편지에 담겨 있었습니다. 호르몬의 메시지는 도착하는 데 시간이 좀 걸렸지만, 한번 전달되면 오래도록 효과가 지속되었습니다.</p>
+        <p>반면에 뉴런은 번개처럼 빠른 전사였습니다. 신경 조직의 정예 요원인 뉴런은 전기 신호를 이용하여 <span class="highlight">초속 120미터</span><br><br>의 속도로 정보를 전달했어요. 바이러스가 성벽 동쪽에 나타나면, 뉴런의 신호는 0.01초 만에 서쪽 방어 부대에 도달했습니다.</p>
+        <p>바이러스 군단의 총공격이 시작되었을 때, 뉴런이 먼저<br><br><span class="dialogue">"적이 온다!"</span><br><br>는 긴급 신호를 보냈고, 호르몬이 뒤따라<br><br><span class="dialogue">"아드레날린 분비! 전 시민 전투 태세!"</span><br><br>라는 장기 명령을 내렸습니다.</p>
+        <p>이 두 영웅의 완벽한 협업 덕분에 도시는 위기 상황에서도 혼란에 빠지지 않을 수 있었습니다. 소통이 끊어지면 아무리 강한 군대도 무너집니다. 호르몬과 뉴런은 그것을 누구보다 잘 알고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">흔들리지 않는 균형의 법칙</span>
+        <h2>⚖️ 항상성 재판관</h2>
+        <p>전투가 한창이던 어느 날, 도시에 새로운 위기가 찾아왔습니다. 바이러스와의 전투에 너무 많은 에너지를 쏟은 나머지 도시의 온도가 위험할 정도로 올라간 것이었습니다. 체온이 정상 범위를 벗어나자, 효소들이 일을 멈추기 시작했고 공장의 생산성이 급격히 떨어졌습니다.</p>
+        <p>이때 등장한 것이 <span class="highlight">'항상성 재판관'</span><br><br>이었습니다. 항상성 재판관은 도시의 모든 수치를 감시하는 최고 감독관이었어요. 체온, 혈당, 수분량, 산성도, 이 모든 것이 정해진 범위 안에 있어야 도시가 정상적으로 작동할 수 있었습니다.</p>
+        <p>재판관은 즉시 명령을 내렸습니다.<br><br><span class="dialogue">"땀샘 부대, 즉시 냉각 작전을 개시하라! 혈관 확장 팀, 피부 표면으로 혈액을 보내 열을 방출하라!"</span><br><br>동시에 과도하게 활성화된 면역 세포에게는<br><br><span class="dialogue">"과잉 반응을 멈추라. 필요한 만큼만 싸워라!"</span><br><br>라고 경고했습니다.</p>
+        <p>왜냐하면 면역 반응이 지나치면 오히려 자기 도시의 세포를 공격하는 <span class="highlight">'자가면역'</span><br><br>이라는 비극이 일어날 수 있기 때문이었습니다.</p>
+        <p>재판관의 지혜 덕분에 도시는 극단으로 치달지 않았습니다. 너무 뜨겁지도, 너무 차갑지도 않게. 너무 많이 싸우지도, 너무 적게 싸우지도 않게. 이 절묘한 균형이 바로 생명의 비밀이었습니다. 재판관은 말했습니다.<br><br><span class="dialogue">"질서란 움직이지 않는 것이 아니라, 흔들리면서도 중심을 잃지 않는 것이다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">작은 질서가 지켜낸 생명</span>
+        <h2>🌅 세포 도시의 새벽</h2>
+        <p>마침내 바이러스 군단은 패배했습니다. 멤브라의 성벽은 끝까지 버텨냈고, 미토의 에너지 공장은 단 한 순간도 멈추지 않았습니다. 핵 시장의 DNA 설계도는 안전하게 지켜졌으며, 호르몬과 뉴런의 소통은 도시 전체를 하나로 묶었습니다. 항상성 재판관의 균형 감각은 도시가 스스로를 파괴하는 것을 막아주었지요.</p>
+        <p>전투가 끝난 후, 도시는 조용히 복구 작업에 들어갔습니다. 손상된 세포는 스스로 분열하여 새로운 세포를 만들어냈고, 지친 세포는 <span class="highlight">'아포토시스'</span><br><br>라는 명예로운 퇴장을 통해 자리를 양보했습니다. 새로운 세포들이 태어나 빈자리를 채웠고, 도시는 다시 활기를 되찾았습니다.</p>
+        <p>세포 도시의 시민들은 이번 전투를 통해 귀중한 교훈을 얻었습니다. 37조 시민이 함께 살아가는 이 도시에서는 한 명의 영웅이 모든 것을 구하는 것이 아니었습니다. 경비병의 경계, 공장장의 성실함, 전령의 정확한 소통, 재판관의 균형 감각, 그리고 이름 없는 수많은 세포들의 묵묵한 헌신이 모여 하나의 생명을 지켜낸 것이었습니다.</p>
+        <p>도시의 광장에는 이런 문구가 새겨졌습니다. <span class="highlight">"가장 작은 질서가 가장 큰 생명을 지킨다."</span></p>
+        <p>그리고 오늘도, 바로 당신의 몸속에서, 37조 시민들은 이 문구를 가슴에 새기고 조용히 자신의 자리를 지키고 있습니다.</p>
+        <p style="text-align: center; margin-top: 30px; font-weight: 700; color: #6A1B9A;">— 🏰 끝 🏰 —</p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 스토리 닫기
+    function closeStory() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // IntersectionObserver로 스크롤 기반 배경 변경 및 카드 애니메이션
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -20% 0px',
+      threshold: 0.3
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const card = entry.target.querySelector('.story-card');
+
+        if (entry.isIntersecting) {
+          // 카드 활성화
+          if (card) card.classList.add('active');
+
+          // 배경 변경
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+        } else {
+          // 카드 비활성화
+          if (card) card.classList.remove('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 첫 번째 섹션 즉시 활성화
+    window.addEventListener('load', () => {
+      const firstCard = document.querySelector('.story-section .story-card');
+      if (firstCard) {
+        setTimeout(() => {
+          firstCard.classList.add('active');
+        }, 500);
+      }
+    });
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/bio08_season1_quiz.html?season=season1';
+    }
+  </script>
+
+  <div class="nav-buttons" style="position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 1000; pointer-events: auto;">
+    <button onclick="closeStory()" style="padding: 15px 30px; background: rgba(45, 106, 79, 0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);">← 목록으로</button>
+    <button onclick="goToQuiz()" style="padding: 15px 30px; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4);">📝 관문평가</button>
+  </div>
+
+</body>
+</html>

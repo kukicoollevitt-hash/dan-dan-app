@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 보완학습 - 발표 : 홍차</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nanum Myeongjo', '바탕', Batang, serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+            padding-top: 45px;
+        }
+
+        /* 상단 학생 정보 바 */
+        .student-info-display {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .student-info-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 5px;
+        }
+
+        .info-item strong {
+            color: #bdc3c7;
+        }
+
+        /* 타이머 */
+        .exam-timer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .exam-timer.warning {
+            background: rgba(255, 193, 7, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        .exam-timer.danger {
+            background: rgba(244, 67, 54, 0.4);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* 페이지 */
+        .page {
+            width: 100%;
+            max-width: 900px;
+            min-height: auto;
+            padding: 12mm 10mm 15mm 10mm;
+            margin: 0 auto;
+            background: #fff;
+            position: relative;
+        }
+
+        .page-footer {
+            text-align: center;
+            font-size: 10pt;
+            color: #333;
+            margin-top: 10mm;
+            padding-top: 5mm;
+        }
+
+        /* 헤더 */
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8mm;
+            position: relative;
+        }
+
+        .session-badge {
+            position: absolute;
+            left: 0;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 11pt;
+            font-weight: 600;
+        }
+
+        .title {
+            font-size: 22pt;
+            font-weight: 700;
+            letter-spacing: 4px;
+        }
+
+        .page-number {
+            position: absolute;
+            right: 0;
+            font-size: 18pt;
+            font-weight: 700;
+        }
+
+        .header-divider {
+            border-top: 1px solid #000;
+            margin-bottom: 5mm;
+        }
+
+        /* 2단 레이아웃 */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .column {
+            text-align: justify;
+            padding: 0 4mm;
+        }
+
+        .column:first-child {
+            border-right: 1px solid #000;
+            padding-left: 0;
+        }
+
+        .column:last-child {
+            padding-right: 0;
+        }
+
+        /* 문제 범위 안내 */
+        .question-range {
+            background: #f0f0f0;
+            padding: 3mm 4mm;
+            margin-bottom: 5mm;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+
+        /* 지문 박스 */
+        .passage-box {
+            border: 1px solid #000;
+            padding: 4mm;
+            margin-bottom: 5mm;
+            text-align: justify;
+            font-size: 9.5pt;
+            line-height: 1.7;
+        }
+
+        .passage-box .label {
+            font-weight: 700;
+            margin-bottom: 2mm;
+        }
+
+        .passage-box p {
+            margin-bottom: 2mm;
+            text-indent: 0;
+        }
+
+        .passage-box .poem-line {
+            margin-bottom: 0.5mm;
+        }
+
+        .passage-box .poem-line.bold {
+            font-weight: 700;
+        }
+
+        .passage-box .note {
+            font-size: 8.5pt;
+            margin-top: 3mm;
+            padding-top: 2mm;
+            border-top: 1px dashed #999;
+        }
+
+        .passage-box .note-item {
+            margin-bottom: 1mm;
+        }
+
+        /* 문제 */
+        .question {
+            margin-bottom: 5mm;
+        }
+
+        .question-number {
+            font-size: 13pt;
+            font-weight: 900;
+            margin-right: 2mm;
+        }
+
+        .question-text {
+            margin-bottom: 3mm;
+            font-weight: 700;
+        }
+
+        /* 선택지 */
+        .choices {
+            margin-left: 4mm;
+        }
+
+        .choice {
+            display: flex;
+            margin-bottom: 1.5mm;
+            text-align: justify;
+            padding: 2mm 3mm;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .choice:hover {
+            background-color: rgba(0, 100, 255, 0.08);
+        }
+
+        .choice.selected {
+            background-color: rgba(0, 100, 255, 0.35);
+        }
+
+        .choice-number {
+            min-width: 1.5em;
+            margin-right: 1mm;
+        }
+
+        /* 밑줄 */
+        .underline {
+            text-decoration: underline;
+        }
+
+        /* 동그라미 문자 */
+        .circled {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.3em;
+            height: 1.3em;
+            border: 1px solid #000;
+            border-radius: 50%;
+            font-size: 0.85em;
+            margin: 0 1px;
+        }
+
+        /* 채점 결과 배너 */
+        .exam-result-banner {
+            display: none;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin: 10px 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .result-banner-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 25px;
+        }
+
+        .result-banner-score {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .result-banner-score span {
+            color: #f093fb;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .result-banner-correct {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .result-banner-time {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .result-banner-time span {
+            color: #4facfe;
+            font-weight: 700;
+        }
+
+        /* 하단 고정 버튼 */
+        .bottom-fixed-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .bottom-fixed-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 180px;
+        }
+
+        .btn-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .btn-grade:hover {
+            opacity: 0.9;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+        }
+
+        .bottom-spacer {
+            height: 80px;
+        }
+
+        /* 정답 표시 스타일 */
+        .choice.correct-answer {
+            background-color: #c8f7c5 !important;
+        }
+
+        .choice.wrong-answer {
+            background-color: #ffcdd2 !important;
+        }
+
+        .correct-mark {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 채점 완료 시 선지 클릭 비활성화 */
+        body.graded .choice {
+            pointer-events: none;
+        }
+        body.graded .choice.correct-answer {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* 해설 팝업 */
+        .explanation-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+
+        .explanation-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .explanation-popup-header {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explanation-popup-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .explanation-popup-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .explanation-popup-body {
+            padding: 20px;
+        }
+
+        .explanation-correct {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .explanation-correct-label {
+            color: #2E7D32;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .explanation-correct-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* 확대/축소 컨트롤 */
+        .zoom-controls {
+            position: fixed;
+            top: 60px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover {
+            background: #f0f0f0;
+        }
+        .zoom-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.95);
+        }
+        .zoom-level {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+            padding: 2px 0;
+        }
+        .zoom-btn-reset {
+            font-size: 12px;
+            background: #667eea;
+            color: #fff;
+        }
+        .zoom-btn-reset:hover {
+            background: #5a6fd6;
+        }
+
+        /* 펜 도구 컨트롤 */
+        .pen-controls {
+            position: fixed;
+            top: 220px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .pen-tools {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        .pen-controls.collapsed .pen-tools {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .pen-toggle-collapse {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-toggle-collapse:hover {
+            background: #5a6fd6;
+        }
+        .pen-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-btn:hover {
+            background: #f0f0f0;
+        }
+        .pen-btn:active {
+            transform: scale(0.95);
+        }
+        .pen-btn.active {
+            background: #667eea;
+            color: #fff;
+        }
+        .pen-btn.eraser-btn.active {
+            background: #ff6b6b;
+            color: #fff;
+        }
+        .pen-color-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            margin: 2px auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pen-color-btn:hover {
+            transform: scale(1.1);
+        }
+        .pen-color-btn.active {
+            border-color: #333;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+        }
+        .pen-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 0;
+        }
+
+        /* 드로잉 캔버스 */
+        #drawingCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 500;
+            pointer-events: none;
+            touch-action: none;
+        }
+        #drawingCanvas.drawing-mode {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        #drawingCanvas.eraser-mode {
+            pointer-events: auto;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="white" stroke="gray" stroke-width="2"/></svg>') 10 10, auto;
+        }
+        #drawingCanvas.pan-mode {
+            pointer-events: auto;
+            cursor: grab;
+        }
+        #drawingCanvas.pan-mode.panning {
+            cursor: grabbing;
+        }
+        .pen-btn.pan-btn.active {
+            background: #43a047;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <!-- 드로잉 캔버스 -->
+    <canvas id="drawingCanvas"></canvas>
+
+    <!-- 펜 도구 컨트롤 -->
+    <div class="pen-controls" id="penControls">
+        <button class="pen-toggle-collapse" id="penCollapseBtn" onclick="togglePenCollapse()" title="펜 도구 접기/펼치기">▲</button>
+        <div class="pen-tools">
+            <div class="pen-divider"></div>
+            <button class="pen-btn" id="penToggleBtn" onclick="togglePenMode()" title="펜 모드">🖊️</button>
+            <div class="pen-divider"></div>
+            <div class="pen-color-btn active" style="background: #e53935;" data-color="#e53935" onclick="setPenColor('#e53935')"></div>
+            <div class="pen-color-btn" style="background: #1e88e5;" data-color="#1e88e5" onclick="setPenColor('#1e88e5')"></div>
+            <div class="pen-color-btn" style="background: #333;" data-color="#333" onclick="setPenColor('#333')"></div>
+            <div class="pen-divider"></div>
+            <button class="pen-btn eraser-btn" id="eraserBtn" onclick="toggleEraserMode()" title="지우개">🧹</button>
+            <button class="pen-btn pan-btn" id="panBtn" onclick="togglePanMode()" title="손으로 이동">🖐️</button>
+            <div class="pen-divider"></div>
+            <button class="pen-btn" onclick="clearCanvas()" title="전체 지우기">🗑️</button>
+        </div>
+    </div>
+
+    <!-- 확대/축소 컨트롤 -->
+    <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+        <button class="zoom-btn zoom-btn-reset" onclick="zoomReset()">맞춤</button>
+    </div>
+
+    <!-- 상단 학생 정보 바 -->
+    <div class="student-info-display">
+        <div class="student-info-left">
+            <button class="home-btn" onclick="goBack()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <div class="info-item">
+                <strong>학교:</strong>
+                <span id="studentSchool">-</span>
+            </div>
+            <div class="info-item">
+                <strong>학년:</strong>
+                <span id="studentGrade">-</span>
+            </div>
+            <div class="info-item">
+                <strong>이름:</strong>
+                <span id="studentName">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 채점 결과 배너 -->
+    <div class="exam-result-banner" id="resultBanner">
+        <div class="result-banner-content">
+            <div class="result-banner-grade">채점 완료</div>
+            <div class="result-banner-score"><span id="bannerScore">0</span>점</div>
+            <div class="result-banner-correct">(<span id="bannerCorrect">0</span>/8 정답)</div>
+        </div>
+    </div>
+
+    <div class="exam-wrapper">
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">화법</div>
+                <div class="page-number">1</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <div class="question-range">【1~8】 다음은 학생이 수업 시간에 한 발표이다. 물음에 답하시오.</div>
+
+            <!-- 통합 지문 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">아이스티와 밀크티. 이들의 공통점은 뭘까요? (대답을 듣고) 네, 차(茶) 맞습니다. 정확히는 홍차를 주재료로 한 차입니다. 자주 접하지만 제대로 몰랐던 홍차의 이모저모를 알려드리기 위해, '홍차, 알고 마셔 보자!'를 주제로 발표하게 되었습니다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">먼저, 차는 차나무에서 딴 잎을 가공하여 만든 음료를 말합니다. 흔히들 녹차 나무, 홍차 나무가 있을 것이라 생각하기 쉽습니다. 하지만 차는 카멜리아 시넨시스라 불리는 차나무의 잎을 어떻게 가공하느냐에 따라 녹차, 홍차 등으로 구분됩니다. 잎을 산화시키지 않는 녹차와 달리 홍차는 가공 과정에서 잎을 충분히 산화시켜 만드는데, 이 과정에서 녹색의 찻잎이 암갈색으로 변하면서 고유의 맛, 향, 색을 가진 홍차가 됩니다. 충분히 산화된 찻잎을 우려내면 붉은빛의 찻물이 만들어지는데, 홍차라는 이름은 여기에서 유래되었습니다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">홍차를 즐기는 기본적인 방법은 찻잎을 직접 우려 마시는 것입니다. 찻잎을 우릴 때 홍차의 맛과 향을 좌우하는 포인트가 하나 있는데요, 동영상을 함께 보시겠습니다. (동영상을 보며) 찻주전자에 100℃까지 끓인 물을 세차게 붓자, 찻잎이 위로 떠올랐다가 천천히 가라앉는 모습을 보실 수 있습니다. 이러한 찻잎의 움직임을 '점핑'이라고 합니다. 점핑은 물의 낙차를 이용해 찻잎이 대류 운동을 하도록 만들어 주는 것인데, 점핑이 잘 되면 찻잎의 성분이 충분히 우러나게 됩니다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">홍차는 조리법이나 첨가물을 달리하여 취향에 맞게 즐길 수도 있습니다. 차갑게 우려내는 아이스티, 설탕과 우유를 넣어 부드러운 맛을 내는 밀크티가 대표적입니다. 또 꽃잎이나 과일 조각, 향신료 등을 더하기도 하는데, 그중 감귤류의 향을 입힌 얼그레이가 인기가 높습니다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">홍차에는 건강에 좋은 성분들이 많습니다. 특히 산화 과정에서 생성된 테아플라빈 성분은 강력한 항산화 작용을 하며 면역력 증진에 효과가 있습니</p>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div style="padding-left: 4mm;">
+                    <p style="margin-bottom: 2mm;">다. 또한 홍차를 마시면 마음이 차분해지고 집중력 향상에 도움이 되는데, 이는 바로 테아닌 성분 때문입니다. 알고 보니 매력 많은 홍차, 이제부터 집중력 향상에 도움이 되는 홍차 한 잔 어떠신지요.</p>
+
+                    <!-- 1번 문제 -->
+                    <div class="question" data-question="1" style="margin-top: 5mm;">
+                        <div class="question-text">
+                            <span class="question-number">1.</span> 위 발표자의 말하기 방식으로 가장 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(1, 1)">
+                                <span class="choice-number">①</span>
+                                <span>자신이 발표 화제를 선정하게 된 계기를 밝히고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(1, 2)">
+                                <span class="choice-number">②</span>
+                                <span>발표 화제와 관련된 구체적인 일화를 소개하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(1, 3)">
+                                <span class="choice-number">③</span>
+                                <span>발표 화제와 관련이 있는 용어의 개념을 정의하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(1, 4)">
+                                <span class="choice-number">④</span>
+                                <span>순서를 나타내는 담화 표지를 활용하여 대상의 변화 과정을 제시하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(1, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>비유적인 표현을 통해 대상의 특징을 강조하며 마무리하고 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 1 -</div>
+        </div>
+
+        <!-- 2페이지 -->
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">화법</div>
+                <div class="page-number">2</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <!-- 2페이지 통합 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼: 2번 문제 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <!-- 문제 2번 -->
+                    <div class="question" data-question="2">
+                        <div class="question-text">
+                            <span class="question-number">2.</span> 다음은 발표자가 발표를 계획하며 메모한 것이다. 발표에 반영되지 <u>않은</u> 것은?
+                        </div>
+                        <div class="passage-box" style="padding: 3mm; margin: 3mm 0; display: block; font-size: 9pt;">
+                            <p style="margin-bottom: 2mm;">- 발표 내용에 흥미를 갖도록 학생들의 관심을 유발해야겠어. 발표 화제와 관련된 질문을 하며 자연스럽게 홍차에 대한 이야기로 이어지도록 해야지. …ㄱ</p>
+                            <p style="margin-bottom: 2mm;">- 학생들은 차에 대한 배경지식이 적을 것 같아. 녹차와의 차이점을 바탕으로 홍차의 특징에 대해 설명해야지. …ㄴ</p>
+                            <p style="margin-bottom: 2mm;">- 찻잎을 우릴 때의 포인트를 학생들이 쉽게 이해할 수 있도록 해야겠어. 동영상을 활용해서 찻잎을 우리는 과정을 단계별로 설명해야지. …ㄷ</p>
+                            <p style="margin-bottom: 2mm;">- 홍차를 다양하게 즐길 수 있는 방법을 알려주는 것이 학생들에게 유용할 것 같아. 대표적인 방법들을 여러 가지 소개해야지. …ㄹ</p>
+                            <p style="margin-bottom: 0;">- 발표 주제와 관련해 발표를 마무리해야겠어. 홍차에 포함된 구체적인 성분의 이름과 그 효능을 제시해야지. …ㅁ</p>
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(2, 1)">
+                                <span class="choice-number">①</span>
+                                <span>ㄱ</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(2, 2)">
+                                <span class="choice-number">②</span>
+                                <span>ㄴ</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(2, 3)">
+                                <span class="choice-number">③</span>
+                                <span>ㄷ</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(2, 4)">
+                                <span class="choice-number">④</span>
+                                <span>ㄹ</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(2, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>ㅁ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼: 3번 문제 -->
+                <div style="padding-left: 4mm;">
+                    <!-- 3번 문제 -->
+                    <div class="question" data-question="3">
+                        <div class="question-text">
+                            <span class="question-number">3.</span> 발표 내용을 바탕으로 할 때, &lt;보기&gt;에 나타난 청중의 반응에 대한 이해로 적절하지 <u>않은</u> 것은?
+                        </div>
+                        <div class="passage-box" style="padding: 3mm; margin: 3mm 0; display: block; font-size: 9pt;">
+                            <p style="text-align: center; margin-bottom: 2mm;">&lt;보기&gt;</p>
+                            <p style="margin-bottom: 2mm;">청중 1: 발표에서 차를 차나무에서 딴 잎을 가공하여 만든 음료라고 정의했는데, 보리차나 메밀차 같은 음료에도 '차'라는 표현을 쓰기 시작한 건 언제부터일까? 한 번 검색해 봐야겠어.</p>
+                            <p style="margin-bottom: 2mm;">청중 2: 얼마 전 카페에서 다양한 재료를 더해 만든 커피를 마신 적 있어. 오늘 발표를 들으며 그때의 경험이 떠올랐어. 여러 재료들을 더한 홍차가 기본적인 홍차와 어떤 차이점이 있을지 궁금해.</p>
+                            <p style="margin-bottom: 0;">청중 3: 홍차에도 카페인 성분이 포함되어 있다고 들었는데, 발표에서는 이 부분을 언급하지 않은 점이 아쉬워. 카페인에 민감할 경우 하루에 홍차를 어느 정도 마셔야 하는지 확인해 봐야겠어.</p>
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(3, 1)">
+                                <span class="choice-number">①</span>
+                                <span>'청중 1'은 발표 내용과 관련한 궁금증을 드러내고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(3, 2)">
+                                <span class="choice-number">②</span>
+                                <span>'청중 2'는 발표에서 언급된 제재와 유사한 대상에 대한 경험을 환기하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(3, 3)">
+                                <span class="choice-number">③</span>
+                                <span>'청중 3'은 발표에서 언급하지 않은 내용에 대한 아쉬움을 드러내고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(3, 4)">
+                                <span class="choice-number">④</span>
+                                <span>'청중 1'과 '청중 2'는 모두, 발표를 통해 새롭게 알게 된 정보가 사실에 부합하는지 판단하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(3, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>'청중 1'과 '청중 3'은 모두, 발표에서 언급된 내용과 관련하여 추가적인 정보를 탐색하려 하고 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 2 -</div>
+        </div>
+
+        <!-- 3페이지 -->
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">화법</div>
+                <div class="page-number">3</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <!-- 3페이지 통합 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼: 4, 5, 6번 문제 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <!-- 문제 4번 -->
+                    <div class="question" data-question="4">
+                        <div class="question-text">
+                            <span class="question-number">4.</span> 위 발표의 내용과 일치하지 <u>않는</u> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(4, 1)">
+                                <span class="choice-number">①</span>
+                                <span>아이스티와 밀크티는 모두 홍차를 주재료로 한다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(4, 2)">
+                                <span class="choice-number">②</span>
+                                <span>홍차와 녹차는 다른 종류의 차나무의 잎을 가공한 것이다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(4, 3)">
+                                <span class="choice-number">③</span>
+                                <span>점핑이 잘 되지 않으면 찻잎의 성분이 충분히 우러나지 않을 수 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(4, 4)">
+                                <span class="choice-number">④</span>
+                                <span>얼그레이는 홍차에 감귤류의 향을 입힌 것이다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(4, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>홍차의 테아닌 성분은 집중력을 향상시키는 데 도움이 된다.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 문제 5번 -->
+                    <div class="question" data-question="5" style="margin-top: 6mm;">
+                        <div class="question-text">
+                            <span class="question-number">5.</span> 위와 같은 말하기에 대한 설명으로 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(5, 1)">
+                                <span class="choice-number">①</span>
+                                <span>특정한 화제나 대상에 대한 자신의 견해를 반드시 제시해야 한다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(5, 2)">
+                                <span class="choice-number">②</span>
+                                <span>화제의 성격에 따라 그에 맞는 다양한 설명 방식을 활용해야 한다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(5, 3)">
+                                <span class="choice-number">③</span>
+                                <span>청중들이 잘 알지 못하는 주제에 대해서만 다루어야 한다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(5, 4)">
+                                <span class="choice-number">④</span>
+                                <span>전달하고자 하는 내용을 단순하게 나열해야 한다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(5, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>주된 목적은 상대방을 설득하여 생각을 바꾸도록 하는 것이다.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 문제 6번 -->
+                    <div class="question" data-question="6" style="margin-top: 6mm;">
+                        <div class="question-text">
+                            <span class="question-number">6.</span> 다음은 위 발표의 내용을 보완하기 위해 발표자가 떠올린 생각이다. 가장 적절하지 <u>않은</u> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(6, 1)">
+                                <span class="choice-number">①</span>
+                                <span>녹차에 대한 우리나라 사람들의 선호도를 조사한 설문 자료를 활용해야겠어.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(6, 2)">
+                                <span class="choice-number">②</span>
+                                <span>차나무의 모습과 가공 전후의 찻잎의 사진을 찾아서 제시해야겠어.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(6, 3)">
+                                <span class="choice-number">③</span>
+                                <span>홍차를 우려 마시기 적절한 물의 온도와 찻잎의 양에 대한 내용을 추가해야겠어.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(6, 4)">
+                                <span class="choice-number">④</span>
+                                <span>홍차에 대한 기록을 찾아 인용해서 홍차를 마시기 시작한 지가 오래되었음을 드러내야겠어.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(6, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>홍차를 마실 때 유의해야 할 점에 대한 내용을 찾아 추가해야겠어.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼: 7, 8번 문제 -->
+                <div style="padding-left: 4mm;">
+                    <!-- 문제 7번 -->
+                    <div class="question" data-question="7">
+                        <div class="question-text">
+                            <span class="question-number">7.</span> 다음 중 위 발표를 통해 해결할 수 있는 질문으로 가장 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(7, 1)">
+                                <span class="choice-number">①</span>
+                                <span>홍차의 원료가 되는 차나무의 원산지는 어디일까?</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(7, 2)">
+                                <span class="choice-number">②</span>
+                                <span>옷에 홍차의 붉은 색이 들었을 때, 쉽게 지우는 방법은 무엇일까?</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(7, 3)">
+                                <span class="choice-number">③</span>
+                                <span>홍차를 우릴 때, 찻주전자에 물을 세차게 붓는 이유가 무엇일까?</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(7, 4)">
+                                <span class="choice-number">④</span>
+                                <span>얼그레이라는 이름은 어디에서 유래되었을까?</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(7, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>공부를 하기 전이나 하는 중에 마시기 가장 좋은 음료는 무엇일까?</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 문제 8번 -->
+                    <div class="question" data-question="8" style="margin-top: 6mm;">
+                        <div class="question-text">
+                            <span class="question-number">8.</span> 위 발표에서 활용하고 있는 설명 방법에 대한 설명으로 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(8, 1)">
+                                <span class="choice-number">①</span>
+                                <span>정의의 방식을 활용하여 홍차를 우릴 때 필요한 도구를 소개하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(8, 2)">
+                                <span class="choice-number">②</span>
+                                <span>인과의 방식을 활용하여 홍차를 가공하는 과정에서 찻잎이 암갈색으로 변화하는 이유를 소개하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(8, 3)">
+                                <span class="choice-number">③</span>
+                                <span>순서의 방식을 활용하여 홍차를 우리는 과정을 소개하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(8, 4)">
+                                <span class="choice-number">④</span>
+                                <span>예시의 방식을 활용하여 홍차를 다양하게 즐길 수 있는 방법을 소개하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(8, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>나열의 방식을 활용하여 홍차의 대표적인 산지들을 소개하고 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 3 -</div>
+        </div>
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <!-- 하단 버튼 -->
+    <div class="bottom-fixed-buttons" id="bottomButtons">
+        <button class="bottom-fixed-btn btn-back" onclick="resetExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+            </svg>
+            다시풀기
+        </button>
+        <button class="bottom-fixed-btn btn-grade" onclick="gradeExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            채점하기
+        </button>
+    </div>
+
+    <!-- 해설 팝업 -->
+    <div class="explanation-overlay" id="explanationOverlay" onclick="closeExplanation()"></div>
+    <div class="explanation-popup" id="explanationPopup">
+        <div class="explanation-popup-header">
+            <h3 id="explanationTitle">문제 해설</h3>
+            <button class="explanation-popup-close" onclick="closeExplanation()">×</button>
+        </div>
+        <div class="explanation-popup-body" id="explanationBody"></div>
+    </div>
+
+    <script>
+        // ===== 시험 설정 =====
+        const EXAM_ID = 'supplement_speech_tea';
+        const TOTAL_QUESTIONS = 8;
+        const POINTS_PER_QUESTION = 12.5;
+
+        // 현재 사용자 ID (사용자별 데이터 분리)
+        let currentUserId = '';
+
+        // localStorage 키 (사용자별 분리)
+        function LS_KEY(key) {
+            return `supp_speech_tea_${currentUserId}_${key}`;
+        }
+
+        // 정답 데이터
+        const correctAnswers = {
+            1: 3,
+            2: 3,
+            3: 4,
+            4: 2,
+            5: 2,
+            6: 1,
+            7: 3,
+            8: 4
+        };
+
+        // 해설 데이터
+        const explanations = {
+            1: {
+                answer: 3,
+                text: "발표자는 '점핑'이라는 용어의 개념을 정의하고 있습니다. '이러한 찻잎의 움직임을 점핑이라고 합니다. 점핑은 물의 낙차를 이용해 찻잎이 대류 운동을 하도록 만들어 주는 것'이라고 용어의 개념을 설명하고 있습니다."
+            },
+            2: {
+                answer: 3,
+                text: "학생 2는 '점핑이 잘 되려면 뜨거운 물이 필요하다고 했는데, 그 이유가 궁금해.'라고 하여, 발표 내용을 듣고 언급되지 않은 정보에 대한 궁금증을 드러내고 있습니다."
+            },
+            3: {
+                answer: 4,
+                text: "발표자는 '음료 대신 차를 마시면 건강에 좋겠다는 생각이 들었고'와 '여러분도 다양한 종류의 차를 접해 보시기 바랍니다.'라는 말을 통해 청중의 인식과 행동 변화를 유도하고 있습니다."
+            },
+            4: {
+                answer: 2,
+                text: "발표에서 언급된 오렌지펙, 플라워리펙, 브로큰은 모두 등급 분류의 예입니다. 따라서 이들의 공통점은 '등급을 나타내는 용어'입니다."
+            },
+            5: {
+                answer: 2,
+                text: "ㄱ은 '찻잎의 크기에 따른 것'이므로 '등급'과 관련이 있고, ㄴ은 '제조법의 차이에 따른 것'이므로 '종류'와 관련이 있습니다."
+            },
+            6: {
+                answer: 1,
+                text: "학생 1은 '탄산음료 대신 마실 수 있는 건강한 음료를 찾고 있는데'라고 했으므로, 건강한 음료로서 찻잎 등급이 높은 홍차를 추천해 주는 것이 적절합니다."
+            },
+            7: {
+                answer: 3,
+                text: "'끓인 물을 먼저 찻잔에 부은 후 그 물을 다시 주전자에 붓는다'는 내용이 발표에 나와 있습니다. 이를 통해 물의 온도를 낮추는 것이 아니라 찻잔을 미리 예열하고 물의 낙차를 이용한 점핑을 유도하기 위한 것임을 알 수 있습니다."
+            },
+            8: {
+                answer: 4,
+                text: "'완전 발효차'는 '완전히 발효시켜 만드는 차'라는 의미입니다. '완전(完全)'은 '필요한 것이 모두 갖추어져 모자람이나 결함이 없음'을 뜻하므로, '발효가 덜 된 차'라는 설명은 적절하지 않습니다."
+            }
+        };
+
+        // 사용자 답안 저장
+        let userAnswers = {};
+        let isGraded = false;
+
+        // ===== 펜 도구 관련 변수 =====
+        let isPenMode = false;
+        let isEraserMode = false;
+        let isPanMode = false;
+        let isPanning = false;
+        let panStartX = 0, panStartY = 0;
+        let isDrawing = false;
+        let penColor = '#e53935';
+        let penSize = 3;
+        let eraserSize = 20;
+        let drawingCanvas, drawingCtx;
+        let lastX = 0, lastY = 0;
+
+        let drawingPaths = [];
+        let currentPath = null;
+        let lastScrollX = 0, lastScrollY = 0;
+        let currentScale = 1;
+
+        let currentZoom = 1;
+        const minZoom = 0.3;
+        const maxZoom = 1.5;
+        const zoomStep = 0.1;
+        let autoScale = 1;
+
+        function getCurrentScale() {
+            return autoScale * currentZoom;
+        }
+
+        function initDrawingCanvas() {
+            drawingCanvas = document.getElementById('drawingCanvas');
+            drawingCtx = drawingCanvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('scroll', redrawCanvas);
+
+            drawingCanvas.addEventListener('mousedown', startDrawing);
+            drawingCanvas.addEventListener('mousemove', bindDraw);
+            drawingCanvas.addEventListener('mouseup', stopDrawing);
+            drawingCanvas.addEventListener('mouseout', stopDrawing);
+
+            drawingCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            drawingCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            drawingCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function resizeCanvas() {
+            const canvas = document.getElementById('drawingCanvas');
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            lastScrollX = window.scrollX;
+            lastScrollY = window.scrollY;
+            redrawCanvas();
+        }
+
+        function redrawCanvas() {
+            if (!drawingCtx || !drawingCanvas) return;
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            const scale = getCurrentScale();
+
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+            drawingPaths.forEach(path => {
+                if (path.points.length < 2) return;
+                drawingCtx.beginPath();
+                drawingCtx.strokeStyle = path.color;
+                drawingCtx.lineWidth = path.size * scale;
+                drawingCtx.lineCap = 'round';
+                drawingCtx.lineJoin = 'round';
+                drawingCtx.globalCompositeOperation = 'source-over';
+
+                const firstPoint = path.points[0];
+                drawingCtx.moveTo(firstPoint.x * scale - scrollX, firstPoint.y * scale - scrollY);
+
+                for (let i = 1; i < path.points.length; i++) {
+                    const point = path.points[i];
+                    drawingCtx.lineTo(point.x * scale - scrollX, point.y * scale - scrollY);
+                }
+                drawingCtx.stroke();
+            });
+
+            lastScrollX = scrollX;
+            lastScrollY = scrollY;
+            currentScale = scale;
+        }
+
+        let isPenCollapsed = false;
+        function togglePenCollapse() {
+            isPenCollapsed = !isPenCollapsed;
+            const penControls = document.getElementById('penControls');
+            const collapseBtn = document.getElementById('penCollapseBtn');
+            if (isPenCollapsed) {
+                penControls.classList.add('collapsed');
+                collapseBtn.innerHTML = '▼';
+            } else {
+                penControls.classList.remove('collapsed');
+                collapseBtn.innerHTML = '▲';
+            }
+        }
+
+        function togglePenMode() {
+            isPenMode = !isPenMode;
+            isEraserMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isPenMode) {
+                penBtn.classList.add('active');
+                eraserBtn.classList.remove('active');
+                canvas.classList.add('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            } else {
+                penBtn.classList.remove('active');
+                canvas.classList.remove('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            }
+        }
+
+        function toggleEraserMode() {
+            isEraserMode = !isEraserMode;
+            isPenMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isEraserMode) {
+                eraserBtn.classList.add('active');
+                penBtn.classList.remove('active');
+                canvas.classList.add('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            } else {
+                eraserBtn.classList.remove('active');
+                canvas.classList.remove('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            }
+        }
+
+        function togglePanMode() {
+            isPanMode = !isPanMode;
+            isPenMode = false;
+            isEraserMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            penBtn.classList.remove('active');
+            eraserBtn.classList.remove('active');
+            canvas.classList.remove('drawing-mode');
+            canvas.classList.remove('eraser-mode');
+
+            if (isPanMode) {
+                panBtn.classList.add('active');
+                canvas.classList.add('pan-mode');
+            } else {
+                panBtn.classList.remove('active');
+                canvas.classList.remove('pan-mode');
+            }
+        }
+
+        function setPenColor(color) {
+            penColor = color;
+            document.querySelectorAll('.pen-color-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.color === color) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (!isPenMode) {
+                togglePenMode();
+            }
+            isEraserMode = false;
+            document.getElementById('eraserBtn').classList.remove('active');
+            document.getElementById('drawingCanvas').classList.remove('eraser-mode');
+            document.getElementById('drawingCanvas').classList.add('drawing-mode');
+        }
+
+        function startDrawing(e) {
+            if (isPanMode) {
+                isPanning = true;
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (e.clientX + window.scrollX) / scale;
+            const docY = (e.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = e.clientX;
+                lastY = e.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = e.clientX;
+            lastY = e.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function bindDraw(e) {
+            if (isPanning) {
+                const dx = e.clientX - panStartX;
+                const dy = e.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+
+            const x = e.clientX;
+            const y = e.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function stopDrawing() {
+            if (isPanning) {
+                isPanning = false;
+                drawingCanvas.classList.remove('panning');
+                return;
+            }
+
+            if (isDrawing && currentPath && currentPath.points.length > 1) {
+                drawingPaths.push(currentPath);
+            }
+            isDrawing = false;
+            currentPath = null;
+        }
+
+        function eraseAtPoint(docX, docY) {
+            const eraseRadius = eraserSize / getCurrentScale();
+            let needsRedraw = false;
+
+            for (let i = drawingPaths.length - 1; i >= 0; i--) {
+                const path = drawingPaths[i];
+                const newPoints = [];
+                let segmentStart = 0;
+
+                for (let j = 0; j < path.points.length; j++) {
+                    const point = path.points[j];
+                    const dist = Math.sqrt(Math.pow(point.x - docX, 2) + Math.pow(point.y - docY, 2));
+
+                    if (dist <= eraseRadius) {
+                        if (j > segmentStart && newPoints.length > 1) {
+                            const newPath = {
+                                color: path.color,
+                                size: path.size,
+                                points: newPoints.slice()
+                            };
+                            if (newPath.points.length > 1) {
+                                drawingPaths.push(newPath);
+                            }
+                            newPoints.length = 0;
+                        } else {
+                            newPoints.length = 0;
+                        }
+                        segmentStart = j + 1;
+                        needsRedraw = true;
+                    } else {
+                        newPoints.push(point);
+                    }
+                }
+
+                if (newPoints.length > 1) {
+                    path.points = newPoints;
+                } else {
+                    drawingPaths.splice(i, 1);
+                    needsRedraw = true;
+                }
+            }
+
+            if (needsRedraw) {
+                redrawCanvas();
+            }
+        }
+
+        function handleTouchStart(e) {
+            if (isPanMode) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                isPanning = true;
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (touch.clientX + window.scrollX) / scale;
+            const docY = (touch.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = touch.clientX;
+                lastY = touch.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function handleTouchMove(e) {
+            if (isPanning) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const dx = touch.clientX - panStartX;
+                const dy = touch.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const x = touch.clientX;
+            const y = touch.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function clearCanvas() {
+            if (confirm('그린 내용을 모두 지우시겠습니까?')) {
+                drawingPaths = [];
+                currentPath = null;
+                drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+        }
+
+        // 줌 기능
+        function zoomIn() {
+            if (currentZoom < maxZoom) {
+                currentZoom = Math.min(currentZoom + zoomStep, maxZoom);
+                applyZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentZoom > minZoom) {
+                currentZoom = Math.max(currentZoom - zoomStep, minZoom);
+                applyZoom();
+            }
+        }
+
+        function zoomReset() {
+            currentZoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const wrapper = document.querySelector('.exam-wrapper');
+            const totalScale = autoScale * currentZoom;
+            wrapper.style.transform = `scale(${totalScale})`;
+            wrapper.style.transformOrigin = 'top center';
+            document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+            redrawCanvas();
+        }
+
+        // 선택지 클릭
+        function selectChoice(questionNum, choiceNum, skipServerSave = false) {
+            if (isGraded) return;
+
+            const questionEl = document.querySelector(`.question[data-question="${questionNum}"]`);
+            if (!questionEl) return;
+
+            questionEl.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+            const selectedChoice = questionEl.querySelector(`.choice[data-choice="${choiceNum}"]`);
+            if (selectedChoice) {
+                selectedChoice.classList.add('selected');
+            }
+
+            userAnswers[questionNum] = choiceNum;
+            localStorage.setItem(LS_KEY(`question_${questionNum}`), choiceNum);
+
+            // 서버에 답안 저장 (복원 시에는 스킵)
+            if (!skipServerSave) {
+                saveAnswerToServer(questionNum, choiceNum);
+            }
+        }
+
+        // 서버에 답안 저장
+        async function saveAnswerToServer(questionNumber, answer) {
+            try {
+                const userData = localStorage.getItem('mockExamUser');
+                let userInfo = {};
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userInfo = {
+                        userId: user._id,
+                        phone: user.phone
+                    };
+                }
+
+                await fetch('/api/supplement-result/save-answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        questionNumber,
+                        answer,
+                        ...userInfo
+                    })
+                });
+            } catch (err) {
+                console.error('답안 저장 오류:', err);
+            }
+        }
+
+        // 채점
+        function gradeExam(skipServerSave = false) {
+            const answeredCount = Object.keys(userAnswers).length;
+            if (answeredCount < TOTAL_QUESTIONS && !skipServerSave) {
+                if (!confirm(`아직 ${TOTAL_QUESTIONS - answeredCount}문제를 풀지 않았습니다. 채점하시겠습니까?`)) {
+                    return;
+                }
+            }
+
+            isGraded = true;
+            document.body.classList.add('graded');
+
+            // 기존 채점 마크 제거
+            document.querySelectorAll('.grade-mark').forEach(el => el.remove());
+
+            let correctCount = 0;
+            let totalScore = 0;
+
+            // 모든 문제 번호 요소 찾기
+            const questionNumbers = document.querySelectorAll('.question-number');
+
+            questionNumbers.forEach((qNum) => {
+                const questionText = qNum.textContent.replace(/[○✓⭕✔]/g, '').trim();
+                const questionId = parseInt(questionText.replace('.', ''));
+                if (isNaN(questionId) || questionId < 1 || questionId > TOTAL_QUESTIONS) return;
+
+                const userAnswer = userAnswers[questionId];
+                const correctAnswer = correctAnswers[questionId];
+
+                // 문제 번호의 부모 요소에 position: relative 추가
+                qNum.style.position = 'relative';
+
+                // 정답 선지에 연녹색 배경 표시
+                const questionEl = qNum.closest('.question');
+                if (questionEl) {
+                    const choices = questionEl.querySelectorAll('.choice');
+                    if (choices[correctAnswer - 1]) {
+                        choices[correctAnswer - 1].style.backgroundColor = '#c8f7c5';
+                        choices[correctAnswer - 1].style.position = 'relative';
+                        choices[correctAnswer - 1].classList.add('correct-answer');
+
+                        // 해설 버튼 추가
+                        const correctMark = document.createElement('span');
+                        correctMark.className = 'correct-mark';
+                        correctMark.textContent = '정답 해설';
+                        correctMark.onclick = (e) => {
+                            e.stopPropagation();
+                            showExplanation(questionId);
+                        };
+                        choices[correctAnswer - 1].appendChild(correctMark);
+                    }
+
+                    // 틀린 답안에 표시
+                    if (userAnswer && userAnswer !== correctAnswer) {
+                        const userChoiceIdx = userAnswer - 1;
+                        if (choices[userChoiceIdx]) {
+                            choices[userChoiceIdx].classList.add('wrong-answer');
+                        }
+                    }
+                }
+
+                // 채점 마크 생성
+                const mark = document.createElement('span');
+                mark.className = 'grade-mark';
+
+                if (userAnswer && userAnswer === correctAnswer) {
+                    // 정답 - 빨간 동그라미
+                    correctCount++;
+                    totalScore += POINTS_PER_QUESTION;
+                    mark.innerHTML = '⭕';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 72px;
+                        position: absolute;
+                        left: -20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        opacity: 0.75;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                } else {
+                    // 오답 또는 미응답 - 빨간 체크 (V 표시)
+                    mark.innerHTML = '✔';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 60px;
+                        position: absolute;
+                        left: -15px;
+                        top: 50%;
+                        transform: translateY(-50%) rotate(-15deg);
+                        opacity: 0.8;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                }
+
+                qNum.appendChild(mark);
+            });
+
+            const score = Math.round(totalScore);
+
+            document.getElementById('bannerScore').textContent = score;
+            document.getElementById('bannerCorrect').textContent = correctCount;
+            document.getElementById('resultBanner').style.display = 'block';
+
+            // 결과 저장 (복원 시에는 스킵)
+            if (!skipServerSave) {
+                saveResult(score, correctCount);
+            }
+
+            localStorage.setItem(LS_KEY('graded'), 'true');
+            localStorage.setItem(LS_KEY('score'), score.toString());
+        }
+
+        // 서버에 채점 결과 저장
+        async function saveResult(score, correctCount) {
+            try {
+                // localStorage에서 사용자 정보 가져오기 (세션 만료 대비)
+                const userData = localStorage.getItem('mockExamUser');
+                let userInfo = {};
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userInfo = {
+                        userId: user._id,
+                        phone: user.phone,
+                        studentInfo: {
+                            name: user.name,
+                            school: user.school,
+                            grade: user.grade
+                        }
+                    };
+                }
+
+                await fetch('/api/supplement-result/save-grade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        answers: userAnswers,
+                        correctCount,
+                        totalQuestions: TOTAL_QUESTIONS,
+                        score,
+                        ...userInfo
+                    })
+                });
+                console.log('채점 결과 저장 완료');
+            } catch (err) {
+                console.error('채점 결과 저장 오류:', err);
+            }
+        }
+
+        // 해설 표시
+        function showExplanation(questionNum) {
+            const explanation = explanations[questionNum];
+            if (!explanation || !explanation.text) return;
+
+            document.getElementById('explanationTitle').textContent = `${questionNum}번 문제 해설`;
+            document.getElementById('explanationBody').innerHTML = `
+                <div class="explanation-correct">
+                    <div class="explanation-correct-label">정답: ${explanation.answer}번</div>
+                    <div class="explanation-correct-text">${explanation.text}</div>
+                </div>
+            `;
+            document.getElementById('explanationOverlay').style.display = 'block';
+            document.getElementById('explanationPopup').style.display = 'block';
+        }
+
+        function closeExplanation() {
+            document.getElementById('explanationOverlay').style.display = 'none';
+            document.getElementById('explanationPopup').style.display = 'none';
+        }
+
+        // 다시풀기
+        async function resetExam() {
+            if (!confirm('모든 답안을 초기화하고 다시 풀겠습니까?')) return;
+
+            userAnswers = {};
+            isGraded = false;
+            document.body.classList.remove('graded');
+
+            // 채점 마크 제거
+            document.querySelectorAll('.grade-mark').forEach(el => el.remove());
+
+            document.querySelectorAll('.choice').forEach(choice => {
+                choice.classList.remove('selected', 'correct-answer', 'wrong-answer');
+                choice.style.backgroundColor = '';
+                const mark = choice.querySelector('.correct-mark');
+                if (mark) mark.remove();
+            });
+
+            document.getElementById('resultBanner').style.display = 'none';
+
+            // localStorage 초기화
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                localStorage.removeItem(LS_KEY(`question_${i}`));
+            }
+            localStorage.removeItem(LS_KEY('isGraded'));
+
+            // 서버 데이터 삭제
+            try {
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`, {
+                    method: 'DELETE'
+                });
+            } catch (err) {
+                console.error('서버 데이터 삭제 오류:', err);
+            }
+
+            // 페이지 새로고침
+            window.location.reload();
+        }
+
+        // 뒤로가기
+        function goBack() {
+            window.location.href = '/mock_exam_dashboard.html';
+        }
+
+        // ===== 초기화 =====
+        async function init() {
+            // 사용자 정보 로드
+            const userData = localStorage.getItem('mockExamUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                currentUserId = user._id || user.phone || ''; // 사용자 ID 설정
+                document.getElementById('studentSchool').textContent = user.school || '-';
+                document.getElementById('studentGrade').textContent = user.grade || '-';
+                document.getElementById('studentName').textContent = user.name || '-';
+            }
+
+            // 서버에서 저장된 답안 로드
+            try {
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData2 = localStorage.getItem('mockExamUser');
+                if (userData2) {
+                    const user = JSON.parse(userData2);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                const response = await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`);
+                const data = await response.json();
+
+                if (data.ok && data.result) {
+                    const serverResult = data.result;
+
+                    // 서버에서 답안 복원
+                    if (serverResult.answers) {
+                        for (const [questionId, answer] of Object.entries(serverResult.answers)) {
+                            localStorage.setItem(LS_KEY(`question_${questionId}`), answer);
+                            selectChoice(parseInt(questionId), answer, true);
+                        }
+                    }
+
+                    // 이미 채점 완료된 경우 채점 결과 표시
+                    if (serverResult.isGraded) {
+                        setTimeout(() => {
+                            gradeExam(true);
+                        }, 100);
+                    }
+                } else {
+                    // 서버에 데이터가 없으면 localStorage에서 복원
+                    for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                        const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                        if (saved) {
+                            selectChoice(i, parseInt(saved), true);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('서버 데이터 로드 오류:', err);
+                // 서버 오류 시 localStorage에서 복원
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        selectChoice(i, parseInt(saved), true);
+                    }
+                }
+            }
+
+            // 펜 도구 초기화
+            initDrawingCanvas();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

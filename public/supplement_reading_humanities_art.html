@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 보완학습 - 독서(예술)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nanum Myeongjo', '바탕', Batang, serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+            padding-top: 45px;
+        }
+
+        /* 상단 학생 정보 바 */
+        .student-info-display {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .student-info-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 5px;
+        }
+
+        .info-item strong {
+            color: #bdc3c7;
+        }
+
+        /* 타이머 */
+        .exam-timer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .exam-timer.warning {
+            background: rgba(255, 193, 7, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        .exam-timer.danger {
+            background: rgba(244, 67, 54, 0.4);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* 페이지 */
+        .page {
+            width: 100%;
+            max-width: 900px;
+            min-height: auto;
+            padding: 12mm 10mm 15mm 10mm;
+            margin: 0 auto;
+            background: #fff;
+            position: relative;
+        }
+
+        .page-footer {
+            text-align: center;
+            font-size: 10pt;
+            color: #333;
+            margin-top: 10mm;
+            padding-top: 5mm;
+        }
+
+        /* 헤더 */
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8mm;
+            position: relative;
+        }
+
+        .session-badge {
+            position: absolute;
+            left: 0;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 11pt;
+            font-weight: 600;
+        }
+
+        .title {
+            font-size: 22pt;
+            font-weight: 700;
+            letter-spacing: 4px;
+        }
+
+        .page-number {
+            position: absolute;
+            right: 0;
+            font-size: 18pt;
+            font-weight: 700;
+        }
+
+        .header-divider {
+            border-top: 1px solid #000;
+            margin-bottom: 5mm;
+        }
+
+        /* 2단 레이아웃 */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .column {
+            text-align: justify;
+            padding: 0 4mm;
+        }
+
+        .column:first-child {
+            border-right: 1px solid #000;
+            padding-left: 0;
+        }
+
+        .column:last-child {
+            padding-right: 0;
+        }
+
+        /* 문제 범위 안내 */
+        .question-range {
+            background: #f0f0f0;
+            padding: 3mm 4mm;
+            margin-bottom: 5mm;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+
+        /* 지문 박스 */
+        .passage-box {
+            border: 1px solid #000;
+            padding: 4mm;
+            margin-bottom: 5mm;
+            text-align: justify;
+            font-size: 9.5pt;
+            line-height: 1.7;
+        }
+
+        .passage-box .label {
+            font-weight: 700;
+            margin-bottom: 2mm;
+        }
+
+        .passage-box p {
+            margin-bottom: 2mm;
+            text-indent: 1em;
+        }
+
+        .passage-box .poem-line {
+            margin-bottom: 0.5mm;
+        }
+
+        .passage-box .poem-line.bold {
+            font-weight: 700;
+        }
+
+        .passage-box .note {
+            font-size: 8.5pt;
+            margin-top: 3mm;
+            padding-top: 2mm;
+            border-top: 1px dashed #999;
+        }
+
+        .passage-box .note-item {
+            margin-bottom: 1mm;
+        }
+
+        /* 문제 */
+        .question {
+            margin-bottom: 5mm;
+        }
+
+        .question-number {
+            font-size: 13pt;
+            font-weight: 900;
+            margin-right: 2mm;
+        }
+
+        .question-text {
+            margin-bottom: 3mm;
+            font-weight: 700;
+        }
+
+        /* 선택지 */
+        .choices {
+            margin-left: 4mm;
+        }
+
+        .choice {
+            display: flex;
+            margin-bottom: 1.5mm;
+            text-align: justify;
+            padding: 2mm 3mm;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .choice:hover {
+            background-color: rgba(0, 100, 255, 0.08);
+        }
+
+        .choice.selected {
+            background-color: rgba(0, 100, 255, 0.35);
+        }
+
+        .choice-number {
+            min-width: 1.5em;
+            margin-right: 1mm;
+        }
+
+        /* 밑줄 */
+        .underline {
+            text-decoration: underline;
+        }
+
+        /* 동그라미 문자 */
+        .circled {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.3em;
+            height: 1.3em;
+            border: 1px solid #000;
+            border-radius: 50%;
+            font-size: 0.85em;
+            margin: 0 1px;
+        }
+
+        /* 채점 결과 배너 */
+        .exam-result-banner {
+            display: none;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin: 10px 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .result-banner-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 25px;
+        }
+
+        .result-banner-score {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .result-banner-score span {
+            color: #f093fb;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .result-banner-correct {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .result-banner-time {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .result-banner-time span {
+            color: #4facfe;
+            font-weight: 700;
+        }
+
+        /* 하단 고정 버튼 */
+        .bottom-fixed-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .bottom-fixed-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 180px;
+        }
+
+        .btn-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .btn-grade:hover {
+            opacity: 0.9;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+        }
+
+        .bottom-spacer {
+            height: 80px;
+        }
+
+        /* 정답 표시 스타일 */
+        .choice.correct-answer {
+            background-color: #c8f7c5 !important;
+        }
+
+        .choice.wrong-answer {
+            background-color: #ffcdd2 !important;
+        }
+
+        .correct-mark {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 채점 완료 시 선지 클릭 비활성화 */
+        body.graded .choice {
+            pointer-events: none;
+        }
+        body.graded .choice.correct-answer {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* 해설 팝업 */
+        .explanation-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+
+        .explanation-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .explanation-popup-header {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explanation-popup-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .explanation-popup-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .explanation-popup-body {
+            padding: 20px;
+        }
+
+        .explanation-correct {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .explanation-correct-label {
+            color: #2E7D32;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .explanation-correct-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* 확대/축소 컨트롤 */
+        .zoom-controls {
+            position: fixed;
+            top: 60px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover {
+            background: #f0f0f0;
+        }
+        .zoom-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.95);
+        }
+        .zoom-level {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+            padding: 2px 0;
+        }
+        .zoom-btn-reset {
+            font-size: 12px;
+            background: #667eea;
+            color: #fff;
+        }
+        .zoom-btn-reset:hover {
+            background: #5a6fd6;
+        }
+
+        /* 펜 도구 컨트롤 */
+        .pen-controls {
+            position: fixed;
+            top: 220px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .pen-tools {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        .pen-controls.collapsed .pen-tools {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .pen-toggle-collapse {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-toggle-collapse:hover {
+            background: #5a6fd6;
+        }
+        .pen-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-btn:hover {
+            background: #f0f0f0;
+        }
+        .pen-btn:active {
+            transform: scale(0.95);
+        }
+        .pen-btn.active {
+            background: #667eea;
+            color: #fff;
+        }
+        .pen-btn.eraser-btn.active {
+            background: #ff6b6b;
+            color: #fff;
+        }
+        .pen-color-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            margin: 2px auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pen-color-btn:hover {
+            transform: scale(1.1);
+        }
+        .pen-color-btn.active {
+            border-color: #333;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+        }
+        .pen-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 0;
+        }
+
+        /* 드로잉 캔버스 */
+        #drawingCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 500;
+            pointer-events: none;
+            touch-action: none;
+        }
+        #drawingCanvas.drawing-mode {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        #drawingCanvas.eraser-mode {
+            pointer-events: auto;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="white" stroke="gray" stroke-width="2"/></svg>') 10 10, auto;
+        }
+        #drawingCanvas.pan-mode {
+            pointer-events: auto;
+            cursor: grab;
+        }
+        #drawingCanvas.pan-mode.panning {
+            cursor: grabbing;
+        }
+        .pen-btn.pan-btn.active {
+            background: #43a047;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <!-- 드로잉 캔버스 -->
+    <canvas id="drawingCanvas"></canvas>
+
+    <!-- 펜 도구 컨트롤 -->
+    <div class="pen-controls" id="penControls">
+        <button class="pen-toggle-collapse" id="penCollapseBtn" onclick="togglePenCollapse()" title="펜 도구 접기/펼치기">▲</button>
+        <div class="pen-tools">
+            <div class="pen-divider"></div>
+            <button class="pen-btn" id="penToggleBtn" onclick="togglePenMode()" title="펜 모드">🖊️</button>
+            <div class="pen-divider"></div>
+            <div class="pen-color-btn active" style="background: #e53935;" data-color="#e53935" onclick="setPenColor('#e53935')"></div>
+            <div class="pen-color-btn" style="background: #1e88e5;" data-color="#1e88e5" onclick="setPenColor('#1e88e5')"></div>
+            <div class="pen-color-btn" style="background: #333;" data-color="#333" onclick="setPenColor('#333')"></div>
+            <div class="pen-divider"></div>
+            <button class="pen-btn eraser-btn" id="eraserBtn" onclick="toggleEraserMode()" title="지우개">🧹</button>
+            <button class="pen-btn pan-btn" id="panBtn" onclick="togglePanMode()" title="손으로 이동">🖐️</button>
+            <div class="pen-divider"></div>
+            <button class="pen-btn" onclick="clearCanvas()" title="전체 지우기">🗑️</button>
+        </div>
+    </div>
+
+    <!-- 확대/축소 컨트롤 -->
+    <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+        <button class="zoom-btn zoom-btn-reset" onclick="zoomReset()">맞춤</button>
+    </div>
+
+    <!-- 상단 학생 정보 바 -->
+    <div class="student-info-display">
+        <div class="student-info-left">
+            <button class="home-btn" onclick="goBack()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <div class="info-item">
+                <strong>학교:</strong>
+                <span id="studentSchool">-</span>
+            </div>
+            <div class="info-item">
+                <strong>학년:</strong>
+                <span id="studentGrade">-</span>
+            </div>
+            <div class="info-item">
+                <strong>이름:</strong>
+                <span id="studentName">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 채점 결과 배너 -->
+    <div class="exam-result-banner" id="resultBanner">
+        <div class="result-banner-content">
+            <div class="result-banner-grade">채점 완료</div>
+            <div class="result-banner-score"><span id="bannerScore">0</span>점</div>
+            <div class="result-banner-correct">(<span id="bannerCorrect">0</span>/5 정답)</div>
+        </div>
+    </div>
+
+    <div class="exam-wrapper">
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">독 서</div>
+                <div class="page-number">1</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <div class="question-range">【1~6】 다음 글을 읽고 물음에 답하시오.</div>
+
+            <!-- 통합 지문 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼 (가) -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <p style="text-indent: 0; font-weight: bold; margin-bottom: 2mm;">(가)</p>
+                    <p style="text-indent: 1em;">예술가는 예술작품을 통해 우리에게 무엇을 전달하려고 하는 것일까? 철학자 아리스토텔레스는 예술작품을 현실 세계를 모방하여 제작한 사물로 규정하고, 예술가는 예술작품을 통해 우리에게 현실 세계에 대한 지식과 깨달음을 준다고 말한다. 이러한 그의 예술관은 그의 세계관과 밀접한 연관이 있다.</p>
+                    <p style="text-indent: 1em;">아리스토텔레스는 현실 세계의 모든 사물은 '질료'와 '형상'으로 구성된 하나의 실체로 보았다. 그가 말하는 '질료'란 사물을 구성하는 물질적 재료를 의미한다. 그리고 '형상'은 그 사물의 보편적 개념이나 가치, 본질을 의미한다. 그는 예술작품의 질료와 형상 또한 마찬가지라고 주장했다. 그에 따르면 예술가는 자신이 이해한 사물의 형상을 질료에 담아 예술작품으로 재현한다. 그래서 감상자는 예술작품을 감각적으로 경험하면서 예술가가 담은 사물의 형상을 이해할 수 있다. 즉, 예술작품이 현실 세계를 이해하는 매체가 되는 것이다.</p>
+                    <p style="text-indent: 1em;">이러한 아리스토텔레스의 예술관은 18세기 비평가 <span class="underline">㉠실러</span>에게 이어진다. 당시 정치적 혼란과 폭력이 지속되던 현실에 환멸을 느낀 실러는 시민들의 도덕성을 <span class="underline">ⓐ함양</span>할 방법을 고민했고, 그 해결책으로 예술을 선택했다. 그는 예술가가 아름다움이라는 형상을 예술작품의 질료에 담아 표현하면 감상자는 미적 경험을 통해 도덕성을 회복할 수 있다고 말한다. 또한, 감상자의 미적 경험을 극대화하기 위해서는 예술작품의 질료가 지닌 물리적 성질이 드러나지 않아야 한다고 주장한다. 예를 들어 조각가가 대리석을 조각하여 인체의 고운 피부를 표현하고자 할 때, 대리석이 지닌 표면의 거친 특성이 드러나지 않아야 매끄러운 피부의 미적 가치가 감상자에게 온전히 전달된다는 것이다. 결국 예술의 목적이 달성되기 위해서는 예술작품의 질료가 투명한 매체로 기능해야 하는 것이다.</p>
+                    <p style="text-indent: 1em;">반면 20세기 미술 비평가 <span class="underline">㉡그린버그</span>는 예술작품의 질료가 불투명한 매체로 기능해야 한다고 보았다. 그는 예술은 교육이나 정치적 의도 등을 실현하는 수단이 되어서는 안 되며, 예술은 그 자체가 목적이 되어야 한다고 주장했다. 그래서 예술가가 질료의 물리적 성질이 갖는 표현 가능성에 주목해야 하며, 예술 장르 그 자체가 가지는 순수성을 실현하기</p>
+                </div>
+
+                <!-- 오른쪽 컬럼 (나) -->
+                <div style="padding-left: 4mm;">
+                    <p style="text-indent: 1em;">위해 노력해야 한다. 가령 화가가 캔버스의 평면, 물감의 색채와 <span class="underline">ⓑ질감</span> 등에 집중할 때, 회화라는 예술 장르만이 지닌 고유한 순수성을 실현할 수 있게 된다. 즉, 회화에 사용된 질료는 회화라는 예술 장르를 규정하는 기준인 '미적 매체'가 되는 것이다.</p>
+                    <p style="text-indent: 0; font-weight: bold; margin-top: 3mm; margin-bottom: 2mm;">(나)</p>
+                    <p style="text-indent: 1em;">1968년, 예술가 브로타스가 자신의 아파트에 전시한 '현대 미술관 독수리부'라는 제목의 설치물은 당시 예술계에 반향을 불러일으켰다. '독수리'라는 주제에 따라 그림과 사진 등을 수집한 후 번호를 붙여 미술관의 작품들처럼 전시한 이 설치물을, 예술이라고 규정할 수 있는 기준이 없었기 때문이다. 이에 미술 비평가 <span class="underline">㉢로절린드 크라우스</span>는 이러한 예술계의 상황을 '포스트매체 조건'이라고 명명하며, '기술적 지지체'라는 새로운 매체 개념을 제안했다.</p>
+                    <p style="text-indent: 1em;">크라우스는 기술적 지지체를 설명하기 위해 먼저, 예술작품을 구성하는 요소가 하나의 예술 장르를 규정하는 기준이 된다는 의미에서 기존 매체를 '지지체'라 규정했다. 그리고 포스트매체 조건 이전에는 예술작품을 구성하는 물질적 요소만을 지지체로 인정한다는 의미에서, 물질적 지지체라 불렀다. 하지만 이 물질적 지지체는 하나의 예술 장르를 물질적 요소로만 <span class="underline">ⓒ환원</span>하게 만들었다고 지적하며, 예술작품을 구성하는 공간, 소리, 대상이 지닌 이미지 등과 같은 비물질적 요소도 지지체로 인정해야 한다고 보았다.</p>
+                    <p style="text-indent: 1em;">이렇게 지지체의 범위를 확장한 크라우스는 물질적 지지체뿐만 아니라 비물질적인 지지체가 결합된 복합 구조를 가진 예술작품을 기술적 지지체라고 규정했다. 또한, 지지체를 사용하는 관습이나 기법을 '규칙'이라 부르며, 기술적 지지체에서 나타나는 지지체들의 '규칙 겹침'이야말로 포스트매체 조건의 진정한 예술작품이라고 주장했다. 이때 규칙 겹침이란 기술적 지지체 내의 지지체들과 그것이 가진 규칙들이 서로 맞물리면서 새로운 규칙을 만들어 그 기술적 지지체만의 미적 효과를 발생시키는 현상이다.</p>
+                    <p style="text-indent: 1em;">이러한 관점에서 '현대 미술관 독수리부'는 기술적 지지체이다. 왜냐하면 이 설치물은 그림, 사진과 같은 물질적 지지체뿐만 아니라 '독수리'가 지닌 이미지, 전시 공간과 같은 비물질적인 지지체가 복합 구조를 이루고 있기 때문이다. 동시에 그림의 회화</p>
+                </div>
+            </div>
+            <div class="page-footer">- 1 -</div>
+        </div>
+
+        <!-- 2페이지 -->
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">독 서</div>
+                <div class="page-number">2</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <!-- 2페이지 통합 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼 (지문 계속 + 1번 문제) -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <p style="text-indent: 0; line-height: 1.8; font-size: 10pt; margin-bottom: 3mm;">방식, 사진의 촬영 기법, 번호를 붙여 전시하는 방식이 서로 맞물리면서 이 설치물만의 새로운 규칙을 만들어, 설치 예술로서의 미적 효과를 발생시키고 있다.</p>
+                    <p style="text-indent: 1em; line-height: 1.8; font-size: 10pt; margin-bottom: 3mm;">그는 이러한 기술적 지지체를 창안하기 위해서는 예술가가 기술적 지지체의 새로운 '규칙'을 발견하고 확립해야 한다고 주장한다. 그에 의하면 기술적 지지체의 <span class="underline">ⓓ창안</span>은 예술가의 의지나 역량만으로 가능한 것이 아니라 예술가가 기술적 지지체의 표현 가능성을 우연히 포착해 규칙을 확립함으로써 가능하다. 또한, 예술가는 현재 사용되는 지지체를 기존의 규칙대로만 사용하지 말고 새로운 기술적 지지체와 결합하는 작업 등을 통해 예술에서 사용하는 매체를 확장하기 위해 노력해야 한다고 <span class="underline">ⓔ역설</span>한다. 왜냐하면 그것이 포스트매체 조건에서 다양한 지지체로 새롭게 시도하는 예술가들을 '이것은 예술이 아니다'로 구속하는 굴레에서 벗어나게 하고, '이것도 예술이다'로 지지하는 바탕이 되기 때문이다.</p>
+
+                    <!-- 1번 문제 -->
+                    <div class="question" data-question="1" style="margin-top: 5mm; font-size: 9.5pt;">
+                        <div class="question-text" style="font-weight: bold;">
+                            <span class="question-number">1.</span> (가)와 (나)에 대한 설명으로 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(1, 1)">
+                                <span class="choice-number">①</span>
+                                <span>(가)는 (나)와 달리 역사적 관점에서 대상의 변화 과정을 분석하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(1, 2)">
+                                <span class="choice-number">②</span>
+                                <span>(나)는 (가)와 달리 문제를 제기한 뒤 그에 대한 다양한 해결책을 제시하고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(1, 3)">
+                                <span class="choice-number">③</span>
+                                <span>(나)는 (가)와 달리 여러 가지 특수한 사례로부터 현상에 대한 보편적 이론을 도출하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(1, 4)">
+                                <span class="choice-number">④</span>
+                                <span>(가)와 (나)는 모두 사례를 통해 제시된 관점에 대한 이해를 돕고 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(1, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>(가)와 (나)는 모두 서로 다른 견해를 소개하고 그 차이점을 열거하고 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div style="padding-left: 4mm;">
+                    <!-- 2번 문제 -->
+                    <div class="question" data-question="2" style="font-size: 9.5pt;">
+                        <div class="question-text" style="font-weight: bold;">
+                            <span class="question-number">2.</span> '그린버그'와 &lt;보기&gt;의 '칸트'가 모두 긍정할 수 있는 것은?
+                        </div>
+                        <!-- 보기 박스 -->
+                        <div class="passage-box" style="padding: 3mm; margin: 3mm 0; display: block;">
+                            <div style="text-align: center; font-size: 9pt; margin-bottom: 2mm;">&lt;보기&gt;</div>
+                            <p style="font-size: 9pt; text-indent: 1em; line-height: 1.7; margin: 0;">그린버그는 순수 추상 미술 작품에서 내용은 형태, 색채 등과 결합하여 작품의 형식으로 남아 있으며 주제란 문학적 요소에 해당하기 때문에 배제되어 있는 것이라고 설명한 반면, 칸트는 『판단력 비판』에서 순수한 미적 판단이란 본질적으로 그 내용이 도덕적, 윤리적인지와는 별개로 작품의 형식적 성격에서 나온다고 하면서 미술의 독자적 성격을 인정하였다. 칸트는 내용의 영역과 형식의 영역은 다르고 형식은 그 자체로 독자적이고 비타협적이기 때문에 내용과 무관하게 미적 판단의 대상이 될 수 있다고 하였다.</p>
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(2, 1)">
+                                <span class="choice-number">①</span>
+                                <span>회화의 내용은 형식으로 드러난다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(2, 2)">
+                                <span class="choice-number">②</span>
+                                <span>회화의 내용과 형식은 완전히 별개이다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(2, 3)">
+                                <span class="choice-number">③</span>
+                                <span>회화의 미적 가치는 감상자에 따라 다르다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(2, 4)">
+                                <span class="choice-number">④</span>
+                                <span>회화의 형식을 통해 미적 판단이 이루어진다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(2, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>회화의 형식은 내용과 주제를 모두 담아야 한다.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3번 문제 -->
+                    <div class="question" data-question="3" style="margin-top: 8mm; font-size: 9.5pt;">
+                        <div class="question-text" style="font-weight: bold;">
+                            <span class="question-number">3.</span> 실러가 예술작품의 질료는 투명해야 한다고 주장한 이유로 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(3, 1)">
+                                <span class="choice-number">①</span>
+                                <span>예술작품의 경제적 가치를 높이기 위해서</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(3, 2)">
+                                <span class="choice-number">②</span>
+                                <span>예술작품의 도덕적 가치를 전달하기 위해서</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(3, 3)">
+                                <span class="choice-number">③</span>
+                                <span>예술작품의 형상을 명확히 전달하기 위해서</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(3, 4)">
+                                <span class="choice-number">④</span>
+                                <span>예술작품의 정치적 메시지를 강화하기 위해서</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(3, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>예술작품이 사회의 논점이 되도록 하기 위해서</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 2 -</div>
+        </div>
+
+        <!-- 3페이지 -->
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">독 서</div>
+                <div class="page-number">3</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <!-- 3페이지 통합 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <!-- 4번 문제 -->
+                    <div class="question" data-question="4" style="font-size: 9.5pt;">
+                        <div class="question-text" style="font-weight: bold;">
+                            <span class="question-number">4.</span> ㉠~㉢에 대한 설명으로 적절하지 <span class="underline">않은</span> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(4, 1)">
+                                <span class="choice-number">①</span>
+                                <span>㉠은 아리스토텔레스의 예술관을 계승하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(4, 2)">
+                                <span class="choice-number">②</span>
+                                <span>㉠은 감상자가 미적 경험을 통해 도덕성을 회복할 수 있다고 생각하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(4, 3)">
+                                <span class="choice-number">③</span>
+                                <span>㉡은 예술가가 예술 장르 자체의 순수성을 실현하기 위해 노력해야 한다고 생각하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(4, 4)">
+                                <span class="choice-number">④</span>
+                                <span>㉢은 브로타스의 작품으로 인한 예술계의 상황을 부정적으로 파악하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(4, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>㉢은 기술적 지지체의 창안은 우연 없이는 불가능하다 생각하였다.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5번 문제 -->
+                    <div class="question" data-question="5" style="margin-top: 8mm; font-size: 9.5pt;">
+                        <div class="question-text" style="font-weight: bold;">
+                            <span class="question-number">5.</span> (가)와 (나)에 대한 설명으로 적절하지 <span class="underline">않은</span> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(5, 1)">
+                                <span class="choice-number">①</span>
+                                <span>아리스토텔레스에 따르면 예술가는 자신이 이해한 사물의 보편적 개념이나 가치, 본질을 질료에 담아 예술작품으로 재현한다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(5, 2)">
+                                <span class="choice-number">②</span>
+                                <span>실러는 당시 사회 문제를 해결할 방법으로 예술을 선택했다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(5, 3)">
+                                <span class="choice-number">③</span>
+                                <span>그린버그는 질료가 예술 장르를 규정하는 기준이 된다고 하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(5, 4)">
+                                <span class="choice-number">④</span>
+                                <span>크라우스는 기술적 지지체의 표현 가능성을 포착하는 능력은 예술가의 역량에 따라 달라진다고 하였다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(5, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>크라우스는 예술가라면 지지체를 기존 규칙대로만 사용하지 말아야 하며, 예술에서 사용하는 매체를 확장하기 위해 노력해야 한다고 하였다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div style="padding-left: 4mm;">
+                    <!-- 6번 문제 -->
+                    <div class="question" data-question="6" style="font-size: 9.5pt;">
+                        <div class="question-text" style="font-weight: bold;">
+                            <span class="question-number">6.</span> ⓐ~ⓔ에 대한 내용으로 적절하지 <span class="underline">않은</span> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(6, 1)">
+                                <span class="choice-number">①</span>
+                                <span>ⓐ: 능력이나 성품을 기르고 닦음.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(6, 2)">
+                                <span class="choice-number">②</span>
+                                <span>ⓑ: 재질에 따라 달리 느껴지는 독특한 느낌.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(6, 3)">
+                                <span class="choice-number">③</span>
+                                <span>ⓒ: 본디의 상태로 되돌아감. 또는 그렇게 되게 함.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(6, 4)">
+                                <span class="choice-number">④</span>
+                                <span>ⓓ: 어떤 방안·물건 따위를 처음으로 생각해 냄.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(6, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>ⓔ: 겉으로는 모순되고 불합리하여 진리에 반대하고 있는 듯하나, 실질적인 내용은 진리인 말.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 3 -</div>
+        </div>
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <!-- 하단 버튼 -->
+    <div class="bottom-fixed-buttons" id="bottomButtons">
+        <button class="bottom-fixed-btn btn-back" onclick="resetExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+            </svg>
+            다시풀기
+        </button>
+        <button class="bottom-fixed-btn btn-grade" onclick="gradeExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            채점하기
+        </button>
+    </div>
+
+    <!-- 해설 팝업 -->
+    <div class="explanation-overlay" id="explanationOverlay" onclick="closeExplanation()"></div>
+    <div class="explanation-popup" id="explanationPopup">
+        <div class="explanation-popup-header">
+            <h3 id="explanationTitle">문제 해설</h3>
+            <button class="explanation-popup-close" onclick="closeExplanation()">×</button>
+        </div>
+        <div class="explanation-popup-body" id="explanationBody"></div>
+    </div>
+
+    <script>
+        // ===== 펜 도구 관련 변수 =====
+        let isPenMode = false;
+        let isEraserMode = false;
+        let isPanMode = false;
+        let isPanning = false;
+        let panStartX = 0, panStartY = 0;
+        let isDrawing = false;
+        let penColor = '#e53935';
+        let penSize = 3;
+        let eraserSize = 20;
+        let drawingCanvas, drawingCtx;
+        let lastX = 0, lastY = 0;
+
+        // 그림 데이터 저장 (문서 좌표계)
+        let drawingPaths = [];
+        let currentPath = null;
+        let lastScrollX = 0, lastScrollY = 0;
+        let currentScale = 1;
+
+        // 줌 관련 변수
+        let currentZoom = 1;
+        const minZoom = 0.3;
+        const maxZoom = 1.5;
+        const zoomStep = 0.1;
+        let autoScale = 1;
+
+        // 현재 적용된 스케일 가져오기
+        function getCurrentScale() {
+            return autoScale * currentZoom;
+        }
+
+        // 펜 도구 초기화
+        function initDrawingCanvas() {
+            drawingCanvas = document.getElementById('drawingCanvas');
+            drawingCtx = drawingCanvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('scroll', redrawCanvas);
+
+            drawingCanvas.addEventListener('mousedown', startDrawing);
+            drawingCanvas.addEventListener('mousemove', bindDraw);
+            drawingCanvas.addEventListener('mouseup', stopDrawing);
+            drawingCanvas.addEventListener('mouseout', stopDrawing);
+
+            drawingCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            drawingCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            drawingCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function resizeCanvas() {
+            const canvas = document.getElementById('drawingCanvas');
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            lastScrollX = window.scrollX;
+            lastScrollY = window.scrollY;
+            redrawCanvas();
+        }
+
+        function redrawCanvas() {
+            if (!drawingCtx || !drawingCanvas) return;
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            const scale = getCurrentScale();
+
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+            drawingPaths.forEach(path => {
+                if (path.points.length < 2) return;
+                drawingCtx.beginPath();
+                drawingCtx.strokeStyle = path.color;
+                drawingCtx.lineWidth = path.size * scale;
+                drawingCtx.lineCap = 'round';
+                drawingCtx.lineJoin = 'round';
+                drawingCtx.globalCompositeOperation = 'source-over';
+
+                const firstPoint = path.points[0];
+                drawingCtx.moveTo(firstPoint.x * scale - scrollX, firstPoint.y * scale - scrollY);
+
+                for (let i = 1; i < path.points.length; i++) {
+                    const point = path.points[i];
+                    drawingCtx.lineTo(point.x * scale - scrollX, point.y * scale - scrollY);
+                }
+                drawingCtx.stroke();
+            });
+
+            lastScrollX = scrollX;
+            lastScrollY = scrollY;
+            currentScale = scale;
+        }
+
+        let isPenCollapsed = false;
+        function togglePenCollapse() {
+            isPenCollapsed = !isPenCollapsed;
+            const penControls = document.getElementById('penControls');
+            const collapseBtn = document.getElementById('penCollapseBtn');
+            if (isPenCollapsed) {
+                penControls.classList.add('collapsed');
+                collapseBtn.innerHTML = '▼';
+            } else {
+                penControls.classList.remove('collapsed');
+                collapseBtn.innerHTML = '▲';
+            }
+        }
+
+        function togglePenMode() {
+            isPenMode = !isPenMode;
+            isEraserMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isPenMode) {
+                penBtn.classList.add('active');
+                eraserBtn.classList.remove('active');
+                canvas.classList.add('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            } else {
+                penBtn.classList.remove('active');
+                canvas.classList.remove('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            }
+        }
+
+        function toggleEraserMode() {
+            isEraserMode = !isEraserMode;
+            isPenMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isEraserMode) {
+                eraserBtn.classList.add('active');
+                penBtn.classList.remove('active');
+                canvas.classList.add('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            } else {
+                eraserBtn.classList.remove('active');
+                canvas.classList.remove('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            }
+        }
+
+        function togglePanMode() {
+            isPanMode = !isPanMode;
+            isPenMode = false;
+            isEraserMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            penBtn.classList.remove('active');
+            eraserBtn.classList.remove('active');
+            canvas.classList.remove('drawing-mode');
+            canvas.classList.remove('eraser-mode');
+
+            if (isPanMode) {
+                panBtn.classList.add('active');
+                canvas.classList.add('pan-mode');
+            } else {
+                panBtn.classList.remove('active');
+                canvas.classList.remove('pan-mode');
+            }
+        }
+
+        function setPenColor(color) {
+            penColor = color;
+            document.querySelectorAll('.pen-color-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.color === color) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (!isPenMode) {
+                togglePenMode();
+            }
+            isEraserMode = false;
+            document.getElementById('eraserBtn').classList.remove('active');
+            document.getElementById('drawingCanvas').classList.remove('eraser-mode');
+            document.getElementById('drawingCanvas').classList.add('drawing-mode');
+        }
+
+        function startDrawing(e) {
+            if (isPanMode) {
+                isPanning = true;
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (e.clientX + window.scrollX) / scale;
+            const docY = (e.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = e.clientX;
+                lastY = e.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = e.clientX;
+            lastY = e.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function bindDraw(e) {
+            if (isPanning) {
+                const dx = e.clientX - panStartX;
+                const dy = e.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+
+            const x = e.clientX;
+            const y = e.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function stopDrawing() {
+            if (isPanning) {
+                isPanning = false;
+                drawingCanvas.classList.remove('panning');
+                return;
+            }
+
+            if (isDrawing && currentPath && currentPath.points.length > 1) {
+                drawingPaths.push(currentPath);
+            }
+            isDrawing = false;
+            currentPath = null;
+        }
+
+        function eraseAtPoint(docX, docY) {
+            const eraseRadius = eraserSize / getCurrentScale();
+            let needsRedraw = false;
+
+            for (let i = drawingPaths.length - 1; i >= 0; i--) {
+                const path = drawingPaths[i];
+                const newPoints = [];
+                let segmentStart = 0;
+
+                for (let j = 0; j < path.points.length; j++) {
+                    const point = path.points[j];
+                    const dist = Math.sqrt(Math.pow(point.x - docX, 2) + Math.pow(point.y - docY, 2));
+
+                    if (dist <= eraseRadius) {
+                        if (j > segmentStart && newPoints.length > 1) {
+                            const newPath = {
+                                color: path.color,
+                                size: path.size,
+                                points: newPoints.slice()
+                            };
+                            if (newPath.points.length > 1) {
+                                drawingPaths.push(newPath);
+                            }
+                            newPoints.length = 0;
+                        } else {
+                            newPoints.length = 0;
+                        }
+                        segmentStart = j + 1;
+                        needsRedraw = true;
+                    } else {
+                        newPoints.push(point);
+                    }
+                }
+
+                if (newPoints.length > 1) {
+                    path.points = newPoints;
+                } else {
+                    drawingPaths.splice(i, 1);
+                    needsRedraw = true;
+                }
+            }
+
+            if (needsRedraw) {
+                redrawCanvas();
+            }
+        }
+
+        function handleTouchStart(e) {
+            if (isPanMode) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                isPanning = true;
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (touch.clientX + window.scrollX) / scale;
+            const docY = (touch.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = touch.clientX;
+                lastY = touch.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function handleTouchMove(e) {
+            if (isPanning) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const dx = touch.clientX - panStartX;
+                const dy = touch.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const x = touch.clientX;
+            const y = touch.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function clearCanvas() {
+            if (confirm('그린 내용을 모두 지우시겠습니까?')) {
+                drawingPaths = [];
+                currentPath = null;
+                drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+        }
+
+        // 모바일 스케일 적용 함수
+        function applyMobileScale() {
+            const wrapper = document.querySelector('.exam-wrapper');
+            if (!wrapper) return;
+
+            const baseWidth = 900;
+            const screenWidth = window.innerWidth;
+
+            if (screenWidth < baseWidth) {
+                autoScale = screenWidth / baseWidth;
+            } else {
+                autoScale = 1;
+            }
+
+            const finalScale = autoScale * currentZoom;
+            wrapper.style.transform = `scale(${finalScale})`;
+            wrapper.style.transformOrigin = 'top center';
+
+            updateZoomDisplay();
+
+            if (typeof redrawCanvas === 'function') {
+                setTimeout(redrawCanvas, 50);
+            }
+        }
+
+        // 줌 인
+        function zoomIn() {
+            if (currentZoom < maxZoom) {
+                currentZoom = Math.min(maxZoom, currentZoom + zoomStep);
+                applyMobileScale();
+            }
+        }
+
+        // 줌 아웃
+        function zoomOut() {
+            if (currentZoom > minZoom) {
+                currentZoom = Math.max(minZoom, currentZoom - zoomStep);
+                applyMobileScale();
+            }
+        }
+
+        // 줌 리셋 (화면 맞춤)
+        function zoomReset() {
+            currentZoom = 1;
+            applyMobileScale();
+        }
+
+        // 줌 레벨 표시 업데이트
+        function updateZoomDisplay() {
+            const zoomLevelEl = document.getElementById('zoomLevel');
+            if (zoomLevelEl) {
+                const displayPercent = Math.round(currentZoom * 100);
+                zoomLevelEl.textContent = displayPercent + '%';
+            }
+        }
+
+        // 페이지 로드 시 캔버스 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initDrawingCanvas();
+            applyMobileScale();
+            window.addEventListener('resize', applyMobileScale);
+        });
+
+        // ===== 설정 =====
+        const EXAM_ID = 'supplement_reading_humanities_art';
+        const TOTAL_QUESTIONS = 6;
+        const TOTAL_TIME = 20 * 60; // 20분
+
+        // 현재 사용자 ID (사용자별 데이터 분리)
+        let currentUserId = '';
+
+        // localStorage 키 (다른 시험과 겹치지 않게 + 사용자별 분리)
+        function LS_KEY(key) {
+            return `supp_reading_humanities_art_${currentUserId}_${key}`;
+        }
+
+        // 정답 데이터 (임시 - 실제 정답으로 수정 필요)
+        const correctAnswers = {
+            1: 4, 2: 4, 3: 3, 4: 4, 5: 4, 6: 5
+        };
+
+        // 배점 (6문항 = 총 100점 기준)
+        const threePointQuestions = [3, 4];
+
+        function getQuestionScore(questionNum) {
+            // 6문제 총 100점: 각 16~17점씩 (약 16.67점)
+            return 17;
+        }
+
+        // 해설 데이터
+        const explanations = {
+            1: {
+                correct: "정답: ④",
+                text: "(가)는 대리석과 캔버스를 예로 들어 실러와 그린버그의 관점에 대한 이해를 돕고 있고, (나)는 '현대 미술관 독수리부'의 예를 들어 크라우스의 관점에 대한 독자들의 이해를 돕고 있다.<br><br>① (가)와 (나) 모두 역사적 관점에서 대상의 변화 과정을 분석하고 있지는 않다.<br>② (나)의 '현대 미술관 독수리부'를 예술이라고 규정할 수 있는 기준이 없었던 것을 문제 제기로 볼 수도 있지만, 그에 대한 크라우스의 견해만을 제시하였을 뿐, 다양한 해결책을 제시하고 있지는 않다.<br>③ (나)에 '현대 미술관 독수리부'라는 특수한 사례가 제시되었으나, 다른 사례는 제시되지 않았고, 보편적 이론을 도출하지도 않았다.<br>⑤ (가)는 서로 다른 견해를 소개하고 있지만, (나)는 크라우스의 견해만을 소개하고 있다."
+            },
+            2: {
+                correct: "정답: ④",
+                text: "'칸트는 … 순수한 미적 판단이란 본질적으로 그 내용이 도덕적, 윤리적인지와는 별개로 작품의 형식적 성격에서 나온다고 하면서'와 '그린버그는 형식을 통해 작품의 미적 측면이 드러나는 것임을 강조하였는데'를 통해, 칸트와 그린버그 모두 회화의 형식을 통해 미적 판단이 이루어진다고 본다는 것을 알 수 있다.<br><br>① &lt;보기&gt;의 칸트는 내용과 형식을 다른 영역으로 보았으므로 적절하지 않다.<br>② &lt;보기&gt;에 따르면 칸트는 내용과 형식을 완전히 별개로 본다는 것을 알 수 있다. 그린버그는 형식을 통해 내용이 드러난다고 보고 있으므로, 내용과 형식을 완전히 별개로 여긴다고 볼 수 없다.<br>③ &lt;보기&gt;의 칸트는 모두 순수한 미적 판단은 형식을 통해 이루어진다고 보고 있으므로 감상자의 주관에 따라 미적 가치가 달라진다고 보지 않을 것이다.<br>⑤ 그린버그는 예술이 교육이나 정치적 의도 등을 실현하는 수단이 되어서는 안 되며, 회화에서 '주제란 문학적인 요소에 해당하기 때문에 배제되어 있는 것'이라고 보므로 회화의 형식이 주제를 담아야 한다고 보지 않는다. 칸트는 미술의 형식과 내용을 완전히 분리하여 보고 있으므로, 형식에 주제가 담겨야 한다고 보지 않을 것임을 짐작할 수 있다."
+            },
+            3: {
+                correct: "정답: ③",
+                text: "실러는 예술가가 아름다움이라는 형상을 예술작품의 질료에 담아 표현하면 감상자는 미적 경험을 통해 도덕성을 회복할 수 있다고 하였는데, 이 미적 경험을 극대화하기 위해서는 예술작품의 질료가 투명한 매체로 기능해야 한다고 하였다.<br><br>① 지문에서 예술작품의 경제적 가치에 대해 언급한 적은 없다.<br>② 실러는 시민들의 도덕성을 함양할 방법으로 예술가가 아름다움이라는 형상을 예술작품에 담아 표현하는 것을 방법으로 택하였지만, 예술작품이 도덕적 가치를 전달한다고 말하지는 않았다.<br>④ 실러가 예술작품에 정치적 메시지가 담겨 있다고 언급한 적은 없다.<br>⑤ 실러가 예술작품이 사회적 논점이 되도록 했다고 한 부분은 없다."
+            },
+            4: {
+                correct: "정답: ④",
+                text: "㉢은 브로타스의 작품으로 인한 예술계의 상황을 '포스트매체 조건'으로 명명하였을 뿐, 이러한 상황을 부정적으로 파악하지는 않았다.<br><br>① (가)의 3문단에서 아리스토텔레스의 예술관은 18세기 비평가 실러에게 이어진다고 하였으므로 적절하다.<br>② (가)의 3문단에서 예술가가 아름다움이라는 형상을 예술작품의 질료에 담아 표현하면 감상자는 미적 경험을 통해 도덕성을 회복할 수 있다고 말한다고 하였으므로 적절하다.<br>③ (가)의 4문단에서 예술가는 질료의 물리적 성질이 갖는 표현 가능성에 주목해야 하며, 예술 장르 그 자체가 가지는 순수성을 실현하기 위해 노력해야 한다고 하였으므로 적절하다.<br>⑤ ㉢은 기술적 지지체의 창안은 예술가의 의지나 역량만으로 가능한 것이 아니라 예술가가 기술적 지지체의 표현 가능성을 우연히 포착해 규칙을 확립함으로써 가능하다고 하였다."
+            },
+            5: {
+                correct: "정답: ④",
+                text: "크라우스는 기술적 지지체의 창안은 예술가의 의지나 역량만으로 가능한 것이 아니라 예술가가 기술적 지지체의 표현 가능성을 우연히 포착해 규칙을 확립함으로써 가능하다고 하였다.<br><br>① (가)의 2문단에서 예술가는 자신이 이해한 사물의 형상을 질료에 담아 예술작품으로 재현한다고 하였는데, 형상은 보편적 개념이나 가치, 본질을 의미하므로 적절한 설명이다.<br>② (가)의 3문단에서 당시 정치적 혼란과 폭력이 지속되던 현실에 환멸을 느낀 실러가 시민들의 도덕성을 함양할 방법을 고민했고, 그 해결책으로 예술을 선택했다고 하였으므로 적절하다.<br>③ (가)의 4문단에서 그린버그의 이론을 설명하며 '회화에 사용된 질료는 회화라는 예술 장르를 규정하는 기준인 '미적 매체'가 되는 것이다.'라고 하였으므로 적절하다.<br>⑤ 크라우스는 예술가는 현재 사용되는 지지체를 기존의 규칙대로만 사용하지 말고 새로운 기술적 지지체와 결합하는 작업 등을 통해 예술에서 사용하는 매체를 확장하기 위해 노력해야 한다고 역설하였다."
+            },
+            6: {
+                correct: "정답: ⑤",
+                text: "ⓔ '역설'은 지문에서 '자신의 뜻을 힘써 말함'의 의미로 사용되었다. ⑤의 '겉으로는 모순되고 불합리하여 진리에 반대하고 있는 듯하나, 실질적인 내용은 진리인 말'은 다른 의미의 '역설(逆說)'에 해당한다.<br><br>① ⓐ 함양: 능력이나 성품을 기르고 닦음. (적절)<br>② ⓑ 질감: 재질에 따라 달리 느껴지는 독특한 느낌. (적절)<br>③ ⓒ 환원: 본디의 상태로 되돌아감. 또는 그렇게 되게 함. (적절)<br>④ ⓓ 창안: 어떤 방안·물건 따위를 처음으로 생각해 냄. (적절)"
+            }
+        };
+
+        // ===== 타이머 =====
+        let remainingSeconds = TOTAL_TIME;
+        let timerInterval = null;
+
+        function startTimer() {
+            const saved = localStorage.getItem(LS_KEY('examTimer'));
+            if (saved) {
+                remainingSeconds = parseInt(saved);
+            }
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                if (remainingSeconds <= 0) {
+                    remainingSeconds = 0;
+                    stopTimer();
+                    alert('시간이 종료되었습니다. 자동으로 채점합니다.');
+                    gradeExam();
+                }
+                localStorage.setItem(LS_KEY('examTimer'), remainingSeconds);
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            const timerEl = document.getElementById('timerValue');
+            if (timerEl) {
+                timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            const timerContainer = document.getElementById('examTimer');
+            if (timerContainer) {
+                if (remainingSeconds <= 60) {
+                    timerContainer.className = 'exam-timer danger';
+                } else if (remainingSeconds <= 300) {
+                    timerContainer.className = 'exam-timer warning';
+                } else {
+                    timerContainer.className = 'exam-timer';
+                }
+            }
+        }
+
+        // ===== 선택지 클릭 =====
+        function selectChoice(questionId, choiceNum, skipServerSave = false) {
+            const questionEl = document.querySelector(`[data-question="${questionId}"]`);
+            if (!questionEl) return;
+
+            questionEl.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+            const selectedChoice = questionEl.querySelector(`.choice[data-choice="${choiceNum}"]`);
+            if (selectedChoice) {
+                selectedChoice.classList.add('selected');
+            }
+            localStorage.setItem(LS_KEY(`question_${questionId}`), choiceNum);
+
+            // 서버에 답안 저장 (초기 로드 시에는 스킵)
+            if (!skipServerSave) {
+                saveAnswerToServer(questionId, choiceNum);
+            }
+        }
+
+        // 서버에 답안 저장
+        async function saveAnswerToServer(questionNumber, answer) {
+            try {
+                await fetch('/api/supplement-result/save-answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        questionNumber,
+                        answer
+                    })
+                });
+            } catch (err) {
+                console.error('답안 저장 오류:', err);
+            }
+        }
+
+        // ===== 채점 =====
+        function gradeExam(skipServerSave = false) {
+            const elapsedSeconds = TOTAL_TIME - remainingSeconds;
+            const elapsedMin = Math.floor(elapsedSeconds / 60);
+            const elapsedSec = elapsedSeconds % 60;
+            const elapsedTimeStr = `${String(elapsedMin).padStart(2, '0')}:${String(elapsedSec).padStart(2, '0')}`;
+
+            stopTimer();
+            const timerEl = document.getElementById('examTimer');
+            if (timerEl) timerEl.style.display = 'none';
+
+            // 기존 채점 마크 제거
+            document.querySelectorAll('.grade-mark').forEach(el => el.remove());
+
+            let correctCount = 0;
+            let totalScore = 0;
+
+            // 모든 문제 번호 요소 찾기
+            const questionNumbers = document.querySelectorAll('.question-number');
+
+            questionNumbers.forEach((qNum) => {
+                const questionText = qNum.textContent.replace(/[○✓⭕✔]/g, '').trim();
+                const questionId = parseInt(questionText.replace('.', ''));
+                if (isNaN(questionId) || questionId < 1 || questionId > TOTAL_QUESTIONS) return;
+
+                const userAnswer = localStorage.getItem(LS_KEY(`question_${questionId}`));
+                const correctAnswer = correctAnswers[questionId];
+
+                // 문제 번호의 부모 요소에 position: relative 추가
+                qNum.style.position = 'relative';
+
+                // 정답 선지에 연녹색 배경 표시
+                const questionEl = qNum.closest('.question');
+                if (questionEl) {
+                    const choices = questionEl.querySelectorAll('.choice');
+                    if (choices[correctAnswer - 1]) {
+                        choices[correctAnswer - 1].style.backgroundColor = '#c8f7c5';
+                        choices[correctAnswer - 1].style.position = 'relative';
+                        choices[correctAnswer - 1].classList.add('correct-answer');
+
+                        // 해설 버튼 추가
+                        const correctMark = document.createElement('span');
+                        correctMark.className = 'correct-mark';
+                        correctMark.textContent = '해설';
+                        correctMark.onclick = (e) => {
+                            e.stopPropagation();
+                            showExplanation(questionId);
+                        };
+                        choices[correctAnswer - 1].appendChild(correctMark);
+                    }
+
+                    // 틀린 답안에 표시
+                    if (userAnswer && parseInt(userAnswer) !== correctAnswer) {
+                        const userChoiceIdx = parseInt(userAnswer) - 1;
+                        if (choices[userChoiceIdx]) {
+                            choices[userChoiceIdx].classList.add('wrong-answer');
+                        }
+                    }
+                }
+
+                // 채점 마크 생성
+                const mark = document.createElement('span');
+                mark.className = 'grade-mark';
+
+                if (userAnswer && parseInt(userAnswer) === correctAnswer) {
+                    // 정답 - 빨간 동그라미
+                    correctCount++;
+                    totalScore += getQuestionScore(questionId);
+                    mark.innerHTML = '⭕';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 72px;
+                        position: absolute;
+                        left: -20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        opacity: 0.75;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                } else {
+                    // 오답 또는 미응답 - 빨간 체크 (V 표시)
+                    mark.innerHTML = '✔';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 60px;
+                        position: absolute;
+                        left: -15px;
+                        top: 50%;
+                        transform: translateY(-50%) rotate(-15deg);
+                        opacity: 0.8;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                }
+
+                qNum.appendChild(mark);
+            });
+
+            // 결과 배너 표시
+            document.getElementById('bannerScore').textContent = totalScore;
+            document.getElementById('bannerCorrect').textContent = correctCount;
+            document.getElementById('resultBanner').style.display = 'block';
+
+            document.body.classList.add('graded');
+
+            // localStorage 정리
+            localStorage.removeItem(LS_KEY('examTimer'));
+
+            // 서버에 채점 결과 저장 (복원 시에는 스킵)
+            if (!skipServerSave) {
+                saveGradeToServer(correctCount, totalScore);
+            }
+        }
+
+        // 서버에 채점 결과 저장
+        async function saveGradeToServer(correctCount, score) {
+            try {
+                // 모든 답안 수집
+                const answers = {};
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        answers[i] = parseInt(saved);
+                    }
+                }
+
+                // localStorage에서 사용자 정보 가져오기 (세션 만료 대비)
+                const userData = localStorage.getItem('mockExamUser');
+                let userInfo = {};
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userInfo = {
+                        userId: user._id,
+                        phone: user.phone,
+                        studentInfo: {
+                            name: user.name,
+                            school: user.school,
+                            grade: user.grade
+                        }
+                    };
+                }
+
+                await fetch('/api/supplement-result/save-grade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        answers,
+                        correctCount,
+                        totalQuestions: TOTAL_QUESTIONS,
+                        score,
+                        ...userInfo
+                    })
+                });
+                console.log('채점 결과 저장 완료');
+            } catch (err) {
+                console.error('채점 결과 저장 오류:', err);
+            }
+        }
+
+        // ===== 해설 =====
+        function showExplanation(questionId) {
+            const exp = explanations[questionId];
+            if (!exp) return;
+
+            document.getElementById('explanationTitle').textContent = `${questionId}번 문제 해설`;
+            document.getElementById('explanationBody').innerHTML = `
+                <div class="explanation-correct">
+                    <div class="explanation-correct-label">${exp.correct}</div>
+                    <div class="explanation-correct-text">${exp.text}</div>
+                </div>
+            `;
+            document.getElementById('explanationOverlay').style.display = 'block';
+            document.getElementById('explanationPopup').style.display = 'block';
+        }
+
+        function closeExplanation() {
+            document.getElementById('explanationOverlay').style.display = 'none';
+            document.getElementById('explanationPopup').style.display = 'none';
+        }
+
+        // ===== 뒤로가기 (대시보드로 이동) =====
+        function goBack() {
+            window.location.href = '/mock_exam_dashboard.html';
+        }
+
+        // ===== 다시풀기 =====
+        async function resetExam() {
+            if (!confirm('모든 답안과 채점 결과가 초기화됩니다. 다시 풀겠습니까?')) {
+                return;
+            }
+
+            // localStorage 초기화
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                localStorage.removeItem(LS_KEY(`question_${i}`));
+            }
+            localStorage.removeItem(LS_KEY('isGraded'));
+
+            // 서버 데이터 삭제
+            try {
+                // 쿼리 파라미터로 사용자 정보 전달 (세션 만료 대비)
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`, {
+                    method: 'DELETE'
+                });
+            } catch (err) {
+                console.error('서버 데이터 삭제 오류:', err);
+            }
+
+            // 페이지 새로고침
+            window.location.reload();
+        }
+
+        // ===== 초기화 =====
+        async function init() {
+            // 사용자 정보 로드
+            const userData = localStorage.getItem('mockExamUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                currentUserId = user._id || user.phone || ''; // 사용자 ID 설정
+                document.getElementById('studentSchool').textContent = user.school || '-';
+                document.getElementById('studentGrade').textContent = user.grade || '-';
+                document.getElementById('studentName').textContent = user.name || '-';
+            }
+
+            // 서버에서 저장된 답안 로드
+            try {
+                // 쿼리 파라미터로 사용자 정보 전달 (세션 만료 대비)
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                const response = await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`);
+                const data = await response.json();
+
+                if (data.ok && data.result) {
+                    const serverResult = data.result;
+
+                    // 서버에서 답안 복원
+                    if (serverResult.answers) {
+                        for (const [questionId, answer] of Object.entries(serverResult.answers)) {
+                            // localStorage에도 저장하고 UI 업데이트 (서버 저장은 스킵)
+                            localStorage.setItem(LS_KEY(`question_${questionId}`), answer);
+                            selectChoice(parseInt(questionId), answer, true);
+                        }
+                    }
+
+                    // 이미 채점 완료된 경우 채점 결과 표시 (서버 저장 스킵)
+                    if (serverResult.isGraded) {
+                        setTimeout(() => {
+                            gradeExam(true);
+                        }, 100);
+                    }
+                } else {
+                    // 서버에 데이터가 없으면 localStorage에서 복원
+                    for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                        const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                        if (saved) {
+                            selectChoice(i, parseInt(saved), true);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('서버 데이터 로드 오류:', err);
+                // 서버 오류 시 localStorage에서 복원
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        selectChoice(i, parseInt(saved), true);
+                    }
+                }
+            }
+
+            // 타이머 시작 (보완학습은 타이머 없음)
+            // startTimer();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

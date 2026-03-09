@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌊 천변풍경</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/chunbyun/chunbyun01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #4a90a4 0%, #2c6b7a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #4a90a4;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #4a90a4;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #4a90a4 0%, #2c6b7a 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌊 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌊 천변풍경</h1>
+        <p class="subtitle">
+          현대소설<br>
+          청계천 서민들의 삶
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 청계천이라는 삶의 자리">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">🏞️</span>
+          청계천이라는 삶의 자리
+        </h2>
+        <div class="story-text">『천변풍경』은 한 인물의 극적인 인생을 따라가는 소설이 아니라, 청계천 변이라는 공간을 중심으로 살아가는 수많은 사람들의 삶을 그린 작품이다. 청계천은 경성에서도 가장 낮은 곳에 위치한 공간으로, 가난한 서민들이 모여 사는 삶의 터전이다.
+
+비가 오면 가장 먼저 물이 차오르고, 여름이면 악취가 퍼지며, 겨울이면 찬바람이 그대로 스며드는 곳이다. 이러한 환경은 청계천 변 사람들의 삶이 늘 불안정하고 위태롭다는 사실을 상징한다.
+
+그러나 작가는 이 공간을 단순한 비참함의 장소로만 그리지 않는다. 사람들은 그 속에서도 장사를 하고, 이야기를 나누며, 서로를 바라보며 하루를 살아간다. 청계천은 도시 발전의 그늘 속에서 묵묵히 사람들의 삶을 받아들이는 공간이며, 이 소설은 그 흐름을 따라 조용히 이야기를 시작한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 평범한 인물들의 등장">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">👥</span>
+          평범한 인물들의 등장
+        </h2>
+        <div class="story-text">청계천 변에는 특별한 주인공 대신 다양한 서민 인물들이 등장한다. 장사를 하며 근근이 살아가는 사람, 남의 집에 세 들어 사는 사람, 일정한 직업 없이 떠도는 사람 등 이들은 모두 당시 도시 하층민의 전형적인 모습이다.
+
+이 인물들은 누구 하나 이야기를 독점하지 않으며, 각자의 삶이 조금씩 겹쳐지며 서사를 이룬다. 서로 자주 마주치고 얼굴을 알지만, 깊이 개입하지는 않는다. 필요할 때는 도움을 주기도 하지만, 끝까지 책임지지는 않는다.
+
+작가는 이처럼 느슨한 관계 속에서 유지되는 공동체의 모습을 통해, 가난한 삶이 반드시 따뜻한 연대를 낳지는 않는다는 현실을 보여 준다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 반복되는 가난한 일상">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">🔄</span>
+          반복되는 가난한 일상
+        </h2>
+        <div class="story-text">청계천 사람들의 하루는 큰 변화 없이 반복된다. 아침이 되면 다시 장사를 나가고, 일거리를 찾고, 저녁이 되면 피곤한 몸을 이끌고 돌아온다. 돈은 늘 부족하고, 그 부족함은 사람들을 예민하게 만든다.
+
+사소한 문제로 말다툼이 벌어지기도 하고, 작은 이익을 두고 다투기도 한다. 그러나 갈등은 오래 지속되지 않는다. 다음 날이면 다시 같은 공간에서 서로를 마주쳐야 하기 때문이다.
+
+이렇게 반복되는 일상은 지루하고 고단하지만, 동시에 삶을 이어 가게 하는 힘이기도 하다. 작가는 이 반복 속에서 서민들의 현실적인 삶의 무게를 담담히 드러낸다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 계산이 섞인 인간관계">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">🤝</span>
+          계산이 섞인 인간관계
+        </h2>
+        <div class="story-text">청계천 변 사람들은 서로 의지하며 살아가지만, 그 관계는 결코 순수하지 않다. 도움에는 늘 계산이 따르고, 손해가 예상되면 쉽게 물러선다. 누군가 어려움에 처하면 진심 어린 위로보다 소문과 평가가 먼저 따라붙는다.
+
+사람들은 남의 사정을 안타까워하면서도, 동시에 자신과 비교하며 안도한다. 작가는 이러한 인간관계를 비난하거나 미화하지 않는다. 그저 가난한 현실 속에서 인간이 보일 수 있는 자연스러운 모습으로 제시한다.
+
+이 냉정함은 청계천이라는 공간이 가진 또 하나의 얼굴이며, 작품의 현실성을 더욱 강화한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 여성들이 짊어진 삶의 무게">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">👩</span>
+          여성들이 짊어진 삶의 무게
+        </h2>
+        <div class="story-text">작품 속 여성 인물들은 특히 불안정한 삶을 살아간다. 경제적으로 자립하기 어려운 상황에서 여성들은 생존을 위해 제한된 선택지 앞에 놓인다. 결혼이나 남성에게 의지하는 삶은 종종 생존 수단이 되며, 그 선택에는 개인의 의지가 충분히 반영되지 않는다.
+
+그러나 여성 인물들은 단순히 수동적인 존재로만 그려지지 않는다. 그들은 주어진 조건 속에서 생활력을 발휘하며 하루하루를 견뎌 낸다.
+
+작가는 이들을 연민의 대상으로만 다루지 않고, 당시 사회 구조 속에서 살아가는 현실적인 인물로 묘사한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 돈이 기준이 되는 세계">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">💰</span>
+          돈이 기준이 되는 세계
+        </h2>
+        <div class="story-text">청계천 변에서 돈은 삶의 가장 중요한 기준이다. 이상이나 도덕보다 당장의 생존이 우선이며, 정직함은 유지하기 어려운 가치가 된다. 작은 속임수와 계산은 일상이 되고, 사람의 평가는 경제적 능력에 따라 달라진다.
+
+돈이 있는 사람은 대접받고, 없는 사람은 쉽게 무시당한다. 이러한 질서는 개인의 성격 문제가 아니라 사회 구조가 만들어 낸 결과로 제시된다.
+
+사람들은 그 부당함을 알면서도 벗어나지 못하고, 결국 체념 속에서 살아간다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 근대화가 남긴 그늘">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🏙️</span>
+          근대화가 남긴 그늘
+        </h2>
+        <div class="story-text">경성은 점점 근대 도시의 모습을 갖추어 가지만, 청계천 변은 그 변화의 중심에서 벗어나 있다. 새로운 문물과 제도는 중심가에 집중되고, 이곳 사람들의 삶은 크게 나아지지 않는다.
+
+오히려 변화는 일자리를 불안정하게 만들고 경쟁을 심화시킨다. 사람들은 미래에 대한 희망보다는 현재를 버티는 데 집중하게 된다.
+
+작가는 이를 통해 근대화가 모두에게 동일한 혜택을 주지 않았다는 사실을 청계천 사람들의 삶으로 보여 준다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 소문과 시선이 지배하는 공간">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">👁️</span>
+          소문과 시선이 지배하는 공간
+        </h2>
+        <div class="story-text">청계천 변에서는 소문이 빠르게 퍼진다. 개인의 사생활은 쉽게 노출되고, 누군가의 실패나 몰락은 곧 이야기거리가 된다. 이러한 시선은 사람들을 조심스럽게 만들고, 행동의 폭을 제한한다.
+
+자유로운 선택보다는 주변의 눈치를 보며 살아가게 된다. 작가는 소문과 시선이 만들어 내는 압박을 통해, 가난한 공간이 가진 또 다른 폭력을 드러낸다.
+
+이는 물리적 가난뿐 아니라 심리적 억압까지 포함하는 모습이다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 떠나는 사람과 남는 사람">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🚶</span>
+          떠나는 사람과 남는 사람
+        </h2>
+        <div class="story-text">청계천을 떠나 더 나은 삶을 꿈꾸는 사람들도 등장한다. 그러나 대부분의 경우, 떠난다고 해서 삶이 크게 달라지지는 않는다. 어디로 가든 가난과 불안은 쉽게 사라지지 않는다.
+
+반대로 남아 있는 사람들은 여전히 같은 공간에서 같은 삶을 반복한다. 새로운 인물이 들어오고, 누군가는 사라지지만, 청계천이라는 공간의 성격은 변하지 않는다.
+
+작가는 이를 통해 개인의 이동보다 구조의 지속성이 더 강하다는 사실을 보여 준다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 천변풍경이 남기는 기록">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">📜</span>
+          천변풍경이 남기는 기록
+        </h2>
+        <div class="story-text">『천변풍경』은 뚜렷한 해결이나 극적인 결말을 제시하지 않는다. 청계천의 물은 계속 흐르고, 사람들의 삶도 그렇게 이어진다. 작가는 이 삶들을 평가하거나 교훈으로 정리하지 않는다.
+
+대신 한 시대를 살아간 서민들의 모습을 하나의 풍경처럼 기록해 남긴다. 이 기록은 화려하지 않지만, 그 시대를 이해하는 데 중요한 의미를 지닌다.
+
+『천변풍경』은 조용히 흐르는 삶 속에서, 우리가 쉽게 지나칠 수 있는 사람들의 존재를 다시 바라보게 만드는 작품이다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌊 천변풍경</h1>
+        <p class="subtitle">
+          현대소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/chunbyun/chunbyun01.jpg',
+      '/images/chunbyun/chunbyun02.jpg',
+      '/images/chunbyun/chunbyun03.jpg',
+      '/images/chunbyun/chunbyun04.jpg',
+      '/images/chunbyun/chunbyun05.jpg',
+      '/images/chunbyun/chunbyun06.jpg',
+      '/images/chunbyun/chunbyun07.jpg',
+      '/images/chunbyun/chunbyun08.jpg',
+      '/images/chunbyun/chunbyun09.jpg',
+      '/images/chunbyun/chunbyun10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🌊 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

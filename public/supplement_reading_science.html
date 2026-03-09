@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 보완학습 - 독서(과학)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nanum Myeongjo', '바탕', Batang, serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+            padding-top: 45px;
+        }
+
+        /* 상단 학생 정보 바 */
+        .student-info-display {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .student-info-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 5px;
+        }
+
+        .info-item strong {
+            color: #bdc3c7;
+        }
+
+        /* 타이머 */
+        .exam-timer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .exam-timer.warning {
+            background: rgba(255, 193, 7, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        .exam-timer.danger {
+            background: rgba(244, 67, 54, 0.4);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* 페이지 */
+        .page {
+            width: 100%;
+            max-width: 900px;
+            min-height: auto;
+            padding: 12mm 10mm 15mm 10mm;
+            margin: 0 auto;
+            background: #fff;
+            position: relative;
+        }
+
+        .page-footer {
+            text-align: center;
+            font-size: 10pt;
+            color: #333;
+            margin-top: 10mm;
+            padding-top: 5mm;
+        }
+
+        /* 헤더 */
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8mm;
+            position: relative;
+        }
+
+        .session-badge {
+            position: absolute;
+            left: 0;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 11pt;
+            font-weight: 600;
+        }
+
+        .title {
+            font-size: 22pt;
+            font-weight: 700;
+            letter-spacing: 4px;
+        }
+
+        .page-number {
+            position: absolute;
+            right: 0;
+            font-size: 18pt;
+            font-weight: 700;
+        }
+
+        .header-divider {
+            border-top: 1px solid #000;
+            margin-bottom: 5mm;
+        }
+
+        /* 2단 레이아웃 */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .column {
+            text-align: justify;
+            padding: 0 4mm;
+        }
+
+        .column:first-child {
+            border-right: 1px solid #000;
+            padding-left: 0;
+        }
+
+        .column:last-child {
+            padding-right: 0;
+        }
+
+        /* 문제 범위 안내 */
+        .question-range {
+            background: #f0f0f0;
+            padding: 3mm 4mm;
+            margin-bottom: 5mm;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+
+        /* 지문 박스 */
+        .passage-box {
+            border: 1px solid #000;
+            padding: 4mm;
+            margin-bottom: 5mm;
+            text-align: justify;
+            font-size: 9.5pt;
+            line-height: 1.7;
+        }
+
+        .passage-box .label {
+            font-weight: 700;
+            margin-bottom: 2mm;
+        }
+
+        .passage-box p {
+            margin-bottom: 2mm;
+            text-indent: 0;
+        }
+
+        .passage-box .poem-line {
+            margin-bottom: 0.5mm;
+        }
+
+        .passage-box .poem-line.bold {
+            font-weight: 700;
+        }
+
+        .passage-box .note {
+            font-size: 8.5pt;
+            margin-top: 3mm;
+            padding-top: 2mm;
+            border-top: 1px dashed #999;
+        }
+
+        .passage-box .note-item {
+            margin-bottom: 1mm;
+        }
+
+        /* 문제 */
+        .question {
+            margin-bottom: 5mm;
+        }
+
+        .question-number {
+            font-size: 13pt;
+            font-weight: 900;
+            margin-right: 2mm;
+        }
+
+        .question-text {
+            margin-bottom: 3mm;
+            font-weight: 700;
+        }
+
+        /* 선택지 */
+        .choices {
+            margin-left: 4mm;
+        }
+
+        .choice {
+            display: flex;
+            margin-bottom: 1.5mm;
+            text-align: justify;
+            padding: 2mm 3mm;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .choice:hover {
+            background-color: rgba(0, 100, 255, 0.08);
+        }
+
+        .choice.selected {
+            background-color: rgba(0, 100, 255, 0.35);
+        }
+
+        .choice-number {
+            min-width: 1.5em;
+            margin-right: 1mm;
+        }
+
+        /* 밑줄 */
+        .underline {
+            text-decoration: underline;
+        }
+
+        /* 동그라미 문자 */
+        .circled {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.3em;
+            height: 1.3em;
+            border: 1px solid #000;
+            border-radius: 50%;
+            font-size: 0.85em;
+            margin: 0 1px;
+        }
+
+        /* 채점 결과 배너 */
+        .exam-result-banner {
+            display: none;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin: 10px 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .result-banner-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 25px;
+        }
+
+        .result-banner-score {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .result-banner-score span {
+            color: #f093fb;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .result-banner-correct {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .result-banner-time {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .result-banner-time span {
+            color: #4facfe;
+            font-weight: 700;
+        }
+
+        /* 하단 고정 버튼 */
+        .bottom-fixed-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .bottom-fixed-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 180px;
+        }
+
+        .btn-grade {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .btn-grade:hover {
+            opacity: 0.9;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+        }
+
+        .bottom-spacer {
+            height: 80px;
+        }
+
+        /* 정답 표시 스타일 */
+        .choice.correct-answer {
+            background-color: #c8f7c5 !important;
+        }
+
+        .choice.wrong-answer {
+            background-color: #ffcdd2 !important;
+        }
+
+        .correct-mark {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 채점 완료 시 선지 클릭 비활성화 */
+        body.graded .choice {
+            pointer-events: none;
+        }
+        body.graded .choice.correct-answer {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* 해설 팝업 */
+        .explanation-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+
+        .explanation-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .explanation-popup-header {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explanation-popup-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .explanation-popup-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .explanation-popup-body {
+            padding: 20px;
+        }
+
+        .explanation-correct {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .explanation-correct-label {
+            color: #2E7D32;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .explanation-correct-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* 확대/축소 컨트롤 */
+        .zoom-controls {
+            position: fixed;
+            top: 60px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover {
+            background: #f0f0f0;
+        }
+        .zoom-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.95);
+        }
+        .zoom-level {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+            padding: 2px 0;
+        }
+        .zoom-btn-reset {
+            font-size: 12px;
+            background: #667eea;
+            color: #fff;
+        }
+        .zoom-btn-reset:hover {
+            background: #5a6fd6;
+        }
+
+        /* 펜 도구 컨트롤 */
+        .pen-controls {
+            position: fixed;
+            top: 220px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+        .pen-tools {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        .pen-controls.collapsed .pen-tools {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .pen-toggle-collapse {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-toggle-collapse:hover {
+            background: #5a6fd6;
+        }
+        .pen-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .pen-btn:hover {
+            background: #f0f0f0;
+        }
+        .pen-btn:active {
+            transform: scale(0.95);
+        }
+        .pen-btn.active {
+            background: #667eea;
+            color: #fff;
+        }
+        .pen-btn.eraser-btn.active {
+            background: #ff6b6b;
+            color: #fff;
+        }
+        .pen-color-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            margin: 2px auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pen-color-btn:hover {
+            transform: scale(1.1);
+        }
+        .pen-color-btn.active {
+            border-color: #333;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+        }
+        .pen-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 0;
+        }
+
+        /* 드로잉 캔버스 */
+        #drawingCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 500;
+            pointer-events: none;
+            touch-action: none;
+        }
+        #drawingCanvas.drawing-mode {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        #drawingCanvas.eraser-mode {
+            pointer-events: auto;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="white" stroke="gray" stroke-width="2"/></svg>') 10 10, auto;
+        }
+        #drawingCanvas.pan-mode {
+            pointer-events: auto;
+            cursor: grab;
+        }
+        #drawingCanvas.pan-mode.panning {
+            cursor: grabbing;
+        }
+        .pen-btn.pan-btn.active {
+            background: #43a047;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <!-- 드로잉 캔버스 -->
+    <canvas id="drawingCanvas"></canvas>
+
+    <!-- 펜 도구 컨트롤 -->
+    <div class="pen-controls" id="penControls">
+        <button class="pen-toggle-collapse" id="penCollapseBtn" onclick="togglePenCollapse()" title="펜 도구 접기/펼치기">▲</button>
+        <div class="pen-tools">
+            <div class="pen-divider"></div>
+            <button class="pen-btn" id="penToggleBtn" onclick="togglePenMode()" title="펜 모드">🖊️</button>
+            <div class="pen-divider"></div>
+            <div class="pen-color-btn active" style="background: #e53935;" data-color="#e53935" onclick="setPenColor('#e53935')"></div>
+            <div class="pen-color-btn" style="background: #1e88e5;" data-color="#1e88e5" onclick="setPenColor('#1e88e5')"></div>
+            <div class="pen-color-btn" style="background: #333;" data-color="#333" onclick="setPenColor('#333')"></div>
+            <div class="pen-divider"></div>
+            <button class="pen-btn eraser-btn" id="eraserBtn" onclick="toggleEraserMode()" title="지우개">🧹</button>
+            <button class="pen-btn pan-btn" id="panBtn" onclick="togglePanMode()" title="손으로 이동">🖐️</button>
+            <div class="pen-divider"></div>
+            <button class="pen-btn" onclick="clearCanvas()" title="전체 지우기">🗑️</button>
+        </div>
+    </div>
+
+    <!-- 확대/축소 컨트롤 -->
+    <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+        <button class="zoom-btn zoom-btn-reset" onclick="zoomReset()">맞춤</button>
+    </div>
+
+    <!-- 상단 학생 정보 바 -->
+    <div class="student-info-display">
+        <div class="student-info-left">
+            <button class="home-btn" onclick="goBack()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <div class="info-item">
+                <strong>학교:</strong>
+                <span id="studentSchool">-</span>
+            </div>
+            <div class="info-item">
+                <strong>학년:</strong>
+                <span id="studentGrade">-</span>
+            </div>
+            <div class="info-item">
+                <strong>이름:</strong>
+                <span id="studentName">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 채점 결과 배너 -->
+    <div class="exam-result-banner" id="resultBanner">
+        <div class="result-banner-content">
+            <div class="result-banner-grade">채점 완료</div>
+            <div class="result-banner-score"><span id="bannerScore">0</span>점</div>
+            <div class="result-banner-correct">(<span id="bannerCorrect">0</span>/6 정답)</div>
+        </div>
+    </div>
+
+    <div class="exam-wrapper">
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">기술 : 햅틱스</div>
+                <div class="page-number">1</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <div class="question-range">【1~6】 다음 글을 읽고 물음에 답하시오.</div>
+
+            <!-- 통합 지문 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼: (가) -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <div class="label">(가)</div>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">촉각을 통해 가상 환경의 물체와 사용자를 연결하는 기계 장치를 햅틱 장치라고 하며, 이 장치는 주로 사용자의 손을 통해 가상 물체에 관한 정보를 전달한다. 사용자가 햅틱 장치를 통해 가상 물체를 만지면 가상 환경 시스템은 물리적 신호에 해당하는 '포스 피드백'을 사용자에게 전달하고, 사용자는 이 포스 피드백에 의해 가상 물체를 만지고 있다고 인지하게 된다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">진동 촉감은 물리적 신호에 해당하는 대표적인 포스 피드백으로, 압전 소자를 활용한 압전 구동 장치를 통해 진동 촉감을 만드는 방법이 널리 활용된다. 압전 소자의 내부에는 한쪽에 양전기를, 반대쪽에 음전기를 띠는 쌍극자들이 수없이 존재한다. 압전 소자에서 양전기를 <span class="underline">ⓐ띠는</span> 쪽에 음극을 연결하고 음전기를 띠는 쪽에 양극을 연결한 후 전압을 가하면, 쌍극자들이 음극과 양극으로 각각 <span class="underline">ⓑ끌려가</span> 전체적으로 압전 소자가 늘어나는 인장 현상이 일어난다. 이와 반대로 연결하면, 쌍극자들은 연결된 음극과 양극에서 각각 멀어지기 때문에 압전 소자가 줄어드는 수축 현상이 일어난다. 이때 압전 소자의 인장과 수축이 빠르게 반복되면 진동이 발생하고, 압전 소자의 인장과 수축 정도는 가해지는 전압이 클수록 커진다. 따라서 전압의 조절만으로 압전 소자의 진동수와 진폭을 조절할 수 있으며, 특히 인간이 쉽게 인지할 수 있는 200~300Hz의 진동을 만들 수 있다는 점에서 이 방법은 널리 활용되고 있다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">한편 햅틱 장치로 물체 표면의 거칠기에 대한 포스 피드백을 전달하면 사용자는 자신이 만지는 가상 물체의 종류를 파악할 수 있는데, 거칠기에 대한 포스 피드백은 '스퀴즈 필름'을 활용하여 만들 수 있다. 초음파 진동수로 진동하는 물체의 표면과 손가락을 가까이 가져가면 진동 표면과 손가락 사이의 공기압이 주변의 공기압보다 높아져서 접촉면 사이에 압축된 얇은 공기층이 형성되어 진동 표면의 마찰 계수가 감소하여 마찰력이 작아진다. 이때 진동 표면과 손가락 사이에 형성된 공기층을 '스퀴즈 필름', 스퀴즈 필름에 작용하는 공기 유체의 힘을 '스퀴즈 힘'이라고 한다. 진동 표면과 손가락 사이의 거리를 <i>h</i>라고 할 때, 스퀴즈 필름은 진동 표면의 진동 진폭이 1㎛ 이상이고, 손가락 접촉면의 반지름이 <i>h</i></p>
+                </div>
+
+                <!-- 오른쪽 컬럼 -->
+                <div style="padding-left: 4mm;">
+                    <p style="margin-bottom: 2mm;">보다 클 때 형성된다. 또한 진동 진폭이나 손가락 접촉면의 반지름을 <i>h</i>로 나눈 값이 클수록 스퀴즈 힘이 커지는데, 스퀴즈 힘이 클수록 마찰 계수는 작아진다. 인간은 마찰 계수가 큰 물체를 만질 때에는 거친 촉감을, 작은 물체를 만질 때에는 부드러운 촉감을 느끼며, 마찰 계수가 일정하지 않을 때에는 울퉁불퉁한 느낌을 받는다. 따라서 <span class="underline">㉠사용자가 가상 물체를 만질 때, 가상 환경 시스템이 햅틱 장치의 초음파 진동을 제어하면 사용자는 물체 표면의 거칠기를 알 수 있어</span> 가상 물체의 종류를 파악할 수 있다.</p>
+
+                    <div class="label" style="margin-top: 4mm;">(나)</div>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">'햅틱'이라는 단어는 '촉각의', '만지는'이라는 뜻을 지닌 말로, 인간의 촉각과 관련된 일련의 지각 과정과 가상 환경에서 가상의 촉감을 만들어 내는 기술을 연구하는 분야를 햅틱스라고 한다. 햅틱스에서는 현실과 <span class="underline">ⓒ가까운</span> 가상의 촉감을 만들 수 있는 햅틱 장치를 개발하기 위해 노력하고 있는데, 이를 위해서는 인간의 촉각 인지 과정을 파악하는 것이 중요하다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">외부의 특정 자극이 피부에 닿으면 피부에 있는 수용체가 활성화되어 전기적 신호가 발생하고, 이 신호가 촉감을 담당하는 뇌의 체감각 피질로 전달되어 인간은 외부 자극을 자각하게 된다. 이때 수용체에서 발생하는 전기적 신호는 자극이 강해질수록 커지며, 체감각 피질에서 넓은 영역을 차지하는 신체의 피부일수록 자극에 민감하게 반응하는데, 인간의 손은 체감각 피질의 영역이 다른 신체 부위보다 넓기 때문에 손에 가해지는 자극에 민감하게 반응할 수 있다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">기계 수용체는 물리적 자극에 반응하는 수용체로, 피부에 일정한 자극을 지속적으로 가할 때 나타나는 수용체의 반응인 감각 순응의 속도에 따라 빠른 순응 수용체와 느린 순응 수용체로 분류할 수 있다. 빠른 순응 수용체에서는 자극이 가해지거나 <span class="underline">ⓓ사라지는</span> 때에만 전기적 신호가 발생하고 자극의 세기가 변하지 않으면 전기적 신호가 발생하지 않는다. 이와 달리 느린 순응 수용체에서는 자극이 가해지는 동안에는 계속해서 전기적 신호가 발생한다. 또한 기계 수용체는 감각 수용장의 넓이에 따라 그 지름이 2~8㎜인 타입Ⅰ 수용체와 지름이 10~1,000㎜인 타입Ⅱ 수용체로 나눌 수 있다. 감각 수용장이란 수용체가 자극을 받아들일 수 있는 영역으로, 수용</p>
+                </div>
+            </div>
+            <div class="page-footer">- 1 -</div>
+        </div>
+
+        <!-- 2페이지 -->
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">기술 : 햅틱스</div>
+                <div class="page-number">2</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <!-- 2페이지 통합 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼: 지문 계속 + 1번 문제 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <p style="text-indent: 0; margin-bottom: 2mm;">체의 지름이 클수록 하나의 수용체가 담당하는 영역은 넓어지지만 지각의 정확도는 떨어진다. 타입Ⅰ 수용체가 많을수록 약한 자극에도 민감하게 반응할 수 있는데, 다른 기계 수용체와 달리 타입Ⅰ 수용체는 손가락 끝에 집중되어 있고 손목에서 팔 방향으로 올라갈수록 점진적으로 수가 줄어든다. 피부 전체에서 타입Ⅰ 수용체는 타입Ⅱ 수용체보다 그 수가 많다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">한편 우리가 손으로 물체를 만질 때 피부는 물리적으로 자극을 받기 때문에 물체와 접촉하는 모든 종류의 기계 수용체가 반응하지만, 자극의 종류에 따라 결정적 역할을 하는 기계 수용체의 종류가 달라진다. 예를 들어 손으로 물체를 서서히 문지르는 경우 물체의 형태에 따라 거칠기가 달라지고 이는 손에 미세한 압력 변화를 일으켜 기계 수용체의 활성화 정도에 영향을 주기 때문에 인간은 물체의 종류를 파악할 수 있는데, 이때에는 느린 순응 타입Ⅰ 수용체가 높은 민감도를 갖는다.</p>
+                    <p style="text-indent: 1em; margin-bottom: 2mm;">또한 기계 수용체에 따라 민감하게 반응하는 주파수 영역이 <span class="underline">ⓔ다른데</span>, 느린 순응 타입Ⅰ 수용체는 1㎐ 이하의 저주파 영역에서 민감하게 반응하는 반면, 빠른 순응 타입Ⅰ 수용체와 빠른 순응 타입Ⅱ 수용체는 각각 30~40㎐와 200~300㎐ 영역의 자극에 민감하게 반응한다. 빠른 순응 타입Ⅱ 수용체는 기계 수용체 중에서 역치가 가장 낮아 해당 영역 주파수의 미세한 자극 변화를 감지하는 역할을 한다.</p>
+
+                    <!-- 지문과 문제 구분선 -->
+                    <div style="border-top: 1px solid #000; margin: 4mm 0;"></div>
+
+                    <!-- 1번 문제 -->
+                    <div class="question" data-question="1">
+                        <div class="question-text">
+                            <span class="question-number">1.</span> (가), (나)에 대한 설명으로 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(1, 1)">
+                                <span class="choice-number">①</span>
+                                <span>신체 부위에 상관없이 타입Ⅰ 수용체의 분포 정도가 같다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(1, 2)">
+                                <span class="choice-number">②</span>
+                                <span>피부에 닿는 외부 자극이 강해질수록 체감각 피질의 영역이 활성화가 되어 넓어질 수 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(1, 3)">
+                                <span class="choice-number">③</span>
+                                <span>떨어진 물건을 손으로 줍는 경우 물건과 접촉하는 모든 종류의 기계 수용체가 반응하며, 그 반응의 종류는 감각 순응의 속도에 따라 나뉠 수 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(1, 4)">
+                                <span class="choice-number">④</span>
+                                <span>압전 소자의 인장과 수축 현상은 압전 소자 내부의 쌍극자들이 마찰을 일으키기 때문에 나타난다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(1, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>물리적 신호에 해당하는 포스 피드백이 특정 신체 부위에 계속해서 가해지면 빠른 순응 수용체가 활성화된다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼: 2번, 3번 문제 -->
+                <div style="padding-left: 4mm;">
+                    <!-- 2번 문제 -->
+                    <div class="question" data-question="2">
+                        <div class="question-text">
+                            <span class="question-number">2.</span> (가)와 (나)를 통해 해결할 수 있는 내용으로 적절하지 <span class="underline">않은</span> 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(2, 1)">
+                                <span class="choice-number">①</span>
+                                <span>가상 환경 사용자가 쉽게 인지할 수 있는 진동의 주파수 영역은 무엇인가?</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(2, 2)">
+                                <span class="choice-number">②</span>
+                                <span>촉각을 통해 가상 환경의 물체를 파악할 때 주로 사용자의 손을 통해 정보를 전달하는 이유는 무엇인가?</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(2, 3)">
+                                <span class="choice-number">③</span>
+                                <span>햅틱 장치에서 물리적 포스 피드백을 대표하는 것은 무엇이며, 그 이유는?</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(2, 4)">
+                                <span class="choice-number">④</span>
+                                <span>사용자가 포스 피드백에 의해 물체를 인지하는 과정은 무엇일까?</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(2, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>가상 환경 기계 장치는 어떤 감각을 통해 인지할 수 있으며, 그를 햅틱 장치라고 부르는 이유는?</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3번 문제 -->
+                    <div class="question" data-question="3" style="margin-top: 5mm;">
+                        <div class="question-text">
+                            <span class="question-number">3.</span> (가)를 바탕으로 &lt;보기&gt;를 이해한 내용으로 적절한 것은?
+                        </div>
+                        <div class="passage-box" style="padding: 3mm; margin: 3mm 0; display: block;">
+                            <div style="text-align: center; font-size: 9pt; margin-bottom: 2mm;">&lt;보기&gt;</div>
+                            <div style="text-align: center; margin-bottom: 2mm;">
+                                <img src="/images/test/reading_science03.png" alt="압전 구동 장치 그림" style="max-width: 100%; height: auto;">
+                            </div>
+                            <p style="font-size: 9pt; text-indent: 1em; line-height: 1.6;">그림은 압전 구동 장치를 활용한 햅틱 장치와 손가락 사이에 스퀴즈 필름이 형성된 모습을 도식화한 것이다. Ⓐ는 햅틱 장치의 진동 표면과 손가락 사이에 형성된 공기층을, Ⓑ는 진동 표면의 진동 진폭을, Ⓒ는 진동 표면과 손가락 사이의 거리를 나타낸 것이다.</p>
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(3, 1)">
+                                <span class="choice-number">①</span>
+                                <span>Ⓐ는 주변의 공기보다 압력이 낮아 진동 표면의 마찰 계수를 감소시킨다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(3, 2)">
+                                <span class="choice-number">②</span>
+                                <span>Ⓑ가 불안정한 상태에서 진동 표면에 손가락을 가까이 가져가면 진동 표면의 마찰력이 감소할 것이다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(3, 3)">
+                                <span class="choice-number">③</span>
+                                <span>Ⓑ를 1㎛ 이상 유지한 상태와 0인 상태가 반복되는 진동 표면을 만지게 되면 부드러운 느낌을 받게 된다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(3, 4)">
+                                <span class="choice-number">④</span>
+                                <span>Ⓒ가 일정한 상태에서 손가락 접촉면의 반지름이 커지면 스퀴즈 힘도 커져서 진동 표면의 마찰력이 감소할 것이다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(3, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>손가락을 그대로 유지한 상태에서 전압을 높이면 Ⓑ를 Ⓒ로 나눈 값이 작아지므로 원래보다 부드러운 느낌을 줄 수 있다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 2 -</div>
+        </div>
+
+        <!-- 3페이지 -->
+        <div class="page">
+            <div class="header">
+                <div class="session-badge">보완학습</div>
+                <div class="title">기술 : 햅틱스</div>
+                <div class="page-number">3</div>
+            </div>
+            <div class="header-divider"></div>
+
+            <!-- 3페이지 통합 박스 -->
+            <div class="passage-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                <!-- 왼쪽 컬럼: 4번, 5번 문제 -->
+                <div style="padding-right: 4mm; border-right: 1px solid #000;">
+                    <!-- 4번 문제 -->
+                    <div class="question" data-question="4">
+                        <div class="question-text">
+                            <span class="question-number">4.</span> 윗글을 토대로 <span class="circled">ㄱ</span>의 이유를 가장 적절하게 설명한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(4, 1)">
+                                <span class="choice-number">①</span>
+                                <span>진동 진폭의 변화가 스퀴즈 필름 발생 유무나 스퀴즈 힘의 크기에 영향을 미쳐 햅틱 장치의 마찰력이 달라질 수 있기 때문에</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(4, 2)">
+                                <span class="choice-number">②</span>
+                                <span>스퀴즈 필름이 발생하면서 스퀴즈 힘의 크기가 감소하여 햅틱 장치의 마찰력이 강해지기 때문에</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(4, 3)">
+                                <span class="choice-number">③</span>
+                                <span>포스 피드백의 발생 유무에 따라 스퀴즈 힘의 크기가 달라져 햅틱 장치 외부에서 스퀴즈 필름이 만들어지기 때문에</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(4, 4)">
+                                <span class="choice-number">④</span>
+                                <span>진동 진폭이 증가하여 스퀴즈 필름이 발생하면 스퀴즈 힘의 크기가 증가하여 햅틱 장치의 마찰력이 커지기 때문에</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(4, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>진동이 발생하여 스퀴즈 힘의 크기가 0이 되면 스퀴즈 필름이 형성되지 않아 햅틱 장치의 마찰력이 없어지기 때문에</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5번 문제 -->
+                    <div class="question" data-question="5" style="margin-top: 6mm;">
+                        <div class="question-text">
+                            <span class="question-number">5.</span> 문맥상 ⓐ~ⓔ와 바꿔 쓰기에 가장 적절한 것은?
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(5, 1)">
+                                <span class="choice-number">①</span>
+                                <span>ⓐ: 상징(象徵)하는</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(5, 2)">
+                                <span class="choice-number">②</span>
+                                <span>ⓑ: 접근(接近)하여</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(5, 3)">
+                                <span class="choice-number">③</span>
+                                <span>ⓒ: 근접(近接)한</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(5, 4)">
+                                <span class="choice-number">④</span>
+                                <span>ⓓ: 멸망(滅亡)하는</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(5, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>ⓔ: 동일(同一)한데</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼: 6번 문제 -->
+                <div style="padding-left: 4mm;">
+                    <!-- 6번 문제 -->
+                    <div class="question" data-question="6">
+                        <div class="question-text">
+                            <span class="question-number">6.</span> (나)를 바탕으로 &lt;보기&gt;의 ㄱ~ㄷ을 이해한 내용으로 적절한 것은?
+                        </div>
+                        <div class="passage-box" style="padding: 3mm; margin: 3mm 0; display: block;">
+                            <div style="text-align: center; font-size: 9pt; margin-bottom: 2mm;">&lt;보기&gt;</div>
+                            <p style="font-size: 9pt; text-indent: 1em; line-height: 1.6; margin-bottom: 2mm;">ㄱ. 실험 결과 안경을 착용하는 사람이 자신이 안경을 착용하고 있다는 사실을 인지한 대부분의 경우는 안경을 착용할 때나 자신이 착용한 안경을 벗을 때였다.</p>
+                            <p style="font-size: 9pt; text-indent: 1em; line-height: 1.6; margin-bottom: 2mm;">ㄴ. 손가락 몇 개를 피실험자의 아랫입술과 등 부위에 접촉하면서 몇 개가 접촉되었는지 맞히게 하였더니, 아랫입술에 접촉한 손가락 개수만 정확하게 맞히었고, 등 부위는 손가락이 닿은 것도 모르는 경우가 있었다.</p>
+                            <p style="font-size: 9pt; text-indent: 1em; line-height: 1.6;">ㄷ. 100명의 피실험자에게 1㎐, 10㎐, 40㎐, 100㎐, 300㎐, 500㎐로 진동하는 물체를 문질러 보게 하였더니 거의 모든 사용자는 1㎐, 10㎐의 진동은 부드러운 촉감으로, 40㎐, 100㎐의 진동은 약간 거친 촉감으로, 300㎐, 500㎐ 진동은 다소 거친 촉감으로 분류하였으며, 모든 피실험자는 10㎐, 100㎐, 500㎐ 진동의 거칠기도 감지할 수 있었다.</p>
+                        </div>
+                        <div class="choices">
+                            <div class="choice" data-choice="1" onclick="selectChoice(6, 1)">
+                                <span class="choice-number">①</span>
+                                <span>ㄱ: 느린 순응 수용체에서 안경을 착용하고 벗을 때에만 전기적 신호가 발생했음을 보여 준다.</span>
+                            </div>
+                            <div class="choice" data-choice="2" onclick="selectChoice(6, 2)">
+                                <span class="choice-number">②</span>
+                                <span>ㄴ: 아랫입술에 분포한 타입Ⅰ 수용체의 수가 등 부위보다 많아서 더 민감하다고 볼 수 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="3" onclick="selectChoice(6, 3)">
+                                <span class="choice-number">③</span>
+                                <span>ㄴ: 체감각 피질에서 아랫입술에 해당하는 영역의 넓이가 등 부위에 해당하는 영역보다 좁다는 것을 보여 준다.</span>
+                            </div>
+                            <div class="choice" data-choice="4" onclick="selectChoice(6, 4)">
+                                <span class="choice-number">④</span>
+                                <span>ㄷ: 감각 수용장의 넓이에 따라 물체의 부드러운 촉감과 거친 촉감의 구별할 수 있다.</span>
+                            </div>
+                            <div class="choice" data-choice="5" onclick="selectChoice(6, 5)">
+                                <span class="choice-number">⑤</span>
+                                <span>ㄷ: 기계 수용체가 민감하게 반응하는 주파수 범위 이외의 진동 자극은 감지할 수 없다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer">- 3 -</div>
+        </div>
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <!-- 하단 버튼 -->
+    <div class="bottom-fixed-buttons" id="bottomButtons">
+        <button class="bottom-fixed-btn btn-back" onclick="resetExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+            </svg>
+            다시풀기
+        </button>
+        <button class="bottom-fixed-btn btn-grade" onclick="gradeExam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            채점하기
+        </button>
+    </div>
+
+    <!-- 해설 팝업 -->
+    <div class="explanation-overlay" id="explanationOverlay" onclick="closeExplanation()"></div>
+    <div class="explanation-popup" id="explanationPopup">
+        <div class="explanation-popup-header">
+            <h3 id="explanationTitle">문제 해설</h3>
+            <button class="explanation-popup-close" onclick="closeExplanation()">×</button>
+        </div>
+        <div class="explanation-popup-body" id="explanationBody"></div>
+    </div>
+
+    <script>
+        // ===== 펜 도구 관련 변수 =====
+        let isPenMode = false;
+        let isEraserMode = false;
+        let isPanMode = false;
+        let isPanning = false;
+        let panStartX = 0, panStartY = 0;
+        let isDrawing = false;
+        let penColor = '#e53935';
+        let penSize = 3;
+        let eraserSize = 20;
+        let drawingCanvas, drawingCtx;
+        let lastX = 0, lastY = 0;
+
+        // 그림 데이터 저장 (문서 좌표계)
+        let drawingPaths = [];
+        let currentPath = null;
+        let lastScrollX = 0, lastScrollY = 0;
+        let currentScale = 1;
+
+        // 줌 관련 변수
+        let currentZoom = 1;
+        const minZoom = 0.3;
+        const maxZoom = 1.5;
+        const zoomStep = 0.1;
+        let autoScale = 1;
+
+        // 현재 적용된 스케일 가져오기
+        function getCurrentScale() {
+            return autoScale * currentZoom;
+        }
+
+        // 펜 도구 초기화
+        function initDrawingCanvas() {
+            drawingCanvas = document.getElementById('drawingCanvas');
+            drawingCtx = drawingCanvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('scroll', redrawCanvas);
+
+            drawingCanvas.addEventListener('mousedown', startDrawing);
+            drawingCanvas.addEventListener('mousemove', bindDraw);
+            drawingCanvas.addEventListener('mouseup', stopDrawing);
+            drawingCanvas.addEventListener('mouseout', stopDrawing);
+
+            drawingCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            drawingCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            drawingCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function resizeCanvas() {
+            const canvas = document.getElementById('drawingCanvas');
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            lastScrollX = window.scrollX;
+            lastScrollY = window.scrollY;
+            redrawCanvas();
+        }
+
+        function redrawCanvas() {
+            if (!drawingCtx || !drawingCanvas) return;
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            const scale = getCurrentScale();
+
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+            drawingPaths.forEach(path => {
+                if (path.points.length < 2) return;
+                drawingCtx.beginPath();
+                drawingCtx.strokeStyle = path.color;
+                drawingCtx.lineWidth = path.size * scale;
+                drawingCtx.lineCap = 'round';
+                drawingCtx.lineJoin = 'round';
+                drawingCtx.globalCompositeOperation = 'source-over';
+
+                const firstPoint = path.points[0];
+                drawingCtx.moveTo(firstPoint.x * scale - scrollX, firstPoint.y * scale - scrollY);
+
+                for (let i = 1; i < path.points.length; i++) {
+                    const point = path.points[i];
+                    drawingCtx.lineTo(point.x * scale - scrollX, point.y * scale - scrollY);
+                }
+                drawingCtx.stroke();
+            });
+
+            lastScrollX = scrollX;
+            lastScrollY = scrollY;
+            currentScale = scale;
+        }
+
+        let isPenCollapsed = false;
+        function togglePenCollapse() {
+            isPenCollapsed = !isPenCollapsed;
+            const penControls = document.getElementById('penControls');
+            const collapseBtn = document.getElementById('penCollapseBtn');
+            if (isPenCollapsed) {
+                penControls.classList.add('collapsed');
+                collapseBtn.innerHTML = '▼';
+            } else {
+                penControls.classList.remove('collapsed');
+                collapseBtn.innerHTML = '▲';
+            }
+        }
+
+        function togglePenMode() {
+            isPenMode = !isPenMode;
+            isEraserMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isPenMode) {
+                penBtn.classList.add('active');
+                eraserBtn.classList.remove('active');
+                canvas.classList.add('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            } else {
+                penBtn.classList.remove('active');
+                canvas.classList.remove('drawing-mode');
+                canvas.classList.remove('eraser-mode');
+            }
+        }
+
+        function toggleEraserMode() {
+            isEraserMode = !isEraserMode;
+            isPenMode = false;
+            isPanMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            panBtn.classList.remove('active');
+            canvas.classList.remove('pan-mode');
+
+            if (isEraserMode) {
+                eraserBtn.classList.add('active');
+                penBtn.classList.remove('active');
+                canvas.classList.add('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            } else {
+                eraserBtn.classList.remove('active');
+                canvas.classList.remove('eraser-mode');
+                canvas.classList.remove('drawing-mode');
+            }
+        }
+
+        function togglePanMode() {
+            isPanMode = !isPanMode;
+            isPenMode = false;
+            isEraserMode = false;
+
+            const penBtn = document.getElementById('penToggleBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const panBtn = document.getElementById('panBtn');
+            const canvas = document.getElementById('drawingCanvas');
+
+            penBtn.classList.remove('active');
+            eraserBtn.classList.remove('active');
+            canvas.classList.remove('drawing-mode');
+            canvas.classList.remove('eraser-mode');
+
+            if (isPanMode) {
+                panBtn.classList.add('active');
+                canvas.classList.add('pan-mode');
+            } else {
+                panBtn.classList.remove('active');
+                canvas.classList.remove('pan-mode');
+            }
+        }
+
+        function setPenColor(color) {
+            penColor = color;
+            document.querySelectorAll('.pen-color-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.color === color) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (!isPenMode) {
+                togglePenMode();
+            }
+            isEraserMode = false;
+            document.getElementById('eraserBtn').classList.remove('active');
+            document.getElementById('drawingCanvas').classList.remove('eraser-mode');
+            document.getElementById('drawingCanvas').classList.add('drawing-mode');
+        }
+
+        function startDrawing(e) {
+            if (isPanMode) {
+                isPanning = true;
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (e.clientX + window.scrollX) / scale;
+            const docY = (e.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = e.clientX;
+                lastY = e.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = e.clientX;
+            lastY = e.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function bindDraw(e) {
+            if (isPanning) {
+                const dx = e.clientX - panStartX;
+                const dy = e.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+
+            const x = e.clientX;
+            const y = e.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function stopDrawing() {
+            if (isPanning) {
+                isPanning = false;
+                drawingCanvas.classList.remove('panning');
+                return;
+            }
+
+            if (isDrawing && currentPath && currentPath.points.length > 1) {
+                drawingPaths.push(currentPath);
+            }
+            isDrawing = false;
+            currentPath = null;
+        }
+
+        function eraseAtPoint(docX, docY) {
+            const eraseRadius = eraserSize / getCurrentScale();
+            let needsRedraw = false;
+
+            for (let i = drawingPaths.length - 1; i >= 0; i--) {
+                const path = drawingPaths[i];
+                const newPoints = [];
+                let segmentStart = 0;
+
+                for (let j = 0; j < path.points.length; j++) {
+                    const point = path.points[j];
+                    const dist = Math.sqrt(Math.pow(point.x - docX, 2) + Math.pow(point.y - docY, 2));
+
+                    if (dist <= eraseRadius) {
+                        if (j > segmentStart && newPoints.length > 1) {
+                            const newPath = {
+                                color: path.color,
+                                size: path.size,
+                                points: newPoints.slice()
+                            };
+                            if (newPath.points.length > 1) {
+                                drawingPaths.push(newPath);
+                            }
+                            newPoints.length = 0;
+                        } else {
+                            newPoints.length = 0;
+                        }
+                        segmentStart = j + 1;
+                        needsRedraw = true;
+                    } else {
+                        newPoints.push(point);
+                    }
+                }
+
+                if (newPoints.length > 1) {
+                    path.points = newPoints;
+                } else {
+                    drawingPaths.splice(i, 1);
+                    needsRedraw = true;
+                }
+            }
+
+            if (needsRedraw) {
+                redrawCanvas();
+            }
+        }
+
+        function handleTouchStart(e) {
+            if (isPanMode) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                isPanning = true;
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                drawingCanvas.classList.add('panning');
+                return;
+            }
+
+            if (!isPenMode && !isEraserMode) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            isDrawing = true;
+            const scale = getCurrentScale();
+            const docX = (touch.clientX + window.scrollX) / scale;
+            const docY = (touch.clientY + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = touch.clientX;
+                lastY = touch.clientY;
+                return;
+            }
+
+            currentPath = {
+                color: penColor,
+                size: penSize,
+                points: [{ x: docX, y: docY }]
+            };
+
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+
+            drawingCtx.beginPath();
+            drawingCtx.strokeStyle = penColor;
+            drawingCtx.lineWidth = penSize * scale;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            drawingCtx.globalCompositeOperation = 'source-over';
+            drawingCtx.moveTo(lastX, lastY);
+        }
+
+        function handleTouchMove(e) {
+            if (isPanning) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const dx = touch.clientX - panStartX;
+                const dy = touch.clientY - panStartY;
+                window.scrollBy(-dx, -dy);
+                panStartX = touch.clientX;
+                panStartY = touch.clientY;
+                return;
+            }
+
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const x = touch.clientX;
+            const y = touch.clientY;
+            const scale = getCurrentScale();
+            const docX = (x + window.scrollX) / scale;
+            const docY = (y + window.scrollY) / scale;
+
+            if (isEraserMode) {
+                eraseAtPoint(docX, docY);
+                lastX = x;
+                lastY = y;
+                return;
+            }
+
+            if (!currentPath) return;
+
+            currentPath.points.push({ x: docX, y: docY });
+
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function clearCanvas() {
+            if (confirm('그린 내용을 모두 지우시겠습니까?')) {
+                drawingPaths = [];
+                currentPath = null;
+                drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+        }
+
+        // 모바일 스케일 적용 함수
+        function applyMobileScale() {
+            const wrapper = document.querySelector('.exam-wrapper');
+            if (!wrapper) return;
+
+            const baseWidth = 900;
+            const screenWidth = window.innerWidth;
+
+            if (screenWidth < baseWidth) {
+                autoScale = screenWidth / baseWidth;
+            } else {
+                autoScale = 1;
+            }
+
+            const finalScale = autoScale * currentZoom;
+            wrapper.style.transform = `scale(${finalScale})`;
+            wrapper.style.transformOrigin = 'top center';
+
+            updateZoomDisplay();
+
+            if (typeof redrawCanvas === 'function') {
+                setTimeout(redrawCanvas, 50);
+            }
+        }
+
+        // 줌 인
+        function zoomIn() {
+            if (currentZoom < maxZoom) {
+                currentZoom = Math.min(maxZoom, currentZoom + zoomStep);
+                applyMobileScale();
+            }
+        }
+
+        // 줌 아웃
+        function zoomOut() {
+            if (currentZoom > minZoom) {
+                currentZoom = Math.max(minZoom, currentZoom - zoomStep);
+                applyMobileScale();
+            }
+        }
+
+        // 줌 리셋 (화면 맞춤)
+        function zoomReset() {
+            currentZoom = 1;
+            applyMobileScale();
+        }
+
+        // 줌 레벨 표시 업데이트
+        function updateZoomDisplay() {
+            const zoomLevelEl = document.getElementById('zoomLevel');
+            if (zoomLevelEl) {
+                const displayPercent = Math.round(currentZoom * 100);
+                zoomLevelEl.textContent = displayPercent + '%';
+            }
+        }
+
+        // 페이지 로드 시 캔버스 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initDrawingCanvas();
+            applyMobileScale();
+            window.addEventListener('resize', applyMobileScale);
+        });
+
+        // ===== 설정 =====
+        const EXAM_ID = 'supplement_reading_science';
+        const TOTAL_QUESTIONS = 6;
+        const TOTAL_TIME = 20 * 60; // 20분
+
+        // 현재 사용자 ID (사용자별 데이터 분리)
+        let currentUserId = '';
+
+        // localStorage 키 (다른 시험과 겹치지 않게 + 사용자별 분리)
+        function LS_KEY(key) {
+            return `supp_reading_science_${currentUserId}_${key}`;
+        }
+
+        // 정답 데이터
+        const correctAnswers = {
+            1: 3, 2: 3, 3: 4, 4: 1, 5: 3, 6: 2
+        };
+
+        // 배점 (6문항 = 총 100점 기준)
+        const threePointQuestions = [2, 3, 5, 6];
+
+        function getQuestionScore(questionNum) {
+            if (threePointQuestions.includes(questionNum)) return 17;
+            return 16;
+        }
+
+        // 해설 데이터
+        const explanations = {
+            1: {
+                correct: "정답: ③",
+                text: "(나)에서 기계 수용체는 물리적 자극에 반응하는 수용체로, 감각 순응의 속도에 따라 빠른 순응 수용체와 느린 순응 수용체로 분류할 수 있다고 설명하였다.<br><br>① 신체 부위마다 타입 Ⅰ 수용체의 분포 정도가 다르다.<br>② (나)의 2문단에서 피부에 닿는 자극이 강해질수록 수용체에서 발생하는 전기적 신호가 커진다고는 하였으나, 외부 자극에 의해 체감각 피질의 영역이 넓어진다는 것은 알 수 없다.<br>④ 압전 소자의 인장과 수축 현상은 압전 소자 내부의 쌍극자들이 이동하기 때문에 나타나는 것이다.<br>⑤ 물리적 신호에 해당하는 포스 피드백이 특정 신체 부위에 계속해서 가해지면 빠른 순응 수용체가 아닌 느린 순응 수용체가 활성화된다."
+            },
+            2: {
+                correct: "정답: ③",
+                text: "(가)에서 햅틱 장치에서 물리적 포스 피드백을 대표하는 것은 진동 촉감이라고 설명하였으나, 그 이유에 대해서는 설명한 부분이 없다.<br><br>① 가상 환경 사용자는 200~300㎐의 진동을 쉽게 인지할 수 있다고 설명하였다.<br>② (나)의 2문단에서 인간의 손은 체감각 피질의 영역이 다른 신체 부위보다 넓기 때문에 손에 가해지는 자극에 민감하게 반응할 수 있다고 설명하였다. 따라서 주로 사용자의 손을 통해 정보를 전달하는 것이다.<br>④ (나)의 2문단에 따르면 외부의 특정 자극이 피부에 닿으면 피부에 있는 수용체가 활성화되어 전기적 신호가 발생하고, 이 신호가 촉감을 담당하는 뇌의 체감각 피질로 전달되어 인간은 외부 자극을 자각할 수 있다.<br>⑤ 가상 환경 기계 장치는 촉각을 통해 인지할 수 있으며 (나)의 1문단에서 '햅틱'이라는 단어는 '촉각의', '만지는'이라는 뜻을 지닌 말이라고 하였다."
+            },
+            3: {
+                correct: "정답: ④",
+                text: "(가)의 3문단을 통해 손가락 접촉면의 반지름을 ℎ로 나눈 값이 클수록 스퀴즈 힘이 커진다는 것을 알 수 있다. 이에 따라 Ⓒ가 일정한 상태에서 손가락 접촉면의 반지름이 커지면 스퀴즈 힘이 커져서 진동 표면의 마찰력이 감소한다는 사실을 파악할 수 있다.<br><br>① Ⓐ는 주변의 공기보다 압력이 높아 진동 표면의 마찰 계수를 감소시킨다.<br>② Ⓑ가 불안정한 상태가 아닌 일정한 상태에서 진동 표면에 손가락을 가까이 가져갔을 때 진동 표면의 마찰력이 감소하는 것이다.<br>③ Ⓑ를 1㎛ 이상 유지한 상태와 0인 상태가 반복되는 진동 표면을 만지게 되면 부드러운 느낌이 아닌 울퉁불퉁한 느낌을 받게 된다.<br>⑤ 손가락을 그대로 유지한 상태에서 전압을 높이면 Ⓑ를 Ⓒ로 나눈 값이 작아지는 것이 아니라 커지게 된다. 손가락을 그대로 유지한 상태에서 전압을 높이면 스퀴즈 힘이 커져 진동 표면의 마찰력이 감소하기 때문에 원래보다 부드러운 느낌을 줄 수 있다."
+            },
+            4: {
+                correct: "정답: ①",
+                text: "(가)의 3문단에 따르면 스퀴즈 필름은 진동 표면의 진동 진폭이 1㎛ 이상이고, 손가락 접촉면의 반지름이 ℎ보다 클 때 형성된다는 점과 진동 진폭이나 손가락 접촉면의 반지름을 ℎ로 나눈 값이 클수록 스퀴즈 힘이 커진다는 점을 알 수 있다. 따라서 사용자가 가상 물체를 만지게 되면 가상 환경 시스템이 햅틱 장치의 초음파 진동을 제어할 수 있게 되어 진동 진폭에 따라 스퀴즈 필름의 발생 유무나 스퀴즈 힘의 크기가 달라져 진동 표면의 마찰력이 달라지고, 이로 인해 사용자는 물체 표면의 거칠기를 파악할 수 있게 된다.<br><br>② 스퀴즈 필름이 발생하면 햅틱 장치의 마찰력이 감소하는 것이지, 햅틱 장치의 마찰력이 강해지는 것은 아니다.<br>③ 진동 진폭이나 손가락 접촉면의 반지름을 ℎ로 나눈 값이 클수록 스퀴즈 힘이 커진다는 설명은 드러나 있지만, 포스 피드백의 발생 유무에 따라 스퀴즈 힘의 크기가 달라져 햅틱 장치 외부에서 스퀴즈 필름이 만들어진다는 설명은 없다.<br>④ 스퀴즈 힘은 스퀴즈 필름에 작용하는 공기 유체의 힘이므로, 스퀴즈 필름이 발생할 때 스퀴즈 힘의 크기가 증가하는 것은 아니다.<br>⑤ 스퀴즈 필름은 진동 표면의 진동 진폭이 1㎛ 이상이고, 손가락 접촉면의 반지름이 ℎ보다 클 때 형성되는 것이다. 진동이 발생하여 스퀴즈 힘의 크기가 0이 된다는 설명이 옳지 않다."
+            },
+            5: {
+                correct: "정답: ③",
+                text: "근접(近接)은 '가까이 접근함.'이라는 뜻을 지니고 있기 때문에 문맥상 적합하다.<br><br>①, ②, ④, ⑤는 옳지 않은 선지이다."
+            },
+            6: {
+                correct: "정답: ②",
+                text: "(나)의 3문단에서 타입Ⅰ 수용체가 많을수록 약한 자극에도 민감하게 반응한다고 설명하며, 타입Ⅰ 수용체는 신체 부위에 따라 분포 정도가 다르다고 하였다.<br><br>① (나)의 3문단에서 느린 순응 수용체가 아닌 빠른 순응 수용체에서는 자극이 가해지거나 사라지는 때에만 전기적 신호가 발생한다고 하였다.<br>③ (나)의 2문단에서 체감각 피질에서 좁은 게 아닌 넓은 영역을 차지하는 신체의 피부일수록 자극에 민감하게 반응한다고 설명하였다.<br>④ 촉감 구별은 감각 수용장의 넓이가 아닌 감각 순응의 속도에 따라 결정되는 것이다.<br>⑤ (나)의 5문단에서 느린 순응 타입Ⅰ 수용체는 1㎐ 이하의 저주파 영역의 자극에, 빠른 순응 타입Ⅰ 수용체는 30~40㎐ 영역의 자극에, 빠른 순응 타입Ⅱ 수용체는 200~300㎐ 영역의 자극에 민감하게 반응한다고 하였다. ㄷ의 실험 결과 역시 기계 수용체가 민감하게 반응하는 주파수 범위 이외의 진동 자극도 감지할 수 있는 것으로 볼 수 있기 때문에 옳지 않은 선지이다."
+            }
+        };
+
+        // ===== 타이머 =====
+        let remainingSeconds = TOTAL_TIME;
+        let timerInterval = null;
+
+        function startTimer() {
+            const saved = localStorage.getItem(LS_KEY('examTimer'));
+            if (saved) {
+                remainingSeconds = parseInt(saved);
+            }
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                if (remainingSeconds <= 0) {
+                    remainingSeconds = 0;
+                    stopTimer();
+                    alert('시간이 종료되었습니다. 자동으로 채점합니다.');
+                    gradeExam();
+                }
+                localStorage.setItem(LS_KEY('examTimer'), remainingSeconds);
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            const timerEl = document.getElementById('timerValue');
+            timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            const timerContainer = document.getElementById('examTimer');
+            if (remainingSeconds <= 60) {
+                timerContainer.className = 'exam-timer danger';
+            } else if (remainingSeconds <= 300) {
+                timerContainer.className = 'exam-timer warning';
+            } else {
+                timerContainer.className = 'exam-timer';
+            }
+        }
+
+        // ===== 선택지 클릭 =====
+        function selectChoice(questionId, choiceNum, skipServerSave = false) {
+            const questionEl = document.querySelector(`[data-question="${questionId}"]`);
+            if (!questionEl) return;
+
+            questionEl.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+            const selectedChoice = questionEl.querySelector(`.choice[data-choice="${choiceNum}"]`);
+            if (selectedChoice) {
+                selectedChoice.classList.add('selected');
+            }
+            localStorage.setItem(LS_KEY(`question_${questionId}`), choiceNum);
+
+            // 서버에 답안 저장 (초기 로드 시에는 스킵)
+            if (!skipServerSave) {
+                saveAnswerToServer(questionId, choiceNum);
+            }
+        }
+
+        // 서버에 답안 저장
+        async function saveAnswerToServer(questionNumber, answer) {
+            try {
+                await fetch('/api/supplement-result/save-answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        questionNumber,
+                        answer
+                    })
+                });
+            } catch (err) {
+                console.error('답안 저장 오류:', err);
+            }
+        }
+
+        // ===== 채점 =====
+        function gradeExam(skipServerSave = false) {
+            const elapsedSeconds = TOTAL_TIME - remainingSeconds;
+            const elapsedMin = Math.floor(elapsedSeconds / 60);
+            const elapsedSec = elapsedSeconds % 60;
+            const elapsedTimeStr = `${String(elapsedMin).padStart(2, '0')}:${String(elapsedSec).padStart(2, '0')}`;
+
+            stopTimer();
+            const timerEl = document.getElementById('examTimer');
+            if (timerEl) timerEl.style.display = 'none';
+
+            // 기존 채점 마크 제거
+            document.querySelectorAll('.grade-mark').forEach(el => el.remove());
+
+            let correctCount = 0;
+            let totalScore = 0;
+
+            // 모든 문제 번호 요소 찾기
+            const questionNumbers = document.querySelectorAll('.question-number');
+
+            questionNumbers.forEach((qNum) => {
+                const questionText = qNum.textContent.replace(/[○✓⭕✔]/g, '').trim();
+                const questionId = parseInt(questionText.replace('.', ''));
+                if (isNaN(questionId) || questionId < 1 || questionId > TOTAL_QUESTIONS) return;
+
+                const userAnswer = localStorage.getItem(LS_KEY(`question_${questionId}`));
+                const correctAnswer = correctAnswers[questionId];
+
+                // 문제 번호의 부모 요소에 position: relative 추가
+                qNum.style.position = 'relative';
+
+                // 정답 선지에 연녹색 배경 표시
+                const questionEl = qNum.closest('.question');
+                if (questionEl) {
+                    const choices = questionEl.querySelectorAll('.choice');
+                    if (choices[correctAnswer - 1]) {
+                        choices[correctAnswer - 1].style.backgroundColor = '#c8f7c5';
+                        choices[correctAnswer - 1].style.position = 'relative';
+                        choices[correctAnswer - 1].classList.add('correct-answer');
+
+                        // 해설 버튼 추가
+                        const correctMark = document.createElement('span');
+                        correctMark.className = 'correct-mark';
+                        correctMark.textContent = '해설';
+                        correctMark.onclick = (e) => {
+                            e.stopPropagation();
+                            showExplanation(questionId);
+                        };
+                        choices[correctAnswer - 1].appendChild(correctMark);
+                    }
+
+                    // 틀린 답안에 표시
+                    if (userAnswer && parseInt(userAnswer) !== correctAnswer) {
+                        const userChoiceIdx = parseInt(userAnswer) - 1;
+                        if (choices[userChoiceIdx]) {
+                            choices[userChoiceIdx].classList.add('wrong-answer');
+                        }
+                    }
+                }
+
+                // 채점 마크 생성
+                const mark = document.createElement('span');
+                mark.className = 'grade-mark';
+
+                if (userAnswer && parseInt(userAnswer) === correctAnswer) {
+                    // 정답 - 빨간 동그라미
+                    correctCount++;
+                    totalScore += getQuestionScore(questionId);
+                    mark.innerHTML = '⭕';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 72px;
+                        position: absolute;
+                        left: -20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        opacity: 0.75;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                } else {
+                    // 오답 또는 미응답 - 빨간 체크 (V 표시)
+                    mark.innerHTML = '✔';
+                    mark.style.cssText = `
+                        color: #e53935;
+                        font-size: 60px;
+                        position: absolute;
+                        left: -15px;
+                        top: 50%;
+                        transform: translateY(-50%) rotate(-15deg);
+                        opacity: 0.8;
+                        z-index: 10;
+                        line-height: 1;
+                    `;
+                }
+
+                qNum.appendChild(mark);
+            });
+
+            // 결과 배너 표시
+            document.getElementById('bannerScore').textContent = totalScore;
+            document.getElementById('bannerCorrect').textContent = correctCount;
+            document.getElementById('resultBanner').style.display = 'block';
+
+            document.body.classList.add('graded');
+
+            // localStorage 정리
+            localStorage.removeItem(LS_KEY('examTimer'));
+
+            // 서버에 채점 결과 저장 (복원 시에는 스킵)
+            if (!skipServerSave) {
+                saveGradeToServer(correctCount, totalScore);
+            }
+        }
+
+        // 서버에 채점 결과 저장
+        async function saveGradeToServer(correctCount, score) {
+            try {
+                // 모든 답안 수집
+                const answers = {};
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        answers[i] = parseInt(saved);
+                    }
+                }
+
+                // localStorage에서 사용자 정보 가져오기 (세션 만료 대비)
+                const userData = localStorage.getItem('mockExamUser');
+                let userInfo = {};
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userInfo = {
+                        userId: user._id,
+                        phone: user.phone,
+                        studentInfo: {
+                            name: user.name,
+                            school: user.school,
+                            grade: user.grade
+                        }
+                    };
+                }
+
+                await fetch('/api/supplement-result/save-grade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        examId: EXAM_ID,
+                        answers,
+                        correctCount,
+                        totalQuestions: TOTAL_QUESTIONS,
+                        score,
+                        ...userInfo
+                    })
+                });
+                console.log('채점 결과 저장 완료');
+            } catch (err) {
+                console.error('채점 결과 저장 오류:', err);
+            }
+        }
+
+        // ===== 해설 =====
+        function showExplanation(questionId) {
+            const exp = explanations[questionId];
+            if (!exp) return;
+
+            document.getElementById('explanationTitle').textContent = `${questionId}번 문제 해설`;
+            document.getElementById('explanationBody').innerHTML = `
+                <div class="explanation-correct">
+                    <div class="explanation-correct-label">${exp.correct}</div>
+                    <div class="explanation-correct-text">${exp.text}</div>
+                </div>
+            `;
+            document.getElementById('explanationOverlay').style.display = 'block';
+            document.getElementById('explanationPopup').style.display = 'block';
+        }
+
+        function closeExplanation() {
+            document.getElementById('explanationOverlay').style.display = 'none';
+            document.getElementById('explanationPopup').style.display = 'none';
+        }
+
+        // ===== 뒤로가기 (대시보드로 이동) =====
+        function goBack() {
+            window.location.href = '/mock_exam_dashboard.html';
+        }
+
+        // ===== 다시풀기 =====
+        async function resetExam() {
+            if (!confirm('모든 답안과 채점 결과가 초기화됩니다. 다시 풀겠습니까?')) {
+                return;
+            }
+
+            // localStorage 초기화
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                localStorage.removeItem(LS_KEY(`question_${i}`));
+            }
+            localStorage.removeItem(LS_KEY('isGraded'));
+
+            // 서버 데이터 삭제
+            try {
+                // 쿼리 파라미터로 사용자 정보 전달 (세션 만료 대비)
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`, {
+                    method: 'DELETE'
+                });
+            } catch (err) {
+                console.error('서버 데이터 삭제 오류:', err);
+            }
+
+            // 페이지 새로고침
+            window.location.reload();
+        }
+
+        // ===== 초기화 =====
+        async function init() {
+            // 사용자 정보 로드
+            const userData = localStorage.getItem('mockExamUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                currentUserId = user._id || user.phone || ''; // 사용자 ID 설정
+                document.getElementById('studentSchool').textContent = user.school || '-';
+                document.getElementById('studentGrade').textContent = user.grade || '-';
+                document.getElementById('studentName').textContent = user.name || '-';
+            }
+
+            // 서버에서 저장된 답안 로드
+            try {
+                // 쿼리 파라미터로 사용자 정보 전달 (세션 만료 대비)
+                const queryParams = new URLSearchParams();
+                if (currentUserId) queryParams.append('userId', currentUserId);
+                const userData = localStorage.getItem('mockExamUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user.phone) queryParams.append('phone', user.phone);
+                }
+                const queryString = queryParams.toString();
+                const response = await fetch(`/api/supplement-result/${EXAM_ID}${queryString ? '?' + queryString : ''}`);
+                const data = await response.json();
+
+                if (data.ok && data.result) {
+                    const serverResult = data.result;
+
+                    // 서버에서 답안 복원
+                    if (serverResult.answers) {
+                        for (const [questionId, answer] of Object.entries(serverResult.answers)) {
+                            // localStorage에도 저장하고 UI 업데이트 (서버 저장은 스킵)
+                            localStorage.setItem(LS_KEY(`question_${questionId}`), answer);
+                            selectChoice(parseInt(questionId), answer, true);
+                        }
+                    }
+
+                    // 이미 채점 완료된 경우 채점 결과 표시 (서버 저장 스킵)
+                    if (serverResult.isGraded) {
+                        setTimeout(() => {
+                            gradeExam(true);
+                        }, 100);
+                    }
+                } else {
+                    // 서버에 데이터가 없으면 localStorage에서 복원
+                    for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                        const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                        if (saved) {
+                            selectChoice(i, parseInt(saved), true);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('서버 데이터 로드 오류:', err);
+                // 서버 오류 시 localStorage에서 복원
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const saved = localStorage.getItem(LS_KEY(`question_${i}`));
+                    if (saved) {
+                        selectChoice(i, parseInt(saved), true);
+                    }
+                }
+            }
+
+            // 타이머 시작 (보완학습은 타이머 없음)
+            // startTimer();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

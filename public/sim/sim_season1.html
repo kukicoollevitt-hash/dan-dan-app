@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌊 심청전</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/sim/sim01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5a8b9a 0%, #3a6a7a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #5a8b9a;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #3a6a7a;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #5a8b9a 0%, #3a6a7a 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🌊 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌊 심청전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          효심이 하늘을 감동시킨 이야기
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 심청의 출생과 가난 속에서도 이어지는 효심">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">👶</span>
+          심청의 출생과 가난 속에서도 이어지는 효심
+        </h2>
+        <div class="story-text">옛날 어느 마을에 심 봉사라는 맹인이 살고 있었다. 그는 시력이 없어 농사도 짓기 어렵고, 의지할 가족도 없었기에 늘 가난과 외로움 속에서 지냈다.
+
+어느 날 그는 우연히 절 근처에서 버려진 아기를 발견하고, 아이를 불쌍히 여겨 집으로 데려왔다. 그 아이가 바로 심청이었다.
+
+심청은 어릴 때부터 기특하고 마음씨가 고와, 눈먼 아버지를 위해 물길을 뜨고 바느질을 배우며 집안일을 도맡아 했다. 가난은 날로 심해졌지만, 심청은 단 한 번도 아버지를 원망하지 않았고 오히려 아버지가 불편하지 않도록 더 세심하게 배려했다.
+
+어린 나이에 비해 유난히 성숙하고 부지런하다는 소문이 마을에 퍼져, 이웃들은 심청을 칭찬하면서도 안타까운 눈길로 바라보곤 했다. 하지만 심청은 아버지 곁에서 살아갈 수 있는 것만으로도 행복하다 여겼다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 눈먼 아버지와 딸의 더 깊어지는 가난, 그리고 효녀의 일상">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">🏠</span>
+          눈먼 아버지와 딸의 더 깊어지는 가난, 그리고 효녀의 일상
+        </h2>
+        <div class="story-text">심청이 자라면서 가난은 더욱 심해졌지만, 심청은 아버지를 부양하기 위해 새벽부터 밤늦게까지 일했다. 남의 집 심부름을 하고, 빨래와 방아 찧는 일을 도우며 겨우 식량을 마련했다.
+
+심 봉사는 딸에게 미안함을 감추지 못했으나, 심청은 오히려 "아버지와 함께 있어 좋다"고 말하며 그의 마음을 달랬다.
+
+마을 사람들은 심청의 고운 마음을 알고 종종 음식을 나누어주었지만, 그것만으로는 생활을 유지하기 어려웠다. 어느 날 절에 들른 심 봉사는 불쌍한 눈먼 딸의 고생을 한탄하며, 중에게 자신의 눈을 뜨게 할 방법이 없냐고 묻는다.
+
+그러자 중은 '부처님께 300석의 쌀 공양을 올리면 눈을 뜰 수 있다'는 말을 한다. 심 봉사는 이 말을 곧이곧대로 믿고 절망에 빠진다. 이때부터 비극의 씨앗이 싹트기 시작한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 아버지의 절망을 들은 심청, 목숨을 건 결심을 세우다">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">💔</span>
+          아버지의 절망을 들은 심청, 목숨을 건 결심을 세우다
+        </h2>
+        <div class="story-text">어느 날 심 봉사는 술에 취해 집에 돌아와 중이 했던 '300석 공양' 이야기를 실수로 심청에게 털어놓는다. 그는 딸에게 부담을 주고 싶지 않았지만, 취한 상태에서 그만 속마음을 모두 말하고 만 것이다.
+
+이 말을 들은 심청은 큰 충격을 받는다. 아버지가 평생 눈을 뜨지 못해 겪는 서러움을 생각하면 가슴이 찢어졌고, 자신으로 인해 아버지가 더 불행해지는 것처럼 느껴졌다.
+
+심청은 아버지를 위해 무엇이든 하고 싶었지만, 300석을 마련하는 것은 불가능해 보였다. 그날 밤 심청은 잠들지 못하고 아버지를 위해 어떻게든 길을 찾고자 하며 눈물을 쏟았다.
+
+결국 그녀는 결심한다. "내 목숨이라도 아버지를 위해 바치겠습니다."
+
+심청의 마음속에서 싹튼 이 결심은 어린 나이에도 불구하고 기적과 같은 희생의 정신이었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 인당수 제물 이야기와 결정적인 거래">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">⚓</span>
+          인당수 제물 이야기와 결정적인 거래
+        </h2>
+        <div class="story-text">한편, 바닷가 마을에서는 매년 큰 배를 띄우기 위해 제물로 바쳐야 하는 인당수 제물에 대한 소문이 돌고 있었다. 용왕에게 바쳐질 '희생'이 있어야만 풍랑 없이 항해가 가능하다는 미신이 오랫동안 전해지고 있었던 것이다.
+
+어느 날 청나라로 가는 큰 상선의 상인들이 마을을 돌아다니며 "배를 무사히 보내기 위해 순결한 처녀를 제물로 바치겠다"며 조건을 내걸었다. 제물로 들어가면 쌀 300석을 그 집에 주겠다는 내용이었다.
+
+이 소식을 들은 심청은 운명처럼 스스로에게 찾아온 기회라고 여긴다. 아버지의 눈을 뜨게 할 수 있는 단 한 가지 길이었다.
+
+결국 심청은 상인들을 찾아가 자진해 제물이 되겠다고 말한다. 상인들은 처음엔 믿지 못했으나, 심청이 변함없는 표정으로 자신의 운명을 받아들이는 모습을 보고 결국 계약을 체결한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 아버지와의 마지막 저녁, 숨겨진 결심과 절절한 이별">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">🌙</span>
+          아버지와의 마지막 저녁, 숨겨진 결심과 절절한 이별
+        </h2>
+        <div class="story-text">심청은 제물이 되기로 한 사실을 아버지에게 숨긴 채, 평소처럼 다정하게 집안일을 하고 아버지의 손을 잡고 이야기를 나누었다.
+
+그러나 그날은 유난히 마음이 무거웠고, 아버지의 손길 하나하나가 헤어짐의 슬픔으로 다가왔다. 심 봉사는 딸이 평소보다 다정한 걸 느끼고 이상하다고 생각했지만, 심청은 "아버지와 함께 있어서 좋을 뿐이에요"라고 말하며 마음을 감췄다.
+
+마지막 밤 심청은 아버지가 잠든 모습을 보며 기도하듯 속삭였다. "아버지, 부디 눈을 뜨시고 오래오래 행복하세요."
+
+이튿날, 심청은 아버지 몰래 집을 떠나 상선이 있는 포구로 향했다. 심 봉사는 잠에서 깨어 딸이 없는 것을 알고 크게 놀랐지만, 이미 늦은 뒤였다.
+
+그날 새벽의 이별은 슬픔과 비극의 시작이었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 인당수로 향하는 배 위에서의 마지막 기도와 희생">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">🌊</span>
+          인당수로 향하는 배 위에서의 마지막 기도와 희생
+        </h2>
+        <div class="story-text">상선에 오른 심청은 제물로 바쳐질 준비를 마쳤다. 뱃사람들은 어린 소녀가 한 치의 두려움도 보이지 않는 모습에 마음이 불편했고, 일부는 깊이 슬퍼했다.
+
+그러나 풍랑을 두려워하는 상인들과 선주들은 약속대로 제물을 바쳐야만 한다고 주장했다. 배는 거센 파도 속에서 인당수 한가운데에 도착했고, 하늘은 먹구름으로 뒤덮여 있었다.
+
+심청은 마지막으로 두 손을 모아 "아버지의 눈을 뜨게 해주시고, 이 세상이 더 이상 억울한 사람들로 가득하지 않기를"이라고 기도했다.
+
+그리고 미소를 띠며 바다를 향해 몸을 던진다. 인당수는 거대한 소용돌이와 함께 심청을 삼켜버리고, 배는 곧 잔잔해진 파도 위에서 신비롭게 안전함을 되찾았다.
+
+심청의 희생은 이 순간, 인간의 마음 속 가장 깊은 곳을 울리는 비극이 되었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 용궁에서의 기적 같은 부활과 새로운 운명">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">🐉</span>
+          용궁에서의 기적 같은 부활과 새로운 운명
+        </h2>
+        <div class="story-text">심청이 인당수에 몸을 던진 순간, 그녀는 죽지 않고 신비로운 용궁으로 떨어져 용왕의 보호를 받게 된다.
+
+용왕은 심청의 진심 어린 효성과 희생에 크게 감동하여, 그녀에게 다시 인간 세상으로 돌아가 살아가도록 돕기로 결심한다.
+
+심청은 용궁의 나라에서 부드러운 빛 속에서 안정을 찾고, 용왕은 그녀에게 "네 효심은 하늘과 바다를 움직였다"고 말하며 새로운 복을 약속한다.
+
+결국 용왕은 심청을 큰 연꽃에 태워 인간 세상으로 보내기로 한다. 연꽃은 마치 기적처럼 강물 위를 따라 떠내려가 어느 나라의 궁궐 연못에 떠오르게 된다.
+
+이때 왕과 대신들은 연꽃의 신비한 기운에 놀라고, 연꽃을 궁으로 들여오기로 한다. 결국 연꽃이 봉오리를 틔우는 순간, 그 속에서 심청이 다시 태어나듯 일어난다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 왕과의 인연, 황후가 된 심청">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">👑</span>
+          왕과의 인연, 황후가 된 심청
+        </h2>
+        <div class="story-text">연꽃 속에서 되살아난 심청은 왕과 조정 대신들에게 소개된다. 왕은 심청의 고운 품성과 신비로운 출현에 깊이 감동하고, 그녀의 슬픈 사연을 들으며 마음을 더욱 크게 움직인다.
+
+결국 왕은 심청을 왕비(황후)로 책봉하기로 결심하며 온 궁궐은 경사로 가득 찬다. 심청은 높은 자리에 올랐지만 오만해지지 않았고, 오히려 그 어떤 사람보다 더 겸손하고 따뜻했다.
+
+궁녀들과 백성들에게 마음으로 다가가며, 고통받는 사람을 돕기 위해 다양한 선정을 베풀었다.
+
+그러나 심청의 마음 한 편에는 여전히 눈먼 아버지에 대한 걱정과 그리움이 자리 잡고 있었다. 궁궐은 화려했지만 아버지가 없는 심청의 삶은 온전히 행복하지 않았다.
+
+그녀는 왕에게 자신이 살아온 이야기를 모두 털어놓고, 아버지를 다시 만날 기회를 허락해달라 간청한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 맹인 잔치와 아버지와의 극적인 재회">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">🎉</span>
+          맹인 잔치와 아버지와의 극적인 재회
+        </h2>
+        <div class="story-text">왕은 심청의 소원을 이루기 위해 전국 곳곳에 "눈먼 백성들을 모두 궁으로 초대한다"는 명령을 내린다. 수많은 맹인들이 왕의 은혜를 기대하며 궁궐로 모여든다.
+
+그들 사이에는 어려운 여정을 견디며 걸어온 심 봉사도 있었다. 딸이 죽었다고 믿고 절망 속에 살아가던 그는, '황후가 맹인들을 위하는 잔치를 베푼다'는 소식을 듣고 조심스레 발걸음을 옮긴 것이다.
+
+잔치날, 심 봉사는 궁궐 뜰에 앉아 왕과 황후의 이야기를 들으며 마음속에 묘한 떨림을 느꼈다.
+
+심청은 한 명 한 명을 살피다가 결국 아버지를 발견하고 눈물을 참지 못한다. 그녀는 조심스레 아버지에게 다가와 손을 잡으며, "아버지, 심청입니다"라고 속삭인다.
+
+심 봉사는 놀라 손을 떨며 믿지 못하지만, 익숙한 목소리와 손길에 결국 딸임을 깨닫고 오열한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 눈을 뜬 심 봉사, 효심이 이루어낸 진정한 기적">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">✨</span>
+          눈을 뜬 심 봉사, 효심이 이루어낸 진정한 기적
+        </h2>
+        <div class="story-text">심 봉사는 딸을 다시 만났다는 감격에 정신을 잃을 듯했다. 그 순간, 기적처럼 그의 눈앞에 밝은 빛이 비추기 시작한다.
+
+용왕이 약속한 복이 이루어지는 것처럼, 심 봉사의 눈이 서서히 밝아지기 시작한 것이다. 그는 점차 시력을 되찾고, 마침내 딸 심청의 얼굴을 처음으로 보게 된다.
+
+두 사람은 서로를 끌어안고 기쁨의 눈물을 흘린다. 왕은 이 장면을 보며 더욱 감동했고, 황후 심청과 심 봉사에게 최고의 예우를 약속한다.
+
+이후 심청은 왕과 함께 백성들을 위한 정치를 이어가며, 부모에게 효도하고 나라에 충성을 다하는 모범적인 황후로 기억된다.
+
+심 봉사는 딸의 보살핌 속에서 평안한 노년을 보내고, 사람들은 이 이야기를 '효심이 하늘을 움직였다'며 길이길이 전했다.
+
+이렇게 「심청전」은 인간의 효심이 신과 자연을 감동시키고, 결국 비극을 기적으로 바꾸어낸 전통 서사의 대표작으로 완성된다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌊 심청전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/sim/sim01.jpg',
+      '/images/sim/sim02.jpg',
+      '/images/sim/sim03.jpg',
+      '/images/sim/sim04.jpg',
+      '/images/sim/sim05.jpg',
+      '/images/sim/sim06.jpg',
+      '/images/sim/sim07.jpg',
+      '/images/sim/sim08.jpg',
+      '/images/sim/sim09.jpg',
+      '/images/sim/sim10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🌊 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

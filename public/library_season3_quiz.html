@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>살아 있는 신비의 도서관 - 시즌3 관문</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/library-story/library_part2_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 0;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 50px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.5s ease-out;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .quiz-header h1 {
+      font-size: 36px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .quiz-header .gate-number {
+      font-size: 20px;
+      color: #8B4789;
+      font-weight: 600;
+      background: linear-gradient(135deg, #8B4789 0%, #5B2C6F 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #8B4789 0%, #5B2C6F 100%);
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .question-box {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      border-left: 5px solid #8B4789;
+    }
+
+    .question-text {
+      font-size: 22px;
+      color: #2c3e50;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .option-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 20px 25px;
+      border-radius: 15px;
+      font-size: 18px;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .option-btn:hover {
+      border-color: #8B4789;
+      background: #f0f4ff;
+      transform: translateX(5px);
+    }
+
+    .option-btn.selected {
+      border-color: #8B4789;
+      background: linear-gradient(135deg, #8B4789 0%, #5B2C6F 100%);
+      color: white;
+    }
+
+    .option-btn.correct {
+      border-color: #27ae60;
+      background: #27ae60;
+      color: white;
+    }
+
+    .option-btn.wrong {
+      border-color: #e74c3c;
+      background: #e74c3c;
+      color: white;
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #8B4789 0%, #5B2C6F 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(139, 71, 137, 0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .result-message.correct {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #28a745;
+    }
+
+    .result-message.wrong {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #dc3545;
+    }
+
+    .congrats-container {
+      text-align: center;
+      animation: scaleIn 0.6s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .congrats-container h2 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    .congrats-container p {
+      font-size: 20px;
+      color: #555;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+
+    .back-btn {
+      background: white;
+      border: 2px solid #8B4789;
+      color: #8B4789;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 10px;
+    }
+
+    .back-btn:hover {
+      background: #8B4789;
+      color: white;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .quiz-container {
+        padding: 30px 20px;
+      }
+      .quiz-header h1 {
+        font-size: 28px;
+      }
+      .question-text {
+        font-size: 18px;
+      }
+      .option-btn {
+        font-size: 16px;
+        padding: 15px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container" id="quizContainer">
+    <!-- 퀴즈 내용이 여기에 동적으로 생성됩니다 -->
+  </div>
+
+  <script>
+    // 퀴즈 문제 데이터 (시즌3 - 중1~2 수준)
+    const quizData = [
+      {
+        gate: 1,
+        question: "민준이 그날 아침 평소와 다른 불안감을 감지하게 된 근본적인 원인은 무엇이었나요?",
+        options: [
+          "기상 조건의 급격한 변화로 인한 신체적 불쾌감",
+          "지혜의 인장에서 전달되는 미세한 진동 신호",
+          "전날 밤 불안정한 수면으로 인한 심리적 동요",
+          "공복 상태에서 비롯된 생리적 불편함"
+        ],
+        correct: 1
+      },
+      {
+        gate: 2,
+        question: "루미가 아이들을 인도하여 도달한 장소의 정식 명칭은 무엇인가요?",
+        options: [
+          "은폐된 비밀 구역",
+          "지하에 위치한 보조 도서관",
+          "심층계",
+          "봉인된 고문헌 보관소"
+        ],
+        correct: 2
+      },
+      {
+        gate: 3,
+        question: "블랙 페이지단이라는 조직을 총괄하며 지휘하는 수장의 명칭은 무엇인가요?",
+        options: [
+          "블랙 리더",
+          "다크 마스터",
+          "섀도우",
+          "크롬"
+        ],
+        correct: 0
+      },
+      {
+        gate: 4,
+        question: "다음 중 블랙 페이지단의 구성원으로 분류되지 않는 인물은 누구인가요?",
+        options: [
+          "크롬",
+          "잉크",
+          "페이퍼맨",
+          "루미"
+        ],
+        correct: 3
+      },
+      {
+        gate: 5,
+        question: "《루멘 코덱스》라는 문헌의 본질적 특성과 기능은 무엇으로 규정되나요?",
+        options: [
+          "아동을 대상으로 한 일반적인 창작 동화 서적",
+          "도서관의 마법적 체계를 관장하는 핵심 주술서",
+          "과거의 사건들을 기록한 역사적 문헌",
+          "자연 현상의 원리를 설명하는 과학 교양서"
+        ],
+        correct: 1
+      },
+      {
+        gate: 6,
+        question: "크롬이 보유한 고유의 초자연적 능력은 구체적으로 무엇인가요?",
+        options: [
+          "화염을 생성하고 자유자재로 통제하는 능력",
+          "텍스트와 문자를 존재 자체에서 소거하는 능력",
+          "시간의 흐름을 일시적으로 정지시키는 능력",
+          "공간적 제약을 초월하여 순간 이동하는 능력"
+        ],
+        correct: 1
+      },
+      {
+        gate: 7,
+        question: "잉크가 자신의 능력을 활용하여 생성해 낸 존재는 무엇인가요?",
+        options: [
+          "문자로 구현된 형상의 괴물체",
+          "종이를 접어 만든 소형 선박",
+          "어둠으로부터 탄생한 그림자 형태의 괴물",
+          "방어 목적의 에너지 장벽"
+        ],
+        correct: 2
+      },
+      {
+        gate: 8,
+        question: "페이퍼맨이 아이들에게 위협을 가하기 위해 대량으로 창조한 공격 수단은 무엇인가요?",
+        options: [
+          "고속으로 비행하는 종이 비행체",
+          "예리하게 접힌 종이 형태의 무기",
+          "수백 척에 달하는 종이 선단",
+          "종이를 겹겹이 쌓아 만든 방어구"
+        ],
+        correct: 2
+      },
+      {
+        gate: 9,
+        question: "민준, 수아, 태영 세 명의 인장이 공명하며 통합되었을 때 형성된 것은 무엇인가요?",
+        options: [
+          "압도적 위력을 지닌 거대한 광검",
+          "전방위적 방어가 가능한 에너지 장막",
+          "눈부신 빛으로 이루어진 거대한 구형 에너지체",
+          "마법의 힘이 집약된 주술 도구"
+        ],
+        correct: 2
+      },
+      {
+        gate: 10,
+        question: "블랙 페이지단과의 결전에서 아이들에게 결정적인 조력을 제공한 서적은 무엇인가요?",
+        options: [
+          "밤의 도서관 수호록",
+          "루멘 코덱스",
+          "요정 숲의 비밀",
+          "세계 명작 동화 선집"
+        ],
+        correct: 1
+      }
+    ];
+
+    let currentGate = 0;
+    let selectedAnswer = null;
+
+    function renderQuiz() {
+      const container = document.getElementById('quizContainer');
+      const quiz = quizData[currentGate];
+
+      container.innerHTML = `
+        <div class="quiz-header">
+          <h1>📚 시즌3 관문 ${quiz.gate}</h1>
+          <p class="gate-number">10개 관문 중 ${quiz.gate}번째</p>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: ${(quiz.gate / 10) * 100}%"></div>
+        </div>
+
+        <div class="question-box">
+          <p class="question-text">${quiz.question}</p>
+        </div>
+
+        <div class="options-container">
+          ${quiz.options.map((option, index) => `
+            <button class="option-btn" onclick="selectAnswer(${index})">
+              ${index + 1}. ${option}
+            </button>
+          `).join('')}
+        </div>
+
+        <button class="submit-btn" onclick="submitAnswer()" disabled>
+          답안 제출
+        </button>
+      `;
+    }
+
+    function selectAnswer(index) {
+      selectedAnswer = index;
+
+      // 모든 버튼 선택 해제
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => btn.classList.remove('selected'));
+
+      // 선택한 버튼 표시
+      buttons[index].classList.add('selected');
+
+      // 제출 버튼 활성화
+      document.querySelector('.submit-btn').disabled = false;
+    }
+
+    function submitAnswer() {
+      const quiz = quizData[currentGate];
+      const buttons = document.querySelectorAll('.option-btn');
+      const submitBtn = document.querySelector('.submit-btn');
+
+      // 버튼 비활성화
+      buttons.forEach(btn => btn.disabled = true);
+      submitBtn.disabled = true;
+
+      if (selectedAnswer === quiz.correct) {
+        // 정답!
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('correct');
+
+        showResult(true);
+      } else {
+        // 오답!
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('wrong');
+        buttons[quiz.correct].classList.add('correct');
+
+        showResult(false);
+      }
+    }
+
+    function showResult(isCorrect) {
+      const container = document.getElementById('quizContainer');
+
+      if (isCorrect) {
+        // 정답 메시지 추가
+        const resultMsg = document.createElement('div');
+        resultMsg.className = 'result-message correct';
+        resultMsg.innerHTML = '🎉 정답입니다! 다음 관문으로 이동합니다...';
+        container.insertBefore(resultMsg, container.firstChild);
+
+        // 1.5초 후 다음 문제로
+        setTimeout(() => {
+          currentGate++;
+          selectedAnswer = null;
+
+          if (currentGate >= quizData.length) {
+            // 모든 관문 통과!
+            showCongratulations();
+          } else {
+            renderQuiz();
+          }
+        }, 1500);
+      } else {
+        // 오답 메시지 추가
+        const resultMsg = document.createElement('div');
+        resultMsg.className = 'result-message wrong';
+        resultMsg.innerHTML = '❌ 틀렸습니다! 관문 1로 돌아갑니다...';
+        container.insertBefore(resultMsg, container.firstChild);
+
+        // 2초 후 관문 1로
+        setTimeout(() => {
+          currentGate = 0;
+          selectedAnswer = null;
+          renderQuiz();
+        }, 2000);
+      }
+    }
+
+    function showCongratulations() {
+      const container = document.getElementById('quizContainer');
+
+      container.innerHTML = `
+        <div class="congrats-container">
+          <h2>🎊 축하합니다! 🎊</h2>
+          <p>
+            10개의 관문을 모두 통과했습니다!<br>
+            시즌2의 이야기를 완벽하게 기억하고 계시네요.<br><br>
+            <strong>시즌3의 최종 모험이 곧 시작됩니다...</strong>
+          </p>
+          <button class="back-btn" onclick="goBack()">
+            ← 시즌2로 돌아가기
+          </button>
+          <button class="submit-btn" onclick="goToSeason3()" style="margin-top: 10px;">
+            📖 시즌3 시작하기
+          </button>
+        </div>
+      `;
+    }
+
+    function goBack() {
+      window.location.href = '/library/library_season2.html';
+    }
+
+    function goToSeason3() {
+      window.location.href = '/library/library_season3.html';
+    }
+
+    // 페이지 로드 시 첫 번째 퀴즈 표시
+    window.addEventListener('DOMContentLoaded', () => {
+      renderQuiz();
+    });
+
+    // ESC 키로 뒤로가기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (confirm('퀴즈를 종료하고 시즌2로 돌아가시겠습니까?')) {
+          goBack();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

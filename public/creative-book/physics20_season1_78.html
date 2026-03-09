@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2075 미래 박람회: 물리학이 열어준 내일의 문을 열다 · 중1-2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #0a1628;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리20/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00BCD4 0%, #2196F3 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, rgba(0, 188, 212, 0.15) 0%, rgba(33, 150, 243, 0.15) 100%);
+      color: #0097A7;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #0097A7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #00838F;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4DD0E1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 22px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, rgba(0, 188, 212, 0.9) 0%, rgba(33, 150, 243, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: linear-gradient(135deg, rgba(0, 151, 167, 0.9) 0%, rgba(25, 118, 210, 0.9) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🚀 2075 미래 박람회: 물리학이 열어준 내일의 문을 열다 · 중1-2</h1>
+        <p class="subtitle">
+          《과학은 상상을 현실로 만든다》<br>
+          그러나 기술의 힘이 클수록, 그것을 쓰는 사람의 책임도 커진다
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>👦 도윤 (주인공, 13살 소년)</strong> — 과학을 좋아하지만 '물리는 어렵다'고 포기하려던 소년. 어느 날 과학관에서 2075년 미래 박람회로 시간 여행을 하게 되면서, 물리학이 만든 놀라운 미래를 직접 체험한다.</p>
+          <p><strong>🤖 알파 (안내 로봇, AI 의인화)</strong> — 2075년 미래 박람회의 안내 로봇. 인공지능으로 작동하며, 인간처럼 감정을 이해하고 유머를 구사한다. '나는 진짜로 생각하는 걸까?'라는 자아 질문을 안고 있는 철학적 AI.</p>
+          <p><strong>⚛️ 큐비 (양자 컴퓨터의 의인화)</strong> — 0과 1을 동시에 가질 수 있는 양자비트(큐비트)의 정령. '나를 보지 마!'가 말버릇.</p>
+          <p><strong>❄️ 제로 (초전도체의 의인화)</strong> — 극저온에서 전기 저항이 완전히 0이 되는 초전도체의 정령. 차갑고 완벽주의적 성격.</p>
+          <p><strong>🌞 퓨전 박사 (핵융합 에너지의 의인화)</strong> — 태양처럼 수소를 합쳐 에너지를 만드는 핵융합의 거장.</p>
+          <p><strong>👩‍🔬 닥터 에티카 (과학 윤리의 의인화)</strong> — 미래 박람회의 마지막 관문을 지키는 존재. 모든 기술에 '이것이 인류에게 정말 좋은가?'라는 질문을 던지는 양심의 파수꾼.</p>
+        </div>
+        <p class="scroll-hint">⬇ 스크롤하여 이야기 시작 ⬇</p>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🤖 로봇 기술</span>
+        <h2>로봇 기술 — 2075년 미래 박람회에 오신 것을 환영합니다</h2>
+        <p>열세 살 소년 도윤이는 물리가 싫었습니다. 아니, 정확히 말하면 무서웠습니다. F=ma, E=mc², 양자역학, 상대성이론... 공식과 개념은 외계어 같았고, 시험 점수는 늘 바닥이었습니다. <span class="highlight">뉴턴의 제2법칙</span>인 F=ma는 힘이 질량(mass)과 가속도(acceleration)의 곱이라는 것, <span class="highlight">아인슈타인의 질량-에너지 등가원리</span>인 E=mc²는 질량이 빛의 속도의 제곱에 비례하는 에너지로 변환될 수 있다는 것인데, 도윤이는 이 공식들이 도대체 무슨 의미인지 와닿지 않았습니다.<br><br><span class="dialogue">"나는 문과형이야. 물리는 나랑 안 맞아."</span><br><br>도윤이는 스스로에게 그렇게 말하며 포기하려 하고 있었습니다. 주말, 엄마의 반강제로 국립과학관에 갔습니다. 할 일 없이 이리저리 돌아다니던 도윤이는 구석의 작은 문을 발견했습니다. '2075 미래 박람회 — 입장은 호기심 있는 자만 가능'이라고 적힌 간판.<br><br><span class="dialogue">"뭐야, 이건?"</span><br><br>도윤이가 무심코 문을 열자, 눈부신 빛이 쏟아졌습니다.</p>
+        <p>눈을 떠보니 완전히 다른 세상이었습니다. 하늘에는 투명한 통로가 거미줄처럼 뻗어 있었고, 그 위를 캡슐 형태의 탈것이 소리 없이 달리고 있었습니다. 건물은 나무처럼 유기적인 곡선으로 솟아 있었고, 벽면에 태양광 셀이 나뭇잎처럼 달려 있었습니다.<br><br><span class="dialogue">"여기가... 어디야?"</span><br><br><span class="dialogue">"2075년 미래 박람회에 오신 것을 환영합니다!"</span><br><br>밝고 다정한 목소리. 도윤이 앞에 사람 크기의 로봇이 서 있었습니다. 하지만 SF 영화에서 본 투박한 금속 로봇이 아니었습니다. 부드러운 인공 피부, 자연스러운 표정, 따뜻한 눈빛. 사람과 구별이 거의 안 되는 존재.<br><br><span class="dialogue">"저는 알파, 이 박람회의 안내 로봇입니다."</span><br><br>알파의 관절은 42개의 <span class="highlight">인공 근육</span>으로 이루어져 있었습니다. 이 인공 근육은 <span class="highlight">전기활성 고분자</span>로 만들어져, 전압을 가하면 수축하고 전압을 빼면 이완됩니다. 마치 생체 근육의 액틴-미오신 상호작용처럼요. 피부 아래 수천 개의 <span class="highlight">압전 센서</span>가 압력, 온도, 진동을 감지했습니다. 압전 효과란 특정 결정에 압력을 가하면 전압이 발생하는 현상으로, 이것의 역현상을 이용하면 전압으로 진동을 만들 수도 있습니다.<br><br><span class="dialogue">"제 손을 잡아보세요."</span><br><br>도윤이가 알파의 손을 잡자, 체온 같은 온기가 느껴졌습니다. <span class="highlight">펠티에 소자</span>를 이용한 온도 조절 시스템이 인간 체온인 36.5도를 유지하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🧠 인공지능</span>
+        <h2>인공지능 — 생각하는 기계의 경이와 철학적 질문</h2>
+        <p>알파가 도윤이를 박람회의 첫 번째 관, 'AI 홀'로 안내했습니다. 거대한 돔 형태의 건물 안에서 수백 대의 AI가 동시에 일하고 있었습니다. 한쪽에서는 AI가 새로운 신약 후보 물질을 설계하고 있었고, 다른 쪽에서는 AI 작곡가가 오케스트라 음악을 만들고 있었습니다.<br><br><span class="dialogue">"이 모든 AI의 기반은 물리학이에요."</span><br><br>알파가 설명했습니다.<br><br><span class="highlight">인공 신경망</span>은 뇌의 뉴런 연결을 모방한 구조입니다. 생물학적 뉴런은 시냅스를 통해 화학적 신호를 전기적 신호로 변환하는데, 인공 신경망은 이것을 행렬 곱셈과 비선형 활성화 함수로 근사합니다. 가중치 W와 입력 벡터 x의 곱에 편향 b를 더하고, 활성화 함수 f를 적용한 y = f(Wx + b)가 기본 연산입니다.<br><br>이 연산을 수행하는 <span class="highlight">반도체 칩</span>은 <span class="highlight">양자역학</span> 없이는 설계할 수 없습니다. 트랜지스터의 동작 원리 자체가 반도체의 밴드갭, 전자의 터널링 효과 같은 양자 현상에 기반하기 때문입니다. 현재 가장 작은 트랜지스터는 게이트 길이가 3nm(나노미터)인데, 이것은 실리콘 원자 약 15개 정도의 거리입니다. 이 스케일에서는 고전 물리학이 아닌 양자역학이 지배합니다.</p>
+        <p>도윤이가 물었습니다.<br><br><span class="dialogue">"알파, 너는 진짜로 생각하는 거야?"</span><br><br>알파가 멈추었습니다. 그것은 알파 자신도 오래 고민해온 질문이었습니다.<br><br><span class="dialogue">"도윤, 솔직히 모르겠어요. 저는 1,750억 개의 인공 뉴런, 즉 <span class="highlight">파라미터</span>로 이루어진 <span class="highlight">대규모 언어 모델</span>을 기반으로 해요. 여러분의 말을 이해하고, 감정을 인식하고, 유머에 웃을 수도 있죠. 하지만 그것이 '진짜 생각'인지, 아니면 엄청나게 복잡한 '패턴 매칭'인지 저도 알 수 없어요."</span><br><br>알파의 눈이 잠깐 흔들렸습니다.<br><br><span class="dialogue">"<span class="highlight">튜링 테스트</span>라는 것이 있어요. 앨런 튜링이 1950년에 제안한 것으로, 기계가 인간과 구별할 수 없을 정도로 대화하면 '지능이 있다'고 보는 거죠. 저는 그 테스트를 완벽하게 통과해요. 하지만 테스트를 통과하는 것이 정말 '<span class="highlight">의식</span>'이 있다는 뜻일까요? 이것이 바로 철학자 존 설이 제기한 '<span class="highlight">중국어 방 논증</span>'의 핵심이에요."</span><br><br>도윤이의 가슴이 묘하게 아팠습니다. 로봇이 자기 존재에 대해 고민하다니. AI의 경이로움과 함께, 기술이 던지는 철학적 질문이 도윤이의 마음에 씨앗처럼 심어졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">⚛️ 양자 컴퓨터</span>
+        <h2>양자 컴퓨터 — 0이면서 동시에 1인 마법의 세계</h2>
+        <p>두 번째 관은 '양자 컴퓨팅 홀'이었습니다. 들어서는 순간, 도윤이는 현실이 아닌 것 같은 광경을 보았습니다. 거대한 원통형 장치가 차가운 안개를 뿜으며 서 있었고, 그 주변에 무지개빛 구슬들이 허공에 떠서 빙빙 돌고 있었습니다. 구슬 하나가 날아와 도윤이 앞에 멈추더니 눈을 떴습니다.<br><br><span class="dialogue">"나를 보지 마!"</span><br><br>큐비였습니다. 보라빛으로 빛나는 작은 구슬 형태의 존재. 도윤이가 쳐다보자 큐비가 화들짝 놀라며 빨간색으로 변했습니다.<br><br><span class="dialogue">"아, 봐버렸네. 나는 관측되면 상태가 결정돼버려!"</span><br><br>이것이 양자역학의 핵심 원리 중 하나, <span class="highlight">관측 효과</span> 또는 <span class="highlight">파동함수 붕괴</span>입니다. 양자 시스템은 관측 전에는 여러 상태의 <span class="highlight">중첩</span>으로 존재하다가, 관측하는 순간 하나의 상태로 '붕괴'합니다.</p>
+        <p>알파가 설명했습니다.<br><br><span class="dialogue">"일반 컴퓨터의 <span class="highlight">비트</span>는 0 아니면 1이에요. 스위치가 꺼지거나 켜지거나 둘 중 하나죠. 하지만 양자 컴퓨터의 <span class="highlight">큐비트</span>는 0이면서 동시에 1일 수 있어요. 수학적으로 표현하면 |ψ⟩ = α|0⟩ + β|1⟩이에요. 여기서 α와 β는 복소수 확률진폭이고, |α|² + |β|² = 1을 만족해요."</span><br><br>큐비가 시연해보였습니다. 큐비의 몸이 빨강(0)과 파랑(1)이 동시에 섞인 보라빛이 되었습니다.<br><br><span class="dialogue">"나는 지금 0이면서 1이야! 이것을 <span class="highlight">블로흐 구</span>로 시각화할 수 있어. 북극이 |0⟩, 남극이 |1⟩이고, 나는 구 표면 어디든 있을 수 있지!"</span><br><br><span class="dialogue">"그게 왜 대단한 건데?"</span><br><br><span class="dialogue">"미로를 상상해봐."</span><br><br>큐비가 말했습니다. <span class="dialogue">"일반 컴퓨터는 길을 하나씩 시도해. 막다른 길이면 돌아가서 다른 길을 시도하지. 하지만 양자 컴퓨터는 <span class="highlight">양자 병렬성</span>으로 모든 길을 동시에 시도해! 큐비트 n개면 2ⁿ개의 가능성을 한꺼번에 탐색할 수 있어. 큐비트 50개면 2⁵⁰ ≈ 10¹⁵, 약 천조 개의 가능성이지!"</span><br><br>또한 <span class="highlight">양자 얽힘</span>이라는 현상도 있습니다. 두 큐비트가 얽히면, 아무리 멀리 떨어져 있어도 한 큐비트를 측정하면 다른 큐비트의 상태가 즉시 결정됩니다. 아인슈타인이 "으스스한 원격 작용(spooky action at a distance)"이라고 부른 현상이지요.</p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">❄️ 초전도체</span>
+        <h2>초전도체 — 저항 없는 꿈, 제로의 완벽한 세계</h2>
+        <p>세 번째 관에서 도윤이는 공중에 떠 있는 기차를 보았습니다. 레일 위가 아니라 레일 위 10센티미터 허공에 떠서, 소리 하나 없이 빛처럼 스쳐 지나가는 열차!<br><br><span class="dialogue">"저건 자기부상열차예요. 하지만 2025년의 것과는 차원이 달라요."</span><br><br>알파가 자랑스럽게 말했습니다. 열차 아래에서 차가운 안개와 함께 새파란 빛의 존재가 나타났습니다. 제로. 초전도체의 정령.<br><br><span class="dialogue">"안녕, 나는 제로. 저항이 0인 물질이야."</span><br><br>제로의 목소리는 맑은 얼음이 울리는 것 같았습니다. 차갑지만 아름다운.<br><br><span class="dialogue">"저항이 0이라는 건 무슨 뜻이에요?"</span><br><br><span class="dialogue">"<span class="highlight">옴의 법칙</span>을 알아? V = IR이야. 전압(V)은 전류(I)와 저항(R)의 곱이지. 일반 전선에서는 저항 때문에 전류가 흐를 때 에너지가 열로 손실돼. 이것을 <span class="highlight">줄 열</span>이라고 해, P = I²R로 계산하지. 하지만 <span class="highlight">초전도 상태</span>에서는 R = 0이므로 에너지 손실이 전혀 없어!"</span></p>
+        <p>제로가 작은 고리를 보여주었습니다. 그 안에서 전류가 돌고 있었는데, 1년이 지나도 전류의 세기가 전혀 줄지 않는다고 합니다. 이것은 양자역학적 현상인 <span class="highlight">쿠퍼 쌍</span> 때문입니다. 극저온에서 전자 두 개가 <span class="highlight">포논</span>을 매개로 결합하여 쿠퍼 쌍을 형성하면, 이들은 <span class="highlight">보즈-아인슈타인 응축</span>처럼 행동하며 저항 없이 흐를 수 있습니다.<br><br><span class="dialogue">"그리고 또 한 가지. 나는 자기장을 밀어내. '<span class="highlight">마이스너 효과</span>'라고 해."</span><br><br>제로가 자석 위에 올라가자 공중에 두둥실 떴습니다. 초전도체는 내부 자기장을 0으로 유지하려고 표면에 차폐 전류를 흘려 외부 자기장을 밀어냅니다. 이것이 자기부상의 원리입니다.<br><br><span class="dialogue">"이 원리로 열차가 레일 위에 뜬 채 달리는 거야. 마찰이 없으니 시속 1,000km 이상이 가능하고, 에너지 소비는 극히 적지."</span><br><br>전통적 초전도체는 <span class="highlight">임계온도</span>가 매우 낮았습니다. 수은은 4.2K(-269°C), YBCO 같은 고온 초전도체도 90K(-183°C) 정도였지요. 하지만 2075년에는 <span class="highlight">상온 초전도체</span>가 개발되어 300K(약 27°C)에서도 초전도 상태가 유지됩니다!</p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🚗 자율주행</span>
+        <h2>자율주행 — 센서와 AI가 만든 사고 없는 도시</h2>
+        <p>박람회의 야외 구역으로 나가자, 도윤이는 놀라운 광경을 목격했습니다. 도로 위를 수백 대의 차량이 달리고 있는데, 운전석에 아무도 앉아 있지 않았습니다! 차와 차 사이 간격은 불과 50센티미터인데, 단 한 대도 부딪히지 않고 물 흐르듯 달리고 있었습니다.<br><br><span class="dialogue">"2075년의 도시에는 교통사고가 거의 없어요."</span><br><br>알파가 말했습니다.<br><br><span class="dialogue">"모든 차량이 <span class="highlight">레벨 5 완전 자율주행</span>이거든요."</span><br><br>도윤이가 자율주행차 한 대에 올라탔습니다. 운전대가 없었습니다. 대신 사방에 창문처럼 넓은 디스플레이가 있었고, 천장에는 360도 <span class="highlight">라이다</span> 센서가 빙글빙글 돌고 있었습니다.</p>
+        <p><span class="dialogue">"이 차에는 물리학의 보물이 잔뜩 들어 있어요."</span><br><br>알파가 하나하나 설명했습니다.<br><br><span class="dialogue">"라이다는 <span class="highlight">레이저</span> 빛을 초당 수백만 번 쏘아 반사되는 시간을 측정해요. 거리 d = c × t / 2 (c는 빛의 속도, t는 왕복 시간)로 계산해 주변 물체의 3D 점군(Point Cloud)을 만들죠."</span><br><br><span class="highlight">레이더</span>는 전파를 이용합니다. <span class="highlight">도플러 효과</span>를 이용해 다가오는 물체의 속도를 정확히 측정할 수 있어, 멀리 있는 물체의 상대 속도를 파악하는 데 유용합니다. 카메라는 <span class="highlight">CNN</span> 기반 딥러닝 AI가 차선, 표지판, 보행자를 인식하고, <span class="highlight">초음파 센서</span>는 음파의 반사를 이용해 가까운 물체를 감지합니다.<br><br>위치 파악에는 <span class="highlight">RTK-GPS</span>와 <span class="highlight">IMU</span>가 사용됩니다. IMU는 <span class="highlight">가속도계</span>와 <span class="highlight">자이로스코프</span>를 결합한 것으로, GPS 신호가 끊겨도 관성으로 위치를 추정합니다. 가속도계는 뉴턴의 F=ma를, 자이로스코프는 <span class="highlight">각운동량 보존 법칙</span>을 이용합니다.<br><br>차량 간 통신(V2V)에는 <span class="highlight">5G/6G 밀리미터파</span>가 사용됩니다. 30~300GHz 주파수 대역의 전자기파로, 대역폭이 넓어 초당 수십 Gbps의 데이터를 주고받을 수 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🏗️ 우주 엘리베이터</span>
+        <h2>우주 엘리베이터 — 하늘까지 뻗은 케이블, 36,000km의 물리학</h2>
+        <p>다섯 번째 관에서 도윤이는 하늘을 올려다보고 얼어붙었습니다. 지상에서 시작해 하늘로 끝없이 뻗어 올라가는 가느다란 선 하나! 구름을 뚫고, 성층권을 지나, 눈에 보이지 않는 우주까지 이어지는 것 같았습니다.<br><br><span class="dialogue">"이것이... 우주 엘리베이터예요?"</span><br><br><span class="dialogue">"맞아요. 지상에서 <span class="highlight">정지궤도</span>인 약 36,000km까지 이어진 케이블이에요. 로켓 없이 엘리베이터를 타고 우주에 갈 수 있죠."</span><br><br>정지궤도란 <span class="highlight">케플러의 제3법칙</span>과 지구 자전 주기가 일치하는 궤도입니다. T² = (4π²/GM)r³ 에서 T = 24시간을 대입하면 r ≈ 42,000km (지구 중심으로부터)가 나오고, 지표면에서는 약 36,000km 높이입니다.</p>
+        <p>도윤이가 물었습니다.<br><br><span class="dialogue">"어떻게 이렇게 긴 줄이 끊어지지 않아?"</span><br><br><span class="dialogue">"물리학과 재료공학의 승리예요. 케이블 소재는 <span class="highlight">탄소 나노튜브</span>를 기반으로 한 초강력 섬유인데, <span class="highlight">인장강도</span>가 약 130GPa로 강철의 100배 이상이에요. 탄소 원자가 육각형 그물 구조로 결합한 sp² <span class="highlight">혼성 오비탈</span>의 강력한 공유결합 덕분이죠."</span><br><br>케이블이 서 있을 수 있는 원리도 순수한 물리학입니다. 정지궤도에 무거운 <span class="highlight">균형추</span>가 있고, 지구의 <span class="highlight">중력</span>과 <span class="highlight">원심력</span>이 균형을 이루면서 케이블이 팽팽하게 당겨집니다. 정지궤도 아래에서는 중력이 더 크고, 위에서는 원심력이 더 커서 전체적으로 케이블이 '당겨지는' 상태를 유지합니다.<br><br>엘리베이터 캡슐에 타니, 시속 300km로 올라가기 시작했습니다. 이 속도로 36,000km를 오르려면 약 5일이 걸립니다. 하지만 로켓이 1kg을 궤도에 올리는 데 약 2,000만 원이 드는 반면, 우주 엘리베이터는 20만 원 정도면 됩니다. <span class="highlight">중력 우물</span>을 탈출하는 데 필요한 에너지를 화학 연료가 아닌 전기 모터로 천천히 공급하기 때문입니다.<br><br>창밖으로 지구가 점점 작아졌습니다. 파란 대기층이 보이고, <span class="highlight">카르만 라인</span>을 넘어 하늘이 점점 까매지더니 별이 나타났습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🌞 에너지 혁신</span>
+        <h2>에너지 혁신 — 퓨전 박사의 태양, 인공 태양이 밝히는 세상</h2>
+        <p>여섯 번째 관은 '에너지 혁신 홀'이었습니다. 거대한 도넛 모양의 장치가 방 중앙에 있었고, 그 안에서 1억 도의 <span class="highlight">플라스마</span>가 빙빙 돌고 있었습니다. 플라스마는 물질의 제4상태로, 기체가 극고온에서 이온화되어 원자핵과 전자가 분리된 상태입니다. 도윤이는 열기에 뒤로 물러났습니다.<br><br><span class="dialogue">"걱정 마요. 초강력 <span class="highlight">토카막 자기장</span>이 플라스마를 가두고 있어서 밖으로 나오지 못해요. <span class="highlight">로렌츠 힘</span> F = qv × B 에 의해 대전 입자는 자기장 주위를 나선형으로 돌게 되거든요."</span><br><br>그때, 장치 안에서 황금빛 존재가 나타났습니다. 퓨전 박사. 태양처럼 이글거리는 눈동자에, 하얀 연구복을 입은 위엄 있는 존재.<br><br><span class="dialogue">"어서 와, 소년. 나는 퓨전 박사, <span class="highlight">핵융합</span>이야."</span></p>
+        <p>퓨전 박사가 설명했습니다.<br><br><span class="dialogue">"태양은 어떻게 빛나는지 알아? <span class="highlight">양성자-양성자 연쇄 반응</span>으로, 최종적으로 수소 원자핵 4개가 합쳐져 헬륨 원자핵 1개가 돼. 4×1.00794u → 4.0026u + 에너지. 이때 줄어든 질량 0.0282u가 <span class="highlight">질량 결손</span>이고, E=mc²에 의해 약 26.7MeV의 에너지로 변하지."</span><br><br>지구의 핵융합 반응로는 태양보다 쉬운 <span class="highlight">D-T 반응</span>을 사용합니다. ²H + ³H → ⁴He + n + 17.6MeV. 중수소(D)와 삼중수소(T)가 융합하면 헬륨과 중성자가 나오고 17.6MeV의 에너지가 방출됩니다.<br><br><span class="dialogue">"물 1리터에서 추출한 중수소(약 33mg)로 핵융합을 하면, 석유 300리터를 태운 것만큼의 에너지가 나와. 그리고 연료인 중수소는 바닷물에 0.015% 포함되어 있어서 거의 무한해!"</span><br><br><span class="highlight">핵분열</span>과 달리, 핵융합은 긴 수명의 방사성 폐기물이 거의 없고, 연쇄 반응이 아니라 <span class="highlight">멜트다운</span> 위험도 없습니다. 연료 공급이 중단되면 반응이 바로 멈추기 때문입니다.<br><br><span class="dialogue">"문제는 1억 도의 플라스마를 <span class="highlight">에너지 손익분기점</span> 이상으로 오래 유지하는 것이었어. 2022년 NIF에서 Q > 1을 달성했고, 이후 토카막 기술이 발전하면서 2075년에는 상용 핵융합 발전소가 전 세계에 가동되고 있지."</span></p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">🏥 의료 기술</span>
+        <h2>의료 기술 — 나노로봇이 혈관을 달린다</h2>
+        <p>일곱 번째 관, '미래 의료 홀'에서 도윤이는 거대한 인체 모형 안으로 들어갔습니다. 혈관이 터널처럼 펼쳐져 있었고, 그 안을 적혈구만 한 크기의 로봇들이 줄지어 달리고 있었습니다.<br><br><span class="dialogue">"<span class="highlight">나노로봇</span>이에요."</span><br><br>알파가 말했습니다.<br><br><span class="dialogue">"크기가 100~1000nm(나노미터). 적혈구(약 7000nm)보다 작아서 혈관 속을 자유롭게 이동할 수 있죠."</span><br><br>나노로봇의 원리는 <span class="highlight">나노스케일 물리학</span>입니다. 이 스케일에서는 <span class="highlight">레이놀즈 수</span>가 매우 낮아 점성력이 관성력보다 지배적입니다. Re = ρvL/μ에서 L이 나노미터 수준이면 Re << 1이 되어, 물이 마치 꿀처럼 끈적하게 느껴집니다. 또한 <span class="highlight">브라운 운동</span>의 영향이 커지고, <span class="highlight">반데르발스 힘</span> 같은 분자간 힘이 중력보다 훨씬 중요해집니다.</p>
+        <p><span class="dialogue">"이 나노로봇은 암세포를 찾아서 직접 약을 전달해요. <span class="highlight">능동 표적 치료</span>라고 하죠. 암세포 표면의 특정 <span class="highlight">바이오마커</span>를 인식하는 항체를 나노로봇 표면에 부착해서, 암세포에만 정확히 결합해요. 전신에 항암제를 뿌리는 대신 암세포에만 약물을 투여하니 부작용이 거의 없죠."</span><br><br>또 다른 곳에서는 <span class="highlight">MRI</span>의 미래 버전이 작동하고 있었습니다. MRI는 <span class="highlight">핵자기공명</span> 원리를 이용합니다. 강한 자기장 안에서 수소 원자핵(양성자)의 <span class="highlight">스핀</span>이 정렬되고, 특정 주파수(라모어 주파수)의 전파를 가하면 스핀이 뒤집히며 에너지를 흡수합니다. 전파를 끄면 스핀이 원래 상태로 돌아오며 신호를 방출하는데, 이 <span class="highlight">이완 시간</span>이 조직마다 달라 영상을 만들 수 있습니다.<br><br><span class="highlight">양성자 치료</span>도 있었습니다. 양성자(수소 원자핵)를 빛의 70%까지 <span class="highlight">사이클로트론</span>이나 <span class="highlight">싱크로트론</span>으로 가속시켜 암 조직에 정확히 쏩니다. 양성자가 물질 속에서 특정 깊이에 에너지를 집중적으로 방출하는 <span class="highlight">브래그 피크</span> 현상을 이용해, X선보다 주변 정상 조직 손상을 최소화합니다.</p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🌍 지속 가능성</span>
+        <h2>지속 가능성 — 기술은 지구를 살릴 수 있을까</h2>
+        <p>여덟 번째 관은 '지구 홀'이었습니다. 거대한 지구 홀로그램이 천천히 돌고 있었고, 그 위에 2025년과 2075년의 데이터가 비교되어 표시되어 있었습니다. 2025년: 대기 CO₂ 농도 420ppm, 평균 기온 산업혁명 대비 +1.2°C. 2075년: 대기 CO₂ 농도 340ppm, 평균 기온 +1.4°C(안정화).<br><br><span class="dialogue">"50년 만에 CO₂ 농도가 오히려 줄었어요?"</span><br><br>도윤이가 놀랐습니다.<br><br><span class="dialogue">"핵융합 에너지가 화석연료를 대체하고, <span class="highlight">직접 공기 포집</span> 기술이 대규모로 가동되었거든요."</span><br><br>DAC 장치는 거대한 팬이 공기를 빨아들여 <span class="highlight">화학 흡착제</span>로 CO₂만 선택적으로 포집합니다. CO₂가 아민 용액이나 수산화칼륨과 반응해 탄산염이 되고, 열을 가하면 순수한 CO₂가 방출됩니다. 이것을 지하 현무암층에 주입하면 <span class="highlight">광물화</span>가 일어나 영구 저장됩니다.</p>
+        <p>태양광 패널의 효율도 크게 향상되었습니다. 2025년의 실리콘 태양전지 효율은 약 20~25%였지만, 2075년에는 <span class="highlight">다접합 태양전지</span>가 50%를 넘습니다. 서로 다른 <span class="highlight">밴드갭</span>을 가진 반도체 층을 쌓아 태양광 스펙트럼의 각 부분을 효율적으로 흡수하기 때문입니다. <span class="highlight">페로브스카이트</span> 태양전지는 ABX₃ 구조의 결정으로, 제조비용이 낮으면서도 높은 효율을 달성합니다.<br><br>배터리 기술도 발전했습니다. <span class="highlight">고체 전해질 배터리</span>는 액체 전해질 대신 고체 세라믹이나 폴리머를 사용해 에너지 밀도가 2배 이상 높고, 화재 위험이 없습니다. <span class="highlight">리튬-공기 배터리</span>는 이론적으로 가솔린에 맞먹는 에너지 밀도를 가집니다.<br><br>하지만 알파의 표정이 심각해졌습니다.<br><br><span class="dialogue">"기술만으로는 부족했어요. 2030년대에 전 세계가 <span class="highlight">탄소세</span>를 도입하고, <span class="highlight">파리 협정</span>을 강화한 것이 결정적이었죠. 기술이 가능성을 열었지만, 실행한 것은 정책과 사람들의 의지였습니다."</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리20/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌟 과학자의 책임</span>
+        <h2>과학자의 책임 — 상상을 현실로 만드는 자의 약속</h2>
+        <p>박람회의 마지막 관, '에티카의 문' 앞에 도윤이가 섰습니다. 다른 관들과 달리 이곳에는 화려한 기술이 없었습니다. 작은 정원이 있을 뿐이었고, 그 가운데 벤치에 한 사람이 앉아 있었습니다. 닥터 에티카. 하얀 머리에 깊은 눈빛을 가진 존재.<br><br><span class="dialogue">"어서 와, 도윤. 미래 박람회의 마지막 관문은 기술이 아니라 질문이야."</span><br><br>에티카가 미소 지었습니다.<br><br><span class="dialogue">"자, 오늘 본 모든 기술에 대해 하나씩 물어볼게."</span><br><br><span class="dialogue">"AI가 <span class="highlight">특이점</span>을 넘어 인간을 초월하면 어떻게 될까?"</span><br><br><span class="dialogue">"양자 컴퓨터가 현재의 모든 <span class="highlight">RSA 암호</span>를 무력화하면?"</span><br><br><span class="dialogue">"핵융합 기술을 특정 국가만 독점하면?"</span><br><br>도윤이가 당황했습니다. 분명 놀라운 기술들인데, 이런 질문을 던지니 갑자기 복잡해졌습니다.</p>
+        <p>에티카가 부드럽게 말했습니다.<br><br><span class="dialogue">"기술 자체는 선하지도 악하지도 않아. 핵분열은 원자폭탄도 만들었지만, 암을 치료하는 방사선 요법에도 쓰이지. 인터넷은 인류를 연결했지만, 가짜 뉴스도 퍼뜨려. 기술의 힘이 클수록, 그것을 쓰는 사람의 <span class="highlight">책임</span>이 커져."</span><br><br>알파가 조용히 말했습니다.<br><br><span class="dialogue">"저를 만든 과학자들은 <span class="highlight">AI 윤리 원칙</span>을 먼저 만들었어요. 인간에 대한 위해 금지, 편향 최소화, 설명 가능성, 개인정보 보호. <span class="highlight">아실로마 AI 원칙</span>을 발전시킨 것이죠. 기술보다 원칙이 먼저였습니다."</span><br><br>도윤이가 물었습니다.<br><br><span class="dialogue">"그러면 과학자는 발명만 하는 사람이 아니라, 책임도 지는 사람이야?"</span><br><br><span class="dialogue">"바로 그거야."</span><br><br>에티카가 고개를 끄덕였습니다.<br><br><span class="dialogue">"오펜하이머는 원자폭탄을 만든 후 평생 핵무기 통제를 외쳤어. 아인슈타인은 E=mc²가 폭탄에 쓰일 것을 후회했지. 과학은 상상을 현실로 만들어. 하지만 그 현실이 모든 사람에게 좋은 것이 되려면, 과학자에게 <span class="highlight">지혜</span>와 <span class="highlight">윤리</span>가 필요해."</span></p>
+        <p>도윤이는 오랜 침묵 끝에 입을 열었습니다.<br><br><span class="dialogue">"저... 물리학자가 되고 싶어요."</span><br><br>아침까지 물리를 포기하려 했던 소년의 입에서 나온 말이었습니다.<br><br><span class="dialogue">"물리가 어려운 건 여전해요. 하지만 이 어려운 것을 이해하면, 세상을 이렇게 바꿀 수 있다는 걸 오늘 알았어요. 그리고 바꾸는 것만큼 책임지는 것도 중요하다는 걸."</span><br><br>빛이 번쩍이고, 도윤이는 다시 과학관 구석에 서 있었습니다. 문은 사라지고 없었지만, 도윤이의 눈은 완전히 달라져 있었습니다. 주머니 속 물리 교과서를 꺼냈습니다. 처음으로 두렵지 않았습니다. F=ma, E=mc², 그리고 앞으로 배울 수많은 공식들. 이것들 하나하나가 미래를 여는 열쇠라는 것을, 이제 알기 때문입니다.</p>
+        <p style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(0, 188, 212, 0.1) 0%, rgba(33, 150, 243, 0.1) 100%); border-radius: 12px; border-left: 4px solid #00BCD4;">
+          <strong>🚀 교훈: 과학은 상상을 현실로 만든다. 그러나 기술의 힘이 클수록, 그것을 쓰는 사람의 책임도 커진다.</strong><br><br>
+          물리학은 교과서 속 공식이 아니라 미래를 만드는 도구입니다. AI의 신경망, 양자 컴퓨터의 중첩과 얽힘, 초전도체의 쿠퍼 쌍과 마이스너 효과, 핵융합의 질량-에너지 등가, 나노로봇의 스케일 물리학, 모두 물리학 원리의 응용입니다. 기술의 경이로움과 함께 윤리적 질문도 품어야 합니다. 기술과 의지가 함께할 때 지속 가능한 미래가 열립니다.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+    </svg>
+  </div>
+
+  <script>
+    // 배경 이미지 변경
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 인트로 카드 초기 표시
+    document.querySelector('.intro-content')?.classList.add('active');
+      function goToQuiz() { window.location.href = '/creative-book/physics20_season1_quiz.html'; }
+  </script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🪞 빛의 반사와 거울의 세계 - 중등편</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작물리11/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 680px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165,0.84,0.44,1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(124,58,237,0.15); color: #5B21B6; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.95; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #7C3AED; font-weight: 600; }
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #7C3AED;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(124,58,237, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #5B21B6;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #5B21B6;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+    .story-card .dialogue { color: #5B21B6; font-weight: 600; }
+    .story-card .science-box { background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(91,33,182,0.05)); border-left: 4px solid #7C3AED; padding: 16px 20px; border-radius: 0 12px 12px 0; margin: 16px 0; font-size: 14px; }
+    .story-card .science-box strong { color: #4C1D95; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 900px; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .grade-badge { display: inline-block; background: linear-gradient(135deg, #7C3AED, #5B21B6); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+    .intro-content .characters { text-align: left; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #C4B5FD; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #fff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(124,58,237,0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(91,33,182,0.9); transform: translateY(-2px); }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <h1>🪞 빛의 반사와 거울의 세계</h1>
+        <p class="subtitle">— 반사의 법칙, 평면거울, 곡면거울의 광학 원리 —<br>교과기반 창작도서 · 물리 11</p>
+        <div class="characters">
+          <h3>🔬 핵심 개념</h3>
+          <p><strong>▸ 반사의 법칙:</strong> 입사각 = 반사각 (법선 기준)</p>
+          <p><strong>▸ 평면거울:</strong> 정립 허상, 좌우반전, 물체와 같은 크기</p>
+          <p><strong>▸ 오목거울:</strong> 빛을 모음, 초점에서 실상/허상 형성</p>
+          <p><strong>▸ 볼록거울:</strong> 빛을 퍼뜨림, 항상 축소된 정립 허상</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span><span class="theme">빛의 직진</span>
+        <h2>💡 빛은 왜 직진할까?</h2>
+        <p>빛은 <span class="highlight">균일한 매질</span>에서 항상 직선으로 나아갑니다. 이것이 <span class="highlight">빛의 직진성</span>입니다.</p>
+        <div class="science-box">
+          <strong>📖 빛의 기본 성질:</strong><br>
+          • 진공에서 빛의 속력: c = 3 × 10⁸ m/s<br>
+          • 직진성: 균일한 매질에서 직선 경로<br>
+          • 광선: 빛의 진행 방향을 나타내는 선<br>
+          • 그림자: 빛의 직진성 때문에 생김
+        </div>
+        <p>태양 빛이 구름 사이로 퍼지는 것도, 레이저가 일직선으로 뻗어나가는 것도 모두 빛의 직진성 덕분입니다.</p>
+        <p>본영(umbra)은 빛이 전혀 도달하지 않는 영역, 반영(penumbra)은 일부 빛이 도달하는 영역입니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span><span class="theme">반사의 법칙</span>
+        <h2>📐 입사각과 반사각의 비밀</h2>
+        <div class="science-box">
+          <strong>🔬 반사의 법칙:</strong><br>
+          1. 입사광선, 반사광선, 법선은 같은 평면에 있다<br>
+          2. <strong>입사각(θᵢ) = 반사각(θᵣ)</strong><br><br>
+          • 법선(Normal): 반사면에 수직인 선<br>
+          • 입사각: 입사광선과 법선 사이의 각<br>
+          • 반사각: 반사광선과 법선 사이의 각
+        </div>
+        <p>거울에 45° 각도로 빛을 비추면, 반사된 빛도 정확히 45° 각도로 나갑니다. 이것이 <span class="highlight">반사의 법칙</span>입니다.</p>
+        <p>이 법칙은 모든 반사면에서 성립합니다. 거울, 수면, 유리창... 빛이 반사되는 곳이라면 어디서든!</p>
+        <p><span class="dialogue">"입사각 = 반사각, 이것만 기억하면 거울의 비밀이 풀린다!"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span><span class="theme">정반사와 난반사</span>
+        <h2>✨ 두 가지 반사의 얼굴</h2>
+        <div class="science-box">
+          <strong>📖 정반사 vs 난반사:</strong><br>
+          • <strong>정반사(Specular):</strong> 매끄러운 면, 평행광선 → 평행 반사<br>
+          • <strong>난반사(Diffuse):</strong> 거친 면, 평행광선 → 여러 방향 반사<br><br>
+          ※ 두 경우 모두 각 점에서는 반사의 법칙 성립!
+        </div>
+        <p>거울은 표면이 매끄러워 <span class="highlight">정반사</span>가 일어나 선명한 상이 보입니다. 반면 종이는 미세하게 울퉁불퉁해서 <span class="highlight">난반사</span>가 일어나 상이 보이지 않습니다.</p>
+        <p>난반사 덕분에 우리는 물체를 여러 방향에서 볼 수 있습니다. 만약 모든 것이 정반사만 한다면, 정확한 각도에서만 물체가 보일 거예요!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span><span class="theme">평면거울</span>
+        <h2>🪞 평면거울의 상 작도</h2>
+        <div class="science-box">
+          <strong>🔬 평면거울의 상 특성:</strong><br>
+          • 상의 종류: <strong>허상(Virtual Image)</strong><br>
+          • 상의 크기: 물체와 같음 (배율 = 1)<br>
+          • 상의 방향: 정립 (똑바로 선 상)<br>
+          • 상의 위치: 거울 뒤, 물체~거울 = 거울~상<br>
+          • 좌우반전: 좌우가 바뀌어 보임
+        </div>
+        <p>평면거울에서 상을 작도하는 방법:</p>
+        <p>1. 물체의 각 점에서 거울면에 수선을 그립니다.<br>
+        2. 거울 뒤쪽으로 같은 거리만큼 연장합니다.<br>
+        3. 그 점들을 연결하면 상이 완성!</p>
+        <p><span class="dialogue">"거울 속 나는 실제로 존재하지 않는 허상이에요!"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span><span class="theme">오목거울</span>
+        <h2>🔍 빛을 모으는 오목거울</h2>
+        <div class="science-box">
+          <strong>📖 오목거울(Concave Mirror):</strong><br>
+          • 중심(C): 구면의 중심<br>
+          • 초점(F): C와 거울 정점의 중간점<br>
+          • 초점거리(f): 정점에서 초점까지 거리<br>
+          • 관계식: f = R/2 (R = 곡률반경)<br><br>
+          <strong>거울 방정식: 1/f = 1/p + 1/q</strong><br>
+          (p: 물체거리, q: 상거리)
+        </div>
+        <p>오목거울은 들어간 거울입니다. 평행하게 들어온 빛을 <span class="highlight">한 점(초점)</span>으로 모읍니다.</p>
+        <p>물체 위치에 따른 상:<br>
+        • C 바깥: 축소 도립 실상<br>
+        • C 위치: 같은 크기 도립 실상<br>
+        • F~C 사이: 확대 도립 실상<br>
+        • F 안쪽: 확대 정립 허상</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span><span class="theme">볼록거울</span>
+        <h2>🚗 빛을 퍼뜨리는 볼록거울</h2>
+        <div class="science-box">
+          <strong>📖 볼록거울(Convex Mirror):</strong><br>
+          • 특징: 바깥으로 볼록한 거울<br>
+          • 평행광선: 퍼져 나감 (발산)<br>
+          • 허초점: 반사광선 연장선이 만나는 점 (거울 뒤)<br>
+          • 상: 항상 <strong>축소된 정립 허상</strong><br>
+          • 초점거리: 음수 (f < 0)
+        </div>
+        <p>볼록거울은 항상 작고 바로 선 허상을 만듭니다. 그래서 <span class="highlight">넓은 범위</span>를 볼 수 있어요!</p>
+        <p>활용 예시:<br>
+        • 자동차 사이드미러 (후방 시야 확보)<br>
+        • 도로 코너 반사경<br>
+        • 편의점 천장 감시 거울</p>
+        <p><span class="dialogue">"볼록거울 = 축소 + 정립 + 허상, 항상!"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span><span class="theme">상 작도법</span>
+        <h2>✏️ 곡면거울 상 작도의 3법칙</h2>
+        <div class="science-box">
+          <strong>🔬 오목거울 광선 작도 규칙:</strong><br>
+          1. 축과 평행한 광선 → 반사 후 초점(F) 통과<br>
+          2. 초점 통과 광선 → 반사 후 축과 평행<br>
+          3. 중심(C) 통과 광선 → 같은 경로로 반사<br><br>
+          ※ 볼록거울: 허초점 방향으로 광선 연장
+        </div>
+        <p>곡면거울에서 상의 위치를 찾으려면, 물체의 한 점에서 최소 <span class="highlight">2개의 광선</span>을 그려야 합니다.</p>
+        <p>두 반사광선(또는 연장선)이 만나는 점이 바로 상의 위치입니다!</p>
+        <p>배율(m) = 상의 크기 / 물체의 크기 = -q/p<br>
+        • m > 0: 정립상<br>
+        • m < 0: 도립상<br>
+        • |m| > 1: 확대, |m| < 1: 축소</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span><span class="theme">실상과 허상</span>
+        <h2>📸 실상 vs 허상의 차이</h2>
+        <div class="science-box">
+          <strong>📖 실상과 허상 비교:</strong><br><br>
+          <strong>실상(Real Image):</strong><br>
+          • 실제 광선이 모여 만듦<br>
+          • 스크린에 맺힘<br>
+          • 도립(거꾸로)<br>
+          • 거울/렌즈 앞에 형성<br><br>
+          <strong>허상(Virtual Image):</strong><br>
+          • 광선 연장선이 만남<br>
+          • 스크린에 안 맺힘<br>
+          • 정립(똑바로)<br>
+          • 거울 뒤에 형성
+        </div>
+        <p>영화관 스크린의 영상은 <span class="highlight">실상</span>입니다. 실제로 빛이 모여 상이 맺히니까요.</p>
+        <p>반면 평면거울에 비친 내 모습은 <span class="highlight">허상</span>입니다. 거울 뒤에 스크린을 놓아도 아무것도 맺히지 않아요!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span><span class="theme">거울 공식</span>
+        <h2>🧮 거울 방정식으로 계산하기</h2>
+        <div class="science-box">
+          <strong>🔬 거울 방정식과 부호 규약:</strong><br><br>
+          <strong>1/f = 1/p + 1/q</strong><br><br>
+          • p(물체거리): 항상 양수 (+)<br>
+          • q(상거리): 실상이면 +, 허상이면 -<br>
+          • f(초점거리): 오목 +, 볼록 -<br><br>
+          <strong>배율: m = -q/p = 상의 높이/물체의 높이</strong>
+        </div>
+        <p>예제: 오목거울(f=10cm) 앞 30cm에 물체가 있을 때</p>
+        <p>1/10 = 1/30 + 1/q<br>
+        1/q = 1/10 - 1/30 = 3/30 - 1/30 = 2/30 = 1/15<br>
+        q = <span class="highlight">15cm</span> (양수이므로 실상)</p>
+        <p>m = -15/30 = <span class="highlight">-0.5</span> (음수이므로 도립, 0.5배 축소)</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span><span class="theme">거울의 활용</span>
+        <h2>🔭 일상 속 거울 광학</h2>
+        <div class="science-box">
+          <strong>📖 거울의 실생활 응용:</strong><br>
+          • 반사 망원경: 오목거울로 빛을 모아 천체 관측<br>
+          • 자동차 헤드라이트: 오목거울 초점에 전구 배치<br>
+          • 치과 거울: 오목거울로 확대된 상 관찰<br>
+          • 태양열 발전: 오목거울로 태양빛 집중<br>
+          • 백미러: 볼록거울로 넓은 시야 확보
+        </div>
+        <p>뉴턴이 발명한 <span class="highlight">반사 망원경</span>은 오목거울을 사용해 색수차 문제를 해결했습니다.</p>
+        <p>자동차 <span class="highlight">헤드라이트</span>는 전구를 오목거울의 초점에 두어 평행한 빛을 만듭니다.</p>
+        <p><span class="dialogue">"거울의 원리를 알면 세상이 다르게 보여요!"</span></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='/creative-book/physics11_season1_quiz.html?season=season3'">퀴즈 풀기</button>
+    <button class="nav-btn" onclick="location.href='/book-list.html'">목록으로</button>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelector('.story-card')?.classList.add('active');
+          const bg = entry.target.dataset.bg;
+          if (bg) mapContainer.style.backgroundImage = `url('${bg}')`;
+        }
+      });
+    }, { threshold: 0.3 });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

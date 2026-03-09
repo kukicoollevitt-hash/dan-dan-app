@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚡ 에너지 전환의 세계 - 중등편</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작물리15/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 680px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165,0.84,0.44,1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(16,185,129,0.15); color: #059669; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.95; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #059669; font-weight: 600; }
+    .story-card .dialogue { color: #10B981; font-weight: 600; }
+    .story-card .science-box { background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.05)); border-left: 4px solid #10B981; padding: 16px 20px; border-radius: 0 12px 12px 0; margin: 16px 0; font-size: 14px; }
+    .story-card .science-box strong { color: #047857; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 900px; animation: fadeInUp 1s ease-out; }
+    .intro-content h1 { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .grade-badge { display: inline-block; background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+    .intro-content .characters { text-align: left; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #6EE7B7; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #fff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(16,185,129,0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(5,150,105,0.9); transform: translateY(-2px); }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <span class="grade-badge">📚 중1-2 심화편</span>
+        <h1>⚡ 에너지 전환의 세계</h1>
+        <p class="subtitle">— 에너지의 종류, 전환, 보존 법칙 —<br>교과기반 창작도서 · 물리 15</p>
+        <div class="characters">
+          <h3>🔬 핵심 개념</h3>
+          <p><strong>▸ 에너지:</strong> 일을 할 수 있는 능력 (단위: J)</p>
+          <p><strong>▸ 운동 에너지:</strong> Ek = ½mv²</p>
+          <p><strong>▸ 위치 에너지:</strong> Ep = mgh</p>
+          <p><strong>▸ 에너지 보존:</strong> 전환은 되지만 총량은 일정</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span><span class="theme">에너지란</span>
+        <h2>💪 에너지는 무엇일까?</h2>
+        <p>자동차가 달리고, 전구가 빛나고, 스피커가 소리를 내는 것 모두 <span class="highlight">에너지</span> 덕분입니다.</p>
+        <div class="science-box">
+          <strong>📖 에너지(Energy)의 정의:</strong><br>
+          • <strong>일을 할 수 있는 능력</strong><br>
+          • 단위: J(줄), kWh(킬로와트시), cal(칼로리)<br><br>
+          <strong>에너지와 일의 관계:</strong><br>
+          • 일(W) = 힘(F) × 이동거리(s)<br>
+          • W = Fs (단위: J)<br>
+          • 1J = 1N × 1m = 1kg·m²/s²
+        </div>
+        <p>1줄(J)은 1뉴턴의 힘으로 물체를 1m 이동시킬 때 하는 일의 양입니다.</p>
+        <p><span class="dialogue">"에너지는 사라지지 않고, 형태만 바꾼다!"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span><span class="theme">에너지 종류</span>
+        <h2>🌈 다양한 형태의 에너지</h2>
+        <div class="science-box">
+          <strong>🔬 에너지의 종류:</strong><br>
+          • <strong>운동 에너지:</strong> 움직이는 물체가 가진 에너지<br>
+          • <strong>위치 에너지:</strong> 높이에 따른 에너지<br>
+          • <strong>열에너지:</strong> 분자 운동에 의한 에너지<br>
+          • <strong>전기 에너지:</strong> 전하의 흐름에 의한 에너지<br>
+          • <strong>화학 에너지:</strong> 화학 결합에 저장된 에너지<br>
+          • <strong>핵에너지:</strong> 원자핵에 저장된 에너지<br>
+          • <strong>빛에너지:</strong> 전자기파가 가진 에너지<br>
+          • <strong>소리 에너지:</strong> 공기 진동의 에너지
+        </div>
+        <p>우리 몸은 음식의 <span class="highlight">화학 에너지</span>를 운동 에너지, 열에너지로 전환합니다!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span><span class="theme">운동 에너지</span>
+        <h2>🏃 움직이면 에너지가 생긴다</h2>
+        <div class="science-box">
+          <strong>📖 운동 에너지(Kinetic Energy):</strong><br><br>
+          <strong>Ek = ½mv²</strong><br><br>
+          • m: 질량 (kg)<br>
+          • v: 속력 (m/s)<br>
+          • Ek: 운동 에너지 (J)<br><br>
+          <strong>특징:</strong><br>
+          • 질량에 비례<br>
+          • 속력의 <strong>제곱</strong>에 비례 (속력 2배 → 에너지 4배!)
+        </div>
+        <p>예제: 질량 1000kg 자동차가 20m/s로 달릴 때의 운동 에너지</p>
+        <p>Ek = ½ × 1000 × 20² = ½ × 1000 × 400 = <span class="highlight">200,000 J = 200 kJ</span></p>
+        <p>같은 차가 40m/s로 달리면? Ek = 800 kJ (4배!)</p>
+        <p><span class="dialogue">"속력이 2배면 에너지는 4배, 그래서 과속이 위험해요!"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span><span class="theme">위치 에너지</span>
+        <h2>🏔️ 높이 올라가면 에너지 저장</h2>
+        <div class="science-box">
+          <strong>📖 중력 위치 에너지(Gravitational PE):</strong><br><br>
+          <strong>Ep = mgh</strong><br><br>
+          • m: 질량 (kg)<br>
+          • g: 중력가속도 (9.8 m/s² ≈ 10 m/s²)<br>
+          • h: 기준점으로부터 높이 (m)<br><br>
+          <strong>특징:</strong><br>
+          • 질량에 비례<br>
+          • 높이에 비례<br>
+          • 기준점 선택에 따라 값이 달라짐
+        </div>
+        <p>예제: 질량 2kg 물체를 5m 높이에 올렸을 때 (g=10)</p>
+        <p>Ep = 2 × 10 × 5 = <span class="highlight">100 J</span></p>
+        <p>롤러코스터가 높이 올라갈 때 위치 에너지가 저장되고, 내려오면서 운동 에너지로 바뀝니다!</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span><span class="theme">역학적 에너지</span>
+        <h2>⚖️ 운동 + 위치 = 역학적 에너지</h2>
+        <div class="science-box">
+          <strong>🔬 역학적 에너지(Mechanical Energy):</strong><br><br>
+          <strong>E = Ek + Ep = ½mv² + mgh</strong><br><br>
+          <strong>역학적 에너지 보존 법칙:</strong><br>
+          마찰이 없을 때, 역학적 에너지의 총합은 일정<br><br>
+          높이 h₁에서 → 높이 h₂로 이동 시:<br>
+          ½mv₁² + mgh₁ = ½mv₂² + mgh₂
+        </div>
+        <p>자유낙하하는 물체:<br>
+        • 처음: Ep 최대, Ek = 0<br>
+        • 중간: Ep와 Ek 중간값<br>
+        • 바닥: Ep = 0, Ek 최대</p>
+        <p>하지만 <span class="highlight">총 역학적 에너지(Ep + Ek)는 항상 일정!</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span><span class="theme">에너지 전환</span>
+        <h2>🔄 에너지는 변신한다!</h2>
+        <div class="science-box">
+          <strong>📖 일상 속 에너지 전환 예시:</strong><br>
+          • 전구: 전기 → 빛 + 열<br>
+          • 선풍기: 전기 → 운동<br>
+          • 광합성: 빛 → 화학<br>
+          • 배터리 충전: 전기 → 화학<br>
+          • 배터리 사용: 화학 → 전기<br>
+          • 발전기: 운동 → 전기<br>
+          • 모터: 전기 → 운동<br>
+          • 태양전지: 빛 → 전기
+        </div>
+        <p>자동차의 에너지 전환:<br>
+        <span class="highlight">화학(연료) → 열 → 운동</span></p>
+        <p>수력 발전소:<br>
+        <span class="highlight">위치(물) → 운동 → 전기</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span><span class="theme">에너지 보존</span>
+        <h2>♾️ 에너지는 창조되지도 소멸되지도 않는다</h2>
+        <div class="science-box">
+          <strong>📖 에너지 보존 법칙:</strong><br>
+          • 에너지는 <strong>새로 만들어지거나 사라지지 않음</strong><br>
+          • 한 형태에서 다른 형태로 전환될 뿐<br>
+          • 전환 전후 총 에너지는 항상 같음<br><br>
+          <strong>열역학 제1법칙과 동일:</strong><br>
+          ΔU = Q - W<br>
+          (내부 에너지 변화 = 흡수한 열 - 한 일)
+        </div>
+        <p>영구기관이 불가능한 이유: 에너지 보존 법칙 때문!</p>
+        <p>에너지가 "손실"된다고 할 때, 실제로는 <span class="highlight">열에너지</span>로 전환되어 주변에 퍼지는 것입니다.</p>
+        <p><span class="dialogue">"우주의 총 에너지는 항상 일정하다!"</span></p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span><span class="theme">에너지 효율</span>
+        <h2>📊 얼마나 효율적으로 쓰는가?</h2>
+        <div class="science-box">
+          <strong>🔬 에너지 효율(Efficiency):</strong><br><br>
+          <strong>효율(%) = (유용한 에너지 출력 / 총 에너지 입력) × 100</strong><br><br>
+          <strong>각종 기기의 효율:</strong><br>
+          • 백열전구: 약 5% (95%가 열로 손실)<br>
+          • LED 전구: 약 40%<br>
+          • 자동차 엔진: 약 25-30%<br>
+          • 전기 모터: 약 85-95%<br>
+          • 태양전지: 약 15-25%
+        </div>
+        <p>백열전구가 비효율적인 이유: 전기 에너지의 대부분이 빛이 아닌 <span class="highlight">열</span>로 변환!</p>
+        <p>100% 효율은 불가능: 항상 일부 에너지가 열로 손실됩니다.</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span><span class="theme">발전 방식</span>
+        <h2>🔌 전기는 어떻게 만들어질까?</h2>
+        <div class="science-box">
+          <strong>📖 발전 방식과 에너지 전환:</strong><br><br>
+          <strong>화력 발전:</strong><br>
+          화학(연료) → 열 → 운동(터빈) → 전기<br><br>
+          <strong>수력 발전:</strong><br>
+          위치(물) → 운동(터빈) → 전기<br><br>
+          <strong>원자력 발전:</strong><br>
+          핵에너지 → 열 → 운동(터빈) → 전기<br><br>
+          <strong>태양광 발전:</strong><br>
+          빛 → 전기 (광전 효과)
+        </div>
+        <p>대부분의 발전소는 <span class="highlight">터빈</span>을 돌려 전기를 생산합니다. (태양광 제외)</p>
+        <p>풍력: 운동(바람) → 운동(터빈) → 전기</p>
+      </div>
+    </section>
+
+    <section class="story-section" data-bg="/images/창작도서/창작물리15/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span><span class="theme">지속가능 에너지</span>
+        <h2>🌍 미래를 위한 에너지</h2>
+        <div class="science-box">
+          <strong>📖 에너지와 환경:</strong><br>
+          • 화석연료: 유한, CO₂ 배출 → 지구온난화<br>
+          • 재생에너지: 태양, 풍력, 수력, 지열<br>
+          • 특징: 무한, 친환경, 지속가능<br><br>
+          <strong>에너지 절약 방법:</strong><br>
+          • 고효율 가전제품 사용<br>
+          • 불필요한 전기 끄기<br>
+          • 단열 강화<br>
+          • 대중교통 이용
+        </div>
+        <p><span class="highlight">에너지 보존</span>은 물리 법칙이지만, <span class="highlight">에너지 절약</span>은 우리의 선택입니다!</p>
+        <p>재생에너지는 태양에서 오는 에너지를 활용합니다:<br>
+        • 태양광: 직접 활용<br>
+        • 풍력: 태양열에 의한 대기 순환<br>
+        • 수력: 태양열에 의한 물 순환</p>
+        <p><span class="dialogue">"에너지를 알면 세상이 다르게 보인다!"</span></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='/creative-book/physics15_season1_quiz.html?season=season3'">퀴즈 풀기</button>
+    <button class="nav-btn" onclick="location.href='/book-list.html'">목록으로</button>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelector('.story-card')?.classList.add('active');
+          const bg = entry.target.dataset.bg;
+          if (bg) mapContainer.style.backgroundImage = `url('${bg}')`;
+        }
+      });
+    }, { threshold: 0.3 });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

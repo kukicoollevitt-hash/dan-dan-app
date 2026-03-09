@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎨 눈으로 세상을 삼킨 소년, 레오나르도</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물01/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #d4a373 0%, #8b4513 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(212, 163, 115, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(212, 163, 115, 0.15);
+      color: #8b4513;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #d4a373;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #8b4513;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #ffd700;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #ff6b6b;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(212, 163, 115, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(212, 163, 115, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(139, 69, 19, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 163, 115, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎨 눈으로 세상을 삼킨 소년, 레오나르도</h1>
+        <p class="subtitle">
+          — 관찰이 천재를 만들다: 호기심과 집념의 르네상스 서사 —<br>
+          Leonardo di ser Piero da Vinci, 1452-1519<br>
+          교과기반 창작도서 · 세계인물 01
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>▸ 레오나르도 다 빈치 (주인공):</strong> 끝없는 호기심과 관찰력을 지닌 소년. 세상 모든 것을 눈에 담고 손으로 옮기려는 꿈을 가졌다. 후대에 '르네상스 인간(보편적 인간)'의 전형(典型)으로 불리게 될 존재.</p>
+          <p><strong>▸ 안드레아 델 베로키오 (스승):</strong> 피렌체 최고의 공방(工房) 주인. 엄격하지만 제자의 재능을 누구보다 먼저 알아본 사람. 레오나르도에게 '보텀업(bottom-up)' 교육의 가치를 심어준 멘토.</p>
+          <p><strong>▸ 세르 피에로 (아버지):</strong> 아들의 재능을 인정하면서도 '쓸모 있는' 직업을 원하는 현실적인 공증인(公證人). 당대 부르주아적 가치관의 대변자.</p>
+          <p><strong>▸ 루도비코 스포르차 (후원자):</strong> 밀라노의 권력자. 레오나르도에게 기회를 주지만 늘 '결과물'만을 요구하는 현실의 벽. 메세나(예술 후원자)의 명암(明暗)을 보여주는 인물.</p>
+          <p><strong>▸ 그림자 (내면의 두려움):</strong> 완벽을 추구하는 레오나르도를 끝없이 괴롭히는 자기 의심의 목소리. 정신분석학적으로는 '초자아'의 상징.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 서사 구조</h3>
+          <p><strong>◆ 외적 갈등 :</strong> 아버지와 사회는 '예술가'라는 직업을 인정하지 않는다. 서자(庶子) 출신이라는 한계가 늘 발목을 잡는다 — 15세기 이탈리아의 신분제(身分制)적 장벽.</p>
+          <p><strong>◆ 내적 갈등 :</strong> 완벽을 향한 집착은 창조의 동력이자 동시에 족쇄다. 끝내지 못하는 수많은 작품들이 그를 괴롭힌다 — 심리학에서 말하는 '완벽주의 패러독스'.</p>
+          <p><strong>◆ 시대적 갈등 :</strong> 예술과 과학은 별개라는 시대의 편견 속에서, 두 세계를 하나로 엮으려는 그의 시도는 끊임없는 오해를 불러온다. 이것이 오늘날 '통섭(統攝)'의 원류가 되었다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">발견의 씨앗</span>
+        <h2>빈치 마을의 이상한 아이</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>세상의 모든 것에 '왜?'를 던지는 소년, 레오나르도는 이미 평범하지 않았다.</p>
+        <p>토스카나 언덕 위, 올리브 나무와 포도밭이 끝없이 펼쳐진 빈치라는 작은 마을에 한 소년이 살았습니다. 이름은 레오나르도. 그 아이는 태어나면서부터 남달랐습니다. 다른 아이들이 언덕을 뛰어다니며 놀 때, 레오나르도는 풀밭에 엎드려 개미가 먹이를 나르는 모습을 한 시간이고 두 시간이고 바라보았습니다. 이것은 오늘날 생물학에서 말하는 <span class="highlight">군집행동(群集行動)</span>의 관찰이었습니다.<br><br><span class="dialogue">"개미는 왜 줄을 서서 걸을까?" "저 구름은 왜 양 모양이었다가 용 모양으로 변하는 걸까?" "강물은 왜 바위를 만나면 소용돌이를 만들까?"</span><br><br>하루에도 수십 개의 질문이 그의 머릿속에서 쏟아져 나왔습니다. 이러한 끊임없는 질문은 철학에서 말하는 <span class="highlight">'경이(驚異, thaumázein)'</span>의 발현이었습니다.</p>
+        <p>아버지 세르 피에로는 공증인(公證人)이었습니다. 그는 아들이 법률가나 상인처럼 '쓸모 있는' 사람이 되기를 바랐습니다. 이는 당대 르네상스 이탈리아 사회에서 <span class="highlight">실용주의</span>가 지배적 가치였음을 보여줍니다.<br><br><span class="dialogue">"레오나르도, 그 벌레를 관찰하는 시간에 라틴어 한 줄이라도 더 외우렴."</span><br><br>아버지의 말에 소년은 고개를 끄덕였지만, 그의 눈은 이미 책상 위 촛불이 만들어내는 그림자의 모양을 쫓고 있었습니다. 레오나르도는 서자(庶子)였습니다. 당시 사회에서 서자라는 것은 대학(大學)에도 갈 수 없고, 아버지의 직업을 물려받을 수도 없다는 뜻이었습니다 — 이것이 바로 <span class="highlight">신분적 유리천장</span>입니다. 하지만 소년은 슬퍼하는 대신 자신만의 방식으로 세상을 배우기로 결심했습니다.</p>
+        <p><span class="dialogue">"책이 없으면 자연이 나의 책이 되면 돼."</span><br><br>레오나르도는 나뭇가지를 꺾어 젖은 땅 위에 새의 날개를 그렸습니다. 깃털 하나하나의 결을 기억해서 그리는 그의 솜씨에 마을 사람들은 혀를 내둘렀습니다. 어떤 이는<br><br><span class="dialogue">"저 아이는 악마에게 눈을 빌렸다"</span><br><br>고 수군거렸고, 어떤 이는<br><br><span class="dialogue">"하느님이 내린 재능"</span><br><br>이라 감탄했습니다. 소년은 그런 말에 개의치 않았습니다. 그에게는 오직 하나, <span class="highlight">세상을 더 가까이에서, 더 깊이, 더 선명하게 보고 싶다는 열망</span>만이 있었습니다. 이것은 그가 훗날 '관찰의 인식론(觀察の認識論)'이라 부르게 될 철학의 씨앗이었습니다. 이것이 바로, 역사상 가장 위대한 관찰자의 이야기가 시작된 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">관찰의 습관</span>
+        <h2>스케치북이라는 우주</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>한 권의 스케치북은 소년에게 세상 전부를 담을 수 있는 무한한 우주였다.</p>
+        <p>레오나르도에게는 보물이 하나 있었습니다. 낡은 양피지를 엮어 만든 스케치북이었습니다. 그 스케치북은 소년의 온 세상이었습니다. 아침이면 해가 뜨는 방향과 그림자의 길이를 기록했고 — 이것은 훗날 <span class="highlight">광학(光學)</span>의 기초가 됩니다 — 낮에는 시장에 나가 사람들의 표정을 관찰하며 빠르게 스케치했습니다. 웃는 얼굴, 화난 얼굴, 슬픈 얼굴, 놀란 얼굴. 그는 단순히 얼굴의 윤곽만 그리는 것이 아니라, <span class="highlight">감정이 근육(筋肉)을 어떻게 움직이는지</span>를 포착하려 했습니다. 오늘날 우리는 이것을 <span class="highlight">'표정 해부학'</span>이라 부릅니다.</p>
+        <p><span class="dialogue">"입꼬리가 올라갈 때 눈 주변의 주름도 함께 접혀야 진짜 웃음이야."</span><br><br>열두 살 소년의 입에서 나온 말이라고는 믿기 어려웠습니다. 현대 심리학에서는 이를 <span class="highlight">'뒤센 미소'</span>라 부르는데, 레오나르도는 이미 500년 전에 이 원리를 직관적으로 파악하고 있었습니다. 시장의 생선 장수 아저씨는 레오나르도가 자신의 얼굴을 그리는 것을 보고 기겁했습니다.<br><br><span class="dialogue">"이 녀석, 내 코가 이렇게 크단 말이냐!"</span><br><br>하지만 레오나르도는 진지하게 대답했습니다.<br><br><span class="dialogue">"아저씨, 코가 큰 게 아니라 빛이 왼쪽에서 올 때 코의 그림자가 오른쪽으로 길게 뻗는 거예요. 그래서 더 커 보이는 거죠."</span><br><br>이것은 <span class="highlight">명암법(明暗法)</span>의 원리에 대한 조기 직관이었습니다.</p>
+        <p>스케치북에는 사람만 있는 것이 아니었습니다. 참나무 잎맥(葉脈)의 갈라지는 패턴, 달팽이 껍데기의 나선형(螺旋形) 구조, 강물이 바위를 감싸 도는 곡선, 박쥐 날개의 막 구조까지. 소년은 자연의 모든 형태에서 숨겨진 규칙을 찾으려 했습니다. 이것이 바로 <span class="highlight">자연의 수학적 질서</span>를 탐구하는 태도입니다.<br><br><span class="dialogue">"모든 것은 연결되어 있어. 나뭇잎의 잎맥과 강의 줄기는 같은 모양이야. 우연일까?"</span><br><br>그는 스케치북 한쪽에 이런 질문을 적어두곤 했습니다. 이것은 현대 과학에서 말하는 <span class="highlight">프랙탈 구조</span>의 발견이었습니다! 이 소박한 질문들이 훗날 해부학(解剖學), 수리학(水理學), 식물학(植物學)이라는 거대한 학문으로 이어질 씨앗이었다는 것을, 그때의 소년은 아직 알지 못했습니다. <span class="highlight">스케치북은 단순한 종이가 아니었습니다. 그것은 소년이 세상을 이해하는 방식 그 자체였고, 눈으로 본 세상을 손끝으로 번역하는 마법의 도구였습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">스승과의 만남</span>
+        <h2>베로키오의 공방 — 불꽃이 불꽃을 만나다</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>진정한 스승은 답을 주는 사람이 아니라, 더 깊은 질문을 던지게 만드는 사람이다.</p>
+        <p>레오나르도의 재능을 알아본 아버지 세르 피에로는, 비록 서자라는 한계 때문에 아들을 대학에 보낼 수는 없었지만, 피렌체 최고의 예술가 안드레아 델 베로키오의 공방(工房)에 입문시켰습니다. 열네 살의 소년이 피렌체라는 거대한 도시에 처음 발을 디딘 날, 그의 눈은 경이로움으로 가득 찼습니다. 거리마다 조각가와 화가들이 작업하고 있었고, 브루넬레스키가 설계한 대성당의 돔은 하늘을 찌를 듯 솟아 있었습니다. 이것은 르네상스 건축 혁명의 상징이었습니다.</p>
+        <p>베로키오의 공방은 엄격한 곳이었습니다. <span class="highlight">도제(徒弟) 제도</span>의 전형적인 모습이었습니다.<br><br><span class="dialogue">"여기서는 천재도 바닥 쓸기부터 시작한다."</span><br><br>스승의 첫 마디에 레오나르도는 빗자루를 잡았습니다. 물감을 갈고, 캔버스를 준비하고, 석고를 개는 일이 수개월간 계속되었습니다. 다른 견습생들은 투덜거렸지만, 레오나르도는 달랐습니다. 물감을 갈면서 안료(顏料)의 색이 입자 크기에 따라 어떻게 변하는지를 관찰했고 — 이것은 <span class="highlight">광학 물리학</span>의 영역입니다 — 석고를 개면서 물과 가루가 섞이는 비율에 따른 질감 변화를 스케치북에 기록했습니다. 그는 모든 '잡일'을 <span class="highlight">실험의 기회</span>로 전환했습니다.</p>
+        <p>어느 날, 베로키오는 자신의 그림 '그리스도의 세례'에서 천사 한 명을 레오나르도에게 그리도록 했습니다. 소년이 그린 천사를 본 순간, 공방 전체가 조용해졌습니다. 천사의 금빛 머리카락은 마치 실제로 바람에 흩날리는 것처럼 부드러웠고, 그 눈동자에는 신비로운 빛이 담겨 있었습니다. 이것은 <span class="highlight">'스푸마토'</span> 기법의 맹아(萌芽)였습니다. 전설에 따르면, 베로키오는 제자의 천사를 보고<br><br><span class="dialogue">"나는 이 아이에게 더 이상 가르칠 것이 없다"</span><br><br>며 붓을 내려놓았다고 합니다. 과장된 이야기일 수도 있지만, 확실한 것은 그날부터 스승과 제자의 관계가 달라졌다는 것입니다. 베로키오는 더 이상 기술을 가르치는 대신, 레오나르도에게 <span class="highlight">소크라테스적 질문</span>을 던지기 시작했습니다.<br><br><span class="dialogue">"넌 왜 그림자를 검은색으로 그리지 않지?" "빛은 정말 직선으로만 움직일까?"</span> <span class="highlight">이 질문들은 소년을 더 깊은 탐구의 세계로 이끌었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">관찰 철학 확립</span>
+        <h2>'보는 법'을 배우다 — 눈이 아닌 마음으로</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>모두가 보는 것을 아무도 보지 못하는 방식으로 보는 것, 그것이 관찰의 진정한 힘이다.</p>
+        <p>베로키오의 공방에서 몇 년을 보낸 레오나르도는 어느 날 깊은 깨달음에 도달했습니다.<br><br><span class="dialogue">"세상 사람들은 눈을 가지고 있지만 보지 못한다."</span><br><br>이 말은 그가 평생 간직한 신념이 되었습니다. 이것은 철학에서 말하는 <span class="highlight">'현상학적 환원'</span>과 맞닿아 있습니다. 보는 것과 관찰하는 것은 완전히 다른 차원의 행위였습니다. 길을 걷는 사람 천 명이 같은 나무를 보지만, 나뭇잎의 앞면과 뒷면이 왜 다른 색인지를 궁금해하는 사람은 레오나르도뿐이었습니다 — 이것은 <span class="highlight">엽록소(葉綠素)</span>의 분포와 관련된 생물학적 현상입니다.</p>
+        <p>그는 관찰에도 방법이 있다는 것을 깨달았습니다. 먼저 전체를 본다. 그다음 부분을 본다. 그리고 부분과 부분 사이의 관계를 본다. 마지막으로, 시간의 흐름에 따른 변화를 본다. 이 네 단계의 관찰법을 그는 <span class="highlight">'사페레 베데레(sapere vedere, 보는 법을 아는 것)'</span>라 불렀습니다. 오늘날 이것은 <span class="highlight">체계적 관찰법</span>이라는 과학적 방법론의 원형으로 인정받습니다. 이것은 단순한 기술이 아니라, 세상과 소통하는 철학이었습니다.</p>
+        <p>하지만 이 능력은 외로움을 동반했습니다. 레오나르도가 식사 자리에서도 접시 위 음식의 색 변화를 관찰하며 메모하면, 친구들은 고개를 저었습니다.<br><br><span class="dialogue">"넌 왜 그냥 먹지를 못하니?"</span><br><br>연인과 산책하면서도 그는 연인의 눈보다 강변의 물결 패턴에 더 매료되곤 했습니다. 이것은 <span class="highlight">아스퍼거적 집중</span>이라 불리는 특성과 유사합니다. 그의 관찰 습관은 때로 사람들과의 관계에 금을 내었습니다.<br><br><span class="dialogue">"나는 세상을 너무 깊이 들여다보느라, 바로 곁에 있는 사람의 마음은 보지 못하는 것일까?"</span><br><br>어느 밤, 촛불 아래에서 그는 스케치북에 이렇게 적었습니다. 관찰의 힘은 위대했지만, 그것은 동시에 고독의 힘이기도 했습니다. 하지만 레오나르도는 멈추지 않았습니다. 왜냐하면 그에게 관찰이란 숨 쉬는 것과 같았기 때문입니다. 숨을 멈출 수 없듯이, 보는 것을 멈출 수 없었습니다. <span class="highlight">그리고 바로 그 멈추지 않는 눈이, 그를 역사 속 가장 빛나는 존재로 만들어가고 있었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">해부학 탐구</span>
+        <h2>금단의 방 — 인체라는 소우주를 열다</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>가장 아름다운 예술은 생명의 구조를 이해하는 것에서 시작된다.</p>
+        <p>레오나르도의 관찰은 드디어 가장 논쟁적인 영역에 도달했습니다. <span class="highlight">인체 해부(人體解剖)</span>. 당시 사회에서 시체를 해부하는 것은 교회의 금기(禁忌)를 어기는 위험한 행위였습니다 — 중세 스콜라 철학의 영향으로 인체는 '신의 피조물'로서 해부가 금지되어 있었습니다. 하지만 레오나르도는 어떤 두려움보다 앎에 대한 갈증이 더 컸습니다. 이것은 <span class="highlight">에피스테메</span>의 발현이었습니다.<br><br><span class="dialogue">"인간의 몸을 그리면서 인간의 몸을 모른다는 것은, 눈을 감고 별을 그리는 것과 같다."</span><br><br>그는 깊은 밤, 병원의 지하실에서 몰래 시체를 해부하기 시작했습니다.</p>
+        <p>처음 메스를 든 날, 그의 손은 떨렸습니다. 죽음의 냄새는 역겨웠고, 차가운 피부의 감촉은 소름 끼치는 것이었습니다. 하지만 피부 아래 드러난 근육의 <span class="highlight">섬유(纖維)</span> 하나하나가 마치 로프처럼 꼬여 있는 것을 보았을 때, 두려움은 경외감으로 바뀌었습니다.<br><br><span class="dialogue">"이것은 신이 만든 가장 정교한 기계(macchina)다."</span><br><br>그는 눈물을 글썽이며 속삭였습니다. 심장이 펌프처럼 작동하는 원리 — 이것은 <span class="highlight">순환계(循環系)</span>의 이해였습니다 — 근육이 뼈를 당기는 <span class="highlight">지렛대</span>의 메커니즘, 혈관이 나뭇가지처럼 갈라지는 프랙탈 구조. 모든 것이 기하학적(幾何學的) 아름다움으로 가득했습니다.</p>
+        <p>그는 서른 구 이상의 시체를 해부하며 수백 장의 해부도를 남겼습니다. 이 그림들은 단순한 의학 도해(圖解)가 아니었습니다. 뼈와 근육 위에 예술가의 시선이 더해져, 과학 도면이면서 동시에 예술 작품이었습니다 — 이것이 <span class="highlight">'과학예술'</span>의 원형입니다. 하지만 이 과정에서 그는 끊임없이 비난을 받았습니다.<br><br><span class="dialogue">"시체를 만지는 자는 악마의 하수인이다!"</span><br><br>교회의 압력과 사회의 편견은 그를 옥죄어 왔습니다. 동료 화가들조차<br><br><span class="dialogue">"그림을 그리면 되지 왜 시체를 파헤치느냐"</span><br><br>고 조롱했습니다. 레오나르도는 외로웠지만 물러서지 않았습니다.<br><br><span class="dialogue">"진정한 예술가는 표면(表面)이 아니라 본질(本質)을 그리는 사람이다."</span> <span class="highlight">이 신념이 그를 버티게 했고, 결과적으로 그의 해부학 연구는 예술과 의학 모두를 수백 년 앞서가게 만들었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">발명가의 꿈</span>
+        <h2>너무 빠른 꿈 — 500년을 앞선 설계도</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>시대가 이해하지 못하는 꿈이야말로 세상을 바꿀 가장 강력한 씨앗이다.</p>
+        <p>레오나르도의 스케치북에는 그림만 있는 것이 아니었습니다. 거기에는 미래가 있었습니다. 비행 기계(飛行機械), 장갑차(armored vehicle), 잠수 장치(潛水裝置), 자동 방적기(紡績機), 태양열을 이용한 난방 시스템. 그의 설계도를 본 사람들은 하나같이 고개를 갸우뚱했습니다.<br><br><span class="dialogue">"하늘을 나는 기계라니, 새가 아닌 이상 어떻게 하늘을 난단 말인가?"</span><br><br>밀라노의 군주 루도비코 스포르차는 레오나르도를 후원했지만, 그가 원한 것은 실용적인 무기와 축성(築城) 기술이었지, 꿈 같은 발명품이 아니었습니다. 이것은 <span class="highlight">'실용주의'와 '이상주의'의 충돌</span>이었습니다.</p>
+        <p><span class="dialogue">"레오나르도, 그대의 비행 기계는 흥미롭지만, 내게는 당장 전쟁에 쓸 대포가 필요하오."</span><br><br>스포르차의 말에 레오나르도는 웃으며 대답했습니다.<br><br><span class="dialogue">"전하, 대포는 성벽을 무너뜨리지만 비행 기계는 성벽이라는 개념 자체를 무너뜨릴 것입니다."</span><br><br>이것은 <span class="highlight">패러다임 전환</span>에 대한 예언이었습니다. 하지만 그 누구도 이 말의 진짜 의미를 이해하지 못했습니다. 시대가 그를 따라잡지 못한 것입니다.</p>
+        <p>그의 설계도 중 가장 유명한 것은 <span class="highlight">'오르니톱터'</span>라 불리는 날개치는 비행 기계였습니다. 그는 새와 박쥐의 날개를 수천 번 관찰하고, 공기의 저항(抵抗)과 양력(揚力)의 원리를 직관적으로 이해한 뒤 이 설계를 완성했습니다. 실제로 작동하지는 않았지만, 그 안에 담긴 <span class="highlight">공기역학적</span> 원리는 500년 뒤 라이트 형제가 비행기를 만들 때 참고할 만큼 정확했습니다. 레오나르도는 실패했을까요? 그렇지 않습니다. 그가 남긴 것은 완성된 기계가 아니라, <span class="highlight">'인간은 날 수 있다'는 꿈 그 자체</span>였습니다. 꿈을 설계도에 옮긴 순간, 그것은 더 이상 불가능이 아니라 '아직 이루어지지 않은 가능성'이 되었습니다.<br><br><span class="dialogue">"나는 오래전부터 알고 있었다. 인간은 인내심과 독창성이 있으면, 어떤 새보다 더 큰 날개를 만들 수 있다는 것을."</span><br><br>레오나르도는 확신에 찬 눈으로 스케치북을 덮었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">모나리자 탄생</span>
+        <h2>미소의 비밀 — 모나리자, 영혼을 담다</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>진정한 걸작은 그리는 것이 아니라, 보는 사람의 마음속에서 완성되는 것이다.</p>
+        <p>피렌체의 부유한 상인 프란체스코 델 조콘도가 아내의 초상화를 의뢰했을 때, 아무도 이 그림이 역사상 가장 유명한 그림이 될 거라고는 상상하지 못했습니다. 레오나르도는 이 그림을 '리자 부인(라 조콘다)'이라 불렀고, 우리는 그것을 '모나리자'로 알고 있습니다. 하지만 이 그림에는 비밀이 숨겨져 있었습니다 — 그것은 <span class="highlight">지각심리학</span>의 영역에 속하는 것이었습니다.</p>
+        <p>레오나르도는 리자 부인을 그리면서, 평생에 걸쳐 쌓아온 모든 관찰의 기술을 쏟아부었습니다. 먼저 <span class="highlight">'스푸마토'</span>라는 기법. 이것은 색과 색 사이의 경계선을 완전히 없애는 기술이었습니다. 마치 안개가 풍경을 감싸듯, 그림 속 리자 부인의 얼굴에서는 어디가 빛이고 어디가 그림자인지 구분할 수 없었습니다. 이 기법 덕분에 그녀의 미소는 신비로워졌습니다. 정면에서 보면 미소 짓는 것 같다가, <span class="highlight">주변시</span>로 보면 슬퍼 보이기도 하고, 다시 보면 무표정한 것 같기도 합니다. 이것은 <span class="highlight">'게슈탈트 전환'</span>이라 불리는 지각 현상입니다.</p>
+        <p><span class="dialogue">"이 여인은 웃고 있는 건가, 울고 있는 건가?"</span><br><br>그림을 본 사람들은 모두 같은 질문을 던졌습니다. 레오나르도는 미소 지으며 대답하지 않았습니다. 왜냐하면, 그것이 바로 그가 의도한 것이었기 때문입니다. 해부학을 통해 입술 주변 <span class="highlight">구륜근(口輪筋)</span>의 미세한 움직임을 연구한 그는, 인간의 미소가 단 하나의 감정이 아닌 수십 가지 감정의 조합이라는 것을 알고 있었습니다. 그래서 모나리자의 미소에는 기쁨, 수줍음, 신비로움, 그리고 약간의 <span class="highlight">멜랑콜리</span>까지 모두 담겨 있습니다.</p>
+        <p>이 그림은 4년이 넘게 작업되었고, 사실 레오나르도는 이 그림을 의뢰인에게 넘기지 않았습니다. 그는 죽는 날까지 이 그림을 곁에 두고 계속 수정하고 또 수정했습니다. 완벽한 미소를 위해, 완벽한 빛을 위해. 이것은 <span class="highlight">'점근선적 완벽'</span> — 결코 도달할 수 없지만 끊임없이 다가가는 것 — 의 추구였습니다. <span class="highlight">모나리자는 단순한 초상화가 아니었습니다. 그것은 레오나르도 다 빈치라는 인간의 모든 관찰, 모든 연구, 모든 열정이 한 장의 캔버스 위에 응축된 결정체였습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">완벽주의와의 전쟁</span>
+        <h2>완벽이라는 감옥 — 끝나지 않는 전쟁</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>완벽을 향한 집착은 가장 위대한 동력이자, 가장 잔인한 감옥이 될 수 있다.</p>
+        <p>레오나르도에게는 어두운 비밀이 하나 있었습니다. 그는 시작한 일을 끝내지 못하는 사람이었습니다. 천재라는 찬사 뒤에는 '미완성'이라는 그림자가 늘 따라다녔습니다. 밀라노 산타 마리아 델레 그라치에 교회의 '최후의 만찬'은 걸작이었지만, 그 과정은 고통 그 자체였습니다. 수도원장은 매일 찾아와 불평했습니다.<br><br><span class="dialogue">"레오나르도, 이 그림은 언제 끝나는 겁니까? 벽이 먼저 무너지겠습니다!"</span></p>
+        <p>레오나르도는 때때로 아침에 와서 붓질 한 번도 하지 않고 그림만 바라보다가 돌아가곤 했습니다. 사람들은 그를 게으르다고 비난했지만, 실제로 그의 머릿속에서는 폭풍이 몰아치고 있었습니다. 이것은 <span class="highlight">분석 마비</span>라 불리는 현상입니다.<br><br><span class="dialogue">"유다의 얼굴에 배신의 그림자를 어떻게 담지? 빛은 왼쪽에서 와야 하는가, 오른쪽에서 와야 하는가? 예수의 손은 빵을 가리켜야 하는가, 하늘을 가리켜야 하는가?"</span><br><br>하나의 붓질 뒤에는 수백 번의 고민이 있었습니다.</p>
+        <p>그의 내면에는 '그림자'라고 부를 수 있는 존재가 살고 있었습니다. 완벽을 향한 강박(强迫), 자기 의심의 목소리 — 정신분석학에서 말하는 <span class="highlight">초자아(超自我)</span>의 과잉이었습니다.<br><br><span class="dialogue">"이 정도로는 부족해. 다시 해. 아직 멀었어."</span><br><br>이 목소리는 잠들기 전에도, 깨어난 직후에도 그를 괴롭혔습니다. 레오나르도의 노트에는 이런 문장이 남아 있습니다.<br><br><span class="dialogue">"나는 평생 단 하나의 작품도 제대로 완성한 적이 없다."</span><br><br>이것은 지나친 겸손이 아니라 진심이었습니다.</p>
+        <p>하지만 역설적이게도(paradoxically), 바로 이 미완성의 고통이 그의 작품을 초월적(超越的) 수준으로 끌어올렸습니다. 다른 화가들이<br><br><span class="dialogue">"이 정도면 충분하다"</span><br><br>고 붓을 내려놓을 때, 레오나르도는<br><br><span class="dialogue">"아직 아니다"</span><br><br>라며 한 겹, 또 한 겹 물감을 덧입혔습니다. 이것이 <span class="highlight">'베라투라'</span> 기법의 극치입니다. <span class="highlight">완벽은 도달할 수 없는 것이었지만, 도달하려는 여정 자체가 그를 다른 모든 예술가들과 구별 짓는 표지가 되었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">경계 허물기</span>
+        <h2>경계를 허물다 — 예술가이자 과학자, 새로운 인간</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>세상이 나누어 놓은 경계를 허무는 사람만이 새로운 세계를 열 수 있다.</p>
+        <p>레오나르도가 살았던 시대에는 명확한 구분이 있었습니다. 예술가는 예술가이고, 과학자는 과학자이며, 기술자는 기술자였습니다. 하나의 분야에 전문가가 되는 것이 미덕이었고, 여러 분야를 넘나드는 것은 '정체성이 없다'는 비판을 받았습니다. 하지만 레오나르도는 이 모든 경계를 거부했습니다. 그는 <span class="highlight">'호모 우니베르살리스(보편적 인간)'</span>라는 르네상스 이상의 체현이었습니다.</p>
+        <p><span class="dialogue">"예술 없는 과학은 영혼이 없고, 과학 없는 예술은 뿌리가 없다."</span><br><br>이것이 그의 대답이었습니다. 그에게 그림은 과학이었고, 과학은 그림이었습니다. 물이 흐르는 소용돌이를 그릴 때 그는 <span class="highlight">유체역학(流體力學)</span>의 원리를 탐구했고, 인체를 그릴 때는 해부학의 정밀함을 추구했습니다. 건축을 설계할 때는 <span class="highlight">황금비(黃金比, golden ratio, φ=1.618...)</span>를 적용했고, 음악을 연주할 때는 소리의 물리학을 의식했습니다.</p>
+        <p>사람들은 혼란스러워했습니다.<br><br><span class="dialogue">"당신은 도대체 무엇을 하는 사람입니까?"</span><br><br>밀라노의 귀족이 물었을 때, 레오나르도는 이렇게 답했습니다.<br><br><span class="dialogue">"저는 보는 사람입니다."</span><br><br>이 간결한 대답 속에 그의 모든 정체성이 담겨 있었습니다. 화가, 조각가, 건축가, 해부학자, 기술자, 음악가, 수학자, 작가. 이 모든 타이틀은 하나의 능력에서 파생된 것이었습니다. 바로 <span class="highlight">관찰(觀察)</span>.</p>
+        <p>레오나르도는 오늘날 우리가 <span class="highlight">'통섭(統攝)'</span> 또는 <span class="highlight">'융합적 사고'</span>라 부르는 것의 원조였습니다. 그는 서로 다른 분야의 지식이 만났을 때 폭발적인 창조가 일어난다는 것을 몸으로 증명했습니다. 해부학적 지식이 있었기에 모나리자의 미소는 그토록 생생했고, 공학적 사고가 있었기에 그의 건축 설계는 그토록 혁신적이었습니다. 그는 단순히 여러 가지를 잘하는 사람이 아니었습니다. <span class="highlight">그는 모든 것이 하나로 연결되어 있다는 것을 깨달은 사람이었습니다. 그리고 그 깨달음은, 이후 수백 년간 인류가 따라가야 할 방향을 제시한 나침반이 되었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물01/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">교훈과 울림</span>
+        <h2>르네상스의 별 — 관찰이 남긴 유산</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>한 사람의 관찰이 인류의 가능성을 얼마나 확장할 수 있는지, 레오나르도가 증명했다.</p>
+        <p>1519년 5월 2일, 프랑스 앙부아즈 성. 예순일곱의 레오나르도는 프랑스 왕 프랑수아 1세(François I)가 마련해 준 거처에서 마지막 숨을 거두었습니다. 전설에 따르면, 그의 임종(臨終)을 프랑스 왕이 직접 지켜보았다고 합니다. 한 나라의 왕이 한 예술가의 마지막을 함께했다는 것은, 레오나르도가 얼마나 위대한 존재였는지를 보여주는 상징적(象徵的) 장면입니다. 이것은 <span class="highlight">예술가의 사회적 지위가 장인(匠人)에서 '지식인'으로 격상</span>되었음을 보여주는 역사적 순간이기도 합니다.</p>
+        <p>그가 남긴 것은 무엇이었을까요? 완성된 회화 작품은 스무 점도 채 되지 않았습니다. 하지만 그의 노트에는 <span class="highlight">7,000장이 넘는</span> 스케치와 메모가 있었습니다. 그 속에는 비행 기계의 설계도, 인체 해부도, 수력 공학(水力工學) 연구, 식물 성장의 패턴, 빛과 그림자의 물리학, 도시 설계도, 그리고 수없이 많은 질문들이 담겨 있었습니다. 이 노트들은 수백 년 동안 흩어졌다가 다시 모이면서, 천천히 그 가치를 인정받았습니다. 오늘날 '코덱스 레스터'는 세계에서 가장 비싼 책 중 하나로 빌 게이츠가 소유하고 있습니다.</p>
+        <p>레오나르도 다 빈치가 인류에게 남긴 가장 큰 유산은 특정 그림이나 발명품이 아닙니다. 그것은 <span class="highlight">'관찰하는 법'</span>이라는 태도입니다. 세상을 있는 그대로 보되, 그 안에 숨겨진 패턴과 원리를 찾아내려는 끈질긴 노력. 분야의 경계를 넘어 모든 지식을 하나로 연결하려는 용기. 완벽을 추구하되 실패를 두려워하지 않는 정신 — 이것이 <span class="highlight">'레오나르데스크'</span>라 불리는 정신의 핵심입니다.</p>
+        <p>빈치 마을의 이상한 아이는 세상을 바꾸었습니다. 개미를 관찰하던 소년의 눈은, 우주의 비밀을 들여다보는 창이 되었습니다. 그리고 오늘, 이 이야기를 읽는 여러분에게 레오나르도는 속삭입니다.<br><br><span class="dialogue">"세상을 바꾸는 것은 특별한 재능이 아니라, 세상을 바라보는 특별한 시선이란다. 눈을 크게 떠. 그리고 질문을 멈추지 마. 네가 보는 모든 것 속에 답이 있으니까."</span></p>
+        <p>🌱 <span class="highlight">교훈: 관찰은 창조의 시작이다. 세상을 깊이 보는 눈을 가진 사람만이, 아직 아무도 보지 못한 세상을 창조할 수 있다. 이것이 500년 전 레오나르도가 우리에게 남긴, 시대를 초월한 메시지(timeless message)다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='worldperson01_season1_quiz_78.html'">📝 관문평가</button>
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+  </div>
+
+  <script>
+    // 배경 이미지 배열
+    const bgImages = [
+      '/images/창작도서/창작세계인물01/00.jpg',
+      '/images/창작도서/창작세계인물01/01.jpg',
+      '/images/창작도서/창작세계인물01/02.jpg',
+      '/images/창작도서/창작세계인물01/03.jpg',
+      '/images/창작도서/창작세계인물01/04.jpg',
+      '/images/창작도서/창작세계인물01/05.jpg',
+      '/images/창작도서/창작세계인물01/06.jpg',
+      '/images/창작도서/창작세계인물01/07.jpg',
+      '/images/창작도서/창작세계인물01/08.jpg',
+      '/images/창작도서/창작세계인물01/09.jpg',
+      '/images/창작도서/창작세계인물01/10.jpg'
+    ];
+
+    // 이미지 프리로드
+    bgImages.forEach(src => {
+      const img = new Image;
+      img.src = src;
+    });
+
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+
+    // Intersection Observer로 섹션 감지
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const card = entry.target.querySelector('.story-card');
+          if (card) {
+            card.classList.add('active');
+          }
+
+          // 배경 이미지 변경
+          const bgUrl = entry.target.getAttribute('data-bg');
+          if (bgUrl) {
+            mapContainer.style.backgroundImage = `url('${bgUrl}')`;
+          }
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // 인트로 섹션 감지
+    const introSection = document.querySelector('.intro-section');
+    const introObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          mapContainer.style.backgroundImage = `url('${bgImages[0]}')`;
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    introObserver.observe(introSection);
+
+    // 뒤로가기 함수
+    function goBack() {
+      if (window.storyOpenedFrom === 'grade34') {
+        window.location.href = '/menu.html#grade34-novel';
+      } else if (window.storyOpenedFrom === 'grade56') {
+        window.location.href = '/menu.html#grade56-novel';
+      } else {
+        window.location.href = '/menu.html';
+      }
+    }
+
+    // 글로벌 변수 확인
+    if (window.opener && window.opener.storyOpenedFrom) {
+      window.storyOpenedFrom = window.opener.storyOpenedFrom;
+    }
+  </script>
+</body>
+</html>

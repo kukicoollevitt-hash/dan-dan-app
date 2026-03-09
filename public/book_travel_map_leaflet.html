@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>단단국어 도서 여행 지도 (Leaflet)</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow: hidden;
+    }
+
+    /* 전체 화면 맵 */
+    #map {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      background: #f8f9fa;
+    }
+
+    /* 줌 컨트롤 스타일 커스터마이징 */
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+    }
+
+    .leaflet-control-zoom a {
+      background: white !important;
+      border: none !important;
+      font-size: 20px !important;
+      font-weight: bold !important;
+      border-radius: 8px !important;
+      margin: 4px !important;
+    }
+
+    /* 팝업 스타일 */
+    .leaflet-popup-content-wrapper {
+      border-radius: 16px !important;
+      padding: 0 !important;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2) !important;
+    }
+
+    .leaflet-popup-content {
+      margin: 0 !important;
+      min-width: 280px !important;
+    }
+
+    .popup-card {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .popup-card h3 {
+      color: #2c3e50;
+      font-size: 20px;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .popup-card p {
+      color: #7f8c8d;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .popup-card .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #e8f4f8;
+      color: #3498db;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .popup-card button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .popup-card button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    /* 책 마커 스타일 */
+    .book-marker {
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .book-marker-content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .book-icon-marker {
+      font-size: 48px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+      transition: all 0.3s ease;
+    }
+
+    .book-marker:hover .book-icon-marker {
+      transform: scale(1.2);
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3));
+    }
+
+    .book-label {
+      background: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-top: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+
+    /* 안내 패널 */
+    .info-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .info-panel p {
+      font-size: 13px;
+      color: #7f8c8d;
+      margin: 3px 0;
+    }
+
+    .info-panel strong {
+      color: #2c3e50;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .header {
+        padding: 12px 20px;
+      }
+      .header h1 {
+        font-size: 20px;
+      }
+      .header p {
+        font-size: 12px;
+      }
+      .info-panel {
+        bottom: 10px;
+        right: 10px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 뒤로가기 버튼 -->
+  <button class="back-btn" onclick="goBack()">← 돌아가기</button>
+
+  <!-- 헤더 -->
+  <div class="header">
+    <h1>🐳 단단국어 도서 여행 지도</h1>
+    <p>마커를 클릭하고 줌/드래그로 지도를 탐험하세요!</p>
+  </div>
+
+  <!-- 안내 패널 -->
+  <div class="info-panel">
+    <p><strong>💡 사용법</strong></p>
+    <p>🖱️ 드래그: 지도 이동</p>
+    <p>🔍 스크롤: 줌 인/아웃</p>
+    <p>📍 마커 클릭: 상세 정보</p>
+  </div>
+
+  <!-- 지도 컨테이너 -->
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // 지도 초기화 (중심 좌표는 임의의 값, bounds로 제한할 예정)
+    const map = L.map('map', {
+      center: [0, 0],
+      zoom: 2,
+      minZoom: 1,
+      maxZoom: 4,
+      zoomControl: true,
+      attributionControl: false
+    });
+
+    // 커스텀 배경 타일 (단색 그라데이션)
+    const customTileLayer = L.tileLayer('', {
+      attribution: ''
+    });
+
+    // 배경을 CSS로 처리하기 위해 빈 타일 레이어
+    map.getContainer().style.background = 'linear-gradient(180deg, #87CEEB 0%, #B0E0E6 30%, #F0E68C 70%, #DEB887 100%)';
+
+    // 지도 이동 범위 제한
+    const bounds = L.latLngBounds([[-60, -120], [60, 120]]);
+    map.setMaxBounds(bounds);
+
+    // 책 카테고리 데이터
+    const bookCategories = [
+      {
+        name: '고전문학',
+        icon: '📕',
+        position: [30, -50],
+        color: '#E74C3C',
+        count: '40개 작품',
+        desc: '시대를 초월한 명작들이 기다리고 있어요. 춘향전, 심청전 등 우리 고전을 만나보세요!',
+        url: '/BRAINUP/korlit/classic_list.html'
+      },
+      {
+        name: '현대문학',
+        icon: '📘',
+        position: [0, 0],
+        color: '#3498DB',
+        count: '40개 작품',
+        desc: '현대의 감성이 담긴 작품들. 소년이 온다, 82년생 김지영 등 현대 문학을 탐험해보세요!',
+        url: '/BRAINUP/korlit/modern_list.html'
+      },
+      {
+        name: '인물전기',
+        icon: '📙',
+        position: [30, 50],
+        color: '#9B59B6',
+        count: '40명의 인물',
+        desc: '역사를 만든 위인들의 이야기. 세종대왕, 신사임당 등 40명의 인물을 만나보세요!',
+        url: '/BRAINUP/person/people_list.html'
+      },
+      {
+        name: '사회분야',
+        icon: '📒',
+        position: [-25, -40],
+        color: '#F39C12',
+        count: '지리·역사·도덕',
+        desc: '세상을 이해하는 지혜. 지리, 역사, 도덕 영역의 다양한 지식이 기다려요!',
+        url: '/BRAINUP/social/geo_list.html'
+      },
+      {
+        name: '과학분야',
+        icon: '📗',
+        position: [-25, 40],
+        color: '#27AE60',
+        count: '생물·물리·화학',
+        desc: '자연의 신비를 탐구해요. 생물, 물리, 화학의 흥미로운 세계로 떠나볼까요?',
+        url: '/BRAINUP/science/bio_list.html'
+      }
+    ];
+
+    // 커스텀 마커 생성
+    bookCategories.forEach(category => {
+      // 커스텀 아이콘 HTML
+      const iconHtml = `
+        <div class="book-marker-content">
+          <div class="book-icon-marker">${category.icon}</div>
+          <div class="book-label">${category.name}</div>
+        </div>
+      `;
+
+      // 커스텀 아이콘 생성
+      const customIcon = L.divIcon({
+        html: iconHtml,
+        className: 'book-marker',
+        iconSize: [80, 80],
+        iconAnchor: [40, 80],
+        popupAnchor: [0, -80]
+      });
+
+      // 마커 생성
+      const marker = L.marker(category.position, { icon: customIcon })
+        .addTo(map);
+
+      // 팝업 내용
+      const popupContent = `
+        <div class="popup-card">
+          <div style="font-size: 40px; margin-bottom: 10px;">${category.icon}</div>
+          <h3>${category.name}</h3>
+          <div class="badge">${category.count}</div>
+          <p>${category.desc}</p>
+          <button onclick="navigateTo('${category.url}')">
+            🚀 여행 떠나기
+          </button>
+        </div>
+      `;
+
+      // 팝업 바인딩
+      marker.bindPopup(popupContent, {
+        maxWidth: 300,
+        className: 'custom-popup'
+      });
+
+      // 호버 효과
+      marker.on('mouseover', function() {
+        this.openPopup();
+      });
+    });
+
+    // 고래 마커 추가 (중앙 상단)
+    const whaleIcon = L.divIcon({
+      html: `
+        <div class="book-marker-content" style="animation-delay: 0.5s;">
+          <div class="book-icon-marker" style="font-size: 60px;">🐳</div>
+          <div class="book-label" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">여행 시작!</div>
+        </div>
+      `,
+      className: 'book-marker',
+      iconSize: [100, 100],
+      iconAnchor: [50, 100],
+      popupAnchor: [0, -100]
+    });
+
+    const whaleMarker = L.marker([45, 0], { icon: whaleIcon }).addTo(map);
+    whaleMarker.bindPopup(`
+      <div class="popup-card">
+        <div style="font-size: 50px; margin-bottom: 10px;">🐳</div>
+        <h3>단단국어 도서 여행</h3>
+        <p>아래 5개의 섬을 여행하며 다양한 책을 만나보세요! 각 마커를 클릭하면 상세 정보를 볼 수 있어요.</p>
+      </div>
+    `);
+
+    // 네비게이션 함수
+    function navigateTo(url) {
+      window.location.href = url;
+    }
+
+    // 뒤로가기
+    function goBack() {
+      window.history.back();
+    }
+
+    // 키보드 단축키
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        goBack();
+      }
+    });
+
+    // 지도 초기 애니메이션 (줌 인)
+    setTimeout(() => {
+      map.setView([0, 0], 2, { animate: true, duration: 1.5 });
+    }, 500);
+  </script>
+</body>
+</html>

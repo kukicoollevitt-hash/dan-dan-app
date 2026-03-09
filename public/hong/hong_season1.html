@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔥 홍계월전</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 배경 이미지 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/hong/hong01.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 550px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #c0392b 0%, #8b1a1a 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .story-card .emoji {
+      font-size: 36px;
+    }
+
+    .story-card .story-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      font-weight: 500;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .story-card .story-text::-webkit-scrollbar-thumb {
+      background: #c0392b;
+      border-radius: 3px;
+    }
+
+    /* 시작 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 50px 60px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-content h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 20px;
+      color: #c0392b;
+      font-weight: 700;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 진행 표시 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #c0392b 0%, #8b1a1a 100%);
+      z-index: 1001;
+      transition: width 0.3s ease;
+    }
+
+    /* 챕터 표시 */
+    .chapter-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 20px;
+        justify-content: center;
+      }
+      .story-card {
+        max-width: 100%;
+        padding: 30px 25px;
+      }
+      .intro-content {
+        padding: 40px 30px;
+      }
+      .intro-content h1 {
+        font-size: 32px;
+      }
+      .chapter-indicator {
+        top: 70px;
+        right: 20px;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 진행 바 -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- 맨위로가기 버튼 -->
+  <button class="back-btn" onclick="scrollToTop()">↑ 맨위로가기</button>
+
+  <!-- 챕터 표시 -->
+  <div class="chapter-indicator" id="chapter-indicator">
+    🔥 시작하기
+  </div>
+
+  <!-- 고정 배경 -->
+  <div id="map-container"></div>
+
+  <!-- 스크롤 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🔥 홍계월전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          여장군 홍계월의 영웅 서사
+        </p>
+        <p class="scroll-hint">↓ 아래로 스크롤 해주세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="story-section" data-step="0" data-chapter="Part 1. 명문가의 비극과 버려진 아기, 운명의 시작">
+      <div class="story-card">
+        <div class="chapter">Part 1 of 10</div>
+        <h2>
+          <span class="emoji">👶</span>
+          명문가의 비극과 버려진 아기, 운명의 시작
+        </h2>
+        <div class="story-text">중국 명나라 시대, 명문 가문 홍씨 집안에 어여쁜 딸이 태어났다. 이름은 계월. 그러나 태어난 지 얼마 되지 않아 집안에 전쟁의 불길이 닥치고, 부모는 적에게 목숨을 잃는다.
+
+전란의 혼란 속에서 아기 계월은 강물에 버려지지만, 기적처럼 흘러가던 배 위에 떨어지며 구조된다. 그 배를 몰던 노인 부부가 불쌍히 여겨 아이를 거두어 키우게 된다.
+
+계월은 어릴 적부터 남다른 기질을 보였다. 바느질보다는 활을 쏘고 싶어 했고, 아버지가 숨겨둔 병서를 몰래 읽으며 전략과 무예에 눈을 떴다.
+
+마을 사람들은 "저 아이, 여자답지 않다"고 수군거렸지만, 계월은 자신만의 길을 걷고자 마음먹었다. 그녀의 마음속에는 어린 시절부터 전쟁의 상처와 복수심이 뿌리내리고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="story-section" data-step="1" data-chapter="Part 2. 남장을 결심한 계월, 과거 시험에 나서다">
+      <div class="story-card">
+        <div class="chapter">Part 2 of 10</div>
+        <h2>
+          <span class="emoji">📜</span>
+          남장을 결심한 계월, 과거 시험에 나서다
+        </h2>
+        <div class="story-text">계월은 자신의 능력을 펼치기 위해 남장을 결심한다. 여자로서는 관직에 나설 수도, 군대에 들어갈 수도 없었기 때문이다.
+
+그녀는 머리를 자르고 남자의 옷을 입은 뒤 "홍계월"이라는 남자 이름을 사용하기 시작한다. 외모도 준수하고 언행도 당당했기에 사람들은 그녀가 여자임을 알아채지 못했다.
+
+양부모의 반대에도 불구하고, 계월은 결국 문무 과거 시험에 응시하게 된다. 시험장에서 그녀는 탁월한 논리력과 무예 실력을 선보이며 다른 응시자들을 압도했다.
+
+특히 활쏘기와 병법 문제에서 만점을 받으며 시험관들을 놀라게 했다. 결국 계월은 장원급제의 영예를 얻고, 조정에서 주목받는 신예로 떠오르게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="story-section" data-step="2" data-chapter="Part 3. 위기의 전쟁터, 계월이 전장에 나서다">
+      <div class="story-card">
+        <div class="chapter">Part 3 of 10</div>
+        <h2>
+          <span class="emoji">⚔️</span>
+          위기의 전쟁터, 계월이 전장에 나서다
+        </h2>
+        <div class="story-text">장원급제 후 관직에 나선 계월은 빠르게 승진하며 무관으로서의 능력을 인정받는다. 그러던 어느 날, 북방 오랑캐가 대거 침입하며 나라는 위기에 빠진다.
+
+황제는 누가 군대를 이끌 것인가를 두고 조정에서 논의를 벌인다. 이때 계월은 스스로 전쟁터에 나가겠다고 청하며 황제의 허락을 받는다.
+
+계월은 군대를 지휘하며 치밀한 전략을 세운다. 적의 허를 찌르는 기습전과 병사들의 사기를 북돋우는 연설로 전세를 역전시킨다.
+
+첫 전투에서 대승을 거두며 계월은 "신의 장수"라 불리기 시작한다. 그녀의 지휘 아래 병사들은 죽음을 두려워하지 않았고, 적들은 "홍 장군"이라는 이름만 들어도 떨게 되었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="story-section" data-step="3" data-chapter="Part 4. 보국안과의 운명적인 만남과 묘한 감정">
+      <div class="story-card">
+        <div class="chapter">Part 4 of 10</div>
+        <h2>
+          <span class="emoji">💕</span>
+          보국안과의 운명적인 만남과 묘한 감정
+        </h2>
+        <div class="story-text">전쟁터에서 함께 싸우던 보국안은 명망 높은 가문 출신의 젊은 장수였다. 계월은 그와 함께 전략을 세우고, 전투에서 서로의 목숨을 구해주는 사이가 된다.
+
+보국안은 계월의 지혜와 담대함에 감탄하며 깊은 존경심을 품는다. 그러나 그 감정은 존경을 넘어 묘한 끌림으로 변해갔다. 그는 자신이 왜 동료 남성에게 이런 감정을 느끼는지 혼란스러워했다.
+
+계월 역시 보국안에게 신뢰를 느꼈고, 마음속 어딘가에서 설렘이 자라나고 있었다. 그러나 그녀는 자신의 정체를 밝힐 수 없었기에, 감정을 애써 눌렀다.
+
+둘은 서로를 "동지"라 부르며, 조국을 지키겠다는 의지를 나누었지만, 그 이면에는 말하지 못한 진심이 흐르고 있었다.</div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section class="story-section" data-step="4" data-chapter="Part 5. 결전의 날, 계월의 전술로 적을 격파하다">
+      <div class="story-card">
+        <div class="chapter">Part 5 of 10</div>
+        <h2>
+          <span class="emoji">🏹</span>
+          결전의 날, 계월의 전술로 적을 격파하다
+        </h2>
+        <div class="story-text">북방 오랑캐의 대군이 결전을 선포하며 국경을 넘어왔다. 수많은 병력과 뛰어난 무장을 갖춘 적군에 맞서, 명나라 군대는 고전을 면치 못했다.
+
+계월은 후퇴하는 듯한 전략을 펼쳐 적을 깊숙이 유인했다. 그리고 미리 숨겨두었던 복병과 협공을 펼쳐 적을 철저히 포위했다. 뛰어난 기마술과 궁술로 직접 전투에 나서며 적장의 목을 베기도 했다.
+
+병사들은 계월의 용맹함에 환호했고, 전투는 대승으로 끝났다. 적군의 주력이 궤멸되며 전쟁은 사실상 명나라의 승리로 기울어졌다.
+
+계월은 "여자가 이끈 전쟁"이라는 사실을 아무도 모른 채, 명예로운 장군으로서 조정에 귀환한다.</div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section class="story-section" data-step="5" data-chapter="Part 6. 정체가 드러나다, 조정의 분노와 계월의 위기">
+      <div class="story-card">
+        <div class="chapter">Part 6 of 10</div>
+        <h2>
+          <span class="emoji">😨</span>
+          정체가 드러나다, 조정의 분노와 계월의 위기
+        </h2>
+        <div class="story-text">개선장군으로 돌아온 계월은 황제의 신임을 받아 높은 벼슬에 오르게 된다. 그러나 질투하는 신하들이 그녀의 과거를 파헤치기 시작했다.
+
+결국 어린 시절의 기록과 양부모의 증언을 통해 계월이 여자임이 밝혀진다. 조정은 발칵 뒤집혔고, 일부 신하들은 "여자가 관직을 속여 차지했다"며 사형을 요구했다.
+
+황제 역시 처음에는 분노하며 그녀를 옥에 가두었다. 계월은 차가운 감옥 안에서 자신의 운명을 돌아보며 눈물을 흘렸지만, 후회하지는 않았다.
+
+그녀는 스스로의 힘으로 나라를 지켰고, 그 누구보다 충성을 다했다. 정체가 밝혀졌을 때, 계월은 당당히 말했다. "저는 여자입니다. 하지만 저는 누구보다 이 나라를 사랑합니다."</div>
+      </div>
+    </section>
+
+    <!-- PART 7 -->
+    <section class="story-section" data-step="6" data-chapter="Part 7. 황제의 관용, 다시 일어선 계월">
+      <div class="story-card">
+        <div class="chapter">Part 7 of 10</div>
+        <h2>
+          <span class="emoji">👑</span>
+          황제의 관용, 다시 일어선 계월
+        </h2>
+        <div class="story-text">황제는 며칠간 고민 끝에 계월의 죄를 사면하기로 결정한다. 그녀의 공적이 너무나 컸고, 전쟁 중 보여준 충성심은 누구도 부정할 수 없었기 때문이다.
+
+결국 황제는 계월을 불러 "네가 여자임을 알게 되었지만, 네 공은 그 어떤 남자 장군보다 크다"고 말하며 공식적으로 그녀를 인정했다.
+
+조정의 일부는 여전히 반발했지만, 황제의 명령 앞에 감히 대들 수 없었다. 계월은 다시 관직에 복귀하며, 이번에는 당당히 여성으로서 자신의 이름을 알렸다.
+
+그녀의 이야기는 백성들 사이에서 전설처럼 퍼져나갔고, 수많은 여인들이 그녀를 본받고자 했다.</div>
+      </div>
+    </section>
+
+    <!-- PART 8 -->
+    <section class="story-section" data-step="7" data-chapter="Part 8. 보국안과의 재회, 진심을 고백하다">
+      <div class="story-card">
+        <div class="chapter">Part 8 of 10</div>
+        <h2>
+          <span class="emoji">💑</span>
+          보국안과의 재회, 진심을 고백하다
+        </h2>
+        <div class="story-text">계월이 여자임이 밝혀진 뒤, 보국안은 처음에는 큰 충격을 받았다. 자신이 남자라고 믿었던 동료가 여자였다는 사실은 쉽게 받아들이기 어려웠다.
+
+그러나 며칠간 혼란스러운 마음을 정리한 후, 그는 자신의 감정이 변하지 않았음을 깨닫는다. 아니, 오히려 더욱 분명해졌다. 자신은 계월을 사랑하고 있었던 것이다.
+
+보국안은 계월을 찾아가 "나는 그대가 남자든 여자든 상관없이 마음을 주었소. 이제 당당히 청혼하오"라고 말한다.
+
+계월은 눈시울이 붉어지며 한동안 말을 잇지 못했다. 전쟁터에서 서로의 등을 지켜주던 그 동지가, 이제 자신의 반려자가 되고자 한다는 사실에 깊이 감동했다. 결국 그녀는 미소를 지으며 그의 손을 잡았다.</div>
+      </div>
+    </section>
+
+    <!-- PART 9 -->
+    <section class="story-section" data-step="8" data-chapter="Part 9. 결혼 후에도 이어지는 영웅의 길">
+      <div class="story-card">
+        <div class="chapter">Part 9 of 10</div>
+        <h2>
+          <span class="emoji">💒</span>
+          결혼 후에도 이어지는 영웅의 길
+        </h2>
+        <div class="story-text">계월과 보국안은 황제의 축복 아래 성대한 혼례를 올린다. 조정 대신들과 수많은 백성들이 축하했고, 둘은 부부이자 동지로서 새로운 삶을 시작한다.
+
+결혼 후에도 계월은 집안에만 머물지 않았다. 그녀는 여전히 조정의 중요한 자리를 맡으며 국정에 참여했고, 변방에서 위기가 생길 때마다 직접 군대를 이끌었다.
+
+보국안은 아내의 활약을 자랑스러워했고, 집안일과 자녀 양육에도 함께 힘을 보탰다. 둘은 서로를 존중하며 조화로운 가정을 꾸려갔다.
+
+사람들은 계월을 "안에서는 현모, 밖에서는 영웅"이라 불렀다. 그녀는 남녀의 경계를 넘어선 진정한 인물로 역사에 이름을 남기게 된다.</div>
+      </div>
+    </section>
+
+    <!-- PART 10 -->
+    <section class="story-section" data-step="9" data-chapter="Part 10. 전설이 된 여장군, 홍계월의 이름이 영원히 남다">
+      <div class="story-card">
+        <div class="chapter">Part 10 of 10</div>
+        <h2>
+          <span class="emoji">🌟</span>
+          전설이 된 여장군, 홍계월의 이름이 영원히 남다
+        </h2>
+        <div class="story-text">세월이 흘러 계월은 여러 차례의 전쟁에서 공을 세우며 나라의 수호자로 칭송받았다. 황제는 그녀에게 최고의 관직과 명예를 수여하며 "국가의 기둥"이라 칭했다.
+
+그녀의 이야기는 책으로 남겨졌고, 온 나라에 퍼졌다. 딸을 가진 어머니들은 "우리 딸도 계월처럼 당당하게 살길 바란다"고 말하며 그녀를 이상으로 삼았다.
+
+홍계월은 노년까지 건강하게 살며, 자녀와 손자들에게 자신의 경험을 전수했다. 그녀는 삶의 마지막 순간까지 "사람의 가치는 성별이 아니라 마음과 행동에 있다"고 가르쳤다.
+
+그녀가 세상을 떠났을 때, 온 나라는 슬픔에 잠겼고, 수많은 사람들이 그녀를 추모했다. 홍계월의 이름은 이후 수백 년 동안 여성 영웅의 상징으로 전해지며 영원히 역사에 남게 되었다.</div>
+      </div>
+    </section>
+
+    <!-- 엔딩 섹션 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🔥 홍계월전</h1>
+        <p class="subtitle">
+          고전소설<br>
+          끝.
+        </p>
+        <p class="scroll-hint">↑ 위로 스크롤하여 다시 읽기 ↑</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 배경 이미지 목록
+    const backgrounds = [
+      '/images/hong/hong01.jpg',
+      '/images/hong/hong02.jpg',
+      '/images/hong/hong03.jpg',
+      '/images/hong/hong04.jpg',
+      '/images/hong/hong05.jpg',
+      '/images/hong/hong06.jpg',
+      '/images/hong/hong07.jpg',
+      '/images/hong/hong08.jpg',
+      '/images/hong/hong09.jpg',
+      '/images/hong/hong10.jpg'
+    ];
+
+    const mapContainer = document.getElementById('map-container');
+    const progressBar = document.getElementById('progress-bar');
+    const chapterIndicator = document.getElementById('chapter-indicator');
+    const sections = document.querySelectorAll('.story-section');
+
+    let currentStep = -1;
+
+    // 스크롤 이벤트
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+
+      // 진행 바 업데이트
+      progressBar.style.width = scrollPercent + '%';
+
+      // 각 섹션 체크
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const card = section.querySelector('.story-card');
+
+        // 섹션이 화면에 보이면 카드 활성화
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          card.classList.add('active');
+
+          // 배경 이미지 변경
+          if (currentStep !== index) {
+            currentStep = index;
+            mapContainer.style.backgroundImage = `url('${backgrounds[index]}')`;
+
+            // 챕터 표시 업데이트
+            const chapterName = section.dataset.chapter;
+            chapterIndicator.textContent = '🔥 ' + chapterName;
+          }
+        }
+      });
+    });
+
+    // 맨위로 가기
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 초기 배경 설정
+    mapContainer.style.backgroundImage = `url('${backgrounds[0]}')`;
+  </script>
+</body>
+</html>

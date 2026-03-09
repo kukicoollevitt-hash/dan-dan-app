@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔬 미래의 생명 과학자가 되어</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작생물20/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #7B1FA2 0%, #4A148C 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(123, 31, 162, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(123, 31, 162, 0.15);
+      color: #4A148C;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #7B1FA2;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #7B1FA2;
+    }
+
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(123, 31, 162, 0.15);
+      border-radius: 3px;
+    }
+
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #4A148C;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #4A148C;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+
+    /* 짝수 섹션(오른쪽 카드)에서는 툴팁을 오른쪽 정렬 */
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #4A148C;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #CE93D8;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(123, 31, 162, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(123, 31, 162, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(74, 20, 140, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(123, 31, 162, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🔬 미래의 생명 과학자가 되어, 내일의 세상을 바꾸는 아이</h1>
+        <p class="subtitle">
+          — 할머니를 살리고 싶은 소녀 하늘이와 별님 박사의 열 가지 약속 —<br>
+          교과기반 창작도서 · 생물 20 · 중1-2
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🔬 하늘이:</strong> 열두 살 소녀, 할머니의 병을 고치겠다는 꿈을 가진 미래의 과학자</p>
+          <p><strong>⭐ 별님 박사:</strong> 세계적인 유전자 치료 과학자, 하늘이의 멘토이자 안내자</p>
+          <p><strong>👵 할머니:</strong> 희귀 유전 질환을 앓고 있는 하늘이의 할머니, 하늘이가 과학자를 꿈꾸게 된 이유</p>
+          <p><strong>🤖 인공지능:</strong> 과학자를 돕는 초특급 보조원, 미래 과학의 강력한 파트너</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">실험실의 꿈</span>
+        <h2>🔬 반짝이는 시험관 속에 담긴 소녀의 소원</h2>
+        <p>서울의 한 작은 아파트, 열두 살 소녀 '하늘이'의 방은 여느 아이들의 방과 조금 달랐습니다. 벽에는 아이돌 포스터 대신 '<span class="highlight">인체 해부도</span>'와 '<span class="highlight">DNA 이중나선</span>' 구조 그림이 붙어 있었고, 책상 위에는 생일 선물로 받은 광학 현미경이 놓여 있었어요. 하늘이는 매일 밤 그 현미경으로 양파 껍질 세포를 들여다보며 눈을 반짝였습니다. 현미경 렌즈 아래로 보이는 세포들은 마치 작은 방처럼 핵과 세포질, 세포벽을 갖추고 있었지요. 하늘이는 이 미시 세계에 푹 빠져 밤이 깊어가는 줄도 몰랐어요.<br><br><span class="dialogue">"세포 하나하나가 작은 우주 같아! 이 안에서 생명 현상이 일어나다니!"</span><br><br>하늘이에게는 간절한 꿈이 하나 있었습니다. 바로 생명 과학자가 되는 것이었지요. 그 꿈은 단순한 호기심을 넘어, 누군가를 살리고 싶다는 절실한 바람에서 시작된 것이었습니다.</p>
+        <p>하늘이가 과학자를 꿈꾸게 된 데에는 특별한 이유가 있었어요. 하늘이의 할머니는 오랫동안 '<span class="highlight">희귀 유전 질환</span>'을 앓고 계셨습니다. 병원에서는 아직 치료법이 없다고 했지요. 의사 선생님의 설명에 따르면, 할머니의 유전자(gene) 중 특정 부분에 '<span class="highlight" data-tooltip="돌연변이(Mutation): 유전자의 염기서열이 변화하는 현상">돌연변이</span>'가 있어서 중요한 단백질이 제대로 만들어지지 않는다고 했어요. 그 단백질이 없으면 근육이 점점 약해지고, 결국 심장까지 영향을 받을 수 있다고요. 하늘이는 그 말을 듣고 밤새 울었습니다. 하지만 울음은 곧 결심으로 바뀌었어요.<br><br><span class="dialogue">"할머니, 제가 크면 꼭 할머니 병을 고칠 수 있는 약을 만들 거예요! 유전자를 고치는 방법, 제가 꼭 찾아낼게요!"</span><br><br>하늘이가 할머니의 손을 꼭 잡으며 말할 때마다, 할머니는 주름진 얼굴로 미소를 지었습니다.<br><br><span class="dialogue">"우리 하늘이가 그러면 할머니는 백 살까지 살 수 있겠구나. 네가 과학자가 되는 것만 봐도 할머니는 행복할 거야."</span></p>
+        <p>어느 날, 학교에서 특별한 소식이 전해졌어요. 세계적인 생명 과학자 '별님 박사'가 하늘이의 학교에서 특별 강연을 한다는 것이었습니다. 별님 박사는 '<span class="highlight">유전자 치료</span>' 분야에서 혁신적인 연구를 이끌고 있는 과학자로, 불치병으로 여겨지던 여러 유전 질환에 새로운 희망을 제시한 인물이었지요. 학술지 네이처와 사이언스에 수십 편의 논문을 발표했고, 노벨상 후보로도 거론되는 분이었어요. 하늘이에게는 영웅과도 같은 존재였습니다. 강연이 끝난 후, 하늘이는 떨리는 다리를 이끌고 용기를 내어 별님 박사에게 다가갔습니다.<br><br><span class="dialogue">"박사님, 저도 과학자가 되고 싶어요. 할머니의 병을 고치고 싶어요. 어떻게 해야 할까요?"</span><br><br>별님 박사는 하늘이의 눈을 가만히 들여다보더니 따뜻하게 미소 지었어요.<br><br><span class="dialogue">"그 마음이면 충분하단다. 하지만 진정한 과학자가 되려면 지식만으로는 부족해. 책임감, 윤리의식, 그리고 실패를 견디는 끈기가 필요하지. 내가 너에게 열 가지 이야기를 들려줄게. 이 이야기들을 모두 이해하면, 너는 세상을 바꿀 수 있는 과학자가 될 거야."</span><br><br>그렇게 하늘이의 놀라운 과학 여행이 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">유전자 치료</span>
+        <h2>🧬 생명의 설계도를 고치는 마법의 가위</h2>
+        <p>별님 박사가 들려준 첫 번째 이야기는 '<span class="highlight" data-tooltip="유전자 치료(Gene therapy): 유전자를 교정하여 질병을 치료하는 방법">유전자 치료</span>'에 관한 것이었습니다. 박사는 하늘이를 자신의 연구실로 초대했어요. 하얀 가운을 입고 연구실에 들어선 하늘이의 눈이 휘둥그레졌습니다. 반짝이는 시험관들, 윙윙거리는 원심분리기(centrifuge), '<span class="highlight">PCR(중합효소연쇄반응) 기계</span>', 거대한 모니터에 떠 있는 DNA 염기서열(sequence) 이미지. 그야말로 미래 세계 같았어요. 연구원들이 '<span class="highlight">무균 작업대</span>' 안에서 세포를 배양하고 있었고, 냉동고에는 수천 개의 샘플이 영하 80도에서 보관되고 있었습니다.<br><br><span class="dialogue">"하늘아, 네 할머니의 병은 유전자 하나에 문제가 생겨서 나타나는 거야. 우리 몸의 세포 안에는 DNA라는 설계도가 있는데, 이 설계도의 글자 하나가 잘못 쓰여 있는 거지. 우리는 이것을 '<span class="highlight">점 돌연변이</span>'라고 불러."</span></p>
+        <p>별님 박사가 화면에 DNA 구조를 띄웠습니다. '<span class="highlight">이중나선</span>' 모양의 긴 분자에 네 가지 염기 A(아데닌), T(티민), G(구아닌), C(시토신)가 끝없이 나열되어 있었어요. 이 염기들이 세 개씩 묶여 '<span class="highlight">코돈</span>'을 이루고, 각 코돈이 하나의 아미노산을 지정한다고 했습니다. 아미노산들이 연결되어 단백질이 만들어지는 것이지요. 이 과정을 '<span class="highlight">단백질 합성</span>'이라고 하며, '<span class="highlight">전사</span>'와 '<span class="highlight">번역</span>' 두 단계로 나뉜다고 박사가 설명했어요.<br><br><span class="dialogue">"이 글자가 삼십억 개나 있는데, 그중 딱 하나가 잘못된 거예요? 어떻게 그걸 찾아요?"</span><br><br>하늘이가 놀라서 물었습니다.<br><br><span class="dialogue">"그렇단다. 예전에는 불가능해 보였지만, 우리에게는 이 잘못된 글자를 찾아 고칠 수 있는 혁명적인 도구가 있어. '<span class="highlight" data-tooltip="크리스퍼 캐스9(CRISPR-Cas9): 유전자를 정밀하게 편집할 수 있는 도구">크리스퍼 캐스9</span>'이라는 유전자 가위지."<br><br>박사가 화면에 가위 모양의 분자 복합체를 보여주었어요. Cas9이라는 단백질이 가이드 RNA의 안내를 받아 정확히 목표 지점으로 이동한 뒤, DNA를 절단하는 원리였습니다.</p>
+        <p>박사의 설명이 이어졌어요.<br><br><span class="dialogue">"크리스퍼 시스템은 원래 세균이 바이러스로부터 자신을 방어하기 위해 진화시킨 '<span class="highlight">적응 면역</span>' 메커니즘이야. 과학자들이 이 시스템을 응용해서 인간 세포의 유전자를 편집할 수 있게 된 거지. 가이드 RNA(guide RNA)가 목표 염기서열을 인식하고, Cas9 단백질이 그 지점의 DNA 이중가닥을 잘라내. 그러면 세포 자체의 '<span class="highlight">DNA 복구 메커니즘</span>'이 작동해서 잘린 부분을 고치는데, 이때 우리가 원하는 염기서열을 넣어줄 수 있어."</span><br><br>하늘이의 가슴이 콩닥콩닥 뛰었어요.<br><br><span class="dialogue">"그러면 할머니도 고칠 수 있는 거예요?"</span><br><br><span class="dialogue">"이론적으로는 그래. 하지만 아직 넘어야 할 산이 많단다. 가장 큰 문제는 '<span class="highlight">오프타겟 효과</span>'야. 가위가 엉뚱한 곳을 잘라버리면 오히려 새로운 돌연변이가 생기거나 암이 발생할 수 있거든. 또한 체내의 모든 세포에 유전자 가위를 전달하는 것도 큰 도전이야. '<span class="highlight">벡터</span>'라고 불리는 전달체를 사용하는데, 바이러스를 변형해서 만든 '<span class="highlight">아데노연관바이러스</span>'가 대표적이지. 안전성을 높이기 위한 연구가 전 세계에서 계속되고 있어."</span><br><br>하늘이는 그날 밤, 일기장에 이렇게 썼습니다. "오늘 크리스퍼 유전자 가위를 배웠다. 삼십억 개 글자 중에서 정확히 하나를 찾아 고치는 기술이라니! 하지만 박사님 말씀처럼 정확성이 핵심이다. 가위를 아무렇게나 쓰면 더 큰 문제가 생긴다. 나는 꼭 오프타겟 없는 완벽한 유전자 가위를 만드는 과학자가 될 거야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">인공 장기</span>
+        <h2>🫀 3D 프린터에서 태어난 심장</h2>
+        <p>두 번째 이야기는 하늘이를 더욱 놀라게 했습니다. 별님 박사가 연구실 한쪽에 있는 특별한 기계 앞으로 하늘이를 데려갔어요. 그것은 보통 프린터와 비슷하게 생겼지만, 잉크 대신 살아 있는 세포를 사용하는 '<span class="highlight">바이오 프린터</span>'였습니다. 기계 안에는 여러 개의 노즐이 있었고, 각 노즐에는 서로 다른 종류의 세포가 담긴 '<span class="highlight">바이오잉크</span>'가 들어 있었어요. 바이오잉크는 세포와 함께 '<span class="highlight">하이드로젤</span>'이라는 물을 머금은 고분자 물질로 이루어져 있어서 세포가 살아 있는 상태로 출력될 수 있다고 했습니다.<br><br><span class="dialogue">"이 프린터로 뭘 만드는 거예요?"</span><br><br>하늘이가 호기심 가득한 눈으로 물었습니다.<br><br><span class="dialogue">"심장 조직을 만들고 있단다. 궁극적으로는 완전한 심장을 출력하는 것이 목표야."</span><br><br>박사가 태연하게 대답했어요.<br><br><span class="dialogue">"네? 심장이요?! 프린터로 심장을 만든다고요?"</span></p>
+        <p>하늘이는 귀를 의심했습니다. 프린터로 종이에 글자를 인쇄하듯이, 살아 있는 심장을 인쇄한다고요? 박사가 차근차근 설명을 이어갔어요.<br><br><span class="dialogue">"'<span class="highlight">장기 이식</span>'이 필요한 환자가 전 세계에 수십만 명이 넘지만, 기증되는 장기는 턱없이 부족하단다. 한국에서도 매년 수천 명이 장기를 기다리다 세상을 떠나. 게다가 타인의 장기를 이식하면 '<span class="highlight">면역 거부 반응</span>'이 일어날 수 있어서 평생 '<span class="highlight">면역억제제</span>'를 복용해야 하지. 그래서 과학자들은 환자 자신의 세포로 장기를 만드는 연구를 하고 있어."</span><br><br>프린터 안에서는 미세한 노즐이 세포와 하이드로젤을 한 층 한 층 쌓아 올리며 심장 조직의 구조를 만들어가고 있었습니다. 마치 레고 블록을 쌓듯이, 세포 하나하나가 '<span class="highlight">컴퓨터단층촬영</span>'이나 '<span class="highlight">자기공명영상</span>'으로 얻은 3D 설계도에 따라 정확한 위치에 놓였지요.</p>
+        <p><span class="dialogue">"환자의 '<span class="highlight">유도만능줄기세포</span>'를 특수한 방법으로 배양하면 심장 근육 세포, 혈관 내피 세포 등 다양한 세포로 '<span class="highlight">분화</span>'시킬 수 있어. 그 세포들을 프린터에 넣고 설계도대로 쌓아 올리는 거야. iPSC는 성인의 피부 세포나 혈액 세포에 '<span class="highlight">야마나카 인자</span>'라는 특정 유전자를 넣어서 만들 수 있단다. 이 기술로 2012년 야마나카 신야 박사가 노벨상을 받았지."</span><br><br>하늘이가 조심스럽게 물었어요.<br><br><span class="dialogue">"이미 사람에게 이식할 수 있는 거예요?"</span><br><br><span class="dialogue">"아직은 작은 조직만 가능하고, 완전한 장기를 만들려면 갈 길이 멀어. 가장 큰 도전은 '<span class="highlight">혈관화</span>'야. 장기 안 구석구석까지 피가 흘러야 세포에 산소와 영양분이 공급되거든. 머리카락보다도 가는 '<span class="highlight">모세혈관</span>'까지 재현하는 건 엄청나게 어려운 일이지. 혈관 없이는 두께 몇 밀리미터 이상의 조직을 만들 수가 없어. 또한 출력된 조직이 실제로 제대로 기능하는지, '<span class="highlight">생체역학</span>'적으로 자연 장기와 동일하게 작동하는지 확인해야 해."</span><br><br>하늘이는 프린터에서 조금씩 형태를 갖추어가는 심장 조직을 바라보며 상상했습니다. 언젠가 이 기술이 완성되면, 장기 이식을 기다리다 세상을 떠나는 사람이 없어질 거라고. 과학은 생명을 인쇄할 수 있는 시대를 향해 한 걸음씩 나아가고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">백신 개발</span>
+        <h2>💉 보이지 않는 적과 싸우는 방패 만들기</h2>
+        <p>세 번째 이야기의 무대는 별님 박사의 연구실이 아니라 역사책 속이었습니다. 박사는 하늘이에게 한 장의 오래된 흑백사진을 보여주었어요. 사진 속에는 온몸에 발진이 생긴 아이들이 줄지어 누워 있었습니다. 그리고 그 옆에 서 있는 무력한 표정의 의사들.<br><br><span class="dialogue">"이것은 '<span class="highlight">천연두</span>'라는 병이 유행했을 때의 사진이란다. '<span class="highlight">바리올라 바이러스</span>'가 일으키는 이 병으로 한때 전 세계에서 수억 명이 목숨을 잃었어. 감염자의 삼십 퍼센트가 사망했고, 살아남아도 심한 후유증이 남았지."</span><br><br>하늘이가 입을 가리며 말했습니다.<br><br><span class="dialogue">"그런데 지금은 천연두가 없잖아요. 어떻게 사라진 거예요?"</span></p>
+        <p><span class="dialogue">"바로 '<span class="highlight" data-tooltip="백신(Vaccine): 병원체에 대한 면역을 만들어주는 예방약">백신</span>' 덕분이야."</span><br><br>박사의 눈이 반짝였어요.<br><br><span class="dialogue">"1796년, 영국의 에드워드 제너라는 의사가 소의 '<span class="highlight">우두</span>'를 사람에게 접종하면 천연두에 걸리지 않는다는 것을 발견했단다. 소젖 짜는 여인들이 천연두에 잘 안 걸린다는 관찰에서 출발한 거야. 그것이 최초의 백신이었지. 'vaccine'이라는 단어 자체가 라틴어로 소를 뜻하는 'vacca'에서 왔어."</span><br><br>박사는 백신의 과학적 원리를 설명해 주었습니다. 우리 몸에는 '<span class="highlight" data-tooltip="면역 시스템(Immune system): 병원체로부터 몸을 보호하는 방어 체계">면역 시스템</span>'이라는 정교한 방어 체계가 있는데, 백신은 이 방어군에게 적의 얼굴을 미리 알려주는 수배 전단지 같은 것이었어요. 약독화(attenuated)된 바이러스나 바이러스의 일부인 '<span class="highlight">항원</span>'을 몸에 넣으면, '<span class="highlight">B세포</span>'가 그 항원을 인식하고 '<span class="highlight">항체</span>'를 만들어요. 동시에 '<span class="highlight">기억 세포</span>'가 형성되어 이 적의 정보를 오랫동안 기억해 두었다가, 진짜 병원체가 침입했을 때 즉시 대량의 항체를 생산해 싸워 물리치는 것이지요.</p>
+        <p><span class="dialogue">"최근에는 '<span class="highlight">mRNA 백신</span>'이라는 혁신적인 기술도 나왔어. 바이러스 자체를 넣는 대신, 바이러스의 '<span class="highlight">스파이크 단백질</span>' 설계도를 '<span class="highlight">전령 RNA</span>' 형태로 넣어서 우리 몸의 세포가 직접 그 단백질을 만들고 면역 반응을 일으키게 하는 거야. '<span class="highlight">지질나노입자</span>'라는 기름 방울이 mRNA를 감싸서 세포 안으로 전달해 주지. 코로나19 팬데믹 때 화이자와 모더나가 이 기술로 백신을 만들었단다."</span><br><br>하늘이가 감탄했어요.<br><br><span class="dialogue">"그러면 새로운 전염병이 나타나도 빨리 백신을 만들 수 있겠네요!"</span><br><br><span class="dialogue">"맞아. mRNA 백신은 바이러스 유전자 서열만 알면 설계할 수 있어서 개발 속도가 획기적으로 빨라졌어. 하지만 백신을 만드는 과정에서 '<span class="highlight">임상시험</span>' 1상, 2상, 3상을 거쳐 안전성과 유효성을 확인하는 데 시간이 걸리고, 전 세계 모든 사람에게 공평하게 나눠주는 '<span class="highlight">백신 형평성</span>'도 큰 도전이야. 부유한 나라는 백신이 넘치는데 가난한 나라는 구하지 못하는 상황이 생기면 안 되거든. 과학적 성과만큼 공정한 분배도 중요한 거란다."</span><br><br>하늘이는 과학이 수억 명의 생명을 구했다는 사실에 전율을 느꼈습니다. 천연두를 박멸한 것은 인류 역사상 가장 위대한 과학적 성취 중 하나였으니까요. 동시에, 그 성과를 모든 사람이 함께 나눠야 한다는 박사의 말을 마음에 깊이 새겼어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">생명 윤리</span>
+        <h2>⚖️ 할 수 있다고 해서 해도 되는 것일까?</h2>
+        <p>네 번째 이야기는 지금까지와 분위기가 달랐습니다. 별님 박사의 표정이 진지해졌어요.<br><br><span class="dialogue">"하늘아, 오늘은 과학의 밝은 면이 아니라 어두운 그림자에 대해 이야기하려 한다."</span><br><br>하늘이는 긴장하며 귀를 기울였습니다.<br><br><span class="dialogue">"유전자 가위로 질병을 고칠 수 있다고 했지? 그런데 만약 누군가가 질병을 고치는 것을 넘어서, '<span class="highlight">배아</span>' 단계에서 아기의 외모나 지능을 마음대로 바꾸려 한다면 어떨까? 이것을 '<span class="highlight">디자이너 베이비</span>'라고 부르는데, 과학적으로 가능해지고 있어."</span></p>
+        <p>하늘이는 잠시 생각에 잠겼어요.<br><br><span class="dialogue">"음… 모든 아기가 건강하고 똑똒해지면 좋은 거 아닌가요?"</span><br><br>박사가 고개를 가로저었습니다.<br><br><span class="dialogue">"생각해 보렴. 유전자 편집이 비싸서 부자만 이용할 수 있다면? 부잣집 아이만 키도 크고, 머리도 좋고, 병에도 안 걸리는 세상이 온다면, 그건 공정한 세상일까? '<span class="highlight">유전적 불평등</span>'이 '<span class="highlight">사회적 불평등</span>'과 겹쳐지면 계급이 영구적으로 고착될 수도 있어. 게다가 '<span class="highlight">유전적 다양성</span>'이 줄어들면 인류 전체가 특정 질병에 취약해질 위험도 있지."</span><br><br>하늘이의 얼굴이 어두워졌습니다. 그건 정말 불공평하고 위험한 세상이었어요.</p>
+        <p>박사가 이어갔습니다.<br><br><span class="dialogue">"실제로 2018년, 중국의 허젠쿠이라는 과학자가 윤리위원회의 허락 없이 인간 배아의 유전자를 편집해서 '<span class="highlight">생식세포 편집</span>'을 한 아기를 태어나게 했어. 그 변화는 아기의 후손에게까지 전해지지. 전 세계 과학자들이 '기술이 있다고 해서 아무 데나 쓰면 안 된다'고 강하게 규탄했고, 그 과학자는 감옥에 갔단다. '<span class="highlight">뉘른베르크 강령</span>'이나 '<span class="highlight">헬싱키 선언</span>' 같은 국제 연구 윤리 기준이 왜 중요한지 보여주는 사례야."</span><br><br>하늘이가 조심스럽게 물었어요.<br><br><span class="dialogue">"그러면 어디까지가 괜찮은 거예요?"</span><br><br><span class="dialogue">"아주 좋은 질문이야. 그 경계를 정하는 것을 '<span class="highlight" data-tooltip="생명 윤리(Bioethics): 생명과학 연구와 응용에서 지켜야 할 윤리적 기준">생명 윤리</span>'라고 해. 질병을 치료하는 '<span class="highlight">치료적 편집</span>'과 능력을 향상시키는 '<span class="highlight">증강적 편집</span>'의 경계, 동물 실험의 범위와 '<span class="highlight">동물 복지</span>', 개인 '<span class="highlight">유전 정보 프라이버시</span>' 보호, '<span class="highlight">사전 동의</span>' 같은 문제들이지. 과학자는 실험실에서 기술만 개발하는 것이 아니라, '이것이 정말 옳은 일인가'를 끊임없이 고민해야 한단다. '<span class="highlight">기관생명윤리위원회</span>'의 승인을 받고, 학계와 사회의 합의를 구해야 해."</span></p>
+        <p>하늘이는 그날 일기에 이렇게 적었습니다. "과학에는 두 가지 질문이 필요하다. 첫째, '이것을 할 수 있는가?' 둘째, '이것을 해도 되는가?' 첫 번째 질문에 대한 답은 기술이 알려주지만, 두 번째 질문에 대한 답은 내 양심과 사회의 합의가 알려준다." 그리고 이 깨달음이야말로 하늘이가 진정한 과학자로 한 발 더 나아간 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">환경 생명공학</span>
+        <h2>🌍 지구를 치료하는 초록빛 과학</h2>
+        <p>다섯 번째 이야기를 위해 별님 박사는 하늘이를 야외로 데려갔습니다. 도시 외곽에 있는 넓은 습지에 도착하자, 하늘이는 코를 찡그렸어요. 물이 탁하고 이상한 화학 냄새가 났거든요. 수면 위로는 기름막이 떠 있었고, 물가의 풀들은 시들어 있었습니다.<br><br><span class="dialogue">"여기는 예전에 공장 '<span class="highlight">폐수</span>'로 심하게 오염된 곳이야. 물속에 '<span class="highlight">중금속</span>'인 카드뮴, 납, 수은이 축적되어 있고, '<span class="highlight">유기 오염물질</span>'도 가득했지. 하지만 지금 과학자들이 '<span class="highlight">생물정화</span>' 기술로 이곳을 살리고 있단다."</span><br><br>박사가 습지 한쪽을 가리켰습니다. 갈대와 부들 같은 수생 식물이 조성되어 있었고, 그 식물들을 지나간 물은 훨씬 맑아져 있었어요.</p>
+        <p><span class="dialogue">"이 식물들이 오염 물질을 걸러내는 거예요?"</span><br><br>하늘이가 놀라서 물었습니다.<br><br><span class="dialogue">"그렇단다. 이것을 '<span class="highlight">식물정화</span>'라고 해. 특정 식물들은 뿌리로 중금속이나 유해 물질을 빨아들여 자기 몸의 조직에 저장하거나 분해하는 능력이 있어. 이런 식물을 '<span class="highlight">초축적식물</span>'이라고 부르지. 예를 들어 버드나무는 카드뮴을, 해바라기는 납을 잘 흡수해. 과학자들은 이런 식물의 유전자를 연구해서 중금속 흡수 효율을 더 높이도록 '<span class="highlight">형질전환</span>'하는 연구를 하고 있지. 또한 '<span class="highlight">인공습지</span>'를 만들어 미생물과 식물이 자연적으로 오염물을 분해하게 하는 시스템도 있어."</span></p>
+        <p>박사는 다른 연구도 소개해 주었어요. 플라스틱을 분해하는 '<span class="highlight">플라스틱 분해 효소</span>'를 가진 세균을 발견하고 그 능력을 유전공학으로 강화하는 연구, 이산화탄소를 흡수해 '<span class="highlight">바이오연료</span>'나 '<span class="highlight">바이오플라스틱</span>'으로 전환하는 '<span class="highlight">미세조류</span>' 연구, '<span class="highlight">균근</span>'과 '<span class="highlight">질소고정세균</span>'을 활용해 황폐한 토양을 비옥하게 복원하는 '<span class="highlight">토양 복원</span>' 프로젝트까지. 하늘이는 점점 흥분했습니다.<br><br><span class="dialogue">"과학이 환경 문제도 해결할 수 있는 거군요! 생명체가 지구를 치료하다니!"</span><br><br><span class="dialogue">"그래. 이것을 '<span class="highlight">환경 생명공학</span>'이라고 해. 하지만 한 가지 기억해야 할 것이 있어."</span><br><br>박사의 목소리가 진지해졌어요.<br><br><span class="dialogue">"기술로 오염을 정화하는 것보다 애초에 오염시키지 않는 '<span class="highlight">오염 예방</span>'이 훨씬 중요하단다. 의사가 병을 고치는 것도 중요하지만, 병에 걸리지 않도록 예방하는 것이 더 좋은 것처럼 말이야. '<span class="highlight">지속가능한 발전</span>'이란 미래 세대의 필요를 해치지 않으면서 현재의 필요를 충족시키는 거야."</span></p>
+        <p>하늘이는 고개를 끄덕였습니다. 과학은 지구를 치료하는 강력한 도구였지만, 지구를 아프지 않게 하는 것은 결국 사람들의 생활 방식과 선택에 달려 있었습니다. '<span class="highlight">순환 경제</span>'와 '<span class="highlight">탄소 중립</span>' 같은 개념도 결국 과학 기술과 사회 시스템의 변화가 함께 가야 한다는 것이지요. 기술과 마음, 두 가지가 함께해야 진정한 환경 보호가 가능하다는 것을 하늘이는 깨달았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">AI와 생명과학</span>
+        <h2>🤖 인공지능이 찾아낸 숨겨진 치료법</h2>
+        <p>여섯 번째 이야기는 하늘이의 상상을 뛰어넘는 것이었습니다. 별님 박사가 커다란 화면 앞에서 무언가를 보여주었어요. 화면에는 수백만 개의 점들이 거미줄처럼 연결되어 빠르게 깜박이고 있었습니다. 숫자와 그래프가 실시간으로 업데이트되고 있었어요.<br><br><span class="dialogue">"이게 뭐예요?"</span><br><br><span class="dialogue">"이것은 '<span class="highlight">인공지능</span>'이 분석 중인 '<span class="highlight">유전체</span>' 데이터야. 수만 명 환자의 유전자 정보, 단백질 발현 패턴, 임상 데이터를 동시에 분석하고 있지. 사람이 평생을 바쳐도 읽기 어려운 양의 데이터를 '<span class="highlight">딥러닝</span>' 알고리즘은 단 몇 시간 만에 패턴을 찾아낼 수 있단다."</span></p>
+        <p>하늘이는 인공지능이라는 말에 영화 속 로봇을 떠올렸어요.<br><br><span class="dialogue">"로봇이 의사가 되는 건가요?"</span><br><br>박사가 웃으며 대답했습니다.<br><br><span class="dialogue">"로봇 의사라기보다는 의사와 과학자를 돕는 초특급 보조원이라고 할 수 있어. 예를 들어, '<span class="highlight">의료 영상</span>' 분석에서 AI는 엑스레이나 CT, MRI 이미지에서 아주 작은 '<span class="highlight">종양</span>'이나 이상 소견을 발견하는 데 뛰어나. 인간 의사가 놓칠 수 있는 미세한 병변도 찾아내지. 또한 '<span class="highlight">신약 개발</span>'에서 수십만 가지 화학 물질 중에서 특정 질병에 효과가 있을 만한 '<span class="highlight">신약 후보물질</span>'을 선별하는 일을 해. 예전에는 일일이 실험해야 했지만, AI가 먼저 '<span class="highlight">컴퓨터 시뮬레이션</span>'으로 가능성 있는 물질만 골라주는 거야."</span></p>
+        <p>더 놀라운 이야기가 이어졌어요. '<span class="highlight">알파폴드</span>'라는 AI는 단백질의 복잡한 '<span class="highlight">3차원 구조</span>'를 예측할 수 있었습니다. 단백질의 '<span class="highlight">아미노산 서열</span>'만 입력하면 그것이 어떤 모양으로 접히는지 정확하게 맞추는 거지요. 단백질의 구조를 알면 거기에 딱 맞는 약물을 '<span class="highlight">분자 도킹</span>'이라는 기술로 설계할 수 있었습니다. 예전에는 한 가지 약을 개발하는 데 십 년 이상, 수조 원의 비용이 들었지만, AI의 도움으로 그 시간과 비용이 획기적으로 줄어들고 있었습니다.<br><br><span class="dialogue">"그런데 박사님, 인공지능이 너무 똑똑해지면 과학자가 필요 없어지는 거 아니에요?"</span><br><br>하늘이가 걱정스럽게 물었습니다. 박사가 고개를 가로저었어요.<br><br><span class="dialogue">"인공지능은 데이터를 분석하고 패턴을 찾는 '<span class="highlight">패턴 인식</span>'에 뛰어나지만, '왜'라는 질문을 던지거나 연구의 방향을 정하거나 '<span class="highlight">가설</span>'을 세우거나 윤리적 판단을 내리는 것은 인간만이 할 수 있어. AI는 상관관계를 찾지만, '<span class="highlight">인과관계</span>'를 해석하고 의미를 부여하는 것은 사람의 몫이지. 중요한 건 AI와 경쟁하는 것이 아니라 '<span class="highlight">인간-AI 협력</span>'을 하는 거야."</span></p>
+        <p>하늘이는 미래의 과학자가 혼자 일하는 것이 아니라 인공지능이라는 강력한 파트너와 함께 연구한다는 사실이 오히려 설레었습니다. 마치 현미경이 눈의 확장이듯, AI는 뇌의 확장이 될 수 있다고 생각했어요. 도구는 점점 강력해지지만, 그 도구를 어떤 방향으로, 어떤 목적으로 사용할지 결정하는 것은 여전히 인간 과학자의 책임이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">실패와 발견</span>
+        <h2>🔭 실패 99번 끝에 찾아온 기적의 순간</h2>
+        <p>일곱 번째 이야기는 별님 박사의 개인적인 경험이었습니다. 박사의 눈가에 옅은 그늘이 드리워졌어요.<br><br><span class="dialogue">"하늘아, 내가 지금의 자리에 오기까지 얼마나 많은 실패를 겪었는지 아니?"</span><br><br>하늘이는 늘 성공만 하셨을 거라 생각했기에 고개를 갸웃거렸습니다. 논문도 많이 쓰셨고, 상도 많이 받으셨으니까요.<br><br><span class="dialogue">"나는 '<span class="highlight">박사 과정</span>' 동안 삼 년 동안 거의 매일 같은 실험을 반복했어. 특정 유전자가 질병에 어떤 역할을 하는지 밝히려고 '<span class="highlight">녹아웃 마우스</span>'를 만들고, 세포 실험을 하고, 분자 분석을 했지. 하지만 결과는 매번 '<span class="highlight">재현성</span>'이 없거나 '<span class="highlight">가설</span>'과 맞지 않았어. 구십아홉 번이나 실패했단다."</span></p>
+        <p>하늘이가 깜짝 놀랐어요.<br><br><span class="dialogue">"구십아홉 번이나요? 포기하고 싶지 않으셨어요?"</span><br><br><span class="dialogue">"물론 포기하고 싶었지. 주변에서는 '그 연구는 안 될 거야', '차라리 다른 주제로 바꿔'라고 했고, 밤마다 '내가 잘못된 길을 가고 있는 건 아닐까' 하고 고민했어. '<span class="highlight">동료 심사</span>'에서 논문이 거절당하면 자신감이 바닥으로 떨어졌지."</span><br><br>박사가 창밖을 바라보며 말을 이었습니다.<br><br><span class="dialogue">"하지만 나를 붙잡아 준 건 '왜'라는 질문이었어. 구십아홉 번의 실패마다 '왜 안 됐을까?'를 '<span class="highlight">실험 노트</span>'에 꼼꼼히 분석했고, 매번 실패에서 작은 단서를 하나씩 얻었단다. 시약의 농도가 조금 달랐을 때, 온도가 조금 달랐을 때, 배양 시간이 달랐을 때 어떤 차이가 나는지. 실패는 끝이 아니라 다음 실험을 위한 '<span class="highlight">데이터</span>'였던 거야."</span></p>
+        <p>그리고 백 번째 실험에서 기적이 일어났어요. 시험관 속의 세포가 드디어 예상대로 반응한 겁니다. '<span class="highlight">형광 현미경</span>' 아래에서 목표 단백질이 정확히 예측한 위치에서 빛나고 있었어요.<br><br><span class="dialogue">"그 순간, 나는 연구실에서 소리를 지르며 울었어. 삼 년 동안 쌓인 실패의 무게가 한꺼번에 무너지는 느낌이었지. 그 결과로 쓴 논문이 '<span class="highlight">사이언스</span>'에 실렸고, 그것이 내 커리어의 전환점이 됐어."</span><br><br>하늘이도 모르게 눈물이 글썽였습니다. 박사가 하늘이의 어깨를 다독이며 말했어요.<br><br><span class="dialogue">"과학에서 가장 중요한 발견은 종종 가장 오랜 실패 끝에 찾아온단다. '<span class="highlight">페니실린</span>'을 발견한 알렉산더 플레밍도 우연히 배양 접시에 핀 곰팡이에서 항생제를 찾았어. '<span class="highlight">방사능</span>'을 발견한 마리 퀴리도 수년간 수 톤의 광석을 직접 정제하며 '<span class="highlight">라듐</span>'을 분리했지. 과학자에게 필요한 것은 천재적 두뇌가 아니라 '<span class="highlight">실패를 견디는 회복탄력성</span>'과 '왜'를 멈추지 않는 '<span class="highlight">과학적 호기심</span>'이란다."</span><br><br>하늘이는 주먹을 꼭 쥐었습니다. 구십아홉 번 실패해도 포기하지 않고, 매 실패에서 배우는 사람. 그것이 진짜 과학자라는 것을 마음에 깊이 새겼습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">과학자의 책임</span>
+        <h2>🛡️ 과학자의 손에 놓인 무거운 선택</h2>
+        <p>여덟 번째와 아홉 번째 이야기는 하나로 이어져 있었습니다. 별님 박사가 하늘이에게 한 가지 가상의 상황을 제시했어요.<br><br><span class="dialogue">"하늘아, 네가 지금 과학자라고 상상해 보렴. 너는 '<span class="highlight">유전자 드라이브</span>'라는 기술을 이용해 모기를 멸종시킬 수 있는 유전자를 개발했어. 이 유전자는 '<span class="highlight">멘델의 유전 법칙</span>'을 깨고 거의 백 퍼센트의 확률로 다음 세대에 전달되어, 몇 세대 안에 특정 모기 종 전체를 불임으로 만들 수 있지. 모기 때문에 매년 수십만 명이 '<span class="highlight">말라리아</span>'로 죽잖아. 이 기술을 야생에 방출해야 할까, 말아야 할까?"</span><br><br>하늘이는 즉시 대답했어요.<br><br><span class="dialogue">"당연히 사용해야죠! 모기 때문에 아이들이 죽는 걸 막을 수 있잖아요!"</span></p>
+        <p>박사가 천천히 고개를 끄덕이더니 물었습니다.<br><br><span class="dialogue">"하지만 모기는 수많은 물고기, 새, 박쥐, 개구리의 '<span class="highlight">먹이 사슬</span>' 일부이기도 해. 모기가 사라지면 모기 유충을 먹는 물고기가 굶주리고, 그 물고기를 먹는 새가 줄고, 새가 줄면 그 새가 먹던 해충이 늘어나지. 생태계의 '<span class="highlight">영양단계</span>'가 연쇄적으로 무너질 수 있어. 전에 숲의 '<span class="highlight">영양 폭포</span>' 이야기 기억나니?"</span><br><br>하늘이의 표정이 굳어졌습니다. 맞았어요. 풀 한 포기가 사라져도 숲 전체가 흔들린다는 것을 배웠으니까요.<br><br><span class="dialogue">"게다가 유전자 드라이브는 한번 방출하면 되돌리기 극히 어려워. 자연에서 퍼져나가는 것을 막을 수 없지. 또한 모기가 사라진 빈자리를 더 해로운 곤충이 차지할 수도 있어. '<span class="highlight">생태계</span>'는 우리가 예측할 수 없을 만큼 복잡하고, '<span class="highlight">의도하지 않은 결과</span>'가 발생할 수 있거든."</span></p>
+        <p>하늘이는 머리가 복잡해졌습니다.<br><br><span class="dialogue">"그러면 어떻게 해야 해요? 말라리아로 죽는 사람들은 어떻게 하고요?"</span><br><br><span class="dialogue">"정답은 없단다. 하지만 과학자의 책임은 '<span class="highlight">위험 평가</span>'를 철저히 하고, 결과를 예측하며, 위험성을 솔직하게 사회에 알리고, 다양한 이해관계자들의 의견을 듣고, '<span class="highlight">예방 원칙</span>'에 따라 가장 피해가 적은 방법을 찾아가는 거야. 한 사람의 판단으로 결정하는 것이 아니라 '<span class="highlight">과학-사회 대화</span>'를 통해 사회 전체가 함께 논의해야 하지. 모기 대신 말라리아 원충을 표적으로 하는 약, 더 효과적인 살충제, 모기장 보급 같은 다른 방법도 병행해야 해."</span><br><br>박사는 덧붙였어요.<br><br><span class="dialogue">"과학자의 책임은 발견만 하는 것이 아니야. 자신의 연구가 세상에 어떤 영향을 미칠지 끊임없이 고민하고, 잘못될 수 있는 부분을 먼저 밝히는 '<span class="highlight">과학적 정직성</span>'도 과학자의 의무란다. '<span class="highlight">책임 있는 연구</span>'란 결과만큼 과정도 투명해야 한다는 뜻이야."</span><br><br>하늘이는 과학자의 손이 얼마나 무거운 선택을 내려야 하는지 처음으로 깊이 느꼈습니다. 지식은 힘이었지만, 그 힘에는 반드시 '<span class="highlight">책임</span>'이 따라야 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작생물20/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">과학자의 서약</span>
+        <h2>🌟 내일의 세상을 바꾸는 아이의 첫 번째 서약</h2>
+        <p>열 가지 이야기를 모두 들은 날, 하늘이는 별님 박사와 함께 연구실 옥상에 올랐습니다. 해가 지고 있었고, 하늘은 온통 주황빛과 보랏빛으로 물들어 있었어요. 도시의 불빛이 하나둘 켜지기 시작했습니다. 저 불빛 하나하나 아래에 수백만 명의 사람들이 살고 있었고, 그중에는 치료법을 기다리는 환자도, 깨끗한 물을 원하는 아이도, 더 나은 미래를 꿈꾸는 가족도 있었지요. 하늘이는 지난 며칠간 배운 것들을 떠올렸습니다. '<span class="highlight">유전자 치료</span>'와 '<span class="highlight">크리스퍼</span>', '<span class="highlight">바이오프린팅</span>'으로 만드는 인공 장기, '<span class="highlight">mRNA 백신</span>'의 혁신, '<span class="highlight">생명 윤리</span>'의 무게, '<span class="highlight">환경 생명공학</span>'의 가능성, '<span class="highlight">인공지능</span>'과의 협력, 그리고 실패를 견디는 '<span class="highlight">과학자 정신</span>'까지.</p>
+        <p><span class="dialogue">"박사님, 저 과학자가 되고 싶은 마음이 더 커졌어요. 그런데 솔직히 무섭기도 해요."</span><br><br>하늘이가 솔직하게 말했습니다.<br><br><span class="dialogue">"뭐가 무서운 거니?"</span><br><br><span class="dialogue">"과학이 정말 대단한 힘을 가지고 있다는 걸 알았으니까요. 만약 제가 실수하거나 잘못된 결정을 내리면 많은 사람이 다칠 수도 있잖아요. 유전자 드라이브 이야기처럼요."</span><br><br>박사가 따뜻하게 미소 지었어요.<br><br><span class="dialogue">"그 두려움이야말로 네가 좋은 과학자가 될 수 있다는 증거란다. 두려움을 모르는 과학자는 위험하지만, 두려움을 아는 과학자는 신중하거든. '<span class="highlight">히포크라테스 선서</span>'처럼 '해를 끼치지 않겠다'는 원칙을 가슴에 새긴 과학자만이 세상을 올바른 방향으로 바꿀 수 있어."</span></p>
+        <p>박사가 하늘이에게 작은 가죽 수첩을 건넸습니다. 박사 자신도 젊은 시절 스승에게 받았던 것이라고 했어요.<br><br><span class="dialogue">"여기에 네 첫 번째 '<span class="highlight">과학자의 서약</span>'을 적어 보지 않을래? 네가 과학자로서 지키고 싶은 원칙들을 말이야."</span><br><br>하늘이는 떨리는 손으로 펜을 들었어요. 그리고 한 글자 한 글자 또박또박 적었습니다.<br><br><span class="highlight">"하나, 나는 생명을 구하기 위해 과학을 공부합니다. 둘, 나는 실패해도 포기하지 않고 '왜'를 계속 묻겠습니다. 셋, 나는 '할 수 있는가'뿐만 아니라 '해도 되는가'를 항상 생각하겠습니다. 넷, 나는 나의 발견이 가져올 결과에 책임지고, 모든 사람과 공평하게 나누겠습니다. 다섯, 나는 자연과 생명 앞에서 늘 겸손하겠습니다."</span></p>
+        <p>별님 박사가 하늘이의 수첩을 읽고 눈시울을 붉혔어요.<br><br><span class="dialogue">"네가 이 다섯 가지 약속을 지킨다면, 너는 반드시 세상을 바꾸는 과학자가 될 거야. 아니, 이미 과학자의 마음을 가진 거란다."</span><br><br>하늘이는 별이 빛나는 하늘을 올려다보았습니다. 저 별들 사이 어딘가에, 아직 발견되지 않은 치료법이, 아직 만들어지지 않은 기술이, 아직 꾸지 않은 꿈이 기다리고 있을 거예요. '<span class="highlight">프런티어</span>'는 늘 탐험가를 기다린다는 것, 과학에는 끝이 없다는 것, 그리고 그 여정에 자신도 함께할 수 있다는 것. 하늘이는 수첩을 가슴에 꼭 안으며 속삭였습니다.<br><br><span class="dialogue">"할머니, 기다려 주세요. 반드시 치료법을 찾아서 갈게요."</span><br><br>과학은 '<span class="highlight">책임</span>'과 함께 성장합니다. 기술은 '<span class="highlight">윤리</span>'와 손잡고 나아가야 합니다. 그리고 그 책임을 기꺼이 짊어지는 작은 과학자의 여행은 이제 막 시작되었습니다. 언젠가 하늘이가 할머니의 병을 고치는 그 날, 세상은 또 한 번 희망으로 빛나게 될 것입니다.</p>
+        <p style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(123, 31, 162, 0.1); border-radius: 12px;">
+          <span class="highlight" style="font-size: 18px;">🌱 "과학은 책임과 함께 성장한다" 🌱</span>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <script>
+    // 배경 이미지 전환
+    const sections = document.querySelectorAll('.story-section');
+    const mapContainer = document.getElementById('map-container');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-30% 0px -30% 0px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bg = entry.target.dataset.bg;
+          if (bg) {
+            mapContainer.style.backgroundImage = `url('${bg}')`;
+          }
+          entry.target.querySelector('.story-card')?.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+
+    // 초기 인트로 카드 활성화
+    document.addEventListener('DOMContentLoaded', () => {
+      const introContent = document.querySelector('.intro-content');
+      if (introContent) {
+        introContent.style.opacity = '1';
+      }
+    });
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/bio20_season1_quiz.html?season=season1';
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>단단 퀴즈쇼 - 국어 왕중왕전</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 배경 애니메이션 */
+    .bg-animation {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* 메인 컨테이너 */
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      animation: logoGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes logoGlow {
+      0%, 100% { text-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.3); }
+      50% { text-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 40px rgba(255,255,255,0.6); }
+    }
+
+    .score-board {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .score-item {
+      text-align: center;
+      background: rgba(255,255,255,0.2);
+      padding: 10px 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .score-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4px;
+    }
+
+    .score-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* 퀴즈 카드 */
+    .quiz-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 50px;
+      max-width: 900px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      margin-bottom: 30px;
+      animation: cardSlideIn 0.5s ease;
+    }
+
+    @keyframes cardSlideIn {
+      from {
+        transform: translateY(50px) scale(0.9);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .question-number {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .timer {
+      margin-left: auto;
+      font-size: 24px;
+      font-weight: 900;
+      color: #ff6b6b;
+      animation: timerPulse 1s infinite;
+    }
+
+    @keyframes timerPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .question-text {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.6;
+      color: #2c3e50;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .question-highlight {
+      color: #667eea;
+      background: linear-gradient(transparent 60%, #ffd93d 60%);
+      padding: 0 8px;
+    }
+
+    /* 선택지 */
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .choice-btn {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border: 3px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 25px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .choice-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .choice-btn:hover::before {
+      left: 100%;
+    }
+
+    .choice-btn:hover {
+      transform: translateY(-5px) scale(1.02);
+      border-color: #667eea;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .choice-btn.selected {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-color: #667eea;
+      animation: choiceSelect 0.3s ease;
+    }
+
+    @keyframes choiceSelect {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .choice-btn.correct {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: #fff;
+      border-color: #11998e;
+      animation: correctBounce 0.6s ease;
+    }
+
+    @keyframes correctBounce {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.1); }
+      50% { transform: scale(0.95); }
+      75% { transform: scale(1.05); }
+    }
+
+    .choice-btn.wrong {
+      background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+      color: #fff;
+      border-color: #ee0979;
+      animation: wrongShake 0.5s ease;
+    }
+
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .choice-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    .choice-number {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 50%;
+      text-align: center;
+      line-height: 32px;
+      font-weight: 900;
+      margin-right: 12px;
+    }
+
+    /* 다음 버튼 */
+    .next-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 18px 60px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+      transition: all 0.3s ease;
+      display: none;
+    }
+
+    .next-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(245, 87, 108, 0.5);
+    }
+
+    .next-btn.show {
+      display: inline-block;
+      animation: btnAppear 0.5s ease;
+    }
+
+    @keyframes btnAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* 결과 화면 */
+    .result-screen {
+      display: none;
+      background: #fff;
+      border-radius: 24px;
+      padding: 60px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+      animation: resultAppear 0.8s ease;
+    }
+
+    .result-screen.show {
+      display: block;
+    }
+
+    @keyframes resultAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.8) rotate(-5deg);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+      }
+    }
+
+    .result-emoji {
+      font-size: 120px;
+      margin-bottom: 20px;
+      animation: emojiFloat 2s ease-in-out infinite;
+    }
+
+    @keyframes emojiFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .result-title {
+      font-size: 42px;
+      font-weight: 900;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .result-score {
+      font-size: 32px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .result-message {
+      font-size: 18px;
+      color: #666;
+      line-height: 1.8;
+      margin-bottom: 40px;
+    }
+
+    .restart-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 18px 60px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .restart-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+    }
+
+    /* 폭죽 효과 */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: #f0f;
+      position: absolute;
+      animation: confettiFall 3s linear forwards;
+    }
+
+    @keyframes confettiFall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* 정답/오답 피드백 */
+    .feedback {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 120px;
+      font-weight: 900;
+      z-index: 1000;
+      animation: feedbackPop 0.6s ease;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    @keyframes feedbackPop {
+      0% { transform: translate(-50%, -50%) scale(0); }
+      50% { transform: translate(-50%, -50%) scale(1.2); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .feedback.correct {
+      color: #38ef7d;
+      text-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
+    }
+
+    .feedback.wrong {
+      color: #ff6a00;
+      text-shadow: 0 0 20px rgba(255, 106, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <!-- 배경 애니메이션 -->
+  <div class="bg-animation" id="bgAnimation"></div>
+
+  <!-- 메인 컨테이너 -->
+  <div class="container">
+    <!-- 헤더 -->
+    <div class="header">
+      <div class="logo">단단 퀴즈쇼</div>
+      <div class="score-board">
+        <div class="score-item">
+          <div class="score-label">문제</div>
+          <div class="score-value"><span id="currentQuestion">1</span>/10</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">점수</div>
+          <div class="score-value" id="score">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 퀴즈 카드 -->
+    <div class="quiz-card" id="quizCard">
+      <div class="question-number">
+        <span id="questionLabel">Question 1</span>
+        <div class="timer" id="timer">15</div>
+      </div>
+      <div class="question-text" id="questionText">
+        다음 중 <span class="question-highlight">맞춤법이 올바른</span> 것을 고르세요.
+      </div>
+      <div class="choices" id="choices">
+        <button class="choice-btn" onclick="selectChoice(0)">
+          <span class="choice-number">1</span>
+          웬지 기분이 좋다
+        </button>
+        <button class="choice-btn" onclick="selectChoice(1)">
+          <span class="choice-number">2</span>
+          왠지 기분이 좋다
+        </button>
+        <button class="choice-btn" onclick="selectChoice(2)">
+          <span class="choice-number">3</span>
+          웬만하면 가지 마
+        </button>
+        <button class="choice-btn" onclick="selectChoice(3)">
+          <span class="choice-number">4</span>
+          왠만하면 가지 마
+        </button>
+      </div>
+    </div>
+
+    <!-- 다음 버튼 -->
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">다음 문제</button>
+
+    <!-- 결과 화면 -->
+    <div class="result-screen" id="resultScreen">
+      <div class="result-emoji" id="resultEmoji">🏆</div>
+      <div class="result-title" id="resultTitle">퀴즈쇼 완료!</div>
+      <div class="result-score">
+        최종 점수: <span id="finalScore">0</span>점 / 100점
+      </div>
+      <div class="result-message" id="resultMessage">
+        훌륭해요! 국어 실력이 대단합니다!
+      </div>
+      <button class="restart-btn" onclick="restartQuiz()">다시 도전하기</button>
+    </div>
+  </div>
+
+  <!-- 피드백 -->
+  <div class="feedback" id="feedback">O</div>
+
+  <script>
+    // 퀴즈 데이터
+    const quizData = [
+      {
+        question: '다음 중 <span class="question-highlight">맞춤법이 올바른</span> 것을 고르세요.',
+        choices: [
+          '웬지 기분이 좋다',
+          '왠지 기분이 좋다',
+          '웬만하면 가지 마',
+          '왠만하면 가지 마'
+        ],
+        correct: 1,
+        explanation: '"왠지"는 "왜인지"의 줄임말이고, "웬"은 "어찌된, 어떠한"의 뜻입니다.'
+      },
+      {
+        question: '밑줄 친 부분의 <span class="question-highlight">품사</span>는 무엇인가요?<br><br>"그는 <u>빨리</u> 달렸다."',
+        choices: [
+          '명사',
+          '동사',
+          '형용사',
+          '부사'
+        ],
+        correct: 3,
+        explanation: '"빨리"는 용언을 꾸며주는 부사입니다.'
+      },
+      {
+        question: '다음 중 <span class="question-highlight">표준어</span>는?',
+        choices: [
+          '개발새발',
+          '가재발',
+          '가지각색',
+          '개발사발'
+        ],
+        correct: 2,
+        explanation: '"가지각색"이 표준어입니다. "개발새발"은 잘못 쓴 글씨를 비유적으로 이르는 말입니다.'
+      },
+      {
+        question: '<span class="question-highlight">외래어 표기법</span>에 맞는 것은?',
+        choices: [
+          '캐릭터',
+          '케릭터',
+          '카렉터',
+          '캐릭타'
+        ],
+        correct: 0,
+        explanation: '"캐릭터"가 올바른 외래어 표기입니다.'
+      },
+      {
+        question: '다음 중 <span class="question-highlight">높임 표현</span>이 올바른 것은?',
+        choices: [
+          '할아버지께서 주무십니다',
+          '할아버지가 주무십니다',
+          '할아버지께서 주무신다',
+          '할아버지가 주무신다'
+        ],
+        correct: 0,
+        explanation: '주체 높임에서는 "께서"와 "-시-"를 함께 사용합니다.'
+      },
+      {
+        question: '<span class="question-highlight">띄어쓰기</span>가 올바른 것은?',
+        choices: [
+          '할수있다',
+          '할 수있다',
+          '할수 있다',
+          '할 수 있다'
+        ],
+        correct: 3,
+        explanation: '"할 수 있다"처럼 의존명사 "수" 앞뒤로 띄어 씁니다.'
+      },
+      {
+        question: '다음 중 <span class="question-highlight">한자성어</span>의 뜻이 올바른 것은?',
+        choices: [
+          '견물생심 - 물건을 보면 욕심이 생김',
+          '금상첨화 - 좋은 일에 나쁜 일이 더해짐',
+          '동문서답 - 같은 질문에 같은 대답',
+          '새옹지마 - 새가 말을 탔다'
+        ],
+        correct: 0,
+        explanation: '"견물생심"은 물건을 보면 욕심이 생긴다는 뜻입니다.'
+      },
+      {
+        question: '<span class="question-highlight">동음이의어</span>로 올바르게 짝지어진 것은?',
+        choices: [
+          '밤(栗) - 밤(夜)',
+          '배(船) - 배(梨)',
+          '말(言) - 말(馬)',
+          '모두 정답'
+        ],
+        correct: 3,
+        explanation: '모두 발음은 같지만 뜻이 다른 동음이의어입니다.'
+      },
+      {
+        question: '다음 문장에서 <span class="question-highlight">주어</span>는?<br><br>"철수가 학교에 갔다."',
+        choices: [
+          '철수가',
+          '학교에',
+          '갔다',
+          '주어 없음'
+        ],
+        correct: 0,
+        explanation: '"철수가"가 문장의 주어입니다.'
+      },
+      {
+        question: '<span class="question-highlight">비유법</span> 중 "내 마음은 호수요"는?',
+        choices: [
+          '직유법',
+          '은유법',
+          '의인법',
+          '과장법'
+        ],
+        correct: 1,
+        explanation: '"~은/는 ~이다" 형태로 직접 비유하는 것은 은유법입니다.'
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let selectedAnswer = null;
+    let timerInterval = null;
+    let timeLeft = 15;
+
+    // 배경 별 생성
+    function createStars() {
+      const bgAnimation = document.getElementById('bgAnimation');
+      for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.width = Math.random() * 3 + 'px';
+        star.style.height = star.style.width;
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        bgAnimation.appendChild(star);
+      }
+    }
+
+    // 타이머 시작
+    function startTimer() {
+      timeLeft = 15;
+      document.getElementById('timer').textContent = timeLeft;
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          // 시간 초과 시 자동으로 오답 처리
+          showFeedback(false);
+          disableChoices();
+          setTimeout(() => {
+            nextQuestion();
+          }, 2000);
+        }
+      }, 1000);
+    }
+
+    // 문제 로드
+    function loadQuestion() {
+      const quiz = quizData[currentQuestionIndex];
+
+      document.getElementById('questionLabel').textContent = `Question ${currentQuestionIndex + 1}`;
+      document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+      document.getElementById('questionText').innerHTML = quiz.question;
+
+      const choicesContainer = document.getElementById('choices');
+      choicesContainer.innerHTML = '';
+
+      quiz.choices.forEach((choice, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.onclick = () => selectChoice(index);
+        btn.innerHTML = `
+          <span class="choice-number">${index + 1}</span>
+          ${choice}
+        `;
+        choicesContainer.appendChild(btn);
+      });
+
+      document.getElementById('nextBtn').classList.remove('show');
+      selectedAnswer = null;
+
+      // 타이머 시작
+      startTimer();
+    }
+
+    // 선택지 선택
+    function selectChoice(index) {
+      if (selectedAnswer !== null) return; // 이미 선택했으면 무시
+
+      clearInterval(timerInterval); // 타이머 정지
+      selectedAnswer = index;
+
+      const buttons = document.querySelectorAll('.choice-btn');
+      const quiz = quizData[currentQuestionIndex];
+
+      buttons[index].classList.add('selected');
+
+      setTimeout(() => {
+        if (index === quiz.correct) {
+          buttons[index].classList.remove('selected');
+          buttons[index].classList.add('correct');
+          score += 10;
+          document.getElementById('score').textContent = score;
+          showFeedback(true);
+          createConfetti();
+        } else {
+          buttons[index].classList.remove('selected');
+          buttons[index].classList.add('wrong');
+          buttons[quiz.correct].classList.add('correct');
+          showFeedback(false);
+        }
+
+        disableChoices();
+        document.getElementById('nextBtn').classList.add('show');
+      }, 300);
+    }
+
+    // 선택지 비활성화
+    function disableChoices() {
+      document.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.disabled = true;
+      });
+    }
+
+    // 피드백 표시
+    function showFeedback(isCorrect) {
+      const feedback = document.getElementById('feedback');
+      feedback.textContent = isCorrect ? '정답!' : '오답!';
+      feedback.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+
+      setTimeout(() => {
+        feedback.classList.remove('show');
+      }, 1500);
+    }
+
+    // 폭죽 효과
+    function createConfetti() {
+      const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f093fb', '#ffd93d', '#6bcf7f'];
+
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = '-10px';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 0.3 + 's';
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+
+    // 다음 문제
+    function nextQuestion() {
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < quizData.length) {
+        document.getElementById('quizCard').style.animation = 'none';
+        setTimeout(() => {
+          document.getElementById('quizCard').style.animation = 'cardSlideIn 0.5s ease';
+          loadQuestion();
+        }, 10);
+      } else {
+        showResult();
+      }
+    }
+
+    // 결과 표시
+    function showResult() {
+      clearInterval(timerInterval);
+      document.getElementById('quizCard').style.display = 'none';
+      document.getElementById('nextBtn').style.display = 'none';
+
+      const resultScreen = document.getElementById('resultScreen');
+      const resultEmoji = document.getElementById('resultEmoji');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultMessage = document.getElementById('resultMessage');
+
+      document.getElementById('finalScore').textContent = score;
+
+      if (score >= 90) {
+        resultEmoji.textContent = '🏆';
+        resultTitle.textContent = '국어 천재!';
+        resultMessage.textContent = '완벽합니다! 당신은 진정한 국어 마스터입니다!';
+      } else if (score >= 70) {
+        resultEmoji.textContent = '🎉';
+        resultTitle.textContent = '훌륭해요!';
+        resultMessage.textContent = '정말 잘했어요! 조금만 더 노력하면 완벽합니다!';
+      } else if (score >= 50) {
+        resultEmoji.textContent = '👍';
+        resultTitle.textContent = '잘했어요!';
+        resultMessage.textContent = '좋은 결과네요! 복습하면 더 좋아질 거예요!';
+      } else {
+        resultEmoji.textContent = '📚';
+        resultTitle.textContent = '다시 도전!';
+        resultMessage.textContent = '조금 더 공부하고 다시 도전해보세요!';
+      }
+
+      resultScreen.classList.add('show');
+
+      if (score >= 70) {
+        createConfetti();
+
+        // 70점 이상이면 단원 완료로 처리하고 menu.html에 알림
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: 'UNIT_COMPLETED',
+            score: score
+          }, window.location.origin);
+        }
+      }
+    }
+
+    // 퀴즈 재시작
+    function restartQuiz() {
+      currentQuestionIndex = 0;
+      score = 0;
+      selectedAnswer = null;
+
+      document.getElementById('score').textContent = score;
+      document.getElementById('resultScreen').classList.remove('show');
+      document.getElementById('quizCard').style.display = 'block';
+
+      loadQuestion();
+    }
+
+    // 초기화
+    createStars();
+    loadQuestion();
+  </script>
+</body>
+</html>

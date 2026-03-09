@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>숫자로 달리는 아이들 — 속력의 비밀을 풀어라!</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00ACC1 0%, #00838F 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 172, 193, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 172, 193, 0.15);
+      color: #00838F;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00ACC1;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #00ACC1;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(0, 172, 193, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #00838F;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #00838F;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #00838F;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #80DEEA;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 172, 193, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 172, 193, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 131, 143, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 172, 193, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🚗 숫자로 달리는 아이들 — 속력의 비밀을 풀어라!</h1>
+        <p class="subtitle">
+          《달리면 시간이 달라진다, 속력의 비밀 공식 이야기》<br>
+          교과기반 창작도서 · 물리 05
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>🏎️ 벨로:</strong> 속력 소년, 무조건 빠르면 최고라고 믿지만 '빠르다'가 무엇인지 모르는 호기심 많은 주인공</p>
+          <p><strong>📏 디스탄:</strong> 거리의 수호자, 자를 항상 들고 다니며 모든 것을 정확히 재는 꼼꼼한 소녀</p>
+          <p><strong>⏱️ 크로노:</strong> 시간의 심판관, 초시계를 손에서 놓지 않는 엄격한 심판</p>
+          <p><strong>📊 그래피:</strong> 그래프 마법사, 복잡한 숫자를 아름다운 그림으로 바꾸는 천재</p>
+          <p><strong>🛑 브레이크 할아버지:</strong> 안전의 수호자, 속력의 위험을 누구보다 잘 아는 현자</p>
+          <p><strong>🌪️ 터보:</strong> 속도광 악당, 규칙도 안전도 무시하고 오직 빠르기만을 숭배하는 위험한 존재</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">자동차 출발</span>
+        <h2>🏁 움직임은 어떻게 시작되는가</h2>
+        <p>매일 아침, 벨로는 학교까지 자전거 경주를 했습니다. 집에서 학교까지 정확히 3킬로미터. 벨로는 이 거리를 누구보다 빨리 달리는 것에 자부심을 느꼈습니다. <span class="dialogue">"오늘도 1등이다!"</span> 벨로가 교문을 통과하며 환호했을 때, 디스탄이 팔짱을 끼고 서 있었습니다. <span class="dialogue">"벨로, 너 오늘 얼마나 빨랐는지 알아?"</span> <span class="dialogue">"몰라, 그냥 빨랐어!"</span> <span class="dialogue">"그게 무슨 대답이야? '빠르다'가 정확히 뭔데?"</span> 디스탄의 질문에 벨로는 말문이 막혔습니다. 생각해보면, '빠르다'는 것을 숫자로 표현할 수 있을까요?</p>
+        <p>이 질문은 물리학에서 가장 기본적이면서도 중요한 질문입니다. 물체의 운동을 이해하려면, 우선 '움직임'이 무엇인지부터 정의해야 합니다. 물리학에서 이것을 운동학(Kinematics)이라고 합니다. 운동학은 물체가 '왜' 움직이는지(힘의 영역)는 다루지 않고, '어떻게' 움직이는지만 다루는 분야입니다. 갈릴레오 갈릴레이(Galileo Galilei)는 16세기에 최초로 운동을 수학적으로 분석했고, 이것이 현대 물리학의 시작이 되었습니다.</p>
+        <p><span class="highlight">물리학에서 운동(Motion)이란 시간에 따라 물체의 위치가 변하는 것입니다.</span> 여기서 중요한 것은 '기준점(Reference Point)'입니다. 움직임은 항상 무엇에 대해 상대적으로 정의됩니다. 버스 안에서 걷는 사람은 버스에 대해서는 움직이지만, 버스가 달리고 있다면 지면에 대해서는 더 빠르게 움직입니다. 이것을 상대 운동(Relative Motion)이라고 합니다. 자동차가 출발선을 떠나 앞으로 나아가는 것, 자전거가 집에서 학교로 이동하는 것, 지구가 태양 주위를 도는 것, 이 모든 것이 운동입니다.</p>
+        <p>그때 크로노가 초시계를 들고 나타났습니다. <span class="dialogue">"내가 심판이 되어줄게. 내일 아침, 공정한 속력 대회를 열자. 하지만 한 가지 조건이 있어. '빠르다'를 숫자로 증명해야 해."</span> 벨로가 고개를 갸웃거렸습니다. <span class="dialogue">"숫자로 증명한다고?"</span> 디스탄이 미소 지었습니다. <span class="dialogue">"그래. 움직임은 숫자로 설명할 수 있어. 그걸 알려면 먼저 두 가지를 알아야 해. 얼마나 멀리 갔는지, 그리고 얼마나 오래 걸렸는지."</span> 물리학에서 이 두 가지를 변위 또는 이동 거리(Distance)와 시간(Time)이라고 합니다. 이것이 바로 운동을 기술하는 가장 기본적인 물리량(Physical Quantity)입니다.</p>
+        <p>다음 날 아침의 대회를 위해, 벨로는 난생처음으로 '빠르다'는 것의 진짜 의미를 공부하기 시작했습니다. 물리학이라는 새로운 모험이 시작된 것입니다. 갈릴레오가 피사의 사탑에서 물체를 떨어뜨려 운동 법칙을 발견했듯이, 벨로도 자신만의 실험을 통해 속력의 비밀을 파헤칠 준비를 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">이동 거리</span>
+        <h2>📏 출발점에서 도착점까지</h2>
+        <p>대회 전날 오후, 디스탄이 벨로에게 첫 번째 수업을 시작했습니다. <span class="dialogue">"속력을 알려면 먼저 '이동 거리'를 정확히 알아야 해."</span> 디스탄은 줄자를 꺼내 학교 운동장에 선을 그었습니다. 출발선과 도착선 사이의 거리를 정확히 100미터로 맞추었지요. 100미터라는 거리는 역사적으로 중요한 의미가 있습니다. 프랑스 혁명 때 '미터'라는 단위가 만들어졌는데, 원래는 지구 자오선 길이의 1천만분의 1로 정의되었습니다. 현재는 빛이 진공에서 1/299,792,458초 동안 진행하는 거리로 더 정밀하게 정의됩니다.</p>
+        <p><span class="dialogue">"이동 거리(Distance)란 물체가 실제로 움직인 경로의 총 길이야. 출발점에서 도착점까지 물체가 지나간 모든 길을 합한 거지."</span> 여기서 중요한 구분이 있습니다. <span class="highlight">'이동 거리(Distance)'와 '변위'는 다릅니다.</span> 이동 거리는 스칼라 양으로 크기만 있고 방향이 없습니다. 반면 변위는 벡터(Vector) 양으로 크기와 방향이 모두 있습니다. 예를 들어 운동장을 한 바퀴 돌면 이동 거리는 400미터이지만, 변위는 0미터입니다. 출발점으로 돌아왔으니까요.</p>
+        <p>벨로가 궁금해했습니다. <span class="dialogue">"그러면 내가 집에서 학교까지 3킬로미터를 달렸다는 건, 직선거리가 아니라 내가 실제로 달린 모든 길의 합이라는 거야?"</span> <span class="dialogue">"정확해!"</span> 디스탄이 기뻐했습니다. <span class="dialogue">"도로가 구불구불하면 직선거리보다 실제 이동 거리가 더 길지. 네비게이션에서 '거리 3.2킬로미터'라고 뜨는 것은 직선거리(변위의 크기)가 아니라 도로를 따라간 실제 이동 거리야."</span> 물리학에서는 이 구분이 매우 중요합니다. 속력(Speed)은 이동 거리를 시간으로 나눈 스칼라 양이고, 속도는 변위를 시간으로 나눈 벡터 양이기 때문이에요.</p>
+        <p>디스탄은 다양한 단위도 설명해주었습니다. SI 단위계(International System of Units)에서 길이의 기본 단위는 미터(m)입니다. 1킬로미터(km) = 1,000미터, 1미터 = 100센티미터(cm) = 1,000밀리미터(mm). 과학에서는 주로 미터를, 일상에서 긴 거리는 킬로미터를 사용합니다. 마이크로미터(μm, 10⁻⁶m)는 세포 크기를, 나노미터(nm, 10⁻⁹m)는 원자 크기를 측정할 때 사용해요. 빛의 파장도 나노미터로 측정하는데, 가시광선은 약 400nm(보라색)~700nm(빨간색)입니다.</p>
+        <p><span class="dialogue">"거리를 정확히 재는 것이 모든 계산의 출발점이야."</span> 디스탄이 줄자를 접으며 말했습니다. <span class="highlight">"대충 '멀다', '가깝다'로는 과학이 될 수 없어. 숫자로 정확하게 표현해야 비로소 과학이 되는 거야."</span> 이것이 바로 정량적 분석(Quantitative Analysis)의 핵심입니다. 과학은 측정(Measurement)에서 시작하고, 측정에는 항상 단위(Unit)가 필요합니다. 단위 없는 숫자는 물리학에서 아무 의미가 없습니다. 벨로는 고개를 끄덕이며, 처음으로 숫자의 힘을 느끼기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">걸린 시간</span>
+        <h2>⏱️ 찰나와 영겁 사이</h2>
+        <p>다음은 크로노의 차례였습니다. <span class="dialogue">"이동 거리를 알았으니, 이제 '걸린 시간'을 알아야 해."</span> 크로노가 초시계를 똑딱거리며 말했습니다. <span class="dialogue">"시간(Time)이란 어떤 사건이 일어나는 데 소요되는 구간이야. 출발부터 도착까지 몇 초, 몇 분, 몇 시간이 걸렸는지를 재는 거지."</span> 시간은 물리학의 7가지 기본 물리량 중 하나로, 길이, 질량과 함께 역학의 기초를 이룹니다. 시간의 SI 단위는 초(second, s)입니다.</p>
+        <p>시간의 단위 체계를 알아봅시다. 1분(min) = 60초, 1시간(h) = 60분 = 3,600초, 1일 = 24시간 = 86,400초입니다. 과학에서 시간의 기본 단위인 '초'는 현재 세슘-133 원자(Cesium-133 Atom)의 바닥 상태에서 두 초미세 준위 사이의 전이에 해당하는 복사선의 9,192,631,770주기가 지속되는 시간으로 정의됩니다. 이 원자시계(Atomic Clock)는 약 3천만 년에 1초의 오차밖에 나지 않을 정도로 정밀합니다! 이렇게 정밀하게 정의하는 이유는, GPS 위성 시스템 같은 기술이 나노초(10⁻⁹초) 단위의 정확성을 요구하기 때문입니다.</p>
+        <p>크로노가 벨로에게 실험을 제안했습니다. <span class="dialogue">"100미터를 달려봐. 내가 시간을 재줄게."</span> 벨로가 전력으로 달렸습니다. <span class="dialogue">"15초 32!"</span> 크로노가 외쳤습니다. <span class="dialogue">"이제 걸어서 가봐."</span> 벨로가 빠른 걸음으로 100미터를 걸었습니다. <span class="dialogue">"1분 12초, 즉 72초!"</span> 여기서 시간 단위 변환이 필요합니다. 1분 12초 = 60초 + 12초 = 72초. 이처럼 과학에서는 계산의 편의를 위해 모든 시간을 초 단위로 통일하는 경우가 많습니다.</p>
+        <p><span class="dialogue">"같은 거리를 이동했는데, 걸린 시간이 다르지?"</span> 크로노가 물었습니다. <span class="dialogue">"달릴 때 15.32초, 걸을 때 72초. 거리는 같은데 시간이 다르면, 우리는 뭐가 다르다고 말할 수 있을까?"</span> <span class="dialogue">"빠르기가 다르다!"</span> 벨로가 대답했습니다. 물리학에서 이것을 운동의 '빠르기(Rate)'라고 합니다. 빠르기는 단위 시간당 이동한 거리로 정의되며, 이것이 바로 속력(Speed)의 정의입니다.</p>
+        <p><span class="highlight">"정확해. 같은 거리를 더 짧은 시간에 이동하면 더 빠른 거야. 이제 거리와 시간, 두 가지 재료가 모였어."</span> 크로노가 초시계를 높이 들었습니다. <span class="dialogue">"이 두 가지를 합치면, 드디어 '속력'이라는 마법의 공식이 탄생하지."</span> 벨로의 눈이 호기심으로 반짝였습니다. 숫자 두 개로 빠르기를 표현할 수 있다니, 물리학이 이렇게 명쾌한 것이었을까요? 참고로, 물리학에서 시간 측정의 역사는 매우 흥미롭습니다. 갈릴레오는 맥박으로 시간을 쟀고, 진자시계(Pendulum Clock)를 발명한 것은 크리스티안 하위헌스(Christiaan Huygens)였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">속력 계산</span>
+        <h2>✨ 마법의 공식이 탄생하다</h2>
+        <p>디스탄과 크로노가 벨로의 양쪽에 섰습니다. 디스탄이 왼손에 '거리'라고 쓴 카드를, 크로노가 오른손에 '시간'이라고 쓴 카드를 들었습니다. 그리고 둘이 동시에 외쳤습니다. <span class="highlight">"속력(Speed)은 이동 거리를 걸린 시간으로 나눈 것이야!"</span> 속력 = 이동 거리 ÷ 걸린 시간. 수학적으로 v = d/t로 표현합니다. 여기서 v는 속력(velocity의 약자로, 정확히는 speed를 나타냄), d는 거리(distance), t는 시간(time)을 뜻합니다. 이것이 바로 운동학(Kinematics)의 가장 기본적인 공식입니다.</p>
+        <p><span class="dialogue">"아까 네가 100미터를 15.32초에 달렸으니까, 속력은?"</span> 디스탄이 물었습니다. 벨로가 계산했습니다. <span class="dialogue">"100 나누기 15.32는… 약 6.53!"</span> <span class="dialogue">"맞아! 초속 약 6.53미터야. 영어로는 6.53 m/s라고 써. 1초에 6.53미터를 이동한 거지."</span> 크로노가 고개를 끄덕였습니다. 이 단위 m/s(미터 퍼 세컨드, meters per second)는 SI 단위계에서 속력의 기본 단위입니다. '/'기호는 '나누기'를 의미하며, '매 초당 미터'로 읽습니다.</p>
+        <p><span class="dialogue">"그런데 이게 빠른 거야, 느린 거야?"</span> 벨로가 물었습니다. 디스탄이 비교 자료를 보여주었습니다. 사람이 걷는 속력은 약 1.4 m/s, 우사인 볼트(Usain Bolt)의 100m 세계 기록(9.58초) 평균 속력은 약 10.44 m/s, 최고 순간 속력은 약 12.42 m/s입니다. 치타(Cheetah)는 약 33 m/s, 가장 빠른 물고기인 돛새치(Sailfish)는 약 30 m/s입니다. 벨로의 6.53 m/s는 평범한 중학생의 전력 질주 속력 정도입니다.</p>
+        <p><span class="dialogue">"단순히 '빠르다' '느리다'가 아니라, 숫자로 비교할 수 있게 된 거야!"</span> 벨로가 감탄했습니다. 이 공식은 놀라울 정도로 다양하게 활용됩니다. 공식을 변형하면: 거리 = 속력 × 시간 (d = v × t), 시간 = 거리 ÷ 속력 (t = d/v). 이 세 공식을 기억하기 쉽게 삼각형으로 표현하기도 합니다. 삼각형 꼭대기에 d, 아래 양쪽에 v와 t를 놓으면, 원하는 값을 손으로 가리고 나머지로 공식을 만들 수 있습니다.</p>
+        <p><span class="highlight">세 변수 중 두 개를 알면 나머지 하나를 항상 구할 수 있는 것이지요.</span> <span class="dialogue">"이게 물리학의 힘이야."</span> 크로노가 말했습니다. <span class="dialogue">"세상의 모든 움직임을 하나의 공식으로 설명할 수 있다니, 멋지지 않아?"</span> 이 간단한 공식이 자동차 네비게이션의 도착 예정 시간 계산, 항공기 운항 계획, 심지어 우주선의 궤도 계산에까지 사용됩니다. 물론 복잡한 상황에서는 추가적인 요소를 고려해야 하지만, 모든 계산의 기초는 바로 이 v = d/t입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">평균 속력</span>
+        <h2>📈 진짜 빠르기는 따로 있다</h2>
+        <p>속력 공식을 배운 벨로는 자신감이 넘쳤습니다. 하지만 크로노가 중요한 질문을 던졌습니다. <span class="dialogue">"벨로, 네가 100미터를 달릴 때, 처음부터 끝까지 같은 빠르기로 달렸을까?"</span> 벨로는 잠시 생각했습니다. 출발할 때는 느렸고, 중간에 가장 빨랐으며, 마지막에는 약간 지쳐서 느려졌습니다. <span class="dialogue">"같은 빠르기는 아니었어."</span> 이것은 매우 중요한 통찰입니다. 실제 운동에서 속력이 일정한 경우는 드물기 때문이에요.</p>
+        <p><span class="dialogue">"바로 그거야."</span> 크로노가 설명했습니다. <span class="dialogue">"우리가 아까 계산한 6.53 m/s는 '평균 속력(Average Speed)'이야. 전체 이동 거리를 전체 걸린 시간으로 나눈 것이지. 실제로 매 순간의 빠르기는 달랐을 거야."</span> 수학적으로 평균 속력은 v_avg = Δd/Δt로 표현합니다. 여기서 Δ(델타)는 '변화량'을 나타내는 그리스 문자입니다. Δd는 총 이동 거리, Δt는 총 걸린 시간이죠.</p>
+        <p><span class="highlight">평균 속력(Average Speed)과 순간 속력(Instantaneous Speed)은 다릅니다.</span> 평균 속력은 전체 여정에 대한 대표값이고, 순간 속력은 어떤 특정 순간의 빠르기입니다. 자동차 계기판의 속도계(Speedometer)에 표시되는 속력이 바로 순간 속력이에요. 시속 60km로 달리다가 시속 80km로 높였다가 신호에 걸려 시속 0이 되기도 하지요. 수학적으로 순간 속력은 v = lim(Δt→0) Δd/Δt, 즉 시간 간격이 0에 가까워질 때의 극한값입니다. 이것이 바로 미분(Derivative)의 개념이에요!</p>
+        <p>디스탄이 예를 들었습니다. <span class="dialogue">"서울에서 부산까지 400km를 4시간에 갔다면, 평균 속력은 시속 100km야. 하지만 고속도로에서는 시속 120km로 달리다가, 톨게이트에서는 멈추고, 휴게소에서는 시속 0이었겠지. 이 모든 빠르기를 평균 낸 것이 시속 100km인 거야."</span> 중요한 점은, 평균 속력은 이동 경로에 따라 달라질 수 있다는 것입니다. 같은 두 지점 사이라도 어떤 경로로 갔느냐에 따라 이동 거리가 달라지고, 따라서 평균 속력도 달라질 수 있어요.</p>
+        <p>벨로가 이해했습니다. <span class="dialogue">"그러면 내가 '6.53 m/s'라는 건 전체 평균이고, 실제로 중간에는 더 빨랐을 수도, 더 느렸을 수도 있다는 거네!"</span> <span class="dialogue">"완벽해!"</span> 크로노가 미소 지었습니다. <span class="dialogue">"과학에서는 평균 속력을 먼저 이해하고, 거기서 순간 속력으로 발전해가는 거야. 그 과정에서 미적분학(Calculus)이라는 놀라운 수학 도구가 필요하게 되지만, 그건 나중에 배워도 돼."</span> 참고로, 미적분은 아이작 뉴턴(Isaac Newton)과 고트프리트 라이프니츠(Gottfried Leibniz)가 17세기에 독립적으로 발명했습니다. 단순한 공식 하나에도 이렇게 깊은 수학적 의미가 숨어 있다니, 벨로는 물리학이 점점 좋아지기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">단위 이해</span>
+        <h2>👔 숫자에 옷을 입히다</h2>
+        <p><span class="dialogue">"잠깐!"</span> 벨로가 갑자기 외쳤습니다. <span class="dialogue">"초속 6.53미터랑 시속 24킬로미터랑 같은 거야, 다른 거야?"</span> 디스탄이 기다렸다는 듯이 미소 지었습니다. <span class="dialogue">"좋은 질문이야! 사실 거의 같은 빠르기를 다른 방식으로 표현한 거야. 이것이 바로 '단위 변환(Unit Conversion)'의 문제란다."</span> 단위 변환은 물리학과 공학에서 필수적인 기술입니다. 같은 물리량을 다른 단위로 표현할 수 있어야 다양한 상황에서 소통할 수 있기 때문이에요.</p>
+        <p><span class="highlight">속력의 단위는 '거리의 단위'를 '시간의 단위'로 나눈 것입니다.</span> 미터(m)를 초(s)로 나누면 m/s(미터 매 초), 킬로미터(km)를 시간(h)으로 나누면 km/h(킬로미터 매 시)가 됩니다. 다른 단위로는 마일/시(mph, miles per hour)도 있어요. 미국에서 주로 사용하는데, 1마일 = 약 1.609km입니다. 항공과 해운에서는 노트(knot)를 사용하는데, 1노트 = 1해리/시간 = 약 1.852 km/h입니다.</p>
+        <p>6.53 m/s를 km/h로 바꿔봅시다. 1시간 = 3,600초이므로, 6.53 m/s × 3,600 s/h = 23,508 m/h. 그리고 1km = 1,000m이므로, 23,508 m/h ÷ 1,000 = 23.508 km/h. 따라서 약 6.53 m/s ≈ 23.5 km/h입니다. 크로노가 단위 변환의 비법을 알려주었습니다. <span class="dialogue">"m/s를 km/h로 바꾸려면 3.6을 곱하면 돼. 반대로 km/h를 m/s로 바꾸려면 3.6으로 나누면 되고. 이 숫자 3.6만 기억하면 두 단위 사이를 자유롭게 오갈 수 있어."</span> 왜 3.6일까요? 1 km/h = 1,000m/3,600s = 1/3.6 m/s이기 때문입니다.</p>
+        <p>디스탄이 다양한 속력을 두 단위로 보여주었습니다. 걷기: 약 1.4 m/s ≈ 5 km/h. 자전거: 약 4-8 m/s ≈ 15-30 km/h. 자동차 고속도로 제한 속력: 약 30.6 m/s ≈ 110 km/h. 소리(공기 중, 20°C): 약 343 m/s ≈ 1,235 km/h. 지구 공전 속력: 약 29.8 km/s ≈ 107,200 km/h! <span class="highlight">빛의 속력(진공에서): 정확히 299,792,458 m/s ≈ 1,079,252,848.8 km/h!</span> 빛의 속력은 우주에서 가장 빠른 속력이며, 아인슈타인의 특수 상대성이론(Special Theory of Relativity)에 따르면 질량이 있는 물체는 절대로 빛의 속력에 도달할 수 없습니다.</p>
+        <p><span class="dialogue">"숫자에 단위가 없으면 아무 의미가 없어."</span> 디스탄이 강조했습니다. <span class="highlight">"숫자는 알몸이야. 단위라는 옷을 입어야 비로소 의미가 생기는 거야.</span> '6.53'만으로는 아무것도 알 수 없지만, '6.53 m/s'라고 하면 정확한 빠르기를 알 수 있지."</span> 물리학에서 이것을 차원 분석(Dimensional Analysis)이라고 합니다. 모든 물리 공식의 양변은 같은 차원을 가져야 합니다. 예를 들어 거리 = 속력 × 시간에서, [L] = [L/T] × [T] = [L]로 차원이 일치합니다. 벨로가 외쳤습니다. <span class="dialogue">"단위는 숫자의 언어구나! 단위가 달라도 같은 뜻일 수 있고, 단위가 없으면 숫자가 벙어리가 되는 거야!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">빠름의 비교</span>
+        <h2>🏆 세상에서 가장 빠른 것은?</h2>
+        <p>대회 당일 아침이 밝았습니다. 운동장에는 벨로 외에도 여러 친구가 모여 있었습니다. 자전거 팀, 달리기 팀, 인라인 팀까지. 하지만 대회를 시작하기 전에, 그래피가 특별한 발표를 준비해왔습니다. <span class="dialogue">"잠깐! 대회 전에 세상의 빠르기를 비교해보자!"</span> 그래피가 거대한 비교표를 펼쳤습니다. 이것은 물리학에서 '규모의 크기(Orders of Magnitude)'라고 불리는 개념으로, 우주의 다양한 현상을 비교하는 데 사용됩니다.</p>
+        <p>지구상 생물의 속력부터 살펴봅시다. 달팽이(Garden Snail): 약 0.001 m/s ≈ 0.03 km/h. 거북이(Tortoise): 약 0.08 m/s ≈ 0.3 km/h. 사람의 걷기: 약 1.4 m/s ≈ 5 km/h. 사람의 달리기(전력 질주): 약 6-8 m/s ≈ 20-30 km/h. 우사인 볼트(최고 기록): 약 12.4 m/s ≈ 44.7 km/h. 치타(Cheetah, 지상 최고속): 약 33 m/s ≈ 120 km/h. 망치머리박쥐의 급강하: 약 160 km/h. 매(Peregrine Falcon, 급강하 시): 약 108 m/s ≈ 389 km/h로 가장 빠른 동물입니다!</p>
+        <p>인간이 만든 이동수단의 속력도 봅시다. 자전거: 약 15-40 km/h. 자동차(고속도로): 약 100-130 km/h. KTX(한국 고속철도): 약 305 km/h. 여객기(순항 속도): 약 900 km/h ≈ 250 m/s. 콩코드(초음속 여객기, 퇴역): 약 2,180 km/h ≈ 마하 2.04. SR-71 블랙버드(정찰기): 약 3,530 km/h ≈ 마하 3.3. 우주왕복선(지구 궤도): 약 28,000 km/h ≈ 7.8 km/s! 여기서 '마하(Mach)'는 음속에 대한 비율을 나타내는 단위입니다. 마하 1 = 음속 ≈ 343 m/s(해수면, 20°C).</p>
+        <p>우주적 규모의 속력은 더 놀랍습니다. 지구 자전(적도): 약 465 m/s ≈ 1,674 km/h. 지구 공전(태양 주위): 약 29.8 km/s ≈ 107,200 km/h. 태양계의 은하 공전: 약 220 km/s ≈ 792,000 km/h! 우리 은하의 우주 공간 이동: 약 600 km/s! 그리고 <span class="highlight">빛의 속력(진공에서): c = 299,792,458 m/s ≈ 약 30만 km/s!</span> 이것은 1초에 지구를 7바퀴 반 도는 속력입니다. 아인슈타인의 특수 상대성이론에 따르면, 이것이 우주에서 정보나 에너지가 전달될 수 있는 최대 속력입니다.</p>
+        <p>그때 터보가 나타났습니다. <span class="dialogue">"하하, 빠르기를 비교한다고? 세상에서 가장 빠른 건 나야! 규칙 같은 건 무시하고 무조건 빨리 달리는 게 최고지!"</span> 터보가 벨로에게 속삭였습니다. <span class="dialogue">"야, 대회 같은 거 시시하다. 나랑 진짜 경주하자. 규칙도 안전도 없이, 순수한 속력 대결!"</span> 벨로가 잠시 흔들렸습니다. 하지만 디스탄이 벨로의 팔을 잡았습니다. <span class="dialogue">"벨로, 빠르기를 숫자로 이해한다는 건, 빠르기를 제어할 수 있다는 뜻이야. 제어할 수 없는 빠르기는 위험할 뿐이야."</span> 크로노도 고개를 끄덕였습니다. <span class="dialogue">"규칙 안에서 빠른 것이 진짜 빠른 거야."</span> 벨로는 터보를 뿌리쳤습니다. <span class="highlight">"나는 숫자로 달릴 거야. 네 방식은 필요 없어."</span> 터보의 눈이 분노로 이글거렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">그래프 표현</span>
+        <h2>📊 움직임을 그림으로 보다</h2>
+        <p>대회가 시작되었습니다. 크로노가 각 참가자의 시간을 기록하고, 디스탄이 거리를 측정한 뒤, 그래피가 그 데이터를 마법처럼 그래프로 바꾸었습니다. <span class="dialogue">"자, 이것을 봐!"</span> 그래피가 거대한 화면에 그래프를 띄웠습니다. 가로축(x축)은 시간(t), 세로축(y축)은 거리(d). 이것이 바로 <span class="highlight">'거리-시간 그래프(Distance-Time Graph)' 또는 '위치-시간 그래프(Position-Time Graph)'</span>입니다. 이 그래프는 운동학에서 가장 기본적이고 중요한 도구입니다.</p>
+        <p>벨로의 그래프는 처음에 완만하다가 중간에 가파르게 올라갔습니다. 출발할 때는 느렸지만 점점 빨라졌다는 뜻이지요. <span class="dialogue">"그래프의 기울기(Slope)가 바로 속력이야!"</span> 그래피가 설명했습니다. 수학적으로, 기울기 = Δy/Δx = Δd/Δt = 속력입니다. <span class="dialogue">"기울기가 가파를수록 빠르고, 완만할수록 느린 거야. 수평선(기울기 = 0)은 멈춰 있다는 뜻이고."</span> 만약 기울기가 일정하다면(직선), 그것은 등속 운동(Uniform Motion)을 의미합니다.</p>
+        <p>자전거 팀의 그래프는 거의 일정한 기울기로 올라갔습니다. 이것은 등속 운동, 즉 일정한 속력으로 달렸다는 뜻입니다. 반면 인라인 팀의 그래프는 기울기가 점점 가팔라졌는데, 이것은 가속 운동(Accelerated Motion)을 의미합니다. 점점 빨라지고 있었다는 것이죠. 기울기가 점점 완만해지면 감속 운동(Decelerated Motion)입니다. 그래프가 아래로 향하면(기울기가 음수) 물체가 출발점 방향으로 돌아오고 있다는 의미입니다.</p>
+        <p>그래피는 속력-시간 그래프(Speed-Time Graph 또는 Velocity-Time Graph)도 보여주었습니다. 이 그래프에서 가로축은 시간, 세로축은 속력입니다. 등속 운동은 수평선(constant value)으로 나타나고, 가속 운동은 오르는 직선(양의 기울기)으로, 감속은 내려가는 직선(음의 기울기)으로 나타납니다. <span class="highlight">그리고 이 그래프 아래의 넓이(Area under the curve)가 바로 이동 거리가 됩니다!</span> 수학적으로, 넓이 = ∫v dt = d (적분). 이것이 미적분학의 기본 개념입니다. 속력이 일정하면 넓이는 직사각형이 되어 d = v × t, 익숙한 공식이 나옵니다.</p>
+        <p><span class="dialogue">"숫자만 보면 추상적이지만, 그래프로 그리면 움직임이 눈에 보여."</span> 그래피가 자랑스럽게 말했습니다. <span class="dialogue">"거리-시간 그래프의 기울기는 속력, 속력-시간 그래프의 넓이는 거리. 그리고 속력-시간 그래프의 기울기는 가속도야. 수학과 과학이 만나면 이렇게 아름다운 그림이 되는 거야."</span> 가속도의 공식은 a = Δv/Δt, 단위는 m/s²(미터 매 초 제곱)입니다. 벨로가 감탄했습니다. <span class="dialogue">"내가 달린 모습이 이런 그림으로 보이다니! 물리학이 이렇게 예술적일 수 있구나!"</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">안전 거리</span>
+        <h2>🛑 빠르기의 책임</h2>
+        <p>대회가 끝나고 벨로가 우승의 기쁨에 젖어 있을 때, 운동장 밖에서 급정거 소리가 들렸습니다. 끼이익! 도로에서 자동차 한 대가 갑자기 튀어나온 공을 피하려다 급브레이크를 밟은 것이었습니다. 다행히 사고는 나지 않았지만, 자동차가 멈추기까지 상당한 거리를 미끄러졌습니다. 브레이크 할아버지가 아이들에게 다가왔습니다. <span class="dialogue">"봤지? 저것이 바로 '제동 거리(Braking Distance)'란다."</span></p>
+        <p><span class="highlight">정지 거리(Stopping Distance) = 반응 거리(Reaction Distance) + 제동 거리</span>입니다. 반응 거리는 운전자가 위험을 인식하고 브레이크를 밟기까지 이동한 거리입니다. 평균 반응 시간은 약 0.75~1.5초인데, 이 동안 차는 원래 속력으로 계속 달립니다. 예를 들어 시속 100km(≈27.8 m/s)로 달리면 1초 동안 약 28m를 이동합니다! 제동 거리는 브레이크를 밟은 후 완전히 멈출 때까지의 거리입니다. 이것은 속력의 제곱에 비례합니다.</p>
+        <p>브레이크 할아버지가 숫자를 보여주었습니다. 마른 도로에서: 시속 50 km/h → 정지 거리 약 28m. 시속 80 km/h → 정지 거리 약 52m. 시속 100 km/h → 정지 거리 약 72m. 시속 120 km/h → 정지 거리 약 100m. <span class="highlight">속력이 2배가 되면 제동 거리는 약 4배가 됩니다!</span> 이것은 운동 에너지(Kinetic Energy)가 KE = ½mv²로, 속력의 제곱에 비례하기 때문입니다. 속력이 2배면 에너지는 4배이고, 이 에너지를 모두 마찰로 소모해야 멈출 수 있습니다.</p>
+        <p><span class="dialogue">"속력이 빨라질수록, 멈추는 데 훨씬 더 많은 거리가 필요해."</span> 할아버지가 진지하게 말했습니다. <span class="dialogue">"비가 오면 마찰 계수가 줄어들어 정지 거리가 약 1.5배로 길어지고, 눈길에서는 5-10배나 더 미끄러지지."</span> 마찰 계수 μ는 두 표면 사이의 마찰력 정도를 나타내는 값입니다. 마른 아스팔트와 타이어 사이 μ ≈ 0.7, 젖은 도로에서 μ ≈ 0.4, 빙판에서 μ ≈ 0.1 정도입니다. 제동 거리 공식은 d = v²/(2μg)로, 마찰 계수가 작아질수록 제동 거리가 길어집니다.</p>
+        <p>터보가 멀리서 비웃었습니다. <span class="dialogue">"겁쟁이! 빠르면 빠를수록 좋은 거야!"</span> 하지만 벨로는 이제 달랐습니다. <span class="dialogue">"아니야, 터보. 빠른 건 좋지만, 멈출 수 있어야 해. 속력을 이해한다는 건 속력의 위험도 이해한다는 거야."</span> 브레이크 할아버지가 흐뭇하게 미소 지었습니다. <span class="highlight">"속력의 공식을 아는 것만큼 중요한 것이 있단다. 바로 속력에 대한 책임감이지. 빠르기만 하면 뭘 해? 안전하게 멈출 수 있어야 진짜 실력이란다."</span> 이것이 바로 교통 공학(Traffic Engineering)과 안전 공학(Safety Engineering)의 기본 원리입니다. 도로 설계, 제한 속도 설정, 안전 거리 규정은 모두 이러한 물리학 원리를 바탕으로 합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">움직임의 공식</span>
+        <h2>🌟 "움직임은 숫자로 설명된다"</h2>
+        <p>모든 대회와 수업이 끝난 뒤, 벨로, 디스탄, 크로노, 그래피가 운동장 한가운데에 둥글게 앉았습니다. 석양이 운동장을 주황빛으로 물들이고 있었습니다. 벨로가 먼저 입을 열었습니다. <span class="dialogue">"처음에 디스탄이 '빠르다가 뭔데?'라고 물었을 때, 나는 대답을 못했어. 그냥 느낌으로만 빠르다고 생각했거든. 하지만 이제는 달라."</span> 벨로가 손가락을 꼽으며 정리했습니다.</p>
+        <p><span class="highlight">"속력(v) = 이동 거리(d) ÷ 걸린 시간(t). 거리(d) = 속력(v) × 시간(t). 시간(t) = 거리(d) ÷ 속력(v). 이 세 가지가 삼각형처럼 연결되어 있어!"</span> 이것을 'DST 삼각형'이라고도 부릅니다. 물리학에서 이러한 관계식을 유도 공식(Derived Formula)이라고 하며, 기본 정의에서 수학적으로 도출됩니다. 이 간단한 관계가 갈릴레오의 운동학에서 뉴턴의 역학으로, 그리고 아인슈타인의 상대성이론으로 발전하는 기초가 되었습니다.</p>
+        <p>디스탄이 덧붙였습니다. <span class="dialogue">"그리고 숫자에는 반드시 단위(Unit)가 필요해. m/s든 km/h든, 단위가 있어야 숫자가 의미를 가지지. 차원 분석(Dimensional Analysis)으로 공식의 타당성도 검증할 수 있어."</span> 크로노가 말했습니다. <span class="dialogue">"평균 속력(Average Speed)과 순간 속력(Instantaneous Speed)은 다르다는 것도 중요해. 전체를 대표하는 값과 특정 순간의 값을 구별할 줄 알아야 해. 그리고 속력(Speed)은 스칼라, 속도는 벡터라는 것도 기억해!"</span> 그래피가 미소 지었습니다. <span class="dialogue">"그리고 이 모든 것을 그래프로 그리면 눈으로 볼 수 있어. 거리-시간 그래프의 기울기가 속력이고, 속력-시간 그래프의 넓이가 거리야. 그래프는 미적분학의 시각적 표현이기도 하지."</span></p>
+        <p>브레이크 할아버지가 멀리서 손을 흔들며 외쳤습니다. <span class="dialogue">"그리고 잊지 마! 운동 에너지는 속력의 제곱에 비례하니까 (KE = ½mv²), 속력이 2배면 에너지와 위험은 4배야. 속력의 공식을 아는 만큼, 속력의 책임도 알아야 해!"</span> 터보는 어디론가 사라지고 없었습니다. 숫자와 과학 앞에서 무모한 속력은 설 자리가 없었으니까요.</p>
+        <p>벨로가 하늘을 올려다보며 말했습니다. <span class="highlight">"움직임은 숫자로 설명된다(Motion can be described by numbers). 이 간단한 진실이 세상의 모든 운동을 이해하는 열쇠였어. 떨어지는 빗방울도, 달리는 기차도, 도는 지구도, 날아가는 빛도. 모두 같은 공식으로 설명할 수 있다니."</span> 그리고 덧붙였습니다. <span class="dialogue">"내일부터 나는 그냥 빨리 달리는 게 아니라, 얼마나 빨리 달리는지 알면서 달릴 거야. 그게 진짜 빠른 거니까."</span> 석양 속에서 네 친구의 그림자가 길게 늘어졌습니다. 운동학(Kinematics)이라는 물리학의 첫 번째 문이 활짝 열린 아름다운 저녁이었습니다. 다음에는 '왜' 움직이는지, 힘과 가속도를 다루는 동역학의 세계가 기다리고 있을 것입니다.</p>
+        <p style="text-align: center; margin-top: 20px; font-weight: 600; color: #00ACC1;">— 끝 —</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+    <button class="nav-btn" onclick="goBack()">📚 목록으로</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goToQuiz() {
+      window.location.href = 'physics05_season1_quiz.html';
+    }
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

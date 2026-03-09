@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나침반 소녀 '나나'와 지구의 심장이 만드는 보이지 않는 방패 - 창작지구과학</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #0a0a1a;
+      color: #e0e0e0;
+      overflow-x: hidden;
+    }
+
+    /* 고정 배경 컨테이너 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.8s ease;
+    }
+
+    #map-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom,
+        rgba(10, 10, 26, 0.3) 0%,
+        rgba(10, 10, 26, 0.5) 50%,
+        rgba(10, 10, 26, 0.8) 100%);
+    }
+
+    /* 콘텐츠 영역 */
+    #content {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .intro-section h1 {
+      font-size: 2.8em;
+      font-weight: 900;
+      color: #4ECDC4;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 30px rgba(78, 205, 196, 0.5);
+      line-height: 1.3;
+    }
+
+    .intro-section .subtitle {
+      font-size: 1.3em;
+      color: #a8dadc;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+
+    .intro-section .description {
+      max-width: 600px;
+      font-size: 1.1em;
+      line-height: 1.8;
+      color: #ccc;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: bounce 2s infinite;
+    }
+
+    .scroll-indicator span {
+      display: block;
+      width: 30px;
+      height: 50px;
+      border: 2px solid rgba(78, 205, 196, 0.5);
+      border-radius: 15px;
+      position: relative;
+    }
+
+    .scroll-indicator span::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background: #4ECDC4;
+      border-radius: 50%;
+      animation: scrollDown 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+      40% { transform: translateX(-50%) translateY(-10px); }
+      60% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    @keyframes scrollDown {
+      0% { opacity: 1; top: 8px; }
+      100% { opacity: 0; top: 30px; }
+    }
+
+    /* 스토리 섹션 */
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 80px 20px;
+    }
+
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      max-width: 600px;
+      background: rgba(20, 30, 50, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 40px;
+      margin: 0 5%;
+      border: 1px solid rgba(78, 205, 196, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      transform: translateX(-100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      background: linear-gradient(135deg, #4ECDC4 0%, #2E8B84 100%);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-size: 0.9em;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      background: rgba(78, 205, 196, 0.2);
+      color: #4ECDC4;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      margin-left: 10px;
+      margin-bottom: 15px;
+    }
+
+    .story-card h2 {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 1.05em;
+      line-height: 2;
+      color: #d0d0d0;
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+
+    .story-card .highlight {
+      color: #4ECDC4;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #4ECDC4;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(78, 205, 196, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #2E8B84;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #2E8B84;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #FFD93D;
+      font-style: italic;
+    }
+
+    /* 배움 섹션 */
+    .lesson-section {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 80px 20px;
+      background: linear-gradient(to top, rgba(10, 10, 26, 1) 0%, rgba(10, 10, 26, 0.8) 100%);
+    }
+
+    .lesson-card {
+      max-width: 700px;
+      background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(46, 139, 132, 0.15) 100%);
+      border: 2px solid rgba(78, 205, 196, 0.3);
+      border-radius: 24px;
+      padding: 50px;
+      text-align: center;
+    }
+
+    .lesson-card h3 {
+      font-size: 1.8em;
+      color: #4ECDC4;
+      margin-bottom: 25px;
+    }
+
+    .lesson-card p {
+      font-size: 1.15em;
+      line-height: 1.9;
+      color: #e0e0e0;
+    }
+
+    /* 뒤로가기 버튼 */
+    .back-btn { display: none;
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      z-index: 100;
+      background: rgba(78, 205, 196, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      color: #4ECDC4;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.95em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn:hover {
+      background: rgba(78, 205, 196, 0.3);
+      transform: translateX(-5px);
+    }
+
+    .quiz-btn { display: none;
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      z-index: 100;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      border: none;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.95em;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+    }
+
+    .quiz-btn:hover {
+      transform: translateX(5px);
+      box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4);
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .intro-section h1 {
+        font-size: 1.8em;
+      }
+
+      .intro-section .subtitle {
+        font-size: 1em;
+      }
+
+      .story-card {
+        margin: 0 15px;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 1.4em;
+      }
+
+      .story-card p {
+        font-size: 0.95em;
+      }
+
+      .back-btn { display: none;
+        top: 15px;
+        left: 15px;
+        padding: 10px 18px;
+        font-size: 0.85em;
+      }
+
+      .story-section {
+        justify-content: center !important;
+      }
+
+      .story-section:nth-child(even) .story-card,
+      .story-card {
+        transform: translateY(50px);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="back-btn" onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    돌아가기
+  </button>
+
+  <button class="quiz-btn" onclick="goToQuiz()">🏆 관문평가</button>
+
+  <!-- 고정 배경 -->
+  <div id="map-container">
+    <img id="map-canvas" src="/images/창작도서/창작지구과학10/00.jpg" alt="배경">
+    <div id="map-overlay"></div>
+  </div>
+
+  <!-- 콘텐츠 -->
+  <div id="content">
+
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <h1>나침반 소녀 '나나'와<br>지구의 심장이 만드는<br>보이지 않는 방패</h1>
+      <p class="subtitle">— 보이지 않는 힘, 지구가 거대한 자석인 이유 —</p>
+      <p class="description">
+        열두 살 소녀 나나는 돌아가신 아빠가 남긴 나침반을 보물처럼 간직합니다.<br>
+        빨간 바늘이 항상 북쪽을 가리키는 이유를 찾아 떠나는 여정에서,<br>
+        나나는 지구의 심장이 만들어내는 보이지 않는 방패의 비밀을 알게 됩니다.
+      </p>
+      <div class="scroll-indicator">
+        <span></span>
+      </div>
+    </section>
+
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">나침반의 원리</span>
+        <h2>빨간 바늘이 항상 북쪽을 가리키는 이유</h2>
+        <p>열두 살 소녀 <span class="highlight">'나나'</span>는 세상에서 나침반을 가장 좋아하는 아이였습니다. 아빠가 돌아가시기 전 마지막으로 선물해 준 작은 황동 나침반을 나나는 늘 주머니에 넣고 다녔습니다. 빨간 바늘이 어디에서든 흔들림 없이 북쪽을 가리키는 것이 나나에게는 큰 위안이었습니다. 어느 날, 학교 과학 시간에 선생님이 물었습니다.<br><br><span class="dialogue">"나침반의 바늘이 왜 북쪽을 가리킬까요?"</span><br><br>나나가 번쩍 손을 들었습니다.<br><br><span class="dialogue">"북쪽에 큰 자석이 있어서요!"</span></p>
+        <p>선생님이 미소 지으며 말했습니다.<br><br><span class="dialogue">"절반은 맞았어. 그런데 그 거대한 자석이 어디에 있는지 아니? 바로 우리 발밑, <span class="highlight">지구 자체가 거대한 자석</span>이란다."</span><br><br>나침반의 바늘은 <span class="highlight">강자성체</span>—철, 니켈, 코발트처럼 자화될 수 있는 물질—로 만들어진 가벼운 금속입니다. 나침반 바늘은 지구의 자기장에 반응하여 <span class="highlight">자기력선</span> 방향으로 정렬됩니다.</p>
+        <p>재미있는 사실은, 나침반이 가리키는 <span class="highlight">'자북극(Magnetic North Pole)'</span>과 <span class="highlight">지리적 북극</span>은 정확히 같은 곳이 아니라는 것입니다. 이 차이를 <span class="highlight">'편각(Magnetic Declination)'</span>이라고 부릅니다. 편각은 위치에 따라 다르며, 항해와 측량에서 반드시 보정해야 합니다. 또한 나침반 바늘이 수평면과 이루는 각도를 <span class="highlight">'복각(Magnetic Inclination)'</span>이라 하며, 극지방으로 갈수록 복각이 커집니다.</p>
+        <p>지구 자기장의 세기는 위치에 따라 다르지만, 표면에서 평균 약 <span class="highlight">25~65 마이크로테슬라</span>입니다. 비교하자면 냉장고 자석은 약 5밀리테슬라(mT), MRI 장치는 1.5~3테슬라(T)입니다. 지구 자기장은 약하지만, 지구 전체를 감싸는 거대한 규모 덕분에 우주로부터 지구를 보호하는 역할을 합니다.<br><br><span class="dialogue">"지구의 심장이 만드는 힘이 이 작은 바늘을 움직이는 거구나."</span><br><br>나나의 눈이 반짝였습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">지구 자기장</span>
+        <h2>지구를 감싸는 보이지 않는 거품</h2>
+        <p>나나의 호기심을 풀어줄 사람은 마을의 은퇴한 지구물리학자, <span class="highlight">'자기 할아버지'</span>였습니다. 흰 수염이 가슴까지 내려오는 할아버지는 언제나 자석 목걸이를 하고 다녔습니다.<br><br><span class="dialogue">"할아버지, 지구가 자석이라면, 자석의 힘은 어디까지 미쳐요?"</span><br><br>나나가 물었습니다. 할아버지는 마당에 큰 원을 그리며 설명했습니다.<br><br><span class="dialogue">"지구 자기장은 지구 표면에만 있는 게 아니란다. 지구를 둘러싸고 <span class="highlight">우주 공간까지 약 6만 킬로미터 이상</span> 뻗어나가지. 마치 거대한 비눗방울이 지구를 감싸고 있는 것처럼."</span></p>
+        <p>이 보이지 않는 거품의 이름은 <span class="highlight">'자기권(Magnetosphere)'</span>입니다. 자기권은 <span class="highlight">쌍극자 자기장</span> 구조를 기본으로 하지만, 태양풍의 영향으로 비대칭 형태를 이룹니다. 태양 쪽(주간 측)은 압축되어 약 <span class="highlight">10지구반경</span>까지, 반대쪽(야간 측)은 길게 늘어져 <span class="highlight">자기 꼬리</span>를 형성하며 수백만 킬로미터까지 뻗습니다.</p>
+        <p>할아버지는 종이 위에 막대자석을 놓고, 그 위에 철가루를 뿌렸습니다. 철가루가 아름다운 곡선을 그리며 정렬되었습니다.<br><br><span class="dialogue">"이것이 <span class="highlight">자기력선</span>이야. 지구도 이 막대자석처럼 자기력선을 가지고 있지. 자기력선은 <span class="highlight">자북극(N극) 근처에서 나와 자남극(S극) 근처로 들어가</span>—마이클 패러데이가 처음 시각화한 개념이야."</span></p>
+        <p>자기권 내부에는 여러 영역이 있습니다. <span class="highlight">플라즈마권</span>은 지구에서 약 4지구반경까지의 차가운 플라즈마 영역이고, <span class="highlight">밴앨런 복사대</span>는 고에너지 하전 입자가 갇혀 있는 도넛 모양의 영역입니다—내대(inner belt, 약 1,000~6,000km)와 외대(outer belt, 약 13,000~60,000km)로 구성됩니다. 1958년 익스플로러 1호 위성이 처음 발견했습니다.<br><br><span class="dialogue">"보이지도, 만져지지도, 냄새도 나지 않는 힘. 하지만 분명 존재하고, 지구 전체를 감싸고 있어."</span></p>
+      </div>
+    </section>
+
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">외핵의 움직임</span>
+        <h2>지구의 심장은 뜨거운 쇠물이 소용돌이치는 바다</h2>
+        <p>자기 할아버지는 나나를 연구실로 데려갔습니다. 벽에는 지구의 단면도가 크게 걸려있었습니다.<br><br><span class="dialogue">"자, 나나야. 지구를 삶은 달걀이라고 생각해보렴. 달걀 껍데기가 <span class="highlight">지각</span>, 흰자가 <span class="highlight">맨틀</span>, 노른자가 <span class="highlight">핵</span>이야. 그런데 지구의 핵은 두 부분으로 나뉘어. 바깥쪽은 <span class="highlight">외핵</span>, 안쪽은 <span class="highlight">내핵</span>이지."</span></p>
+        <p><span class="dialogue">"외핵이 자기장을 만든다고요? 어떻게요?"</span><br><br><span class="dialogue">"외핵은 주로 <span class="highlight">철(Fe)과 니켈</span>로 이루어진 <span class="highlight">액체 금속</span>이란다. 온도가 무려 <span class="highlight">4,400~6,100K</span>—태양 표면 온도와 비슷해. 그런데도 엄청난 압력(약 135~360GPa) 때문에 고체가 아닌 액체 상태를 유지하지. 이 뜨거운 액체 금속이 <span class="highlight">지구의 자전</span>과 <span class="highlight">열대류</span> 때문에 엄청난 속도로 소용돌이치고 있어."</span></p>
+        <p>이것이 바로 <span class="highlight">'지구 다이나모 이론(Geodynamo Theory)'</span>의 핵심입니다. 전기를 잘 통하는 액체 금속(<span class="highlight">전기전도체, Electrical Conductor</span>)이 움직이면 <span class="highlight">전류</span>가 발생하고, <span class="highlight">암페어 법칙</span>에 따라 전류는 자기장을 유도합니다. 이 자기장이 다시 액체 금속의 흐름에 영향을 주어 전류를 강화하는 <span class="highlight">양의 피드백</span> 과정이 일어납니다.</p>
+        <p>지구 다이나모가 작동하려면 세 가지 조건이 필요합니다: (1) 전기 전도성 유체, (2) 유체의 대류 운동, (3) 행성의 자전. 지구는 이 세 조건을 모두 충족합니다. 내핵의 결정화 과정에서 방출되는 <span class="highlight">잠열</span>과 가벼운 원소의 부력이 대류를 구동합니다. <span class="highlight">코리올리 효과</span>가 흐름을 나선 형태로 비틀어, 자기장을 정렬시키는 역할을 합니다.<br><br><span class="dialogue">"지구의 심장이 뛰는 거네요! 심장이 뛰어야 피가 돌듯, 외핵이 움직여야 자기장이 만들어지는 거잖아요!"</span></p>
+      </div>
+    </section>
+
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">극의 변화</span>
+        <h2>북극이 남극이 되는 날, 나침반의 대혼란</h2>
+        <p>나나에게 충격적인 사실을 알려준 것은 같은 반 친구 <span class="highlight">'극이'</span>였습니다.<br><br><span class="dialogue">"나나, 너 나침반이 항상 북쪽을 가리킨다고 믿지? 근데 그거 알아? 자북극이 매년 움직이고 있다는 거?"</span><br><br>사실이었습니다. <span class="highlight">자북극의 위치</span>는 고정되어 있지 않습니다. 19세기에 캐나다 북극 제도에 있던 자북극은 현재 연간 약 <span class="highlight">55km의 속도</span>로 시베리아 방향으로 이동하고 있습니다. 이것을 <span class="highlight">'지자기 영년 변화(Secular Variation)'</span>라고 합니다.</p>
+        <p><span class="dialogue">"그뿐만이 아니야, 나나. 지구 역사에서 <span class="highlight">북극과 남극이 완전히 뒤바뀐 적</span>이 있단다. 여러 번이나!"</span><br><br>할아버지가 말했습니다. 이것이 <span class="highlight">지자기 역전</span>입니다. 지질 기록에 따르면, 지난 <span class="highlight">500만 년 동안 약 20회 이상</span>의 역전이 있었습니다. 마지막 완전 역전은 약 <span class="highlight">78만 년 전 브루네스-마투야마 역전</span>이었습니다.</p>
+        <p>역전 과정에서 <span class="highlight">지자기 소여정</span>이라는 짧은 변동도 일어납니다—자극이 크게 이동했다가 원래로 돌아오는 현상입니다. 약 4만 1천 년 전 <span class="highlight">라샹 소여정</span>에서는 자기장 세기가 현재의 5% 수준까지 약해졌습니다.<br><br><span class="dialogue">"그러면... 빨간 바늘이 남쪽을 가리키게 되는 거예요?"</span><br><br><span class="dialogue">"맞아. 하지만 역전에는 보통 <span class="highlight">수천 년에서 수만 년</span>이 걸려. 어느 날 갑자기 뒤집히는 게 아니야."</span></p>
+        <p>현재 지구 자기장의 세기는 지난 <span class="highlight">150년간 약 10% 감소</span>했습니다. 특히 남대서양에는 <span class="highlight">남대서양 이상대</span>라는 자기장이 약한 지역이 확장되고 있습니다. 일부 과학자들은 이것이 새로운 역전의 전조일 수 있다고 봅니다.<br><br><span class="dialogue">"변한다는 것은 살아있다는 증거야. 자기장이 역전되면서도 지구가 생명을 지켜온 건, 자연의 회복력이 그만큼 대단하다는 뜻이란다."</span></p>
+      </div>
+    </section>
+
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">태양풍 차단</span>
+        <h2>우주에서 날아오는 불의 화살을 막아라</h2>
+        <p>자기 할아버지가 나나와 극이를 천문대로 데려간 날, 아이들은 태양의 진짜 얼굴을 처음 보았습니다. 특수 필터가 장착된 망원경으로 본 태양은 고요한 불덩이가 아니었습니다. 표면에서 <span class="highlight">태양 플레어</span>가 수십만 킬로미터나 치솟아 오르고, <span class="highlight">코로나 질량 방출</span>이 폭발적으로 일어나고 있었습니다.</p>
+        <p><span class="dialogue">"태양은 끊임없이 고에너지 입자를 우주로 쏟아내고 있어. 이것을 <span class="highlight">'태양풍(Solar Wind)'</span>이라고 부르지."</span><br><br>태양풍은 주로 <span class="highlight">양성자</span>와 <span class="highlight">전자</span>로 이루어진 <span class="highlight">플라즈마</span>입니다. 속도는 평상시 <span class="highlight">300~800km/s</span>, CME 발생 시에는 <span class="highlight">1,000~3,000km/s</span>까지 가속됩니다. 에너지는 수 keV에서 수백 MeV에 이릅니다.</p>
+        <p><span class="dialogue">"이 입자들이 지구로 날아와요?"</span><br><br><span class="dialogue">"물론이지. 만약 이 입자들이 지구 표면에 직접 닿으면 <span class="highlight">DNA 손상</span>, <span class="highlight">대기 스퍼터링</span>으로 인한 대기 유실, 심각한 방사선 피폭이 일어나. 지구를 화성처럼 황폐하게 만들 수 있어."</span><br><br>하지만 지구에는 <span class="highlight">자기장이라는 방패</span>가 있습니다!</p>
+        <p>자기장은 태양풍의 <span class="highlight">하전 입자</span>를 <span class="highlight">로렌츠 힘</span>으로 휘어지게 만듭니다. 하전 입자는 자기장에 수직 방향으로 힘을 받아, 자기력선을 따라 나선 운동을 합니다. 이 과정에서 대부분의 태양풍 입자는 지구 양옆으로 휘어져 지나갑니다. 태양풍과 자기권이 만나는 경계를 <span class="highlight">자기권계면</span>이라 하고, 그 바깥에 태양풍이 초음속에서 아음속으로 감속되는 <span class="highlight">충격파</span>가 형성됩니다.<br><br><span class="dialogue">"보이지 않는 방패가 매 순간 우리를 지키고 있는 거야. 이 방패가 없다면 지구의 모든 생명은 존재할 수 없었을 거란다."</span></p>
+      </div>
+    </section>
+
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">오로라 형성</span>
+        <h2>방패가 만들어낸 하늘의 커튼, 빛의 춤</h2>
+        <p><span class="dialogue">"할아버지, 자기장이 태양풍을 완전히 다 막아요?"</span><br><br><span class="dialogue">"사실 완전히 막지는 못해. 태양풍의 일부 입자는 자기력선을 타고 극지방으로 들어오거든. 자기력선이 지구 표면으로 <span class="highlight">수렴</span>하는 곳, 즉 <span class="highlight">오로라 타원대</span>—자기 위도 약 65~75도—에서 말이야."</span></p>
+        <p>할아버지가 노트북을 열어 영상을 보여주었습니다. 밤하늘에 초록색, 보라색, 붉은색의 빛이 거대한 커튼처럼 하늘거리며 춤추고 있었습니다.<br><br><span class="dialogue">"이것이 <span class="highlight">오로라</span>란다. 북극에서 보이면 <span class="highlight">Aurora Borealis</span>, 남극에서 보이면 <span class="highlight">Aurora Australis</span>라고 부르지."</span></p>
+        <p><span class="highlight">오로라의 발광 메커니즘</span>: 태양풍의 하전 입자(주로 전자)가 자기력선을 따라 극지방 상공 <span class="highlight">100~300km 고도</span>(열권, Thermosphere)에 도달합니다. 이 입자들이 대기의 원자/분자와 충돌하면, 원자의 <span class="highlight">전자가 들뜬 상태</span>로 올라갔다가 <span class="highlight">바닥 상태</span>로 돌아오면서 <span class="highlight">광자</span>를 방출합니다. 이것이 오로라의 빛입니다.</p>
+        <p>오로라의 색깔은 어떤 원자가 어느 고도에서 충돌하느냐에 따라 결정됩니다. <span class="highlight">산소</span>: 초록색(557.7nm, 100~150km), 붉은색(630.0nm, 200~300km). <span class="highlight">질소</span>: 보라색/푸른색(391.4nm, 428nm). 고에너지 입자일수록 더 깊이 침투하여 다양한 색을 만듭니다. 태양 활동이 활발한 <span class="highlight">태양 극대기</span>에는 오로라가 더 자주, 더 밝게, 더 낮은 위도까지 관측됩니다.<br><br><span class="dialogue">"보이지 않는 방패가 만들어낸 빛이잖아요. 자기장이 없으면 오로라도 없는 거잖아요."</span><br><br>오로라는 자기장의 존재를 눈으로 볼 수 있는 유일한 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">생명 보호</span>
+        <h2>자기장이 사라진 별, 화성의 경고</h2>
+        <p>자기 할아버지는 두 아이에게 결정적인 이야기를 들려주었습니다.<br><br><span class="dialogue">"그러면 극이야, 자기장이 없는 행성이 어떻게 되었는지 보여줄까?"</span><br><br>할아버지가 <span class="highlight">화성</span>의 사진을 펼쳤습니다. 붉고 황량한 사막. 물 한 방울 없는 메마른 땅. 대기압은 지구의 <span class="highlight">0.6%</span>에 불과한 죽은 행성.</p>
+        <p><span class="dialogue">"약 40억 년 전, 화성에도 <span class="highlight">전구적 자기장</span>이 있었단다. 화성 탐사선 <span class="highlight">MGS</span>가 화성 지각에서 <span class="highlight">잔류 자기</span>를 발견했어. 이건 과거에 다이나모가 작동했다는 증거야. 그때 화성에는 액체 물이 흐르고, 두꺼운 대기가 있었을 가능성이 높아."</span></p>
+        <p>그러나 화성은 지구보다 작아(질량이 지구의 약 10.7%) <span class="highlight">핵이 더 빨리 식었습니다</span>. 외핵의 대류가 멈추면서 다이나모가 정지하고, 자기장이 사라졌습니다. 그 결과:<br><br>• <span class="highlight">태양풍 스퍼터링</span>: 태양풍이 대기 상층부와 직접 충돌하여 원자를 우주로 날려보냄<br>• <span class="highlight">대기 유실</span>: NASA의 MAVEN 탐사선 관측에 따르면, 화성은 초당 약 100g의 대기를 잃고 있음<br>• <span class="highlight">기압 하강 → 액체 물 불안정</span>: 낮은 기압에서 물은 액체로 존재할 수 없음</p>
+        <p><span class="dialogue">"그러면... 지구의 자기장이 사라지면 지구도 화성처럼 될 수 있다는 거예요?"</span><br><br><span class="dialogue">"이론적으로는 그래. 하지만 지구의 외핵은 아직 뜨겁게 움직이고 있으니 당장 걱정할 필요는 없어. 다만 지구 내부 열이 결국 식으면—수십억 년 후—지구도 같은 운명을 맞을 수 있지."</span><br><br>화성은 <span class="highlight">자기장을 잃은 행성의 미래</span>를 보여주는 경고장이었습니다. 우리가 숨 쉬는 공기, 마시는 물, 이 모든 것이 존재하는 이유 중 하나가 바로 보이지 않는 자기장 덕분입니다.</p>
+      </div>
+    </section>
+
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">자기 역전</span>
+        <h2>지구의 나침반이 뒤집히는 순간, 역사 속 대사건</h2>
+        <p>극이가 가장 궁금해했던 주제가 드디어 등장했습니다. 바로 <span class="highlight">'지자기 역전(Geomagnetic Reversal)'</span>의 증거였습니다. 자기 할아버지는 아이들을 해변으로 데려가 <span class="highlight">현무암</span> 바위를 보여주었습니다.<br><br><span class="dialogue">"이 바위 속에 과거의 자기장 방향이 기록되어 있단다."</span></p>
+        <p><span class="dialogue">"용암이 식을 때, 안에 있는 <span class="highlight">자성 광물</span>—주로 <span class="highlight">자철석</span>—이 그 당시 자기장 방향으로 정렬돼. 이 온도를 <span class="highlight">큐리 온도</span>라고 해. 용암이 굳으면 그 방향이 영구적으로 기록되지. 이것을 <span class="highlight">열잔류자화</span>라고 해."</span><br><br>이 기록을 연구하는 학문이 <span class="highlight">고지자기학</span>입니다.</p>
+        <p>1960년대 과학자들은 <span class="highlight">해저 확장</span>을 연구하면서 놀라운 패턴을 발견했습니다. <span class="highlight">중앙해령</span>을 중심으로 양쪽에 자기장 방향이 번갈아 기록되어 있었습니다—<span class="highlight">자기 줄무늬</span>. 정상극성(현재와 같은 방향), 역극성(현재와 반대 방향), 정상극성, 역극성... 이것은 (1) 지자기가 주기적으로 역전했다는 증거이자, (2) 판 구조론과 해저 확장설을 뒷받침하는 핵심 증거였습니다.</p>
+        <p>과학자들은 이 자기 기록을 이용해 <span class="highlight">지자기 극성 시간 척도</span>를 만들었습니다. 주요 역전 시기에는 이름이 붙어 있습니다: 브루네스 정상기(현재~78만 년 전), 마투야마 역전기(78만~258만 년 전), 가우스 정상기, 길버트 역전기 등.<br><br><span class="dialogue">"역전 과정에서 자기장은 약해지지만, 완전히 사라지지는 않아. 그리고 대기와 오존층이 추가 보호막 역할을 하니까 대멸종 같은 일은 일어나지 않았어."</span></p>
+      </div>
+    </section>
+
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">과학적 탐구</span>
+        <h2>보이지 않는 것을 보는 사람들, 과학자의 눈</h2>
+        <p>나나는 자기장에 대해 알면 알수록, 이 모든 것을 어떻게 알아냈는지가 더 궁금해졌습니다.<br><br><span class="dialogue">"할아버지, 보이지도 않고, 만질 수도 없는 자기장을 과학자들은 어떻게 연구한 거예요?"</span><br><br>할아버지의 눈이 빛났습니다.</p>
+        <p><span class="dialogue">"모든 것은 관찰에서 시작되었단다. 기원전 6세기, 그리스의 <span class="highlight">탈레스</span>가 <span class="highlight">자석광</span>이 철을 끌어당기는 것을 관찰한 것이 시작이야. 기원전 4세기 중국에서는 <span class="highlight">지남철</span>이 항해에 사용되기 시작했지."</span><br><br>1600년 영국의 <span class="highlight">윌리엄 길버트</span>는 저서 《De Magnete》에서 둥근 자석 모형(<span class="highlight">테렐라, Terrella</span>)을 만들어 실험하며, <span class="highlight">지구 자체가 거대한 자석</span>이라는 것을 증명했습니다.</p>
+        <p>이후의 발전:<br>• <span class="highlight">카를 프리드리히 가우스</span>: 자기장 세기의 <span class="highlight">수학적 분석</span>, 가우스(G) 단위<br>• <span class="highlight">조셉 라모르</span>: <span class="highlight">지구 다이나모 이론</span>의 기초 제안<br>• <span class="highlight">월터 엘사서</span>: 외핵 대류와 자기장 생성의 수학적 모델<br>• <span class="highlight">슈퍼컴퓨터 시뮬레이션</span>: 지구 다이나모의 3D 수치 모델링으로 자기장 역전 재현</p>
+        <p>현대 관측:<br>• <span class="highlight">SWARM 위성군</span>: 세 개의 위성이 지구 자기장을 정밀 측정<br>• <span class="highlight">지구자기 관측소 네트워크</span>: 전 세계 100개 이상의 관측소<br>• <span class="highlight">고지자기학 연구</span>: 용암, 퇴적물, 고고학 유물의 잔류자화 분석<br><br><span class="dialogue">"과학은 보이지 않는 것을 보는 눈이에요!"</span><br><br>나나가 외쳤습니다. 할아버지가 고개를 끄덕였습니다.<br><br><span class="dialogue">"맞아, 나나야. 과학은 눈이 아니라 마음으로 보는 거란다. 궁금해하는 마음, 의심하는 마음, 확인하려는 마음. 그것이 과학의 시작이야."</span></p>
+      </div>
+    </section>
+
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지구과학10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">보이지 않는 보호막</span>
+        <h2>나나의 나침반이 가리키는 곳</h2>
+        <p>봄이 깊어가는 어느 오후, 나나는 학교 발표회에서 지구 자기장에 대한 발표를 했습니다. 아빠의 나침반을 손에 쥔 채, 나나는 또래 친구들 앞에서 당당하게 말했습니다.<br><br><span class="dialogue">"여러분, 지금 이 순간에도 우리 발밑 2,900km 아래 <span class="highlight">외핵</span>에서는 4,500K 이상의 뜨거운 액체 철이 소용돌이치고 있어요. 그 움직임이 <span class="highlight">지구 다이나모</span>를 구동하여 <span class="highlight">자기권</span>을 만들고, <span class="highlight">태양풍</span>으로부터 우리를 지키고 있지요."</span></p>
+        <p>극이가 이어서 말했습니다.<br><br><span class="dialogue">"저는 처음에 보이지 않는 힘을 믿을 수 없었어요. 하지만 알게 되었습니다. 과학은 믿음이 아니라 <span class="highlight">측정과 검증</span>의 문제라는 것을요. 자기장은 <span class="highlight">자력계</span>로 측정할 수 있고, <span class="highlight">오로라</span>라는 아름다운 증거를 남기고, <span class="highlight">화성</span>이라는 경고를 통해 그 중요성을 보여줍니다."</span></p>
+        <p>나나가 마지막으로 나침반을 들어 올렸습니다.<br><br><span class="dialogue">"이 나침반은 아빠가 주신 거예요. 아빠는 보이지 않는 곳에 계시지만, 아빠의 사랑은 이 나침반처럼 항상 저를 올바른 방향으로 이끌어요. 지구의 자기장도 마찬가지예요. 보이지 않는 힘이 우리를 지킵니다. 그리고 그 힘을 이해하는 것이 <span class="highlight">지구과학</span>이에요."</span></p>
+        <p>교실이 조용해졌습니다. 그리고 박수가 터져 나왔습니다. 발표가 끝난 후, 나나는 창가에 서서 하늘을 올려다보았습니다. 맑은 하늘 너머로 보이지 않는 <span class="highlight">자기권</span>이 지구를 감싸고 있을 것입니다. <span class="highlight">밴앨런대</span>가 우주 방사선을 붙잡고 있을 것입니다. <span class="highlight">충격파</span>가 태양풍을 막아내고 있을 것입니다. 그리고 그 너머로, 아빠가 웃고 계실 것입니다. 나나는 나침반을 가슴에 꼭 안았습니다. 바늘은 오늘도 변함없이, 북쪽을 가리키고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- 배움 섹션 -->
+    <section class="lesson-section">
+      <div class="lesson-card">
+        <h3>보이지 않는 힘이 우리를 지킨다</h3>
+        <p>
+          나나의 나침반이 가리키는 것은 단순한 방향이 아니었습니다.<br>
+          그것은 지구의 심장—<span class="highlight">외핵의 다이나모</span>—이 만들어낸 보이지 않는 사랑이었습니다.<br><br>
+          지구 자기장은 <span class="highlight">태양풍</span>을 막아 대기를 보존하고,<br>
+          <span class="highlight">우주 방사선</span>을 차단하여 생명을 보호하며,<br>
+          <span class="highlight">오로라</span>라는 아름다운 증거를 남깁니다.<br><br>
+          우리를 지키는 힘은 항상 눈에 보이는 것만은 아닙니다.<br>
+          과학은 그 보이지 않는 힘을 측정하고, 이해하고, 설명합니다.<br>
+          당신을 지키는 보이지 않는 힘을 알아가세요.<br>
+          그 힘은 지금 이 순간에도, 당신을 감싸고 있습니다.
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // 배경 이미지 전환
+    const sections = document.querySelectorAll('.story-section');
+    const mapCanvas = document.getElementById('map-canvas');
+    let currentBg = mapCanvas.src;
+
+    function updateBackground() {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const sectionMiddle = rect.top + rect.height / 2;
+
+        if (sectionMiddle > 0 && sectionMiddle < windowHeight) {
+          const newBg = section.dataset.bg;
+          if (newBg && newBg !== currentBg) {
+            mapCanvas.style.opacity = 0;
+            setTimeout(() => {
+              mapCanvas.src = newBg;
+              mapCanvas.style.opacity = 1;
+              currentBg = newBg;
+            }, 400);
+          }
+        }
+      });
+    }
+
+    // 카드 애니메이션
+    function animateCards() {
+      const cards = document.querySelectorAll('.story-card');
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+
+        if (rect.top < windowHeight * 0.8) {
+          card.classList.add('visible');
+        }
+      });
+    }
+
+    // 스크롤 이벤트
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          animateCards();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    animateCards();
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/earth10_season1_quiz.html?season=season1';
+    }
+  </script>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons" style="position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 1000; pointer-events: auto;">
+    <button onclick="if(window.parent && window.parent.closeStoryModal) window.parent.closeStoryModal(); else history.back();" style="padding: 15px 30px; background: rgba(45, 106, 79, 0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);">← 목록으로</button>
+    <button onclick="goToQuiz()" style="padding: 15px 30px; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4);">📝 관문평가</button>
+  </div>
+</body>
+</html>

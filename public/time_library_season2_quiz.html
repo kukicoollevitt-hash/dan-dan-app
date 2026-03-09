@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>시간도서관 - 시즌2 관문</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: url(https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/time-library-story/time_part1_main.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 0;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 50px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.5s ease-out;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .quiz-header h1 {
+      font-size: 36px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .quiz-header .gate-number {
+      font-size: 20px;
+      color: #FF6B35;
+      font-weight: 600;
+      background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #FF6B35 0%, #F7931E 100%);
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .question-box {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      border-left: 5px solid #FF6B35;
+    }
+
+    .question-text {
+      font-size: 22px;
+      color: #2c3e50;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .option-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 20px 25px;
+      border-radius: 15px;
+      font-size: 18px;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .option-btn:hover {
+      border-color: #FF6B35;
+      background: #fff4f0;
+      transform: translateX(5px);
+    }
+
+    .option-btn.selected {
+      border-color: #FF6B35;
+      background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+      color: white;
+    }
+
+    .option-btn.correct {
+      border-color: #27ae60;
+      background: #27ae60;
+      color: white;
+    }
+
+    .option-btn.wrong {
+      border-color: #e74c3c;
+      background: #e74c3c;
+      color: white;
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .result-message.correct {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #28a745;
+    }
+
+    .result-message.wrong {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #dc3545;
+    }
+
+    .congrats-container {
+      text-align: center;
+      animation: scaleIn 0.6s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .congrats-container h2 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    .congrats-container p {
+      font-size: 20px;
+      color: #555;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+
+    .back-btn {
+      background: white;
+      border: 2px solid #FF6B35;
+      color: #FF6B35;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 10px;
+    }
+
+    .back-btn:hover {
+      background: #FF6B35;
+      color: white;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .quiz-container {
+        padding: 30px 20px;
+      }
+      .quiz-header h1 {
+        font-size: 28px;
+      }
+      .question-text {
+        font-size: 18px;
+      }
+      .option-btn {
+        font-size: 16px;
+        padding: 15px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container" id="quizContainer">
+    <!-- 퀴즈 내용이 여기에 동적으로 생성됩니다 -->
+  </div>
+
+  <script>
+    // 퀴즈 문제 데이터 (시즌1 스토리 기반)
+    const quizData = [
+      {
+        gate: 1,
+        question: "민준, 수아, 태영이가 발견한 시간도서관은 어디에 숨겨져 있었나요?",
+        options: [
+          "학교 도서관 지하",
+          "공원 나무 뒤",
+          "오래된 책방 뒤쪽 벽",
+          "학교 옥상"
+        ],
+        correct: 2
+      },
+      {
+        gate: 2,
+        question: "시간도서관의 수호자 이름은 무엇인가요?",
+        options: [
+          "크로노스",
+          "타임키퍼",
+          "테미스",
+          "루미"
+        ],
+        correct: 0
+      },
+      {
+        gate: 3,
+        question: "아이들이 처음 여행한 시대는 언제인가요?",
+        options: [
+          "조선시대",
+          "고대 이집트",
+          "로마 제국",
+          "중세 유럽"
+        ],
+        correct: 1
+      },
+      {
+        gate: 4,
+        question: "시간도서관에서 사용하는 특별한 책의 이름은?",
+        options: [
+          "시간서",
+          "타임 코덱스",
+          "크로니클",
+          "에이지 북"
+        ],
+        correct: 1
+      },
+      {
+        gate: 5,
+        question: "아이들이 과거에서 발견한 잊힌 존재들을 뭐라고 부르나요?",
+        options: [
+          "타임 워커",
+          "시간의 수호자들",
+          "크로노 가디언",
+          "히스토리 키퍼"
+        ],
+        correct: 1
+      },
+      {
+        gate: 6,
+        question: "시간도서관의 책들이 가진 특별한 힘은?",
+        options: [
+          "미래를 예측함",
+          "과거로 여행할 수 있게 함",
+          "마법을 사용할 수 있게 함",
+          "투명해질 수 있게 함"
+        ],
+        correct: 1
+      },
+      {
+        gate: 7,
+        question: "민준이 과거에서 만난 첫 번째 수호자는?",
+        options: [
+          "파라오의 서기관",
+          "로마의 장군",
+          "중세 기사",
+          "고대 현자"
+        ],
+        correct: 0
+      },
+      {
+        gate: 8,
+        question: "시간도서관을 위협하는 어둠의 세력의 이름은?",
+        options: [
+          "다크 크로노",
+          "시간 파괴자",
+          "타임 이레이저",
+          "블랙 에이지"
+        ],
+        correct: 2
+      },
+      {
+        gate: 9,
+        question: "아이들이 과거에서 지켜야 했던 가장 중요한 것은?",
+        options: [
+          "역사를 바꾸지 않기",
+          "보물을 찾기",
+          "수호자들과 싸우기",
+          "미래로 돌아가기"
+        ],
+        correct: 0
+      },
+      {
+        gate: 10,
+        question: "시즌1의 마지막에서 아이들이 발견한 중요한 진실은?",
+        options: [
+          "시간도서관이 여러 개 존재한다",
+          "자신들도 수호자의 후손이다",
+          "현재의 시간도 위험에 처해있다",
+          "크로노스가 사라졌다"
+        ],
+        correct: 2
+      }
+    ];
+
+    let currentGate = 0;
+    let selectedAnswer = null;
+
+    function renderQuiz() {
+      const container = document.getElementById('quizContainer');
+      const quiz = quizData[currentGate];
+
+      container.innerHTML = `
+        <div class="quiz-header">
+          <h1>⏰ 시즌2 관문 ${quiz.gate}</h1>
+          <p class="gate-number">10개 관문 중 ${quiz.gate}번째</p>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: ${(quiz.gate / 10) * 100}%"></div>
+        </div>
+
+        <div class="question-box">
+          <p class="question-text">${quiz.question}</p>
+        </div>
+
+        <div class="options-container">
+          ${quiz.options.map((option, index) => `
+            <button class="option-btn" onclick="selectAnswer(${index})">
+              ${index + 1}. ${option}
+            </button>
+          `).join('')}
+        </div>
+
+        <button class="submit-btn" onclick="submitAnswer()" disabled>
+          답안 제출
+        </button>
+      `;
+    }
+
+    function selectAnswer(index) {
+      selectedAnswer = index;
+
+      // 모든 버튼 선택 해제
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => btn.classList.remove('selected'));
+
+      // 선택한 버튼 표시
+      buttons[index].classList.add('selected');
+
+      // 제출 버튼 활성화
+      document.querySelector('.submit-btn').disabled = false;
+    }
+
+    function submitAnswer() {
+      const quiz = quizData[currentGate];
+      const buttons = document.querySelectorAll('.option-btn');
+      const submitBtn = document.querySelector('.submit-btn');
+
+      // 버튼 비활성화
+      buttons.forEach(btn => btn.disabled = true);
+      submitBtn.disabled = true;
+
+      if (selectedAnswer === quiz.correct) {
+        // 정답!
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('correct');
+
+        showResult(true);
+      } else {
+        // 오답!
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('wrong');
+        buttons[quiz.correct].classList.add('correct');
+
+        showResult(false);
+      }
+    }
+
+    function showResult(isCorrect) {
+      const container = document.getElementById('quizContainer');
+
+      if (isCorrect) {
+        // 정답 메시지 추가
+        const resultMsg = document.createElement('div');
+        resultMsg.className = 'result-message correct';
+        resultMsg.innerHTML = '🎉 정답입니다! 다음 관문으로 이동합니다...';
+        container.insertBefore(resultMsg, container.firstChild);
+
+        // 1.5초 후 다음 문제로
+        setTimeout(() => {
+          currentGate++;
+          selectedAnswer = null;
+
+          if (currentGate >= quizData.length) {
+            // 모든 관문 통과!
+            showCongratulations();
+          } else {
+            renderQuiz();
+          }
+        }, 1500);
+      } else {
+        // 오답 메시지 추가
+        const resultMsg = document.createElement('div');
+        resultMsg.className = 'result-message wrong';
+        resultMsg.innerHTML = '❌ 틀렸습니다! 관문 1로 돌아갑니다...';
+        container.insertBefore(resultMsg, container.firstChild);
+
+        // 2초 후 관문 1로
+        setTimeout(() => {
+          currentGate = 0;
+          selectedAnswer = null;
+          renderQuiz();
+        }, 2000);
+      }
+    }
+
+    function showCongratulations() {
+      const container = document.getElementById('quizContainer');
+
+      container.innerHTML = `
+        <div class="congrats-container">
+          <h2>🎊 축하합니다! 🎊</h2>
+          <p>
+            10개의 관문을 모두 통과했습니다!<br>
+            시즌1의 이야기를 완벽하게 기억하고 계시네요.<br><br>
+            <strong>시즌2의 모험이 곧 시작됩니다...</strong>
+          </p>
+          <button class="back-btn" onclick="goBack()">
+            ← 시즌1로 돌아가기
+          </button>
+          <button class="submit-btn" onclick="goToSeason2()" style="margin-top: 10px;">
+            ⏰ 시즌2 시작하기
+          </button>
+        </div>
+      `;
+    }
+
+    function goBack() {
+      window.location.href = '/time-library/time_library_season1.html';
+    }
+
+    function goToSeason2() {
+      window.location.href = '/time-library/time_library_season2.html';
+    }
+
+    // 페이지 로드 시 첫 번째 퀴즈 표시
+    window.addEventListener('DOMContentLoaded', () => {
+      renderQuiz();
+    });
+
+    // ESC 키로 뒤로가기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (confirm('퀴즈를 종료하고 시즌1로 돌아가시겠습니까?')) {
+          goBack();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

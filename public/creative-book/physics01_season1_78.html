@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>멈춰버린 세상을 다시 움직인 소년 '뉴톤'과 보이지 않는 손의 전설</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작물리01/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(92, 107, 192, 0.15);
+      color: #3949AB;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #5C6BC0;
+      font-weight: 600;
+    }
+
+    /* 툴팁이 있는 용어만 인터랙티브 스타일 적용 */
+    .story-card .highlight[data-tooltip] {
+      cursor: help;
+      position: relative;
+      border-bottom: 1px dotted #5C6BC0;
+    }
+    .story-card .highlight[data-tooltip]:hover {
+      background: rgba(92, 107, 192, 0.15);
+      border-radius: 3px;
+    }
+    /* 커스텀 툴팁 스타일 */
+    .story-card .highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #3949AB;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      width: 380px;
+      max-width: 85vw;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .story-card .highlight[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #3949AB;
+      margin-bottom: -4px;
+      z-index: 1001;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::after {
+      left: auto;
+      right: 0;
+    }
+    .story-section:nth-child(even) .story-card .highlight[data-tooltip]:hover::before {
+      left: auto;
+      right: 20px;
+    }
+
+    .story-card .dialogue {
+      color: #3949AB;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #B39DDB;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 24px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(92, 107, 192, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(57, 73, 171, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(92, 107, 192, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>💪 멈춰버린 세상을 다시 움직인 소년 '뉴톤'과 보이지 않는 손의 전설</h1>
+        <p class="subtitle">
+          — 보이지 않는 손이 밀고 당길 때, 세상이 움직이기 시작했다 —<br>
+          교과기반 창작도서 · 물리 01
+        </p>
+        <div class="characters">
+          <h3>등장인물 소개</h3>
+          <p><strong>▸ 뉴톤:</strong> 열두 살 소년. 정지촌에서 가장 호기심이 많은 아이. 금기를 깨고 상자를 움직이며 마을 전체를 변화시키는 주인공.</p>
+          <p><strong>▸ 마찰이:</strong> 뉴톤의 단짝 친구이자 마찰력의 수호자. 처음에는 움직임을 방해하지만, 마찰이 없으면 걸을 수도 없다는 진실을 깨닫게 해주는 인물.</p>
+          <p><strong>▸ 아이작 현자:</strong> 숲속 오두막에 사는 늙은 현자. 뉴턴의 운동법칙을 가르쳐주는 스승이자 지혜의 안내자.</p>
+          <p><strong>▸ 가만 어르신:</strong> 정지촌의 촌장. 변화를 두려워하며 모든 것을 멈춰두려 하지만, 결국 힘의 원리를 이해하고 변화를 받아들인다.</p>
+          <p><strong>▸ 움직임파 아이들:</strong> 뉴톤을 따르며 힘과 운동의 원리를 몸으로 배워가는 마을 아이들.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">멈춰 있던 상자</span>
+        <h2>아무것도 움직이지 않는 마을, '정지촌'</h2>
+        <p>아주 먼 옛날, 물리 왕국의 한구석에 '정지촌'이라는 작고 조용한 마을이 있었습니다. 이 마을은 이름 그대로 모든 것이 멈춰있는 곳이었습니다. 마을 광장 한가운데에는 커다란 나무 상자 하나가 놓여있었는데, 마을 사람들의 기억에 이 상자는 태어나기도 전부터 그 자리에 있었습니다. 아무도 이 상자를 움직여본 적이 없었고, 움직일 수 있다고 생각하는 사람도 없었지요. 이 상자의 <span class="highlight" data-tooltip="질량: 물체를 구성하는 물질의 양. 어디에서나 변하지 않는 물체 고유의 성질.">질량</span>이 얼마인지, 왜 그 자리에 가만히 있는지 궁금해하는 사람조차 없었습니다. 마을 사람들에게 정지 상태는 자연스러운 것이었고, 변화는 두려운 것이었습니다.</p>
+        <p><span class="dialogue">"상자는 원래 그 자리에 있는 거야. 움직이는 건 위험해."</span> 마을의 촌장 '가만 어르신'이 항상 하는 말이었습니다. 정지촌 사람들은 변화를 두려워했습니다. 바람이 불어도 창문을 닫았고, 빗물이 흘러도 둑으로 막았습니다. 모든 것이 제자리에 있는 것, 그것이 정지촌의 유일한 법칙이었습니다. 물리학적으로 말하면, 이 마을은 모든 물체가 <span class="highlight" data-tooltip="평형 상태: 물체에 작용하는 모든 힘의 합(알짜힘)이 0인 상태. 물체는 정지하거나 등속 운동을 유지함.">평형 상태</span>를 유지하고 있는 곳이었습니다. 평형 상태란 물체에 작용하는 모든 힘의 합이 0인 상태를 말합니다.</p>
+        <p>이 마을에 '뉴톤'이라는 열두 살 소년이 살고 있었습니다. 뉴톤은 마을에서 가장 호기심이 많은 아이였습니다. 그의 이름은 역사상 가장 위대한 <span class="highlight">물리학자</span>인 아이작 뉴턴(Isaac Newton)에서 따온 것이었는데, 마을 사람들은 그 의미를 잊은 지 오래였습니다. 뉴톤은 매일 광장의 상자를 바라보며 생각했습니다. <span class="dialogue">"저 상자 안에는 뭐가 들어있을까? 저 상자를 밀면 어떻게 될까? 상자의 <span class="highlight">운동 상태</span>가 변할 수 있을까?"</span> 하지만 상자에 손을 대는 것은 마을의 금기였습니다.</p>
+        <p>뉴톤의 단짝 친구 '마찰이'는 언제나 뉴톤을 말렸습니다. <span class="dialogue">"뉴톤아, 제발 상자에 손대지 마. 가만 어르신이 뭐라고 하셨어? 멈춰있는 것은 멈춰있어야 해!"</span> 마찰이는 자신도 모르게 <span class="highlight">마찰력</span>의 원리를 대변하고 있었습니다. 마찰력은 두 접촉면 사이에서 상대적인 운동을 방해하는 힘이니까요. 뉴톤은 고개를 끄덕이면서도, 마음속 깊은 곳에서 무언가가 속삭이는 것을 느꼈습니다. <span class="highlight">'세상은 원래 멈춰있는 게 아니야. 누군가가 멈추게 한 거야. 어딘가에 숨겨진 힘이 있을 거야.'</span> 그 속삭임이 뉴톤의 위대한 모험의 씨앗이 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">누군가의 밀기</span>
+        <h2>금기를 깨뜨린 손, 상자가 움직이다</h2>
+        <p>변화는 예고 없이 찾아왔습니다. 어느 폭풍우 치는 밤, 하늘에서 번개가 내리치며 광장의 상자를 스쳤습니다. 번개의 <span class="highlight">전기 에너지</span>가 방전되면서 엄청난 <span class="highlight">충격파</span>가 발생했고, 그 힘이 상자에 전달되었습니다. 다음 날 아침, 뉴톤이 광장에 나가보니 상자가 아주 조금, 손톱만큼 움직여 있었습니다. 물리학에서는 이처럼 물체의 위치가 변하는 것을 <span class="highlight" data-tooltip="변위: 물체의 처음 위치에서 나중 위치까지의 거리와 방향. 벡터량으로 크기와 방향을 모두 가짐.">변위</span>라고 합니다. 비록 몇 밀리미터에 불과했지만, 그것은 분명한 변위였습니다.</p>
+        <p><span class="dialogue">"상자가... 움직였어!"</span> 뉴톤이 소리쳤습니다. 마을 사람들이 몰려왔습니다. 가만 어르신은 얼굴이 하얘졌습니다. <span class="dialogue">"말도 안 돼! 분명 착각이야!"</span> 하지만 상자가 있던 자리에 남은 자국이 확실한 증거였습니다. 상자와 바닥 사이에 긁힌 흔적이 있었고, 이것은 상자가 이동하면서 <span class="highlight">마찰력</span>에 의해 생긴 것이었습니다. 물체가 다른 표면 위를 미끄러지면, 두 표면 사이의 <span class="highlight">미시적 돌기</span>들이 서로 부딪히며 흔적을 남기게 됩니다.</p>
+        <p>뉴톤의 심장이 두근거렸습니다. '번개의 힘이 상자를 밀었구나. 그렇다면 나도 밀 수 있지 않을까? 내 <span class="highlight">근력</span>으로도 상자에 힘을 가할 수 있지 않을까?' 뉴톤은 모두가 잠든 한밤중에 몰래 광장으로 나갔습니다. 상자 앞에 서서 두 손을 대고, 온 힘을 다해 밀었습니다. 얼굴이 빨갛게 달아오르고, 팔이 부들부들 떨렸습니다. 하지만 상자는 꿈쩍도 하지 않았습니다. 뉴톤이 가한 <span class="highlight">작용력</span>이 상자를 움직이기에 충분하지 않았던 것입니다.</p>
+        <p><span class="dialogue">"왜 안 움직이는 거야!"</span> 뉴톤은 좌절했습니다. 하지만 포기하지 않았습니다. 다음 날 밤에도, 그 다음 날 밤에도 찾아가 밀었습니다. 일주일째 되는 날, 뉴톤은 발견했습니다. 상자 아래에 모래가 잔뜩 쌓여있다는 것을. 모래 입자들이 상자와 바닥 사이에 끼어들어 <span class="highlight">마찰 계수</span>를 크게 높이고 있었던 것입니다. 마찰 계수란 두 표면 사이의 마찰력 크기를 결정하는 값으로, 표면이 거칠수록, 또는 중간에 이물질이 있을수록 커집니다. 모래를 걷어내자, 마찰 계수가 낮아졌고, 상자가 미끄러지듯 움직이기 시작했습니다!</p>
+        <p><span class="dialogue">"움직인다! 진짜 움직인다!"</span> 뉴톤은 환호했습니다. 상자가 멈춰있던 이유는 상자 자체가 움직일 수 없어서가 아니었습니다. 상자와 바닥 사이의 <span class="highlight">마찰력</span>이 뉴톤의 작용력보다 컸기 때문이었습니다. 모래를 제거하자 마찰력이 줄어들었고, 뉴톤의 작용력이 마찰력을 넘어서는 순간 상자가 움직이기 시작한 것이지요. 가장 중요한 깨달음은 이것이었습니다. 물체를 움직이려면 '무언가'가 필요하다. 물체의 <span class="highlight">운동 상태를 변화</span>시키는 그 무언가의 이름은, 바로 <span class="highlight">'힘'</span>이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">힘의 정의</span>
+        <h2>현자 '아이작'이 알려준 보이지 않는 손의 정체</h2>
+        <p>상자가 움직였다는 소식은 마을을 발칵 뒤집어놓았습니다. 가만 어르신은 화가 났고, 마을 사람들은 두려워했습니다. <span class="dialogue">"상자를 건드린 놈이 누구야! 재앙이 닥칠 거야!"</span> 뉴톤은 마을에서 쫓겨나다시피 했습니다. 마을 사람들은 <span class="highlight">변화</span>를 두려워했습니다. 하지만 뉴톤은 알고 있었습니다. 진정한 재앙은 변화 그 자체가 아니라, 변화의 원리를 이해하지 못하는 것이라는 것을요.</p>
+        <p>혼자 마을 뒷산을 헤매던 뉴톤은 깊은 숲속에서 오래된 오두막을 발견했습니다. 그 안에는 하얀 머리카락의 늙은 현자가 살고 있었습니다. <span class="dialogue">"나는 '아이작'이라고 한다. 네가 상자를 움직인 아이로구나."</span> 뉴톤은 놀랐습니다. <span class="dialogue">"어떻게 아셨어요?"</span> <span class="dialogue">"이 숲에서는 모든 움직임이 느껴지거든. 나는 오래전부터 <span class="highlight">역학</span>을 연구해왔단다. 역학이란 힘과 운동의 관계를 탐구하는 물리학의 한 분야야. 자, 앉거라. 네가 발견한 것의 정체를 알려주마."</span></p>
+        <p>아이작 현자는 나뭇가지 하나를 집어 들었습니다. <span class="dialogue">"물체의 운동 상태를 변화시키는 원인, 그것이 <span class="highlight">'힘'</span>이란다. 영어로는 Force라고 하지. 국제단위계(SI)에서 힘의 단위는 <span class="highlight">뉴턴</span>이야. 1뉴턴은 질량 1kg의 물체에 1m/s²의 <span class="highlight">가속도</span>를 발생시키는 힘의 크기란다."</span> 현자는 돌멩이 하나를 바닥에 놓았습니다. <span class="dialogue">"이 돌이 가만히 있는 것은 힘이 없어서가 아니야. 돌에 작용하는 모든 힘이 균형을 이루고 있기 때문이지. 지구의 <span class="highlight">중력</span>이 아래로 당기고, 바닥의 <span class="highlight">수직항력</span>이 위로 떠받치고 있어. 이 두 힘이 정확히 상쇄되니까 돌은 움직이지 않는 거야. 이것을 <span class="highlight">힘의 평형</span>이라고 한단다."</span></p>
+        <p>뉴톤이 물었습니다. <span class="dialogue">"그러면 제가 상자를 밀었을 때, 제 힘이 균형을 깨뜨린 건가요?"</span> <span class="dialogue">"정확해! 네 밀기 힘이 마찰력보다 커지는 순간, 힘의 평형이 깨지고 <span class="highlight">알짜힘</span>이 0이 아니게 되었어. 그 순간 상자가 움직이기 시작한 거야. 알짜힘이란 물체에 작용하는 모든 힘을 벡터적으로 합한 것을 말해."</span> 현자는 힘의 크기를 설명하며 덧붙였습니다. <span class="dialogue">"약 100그램의 물체를 들어 올리는 데 약 1뉴턴이 필요하지. 사과 하나가 약 100g이니까, 사과 하나를 들어 올리는 힘이 대략 1N인 거야."</span></p>
+        <p>뉴톤의 눈이 빛났습니다. <span class="dialogue">"그러면 정지촌이 멈춰있는 건, 힘이 없어서가 아니라 힘이 평형을 이루고 있기 때문이군요! 모든 물체에는 여러 힘이 동시에 작용하고 있지만, 그것들이 서로 상쇄되어 알짜힘이 0이 되면 정지 상태를 유지하는 거네요!"</span> 현자가 미소 지었습니다. <span class="dialogue">"맞다. 그리고 그 평형을 이해하는 자만이 세상을 진정으로 움직일 수 있단다. 이것이 <span class="highlight">정역학</span>과 <span class="highlight">동역학</span>의 첫걸음이야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">힘의 크기와 방향</span>
+        <h2>화살표의 비밀, 힘에는 얼굴이 있다</h2>
+        <p>아이작 현자는 뉴톤에게 첫 번째 수업을 시작했습니다. <span class="dialogue">"힘에는 두 가지 얼굴이 있단다. 하나는 <span class="highlight" data-tooltip="크기(Magnitude): 힘, 속도 등 물리량의 세기. 벡터량은 크기와 방향을 모두 가짐.">'크기'</span>, 다른 하나는 <span class="highlight" data-tooltip="방향(Direction): 힘이 작용하는 쪽. 같은 크기라도 방향이 다르면 완전히 다른 결과를 만듦.">'방향'</span>이야. 크기가 같아도 방향이 다르면 완전히 다른 힘이 되지."</span> 현자는 오두막 앞마당에 수레를 가져왔습니다. <span class="dialogue">"자, 이 수레를 오른쪽으로 밀어보렴."</span> 뉴톤이 수레를 오른쪽으로 밀자, 수레는 오른쪽으로 움직였습니다. <span class="dialogue">"이번에는 왼쪽으로."</span> 뉴톤이 왼쪽으로 밀자 수레는 왼쪽으로 갔습니다.</p>
+        <p><span class="dialogue">"같은 크기의 힘이라도 방향이 다르면 결과가 완전히 달라지지? 그래서 힘은 <span class="highlight">'벡터'</span>라고 부르는 특별한 양이야. 벡터는 크기와 방향을 모두 가진 물리량을 말해. 숫자만으로 표현되는 양은 <span class="highlight">스칼라</span>라고 부르는데, 온도, 질량, 시간 같은 것들이지. 하지만 힘, 속도, 가속도, 변위 같은 양은 반드시 방향까지 함께 말해야 해."</span> 현자는 땅에 화살표를 그렸습니다. <span class="dialogue">"힘을 그림으로 나타낼 때는 화살표를 사용한단다. 화살표의 길이가 힘의 크기를, 화살표의 방향이 힘의 방향을 나타내지. 이것을 <span class="highlight">벡터 다이어그램</span>이라고 해."</span></p>
+        <p>뉴톤은 나뭇가지로 여러 가지 화살표를 그려보았습니다. 짧은 화살표(약한 힘), 긴 화살표(강한 힘), 위로 향하는 화살표(들어 올리는 힘, <span class="highlight">양력 또는 인력</span>), 아래로 향하는 화살표(누르는 힘, <span class="highlight">중력 또는 압력</span>). <span class="dialogue">"힘은 보이지 않지만, 화살표로 그리면 눈에 보이게 할 수 있군요! 이것을 <span class="highlight">자유 물체도</span>라고 부를 수 있겠네요!"</span> 뉴톤이 감탄했습니다. 현자가 고개를 끄덕였습니다. <span class="dialogue">"맞아. 자유 물체도는 물체에 작용하는 모든 힘을 화살표로 나타낸 그림이야. 과학이란 보이지 않는 것을 보이게 만드는 기술이기도 하지."</span></p>
+        <p><span class="dialogue">"그리고 한 가지 더. 힘은 반드시 물체에 작용하는 것이야. 허공에 혼자 존재하는 힘은 없단다. 네가 상자를 밀 때, 힘은 '네 손에서 상자로' 전달된 거야. 이것을 <span class="highlight">'작용점'</span>이라고 해. 같은 힘이라도 작용점이 다르면 물체의 운동이 달라질 수 있어. 예를 들어, 문손잡이 근처를 밀면 문이 쉽게 열리지만, 경첩 가까이를 밀면 문이 잘 안 열리잖아? 그것은 <span class="highlight">토크</span>와 관련이 있는데, 나중에 더 배우게 될 거야."</span> 뉴톤은 이제 힘을 눈으로 볼 수 있게 되었습니다. 보이지 않던 세상의 규칙이 화살표라는 언어를 통해 하나씩 모습을 드러내고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">마찰의 방해</span>
+        <h2>뉴톤의 친구이자 적, '마찰이'의 진실</h2>
+        <p>뉴톤이 현자에게 배운 것을 정지촌으로 가져가자, 뜻밖의 갈등이 벌어졌습니다. 뉴톤의 가장 친한 친구 '마찰이'가 뉴톤의 앞을 가로막은 것입니다. <span class="dialogue">"뉴톤, 너 왜 자꾸 물건을 움직이려고 해? 내가 얼마나 힘들게 세상을 잡아두고 있는지 몰라?"</span> 마찰이는 타고난 '마찰력의 수호자'였습니다. 모든 움직임에 저항하는 것이 마찰이의 존재 이유였지요. 마찰력은 물리학에서 <span class="highlight">접촉력</span>의 일종으로, 두 표면이 접촉한 상태에서 상대적인 운동을 방해하는 방향으로 작용합니다.</p>
+        <p><span class="dialogue">"내가 없으면 세상이 어떻게 되는지 알아? 사람들이 걸을 수도 없고, 연필로 글을 쓸 수도 없고, 자동차 바퀴가 헛돌아! <span class="highlight">마찰력</span>이 없으면 바퀴와 도로 사이에 <span class="highlight">그립</span>이 형성되지 않아서 차가 앞으로 나갈 수가 없다고!"</span> 뉴톤은 당황했습니다. <span class="dialogue">"마찰이, 넌 나쁜 게 아니었어?"</span> <span class="dialogue">"나쁘다니! 나는 세상을 안정시키는 힘이야! 물체가 접촉하는 표면 사이에서 움직임에 저항하는 힘, 그게 나란 말이야! 내 크기는 <span class="highlight">수직항력</span>에 비례하고, 표면의 <span class="highlight">마찰 계수</span>에 따라 달라져!"</span></p>
+        <p>아이작 현자가 나타나 중재했습니다. <span class="dialogue">"둘 다 옳단다. <span class="highlight">마찰력</span>은 움직임을 방해하기도 하지만, 동시에 움직임을 가능하게도 해. 네가 걸을 수 있는 것은 발과 땅 사이의 마찰력 덕분이야. 네 발이 땅을 뒤로 밀면, 마찰력이 네 발을 앞으로 밀어줘서 전진할 수 있는 거지. 마찰이 없으면 빙판길에서 미끄러지듯 한 발짝도 움직일 수 없어. 이것이 마찰력의 <span class="highlight">반작용</span> 역할이야."</span> 뉴톤이 이해하기 시작했습니다. <span class="dialogue">"그러니까 마찰이 너무 많으면 움직이기 힘들고, 너무 적으면 멈출 수 없는 거네요!"</span></p>
+        <p>마찰력에는 두 종류가 있었습니다. 물체가 움직이기 시작하기 전에 작용하는 <span class="highlight">'정지 마찰력'</span>과, 이미 움직이고 있는 물체에 작용하는 <span class="highlight">'운동 마찰력'</span>이었지요. 정지 마찰력의 최댓값을 <span class="highlight">최대 정지 마찰력</span>이라 하며, 이 값은 운동 마찰력보다 큽니다. 그래서 물건을 처음 움직이기 시작할 때가 가장 힘든 것입니다. 한번 움직이기 시작하면 운동 마찰력만 이기면 되니까 상대적으로 쉬워지죠. 마찰이가 뉴톤의 손을 잡았습니다. <span class="dialogue">"나는 네 적이 아니야. 네가 세상을 움직이려면, 나를 이해하고 함께 가야 해. f = μN, 이것이 나의 공식이야."</span> 뉴톤은 웃으며 고개를 끄덕였습니다. 마찰은 적이 아니라 파트너였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">여러 힘의 합</span>
+        <h2>줄다리기 대회에서 발견한 '알짜힘'의 비밀</h2>
+        <p>뉴톤이 정지촌으로 돌아온 후, 마을에서는 뜻밖의 행사가 열렸습니다. 바로 줄다리기 대회였지요. 마을의 '움직임파'(뉴톤을 따르는 아이들)와 '정지파'(가만 어르신을 따르는 아이들)가 맞붙게 되었습니다. 줄다리기는 <span class="highlight">힘의 합성</span>을 가장 잘 보여주는 예시였습니다. 움직임파 세 명이 오른쪽으로 200뉴턴의 힘으로 당기고, 정지파 세 명이 왼쪽으로 200뉴턴의 힘으로 당겼습니다. 줄은 꿈쩍도 하지 않았습니다.</p>
+        <p><span class="dialogue">"왜 안 움직여?"</span> 뉴톤이 의아해했습니다. 아이작 현자가 나무 위에서 지켜보다 말했습니다. <span class="dialogue">"양쪽의 힘이 같으니까! +200N과 -200N을 더하면, <span class="highlight">합력</span>이 0이야. 이것을 <span class="highlight">'알짜힘이 0이다'</span>라고 하고, 물체는 <span class="highlight">평형 상태</span>를 유지하지. 평형 상태에서는 정지해 있는 물체는 계속 정지하고, 운동하는 물체는 등속 운동을 유지한단다."</span> 뉴톤이 번쩍 깨달았습니다. <span class="dialogue">"그러면 상자가 안 움직였던 것도 마찬가지인 거예요? 제 밀기 힘과 마찰력이 같아서 알짜힘이 0이었던 거예요?"</span></p>
+        <p><span class="dialogue">"정확해! 네 힘이 마찰력보다 커지는 순간, 알짜힘이 0이 아니게 되고, 그때 상자가 <span class="highlight">가속</span>되기 시작한 거야. 알짜힘이 존재하면 물체는 반드시 가속도를 가지게 돼."</span> 뉴톤은 친구들에게 외쳤습니다. <span class="dialogue">"다 같이 당겨! 힘을 합치자!"</span> 움직임파에 두 명이 더 합류했습니다. 이제 오른쪽으로 330뉴턴, 왼쪽으로 200뉴턴. 알짜힘 계산: F_net = 330N - 200N = +130N (오른쪽 방향). 줄이 오른쪽으로 쏠리기 시작했고, 정지파가 끌려왔습니다.</p>
+        <p><span class="dialogue">"우와!"</span> 아이들이 환호했습니다. 현자가 설명을 이어갔습니다. <span class="dialogue">"여러 힘이 작용할 때, 물체의 운동을 결정하는 것은 개별 힘이 아니라 <span class="highlight">'알짜힘(합력)'</span>이란다. 같은 방향의 힘은 더해지고, 반대 방향의 힘은 빼지지. 만약 힘들이 서로 수직이면 <span class="highlight">피타고라스 정리</span>를 사용해서 합력의 크기를 구할 수 있어. 예를 들어 3N과 4N의 힘이 수직으로 작용하면, 합력은 √(3²+4²) = 5N이 되지."</span> 뉴톤은 깨달았습니다. 혼자서는 이길 수 없는 힘도, 함께하면 세상을 움직일 수 있다는 것을. 이것이 바로 <span class="highlight">벡터 합성</span>의 원리였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">뉴턴의 첫 번째 약속</span>
+        <h2>관성의 법칙, '멈춰있는 것은 멈춰있고 싶다'</h2>
+        <p>아이작 현자가 뉴톤에게 가장 중요한 가르침을 전할 날이 왔습니다. 현자는 매끈한 대리석 바닥 위에 쇠구슬을 놓았습니다. <span class="dialogue">"자, 이 구슬을 밀어보렴."</span> 뉴톤이 구슬을 살짝 밀자, 구슬은 대리석 바닥 위를 길게 굴러갔습니다. 거친 흙바닥에서는 금방 멈추던 구슬이, 매끈한 바닥에서는 훨씬 멀리 갔습니다. 이것은 매끈한 표면의 <span class="highlight">마찰 계수</span>가 작아서 <span class="highlight">운동 마찰력</span>이 작기 때문이었습니다.</p>
+        <p><span class="dialogue">"마찰이 적을수록 더 멀리 가네요!"</span> <span class="dialogue">"맞아. 만약 마찰이 전혀 없다면 어떻게 될까?"</span> <span class="dialogue">"영원히 굴러가겠죠?"</span> <span class="dialogue">"바로 그거야!"</span> 현자의 눈이 빛났습니다. <span class="dialogue">"이것이 <span class="highlight">뉴턴의 운동 제1법칙</span>, 즉 <span class="highlight">'관성의 법칙'</span>이란다. 외부의 알짜힘이 작용하지 않으면, 정지해 있는 물체는 계속 정지해 있고, 운동하고 있는 물체는 같은 <span class="highlight">속도</span>로 같은 방향으로 계속 <span class="highlight">등속 직선 운동</span>을 한다."</span></p>
+        <p>뉴톤은 전율했습니다. <span class="dialogue">"그러면 정지촌이 멈춰있는 것도 관성 때문이에요? 멈춰있으니까 계속 멈춰있으려는 거예요?"</span> <span class="dialogue">"그래. <span class="highlight">관성</span>이란 물체가 자신의 운동 상태를 유지하려는 성질이야. 관성의 크기는 물체의 <span class="highlight">질량</span>에 비례해. 질량이 클수록 운동 상태를 바꾸기 어렵지. 하지만 반대도 마찬가지야. 한번 움직이기 시작한 것은 계속 움직이려 한단다."</span> 현자는 달리는 마차 위에서 공을 위로 던지는 실험을 보여주었습니다. 공은 마차와 같은 속도로 앞으로 나아가면서 위로 올라갔다 내려왔습니다. 마차 위의 사람에게는 공이 수직으로 올라갔다 떨어지는 것처럼 보였지요.</p>
+        <p><span class="dialogue">"이것이 관성이야. 공은 마차의 <span class="highlight">수평 속도 성분</span>을 기억하고 있는 거지. 버스가 갑자기 출발하면 몸이 뒤로 쏠리고, 갑자기 멈추면 앞으로 쏠리는 것도 관성 때문이야. 몸은 원래 속도를 유지하려고 하는데, 버스만 속도가 변하니까 상대적으로 쏠리는 거지."</span> 뉴톤은 정지촌의 상자를 떠올렸습니다. 상자는 나쁜 것이 아니었습니다. <span class="highlight">관성</span>이라는 자연의 법칙을 따르고 있었을 뿐입니다. 하지만 <span class="highlight">알짜힘</span>이 가해지면 운동 상태가 변할 수 있습니다. 세상도, 사람도, 마음도. 이것이 <span class="highlight">갈릴레오 갈릴레이</span>가 처음 발견하고 뉴턴이 정립한 관성의 원리였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">움직임의 변화</span>
+        <h2>가속의 마법, 힘이 클수록 빠르게 변한다</h2>
+        <p>뉴톤이 관성의 법칙을 이해한 후, 새로운 궁금증이 생겼습니다. <span class="dialogue">"현자님, 같은 힘으로 밀어도 무거운 상자는 천천히 움직이고 가벼운 상자는 빨리 움직이잖아요. 왜 그런 거예요?"</span> 아이작 현자가 빙그레 웃었습니다. <span class="dialogue">"드디어 두 번째 법칙에 도달했구나. 자, 보거라."</span> 현자는 같은 크기의 상자 두 개를 준비했습니다. 하나에는 깃털을, 다른 하나에는 돌을 가득 넣었습니다. <span class="dialogue">"같은 힘으로 밀어보렴."</span> 뉴톤이 두 상자를 똑같은 힘으로 밀자, 깃털 상자는 휙 미끄러지고 돌 상자는 느릿느릿 움직였습니다.</p>
+        <p><span class="dialogue">"힘이 같아도 <span class="highlight">질량</span>이 다르면 <span class="highlight" data-tooltip="가속도: 속도가 변하는 비율. 단위 시간당 속도의 변화량으로 m/s² 단위 사용.">가속도</span>가 달라지는 거야. 가속도란 속도가 변하는 비율을 말해. 단위 시간당 속도의 변화량이지. 단위는 m/s²(미터 매 초 제곱)야. 이것을 공식으로 쓰면, <span class="highlight" data-tooltip="F = ma: 뉴턴의 제2법칙. 힘은 질량과 가속도의 곱. 같은 힘이라도 질량이 크면 가속도가 작아짐.">F = ma</span>. 힘(F)은 질량(m)과 가속도(a)의 곱이란다. 이것을 <span class="highlight">뉴턴의 운동 제2법칙</span>이라고 해."</span> 뉴톤이 곰곰이 생각했습니다. <span class="dialogue">"그러면 같은 물체에 큰 힘을 가하면 가속도가 커지고, 같은 힘이라도 무거운 물체는 가속도가 작아지는 거네요! a = F/m 이니까, 힘에 비례하고 질량에 반비례하는 거군요!"</span></p>
+        <p><span class="dialogue">"정확해! 1kg의 물체에 1N의 힘을 가하면 1m/s²의 가속도가 생기지. 2N의 힘을 가하면 2m/s²가 되고, 같은 1N을 2kg 물체에 가하면 0.5m/s²가 돼."</span> 마찰이가 옆에서 듣고 있다가 말했습니다. <span class="dialogue">"그러면 내가 무거운 물건을 움직이기 더 힘든 건, 무거운 물건일수록 <span class="highlight">관성</span>이 크기 때문이구나! 관성이 크면 같은 힘으로 가속시키기 어려우니까!"</span> 현자가 덧붙였습니다. <span class="dialogue">"그래서 질량을 <span class="highlight">관성 질량</span>이라고도 부른단다. 물체가 얼마나 '굼뜨게' 반응하는지를 나타내는 거지."</span></p>
+        <p>뉴톤은 이제 힘과 운동의 관계를 <span class="highlight">수식</span>으로 이해할 수 있게 되었습니다. 힘은 물체를 <span class="highlight">가속</span>시키고, 질량은 변화에 저항합니다. 이 두 가지의 팽팽한 줄다리기가 우주의 모든 운동을 결정하고 있었습니다. 작은 힘이라도 꾸준히 가하면 <span class="highlight">가속도</span>가 시간에 따라 <span class="highlight">속도 변화</span>를 누적시키고, 결국 무거운 물체도 움직일 수 있습니다. 그것이 F=ma가 뉴톤에게 가르쳐준 희망이었습니다. 이 공식은 로켓 발사부터 자동차 설계까지 모든 공학의 기초가 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">힘이 사라질 때</span>
+        <h2>보이지 않는 힘들의 조용한 일, 중력의 고백</h2>
+        <p>뉴톤이 현자에게 배운 지식을 마을에 전파하면서, 정지촌에도 서서히 변화가 찾아왔습니다. 아이들이 공을 차고, 수레를 밀고, 그네를 타기 시작했습니다. 하지만 가만 어르신은 여전히 불안해했습니다. <span class="dialogue">"힘이 사라지면 어떻게 되는 거야? 모든 것이 영원히 멈추지 않고 움직이면, 세상이 혼란스러워질 거야!"</span> 뉴톤은 가만 어르신에게 조용히 설명했습니다. <span class="dialogue">"어르신, 걱정 마세요. 세상에는 눈에 보이지 않지만 항상 작용하는 힘들이 있어서, 모든 것이 적절한 때에 멈추고 적절한 때에 움직여요."</span></p>
+        <p>그날 저녁, 뉴톤은 사과나무 아래 앉아있다가 사과가 떨어지는 것을 보았습니다. <span class="dialogue">"사과는 왜 위로 안 가고 아래로 떨어지지? 왜 항상 지구 중심을 향해 떨어지는 걸까?"</span> 아이작 현자가 나타나 마지막 수업을 해주었습니다. <span class="dialogue">"그것이 <span class="highlight" data-tooltip="중력: 질량을 가진 모든 물체 사이에 작용하는 끌어당기는 힘. 지구가 물체를 끌어당기는 힘.">'중력'</span>이란다. <span class="highlight">질량</span>을 가진 모든 물체 사이에 작용하는 끌어당기는 힘이야. 이것을 <span class="highlight" data-tooltip="만유인력: 우주의 모든 물체가 서로를 끌어당기는 힘. F = G(m₁m₂)/r² 공식으로 계산.">만유인력</span>이라고 해. 지구가 사과를 당기고, 사실은 사과도 지구를 당기고 있어. 이것이 <span class="highlight" data-tooltip="작용-반작용 법칙: 뉴턴 제3법칙. 모든 작용에는 크기가 같고 방향이 반대인 반작용이 존재.">뉴턴의 운동 제3법칙</span>, 즉 <span class="highlight">작용-반작용 법칙</span>이야. 모든 작용에는 크기가 같고 방향이 반대인 반작용이 있단다."</span></p>
+        <p>뉴톤의 눈이 커졌습니다. <span class="dialogue">"모든 물체가 서로 당기고 있다고요? 그러면 달도 지구에 당겨지고 있는 거예요?"</span> <span class="dialogue">"맞아. 달이 지구 주위를 도는 것도 <span class="highlight">만유인력</span> 때문이지. 만유인력의 크기는 F = G(m₁m₂/r²)로 나타내는데, 두 질량의 곱에 비례하고 거리의 제곱에 반비례해. G는 <span class="highlight">만유인력 상수</span>로 약 6.67×10⁻¹¹ N·m²/kg²야. 달이 떨어지지 않는 것은 달이 충분히 빠른 <span class="highlight">공전 속도</span>를 가지고 있어서 지구를 향해 떨어지면서 동시에 옆으로 나아가기 때문이야. 이것이 <span class="highlight">원운동</span>이지."</span></p>
+        <p>지구 표면에서 물체에 작용하는 중력을 <span class="highlight">무게</span>라고 합니다. 무게 W = mg로 계산하는데, g는 <span class="highlight">중력 가속도</span>로 지구 표면에서 약 9.8 m/s²입니다. 질량 1kg의 물체는 지구 표면에서 약 9.8N의 무게를 갖습니다. 정지촌의 모든 것이 제자리에 있는 것도, 사과가 떨어지는 것도, 달이 뜨는 것도 모두 보이지 않는 <span class="highlight">중력</span> 때문이었습니다. 힘이 사라지는 것은 없었습니다. 다만 우리 눈에 보이지 않을 뿐, 중력은 항상 그 자리에서 묵묵히 모든 물체를 끌어당기고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작물리01/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">세상을 움직이는 원리</span>
+        <h2>뉴톤이 정지촌의 이름을 바꾼 날</h2>
+        <p>뉴톤이 마을로 돌아온 지 한 해가 지났습니다. 정지촌은 완전히 달라져 있었습니다. 아이들은 언덕에서 공을 굴리며 <span class="highlight">중력</span>과 <span class="highlight">가속도</span>를 몸으로 배웠고, 어른들은 수레에 기름을 발라 <span class="highlight">마찰 계수</span>를 줄이며 짐을 나르기 시작했습니다. 바람개비가 돌고, 물레방아가 움직이고, 그네가 높이 올라갔습니다. 그네의 운동은 <span class="highlight">단진자 운동</span>으로, 중력과 <span class="highlight">복원력</span>에 의해 진동하는 현상이었습니다.</p>
+        <p>가만 어르신조차 변했습니다. 어르신은 뉴톤을 찾아와 조용히 말했습니다. <span class="dialogue">"뉴톤아, 네가 옳았구나. 멈춰있는 것이 안전한 게 아니라, <span class="highlight">힘</span>을 이해하는 것이 안전한 거였어. <span class="highlight">뉴턴의 세 가지 운동 법칙</span>이 세상이 어떻게 움직이는지를 설명해주는구나. 관성의 법칙, 가속도의 법칙, 작용-반작용 법칙... 이 세 가지가 <span class="highlight">고전 역학</span>의 기초라는 것을 이제야 알겠어."</span></p>
+        <p>마을 광장에서 큰 모임이 열렸습니다. 뉴톤이 앞에 서서 말했습니다. <span class="dialogue">"여러분, 세상을 움직이는 것은 <span class="highlight">힘</span>입니다. 우리가 밀고, 당기고, 들어 올리는 모든 행동이 힘이에요. <span class="highlight">중력</span>은 우리를 땅에 붙잡아두고, <span class="highlight">마찰력</span>은 우리가 걸을 수 있게 해주고, <span class="highlight">탄성력</span>은 공이 튀어 오르게 해줘요. 이 모든 힘은 눈에 보이지 않지만, 단 한 순간도 쉬지 않고 작용하고 있어요. 그리고 힘이 작용하면 <span class="highlight">F=ma</span>에 따라 물체의 운동 상태가 변합니다."</span></p>
+        <p>마찰이가 뉴톤 옆에 서서 말했습니다. <span class="dialogue">"저는 처음에 뉴톤을 막으려고 했어요. 하지만 깨달았습니다. 마찰 없이는 전진도 없다는 것을요. <span class="highlight">저항</span>이 있기에 더 강해질 수 있어요. <span class="highlight">작용-반작용</span>처럼, 내가 밀면 나도 밀리고, 내가 당기면 나도 당겨지는 거예요."</span> 아이들이 환호했고, 어른들이 박수 쳤습니다. 그날 마을 사람들은 투표를 했습니다. '정지촌'이라는 이름을 바꾸기로 한 것이지요. 새 이름은 <span class="highlight">'힘찬 마을'</span>이었습니다. 마을 입구에는 "F = ma, 작은 힘이라도 꾸준히 가하면 세상을 바꿀 수 있다"는 문구가 새겨졌습니다.</p>
+        <p>보이지 않는 힘이 세상을 움직인다는 것, 그리고 그 힘을 <span class="highlight">뉴턴의 운동 법칙</span>으로 이해하고 활용하는 것이 진정한 지혜라는 것. 이것이 소년 뉴톤이 정지촌에 선물한 가장 큰 교훈이었습니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(92, 107, 192, 0.15); border-radius: 16px;">
+          <strong style="color: #3949AB; font-size: 18px;">「보이지 않아도 힘은 항상 작용한다. 당신 안의 꿈과 용기도 보이지 않는 힘입니다. 그 힘을 믿고, 한 발짝 내딛으세요. F = ma, 작은 힘이라도 가속도를 만들어냅니다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+    <button class="nav-btn" onclick="goBack()">📚 목록으로</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goToQuiz() {
+      window.location.href = 'physics01_season1_quiz.html';
+    }
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

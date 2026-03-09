@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>행동예측 AI 데이터 관리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      --panel: #ffffff;
+      --accent: #059669;
+      --accent-hover: #047857;
+      --accent-dark: #065f46;
+      --text: #1f2937;
+      --text-light: #6b7280;
+      --line: #d1fae5;
+      --danger: #dc3545;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 40px 20px;
+      background: var(--bg);
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .title-main {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent-dark);
+      margin: 0 0 8px;
+    }
+    .title-sub {
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin: 0;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .search-box input {
+      padding: 10px 16px;
+      border: 2px solid var(--line);
+      border-radius: 10px;
+      font-size: 14px;
+      width: 250px;
+      transition: border-color 0.3s;
+    }
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .count-info {
+      font-size: 14px;
+      color: var(--text-light);
+      background: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    .count-info strong {
+      color: var(--accent-dark);
+    }
+    .table-container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(5, 150, 105, 0.08);
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      color: #fff;
+    }
+    th {
+      padding: 16px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid #e9ecef;
+      transition: background 0.2s;
+    }
+    tbody tr:hover {
+      background: #f0fdf4;
+    }
+    td {
+      padding: 14px 12px;
+      font-size: 14px;
+      color: var(--text-light);
+    }
+    .no-data {
+      text-align: center;
+      padding: 60px 20px;
+      color: #868e96;
+      font-size: 16px;
+    }
+    .gate-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      color: #fff;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .gate-badge:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    }
+    .date-cell {
+      white-space: nowrap;
+    }
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-light);
+    }
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--line);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .section-divider {
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 3px solid var(--line);
+    }
+    .error-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #e57373 0%, #c62828 100%);
+      color: #fff;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .error-badge:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    /* 모달 스타일 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    .modal-overlay.show .modal-content {
+      transform: translateY(0);
+    }
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-dark);
+      margin: 0;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #868e96;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .modal-close:hover {
+      color: #495057;
+    }
+    .modal-body {
+      padding: 24px;
+    }
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .detail-table th, .detail-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .detail-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+    }
+    .detail-table td {
+      color: #212529;
+    }
+    .total-row {
+      background: #fff3cd;
+      font-weight: 600;
+    }
+    /* 관문 상세 모달 스타일 */
+    .detail-section {
+      margin-bottom: 24px;
+    }
+    .detail-section:last-child {
+      margin-bottom: 0;
+    }
+    .detail-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .detail-item {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .detail-label {
+      font-size: 12px;
+      color: #868e96;
+      margin-bottom: 4px;
+    }
+    .detail-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-dark);
+    }
+    .detail-value.highlight {
+      color: #495057;
+    }
+    .question-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .question-table th, .question-table td {
+      padding: 10px 8px;
+      text-align: center;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .question-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+    }
+    .no-attempt-data {
+      text-align: center;
+      padding: 40px 20px;
+      color: #868e96;
+    }
+    .loading-modal {
+      text-align: center;
+      padding: 40px 20px;
+      color: #868e96;
+    }
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--accent-dark);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .load-more-btn {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+      transition: all 0.3s ease;
+    }
+    .load-more-btn:hover {
+      transform: translateY(-2px);
+    }
+    @media (max-width: 768px) {
+      .title-main { font-size: 22px; }
+      header { flex-direction: column; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-box input { width: 100%; }
+      th, td { padding: 10px 8px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="title-main" id="page-title">행동예측 AI 데이터 관리</div>
+        <div class="title-sub">
+          내 학원 학생들의 형성평가 관문 통과 기록과 본문학습 행동 데이터를 확인합니다.
+        </div>
+      </div>
+      <a href="/academy/dashboard" class="back-btn">← 대시보드로 돌아가기</a>
+    </header>
+
+    <!-- 관문학습 데이터 섹션 -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-box">
+          <input type="text" id="gateSearchInput" placeholder="이름으로 검색..." />
+        </div>
+        <div class="count-info">
+          전체: <strong id="gateTotalCount">0</strong>개
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>번호</th>
+            <th>학년</th>
+            <th>이름</th>
+            <th>관문</th>
+            <th>관문 통과 날짜</th>
+          </tr>
+        </thead>
+        <tbody id="gateTableBody">
+          <tr>
+            <td colspan="5" class="loading">데이터를 불러오는 중...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button id="gateLoadMoreBtn" class="load-more-btn" style="display:none;" onclick="loadMoreGateData()">더보기</button>
+
+    <!-- 본문학습 행동 데이터 섹션 -->
+    <div class="section-divider">
+      <header style="margin-bottom: 30px;">
+        <div>
+          <div class="title-main" style="font-size: 24px;">본문학습 행동 데이터</div>
+          <div class="title-sub">
+            학생들의 본문학습 오답 기록을 확인합니다. (독해시간, 중심문단 퀴즈 오답, 문제 오답)
+          </div>
+        </div>
+      </header>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-box">
+            <input type="text" id="behaviorSearchInput" placeholder="이름 또는 단원명으로 검색..." />
+          </div>
+          <div class="count-info">
+            전체: <strong id="behaviorTotalCount">0</strong>개
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>번호</th>
+              <th>학년</th>
+              <th>이름</th>
+              <th>과목명</th>
+              <th>단원명</th>
+              <th>과목평균소요시간</th>
+              <th>독해 총소요시간</th>
+              <th>중심문단 총오답</th>
+              <th>문제 총오답</th>
+              <th>학습일시</th>
+            </tr>
+          </thead>
+          <tbody id="behaviorTableBody">
+            <tr>
+              <td colspan="9" class="loading">데이터를 불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button id="behaviorLoadMoreBtn" class="load-more-btn" style="display:none;" onclick="loadMoreBehaviorData()">더보기</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 중심문단 오답 상세 모달 -->
+  <div class="modal-overlay" id="paragraphModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="paragraphModalTitle">중심문단 오답 상세</h3>
+        <button class="modal-close" onclick="closeParagraphModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="paragraphModalBody">
+        <div class="loading">데이터를 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 문제 오답 상세 모달 -->
+  <div class="modal-overlay" id="problemModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="problemModalTitle">문제 오답 상세</h3>
+        <button class="modal-close" onclick="closeProblemModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="problemModalBody">
+        <div class="loading">데이터를 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 관문 상세 모달 -->
+  <div class="modal-overlay" id="gateModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="gateModalTitle">관문 통과 상세</h3>
+        <button class="modal-close" onclick="closeGateModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="gateModalBody">
+        <div class="loading">데이터를 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 관문학습 데이터
+    let gateAllData = [];
+    let gateFilteredData = [];
+    let gateDisplayCount = 10;
+
+    // 본문학습 행동 데이터
+    let behaviorAllData = [];
+    let behaviorFilteredData = [];
+    let behaviorDisplayCount = 10;
+    let subjectAverages = {}; // 과목별 평균 소요시간
+
+    // 단원명에서 과목코드 추출 (on_chem_04 → chem)
+    function getSubjectCode(unitName) {
+      if (!unitName) return null;
+      // on_, fit_, deep_ 접두어 제거 후 마지막 _숫자 제거
+      let code = unitName.replace(/^(on_|fit_|deep_)/, '');
+      code = code.replace(/_\d+$/, '');
+      return code || null;
+    }
+
+    // 과목별 평균 소요시간 계산 (30분 초과 데이터 제외)
+    function calculateSubjectAverages(data) {
+      const subjectTimes = {};
+
+      data.forEach(item => {
+        const unitName = item.unit || item.unitTitle;
+        const subjectCode = getSubjectCode(unitName);
+        const readingTime = item.readingTime || 0;
+
+        // 30분(1800초) 초과 데이터 제외
+        if (!subjectCode || readingTime > 1800) return;
+
+        if (!subjectTimes[subjectCode]) {
+          subjectTimes[subjectCode] = { total: 0, count: 0 };
+        }
+        subjectTimes[subjectCode].total += readingTime;
+        subjectTimes[subjectCode].count += 1;
+      });
+
+      // 평균 계산
+      const averages = {};
+      for (const code in subjectTimes) {
+        if (subjectTimes[code].count > 0) {
+          averages[code] = Math.round(subjectTimes[code].total / subjectTimes[code].count);
+        }
+      }
+      return averages;
+    }
+
+    // 페이지 로드 시 데이터 가져오기
+    document.addEventListener('DOMContentLoaded', () => {
+      loadGateData();
+      loadBehaviorData();
+      setupSearchListeners();
+    });
+
+    // 관문학습 데이터 로드
+    async function loadGateData() {
+      try {
+        const res = await fetch('/api/academy/gate-passes');
+        const result = await res.json();
+
+        if (result.ok) {
+          gateAllData = result.data;
+          gateFilteredData = [...gateAllData];
+          renderGateTable();
+          updateGateCounts();
+        } else {
+          showToast('관문 데이터를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('서버 오류가 발생했습니다.');
+      }
+    }
+
+    // 본문학습 행동 데이터 로드
+    async function loadBehaviorData() {
+      try {
+        const res = await fetch('/api/academy/learning-behaviors');
+        const result = await res.json();
+
+        if (result.ok) {
+          behaviorAllData = result.data;
+          behaviorFilteredData = [...behaviorAllData];
+          subjectAverages = calculateSubjectAverages(behaviorAllData);
+          renderBehaviorTable();
+          updateBehaviorCounts();
+        } else {
+          showToast('학습 행동 데이터를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('서버 오류가 발생했습니다.');
+      }
+    }
+
+    // 관문 테이블 렌더링
+    function renderGateTable() {
+      const tbody = document.getElementById('gateTableBody');
+
+      if (gateFilteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="no-data">관문 통과 기록이 없습니다.</td></tr>';
+        document.getElementById('gateLoadMoreBtn').style.display = 'none';
+        return;
+      }
+
+      const displayData = gateFilteredData.slice(0, gateDisplayCount);
+
+      tbody.innerHTML = displayData.map((item, index) => {
+        const passedDate = item.passedAt ? new Date(item.passedAt).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '-';
+
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${item.grade || '-'}</td>
+            <td>${item.name || '-'}</td>
+            <td><span class="gate-badge" style="cursor:pointer;" onclick="openGateModal('${item._id}')">관문 ${item.gate}</span></td>
+            <td class="date-cell">${passedDate}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 더보기 버튼
+      const loadMoreBtn = document.getElementById('gateLoadMoreBtn');
+      if (gateDisplayCount < gateFilteredData.length) {
+        loadMoreBtn.style.display = 'block';
+        loadMoreBtn.textContent = `더보기 (${gateDisplayCount}/${gateFilteredData.length})`;
+      } else {
+        loadMoreBtn.style.display = 'none';
+      }
+    }
+
+    // 본문학습 행동 테이블 렌더링
+    function renderBehaviorTable() {
+      const tbody = document.getElementById('behaviorTableBody');
+
+      if (behaviorFilteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="no-data">학습 행동 데이터가 없습니다.</td></tr>';
+        document.getElementById('behaviorLoadMoreBtn').style.display = 'none';
+        return;
+      }
+
+      const displayData = behaviorFilteredData.slice(0, behaviorDisplayCount);
+
+      tbody.innerHTML = displayData.map((item, index) => {
+        const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '-';
+
+        const paragraphTotal = item.paragraphQuizErrors?.total || 0;
+        const problemTotal = item.problemErrors?.total || 0;
+        const unitName = item.unit || item.unitTitle;
+
+        // 과목평균소요시간 계산
+        const subjectCode = getSubjectCode(unitName);
+        const subjectAvg = subjectCode ? subjectAverages[subjectCode] : null;
+
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${item.grade || '-'}</td>
+            <td>${item.name || '-'}</td>
+            <td>${getSubjectName(unitName)}</td>
+            <td>${item.unitTitle || item.unit || '-'}</td>
+            <td>${subjectAvg ? formatTime(subjectAvg) : '-'}</td>
+            <td>${formatTime(item.readingTime)}</td>
+            <td>
+              ${paragraphTotal > 0
+                ? `<span class="error-badge" onclick="openParagraphModal('${item._id}')">${paragraphTotal}회</span>`
+                : '<span style="color:#868e96;">0회</span>'}
+            </td>
+            <td>
+              ${problemTotal > 0
+                ? `<span class="error-badge" onclick="openProblemModal('${item._id}')">${problemTotal}회</span>`
+                : '<span style="color:#868e96;">0회</span>'}
+            </td>
+            <td class="date-cell">${createdDate}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 더보기 버튼
+      const loadMoreBtn = document.getElementById('behaviorLoadMoreBtn');
+      if (behaviorDisplayCount < behaviorFilteredData.length) {
+        loadMoreBtn.style.display = 'block';
+        loadMoreBtn.textContent = `더보기 (${behaviorDisplayCount}/${behaviorFilteredData.length})`;
+      } else {
+        loadMoreBtn.style.display = 'none';
+      }
+    }
+
+    // 더보기 함수들
+    function loadMoreGateData() {
+      gateDisplayCount += 10;
+      renderGateTable();
+    }
+
+    function loadMoreBehaviorData() {
+      behaviorDisplayCount += 10;
+      renderBehaviorTable();
+    }
+
+    // 카운트 업데이트
+    function updateGateCounts() {
+      document.getElementById('gateTotalCount').textContent = gateFilteredData.length;
+    }
+
+    function updateBehaviorCounts() {
+      document.getElementById('behaviorTotalCount').textContent = behaviorFilteredData.length;
+    }
+
+    // 검색 리스너
+    function setupSearchListeners() {
+      // 관문 검색
+      const gateSearchInput = document.getElementById('gateSearchInput');
+      gateSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (query) {
+          gateFilteredData = gateAllData.filter(item =>
+            (item.name || '').toLowerCase().includes(query)
+          );
+        } else {
+          gateFilteredData = [...gateAllData];
+        }
+        gateDisplayCount = 10;
+        renderGateTable();
+        updateGateCounts();
+      });
+
+      // 본문학습 행동 검색
+      const behaviorSearchInput = document.getElementById('behaviorSearchInput');
+      behaviorSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (query) {
+          behaviorFilteredData = behaviorAllData.filter(item =>
+            (item.name || '').toLowerCase().includes(query) ||
+            (item.unitTitle || '').toLowerCase().includes(query) ||
+            (item.unit || '').toLowerCase().includes(query)
+          );
+        } else {
+          behaviorFilteredData = [...behaviorAllData];
+        }
+        behaviorDisplayCount = 10;
+        renderBehaviorTable();
+        updateBehaviorCounts();
+      });
+    }
+
+    // 유틸리티 함수들
+    function formatTime(seconds) {
+      if (!seconds) return '0초';
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      if (mins > 0) {
+        return `${mins}분 ${secs}초`;
+      }
+      return `${secs}초`;
+    }
+
+    function getSubjectCode(unitName) {
+      if (!unitName) return null;
+      let code = unitName.replace(/^(on_|fit_|deep_)/, '');
+      code = code.replace(/_\d+$/, '');
+      return code || null;
+    }
+
+    function getSubjectName(unitName) {
+      const code = getSubjectCode(unitName);
+      if (!code) return '-';
+
+      const subjectMap = {
+        'chem': '화학',
+        'physics': '물리',
+        'bio': '생물',
+        'earth': '지구과학',
+        'pol': '정치경제',
+        'law': '법',
+        'soc': '사회문화',
+        'eco': '경제',
+        'geo': '지리',
+        'eth': '윤리',
+        'world1': '세계문학1',
+        'world2': '세계문학2',
+        'kor1': '한국사1',
+        'kor2': '한국사2',
+        'classic': '고전문학',
+        'modern': '현대문학',
+        'people1': '인물1',
+        'people2': '인물2',
+        'tech': '기술',
+        'art': '예술',
+        'sports': '체육',
+        'math': '수학'
+      };
+
+      return subjectMap[code] || code;
+    }
+
+    // 단원 코드를 읽기 좋은 형태로 변환 (예: on_bio_01 → 브레인온 생명과학 01)
+    function formatUnitName(unitCode) {
+      if (!unitCode) return '-';
+
+      let prefix = '';
+      let code = unitCode;
+
+      // on_, fit_, deep_ 접두사 처리
+      if (code.startsWith('on_')) {
+        prefix = '브레인온 ';
+        code = code.substring(3);
+      } else if (code.startsWith('fit_')) {
+        prefix = '브레인핏 ';
+        code = code.substring(4);
+      } else if (code.startsWith('deep_')) {
+        prefix = '브레인딥 ';
+        code = code.substring(5);
+      }
+
+      // 과목 코드와 번호 분리 (예: bio_01 → bio, 01)
+      const parts = code.split('_');
+      if (parts.length >= 2) {
+        const subjectCode = parts[0];
+        const unitNum = parts.slice(1).join('_');
+        const subjectName = getSubjectName(subjectCode);
+        return `${prefix}${subjectName} ${unitNum}`;
+      }
+
+      return prefix + code;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // 문항별 지수 명칭
+    const paragraphIndexNames = {
+      1: '중심문단 1',
+      2: '중심문단 2',
+      3: '중심문단 3',
+      4: '중심문단 4',
+      5: '중심문단 5'
+    };
+
+    const problemIndexNames = {
+      1: '사실적 이해',
+      2: '구조적 이해',
+      3: '어휘력',
+      4: '추론적 이해',
+      5: '비판적 이해'
+    };
+
+    // 중심문단 오답 모달 열기
+    function openParagraphModal(itemId) {
+      const item = behaviorAllData.find(d => d._id === itemId);
+      if (!item) return;
+
+      const modal = document.getElementById('paragraphModal');
+      const modalTitle = document.getElementById('paragraphModalTitle');
+      const modalBody = document.getElementById('paragraphModalBody');
+
+      modalTitle.textContent = `${item.name} - 중심문단 오답 상세`;
+
+      const details = item.paragraphQuizErrors?.details || [];
+      if (details.length === 0) {
+        modalBody.innerHTML = '<p style="text-align:center; color:#868e96;">상세 오답 기록이 없습니다.</p>';
+      } else {
+        modalBody.innerHTML = `
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th>문단 번호</th>
+                <th>오답 횟수</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${details.map(d => `
+                <tr>
+                  <td>${paragraphIndexNames[d.paragraphNo] || '문단 ' + d.paragraphNo}</td>
+                  <td style="color:#dc3545; font-weight:600;">${d.errorCount}회</td>
+                </tr>
+              `).join('')}
+              <tr class="total-row">
+                <td>총 오답</td>
+                <td style="color:#dc3545;">${item.paragraphQuizErrors?.total || 0}회</td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+      }
+
+      modal.classList.add('show');
+    }
+
+    // 문제 오답 모달 열기
+    function openProblemModal(itemId) {
+      const item = behaviorAllData.find(d => d._id === itemId);
+      if (!item) return;
+
+      const modal = document.getElementById('problemModal');
+      const modalTitle = document.getElementById('problemModalTitle');
+      const modalBody = document.getElementById('problemModalBody');
+
+      modalTitle.textContent = `${item.name} - 문제 오답 상세`;
+
+      const details = item.problemErrors?.details || [];
+      if (details.length === 0) {
+        modalBody.innerHTML = '<p style="text-align:center; color:#868e96;">상세 오답 기록이 없습니다.</p>';
+      } else {
+        modalBody.innerHTML = `
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th>문항 번호</th>
+                <th>지수 명칭</th>
+                <th>오답 횟수</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${details.map(d => `
+                <tr>
+                  <td>문항 ${d.problemNo}</td>
+                  <td style="color:#495057;">${problemIndexNames[d.problemNo] || '-'}</td>
+                  <td style="color:#dc3545; font-weight:600;">${d.errorCount}회</td>
+                </tr>
+              `).join('')}
+              <tr class="total-row">
+                <td colspan="2">총 오답</td>
+                <td style="color:#dc3545;">${item.problemErrors?.total || 0}회</td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+      }
+
+      modal.classList.add('show');
+    }
+
+    // 모달 닫기
+    function closeParagraphModal() {
+      document.getElementById('paragraphModal').classList.remove('show');
+    }
+
+    function closeProblemModal() {
+      document.getElementById('problemModal').classList.remove('show');
+    }
+
+    function closeGateModal() {
+      document.getElementById('gateModal').classList.remove('show');
+    }
+
+    // 관문 상세 모달 열기
+    async function openGateModal(itemId) {
+      const item = gateAllData.find(d => d._id === itemId);
+      if (!item) return;
+
+      const modal = document.getElementById('gateModal');
+      const modalTitle = document.getElementById('gateModalTitle');
+      const modalBody = document.getElementById('gateModalBody');
+
+      modalTitle.textContent = `${item.name} - 관문 ${item.gate} 상세 정보`;
+      modalBody.innerHTML = '<div class="loading-modal">데이터를 불러오는 중...</div>';
+      modal.classList.add('show');
+
+      try {
+        const res = await fetch(`/api/academy/gate-pass-details?grade=${encodeURIComponent(item.grade)}&name=${encodeURIComponent(item.name)}&gate=${item.gate}`);
+        const result = await res.json();
+
+        if (result.ok) {
+          renderGateDetailModal(result.data, item.gate);
+        } else {
+          modalBody.innerHTML = '<div class="no-attempt-data">데이터를 불러오는데 실패했습니다.</div>';
+        }
+      } catch (err) {
+        console.error(err);
+        modalBody.innerHTML = '<div class="no-attempt-data">서버 오류가 발생했습니다.</div>';
+      }
+    }
+
+    function renderGateDetailModal(data, gate) {
+      const modalBody = document.getElementById('gateModalBody');
+
+      // 시도 기록이 없는 경우
+      if (data.totalAttempts === 0) {
+        modalBody.innerHTML = `
+          <div class="no-attempt-data">
+            <p>아직 상세 시도 기록이 없습니다.</p>
+            <p style="font-size:12px; color:#adb5bd; margin-top:8px;">
+              (새로운 형성평가 풀이부터 기록됩니다)
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      const formatTime = (seconds) => {
+        if (!seconds) return '0초';
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (mins > 0) {
+          return `${mins}분 ${secs}초`;
+        }
+        return `${secs}초`;
+      };
+
+      const passedDate = data.passedAt ? new Date(data.passedAt).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : '-';
+
+      // 지수 유형 매핑 함수
+      const getIndexName = (qType) => {
+        return qType === 'q2' ? '구조파악력' : '핵심이해력';
+      };
+
+      let weakestQuestionsHtml = '';
+      let questionDetailsHtml = '';
+
+      if (data.questionDetails && data.questionDetails.length > 0) {
+        const validQuestions = data.questionDetails
+          .filter(q => q.questionNo != null && !isNaN(q.questionNo));
+
+        // 가장 미흡한 문항 2개 선정
+        const sortedByWeakness = [...validQuestions].sort((a, b) => {
+          if (b.cumulativeWrongClicks !== a.cumulativeWrongClicks) {
+            return b.cumulativeWrongClicks - a.cumulativeWrongClicks;
+          }
+          if (b.cumulativeTime !== a.cumulativeTime) {
+            return b.cumulativeTime - a.cumulativeTime;
+          }
+          if (a.qType !== b.qType) {
+            return a.qType === 'q2' ? -1 : 1;
+          }
+          return 0;
+        });
+
+        const weakestTwo = sortedByWeakness.slice(0, 2);
+        const weakestQuestionNos = new Set(weakestTwo.map(q => q.questionNo));
+
+        if (weakestTwo.length > 0) {
+          weakestQuestionsHtml = `
+            <div class="detail-section">
+              <div class="detail-section-title" style="color:#dc3545;">⚠️ 가장 미흡한 문항 (상위 ${weakestTwo.length}개)</div>
+              <p style="font-size:11px; color:#868e96; margin-bottom:8px;">클릭하면 문제를 확인할 수 있습니다</p>
+              <table class="question-table" style="border:2px solid #ffcdd2; border-radius:8px;">
+                <thead style="background:#ffebee;">
+                  <tr>
+                    <th style="color:#c62828;">문항</th>
+                    <th style="color:#c62828;">단원명</th>
+                    <th style="color:#c62828;">지수</th>
+                    <th style="color:#c62828;">누적 시간</th>
+                    <th style="color:#c62828;">누적 오답</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${weakestTwo.map(q => `
+                    <tr style="background:#fff8f8;">
+                      <td style="font-weight:600; color:#c62828;">문항 ${q.questionNo}</td>
+                      <td style="font-size:11px; max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${q.unitTitle || q.unitCode || '-'}">${q.unitTitle || q.unitCode || '-'}</td>
+                      <td><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:${q.qType === 'q2' ? '#e3f2fd' : '#fff3e0'}; color:${q.qType === 'q2' ? '#1565c0' : '#e65100'};">${getIndexName(q.qType)}</span></td>
+                      <td style="font-weight:600;">${formatTime(q.cumulativeTime)}</td>
+                      <td style="font-weight:600; color:#c62828;">${q.cumulativeWrongClicks}회</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        // 각 문항별 누적 기록 테이블
+        questionDetailsHtml = `
+          <div class="detail-section">
+            <div class="detail-section-title">각 문항별 누적 기록</div>
+            <p style="font-size:11px; color:#868e96; margin-bottom:8px;">클릭하면 문제를 확인할 수 있습니다</p>
+            <table class="question-table">
+              <thead>
+                <tr>
+                  <th>문항</th>
+                  <th>단원명</th>
+                  <th>지수</th>
+                  <th>누적 시간</th>
+                  <th>누적 오답</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${validQuestions
+                  .sort((a, b) => a.questionNo - b.questionNo)
+                  .map(q => `
+                  <tr style="${weakestQuestionNos.has(q.questionNo) ? 'background:#fff8f8;' : ''}">
+                    <td style="${weakestQuestionNos.has(q.questionNo) ? 'color:#c62828; font-weight:600;' : ''}">문항 ${q.questionNo}</td>
+                    <td style="font-size:11px; max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${q.unitTitle || q.unitCode || '-'}">${q.unitTitle || q.unitCode || '-'}</td>
+                    <td><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:${q.qType === 'q2' ? '#e3f2fd' : '#fff3e0'}; color:${q.qType === 'q2' ? '#1565c0' : '#e65100'};">${getIndexName(q.qType)}</span></td>
+                    <td>${formatTime(q.cumulativeTime)}</td>
+                    <td style="${weakestQuestionNos.has(q.questionNo) ? 'color:#c62828; font-weight:600;' : ''}">${q.cumulativeWrongClicks}회</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      modalBody.innerHTML = `
+        <div class="detail-section">
+          <div class="detail-section-title">요약 정보</div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">재도전 횟수</div>
+              <div class="detail-value highlight">${data.retryCount}회</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">총 시도 횟수</div>
+              <div class="detail-value">${data.totalAttempts}회</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">누적 전체 풀이 시간</div>
+              <div class="detail-value">${formatTime(data.cumulativeTime)}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">누적 전체 오답 클릭</div>
+              <div class="detail-value">${data.cumulativeWrongClicks}회</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">최종 시도 (통과)</div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">최종 풀이 시간</div>
+              <div class="detail-value">${formatTime(data.lastAttemptTime)}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">최종 오답 클릭</div>
+              <div class="detail-value">${data.lastAttemptWrongs}회</div>
+            </div>
+          </div>
+        </div>
+
+        ${weakestQuestionsHtml}
+
+        ${questionDetailsHtml}
+
+        <div class="detail-section" style="text-align: center; padding-top: 16px; border-top: 1px solid #e9ecef;">
+          <div style="font-size: 12px; color: #868e96; margin-bottom: 4px;">통과 날짜</div>
+          <div style="font-size: 14px; font-weight: 600; color: var(--accent-dark);">${passedDate}</div>
+        </div>
+      `;
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('paragraphModal').addEventListener('click', (e) => {
+      if (e.target.id === 'paragraphModal') closeParagraphModal();
+    });
+
+    document.getElementById('problemModal').addEventListener('click', (e) => {
+      if (e.target.id === 'problemModal') closeProblemModal();
+    });
+
+    document.getElementById('gateModal').addEventListener('click', (e) => {
+      if (e.target.id === 'gateModal') closeGateModal();
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeParagraphModal();
+        closeProblemModal();
+        closeGateModal();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎮 게임 속의 나와 현실의 나</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; overflow-x: hidden; background: #1a1a1a; }
+    #map-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: url('/images/창작도서/창작사회문화06/00.jpg'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; z-index: 1; }
+    #content { position: relative; z-index: 2; pointer-events: none; }
+    .story-section { min-height: 100vh; display: flex; align-items: center; justify-content: flex-start; padding: 60px 120px; pointer-events: none; }
+    .story-section:nth-child(odd) { justify-content: flex-start; }
+    .story-section:nth-child(even) { justify-content: flex-end; }
+    .story-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; max-width: 600px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); transform: translateX(100px); opacity: 0; transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1); pointer-events: auto; }
+    .story-section:nth-child(odd) .story-card { transform: translateX(-100px); }
+    .story-section:nth-child(even) .story-card { transform: translateX(100px); }
+    .story-card.active { transform: translateX(0); opacity: 1; }
+    .story-card .chapter { display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+    .story-card .theme { display: inline-block; padding: 4px 12px; background: rgba(108, 92, 231, 0.15); color: #341f97; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+    .story-card h2 { font-size: 26px; color: #2c3e50; margin-bottom: 20px; line-height: 1.4; }
+    .story-card p { font-size: 15px; line-height: 1.9; color: #34495e; margin-bottom: 14px; text-align: justify; }
+    .story-card .highlight { color: #6C5CE7; font-weight: 600; }
+    .story-card .dialogue { color: #341f97; font-weight: 600; }
+    .intro-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; }
+    .intro-content { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); padding: 60px 80px; border-radius: 30px; max-width: 850px; }
+    .intro-content h1 { font-size: 44px; font-weight: 700; color: #ffffff; margin-bottom: 20px; }
+    .intro-content .subtitle { font-size: 20px; line-height: 1.8; color: #e0e0e0; margin-bottom: 30px; }
+    .intro-content .characters { text-align: left; background: rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+    .intro-content .characters h3 { color: #A29BFE; font-size: 16px; margin-bottom: 15px; }
+    .intro-content .characters p { color: #d0d0d0; font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+    .intro-content .scroll-hint { font-size: 16px; color: #ffffff; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: auto; }
+    .nav-btn { padding: 15px 30px; background: rgba(108, 92, 231, 0.9); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    @media (max-width: 768px) { .story-section { padding: 40px 20px; } .story-card { max-width: 100%; padding: 30px; } .intro-content { padding: 40px 30px; } .intro-content h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎮 게임 속의 나와 현실의 나</h1>
+        <p class="subtitle">진짜 나를 찾아가는 이야기<br>교과기반 창작도서 · 사회문화 06 · 중1-2</p>
+        <div class="characters">
+          <h3>🎭 등장인물</h3>
+          <p><strong>★ 준호:</strong> 현실에서는 조용한 열네 살 소년. 온라인에서는 최강 전사 '드래곤나이트'. <span class="highlight">현실 자아</span>와 <span class="highlight">가상 자아</span>의 괴리를 경험하는 주인공.</p>
+          <p><strong>★ 예린:</strong> 준호의 유일한 현실 친구. <span class="highlight">정서적 지지</span>를 제공하며 준호의 성장을 돕는 조력자.</p>
+          <p><strong>★ 미러 선생님:</strong> 학교 상담교사. <span class="highlight">자아 정체성</span> 탐색을 안내하는 멘토.</p>
+          <p><strong>★ 섀도우:</strong> 게임 속 라이벌. 완벽해 보이는 모범생 선배의 또 다른 얼굴로, <span class="highlight">사회적 가면</span>의 보편성을 보여주는 캐릭터.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">아바타 생성</span>
+        <h2>🎮 내가 되고 싶은 '나'를 만들다</h2>
+        <p>준호는 조용한 소년이었어요. 키가 작고, 발표할 때 목소리가 떨려요. 체육 시간 달리기에서 항상 꼴찌였고, 반에서 존재감이 없었어요. 심리학에서 말하는 <span class="highlight">자존감</span>이 낮은 상태였지요.</p>
+        <p>그런 준호에게 유일한 탈출구가 있었어요. 온라인 게임 '판타지아'. 집에 오면 컴퓨터를 켜고, 준호는 전혀 다른 사람이 됐어요. 이것을 심리학에서는 <span class="highlight">자아 분리</span>라고 해요.</p>
+        <p>아바타 생성 화면에서 준호는 신중하게 선택했어요. 키 190cm, 넓은 어깨, 불꽃 무늬 갑옷. 이름은 '드래곤나이트'. 현실의 준호와 정반대였어요. 심리학자 칼 로저스는 이것을 <span class="highlight">이상적 자기</span>라고 불렀어요 - 우리가 되고 싶어 하는 모습이지요.</p>
+        <p><span class="highlight">'나는 이렇게 되고 싶었어.'</span> 게임에 접속하면 준호의 심장이 빠르게 뛰었어요. <span class="dialogue">"드래곤나이트님 멋있어요!"</span> 채팅창에 찬사가 쏟아졌어요. 이것이 <span class="highlight">사회적 인정</span>이었어요 - 현실에서 한 번도 경험하지 못한 것이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">가상의 모습</span>
+        <h2>⚔️ 서버 1위, 수천 명의 팬</h2>
+        <p>6개월이 지나자, 드래곤나이트는 게임 서버 전체 1위가 됐어요. 수천 명의 길드원이 드래곤나이트의 말에 따랐어요. 이것이 <span class="highlight">가상 세계에서의 사회적 지위</span>였어요.</p>
+        <p><span class="dialogue">"드래곤나이트님, 오늘도 저희를 이끌어 주세요!"</span> 게임 속에서 준호는 <span class="highlight">리더십</span>을 발휘하는 왕이었어요. 목소리가 떨리지 않았고, 당당했어요.</p>
+        <p>하지만 이상한 현상이 나타났어요. <span class="highlight">게임 속 자신감이 현실로 전혀 전이되지 않았어요.</span> 심리학에서는 이를 <span class="highlight">맥락 의존적 자기효능감</span>이라고 해요 - 특정 상황에서만 발휘되는 자신감이지요.</p>
+        <p><span class="dialogue">"이상하다. 게임에서는 수천 명 앞에서 말할 수 있는데, 왜 교실에서 30명 앞에 서면 다리가 떨리지?"</span> 이 질문은 <span class="highlight">현실적 자기</span>와 <span class="highlight">이상적 자기</span> 사이의 괴리를 인식하는 시작이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">현실의 나</span>
+        <h2>💭 모니터를 끄면 남는 것들</h2>
+        <p>준호의 게임 시간은 점점 늘어났어요. 하루 3시간이 8시간이 됐어요. 이것은 <span class="highlight">과몰입</span>의 징후였어요. 성적은 떨어지고, 수업 시간에 졸기 시작했어요.</p>
+        <p>유일한 친구 예린이 말했어요. <span class="dialogue">"준호야, 너 요즘 게임만 하는 거 아니야? 얼굴이 안 좋아 보여."</span> 예린은 <span class="highlight">사회적 지지망</span>의 역할을 하고 있었어요.</p>
+        <p><span class="dialogue">"괜찮아. 나 게임에서는 잘 나가거든."</span> 이 대답은 <span class="highlight">현실 회피</span>를 드러내요 - 현실의 문제를 직면하지 않고 가상 세계로 도피하는 것이지요.</p>
+        <p>어느 날, 게임 서버가 48시간 동안 점검에 들어갔어요. 드래곤나이트가 없는 준호는 무엇이 남을까. <span class="highlight">정체성 공백</span>이 밀려왔어요. 성적은 하위권, 친구는 예린 한 명, 특기도 없는 소년. <span class="dialogue">"나는... 누구지?"</span> <span class="highlight">모니터를 끄면 남는 것, 그것이 진짜 자신이라는 것을 준호는 직면하기 시작했어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">자아 정체성</span>
+        <h2>🪞 거울 앞에 선 두 명의 준호</h2>
+        <p>담임선생님이 준호를 상담실로 불렀어요. 미러 선생님이 물었어요. <span class="dialogue">"저 거울 앞에 서볼래?"</span> 거울 속에는 고개를 숙인 마른 소년이 있었어요.</p>
+        <p><span class="dialogue">"거울에 보이는 사람은 누구야?"</span> <span class="dialogue">"저요... 그냥 준호요."</span> <span class="dialogue">"그러면 게임 속 드래곤나이트는 누구지?"</span> 준호는 대답하지 못했어요.</p>
+        <p>선생님이 <span class="highlight">자아 정체성</span>을 설명했어요. <span class="dialogue">"'나는 누구인가'에 대한 인식이야. 심리학자 에릭 에릭슨은 청소년기가 <span class="highlight">정체성 형성</span>의 결정적 시기라고 했어."</span></p>
+        <p>선생님은 양파 그림을 그렸어요. 가장 바깥은 <span class="highlight">외적 자아</span> - 남들에게 보이는 모습. 그 안쪽은 <span class="highlight">사회적 자아</span> - 관계 속에서의 역할. 가장 안쪽은 <span class="highlight">핵심 자아</span> - 자신만 아는 가치관과 감정이에요.</p>
+        <p><span class="dialogue">"드래곤나이트는 네가 바라는 <span class="highlight">이상적 자기</span>야. 현실의 너는 <span class="highlight">현실적 자기</span>고. 둘 사이 차이가 크면 <span class="highlight">정체성 혼란</span>이 올 수 있어. 하지만 그 차이를 인식하는 것 자체가 성장의 시작이야."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">역할과 이미지</span>
+        <h2>🎭 우리는 여러 모습을 가지고 있어</h2>
+        <p>미러 선생님이 사회학자 <span class="highlight">어빙 고프먼</span>의 이론을 소개했어요. <span class="dialogue">"고프먼은 인간의 삶을 연극에 비유했어. 이것이 <span class="highlight">인상 관리 이론</span>이야."</span></p>
+        <p><span class="dialogue">"우리는 살면서 여러 무대에 올라. 학교에서는 '학생', 집에서는 '아들'이라는 <span class="highlight">역할</span>을 해. 친구들 앞에서는 또 다른 모습이지."</span></p>
+        <p>준호는 자신의 하루를 돌아봤어요. 학교에서는 조용한 소년, 집에서는 무뚝뚝한 아들, 게임 속에서는 카리스마 넘치는 리더. <span class="dialogue">"어느 게 진짜 저예요?"</span> <span class="dialogue">"전부 다 너야. 사람은 <span class="highlight">다면적 존재</span>야."</span></p>
+        <p>하지만 문제는 자기에게 붙인 꼬리표였어요. <span class="highlight">'나는 현실에서는 안 되는 애'</span>라는 생각. 이것이 <span class="highlight">자기 낙인</span>이에요 - 부정적 이미지를 스스로에게 붙이는 것이지요. <span class="highlight">역할을 연기하되, 역할에 갇히지 않는 것이 건강한 정체성의 핵심이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">또래의 영향</span>
+        <h2>📱 팔로워 수가 내 가치를 정할까?</h2>
+        <p>학교에서는 SNS <span class="highlight">팔로워 전쟁</span>이 벌어지고 있었어요. 반 친구 민서는 팔로워가 3천 명이었고, 가장 인기 있는 아이였어요. 이것이 <span class="highlight">디지털 사회적 자본</span>의 시대였어요.</p>
+        <p>준호의 팔로워는 23명이었어요. <span class="dialogue">"팔로워가 23명이라니, 존재감 없네."</span> 누군가 말했고, 아이들이 웃었어요. 이것이 <span class="highlight">또래 집단의 압력</span>이에요.</p>
+        <p>미러 선생님이 설명했어요. <span class="dialogue">"청소년기에는 <span class="highlight">또래 집단 사회화</span>가 강하게 작용해. 또래의 기준과 가치관이 자기 정체성에 큰 영향을 미치지."</span></p>
+        <p>문제는 디지털 공간에서 그 기준이 왜곡된다는 거예요. 팔로워 수, 좋아요 수가 <span class="highlight">인기의 척도</span>가 되고, 그것이 곧 한 사람의 가치처럼 여겨져요. 하지만 <span class="dialogue">"팔로워 수가 정말 그 사람의 가치를 보여줄까?"</span></p>
+        <p>게임에서 수천 명의 팬이 있어도 외로움은 사라지지 않았듯이, <span class="highlight">팔로워 수천 명이 있어도 진짜 친구 한 명의 가치를 대신할 수 없었어요.</span> 숫자가 아닌 <span class="highlight">관계의 질</span>이 진짜라는 것을 준호는 이해하기 시작했어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">자기 이해</span>
+        <h2>📓 나는 무엇을 좋아하는 걸까</h2>
+        <p>미러 선생님이 과제를 냈어요. <span class="dialogue">"'나 탐험 노트'를 만들어봐. 일주일 동안 매일 자신에 대해 하나씩 발견하는 거야."</span> 이것이 <span class="highlight">자기 탐색</span>의 시작이었어요.</p>
+        <p>처음엔 막막했어요. 게임을 빼면 자신에 대해 아는 게 없었거든요. 이것이 <span class="highlight">자기 인식 부재</span>의 상태였어요. 하지만 천천히 노트를 채워나갔어요.</p>
+        <p>월요일: 과학 실험이 재미있었어요 - <span class="highlight">지적 호기심</span>을 발견했어요. 화요일: SF 소설에 빠져들었어요 - <span class="highlight">상상력</span>이 강점이었어요. 수요일: 예린이와 떡볶이 먹으며 웃을 때 마음이 따뜻했어요 - <span class="highlight">관계의 가치</span>를 느꼈어요. 목요일: 기타를 처음 만져봤는데, 소리가 나는 순간 심장이 뛰었어요 - 새로운 <span class="highlight">잠재력</span>을 발견했어요.</p>
+        <p><span class="dialogue">"이게 다 나인 거예요?"</span> <span class="dialogue">"그래. 게임도 너의 일부이지만, 너의 전부는 아닌 거야."</span> <span class="highlight">자기 이해란 매일의 작은 감정과 반응에 귀를 기울이는 것, 자기 안의 다양한 목소리를 듣는 것이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">비교와 불안</span>
+        <h2>🎭 완벽해 보이는 사람도 가면을 쓰고 있어</h2>
+        <p>게임 라이벌 섀도우가 개인 메시지를 보냈어요. <span class="dialogue">"사실... 나 현실에서는 너희 학교 3학년 박지민이야."</span> 준호는 충격을 받았어요.</p>
+        <p>박지민은 성적 1등, 학생회장, 모범생이었어요. 겉으로는 완벽한 <span class="highlight">사회적 이미지</span>를 가진 선배였지요. 완벽해 보이는 사람이 왜 게임에서 독설을 퍼부으며 2위에 집착했을까?</p>
+        <p><span class="dialogue">"나도 현실에서 지쳐. 항상 1등이어야 하고, 실수하면 안 되고... 게임에서만큼은 마음대로 하고 싶었어."</span> 지민 선배도 <span class="highlight">가면</span>을 쓰고 있었어요.</p>
+        <p>미러 선생님이 <span class="highlight">사회적 비교 이론</span>을 설명했어요. <span class="dialogue">"사람은 자신을 다른 사람과 비교하는 본능이 있어. 하지만 우리가 비교하는 대상은 상대방의 <span class="highlight">외적 모습</span>뿐이야. 그 이면의 불안과 고민은 보이지 않지."</span></p>
+        <p><span class="highlight">모든 사람이 가면을 쓰고 있었어요. 완벽해 보이는 사람의 가면 뒤에도 불안한 인간이 있었어요.</span> 비교는 <span class="highlight">보이는 것</span>만으로 하기 때문에 항상 불공평하고, 그래서 비교는 늘 불안을 낳았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">성장 과정</span>
+        <h2>🌱 넘어지고 일어서는 것이 성장</h2>
+        <p>학교 발표 대회에 준호가 신청했어요. 주제는 '디지털 시대의 나'. 이것은 <span class="highlight">도전</span>이자 <span class="highlight">자기 극복</span>의 시도였어요. 신청한 순간부터 후회가 밀려왔어요.</p>
+        <p>예린이 말했어요. <span class="dialogue">"게임에서는 수천 명 앞에서 연설하잖아. 그 용기가 가짜라고 생각해? 그것도 너에게서 나온 거야. 다만 아직 현실에서 연습을 안 해본 것뿐이야."</span> 이것이 <span class="highlight">전이 가능한 능력</span>의 개념이에요.</p>
+        <p>준호는 매일 거울 앞에서 연습했어요. 이것이 <span class="highlight">의도적 연습</span>이에요 - 목표를 가지고 반복적으로 연습하는 것이지요. 발표 당일, 200명 앞에서 다리가 떨렸어요. 하지만 눈을 감고 심호흡했어요. 드래곤나이트가 전투 전 하던 것처럼.</p>
+        <p>완벽하지 않았어요. 중간에 더듬었고, 손은 떨렸어요. <span class="highlight">하지만 끝까지 해냈어요.</span> 박수가 쏟아졌을 때, 준호의 눈에서 눈물이 흘렀어요. 심리학자 에릭슨은 말했어요 - <span class="highlight">정체성은 위기를 통해 형성된다</span>고. 준호는 오늘, 넘어질 수도 있는 무대에 올랐고, 떨리는 목소리로나마 자신을 증명했어요. 그것이 <span class="highlight">성장</span>이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">진짜 나 찾기</span>
+        <h2>🌟 아바타를 벗고, 나를 입다</h2>
+        <p>발표 대회 후, 준호에게 많은 것이 달라졌어요. 친구들이 말을 걸어왔고, 과학 동아리 가입 제안도 받았어요. 이것이 <span class="highlight">사회적 인정</span>이 현실에서도 가능하다는 증거였어요.</p>
+        <p>준호는 여전히 게임을 했어요. 하지만 이제 게임을 끄고도 괜찮았어요. <span class="dialogue">"드래곤나이트가 없어도 나는 나야."</span> 이것이 <span class="highlight">통합된 자아</span>의 시작이었어요 - 가상과 현실의 자아가 분열되지 않고 하나로 연결되는 것이지요.</p>
+        <p>미러 선생님이 마지막으로 물었어요. <span class="dialogue">"거울에 보이는 사람은 누구야?"</span> <span class="dialogue">"준호요. 키 작고, 떨릴 때도 있고, 게임도 좋아하고, SF 소설도 좋아하고, 기타를 배우고 싶어 하고, 예린이라는 좋은 친구가 있는 열네 살 소년이요."</span></p>
+        <p>집에 와서 준호는 일기장에 적었어요. <span class="highlight">"정체성은 스스로 만들어가는 것이다. 누가 정해주는 것도, 팔로워 수가 결정하는 것도, 아바타가 대신해 주는 것도 아니다. 매일 조금씩, 넘어지고 일어서며, 스스로 선택하고 행동하는 것. 그것이 진짜 나를 만드는 방법이다."</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(108, 92, 231, 0.15); border-radius: 16px;"><strong style="color: #341f97; font-size: 18px;">🌱 「정체성은 스스로 만들어간다. 아바타가 아닌 <span class="highlight">나 자신</span>으로.」</strong></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goBack()">← 목록으로</button>
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+      sections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    updateBackground();
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/social06_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>
