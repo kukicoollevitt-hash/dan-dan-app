@@ -661,10 +661,17 @@ const adminSchema = new mongoose.Schema({
     default: "school"
   },
 
-  // 🔹 시리즈 사용 권한 승인 여부 (슈퍼관리자가 승인)
+  // 🔹 시리즈 사용 권한 승인 여부 (슈퍼관리자가 승인) - deprecated, approvedSeries로 대체
   seriesApproved: {
     type: Boolean,
     default: false
+  },
+
+  // 🔹 승인된 시리즈 목록 (배열)
+  // brainon: 브레인온, brainup: 브레인업, brainfit: 브레인핏, braindeep: 브레인딥, brainreal: 브레인실전
+  approvedSeries: {
+    type: [String],
+    default: ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal']
   },
 
   // 🔹 계약 관리 (학원용)
@@ -3508,6 +3515,42 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
         }
         .contract-type-select option[value="franchise"] { color: #dc2626; }
         .contract-type-select option[value="subscription"] { color: #2563eb; }
+        /* 시리즈 체크박스 스타일 */
+        .series-checkboxes {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .series-checkbox-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          border-radius: 16px;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: 2px solid var(--line);
+          background: #f8f8fa;
+          color: var(--text);
+        }
+        .series-checkbox-label:hover {
+          border-color: var(--accent);
+        }
+        .series-checkbox-label.checked {
+          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+          border-color: #10b981;
+          color: #065f46;
+        }
+        .series-checkbox-label.disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          background: #e5e5e5;
+        }
+        .series-checkbox-label input[type="checkbox"] {
+          display: none;
+        }
         .empty-state {
           text-align: center;
           padding: 60px 20px;
@@ -3734,6 +3777,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
               const data = await res.json();
               if (data.success) {
                 alert('계약구분이 변경되었습니다.');
+                location.reload(); // 시리즈 체크박스 상태 갱신
               } else {
                 alert('오류: ' + (data.message || '알 수 없는 오류'));
                 location.reload();
@@ -3741,6 +3785,46 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
             } catch (err) {
               alert('서버 오류가 발생했습니다.');
               location.reload();
+            }
+          }
+
+          // 시리즈 체크박스 토글
+          async function toggleSeries(adminId, seriesKey, checkbox) {
+            const label = checkbox.closest('.series-checkbox-label');
+            if (label.classList.contains('disabled')) {
+              checkbox.checked = !checkbox.checked; // 원래 상태로 되돌림
+              return;
+            }
+
+            const isChecked = checkbox.checked;
+            const seriesName = {
+              brainon: '브레인온',
+              brainup: '브레인업',
+              brainfit: '브레인핏',
+              braindeep: '브레인딥',
+              brainreal: '브레인실전'
+            }[seriesKey] || seriesKey;
+
+            try {
+              const res = await fetch('/super/api/toggle-series', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminId, seriesKey, enabled: isChecked })
+              });
+              const data = await res.json();
+              if (data.success) {
+                if (isChecked) {
+                  label.classList.add('checked');
+                } else {
+                  label.classList.remove('checked');
+                }
+              } else {
+                alert('오류: ' + (data.message || '알 수 없는 오류'));
+                checkbox.checked = !isChecked;
+              }
+            } catch (err) {
+              alert('서버 오류가 발생했습니다.');
+              checkbox.checked = !isChecked;
             }
           }
         </script>
@@ -3827,28 +3911,40 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
         </a>
       `;
 
-      // 🔹 시리즈 승인 상태
-      const seriesApproved = a.seriesApproved || false;
-      const seriesLabel = seriesApproved ? "승인" : "미승인";
-      const seriesClass = seriesApproved ? "badge-approved" : "badge-pending";
-      let seriesToggleLink = "";
-      if (seriesApproved) {
-        seriesToggleLink = `
-          <a class="link"
-             href="/super/academy-admin-series?id=${a._id}&approved=false"
-             onclick="return confirm('시리즈 권한을 미승인으로 변경할까요?\\n미승인 시 학생에게 시리즈 부여가 불가합니다.');">
-             미승인 전환
-          </a>
+      // 🔹 시리즈 체크박스 (계약구분에 따라 활성화/비활성화)
+      const approvedSeries = a.approvedSeries || [];
+      const contractTypeVal = a.contractType || "";
+
+      // 구독형: 브레인온, 브레인업만 선택 가능
+      // 가맹형: 모든 시리즈 선택 가능
+      const allSeries = [
+        { key: 'brainon', label: '온' },
+        { key: 'brainup', label: '업' },
+        { key: 'brainfit', label: '핏' },
+        { key: 'braindeep', label: '딥' },
+        { key: 'brainreal', label: '실전' }
+      ];
+
+      // 구독형일 때만 brainfit, braindeep, brainreal 비활성화
+      const subscriptionAllowed = ['brainon', 'brainup'];
+
+      let seriesCheckboxes = '<div class="series-checkboxes">';
+      allSeries.forEach(s => {
+        const isChecked = approvedSeries.includes(s.key);
+        const isDisabled = contractTypeVal === 'subscription' && !subscriptionAllowed.includes(s.key);
+        const checkedClass = isChecked ? 'checked' : '';
+        const disabledClass = isDisabled ? 'disabled' : '';
+        const disabledAttr = isDisabled ? 'disabled' : '';
+
+        seriesCheckboxes += `
+          <label class="series-checkbox-label ${checkedClass} ${disabledClass}" title="${isDisabled ? '구독형은 브레인온, 브레인업만 선택 가능' : ''}">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} ${disabledAttr}
+              onchange="toggleSeries('${a._id}', '${s.key}', this)" />
+            ${s.label}
+          </label>
         `;
-      } else {
-        seriesToggleLink = `
-          <a class="link"
-             href="/super/academy-admin-series?id=${a._id}&approved=true"
-             onclick="return confirm('시리즈 권한을 승인할까요?\\n승인 시 학생에게 시리즈 부여가 가능합니다.');">
-             승인하기
-          </a>
-        `;
-      }
+      });
+      seriesCheckboxes += '</div>';
 
       // 🔹 계약구분 (가맹형/구독형)
       const contractType = a.contractType || "";
@@ -3879,8 +3975,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
             ${statusToggleLink}
           </td>
           <td>
-            <span class="badge ${seriesClass}">${seriesLabel}</span>
-            ${seriesToggleLink}
+            ${seriesCheckboxes}
           </td>
           <td>${createdAt}</td>
           <td>${lastLogin}</td>
@@ -3932,6 +4027,16 @@ app.post("/super/academy-admin-add", requireSuperAdmin, async (req, res) => {
       return res.status(400).send("이미 등록된 전화번호입니다.");
     }
 
+    // 계약 유형에 따라 approvedSeries 자동 설정
+    let approvedSeries = [];
+    if (contractType === 'franchise') {
+      // 가맹형: 모든 시리즈
+      approvedSeries = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
+    } else if (contractType === 'subscription') {
+      // 구독형: 브레인온, 브레인업만
+      approvedSeries = ['brainon', 'brainup'];
+    }
+
     const newAdmin = new Admin({
       academyName,
       name,
@@ -3940,6 +4045,8 @@ app.post("/super/academy-admin-add", requireSuperAdmin, async (req, res) => {
       userType: "academy",
       contractType: contractType,
       contractStartDate: new Date(contractStartDate),
+      approvedSeries: approvedSeries,
+      seriesApproved: approvedSeries.length > 0,
       createdAt: new Date()
     });
 
@@ -4015,7 +4122,7 @@ app.get("/super/academy-admin-status", requireSuperAdmin, async (req, res) => {
   }
 });
 
-// 🔹 학원용 관리자 시리즈 승인 상태 변경
+// 🔹 학원용 관리자 시리즈 승인 상태 변경 (deprecated - approvedSeries 배열로 대체)
 app.get("/super/academy-admin-series", requireSuperAdmin, async (req, res) => {
   const { id, approved } = req.query;
 
@@ -4031,6 +4138,57 @@ app.get("/super/academy-admin-series", requireSuperAdmin, async (req, res) => {
   } catch (err) {
     console.error("❌ /super/academy-admin-series 에러:", err);
     res.status(500).send("시리즈 승인 상태 변경 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 시리즈 개별 토글 API (새로운 approvedSeries 배열 방식)
+app.post("/super/api/toggle-series", requireSuperAdmin, async (req, res) => {
+  const { adminId, seriesKey, enabled } = req.body;
+
+  if (!adminId || !seriesKey) {
+    return res.json({ success: false, message: "adminId와 seriesKey가 필요합니다." });
+  }
+
+  // 유효한 시리즈 키 확인
+  const validSeriesKeys = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
+  if (!validSeriesKeys.includes(seriesKey)) {
+    return res.json({ success: false, message: "유효하지 않은 시리즈입니다." });
+  }
+
+  try {
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.json({ success: false, message: "관리자를 찾을 수 없습니다." });
+    }
+
+    // 구독형인 경우 brainfit, braindeep, brainreal 선택 불가
+    if (admin.contractType === 'subscription' && !['brainon', 'brainup'].includes(seriesKey) && enabled) {
+      return res.json({ success: false, message: "구독형은 브레인온, 브레인업만 선택 가능합니다." });
+    }
+
+    let approvedSeries = admin.approvedSeries || [];
+
+    if (enabled) {
+      // 추가
+      if (!approvedSeries.includes(seriesKey)) {
+        approvedSeries.push(seriesKey);
+      }
+    } else {
+      // 제거
+      approvedSeries = approvedSeries.filter(s => s !== seriesKey);
+    }
+
+    await Admin.findByIdAndUpdate(adminId, { approvedSeries });
+
+    // 기존 seriesApproved 필드도 동기화 (하위 호환성)
+    const hasAnySeries = approvedSeries.length > 0;
+    await Admin.findByIdAndUpdate(adminId, { seriesApproved: hasAnySeries });
+
+    console.log("✅ 시리즈 토글:", adminId, seriesKey, "→", enabled, "| approvedSeries:", approvedSeries);
+    res.json({ success: true, approvedSeries });
+  } catch (err) {
+    console.error("❌ /super/api/toggle-series 에러:", err);
+    res.json({ success: false, message: "서버 오류가 발생했습니다." });
   }
 });
 
@@ -7619,14 +7777,26 @@ app.post("/super/api/set-contract-type", requireSuperAdmin, async (req, res) => 
       return res.status(400).json({ success: false, message: "유효하지 않은 계약구분입니다." });
     }
 
+    // 계약 유형에 따라 approvedSeries 자동 설정
+    let approvedSeries = [];
+    if (contractType === 'franchise') {
+      // 가맹형: 모든 시리즈
+      approvedSeries = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
+    } else if (contractType === 'subscription') {
+      // 구독형: 브레인온, 브레인업만
+      approvedSeries = ['brainon', 'brainup'];
+    }
+
     await Admin.findByIdAndUpdate(adminId, {
-      contractType: contractType || null
+      contractType: contractType || null,
+      approvedSeries: approvedSeries,
+      seriesApproved: approvedSeries.length > 0
     });
 
     const typeLabel = contractType === 'franchise' ? '가맹형' : contractType === 'subscription' ? '구독형' : '미설정';
-    console.log("📋 계약구분 설정:", adminId, "->", typeLabel);
+    console.log("📋 계약구분 설정:", adminId, "->", typeLabel, "| approvedSeries:", approvedSeries);
 
-    res.json({ success: true, message: "계약구분이 설정되었습니다." });
+    res.json({ success: true, message: "계약구분이 설정되었습니다.", approvedSeries });
   } catch (err) {
     console.error("❌ /super/api/set-contract-type 에러:", err);
     res.status(500).json({ success: false, message: "계약구분 설정 중 오류가 발생했습니다." });
@@ -23726,14 +23896,15 @@ app.get("/api/session", (req, res) => {
 // ✅ 관리자(admin) 세션 정보 조회 API
 app.get("/api/admin-session", async (req, res) => {
   if (req.session && req.session.admin) {
-    // DB에서 최신 seriesApproved 정보 가져오기
+    // DB에서 최신 seriesApproved, approvedSeries 정보 가져오기
     try {
       const admin = await Admin.findById(req.session.admin.id).lean();
       return res.json({
         ok: true,
         admin: {
           ...req.session.admin,
-          seriesApproved: admin ? admin.seriesApproved : false
+          seriesApproved: admin ? admin.seriesApproved : false,
+          approvedSeries: admin ? (admin.approvedSeries || []) : []
         }
       });
     } catch (err) {
@@ -23741,7 +23912,8 @@ app.get("/api/admin-session", async (req, res) => {
         ok: true,
         admin: {
           ...req.session.admin,
-          seriesApproved: false
+          seriesApproved: false,
+          approvedSeries: []
         }
       });
     }

@@ -890,41 +890,10 @@
       <div class="modal-title">시리즈 부여</div>
       <div class="modal-subtitle" id="modal-student-name">학생: </div>
 
-      <div class="checkbox-list">
-        <div class="checkbox-item">
-          <input type="checkbox" id="series-brainun" value="BRAIN은" />
-          <label for="series-brainun">
-            <span class="series-name">BRAIN ON</span>
-            <span class="series-desc">개념이해 (3/4/5학년 추천)</span>
-          </label>
-        </div>
-        <div class="checkbox-item">
-          <input type="checkbox" id="series-brainam" value="BRAIN암" />
-          <label for="series-brainam">
-            <span class="series-name">BRAIN UP</span>
-            <span class="series-desc">응용적용 (4/5/6학년 추천)</span>
-          </label>
-        </div>
-        <div class="checkbox-item">
-          <input type="checkbox" id="series-brainbit" value="BRAIN빛" />
-          <label for="series-brainbit">
-            <span class="series-name">BRAIN FIT</span>
-            <span class="series-desc">사고연결 (중1/중2 추천)</span>
-          </label>
-        </div>
-        <div class="checkbox-item">
-          <input type="checkbox" id="series-braindap" value="BRAIN답" />
-          <label for="series-braindap">
-            <span class="series-name">BRAIN DEEP</span>
-            <span class="series-desc">심화추론 (중3/고1 추천)</span>
-          </label>
-        </div>
-        <div class="checkbox-item">
-          <input type="checkbox" id="series-brainjung" value="BRAIN중등" />
-          <label for="series-brainjung">
-            <span class="series-name">실전</span>
-            <span class="series-desc">실전학습(수능모고)</span>
-          </label>
+      <div class="checkbox-list" id="series-checkbox-list">
+        <!-- 승인된 시리즈만 동적으로 렌더링됨 -->
+        <div style="color: #999; text-align: center; padding: 20px;">
+          시리즈 정보를 불러오는 중...
         </div>
       </div>
 
@@ -969,6 +938,16 @@
     let deleteTargetName = "";
     let deleteTargetPhone = "";
     let seriesApproved = false; // 🔹 시리즈 권한 승인 여부 (슈퍼관리자가 승인)
+    let approvedSeries = []; // 🔹 승인된 시리즈 목록 (슈퍼관리자가 승인한 시리즈)
+
+    // 시리즈 키 → 모달 표시용 데이터 매핑
+    const SERIES_MAP = {
+      brainon: { value: 'BRAIN은', id: 'series-brainun', name: 'BRAIN ON', desc: '개념이해 (3/4/5학년 추천)' },
+      brainup: { value: 'BRAIN암', id: 'series-brainam', name: 'BRAIN UP', desc: '응용적용 (4/5/6학년 추천)' },
+      brainfit: { value: 'BRAIN빛', id: 'series-brainbit', name: 'BRAIN FIT', desc: '사고연결 (중1/중2 추천)' },
+      braindeep: { value: 'BRAIN답', id: 'series-braindap', name: 'BRAIN DEEP', desc: '심화추론 (중3/고1 추천)' },
+      brainreal: { value: 'BRAIN중등', id: 'series-brainjung', name: '실전', desc: '실전학습(수능모고)' }
+    };
 
     // 삭제 모달 열기
     function openDeleteModal(userId, userName, userPhone) {
@@ -1199,19 +1178,15 @@
             </a>
           </td>
           <td class="center">
-            ${seriesApproved
-              ? ((u.assignedSeries && u.assignedSeries.length > 0)
-                ? `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
-                     style="display: inline-block; padding: 4px 10px; background: #10b981; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
-                    부여됨 (${u.assignedSeries.length})
-                   </a>`
-                : `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
-                     style="display: inline-block; padding: 4px 10px; background: #9ca3af; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
-                    미부여
-                   </a>`)
-              : `<span style="display: inline-block; padding: 4px 10px; background: #e5e7eb; color: #9ca3af; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: not-allowed;" title="시리즈 권한이 필요합니다. 본사에 문의하세요.">
-                  🔒 권한없음
-                 </span>`
+            ${(u.assignedSeries && u.assignedSeries.length > 0)
+              ? `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
+                   style="display: inline-block; padding: 4px 10px; background: #10b981; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
+                  부여됨 (${u.assignedSeries.length})
+                 </a>`
+              : `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
+                   style="display: inline-block; padding: 4px 10px; background: #9ca3af; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
+                  미부여
+                 </a>`
             }
           </td>
           <td class="center">
@@ -1323,7 +1298,11 @@
         const sessionData = await sessionRes.json();
         if (sessionData.ok && sessionData.admin) {
           seriesApproved = sessionData.admin.seriesApproved || false;
+          approvedSeries = sessionData.admin.approvedSeries || [];
           console.log('🔒 시리즈 권한 승인 상태:', seriesApproved);
+          console.log('🔒 승인된 시리즈 목록:', approvedSeries);
+          // 동적으로 시리즈 모달 체크박스 렌더링
+          renderSeriesCheckboxes();
         }
       } catch (err) {
         console.error('세션 조회 실패:', err);
@@ -1376,22 +1355,22 @@
       document.getElementById("modal-student-name").textContent = "학생: " + userName;
 
       // 모든 체크박스 초기화
-      document.querySelectorAll('#series-modal input[type="checkbox"]').forEach(cb => {
+      document.querySelectorAll('#series-checkbox-list input[type="checkbox"]').forEach(cb => {
         cb.checked = false;
       });
 
-      // 문자열을 배열로 파싱
-      let assignedSeries = [];
+      // 문자열을 배열로 파싱 (학생에게 이미 부여된 시리즈)
+      let studentAssignedSeries = [];
       try {
-        assignedSeries = JSON.parse(assignedSeriesStr);
+        studentAssignedSeries = JSON.parse(assignedSeriesStr);
       } catch (e) {
         console.error('Failed to parse assignedSeries:', e);
       }
 
       // 현재 부여된 시리즈 체크
-      if (Array.isArray(assignedSeries)) {
-        assignedSeries.forEach(series => {
-          const checkbox = document.querySelector(`#series-modal input[value="${series}"]`);
+      if (Array.isArray(studentAssignedSeries)) {
+        studentAssignedSeries.forEach(series => {
+          const checkbox = document.querySelector(`#series-checkbox-list input[value="${series}"]`);
           if (checkbox) {
             checkbox.checked = true;
           }
@@ -1405,6 +1384,44 @@
     function closeSeriesModal() {
       document.getElementById("series-modal").classList.remove("show");
       currentUserId = null;
+    }
+
+    // 🔹 승인된 시리즈만 체크박스로 렌더링
+    function renderSeriesCheckboxes() {
+      const container = document.getElementById('series-checkbox-list');
+
+      // 빈 배열이면 모든 시리즈를 기본으로 사용 (기존 계정 호환)
+      const seriesToRender = (!approvedSeries || approvedSeries.length === 0)
+        ? ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal']
+        : approvedSeries;
+
+      let html = '';
+      // approvedSeries 배열에 있는 시리즈만 렌더링
+      seriesToRender.forEach(seriesKey => {
+        const series = SERIES_MAP[seriesKey];
+        if (series) {
+          html += `
+            <div class="checkbox-item">
+              <input type="checkbox" id="${series.id}" value="${series.value}" />
+              <label for="${series.id}">
+                <span class="series-name">${series.name}</span>
+                <span class="series-desc">${series.desc}</span>
+              </label>
+            </div>
+          `;
+        }
+      });
+
+      if (html === '') {
+        container.innerHTML = `
+          <div style="color: #dc2626; text-align: center; padding: 20px;">
+            승인된 시리즈가 없습니다.<br>
+            <span style="font-size: 13px; color: #999;">본사에 시리즈 승인을 요청해 주세요.</span>
+          </div>
+        `;
+      } else {
+        container.innerHTML = html;
+      }
     }
 
     // ===== PIN 모달 관련 함수 =====
@@ -1482,7 +1499,7 @@
 
       // 선택된 시리즈 수집
       const selectedSeries = [];
-      document.querySelectorAll('#series-modal input[type="checkbox"]:checked').forEach(cb => {
+      document.querySelectorAll('#series-checkbox-list input[type="checkbox"]:checked').forEach(cb => {
         selectedSeries.push(cb.value);
       });
 
