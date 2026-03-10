@@ -272,7 +272,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '국민이 직접 대통령을 뽑는 선거 방식을 (        )라고 해요.', answer: '직선제', initials: 'ㅈㅅㅈ', aliases: ['직선제'] },
         { no: 6, text: '지역 주민이 지역 행정을 스스로 결정하는 제도를 (          )라고 해요.', answer: '지방자치제', initials: 'ㅈㅂㅈㅊㅈ', aliases: ['지방자치제'] },
         { no: 7, text: '사회 문제 해결을 위해 시민들이 자발적으로 만든 단체를 (        )라고 해요.', answer: '시민 단체', initials: 'ㅅㅁ ㄷㅊ', aliases: ['시민단체','시민 단체'] },
-        { no: 8, text: '개인이 의견을 자유롭게 말하고 전달할 권리를 (            )라고 해요.', answer: '표현·언론의 자유', initials: 'ㅍㅎ ㅇㄹㅇ ㅈㅇ', aliases: ['표현의 자유','언론의 자유','표현·언론의 자유'] }
+        { no: 8, text: '개인이 의견을 자유롭게 말하고 전달할 권리를 표현·언론의 (    )라고 해요.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] }
       ]
     },
     quiz: {

@@ -3327,17 +3327,14 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
         doc: { $first: "$$ROOT" }  // 각 phone별 최신 1개만
       }},
       { $replaceRoot: { newRoot: "$doc" } },
-      { $sort: { academyName: 1, name: 1 } }
+      { $sort: { createdAt: -1 } }  // 가입일 기준 최신순 (기본 정렬)
     ]);
 
-    // 정렬: 미설정(contractType 없음)이 맨 위로
+    // 가입일 기준 최신순 정렬 (기본값)
     const admins = adminsRaw.sort((a, b) => {
-      const aNoContract = !a.contractType || a.contractType === '';
-      const bNoContract = !b.contractType || b.contractType === '';
-      if (aNoContract && !bNoContract) return -1;
-      if (!aNoContract && bNoContract) return 1;
-      // 둘 다 미설정이거나 둘 다 설정된 경우 academyName, name 순
-      return (a.academyName || '').localeCompare(b.academyName || '') || (a.name || '').localeCompare(b.name || '');
+      const aDate = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const bDate = b.createdAt ? new Date(b.createdAt) : new Date(0);
+      return bDate - aDate;  // 최신순
     });
 
     let html = `
@@ -3740,20 +3737,106 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
             if (e.target === this) closeAddModal();
           });
 
-          // 테이블 검색 필터
+          // 정렬 상태 변수
+          let contractSortAsc = null;  // null: 기본, true: 오름차순, false: 내림차순
+          let createdSortAsc = false;  // 기본: 최신순(내림차순)
+
+          // 테이블 검색 및 유형 필터
           function filterTable() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const typeFilter = document.getElementById('contractTypeFilter').value;
             const rows = document.querySelectorAll('table tbody tr');
             rows.forEach(row => {
               const academyName = row.cells[1]?.textContent.toLowerCase() || '';
               const name = row.cells[2]?.textContent.toLowerCase() || '';
               const phone = row.cells[3]?.textContent.toLowerCase() || '';
-              if (academyName.includes(query) || name.includes(query) || phone.includes(query)) {
+              const contractSelect = row.cells[4]?.querySelector('select');
+              const contractType = contractSelect ? contractSelect.value : '';
+
+              // 검색 조건
+              const matchesQuery = !query || academyName.includes(query) || name.includes(query) || phone.includes(query);
+
+              // 유형 필터 조건
+              let matchesType = true;
+              if (typeFilter === 'franchise') {
+                matchesType = contractType === 'franchise';
+              } else if (typeFilter === 'subscription') {
+                matchesType = contractType === 'subscription';
+              } else if (typeFilter === 'none') {
+                matchesType = !contractType || contractType === '';
+              }
+
+              if (matchesQuery && matchesType) {
                 row.style.display = '';
               } else {
                 row.style.display = 'none';
               }
             });
+          }
+
+          // 계약일 기준 정렬
+          function sortByContractDate() {
+            const tbody = document.querySelector('table tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            contractSortAsc = contractSortAsc === null ? false : !contractSortAsc;
+            createdSortAsc = null;
+
+            rows.sort((a, b) => {
+              const aDate = a.cells[5]?.textContent.trim() || '';
+              const bDate = b.cells[5]?.textContent.trim() || '';
+              const aTime = aDate === '-' ? 0 : new Date(aDate.replace(/\\./g, '-')).getTime();
+              const bTime = bDate === '-' ? 0 : new Date(bDate.replace(/\\./g, '-')).getTime();
+              return contractSortAsc ? aTime - bTime : bTime - aTime;
+            });
+
+            rows.forEach((row, idx) => {
+              row.cells[0].textContent = idx + 1;
+              tbody.appendChild(row);
+            });
+
+            // 아이콘 업데이트
+            document.getElementById('contractSortIcon').textContent = contractSortAsc ? '▲' : '▼';
+            document.getElementById('createdSortIcon').textContent = '↕';
+          }
+
+          // 한국어 날짜 문자열을 Date로 파싱 (예: "2026. 3. 10. 오후 6:52:09")
+          function parseKoreanDate(str) {
+            if (!str || str === '-') return 0;
+            // "2026. 3. 10. 오후 6:52:09" 형태 파싱
+            const match = str.match(/(\\d+)\\.\\s*(\\d+)\\.\\s*(\\d+)\\.\\s*(오전|오후)?\\s*(\\d+):(\\d+):(\\d+)/);
+            if (!match) return 0;
+            let [, year, month, day, ampm, hour, min, sec] = match;
+            hour = parseInt(hour);
+            if (ampm === '오후' && hour < 12) hour += 12;
+            if (ampm === '오전' && hour === 12) hour = 0;
+            return new Date(year, month - 1, day, hour, min, sec).getTime();
+          }
+
+          // 가입일 기준 정렬
+          function sortByCreatedAt() {
+            const tbody = document.querySelector('table tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            createdSortAsc = createdSortAsc === null ? false : !createdSortAsc;
+            contractSortAsc = null;
+
+            rows.sort((a, b) => {
+              const aDate = a.cells[8]?.textContent.trim() || '';
+              const bDate = b.cells[8]?.textContent.trim() || '';
+              const aTime = parseKoreanDate(aDate);
+              const bTime = parseKoreanDate(bDate);
+              return createdSortAsc ? aTime - bTime : bTime - aTime;
+            });
+
+            rows.forEach((row, idx) => {
+              row.cells[0].textContent = idx + 1;
+              tbody.appendChild(row);
+            });
+
+            // 아이콘 업데이트
+            document.getElementById('createdSortIcon').textContent = createdSortAsc ? '▲' : '▼';
+            document.getElementById('contractSortIcon').textContent = '↕';
           }
 
           // 계약구분 변경
@@ -3836,11 +3919,20 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
               총 <strong>${admins.length}</strong>개의 학원 선생님 계정이 있습니다.
             </p>
           </div>
-          <div style="position: relative;">
-            <input type="text" id="searchInput" placeholder="학원명, 이름, 전화번호 검색..."
-              style="padding: 10px 14px 10px 36px; border: 2px solid var(--line); border-radius: 10px; font-size: 14px; width: 260px; outline: none; transition: border-color 0.2s;"
-              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--line)'" oninput="filterTable()">
-            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light);">🔍</span>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <select id="contractTypeFilter" onchange="filterTable()"
+              style="padding: 10px 14px; border: 2px solid var(--line); border-radius: 10px; font-size: 14px; outline: none; cursor: pointer;">
+              <option value="">전체 유형</option>
+              <option value="franchise">가맹형</option>
+              <option value="subscription">구독형</option>
+              <option value="none">미설정</option>
+            </select>
+            <div style="position: relative;">
+              <input type="text" id="searchInput" placeholder="학원명, 이름, 전화번호 검색..."
+                style="padding: 10px 14px 10px 36px; border: 2px solid var(--line); border-radius: 10px; font-size: 14px; width: 260px; outline: none; transition: border-color 0.2s;"
+                onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--line)'" oninput="filterTable()">
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light);">🔍</span>
+            </div>
           </div>
         </div>
 
@@ -3860,10 +3952,10 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
                 <th>이름</th>
                 <th>전화번호(ID)</th>
                 <th>계약구분</th>
-                <th>계약일</th>
+                <th style="cursor: pointer;" onclick="sortByContractDate()" title="클릭하여 계약일 기준 정렬">계약일 <span id="contractSortIcon">↕</span></th>
                 <th>상태</th>
                 <th>시리즈</th>
-                <th>가입일</th>
+                <th style="cursor: pointer;" onclick="sortByCreatedAt()" title="클릭하여 가입일 기준 정렬">가입일 <span id="createdSortIcon">▼</span></th>
                 <th>마지막 로그인</th>
                 <th>수정</th>
                 <th>삭제</th>
