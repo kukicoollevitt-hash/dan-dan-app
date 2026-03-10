@@ -200,6 +200,43 @@
       transform: scale(1.05);
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
+    /* 중간평가 상태 배지 */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-badge.completed {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+    }
+    .status-badge.pending {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff;
+    }
+    .score-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .score-badge.pass {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+    .score-badge.fail {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #fff;
+    }
+    .score-badge:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
     /* 모달 스타일 */
     .modal-overlay {
       position: fixed;
@@ -483,6 +520,52 @@
       </div>
       <button id="behaviorLoadMoreBtn" class="load-more-btn" style="display:none;" onclick="loadMoreBehaviorData()">더보기</button>
     </div>
+
+    <!-- 중간평가 AI 데이터 관리 섹션 -->
+    <div class="section-divider">
+      <header style="margin-bottom: 30px;">
+        <div>
+          <div class="title-main" style="font-size: 24px;">📊 중간평가 AI 데이터 관리</div>
+          <div class="title-sub">
+            학생들의 중간평가 결과를 확인합니다. (관문 10 완료 후 도전, 90점 이상 통과)
+          </div>
+        </div>
+      </header>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-box">
+            <input type="text" id="midtermSearchInput" placeholder="이름으로 검색..." />
+          </div>
+          <div class="count-info">
+            전체: <strong id="midtermTotalCount">0</strong>명
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>번호</th>
+              <th>학년</th>
+              <th>이름</th>
+              <th>학교</th>
+              <th>최고관문</th>
+              <th>상태</th>
+              <th>점수</th>
+              <th>완료일시</th>
+            </tr>
+          </thead>
+          <tbody id="midtermTableBody">
+            <tr>
+              <td colspan="8" class="loading">데이터를 불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button id="midtermLoadMoreBtn" class="load-more-btn" style="display:none;" onclick="loadMoreMidtermData()">더보기</button>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -526,6 +609,19 @@
     </div>
   </div>
 
+  <!-- 중간평가 결과 모달 -->
+  <div class="modal-overlay" id="midtermResultModal" onclick="closeMidtermModal(event)">
+    <div class="modal-content" style="max-width: 500px; background: linear-gradient(135deg, #fefefe 0%, #f8f9ff 100%);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px 20px 0 0;">
+        <h3 class="modal-title" style="color: #fff;">📊 중간평가 결과</h3>
+        <button class="modal-close" onclick="closeMidtermModal()" style="color: #fff;">&times;</button>
+      </div>
+      <div class="modal-body" id="midtermResultBody">
+        <div class="loading">데이터를 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // 관문학습 데이터
     let gateAllData = [];
@@ -537,6 +633,11 @@
     let behaviorFilteredData = [];
     let behaviorDisplayCount = 10;
     let subjectAverages = {}; // 과목별 평균 소요시간
+
+    // 중간평가 데이터
+    let midtermAllData = [];
+    let midtermFilteredData = [];
+    let midtermDisplayCount = 10;
 
     // 단원명에서 과목코드 추출 (on_chem_04 → chem)
     function getSubjectCode(unitName) {
@@ -580,6 +681,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadGateData();
       loadBehaviorData();
+      loadMidtermData();
       setupSearchListeners();
     });
 
@@ -729,6 +831,91 @@
       }
     }
 
+    // 중간평가 데이터 로드
+    async function loadMidtermData() {
+      try {
+        const res = await fetch('/api/academy/midterm-pending');
+        const result = await res.json();
+
+        if (result.ok) {
+          midtermAllData = result.data;
+          // 정렬: 완료가 위로, 완료일시 최신이 위로
+          midtermAllData.sort((a, b) => {
+            // 1순위: 완료 상태 (completed가 위로)
+            if (a.midtermStatus === 'completed' && b.midtermStatus !== 'completed') return -1;
+            if (a.midtermStatus !== 'completed' && b.midtermStatus === 'completed') return 1;
+            // 2순위: 완료일시 내림차순 (최신이 위로)
+            const dateA = a.midtermCompletedAt ? new Date(a.midtermCompletedAt) : new Date(0);
+            const dateB = b.midtermCompletedAt ? new Date(b.midtermCompletedAt) : new Date(0);
+            return dateB - dateA;
+          });
+          midtermFilteredData = [...midtermAllData];
+          renderMidtermTable();
+          updateMidtermCounts();
+        } else {
+          showToast('중간평가 데이터를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('서버 오류가 발생했습니다.');
+      }
+    }
+
+    // 중간평가 테이블 렌더링
+    function renderMidtermTable() {
+      const tbody = document.getElementById('midtermTableBody');
+
+      if (midtermFilteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data">중간평가 대상 학생이 없습니다.</td></tr>';
+        document.getElementById('midtermLoadMoreBtn').style.display = 'none';
+        return;
+      }
+
+      const displayData = midtermFilteredData.slice(0, midtermDisplayCount);
+
+      tbody.innerHTML = displayData.map((item, index) => {
+        const completedDate = item.midtermCompletedAt ? new Date(item.midtermCompletedAt).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '-';
+
+        const statusBadge = item.midtermStatus === 'completed'
+          ? '<span class="status-badge completed">완료</span>'
+          : '<span class="status-badge pending">대기중</span>';
+
+        let scoreBadge = '-';
+        if (item.midtermScore !== null && item.midtermScore !== undefined) {
+          const passed = item.midtermPassed;
+          scoreBadge = `<span class="score-badge ${passed ? 'pass' : 'fail'}" onclick="showMidtermResult(${index})">${item.midtermScore}점</span>`;
+        }
+
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${item.grade || '-'}</td>
+            <td>${item.name || '-'}</td>
+            <td>${item.school || '-'}</td>
+            <td><span class="gate-badge">관문 ${item.maxGate}</span></td>
+            <td>${statusBadge}</td>
+            <td>${scoreBadge}</td>
+            <td class="date-cell">${completedDate}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 더보기 버튼
+      const loadMoreBtn = document.getElementById('midtermLoadMoreBtn');
+      if (midtermDisplayCount < midtermFilteredData.length) {
+        loadMoreBtn.style.display = 'block';
+        loadMoreBtn.textContent = `더보기 (${midtermDisplayCount}/${midtermFilteredData.length})`;
+      } else {
+        loadMoreBtn.style.display = 'none';
+      }
+    }
+
     // 더보기 함수들
     function loadMoreGateData() {
       gateDisplayCount += 10;
@@ -740,6 +927,11 @@
       renderBehaviorTable();
     }
 
+    function loadMoreMidtermData() {
+      midtermDisplayCount += 10;
+      renderMidtermTable();
+    }
+
     // 카운트 업데이트
     function updateGateCounts() {
       document.getElementById('gateTotalCount').textContent = gateFilteredData.length;
@@ -747,6 +939,10 @@
 
     function updateBehaviorCounts() {
       document.getElementById('behaviorTotalCount').textContent = behaviorFilteredData.length;
+    }
+
+    function updateMidtermCounts() {
+      document.getElementById('midtermTotalCount').textContent = midtermFilteredData.length;
     }
 
     // 검색 리스너
@@ -783,6 +979,22 @@
         behaviorDisplayCount = 10;
         renderBehaviorTable();
         updateBehaviorCounts();
+      });
+
+      // 중간평가 검색
+      const midtermSearchInput = document.getElementById('midtermSearchInput');
+      midtermSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (query) {
+          midtermFilteredData = midtermAllData.filter(item =>
+            (item.name || '').toLowerCase().includes(query)
+          );
+        } else {
+          midtermFilteredData = [...midtermAllData];
+        }
+        midtermDisplayCount = 10;
+        renderMidtermTable();
+        updateMidtermCounts();
       });
     }
 
@@ -1214,8 +1426,92 @@
         closeParagraphModal();
         closeProblemModal();
         closeGateModal();
+        closeMidtermModal();
       }
     });
+
+    // 중간평가 결과 모달 표시
+    function showMidtermResult(index) {
+      const item = midtermFilteredData[index];
+      if (!item || item.midtermScore === null) return;
+
+      const modal = document.getElementById('midtermResultModal');
+      const body = document.getElementById('midtermResultBody');
+      const latestScore = item.midtermScore;
+      const passed = item.midtermPassed;
+      const history = item.midtermHistory || [];
+
+      // 스테이지 진행 상태 (1-8)
+      let stageCircles = '';
+      for (let i = 1; i <= 8; i++) {
+        if (i === 1 && passed) {
+          stageCircles += `<div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">✓</div>`;
+        } else if (i === 1) {
+          stageCircles += `<div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">1</div>`;
+        } else {
+          stageCircles += `<div style="width: 36px; height: 36px; border-radius: 50%; background: #e5e7eb; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">${i}</div>`;
+        }
+      }
+
+      // 성장 그래프 (시도 이력)
+      let chartBars = '';
+      if (history.length > 0) {
+        chartBars = history.map((h, idx) => {
+          const barHeight = h.score * 1.2;
+          const barColor = h.passed ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+          return `
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+              <div style="font-size: 11px; font-weight: 600; color: ${h.passed ? '#059669' : '#dc2626'};">${h.score}</div>
+              <div style="width: 32px; height: ${barHeight}px; background: ${barColor}; border-radius: 4px 4px 0 0;"></div>
+              <div style="font-size: 10px; color: #6b7280;">${h.label}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      body.innerHTML = `
+        <div style="text-align: center; padding: 20px 0;">
+          <!-- 결과 점수 -->
+          <div style="font-size: 64px; font-weight: 800; background: ${passed ? 'linear-gradient(135deg, #667eea, #764ba2)' : 'linear-gradient(135deg, #ef4444, #dc2626)'}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">
+            ${latestScore}점
+          </div>
+          <div style="font-size: 18px; font-weight: 600; color: ${passed ? '#059669' : '#dc2626'}; margin-bottom: 24px;">
+            ${passed ? '🎉 통과! 축하합니다!' : '😢 아쉬워요, 다시 도전하세요!'}
+          </div>
+
+          <!-- 스테이지 진행 -->
+          <div style="margin-bottom: 24px;">
+            <div style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 12px;">📍 스테이지 진행</div>
+            <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+              ${stageCircles}
+            </div>
+          </div>
+
+          <!-- 성장 그래프 -->
+          ${history.length > 0 ? `
+            <div style="margin-top: 24px; padding: 20px; background: #f9fafb; border-radius: 12px;">
+              <div style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 16px;">📈 성장 그래프</div>
+              <div style="display: flex; justify-content: center; align-items: flex-end; gap: 12px; min-height: 140px;">
+                ${chartBars}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- 학생 정보 -->
+          <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #6b7280;">
+            ${item.grade} ${item.name} (${item.school || '-'})
+          </div>
+        </div>
+      `;
+
+      modal.classList.add('show');
+    }
+
+    // 중간평가 모달 닫기
+    function closeMidtermModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('midtermResultModal').classList.remove('show');
+    }
   </script>
 </body>
 </html>

@@ -1545,6 +1545,88 @@ app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) =
   }
 });
 
+// ✅ 학원용 중간평가 대상 학생 조회 API
+app.get("/api/academy/midterm-pending", requireAdminLogin, async (req, res) => {
+  try {
+    const academyName = req.session.admin?.academyName;
+    if (!academyName) {
+      return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
+    }
+
+    // 해당 학원 학생 목록 조회
+    const academyUsers = await User.find({ academyName }).select('grade name school').lean();
+    const studentKeys = new Set(academyUsers.map(u => `${u.grade}||${u.name}`));
+    const studentMap = {};
+    academyUsers.forEach(u => { studentMap[`${u.grade}||${u.name}`] = u; });
+
+    // 10관문 이상 통과한 학생들 조회
+    const gatePasses = await GatePass.aggregate([
+      { $group: { _id: { grade: "$grade", name: "$name" }, maxGate: { $max: "$gate" }, gates: { $push: "$gate" } } },
+      { $match: { maxGate: { $gte: 10 } } }
+    ]);
+
+    const pendingStudents = [];
+
+    for (const student of gatePasses) {
+      const { grade, name } = student._id;
+      const key = `${grade}||${name}`;
+
+      // 해당 학원 학생만 필터링
+      if (!studentKeys.has(key)) continue;
+
+      const gates = student.gates.sort((a, b) => a - b);
+
+      // 1~10 관문 모두 통과했는지 확인
+      let hasAll10 = true;
+      for (let i = 1; i <= 10; i++) {
+        if (!gates.includes(i)) { hasAll10 = false; break; }
+      }
+
+      if (!hasAll10) continue;
+
+      const userInfo = studentMap[key];
+
+      // 중간평가 모든 시도 이력 조회 (최신순)
+      const midtermEvals = await MidtermEval.find({ grade, name, stage: 1 })
+        .sort({ completedAt: -1 }).lean();
+
+      const latestEval = midtermEvals.length > 0 ? midtermEvals[0] : null;
+      const hasPassed = midtermEvals.some(e => e.score >= 90);
+
+      // 모든 시도 이력 (성장 그래프용)
+      const history = midtermEvals.reverse().map((e, idx) => ({
+        stage: e.stage,
+        attemptNumber: e.attemptNumber || (idx + 1),
+        passed: e.passed !== undefined ? e.passed : (e.score >= 90),
+        score: e.score,
+        completedAt: e.completedAt,
+        label: `S${e.stage}-${e.attemptNumber || (idx + 1)}`
+      }));
+
+      pendingStudents.push({
+        grade,
+        name,
+        school: userInfo?.school || '-',
+        academyName: academyName,
+        maxGate: student.maxGate,
+        midtermStatus: latestEval ? 'completed' : 'pending',
+        midtermPassed: hasPassed,
+        midtermScore: latestEval?.score || null,
+        midtermCompletedAt: latestEval?.completedAt || null,
+        midtermHistory: history
+      });
+    }
+
+    console.log(`[academy/midterm-pending] ${academyName} 중간평가 대상: ${pendingStudents.length}명`);
+
+    res.json({ ok: true, data: pendingStudents });
+
+  } catch (err) {
+    console.error("[academy/midterm-pending] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
 // ✅ 슈퍼관리자: 학원용 형성평가 관문 AI 관리
 app.get("/super/academy-gate-pass-management", requireSuperAdmin, (req, res) => {
   console.log("✅ [GET] /super/academy-gate-pass-management");
@@ -16754,6 +16836,19 @@ app.get("/my-learning", async (req, res) => {
         </div>
       </div>
 
+      <!-- 중간평가 상세 모달 -->
+      <div id="midtermDetailModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#fff; border-radius:20px; width:90%; max-width:600px; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+          <div style="padding:24px 28px; border-bottom:1px solid #e9ecef; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h3 id="midtermModalTitle" style="font-size:20px; font-weight:700; color:#fff; margin:0;">중간평가 상세 정보</h3>
+            <button onclick="closeMidtermDetailModal()" style="width:36px; height:36px; border:none; background:rgba(255,255,255,0.2); border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#fff;">&times;</button>
+          </div>
+          <div id="midtermModalBody" style="padding:28px;">
+            <div style="text-align:center; padding:40px; color:#495057;">데이터를 불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
       <script>
@@ -16857,6 +16952,108 @@ app.get("/my-learning", async (req, res) => {
           document.getElementById('gateDetailModal').style.display = 'none';
         }
 
+        // ===== 중간평가 상세 모달 함수 =====
+        async function showMidtermDetailModal(stage, attemptNumber) {
+          const modal = document.getElementById('midtermDetailModal');
+          const modalTitle = document.getElementById('midtermModalTitle');
+          const modalBody = document.getElementById('midtermModalBody');
+
+          const grade = '${grade}';
+          const name = '${name}';
+
+          modalTitle.textContent = '중간평가 단계 ' + stage + ' 결과';
+          modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#495057;">데이터를 불러오는 중...</div>';
+          modal.style.display = 'flex';
+
+          try {
+            const res = await fetch('/api/midterm/history?grade=' + encodeURIComponent(grade) + '&name=' + encodeURIComponent(name));
+            const result = await res.json();
+
+            if (result.ok) {
+              renderMidtermDetailModal(result.history, stage, attemptNumber);
+            } else {
+              modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#868e96;">데이터를 불러오는데 실패했습니다.</div>';
+            }
+          } catch (err) {
+            console.error('중간평가 상세 조회 오류:', err);
+            modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#868e96;">서버 오류가 발생했습니다.</div>';
+          }
+        }
+
+        function renderMidtermDetailModal(history, targetStage, targetAttempt) {
+          const modalBody = document.getElementById('midtermModalBody');
+
+          if (!history || history.length === 0) {
+            modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#868e96;">중간평가 기록이 없습니다.</div>';
+            return;
+          }
+
+          // 특정 시도 찾기
+          const targetRecord = history.find(h => h.stage === targetStage && h.attemptNumber === targetAttempt);
+          if (!targetRecord) {
+            modalBody.innerHTML = '<div style="text-align:center; padding:40px; color:#868e96;">해당 기록을 찾을 수 없습니다.</div>';
+            return;
+          }
+
+          const completedDate = targetRecord.completedAt ? new Date(targetRecord.completedAt).toLocaleDateString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+          }) : '-';
+
+          const passedText = targetRecord.passed ? '통과' : '미통과';
+          const passedColor = targetRecord.passed ? '#28a745' : '#dc3545';
+          const passedBg = targetRecord.passed ? '#d4edda' : '#f8d7da';
+
+          // 단계 진행 상태 (1-8)
+          let stageCirclesHtml = '<div style="display:flex; justify-content:center; gap:8px; margin-top:12px;">';
+          for (let i = 1; i <= 8; i++) {
+            const stageRecords = history.filter(h => h.stage === i && h.passed);
+            const isPassed = stageRecords.length > 0;
+            const isCurrent = i === targetStage;
+            const circleBg = isPassed ? '#28a745' : (isCurrent ? '#ffc107' : '#e9ecef');
+            const circleColor = isPassed ? '#fff' : (isCurrent ? '#212529' : '#868e96');
+            const circleBorder = isCurrent ? '3px solid #212529' : 'none';
+            stageCirclesHtml += '<div style="width:32px; height:32px; border-radius:50%; background:' + circleBg + '; color:' + circleColor + '; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; border:' + circleBorder + ';">' + (isPassed ? '✓' : i) + '</div>';
+          }
+          stageCirclesHtml += '</div>';
+
+          // 성장 그래프 데이터 (최근 8개 시도)
+          const recentHistory = history.slice(-8);
+          let growthBarsHtml = '';
+          if (recentHistory.length > 0) {
+            growthBarsHtml = '<div style="margin-top:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px;">📈 점수 추이</div><div style="display:flex; align-items:end; justify-content:space-around; height:120px; background:#f8f9fa; border-radius:12px; padding:12px 8px;">';
+            recentHistory.forEach(h => {
+              const barHeight = Math.max(h.score * 1.0, 10);
+              const barColor = h.passed ? '#28a745' : '#dc3545';
+              const isTarget = h.stage === targetStage && h.attemptNumber === targetAttempt;
+              const barBorder = isTarget ? '3px solid #212529' : 'none';
+              growthBarsHtml += '<div style="text-align:center;"><div style="width:28px; height:' + barHeight + 'px; background:' + barColor + '; border-radius:4px 4px 0 0; margin:0 auto; border:' + barBorder + ';"></div><div style="font-size:10px; color:#868e96; margin-top:4px;">' + h.label + '</div><div style="font-size:11px; font-weight:600; color:#495057;">' + h.score + '</div></div>';
+            });
+            growthBarsHtml += '</div></div>';
+          }
+
+          // 해당 단계의 모든 시도 목록
+          const stageAttempts = history.filter(h => h.stage === targetStage);
+          let attemptsListHtml = '';
+          if (stageAttempts.length > 0) {
+            attemptsListHtml = '<div style="margin-top:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px;">🔄 단계 ' + targetStage + ' 시도 기록</div><div style="background:#f8f9fa; border-radius:12px; padding:12px;">';
+            stageAttempts.forEach((a, idx) => {
+              const attemptDate = a.completedAt ? new Date(a.completedAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+              const attemptBg = a.passed ? '#d4edda' : '#f8d7da';
+              const attemptColor = a.passed ? '#155724' : '#721c24';
+              const isCurrentAttempt = a.attemptNumber === targetAttempt;
+              const currentBorder = isCurrentAttempt ? '2px solid #212529' : '1px solid transparent';
+              attemptsListHtml += '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:' + attemptBg + '; border-radius:8px; margin-bottom:' + (idx < stageAttempts.length - 1 ? '8px' : '0') + '; border:' + currentBorder + ';"><span style="font-weight:600; color:' + attemptColor + ';">시도 ' + a.attemptNumber + '</span><span style="color:' + attemptColor + ';">' + a.score + '점</span><span style="font-size:12px; color:#868e96;">' + attemptDate + '</span></div>';
+            });
+            attemptsListHtml += '</div></div>';
+          }
+
+          modalBody.innerHTML = '<div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #e9ecef;">결과 요약</div><div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;"><div style="background:' + passedBg + '; border-radius:12px; padding:16px; text-align:center;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">결과</div><div style="font-size:20px; font-weight:700; color:' + passedColor + ';">' + passedText + '</div></div><div style="background:#f8f9fa; border-radius:12px; padding:16px; text-align:center;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">점수</div><div style="font-size:20px; font-weight:700; color:#212529;">' + targetRecord.score + '점</div></div><div style="background:#f8f9fa; border-radius:12px; padding:16px; text-align:center;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">단계</div><div style="font-size:20px; font-weight:700; color:#212529;">' + targetStage + '단계</div></div><div style="background:#f8f9fa; border-radius:12px; padding:16px; text-align:center;"><div style="font-size:12px; color:#868e96; margin-bottom:4px;">시도</div><div style="font-size:20px; font-weight:700; color:#212529;">' + targetAttempt + '회차</div></div></div></div><div style="margin-bottom:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px;">🏆 단계 진행 현황</div>' + stageCirclesHtml + '</div>' + growthBarsHtml + attemptsListHtml + '<div style="margin-top:24px;"><div style="font-size:14px; font-weight:600; color:#495057; margin-bottom:12px;">📅 완료 시각</div><div style="background:#f8f9fa; border-radius:12px; padding:16px; text-align:center;"><div style="font-size:16px; font-weight:600; color:#212529;">' + completedDate + '</div></div></div>';
+        }
+
+        function closeMidtermDetailModal() {
+          document.getElementById('midtermDetailModal').style.display = 'none';
+        }
+
         // 문제 상세 보기 팝업
         async function showQuestionDetail(unitCode, qType, questionNo) {
           if (!unitCode) {
@@ -16916,6 +17113,12 @@ app.get("/my-learning", async (req, res) => {
         document.getElementById('gateDetailModal').addEventListener('click', function(e) {
           if (e.target.id === 'gateDetailModal') {
             closeGateDetailModal();
+          }
+        });
+
+        document.getElementById('midtermDetailModal').addEventListener('click', function(e) {
+          if (e.target.id === 'midtermDetailModal') {
+            closeMidtermDetailModal();
           }
         });
 
@@ -19482,22 +19685,6 @@ app.get("/my-learning", async (req, res) => {
 
           if (!tableContainer || !radarWrap) return;
 
-          if (weeklyLogs.length === 0) {
-            tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#333; padding:20px; font-size:14px;">해당 주간의 학습 기록이 없습니다.</div>';
-            radarWrap.innerHTML = '<div class="no-data-message" style="width:100%; text-align:center; color:#fff; padding:30px; font-size:14px;">해당 주간의 학습 기록이 없습니다.</div>';
-            // 다른 섹션 타이틀도 주간으로 변경
-            updateWeeklySectionTitles(weekStart, weekEnd);
-            // 지수 추이 그래프도 주간 데이터로 업데이트
-            if (typeof window.updateIndexTrendChart === 'function') window.updateIndexTrendChart();
-            // 과목 평균 평점 그래프도 주간 데이터로 업데이트
-            if (typeof window.updateSubjectBarChart === 'function') window.updateSubjectBarChart();
-            // 어휘 점수 그래프도 주간 데이터로 업데이트
-            if (typeof renderVocabScoreChart === 'function') renderVocabScoreChart();
-            // 창의활동 내역도 주간 데이터로 업데이트
-            if (typeof renderCreativeTable === 'function') renderCreativeTable();
-            return;
-          }
-
           // 과목 매핑
           const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
 
@@ -19552,6 +19739,43 @@ app.get("/my-learning", async (req, res) => {
           const gatesByDate = {};
           weeklyGatePasses.forEach(item => { gatesByDate[item.date] = item.gates; });
 
+          // 주간 기간 동안의 중간평가 데이터 가져오기
+          let weeklyMidterms = [];
+          try {
+            const midtermPromises = weekDates.map(dateStr =>
+              fetch('/api/midterm/passed-by-date?grade=' + encodeURIComponent(studentGrade) + '&name=' + encodeURIComponent(studentName) + '&date=' + dateStr)
+                .then(res => res.json())
+                .then(data => ({ date: dateStr, midterms: data.ok && data.data ? data.data : [] }))
+            );
+            weeklyMidterms = await Promise.all(midtermPromises);
+          } catch (err) {
+            console.error('주간 중간평가 데이터 조회 실패:', err);
+          }
+          // 날짜별 중간평가 데이터 맵
+          const midtermsByDate = {};
+          weeklyMidterms.forEach(item => { midtermsByDate[item.date] = item.midterms; });
+
+          // 전체 기록 수 계산 (학습기록 + 관문 + 중간평가)
+          const totalGates = Object.values(gatesByDate).reduce((sum, arr) => sum + arr.length, 0);
+          const totalMidterms = Object.values(midtermsByDate).reduce((sum, arr) => sum + arr.length, 0);
+          const hasAnyRecords = weeklyLogs.length > 0 || totalGates > 0 || totalMidterms > 0;
+
+          if (!hasAnyRecords) {
+            tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#333; padding:20px; font-size:14px;">해당 주간의 학습 기록이 없습니다.</div>';
+            radarWrap.innerHTML = '<div class="no-data-message" style="width:100%; text-align:center; color:#fff; padding:30px; font-size:14px;">해당 주간의 학습 기록이 없습니다.</div>';
+            // 다른 섹션 타이틀도 주간으로 변경
+            updateWeeklySectionTitles(weekStart, weekEnd);
+            // 지수 추이 그래프도 주간 데이터로 업데이트
+            if (typeof window.updateIndexTrendChart === 'function') window.updateIndexTrendChart();
+            // 과목 평균 평점 그래프도 주간 데이터로 업데이트
+            if (typeof window.updateSubjectBarChart === 'function') window.updateSubjectBarChart();
+            // 어휘 점수 그래프도 주간 데이터로 업데이트
+            if (typeof renderVocabScoreChart === 'function') renderVocabScoreChart();
+            // 창의활동 내역도 주간 데이터로 업데이트
+            if (typeof renderCreativeTable === 'function') renderCreativeTable();
+            return;
+          }
+
           // 요일 이름
           const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -19561,16 +19785,17 @@ app.get("/my-learning", async (req, res) => {
           weekDates.forEach((dateStr, dayIdx) => {
             const dayLogs = logsByDate[dateStr];
             const dayGates = gatesByDate[dateStr] || [];
+            const dayMidterms = midtermsByDate[dateStr] || [];
 
-            // 학습 기록과 관문 모두 없는 날은 스킵
-            if (dayLogs.length === 0 && dayGates.length === 0) return;
+            // 학습 기록, 관문, 중간평가 모두 없는 날은 스킵
+            if (dayLogs.length === 0 && dayGates.length === 0 && dayMidterms.length === 0) return;
 
             const dateObj = new Date(dateStr + 'T00:00:00');
             const dayName = dayNames[dateObj.getDay()];
             const displayDate = (dateObj.getMonth() + 1) + '/' + dateObj.getDate() + ' (' + dayName + ')';
 
             // 날짜 헤더 (흰색 배경, 검은 글씨)
-            const totalCount = dayLogs.length + dayGates.length;
+            const totalCount = dayLogs.length + dayGates.length + dayMidterms.length;
             tableHtml += '<div class="weekly-day-header" style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%); padding: 12px 16px; margin-top: ' + (displayedCount === 0 ? '0' : '15px') + '; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.08); border-bottom: none;">';
             tableHtml += '<span style="color: #333; font-weight: 700; font-size: 15px;">📅 ' + displayDate + '</span>';
             tableHtml += '<span style="color: #667eea; font-size: 13px; font-weight: 600;">' + totalCount + '건</span>';
@@ -19713,6 +19938,28 @@ app.get("/my-learning", async (req, res) => {
                   tableHtml += '<td style="font-weight:700; color:#78350f;">관문 ' + gateInfo.gate + ' 통과</td>';
                   tableHtml += '<td><span class="badge" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff;">통과</span></td>';
                   tableHtml += '<td style="color:#92400e;">' + passedTime + '</td>';
+                  tableHtml += '<td></td>';
+                  tableHtml += '<td></td>';
+                  tableHtml += '</tr>';
+                });
+              }
+
+              // 해당 날짜의 중간평가 기록 추가
+              if (dayMidterms.length > 0) {
+                dayMidterms.forEach((midtermInfo) => {
+                  const completedTime = midtermInfo.completedAt ? new Date(midtermInfo.completedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+                  const stageText = '단계 ' + midtermInfo.stage;
+                  const passedText = midtermInfo.passed ? '통과' : '미통과';
+                  const badgeStyle = midtermInfo.passed ? 'background:linear-gradient(135deg,#667eea,#764ba2); color:#fff;' : 'background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;';
+                  const rowBgStyle = midtermInfo.passed ? 'background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);' : 'background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);';
+                  const scoreText = midtermInfo.score + '점';
+
+                  tableHtml += '<tr class="midterm-row" style="' + rowBgStyle + ' cursor: pointer;" onclick="showMidtermDetailModal(' + midtermInfo.stage + ', ' + midtermInfo.attemptNumber + ')">';
+                  tableHtml += '<td style="text-align:center;">📊</td>';
+                  tableHtml += '<td colspan="2" style="font-weight:600; color:#4338ca;">중간평가</td>';
+                  tableHtml += '<td style="font-weight:700; color:#3730a3;">' + stageText + ' (' + scoreText + ')</td>';
+                  tableHtml += '<td><span class="badge" style="' + badgeStyle + '">' + passedText + '</span></td>';
+                  tableHtml += '<td style="color:#4338ca;">' + completedTime + '</td>';
                   tableHtml += '<td></td>';
                   tableHtml += '<td></td>';
                   tableHtml += '</tr>';
@@ -30027,6 +30274,29 @@ const gateAttemptSchema = new mongoose.Schema({
 });
 const GateAttempt = mongoose.model("GateAttempt", gateAttemptSchema);
 
+// 중간평가 스키마 (10개 관문 통과 후 응시)
+const midtermEvalSchema = new mongoose.Schema({
+  grade: String,
+  name: String,
+  stage: { type: Number, default: 1 },  // 중간평가 단계 (1, 2, 3, ...)
+  attemptNumber: { type: Number, default: 1 },  // 해당 단계의 시도 횟수 (1, 2, 3, ...)
+  passed: { type: Boolean, default: false },    // 통과 여부 (90점 이상)
+  score: { type: Number, default: 0 },  // 최종 점수 (100점 만점)
+  totalQuestions: { type: Number, default: 20 },  // 총 문항 수
+  correctCount: { type: Number, default: 0 },     // 정답 수
+  completedAt: { type: Date, default: Date.now }, // 완료 시각
+  questionResults: [{                   // 각 문항별 결과
+    questionNo: Number,                 // 문항 번호 (1~20)
+    unitCode: String,                   // 단원 코드
+    unitTitle: String,                  // 단원 제목
+    qType: String,                      // 지수 유형
+    fromGate: Number,                   // 원래 관문 번호
+    correct: Boolean,                   // 정답 여부
+    timeSpent: Number                   // 소요 시간 (초)
+  }]
+});
+const MidtermEval = mongoose.model("MidtermEval", midtermEvalSchema);
+
 // 관문 문제 생성 API
 app.get("/api/gate-quiz/generate", async (req, res) => {
   try {
@@ -30373,6 +30643,478 @@ app.post("/api/gate-quiz/attempt", async (req, res) => {
   }
 });
 
+// ============ 중간평가 API ============
+
+// 중간평가 대상 여부 확인 API (10관문 통과 + 미응시 체크)
+app.get("/api/midterm/check", async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    // 통과한 관문 수 확인
+    const passedGates = await GatePass.find({ grade, name }).select('gate').lean();
+    const passedGateNums = passedGates.map(g => g.gate).sort((a, b) => a - b);
+    const maxGate = Math.max(...passedGateNums, 0);
+
+    // 이미 완료한 중간평가 조회
+    const completedEvals = await MidtermEval.find({ grade, name }).select('stage').lean();
+    const completedStages = completedEvals.map(e => e.stage);
+
+    // 순차적으로 미완료된 가장 낮은 stage 찾기
+    // stage 1 = 관문 1~10, stage 2 = 관문 11~20, ...
+    let targetStage = 0;
+    let isEligible = false;
+
+    for (let stage = 1; stage <= 8; stage++) {  // 최대 80관문 = 8 stage
+      const stageStartGate = (stage - 1) * 10 + 1;
+      const stageEndGate = stage * 10;
+
+      // 해당 stage에 필요한 관문들 (1~10, 11~20, ...)
+      let gatesForStage = [];
+      for (let i = stageStartGate; i <= stageEndGate; i++) {
+        if (passedGateNums.includes(i)) gatesForStage.push(i);
+      }
+
+      // 10개 관문 모두 통과했는지 확인
+      if (gatesForStage.length >= 10) {
+        // 해당 stage 중간평가 아직 안 했으면 이게 대상
+        if (!completedStages.includes(stage)) {
+          targetStage = stage;
+          isEligible = true;
+          break;
+        }
+      } else {
+        // 아직 10개 관문 다 안 통과했으면 중단
+        break;
+      }
+    }
+
+    console.log(`[midterm/check] ${grade} ${name}: maxGate=${maxGate}, targetStage=${targetStage}, eligible=${isEligible}, completedStages=${completedStages}`);
+
+    res.json({
+      ok: true,
+      eligible: isEligible,
+      stage: targetStage,
+      passedGates: passedGateNums.length,
+      alreadyCompleted: !isEligible && completedStages.length > 0,
+      completedStages: completedStages
+    });
+
+  } catch (err) {
+    console.error("[midterm/check] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 중간평가 문제 생성 API (관문 1~10의 미흡 문항 2개씩 = 20문항)
+app.get("/api/midterm/generate", async (req, res) => {
+  try {
+    const { grade, name, stage } = req.query;
+    const stageNum = parseInt(stage) || 1;
+
+    console.log(`[midterm/generate] ${grade} ${name}, stage=${stageNum}`);
+
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    // 해당 단계의 관문 범위 (stage 1: 1~10, stage 2: 11~20, ...)
+    const startGate = (stageNum - 1) * 10 + 1;
+    const endGate = stageNum * 10;
+
+    // 각 관문의 시도 기록에서 미흡 문항 추출
+    const weakQuestions = [];
+
+    for (let gate = startGate; gate <= endGate; gate++) {
+      // 해당 관문의 모든 시도 기록 조회
+      const attempts = await GateAttempt.find({ grade, name, gate }).lean();
+
+      if (attempts.length === 0) continue;
+
+      // 문항별 누적 데이터 계산
+      const questionMap = new Map();
+      attempts.forEach(attempt => {
+        if (attempt.questionDetails && Array.isArray(attempt.questionDetails)) {
+          attempt.questionDetails.forEach(q => {
+            const key = q.questionNo;
+            if (!questionMap.has(key)) {
+              questionMap.set(key, {
+                questionNo: q.questionNo,
+                unitCode: q.unitCode,
+                unitTitle: q.unitTitle,
+                qType: q.qType,
+                cumulativeTime: 0,
+                cumulativeWrongClicks: 0,
+                fromGate: gate
+              });
+            }
+            const existing = questionMap.get(key);
+            existing.cumulativeTime += (q.timeSpent || 0);
+            existing.cumulativeWrongClicks += (q.wrongClicks || 0);
+          });
+        }
+      });
+
+      // 미흡한 순서로 정렬 (오답 많은 순 → 시간 긴 순 → 구조파악력 우선)
+      const sorted = Array.from(questionMap.values()).sort((a, b) => {
+        if (b.cumulativeWrongClicks !== a.cumulativeWrongClicks) {
+          return b.cumulativeWrongClicks - a.cumulativeWrongClicks;
+        }
+        if (b.cumulativeTime !== a.cumulativeTime) {
+          return b.cumulativeTime - a.cumulativeTime;
+        }
+        return a.qType === 'q2' ? -1 : 1;
+      });
+
+      // 상위 2개 미흡 문항 추출
+      const top2 = sorted.slice(0, 2);
+      weakQuestions.push(...top2);
+    }
+
+    console.log(`[midterm/generate] 추출된 미흡 문항: ${weakQuestions.length}개`);
+
+    if (weakQuestions.length < 20) {
+      return res.json({
+        ok: false,
+        message: `중간평가를 위한 문항이 부족합니다. (${weakQuestions.length}/20개)`
+      });
+    }
+
+    // 각 문항의 실제 문제 데이터 로드
+    const quizzes = [];
+    const fs = require('fs');
+    const path = require('path');
+
+    for (let i = 0; i < Math.min(weakQuestions.length, 20); i++) {
+      const wq = weakQuestions[i];
+      const unitCode = wq.unitCode;
+      const qType = wq.qType || 'q1';
+
+      // 콘텐츠 파일 경로 결정
+      const isFit = unitCode.startsWith('fit_');
+      const isOn = unitCode.startsWith('on_');
+      const isDeep = unitCode.startsWith('deep_');
+
+      let subject, num;
+      if (isFit) {
+        const match = unitCode.match(/fit_([a-z]+\d?)_(\d{1,2})/);
+        if (match) { subject = match[1]; num = match[2].padStart(2, '0'); }
+      } else if (isOn) {
+        const match = unitCode.match(/on_([a-z]+\d?)_(\d{1,2})/);
+        if (match) { subject = match[1]; num = match[2].padStart(2, '0'); }
+      } else if (isDeep) {
+        const match = unitCode.match(/deep_([a-z]+\d?)_(\d{1,2})/);
+        if (match) { subject = match[1]; num = match[2].padStart(2, '0'); }
+      } else {
+        const match = unitCode.match(/([a-z]+\d?)_(\d{1,2})/);
+        if (match) { subject = match[1]; num = match[2].padStart(2, '0'); }
+      }
+
+      if (!subject || !num) continue;
+
+      // 과목별 디렉토리 매핑
+      const dirMap = {
+        'physics': 'science', 'chem': 'science', 'bio': 'science', 'earth': 'science',
+        'law': 'social', 'geo': 'social', 'soc': 'social', 'pol': 'social', 'eco': 'social',
+        'world1': 'worldlit', 'world2': 'worldlit',
+        'classic': 'korlit', 'modern': 'korlit', 'poem': 'korlit', 'novel': 'korlit',
+        'people1': 'person', 'people2': 'person'
+      };
+      const dir = dirMap[subject] || 'science';
+
+      // 콘텐츠 파일 경로
+      let contentPath;
+      if (isFit) {
+        contentPath = path.join(__dirname, 'public', 'BRAINUP', dir, `fit_${subject}_content.js`);
+      } else if (isOn) {
+        contentPath = path.join(__dirname, 'public', 'BRAINUP', dir, `on_${subject}_content.js`);
+      } else if (isDeep) {
+        contentPath = path.join(__dirname, 'public', 'BRAINUP', dir, `deep_${subject}_content.js`);
+      } else {
+        contentPath = path.join(__dirname, 'public', 'BRAINUP', dir, `${subject}_content.js`);
+      }
+
+      try {
+        if (fs.existsSync(contentPath)) {
+          const content = fs.readFileSync(contentPath, 'utf-8');
+
+          // 단원 키 결정
+          let unitKey;
+          if (isFit) unitKey = `fit_${subject}_${num}`;
+          else if (isOn) unitKey = `on_${subject}_${num}`;
+          else if (isDeep) unitKey = `deep_${subject}_${num}`;
+          else unitKey = `${subject}_${num}`;
+
+          // labelNo로 해당 단원 블록 찾기
+          const labelNoMatch = content.match(new RegExp(`labelNo:\\s*["']${num}["']`));
+
+          if (labelNoMatch) {
+            const unitIndex = content.indexOf(labelNoMatch[0]);
+            const nextUnitMatch = content.slice(unitIndex + 100).match(/labelNo:\s*["']\d{2}["']/);
+            const endIndex = nextUnitMatch ? unitIndex + 100 + content.slice(unitIndex + 100).indexOf(nextUnitMatch[0]) : content.length;
+            const unitBlock = content.slice(unitIndex, endIndex);
+
+            // title 추출
+            const titleMatch = unitBlock.match(/title:\s*["'](.+?)["']/);
+            const unitTitle = titleMatch ? titleMatch[1] : wq.unitTitle || unitKey;
+
+            // answerKey에서 정답 찾기
+            const answerKeyMatch = unitBlock.match(/answerKey:\s*\{([^}]+)\}/);
+            let correctAnswer = 1;
+            if (answerKeyMatch) {
+              const answerKeyBlock = answerKeyMatch[1];
+              const ansMatch = answerKeyBlock.match(new RegExp(`${qType}:\\s*['"]?(\\d)['"]?`));
+              if (ansMatch) correctAnswer = parseInt(ansMatch[1]);
+            }
+
+            // 해당 qType의 텍스트와 옵션 추출
+            const qTextMatch = unitBlock.match(new RegExp(`${qType}_text:\\s*'((?:\\\\'|[^'])+?)'`)) ||
+                              unitBlock.match(new RegExp(`${qType}_text:\\s*"((?:\\\\"|[^"])+?)"`));
+            const qOptsMatch = unitBlock.match(new RegExp(`${qType}_opts:\\s*\\[([\\s\\S]*?)\\]`));
+
+            if (qTextMatch && qOptsMatch) {
+              const question = qTextMatch[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+              const optionsRaw = qOptsMatch[1];
+              let options = optionsRaw.match(/'((?:\\'|[^'])+)'|"((?:\\"|[^"])+)"/g)?.map(s => {
+                let opt = s.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
+                opt = opt.replace(/^[①②③④]\s*/, '');
+                return opt;
+              }) || [];
+
+              // passage 추출 (본문 4문단)
+              const passageMatch = unitBlock.match(/passage:\s*\[([\s\S]*?)\],?\s*\n\s*vocab:/);
+              let passages = [];
+              if (passageMatch) {
+                const passageRaw = passageMatch[1];
+                passages = passageRaw.match(/'((?:\\'|[^'])+)'/g)?.map(s => {
+                  return s.slice(1, -1).replace(/\\'/g, "'");
+                }) || [];
+              }
+
+              if (options.length === 4) {
+                quizzes.push({
+                  questionNo: i + 1,
+                  unitCode: unitCode,
+                  unitTitle: unitTitle,
+                  qType: qType,
+                  fromGate: wq.fromGate,
+                  question: question,
+                  options: options,
+                  answer: correctAnswer,
+                  passage: passages
+                });
+                console.log(`[midterm/generate] ${unitKey} ${qType} 추출 성공 (passage: ${passages.length}문단)`);
+              }
+            }
+          }
+        }
+      } catch (fileErr) {
+        console.error(`[midterm/generate] 파일 로드 오류 (${unitCode}):`, fileErr.message);
+      }
+    }
+
+    console.log(`[midterm/generate] 최종 문제 수: ${quizzes.length}개`);
+
+    res.json({
+      ok: true,
+      stage: stageNum,
+      totalQuestions: quizzes.length,
+      quizzes: quizzes
+    });
+
+  } catch (err) {
+    console.error("[midterm/generate] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 중간평가 결과 저장 API (90점 이상만 통과로 저장)
+app.post("/api/midterm/submit", async (req, res) => {
+  try {
+    const { grade, name, stage, score, correctCount, totalQuestions, questionResults } = req.body;
+
+    console.log(`[midterm/submit] ${grade} ${name}, stage=${stage}, score=${score}`);
+
+    if (!grade || !name || !stage) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    const passed = score >= 90;
+
+    // 이미 해당 단계를 통과했는지 확인
+    const existingPassed = await MidtermEval.findOne({ grade, name, stage, passed: true });
+    if (existingPassed) {
+      return res.json({ ok: false, message: "이미 통과한 중간평가입니다." });
+    }
+
+    // 해당 단계의 시도 횟수 계산 (몇 번째 시도인지)
+    const attemptCount = await MidtermEval.countDocuments({ grade, name, stage });
+    const attemptNumber = attemptCount + 1;
+
+    // 모든 시도를 저장 (통과 여부와 관계없이)
+    const midtermEval = new MidtermEval({
+      grade,
+      name,
+      stage,
+      attemptNumber,
+      passed,
+      score: score || 0,
+      correctCount: correctCount || 0,
+      totalQuestions: totalQuestions || 20,
+      questionResults: questionResults || []
+    });
+    await midtermEval.save();
+
+    if (passed) {
+      console.log(`[midterm/submit] 중간평가 stage ${stage} 통과! ${score}점 (${attemptNumber}번째 시도)`);
+      res.json({
+        ok: true,
+        passed: true,
+        message: "중간평가 통과! 축하합니다!",
+        evalId: midtermEval._id,
+        score: score,
+        attemptNumber
+      });
+    } else {
+      console.log(`[midterm/submit] 미통과 (${score}점 < 90점) - ${attemptNumber}번째 시도 기록`);
+      res.json({
+        ok: true,
+        passed: false,
+        message: "90점 이상 달성 시 통과됩니다. 다시 도전해주세요!",
+        score: score,
+        attemptNumber
+      });
+    }
+
+  } catch (err) {
+    console.error("[midterm/submit] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 중간평가 이력 조회 API (학생용 - 성장 그래프용)
+app.get("/api/midterm/history", async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    // 해당 학생의 모든 중간평가 시도 조회 (통과 여부 관계없이)
+    const midtermEvals = await MidtermEval.find({ grade, name })
+      .select('stage attemptNumber passed score completedAt')
+      .sort({ stage: 1, attemptNumber: 1 })  // 단계순 > 시도순
+      .lean();
+
+    const history = midtermEvals.map(e => ({
+      stage: e.stage,
+      attemptNumber: e.attemptNumber || 1,  // 기존 데이터 호환
+      passed: e.passed !== undefined ? e.passed : (e.score >= 90),  // 기존 데이터 호환
+      score: e.score,
+      completedAt: e.completedAt,
+      label: `S${e.stage}-${e.attemptNumber || 1}`  // 그래프용 레이블 (S1-1, S1-2, ...)
+    }));
+
+    console.log(`[midterm/history] ${grade} ${name}: ${history.length}개 시도 기록`);
+
+    res.json({ ok: true, history: history });
+
+  } catch (err) {
+    console.error("[midterm/history] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 중간평가 목록 조회 API (슈퍼관리자용)
+app.get("/api/super/midterm-evals", requireSuperAdmin, async (req, res) => {
+  try {
+    const midtermEvals = await MidtermEval.find({}).sort({ completedAt: -1 }).lean();
+
+    console.log(`[super/midterm-evals] 조회된 중간평가: ${midtermEvals.length}개`);
+
+    res.json({ ok: true, data: midtermEvals });
+
+  } catch (err) {
+    console.error("[super/midterm-evals] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 중간평가 대기자 목록 조회 API (10관문 통과했지만 미응시인 학생들)
+app.get("/api/super/midterm-pending", requireSuperAdmin, async (req, res) => {
+  try {
+    // 10관문 이상 통과한 학생들 조회
+    const gatePasses = await GatePass.aggregate([
+      { $group: { _id: { grade: "$grade", name: "$name" }, maxGate: { $max: "$gate" }, gates: { $push: "$gate" } } },
+      { $match: { maxGate: { $gte: 10 } } }
+    ]);
+
+    const pendingStudents = [];
+
+    for (const student of gatePasses) {
+      const { grade, name } = student._id;
+      const gates = student.gates.sort((a, b) => a - b);
+
+      // 1~10 관문 모두 통과했는지 확인
+      let hasAll10 = true;
+      for (let i = 1; i <= 10; i++) {
+        if (!gates.includes(i)) { hasAll10 = false; break; }
+      }
+
+      if (!hasAll10) continue;
+
+      // 학생 정보 조회 (학교명, 학원명)
+      const userInfo = await User.findOne({ grade, name }).select('school academyName').lean();
+
+      // 중간평가 모든 시도 이력 조회 (최신순)
+      const midtermEvals = await MidtermEval.find({ grade, name, stage: 1 })
+        .sort({ completedAt: -1 }).lean();
+
+      // 최신 기록 (가장 최근 시도)
+      const latestEval = midtermEvals.length > 0 ? midtermEvals[0] : null;
+      // 통과 여부 (하나라도 90점 이상이면 통과)
+      const hasPassed = midtermEvals.some(e => e.score >= 90);
+
+      // 모든 시도 이력 (성장 그래프용)
+      const history = midtermEvals.reverse().map((e, idx) => ({
+        stage: e.stage,
+        attemptNumber: e.attemptNumber || (idx + 1),
+        passed: e.passed !== undefined ? e.passed : (e.score >= 90),
+        score: e.score,
+        completedAt: e.completedAt,
+        label: `S${e.stage}-${e.attemptNumber || (idx + 1)}`
+      }));
+
+      pendingStudents.push({
+        grade,
+        name,
+        school: userInfo?.school || '-',
+        academyName: userInfo?.academyName || '-',
+        maxGate: student.maxGate,
+        midtermStatus: latestEval ? 'completed' : 'pending',
+        midtermPassed: hasPassed,
+        midtermScore: latestEval?.score || null,
+        midtermCompletedAt: latestEval?.completedAt || null,
+        midtermHistory: history  // 성장 그래프용 이력
+      });
+    }
+
+    console.log(`[super/midterm-pending] 중간평가 대상: ${pendingStudents.length}명`);
+
+    res.json({ ok: true, data: pendingStudents });
+
+  } catch (err) {
+    console.error("[super/midterm-pending] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// ============ 중간평가 API 끝 ============
+
 // 관문 상세 정보 조회 API (슈퍼관리자용)
 app.get("/api/super/gate-pass-details", requireSuperAdmin, async (req, res) => {
   try {
@@ -30522,6 +31264,49 @@ app.get("/api/gate-quiz/passed-by-date", async (req, res) => {
 
   } catch (err) {
     console.error("[gate-quiz/passed-by-date] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 특정 날짜의 중간평가 기록 조회 API
+app.get("/api/midterm/passed-by-date", async (req, res) => {
+  try {
+    const { grade, name, date } = req.query;
+
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    // date가 있으면 해당 날짜, 없으면 오늘
+    let targetDate = date ? new Date(date) : new Date();
+
+    // KST 기준으로 해당 날짜의 시작과 끝
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstTargetDate = new Date(targetDate.getTime() + kstOffset);
+    const startOfDay = new Date(Date.UTC(kstTargetDate.getUTCFullYear(), kstTargetDate.getUTCMonth(), kstTargetDate.getUTCDate(), 0, 0, 0) - kstOffset);
+    const endOfDay = new Date(Date.UTC(kstTargetDate.getUTCFullYear(), kstTargetDate.getUTCMonth(), kstTargetDate.getUTCDate(), 23, 59, 59, 999) - kstOffset);
+
+    const midtermEvals = await MidtermEval.find({
+      grade,
+      name,
+      completedAt: { $gte: startOfDay, $lte: endOfDay }
+    }).sort({ completedAt: 1 }).lean();
+
+    res.json({
+      ok: true,
+      data: midtermEvals.map(m => ({
+        stage: m.stage,
+        passed: m.passed,
+        score: m.score,
+        attemptNumber: m.attemptNumber,
+        completedAt: m.completedAt,
+        totalQuestions: m.totalQuestions,
+        correctCount: m.correctCount
+      }))
+    });
+
+  } catch (err) {
+    console.error("[midterm/passed-by-date] error:", err);
     res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
   }
 });
