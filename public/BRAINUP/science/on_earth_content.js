@@ -360,7 +360,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[암석 풍화 관련 어휘]',
       items: [
         { no: 1, text: '암석이 자연의 힘으로 잘게 부서지는 과정을 (      )이라고 한다.', answer: '풍화 작용', initials: 'ㅍㅎ ㅈㅇ', aliases: ['풍화작용','풍화'] },
-        { no: 2, text: '온도 변화로 물질이 커졌다가 작아지는 현상을 (      )이라고 한다.', answer: '팽창·수축', initials: 'ㅍㅊ ㅅㅊ', aliases: ['팽창수축','팽창과 수축','팽창 수축'] },
+        { no: 2, text: '온도 변화로 물질이 커졌다가 작아지는 현상을 (      )이라고 한다.', answer: '팽창 수축', initials: 'ㅍㅊ ㅅㅊ', aliases: ['팽창수축','팽창과 수축','팽창·수축'] },
         { no: 3, text: '강물의 흐름에서 아래쪽 방향을 (      )라고 한다.', answer: '하류', initials: 'ㅎㄹ', aliases: ['하류'] },
         { no: 4, text: '물체끼리 부딪히며 닳거나 깎이는 작용을 (      )이라고 한다.', answer: '마찰', initials: 'ㅁㅊ', aliases: ['마찰'] },
         { no: 5, text: '물질 사이에 생긴 작은 공간을 (      )라고 한다.', answer: '틈새', initials: 'ㅌㅅ', aliases: ['틈새'] },
