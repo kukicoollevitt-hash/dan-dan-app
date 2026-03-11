@@ -9933,16 +9933,22 @@ if (logoutConfirmBtn) {
     /* 🧹 다른 학생의 localStorage 캐시 자동 정리 (학생 전환 시 혼선 방지) */
     function cleanupOtherStudentCache() {
       const stu = getCurrentStudent();
-      if (!stu || !stu.name) return;
+      console.log('🧹 cleanupOtherStudentCache 실행, 현재 학생:', stu?.name);
+      if (!stu || !stu.name) {
+        console.log('🧹 학생 정보 없음, 정리 건너뜀');
+        return;
+      }
 
       const currentName = stu.name.trim();
       const currentNamePattern = new RegExp(`_${currentName}_`);
       const keysToRemove = [];
+      const allProgressKeys = [];
 
       // dan-progress: 키 중 현재 학생이 아닌 것 찾기
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith('dan-progress:')) {
+          allProgressKeys.push(key);
           // 현재 학생의 키가 아니면 삭제 대상
           if (!currentNamePattern.test(key)) {
             keysToRemove.push(key);
@@ -9950,10 +9956,15 @@ if (logoutConfirmBtn) {
         }
       }
 
+      console.log('🧹 전체 dan-progress 키:', allProgressKeys.length, '개');
+      console.log('🧹 현재 학생 패턴:', `_${currentName}_`);
+
       // 삭제 실행
       if (keysToRemove.length > 0) {
         console.log(`🧹 다른 학생 캐시 ${keysToRemove.length}개 정리:`, keysToRemove);
         keysToRemove.forEach(k => localStorage.removeItem(k));
+      } else {
+        console.log('🧹 정리할 다른 학생 캐시 없음');
       }
     }
 
