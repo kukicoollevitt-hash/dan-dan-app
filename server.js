@@ -14857,7 +14857,7 @@ app.get("/my-learning", async (req, res) => {
       <meta property="og:type" content="website" />
       <meta property="og:title" content="📊 ${name} 학생의 학습 리포트" />
       <meta property="og:description" content="브레인문해력 AI 학습 분석 리포트가 도착했습니다. 이번 주 학습 현황과 성취도를 확인해보세요!" />
-      <meta property="og:image" content="https://brainmoon.kr/images/brain-main-hero.jpg" />
+      <meta property="og:image" content="https://brainmoon.kr/images/total-radar-chart-v2.png" />
       <meta property="og:url" content="https://brainmoon.kr/my-learning" />
       <meta property="og:site_name" content="브레인문해력" />
 
