@@ -14715,23 +14715,31 @@ app.get("/my-learning", async (req, res) => {
     let readingTimesMap = {};
     try {
       const userInfo = await User.findOne({ grade, name }).lean();
-      if (userInfo && userInfo.phone) {
-        const cleanPhone = (userInfo.phone || '').replace(/\D/g, '');
-        const studentKey = `${grade}_${name}_${cleanPhone}`;
+      const cleanPhone = userInfo?.phone ? userInfo.phone.replace(/\D/g, '') : '';
 
-        // reading_times 컬렉션에서 해당 학생의 모든 독해시간 조회
-        const db = mongoose.connection.db;
-        const readingTimesCollection = db.collection('reading_times');
-        const readingTimes = await readingTimesCollection.find({ studentKey }).toArray();
+      // 가능한 studentKey 형태들 (전화번호 있는 경우, 없는 경우 모두 조회)
+      const studentKeyWithPhone = `${grade}_${name}_${cleanPhone}`;
+      const studentKeyWithoutPhone = `${grade}_${name}_`;
 
-        // unitKey를 key로 하는 Map 생성
-        readingTimes.forEach(rt => {
-          if (rt.unitKey && rt.duration) {
-            readingTimesMap[rt.unitKey] = rt.duration;
-          }
-        });
-        console.log("✅ [/my-learning] 독해시간 조회 완료:", Object.keys(readingTimesMap).length, "개 기록");
-      }
+      // reading_times 컬렉션에서 해당 학생의 모든 독해시간 조회
+      const db = mongoose.connection.db;
+      const readingTimesCollection = db.collection('reading_times');
+
+      // 두 가지 형태 모두 조회 (전화번호 유무 관계없이)
+      const readingTimes = await readingTimesCollection.find({
+        $or: [
+          { studentKey: studentKeyWithPhone },
+          { studentKey: studentKeyWithoutPhone }
+        ]
+      }).toArray();
+
+      // unitKey를 key로 하는 Map 생성
+      readingTimes.forEach(rt => {
+        if (rt.unitKey && rt.duration) {
+          readingTimesMap[rt.unitKey] = rt.duration;
+        }
+      });
+      console.log("✅ [/my-learning] 독해시간 조회 완료:", Object.keys(readingTimesMap).length, "개 기록 (keys:", studentKeyWithPhone, "또는", studentKeyWithoutPhone, ")");
     } catch (err) {
       console.error("⚠️ [/my-learning] 독해시간 조회 실패:", err);
     }

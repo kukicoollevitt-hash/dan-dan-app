@@ -574,6 +574,7 @@
             <th>이름</th>
             <th id="school-header">학교명</th>
             <th>학년반번호(ID)</th>
+            <th>학부모 번호</th>
             <th style="cursor: pointer;" onclick="sortByPendingTasks()" title="클릭하면 미완료 과제순으로 정렬">
               학습실 상태 <span id="studyRoomSortIcon" style="font-size: 12px;">↕</span>
             </th>
@@ -586,7 +587,7 @@
         </thead>
         <tbody id="student-tbody">
           <tr class="empty-row">
-            <td colspan="14">학생 목록을 불러오는 중입니다…</td>
+            <td colspan="15">학생 목록을 불러오는 중입니다…</td>
           </tr>
         </tbody>
       </table>
@@ -869,7 +870,7 @@
       if (!Array.isArray(list) || list.length === 0) {
         totalEl.textContent = "0";
         tbody.innerHTML = `
-          <tr class="empty-row"><td colspan="14">표시할 학생이 없습니다.</td></tr>
+          <tr class="empty-row"><td colspan="15">표시할 학생이 없습니다.</td></tr>
         `;
         return;
       }
@@ -1012,6 +1013,24 @@
           </td>
           <td>${isAcademy ? (u.academyName || "") : (u.school || "")}</td>
           <td>${phone}</td>
+          <td class="center">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <input type="text"
+                     id="parentPhone-${u._id}"
+                     value="${u.parentPhone || ''}"
+                     placeholder="010-0000-0000"
+                     style="width: 120px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                     onchange="updateParentPhone('${u._id}', this.value)" />
+              <span class="parent-notify-toggle"
+                    data-id="${u._id}"
+                    data-notify="${u.parentNotify !== false}"
+                    onclick="toggleParentNotify('${u._id}')"
+                    style="cursor: pointer; font-size: 16px; ${u.parentNotify !== false ? '' : 'opacity: 0.4;'}"
+                    title="${u.parentNotify !== false ? '알림 ON (클릭해서 끄기)' : '알림 OFF (클릭해서 켜기)'}">
+                ${u.parentNotify !== false ? '🔔' : '🔕'}
+              </span>
+            </div>
+          </td>
           <td class="center">
             ${studyRoomStatusHtml}
           </td>
@@ -1750,6 +1769,61 @@
       } catch (error) {
         console.error('카카오톡 공유 오류:', error);
         alert('카카오톡 공유 중 오류가 발생했습니다.');
+      }
+    }
+
+    // 📱 학부모 번호 업데이트
+    async function updateParentPhone(userId, phone) {
+      try {
+        const res = await fetch(`/api/branch/users/${userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ parentPhone: phone })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          // 입력 필드 테두리 색상으로 성공 표시
+          const input = document.getElementById(`parentPhone-${userId}`);
+          if (input) {
+            input.style.borderColor = '#10b981';
+            setTimeout(() => { input.style.borderColor = '#ddd'; }, 1500);
+          }
+        } else {
+          alert('학부모 번호 저장 실패: ' + (data.message || ''));
+        }
+      } catch (err) {
+        console.error('학부모 번호 업데이트 오류:', err);
+        alert('학부모 번호 저장 중 오류가 발생했습니다.');
+      }
+    }
+
+    // 🔔 학부모 알림 토글
+    async function toggleParentNotify(userId) {
+      const toggleEl = document.querySelector(`.parent-notify-toggle[data-id="${userId}"]`);
+      if (!toggleEl) return;
+
+      const currentNotify = toggleEl.getAttribute('data-notify') === 'true';
+      const newNotify = !currentNotify;
+
+      try {
+        const res = await fetch(`/api/branch/users/${userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ parentNotify: newNotify })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          // UI 업데이트
+          toggleEl.setAttribute('data-notify', newNotify);
+          toggleEl.innerHTML = newNotify ? '🔔' : '🔕';
+          toggleEl.style.opacity = newNotify ? '1' : '0.4';
+          toggleEl.title = newNotify ? '알림 ON (클릭해서 끄기)' : '알림 OFF (클릭해서 켜기)';
+        } else {
+          alert('알림 설정 변경 실패: ' + (data.message || ''));
+        }
+      } catch (err) {
+        console.error('알림 설정 변경 오류:', err);
+        alert('알림 설정 변경 중 오류가 발생했습니다.');
       }
     }
   </script>

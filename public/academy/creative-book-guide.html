@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <title>브레인창작도서 수업 지침서 - 교사용 가이드</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- PDF 생성용 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       --bg: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
@@ -434,6 +437,42 @@
       font-weight: 600;
     }
     .mindmap-table td { color: var(--text); }
+
+    /* PDF 다운로드 버튼 */
+    .pdf-download-wrap {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 2px dashed #fde68a;
+      text-align: center;
+    }
+    .pdf-download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+    }
+    .pdf-download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+    }
+    .pdf-download-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .pdf-download-btn .icon {
+      font-size: 20px;
+    }
 
     /* 플레이스홀더 */
     .placeholder-notice {
@@ -1195,7 +1234,106 @@
         html += `</div>`;
       });
 
+      // PDF 다운로드 버튼 추가
+      html += `
+        <div class="pdf-download-wrap">
+          <button class="pdf-download-btn" onclick="downloadPDF('${book.code}', '${guide.bookTitle.replace(/'/g, "\\'")}')">
+            <span class="icon">📥</span>
+            <span>수업 지침서 PDF 다운로드</span>
+          </button>
+        </div>
+      `;
+
       return html;
+    }
+
+    // =============================================
+    // PDF 다운로드 기능
+    // =============================================
+    async function downloadPDF(bookCode, bookTitle) {
+      const btn = event.target.closest('.pdf-download-btn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="icon">⏳</span><span>PDF 생성 중...</span>';
+
+      try {
+        // 해당 도서의 book-body 요소 찾기
+        const targetBody = btn.closest('.book-body');
+
+        if (!targetBody) {
+          alert('PDF 생성에 실패했습니다. 콘텐츠를 찾을 수 없습니다.');
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          return;
+        }
+
+        // PDF 생성을 위한 임시 컨테이너 생성
+        const pdfContainer = document.createElement('div');
+        pdfContainer.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 800px; padding: 30px; background: #fff; font-family: "Noto Sans KR", sans-serif;';
+
+        // 제목 추가
+        const headerHtml = `
+          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #d97706;">
+            <h1 style="font-size: 24px; color: #92400e; margin: 0 0 10px 0;">브레인창작도서 수업 지침서</h1>
+            <h2 style="font-size: 18px; color: #1f2937; margin: 0;">${bookTitle}</h2>
+            <p style="font-size: 12px; color: #6b7280; margin-top: 10px;">도서 코드: ${bookCode}</p>
+          </div>
+        `;
+
+        pdfContainer.innerHTML = headerHtml + targetBody.innerHTML;
+
+        // PDF 다운로드 버튼 제거
+        const downloadWrap = pdfContainer.querySelector('.pdf-download-wrap');
+        if (downloadWrap) downloadWrap.remove();
+
+        document.body.appendChild(pdfContainer);
+
+        // html2canvas로 캡처
+        const canvas = await html2canvas(pdfContainer, {
+          scale: 1.5,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        // PDF 생성
+        const { jsPDF } = window.jspdf;
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+
+        const pdfWidth = 210;
+        const pdfHeight = 297;
+        const imgWidth = pdfWidth - 20;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        const pdf = new jsPDF('p', 'mm', 'a4');
+
+        let heightLeft = imgHeight;
+        let position = 10;
+        let pageCount = 0;
+
+        while (heightLeft > 0) {
+          if (pageCount > 0) {
+            pdf.addPage();
+            position = 10;
+          }
+
+          pdf.addImage(imgData, 'JPEG', 10, position - (pageCount * (pdfHeight - 20)), imgWidth, imgHeight);
+          heightLeft -= (pdfHeight - 20);
+          pageCount++;
+        }
+
+        pdf.save(`창작도서지침서_${bookCode}.pdf`);
+
+        document.body.removeChild(pdfContainer);
+
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      } catch (error) {
+        console.error('PDF 생성 오류:', error);
+        alert('PDF 생성 중 오류가 발생했습니다.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
 
     // =============================================
