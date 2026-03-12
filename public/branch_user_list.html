@@ -1005,9 +1005,9 @@
           <td class="center">${u.classNum || ""}</td>
           <td class="center">
             <a class="btn-student"
-               href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openStudyRoom=true"
+               href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openLearningAnalysis=true"
                target="_blank"
-               title="학생 화면으로 이동 (학습실 자동 열기)">
+               title="학생 화면으로 이동 (학습 분석 자동 열기)">
               👤 ${u.name || ""}
             </a>
           </td>
@@ -1164,7 +1164,41 @@
         "&view=branch";
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", async function () {
+      // 🔹 관리자 세션에서 학교명/학년/반 정보 가져오기
+      try {
+        const sessionRes = await fetch('/api/admin-session');
+        const sessionData = await sessionRes.json();
+        if (sessionData.ok && sessionData.admin) {
+          const admin = sessionData.admin;
+          const schoolName = admin.academyName || "";
+          const grade = admin.grade || "";
+          const classNum = admin.classNum || "";
+
+          // 학교명/학년/반 조합으로 표시
+          let titleText = "";
+          let descText = "";
+          let addInfoText = "";
+
+          if (schoolName) {
+            titleText = schoolName;
+            if (grade) titleText += " " + grade;
+            if (classNum) titleText += " " + classNum;
+            titleText += " 학생 목록";
+
+            descText = "이 화면에는 <b>" + (schoolName + (grade ? " " + grade : "") + (classNum ? " " + classNum : "")) + "</b>에 소속된 승인 학생만 표시됩니다.";
+            addInfoText = schoolName + (grade ? " " + grade : "") + (classNum ? " " + classNum : "");
+
+            currentAcademyName = schoolName;
+            document.getElementById("page-title").textContent = titleText;
+            document.getElementById("page-desc").innerHTML = descText;
+            document.getElementById("add-info-display").textContent = addInfoText;
+          }
+        }
+      } catch (err) {
+        console.error('세션 조회 실패:', err);
+      }
+
       const input = document.getElementById("search-input");
       const btnSearch = document.getElementById("search-btn");
       const btnRefresh = document.getElementById("refresh-btn");

@@ -68,14 +68,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '',
       items: [
-        { no: 1, text: '김유신은 열다섯 살에 (      )이 되어 큰 기대를 받았어요.', answer: '화랑', initials: 'ㅎㄹ', aliases: ['화랑'] },
-        { no: 2, text: '김유신의 어머니는 아들의 잘못된 행동을 단호하게 (       )었어요.', answer: '꾸짖', initials: 'ㄲㅈ', aliases: ['꾸짖다','꾸짖었','꾸짖'] },
-        { no: 3, text: '김유신은 활쏘기, 검술 같은 (      )를 열심히 연습했어요.', answer: '무예', initials: 'ㅁㅇ', aliases: ['무예'] },
-        { no: 4, text: '김유신은 다시는 (      )을 어기지 않겠다고 결심했어요.', answer: '약속', initials: 'ㅇㅅ', aliases: ['약속'] },
-        { no: 5, text: '김유신은 더 이상 (         ) 않기 위해 힘든 선택까지 감수했어요.', answer: '한눈팔지', initials: 'ㅎㄴㅍㅈ', aliases: ['한눈팔다','한눈팔지'] },
-        { no: 6, text: '김유신은 (      )하게 자신을 단련하며 노력했어요.', answer: '성실', initials: 'ㅅㅅ', aliases: ['성실'] },
-        { no: 7, text: '김유신은 신라의 삼국 통일에 큰 공을 세운 (      )으로 성장했어요.', answer: '장군', initials: 'ㅈㄱ', aliases: ['장군'] },
-        { no: 8, text: '김유신은 마음을 고쳐먹고 무예와 (      )을 다시 다지기로 결심했어요.', answer: '학문', initials: 'ㅎㅁ', aliases: ['학문'] }
+        { no: 1, text: '김유신은 뛰어난 (      )과 무예로 삼국 통일의 기틀을 마련했어요.', answer: '지략', initials: 'ㅈㄹ', aliases: ['지략'] },
+        { no: 2, text: '김유신은 활쏘기, 검술 같은 (      )를 열심히 연습했어요.', answer: '무예', initials: 'ㅁㅇ', aliases: ['무예'] },
+        { no: 3, text: '김유신의 어머니는 아들의 잘못된 행동을 단호하게 (       )었어요.', answer: '꾸짖', initials: 'ㄲㅈ', aliases: ['꾸짖다','꾸짖었','꾸짖'] },
+        { no: 4, text: '김유신은 자신의 잘못을 깨닫고 (        )며 마음을 다잡았어요.', answer: '뉘우치', initials: 'ㄴㅇㅊ', aliases: ['뉘우치다','뉘우치며','뉘우치'] },
+        { no: 5, text: '어머니는 김유신에게 진정한 (      )가 되려면 행동을 고쳐야 한다고 말했어요.', answer: '장부', initials: 'ㅈㅂ', aliases: ['장부'] },
+        { no: 6, text: '김유신은 더 이상 (         ) 않기 위해 힘든 선택까지 감수했어요.', answer: '한눈팔지', initials: 'ㅎㄴㅍㅈ', aliases: ['한눈팔다','한눈팔지'] },
+        { no: 7, text: '김유신은 다시는 (      )을 어기지 않겠다고 결심했어요.', answer: '약속', initials: 'ㅇㅅ', aliases: ['약속'] },
+        { no: 8, text: '김유신은 (      )하게 자신을 단련하며 노력했어요.', answer: '성실', initials: 'ㅅㅅ', aliases: ['성실'] }
       ]
     },
     quiz: {

@@ -631,7 +631,7 @@ app.use((req, res, next) => {
     console.log("⛔ 슈퍼관리자 파일 직접 접근 차단:", req.path);
     // 학원용 관리자인지 확인 후 적절한 로그인 페이지로
     const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
-    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+    return res.redirect("/academy-admin-login");
   }
   next();
 });
@@ -849,7 +849,7 @@ function requireAdminLogin(req, res, next) {
     console.log("⛔ 관리자 세션 없음 → 판단:", { requestPath, referer, cookieType, isAcademyAdmin });
     console.log("  → 리다이렉트:", isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
 
-    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+    return res.redirect("/academy-admin-login");
   }
   next();
 }
@@ -890,15 +890,15 @@ function requireSuperAdmin(req, res, next) {
  *   (모두 public 폴더의 HTML과 연결)
  * ==================================== */
 
-// 관리자 로그인 페이지 (GET)
+// 관리자 로그인 페이지 (GET) - 🔥 3000 포트는 학원용 전용이므로 학원 로그인으로 리다이렉트
 app.get("/admin-login", (req, res) => {
-  console.log("✅ [GET] /admin-login -> public/admin_login.html");
-  res.sendFile(path.join(__dirname, "public", "admin_login.html"));
+  console.log("✅ [GET] /admin-login -> 학원용 로그인으로 리다이렉트");
+  return res.redirect("/academy-admin-login");
 });
 
-// ✅ /admin/login 으로 들어오면 기존 /admin-login 으로 보내기 (별칭)
+// ✅ /admin/login 으로 들어오면 학원용 로그인으로 보내기
 app.get("/admin/login", (req, res) => {
-  return res.redirect("/admin-login");
+  return res.redirect("/academy-admin-login");
 });
 
 // ✅ 슈퍼관리자 PIN 입력 페이지
@@ -906,7 +906,7 @@ app.get("/super/pin", (req, res) => {
   // 슈퍼관리자가 아니면 로그인 페이지로
   if (!req.session.admin || !req.session.admin.isSuper) {
     const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
-    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+    return res.redirect("/academy-admin-login");
   }
   // 이미 PIN 인증 완료면 대시보드로
   if (req.session.superPinVerified) {
@@ -1080,7 +1080,7 @@ app.post("/super/pin/verify", (req, res) => {
   // 슈퍼관리자가 아니면 로그인 페이지로
   if (!req.session.admin || !req.session.admin.isSuper) {
     const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
-    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+    return res.redirect("/academy-admin-login");
   }
 
   const { pin } = req.body;
@@ -1104,7 +1104,7 @@ app.get("/admin/pin", (req, res) => {
   // 관리자가 아니면 로그인 페이지로
   if (!req.session.admin) {
     const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
-    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+    return res.redirect("/academy-admin-login");
   }
   // PIN 필요 없으면 대시보드로
   if (!req.session.adminPinRequired || req.session.adminPinVerified) {
@@ -1287,7 +1287,7 @@ app.post("/admin/pin/verify", async (req, res) => {
   // 관리자가 아니면 로그인 페이지로
   if (!req.session.admin) {
     const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
-    return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+    return res.redirect("/academy-admin-login");
   }
 
   const { pin } = req.body;
@@ -2722,7 +2722,7 @@ app.post("/admin-signup", async (req, res) => {
     if (exists) {
       console.log("⛔ 이미 존재하는 관리자:", academyName, grade, classNum, name, phone);
       const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
-      return res.redirect(isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+      return res.redirect("/academy-admin-login");
     }
 
     // 🔥 어드민(슈퍼관리자) 계정인지 확인
@@ -2805,8 +2805,8 @@ app.post("/admin-signup", async (req, res) => {
       console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
     }
 
-    // 학교용 회원가입이므로 /admin-login으로 리다이렉트
-    return res.redirect("/admin-login");
+    // 🔥 3000 포트는 학원용 전용이므로 학원 로그인으로 리다이렉트
+    return res.redirect("/academy-admin-login");
   } catch (err) {
     console.error("❌ /admin-signup 에러:", err);
     res.status(500).send("관리자 회원가입 중 오류가 발생했습니다.");
@@ -2835,13 +2835,13 @@ app.post("/admin-login", async (req, res) => {
 
     if (!admin) {
       console.log("❌ 관리자 로그인 실패: 일치하는 계정 없음");
-      return res.redirect("/admin-login?error=invalid");
+      return res.redirect("/academy-admin-login?error=invalid");
     }
 
     // 🔒 슈퍼관리자가 아닌데 승인 대기면 로그인 막기
     if (!isSuperLogin && admin.status === "pending") {
       console.log("⛔ 승인 대기 관리자 로그인 시도:", admin.name);
-      return res.redirect("/admin-login?error=pending");
+      return res.redirect("/academy-admin-login?error=pending");
     }
 
     // 마지막 로그인 시간 업데이트
@@ -3167,16 +3167,36 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
               <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <div style="flex:1;">
                   <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">학년</label>
-                  <input type="text" name="grade" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 4학년">
+                  <select name="grade" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;">
+                    <option value="">선택</option>
+                    <option value="초3">초3</option>
+                    <option value="초4">초4</option>
+                    <option value="초5">초5</option>
+                    <option value="초6">초6</option>
+                    <option value="중1">중1</option>
+                    <option value="중2">중2</option>
+                    <option value="중3">중3</option>
+                    <option value="고1">고1</option>
+                    <option value="고2">고2</option>
+                    <option value="고3">고3</option>
+                  </select>
                 </div>
                 <div style="flex:1;">
                   <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">반</label>
-                  <input type="text" name="classNum" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 2반">
+                  <select name="classNum" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;">
+                    <option value="">선택</option>
+                    <option value="1반">1반</option>
+                    <option value="2반">2반</option>
+                    <option value="3반">3반</option>
+                    <option value="4반">4반</option>
+                    <option value="5반">5반</option>
+                    <option value="6반">6반</option>
+                    <option value="7반">7반</option>
+                    <option value="8반">8반</option>
+                    <option value="9반">9반</option>
+                    <option value="10반">10반</option>
+                  </select>
                 </div>
-              </div>
-              <div style="margin-bottom:15px;">
-                <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">생년월일 *</label>
-                <input type="text" name="birth" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" placeholder="예: 850315">
               </div>
               <div style="margin-bottom:15px;">
                 <label style="display:block; margin-bottom:5px; font-weight:600; color:#555;">전화번호(ID) *</label>
@@ -4364,10 +4384,10 @@ app.post("/super/academy-admin-add", requireSuperAdmin, async (req, res) => {
 // 🔹 학교용 관리자 추가 (슈퍼관리자)
 app.post("/super/school-admin-add", requireSuperAdmin, async (req, res) => {
   try {
-    const { academyName, name, grade, classNum, birth, phone, status } = req.body;
+    const { academyName, name, grade, classNum, phone, status } = req.body;
 
-    if (!academyName || !name || !birth || !phone) {
-      return res.status(400).send("학교명, 이름, 생년월일, 전화번호는 필수입니다.");
+    if (!academyName || !name || !phone) {
+      return res.status(400).send("학교명, 이름, 전화번호는 필수입니다.");
     }
 
     // 중복 체크 (학교용 - userType이 없거나 school인 계정)
@@ -4389,7 +4409,6 @@ app.post("/super/school-admin-add", requireSuperAdmin, async (req, res) => {
       name,
       grade: grade || "",
       classNum: classNum || "",
-      birth,
       phone,
       status: status || "approved",
       userType: "school",
@@ -9171,14 +9190,10 @@ app.get("/admin/branch/logs", requireAdminLogin, (req, res) => {
 app.get("/admin/logout", (req, res) => {
   console.log("📤 [GET] /admin/logout 호출");
   if (!req.session) {
-    // 🔥 세션 없을 때도 쿠키로 학원용인지 확인
-    const wasAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
     res.clearCookie("adminType");
-    return res.redirect(wasAcademyAdmin ? "/academy-admin-login" : "/admin-login");
+    // 🔥 3000 포트는 학원용 전용이므로 무조건 학원 로그인으로
+    return res.redirect("/academy-admin-login");
   }
-
-  // 🔥 학원용 관리자면 학원 로그인 페이지로 리다이렉트
-  const isAcademyAdmin = req.session.admin && req.session.admin.userType === "academy";
 
   req.session.admin = null;
   req.session.superPinVerified = false; // 슈퍼관리자 PIN 인증 초기화
@@ -9188,10 +9203,8 @@ app.get("/admin/logout", (req, res) => {
   // 🔥 로그아웃 시 adminType 쿠키 삭제
   res.clearCookie("adminType");
 
-  if (isAcademyAdmin) {
-    return res.redirect("/academy-admin-login");
-  }
-  res.redirect("/admin-login");
+  // 🔥 3000 포트는 학원용 전용이므로 무조건 학원 로그인으로
+  res.redirect("/academy-admin-login");
 });
 
 /* ====================================
