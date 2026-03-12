@@ -13413,8 +13413,6 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         .stat-item {
           text-align: center;
           flex: 1;
-          min-width: 0;
-          overflow: visible;
         }
 
         .stat-label {
@@ -13439,8 +13437,6 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           font-size: 12px;
           font-weight: 700;
           margin-top: 10px;
-          white-space: nowrap;
-          min-width: fit-content;
         }
 
         .badge-excellent {
@@ -13456,11 +13452,6 @@ app.get("/admin/logs-old-inline", async (req, res) => {
         .badge-normal {
           background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
           color: #2d3436;
-        }
-
-        .badge-encourage {
-          background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-          color: white;
         }
 
         /* 종합 레이더 카드 - 붉은 계열 */
@@ -16450,8 +16441,6 @@ app.get("/my-learning", async (req, res) => {
           font-weight: 700;
           letter-spacing: 0.5px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-          white-space: nowrap;
-          min-width: fit-content;
         }
 
         #today-radar-wrap .score-badge.badge-excellent,
@@ -16489,7 +16478,6 @@ app.get("/my-learning", async (req, res) => {
 
         #today-radar-wrap .stat-item {
           text-align: center;
-          overflow: visible;
         }
 
         #today-radar-wrap .stat-label {
@@ -16616,7 +16604,6 @@ app.get("/my-learning", async (req, res) => {
 
         .today-radar-grid .stat-item {
           text-align: center;
-          overflow: visible;
         }
 
         .today-radar-grid .stat-label {
