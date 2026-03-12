@@ -153,8 +153,10 @@ async function sendParentNotification(studentName, parentPhone, type, additional
   }
 
   let message = '';
+  // 한국 시간(KST, UTC+9)으로 변환
   const now = new Date();
-  const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const kstOptions = { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false };
+  const timeStr = now.toLocaleTimeString('ko-KR', kstOptions);
 
   switch (type) {
     case 'login':
