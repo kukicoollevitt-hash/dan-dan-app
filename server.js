@@ -168,7 +168,7 @@ async function sendParentNotification(studentName, parentPhone, type, additional
       // 주간 리포트 링크 생성 (grade 정보가 있으면 포함)
       const grade = additionalInfo.grade || '';
       const weekStart = getWeekStart();
-      const reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}`;
+      const reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}&shared=true`;
 
       // URL 단축 없이 원본 URL 사용 (LMS 발송이라 장문 OK)
       message = `[브레인문해력] ${studentName} 학생이 학습을 종료! 학습 리포트가 도착했어요!\n📊 리포트: ${reportUrl}`;
@@ -14749,9 +14749,10 @@ app.get("/my-learning", async (req, res) => {
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
 
-  const { grade, name, series } = req.query;
+  const { grade, name, series, shared } = req.query;
+  const isSharedMode = shared === 'true';
 
-  console.log("📊 [/my-learning] 요청:", { grade, name, series });
+  console.log("📊 [/my-learning] 요청:", { grade, name, series, shared: isSharedMode });
 
   if (!grade || !name) {
     console.log("❌ [/my-learning] 파라미터 부족");
@@ -14834,6 +14835,10 @@ app.get("/my-learning", async (req, res) => {
       <!-- html2canvas & jsPDF 라이브러리 -->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script>
+        // 공유 모드 여부 (SMS/카카오톡 공유 링크로 접속 시 true)
+        const IS_SHARED_MODE = ${isSharedMode};
+      </script>
       <style>
         /* 🔄 로딩 스피너 - 인라인 크리티컬 CSS */
         #loading-overlay {
@@ -20596,7 +20601,12 @@ app.get("/my-learning", async (req, res) => {
                 const unitUrl = '/BRAINUP/' + folder + '/' + unitCode + '.html';
                 const vocabPageUrl = '/BRAINUP/' + folder + '/' + unitCode + '.html?tab=vocab';
 
-                tableHtml += '<tr onclick="window.open(\\'' + unitUrl + '\\', \\'_blank\\')" style="cursor:pointer;">';
+                // 공유 모드가 아닐 때만 클릭 가능
+                if (${isSharedMode}) {
+                  tableHtml += '<tr style="cursor:default;">';
+                } else {
+                  tableHtml += '<tr onclick="window.open(\\'' + unitUrl + '\\', \\'_blank\\')" style="cursor:pointer;">';
+                }
                 tableHtml += '<td>' + (idx + 1) + '</td>';
                 tableHtml += '<td>' + series + '</td>';
                 tableHtml += '<td>' + field + '</td>';
