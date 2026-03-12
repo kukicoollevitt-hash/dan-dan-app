@@ -51,38 +51,73 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// ===== 알리고 SMS 설정 =====
-const ALIGO_API_KEY = process.env.ALIGO_API_KEY || '26mxxyft14d6ky6vgdtjo1h3oa8o3ijr';
-const ALIGO_USER_ID = process.env.ALIGO_USER_ID || 'momblang';
+// ===== SOLAPI SMS 설정 =====
+const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY || 'NCSWWNMNZRXCSSKM';
+const SOLAPI_API_SECRET = process.env.SOLAPI_API_SECRET || 'BRWNHDE0RDTRCBYBHCQWGKX526YXRYRZ';
 const SMS_SENDER = process.env.SMS_SENDER || '01088953903';
+const crypto = require('crypto');
 
-// SMS 발송 함수 (알리고)
+// TinyURL 단축 URL 생성 함수
+async function shortenUrl(longUrl) {
+  try {
+    const response = await axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+    console.log(`🔗 URL 단축 성공: ${response.data}`);
+    return response.data;
+  } catch (error) {
+    console.error(`🔗 URL 단축 실패: ${error.message}`);
+    return longUrl; // 실패 시 원본 URL 반환
+  }
+}
+
+// 주간 시작일 계산 함수 (월요일 기준)
+function getWeekStart() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1); // 월요일로 조정
+  const monday = new Date(now.setDate(diff));
+  return monday.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+}
+
+// SOLAPI 인증 헤더 생성 함수
+function getSolapiAuthHeader() {
+  const date = new Date().toISOString();
+  const salt = crypto.randomBytes(32).toString('hex');
+  const signature = crypto.createHmac('sha256', SOLAPI_API_SECRET)
+    .update(date + salt)
+    .digest('hex');
+  return `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`;
+}
+
+// SMS 발송 함수 (SOLAPI)
 async function sendSMS(to, text) {
   try {
     // 전화번호 정리 (하이픈 제거)
     const cleanTo = to.replace(/-/g, '');
 
-    const formData = new URLSearchParams();
-    formData.append('key', ALIGO_API_KEY);
-    formData.append('user_id', ALIGO_USER_ID);
-    formData.append('sender', SMS_SENDER);
-    formData.append('receiver', cleanTo);
-    formData.append('msg', text);
-
-    const response = await axios.post('https://apis.aligo.in/send/', formData, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    const response = await axios.post('https://api.solapi.com/messages/v4/send', {
+      message: {
+        to: cleanTo,
+        from: SMS_SENDER,
+        text: text
+      }
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': getSolapiAuthHeader()
+      }
     });
 
-    if (response.data.result_code === '1') {
+    if (response.data.statusCode === '2000' || response.data.groupId) {
       console.log(`📱 SMS 발송 성공: ${cleanTo}`);
       return { success: true, result: response.data };
     } else {
-      console.error(`📱 SMS 발송 실패: ${response.data.message}`);
-      return { success: false, error: response.data.message };
+      console.error(`📱 SMS 발송 실패: ${JSON.stringify(response.data)}`);
+      return { success: false, error: response.data };
     }
   } catch (error) {
-    console.error(`📱 SMS 발송 오류: ${error.message}`);
-    return { success: false, error: error.message };
+    const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+    console.error(`📱 SMS 발송 오류: ${errorData}`);
+    return { success: false, error: error.response?.data || error.message };
   }
 }
 
@@ -127,8 +162,14 @@ async function sendParentNotification(studentName, parentPhone, type, additional
       message = `[브레인문해원] ${studentName} 학생이 ${timeStr}에 학습 시작했어요!`;
       break;
     case 'logout':
-      // [브레인문해원] 홍길동 학생 17:30 학습 종료. 수고했어요!
-      message = `[브레인문해원] ${studentName} 학생 ${timeStr} 학습 종료. 수고했어요!`;
+      // [브레인문해력] 홍길동 학생이 학습을 종료! 학습 리포트가 도착했어요!
+      // 주간 리포트 링크 생성 (grade 정보가 있으면 포함)
+      const grade = additionalInfo.grade || '';
+      const weekStart = getWeekStart();
+      const reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}&pdf=true`;
+
+      // URL 단축 없이 원본 URL 사용 (LMS 발송이라 장문 OK)
+      message = `[브레인문해력] ${studentName} 학생이 학습을 종료! 학습 리포트가 도착했어요!\n📊 리포트: ${reportUrl}`;
       break;
     case 'complete':
       // [브레인문해원] 홍길동 학생 "미켈란젤로" 학습 완료!
@@ -9219,7 +9260,7 @@ app.get("/logout", async (req, res) => {
       const { name, grade } = req.session.user;
       const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
       if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
-        sendParentNotification(name, studentUser.parentPhone, 'logout')
+        sendParentNotification(name, studentUser.parentPhone, 'logout', { grade })
           .catch(err => console.error('학부모 알림(로그아웃) 실패:', err));
       }
     } catch (notifyErr) {
@@ -12698,30 +12739,44 @@ app.post("/api/log", async (req, res) => {
       }
     }
 
-    // 📱 학부모 알림 발송 (학습 완료)
+    // 📱 학부모 알림 발송 (학습 완료) - 5분 내 중복 발송 방지
     if (completed === true && unit) {
-      try {
-        const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
-        if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
-          // 단원 제목 가져오기
-          const unitTitle = UNIT_TITLES[unit] || unit;
-          // 과목명 추출 (unit 코드에서)
-          const subjectMap = {
-            bio: '생명과학', chem: '화학', physics: '물리', earth: '지구과학',
-            law: '법과정치', geo: '한국지리', soc: '사회문화', pol: '정치',
-            world1: '세계지리', world2: '세계사',
-            classic: '고전문학', modern: '현대문학', poem: '시문학', novel: '소설',
-            people1: '인물1', people2: '인물2'
-          };
-          const subjectMatch = unit.match(/^(?:on_|fit_|deep_)?([a-z]+\d?)/i);
-          const subjectKey = subjectMatch ? subjectMatch[1].toLowerCase() : '';
-          const subject = subjectMap[subjectKey] || '';
+      const smsKey = `sms-complete:${grade}:${name}:${unit}`;
+      const lastSent = cache.get(smsKey);
 
-          sendParentNotification(name, studentUser.parentPhone, 'complete', { unitKey: unit, unitTitle, subject })
-            .catch(err => console.error('학부모 알림(학습완료) 실패:', err));
+      if (lastSent) {
+        console.log(`📱 [학습완료 SMS] 중복 방지: ${grade} ${name} ${unit} (5분 내 이미 발송됨)`);
+      } else {
+        try {
+          const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
+          if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+            // 단원 제목 가져오기
+            const unitTitle = UNIT_TITLES[unit] || unit;
+            // 과목명 추출 (unit 코드에서)
+            const subjectMap = {
+              bio: '생명과학', chem: '화학', physics: '물리', earth: '지구과학',
+              law: '법과정치', geo: '한국지리', soc: '사회문화', pol: '정치',
+              world1: '세계지리', world2: '세계사',
+              classic: '고전문학', modern: '현대문학', poem: '시문학', novel: '소설',
+              people1: '인물1', people2: '인물2'
+            };
+            const subjectMatch = unit.match(/^(?:on_|fit_|deep_)?([a-z]+\d?)/i);
+            const subjectKey = subjectMatch ? subjectMatch[1].toLowerCase() : '';
+            const subject = subjectMap[subjectKey] || '';
+
+            // SMS 발송 후 성공했을 때만 캐시 설정
+            sendParentNotification(name, studentUser.parentPhone, 'complete', { unitKey: unit, unitTitle, subject })
+              .then(result => {
+                if (result && result.success) {
+                  cache.set(smsKey, Date.now(), 5 * 60 * 1000);
+                  console.log(`📱 [학습완료 SMS] 캐시 설정: ${smsKey}`);
+                }
+              })
+              .catch(err => console.error('학부모 알림(학습완료) 실패:', err));
+          }
+        } catch (notifyErr) {
+          console.warn("📱 학부모 알림 발송 실패:", notifyErr.message);
         }
-      } catch (notifyErr) {
-        console.warn("📱 학부모 알림 발송 실패:", notifyErr.message);
       }
     }
 
@@ -14442,6 +14497,39 @@ app.get("/admin/logs-old-inline", async (req, res) => {
             alert('PDF 생성 중 오류가 발생했습니다.');
           }
         }
+
+        // URL에 pdf=true 파라미터가 있으면 자동 PDF 다운로드 (페이지 숨김)
+        window.addEventListener('load', function() {
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('pdf') === 'true') {
+            // 컨테이너 숨기고 로딩 화면 표시
+            const container = document.querySelector('.container');
+            if (container) container.style.visibility = 'hidden';
+
+            // 로딩 오버레이 표시 유지 (fade-out 방지)
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+              loadingOverlay.classList.remove('fade-out');
+              loadingOverlay.querySelector('.loading-text').textContent = 'PDF 생성 중...';
+            }
+
+            // 페이지 렌더링 완료 후 PDF 다운로드
+            setTimeout(async function() {
+              // PDF 생성을 위해 잠시 보이게
+              if (container) container.style.visibility = 'visible';
+
+              await downloadPDF();
+
+              // 완료 메시지
+              if (loadingOverlay) {
+                loadingOverlay.querySelector('.loading-text').textContent = 'PDF 다운로드 완료!';
+                setTimeout(() => {
+                  loadingOverlay.classList.add('fade-out');
+                }, 1000);
+              }
+            }, 2000);
+          }
+        });
       </script>
 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -14762,7 +14850,17 @@ app.get("/my-learning", async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>나의 AI 학습 분석 - ${grade} ${name}</title>
+
+      <!-- Open Graph 메타태그 (링크 프리뷰용) -->
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="📊 ${name} 학생의 학습 리포트" />
+      <meta property="og:description" content="브레인문해력 AI 학습 분석 리포트가 도착했습니다. 이번 주 학습 현황과 성취도를 확인해보세요!" />
+      <meta property="og:image" content="https://brainmoon.kr/images/brain-main-hero.jpg" />
+      <meta property="og:url" content="https://brainmoon.kr/my-learning" />
+      <meta property="og:site_name" content="브레인문해력" />
+
       <!-- html2canvas & jsPDF 라이브러리 -->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -24068,9 +24166,11 @@ app.post("/logout", async (req, res) => {
 
   // 📱 세션 정보 백업 (세션 삭제 전에 학부모 알림용)
   const sessionUser = req.session.user;
+  console.log("📤 [POST] /logout sessionUser:", JSON.stringify(sessionUser));
 
   // 학생인 경우 학부모 알림 발송
   if (sessionUser && (sessionUser.role === 'student' || sessionUser.userType === 'academy')) {
+    console.log("📤 [POST] /logout SMS 발송 시도...");
     try {
       const studentUser = await User.findOne({
         name: sessionUser.name,
@@ -24079,7 +24179,7 @@ app.post("/logout", async (req, res) => {
       });
 
       if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
-        sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout')
+        sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout', { grade: sessionUser.grade })
           .catch(err => console.error('학부모 알림 실패:', err));
       }
     } catch (err) {
