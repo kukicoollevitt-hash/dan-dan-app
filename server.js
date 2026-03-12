@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const axios = require("axios");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
@@ -49,6 +50,105 @@ const transporter = nodemailer.createTransport({
     pass: process.env.NAVER_EMAIL_PASSWORD
   }
 });
+
+// ===== 알리고 SMS 설정 =====
+const ALIGO_API_KEY = process.env.ALIGO_API_KEY || '26mxxyft14d6ky6vgdtjo1h3oa8o3ijr';
+const ALIGO_USER_ID = process.env.ALIGO_USER_ID || 'momblang';
+const SMS_SENDER = process.env.SMS_SENDER || '01088953903';
+
+// SMS 발송 함수 (알리고)
+async function sendSMS(to, text) {
+  try {
+    // 전화번호 정리 (하이픈 제거)
+    const cleanTo = to.replace(/-/g, '');
+
+    const formData = new URLSearchParams();
+    formData.append('key', ALIGO_API_KEY);
+    formData.append('user_id', ALIGO_USER_ID);
+    formData.append('sender', SMS_SENDER);
+    formData.append('receiver', cleanTo);
+    formData.append('msg', text);
+
+    const response = await axios.post('https://apis.aligo.in/send/', formData, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    if (response.data.result_code === '1') {
+      console.log(`📱 SMS 발송 성공: ${cleanTo}`);
+      return { success: true, result: response.data };
+    } else {
+      console.error(`📱 SMS 발송 실패: ${response.data.message}`);
+      return { success: false, error: response.data.message };
+    }
+  } catch (error) {
+    console.error(`📱 SMS 발송 오류: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+}
+
+// 바이트 계산 함수 (한글 2바이트, 그 외 1바이트)
+function getByteLength(str) {
+  let byteLen = 0;
+  for (let i = 0; i < str.length; i++) {
+    byteLen += str.charCodeAt(i) > 127 ? 2 : 1;
+  }
+  return byteLen;
+}
+
+// 단원명 축약 함수 (90바이트 맞추기)
+function truncateUnitTitle(title, maxBytes) {
+  let result = '';
+  let byteLen = 0;
+  for (let i = 0; i < title.length; i++) {
+    const charBytes = title.charCodeAt(i) > 127 ? 2 : 1;
+    if (byteLen + charBytes > maxBytes) {
+      return result + '...';
+    }
+    result += title[i];
+    byteLen += charBytes;
+  }
+  return result;
+}
+
+// 학부모 알림 발송 함수 (90바이트 이내 SMS 유지)
+async function sendParentNotification(studentName, parentPhone, type, additionalInfo = {}) {
+  if (!parentPhone) {
+    console.log(`📱 학부모 연락처 없음: ${studentName}`);
+    return { success: false, error: '학부모 연락처 없음' };
+  }
+
+  let message = '';
+  const now = new Date();
+  const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  switch (type) {
+    case 'login':
+      // [브레인문해원] 홍길동 학생이 16:47에 학습 시작했어요!
+      message = `[브레인문해원] ${studentName} 학생이 ${timeStr}에 학습 시작했어요!`;
+      break;
+    case 'logout':
+      // [브레인문해원] 홍길동 학생 17:30 학습 종료. 수고했어요!
+      message = `[브레인문해원] ${studentName} 학생 ${timeStr} 학습 종료. 수고했어요!`;
+      break;
+    case 'complete':
+      // [브레인문해원] 홍길동 학생 "미켈란젤로" 학습 완료!
+      let unitTitle = additionalInfo.unitTitle || additionalInfo.unitKey || '단원';
+      // 기본 메시지 (단원명 제외) 바이트 계산
+      const baseMsg = `[브레인문해원] ${studentName} 학생 "" 학습 완료!`;
+      const baseBytes = getByteLength(baseMsg);
+      const availableBytes = 90 - baseBytes - 6; // 여유분 6바이트
+      // 단원명이 길면 축약
+      if (getByteLength(unitTitle) > availableBytes) {
+        unitTitle = truncateUnitTitle(unitTitle, availableBytes - 6); // ... 포함
+      }
+      message = `[브레인문해원] ${studentName} 학생 "${unitTitle}" 학습 완료!`;
+      break;
+    default:
+      message = `[브레인문해원] ${studentName} 학생 알림`;
+  }
+
+  return await sendSMS(parentPhone, message);
+}
 
 // ===== MongoDB 모델 =====
 const LearningLog = require("./models/LearningLog");
@@ -609,6 +709,16 @@ const userSchema = new mongoose.Schema({
   assignedSeries: {
     type: [String],
     default: []
+  },
+  // 🔹 학부모 연락처 (SMS 알림용)
+  parentPhone: {
+    type: String,
+    default: ''
+  },
+  // 🔹 학부모 알림 설정
+  parentNotify: {
+    type: Boolean,
+    default: true
   }
 });
 const User = mongoose.model("User", userSchema);
@@ -2402,6 +2512,106 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
   } catch (err) {
     console.error("❌ /api/branch/users 에러:", err);
     res.status(500).json({ ok: false, message: "서버 오류" });
+  }
+});
+
+// ✅ 학생 정보 수정 API (학부모 번호 포함) - 브랜치 관리자용
+app.put("/api/branch/users/:id", requireAdminLogin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { parentPhone, parentNotify } = req.body;
+
+    console.log(`📝 [PUT] /api/branch/users/${id} - 학부모 번호 수정:`, { parentPhone, parentNotify });
+
+    const updateData = {};
+
+    // parentPhone이 명시적으로 전달된 경우에만 업데이트 (undefined면 기존값 유지)
+    if (parentPhone !== undefined) {
+      const cleanParentPhone = parentPhone ? parentPhone.replace(/-/g, '') : '';
+      updateData.parentPhone = cleanParentPhone;
+    }
+
+    // parentNotify가 명시적으로 전달된 경우에만 업데이트
+    if (parentNotify !== undefined) {
+      updateData.parentNotify = parentNotify;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "학생을 찾을 수 없습니다." });
+    }
+
+    console.log(`✅ 학생 정보 수정 완료: ${user.name} - 학부모번호: ${user.parentPhone || '(없음)'}`);
+    res.json({ ok: true, message: "학생 정보가 수정되었습니다.", user });
+  } catch (err) {
+    console.error("❌ /api/branch/users/:id 수정 오류:", err);
+    res.status(500).json({ ok: false, message: "수정 중 오류가 발생했습니다." });
+  }
+});
+
+// ✅ 학생 정보 수정 API (학부모 번호 포함) - 슈퍼관리자용
+app.put("/api/admin/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { key, parentPhone, parentNotify } = req.body;
+
+    // 슈퍼관리자 키 확인
+    if (key !== ADMIN_KEY) {
+      return res.status(403).json({ ok: false, message: "관리자 인증 실패" });
+    }
+
+    console.log(`📝 [PUT] /api/admin/users/${id} - 학부모 번호 수정:`, { parentPhone, parentNotify });
+
+    const updateData = {};
+
+    // parentPhone이 명시적으로 전달된 경우에만 업데이트 (undefined면 기존값 유지)
+    if (parentPhone !== undefined) {
+      const cleanParentPhone = parentPhone ? parentPhone.replace(/-/g, '') : '';
+      updateData.parentPhone = cleanParentPhone;
+    }
+
+    // parentNotify가 명시적으로 전달된 경우에만 업데이트
+    if (parentNotify !== undefined) {
+      updateData.parentNotify = parentNotify;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "학생을 찾을 수 없습니다." });
+    }
+
+    console.log(`✅ 학생 정보 수정 완료: ${user.name} - 학부모번호: ${user.parentPhone || '(없음)'}`);
+    res.json({ ok: true, message: "학생 정보가 수정되었습니다.", user });
+  } catch (err) {
+    console.error("❌ /api/admin/users/:id 수정 오류:", err);
+    res.status(500).json({ ok: false, message: "수정 중 오류가 발생했습니다." });
+  }
+});
+
+// ✅ SMS 테스트 발송 API
+app.post("/api/sms/test", requireAdminLogin, async (req, res) => {
+  try {
+    const { phone, message } = req.body;
+
+    if (!phone || !message) {
+      return res.status(400).json({ ok: false, message: "전화번호와 메시지를 입력해주세요." });
+    }
+
+    const result = await sendSMS(phone, message);
+    res.json(result);
+  } catch (err) {
+    console.error("❌ SMS 테스트 발송 오류:", err);
+    res.status(500).json({ ok: false, message: "SMS 발송 중 오류가 발생했습니다." });
   }
 });
 
@@ -8989,7 +9199,21 @@ app.get("/admin/logout", (req, res) => {
  * ==================================== */
 
 // ✅ 로그아웃 (GET: 애니메이션 페이지로)
-app.get("/logout", (req, res) => {
+app.get("/logout", async (req, res) => {
+  // 📱 로그아웃 전 학부모 알림 발송
+  if (req.session && req.session.user) {
+    try {
+      const { name, grade } = req.session.user;
+      const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
+      if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+        sendParentNotification(name, studentUser.parentPhone, 'logout')
+          .catch(err => console.error('학부모 알림(로그아웃) 실패:', err));
+      }
+    } catch (notifyErr) {
+      console.warn("📱 로그아웃 알림 발송 실패:", notifyErr.message);
+    }
+  }
+
   req.session.destroy((err) => {
     if (err) {
       console.log("❗ 세션 종료 오류:", err);
@@ -10517,6 +10741,7 @@ app.get("/admin/users", async (req, res) => {
                 <th>학년</th>
                 <th>이름</th>
                 <th>전화번호</th>
+                <th>학부모 번호</th>
                 ` : `
                 <th>학년</th>
                 <th>반</th>
@@ -10524,6 +10749,7 @@ app.get("/admin/users", async (req, res) => {
                 <th>이름</th>
                 <th>학교명</th>
                 <th>학년반번호(ID)</th>
+                <th>학부모 번호</th>
                 `}
                 <th>상태</th>
                 <th>시리즈 부여</th>
@@ -10619,7 +10845,25 @@ app.get("/admin/users", async (req, res) => {
               👤 ${u.name || ""}
             </a>
           </td>
-          <td>${u.phone || ""}</td>`;
+          <td>${u.phone || ""}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <input type="text"
+                     id="parentPhone-${u._id}"
+                     value="${u.parentPhone || ''}"
+                     placeholder="010-0000-0000"
+                     style="width: 120px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                     onchange="updateParentPhone('${u._id}', this.value)" />
+              <span class="parent-notify-toggle"
+                    data-id="${u._id}"
+                    data-notify="${u.parentNotify !== false}"
+                    onclick="toggleParentNotify('${u._id}')"
+                    style="cursor: pointer; font-size: 16px; ${u.parentNotify !== false ? '' : 'opacity: 0.4;'}"
+                    title="${u.parentNotify !== false ? '알림 ON (클릭해서 끄기)' : '알림 OFF (클릭해서 켜기)'}">
+                ${u.parentNotify !== false ? '🔔' : '🔕'}
+              </span>
+            </div>
+          </td>`;
       } else {
         html += `
         <tr data-user-grade="${u.grade || ''}" data-user-name="${u.name || ''}" data-pending="${pendingTasks}">
@@ -10639,7 +10883,25 @@ app.get("/admin/users", async (req, res) => {
             </a>
           </td>
           <td>${u.school || ""}</td>
-          <td>${idOrPhone}</td>`;
+          <td>${idOrPhone}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <input type="text"
+                     id="parentPhone-${u._id}"
+                     value="${u.parentPhone || ''}"
+                     placeholder="010-0000-0000"
+                     style="width: 120px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                     onchange="updateParentPhone('${u._id}', this.value)" />
+              <span class="parent-notify-toggle"
+                    data-id="${u._id}"
+                    data-notify="${u.parentNotify !== false}"
+                    onclick="toggleParentNotify('${u._id}')"
+                    style="cursor: pointer; font-size: 16px; ${u.parentNotify !== false ? '' : 'opacity: 0.4;'}"
+                    title="${u.parentNotify !== false ? '알림 ON (클릭해서 끄기)' : '알림 OFF (클릭해서 켜기)'}">
+                ${u.parentNotify !== false ? '🔔' : '🔕'}
+              </span>
+            </div>
+          </td>`;
       }
 
       // 공통 컬럼 (상태, 시리즈 부여, 학습실 등)
@@ -10833,6 +11095,59 @@ app.get("/admin/users", async (req, res) => {
         function closeSeriesModal() {
           document.getElementById('seriesModal').classList.remove('active');
           currentUserId = null;
+        }
+
+        // 📱 학부모 번호 업데이트 (슈퍼관리자용)
+        async function updateParentPhone(userId, phone) {
+          try {
+            const res = await fetch('/api/admin/users/' + userId, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key: '${key}', parentPhone: phone })
+            });
+            const data = await res.json();
+            if (data.ok) {
+              const input = document.getElementById('parentPhone-' + userId);
+              if (input) {
+                input.style.borderColor = '#10b981';
+                setTimeout(function() { input.style.borderColor = '#ddd'; }, 1500);
+              }
+            } else {
+              alert('학부모 번호 저장 실패: ' + (data.message || ''));
+            }
+          } catch (err) {
+            console.error('학부모 번호 업데이트 오류:', err);
+            alert('학부모 번호 저장 중 오류가 발생했습니다.');
+          }
+        }
+
+        // 🔔 학부모 알림 토글 (슈퍼관리자용)
+        async function toggleParentNotify(userId) {
+          const toggleEl = document.querySelector('.parent-notify-toggle[data-id="' + userId + '"]');
+          if (!toggleEl) return;
+
+          const currentNotify = toggleEl.getAttribute('data-notify') === 'true';
+          const newNotify = !currentNotify;
+
+          try {
+            const res = await fetch('/api/admin/users/' + userId, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key: '${key}', parentNotify: newNotify })
+            });
+            const data = await res.json();
+            if (data.ok) {
+              toggleEl.setAttribute('data-notify', newNotify);
+              toggleEl.innerHTML = newNotify ? '🔔' : '🔕';
+              toggleEl.style.opacity = newNotify ? '1' : '0.4';
+              toggleEl.title = newNotify ? '알림 ON (클릭해서 끄기)' : '알림 OFF (클릭해서 켜기)';
+            } else {
+              alert('알림 설정 변경 실패: ' + (data.message || ''));
+            }
+          } catch (err) {
+            console.error('알림 설정 변경 오류:', err);
+            alert('알림 설정 변경 중 오류가 발생했습니다.');
+          }
         }
 
         async function submitSeries() {
@@ -12367,6 +12682,33 @@ app.post("/api/log", async (req, res) => {
       if (key.startsWith(completionCachePrefix)) {
         cache.delete(key);
         console.log("🗑️ [/api/log] completion-status 캐시 삭제:", key);
+      }
+    }
+
+    // 📱 학부모 알림 발송 (학습 완료)
+    if (completed === true && unit) {
+      try {
+        const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
+        if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+          // 단원 제목 가져오기
+          const unitTitle = UNIT_TITLES[unit] || unit;
+          // 과목명 추출 (unit 코드에서)
+          const subjectMap = {
+            bio: '생명과학', chem: '화학', physics: '물리', earth: '지구과학',
+            law: '법과정치', geo: '한국지리', soc: '사회문화', pol: '정치',
+            world1: '세계지리', world2: '세계사',
+            classic: '고전문학', modern: '현대문학', poem: '시문학', novel: '소설',
+            people1: '인물1', people2: '인물2'
+          };
+          const subjectMatch = unit.match(/^(?:on_|fit_|deep_)?([a-z]+\d?)/i);
+          const subjectKey = subjectMatch ? subjectMatch[1].toLowerCase() : '';
+          const subject = subjectMap[subjectKey] || '';
+
+          sendParentNotification(name, studentUser.parentPhone, 'complete', { unitKey: unit, unitTitle, subject })
+            .catch(err => console.error('학부모 알림(학습완료) 실패:', err));
+        }
+      } catch (notifyErr) {
+        console.warn("📱 학부모 알림 발송 실패:", notifyErr.message);
       }
     }
 
@@ -23696,11 +24038,32 @@ app.get("/admin/trash-delete", async (req, res) => {
 
 
 // ✅ 로그아웃 처리 (AJAX용 - 학생/관리자 공통 세션 삭제)
-app.post("/logout", (req, res) => {
+app.post("/logout", async (req, res) => {
   console.log("📤 [POST] /logout 호출");
 
   if (!req.session) {
     return res.json({ ok: true });
+  }
+
+  // 📱 세션 정보 백업 (세션 삭제 전에 학부모 알림용)
+  const sessionUser = req.session.user;
+
+  // 학생인 경우 학부모 알림 발송
+  if (sessionUser && (sessionUser.role === 'student' || sessionUser.userType === 'academy')) {
+    try {
+      const studentUser = await User.findOne({
+        name: sessionUser.name,
+        grade: sessionUser.grade,
+        deleted: { $ne: true }
+      });
+
+      if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+        sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout')
+          .catch(err => console.error('학부모 알림 실패:', err));
+      }
+    } catch (err) {
+      console.error('로그아웃 알림 조회 오류:', err);
+    }
   }
 
   req.session.destroy((err) => {
@@ -23780,6 +24143,12 @@ await User.updateOne(
   { _id: user._id },
   { $set: { lastLogin: new Date() } }
 );
+
+// 📱 학부모 알림 발송 (로그인)
+if (user.parentPhone && user.parentNotify !== false) {
+  sendParentNotification(user.name, user.parentPhone, 'login', { grade: user.grade })
+    .catch(err => console.error('학부모 알림 실패:', err));
+}
 
 // ❗ 실제로 들어갈 메인/목차 페이지 경로
 const NEXT_URL = "/menu.html"; 
@@ -23960,6 +24329,12 @@ app.post("/academy-login", async (req, res) => {
     );
 
     console.log("✅ 학원용 로그인 성공:", user.name, user.grade, user.academyName);
+
+    // 📱 학부모 알림 발송 (학원 로그인)
+    if (user.parentPhone && user.parentNotify !== false) {
+      sendParentNotification(user.name, user.parentPhone, 'login', { grade: user.grade })
+        .catch(err => console.error('학부모 알림 실패:', err));
+    }
 
     // 학원용도 동일한 메뉴 페이지로 이동
     // brain_library에서 로그인한 경우 창작 도서관 팝업 자동 오픈
