@@ -14500,44 +14500,74 @@ app.get("/admin/logs-old-inline", async (req, res) => {
           }
         }
 
-        // URL에 pdf=true 파라미터가 있으면 자동 PDF 다운로드 (페이지 숨김)
-        window.addEventListener('load', function() {
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.get('pdf') === 'true') {
-            // 컨테이너 숨기고 로딩 화면 표시
-            const container = document.querySelector('.container');
-            if (container) container.style.visibility = 'hidden';
-
-            // 로딩 오버레이 표시 유지 (fade-out 방지)
-            const loadingOverlay = document.getElementById('loading-overlay');
-            if (loadingOverlay) {
-              loadingOverlay.classList.remove('fade-out');
-              loadingOverlay.querySelector('.loading-text').textContent = 'PDF 생성 중...';
-            }
-
-            // 페이지 렌더링 완료 후 PDF 다운로드
-            setTimeout(async function() {
-              // PDF 생성을 위해 잠시 보이게
-              if (container) container.style.visibility = 'visible';
-
-              await downloadPDF();
-
-              // 완료 메시지
-              if (loadingOverlay) {
-                loadingOverlay.querySelector('.loading-text').textContent = 'PDF 다운로드 완료!';
-                setTimeout(() => {
-                  loadingOverlay.classList.add('fade-out');
-                }, 1000);
-              }
-            }, 2000);
-          }
-        });
       </script>
 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
       <script>
+        // URL에 pdf=true 파라미터가 있으면 자동 PDF 다운로드 (라이브러리 로드 후 실행)
+        (function() {
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('pdf') === 'true') {
+            console.log('📄 PDF 자동 다운로드 모드 감지');
+
+            // 라이브러리 로드 대기 함수
+            function waitForLibraries(callback, maxRetries = 50) {
+              let retries = 0;
+              const check = function() {
+                if (typeof html2canvas !== 'undefined' && typeof window.jspdf !== 'undefined') {
+                  console.log('✅ 라이브러리 로드 완료');
+                  callback();
+                } else if (retries < maxRetries) {
+                  retries++;
+                  console.log('⏳ 라이브러리 로드 대기 중...', retries);
+                  setTimeout(check, 100);
+                } else {
+                  console.error('❌ 라이브러리 로드 실패');
+                  alert('PDF 생성에 필요한 라이브러리를 로드하지 못했습니다.');
+                }
+              };
+              check();
+            }
+
+            // 페이지 로드 완료 후 실행
+            window.addEventListener('load', function() {
+              // 로딩 오버레이 표시 유지
+              const loadingOverlay = document.getElementById('loading-overlay');
+              if (loadingOverlay) {
+                loadingOverlay.classList.remove('fade-out');
+                loadingOverlay.querySelector('.loading-text').textContent = 'PDF 생성 중...';
+              }
+
+              // 라이브러리 로드 대기 후 PDF 생성
+              waitForLibraries(async function() {
+                // 차트 렌더링 대기 (2초)
+                setTimeout(async function() {
+                  try {
+                    console.log('🚀 PDF 다운로드 시작');
+                    await downloadPDF();
+                    console.log('✅ PDF 다운로드 완료');
+
+                    // 완료 메시지
+                    if (loadingOverlay) {
+                      loadingOverlay.querySelector('.loading-text').textContent = 'PDF 다운로드 완료!';
+                      setTimeout(() => {
+                        loadingOverlay.classList.add('fade-out');
+                      }, 1000);
+                    }
+                  } catch (err) {
+                    console.error('❌ PDF 생성 오류:', err);
+                    alert('PDF 생성 중 오류가 발생했습니다: ' + err.message);
+                    if (loadingOverlay) {
+                      loadingOverlay.classList.add('fade-out');
+                    }
+                  }
+                }, 2000);
+              });
+            });
+          }
+        })();
         // 학습이력 전송 (mailto 방식)
         function openSendModal() {
           const subject = \`[단단교실] ${grade} ${name} 학생 학습이력\`;
