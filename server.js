@@ -170,7 +170,7 @@ async function sendParentNotification(studentName, parentPhone, type, additional
       const reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}&shared=true`;
 
       // URL 단축 없이 원본 URL 사용 (LMS 발송이라 장문 OK)
-      message = `[브레인문해력] ${studentName} 학생이 학습을 종료! 학습 리포트가 도착했어요!\n📊 리포트: ${reportUrl}`;
+      message = `[브레인문해력] ${studentName} 학생이 학습을 종료! 학습 리포트가 도착했어요!\n리포트: ${reportUrl}`;
       break;
     case 'complete':
       // [브레인문해원] 홍길동 학생 "미켈란젤로" 학습 완료!
