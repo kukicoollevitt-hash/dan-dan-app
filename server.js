@@ -51,9 +51,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// ===== SOLAPI SMS 설정 =====
-const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY || 'NCSWWNMNZRXCSSKM';
-const SOLAPI_API_SECRET = process.env.SOLAPI_API_SECRET || 'BRWNHDE0RDTRCBYBHCQWGKX526YXRYRZ';
+// ===== Aligo SMS 설정 =====
+const ALIGO_API_KEY = process.env.ALIGO_API_KEY || '26mxxyft14d6ky6vgdtjo1h3oa8o3ijr';
+const ALIGO_USER_ID = process.env.ALIGO_USER_ID || 'momblang';
 const SMS_SENDER = process.env.SMS_SENDER || '01088953903';
 const crypto = require('crypto');
 
@@ -78,49 +78,6 @@ function getWeekStart() {
   return monday.toISOString().split('T')[0]; // YYYY-MM-DD 형식
 }
 
-// SOLAPI 인증 헤더 생성 함수
-function getSolapiAuthHeader() {
-  const date = new Date().toISOString();
-  const salt = crypto.randomBytes(32).toString('hex');
-  const signature = crypto.createHmac('sha256', SOLAPI_API_SECRET)
-    .update(date + salt)
-    .digest('hex');
-  return `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`;
-}
-
-// SMS 발송 함수 (SOLAPI)
-async function sendSMS(to, text) {
-  try {
-    // 전화번호 정리 (하이픈 제거)
-    const cleanTo = to.replace(/-/g, '');
-
-    const response = await axios.post('https://api.solapi.com/messages/v4/send', {
-      message: {
-        to: cleanTo,
-        from: SMS_SENDER,
-        text: text
-      }
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': getSolapiAuthHeader()
-      }
-    });
-
-    if (response.data.statusCode === '2000' || response.data.groupId) {
-      console.log(`📱 SMS 발송 성공: ${cleanTo}`);
-      return { success: true, result: response.data };
-    } else {
-      console.error(`📱 SMS 발송 실패: ${JSON.stringify(response.data)}`);
-      return { success: false, error: response.data };
-    }
-  } catch (error) {
-    const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
-    console.error(`📱 SMS 발송 오류: ${errorData}`);
-    return { success: false, error: error.response?.data || error.message };
-  }
-}
-
 // 바이트 계산 함수 (한글 2바이트, 그 외 1바이트)
 function getByteLength(str) {
   let byteLen = 0;
@@ -128,6 +85,48 @@ function getByteLength(str) {
     byteLen += str.charCodeAt(i) > 127 ? 2 : 1;
   }
   return byteLen;
+}
+
+// SMS 발송 함수 (Aligo)
+async function sendSMS(to, text) {
+  try {
+    // 전화번호 정리 (하이픈 제거)
+    const cleanTo = to.replace(/-/g, '');
+
+    // Aligo API는 form-urlencoded 형식 사용
+    const params = new URLSearchParams();
+    params.append('key', ALIGO_API_KEY);
+    params.append('user_id', ALIGO_USER_ID);
+    params.append('sender', SMS_SENDER);
+    params.append('receiver', cleanTo);
+    params.append('msg', text);
+    // 90바이트 초과 시 LMS로 전환
+    const byteLen = getByteLength(text);
+    if (byteLen > 90) {
+      params.append('msg_type', 'LMS');
+    } else {
+      params.append('msg_type', 'SMS');
+    }
+
+    const response = await axios.post('https://apis.aligo.in/send/', params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    // Aligo 응답: result_code가 1이면 성공
+    if (response.data.result_code === '1' || response.data.result_code === 1) {
+      console.log(`📱 SMS 발송 성공 (Aligo): ${cleanTo}, msg_id: ${response.data.msg_id}`);
+      return { success: true, result: response.data };
+    } else {
+      console.error(`📱 SMS 발송 실패 (Aligo): ${JSON.stringify(response.data)}`);
+      return { success: false, error: response.data };
+    }
+  } catch (error) {
+    const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+    console.error(`📱 SMS 발송 오류 (Aligo): ${errorData}`);
+    return { success: false, error: error.response?.data || error.message };
+  }
 }
 
 // 단원명 축약 함수 (90바이트 맞추기)
