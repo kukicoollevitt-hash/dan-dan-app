@@ -35112,6 +35112,16 @@ app.get('/api/speed-reading-king/ranking', async (req, res) => {
   }
 });
 
+// ===== Render outbound IP 확인용 임시 API =====
+app.get('/api/check-outbound-ip', async (req, res) => {
+  try {
+    const response = await axios.get('https://api.ipify.org?format=json');
+    res.json({ outboundIP: response.data.ip });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ===== 서버 시작 (MongoDB와 독립적으로) =====
 app.listen(PORT, () => {
   console.log(`✅ 서버 실행 중: ${PORT}`);
