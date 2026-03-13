@@ -13573,7 +13573,8 @@ async function performLogout() {
     }
 
     // === 단원 학습 모달 관련 ===
-    function openUnitModal(unitIdOrPath) {
+    function openUnitModal(unitIdOrPath, isAITask = false) {
+      console.log('🚀 [openUnitModal] 호출됨! isAITask =', isAITask, '타입:', typeof isAITask);
       // 메뉴 클릭 효과음 재생
       playMenuClickSound();
 
@@ -13631,11 +13632,20 @@ async function performLogout() {
         };
 
         // 캐시버스터 추가 (iframe 캐시 방지)
-        const cacheBuster = unitPath.includes('?') ? `&_t=${Date.now()}` : `?_t=${Date.now()}`;
+        let queryParams = unitPath.includes('?') ? `&_t=${Date.now()}` : `?_t=${Date.now()}`;
+        // AI 추천과제인 경우 isAI 파라미터 추가 (본문학습 초기화용)
+        if (isAITask) {
+          queryParams += '&isAI=true';
+          console.log('✅ [openUnitModal] isAI=true 파라미터 추가됨!');
+        }
+
+        const finalUrl = unitPath + queryParams;
+        console.log('📍 [openUnitModal] 최종 iframe URL:', finalUrl);
 
         // iframe src 설정 전에 약간의 딜레이 (모달 렌더링 완료 대기)
         requestAnimationFrame(() => {
-          unitIframe.src = unitPath + cacheBuster;
+          unitIframe.src = finalUrl;
+          console.log('🎯 [openUnitModal] iframe.src 설정 완료:', unitIframe.src);
         });
         // sessionStorage에 현재 열린 단원 경로 저장
         sessionStorage.setItem('currentOpenUnit', unitPath);
@@ -16254,8 +16264,12 @@ async function performLogout() {
           // 학습실 모달 먼저 닫기
           closeStudyRoomModal();
           // 약간의 딜레이 후 학습 페이지 열기
+          // AI 추천과제인 경우 isAI 플래그 전달
+          console.log('🔍 [AI Task Debug] task.isAI =', task.isAI, '타입:', typeof task.isAI);
+          const isAIFlag = !!task.isAI;  // truthy 값을 boolean으로 변환
+          console.log('🔍 [AI Task Debug] isAIFlag =', isAIFlag);
           setTimeout(() => {
-            openUnitModal(unitId);
+            openUnitModal(unitId, isAIFlag);
           }, 200);
         });
 

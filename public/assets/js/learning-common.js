@@ -304,6 +304,75 @@
     // 전역 변수: 오른쪽 5문제 오답 카운트 (다시풀기 포함 누적)
     window.problemErrorCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
+    // ===== AI 추천과제 여부 확인 및 본문학습 초기화 =====
+    (function checkAndResetForAITask() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isAITask = urlParams.get('isAI') === 'true';
+
+      if (isAITask) {
+        console.log('[AI추천과제] 본문학습 상태 초기화 시작...');
+
+        // 1. 오답 카운터 초기화
+        window.paragraphQuizErrorCounts = {};
+        window.problemErrorCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        console.log('[AI추천과제] 오답 카운터 초기화 완료');
+
+        // 2. 전역 플래그 설정 (다른 곳에서 참조용)
+        window.isAITaskMode = true;
+
+        // 3. ★★★ localStorage 즉시 삭제 (다른 코드보다 먼저 실행) ★★★
+        // URL에서 단원 ID 추출 (예: on_geo_03.html -> on_geo_03)
+        const pathMatch = window.location.pathname.match(/\/([^\/]+)\.html/);
+        if (pathMatch) {
+          const unitFromPath = pathMatch[1];
+
+          // 해당 단원과 관련된 모든 localStorage 키 삭제 (학생 이름 포함된 키도 삭제)
+          // 키 종류: passage_read_, passage_time_, paragraph_completed_,
+          //         dan-reading-state:, dan-progress:, creative-state:
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.includes(unitFromPath)) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+            console.log('[AI추천과제] localStorage 삭제:', key);
+          });
+          console.log('[AI추천과제] 총', keysToRemove.length, '개 localStorage 키 삭제');
+        }
+
+        // 4. DOM 로드 후 추가 초기화 (탁상시계, DOM 하이라이트 제거)
+        document.addEventListener('DOMContentLoaded', function() {
+          // 독해 시간(탁상시계) 초기화
+          const minuteInput = document.getElementById('minute-input');
+          const secondInput = document.getElementById('second-input');
+          if (minuteInput) minuteInput.value = '00';
+          if (secondInput) secondInput.value = '00';
+          console.log('[AI추천과제] 독해 시간 UI 초기화 완료');
+
+          // DOM에서 하이라이트 클래스 제거
+          setTimeout(() => {
+            document.querySelectorAll('.passage-text .sentence.read').forEach(el => {
+              el.classList.remove('read');
+            });
+            document.querySelectorAll('.passage-text .sentence.selected').forEach(el => {
+              el.classList.remove('selected');
+            });
+            // 완독 팝업 숨기기
+            const completionToast = document.querySelector('.complete-toast');
+            if (completionToast) {
+              completionToast.style.display = 'none';
+            }
+            console.log('[AI추천과제] 지문 하이라이트 DOM 초기화 완료');
+          }, 100);
+        });
+
+        console.log('[AI추천과제] 본문학습 초기화 설정 완료');
+      }
+    })();
+
     // 중심문단 퀴즈 오답 기록 함수
     function recordParagraphQuizError(paragraphNo) {
       if (!window.paragraphQuizErrorCounts[paragraphNo]) {
@@ -1623,6 +1692,11 @@
     let hasServerReadingData = false;  // 서버에서 본문학습 데이터 복원 여부
     try {
       console.log('[learning-common] ★ 서버 데이터 로딩 시작...');
+
+      // ★ AI 추천과제인 경우 서버 복원 건너뛰기 (새로 시작)
+      if (window.isAITaskMode) {
+        console.log('[learning-common] ★ AI 추천과제 모드 - 서버 데이터 복원 건너뜀 (초기화 상태 유지)');
+      } else {
       const serverData = await loadUnitProgressFromServer();
       console.log('[learning-common] ★ 서버 데이터 로드 결과:', serverData);
       console.log('[learning-common] ★ 서버 데이터 키 목록:', serverData ? Object.keys(serverData) : 'null');
@@ -1662,6 +1736,7 @@
       } else {
         console.log('[learning-common] ★ 서버에서 데이터 없음 (null)');
       }
+      } // AI 추천과제 else 블록 끝
     } catch (err) {
       console.error('[learning-common] 서버 데이터 복원 오류:', err);
     }

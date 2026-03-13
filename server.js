@@ -55,6 +55,12 @@ const transporter = nodemailer.createTransport({
 const ALIGO_API_KEY = process.env.ALIGO_API_KEY || '26mxxyft14d6ky6vgdtjo1h3oa8o3ijr';
 const ALIGO_USER_ID = process.env.ALIGO_USER_ID || 'momblang';
 const SMS_SENDER = process.env.SMS_SENDER || '01088953903';
+
+// 본사 관리자 SMS 알림 설정 (모든 학생 상황 수신)
+const HQ_ADMIN_PHONES = process.env.HQ_ADMIN_PHONES
+  ? process.env.HQ_ADMIN_PHONES.split(',').map(p => p.trim())
+  : []; // 예: '01012345678,01087654321'
+
 const crypto = require('crypto');
 
 // TinyURL 단축 URL 생성 함수
@@ -200,6 +206,44 @@ async function sendParentNotification(studentName, parentPhone, type, additional
   }
 
   return await sendSMS(parentPhone, message);
+}
+
+// 본사 관리자 알림 발송 함수 (모든 학생 상황 수신)
+async function sendHQAdminNotification(studentName, grade, type, additionalInfo = {}) {
+  if (!HQ_ADMIN_PHONES || HQ_ADMIN_PHONES.length === 0) {
+    return;
+  }
+
+  let message = '';
+  const now = new Date();
+  const kstOptions = { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false };
+  const timeStr = now.toLocaleTimeString('ko-KR', kstOptions);
+  const academyName = additionalInfo.academyName || '';
+  const schoolName = additionalInfo.school || '';
+  const location = academyName || schoolName || '';
+
+  switch (type) {
+    case 'login':
+      message = `[본사알림] ${location} ${grade} ${studentName} 로그인 (${timeStr})`;
+      break;
+    case 'logout':
+      message = `[본사알림] ${location} ${grade} ${studentName} 로그아웃 (${timeStr})`;
+      break;
+    case 'complete':
+      let unitTitle = additionalInfo.unitTitle || additionalInfo.unitKey || '단원';
+      if (getByteLength(unitTitle) > 20) {
+        unitTitle = truncateUnitTitle(unitTitle, 17);
+      }
+      message = `[본사알림] ${location} ${grade} ${studentName} "${unitTitle}" 완료`;
+      break;
+    default:
+      message = `[본사알림] ${location} ${grade} ${studentName} 알림`;
+  }
+
+  // 모든 본사 관리자에게 발송
+  for (const phone of HQ_ADMIN_PHONES) {
+    sendSMS(phone, message).catch(err => console.error('본사 알림 발송 실패:', err));
+  }
 }
 
 // ===== MongoDB 모델 =====
@@ -9268,12 +9312,14 @@ app.get("/logout", async (req, res) => {
   // 📱 로그아웃 전 학부모 알림 발송
   if (req.session && req.session.user) {
     try {
-      const { name, grade } = req.session.user;
+      const { name, grade, school, academyName } = req.session.user;
       const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
       if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
         sendParentNotification(name, studentUser.parentPhone, 'logout', { grade })
           .catch(err => console.error('학부모 알림(로그아웃) 실패:', err));
       }
+      // 📱 본사 관리자 알림 발송 (로그아웃)
+      sendHQAdminNotification(name, grade, 'logout', { school, academyName });
     } catch (notifyErr) {
       console.warn("📱 로그아웃 알림 발송 실패:", notifyErr.message);
     }
@@ -12794,6 +12840,14 @@ app.post("/api/log", async (req, res) => {
                 }
               })
               .catch(err => console.error('학부모 알림(학습완료) 실패:', err));
+
+            // 📱 본사 관리자 알림 발송 (학습완료)
+            sendHQAdminNotification(name, grade, 'complete', {
+              unitKey: unit,
+              unitTitle,
+              school: studentUser.school,
+              academyName: studentUser.academyName
+            });
           }
         } catch (notifyErr) {
           console.warn("📱 학부모 알림 발송 실패:", notifyErr.message);
@@ -12832,22 +12886,26 @@ app.post("/api/log", async (req, res) => {
 
           const normalizedUnit = normalizeUnitId(unit);
 
-          userProgress.studyRoom.assignedTasks.forEach(task => {
-            // AI 과제이고, id 또는 unitId가 일치하면 완료 처리 (정규화 후 비교)
+          // AI 과제 찾기 및 즉시 삭제 (완료 시 바로 사라짐)
+          const originalLength = userProgress.studyRoom.assignedTasks.length;
+          userProgress.studyRoom.assignedTasks = userProgress.studyRoom.assignedTasks.filter(task => {
             const normalizedTaskId = normalizeUnitId(task.id);
             const normalizedTaskUnitId = normalizeUnitId(task.unitId);
-            if (task.isAI && (normalizedTaskId === normalizedUnit || normalizedTaskUnitId === normalizedUnit)) {
-              task.status = 'completed';
-              task.completedAt = aiReviewTime;
+            const isMatchingAITask = task.isAI && (normalizedTaskId === normalizedUnit || normalizedTaskUnitId === normalizedUnit);
+
+            if (isMatchingAITask) {
+              console.log(`🗑️ [/api/log] AI 추천과제 완료 → 즉시 삭제: ${unit} (원본 task.id: ${task.id})`);
               taskUpdated = true;
-              console.log(`✅ [/api/log] AI 과제 완료 처리: ${unit} (원본 task.id: ${task.id})`);
+              return false; // 배열에서 제거
             }
+            return true; // 유지
           });
+
           if (taskUpdated) {
             await userProgress.save();
-            console.log(`💾 [/api/log] UserProgress 저장 완료`);
+            console.log(`💾 [/api/log] UserProgress 저장 완료 (AI과제 ${originalLength - userProgress.studyRoom.assignedTasks.length}개 삭제)`);
 
-            // 🔥 LearningLog에도 aiReviewCompletedAt 저장 (과제 삭제해도 유지됨)
+            // 🔥 LearningLog에도 aiReviewCompletedAt 저장 (과제 삭제해도 기록은 유지됨)
             await LearningLog.updateOne(
               { grade, name, unit },
               { $set: { aiReviewCompletedAt: aiReviewTime } }
@@ -24275,6 +24333,9 @@ if (user.parentPhone && user.parentNotify !== false) {
     .catch(err => console.error('학부모 알림 실패:', err));
 }
 
+// 📱 본사 관리자 알림 발송 (로그인)
+sendHQAdminNotification(user.name, user.grade, 'login', { school: user.school, academyName: user.academyName });
+
 // ❗ 실제로 들어갈 메인/목차 페이지 경로
 const NEXT_URL = "/menu.html"; 
 // 만약 네가 바로 geo_01로 보내고 싶으면 "/geo_01.html" 처럼 수정
@@ -24460,6 +24521,9 @@ app.post("/academy-login", async (req, res) => {
       sendParentNotification(user.name, user.parentPhone, 'login', { grade: user.grade })
         .catch(err => console.error('학부모 알림 실패:', err));
     }
+
+    // 📱 본사 관리자 알림 발송 (학원 로그인)
+    sendHQAdminNotification(user.name, user.grade, 'login', { academyName: user.academyName });
 
     // 학원용도 동일한 메뉴 페이지로 이동
     // brain_library에서 로그인한 경우 창작 도서관 팝업 자동 오픈
@@ -26966,12 +27030,60 @@ app.post('/api/ai-task/create-schedule', async (req, res) => {
 // 매일 자정 실행: AI 과제 자동 부여 (LearningLog 테이블 기준)
 // - 최종완료 시간과 최종등급을 기준으로 AI 추천과제 부여
 // - 격려: 24시간 후, 보통: 48시간 후, 양호: 72시간 후, 우수: 부여 안 함
+// - 오답 기반: 중심문단 오답 + 문제 오답 >= 3회 → 1시간 후 재부여
+// - 완료된 AI 과제는 24시간 후 자동 삭제
 async function assignAITasksDaily() {
   try {
     console.log('🤖 [NEW] AI 자동 과제 부여 시작 (LearningLog 기준):', new Date().toISOString());
 
     const now = new Date();
 
+    // ========== 완료된 AI 추천과제 24시간 후 자동 삭제 ==========
+    console.log('🗑️ 완료된 AI 추천과제 정리 시작...');
+    const AI_TASK_EXPIRE_HOURS = 24;
+
+    const allProgress = await UserProgress.find({ 'studyRoom.assignedTasks': { $exists: true, $ne: [] } });
+    let totalRemovedCount = 0;
+
+    for (const progress of allProgress) {
+      const tasks = progress.studyRoom?.assignedTasks || [];
+      const originalLength = tasks.length;
+
+      // 완료된 AI 과제 중 24시간 지난 것 필터링
+      const filteredTasks = tasks.filter(task => {
+        // AI 과제가 아니면 유지
+        if (!task.isAI) return true;
+
+        // 완료되지 않은 과제는 유지
+        if (task.status !== 'completed') return true;
+
+        // completedAt이 없으면 유지
+        if (!task.completedAt) return true;
+
+        // 완료 후 24시간 경과 확인
+        const completedAt = new Date(task.completedAt);
+        const expireAt = new Date(completedAt.getTime() + AI_TASK_EXPIRE_HOURS * 60 * 60 * 1000);
+
+        if (now >= expireAt) {
+          console.log(`🗑️ [${progress.name}] ${task.title || task.id} 삭제 (완료 후 24시간 경과)`);
+          return false; // 삭제
+        }
+
+        return true; // 유지
+      });
+
+      const removedCount = originalLength - filteredTasks.length;
+      if (removedCount > 0) {
+        progress.studyRoom.assignedTasks = filteredTasks;
+        await progress.save();
+        totalRemovedCount += removedCount;
+        console.log(`✅ [${progress.name}] ${removedCount}개 AI 과제 삭제 완료`);
+      }
+    }
+
+    console.log(`🗑️ 완료된 AI 추천과제 정리 완료: 총 ${totalRemovedCount}개 삭제`);
+
+    // ========== 등급 기반 AI 추천과제 부여 ==========
     // 모든 LearningLog 조회 (completed된 것만)
     const allLogs = await LearningLog.find({ completed: true, deleted: { $ne: true } });
     console.log(`📚 조회된 학습 로그 수: ${allLogs.length}개`);
@@ -27164,7 +27276,151 @@ async function assignAITasksDaily() {
       }
     }
 
-    console.log('🤖 [NEW] AI 자동 과제 부여 완료:', new Date().toISOString());
+    console.log('🤖 [NEW] AI 자동 과제 부여 완료 (등급 기반):', new Date().toISOString());
+
+    // ========== 오답 기반 AI 추천과제 로직 (중심문단 오답 + 문제 오답 >= 3회) ==========
+    console.log('🎯 [오답 기반] AI 추천과제 부여 시작...');
+
+    // LearningBehavior에서 오답 데이터 조회
+    const behaviorData = await LearningBehavior.find({});
+    console.log(`📊 조회된 행동 데이터 수: ${behaviorData.length}개`);
+
+    // 오답 기준: 중심문단 오답 + 문제 오답 >= 3회, 12시간 경과
+    const ERROR_THRESHOLD = 3;
+    const WAIT_HOURS_FOR_ERROR = 12; // 12시간 후 부여
+
+    // 학생별로 그룹화
+    const behaviorByStudent = {};
+    for (const behavior of behaviorData) {
+      const studentKey = `${behavior.grade}::${behavior.name}`;
+      if (!behaviorByStudent[studentKey]) {
+        behaviorByStudent[studentKey] = {
+          grade: behavior.grade,
+          name: behavior.name,
+          behaviors: []
+        };
+      }
+      behaviorByStudent[studentKey].behaviors.push(behavior);
+    }
+
+    let errorBasedAssignedCount = 0;
+
+    for (const studentKey of Object.keys(behaviorByStudent)) {
+      const studentData = behaviorByStudent[studentKey];
+      const { grade, name, behaviors } = studentData;
+
+      // UserProgress 조회
+      let progress = await UserProgress.findOne({ grade, name });
+      if (!progress) {
+        progress = new UserProgress({
+          grade,
+          name,
+          studyRoom: { assignedTasks: [] }
+        });
+      }
+
+      const existingTasks = progress.studyRoom?.assignedTasks || [];
+      const existingUnitIds = new Set(existingTasks.map(t => {
+        const taskId = t.unitId || t.id;
+        const match = taskId.match(/([a-z]+\d*_\d+)\.html$/i);
+        if (match) return match[1];
+        return taskId;
+      }));
+
+      let studentAssignedCount = 0;
+
+      for (const behavior of behaviors) {
+        const paragraphErrors = behavior.paragraphQuizErrors?.total || 0;
+        const problemErrors = behavior.problemErrors?.total || 0;
+        const totalErrors = paragraphErrors + problemErrors;
+
+        // 오답 합계가 기준 미만이면 스킵
+        if (totalErrors < ERROR_THRESHOLD) continue;
+
+        const unitId = behavior.unit;
+        if (!unitId) continue;
+
+        // 이미 학습실에 있으면 스킵
+        if (existingUnitIds.has(unitId)) {
+          console.log(`⏭️ [오답] ${name}: ${unitId} 이미 학습실에 있음 → 스킵`);
+          continue;
+        }
+
+        // 1시간 경과 확인
+        const createdAt = new Date(behavior.createdAt);
+        const assignableAt = new Date(createdAt.getTime() + WAIT_HOURS_FOR_ERROR * 60 * 60 * 1000);
+
+        if (now < assignableAt) {
+          console.log(`⏭️ [오답] ${name}: ${unitId} 아직 대기 중 (${assignableAt.toLocaleString('ko-KR')}까지)`);
+          continue;
+        }
+
+        // 단원 정보 추출
+        const parts = unitId.split('_');
+        const subjectCode = parts[0];
+        const unitNumber = parts[1] ? parseInt(parts[1], 10) : 1;
+
+        const subjectMap = {
+          'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학',
+          'soc': '사회문화', 'law': '법', 'pol': '정치경제',
+          'modern': '현대문학', 'classic': '고전문학',
+          'world1': '세계문학1', 'world2': '세계문학2', 'world': '세계문학1',
+          'on_geo': '지리', 'on_bio': '생물', 'on_earth': '지구과학', 'on_physics': '물리', 'on_chem': '화학',
+          'on_soc': '사회문화', 'on_law': '법', 'on_pol': '정치경제',
+          'on_modern': '현대문학', 'on_classic': '고전문학',
+          'on_world1': '세계문학1', 'on_world2': '세계문학2',
+          'people1': '한국인물', 'people2': '세계인물',
+          'on_people1': '한국인물', 'on_people2': '세계인물'
+        };
+        const subjectName = subjectMap[subjectCode] || subjectCode;
+
+        const fieldMap = {
+          'geo': '사회', 'soc': '사회', 'law': '사회', 'pol': '사회',
+          'bio': '과학', 'earth': '과학', 'physics': '과학', 'chem': '과학',
+          'modern': '한국문학', 'classic': '한국문학',
+          'world1': '세계문학', 'world2': '세계문학',
+          'people1': '인물', 'people2': '인물',
+          'on_geo': '사회', 'on_soc': '사회', 'on_law': '사회', 'on_pol': '사회',
+          'on_bio': '과학', 'on_earth': '과학', 'on_physics': '과학', 'on_chem': '과학',
+          'on_modern': '한국문학', 'on_classic': '한국문학',
+          'on_world1': '세계문학', 'on_world2': '세계문학',
+          'on_people1': '인물', 'on_people2': '인물'
+        };
+        const fieldName = fieldMap[subjectCode] || '기타';
+
+        const unitTitle = behavior.unitTitle || `${subjectName} ${unitNumber}`;
+
+        // 학습실에 추가
+        existingTasks.push({
+          id: unitId,
+          title: unitTitle,
+          series: 'BRAINUP',
+          field: fieldName,
+          subject: subjectName,
+          isAI: true,
+          assignedAt: now,
+          assignReason: 'error_based', // 오답 기반임을 표시
+          totalErrors: totalErrors // 오답 횟수 기록
+        });
+
+        existingUnitIds.add(unitId);
+        studentAssignedCount++;
+        errorBasedAssignedCount++;
+
+        console.log(`✅ [오답] ${name}: ${unitTitle} AI 과제 부여 (오답 ${totalErrors}회)`);
+      }
+
+      if (studentAssignedCount > 0) {
+        progress.studyRoom = {
+          assignedTasks: existingTasks,
+          lastAIAssignedAt: now
+        };
+        await progress.save();
+        console.log(`🎉 [오답] ${name} 학생에게 ${studentAssignedCount}개 AI 과제 부여 완료`);
+      }
+    }
+
+    console.log(`🎯 [오답 기반] AI 추천과제 부여 완료: 총 ${errorBasedAssignedCount}개`);
 
   } catch (error) {
     console.error('❌ AI 자동 과제 부여 오류:', error);
@@ -27175,6 +27431,48 @@ async function assignAITasksDaily() {
 
 // 서버 시작 시 한 번 실행 (테스트용 - 프로덕션에서는 주석 처리)
 // assignAITasksDaily();
+
+// 🧪 테스트용: AI 과제 부여 즉시 실행 API
+app.get('/api/test-ai-task-assign', async (req, res) => {
+  try {
+    console.log('🧪 [테스트] AI 과제 부여 수동 실행...');
+    await assignAITasksDaily();
+    res.json({ ok: true, message: 'AI 과제 부여 완료. 콘솔 로그를 확인하세요.' });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+// 🧪 테스트용: 특정 학생의 오답 데이터 확인 API
+app.get('/api/test-error-data/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    const behaviors = await LearningBehavior.find({ name });
+
+    const result = behaviors.map(b => ({
+      unit: b.unit,
+      unitTitle: b.unitTitle,
+      paragraphErrors: b.paragraphQuizErrors?.total || 0,
+      problemErrors: b.problemErrors?.total || 0,
+      totalErrors: (b.paragraphQuizErrors?.total || 0) + (b.problemErrors?.total || 0),
+      createdAt: b.createdAt
+    }));
+
+    // 3회 이상인 것만 필터링
+    const errorThreshold = result.filter(r => r.totalErrors >= 3);
+
+    res.json({
+      ok: true,
+      name,
+      totalRecords: result.length,
+      errorThresholdRecords: errorThreshold.length,
+      all: result,
+      overThreshold: errorThreshold
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
 
 // AI 과제 title 조회 API (디버그용)
 app.get('/api/debug-ai-task-titles', async (req, res) => {
