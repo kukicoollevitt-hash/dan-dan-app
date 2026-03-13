@@ -10915,16 +10915,10 @@ app.get("/admin/users", async (req, res) => {
                      id="parentPhone-${u._id}"
                      value="${u.parentPhone || ''}"
                      placeholder="010-0000-0000"
-                     style="width: 120px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                     onchange="updateParentPhone('${u._id}', this.value)" />
-              <span class="parent-notify-toggle"
-                    data-id="${u._id}"
-                    data-notify="${u.parentNotify !== false}"
-                    onclick="toggleParentNotify('${u._id}')"
-                    style="cursor: pointer; font-size: 16px; ${u.parentNotify !== false ? '' : 'opacity: 0.4;'}"
-                    title="${u.parentNotify !== false ? '알림 ON (클릭해서 끄기)' : '알림 OFF (클릭해서 켜기)'}">
-                ${u.parentNotify !== false ? '🔔' : '🔕'}
-              </span>
+                     style="width: 120px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;" />
+              <button onclick="saveParentPhone('${u._id}')"
+                      style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;"
+                      title="학부모 번호 저장">저장</button>
             </div>
           </td>`;
       } else {
@@ -10953,16 +10947,10 @@ app.get("/admin/users", async (req, res) => {
                      id="parentPhone-${u._id}"
                      value="${u.parentPhone || ''}"
                      placeholder="010-0000-0000"
-                     style="width: 120px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                     onchange="updateParentPhone('${u._id}', this.value)" />
-              <span class="parent-notify-toggle"
-                    data-id="${u._id}"
-                    data-notify="${u.parentNotify !== false}"
-                    onclick="toggleParentNotify('${u._id}')"
-                    style="cursor: pointer; font-size: 16px; ${u.parentNotify !== false ? '' : 'opacity: 0.4;'}"
-                    title="${u.parentNotify !== false ? '알림 ON (클릭해서 끄기)' : '알림 OFF (클릭해서 켜기)'}">
-                ${u.parentNotify !== false ? '🔔' : '🔕'}
-              </span>
+                     style="width: 120px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;" />
+              <button onclick="saveParentPhone('${u._id}')"
+                      style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;"
+                      title="학부모 번호 저장">저장</button>
             </div>
           </td>`;
       }
@@ -11160,8 +11148,12 @@ app.get("/admin/users", async (req, res) => {
           currentUserId = null;
         }
 
-        // 📱 학부모 번호 업데이트 (슈퍼관리자용)
-        async function updateParentPhone(userId, phone) {
+        // 📱 학부모 번호 저장 (토스트 팝업 포함)
+        async function saveParentPhone(userId) {
+          const input = document.getElementById('parentPhone-' + userId);
+          if (!input) return;
+          const phone = input.value;
+
           try {
             const res = await fetch('/api/admin/users/' + userId, {
               method: 'PUT',
@@ -11170,47 +11162,65 @@ app.get("/admin/users", async (req, res) => {
             });
             const data = await res.json();
             if (data.ok) {
-              const input = document.getElementById('parentPhone-' + userId);
-              if (input) {
-                input.style.borderColor = '#10b981';
-                setTimeout(function() { input.style.borderColor = '#ddd'; }, 1500);
-              }
+              showToast('학부모 번호가 저장되었습니다', 'success');
+              input.style.borderColor = '#10b981';
+              setTimeout(function() { input.style.borderColor = '#ddd'; }, 2000);
             } else {
-              alert('학부모 번호 저장 실패: ' + (data.message || ''));
+              showToast('저장 실패: ' + (data.message || ''), 'error');
             }
           } catch (err) {
-            console.error('학부모 번호 업데이트 오류:', err);
-            alert('학부모 번호 저장 중 오류가 발생했습니다.');
+            console.error('학부모 번호 저장 오류:', err);
+            showToast('저장 중 오류가 발생했습니다', 'error');
           }
         }
 
-        // 🔔 학부모 알림 토글 (슈퍼관리자용)
-        async function toggleParentNotify(userId) {
-          const toggleEl = document.querySelector('.parent-notify-toggle[data-id="' + userId + '"]');
-          if (!toggleEl) return;
+        // 🎉 토스트 팝업 표시
+        function showToast(message, type = 'success') {
+          // 기존 토스트 제거
+          const existing = document.querySelector('.admin-toast');
+          if (existing) existing.remove();
 
-          const currentNotify = toggleEl.getAttribute('data-notify') === 'true';
-          const newNotify = !currentNotify;
+          const toast = document.createElement('div');
+          toast.className = 'admin-toast';
+          toast.innerHTML = (type === 'success' ? '✓ ' : '✕ ') + message;
+          toast.style.cssText = \`
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: \${type === 'success' ? '#10b981' : '#ef4444'};
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            animation: toastSlideIn 0.3s ease;
+          \`;
+          document.body.appendChild(toast);
 
-          try {
-            const res = await fetch('/api/admin/users/' + userId, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ key: '${key}', parentNotify: newNotify })
-            });
-            const data = await res.json();
-            if (data.ok) {
-              toggleEl.setAttribute('data-notify', newNotify);
-              toggleEl.innerHTML = newNotify ? '🔔' : '🔕';
-              toggleEl.style.opacity = newNotify ? '1' : '0.4';
-              toggleEl.title = newNotify ? '알림 ON (클릭해서 끄기)' : '알림 OFF (클릭해서 켜기)';
-            } else {
-              alert('알림 설정 변경 실패: ' + (data.message || ''));
+          setTimeout(() => {
+            toast.style.animation = 'toastSlideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+          }, 2500);
+        }
+
+        // 토스트 애니메이션 CSS 추가
+        if (!document.getElementById('toast-animation-style')) {
+          const style = document.createElement('style');
+          style.id = 'toast-animation-style';
+          style.textContent = \`
+            @keyframes toastSlideIn {
+              from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+              to { opacity: 1; transform: translateX(-50%) translateY(0); }
             }
-          } catch (err) {
-            console.error('알림 설정 변경 오류:', err);
-            alert('알림 설정 변경 중 오류가 발생했습니다.');
-          }
+            @keyframes toastSlideOut {
+              from { opacity: 1; transform: translateX(-50%) translateY(0); }
+              to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            }
+          \`;
+          document.head.appendChild(style);
         }
 
         async function submitSeries() {
