@@ -168,17 +168,18 @@ async function sendParentNotification(studentName, parentPhone, type, additional
   switch (type) {
     case 'login':
       // [브레인문해원] 홍길동 학생이 16:47에 학습 시작했어요!
-      message = `[브레인문해원] ${studentName} 학생이 ${timeStr}에 학습 시작했어요!`;
+      // 함께 응원해 주세요!
+      message = `[브레인문해원] ${studentName} 학생이 ${timeStr}에 학습 시작했어요!\n함께 응원해 주세요!`;
       break;
     case 'logout':
-      // [브레인문해력] 홍길동 학생이 학습을 종료! 학습 리포트가 도착했어요!
+      // [브레인문해력] 홍길동 학생이 학습을 완료하였어요! 많이 칭찬 해주세요!
       // 주간 리포트 링크 생성 (grade 정보가 있으면 포함)
       const grade = additionalInfo.grade || '';
       const weekStart = getWeekStart();
       const reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}&shared=true`;
 
       // URL 단축 없이 원본 URL 사용 (LMS 발송이라 장문 OK)
-      message = `[브레인문해력] ${studentName} 학생이 학습을 종료! 학습 리포트가 도착했어요!\n리포트: ${reportUrl}`;
+      message = `[브레인문해력] ${studentName} 학생이 학습을 완료하였어요! 많이 칭찬 해주세요!\n링크를 클릭하면 학습 리포트를 볼 수 있어요!\n${reportUrl}`;
       break;
     case 'complete':
       // [브레인문해원] 홍길동 학생 "미켈란젤로" 학습 완료!
