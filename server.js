@@ -19729,6 +19729,8 @@ app.get("/my-learning", async (req, res) => {
 
         // 어휘 학습 페이지로 이동 함수
         function goToVocabPage(url) {
+          // 공유 모드에서는 페이지 이동 차단
+          if (IS_SHARED_MODE) return;
           window.location.href = url;
         }
         window.goToVocabPage = goToVocabPage;
@@ -21157,7 +21159,9 @@ app.get("/my-learning", async (req, res) => {
             const folder = folderMap[subjectKey] || 'science';
             const vocabPageUrl = '/BRAINUP/' + folder + '/' + item.unit + '.html?tab=vocab';
 
-            html += '<div class="vocab-bar-row" data-url="' + vocabPageUrl + '" style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: all 0.3s ease;">';
+            // 공유 모드에서는 cursor와 클릭 비활성화
+            const vocabBarCursor = ${isSharedMode} ? 'default' : 'pointer';
+            html += '<div class="vocab-bar-row" data-url="' + vocabPageUrl + '" data-shared="${isSharedMode}" style="display: flex; align-items: center; margin-bottom: 12px; cursor: ' + vocabBarCursor + '; padding: 4px 8px; border-radius: 8px; transition: all 0.3s ease;">';
 
             // 단원명 + 날짜 (좌측)
             html += '<div class="vocab-bar-label" style="width: 100px; font-size: 12px; color: #fff; text-align: right; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">';
@@ -21225,8 +21229,9 @@ app.get("/my-learning", async (req, res) => {
               }
             });
 
-            // 클릭 시 어휘 학습 페이지로 이동
+            // 클릭 시 어휘 학습 페이지로 이동 (공유 모드에서는 비활성화)
             row.addEventListener('click', function() {
+              if (IS_SHARED_MODE) return;
               const url = this.getAttribute('data-url');
               if (url) {
                 window.location.href = url;
