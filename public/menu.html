@@ -26252,6 +26252,100 @@ ${content}
 
   <!-- 🔒 학습 잠금 모달 -->
   <style>
+    /* 커스텀 Confirm 모달 */
+    .custom-confirm-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .custom-confirm-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .custom-confirm-box {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: scale(0.8) translateY(20px);
+      transition: all 0.3s ease;
+    }
+    .custom-confirm-overlay.show .custom-confirm-box {
+      transform: scale(1) translateY(0);
+    }
+    .custom-confirm-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #ff9a56 0%, #ff6b35 100%);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 20px;
+    }
+    .custom-confirm-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: white;
+    }
+    .custom-confirm-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .custom-confirm-message {
+      font-size: 15px;
+      color: #666;
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .custom-confirm-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .custom-confirm-btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .custom-confirm-btn.cancel {
+      background: #f0f0f0;
+      color: #666;
+    }
+    .custom-confirm-btn.cancel:hover {
+      background: #e0e0e0;
+    }
+    .custom-confirm-btn.confirm {
+      background: linear-gradient(135deg, #8b2f2f 0%, #a04040 100%);
+      color: white;
+    }
+    .custom-confirm-btn.confirm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(139, 47, 47, 0.4);
+    }
+  </style>
+  <style>
     .lock-modal-overlay {
       position: fixed;
       inset: 0;
@@ -26869,12 +26963,62 @@ ${content}
       }
     }
 
+    // 커스텀 Confirm 모달
+    function showCustomConfirm(title, message, onConfirm) {
+      const existing = document.querySelector('.custom-confirm-overlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'custom-confirm-overlay';
+      overlay.innerHTML = `
+        <div class="custom-confirm-box">
+          <div class="custom-confirm-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h2v2h-2zm0-4V7h2v6h-2z"/></svg>
+          </div>
+          <div class="custom-confirm-title">${title}</div>
+          <div class="custom-confirm-message">${message}</div>
+          <div class="custom-confirm-buttons">
+            <button class="custom-confirm-btn cancel">취소</button>
+            <button class="custom-confirm-btn confirm">확인</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      setTimeout(() => overlay.classList.add('show'), 10);
+
+      overlay.querySelector('.cancel').onclick = () => {
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.remove(), 300);
+      };
+      overlay.querySelector('.confirm').onclick = () => {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+          overlay.remove();
+          if (onConfirm) onConfirm();
+        }, 300);
+      };
+      overlay.onclick = (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('show');
+          setTimeout(() => overlay.remove(), 300);
+        }
+      };
+    }
+
     // 형성평가 모달 닫기
     function closeGateQuizModal() {
       if (gateQuizData.length > 0 && gateCurrentIndex < gateQuizData.length) {
-        if (!confirm('형성평가를 종료하시겠습니까?\n통과하지 못하면 다음 단원 학습이 제한됩니다.')) {
-          return;
-        }
+        showCustomConfirm(
+          '형성평가를 종료하시겠습니까?',
+          '통과하지 못하면 다음 단원 학습이 제한됩니다.',
+          () => {
+            document.getElementById('gateQuizModal').classList.remove('active');
+            gateQuizData = [];
+            gateCurrentIndex = 0;
+          }
+        );
+        return;
       }
       document.getElementById('gateQuizModal').classList.remove('active');
       gateQuizData = [];
