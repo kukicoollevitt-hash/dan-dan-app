@@ -59,7 +59,7 @@ const SMS_SENDER = process.env.SMS_SENDER || '01088953903';
 // 본사 관리자 SMS 알림 설정 (모든 학생 상황 수신)
 const HQ_ADMIN_PHONES = process.env.HQ_ADMIN_PHONES
   ? process.env.HQ_ADMIN_PHONES.split(',').map(p => p.trim())
-  : []; // 예: '01012345678,01087654321'
+  : ['01038879967']; // 기본값: 본사 관리자 번호
 
 const crypto = require('crypto');
 
