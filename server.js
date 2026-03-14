@@ -208,10 +208,25 @@ async function sendParentNotification(studentName, parentPhone, type, additional
   return await sendSMS(parentPhone, message);
 }
 
+// 본사 관리자 알림 중복 방지용 캐시 (5분)
+const hqNotifyCache = new Map();
+
 // 본사 관리자 알림 발송 함수 (모든 학생 상황 수신)
 async function sendHQAdminNotification(studentName, grade, type, additionalInfo = {}) {
   if (!HQ_ADMIN_PHONES || HQ_ADMIN_PHONES.length === 0) {
     return;
+  }
+
+  // 학습완료(complete)일 때 중복 발송 방지 (5분)
+  if (type === 'complete' && additionalInfo.unitKey) {
+    const cacheKey = `hq-complete:${grade}:${studentName}:${additionalInfo.unitKey}`;
+    if (hqNotifyCache.has(cacheKey)) {
+      console.log(`📱 [본사알림] 중복 방지: ${grade} ${studentName} ${additionalInfo.unitKey} (5분 내 이미 발송됨)`);
+      return;
+    }
+    // 즉시 캐시에 추가 (동기)
+    hqNotifyCache.set(cacheKey, Date.now());
+    setTimeout(() => hqNotifyCache.delete(cacheKey), 5 * 60 * 1000); // 5분 후 삭제
   }
 
   let message = '';
@@ -12816,21 +12831,22 @@ app.post("/api/log", async (req, res) => {
       } else {
         try {
           const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
-          if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
-            // 단원 제목 가져오기
-            const unitTitle = UNIT_TITLES[unit] || unit;
-            // 과목명 추출 (unit 코드에서)
-            const subjectMap = {
-              bio: '생명과학', chem: '화학', physics: '물리', earth: '지구과학',
-              law: '법과정치', geo: '한국지리', soc: '사회문화', pol: '정치',
-              world1: '세계지리', world2: '세계사',
-              classic: '고전문학', modern: '현대문학', poem: '시문학', novel: '소설',
-              people1: '인물1', people2: '인물2'
-            };
-            const subjectMatch = unit.match(/^(?:on_|fit_|deep_)?([a-z]+\d?)/i);
-            const subjectKey = subjectMatch ? subjectMatch[1].toLowerCase() : '';
-            const subject = subjectMap[subjectKey] || '';
+          // 단원 제목 가져오기
+          const unitTitle = UNIT_TITLES[unit] || unit;
+          // 과목명 추출 (unit 코드에서)
+          const subjectMap = {
+            bio: '생명과학', chem: '화학', physics: '물리', earth: '지구과학',
+            law: '법과정치', geo: '한국지리', soc: '사회문화', pol: '정치',
+            world1: '세계지리', world2: '세계사',
+            classic: '고전문학', modern: '현대문학', poem: '시문학', novel: '소설',
+            people1: '인물1', people2: '인물2'
+          };
+          const subjectMatch = unit.match(/^(?:on_|fit_|deep_)?([a-z]+\d?)/i);
+          const subjectKey = subjectMatch ? subjectMatch[1].toLowerCase() : '';
+          const subject = subjectMap[subjectKey] || '';
 
+          // 📱 학부모 알림 발송 (학부모 연락처가 있는 경우만)
+          if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
             // SMS 발송 후 성공했을 때만 캐시 설정
             sendParentNotification(name, studentUser.parentPhone, 'complete', { unitKey: unit, unitTitle, subject })
               .then(result => {
@@ -12840,15 +12856,15 @@ app.post("/api/log", async (req, res) => {
                 }
               })
               .catch(err => console.error('학부모 알림(학습완료) 실패:', err));
-
-            // 📱 본사 관리자 알림 발송 (학습완료)
-            sendHQAdminNotification(name, grade, 'complete', {
-              unitKey: unit,
-              unitTitle,
-              school: studentUser.school,
-              academyName: studentUser.academyName
-            });
           }
+
+          // 📱 본사 관리자 알림 발송 (학습완료) - 학부모 연락처 유무와 상관없이 항상 발송
+          sendHQAdminNotification(name, grade, 'complete', {
+            unitKey: unit,
+            unitTitle,
+            school: studentUser?.school,
+            academyName: studentUser?.academyName
+          });
         } catch (notifyErr) {
           console.warn("📱 학부모 알림 발송 실패:", notifyErr.message);
         }
@@ -27166,8 +27182,8 @@ async function assignAITasksDaily() {
 
       // 기존 학습실 과제 목록
       const existingTasks = progress.studyRoom?.assignedTasks || [];
-      // 기존 과제의 unitId 추출 (./BRAINUP/science/bio_02.html -> bio_02, 또는 bio_02 그대로)
-      const existingUnitIds = new Set(existingTasks.map(t => {
+      // AI 추천과제만 추출 (isAI: true인 것만 스킵 대상)
+      const existingAIUnitIds = new Set(existingTasks.filter(t => t.isAI === true).map(t => {
         const taskId = t.unitId || t.id;
         // ./BRAINUP/xxx/yyy.html 형식에서 unit 코드 추출
         const match = taskId.match(/([a-z]+\d*_\d+)\.html$/i);
@@ -27178,8 +27194,8 @@ async function assignAITasksDaily() {
 
       let assignedCount = 0;
 
-      // 디버그: 기존 학습실 과제 ID 출력
-      console.log(`🔍 [${name}] 기존 학습실 과제 IDs:`, Array.from(existingUnitIds));
+      // 디버그: 기존 학습실 AI 과제 ID 출력
+      console.log(`🔍 [${name}] 기존 학습실 AI 과제 IDs:`, Array.from(existingAIUnitIds));
 
       // 각 단원의 최종등급과 최종완료 시간 확인
       for (const unitId in unitLatestLogs) {
@@ -27195,9 +27211,9 @@ async function assignAITasksDaily() {
           continue;
         }
 
-        // 이미 학습실에 있으면 스킵
-        if (existingUnitIds.has(unitId)) {
-          console.log(`⏭️ [${name}] ${unitId}: 이미 학습실에 있음 → 스킵`);
+        // 이미 AI 추천과제로 학습실에 있으면 스킵 (일반과제는 스킵 안함)
+        if (existingAIUnitIds.has(unitId)) {
+          console.log(`⏭️ [${name}] ${unitId}: 이미 AI 추천과제로 있음 → 스킵`);
           continue;
         }
 
@@ -27251,7 +27267,7 @@ async function assignAITasksDaily() {
             originalGrade: gradeInfo.text // 원래 등급 기록
           });
 
-          existingUnitIds.add(unitId);
+          existingAIUnitIds.add(unitId);
           assignedCount++;
 
           // 🔥 LearningLog에도 aiTaskAssignedAt 저장 (학습 기록 테이블에 표시)
@@ -27320,7 +27336,8 @@ async function assignAITasksDaily() {
       }
 
       const existingTasks = progress.studyRoom?.assignedTasks || [];
-      const existingUnitIds = new Set(existingTasks.map(t => {
+      // AI 추천과제만 추출 (isAI: true인 것만 스킵 대상)
+      const existingAIUnitIds2 = new Set(existingTasks.filter(t => t.isAI === true).map(t => {
         const taskId = t.unitId || t.id;
         const match = taskId.match(/([a-z]+\d*_\d+)\.html$/i);
         if (match) return match[1];
@@ -27340,9 +27357,9 @@ async function assignAITasksDaily() {
         const unitId = behavior.unit;
         if (!unitId) continue;
 
-        // 이미 학습실에 있으면 스킵
-        if (existingUnitIds.has(unitId)) {
-          console.log(`⏭️ [오답] ${name}: ${unitId} 이미 학습실에 있음 → 스킵`);
+        // 이미 AI 추천과제로 학습실에 있으면 스킵 (일반과제는 스킵 안함)
+        if (existingAIUnitIds2.has(unitId)) {
+          console.log(`⏭️ [오답] ${name}: ${unitId} 이미 AI 추천과제로 있음 → 스킵`);
           continue;
         }
 
@@ -27403,7 +27420,7 @@ async function assignAITasksDaily() {
           totalErrors: totalErrors // 오답 횟수 기록
         });
 
-        existingUnitIds.add(unitId);
+        existingAIUnitIds2.add(unitId);
         studentAssignedCount++;
         errorBasedAssignedCount++;
 
@@ -28141,15 +28158,21 @@ async function executeAutoTaskSchedules() {
 
 console.log('⏭️ 구버전 자동 과제 부여 스케줄러 비활성화됨 (신버전 사용)');
 
-// AI 추천과제 스케줄러 (매시 정각 실행 - 등급별 시간 체크)
-cron.schedule('0 * * * *', () => {
-  console.log('⏰ AI 추천과제 스케줄러 트리거 (매시 정각)');
+// AI 추천과제 스케줄러 (30분마다 실행 - 놓침 방지)
+cron.schedule('0,30 * * * *', () => {
+  console.log('⏰ AI 추천과제 스케줄러 트리거 (30분마다)');
   assignAITasksDaily();
 }, {
   timezone: "Asia/Seoul"
 });
 
-console.log('✅ AI 추천과제 스케줄러 등록 완료 (매시 정각 실행)');
+console.log('✅ AI 추천과제 스케줄러 등록 완료 (30분마다 실행)');
+
+// 서버 시작 시 10초 후 즉시 실행 (놓친 과제 복구)
+setTimeout(() => {
+  console.log('🚀 서버 시작 후 AI 추천과제 즉시 실행 (놓친 과제 복구)');
+  assignAITasksDaily();
+}, 10000);
 
 // ========== 독서 감상문 월간 리셋 ==========
 // 매월 1일 0시 0분에 실행 (월간 과제 리셋)

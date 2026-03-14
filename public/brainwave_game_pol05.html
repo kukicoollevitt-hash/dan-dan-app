@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <title>브레인웨이브 창의노트 - 정치05</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      touch-action: none;
+      background: #f5f0e6;
+    }
+
+    .scale-container {
+      width: 1024px;
+      height: 768px;
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      transform-origin: center center;
+    }
+
+    .left-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .title-area {
+      text-align: center;
+      padding: 10px;
+    }
+
+    .title-area h1 {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1.5rem;
+      color: #3b82f6;
+      text-shadow: 2px 2px 0 #fff, -1px -1px 0 #ddd;
+      letter-spacing: 1px;
+    }
+
+    .title-area p {
+      font-family: 'Gaegu', cursive;
+      font-size: 1rem;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .wave-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .wave-center {
+      position: relative;
+      width: 360px;
+      height: 360px;
+    }
+
+    /* 4-level colored wave rings */
+    .wave-ring {
+      position: absolute;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 3px solid;
+    }
+
+    .wave-ring:nth-child(1) {
+      width: 90px;
+      height: 90px;
+      border-color: #fcd34d;
+      background: rgba(252, 211, 77, 0.1);
+      animation: pulse1 2.5s ease-in-out infinite;
+    }
+
+    .wave-ring:nth-child(2) {
+      width: 150px;
+      height: 150px;
+      border-color: #86efac;
+      background: rgba(134, 239, 172, 0.08);
+      animation: pulse2 2.5s ease-in-out infinite 0.2s;
+    }
+
+    .wave-ring:nth-child(3) {
+      width: 210px;
+      height: 210px;
+      border-color: #93c5fd;
+      background: rgba(147, 197, 253, 0.06);
+      animation: pulse3 2.5s ease-in-out infinite 0.4s;
+    }
+
+    .wave-ring:nth-child(4) {
+      width: 270px;
+      height: 270px;
+      border-color: #c4b5fd;
+      background: rgba(196, 181, 253, 0.04);
+      animation: pulse4 2.5s ease-in-out infinite 0.6s;
+    }
+
+    @keyframes pulse1 {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+      50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+    }
+
+    @keyframes pulse2 {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+      50% { transform: translate(-50%, -50%) scale(1.06); opacity: 0.9; }
+    }
+
+    @keyframes pulse3 {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+      50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.8; }
+    }
+
+    @keyframes pulse4 {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+      50% { transform: translate(-50%, -50%) scale(1.04); opacity: 0.7; }
+    }
+
+    .center-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2.8rem;
+      z-index: 10;
+      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .node-card {
+      position: absolute;
+      background: linear-gradient(145deg, #ffffff, #f8f8f8);
+      border: 2px solid #3b82f6;
+      border-radius: 14px;
+      padding: 10px 14px;
+      min-width: 105px;
+      max-width: 145px;
+      text-align: center;
+      cursor: default;
+      transition: all 0.3s ease;
+      font-family: 'Gaegu', cursive;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #333;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.1), -1px -1px 5px rgba(255,255,255,0.8);
+    }
+
+    .node-card:hover {
+      transform: scale(1.05);
+      border-color: #2563eb;
+      box-shadow: 4px 4px 15px rgba(59,130,246,0.3);
+    }
+
+    .node-num {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .blank {
+      display: inline-block;
+      min-width: 55px;
+      height: 26px;
+      background: #fff;
+      border: 2px dashed #3b82f6;
+      border-radius: 6px;
+      margin: 2px;
+      vertical-align: middle;
+      text-align: center;
+      line-height: 22px;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+    }
+
+    .blank.drag-over {
+      background: rgba(59,130,246,0.2);
+      border-color: #2563eb;
+      transform: scale(1.05);
+    }
+
+    .blank.filled {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      border: 2px solid #2563eb;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .right-panel {
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .score-bar {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 16px;
+      background: linear-gradient(145deg, #fff, #f5f5f5);
+      border-radius: 14px;
+      border: 2px solid #e0e0e0;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.08);
+    }
+
+    .score-item {
+      text-align: center;
+    }
+
+    .score-item .num {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1.4rem;
+      color: #3b82f6;
+    }
+
+    .score-item .label {
+      font-family: 'Gaegu', cursive;
+      font-size: 0.8rem;
+      color: #666;
+      font-weight: 700;
+    }
+
+    .concept-map {
+      background: linear-gradient(145deg, #fff, #f8f8f8);
+      border: 2px solid #3b82f6;
+      border-radius: 16px;
+      padding: 14px;
+      flex: 1;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.08);
+    }
+
+    .concept-map h3 {
+      font-family: 'Black Han Sans', sans-serif;
+      color: #3b82f6;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .map-flow {
+      font-family: 'Gaegu', cursive;
+      color: #444;
+      font-size: 0.95rem;
+      line-height: 1.9;
+      font-weight: 700;
+    }
+
+    .map-flow .flow-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 4px 0;
+    }
+
+    .map-flow .arrow {
+      color: #3b82f6;
+      margin: 0 6px;
+      font-weight: bold;
+    }
+
+    .map-flow .concept-blank {
+      display: inline-block;
+      min-width: 60px;
+      height: 26px;
+      background: #fff;
+      border: 2px dashed #3b82f6;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 22px;
+      font-size: 0.85rem;
+      margin: 2px 4px;
+      transition: all 0.3s ease;
+    }
+
+    .map-flow .concept-blank.drag-over {
+      background: rgba(59,130,246,0.2);
+      border-color: #2563eb;
+      transform: scale(1.05);
+    }
+
+    .map-flow .concept-blank.filled {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      border: 2px solid #2563eb;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .question-card {
+      background: linear-gradient(145deg, #fffbeb, #fef3c7);
+      border: 2px solid #f59e0b;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.08);
+    }
+
+    .question-card h3 {
+      font-family: 'Black Han Sans', sans-serif;
+      color: #d97706;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .question-card p {
+      font-family: 'Gaegu', cursive;
+      color: #92400e;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .question-card textarea {
+      width: 100%;
+      height: 50px;
+      border: 2px solid #fbbf24;
+      border-radius: 8px;
+      padding: 8px;
+      font-family: 'Gaegu', cursive;
+      font-size: 0.9rem;
+      resize: none;
+      background: #fff;
+    }
+
+    .question-card textarea:focus {
+      outline: none;
+      border-color: #f59e0b;
+    }
+
+    .word-bank {
+      background: linear-gradient(145deg, #fff, #f8f8f8);
+      border: 2px solid #3b82f6;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.08);
+    }
+
+    .word-bank h3 {
+      font-family: 'Black Han Sans', sans-serif;
+      color: #3b82f6;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+
+    .word-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .word-chip {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      color: #fff;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-family: 'Gaegu', cursive;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: grab;
+      transition: all 0.3s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      box-shadow: 2px 2px 8px rgba(59,130,246,0.3);
+    }
+
+    .word-chip:hover {
+      transform: scale(1.08);
+      box-shadow: 3px 3px 12px rgba(59,130,246,0.5);
+    }
+
+    .word-chip.dragging {
+      opacity: 0.5;
+      transform: scale(1.1);
+    }
+
+    .word-chip.used {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+      background: #94a3b8;
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 14px;
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 3px 3px 10px rgba(16,185,129,0.3);
+    }
+
+    .download-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 4px 4px 15px rgba(16,185,129,0.5);
+    }
+
+    /* Completion Modal */
+    .completion-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .completion-modal.show {
+      display: flex;
+    }
+
+    .completion-content {
+      background: linear-gradient(145deg, #fff, #f0fdf4);
+      border: 4px solid #10b981;
+      border-radius: 24px;
+      padding: 40px 50px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: popIn 0.5s ease;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .completion-content h2 {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 2rem;
+      color: #10b981;
+      margin-bottom: 10px;
+    }
+
+    .completion-content p {
+      font-family: 'Gaegu', cursive;
+      font-size: 1.3rem;
+      color: #333;
+      font-weight: 700;
+    }
+
+    .completion-content .emoji {
+      font-size: 4rem;
+      margin-bottom: 15px;
+    }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    @media (max-width: 1024px) or (max-height: 768px) {
+      body { align-items: flex-start; padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="scale-container" id="container">
+    <div class="left-panel">
+      <div class="title-area">
+        <h1>🗳️ 한 표의 힘이 모여 만드는 민주주의</h1>
+        <p>브레인웨이브 창의노트 | 정치 05단원</p>
+      </div>
+      <div class="wave-container">
+        <div class="wave-center">
+          <div class="wave-ring"></div>
+          <div class="wave-ring"></div>
+          <div class="wave-ring"></div>
+          <div class="wave-ring"></div>
+          <div class="center-icon">🗳️</div>
+
+          <div class="node-card" style="top:-35px;left:50%;transform:translateX(-50%)">
+            <div class="node-num">1</div>
+            국민이 가진 힘 <span class="blank" data-answer="주권"></span>
+          </div>
+          <div class="node-card" style="top:15px;right:-65px">
+            <div class="node-num">2</div>
+            대표를 뽑는 <span class="blank" data-answer="대표"></span> 민주주의
+          </div>
+          <div class="node-card" style="top:120px;right:-75px">
+            <div class="node-num">3</div>
+            누구나 투표하는 <span class="blank" data-answer="보통"></span> 선거
+          </div>
+          <div class="node-card" style="bottom:50px;right:-55px">
+            <div class="node-num">4</div>
+            본인이 직접 하는 <span class="blank" data-answer="직접"></span> 선거
+          </div>
+          <div class="node-card" style="bottom:-30px;left:50%;transform:translateX(-50%)">
+            <div class="node-num">5</div>
+            모두 1표씩 <span class="blank" data-answer="평등"></span> 선거
+          </div>
+          <div class="node-card" style="bottom:50px;left:-65px">
+            <div class="node-num">6</div>
+            선택을 숨기는 <span class="blank" data-answer="비밀"></span> 선거
+          </div>
+          <div class="node-card" style="top:120px;left:-75px">
+            <div class="node-num">7</div>
+            투표할 자격 <span class="blank" data-answer="유권자"></span>
+          </div>
+          <div class="node-card" style="top:15px;left:-65px">
+            <div class="node-num">8</div>
+            손해가 되는 일 <span class="blank" data-answer="불이익"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="score-bar">
+        <div class="score-item">
+          <div class="num" id="correct">0</div>
+          <div class="label">정답</div>
+        </div>
+        <div class="score-item">
+          <div class="num" id="wrong">0</div>
+          <div class="label">오답</div>
+        </div>
+        <div class="score-item">
+          <div class="num" id="remain">13</div>
+          <div class="label">남음</div>
+        </div>
+      </div>
+
+      <div class="concept-map">
+        <h3>🗺️ 개념 구조도</h3>
+        <div class="map-flow">
+          <div class="flow-row">
+            <span class="concept-blank" data-answer="주권"></span> <span class="arrow">→</span> 선거 <span class="arrow">→</span> <span class="concept-blank" data-answer="대표"></span> 민주주의
+          </div>
+          <div class="flow-row">
+            선거 4원칙: <span class="concept-blank" data-answer="보통"></span> + <span class="concept-blank" data-answer="평등"></span> + <span class="concept-blank" data-answer="직접"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-card">
+        <h3>✏️ 생각 쓰기</h3>
+        <p>왜 선거에서 비밀 투표가 중요할까요?</p>
+        <textarea placeholder="내 생각을 자유롭게 적어보세요..."></textarea>
+      </div>
+
+      <div class="word-bank">
+        <h3>🎯 단어 카드</h3>
+        <div class="word-chips" id="wordChips"></div>
+      </div>
+
+      <button class="download-btn" onclick="downloadPDF()">📥 PDF로 저장하기</button>
+    </div>
+  </div>
+
+  <div class="completion-modal" id="completionModal">
+    <div class="completion-content">
+      <div class="emoji">🎉</div>
+      <h2>완벽해요!</h2>
+      <p>모든 빈칸을 채웠어요!</p>
+    </div>
+  </div>
+
+<script>
+const GAME_DATA = {
+  answers: ['주권', '대표', '보통', '직접', '평등', '비밀', '유권자', '불이익', '주권', '대표', '보통', '평등', '직접']
+};
+
+let correctCount = 0;
+let wrongCount = 0;
+let remainCount = 13;
+
+function init() {
+  // 8개 기본 단어만 단어카드에 표시 (중복 없이)
+  const uniqueWords = ['주권', '대표', '보통', '직접', '평등', '비밀', '유권자', '불이익'];
+  const chips = uniqueWords.slice().sort(() => Math.random() - 0.5);
+  const container = document.getElementById('wordChips');
+
+  chips.forEach(word => {
+    const chip = document.createElement('div');
+    chip.className = 'word-chip';
+    chip.textContent = word;
+    chip.draggable = true;
+    chip.dataset.word = word;
+    chip.addEventListener('dragstart', dragStart);
+    chip.addEventListener('dragend', dragEnd);
+    chip.addEventListener('touchstart', touchStart, { passive: false });
+    chip.addEventListener('touchmove', touchMove, { passive: false });
+    chip.addEventListener('touchend', touchEnd);
+    container.appendChild(chip);
+  });
+
+  // 모든 빈칸에 이벤트 리스너 추가 (node-card + concept-map)
+  document.querySelectorAll('.blank, .concept-blank').forEach(blank => {
+    blank.addEventListener('dragover', e => e.preventDefault());
+    blank.addEventListener('dragenter', e => {
+      e.preventDefault();
+      blank.classList.add('drag-over');
+    });
+    blank.addEventListener('dragleave', () => blank.classList.remove('drag-over'));
+    blank.addEventListener('drop', drop);
+  });
+
+  fitScale();
+  window.addEventListener('resize', fitScale);
+}
+
+function fitScale() {
+  const c = document.getElementById('container');
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const s = Math.min(w / 1024, h / 768, 1);
+  c.style.transform = `scale(${s})`;
+}
+
+let draggedChip = null;
+let touchClone = null;
+let currentDropTarget = null;
+
+function dragStart(e) {
+  draggedChip = e.target;
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function dragEnd(e) {
+  e.target.classList.remove('dragging');
+  draggedChip = null;
+}
+
+function drop(e) {
+  e.preventDefault();
+  const blank = e.target;
+  blank.classList.remove('drag-over');
+  if (!draggedChip || blank.classList.contains('filled')) return;
+  checkAnswer(blank, draggedChip.dataset.word, draggedChip);
+}
+
+function touchStart(e) {
+  if (e.target.classList.contains('used')) return;
+  e.preventDefault();
+  draggedChip = e.target;
+  const touch = e.touches[0];
+  const rect = draggedChip.getBoundingClientRect();
+
+  touchClone = draggedChip.cloneNode(true);
+  touchClone.style.cssText = `
+    position: fixed;
+    left: ${rect.left}px;
+    top: ${rect.top}px;
+    width: ${rect.width}px;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0.9;
+    transform: scale(1.1);
+  `;
+  document.body.appendChild(touchClone);
+  draggedChip.classList.add('dragging');
+}
+
+function touchMove(e) {
+  if (!touchClone) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+  touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  document.querySelectorAll('.blank.drag-over, .concept-blank.drag-over').forEach(b => b.classList.remove('drag-over'));
+
+  if (el && (el.classList.contains('blank') || el.classList.contains('concept-blank')) && !el.classList.contains('filled')) {
+    el.classList.add('drag-over');
+    currentDropTarget = el;
+  } else {
+    currentDropTarget = null;
+  }
+}
+
+function touchEnd(e) {
+  if (!touchClone) return;
+  e.preventDefault();
+
+  if (touchClone.parentNode) touchClone.parentNode.removeChild(touchClone);
+  if (draggedChip) draggedChip.classList.remove('dragging');
+  document.querySelectorAll('.blank.drag-over, .concept-blank.drag-over').forEach(b => b.classList.remove('drag-over'));
+
+  if (currentDropTarget && draggedChip) {
+    checkAnswer(currentDropTarget, draggedChip.dataset.word, draggedChip);
+  }
+
+  touchClone = null;
+  draggedChip = null;
+  currentDropTarget = null;
+}
+
+function checkAnswer(blank, word, chip) {
+  if (blank.dataset.answer === word) {
+    blank.textContent = word;
+    blank.classList.add('filled');
+    correctCount++;
+    remainCount--;
+    createMiniConfetti(blank);
+
+    // 단어 카드 사용 처리 (같은 단어의 모든 빈칸이 채워지면)
+    const sameAnswerBlanks = document.querySelectorAll(`[data-answer="${word}"]`);
+    const allFilled = Array.from(sameAnswerBlanks).every(b => b.classList.contains('filled'));
+    if (allFilled) {
+      chip.classList.add('used');
+    }
+
+    if (remainCount === 0) {
+      setTimeout(() => showCompletion(), 500);
+    }
+  } else {
+    wrongCount++;
+    blank.style.animation = 'shake 0.5s';
+    setTimeout(() => blank.style.animation = '', 500);
+  }
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('correct').textContent = correctCount;
+  document.getElementById('wrong').textContent = wrongCount;
+  document.getElementById('remain').textContent = remainCount;
+}
+
+function createMiniConfetti(el) {
+  const rect = el.getBoundingClientRect();
+  const colors = ['#3b82f6', '#60a5fa', '#fbbf24', '#10b981', '#ec4899', '#8b5cf6'];
+
+  for (let i = 0; i < 12; i++) {
+    const conf = document.createElement('div');
+    conf.style.cssText = `
+      position: fixed;
+      left: ${rect.left + rect.width / 2}px;
+      top: ${rect.top + rect.height / 2}px;
+      width: 8px;
+      height: 8px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+    `;
+    document.body.appendChild(conf);
+
+    const angle = (Math.PI * 2 * i) / 12;
+    const velocity = 60 + Math.random() * 40;
+    const vx = Math.cos(angle) * velocity;
+    const vy = Math.sin(angle) * velocity;
+    let x = 0, y = 0, opacity = 1;
+
+    const animate = () => {
+      x += vx * 0.03;
+      y += vy * 0.03 + 1;
+      opacity -= 0.025;
+      conf.style.transform = `translate(${x}px, ${y}px)`;
+      conf.style.opacity = opacity;
+      if (opacity > 0) requestAnimationFrame(animate);
+      else conf.remove();
+    };
+    requestAnimationFrame(animate);
+  }
+}
+
+function showCompletion() {
+  document.getElementById('completionModal').classList.add('show');
+  launchConfetti();
+
+  setTimeout(() => {
+    document.getElementById('completionModal').classList.remove('show');
+  }, 3500);
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const confetti = [];
+  const colors = ['#3b82f6', '#60a5fa', '#fbbf24', '#10b981', '#ec4899', '#8b5cf6', '#f97316'];
+
+  for (let i = 0; i < 150; i++) {
+    confetti.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speed: Math.random() * 3 + 2,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.2
+    });
+  }
+
+  let frame = 0;
+  const maxFrames = 180;
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    confetti.forEach(c => {
+      c.y += c.speed;
+      c.x += Math.sin(c.angle) * 0.5;
+      c.angle += c.spin;
+
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.rotate(c.angle);
+      ctx.fillStyle = c.color;
+      ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+      ctx.restore();
+    });
+
+    frame++;
+    if (frame < maxFrames) {
+      requestAnimationFrame(animate);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  animate();
+}
+
+async function downloadPDF() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '생성 중...';
+
+  try {
+    const canvas = await html2canvas(document.getElementById('container'), {
+      scale: 2,
+      backgroundColor: '#f5f0e6',
+      useCORS: true
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const w = pdf.internal.pageSize.getWidth();
+    const h = pdf.internal.pageSize.getHeight();
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+    pdf.save('브레인웨이브_정치05_선거원칙.pdf');
+  } catch (err) {
+    alert('PDF 생성 실패: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📥 PDF로 저장하기';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

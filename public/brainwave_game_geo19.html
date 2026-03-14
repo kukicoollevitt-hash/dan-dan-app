@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024">
+  <title>창의노트 - 세계화와 다문화</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+    html, body { width: 100%; overflow-x: hidden; }
+    body { font-family: 'Pretendard', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 0; }
+
+    .scale-container { width: 1024px; min-height: 768px; position: relative; padding: 15px; padding-bottom: 30px; }
+
+    /* 상단 헤더 */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 10px; }
+    .header h1 { font-size: 1.4rem; color: #fff; text-shadow: 0 0 20px rgba(255,200,100,0.5); display: flex; align-items: center; gap: 8px; }
+    .header h1 .icon { font-size: 1.6rem; }
+    .stats { display: flex; gap: 18px; }
+    .stat-item { color: #fff; font-size: 1.05rem; display: flex; align-items: center; gap: 5px; }
+    .stat-item .label { opacity: 0.75; }
+    .stat-item .value { font-weight: 700; min-width: 24px; text-align: center; }
+    .stat-item.correct .value { color: #4ade80; text-shadow: 0 0 10px rgba(74,222,128,0.5); }
+    .stat-item.wrong .value { color: #f87171; text-shadow: 0 0 10px rgba(248,113,113,0.5); }
+    .stat-item.remain .value { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.5); }
+
+    /* 메인 레이아웃 */
+    .main-layout { display: flex; gap: 20px; justify-content: center; }
+
+    /* 좌측 - 파동 영역 */
+    .wave-section { position: relative; width: 400px; height: 400px; }
+    .wave-container { position: relative; width: 100%; height: 100%; }
+
+    /* 파동 원 */
+    .wave-ring { position: absolute; border-radius: 50%; border: 2px solid; opacity: 0.6; }
+    .wave-ring.w1 { width: 100px; height: 100px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: rgba(251,191,36,0.8); box-shadow: 0 0 15px rgba(251,191,36,0.3); }
+    .wave-ring.w2 { width: 180px; height: 180px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: rgba(124,58,237,0.8); box-shadow: 0 0 15px rgba(124,58,237,0.3); }
+    .wave-ring.w3 { width: 260px; height: 260px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: rgba(45,212,191,0.8); box-shadow: 0 0 15px rgba(45,212,191,0.3); }
+    .wave-ring.w4 { width: 340px; height: 340px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: rgba(251,146,60,0.8); box-shadow: 0 0 15px rgba(251,146,60,0.3); }
+
+    /* 파동 영역 라벨 */
+    .wave-zone-label { position: absolute; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; white-space: nowrap; z-index: 5; }
+    .wave-zone-label.wz-1 { top: calc(50% - 50px - 10px); color: #fbbf24; background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.4); }
+    .wave-zone-label.wz-2 { top: calc(50% - 90px - 10px); color: #a78bfa; background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.4); }
+    .wave-zone-label.wz-3 { top: calc(50% - 130px - 10px); color: #2dd4bf; background: rgba(45,212,191,0.15); border: 1px solid rgba(45,212,191,0.4); }
+    .wave-zone-label.wz-4 { top: calc(50% - 170px - 10px); color: #fb923c; background: rgba(251,146,60,0.15); border: 1px solid rgba(251,146,60,0.4); }
+
+    /* 중심 핵 */
+    .core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(251,191,36,0.6); z-index: 10; }
+    .core span { color: #1a1a2e; font-weight: 800; font-size: 0.85rem; text-align: center; line-height: 1.2; }
+
+    /* 파동 위 노드 */
+    .wave-node { position: absolute; transform: translate(-50%, -50%); z-index: 15; }
+    .wave-node .node-circle { width: 54px; height: 54px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.7rem; text-align: center; padding: 4px; transition: all 0.3s; cursor: pointer; line-height: 1.2; }
+
+    .wave-node.n1 .node-circle { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1a1a2e; box-shadow: 0 0 15px rgba(251,191,36,0.5); }
+    .wave-node.n2 .node-circle { background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); color: #fff; box-shadow: 0 0 15px rgba(124,58,237,0.5); }
+    .wave-node.n3 .node-circle { background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%); color: #1a1a2e; box-shadow: 0 0 15px rgba(45,212,191,0.5); }
+    .wave-node.n4 .node-circle { background: linear-gradient(135deg, #fb923c 0%, #f97316 100%); color: #fff; box-shadow: 0 0 15px rgba(251,146,60,0.5); }
+
+    .wave-node .node-label { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 3px 8px; border-radius: 8px; font-size: 0.65rem; white-space: nowrap; }
+
+    /* 빈칸 슬롯 */
+    .blank-slot { min-width: 52px; height: 26px; background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,255,255,0.4); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; color: rgba(255,255,255,0.5); transition: all 0.3s; padding: 0 6px; cursor: pointer; }
+    .blank-slot:hover { border-color: #fbbf24; background: rgba(251,191,36,0.1); }
+    .blank-slot.drag-over { border-color: #4ade80; background: rgba(74,222,128,0.2); transform: scale(1.05); }
+    .blank-slot.filled { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); border: none; color: #fff; font-weight: 600; }
+    .blank-slot.wrong { background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); border: none; color: #fff; animation: shake 0.5s; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+    /* 우측 섹션 */
+    .right-section { display: flex; flex-direction: column; gap: 12px; width: 560px; }
+
+    /* 개념 지도 */
+    .concept-map { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 18px; border: 1px solid rgba(255,255,255,0.1); }
+    .summary-title { color: #fbbf24; font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+
+    .concept-flow { display: flex; flex-direction: column; gap: 12px; }
+    .concept-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+    .concept-box { background: rgba(124,58,237,0.2); border: 1px solid rgba(124,58,237,0.5); padding: 8px 12px; border-radius: 10px; color: #a78bfa; font-size: 0.8rem; font-weight: 600; text-align: center; }
+    .concept-box.highlight { background: rgba(251,191,36,0.2); border-color: rgba(251,191,36,0.5); color: #fbbf24; }
+    .concept-box.teal { background: rgba(45,212,191,0.2); border-color: rgba(45,212,191,0.5); color: #2dd4bf; }
+    .concept-box.orange { background: rgba(251,146,60,0.2); border-color: rgba(251,146,60,0.5); color: #fb923c; }
+
+    .arrow { color: rgba(255,255,255,0.4); font-size: 1.1rem; }
+    .arrow-down { color: rgba(255,255,255,0.4); font-size: 1.1rem; }
+
+    .vs-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; }
+
+    .examples-row { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    .example-item { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 8px; color: rgba(255,255,255,0.8); font-size: 0.72rem; }
+
+    /* 워드뱅크 */
+    .word-bank { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); }
+    .word-bank h3 { color: #4ade80; font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .words-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .word-chip { padding: 8px 14px; background: linear-gradient(135deg, rgba(74,222,128,0.2) 0%, rgba(34,197,94,0.2) 100%); border: 1px solid rgba(74,222,128,0.4); border-radius: 20px; color: #4ade80; font-size: 0.8rem; font-weight: 600; cursor: grab; transition: all 0.3s; }
+    .word-chip:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(74,222,128,0.3); }
+    .word-chip:active { cursor: grabbing; }
+    .word-chip.used { opacity: 0.3; pointer-events: none; text-decoration: line-through; }
+
+    /* 완료 메시지 */
+    .completion-msg { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 30px 50px; border-radius: 20px; text-align: center; z-index: 1000; box-shadow: 0 20px 60px rgba(251,191,36,0.4); }
+    .completion-msg h2 { color: #1a1a2e; font-size: 1.8rem; margin-bottom: 10px; }
+    .completion-msg p { color: #1a1a2e; font-size: 1rem; opacity: 0.8; }
+
+    /* 하단 버튼 */
+    .bottom-actions { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
+    .btn { padding: 12px 28px; border-radius: 25px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; border: none; }
+    .btn-reset { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+    .btn-reset:hover { background: rgba(255,255,255,0.2); }
+    .btn-hint { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #fff; }
+    .btn-hint:hover { box-shadow: 0 5px 20px rgba(59,130,246,0.4); }
+
+    /* 드래그 고스트 */
+    .drag-ghost { position: fixed; pointer-events: none; z-index: 9999; padding: 8px 14px; background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); border-radius: 20px; color: #fff; font-size: 0.8rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+    /* 힌트 하이라이트 */
+    .hint-highlight { animation: hintPulse 1s ease-in-out 3; }
+    @keyframes hintPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.7); } 50% { box-shadow: 0 0 0 10px rgba(59,130,246,0); } }
+    .hint-word { animation: hintWord 1s ease-in-out 3; }
+    @keyframes hintWord { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(59,130,246,0.7); } }
+  </style>
+</head>
+<body>
+  <div class="scale-container">
+    <div class="header">
+      <h1><span class="icon">🌐</span> 세계화와 다문화</h1>
+      <div class="stats">
+        <div class="stat-item correct"><span class="label">정답</span><span class="value" id="correctCount">0</span></div>
+        <div class="stat-item wrong"><span class="label">오답</span><span class="value" id="wrongCount">0</span></div>
+        <div class="stat-item remain"><span class="label">남음</span><span class="value" id="remainCount">13</span></div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="wave-section">
+        <div class="wave-container">
+          <div class="wave-ring w4"></div>
+          <div class="wave-ring w3"></div>
+          <div class="wave-ring w2"></div>
+          <div class="wave-ring w1"></div>
+
+          <div class="wave-zone-label wz-1">1차: 세계화 현상</div>
+          <div class="wave-zone-label wz-2">2차: 장단점</div>
+          <div class="wave-zone-label wz-3">3차: 다문화 사회</div>
+          <div class="wave-zone-label wz-4">4차: 존중과 공존</div>
+
+          <div class="core"><span>세계화<br>지구촌</span></div>
+
+          <!-- 1차 파동 (2개) -->
+          <div class="wave-node n1" style="top: 50%; left: calc(50% + 70px);">
+            <div class="node-circle"><span class="blank-slot" data-answer="세계화">?</span></div>
+            <div class="node-label">하나로 연결</div>
+          </div>
+          <div class="wave-node n1" style="top: calc(50% - 60px); left: 50%;">
+            <div class="node-circle"><span class="blank-slot" data-answer="다국적 기업">?</span></div>
+            <div class="node-label">여러 나라 활동</div>
+          </div>
+
+          <!-- 2차 파동 (2개) -->
+          <div class="wave-node n2" style="top: calc(50% + 80px); left: calc(50% - 55px);">
+            <div class="node-circle"><span class="blank-slot" data-answer="문화 획일화">?</span></div>
+            <div class="node-label">문화 비슷해짐</div>
+          </div>
+          <div class="wave-node n2" style="top: calc(50% + 50px); left: calc(50% + 80px);">
+            <div class="node-circle"><span class="blank-slot" data-answer="지역화">?</span></div>
+            <div class="node-label">고유문화 지킴</div>
+          </div>
+
+          <!-- 3차 파동 (2개) -->
+          <div class="wave-node n3" style="top: calc(50% - 100px); left: calc(50% + 80px);">
+            <div class="node-circle"><span class="blank-slot" data-answer="다문화 사회">?</span></div>
+            <div class="node-label">다양한 문화</div>
+          </div>
+          <div class="wave-node n3" style="top: calc(50% - 70px); left: calc(50% - 100px);">
+            <div class="node-circle"><span class="blank-slot" data-answer="이주민">?</span></div>
+            <div class="node-label">외국에서 옴</div>
+          </div>
+
+          <!-- 4차 파동 (2개) -->
+          <div class="wave-node n4" style="top: calc(50% + 130px); left: calc(50% + 70px);">
+            <div class="node-circle"><span class="blank-slot" data-answer="존중">?</span></div>
+            <div class="node-label">상대 인정</div>
+          </div>
+          <div class="wave-node n4" style="top: calc(50% + 100px); left: calc(50% - 110px);">
+            <div class="node-circle"><span class="blank-slot" data-answer="문화 다양성">?</span></div>
+            <div class="node-label">여러 문화 공존</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-section">
+        <div class="concept-map">
+          <div class="summary-title">📊 개념 구조도</div>
+          <div class="concept-flow">
+            <div class="concept-row">
+              <div class="concept-box highlight"><span class="blank-slot" data-answer="세계화">?</span></div>
+            </div>
+            <div class="arrow-down">↓</div>
+            <div class="concept-row">
+              <div class="concept-box">장점: 문화 교류</div>
+              <div class="vs-badge">VS</div>
+              <div class="concept-box teal">단점: <span class="blank-slot" data-answer="문화 획일화">?</span></div>
+            </div>
+            <div class="arrow-down">↓</div>
+            <div class="concept-row">
+              <div class="concept-box orange"><span class="blank-slot" data-answer="다문화 사회">?</span></div>
+            </div>
+            <div class="examples-row">
+              <div class="example-item">결혼 이민자</div>
+              <div class="example-item">외국인 노동자</div>
+              <div class="example-item">유학생</div>
+            </div>
+            <div class="arrow-down">↓</div>
+            <div class="concept-row">
+              <div class="concept-box highlight"><span class="blank-slot" data-answer="문화 다양성">?</span> <span class="blank-slot" data-answer="존중">?</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="word-bank">
+          <h3>📦 단어 상자</h3>
+          <div class="words-container" id="wordBank"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="completion-msg" id="completionMsg">
+      <h2>🎉 완벽해요!</h2>
+      <p>세계화와 다문화 개념을 모두 완성했어요!</p>
+    </div>
+  </div>
+
+  <div class="bottom-actions">
+    <button class="btn btn-reset" onclick="resetGame()">🔄 다시하기</button>
+    <button class="btn btn-hint" onclick="showHint()">💡 힌트</button>
+  </div>
+
+  <script>
+    const GAME_DATA = {
+      answers: [
+        '세계화', '다국적 기업', '문화 획일화', '지역화', '다문화 사회', '이주민', '존중', '문화 다양성',
+        '세계화', '문화 획일화', '다문화 사회', '문화 다양성', '존중'
+      ],
+      decoys: ['지구촌', '인터넷', '편견', '교류', '이해', '경제']
+    };
+
+    let correctCount = 0, wrongCount = 0, remainCount = 13;
+    let draggedWord = null, ghostEl = null;
+
+    function init() {
+      const wordBank = document.getElementById('wordBank');
+      const allWords = [...new Set([...GAME_DATA.answers, ...GAME_DATA.decoys])];
+      shuffleArray(allWords);
+
+      allWords.forEach(word => {
+        const chip = document.createElement('div');
+        chip.className = 'word-chip';
+        chip.textContent = word;
+        chip.draggable = true;
+
+        chip.addEventListener('dragstart', handleDragStart);
+        chip.addEventListener('dragend', handleDragEnd);
+        chip.addEventListener('touchstart', handleTouchStart, { passive: false });
+        chip.addEventListener('touchmove', handleTouchMove, { passive: false });
+        chip.addEventListener('touchend', handleTouchEnd);
+
+        wordBank.appendChild(chip);
+      });
+
+      document.querySelectorAll('.blank-slot').forEach(slot => {
+        slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+        slot.addEventListener('drop', handleDrop);
+      });
+
+      // Update remain count based on actual blank slots
+      remainCount = document.querySelectorAll('.blank-slot').length;
+      updateStats();
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function handleDragStart(e) {
+      draggedWord = e.target.textContent;
+      e.target.style.opacity = '0.5';
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+      e.target.style.opacity = '1';
+      document.querySelectorAll('.blank-slot').forEach(s => s.classList.remove('drag-over'));
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const slot = e.target.closest('.blank-slot');
+      if (!slot || slot.classList.contains('filled')) return;
+      slot.classList.remove('drag-over');
+      checkAnswer(slot, draggedWord);
+    }
+
+    function handleTouchStart(e) {
+      e.preventDefault();
+      const chip = e.target.closest('.word-chip');
+      if (!chip || chip.classList.contains('used')) return;
+
+      draggedWord = chip.textContent;
+      chip.style.opacity = '0.5';
+
+      ghostEl = document.createElement('div');
+      ghostEl.className = 'drag-ghost';
+      ghostEl.textContent = draggedWord;
+      document.body.appendChild(ghostEl);
+
+      const touch = e.touches[0];
+      ghostEl.style.left = touch.clientX - 30 + 'px';
+      ghostEl.style.top = touch.clientY - 20 + 'px';
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      if (!ghostEl) return;
+
+      const touch = e.touches[0];
+      ghostEl.style.left = touch.clientX - 30 + 'px';
+      ghostEl.style.top = touch.clientY - 20 + 'px';
+
+      document.querySelectorAll('.blank-slot').forEach(slot => {
+        const rect = slot.getBoundingClientRect();
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          slot.classList.add('drag-over');
+        } else {
+          slot.classList.remove('drag-over');
+        }
+      });
+    }
+
+    function handleTouchEnd(e) {
+      if (!ghostEl) return;
+
+      const touch = e.changedTouches[0];
+      document.querySelectorAll('.blank-slot').forEach(slot => {
+        const rect = slot.getBoundingClientRect();
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom &&
+            !slot.classList.contains('filled')) {
+          checkAnswer(slot, draggedWord);
+        }
+        slot.classList.remove('drag-over');
+      });
+
+      document.querySelectorAll('.word-chip').forEach(c => c.style.opacity = '1');
+      ghostEl.remove();
+      ghostEl = null;
+    }
+
+    function checkAnswer(slot, word) {
+      const correct = slot.dataset.answer;
+      if (word === correct) {
+        slot.textContent = word;
+        slot.classList.add('filled');
+        correctCount++;
+        remainCount--;
+
+        document.querySelectorAll('.word-chip').forEach(chip => {
+          if (chip.textContent === word && !chip.classList.contains('used')) {
+            chip.classList.add('used');
+          }
+        });
+
+        if (remainCount === 0) {
+          setTimeout(() => {
+            document.getElementById('completionMsg').style.display = 'block';
+          }, 500);
+        }
+      } else {
+        slot.classList.add('wrong');
+        wrongCount++;
+        setTimeout(() => slot.classList.remove('wrong'), 500);
+      }
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById('correctCount').textContent = correctCount;
+      document.getElementById('wrongCount').textContent = wrongCount;
+      document.getElementById('remainCount').textContent = remainCount;
+    }
+
+    function resetGame() {
+      correctCount = 0; wrongCount = 0;
+      remainCount = document.querySelectorAll('.blank-slot').length;
+      updateStats();
+
+      document.querySelectorAll('.blank-slot').forEach(slot => {
+        slot.textContent = '?';
+        slot.classList.remove('filled', 'wrong');
+      });
+
+      document.querySelectorAll('.word-chip').forEach(chip => {
+        chip.classList.remove('used');
+      });
+
+      document.getElementById('completionMsg').style.display = 'none';
+    }
+
+    function showHint() {
+      const emptySlots = document.querySelectorAll('.blank-slot:not(.filled)');
+      if (emptySlots.length === 0) return;
+
+      const slot = emptySlots[0];
+      const answer = slot.dataset.answer;
+
+      slot.classList.add('hint-highlight');
+      setTimeout(() => slot.classList.remove('hint-highlight'), 3000);
+
+      document.querySelectorAll('.word-chip').forEach(chip => {
+        if (chip.textContent === answer && !chip.classList.contains('used')) {
+          chip.classList.add('hint-word');
+          setTimeout(() => chip.classList.remove('hint-word'), 3000);
+        }
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
