@@ -258,6 +258,12 @@
         if (result.ok || result.success || result._id) {
           console.log(`[sendLearningLog] ${unit} 학습 로그 전송 완료`, radar);
 
+          // 🔔 자동 로그아웃 타이머 활성화 (학습완료 플래그 설정)
+          if (typeof window.setLearningCompleted === 'function') {
+            window.setLearningCompleted();
+            console.log('[sendLearningLog] 자동 로그아웃 타이머 활성화됨');
+          }
+
           // 🐋 최초 학습 완료 시 고래 배지 축하 팝업 표시 및 localStorage 업데이트
           if (result.firstCompletion && result.badgesAwarded > 0) {
             console.log(`🐋 [sendLearningLog] 최초 학습 완료! 고래 배지 ${result.badgesAwarded}개 지급!`);

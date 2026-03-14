@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024">
+  <title>브레인웨이브 - 김정호</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a1628 0%, #1a2d4a 50%, #0d1926 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+    .scale-container {
+      width: 1024px;
+      height: 768px;
+      position: relative;
+      transform-origin: center center;
+    }
+    .game-container {
+      width: 100%;
+      height: 100%;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      position: relative;
+    }
+
+    /* ─── 좌측 영역 ─── */
+    .left-panel {
+      flex: 0 0 580px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 헤더 */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+    .title-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .game-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(96,165,250,.5);
+    }
+    .unit-badge {
+      background: rgba(59,130,246,.18);
+      border: 1px solid rgba(96,165,250,.35);
+      color: #93c5fd;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+    .progress-area { display: flex; align-items: center; gap: 10px; }
+    .progress-ring { width: 44px; height: 44px; }
+    .progress-ring-bg { fill: none; stroke: rgba(71,85,105,.45); stroke-width: 4; }
+    .progress-ring-fill {
+      fill: none; stroke: url(#progressGradient); stroke-width: 4;
+      stroke-linecap: round; transform: rotate(-90deg); transform-origin: center;
+      transition: stroke-dashoffset .4s;
+    }
+    .progress-text {
+      font-size: .8rem; font-weight: 700;
+      fill: #e2e8f0; text-anchor: middle; dominant-baseline: middle;
+    }
+    .score-display {
+      background: rgba(16,185,129,.12);
+      border: 1px solid rgba(16,185,129,.3);
+      padding: 6px 14px; border-radius: 12px;
+      font-weight: 700; color: #34d399; font-size: .95rem;
+    }
+
+    /* 파형 브레인맵 */
+    .wave-brain-map {
+      flex: 1;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 0;
+    }
+    .wave-center {
+      position: relative;
+      width: 420px;
+      height: 420px;
+    }
+    .wave-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: .7;
+    }
+    .wave-ring.w1 { width: 100px; height: 100px; border-color: rgba(250,204,21,.5); animation: pulse1 2.5s ease-in-out infinite; }
+    .wave-ring.w2 { width: 180px; height: 180px; border-color: rgba(74,222,128,.4); animation: pulse2 3s ease-in-out infinite; }
+    .wave-ring.w3 { width: 270px; height: 270px; border-color: rgba(96,165,250,.35); animation: pulse3 3.5s ease-in-out infinite; }
+    .wave-ring.w4 { width: 360px; height: 360px; border-color: rgba(168,85,247,.3); animation: pulse4 4s ease-in-out infinite; }
+    @keyframes pulse1 { 0%,100%{ transform: translate(-50%,-50%) scale(1); opacity:.7; } 50%{ transform: translate(-50%,-50%) scale(1.06); opacity:.9; } }
+    @keyframes pulse2 { 0%,100%{ transform: translate(-50%,-50%) scale(1); opacity:.6; } 50%{ transform: translate(-50%,-50%) scale(1.05); opacity:.8; } }
+    @keyframes pulse3 { 0%,100%{ transform: translate(-50%,-50%) scale(1); opacity:.5; } 50%{ transform: translate(-50%,-50%) scale(1.04); opacity:.7; } }
+    @keyframes pulse4 { 0%,100%{ transform: translate(-50%,-50%) scale(1); opacity:.4; } 50%{ transform: translate(-50%,-50%) scale(1.03); opacity:.6; } }
+
+    /* 중앙 코어 */
+    .core-concept {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90px; height: 90px;
+      background: radial-gradient(circle, rgba(250,204,21,.25) 0%, transparent 70%);
+      border-radius: 50%;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      z-index: 10;
+    }
+    .core-icon { font-size: 2rem; margin-bottom: 2px; filter: drop-shadow(0 0 10px rgba(250,204,21,.8)); }
+    .core-text {
+      font-size: .85rem; font-weight: 700; color: #fde047;
+      text-shadow: 0 0 10px rgba(250,204,21,.8);
+    }
+
+    /* 노드 카드 */
+    .node-card {
+      position: absolute;
+      width: 95px;
+      background: rgba(30,41,59,.92);
+      border: 2px solid;
+      border-radius: 14px;
+      padding: 10px 7px 8px;
+      text-align: center;
+      transition: all .3s;
+      box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    }
+    .node-card.n-w1 { border-color: rgba(250,204,21,.5); box-shadow: 0 0 20px rgba(250,204,21,.15); }
+    .node-card.n-w2 { border-color: rgba(74,222,128,.5); box-shadow: 0 0 20px rgba(74,222,128,.15); }
+    .node-card.n-w3 { border-color: rgba(96,165,250,.5); box-shadow: 0 0 20px rgba(96,165,250,.15); }
+    .node-card.n-w4 { border-color: rgba(168,85,247,.5); box-shadow: 0 0 20px rgba(168,85,247,.15); }
+    .node-card.correct { border-color: #22c55e !important; background: rgba(34,197,94,.13) !important; }
+    .node-num {
+      width: 22px; height: 22px;
+      background: rgba(100,116,139,.5);
+      border-radius: 50%;
+      margin: 0 auto 6px;
+      font-size: .75rem; font-weight: 700; color: #cbd5e1;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .node-blank {
+      min-height: 28px;
+      background: rgba(71,85,105,.4);
+      border: 2px dashed rgba(148,163,184,.4);
+      border-radius: 8px;
+      display: flex; justify-content: center; align-items: center;
+      font-size: .85rem; color: #94a3b8;
+      transition: all .3s;
+    }
+    .node-blank.drag-over { border-color: #60a5fa; background: rgba(96,165,250,.15); transform: scale(1.05); }
+    .node-blank.filled {
+      background: linear-gradient(135deg, rgba(59,130,246,.25), rgba(139,92,246,.25));
+      border: 2px solid rgba(96,165,250,.6);
+      color: #e2e8f0; font-weight: 600;
+    }
+    .node-blank.correct-answer {
+      background: linear-gradient(135deg, rgba(34,197,94,.25), rgba(16,185,129,.25)) !important;
+      border-color: #22c55e !important;
+      color: #fff !important;
+    }
+
+    /* 노드 위치 (8개) */
+    .node-card:nth-child(1) { top: 3%; left: 50%; transform: translateX(-50%); }
+    .node-card:nth-child(2) { top: 12%; right: 6%; }
+    .node-card:nth-child(3) { top: 42%; right: -4%; }
+    .node-card:nth-child(4) { bottom: 12%; right: 6%; }
+    .node-card:nth-child(5) { bottom: 3%; left: 50%; transform: translateX(-50%); }
+    .node-card:nth-child(6) { bottom: 12%; left: 6%; }
+    .node-card:nth-child(7) { top: 42%; left: -4%; }
+    .node-card:nth-child(8) { top: 12%; left: 6%; }
+
+    /* ─── 우측 영역 ─── */
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    /* 개념 연결 맵 */
+    .concept-map-card {
+      background: linear-gradient(180deg, rgba(30,41,59,.95), rgba(15,23,42,.98));
+      border: 1px solid rgba(71,85,105,.4);
+      border-radius: 16px;
+      padding: 14px;
+      flex: 0 0 auto;
+    }
+    .concept-map-title {
+      font-size: .95rem; font-weight: 700; color: #e2e8f0;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .concept-map-title::before { content: '🔗'; font-size: 1rem; }
+    .concept-flow { display: flex; flex-direction: column; gap: 8px; }
+    .concept-row { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+    .concept-box {
+      padding: 8px 11px;
+      border-radius: 10px;
+      font-size: .8rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .cb-primary { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; }
+    .cb-secondary { background: rgba(100,116,139,.35); color: #cbd5e1; border: 1px solid rgba(148,163,184,.3); }
+    .cb-feature { background: rgba(34,197,94,.18); color: #4ade80; border: 1px solid rgba(34,197,94,.35); }
+    .cb-cycle { background: rgba(168,85,247,.18); color: #c4b5fd; border: 1px solid rgba(168,85,247,.35); }
+    .concept-blank {
+      flex: 1;
+      min-width: 60px;
+      height: 32px;
+      background: rgba(71,85,105,.35);
+      border: 2px dashed rgba(148,163,184,.4);
+      border-radius: 8px;
+      display: flex; justify-content: center; align-items: center;
+      font-size: .8rem; color: #64748b;
+      transition: all .3s;
+    }
+    .concept-blank.drag-over { border-color: #a78bfa; background: rgba(139,92,246,.15); }
+    .concept-blank.filled {
+      background: linear-gradient(135deg, rgba(139,92,246,.25), rgba(168,85,247,.25));
+      border: 2px solid rgba(168,85,247,.6);
+      color: #e2e8f0; font-weight: 600;
+    }
+    .concept-blank.correct-answer {
+      background: linear-gradient(135deg, rgba(34,197,94,.25), rgba(16,185,129,.25)) !important;
+      border-color: #22c55e !important;
+      color: #fff !important;
+    }
+    .concept-arrow { color: #64748b; font-size: 1rem; }
+
+    /* 질문 카드 */
+    .question-card {
+      background: linear-gradient(135deg, rgba(79,70,229,.1) 0%, rgba(147,51,234,.1) 100%);
+      border: 1px solid rgba(139,92,246,.35);
+      border-radius: 16px;
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .question-label {
+      font-size: .85rem;
+      font-weight: 700;
+      color: #a78bfa;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .question-label::before { content: '💭'; }
+    .question-text {
+      color: #e2e8f0;
+      font-size: .95rem;
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+    .answer-area {
+      flex: 1;
+      background: rgba(15,23,42,.6);
+      border: 2px solid rgba(100,116,139,.35);
+      border-radius: 12px;
+      padding: 12px;
+      color: #e2e8f0;
+      font-size: .9rem;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+      transition: border-color .3s, box-shadow .3s;
+    }
+    .answer-area::placeholder { color: #64748b; }
+    .answer-area:focus {
+      border-color: rgba(139,92,246,.6);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+
+    /* 워드뱅크 */
+    .word-bank {
+      background: linear-gradient(180deg, rgba(30,41,59,.95), rgba(15,23,42,.98));
+      border: 1px solid rgba(71,85,105,.4);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .word-bank-title {
+      font-size: .9rem; font-weight: 700; color: #e2e8f0;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .word-bank-title::before { content: '🎯'; }
+    .word-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .word-chip {
+      padding: 8px 14px;
+      background: linear-gradient(135deg, rgba(59,130,246,.2), rgba(139,92,246,.2));
+      border: 2px solid rgba(96,165,250,.4);
+      border-radius: 20px;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      cursor: grab;
+      transition: all .25s;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    .word-chip:hover {
+      transform: translateY(-2px) scale(1.05);
+      border-color: #60a5fa;
+      box-shadow: 0 6px 20px rgba(96,165,250,.3);
+    }
+    .word-chip:active { cursor: grabbing; }
+    .word-chip.used {
+      opacity: .35;
+      pointer-events: none;
+      border-style: dashed;
+    }
+
+    /* 드래그 고스트 */
+    .drag-ghost {
+      position: fixed;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 20px;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #fff;
+      pointer-events: none;
+      z-index: 9999;
+      box-shadow: 0 8px 30px rgba(59,130,246,.5);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    /* 완료 모달 */
+    .completion-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .completion-modal.show { display: flex; }
+    .modal-content {
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid rgba(139,92,246,.5);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      animation: modalPop .4s ease;
+    }
+    @keyframes modalPop {
+      0% { transform: scale(.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .modal-icon { font-size: 4rem; margin-bottom: 16px; }
+    .modal-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .modal-sub { color: #94a3b8; font-size: 1rem; margin-bottom: 24px; }
+    .modal-btn {
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      margin: 0 6px;
+    }
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(99,102,241,.5);
+    }
+    .modal-btn.secondary {
+      background: rgba(100,116,139,.4);
+    }
+
+    /* confetti */
+    .confetti {
+      position: fixed;
+      width: 10px; height: 10px;
+      top: -20px;
+      z-index: 999;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      to { top: 110vh; transform: rotate(720deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="scale-container">
+    <div class="game-container">
+      <!-- 좌측 -->
+      <div class="left-panel">
+        <header class="game-header">
+          <div class="title-area">
+            <h1 class="game-title">브레인웨이브</h1>
+            <span class="unit-badge">📘 인물 · 20단원</span>
+          </div>
+          <div class="progress-area">
+            <svg class="progress-ring" viewBox="0 0 44 44">
+              <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#3b82f6"/>
+                  <stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+              <circle class="progress-ring-bg" cx="22" cy="22" r="18"/>
+              <circle class="progress-ring-fill" cx="22" cy="22" r="18"
+                      stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
+              <text class="progress-text" x="22" y="22">0%</text>
+            </svg>
+            <div class="score-display">0 / 13</div>
+          </div>
+        </header>
+
+        <div class="wave-brain-map">
+          <div class="wave-center">
+            <div class="wave-ring w1"></div>
+            <div class="wave-ring w2"></div>
+            <div class="wave-ring w3"></div>
+            <div class="wave-ring w4"></div>
+
+            <div class="core-concept">
+              <div class="core-icon">🗺️</div>
+              <div class="core-text">김정호</div>
+            </div>
+
+            <!-- 8개 노드 -->
+            <div class="node-card n-w1">
+              <div class="node-num">1</div>
+              <div class="node-blank" data-answer="0">?</div>
+            </div>
+            <div class="node-card n-w2">
+              <div class="node-num">2</div>
+              <div class="node-blank" data-answer="1">?</div>
+            </div>
+            <div class="node-card n-w3">
+              <div class="node-num">3</div>
+              <div class="node-blank" data-answer="2">?</div>
+            </div>
+            <div class="node-card n-w4">
+              <div class="node-num">4</div>
+              <div class="node-blank" data-answer="3">?</div>
+            </div>
+            <div class="node-card n-w1">
+              <div class="node-num">5</div>
+              <div class="node-blank" data-answer="4">?</div>
+            </div>
+            <div class="node-card n-w2">
+              <div class="node-num">6</div>
+              <div class="node-blank" data-answer="5">?</div>
+            </div>
+            <div class="node-card n-w3">
+              <div class="node-num">7</div>
+              <div class="node-blank" data-answer="6">?</div>
+            </div>
+            <div class="node-card n-w4">
+              <div class="node-num">8</div>
+              <div class="node-blank" data-answer="7">?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우측 -->
+      <div class="right-panel">
+        <!-- 개념 연결 맵 -->
+        <div class="concept-map-card">
+          <div class="concept-map-title">개념 연결 맵</div>
+          <div class="concept-flow">
+            <div class="concept-row">
+              <div class="concept-box cb-primary">김정호</div>
+              <span class="concept-arrow">→</span>
+              <div class="concept-blank" data-answer="8">?</div>
+              <span class="concept-arrow">→</span>
+              <div class="concept-box cb-secondary">지도 제작</div>
+            </div>
+            <div class="concept-row">
+              <div class="concept-box cb-feature">🔬 방법</div>
+              <span class="concept-arrow">→</span>
+              <div class="concept-blank" data-answer="9">?</div>
+              <span class="concept-arrow">+</span>
+              <div class="concept-blank" data-answer="10">?</div>
+            </div>
+            <div class="concept-row">
+              <div class="concept-box cb-cycle">📜 결과</div>
+              <span class="concept-arrow">→</span>
+              <div class="concept-blank" data-answer="11">?</div>
+              <span class="concept-arrow">→</span>
+              <div class="concept-blank" data-answer="12">?</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 질문 카드 -->
+        <div class="question-card">
+          <div class="question-label">생각 질문</div>
+          <div class="question-text">
+            정확한 지도를 만들기 위해 전국을 걸어 다닌 김정호처럼, 끈기 있게 도전해본 경험이 있나요?
+          </div>
+          <textarea class="answer-area" placeholder="나의 생각을 자유롭게 적어보세요..."></textarea>
+        </div>
+
+        <!-- 워드뱅크 -->
+        <div class="word-bank">
+          <div class="word-bank-title">단어 카드</div>
+          <div class="word-chips">
+            <div class="word-chip" data-word="지리학자">지리학자</div>
+            <div class="word-chip" data-word="대동여지도">대동여지도</div>
+            <div class="word-chip" data-word="정확도">정확도</div>
+            <div class="word-chip" data-word="측량">측량</div>
+            <div class="word-chip" data-word="답사">답사</div>
+            <div class="word-chip" data-word="수집">수집</div>
+            <div class="word-chip" data-word="거대">거대</div>
+            <div class="word-chip" data-word="휴대">휴대</div>
+            <div class="word-chip" data-word="목판">목판</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 완료 모달 -->
+  <div class="completion-modal" id="completionModal">
+    <div class="modal-content">
+      <div class="modal-icon">🎉</div>
+      <h2 class="modal-title">브레인웨이브 완성!</h2>
+      <p class="modal-sub">김정호의 핵심 개념을 모두 연결했어요!</p>
+      <button class="modal-btn" onclick="downloadPDF()">📥 PDF 저장</button>
+      <button class="modal-btn secondary" onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    /* ─── 게임 데이터 ─── */
+    const GAME_DATA = {
+      // 노드 8개 + 개념맵 5개 = 13
+      // 노드: 지리학자, 대동여지도, 측량, 답사, 정확도, 목판, 거대, 휴대
+      // 개념: 지리학자, 측량, 답사, 대동여지도, 목판
+      answers: ['지리학자', '대동여지도', '측량', '답사', '정확도', '목판', '거대', '휴대', '지리학자', '측량', '답사', '대동여지도', '목판'],
+      decoys: []
+    };
+
+    let filled = 0;
+    const total = 13;
+    let draggedChip = null;
+    let ghost = null;
+
+    /* ─── 반응형 스케일 ─── */
+    function adjustScale() {
+      const container = document.querySelector('.scale-container');
+      const scaleX = window.innerWidth / 1024;
+      const scaleY = window.innerHeight / 768;
+      const scale = Math.min(scaleX, scaleY, 1.25);
+      container.style.transform = `scale(${scale})`;
+    }
+    adjustScale();
+    window.addEventListener('resize', adjustScale);
+
+    /* ─── 진행률 업데이트 ─── */
+    function updateProgress() {
+      const pct = Math.round((filled / total) * 100);
+      const circle = document.querySelector('.progress-ring-fill');
+      const text = document.querySelector('.progress-text');
+      const offset = 113.1 - (113.1 * filled / total);
+      circle.style.strokeDashoffset = offset;
+      text.textContent = pct + '%';
+      document.querySelector('.score-display').textContent = filled + ' / ' + total;
+
+      if (filled === total) setTimeout(showCompletion, 500);
+    }
+
+    /* ─── 드래그 앤 드롭 ─── */
+    const chips = document.querySelectorAll('.word-chip');
+    const blanks = document.querySelectorAll('.node-blank, .concept-blank');
+
+    function createGhost(text, x, y) {
+      ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.textContent = text;
+      ghost.style.left = x + 'px';
+      ghost.style.top = y + 'px';
+      document.body.appendChild(ghost);
+    }
+    function moveGhost(x, y) {
+      if (ghost) { ghost.style.left = x + 'px'; ghost.style.top = y + 'px'; }
+    }
+    function removeGhost() {
+      if (ghost) { ghost.remove(); ghost = null; }
+    }
+
+    // Mouse Events
+    chips.forEach(chip => {
+      chip.addEventListener('mousedown', e => {
+        if (chip.classList.contains('used')) return;
+        draggedChip = chip;
+        createGhost(chip.dataset.word, e.clientX, e.clientY);
+        e.preventDefault();
+      });
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (draggedChip) moveGhost(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('mouseup', e => {
+      if (!draggedChip) return;
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      if (target && (target.classList.contains('node-blank') || target.classList.contains('concept-blank'))) {
+        handleDrop(target, draggedChip.dataset.word, draggedChip);
+      }
+      blanks.forEach(b => b.classList.remove('drag-over'));
+      removeGhost();
+      draggedChip = null;
+    });
+
+    // Touch Events
+    chips.forEach(chip => {
+      chip.addEventListener('touchstart', e => {
+        if (chip.classList.contains('used')) return;
+        draggedChip = chip;
+        const t = e.touches[0];
+        createGhost(chip.dataset.word, t.clientX, t.clientY);
+        e.preventDefault();
+      }, { passive: false });
+    });
+
+    document.addEventListener('touchmove', e => {
+      if (draggedChip) {
+        const t = e.touches[0];
+        moveGhost(t.clientX, t.clientY);
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        blanks.forEach(b => b.classList.remove('drag-over'));
+        if (el && (el.classList.contains('node-blank') || el.classList.contains('concept-blank'))) {
+          el.classList.add('drag-over');
+        }
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', e => {
+      if (!draggedChip) return;
+      const t = e.changedTouches[0];
+      const target = document.elementFromPoint(t.clientX, t.clientY);
+      if (target && (target.classList.contains('node-blank') || target.classList.contains('concept-blank'))) {
+        handleDrop(target, draggedChip.dataset.word, draggedChip);
+      }
+      blanks.forEach(b => b.classList.remove('drag-over'));
+      removeGhost();
+      draggedChip = null;
+    });
+
+    // Hover effect
+    blanks.forEach(blank => {
+      blank.addEventListener('mouseenter', () => { if (draggedChip) blank.classList.add('drag-over'); });
+      blank.addEventListener('mouseleave', () => blank.classList.remove('drag-over'));
+    });
+
+    /* ─── 정답 처리 ─── */
+    function handleDrop(blank, word, chip) {
+      if (blank.classList.contains('filled')) return;
+      const idx = parseInt(blank.dataset.answer);
+      const correct = GAME_DATA.answers[idx];
+      if (word === correct) {
+        blank.textContent = word;
+        blank.classList.add('filled', 'correct-answer');
+        blank.classList.remove('drag-over');
+        chip.classList.add('used');
+
+        const card = blank.closest('.node-card');
+        if (card) card.classList.add('correct');
+
+        filled++;
+        updateProgress();
+      } else {
+        blank.classList.add('shake');
+        setTimeout(() => blank.classList.remove('shake'), 400);
+      }
+    }
+
+    /* ─── 완료 처리 ─── */
+    function showCompletion() {
+      createConfetti();
+      document.getElementById('completionModal').classList.add('show');
+    }
+    function closeModal() {
+      document.getElementById('completionModal').classList.remove('show');
+    }
+    function createConfetti() {
+      const colors = ['#3b82f6', '#8b5cf6', '#f472b6', '#fbbf24', '#34d399'];
+      for (let i = 0; i < 80; i++) {
+        const conf = document.createElement('div');
+        conf.className = 'confetti';
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.background = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.animationDuration = (2 + Math.random() * 2) + 's';
+        conf.style.animationDelay = Math.random() * 0.5 + 's';
+        document.body.appendChild(conf);
+        setTimeout(() => conf.remove(), 4000);
+      }
+    }
+
+    /* ─── PDF 다운로드 ─── */
+    async function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const container = document.querySelector('.scale-container');
+      const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#0f172a' });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+      pdf.save('브레인웨이브_창의노트_김정호.pdf');
+    }
+  </script>
+</body>
+</html>
