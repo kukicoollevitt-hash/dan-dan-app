@@ -103,9 +103,9 @@
     sessionStorage.removeItem('loginPhone');
     sessionStorage.removeItem('hasCompletedLearning');
 
-    // 로그인 페이지로 이동 (학원용)
+    // 로그인 페이지로 이동 (학원용 학생)
     alert('2시간 동안 활동이 없어 자동 로그아웃되었습니다.\n학습 리포트가 발송되었습니다.');
-    window.location.href = '/index.html';
+    window.location.href = '/academy.html';
   }
 
   // 경고 표시
