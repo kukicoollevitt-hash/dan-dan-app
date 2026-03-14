@@ -9355,6 +9355,42 @@ app.get("/logout", async (req, res) => {
   });
 });
 
+// 📱 자동 로그아웃 API (2시간 비활동 시 클라이언트에서 호출)
+app.post("/api/auto-logout", async (req, res) => {
+  const { grade, name, reason } = req.body;
+
+  if (!grade || !name) {
+    return res.status(400).json({ success: false, message: '학년/이름 필요' });
+  }
+
+  console.log(`🔄 [자동 로그아웃] ${grade} ${name} - 사유: ${reason || 'inactivity'}`);
+
+  try {
+    const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
+
+    if (studentUser) {
+      // 📱 학부모 알림 발송
+      if (studentUser.parentPhone && studentUser.parentNotify !== false) {
+        sendParentNotification(name, studentUser.parentPhone, 'logout', { grade })
+          .catch(err => console.error('학부모 알림(자동 로그아웃) 실패:', err));
+      }
+
+      // 📱 본사 관리자 알림 발송
+      sendHQAdminNotification(name, grade, 'logout', {
+        school: studentUser.school,
+        academyName: studentUser.academyName
+      });
+
+      console.log(`✅ [자동 로그아웃] ${grade} ${name} SMS 발송 완료`);
+    }
+
+    res.json({ success: true, message: '자동 로그아웃 처리 완료' });
+  } catch (err) {
+    console.error('[자동 로그아웃] 오류:', err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
 // ping
 app.get("/ping", (req, res) => {
   console.log("✅ [GET] /ping");
