@@ -938,6 +938,17 @@ const learningBehaviorSchema = new mongoose.Schema({
 });
 const LearningBehavior = mongoose.model("LearningBehavior", learningBehaviorSchema);
 
+// 일일 리포트 발송 기록 스키마
+const dailyReportSentSchema = new mongoose.Schema({
+  grade: String,
+  name: String,
+  date: String,  // 'YYYY-MM-DD' 형식
+  sentAt: { type: Date, default: Date.now },
+  type: { type: String, enum: ['logout', 'auto_logout', 'scheduled'], default: 'logout' }
+});
+dailyReportSentSchema.index({ grade: 1, name: 1, date: 1 }, { unique: true });
+const DailyReportSent = mongoose.model("DailyReportSent", dailyReportSentSchema);
+
 /* ====================================
  * ✅ 브랜치 관리자용 미들웨어
  * ==================================== */
@@ -9372,6 +9383,17 @@ app.post("/api/auto-logout", async (req, res) => {
   console.log(`🔄 [자동 로그아웃] ${grade} ${name} - 사유: ${reason || 'inactivity'}, 학습완료: 있음`);
 
   try {
+    // 오늘 날짜
+    const today = new Date().toISOString().split('T')[0];
+
+    // 오늘 이미 발송했는지 확인
+    const alreadySent = await DailyReportSent.findOne({ grade, name, date: today });
+
+    if (alreadySent) {
+      console.log(`⏭️ [자동 로그아웃] ${grade} ${name} - 오늘 이미 발송됨, 스킵`);
+      return res.json({ success: true, message: '오늘 이미 발송됨 - 스킵' });
+    }
+
     const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
 
     if (studentUser) {
@@ -9386,6 +9408,9 @@ app.post("/api/auto-logout", async (req, res) => {
         school: studentUser.school,
         academyName: studentUser.academyName
       });
+
+      // 발송 기록 저장
+      await DailyReportSent.create({ grade, name, date: today, type: 'auto_logout' });
 
       console.log(`✅ [자동 로그아웃] ${grade} ${name} SMS + 리포트 발송 완료`);
     }
@@ -24298,16 +24323,39 @@ app.post("/logout", async (req, res) => {
         deleted: { $ne: true }
       });
 
-      if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
-        sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout', { grade: sessionUser.grade })
-          .catch(err => console.error('학부모 알림 실패:', err));
-      }
+      // 오늘 날짜
+      const today = new Date().toISOString().split('T')[0];
 
-      // 📱 본사 관리자 알림 발송 (로그아웃)
-      sendHQAdminNotification(sessionUser.name, sessionUser.grade, 'logout', {
-        school: studentUser?.school,
-        academyName: studentUser?.academyName
+      // 오늘 이미 발송했는지 확인
+      const alreadySent = await DailyReportSent.findOne({
+        grade: sessionUser.grade,
+        name: sessionUser.name,
+        date: today
       });
+
+      if (alreadySent) {
+        console.log(`📤 [POST] /logout 오늘 이미 발송됨 - ${sessionUser.grade} ${sessionUser.name}`);
+      } else {
+        if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+          sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout', { grade: sessionUser.grade })
+            .catch(err => console.error('학부모 알림 실패:', err));
+        }
+
+        // 📱 본사 관리자 알림 발송 (로그아웃)
+        sendHQAdminNotification(sessionUser.name, sessionUser.grade, 'logout', {
+          school: studentUser?.school,
+          academyName: studentUser?.academyName
+        });
+
+        // 발송 기록 저장
+        await DailyReportSent.create({
+          grade: sessionUser.grade,
+          name: sessionUser.name,
+          date: today,
+          type: 'logout'
+        });
+        console.log(`✅ [POST] /logout 발송 기록 저장 - ${sessionUser.grade} ${sessionUser.name}`);
+      }
     } catch (err) {
       console.error('로그아웃 알림 조회 오류:', err);
     }
@@ -31346,6 +31394,71 @@ cron.schedule('0 0 * * 1', () => {
 });
 
 console.log('✅ AI 추천 보완 학습 스케줄러 등록 완료 (매주 월요일 00:00 실행)');
+
+// 매일 저녁 9시 - 미발송 학생 일괄 리포트 발송
+cron.schedule('0 21 * * *', async () => {
+  console.log('📧 [저녁 9시 스케줄러] 미발송 학생 리포트 일괄 발송 시작');
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const todayStart = new Date(today + 'T00:00:00.000Z');
+    const todayEnd = new Date(today + 'T23:59:59.999Z');
+
+    // 오늘 학습완료가 있는 학생 조회 (LearningLog에서)
+    const todayLogs = await LearningLog.find({
+      createdAt: { $gte: todayStart, $lte: todayEnd }
+    });
+
+    // 고유 학생 목록 추출
+    const studentsWithLearning = [...new Set(todayLogs.map(log => `${log.grade}|${log.name}`))];
+    console.log(`📧 [저녁 9시] 오늘 학습완료 학생 수: ${studentsWithLearning.length}명`);
+
+    // 이미 발송된 학생 조회
+    const sentRecords = await DailyReportSent.find({ date: today });
+    const sentStudents = new Set(sentRecords.map(r => `${r.grade}|${r.name}`));
+    console.log(`📧 [저녁 9시] 오늘 이미 발송된 학생 수: ${sentStudents.size}명`);
+
+    // 미발송 학생 필터링
+    const unsent = studentsWithLearning.filter(s => !sentStudents.has(s));
+    console.log(`📧 [저녁 9시] 미발송 학생 수: ${unsent.length}명`);
+
+    let sentCount = 0;
+    for (const studentKey of unsent) {
+      const [grade, name] = studentKey.split('|');
+
+      try {
+        const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
+
+        if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+          // 학부모 알림 발송
+          await sendParentNotification(name, studentUser.parentPhone, 'logout', { grade });
+
+          // 본사 관리자 알림
+          sendHQAdminNotification(name, grade, 'logout', {
+            school: studentUser.school,
+            academyName: studentUser.academyName
+          });
+
+          // 발송 기록 저장
+          await DailyReportSent.create({ grade, name, date: today, type: 'scheduled' });
+
+          sentCount++;
+          console.log(`📧 [저녁 9시] ${grade} ${name} 리포트 발송 완료`);
+        }
+      } catch (err) {
+        console.error(`📧 [저녁 9시] ${grade} ${name} 발송 오류:`, err.message);
+      }
+    }
+
+    console.log(`📧 [저녁 9시 스케줄러] 완료 - 총 ${sentCount}명 발송`);
+  } catch (err) {
+    console.error('📧 [저녁 9시 스케줄러] 오류:', err);
+  }
+}, {
+  timezone: "Asia/Seoul"
+});
+
+console.log('✅ 저녁 9시 리포트 일괄발송 스케줄러 등록 완료');
 
 // 테스트용 수동 트리거 엔드포인트
 app.post('/api/mock-exam/recommend-tasks/generate/:userId', async (req, res) => {
