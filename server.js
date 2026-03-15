@@ -1825,8 +1825,8 @@ app.get("/api/academy/midterm-pending", requireAdminLogin, async (req, res) => {
 
       const userInfo = studentMap[key];
 
-      // 중간평가 모든 시도 이력 조회 (최신순)
-      const midtermEvals = await MidtermEval.find({ grade, name, stage: 1 })
+      // 중간평가 모든 시도 이력 조회 (모든 Stage, 최신순)
+      const midtermEvals = await MidtermEval.find({ grade, name })
         .sort({ completedAt: -1 }).lean();
 
       const latestEval = midtermEvals.length > 0 ? midtermEvals[0] : null;
@@ -32316,8 +32316,8 @@ app.get("/api/super/midterm-pending", requireSuperAdmin, async (req, res) => {
       // 학생 정보 조회 (학교명, 학원명)
       const userInfo = await User.findOne({ grade, name }).select('school academyName').lean();
 
-      // 중간평가 모든 시도 이력 조회 (최신순)
-      const midtermEvals = await MidtermEval.find({ grade, name, stage: 1 })
+      // 중간평가 모든 시도 이력 조회 (모든 Stage, 최신순)
+      const midtermEvals = await MidtermEval.find({ grade, name })
         .sort({ completedAt: -1 }).lean();
 
       // 최신 기록 (가장 최근 시도)

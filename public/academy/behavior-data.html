@@ -551,7 +551,8 @@
               <th>학년</th>
               <th>이름</th>
               <th>학교</th>
-              <th>최고관문</th>
+              <th>단계</th>
+              <th>회차</th>
               <th>상태</th>
               <th>점수</th>
               <th>완료일시</th>
@@ -838,15 +839,46 @@
         const result = await res.json();
 
         if (result.ok) {
-          midtermAllData = result.data;
-          // 정렬: 완료가 위로, 완료일시 최신이 위로
+          // midtermHistory를 펼쳐서 각 시도마다 별도 레코드로 변환
+          const expandedData = [];
+          for (const student of result.data) {
+            const history = student.midtermHistory || [];
+            if (history.length === 0) {
+              // 시도 이력이 없으면 대기 중 상태로 1개 레코드
+              expandedData.push({
+                grade: student.grade,
+                name: student.name,
+                school: student.school,
+                stage: 1,
+                attemptNumber: '-',
+                status: 'pending',
+                score: null,
+                passed: false,
+                completedAt: null
+              });
+            } else {
+              // 각 시도마다 별도 레코드 생성
+              for (const attempt of history) {
+                expandedData.push({
+                  grade: student.grade,
+                  name: student.name,
+                  school: student.school,
+                  stage: attempt.stage || 1,
+                  attemptNumber: attempt.attemptNumber || 1,
+                  status: 'completed',
+                  score: attempt.score,
+                  passed: attempt.passed,
+                  completedAt: attempt.completedAt
+                });
+              }
+            }
+          }
+
+          midtermAllData = expandedData;
+          // 완료일시 최신순 정렬 (최신이 위로)
           midtermAllData.sort((a, b) => {
-            // 1순위: 완료 상태 (completed가 위로)
-            if (a.midtermStatus === 'completed' && b.midtermStatus !== 'completed') return -1;
-            if (a.midtermStatus !== 'completed' && b.midtermStatus === 'completed') return 1;
-            // 2순위: 완료일시 내림차순 (최신이 위로)
-            const dateA = a.midtermCompletedAt ? new Date(a.midtermCompletedAt) : new Date(0);
-            const dateB = b.midtermCompletedAt ? new Date(b.midtermCompletedAt) : new Date(0);
+            const dateA = a.completedAt ? new Date(a.completedAt) : new Date(0);
+            const dateB = b.completedAt ? new Date(b.completedAt) : new Date(0);
             return dateB - dateA;
           });
           midtermFilteredData = [...midtermAllData];
@@ -866,7 +898,7 @@
       const tbody = document.getElementById('midtermTableBody');
 
       if (midtermFilteredData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="no-data">중간평가 대상 학생이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="no-data">중간평가 대상 학생이 없습니다.</td></tr>';
         document.getElementById('midtermLoadMoreBtn').style.display = 'none';
         return;
       }
@@ -874,7 +906,7 @@
       const displayData = midtermFilteredData.slice(0, midtermDisplayCount);
 
       tbody.innerHTML = displayData.map((item, index) => {
-        const completedDate = item.midtermCompletedAt ? new Date(item.midtermCompletedAt).toLocaleDateString('ko-KR', {
+        const completedDate = item.completedAt ? new Date(item.completedAt).toLocaleDateString('ko-KR', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -882,14 +914,13 @@
           minute: '2-digit'
         }) : '-';
 
-        const statusBadge = item.midtermStatus === 'completed'
+        const statusBadge = item.status === 'completed'
           ? '<span class="status-badge completed">완료</span>'
           : '<span class="status-badge pending">대기중</span>';
 
         let scoreBadge = '-';
-        if (item.midtermScore !== null && item.midtermScore !== undefined) {
-          const passed = item.midtermPassed;
-          scoreBadge = `<span class="score-badge ${passed ? 'pass' : 'fail'}" onclick="showMidtermResult(${index})">${item.midtermScore}점</span>`;
+        if (item.score !== null && item.score !== undefined) {
+          scoreBadge = `<span class="score-badge ${item.passed ? 'pass' : 'fail'}">${item.score}점${item.passed ? ' ✓' : ''}</span>`;
         }
 
         return `
@@ -898,7 +929,8 @@
             <td>${item.grade || '-'}</td>
             <td>${item.name || '-'}</td>
             <td>${item.school || '-'}</td>
-            <td><span class="gate-badge">관문 ${item.maxGate}</span></td>
+            <td><span class="gate-badge">Stage ${item.stage}</span></td>
+            <td>${item.attemptNumber || '-'}</td>
             <td>${statusBadge}</td>
             <td>${scoreBadge}</td>
             <td class="date-cell">${completedDate}</td>

@@ -542,11 +542,11 @@
               <th>학년</th>
               <th>이름</th>
               <th style="cursor:pointer;" onclick="sortMidtermTable('school')">학교명 ↕</th>
-              <th style="cursor:pointer;" onclick="sortMidtermTable('academyName')">학원명 ↕</th>
-              <th>통과 관문</th>
-              <th>중간평가 상태</th>
+              <th>단계</th>
+              <th>회차</th>
+              <th>상태</th>
               <th>점수</th>
-              <th>완료일시</th>
+              <th style="cursor:pointer;" onclick="sortMidtermTable('completedAt')">완료일시 ↕</th>
             </tr>
           </thead>
           <tbody id="midtermTableBody">
@@ -1538,15 +1538,46 @@
         const result = await res.json();
 
         if (result.ok) {
-          midtermAllData = result.data;
-          // 완료한 학생이 위로, 완료일시 최신순 정렬
+          // midtermHistory를 펼쳐서 각 시도마다 별도 레코드로 변환
+          const expandedData = [];
+          for (const student of result.data) {
+            const history = student.midtermHistory || [];
+            if (history.length === 0) {
+              // 시도 이력이 없으면 대기 중 상태로 1개 레코드
+              expandedData.push({
+                grade: student.grade,
+                name: student.name,
+                school: student.school,
+                stage: 1,
+                attemptNumber: '-',
+                status: 'pending',
+                score: null,
+                passed: false,
+                completedAt: null
+              });
+            } else {
+              // 각 시도마다 별도 레코드 생성
+              for (const attempt of history) {
+                expandedData.push({
+                  grade: student.grade,
+                  name: student.name,
+                  school: student.school,
+                  stage: attempt.stage || 1,
+                  attemptNumber: attempt.attemptNumber || 1,
+                  status: 'completed',
+                  score: attempt.score,
+                  passed: attempt.passed,
+                  completedAt: attempt.completedAt
+                });
+              }
+            }
+          }
+
+          midtermAllData = expandedData;
+          // 완료일시 최신순 정렬 (최신이 위로)
           midtermAllData.sort((a, b) => {
-            // 1순위: 완료 상태 (completed가 위로)
-            if (a.midtermStatus === 'completed' && b.midtermStatus !== 'completed') return -1;
-            if (a.midtermStatus !== 'completed' && b.midtermStatus === 'completed') return 1;
-            // 2순위: 완료일시 내림차순 (최신이 위로)
-            const dateA = a.midtermCompletedAt ? new Date(a.midtermCompletedAt) : new Date(0);
-            const dateB = b.midtermCompletedAt ? new Date(b.midtermCompletedAt) : new Date(0);
+            const dateA = a.completedAt ? new Date(a.completedAt) : new Date(0);
+            const dateB = b.completedAt ? new Date(b.completedAt) : new Date(0);
             return dateB - dateA;
           });
           midtermFilteredData = [...midtermAllData];
@@ -1572,7 +1603,7 @@
       }
 
       tbody.innerHTML = midtermFilteredData.map((item, index) => {
-        const completedDate = item.midtermCompletedAt ? new Date(item.midtermCompletedAt).toLocaleDateString('ko-KR', {
+        const completedDate = item.completedAt ? new Date(item.completedAt).toLocaleDateString('ko-KR', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -1580,14 +1611,17 @@
           minute: '2-digit'
         }) : '-';
 
-        const statusBadge = item.midtermStatus === 'completed'
+        const statusBadge = item.status === 'completed'
           ? `<span style="display:inline-block; padding:4px 12px; background:linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color:#fff; border-radius:20px; font-size:13px; font-weight:600;">✅ 완료</span>`
           : `<span style="display:inline-block; padding:4px 12px; background:linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color:#fff; border-radius:20px; font-size:13px; font-weight:600;">⏳ 대기 중</span>`;
 
-        // 점수 배지 (클릭 가능)
-        const scoreBadge = item.midtermScore !== null
-          ? `<span onclick="showMidtermResult(${index})" style="cursor:pointer; display:inline-block; padding:4px 12px; background:linear-gradient(135deg, ${item.midtermPassed ? '#27ae60' : item.midtermScore >= 60 ? '#9b59b6' : '#e74c3c'} 0%, ${item.midtermPassed ? '#2ecc71' : item.midtermScore >= 60 ? '#8e44ad' : '#c0392b'} 100%); color:#fff; border-radius:20px; font-size:13px; font-weight:600; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">${item.midtermScore}점 📊</span>`
-          : '-';
+        // 점수 배지 (90점 이상: 녹색, 60-89: 보라, 60 미만: 빨강)
+        let scoreBadge = '-';
+        if (item.score !== null) {
+          const bgColor = item.passed || item.score >= 90 ? '#27ae60' : (item.score >= 60 ? '#9b59b6' : '#e74c3c');
+          const bgColorEnd = item.passed || item.score >= 90 ? '#2ecc71' : (item.score >= 60 ? '#8e44ad' : '#c0392b');
+          scoreBadge = `<span style="display:inline-block; padding:4px 12px; background:linear-gradient(135deg, ${bgColor} 0%, ${bgColorEnd} 100%); color:#fff; border-radius:20px; font-size:13px; font-weight:600;">${item.score}점${item.passed ? ' ✓' : ''}</span>`;
+        }
 
         return `
           <tr>
@@ -1595,8 +1629,8 @@
             <td>${item.grade || '-'}</td>
             <td>${item.name || '-'}</td>
             <td>${item.school || '-'}</td>
-            <td>${item.academyName || '-'}</td>
-            <td><span class="gate-badge" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">관문 ${item.maxGate}</span></td>
+            <td><span class="gate-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">Stage ${item.stage}</span></td>
+            <td>${item.attemptNumber || '-'}</td>
             <td>${statusBadge}</td>
             <td>${scoreBadge}</td>
             <td class="date-cell">${completedDate}</td>
@@ -1607,7 +1641,7 @@
 
     function updateMidtermCounts() {
       const total = midtermFilteredData.length;
-      const completed = midtermFilteredData.filter(d => d.midtermStatus === 'completed').length;
+      const completed = midtermFilteredData.filter(d => d.status === 'completed').length;
       document.getElementById('midtermTotalCount').textContent = total;
       document.getElementById('midtermCompletedCount').textContent = completed;
     }
@@ -1638,6 +1672,14 @@
       }
 
       midtermFilteredData.sort((a, b) => {
+        // 완료일시 정렬 (날짜)
+        if (field === 'completedAt') {
+          const dateA = a.completedAt ? new Date(a.completedAt) : new Date(0);
+          const dateB = b.completedAt ? new Date(b.completedAt) : new Date(0);
+          return midtermSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+        }
+
+        // 문자열 정렬
         const aVal = (a[field] || '-').toLowerCase();
         const bVal = (b[field] || '-').toLowerCase();
 
@@ -1652,7 +1694,8 @@
       });
 
       renderMidtermTable();
-      showToast(`${field === 'school' ? '학교명' : '학원명'} ${midtermSortOrder === 'asc' ? '오름차순' : '내림차순'} 정렬`);
+      const fieldNames = { school: '학교명', completedAt: '완료일시' };
+      showToast(`${fieldNames[field] || field} ${midtermSortOrder === 'asc' ? '오름차순' : '내림차순'} 정렬`);
     }
 
     // 중간평가 결과 모달 표시
