@@ -207,6 +207,69 @@
       ]
     }
   };
+    // ===== 보완학습 열기 =====
+    function openRemedial() {
+      const needKeys = ['literal', 'structural', 'lexical', 'inferential', 'critical'];
+
+      const panel = document.getElementById('remedial-panel');
+      const body = document.getElementById('remedial-panel-body');
+      if (!panel || !body) return;
+
+      let html = "";
+      needKeys.forEach(key => {
+        const data = window.REMEDIAL_BANK[key];
+        if (!data) return;
+        html += `<div style="margin-bottom:16px;">
+          <h4 style="margin:4px 0 6px; color:#8b2f2f;">${data.title}</h4>
+          <ol style="padding-left:18px;">`;
+        (data.problems || []).forEach((p, idx) => {
+          html += `<li style="margin-bottom:6px;">${p.q}<br>`;
+          p.options.forEach((opt, optIdx) => {
+            html += `<label style="display:block;font-weight:normal;"><input type="radio" name="${key}-q${idx}" value="${optIdx}"> ${["①","②","③","④"][optIdx]} ${opt}</label>`;
+          });
+          html += `</li>`;
+        });
+        html += `</ol></div>`;
+      });
+
+      body.innerHTML = html;
+      panel.style.display = 'flex';
+    }
+
+    // 보완학습 채점
+    function gradeRemedial() {
+      const body = document.getElementById('remedial-panel-body');
+      if (!body) return;
+      for (const key in window.REMEDIAL_BANK) {
+        const data = window.REMEDIAL_BANK[key];
+        if (!data) continue;
+        (data.problems || []).forEach((p, idx) => {
+          const name = key + '-q' + idx;
+          const inputs = body.querySelectorAll(`input[name="${name}"]`);
+          if (!inputs.length) return;
+          let selected = -1;
+          inputs.forEach((inp, i) => { if (inp.checked) selected = parseInt(inp.value); });
+          const li = inputs[0].closest('li');
+          if (!li) return;
+          const old = li.querySelector('.remed-result');
+          if (old) old.remove();
+          if (selected === p.answer) {
+            li.insertAdjacentHTML('beforeend', '<div class="remed-result" style="margin-top:3px; color:#157347; font-size:12px;">정답입니다 ✅ <span style="color:#555;">| ' + (p.explanation || '') + '</span></div>');
+          } else {
+            const correctText = p.options[p.answer];
+            li.insertAdjacentHTML('beforeend', `<div class="remed-result" style="margin-top:3px; color:#b3261e; font-size:12px;">틀렸어요 ❌ 정답: ${["①","②","③","④"][p.answer]} ${correctText} <span style="color:#555;">| ${p.explanation || ''}</span></div>`);
+          }
+        });
+      }
+    }
+
+    // 보완학습 리셋
+    function resetRemedial() {
+      const body = document.getElementById('remedial-panel-body');
+      if (!body) return;
+      body.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+      body.querySelectorAll('.remed-result').forEach(el => el.remove());
+    }
   </script>
 
   <!-- 공통 JavaScript -->
@@ -771,7 +834,7 @@
 
       <!-- ✅ 제출하기 버튼 -->
       <div class="report-actions">
-        <button class="report-btn-remedial" onclick="openRemedial && openRemedial()" style="display:none;">
+        <button class="report-btn-remedial" onclick="openRemedial && openRemedial()">
           보완학습 하기
         </button>
         <button class="report-btn-submit" onclick="submitReport()">

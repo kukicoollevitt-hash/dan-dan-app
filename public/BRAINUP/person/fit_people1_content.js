@@ -403,10 +403,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '혜초는 약 4년 동안 인도와 여러 나라를 여행하며 새로운 세계를 경험했다.'],
       q2_text: '이 글의 전개 구조로 가장 알맞은 것은 무엇인가요?',
       q2_opts: [
-        '문제 제기 → 해결 방법 설명 → 결론 도출',
+        '인도 여행 출발 → 어린 시절 회상 → 당나라 유학',
         '어린 시절의 깨달음 → 당나라 유학과 여행 결심 → 여행 기록 완성',
-        '과거 회상 → 현재 상황 → 미래 예측',
-        '주장 제시 → 근거 나열 → 결론 요약'
+        '여행 기록 완성 → 인도 여정 → 불교 공부 시작',
+        '당나라 유학 → 여행 기록 완성 → 어린 시절의 깨달음'
       ],
       q3_html: `혜초는 당나라에서 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅅ">에게 가르침을 받으며 인도로 향하는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㄷ">을 따라가기로 결심했습니다.`,
       q4_html: `혜초는 자신이 '<input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅁ ㅇ ㄱㄱㄹ">'였음을 깨닫고, 여행 경험을 정리해 귀중한 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅎㅇㅅ">을 남겼습니다.`,
@@ -5688,7 +5688,10 @@ window.renderVocabFill = function () {
   // 서버 데이터 복원 (있으면)
   if (typeof window.restoreVocabFromServerData === 'function') {
     window.restoreVocabFromServerData();
-}
+  }
+
+  // 렌더링 완료 표시 (탭 전환 시 재렌더링 방지)
+  _vocabFillRendered = true;
 
   console.log('[renderVocabFill] 완료, 빈칸 수:', pack.vocabFill.items.length);
 };
