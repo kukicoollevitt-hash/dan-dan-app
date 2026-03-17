@@ -360,6 +360,25 @@ const PORT = process.env.PORT || 3000;
 const USERS_FILE = "users.json";
 const MONGO_URI = process.env.MONGODB_URI;
 
+// 🔹 슈퍼관리자 학원 조회 모드 지원 헬퍼 함수
+function getAcademyNameFromSession(req) {
+  // 슈퍼관리자가 특정 학원 조회 중인 경우
+  if (req.session && req.session.viewingBranch) {
+    return req.session.viewingBranch.academyName;
+  }
+  // 일반 브랜치 관리자인 경우
+  if (req.session && req.session.admin) {
+    return req.session.admin.academyName;
+  }
+  return null;
+}
+
+// 🔹 슈퍼관리자 조회 모드 또는 브랜치 관리자 로그인 체크
+function isAdminLoggedInOrViewing(req) {
+  return (req.session && req.session.viewingBranch) ||
+         (req.session && req.session.admin && req.session.admin.academyName);
+}
+
 // OpenAI 설정
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -453,6 +472,11 @@ app.post("/academy-admin-login", async (req, res) => {
       userType: "academy",
       isSuper: isSuperAdmin
     };
+
+    // 🔹 슈퍼관리자 조회 모드 세션 정리 (브랜치 관리자 직접 로그인 시)
+    if (req.session.viewingBranch) {
+      delete req.session.viewingBranch;
+    }
 
     // 🔥 학원용 관리자 쿠키 설정 (세션 만료 시 리다이렉트용)
     res.cookie("adminType", "academy", { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
@@ -953,6 +977,11 @@ const DailyReportSent = mongoose.model("DailyReportSent", dailyReportSentSchema)
  * ✅ 브랜치 관리자용 미들웨어
  * ==================================== */
 function requireAdminLogin(req, res, next) {
+  // 🔹 슈퍼관리자 조회 모드인 경우도 허용
+  if (req.session.viewingBranch) {
+    return next();
+  }
+
   if (!req.session.admin) {
     // 🔥 학원용 관리자인지 판단 (3단계 체크)
     // 1순위: 요청 URL에 "academy"가 포함되어 있으면 학원용
@@ -2452,23 +2481,26 @@ app.get("/super/users", requireSuperAdmin, (req, res) => {
 // ✅ 내 학원 학생 목록 데이터 API (JSON)
 app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
   try {
-    const admin = req.session.admin;
+    // 🔹 슈퍼관리자 조회 모드 지원
+    const viewingBranch = req.session.viewingBranch;
+    const admin = viewingBranch || req.session.admin;
     if (!admin) {
       return res.status(401).json({ ok: false, message: "관리자 세션 없음" });
     }
 
     const academyName = admin.academyName;
-    const adminGrade = admin.grade;      // 선생님 학년
-    const adminClassNum = admin.classNum; // 선생님 반
+    const adminGrade = viewingBranch ? "" : (admin.grade || "");      // 슈퍼관리자 조회 시 전체 학년
+    const adminClassNum = viewingBranch ? "" : (admin.classNum || ""); // 슈퍼관리자 조회 시 전체 반
     const { q, status, sort } = req.query; // 검색어 + 상태 필터(옵션) + 정렬
 
-    const userType = admin.userType || "school";  // 🔥 학교용/학원용 구분
+    const userType = viewingBranch ? "academy" : (admin.userType || "school");  // 🔥 학교용/학원용 구분
 
     console.log("🔍 [/api/branch/users] 필터 조건:", {
       academyName,
       adminGrade,
       adminClassNum,
-      userType
+      userType,
+      viewingMode: viewingBranch ? "super" : "normal"
     });
 
     // 기본 필터: 휴지 아님
@@ -4403,7 +4435,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
       html += `
         <tr>
           <td>${idx + 1}</td>
-          <td>${a.academyName || ""}</td>
+          <td><a href="/super/view-branch?id=${a._id}" style="color:#007bff; text-decoration:underline; cursor:pointer;" title="해당 지점 대시보드 보기">${a.academyName || ""}</a></td>
           <td>${a.name || ""}</td>
           <td>${a.phone || ""}</td>
           <td>
@@ -4669,6 +4701,41 @@ app.get("/super/academy-admin-delete", requireSuperAdmin, async (req, res) => {
     console.error("❌ /super/academy-admin-delete 에러:", err);
     res.status(500).send("삭제 중 오류가 발생했습니다.");
   }
+});
+
+// 🔹 슈퍼관리자: 특정 학원 대시보드 조회 (학원명 클릭 시)
+app.get("/super/view-branch", requireSuperAdmin, async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).send("id 파라미터가 필요합니다.");
+
+  try {
+    const admin = await Admin.findById(id);
+    if (!admin) return res.status(404).send("해당 관리자를 찾을 수 없습니다.");
+
+    // 세션에 임시로 해당 학원 정보 저장 (슈퍼관리자가 학원 대시보드 조회용)
+    req.session.viewingBranch = {
+      _id: admin._id,
+      academyName: admin.academyName,
+      name: admin.name,
+      phone: admin.phone,
+      approvedSeries: admin.approvedSeries || []
+    };
+
+    console.log("🔍 슈퍼관리자가 학원 대시보드 조회:", admin.academyName);
+    res.redirect("/academy/dashboard?viewMode=super");
+  } catch (err) {
+    console.error("❌ /super/view-branch 에러:", err);
+    res.status(500).send("학원 대시보드 조회 중 오류가 발생했습니다.");
+  }
+});
+
+// 🔹 슈퍼관리자: 학원 조회 모드 종료
+app.get("/super/exit-view-branch", requireSuperAdmin, (req, res) => {
+  if (req.session.viewingBranch) {
+    console.log("🔙 슈퍼관리자가 학원 조회 모드 종료:", req.session.viewingBranch.academyName);
+    delete req.session.viewingBranch;
+  }
+  res.redirect("/super/academy-admins");
 });
 
 // 🔹 학원용 관리자 정보 수정 화면
@@ -24663,6 +24730,39 @@ app.get("/api/session", (req, res) => {
 
 // ✅ 관리자(admin) 세션 정보 조회 API
 app.get("/api/admin-session", async (req, res) => {
+  // 🔹 슈퍼관리자 조회 모드인 경우
+  if (req.session && req.session.viewingBranch) {
+    const viewing = req.session.viewingBranch;
+    try {
+      const admin = await Admin.findById(viewing._id).lean();
+      return res.json({
+        ok: true,
+        admin: {
+          id: viewing._id,
+          academyName: viewing.academyName,
+          name: viewing.name,
+          userType: "academy",
+          viewMode: "super",
+          seriesApproved: admin ? admin.seriesApproved : false,
+          approvedSeries: admin ? (admin.approvedSeries || []) : []
+        }
+      });
+    } catch (err) {
+      return res.json({
+        ok: true,
+        admin: {
+          id: viewing._id,
+          academyName: viewing.academyName,
+          name: viewing.name,
+          userType: "academy",
+          viewMode: "super",
+          seriesApproved: false,
+          approvedSeries: viewing.approvedSeries || []
+        }
+      });
+    }
+  }
+
   if (req.session && req.session.admin) {
     // DB에서 최신 seriesApproved, approvedSeries 정보 가져오기
     try {
@@ -29278,6 +29378,21 @@ app.delete("/api/course-applications/delete-selected", async (req, res) => {
 // 관리자 정보 조회 (브랜치 관리자용)
 app.get("/api/admin/info", async (req, res) => {
   try {
+    // 🔹 슈퍼관리자가 특정 학원 조회 중인 경우
+    if (req.session.viewingBranch) {
+      const viewing = req.session.viewingBranch;
+      return res.json({
+        success: true,
+        academyName: viewing.academyName || "",
+        adminId: viewing._id || "",
+        grade: "",
+        classNum: "",
+        userType: "academy",
+        viewMode: "super",  // 슈퍼관리자 조회 모드 표시
+        approvedSeries: viewing.approvedSeries || []
+      });
+    }
+
     if (!req.session || !req.session.admin) {
       return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
     }
