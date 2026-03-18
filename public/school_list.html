@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>브레인 문해원 가맹 1692개 지점 현황</title>
+  <title>브레인 문해원 1692개 센터 현황</title>
   <style>
     * {
       margin: 0;
@@ -194,9 +194,9 @@
       outline: none;
     }
 
-    .status-select option[value="가맹가능"] { color: #2196F3; }
-    .status-select option[value="가맹예정"] { color: #FF9800; }
-    .status-select option[value="가맹확정"] { color: #4CAF50; }
+    .status-select option[value="센터가능"] { color: #2196F3; }
+    .status-select option[value="센터예정"] { color: #FF9800; }
+    .status-select option[value="센터확정"] { color: #4CAF50; }
 
     .payment-select {
       padding: 6px 8px;
@@ -304,19 +304,19 @@
 </head>
 <body>
   <div class="container">
-    <h1>브레인 문해원 가맹 1692개 지점 현황</h1>
+    <h1>브레인 문해원 1692개 센터 현황</h1>
     <p class="subtitle">(2025년 학생 수 500명 이상 초등학교 지역)<br>총 1,880개교 | 2025년 기준 | 학생 수 내림차순 정렬</p>
 
     <div class="legend">
-      <span class="legend-item3">⭐⭐⭐ 가맹 2개 가능 지역 (1,500명 이상)</span>
+      <span class="legend-item3">⭐⭐⭐ 센터 2개 가능 지역 (1,500명 이상)</span>
       <span class="legend-count3" id="doubleCount">0개교</span>
     </div>
     <div class="legend">
-      <span class="legend-item">⭐⭐ 가맹우선지역 (1,000명 이상)</span>
+      <span class="legend-item">⭐⭐ 센터우선지역 (1,000명 이상)</span>
       <span class="legend-count" id="priorityCount">0개교</span>
     </div>
     <div class="legend">
-      <span class="legend-item2">⭐ 가맹추천지역 (500~999명)</span>
+      <span class="legend-item2">⭐ 센터추천지역 (500~999명)</span>
       <span class="legend-count2" id="recommendCount">0개교</span>
     </div>
 
@@ -327,6 +327,12 @@
       </select>
       <select id="sigunguFilter">
         <option value="">전체 시군구</option>
+      </select>
+      <select id="statusFilter">
+        <option value="">센터여부 전체</option>
+        <option value="센터가능">센터가능</option>
+        <option value="센터예정">센터예정</option>
+        <option value="센터확정">센터확정</option>
       </select>
     </div>
 
@@ -344,7 +350,7 @@
             <th>학교명</th>
             <th style="text-align:right">학생수</th>
             <th>주변 경쟁업체</th>
-            <th>가맹 여부</th>
+            <th>센터 여부</th>
             <th>결제 여부</th>
             <th>계약시작일</th>
             <th>남은 계약일</th>
@@ -2013,17 +2019,28 @@
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
       const sidoFilter = document.getElementById('sidoFilter').value;
       const sigunguFilter = document.getElementById('sigunguFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
 
       const filtered = schoolData.filter(school => {
         const matchSearch = school.name.toLowerCase().includes(searchTerm) || school.sigungu.toLowerCase().includes(searchTerm);
         const matchSido = !sidoFilter || school.sido === sidoFilter;
         const matchSigungu = !sigunguFilter || school.sigungu === sigunguFilter;
-        return matchSearch && matchSido && matchSigungu;
+
+        // 센터여부 필터링 (localStorage에서 저장된 상태 확인)
+        let matchStatus = true;
+        if (statusFilter) {
+          const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
+          const savedData = JSON.parse(localStorage.getItem('schoolData_' + schoolId) || '{}');
+          const status = savedData.status || '';
+          matchStatus = status === statusFilter;
+        }
+
+        return matchSearch && matchSido && matchSigungu && matchStatus;
       });
 
       document.getElementById('resultCount').textContent = filtered.length.toLocaleString();
 
-      // 1500명 이상 학교 수 계산 (가맹 2개 가능)
+      // 1500명 이상 학교 수 계산 (센터 2개 가능)
       const doubleCount = filtered.filter(s => s.students >= 1500).length;
       document.getElementById('doubleCount').textContent = doubleCount.toLocaleString() + '개교';
 
@@ -2075,9 +2092,9 @@
           <td>
             <select class="status-select" data-id="${schoolId}">
               <option value="" ${status === '' ? 'selected' : ''}>선택</option>
-              <option value="가맹가능" ${status === '가맹가능' ? 'selected' : ''}>가맹가능</option>
-              <option value="가맹예정" ${status === '가맹예정' ? 'selected' : ''}>가맹예정</option>
-              <option value="가맹확정" ${status === '가맹확정' ? 'selected' : ''}>가맹확정</option>
+              <option value="센터가능" ${status === '센터가능' ? 'selected' : ''}>센터가능</option>
+              <option value="센터예정" ${status === '센터예정' ? 'selected' : ''}>센터예정</option>
+              <option value="센터확정" ${status === '센터확정' ? 'selected' : ''}>센터확정</option>
             </select>
           </td>
           <td>
@@ -2171,6 +2188,7 @@
       renderTable();
     });
     document.getElementById('sigunguFilter').addEventListener('change', renderTable);
+    document.getElementById('statusFilter').addEventListener('change', renderTable);
 
     // 초기화 - 학생 수 내림차순 정렬 (많은 순)
     schoolData.sort((a, b) => b.students - a.students);
