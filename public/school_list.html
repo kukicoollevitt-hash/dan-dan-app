@@ -196,6 +196,61 @@
     .status-select option[value="가맹예정"] { color: #FF9800; }
     .status-select option[value="가맹확정"] { color: #4CAF50; }
 
+    .payment-select {
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .payment-select:focus {
+      border-color: #4a90d9;
+      outline: none;
+    }
+
+    .payment-select option[value="미완료"] { color: #f44336; }
+    .payment-select option[value="완료"] { color: #4CAF50; }
+
+    .contract-input {
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .contract-input:focus {
+      border-color: #4a90d9;
+      outline: none;
+    }
+
+    .remaining-days {
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .renewal-date {
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .reset-btn {
+      padding: 6px 12px;
+      border: 1px solid #f44336;
+      border-radius: 4px;
+      background: #fff;
+      color: #f44336;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: #f44336;
+      color: white;
+    }
+
     .legend-count {
       font-weight: 600;
       color: #e67e22;
@@ -288,6 +343,11 @@
             <th style="text-align:right">학생수</th>
             <th>주변 경쟁업체</th>
             <th>가맹 여부</th>
+            <th>결제 여부</th>
+            <th>계약시작일</th>
+            <th>남은 계약일</th>
+            <th>재계약일</th>
+            <th>초기화</th>
           </tr>
         </thead>
         <tbody id="schoolTable">
@@ -1976,7 +2036,7 @@
       const tbody = document.getElementById('schoolTable');
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="no-result">검색 결과가 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" class="no-result">검색 결과가 없습니다.</td></tr>';
         return;
       }
 
@@ -1985,6 +2045,22 @@
         const savedData = JSON.parse(localStorage.getItem('schoolData_' + schoolId) || '{}');
         const competitor = savedData.competitor || '';
         const status = savedData.status || '';
+        const payment = savedData.payment || '';
+        const contractStart = savedData.contractStart || '';
+
+        // 남은 계약일 및 재계약일 계산
+        let remainingDays = '-';
+        let renewalDate = '-';
+        if (contractStart) {
+          const startDate = new Date(contractStart);
+          const endDate = new Date(startDate);
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          const today = new Date();
+          const diffTime = endDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          remainingDays = diffDays > 0 ? diffDays + '일' : '만료';
+          renewalDate = endDate.toISOString().split('T')[0];
+        }
 
         return `
         <tr class="${school.students >= 1000 ? 'priority' : ''}">
@@ -2002,6 +2078,17 @@
               <option value="가맹확정" ${status === '가맹확정' ? 'selected' : ''}>가맹확정</option>
             </select>
           </td>
+          <td>
+            <select class="payment-select" data-id="${schoolId}">
+              <option value="" ${payment === '' ? 'selected' : ''}>선택</option>
+              <option value="미완료" ${payment === '미완료' ? 'selected' : ''}>미완료</option>
+              <option value="완료" ${payment === '완료' ? 'selected' : ''}>완료</option>
+            </select>
+          </td>
+          <td><input type="date" class="contract-input" data-id="${schoolId}" value="${contractStart}"></td>
+          <td class="remaining-days">${remainingDays}</td>
+          <td class="renewal-date">${renewalDate}</td>
+          <td><button class="reset-btn" data-id="${schoolId}">초기화</button></td>
         </tr>
       `}).join('');
 
@@ -2011,6 +2098,28 @@
       });
       document.querySelectorAll('.status-select').forEach(select => {
         select.addEventListener('change', (e) => saveSchoolData(e.target.dataset.id, 'status', e.target.value));
+      });
+      document.querySelectorAll('.payment-select').forEach(select => {
+        select.addEventListener('change', (e) => saveSchoolData(e.target.dataset.id, 'payment', e.target.value));
+      });
+      document.querySelectorAll('.contract-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          saveSchoolData(e.target.dataset.id, 'contractStart', e.target.value);
+          renderTable();
+        });
+      });
+      document.querySelectorAll('.reset-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const password = prompt('비밀번호를 입력하세요:');
+          if (password === '2846') {
+            const schoolId = e.target.dataset.id;
+            localStorage.removeItem('schoolData_' + schoolId);
+            renderTable();
+            alert('초기화되었습니다.');
+          } else if (password !== null) {
+            alert('비밀번호가 틀렸습니다.');
+          }
+        });
       });
     }
 
