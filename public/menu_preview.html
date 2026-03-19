@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메뉴 스타일 미리보기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #1b2a3f;
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    /* 스타일 선택 탭 */
+    .style-tabs {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+      background: rgba(27, 42, 63, 0.95);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+      z-index: 1000;
+    }
+
+    .style-tab {
+      padding: 12px 30px;
+      background: transparent;
+      border: 2px solid #d4af37;
+      color: #d4af37;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+    }
+
+    .style-tab:hover,
+    .style-tab.active {
+      background: linear-gradient(135deg, #d4af37, #f4e4a6);
+      color: #1b2a3f;
+    }
+
+    /* 프리뷰 컨테이너 */
+    .preview-container {
+      display: none;
+      min-height: 100vh;
+      padding-top: 80px;
+    }
+
+    .preview-container.active {
+      display: block;
+    }
+
+    /* ========== 스타일 1: 고정 상단 메뉴 ========== */
+    .style1-header {
+      position: fixed;
+      top: 80px;
+      left: 0;
+      right: 0;
+      padding: 15px 40px;
+      background: rgba(27, 42, 63, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .style1-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .style1-logo img {
+      width: 40px;
+      height: auto;
+    }
+
+    .style1-logo span {
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #d4af37, #f4e4a6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .style1-nav {
+      display: flex;
+      gap: 30px;
+    }
+
+    .style1-nav a {
+      color: #b8976b;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      position: relative;
+      padding: 5px 0;
+      transition: color 0.3s ease;
+    }
+
+    .style1-nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #d4af37, #f4e4a6);
+      transition: width 0.3s ease;
+    }
+
+    .style1-nav a:hover {
+      color: #f4e4a6;
+    }
+
+    .style1-nav a:hover::after {
+      width: 100%;
+    }
+
+    /* ========== 스타일 2: 사이드 네비게이션 ========== */
+    .style2-sidenav {
+      position: fixed;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 100;
+    }
+
+    .style2-dot {
+      width: 12px;
+      height: 12px;
+      background: rgba(212, 175, 55, 0.3);
+      border: 2px solid #d4af37;
+      transform: rotate(45deg);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .style2-dot:hover,
+    .style2-dot.active {
+      background: #d4af37;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+    }
+
+    .style2-dot .tooltip {
+      position: absolute;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%) rotate(-45deg);
+      background: rgba(27, 42, 63, 0.95);
+      border: 1px solid #d4af37;
+      padding: 8px 15px;
+      border-radius: 5px;
+      white-space: nowrap;
+      font-size: 0.85rem;
+      color: #f4e4a6;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .style2-dot:hover .tooltip {
+      opacity: 1;
+    }
+
+    .style2-line {
+      position: fixed;
+      right: 35px;
+      top: calc(50% - 120px);
+      width: 2px;
+      height: 240px;
+      background: linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.3), transparent);
+      z-index: 99;
+    }
+
+    /* ========== 스타일 3: 풀스크린 메뉴 ========== */
+    .style3-hamburger {
+      position: fixed;
+      top: 100px;
+      right: 40px;
+      width: 40px;
+      height: 30px;
+      cursor: pointer;
+      z-index: 200;
+    }
+
+    .style3-hamburger span {
+      display: block;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #d4af37, #f4e4a6);
+      margin-bottom: 8px;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .style3-hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(8px, 8px);
+    }
+
+    .style3-hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .style3-hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(8px, -8px);
+    }
+
+    .style3-fullmenu {
+      position: fixed;
+      top: 80px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(27, 42, 63, 0.98);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 25px;
+      z-index: 150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    .style3-fullmenu.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .style3-fullmenu a {
+      font-size: 2rem;
+      font-weight: 700;
+      text-decoration: none;
+      background: linear-gradient(135deg, #d4af37 0%, #f4e4a6 50%, #d4af37 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.4s ease;
+      animation: menuFadeIn 0.5s ease forwards;
+    }
+
+    .style3-fullmenu.active a:nth-child(1) { animation-delay: 0.1s; }
+    .style3-fullmenu.active a:nth-child(2) { animation-delay: 0.15s; }
+    .style3-fullmenu.active a:nth-child(3) { animation-delay: 0.2s; }
+    .style3-fullmenu.active a:nth-child(4) { animation-delay: 0.25s; }
+    .style3-fullmenu.active a:nth-child(5) { animation-delay: 0.3s; }
+    .style3-fullmenu.active a:nth-child(6) { animation-delay: 0.35s; }
+    .style3-fullmenu.active a:nth-child(7) { animation-delay: 0.4s; }
+    .style3-fullmenu.active a:nth-child(8) { animation-delay: 0.45s; }
+    .style3-fullmenu.active a:nth-child(9) { animation-delay: 0.5s; }
+
+    @keyframes menuFadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .style3-fullmenu a:hover {
+      animation: goldShine 1s ease-in-out infinite;
+    }
+
+    @keyframes goldShine {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    /* 풀스크린 메뉴 파티클 */
+    .style3-particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .style3-particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #d4af37;
+      border-radius: 50%;
+      animation: floatParticle 8s ease-in-out infinite;
+    }
+
+    @keyframes floatParticle {
+      0%, 100% { transform: translateY(100vh); opacity: 0; }
+      50% { opacity: 0.6; }
+      100% { transform: translateY(-100vh); }
+    }
+
+    /* ========== 스타일 4: 추천 조합 ========== */
+    .style4-header {
+      position: fixed;
+      top: 80px;
+      left: 0;
+      right: 0;
+      padding: 12px 40px;
+      background: rgba(27, 42, 63, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .style4-header.visible {
+      transform: translateY(0);
+    }
+
+    .style4-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .style4-logo img {
+      width: 35px;
+      height: auto;
+    }
+
+    .style4-logo span {
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #d4af37, #f4e4a6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .style4-nav {
+      display: flex;
+      gap: 25px;
+    }
+
+    .style4-nav a {
+      color: #b8976b;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      position: relative;
+      transition: color 0.3s ease;
+    }
+
+    .style4-nav a:hover {
+      color: #f4e4a6;
+    }
+
+    .style4-sidenav {
+      position: fixed;
+      right: 25px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .style4-dot {
+      width: 10px;
+      height: 10px;
+      background: rgba(212, 175, 55, 0.2);
+      border: 1px solid #d4af37;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .style4-dot:hover,
+    .style4-dot.active {
+      background: #d4af37;
+      transform: scale(1.3);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
+
+    .style4-dot .tooltip {
+      position: absolute;
+      right: 25px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(27, 42, 63, 0.95);
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      padding: 6px 12px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-size: 0.8rem;
+      color: #d4af37;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .style4-dot:hover .tooltip {
+      opacity: 1;
+    }
+
+    /* 샘플 콘텐츠 */
+    .sample-content {
+      padding: 180px 60px 60px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .sample-section {
+      margin-bottom: 100vh;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 15px;
+    }
+
+    .sample-section h2 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #d4af37, #f4e4a6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+    }
+
+    .sample-section p {
+      color: #8899aa;
+      line-height: 1.8;
+    }
+
+    .style-description {
+      text-align: center;
+      padding: 40px;
+      margin: 20px 60px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 15px;
+    }
+
+    .style-description h3 {
+      font-size: 1.5rem;
+      color: #f4e4a6;
+      margin-bottom: 15px;
+    }
+
+    .style-description p {
+      color: #b8976b;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <!-- 스타일 선택 탭 -->
+  <div class="style-tabs">
+    <button class="style-tab active" data-style="1">스타일 1: 고정 상단</button>
+    <button class="style-tab" data-style="2">스타일 2: 사이드</button>
+    <button class="style-tab" data-style="3">스타일 3: 풀스크린</button>
+    <button class="style-tab" data-style="4">추천: 조합</button>
+  </div>
+
+  <!-- 스타일 1: 고정 상단 메뉴 -->
+  <div class="preview-container active" id="style1">
+    <header class="style1-header">
+      <div class="style1-logo">
+        <img src="images/브레인문해원 로고(금색).png" alt="로고">
+        <span>브레인문해원</span>
+      </div>
+      <nav class="style1-nav">
+        <a href="#">문해력의 중요성</a>
+        <a href="#">왜 브레인문해원인가</a>
+        <a href="#">프로그램</a>
+        <a href="#">성공 사례</a>
+        <a href="#">가맹 안내</a>
+      </nav>
+    </header>
+
+    <div class="style-description">
+      <h3>스타일 1: 고정 상단 메뉴</h3>
+      <p>골드 언더라인 애니메이션 + 반투명 네이비 배경<br>심플하고 깔끔한 프리미엄 느낌</p>
+    </div>
+
+    <div class="sample-content">
+      <div class="sample-section">
+        <h2>문해력의 중요성</h2>
+        <p>샘플 콘텐츠 영역입니다. 스크롤하여 메뉴 동작을 확인해보세요.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스타일 2: 사이드 네비게이션 -->
+  <div class="preview-container" id="style2">
+    <div class="style2-line"></div>
+    <nav class="style2-sidenav">
+      <div class="style2-dot active"><span class="tooltip">문해력의 중요성</span></div>
+      <div class="style2-dot"><span class="tooltip">왜 기존 학원으로는 부족한가</span></div>
+      <div class="style2-dot"><span class="tooltip">왜 브레인문해원인가</span></div>
+      <div class="style2-dot"><span class="tooltip">브레인문해력 프로그램</span></div>
+      <div class="style2-dot"><span class="tooltip">창작 독서 프로그램</span></div>
+      <div class="style2-dot"><span class="tooltip">성공 사례</span></div>
+      <div class="style2-dot"><span class="tooltip">운영 시스템</span></div>
+      <div class="style2-dot"><span class="tooltip">공간 & 인테리어</span></div>
+      <div class="style2-dot"><span class="tooltip">가맹 안내</span></div>
+    </nav>
+
+    <div class="style-description">
+      <h3>스타일 2: 사이드 네비게이션</h3>
+      <p>우측 골드 다이아몬드 + 호버 시 섹션명 표시<br>초대장 목차 같은 특별한 느낌</p>
+    </div>
+
+    <div class="sample-content">
+      <div class="sample-section">
+        <h2>문해력의 중요성</h2>
+        <p>마우스를 우측 다이아몬드에 올려보세요. 섹션명이 나타납니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스타일 3: 풀스크린 메뉴 -->
+  <div class="preview-container" id="style3">
+    <div class="style3-hamburger" id="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+    <div class="style3-fullmenu" id="fullmenu">
+      <div class="style3-particles" id="style3Particles"></div>
+      <a href="#">문해력의 중요성</a>
+      <a href="#">왜 기존 학원으로는 부족한가</a>
+      <a href="#">왜 브레인문해원인가</a>
+      <a href="#">브레인문해력 프로그램</a>
+      <a href="#">창작 독서 프로그램</a>
+      <a href="#">성공 사례</a>
+      <a href="#">운영 시스템</a>
+      <a href="#">공간 & 인테리어</a>
+      <a href="#">가맹 안내</a>
+    </div>
+
+    <div class="style-description">
+      <h3>스타일 3: 풀스크린 메뉴</h3>
+      <p>우측 상단 햄버거 메뉴 클릭 → 전체 화면 오버레이<br>웅장하고 드라마틱한 등장 효과</p>
+    </div>
+
+    <div class="sample-content">
+      <div class="sample-section">
+        <h2>문해력의 중요성</h2>
+        <p>우측 상단 햄버거 메뉴(≡)를 클릭해보세요!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스타일 4: 추천 조합 -->
+  <div class="preview-container" id="style4">
+    <header class="style4-header visible">
+      <div class="style4-logo">
+        <img src="images/브레인문해원 로고(금색).png" alt="로고">
+        <span>브레인문해원</span>
+      </div>
+      <nav class="style4-nav">
+        <a href="#">문해력의 중요성</a>
+        <a href="#">왜 브레인문해원인가</a>
+        <a href="#">프로그램</a>
+        <a href="#">성공 사례</a>
+        <a href="#">가맹 안내</a>
+      </nav>
+    </header>
+
+    <nav class="style4-sidenav">
+      <div class="style4-dot active"><span class="tooltip">문해력의 중요성</span></div>
+      <div class="style4-dot"><span class="tooltip">왜 기존 학원으로는 부족한가</span></div>
+      <div class="style4-dot"><span class="tooltip">왜 브레인문해원인가</span></div>
+      <div class="style4-dot"><span class="tooltip">브레인문해력 프로그램</span></div>
+      <div class="style4-dot"><span class="tooltip">창작 독서 프로그램</span></div>
+      <div class="style4-dot"><span class="tooltip">성공 사례</span></div>
+      <div class="style4-dot"><span class="tooltip">운영 시스템</span></div>
+      <div class="style4-dot"><span class="tooltip">공간 & 인테리어</span></div>
+      <div class="style4-dot"><span class="tooltip">가맹 안내</span></div>
+    </nav>
+
+    <div class="style-description">
+      <h3>추천: 조합 스타일</h3>
+      <p>상단 얇은 메뉴 + 우측 미니멀 점 네비게이션<br>스크롤 시 현재 섹션 표시 + 깔끔한 UX</p>
+    </div>
+
+    <div class="sample-content">
+      <div class="sample-section">
+        <h2>문해력의 중요성</h2>
+        <p>상단 메뉴와 우측 점 네비게이션이 함께 동작합니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 탭 전환
+    const tabs = document.querySelectorAll('.style-tab');
+    const containers = document.querySelectorAll('.preview-container');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const styleNum = tab.dataset.style;
+
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        containers.forEach(c => c.classList.remove('active'));
+        document.getElementById('style' + styleNum).classList.add('active');
+      });
+    });
+
+    // 스타일 3: 햄버거 메뉴
+    const hamburger = document.getElementById('hamburger');
+    const fullmenu = document.getElementById('fullmenu');
+
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');
+      fullmenu.classList.toggle('active');
+    });
+
+    // 스타일 3: 파티클 생성
+    function createStyle3Particles() {
+      const container = document.getElementById('style3Particles');
+      for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'style3-particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 8 + 's';
+        particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+        container.appendChild(particle);
+      }
+    }
+    createStyle3Particles();
+
+    // 스타일 2: 다이아몬드 클릭
+    const dots2 = document.querySelectorAll('.style2-dot');
+    dots2.forEach(dot => {
+      dot.addEventListener('click', () => {
+        dots2.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+      });
+    });
+
+    // 스타일 4: 점 클릭
+    const dots4 = document.querySelectorAll('.style4-dot');
+    dots4.forEach(dot => {
+      dot.addEventListener('click', () => {
+        dots4.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
