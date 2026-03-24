@@ -9743,11 +9743,13 @@ app.post("/admin/user-edit", async (req, res) => {
     const newName = name || "";
 
     // 필드 업데이트 - 학원용/학교용 분기
+    // 전화번호에서 하이픈 제거 (숫자만 저장)
+    const cleanPhone = (phone || "").replace(/\D/g, "");
     user.grade = newGrade;
     user.name = newName;
-    user.phone = phone || "";
-    user.id = phone || "";
-    user.pw = phone || "";
+    user.phone = cleanPhone;
+    user.id = cleanPhone;
+    user.pw = cleanPhone;
 
     if (isAcademy) {
       // 학원용: 학원명만 업데이트 (반/번호/학교 필드 사용 안 함)
@@ -35736,6 +35738,30 @@ app.get('/api/check-outbound-ip', async (req, res) => {
     res.json({ outboundIP: response.data.ip });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ===== 전화번호 하이픈 제거 수정 API (임시) =====
+app.post("/api/fix-phone-hyphen", async (req, res) => {
+  const { key, phone } = req.body;
+  if (key !== ADMIN_KEY) {
+    return res.status(403).json({ ok: false, message: "인증 실패" });
+  }
+  try {
+    const user = await User.findOne({ phone: phone });
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "사용자를 찾을 수 없습니다." });
+    }
+    const cleanPhone = phone.replace(/\D/g, "");
+    user.phone = cleanPhone;
+    user.id = cleanPhone;
+    user.pw = cleanPhone;
+    await user.save();
+    console.log(`✅ 전화번호 수정 완료: ${phone} → ${cleanPhone}`);
+    res.json({ ok: true, message: `수정 완료: ${phone} → ${cleanPhone}`, user: { name: user.name, phone: user.phone } });
+  } catch (err) {
+    console.error("❌ 전화번호 수정 오류:", err);
+    res.status(500).json({ ok: false, message: "수정 중 오류" });
   }
 });
 
