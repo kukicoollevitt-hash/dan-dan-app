@@ -9603,7 +9603,7 @@ app.get("/admin/user-edit", async (req, res) => {
 
         <div class="row">
           <label>전화번호(ID)</label>
-          <input type="tel" name="phone" value="${user.phone || ""}" maxlength="13" placeholder="010-0000-0000" oninput="formatPhone(this)" />
+          <input type="tel" name="phone" value="${user.phone || ""}" maxlength="11" placeholder="01000000000" />
         </div>
     ` : `
         <div class="row">
