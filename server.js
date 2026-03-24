@@ -31966,6 +31966,32 @@ app.post("/api/gate-quiz/pass", async (req, res) => {
     }
 
     console.log(`[gate-quiz/pass] 관문 ${gate} 통과 저장 완료`);
+
+    // 📱 관문 통과 문자 발송 (학부모 + 본사)
+    try {
+      const user = await User.findOne({ grade, name });
+      if (user) {
+        const studentName = name;
+        const location = user.academyName || user.school || '';
+        const gateMessage = `[브레인문해력]\n${studentName} 학생이 ${gate}관문(형성평가)을 통과했습니다!\n축하해주세요!`;
+
+        // 학부모에게 발송
+        if (user.parentPhone) {
+          sendSMS(user.parentPhone, gateMessage).catch(err => console.error('관문 통과 학부모 알림 발송 실패:', err));
+          console.log(`📱 [gate-quiz/pass] 학부모 문자 발송: ${user.parentPhone}`);
+        }
+
+        // 본사에게 발송
+        const hqMessage = `[본사알림] ${location} ${grade} ${studentName} ${gate}관문 통과!`;
+        for (const phone of HQ_ADMIN_PHONES) {
+          sendSMS(phone, hqMessage).catch(err => console.error('관문 통과 본사 알림 발송 실패:', err));
+        }
+        console.log(`📱 [gate-quiz/pass] 본사 문자 발송 완료`);
+      }
+    } catch (smsErr) {
+      console.error("⚠️ [gate-quiz/pass] 문자 발송 실패:", smsErr.message);
+    }
+
     res.json({ ok: true, message: "관문 통과가 저장되었습니다.", badgesAwarded });
 
   } catch (err) {
