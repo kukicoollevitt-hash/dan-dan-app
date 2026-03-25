@@ -1863,6 +1863,28 @@
         examplesBox.appendChild(div3);
       }
     }
+
+    // 활용 키워드 박스 추가 (vocab에서 단어만 추출)
+    if (pack && pack.vocab && pack.vocab.length > 0) {
+      const keywords = pack.vocab.map(v => v[0]).join(', ');
+
+      // 기존 키워드 박스가 있으면 업데이트, 없으면 생성
+      let keywordBox = document.querySelector('.creative-keyword-box');
+      if (!keywordBox) {
+        keywordBox = document.createElement('div');
+        keywordBox.className = 'creative-keyword-box';
+        keywordBox.style.cssText = 'background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%); border: 2px solid #f0c14b; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; font-size: 14px; line-height: 1.8;';
+
+        // 예시 박스 다음에 삽입
+        if (examplesBox && examplesBox.nextSibling) {
+          examplesBox.parentNode.insertBefore(keywordBox, examplesBox.nextSibling);
+        } else if (examplesBox) {
+          examplesBox.parentNode.appendChild(keywordBox);
+        }
+      }
+
+      keywordBox.innerHTML = '<div style="font-weight: 700; color: #b8860b; margin-bottom: 6px;">💡 활용 키워드</div><div style="color: #5a4a00;">' + keywords + '</div>';
+    }
   }
 
     /* ===== 뒤로 가기 확인 팝업 ===== */
