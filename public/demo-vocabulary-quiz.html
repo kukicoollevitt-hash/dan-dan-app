@@ -1405,6 +1405,151 @@
       display: block;
     }
 
+    /* ===== 단어 미리보기 팝업 ===== */
+    .vocab-preview-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .vocab-preview-overlay.show {
+      display: flex;
+    }
+    .vocab-preview-popup {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .vocab-preview-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 24px 28px;
+      text-align: center;
+    }
+    .vocab-preview-header h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .vocab-preview-subtitle {
+      margin: 8px 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .vocab-preview-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      max-height: 400px;
+    }
+    .vocab-preview-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      background: white;
+      border-radius: 14px;
+      border: 2px solid #e8ecf4;
+      transition: all 0.2s ease;
+    }
+    .vocab-preview-item:hover {
+      border-color: #667eea;
+      transform: translateX(5px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+    }
+    .vocab-preview-num {
+      min-width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .vocab-preview-content {
+      flex: 1;
+    }
+    .vocab-preview-word {
+      font-size: 17px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .vocab-preview-meaning {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.4;
+    }
+    .vocab-preview-example {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.4;
+      margin-top: 6px;
+      padding: 8px 10px;
+      background: #f5f7fa;
+      border-radius: 6px;
+      border-left: 3px solid #667eea;
+    }
+    .vocab-preview-footer {
+      padding: 20px 24px;
+      background: #f8f9ff;
+      border-top: 1px solid #e8ecf4;
+      text-align: center;
+    }
+    .vocab-preview-start-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    .vocab-preview-start-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+    }
+    @media (max-width: 600px) {
+      .vocab-preview-popup {
+        width: 95%;
+        max-height: 85vh;
+      }
+      .vocab-preview-header {
+        padding: 20px;
+      }
+      .vocab-preview-header h2 {
+        font-size: 18px;
+      }
+      .vocab-preview-list {
+        max-height: 350px;
+      }
+    }
+
     .question-count-content {
       text-align: center;
     }
@@ -1768,6 +1913,24 @@
           <p class="input-validation-text">최소 15개 ~ 최대 50개</p>
         </div>
         <button class="start-quiz-btn" onclick="confirmQuestionCount()">확인</button>
+      </div>
+    </div>
+
+    <!-- 단어 미리보기 팝업 -->
+    <div class="vocab-preview-overlay" id="vocabPreviewOverlay">
+      <div class="vocab-preview-popup">
+        <div class="vocab-preview-header">
+          <h2>📖 오늘의 단어 미리 훑어보기</h2>
+          <p class="vocab-preview-subtitle">퀴즈 전에 단어를 먼저 확인해보세요!</p>
+        </div>
+        <div class="vocab-preview-list" id="vocabPreviewList">
+          <!-- JS로 동적 생성 -->
+        </div>
+        <div class="vocab-preview-footer">
+          <button class="vocab-preview-start-btn" onclick="startQuizFromPreview()">
+            🚀 퀴즈 시작하기
+          </button>
+        </div>
       </div>
     </div>
 
@@ -8009,8 +8172,34 @@
 
       console.log(`[퀴즈 시작] 요청: ${count}개, 실제 선택: ${selectedQuizData.length}개, currentIndex: ${currentQuestionIndex}`);
 
-      // 문제 수 선택 화면 닫고 퀴즈 시작
+      // 문제 수 선택 화면 닫고 → 미리보기 팝업 표시
       document.getElementById('questionCountScreen').classList.remove('show');
+      showVocabPreviewPopup();
+    }
+
+    // ★ 단어 미리보기 팝업 표시
+    function showVocabPreviewPopup() {
+      const listEl = document.getElementById('vocabPreviewList');
+
+      // 선택된 단어 목록 렌더링
+      listEl.innerHTML = selectedQuizData.map((quiz, idx) => `
+        <div class="vocab-preview-item">
+          <div class="vocab-preview-num">${idx + 1}</div>
+          <div class="vocab-preview-content">
+            <div class="vocab-preview-word">${quiz.word}</div>
+            <div class="vocab-preview-meaning">${quiz.meaning}</div>
+            ${quiz.example ? `<div class="vocab-preview-example">${quiz.example}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      // 팝업 표시
+      document.getElementById('vocabPreviewOverlay').classList.add('show');
+    }
+
+    // ★ 미리보기 팝업 닫고 퀴즈 시작
+    function startQuizFromPreview() {
+      document.getElementById('vocabPreviewOverlay').classList.remove('show');
       startQuiz();
     }
 

@@ -913,8 +913,7 @@ const SUNEUNG_VOCAB_DATA = [
     koreanLevel: 6,
     explanation: '"기인"은 어떤 일의 원인이 되는 것을 의미합니다.',
     example: '예문: 이 문제는 소통 부재에 기인한다.'
-  }
-];
+  },
 
   // ===== 101~200번 어휘 =====
   {
@@ -1906,9 +1905,7 @@ const SUNEUNG_VOCAB_DATA = [
     koreanLevel: 6,
     explanation: '"입증"은 증거를 세워 증명하는 것을 의미합니다.',
     example: '예문: 그의 주장이 입증되었다.'
-  }
-];
-
+  },
   // ===== 201~300번 어휘 =====
   {
     word: '자율',
@@ -2929,9 +2926,7 @@ const SUNEUNG_VOCAB_DATA = [
     koreanLevel: 6,
     explanation: '"후퇴"는 뒤로 물러나는 것을 의미합니다.',
     example: '예문: 한 발 후퇴했다.'
-  }
-];
-
+  },
   // ===== 301~400번 어휘 =====
   {
     word: '가공',
@@ -3802,9 +3797,7 @@ const SUNEUNG_VOCAB_DATA = [
     koreanLevel: 6,
     explanation: '"동화"는 서로 닮아서 같아지는 것을 의미합니다.',
     example: '예문: 현지 문화에 동화되었다.'
-  }
-];
-
+  },
   // ===== 401~500번 어휘 =====
   {
     word: '득실',
