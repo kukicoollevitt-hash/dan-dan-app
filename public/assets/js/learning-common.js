@@ -3090,7 +3090,7 @@
         const loadingPopup = document.getElementById('spell-check-loading');
         const loadingText = loadingPopup.querySelector('.spell-check-loading-text');
         if (loadingText) {
-          loadingText.textContent = 'AI가 글을 분석하고 다듬는 중입니다...';
+          loadingText.textContent = '고래쌤이 열심히 글쓰기 방법을 정리 중이에요...';
         }
         loadingPopup.style.display = 'flex';
         creativeCheckBtn.disabled = true;
@@ -3141,7 +3141,7 @@
                 }
               </style>
               <div style="margin-bottom: 10px; font-weight: 700; color: #4a7ab0; font-size: 16px;">
-                AI 고래샘의 피드백
+                고래샘의 글쓰기 추천 방향
               </div>
               ${directionsHtml}
               <div style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #d4e4f7;">
