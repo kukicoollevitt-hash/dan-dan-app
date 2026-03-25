@@ -25006,7 +25006,7 @@ app.post("/api/polish-writing", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `당신은 초등학생~중학생의 글쓰기를 도와주는 친절한 AI 선생님입니다.
+          content: `당신은 초등학생~중학생의 글쓰기를 도와주는 친절한 AI 고래샘입니다.
 학생이 작성한 글을 다듬고, 더 풍성하게 확장해주세요. 다음 사항을 지켜주세요:
 
 1. 맞춤법과 띄어쓰기 오류를 수정합니다
@@ -25019,14 +25019,19 @@ app.post("/api/polish-writing", async (req, res) => {
    - "~하고 싶다" → "왜 그렇게 하고 싶은지", "어떻게 할 것인지" 등을 추가합니다
    - 단, 학생의 원래 생각을 크게 벗어나지 않도록 주의합니다
    - 확장된 글은 원래 글의 1.5~2배 정도 분량이 되도록 합니다
+7. **중요: 다듬어진 글에서 수정하거나 추가한 부분은 반드시 <mark></mark> 태그로 감싸주세요**
+   - 예: "나는 <mark>정말</mark> 행복했어요" (추가된 단어)
+   - 예: "<mark>그래서 더욱 열심히 노력하기로 마음먹었습니다.</mark>" (추가된 문장)
 
 반드시 다음 JSON 형식으로만 응답하세요:
 {
-  "polished_text": "다듬어지고 확장된 글 (전체 텍스트)",
-  "changes": [
-    {"before": "원래 표현", "after": "수정/확장된 표현", "reason": "수정 또는 확장 이유"}
+  "directions": [
+    "글을 다듬은 방향 1 (예: 문장을 더 자연스럽게 연결했어요)",
+    "글을 다듬은 방향 2 (예: 구체적인 예시를 추가했어요)",
+    "글을 다듬은 방향 3 (예: 감정과 이유를 더 풍부하게 표현했어요)"
   ],
-  "feedback": "전체적인 피드백 (칭찬과 개선점 포함, 2-3문장)"
+  "polished_text": "다듬어지고 확장된 글 (수정/추가된 부분은 <mark></mark>로 감싸기)",
+  "feedback": "directions에서 언급한 다듬은 방향을 활용하면 더 좋은 글이 된다고 격려하며, 다듬어진 글을 참고해서 다시 써보라고 응원하는 메시지 (예: 문장 연결과 구체적인 예시를 잘 활용하면 더 멋진 글이 될 거예요! 다듬어진 글을 참고해서 나만의 글로 다시 작성해보세요!)"
 }`
         },
         {
@@ -25064,9 +25069,9 @@ app.post("/api/polish-writing", async (req, res) => {
       return res.json({
         success: true,
         original_text: text,
+        directions: result.directions || [],
         polished_text: result.polished_text || text,
-        changes: result.changes || [],
-        feedback: result.feedback || "글이 잘 작성되었습니다!"
+        feedback: result.feedback || "다시 한 번 글을 완성해보세요!"
       });
 
     } catch (parseError) {
@@ -25076,9 +25081,9 @@ app.post("/api/polish-writing", async (req, res) => {
       return res.json({
         success: true,
         original_text: text,
+        directions: [],
         polished_text: text,
-        changes: [],
-        feedback: "글이 잘 작성되었습니다. 맞춤법과 문장이 괜찮아 보입니다!"
+        feedback: "다시 한 번 글을 완성해보세요!"
       });
     }
 

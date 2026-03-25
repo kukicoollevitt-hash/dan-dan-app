@@ -3096,17 +3096,12 @@
         creativeCheckBtn.disabled = true;
 
         try {
-          // 1. 맞춤법 검사
-          const spellResult = await checkSpelling(text);
-
-          // 2. AI 글 다듬기 (병렬로 호출하지 않고 순차 호출 - 안정성)
+          // AI 글 다듬기
           const polishResult = await polishWriting(text);
 
-          // 결과 영역 표시
+          // 결과 영역
           const spellingResult = document.getElementById('spelling-result');
           const spellingCorrect = document.getElementById('spelling-correct');
-          const spellingErrors = document.getElementById('spelling-errors');
-          const spellingCorrected = document.getElementById('spelling-corrected');
 
           // AI 피드백 영역 (동적 생성)
           let aiFeedbackEl = document.getElementById('ai-feedback-result');
@@ -3118,69 +3113,44 @@
             spellingCorrect.parentNode.insertBefore(aiFeedbackEl, spellingCorrect.nextSibling);
           }
 
-          // 맞춤법 결과 표시
-          if (spellResult.errata_count > 0) {
-            spellingErrors.innerHTML = `
-              <div style="margin-bottom:8px; font-weight:600; color:#c04a3b;">
-                맞춤법/띄어쓰기 오류 ${spellResult.errata_count}개 발견
-              </div>
-              <div style="line-height:1.8; white-space:pre-wrap;">${spellResult.html}</div>
-            `;
-
-            spellingCorrected.innerHTML = `
-              <div class="correct-block">
-                <div style="margin-bottom:6px; font-weight:600; color:#3a8755;">
-                  ✓ 올바른 맞춤법
-                </div>
-                <div style="line-height:1.8; white-space:pre-wrap;">${spellResult.corrected_html || spellResult.notag_html}</div>
-              </div>
-            `;
-
-            spellingResult.style.display = 'block';
-            spellingCorrect.style.display = 'block';
-          } else {
-            spellingErrors.innerHTML = `
-              <div style="font-weight:600; color:#3a8755;">
-                ✓ 맞춤법과 띄어쓰기가 정확합니다!
-              </div>
-            `;
-
-            spellingResult.style.display = 'block';
-            spellingCorrect.style.display = 'none';
-          }
+          // 맞춤법 결과 숨김 (AI 고래샘 피드백만 표시)
+          spellingResult.style.display = 'none';
+          spellingCorrect.style.display = 'none';
 
           // AI 피드백 결과 표시
           if (polishResult.success) {
-            let changesHtml = '';
-            if (polishResult.changes && polishResult.changes.length > 0) {
-              changesHtml = `
-                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #b8d4f0;">
-                  <div style="font-weight: 600; color: #4a7ab0; margin-bottom: 8px;">수정 제안:</div>
-                  <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    ${polishResult.changes.map(c => `
-                      <li style="margin-bottom: 6px;">
-                        <span style="color: #c04a3b; text-decoration: line-through;">${c.before}</span>
-                        → <span style="color: #3a8755; font-weight: 600;">${c.after}</span>
-                        ${c.reason ? `<br><span style="color: #666; font-size: 13px;">  (${c.reason})</span>` : ''}
-                      </li>
-                    `).join('')}
-                  </ul>
+            // 다듬은 방향 HTML 생성
+            let directionsHtml = '';
+            if (polishResult.directions && polishResult.directions.length > 0) {
+              directionsHtml = `
+                <div style="background: #fff8e8; padding: 12px; border-radius: 8px; border: 1px solid #f0d9a0; margin-bottom: 12px;">
+                  <div style="font-weight: 600; color: #c08030; margin-bottom: 8px;">이렇게하면 더 글을 잘 쓸 수 있어요!</div>
+                  <ol style="margin: 0; padding-left: 20px; line-height: 1.8; color: #555;">
+                    ${polishResult.directions.map(d => `<li>${d}</li>`).join('')}
+                  </ol>
                 </div>
               `;
             }
 
             aiFeedbackEl.innerHTML = `
+              <style>
+                #ai-feedback-result mark {
+                  background: linear-gradient(180deg, transparent 60%, #ffe066 60%);
+                  padding: 0 2px;
+                  border-radius: 2px;
+                }
+              </style>
               <div style="margin-bottom: 10px; font-weight: 700; color: #4a7ab0; font-size: 16px;">
-                AI 선생님의 피드백
+                AI 고래샘의 피드백
               </div>
+              ${directionsHtml}
               <div style="background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #d4e4f7;">
-                <div style="font-weight: 600; color: #333; margin-bottom: 8px;">다듬어진 글:</div>
+                <div style="font-weight: 600; color: #333; margin-bottom: 8px;">다듬어진 글을 참고해서 다시 작성해보세요!</div>
                 <div style="line-height: 1.8; white-space: pre-wrap; color: #333;">${polishResult.polished_text}</div>
               </div>
               <div style="margin-top: 12px; padding: 10px; background: #e8f4e8; border-radius: 8px;">
-                <span style="font-weight: 600; color: #3a8755;">선생님 한마디:</span> ${polishResult.feedback}
+                <span style="font-weight: 600; color: #3a8755;">고래샘 한마디:</span> ${polishResult.feedback}
               </div>
-              ${changesHtml}
             `;
             aiFeedbackEl.style.display = 'block';
           } else {
