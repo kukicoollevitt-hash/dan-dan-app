@@ -1,17 +1,17 @@
 const fs = require('fs');
 
-const content = fs.readFileSync('public/BRAINUP/person/on_people1_content.js', 'utf8');
+const content = fs.readFileSync('public/BRAINUP/social/on_pol_content.js', 'utf8');
 
-const unitPattern = /on_people1_(\d+):\s*\{/g;
+const unitPattern = /on_pol_(\d+):\s*\{/g;
 let match;
 const issues = [];
 
 while ((match = unitPattern.exec(content)) !== null) {
   const unitNum = match[1];
   const num = parseInt(unitNum);
-  if (num < 1 || num > 40) continue;
+  if (num < 1 || num > 20) continue;
 
-  const unitKey = 'on_people1_' + unitNum.padStart(2, '0');
+  const unitKey = 'on_pol_' + unitNum.padStart(2, '0');
   const startIdx = match.index;
   const unitBlock = content.slice(startIdx, startIdx + 10000);
 
@@ -104,5 +104,5 @@ if (issues.length > 0) {
   console.log('총 ' + issues.length + '개 유닛에서 문제 발견:');
   issues.forEach(i => console.log('  - ' + i));
 } else {
-  console.log('✅ on_people1 01~40: 모든 q2 보기가 정상입니다.');
+  console.log('✅ on_pol 01~20: 모든 q2 보기가 정상입니다.');
 }

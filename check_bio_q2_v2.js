@@ -1,17 +1,17 @@
 const fs = require('fs');
 
-const content = fs.readFileSync('public/BRAINUP/person/on_people1_content.js', 'utf8');
+const content = fs.readFileSync('public/BRAINUP/science/on_bio_content.js', 'utf8');
 
-const unitPattern = /on_people1_(\d+):\s*\{/g;
+const unitPattern = /on_bio_(\d+):\s*\{/g;
 let match;
 const issues = [];
 
 while ((match = unitPattern.exec(content)) !== null) {
   const unitNum = match[1];
   const num = parseInt(unitNum);
-  if (num < 1 || num > 40) continue;
+  if (num < 1 || num > 20) continue;
 
-  const unitKey = 'on_people1_' + unitNum.padStart(2, '0');
+  const unitKey = 'on_bio_' + unitNum.padStart(2, '0');
   const startIdx = match.index;
   const unitBlock = content.slice(startIdx, startIdx + 10000);
 
@@ -43,7 +43,7 @@ while ((match = unitPattern.exec(content)) !== null) {
   }
 
   // answerKey q2 추출
-  const answerMatch = unitBlock.match(/answerKey:\s*\{[^}]*q2:\s*['"](\\d)['"]/);
+  const answerMatch = unitBlock.match(/answerKey:\s*\{[^}]*q2:\s*['"](\d)['"]/);
   if (!answerMatch) continue;
   const q2Answer = parseInt(answerMatch[1]);
 
@@ -104,5 +104,5 @@ if (issues.length > 0) {
   console.log('총 ' + issues.length + '개 유닛에서 문제 발견:');
   issues.forEach(i => console.log('  - ' + i));
 } else {
-  console.log('✅ on_people1 01~40: 모든 q2 보기가 정상입니다.');
+  console.log('✅ on_bio 01~20: 모든 q2 보기가 정상입니다.');
 }

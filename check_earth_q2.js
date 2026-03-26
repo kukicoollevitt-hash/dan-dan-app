@@ -1,8 +1,8 @@
 const fs = require('fs');
 
-const content = fs.readFileSync('public/BRAINUP/person/on_people1_content.js', 'utf8');
+const content = fs.readFileSync('public/BRAINUP/science/on_earth_content.js', 'utf8');
 
-const unitPattern = /on_people1_(\d+):\s*\{/g;
+const unitPattern = /on_earth_(\d+):\s*\{/g;
 let match;
 const issues = [];
 
@@ -11,7 +11,7 @@ while ((match = unitPattern.exec(content)) !== null) {
   const num = parseInt(unitNum);
   if (num < 1 || num > 40) continue;
 
-  const unitKey = 'on_people1_' + unitNum.padStart(2, '0');
+  const unitKey = 'on_earth_' + unitNum.padStart(2, '0');
   const startIdx = match.index;
   const unitBlock = content.slice(startIdx, startIdx + 10000);
 
@@ -43,14 +43,14 @@ while ((match = unitPattern.exec(content)) !== null) {
   }
 
   // answerKey q2 추출
-  const answerMatch = unitBlock.match(/answerKey:\s*\{[^}]*q2:\s*['"](\\d)['"]/);
+  const answerMatch = unitBlock.match(/answerKey:\s*\{[^}]*q2:\s*['"](\d)['"]/);
   if (!answerMatch) continue;
   const q2Answer = parseInt(answerMatch[1]);
 
-  console.log('\n=== ' + unitKey + ' ===');
+  console.log(`\n=== ${unitKey} ===`);
   console.log('paragraphMain:');
-  paragraphMain.forEach((p, i) => console.log('  ' + (i+1) + '문단: ' + p.substring(0, 40) + '...'));
-  console.log('정답: ' + q2Answer + '번');
+  paragraphMain.forEach((p, i) => console.log(`  ${i+1}문단: ${p.substring(0, 40)}...`));
+  console.log(`정답: ${q2Answer}번`);
   console.log('q2_opts:');
 
   let hasIssue = false;
@@ -60,7 +60,7 @@ while ((match = unitPattern.exec(content)) !== null) {
     // 보기에서 문단 번호 추출
     const paragraphNumMatch = opt.match(/(\d)문단/);
     if (!paragraphNumMatch) {
-      console.log('  ' + (i+1) + '번: ' + opt.substring(0, 50) + '...' + isAnswer);
+      console.log(`  ${i+1}번: ${opt.substring(0, 50)}...${isAnswer}`);
       return;
     }
     const claimedParagraph = parseInt(paragraphNumMatch[1]);
@@ -87,10 +87,10 @@ while ((match = unitPattern.exec(content)) !== null) {
 
     // 오답인데 실제 내용과 일치하면 문제
     if ((i + 1) !== q2Answer && similarity > 0.4) {
-      console.log('  ' + (i+1) + '번: ' + opt.substring(0, 50) + '... ⚠️실제' + claimedParagraph + '문단과 일치!(' + (similarity*100).toFixed(0) + '%)');
+      console.log(`  ${i+1}번: ${opt.substring(0, 50)}... ⚠️실제${claimedParagraph}문단과 일치!(${(similarity*100).toFixed(0)}%)`);
       hasIssue = true;
     } else {
-      console.log('  ' + (i+1) + '번: ' + opt.substring(0, 50) + '...' + isAnswer);
+      console.log(`  ${i+1}번: ${opt.substring(0, 50)}...${isAnswer}`);
     }
   });
 
@@ -101,8 +101,8 @@ while ((match = unitPattern.exec(content)) !== null) {
 
 console.log('\n========================================');
 if (issues.length > 0) {
-  console.log('총 ' + issues.length + '개 유닛에서 문제 발견:');
-  issues.forEach(i => console.log('  - ' + i));
+  console.log(`총 ${issues.length}개 유닛에서 문제 발견:`);
+  issues.forEach(i => console.log(`  - ${i}`));
 } else {
-  console.log('✅ on_people1 01~40: 모든 q2 보기가 정상입니다.');
+  console.log('✅ on_earth 01~20: 모든 q2 보기가 정상입니다.');
 }

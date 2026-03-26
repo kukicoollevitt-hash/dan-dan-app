@@ -4,7 +4,7 @@ const content = fs.readFileSync('public/BRAINUP/worldlit/on_world2_content.js', 
 
 const unitPattern = /on_world2_(\d+):\s*\{/g;
 let match;
-const errors = [];
+const issues = [];
 
 while ((match = unitPattern.exec(content)) !== null) {
   const unitNum = match[1];
@@ -13,59 +13,96 @@ while ((match = unitPattern.exec(content)) !== null) {
 
   const unitKey = 'on_world2_' + unitNum.padStart(2, '0');
   const startIdx = match.index;
-  const unitBlock = content.slice(startIdx, startIdx + 15000);
+  const unitBlock = content.slice(startIdx, startIdx + 10000);
 
-  // passage 추출 (4개 문단)
-  const passageMatch = unitBlock.match(/passage:\s*\[([\s\S]*?)\]/);
-  if (!passageMatch) continue;
+  // paragraphMain 추출
+  const pmMatch = unitBlock.match(/paragraphMain:\s*\[([\s\S]*?)\]/);
+  if (!pmMatch) continue;
 
-  const passageRaw = passageMatch[1];
-  const paragraphs = passageRaw.split(/'\s*,\s*'/).map(p =>
-    p.replace(/<[^>]*>/g, '').replace(/'/g, '').trim()
-  );
+  // paragraphMain 배열 파싱
+  const pmRaw = pmMatch[1];
+  const paragraphMain = [];
+  const pmItems = pmRaw.match(/'[^']+'/g);
+  if (pmItems) {
+    pmItems.forEach(item => {
+      paragraphMain.push(item.replace(/'/g, '').trim());
+    });
+  }
 
-  // answerKey에서 q2 정답 추출
-  const answerMatch = unitBlock.match(/answerKey:\s*\{[^}]*q2:\s*['"](\d)['"]/);
-  if (!answerMatch) continue;
-  const q2Answer = parseInt(answerMatch[1]);
-
-  // explain에서 q2 값 추출
-  const explainMatch = unitBlock.match(/explain:\s*\{[\s\S]*?q2:\s*['"]([^'"]+)['"]/);
-  if (!explainMatch) continue;
-  const q2Explain = explainMatch[1];
-
-  // q2 정답이 가리키는 문단 번호 확인 (보기에서 몇문단인지)
+  // q2_opts 추출
   const q2OptsMatch = unitBlock.match(/q2_opts:\s*\[([\s\S]*?)\]/);
   if (!q2OptsMatch) continue;
 
-  // 정답 보기에서 문단 번호 추출
-  const opts = q2OptsMatch[1].split(/'\s*,\s*'/);
-  const correctOpt = opts[q2Answer - 1] || '';
-  const paragraphNumMatch = correctOpt.match(/(\d)문단/);
-  if (!paragraphNumMatch) continue;
-  const correctParagraphNum = parseInt(paragraphNumMatch[1]);
+  const optsRaw = q2OptsMatch[1];
+  const q2Opts = [];
+  const optItems = optsRaw.match(/'[^']+'/g);
+  if (optItems) {
+    optItems.forEach(item => {
+      q2Opts.push(item.replace(/'/g, '').trim());
+    });
+  }
 
-  // explain이 해당 문단에 있는지 확인
-  const targetParagraph = paragraphs[correctParagraphNum - 1] || '';
+  // answerKey q2 추출
+  const answerMatch = unitBlock.match(/answerKey:\s*\{[^}]*q2:\s*['"](\\d)['"]/);
+  if (!answerMatch) continue;
+  const q2Answer = parseInt(answerMatch[1]);
 
-  if (!targetParagraph.includes(q2Explain)) {
-    // 어느 문단에 있는지 찾기
-    let foundIn = 0;
-    for (let i = 0; i < paragraphs.length; i++) {
-      if (paragraphs[i].includes(q2Explain)) {
-        foundIn = i + 1;
-        break;
+  console.log('\n=== ' + unitKey + ' ===');
+  console.log('paragraphMain:');
+  paragraphMain.forEach((p, i) => console.log('  ' + (i+1) + '문단: ' + p.substring(0, 40) + '...'));
+  console.log('정답: ' + q2Answer + '번');
+  console.log('q2_opts:');
+
+  let hasIssue = false;
+  q2Opts.forEach((opt, i) => {
+    const isAnswer = (i + 1) === q2Answer ? ' ✅정답' : '';
+
+    // 보기에서 문단 번호 추출
+    const paragraphNumMatch = opt.match(/(\d)문단/);
+    if (!paragraphNumMatch) {
+      console.log('  ' + (i+1) + '번: ' + opt.substring(0, 50) + '...' + isAnswer);
+      return;
+    }
+    const claimedParagraph = parseInt(paragraphNumMatch[1]);
+
+    // 보기 내용 추출 (: 이후)
+    const colonIdx = opt.indexOf(':');
+    const claimedContent = colonIdx !== -1 ? opt.slice(colonIdx + 1).trim() : opt;
+
+    // 실제 해당 문단의 내용
+    const actualContent = paragraphMain[claimedParagraph - 1] || '';
+
+    // 키워드 매칭 체크
+    const claimedWords = claimedContent.replace(/[^가-힣a-zA-Z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 1);
+    const actualWords = actualContent.replace(/[^가-힣a-zA-Z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 1);
+
+    let matchCount = 0;
+    for (const word of claimedWords) {
+      if (actualWords.some(aw => aw.includes(word) || word.includes(aw))) {
+        matchCount++;
       }
     }
 
-    console.log('❌ ' + unitKey + ': q2 정답=' + q2Answer + '번(' + correctParagraphNum + '문단), 하이라이트는 ' + (foundIn ? foundIn + '문단' : '없음'));
-    console.log('   explain: "' + q2Explain.substring(0, 50) + '..."');
-    errors.push(unitKey);
+    const similarity = claimedWords.length > 0 ? matchCount / claimedWords.length : 0;
+
+    // 오답인데 실제 내용과 일치하면 문제
+    if ((i + 1) !== q2Answer && similarity > 0.4) {
+      console.log('  ' + (i+1) + '번: ' + opt.substring(0, 50) + '... ⚠️실제' + claimedParagraph + '문단과 일치!(' + (similarity*100).toFixed(0) + '%)');
+      hasIssue = true;
+    } else {
+      console.log('  ' + (i+1) + '번: ' + opt.substring(0, 50) + '...' + isAnswer);
+    }
+  });
+
+  if (hasIssue) {
+    issues.push(unitKey);
   }
 }
 
-if (errors.length === 0) {
-  console.log('✅ on_world2 01~40: 모든 q2 하이라이트가 정답 문단과 일치합니다.');
+console.log('\n========================================');
+if (issues.length > 0) {
+  console.log('총 ' + issues.length + '개 유닛에서 문제 발견:');
+  issues.forEach(i => console.log('  - ' + i));
 } else {
-  console.log('\n총 ' + errors.length + '개 불일치 발견');
+  console.log('✅ on_world2 01~40: 모든 q2 보기가 정상입니다.');
 }
