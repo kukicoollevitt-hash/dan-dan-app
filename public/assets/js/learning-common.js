@@ -1306,21 +1306,8 @@
 
     /* ===== 탭 전환 ===== */
     // 분석리포트 새로고침 함수 (서버에서 최신 데이터 가져오기)
+    // 참고: activateTab에서 이미 ai-loading-overlay를 표시하므로 여기서는 별도 스피너 사용 안함
     async function refreshReportTab() {
-      // 스피너 표시
-      let spinner = document.getElementById('report-loading-spinner');
-      if (!spinner) {
-        spinner = document.createElement('div');
-        spinner.id = 'report-loading-spinner';
-        spinner.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
-        spinner.innerHTML = `
-          <div style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid #8b5a2b;border-radius:50%;animation:spin 1s linear infinite;"></div>
-          <p style="margin-top:16px;font-size:16px;color:#5a4a3a;font-weight:600;">AI 학습 인식 중...</p>
-          <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
-        `;
-        document.body.appendChild(spinner);
-      }
-      spinner.style.display = 'flex';
 
       try {
         const unit = window.CUR_UNIT || 'geo_01';
@@ -1329,7 +1316,6 @@
         const stu = getCurrentStudent();
         if (!stu) {
           console.log('[refreshReportTab] 학생 정보 없음');
-          spinner.style.display = 'none';
           return;
         }
 
@@ -1380,11 +1366,6 @@
         const unit = window.CUR_UNIT || 'geo_01';
         const stu = getCurrentStudent();
         if (stu) refreshReportTabFromLocalStorage(unit, stu);
-      } finally {
-        // 스피너 숨기기 (최소 2초 표시)
-        setTimeout(() => {
-          if (spinner) spinner.style.display = 'none';
-        }, 2000);
       }
     }
 

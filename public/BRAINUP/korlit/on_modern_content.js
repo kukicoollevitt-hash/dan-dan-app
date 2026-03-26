@@ -4223,8 +4223,8 @@ function applyContentPack(unitKey) {
     const loadingOverlay = document.getElementById('loadingOverlay');
     if (loadingOverlay) {
       // 분석리포트 탭일 경우 1.3초 후에 숨기기
-      const unit = window.CUR_UNIT || 'modern_01';
-      const savedTab = localStorage.getItem(`current-geo-tab:${unit}`);
+      const unit = window.CUR_UNIT || 'on_modern_01';
+      const savedTab = localStorage.getItem(`current-modern-tab:${unit}`);
       const delay = (savedTab === 'report') ? 1300 : 0;
 
       setTimeout(() => {
