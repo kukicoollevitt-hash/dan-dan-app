@@ -1628,36 +1628,48 @@ app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
     // 4. Set을 이용해 빠르게 필터링 (학원 학생만)
     const filteredPasses = gatePasses.filter(gp => studentKeys.has(`${gp.grade}||${gp.name}`));
 
-    // 5. units가 비어있는 항목만 LearningLog 조회 (필요한 경우만)
-    const enrichedData = [];
-    for (const gp of filteredPasses) {
+    // 5. units가 비어있는 항목이 있는지 확인
+    const needsLearningLog = filteredPasses.some(gp => (!gp.units || gp.units.length === 0) && gp.gate);
+
+    // 6. 필요한 경우에만 LearningLog를 한 번에 조회 (N+1 문제 해결)
+    let learningLogMap = {};
+    if (needsLearningLog) {
+      const allCompletedLogs = await LearningLog.find({
+        completed: true,
+        deleted: { $ne: true }
+      }).sort({ completedAt: 1 }).lean();
+
+      // grade||name 키로 그룹핑
+      allCompletedLogs.forEach(log => {
+        const key = `${log.grade}||${log.name}`;
+        if (!learningLogMap[key]) {
+          learningLogMap[key] = [];
+        }
+        learningLogMap[key].push(log);
+      });
+    }
+
+    // 7. 메모리에서 units 보강 (추가 DB 호출 없음)
+    const enrichedData = filteredPasses.map(gp => {
       let units = gp.units || [];
 
-      // units가 비어있으면 LearningLog에서 해당 관문 범위의 단원 가져오기
       if (units.length === 0 && gp.gate) {
-        const completedLogs = await LearningLog.find({
-          grade: gp.grade,
-          name: gp.name,
-          completed: true,
-          deleted: { $ne: true }
-        }).sort({ completedAt: 1 }).lean();
-
-        // 관문 범위 계산 (관문 1: 1~5번째, 관문 2: 6~10번째, ...)
+        const key = `${gp.grade}||${gp.name}`;
+        const completedLogs = learningLogMap[key] || [];
         const startIdx = (gp.gate - 1) * 5;
         const endIdx = gp.gate * 5;
-        const gateUnits = completedLogs.slice(startIdx, endIdx).map(log => log.unit);
-        units = gateUnits;
+        units = completedLogs.slice(startIdx, endIdx).map(log => log.unit);
       }
 
-      enrichedData.push({
+      return {
         _id: gp._id,
         grade: gp.grade,
         name: gp.name,
         gate: gp.gate,
         passedAt: gp.passedAt,
         units: units
-      });
-    }
+      };
+    });
 
     res.json({ ok: true, data: enrichedData });
   } catch (err) {
