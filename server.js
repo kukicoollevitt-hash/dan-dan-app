@@ -32376,6 +32376,32 @@ app.post("/api/midterm/submit", async (req, res) => {
 
     if (passed) {
       console.log(`[midterm/submit] 중간평가 stage ${stage} 통과! ${score}점 (${attemptNumber}번째 시도)`);
+
+      // 📱 중간평가 통과 문자 발송
+      try {
+        const user = await User.findOne({ grade, name }).lean();
+        if (user) {
+          const studentName = name;
+          const location = user.academyName || user.school || '';
+
+          // 학부모 문자 발송
+          if (user.parentPhone) {
+            const parentMessage = `[브레인문해력]\n${studentName} 학생이 중간평가를 통과했습니다! (${score}점)\n축하해주세요!`;
+            sendSMS(user.parentPhone, parentMessage).catch(err => console.error('중간평가 통과 학부모 알림 발송 실패:', err));
+            console.log(`📱 [midterm/submit] 학부모 문자 발송: ${user.parentPhone}`);
+          }
+
+          // 본사 문자 발송
+          const hqMessage = `[본사알림] ${location} ${grade} ${studentName} 중간평가 통과! (${score}점)`;
+          for (const phone of HQ_ADMIN_PHONES) {
+            sendSMS(phone, hqMessage).catch(err => console.error('중간평가 통과 본사 알림 발송 실패:', err));
+          }
+          console.log(`📱 [midterm/submit] 본사 문자 발송 완료`);
+        }
+      } catch (notifyErr) {
+        console.error('중간평가 통과 문자 발송 오류:', notifyErr);
+      }
+
       res.json({
         ok: true,
         passed: true,
