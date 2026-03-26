@@ -1,0 +1,68 @@
+const fs = require("fs");
+const content = fs.readFileSync("/Users/dandan/Desktop/brainmoon_academy0326/public/BRAINUP/worldlit/world1_content.js", "utf8");
+
+// 각 유닛에서 vocab에만 있는 항목들 찾기
+for (let i = 1; i <= 40; i++) {
+  const unit = "world1_" + String(i).padStart(2, "0");
+
+  const passageStart = content.indexOf(unit + ":");
+  if (passageStart === -1) continue;
+
+  const nextUnit = "world1_" + String(i + 1).padStart(2, "0");
+  const unitEnd = content.indexOf(nextUnit + ":", passageStart);
+  const unitContent = unitEnd === -1 ? content.substring(passageStart) : content.substring(passageStart, unitEnd);
+
+  // passage 추출
+  const passageIdx = unitContent.indexOf("passage:");
+  const vocabIdx = unitContent.indexOf("vocab:");
+  const vocabFillIdx = unitContent.indexOf("vocabFill:");
+
+  if (passageIdx === -1 || vocabIdx === -1 || vocabFillIdx === -1) continue;
+
+  const passageText = unitContent.substring(passageIdx, vocabIdx);
+  const vocabText = unitContent.substring(vocabIdx, vocabFillIdx);
+  const vocabFillText = unitContent.substring(vocabFillIdx);
+
+  // passage에서 <b> 태그 추출
+  const bTagRegex = /<b>([^<]+)<\/b>/g;
+  const bTags = [];
+  let bMatch;
+  while ((bMatch = bTagRegex.exec(passageText)) !== null) {
+    if (!bTags.includes(bMatch[1])) bTags.push(bMatch[1]);
+  }
+
+  // vocab에서 첫 번째 요소 추출
+  const vocabRegex = /\['([^']+)',/g;
+  const vocabs = [];
+  let vMatch;
+  while ((vMatch = vocabRegex.exec(vocabText)) !== null) {
+    vocabs.push(vMatch[1]);
+  }
+
+  // vocab에만 있는 항목
+  const vocabOnly = vocabs.filter(v => !bTags.includes(v));
+
+  if (vocabOnly.length > 0) {
+    console.log(`=== ${unit} ===`);
+    vocabOnly.forEach(v => {
+      // vocabFill에서 사용되는지 확인 (더 유연한 패턴)
+      const usedInFill = vocabFillText.includes(`answer:'${v}'`) || 
+                         vocabFillText.includes(`answer: '${v}'`) || 
+                         vocabFillText.includes(`answer:"${v}"`) ||
+                         vocabFillText.includes(`answer: "${v}"`);
+      
+      // passage 원문에 해당 단어가 있는지 확인
+      const existsInPassage = passageText.includes(v);
+      
+      if (usedInFill) {
+        if (existsInPassage) {
+          console.log(`  ${v}: vocabFill 사용 + passage에 존재 -> 태그 추가 필요`);
+        } else {
+          console.log(`  ${v}: vocabFill 사용 + passage에 없음 -> 판단 필요`);
+        }
+      } else {
+        console.log(`  ${v}: vocabFill 미사용 -> vocab에서 제거`);
+      }
+    });
+  }
+}
