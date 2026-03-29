@@ -2321,6 +2321,30 @@
       position: relative;
       transition: all 0.3s ease;
       overflow: hidden;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: stepCardAppear 0.8s ease forwards;
+    }
+
+    .three-step-cards .step-card:nth-child(1) {
+      animation-delay: 0s;
+    }
+    .three-step-cards .step-card:nth-child(2) {
+      animation-delay: 0.3s;
+    }
+    .three-step-cards .step-card:nth-child(3) {
+      animation-delay: 0.6s;
+    }
+
+    @keyframes stepCardAppear {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .step-card:hover {
@@ -17327,6 +17351,41 @@
     const heroStats = document.querySelector('.hero-stats');
     if (heroStats) {
       heroStatsObserver.observe(heroStats);
+    }
+
+    // 3단계 카드 순차 등장 애니메이션 (반복)
+    function animateStepCards() {
+      const cards = document.querySelectorAll('.three-step-cards .step-card');
+      cards.forEach((card, index) => {
+        card.style.animation = 'none';
+        card.offsetHeight; // reflow 트리거
+        card.style.animation = `stepCardAppear 0.8s ease forwards`;
+        card.style.animationDelay = `${index * 0.3}s`;
+      });
+    }
+
+    let stepCardsInterval = null;
+
+    const stepCardsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateStepCards();
+          // 5초마다 반복
+          if (!stepCardsInterval) {
+            stepCardsInterval = setInterval(animateStepCards, 5000);
+          }
+        } else {
+          if (stepCardsInterval) {
+            clearInterval(stepCardsInterval);
+            stepCardsInterval = null;
+          }
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const threeStepCards = document.querySelector('.three-step-cards');
+    if (threeStepCards) {
+      stepCardsObserver.observe(threeStepCards);
     }
   </script>
 
