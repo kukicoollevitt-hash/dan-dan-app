@@ -60,6 +60,134 @@
       --bg-value-section: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
     }
 
+    /* 블루 테마 - 별빛 반짝임 효과 */
+    .stars-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    body.theme-blue .stars-container {
+      display: block;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0;
+      animation: starTwinkle var(--duration) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    .star.bright {
+      width: 3px;
+      height: 3px;
+      box-shadow: 0 0 6px 1px rgba(135, 206, 235, 0.6);
+    }
+
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0.1; transform: scale(0.8); }
+      50% { opacity: 0.8; transform: scale(1.2); }
+    }
+
+    /* 블루 테마 - 오로라 그라데이션 효과 */
+    .aurora-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    body.theme-blue .aurora-container {
+      display: block;
+    }
+
+    .aurora {
+      position: absolute;
+      width: 150%;
+      height: 150%;
+      top: -25%;
+      left: -25%;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(74, 144, 217, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, rgba(135, 206, 235, 0.06) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 80%, rgba(44, 90, 160, 0.07) 0%, transparent 55%);
+      animation: auroraMove 20s ease-in-out infinite;
+    }
+
+    .aurora-2 {
+      animation-delay: -10s;
+      animation-duration: 25s;
+      opacity: 0.7;
+    }
+
+    @keyframes auroraMove {
+      0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+      25% { transform: translate(5%, 3%) rotate(2deg) scale(1.02); }
+      50% { transform: translate(-3%, 5%) rotate(-1deg) scale(0.98); }
+      75% { transform: translate(-5%, -3%) rotate(1deg) scale(1.01); }
+    }
+
+    /* 블루 테마 - 미세 파티클 부유 효과 */
+    .dust-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    body.theme-blue .dust-container {
+      display: block;
+    }
+
+    .dust {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      animation: dustFloat var(--duration) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    @keyframes dustFloat {
+      0%, 100% {
+        transform: translate(0, 0);
+        opacity: 0.2;
+      }
+      25% {
+        transform: translate(calc(var(--dx) * 1px), calc(var(--dy) * -1px));
+        opacity: 0.5;
+      }
+      50% {
+        transform: translate(calc(var(--dx) * 0.5px), calc(var(--dy) * -2px));
+        opacity: 0.3;
+      }
+      75% {
+        transform: translate(calc(var(--dx) * -0.5px), calc(var(--dy) * -1px));
+        opacity: 0.4;
+      }
+    }
+
     /* 블루 테마 - 히어로 섹션 텍스트 가독성 개선 */
     body.theme-blue .brand-description {
       color: rgba(255, 255, 255, 0.85);
@@ -3609,7 +3737,8 @@
       font-size: 0.85rem;
     }
 
-    .inquiry-particles {
+    .inquiry-particles,
+    .hero-particles {
       position: absolute;
       top: 0;
       left: 0;
@@ -3617,9 +3746,11 @@
       height: 100%;
       pointer-events: none;
       overflow: hidden;
+      z-index: 1;
     }
 
-    .inquiry-particle {
+    .inquiry-particle,
+    .hero-particle {
       position: absolute;
       width: 8px;
       height: 8px;
@@ -8909,6 +9040,18 @@
   </style>
 </head>
 <body>
+  <!-- 블루 테마 별빛 배경 -->
+  <div class="stars-container" id="starsContainer"></div>
+
+  <!-- 블루 테마 오로라 배경 -->
+  <div class="aurora-container">
+    <div class="aurora"></div>
+    <div class="aurora aurora-2"></div>
+  </div>
+
+  <!-- 블루 테마 미세 파티클 -->
+  <div class="dust-container" id="dustContainer"></div>
+
   <!-- 상단 헤더 -->
   <header class="header" id="header">
     <div class="header-left">
@@ -8956,6 +9099,7 @@
 
   <!-- 브랜드 히어로 섹션 -->
   <section class="brand-hero" id="brand">
+    <div class="hero-particles" id="heroParticles"></div>
     <div class="brand-hero-content">
       <p class="brand-tagline">Premium Brain Literacy Center</p>
       <h1 class="brand-main-title">
@@ -14765,6 +14909,64 @@
       }
     }
     createInquiryParticles();
+
+    // 블루 테마 별빛 생성
+    function createStars() {
+      const container = document.getElementById('starsContainer');
+      if (!container) return;
+
+      const starCount = 80;
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.className = Math.random() > 0.85 ? 'star bright' : 'star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.setProperty('--delay', (Math.random() * 5) + 's');
+        star.style.setProperty('--duration', (3 + Math.random() * 4) + 's');
+        container.appendChild(star);
+      }
+    }
+    createStars();
+
+    // 블루 테마 미세 파티클 생성
+    function createDust() {
+      const container = document.getElementById('dustContainer');
+      if (!container) return;
+
+      const dustCount = 50;
+      for (let i = 0; i < dustCount; i++) {
+        const dust = document.createElement('div');
+        dust.className = 'dust';
+        dust.style.left = Math.random() * 100 + '%';
+        dust.style.top = Math.random() * 100 + '%';
+        dust.style.setProperty('--delay', (Math.random() * 8) + 's');
+        dust.style.setProperty('--duration', (6 + Math.random() * 6) + 's');
+        dust.style.setProperty('--dx', (Math.random() * 40 - 20));
+        dust.style.setProperty('--dy', (Math.random() * 30 + 10));
+        container.appendChild(dust);
+      }
+    }
+    createDust();
+
+    // 히어로 섹션 파티클 생성
+    function createHeroParticles() {
+      const container = document.getElementById('heroParticles');
+      if (!container) return;
+
+      const particleCount = 40;
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'hero-particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 10 + 's';
+        particle.style.animationDuration = (8 + Math.random() * 6) + 's';
+        particle.style.opacity = 0.2 + Math.random() * 0.4;
+        particle.style.width = (3 + Math.random() * 5) + 'px';
+        particle.style.height = particle.style.width;
+        container.appendChild(particle);
+      }
+    }
+    createHeroParticles();
 
     // 긴급 모집 카운트다운 타이머 (고정 10일 반복)
     function startUrgencyCountdown() {
