@@ -35458,6 +35458,53 @@ app.get('/api/reading-time/:studentKey/:unitKey', async (req, res) => {
   }
 });
 
+// ===== 고래도서관 문의 API =====
+app.post("/api/whale-inquiry", async (req, res) => {
+  try {
+    const { region, name, phone, academy } = req.body;
+
+    if (!region || !name || !phone || !academy) {
+      return res.status(400).json({ success: false, error: "필수 항목을 입력해주세요." });
+    }
+
+    const mailOptions = {
+      from: process.env.NAVER_EMAIL,
+      to: process.env.NAVER_EMAIL,
+      subject: `[고래도서관 문의] ${name}님 - ${region}`,
+      html: `
+        <h2>🐳 고래도서관 도입 문의</h2>
+        <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #e8f4fc; font-weight: bold;">지역</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${region}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #e8f4fc; font-weight: bold;">성함</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #e8f4fc; font-weight: bold;">연락처</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #e8f4fc; font-weight: bold;">운영 학원</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${academy}</td>
+          </tr>
+        </table>
+        <p style="color: #888; margin-top: 20px;">전송 시간: ${new Date().toLocaleString('ko-KR')}</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ 고래도서관 문의 메일 발송: ${name} (${region}) - ${academy}`);
+
+    res.json({ success: true, message: "고래도서관 문의가 접수되었습니다." });
+  } catch (err) {
+    console.error("고래도서관 문의 메일 발송 오류:", err);
+    res.status(500).json({ success: false, error: "메일 발송에 실패했습니다." });
+  }
+});
+
 // ===== 설명회 상담문의 API =====
 app.post("/api/consultation-inquiry", async (req, res) => {
   try {
