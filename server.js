@@ -276,6 +276,7 @@ const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
 const BookOrder = require("./models/BookOrder");
+const TextbookOrder = require("./models/TextbookOrder");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -2466,6 +2467,175 @@ app.delete("/api/book-orders/:id", requireSuperAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("❌ 교재 주문 삭제 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ===== 교재 신청 API (TextbookOrder) =====
+
+// ✅ 교재 신청 목록 조회
+app.get("/api/textbook-orders", async (req, res) => {
+  try {
+    const { branchName, phone } = req.query;
+    let query = {};
+
+    // 지점명과 연락처로 필터링 (본인 신청내역만 조회)
+    if (branchName) query.branchName = branchName;
+    if (phone) query.phone = phone;
+
+    const orders = await TextbookOrder.find(query).sort({ createdAt: -1 });
+    res.json({ ok: true, orders });
+  } catch (err) {
+    console.error("❌ 교재 신청 목록 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 전체 교재 신청 목록 (관리자용)
+app.get("/api/textbook-orders/all", async (req, res) => {
+  try {
+    const orders = await TextbookOrder.find().sort({ createdAt: -1 });
+    res.json({ ok: true, orders });
+  } catch (err) {
+    console.error("❌ 전체 교재 신청 목록 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 교재 신청 등록
+app.post("/api/textbook-orders", async (req, res) => {
+  try {
+    const { applicantName, branchName, phone, items, memo } = req.body;
+
+    if (!applicantName || !branchName || !phone) {
+      return res.status(400).json({ ok: false, message: "필수 정보를 입력해주세요." });
+    }
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ ok: false, message: "교재를 선택해주세요." });
+    }
+
+    const order = new TextbookOrder({
+      applicantName,
+      branchName,
+      phone,
+      items,
+      memo: memo || ''
+    });
+
+    await order.save();
+
+    // 교재 신청 메일 발송
+    const itemsHtml = items.map(item => `
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.bookType}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.series}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.issueNumber}호</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}권</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${(item.quantity * item.unitPrice).toLocaleString()}원</td>
+      </tr>
+    `).join('');
+
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+
+    const mailOptions = {
+      from: process.env.NAVER_EMAIL,
+      to: process.env.NAVER_EMAIL,
+      subject: `[교재신청] ${branchName} - ${applicantName}님`,
+      html: `
+        <h2>📚 교재 신청</h2>
+        <table style="border-collapse: collapse; width: 100%; max-width: 500px; margin-bottom: 20px;">
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold; width: 100px;">지점명</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${branchName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">성함</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${applicantName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연락처</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
+          </tr>
+        </table>
+
+        <h3>📋 신청 교재 목록</h3>
+        <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
+          <thead>
+            <tr style="background: #667eea; color: white;">
+              <th style="padding: 10px; border: 1px solid #ddd;">교재 종류</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">시리즈</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">호수</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">권수</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">금액</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <strong>총 ${totalQuantity}권 / ${totalAmount.toLocaleString()}원</strong>
+        </div>
+
+        <p style="color: #888; margin-top: 20px;">신청 시간: ${new Date().toLocaleString('ko-KR')}</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ 교재 신청 완료 & 메일 발송: ${branchName} - ${applicantName}`);
+
+    res.json({ ok: true, order });
+  } catch (err) {
+    console.error("❌ 교재 신청 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 교재 신청 수정
+app.put("/api/textbook-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    updateData.updatedAt = new Date();
+
+    const order = await TextbookOrder.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!order) {
+      return res.status(404).json({ ok: false, message: "신청 내역을 찾을 수 없습니다." });
+    }
+
+    // 아이템이 수정되었으면 총계 다시 계산
+    if (updateData.items) {
+      order.items.forEach(item => {
+        item.subtotal = item.quantity * item.unitPrice;
+      });
+      order.totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+      order.totalAmount = order.items.reduce((sum, item) => sum + item.subtotal, 0);
+      await order.save();
+    }
+
+    console.log(`✅ 교재 신청 수정: ${id}`);
+    res.json({ ok: true, order });
+  } catch (err) {
+    console.error("❌ 교재 신청 수정 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 교재 신청 삭제
+app.delete("/api/textbook-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await TextbookOrder.deleteOne({ _id: id });
+
+    console.log(`✅ 교재 신청 삭제: ${id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ 교재 신청 삭제 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });

@@ -420,6 +420,13 @@
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border: 2px solid #333;
+      cursor: move;
+      user-select: none;
+      z-index: 100;
+    }
+
+    .digital-clock:active {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     }
 
     .clock-date {
@@ -1572,6 +1579,19 @@
           <span>고래도서관 구독형</span>
         </div>
       </div>
+
+      <!-- 교재 섹션 -->
+      <div class="menu-section">
+        <div class="menu-section-title">교재</div>
+        <div class="menu-item" onclick="location.href='/textbook_order_history.html'">
+          <span class="menu-item-icon">📋</span>
+          <span>교재신청내역</span>
+        </div>
+        <div class="menu-item" onclick="location.href='/textbook_order.html'">
+          <span class="menu-item-icon">📝</span>
+          <span>교재신청하기</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1709,7 +1729,7 @@
     </button>
 
     <!-- 전자시계 -->
-    <div class="digital-clock">
+    <div class="digital-clock" id="digitalClock">
       <div class="clock-date" id="clockDate"></div>
       <div class="clock-time" id="clockTime"></div>
     </div>
@@ -2013,6 +2033,49 @@
     // 시계 시작
     updateClock();
     setInterval(updateClock, 1000);
+
+    // 시계 드래그 기능
+    (function() {
+      const clock = document.getElementById('digitalClock');
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      // 저장된 위치 불러오기
+      const savedPos = localStorage.getItem('clockPosition');
+      if (savedPos) {
+        const pos = JSON.parse(savedPos);
+        clock.style.left = pos.left + 'px';
+        clock.style.top = pos.top + 'px';
+      }
+
+      clock.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        offsetX = e.clientX - clock.offsetLeft;
+        offsetY = e.clientY - clock.offsetTop;
+        clock.style.transition = 'none';
+      });
+
+      document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        clock.style.left = x + 'px';
+        clock.style.top = y + 'px';
+      });
+
+      document.addEventListener('mouseup', function() {
+        if (isDragging) {
+          isDragging = false;
+          clock.style.transition = '';
+          // 위치 저장
+          localStorage.setItem('clockPosition', JSON.stringify({
+            left: clock.offsetLeft,
+            top: clock.offsetTop
+          }));
+        }
+      });
+    })();
 
     // 잠금/해제 상태 관리
     let isUnlocked = false;
