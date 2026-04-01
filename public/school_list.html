@@ -254,11 +254,167 @@
       color: white;
     }
 
+    /* 햄버거 메뉴 버튼 */
+    .menu-btn {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      width: 44px;
+      height: 44px;
+      background: #fff;
+      border: 2px solid #333;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      z-index: 1001;
+      transition: all 0.3s;
+    }
+
+    .menu-btn:hover {
+      background: #333;
+    }
+
+    .menu-btn:hover .menu-line {
+      background: #fff;
+    }
+
+    .menu-line {
+      width: 22px;
+      height: 3px;
+      background: #333;
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+
+    /* 사이드 메뉴 오버레이 */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1002;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .sidebar-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 사이드 메뉴 */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 300px;
+      height: 100%;
+      background: #fff;
+      z-index: 1003;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.show {
+      left: 0;
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .sidebar-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: #f5f5f5;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .sidebar-close:hover {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .sidebar-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .menu-section {
+      margin-bottom: 24px;
+    }
+
+    .menu-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      padding-left: 12px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 15px;
+      color: #333;
+      border: 2px solid transparent;
+    }
+
+    .menu-item:hover {
+      background: #f5f5f5;
+    }
+
+    .menu-item.active {
+      background: #e8f4fd;
+      border-color: #3498db;
+      color: #3498db;
+      font-weight: 600;
+    }
+
+    .menu-item-icon {
+      font-size: 20px;
+    }
+
     /* 전자시계 스타일 */
     .digital-clock {
       position: absolute;
       top: 24px;
-      left: 24px;
+      left: 80px;
       background: #fff;
       padding: 12px 20px;
       border-radius: 12px;
@@ -341,6 +497,17 @@
 
     .container {
       position: relative;
+    }
+
+    /* 구독형 모드에서 숨길 컬럼 */
+    body.subscribe-mode .col-competitor,
+    body.subscribe-mode .col-center-status {
+      display: none;
+    }
+
+    /* 구독형 모드에서 검색창 영역 아래로 내리기 */
+    body.subscribe-mode .search-box {
+      margin-top: 60px;
     }
 
     /* 센터 필터 배지 스타일 */
@@ -1384,6 +1551,30 @@
   </style>
 </head>
 <body>
+  <!-- 사이드 메뉴 오버레이 -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- 사이드 메뉴 -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">메뉴</span>
+      <button class="sidebar-close" onclick="closeSidebar()">&times;</button>
+    </div>
+    <div class="sidebar-content">
+      <div class="menu-section">
+        <div class="menu-section-title">계약 형태</div>
+        <div class="menu-item active" id="menuCenterType" onclick="switchContractType('center')">
+          <span class="menu-item-icon">🏢</span>
+          <span>브레인문해원 센터형</span>
+        </div>
+        <div class="menu-item" id="menuSubscribeType" onclick="switchContractType('subscribe')">
+          <span class="menu-item-icon">📚</span>
+          <span>고래도서관 구독형</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 미납현황 모달 -->
   <div class="unpaid-modal-overlay" id="unpaidModal">
     <div class="unpaid-modal">
@@ -1510,6 +1701,13 @@
   </div>
 
   <div class="container locked" id="mainContainer">
+    <!-- 햄버거 메뉴 버튼 -->
+    <button class="menu-btn" onclick="openSidebar()">
+      <div class="menu-line"></div>
+      <div class="menu-line"></div>
+      <div class="menu-line"></div>
+    </button>
+
     <!-- 전자시계 -->
     <div class="digital-clock">
       <div class="clock-date" id="clockDate"></div>
@@ -1524,20 +1722,22 @@
       </button>
     </div>
 
-    <h1>브레인 문해원 1692개 센터 현황</h1>
-    <p class="subtitle">(2025년 학생 수 500명 이상 초등학교 지역)<br>총 1,880개교 | 2025년 기준 | 학생 수 내림차순 정렬</p>
+    <h1 id="mainTitle">브레인 문해원 1692개 센터 현황</h1>
+    <p class="subtitle" id="mainSubtitle">(2025년 학생 수 500명 이상 초등학교 지역)<br>총 1,880개교 | 2025년 기준 | 학생 수 내림차순 정렬</p>
 
-    <div class="legend">
-      <span class="legend-item3">⭐⭐⭐ 센터 2개 가능 지역 (1,500명 이상)</span>
-      <span class="legend-count3" id="doubleCount">0개교</span>
-    </div>
-    <div class="legend">
-      <span class="legend-item">⭐⭐ 센터우선지역 (1,000명 이상)</span>
-      <span class="legend-count" id="priorityCount">0개교</span>
-    </div>
-    <div class="legend">
-      <span class="legend-item2">⭐ 센터추천지역 (500~999명)</span>
-      <span class="legend-count2" id="recommendCount">0개교</span>
+    <div id="legendSection">
+      <div class="legend">
+        <span class="legend-item3">⭐⭐⭐ 센터 2개 가능 지역 (1,500명 이상)</span>
+        <span class="legend-count3" id="doubleCount">0개교</span>
+      </div>
+      <div class="legend">
+        <span class="legend-item">⭐⭐ 센터우선지역 (1,000명 이상)</span>
+        <span class="legend-count" id="priorityCount">0개교</span>
+      </div>
+      <div class="legend">
+        <span class="legend-item2">⭐ 센터추천지역 (500~999명)</span>
+        <span class="legend-count2" id="recommendCount">0개교</span>
+      </div>
     </div>
 
     <div class="search-box">
@@ -1561,7 +1761,7 @@
     </div>
 
     <!-- 센터 필터 배지 -->
-    <div class="center-filter-badges">
+    <div class="center-filter-badges" id="centerFilterBadges">
       <span class="center-badge" id="badgeAll" onclick="filterByCenter('all')">센터전체</span>
       <span class="center-badge badge-expected" id="badgeExpected" onclick="filterByCenter('expected')">센터예정</span>
       <span class="center-badge badge-confirmed" id="badgeConfirmed" onclick="filterByCenter('confirmed')">센터확정</span>
@@ -1569,15 +1769,15 @@
 
     <div class="table-container">
       <table>
-        <thead>
+        <thead id="tableHeader">
           <tr>
             <th class="num">번호</th>
             <th>시도</th>
             <th>시군구</th>
-            <th>학교명</th>
-            <th style="text-align:right">학생수</th>
-            <th>주변 경쟁업체</th>
-            <th>센터 여부</th>
+            <th id="thSchoolName">학교명</th>
+            <th style="text-align:right" id="thStudents">학생수</th>
+            <th id="thCompetitor" class="col-competitor">주변 경쟁업체</th>
+            <th id="thCenterStatus" class="col-center-status">센터 여부</th>
             <th>계약 정보</th>
             <th class="sortable" id="paymentSortHeader" onclick="togglePaymentSort()">결제여부 <span id="paymentSortIcon"></span></th>
             <th>초과인원</th>
@@ -1598,11 +1798,78 @@
   </div>
 
   <script>
+    // 사이드바 메뉴 관련
+    let currentContractType = 'center'; // 'center' 또는 'subscribe'
+
+    // 구독형 전용 학원 데이터 (초기에는 하마수학 강서점만 있음)
+    const subscribeData = [
+      { sido: "경기도", sigungu: "수원시", name: "하마수학 강서점", students: 10, competitor: "" }
+    ];
+
+    // 데이터 키 prefix 함수 (센터형/구독형 분리)
+    function getDataKey(baseKey) {
+      return currentContractType + '_' + baseKey;
+    }
+
+    function openSidebar() {
+      document.getElementById('sidebar').classList.add('show');
+      document.getElementById('sidebarOverlay').classList.add('show');
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('show');
+      document.getElementById('sidebarOverlay').classList.remove('show');
+    }
+
+    function switchContractType(type) {
+      currentContractType = type;
+
+      // 메뉴 아이템 활성화 상태 변경
+      document.getElementById('menuCenterType').classList.remove('active');
+      document.getElementById('menuSubscribeType').classList.remove('active');
+
+      if (type === 'center') {
+        document.getElementById('menuCenterType').classList.add('active');
+        document.body.classList.remove('subscribe-mode');
+        // 센터형 모드
+        document.getElementById('mainTitle').textContent = '브레인 문해원 1692개 센터 현황';
+        document.getElementById('mainSubtitle').innerHTML = '(2025년 학생 수 500명 이상 초등학교 지역)<br>총 1,880개교 | 2025년 기준 | 학생 수 내림차순 정렬';
+        document.getElementById('mainSubtitle').style.display = 'block';
+        document.getElementById('legendSection').style.display = 'block';
+        document.getElementById('centerFilterBadges').style.display = 'flex';
+        // 테이블 헤더 변경
+        document.getElementById('thSchoolName').textContent = '학교명';
+        document.getElementById('thStudents').textContent = '학생수';
+      } else {
+        document.getElementById('menuSubscribeType').classList.add('active');
+        document.body.classList.add('subscribe-mode');
+        // 구독형 모드
+        document.getElementById('mainTitle').textContent = '고래도서관 구독 현황';
+        document.getElementById('mainSubtitle').style.display = 'none';
+        document.getElementById('legendSection').style.display = 'none';
+        document.getElementById('centerFilterBadges').style.display = 'none';
+        // 테이블 헤더 변경
+        document.getElementById('thSchoolName').textContent = '학원명';
+        document.getElementById('thStudents').textContent = '최소학생수';
+        // 센터 필터 초기화
+        currentCenterFilter = null;
+      }
+
+      closeSidebar();
+
+      // 테이블 새로고침
+      if (currentCenterFilter) {
+        renderTableWithCenterFilter();
+      } else {
+        renderTable();
+      }
+    }
+
     // 미납현황 모달 관련
     function openUnpaidModal(schoolId, schoolName) {
-      const allExcessData = JSON.parse(localStorage.getItem('excessData_' + schoolId) || '{}');
-      const allTextbookData = JSON.parse(localStorage.getItem('textbookData_' + schoolId) || '{}');
-      const contractData = JSON.parse(localStorage.getItem('contractData_' + schoolId) || '{}');
+      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
+      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
+      const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolId)) || '{}');
 
       const centerName = '브레인 문해원 ' + schoolName.replace('초등학교', '').replace('초', '') + '센터';
 
@@ -1701,8 +1968,8 @@
 
     // 미납현황 개수 및 HTML 생성 함수
     function getUnpaidInfo(schoolId) {
-      const allExcessData = JSON.parse(localStorage.getItem('excessData_' + schoolId) || '{}');
-      const allTextbookData = JSON.parse(localStorage.getItem('textbookData_' + schoolId) || '{}');
+      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
+      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
 
       let unpaidCount = 0;
 
@@ -1824,7 +2091,7 @@
     function loadExcessMonthData() {
       if (!currentExcessSchoolId) return;
 
-      const allExcessData = JSON.parse(localStorage.getItem('excessData_' + currentExcessSchoolId) || '{}');
+      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + currentExcessSchoolId)) || '{}');
       const monthData = allExcessData[currentExcessMonth] || {};
 
       document.getElementById('excessMonthDisplay').textContent = formatMonthDisplay(currentExcessMonth);
@@ -1840,8 +2107,8 @@
     }
 
     function renderExcessHistory() {
-      const allExcessData = JSON.parse(localStorage.getItem('excessData_' + currentExcessSchoolId) || '{}');
-      const contractData = JSON.parse(localStorage.getItem('contractData_' + currentExcessSchoolId) || '{}');
+      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + currentExcessSchoolId)) || '{}');
+      const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + currentExcessSchoolId)) || '{}');
       const annualFee = contractData.annualFee;
 
       let minPersons = 0;
@@ -1892,8 +2159,8 @@
       currentExcessSchoolName = schoolName;
       currentExcessMonth = getCurrentMonth();
 
-      const contractData = JSON.parse(localStorage.getItem('contractData_' + schoolId) || '{}');
-      const allExcessData = JSON.parse(localStorage.getItem('excessData_' + schoolId) || '{}');
+      const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolId)) || '{}');
+      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
       const monthData = allExcessData[currentExcessMonth] || {};
       const centerName = '브레인 문해원 ' + schoolName.replace('초등학교', '').replace('초', '') + '센터';
 
@@ -2023,7 +2290,7 @@
       const paymentStatus = document.getElementById('excessPaymentStatus').value;
 
       // 기존 전체 데이터 가져오기
-      const allExcessData = JSON.parse(localStorage.getItem('excessData_' + currentExcessSchoolId) || '{}');
+      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + currentExcessSchoolId)) || '{}');
 
       // 현재 월 데이터 저장
       allExcessData[currentExcessMonth] = {
@@ -2031,7 +2298,7 @@
         paymentStatus: paymentStatus
       };
 
-      localStorage.setItem('excessData_' + currentExcessSchoolId, JSON.stringify(allExcessData));
+      localStorage.setItem(getDataKey('excessData_' + currentExcessSchoolId), JSON.stringify(allExcessData));
       alert(`${formatMonthDisplay(currentExcessMonth)} 데이터가 저장되었습니다.`);
 
       // 히스토리 새로고침
@@ -2092,8 +2359,8 @@
     function loadTextbookMonthData() {
       if (!currentTextbookSchoolId) return;
 
-      const allExcessData = JSON.parse(localStorage.getItem('excessData_' + currentTextbookSchoolId) || '{}');
-      const allTextbookData = JSON.parse(localStorage.getItem('textbookData_' + currentTextbookSchoolId) || '{}');
+      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + currentTextbookSchoolId)) || '{}');
+      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + currentTextbookSchoolId)) || '{}');
       const excessMonthData = allExcessData[currentTextbookMonth] || {};
       const monthData = allTextbookData[currentTextbookMonth] || {};
 
@@ -2116,7 +2383,7 @@
     }
 
     function renderTextbookHistory() {
-      const allTextbookData = JSON.parse(localStorage.getItem('textbookData_' + currentTextbookSchoolId) || '{}');
+      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + currentTextbookSchoolId)) || '{}');
 
       // 월별 데이터 정렬 (최신순)
       const months = Object.keys(allTextbookData).filter(k => k.match(/^\d{4}-\d{2}$/)).sort().reverse();
@@ -2160,8 +2427,8 @@
       currentTextbookSchoolName = schoolName;
       currentTextbookMonth = getCurrentMonth();
 
-      const allExcessData = JSON.parse(localStorage.getItem('excessData_' + schoolId) || '{}');
-      const allTextbookData = JSON.parse(localStorage.getItem('textbookData_' + schoolId) || '{}');
+      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
+      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
       const excessMonthData = allExcessData[currentTextbookMonth] || {};
       const monthData = allTextbookData[currentTextbookMonth] || {};
       const centerName = '브레인 문해원 ' + schoolName.replace('초등학교', '').replace('초', '') + '센터';
@@ -2258,7 +2525,7 @@
       const paymentStatus = document.getElementById('textbookPaymentStatus').value;
 
       // 기존 전체 데이터 가져오기
-      const allTextbookData = JSON.parse(localStorage.getItem('textbookData_' + currentTextbookSchoolId) || '{}');
+      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + currentTextbookSchoolId)) || '{}');
 
       // 현재 월 데이터 저장
       allTextbookData[currentTextbookMonth] = {
@@ -2267,7 +2534,7 @@
         paymentStatus: paymentStatus
       };
 
-      localStorage.setItem('textbookData_' + currentTextbookSchoolId, JSON.stringify(allTextbookData));
+      localStorage.setItem(getDataKey('textbookData_' + currentTextbookSchoolId), JSON.stringify(allTextbookData));
       alert(`${formatMonthDisplay(currentTextbookMonth)} 데이터가 저장되었습니다.`);
 
       // 히스토리 새로고침
@@ -2304,7 +2571,7 @@
       document.getElementById('modalSchoolName').textContent = centerName;
 
       // 저장된 데이터 로드
-      const key = 'contractData_' + schoolId;
+      const key = getDataKey('contractData_' + schoolId);
       const data = JSON.parse(localStorage.getItem(key) || '{}');
 
       document.getElementById('contractOpeningFee').value = data.openingFee || '';
@@ -2375,11 +2642,11 @@
         memo: document.getElementById('contractMemo').value
       };
 
-      const key = 'contractData_' + currentContractSchoolId;
+      const key = getDataKey('contractData_' + currentContractSchoolId);
       localStorage.setItem(key, JSON.stringify(data));
 
       // 결제여부를 기존 schoolData에도 저장 (호환성)
-      const schoolKey = 'schoolData_' + currentContractSchoolId;
+      const schoolKey = getDataKey('schoolData_' + currentContractSchoolId);
       const schoolData = JSON.parse(localStorage.getItem(schoolKey) || '{}');
       schoolData.payment = data.paymentStatus === '완료' ? '완료' : (data.paymentStatus === '대기' ? '미완료' : '');
       localStorage.setItem(schoolKey, JSON.stringify(schoolData));
@@ -2455,8 +2722,8 @@
       return filtered.sort((a, b) => {
         const schoolIdA = `${a.sido}_${a.sigungu}_${a.name}`.replace(/\s/g, '_');
         const schoolIdB = `${b.sido}_${b.sigungu}_${b.name}`.replace(/\s/g, '_');
-        const contractDataA = JSON.parse(localStorage.getItem('contractData_' + schoolIdA) || '{}');
-        const contractDataB = JSON.parse(localStorage.getItem('contractData_' + schoolIdB) || '{}');
+        const contractDataA = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolIdA)) || '{}');
+        const contractDataB = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolIdB)) || '{}');
         const statusA = contractDataA.paymentStatus || '';
         const statusB = contractDataB.paymentStatus || '';
 
@@ -2503,8 +2770,8 @@
       return filtered.sort((a, b) => {
         const schoolIdA = `${a.sido}_${a.sigungu}_${a.name}`.replace(/\s/g, '_');
         const schoolIdB = `${b.sido}_${b.sigungu}_${b.name}`.replace(/\s/g, '_');
-        const allExcessDataA = JSON.parse(localStorage.getItem('excessData_' + schoolIdA) || '{}');
-        const allExcessDataB = JSON.parse(localStorage.getItem('excessData_' + schoolIdB) || '{}');
+        const allExcessDataA = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolIdA)) || '{}');
+        const allExcessDataB = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolIdB)) || '{}');
         const statusA = (allExcessDataA[currentMonth] || {}).paymentStatus || '';
         const statusB = (allExcessDataB[currentMonth] || {}).paymentStatus || '';
 
@@ -2551,8 +2818,8 @@
       return filtered.sort((a, b) => {
         const schoolIdA = `${a.sido}_${a.sigungu}_${a.name}`.replace(/\s/g, '_');
         const schoolIdB = `${b.sido}_${b.sigungu}_${b.name}`.replace(/\s/g, '_');
-        const allTextbookDataA = JSON.parse(localStorage.getItem('textbookData_' + schoolIdA) || '{}');
-        const allTextbookDataB = JSON.parse(localStorage.getItem('textbookData_' + schoolIdB) || '{}');
+        const allTextbookDataA = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolIdA)) || '{}');
+        const allTextbookDataB = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolIdB)) || '{}');
         const statusA = (allTextbookDataA[currentMonth] || {}).paymentStatus || '';
         const statusB = (allTextbookDataB[currentMonth] || {}).paymentStatus || '';
 
@@ -2595,8 +2862,11 @@
       const sidoFilter = document.getElementById('sidoFilter').value;
       const sigunguFilter = document.getElementById('sigunguFilter').value;
 
+      // 구독형일 때는 subscribeData 사용
+      const dataSource = currentContractType === 'subscribe' ? subscribeData : schoolData;
+
       // 센터 배지 필터 적용
-      const filtered = schoolData.filter(school => {
+      const filtered = dataSource.filter(school => {
         const matchSearch = school.name.toLowerCase().includes(searchTerm) || school.sigungu.toLowerCase().includes(searchTerm);
         const matchSido = !sidoFilter || school.sido === sidoFilter;
         const matchSigungu = !sigunguFilter || school.sigungu === sigunguFilter;
@@ -2604,7 +2874,7 @@
         // 센터 배지 필터
         if (currentCenterFilter) {
           const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
-          const savedData = JSON.parse(localStorage.getItem('schoolData_' + schoolId) || '{}');
+          const savedData = JSON.parse(localStorage.getItem(getDataKey('schoolData_' + schoolId)) || '{}');
           const status = savedData.status || '';
 
           if (currentCenterFilter === 'all') {
@@ -2647,10 +2917,10 @@
 
       tbody.innerHTML = sortedFiltered3.map((school, idx) => {
         const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
-        const savedData = JSON.parse(localStorage.getItem('schoolData_' + schoolId) || '{}');
-        const contractData = JSON.parse(localStorage.getItem('contractData_' + schoolId) || '{}');
-        const allExcessData = JSON.parse(localStorage.getItem('excessData_' + schoolId) || '{}');
-        const allTextbookData = JSON.parse(localStorage.getItem('textbookData_' + schoolId) || '{}');
+        const savedData = JSON.parse(localStorage.getItem(getDataKey('schoolData_' + schoolId)) || '{}');
+        const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolId)) || '{}');
+        const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
+        const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
         const currentMonth = getCurrentMonth();
         const excessMonthData = allExcessData[currentMonth] || {};
         const textbookMonthData = allTextbookData[currentMonth] || {};
@@ -2705,8 +2975,8 @@
           <td>${school.sigungu}</td>
           <td>${school.name}${school.students >= 1500 ? ' <span class="star">⭐⭐⭐</span>' : school.students >= 1000 ? ' <span class="star">⭐⭐</span>' : ' <span class="star">⭐</span>'}</td>
           <td class="students">${school.students.toLocaleString()}명</td>
-          <td><input type="text" class="competitor-input" data-id="${schoolId}" value="${competitor}" placeholder="경쟁업체 입력"></td>
-          <td>
+          <td class="col-competitor"><input type="text" class="competitor-input" data-id="${schoolId}" value="${competitor}" placeholder="경쟁업체 입력"></td>
+          <td class="col-center-status">
             <select class="status-select" data-id="${schoolId}">
               <option value="" ${status === '' ? 'selected' : ''}>선택</option>
               <option value="센터가능" ${status === '센터가능' ? 'selected' : ''}>센터가능</option>
@@ -2715,7 +2985,7 @@
             </select>
           </td>
           <td>
-            <button class="detail-btn ${localStorage.getItem('contractData_' + schoolId) ? 'has-data' : ''}" data-id="${schoolId}" data-name="${school.name}">상세보기</button>
+            <button class="detail-btn ${localStorage.getItem(getDataKey('contractData_' + schoolId)) ? 'has-data' : ''}" data-id="${schoolId}" data-name="${school.name}">상세보기</button>
           </td>
           <td>${paymentStatusHtml}</td>
           <td>
@@ -4401,7 +4671,10 @@
       const sigunguFilter = document.getElementById('sigunguFilter').value;
       const statusFilter = document.getElementById('statusFilter').value;
 
-      const filtered = schoolData.filter(school => {
+      // 구독형일 때는 subscribeData 사용
+      const dataSource = currentContractType === 'subscribe' ? subscribeData : schoolData;
+
+      const filtered = dataSource.filter(school => {
         const matchSearch = school.name.toLowerCase().includes(searchTerm) || school.sigungu.toLowerCase().includes(searchTerm);
         const matchSido = !sidoFilter || school.sido === sidoFilter;
         const matchSigungu = !sigunguFilter || school.sigungu === sigunguFilter;
@@ -4410,7 +4683,7 @@
         let matchStatus = true;
         if (statusFilter) {
           const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
-          const savedData = JSON.parse(localStorage.getItem('schoolData_' + schoolId) || '{}');
+          const savedData = JSON.parse(localStorage.getItem(getDataKey('schoolData_' + schoolId)) || '{}');
           const status = savedData.status || '';
           matchStatus = status === statusFilter;
         }
@@ -4450,10 +4723,10 @@
 
       tbody.innerHTML = sortedFiltered3.map((school, idx) => {
         const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
-        const savedData = JSON.parse(localStorage.getItem('schoolData_' + schoolId) || '{}');
-        const contractData = JSON.parse(localStorage.getItem('contractData_' + schoolId) || '{}');
-        const allExcessData = JSON.parse(localStorage.getItem('excessData_' + schoolId) || '{}');
-        const allTextbookData = JSON.parse(localStorage.getItem('textbookData_' + schoolId) || '{}');
+        const savedData = JSON.parse(localStorage.getItem(getDataKey('schoolData_' + schoolId)) || '{}');
+        const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolId)) || '{}');
+        const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
+        const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
         const currentMonth = getCurrentMonth();
         const excessMonthData = allExcessData[currentMonth] || {};
         const textbookMonthData = allTextbookData[currentMonth] || {};
@@ -4509,8 +4782,8 @@
           <td>${school.sigungu}</td>
           <td>${school.name}${school.students >= 1500 ? ' <span class="star">⭐⭐⭐</span>' : school.students >= 1000 ? ' <span class="star">⭐⭐</span>' : ' <span class="star">⭐</span>'}</td>
           <td class="students">${school.students.toLocaleString()}명</td>
-          <td><input type="text" class="competitor-input" data-id="${schoolId}" value="${competitor}" placeholder="경쟁업체 입력"></td>
-          <td>
+          <td class="col-competitor"><input type="text" class="competitor-input" data-id="${schoolId}" value="${competitor}" placeholder="경쟁업체 입력"></td>
+          <td class="col-center-status">
             <select class="status-select" data-id="${schoolId}">
               <option value="" ${status === '' ? 'selected' : ''}>선택</option>
               <option value="센터가능" ${status === '센터가능' ? 'selected' : ''}>센터가능</option>
@@ -4519,7 +4792,7 @@
             </select>
           </td>
           <td>
-            <button class="detail-btn ${localStorage.getItem('contractData_' + schoolId) ? 'has-data' : ''}" data-id="${schoolId}" data-name="${school.name}">상세보기</button>
+            <button class="detail-btn ${localStorage.getItem(getDataKey('contractData_' + schoolId)) ? 'has-data' : ''}" data-id="${schoolId}" data-name="${school.name}">상세보기</button>
           </td>
           <td>${paymentStatusHtml}</td>
           <td>
@@ -4598,7 +4871,7 @@
           const password = prompt('비밀번호를 입력하세요:');
           if (password === '2846') {
             const schoolId = e.target.dataset.id;
-            localStorage.removeItem('schoolData_' + schoolId);
+            localStorage.removeItem(getDataKey('schoolData_' + schoolId));
             if (currentCenterFilter) {
               renderTableWithCenterFilter();
             } else {
@@ -4614,7 +4887,7 @@
 
     // 데이터 저장 함수
     function saveSchoolData(schoolId, field, value) {
-      const key = 'schoolData_' + schoolId;
+      const key = getDataKey('schoolData_' + schoolId);
       const data = JSON.parse(localStorage.getItem(key) || '{}');
       data[field] = value;
       localStorage.setItem(key, JSON.stringify(data));
@@ -4659,6 +4932,40 @@
     });
     document.getElementById('sigunguFilter').addEventListener('change', renderTable);
     document.getElementById('statusFilter').addEventListener('change', renderTable);
+
+    // 기존 데이터 마이그레이션 (prefix 없는 키 -> center_ prefix 추가)
+    function migrateOldData() {
+      const migrated = localStorage.getItem('dataMigrated_v1');
+      if (migrated) return; // 이미 마이그레이션 완료
+
+      const keysToMigrate = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        // prefix가 없는 기존 데이터 키들 찾기
+        if (key && (key.startsWith('schoolData_') || key.startsWith('contractData_') ||
+            key.startsWith('excessData_') || key.startsWith('textbookData_'))) {
+          keysToMigrate.push(key);
+        }
+      }
+
+      // 센터형 prefix로 복사
+      keysToMigrate.forEach(oldKey => {
+        const newKey = 'center_' + oldKey;
+        if (!localStorage.getItem(newKey)) {
+          const data = localStorage.getItem(oldKey);
+          if (data) {
+            localStorage.setItem(newKey, data);
+            console.log('Migrated:', oldKey, '->', newKey);
+          }
+        }
+      });
+
+      localStorage.setItem('dataMigrated_v1', 'true');
+      console.log('Data migration completed. Migrated', keysToMigrate.length, 'keys.');
+    }
+
+    // 초기화 - 데이터 마이그레이션 실행
+    migrateOldData();
 
     // 초기화 - 학생 수 내림차순 정렬 (많은 순)
     schoolData.sort((a, b) => b.students - a.students);
