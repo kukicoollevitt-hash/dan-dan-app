@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>창작물리18 퀴즈 - 시즌1 관문평가</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Gmarket Sans", "Noto Sans KR", sans-serif; background: url('/images/창작도서/창작물리18/00.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
+    body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 0; }
+    .quiz-container { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 30px; padding: 50px; max-width: 750px; width: 100%; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3); animation: slideIn 0.5s ease-out; position: relative; z-index: 1; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .quiz-header { text-align: center; margin-bottom: 40px; }
+    .quiz-header h1 { font-size: 32px; color: #2c3e50; margin-bottom: 10px; font-weight: 700; }
+    .quiz-header .gate-number { font-size: 18px; color: #E65100; font-weight: 600; background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .quiz-header .category-badge { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin-top: 10px; }
+    .progress-bar-container { width: 100%; height: 8px; background: #e0e0e0; border-radius: 10px; margin-bottom: 30px; overflow: hidden; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, #FFC107 0%, #FF5722 100%); border-radius: 10px; transition: width 0.5s ease; }
+    .question-box { background: #f8f9fa; padding: 30px; border-radius: 20px; margin-bottom: 30px; border-left: 5px solid #E65100; }
+    .question-text { font-size: 20px; color: #2c3e50; font-weight: 600; line-height: 1.7; }
+    .options-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+    .option-btn { background: white; border: 2px solid #e0e0e0; padding: 20px 25px; border-radius: 15px; font-size: 17px; color: #2c3e50; cursor: pointer; transition: all 0.3s ease; text-align: left; font-weight: 500; line-height: 1.5; }
+    .option-btn:hover { border-color: #E65100; background: #fff3e0; transform: translateX(5px); }
+    .option-btn.selected { border-color: #E65100; background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%); color: white; }
+    .option-btn.correct { border-color: #27ae60; background: #27ae60; color: white; }
+    .option-btn.wrong { border-color: #e74c3c; background: #e74c3c; color: white; }
+    .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+    .submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255, 87, 34, 0.4); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .result-message { text-align: center; padding: 20px; border-radius: 15px; margin-bottom: 20px; font-size: 18px; font-weight: 600; animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .result-message.correct { background: #d4edda; color: #155724; border: 2px solid #28a745; }
+    .result-message.wrong { background: #f8d7da; color: #721c24; border: 2px solid #dc3545; }
+    .congrats-container { text-align: center; animation: scaleIn 0.6s ease-out; }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    .congrats-container h2 { font-size: 44px; margin-bottom: 20px; }
+    .congrats-container p { font-size: 18px; color: #555; margin-bottom: 30px; line-height: 1.8; }
+    .score-summary { background: #f8f9fa; padding: 25px; border-radius: 16px; margin: 25px 0; text-align: left; }
+    .score-summary h3 { font-size: 18px; color: #E65100; margin-bottom: 15px; text-align: center; }
+    .score-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e0e0e0; }
+    .score-item:last-child { border-bottom: none; }
+    .score-item .category { font-weight: 600; color: #2c3e50; }
+    .score-item .score { font-weight: 700; color: #E65100; }
+    .back-btn { background: white; border: 2px solid #E65100; color: #E65100; padding: 15px 30px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-right: 10px; }
+    .back-btn:hover { background: #E65100; color: white; }
+    .radar-container { display: flex; justify-content: center; margin: 25px 0; }
+    @media (max-width: 768px) { .quiz-container { padding: 30px 20px; } .quiz-header h1 { font-size: 24px; } .question-text { font-size: 17px; } .option-btn { font-size: 15px; padding: 15px 20px; } }
+  </style>
+</head>
+<body>
+  <div class="quiz-container" id="quizContainer"></div>
+  <script>
+    // 시즌1 (3~4학년 수준) - 기본 이해
+    const quizDataSeason1 = [
+      { gate: 1, category: "인물파악", question: "감전 사고 경험을 바탕으로 마을의 전기 안전을 지키는 수호자가 된 사람은?", options: ["암페어 박사", "스파크(인물)", "볼트 할아버지", "접지 아저씨"], correct: 2 },
+      { gate: 2, category: "인물파악", question: "전기를 장난감처럼 다루다가 감전 사고를 당한 소년은?", options: ["하나", "암페어", "볼트", "스파크"], correct: 3 },
+      { gate: 3, category: "내용일치", question: "한국 가정의 콘센트 전압은 몇 볼트인가요?", options: ["220볼트", "110볼트", "12볼트 때문", "380볼트"], correct: 0 },
+      { gate: 4, category: "내용일치", question: "젖은 피부는 마른 피부보다 전기가 얼마나 더 잘 통하나요?", options: ["2배(등장)", "100배", "10배", "1000배"], correct: 1 },
+      { gate: 5, category: "내용구조", question: "전기가 잘 통하는 물질을 무엇이라 하나요?", options: ["절연체", "자석", "반도체", "도체"], correct: 3 },
+      { gate: 6, category: "내용구조", question: "누전 차단기가 전류를 차단하는 시간은?", options: ["1초(인물)", "0.5초", "0.03초", "10초 때문에 발생함"], correct: 2 },
+      { gate: 7, category: "내용어휘", question: "'누전'이란 무엇인가요?", options: ["전기가 정상적인 길을 벗어나 다른 곳으로 흐르는 것", "전기가 완전히 끊겨서 더 이상 흐르지 않는 것", "전기가 점점 약해져서 기기가 작동 안 하는 것", "전기가 갑자기 강해져서 전구가 밝아지는 것"], correct: 0 },
+      { gate: 8, category: "내용어휘", question: "'접지'란 무엇인가요?", options: ["전기를 완전히 끄는 것", "새어나온 전류를 안전하게 땅으로 보내는 것", "전기를 더 강하게 만드는 것", "전기를 배터리에 저장하는 것"], correct: 1 },
+      { gate: 9, category: "내용추론", question: "스파크가 감전된 할아버지를 구할 때 사용한 것은?", options: ["쇠막대와 맨손 때문에 발생함", "물과 천 선택", "고무장갑과 나무 막대", "전선과 스위치"], correct: 2 },
+      { gate: 10, category: "내용추론", question: "이 이야기가 전하고자 하는 핵심 메시지는?", options: ["지식은 생명을 지킨다 - 전기를 이해하면 안전하다", "전기는 위험하니 쓰지 말아야 한다", "전기는 자연에서만 존재한다", "감전되면 아무도 구할 수 없다"], correct: 0 }
+    ];
+
+    // 시즌2 (5~6학년 수준) - 원리와 이유를 묻는 심화 문제
+    const quizDataSeason2 = [
+      { gate: 1, category: "인물파악", question: "볼트 할아버지가 전기 안전의 중요성을 깨달은 계기는?", options: ["학교에서 배워서 전기의 위험성을 알게 되었다", "감전 사고로 한쪽 손을 잃은 경험", "TV에서 보고 전기 안전에 대해 관심을 갖게 됨", "친구가 알려줘서 전기를 조심하게 되었다"], correct: 1 },
+      { gate: 2, category: "인물파악", question: "스파크가 할아버지를 구할 수 있었던 핵심 지식은?", options: ["수영 실력이 뛰어나서 물에서도 안전하게 움직임", "전류는 저항이 낮은 곳으로 흐르고 절연체를 쓰면 안전", "달리기 실력이 좋아서 빠르게 도움을 요청했다", "큰 힘을 가지고 있어서 할아버지를 들어 올렸다"], correct: 1 },
+      { gate: 3, category: "내용일치", question: "사람 몸이 전기가 통하는 이유는?", options: ["피부가 딱딱해서 전기가 쉽게 통과할 수 있다", "몸의 절반 이상이 물로 이루어져 있어서", "뼈가 금속이라서 전기가 잘 통하게 되어 있다", "머리카락이 전선이라서 전기가 흐를 수 있다"], correct: 1 },
+      { gate: 4, category: "내용일치", question: "전류가 심장을 통과하면 특히 위험한 이유는?", options: ["아프기 때문에 고통을 많이 느끼게 되기 때문", "심장 박동을 멈추게 할 수 있기 때문에", "눈이 아프기 때문에 앞을 볼 수 없게 되기 때문", "귀가 안 들리기 때문에 소리를 못 듣게 되기 때문"], correct: 1 },
+      { gate: 5, category: "내용구조", question: "접지선으로 전류가 흐르고 사람은 감전되지 않는 이유는?", options: ["접지선이 예쁘고 눈에 잘 보여서 사람이 피할 수 있다", "전류는 저항이 낮은 곳으로 더 많이 흐르고 접지선이 저항이 낮아서", "접지선이 무거워서 전류가 아래로 흘러가기 때문이다", "접지선에 자석이 있어서 전류가 자석에 끌려가기 때문이다"], correct: 1 },
+      { gate: 6, category: "내용구조", question: "과부하(문어발 배선)가 위험한 이유는?", options: ["보기 싫어서 사람들이 불편함을 느끼기 때문이다", "전선에 허용 전류를 초과하면 과열로 화재가 발생할 수 있어서", "색깔이 이상해서 집의 분위기를 망치기 때문이다", "무거워서 콘센트가 빠지거나 망가질 수 있기 때문"], correct: 1 },
+      { gate: 7, category: "내용어휘", question: "'폐회로'란 무엇인가요?", options: ["끊어진 회로로 전류가 흐르지 않는 상태이다", "전류가 출발점에서 다시 출발점으로 돌아오는 완성된 경로", "열린 회로로 전류가 한쪽으로만 흐르는 상태", "짧은 회로로 전선의 길이가 짧은 상태를 말함"], correct: 1 },
+      { gate: 8, category: "내용어휘", question: "'퓨즈'의 역할은?", options: ["전기를 강하게 해서 기기가 더 잘 작동하게 함", "과도한 전류가 흐르면 스스로 녹아서 끊어져 회로를 보호", "전기를 저장해서 나중에 사용할 수 있게 해줌", "전기를 생산해서 기기에 전력을 공급하는 역할"], correct: 1 },
+      { gate: 9, category: "내용추론", question: "비 오는 날 전기 기기를 만지면 더 위험한 이유는?", options: ["번개가 치니까 전기가 더 강해지기 때문이다", "물기로 인해 피부 저항이 낮아져 전류가 많이 흐르기 때문", "바람이 불어서 전기가 흔들리게 되기 때문이다", "어두워서 전기 기기를 잘 볼 수 없기 때문이다"], correct: 1 },
+      { gate: 10, category: "내용추론", question: "변전소가 22,000볼트의 고압인 이유는?", options: ["위험하게 만들려고 일부러 전압을 높인 것이다", "높은 전압으로 전기를 효율적으로 멀리 보내기 위해", "예쁘게 보이려고 특별한 디자인을 적용한 것", "소리를 내려고 전압을 높여서 진동을 만든 것"], correct: 1 }
+    ];
+
+    // 시즌3 (중1~2 수준) - 심화 개념
+    const quizDataSeason3 = [
+      { gate: 1, category: "인물파악", question: "암페어 박사가 설명한 전류의 단위 '암페어(A)'는 무엇을 측정하는가?", options: ["전기의 압력을 나타내는 전압(개념)", "전기 흐름을 방해하는 저항(항목)", "전류의 세기(전자의 흐름 양)", "소비되는 에너지인 전력(선택)"], correct: 2 },
+      { gate: 2, category: "인물파악", question: "접지 아저씨가 언급한 '키르히호프의 법칙'과 관련된 내용은?", options: ["에너지는 생성되거나 소멸되지 않는다", "운동량은 충돌 전후 일정하게 유지된다", "질량은 화학 반응에서 보존된다", "전류는 저항이 낮은 곳으로 분배되어 흐른다"], correct: 3 },
+      { gate: 3, category: "내용일치", question: "누전 차단기가 누전을 감지하는 원리는?", options: ["나가는 전류와 돌아오는 전류의 차이 감지", "전선의 색깔 변화를 감지 때문에 영향을 미침", "전선 온도의 급격한 변화 감지", "전기가 흐를 때 나는 소리 감지"], correct: 0 },
+      { gate: 4, category: "내용일치", question: "한국에서 3구 플러그(접지 포함)가 의무화된 시기는?", options: ["1980년대 후반 무렵", "2000년대 초반 무렵", "1990년대 초반 무렵", "2010년대 초반 무렵"], correct: 1 },
+      { gate: 5, category: "내용구조", question: "전기 화상이 일반 화상보다 더 심각할 수 있는 이유는?", options: ["화상 자국의 색깔이 다르게 나타나서", "전기 화상은 특유의 냄새가 나기 때문에", "전기 화상은 일반 화상보다 차갑게 느껴져서", "표면은 작아 보여도 전류 경로의 내부 조직 손상이 심할 수 있어서"], correct: 3 },
+      { gate: 6, category: "내용구조", question: "접지봉을 땅에 깊이 박는 이유는?", options: ["외관상 예쁘게 보이도록 만들기 위해 때문에 영향을 미침", "접지 시스템을 무겁게 만들기 위해서", "대지의 낮은 저항을 활용해 전류를 안전하게 흡수시키기 위해", "접지할 때 특정 소리를 내기 위해서"], correct: 2 },
+      { gate: 7, category: "내용어휘", question: "'전위(전기적 위치 에너지)'란 무엇인가?", options: ["전기가 흐르게 하는 힘의 정도(높낮이)", "전자 하나가 가지는 질량의 무게(항목)", "전선의 전체 길이를 측정한 값(내용)", "전구가 얼마나 밝은지 나타내는 값(선택)"], correct: 0 },
+      { gate: 8, category: "내용어휘", question: "'정격 전류'를 초과하면 어떤 일이 발생하나요?", options: ["전기의 세기가 약해지게 된다", "전선이 과열되어 화재 위험이 생긴다", "전기가 배터리에 저장되게 된다", "전기가 완전히 사라지게 된다"], correct: 1 },
+      { gate: 9, category: "내용추론", question: "심장에 영향을 주기 전에 차단해야 하는 이유와 0.03초의 관계는?", options: ["0.03초라는 시간이 매우 길어서", "0.03이라는 숫자가 예쁘고 기억하기 좋아서", "심장에 치명적 영향이 가기 전 최대 허용 시간이기 때문", "시간과 차단은 서로 관계가 없다 하게 됨"], correct: 2 },
+      { gate: 10, category: "내용추론", question: "절연체(고무, 나무 등)로 감전자를 구조하는 원리는?", options: ["절연체는 전기가 통하지 않아 구조자가 감전되지 않기 때문", "절연체는 무거워서 힘을 전달하기 좋다", "절연체는 색이 예뻐서 눈에 잘 띄기 때문", "절연체는 따뜻해서 환자 체온 유지에 좋다"], correct: 0 }
+    ];
+
+    // URL 파라미터에서 시즌 정보 가져오기
+    function getSeasonFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('season') || 'season1';
+    }
+
+    // 시즌에 따른 퀴즈 데이터 선택
+    const season = getSeasonFromUrl();
+    const quizData = season === 'season1' ? quizDataSeason1
+                   : season === 'season2' ? quizDataSeason2
+                   : quizDataSeason3;
+
+
+    let currentGate = 0, selectedAnswer = null;
+    let categoryScores = { "인물파악": 0, "내용일치": 0, "내용구조": 0, "내용어휘": 0, "내용추론": 0 };
+
+    function renderQuiz() { const container = document.getElementById('quizContainer'); const quiz = quizData[currentGate]; container.innerHTML = `<div class="quiz-header"><h1>✨ 관문평가</h1><p class="gate-number">10개 관문 중 ${quiz.gate}번째</p><span class="category-badge">${quiz.category}</span></div><div class="progress-bar-container"><div class="progress-bar" style="width: ${(quiz.gate / 10) * 100}%"></div></div><div class="question-box"><p class="question-text">${quiz.question}</p></div><div class="options-container">${quiz.options.map((option, index) => `<button class="option-btn" onclick="selectAnswer(${index})">${index + 1}. ${option}</button>`).join('')}</div><button class="submit-btn" onclick="submitAnswer()" disabled>답안 제출</button>`; }
+    function selectAnswer(index) { selectedAnswer = index; document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected')); document.querySelectorAll('.option-btn')[index].classList.add('selected'); document.querySelector('.submit-btn').disabled = false; }
+    function submitAnswer() { const quiz = quizData[currentGate]; const buttons = document.querySelectorAll('.option-btn'); buttons.forEach(btn => btn.disabled = true); document.querySelector('.submit-btn').disabled = true; const isCorrect = selectedAnswer === quiz.correct; if (isCorrect) { categoryScores[quiz.category]++; buttons[selectedAnswer].classList.add('correct'); } else { buttons[selectedAnswer].classList.add('wrong'); buttons[quiz.correct].classList.add('correct'); } showResult(isCorrect); }
+    function showResult(isCorrect) { const container = document.getElementById('quizContainer'); const resultMsg = document.createElement('div'); resultMsg.className = isCorrect ? 'result-message correct' : 'result-message wrong'; resultMsg.innerHTML = isCorrect ? '🎉 정답입니다! 다음 관문으로 이동합니다...' : '❌ 틀렸습니다. 다음 관문으로 이동합니다...'; container.insertBefore(resultMsg, container.firstChild); setTimeout(() => { currentGate++; selectedAnswer = null; currentGate >= quizData.length ? showCongratulations() : renderQuiz(); }, 1500); }
+    function convertToRadarScore(c) { return c === 2 ? 10 : c === 1 ? 5 : 1; }
+    function drawRadarChart(scores) { const canvas = document.getElementById('radarCanvas'), ctx = canvas.getContext('2d'); const centerX = 140, centerY = 140, maxRadius = 100; const angles = []; for (let i = 0; i < 5; i++) angles.push((Math.PI * 2 * i / 5) - Math.PI / 2); ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1; [1, 0.5, 0.1].forEach(ratio => { ctx.beginPath(); for (let i = 0; i <= 5; i++) { const angle = angles[i % 5], x = centerX + Math.cos(angle) * maxRadius * ratio, y = centerY + Math.sin(angle) * maxRadius * ratio; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.closePath(); ctx.stroke(); }); ctx.strokeStyle = '#d0d0d0'; angles.forEach(angle => { ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX + Math.cos(angle) * maxRadius, centerY + Math.sin(angle) * maxRadius); ctx.stroke(); }); const categories = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론']; ctx.beginPath(); ctx.fillStyle = 'rgba(255, 87, 34, 0.3)'; ctx.strokeStyle = '#FF5722'; ctx.lineWidth = 2; categories.forEach((cat, i) => { const score = scores[cat], ratio = score / 10, x = centerX + Math.cos(angles[i]) * maxRadius * ratio, y = centerY + Math.sin(angles[i]) * maxRadius * ratio; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#FFC107'; categories.forEach((cat, i) => { const score = scores[cat], ratio = score / 10, x = centerX + Math.cos(angles[i]) * maxRadius * ratio, y = centerY + Math.sin(angles[i]) * maxRadius * ratio; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); }); ctx.fillStyle = '#2c3e50'; ctx.font = 'bold 12px "Noto Sans KR", sans-serif'; ctx.textAlign = 'center'; const labelOffset = 18; categories.forEach((label, i) => { const x = centerX + Math.cos(angles[i]) * (maxRadius + labelOffset), y = centerY + Math.sin(angles[i]) * (maxRadius + labelOffset); ctx.fillText(label, x, y + 4); }); }
+    function showCongratulations() { const container = document.getElementById('quizContainer'); const radarScores = { "인물파악": convertToRadarScore(categoryScores["인물파악"]), "내용일치": convertToRadarScore(categoryScores["내용일치"]), "내용구조": convertToRadarScore(categoryScores["내용구조"]), "내용어휘": convertToRadarScore(categoryScores["내용어휘"]), "내용추론": convertToRadarScore(categoryScores["내용추론"]) }; const totalScore100 = Object.values(radarScores).reduce((a, b) => a + b, 0) * 2; container.innerHTML = `<div class="congrats-container"><h2>🎊 관문평가 완료! 🎊</h2><p>10개의 관문을 모두 완료했습니다!<br>'전기 안전' 이야기를 잘 이해하셨네요.</p><div class="radar-container"><canvas id="radarCanvas" width="280" height="280"></canvas></div><div class="score-summary"><h3>📊 영역별 점수 (각 10점 만점)</h3><div class="score-item"><span class="category">👤 인물파악</span><span class="score">${radarScores["인물파악"]} / 10</span></div><div class="score-item"><span class="category">✅ 내용일치</span><span class="score">${radarScores["내용일치"]} / 10</span></div><div class="score-item"><span class="category">🏗️ 내용구조</span><span class="score">${radarScores["내용구조"]} / 10</span></div><div class="score-item"><span class="category">📚 내용어휘</span><span class="score">${radarScores["내용어휘"]} / 10</span></div><div class="score-item"><span class="category">🔍 내용추론</span><span class="score">${radarScores["내용추론"]} / 10</span></div><div class="score-item" style="border-top: 2px solid #E65100; margin-top: 10px; padding-top: 15px;"><span class="category" style="font-size: 18px;">총점</span><span class="score" style="font-size: 22px; color: #FF5722;">${totalScore100}점</span></div></div><button class="back-btn" onclick="goBack()">← 목록으로 돌아가기</button><button class="submit-btn" onclick="retryQuiz()" style="margin-top: 10px;">🔄 다시 풀기</button></div>`; setTimeout(() => drawRadarChart(radarScores), 100); saveQuizResult(radarScores, totalScore100); if (window.parent !== window) window.parent.postMessage({ action: 'quizComplete', storyId: 'physics18', season: getSeasonFromUrl(), scores: radarScores, totalScore: totalScore100 }, '*'); }
+    function getSeasonFromUrl() { return new URLSearchParams(window.location.search).get('season') || 'season1'; }
+    async function saveQuizResult(scores, totalScore) { try { const userInfo = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}'); if (!userInfo.grade || !userInfo.name) return; await fetch('/api/creative-quiz/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: userInfo.grade, name: userInfo.name, storyId: 'physics18', season: getSeasonFromUrl(), scores, totalScore }) }); } catch (err) { console.error('[saveQuizResult] 오류:', err); } }
+    function goBack() { window.parent !== window ? window.parent.postMessage({ action: 'closeStory' }, '*') : window.history.back(); }
+    function retryQuiz() { currentGate = 0; selectedAnswer = null; categoryScores = { "인물파악": 0, "내용일치": 0, "내용구조": 0, "내용어휘": 0, "내용추론": 0 }; renderQuiz(); }
+    window.addEventListener('DOMContentLoaded', () => renderQuiz());
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && confirm('퀴즈를 종료하고 목록으로 돌아가시겠습니까?')) goBack(); });
+  </script>
+</body>
+</html>
