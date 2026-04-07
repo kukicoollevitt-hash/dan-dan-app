@@ -418,6 +418,26 @@ body {
       cursor: not-allowed;
       pointer-events: none;
     }
+    /* 비활성화된 분야 (체험판) */
+    .domain-item.disabled {
+      opacity: 0.5;
+      filter: grayscale(0.7);
+      cursor: not-allowed;
+      background: rgba(200, 200, 200, 0.5);
+      position: relative;
+    }
+    .domain-item.disabled:hover {
+      transform: none;
+      border-color: rgba(139,47,47,0.2);
+      background: rgba(200, 200, 200, 0.5);
+    }
+    .domain-item .lock-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+    }
     .meta { font-size: 11px; opacity: 0.6; }
     .detail-panel {
       padding: 14px 18px 40px;
@@ -7297,22 +7317,30 @@ if (logoutConfirmBtn) {
       domainList.innerHTML = "";
       const domainData = domainsBySeries[seriesKey] || domainsBySeries["BRAINON"];
 
+      // 체험판에서는 과학분야, 사회분야만 활성화 (한국문학, 세계문학, 인물분야는 비활성화)
+      const allowedDomains = ["science", "social"];
+
       domainData.forEach(dom => {
         const li = document.createElement("li");
-        li.className = "domain-item";
+        const isDisabled = !allowedDomains.includes(dom.id);
+        li.className = "domain-item" + (isDisabled ? " disabled" : "");
         li.dataset.domain = dom.id;
-        li.innerHTML = `<span>${dom.label}</span><span class="meta">${dom.subs.length}과목</span>`;
-        li.addEventListener("click", () => {
-          document.querySelectorAll(".domain-item").forEach(x => x.classList.remove("active"));
-          li.classList.add("active");
-          currentSelectedDomain = dom;
-          currentSelectedSubject = null;
-          renderSubjects(seriesKey, dom);
-          unitList.innerHTML = "";
-          document.getElementById("unitTitle").textContent = dom.label;
-          document.getElementById("unitDesc").textContent = "세부 과목을 선택하면 01~번호가 표시됩니다.";
-          unitSearch.value = "";
-        });
+        li.innerHTML = `<span>${dom.label}</span><span class="meta">${dom.subs.length}과목</span>` +
+          (isDisabled ? '<span class="lock-icon">🔒</span>' : '');
+
+        if (!isDisabled) {
+          li.addEventListener("click", () => {
+            document.querySelectorAll(".domain-item").forEach(x => x.classList.remove("active"));
+            li.classList.add("active");
+            currentSelectedDomain = dom;
+            currentSelectedSubject = null;
+            renderSubjects(seriesKey, dom);
+            unitList.innerHTML = "";
+            document.getElementById("unitTitle").textContent = dom.label;
+            document.getElementById("unitDesc").textContent = "세부 과목을 선택하면 01~번호가 표시됩니다.";
+            unitSearch.value = "";
+          });
+        }
         domainList.appendChild(li);
       });
     }
