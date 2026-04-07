@@ -431,12 +431,26 @@ body {
       border-color: rgba(139,47,47,0.2);
       background: rgba(200, 200, 200, 0.5);
     }
-    .domain-item .lock-icon {
+    .domain-item .lock-icon,
+    .subject-item .lock-icon {
       position: absolute;
       right: 12px;
       top: 50%;
       transform: translateY(-50%);
       font-size: 14px;
+    }
+    /* 비활성화된 과목 (체험판) */
+    .subject-item.disabled {
+      opacity: 0.5;
+      filter: grayscale(0.7);
+      cursor: not-allowed;
+      background: rgba(200, 200, 200, 0.5);
+      position: relative;
+    }
+    .subject-item.disabled:hover {
+      transform: none;
+      border-color: rgba(139,47,47,0.2);
+      background: rgba(200, 200, 200, 0.5);
     }
     .meta { font-size: 11px; opacity: 0.6; }
     .detail-panel {
@@ -3137,6 +3151,24 @@ body {
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 10px;
+  margin-left: 8px;
+}
+
+/* 비활성화된 드롭다운 아이템 (체험판) */
+.dropdown-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f5f5f5;
+  color: #999;
+}
+
+.dropdown-item.disabled:hover {
+  background: #f5f5f5;
+}
+
+.dropdown-item .lock-badge {
+  display: inline-block;
+  font-size: 12px;
   margin-left: 8px;
 }
 
@@ -7317,8 +7349,8 @@ if (logoutConfirmBtn) {
       domainList.innerHTML = "";
       const domainData = domainsBySeries[seriesKey] || domainsBySeries["BRAINON"];
 
-      // 체험판에서는 과학분야, 사회분야만 활성화 (한국문학, 세계문학, 인물분야는 비활성화)
-      const allowedDomains = ["science", "social"];
+      // 체험판에서는 과학분야만 활성화 (사회, 한국문학, 세계문학, 인물분야는 비활성화)
+      const allowedDomains = ["science"];
 
       domainData.forEach(dom => {
         const li = document.createElement("li");
@@ -7348,9 +7380,13 @@ if (logoutConfirmBtn) {
     /* 7. 세부 과목 표시 */
     function renderSubjects(seriesKey, domainObj) {
       subjectList.innerHTML = "";
+      // 체험판에서 비활성화할 과목 (물리, 화학)
+      const disabledSubjects = ["physics", "chem"];
+
       domainObj.subs.forEach(sub => {
         const li = document.createElement("li");
-        li.className = "subject-item";
+        const isDisabled = disabledSubjects.includes(sub.id);
+        li.className = "subject-item" + (isDisabled ? " disabled" : "");
         li.dataset.sub = sub.id;
         li.dataset.offset = sub.offset || ''; // ✅ offset 정보 추가
         // 완료 개수 계산 - BRAINUP, BRAINFIT, BRAINDEEP 시리즈 지원
@@ -7364,14 +7400,18 @@ if (logoutConfirmBtn) {
         } else if (seriesKey === 'BRAINON') {
           completedCount = getCompletedCountForOnSubject(sub.id, sub.count);
         }
-        li.innerHTML = `<span>${sub.label}</span><span class="meta">${completedCount}/${sub.count}개</span>`;
-        li.addEventListener("click", () => {
-          document.querySelectorAll(".subject-item").forEach(x => x.classList.remove("active"));
-          li.classList.add("active");
-          currentSelectedSubject = sub;
-          changeBackgroundImage(sub);  // 배경 이미지 변경 (sub 전체 전달)
-          renderUnits(seriesKey, domainObj, sub);
-        });
+        li.innerHTML = `<span>${sub.label}</span><span class="meta">${completedCount}/${sub.count}개</span>` +
+          (isDisabled ? '<span class="lock-icon">🔒</span>' : '');
+
+        if (!isDisabled) {
+          li.addEventListener("click", () => {
+            document.querySelectorAll(".subject-item").forEach(x => x.classList.remove("active"));
+            li.classList.add("active");
+            currentSelectedSubject = sub;
+            changeBackgroundImage(sub);  // 배경 이미지 변경 (sub 전체 전달)
+            renderUnits(seriesKey, domainObj, sub);
+          });
+        }
         subjectList.appendChild(li);
       });
     }
@@ -14355,47 +14395,55 @@ async function performLogout() {
       nextBtn.disabled = currentSlide === totalSlides - 1;
     }
 
+    // 체험판에서 활성화된 인덱스: 0(푸른 고래섬), 1(깊은 정글)
+    const allowedStoryIndexes = [0, 1];
+
     function moveCarousel(direction) {
-      currentSlide += direction;
-      if (currentSlide < 0) currentSlide = 0;
-      if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+      let newSlide = currentSlide + direction;
+      // 체험판: 허용된 슬라이드 범위 내에서만 이동 (0, 1만 허용)
+      const maxAllowed = Math.max(...allowedStoryIndexes);
+      const minAllowed = Math.min(...allowedStoryIndexes);
+      if (newSlide < minAllowed) newSlide = minAllowed;
+      if (newSlide > maxAllowed) newSlide = maxAllowed;
+      currentSlide = newSlide;
       updateCarousel();
     }
 
     // 고래 이야기 검색 기능
+
     const whaleStoryTitles = [
-      { index: 0, emoji: '🐋', title: '푸른 고래섬의 비밀 모험단' },
-      { index: 1, emoji: '🌿', title: '깊은 정글의 잊힌 도시' },
-      { index: 2, emoji: '📚', title: '살아 있는 신비의 도서관' },
-      { index: 11, emoji: '🌿', title: '사랑손님과 어머니' },
-      { index: 3, emoji: '⏰', title: '시간도서관' },
-      { index: 4, emoji: '🐱', title: '미지의 고양이 섬 표류기' },
-      { index: 5, emoji: '🐈', title: '고양이가 되어버린 날' },
-      { index: 6, emoji: '🌧️', title: '소나기' },
-      { index: 7, emoji: '🌧️', title: '운수 좋은 날' },
-      { index: 8, emoji: '🌸', title: '동백꽃' },
-      { index: 9, emoji: '🏛️', title: '삼대' },
-      { index: 10, emoji: '🌸', title: '춘향전' },
-      { index: 12, emoji: '🌨', title: '삼포 가는 길' },
-      { index: 13, emoji: '🥀', title: '꺼삐딴 리' },
-      { index: 14, emoji: '🌊', title: '심청전' },
-      { index: 15, emoji: '🔥', title: '홍계월전' },
-      { index: 16, emoji: '🐢', title: '별주부전' },
-      { index: 17, emoji: '🌙', title: '이생규장전' },
-      { index: 18, emoji: '🌸', title: '숙향전' },
-      { index: 19, emoji: '🎭', title: '운영전' },
-      { index: 20, emoji: '📘', title: '박씨전' },
-      { index: 21, emoji: '📚', title: '허생전' },
-      { index: 22, emoji: '🩹', title: '수난이대' },
-      { index: 23, emoji: '🌧️', title: '장마' },
-      { index: 24, emoji: '🏭', title: '레디메이드 인생' },
-      { index: 25, emoji: '🌊', title: '천변풍경' },
-      { index: 26, emoji: '👞', title: '아홉켤레구두로 남은 사내' },
-      { index: 27, emoji: '🗣️', title: '황만근은 이렇게 말했다' },
-      { index: 28, emoji: '🎈', title: '난쟁이가 쏘아올린 작은 공' },
-      { index: 29, emoji: '🌙', title: '구운몽' },
-      { index: 30, emoji: '🎃', title: '흥부전' },
-      { index: 31, emoji: '📜', title: '양반전' }
+      { index: 0, emoji: '🐋', title: '푸른 고래섬의 비밀 모험단', disabled: false },
+      { index: 1, emoji: '🌿', title: '깊은 정글의 잊힌 도시', disabled: false },
+      { index: 2, emoji: '📚', title: '살아 있는 신비의 도서관', disabled: true },
+      { index: 11, emoji: '🌿', title: '사랑손님과 어머니', disabled: true },
+      { index: 3, emoji: '⏰', title: '시간도서관', disabled: true },
+      { index: 4, emoji: '🐱', title: '미지의 고양이 섬 표류기', disabled: true },
+      { index: 5, emoji: '🐈', title: '고양이가 되어버린 날', disabled: true },
+      { index: 6, emoji: '🌧️', title: '소나기', disabled: true },
+      { index: 7, emoji: '🌧️', title: '운수 좋은 날', disabled: true },
+      { index: 8, emoji: '🌸', title: '동백꽃', disabled: true },
+      { index: 9, emoji: '🏛️', title: '삼대', disabled: true },
+      { index: 10, emoji: '🌸', title: '춘향전', disabled: true },
+      { index: 12, emoji: '🌨', title: '삼포 가는 길', disabled: true },
+      { index: 13, emoji: '🥀', title: '꺼삐딴 리', disabled: true },
+      { index: 14, emoji: '🌊', title: '심청전', disabled: true },
+      { index: 15, emoji: '🔥', title: '홍계월전', disabled: true },
+      { index: 16, emoji: '🐢', title: '별주부전', disabled: true },
+      { index: 17, emoji: '🌙', title: '이생규장전', disabled: true },
+      { index: 18, emoji: '🌸', title: '숙향전', disabled: true },
+      { index: 19, emoji: '🎭', title: '운영전', disabled: true },
+      { index: 20, emoji: '📘', title: '박씨전', disabled: true },
+      { index: 21, emoji: '📚', title: '허생전', disabled: true },
+      { index: 22, emoji: '🩹', title: '수난이대', disabled: true },
+      { index: 23, emoji: '🌧️', title: '장마', disabled: true },
+      { index: 24, emoji: '🏭', title: '레디메이드 인생', disabled: true },
+      { index: 25, emoji: '🌊', title: '천변풍경', disabled: true },
+      { index: 26, emoji: '👞', title: '아홉켤레구두로 남은 사내', disabled: true },
+      { index: 27, emoji: '🗣️', title: '황만근은 이렇게 말했다', disabled: true },
+      { index: 28, emoji: '🎈', title: '난쟁이가 쏘아올린 작은 공', disabled: true },
+      { index: 29, emoji: '🌙', title: '구운몽', disabled: true },
+      { index: 30, emoji: '🎃', title: '흥부전', disabled: true },
+      { index: 31, emoji: '📜', title: '양반전', disabled: true }
     ];
 
     function showSearchDropdown() {
@@ -14438,14 +14486,23 @@ async function performLogout() {
         return;
       }
 
-      dropdown.innerHTML = results.map(story => `
-        <div class="whale-story-search-item" onclick="goToSlide(${story.index})">
+      dropdown.innerHTML = results.map(story => {
+        if (story.disabled) {
+          return `<div class="whale-story-search-item disabled" style="opacity: 0.5; cursor: not-allowed; background: #f5f5f5;">
+            <span class="story-emoji">${story.emoji}</span>${story.title} <span style="margin-left: 8px;">🔒</span>
+          </div>`;
+        }
+        return `<div class="whale-story-search-item" onclick="goToSlide(${story.index})">
           <span class="story-emoji">${story.emoji}</span>${story.title}
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     function goToSlide(slideIndex) {
+      // 체험판: 비활성화된 슬라이드로 이동 불가
+      if (!allowedStoryIndexes.includes(slideIndex)) {
+        return;
+      }
       currentSlide = slideIndex;
       updateCarousel();
       document.getElementById('whaleStorySearchDropdown').classList.remove('active');
@@ -15044,14 +15101,22 @@ async function performLogout() {
       // 완료된 스토리와 미완료 스토리 분리
       const completedStories = [];
       const uncompletedStories = [];
+      const disabledStories = [];
 
-      Object.values(STORY_DATA).forEach(story => {
+      // 체험판에서 활성화할 스토리 (whale, jungle만)
+      const allowedStoryKeys = ['whale', 'jungle'];
+
+      Object.entries(STORY_DATA).forEach(([key, story]) => {
+        const isAllowed = allowedStoryKeys.includes(key);
+
         story.seasons.forEach(season => {
           const baseTitle = `${story.title} 시즌 ${season.season}: ${season.subtitle}`;
           const isCompleted = completedStoryIds.includes(season.id);
-          const storyInfo = { id: season.id, title: baseTitle, isCompleted };
+          const storyInfo = { id: season.id, title: baseTitle, isCompleted, disabled: !isAllowed };
 
-          if (isCompleted) {
+          if (!isAllowed) {
+            disabledStories.push(storyInfo);
+          } else if (isCompleted) {
             completedStories.push(storyInfo);
           } else {
             uncompletedStories.push(storyInfo);
@@ -15059,16 +15124,16 @@ async function performLogout() {
         });
       });
 
-      // 전역 스토리 목록 저장 (완료된 것 먼저)
-      allStories = [...completedStories, ...uncompletedStories];
+      // 전역 스토리 목록 저장 (완료된 것 먼저, 비활성화된 것 마지막)
+      allStories = [...completedStories, ...uncompletedStories, ...disabledStories];
 
       // 드롭다운 리스트 렌더링
-      renderStoryDropdown('', completedStories, uncompletedStories);
+      renderStoryDropdown('', completedStories, uncompletedStories, disabledStories);
 
       // 검색 입력 이벤트
       searchInput.addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase();
-        renderStoryDropdown(query, completedStories, uncompletedStories);
+        renderStoryDropdown(query, completedStories, uncompletedStories, disabledStories);
         dropdownList.classList.add('show');
       });
 
@@ -15087,7 +15152,7 @@ async function performLogout() {
     }
 
     // 스토리 드롭다운 렌더링 (검색 필터링 포함)
-    function renderStoryDropdown(query, completedStories, uncompletedStories) {
+    function renderStoryDropdown(query, completedStories, uncompletedStories, disabledStories = []) {
       const dropdownList = document.getElementById('storyDropdownList');
       const searchInput = document.getElementById('storySearchInput');
       const hiddenInput = document.getElementById('reportStory');
@@ -15101,9 +15166,12 @@ async function performLogout() {
       const filteredUncompleted = uncompletedStories.filter(s =>
         s.title.toLowerCase().includes(query)
       );
+      const filteredDisabled = disabledStories.filter(s =>
+        s.title.toLowerCase().includes(query)
+      );
 
       // 결과 없음
-      if (filteredCompleted.length === 0 && filteredUncompleted.length === 0) {
+      if (filteredCompleted.length === 0 && filteredUncompleted.length === 0 && filteredDisabled.length === 0) {
         dropdownList.innerHTML = '<div class="dropdown-no-result">검색 결과가 없습니다</div>';
         return;
       }
@@ -15140,6 +15208,24 @@ async function performLogout() {
           item.dataset.value = story.id;
           item.dataset.title = story.title;
           item.addEventListener('click', () => selectStory(story.id, story.title, false));
+          dropdownList.appendChild(item);
+        });
+      }
+
+      // 비활성화된 스토리 섹션 (체험판)
+      if (filteredDisabled.length > 0) {
+        const separator = document.createElement('div');
+        separator.className = 'dropdown-separator';
+        separator.textContent = '🔒 체험판 미지원';
+        dropdownList.appendChild(separator);
+
+        filteredDisabled.forEach(story => {
+          const item = document.createElement('div');
+          item.className = 'dropdown-item disabled';
+          item.innerHTML = `${story.title}<span class="lock-badge">🔒</span>`;
+          item.dataset.value = story.id;
+          item.dataset.title = story.title;
+          // 클릭 이벤트 없음 (비활성화)
           dropdownList.appendChild(item);
         });
       }
