@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>브레인문해력 매일비평</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -15,9 +16,22 @@
 
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      background: #f5f0e6;
+      background: url('/images/신문배경.jpeg') no-repeat center center fixed;
+      background-size: cover;
       min-height: 100vh;
       padding: 20px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.7);
+      z-index: -1;
     }
 
     /* 날짜 선택 바 */
@@ -146,6 +160,51 @@
     .topic-시사 { background: linear-gradient(135deg, #c62828, #ef5350); }
     .topic-랜덤 { background: linear-gradient(135deg, #f57c00, #ffb74d); }
 
+    .topic-badge {
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .topic-badge:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .topic-badge:active {
+      transform: scale(0.98);
+    }
+
+    /* 날짜바 우측 영역 */
+    .date-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* 별점 평가 */
+    .star-rating {
+      display: flex;
+      gap: 2px;
+    }
+
+    .star-rating .star {
+      font-size: 24px;
+      color: #fff;
+      cursor: pointer;
+      transition: color 0.2s, transform 0.1s;
+      text-shadow: 0 0 2px rgba(0,0,0,0.3);
+      -webkit-text-stroke: 1px #ccc;
+    }
+
+    .star-rating .star:hover {
+      transform: scale(1.2);
+    }
+
+    .star-rating .star.active {
+      color: #ffc107;
+      -webkit-text-stroke: 1px #e6a800;
+    }
+
     /* 기사 본문 영역 - A4 최적화 */
     .article-section {
       padding: 15px 20px;
@@ -165,11 +224,11 @@
 
     .article-headline {
       font-family: 'Noto Serif KR', serif;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       color: #1a1a1a;
       line-height: 1.4;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .article-meta {
@@ -178,69 +237,80 @@
       margin-bottom: 10px;
       padding-bottom: 8px;
       border-bottom: 1px solid #e8dcc8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .article-meta-left {
+      display: flex;
+      gap: 8px;
+    }
+
+    .article-char-count {
+      background: #f5f0e6;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      color: #666;
     }
 
     .article-content {
       font-family: 'Noto Serif KR', serif;
-      font-size: 13px;
-      line-height: 1.75;
+      font-size: 16px;
+      line-height: 1.9;
       color: #2a2a2a;
       text-align: justify;
     }
 
     .article-content p {
-      margin-bottom: 8px;
+      margin-bottom: 12px;
       text-indent: 1em;
     }
 
-    .article-content p:first-child::first-letter {
-      font-size: 2.2em;
-      float: left;
-      line-height: 1;
-      margin-right: 4px;
-      margin-top: 2px;
-      font-weight: 700;
-      color: #1a1a1a;
-    }
 
-    /* 육하원칙 섹션 - A4 최적화 */
+    /* 육하원칙 섹션 - 세로 1줄씩 배치 */
     .analysis-section {
-      padding: 12px 20px;
+      padding: 15px 20px;
       background: #fdfbf5;
       border-bottom: 1px dashed #d4c5a9;
     }
 
     .six-w-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .six-w-item {
       background: #fff;
       border: 1px solid #e0d6c2;
       border-radius: 5px;
-      padding: 8px 10px;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
 
     .six-w-label {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       color: #1a1a1a;
-      margin-bottom: 4px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      min-width: 110px;
+      flex-shrink: 0;
     }
 
     .six-w-label .icon {
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 9px;
+      font-size: 10px;
       color: #fff;
     }
 
@@ -252,14 +322,14 @@
     .icon-how { background: #5d4037; }
 
     .six-w-input {
-      width: 100%;
+      flex: 1;
       border: none;
       border-bottom: 1px dashed #d4c5a9;
-      padding: 4px 0;
-      font-size: 11px;
+      padding: 6px 0;
+      font-size: 12px;
       background: transparent;
       font-family: 'Noto Sans KR', sans-serif;
-      min-height: 20px;
+      min-height: 24px;
     }
 
     .six-w-input:focus {
@@ -267,20 +337,26 @@
       border-bottom-color: #1a1a1a;
     }
 
+    /* 페이지 1: 기사 + 육하원칙 */
+    .page-1 {
+      min-height: 277mm;
+      padding-bottom: 10mm;
+    }
+
     /* 생각 쓰기 섹션 - 2페이지 시작 */
     .thinking-section {
-      padding: 20px;
+      padding: 25px 20px;
       background: #fff;
-      page-break-before: always;
-      min-height: 260mm;
+      min-height: 277mm;
     }
 
     .thinking-section .section-title {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      font-size: 16px;
     }
 
     .thinking-item {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
 
     .thinking-item:last-child {
@@ -288,26 +364,34 @@
     }
 
     .thinking-question {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: #1a1a1a;
-      margin-bottom: 10px;
-      padding-left: 10px;
+      margin-bottom: 12px;
+      padding-left: 12px;
       border-left: 4px solid #d4af37;
     }
 
     .thinking-textarea {
       width: 100%;
-      height: 70mm;
-      min-height: 70mm;
+      height: 75mm;
+      min-height: 75mm;
       border: 1px solid #e0d6c2;
       border-radius: 8px;
-      padding: 12px 15px;
-      font-size: 13px;
+      padding: 15px;
+      font-size: 16px;
       font-family: 'Noto Sans KR', sans-serif;
-      line-height: 1.6;
+      line-height: 2.8;
       resize: none;
-      background: #fdfbf5;
+      background-color: #fdfbf5;
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 43px,
+        rgba(212, 197, 169, 0.4) 43px,
+        transparent 44px
+      );
+      background-size: 100% 44px;
+      background-position-y: 15px;
     }
 
     .thinking-textarea:focus {
@@ -383,7 +467,7 @@
     @media print {
       @page {
         size: A4;
-        margin: 0;
+        margin: 10mm;
       }
 
       body {
@@ -399,14 +483,22 @@
       .newspaper-container {
         box-shadow: none;
         border: none;
-        width: 210mm;
-        min-height: 297mm;
+        width: 100%;
+        min-height: auto;
         margin: 0;
         padding: 0;
       }
 
       .action-bar {
         display: none !important;
+      }
+
+      .page-1 {
+        page-break-after: always;
+      }
+
+      .thinking-section {
+        page-break-before: always;
       }
 
       .six-w-input,
@@ -541,96 +633,108 @@
   <div class="newspaper-container" id="newspaperContainer">
     <!-- 신문 헤더 -->
     <header class="newspaper-header">
-      <h1 class="newspaper-title">브레인문해력</h1>
-      <p class="newspaper-subtitle">DAILY CRITIQUE · 매일비평</p>
+      <h1 class="newspaper-title">브레인문해력매일비평</h1>
+      <p class="newspaper-subtitle" id="dailyQuote">오늘의 명언을 불러오는 중...</p>
     </header>
 
     <!-- 날짜/주제 바 -->
     <div class="date-bar">
       <span class="current-date" id="currentDate">2026년 4월 9일 (수)</span>
-      <span class="topic-badge topic-사회" id="topicBadge">
-        <span>📚</span>
-        <span id="topicText">사회/문화</span>
-      </span>
+      <div class="date-bar-right">
+        <div class="star-rating" id="starRating">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+        <span class="topic-badge topic-사회" id="topicBadge" title="클릭하면 교사용 해설이 채워집니다">
+          <span>📚</span>
+          <span id="topicText">사회/문화</span>
+        </span>
+      </div>
     </div>
 
-    <!-- 기사 본문 -->
-    <section class="article-section">
-      <h2 class="section-title">📰 오늘의 기사</h2>
-      <div id="articleArea">
-        <div class="loading">
-          <div class="loading-spinner"></div>
-          <p>기사를 불러오는 중...</p>
+    <!-- 페이지 1: 기사 + 육하원칙 -->
+    <div class="page-1" data-html2pdf-page-break="before">
+      <!-- 기사 본문 -->
+      <section class="article-section">
+        <h2 class="section-title">📰 오늘의 기사</h2>
+        <div id="articleArea">
+          <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>기사를 불러오는 중...</p>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- 육하원칙 -->
-    <section class="analysis-section">
-      <h2 class="section-title">✍️ 육하원칙으로 정리하기</h2>
-      <div class="six-w-grid">
-        <div class="six-w-item">
-          <label class="six-w-label">
-            <span class="icon icon-who">누</span>
-            누가 (Who)
-          </label>
-          <input type="text" class="six-w-input" placeholder="이 기사의 주인공은 누구인가요?">
+      <!-- 육하원칙 -->
+      <section class="analysis-section">
+        <h2 class="section-title">✍️ 육하원칙으로 정리하기</h2>
+        <div class="six-w-grid">
+          <div class="six-w-item">
+            <label class="six-w-label">
+              <span class="icon icon-who">누</span>
+              누가 (Who)
+            </label>
+            <input type="text" class="six-w-input">
+          </div>
+          <div class="six-w-item">
+            <label class="six-w-label">
+              <span class="icon icon-when">언</span>
+              언제 (When)
+            </label>
+            <input type="text" class="six-w-input">
+          </div>
+          <div class="six-w-item">
+            <label class="six-w-label">
+              <span class="icon icon-where">어</span>
+              어디서 (Where)
+            </label>
+            <input type="text" class="six-w-input">
+          </div>
+          <div class="six-w-item">
+            <label class="six-w-label">
+              <span class="icon icon-what">무</span>
+              무엇을 (What)
+            </label>
+            <input type="text" class="six-w-input">
+          </div>
+          <div class="six-w-item">
+            <label class="six-w-label">
+              <span class="icon icon-why">왜</span>
+              왜 (Why)
+            </label>
+            <input type="text" class="six-w-input">
+          </div>
+          <div class="six-w-item">
+            <label class="six-w-label">
+              <span class="icon icon-how">어</span>
+              어떻게 (How)
+            </label>
+            <input type="text" class="six-w-input">
+          </div>
         </div>
-        <div class="six-w-item">
-          <label class="six-w-label">
-            <span class="icon icon-when">언</span>
-            언제 (When)
-          </label>
-          <input type="text" class="six-w-input" placeholder="언제 일어난 일인가요?">
-        </div>
-        <div class="six-w-item">
-          <label class="six-w-label">
-            <span class="icon icon-where">어</span>
-            어디서 (Where)
-          </label>
-          <input type="text" class="six-w-input" placeholder="어디서 일어난 일인가요?">
-        </div>
-        <div class="six-w-item">
-          <label class="six-w-label">
-            <span class="icon icon-what">무</span>
-            무엇을 (What)
-          </label>
-          <input type="text" class="six-w-input" placeholder="무슨 일이 일어났나요?">
-        </div>
-        <div class="six-w-item">
-          <label class="six-w-label">
-            <span class="icon icon-why">왜</span>
-            왜 (Why)
-          </label>
-          <input type="text" class="six-w-input" placeholder="왜 이런 일이 일어났나요?">
-        </div>
-        <div class="six-w-item">
-          <label class="six-w-label">
-            <span class="icon icon-how">어</span>
-            어떻게 (How)
-          </label>
-          <input type="text" class="six-w-input" placeholder="어떻게 진행되었나요?">
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
 
-    <!-- 자신의 생각 쓰기 -->
-    <section class="thinking-section">
+    <!-- 페이지 2: 생각 쓰기 -->
+    <section class="thinking-section" data-html2pdf-page-break="before">
       <h2 class="section-title">💭 나의 생각 쓰기</h2>
 
       <div class="thinking-item">
         <p class="thinking-question">1. 이 기사에서 가장 중요하다고 생각한 내용은 무엇인가요?</p>
-        <textarea class="thinking-textarea" placeholder="기사에서 가장 중요하다고 느낀 부분을 적어보세요..."></textarea>
+        <textarea class="thinking-textarea"></textarea>
       </div>
 
       <div class="thinking-item">
         <p class="thinking-question">2. 나는 이 문제에 대해 어떻게 생각하나요?</p>
-        <textarea class="thinking-textarea" placeholder="이 주제에 대한 나의 의견을 자유롭게 적어보세요..."></textarea>
+        <textarea class="thinking-textarea"></textarea>
       </div>
 
       <div class="thinking-item">
         <p class="thinking-question">3. 이 문제를 해결하려면 어떤 방법이 필요할까요?</p>
-        <textarea class="thinking-textarea" placeholder="해결 방법이나 개선 아이디어를 적어보세요..."></textarea>
+        <textarea class="thinking-textarea"></textarea>
       </div>
     </section>
 
@@ -713,6 +817,12 @@
         currentArticle = null;
         showNoArticle();
       }
+
+      // 날짜 변경 시 토글 상태 초기화
+      isTeacherGuideShown = false;
+
+      // 날짜별 명언 표시
+      showDailyQuote(dateKey);
     }
 
     // 날짜 포맷 (표시용)
@@ -739,12 +849,18 @@
       const paragraphs = article.content.split('\n\n').filter(p => p.trim());
       const contentHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
 
+      // 글자수 계산 (공백 제외)
+      const charCount = article.content.replace(/\s/g, '').length;
+
       articleArea.innerHTML = `
         <h3 class="article-headline">${article.title}</h3>
         <div class="article-meta">
-          <span>📅 ${article.date}</span> ·
-          <span>📁 ${article.category}</span>
-          ${article.source ? ` · <span>출처: ${article.source}</span>` : ''}
+          <div class="article-meta-left">
+            <span>📅 ${article.date}</span> ·
+            <span>📁 ${article.category}</span>
+            ${article.source ? ` · <span>출처: ${article.source}</span>` : ''}
+          </div>
+          <span class="article-char-count">📝 ${charCount.toLocaleString()}자</span>
         </div>
         <div class="article-content">
           ${contentHtml}
@@ -764,12 +880,76 @@
       `;
     }
 
-    // PDF 다운로드 (A4 최적화)
+    // PDF용: input/textarea를 div로 임시 변환
+    function convertInputsToDiv() {
+      const converted = [];
+
+      // 육하원칙 input → div
+      document.querySelectorAll('.six-w-input').forEach(input => {
+        const div = document.createElement('div');
+        div.className = 'six-w-input-pdf';
+        div.style.cssText = `
+          flex: 1;
+          border: none;
+          border-bottom: 1px dashed #d4c5a9;
+          padding: 6px 0;
+          font-size: 12px;
+          font-family: 'Noto Sans KR', sans-serif;
+          min-height: 24px;
+          line-height: 1.6;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        `;
+        div.textContent = input.value;
+        converted.push({ original: input, replacement: div, parent: input.parentNode });
+        input.parentNode.replaceChild(div, input);
+      });
+
+      // 나의 생각 쓰기 textarea → div
+      document.querySelectorAll('.thinking-textarea').forEach(textarea => {
+        const div = document.createElement('div');
+        div.className = 'thinking-textarea-pdf';
+        div.style.cssText = `
+          width: 100%;
+          min-height: 75mm;
+          border: 1px solid #e0d6c2;
+          border-radius: 8px;
+          padding: 15px;
+          font-size: 14px;
+          font-family: 'Noto Sans KR', sans-serif;
+          line-height: 1.7;
+          background: #fdfbf5;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          box-sizing: border-box;
+        `;
+        div.textContent = textarea.value;
+        converted.push({ original: textarea, replacement: div, parent: textarea.parentNode });
+        textarea.parentNode.replaceChild(div, textarea);
+      });
+
+      return converted;
+    }
+
+    // PDF용: div를 다시 input/textarea로 복원
+    function restoreInputs(converted) {
+      converted.forEach(({ original, replacement, parent }) => {
+        if (replacement.parentNode) {
+          replacement.parentNode.replaceChild(original, replacement);
+        }
+      });
+    }
+
+    // PDF 다운로드 (A4 2페이지 - 페이지1: 기사+육하원칙, 페이지2: 생각쓰기)
     async function downloadPDF() {
-      const element = document.getElementById('newspaperContainer');
       const dateSelectorBar = document.getElementById('dateSelectorBar');
       const actionBar = document.getElementById('actionBar');
+      const thinkingSection = document.querySelector('.thinking-section');
+      const page1 = document.querySelector('.page-1');
+      const header = document.querySelector('.newspaper-header');
+      const dateBar = document.querySelector('.date-bar');
       const footer = document.querySelector('.newspaper-footer');
+      const container = document.getElementById('newspaperContainer');
 
       // 로딩 표시
       const loadingDiv = document.createElement('div');
@@ -782,62 +962,106 @@
       `;
       document.body.appendChild(loadingDiv);
 
-      // PDF용 스타일 임시 적용
-      const originalStyles = {
-        width: element.style.width,
-        maxWidth: element.style.maxWidth,
-        minHeight: element.style.minHeight,
-        boxShadow: element.style.boxShadow,
-        border: element.style.border
-      };
-
-      // 버튼 숨기기
-      dateSelectorBar.style.display = 'none';
-      actionBar.style.display = 'none';
-
-      // PDF용 스타일 적용
-      element.style.width = '190mm';
-      element.style.maxWidth = '190mm';
-      element.style.minHeight = 'auto';
-      element.style.boxShadow = 'none';
-      element.style.border = 'none';
-
       // 파일명 생성
       const dateInput = document.getElementById('dateSelect');
       const fileName = `브레인문해력_매일비평_${dateInput.value}.pdf`;
 
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: fileName,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
+      // PDF 렌더링용: input/textarea → div 변환
+      const converted = convertInputsToDiv();
+
+      try {
+        // 버튼 숨기기
+        dateSelectorBar.style.display = 'none';
+        actionBar.style.display = 'none';
+        footer.style.display = 'none';
+
+        // 컨테이너 스타일 임시 변경
+        container.style.boxShadow = 'none';
+        container.style.border = 'none';
+        container.style.width = '210mm';
+        container.style.maxWidth = '210mm';
+
+        // === 페이지 1: 헤더 + 날짜바 + 기사 + 육하원칙 ===
+        thinkingSection.style.display = 'none';
+
+        // 페이지1 높이 조정 (A4에 맞게)
+        page1.style.minHeight = 'auto';
+        page1.style.paddingBottom = '20px';
+
+        const canvas1 = await html2canvas(container, {
           scale: 2,
           useCORS: true,
           logging: false,
-          allowTaint: true
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait'
-        }
-      };
+          backgroundColor: '#fffef9'
+        });
 
-      try {
-        await html2pdf().set(opt).from(element).save();
+        // === 페이지 2: 생각쓰기 섹션만 ===
+        header.style.display = 'none';
+        dateBar.style.display = 'none';
+        page1.style.display = 'none';
+        thinkingSection.style.display = 'block';
+        thinkingSection.style.minHeight = 'auto';
+        thinkingSection.style.paddingTop = '30px';
+
+        const canvas2 = await html2canvas(container, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        // PDF 생성
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = 210;
+        const pdfHeight = 297;
+
+        // 페이지 1 추가
+        const img1Width = canvas1.width;
+        const img1Height = canvas1.height;
+        const ratio1 = Math.min(pdfWidth / img1Width, pdfHeight / img1Height);
+        const imgWidth1 = img1Width * ratio1;
+        const imgHeight1 = Math.min(img1Height * ratio1, pdfHeight);
+
+        pdf.addImage(canvas1.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, imgHeight1);
+
+        // 페이지 2 추가
+        pdf.addPage();
+        const img2Width = canvas2.width;
+        const img2Height = canvas2.height;
+        const ratio2 = Math.min(pdfWidth / img2Width, pdfHeight / img2Height);
+        const imgWidth2 = img2Width * ratio2;
+        const imgHeight2 = Math.min(img2Height * ratio2, pdfHeight);
+
+        pdf.addImage(canvas2.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, imgHeight2);
+
+        // PDF 저장
+        pdf.save(fileName);
+
       } catch (error) {
         console.error('PDF 생성 실패:', error);
         alert('PDF 생성에 실패했습니다. 다시 시도해 주세요.');
       } finally {
-        // 원래 스타일 복원
-        element.style.width = originalStyles.width;
-        element.style.maxWidth = originalStyles.maxWidth;
-        element.style.minHeight = originalStyles.minHeight;
-        element.style.boxShadow = originalStyles.boxShadow;
-        element.style.border = originalStyles.border;
+        // input/textarea 복원
+        restoreInputs(converted);
 
+        // 원래 스타일 복원
+        header.style.display = '';
+        dateBar.style.display = '';
+        page1.style.display = '';
+        page1.style.minHeight = '';
+        page1.style.paddingBottom = '';
+        thinkingSection.style.display = '';
+        thinkingSection.style.minHeight = '';
+        thinkingSection.style.paddingTop = '';
+        footer.style.display = '';
+        container.style.boxShadow = '';
+        container.style.border = '';
+        container.style.width = '';
+        container.style.maxWidth = '';
         dateSelectorBar.style.display = 'flex';
         actionBar.style.display = 'flex';
+
         // 로딩 제거
         document.body.removeChild(loadingDiv);
       }
@@ -851,8 +1075,117 @@
       }
     }
 
+    // 교사용 해설 표시 상태
+    let isTeacherGuideShown = false;
+
+    // 교사용 해설 토글 (배지 클릭 시)
+    function toggleTeacherGuide() {
+      if (!currentArticle || !currentArticle.teacherGuide) {
+        alert('현재 기사에 교사용 해설이 없습니다.');
+        return;
+      }
+
+      const sixWInputs = document.querySelectorAll('.six-w-input');
+      const thinkingTextareas = document.querySelectorAll('.thinking-textarea');
+
+      if (isTeacherGuideShown) {
+        // 해설 지우기
+        sixWInputs.forEach(input => input.value = '');
+        thinkingTextareas.forEach(textarea => textarea.value = '');
+        isTeacherGuideShown = false;
+      } else {
+        // 해설 채우기
+        const guide = currentArticle.teacherGuide;
+        const sixWKeys = ['who', 'when', 'where', 'what', 'why', 'how'];
+
+        sixWInputs.forEach((input, index) => {
+          const key = sixWKeys[index];
+          if (guide.sixW && guide.sixW[key]) {
+            input.value = guide.sixW[key];
+          }
+        });
+
+        const thinkingKeys = ['q1', 'q2', 'q3'];
+        thinkingTextareas.forEach((textarea, index) => {
+          const key = thinkingKeys[index];
+          if (guide.thinking && guide.thinking[key]) {
+            textarea.value = guide.thinking[key];
+          }
+        });
+
+        isTeacherGuideShown = true;
+      }
+    }
+
+    // 별점 클릭 이벤트
+    function setupStarRating() {
+      const stars = document.querySelectorAll('.star-rating .star');
+      let currentRating = 0;
+
+      stars.forEach(star => {
+        star.addEventListener('click', () => {
+          const value = parseInt(star.dataset.value);
+
+          // 같은 별 클릭 시 해제
+          if (currentRating === value) {
+            currentRating = 0;
+            stars.forEach(s => s.classList.remove('active'));
+          } else {
+            currentRating = value;
+            stars.forEach(s => {
+              if (parseInt(s.dataset.value) <= value) {
+                s.classList.add('active');
+              } else {
+                s.classList.remove('active');
+              }
+            });
+          }
+        });
+      });
+    }
+
+    // 오늘의 명언 목록
+    const DAILY_QUOTES = [
+      "독서는 마음의 양식이다. - 키케로",
+      "책을 읽는 것은 과거의 가장 훌륭한 사람들과 대화하는 것이다. - 데카르트",
+      "오늘 읽은 책이 내일의 나를 만든다.",
+      "생각하는 대로 살지 않으면, 사는 대로 생각하게 된다. - 폴 발레리",
+      "배움에는 끝이 없다.",
+      "아는 것이 힘이다. - 프랜시스 베이컨",
+      "천 리 길도 한 걸음부터. - 노자",
+      "실패는 성공의 어머니다. - 토마스 에디슨",
+      "꿈을 꾸고, 그 꿈을 향해 나아가라.",
+      "작은 것이 쌓여 큰 것이 된다.",
+      "오늘 할 일을 내일로 미루지 마라. - 벤자민 프랭클린",
+      "노력 없이 얻는 것은 없다.",
+      "좋은 질문이 좋은 답을 만든다.",
+      "생각을 바꾸면 세상이 바뀐다.",
+      "매일 조금씩 성장하는 내가 되자.",
+      "호기심은 지식의 시작이다.",
+      "책 한 권이 세상을 바꿀 수 있다.",
+      "지금 이 순간이 가장 소중하다.",
+      "포기하지 않으면 실패는 없다.",
+      "나를 믿으면 무엇이든 할 수 있다."
+    ];
+
+    // 날짜 기반 명언 표시
+    function showDailyQuote(dateStr) {
+      // 날짜 문자열을 숫자로 변환하여 인덱스 결정
+      const dateNum = dateStr.replace(/-/g, '');
+      const index = parseInt(dateNum) % DAILY_QUOTES.length;
+      document.getElementById('dailyQuote').textContent = DAILY_QUOTES[index];
+    }
+
     // 페이지 로드 시 실행
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+      init();
+
+      // 배지 클릭 이벤트 등록
+      document.getElementById('topicBadge').addEventListener('click', toggleTeacherGuide);
+
+      // 별점 이벤트 등록
+      setupStarRating();
+    });
   </script>
 </body>
 </html>
