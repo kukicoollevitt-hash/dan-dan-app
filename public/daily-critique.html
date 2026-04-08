@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>브레인문해력 매일비평</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #f5f0e6;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* 날짜 선택 바 */
+    .date-selector-bar {
+      max-width: 210mm;
+      margin: 0 auto 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .date-selector-bar label {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .date-input {
+      padding: 10px 15px;
+      border: 2px solid #e8dcc8;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: #d4af37;
+    }
+
+    .date-input:hover {
+      border-color: #d4af37;
+    }
+
+    .date-nav-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 8px;
+      background: #f5f0e6;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .date-nav-btn:hover {
+      background: #e8dcc8;
+    }
+
+    /* A4 사이즈 최적화 (210mm x 297mm) */
+    .newspaper-container {
+      width: 210mm;
+      min-height: 297mm;
+      max-width: 210mm;
+      margin: 0 auto;
+      background: #fffef9;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border: 1px solid #d4c5a9;
+    }
+
+    /* 신문 헤더 - 컴팩트하게 */
+    .newspaper-header {
+      background: linear-gradient(to bottom, #2c2c2c 0%, #1a1a1a 100%);
+      color: #fff;
+      padding: 12px 20px;
+      text-align: center;
+      border-bottom: 3px double #d4af37;
+    }
+
+    .newspaper-title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      margin-bottom: 4px;
+      color: #f5f5f5;
+    }
+
+    .newspaper-subtitle {
+      font-size: 11px;
+      color: #d4af37;
+      letter-spacing: 2px;
+    }
+
+    /* 날짜/주제 바 - 컴팩트 */
+    .date-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 20px;
+      background: #f8f4eb;
+      border-bottom: 1px solid #e8dcc8;
+    }
+
+    .current-date {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .topic-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .topic-환경 { background: linear-gradient(135deg, #2e7d32, #4caf50); }
+    .topic-과학 { background: linear-gradient(135deg, #1565c0, #42a5f5); }
+    .topic-사회 { background: linear-gradient(135deg, #7b1fa2, #ab47bc); }
+    .topic-시사 { background: linear-gradient(135deg, #c62828, #ef5350); }
+    .topic-랜덤 { background: linear-gradient(135deg, #f57c00, #ffb74d); }
+
+    /* 기사 본문 영역 - A4 최적화 */
+    .article-section {
+      padding: 15px 20px;
+      border-bottom: 1px dashed #d4c5a9;
+    }
+
+    .section-title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #1a1a1a;
+      display: inline-block;
+    }
+
+    .article-headline {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .article-meta {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e8dcc8;
+    }
+
+    .article-content {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 13px;
+      line-height: 1.75;
+      color: #2a2a2a;
+      text-align: justify;
+    }
+
+    .article-content p {
+      margin-bottom: 8px;
+      text-indent: 1em;
+    }
+
+    .article-content p:first-child::first-letter {
+      font-size: 2.2em;
+      float: left;
+      line-height: 1;
+      margin-right: 4px;
+      margin-top: 2px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    /* 육하원칙 섹션 - A4 최적화 */
+    .analysis-section {
+      padding: 12px 20px;
+      background: #fdfbf5;
+      border-bottom: 1px dashed #d4c5a9;
+    }
+
+    .six-w-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .six-w-item {
+      background: #fff;
+      border: 1px solid #e0d6c2;
+      border-radius: 5px;
+      padding: 8px 10px;
+    }
+
+    .six-w-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .six-w-label .icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #fff;
+    }
+
+    .icon-who { background: #e53935; }
+    .icon-when { background: #8e24aa; }
+    .icon-where { background: #3949ab; }
+    .icon-what { background: #00897b; }
+    .icon-why { background: #f57c00; }
+    .icon-how { background: #5d4037; }
+
+    .six-w-input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px dashed #d4c5a9;
+      padding: 4px 0;
+      font-size: 11px;
+      background: transparent;
+      font-family: 'Noto Sans KR', sans-serif;
+      min-height: 20px;
+    }
+
+    .six-w-input:focus {
+      outline: none;
+      border-bottom-color: #1a1a1a;
+    }
+
+    /* 생각 쓰기 섹션 - 2페이지 시작 */
+    .thinking-section {
+      padding: 20px;
+      background: #fff;
+      page-break-before: always;
+      min-height: 260mm;
+    }
+
+    .thinking-section .section-title {
+      margin-bottom: 20px;
+    }
+
+    .thinking-item {
+      margin-bottom: 20px;
+    }
+
+    .thinking-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .thinking-question {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+      padding-left: 10px;
+      border-left: 4px solid #d4af37;
+    }
+
+    .thinking-textarea {
+      width: 100%;
+      height: 70mm;
+      min-height: 70mm;
+      border: 1px solid #e0d6c2;
+      border-radius: 8px;
+      padding: 12px 15px;
+      font-size: 13px;
+      font-family: 'Noto Sans KR', sans-serif;
+      line-height: 1.6;
+      resize: none;
+      background: #fdfbf5;
+    }
+
+    .thinking-textarea:focus {
+      outline: none;
+      border-color: #d4af37;
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+    }
+
+    /* 하단 버튼 */
+    .action-bar {
+      padding: 20px 30px;
+      background: #f8f4eb;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      border-top: 2px solid #e8dcc8;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Noto Sans KR', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-pdf {
+      background: linear-gradient(135deg, #c62828, #e53935);
+      color: #fff;
+    }
+
+    .btn-pdf:hover {
+      background: linear-gradient(135deg, #b71c1c, #c62828);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3);
+    }
+
+    .btn-print {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    .btn-print:hover {
+      background: #333;
+    }
+
+    .btn-reset {
+      background: #fff;
+      color: #666;
+      border: 1px solid #d4c5a9;
+    }
+
+    .btn-reset:hover {
+      background: #f5f0e6;
+    }
+
+    /* 푸터 - A4 최적화 */
+    .newspaper-footer {
+      text-align: center;
+      padding: 8px;
+      background: #1a1a1a;
+      color: #888;
+      font-size: 10px;
+    }
+
+    /* 프린트 & PDF 스타일 */
+    @media print {
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      body {
+        background: #fff;
+        padding: 0;
+        margin: 0;
+      }
+
+      .date-selector-bar {
+        display: none !important;
+      }
+
+      .newspaper-container {
+        box-shadow: none;
+        border: none;
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0;
+        padding: 0;
+      }
+
+      .action-bar {
+        display: none !important;
+      }
+
+      .six-w-input,
+      .thinking-textarea {
+        border: 1px solid #ccc;
+      }
+    }
+
+    /* PDF 생성용 스타일 */
+    .pdf-mode .newspaper-container {
+      width: 210mm !important;
+      max-width: 210mm !important;
+      min-height: auto !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+
+    .pdf-mode .action-bar,
+    .pdf-mode .date-selector-bar {
+      display: none !important;
+    }
+
+    /* 반응형 */
+    @media (max-width: 800px) {
+      .newspaper-container {
+        width: 100%;
+        max-width: 100%;
+        min-height: auto;
+      }
+
+      .newspaper-title {
+        font-size: 20px;
+        letter-spacing: 4px;
+      }
+
+      .date-selector-bar {
+        flex-wrap: wrap;
+      }
+
+      .date-bar {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+      }
+
+      .six-w-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .article-content {
+        font-size: 14px;
+      }
+
+      .article-headline {
+        font-size: 18px;
+      }
+
+      .action-bar {
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        flex: 1;
+        min-width: 100px;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .six-w-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 로딩 상태 */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e8dcc8;
+      border-top-color: #d4af37;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* PDF 생성 중 표시 */
+    .pdf-generating {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .pdf-generating-content {
+      background: #fff;
+      padding: 30px 50px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .pdf-generating-content p {
+      margin-top: 15px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!-- 날짜 선택 바 -->
+  <div class="date-selector-bar" id="dateSelectorBar">
+    <button class="date-nav-btn" onclick="changeDate(-1)" title="이전 날짜">◀</button>
+    <label for="dateSelect">날짜 선택:</label>
+    <input type="date" id="dateSelect" class="date-input" onchange="loadArticleByDate()">
+    <button class="date-nav-btn" onclick="changeDate(1)" title="다음 날짜">▶</button>
+  </div>
+
+  <div class="newspaper-container" id="newspaperContainer">
+    <!-- 신문 헤더 -->
+    <header class="newspaper-header">
+      <h1 class="newspaper-title">브레인문해력</h1>
+      <p class="newspaper-subtitle">DAILY CRITIQUE · 매일비평</p>
+    </header>
+
+    <!-- 날짜/주제 바 -->
+    <div class="date-bar">
+      <span class="current-date" id="currentDate">2026년 4월 9일 (수)</span>
+      <span class="topic-badge topic-사회" id="topicBadge">
+        <span>📚</span>
+        <span id="topicText">사회/문화</span>
+      </span>
+    </div>
+
+    <!-- 기사 본문 -->
+    <section class="article-section">
+      <h2 class="section-title">📰 오늘의 기사</h2>
+      <div id="articleArea">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>기사를 불러오는 중...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 육하원칙 -->
+    <section class="analysis-section">
+      <h2 class="section-title">✍️ 육하원칙으로 정리하기</h2>
+      <div class="six-w-grid">
+        <div class="six-w-item">
+          <label class="six-w-label">
+            <span class="icon icon-who">누</span>
+            누가 (Who)
+          </label>
+          <input type="text" class="six-w-input" placeholder="이 기사의 주인공은 누구인가요?">
+        </div>
+        <div class="six-w-item">
+          <label class="six-w-label">
+            <span class="icon icon-when">언</span>
+            언제 (When)
+          </label>
+          <input type="text" class="six-w-input" placeholder="언제 일어난 일인가요?">
+        </div>
+        <div class="six-w-item">
+          <label class="six-w-label">
+            <span class="icon icon-where">어</span>
+            어디서 (Where)
+          </label>
+          <input type="text" class="six-w-input" placeholder="어디서 일어난 일인가요?">
+        </div>
+        <div class="six-w-item">
+          <label class="six-w-label">
+            <span class="icon icon-what">무</span>
+            무엇을 (What)
+          </label>
+          <input type="text" class="six-w-input" placeholder="무슨 일이 일어났나요?">
+        </div>
+        <div class="six-w-item">
+          <label class="six-w-label">
+            <span class="icon icon-why">왜</span>
+            왜 (Why)
+          </label>
+          <input type="text" class="six-w-input" placeholder="왜 이런 일이 일어났나요?">
+        </div>
+        <div class="six-w-item">
+          <label class="six-w-label">
+            <span class="icon icon-how">어</span>
+            어떻게 (How)
+          </label>
+          <input type="text" class="six-w-input" placeholder="어떻게 진행되었나요?">
+        </div>
+      </div>
+    </section>
+
+    <!-- 자신의 생각 쓰기 -->
+    <section class="thinking-section">
+      <h2 class="section-title">💭 나의 생각 쓰기</h2>
+
+      <div class="thinking-item">
+        <p class="thinking-question">1. 이 기사에서 가장 중요하다고 생각한 내용은 무엇인가요?</p>
+        <textarea class="thinking-textarea" placeholder="기사에서 가장 중요하다고 느낀 부분을 적어보세요..."></textarea>
+      </div>
+
+      <div class="thinking-item">
+        <p class="thinking-question">2. 나는 이 문제에 대해 어떻게 생각하나요?</p>
+        <textarea class="thinking-textarea" placeholder="이 주제에 대한 나의 의견을 자유롭게 적어보세요..."></textarea>
+      </div>
+
+      <div class="thinking-item">
+        <p class="thinking-question">3. 이 문제를 해결하려면 어떤 방법이 필요할까요?</p>
+        <textarea class="thinking-textarea" placeholder="해결 방법이나 개선 아이디어를 적어보세요..."></textarea>
+      </div>
+    </section>
+
+    <!-- 버튼 영역 -->
+    <div class="action-bar" id="actionBar">
+      <button class="btn btn-reset" onclick="resetForm()">🔄 다시 쓰기</button>
+      <button class="btn btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+      <button class="btn btn-pdf" onclick="downloadPDF()">📥 PDF 다운로드</button>
+    </div>
+
+    <!-- 푸터 -->
+    <footer class="newspaper-footer">
+      © 2026 브레인문해력 · 생각하는 힘을 키우는 매일 비평
+    </footer>
+  </div>
+
+  <script>
+    // 전역 변수
+    let articlesData = null;
+    let currentArticle = null;
+
+    // 요일별 주제 설정
+    const TOPICS = {
+      1: { name: '환경/기후변화', icon: '🌿', class: '환경' },  // 월
+      2: { name: '과학/기술', icon: '🔬', class: '과학' },      // 화
+      3: { name: '사회/문화', icon: '📚', class: '사회' },      // 수
+      4: { name: '시사/이슈', icon: '📢', class: '시사' },      // 목
+      5: { name: '랜덤', icon: '🎲', class: '랜덤' },           // 금
+      0: { name: '랜덤', icon: '🎲', class: '랜덤' },           // 일
+      6: { name: '랜덤', icon: '🎲', class: '랜덤' }            // 토
+    };
+
+    // 초기화
+    async function init() {
+      // 오늘 날짜 설정
+      const today = new Date();
+      document.getElementById('dateSelect').value = formatDateKey(today);
+
+      // 기사 데이터 로드
+      try {
+        const response = await fetch('/data/critique-articles.json');
+        articlesData = await response.json();
+        loadArticleByDate();
+      } catch (error) {
+        console.error('기사 로드 실패:', error);
+        showNoArticle();
+      }
+    }
+
+    // 날짜 변경 (이전/다음 버튼)
+    function changeDate(delta) {
+      const dateInput = document.getElementById('dateSelect');
+      const currentDate = new Date(dateInput.value);
+      currentDate.setDate(currentDate.getDate() + delta);
+      dateInput.value = formatDateKey(currentDate);
+      loadArticleByDate();
+    }
+
+    // 선택한 날짜의 기사 로드
+    function loadArticleByDate() {
+      const dateInput = document.getElementById('dateSelect');
+      const selectedDate = new Date(dateInput.value);
+      const dateKey = formatDateKey(selectedDate);
+      const dayOfWeek = selectedDate.getDay();
+      const topic = TOPICS[dayOfWeek];
+
+      // 날짜 표시 업데이트
+      document.getElementById('currentDate').textContent = formatDate(selectedDate);
+
+      // 주제 표시 업데이트
+      const topicBadge = document.getElementById('topicBadge');
+      topicBadge.className = `topic-badge topic-${topic.class}`;
+      topicBadge.innerHTML = `<span>${topic.icon}</span><span>${topic.name}</span>`;
+
+      // 기사 찾기
+      if (articlesData && articlesData.articles[dateKey]) {
+        currentArticle = articlesData.articles[dateKey];
+        renderArticle(currentArticle);
+      } else {
+        currentArticle = null;
+        showNoArticle();
+      }
+    }
+
+    // 날짜 포맷 (표시용)
+    function formatDate(date) {
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const dayName = days[date.getDay()];
+      return `${year}년 ${month}월 ${day}일 (${dayName})`;
+    }
+
+    // 날짜 키 포맷 (YYYY-MM-DD)
+    function formatDateKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // 기사 렌더링
+    function renderArticle(article) {
+      const articleArea = document.getElementById('articleArea');
+      const paragraphs = article.content.split('\n\n').filter(p => p.trim());
+      const contentHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
+
+      articleArea.innerHTML = `
+        <h3 class="article-headline">${article.title}</h3>
+        <div class="article-meta">
+          <span>📅 ${article.date}</span> ·
+          <span>📁 ${article.category}</span>
+          ${article.source ? ` · <span>출처: ${article.source}</span>` : ''}
+        </div>
+        <div class="article-content">
+          ${contentHtml}
+        </div>
+      `;
+    }
+
+    // 기사 없음 표시
+    function showNoArticle() {
+      const articleArea = document.getElementById('articleArea');
+      articleArea.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #666;">
+          <p style="font-size: 48px; margin-bottom: 15px;">📰</p>
+          <p style="font-size: 18px; font-weight: 600;">해당 날짜의 기사가 없습니다</p>
+          <p style="font-size: 14px; margin-top: 10px;">다른 날짜를 선택해 주세요</p>
+        </div>
+      `;
+    }
+
+    // PDF 다운로드 (A4 최적화)
+    async function downloadPDF() {
+      const element = document.getElementById('newspaperContainer');
+      const dateSelectorBar = document.getElementById('dateSelectorBar');
+      const actionBar = document.getElementById('actionBar');
+      const footer = document.querySelector('.newspaper-footer');
+
+      // 로딩 표시
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'pdf-generating';
+      loadingDiv.innerHTML = `
+        <div class="pdf-generating-content">
+          <div class="loading-spinner"></div>
+          <p>PDF 생성 중...</p>
+        </div>
+      `;
+      document.body.appendChild(loadingDiv);
+
+      // PDF용 스타일 임시 적용
+      const originalStyles = {
+        width: element.style.width,
+        maxWidth: element.style.maxWidth,
+        minHeight: element.style.minHeight,
+        boxShadow: element.style.boxShadow,
+        border: element.style.border
+      };
+
+      // 버튼 숨기기
+      dateSelectorBar.style.display = 'none';
+      actionBar.style.display = 'none';
+
+      // PDF용 스타일 적용
+      element.style.width = '190mm';
+      element.style.maxWidth = '190mm';
+      element.style.minHeight = 'auto';
+      element.style.boxShadow = 'none';
+      element.style.border = 'none';
+
+      // 파일명 생성
+      const dateInput = document.getElementById('dateSelect');
+      const fileName = `브레인문해력_매일비평_${dateInput.value}.pdf`;
+
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          allowTaint: true
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait'
+        }
+      };
+
+      try {
+        await html2pdf().set(opt).from(element).save();
+      } catch (error) {
+        console.error('PDF 생성 실패:', error);
+        alert('PDF 생성에 실패했습니다. 다시 시도해 주세요.');
+      } finally {
+        // 원래 스타일 복원
+        element.style.width = originalStyles.width;
+        element.style.maxWidth = originalStyles.maxWidth;
+        element.style.minHeight = originalStyles.minHeight;
+        element.style.boxShadow = originalStyles.boxShadow;
+        element.style.border = originalStyles.border;
+
+        dateSelectorBar.style.display = 'flex';
+        actionBar.style.display = 'flex';
+        // 로딩 제거
+        document.body.removeChild(loadingDiv);
+      }
+    }
+
+    // 폼 초기화
+    function resetForm() {
+      if (confirm('작성한 내용을 모두 지우시겠습니까?')) {
+        document.querySelectorAll('.six-w-input').forEach(input => input.value = '');
+        document.querySelectorAll('.thinking-textarea').forEach(textarea => textarea.value = '');
+      }
+    }
+
+    // 페이지 로드 시 실행
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
