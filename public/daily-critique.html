@@ -188,7 +188,7 @@
     }
 
     .star-rating .star {
-      font-size: 24px;
+      font-size: 30px;
       color: #fff;
       cursor: pointer;
       transition: color 0.2s, transform 0.1s;
@@ -905,11 +905,11 @@
         input.parentNode.replaceChild(div, input);
       });
 
-      // 나의 생각 쓰기 textarea → div
+      // 나의 생각 쓰기 textarea → div (줄 포함)
       document.querySelectorAll('.thinking-textarea').forEach(textarea => {
-        const div = document.createElement('div');
-        div.className = 'thinking-textarea-pdf';
-        div.style.cssText = `
+        const wrapper = document.createElement('div');
+        wrapper.className = 'thinking-textarea-pdf';
+        wrapper.style.cssText = `
           width: 100%;
           min-height: 75mm;
           border: 1px solid #e0d6c2;
@@ -917,15 +917,52 @@
           padding: 15px;
           font-size: 14px;
           font-family: 'Noto Sans KR', sans-serif;
-          line-height: 1.7;
-          background: #fdfbf5;
+          line-height: 2.8;
+          background-color: #fdfbf5;
+          box-sizing: border-box;
+          position: relative;
+          overflow: hidden;
+        `;
+
+        // 줄 생성 (실제 DOM 요소로)
+        const linesContainer = document.createElement('div');
+        linesContainer.style.cssText = `
+          position: absolute;
+          top: 15px;
+          left: 15px;
+          right: 15px;
+          bottom: 15px;
+          pointer-events: none;
+        `;
+
+        // 6줄 생성 (44px 간격)
+        for (let i = 0; i < 6; i++) {
+          const line = document.createElement('div');
+          line.style.cssText = `
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: ${43 + (i * 44)}px;
+            height: 1px;
+            border-bottom: 1px dashed rgba(212, 197, 169, 0.6);
+          `;
+          linesContainer.appendChild(line);
+        }
+        wrapper.appendChild(linesContainer);
+
+        // 텍스트 컨텐츠
+        const textDiv = document.createElement('div');
+        textDiv.style.cssText = `
+          position: relative;
+          z-index: 1;
           white-space: pre-wrap;
           word-wrap: break-word;
-          box-sizing: border-box;
         `;
-        div.textContent = textarea.value;
-        converted.push({ original: textarea, replacement: div, parent: textarea.parentNode });
-        textarea.parentNode.replaceChild(div, textarea);
+        textDiv.textContent = textarea.value;
+        wrapper.appendChild(textDiv);
+
+        converted.push({ original: textarea, replacement: wrapper, parent: textarea.parentNode });
+        textarea.parentNode.replaceChild(wrapper, textarea);
       });
 
       return converted;
@@ -940,7 +977,7 @@
       });
     }
 
-    // PDF 다운로드 (A4 2페이지 - 페이지1: 기사+육하원칙, 페이지2: 생각쓰기)
+    // PDF 다운로드 (A4 3페이지 - 표지, 기사+육하원칙, 생각쓰기)
     async function downloadPDF() {
       const dateSelectorBar = document.getElementById('dateSelectorBar');
       const actionBar = document.getElementById('actionBar');
@@ -966,6 +1003,11 @@
       const dateInput = document.getElementById('dateSelect');
       const fileName = `브레인문해력_매일비평_${dateInput.value}.pdf`;
 
+      // 현재 기사 정보 가져오기
+      const currentDate = document.getElementById('currentDate').textContent;
+      const dailyQuote = document.getElementById('dailyQuote').textContent;
+      const articleTitle = currentArticle ? currentArticle.title : '오늘의 기사';
+
       // PDF 렌더링용: input/textarea → div 변환
       const converted = convertInputsToDiv();
 
@@ -981,10 +1023,98 @@
         container.style.width = '210mm';
         container.style.maxWidth = '210mm';
 
-        // === 페이지 1: 헤더 + 날짜바 + 기사 + 육하원칙 ===
-        thinkingSection.style.display = 'none';
+        // PDF 생성
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = 210;
+        const pdfHeight = 297;
 
-        // 페이지1 높이 조정 (A4에 맞게)
+        // === 표지 페이지 (HTML 요소로 생성 후 html2canvas로 캡처) ===
+        const coverPage = document.createElement('div');
+        coverPage.style.cssText = `
+          width: 210mm;
+          height: 297mm;
+          background: #fffef9;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          font-family: 'Noto Sans KR', 'Noto Serif KR', sans-serif;
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 99999;
+          box-sizing: border-box;
+          padding: 40px;
+        `;
+        coverPage.innerHTML = `
+          <div style="width: 100%; text-align: center;">
+            <!-- 상단 장식 라인 -->
+            <div style="margin: 0 auto 40px; width: 80%;">
+              <div style="border-top: 2px solid #d4af37; margin-bottom: 3px;"></div>
+              <div style="border-top: 2px solid #d4af37;"></div>
+            </div>
+
+            <!-- 날짜 -->
+            <div style="font-size: 18px; color: #666; margin-bottom: 50px; letter-spacing: 2px;">
+              ${currentDate}
+            </div>
+
+            <!-- 메인 제목 -->
+            <div style="font-family: 'Noto Serif KR', serif; font-size: 42px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px; letter-spacing: 4px;">
+              브레인문해력매일비평
+            </div>
+
+            <!-- 명언 -->
+            <div style="font-size: 16px; color: #888; font-style: italic; margin-bottom: 60px; padding: 0 30px;">
+              ${dailyQuote}
+            </div>
+
+            <!-- 중간 장식 라인 -->
+            <div style="width: 100px; border-top: 1px solid #d4af37; margin: 0 auto 60px;"></div>
+
+            <!-- 오늘의 기사 라벨 -->
+            <div style="font-size: 18px; color: #d4af37; font-weight: 600; margin-bottom: 20px;">
+              📰 오늘의 기사
+            </div>
+
+            <!-- 기사 제목 -->
+            <div style="font-family: 'Noto Serif KR', serif; font-size: 24px; font-weight: 700; color: #333; padding: 0 40px; line-height: 1.5;">
+              ${articleTitle}
+            </div>
+
+            <!-- 하단 장식 라인 -->
+            <div style="margin: 80px auto 30px; width: 80%;">
+              <div style="border-top: 2px solid #d4af37; margin-bottom: 3px;"></div>
+              <div style="border-top: 2px solid #d4af37;"></div>
+            </div>
+
+            <!-- 하단 브랜드 -->
+            <div style="font-size: 12px; color: #999; letter-spacing: 3px;">
+              BRAIN LITERACY DAILY CRITIQUE
+            </div>
+          </div>
+        `;
+        document.body.appendChild(coverPage);
+
+        // 표지 캡처
+        const coverCanvas = await html2canvas(coverPage, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#fffef9'
+        });
+
+        // 표지 제거
+        document.body.removeChild(coverPage);
+
+        // 표지 이미지 추가
+        pdf.addImage(coverCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+        // === 페이지 2: 헤더 + 날짜바 + 기사 + 육하원칙 ===
+        pdf.addPage();
+
+        thinkingSection.style.display = 'none';
         page1.style.minHeight = 'auto';
         page1.style.paddingBottom = '20px';
 
@@ -995,7 +1125,16 @@
           backgroundColor: '#fffef9'
         });
 
-        // === 페이지 2: 생각쓰기 섹션만 ===
+        const img1Width = canvas1.width;
+        const img1Height = canvas1.height;
+        const ratio1 = Math.min(pdfWidth / img1Width, pdfHeight / img1Height);
+        const imgHeight1 = Math.min(img1Height * ratio1, pdfHeight);
+
+        pdf.addImage(canvas1.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, imgHeight1);
+
+        // === 페이지 3: 생각쓰기 섹션만 ===
+        pdf.addPage();
+
         header.style.display = 'none';
         dateBar.style.display = 'none';
         page1.style.display = 'none';
@@ -1010,27 +1149,9 @@
           backgroundColor: '#ffffff'
         });
 
-        // PDF 생성
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = 210;
-        const pdfHeight = 297;
-
-        // 페이지 1 추가
-        const img1Width = canvas1.width;
-        const img1Height = canvas1.height;
-        const ratio1 = Math.min(pdfWidth / img1Width, pdfHeight / img1Height);
-        const imgWidth1 = img1Width * ratio1;
-        const imgHeight1 = Math.min(img1Height * ratio1, pdfHeight);
-
-        pdf.addImage(canvas1.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, imgHeight1);
-
-        // 페이지 2 추가
-        pdf.addPage();
         const img2Width = canvas2.width;
         const img2Height = canvas2.height;
         const ratio2 = Math.min(pdfWidth / img2Width, pdfHeight / img2Height);
-        const imgWidth2 = img2Width * ratio2;
         const imgHeight2 = Math.min(img2Height * ratio2, pdfHeight);
 
         pdf.addImage(canvas2.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, imgHeight2);
