@@ -328,6 +328,27 @@ body {
       gap: 8px;
     }
 
+    /* 체험판 초기화 버튼 */
+    .demo-reset-btn {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+    }
+    .demo-reset-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4);
+    }
+    .demo-reset-btn:active {
+      transform: scale(0.98);
+    }
+
     /* 헤더 고래 배지 스타일 */
     .header-whale-badge {
       display: flex;
@@ -4703,14 +4724,16 @@ canvas[id^="confetti-canvas"] {
       </div>
     </div>
 
-    <!-- 🔹 오른쪽: 게스트 정보 (로그아웃 버튼 제거) -->
+    <!-- 🔹 오른쪽: 게스트 정보 + 초기화 버튼 -->
     <div class="header-right">
       <div id="user-info">게스트님 환영합니다!</div>
+      <button class="demo-reset-btn" onclick="resetDemoSession()" title="체험판 데이터 초기화">
+        🔄 초기화
+      </button>
       <div class="header-whale-badge" id="headerWhaleBadge" style="display:none;">
         <span class="whale-icon">🐋</span>
         <span class="whale-count" id="headerWhaleCount">--</span>
       </div>
-      <!-- 체험판에서는 로그아웃 버튼 숨김 -->
     </div>
   </header>
 
@@ -4784,12 +4807,66 @@ canvas[id^="confetti-canvas"] {
     window.DEMO_MODE = true;
     window.DEMO_ALLOWED_SERIES = ['BRAINON'];
     window.DEMO_ALLOWED_UNIT = 3; // 3단원까지 허용
+    window.DEMO_SESSION_DURATION = 60 * 60 * 1000; // 1시간 (밀리초)
 
     (function() {
-      // 게스트 사용자 정보 설정
+      // 🕐 체험판 세션 시간 체크 및 초기화
+      const DEMO_START_KEY = 'demo_session_start';
+      const now = Date.now();
+      const sessionStart = localStorage.getItem(DEMO_START_KEY);
+
+      if (sessionStart) {
+        const elapsed = now - parseInt(sessionStart);
+        if (elapsed > window.DEMO_SESSION_DURATION) {
+          // 1시간 경과 - 모든 체험판 데이터 초기화
+          console.log('🔄 체험판 세션 만료 - 데이터 초기화');
+
+          // localStorage에서 체험판 관련 데이터 삭제
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (
+              key.startsWith('dan-progress:') ||
+              key.startsWith('dan-vocab:') ||
+              key.startsWith('reading-report:') ||
+              key.includes('게스트') ||
+              key === 'currentStudent' ||
+              key === 'novelCategoryModalOpen'
+            )) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+
+          // sessionStorage 초기화
+          sessionStorage.clear();
+
+          // 새 세션 시작 시간 기록
+          localStorage.setItem(DEMO_START_KEY, now.toString());
+          console.log('✅ 체험판 초기화 완료 - 새 세션 시작');
+        } else {
+          // 남은 시간 표시
+          const remainingMin = Math.ceil((window.DEMO_SESSION_DURATION - elapsed) / 60000);
+          console.log(`🎯 체험판 세션 유지 중 (남은 시간: ${remainingMin}분)`);
+        }
+      } else {
+        // 첫 방문 - 세션 시작 시간 기록
+        localStorage.setItem(DEMO_START_KEY, now.toString());
+        console.log('🎯 체험판 새 세션 시작');
+      }
+
+      // 게스트 사용자 정보 설정 (세션별 고유 ID 부여)
+      const GUEST_ID_KEY = 'demo_guest_id';
+      let guestId = localStorage.getItem(GUEST_ID_KEY);
+      if (!guestId) {
+        // 새 세션: 랜덤 ID 생성 (6자리)
+        guestId = Math.random().toString(36).substring(2, 8);
+        localStorage.setItem(GUEST_ID_KEY, guestId);
+      }
+
       const guestUser = {
         grade: '체험',
-        name: '게스트',
+        name: `게스트_${guestId}`,
         role: 'student',
         isDemo: true
       };
@@ -4802,6 +4879,62 @@ canvas[id^="confetti-canvas"] {
       // 세션 준비 완료 플래그
       window.sessionReady = true;
     })();
+
+    // 🔄 수동 초기화 함수 (우측 상단 버튼용)
+    function resetDemoSession() {
+      if (!confirm('체험판 데이터를 초기화하시겠습니까?\n학습 진행 상황이 모두 삭제됩니다.')) {
+        return;
+      }
+
+      console.log('🔄 체험판 수동 초기화 시작');
+
+      // localStorage에서 체험판 관련 데이터 삭제
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.startsWith('dan-progress:') ||
+          key.startsWith('dan-vocab:') ||
+          key.startsWith('reading-report:') ||
+          key.startsWith('passage_read_') ||
+          key.startsWith('api_cache_') ||
+          key.includes('게스트') ||
+          key.includes('unit-grades') ||
+          key.includes('completion-status') ||
+          key.includes('learning-logs') ||
+          key === 'currentStudent' ||
+          key === 'novelCategoryModalOpen' ||
+          key === 'demo_session_start' ||
+          key === 'demo_guest_id'
+        )) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      // sessionStorage 초기화
+      sessionStorage.clear();
+
+      // ApiCache 전체 무효화 (메모리 캐시)
+      if (window.ApiCache && typeof window.ApiCache.clear === 'function') {
+        window.ApiCache.clear();
+      } else if (window.ApiCache && typeof window.ApiCache.invalidate === 'function') {
+        // clear가 없으면 주요 캐시들 개별 무효화
+        window.ApiCache.invalidate('unit-grades');
+        window.ApiCache.invalidate('completion-status');
+        window.ApiCache.invalidate('learning-logs');
+        window.ApiCache.invalidate('study-room');
+      }
+
+      // 새 세션 시작 시간 기록
+      localStorage.setItem('demo_session_start', Date.now().toString());
+
+      console.log('✅ 체험판 수동 초기화 완료');
+
+      // 페이지 새로고침
+      alert('초기화가 완료되었습니다.');
+      location.reload();
+    }
   </script>
 
   <!-- 🎯 체험판 온보딩 팝업 스크립트 -->
