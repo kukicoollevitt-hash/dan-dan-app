@@ -19,6 +19,16 @@ const CenterContractSchema = new mongoose.Schema({
 
   // 계약 상세 정보
   contractData: {
+    contractorName: { type: String, default: '' }, // 계약자명
+    contractorPhone: { type: String, default: '' }, // 연락처
+    contractorSSN: { type: String, default: '' }, // 주민번호
+    contractorBizNo: { type: String, default: '' }, // 사업자번호
+    contractorAcademy: { type: String, default: '' }, // 현재학원명
+    contractorAcademyAddr: { type: String, default: '' }, // 학원주소지
+    contractorHomeAddr: { type: String, default: '' }, // 거주지
+    contractorAccount: { type: String, default: '' }, // 계좌상세정보
+    contractorEmail: { type: String, default: '' }, // 이메일
+    contractStartDate: { type: String, default: '' }, // 계약시작일
     openingFee: { type: Number, default: 0 }, // 센터개설비
     introFee: { type: Number, default: 0 }, // 도입비
     annualFee: { type: String, default: '' }, // 연이용료 (420/600/720)

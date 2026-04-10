@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>브레인 문해력 2307개 센터 현황</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -720,19 +721,31 @@
     }
 
     .contract-form-row select,
-    .contract-form-row textarea {
+    .contract-form-row textarea,
+    .contract-form-row input[type="text"],
+    .contract-form-row input[type="date"] {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
       border-radius: 8px;
       font-size: 14px;
       transition: border-color 0.2s;
+      box-sizing: border-box;
     }
 
     .contract-form-row select:focus,
-    .contract-form-row textarea:focus {
+    .contract-form-row textarea:focus,
+    .contract-form-row input[type="text"]:focus,
+    .contract-form-row input[type="date"]:focus {
       border-color: #4a90d9;
       outline: none;
+    }
+
+    .contract-form-row input[type="text"]:disabled,
+    .contract-form-row input[type="date"]:disabled {
+      background-color: #f5f5f5;
+      color: #333;
+      cursor: default;
     }
 
     .contract-form-row textarea {
@@ -775,6 +788,12 @@
       font-weight: 700;
     }
 
+    .total-amount-box .vat-note {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
     .contract-modal-footer {
       padding: 16px 24px;
       border-top: 1px solid #eee;
@@ -811,6 +830,16 @@
     .btn-edit:hover {
       background: #e67e22;
       color: white;
+    }
+
+    .btn-download {
+      background: #27ae60;
+      color: white;
+      border: none;
+    }
+
+    .btn-download:hover {
+      background: #219a52;
     }
 
     .school-name-display {
@@ -1650,7 +1679,70 @@
         <button class="contract-modal-close" onclick="closeContractModal()">&times;</button>
       </div>
       <div class="contract-modal-body">
-        <div class="school-name-display" id="modalSchoolName"></div>
+        <div class="contract-form-row">
+          <label>계약 지점명</label>
+          <div class="school-name-display" id="modalSchoolName"></div>
+        </div>
+
+        <div class="contract-form-row">
+          <label>계약자명</label>
+          <input type="text" id="contractorName" placeholder="계약자명 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>연락처</label>
+          <input type="text" id="contractorPhone" placeholder="연락처 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>주민번호</label>
+          <input type="text" id="contractorSSN" placeholder="주민번호 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>현재학원명</label>
+          <input type="text" id="contractorAcademy" placeholder="현재학원명 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>사업자번호</label>
+          <input type="text" id="contractorBizNo" placeholder="사업자번호 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>학원주소지</label>
+          <input type="text" id="contractorAcademyAddr" placeholder="학원주소지 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>거주지</label>
+          <input type="text" id="contractorHomeAddr" placeholder="거주지 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>계좌상세정보</label>
+          <input type="text" id="contractorAccount" placeholder="계좌상세정보 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>이메일</label>
+          <input type="text" id="contractorEmail" placeholder="이메일 입력">
+        </div>
+
+        <div class="contract-form-row">
+          <label>계약시작일</label>
+          <input type="date" id="contractStartDate" onchange="calculateContractEndDate()">
+        </div>
+
+        <div class="contract-form-row">
+          <label>계약종료일</label>
+          <input type="text" id="contractEndDate" readonly style="background-color: #f5f5f5;">
+        </div>
+
+        <div class="contract-form-row">
+          <label>남은기간</label>
+          <input type="text" id="contractRemaining" readonly style="background-color: #f5f5f5;">
+        </div>
 
         <div class="contract-form-row">
           <label>센터개설비</label>
@@ -1711,9 +1803,11 @@
         <div class="total-amount-box">
           <div class="label">총 금액</div>
           <div class="amount" id="contractTotalAmount">0만원</div>
+          <div class="vat-note">(VAT별도)</div>
         </div>
       </div>
       <div class="contract-modal-footer">
+        <button class="btn-download" onclick="downloadContractPDF()">PDF 다운로드</button>
         <button class="btn-edit" onclick="editContractData()">수정</button>
         <button class="btn-save" onclick="saveContractData()">저장</button>
       </div>
@@ -2416,7 +2510,7 @@
 
     function editExcessData() {
       const password = prompt('수정 비밀번호를 입력하세요:');
-      if (password === '2846') {
+      if (password === '284600') {
         isExcessEditMode = true;
         setExcessFieldDisabled(false);
         alert('수정 모드가 활성화되었습니다.');
@@ -2662,7 +2756,7 @@
 
     function editTextbookData() {
       const password = prompt('수정 비밀번호를 입력하세요:');
-      if (password === '2846') {
+      if (password === '284600') {
         isTextbookEditMode = true;
         setTextbookFieldDisabled(false);
         alert('수정 모드가 활성화되었습니다.');
@@ -2728,6 +2822,22 @@
       const key = getDataKey('contractData_' + schoolId);
       const data = getStoredData(key);
 
+      document.getElementById('contractorName').value = data.contractorName || '';
+      document.getElementById('contractorPhone').value = data.contractorPhone || '';
+      document.getElementById('contractorSSN').value = data.contractorSSN || '';
+      document.getElementById('contractorBizNo').value = data.contractorBizNo || '';
+      document.getElementById('contractorAcademy').value = data.contractorAcademy || '';
+      document.getElementById('contractorAcademyAddr').value = data.contractorAcademyAddr || '';
+      document.getElementById('contractorHomeAddr').value = data.contractorHomeAddr || '';
+      document.getElementById('contractorAccount').value = data.contractorAccount || '';
+      document.getElementById('contractorEmail').value = data.contractorEmail || '';
+      document.getElementById('contractStartDate').value = data.contractStartDate || '';
+      if (data.contractStartDate) {
+        calculateContractEndDate();
+      } else {
+        document.getElementById('contractEndDate').value = '';
+        document.getElementById('contractRemaining').value = '';
+      }
       document.getElementById('contractOpeningFee').value = data.openingFee || '';
       document.getElementById('contractIntroFee').value = data.introFee || '';
       document.getElementById('contractAnnualFee').value = data.annualFee || '';
@@ -2784,10 +2894,63 @@
       document.getElementById('contractTotalAmount').textContent = total.toLocaleString() + '만원';
     }
 
+    function calculateContractEndDate() {
+      const startDateInput = document.getElementById('contractStartDate').value;
+      if (!startDateInput) {
+        document.getElementById('contractEndDate').value = '';
+        document.getElementById('contractRemaining').value = '';
+        return;
+      }
+
+      const startDate = new Date(startDateInput);
+      const endDate = new Date(startDate);
+      endDate.setFullYear(endDate.getFullYear() + 1);
+
+      // 종료일 표시 (YYYY-MM-DD 형식)
+      const endDateStr = endDate.toISOString().split('T')[0];
+      document.getElementById('contractEndDate').value = endDateStr;
+
+      // 남은 기간 계산
+      calculateRemainingDays();
+    }
+
+    function calculateRemainingDays() {
+      const endDateStr = document.getElementById('contractEndDate').value;
+      if (!endDateStr) {
+        document.getElementById('contractRemaining').value = '';
+        return;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endDate = new Date(endDateStr);
+
+      const diffTime = endDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        document.getElementById('contractRemaining').value = '계약 만료';
+      } else if (diffDays === 0) {
+        document.getElementById('contractRemaining').value = '오늘 만료';
+      } else {
+        document.getElementById('contractRemaining').value = `${diffDays}일 남음`;
+      }
+    }
+
     function saveContractData() {
       if (!currentContractSchoolId) return;
 
       const data = {
+        contractorName: document.getElementById('contractorName').value,
+        contractorPhone: document.getElementById('contractorPhone').value,
+        contractorSSN: document.getElementById('contractorSSN').value,
+        contractorBizNo: document.getElementById('contractorBizNo').value,
+        contractorAcademy: document.getElementById('contractorAcademy').value,
+        contractorAcademyAddr: document.getElementById('contractorAcademyAddr').value,
+        contractorHomeAddr: document.getElementById('contractorHomeAddr').value,
+        contractorAccount: document.getElementById('contractorAccount').value,
+        contractorEmail: document.getElementById('contractorEmail').value,
+        contractStartDate: document.getElementById('contractStartDate').value,
         openingFee: document.getElementById('contractOpeningFee').value,
         introFee: document.getElementById('contractIntroFee').value,
         annualFee: document.getElementById('contractAnnualFee').value,
@@ -2820,6 +2983,16 @@
     let isContractEditMode = false;
 
     function setContractFieldsDisabled(disabled) {
+      document.getElementById('contractorName').disabled = disabled;
+      document.getElementById('contractorPhone').disabled = disabled;
+      document.getElementById('contractorSSN').disabled = disabled;
+      document.getElementById('contractorBizNo').disabled = disabled;
+      document.getElementById('contractorAcademy').disabled = disabled;
+      document.getElementById('contractorAcademyAddr').disabled = disabled;
+      document.getElementById('contractorHomeAddr').disabled = disabled;
+      document.getElementById('contractorAccount').disabled = disabled;
+      document.getElementById('contractorEmail').disabled = disabled;
+      document.getElementById('contractStartDate').disabled = disabled;
       document.getElementById('contractOpeningFee').disabled = disabled;
       document.getElementById('contractIntroFee').disabled = disabled;
       document.getElementById('contractAnnualFee').disabled = disabled;
@@ -2831,13 +3004,165 @@
 
     function editContractData() {
       const password = prompt('수정 비밀번호를 입력하세요:');
-      if (password === '2846') {
+      if (password === '284600') {
         isContractEditMode = true;
         setContractFieldsDisabled(false);
         alert('수정 모드가 활성화되었습니다.');
       } else if (password !== null) {
         alert('비밀번호가 틀렸습니다.');
       }
+    }
+
+    function downloadContractPDF() {
+      const centerName = document.getElementById('modalSchoolName').textContent;
+      const contractorName = document.getElementById('contractorName').value || '-';
+      const contractorPhone = document.getElementById('contractorPhone').value || '-';
+      const contractorSSN = document.getElementById('contractorSSN').value || '-';
+      const contractorBizNo = document.getElementById('contractorBizNo').value || '-';
+      const contractorAcademy = document.getElementById('contractorAcademy').value || '-';
+      const contractorAcademyAddr = document.getElementById('contractorAcademyAddr').value || '-';
+      const contractorHomeAddr = document.getElementById('contractorHomeAddr').value || '-';
+      const contractorAccount = document.getElementById('contractorAccount').value || '-';
+      const contractorEmail = document.getElementById('contractorEmail').value || '-';
+      const contractStartDate = document.getElementById('contractStartDate').value || '-';
+      const contractEndDate = document.getElementById('contractEndDate').value || '-';
+      const contractRemaining = document.getElementById('contractRemaining').value || '-';
+      const openingFee = document.getElementById('contractOpeningFee').value ? document.getElementById('contractOpeningFee').value + '만원' : '-';
+      const introFee = document.getElementById('contractIntroFee').value ? (document.getElementById('contractIntroFee').value === '0' ? '면제' : document.getElementById('contractIntroFee').value + '만원') : '-';
+      const annualFee = document.getElementById('contractAnnualFee').value ? document.getElementById('contractAnnualFee').value + '만원' : '-';
+      const minPersons = document.getElementById('contractMinPersons').value ? document.getElementById('contractMinPersons').value + '명' : '-';
+      const paymentStatus = document.getElementById('contractPaymentStatus').value || '-';
+      const memo = document.getElementById('contractMemo').value || '-';
+      const totalAmount = document.getElementById('contractTotalAmount').textContent;
+
+      const today = new Date().toLocaleDateString('ko-KR');
+
+      const pdfContent = document.createElement('div');
+      pdfContent.innerHTML = `
+        <div style="font-family: 'Malgun Gothic', sans-serif; padding: 40px; max-width: 700px; margin: 0 auto;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="font-size: 28px; color: #2c3e50; margin-bottom: 10px;">브레인 문해력 센터 계약서</h1>
+            <p style="color: #7f8c8d; font-size: 14px;">작성일: ${today}</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, #4a90d9, #357abd); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+            <h2 style="font-size: 24px; margin: 0;">${centerName}</h2>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="font-size: 16px; color: #2c3e50; border-bottom: 2px solid #4a90d9; padding-bottom: 10px; margin-bottom: 20px;">계약자 정보</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d; width: 140px;">계약자명</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">연락처</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorPhone}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">이메일</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorEmail}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">주민번호</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorSSN}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">현재학원명</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorAcademy}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">사업자번호</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorBizNo}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">학원주소지</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorAcademyAddr}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">거주지</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorHomeAddr}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; color: #6c757d;">계좌상세정보</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractorAccount}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="font-size: 16px; color: #2c3e50; border-bottom: 2px solid #27ae60; padding-bottom: 10px; margin-bottom: 20px;">계약 기간</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d; width: 140px;">계약시작일</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractStartDate}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">계약종료일</td>
+                <td style="padding: 12px 0; font-weight: 600;">${contractEndDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; color: #6c757d;">남은기간</td>
+                <td style="padding: 12px 0; font-weight: 600; color: #e74c3c;">${contractRemaining}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="font-size: 16px; color: #2c3e50; border-bottom: 2px solid #e67e22; padding-bottom: 10px; margin-bottom: 20px;">계약 금액</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d; width: 140px;">센터개설비</td>
+                <td style="padding: 12px 0; font-weight: 600;">${openingFee}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">도입비</td>
+                <td style="padding: 12px 0; font-weight: 600;">${introFee}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">연이용료</td>
+                <td style="padding: 12px 0; font-weight: 600;">${annualFee}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 12px 0; color: #6c757d;">최소인원</td>
+                <td style="padding: 12px 0; font-weight: 600;">${minPersons}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; color: #6c757d;">결제여부</td>
+                <td style="padding: 12px 0; font-weight: 600; color: ${paymentStatus === '완료' ? '#27ae60' : '#e74c3c'};">${paymentStatus}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background: linear-gradient(135deg, #4a90d9, #357abd); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">총 금액</div>
+            <div style="font-size: 32px; font-weight: 700;">${totalAmount}</div>
+            <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">(VAT별도)</div>
+          </div>
+
+          ${memo !== '-' ? `
+          <div style="background: #fff3cd; padding: 20px; border-radius: 12px; border-left: 4px solid #ffc107;">
+            <h3 style="font-size: 14px; color: #856404; margin-bottom: 10px;">메모</h3>
+            <p style="color: #856404; margin: 0; white-space: pre-wrap;">${memo}</p>
+          </div>
+          ` : ''}
+
+          <div style="margin-top: 50px; text-align: center; color: #adb5bd; font-size: 12px;">
+            <p>본 문서는 브레인 문해력 센터 계약 정보를 담고 있습니다.</p>
+          </div>
+        </div>
+      `;
+
+      const opt = {
+        margin: 10,
+        filename: `${centerName}_계약상세정보.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(pdfContent).save();
     }
 
     // 모달 외부 클릭 시 닫기
@@ -3080,18 +3405,20 @@
         const textbookMonthData = allTextbookData[currentMonth] || {};
         const competitor = savedData.competitor || school.competitor || '';
         const status = savedData.status || '';
-        const contractStart = savedData.contractStart || '';
+        // 팝업의 계약시작일 데이터 사용 (contractData.contractStartDate)
+        const contractStartDate = contractData.contractStartDate || '';
         const paymentStatus = contractData.paymentStatus || '';
         const excessPaymentStatus = excessMonthData.paymentStatus || '';
         const textbookPaymentStatus = textbookMonthData.paymentStatus || '';
 
         let remainingDays = '-';
         let renewalDate = '-';
-        if (contractStart) {
-          const startDate = new Date(contractStart);
+        if (contractStartDate) {
+          const startDate = new Date(contractStartDate);
           const endDate = new Date(startDate);
           endDate.setFullYear(endDate.getFullYear() + 1);
           const today = new Date();
+          today.setHours(0, 0, 0, 0);
           const diffTime = endDate - today;
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           remainingDays = diffDays > 0 ? diffDays + '일' : '만료';
@@ -3158,7 +3485,7 @@
               return `<span class="unpaid-badge no-unpaid" onclick="openUnpaidModal('${schoolId}', '${school.name}')">-</span>`;
             }
           })()}</td>
-          <td><input type="date" class="contract-input" data-id="${schoolId}" value="${contractStart}"></td>
+          <td><input type="date" class="contract-input" data-id="${schoolId}" value="${contractStartDate}"></td>
           <td class="remaining-days">${remainingDays}</td>
           <td class="renewal-date">${renewalDate}</td>
           <td><button class="reset-btn" data-id="${schoolId}">초기화</button></td>
@@ -5573,7 +5900,8 @@
         const textbookMonthData = allTextbookData[currentMonth] || {};
         const competitor = savedData.competitor || school.competitor || '';
         const status = savedData.status || '';
-        const contractStart = savedData.contractStart || '';
+        // 팝업의 계약시작일 데이터 사용 (contractData.contractStartDate)
+        const contractStartDate = contractData.contractStartDate || '';
         const paymentStatus = contractData.paymentStatus || '';
         const excessPaymentStatus = excessMonthData.paymentStatus || '';
         const textbookPaymentStatus = textbookMonthData.paymentStatus || '';
@@ -5581,11 +5909,12 @@
         // 남은 계약일 및 재계약일 계산
         let remainingDays = '-';
         let renewalDate = '-';
-        if (contractStart) {
-          const startDate = new Date(contractStart);
+        if (contractStartDate) {
+          const startDate = new Date(contractStartDate);
           const endDate = new Date(startDate);
           endDate.setFullYear(endDate.getFullYear() + 1);
           const today = new Date();
+          today.setHours(0, 0, 0, 0);
           const diffTime = endDate - today;
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           remainingDays = diffDays > 0 ? diffDays + '일' : '만료';
@@ -5652,7 +5981,7 @@
               return `<span class="unpaid-badge no-unpaid" onclick="openUnpaidModal('${schoolId}', '${school.name}')">-</span>`;
             }
           })()}</td>
-          <td><input type="date" class="contract-input" data-id="${schoolId}" value="${contractStart}"></td>
+          <td><input type="date" class="contract-input" data-id="${schoolId}" value="${contractStartDate}"></td>
           <td class="remaining-days">${remainingDays}</td>
           <td class="renewal-date">${renewalDate}</td>
           <td><button class="reset-btn" data-id="${schoolId}">초기화</button></td>
@@ -5699,7 +6028,13 @@
       });
       document.querySelectorAll('.contract-input').forEach(input => {
         input.addEventListener('change', (e) => {
-          saveSchoolData(e.target.dataset.id, 'contractStart', e.target.value);
+          const schoolId = e.target.dataset.id;
+          const contractStartDate = e.target.value;
+          // contractData에 계약시작일 저장
+          const key = getDataKey('contractData_' + schoolId);
+          const contractData = getStoredData(key);
+          contractData.contractStartDate = contractStartDate;
+          setStoredData(key, contractData, schoolId, 'contractData');
           if (currentCenterFilter) {
             renderTableWithCenterFilter();
           } else {
@@ -5710,7 +6045,7 @@
       document.querySelectorAll('.reset-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const password = prompt('비밀번호를 입력하세요:');
-          if (password === '2846') {
+          if (password === '284600') {
             const schoolId = e.target.dataset.id;
             // 서버에서 삭제
             await deleteFromServer(schoolId);
