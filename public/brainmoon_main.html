@@ -9139,6 +9139,29 @@
       video {
         will-change: auto !important;
       }
+
+      /* backdrop-filter 비활성화 (GPU 부하 감소) */
+      .header,
+      .value-letter-box,
+      [style*="backdrop-filter"] {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+
+      /* box-shadow 간소화 */
+      .step-card,
+      .evidence-card,
+      .difference-card,
+      .supply-card,
+      .curriculum-table,
+      .feature-box {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+      }
+
+      /* 고정 요소 최적화 */
+      .side-nav {
+        display: none !important;
+      }
     }
 
     /* 사용자가 애니메이션 줄이기를 선호하는 경우 */
@@ -18369,20 +18392,25 @@
     }
     startUrgencyCountdown();
 
-    // 스크롤 시 헤더 표시
+    // 스크롤 시 헤더 표시 (throttle 적용)
     const header = document.getElementById('header');
     let lastScroll = 0;
+    let headerTicking = false;
 
     window.addEventListener('scroll', () => {
-      const currentScroll = window.pageYOffset;
-
-      if (currentScroll > 100) {
-        header.classList.add('visible');
-      } else {
-        header.classList.remove('visible');
+      if (!headerTicking) {
+        requestAnimationFrame(() => {
+          const currentScroll = window.pageYOffset;
+          if (currentScroll > 100) {
+            header.classList.add('visible');
+          } else {
+            header.classList.remove('visible');
+          }
+          lastScroll = currentScroll;
+          headerTicking = false;
+        });
+        headerTicking = true;
       }
-
-      lastScroll = currentScroll;
     });
 
     // 사이드 네비게이션 클릭
@@ -18394,10 +18422,10 @@
       });
     });
 
-    // 스크롤 시 현재 섹션 활성화
+    // 스크롤 시 현재 섹션 활성화 (throttle 적용)
     const sections = document.querySelectorAll('section');
 
-    window.addEventListener('scroll', () => {
+    const handleSectionScroll = () => {
       let current = '';
 
       sections.forEach(section => {
@@ -18422,6 +18450,18 @@
           link.classList.add('active');
         }
       });
+    };
+
+    // 스크롤 이벤트 throttle 적용 (성능 최적화)
+    let scrollTicking = false;
+    window.addEventListener('scroll', () => {
+      if (!scrollTicking) {
+        requestAnimationFrame(() => {
+          handleSectionScroll();
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
     });
 
     // 스크롤 애니메이션
@@ -21350,6 +21390,28 @@
     const threeStepCards = document.querySelector('.three-step-cards');
     if (threeStepCards) {
       stepCardsObserver.observe(threeStepCards);
+    }
+
+    // ========== 모바일 비디오 최적화 (화면에 보일 때만 재생) ==========
+    if (window.innerWidth <= 768) {
+      const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const video = entry.target;
+          if (entry.isIntersecting) {
+            // 화면에 보이면 재생
+            video.play().catch(() => {});
+          } else {
+            // 화면 밖이면 일시정지
+            video.pause();
+          }
+        });
+      }, { threshold: 0.1 });
+
+      // 모든 비디오에 옵저버 적용
+      document.querySelectorAll('video[autoplay]').forEach(video => {
+        video.pause(); // 초기에는 모두 일시정지
+        videoObserver.observe(video);
+      });
     }
   </script>
 
