@@ -277,6 +277,7 @@ const SpeedVocabKing = require("./models/SpeedVocabKing");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
 const BookOrder = require("./models/BookOrder");
 const TextbookOrder = require("./models/TextbookOrder");
+const CenterContract = require("./models/CenterContract");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -36048,6 +36049,107 @@ app.post("/api/fix-phone-hyphen", async (req, res) => {
   } catch (err) {
     console.error("❌ 전화번호 수정 오류:", err);
     res.status(500).json({ ok: false, message: "수정 중 오류" });
+  }
+});
+
+// ===== 센터 계약 관리 API =====
+
+// 센터 계약 데이터 조회 (전체)
+app.get("/api/center-contracts", async (req, res) => {
+  try {
+    const { contractType } = req.query;
+    const query = contractType ? { contractType } : {};
+    const contracts = await CenterContract.find(query);
+    res.json({ ok: true, contracts });
+  } catch (err) {
+    console.error("❌ 센터 계약 조회 오류:", err);
+    res.status(500).json({ ok: false, message: "조회 중 오류" });
+  }
+});
+
+// 센터 계약 데이터 조회 (단일)
+app.get("/api/center-contracts/:contractType/:schoolId", async (req, res) => {
+  try {
+    const { contractType, schoolId } = req.params;
+    const contract = await CenterContract.findOne({ contractType, schoolId });
+    res.json({ ok: true, contract: contract || null });
+  } catch (err) {
+    console.error("❌ 센터 계약 조회 오류:", err);
+    res.status(500).json({ ok: false, message: "조회 중 오류" });
+  }
+});
+
+// 센터 계약 데이터 저장/업데이트
+app.post("/api/center-contracts", async (req, res) => {
+  try {
+    const { contractType, schoolId, sido, sigungu, name, schoolData, contractData, excessData, textbookData } = req.body;
+
+    if (!contractType || !schoolId) {
+      return res.status(400).json({ ok: false, message: "contractType과 schoolId는 필수입니다" });
+    }
+
+    const updateData = {
+      updatedAt: new Date()
+    };
+
+    if (sido) updateData.sido = sido;
+    if (sigungu) updateData.sigungu = sigungu;
+    if (name) updateData.name = name;
+    if (schoolData) updateData.schoolData = schoolData;
+    if (contractData) updateData.contractData = contractData;
+    if (excessData) updateData.excessData = excessData;
+    if (textbookData) updateData.textbookData = textbookData;
+
+    const contract = await CenterContract.findOneAndUpdate(
+      { contractType, schoolId },
+      { $set: updateData, $setOnInsert: { createdAt: new Date() } },
+      { upsert: true, new: true }
+    );
+
+    console.log(`✅ 센터 계약 저장: ${contractType}/${schoolId}`);
+    res.json({ ok: true, contract });
+  } catch (err) {
+    console.error("❌ 센터 계약 저장 오류:", err);
+    res.status(500).json({ ok: false, message: "저장 중 오류" });
+  }
+});
+
+// 센터 계약 데이터 부분 업데이트 (schoolData, contractData, excessData, textbookData 개별 업데이트)
+app.put("/api/center-contracts/:contractType/:schoolId", async (req, res) => {
+  try {
+    const { contractType, schoolId } = req.params;
+    const { field, data } = req.body; // field: 'schoolData' | 'contractData' | 'excessData' | 'textbookData'
+
+    if (!field || !data) {
+      return res.status(400).json({ ok: false, message: "field와 data는 필수입니다" });
+    }
+
+    const updateQuery = { [`${field}`]: data, updatedAt: new Date() };
+
+    const contract = await CenterContract.findOneAndUpdate(
+      { contractType, schoolId },
+      { $set: updateQuery, $setOnInsert: { createdAt: new Date(), contractType, schoolId } },
+      { upsert: true, new: true }
+    );
+
+    console.log(`✅ 센터 계약 부분 업데이트: ${contractType}/${schoolId} - ${field}`);
+    res.json({ ok: true, contract });
+  } catch (err) {
+    console.error("❌ 센터 계약 업데이트 오류:", err);
+    res.status(500).json({ ok: false, message: "업데이트 중 오류" });
+  }
+});
+
+// 센터 계약 데이터 삭제 (초기화)
+app.delete("/api/center-contracts/:contractType/:schoolId", async (req, res) => {
+  try {
+    const { contractType, schoolId } = req.params;
+    await CenterContract.deleteOne({ contractType, schoolId });
+    console.log(`✅ 센터 계약 삭제: ${contractType}/${schoolId}`);
+    res.json({ ok: true, message: "삭제 완료" });
+  } catch (err) {
+    console.error("❌ 센터 계약 삭제 오류:", err);
+    res.status(500).json({ ok: false, message: "삭제 중 오류" });
   }
 });
 

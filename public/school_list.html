@@ -1826,9 +1826,97 @@
       { sido: "서울시", sigungu: "강서구", name: "꿀잼수학", students: 10, competitor: "" }
     ];
 
+    // 서버 데이터 캐시 (메모리에 저장)
+    const serverDataCache = {};
+
     // 데이터 키 prefix 함수 (센터형/구독형 분리)
     function getDataKey(baseKey) {
       return currentContractType + '_' + baseKey;
+    }
+
+    // ===== 서버 API 연동 함수 =====
+
+    // 서버에서 모든 계약 데이터 로드
+    async function loadAllContractsFromServer() {
+      try {
+        const response = await fetch(`/api/center-contracts?contractType=${currentContractType}`);
+        const result = await response.json();
+        if (result.ok && result.contracts) {
+          // 캐시에 저장
+          result.contracts.forEach(contract => {
+            const schoolId = contract.schoolId;
+            if (contract.schoolData) {
+              serverDataCache[getDataKey('schoolData_' + schoolId)] = contract.schoolData;
+            }
+            if (contract.contractData) {
+              serverDataCache[getDataKey('contractData_' + schoolId)] = contract.contractData;
+            }
+            if (contract.excessData) {
+              serverDataCache[getDataKey('excessData_' + schoolId)] = contract.excessData;
+            }
+            if (contract.textbookData) {
+              serverDataCache[getDataKey('textbookData_' + schoolId)] = contract.textbookData;
+            }
+          });
+          console.log(`✅ 서버에서 ${result.contracts.length}개 계약 데이터 로드 완료`);
+        }
+      } catch (err) {
+        console.error('❌ 서버 데이터 로드 실패:', err);
+      }
+    }
+
+    // 서버에 데이터 저장
+    async function saveToServer(schoolId, field, data) {
+      try {
+        const response = await fetch(`/api/center-contracts/${currentContractType}/${schoolId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ field, data })
+        });
+        const result = await response.json();
+        if (result.ok) {
+          console.log(`✅ 서버 저장 성공: ${schoolId} - ${field}`);
+        }
+        return result;
+      } catch (err) {
+        console.error('❌ 서버 저장 실패:', err);
+        return { ok: false };
+      }
+    }
+
+    // 서버에서 데이터 삭제 (초기화)
+    async function deleteFromServer(schoolId) {
+      try {
+        const response = await fetch(`/api/center-contracts/${currentContractType}/${schoolId}`, {
+          method: 'DELETE'
+        });
+        const result = await response.json();
+        if (result.ok) {
+          console.log(`✅ 서버 삭제 성공: ${schoolId}`);
+        }
+        return result;
+      } catch (err) {
+        console.error('❌ 서버 삭제 실패:', err);
+        return { ok: false };
+      }
+    }
+
+    // localStorage 대체 함수 (서버 + 캐시 사용)
+    function getStoredData(key) {
+      // 먼저 캐시 확인
+      if (serverDataCache[key]) {
+        return serverDataCache[key];
+      }
+      // 캐시에 없으면 localStorage fallback (마이그레이션용)
+      const localData = localStorage.getItem(key);
+      return localData ? JSON.parse(localData) : {};
+    }
+
+    function setStoredData(key, data, schoolId, field) {
+      // 캐시에 저장
+      serverDataCache[key] = data;
+      // 서버에 저장 (비동기)
+      saveToServer(schoolId, field, data);
     }
 
     function openSidebar() {
@@ -1877,19 +1965,22 @@
 
       closeSidebar();
 
-      // 테이블 새로고침
-      if (currentCenterFilter) {
-        renderTableWithCenterFilter();
-      } else {
-        renderTable();
-      }
+      // 서버에서 데이터 로드 후 테이블 새로고침
+      (async function() {
+        await loadAllContractsFromServer();
+        if (currentCenterFilter) {
+          renderTableWithCenterFilter();
+        } else {
+          renderTable();
+        }
+      })();
     }
 
     // 미납현황 모달 관련
     function openUnpaidModal(schoolId, schoolName) {
-      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
-      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
-      const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolId)) || '{}');
+      const allExcessData = getStoredData(getDataKey('excessData_' + schoolId));
+      const allTextbookData = getStoredData(getDataKey('textbookData_' + schoolId));
+      const contractData = getStoredData(getDataKey('contractData_' + schoolId));
 
       const centerName = '브레인 문해원 ' + schoolName.replace('초등학교', '').replace('초', '') + '센터';
 
@@ -1988,8 +2079,8 @@
 
     // 미납현황 개수 및 HTML 생성 함수
     function getUnpaidInfo(schoolId) {
-      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
-      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
+      const allExcessData = getStoredData(getDataKey('excessData_' + schoolId));
+      const allTextbookData = getStoredData(getDataKey('textbookData_' + schoolId));
 
       let unpaidCount = 0;
 
@@ -2154,7 +2245,7 @@
     function loadExcessMonthData() {
       if (!currentExcessSchoolId) return;
 
-      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + currentExcessSchoolId)) || '{}');
+      const allExcessData = getStoredData(getDataKey('excessData_' + currentExcessSchoolId));
       const monthData = allExcessData[currentExcessMonth] || {};
 
       document.getElementById('excessMonthDisplay').textContent = formatMonthDisplay(currentExcessMonth);
@@ -2170,8 +2261,8 @@
     }
 
     function renderExcessHistory() {
-      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + currentExcessSchoolId)) || '{}');
-      const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + currentExcessSchoolId)) || '{}');
+      const allExcessData = getStoredData(getDataKey('excessData_' + currentExcessSchoolId));
+      const contractData = getStoredData(getDataKey('contractData_' + currentExcessSchoolId));
       const annualFee = contractData.annualFee;
 
       let minPersons = 0;
@@ -2222,8 +2313,8 @@
       currentExcessSchoolName = schoolName;
       currentExcessMonth = getCurrentMonth();
 
-      const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolId)) || '{}');
-      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
+      const contractData = getStoredData(getDataKey('contractData_' + schoolId));
+      const allExcessData = getStoredData(getDataKey('excessData_' + schoolId));
       const monthData = allExcessData[currentExcessMonth] || {};
       const centerName = '브레인 문해원 ' + schoolName.replace('초등학교', '').replace('초', '') + '센터';
 
@@ -2353,7 +2444,7 @@
       const paymentStatus = document.getElementById('excessPaymentStatus').value;
 
       // 기존 전체 데이터 가져오기
-      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + currentExcessSchoolId)) || '{}');
+      const allExcessData = getStoredData(getDataKey('excessData_' + currentExcessSchoolId));
 
       // 현재 월 데이터 저장
       allExcessData[currentExcessMonth] = {
@@ -2361,7 +2452,7 @@
         paymentStatus: paymentStatus
       };
 
-      localStorage.setItem(getDataKey('excessData_' + currentExcessSchoolId), JSON.stringify(allExcessData));
+      setStoredData(getDataKey('excessData_' + currentExcessSchoolId), allExcessData, currentExcessSchoolId, 'excessData');
       alert(`${formatMonthDisplay(currentExcessMonth)} 데이터가 저장되었습니다.`);
 
       // 히스토리 새로고침
@@ -2422,8 +2513,8 @@
     function loadTextbookMonthData() {
       if (!currentTextbookSchoolId) return;
 
-      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + currentTextbookSchoolId)) || '{}');
-      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + currentTextbookSchoolId)) || '{}');
+      const allExcessData = getStoredData(getDataKey('excessData_' + currentTextbookSchoolId));
+      const allTextbookData = getStoredData(getDataKey('textbookData_' + currentTextbookSchoolId));
       const excessMonthData = allExcessData[currentTextbookMonth] || {};
       const monthData = allTextbookData[currentTextbookMonth] || {};
 
@@ -2446,7 +2537,7 @@
     }
 
     function renderTextbookHistory() {
-      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + currentTextbookSchoolId)) || '{}');
+      const allTextbookData = getStoredData(getDataKey('textbookData_' + currentTextbookSchoolId));
 
       // 월별 데이터 정렬 (최신순)
       const months = Object.keys(allTextbookData).filter(k => k.match(/^\d{4}-\d{2}$/)).sort().reverse();
@@ -2490,8 +2581,8 @@
       currentTextbookSchoolName = schoolName;
       currentTextbookMonth = getCurrentMonth();
 
-      const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
-      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
+      const allExcessData = getStoredData(getDataKey('excessData_' + schoolId));
+      const allTextbookData = getStoredData(getDataKey('textbookData_' + schoolId));
       const excessMonthData = allExcessData[currentTextbookMonth] || {};
       const monthData = allTextbookData[currentTextbookMonth] || {};
       const centerName = '브레인 문해원 ' + schoolName.replace('초등학교', '').replace('초', '') + '센터';
@@ -2588,7 +2679,7 @@
       const paymentStatus = document.getElementById('textbookPaymentStatus').value;
 
       // 기존 전체 데이터 가져오기
-      const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + currentTextbookSchoolId)) || '{}');
+      const allTextbookData = getStoredData(getDataKey('textbookData_' + currentTextbookSchoolId));
 
       // 현재 월 데이터 저장
       allTextbookData[currentTextbookMonth] = {
@@ -2597,7 +2688,7 @@
         paymentStatus: paymentStatus
       };
 
-      localStorage.setItem(getDataKey('textbookData_' + currentTextbookSchoolId), JSON.stringify(allTextbookData));
+      setStoredData(getDataKey('textbookData_' + currentTextbookSchoolId), allTextbookData, currentTextbookSchoolId, 'textbookData');
       alert(`${formatMonthDisplay(currentTextbookMonth)} 데이터가 저장되었습니다.`);
 
       // 히스토리 새로고침
@@ -2635,7 +2726,7 @@
 
       // 저장된 데이터 로드
       const key = getDataKey('contractData_' + schoolId);
-      const data = JSON.parse(localStorage.getItem(key) || '{}');
+      const data = getStoredData(key);
 
       document.getElementById('contractOpeningFee').value = data.openingFee || '';
       document.getElementById('contractIntroFee').value = data.introFee || '';
@@ -2706,13 +2797,13 @@
       };
 
       const key = getDataKey('contractData_' + currentContractSchoolId);
-      localStorage.setItem(key, JSON.stringify(data));
+      setStoredData(key, data, currentContractSchoolId, 'contractData');
 
       // 결제여부를 기존 schoolData에도 저장 (호환성)
       const schoolKey = getDataKey('schoolData_' + currentContractSchoolId);
-      const schoolData = JSON.parse(localStorage.getItem(schoolKey) || '{}');
+      const schoolData = getStoredData(schoolKey);
       schoolData.payment = data.paymentStatus === '완료' ? '완료' : (data.paymentStatus === '대기' ? '미완료' : '');
-      localStorage.setItem(schoolKey, JSON.stringify(schoolData));
+      setStoredData(schoolKey, schoolData, currentContractSchoolId, 'schoolData');
 
       alert('저장되었습니다.');
       closeContractModal();
@@ -2785,8 +2876,8 @@
       return filtered.sort((a, b) => {
         const schoolIdA = `${a.sido}_${a.sigungu}_${a.name}`.replace(/\s/g, '_');
         const schoolIdB = `${b.sido}_${b.sigungu}_${b.name}`.replace(/\s/g, '_');
-        const contractDataA = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolIdA)) || '{}');
-        const contractDataB = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolIdB)) || '{}');
+        const contractDataA = getStoredData(getDataKey('contractData_' + schoolIdA));
+        const contractDataB = getStoredData(getDataKey('contractData_' + schoolIdB));
         const statusA = contractDataA.paymentStatus || '';
         const statusB = contractDataB.paymentStatus || '';
 
@@ -2833,8 +2924,8 @@
       return filtered.sort((a, b) => {
         const schoolIdA = `${a.sido}_${a.sigungu}_${a.name}`.replace(/\s/g, '_');
         const schoolIdB = `${b.sido}_${b.sigungu}_${b.name}`.replace(/\s/g, '_');
-        const allExcessDataA = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolIdA)) || '{}');
-        const allExcessDataB = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolIdB)) || '{}');
+        const allExcessDataA = getStoredData(getDataKey('excessData_' + schoolIdA));
+        const allExcessDataB = getStoredData(getDataKey('excessData_' + schoolIdB));
         const statusA = (allExcessDataA[currentMonth] || {}).paymentStatus || '';
         const statusB = (allExcessDataB[currentMonth] || {}).paymentStatus || '';
 
@@ -2881,8 +2972,8 @@
       return filtered.sort((a, b) => {
         const schoolIdA = `${a.sido}_${a.sigungu}_${a.name}`.replace(/\s/g, '_');
         const schoolIdB = `${b.sido}_${b.sigungu}_${b.name}`.replace(/\s/g, '_');
-        const allTextbookDataA = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolIdA)) || '{}');
-        const allTextbookDataB = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolIdB)) || '{}');
+        const allTextbookDataA = getStoredData(getDataKey('textbookData_' + schoolIdA));
+        const allTextbookDataB = getStoredData(getDataKey('textbookData_' + schoolIdB));
         const statusA = (allTextbookDataA[currentMonth] || {}).paymentStatus || '';
         const statusB = (allTextbookDataB[currentMonth] || {}).paymentStatus || '';
 
@@ -2937,7 +3028,7 @@
         // 센터 배지 필터
         if (currentCenterFilter) {
           const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
-          const savedData = JSON.parse(localStorage.getItem(getDataKey('schoolData_' + schoolId)) || '{}');
+          const savedData = getStoredData(getDataKey('schoolData_' + schoolId));
           const status = savedData.status || '';
 
           if (currentCenterFilter === 'all') {
@@ -2980,10 +3071,10 @@
 
       tbody.innerHTML = sortedFiltered3.map((school, idx) => {
         const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
-        const savedData = JSON.parse(localStorage.getItem(getDataKey('schoolData_' + schoolId)) || '{}');
-        const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolId)) || '{}');
-        const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
-        const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
+        const savedData = getStoredData(getDataKey('schoolData_' + schoolId));
+        const contractData = getStoredData(getDataKey('contractData_' + schoolId));
+        const allExcessData = getStoredData(getDataKey('excessData_' + schoolId));
+        const allTextbookData = getStoredData(getDataKey('textbookData_' + schoolId));
         const currentMonth = getCurrentMonth();
         const excessMonthData = allExcessData[currentMonth] || {};
         const textbookMonthData = allTextbookData[currentMonth] || {};
@@ -3048,7 +3139,7 @@
             </select>
           </td>
           <td>
-            <button class="detail-btn ${localStorage.getItem(getDataKey('contractData_' + schoolId)) ? 'has-data' : ''}" data-id="${schoolId}" data-name="${school.name}">상세보기</button>
+            <button class="detail-btn ${Object.keys(getStoredData(getDataKey('contractData_' + schoolId))).length > 0 ? 'has-data' : ''}" data-id="${schoolId}" data-name="${school.name}">상세보기</button>
           </td>
           <td>${paymentStatusHtml}</td>
           <td>
@@ -4746,7 +4837,7 @@
         let matchStatus = true;
         if (statusFilter) {
           const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
-          const savedData = JSON.parse(localStorage.getItem(getDataKey('schoolData_' + schoolId)) || '{}');
+          const savedData = getStoredData(getDataKey('schoolData_' + schoolId));
           const status = savedData.status || '';
           matchStatus = status === statusFilter;
         }
@@ -4786,10 +4877,10 @@
 
       tbody.innerHTML = sortedFiltered3.map((school, idx) => {
         const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
-        const savedData = JSON.parse(localStorage.getItem(getDataKey('schoolData_' + schoolId)) || '{}');
-        const contractData = JSON.parse(localStorage.getItem(getDataKey('contractData_' + schoolId)) || '{}');
-        const allExcessData = JSON.parse(localStorage.getItem(getDataKey('excessData_' + schoolId)) || '{}');
-        const allTextbookData = JSON.parse(localStorage.getItem(getDataKey('textbookData_' + schoolId)) || '{}');
+        const savedData = getStoredData(getDataKey('schoolData_' + schoolId));
+        const contractData = getStoredData(getDataKey('contractData_' + schoolId));
+        const allExcessData = getStoredData(getDataKey('excessData_' + schoolId));
+        const allTextbookData = getStoredData(getDataKey('textbookData_' + schoolId));
         const currentMonth = getCurrentMonth();
         const excessMonthData = allExcessData[currentMonth] || {};
         const textbookMonthData = allTextbookData[currentMonth] || {};
@@ -4855,7 +4946,7 @@
             </select>
           </td>
           <td>
-            <button class="detail-btn ${localStorage.getItem(getDataKey('contractData_' + schoolId)) ? 'has-data' : ''}" data-id="${schoolId}" data-name="${school.name}">상세보기</button>
+            <button class="detail-btn ${Object.keys(getStoredData(getDataKey('contractData_' + schoolId))).length > 0 ? 'has-data' : ''}" data-id="${schoolId}" data-name="${school.name}">상세보기</button>
           </td>
           <td>${paymentStatusHtml}</td>
           <td>
@@ -4930,11 +5021,22 @@
         });
       });
       document.querySelectorAll('.reset-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           const password = prompt('비밀번호를 입력하세요:');
           if (password === '2846') {
             const schoolId = e.target.dataset.id;
+            // 서버에서 삭제
+            await deleteFromServer(schoolId);
+            // 캐시에서 삭제
+            delete serverDataCache[getDataKey('schoolData_' + schoolId)];
+            delete serverDataCache[getDataKey('contractData_' + schoolId)];
+            delete serverDataCache[getDataKey('excessData_' + schoolId)];
+            delete serverDataCache[getDataKey('textbookData_' + schoolId)];
+            // localStorage에서도 삭제 (마이그레이션 호환)
             localStorage.removeItem(getDataKey('schoolData_' + schoolId));
+            localStorage.removeItem(getDataKey('contractData_' + schoolId));
+            localStorage.removeItem(getDataKey('excessData_' + schoolId));
+            localStorage.removeItem(getDataKey('textbookData_' + schoolId));
             if (currentCenterFilter) {
               renderTableWithCenterFilter();
             } else {
@@ -4948,12 +5050,12 @@
       });
     }
 
-    // 데이터 저장 함수
+    // 데이터 저장 함수 (서버 연동)
     function saveSchoolData(schoolId, field, value) {
       const key = getDataKey('schoolData_' + schoolId);
-      const data = JSON.parse(localStorage.getItem(key) || '{}');
+      const data = getStoredData(key);
       data[field] = value;
-      localStorage.setItem(key, JSON.stringify(data));
+      setStoredData(key, data, schoolId, 'schoolData');
     }
 
     // 시도 필터 옵션 생성
@@ -5035,7 +5137,12 @@
 
     populateSidoFilter();
     populateSigunguFilter();
-    renderTable();
+
+    // 서버에서 데이터 로드 후 테이블 렌더링
+    (async function init() {
+      await loadAllContractsFromServer();
+      renderTable();
+    })();
   </script>
 </body>
 </html>
