@@ -2,19 +2,24 @@
 <html lang="ko">
 <head>
   <script>
-    // 카카오톡 인앱 브라우저 감지 → 외부 브라우저로 열기
+    // 카카오톡 인앱 브라우저 감지 → 외부 브라우저 안내 팝업
     (function() {
       var userAgent = navigator.userAgent.toLowerCase();
       if (userAgent.indexOf('kakaotalk') > -1) {
-        var currentUrl = window.location.href;
-        // Android
-        if (userAgent.indexOf('android') > -1) {
-          location.href = 'intent://' + currentUrl.replace(/https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
-        }
-        // iOS
-        else if (userAgent.indexOf('iphone') > -1 || userAgent.indexOf('ipad') > -1) {
-          location.href = currentUrl + (currentUrl.indexOf('?') > -1 ? '&' : '?') + 'openExternalBrowser=1';
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+          var overlay = document.createElement('div');
+          overlay.id = 'kakao-browser-overlay';
+          overlay.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#fff;border-radius:16px;padding:30px 25px;max-width:320px;text-align:center;margin:20px;"><p style="font-size:18px;font-weight:700;color:#333;margin:0 0 15px;">외부 브라우저로 열기</p><p style="font-size:14px;color:#666;margin:0 0 20px;line-height:1.5;">원활한 이용을 위해<br>Chrome 또는 Safari로 열어주세요.</p><button onclick="openExternal()" style="width:100%;padding:14px;background:#fee500;border:none;border-radius:10px;font-size:16px;font-weight:600;color:#333;cursor:pointer;">브라우저로 열기</button><p style="font-size:12px;color:#999;margin:15px 0 0;">우측 상단 ⋮ → 다른 브라우저로 열기</p></div></div>';
+          document.body.appendChild(overlay);
+        });
+        window.openExternal = function() {
+          var currentUrl = window.location.href;
+          if (userAgent.indexOf('android') > -1) {
+            location.href = 'intent://' + currentUrl.replace(/https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+          } else {
+            window.open(currentUrl);
+          }
+        };
       }
     })();
   </script>
@@ -189,6 +194,45 @@
 
     .topic-badge:active {
       transform: scale(0.98);
+    }
+
+    /* 학년 선택 바 */
+    .grade-selector {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: #fff;
+      border-bottom: 1px solid #e8dcc8;
+    }
+
+    .grade-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid #ddd;
+      background: #fff;
+      color: #666;
+    }
+
+    .grade-badge:hover {
+      border-color: #d4af37;
+      color: #d4af37;
+    }
+
+    .grade-badge.active {
+      background: linear-gradient(135deg, #d4af37, #f0c14b);
+      border-color: #d4af37;
+      color: #fff;
+    }
+
+    .grade-badge .char-count {
+      font-size: 10px;
+      opacity: 0.8;
+      margin-left: 4px;
     }
 
     /* 날짜바 우측 영역 */
@@ -672,6 +716,22 @@
       </div>
     </div>
 
+    <!-- 학년 선택 바 -->
+    <div class="grade-selector" id="gradeSelector">
+      <span class="grade-badge active" data-grade="elem34" onclick="selectGrade('elem34')">
+        초3~4<span class="char-count">(400자)</span>
+      </span>
+      <span class="grade-badge" data-grade="elem56" onclick="selectGrade('elem56')">
+        초5~6<span class="char-count">(700자)</span>
+      </span>
+      <span class="grade-badge" data-grade="mid12" onclick="selectGrade('mid12')">
+        중1~2<span class="char-count">(1000자)</span>
+      </span>
+      <span class="grade-badge" data-grade="mid3high1" onclick="selectGrade('mid3high1')">
+        중3~고1<span class="char-count">(1300자)</span>
+      </span>
+    </div>
+
     <!-- 페이지 1: 기사 + 육하원칙 -->
     <div class="page-1" data-html2pdf-page-break="before">
       <!-- 기사 본문 -->
@@ -772,6 +832,23 @@
     // 전역 변수
     let articlesData = null;
     let currentArticle = null;
+    let currentGrade = 'elem34'; // 현재 선택된 학년 (기본: 초3~4)
+
+    // 학년 선택 함수
+    function selectGrade(grade) {
+      currentGrade = grade;
+
+      // 배지 active 상태 변경
+      document.querySelectorAll('.grade-badge').forEach(badge => {
+        badge.classList.remove('active');
+      });
+      document.querySelector(`.grade-badge[data-grade="${grade}"]`).classList.add('active');
+
+      // 기사 다시 렌더링
+      if (currentArticle) {
+        renderArticle(currentArticle);
+      }
+    }
 
     // 요일별 주제 설정
     const TOPICS = {
@@ -860,14 +937,32 @@
       return `${year}-${month}-${day}`;
     }
 
+    // 학년별 레이블
+    const GRADE_LABELS = {
+      'elem34': '초3~4',
+      'elem56': '초5~6',
+      'mid12': '중1~2',
+      'mid3high1': '중3~고1'
+    };
+
     // 기사 렌더링
     function renderArticle(article) {
       const articleArea = document.getElementById('articleArea');
-      const paragraphs = article.content.split('\n\n').filter(p => p.trim());
+
+      // 학년별 content 가져오기 (없으면 기본 content 사용)
+      let articleContent = article.content; // 기본 (elem34)
+      if (currentGrade !== 'elem34' && article.contents && article.contents[currentGrade]) {
+        articleContent = article.contents[currentGrade];
+      }
+
+      const paragraphs = articleContent.split('\n\n').filter(p => p.trim());
       const contentHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
 
       // 글자수 계산 (공백 제외)
-      const charCount = article.content.replace(/\s/g, '').length;
+      const charCount = articleContent.replace(/\s/g, '').length;
+
+      // 학년 레이블
+      const gradeLabel = GRADE_LABELS[currentGrade];
 
       articleArea.innerHTML = `
         <h3 class="article-headline">${article.title}</h3>
@@ -877,7 +972,7 @@
             <span>📁 ${article.category}</span>
             ${article.source ? ` · <span>출처: ${article.source}</span>` : ''}
           </div>
-          <span class="article-char-count">📝 ${charCount.toLocaleString()}자</span>
+          <span class="article-char-count">📝 ${charCount.toLocaleString()}자 (${gradeLabel})</span>
         </div>
         <div class="article-content">
           ${contentHtml}
@@ -1128,9 +1223,11 @@
         // 표지 이미지 추가
         pdf.addImage(coverCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
 
-        // === 페이지 2: 헤더 + 날짜바 + 기사 + 육하원칙 ===
+        // === 페이지 2+: 헤더 + 날짜바 + 기사 + 육하원칙 (여러 페이지 지원) ===
         pdf.addPage();
 
+        const gradeSelector = document.getElementById('gradeSelector');
+        gradeSelector.style.display = 'none';
         thinkingSection.style.display = 'none';
         page1.style.minHeight = 'auto';
         page1.style.paddingBottom = '20px';
@@ -1144,12 +1241,43 @@
 
         const img1Width = canvas1.width;
         const img1Height = canvas1.height;
-        const ratio1 = Math.min(pdfWidth / img1Width, pdfHeight / img1Height);
-        const imgHeight1 = Math.min(img1Height * ratio1, pdfHeight);
 
-        pdf.addImage(canvas1.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, imgHeight1);
+        // 실제 비율로 PDF 너비에 맞춤
+        const scale1 = pdfWidth / (img1Width / 2); // scale: 2로 캡처했으므로 /2
+        const scaledHeight1 = (img1Height / 2) * scale1;
 
-        // === 페이지 3: 생각쓰기 섹션만 ===
+        // 한 페이지 높이를 초과하면 여러 페이지로 나눔
+        if (scaledHeight1 <= pdfHeight) {
+          // 한 페이지에 들어감
+          pdf.addImage(canvas1.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, scaledHeight1);
+        } else {
+          // 여러 페이지로 분할
+          const pageHeightPx = (pdfHeight / scale1) * 2; // 한 페이지에 들어갈 픽셀 높이
+          let yOffset = 0;
+          let isFirstPage = true;
+
+          while (yOffset < img1Height) {
+            if (!isFirstPage) {
+              pdf.addPage();
+            }
+
+            // 캔버스에서 해당 부분만 추출
+            const sliceHeight = Math.min(pageHeightPx, img1Height - yOffset);
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = img1Width;
+            tempCanvas.height = sliceHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(canvas1, 0, yOffset, img1Width, sliceHeight, 0, 0, img1Width, sliceHeight);
+
+            const sliceScaledHeight = (sliceHeight / 2) * scale1;
+            pdf.addImage(tempCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, sliceScaledHeight);
+
+            yOffset += sliceHeight;
+            isFirstPage = false;
+          }
+        }
+
+        // === 생각쓰기 페이지 ===
         pdf.addPage();
 
         header.style.display = 'none';
@@ -1168,10 +1296,10 @@
 
         const img2Width = canvas2.width;
         const img2Height = canvas2.height;
-        const ratio2 = Math.min(pdfWidth / img2Width, pdfHeight / img2Height);
-        const imgHeight2 = Math.min(img2Height * ratio2, pdfHeight);
+        const scale2 = pdfWidth / (img2Width / 2);
+        const scaledHeight2 = (img2Height / 2) * scale2;
 
-        pdf.addImage(canvas2.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, imgHeight2);
+        pdf.addImage(canvas2.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, scaledHeight2);
 
         // PDF 저장
         pdf.save(fileName);
@@ -1199,6 +1327,7 @@
         container.style.maxWidth = '';
         dateSelectorBar.style.display = 'flex';
         actionBar.style.display = 'flex';
+        document.getElementById('gradeSelector').style.display = 'flex';
 
         // 로딩 제거
         document.body.removeChild(loadingDiv);
