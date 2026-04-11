@@ -497,7 +497,10 @@
     .locked .status-select,
     .locked .payment-select,
     .locked .contract-input,
-    .locked .reset-btn {
+    .locked .reset-btn,
+    .locked .detail-btn,
+    .locked .person-btn,
+    .locked .textbook-btn {
       pointer-events: none;
       opacity: 0.5;
       cursor: not-allowed;
@@ -567,6 +570,17 @@
     .center-badge.badge-confirmed:hover,
     .center-badge.badge-confirmed.active {
       background: #4CAF50;
+      color: white;
+    }
+
+    .center-badge.badge-sort {
+      border-color: #9b59b6;
+      color: #9b59b6;
+    }
+
+    .center-badge.badge-sort:hover,
+    .center-badge.badge-sort.active {
+      background: #9b59b6;
       color: white;
     }
 
@@ -1751,6 +1765,7 @@
             <option value="250">250만원</option>
             <option value="500">500만원</option>
             <option value="1000">1000만원</option>
+            <option value="0">면제</option>
           </select>
         </div>
 
@@ -1879,6 +1894,8 @@
       <span class="center-badge" id="badgeAll" onclick="filterByCenter('all')">센터전체</span>
       <span class="center-badge badge-expected" id="badgeExpected" onclick="filterByCenter('expected')">센터예정</span>
       <span class="center-badge badge-confirmed" id="badgeConfirmed" onclick="filterByCenter('confirmed')">센터확정</span>
+      <span class="center-badge badge-sort" id="badgeSortStart" onclick="sortByContractStart()">계약시작일순</span>
+      <span class="center-badge badge-sort" id="badgeSortRemaining" onclick="sortByRemainingDays()">남은기간순</span>
     </div>
 
     <div class="table-container">
@@ -3317,6 +3334,83 @@
 
     // 센터 필터 배지 상태
     let currentCenterFilter = null;
+    let currentSortType = null; // 'contractStart' | 'remainingDays' | null
+
+    function sortByContractStart() {
+      // 배지 활성화 상태 업데이트
+      document.getElementById('badgeSortStart').classList.toggle('active');
+      document.getElementById('badgeSortRemaining').classList.remove('active');
+
+      if (currentSortType === 'contractStart') {
+        currentSortType = null;
+        document.getElementById('badgeSortStart').classList.remove('active');
+      } else {
+        currentSortType = 'contractStart';
+      }
+
+      if (currentCenterFilter) {
+        renderTableWithCenterFilter();
+      } else {
+        renderTable();
+      }
+    }
+
+    function sortByRemainingDays() {
+      // 배지 활성화 상태 업데이트
+      document.getElementById('badgeSortRemaining').classList.toggle('active');
+      document.getElementById('badgeSortStart').classList.remove('active');
+
+      if (currentSortType === 'remainingDays') {
+        currentSortType = null;
+        document.getElementById('badgeSortRemaining').classList.remove('active');
+      } else {
+        currentSortType = 'remainingDays';
+      }
+
+      if (currentCenterFilter) {
+        renderTableWithCenterFilter();
+      } else {
+        renderTable();
+      }
+    }
+
+    function applySortByContract(dataArray) {
+      if (!currentSortType) return dataArray;
+
+      return [...dataArray].sort((a, b) => {
+        const schoolIdA = `${a.sido}_${a.sigungu}_${a.name}`.replace(/\s/g, '_');
+        const schoolIdB = `${b.sido}_${b.sigungu}_${b.name}`.replace(/\s/g, '_');
+        const contractDataA = getStoredData(getDataKey('contractData_' + schoolIdA));
+        const contractDataB = getStoredData(getDataKey('contractData_' + schoolIdB));
+        const startDateA = contractDataA.contractStartDate || '';
+        const startDateB = contractDataB.contractStartDate || '';
+
+        if (currentSortType === 'contractStart') {
+          // 계약시작일순 (오름차순, 빈 값은 뒤로)
+          if (!startDateA && !startDateB) return 0;
+          if (!startDateA) return 1;
+          if (!startDateB) return -1;
+          return new Date(startDateA) - new Date(startDateB);
+        } else if (currentSortType === 'remainingDays') {
+          // 남은기간순 (내림차순 - 남은 기간 적은 것이 위로)
+          if (!startDateA && !startDateB) return 0;
+          if (!startDateA) return 1;
+          if (!startDateB) return -1;
+
+          const endDateA = new Date(startDateA);
+          endDateA.setFullYear(endDateA.getFullYear() + 1);
+          const endDateB = new Date(startDateB);
+          endDateB.setFullYear(endDateB.getFullYear() + 1);
+
+          const today = new Date();
+          const remainingA = endDateA - today;
+          const remainingB = endDateB - today;
+
+          return remainingA - remainingB; // 남은 기간 적은 것이 위로 (내림차순)
+        }
+        return 0;
+      });
+    }
 
     function filterByCenter(type) {
       // 배지 활성화 상태 업데이트
@@ -3394,7 +3488,10 @@
       // 교재결제 정렬 적용
       const sortedFiltered3 = sortByTextbookPaymentStatus(sortedFiltered2);
 
-      tbody.innerHTML = sortedFiltered3.map((school, idx) => {
+      // 계약시작일/남은기간 정렬 적용
+      const sortedFiltered4 = applySortByContract(sortedFiltered3);
+
+      tbody.innerHTML = sortedFiltered4.map((school, idx) => {
         const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
         const savedData = getStoredData(getDataKey('schoolData_' + schoolId));
         const contractData = getStoredData(getDataKey('contractData_' + schoolId));
@@ -5889,7 +5986,10 @@
       // 교재결제 정렬 적용
       const sortedFiltered3 = sortByTextbookPaymentStatus(sortedFiltered2);
 
-      tbody.innerHTML = sortedFiltered3.map((school, idx) => {
+      // 계약시작일/남은기간 정렬 적용
+      const sortedFiltered4 = applySortByContract(sortedFiltered3);
+
+      tbody.innerHTML = sortedFiltered4.map((school, idx) => {
         const schoolId = `${school.sido}_${school.sigungu}_${school.name}`.replace(/\s/g, '_');
         const savedData = getStoredData(getDataKey('schoolData_' + schoolId));
         const contractData = getStoredData(getDataKey('contractData_' + schoolId));
