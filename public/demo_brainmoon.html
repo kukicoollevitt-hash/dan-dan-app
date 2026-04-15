@@ -4729,7 +4729,7 @@ canvas[id^="confetti-canvas"] {
   <!-- 🎯 체험판 배너 -->
   <div class="demo-banner">
     <span class="demo-banner-icon">🎓</span>
-    <span class="demo-banner-text">체험판 - BRAIN온 시리즈 전 분야 1~3단원 이용 가능합니다</span>
+    <span class="demo-banner-text">체험판 - BRAIN온 시리즈 | 과학·사회 3단원, 한국문학·세계문학·인물 1단원 이용 가능</span>
   </div>
 
   <!-- 고래 도서관 아이콘 (좌측 하단, 학습실 옆) -->
@@ -4830,8 +4830,16 @@ canvas[id^="confetti-canvas"] {
     // 🎯 체험판 모드 플래그
     window.DEMO_MODE = true;
     window.DEMO_ALLOWED_SERIES = ['BRAINON'];
-    window.DEMO_ALLOWED_UNIT = 1; // 1단원만 허용
-    window.DEMO_DISABLED_FIELDS = ['korlit', 'worldlit', 'person', 'social']; // 비활성화 분야: 한국문학, 세계문학, 인물, 사회
+    // 분야별 허용 단원 수 설정
+    window.DEMO_ALLOWED_UNITS_BY_DOMAIN = {
+      science: 3,   // 과학분야: 3단원
+      social: 3,    // 사회분야: 3단원
+      korlit: 1,    // 한국문학분야: 1단원
+      worldlit: 1,  // 세계문학분야: 1단원
+      person: 1     // 인물분야: 1단원
+    };
+    window.DEMO_ALLOWED_UNIT = 3; // 기본값 (과학/사회)
+    window.DEMO_DISABLED_FIELDS = []; // 모든 분야 활성화
     window.DEMO_SESSION_DURATION = 60 * 60 * 1000; // 1시간 (밀리초)
 
     (function() {
@@ -7785,8 +7793,8 @@ if (logoutConfirmBtn) {
       domainList.innerHTML = "";
       const domainData = domainsBySeries[seriesKey] || domainsBySeries["BRAINON"];
 
-      // 체험판에서는 과학 분야만 활성화 (사회/한국문학/세계문학/인물 비활성화)
-      const allowedDomains = ["science"];
+      // 체험판에서 활성화할 분야 (전체 분야)
+      const allowedDomains = ["science", "social", "korlit", "worldlit", "person"];
       const disabledFields = window.DEMO_DISABLED_FIELDS || [];
 
       domainData.forEach(dom => {
@@ -7817,8 +7825,8 @@ if (logoutConfirmBtn) {
     /* 7. 세부 과목 표시 */
     function renderSubjects(seriesKey, domainObj) {
       subjectList.innerHTML = "";
-      // 체험판에서 활성화할 과목 (과학 분야만)
-      const allowedSubjects = ["bio", "earth", "physics", "chem"];
+      // 체험판에서 활성화할 과목 (전체 과목)
+      const allowedSubjects = ["bio", "earth", "physics", "chem", "soc", "geo", "law", "pol", "classic", "poem", "novel", "world1", "world2", "people1", "people2"];
 
       domainObj.subs.forEach(sub => {
         const li = document.createElement("li");
@@ -7990,9 +7998,11 @@ if (logoutConfirmBtn) {
           console.log('⭐ [renderUnitList] 온시리즈 단원:', unitId, '등급정보:', gradeInfo ? gradeInfo.grade : '없음');
         }
 
-        // 🎯 체험판: 1단원 외 잠금 표시
+        // 🎯 체험판: 분야별 단원 제한 적용
         const unitNum = parseInt(u.num);
-        const isDemoLocked = window.DEMO_MODE && unitNum > window.DEMO_ALLOWED_UNIT;
+        const currentDomainId = currentSelectedDomain ? currentSelectedDomain.id : 'science';
+        const allowedUnitCount = window.DEMO_ALLOWED_UNITS_BY_DOMAIN[currentDomainId] || 3;
+        const isDemoLocked = window.DEMO_MODE && unitNum > allowedUnitCount;
 
         if (isDemoLocked) {
           li.classList.add('demo-locked');
@@ -8017,11 +8027,13 @@ if (logoutConfirmBtn) {
             return;
           }
 
-          // 🎯 체험판: 2단원까지 허용
+          // 🎯 체험판: 분야별 단원 제한 적용
           if (window.DEMO_MODE) {
             const unitNum = parseInt(u.num);
-            if (unitNum > window.DEMO_ALLOWED_UNIT) {
-              showDemoLockModal(`체험판에서는 1~3단원만 이용 가능합니다.\n\n${unitNum}단원은 정식버전에서 만나보세요!`);
+            const currentDomainId = currentSelectedDomain ? currentSelectedDomain.id : 'science';
+            const allowedUnitCount = window.DEMO_ALLOWED_UNITS_BY_DOMAIN[currentDomainId] || 3;
+            if (unitNum > allowedUnitCount) {
+              showDemoLockModal(`체험판에서는 1~${allowedUnitCount}단원만 이용 가능합니다.\n\n${unitNum}단원은 정식버전에서 만나보세요!`);
               return;
             }
           }
