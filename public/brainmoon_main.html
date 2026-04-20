@@ -20565,6 +20565,13 @@
     <span class="badge-glow"></span>
   </a>
 
+  <!-- 우측 하단 플로팅 교육영상 배지 -->
+  <a href="javascript:void(0)" class="floating-video-badge" onclick="openVideoPasswordModal()">
+    <span class="badge-icon">▶</span>
+    <span class="badge-text">교육영상</span>
+    <span class="badge-glow"></span>
+  </a>
+
   <!-- 우측 하단 플로팅 상담신청 배지 -->
   <a href="#franchise" class="floating-consult-badge">
     <span class="badge-icon">✦</span>
@@ -20721,6 +20728,72 @@
       animation-delay: 1.5s;
     }
 
+    /* 교육영상 배지 */
+    .floating-video-badge {
+      position: fixed;
+      bottom: 170px;
+      right: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 28px;
+      background: linear-gradient(135deg, rgba(30, 28, 22, 0.95) 0%, rgba(45, 40, 30, 0.95) 100%);
+      border: 1px solid rgba(var(--primary-rgb), 0.4);
+      border-radius: 50px;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 9999;
+      overflow: hidden;
+      box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(var(--primary-rgb), 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: badgeFloat 3s ease-in-out infinite;
+      animation-delay: 1s;
+    }
+
+    .floating-video-badge:hover {
+      transform: scale(1.05);
+      border-color: rgba(var(--primary-rgb), 0.8);
+      box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.5),
+        0 0 50px rgba(var(--primary-rgb), 0.25);
+      animation: none;
+    }
+
+    .floating-video-badge .badge-icon {
+      font-size: 1.2rem;
+      color: var(--primary);
+      animation: iconPulse 2s ease-in-out infinite;
+    }
+
+    .floating-video-badge .badge-text {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 50%, #c9a227 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .floating-video-badge .badge-glow {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(var(--primary-rgb), 0.15),
+        transparent
+      );
+      animation: badgeShine 3s ease-in-out infinite;
+      animation-delay: 2s;
+    }
+
     /* 모바일 대응 */
     @media (max-width: 768px) {
       .floating-trial-badge {
@@ -20735,14 +20808,315 @@
         padding: 10px 16px;
         gap: 6px;
       }
+      .floating-video-badge {
+        bottom: 115px;
+        right: 15px;
+        padding: 10px 16px;
+        gap: 6px;
+      }
       .floating-trial-badge .badge-icon,
-      .floating-consult-badge .badge-icon {
+      .floating-consult-badge .badge-icon,
+      .floating-video-badge .badge-icon {
         font-size: 0.9rem;
       }
       .floating-trial-badge .badge-text,
-      .floating-consult-badge .badge-text {
+      .floating-consult-badge .badge-text,
+      .floating-video-badge .badge-text {
         font-size: 0.75rem;
         letter-spacing: 1px;
+      }
+    }
+  </style>
+
+  <!-- 교육영상 비밀번호 모달 -->
+  <div class="video-password-overlay" id="videoPasswordOverlay">
+    <div class="video-password-modal">
+      <button class="video-modal-close" onclick="closeVideoPasswordModal()">&times;</button>
+      <div class="video-password-title">교육영상</div>
+      <div class="video-password-subtitle">비밀번호를 입력해주세요</div>
+      <input type="password" id="videoPasswordInput" class="video-password-input" placeholder="비밀번호 4자리" maxlength="4" onkeypress="if(event.key==='Enter') checkVideoPassword()">
+      <div class="video-password-error" id="videoPasswordError">비밀번호가 틀렸습니다</div>
+      <button class="video-password-btn" onclick="checkVideoPassword()">확인</button>
+    </div>
+  </div>
+
+  <!-- 교육영상 목록 모달 -->
+  <div class="video-list-overlay" id="videoListOverlay">
+    <div class="video-list-modal">
+      <button class="video-modal-close" onclick="closeVideoListModal()">&times;</button>
+      <div class="video-list-title">교육영상</div>
+      <div class="video-list-grid" id="videoListGrid">
+        <!-- 영상 카드들이 여기에 추가됩니다 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 영상 재생 모달 -->
+  <div class="video-player-overlay" id="videoPlayerOverlay">
+    <div class="video-player-modal">
+      <button class="video-modal-close" onclick="closeVideoPlayerModal()">&times;</button>
+      <div class="video-player-title" id="videoPlayerTitle"></div>
+      <div class="video-player-container" id="videoPlayerContainer">
+        <!-- iframe이 여기에 삽입됩니다 -->
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* 교육영상 비밀번호 모달 */
+    .video-password-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10001;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .video-password-modal {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 20px;
+      padding: 40px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+      border: 1px solid rgba(var(--primary-rgb), 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .video-modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 28px;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .video-modal-close:hover {
+      color: var(--primary);
+    }
+
+    .video-password-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .video-password-subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 25px;
+    }
+
+    .video-password-input {
+      width: 100%;
+      padding: 15px 20px;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 8px;
+      border: 2px solid rgba(var(--primary-rgb), 0.3);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .video-password-input:focus {
+      border-color: var(--primary);
+    }
+
+    .video-password-error {
+      display: none;
+      color: #e74c3c;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .video-password-btn {
+      width: 100%;
+      padding: 15px;
+      margin-top: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, #b8962e 100%);
+      border: none;
+      border-radius: 12px;
+      color: #1a1a2e;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .video-password-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(var(--primary-rgb), 0.3);
+    }
+
+    /* 교육영상 목록 모달 */
+    .video-list-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 10001;
+      justify-content: center;
+      align-items: center;
+      overflow-y: auto;
+      padding: 40px 20px;
+    }
+
+    .video-list-modal {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 20px;
+      padding: 40px;
+      width: 90%;
+      max-width: 900px;
+      position: relative;
+      border: 1px solid rgba(var(--primary-rgb), 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .video-list-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .video-list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .video-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 1px solid rgba(var(--primary-rgb), 0.2);
+    }
+
+    .video-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(var(--primary-rgb), 0.2);
+      border-color: var(--primary);
+    }
+
+    .video-card-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-card-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background: rgba(var(--primary-rgb), 0.9);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      color: #1a1a2e;
+      transition: transform 0.3s, background 0.3s;
+    }
+
+    .video-card:hover .video-card-play {
+      transform: translate(-50%, -50%) scale(1.1);
+      background: var(--primary);
+    }
+
+    .video-card-title {
+      padding: 15px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      text-align: center;
+    }
+
+    /* 영상 재생 모달 */
+    .video-player-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 10002;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .video-player-modal {
+      width: 90%;
+      max-width: 1000px;
+      position: relative;
+    }
+
+    .video-player-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .video-player-container {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .video-player-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* 모바일 대응 */
+    @media (max-width: 768px) {
+      .video-password-modal,
+      .video-list-modal {
+        padding: 25px;
+      }
+
+      .video-list-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .video-player-modal {
+        width: 95%;
       }
     }
   </style>
@@ -22283,6 +22657,140 @@
       animateHistoryFlow();
     }
   })();
+  </script>
+
+  <!-- 교육영상 기능 스크립트 -->
+  <script>
+    // 교육영상 목록 데이터
+    const educationVideos = [
+      {
+        id: '1184740751',
+        title: '브레인문해력_프롤로그',
+        thumbnail: 'https://vumbnail.com/1184740751.jpg'
+      },
+      {
+        id: '1184728911',
+        title: '브레인문해력_가치 및 성과',
+        thumbnail: 'https://vumbnail.com/1184728911.jpg'
+      },
+      {
+        id: '1184729474',
+        title: '브레인문해력_문해력의 중요성',
+        thumbnail: 'https://vumbnail.com/1184729474.jpg'
+      },
+      {
+        id: '1184729755',
+        title: '브레인문해력_문해파동학습법',
+        thumbnail: 'https://vumbnail.com/1184729755.jpg'
+      },
+      {
+        id: '1184730128',
+        title: '브레인문해력_교과기반창작독서',
+        thumbnail: 'https://vumbnail.com/1184730128.jpg'
+      },
+      {
+        id: '1184730980',
+        title: '브레인문해력_9단계 완전학습',
+        thumbnail: 'https://vumbnail.com/1184730980.jpg'
+      }
+      // 여기에 영상 추가 가능
+    ];
+
+    // 비밀번호 모달 열기
+    function openVideoPasswordModal() {
+      const overlay = document.getElementById('videoPasswordOverlay');
+      overlay.style.display = 'flex';
+      document.getElementById('videoPasswordInput').value = '';
+      document.getElementById('videoPasswordError').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('videoPasswordInput').focus();
+      }, 100);
+    }
+
+    // 비밀번호 모달 닫기
+    function closeVideoPasswordModal() {
+      document.getElementById('videoPasswordOverlay').style.display = 'none';
+    }
+
+    // 비밀번호 확인
+    function checkVideoPassword() {
+      const input = document.getElementById('videoPasswordInput');
+      const error = document.getElementById('videoPasswordError');
+
+      if (input.value === '2846') {
+        closeVideoPasswordModal();
+        openVideoListModal();
+      } else {
+        error.style.display = 'block';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    // 영상 목록 모달 열기
+    function openVideoListModal() {
+      const overlay = document.getElementById('videoListOverlay');
+      const grid = document.getElementById('videoListGrid');
+
+      // 그리드 내용 생성
+      grid.innerHTML = educationVideos.map(video => `
+        <div class="video-card" onclick="playVideo('${video.id}', '${video.title}')">
+          <div class="video-card-thumb">
+            <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='https://via.placeholder.com/320x180/1a1a2e/d4af37?text=Video'">
+            <div class="video-card-play">▶</div>
+          </div>
+          <div class="video-card-title">${video.title}</div>
+        </div>
+      `).join('');
+
+      overlay.style.display = 'flex';
+    }
+
+    // 영상 목록 모달 닫기
+    function closeVideoListModal() {
+      document.getElementById('videoListOverlay').style.display = 'none';
+    }
+
+    // 영상 재생
+    function playVideo(videoId, title) {
+      const overlay = document.getElementById('videoPlayerOverlay');
+      const titleEl = document.getElementById('videoPlayerTitle');
+      const container = document.getElementById('videoPlayerContainer');
+
+      titleEl.textContent = title;
+      container.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+
+      overlay.style.display = 'flex';
+    }
+
+    // 영상 재생 모달 닫기
+    function closeVideoPlayerModal() {
+      const overlay = document.getElementById('videoPlayerOverlay');
+      const container = document.getElementById('videoPlayerContainer');
+
+      container.innerHTML = '';
+      overlay.style.display = 'none';
+    }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeVideoPlayerModal();
+        closeVideoListModal();
+        closeVideoPasswordModal();
+      }
+    });
+
+    // 오버레이 클릭으로 닫기
+    document.getElementById('videoPasswordOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeVideoPasswordModal();
+    });
+    document.getElementById('videoListOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeVideoListModal();
+    });
+    document.getElementById('videoPlayerOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeVideoPlayerModal();
+    });
   </script>
 </body>
 </html>
