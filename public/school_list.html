@@ -140,6 +140,11 @@
       white-space: nowrap;
     }
 
+    /* 학교명 컬럼 간격 줄이기 */
+    td:nth-child(4) {
+      padding: 12px 6px;
+    }
+
     tbody tr:hover {
       background: #f8f9fa;
     }
@@ -1961,6 +1966,23 @@
       { sido: "서울시", sigungu: "강서구", name: "꿀잼수학", students: 10, competitor: "" }
     ];
 
+    // 🔹 학원별 학생 수 데이터 (서버에서 로드)
+    let academyStudentCounts = {};
+
+    // 학원 학생 수 데이터 로드
+    async function loadAcademyStudentCounts() {
+      try {
+        const response = await fetch('/api/academy-student-counts');
+        const result = await response.json();
+        if (result.success) {
+          academyStudentCounts = result.data;
+          console.log('✅ 학원 학생 수 데이터 로드 완료:', academyStudentCounts);
+        }
+      } catch (err) {
+        console.error('❌ 학원 학생 수 데이터 로드 실패:', err);
+      }
+    }
+
     // 서버 데이터 캐시 (메모리에 저장)
     const serverDataCache = {};
 
@@ -2453,6 +2475,10 @@
       const monthData = allExcessData[currentExcessMonth] || {};
       const centerName = '브레인 문해력 ' + schoolName.replace('초등학교', '').replace('초', '') + '센터';
 
+      // 🔹 학원 연동 학교인지 확인
+      const linkedSchool = schoolData.find(s => s.name === schoolName && s.academyName);
+      const academyData = linkedSchool ? academyStudentCounts[linkedSchool.academyName] : null;
+
       const annualFee = contractData.annualFee;
       let bodyHtml = '';
 
@@ -2486,11 +2512,16 @@
           feeDetail = '최소 30명 기준 / 인당 20,000원 / 초과시 15,000원';
         }
 
-        const currentPersons = monthData.currentPersons || 0;
+        // 학원 연동 시 서버 데이터 사용, 아니면 localStorage 데이터 사용
+        const currentPersons = academyData ? academyData.current : (monthData.currentPersons || 0);
+        const academyExcessPersons = academyData ? academyData.over : 0;
+        const academyCumulativePersons = academyData ? academyData.cumulative : 0;
         const excessPaymentStatus = monthData.paymentStatus || '';
+        const isAcademyLinked = !!academyData;
 
         bodyHtml = `
           <div class="school-name-display">${centerName}</div>
+          ${isAcademyLinked ? '<div style="background: #ecfdf5; color: #059669; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 13px; text-align: center;">🔗 ' + linkedSchool.academyName + ' 연동</div>' : ''}
           <div class="month-nav">
             <button class="month-btn" onclick="changeExcessMonth(-1)">◀</button>
             <span class="month-display" id="excessMonthDisplay">${formatMonthDisplay(currentExcessMonth)}</span>
@@ -2500,17 +2531,24 @@
             <div class="title">연이용료 ${annualFee}만원</div>
             <div class="detail">${feeDetail}</div>
           </div>
+          ${isAcademyLinked ? `
+          <div class="excess-row">
+            <label>누적인원</label>
+            <span class="value" style="color: #059669; font-weight: 700;">${academyCumulativePersons}/120명</span>
+          </div>` : ''}
           <div class="excess-row">
             <label>최소인원</label>
             <span class="value" id="excessMinPersons">${minPersons}명</span>
           </div>
           <div class="excess-row">
             <label>현재사용인원</label>
-            <input type="number" id="excessCurrentPersons" value="${currentPersons}" min="0" onchange="calculateExcess()">
+            ${isAcademyLinked ?
+              '<span class="value" style="color: #2563eb; font-weight: 600;">' + currentPersons + '명</span><input type="hidden" id="excessCurrentPersons" value="' + currentPersons + '">' :
+              '<input type="number" id="excessCurrentPersons" value="' + currentPersons + '" min="0" onchange="calculateExcess()">'}
           </div>
           <div class="excess-row">
             <label>초과인원</label>
-            <span class="value" id="excessPersonsCount">0명</span>
+            <span class="value" id="excessPersonsCount" style="${isAcademyLinked && academyExcessPersons > 0 ? 'color: #dc2626; font-weight: 700;' : ''}">${isAcademyLinked ? academyExcessPersons + '명' : '0명'}</span>
           </div>
           <input type="hidden" id="excessFeePerPerson" value="${excessFee}">
           <input type="hidden" id="excessMinPersonsValue" value="${minPersons}">
@@ -3532,6 +3570,37 @@
         const excessPaymentStatus = excessMonthData.paymentStatus || '';
         const textbookPaymentStatus = textbookMonthData.paymentStatus || '';
 
+        // 인원 계산 (누적/현재/초과)
+        let cumulativePersons = 0;
+        let currentPersons = 0;
+        let excessPersons = 0;
+
+        // 학원과 연동된 학교인 경우 서버 데이터 사용
+        if (school.academyName && academyStudentCounts[school.academyName]) {
+          const academyData = academyStudentCounts[school.academyName];
+          cumulativePersons = academyData.cumulative;
+          currentPersons = academyData.current;
+          excessPersons = academyData.over;
+        } else {
+          // 기존 로직 (localStorage 기반)
+          const annualFee = contractData.annualFee || '';
+          let minPersons = 0;
+          if (annualFee === '420') minPersons = 10;
+          else if (annualFee === '600') minPersons = 20;
+          else if (annualFee === '720') minPersons = 30;
+
+          // 누적 인원: 모든 월의 최대 currentPersons 값
+          Object.keys(allExcessData).forEach(month => {
+            if (month.match(/^\d{4}-\d{2}$/)) {
+              const monthPersons = allExcessData[month].currentPersons || 0;
+              if (monthPersons > cumulativePersons) cumulativePersons = monthPersons;
+            }
+          });
+
+          currentPersons = excessMonthData.currentPersons || 0;
+          excessPersons = Math.max(0, currentPersons - minPersons);
+        }
+
         let remainingDays = '-';
         let renewalDate = '-';
         if (contractStartDate) {
@@ -3591,7 +3660,7 @@
           </td>
           <td>${paymentStatusHtml}</td>
           <td>
-            <button class="person-btn" data-id="${schoolId}" data-name="${school.name}">인원보기</button>
+            <button class="person-btn" data-id="${schoolId}" data-name="${school.name}">${cumulativePersons}/120 <span style="color:#d1d5db;">|</span> ${currentPersons} <span style="color:#d1d5db;">|</span> ${excessPersons > 0 ? '<span style="color:#dc2626; font-weight:700;">' + excessPersons + '</span>' : '<span style="color:#9ca3af;">' + excessPersons + '</span>'}</button>
           </td>
           <td>${excessPaymentStatusHtml}</td>
           <td>
@@ -5866,6 +5935,7 @@
       { sido: "충청남도", sigungu: "천안시", name: "환서초등학교", students: 1945, competitor: "" },
       { sido: "충청남도", sigungu: "천안시", name: "천안불무초등학교", students: 1969, competitor: "" },
       { sido: "충청남도", sigungu: "아산시", name: "한들물빛초등학교", students: 2058, competitor: "" },
+      { sido: "브레인", sigungu: "문해력", name: "테스트초등학교", students: 9999, competitor: "", priority: true, academyName: "브레인문해원_테스트" },
       { sido: "충청남도", sigungu: "천안시", name: "천안아름초등학교", students: 2064, competitor: "" },
       { sido: "충청남도", sigungu: "천안시", name: "천안새샘초등학교", students: 1468, competitor: "리드인" },
       { sido: "충청남도", sigungu: "천안시", name: "천안청수초등학교", students: 1502, competitor: "리드인" },
@@ -6030,6 +6100,37 @@
         const excessPaymentStatus = excessMonthData.paymentStatus || '';
         const textbookPaymentStatus = textbookMonthData.paymentStatus || '';
 
+        // 인원 계산 (누적/현재/초과)
+        let cumulativePersons = 0;
+        let currentPersons = 0;
+        let excessPersons = 0;
+
+        // 학원과 연동된 학교인 경우 서버 데이터 사용
+        if (school.academyName && academyStudentCounts[school.academyName]) {
+          const academyData = academyStudentCounts[school.academyName];
+          cumulativePersons = academyData.cumulative;
+          currentPersons = academyData.current;
+          excessPersons = academyData.over;
+        } else {
+          // 기존 로직 (localStorage 기반)
+          const annualFee = contractData.annualFee || '';
+          let minPersons = 0;
+          if (annualFee === '420') minPersons = 10;
+          else if (annualFee === '600') minPersons = 20;
+          else if (annualFee === '720') minPersons = 30;
+
+          // 누적 인원: 모든 월의 최대 currentPersons 값
+          Object.keys(allExcessData).forEach(month => {
+            if (month.match(/^\d{4}-\d{2}$/)) {
+              const monthPersons = allExcessData[month].currentPersons || 0;
+              if (monthPersons > cumulativePersons) cumulativePersons = monthPersons;
+            }
+          });
+
+          currentPersons = excessMonthData.currentPersons || 0;
+          excessPersons = Math.max(0, currentPersons - minPersons);
+        }
+
         // 남은 계약일 및 재계약일 계산
         let remainingDays = '-';
         let renewalDate = '-';
@@ -6090,7 +6191,7 @@
           </td>
           <td>${paymentStatusHtml}</td>
           <td>
-            <button class="person-btn" data-id="${schoolId}" data-name="${school.name}">인원보기</button>
+            <button class="person-btn" data-id="${schoolId}" data-name="${school.name}">${cumulativePersons}/120 <span style="color:#d1d5db;">|</span> ${currentPersons} <span style="color:#d1d5db;">|</span> ${excessPersons > 0 ? '<span style="color:#dc2626; font-weight:700;">' + excessPersons + '</span>' : '<span style="color:#9ca3af;">' + excessPersons + '</span>'}</button>
           </td>
           <td>${excessPaymentStatusHtml}</td>
           <td>
@@ -6286,7 +6387,10 @@
 
     // 서버에서 데이터 로드 후 테이블 렌더링
     (async function init() {
-      await loadAllContractsFromServer();
+      await Promise.all([
+        loadAllContractsFromServer(),
+        loadAcademyStudentCounts()
+      ]);
       renderTable();
     })();
   </script>

@@ -934,6 +934,10 @@ const adminSchema = new mongoose.Schema({
   // 🔹 가맹형 관리 필드
   franchiseFee: { type: Number, default: 0 }, // 총가맹비 (가맹형)
   franchiseContractDate: { type: Date, default: null }, // 가맹 계약일 (가맹형)
+
+  // 🔹 누적 학생 수 (삭제해도 감소하지 않음, 최대 120명)
+  cumulativeStudentCount: { type: Number, default: 0 },
+  maxStudentLimit: { type: Number, default: 120 }, // 최대 학생 수 제한
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
@@ -3904,6 +3908,16 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
       return bDate - aDate;  // 최신순
     });
 
+    // 🔹 각 학원별 현재 학생 수 조회
+    const studentCountByAcademy = await User.aggregate([
+      { $match: { deleted: { $ne: true }, userType: "academy", status: "approved" } },
+      { $group: { _id: "$academyName", count: { $sum: 1 } } }
+    ]);
+    const studentCountMap = {};
+    studentCountByAcademy.forEach(item => {
+      studentCountMap[item._id] = item.count;
+    });
+
     let html = `
     <!DOCTYPE html>
     <html lang="ko">
@@ -4522,6 +4536,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
                 <th style="cursor: pointer;" onclick="sortByContractDate()" title="클릭하여 계약일 기준 정렬">계약일 <span id="contractSortIcon">↕</span></th>
                 <th>상태</th>
                 <th>시리즈</th>
+                <th>누적/현재/초과 수</th>
                 <th style="cursor: pointer;" onclick="sortByCreatedAt()" title="클릭하여 가입일 기준 정렬">가입일 <span id="createdSortIcon">▼</span></th>
                 <th>마지막 로그인</th>
                 <th>수정</th>
@@ -4635,6 +4650,23 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           </td>
           <td>
             ${seriesCheckboxes}
+          </td>
+          <td style="white-space: nowrap;">
+            ${(() => {
+              const rawCumulative = a.cumulativeStudentCount || 0;
+              const maxLimit = a.maxStudentLimit || 120;
+              const displayCumulative = Math.min(rawCumulative, maxLimit);
+              const currentCount = studentCountMap[a.academyName] || 0;
+              // 초과 인원: 누적 120명 이상일 때만 현재 인원 - 10
+              const overCount = rawCumulative >= maxLimit ? Math.max(0, currentCount - 10) : 0;
+              let html = '<span style="color: #059669; font-weight: 700;">' + displayCumulative + '</span>/<span style="color: #6b7280;">' + maxLimit + '</span>';
+              html += '<span style="color: #d1d5db; margin: 0 4px;">|</span>';
+              html += '<span style="color: #2563eb; font-weight: 600;">' + currentCount + '</span>명';
+              html += '<span style="color: #d1d5db; margin: 0 4px;">|</span>';
+              const overColor = overCount > 0 ? '#dc2626' : '#9ca3af';
+              html += '<span style="color: ' + overColor + '; font-weight: 700;">' + overCount + '명</span>';
+              return html;
+            })()}
           </td>
           <td>${createdAt}</td>
           <td>${lastLogin}</td>
@@ -24929,7 +24961,9 @@ app.get("/api/admin-session", async (req, res) => {
           userType: "academy",
           viewMode: "super",
           seriesApproved: admin ? admin.seriesApproved : false,
-          approvedSeries: admin ? (admin.approvedSeries || []) : []
+          approvedSeries: admin ? (admin.approvedSeries || []) : [],
+          cumulativeStudentCount: admin ? (admin.cumulativeStudentCount || 0) : 0,
+          maxStudentLimit: admin ? (admin.maxStudentLimit || 120) : 120
         }
       });
     } catch (err) {
@@ -24942,14 +24976,16 @@ app.get("/api/admin-session", async (req, res) => {
           userType: "academy",
           viewMode: "super",
           seriesApproved: false,
-          approvedSeries: viewing.approvedSeries || []
+          approvedSeries: viewing.approvedSeries || [],
+          cumulativeStudentCount: 0,
+          maxStudentLimit: 120
         }
       });
     }
   }
 
   if (req.session && req.session.admin) {
-    // DB에서 최신 seriesApproved, approvedSeries 정보 가져오기
+    // DB에서 최신 seriesApproved, approvedSeries, 누적 학생 수 정보 가져오기
     try {
       const admin = await Admin.findById(req.session.admin.id).lean();
       return res.json({
@@ -24957,7 +24993,9 @@ app.get("/api/admin-session", async (req, res) => {
         admin: {
           ...req.session.admin,
           seriesApproved: admin ? admin.seriesApproved : false,
-          approvedSeries: admin ? (admin.approvedSeries || []) : []
+          approvedSeries: admin ? (admin.approvedSeries || []) : [],
+          cumulativeStudentCount: admin ? (admin.cumulativeStudentCount || 0) : 0,
+          maxStudentLimit: admin ? (admin.maxStudentLimit || 120) : 120
         }
       });
     } catch (err) {
@@ -24966,7 +25004,9 @@ app.get("/api/admin-session", async (req, res) => {
         admin: {
           ...req.session.admin,
           seriesApproved: false,
-          approvedSeries: []
+          approvedSeries: [],
+          cumulativeStudentCount: 0,
+          maxStudentLimit: 120
         }
       });
     }
@@ -29673,6 +29713,20 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
 
     // 관리자의 학원 정보 사용
     const adminAcademyName = req.session.admin.academyName;
+    const adminId = req.session.admin.id || req.session.admin._id;
+
+    // 누적 학생 수 확인 (최대 제한 체크)
+    const adminDoc = await Admin.findById(adminId);
+    if (adminDoc) {
+      const maxLimit = adminDoc.maxStudentLimit || 120;
+      const currentCumulative = adminDoc.cumulativeStudentCount || 0;
+      if (currentCumulative >= maxLimit) {
+        return res.status(400).json({
+          success: false,
+          message: `누적 학생 수가 최대 ${maxLimit}명에 도달했습니다. 추가 등록이 필요하시면 본사에 문의해 주세요.`
+        });
+      }
+    }
 
     // 전화번호(ID): 11자리 전체 사용 (하이픈 제거)
     const phone = String(number).replace(/[^0-9]/g, '');
@@ -29700,6 +29754,13 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
     });
 
     await newUser.save();
+
+    // 누적 학생 수 증가 (삭제해도 감소하지 않음)
+    if (adminDoc) {
+      await Admin.findByIdAndUpdate(adminId, { $inc: { cumulativeStudentCount: 1 } });
+      console.log("✅ 누적 학생 수 증가:", (adminDoc.cumulativeStudentCount || 0) + 1);
+    }
+
     console.log("✅ 학원 학생 추가 완료:", newUser.name, "ID:", phone, "학원:", adminAcademyName);
 
     res.json({ success: true, message: "학생이 추가되었습니다. (ID: " + phone + ")", data: newUser });
@@ -36150,6 +36211,46 @@ app.delete("/api/center-contracts/:contractType/:schoolId", async (req, res) => 
   } catch (err) {
     console.error("❌ 센터 계약 삭제 오류:", err);
     res.status(500).json({ ok: false, message: "삭제 중 오류" });
+  }
+});
+
+// 🔹 학원별 학생 수 조회 API (school_list.html 연동용)
+app.get("/api/academy-student-counts", async (req, res) => {
+  try {
+    // 모든 학원(Admin) 정보 조회
+    const admins = await Admin.find({ userType: "academy", deleted: { $ne: true } });
+
+    // 학원별 현재 학생 수 조회
+    const studentCountByAcademy = await User.aggregate([
+      { $match: { deleted: { $ne: true }, userType: "academy", status: "approved" } },
+      { $group: { _id: "$academyName", count: { $sum: 1 } } }
+    ]);
+    const studentCountMap = {};
+    studentCountByAcademy.forEach(item => {
+      studentCountMap[item._id] = item.count;
+    });
+
+    // 결과 데이터 생성
+    const result = {};
+    admins.forEach(admin => {
+      const academyName = admin.academyName;
+      const rawCumulative = admin.cumulativeStudentCount || 0;
+      const maxLimit = admin.maxStudentLimit || 120;
+      const currentCount = studentCountMap[academyName] || 0;
+      const overCount = rawCumulative >= maxLimit ? Math.max(0, currentCount - 10) : 0;
+
+      result[academyName] = {
+        cumulative: Math.min(rawCumulative, maxLimit),
+        current: currentCount,
+        over: overCount,
+        maxLimit: maxLimit
+      };
+    });
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error("❌ 학원별 학생 수 조회 오류:", err);
+    res.status(500).json({ success: false, message: "조회 중 오류" });
   }
 });
 

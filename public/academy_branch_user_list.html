@@ -652,8 +652,12 @@
     </div>
 
     <div class="toolbar">
-      <div class="left-info">
-        총 <span id="total-count">0</span>명의 학생이 있습니다.
+      <div class="left-info" style="display: flex; gap: 20px; align-items: center;">
+        <span>누적 총 학생 수 <span id="cumulative-count" style="font-weight: 700; color: #059669;">0</span>/120명</span>
+        <span style="color: #d1d5db;">|</span>
+        <span>현재 학생 수 <span id="total-count">0</span>명</span>
+        <span style="color: #d1d5db;">|</span>
+        <span>초과 인원 <span id="over-count" style="font-weight: 700; color: #9ca3af;">0</span>명</span>
       </div>
       <div class="right-actions">
         <button id="btn-add-student" class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="openAddStudentModal()">+ 학생 추가</button>
@@ -1046,6 +1050,16 @@
 
       totalEl.textContent = list.length;
 
+      // 초과 인원 계산 (누적 120명 이상일 때만, 현재 학생 수 - 10)
+      const cumulativeCount = parseInt(document.getElementById("cumulative-count").textContent) || 0;
+      let overCount = 0;
+      if (cumulativeCount >= 120) {
+        overCount = Math.max(0, list.length - 10);
+      }
+      const overCountEl = document.getElementById("over-count");
+      overCountEl.textContent = overCount;
+      overCountEl.style.color = overCount > 0 ? '#dc2626' : '#9ca3af';
+
       // 학원명 사용
       const firstAcademy = list[0].academyName || "";
 
@@ -1313,6 +1327,10 @@
               "이 화면에는 <b>" + adminAcademyName + "</b>에 소속된 승인 학생만 표시됩니다.";
             document.getElementById("add-info-display").textContent = "학원명: " + adminAcademyName;
           }
+
+          // 🔹 누적 학생 수 표시
+          const cumulativeCount = sessionData.admin.cumulativeStudentCount || 0;
+          document.getElementById("cumulative-count").textContent = cumulativeCount;
         }
       } catch (err) {
         console.error('세션 조회 실패:', err);
@@ -1926,7 +1944,7 @@
         if (result.success) {
           alert('학생이 추가되었습니다.');
           closeAddStudentModal();
-          fetchBranchStudents(); // 목록 새로고침
+          location.reload(); // 전체 페이지 새로고침 (누적 학생 수 반영)
         } else {
           alert(result.message || '학생 추가에 실패했습니다.');
         }
