@@ -35740,7 +35740,7 @@ app.post("/api/whale-inquiry", async (req, res) => {
 // ===== 설명회 상담문의 API =====
 app.post("/api/consultation-inquiry", async (req, res) => {
   try {
-    const { region, name, phone, purpose, sessionDate, sessionTime, sessionPurpose } = req.body;
+    const { region, name, phone, age, type, purpose, sessionDate, sessionTime, sessionPurpose, source } = req.body;
 
     if (!region || !name || !phone) {
       return res.status(400).json({ success: false, error: "필수 항목을 입력해주세요." });
@@ -35795,6 +35795,14 @@ app.post("/api/consultation-inquiry", async (req, res) => {
           <tr>
             <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연락처</td>
             <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연령대</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${age || '미선택'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">유형</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${type || '미선택'}</td>
           </tr>${sessionInfo}
           <tr>
             <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">목적</td>
@@ -35807,6 +35815,30 @@ app.post("/api/consultation-inquiry", async (req, res) => {
 
     await transporter.sendMail(mailOptions);
     console.log(`✅ 상담문의 메일 발송: ${name} (${region})`);
+
+    // 🔹 상담 신청 SMS 발송 (파트너 페이지면 파트너 번호로, 아니면 본사 번호로)
+    const smsReceivers = source === 'partner'
+      ? process.env.PARTNER_SMS_RECEIVERS
+      : process.env.CONSULTATION_SMS_RECEIVERS;
+    if (smsReceivers) {
+      const receivers = smsReceivers.split(',').map(r => r.trim());
+      const smsMessage = `[브레인문해원 상담신청]
+지역: ${region}
+성함: ${name}
+연락처: ${phone}
+연령대: ${age || '미선택'}
+유형: ${type || '미선택'}
+목적: ${purpose || '미선택'}`;
+
+      for (const receiver of receivers) {
+        try {
+          await sendSMS(receiver, smsMessage);
+          console.log(`📱 상담신청 SMS 발송: ${receiver}`);
+        } catch (smsErr) {
+          console.error(`📱 상담신청 SMS 발송 실패: ${receiver}`, smsErr);
+        }
+      }
+    }
 
     // 설명회 신청일 경우 신청 인원 저장
     if (purpose === '설명회 신청' && sessionDate && sessionTime) {
