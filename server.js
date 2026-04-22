@@ -35813,8 +35813,13 @@ app.post("/api/consultation-inquiry", async (req, res) => {
       `
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ 상담문의 메일 발송: ${name} (${region})`);
+    // 🔹 메일 발송 (실패해도 계속 진행)
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ 상담문의 메일 발송: ${name} (${region})`);
+    } catch (mailErr) {
+      console.error(`📧 메일 발송 실패 (무시됨):`, mailErr.message);
+    }
 
     // 🔹 상담 신청 SMS 발송 (파트너 페이지면 파트너 번호로, 아니면 본사 번호로)
     try {
@@ -35849,25 +35854,29 @@ app.post("/api/consultation-inquiry", async (req, res) => {
 
     // 설명회 신청일 경우 신청 인원 저장
     if (purpose === '설명회 신청' && sessionDate && sessionTime) {
-      const db = mongoose.connection.db;
-      const sessionCollection = db.collection('session_applications');
+      try {
+        const db = mongoose.connection.db;
+        const sessionCollection = db.collection('session_applications');
 
-      await sessionCollection.insertOne({
-        region,
-        name,
-        phone,
-        sessionDate,
-        sessionTime,
-        sessionPurpose: sessionPurpose || '',
-        createdAt: new Date()
-      });
-      console.log(`✅ 설명회 신청 저장: ${name} - ${sessionDate} ${sessionTime}`);
+        await sessionCollection.insertOne({
+          region,
+          name,
+          phone,
+          sessionDate,
+          sessionTime,
+          sessionPurpose: sessionPurpose || '',
+          createdAt: new Date()
+        });
+        console.log(`✅ 설명회 신청 저장: ${name} - ${sessionDate} ${sessionTime}`);
+      } catch (dbErr) {
+        console.error('📝 설명회 신청 저장 실패 (무시됨):', dbErr.message);
+      }
     }
 
     res.json({ success: true, message: "상담 문의가 접수되었습니다." });
   } catch (err) {
-    console.error("상담문의 메일 발송 오류:", err);
-    res.status(500).json({ success: false, error: "메일 발송에 실패했습니다." });
+    console.error("상담문의 처리 오류:", err);
+    res.status(500).json({ success: false, error: "상담 문의 처리에 실패했습니다." });
   }
 });
 
