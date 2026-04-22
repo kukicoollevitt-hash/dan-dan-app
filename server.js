@@ -35817,12 +35817,14 @@ app.post("/api/consultation-inquiry", async (req, res) => {
     console.log(`✅ 상담문의 메일 발송: ${name} (${region})`);
 
     // 🔹 상담 신청 SMS 발송 (파트너 페이지면 파트너 번호로, 아니면 본사 번호로)
-    const smsReceivers = source === 'partner'
-      ? process.env.PARTNER_SMS_RECEIVERS
-      : process.env.CONSULTATION_SMS_RECEIVERS;
-    if (smsReceivers) {
-      const receivers = smsReceivers.split(',').map(r => r.trim());
-      const smsMessage = `[브레인문해원 상담신청]
+    try {
+      const smsReceivers = source === 'partner'
+        ? process.env.PARTNER_SMS_RECEIVERS
+        : process.env.CONSULTATION_SMS_RECEIVERS;
+
+      if (smsReceivers && smsReceivers.trim()) {
+        const receivers = smsReceivers.split(',').map(r => r.trim()).filter(r => r);
+        const smsMessage = `[브레인문해원 상담신청]
 지역: ${region}
 성함: ${name}
 연락처: ${phone}
@@ -35830,14 +35832,19 @@ app.post("/api/consultation-inquiry", async (req, res) => {
 유형: ${type || '미선택'}
 목적: ${purpose || '미선택'}`;
 
-      for (const receiver of receivers) {
-        try {
-          await sendSMS(receiver, smsMessage);
-          console.log(`📱 상담신청 SMS 발송: ${receiver}`);
-        } catch (smsErr) {
-          console.error(`📱 상담신청 SMS 발송 실패: ${receiver}`, smsErr);
+        for (const receiver of receivers) {
+          try {
+            await sendSMS(receiver, smsMessage);
+            console.log(`📱 상담신청 SMS 발송: ${receiver}`);
+          } catch (smsErr) {
+            console.error(`📱 상담신청 SMS 발송 실패: ${receiver}`, smsErr);
+          }
         }
+      } else {
+        console.log('📱 SMS 수신자 미설정 - SMS 발송 스킵');
       }
+    } catch (smsError) {
+      console.error('📱 SMS 발송 처리 중 오류 (무시됨):', smsError);
     }
 
     // 설명회 신청일 경우 신청 인원 저장
