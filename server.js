@@ -35829,7 +35829,8 @@ app.post("/api/consultation-inquiry", async (req, res) => {
 
       if (smsReceivers && smsReceivers.trim()) {
         const receivers = smsReceivers.split(',').map(r => r.trim()).filter(r => r);
-        const smsMessage = `[브레인문해원 상담신청]
+        const sourceLabel = source === 'partner' ? '[파트너페이지]' : '[메인페이지]';
+        const smsMessage = `[브레인문해원 상담신청]${sourceLabel}
 지역: ${region}
 성함: ${name}
 연락처: ${phone}
