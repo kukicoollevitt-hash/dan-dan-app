@@ -4658,7 +4658,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
               const displayCumulative = Math.min(rawCumulative, maxLimit);
               const currentCount = studentCountMap[a.academyName] || 0;
               // 초과 인원: 누적 120명 이상일 때만 현재 인원 - 10
-              const overCount = rawCumulative >= maxLimit ? Math.max(0, currentCount - 10) : 0;
+              const overCount = Math.max(0, rawCumulative - maxLimit);
               let html = '<span style="color: #059669; font-weight: 700;">' + displayCumulative + '</span>/<span style="color: #6b7280;">' + maxLimit + '</span>';
               html += '<span style="color: #d1d5db; margin: 0 4px;">|</span>';
               html += '<span style="color: #2563eb; font-weight: 600;">' + currentCount + '</span>명';
@@ -36286,7 +36286,7 @@ app.get("/api/academy-student-counts", async (req, res) => {
       const rawCumulative = admin.cumulativeStudentCount || 0;
       const maxLimit = admin.maxStudentLimit || 120;
       const currentCount = studentCountMap[academyName] || 0;
-      const overCount = rawCumulative >= maxLimit ? Math.max(0, currentCount - 10) : 0;
+      const overCount = Math.max(0, rawCumulative - maxLimit);
 
       result[academyName] = {
         cumulative: Math.min(rawCumulative, maxLimit),
