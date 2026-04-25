@@ -15361,16 +15361,27 @@ async function performLogout() {
 
       // 배경 클릭으로 닫기 방지 (X 버튼으로만 닫기 가능)
 
-      // iframe에서 학습완료 메시지를 받으면 모달 닫기 및 페이지 새로고침
+      // iframe에서 학습완료 메시지를 받으면 모달 닫기 (학습실 유지)
       window.addEventListener('message', async (event) => {
         if (event.data && event.data.type === 'vocabularyQuizCompleted') {
-          console.log('✅ 어휘 퀴즈 완료 - 모달 닫기 및 페이지 새로고침');
+          console.log('✅ 어휘 퀴즈 완료 - 모달 닫기');
           vocabModal.classList.remove('show');
           vocabIframe.src = '';
 
-          // 페이지 새로고침
-          setTimeout(() => {
-            location.reload();
+          // 학습실 모달이 열려있으면 목록만 갱신 (페이지 새로고침 대신)
+          setTimeout(async () => {
+            const studyRoomModal = document.getElementById('studyRoomModal');
+            if (studyRoomModal && studyRoomModal.classList.contains('show')) {
+              console.log('🔄 학습실 목록 업데이트 (새로고침 대신)');
+              if (typeof renderStudyRoomList === 'function') {
+                await renderStudyRoomList();
+              }
+              if (typeof updateStudyRoomBadge === 'function') {
+                await updateStudyRoomBadge();
+              }
+            } else {
+              location.reload();
+            }
           }, 300);
         }
       });
@@ -16411,10 +16422,24 @@ async function performLogout() {
         overlay.remove();
       }
 
-      // 새로고침 옵션이 true면 페이지 새로고침
+      // 완료 시 학습실 목록만 업데이트 (페이지 새로고침 대신)
       if (shouldReload) {
-        setTimeout(() => {
-          location.reload();
+        setTimeout(async () => {
+          // 학습실 모달이 열려있으면 목록만 갱신 (classList.contains('show')로 확인)
+          const studyRoomModal = document.getElementById('studyRoomModal');
+          if (studyRoomModal && studyRoomModal.classList.contains('show')) {
+            console.log('🔄 학습실 목록 업데이트 (새로고침 대신)');
+            if (typeof renderStudyRoomList === 'function') {
+              await renderStudyRoomList();
+            }
+            // 학습실 뱃지 업데이트
+            if (typeof updateStudyRoomBadge === 'function') {
+              await updateStudyRoomBadge();
+            }
+          } else {
+            // 학습실이 닫혀있으면 전체 새로고침
+            location.reload();
+          }
         }, 300);
       }
     }
