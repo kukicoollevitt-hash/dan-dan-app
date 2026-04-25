@@ -732,6 +732,9 @@
         });
         console.log('[restoreReadingStateFromServer] 채점 결과 직접 복원 완료 (q1ok 형식)');
 
+        // ✅ 본문학습 채점 완료 플래그 설정
+        window.isReadingGraded = true;
+
         // ✅ 레이더 차트 업데이트 (q1ok 형식 기반)
         // lexical은 서버에 저장된 값이 있으면 우선 사용 (어휘 빈칸 채우기 점수)
         const lexicalValue = (typeof data.lexical === 'number' && data.lexical >= 6) ? data.lexical : (data.q3ok ? 10 : 6);
@@ -813,6 +816,9 @@
         });
         console.log('[restoreReadingStateFromServer] 채점 결과 직접 복원 완료 (results 배열)');
 
+        // ✅ 본문학습 채점 완료 플래그 설정
+        window.isReadingGraded = true;
+
         // ✅ 레이더 차트 업데이트 (results 배열 기반)
         const q1ok = data.results[0]?.isCorrect === true;
         const q2ok = data.results[1]?.isCorrect === true;
@@ -873,6 +879,8 @@
             try {
               window.gradeQuiz();
               console.log('[restoreReadingStateFromServer] 자동 재채점 완료');
+              // ✅ 본문학습 채점 완료 플래그 설정
+              window.isReadingGraded = true;
             } catch (e) {
               console.warn('[restoreReadingStateFromServer] 자동 재채점 오류:', e);
             }
@@ -944,6 +952,9 @@
             const input = bw.querySelector('.blank-input');
             if (input) input.disabled = true;
           });
+
+          // ✅ 어휘학습 채점 완료 플래그 설정
+          window.isVocabGraded = true;
         }
 
         console.log('[restoreVocabStateFromServer] 어휘학습 복원 완료');
@@ -1540,12 +1551,111 @@
   // 전역으로 노출
   window.showSubmitSuccess = showSubmitSuccess;
 
+  /* ===== ✅ 미완료 항목 팝업 ===== */
+  function showIncompletePopup(isReadingDone, isVocabDone, isCreativeDone) {
+    // 이미 있으면 제거
+    const existing = document.getElementById('incomplete-popup-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'incomplete-popup-overlay';
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex; align-items: center;
+      justify-content: center; z-index: 99999;
+    `;
+
+    // 상태 아이콘 및 메시지 생성
+    const readingStatus = isReadingDone
+      ? '<span style="color: #2e7d32;">✅ 본문학습 완료</span>'
+      : '<span style="color: #c62828;">❌ 본문학습 미완료</span>';
+    const vocabStatus = isVocabDone
+      ? '<span style="color: #2e7d32;">✅ 어휘학습 완료</span>'
+      : '<span style="color: #c62828;">❌ 어휘학습 미완료</span>';
+    const creativeStatus = isCreativeDone
+      ? '<span style="color: #2e7d32;">✅ 창의활동 완료</span>'
+      : '<span style="color: #c62828;">❌ 창의활동 미완료</span>';
+
+    // 미완료 항목 안내 메시지
+    let guideMessages = [];
+    if (!isReadingDone) guideMessages.push('📖 본문학습을 채점해주세요');
+    if (!isVocabDone) guideMessages.push('📝 어휘학습을 채점해주세요');
+    if (!isCreativeDone) guideMessages.push('✏️ 창의활동을 제출해주세요');
+
+    const box = document.createElement('div');
+    box.style.cssText = `
+      background: #fffdf8; border-radius: 16px; padding: 28px 36px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25); text-align: center;
+      max-width: 360px; animation: popIn 0.25s ease-out;
+    `;
+
+    box.innerHTML = `
+      <div style="font-size: 40px; margin-bottom: 12px;">📋</div>
+      <div style="font-size: 18px; font-weight: 700; color: #333; margin-bottom: 16px;">학습 완료 현황</div>
+      <div style="text-align: left; background: #f5f5f5; padding: 14px 18px; border-radius: 10px; margin-bottom: 16px;">
+        <div style="margin-bottom: 8px; font-size: 15px;">${readingStatus}</div>
+        <div style="margin-bottom: 8px; font-size: 15px;">${vocabStatus}</div>
+        <div style="font-size: 15px;">${creativeStatus}</div>
+      </div>
+      <div style="background: #fff3e0; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; text-align: left;">
+        ${guideMessages.map(m => `<div style="font-size: 14px; color: #e65100; margin-bottom: 4px;">${m}</div>`).join('')}
+      </div>
+      <button id="incomplete-popup-ok" style="
+        background: linear-gradient(135deg, #d16355 0%, #c04a3b 100%);
+        color: #fff; border: none; border-radius: 10px;
+        padding: 12px 32px; font-size: 15px; font-weight: 600;
+        cursor: pointer; box-shadow: 0 2px 8px rgba(193,74,59,0.3);
+      ">확인</button>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // 팝업 애니메이션 스타일 추가
+    if (!document.getElementById('incomplete-popup-style')) {
+      const style = document.createElement('style');
+      style.id = 'incomplete-popup-style';
+      style.textContent = `
+        @keyframes popIn {
+          0% { transform: scale(0.8); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // 확인 버튼 클릭 시 닫기
+    document.getElementById('incomplete-popup-ok').addEventListener('click', () => {
+      overlay.remove();
+    });
+
+    // 배경 클릭 시 닫기
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.remove();
+      }
+    });
+  }
+  // 전역으로 노출
+  window.showIncompletePopup = showIncompletePopup;
+
   /* ===== ✅ submitReport - DOMContentLoaded 외부에서 전역 접근 가능 ===== */
   async function submitReport() {
     // 0) 로그인 정보 확인
     const stu = getCurrentStudent();
     if (!stu) {
       alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
+      return;
+    }
+
+    // ✅ 각 탭 완료 여부 체크
+    const isReadingDone = window.isReadingGraded === true;
+    const isVocabDone = window.isVocabGraded === true;
+    const isCreativeDone = window.isCreativeSubmitted === true;
+
+    // 하나라도 미완료면 팝업 표시
+    if (!isReadingDone || !isVocabDone || !isCreativeDone) {
+      showIncompletePopup(isReadingDone, isVocabDone, isCreativeDone);
       return;
     }
 
@@ -2329,6 +2439,9 @@
       window.reportState.q4ok = q4ok;
       window.reportState.q5ok = q5ok;
 
+      // ✅ 본문학습 채점 완료 플래그 설정
+      window.isReadingGraded = true;
+
       // ★ 분석리포트 텍스트/박스 동기화
       updateReportPanel({
         q1ok: window.reportState.q1ok,
@@ -2700,6 +2813,9 @@
       const totalQuestions = total + 1;
       window.reportState.vocabScoreRatio = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
 
+      // ✅ 어휘학습 채점 완료 플래그 설정
+      window.isVocabGraded = true;
+
       const lexicalScore = Math.round((window.reportState.vocabScoreRatio || 0) * 10);
 
       drawRadarChart({
@@ -2846,6 +2962,11 @@
           spellingCorrect.innerHTML = creativeState.correctHTML;
           spellingCorrect.style.display = 'block';
         }
+      }
+
+      // ✅ 창의활동 제출 완료 플래그 설정 (isSubmitted가 true인 경우)
+      if (creativeState.isSubmitted) {
+        window.isCreativeSubmitted = true;
       }
 
       console.log('[restoreCreativeStateFromServer] 복원 완료');
@@ -3240,6 +3361,9 @@
           console.log('[creative-submit] 서버 저장 완료!');
         }
 
+        // ✅ 창의활동 제출 완료 플래그 설정
+        window.isCreativeSubmitted = true;
+
         showSubmitSuccess('창의활동');
       });
     }
@@ -3525,4 +3649,62 @@
       }
     }, 100);
   };
+})();
+
+/* =========================================================
+   ✅ submitReport 강제 덮어쓰기 (HTML 자체 함수보다 우선)
+   - 각 HTML 파일에 있는 submitReport를 덮어쓰기
+   - 본문학습/어휘학습/창의활동 완료 체크 후 제출
+========================================================= */
+(function() {
+  // DOMContentLoaded 후 약간의 딜레이를 두고 덮어쓰기
+  // (HTML의 스크립트가 먼저 실행된 후 덮어쓰기)
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      // 기존 submitReport 백업
+      const originalSubmitReport = window.submitReport;
+
+      // 새로운 submitReport로 덮어쓰기
+      window.submitReport = async function() {
+        // 로그인 정보 확인
+        const stu = getCurrentStudent();
+        if (!stu) {
+          alert('로그인한 학생 정보가 없습니다. 먼저 로그인 해주세요.');
+          return;
+        }
+
+        // ✅ 각 탭 완료 여부 체크 (플래그 + DOM 상태 모두 확인)
+        // 1) 본문학습: 플래그 또는 DOM에서 채점 마크(correct/wrong) 확인
+        const readingGradedMarks = document.querySelectorAll('#tab-reading .quiz-num.correct, #tab-reading .quiz-num.wrong');
+        const isReadingDone = window.isReadingGraded === true || readingGradedMarks.length > 0;
+
+        // 2) 어휘학습: 플래그 또는 DOM에서 결과박스 표시 확인
+        const vocabResultBox = document.getElementById('vocab-result');
+        const isVocabDone = window.isVocabGraded === true ||
+          (vocabResultBox && vocabResultBox.style.display !== 'none' && vocabResultBox.innerHTML.trim() !== '');
+
+        // 3) 창의활동: 플래그 또는 DOM에서 제출 상태 확인
+        const creativeTextarea = document.getElementById('creative-input');
+        const creativeText = creativeTextarea ? creativeTextarea.value.trim() : '';
+        const creativeSubmitBtn = document.getElementById('creative-submit-btn');
+        // 제출 완료 시 버튼이 비활성화되거나 텍스트가 변경됨
+        const isCreativeSubmittedByBtn = creativeSubmitBtn &&
+          (creativeSubmitBtn.disabled || creativeSubmitBtn.textContent.includes('완료'));
+        const isCreativeDone = window.isCreativeSubmitted === true || isCreativeSubmittedByBtn;
+
+        // 하나라도 미완료면 팝업 표시
+        if (!isReadingDone || !isVocabDone || !isCreativeDone) {
+          showIncompletePopup(isReadingDone, isVocabDone, isCreativeDone);
+          return;
+        }
+
+        // 모두 완료된 경우 기존 함수 실행
+        if (typeof originalSubmitReport === 'function') {
+          await originalSubmitReport();
+        }
+      };
+
+      console.log('[learning-common.js] submitReport 덮어쓰기 완료 (완료 체크 추가)');
+    }, 100);
+  });
 })();
