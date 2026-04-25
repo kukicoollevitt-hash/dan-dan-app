@@ -4747,7 +4747,7 @@ function applyContentPack(unitKey) {
       const pps = document.createElement('style'); pps.id = 'paragraph-popup-style';
       pps.textContent = `
         .paragraph-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; }
-        .paragraph-popup { background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: popupIn 0.3s ease; }
+        .paragraph-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10001; }
         @keyframes popupIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .paragraph-popup-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; }
         .paragraph-popup-options { display: flex; flex-direction: column; gap: 10px; }
