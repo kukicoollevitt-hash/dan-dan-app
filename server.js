@@ -1004,8 +1004,13 @@ function requireAdminLogin(req, res, next) {
     const isAcademyAdmin = isAcademyPath || isAcademyReferer || isAcademyCookie;
 
     console.log("⛔ 관리자 세션 없음 → 판단:", { requestPath, referer, cookieType, isAcademyAdmin });
-    console.log("  → 리다이렉트:", isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
 
+    // API 요청인 경우 JSON 응답
+    if (requestPath.startsWith('/api/')) {
+      return res.status(401).json({ ok: false, message: '관리자 로그인이 필요합니다.' });
+    }
+
+    console.log("  → 리다이렉트:", isAcademyAdmin ? "/academy-admin-login" : "/admin-login");
     return res.redirect("/academy-admin-login");
   }
   next();
@@ -24597,7 +24602,7 @@ app.post("/logout", async (req, res) => {
   const sessionUser = req.session.user;
   console.log("📤 [POST] /logout sessionUser:", JSON.stringify(sessionUser));
 
-  // 학생인 경우 학부모 알림 발송
+  // 학생인 경우 학부모 알림 발송 (매번 발송 - 중복체크 제거)
   if (sessionUser && (sessionUser.role === 'student' || sessionUser.userType === 'academy')) {
     console.log("📤 [POST] /logout SMS 발송 시도...");
     try {
@@ -24607,41 +24612,20 @@ app.post("/logout", async (req, res) => {
         deleted: { $ne: true }
       });
 
-      // 오늘 날짜
-      const today = new Date().toISOString().split('T')[0];
-
-      // 오늘 이미 발송했는지 확인
-      const alreadySent = await DailyReportSent.findOne({
-        grade: sessionUser.grade,
-        name: sessionUser.name,
-        date: today
-      });
-
-      if (alreadySent) {
-        console.log(`📤 [POST] /logout 오늘 이미 발송됨 - ${sessionUser.grade} ${sessionUser.name}`);
-      } else {
-        if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
-          sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout', { grade: sessionUser.grade })
-            .catch(err => console.error('학부모 알림 실패:', err));
-        }
-
-        // 📱 본사 관리자 알림 발송 (로그아웃)
-        sendHQAdminNotification(sessionUser.name, sessionUser.grade, 'logout', {
-          school: studentUser?.school,
-          academyName: studentUser?.academyName
-        });
-
-        // 발송 기록 저장
-        await DailyReportSent.create({
-          grade: sessionUser.grade,
-          name: sessionUser.name,
-          date: today,
-          type: 'logout'
-        });
-        console.log(`✅ [POST] /logout 발송 기록 저장 - ${sessionUser.grade} ${sessionUser.name}`);
+      // 학부모 알림 발송 (매번)
+      if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+        sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout', { grade: sessionUser.grade })
+          .catch(err => console.error('학부모 알림 실패:', err));
+        console.log(`✅ [POST] /logout 학부모 알림 발송 - ${sessionUser.grade} ${sessionUser.name}`);
       }
+
+      // 📱 본사 관리자 알림 발송 (로그아웃)
+      sendHQAdminNotification(sessionUser.name, sessionUser.grade, 'logout', {
+        school: studentUser?.school,
+        academyName: studentUser?.academyName
+      });
     } catch (err) {
-      console.error('로그아웃 알림 조회 오류:', err);
+      console.error('로그아웃 알림 발송 오류:', err);
     }
   }
 

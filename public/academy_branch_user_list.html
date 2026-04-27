@@ -690,6 +690,7 @@
             <th>이름</th>
             <th>학원명</th>
             <th>학년반번호(ID)</th>
+            <th>학부모 번호</th>
             <th style="cursor: pointer;" onclick="sortByPendingTasks()" title="클릭하면 미완료 과제순으로 정렬">
               학습실 상태 <span id="studyRoomSortIcon" style="font-size: 12px;">↕</span>
             </th>
@@ -702,7 +703,7 @@
         </thead>
         <tbody id="student-tbody">
           <tr class="empty-row">
-            <td colspan="12">학생 목록을 불러오는 중입니다…</td>
+            <td colspan="13">학생 목록을 불러오는 중입니다…</td>
           </tr>
         </tbody>
       </table>
@@ -1006,7 +1007,7 @@
 
       tbody.innerHTML = `
         <tr class="empty-row">
-          <td colspan="12">학생 목록을 불러오는 중입니다…</td>
+          <td colspan="13">학생 목록을 불러오는 중입니다…</td>
         </tr>
       `;
 
@@ -1028,7 +1029,7 @@
       } catch (err) {
         tbody.innerHTML = `
           <tr class="empty-row">
-            <td colspan="12">❌ 학생 목록을 불러오는 중 오류가 발생했습니다.</td>
+            <td colspan="13">❌ 학생 목록을 불러오는 중 오류가 발생했습니다.</td>
           </tr>
         `;
         errorBox.textContent = "오류: " + err.message;
@@ -1043,7 +1044,7 @@
       if (!Array.isArray(list) || list.length === 0) {
         totalEl.textContent = "0";
         tbody.innerHTML = `
-          <tr class="empty-row"><td colspan="12">표시할 학생이 없습니다.</td></tr>
+          <tr class="empty-row"><td colspan="13">표시할 학생이 없습니다.</td></tr>
         `;
         return;
       }
@@ -1177,6 +1178,20 @@
           </td>
           <td>${u.academyName || ""}</td>
           <td>${phone}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <input type="text"
+                     id="parentPhone-${u._id}"
+                     value="${u.parentPhone || ''}"
+                     placeholder="010-0000-0000"
+                     maxlength="13"
+                     oninput="formatParentPhone(this)"
+                     style="width: 120px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;" />
+              <button onclick="saveParentPhone('${u._id}')"
+                      style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;"
+                      title="학부모 번호 저장">저장</button>
+            </div>
+          </td>
           <td class="center">
             ${studyRoomStatusHtml}
           </td>
@@ -1996,6 +2011,108 @@
         console.error('카카오톡 공유 오류:', error);
         alert('카카오톡 공유 중 오류가 발생했습니다.');
       }
+    }
+
+    // ===== 학부모 번호 포맷팅 함수 =====
+    function formatParentPhone(input) {
+      let value = input.value.replace(/[^0-9]/g, '');
+      if (value.length > 11) value = value.slice(0, 11);
+
+      if (value.length >= 8) {
+        input.value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+      } else if (value.length >= 4) {
+        input.value = value.slice(0, 3) + '-' + value.slice(3);
+      } else {
+        input.value = value;
+      }
+    }
+
+    // ===== 학부모 번호 저장 함수 =====
+    async function saveParentPhone(userId) {
+      const input = document.getElementById('parentPhone-' + userId);
+      if (!input) return;
+
+      const phone = input.value.trim();
+
+      try {
+        const res = await fetch('/api/branch/users/' + userId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ parentPhone: phone })
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+          // 성공 시 테두리 색상 변경
+          input.style.borderColor = '#10b981';
+          input.style.background = '#f0fdf4';
+
+          // 토스트 메시지
+          showToast('학부모 번호가 저장되었습니다', 'success');
+
+          // 2초 후 원래대로
+          setTimeout(() => {
+            input.style.borderColor = '#ddd';
+            input.style.background = '';
+          }, 2000);
+        } else {
+          input.style.borderColor = '#dc2626';
+          showToast(data.message || '저장에 실패했습니다', 'error');
+        }
+      } catch (err) {
+        console.error('학부모 번호 저장 오류:', err);
+        input.style.borderColor = '#dc2626';
+        showToast('저장 중 오류가 발생했습니다', 'error');
+      }
+    }
+
+    // ===== 토스트 메시지 함수 =====
+    function showToast(message, type = 'success') {
+      // 기존 토스트 제거
+      const existingToast = document.querySelector('.branch-toast');
+      if (existingToast) existingToast.remove();
+
+      const toast = document.createElement('div');
+      toast.className = 'branch-toast';
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        background: ${type === 'success' ? '#10b981' : '#dc2626'};
+        color: white;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 9999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: toastFadeIn 0.3s ease;
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      // 애니메이션 스타일 추가
+      if (!document.getElementById('toast-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'toast-animation-style';
+        style.textContent = `
+          @keyframes toastFadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // 3초 후 제거
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
     }
   </script>
 </body>
