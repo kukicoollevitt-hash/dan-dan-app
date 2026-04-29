@@ -1238,14 +1238,9 @@
     </div>
 
     <div class="landing-container">
-        <!-- 메인 영상 -->
+        <!-- 메인 영상 (반응형: JS가 viewport에 따라 src 설정) -->
         <section class="section video-section">
-            <!-- 데스크톱용 영상 -->
-            <video class="video-desktop" src="images/brain/브레인문메인.mp4?v=202603211748" autoplay muted loop playsinline></video>
-            <!-- 태블릿용 영상 -->
-            <video class="video-tablet" src="images/brain/브레인문메인테블릿.mp4" autoplay muted loop playsinline></video>
-            <!-- 모바일용 영상 -->
-            <video class="video-mobile" src="images/brain/브레인문메인모바일.mp4" autoplay muted loop playsinline></video>
+            <video id="mainHeroVideo" autoplay muted loop playsinline preload="auto"></video>
         </section>
 
         <!-- 추가 영상 섹션 -->
@@ -2198,7 +2193,35 @@
             observer.observe(section);
         });
 
-        // 비디오 자동 재생 보장
+        // 메인 히어로 영상: viewport에 따라 src 동적 설정 (iOS 동시재생 제한 회피)
+        (function setupHeroVideo() {
+            const heroVideo = document.getElementById('mainHeroVideo');
+            if (!heroVideo) return;
+            const sources = {
+                desktop: 'images/brain/브레인문메인.mp4?v=202603211748',
+                tablet:  'images/brain/브레인문메인테블릿.mp4',
+                mobile:  'images/brain/브레인문메인모바일.mp4'
+            };
+            function pickSrc() {
+                const w = window.innerWidth;
+                if (w <= 768) return sources.mobile;
+                if (w <= 1024) return sources.tablet;
+                return sources.desktop;
+            }
+            function applySrc() {
+                const next = pickSrc();
+                if (heroVideo.getAttribute('src') !== next) {
+                    heroVideo.setAttribute('src', next);
+                    heroVideo.load();
+                    heroVideo.play().catch(() => {});
+                }
+            }
+            applySrc();
+            window.addEventListener('resize', applySrc);
+            window.addEventListener('orientationchange', applySrc);
+        })();
+
+        // 나머지 비디오 자동 재생 보장
         document.querySelectorAll('video').forEach(video => {
             video.play().catch(() => {
                 // 자동 재생 실패 시 무시
