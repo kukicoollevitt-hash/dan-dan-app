@@ -13177,6 +13177,28 @@ app.post("/api/log", async (req, res) => {
       }
     }
 
+    // 🤖 AI 추천과제 자동 복습완료 처리
+    // (개별 HTML에서 markAITaskAsCompleted 호출이 누락된 경우 대비, 서버 진입점에서 일괄 처리)
+    if (completed === true && unit) {
+      try {
+        const userProgress = await UserProgress.findOne({ grade, name });
+        const tasks = userProgress?.studyRoom?.assignedTasks || [];
+        let aiUpdated = false;
+        for (const task of tasks) {
+          if (!task.isAI || task.status === 'completed') continue;
+          if (task.id === unit || task.unitId === unit) {
+            task.status = 'completed';
+            task.completedAt = new Date();
+            aiUpdated = true;
+            console.log(`✅ [/api/log] AI 과제 자동 복습완료: ${grade} ${name} - ${unit}`);
+          }
+        }
+        if (aiUpdated) await userProgress.save();
+      } catch (aiErr) {
+        console.error("⚠️ [/api/log] AI 과제 자동 완료 처리 실패:", aiErr.message);
+      }
+    }
+
     // 📱 학부모 알림 발송 (학습 완료) - 5분 내 중복 발송 방지
     if (completed === true && unit) {
       const smsKey = `sms-complete:${grade}:${name}:${unit}`;
