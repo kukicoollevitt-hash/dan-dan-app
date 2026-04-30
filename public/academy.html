@@ -2197,23 +2197,26 @@
         (function setupHeroVideo() {
             const heroVideo = document.getElementById('mainHeroVideo');
             if (!heroVideo) return;
+            const VER = '20260501';
             const sources = {
-                desktop: 'images/brain/브레인문메인.mp4?v=202603211748',
-                tablet:  'images/brain/브레인문메인테블릿.mp4',
-                mobile:  'images/brain/브레인문메인모바일.mp4'
+                desktop: `images/brain/브레인문메인.mp4?v=${VER}`,
+                mobile:  `images/brain/브레인문메인모바일.mp4?v=${VER}`
             };
+            // 태블릿 파일이 iOS에서 재생 안 되는 이슈로 태블릿도 데스크톱 영상 사용
             function pickSrc() {
-                const w = window.innerWidth;
-                if (w <= 768) return sources.mobile;
-                if (w <= 1024) return sources.tablet;
-                return sources.desktop;
+                return window.innerWidth <= 768 ? sources.mobile : sources.desktop;
             }
             function applySrc() {
                 const next = pickSrc();
                 if (heroVideo.getAttribute('src') !== next) {
+                    console.log('[heroVideo] src 적용:', next, 'innerWidth=', window.innerWidth);
                     heroVideo.setAttribute('src', next);
                     heroVideo.load();
-                    heroVideo.play().catch(() => {});
+                    heroVideo.play().then(() => {
+                        console.log('[heroVideo] 재생 성공');
+                    }).catch(err => {
+                        console.warn('[heroVideo] 재생 실패:', err.message);
+                    });
                 }
             }
             applySrc();
