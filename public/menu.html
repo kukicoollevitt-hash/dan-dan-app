@@ -6322,7 +6322,7 @@ canvas[id^="confetti-canvas"] {
         </div>
         <div class="speed-quiz-stats">
           <span class="speed-quiz-progress" id="speedQuizProgress">1/100</span>
-          <span class="speed-quiz-timer" id="speedQuizTimer">10</span>
+          <span class="speed-quiz-timer" id="speedQuizTimer">5</span>
         </div>
         <button class="speed-quiz-ranking-btn" onclick="showSpeedVocabRanking()">순위보기</button>
         <button class="speed-quiz-exit-btn" onclick="closeSpeedQuizOverlay()">✕</button>
@@ -29797,6 +29797,23 @@ ${content}
 
     // ===== 월간 스피드 어휘왕 =====
 
+    // 결정론적 시드 PRNG (월별 이벤트 공정성용)
+    function createSeededRng(seed) {
+      let s = seed >>> 0;
+      return function() {
+        s = (s * 9301 + 49297) % 233280;
+        return s / 233280;
+      };
+    }
+    function seededShuffle(arr, rng) {
+      const result = [...arr];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
     // 월별 분야 매핑 (BRAINFIT_VOCAB_DATA 활용)
     // 1,2월: science (과학)
     // 3,4월: social (사회)
@@ -29835,16 +29852,19 @@ ${content}
         ];
       }
 
-      // BRAINFIT_VOCAB_DATA 형식을 스피드 퀴즈 형식으로 변환
-      // 각 월마다 다른 랜덤 시드로 15개 선택
-      const shuffled = [...sourceData].sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, 15);
+      // 월별 결정론적 셔플 — 같은 월이면 누가 풀어도 동일한 100개·동일 순서·동일 오답
+      const wordRng = createSeededRng(m * 1000 + 31);
+      const shuffled = seededShuffle(sourceData, wordRng);
+      const selected = shuffled.slice(0, 100);
 
-      return selected.map(item => ({
-        word: item.word,
-        meaning: item.meaning,
-        wrongs: generateWrongAnswers(item.meaning, sourceData)
-      }));
+      return selected.map((item, idx) => {
+        // 단어별 시드로 오답 3개 결정 — 매번 동일
+        const wrongRng = createSeededRng(m * 100000 + idx * 17 + 11);
+        const candidates = sourceData.filter(s => s.meaning !== item.meaning);
+        const wrongs = seededShuffle(candidates, wrongRng).slice(0, 3).map(c => c.meaning);
+        while (wrongs.length < 3) wrongs.push('해당 없음');
+        return { word: item.word, meaning: item.meaning, wrongs };
+      });
     }
 
     // 오답 생성 함수 (다른 단어들의 뜻에서 3개 선택)
@@ -29974,11 +29994,13 @@ ${content}
 
     // 랜덤으로 100문제 선택 (월별 데이터 사용)
     function selectSpeedQuizQuestions(count, month) {
+      // getMonthlyVocabData가 이미 월별 결정론적 100개를 반환 (순서 고정)
       const vocabData = getMonthlyVocabData(month);
-      const shuffled = [...vocabData].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, count).map(item => {
-        // 선택지 생성: 정답 + 오답 3개
-        const choices = [item.meaning, ...item.wrongs].sort(() => Math.random() - 0.5);
+      const m = parseInt(month);
+      // 선택지 순서도 결정론적 (단어별 시드)
+      return vocabData.map((item, idx) => {
+        const choiceRng = createSeededRng(m * 1000000 + idx * 7 + 999);
+        const choices = seededShuffle([item.meaning, ...item.wrongs], choiceRng);
         const correctIndex = choices.indexOf(item.meaning);
         return {
           word: item.word,
@@ -29995,7 +30017,7 @@ ${content}
       const question = state.questions[state.currentIndex];
 
       // 진행 상황 업데이트
-      document.getElementById('speedQuizProgress').textContent = `${state.currentIndex + 1}/100`;
+      document.getElementById('speedQuizProgress').textContent = `${state.currentIndex + 1}/${state.questions.length}`;
       document.getElementById('speedQuizQuestion').innerHTML = `<span class="word-highlight">${question.word}</span>의 뜻은?`;
 
       // 선택지 렌더링
@@ -30004,8 +30026,8 @@ ${content}
         `<button class="speed-quiz-choice" onclick="selectSpeedQuizAnswer(${idx})">${choice}</button>`
       ).join('');
 
-      // 타이머 시작 (10초)
-      let timeLeft = 10;
+      // 타이머 시작 (5초)
+      let timeLeft = 5;
       document.getElementById('speedQuizTimer').textContent = timeLeft;
 
       if (state.timerInterval) clearInterval(state.timerInterval);
@@ -30049,7 +30071,7 @@ ${content}
       // 다음 문제 또는 결과
       setTimeout(() => {
         state.currentIndex++;
-        if (state.currentIndex < 100) {
+        if (state.currentIndex < state.questions.length) {
           showSpeedQuizQuestion();
         } else {
           showSpeedQuizResult();
@@ -30070,7 +30092,7 @@ ${content}
       // 다음 문제
       setTimeout(() => {
         state.currentIndex++;
-        if (state.currentIndex < 100) {
+        if (state.currentIndex < state.questions.length) {
           showSpeedQuizQuestion();
         } else {
           showSpeedQuizResult();
@@ -30087,7 +30109,7 @@ ${content}
       document.querySelector('.speed-quiz-body').style.display = 'none';
       document.getElementById('speedQuizResult').classList.add('show');
 
-      document.getElementById('speedResultScore').textContent = `${state.correctCount}/100`;
+      document.getElementById('speedResultScore').textContent = `${state.correctCount}/${state.questions.length}`;
       document.getElementById('speedResultTime').textContent = `총 ${state.totalTime}초`;
 
       // 서버에 결과 저장
