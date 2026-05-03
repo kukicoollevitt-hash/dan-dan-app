@@ -2025,10 +2025,16 @@
     // 서버에 데이터 저장
     async function saveToServer(schoolId, field, data) {
       try {
+        // 학교 → 학원 매핑 (있으면 함께 보내서 서버에서 Admin 동기화 가능하게)
+        const matchedSchool = (typeof schoolData !== 'undefined' && Array.isArray(schoolData))
+          ? schoolData.find(s => `${s.sido}_${s.sigungu}_${s.name}`.replace(/\s/g, '_') === schoolId)
+          : null;
+        const academyName = matchedSchool && matchedSchool.academyName ? matchedSchool.academyName : '';
+
         const response = await fetch(`/api/center-contracts/${currentContractType}/${schoolId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ field, data })
+          body: JSON.stringify({ field, data, academyName })
         });
         const result = await response.json();
         if (result.ok) {

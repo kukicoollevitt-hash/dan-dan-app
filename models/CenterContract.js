@@ -9,6 +9,7 @@ const CenterContractSchema = new mongoose.Schema({
   sido: { type: String },
   sigungu: { type: String },
   name: { type: String },
+  academyName: { type: String, default: '', index: true }, // 학원명 매핑 (Admin.academyName과 일치)
 
   // 학교 데이터 (competitor, status, contractStart)
   schoolData: {

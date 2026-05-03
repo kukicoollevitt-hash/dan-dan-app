@@ -935,12 +935,28 @@ const adminSchema = new mongoose.Schema({
   franchiseFee: { type: Number, default: 0 }, // 총가맹비 (가맹형)
   franchiseContractDate: { type: Date, default: null }, // 가맹 계약일 (가맹형)
 
-  // 🔹 누적 학생 수 (삭제해도 감소하지 않음, 최대 120명)
+  // 🔹 누적 학생 수 (월말 cron이 갱신, 사이클 단위로 리셋)
   cumulativeStudentCount: { type: Number, default: 0 },
+  overStudentCount: { type: Number, default: 0 },     // 직전 월말 기준 초과 인원
+  currentCycleNumber: { type: Number, default: 0 },   // 현재 계약 사이클 번호 (0=첫해, 1=2년차, ...)
+  lastSnapshotYearMonth: { type: String, default: null }, // 마지막 스냅샷 yearMonth ("2026-06")
   maxStudentLimit: { type: Number, default: 120 }, // 최대 학생 수 제한
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
+
+// ===== 월별 학원 학생수 스냅샷 (월말 cron이 기록) =====
+const monthlyStudentSnapshotSchema = new mongoose.Schema({
+  academyName: { type: String, required: true, index: true },
+  yearMonth: { type: String, required: true }, // "2026-06"
+  cycleNumber: { type: Number, required: true }, // 0=첫해
+  monthEndCount: { type: Number, default: 0 },     // 그달 월말 현재인원 스냅샷
+  cumulativeAfter: { type: Number, default: 0 },   // 이 달 갱신 후 사이클 누적
+  overThisMonth: { type: Number, default: 0 },     // 이 달 초과 인원 (규칙 기반)
+  capturedAt: { type: Date, default: Date.now },
+});
+monthlyStudentSnapshotSchema.index({ academyName: 1, yearMonth: 1 }, { unique: true });
+const MonthlyStudentSnapshot = mongoose.model("MonthlyStudentSnapshot", monthlyStudentSnapshotSchema);
 
 // ===== 학습 행동 데이터 스키마 (본문학습 오답 추적) =====
 const learningBehaviorSchema = new mongoose.Schema({
@@ -4662,8 +4678,8 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
               const maxLimit = a.maxStudentLimit || 120;
               const displayCumulative = Math.min(rawCumulative, maxLimit);
               const currentCount = studentCountMap[a.academyName] || 0;
-              // 초과 인원: 누적 120명 이상일 때만 현재 인원 - 10
-              const overCount = Math.max(0, rawCumulative - maxLimit);
+              // 초과 인원: 직전 월말 cron 결과 (월별 규칙 기반 산정)
+              const overCount = a.overStudentCount || 0;
               let html = '<span style="color: #059669; font-weight: 700;">' + displayCumulative + '</span>/<span style="color: #6b7280;">' + maxLimit + '</span>';
               html += '<span style="color: #d1d5db; margin: 0 4px;">|</span>';
               html += '<span style="color: #2563eb; font-weight: 600;">' + currentCount + '</span>명';
@@ -24969,6 +24985,7 @@ app.get("/api/admin-session", async (req, res) => {
           seriesApproved: admin ? admin.seriesApproved : false,
           approvedSeries: admin ? (admin.approvedSeries || []) : [],
           cumulativeStudentCount: admin ? (admin.cumulativeStudentCount || 0) : 0,
+          overStudentCount: admin ? (admin.overStudentCount || 0) : 0,
           maxStudentLimit: admin ? (admin.maxStudentLimit || 120) : 120
         }
       });
@@ -24984,6 +25001,7 @@ app.get("/api/admin-session", async (req, res) => {
           seriesApproved: false,
           approvedSeries: viewing.approvedSeries || [],
           cumulativeStudentCount: 0,
+          overStudentCount: 0,
           maxStudentLimit: 120
         }
       });
@@ -25001,6 +25019,7 @@ app.get("/api/admin-session", async (req, res) => {
           seriesApproved: admin ? admin.seriesApproved : false,
           approvedSeries: admin ? (admin.approvedSeries || []) : [],
           cumulativeStudentCount: admin ? (admin.cumulativeStudentCount || 0) : 0,
+          overStudentCount: admin ? (admin.overStudentCount || 0) : 0,
           maxStudentLimit: admin ? (admin.maxStudentLimit || 120) : 120
         }
       });
@@ -25012,6 +25031,7 @@ app.get("/api/admin-session", async (req, res) => {
           seriesApproved: false,
           approvedSeries: [],
           cumulativeStudentCount: 0,
+          overStudentCount: 0,
           maxStudentLimit: 120
         }
       });
@@ -28606,6 +28626,198 @@ setTimeout(() => {
   assignAITasksDaily();
 }, 10000);
 
+// ========== 학원 월별 학생수 스냅샷 (월말 누적/초과 산정) ==========
+// KST "yearMonth" 형식 ("2026-06") 변환
+function formatYearMonthKST(date) {
+  const kst = new Date(date.getTime() + (9 * 60 * 60 * 1000) - (date.getTimezoneOffset() * 60 * 1000));
+  const y = kst.getUTCFullYear();
+  const m = String(kst.getUTCMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
+// 두 yearMonth 비교 ("2026-05" < "2026-06")
+function ymCompare(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+
+// 사이클 번호 계산: 계약시작일 기준 365일 단위, 0=첫해
+function computeCycleNumber(contractStartDate, asOfDate) {
+  const days = Math.floor((asOfDate.getTime() - contractStartDate.getTime()) / 86400000);
+  return Math.max(0, Math.floor(days / 365));
+}
+
+// 해당 yearMonth가 계약시작월보다 이전이면 true (시작월부터 카운트 포함)
+function isBeforeContractStartMonth(contractStartDate, yearMonth) {
+  const startYM = formatYearMonthKST(contractStartDate);
+  return ymCompare(yearMonth, startYM) < 0;
+}
+
+// 사이클 시작월 yearMonth (사이클 번호 N의 시작 월) — 이 월부터 카운트 포함
+function cycleStartYearMonth(contractStartDate, cycleNumber) {
+  const start = new Date(contractStartDate.getTime() + cycleNumber * 365 * 86400000);
+  return formatYearMonthKST(start);
+}
+
+/**
+ * 월말 스냅샷 실행
+ * @param {Object} opts
+ * @param {string} [opts.targetYearMonth] - "2026-06" 직접 지정 (기본: 어제의 yearMonth = 직전월)
+ * @param {string} [opts.onlyAcademyName] - 특정 학원만 실행 (테스트용)
+ * @param {boolean} [opts.dryRun] - true면 DB 변경 없이 결과만 리턴
+ * @returns {Promise<Array>} 학원별 결과 요약
+ */
+async function runMonthlySnapshot(opts = {}) {
+  // 기본 타겟: "어제"의 yearMonth = 직전 월. cron이 1일 00:00에 돌면 어제 = 전월 말일
+  let targetYM = opts.targetYearMonth;
+  if (!targetYM) {
+    const yesterday = new Date(Date.now() - 86400000);
+    targetYM = formatYearMonthKST(yesterday);
+  }
+
+  const query = { userType: "academy", deleted: { $ne: true } };
+  if (opts.onlyAcademyName) query.academyName = opts.onlyAcademyName;
+
+  const admins = await Admin.find(query);
+  const results = [];
+
+  for (const admin of admins) {
+    if (!admin.contractStartDate) {
+      results.push({ academyName: admin.academyName, skipped: "no contractStartDate" });
+      continue;
+    }
+
+    const contractStart = new Date(admin.contractStartDate);
+
+    // 계약시작월 이전만 스킵 (시작월은 포함)
+    if (isBeforeContractStartMonth(contractStart, targetYM)) {
+      results.push({ academyName: admin.academyName, skipped: `before start month (${targetYM} < start)` });
+      continue;
+    }
+
+    // 타겟 월의 마지막 시점 기준 사이클 결정
+    // yy/mm은 1-indexed, Date.UTC는 0-indexed → Date.UTC(yy, mm, 1)는 익월 1일 00:00 UTC.
+    // KST는 UTC+9이므로 -9h 하면 KST 익월 1일 00:00 = 그 달 말일 23:59:59 KST 직후.
+    const [yy, mm] = targetYM.split('-').map(n => parseInt(n));
+    const utcMonthEnd = new Date(Date.UTC(yy, mm, 1) - 9 * 3600000);
+
+    const cycleNumber = computeCycleNumber(contractStart, utcMonthEnd);
+
+    // 사이클 시작월 이전이면 스킵 (시작월 자체는 포함)
+    const thisCycleStartYM = cycleStartYearMonth(contractStart, cycleNumber);
+    if (ymCompare(targetYM, thisCycleStartYM) < 0) {
+      results.push({ academyName: admin.academyName, skipped: `cycle ${cycleNumber} before start (${targetYM} < ${thisCycleStartYM})` });
+      continue;
+    }
+
+    // 직전 스냅샷 (같은 사이클 내, targetYM 이전) 조회
+    const prevSnap = await MonthlyStudentSnapshot.findOne({
+      academyName: admin.academyName,
+      cycleNumber,
+      yearMonth: { $lt: targetYM }
+    }).sort({ yearMonth: -1 });
+
+    // 사이클 누적 시작값:
+    //   첫 사이클(cycle 0)이고 직전 스냅샷 없으면 → 기존 admin.cumulativeStudentCount 이어쓰기 (Q8)
+    //   이후 사이클이거나 같은 사이클 내 이전 스냅샷이 있으면 그 값 사용
+    let prevCum;
+    if (prevSnap) {
+      prevCum = prevSnap.cumulativeAfter;
+    } else if (cycleNumber === 0) {
+      prevCum = admin.cumulativeStudentCount || 0;
+    } else {
+      prevCum = 0; // 새 사이클 시작
+    }
+
+    // 그 달 월말 시점의 현재 인원 (지금 카운트 — cron은 월말 직후 돌기 때문에 사실상 월말 카운트)
+    const monthEndCount = await User.countDocuments({
+      academyName: admin.academyName,
+      userType: "academy",
+      status: "approved",
+      deleted: { $ne: true }
+    });
+
+    const newCum = prevCum + monthEndCount;
+    const maxLimit = admin.maxStudentLimit || 120;
+
+    // 초과 산정 (Q1·Q2)
+    let overThisMonth = 0;
+    if (monthEndCount === 0) {
+      overThisMonth = 0;
+    } else if (prevCum >= maxLimit) {
+      overThisMonth = monthEndCount;
+    } else if (newCum > maxLimit) {
+      overThisMonth = newCum - maxLimit;
+    }
+
+    if (opts.dryRun) {
+      results.push({
+        academyName: admin.academyName, yearMonth: targetYM, cycleNumber,
+        monthEndCount, prevCum, newCum, overThisMonth, dryRun: true
+      });
+      continue;
+    }
+
+    // 스냅샷 upsert
+    await MonthlyStudentSnapshot.findOneAndUpdate(
+      { academyName: admin.academyName, yearMonth: targetYM },
+      {
+        academyName: admin.academyName,
+        yearMonth: targetYM,
+        cycleNumber,
+        monthEndCount,
+        cumulativeAfter: newCum,
+        overThisMonth,
+        capturedAt: new Date()
+      },
+      { upsert: true, new: true }
+    );
+
+    // Admin 빠른 조회용 필드 갱신
+    admin.cumulativeStudentCount = newCum;
+    admin.overStudentCount = overThisMonth;
+    admin.currentCycleNumber = cycleNumber;
+    admin.lastSnapshotYearMonth = targetYM;
+    await admin.save();
+
+    results.push({
+      academyName: admin.academyName, yearMonth: targetYM, cycleNumber,
+      monthEndCount, prevCum, newCum, overThisMonth
+    });
+  }
+
+  console.log(`📸 월별 스냅샷 완료 (${targetYM}): ${results.length}개 학원 처리`);
+  return results;
+}
+
+// 수동 트리거 엔드포인트 (슈퍼관리자 PIN 필요, 테스트/백필용)
+app.post('/api/admin/run-monthly-snapshot', async (req, res) => {
+  try {
+    const { pin, targetYearMonth, onlyAcademyName, dryRun } = req.body || {};
+    if (pin !== SUPER_ADMIN_PIN) {
+      return res.status(401).json({ success: false, message: '슈퍼관리자 PIN이 필요합니다.' });
+    }
+    const results = await runMonthlySnapshot({
+      targetYearMonth: targetYearMonth || undefined,
+      onlyAcademyName: onlyAcademyName || undefined,
+      dryRun: !!dryRun
+    });
+    res.json({ success: true, count: results.length, results });
+  } catch (err) {
+    console.error('❌ 수동 월별 스냅샷 오류:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 매월 1일 00:00 KST: 직전 월의 월말 스냅샷 산정
+cron.schedule('0 0 1 * *', async () => {
+  console.log('📅 학원 월별 학생수 스냅샷 cron 트리거');
+  try {
+    const results = await runMonthlySnapshot();
+    console.log(`✅ 학원 월별 스냅샷 cron 완료: ${results.length}개 학원`);
+  } catch (err) {
+    console.error('❌ 학원 월별 스냅샷 cron 오류:', err);
+  }
+}, { timezone: 'Asia/Seoul' });
+console.log('✅ 학원 월별 스냅샷 스케줄러 등록 완료 (매월 1일 00:00 KST)');
+
 // ========== 독서 감상문 월간 리셋 ==========
 // 매월 1일 0시 0분에 실행 (월간 과제 리셋)
 cron.schedule('0 0 1 * *', async () => {
@@ -29719,20 +29931,8 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
 
     // 관리자의 학원 정보 사용
     const adminAcademyName = req.session.admin.academyName;
-    const adminId = req.session.admin.id || req.session.admin._id;
 
-    // 누적 학생 수 확인 (최대 제한 체크)
-    const adminDoc = await Admin.findById(adminId);
-    if (adminDoc) {
-      const maxLimit = adminDoc.maxStudentLimit || 120;
-      const currentCumulative = adminDoc.cumulativeStudentCount || 0;
-      if (currentCumulative >= maxLimit) {
-        return res.status(400).json({
-          success: false,
-          message: `누적 학생 수가 최대 ${maxLimit}명에 도달했습니다. 추가 등록이 필요하시면 본사에 문의해 주세요.`
-        });
-      }
-    }
+    // 초과 인원도 추가 허용 (추가금 부과 정책 — 월말 cron이 누적/초과 산정)
 
     // 전화번호(ID): 11자리 전체 사용 (하이픈 제거)
     const phone = String(number).replace(/[^0-9]/g, '');
@@ -29761,11 +29961,7 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
 
     await newUser.save();
 
-    // 누적 학생 수 증가 (삭제해도 감소하지 않음)
-    if (adminDoc) {
-      await Admin.findByIdAndUpdate(adminId, { $inc: { cumulativeStudentCount: 1 } });
-      console.log("✅ 누적 학생 수 증가:", (adminDoc.cumulativeStudentCount || 0) + 1);
-    }
+    // 누적 학생 수는 월말 cron이 갱신하므로 추가 시점에는 증감하지 않음
 
     console.log("✅ 학원 학생 추가 완료:", newUser.name, "ID:", phone, "학원:", adminAcademyName);
 
@@ -36234,13 +36430,16 @@ app.post("/api/center-contracts", async (req, res) => {
 app.put("/api/center-contracts/:contractType/:schoolId", async (req, res) => {
   try {
     const { contractType, schoolId } = req.params;
-    const { field, data } = req.body; // field: 'schoolData' | 'contractData' | 'excessData' | 'textbookData'
+    const { field, data, academyName } = req.body; // field: 'schoolData' | 'contractData' | 'excessData' | 'textbookData'
 
     if (!field || !data) {
       return res.status(400).json({ ok: false, message: "field와 data는 필수입니다" });
     }
 
     const updateQuery = { [`${field}`]: data, updatedAt: new Date() };
+    if (academyName) {
+      updateQuery.academyName = academyName;
+    }
 
     const contract = await CenterContract.findOneAndUpdate(
       { contractType, schoolId },
@@ -36249,7 +36448,50 @@ app.put("/api/center-contracts/:contractType/:schoolId", async (req, res) => {
     );
 
     console.log(`✅ 센터 계약 부분 업데이트: ${contractType}/${schoolId} - ${field}`);
-    res.json({ ok: true, contract });
+
+    // 🔹 학원 동기화: contractData.contractStartDate가 변경되면 Admin에 반영하고 누적/스냅샷 리셋
+    let academySync = null;
+    if (field === 'contractData' && academyName && data && data.contractStartDate) {
+      try {
+        const newStartStr = data.contractStartDate; // "YYYY-MM-DD"
+        const newStartDate = new Date(newStartStr + 'T00:00:00+09:00'); // KST 자정
+        if (isNaN(newStartDate.getTime())) {
+          console.warn(`⚠️ 계약시작일 형식 오류 무시: "${newStartStr}"`);
+        } else {
+          const admin = await Admin.findOne({ academyName, userType: 'academy', deleted: { $ne: true } });
+          if (!admin) {
+            console.warn(`⚠️ academyName="${academyName}" 학원 not found — Admin 동기화 스킵`);
+          } else {
+            const prevStart = admin.contractStartDate ? admin.contractStartDate.getTime() : null;
+            const nextStart = newStartDate.getTime();
+            const changed = prevStart !== nextStart;
+
+            admin.contractStartDate = newStartDate;
+            const endDate = new Date(newStartDate);
+            endDate.setFullYear(endDate.getFullYear() + 1);
+            admin.contractEndDate = endDate;
+
+            if (changed) {
+              // 계약시작일 변경 → 사이클 처음부터, 누적/초과/스냅샷 모두 리셋
+              admin.cumulativeStudentCount = 0;
+              admin.overStudentCount = 0;
+              admin.currentCycleNumber = 0;
+              admin.lastSnapshotYearMonth = null;
+              await MonthlyStudentSnapshot.deleteMany({ academyName });
+              console.log(`♻️  계약시작일 변경 — 학원 "${academyName}" 누적/스냅샷 리셋`);
+            }
+
+            await admin.save();
+            academySync = { academyName, contractStartDate: newStartStr, reset: changed };
+            console.log(`✅ Admin 동기화 완료: "${academyName}" 계약시작일=${newStartStr} (reset=${changed})`);
+          }
+        }
+      } catch (syncErr) {
+        console.error('❌ Admin 동기화 오류:', syncErr);
+      }
+    }
+
+    res.json({ ok: true, contract, academySync });
   } catch (err) {
     console.error("❌ 센터 계약 업데이트 오류:", err);
     res.status(500).json({ ok: false, message: "업데이트 중 오류" });
@@ -36286,13 +36528,16 @@ app.get("/api/academy-student-counts", async (req, res) => {
     });
 
     // 결과 데이터 생성
+    // - cumulative: 사이클 내 누적 (월말 cron이 갱신, 표시는 maxLimit으로 클램프)
+    // - current: 현재 approved 학생 수 (실시간)
+    // - over: 직전 월말 기준 초과 인원 (월말 cron이 산정)
     const result = {};
     admins.forEach(admin => {
       const academyName = admin.academyName;
       const rawCumulative = admin.cumulativeStudentCount || 0;
       const maxLimit = admin.maxStudentLimit || 120;
       const currentCount = studentCountMap[academyName] || 0;
-      const overCount = Math.max(0, rawCumulative - maxLimit);
+      const overCount = admin.overStudentCount || 0;
 
       result[academyName] = {
         cumulative: Math.min(rawCumulative, maxLimit),
