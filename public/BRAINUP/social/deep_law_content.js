@@ -86,9 +86,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '개인과 개인 간의 관계를 규율하는 법을 (   )이라고 한다.', answer: '사법', initials: 'ㅅㅂ', aliases: ['사법'] },
         { no: 9, text: '권리와 의무의 내용을 정하는 법을 (    )이라고 한다.', answer: '실체법', initials: 'ㅅㅊㅂ', aliases: ['실체법'] },
         { no: 10, text: '권리 실현을 위한 절차를 규정하는 법을 (    )이라고 한다.', answer: '절차법', initials: 'ㅈㅊㅂ', aliases: ['절차법'] },
-        { no: 11, text: '국가 권력이 법에 의해 행사되고 통제되어야 한다는 원칙을 (     )라고 한다.', answer: '법치주의', initials: 'ㅂㅊㅈㅇ', aliases: ['법치주의'] },        { no: 13, text: '새로운 법을 과거 행위에 적용하지 않는 원칙을 (       )라고 한다.', answer: '소급 적용 금지', initials: 'ㅅㄱ ㅈㅇ ㄱㅈ', aliases: ['소급적용금지', '소급 적용 금지'] },
-        { no: 14, text: '법률의 내용이 분명하고 예측 가능해야 한다는 원칙을 (       )라고 한다.', answer: '명확성의 원칙', initials: 'ㅁㅎㅅㅇ ㅇㅊ', aliases: ['명확성의원칙', '명확성의 원칙'] },
-        { no: 15, text: '법률에 따라 재판을 담당하는 국가 기관을 (     )이라고 한다.', answer: '사법 기관', initials: 'ㅅㅂ ㄱㄱ', aliases: ['사법기관', '사법 기관'] }
+        { no: 11, text: '국가 권력이 법에 의해 행사되고 통제되어야 한다는 원칙을 (     )라고 한다.', answer: '법치주의', initials: 'ㅂㅊㅈㅇ', aliases: ['법치주의'] },        { no: 12, text: '새로운 법을 과거 행위에 적용하지 않는 원칙을 (       )라고 한다.', answer: '소급 적용 금지', initials: 'ㅅㄱ ㅈㅇ ㄱㅈ', aliases: ['소급적용금지', '소급 적용 금지'] },
+        { no: 13, text: '법률의 내용이 분명하고 예측 가능해야 한다는 원칙을 (       )라고 한다.', answer: '명확성의 원칙', initials: 'ㅁㅎㅅㅇ ㅇㅊ', aliases: ['명확성의원칙', '명확성의 원칙'] },
+        { no: 14, text: '법률에 따라 재판을 담당하는 국가 기관을 (     )이라고 한다.', answer: '사법 기관', initials: 'ㅅㅂ ㄱㄱ', aliases: ['사법기관', '사법 기관'] }
       ]
     },
     quiz: {
@@ -516,9 +516,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[선거와 정당 어휘]',
       items: [
         { no: 1, text: '국민이 투표로 대표자를 선출하는 제도를 (      )라고 한다.', answer: '선거', initials: 'ㅅㄱ', aliases: ['선거'] },
-        { no: 2, text: '선거에서 투표할 수 있는 권리를 (      )라고 한다.', answer: '선거권', initials: 'ㅅㄱㄱ', aliases: ['선거권'] },        { no: 7, text: '정치적 견해가 같은 사람들이 만든 단체를 (      )이라 한다.', answer: '정당', initials: 'ㅈㄷ', aliases: ['정당'] },        { no: 9, text: '당선되면 실천하겠다고 약속하는 정책을 (      )이라 한다.', answer: '공약', initials: 'ㄱㅇ', aliases: ['공약'] },        { no: 11, text: '구체적인 목표와 실현 방법을 담은 공약을 (          )라고 한다.', answer: '매니페스토', initials: 'ㅁㄴㅍㅅㅌ', aliases: ['매니페스토'] },        { no: 13, text: '선거에서 투표할 자격이 있는 사람을 (        )라고 한다.', answer: '유권자', initials: 'ㅇㄱㅈ', aliases: ['유권자'] },
-        { no: 14, text: '현재 정권을 잡고 있는 정당을 (      )이라 한다.', answer: '여당', initials: 'ㅇㄷ', aliases: ['여당'] },
-        { no: 15, text: '정권을 잡지 않은 반대 정당을 (      )이라 한다.', answer: '야당', initials: 'ㅇㄷ', aliases: ['야당'] }
+        { no: 2, text: '선거에서 투표할 수 있는 권리를 (      )라고 한다.', answer: '선거권', initials: 'ㅅㄱㄱ', aliases: ['선거권'] },        { no: 3, text: '정치적 견해가 같은 사람들이 만든 단체를 (      )이라 한다.', answer: '정당', initials: 'ㅈㄷ', aliases: ['정당'] },        { no: 4, text: '당선되면 실천하겠다고 약속하는 정책을 (      )이라 한다.', answer: '공약', initials: 'ㄱㅇ', aliases: ['공약'] },        { no: 5, text: '구체적인 목표와 실현 방법을 담은 공약을 (          )라고 한다.', answer: '매니페스토', initials: 'ㅁㄴㅍㅅㅌ', aliases: ['매니페스토'] },        { no: 6, text: '선거에서 투표할 자격이 있는 사람을 (        )라고 한다.', answer: '유권자', initials: 'ㅇㄱㅈ', aliases: ['유권자'] },
+        { no: 7, text: '현재 정권을 잡고 있는 정당을 (      )이라 한다.', answer: '여당', initials: 'ㅇㄷ', aliases: ['여당'] },
+        { no: 8, text: '정권을 잡지 않은 반대 정당을 (      )이라 한다.', answer: '야당', initials: 'ㅇㄷ', aliases: ['야당'] }
       ]
     },
     quiz: {
@@ -619,8 +619,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '법에 의해 권리능력이 인정되는 단체를 (      )이라고 한다.', answer: '법인', initials: 'ㅂㅇ', aliases: ['법인'] },
         { no: 7, text: '단독으로 유효한 법률 행위를 할 수 있는 능력을 (        )이라고 한다.', answer: '행위능력', initials: 'ㅎㅇㄴㄹ', aliases: ['행위능력'] },
         { no: 8, text: '만 19세가 되지 않은 사람을 (        )라고 한다.', answer: '미성년자', initials: 'ㅁㅅㄴㅈ', aliases: ['미성년자'] },
-        { no: 9, text: '법에 의해 대리권이 부여된 부모 등을 (          )이라고 한다.', answer: '법정대리인', initials: 'ㅂㅈㄷㄹㅇ', aliases: ['법정대리인'] },        { no: 13, text: '일단 성립한 법률 행위의 효력을 소급하여 없애는 것을 (      )라고 한다.', answer: '취소', initials: 'ㅊㅅ', aliases: ['취소'] },
-        { no: 14, text: '과실이 없어도 손해배상 책임을 지는 것을 (        )이라고 한다.', answer: '무과실책임', initials: 'ㅁㄱㅅㅊㅇ', aliases: ['무과실책임', '무과실 책임'] },      ]
+        { no: 9, text: '법에 의해 대리권이 부여된 부모 등을 (          )이라고 한다.', answer: '법정대리인', initials: 'ㅂㅈㄷㄹㅇ', aliases: ['법정대리인'] },        { no: 10, text: '일단 성립한 법률 행위의 효력을 소급하여 없애는 것을 (      )라고 한다.', answer: '취소', initials: 'ㅊㅅ', aliases: ['취소'] },
+        { no: 11, text: '과실이 없어도 손해배상 책임을 지는 것을 (        )이라고 한다.', answer: '무과실책임', initials: 'ㅁㄱㅅㅊㅇ', aliases: ['무과실책임', '무과실 책임'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -711,10 +711,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '법적 효력이 있는 당사자 간의 합의를 (      )이라고 한다.', answer: '계약', initials: 'ㄱㅇ', aliases: ['계약'] },
         { no: 2, text: '계약 체결을 제안하는 의사표시를 (      )이라고 한다.', answer: '청약', initials: 'ㅊㅇ', aliases: ['청약'] },
-        { no: 3, text: '청약을 받아들이는 의사표시를 (      )이라고 한다.', answer: '승낙', initials: 'ㅅㄴ', aliases: ['승낙'] },        { no: 5, text: '공공의 질서와 선량한 풍속을 (        )이라고 한다.', answer: '공서양속', initials: 'ㄱㅅㅇㅅ', aliases: ['공서양속'] },
-        { no: 6, text: '거짓으로 상대방을 속이는 행위를 (      )라고 한다.', answer: '사기', initials: 'ㅅㄱ', aliases: ['사기'] },
-        { no: 7, text: '위협을 가하여 억지로 의사를 굽히게 하는 것을 (      )이라고 한다.', answer: '강박', initials: 'ㄱㅂ', aliases: ['강박'] },
-        { no: 8, text: '계약에 따라 이행해야 할 의무를 (      )라고 한다.', answer: '채무', initials: 'ㅊㅁ', aliases: ['채무'] },        { no: 10, text: '타인에게 입힌 손해를 금전 등으로 갚는 것을 (        )이라고 한다.', answer: '손해배상', initials: 'ㅅㅎㅂㅅ', aliases: ['손해배상'] },        { no: 13, text: '기업이 미리 만들어 놓은 정형화된 계약 조건을 (      )이라고 한다.', answer: '약관', initials: 'ㅇㄱ', aliases: ['약관'] },        { no: 15, text: '불공정 거래를 감시하고 규제하는 정부 기관을 (            )라고 한다.', answer: '공정거래위원회', initials: 'ㄱㅈㄱㄹㅇㅇㅎ', aliases: ['공정거래위원회', '공정 거래 위원회'] }
+        { no: 3, text: '청약을 받아들이는 의사표시를 (      )이라고 한다.', answer: '승낙', initials: 'ㅅㄴ', aliases: ['승낙'] },        { no: 4, text: '공공의 질서와 선량한 풍속을 (        )이라고 한다.', answer: '공서양속', initials: 'ㄱㅅㅇㅅ', aliases: ['공서양속'] },
+        { no: 5, text: '거짓으로 상대방을 속이는 행위를 (      )라고 한다.', answer: '사기', initials: 'ㅅㄱ', aliases: ['사기'] },
+        { no: 6, text: '위협을 가하여 억지로 의사를 굽히게 하는 것을 (      )이라고 한다.', answer: '강박', initials: 'ㄱㅂ', aliases: ['강박'] },
+        { no: 7, text: '계약에 따라 이행해야 할 의무를 (      )라고 한다.', answer: '채무', initials: 'ㅊㅁ', aliases: ['채무'] },        { no: 8, text: '타인에게 입힌 손해를 금전 등으로 갚는 것을 (        )이라고 한다.', answer: '손해배상', initials: 'ㅅㅎㅂㅅ', aliases: ['손해배상'] },        { no: 9, text: '기업이 미리 만들어 놓은 정형화된 계약 조건을 (      )이라고 한다.', answer: '약관', initials: 'ㅇㄱ', aliases: ['약관'] },        { no: 10, text: '불공정 거래를 감시하고 규제하는 정부 기관을 (            )라고 한다.', answer: '공정거래위원회', initials: 'ㄱㅈㄱㄹㅇㅇㅎ', aliases: ['공정거래위원회', '공정 거래 위원회'] }
       ]
     },
     quiz: {
@@ -919,10 +919,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '가족 간의 관계를 규율하는 법을 (        )이라고 한다.', answer: '가족법', initials: 'ㄱㅈㅂ', aliases: ['가족법'] },
         { no: 2, text: '법적으로 부부가 되는 것을 (      )이라고 한다.', answer: '혼인', initials: 'ㅎㅇ', aliases: ['혼인'] },
-        { no: 3, text: '법적으로 부부 관계를 해소하는 것을 (      )이라고 한다.', answer: '이혼', initials: 'ㅇㅎ', aliases: ['이혼'] },        { no: 6, text: '부모가 자녀를 보호하고 교육할 권리와 의무를 (      )이라고 한다.', answer: '친권', initials: 'ㅊㄱ', aliases: ['친권'] },
-        { no: 7, text: '자녀를 키울 권리를 (        )이라고 한다.', answer: '양육권', initials: 'ㅇㅇㄱ', aliases: ['양육권'] },        { no: 9, text: '정신적 손해에 대한 배상금을 (        )라고 한다.', answer: '위자료', initials: 'ㅇㅈㄹ', aliases: ['위자료'] },        { no: 11, text: '아버지가 자녀를 자기 자녀로 인정하는 것을 (      )라고 한다.', answer: '인지', initials: 'ㅇㅈ', aliases: ['인지'] },
-        { no: 12, text: '법적으로 친자 관계를 맺는 것을 (      )이라고 한다.', answer: '입양', initials: 'ㅇㅇ', aliases: ['입양'] },
-        { no: 13, text: '사망한 사람의 재산이 유족에게 이전되는 것을 (      )이라고 한다.', answer: '상속', initials: 'ㅅㅅ', aliases: ['상속'] },        { no: 15, text: '부부 간 재산 관계를 정하는 제도를 (          )라고 한다.', answer: '부부재산제', initials: 'ㅂㅂㅈㅅㅈ', aliases: ['부부재산제'] }
+        { no: 3, text: '법적으로 부부 관계를 해소하는 것을 (      )이라고 한다.', answer: '이혼', initials: 'ㅇㅎ', aliases: ['이혼'] },        { no: 4, text: '부모가 자녀를 보호하고 교육할 권리와 의무를 (      )이라고 한다.', answer: '친권', initials: 'ㅊㄱ', aliases: ['친권'] },
+        { no: 5, text: '자녀를 키울 권리를 (        )이라고 한다.', answer: '양육권', initials: 'ㅇㅇㄱ', aliases: ['양육권'] },        { no: 6, text: '정신적 손해에 대한 배상금을 (        )라고 한다.', answer: '위자료', initials: 'ㅇㅈㄹ', aliases: ['위자료'] },        { no: 7, text: '아버지가 자녀를 자기 자녀로 인정하는 것을 (      )라고 한다.', answer: '인지', initials: 'ㅇㅈ', aliases: ['인지'] },
+        { no: 8, text: '법적으로 친자 관계를 맺는 것을 (      )이라고 한다.', answer: '입양', initials: 'ㅇㅇ', aliases: ['입양'] },
+        { no: 9, text: '사망한 사람의 재산이 유족에게 이전되는 것을 (      )이라고 한다.', answer: '상속', initials: 'ㅅㅅ', aliases: ['상속'] },        { no: 10, text: '부부 간 재산 관계를 정하는 제도를 (          )라고 한다.', answer: '부부재산제', initials: 'ㅂㅂㅈㅅㅈ', aliases: ['부부재산제'] }
       ]
     },
     quiz: {
@@ -1143,8 +1143,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '피감독자의 불법행위에 대해 감독자가 지는 책임을 (        )이라고 한다.', answer: '감독자책임', initials: 'ㄱㄷㅈㅊㅇ', aliases: ['감독자책임'] },
         { no: 9, text: '피용자의 업무상 불법행위에 대해 사용자가 지는 책임을 (        )이라고 한다.', answer: '사용자책임', initials: 'ㅅㅇㅈㅊㅇ', aliases: ['사용자책임'] },
         { no: 10, text: '건물 등 공작물의 하자로 인한 손해에 대한 책임을 (        )이라고 한다.', answer: '공작물책임', initials: 'ㄱㅈㅁㅊㅇ', aliases: ['공작물책임'] },
-        { no: 11, text: '손해를 금전으로 보상하는 것을 (        )이라고 한다.', answer: '금전배상', initials: 'ㄱㅈㅂㅅ', aliases: ['금전배상'] },        { no: 14, text: '피해자의 과실 비율만큼 배상액을 줄이는 것을 (        )라고 한다.', answer: '과실상계', initials: 'ㄱㅅㅅㄱ', aliases: ['과실상계'] },
-        { no: 15, text: '행위가 법질서에 반하는 성질을 (      )이라고 한다.', answer: '위법성', initials: 'ㅇㅂㅅ', aliases: ['위법성'] }
+        { no: 11, text: '손해를 금전으로 보상하는 것을 (        )이라고 한다.', answer: '금전배상', initials: 'ㄱㅈㅂㅅ', aliases: ['금전배상'] },        { no: 12, text: '피해자의 과실 비율만큼 배상액을 줄이는 것을 (        )라고 한다.', answer: '과실상계', initials: 'ㄱㅅㅅㄱ', aliases: ['과실상계'] },
+        { no: 13, text: '행위가 법질서에 반하는 성질을 (      )이라고 한다.', answer: '위법성', initials: 'ㅇㅂㅅ', aliases: ['위법성'] }
       ]
     },
     quiz: {
@@ -1248,12 +1248,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '소송을 제기하는 측을 (      )라고 한다.', answer: '원고', initials: 'ㅇㄱ', aliases: ['원고'] },
         { no: 6, text: '소송을 당하는 측을 (      )라고 한다.', answer: '피고', initials: 'ㅍㄱ', aliases: ['피고'] },
         { no: 7, text: '검사가 법원에 공소를 제기하는 것을 (      )라고 한다.', answer: '기소', initials: 'ㄱㅅ', aliases: ['기소'] },
-        { no: 8, text: '형사재판에서 기소된 사람을 (      )이라고 한다.', answer: '피고인', initials: 'ㅍㄱㅇ', aliases: ['피고인'] },        { no: 10, text: '피고인을 법적으로 조력하는 사람을 (      )이라고 한다.', answer: '변호인', initials: 'ㅂㅎㅇ', aliases: ['변호인'] },
-        { no: 11, text: '판결에 불복하여 상급법원에 재판을 청구하는 것을 (      )라고 한다.', answer: '상소', initials: 'ㅅㅅ', aliases: ['상소'] },
-        { no: 12, text: '1심 판결에 불복하는 상소를 (      )라고 한다.', answer: '항소', initials: 'ㅎㅅ', aliases: ['항소'] },
-        { no: 13, text: '2심 판결에 불복하는 상소를 (      )라고 한다.', answer: '상고', initials: 'ㅅㄱ', aliases: ['상고'] },
-        { no: 14, text: '최대 세 번까지 재판받을 수 있는 제도를 (      )라고 한다.', answer: '삼심제', initials: 'ㅅㅅㅈ', aliases: ['삼심제'] },
-        { no: 15, text: '법원이 재판의 결과로 내리는 결정을 (      )이라고 한다.', answer: '판결', initials: 'ㅍㄱ', aliases: ['판결'] }
+        { no: 8, text: '형사재판에서 기소된 사람을 (      )이라고 한다.', answer: '피고인', initials: 'ㅍㄱㅇ', aliases: ['피고인'] },        { no: 9, text: '피고인을 법적으로 조력하는 사람을 (      )이라고 한다.', answer: '변호인', initials: 'ㅂㅎㅇ', aliases: ['변호인'] },
+        { no: 10, text: '판결에 불복하여 상급법원에 재판을 청구하는 것을 (      )라고 한다.', answer: '상소', initials: 'ㅅㅅ', aliases: ['상소'] },
+        { no: 11, text: '1심 판결에 불복하는 상소를 (      )라고 한다.', answer: '항소', initials: 'ㅎㅅ', aliases: ['항소'] },
+        { no: 12, text: '2심 판결에 불복하는 상소를 (      )라고 한다.', answer: '상고', initials: 'ㅅㄱ', aliases: ['상고'] },
+        { no: 13, text: '최대 세 번까지 재판받을 수 있는 제도를 (      )라고 한다.', answer: '삼심제', initials: 'ㅅㅅㅈ', aliases: ['삼심제'] },
+        { no: 14, text: '법원이 재판의 결과로 내리는 결정을 (      )이라고 한다.', answer: '판결', initials: 'ㅍㄱ', aliases: ['판결'] }
       ]
     },
     quiz: {
@@ -1583,8 +1583,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 9, text: '국제 무역 규범을 관장하는 기구를 (          )라고 한다.', answer: '세계무역기구', initials: 'ㅅㄱㅁㅇㄱㄱ', aliases: ['세계무역기구', 'WTO'] },
         { no: 10, text: '국제 금융 질서를 유지하는 기구를 (          )라고 한다.', answer: '국제통화기금', initials: 'ㄱㅈㅌㅎㄱㄱ', aliases: ['국제통화기금', 'IMF'] },
         { no: 11, text: '국제 보건 문제를 다루는 기구를 (          )라고 한다.', answer: '세계보건기구', initials: 'ㅅㄱㅂㄱㄱㄱ', aliases: ['세계보건기구', 'WHO'] },
-        { no: 12, text: '중대한 국제범죄를 저지른 개인을 처벌하는 재판소를 (          )라고 한다.', answer: '국제형사재판소', initials: 'ㄱㅈㅎㅅㅈㅍㅅ', aliases: ['국제형사재판소', 'ICC'] },        { no: 14, text: '국가들이 공동 목적을 위해 설립한 기구를 (        )라고 한다.', answer: '국제기구', initials: 'ㄱㅈㄱㄱ', aliases: ['국제기구'] },
-        { no: 15, text: '사회 구성원들의 공통된 의견을 (      )이라고 한다.', answer: '여론', initials: 'ㅇㄹ', aliases: ['여론'] }
+        { no: 12, text: '중대한 국제범죄를 저지른 개인을 처벌하는 재판소를 (          )라고 한다.', answer: '국제형사재판소', initials: 'ㄱㅈㅎㅅㅈㅍㅅ', aliases: ['국제형사재판소', 'ICC'] },        { no: 13, text: '국가들이 공동 목적을 위해 설립한 기구를 (        )라고 한다.', answer: '국제기구', initials: 'ㄱㅈㄱㄱ', aliases: ['국제기구'] },
+        { no: 14, text: '사회 구성원들의 공통된 의견을 (      )이라고 한다.', answer: '여론', initials: 'ㅇㄹ', aliases: ['여론'] }
       ]
     },
     quiz: {

@@ -197,9 +197,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '독립 변인에 따라 변화하는 결과를 (        )이라 한다.', answer: '종속 변인', initials: 'ㅈㅅ ㅂㅇ', aliases: ['종속변인','종속 변인'] },
         { no: 8, text: '연구 결과를 전체 모집단에 적용할 수 있는 것을 (      )라 한다.', answer: '일반화', initials: 'ㅇㅂㅎ', aliases: ['일반화'] },
         { no: 9, text: '연구자가 대상자와 대화를 통해 경험을 깊이 탐색하는 방법을 (        )이라 한다.', answer: '심층 면접', initials: 'ㅅㅊ ㅁㅈ', aliases: ['심층면접','심층 면접'] },
-        { no: 10, text: '연구자가 집단의 일원으로 참여하며 관찰하는 방법을 (        )이라 한다.', answer: '참여 관찰', initials: 'ㅊㅇ ㄱㅊ', aliases: ['참여관찰','참여 관찰'] },        { no: 13, text: '연구에서 변화하는 요소나 특성을 (      )이라 한다.', answer: '변인', initials: 'ㅂㅇ', aliases: ['변인'] },
-        { no: 14, text: '개인의 주관이 배제된 공정한 성질을 (      )이라 한다.', answer: '객관성', initials: 'ㄱㄱㅅ', aliases: ['객관성'] },
-        { no: 15, text: '양적 연구와 질적 연구를 함께 활용하는 방법을 (        )라 한다.', answer: '혼합 연구', initials: 'ㅎㅎ ㅇㄱ', aliases: ['혼합연구','혼합 연구'] }
+        { no: 10, text: '연구자가 집단의 일원으로 참여하며 관찰하는 방법을 (        )이라 한다.', answer: '참여 관찰', initials: 'ㅊㅇ ㄱㅊ', aliases: ['참여관찰','참여 관찰'] },        { no: 11, text: '연구에서 변화하는 요소나 특성을 (      )이라 한다.', answer: '변인', initials: 'ㅂㅇ', aliases: ['변인'] },
+        { no: 12, text: '개인의 주관이 배제된 공정한 성질을 (      )이라 한다.', answer: '객관성', initials: 'ㄱㄱㅅ', aliases: ['객관성'] },
+        { no: 13, text: '양적 연구와 질적 연구를 함께 활용하는 방법을 (        )라 한다.', answer: '혼합 연구', initials: 'ㅎㅎ ㅇㄱ', aliases: ['혼합연구','혼합 연구'] }
       ]
     },
     quiz: {
@@ -531,9 +531,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '여러 역할 기대가 충돌하여 발생하는 갈등을 (          )이라 한다.', answer: '역할 갈등', initials: 'ㅇㅎ ㄱㄷ', aliases: ['역할갈등','역할 갈등'] },
         { no: 7, text: '타인에게 원하는 인상을 주기 위해 행동을 조절하는 것을 (          )라 한다.', answer: '인상 관리', initials: 'ㅇㅅ ㄱㄹ', aliases: ['인상관리','인상 관리'] },
         { no: 8, text: '직장 생활과 가정 생활을 조화롭게 유지하는 것을 (            )이라 한다.', answer: '일·가정 양립', initials: 'ㅇ·ㄱㅈ ㅇㄹ', aliases: ['일가정양립','일·가정 양립','일가정 양립'] },
-        { no: 9, text: '특정 지위에 대해 사회가 기대하는 행동을 (          )라 한다.', answer: '역할 기대', initials: 'ㅇㅎ ㄱㄷ', aliases: ['역할기대','역할 기대'] },        { no: 13, text: '산업화 이전의 농업 중심 사회를 (          )라 한다.', answer: '전통 사회', initials: 'ㅈㅌ ㅅㅎ', aliases: ['전통사회','전통 사회'] },
-        { no: 14, text: '산업화 이후의 도시화된 사회를 (          )라 한다.', answer: '현대 사회', initials: 'ㅎㄷ ㅅㅎ', aliases: ['현대사회','현대 사회'] },
-        { no: 15, text: '근무 시간이나 장소를 탄력적으로 조정하는 제도를 (          )라 한다.', answer: '유연 근무제', initials: 'ㅇㅇ ㄱㅁㅈ', aliases: ['유연근무제','유연 근무제'] }
+        { no: 9, text: '특정 지위에 대해 사회가 기대하는 행동을 (          )라 한다.', answer: '역할 기대', initials: 'ㅇㅎ ㄱㄷ', aliases: ['역할기대','역할 기대'] },        { no: 10, text: '산업화 이전의 농업 중심 사회를 (          )라 한다.', answer: '전통 사회', initials: 'ㅈㅌ ㅅㅎ', aliases: ['전통사회','전통 사회'] },
+        { no: 11, text: '산업화 이후의 도시화된 사회를 (          )라 한다.', answer: '현대 사회', initials: 'ㅎㄷ ㅅㅎ', aliases: ['현대사회','현대 사회'] },
+        { no: 12, text: '근무 시간이나 장소를 탄력적으로 조정하는 제도를 (          )라 한다.', answer: '유연 근무제', initials: 'ㅇㅇ ㄱㅁㅈ', aliases: ['유연근무제','유연 근무제'] }
       ]
     },
     quiz: {
@@ -642,8 +642,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 9, text: '사람들 사이의 정서적 연결을 (      )라 한다.', answer: '유대', initials: 'ㅇㄷ', aliases: ['유대'] },
         { no: 10, text: '서로 비슷하다고 느끼는 감정을 (      )이라 한다.', answer: '동질감', initials: 'ㄷㅈㄱ', aliases: ['동질감'] },
         { no: 11, text: '서로 다르다고 느끼는 감정을 (      )이라 한다.', answer: '이질감', initials: 'ㅇㅈㄱ', aliases: ['이질감'] },
-        { no: 12, text: '정해진 규칙이나 절차에 따르는 것을 (      )이라 한다.', answer: '공식적', initials: 'ㄱㅅㅈ', aliases: ['공식적'] },        { no: 14, text: '직접 얼굴을 맞대고 만나는 것을 (          )이라 한다.', answer: '대면 접촉', initials: 'ㄷㅁ ㅈㅊ', aliases: ['대면접촉','대면 접촉'] },
-        { no: 15, text: '사회의 규범과 가치를 습득하는 과정을 (      )라 한다.', answer: '사회화', initials: 'ㅅㅎㅎ', aliases: ['사회화'] }
+        { no: 12, text: '정해진 규칙이나 절차에 따르는 것을 (      )이라 한다.', answer: '공식적', initials: 'ㄱㅅㅈ', aliases: ['공식적'] },        { no: 13, text: '직접 얼굴을 맞대고 만나는 것을 (          )이라 한다.', answer: '대면 접촉', initials: 'ㄷㅁ ㅈㅊ', aliases: ['대면접촉','대면 접촉'] },
+        { no: 14, text: '사회의 규범과 가치를 습득하는 과정을 (      )라 한다.', answer: '사회화', initials: 'ㅅㅎㅎ', aliases: ['사회화'] }
       ]
     },
     quiz: {
@@ -975,13 +975,13 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '사회적 낙인이 일탈을 강화한다고 보는 이론을 (        )이라 한다.', answer: '낙인 이론', initials: 'ㄴㅇ ㅇㄹ', aliases: ['낙인이론','낙인 이론'] },
         { no: 5, text: '특정 행동이나 특성에 부정적 딱지를 붙이는 것을 (      )이라 한다.', answer: '낙인', initials: 'ㄴㅇ', aliases: ['낙인'] },
         { no: 6, text: '낙인으로 인해 발생하는 추가적인 일탈 행동을 (        )이라 한다.', answer: '2차적 일탈', initials: '2ㅊㅈ ㅇㅌ', aliases: ['2차적일탈','2차적 일탈','이차적 일탈'] },
-        { no: 7, text: '엄격한 제재를 통해 일탈을 억제하려는 방식을 (        )이라 한다.', answer: '처벌적 접근', initials: 'ㅊㅂㅈ ㅈㄱ', aliases: ['처벌적접근','처벌적 접근'] },        { no: 9, text: '가해자의 책임 인식과 피해자 회복에 초점을 둔 사법 개념을 (        )라 한다.', answer: '회복적 정의', initials: 'ㅎㅂㅈ ㅈㅇ', aliases: ['회복적정의','회복적 정의'] },
-        { no: 10, text: '사회 구성원이 따라야 할 행동의 기준을 (      )이라 한다.', answer: '규범', initials: 'ㄱㅂ', aliases: ['규범'] },
-        { no: 11, text: '시대나 사회에 따라 달라지는 성질을 (      )이라 한다.', answer: '상대적', initials: 'ㅅㄷㅈ', aliases: ['상대적'] },
-        { no: 12, text: '새로운 규범과 가치를 다시 학습하는 과정을 (        )라 한다.', answer: '재사회화', initials: 'ㅈㅅㅎㅎ', aliases: ['재사회화'] },
-        { no: 13, text: '청소년이 저지르는 일탈 행동을 (      )이라 한다.', answer: '비행', initials: 'ㅂㅎ', aliases: ['비행'] },
-        { no: 14, text: '사회가 인정하는 정당한 방법을 (        )이라 한다.', answer: '합법적 수단', initials: 'ㅎㅂㅈ ㅅㄷ', aliases: ['합법적수단','합법적 수단'] },
-        { no: 15, text: '목표 달성을 위해 사회가 제공하는 기회의 체계를 (        )라 한다.', answer: '기회 구조', initials: 'ㄱㅎ ㄱㅈ', aliases: ['기회구조','기회 구조'] }
+        { no: 7, text: '엄격한 제재를 통해 일탈을 억제하려는 방식을 (        )이라 한다.', answer: '처벌적 접근', initials: 'ㅊㅂㅈ ㅈㄱ', aliases: ['처벌적접근','처벌적 접근'] },        { no: 8, text: '가해자의 책임 인식과 피해자 회복에 초점을 둔 사법 개념을 (        )라 한다.', answer: '회복적 정의', initials: 'ㅎㅂㅈ ㅈㅇ', aliases: ['회복적정의','회복적 정의'] },
+        { no: 9, text: '사회 구성원이 따라야 할 행동의 기준을 (      )이라 한다.', answer: '규범', initials: 'ㄱㅂ', aliases: ['규범'] },
+        { no: 10, text: '시대나 사회에 따라 달라지는 성질을 (      )이라 한다.', answer: '상대적', initials: 'ㅅㄷㅈ', aliases: ['상대적'] },
+        { no: 11, text: '새로운 규범과 가치를 다시 학습하는 과정을 (        )라 한다.', answer: '재사회화', initials: 'ㅈㅅㅎㅎ', aliases: ['재사회화'] },
+        { no: 12, text: '청소년이 저지르는 일탈 행동을 (      )이라 한다.', answer: '비행', initials: 'ㅂㅎ', aliases: ['비행'] },
+        { no: 13, text: '사회가 인정하는 정당한 방법을 (        )이라 한다.', answer: '합법적 수단', initials: 'ㅎㅂㅈ ㅅㄷ', aliases: ['합법적수단','합법적 수단'] },
+        { no: 14, text: '목표 달성을 위해 사회가 제공하는 기회의 체계를 (        )라 한다.', answer: '기회 구조', initials: 'ㄱㅎ ㄱㅈ', aliases: ['기회구조','기회 구조'] }
       ]
     },
     quiz: {
@@ -1079,19 +1079,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[교육과 사회 불평등 어휘]',
       items: [
-        { no: 1, text: '사회의 규범과 가치를 학습하여 사회 구성원이 되는 과정을 (        )라 한다.', answer: '사회화', initials: 'ㅅㅎㅎ', aliases: ['사회화'] },        { no: 3, text: '교육적 성취에 영향을 미치는 문화적 능력과 자원을 (        )이라 한다.', answer: '문화 자본', initials: 'ㅁㅎ ㅈㅂ', aliases: ['문화자본','문화 자본'] },
-        { no: 4, text: '교육이 기존 계층 구조를 유지·강화한다는 이론을 (        )이라 한다.', answer: '재생산 이론', initials: 'ㅈㅅㅅ ㅇㄹ', aliases: ['재생산이론','재생산 이론'] },
-        { no: 5, text: '교육에 접근할 수 있는 기회 자체의 차이를 (          )이라 한다.', answer: '교육 기회의 불평등', initials: 'ㄱㅇ ㄱㅎㅇ ㅂㅍㄷ', aliases: ['교육기회의불평등','교육 기회의 불평등'] },
-        { no: 6, text: '교육을 받는 과정에서 발생하는 질적 차이를 (          )이라 한다.', answer: '교육 과정의 불평등', initials: 'ㄱㅇ ㄱㅈㅇ ㅂㅍㄷ', aliases: ['교육과정의불평등','교육 과정의 불평등'] },
-        { no: 7, text: '교육 수준에 따른 사회적 보상의 차이를 (          )이라 한다.', answer: '교육 결과의 불평등', initials: 'ㄱㅇ ㄱㄱㅇ ㅂㅍㄷ', aliases: ['교육결과의불평등','교육 결과의 불평등'] },
-        { no: 8, text: '집단 간 교육 수준이나 성취의 차이를 (        )라 한다.', answer: '교육 격차', initials: 'ㄱㅇ ㄱㅊ', aliases: ['교육격차','교육 격차'] },
-        { no: 9, text: '기존 제도권 교육과 다른 형태의 교육을 (        )이라 한다.', answer: '대안 교육', initials: 'ㄷㅇ ㄱㅇ', aliases: ['대안교육','대안 교육'] },
-        { no: 10, text: '수단이 아닌 그 자체로 의미 있는 가치를 (        )라 한다.', answer: '본질적 가치', initials: 'ㅂㅈㅈ ㄱㅊ', aliases: ['본질적가치','본질적 가치'] },
-        { no: 11, text: '개인이나 집단의 사회적 지위가 변화하는 것을 (        )이라 한다.', answer: '사회 이동', initials: 'ㅅㅎ ㅇㄷ', aliases: ['사회이동','사회 이동'] },
-        { no: 12, text: '특정 집단의 이익을 대변하는 신념 체계를 (          )라 한다.', answer: '이데올로기', initials: 'ㅇㄷㅇㄹㄱ', aliases: ['이데올로기'] },
-        { no: 13, text: '능력에 따라 보상이 주어져야 한다는 원칙을 (        )라 한다.', answer: '능력주의', initials: 'ㄴㄹㅈㅇ', aliases: ['능력주의'] },
-        { no: 14, text: '앞으로 발휘될 수 있는 숨겨진 능력을 (        )이라 한다.', answer: '잠재력', initials: 'ㅈㅈㄹ', aliases: ['잠재력'] },
-        { no: 15, text: '민주주의 사회에 참여하는 주체적 구성원을 (        )이라 한다.', answer: '민주 시민', initials: 'ㅁㅈ ㅅㅁ', aliases: ['민주시민','민주 시민'] }
+        { no: 1, text: '사회의 규범과 가치를 학습하여 사회 구성원이 되는 과정을 (        )라 한다.', answer: '사회화', initials: 'ㅅㅎㅎ', aliases: ['사회화'] },        { no: 2, text: '교육적 성취에 영향을 미치는 문화적 능력과 자원을 (        )이라 한다.', answer: '문화 자본', initials: 'ㅁㅎ ㅈㅂ', aliases: ['문화자본','문화 자본'] },
+        { no: 3, text: '교육이 기존 계층 구조를 유지·강화한다는 이론을 (        )이라 한다.', answer: '재생산 이론', initials: 'ㅈㅅㅅ ㅇㄹ', aliases: ['재생산이론','재생산 이론'] },
+        { no: 4, text: '교육에 접근할 수 있는 기회 자체의 차이를 (          )이라 한다.', answer: '교육 기회의 불평등', initials: 'ㄱㅇ ㄱㅎㅇ ㅂㅍㄷ', aliases: ['교육기회의불평등','교육 기회의 불평등'] },
+        { no: 5, text: '교육을 받는 과정에서 발생하는 질적 차이를 (          )이라 한다.', answer: '교육 과정의 불평등', initials: 'ㄱㅇ ㄱㅈㅇ ㅂㅍㄷ', aliases: ['교육과정의불평등','교육 과정의 불평등'] },
+        { no: 6, text: '교육 수준에 따른 사회적 보상의 차이를 (          )이라 한다.', answer: '교육 결과의 불평등', initials: 'ㄱㅇ ㄱㄱㅇ ㅂㅍㄷ', aliases: ['교육결과의불평등','교육 결과의 불평등'] },
+        { no: 7, text: '집단 간 교육 수준이나 성취의 차이를 (        )라 한다.', answer: '교육 격차', initials: 'ㄱㅇ ㄱㅊ', aliases: ['교육격차','교육 격차'] },
+        { no: 8, text: '기존 제도권 교육과 다른 형태의 교육을 (        )이라 한다.', answer: '대안 교육', initials: 'ㄷㅇ ㄱㅇ', aliases: ['대안교육','대안 교육'] },
+        { no: 9, text: '수단이 아닌 그 자체로 의미 있는 가치를 (        )라 한다.', answer: '본질적 가치', initials: 'ㅂㅈㅈ ㄱㅊ', aliases: ['본질적가치','본질적 가치'] },
+        { no: 10, text: '개인이나 집단의 사회적 지위가 변화하는 것을 (        )이라 한다.', answer: '사회 이동', initials: 'ㅅㅎ ㅇㄷ', aliases: ['사회이동','사회 이동'] },
+        { no: 11, text: '특정 집단의 이익을 대변하는 신념 체계를 (          )라 한다.', answer: '이데올로기', initials: 'ㅇㄷㅇㄹㄱ', aliases: ['이데올로기'] },
+        { no: 12, text: '능력에 따라 보상이 주어져야 한다는 원칙을 (        )라 한다.', answer: '능력주의', initials: 'ㄴㄹㅈㅇ', aliases: ['능력주의'] },
+        { no: 13, text: '앞으로 발휘될 수 있는 숨겨진 능력을 (        )이라 한다.', answer: '잠재력', initials: 'ㅈㅈㄹ', aliases: ['잠재력'] },
+        { no: 14, text: '민주주의 사회에 참여하는 주체적 구성원을 (        )이라 한다.', answer: '민주 시민', initials: 'ㅁㅈ ㅅㅁ', aliases: ['민주시민','민주 시민'] }
       ]
     },
     quiz: {

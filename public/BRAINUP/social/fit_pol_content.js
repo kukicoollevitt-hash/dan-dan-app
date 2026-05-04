@@ -175,8 +175,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '하고 싶은 일을 스스로 선택할 수 있는 권리를 (      )라고 해요.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] },
         { no: 5, text: '차별 없이 같은 기준으로 대우받는 상태를 (      )이라고 해요.', answer: '평등', initials: 'ㅍㄷ', aliases: ['평등'] },
         { no: 6, text: '인간이 본래적으로 가지는 소중함과 가치를 (        )이라고 해요.', answer: '존엄성', initials: 'ㅈㅇㅅ', aliases: ['존엄성'] },
-        { no: 7, text: '마땅히 해야 하는 일이나 책임을 (      )라고 해요.', answer: '의무', initials: 'ㅇㅁ', aliases: ['의무'] },        { no: 9, text: '사회 구성원 대다수의 공통된 의견을 (      )이라고 해요.', answer: '여론', initials: 'ㅇㄹ', aliases: ['여론'] },
-        { no: 10, text: '서로 의견을 맞추어 결정하는 것을 (      )라고 해요.', answer: '합의', initials: 'ㅎㅇ', aliases: ['합의'] }
+        { no: 7, text: '마땅히 해야 하는 일이나 책임을 (      )라고 해요.', answer: '의무', initials: 'ㅇㅁ', aliases: ['의무'] },        { no: 8, text: '사회 구성원 대다수의 공통된 의견을 (      )이라고 해요.', answer: '여론', initials: 'ㅇㄹ', aliases: ['여론'] },
+        { no: 9, text: '서로 의견을 맞추어 결정하는 것을 (      )라고 해요.', answer: '합의', initials: 'ㅎㅇ', aliases: ['합의'] }
       ]
     },
     quiz: {
@@ -488,9 +488,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '신분·재산과 상관없이 대부분의 국민에게 선거권을 주는 원칙을 (      )라 한다.', answer: '보통 선거', initials: 'ㅂㅌㅅㄱ', aliases: ['보통 선거','보통선거'] },
         { no: 4, text: '다른 사람을 통하지 않고 유권자가 스스로 투표하는 방식을 (      )라 한다.', answer: '직접 선거', initials: 'ㅈㅈㅅㄱ', aliases: ['직접 선거','직접선거'] },
         { no: 5, text: '모든 사람이 똑같이 1표씩 가지는 선거 원칙을 (      )라고 한다.', answer: '평등 선거', initials: 'ㅍㄷㅅㄱ', aliases: ['평등 선거','평등선거'] },
-        { no: 6, text: '누구를 선택했는지 타인이 알 수 없도록 보호하는 선거 방식을 (      )라고 한다.', answer: '비밀 선거', initials: 'ㅂㅁㅅㄱ', aliases: ['비밀 선거','비밀선거'] },        { no: 8, text: '불편하거나 손해가 되는 일을 (      )이라고 한다.', answer: '불이익', initials: 'ㅂㅇㅇ', aliases: ['불이익'] },
-        { no: 9, text: '국민이 정치에 참여할 수 있는 권리를 (      )이라고 한다.', answer: '참정권', initials: 'ㅊㅈㄱ', aliases: ['참정권'] },
-        { no: 10, text: '전체 유권자 중 실제 투표한 사람의 비율을 (      )이라고 한다.', answer: '투표율', initials: 'ㅌㅍㄹ', aliases: ['투표율'] }
+        { no: 6, text: '누구를 선택했는지 타인이 알 수 없도록 보호하는 선거 방식을 (      )라고 한다.', answer: '비밀 선거', initials: 'ㅂㅁㅅㄱ', aliases: ['비밀 선거','비밀선거'] },        { no: 7, text: '불편하거나 손해가 되는 일을 (      )이라고 한다.', answer: '불이익', initials: 'ㅂㅇㅇ', aliases: ['불이익'] },
+        { no: 8, text: '국민이 정치에 참여할 수 있는 권리를 (      )이라고 한다.', answer: '참정권', initials: 'ㅊㅈㄱ', aliases: ['참정권'] },
+        { no: 9, text: '전체 유권자 중 실제 투표한 사람의 비율을 (      )이라고 한다.', answer: '투표율', initials: 'ㅌㅍㄹ', aliases: ['투표율'] }
       ]
     },
     quiz: {
@@ -999,8 +999,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '분단으로 헤어져 만나지 못하는 가족을 (        )이라고 해요.', answer: '이산가족', initials: 'ㅇㅅㄱㅈ', aliases: ['이산가족'] },
         { no: 5, text: '남북한 정상이 만나 대화하는 회의를 (          )이라고 해요.', answer: '남북정상회담', initials: 'ㄴㅂㅈㅅㅎㄷ', aliases: ['남북정상회담'] },
         { no: 6, text: '2018년 남북정상회담에서 채택된 평화 합의를 (        )이라고 해요.', answer: '판문점 선언', initials: 'ㅍㅁㅈ ㅅㅇ', aliases: ['판문점선언','판문점 선언'] },
-        { no: 7, text: '나뉜 나라가 하나로 합쳐지는 것을 (      )이라고 해요.', answer: '통일', initials: 'ㅌㅇ', aliases: ['통일'] },        { no: 9, text: '2000년 남북정상회담에서 발표된 합의문을 (              )이라고 해요.', answer: '6·15 남북공동선언', initials: 'ㅇㅇㅇ ㄴㅂㄱㄷㅅㅇ', aliases: ['6·15 남북공동선언','6.15 남북공동선언'] },
-        { no: 10, text: '같은 민족으로서 공유하는 공통된 특성을 (      )이라고 해요.', answer: '동질성', initials: 'ㄷㅈㅅ', aliases: ['동질성'] }
+        { no: 7, text: '나뉜 나라가 하나로 합쳐지는 것을 (      )이라고 해요.', answer: '통일', initials: 'ㅌㅇ', aliases: ['통일'] },        { no: 8, text: '2000년 남북정상회담에서 발표된 합의문을 (              )이라고 해요.', answer: '6·15 남북공동선언', initials: 'ㅇㅇㅇ ㄴㅂㄱㄷㅅㅇ', aliases: ['6·15 남북공동선언','6.15 남북공동선언'] },
+        { no: 9, text: '같은 민족으로서 공유하는 공통된 특성을 (      )이라고 해요.', answer: '동질성', initials: 'ㄷㅈㅅ', aliases: ['동질성'] }
       ]
     },
     quiz: {

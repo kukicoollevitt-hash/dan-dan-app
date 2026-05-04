@@ -378,14 +378,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[지역 문제 관련 어휘]',
       items: [
-        { no: 1, text: '주민이 공공 기관에 문제 해결을 요청하는 것을 (      )이라고 한다.', answer: '민원', initials: 'ㅁㅇ', aliases: ['민원'] },        { no: 3, text: '자연이 더러워지거나 훼손되는 현상을 (        )이라고 한다.', answer: '환경 오염', initials: 'ㅎㄱ ㅇㅇ', aliases: ['환경오염','환경 오염'] },
-        { no: 4, text: '차량이 많아 도로가 막히는 상태를 (        )이라고 한다.', answer: '교통 혼잡', initials: 'ㄱㅌ ㅎㅈ', aliases: ['교통혼잡','교통 혼잡'] },
-        { no: 5, text: '주민 생활을 지원하는 행정 기관을 (        )이라고 한다.', answer: '공공 기관', initials: 'ㄱㄱ ㄱㄱ', aliases: ['공공기관','공공 기관'] },
-        { no: 6, text: '문제가 생긴 이유를 찾아내는 과정을 (        )라고 한다.', answer: '원인 조사', initials: 'ㅇㅇ ㅈㅅ', aliases: ['원인조사','원인 조사'] },
-        { no: 7, text: '문제를 해결하기 위해 선택하는 방법을 (        )이라고 한다.', answer: '해결 방안', initials: 'ㅎㄱ ㅂㅇ', aliases: ['해결방안','해결 방안'] },
-        { no: 8, text: '주민 의견을 공개적으로 듣는 모임을 (      )라고 한다.', answer: '공청회', initials: 'ㄱㅊㅎ', aliases: ['공청회'] },
-        { no: 9, text: '지역 문제 해결에 주민이 적극적으로 참여하는 것을 (        )라 한다.', answer: '주민 참여', initials: 'ㅈㅁ ㅊㅇ', aliases: ['주민참여','주민 참여'] },
-        { no: 10, text: '병원, 약국 등 건강을 돌보는 기관을 (        )라고 한다.', answer: '의료 시설', initials: 'ㅇㄹ ㅅㅅ', aliases: ['의료시설','의료 시설'] }
+        { no: 1, text: '주민이 공공 기관에 문제 해결을 요청하는 것을 (      )이라고 한다.', answer: '민원', initials: 'ㅁㅇ', aliases: ['민원'] },        { no: 2, text: '자연이 더러워지거나 훼손되는 현상을 (        )이라고 한다.', answer: '환경 오염', initials: 'ㅎㄱ ㅇㅇ', aliases: ['환경오염','환경 오염'] },
+        { no: 3, text: '차량이 많아 도로가 막히는 상태를 (        )이라고 한다.', answer: '교통 혼잡', initials: 'ㄱㅌ ㅎㅈ', aliases: ['교통혼잡','교통 혼잡'] },
+        { no: 4, text: '주민 생활을 지원하는 행정 기관을 (        )이라고 한다.', answer: '공공 기관', initials: 'ㄱㄱ ㄱㄱ', aliases: ['공공기관','공공 기관'] },
+        { no: 5, text: '문제가 생긴 이유를 찾아내는 과정을 (        )라고 한다.', answer: '원인 조사', initials: 'ㅇㅇ ㅈㅅ', aliases: ['원인조사','원인 조사'] },
+        { no: 6, text: '문제를 해결하기 위해 선택하는 방법을 (        )이라고 한다.', answer: '해결 방안', initials: 'ㅎㄱ ㅂㅇ', aliases: ['해결방안','해결 방안'] },
+        { no: 7, text: '주민 의견을 공개적으로 듣는 모임을 (      )라고 한다.', answer: '공청회', initials: 'ㄱㅊㅎ', aliases: ['공청회'] },
+        { no: 8, text: '지역 문제 해결에 주민이 적극적으로 참여하는 것을 (        )라 한다.', answer: '주민 참여', initials: 'ㅈㅁ ㅊㅇ', aliases: ['주민참여','주민 참여'] },
+        { no: 9, text: '병원, 약국 등 건강을 돌보는 기관을 (        )라고 한다.', answer: '의료 시설', initials: 'ㅇㄹ ㅅㅅ', aliases: ['의료시설','의료 시설'] }
       ]
     },
     quiz: {
@@ -1401,7 +1401,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '지구 주위를 도는 인공 천체를 (      )이라고 해요.', answer: '인공위성', initials: 'ㅇㄱㅇㅅ', aliases: ['인공위성'] },
         { no: 6, text: 'GPS를 이용해 경로를 안내하는 장치를 (        )이라고 해요.', answer: '내비게이션', initials: 'ㄴㅂㄱㅇㅅ', aliases: ['내비게이션', '네비게이션'] },
         { no: 7, text: '정보 기술로 효율적으로 운영되는 도시를 (          )라고 해요.', answer: '스마트 시티', initials: 'ㅅㅁㅌ ㅅㅌ', aliases: ['스마트시티', '스마트 시티'] },
-        { no: 8, text: '지연 없이 즉각적으로를 (      )이라고 해요.', answer: '실시간', initials: 'ㅅㅅㄱ', aliases: ['실시간'] },        { no: 10, text: '위성 정보로 농작물을 효율적으로 관리하는 농업을 (        )라고 해요.', answer: '정밀 농업', initials: 'ㅈㅁ ㄴㅇ', aliases: ['정밀농업', '정밀 농업'] }
+        { no: 8, text: '지연 없이 즉각적으로를 (      )이라고 해요.', answer: '실시간', initials: 'ㅅㅅㄱ', aliases: ['실시간'] },        { no: 9, text: '위성 정보로 농작물을 효율적으로 관리하는 농업을 (        )라고 해요.', answer: '정밀 농업', initials: 'ㅈㅁ ㄴㅇ', aliases: ['정밀농업', '정밀 농업'] }
       ]
     },
     quiz: {
@@ -1901,9 +1901,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '여러 나라에서 활동하는 큰 기업을 (      )라고 한다.', answer: '다국적 기업', initials: 'ㄷㄱㅈ ㄱㅇ', aliases: ['다국적기업', '다국적 기업'] },
         { no: 4, text: '다양한 문화가 비슷해지는 현상을 (       )라고 한다.', answer: '문화 획일화', initials: 'ㅁㅎ ㅎㅇㅎ', aliases: ['문화획일화', '문화 획일화'] },
         { no: 5, text: '다양한 문화를 가진 사람들이 함께 사는 사회를 (       )라고 한다.', answer: '다문화 사회', initials: 'ㄷㅁㅎ ㅅㅎ', aliases: ['다문화사회', '다문화 사회'] },
-        { no: 6, text: '다른 나라로 이동해 온 사람을 (    )이라고 한다.', answer: '이주민', initials: 'ㅇㅈㅁ', aliases: ['이주민'] },        { no: 8, text: '상대방의 가치를 인정하고 소중히 여기는 것을 (   )이라 한다.', answer: '존중', initials: 'ㅈㅈ', aliases: ['존중'] },
-        { no: 9, text: '한쪽으로 치우친 잘못된 생각을 (   )이라고 한다.', answer: '편견', initials: 'ㅍㄱ', aliases: ['편견'] },
-        { no: 10, text: '지구촌 문제에 관심을 갖고 책임감 있게 행동하는 사람을 (      )이라고 한다.', answer: '세계 시민', initials: 'ㅅㄱ ㅅㅁ', aliases: ['세계시민', '세계 시민'] }
+        { no: 6, text: '다른 나라로 이동해 온 사람을 (    )이라고 한다.', answer: '이주민', initials: 'ㅇㅈㅁ', aliases: ['이주민'] },        { no: 7, text: '상대방의 가치를 인정하고 소중히 여기는 것을 (   )이라 한다.', answer: '존중', initials: 'ㅈㅈ', aliases: ['존중'] },
+        { no: 8, text: '한쪽으로 치우친 잘못된 생각을 (   )이라고 한다.', answer: '편견', initials: 'ㅍㄱ', aliases: ['편견'] },
+        { no: 9, text: '지구촌 문제에 관심을 갖고 책임감 있게 행동하는 사람을 (      )이라고 한다.', answer: '세계 시민', initials: 'ㅅㄱ ㅅㅁ', aliases: ['세계시민', '세계 시민'] }
       ]
     },
     quiz: {

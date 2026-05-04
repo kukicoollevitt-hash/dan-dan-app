@@ -271,12 +271,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '',
-      items: [        { no: 2, text: '돈이나 물건 같은 소유한 것을 (      )이라고 해요.', answer: '재물', initials: 'ㅈㅁ', aliases: ['재물'] },
-        { no: 3, text: '사람이 인간답게 살아가기 위해 보장되어야 하는 권리를 (      )이라고 해요.', answer: '인권', initials: 'ㅇㄱ', aliases: ['인권'] },        { no: 6, text: '공정하지 못하게 다르게 대하는 일을 (      )이라고 해요.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
-        { no: 7, text: '눈이 불편해 보기가 어려운 상태를 (        )이라고 해요.', answer: '시각 장애', initials: 'ㅅㄱ ㅈㅇ', aliases: ['시각장애','시각 장애'] },
-        { no: 8, text: '일하며 생활을 꾸려 가는 사람을 (        )라고 해요.', answer: '노동자', initials: 'ㄴㄷㅈ', aliases: ['노동자'] },
-        { no: 9, text: '특정한 일을 맡아 처리하는 곳을 (      )이라고 해요.', answer: '기관', initials: 'ㄱㄱ', aliases: ['기관'] },
-        { no: 10, text: '다른 사람을 생각하고 도와주려는 마음을 (      )라고 해요.', answer: '배려', initials: 'ㅂㄹ', aliases: ['배려'] }
+      items: [        { no: 1, text: '돈이나 물건 같은 소유한 것을 (      )이라고 해요.', answer: '재물', initials: 'ㅈㅁ', aliases: ['재물'] },
+        { no: 2, text: '사람이 인간답게 살아가기 위해 보장되어야 하는 권리를 (      )이라고 해요.', answer: '인권', initials: 'ㅇㄱ', aliases: ['인권'] },        { no: 3, text: '공정하지 못하게 다르게 대하는 일을 (      )이라고 해요.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
+        { no: 4, text: '눈이 불편해 보기가 어려운 상태를 (        )이라고 해요.', answer: '시각 장애', initials: 'ㅅㄱ ㅈㅇ', aliases: ['시각장애','시각 장애'] },
+        { no: 5, text: '일하며 생활을 꾸려 가는 사람을 (        )라고 해요.', answer: '노동자', initials: 'ㄴㄷㅈ', aliases: ['노동자'] },
+        { no: 6, text: '특정한 일을 맡아 처리하는 곳을 (      )이라고 해요.', answer: '기관', initials: 'ㄱㄱ', aliases: ['기관'] },
+        { no: 7, text: '다른 사람을 생각하고 도와주려는 마음을 (      )라고 해요.', answer: '배려', initials: 'ㅂㄹ', aliases: ['배려'] }
       ]
     },
     quiz: {
@@ -377,9 +377,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '다른 이유로 사람을 부당하게 대하는 행동을 (      )이라고 한다.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
         { no: 4, text: '인터넷에서 이루어지는 욕설·따돌림·괴롭힘을 (        )이라 한다.', answer: '사이버 폭력', initials: 'ㅅㅇㅂ ㅍㄹ', aliases: ['사이버폭력'] },
         { no: 5, text: '개인의 정보를 허락 없이 공개하거나 간섭하는 것을 (        )라 한다.', answer: '사생활 침해', initials: 'ㅅㅅㅎ ㅊㅎ', aliases: ['사생활침해'] },
-        { no: 6, text: '인터넷에서 지켜야 할 예절과 규칙을 (      )이라고 한다.', answer: '네티켓', initials: 'ㄴㅌㅋ', aliases: ['네티켓'] },        { no: 8, text: '어린이를 보호하고 지원하기 위한 법률을 (        )이라 한다.', answer: '아동 복지법', initials: 'ㅇㄷ ㅂㅈㅂ', aliases: ['아동복지법'] },
-        { no: 9, text: '세계 평화와 안전을 위해 만들어진 국제 기구를 (      )이라고 한다.', answer: '유엔', initials: 'ㅇㅇ', aliases: ['유엔', 'UN'] },
-        { no: 10, text: '널리 알려 이해를 구하는 활동을 (      )라고 한다.', answer: '홍보', initials: 'ㅎㅂ', aliases: ['홍보'] }
+        { no: 6, text: '인터넷에서 지켜야 할 예절과 규칙을 (      )이라고 한다.', answer: '네티켓', initials: 'ㄴㅌㅋ', aliases: ['네티켓'] },        { no: 7, text: '어린이를 보호하고 지원하기 위한 법률을 (        )이라 한다.', answer: '아동 복지법', initials: 'ㅇㄷ ㅂㅈㅂ', aliases: ['아동복지법'] },
+        { no: 8, text: '세계 평화와 안전을 위해 만들어진 국제 기구를 (      )이라고 한다.', answer: '유엔', initials: 'ㅇㅇ', aliases: ['유엔', 'UN'] },
+        { no: 9, text: '널리 알려 이해를 구하는 활동을 (      )라고 한다.', answer: '홍보', initials: 'ㅎㅂ', aliases: ['홍보'] }
       ]
     },
     quiz: {

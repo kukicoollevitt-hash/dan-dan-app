@@ -67,11 +67,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '',
       items: [
-        { no: 1, text: '물체의 모양이나 움직임을 바꾸는 작용을 (      )이라고 해요.', answer: '힘', initials: 'ㅎ', aliases: ['힘'] },        { no: 3, text: '지구가 물체를 중심으로 끌어당기는 힘을 (      )이라고 해요.', answer: '중력', initials: 'ㅈㄹ', aliases: ['중력'] },
-        { no: 4, text: '물체가 닿을 때 움직임을 방해하는 힘을 (      )이라고 해요.', answer: '마찰력', initials: 'ㅁㅊㄹ', aliases: ['마찰력'] },
-        { no: 5, text: '늘어나거나 줄어든 물체가 원래대로 돌아오려는 힘을 (      )이라고 해요.', answer: '탄성력', initials: 'ㅌㅅㄹ', aliases: ['탄성력'] },
-        { no: 6, text: '전기를 띤 물체끼리 끌리거나 밀어내는 힘을 (      )이라고 해요.', answer: '전기력', initials: 'ㅈㄱㄹ', aliases: ['전기력'] },
-        { no: 7, text: '자석끼리 끌리거나 밀어내는 힘을 (      )이라고 해요.', answer: '자기력', initials: 'ㅈㄱㄹ', aliases: ['자기력'] },        { no: 10, text: '처음부터 있던 본디의 상태를 (      )라고 해요.', answer: '원래', initials: 'ㅇㄹ', aliases: ['원래'] }
+        { no: 1, text: '물체의 모양이나 움직임을 바꾸는 작용을 (      )이라고 해요.', answer: '힘', initials: 'ㅎ', aliases: ['힘'] },        { no: 2, text: '지구가 물체를 중심으로 끌어당기는 힘을 (      )이라고 해요.', answer: '중력', initials: 'ㅈㄹ', aliases: ['중력'] },
+        { no: 3, text: '물체가 닿을 때 움직임을 방해하는 힘을 (      )이라고 해요.', answer: '마찰력', initials: 'ㅁㅊㄹ', aliases: ['마찰력'] },
+        { no: 4, text: '늘어나거나 줄어든 물체가 원래대로 돌아오려는 힘을 (      )이라고 해요.', answer: '탄성력', initials: 'ㅌㅅㄹ', aliases: ['탄성력'] },
+        { no: 5, text: '전기를 띤 물체끼리 끌리거나 밀어내는 힘을 (      )이라고 해요.', answer: '전기력', initials: 'ㅈㄱㄹ', aliases: ['전기력'] },
+        { no: 6, text: '자석끼리 끌리거나 밀어내는 힘을 (      )이라고 해요.', answer: '자기력', initials: 'ㅈㄱㄹ', aliases: ['자기력'] },        { no: 7, text: '처음부터 있던 본디의 상태를 (      )라고 해요.', answer: '원래', initials: 'ㅇㄹ', aliases: ['원래'] }
       ]
     },
     quiz: {
@@ -372,8 +372,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '물체와 받침점 사이의 간격을 (      )라고 한다.', answer: '거리', initials: 'ㄱㄹ', aliases: ['거리'] },
         { no: 5, text: '구조물이 견뎌야 하는 무게나 힘을 (      )이라고 한다.', answer: '하중', initials: 'ㅎㅈ', aliases: ['하중'] },
         { no: 6, text: '거리와 힘의 비율로 균형을 맞추는 물리 법칙을 (      )라고 한다.', answer: '지렛대 원리', initials: 'ㅈㄹㄷ ㅇㄹ', aliases: ['지렛대원리','지렛대의 원리'] },
-        { no: 7, text: '특정 목적을 위해 만들어진 건축물이나 기계 장치를 (      )라고 한다.', answer: '구조물', initials: 'ㄱㅈㅁ', aliases: ['구조물'] },        { no: 9, text: '적은 힘이나 자원으로 큰 효과를 내는 것을 (      )이라고 한다.', answer: '효율적', initials: 'ㅎㅇㅈ', aliases: ['효율적'] },
-        { no: 10, text: '건물이나 기계 등을 계획하고 도면을 그리는 사람을 (      )라고 한다.', answer: '설계자', initials: 'ㅅㄱㅈ', aliases: ['설계자'] }
+        { no: 7, text: '특정 목적을 위해 만들어진 건축물이나 기계 장치를 (      )라고 한다.', answer: '구조물', initials: 'ㄱㅈㅁ', aliases: ['구조물'] },        { no: 8, text: '적은 힘이나 자원으로 큰 효과를 내는 것을 (      )이라고 한다.', answer: '효율적', initials: 'ㅎㅇㅈ', aliases: ['효율적'] },
+        { no: 9, text: '건물이나 기계 등을 계획하고 도면을 그리는 사람을 (      )라고 한다.', answer: '설계자', initials: 'ㅅㄱㅈ', aliases: ['설계자'] }
       ]
     },
     quiz: {
@@ -489,9 +489,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '움직임을 판단하기 위한 비교 기준이 되는 위치를 (      )이라고 한다.', answer: '기준점', initials: 'ㄱㅈㅈ', aliases: ['기준점'] },
         { no: 3, text: '물체가 이동하는 쪽 또는 경로를 (      )이라 한다.', answer: '방향', initials: 'ㅂㅎ', aliases: ['방향'] },
         { no: 4, text: '이동한 길이 또는 떨어져 있는 정도를 (      )라 한다.', answer: '거리', initials: 'ㄱㄹ', aliases: ['거리'] },
-        { no: 5, text: '움직임이나 현상을 바라보는 사람을 (      )라고 한다.', answer: '관찰자', initials: 'ㄱㅊㅈ', aliases: ['관찰자'] },        { no: 8, text: '자연에서 일어나는 일이나 변화를 (      )이라고 한다.', answer: '현상', initials: 'ㅎㅅ', aliases: ['현상'] },
-        { no: 9, text: '일정한 시간 동안 물체가 이동한 거리를 (      )이라고 한다.', answer: '속력', initials: 'ㅅㄹ', aliases: ['속력'] },
-        { no: 10, text: '어떤 일이 일어나는 동안의 길이를 (      )이라고 한다.', answer: '시간', initials: 'ㅅㄱ', aliases: ['시간'] }
+        { no: 5, text: '움직임이나 현상을 바라보는 사람을 (      )라고 한다.', answer: '관찰자', initials: 'ㄱㅊㅈ', aliases: ['관찰자'] },        { no: 6, text: '자연에서 일어나는 일이나 변화를 (      )이라고 한다.', answer: '현상', initials: 'ㅎㅅ', aliases: ['현상'] },
+        { no: 7, text: '일정한 시간 동안 물체가 이동한 거리를 (      )이라고 한다.', answer: '속력', initials: 'ㅅㄹ', aliases: ['속력'] },
+        { no: 8, text: '어떤 일이 일어나는 동안의 길이를 (      )이라고 한다.', answer: '시간', initials: 'ㅅㄱ', aliases: ['시간'] }
       ]
     },
     quiz: {
@@ -1702,7 +1702,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '유체가 물체를 위로 밀어 올리는 힘을 (    )이라 한다.', answer: '부력', initials: 'ㅂㄹ', aliases: ['부력'] },
         { no: 6, text: '부력은 밀어낸 유체의 무게와 같다는 원리를 (            )이라 한다.', answer: '아르키메데스의 원리', initials: 'ㅇㄹㅋㅁㄷㅅ ㅇㄹ', aliases: ['아르키메데스의원리', '아르키메데스 원리'] },
         { no: 7, text: '흐르는 성질을 가진 액체와 기체를 (    )라고 한다.', answer: '유체', initials: 'ㅇㅊ', aliases: ['유체'] },
-        { no: 8, text: '단위 부피당 질량을 (    )라고 한다.', answer: '밀도', initials: 'ㅁㄷ', aliases: ['밀도'] },        { no: 10, text: '물탱크로 부력을 조절해 잠수하는 배를 (      )이라 한다.', answer: '잠수함', initials: 'ㅈㅅㅎ', aliases: ['잠수함'] }
+        { no: 8, text: '단위 부피당 질량을 (    )라고 한다.', answer: '밀도', initials: 'ㅁㄷ', aliases: ['밀도'] },        { no: 9, text: '물탱크로 부력을 조절해 잠수하는 배를 (      )이라 한다.', answer: '잠수함', initials: 'ㅈㅅㅎ', aliases: ['잠수함'] }
       ]
     },
     quiz: {
@@ -1898,7 +1898,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '별들이 모여 이룬 거대한 집단을 (    )라고 한다.', answer: '은하', initials: 'ㅇㅎ', aliases: ['은하'] },
         { no: 5, text: '태양계가 속한 은하를 (      )라고 한다.', answer: '우리 은하', initials: 'ㅇㄹ ㅇㅎ', aliases: ['우리은하', '은하수'] },
         { no: 6, text: '우주가 대폭발로 시작되었다는 이론을 (        )이라 한다.', answer: '빅뱅 이론', initials: 'ㅂㅂ ㅇㄹ', aliases: ['빅뱅이론'] },
-        { no: 7, text: '우주가 계속 커지고 있는 현상을 (    )이라 한다.', answer: '팽창', initials: 'ㅍㅊ', aliases: ['팽창'] },        { no: 10, text: '멀리 있는 천체를 관찰하는 도구를 (      )이라 한다.', answer: '망원경', initials: 'ㅁㅇㄱ', aliases: ['망원경'] }
+        { no: 7, text: '우주가 계속 커지고 있는 현상을 (    )이라 한다.', answer: '팽창', initials: 'ㅍㅊ', aliases: ['팽창'] },        { no: 8, text: '멀리 있는 천체를 관찰하는 도구를 (      )이라 한다.', answer: '망원경', initials: 'ㅁㅇㄱ', aliases: ['망원경'] }
       ]
     },
     quiz: {

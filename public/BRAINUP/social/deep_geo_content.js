@@ -875,7 +875,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '어업이 주된 경제 활동인 촌락을 (    )이라고 한다.', answer: '어촌', initials: 'ㅇㅊ', aliases: ['어촌'] },
         { no: 5, text: '인구가 급격히 줄어 지역 기능이 약화되는 현상을 (    )라고 한다.', answer: '과소화', initials: 'ㄱㅅㅎ', aliases: ['과소화'] },
         { no: 6, text: '고령 인구 비율이 20%를 넘는 사회를 (      )라고 한다.', answer: '초고령사회', initials: 'ㅊㄱㄹㅅㅎ', aliases: ['초고령사회'] },
-        { no: 7, text: '인구 감소로 마을 소멸 위험에 처한 지역을 (        )라고 한다.', answer: '소멸위험지역', initials: 'ㅅㅁㅇㅎㅈㅇ', aliases: ['소멸위험지역'] },        { no: 11, text: '농업에 종사하는 청년 세대를 (    )이라고 한다.', answer: '청년농', initials: 'ㅊㄴㄴ', aliases: ['청년농'] },        { no: 13, text: 'ICT 기술을 활용한 첨단 농업 시설을 (      )이라고 한다.', answer: '스마트팜', initials: 'ㅅㅁㅌㅍ', aliases: ['스마트팜'] },      ]
+        { no: 7, text: '인구 감소로 마을 소멸 위험에 처한 지역을 (        )라고 한다.', answer: '소멸위험지역', initials: 'ㅅㅁㅇㅎㅈㅇ', aliases: ['소멸위험지역'] },        { no: 8, text: '농업에 종사하는 청년 세대를 (    )이라고 한다.', answer: '청년농', initials: 'ㅊㄴㄴ', aliases: ['청년농'] },        { no: 9, text: 'ICT 기술을 활용한 첨단 농업 시설을 (      )이라고 한다.', answer: '스마트팜', initials: 'ㅅㅁㅌㅍ', aliases: ['스마트팜'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -960,10 +960,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['지역특화발전특구', '지역 특성을 살려 규제 완화와 지원을 집중하는 제도'],      ['메가시티', '인접 도시들이 연계하여 형성하는 광역 경제권'],    ],
     vocabFill: {
       instructions: '[지역 개발과 균형 발전 어휘]',
-      items: [        { no: 6, text: '공공기관 이전으로 조성된 지역 성장 거점 도시를 (      )라고 한다.', answer: '혁신도시', initials: 'ㅎㅅㄷㅅ', aliases: ['혁신도시'] },
-        { no: 7, text: '행정 중심 복합도시로 조성된 특별자치시는 (          )이다.', answer: '세종특별자치시', initials: 'ㅅㅈㅌㅂㅈㅊㅅ', aliases: ['세종특별자치시', '세종시'] },
-        { no: 8, text: '민간 기업 주도로 조성하는 자족적 도시를 (      )라고 한다.', answer: '기업도시', initials: 'ㄱㅇㄷㅅ', aliases: ['기업도시'] },
-        { no: 9, text: '지역 특성을 살려 규제를 완화하는 제도를 (          )라고 한다.', answer: '지역특화발전특구', initials: 'ㅈㅇㅌㅎㅂㅈㅌㄱ', aliases: ['지역특화발전특구'] },        { no: 12, text: '인접 도시들이 연계하여 형성하는 광역 경제권을 (      )라고 한다.', answer: '메가시티', initials: 'ㅁㄱㅅㅌ', aliases: ['메가시티'] },      ]
+      items: [        { no: 1, text: '공공기관 이전으로 조성된 지역 성장 거점 도시를 (      )라고 한다.', answer: '혁신도시', initials: 'ㅎㅅㄷㅅ', aliases: ['혁신도시'] },
+        { no: 2, text: '행정 중심 복합도시로 조성된 특별자치시는 (          )이다.', answer: '세종특별자치시', initials: 'ㅅㅈㅌㅂㅈㅊㅅ', aliases: ['세종특별자치시', '세종시'] },
+        { no: 3, text: '민간 기업 주도로 조성하는 자족적 도시를 (      )라고 한다.', answer: '기업도시', initials: 'ㄱㅇㄷㅅ', aliases: ['기업도시'] },
+        { no: 4, text: '지역 특성을 살려 규제를 완화하는 제도를 (          )라고 한다.', answer: '지역특화발전특구', initials: 'ㅈㅇㅌㅎㅂㅈㅌㄱ', aliases: ['지역특화발전특구'] },        { no: 5, text: '인접 도시들이 연계하여 형성하는 광역 경제권을 (      )라고 한다.', answer: '메가시티', initials: 'ㅁㄱㅅㅌ', aliases: ['메가시티'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -1050,10 +1050,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[자원과 에너지 어휘]',
       items: [
-        { no: 1, text: '인간 생활과 경제 활동에 필요한 물질을 (    )이라고 한다.', answer: '자원', initials: 'ㅈㅇ', aliases: ['자원'] },        { no: 3, text: '자원이 지구상에 고르지 않게 분포하는 특성을 (    )이라고 한다.', answer: '편재성', initials: 'ㅍㅈㅅ', aliases: ['편재성'] },        { no: 6, text: '산업혁명의 원동력이 된 고체 화석 연료는 (    )이다.', answer: '석탄', initials: 'ㅅㅌ', aliases: ['석탄'] },
-        { no: 7, text: '교통과 화학 공업의 핵심 액체 화석 연료는 (    )이다.', answer: '석유', initials: 'ㅅㅇ', aliases: ['석유'] },
-        { no: 8, text: '석탄·석유보다 청정한 기체 화석 연료는 (      )이다.', answer: '천연가스', initials: 'ㅊㅇㄱㅅ', aliases: ['천연가스'] },        { no: 11, text: '태양광·풍력 등 재생 가능하고 청정한 에너지를 (        )라고 한다.', answer: '신재생에너지', initials: 'ㅅㅈㅅㅇㄴㅈ', aliases: ['신재생에너지'] },
-        { no: 12, text: '탄소 순배출을 0으로 만드는 것을 (      )이라고 한다.', answer: '탄소중립', initials: 'ㅌㅅㅈㄹ', aliases: ['탄소중립'] },      ]
+        { no: 1, text: '인간 생활과 경제 활동에 필요한 물질을 (    )이라고 한다.', answer: '자원', initials: 'ㅈㅇ', aliases: ['자원'] },        { no: 2, text: '자원이 지구상에 고르지 않게 분포하는 특성을 (    )이라고 한다.', answer: '편재성', initials: 'ㅍㅈㅅ', aliases: ['편재성'] },        { no: 3, text: '산업혁명의 원동력이 된 고체 화석 연료는 (    )이다.', answer: '석탄', initials: 'ㅅㅌ', aliases: ['석탄'] },
+        { no: 4, text: '교통과 화학 공업의 핵심 액체 화석 연료는 (    )이다.', answer: '석유', initials: 'ㅅㅇ', aliases: ['석유'] },
+        { no: 5, text: '석탄·석유보다 청정한 기체 화석 연료는 (      )이다.', answer: '천연가스', initials: 'ㅊㅇㄱㅅ', aliases: ['천연가스'] },        { no: 6, text: '태양광·풍력 등 재생 가능하고 청정한 에너지를 (        )라고 한다.', answer: '신재생에너지', initials: 'ㅅㅈㅅㅇㄴㅈ', aliases: ['신재생에너지'] },
+        { no: 7, text: '탄소 순배출을 0으로 만드는 것을 (      )이라고 한다.', answer: '탄소중립', initials: 'ㅌㅅㅈㄹ', aliases: ['탄소중립'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -1138,8 +1138,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[세계화와 지역화 어휘]',
       items: [
-        { no: 1, text: '국경을 넘어 정치·경제·문화의 연결성이 심화되는 현상을 (    )라고 한다.', answer: '세계화', initials: 'ㅅㄱㅎ', aliases: ['세계화'] },        { no: 3, text: '자유 무역을 촉진하고 무역 분쟁을 해결하는 국제기구는 (        )이다.', answer: '세계무역기구', initials: 'ㅅㄱㅁㅇㄱㄱ', aliases: ['세계무역기구', 'WTO'] },        { no: 7, text: '지역의 고유한 특성과 정체성을 강화하려는 움직임을 (    )라고 한다.', answer: '지역화', initials: 'ㅈㅇㅎ', aliases: ['지역화'] },        { no: 10, text: '유네스코가 지정한 보편적 가치가 있는 문화유산을 (        )이라고 한다.', answer: '세계문화유산', initials: 'ㅅㄱㅁㅎㅇㅅ', aliases: ['세계문화유산'] },
-        { no: 11, text: '세계화와 지역화를 조화시키는 전략을 (    )라고 한다.', answer: '세방화', initials: 'ㅅㅂㅎ', aliases: ['세방화'] },      ]
+        { no: 1, text: '국경을 넘어 정치·경제·문화의 연결성이 심화되는 현상을 (    )라고 한다.', answer: '세계화', initials: 'ㅅㄱㅎ', aliases: ['세계화'] },        { no: 2, text: '자유 무역을 촉진하고 무역 분쟁을 해결하는 국제기구는 (        )이다.', answer: '세계무역기구', initials: 'ㅅㄱㅁㅇㄱㄱ', aliases: ['세계무역기구', 'WTO'] },        { no: 3, text: '지역의 고유한 특성과 정체성을 강화하려는 움직임을 (    )라고 한다.', answer: '지역화', initials: 'ㅈㅇㅎ', aliases: ['지역화'] },        { no: 4, text: '유네스코가 지정한 보편적 가치가 있는 문화유산을 (        )이라고 한다.', answer: '세계문화유산', initials: 'ㅅㄱㅁㅎㅇㅅ', aliases: ['세계문화유산'] },
+        { no: 5, text: '세계화와 지역화를 조화시키는 전략을 (    )라고 한다.', answer: '세방화', initials: 'ㅅㅂㅎ', aliases: ['세방화'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -1230,11 +1230,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[교통·통신과 공간 변화 어휘]',
       items: [
         { no: 1, text: '사람이나 물자가 장소 간을 이동하는 것을 (    )이라고 한다.', answer: '교통', initials: 'ㄱㅌ', aliases: ['교통'] },
-        { no: 2, text: '시속 200km 이상으로 운행하는 철도를 (      )라고 한다.', answer: '고속철도', initials: 'ㄱㅅㅊㄷ', aliases: ['고속철도', 'KTX'] },        { no: 5, text: '정보를 전달하고 교환하는 수단을 (    )이라고 한다.', answer: '통신', initials: 'ㅌㅅ', aliases: ['통신'] },        { no: 8, text: '인터넷을 통해 상품과 서비스를 사고파는 활동을 (        )라고 한다.', answer: '전자상거래', initials: 'ㅈㅈㅅㄱㄹ', aliases: ['전자상거래'] },        { no: 11, text: '도심 인구가 외곽 지역으로 이동하는 현상을 (    )라고 한다.', answer: '교외화', initials: 'ㄱㅇㅎ', aliases: ['교외화'] },
-        { no: 12, text: '특정 장소에 도달할 수 있는 용이성을 (    )이라고 한다.', answer: '접근성', initials: 'ㅈㄱㅅ', aliases: ['접근성'] },
-        { no: 13, text: '운전자 없이 스스로 주행하는 자동차를 (        )라고 한다.', answer: '자율주행차', initials: 'ㅈㅇㅈㅎㅊ', aliases: ['자율주행차', '자율주행 자동차'] },
-        { no: 14, text: '도심 내 수직 이착륙 항공기 이동 체계를 (          )라고 한다.', answer: '도심항공교통', initials: 'ㄷㅅㅎㄱㄱㅌ', aliases: ['도심항공교통', 'UAM'] },
-        { no: 15, text: '가상현실에서 사회·경제 활동이 이루어지는 공간을 (      )라고 한다.', answer: '메타버스', initials: 'ㅁㅌㅂㅅ', aliases: ['메타버스'] }
+        { no: 2, text: '시속 200km 이상으로 운행하는 철도를 (      )라고 한다.', answer: '고속철도', initials: 'ㄱㅅㅊㄷ', aliases: ['고속철도', 'KTX'] },        { no: 3, text: '정보를 전달하고 교환하는 수단을 (    )이라고 한다.', answer: '통신', initials: 'ㅌㅅ', aliases: ['통신'] },        { no: 4, text: '인터넷을 통해 상품과 서비스를 사고파는 활동을 (        )라고 한다.', answer: '전자상거래', initials: 'ㅈㅈㅅㄱㄹ', aliases: ['전자상거래'] },        { no: 5, text: '도심 인구가 외곽 지역으로 이동하는 현상을 (    )라고 한다.', answer: '교외화', initials: 'ㄱㅇㅎ', aliases: ['교외화'] },
+        { no: 6, text: '특정 장소에 도달할 수 있는 용이성을 (    )이라고 한다.', answer: '접근성', initials: 'ㅈㄱㅅ', aliases: ['접근성'] },
+        { no: 7, text: '운전자 없이 스스로 주행하는 자동차를 (        )라고 한다.', answer: '자율주행차', initials: 'ㅈㅇㅈㅎㅊ', aliases: ['자율주행차', '자율주행 자동차'] },
+        { no: 8, text: '도심 내 수직 이착륙 항공기 이동 체계를 (          )라고 한다.', answer: '도심항공교통', initials: 'ㄷㅅㅎㄱㄱㅌ', aliases: ['도심항공교통', 'UAM'] },
+        { no: 9, text: '가상현실에서 사회·경제 활동이 이루어지는 공간을 (      )라고 한다.', answer: '메타버스', initials: 'ㅁㅌㅂㅅ', aliases: ['메타버스'] }
       ]
     },
     quiz: {
@@ -1319,7 +1319,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[세계 기후와 환경 어휘]',
       items: [
-        { no: 1, text: '오랜 기간에 걸친 대기의 평균적인 상태를 (    )라고 한다.', answer: '기후', initials: 'ㄱㅎ', aliases: ['기후'] },        { no: 6, text: '사막에서 물이 솟아나는 곳을 (      )라고 한다.', answer: '오아시스', initials: 'ㅇㅇㅅㅅ', aliases: ['오아시스'] },        { no: 8, text: '토지가 사막처럼 황폐화되는 현상을 (    )라고 한다.', answer: '사막화', initials: 'ㅅㅁㅎ', aliases: ['사막화'] },        { no: 12, text: '냉대 기후 지역에 발달한 침엽수림을 (      )라고 한다.', answer: '타이가', initials: 'ㅌㅇㄱ', aliases: ['타이가'] },        { no: 14, text: '지의류와 이끼만 자라는 한대 지역을 (    )라고 한다.', answer: '툰드라', initials: 'ㅌㄷㄹ', aliases: ['툰드라'] },      ]
+        { no: 1, text: '오랜 기간에 걸친 대기의 평균적인 상태를 (    )라고 한다.', answer: '기후', initials: 'ㄱㅎ', aliases: ['기후'] },        { no: 2, text: '사막에서 물이 솟아나는 곳을 (      )라고 한다.', answer: '오아시스', initials: 'ㅇㅇㅅㅅ', aliases: ['오아시스'] },        { no: 3, text: '토지가 사막처럼 황폐화되는 현상을 (    )라고 한다.', answer: '사막화', initials: 'ㅅㅁㅎ', aliases: ['사막화'] },        { no: 4, text: '냉대 기후 지역에 발달한 침엽수림을 (      )라고 한다.', answer: '타이가', initials: 'ㅌㅇㄱ', aliases: ['타이가'] },        { no: 5, text: '지의류와 이끼만 자라는 한대 지역을 (    )라고 한다.', answer: '툰드라', initials: 'ㅌㄷㄹ', aliases: ['툰드라'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',

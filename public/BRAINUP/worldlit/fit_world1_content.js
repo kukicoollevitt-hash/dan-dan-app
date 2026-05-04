@@ -68,14 +68,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '',
       items: [
-        { no: 1, text: '무섭거나 불안할 때 마음이 움츠러드는 느낌을 (      )이라고 해요.', answer: '두려움', initials: 'ㄷㄹㅇ', aliases: ['두려움'] },        { no: 3, text: '어려움이나 위험에서 건져 내어 구해 주는 것을 (      )이라고 해요.', answer: '구원', initials: 'ㄱㅇ', aliases: ['구원'] },
-        { no: 4, text: '어떤 일이 일어날 것 같은 느낌이나 짐작을 (      )이라고 해요.', answer: '예감', initials: 'ㅇㄱ', aliases: ['예감'] },
-        { no: 5, text: '이러지도 저러지도 못하고 머뭇거리는 것을 (        )라고 해요.', answer: '망설이다', initials: 'ㅁㅅㅇㄷ', aliases: ['망설이다','망설임'] },
-        { no: 6, text: '어려움이나 장애를 이겨 내는 것을 (        )라고 해요.', answer: '극복하다', initials: 'ㄱㅂㅎㄷ', aliases: ['극복하다','극복'] },
-        { no: 7, text: '뜻하지 않게 저절로 일어나는 것을 (      )라고 해요.', answer: '우연히', initials: 'ㅇㅇㅎ', aliases: ['우연히','우연'] },
-        { no: 8, text: '한 번도 만난 적이 없어 모르는 사람을 (          )이라고 해요.', answer: '낯선 사람', initials: 'ㄴㅅ ㅅㄹ', aliases: ['낯선사람','낯선 사람'] },
-        { no: 9, text: '어려움에 맞서 힘써 싸우는 것을 (      )이라고 해요.', answer: '투쟁', initials: 'ㅌㅈ', aliases: ['투쟁'] },
-        { no: 10, text: '시간이 지나면서 발전하고 커지는 것을 (      )이라고 해요.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] }
+        { no: 1, text: '무섭거나 불안할 때 마음이 움츠러드는 느낌을 (      )이라고 해요.', answer: '두려움', initials: 'ㄷㄹㅇ', aliases: ['두려움'] },        { no: 2, text: '어려움이나 위험에서 건져 내어 구해 주는 것을 (      )이라고 해요.', answer: '구원', initials: 'ㄱㅇ', aliases: ['구원'] },
+        { no: 3, text: '어떤 일이 일어날 것 같은 느낌이나 짐작을 (      )이라고 해요.', answer: '예감', initials: 'ㅇㄱ', aliases: ['예감'] },
+        { no: 4, text: '이러지도 저러지도 못하고 머뭇거리는 것을 (        )라고 해요.', answer: '망설이다', initials: 'ㅁㅅㅇㄷ', aliases: ['망설이다','망설임'] },
+        { no: 5, text: '어려움이나 장애를 이겨 내는 것을 (        )라고 해요.', answer: '극복하다', initials: 'ㄱㅂㅎㄷ', aliases: ['극복하다','극복'] },
+        { no: 6, text: '뜻하지 않게 저절로 일어나는 것을 (      )라고 해요.', answer: '우연히', initials: 'ㅇㅇㅎ', aliases: ['우연히','우연'] },
+        { no: 7, text: '한 번도 만난 적이 없어 모르는 사람을 (          )이라고 해요.', answer: '낯선 사람', initials: 'ㄴㅅ ㅅㄹ', aliases: ['낯선사람','낯선 사람'] },
+        { no: 8, text: '어려움에 맞서 힘써 싸우는 것을 (      )이라고 해요.', answer: '투쟁', initials: 'ㅌㅈ', aliases: ['투쟁'] },
+        { no: 9, text: '시간이 지나면서 발전하고 커지는 것을 (      )이라고 해요.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] }
       ]
     },
     quiz: {
@@ -144,15 +144,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     ],
     vocabFill: {
       instructions: '[15소년 표류기 어휘]',
-      items: [        { no: 2, text: '사람이 살지 않는 섬을 (      )라고 해요.', answer: '무인도', initials: 'ㅁㅇㄷ', aliases: ['무인도'] },
-        { no: 3, text: '권력을 거스르고 맞서 일어나는 것을 (      )이라고 해요.', answer: '반란', initials: 'ㅂㄹ', aliases: ['반란'] },
-        { no: 4, text: '배에서 항로를 맡아 인도하는 사람을 (      )라고 해요.', answer: '항해사', initials: 'ㅎㅎㅅ', aliases: ['항해사'] },
-        { no: 5, text: '숨거나 몸을 피할 수 있는 곳을 (      )라고 해요.', answer: '은신처', initials: 'ㅇㅅㅊ', aliases: ['은신처'] },
-        { no: 6, text: '마음을 굳게 정하는 것을 (      )이라고 해요.', answer: '결심', initials: 'ㄱㅅ', aliases: ['결심'] },
-        { no: 7, text: '법을 지키지 않는 사람을 (      )라고 해요.', answer: '무법자', initials: 'ㅁㅂㅈ', aliases: ['무법자'] },
-        { no: 8, text: '괴롭고 어려운 일을 (      )이라고 해요.', answer: '고난', initials: 'ㄱㄴ', aliases: ['고난'] },
-        { no: 9, text: '힘을 합쳐 서로 돕는 것을 (      )이라고 해요.', answer: '협력', initials: 'ㅎㄹ', aliases: ['협력'] },
-        { no: 10, text: '여럿이 한마음으로 뭉치는 것을 (      )이라고 해요.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] }
+      items: [        { no: 1, text: '사람이 살지 않는 섬을 (      )라고 해요.', answer: '무인도', initials: 'ㅁㅇㄷ', aliases: ['무인도'] },
+        { no: 2, text: '권력을 거스르고 맞서 일어나는 것을 (      )이라고 해요.', answer: '반란', initials: 'ㅂㄹ', aliases: ['반란'] },
+        { no: 3, text: '배에서 항로를 맡아 인도하는 사람을 (      )라고 해요.', answer: '항해사', initials: 'ㅎㅎㅅ', aliases: ['항해사'] },
+        { no: 4, text: '숨거나 몸을 피할 수 있는 곳을 (      )라고 해요.', answer: '은신처', initials: 'ㅇㅅㅊ', aliases: ['은신처'] },
+        { no: 5, text: '마음을 굳게 정하는 것을 (      )이라고 해요.', answer: '결심', initials: 'ㄱㅅ', aliases: ['결심'] },
+        { no: 6, text: '법을 지키지 않는 사람을 (      )라고 해요.', answer: '무법자', initials: 'ㅁㅂㅈ', aliases: ['무법자'] },
+        { no: 7, text: '괴롭고 어려운 일을 (      )이라고 해요.', answer: '고난', initials: 'ㄱㄴ', aliases: ['고난'] },
+        { no: 8, text: '힘을 합쳐 서로 돕는 것을 (      )이라고 해요.', answer: '협력', initials: 'ㅎㄹ', aliases: ['협력'] },
+        { no: 9, text: '여럿이 한마음으로 뭉치는 것을 (      )이라고 해요.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] }
       ]
     },
     quiz: {
@@ -218,10 +218,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '[꿀벌 마야·감정 관련 어휘]',
-      items: [        { no: 3, text: '자연 속에서 마법을 다루는 상상의 존재를 (      )이라 한다.', answer: '요정', initials: 'ㅇㅈ', aliases: ['요정'] },        { no: 5, text: '서로를 아끼고 사랑하는 마음을 (      )이라 한다.', answer: '애정', initials: 'ㅇㅈ', aliases: ['애정'] },
-        { no: 6, text: '시간이 지나면서 능력이나 모습이 발달하는 과정을 (      )이라 한다.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },        { no: 8, text: '시간이 잠깐 머무는 아주 짧은 때를 (      )이라 한다.', answer: '순간', initials: 'ㅅㄱ', aliases: ['순간'] },
-        { no: 9, text: '이루고 싶은 바람을 (      )이라 한다.', answer: '소원', initials: 'ㅅㅇ', aliases: ['소원'] },
-        { no: 10, text: '마음이 기쁘고 만족스러운 상태를 (      )이라 한다.', answer: '행복', initials: 'ㅎㅂ', aliases: ['행복'] }
+      items: [        { no: 1, text: '자연 속에서 마법을 다루는 상상의 존재를 (      )이라 한다.', answer: '요정', initials: 'ㅇㅈ', aliases: ['요정'] },        { no: 2, text: '서로를 아끼고 사랑하는 마음을 (      )이라 한다.', answer: '애정', initials: 'ㅇㅈ', aliases: ['애정'] },
+        { no: 3, text: '시간이 지나면서 능력이나 모습이 발달하는 과정을 (      )이라 한다.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },        { no: 4, text: '시간이 잠깐 머무는 아주 짧은 때를 (      )이라 한다.', answer: '순간', initials: 'ㅅㄱ', aliases: ['순간'] },
+        { no: 5, text: '이루고 싶은 바람을 (      )이라 한다.', answer: '소원', initials: 'ㅅㅇ', aliases: ['소원'] },
+        { no: 6, text: '마음이 기쁘고 만족스러운 상태를 (      )이라 한다.', answer: '행복', initials: 'ㅎㅂ', aliases: ['행복'] }
       ]
     },
     quiz: {
@@ -365,12 +365,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['여행', '다른 곳으로 떠나 구경하거나 경험하는 것.'],    ],
     vocabFill: {
       instructions: '[어린 왕자 어휘]',
-      items: [        { no: 2, text: '겉으로 드러나는 것만 중요하게 여기는 마음을 (      )이라고 해요.', answer: '허영심', initials: 'ㅎㅇㅅ', aliases: ['허영심'] },        { no: 4, text: '둘 이상의 사람이나 사물이 서로 연결된 상태를 (      )라고 해요.', answer: '관계', initials: 'ㄱㄱ', aliases: ['관계'] },
-        { no: 5, text: '맡은 일이나 의무를 다해야 하는 마음가짐을 (      )이라고 해요.', answer: '책임', initials: 'ㅊㅇ', aliases: ['책임'] },
-        { no: 6, text: '남에게 알리지 않고 숨기는 것을 (      )이라고 해요.', answer: '비밀', initials: 'ㅂㅁ', aliases: ['비밀'] },
-        { no: 7, text: '온 마음을 다하여 정성껏 하는 태도를 (      )이라고 해요.', answer: '정성', initials: 'ㅈㅅ', aliases: ['정성'] },
-        { no: 8, text: '좋은 점이나 잘한 일을 높이 평가하는 말을 (      )이라고 해요.', answer: '칭찬', initials: 'ㅊㅊ', aliases: ['칭찬'] },
-        { no: 9, text: '다른 곳으로 떠나 구경하거나 경험하는 것을 (      )이라고 해요.', answer: '여행', initials: 'ㅇㅎ', aliases: ['여행'] },      ]
+      items: [        { no: 1, text: '겉으로 드러나는 것만 중요하게 여기는 마음을 (      )이라고 해요.', answer: '허영심', initials: 'ㅎㅇㅅ', aliases: ['허영심'] },        { no: 2, text: '둘 이상의 사람이나 사물이 서로 연결된 상태를 (      )라고 해요.', answer: '관계', initials: 'ㄱㄱ', aliases: ['관계'] },
+        { no: 3, text: '맡은 일이나 의무를 다해야 하는 마음가짐을 (      )이라고 해요.', answer: '책임', initials: 'ㅊㅇ', aliases: ['책임'] },
+        { no: 4, text: '남에게 알리지 않고 숨기는 것을 (      )이라고 해요.', answer: '비밀', initials: 'ㅂㅁ', aliases: ['비밀'] },
+        { no: 5, text: '온 마음을 다하여 정성껏 하는 태도를 (      )이라고 해요.', answer: '정성', initials: 'ㅈㅅ', aliases: ['정성'] },
+        { no: 6, text: '좋은 점이나 잘한 일을 높이 평가하는 말을 (      )이라고 해요.', answer: '칭찬', initials: 'ㅊㅊ', aliases: ['칭찬'] },
+        { no: 7, text: '다른 곳으로 떠나 구경하거나 경험하는 것을 (      )이라고 해요.', answer: '여행', initials: 'ㅇㅎ', aliases: ['여행'] },      ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -445,9 +445,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '땅이나 바다의 모습을 그림으로 나타낸 것을 (    )라고 해요.', answer: '지도', initials: 'ㅈㄷ', aliases: ['지도'] },
         { no: 4, text: '배를 타고 바다를 건너 여행하는 것을 (    )라고 해요.', answer: '항해', initials: 'ㅎㅎ', aliases: ['항해'] },
         { no: 5, text: '나쁜 목적을 이루려고 몰래 꾸미는 계획을 (    )라고 해요.', answer: '음모', initials: 'ㅇㅁ', aliases: ['음모'] },
-        { no: 6, text: '윗사람의 명령을 따르는 사람을 (    )라고 해요.', answer: '부하', initials: 'ㅂㅎ', aliases: ['부하'] },        { no: 8, text: '배를 타고 바다에서 일하는 사람을 (      )이라고 해요.', answer: '뱃사람', initials: 'ㅂㅅㄹ', aliases: ['뱃사람'] },
-        { no: 9, text: '모르던 것을 처음으로 찾아내거나 알게 되는 것을 (    )이라고 해요.', answer: '발견', initials: 'ㅂㄱ', aliases: ['발견'] },
-        { no: 10, text: '두려움을 이기고 어려움에 맞서는 힘을 (    )라고 해요.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] }
+        { no: 6, text: '윗사람의 명령을 따르는 사람을 (    )라고 해요.', answer: '부하', initials: 'ㅂㅎ', aliases: ['부하'] },        { no: 7, text: '배를 타고 바다에서 일하는 사람을 (      )이라고 해요.', answer: '뱃사람', initials: 'ㅂㅅㄹ', aliases: ['뱃사람'] },
+        { no: 8, text: '모르던 것을 처음으로 찾아내거나 알게 되는 것을 (    )이라고 해요.', answer: '발견', initials: 'ㅂㄱ', aliases: ['발견'] },
+        { no: 9, text: '두려움을 이기고 어려움에 맞서는 힘을 (    )라고 해요.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] }
       ]
     },
     quiz: {
@@ -1023,7 +1023,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '아주 큰 사람을 (    )이라고 해요.', answer: '거인', initials: 'ㄱㅇ', aliases: ['거인'] },
         { no: 6, text: '사람들이 구경하도록 보여주는 것을 (        )라고 해요.', answer: '구경거리', initials: 'ㄱㄱㄱㄹ', aliases: ['구경거리'] },
         { no: 7, text: '하늘에 떠 있는 섬을 (      )이라고 해요.', answer: '비행섬', initials: 'ㅂㅎㅅ', aliases: ['비행섬'] },
-        { no: 8, text: '걸리버의 고향 나라는 (    )이에요.', answer: '영국', initials: 'ㅇㄱ', aliases: ['영국'] },        { no: 10, text: '자신을 낮추고 남을 높이는 태도를 (    )이라고 해요.', answer: '겸손', initials: 'ㄱㅅ', aliases: ['겸손'] }
+        { no: 8, text: '걸리버의 고향 나라는 (    )이에요.', answer: '영국', initials: 'ㅇㄱ', aliases: ['영국'] },        { no: 9, text: '자신을 낮추고 남을 높이는 태도를 (    )이라고 해요.', answer: '겸손', initials: 'ㄱㅅ', aliases: ['겸손'] }
       ]
     },
     quiz: {
@@ -2460,14 +2460,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['우물', '늑대가 빠진 곳']
     ],
     vocabFill: { instructions: '[늑대와 아기 염소 어휘]', items: [
-      {no:1,text:'아기 염소들의 어머니는 (      )이다.',answer:'엄마 염소',initials:'ㅇㅁ ㅇㅅ',aliases:['엄마염소']},
-      {no:2,text:'늑대에게 잡아먹힐 뻔한 동물은 (      )이다.',answer:'아기 염소',initials:'ㅇㄱ ㅇㅅ',aliases:['아기염소']},
-      {no:3,text:'아기 염소들을 속인 동물은 (   )이다.',answer:'늑대',initials:'ㄴㄷ',aliases:['늑대']},
-      {no:4,text:'늑대가 목소리를 부드럽게 하려고 먹은 것은 (   )이다.',answer:'분필',initials:'ㅂㅍ',aliases:['분필']},
-      {no:5,text:'늑대가 발에 묻힌 하얀 것은 (      )이다.',answer:'밀가루',initials:'ㅁㄱㄹ',aliases:['밀가루']},
-      {no:6,text:'막내가 숨어서 살아남은 곳은 (   ) 속이다.',answer:'시계',initials:'ㅅㄱ',aliases:['시계']},
-      {no:7,text:'엄마 염소가 늑대 배에 넣은 것은 (   )이다.',answer:'돌',initials:'ㄷ',aliases:['돌']},      {no:9,text:'엄마 염소가 배를 가른 도구는 (   )이다.',answer:'가위',initials:'ㄱㅇ',aliases:['가위']},
-      {no:10,text:'늑대가 빠진 곳은 (   )이다.',answer:'우물',initials:'ㅇㅁ',aliases:['우물']}
+      {no: 1,text:'아기 염소들의 어머니는 (      )이다.',answer:'엄마 염소',initials:'ㅇㅁ ㅇㅅ',aliases:['엄마염소']},
+      {no: 2,text:'늑대에게 잡아먹힐 뻔한 동물은 (      )이다.',answer:'아기 염소',initials:'ㅇㄱ ㅇㅅ',aliases:['아기염소']},
+      {no: 3,text:'아기 염소들을 속인 동물은 (   )이다.',answer:'늑대',initials:'ㄴㄷ',aliases:['늑대']},
+      {no: 4,text:'늑대가 목소리를 부드럽게 하려고 먹은 것은 (   )이다.',answer:'분필',initials:'ㅂㅍ',aliases:['분필']},
+      {no: 5,text:'늑대가 발에 묻힌 하얀 것은 (      )이다.',answer:'밀가루',initials:'ㅁㄱㄹ',aliases:['밀가루']},
+      {no: 6,text:'막내가 숨어서 살아남은 곳은 (   ) 속이다.',answer:'시계',initials:'ㅅㄱ',aliases:['시계']},
+      {no: 7,text:'엄마 염소가 늑대 배에 넣은 것은 (   )이다.',answer:'돌',initials:'ㄷ',aliases:['돌']},      {no: 8,text:'엄마 염소가 배를 가른 도구는 (   )이다.',answer:'가위',initials:'ㄱㅇ',aliases:['가위']},
+      {no: 9,text:'늑대가 빠진 곳은 (   )이다.',answer:'우물',initials:'ㅇㅁ',aliases:['우물']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -3016,14 +3016,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['소중한', '가치 있고 귀중한']
     ],
     vocabFill: { instructions: '[어린 왕자 어휘]', items: [
-      {no:1,text:'작은 별에서 온 소년은 (         )이다.',answer:'어린 왕자',initials:'ㅇㄹ ㅇㅈ',aliases:['어린왕자']},
-      {no:2,text:'사막에서 어린 왕자를 만난 사람은 (      )이다.',answer:'비행사',initials:'ㅂㅎㅅ',aliases:['비행사']},
-      {no:3,text:'어린 왕자의 별에 있던 꽃은 (   )이다.',answer:'장미',initials:'ㅈㅁ',aliases:['장미']},
-      {no:4,text:'길들이기를 가르쳐준 동물은 (   )이다.',answer:'여우',initials:'ㅇㅇ',aliases:['여우']},      {no:6,text:'어린 왕자가 사는 곳은 작은 (   )이다.',answer:'별',initials:'ㅂ',aliases:['별']},
-      {no:7,text:'관계를 소중하게 만드는 것은 함께한 (   )이다.',answer:'시간',initials:'ㅅㄱ',aliases:['시간']},
-      {no:8,text:'중요한 것을 보는 곳은 (   )이다.',answer:'마음',initials:'ㅁㅇ',aliases:['마음']},
-      {no:9,text:'세상에 하나뿐인 것을 (      )이라 한다.',answer:'유일한',initials:'ㅇㅇㅎ',aliases:['유일한']},
-      {no:10,text:'가치 있고 귀중한 것을 (      )이라 한다.',answer:'소중한',initials:'ㅅㅈㅎ',aliases:['소중한']}
+      {no: 1,text:'작은 별에서 온 소년은 (         )이다.',answer:'어린 왕자',initials:'ㅇㄹ ㅇㅈ',aliases:['어린왕자']},
+      {no: 2,text:'사막에서 어린 왕자를 만난 사람은 (      )이다.',answer:'비행사',initials:'ㅂㅎㅅ',aliases:['비행사']},
+      {no: 3,text:'어린 왕자의 별에 있던 꽃은 (   )이다.',answer:'장미',initials:'ㅈㅁ',aliases:['장미']},
+      {no: 4,text:'길들이기를 가르쳐준 동물은 (   )이다.',answer:'여우',initials:'ㅇㅇ',aliases:['여우']},      {no: 5,text:'어린 왕자가 사는 곳은 작은 (   )이다.',answer:'별',initials:'ㅂ',aliases:['별']},
+      {no: 6,text:'관계를 소중하게 만드는 것은 함께한 (   )이다.',answer:'시간',initials:'ㅅㄱ',aliases:['시간']},
+      {no: 7,text:'중요한 것을 보는 곳은 (   )이다.',answer:'마음',initials:'ㅁㅇ',aliases:['마음']},
+      {no: 8,text:'세상에 하나뿐인 것을 (      )이라 한다.',answer:'유일한',initials:'ㅇㅇㅎ',aliases:['유일한']},
+      {no: 9,text:'가치 있고 귀중한 것을 (      )이라 한다.',answer:'소중한',initials:'ㅅㅈㅎ',aliases:['소중한']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',

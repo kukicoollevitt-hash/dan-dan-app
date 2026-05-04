@@ -461,11 +461,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '위험한 상황에서 구조하여 살려내는 것을 (      )이라 한다.', answer: '구출', initials: 'ㄱㅊ', aliases: ['구출', '구출하다'] },
         { no: 2, text: '사실이 아닌데 억울하게 뒤집어쓴 죄를 (      )이라 한다.', answer: '누명', initials: 'ㄴㅁ', aliases: ['누명'] },
-        { no: 3, text: '상대를 해치려고 거짓을 꾸며 씌우는 일을 (      )이라 한다.', answer: '모함', initials: 'ㅁㅎ', aliases: ['모함'] },        { no: 6, text: '옛날 형벌을 집행하던 관리를 (      )라 한다.', answer: '형리', initials: 'ㅎㄹ', aliases: ['형리'] },
-        { no: 7, text: '하늘나라, 신이나 선녀들이 머문다는 세계를 (      )이라 한다.', answer: '천상', initials: 'ㅊㅅ', aliases: ['천상'] },
-        { no: 8, text: '남의 딸을 데려다가 자기 딸로 삼는 것을 (      )라 한다.', answer: '양녀', initials: 'ㅇㄴ', aliases: ['양녀'] },
-        { no: 9, text: '장 (      )은 숙향을 양녀로 삼았다.', answer: '승상', initials: 'ㅅㅅ', aliases: ['승상'] },
-        { no: 10, text: '강물에 빠진 숙향을 (      )가 구해 주었다.', answer: '용녀', initials: 'ㅇㄴ', aliases: ['용녀'] }
+        { no: 3, text: '상대를 해치려고 거짓을 꾸며 씌우는 일을 (      )이라 한다.', answer: '모함', initials: 'ㅁㅎ', aliases: ['모함'] },        { no: 4, text: '옛날 형벌을 집행하던 관리를 (      )라 한다.', answer: '형리', initials: 'ㅎㄹ', aliases: ['형리'] },
+        { no: 5, text: '하늘나라, 신이나 선녀들이 머문다는 세계를 (      )이라 한다.', answer: '천상', initials: 'ㅊㅅ', aliases: ['천상'] },
+        { no: 6, text: '남의 딸을 데려다가 자기 딸로 삼는 것을 (      )라 한다.', answer: '양녀', initials: 'ㅇㄴ', aliases: ['양녀'] },
+        { no: 7, text: '장 (      )은 숙향을 양녀로 삼았다.', answer: '승상', initials: 'ㅅㅅ', aliases: ['승상'] },
+        { no: 8, text: '강물에 빠진 숙향을 (      )가 구해 주었다.', answer: '용녀', initials: 'ㅇㄴ', aliases: ['용녀'] }
       ]
     },
     quiz: {
@@ -736,10 +736,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '용궁을 다스리는 바다의 왕을 (      )이라고 한다.', answer: '용왕', initials: 'ㅇㅇ', aliases: ['용왕'] },
         { no: 3, text: '동물의 몸속에 있는 장기를 (      )이라고 한다.', answer: '간', initials: 'ㄱ', aliases: ['간'] },
         { no: 4, text: '거북과 비슷하게 생긴 파충류를 (      )라고 한다.', answer: '자라', initials: 'ㅈㄹ', aliases: ['자라'] },
-        { no: 5, text: '귀가 길고 뒷다리가 발달한 동물을 (      )라고 한다.', answer: '토끼', initials: 'ㅌㄲ', aliases: ['토끼'] },        { no: 7, text: '위기 상황에서 발휘하는 재치를 (      )라고 한다.', answer: '기지', initials: 'ㄱㅈ', aliases: ['기지'] },
-        { no: 8, text: '사리를 판단하는 슬기를 (      )라고 한다.', answer: '지혜', initials: 'ㅈㅎ', aliases: ['지혜'] },
-        { no: 9, text: '임금의 병을 치료하는 의원을 (      )라고 한다.', answer: '어의', initials: 'ㅇㅇ', aliases: ['어의'] },
-        { no: 10, text: '사람이 아닌 것을 사람처럼 표현하는 것을 (      )라고 한다.', answer: '의인화', initials: 'ㅇㅇㅎ', aliases: ['의인화'] }
+        { no: 5, text: '귀가 길고 뒷다리가 발달한 동물을 (      )라고 한다.', answer: '토끼', initials: 'ㅌㄲ', aliases: ['토끼'] },        { no: 6, text: '위기 상황에서 발휘하는 재치를 (      )라고 한다.', answer: '기지', initials: 'ㄱㅈ', aliases: ['기지'] },
+        { no: 7, text: '사리를 판단하는 슬기를 (      )라고 한다.', answer: '지혜', initials: 'ㅈㅎ', aliases: ['지혜'] },
+        { no: 8, text: '임금의 병을 치료하는 의원을 (      )라고 한다.', answer: '어의', initials: 'ㅇㅇ', aliases: ['어의'] },
+        { no: 9, text: '사람이 아닌 것을 사람처럼 표현하는 것을 (      )라고 한다.', answer: '의인화', initials: 'ㅇㅇㅎ', aliases: ['의인화'] }
       ]
     },
     quiz: {
@@ -1944,11 +1944,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '조선 지배층 신분을 (      )이라 해요.', answer: '양반', initials: 'ㅇㅂ', aliases: ['양반'] },
         { no: 2, text: '관아에서 빌려준 곡식을 (      )이라 해요.', answer: '환곡', initials: 'ㅎㄱ', aliases: ['환곡'] },
         { no: 3, text: '농업에 종사하는 백성을 (      )이라 해요.', answer: '상민', initials: 'ㅅㅁ', aliases: ['상민'] },
-        { no: 4, text: '거래를 적은 문서를 (      )라 해요.', answer: '증서', initials: 'ㅈㅅ', aliases: ['증서'] },        { no: 6, text: '거래를 없던 것으로 하는 것을 (      )라 해요.', answer: '취소', initials: 'ㅊㅅ', aliases: ['취소'] },
-        { no: 7, text: '사람을 계층으로 나눈 것을 (         )라 해요.', answer: '신분 제도', initials: 'ㅅㅂ ㅈㄷ', aliases: ['신분 제도','신분제도'] },
-        { no: 8, text: '겉과 속이 다르게 꾸미는 것을 (      )이라 해요.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
-        { no: 9, text: '사회의 부조리를 비꼬아 드러내는 것을 (      )라 해요.', answer: '풍자', initials: 'ㅍㅈ', aliases: ['풍자'] },
-        { no: 10, text: '겉치레만 하고 실속이 없는 것을 (        )라 해요.', answer: '허례허식', initials: 'ㅎㄹㅎㅅ', aliases: ['허례허식'] }
+        { no: 4, text: '거래를 적은 문서를 (      )라 해요.', answer: '증서', initials: 'ㅈㅅ', aliases: ['증서'] },        { no: 5, text: '거래를 없던 것으로 하는 것을 (      )라 해요.', answer: '취소', initials: 'ㅊㅅ', aliases: ['취소'] },
+        { no: 6, text: '사람을 계층으로 나눈 것을 (         )라 해요.', answer: '신분 제도', initials: 'ㅅㅂ ㅈㄷ', aliases: ['신분 제도','신분제도'] },
+        { no: 7, text: '겉과 속이 다르게 꾸미는 것을 (      )이라 해요.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
+        { no: 8, text: '사회의 부조리를 비꼬아 드러내는 것을 (      )라 해요.', answer: '풍자', initials: 'ㅍㅈ', aliases: ['풍자'] },
+        { no: 9, text: '겉치레만 하고 실속이 없는 것을 (        )라 해요.', answer: '허례허식', initials: 'ㅎㄹㅎㅅ', aliases: ['허례허식'] }
       ]
     },
     quiz: {
@@ -2031,11 +2031,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '사람들이 우러러보는 것을 (      )이라 해요.', answer: '덕망', initials: 'ㄷㅁ', aliases: ['덕망'] },
         { no: 2, text: '학식과 덕을 갖춘 사람을 (      )라 해요.', answer: '군자', initials: 'ㄱㅈ', aliases: ['군자'] },
         { no: 3, text: '이름이 널리 알려져 존경받는 것을 (      )이라 해요.', answer: '명망', initials: 'ㅁㅁ', aliases: ['명망'] },
-        { no: 4, text: '겉과 속이 서로 다른 것을 (      )이라 해요.', answer: '이중적', initials: 'ㅇㅈㅈ', aliases: ['이중적'] },        { no: 6, text: '사람 사이에 지켜야 할 바른 행동을 (      )라 해요.', answer: '예의', initials: 'ㅇㅇ', aliases: ['예의'] },
-        { no: 7, text: '사회에서 지켜야 할 도리를 (      )이라 해요.', answer: '도덕', initials: 'ㄷㄷ', aliases: ['도덕'] },
-        { no: 8, text: '겉과 속이 다르게 행동하는 것을 (      )이라 해요.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
-        { no: 9, text: '잘못을 따져 나무라는 것을 (      )이라 해요.', answer: '비판', initials: 'ㅂㅍ', aliases: ['비판'] },
-        { no: 10, text: '지나치게 욕심을 부리는 것을 (      )이라 해요.', answer: '탐욕', initials: 'ㅌㅇ', aliases: ['탐욕'] }
+        { no: 4, text: '겉과 속이 서로 다른 것을 (      )이라 해요.', answer: '이중적', initials: 'ㅇㅈㅈ', aliases: ['이중적'] },        { no: 5, text: '사람 사이에 지켜야 할 바른 행동을 (      )라 해요.', answer: '예의', initials: 'ㅇㅇ', aliases: ['예의'] },
+        { no: 6, text: '사회에서 지켜야 할 도리를 (      )이라 해요.', answer: '도덕', initials: 'ㄷㄷ', aliases: ['도덕'] },
+        { no: 7, text: '겉과 속이 다르게 행동하는 것을 (      )이라 해요.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
+        { no: 8, text: '잘못을 따져 나무라는 것을 (      )이라 해요.', answer: '비판', initials: 'ㅂㅍ', aliases: ['비판'] },
+        { no: 9, text: '지나치게 욕심을 부리는 것을 (      )이라 해요.', answer: '탐욕', initials: 'ㅌㅇ', aliases: ['탐욕'] }
       ]
     },
     quiz: {
@@ -2119,10 +2119,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '노래와 춤으로 접대하던 여자를 (      )이라 해요.', answer: '기생', initials: 'ㄱㅅ', aliases: ['기생'] },
         { no: 3, text: '재산을 낭비하여 없애는 것을 (      )이라 해요.', answer: '탕진', initials: 'ㅌㅈ', aliases: ['탕진'] },
         { no: 4, text: '지방 관아의 보좌관을 (      )이라 해요.', answer: '비장', initials: 'ㅂㅈ', aliases: ['비장'] },
-        { no: 5, text: '여자가 남자 옷을 입는 것을 (      )이라 해요.', answer: '남장', initials: 'ㄴㅈ', aliases: ['남장'] },        { no: 7, text: '슬기롭고 사리에 밝은 것을 (      )하다고 해요.', answer: '현명', initials: 'ㅎㅁ', aliases: ['현명'] },
-        { no: 8, text: '행실이 좋지 않고 낭비하는 것을 (      )하다고 해요.', answer: '방탕', initials: 'ㅂㅌ', aliases: ['방탕'] },
-        { no: 9, text: '상황에 맞게 일을 꾸미는 지혜를 (      )이라 해요.', answer: '지략', initials: 'ㅈㄹ', aliases: ['지략'] },
-        { no: 10, text: '스스로 판단하고 행동하는 성질을 (      )이라 해요.', answer: '주체성', initials: 'ㅈㅊㅅ', aliases: ['주체성'] }
+        { no: 5, text: '여자가 남자 옷을 입는 것을 (      )이라 해요.', answer: '남장', initials: 'ㄴㅈ', aliases: ['남장'] },        { no: 6, text: '슬기롭고 사리에 밝은 것을 (      )하다고 해요.', answer: '현명', initials: 'ㅎㅁ', aliases: ['현명'] },
+        { no: 7, text: '행실이 좋지 않고 낭비하는 것을 (      )하다고 해요.', answer: '방탕', initials: 'ㅂㅌ', aliases: ['방탕'] },
+        { no: 8, text: '상황에 맞게 일을 꾸미는 지혜를 (      )이라 해요.', answer: '지략', initials: 'ㅈㄹ', aliases: ['지략'] },
+        { no: 9, text: '스스로 판단하고 행동하는 성질을 (      )이라 해요.', answer: '주체성', initials: 'ㅈㅊㅅ', aliases: ['주체성'] }
       ]
     },
     quiz: {
@@ -2295,12 +2295,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '신선이 사는 하늘 세상을 (      )라 해요.', answer: '선계', initials: 'ㅅㄱ', aliases: ['선계'] },
         { no: 2, text: '높은 분을 모시는 여자를 (      )라 해요.', answer: '시녀', initials: 'ㅅㄴ', aliases: ['시녀'] },
-        { no: 3, text: '지금보다 앞선 삶을 (      )이라 해요.', answer: '전생', initials: 'ㅈㅅ', aliases: ['전생'] },        { no: 5, text: '없는 일을 꾸며 해치는 것을 (      )이라 해요.', answer: '모함', initials: 'ㅁㅎ', aliases: ['모함'] },
-        { no: 6, text: '잘못 없이 깨끗한 것을 (      )이라 해요.', answer: '결백', initials: 'ㄱㅂ', aliases: ['결백'] },
-        { no: 7, text: '결혼하는 것을 (      )이라 해요.', answer: '혼인', initials: 'ㅎㅇ', aliases: ['혼인'] },
-        { no: 8, text: '하늘로 올라가는 것을 (      )이라 해요.', answer: '승천', initials: 'ㅅㅊ', aliases: ['승천'] },
-        { no: 9, text: '사람 사이에 맺어진 관계를 (      )이라 해요.', answer: '인연', initials: 'ㅇㅇ', aliases: ['인연'] },
-        { no: 10, text: '남의 좋은 점을 부러워하며 미워하는 것을 (      )라 해요.', answer: '시기', initials: 'ㅅㄱ', aliases: ['시기'] }
+        { no: 3, text: '지금보다 앞선 삶을 (      )이라 해요.', answer: '전생', initials: 'ㅈㅅ', aliases: ['전생'] },        { no: 4, text: '없는 일을 꾸며 해치는 것을 (      )이라 해요.', answer: '모함', initials: 'ㅁㅎ', aliases: ['모함'] },
+        { no: 5, text: '잘못 없이 깨끗한 것을 (      )이라 해요.', answer: '결백', initials: 'ㄱㅂ', aliases: ['결백'] },
+        { no: 6, text: '결혼하는 것을 (      )이라 해요.', answer: '혼인', initials: 'ㅎㅇ', aliases: ['혼인'] },
+        { no: 7, text: '하늘로 올라가는 것을 (      )이라 해요.', answer: '승천', initials: 'ㅅㅊ', aliases: ['승천'] },
+        { no: 8, text: '사람 사이에 맺어진 관계를 (      )이라 해요.', answer: '인연', initials: 'ㅇㅇ', aliases: ['인연'] },
+        { no: 9, text: '남의 좋은 점을 부러워하며 미워하는 것을 (      )라 해요.', answer: '시기', initials: 'ㅅㄱ', aliases: ['시기'] }
       ]
     },
     quiz: {
@@ -2478,7 +2478,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '멀리 전쟁하러 나가는 것을 (      )이라 해요.', answer: '원정', initials: 'ㅇㅈ', aliases: ['원정'] },
         { no: 6, text: '뒤죽박죽 어지러운 상태를 (      )이라 해요.', answer: '혼란', initials: 'ㅎㄹ', aliases: ['혼란'] },
         { no: 7, text: '마음을 시험하는 어려움을 (      )이라 해요.', answer: '시련', initials: 'ㅅㄹ', aliases: ['시련'] },
-        { no: 8, text: '살아남으려는 힘을 (       )이라 해요.', answer: '생명력', initials: 'ㅅㅁㄹ', aliases: ['생명력'] },        { no: 10, text: '부수어 망가뜨리는 것을 (      )라 해요.', answer: '파괴', initials: 'ㅍㄱ', aliases: ['파괴'] }
+        { no: 8, text: '살아남으려는 힘을 (       )이라 해요.', answer: '생명력', initials: 'ㅅㅁㄹ', aliases: ['생명력'] },        { no: 9, text: '부수어 망가뜨리는 것을 (      )라 해요.', answer: '파괴', initials: 'ㅍㄱ', aliases: ['파괴'] }
       ]
     },
     quiz: {
@@ -2741,9 +2741,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '동물을 잡는 도구를 (    )이라 해요.', answer: '덫', initials: 'ㄷ', aliases: ['덫'] },
         { no: 4, text: '하지 말라고 말리는 것을 (      )라 해요.', answer: '만류', initials: 'ㅁㄹ', aliases: ['만류'] },
         { no: 5, text: '동물로 교훈을 주는 이야기를 (      )라 해요.', answer: '우화', initials: 'ㅇㅎ', aliases: ['우화'] },
-        { no: 6, text: '잘못을 빗대어 비판하는 것을 (      )라 해요.', answer: '풍자', initials: 'ㅍㅈ', aliases: ['풍자'] },        { no: 8, text: '도움이 되는 것을 (      )이라 해요.', answer: '이익', initials: 'ㅇㅇ', aliases: ['이익'] },
-        { no: 9, text: '잘못을 바로잡도록 타이르는 말을 (      )라 해요.', answer: '충고', initials: 'ㅊㄱ', aliases: ['충고'] },
-        { no: 10, text: '자기 생각만 내세우는 것을 (      )이라 해요.', answer: '고집', initials: 'ㄱㅈ', aliases: ['고집'] }
+        { no: 6, text: '잘못을 빗대어 비판하는 것을 (      )라 해요.', answer: '풍자', initials: 'ㅍㅈ', aliases: ['풍자'] },        { no: 7, text: '도움이 되는 것을 (      )이라 해요.', answer: '이익', initials: 'ㅇㅇ', aliases: ['이익'] },
+        { no: 8, text: '잘못을 바로잡도록 타이르는 말을 (      )라 해요.', answer: '충고', initials: 'ㅊㄱ', aliases: ['충고'] },
+        { no: 9, text: '자기 생각만 내세우는 것을 (      )이라 해요.', answer: '고집', initials: 'ㄱㅈ', aliases: ['고집'] }
       ]
     },
     quiz: {
@@ -3009,10 +3009,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '죄를 지어 먼 곳으로 쫓겨나는 것을 (      )이라 해요.', answer: '귀양', initials: 'ㄱㅇ', aliases: ['귀양'] },
         { no: 3, text: '억울하게 뒤집어쓴 죄를 (      )이라 해요.', answer: '누명', initials: 'ㄴㅁ', aliases: ['누명'] },
         { no: 4, text: '신비한 요술이나 재주를 (      )이라 해요.', answer: '도술', initials: 'ㄷㅅ', aliases: ['도술'] },
-        { no: 5, text: '군대를 이끄는 우두머리를 (      )라 해요.', answer: '장수', initials: 'ㅈㅅ', aliases: ['장수'] },        { no: 7, text: '나라에서 내리는 관직을 (      )이라 해요.', answer: '벼슬', initials: 'ㅂㅅ', aliases: ['벼슬'] },
-        { no: 8, text: '이름이 널리 알려진 영광을 (      )라 해요.', answer: '명예', initials: 'ㅁㅇ', aliases: ['명예'] },
-        { no: 9, text: '착한 일을 권하고 악한 일을 벌하는 것을 (        )이라 해요.', answer: '권선징악', initials: 'ㄱㅅㅈㅇ', aliases: ['권선징악'] },
-        { no: 10, text: '일이 순조롭지 못한 어려운 처지를 (      )이라 해요.', answer: '역경', initials: 'ㅇㄱ', aliases: ['역경'] }
+        { no: 5, text: '군대를 이끄는 우두머리를 (      )라 해요.', answer: '장수', initials: 'ㅈㅅ', aliases: ['장수'] },        { no: 6, text: '나라에서 내리는 관직을 (      )이라 해요.', answer: '벼슬', initials: 'ㅂㅅ', aliases: ['벼슬'] },
+        { no: 7, text: '이름이 널리 알려진 영광을 (      )라 해요.', answer: '명예', initials: 'ㅁㅇ', aliases: ['명예'] },
+        { no: 8, text: '착한 일을 권하고 악한 일을 벌하는 것을 (        )이라 해요.', answer: '권선징악', initials: 'ㄱㅅㅈㅇ', aliases: ['권선징악'] },
+        { no: 9, text: '일이 순조롭지 못한 어려운 처지를 (      )이라 해요.', answer: '역경', initials: 'ㅇㄱ', aliases: ['역경'] }
       ]
     },
     quiz: {
@@ -3281,7 +3281,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '글과 무예를 아울러 이르는 말을 (      )라 해요.', answer: '문무', initials: 'ㅁㅁ', aliases: ['문무'] },
         { no: 6, text: '전쟁이나 일의 계획을 (      )이라 해요.', answer: '전략', initials: 'ㅈㄹ', aliases: ['전략'] },
         { no: 7, text: '군대의 높은 우두머리를 (       )이라 해요.', answer: '대장군', initials: 'ㄷㅈㄱ', aliases: ['대장군'] },
-        { no: 8, text: '결혼하는 것을 (      )이라 해요.', answer: '혼인', initials: 'ㅎㅇ', aliases: ['혼인'] },        { no: 10, text: '일을 해낼 수 있는 힘을 (      )이라 해요.', answer: '능력', initials: 'ㄴㄹ', aliases: ['능력'] }
+        { no: 8, text: '결혼하는 것을 (      )이라 해요.', answer: '혼인', initials: 'ㅎㅇ', aliases: ['혼인'] },        { no: 9, text: '일을 해낼 수 있는 힘을 (      )이라 해요.', answer: '능력', initials: 'ㄴㄹ', aliases: ['능력'] }
       ]
     },
     quiz: {
@@ -3459,7 +3459,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '무술 기술을 (      )라 해요.', answer: '무예', initials: 'ㅁㅇ', aliases: ['무예'] },
         { no: 6, text: '전쟁에서 이기기 위한 계획을 (      )이라 해요.', answer: '전략', initials: 'ㅈㄹ', aliases: ['전략'] },
         { no: 7, text: '전쟁에서 세운 공을 (      )이라 해요.', answer: '전공', initials: 'ㅈㄱ', aliases: ['전공'] },
-        { no: 8, text: '이름이 널리 알려진 영광을 (      )라 해요.', answer: '명예', initials: 'ㅁㅇ', aliases: ['명예'] },        { no: 10, text: '올바르고 바른 도리를 (      )라 해요.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] }
+        { no: 8, text: '이름이 널리 알려진 영광을 (      )라 해요.', answer: '명예', initials: 'ㅁㅇ', aliases: ['명예'] },        { no: 9, text: '올바르고 바른 도리를 (      )라 해요.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] }
       ]
     },
     quiz: {
@@ -3544,9 +3544,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '달빛의 정기를 받은 선녀를 (        )라 해요.', answer: '월영낭자', initials: 'ㅇㅇㄴㅈ', aliases: ['월영낭자'] },
         { no: 4, text: '맑고 순수한 기운을 (      )라 해요.', answer: '정기', initials: 'ㅈㄱ', aliases: ['정기'] },
         { no: 5, text: '남에게 알리지 않는 일을 (      )이라 해요.', answer: '비밀', initials: 'ㅂㅁ', aliases: ['비밀'] },
-        { no: 6, text: '앞으로 할 일을 정해 두는 것을 (      )이라 해요.', answer: '약속', initials: 'ㅇㅅ', aliases: ['약속'] },        { no: 8, text: '밤하늘의 흰 띠 모양 별무리를 (       )라 해요.', answer: '은하수', initials: 'ㅇㅎㅅ', aliases: ['은하수'] },
-        { no: 9, text: '가로막는 벽을 (      )이라 해요.', answer: '장벽', initials: 'ㅈㅂ', aliases: ['장벽'] },
-        { no: 10, text: '감정이 풍부하고 꿈같은 것을 (      )이라 해요.', answer: '낭만', initials: 'ㄴㅁ', aliases: ['낭만'] }
+        { no: 6, text: '앞으로 할 일을 정해 두는 것을 (      )이라 해요.', answer: '약속', initials: 'ㅇㅅ', aliases: ['약속'] },        { no: 7, text: '밤하늘의 흰 띠 모양 별무리를 (       )라 해요.', answer: '은하수', initials: 'ㅇㅎㅅ', aliases: ['은하수'] },
+        { no: 8, text: '가로막는 벽을 (      )이라 해요.', answer: '장벽', initials: 'ㅈㅂ', aliases: ['장벽'] },
+        { no: 9, text: '감정이 풍부하고 꿈같은 것을 (      )이라 해요.', answer: '낭만', initials: 'ㄴㅁ', aliases: ['낭만'] }
       ]
     },
     quiz: {

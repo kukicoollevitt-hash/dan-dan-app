@@ -485,13 +485,13 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     ],
     vocabFill: {
       instructions: '[동백꽃 어휘]',
-      items: [        { no: 3, text: '창피해서 얼굴 들기 어려운 것을 (      )라고 한다.', answer: '무안하다', initials: 'ㅁㅇㅎㄷ', aliases: ['무안하다','무안'] },
-        { no: 4, text: '일부러 화나게 하거나 놀리는 것을 (        )라고 한다.', answer: '약을 올리다', initials: 'ㅇㅇ ㅇㄹㄷ', aliases: ['약을 올리다','약을올리다'] },
-        { no: 5, text: '손쓸 방법이 없어 어찌할 수 없는 것을 (        )이라고 한다.', answer: '속수무책', initials: 'ㅅㅅㅁㅊ', aliases: ['속수무책'] },
-        { no: 6, text: '풀잎이나 나뭇잎으로 만든 피리를 (      )라고 한다.', answer: '호드기', initials: 'ㅎㄷㄱ', aliases: ['호드기'] },        { no: 8, text: '예상치 못한 일에 어쩔 줄 몰라 하는 것을 (      )라고 한다.', answer: '당황하다', initials: 'ㄷㅎㅎㄷ', aliases: ['당황하다','당황'] },        { no: 10, text: '한껏 활짝 피거나 펼쳐진 모양을 (        )라고 한다.', answer: '흐드러지게', initials: 'ㅎㄷㄹㅈㄱ', aliases: ['흐드러지게'] },
-        { no: 11, text: '향기나 맛이 톡 쏘는 듯하면서 자극적인 것을 (      )라고 한다.', answer: '알싸하다', initials: 'ㅇㅆㅎㄷ', aliases: ['알싸하다','알싸한'] },
-        { no: 12, text: '심장이 세게 뛰는 소리나 모양을 (        )이라고 한다.', answer: '쿵쾅쿵쾅', initials: 'ㅋㅋㅋㅋ', aliases: ['쿵쾅쿵쾅'] },        { no: 14, text: '남의 땅을 빌려서 농사 짓는 것을 (      )이라고 한다.', answer: '소작', initials: 'ㅅㅈ', aliases: ['소작'] },
-        { no: 15, text: '우리 집은 소작농이라 마름네 집보다 (      )이 못했다.', answer: '형편', initials: 'ㅎㅍ', aliases: ['형편'] }
+      items: [        { no: 1, text: '창피해서 얼굴 들기 어려운 것을 (      )라고 한다.', answer: '무안하다', initials: 'ㅁㅇㅎㄷ', aliases: ['무안하다','무안'] },
+        { no: 2, text: '일부러 화나게 하거나 놀리는 것을 (        )라고 한다.', answer: '약을 올리다', initials: 'ㅇㅇ ㅇㄹㄷ', aliases: ['약을 올리다','약을올리다'] },
+        { no: 3, text: '손쓸 방법이 없어 어찌할 수 없는 것을 (        )이라고 한다.', answer: '속수무책', initials: 'ㅅㅅㅁㅊ', aliases: ['속수무책'] },
+        { no: 4, text: '풀잎이나 나뭇잎으로 만든 피리를 (      )라고 한다.', answer: '호드기', initials: 'ㅎㄷㄱ', aliases: ['호드기'] },        { no: 5, text: '예상치 못한 일에 어쩔 줄 몰라 하는 것을 (      )라고 한다.', answer: '당황하다', initials: 'ㄷㅎㅎㄷ', aliases: ['당황하다','당황'] },        { no: 6, text: '한껏 활짝 피거나 펼쳐진 모양을 (        )라고 한다.', answer: '흐드러지게', initials: 'ㅎㄷㄹㅈㄱ', aliases: ['흐드러지게'] },
+        { no: 7, text: '향기나 맛이 톡 쏘는 듯하면서 자극적인 것을 (      )라고 한다.', answer: '알싸하다', initials: 'ㅇㅆㅎㄷ', aliases: ['알싸하다','알싸한'] },
+        { no: 8, text: '심장이 세게 뛰는 소리나 모양을 (        )이라고 한다.', answer: '쿵쾅쿵쾅', initials: 'ㅋㅋㅋㅋ', aliases: ['쿵쾅쿵쾅'] },        { no: 9, text: '남의 땅을 빌려서 농사 짓는 것을 (      )이라고 한다.', answer: '소작', initials: 'ㅅㅈ', aliases: ['소작'] },
+        { no: 10, text: '우리 집은 소작농이라 마름네 집보다 (      )이 못했다.', answer: '형편', initials: 'ㅎㅍ', aliases: ['형편'] }
       ]
     },
     quiz: {
@@ -580,18 +580,18 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[사랑손님과 어머니 어휘]',
       items: [
         { no: 1, text: '옛날 집에서 손님을 맞이하거나 남자가 기거하던 방을 (      )이라고 한다.', answer: '사랑방', initials: 'ㅅㄹㅂ', aliases: ['사랑방'] },
-        { no: 2, text: '일한 대가로 받는 돈이나 물건을 (      )이라고 한다.', answer: '삯', initials: 'ㅅ', aliases: ['삯'] },        { no: 4, text: '어머니는 바느질하다가도 (      ) 일어나셨다.', answer: '황급히', initials: 'ㅎㄱㅎ', aliases: ['황급히'] },
-        { no: 5, text: '털이 (        ) 닭이 마당을 뛰어다녔다.', answer: '보송보송한', initials: 'ㅂㅅㅂㅅㅎ', aliases: ['보송보송한','보송보송하다'] },
-        { no: 6, text: '쓸데없이 자주 하는 꾸중이나 충고를 (      )라고 한다.', answer: '잔소리', initials: 'ㅈㅅㄹ', aliases: ['잔소리'] },
-        { no: 7, text: '남편이 죽고 혼자 사는 여자를 (      )라고 한다.', answer: '과부', initials: 'ㄱㅂ', aliases: ['과부'] },
-        { no: 8, text: '남에게 보이는 품위나 명예를 (      )이라고 한다.', answer: '체면', initials: 'ㅊㅁ', aliases: ['체면'] },
-        { no: 9, text: '외할머니의 목소리는 (        ).', answer: '날카로웠다', initials: 'ㄴㅋㄹㅇㄷ', aliases: ['날카로웠다','날카롭다'] },
-        { no: 10, text: '어머니가 고개를 푹 숙이고 계신 것이 (      ).', answer: '안쓰러웠다', initials: 'ㅇㅆㄹㅇㄷ', aliases: ['안쓰럽다','안쓰러웠다'] },
-        { no: 11, text: '어머니는 갑자기 눈물을 (      ).', answer: '글썽였다', initials: 'ㄱㅆㅇㄷ', aliases: ['글썽이다','글썽였다'] },
-        { no: 12, text: '아버지가 살아 계셨으면 어머니도 저렇게 (      )지 않으셨을까.', answer: '외롭', initials: 'ㅇㄹ', aliases: ['외롭다','외로웠다','외롭'] },
-        { no: 13, text: '어머니가 (      ) 소리에 잠이 깼다.', answer: '흐느끼는', initials: 'ㅎㄴㄲㄴ', aliases: ['흐느끼는','흐느끼다'] },
-        { no: 14, text: '사진 속 아버지는 (      ) 미소를 짓고 계셨다.', answer: '온화한', initials: 'ㅇㅎㅎ', aliases: ['온화한','온화하다'] },
-        { no: 15, text: '나는 어머니 옆에 (        ) 다가가 손을 잡아 드렸다.', answer: '살금살금', initials: 'ㅅㄱㅅㄱ', aliases: ['살금살금'] }
+        { no: 2, text: '일한 대가로 받는 돈이나 물건을 (      )이라고 한다.', answer: '삯', initials: 'ㅅ', aliases: ['삯'] },        { no: 3, text: '어머니는 바느질하다가도 (      ) 일어나셨다.', answer: '황급히', initials: 'ㅎㄱㅎ', aliases: ['황급히'] },
+        { no: 4, text: '털이 (        ) 닭이 마당을 뛰어다녔다.', answer: '보송보송한', initials: 'ㅂㅅㅂㅅㅎ', aliases: ['보송보송한','보송보송하다'] },
+        { no: 5, text: '쓸데없이 자주 하는 꾸중이나 충고를 (      )라고 한다.', answer: '잔소리', initials: 'ㅈㅅㄹ', aliases: ['잔소리'] },
+        { no: 6, text: '남편이 죽고 혼자 사는 여자를 (      )라고 한다.', answer: '과부', initials: 'ㄱㅂ', aliases: ['과부'] },
+        { no: 7, text: '남에게 보이는 품위나 명예를 (      )이라고 한다.', answer: '체면', initials: 'ㅊㅁ', aliases: ['체면'] },
+        { no: 8, text: '외할머니의 목소리는 (        ).', answer: '날카로웠다', initials: 'ㄴㅋㄹㅇㄷ', aliases: ['날카로웠다','날카롭다'] },
+        { no: 9, text: '어머니가 고개를 푹 숙이고 계신 것이 (      ).', answer: '안쓰러웠다', initials: 'ㅇㅆㄹㅇㄷ', aliases: ['안쓰럽다','안쓰러웠다'] },
+        { no: 10, text: '어머니는 갑자기 눈물을 (      ).', answer: '글썽였다', initials: 'ㄱㅆㅇㄷ', aliases: ['글썽이다','글썽였다'] },
+        { no: 11, text: '아버지가 살아 계셨으면 어머니도 저렇게 (      )지 않으셨을까.', answer: '외롭', initials: 'ㅇㄹ', aliases: ['외롭다','외로웠다','외롭'] },
+        { no: 12, text: '어머니가 (      ) 소리에 잠이 깼다.', answer: '흐느끼는', initials: 'ㅎㄴㄲㄴ', aliases: ['흐느끼는','흐느끼다'] },
+        { no: 13, text: '사진 속 아버지는 (      ) 미소를 짓고 계셨다.', answer: '온화한', initials: 'ㅇㅎㅎ', aliases: ['온화한','온화하다'] },
+        { no: 14, text: '나는 어머니 옆에 (        ) 다가가 손을 잡아 드렸다.', answer: '살금살금', initials: 'ㅅㄱㅅㄱ', aliases: ['살금살금'] }
       ]
     },
     quiz: {
@@ -680,15 +680,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     ],
     vocabFill: {
       instructions: '[감자 어휘]',
-      items: [        { no: 3, text: '가난한 사람들이 모여 사는 허름한 동네를 (      )이라고 한다.', answer: '빈민굴', initials: 'ㅂㅁㄱ', aliases: ['빈민굴'] },
-        { no: 4, text: '살아가기 위한 방법이나 수단을 (      )라고 한다.', answer: '생계', initials: 'ㅅㄱ', aliases: ['생계'] },
-        { no: 5, text: '재산이나 돈을 함부로 써서 모두 없애는 것을 (      )라고 한다.', answer: '탕진하다', initials: 'ㅌㅈㅎㄷ', aliases: ['탕진하다','탕진했다'] },
-        { no: 6, text: '복녀는 남편의 (      )에 굴복하고 말았다.', answer: '협박', initials: 'ㅎㅂ', aliases: ['협박'] },
-        { no: 7, text: '성격이나 모습이 이전과 달라지는 것을 (      )라고 한다.', answer: '변하다', initials: 'ㅂㅎㄷ', aliases: ['변하다','변했다'] },        { no: 9, text: '얼굴을 꾸미기 위해 바르는 것을 (      )이라고 한다.', answer: '화장', initials: 'ㅎㅈ', aliases: ['화장'] },
-        { no: 10, text: '남을 비난하며 가리키는 행위를 (      )이라고 한다.', answer: '손가락질', initials: 'ㅅㄱㄹㅈ', aliases: ['손가락질'] },
-        { no: 11, text: '자신의 행동을 그럴듯한 이유로 정당화하는 것을 (        )라고 한다.', answer: '합리화하다', initials: 'ㅎㄹㅎㅎㄷ', aliases: ['합리화하다','합리화했다'] },
-        { no: 12, text: '숨기려던 것이 남에게 알려지는 것을 (      )라고 한다.', answer: '들키다', initials: 'ㄷㅋㄷ', aliases: ['들키다','들켰다'] },
-        { no: 13, text: '완전히 망하게 하는 것을 (        )라고 한다.', answer: '파멸시키다', initials: 'ㅍㅁㅅㅋㄷ', aliases: ['파멸시키다','파멸'] },        { no: 15, text: '복녀는 가난 때문에 점점 (      )해 갔다.', answer: '타락', initials: 'ㅌㄹ', aliases: ['타락'] }
+      items: [        { no: 1, text: '가난한 사람들이 모여 사는 허름한 동네를 (      )이라고 한다.', answer: '빈민굴', initials: 'ㅂㅁㄱ', aliases: ['빈민굴'] },
+        { no: 2, text: '살아가기 위한 방법이나 수단을 (      )라고 한다.', answer: '생계', initials: 'ㅅㄱ', aliases: ['생계'] },
+        { no: 3, text: '재산이나 돈을 함부로 써서 모두 없애는 것을 (      )라고 한다.', answer: '탕진하다', initials: 'ㅌㅈㅎㄷ', aliases: ['탕진하다','탕진했다'] },
+        { no: 4, text: '복녀는 남편의 (      )에 굴복하고 말았다.', answer: '협박', initials: 'ㅎㅂ', aliases: ['협박'] },
+        { no: 5, text: '성격이나 모습이 이전과 달라지는 것을 (      )라고 한다.', answer: '변하다', initials: 'ㅂㅎㄷ', aliases: ['변하다','변했다'] },        { no: 6, text: '얼굴을 꾸미기 위해 바르는 것을 (      )이라고 한다.', answer: '화장', initials: 'ㅎㅈ', aliases: ['화장'] },
+        { no: 7, text: '남을 비난하며 가리키는 행위를 (      )이라고 한다.', answer: '손가락질', initials: 'ㅅㄱㄹㅈ', aliases: ['손가락질'] },
+        { no: 8, text: '자신의 행동을 그럴듯한 이유로 정당화하는 것을 (        )라고 한다.', answer: '합리화하다', initials: 'ㅎㄹㅎㅎㄷ', aliases: ['합리화하다','합리화했다'] },
+        { no: 9, text: '숨기려던 것이 남에게 알려지는 것을 (      )라고 한다.', answer: '들키다', initials: 'ㄷㅋㄷ', aliases: ['들키다','들켰다'] },
+        { no: 10, text: '완전히 망하게 하는 것을 (        )라고 한다.', answer: '파멸시키다', initials: 'ㅍㅁㅅㅋㄷ', aliases: ['파멸시키다','파멸'] },        { no: 11, text: '복녀는 가난 때문에 점점 (      )해 갔다.', answer: '타락', initials: 'ㅌㄹ', aliases: ['타락'] }
       ]
     },
     quiz: {
@@ -890,14 +890,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '돈을 내고 빌려 사는 방을 (      )이라고 한다.', answer: '셋방', initials: 'ㅅㅂ', aliases: ['셋방'] },
         { no: 4, text: '몸이 마르고 여위어지는 것을 (      )라고 한다.', answer: '수척해지다', initials: 'ㅅㅊㅎㅈㄷ', aliases: ['수척해지다','수척'] },
         { no: 5, text: '어떤 것에 대해 의심하고 믿지 못하는 마음을 (      )라고 한다.', answer: '회의', initials: 'ㅎㅇ', aliases: ['회의'] },
-        { no: 6, text: '마음에 깊이 사무쳐 몹시 아픈 것을 (      )라고 한다.', answer: '뼈아프다', initials: 'ㅃㅇㅍㄷ', aliases: ['뼈아프다','뼈아팠다'] },        { no: 8, text: '여자가 머리를 장식하거나 고정하는 데 쓰는 물건을 (      )라고 한다.', answer: '비녀', initials: 'ㅂㄴ', aliases: ['비녀'] },
-        { no: 9, text: '무겁게 눌러 힘들게 하는 것을 (      )라고 한다.', answer: '짓누르다', initials: 'ㅈㄴㄹㄷ', aliases: ['짓누르다','짓눌러도'] },
-        { no: 10, text: '자신을 돌보지 않고 남을 위해 헌신하는 것을 (      )이라고 한다.', answer: '희생', initials: 'ㅎㅅ', aliases: ['희생'] },
-        { no: 11, text: '헛되고 보람이 없는 것을 (      )라고 한다.', answer: '허망하다', initials: 'ㅎㅁㅎㄷ', aliases: ['허망하다','허망한'] },
-        { no: 12, text: '마음이 아프거나 쓰린 것을 (      )라고 한다.', answer: '저리다', initials: 'ㅈㄹㄷ', aliases: ['저리다','저렸다'] },
-        { no: 13, text: '서로 다른 생각이나 감정이 충돌하는 것을 (      )이라고 한다.', answer: '갈등', initials: 'ㄱㄷ', aliases: ['갈등'] },
-        { no: 14, text: '어려움을 참고 견디는 것을 (      )라고 한다.', answer: '감내하다', initials: 'ㄱㄴㅎㄷ', aliases: ['감내하다','감내하고'] },
-        { no: 15, text: '마음속으로 깊이 괴로워하는 것을 (      )라고 한다.', answer: '고뇌', initials: 'ㄱㄴ', aliases: ['고뇌'] }
+        { no: 6, text: '마음에 깊이 사무쳐 몹시 아픈 것을 (      )라고 한다.', answer: '뼈아프다', initials: 'ㅃㅇㅍㄷ', aliases: ['뼈아프다','뼈아팠다'] },        { no: 7, text: '여자가 머리를 장식하거나 고정하는 데 쓰는 물건을 (      )라고 한다.', answer: '비녀', initials: 'ㅂㄴ', aliases: ['비녀'] },
+        { no: 8, text: '무겁게 눌러 힘들게 하는 것을 (      )라고 한다.', answer: '짓누르다', initials: 'ㅈㄴㄹㄷ', aliases: ['짓누르다','짓눌러도'] },
+        { no: 9, text: '자신을 돌보지 않고 남을 위해 헌신하는 것을 (      )이라고 한다.', answer: '희생', initials: 'ㅎㅅ', aliases: ['희생'] },
+        { no: 10, text: '헛되고 보람이 없는 것을 (      )라고 한다.', answer: '허망하다', initials: 'ㅎㅁㅎㄷ', aliases: ['허망하다','허망한'] },
+        { no: 11, text: '마음이 아프거나 쓰린 것을 (      )라고 한다.', answer: '저리다', initials: 'ㅈㄹㄷ', aliases: ['저리다','저렸다'] },
+        { no: 12, text: '서로 다른 생각이나 감정이 충돌하는 것을 (      )이라고 한다.', answer: '갈등', initials: 'ㄱㄷ', aliases: ['갈등'] },
+        { no: 13, text: '어려움을 참고 견디는 것을 (      )라고 한다.', answer: '감내하다', initials: 'ㄱㄴㅎㄷ', aliases: ['감내하다','감내하고'] },
+        { no: 14, text: '마음속으로 깊이 괴로워하는 것을 (      )라고 한다.', answer: '고뇌', initials: 'ㄱㄴ', aliases: ['고뇌'] }
       ]
     },
     quiz: {

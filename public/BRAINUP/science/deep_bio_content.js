@@ -172,11 +172,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '물속에서 헤엄치는 것을 (      )이라 한다.', answer: '유영', initials: 'ㅇㅇ', aliases: ['유영'] },
         { no: 4, text: '음식이나 물질을 받아들이는 것을 (      )라고 한다.', answer: '섭취', initials: 'ㅅㅊ', aliases: ['섭취'] },
         { no: 5, text: '식물에 많은 소화하기 어려운 성분을 (      )이라 한다.', answer: '섬유질', initials: 'ㅅㅇㅈ', aliases: ['섬유질'] },
-        { no: 6, text: '현미경으로만 볼 수 있는 작은 생물을 (      )이라 한다.', answer: '미생물', initials: 'ㅁㅅㅁ', aliases: ['미생물'] },        { no: 9, text: '매우 적은 양을 (      )이라 한다.', answer: '극미량', initials: 'ㄱㅁㄹ', aliases: ['극미량'] },
-        { no: 10, text: '생물이 가진 특징을 (      )이라 한다.', answer: '형질', initials: 'ㅎㅈ', aliases: ['형질'] },
-        { no: 11, text: '여러 갈래로 나뉘어 발전하는 것을 (      )라고 한다.', answer: '분화', initials: 'ㅂㅎ', aliases: ['분화'] },
-        { no: 12, text: '네 개의 팔다리를 (      )라고 한다.', answer: '사지', initials: 'ㅅㅈ', aliases: ['사지'] },
-        { no: 13, text: '물이나 공기의 저항을 줄이는 형태를 (      )이라 한다.', answer: '유선형', initials: 'ㅇㅅㅎ', aliases: ['유선형'] },      ]
+        { no: 6, text: '현미경으로만 볼 수 있는 작은 생물을 (      )이라 한다.', answer: '미생물', initials: 'ㅁㅅㅁ', aliases: ['미생물'] },        { no: 7, text: '매우 적은 양을 (      )이라 한다.', answer: '극미량', initials: 'ㄱㅁㄹ', aliases: ['극미량'] },
+        { no: 8, text: '생물이 가진 특징을 (      )이라 한다.', answer: '형질', initials: 'ㅎㅈ', aliases: ['형질'] },
+        { no: 9, text: '여러 갈래로 나뉘어 발전하는 것을 (      )라고 한다.', answer: '분화', initials: 'ㅂㅎ', aliases: ['분화'] },
+        { no: 10, text: '네 개의 팔다리를 (      )라고 한다.', answer: '사지', initials: 'ㅅㅈ', aliases: ['사지'] },
+        { no: 11, text: '물이나 공기의 저항을 줄이는 형태를 (      )이라 한다.', answer: '유선형', initials: 'ㅇㅅㅎ', aliases: ['유선형'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 <u>일치하지 않는 것</u>은?',

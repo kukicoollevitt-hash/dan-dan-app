@@ -1981,10 +1981,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '열을 가두어 지구 온도를 높이는 기체를 (      )라고 한다.', answer: '온실가스', initials: 'ㅇㅅㄱㅅ', aliases: ['온실가스'] },
         { no: 2, text: '온실가스로 인해 지구 평균 기온이 상승하는 현상을 (          )라고 한다.', answer: '지구 온난화', initials: 'ㅈㄱ ㅇㄴㅎ', aliases: ['지구온난화','지구 온난화'] },
         { no: 3, text: '극지방이나 고산지대의 큰 얼음덩어리를 (      )라고 한다.', answer: '빙하', initials: 'ㅂㅎ', aliases: ['빙하'] },
-        { no: 4, text: '폭염, 한파, 폭우 등 평소와 다른 극단적 날씨를 (        )라고 한다.', answer: '이상 기후', initials: 'ㅇㅅ ㄱㅎ', aliases: ['이상기후','이상 기후'] },        { no: 6, text: '철새 등이 이동하는 때를 (        )라고 한다.', answer: '이동 시기', initials: 'ㅇㄷ ㅅㄱ', aliases: ['이동시기','이동 시기'] },
-        { no: 7, text: '산호가 하얗게 변하며 죽어가는 현상을 (        )이라 한다.', answer: '백화 현상', initials: 'ㅂㅎ ㅎㅅ', aliases: ['백화현상','백화 현상'] },
-        { no: 8, text: '생물이 사라질 위험에 처한 상태를 (        )라고 한다.', answer: '멸종 위기', initials: 'ㅁㅈ ㅇㄱ', aliases: ['멸종위기','멸종 위기'] },
-        { no: 9, text: '태양광, 풍력 등 고갈되지 않는 친환경 에너지를 (          )라고 한다.', answer: '신재생 에너지', initials: 'ㅅㅈㅅ ㅇㄴㅈ', aliases: ['신재생에너지','신재생 에너지'] },      ]
+        { no: 4, text: '폭염, 한파, 폭우 등 평소와 다른 극단적 날씨를 (        )라고 한다.', answer: '이상 기후', initials: 'ㅇㅅ ㄱㅎ', aliases: ['이상기후','이상 기후'] },        { no: 5, text: '철새 등이 이동하는 때를 (        )라고 한다.', answer: '이동 시기', initials: 'ㅇㄷ ㅅㄱ', aliases: ['이동시기','이동 시기'] },
+        { no: 6, text: '산호가 하얗게 변하며 죽어가는 현상을 (        )이라 한다.', answer: '백화 현상', initials: 'ㅂㅎ ㅎㅅ', aliases: ['백화현상','백화 현상'] },
+        { no: 7, text: '생물이 사라질 위험에 처한 상태를 (        )라고 한다.', answer: '멸종 위기', initials: 'ㅁㅈ ㅇㄱ', aliases: ['멸종위기','멸종 위기'] },
+        { no: 8, text: '태양광, 풍력 등 고갈되지 않는 친환경 에너지를 (          )라고 한다.', answer: '신재생 에너지', initials: 'ㅅㅈㅅ ㅇㄴㅈ', aliases: ['신재생에너지','신재생 에너지'] },      ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',

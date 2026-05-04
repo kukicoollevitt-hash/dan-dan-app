@@ -388,20 +388,20 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     ],
     vocabFill: {
       instructions: '[뉴턴의 운동 법칙 관련 어휘]',
-      items: [        { no: 2, text: '물체가 현재 운동 상태를 유지하려는 성질을 (    )이라 한다.', answer: '관성', initials: 'ㄱㅅ', aliases: ['관성'] },
-        { no: 3, text: 'F = ma로 표현되는 뉴턴의 법칙을 (         )이라 한다.', answer: '가속도의 법칙', initials: 'ㄱㅅㄷㅇ ㅂㅊ', aliases: ['가속도의법칙', '가속도의 법칙', '제2법칙'] },
-        { no: 4, text: '물체에 작용하는 모든 힘의 벡터 합을 (     )이라 한다.', answer: '알짜힘', initials: 'ㅇㅉㅎ', aliases: ['알짜힘', '합력'] },
-        { no: 5, text: '두 물체가 서로 같은 크기 반대 방향 힘을 가한다는 법칙을 (           )이라 한다.', answer: '작용 반작용의 법칙', initials: 'ㅈㅇ ㅂㅈㅇㅇ ㅂㅊ', aliases: ['작용반작용의법칙', '작용 반작용의 법칙', '제3법칙'] },
-        { no: 6, text: '가속하지 않는 기준계를 (        )라 한다.', answer: '관성 기준계', initials: 'ㄱㅅ ㄱㅈㄱ', aliases: ['관성기준계', '관성 기준계'] },
-        { no: 7, text: '실이나 줄이 물체를 당기는 힘을 (    )이라 한다.', answer: '장력', initials: 'ㅈㄹ', aliases: ['장력'] },
-        { no: 8, text: '접촉면이 물체를 수직으로 떠받치는 힘을 (      )이라 한다.', answer: '수직항력', initials: 'ㅅㅈㅎㄹ', aliases: ['수직항력'] },
-        { no: 9, text: '접촉면에서 상대 운동을 방해하는 힘을 (     )이라 한다.', answer: '마찰력', initials: 'ㅁㅊㄹ', aliases: ['마찰력'] },
-        { no: 10, text: '정지 상태를 유지하려는 마찰력을 (        )이라 한다.', answer: '정지 마찰력', initials: 'ㅈㅈ ㅁㅊㄹ', aliases: ['정지마찰력', '정지 마찰력'] },
-        { no: 11, text: '운동 중인 물체에 작용하는 마찰력을 (        )이라 한다.', answer: '운동 마찰력', initials: 'ㅇㄷ ㅁㅊㄹ', aliases: ['운동마찰력', '운동 마찰력'] },
-        { no: 12, text: '접촉면의 거칠기를 나타내는 상수를 (       )라 한다.', answer: '마찰 계수', initials: 'ㅁㅊ ㄱㅅ', aliases: ['마찰계수', '마찰 계수'] },
-        { no: 13, text: '기울어진 평면에서의 운동 분석을 (     ) 문제라 한다.', answer: '경사면', initials: 'ㄱㅅㅁ', aliases: ['경사면'] },
-        { no: 14, text: '줄을 걸어 힘의 방향을 바꾸는 장치를 (     )라 한다.', answer: '도르래', initials: 'ㄷㄹㄹ', aliases: ['도르래'] },
-        { no: 15, text: '뉴턴의 운동 법칙이 담긴 저서를 (       )라 한다.', answer: '프린키피아', initials: 'ㅍㄹㅋㅍㅇ', aliases: ['프린키피아'] }
+      items: [        { no: 1, text: '물체가 현재 운동 상태를 유지하려는 성질을 (    )이라 한다.', answer: '관성', initials: 'ㄱㅅ', aliases: ['관성'] },
+        { no: 2, text: 'F = ma로 표현되는 뉴턴의 법칙을 (         )이라 한다.', answer: '가속도의 법칙', initials: 'ㄱㅅㄷㅇ ㅂㅊ', aliases: ['가속도의법칙', '가속도의 법칙', '제2법칙'] },
+        { no: 3, text: '물체에 작용하는 모든 힘의 벡터 합을 (     )이라 한다.', answer: '알짜힘', initials: 'ㅇㅉㅎ', aliases: ['알짜힘', '합력'] },
+        { no: 4, text: '두 물체가 서로 같은 크기 반대 방향 힘을 가한다는 법칙을 (           )이라 한다.', answer: '작용 반작용의 법칙', initials: 'ㅈㅇ ㅂㅈㅇㅇ ㅂㅊ', aliases: ['작용반작용의법칙', '작용 반작용의 법칙', '제3법칙'] },
+        { no: 5, text: '가속하지 않는 기준계를 (        )라 한다.', answer: '관성 기준계', initials: 'ㄱㅅ ㄱㅈㄱ', aliases: ['관성기준계', '관성 기준계'] },
+        { no: 6, text: '실이나 줄이 물체를 당기는 힘을 (    )이라 한다.', answer: '장력', initials: 'ㅈㄹ', aliases: ['장력'] },
+        { no: 7, text: '접촉면이 물체를 수직으로 떠받치는 힘을 (      )이라 한다.', answer: '수직항력', initials: 'ㅅㅈㅎㄹ', aliases: ['수직항력'] },
+        { no: 8, text: '접촉면에서 상대 운동을 방해하는 힘을 (     )이라 한다.', answer: '마찰력', initials: 'ㅁㅊㄹ', aliases: ['마찰력'] },
+        { no: 9, text: '정지 상태를 유지하려는 마찰력을 (        )이라 한다.', answer: '정지 마찰력', initials: 'ㅈㅈ ㅁㅊㄹ', aliases: ['정지마찰력', '정지 마찰력'] },
+        { no: 10, text: '운동 중인 물체에 작용하는 마찰력을 (        )이라 한다.', answer: '운동 마찰력', initials: 'ㅇㄷ ㅁㅊㄹ', aliases: ['운동마찰력', '운동 마찰력'] },
+        { no: 11, text: '접촉면의 거칠기를 나타내는 상수를 (       )라 한다.', answer: '마찰 계수', initials: 'ㅁㅊ ㄱㅅ', aliases: ['마찰계수', '마찰 계수'] },
+        { no: 12, text: '기울어진 평면에서의 운동 분석을 (     ) 문제라 한다.', answer: '경사면', initials: 'ㄱㅅㅁ', aliases: ['경사면'] },
+        { no: 13, text: '줄을 걸어 힘의 방향을 바꾸는 장치를 (     )라 한다.', answer: '도르래', initials: 'ㄷㄹㄹ', aliases: ['도르래'] },
+        { no: 14, text: '뉴턴의 운동 법칙이 담긴 저서를 (       )라 한다.', answer: '프린키피아', initials: 'ㅍㄹㅋㅍㅇ', aliases: ['프린키피아'] }
       ]
     },
     quiz: {
@@ -735,12 +735,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '높이로 인해 저장된 에너지를 (            )라 한다.', answer: '중력 퍼텐셜 에너지', initials: 'ㅈㄹ ㅍㅌㅅ ㅇㄴㅈ', aliases: ['중력퍼텐셜에너지', '중력 퍼텐셜 에너지'] },
         { no: 6, text: '스프링 변형으로 저장된 에너지를 (            )라 한다.', answer: '탄성 퍼텐셜 에너지', initials: 'ㅌㅅ ㅍㅌㅅ ㅇㄴㅈ', aliases: ['탄성퍼텐셜에너지', '탄성 퍼텐셜 에너지'] },
         { no: 7, text: '물체에 한 일이 운동 에너지 변화와 같다는 정리를 (        )라 한다.', answer: '일-에너지 정리', initials: 'ㅇ-ㅇㄴㅈ ㅈㄹ', aliases: ['일에너지정리', '일-에너지 정리'] },
-        { no: 8, text: '운동 에너지와 퍼텐셜 에너지의 합을 (         )라 한다.', answer: '역학적 에너지', initials: 'ㅇㅎㅈ ㅇㄴㅈ', aliases: ['역학적에너지', '역학적 에너지'] },        { no: 10, text: '마찰력처럼 경로에 따라 일이 달라지는 힘을 (      )이라 한다.', answer: '비보존력', initials: 'ㅂㅂㅈㄹ', aliases: ['비보존력'] },
-        { no: 11, text: '중력처럼 경로와 무관하게 일이 결정되는 힘을 (     )이라 한다.', answer: '보존력', initials: 'ㅂㅈㄹ', aliases: ['보존력'] },
-        { no: 12, text: '단위 시간당 하는 일을 (    )이라 한다.', answer: '일률', initials: 'ㅇㄹ', aliases: ['일률'] },
-        { no: 13, text: '일률의 SI 단위로 1J/s와 같은 것을 (   )라 한다.', answer: '와트', initials: 'ㅇㅌ', aliases: ['와트', 'W'] },
-        { no: 14, text: '분자의 무질서한 운동 에너지를 (       )라 한다.', answer: '열에너지', initials: 'ㅇㅇㄴㅈ', aliases: ['열에너지'] },
-        { no: 15, text: '에너지는 형태만 바뀌고 총량은 보존된다는 법칙을 (          )이라 한다.', answer: '에너지 보존 법칙', initials: 'ㅇㄴㅈ ㅂㅈ ㅂㅊ', aliases: ['에너지보존법칙', '에너지 보존 법칙'] }
+        { no: 8, text: '운동 에너지와 퍼텐셜 에너지의 합을 (         )라 한다.', answer: '역학적 에너지', initials: 'ㅇㅎㅈ ㅇㄴㅈ', aliases: ['역학적에너지', '역학적 에너지'] },        { no: 9, text: '마찰력처럼 경로에 따라 일이 달라지는 힘을 (      )이라 한다.', answer: '비보존력', initials: 'ㅂㅂㅈㄹ', aliases: ['비보존력'] },
+        { no: 10, text: '중력처럼 경로와 무관하게 일이 결정되는 힘을 (     )이라 한다.', answer: '보존력', initials: 'ㅂㅈㄹ', aliases: ['보존력'] },
+        { no: 11, text: '단위 시간당 하는 일을 (    )이라 한다.', answer: '일률', initials: 'ㅇㄹ', aliases: ['일률'] },
+        { no: 12, text: '일률의 SI 단위로 1J/s와 같은 것을 (   )라 한다.', answer: '와트', initials: 'ㅇㅌ', aliases: ['와트', 'W'] },
+        { no: 13, text: '분자의 무질서한 운동 에너지를 (       )라 한다.', answer: '열에너지', initials: 'ㅇㅇㄴㅈ', aliases: ['열에너지'] },
+        { no: 14, text: '에너지는 형태만 바뀌고 총량은 보존된다는 법칙을 (          )이라 한다.', answer: '에너지 보존 법칙', initials: 'ㅇㄴㅈ ㅂㅈ ㅂㅊ', aliases: ['에너지보존법칙', '에너지 보존 법칙'] }
       ]
     },
     quiz: {
@@ -1476,11 +1476,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '단위 시간당 소비되는 전기 에너지로 P = VI인 것을 (   )이라 한다.', answer: '전력', initials: 'ㅈㄹ', aliases: ['전력'] },
         { no: 7, text: '저항에서 전기 에너지가 열로 변환되는 현상을 (    )이라 한다.', answer: '줄 열', initials: 'ㅈ ㅇ', aliases: ['줄열', '줄 열'] },
         { no: 8, text: '저항을 일렬로 연결하여 합성 저항이 증가하는 연결을 (     )이라 한다.', answer: '직렬 연결', initials: 'ㅈㄹ ㅇㄱ', aliases: ['직렬연결', '직렬 연결'] },
-        { no: 9, text: '저항을 나란히 연결하여 합성 저항이 감소하는 연결을 (     )이라 한다.', answer: '병렬 연결', initials: 'ㅂㄹ ㅇㄱ', aliases: ['병렬연결', '병렬 연결'] },        { no: 11, text: '전하를 저장하는 소자인 콘덴서를 (    )라 한다.', answer: '축전기', initials: 'ㅊㅈㄱ', aliases: ['축전기', '콘덴서'] },
-        { no: 12, text: '한 방향으로만 전류가 흐르는 반도체 소자를 (     )라 한다.', answer: '다이오드', initials: 'ㄷㅇㅇㄷ', aliases: ['다이오드'] },
-        { no: 13, text: '주기적으로 방향이 바뀌는 전류를 (   )라 한다.', answer: '교류', initials: 'ㄱㄹ', aliases: ['교류', 'AC'] },
-        { no: 14, text: '일정한 방향으로 흐르는 전류를 (   )라 한다.', answer: '직류', initials: 'ㅈㄹ', aliases: ['직류', 'DC'] },
-        { no: 15, text: '누전 시 전류를 땅으로 흘려 감전을 방지하는 장치를 (   )라 한다.', answer: '접지', initials: 'ㅈㅈ', aliases: ['접지'] }
+        { no: 9, text: '저항을 나란히 연결하여 합성 저항이 감소하는 연결을 (     )이라 한다.', answer: '병렬 연결', initials: 'ㅂㄹ ㅇㄱ', aliases: ['병렬연결', '병렬 연결'] },        { no: 10, text: '전하를 저장하는 소자인 콘덴서를 (    )라 한다.', answer: '축전기', initials: 'ㅊㅈㄱ', aliases: ['축전기', '콘덴서'] },
+        { no: 11, text: '한 방향으로만 전류가 흐르는 반도체 소자를 (     )라 한다.', answer: '다이오드', initials: 'ㄷㅇㅇㄷ', aliases: ['다이오드'] },
+        { no: 12, text: '주기적으로 방향이 바뀌는 전류를 (   )라 한다.', answer: '교류', initials: 'ㄱㄹ', aliases: ['교류', 'AC'] },
+        { no: 13, text: '일정한 방향으로 흐르는 전류를 (   )라 한다.', answer: '직류', initials: 'ㅈㄹ', aliases: ['직류', 'DC'] },
+        { no: 14, text: '누전 시 전류를 땅으로 흘려 감전을 방지하는 장치를 (   )라 한다.', answer: '접지', initials: 'ㅈㅈ', aliases: ['접지'] }
       ]
     },
     quiz: {
@@ -1684,11 +1684,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '운동 방향으로 길이가 짧아지는 현상을 (     )이라 한다.', answer: '길이 수축', initials: 'ㄱㅇ ㅅㅊ', aliases: ['길이수축', '길이 수축'] },
         { no: 7, text: 'E = mc²로 표현되는 질량과 에너지의 동등성을 (       )이라 한다.', answer: '질량-에너지 등가', initials: 'ㅈㄹ-ㅇㄴㅈ ㄷㄱ', aliases: ['질량에너지등가', '질량-에너지 등가'] },
         { no: 8, text: '정지한 물체가 가진 고유 에너지 E₀ = m₀c²를 (      )라 한다.', answer: '정지 에너지', initials: 'ㅈㅈ ㅇㄴㅈ', aliases: ['정지에너지', '정지 에너지'] },
-        { no: 9, text: '중력을 시공간의 곡률로 설명하는 이론을 (        )이라 한다.', answer: '일반 상대성 이론', initials: 'ㅇㅂ ㅅㄷㅅ ㅇㄹ', aliases: ['일반상대성이론', '일반 상대성 이론'] },        { no: 11, text: '큰 질량 주변에서 빛이 휘어지는 현상을 (     )라 한다.', answer: '중력 렌즈', initials: 'ㅈㄹ ㄹㅈ', aliases: ['중력렌즈', '중력 렌즈'] },
-        { no: 12, text: '가속하는 질량이 만드는 시공간의 파동을 (    )라 한다.', answer: '중력파', initials: 'ㅈㄹㅍ', aliases: ['중력파'] },
-        { no: 13, text: '탈출 속력이 빛보다 큰 천체를 (    )이라 한다.', answer: '블랙홀', initials: 'ㅂㄹㅎ', aliases: ['블랙홀'] },
-        { no: 14, text: '가속도가 0인 기준틀을 (    )이라 한다.', answer: '관성계', initials: 'ㄱㅅㄱ', aliases: ['관성계'] },
-        { no: 15, text: '수명 증가로 상대론적 효과가 검증된 기본 입자를 (   )이라 한다.', answer: '뮤온', initials: 'ㅁㅇ', aliases: ['뮤온'] }
+        { no: 9, text: '중력을 시공간의 곡률로 설명하는 이론을 (        )이라 한다.', answer: '일반 상대성 이론', initials: 'ㅇㅂ ㅅㄷㅅ ㅇㄹ', aliases: ['일반상대성이론', '일반 상대성 이론'] },        { no: 10, text: '큰 질량 주변에서 빛이 휘어지는 현상을 (     )라 한다.', answer: '중력 렌즈', initials: 'ㅈㄹ ㄹㅈ', aliases: ['중력렌즈', '중력 렌즈'] },
+        { no: 11, text: '가속하는 질량이 만드는 시공간의 파동을 (    )라 한다.', answer: '중력파', initials: 'ㅈㄹㅍ', aliases: ['중력파'] },
+        { no: 12, text: '탈출 속력이 빛보다 큰 천체를 (    )이라 한다.', answer: '블랙홀', initials: 'ㅂㄹㅎ', aliases: ['블랙홀'] },
+        { no: 13, text: '가속도가 0인 기준틀을 (    )이라 한다.', answer: '관성계', initials: 'ㄱㅅㄱ', aliases: ['관성계'] },
+        { no: 14, text: '수명 증가로 상대론적 효과가 검증된 기본 입자를 (   )이라 한다.', answer: '뮤온', initials: 'ㅁㅇ', aliases: ['뮤온'] }
       ]
     },
     quiz: {

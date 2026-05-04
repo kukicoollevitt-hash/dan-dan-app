@@ -72,19 +72,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '',
       items: [
-        { no: 1, text: '무섭거나 불안할 때 마음이 움츠러드는 느낌을 (      )이라고 해요.', answer: '두려움', initials: 'ㄷㄹㅇ', aliases: ['두려움'] },        { no: 3, text: '어려움이나 위험에서 건져 내어 구해 주는 것을 (      )이라고 해요.', answer: '구원', initials: 'ㄱㅇ', aliases: ['구원'] },
-        { no: 4, text: '어떤 일이 일어날 것 같은 느낌이나 짐작을 (      )이라고 해요.', answer: '예감', initials: 'ㅇㄱ', aliases: ['예감'] },
-        { no: 5, text: '이러지도 저러지도 못하고 머뭇거리는 것을 (        )라고 해요.', answer: '망설이다', initials: 'ㅁㅅㅇㄷ', aliases: ['망설이다','망설임'] },
-        { no: 6, text: '어려움이나 장애를 이겨 내는 것을 (        )라고 해요.', answer: '극복하다', initials: 'ㄱㅂㅎㄷ', aliases: ['극복하다','극복'] },
-        { no: 7, text: '뜻하지 않게 저절로 일어나는 것을 (      )라고 해요.', answer: '우연히', initials: 'ㅇㅇㅎ', aliases: ['우연히','우연'] },
-        { no: 8, text: '한 번도 만난 적이 없어 모르는 사람을 (          )이라고 해요.', answer: '낯선 사람', initials: 'ㄴㅅ ㅅㄹ', aliases: ['낯선사람','낯선 사람'] },
-        { no: 9, text: '어려움에 맞서 힘써 싸우는 것을 (      )이라고 해요.', answer: '투쟁', initials: 'ㅌㅈ', aliases: ['투쟁'] },
-        { no: 10, text: '시간이 지나면서 발전하고 커지는 것을 (      )이라고 해요.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },
-        { no: 11, text: '힘을 내도록 북돋아 주는 일을 (      )이라고 해요.', answer: '격려', initials: 'ㄱㄹ', aliases: ['격려'] },
-        { no: 12, text: '특정한 범위나 영역을 이루는 곳을 (      )라고 해요.', answer: '세계', initials: 'ㅅㄱ', aliases: ['세계'] },
-        { no: 13, text: '여행하거나 나아가는 과정을 (      )이라고 해요.', answer: '여정', initials: 'ㅇㅈ', aliases: ['여정'] },
-        { no: 14, text: '힘을 보태어 돕거나 격려하는 것을 (      )이라고 해요.', answer: '응원', initials: 'ㅇㅇ', aliases: ['응원'] },
-        { no: 15, text: '함께 일하거나 같이 가는 사람을 (      )라고 해요.', answer: '동반자', initials: 'ㄷㅂㅈ', aliases: ['동반자'] }
+        { no: 1, text: '무섭거나 불안할 때 마음이 움츠러드는 느낌을 (      )이라고 해요.', answer: '두려움', initials: 'ㄷㄹㅇ', aliases: ['두려움'] },        { no: 2, text: '어려움이나 위험에서 건져 내어 구해 주는 것을 (      )이라고 해요.', answer: '구원', initials: 'ㄱㅇ', aliases: ['구원'] },
+        { no: 3, text: '어떤 일이 일어날 것 같은 느낌이나 짐작을 (      )이라고 해요.', answer: '예감', initials: 'ㅇㄱ', aliases: ['예감'] },
+        { no: 4, text: '이러지도 저러지도 못하고 머뭇거리는 것을 (        )라고 해요.', answer: '망설이다', initials: 'ㅁㅅㅇㄷ', aliases: ['망설이다','망설임'] },
+        { no: 5, text: '어려움이나 장애를 이겨 내는 것을 (        )라고 해요.', answer: '극복하다', initials: 'ㄱㅂㅎㄷ', aliases: ['극복하다','극복'] },
+        { no: 6, text: '뜻하지 않게 저절로 일어나는 것을 (      )라고 해요.', answer: '우연히', initials: 'ㅇㅇㅎ', aliases: ['우연히','우연'] },
+        { no: 7, text: '한 번도 만난 적이 없어 모르는 사람을 (          )이라고 해요.', answer: '낯선 사람', initials: 'ㄴㅅ ㅅㄹ', aliases: ['낯선사람','낯선 사람'] },
+        { no: 8, text: '어려움에 맞서 힘써 싸우는 것을 (      )이라고 해요.', answer: '투쟁', initials: 'ㅌㅈ', aliases: ['투쟁'] },
+        { no: 9, text: '시간이 지나면서 발전하고 커지는 것을 (      )이라고 해요.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },
+        { no: 10, text: '힘을 내도록 북돋아 주는 일을 (      )이라고 해요.', answer: '격려', initials: 'ㄱㄹ', aliases: ['격려'] },
+        { no: 11, text: '특정한 범위나 영역을 이루는 곳을 (      )라고 해요.', answer: '세계', initials: 'ㅅㄱ', aliases: ['세계'] },
+        { no: 12, text: '여행하거나 나아가는 과정을 (      )이라고 해요.', answer: '여정', initials: 'ㅇㅈ', aliases: ['여정'] },
+        { no: 13, text: '힘을 보태어 돕거나 격려하는 것을 (      )이라고 해요.', answer: '응원', initials: 'ㅇㅇ', aliases: ['응원'] },
+        { no: 14, text: '함께 일하거나 같이 가는 사람을 (      )라고 해요.', answer: '동반자', initials: 'ㄷㅂㅈ', aliases: ['동반자'] }
       ]
     },
     quiz: {
@@ -163,16 +163,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     ],
     vocabFill: {
       instructions: '[15소년 표류기 어휘]',
-      items: [        { no: 2, text: '사람이 살지 않는 섬을 (      )라고 해요.', answer: '무인도', initials: 'ㅁㅇㄷ', aliases: ['무인도'] },
-        { no: 3, text: '권력을 거스르고 맞서 일어나는 것을 (      )이라고 해요.', answer: '반란', initials: 'ㅂㄹ', aliases: ['반란'] },
-        { no: 4, text: '배에서 항로를 맡아 인도하는 사람을 (      )라고 해요.', answer: '항해사', initials: 'ㅎㅎㅅ', aliases: ['항해사'] },
-        { no: 5, text: '숨거나 몸을 피할 수 있는 곳을 (      )라고 해요.', answer: '은신처', initials: 'ㅇㅅㅊ', aliases: ['은신처'] },
-        { no: 6, text: '마음을 굳게 정하는 것을 (      )이라고 해요.', answer: '결심', initials: 'ㄱㅅ', aliases: ['결심'] },
-        { no: 7, text: '법을 지키지 않는 사람을 (      )라고 해요.', answer: '무법자', initials: 'ㅁㅂㅈ', aliases: ['무법자'] },
-        { no: 8, text: '괴롭고 어려운 일을 (      )이라고 해요.', answer: '고난', initials: 'ㄱㄴ', aliases: ['고난'] },        { no: 10, text: '여럿이 한마음으로 뭉치는 것을 (      )이라고 해요.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] },
-        { no: 11, text: '살아남는 것을 (      )이라고 해요.', answer: '생존', initials: 'ㅅㅈ', aliases: ['생존'] },
-        { no: 12, text: '친구 사이의 정을 (      )이라고 해요.', answer: '우정', initials: 'ㅇㅈ', aliases: ['우정'] },
-        { no: 13, text: '마음이 깊이 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] },        { no: 15, text: '함께 일하거나 생활하는 사람을 (      )라고 해요.', answer: '동료', initials: 'ㄷㄹ', aliases: ['동료'] }
+      items: [        { no: 1, text: '사람이 살지 않는 섬을 (      )라고 해요.', answer: '무인도', initials: 'ㅁㅇㄷ', aliases: ['무인도'] },
+        { no: 2, text: '권력을 거스르고 맞서 일어나는 것을 (      )이라고 해요.', answer: '반란', initials: 'ㅂㄹ', aliases: ['반란'] },
+        { no: 3, text: '배에서 항로를 맡아 인도하는 사람을 (      )라고 해요.', answer: '항해사', initials: 'ㅎㅎㅅ', aliases: ['항해사'] },
+        { no: 4, text: '숨거나 몸을 피할 수 있는 곳을 (      )라고 해요.', answer: '은신처', initials: 'ㅇㅅㅊ', aliases: ['은신처'] },
+        { no: 5, text: '마음을 굳게 정하는 것을 (      )이라고 해요.', answer: '결심', initials: 'ㄱㅅ', aliases: ['결심'] },
+        { no: 6, text: '법을 지키지 않는 사람을 (      )라고 해요.', answer: '무법자', initials: 'ㅁㅂㅈ', aliases: ['무법자'] },
+        { no: 7, text: '괴롭고 어려운 일을 (      )이라고 해요.', answer: '고난', initials: 'ㄱㄴ', aliases: ['고난'] },        { no: 8, text: '여럿이 한마음으로 뭉치는 것을 (      )이라고 해요.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] },
+        { no: 9, text: '살아남는 것을 (      )이라고 해요.', answer: '생존', initials: 'ㅅㅈ', aliases: ['생존'] },
+        { no: 10, text: '친구 사이의 정을 (      )이라고 해요.', answer: '우정', initials: 'ㅇㅈ', aliases: ['우정'] },
+        { no: 11, text: '마음이 깊이 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] },        { no: 12, text: '함께 일하거나 생활하는 사람을 (      )라고 해요.', answer: '동료', initials: 'ㄷㄹ', aliases: ['동료'] }
       ]
     },
     quiz: {
@@ -242,10 +242,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     /* ✅ 어휘학습(빈칸) */
     vocabFill: {
       instructions: '[꿀벌 마야·감정 관련 어휘]',
-      items: [        { no: 3, text: '자연 속에서 마법을 다루는 상상의 존재를 (      )이라 한다.', answer: '요정', initials: 'ㅇㅈ', aliases: ['요정'] },        { no: 5, text: '서로를 아끼고 사랑하는 마음을 (      )이라 한다.', answer: '애정', initials: 'ㅇㅈ', aliases: ['애정'] },
-        { no: 6, text: '시간이 지나면서 능력이나 모습이 발달하는 과정을 (      )이라 한다.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },        { no: 8, text: '시간이 잠깐 머무는 아주 짧은 때를 (      )이라 한다.', answer: '순간', initials: 'ㅅㄱ', aliases: ['순간'] },
-        { no: 9, text: '이루고 싶은 바람을 (      )이라 한다.', answer: '소원', initials: 'ㅅㅇ', aliases: ['소원'] },
-        { no: 10, text: '마음이 기쁘고 만족스러운 상태를 (      )이라 한다.', answer: '행복', initials: 'ㅎㅂ', aliases: ['행복'] }
+      items: [        { no: 1, text: '자연 속에서 마법을 다루는 상상의 존재를 (      )이라 한다.', answer: '요정', initials: 'ㅇㅈ', aliases: ['요정'] },        { no: 2, text: '서로를 아끼고 사랑하는 마음을 (      )이라 한다.', answer: '애정', initials: 'ㅇㅈ', aliases: ['애정'] },
+        { no: 3, text: '시간이 지나면서 능력이나 모습이 발달하는 과정을 (      )이라 한다.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },        { no: 4, text: '시간이 잠깐 머무는 아주 짧은 때를 (      )이라 한다.', answer: '순간', initials: 'ㅅㄱ', aliases: ['순간'] },
+        { no: 5, text: '이루고 싶은 바람을 (      )이라 한다.', answer: '소원', initials: 'ㅅㅇ', aliases: ['소원'] },
+        { no: 6, text: '마음이 기쁘고 만족스러운 상태를 (      )이라 한다.', answer: '행복', initials: 'ㅎㅂ', aliases: ['행복'] }
       ]
     },
     quiz: {
@@ -307,12 +307,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '',
       items: [
         { no: 1, text: '능력이나 성품을 확인하기 위해 행하는 검사를 (      )이라 한다.', answer: '시험', initials: 'ㅅㅎ', aliases: ['시험'] },
-        { no: 2, text: '말을 하지 않고 조용히 있는 상태를 (      )이라 한다.', answer: '침묵', initials: 'ㅊㅁ', aliases: ['침묵'] },        { no: 4, text: '겉으로는 드러내지 않은 숨은 의도를 (      )이라 한다.', answer: '속셈', initials: 'ㅅㅅ', aliases: ['속셈'] },
-        { no: 5, text: '특정 신앙이나 의식을 담당하는 사람을 (      )이라 한다.', answer: '사제', initials: 'ㅅㅈ', aliases: ['사제'] },
-        { no: 6, text: '옳고 그름을 판단하고 바른 행동을 하려는 마음을 (      )이라 한다.', answer: '양심', initials: 'ㅇㅅ', aliases: ['양심'] },
-        { no: 7, text: '받은 해를 되갚기 위한 행동을 (      )이라 한다.', answer: '보복', initials: 'ㅂㅂ', aliases: ['보복'] },        { no: 9, text: '슬픔이나 고통을 달래 주는 것을 (      )라 한다.', answer: '위로', initials: 'ㅇㄹ', aliases: ['위로'] },        { no: 11, text: '지켜야 할 일정한 법칙이나 정해진 방식을 (      )이라 한다.', answer: '규칙', initials: 'ㄱㅊ', aliases: ['규칙'] },
-        { no: 12, text: '어떤 일을 해내기 위해 마음을 단단히 먹는 것을 (      )라 한다.', answer: '각오', initials: 'ㄱㅇ', aliases: ['각오'] },
-        { no: 13, text: '앞으로 할 일의 절차나 방법을 미리 생각하여 정하는 것을 (      )이라 한다.', answer: '계획', initials: 'ㄱㅎ', aliases: ['계획'] },      ]
+        { no: 2, text: '말을 하지 않고 조용히 있는 상태를 (      )이라 한다.', answer: '침묵', initials: 'ㅊㅁ', aliases: ['침묵'] },        { no: 3, text: '겉으로는 드러내지 않은 숨은 의도를 (      )이라 한다.', answer: '속셈', initials: 'ㅅㅅ', aliases: ['속셈'] },
+        { no: 4, text: '특정 신앙이나 의식을 담당하는 사람을 (      )이라 한다.', answer: '사제', initials: 'ㅅㅈ', aliases: ['사제'] },
+        { no: 5, text: '옳고 그름을 판단하고 바른 행동을 하려는 마음을 (      )이라 한다.', answer: '양심', initials: 'ㅇㅅ', aliases: ['양심'] },
+        { no: 6, text: '받은 해를 되갚기 위한 행동을 (      )이라 한다.', answer: '보복', initials: 'ㅂㅂ', aliases: ['보복'] },        { no: 7, text: '슬픔이나 고통을 달래 주는 것을 (      )라 한다.', answer: '위로', initials: 'ㅇㄹ', aliases: ['위로'] },        { no: 8, text: '지켜야 할 일정한 법칙이나 정해진 방식을 (      )이라 한다.', answer: '규칙', initials: 'ㄱㅊ', aliases: ['규칙'] },
+        { no: 9, text: '어떤 일을 해내기 위해 마음을 단단히 먹는 것을 (      )라 한다.', answer: '각오', initials: 'ㄱㅇ', aliases: ['각오'] },
+        { no: 10, text: '앞으로 할 일의 절차나 방법을 미리 생각하여 정하는 것을 (      )이라 한다.', answer: '계획', initials: 'ㄱㅎ', aliases: ['계획'] },      ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
@@ -384,11 +384,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['여행', '다른 곳으로 떠나 구경하거나 경험하는 것.'],    ],
     vocabFill: {
       instructions: '[어린 왕자 어휘]',
-      items: [        { no: 2, text: '겉으로 드러나는 것만 중요하게 여기는 마음을 (      )이라고 해요.', answer: '허영심', initials: 'ㅎㅇㅅ', aliases: ['허영심'] },        { no: 5, text: '맡은 일이나 의무를 다해야 하는 마음가짐을 (      )이라고 해요.', answer: '책임', initials: 'ㅊㅇ', aliases: ['책임'] },
-        { no: 6, text: '남에게 알리지 않고 숨기는 것을 (      )이라고 해요.', answer: '비밀', initials: 'ㅂㅁ', aliases: ['비밀'] },
-        { no: 7, text: '온 마음을 다하여 정성껏 하는 태도를 (      )이라고 해요.', answer: '정성', initials: 'ㅈㅅ', aliases: ['정성'] },
-        { no: 8, text: '좋은 점이나 잘한 일을 높이 평가하는 말을 (      )이라고 해요.', answer: '칭찬', initials: 'ㅊㅊ', aliases: ['칭찬'] },
-        { no: 9, text: '다른 곳으로 떠나 구경하거나 경험하는 것을 (      )이라고 해요.', answer: '여행', initials: 'ㅇㅎ', aliases: ['여행'] },      ]
+      items: [        { no: 1, text: '겉으로 드러나는 것만 중요하게 여기는 마음을 (      )이라고 해요.', answer: '허영심', initials: 'ㅎㅇㅅ', aliases: ['허영심'] },        { no: 2, text: '맡은 일이나 의무를 다해야 하는 마음가짐을 (      )이라고 해요.', answer: '책임', initials: 'ㅊㅇ', aliases: ['책임'] },
+        { no: 3, text: '남에게 알리지 않고 숨기는 것을 (      )이라고 해요.', answer: '비밀', initials: 'ㅂㅁ', aliases: ['비밀'] },
+        { no: 4, text: '온 마음을 다하여 정성껏 하는 태도를 (      )이라고 해요.', answer: '정성', initials: 'ㅈㅅ', aliases: ['정성'] },
+        { no: 5, text: '좋은 점이나 잘한 일을 높이 평가하는 말을 (      )이라고 해요.', answer: '칭찬', initials: 'ㅊㅊ', aliases: ['칭찬'] },
+        { no: 6, text: '다른 곳으로 떠나 구경하거나 경험하는 것을 (      )이라고 해요.', answer: '여행', initials: 'ㅇㅎ', aliases: ['여행'] },      ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
@@ -470,12 +470,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '땅이나 바다의 모습을 그림으로 나타낸 것을 (    )라고 해요.', answer: '지도', initials: 'ㅈㄷ', aliases: ['지도'] },
         { no: 4, text: '배를 타고 바다를 건너 여행하는 것을 (    )라고 해요.', answer: '항해', initials: 'ㅎㅎ', aliases: ['항해'] },
         { no: 5, text: '나쁜 목적을 이루려고 몰래 꾸미는 계획을 (    )라고 해요.', answer: '음모', initials: 'ㅇㅁ', aliases: ['음모'] },
-        { no: 6, text: '윗사람의 명령을 따르는 사람을 (    )라고 해요.', answer: '부하', initials: 'ㅂㅎ', aliases: ['부하'] },        { no: 8, text: '배를 타고 바다에서 일하는 사람을 (      )이라고 해요.', answer: '뱃사람', initials: 'ㅂㅅㄹ', aliases: ['뱃사람'] },
-        { no: 9, text: '모르던 것을 처음으로 찾아내거나 알게 되는 것을 (    )이라고 해요.', answer: '발견', initials: 'ㅂㄱ', aliases: ['발견'] },        { no: 11, text: '전설적인 해적으로 보물을 숨긴 인물을 (        )이라고 해요.', answer: '플린트 선장', initials: 'ㅍㄹㅌ ㅅㅈ', aliases: ['플린트선장','플린트 선장'] },
-        { no: 12, text: '한쪽 다리가 없는 교활한 요리사를 (          )라고 해요.', answer: '롱 존 실버', initials: 'ㄹ ㅈ ㅅㅂ', aliases: ['롱존실버','롱 존 실버'] },
-        { no: 13, text: '명령이나 지배에 반항하여 거역하는 것을 (    )이라고 해요.', answer: '반란', initials: 'ㅂㄹ', aliases: ['반란'] },
-        { no: 14, text: '생명이 끝나는 것을 (    )이라고 해요.', answer: '죽음', initials: 'ㅈㅇ', aliases: ['죽음'] },
-        { no: 15, text: '값어치가 큰 금이나 은 등의 귀중품을 (    )이라고 해요.', answer: '보물', initials: 'ㅂㅁ', aliases: ['보물'] }
+        { no: 6, text: '윗사람의 명령을 따르는 사람을 (    )라고 해요.', answer: '부하', initials: 'ㅂㅎ', aliases: ['부하'] },        { no: 7, text: '배를 타고 바다에서 일하는 사람을 (      )이라고 해요.', answer: '뱃사람', initials: 'ㅂㅅㄹ', aliases: ['뱃사람'] },
+        { no: 8, text: '모르던 것을 처음으로 찾아내거나 알게 되는 것을 (    )이라고 해요.', answer: '발견', initials: 'ㅂㄱ', aliases: ['발견'] },        { no: 9, text: '전설적인 해적으로 보물을 숨긴 인물을 (        )이라고 해요.', answer: '플린트 선장', initials: 'ㅍㄹㅌ ㅅㅈ', aliases: ['플린트선장','플린트 선장'] },
+        { no: 10, text: '한쪽 다리가 없는 교활한 요리사를 (          )라고 해요.', answer: '롱 존 실버', initials: 'ㄹ ㅈ ㅅㅂ', aliases: ['롱존실버','롱 존 실버'] },
+        { no: 11, text: '명령이나 지배에 반항하여 거역하는 것을 (    )이라고 해요.', answer: '반란', initials: 'ㅂㄹ', aliases: ['반란'] },
+        { no: 12, text: '생명이 끝나는 것을 (    )이라고 해요.', answer: '죽음', initials: 'ㅈㅇ', aliases: ['죽음'] },
+        { no: 13, text: '값어치가 큰 금이나 은 등의 귀중품을 (    )이라고 해요.', answer: '보물', initials: 'ㅂㅁ', aliases: ['보물'] }
       ]
     },
     quiz: {
@@ -562,7 +562,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '부모의 남자 자녀를 (    )이라고 해요.', answer: '아들', initials: 'ㅇㄷ', aliases: ['아들'] },
         { no: 9, text: '마법을 쓰는 신비로운 존재를 (    )이라고 해요.', answer: '요정', initials: 'ㅇㅈ', aliases: ['요정'] },
         { no: 10, text: '겁을 주어 두렵게 하는 것을 (    )이라고 해요.', answer: '위협', initials: 'ㅇㅎ', aliases: ['위협'] },
-        { no: 11, text: '피노키오를 만든 가난한 목수의 이름은 (      )예요.', answer: '제페토', initials: 'ㅈㅍㅌ', aliases: ['제페토'] },        { no: 13, text: '잘못하거나 틀린 행동을 (    )라고 해요.', answer: '실수', initials: 'ㅅㅅ', aliases: ['실수'] },      ]
+        { no: 11, text: '피노키오를 만든 가난한 목수의 이름은 (      )예요.', answer: '제페토', initials: 'ㅈㅍㅌ', aliases: ['제페토'] },        { no: 12, text: '잘못하거나 틀린 행동을 (    )라고 해요.', answer: '실수', initials: 'ㅅㅅ', aliases: ['실수'] },      ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
@@ -642,8 +642,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '초록빛 보석으로 빛나는 오즈의 수도를 (          )라고 해요.', answer: '에메랄드 시티', initials: 'ㅇㅁㄹㄷ ㅅㅌ', aliases: ['에메랄드시티','에메랄드 시티'] },
         { no: 5, text: '논밭에 새를 쫓으려고 세워 놓은 인형을 (      )라고 해요.', answer: '허수아비', initials: 'ㅎㅅㅇㅂ', aliases: ['허수아비'] },
         { no: 6, text: '양철로 만들어진 나무꾼 모양 인형을 (          )라고 해요.', answer: '양철 나무꾼', initials: 'ㅇㅊ ㄴㅁㄲ', aliases: ['양철나무꾼','양철 나무꾼'] },
-        { no: 7, text: '숲속의 왕이라 불리는 용맹한 동물을 (    )라고 해요.', answer: '사자', initials: 'ㅅㅈ', aliases: ['사자'] },        { no: 10, text: '슬프거나 안타까운 일을 탄식하는 것을 (    )이라고 해요.', answer: '한탄', initials: 'ㅎㅌ', aliases: ['한탄'] },        { no: 13, text: '부모와 자식, 형제자매 등의 혈연 관계를 (    )이라고 해요.', answer: '가족', initials: 'ㄱㅈ', aliases: ['가족'] },
-        { no: 14, text: '어려움이나 장애를 이겨 내는 것을 (    )이라고 해요.', answer: '극복', initials: 'ㄱㅂ', aliases: ['극복'] },      ]
+        { no: 7, text: '숲속의 왕이라 불리는 용맹한 동물을 (    )라고 해요.', answer: '사자', initials: 'ㅅㅈ', aliases: ['사자'] },        { no: 8, text: '슬프거나 안타까운 일을 탄식하는 것을 (    )이라고 해요.', answer: '한탄', initials: 'ㅎㅌ', aliases: ['한탄'] },        { no: 9, text: '부모와 자식, 형제자매 등의 혈연 관계를 (    )이라고 해요.', answer: '가족', initials: 'ㄱㅈ', aliases: ['가족'] },
+        { no: 10, text: '어려움이나 장애를 이겨 내는 것을 (    )이라고 해요.', answer: '극복', initials: 'ㄱㅂ', aliases: ['극복'] },      ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
@@ -918,14 +918,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '아이들이 어른이 되지 않는 신비의 섬을 (        )라고 해요.', answer: '네버랜드', initials: 'ㄴㅂㄹㄷ', aliases: ['네버랜드'] },
         { no: 4, text: '뿌리면 하늘을 날 수 있는 마법 가루를 (        )라고 해요.', answer: '요정 가루', initials: 'ㅇㅈ ㄱㄹ', aliases: ['요정가루','요정 가루'] },
         { no: 5, text: '네버랜드에서 피터와 함께 사는 아이들을 (            )이라고 해요.', answer: '잃어버린 아이들', initials: 'ㅇㅇㅂㄹ ㅇㅇㄷ', aliases: ['잃어버린아이들','잃어버린 아이들'] },
-        { no: 6, text: '후크 선장이 손 대신 달고 있는 것을 (      )라고 해요.', answer: '갈고리', initials: 'ㄱㄱㄹ', aliases: ['갈고리'] },        { no: 8, text: '위험을 무릅쓰고 하는 경험을 (    )이라고 해요.', answer: '모험', initials: 'ㅁㅎ', aliases: ['모험'] },
-        { no: 9, text: '빛을 받아 생기는 검은 모양을 (      )라고 해요.', answer: '그림자', initials: 'ㄱㄹㅈ', aliases: ['그림자'] },
-        { no: 10, text: '강이나 늪에 사는 큰 파충류를 (    )라고 해요.', answer: '악어', initials: 'ㅇㅇ', aliases: ['악어'] },
-        { no: 11, text: '기쁘고 신나는 생각을 (        )이라고 해요.', answer: '즐거운 생각', initials: 'ㅈㄱㅇ ㅅㄱ', aliases: ['즐거운생각','즐거운 생각'] },
-        { no: 12, text: '목소리로 가락을 내어 부르는 것을 (    )라고 해요.', answer: '노래', initials: 'ㄴㄹ', aliases: ['노래'] },
-        { no: 13, text: '해적들이 타고 다니는 배를 (      )이라고 해요.', answer: '해적선', initials: 'ㅎㅈㅅ', aliases: ['해적선'] },
-        { no: 14, text: '영국의 수도이자 달링 가족이 사는 도시는 (    )이에요.', answer: '런던', initials: 'ㄹㄷ', aliases: ['런던'] },
-        { no: 15, text: '자식을 낳아 키우는 어머니를 (    )라고 해요.', answer: '엄마', initials: 'ㅇㅁ', aliases: ['엄마'] }
+        { no: 6, text: '후크 선장이 손 대신 달고 있는 것을 (      )라고 해요.', answer: '갈고리', initials: 'ㄱㄱㄹ', aliases: ['갈고리'] },        { no: 7, text: '위험을 무릅쓰고 하는 경험을 (    )이라고 해요.', answer: '모험', initials: 'ㅁㅎ', aliases: ['모험'] },
+        { no: 8, text: '빛을 받아 생기는 검은 모양을 (      )라고 해요.', answer: '그림자', initials: 'ㄱㄹㅈ', aliases: ['그림자'] },
+        { no: 9, text: '강이나 늪에 사는 큰 파충류를 (    )라고 해요.', answer: '악어', initials: 'ㅇㅇ', aliases: ['악어'] },
+        { no: 10, text: '기쁘고 신나는 생각을 (        )이라고 해요.', answer: '즐거운 생각', initials: 'ㅈㄱㅇ ㅅㄱ', aliases: ['즐거운생각','즐거운 생각'] },
+        { no: 11, text: '목소리로 가락을 내어 부르는 것을 (    )라고 해요.', answer: '노래', initials: 'ㄴㄹ', aliases: ['노래'] },
+        { no: 12, text: '해적들이 타고 다니는 배를 (      )이라고 해요.', answer: '해적선', initials: 'ㅎㅈㅅ', aliases: ['해적선'] },
+        { no: 13, text: '영국의 수도이자 달링 가족이 사는 도시는 (    )이에요.', answer: '런던', initials: 'ㄹㄷ', aliases: ['런던'] },
+        { no: 14, text: '자식을 낳아 키우는 어머니를 (    )라고 해요.', answer: '엄마', initials: 'ㅇㅁ', aliases: ['엄마'] }
       ]
     },
     quiz: {
@@ -1102,9 +1102,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '아주 큰 사람을 (    )이라고 해요.', answer: '거인', initials: 'ㄱㅇ', aliases: ['거인'] },
         { no: 6, text: '사람들이 구경하도록 보여주는 것을 (        )라고 해요.', answer: '구경거리', initials: 'ㄱㄱㄱㄹ', aliases: ['구경거리'] },
         { no: 7, text: '하늘에 떠 있는 섬을 (      )이라고 해요.', answer: '비행섬', initials: 'ㅂㅎㅅ', aliases: ['비행섬'] },
-        { no: 8, text: '걸리버의 고향 나라는 (    )이에요.', answer: '영국', initials: 'ㅇㄱ', aliases: ['영국'] },        { no: 11, text: '거인들이 사는 나라를 (          )라고 해요.', answer: '브로브딩낵', initials: 'ㅂㄹㅂㄷㄴ', aliases: ['브로브딩낵'] },
-        { no: 12, text: '어리석고 생각이 모자라는 것을 (        )이라고 해요.', answer: '어리석음', initials: 'ㅇㄹㅅㅇ', aliases: ['어리석음'] },
-        { no: 13, text: '끝없이 욕심을 부리는 것을 (    )이라고 해요.', answer: '탐욕', initials: 'ㅌㅇ', aliases: ['탐욕'] },      ]
+        { no: 8, text: '걸리버의 고향 나라는 (    )이에요.', answer: '영국', initials: 'ㅇㄱ', aliases: ['영국'] },        { no: 9, text: '거인들이 사는 나라를 (          )라고 해요.', answer: '브로브딩낵', initials: 'ㅂㄹㅂㄷㄴ', aliases: ['브로브딩낵'] },
+        { no: 10, text: '어리석고 생각이 모자라는 것을 (        )이라고 해요.', answer: '어리석음', initials: 'ㅇㄹㅅㅇ', aliases: ['어리석음'] },
+        { no: 11, text: '끝없이 욕심을 부리는 것을 (    )이라고 해요.', answer: '탐욕', initials: 'ㅌㅇ', aliases: ['탐욕'] },      ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
@@ -1270,8 +1270,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '나이 많은 여자 어른을 (      )라고 해요.', answer: '할머니', initials: 'ㅎㅁㄴ', aliases: ['할머니'] },
         { no: 7, text: '빨갛고 둥근 과일을 (    )라고 해요.', answer: '사과', initials: 'ㅅㄱ', aliases: ['사과'] },
         { no: 8, text: '왕의 아들을 (    )라고 해요.', answer: '왕자', initials: 'ㅇㅈ', aliases: ['왕자'] },
-        { no: 9, text: '남이 잘되는 것을 시기하고 미워하는 것을 (    )라고 해요.', answer: '질투', initials: 'ㅈㅌ', aliases: ['질투'] },        { no: 11, text: '땅속에서 광물을 캐는 곳을 (    )이라고 해요.', answer: '광산', initials: 'ㄱㅅ', aliases: ['광산'] },        { no: 14, text: '먹으면 죽거나 아픈 물질을 (  )이라고 해요.', answer: '독', initials: 'ㄷ', aliases: ['독'] },
-        { no: 15, text: '눈을 감고 의식을 잃는 상태를 (  )이라고 해요.', answer: '잠', initials: 'ㅈ', aliases: ['잠'] }
+        { no: 9, text: '남이 잘되는 것을 시기하고 미워하는 것을 (    )라고 해요.', answer: '질투', initials: 'ㅈㅌ', aliases: ['질투'] },        { no: 10, text: '땅속에서 광물을 캐는 곳을 (    )이라고 해요.', answer: '광산', initials: 'ㄱㅅ', aliases: ['광산'] },        { no: 11, text: '먹으면 죽거나 아픈 물질을 (  )이라고 해요.', answer: '독', initials: 'ㄷ', aliases: ['독'] },
+        { no: 12, text: '눈을 감고 의식을 잃는 상태를 (  )이라고 해요.', answer: '잠', initials: 'ㅈ', aliases: ['잠'] }
       ]
     },
     quiz: {
@@ -1361,10 +1361,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '유리로 만든 신발을 (        )라고 해요.', answer: '유리구두', initials: 'ㅇㄹㄱㄷ', aliases: ['유리구두'] },
         { no: 8, text: '밤 열두 시를 (    )이라고 해요.', answer: '자정', initials: 'ㅈㅈ', aliases: ['자정'] },
         { no: 9, text: '죽은 사람을 묻은 곳을 (    )이라고 해요.', answer: '무덤', initials: 'ㅁㄷ', aliases: ['무덤'] },
-        { no: 10, text: '위아래를 오르내리는 구조물을 (    )이라고 해요.', answer: '계단', initials: 'ㄱㄷ', aliases: ['계단'] },        { no: 12, text: '왕의 아들을 (    )라고 해요.', answer: '왕자', initials: 'ㅇㅈ', aliases: ['왕자'] },
-        { no: 13, text: '사람이 타는 큰 수레를 (    )라고 해요.', answer: '마차', initials: 'ㅁㅊ', aliases: ['마차'] },
-        { no: 14, text: '왕의 아내를 (    )라고 해요.', answer: '왕비', initials: 'ㅇㅂ', aliases: ['왕비'] },
-        { no: 15, text: '왕이 사는 집을 (    )이라고 해요.', answer: '궁전', initials: 'ㄱㅈ', aliases: ['궁전'] }
+        { no: 10, text: '위아래를 오르내리는 구조물을 (    )이라고 해요.', answer: '계단', initials: 'ㄱㄷ', aliases: ['계단'] },        { no: 11, text: '왕의 아들을 (    )라고 해요.', answer: '왕자', initials: 'ㅇㅈ', aliases: ['왕자'] },
+        { no: 12, text: '사람이 타는 큰 수레를 (    )라고 해요.', answer: '마차', initials: 'ㅁㅊ', aliases: ['마차'] },
+        { no: 13, text: '왕의 아내를 (    )라고 해요.', answer: '왕비', initials: 'ㅇㅂ', aliases: ['왕비'] },
+        { no: 14, text: '왕이 사는 집을 (    )이라고 해요.', answer: '궁전', initials: 'ㄱㅈ', aliases: ['궁전'] }
       ]
     },
     quiz: {
@@ -1533,12 +1533,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '기쁜 일을 축하하는 모임을 (        )이라고 해요.', answer: '축하 잔치', initials: 'ㅊㅎ ㅈㅊ', aliases: ['축하잔치','축하 잔치'] },
         { no: 3, text: '마법을 쓰는 작은 존재를 (    )이라고 해요.', answer: '요정', initials: 'ㅇㅈ', aliases: ['요정'] },
         { no: 4, text: '기념으로 주는 물건을 (    )이라고 해요.', answer: '선물', initials: 'ㅅㅁ', aliases: ['선물'] },
-        { no: 5, text: '실을 뽑는 데 쓰는 도구를 (    )라고 해요.', answer: '물레', initials: 'ㅁㄹ', aliases: ['물레'] },        { no: 8, text: '높이 솟은 좁은 건물을 (  )이라고 해요.', answer: '탑', initials: 'ㅌ', aliases: ['탑'] },
-        { no: 9, text: '뾰족한 가시가 있는 나무를 (        )라고 해요.', answer: '가시나무', initials: 'ㄱㅅㄴㅁ', aliases: ['가시나무'] },
-        { no: 10, text: '옛날부터 전해 내려오는 이야기를 (    )이라고 해요.', answer: '전설', initials: 'ㅈㅅ', aliases: ['전설'] },
-        { no: 11, text: '사랑하는 사람에게 입술을 맞추는 일을 (      )이라고 해요.', answer: '입맞춤', initials: 'ㅇㅁㅊ', aliases: ['입맞춤'] },        { no: 13, text: '물레에 달린 뾰족한 부분을 (    )이라고 해요.', answer: '바늘', initials: 'ㅂㄴ', aliases: ['바늘'] },
-        { no: 14, text: '왕의 딸을 (    )라고 해요.', answer: '공주', initials: 'ㄱㅊ', aliases: ['공주'] },
-        { no: 15, text: '새로운 것을 알고 싶어하는 마음을 (      )이라고 해요.', answer: '호기심', initials: 'ㅎㄱㅅ', aliases: ['호기심'] }
+        { no: 5, text: '실을 뽑는 데 쓰는 도구를 (    )라고 해요.', answer: '물레', initials: 'ㅁㄹ', aliases: ['물레'] },        { no: 6, text: '높이 솟은 좁은 건물을 (  )이라고 해요.', answer: '탑', initials: 'ㅌ', aliases: ['탑'] },
+        { no: 7, text: '뾰족한 가시가 있는 나무를 (        )라고 해요.', answer: '가시나무', initials: 'ㄱㅅㄴㅁ', aliases: ['가시나무'] },
+        { no: 8, text: '옛날부터 전해 내려오는 이야기를 (    )이라고 해요.', answer: '전설', initials: 'ㅈㅅ', aliases: ['전설'] },
+        { no: 9, text: '사랑하는 사람에게 입술을 맞추는 일을 (      )이라고 해요.', answer: '입맞춤', initials: 'ㅇㅁㅊ', aliases: ['입맞춤'] },        { no: 10, text: '물레에 달린 뾰족한 부분을 (    )이라고 해요.', answer: '바늘', initials: 'ㅂㄴ', aliases: ['바늘'] },
+        { no: 11, text: '왕의 딸을 (    )라고 해요.', answer: '공주', initials: 'ㄱㅊ', aliases: ['공주'] },
+        { no: 12, text: '새로운 것을 알고 싶어하는 마음을 (      )이라고 해요.', answer: '호기심', initials: 'ㅎㄱㅅ', aliases: ['호기심'] }
       ]
     },
     quiz: {
@@ -1615,17 +1615,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['위험', '해를 입을 수 있는 상황'],      ['낯선', '처음 보거나 익숙하지 않은']
     ],
     vocabFill: { instructions: '[빨간 모자 어휘]', items: [
-      {no:1,text:'빨간 모자를 쓴 소녀를 (        )라고 불렀다.',answer:'빨간 모자',initials:'ㅃㄱ ㅁㅈ',aliases:['빨간모자','빨간 모자']},
-      {no:2,text:'빨간 모자는 (      ) 댁에 음식을 가져다 드리러 갔다.',answer:'할머니',initials:'ㅎㅁㄴ',aliases:['할머니']},
-      {no:3,text:'몸이 아픈 상태를 (  )이라고 해요.',answer:'병',initials:'ㅂ',aliases:['병']},
-      {no:4,text:'음식을 담아 나르는 도구를 (      )라고 한다.',answer:'바구니',initials:'ㅂㄱㄴ',aliases:['바구니']},
-      {no:5,text:'신신히 부탁하는 것을 (    )라고 해요.',answer:'당부',initials:'ㄷㅂ',aliases:['당부']},
-      {no:6,text:'숲에서 나타난 교활한 동물은 (    )이다.',answer:'늑대',initials:'ㄴㄷ',aliases:['늑대']},
-      {no:7,text:'늑대가 알려준 가까운 길을 (      )이라 한다.',answer:'지름길',initials:'ㅈㄹㄱ',aliases:['지름길']},
-      {no:8,text:'늑대가 할머니로 모습을 꾸민 것을 (    )이라 한다.',answer:'변장',initials:'ㅂㅈ',aliases:['변장']},
-      {no:9,text:'늑대를 물리치고 구해준 사람은 (      )이다.',answer:'사냥꾼',initials:'ㅅㄴㄲ',aliases:['사냥꾼']},      {no:11,text:'나무가 많이 자란 곳을 (  )이라고 해요.',answer:'숲',initials:'ㅅ',aliases:['숲']},
-      {no:12,text:'사람들이 모여 사는 곳을 (    )이라고 해요.',answer:'마을',initials:'ㅁㅇ',aliases:['마을']},
-      {no:13,text:'해를 입을 수 있는 상황을 (    )이라고 해요.',answer:'위험',initials:'ㅇㅎ',aliases:['위험']},      {no:15,text:'처음 보거나 익숙하지 않은 것을 (    )이라고 해요.',answer:'낯선',initials:'ㄴㅅ',aliases:['낯선']}
+      {no: 1,text:'빨간 모자를 쓴 소녀를 (        )라고 불렀다.',answer:'빨간 모자',initials:'ㅃㄱ ㅁㅈ',aliases:['빨간모자','빨간 모자']},
+      {no: 2,text:'빨간 모자는 (      ) 댁에 음식을 가져다 드리러 갔다.',answer:'할머니',initials:'ㅎㅁㄴ',aliases:['할머니']},
+      {no: 3,text:'몸이 아픈 상태를 (  )이라고 해요.',answer:'병',initials:'ㅂ',aliases:['병']},
+      {no: 4,text:'음식을 담아 나르는 도구를 (      )라고 한다.',answer:'바구니',initials:'ㅂㄱㄴ',aliases:['바구니']},
+      {no: 5,text:'신신히 부탁하는 것을 (    )라고 해요.',answer:'당부',initials:'ㄷㅂ',aliases:['당부']},
+      {no: 6,text:'숲에서 나타난 교활한 동물은 (    )이다.',answer:'늑대',initials:'ㄴㄷ',aliases:['늑대']},
+      {no: 7,text:'늑대가 알려준 가까운 길을 (      )이라 한다.',answer:'지름길',initials:'ㅈㄹㄱ',aliases:['지름길']},
+      {no: 8,text:'늑대가 할머니로 모습을 꾸민 것을 (    )이라 한다.',answer:'변장',initials:'ㅂㅈ',aliases:['변장']},
+      {no: 9,text:'늑대를 물리치고 구해준 사람은 (      )이다.',answer:'사냥꾼',initials:'ㅅㄴㄲ',aliases:['사냥꾼']},      {no: 10,text:'나무가 많이 자란 곳을 (  )이라고 해요.',answer:'숲',initials:'ㅅ',aliases:['숲']},
+      {no: 11,text:'사람들이 모여 사는 곳을 (    )이라고 해요.',answer:'마을',initials:'ㅁㅇ',aliases:['마을']},
+      {no: 12,text:'해를 입을 수 있는 상황을 (    )이라고 해요.',answer:'위험',initials:'ㅇㅎ',aliases:['위험']},      {no: 13,text:'처음 보거나 익숙하지 않은 것을 (    )이라고 해요.',answer:'낯선',initials:'ㄴㅅ',aliases:['낯선']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
@@ -1700,17 +1700,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['화덕', '불을 피워 요리하는 곳'],      ['달빛', '달이 내는 빛'],
       ['숲', '나무가 많이 모여 있는 곳'],    ],
     vocabFill: { instructions: '[헨젤과 그레텔 어휘]', items: [
-      {no:1,text:'이야기의 오빠 이름은 (    )이다.',answer:'헨젤',initials:'ㅎㅈ',aliases:['헨젤']},
-      {no:2,text:'이야기의 여동생 이름은 (      )이다.',answer:'그레텔',initials:'ㄱㄹㅌ',aliases:['그레텔']},
-      {no:3,text:'아버지의 직업은 (      )이다.',answer:'나무꾼',initials:'ㄴㅁㄲ',aliases:['나무꾼']},
-      {no:4,text:'아버지가 다시 결혼한 여자를 (      )라고 해요.',answer:'새어머니',initials:'ㅅㅇㅁㄴ',aliases:['새어머니']},
-      {no:5,text:'흉년으로 먹을 것이 없는 상태를 (    )이라 한다.',answer:'기근',initials:'ㄱㄱ',aliases:['기근']},
-      {no:6,text:'헨젤이 길을 표시하려고 뿌린 작고 둥근 돌을 (      )이라 한다.',answer:'조약돌',initials:'ㅈㅇㄷ',aliases:['조약돌']},
-      {no:7,text:'새들이 먹어버린 것은 (          )이다.',answer:'빵 부스러기',initials:'ㅃ ㅂㅅㄹㄱ',aliases:['빵부스러기','빵 부스러기']},
-      {no:8,text:'마녀의 집은 (    )로 만들어져 있었다.',answer:'과자',initials:'ㄱㅈ',aliases:['과자']},
-      {no:9,text:'과자 집에 살던 나쁜 할머니는 (    )이다.',answer:'마녀',initials:'ㅁㄴ',aliases:['마녀']},
-      {no:10,text:'그레텔이 마녀를 밀어 넣은 곳은 (    )이다.',answer:'화덕',initials:'ㅎㄷ',aliases:['화덕']},      {no:12,text:'달이 내는 빛을 (    )이라고 해요.',answer:'달빛',initials:'ㄷㅂ',aliases:['달빛']},
-      {no:13,text:'나무가 많이 모여 있는 곳을 (  )이라고 해요.',answer:'숲',initials:'ㅅ',aliases:['숲']},    ]},
+      {no: 1,text:'이야기의 오빠 이름은 (    )이다.',answer:'헨젤',initials:'ㅎㅈ',aliases:['헨젤']},
+      {no: 2,text:'이야기의 여동생 이름은 (      )이다.',answer:'그레텔',initials:'ㄱㄹㅌ',aliases:['그레텔']},
+      {no: 3,text:'아버지의 직업은 (      )이다.',answer:'나무꾼',initials:'ㄴㅁㄲ',aliases:['나무꾼']},
+      {no: 4,text:'아버지가 다시 결혼한 여자를 (      )라고 해요.',answer:'새어머니',initials:'ㅅㅇㅁㄴ',aliases:['새어머니']},
+      {no: 5,text:'흉년으로 먹을 것이 없는 상태를 (    )이라 한다.',answer:'기근',initials:'ㄱㄱ',aliases:['기근']},
+      {no: 6,text:'헨젤이 길을 표시하려고 뿌린 작고 둥근 돌을 (      )이라 한다.',answer:'조약돌',initials:'ㅈㅇㄷ',aliases:['조약돌']},
+      {no: 7,text:'새들이 먹어버린 것은 (          )이다.',answer:'빵 부스러기',initials:'ㅃ ㅂㅅㄹㄱ',aliases:['빵부스러기','빵 부스러기']},
+      {no: 8,text:'마녀의 집은 (    )로 만들어져 있었다.',answer:'과자',initials:'ㄱㅈ',aliases:['과자']},
+      {no: 9,text:'과자 집에 살던 나쁜 할머니는 (    )이다.',answer:'마녀',initials:'ㅁㄴ',aliases:['마녀']},
+      {no: 10,text:'그레텔이 마녀를 밀어 넣은 곳은 (    )이다.',answer:'화덕',initials:'ㅎㄷ',aliases:['화덕']},      {no: 11,text:'달이 내는 빛을 (    )이라고 해요.',answer:'달빛',initials:'ㄷㅂ',aliases:['달빛']},
+      {no: 12,text:'나무가 많이 모여 있는 곳을 (  )이라고 해요.',answer:'숲',initials:'ㅅ',aliases:['숲']},    ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
       q1_opts: ['용감한 그레텔이 마녀를 화덕 속으로 밀어 넣어 물리쳤다.', '헨젤은 조약돌을 뿌려 길을 표시하고 집으로 돌아왔다.', '마녀는 헨젤을 철창에 가두고 매일 음식을 먹여 살찌웠다.', '새어머니는 아이들을 잘 돌봐주었다.'],
@@ -1876,19 +1876,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['보물', '귀하고 값진 물건'],      ['거위', '황금 알을 낳는 새']
     ],
     vocabFill: { instructions: '[잭과 콩나무 어휘]', items: [
-      {no:1,text:'이야기의 주인공 소년 이름은 (  )이다.',answer:'잭',initials:'ㅈ',aliases:['잭']},
-      {no:2,text:'잭과 함께 사는 사람은 (      )이다.',answer:'어머니',initials:'ㅇㅁㄴ',aliases:['어머니']},
-      {no:3,text:'잭의 유일한 재산이었던 동물은 (  )이다.',answer:'소',initials:'ㅅ',aliases:['소']},
-      {no:4,text:'노인이 소와 바꾼 것은 (      )이다.',answer:'마법 콩',initials:'ㅁㅂ ㅋ',aliases:['마법콩','마법 콩']},
-      {no:5,text:'하늘 끝까지 자란 것은 거대한 (      )이다.',answer:'콩나무',initials:'ㅋㄴㅁ',aliases:['콩나무']},
-      {no:6,text:'거인이 살던 커다란 건물은 (  )이다.',answer:'성',initials:'ㅅ',aliases:['성']},
-      {no:7,text:'구름 위 성에 살던 무서운 괴물은 (    )이다.',answer:'거인',initials:'ㄱㅇ',aliases:['거인']},
-      {no:8,text:'금으로 된 알을 낳는 동물은 (    )이다.',answer:'거위',initials:'ㄱㅇ',aliases:['거위']},
-      {no:9,text:'저절로 연주하는 악기는 (    )이다.',answer:'하프',initials:'ㅎㅍ',aliases:['하프']},
-      {no:10,text:'잭이 콩나무를 쓰러뜨린 도구는 (    )이다.',answer:'도끼',initials:'ㄷㄲ',aliases:['도끼']},
-      {no:11,text:'소와 콩을 바꾼 사람은 수염이 긴 (    )이다.',answer:'노인',initials:'ㄴㅇ',aliases:['노인']},
-      {no:12,text:'콩나무가 자라서 뚫고 올라간 곳은 (    )이다.',answer:'구름',initials:'ㄱㄹ',aliases:['구름']},
-      {no:13,text:'잭이 거인의 집에서 가져온 귀한 것을 (    )이라고 해요.',answer:'보물',initials:'ㅂㅁ',aliases:['보물']},      {no:15,text:'황금 알을 낳는 새는 (    )이다.',answer:'거위',initials:'ㄱㅇ',aliases:['거위']}
+      {no: 1,text:'이야기의 주인공 소년 이름은 (  )이다.',answer:'잭',initials:'ㅈ',aliases:['잭']},
+      {no: 2,text:'잭과 함께 사는 사람은 (      )이다.',answer:'어머니',initials:'ㅇㅁㄴ',aliases:['어머니']},
+      {no: 3,text:'잭의 유일한 재산이었던 동물은 (  )이다.',answer:'소',initials:'ㅅ',aliases:['소']},
+      {no: 4,text:'노인이 소와 바꾼 것은 (      )이다.',answer:'마법 콩',initials:'ㅁㅂ ㅋ',aliases:['마법콩','마법 콩']},
+      {no: 5,text:'하늘 끝까지 자란 것은 거대한 (      )이다.',answer:'콩나무',initials:'ㅋㄴㅁ',aliases:['콩나무']},
+      {no: 6,text:'거인이 살던 커다란 건물은 (  )이다.',answer:'성',initials:'ㅅ',aliases:['성']},
+      {no: 7,text:'구름 위 성에 살던 무서운 괴물은 (    )이다.',answer:'거인',initials:'ㄱㅇ',aliases:['거인']},
+      {no: 8,text:'금으로 된 알을 낳는 동물은 (    )이다.',answer:'거위',initials:'ㄱㅇ',aliases:['거위']},
+      {no: 9,text:'저절로 연주하는 악기는 (    )이다.',answer:'하프',initials:'ㅎㅍ',aliases:['하프']},
+      {no: 10,text:'잭이 콩나무를 쓰러뜨린 도구는 (    )이다.',answer:'도끼',initials:'ㄷㄲ',aliases:['도끼']},
+      {no: 11,text:'소와 콩을 바꾼 사람은 수염이 긴 (    )이다.',answer:'노인',initials:'ㄴㅇ',aliases:['노인']},
+      {no: 12,text:'콩나무가 자라서 뚫고 올라간 곳은 (    )이다.',answer:'구름',initials:'ㄱㄹ',aliases:['구름']},
+      {no: 13,text:'잭이 거인의 집에서 가져온 귀한 것을 (    )이라고 해요.',answer:'보물',initials:'ㅂㅁ',aliases:['보물']},      {no: 14,text:'황금 알을 낳는 새는 (    )이다.',answer:'거위',initials:'ㄱㅇ',aliases:['거위']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -1959,18 +1959,18 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['튼튼', '든든하고 강한 것'],
       ['준비', '미리 갖추어 놓음'],    ],
     vocabFill: { instructions: '[아기 돼지 삼 형제 어휘]', items: [
-      {no:1,text:'이야기의 주인공은 아기 돼지 (      )이다.',answer:'삼 형제',initials:'ㅅ ㅎㅈ',aliases:['삼형제','삼 형제']},
-      {no:2,text:'돼지들이 처음 살던 곳은 (    )이다.',answer:'농장',initials:'ㄴㅈ',aliases:['농장']},
-      {no:3,text:'돼지 형제들의 어머니를 (    )라고 해요.',answer:'엄마',initials:'ㅇㅁ',aliases:['엄마']},
-      {no:4,text:'스스로 살아가는 것을 (    )이라고 해요.',answer:'독립',initials:'ㄷㄹ',aliases:['독립']},
-      {no:5,text:'첫째 돼지가 집을 지은 재료는 (        )이다.',answer:'지푸라기',initials:'ㅈㅍㄹㄱ',aliases:['지푸라기']},
-      {no:6,text:'둘째 돼지가 집을 지은 재료는 (    )이다.',answer:'나무',initials:'ㄴㅁ',aliases:['나무']},
-      {no:7,text:'막내 돼지가 집을 지은 재료는 (    )이다.',answer:'벽돌',initials:'ㅂㄷ',aliases:['벽돌']},
-      {no:8,text:'돼지들을 잡아먹으려 한 동물은 (    )이다.',answer:'늑대',initials:'ㄴㄷ',aliases:['늑대']},
-      {no:9,text:'늑대가 들어가려 한 곳은 (    )이다.',answer:'굴뚝',initials:'ㄱㄸ',aliases:['굴뚝']},
-      {no:10,text:'막내가 뜨거운 물을 끓인 도구는 (      )이다.',answer:'가마솥',initials:'ㄱㅁㅅ',aliases:['가마솥']},      {no:12,text:'막내 돼지는 열심히 일하는 (      ) 돼지였다.',answer:'부지런',initials:'ㅂㅈㄹ',aliases:['부지런']},
-      {no:13,text:'벽돌집은 매우 (    )했어요.',answer:'튼튼',initials:'ㅌㅌ',aliases:['튼튼']},
-      {no:14,text:'막내 돼지가 미리 물을 끓여 놓은 것은 (    )였다.',answer:'준비',initials:'ㅈㅂ',aliases:['준비']},    ]},
+      {no: 1,text:'이야기의 주인공은 아기 돼지 (      )이다.',answer:'삼 형제',initials:'ㅅ ㅎㅈ',aliases:['삼형제','삼 형제']},
+      {no: 2,text:'돼지들이 처음 살던 곳은 (    )이다.',answer:'농장',initials:'ㄴㅈ',aliases:['농장']},
+      {no: 3,text:'돼지 형제들의 어머니를 (    )라고 해요.',answer:'엄마',initials:'ㅇㅁ',aliases:['엄마']},
+      {no: 4,text:'스스로 살아가는 것을 (    )이라고 해요.',answer:'독립',initials:'ㄷㄹ',aliases:['독립']},
+      {no: 5,text:'첫째 돼지가 집을 지은 재료는 (        )이다.',answer:'지푸라기',initials:'ㅈㅍㄹㄱ',aliases:['지푸라기']},
+      {no: 6,text:'둘째 돼지가 집을 지은 재료는 (    )이다.',answer:'나무',initials:'ㄴㅁ',aliases:['나무']},
+      {no: 7,text:'막내 돼지가 집을 지은 재료는 (    )이다.',answer:'벽돌',initials:'ㅂㄷ',aliases:['벽돌']},
+      {no: 8,text:'돼지들을 잡아먹으려 한 동물은 (    )이다.',answer:'늑대',initials:'ㄴㄷ',aliases:['늑대']},
+      {no: 9,text:'늑대가 들어가려 한 곳은 (    )이다.',answer:'굴뚝',initials:'ㄱㄸ',aliases:['굴뚝']},
+      {no: 10,text:'막내가 뜨거운 물을 끓인 도구는 (      )이다.',answer:'가마솥',initials:'ㄱㅁㅅ',aliases:['가마솥']},      {no: 11,text:'막내 돼지는 열심히 일하는 (      ) 돼지였다.',answer:'부지런',initials:'ㅂㅈㄹ',aliases:['부지런']},
+      {no: 12,text:'벽돌집은 매우 (    )했어요.',answer:'튼튼',initials:'ㅌㅌ',aliases:['튼튼']},
+      {no: 13,text:'막내 돼지가 미리 물을 끓여 놓은 것은 (    )였다.',answer:'준비',initials:'ㅈㅂ',aliases:['준비']},    ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: ['첫째 돼지는 시간을 들여 단단한 집을 지었다.', '둘째 돼지의 나무 집은 늑대가 불어도 끄떡없었다.', '늑대는 굴뚝으로 들어가려다 뜨거운 물에 빠졌다.', '막내 돼지는 지푸라기로 집을 지었다.'],
@@ -2042,19 +2042,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['가치', '소중하고 중요한 의미']
     ],
     vocabFill: { instructions: '[미운 오리 새끼 어휘]', items: [
-      {no:1,text:'주인공이 처음 살던 곳은 (    )이다.',answer:'농장',initials:'ㄴㅈ',aliases:['농장']},
-      {no:2,text:'새의 몸을 덮는 털을 (    )이라고 해요.',answer:'깃털',initials:'ㄱㅌ',aliases:['깃털']},
-      {no:3,text:'다른 오리들에게 놀림받은 주인공은 (            )이다.',answer:'미운 오리 새끼',initials:'ㅁㅇ ㅇㄹ ㅅㄲ',aliases:['미운오리새끼','미운 오리 새끼']},
-      {no:4,text:'남을 비웃거나 괴롭히는 것을 (    )이라고 해요.',answer:'놀림',initials:'ㄴㄹ',aliases:['놀림']},
-      {no:5,text:'무리에서 밀어내는 것을 (      )이라 한다.',answer:'따돌림',initials:'ㄸㄷㄹ',aliases:['따돌림']},
-      {no:6,text:'호수에서 얼어붙을 뻔한 계절은 (    )이다.',answer:'겨울',initials:'ㄱㅇ',aliases:['겨울']},
-      {no:7,text:'새끼를 구해준 사람은 (    )이다.',answer:'농부',initials:'ㄴㅂ',aliases:['농부']},
-      {no:8,text:'미운 오리 새끼가 변화를 발견한 계절은 (  )이다.',answer:'봄',initials:'ㅂ',aliases:['봄']},
-      {no:9,text:'자신의 모습을 비춰본 곳은 (    )이다.',answer:'호수',initials:'ㅎㅅ',aliases:['호수']},
-      {no:10,text:'주인공이 결국 변한 아름다운 새는 (    )이다.',answer:'백조',initials:'ㅂㅈ',aliases:['백조']},
-      {no:11,text:'보기에 매우 예쁜 것을 (      )이라고 해요.',answer:'아름다운',initials:'ㅇㄹㄷㅇ',aliases:['아름다운']},
-      {no:12,text:'마음이 흡족하고 기쁜 상태를 (    )이라 한다.',answer:'행복',initials:'ㅎㅂ',aliases:['행복']},      {no:14,text:'미운 오리 새끼의 몸과 깃털이 달라진 것을 (    )이라 한다.',answer:'변화',initials:'ㅂㅎ',aliases:['변화']},
-      {no:15,text:'누구나 자신만의 소중한 것을 (    )라고 해요.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']}
+      {no: 1,text:'주인공이 처음 살던 곳은 (    )이다.',answer:'농장',initials:'ㄴㅈ',aliases:['농장']},
+      {no: 2,text:'새의 몸을 덮는 털을 (    )이라고 해요.',answer:'깃털',initials:'ㄱㅌ',aliases:['깃털']},
+      {no: 3,text:'다른 오리들에게 놀림받은 주인공은 (            )이다.',answer:'미운 오리 새끼',initials:'ㅁㅇ ㅇㄹ ㅅㄲ',aliases:['미운오리새끼','미운 오리 새끼']},
+      {no: 4,text:'남을 비웃거나 괴롭히는 것을 (    )이라고 해요.',answer:'놀림',initials:'ㄴㄹ',aliases:['놀림']},
+      {no: 5,text:'무리에서 밀어내는 것을 (      )이라 한다.',answer:'따돌림',initials:'ㄸㄷㄹ',aliases:['따돌림']},
+      {no: 6,text:'호수에서 얼어붙을 뻔한 계절은 (    )이다.',answer:'겨울',initials:'ㄱㅇ',aliases:['겨울']},
+      {no: 7,text:'새끼를 구해준 사람은 (    )이다.',answer:'농부',initials:'ㄴㅂ',aliases:['농부']},
+      {no: 8,text:'미운 오리 새끼가 변화를 발견한 계절은 (  )이다.',answer:'봄',initials:'ㅂ',aliases:['봄']},
+      {no: 9,text:'자신의 모습을 비춰본 곳은 (    )이다.',answer:'호수',initials:'ㅎㅅ',aliases:['호수']},
+      {no: 10,text:'주인공이 결국 변한 아름다운 새는 (    )이다.',answer:'백조',initials:'ㅂㅈ',aliases:['백조']},
+      {no: 11,text:'보기에 매우 예쁜 것을 (      )이라고 해요.',answer:'아름다운',initials:'ㅇㄹㄷㅇ',aliases:['아름다운']},
+      {no: 12,text:'마음이 흡족하고 기쁜 상태를 (    )이라 한다.',answer:'행복',initials:'ㅎㅂ',aliases:['행복']},      {no: 13,text:'미운 오리 새끼의 몸과 깃털이 달라진 것을 (    )이라 한다.',answer:'변화',initials:'ㅂㅎ',aliases:['변화']},
+      {no: 14,text:'누구나 자신만의 소중한 것을 (    )라고 해요.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -2293,15 +2293,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['왕자', '왕의 아들'],      ['식사', '밥을 먹는 것'],      ['마녀', '나쁜 마법을 쓰는 사람'],      ['사랑', '깊이 좋아하는 마음']
     ],
     vocabFill: { instructions: '[개구리 왕자 어휘]', items: [
-      {no:1,text:'왕이 다스리는 나라를 (    )이라고 해요.',answer:'왕국',initials:'ㅇㄱ',aliases:['왕국']},
-      {no:2,text:'황금 공을 빠뜨린 사람은 (    )이다.',answer:'공주',initials:'ㄱㅈ',aliases:['공주']},
-      {no:3,text:'매우 귀한 물건을 (    )이라고 해요.',answer:'보물',initials:'ㅂㅁ',aliases:['보물']},
-      {no:4,text:'공주가 가장 소중히 여긴 것은 (      )이다.',answer:'황금 공',initials:'ㅎㄱ ㄱ',aliases:['황금공','황금 공']},
-      {no:5,text:'공이 빠진 곳은 (    )이다.',answer:'연못',initials:'ㅇㅁ',aliases:['연못']},
-      {no:6,text:'공을 꺼내준 동물은 (      )이다.',answer:'개구리',initials:'ㄱㄱㄹ',aliases:['개구리']},
-      {no:7,text:'공주가 개구리와 한 것은 (    )이다.',answer:'약속',initials:'ㅇㅅ',aliases:['약속']},
-      {no:8,text:'공주에게 약속을 지키라고 한 분은 (  )이다.',answer:'왕',initials:'ㅇ',aliases:['왕']},
-      {no:9,text:'개구리가 변한 모습은 (    )이다.',answer:'왕자',initials:'ㅇㅈ',aliases:['왕자']},      {no:11,text:'공주와 개구리가 함께한 것은 (    )이다.',answer:'식사',initials:'ㅅㅅ',aliases:['식사']},      {no:13,text:'왕자에게 저주를 건 나쁜 사람은 (    )이다.',answer:'마녀',initials:'ㅁㄴ',aliases:['마녀']},      {no:15,text:'왕자와 공주가 서로에게 느낀 감정은 (    )이다.',answer:'사랑',initials:'ㅅㄹ',aliases:['사랑']}
+      {no: 1,text:'왕이 다스리는 나라를 (    )이라고 해요.',answer:'왕국',initials:'ㅇㄱ',aliases:['왕국']},
+      {no: 2,text:'황금 공을 빠뜨린 사람은 (    )이다.',answer:'공주',initials:'ㄱㅈ',aliases:['공주']},
+      {no: 3,text:'매우 귀한 물건을 (    )이라고 해요.',answer:'보물',initials:'ㅂㅁ',aliases:['보물']},
+      {no: 4,text:'공주가 가장 소중히 여긴 것은 (      )이다.',answer:'황금 공',initials:'ㅎㄱ ㄱ',aliases:['황금공','황금 공']},
+      {no: 5,text:'공이 빠진 곳은 (    )이다.',answer:'연못',initials:'ㅇㅁ',aliases:['연못']},
+      {no: 6,text:'공을 꺼내준 동물은 (      )이다.',answer:'개구리',initials:'ㄱㄱㄹ',aliases:['개구리']},
+      {no: 7,text:'공주가 개구리와 한 것은 (    )이다.',answer:'약속',initials:'ㅇㅅ',aliases:['약속']},
+      {no: 8,text:'공주에게 약속을 지키라고 한 분은 (  )이다.',answer:'왕',initials:'ㅇ',aliases:['왕']},
+      {no: 9,text:'개구리가 변한 모습은 (    )이다.',answer:'왕자',initials:'ㅇㅈ',aliases:['왕자']},      {no: 10,text:'공주와 개구리가 함께한 것은 (    )이다.',answer:'식사',initials:'ㅅㅅ',aliases:['식사']},      {no: 11,text:'왕자에게 저주를 건 나쁜 사람은 (    )이다.',answer:'마녀',initials:'ㅁㄴ',aliases:['마녀']},      {no: 12,text:'왕자와 공주가 서로에게 느낀 감정은 (    )이다.',answer:'사랑',initials:'ㅅㄹ',aliases:['사랑']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -2369,17 +2369,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['마을', '사람들이 사는 곳'],
       ['망토', '어깨에 걸치는 긴 옷'],    ],
     vocabFill: { instructions: '[피리 부는 사나이 어휘]', items: [
-      {no:1,text:'쥐가 많았던 독일 마을 이름은 (      )이다.',answer:'하멜른',initials:'ㅎㅁㄹ',aliases:['하멜른']},
-      {no:2,text:'마을을 괴롭히던 동물은 (   )이다.',answer:'쥐',initials:'ㅈ',aliases:['쥐']},
-      {no:3,text:'사나이가 불었던 악기는 (   )이다.',answer:'피리',initials:'ㅍㄹ',aliases:['피리']},
-      {no:4,text:'사나이가 받기로 한 것은 (   )이다.',answer:'금화',initials:'ㄱㅎ',aliases:['금화']},
-      {no:5,text:'마을의 우두머리는 (   )이다.',answer:'시장',initials:'ㅅㅈ',aliases:['시장']},
-      {no:6,text:'마을 사람들이 어긴 것은 (   )이다.',answer:'약속',initials:'ㅇㅅ',aliases:['약속']},
-      {no:7,text:'피리 소리를 따라간 것은 (      )이다.',answer:'아이들',initials:'ㅇㅇㄷ',aliases:['아이들']},      {no:9,text:'약속을 어긴 것을 뉘우치는 것은 (   )이다.',answer:'후회',initials:'ㅎㅎ',aliases:['후회']},
-      {no:10,text:'아이들이 사라진 산속의 굴은 (   )이다.',answer:'동굴',initials:'ㄷㄱ',aliases:['동굴']},
-      {no:11,text:'하멜른이 있는 나라는 (    )이다.',answer:'독일',initials:'ㄷㅇ',aliases:['독일']},
-      {no:12,text:'사람들이 모여 사는 곳을 (    )이라 한다.',answer:'마을',initials:'ㅁㅇ',aliases:['마을']},
-      {no:13,text:'사나이가 입고 있던 긴 옷은 (    )이다.',answer:'망토',initials:'ㅁㅌ',aliases:['망토']},    ]},
+      {no: 1,text:'쥐가 많았던 독일 마을 이름은 (      )이다.',answer:'하멜른',initials:'ㅎㅁㄹ',aliases:['하멜른']},
+      {no: 2,text:'마을을 괴롭히던 동물은 (   )이다.',answer:'쥐',initials:'ㅈ',aliases:['쥐']},
+      {no: 3,text:'사나이가 불었던 악기는 (   )이다.',answer:'피리',initials:'ㅍㄹ',aliases:['피리']},
+      {no: 4,text:'사나이가 받기로 한 것은 (   )이다.',answer:'금화',initials:'ㄱㅎ',aliases:['금화']},
+      {no: 5,text:'마을의 우두머리는 (   )이다.',answer:'시장',initials:'ㅅㅈ',aliases:['시장']},
+      {no: 6,text:'마을 사람들이 어긴 것은 (   )이다.',answer:'약속',initials:'ㅇㅅ',aliases:['약속']},
+      {no: 7,text:'피리 소리를 따라간 것은 (      )이다.',answer:'아이들',initials:'ㅇㅇㄷ',aliases:['아이들']},      {no: 8,text:'약속을 어긴 것을 뉘우치는 것은 (   )이다.',answer:'후회',initials:'ㅎㅎ',aliases:['후회']},
+      {no: 9,text:'아이들이 사라진 산속의 굴은 (   )이다.',answer:'동굴',initials:'ㄷㄱ',aliases:['동굴']},
+      {no: 10,text:'하멜른이 있는 나라는 (    )이다.',answer:'독일',initials:'ㄷㅇ',aliases:['독일']},
+      {no: 11,text:'사람들이 모여 사는 곳을 (    )이라 한다.',answer:'마을',initials:'ㅁㅇ',aliases:['마을']},
+      {no: 12,text:'사나이가 입고 있던 긴 옷은 (    )이다.',answer:'망토',initials:'ㅁㅌ',aliases:['망토']},    ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
       q1_opts: ['마을 사람들은 사나이에게 약속대로 금화를 주었다.', '시장은 사나이에게 더 많은 금화를 주었다.', '아이들은 피리 소리를 듣고도 집에 가만히 있었다.', '사나이는 피리 소리로 쥐들을 강물에 빠뜨려 없앴다.'],
@@ -2447,17 +2447,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['성', '큰 건물'],      ['비단', '부드러운 옷감'],      ['카라바스', '고양이가 지어낸 이름']
     ],
     vocabFill: { instructions: '[장화 신은 고양이 어휘]', items: [
-      {no:1,text:'셋째 아들이 물려받은 동물은 (      )이다.',answer:'고양이',initials:'ㄱㅇㅇ',aliases:['고양이']},
-      {no:2,text:'아버지의 직업 장소는 (      )이다.',answer:'방앗간',initials:'ㅂㅇㄱ',aliases:['방앗간']},
-      {no:3,text:'고양이가 신은 것은 (   )이다.',answer:'장화',initials:'ㅈㅎ',aliases:['장화']},
-      {no:4,text:'고양이가 주인에게 붙여준 거짓 칭호는 (   )이다.',answer:'후작',initials:'ㅎㅈ',aliases:['후작']},
-      {no:5,text:'쥐로 변해서 잡아먹힌 사람은 (      )이다.',answer:'마법사',initials:'ㅁㅂㅅ',aliases:['마법사']},
-      {no:6,text:'셋째 아들이 결혼한 사람은 (   )이다.',answer:'공주',initials:'ㄱㅈ',aliases:['공주']},
-      {no:7,text:'고양이가 선물을 바친 사람은 (   )이다.',answer:'왕',initials:'ㅇ',aliases:['왕']},
-      {no:8,text:'고양이가 세운 꾀와 계획을 (   )이라 한다.',answer:'계략',initials:'ㄱㄹ',aliases:['계략']},
-      {no:9,text:'아버지가 아들들에게 남긴 재산을 (   )이라 한다.',answer:'유산',initials:'ㅇㅅ',aliases:['유산']},
-      {no:10,text:'고양이처럼 주인을 위해 힘쓰는 것을 (   )이라 한다.',answer:'충성',initials:'ㅊㅅ',aliases:['충성']},
-      {no:11,text:'마법사가 살던 큰 건물은 (  )이다.',answer:'성',initials:'ㅅ',aliases:['성']},      {no:13,text:'왕이 셋째에게 입혀준 옷감은 (    )이다.',answer:'비단',initials:'ㅂㄷ',aliases:['비단']},      {no:15,text:'고양이가 주인에게 붙여준 가짜 이름은 (        )이다.',answer:'카라바스',initials:'ㅋㄹㅂㅅ',aliases:['카라바스']}
+      {no: 1,text:'셋째 아들이 물려받은 동물은 (      )이다.',answer:'고양이',initials:'ㄱㅇㅇ',aliases:['고양이']},
+      {no: 2,text:'아버지의 직업 장소는 (      )이다.',answer:'방앗간',initials:'ㅂㅇㄱ',aliases:['방앗간']},
+      {no: 3,text:'고양이가 신은 것은 (   )이다.',answer:'장화',initials:'ㅈㅎ',aliases:['장화']},
+      {no: 4,text:'고양이가 주인에게 붙여준 거짓 칭호는 (   )이다.',answer:'후작',initials:'ㅎㅈ',aliases:['후작']},
+      {no: 5,text:'쥐로 변해서 잡아먹힌 사람은 (      )이다.',answer:'마법사',initials:'ㅁㅂㅅ',aliases:['마법사']},
+      {no: 6,text:'셋째 아들이 결혼한 사람은 (   )이다.',answer:'공주',initials:'ㄱㅈ',aliases:['공주']},
+      {no: 7,text:'고양이가 선물을 바친 사람은 (   )이다.',answer:'왕',initials:'ㅇ',aliases:['왕']},
+      {no: 8,text:'고양이가 세운 꾀와 계획을 (   )이라 한다.',answer:'계략',initials:'ㄱㄹ',aliases:['계략']},
+      {no: 9,text:'아버지가 아들들에게 남긴 재산을 (   )이라 한다.',answer:'유산',initials:'ㅇㅅ',aliases:['유산']},
+      {no: 10,text:'고양이처럼 주인을 위해 힘쓰는 것을 (   )이라 한다.',answer:'충성',initials:'ㅊㅅ',aliases:['충성']},
+      {no: 11,text:'마법사가 살던 큰 건물은 (  )이다.',answer:'성',initials:'ㅅ',aliases:['성']},      {no: 12,text:'왕이 셋째에게 입혀준 옷감은 (    )이다.',answer:'비단',initials:'ㅂㄷ',aliases:['비단']},      {no: 13,text:'고양이가 주인에게 붙여준 가짜 이름은 (        )이다.',answer:'카라바스',initials:'ㅋㄹㅂㅅ',aliases:['카라바스']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -2530,19 +2530,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['희망', '바라고 기대하는 것']
     ],
     vocabFill: { instructions: '[엄지공주 어휘]', items: [
-      {no:1,text:'꽃에서 태어난 작은 소녀는 (      )이다.',answer:'엄지공주',initials:'ㅇㅈㄱㅈ',aliases:['엄지공주']},
-      {no:2,text:'엄지공주를 처음 납치한 동물은 (      )이다.',answer:'두꺼비',initials:'ㄷㄲㅂ',aliases:['두꺼비']},
-      {no:3,text:'겨울에 엄지공주가 지낸 곳의 주인은 (   )이다.',answer:'들쥐',initials:'ㄷㅈ',aliases:['들쥐']},
-      {no:4,text:'땅속에서 사는 부자 이웃은 (      )이다.',answer:'두더지',initials:'ㄷㄷㅈ',aliases:['두더지']},
-      {no:5,text:'엄지공주가 구해준 새는 (   )이다.',answer:'제비',initials:'ㅈㅂ',aliases:['제비']},
-      {no:6,text:'엄지공주가 진정한 사랑을 찾은 상대는 꽃의 (   )이다.',answer:'왕자',initials:'ㅇㅈ',aliases:['왕자']},
-      {no:7,text:'아주머니에게 씨앗을 준 사람은 (      )이다.',answer:'마법사',initials:'ㅁㅂㅅ',aliases:['마법사']},
-      {no:8,text:'제비가 얼어붙어 있던 계절은 (   )이다.',answer:'겨울',initials:'ㄱㅇ',aliases:['겨울']},
-      {no:9,text:'마법사가 아주머니에게 준 것은 (   )이다.',answer:'씨앗',initials:'ㅆㅇ',aliases:['씨앗']},      {no:11,text:'씨앗을 준 사람은 (      )이다.',answer:'마법사',initials:'ㅁㅂㅅ',aliases:['마법사']},
-      {no:12,text:'엄지공주가 행복해진 곳은 (        )이다.',answer:'꽃의 나라',initials:'ㄲㅇ ㄴㄹ',aliases:['꽃의나라','꽃의 나라']},
-      {no:13,text:'왕자가 엄지공주에게 준 선물은 (    )이다.',answer:'날개',initials:'ㄴㄱ',aliases:['날개']},
-      {no:14,text:'들쥐 아주머니의 다정한 마음을 (    )이라 한다.',answer:'친절',initials:'ㅊㅈ',aliases:['친절']},
-      {no:15,text:'엄지공주가 어려움 속에서도 잃지 않은 것은 (    )이다.',answer:'희망',initials:'ㅎㅁ',aliases:['희망']}
+      {no: 1,text:'꽃에서 태어난 작은 소녀는 (      )이다.',answer:'엄지공주',initials:'ㅇㅈㄱㅈ',aliases:['엄지공주']},
+      {no: 2,text:'엄지공주를 처음 납치한 동물은 (      )이다.',answer:'두꺼비',initials:'ㄷㄲㅂ',aliases:['두꺼비']},
+      {no: 3,text:'겨울에 엄지공주가 지낸 곳의 주인은 (   )이다.',answer:'들쥐',initials:'ㄷㅈ',aliases:['들쥐']},
+      {no: 4,text:'땅속에서 사는 부자 이웃은 (      )이다.',answer:'두더지',initials:'ㄷㄷㅈ',aliases:['두더지']},
+      {no: 5,text:'엄지공주가 구해준 새는 (   )이다.',answer:'제비',initials:'ㅈㅂ',aliases:['제비']},
+      {no: 6,text:'엄지공주가 진정한 사랑을 찾은 상대는 꽃의 (   )이다.',answer:'왕자',initials:'ㅇㅈ',aliases:['왕자']},
+      {no: 7,text:'아주머니에게 씨앗을 준 사람은 (      )이다.',answer:'마법사',initials:'ㅁㅂㅅ',aliases:['마법사']},
+      {no: 8,text:'제비가 얼어붙어 있던 계절은 (   )이다.',answer:'겨울',initials:'ㄱㅇ',aliases:['겨울']},
+      {no: 9,text:'마법사가 아주머니에게 준 것은 (   )이다.',answer:'씨앗',initials:'ㅆㅇ',aliases:['씨앗']},      {no: 10,text:'씨앗을 준 사람은 (      )이다.',answer:'마법사',initials:'ㅁㅂㅅ',aliases:['마법사']},
+      {no: 11,text:'엄지공주가 행복해진 곳은 (        )이다.',answer:'꽃의 나라',initials:'ㄲㅇ ㄴㄹ',aliases:['꽃의나라','꽃의 나라']},
+      {no: 12,text:'왕자가 엄지공주에게 준 선물은 (    )이다.',answer:'날개',initials:'ㄴㄱ',aliases:['날개']},
+      {no: 13,text:'들쥐 아주머니의 다정한 마음을 (    )이라 한다.',answer:'친절',initials:'ㅊㅈ',aliases:['친절']},
+      {no: 14,text:'엄지공주가 어려움 속에서도 잃지 않은 것은 (    )이다.',answer:'희망',initials:'ㅎㅁ',aliases:['희망']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -2613,17 +2613,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['엉망진창', '매우 어지럽고 뒤죽박죽인 모양'],      ['가족', '함께 사는 부모와 자식들']
     ],
     vocabFill: { instructions: '[늑대와 아기 염소 어휘]', items: [
-      {no:1,text:'아기 염소들의 어머니는 (      )이다.',answer:'엄마 염소',initials:'ㅇㅁ ㅇㅅ',aliases:['엄마염소','엄마 염소']},
-      {no:2,text:'늑대에게 잡아먹힐 뻔한 동물은 (      )이다.',answer:'아기 염소',initials:'ㅇㄱ ㅇㅅ',aliases:['아기염소','아기 염소']},
-      {no:3,text:'아기 염소들을 속인 동물은 (   )이다.',answer:'늑대',initials:'ㄴㄷ',aliases:['늑대']},
-      {no:4,text:'늑대가 목소리를 부드럽게 하려고 먹은 것은 (   )이다.',answer:'분필',initials:'ㅂㅍ',aliases:['분필']},
-      {no:5,text:'늑대가 발에 묻힌 하얀 것은 (      )이다.',answer:'밀가루',initials:'ㅁㄱㄹ',aliases:['밀가루']},
-      {no:6,text:'막내가 숨어서 살아남은 곳은 (   ) 속이다.',answer:'시계',initials:'ㅅㄱ',aliases:['시계']},
-      {no:7,text:'엄마 염소가 늑대 배에 넣은 것은 (   )이다.',answer:'돌',initials:'ㄷ',aliases:['돌']},      {no:9,text:'엄마 염소가 배를 가른 도구는 (   )이다.',answer:'가위',initials:'ㄱㅇ',aliases:['가위']},
-      {no:10,text:'늑대가 빠진 곳은 (   )이다.',answer:'우물',initials:'ㅇㅁ',aliases:['우물']},
-      {no:11,text:'엄마 염소가 먹을 것을 사러 간 곳은 (   )이다.',answer:'시장',initials:'ㅅㅈ',aliases:['시장']},
-      {no:12,text:'곡식을 가루로 만드는 곳을 (      )이라 한다.',answer:'방앗간',initials:'ㅂㅇㄱ',aliases:['방앗간']},
-      {no:13,text:'매우 어지럽고 뒤죽박죽인 모양을 (         )이라 한다.',answer:'엉망진창',initials:'ㅇㅁㅈㅊ',aliases:['엉망진창']},      {no:15,text:'함께 사는 부모와 자식들을 (   )이라 한다.',answer:'가족',initials:'ㄱㅈ',aliases:['가족']}
+      {no: 1,text:'아기 염소들의 어머니는 (      )이다.',answer:'엄마 염소',initials:'ㅇㅁ ㅇㅅ',aliases:['엄마염소','엄마 염소']},
+      {no: 2,text:'늑대에게 잡아먹힐 뻔한 동물은 (      )이다.',answer:'아기 염소',initials:'ㅇㄱ ㅇㅅ',aliases:['아기염소','아기 염소']},
+      {no: 3,text:'아기 염소들을 속인 동물은 (   )이다.',answer:'늑대',initials:'ㄴㄷ',aliases:['늑대']},
+      {no: 4,text:'늑대가 목소리를 부드럽게 하려고 먹은 것은 (   )이다.',answer:'분필',initials:'ㅂㅍ',aliases:['분필']},
+      {no: 5,text:'늑대가 발에 묻힌 하얀 것은 (      )이다.',answer:'밀가루',initials:'ㅁㄱㄹ',aliases:['밀가루']},
+      {no: 6,text:'막내가 숨어서 살아남은 곳은 (   ) 속이다.',answer:'시계',initials:'ㅅㄱ',aliases:['시계']},
+      {no: 7,text:'엄마 염소가 늑대 배에 넣은 것은 (   )이다.',answer:'돌',initials:'ㄷ',aliases:['돌']},      {no: 8,text:'엄마 염소가 배를 가른 도구는 (   )이다.',answer:'가위',initials:'ㄱㅇ',aliases:['가위']},
+      {no: 9,text:'늑대가 빠진 곳은 (   )이다.',answer:'우물',initials:'ㅇㅁ',aliases:['우물']},
+      {no: 10,text:'엄마 염소가 먹을 것을 사러 간 곳은 (   )이다.',answer:'시장',initials:'ㅅㅈ',aliases:['시장']},
+      {no: 11,text:'곡식을 가루로 만드는 곳을 (      )이라 한다.',answer:'방앗간',initials:'ㅂㅇㄱ',aliases:['방앗간']},
+      {no: 12,text:'매우 어지럽고 뒤죽박죽인 모양을 (         )이라 한다.',answer:'엉망진창',initials:'ㅇㅁㅈㅊ',aliases:['엉망진창']},      {no: 13,text:'함께 사는 부모와 자식들을 (   )이라 한다.',answer:'가족',initials:'ㄱㅈ',aliases:['가족']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -2696,16 +2696,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['황홀', '정신이 아찔할 정도로 기쁨']
     ],
     vocabFill: { instructions: '[호두까기 인형 어휘]', items: [
-      {no:1,text:'클라라가 선물 받은 인형은 (         )이다.',answer:'호두까기 인형',initials:'ㅎㄷㄲㄱ ㅇㅎ',aliases:['호두까기인형']},
-      {no:2,text:'이야기의 주인공 소녀 이름은 (      )이다.',answer:'클라라',initials:'ㅋㄹㄹ',aliases:['클라라']},
-      {no:3,text:'클라라에게 인형을 선물한 대부는 (            )이다.',answer:'드로셀마이어',initials:'ㄷㄹㅅㅁㅇㅇ',aliases:['드로셀마이어']},
-      {no:4,text:'쥐 군대를 이끈 왕은 (      )이다.',answer:'쥐 왕',initials:'ㅈ ㅇ',aliases:['쥐왕']},
-      {no:5,text:'왕자가 클라라를 초대한 곳은 (      )이다.',answer:'과자 나라',initials:'ㄱㅈ ㄴㄹ',aliases:['과자나라']},
-      {no:11,text:'아이의 보호자 역할을 하는 사람을 (   )라 한다.',answer:'대부',initials:'ㄷㅂ',aliases:['대부']},
-      {no:12,text:'클라라가 쥐 왕에게 던진 것은 (      )이다.',answer:'슬리퍼',initials:'ㅅㄹㅍ',aliases:['슬리퍼']},
-      {no:13,text:'기술이 뛰어난 사람을 (   )이라 한다.',answer:'장인',initials:'ㅈㅇ',aliases:['장인']},
-      {no:14,text:'기쁘게 맞이하는 것을 (   )이라 한다.',answer:'환영',initials:'ㅎㅇ',aliases:['환영']},
-      {no:15,text:'정신이 아찔할 정도로 기쁜 것을 (   )이라 한다.',answer:'황홀',initials:'ㅎㅎ',aliases:['황홀']}
+      {no: 1,text:'클라라가 선물 받은 인형은 (         )이다.',answer:'호두까기 인형',initials:'ㅎㄷㄲㄱ ㅇㅎ',aliases:['호두까기인형']},
+      {no: 2,text:'이야기의 주인공 소녀 이름은 (      )이다.',answer:'클라라',initials:'ㅋㄹㄹ',aliases:['클라라']},
+      {no: 3,text:'클라라에게 인형을 선물한 대부는 (            )이다.',answer:'드로셀마이어',initials:'ㄷㄹㅅㅁㅇㅇ',aliases:['드로셀마이어']},
+      {no: 4,text:'쥐 군대를 이끈 왕은 (      )이다.',answer:'쥐 왕',initials:'ㅈ ㅇ',aliases:['쥐왕']},
+      {no: 5,text:'왕자가 클라라를 초대한 곳은 (      )이다.',answer:'과자 나라',initials:'ㄱㅈ ㄴㄹ',aliases:['과자나라']},
+      {no: 6,text:'아이의 보호자 역할을 하는 사람을 (   )라 한다.',answer:'대부',initials:'ㄷㅂ',aliases:['대부']},
+      {no: 7,text:'클라라가 쥐 왕에게 던진 것은 (      )이다.',answer:'슬리퍼',initials:'ㅅㄹㅍ',aliases:['슬리퍼']},
+      {no: 8,text:'기술이 뛰어난 사람을 (   )이라 한다.',answer:'장인',initials:'ㅈㅇ',aliases:['장인']},
+      {no: 9,text:'기쁘게 맞이하는 것을 (   )이라 한다.',answer:'환영',initials:'ㅎㅇ',aliases:['환영']},
+      {no: 10,text:'정신이 아찔할 정도로 기쁜 것을 (   )이라 한다.',answer:'황홀',initials:'ㅎㅎ',aliases:['황홀']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -2778,14 +2778,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['천사', '하느님의 사자']
     ],
     vocabFill: { instructions: '[빨간 구두 어휘]', items: [
-      {no:1,text:'이야기의 주인공 소녀 이름은 (   )이다.',answer:'카렌',initials:'ㅋㄹ',aliases:['카렌']},
-      {no:2,text:'카렌이 갖고 싶었던 것은 (      )이다.',answer:'빨간 구두',initials:'ㅃㄱ ㄱㄷ',aliases:['빨간구두']},
-      {no:3,text:'카렌을 입양해준 분은 (      )이다.',answer:'할머니',initials:'ㅎㅁㄴ',aliases:['할머니']},
-      {no:4,text:'카렌이 화려한 구두를 신고 간 곳은 (   )이다.',answer:'교회',initials:'ㄱㅎ',aliases:['교회']},
-      {no:5,text:'빨간 구두가 멈추지 않고 추게 한 것은 (   )이다.',answer:'춤',initials:'ㅊ',aliases:['춤']},
-      {no:6,text:'카렌의 발을 자른 사람은 (      )이다.',answer:'집행인',initials:'ㅈㅎㅇ',aliases:['집행인']},
-      {no:7,text:'카렌이 잘못을 뉘우친 것을 (   )이라 한다.',answer:'반성',initials:'ㅂㅅ',aliases:['반성']},
-      {no:8,text:'겉모습에 대한 욕심을 (   )이라 한다.',answer:'허영',initials:'ㅎㅇ',aliases:['허영']},      {no:10,text:'카렌이 하느님께 받은 것은 (   )이다.',answer:'용서',initials:'ㅇㅅ',aliases:['용서']}
+      {no: 1,text:'이야기의 주인공 소녀 이름은 (   )이다.',answer:'카렌',initials:'ㅋㄹ',aliases:['카렌']},
+      {no: 2,text:'카렌이 갖고 싶었던 것은 (      )이다.',answer:'빨간 구두',initials:'ㅃㄱ ㄱㄷ',aliases:['빨간구두']},
+      {no: 3,text:'카렌을 입양해준 분은 (      )이다.',answer:'할머니',initials:'ㅎㅁㄴ',aliases:['할머니']},
+      {no: 4,text:'카렌이 화려한 구두를 신고 간 곳은 (   )이다.',answer:'교회',initials:'ㄱㅎ',aliases:['교회']},
+      {no: 5,text:'빨간 구두가 멈추지 않고 추게 한 것은 (   )이다.',answer:'춤',initials:'ㅊ',aliases:['춤']},
+      {no: 6,text:'카렌의 발을 자른 사람은 (      )이다.',answer:'집행인',initials:'ㅈㅎㅇ',aliases:['집행인']},
+      {no: 7,text:'카렌이 잘못을 뉘우친 것을 (   )이라 한다.',answer:'반성',initials:'ㅂㅅ',aliases:['반성']},
+      {no: 8,text:'겉모습에 대한 욕심을 (   )이라 한다.',answer:'허영',initials:'ㅎㅇ',aliases:['허영']},      {no: 9,text:'카렌이 하느님께 받은 것은 (   )이다.',answer:'용서',initials:'ㅇㅅ',aliases:['용서']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -2858,19 +2858,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['보상', '대가로 받는 것']
     ],
     vocabFill: { instructions: '[금도끼 은도끼 어휘]', items: [
-      {no:1,text:'도끼를 빠뜨린 사람은 (      )이다.',answer:'나무꾼',initials:'ㄴㅁㄲ',aliases:['나무꾼']},
-      {no:2,text:'나무꾼이 빠뜨린 것은 (   )이다.',answer:'도끼',initials:'ㄷㄲ',aliases:['도끼']},
-      {no:3,text:'연못에서 나타난 분은 (      )이다.',answer:'산신령',initials:'ㅅㅅㄹ',aliases:['산신령']},
-      {no:4,text:'산신령이 처음 가져온 것은 (      )이다.',answer:'금도끼',initials:'ㄱㄷㄲ',aliases:['금도끼']},
-      {no:5,text:'산신령이 두 번째 가져온 것은 (      )이다.',answer:'은도끼',initials:'ㅇㄷㄲ',aliases:['은도끼']},
-      {no:6,text:'나무꾼의 진짜 도끼는 (      )이다.',answer:'쇠도끼',initials:'ㅅㄷㄲ',aliases:['쇠도끼']},
-      {no:7,text:'나무꾼이 보여준 바른 태도는 (   )이다.',answer:'정직',initials:'ㅈㅈ',aliases:['정직']},
-      {no:8,text:'거짓말한 사람을 (      )이라 한다.',answer:'욕심쟁이',initials:'ㅇㅅㅈㅇ',aliases:['욕심쟁이']},
-      {no:9,text:'도끼가 빠진 곳은 (   )이다.',answer:'연못',initials:'ㅇㅁ',aliases:['연못']},      {no:11,text:'욕심쟁이가 치른 것은 (   )이다.',answer:'손해',initials:'ㅅㅎ',aliases:['손해']},
-      {no:12,text:'욕심쟁이가 산신령에게 한 것은 (      )이다.',answer:'거짓말',initials:'ㄱㅈㅁ',aliases:['거짓말']},
-      {no:13,text:'나무꾼이 찾은 기쁜 감정은 (   )이다.',answer:'행복',initials:'ㅎㅂ',aliases:['행복']},
-      {no:14,text:'정직한 사람에게 오는 좋은 일은 (   )이다.',answer:'복',initials:'ㅂ',aliases:['복']},
-      {no:15,text:'정직에 대한 대가로 받은 것을 (   )이라 한다.',answer:'보상',initials:'ㅂㅅ',aliases:['보상']}
+      {no: 1,text:'도끼를 빠뜨린 사람은 (      )이다.',answer:'나무꾼',initials:'ㄴㅁㄲ',aliases:['나무꾼']},
+      {no: 2,text:'나무꾼이 빠뜨린 것은 (   )이다.',answer:'도끼',initials:'ㄷㄲ',aliases:['도끼']},
+      {no: 3,text:'연못에서 나타난 분은 (      )이다.',answer:'산신령',initials:'ㅅㅅㄹ',aliases:['산신령']},
+      {no: 4,text:'산신령이 처음 가져온 것은 (      )이다.',answer:'금도끼',initials:'ㄱㄷㄲ',aliases:['금도끼']},
+      {no: 5,text:'산신령이 두 번째 가져온 것은 (      )이다.',answer:'은도끼',initials:'ㅇㄷㄲ',aliases:['은도끼']},
+      {no: 6,text:'나무꾼의 진짜 도끼는 (      )이다.',answer:'쇠도끼',initials:'ㅅㄷㄲ',aliases:['쇠도끼']},
+      {no: 7,text:'나무꾼이 보여준 바른 태도는 (   )이다.',answer:'정직',initials:'ㅈㅈ',aliases:['정직']},
+      {no: 8,text:'거짓말한 사람을 (      )이라 한다.',answer:'욕심쟁이',initials:'ㅇㅅㅈㅇ',aliases:['욕심쟁이']},
+      {no: 9,text:'도끼가 빠진 곳은 (   )이다.',answer:'연못',initials:'ㅇㅁ',aliases:['연못']},      {no: 10,text:'욕심쟁이가 치른 것은 (   )이다.',answer:'손해',initials:'ㅅㅎ',aliases:['손해']},
+      {no: 11,text:'욕심쟁이가 산신령에게 한 것은 (      )이다.',answer:'거짓말',initials:'ㄱㅈㅁ',aliases:['거짓말']},
+      {no: 12,text:'나무꾼이 찾은 기쁜 감정은 (   )이다.',answer:'행복',initials:'ㅎㅂ',aliases:['행복']},
+      {no: 13,text:'정직한 사람에게 오는 좋은 일은 (   )이다.',answer:'복',initials:'ㅂ',aliases:['복']},
+      {no: 14,text:'정직에 대한 대가로 받은 것을 (   )이라 한다.',answer:'보상',initials:'ㅂㅅ',aliases:['보상']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -3029,16 +3029,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['사랑', '가족을 위한 마음']
     ],
     vocabFill: { instructions: '[백조 왕자 어휘]', items: [
-      {no:1,text:'이야기의 주인공 공주 이름은 (      )이다.',answer:'엘리사',initials:'ㅇㄹㅅ',aliases:['엘리사']},
-      {no:2,text:'백조로 변한 오빠들은 (   )이다.',answer:'왕자',initials:'ㅇㅈ',aliases:['왕자']},
-      {no:3,text:'왕자들에게 저주를 건 사람은 (   )이다.',answer:'계모',initials:'ㄱㅁ',aliases:['계모']},
-      {no:4,text:'왕자들이 변한 새는 (   )이다.',answer:'백조',initials:'ㅂㅈ',aliases:['백조']},
-      {no:5,text:'엘리사가 옷을 짠 재료는 (      )이다.',answer:'쐐기풀',initials:'ㅆㄱㅍ',aliases:['쐐기풀']},
-      {no:6,text:'옷을 짜는 동안 지켜야 하는 것은 (   )이다.',answer:'침묵',initials:'ㅊㅁ',aliases:['침묵']},
-      {no:7,text:'사람들이 엘리사를 오해한 것은 (   )이다.',answer:'마녀',initials:'ㅁㄴ',aliases:['마녀']},      {no:9,text:'엘리사가 보여준 가족 사랑은 (   )이다.',answer:'희생',initials:'ㅎㅅ',aliases:['희생']},
-      {no:10,text:'가족이 다시 찾은 것은 (   )이다.',answer:'행복',initials:'ㅎㅂ',aliases:['행복']},
-      {no:11,text:'엘리사의 신분을 (   )라 한다.',answer:'공주',initials:'ㄱㅈ',aliases:['공주']},      {no:14,text:'엘리사와 오빠들의 관계는 (   )이다.',answer:'가족',initials:'ㄱㅈ',aliases:['가족']},
-      {no:15,text:'엘리사가 가족을 위해 보여준 마음은 (   )이다.',answer:'사랑',initials:'ㅅㄹ',aliases:['사랑']}
+      {no: 1,text:'이야기의 주인공 공주 이름은 (      )이다.',answer:'엘리사',initials:'ㅇㄹㅅ',aliases:['엘리사']},
+      {no: 2,text:'백조로 변한 오빠들은 (   )이다.',answer:'왕자',initials:'ㅇㅈ',aliases:['왕자']},
+      {no: 3,text:'왕자들에게 저주를 건 사람은 (   )이다.',answer:'계모',initials:'ㄱㅁ',aliases:['계모']},
+      {no: 4,text:'왕자들이 변한 새는 (   )이다.',answer:'백조',initials:'ㅂㅈ',aliases:['백조']},
+      {no: 5,text:'엘리사가 옷을 짠 재료는 (      )이다.',answer:'쐐기풀',initials:'ㅆㄱㅍ',aliases:['쐐기풀']},
+      {no: 6,text:'옷을 짜는 동안 지켜야 하는 것은 (   )이다.',answer:'침묵',initials:'ㅊㅁ',aliases:['침묵']},
+      {no: 7,text:'사람들이 엘리사를 오해한 것은 (   )이다.',answer:'마녀',initials:'ㅁㄴ',aliases:['마녀']},      {no: 8,text:'엘리사가 보여준 가족 사랑은 (   )이다.',answer:'희생',initials:'ㅎㅅ',aliases:['희생']},
+      {no: 9,text:'가족이 다시 찾은 것은 (   )이다.',answer:'행복',initials:'ㅎㅂ',aliases:['행복']},
+      {no: 10,text:'엘리사의 신분을 (   )라 한다.',answer:'공주',initials:'ㄱㅈ',aliases:['공주']},      {no: 11,text:'엘리사와 오빠들의 관계는 (   )이다.',answer:'가족',initials:'ㄱㅈ',aliases:['가족']},
+      {no: 12,text:'엘리사가 가족을 위해 보여준 마음은 (   )이다.',answer:'사랑',initials:'ㅅㄹ',aliases:['사랑']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -3111,19 +3111,19 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['여행', '게르다가 떠난 긴 길'],      ['사랑', '카이를 구한 힘']
     ],
     vocabFill: { instructions: '[눈의 여왕 어휘]', items: [
-      {no:1,text:'카이를 찾아 여행한 소녀는 (      )이다.',answer:'게르다',initials:'ㄱㄹㄷ',aliases:['게르다']},
-      {no:2,text:'눈의 여왕에게 끌려간 소년은 (   )이다.',answer:'카이',initials:'ㅋㅇ',aliases:['카이']},
-      {no:3,text:'카이를 데려간 사람은 (         )이다.',answer:'눈의 여왕',initials:'ㄴㅇ ㅇㅇ',aliases:['눈의여왕']},
-      {no:4,text:'카이의 눈과 심장에 들어간 것은 악마의 (   ) 조각이다.',answer:'거울',initials:'ㄱㅇ',aliases:['거울']},
-      {no:5,text:'눈의 여왕이 사는 곳은 (         )이다.',answer:'얼음 궁전',initials:'ㅇㅇ ㄱㅈ',aliases:['얼음궁전']},
-      {no:6,text:'게르다를 북쪽으로 데려다 준 동물은 (   )이다.',answer:'순록',initials:'ㅅㄹ',aliases:['순록']},
-      {no:7,text:'게르다가 탈출한 꽃밭의 주인은 (   )이다.',answer:'마녀',initials:'ㅁㄴ',aliases:['마녀']},
-      {no:8,text:'카이의 심장을 녹인 것은 게르다의 (   )이다.',answer:'눈물',initials:'ㄴㅁ',aliases:['눈물']},
-      {no:9,text:'창가에 피어 있던 꽃은 (   )이다.',answer:'장미',initials:'ㅈㅁ',aliases:['장미']},
-      {no:10,text:'게르다와 카이 사이의 감정은 (   )이다.',answer:'우정',initials:'ㅇㅈ',aliases:['우정']},
-      {no:11,text:'게르다와 카이는 어릴 때부터 (         )였다.',answer:'소꿉친구',initials:'ㅅㄲㅊㄱ',aliases:['소꿉친구']},
-      {no:12,text:'카이가 궁전에서 맞추던 것은 (   ) 조각이다.',answer:'얼음',initials:'ㅇㅇ',aliases:['얼음']},
-      {no:13,text:'게르다가 카이를 찾아 떠난 긴 길을 (   )이라 한다.',answer:'여행',initials:'ㅇㅎ',aliases:['여행']},      {no:15,text:'카이를 구한 힘은 게르다의 (   )이다.',answer:'사랑',initials:'ㅅㄹ',aliases:['사랑']}
+      {no: 1,text:'카이를 찾아 여행한 소녀는 (      )이다.',answer:'게르다',initials:'ㄱㄹㄷ',aliases:['게르다']},
+      {no: 2,text:'눈의 여왕에게 끌려간 소년은 (   )이다.',answer:'카이',initials:'ㅋㅇ',aliases:['카이']},
+      {no: 3,text:'카이를 데려간 사람은 (         )이다.',answer:'눈의 여왕',initials:'ㄴㅇ ㅇㅇ',aliases:['눈의여왕']},
+      {no: 4,text:'카이의 눈과 심장에 들어간 것은 악마의 (   ) 조각이다.',answer:'거울',initials:'ㄱㅇ',aliases:['거울']},
+      {no: 5,text:'눈의 여왕이 사는 곳은 (         )이다.',answer:'얼음 궁전',initials:'ㅇㅇ ㄱㅈ',aliases:['얼음궁전']},
+      {no: 6,text:'게르다를 북쪽으로 데려다 준 동물은 (   )이다.',answer:'순록',initials:'ㅅㄹ',aliases:['순록']},
+      {no: 7,text:'게르다가 탈출한 꽃밭의 주인은 (   )이다.',answer:'마녀',initials:'ㅁㄴ',aliases:['마녀']},
+      {no: 8,text:'카이의 심장을 녹인 것은 게르다의 (   )이다.',answer:'눈물',initials:'ㄴㅁ',aliases:['눈물']},
+      {no: 9,text:'창가에 피어 있던 꽃은 (   )이다.',answer:'장미',initials:'ㅈㅁ',aliases:['장미']},
+      {no: 10,text:'게르다와 카이 사이의 감정은 (   )이다.',answer:'우정',initials:'ㅇㅈ',aliases:['우정']},
+      {no: 11,text:'게르다와 카이는 어릴 때부터 (         )였다.',answer:'소꿉친구',initials:'ㅅㄲㅊㄱ',aliases:['소꿉친구']},
+      {no: 12,text:'카이가 궁전에서 맞추던 것은 (   ) 조각이다.',answer:'얼음',initials:'ㅇㅇ',aliases:['얼음']},
+      {no: 13,text:'게르다가 카이를 찾아 떠난 긴 길을 (   )이라 한다.',answer:'여행',initials:'ㅇㅎ',aliases:['여행']},      {no: 14,text:'카이를 구한 힘은 게르다의 (   )이다.',answer:'사랑',initials:'ㅅㄹ',aliases:['사랑']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',
@@ -3194,17 +3194,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['비밀', '여우가 알려준 것'],      ['특별한', '다른 것과 다른']
     ],
     vocabFill: { instructions: '[어린 왕자 어휘]', items: [
-      {no:1,text:'작은 별에서 온 소년은 (         )이다.',answer:'어린 왕자',initials:'ㅇㄹ ㅇㅈ',aliases:['어린왕자']},
-      {no:2,text:'사막에서 어린 왕자를 만난 사람은 (      )이다.',answer:'비행사',initials:'ㅂㅎㅅ',aliases:['비행사']},
-      {no:3,text:'어린 왕자의 별에 있던 꽃은 (   )이다.',answer:'장미',initials:'ㅈㅁ',aliases:['장미']},
-      {no:4,text:'길들이기를 가르쳐준 동물은 (   )이다.',answer:'여우',initials:'ㅇㅇ',aliases:['여우']},      {no:6,text:'어린 왕자가 사는 곳은 작은 (   )이다.',answer:'별',initials:'ㅂ',aliases:['별']},
-      {no:7,text:'관계를 소중하게 만드는 것은 함께한 (   )이다.',answer:'시간',initials:'ㅅㄱ',aliases:['시간']},
-      {no:8,text:'중요한 것을 보는 곳은 (   )이다.',answer:'마음',initials:'ㅁㅇ',aliases:['마음']},
-      {no:9,text:'세상에 하나뿐인 것을 (      )이라 한다.',answer:'유일한',initials:'ㅇㅇㅎ',aliases:['유일한']},
-      {no:10,text:'가치 있고 귀중한 것을 (      )이라 한다.',answer:'소중한',initials:'ㅅㅈㅎ',aliases:['소중한']},
-      {no:11,text:'비행사가 불시착한 곳은 (   )이다.',answer:'사막',initials:'ㅅㅁ',aliases:['사막']},
-      {no:12,text:'왕자가 여행하며 만난 이상한 사람들은 (   )이다.',answer:'어른',initials:'ㅇㄹ',aliases:['어른']},
-      {no:13,text:'여우가 왕자에게 알려준 것은 (   )이다.',answer:'비밀',initials:'ㅂㅁ',aliases:['비밀']},      {no:15,text:'장미가 왕자에게 다른 것과 다르게 된 것을 (      )이라 한다.',answer:'특별한',initials:'ㅌㅂㅎ',aliases:['특별한']}
+      {no: 1,text:'작은 별에서 온 소년은 (         )이다.',answer:'어린 왕자',initials:'ㅇㄹ ㅇㅈ',aliases:['어린왕자']},
+      {no: 2,text:'사막에서 어린 왕자를 만난 사람은 (      )이다.',answer:'비행사',initials:'ㅂㅎㅅ',aliases:['비행사']},
+      {no: 3,text:'어린 왕자의 별에 있던 꽃은 (   )이다.',answer:'장미',initials:'ㅈㅁ',aliases:['장미']},
+      {no: 4,text:'길들이기를 가르쳐준 동물은 (   )이다.',answer:'여우',initials:'ㅇㅇ',aliases:['여우']},      {no: 5,text:'어린 왕자가 사는 곳은 작은 (   )이다.',answer:'별',initials:'ㅂ',aliases:['별']},
+      {no: 6,text:'관계를 소중하게 만드는 것은 함께한 (   )이다.',answer:'시간',initials:'ㅅㄱ',aliases:['시간']},
+      {no: 7,text:'중요한 것을 보는 곳은 (   )이다.',answer:'마음',initials:'ㅁㅇ',aliases:['마음']},
+      {no: 8,text:'세상에 하나뿐인 것을 (      )이라 한다.',answer:'유일한',initials:'ㅇㅇㅎ',aliases:['유일한']},
+      {no: 9,text:'가치 있고 귀중한 것을 (      )이라 한다.',answer:'소중한',initials:'ㅅㅈㅎ',aliases:['소중한']},
+      {no: 10,text:'비행사가 불시착한 곳은 (   )이다.',answer:'사막',initials:'ㅅㅁ',aliases:['사막']},
+      {no: 11,text:'왕자가 여행하며 만난 이상한 사람들은 (   )이다.',answer:'어른',initials:'ㅇㄹ',aliases:['어른']},
+      {no: 12,text:'여우가 왕자에게 알려준 것은 (   )이다.',answer:'비밀',initials:'ㅂㅁ',aliases:['비밀']},      {no: 13,text:'장미가 왕자에게 다른 것과 다르게 된 것을 (      )이라 한다.',answer:'특별한',initials:'ㅌㅂㅎ',aliases:['특별한']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',

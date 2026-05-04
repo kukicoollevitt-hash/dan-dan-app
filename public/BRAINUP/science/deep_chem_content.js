@@ -980,18 +980,18 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[화학 반응 속도 관련 어휘]',
       items: [
         { no: 1, text: '단위 시간당 반응물이 소모되거나 생성물이 생성되는 양을 (            )라 한다.', answer: '화학 반응 속도', initials: 'ㅎㅎ ㅂㅇ ㅅㄷ', aliases: ['화학반응속도', '화학 반응 속도'] },
-        { no: 2, text: '반응물 분자들이 충돌해야 반응이 일어난다는 이론을 (        )이라 한다.', answer: '충돌 이론', initials: 'ㅊㄷ ㅇㄹ', aliases: ['충돌이론', '충돌 이론'] },        { no: 4, text: '반응을 일으키는 충분한 에너지와 적절한 방향의 충돌을 (        )이라 한다.', answer: '유효 충돌', initials: 'ㅇㅎ ㅊㄷ', aliases: ['유효충돌', '유효 충돌'] },
-        { no: 5, text: '농도와 반응 속도의 관계를 나타낸 수식을 (            )이라 한다.', answer: '반응 속도 법칙', initials: 'ㅂㅇ ㅅㄷ ㅂㅊ', aliases: ['반응속도법칙', '반응 속도 법칙'] },
-        { no: 6, text: '온도에 의해 결정되는 반응 고유의 상수를 (            )라 한다.', answer: '반응 속도 상수', initials: 'ㅂㅇ ㅅㄷ ㅅㅅ', aliases: ['반응속도상수', '반응 속도 상수'] },
-        { no: 7, text: '반응 속도를 변화시키지만 자신은 변하지 않는 물질을 (    )라 한다.', answer: '촉매', initials: 'ㅊㅁ', aliases: ['촉매'] },
-        { no: 8, text: '활성화 에너지를 낮추어 반응 속도를 높이는 촉매를 (      )라 한다.', answer: '정촉매', initials: 'ㅈㅊㅁ', aliases: ['정촉매'] },
-        { no: 9, text: '반응 속도를 낮추는 촉매를 (      ) 또는 억제제라 한다.', answer: '부촉매', initials: 'ㅂㅊㅁ', aliases: ['부촉매'] },
-        { no: 10, text: '생체 내 생화학 반응의 촉매 역할을 하는 단백질을 (    )라 한다.', answer: '효소', initials: 'ㅎㅅ', aliases: ['효소'] },
-        { no: 11, text: '물질이 외부와 접촉하는 면의 넓이를 (      )이라 한다.', answer: '표면적', initials: 'ㅍㅁㅈ', aliases: ['표면적'] },
-        { no: 12, text: '자동차 배기가스를 정화하는 촉매 장치를 (          )라 한다.', answer: '촉매 변환기', initials: 'ㅊㅁ ㅂㅎㄱ', aliases: ['촉매변환기', '촉매 변환기'] },
-        { no: 13, text: '물질의 양이 절반으로 줄어드는 데 걸리는 시간을 (      )라 한다.', answer: '반감기', initials: 'ㅂㄱㄱ', aliases: ['반감기'] },
-        { no: 14, text: '제품이 품질을 유지할 수 있는 기간을 (        )이라 한다.', answer: '저장 수명', initials: 'ㅈㅈ ㅅㅁ', aliases: ['저장수명', '저장 수명'] },
-        { no: 15, text: '화학 반응이 진행되는 단계별 과정을 (          )이라 한다.', answer: '반응 메커니즘', initials: 'ㅂㅇ ㅁㅋㄴㅈ', aliases: ['반응메커니즘', '반응 메커니즘'] }
+        { no: 2, text: '반응물 분자들이 충돌해야 반응이 일어난다는 이론을 (        )이라 한다.', answer: '충돌 이론', initials: 'ㅊㄷ ㅇㄹ', aliases: ['충돌이론', '충돌 이론'] },        { no: 3, text: '반응을 일으키는 충분한 에너지와 적절한 방향의 충돌을 (        )이라 한다.', answer: '유효 충돌', initials: 'ㅇㅎ ㅊㄷ', aliases: ['유효충돌', '유효 충돌'] },
+        { no: 4, text: '농도와 반응 속도의 관계를 나타낸 수식을 (            )이라 한다.', answer: '반응 속도 법칙', initials: 'ㅂㅇ ㅅㄷ ㅂㅊ', aliases: ['반응속도법칙', '반응 속도 법칙'] },
+        { no: 5, text: '온도에 의해 결정되는 반응 고유의 상수를 (            )라 한다.', answer: '반응 속도 상수', initials: 'ㅂㅇ ㅅㄷ ㅅㅅ', aliases: ['반응속도상수', '반응 속도 상수'] },
+        { no: 6, text: '반응 속도를 변화시키지만 자신은 변하지 않는 물질을 (    )라 한다.', answer: '촉매', initials: 'ㅊㅁ', aliases: ['촉매'] },
+        { no: 7, text: '활성화 에너지를 낮추어 반응 속도를 높이는 촉매를 (      )라 한다.', answer: '정촉매', initials: 'ㅈㅊㅁ', aliases: ['정촉매'] },
+        { no: 8, text: '반응 속도를 낮추는 촉매를 (      ) 또는 억제제라 한다.', answer: '부촉매', initials: 'ㅂㅊㅁ', aliases: ['부촉매'] },
+        { no: 9, text: '생체 내 생화학 반응의 촉매 역할을 하는 단백질을 (    )라 한다.', answer: '효소', initials: 'ㅎㅅ', aliases: ['효소'] },
+        { no: 10, text: '물질이 외부와 접촉하는 면의 넓이를 (      )이라 한다.', answer: '표면적', initials: 'ㅍㅁㅈ', aliases: ['표면적'] },
+        { no: 11, text: '자동차 배기가스를 정화하는 촉매 장치를 (          )라 한다.', answer: '촉매 변환기', initials: 'ㅊㅁ ㅂㅎㄱ', aliases: ['촉매변환기', '촉매 변환기'] },
+        { no: 12, text: '물질의 양이 절반으로 줄어드는 데 걸리는 시간을 (      )라 한다.', answer: '반감기', initials: 'ㅂㄱㄱ', aliases: ['반감기'] },
+        { no: 13, text: '제품이 품질을 유지할 수 있는 기간을 (        )이라 한다.', answer: '저장 수명', initials: 'ㅈㅈ ㅅㅁ', aliases: ['저장수명', '저장 수명'] },
+        { no: 14, text: '화학 반응이 진행되는 단계별 과정을 (          )이라 한다.', answer: '반응 메커니즘', initials: 'ㅂㅇ ㅁㅋㄴㅈ', aliases: ['반응메커니즘', '반응 메커니즘'] }
       ]
     },
     quiz: {
@@ -1210,8 +1210,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 9, text: '기체 분자에서 특정 결합 1몰을 끊는 데 필요한 에너지를 (          )라 한다.', answer: '결합 에너지', initials: 'ㄱㅎ ㅇㄴㅈ', aliases: ['결합에너지', '결합 에너지'] },
         { no: 10, text: '물질 1몰이 완전 연소할 때의 엔탈피 변화를 (      )라 한다.', answer: '연소열', initials: 'ㅇㅅㅇ', aliases: ['연소열'] },
         { no: 11, text: '반응열을 측정하는 장치를 (      )라 한다.', answer: '열량계', initials: 'ㅇㄹㄱ', aliases: ['열량계'] },
-        { no: 12, text: '경로와 무관하게 상태에만 의존하는 물리량을 (        )라 한다.', answer: '상태 함수', initials: 'ㅅㅌ ㅎㅅ', aliases: ['상태함수', '상태 함수'] },        { no: 14, text: '열량의 단위로 4.184J에 해당하는 것을 (      )라 한다.', answer: '칼로리', initials: 'ㅋㄹㄹ', aliases: ['칼로리'] },
-        { no: 15, text: '열량의 SI 단위를 (      )라 한다.', answer: '킬로줄', initials: 'ㅋㄹㅈ', aliases: ['킬로줄'] }
+        { no: 12, text: '경로와 무관하게 상태에만 의존하는 물리량을 (        )라 한다.', answer: '상태 함수', initials: 'ㅅㅌ ㅎㅅ', aliases: ['상태함수', '상태 함수'] },        { no: 13, text: '열량의 단위로 4.184J에 해당하는 것을 (      )라 한다.', answer: '칼로리', initials: 'ㅋㄹㄹ', aliases: ['칼로리'] },
+        { no: 14, text: '열량의 SI 단위를 (      )라 한다.', answer: '킬로줄', initials: 'ㅋㄹㅈ', aliases: ['킬로줄'] }
       ]
     },
     quiz: {

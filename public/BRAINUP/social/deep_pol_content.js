@@ -845,7 +845,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocab: [      ['담합','기업들이 경쟁을 제한하기 위해 가격 등을 합의하는 행위'],      ['공정거래위원회','불공정 거래와 담합을 감시하는 정부 기관'],    ],
     vocabFill: {
       instructions: '[시장 구조 어휘]',
-      items: [        { no: 7, text: '기업들이 경쟁을 제한하기 위해 가격 등을 합의하는 행위를 (    )이라고 해요.', answer: '담합', initials: 'ㄷㅎ', aliases: ['담합'] },        { no: 10, text: '불공정 거래와 담합을 감시하는 정부 기관을 (          )라고 해요.', answer: '공정거래위원회', initials: 'ㄱㅈㄱㄹㅇㅇㅎ', aliases: ['공정거래위원회'] },      ]
+      items: [        { no: 1, text: '기업들이 경쟁을 제한하기 위해 가격 등을 합의하는 행위를 (    )이라고 해요.', answer: '담합', initials: 'ㄷㅎ', aliases: ['담합'] },        { no: 2, text: '불공정 거래와 담합을 감시하는 정부 기관을 (          )라고 해요.', answer: '공정거래위원회', initials: 'ㄱㅈㄱㄹㅇㅇㅎ', aliases: ['공정거래위원회'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -930,11 +930,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     ],
     vocabFill: {
       instructions: '[시장 실패 어휘]',
-      items: [        { no: 5, text: '비배제성과 비경합성을 가진 재화를 (      )라고 해요.', answer: '공공재', initials: 'ㄱㄱㅈ', aliases: ['공공재'] },
-        { no: 6, text: '대가를 지불하지 않아도 소비에서 제외할 수 없는 특성을 (        )이라고 해요.', answer: '비배제성', initials: 'ㅂㅂㅈㅅ', aliases: ['비배제성'] },
-        { no: 7, text: '한 사람의 소비가 다른 사람의 소비를 방해하지 않는 특성을 (        )이라고 해요.', answer: '비경합성', initials: 'ㅂㄱㅎㅅ', aliases: ['비경합성'] },
-        { no: 8, text: '대가를 지불하지 않고 이익을 얻으려는 행위를 (        )라고 해요.', answer: '무임승차', initials: 'ㅁㅇㅅㅊ', aliases: ['무임승차'] },        { no: 10, text: '정보 비대칭으로 품질 좋은 상품이 시장에서 사라지는 현상을 (      )이라고 해요.', answer: '역선택', initials: 'ㅇㅅㅌ', aliases: ['역선택'] },        { no: 12, text: '오염 물질 배출에 부과하는 세금을 (      )라고 해요.', answer: '환경세', initials: 'ㅎㄱㅅ', aliases: ['환경세'] },
-        { no: 13, text: '특정 활동을 장려하기 위해 정부가 지원하는 금전을 (      )이라고 해요.', answer: '보조금', initials: 'ㅂㅈㄱ', aliases: ['보조금'] },        { no: 15, text: '정부가 경제 활동에 제한을 가하는 것을 (    )라고 해요.', answer: '규제', initials: 'ㄱㅈ', aliases: ['규제'] }
+      items: [        { no: 1, text: '비배제성과 비경합성을 가진 재화를 (      )라고 해요.', answer: '공공재', initials: 'ㄱㄱㅈ', aliases: ['공공재'] },
+        { no: 2, text: '대가를 지불하지 않아도 소비에서 제외할 수 없는 특성을 (        )이라고 해요.', answer: '비배제성', initials: 'ㅂㅂㅈㅅ', aliases: ['비배제성'] },
+        { no: 3, text: '한 사람의 소비가 다른 사람의 소비를 방해하지 않는 특성을 (        )이라고 해요.', answer: '비경합성', initials: 'ㅂㄱㅎㅅ', aliases: ['비경합성'] },
+        { no: 4, text: '대가를 지불하지 않고 이익을 얻으려는 행위를 (        )라고 해요.', answer: '무임승차', initials: 'ㅁㅇㅅㅊ', aliases: ['무임승차'] },        { no: 5, text: '정보 비대칭으로 품질 좋은 상품이 시장에서 사라지는 현상을 (      )이라고 해요.', answer: '역선택', initials: 'ㅇㅅㅌ', aliases: ['역선택'] },        { no: 6, text: '오염 물질 배출에 부과하는 세금을 (      )라고 해요.', answer: '환경세', initials: 'ㅎㄱㅅ', aliases: ['환경세'] },
+        { no: 7, text: '특정 활동을 장려하기 위해 정부가 지원하는 금전을 (      )이라고 해요.', answer: '보조금', initials: 'ㅂㅈㄱ', aliases: ['보조금'] },        { no: 8, text: '정부가 경제 활동에 제한을 가하는 것을 (    )라고 해요.', answer: '규제', initials: 'ㄱㅈ', aliases: ['규제'] }
       ]
     },
     quiz: {
@@ -1018,8 +1018,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[국민 경제 어휘]',
       items: [
-        { no: 1, text: '일정 기간 한 나라 안에서 생산된 모든 최종 재화와 서비스의 가치를 (        )라고 해요.', answer: '국내총생산', initials: 'ㄱㄴㅊㅅㅅ', aliases: ['국내총생산','GDP'] },        { no: 4, text: '국민이 국내외에서 벌어들인 소득의 총합을 (        )이라고 해요.', answer: '국민총소득', initials: 'ㄱㅁㅊㅅㄷ', aliases: ['국민총소득','GNI'] },        { no: 7, text: '재화와 서비스를 생산하는 인간의 활동을 (    )이라고 해요.', answer: '노동', initials: 'ㄴㄷ', aliases: ['노동'] },
-        { no: 8, text: '생산에 사용되는 기계, 설비, 공장 등을 (    )이라고 해요.', answer: '자본', initials: 'ㅈㅂ', aliases: ['자본'] },        { no: 13, text: '투입 대비 산출의 효율성을 (      )이라고 해요.', answer: '생산성', initials: 'ㅅㅅㅅ', aliases: ['생산성'] },      ]
+        { no: 1, text: '일정 기간 한 나라 안에서 생산된 모든 최종 재화와 서비스의 가치를 (        )라고 해요.', answer: '국내총생산', initials: 'ㄱㄴㅊㅅㅅ', aliases: ['국내총생산','GDP'] },        { no: 2, text: '국민이 국내외에서 벌어들인 소득의 총합을 (        )이라고 해요.', answer: '국민총소득', initials: 'ㄱㅁㅊㅅㄷ', aliases: ['국민총소득','GNI'] },        { no: 3, text: '재화와 서비스를 생산하는 인간의 활동을 (    )이라고 해요.', answer: '노동', initials: 'ㄴㄷ', aliases: ['노동'] },
+        { no: 4, text: '생산에 사용되는 기계, 설비, 공장 등을 (    )이라고 해요.', answer: '자본', initials: 'ㅈㅂ', aliases: ['자본'] },        { no: 5, text: '투입 대비 산출의 효율성을 (      )이라고 해요.', answer: '생산성', initials: 'ㅅㅅㅅ', aliases: ['생산성'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -1110,11 +1110,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '시장에서 거래되는 상품과 서비스의 평균적인 가격 수준을 (    )라고 해요.', answer: '물가', initials: 'ㅁㄱ', aliases: ['물가'] },
         { no: 2, text: '가계 소비 품목의 가격 변동을 측정하는 지표를 (          )라고 해요.', answer: '소비자물가지수', initials: 'ㅅㅂㅈㅁㄱㅈㅅ', aliases: ['소비자물가지수','CPI'] },
-        { no: 3, text: '물가가 지속적으로 상승하는 현상을 (          )이라고 해요.', answer: '인플레이션', initials: 'ㅇㅍㄹㅇㅅ', aliases: ['인플레이션'] },        { no: 7, text: '물가가 급격히 상승하는 심각한 인플레이션을 (            )이라고 해요.', answer: '하이퍼인플레이션', initials: 'ㅎㅇㅍㅇㅍㄹㅇㅅ', aliases: ['하이퍼인플레이션'] },
-        { no: 8, text: '우리나라의 중앙은행으로 통화 정책을 담당하는 기관을 (        )이라고 해요.', answer: '한국은행', initials: 'ㅎㄱㅇㅎ', aliases: ['한국은행'] },
-        { no: 9, text: '중앙은행이 물가 상승률 목표를 설정하고 달성하는 정책을 (          )라고 해요.', answer: '물가안정목표제', initials: 'ㅁㄱㅇㅈㅁㅍㅈ', aliases: ['물가안정목표제'] },
-        { no: 10, text: '중앙은행이 결정하는 기준이 되는 금리를 (        )라고 해요.', answer: '기준금리', initials: 'ㄱㅈㄱㄹ', aliases: ['기준금리'] },
-        { no: 11, text: '물가가 지속적으로 하락하는 현상을 (          )이라고 해요.', answer: '디플레이션', initials: 'ㄷㅍㄹㅇㅅ', aliases: ['디플레이션'] },        { no: 13, text: '경제 전체의 재화와 서비스에 대한 수요 합계를 (      )라고 해요.', answer: '총수요', initials: 'ㅊㅅㅇ', aliases: ['총수요'] },      ]
+        { no: 3, text: '물가가 지속적으로 상승하는 현상을 (          )이라고 해요.', answer: '인플레이션', initials: 'ㅇㅍㄹㅇㅅ', aliases: ['인플레이션'] },        { no: 4, text: '물가가 급격히 상승하는 심각한 인플레이션을 (            )이라고 해요.', answer: '하이퍼인플레이션', initials: 'ㅎㅇㅍㅇㅍㄹㅇㅅ', aliases: ['하이퍼인플레이션'] },
+        { no: 5, text: '우리나라의 중앙은행으로 통화 정책을 담당하는 기관을 (        )이라고 해요.', answer: '한국은행', initials: 'ㅎㄱㅇㅎ', aliases: ['한국은행'] },
+        { no: 6, text: '중앙은행이 물가 상승률 목표를 설정하고 달성하는 정책을 (          )라고 해요.', answer: '물가안정목표제', initials: 'ㅁㄱㅇㅈㅁㅍㅈ', aliases: ['물가안정목표제'] },
+        { no: 7, text: '중앙은행이 결정하는 기준이 되는 금리를 (        )라고 해요.', answer: '기준금리', initials: 'ㄱㅈㄱㄹ', aliases: ['기준금리'] },
+        { no: 8, text: '물가가 지속적으로 하락하는 현상을 (          )이라고 해요.', answer: '디플레이션', initials: 'ㄷㅍㄹㅇㅅ', aliases: ['디플레이션'] },        { no: 9, text: '경제 전체의 재화와 서비스에 대한 수요 합계를 (      )라고 해요.', answer: '총수요', initials: 'ㅊㅅㅇ', aliases: ['총수요'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -1202,9 +1202,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '근로자가 일하고 임금을 받는 것을 (    )이라고 해요.', answer: '고용', initials: 'ㄱㅇ', aliases: ['고용'] },
         { no: 2, text: '일할 능력과 의사가 있지만 일자리를 구하지 못한 상태를 (    )이라고 해요.', answer: '실업', initials: 'ㅅㅇ', aliases: ['실업'] },
-        { no: 3, text: '경제활동인구 중 실업자가 차지하는 비율을 (      )이라고 해요.', answer: '실업률', initials: 'ㅅㅇㄹ', aliases: ['실업률'] },        { no: 11, text: '법으로 정한 최소한의 임금 기준을 (        )라고 해요.', answer: '최저임금제', initials: 'ㅊㅈㅇㄱㅈ', aliases: ['최저임금제','최저 임금제'] },
-        { no: 12, text: '실업에 대비하여 보험료를 내고 실직 시 급여를 받는 제도를 (          )라고 해요.', answer: '고용보험제도', initials: 'ㄱㅇㅂㅎㅈㄷ', aliases: ['고용보험제도','고용 보험 제도'] },
-        { no: 13, text: '노동력이 거래되는 시장을 (        )이라고 해요.', answer: '노동시장', initials: 'ㄴㄷㅅㅈ', aliases: ['노동시장','노동 시장'] },      ]
+        { no: 3, text: '경제활동인구 중 실업자가 차지하는 비율을 (      )이라고 해요.', answer: '실업률', initials: 'ㅅㅇㄹ', aliases: ['실업률'] },        { no: 4, text: '법으로 정한 최소한의 임금 기준을 (        )라고 해요.', answer: '최저임금제', initials: 'ㅊㅈㅇㄱㅈ', aliases: ['최저임금제','최저 임금제'] },
+        { no: 5, text: '실업에 대비하여 보험료를 내고 실직 시 급여를 받는 제도를 (          )라고 해요.', answer: '고용보험제도', initials: 'ㄱㅇㅂㅎㅈㄷ', aliases: ['고용보험제도','고용 보험 제도'] },
+        { no: 6, text: '노동력이 거래되는 시장을 (        )이라고 해요.', answer: '노동시장', initials: 'ㄴㄷㅅㅈ', aliases: ['노동시장','노동 시장'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -1299,14 +1299,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '경제 활동의 수준이 시간에 따라 변하는 현상을 (      )이라고 해요.', answer: '경기 변동', initials: 'ㄱㄱ ㅂㄷ', aliases: ['경기변동', '경기 변동'] },
         { no: 2, text: '경기가 좋아 생산과 고용이 활발한 상태를 (      )이라고 해요.', answer: '호황', initials: 'ㅎㅎ', aliases: ['호황'] },
         { no: 3, text: '경기가 나빠 생산과 고용이 위축된 상태를 (      )이라고 해요.', answer: '불황', initials: 'ㅂㅎ', aliases: ['불황'] },
-        { no: 4, text: '호황과 불황이 주기적으로 반복되는 현상을 (      )이라고 해요.', answer: '경기 순환', initials: 'ㄱㄱ ㅅㅎ', aliases: ['경기순환', '경기 순환'] },        { no: 6, text: '한 나라에서 생산된 재화와 서비스의 총 가치를 (      )이라고 해요.', answer: '국내총생산', initials: 'ㄱㄴㅊㅅㅅ', aliases: ['국내총생산', 'GDP'] },
-        { no: 7, text: '정부가 세금과 지출을 조절하는 정책을 (      )이라고 해요.', answer: '재정정책', initials: 'ㅈㅈㅈㅊ', aliases: ['재정정책'] },        { no: 9, text: '돈을 빌릴 때 내는 이자의 비율을 (      )이라고 해요.', answer: '금리', initials: 'ㄱㄹ', aliases: ['금리'] },
-        { no: 10, text: '통화정책을 담당하고 화폐를 발행하는 은행을 (      )이라고 해요.', answer: '중앙은행', initials: 'ㅈㅇㅇㅎ', aliases: ['중앙은행'] },
-        { no: 11, text: '경기 상태를 파악하기 위해 사용하는 통계 수치를 (      )라고 해요.', answer: '경기 지표', initials: 'ㄱㄱ ㅈㅍ', aliases: ['경기지표', '경기 지표'] },
-        { no: 12, text: '경제가 성장하고 활발해지는 시기를 (      )라고 해요.', answer: '경기 확장기', initials: 'ㄱㄱ ㅎㅈㄱ', aliases: ['경기확장기', '경기 확장기'] },
-        { no: 13, text: '경제가 위축되고 침체되는 시기를 (      )라고 해요.', answer: '경기 수축기', initials: 'ㄱㄱ ㅅㅊㄱ', aliases: ['경기수축기', '경기 수축기'] },
-        { no: 14, text: '재화나 서비스를 구입하여 사용하는 활동을 (      )라고 해요.', answer: '소비', initials: 'ㅅㅂ', aliases: ['소비'] },
-        { no: 15, text: '미래의 이익을 위해 자금을 투입하는 활동을 (      )라고 해요.', answer: '투자', initials: 'ㅌㅈ', aliases: ['투자'] }
+        { no: 4, text: '호황과 불황이 주기적으로 반복되는 현상을 (      )이라고 해요.', answer: '경기 순환', initials: 'ㄱㄱ ㅅㅎ', aliases: ['경기순환', '경기 순환'] },        { no: 5, text: '한 나라에서 생산된 재화와 서비스의 총 가치를 (      )이라고 해요.', answer: '국내총생산', initials: 'ㄱㄴㅊㅅㅅ', aliases: ['국내총생산', 'GDP'] },
+        { no: 6, text: '정부가 세금과 지출을 조절하는 정책을 (      )이라고 해요.', answer: '재정정책', initials: 'ㅈㅈㅈㅊ', aliases: ['재정정책'] },        { no: 7, text: '돈을 빌릴 때 내는 이자의 비율을 (      )이라고 해요.', answer: '금리', initials: 'ㄱㄹ', aliases: ['금리'] },
+        { no: 8, text: '통화정책을 담당하고 화폐를 발행하는 은행을 (      )이라고 해요.', answer: '중앙은행', initials: 'ㅈㅇㅇㅎ', aliases: ['중앙은행'] },
+        { no: 9, text: '경기 상태를 파악하기 위해 사용하는 통계 수치를 (      )라고 해요.', answer: '경기 지표', initials: 'ㄱㄱ ㅈㅍ', aliases: ['경기지표', '경기 지표'] },
+        { no: 10, text: '경제가 성장하고 활발해지는 시기를 (      )라고 해요.', answer: '경기 확장기', initials: 'ㄱㄱ ㅎㅈㄱ', aliases: ['경기확장기', '경기 확장기'] },
+        { no: 11, text: '경제가 위축되고 침체되는 시기를 (      )라고 해요.', answer: '경기 수축기', initials: 'ㄱㄱ ㅅㅊㄱ', aliases: ['경기수축기', '경기 수축기'] },
+        { no: 12, text: '재화나 서비스를 구입하여 사용하는 활동을 (      )라고 해요.', answer: '소비', initials: 'ㅅㅂ', aliases: ['소비'] },
+        { no: 13, text: '미래의 이익을 위해 자금을 투입하는 활동을 (      )라고 해요.', answer: '투자', initials: 'ㅌㅈ', aliases: ['투자'] }
       ]
     },
     quiz: {
@@ -1515,16 +1515,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '서로 다른 나라 화폐의 교환 비율을 (      )이라고 해요.', answer: '환율', initials: 'ㅎㅇ', aliases: ['환율'] },
         { no: 2, text: '외국의 화폐나 외국 돈을 (      )이라고 해요.', answer: '외환', initials: 'ㅇㅎ', aliases: ['외환'] },
-        { no: 3, text: '외국 화폐를 사고파는 시장을 (      )이라고 해요.', answer: '외환시장', initials: 'ㅇㅎㅅㅈ', aliases: ['외환시장'] },        { no: 6, text: '자국 화폐의 가치가 올라가는 것을 (      )이라고 해요.', answer: '절상', initials: 'ㅈㅅ', aliases: ['절상'] },
-        { no: 7, text: '자국 화폐의 가치가 내려가는 것을 (      )라고 해요.', answer: '절하', initials: 'ㅈㅎ', aliases: ['절하'] },
-        { no: 8, text: '중앙은행이 보유한 외국 화폐의 총액을 (      )라고 해요.', answer: '외환보유고', initials: 'ㅇㅎㅂㅇㄱ', aliases: ['외환보유고'] },
-        { no: 9, text: '외환 부족으로 경제가 어려워지는 상황을 (      )라고 해요.', answer: '외환위기', initials: 'ㅇㅎㅇㄱ', aliases: ['외환위기'] },
-        { no: 10, text: '자국의 상품을 외국에 파는 것을 (      )이라고 해요.', answer: '수출', initials: 'ㅅㅊ', aliases: ['수출'] },
-        { no: 11, text: '외국의 상품을 사 오는 것을 (      )이라고 해요.', answer: '수입', initials: 'ㅅㅇ', aliases: ['수입'] },
-        { no: 12, text: '돈을 빌릴 때 내는 이자의 비율을 (      )라고 해요.', answer: '금리', initials: 'ㄱㄹ', aliases: ['금리'] },
-        { no: 13, text: '통화정책을 담당하고 화폐를 발행하는 은행을 (      )이라고 해요.', answer: '중앙은행', initials: 'ㅈㅇㅇㅎ', aliases: ['중앙은행'] },
-        { no: 14, text: '미래의 이익을 위해 자금을 투입하는 활동을 (      )라고 해요.', answer: '투자', initials: 'ㅌㅈ', aliases: ['투자'] },
-        { no: 15, text: '가격 면에서 다른 상품과 경쟁할 수 있는 힘을 (      )이라고 해요.', answer: '가격 경쟁력', initials: 'ㄱㄱ ㄱㅈㄹ', aliases: ['가격경쟁력', '가격 경쟁력'] }
+        { no: 3, text: '외국 화폐를 사고파는 시장을 (      )이라고 해요.', answer: '외환시장', initials: 'ㅇㅎㅅㅈ', aliases: ['외환시장'] },        { no: 4, text: '자국 화폐의 가치가 올라가는 것을 (      )이라고 해요.', answer: '절상', initials: 'ㅈㅅ', aliases: ['절상'] },
+        { no: 5, text: '자국 화폐의 가치가 내려가는 것을 (      )라고 해요.', answer: '절하', initials: 'ㅈㅎ', aliases: ['절하'] },
+        { no: 6, text: '중앙은행이 보유한 외국 화폐의 총액을 (      )라고 해요.', answer: '외환보유고', initials: 'ㅇㅎㅂㅇㄱ', aliases: ['외환보유고'] },
+        { no: 7, text: '외환 부족으로 경제가 어려워지는 상황을 (      )라고 해요.', answer: '외환위기', initials: 'ㅇㅎㅇㄱ', aliases: ['외환위기'] },
+        { no: 8, text: '자국의 상품을 외국에 파는 것을 (      )이라고 해요.', answer: '수출', initials: 'ㅅㅊ', aliases: ['수출'] },
+        { no: 9, text: '외국의 상품을 사 오는 것을 (      )이라고 해요.', answer: '수입', initials: 'ㅅㅇ', aliases: ['수입'] },
+        { no: 10, text: '돈을 빌릴 때 내는 이자의 비율을 (      )라고 해요.', answer: '금리', initials: 'ㄱㄹ', aliases: ['금리'] },
+        { no: 11, text: '통화정책을 담당하고 화폐를 발행하는 은행을 (      )이라고 해요.', answer: '중앙은행', initials: 'ㅈㅇㅇㅎ', aliases: ['중앙은행'] },
+        { no: 12, text: '미래의 이익을 위해 자금을 투입하는 활동을 (      )라고 해요.', answer: '투자', initials: 'ㅌㅈ', aliases: ['투자'] },
+        { no: 13, text: '가격 면에서 다른 상품과 경쟁할 수 있는 힘을 (      )이라고 해요.', answer: '가격 경쟁력', initials: 'ㄱㄱ ㄱㅈㄹ', aliases: ['가격경쟁력', '가격 경쟁력'] }
       ]
     },
     quiz: {

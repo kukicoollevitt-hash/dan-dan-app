@@ -994,8 +994,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '특정 집단이 공유하는 생활 방식과 가치관의 총체를 (    )라 한다.', answer: '문화', initials: 'ㅁㅎ', aliases: ['문화'] },
         { no: 2, text: '각 문화를 그 사회의 맥락에서 이해하고 존중하는 태도를 (        )라 한다.', answer: '문화 상대주의', initials: 'ㅁㅎ ㅅㄷㅈㅇ', aliases: ['문화상대주의'] },
         { no: 3, text: '자신의 문화가 우월하다고 여기는 태도를 (          )라 한다.', answer: '자문화 중심주의', initials: 'ㅈㅁㅎ ㅈㅅㅈㅇ', aliases: ['자문화중심주의'] },
-        { no: 4, text: '시간이 지남에 따라 문화가 변화하는 현상을 (      )이라 한다.', answer: '문화 변동', initials: 'ㅁㅎ ㅂㄷ', aliases: ['문화변동'] },        { no: 6, text: '다양한 문화의 존재를 인정하고 존중하는 것을 (        )이라 한다.', answer: '문화 다양성', initials: 'ㅁㅎ ㄷㅇㅅ', aliases: ['문화다양성'] },        { no: 9, text: '특정 문화에 속해 있다는 소속감을 (        )이라 한다.', answer: '문화 정체성', initials: 'ㅁㅎ ㅈㅊㅅ', aliases: ['문화정체성'] },
-        { no: 10, text: '새로운 것을 받아들이는 데 열린 태도를 가진 것을 (      )이라 한다.', answer: '개방적', initials: 'ㄱㅂㅈ', aliases: ['개방적'] }
+        { no: 4, text: '시간이 지남에 따라 문화가 변화하는 현상을 (      )이라 한다.', answer: '문화 변동', initials: 'ㅁㅎ ㅂㄷ', aliases: ['문화변동'] },        { no: 5, text: '다양한 문화의 존재를 인정하고 존중하는 것을 (        )이라 한다.', answer: '문화 다양성', initials: 'ㅁㅎ ㄷㅇㅅ', aliases: ['문화다양성'] },        { no: 6, text: '특정 문화에 속해 있다는 소속감을 (        )이라 한다.', answer: '문화 정체성', initials: 'ㅁㅎ ㅈㅊㅅ', aliases: ['문화정체성'] },
+        { no: 7, text: '새로운 것을 받아들이는 데 열린 태도를 가진 것을 (      )이라 한다.', answer: '개방적', initials: 'ㄱㅂㅈ', aliases: ['개방적'] }
       ]
     },
     quiz: {
@@ -1491,11 +1491,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[기후와 환경 어휘]',
       items: [
-        { no: 1, text: '지구의 평균 기온이나 날씨 패턴이 장기간 변하는 현상을 (        )라고 한다.', answer: '기후 변화', initials: 'ㄱㅎ ㅂㅎ', aliases: ['기후변화', '기후 변화'] },        { no: 3, text: '온실가스가 지구의 열이 빠져나가는 것을 막아 온도가 상승하는 현상을 (        )라고 한다.', answer: '온실효과', initials: 'ㅇㅅㅎㄱ', aliases: ['온실효과', '온실 효과'] },
-        { no: 4, text: '온실가스 배출량과 흡수량을 같게 하여 순 배출량을 0으로 만드는 것을 (        )이라고 한다.', answer: '탄소 중립', initials: 'ㅌㅅ ㅈㄹ', aliases: ['탄소중립', '탄소 중립'] },
-        { no: 5, text: '한 번 쓰고 버리는 물건을 (        )이라고 한다.', answer: '일회용품', initials: 'ㅇㅎㅇㅍ', aliases: ['일회용품'] },
-        { no: 6, text: '기후 위기 대응을 요구하며 시위하는 행동을 (        )이라고 한다.', answer: '기후 파업', initials: 'ㄱㅎ ㅍㅇ', aliases: ['기후파업', '기후 파업'] },
-        { no: 7, text: '현재 세대와 미래 세대 간의 공정한 책임을 (          )이라고 한다.', answer: '세대 간 정의', initials: 'ㅅㄷ ㄱ ㅈㅇ', aliases: ['세대간정의', '세대 간 정의'] },        { no: 10, text: '태양광, 풍력 등 자연에서 얻는 무한한 에너지원을 (        )라고 한다.', answer: '재생에너지', initials: 'ㅈㅅㅇㄴㅈ', aliases: ['재생에너지', '재생 에너지'] }
+        { no: 1, text: '지구의 평균 기온이나 날씨 패턴이 장기간 변하는 현상을 (        )라고 한다.', answer: '기후 변화', initials: 'ㄱㅎ ㅂㅎ', aliases: ['기후변화', '기후 변화'] },        { no: 2, text: '온실가스가 지구의 열이 빠져나가는 것을 막아 온도가 상승하는 현상을 (        )라고 한다.', answer: '온실효과', initials: 'ㅇㅅㅎㄱ', aliases: ['온실효과', '온실 효과'] },
+        { no: 3, text: '온실가스 배출량과 흡수량을 같게 하여 순 배출량을 0으로 만드는 것을 (        )이라고 한다.', answer: '탄소 중립', initials: 'ㅌㅅ ㅈㄹ', aliases: ['탄소중립', '탄소 중립'] },
+        { no: 4, text: '한 번 쓰고 버리는 물건을 (        )이라고 한다.', answer: '일회용품', initials: 'ㅇㅎㅇㅍ', aliases: ['일회용품'] },
+        { no: 5, text: '기후 위기 대응을 요구하며 시위하는 행동을 (        )이라고 한다.', answer: '기후 파업', initials: 'ㄱㅎ ㅍㅇ', aliases: ['기후파업', '기후 파업'] },
+        { no: 6, text: '현재 세대와 미래 세대 간의 공정한 책임을 (          )이라고 한다.', answer: '세대 간 정의', initials: 'ㅅㄷ ㄱ ㅈㅇ', aliases: ['세대간정의', '세대 간 정의'] },        { no: 7, text: '태양광, 풍력 등 자연에서 얻는 무한한 에너지원을 (        )라고 한다.', answer: '재생에너지', initials: 'ㅈㅅㅇㄴㅈ', aliases: ['재생에너지', '재생 에너지'] }
       ]
     },
     quiz: {
@@ -1690,7 +1690,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '운전자 없이 자동차가 스스로 운행하는 기술을 (     )이라고 해요.', answer: '자율주행', initials: 'ㅈㅇㅈㅎ', aliases: ['자율주행'] },
         { no: 5, text: '사물들이 인터넷으로 연결되어 정보를 주고받는 기술을 (      )이라고 해요.', answer: '사물인터넷', initials: 'ㅅㅁㅇㅌㄴ', aliases: ['사물인터넷', 'IoT'] },
         { no: 6, text: '개인의 사적인 정보가 보호받을 권리를 (      )라고 해요.', answer: '프라이버시', initials: 'ㅍㄹㅇㅂㅅ', aliases: ['프라이버시'] },
-        { no: 7, text: '기술을 다루는 능력의 차이로 발생하는 불평등을 (      )라고 해요.', answer: '디지털 격차', initials: 'ㄷㅈㅌ ㄱㅊ', aliases: ['디지털격차', '디지털 격차'] },        { no: 10, text: '디지털 기기와 정보를 올바르게 이해하고 활용하는 능력을 (         )라고 해요.', answer: '디지털 리터러시', initials: 'ㄷㅈㅌ ㄹㅌㄹㅅ', aliases: ['디지털리터러시', '디지털 리터러시'] }
+        { no: 7, text: '기술을 다루는 능력의 차이로 발생하는 불평등을 (      )라고 해요.', answer: '디지털 격차', initials: 'ㄷㅈㅌ ㄱㅊ', aliases: ['디지털격차', '디지털 격차'] },        { no: 8, text: '디지털 기기와 정보를 올바르게 이해하고 활용하는 능력을 (         )라고 해요.', answer: '디지털 리터러시', initials: 'ㄷㅈㅌ ㄹㅌㄹㅅ', aliases: ['디지털리터러시', '디지털 리터러시'] }
       ]
     },
     quiz: {
@@ -1884,7 +1884,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '환경에 미치는 영향을 고려하여 물건을 구매하는 것을 (       )라고 해요.', answer: '친환경 소비', initials: 'ㅊㅎㄱ ㅅㅂ', aliases: ['친환경소비', '친환경 소비'] },
         { no: 5, text: '개인이나 단체의 활동으로 발생하는 탄소 배출량을 (       )이라고 해요.', answer: '탄소발자국', initials: 'ㅌㅅㅂㅈㄱ', aliases: ['탄소발자국'] },
         { no: 6, text: '버려지는 물건을 새롭고 가치 있는 제품으로 재탄생시키는 것을 (      )이라고 해요.', answer: '업사이클링', initials: 'ㅇㅅㅇㅋㄹ', aliases: ['업사이클링'] },
-        { no: 7, text: '다 쓴 물건을 다시 가공하여 사용하는 것을 (    )이라고 해요.', answer: '재활용', initials: 'ㅈㅎㅇ', aliases: ['재활용'] },        { no: 10, text: '자원을 재활용하고 재사용하여 순환시키는 경제 시스템을 (      )라고 해요.', answer: '순환 경제', initials: 'ㅅㅎ ㄱㅈ', aliases: ['순환경제', '순환 경제'] }
+        { no: 7, text: '다 쓴 물건을 다시 가공하여 사용하는 것을 (    )이라고 해요.', answer: '재활용', initials: 'ㅈㅎㅇ', aliases: ['재활용'] },        { no: 8, text: '자원을 재활용하고 재사용하여 순환시키는 경제 시스템을 (      )라고 해요.', answer: '순환 경제', initials: 'ㅅㅎ ㄱㅈ', aliases: ['순환경제', '순환 경제'] }
       ]
     },
     quiz: {

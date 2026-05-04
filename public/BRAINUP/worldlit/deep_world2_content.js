@@ -70,15 +70,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[윌리엄 텔 어휘]',
       items: [
-        { no: 1, text: '어떤 일에 대해 깊이 생각하는 것을 (      )라고 해요.', answer: '궁리', initials: 'ㄱㄹ', aliases: ['궁리'] },        { no: 4, text: '일을 잘 해결할 수 있는 좋은 생각이나 방법을 (      )라고 해요.', answer: '묘안', initials: 'ㅁㅇ', aliases: ['묘안'] },
-        { no: 5, text: '활을 다루는 기술이나 능력을 (        )라고 해요.', answer: '활 솜씨', initials: 'ㅎ ㅅㅆ', aliases: ['활솜씨','활 솜씨'] },
-        { no: 6, text: '어떤 의견이나 조건을 내놓는 것을 (      )라고 해요.', answer: '제안', initials: 'ㅈㅇ', aliases: ['제안'] },
-        { no: 7, text: '겁내지 않고 맞서는 용기나 담력을 (      )라고 해요.', answer: '배짱', initials: 'ㅂㅉ', aliases: ['배짱'] },        { no: 9, text: '힘에 눌려 복종하는 것을 (      )이라고 해요.', answer: '굴복', initials: 'ㄱㅂ', aliases: ['굴복'] },
-        { no: 10, text: '억압 없이 스스로 행동할 수 있는 상태를 (      )라고 해요.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] },
-        { no: 11, text: '왕을 대신하여 지역을 다스리는 관리를 (      )라고 해요.', answer: '총독', initials: 'ㅊㄷ', aliases: ['총독'] },
-        { no: 12, text: '두려움을 주며 해를 끼칠 듯이 겁을 주는 것을 (      )라고 해요.', answer: '위협', initials: 'ㅇㅎ', aliases: ['위협'] },
-        { no: 13, text: '굳게 믿는 생각이나 가치관을 (      )이라고 해요.', answer: '신념', initials: 'ㅅㄴ', aliases: ['신념'] },
-        { no: 14, text: '놀라거나 당황하지 않고 차분한 것을 (      )라고 해요.', answer: '침착', initials: 'ㅊㅊ', aliases: ['침착'] },      ]
+        { no: 1, text: '어떤 일에 대해 깊이 생각하는 것을 (      )라고 해요.', answer: '궁리', initials: 'ㄱㄹ', aliases: ['궁리'] },        { no: 2, text: '일을 잘 해결할 수 있는 좋은 생각이나 방법을 (      )라고 해요.', answer: '묘안', initials: 'ㅁㅇ', aliases: ['묘안'] },
+        { no: 3, text: '활을 다루는 기술이나 능력을 (        )라고 해요.', answer: '활 솜씨', initials: 'ㅎ ㅅㅆ', aliases: ['활솜씨','활 솜씨'] },
+        { no: 4, text: '어떤 의견이나 조건을 내놓는 것을 (      )라고 해요.', answer: '제안', initials: 'ㅈㅇ', aliases: ['제안'] },
+        { no: 5, text: '겁내지 않고 맞서는 용기나 담력을 (      )라고 해요.', answer: '배짱', initials: 'ㅂㅉ', aliases: ['배짱'] },        { no: 6, text: '힘에 눌려 복종하는 것을 (      )이라고 해요.', answer: '굴복', initials: 'ㄱㅂ', aliases: ['굴복'] },
+        { no: 7, text: '억압 없이 스스로 행동할 수 있는 상태를 (      )라고 해요.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] },
+        { no: 8, text: '왕을 대신하여 지역을 다스리는 관리를 (      )라고 해요.', answer: '총독', initials: 'ㅊㄷ', aliases: ['총독'] },
+        { no: 9, text: '두려움을 주며 해를 끼칠 듯이 겁을 주는 것을 (      )라고 해요.', answer: '위협', initials: 'ㅇㅎ', aliases: ['위협'] },
+        { no: 10, text: '굳게 믿는 생각이나 가치관을 (      )이라고 해요.', answer: '신념', initials: 'ㅅㄴ', aliases: ['신념'] },
+        { no: 11, text: '놀라거나 당황하지 않고 차분한 것을 (      )라고 해요.', answer: '침착', initials: 'ㅊㅊ', aliases: ['침착'] },      ]
     },
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
@@ -181,13 +181,13 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '배에서 길을 인도하는 사람을 (      )라고 해요.', answer: '항해사', initials: 'ㅎㅎㅅ', aliases: ['항해사'] },
         { no: 5, text: '숨어 있거나 몸을 피할 수 있는 곳을 (      )라고 해요.', answer: '은신처', initials: 'ㅇㅅㅊ', aliases: ['은신처'] },
         { no: 6, text: '단단히 마음먹는 것을 (      )이라고 해요.', answer: '결심', initials: 'ㄱㅅ', aliases: ['결심'] },
-        { no: 7, text: '힘을 합쳐 함께 일하는 것을 (      )이라고 해요.', answer: '협력', initials: 'ㅎㄹ', aliases: ['협력'] },        { no: 9, text: '살아남아 목숨을 유지하는 것을 (      )이라고 해요.', answer: '생존', initials: 'ㅅㅈ', aliases: ['생존'] },
-        { no: 10, text: '여러 사람이 한마음으로 뭉치는 것을 (      )이라고 해요.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] },
-        { no: 11, text: '무서워서 두려운 마음을 (      )라고 해요.', answer: '공포', initials: 'ㄱㅍ', aliases: ['공포'] },
-        { no: 12, text: '어려움을 참고 견디는 것을 (      )라고 해요.', answer: '인내', initials: 'ㅇㄴ', aliases: ['인내'] },
-        { no: 13, text: '무리를 이끄는 지도자를 (      )라고 해요.', answer: '리더', initials: 'ㄹㄷ', aliases: ['리더'] },
-        { no: 14, text: '위험이 없고 편안한 상태를 (      )이라고 해요.', answer: '안전', initials: 'ㅇㅈ', aliases: ['안전'] },
-        { no: 15, text: '어렵고 힘든 시험이나 고난을 (      )이라고 해요.', answer: '시련', initials: 'ㅅㄹ', aliases: ['시련'] }
+        { no: 7, text: '힘을 합쳐 함께 일하는 것을 (      )이라고 해요.', answer: '협력', initials: 'ㅎㄹ', aliases: ['협력'] },        { no: 8, text: '살아남아 목숨을 유지하는 것을 (      )이라고 해요.', answer: '생존', initials: 'ㅅㅈ', aliases: ['생존'] },
+        { no: 9, text: '여러 사람이 한마음으로 뭉치는 것을 (      )이라고 해요.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] },
+        { no: 10, text: '무서워서 두려운 마음을 (      )라고 해요.', answer: '공포', initials: 'ㄱㅍ', aliases: ['공포'] },
+        { no: 11, text: '어려움을 참고 견디는 것을 (      )라고 해요.', answer: '인내', initials: 'ㅇㄴ', aliases: ['인내'] },
+        { no: 12, text: '무리를 이끄는 지도자를 (      )라고 해요.', answer: '리더', initials: 'ㄹㄷ', aliases: ['리더'] },
+        { no: 13, text: '위험이 없고 편안한 상태를 (      )이라고 해요.', answer: '안전', initials: 'ㅇㅈ', aliases: ['안전'] },
+        { no: 14, text: '어렵고 힘든 시험이나 고난을 (      )이라고 해요.', answer: '시련', initials: 'ㅅㄹ', aliases: ['시련'] }
       ]
     },
     quiz: {
@@ -297,8 +297,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 9, text: '세상에 널리 퍼진 좋은 평판을 (      )이라고 한다.', answer: '명성', initials: 'ㅁㅅ', aliases: ['명성'] },
         { no: 10, text: '바르고 올바른 도리를 지키는 것을 (      )라고 한다.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] },
         { no: 11, text: '소유하고 있는 재물이나 물건을 (      )이라고 한다.', answer: '재산', initials: 'ㅈㅅ', aliases: ['재산'] },
-        { no: 12, text: '잘못을 바로잡기 위해 하는 말을 (      )이라고 한다.', answer: '변명', initials: 'ㅂㅁ', aliases: ['변명'] },        { no: 14, text: '앞날에 대한 긍정적인 기대를 (      )라고 한다.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
-        { no: 15, text: '로빈 후드가 활동한 영국의 숲을 (        )라고 한다.', answer: '셔우드 숲', initials: 'ㅅㅇㄷ ㅅ', aliases: ['셔우드숲','셔우드 숲'] }
+        { no: 12, text: '잘못을 바로잡기 위해 하는 말을 (      )이라고 한다.', answer: '변명', initials: 'ㅂㅁ', aliases: ['변명'] },        { no: 13, text: '앞날에 대한 긍정적인 기대를 (      )라고 한다.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
+        { no: 14, text: '로빈 후드가 활동한 영국의 숲을 (        )라고 한다.', answer: '셔우드 숲', initials: 'ㅅㅇㄷ ㅅ', aliases: ['셔우드숲','셔우드 숲'] }
       ]
     },
     quiz: {
@@ -409,7 +409,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '잘난 체하지 않고 자신을 낮추는 태도를 (      )이라고 한다.', answer: '겸손', initials: 'ㄱㅅ', aliases: ['겸손'] },
         { no: 11, text: '성격이 활발하고 거친 여자아이를 (        )라고 한다.', answer: '말괄량이', initials: 'ㅁㄱㄹㅇ', aliases: ['말괄량이'] },
         { no: 12, text: '남에게 전하는 소식이나 말을 (      )이라고 한다.', answer: '전갈', initials: 'ㅈㄱ', aliases: ['전갈'] },
-        { no: 13, text: '요청이나 제안을 받아들이지 않는 것을 (      )이라고 한다.', answer: '거절', initials: 'ㄱㅈ', aliases: ['거절'] },        { no: 15, text: '여러 의견이 엇갈려 다투는 상태를 (      )이라고 한다.', answer: '논란', initials: 'ㄴㄹ', aliases: ['논란'] }
+        { no: 13, text: '요청이나 제안을 받아들이지 않는 것을 (      )이라고 한다.', answer: '거절', initials: 'ㄱㅈ', aliases: ['거절'] },        { no: 14, text: '여러 의견이 엇갈려 다투는 상태를 (      )이라고 한다.', answer: '논란', initials: 'ㄴㄹ', aliases: ['논란'] }
       ]
     },
     quiz: {
@@ -501,11 +501,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[올리버 트위스트 어휘]',
       items: [
         { no: 1, text: '가난하고 의지할 곳 없는 사람들을 모아 돌보던 곳을 (      )이라고 해요.', answer: '구빈원', initials: 'ㄱㅂㅇ', aliases: ['구빈원'] },
-        { no: 2, text: '부모가 없거나 버림받아 혼자 자라는 아이를 (      )라고 해요.', answer: '고아', initials: 'ㄱㅇ', aliases: ['고아'] },        { no: 4, text: '부당한 것에 맞서 거부하거나 대항하는 것을 (      )이라고 해요.', answer: '저항', initials: 'ㅈㅎ', aliases: ['저항'] },        { no: 6, text: '잘못에 대한 대가로 받는 괴로움이나 처벌을 (      )이라고 해요.', answer: '벌', initials: 'ㅂ', aliases: ['벌'] },
-        { no: 7, text: '먹을 것이 없어 배가 몹시 고픈 상태를 (      )라고 해요.', answer: '허기', initials: 'ㅎㄱ', aliases: ['허기'] },
-        { no: 8, text: '겁을 내지 않고 어려운 일에 맞서는 마음을 (      )라고 해요.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] },        { no: 10, text: '강제로 누르거나 자유를 빼앗는 것을 (      )이라고 해요.', answer: '억압', initials: 'ㅇㅇ', aliases: ['억압'] },        { no: 13, text: '시끄럽고 혼란스러운 일을 (      )이라고 해요.', answer: '소동', initials: 'ㅅㄷ', aliases: ['소동'] },
-        { no: 14, text: '법을 어기는 나쁜 행동을 (      )라고 해요.', answer: '범죄', initials: 'ㅂㅈ', aliases: ['범죄'] },
-        { no: 15, text: '새로운 생각이나 느낌을 주는 것을 (      )이라고 해요.', answer: '영감', initials: 'ㅇㄱ', aliases: ['영감'] }
+        { no: 2, text: '부모가 없거나 버림받아 혼자 자라는 아이를 (      )라고 해요.', answer: '고아', initials: 'ㄱㅇ', aliases: ['고아'] },        { no: 3, text: '부당한 것에 맞서 거부하거나 대항하는 것을 (      )이라고 해요.', answer: '저항', initials: 'ㅈㅎ', aliases: ['저항'] },        { no: 4, text: '잘못에 대한 대가로 받는 괴로움이나 처벌을 (      )이라고 해요.', answer: '벌', initials: 'ㅂ', aliases: ['벌'] },
+        { no: 5, text: '먹을 것이 없어 배가 몹시 고픈 상태를 (      )라고 해요.', answer: '허기', initials: 'ㅎㄱ', aliases: ['허기'] },
+        { no: 6, text: '겁을 내지 않고 어려운 일에 맞서는 마음을 (      )라고 해요.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] },        { no: 7, text: '강제로 누르거나 자유를 빼앗는 것을 (      )이라고 해요.', answer: '억압', initials: 'ㅇㅇ', aliases: ['억압'] },        { no: 8, text: '시끄럽고 혼란스러운 일을 (      )이라고 해요.', answer: '소동', initials: 'ㅅㄷ', aliases: ['소동'] },
+        { no: 9, text: '법을 어기는 나쁜 행동을 (      )라고 해요.', answer: '범죄', initials: 'ㅂㅈ', aliases: ['범죄'] },
+        { no: 10, text: '새로운 생각이나 느낌을 주는 것을 (      )이라고 해요.', answer: '영감', initials: 'ㅇㄱ', aliases: ['영감'] }
       ]
     },
     quiz: {
@@ -608,14 +608,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '헉과 짐이 뗏목을 타고 여행한 강은 (         )이다.', answer: '미시시피 강', initials: 'ㅁㅅㅅㅍ ㄱ', aliases: ['미시시피강'] },
         { no: 4, text: '나무를 엮어 만든 배를 (      )이라 한다.', answer: '뗏목', initials: 'ㄸㅁ', aliases: ['뗏목'] },
         { no: 5, text: '주인에게 속해 자유가 없는 사람을 (      )라 한다.', answer: '노예', initials: 'ㄴㅇ', aliases: ['노예'] },
-        { no: 6, text: '억압 없이 살 수 있는 상태를 (      )라 한다.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] },        { no: 8, text: '친구 사이의 정을 (      )이라 한다.', answer: '우정', initials: 'ㅇㅈ', aliases: ['우정'] },
-        { no: 9, text: '거짓말로 남을 속이는 사람을 (      )이라 한다.', answer: '사기꾼', initials: 'ㅅㄱㄲ', aliases: ['사기꾼'] },
-        { no: 10, text: '죽은 사람이 남긴 재산을 (      )이라 한다.', answer: '유산', initials: 'ㅇㅅ', aliases: ['유산'] },
-        { no: 11, text: '지식과 기술을 가르치고 배우는 것을 (      )이라 한다.', answer: '교육', initials: 'ㄱㅇ', aliases: ['교육'] },
-        { no: 12, text: '사회에서 지켜야 할 바른 행동과 예절을 (        )이라 한다.', answer: '예의범절', initials: 'ㅇㅇㅂㅂ', aliases: ['예의범절'] },
-        { no: 13, text: '맡은 일을 끝까지 해내려는 마음을 (      )이라 한다.', answer: '책임감', initials: 'ㅊㅇㄱ', aliases: ['책임감'] },
-        { no: 14, text: '갇힌 곳에서 빠져나오는 것을 (      )이라 한다.', answer: '탈출', initials: 'ㅌㅊ', aliases: ['탈출'] },
-        { no: 15, text: '새롭고 위험한 일을 해보고 싶어하는 마음을 (      )이라 한다.', answer: '모험심', initials: 'ㅁㅎㅅ', aliases: ['모험심'] }
+        { no: 6, text: '억압 없이 살 수 있는 상태를 (      )라 한다.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] },        { no: 7, text: '친구 사이의 정을 (      )이라 한다.', answer: '우정', initials: 'ㅇㅈ', aliases: ['우정'] },
+        { no: 8, text: '거짓말로 남을 속이는 사람을 (      )이라 한다.', answer: '사기꾼', initials: 'ㅅㄱㄲ', aliases: ['사기꾼'] },
+        { no: 9, text: '죽은 사람이 남긴 재산을 (      )이라 한다.', answer: '유산', initials: 'ㅇㅅ', aliases: ['유산'] },
+        { no: 10, text: '지식과 기술을 가르치고 배우는 것을 (      )이라 한다.', answer: '교육', initials: 'ㄱㅇ', aliases: ['교육'] },
+        { no: 11, text: '사회에서 지켜야 할 바른 행동과 예절을 (        )이라 한다.', answer: '예의범절', initials: 'ㅇㅇㅂㅂ', aliases: ['예의범절'] },
+        { no: 12, text: '맡은 일을 끝까지 해내려는 마음을 (      )이라 한다.', answer: '책임감', initials: 'ㅊㅇㄱ', aliases: ['책임감'] },
+        { no: 13, text: '갇힌 곳에서 빠져나오는 것을 (      )이라 한다.', answer: '탈출', initials: 'ㅌㅊ', aliases: ['탈출'] },
+        { no: 14, text: '새롭고 위험한 일을 해보고 싶어하는 마음을 (      )이라 한다.', answer: '모험심', initials: 'ㅁㅎㅅ', aliases: ['모험심'] }
       ]
     },
     quiz: {
@@ -704,12 +704,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     ],
     vocabFill: {
       instructions: '[비밀의 화원 어휘]',
-      items: [        { no: 2, text: '크고 훌륭한 집을 (      )이라고 해요.', answer: '저택', initials: 'ㅈㅌ', aliases: ['저택'] },
-        { no: 3, text: '사람에게서 사람으로 옮아가는 병을 (      )이라고 해요.', answer: '전염병', initials: 'ㅈㅇㅂ', aliases: ['전염병'] },
-        { no: 4, text: '벽이나 담을 타고 올라가는 식물을 (        )이라고 해요.', answer: '담쟁이덩굴', initials: 'ㄷㅉㅇㄷㄱ', aliases: ['담쟁이덩굴'] },        { no: 6, text: '앞으로 잘 될 것이라고 기대하는 마음을 (      )이라고 해요.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
-        { no: 7, text: '상처나 병이 낫는 것을 (      )라고 해요.', answer: '치유', initials: 'ㅊㅇ', aliases: ['치유'] },
-        { no: 8, text: '살아 있는 듯한 활기와 힘을 (      )라고 해요.', answer: '생기', initials: 'ㅅㄱ', aliases: ['생기'] },        { no: 10, text: '마음이 크게 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] },
-        { no: 11, text: '남을 옆에서 돌보며 시키는 일을 하는 것을 (      )이라고 해요.', answer: '시중', initials: 'ㅅㅈ', aliases: ['시중'] },        { no: 13, text: '혼자 있어서 쓸쓸한 감정을 (      )이라고 해요.', answer: '외로움', initials: 'ㅇㄹㅇ', aliases: ['외로움'] },        { no: 15, text: '몸과 마음이 튼튼한 상태를 (      )이라고 해요.', answer: '건강', initials: 'ㄱㄱ', aliases: ['건강'] }
+      items: [        { no: 1, text: '크고 훌륭한 집을 (      )이라고 해요.', answer: '저택', initials: 'ㅈㅌ', aliases: ['저택'] },
+        { no: 2, text: '사람에게서 사람으로 옮아가는 병을 (      )이라고 해요.', answer: '전염병', initials: 'ㅈㅇㅂ', aliases: ['전염병'] },
+        { no: 3, text: '벽이나 담을 타고 올라가는 식물을 (        )이라고 해요.', answer: '담쟁이덩굴', initials: 'ㄷㅉㅇㄷㄱ', aliases: ['담쟁이덩굴'] },        { no: 4, text: '앞으로 잘 될 것이라고 기대하는 마음을 (      )이라고 해요.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
+        { no: 5, text: '상처나 병이 낫는 것을 (      )라고 해요.', answer: '치유', initials: 'ㅊㅇ', aliases: ['치유'] },
+        { no: 6, text: '살아 있는 듯한 활기와 힘을 (      )라고 해요.', answer: '생기', initials: 'ㅅㄱ', aliases: ['생기'] },        { no: 7, text: '마음이 크게 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] },
+        { no: 8, text: '남을 옆에서 돌보며 시키는 일을 하는 것을 (      )이라고 해요.', answer: '시중', initials: 'ㅅㅈ', aliases: ['시중'] },        { no: 9, text: '혼자 있어서 쓸쓸한 감정을 (      )이라고 해요.', answer: '외로움', initials: 'ㅇㄹㅇ', aliases: ['외로움'] },        { no: 10, text: '몸과 마음이 튼튼한 상태를 (      )이라고 해요.', answer: '건강', initials: 'ㄱㄱ', aliases: ['건강'] }
       ]
     },
     quiz: {
@@ -811,15 +811,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '주인을 섬기며 일하는 사람을 (      )이라고 해요.', answer: '하인', initials: 'ㅎㅇ', aliases: ['하인'] },
         { no: 3, text: '시신을 불에 태우는 곳을 (      )라고 해요.', answer: '화장터', initials: 'ㅎㅈㅌ', aliases: ['화장터'] },
         { no: 4, text: '남의 일을 막거나 훼방 놓는 것을 (      )라고 해요.', answer: '방해', initials: 'ㅂㅎ', aliases: ['방해'] },
-        { no: 5, text: '큰 땅덩어리를 가로질러 건너는 것을 (        )이라고 해요.', answer: '대륙 횡단', initials: 'ㄷㄹ ㅎㄷ', aliases: ['대륙횡단','대륙 횡단'] },        { no: 7, text: '지구에서 날짜가 바뀌는 기준선을 (        )이라고 해요.', answer: '날짜 변경선', initials: 'ㄴㅉ ㅂㄱㅅ', aliases: ['날짜변경선','날짜 변경선'] },
-        { no: 8, text: '억울하게 뒤집어쓴 죄를 (      )이라고 해요.', answer: '누명', initials: 'ㄴㅁ', aliases: ['누명'] },
-        { no: 9, text: '도둑맞는 것을 (      )이라고 해요.', answer: '도난', initials: 'ㄷㄴ', aliases: ['도난'] },
-        { no: 10, text: '어려움이 있어도 포기하지 않는 힘을 (      )라고 해요.', answer: '끈기', initials: 'ㄲㄱ', aliases: ['끈기'] },
-        { no: 11, text: '일정한 규칙에 따라 정해진 대로 하는 것을 (      )이라고 해요.', answer: '규칙적', initials: 'ㄱㅊㅈ', aliases: ['규칙적'] },
-        { no: 12, text: '어려움을 이겨내는 씩씩한 마음을 (      )이라고 해요.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] },
-        { no: 13, text: '하던 일을 그만두는 것을 (      )라고 해요.', answer: '포기', initials: 'ㅍㄱ', aliases: ['포기'] },
-        { no: 14, text: '요구나 제안을 받아들이지 않는 것을 (      )이라고 해요.', answer: '거절', initials: 'ㄱㅈ', aliases: ['거절'] },
-        { no: 15, text: '틀림이 없이 바르고 확실한 것을 (      )이라고 해요.', answer: '정확', initials: 'ㅈㅎ', aliases: ['정확'] }
+        { no: 5, text: '큰 땅덩어리를 가로질러 건너는 것을 (        )이라고 해요.', answer: '대륙 횡단', initials: 'ㄷㄹ ㅎㄷ', aliases: ['대륙횡단','대륙 횡단'] },        { no: 6, text: '지구에서 날짜가 바뀌는 기준선을 (        )이라고 해요.', answer: '날짜 변경선', initials: 'ㄴㅉ ㅂㄱㅅ', aliases: ['날짜변경선','날짜 변경선'] },
+        { no: 7, text: '억울하게 뒤집어쓴 죄를 (      )이라고 해요.', answer: '누명', initials: 'ㄴㅁ', aliases: ['누명'] },
+        { no: 8, text: '도둑맞는 것을 (      )이라고 해요.', answer: '도난', initials: 'ㄷㄴ', aliases: ['도난'] },
+        { no: 9, text: '어려움이 있어도 포기하지 않는 힘을 (      )라고 해요.', answer: '끈기', initials: 'ㄲㄱ', aliases: ['끈기'] },
+        { no: 10, text: '일정한 규칙에 따라 정해진 대로 하는 것을 (      )이라고 해요.', answer: '규칙적', initials: 'ㄱㅊㅈ', aliases: ['규칙적'] },
+        { no: 11, text: '어려움을 이겨내는 씩씩한 마음을 (      )이라고 해요.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] },
+        { no: 12, text: '하던 일을 그만두는 것을 (      )라고 해요.', answer: '포기', initials: 'ㅍㄱ', aliases: ['포기'] },
+        { no: 13, text: '요구나 제안을 받아들이지 않는 것을 (      )이라고 해요.', answer: '거절', initials: 'ㄱㅈ', aliases: ['거절'] },
+        { no: 14, text: '틀림이 없이 바르고 확실한 것을 (      )이라고 해요.', answer: '정확', initials: 'ㅈㅎ', aliases: ['정확'] }
       ]
     },
     quiz: {
@@ -917,15 +917,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '물속으로 들어가 다닐 수 있는 배를 (      )이라고 해요.', answer: '잠수함', initials: 'ㅈㅅㅎ', aliases: ['잠수함'] },
         { no: 2, text: '바다 생물을 연구하는 과학자를 (          )라고 해요.', answer: '해양 생물학자', initials: 'ㅎㅇ ㅅㅁㅎㅈ', aliases: ['해양생물학자','해양 생물학자'] },
-        { no: 3, text: '필요한 것을 스스로 마련하는 것을 (        )이라고 해요.', answer: '자급자족', initials: 'ㅈㄱㅈㅈ', aliases: ['자급자족'] },        { no: 5, text: '바다에서 산호가 모여 이룬 지형을 (      )라고 해요.', answer: '산호초', initials: 'ㅅㅎㅊ', aliases: ['산호초'] },
-        { no: 6, text: '옛날에 만들어진 건물이나 물건의 자취를 (      )이라고 해요.', answer: '유적', initials: 'ㅇㅈ', aliases: ['유적'] },        { no: 8, text: '옳고 바른 것을 지키려는 마음을 (      )이라고 해요.', answer: '정의감', initials: 'ㅈㅇㄱ', aliases: ['정의감'] },
-        { no: 9, text: '바다의 밑바닥을 (      )라고 해요.', answer: '해저', initials: 'ㅎㅈ', aliases: ['해저'] },
-        { no: 10, text: '물이 빙빙 도는 현상을 (      )라고 해요.', answer: '소용돌이', initials: 'ㅅㅇㄷㅇ', aliases: ['소용돌이'] },
-        { no: 11, text: '찾아서 살피는 것을 (      )이라고 해요.', answer: '수색', initials: 'ㅅㅅ', aliases: ['수색'] },
-        { no: 12, text: '갑자기 받는 강한 자극이나 타격을 (      )이라고 해요.', answer: '충격', initials: 'ㅊㄱ', aliases: ['충격'] },
-        { no: 13, text: '외롭고 쓸쓸한 것을 (      )이라고 해요.', answer: '고독', initials: 'ㄱㄷ', aliases: ['고독'] },
-        { no: 14, text: '매우 귀중한 물건이나 재물을 (      )이라고 해요.', answer: '보물', initials: 'ㅂㅁ', aliases: ['보물'] },
-        { no: 15, text: '몸이나 마음이 괴롭고 아픈 것을 (      )이라고 해요.', answer: '고통', initials: 'ㄱㅌ', aliases: ['고통'] }
+        { no: 3, text: '필요한 것을 스스로 마련하는 것을 (        )이라고 해요.', answer: '자급자족', initials: 'ㅈㄱㅈㅈ', aliases: ['자급자족'] },        { no: 4, text: '바다에서 산호가 모여 이룬 지형을 (      )라고 해요.', answer: '산호초', initials: 'ㅅㅎㅊ', aliases: ['산호초'] },
+        { no: 5, text: '옛날에 만들어진 건물이나 물건의 자취를 (      )이라고 해요.', answer: '유적', initials: 'ㅇㅈ', aliases: ['유적'] },        { no: 6, text: '옳고 바른 것을 지키려는 마음을 (      )이라고 해요.', answer: '정의감', initials: 'ㅈㅇㄱ', aliases: ['정의감'] },
+        { no: 7, text: '바다의 밑바닥을 (      )라고 해요.', answer: '해저', initials: 'ㅎㅈ', aliases: ['해저'] },
+        { no: 8, text: '물이 빙빙 도는 현상을 (      )라고 해요.', answer: '소용돌이', initials: 'ㅅㅇㄷㅇ', aliases: ['소용돌이'] },
+        { no: 9, text: '찾아서 살피는 것을 (      )이라고 해요.', answer: '수색', initials: 'ㅅㅅ', aliases: ['수색'] },
+        { no: 10, text: '갑자기 받는 강한 자극이나 타격을 (      )이라고 해요.', answer: '충격', initials: 'ㅊㄱ', aliases: ['충격'] },
+        { no: 11, text: '외롭고 쓸쓸한 것을 (      )이라고 해요.', answer: '고독', initials: 'ㄱㄷ', aliases: ['고독'] },
+        { no: 12, text: '매우 귀중한 물건이나 재물을 (      )이라고 해요.', answer: '보물', initials: 'ㅂㅁ', aliases: ['보물'] },
+        { no: 13, text: '몸이나 마음이 괴롭고 아픈 것을 (      )이라고 해요.', answer: '고통', initials: 'ㄱㅌ', aliases: ['고통'] }
       ]
     },
     quiz: {
@@ -1025,11 +1025,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '먹지 못해 배가 고픈 상태를 (      )이라고 해요.', answer: '굶주림', initials: 'ㄱㅈㄹ', aliases: ['굶주림'] },
         { no: 4, text: '얕보고 무시하는 것을 (      )라고 해요.', answer: '멸시', initials: 'ㅁㅅ', aliases: ['멸시'] },
         { no: 5, text: '왕에게 왕관을 씌워 주는 의식을 (      )이라고 해요.', answer: '대관식', initials: 'ㄷㄱㅅ', aliases: ['대관식'] },
-        { no: 6, text: '나라를 대표하는 도장을 (      )라고 해요.', answer: '국새', initials: 'ㄱㅅ', aliases: ['국새'] },        { no: 8, text: '사회에서 사람이 차지하는 지위나 자격을 (      )이라고 해요.', answer: '신분', initials: 'ㅅㅂ', aliases: ['신분'] },
-        { no: 9, text: '왕이 사는 크고 화려한 건물을 (      )이라고 해요.', answer: '궁전', initials: 'ㄱㅈ', aliases: ['궁전'] },
-        { no: 10, text: '타고난 삶의 정해진 길을 (      )이라고 해요.', answer: '운명', initials: 'ㅇㅁ', aliases: ['운명'] },        { no: 13, text: '공평하지 못하고 치우친 것을 (      )이라고 해요.', answer: '불공정', initials: 'ㅂㄱㅈ', aliases: ['불공정'] },
-        { no: 14, text: '걱정이나 긴장이 풀려 마음이 편안해지는 것을 (      )이라고 해요.', answer: '안도', initials: 'ㅇㄷ', aliases: ['안도'] },
-        { no: 15, text: '거짓이 없는 사실 그대로를 (      )이라고 해요.', answer: '진실', initials: 'ㅈㅅ', aliases: ['진실'] }
+        { no: 6, text: '나라를 대표하는 도장을 (      )라고 해요.', answer: '국새', initials: 'ㄱㅅ', aliases: ['국새'] },        { no: 7, text: '사회에서 사람이 차지하는 지위나 자격을 (      )이라고 해요.', answer: '신분', initials: 'ㅅㅂ', aliases: ['신분'] },
+        { no: 8, text: '왕이 사는 크고 화려한 건물을 (      )이라고 해요.', answer: '궁전', initials: 'ㄱㅈ', aliases: ['궁전'] },
+        { no: 9, text: '타고난 삶의 정해진 길을 (      )이라고 해요.', answer: '운명', initials: 'ㅇㅁ', aliases: ['운명'] },        { no: 10, text: '공평하지 못하고 치우친 것을 (      )이라고 해요.', answer: '불공정', initials: 'ㅂㄱㅈ', aliases: ['불공정'] },
+        { no: 11, text: '걱정이나 긴장이 풀려 마음이 편안해지는 것을 (      )이라고 해요.', answer: '안도', initials: 'ㅇㄷ', aliases: ['안도'] },
+        { no: 12, text: '거짓이 없는 사실 그대로를 (      )이라고 해요.', answer: '진실', initials: 'ㅈㅅ', aliases: ['진실'] }
       ]
     },
     quiz: {
@@ -1126,16 +1126,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[톰 소여의 모험 어휘]',
       items: [
         { no: 1, text: '장난을 좋아하는 아이를 (      )라고 해요.', answer: '개구쟁이', initials: 'ㄱㄱㅈㅇ', aliases: ['개구쟁이'] },
-        { no: 2, text: '어려운 상황을 벗어나기 위한 좋은 생각을 (      )라고 해요.', answer: '꾀', initials: 'ㄲ', aliases: ['꾀'] },        { no: 4, text: '굳게 약속하는 것을 (      )라고 해요.', answer: '맹세', initials: 'ㅁㅅ', aliases: ['맹세'] },
-        { no: 5, text: '잘못한 일이 마음에 걸리는 것을 (          )라고 해요.', answer: '양심의 가책', initials: 'ㅇㅅㅇ ㄱㅊ', aliases: ['양심의가책','양심의 가책'] },
-        { no: 6, text: '당한 것을 앙갚음하는 것을 (      )라고 해요.', answer: '복수', initials: 'ㅂㅅ', aliases: ['복수'] },
-        { no: 7, text: '알려지지 않은 곳을 찾아다니며 살피는 것을 (      )이라고 해요.', answer: '탐험', initials: 'ㅌㅎ', aliases: ['탐험'] },
-        { no: 8, text: '매우 귀중한 물건을 (      )이라고 해요.', answer: '보물', initials: 'ㅂㅁ', aliases: ['보물'] },
-        { no: 9, text: '용감하고 훌륭한 일을 한 사람을 (      )이라고 해요.', answer: '영웅', initials: 'ㅇㅇ', aliases: ['영웅'] },
-        { no: 10, text: '훌륭함을 칭찬하고 기리는 것을 (      )이라고 해요.', answer: '칭송', initials: 'ㅊㅅ', aliases: ['칭송'] },
-        { no: 11, text: '일정한 집이나 직업 없이 떠도는 아이를 (      )라고 해요.', answer: '부랑아', initials: 'ㅂㄹㅇ', aliases: ['부랑아'] },        { no: 13, text: '범죄 혐의자를 잡아 가두는 것을 (      )라고 해요.', answer: '체포', initials: 'ㅊㅍ', aliases: ['체포'] },
-        { no: 14, text: '사실을 말하여 증명하는 것을 (      )이라고 해요.', answer: '증언', initials: 'ㅈㅇ', aliases: ['증언'] },
-        { no: 15, text: '힘을 북돋아 용기를 주는 것을 (      )이라고 해요.', answer: '격려', initials: 'ㄱㄹ', aliases: ['격려'] }
+        { no: 2, text: '어려운 상황을 벗어나기 위한 좋은 생각을 (      )라고 해요.', answer: '꾀', initials: 'ㄲ', aliases: ['꾀'] },        { no: 3, text: '굳게 약속하는 것을 (      )라고 해요.', answer: '맹세', initials: 'ㅁㅅ', aliases: ['맹세'] },
+        { no: 4, text: '잘못한 일이 마음에 걸리는 것을 (          )라고 해요.', answer: '양심의 가책', initials: 'ㅇㅅㅇ ㄱㅊ', aliases: ['양심의가책','양심의 가책'] },
+        { no: 5, text: '당한 것을 앙갚음하는 것을 (      )라고 해요.', answer: '복수', initials: 'ㅂㅅ', aliases: ['복수'] },
+        { no: 6, text: '알려지지 않은 곳을 찾아다니며 살피는 것을 (      )이라고 해요.', answer: '탐험', initials: 'ㅌㅎ', aliases: ['탐험'] },
+        { no: 7, text: '매우 귀중한 물건을 (      )이라고 해요.', answer: '보물', initials: 'ㅂㅁ', aliases: ['보물'] },
+        { no: 8, text: '용감하고 훌륭한 일을 한 사람을 (      )이라고 해요.', answer: '영웅', initials: 'ㅇㅇ', aliases: ['영웅'] },
+        { no: 9, text: '훌륭함을 칭찬하고 기리는 것을 (      )이라고 해요.', answer: '칭송', initials: 'ㅊㅅ', aliases: ['칭송'] },
+        { no: 10, text: '일정한 집이나 직업 없이 떠도는 아이를 (      )라고 해요.', answer: '부랑아', initials: 'ㅂㄹㅇ', aliases: ['부랑아'] },        { no: 11, text: '범죄 혐의자를 잡아 가두는 것을 (      )라고 해요.', answer: '체포', initials: 'ㅊㅍ', aliases: ['체포'] },
+        { no: 12, text: '사실을 말하여 증명하는 것을 (      )이라고 해요.', answer: '증언', initials: 'ㅈㅇ', aliases: ['증언'] },
+        { no: 13, text: '힘을 북돋아 용기를 주는 것을 (      )이라고 해요.', answer: '격려', initials: 'ㄱㄹ', aliases: ['격려'] }
       ]
     },
     quiz: {
@@ -1236,9 +1236,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '단체에 속한 사람이나 동물을 (      )이라고 해요.', answer: '일원', initials: 'ㅇㅇ', aliases: ['일원'] },
         { no: 9, text: '살아남는 것을 (      )이라고 해요.', answer: '생존', initials: 'ㅅㅈ', aliases: ['생존'] },
         { no: 10, text: '여럿이 한마음으로 뭉치는 것을 (      )이라고 해요.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] },
-        { no: 11, text: '지키고 돌봐주는 사람이나 동물을 (      )라고 해요.', answer: '보호자', initials: 'ㅂㅎㅈ', aliases: ['보호자'] },        { no: 13, text: '정당하게 누릴 수 있는 힘이나 자격을 (      )라고 해요.', answer: '권리', initials: 'ㄱㄹ', aliases: ['권리'] },
-        { no: 14, text: '자기가 누구인지에 대한 인식을 (      )이라고 해요.', answer: '정체성', initials: 'ㅈㅊㅅ', aliases: ['정체성'] },
-        { no: 15, text: '사물의 이치를 깨달아 아는 능력을 (      )라고 해요.', answer: '지혜', initials: 'ㅈㅎ', aliases: ['지혜'] }
+        { no: 11, text: '지키고 돌봐주는 사람이나 동물을 (      )라고 해요.', answer: '보호자', initials: 'ㅂㅎㅈ', aliases: ['보호자'] },        { no: 12, text: '정당하게 누릴 수 있는 힘이나 자격을 (      )라고 해요.', answer: '권리', initials: 'ㄱㄹ', aliases: ['권리'] },
+        { no: 13, text: '자기가 누구인지에 대한 인식을 (      )이라고 해요.', answer: '정체성', initials: 'ㅈㅊㅅ', aliases: ['정체성'] },
+        { no: 14, text: '사물의 이치를 깨달아 아는 능력을 (      )라고 해요.', answer: '지혜', initials: 'ㅈㅎ', aliases: ['지혜'] }
       ]
     },
     quiz: {
@@ -1336,13 +1336,13 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '마법의 힘을 가진 작은 존재를 (      )이라고 해요.', answer: '요정', initials: 'ㅇㅈ', aliases: ['요정'] },
         { no: 2, text: '빛을 받아 생기는 어두운 모양을 (      )라고 해요.', answer: '그림자', initials: 'ㄱㄹㅈ', aliases: ['그림자'] },
         { no: 3, text: '끝없이 계속되는 것을 (      )라고 해요.', answer: '영원히', initials: 'ㅇㅇㅎ', aliases: ['영원히','영원'] },
-        { no: 4, text: '위험하고 신기한 경험을 (      )이라고 해요.', answer: '모험', initials: 'ㅁㅎ', aliases: ['모험'] },        { no: 9, text: '마음속으로 그려보는 힘을 (      )이라고 해요.', answer: '상상력', initials: 'ㅅㅅㄹ', aliases: ['상상력'] },
-        { no: 10, text: '몸이나 마음이 자라는 것을 (      )이라고 해요.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },
-        { no: 11, text: '신비한 힘으로 불가능한 일을 하는 것을 (      )이라고 해요.', answer: '마법', initials: 'ㅁㅂ', aliases: ['마법'] },
-        { no: 12, text: '억압 없이 스스로 행동할 수 있는 상태를 (      )라고 해요.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] },
-        { no: 13, text: '실제가 아닌 것이 있는 것처럼 보이는 것을 (      )이라고 해요.', answer: '환상', initials: 'ㅎㅅ', aliases: ['환상'] },
-        { no: 14, text: '지난 일을 돌이켜 생각하는 것을 (      )이라고 해요.', answer: '추억', initials: 'ㅊㅇ', aliases: ['추억'] },
-        { no: 15, text: '같은 시기에 살아가는 사람들의 무리를 (      )라고 해요.', answer: '세대', initials: 'ㅅㄷ', aliases: ['세대'] }
+        { no: 4, text: '위험하고 신기한 경험을 (      )이라고 해요.', answer: '모험', initials: 'ㅁㅎ', aliases: ['모험'] },        { no: 5, text: '마음속으로 그려보는 힘을 (      )이라고 해요.', answer: '상상력', initials: 'ㅅㅅㄹ', aliases: ['상상력'] },
+        { no: 6, text: '몸이나 마음이 자라는 것을 (      )이라고 해요.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },
+        { no: 7, text: '신비한 힘으로 불가능한 일을 하는 것을 (      )이라고 해요.', answer: '마법', initials: 'ㅁㅂ', aliases: ['마법'] },
+        { no: 8, text: '억압 없이 스스로 행동할 수 있는 상태를 (      )라고 해요.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] },
+        { no: 9, text: '실제가 아닌 것이 있는 것처럼 보이는 것을 (      )이라고 해요.', answer: '환상', initials: 'ㅎㅅ', aliases: ['환상'] },
+        { no: 10, text: '지난 일을 돌이켜 생각하는 것을 (      )이라고 해요.', answer: '추억', initials: 'ㅊㅇ', aliases: ['추억'] },
+        { no: 11, text: '같은 시기에 살아가는 사람들의 무리를 (      )라고 해요.', answer: '세대', initials: 'ㅅㄷ', aliases: ['세대'] }
       ]
     },
     quiz: {
@@ -1443,14 +1443,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '윗사람이나 권위에 대들어 일으키는 소동을 (      )이라고 해요.', answer: '반란', initials: 'ㅂㄹ', aliases: ['반란'] },
         { no: 3, text: '나쁜 일을 꾸미는 비밀스러운 계획을 (      )라고 해요.', answer: '음모', initials: 'ㅇㅁ', aliases: ['음모'] },
         { no: 4, text: '한곳에 모여 버티며 저항하는 것을 (      )이라고 해요.', answer: '농성', initials: 'ㄴㅅ', aliases: ['농성'] },
-        { no: 5, text: '바다에서 배를 습격해 물건을 빼앗는 도둑을 (      )이라고 해요.', answer: '해적', initials: 'ㅎㅈ', aliases: ['해적'] },        { no: 8, text: '배에서 일하는 사람을 (      )이라고 해요.', answer: '선원', initials: 'ㅅㅇ', aliases: ['선원'] },
-        { no: 9, text: '결정을 내리는 힘과 용기를 (      )이라고 해요.', answer: '결단력', initials: 'ㄱㄷㄹ', aliases: ['결단력'] },
-        { no: 10, text: '살아남는 것을 (      )이라고 해요.', answer: '생존', initials: 'ㅅㅈ', aliases: ['생존'] },
-        { no: 11, text: '위험을 무릅쓰고 새로운 경험을 하는 것을 (      )이라고 해요.', answer: '모험', initials: 'ㅁㅎ', aliases: ['모험'] },
-        { no: 12, text: '무서워하는 마음을 (      )라고 해요.', answer: '공포', initials: 'ㄱㅍ', aliases: ['공포'] },
-        { no: 13, text: '지난 일을 마음에 간직하는 것을 (      )이라고 해요.', answer: '기억', initials: 'ㄱㅇ', aliases: ['기억'] },
-        { no: 14, text: '사물의 이치를 잘 깨달아 아는 능력을 (      )라고 해요.', answer: '지혜', initials: 'ㅈㅎ', aliases: ['지혜'] },
-        { no: 15, text: '직접 겪어서 얻은 지식이나 기능을 (      )이라고 해요.', answer: '경험', initials: 'ㄱㅎ', aliases: ['경험'] }
+        { no: 5, text: '바다에서 배를 습격해 물건을 빼앗는 도둑을 (      )이라고 해요.', answer: '해적', initials: 'ㅎㅈ', aliases: ['해적'] },        { no: 6, text: '배에서 일하는 사람을 (      )이라고 해요.', answer: '선원', initials: 'ㅅㅇ', aliases: ['선원'] },
+        { no: 7, text: '결정을 내리는 힘과 용기를 (      )이라고 해요.', answer: '결단력', initials: 'ㄱㄷㄹ', aliases: ['결단력'] },
+        { no: 8, text: '살아남는 것을 (      )이라고 해요.', answer: '생존', initials: 'ㅅㅈ', aliases: ['생존'] },
+        { no: 9, text: '위험을 무릅쓰고 새로운 경험을 하는 것을 (      )이라고 해요.', answer: '모험', initials: 'ㅁㅎ', aliases: ['모험'] },
+        { no: 10, text: '무서워하는 마음을 (      )라고 해요.', answer: '공포', initials: 'ㄱㅍ', aliases: ['공포'] },
+        { no: 11, text: '지난 일을 마음에 간직하는 것을 (      )이라고 해요.', answer: '기억', initials: 'ㄱㅇ', aliases: ['기억'] },
+        { no: 12, text: '사물의 이치를 잘 깨달아 아는 능력을 (      )라고 해요.', answer: '지혜', initials: 'ㅈㅎ', aliases: ['지혜'] },
+        { no: 13, text: '직접 겪어서 얻은 지식이나 기능을 (      )이라고 해요.', answer: '경험', initials: 'ㄱㅎ', aliases: ['경험'] }
       ]
     },
     quiz: {
@@ -1765,15 +1765,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '이야기나 글을 쓰는 것을 직업으로 하는 사람을 (      )라고 해요.', answer: '작가', initials: 'ㅈㄱ', aliases: ['작가'] },
         { no: 3, text: '외국에 가서 공부하는 것을 (      )이라고 해요.', answer: '유학', initials: 'ㅇㅎ', aliases: ['유학'] },
         { no: 4, text: '몸이나 마음이 자라고 발전하는 것을 (      )이라고 해요.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },
-        { no: 5, text: '큰 목표를 이루려는 강한 욕심을 (      )이라고 해요.', answer: '야심', initials: 'ㅇㅅ', aliases: ['야심'] },        { no: 7, text: '부끄러워하며 내성적인 성격을 (      )이라고 해요.', answer: '수줍음', initials: 'ㅅㅈㅇ', aliases: ['수줍음'] },
-        { no: 8, text: '부모와 자녀 등으로 이루어진 사람들의 모임을 (      )이라고 해요.', answer: '가족', initials: 'ㄱㅈ', aliases: ['가족'] },
-        { no: 9, text: '자유로운 행동을 막는 조건을 (      )이라고 해요.', answer: '제약', initials: 'ㅈㅇ', aliases: ['제약'] },
-        { no: 10, text: '자신을 돌보지 않고 남을 위하는 것을 (        )라고 해요.', answer: '헌신적인', initials: 'ㅎㅅㅈㅇ', aliases: ['헌신적인','헌신적','헌신'] },
-        { no: 11, text: '현실보다 감정과 이상을 중시하는 것을 (          )라고 해요.', answer: '낭만적인', initials: 'ㄴㅁㅈㅇ', aliases: ['낭만적인','낭만적'] },
-        { no: 12, text: '다른 사람에게 의지하지 않고 스스로 하는 것을 (          )라고 해요.', answer: '독립적인', initials: 'ㄷㄹㅈㅇ', aliases: ['독립적인','독립적'] },
-        { no: 13, text: '일을 해서 벌어들이는 돈을 (      )이라고 해요.', answer: '수입', initials: 'ㅅㅇ', aliases: ['수입'] },
-        { no: 14, text: '어떤 일을 하게 하는 힘을 (      )이라고 해요.', answer: '동력', initials: 'ㄷㄹ', aliases: ['동력'] },
-        { no: 15, text: '마음이 깊이 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] }
+        { no: 5, text: '큰 목표를 이루려는 강한 욕심을 (      )이라고 해요.', answer: '야심', initials: 'ㅇㅅ', aliases: ['야심'] },        { no: 6, text: '부끄러워하며 내성적인 성격을 (      )이라고 해요.', answer: '수줍음', initials: 'ㅅㅈㅇ', aliases: ['수줍음'] },
+        { no: 7, text: '부모와 자녀 등으로 이루어진 사람들의 모임을 (      )이라고 해요.', answer: '가족', initials: 'ㄱㅈ', aliases: ['가족'] },
+        { no: 8, text: '자유로운 행동을 막는 조건을 (      )이라고 해요.', answer: '제약', initials: 'ㅈㅇ', aliases: ['제약'] },
+        { no: 9, text: '자신을 돌보지 않고 남을 위하는 것을 (        )라고 해요.', answer: '헌신적인', initials: 'ㅎㅅㅈㅇ', aliases: ['헌신적인','헌신적','헌신'] },
+        { no: 10, text: '현실보다 감정과 이상을 중시하는 것을 (          )라고 해요.', answer: '낭만적인', initials: 'ㄴㅁㅈㅇ', aliases: ['낭만적인','낭만적'] },
+        { no: 11, text: '다른 사람에게 의지하지 않고 스스로 하는 것을 (          )라고 해요.', answer: '독립적인', initials: 'ㄷㄹㅈㅇ', aliases: ['독립적인','독립적'] },
+        { no: 12, text: '일을 해서 벌어들이는 돈을 (      )이라고 해요.', answer: '수입', initials: 'ㅅㅇ', aliases: ['수입'] },
+        { no: 13, text: '어떤 일을 하게 하는 힘을 (      )이라고 해요.', answer: '동력', initials: 'ㄷㄹ', aliases: ['동력'] },
+        { no: 14, text: '마음이 깊이 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] }
       ]
     },
     quiz: {
@@ -1870,15 +1870,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '업신여기고 함부로 대하는 것을 (      )라고 해요.', answer: '천대', initials: 'ㅊㄷ', aliases: ['천대'] },
         { no: 3, text: '사회에서의 지위나 계급을 (      )이라고 해요.', answer: '신분', initials: 'ㅅㅂ', aliases: ['신분'] },
         { no: 4, text: '미워하고 싫어하는 마음을 (      )라고 해요.', answer: '증오', initials: 'ㅈㅇ', aliases: ['증오'] },
-        { no: 5, text: '원수에게 앙갚음하려는 마음을 (        )이라고 해요.', answer: '복수심', initials: 'ㅂㅅㅅ', aliases: ['복수심'] },        { no: 7, text: '슬프고 불행한 일이나 이야기를 (      )이라고 해요.', answer: '비극', initials: 'ㅂㄱ', aliases: ['비극'] },
-        { no: 8, text: '잘못을 따지지 않고 너그럽게 보아주는 것을 (      )라고 해요.', answer: '용서', initials: 'ㅇㅅ', aliases: ['용서'] },
-        { no: 9, text: '어떤 일의 뒷바탕이 되는 사정을 (      )이라고 해요.', answer: '배경', initials: 'ㅂㄱ', aliases: ['배경'] },
-        { no: 10, text: '다툼을 그치고 사이좋게 지내는 것을 (      )라고 해요.', answer: '화해', initials: 'ㅎㅎ', aliases: ['화해'] },
-        { no: 11, text: '괴롭히고 못되게 대하는 것을 (      )라고 해요.', answer: '학대', initials: 'ㅎㄷ', aliases: ['학대'] },
-        { no: 12, text: '뜨겁고 강한 감정을 가진 것을 (        )이라고 해요.', answer: '열정적', initials: 'ㅇㅈㅈ', aliases: ['열정적','열정'] },
-        { no: 13, text: '재산을 모두 잃고 망하는 것을 (      )이라고 해요.', answer: '파산', initials: 'ㅍㅅ', aliases: ['파산'] },
-        { no: 14, text: '실제로는 없는 것을 보는 환상을 (      )이라고 해요.', answer: '환영', initials: 'ㅎㅇ', aliases: ['환영'] },
-        { no: 15, text: '흡족하고 충분한 것을 (      )이라고 해요.', answer: '만족', initials: 'ㅁㅈ', aliases: ['만족'] }
+        { no: 5, text: '원수에게 앙갚음하려는 마음을 (        )이라고 해요.', answer: '복수심', initials: 'ㅂㅅㅅ', aliases: ['복수심'] },        { no: 6, text: '슬프고 불행한 일이나 이야기를 (      )이라고 해요.', answer: '비극', initials: 'ㅂㄱ', aliases: ['비극'] },
+        { no: 7, text: '잘못을 따지지 않고 너그럽게 보아주는 것을 (      )라고 해요.', answer: '용서', initials: 'ㅇㅅ', aliases: ['용서'] },
+        { no: 8, text: '어떤 일의 뒷바탕이 되는 사정을 (      )이라고 해요.', answer: '배경', initials: 'ㅂㄱ', aliases: ['배경'] },
+        { no: 9, text: '다툼을 그치고 사이좋게 지내는 것을 (      )라고 해요.', answer: '화해', initials: 'ㅎㅎ', aliases: ['화해'] },
+        { no: 10, text: '괴롭히고 못되게 대하는 것을 (      )라고 해요.', answer: '학대', initials: 'ㅎㄷ', aliases: ['학대'] },
+        { no: 11, text: '뜨겁고 강한 감정을 가진 것을 (        )이라고 해요.', answer: '열정적', initials: 'ㅇㅈㅈ', aliases: ['열정적','열정'] },
+        { no: 12, text: '재산을 모두 잃고 망하는 것을 (      )이라고 해요.', answer: '파산', initials: 'ㅍㅅ', aliases: ['파산'] },
+        { no: 13, text: '실제로는 없는 것을 보는 환상을 (      )이라고 해요.', answer: '환영', initials: 'ㅎㅇ', aliases: ['환영'] },
+        { no: 14, text: '흡족하고 충분한 것을 (      )이라고 해요.', answer: '만족', initials: 'ㅁㅈ', aliases: ['만족'] }
       ]
     },
     quiz: {
@@ -2083,12 +2083,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '갇힌 곳에서 빠져나가는 것을 (      )이라고 해요.', answer: '탈출', initials: 'ㅌㅊ', aliases: ['탈출'] },
         { no: 6, text: '자신에게 해를 끼친 사람에게 앙갚음하는 것을 (      )라고 해요.', answer: '복수', initials: 'ㅂㅅ', aliases: ['복수'] },
         { no: 7, text: '마음속으로 괴로워하며 생각하는 것을 (      )이라고 해요.', answer: '고민', initials: 'ㄱㅁ', aliases: ['고민'] },
-        { no: 8, text: '잘못을 따지지 않고 너그럽게 봐주는 것을 (      )라고 해요.', answer: '용서', initials: 'ㅇㅅ', aliases: ['용서'] },        { no: 10, text: '목적을 이루어 내는 것을 (      )이라고 해요.', answer: '성공', initials: 'ㅅㄱ', aliases: ['성공'] },
-        { no: 11, text: '죽기 전에 남기는 말을 (      )이라고 해요.', answer: '유언', initials: 'ㅇㅇ', aliases: ['유언'] },
-        { no: 12, text: '나라를 배신하는 사람을 (        )라고 해요.', answer: '반역자', initials: 'ㅂㅇㅈ', aliases: ['반역자'] },
-        { no: 13, text: '논리적으로 생각하여 결론을 내리는 것을 (      )라고 해요.', answer: '추리', initials: 'ㅊㄹ', aliases: ['추리'] },
-        { no: 14, text: '실제 모습이나 신분을 (      )라고 해요.', answer: '정체', initials: 'ㅈㅊ', aliases: ['정체'] },
-        { no: 15, text: '죄가 없는데 벌을 받아 분한 것을 (        )이라고 해요.', answer: '억울함', initials: 'ㅇㅇㅎ', aliases: ['억울함','억울'] }
+        { no: 8, text: '잘못을 따지지 않고 너그럽게 봐주는 것을 (      )라고 해요.', answer: '용서', initials: 'ㅇㅅ', aliases: ['용서'] },        { no: 9, text: '목적을 이루어 내는 것을 (      )이라고 해요.', answer: '성공', initials: 'ㅅㄱ', aliases: ['성공'] },
+        { no: 10, text: '죽기 전에 남기는 말을 (      )이라고 해요.', answer: '유언', initials: 'ㅇㅇ', aliases: ['유언'] },
+        { no: 11, text: '나라를 배신하는 사람을 (        )라고 해요.', answer: '반역자', initials: 'ㅂㅇㅈ', aliases: ['반역자'] },
+        { no: 12, text: '논리적으로 생각하여 결론을 내리는 것을 (      )라고 해요.', answer: '추리', initials: 'ㅊㄹ', aliases: ['추리'] },
+        { no: 13, text: '실제 모습이나 신분을 (      )라고 해요.', answer: '정체', initials: 'ㅈㅊ', aliases: ['정체'] },
+        { no: 14, text: '죄가 없는데 벌을 받아 분한 것을 (        )이라고 해요.', answer: '억울함', initials: 'ㅇㅇㅎ', aliases: ['억울함','억울'] }
       ]
     },
     quiz: {
@@ -2665,17 +2665,17 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '괴테는 독일의 (        )로 유명합니다.', answer: '대문호', initials: 'ㄷㅁㅎ', aliases: ['대문호'] },
         { no: 2, text: '악마의 (      )에 넘어가면 안 됩니다.', answer: '유혹', initials: 'ㅇㅎ', aliases: ['유혹'] },
-        { no: 3, text: '파우스트는 악마와 (      )을 맺었습니다.', answer: '계약', initials: 'ㄱㅇ', aliases: ['계약'] },        { no: 5, text: '순간의 (      )만 추구하면 진정한 행복을 찾기 어렵습니다.', answer: '쾌락', initials: 'ㅋㄹ', aliases: ['쾌락'] },
-        { no: 6, text: '파우스트는 사람들을 위해 (      )했습니다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] },
-        { no: 7, text: '악마는 파우스트의 (      )을 가져가려 했습니다.', answer: '영혼', initials: 'ㅇㅎ', aliases: ['영혼'] },
-        { no: 8, text: '파우스트는 삶의 참된 (      )를 찾고 싶어 했습니다.', answer: '진리', initials: 'ㅈㄹ', aliases: ['진리'] },
-        { no: 9, text: '마음에 흡족한 상태를 (      )이라고 해요.', answer: '만족', initials: 'ㅁㅈ', aliases: ['만족'] },
-        { no: 10, text: '갈 바를 몰라 헤매는 것을 (      )이라고 해요.', answer: '방황', initials: 'ㅂㅎ', aliases: ['방황'] },
-        { no: 11, text: '희망을 잃고 낙심하는 것을 (      )이라고 해요.', answer: '절망', initials: 'ㅈㅁ', aliases: ['절망'] },
-        { no: 12, text: '텅 빈 느낌을 (      )라고 해요.', answer: '공허', initials: 'ㄱㅎ', aliases: ['공허'] },
-        { no: 13, text: '의심이 되어 묻는 것을 (      )이라고 해요.', answer: '의문', initials: 'ㅇㅁ', aliases: ['의문'] },
-        { no: 14, text: '무엇을 가지거나 하고 싶어하는 마음을 (      )이라고 해요.', answer: '욕망', initials: 'ㅇㅁ', aliases: ['욕망'] },
-        { no: 15, text: '이치를 깨쳐 아는 것을 (        )이라고 해요.', answer: '깨달음', initials: 'ㄲㄷㅇ', aliases: ['깨달음'] }
+        { no: 3, text: '파우스트는 악마와 (      )을 맺었습니다.', answer: '계약', initials: 'ㄱㅇ', aliases: ['계약'] },        { no: 4, text: '순간의 (      )만 추구하면 진정한 행복을 찾기 어렵습니다.', answer: '쾌락', initials: 'ㅋㄹ', aliases: ['쾌락'] },
+        { no: 5, text: '파우스트는 사람들을 위해 (      )했습니다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] },
+        { no: 6, text: '악마는 파우스트의 (      )을 가져가려 했습니다.', answer: '영혼', initials: 'ㅇㅎ', aliases: ['영혼'] },
+        { no: 7, text: '파우스트는 삶의 참된 (      )를 찾고 싶어 했습니다.', answer: '진리', initials: 'ㅈㄹ', aliases: ['진리'] },
+        { no: 8, text: '마음에 흡족한 상태를 (      )이라고 해요.', answer: '만족', initials: 'ㅁㅈ', aliases: ['만족'] },
+        { no: 9, text: '갈 바를 몰라 헤매는 것을 (      )이라고 해요.', answer: '방황', initials: 'ㅂㅎ', aliases: ['방황'] },
+        { no: 10, text: '희망을 잃고 낙심하는 것을 (      )이라고 해요.', answer: '절망', initials: 'ㅈㅁ', aliases: ['절망'] },
+        { no: 11, text: '텅 빈 느낌을 (      )라고 해요.', answer: '공허', initials: 'ㄱㅎ', aliases: ['공허'] },
+        { no: 12, text: '의심이 되어 묻는 것을 (      )이라고 해요.', answer: '의문', initials: 'ㅇㅁ', aliases: ['의문'] },
+        { no: 13, text: '무엇을 가지거나 하고 싶어하는 마음을 (      )이라고 해요.', answer: '욕망', initials: 'ㅇㅁ', aliases: ['욕망'] },
+        { no: 14, text: '이치를 깨쳐 아는 것을 (        )이라고 해요.', answer: '깨달음', initials: 'ㄲㄷㅇ', aliases: ['깨달음'] }
       ]
     },
     quiz: {
@@ -2763,11 +2763,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '사랑은 사람을 (      )시키는 힘이 있습니다.', answer: '변화', initials: 'ㅂㅎ', aliases: ['변화'] },
         { no: 7, text: '이 소설은 (      )의 메시지를 전합니다.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
         { no: 8, text: '자베르는 장 발장을 (      )하게 추적했습니다.', answer: '집요', initials: 'ㅈㅇ', aliases: ['집요'] },
-        { no: 9, text: '코제트는 테나르디에 부부에게 (      )받았습니다.', answer: '학대', initials: 'ㅎㄷ', aliases: ['학대'] },        { no: 11, text: '숨겼던 것을 솔직히 털어놓는 것을 (      )이라고 해요.', answer: '고백', initials: 'ㄱㅂ', aliases: ['고백'] },
-        { no: 12, text: '정해진 규칙이나 법칙을 (      )이라고 해요.', answer: '규율', initials: 'ㄱㅇ', aliases: ['규율'] },
-        { no: 13, text: '많은 사람이 떨쳐 일어나는 것을 (      )라고 해요.', answer: '봉기', initials: 'ㅂㄱ', aliases: ['봉기'] },
-        { no: 14, text: '거짓이나 꾸밈이 없이 참된 것을 (      )이라고 해요.', answer: '성실', initials: 'ㅅㅅ', aliases: ['성실'] },
-        { no: 15, text: '마음에 깊이 느끼어 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] }
+        { no: 9, text: '코제트는 테나르디에 부부에게 (      )받았습니다.', answer: '학대', initials: 'ㅎㄷ', aliases: ['학대'] },        { no: 10, text: '숨겼던 것을 솔직히 털어놓는 것을 (      )이라고 해요.', answer: '고백', initials: 'ㄱㅂ', aliases: ['고백'] },
+        { no: 11, text: '정해진 규칙이나 법칙을 (      )이라고 해요.', answer: '규율', initials: 'ㄱㅇ', aliases: ['규율'] },
+        { no: 12, text: '많은 사람이 떨쳐 일어나는 것을 (      )라고 해요.', answer: '봉기', initials: 'ㅂㄱ', aliases: ['봉기'] },
+        { no: 13, text: '거짓이나 꾸밈이 없이 참된 것을 (      )이라고 해요.', answer: '성실', initials: 'ㅅㅅ', aliases: ['성실'] },
+        { no: 14, text: '마음에 깊이 느끼어 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] }
       ]
     },
     quiz: {
@@ -2853,9 +2853,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '안나의 삶은 (      )으로 끝났습니다.', answer: '비극', initials: 'ㅂㄱ', aliases: ['비극'] },
         { no: 7, text: '안나는 아름답고 (      )인 여성이었습니다.', answer: '지적', initials: 'ㅈㅈ', aliases: ['지적'] },
         { no: 8, text: '안나는 남편에게 사실을 (      )했습니다.', answer: '고백', initials: 'ㄱㅂ', aliases: ['고백'] },
-        { no: 9, text: '안나에게는 가혹한 (      )이 쏟아졌습니다.', answer: '편견', initials: 'ㅍㄱ', aliases: ['편견'] },        { no: 11, text: '뜨거운 마음으로 몰두하는 것을 (      )이라고 해요.', answer: '열정', initials: 'ㅇㅈ', aliases: ['열정'] },
-        { no: 12, text: '무엇을 갖거나 하고 싶어하는 마음을 (      )이라고 해요.', answer: '욕망', initials: 'ㅇㅁ', aliases: ['욕망'] },        { no: 14, text: '날마다 되풀이되는 평범한 생활을 (      )이라고 해요.', answer: '일상', initials: 'ㅇㅅ', aliases: ['일상'] },
-        { no: 15, text: '만족스럽고 기쁜 상태를 (      )이라고 해요.', answer: '행복', initials: 'ㅎㅂ', aliases: ['행복'] }
+        { no: 9, text: '안나에게는 가혹한 (      )이 쏟아졌습니다.', answer: '편견', initials: 'ㅍㄱ', aliases: ['편견'] },        { no: 10, text: '뜨거운 마음으로 몰두하는 것을 (      )이라고 해요.', answer: '열정', initials: 'ㅇㅈ', aliases: ['열정'] },
+        { no: 11, text: '무엇을 갖거나 하고 싶어하는 마음을 (      )이라고 해요.', answer: '욕망', initials: 'ㅇㅁ', aliases: ['욕망'] },        { no: 12, text: '날마다 되풀이되는 평범한 생활을 (      )이라고 해요.', answer: '일상', initials: 'ㅇㅅ', aliases: ['일상'] },
+        { no: 13, text: '만족스럽고 기쁜 상태를 (      )이라고 해요.', answer: '행복', initials: 'ㅎㅂ', aliases: ['행복'] }
       ]
     },
     quiz: {
@@ -2936,14 +2936,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '(      )한 생각이 그를 잘못된 길로 이끌었습니다.', answer: '오만', initials: 'ㅇㅁ', aliases: ['오만'] },
         { no: 2, text: '그는 (          )라고 생각했지만 양심의 고통에 시달렸습니다.', answer: '완전 범죄', initials: 'ㅇㅈ ㅂㅈ', aliases: ['완전 범죄','완전범죄'] },
         { no: 3, text: '결국 그는 경찰서에 (      )했습니다.', answer: '자수', initials: 'ㅈㅅ', aliases: ['자수'] },
-        { no: 4, text: '진정한 (      )를 통해 새 사람이 될 수 있습니다.', answer: '회개', initials: 'ㅎㄱ', aliases: ['회개'] },        { no: 6, text: '라스콜니코프는 극심한 (      )에 시달렸습니다.', answer: '고통', initials: 'ㄱㅌ', aliases: ['고통'] },        { no: 8, text: '그는 위험한 (      )을 믿고 범죄를 저질렀습니다.', answer: '이론', initials: 'ㅇㄹ', aliases: ['이론'] },
-        { no: 9, text: '형사 포르피리는 라스콜니코프를 (      )했습니다.', answer: '의심', initials: 'ㅇㅅ', aliases: ['의심'] },
-        { no: 10, text: '라스콜니코프는 시베리아 (      )을 받았습니다.', answer: '유형', initials: 'ㅇㅎ', aliases: ['유형'] },
-        { no: 11, text: '러시아의 (        ) 도스토예프스키가 이 소설을 썼습니다.', answer: '대문호', initials: 'ㄷㅁㅎ', aliases: ['대문호'] },
-        { no: 12, text: '이 소설의 (        )는 라스콜니코프입니다.', answer: '주인공', initials: 'ㅈㅇㄱ', aliases: ['주인공'] },
-        { no: 13, text: '세상에는 (      )한 사람과 비범한 사람이 있다고 믿었습니다.', answer: '평범', initials: 'ㅍㅂ', aliases: ['평범'] },
-        { no: 14, text: '자신이 (      )한 인간이라고 착각했습니다.', answer: '비범', initials: 'ㅂㅂ', aliases: ['비범'] },
-        { no: 15, text: '나폴레옹처럼 (      )으로 칭송받고 싶었습니다.', answer: '영웅', initials: 'ㅇㅇ', aliases: ['영웅'] }
+        { no: 4, text: '진정한 (      )를 통해 새 사람이 될 수 있습니다.', answer: '회개', initials: 'ㅎㄱ', aliases: ['회개'] },        { no: 5, text: '라스콜니코프는 극심한 (      )에 시달렸습니다.', answer: '고통', initials: 'ㄱㅌ', aliases: ['고통'] },        { no: 6, text: '그는 위험한 (      )을 믿고 범죄를 저질렀습니다.', answer: '이론', initials: 'ㅇㄹ', aliases: ['이론'] },
+        { no: 7, text: '형사 포르피리는 라스콜니코프를 (      )했습니다.', answer: '의심', initials: 'ㅇㅅ', aliases: ['의심'] },
+        { no: 8, text: '라스콜니코프는 시베리아 (      )을 받았습니다.', answer: '유형', initials: 'ㅇㅎ', aliases: ['유형'] },
+        { no: 9, text: '러시아의 (        ) 도스토예프스키가 이 소설을 썼습니다.', answer: '대문호', initials: 'ㄷㅁㅎ', aliases: ['대문호'] },
+        { no: 10, text: '이 소설의 (        )는 라스콜니코프입니다.', answer: '주인공', initials: 'ㅈㅇㄱ', aliases: ['주인공'] },
+        { no: 11, text: '세상에는 (      )한 사람과 비범한 사람이 있다고 믿었습니다.', answer: '평범', initials: 'ㅍㅂ', aliases: ['평범'] },
+        { no: 12, text: '자신이 (      )한 인간이라고 착각했습니다.', answer: '비범', initials: 'ㅂㅂ', aliases: ['비범'] },
+        { no: 13, text: '나폴레옹처럼 (      )으로 칭송받고 싶었습니다.', answer: '영웅', initials: 'ㅇㅇ', aliases: ['영웅'] }
       ]
     },
     quiz: {
@@ -3026,16 +3026,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '그레고르는 (        )으로 열심히 일했습니다.', answer: '외판원', initials: 'ㅇㅍㅇ', aliases: ['외판원'] },
         { no: 2, text: '그는 가족을 (      )하기 위해 희생했습니다.', answer: '부양', initials: 'ㅂㅇ', aliases: ['부양'] },
         { no: 3, text: '벌레가 된 후 그는 가족에게 (      )당했습니다.', answer: '소외', initials: 'ㅅㅇ', aliases: ['소외'] },
-        { no: 4, text: '(        )을 잃으면 존재의 의미를 느끼기 어렵습니다.', answer: '정체성', initials: 'ㅈㅊㅅ', aliases: ['정체성'] },        { no: 6, text: '이 소설은 현대인의 (      )을 다룹니다.', answer: '고독', initials: 'ㄱㄷ', aliases: ['고독'] },
-        { no: 7, text: '그레고르는 가족을 위해 (      )했습니다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] },
-        { no: 8, text: '벌레가 된 그의 모습은 (      )했습니다.', answer: '흉측', initials: 'ㅎㅊ', aliases: ['흉측'] },
-        { no: 9, text: '그레고르는 인간이었을 때의 (      )을 그리워했습니다.', answer: '추억', initials: 'ㅊㅇ', aliases: ['추억'] },
-        { no: 10, text: '가족들은 그레고르가 죽자 (      )했습니다.', answer: '안도', initials: 'ㅇㄷ', aliases: ['안도'] },
-        { no: 11, text: '여동생 그레테는 처음에 오빠를 (      ) 주었습니다.', answer: '돌봐', initials: 'ㄷㅂ', aliases: ['돌봐'] },
-        { no: 12, text: '그레고르는 성실한 (      )이었습니다.', answer: '청년', initials: 'ㅊㄴ', aliases: ['청년'] },
-        { no: 13, text: '가족들은 그의 모습에 (      )했습니다.', answer: '경악', initials: 'ㄱㅇ', aliases: ['경악'] },
-        { no: 14, text: '그의 방에서 (      )들을 치워버렸습니다.', answer: '가구', initials: 'ㄱㄱ', aliases: ['가구'] },
-        { no: 15, text: '그는 쓸모없는 (      )가 되어버렸습니다.', answer: '존재', initials: 'ㅈㅈ', aliases: ['존재'] }
+        { no: 4, text: '(        )을 잃으면 존재의 의미를 느끼기 어렵습니다.', answer: '정체성', initials: 'ㅈㅊㅅ', aliases: ['정체성'] },        { no: 5, text: '이 소설은 현대인의 (      )을 다룹니다.', answer: '고독', initials: 'ㄱㄷ', aliases: ['고독'] },
+        { no: 6, text: '그레고르는 가족을 위해 (      )했습니다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] },
+        { no: 7, text: '벌레가 된 그의 모습은 (      )했습니다.', answer: '흉측', initials: 'ㅎㅊ', aliases: ['흉측'] },
+        { no: 8, text: '그레고르는 인간이었을 때의 (      )을 그리워했습니다.', answer: '추억', initials: 'ㅊㅇ', aliases: ['추억'] },
+        { no: 9, text: '가족들은 그레고르가 죽자 (      )했습니다.', answer: '안도', initials: 'ㅇㄷ', aliases: ['안도'] },
+        { no: 10, text: '여동생 그레테는 처음에 오빠를 (      ) 주었습니다.', answer: '돌봐', initials: 'ㄷㅂ', aliases: ['돌봐'] },
+        { no: 11, text: '그레고르는 성실한 (      )이었습니다.', answer: '청년', initials: 'ㅊㄴ', aliases: ['청년'] },
+        { no: 12, text: '가족들은 그의 모습에 (      )했습니다.', answer: '경악', initials: 'ㄱㅇ', aliases: ['경악'] },
+        { no: 13, text: '그의 방에서 (      )들을 치워버렸습니다.', answer: '가구', initials: 'ㄱㄱ', aliases: ['가구'] },
+        { no: 14, text: '그는 쓸모없는 (      )가 되어버렸습니다.', answer: '존재', initials: 'ㅈㅈ', aliases: ['존재'] }
       ]
     },
     quiz: {
@@ -3215,15 +3215,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '에이햅 선장은 (      )으로 가득 차 있었습니다.', answer: '복수심', initials: 'ㅂㅅㅅ', aliases: ['복수심'] },
         { no: 3, text: '지나친 (      )은 위험한 결과를 가져옵니다.', answer: '집착', initials: 'ㅈㅊ', aliases: ['집착'] },
         { no: 4, text: '결국 에이햅의 집착은 (      )을 불러왔습니다.', answer: '파멸', initials: 'ㅍㅁ', aliases: ['파멸'] },
-        { no: 5, text: '에이햅에게 모비 딕은 (      ) 그 자체였습니다.', answer: '운명', initials: 'ㅇㅁ', aliases: ['운명'] },        { no: 7, text: '에이햅의 행동은 (      )에 가까웠습니다.', answer: '광기', initials: 'ㄱㄱ', aliases: ['광기'] },
-        { no: 8, text: '금화를 내걸어 선원들의 (      )을 자극했습니다.', answer: '탐욕', initials: 'ㅌㅇ', aliases: ['탐욕'] },
-        { no: 9, text: '3일간의 격렬한 (      )이 벌어졌습니다.', answer: '추격전', initials: 'ㅊㄱㅈ', aliases: ['추격전'] },
-        { no: 10, text: '에이햅은 운명에 대한 (      )을 멈추지 않았습니다.', answer: '저항', initials: 'ㅈㅎ', aliases: ['저항'] },
-        { no: 11, text: '모비 딕의 (      )으로 배가 산산조각이 났습니다.', answer: '충돌', initials: 'ㅊㄷ', aliases: ['충돌'] },
-        { no: 12, text: '스타벅은 에이햅에게 돌아가자고 (      )했습니다.', answer: '간청', initials: 'ㄱㅊ', aliases: ['간청'] },
-        { no: 13, text: '피쿼드호에는 다양한 (      )들이 있었습니다.', answer: '선원', initials: 'ㅅㅇ', aliases: ['선원'] },
-        { no: 14, text: '에이햅은 피쿼드호의 (      )입니다.', answer: '선장', initials: 'ㅅㅈ', aliases: ['선장'] },
-        { no: 15, text: '피쿼드호는 바다 속으로 (      )했습니다.', answer: '침몰', initials: 'ㅊㅁ', aliases: ['침몰'] }
+        { no: 5, text: '에이햅에게 모비 딕은 (      ) 그 자체였습니다.', answer: '운명', initials: 'ㅇㅁ', aliases: ['운명'] },        { no: 6, text: '에이햅의 행동은 (      )에 가까웠습니다.', answer: '광기', initials: 'ㄱㄱ', aliases: ['광기'] },
+        { no: 7, text: '금화를 내걸어 선원들의 (      )을 자극했습니다.', answer: '탐욕', initials: 'ㅌㅇ', aliases: ['탐욕'] },
+        { no: 8, text: '3일간의 격렬한 (      )이 벌어졌습니다.', answer: '추격전', initials: 'ㅊㄱㅈ', aliases: ['추격전'] },
+        { no: 9, text: '에이햅은 운명에 대한 (      )을 멈추지 않았습니다.', answer: '저항', initials: 'ㅈㅎ', aliases: ['저항'] },
+        { no: 10, text: '모비 딕의 (      )으로 배가 산산조각이 났습니다.', answer: '충돌', initials: 'ㅊㄷ', aliases: ['충돌'] },
+        { no: 11, text: '스타벅은 에이햅에게 돌아가자고 (      )했습니다.', answer: '간청', initials: 'ㄱㅊ', aliases: ['간청'] },
+        { no: 12, text: '피쿼드호에는 다양한 (      )들이 있었습니다.', answer: '선원', initials: 'ㅅㅇ', aliases: ['선원'] },
+        { no: 13, text: '에이햅은 피쿼드호의 (      )입니다.', answer: '선장', initials: 'ㅅㅈ', aliases: ['선장'] },
+        { no: 14, text: '피쿼드호는 바다 속으로 (      )했습니다.', answer: '침몰', initials: 'ㅊㅁ', aliases: ['침몰'] }
       ]
     },
     quiz: {
@@ -3694,12 +3694,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '그는 (      )를 이루기 위해 무슨 일이든 했습니다.', answer: '부', initials: 'ㅂ', aliases: ['부'] },
         { no: 6, text: '개츠비는 데이지를 향한 (      )을 포기하지 않았습니다.', answer: '사랑', initials: 'ㅅㄹ', aliases: ['사랑'] },
         { no: 7, text: '그는 (      )를 되돌리고 싶어했습니다.', answer: '과거', initials: 'ㄱㄱ', aliases: ['과거'] },
-        { no: 8, text: '개츠비는 매주 화려한 (      )를 열었습니다.', answer: '파티', initials: 'ㅍㅌ', aliases: ['파티'] },        { no: 10, text: '데이지는 (      )을 내리지 못하고 망설였습니다.', answer: '결단', initials: 'ㄱㄷ', aliases: ['결단'] },
-        { no: 11, text: '개츠비의 (      )은 5년 동안 멈추지 않았습니다.', answer: '집착', initials: 'ㅈㅊ', aliases: ['집착'] },
-        { no: 12, text: '데이지는 편안한 삶을 (      )할 용기가 없었습니다.', answer: '포기', initials: 'ㅍㄱ', aliases: ['포기'] },
-        { no: 13, text: '개츠비가 (      )했던 데이지는 현실과 달랐습니다.', answer: '상상', initials: 'ㅅㅅ', aliases: ['상상'] },
-        { no: 14, text: '닉은 사람들의 (      )에 환멸을 느꼈습니다.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
-        { no: 15, text: '개츠비는 데이지를 위해 (      )을 했습니다.', answer: '거짓말', initials: 'ㄱㅈㅁ', aliases: ['거짓말'] }
+        { no: 8, text: '개츠비는 매주 화려한 (      )를 열었습니다.', answer: '파티', initials: 'ㅍㅌ', aliases: ['파티'] },        { no: 9, text: '데이지는 (      )을 내리지 못하고 망설였습니다.', answer: '결단', initials: 'ㄱㄷ', aliases: ['결단'] },
+        { no: 10, text: '개츠비의 (      )은 5년 동안 멈추지 않았습니다.', answer: '집착', initials: 'ㅈㅊ', aliases: ['집착'] },
+        { no: 11, text: '데이지는 편안한 삶을 (      )할 용기가 없었습니다.', answer: '포기', initials: 'ㅍㄱ', aliases: ['포기'] },
+        { no: 12, text: '개츠비가 (      )했던 데이지는 현실과 달랐습니다.', answer: '상상', initials: 'ㅅㅅ', aliases: ['상상'] },
+        { no: 13, text: '닉은 사람들의 (      )에 환멸을 느꼈습니다.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
+        { no: 14, text: '개츠비는 데이지를 위해 (      )을 했습니다.', answer: '거짓말', initials: 'ㄱㅈㅁ', aliases: ['거짓말'] }
       ]
     },
     quiz: {
@@ -3778,20 +3778,20 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['증거', '사실을 증명하는 근거.']
     ],
     vocabFill: {
-      items: [        { no: 2, text: '배심원들은 증거보다 (      )을 따랐습니다.', answer: '편견', initials: 'ㅍㄱ', aliases: ['편견'] },
-        { no: 3, text: '톰 로빈슨은 (      ) 사람이었습니다.', answer: '무고한', initials: 'ㅁㄱㅎ', aliases: ['무고한'] },
-        { no: 4, text: '애티커스는 (      ) 재판을 위해 노력했습니다.', answer: '공정한', initials: 'ㄱㅈㅎ', aliases: ['공정한', '공정'] },
-        { no: 5, text: '애티커스는 (      )를 위해 싸웠습니다.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] },
-        { no: 6, text: '불리해도 옳은 일을 하는 (      )가 필요합니다.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] },
-        { no: 7, text: '상대방의 입장에서 (      )하려 노력해야 합니다.', answer: '이해', initials: 'ㅇㅎ', aliases: ['이해'] },
-        { no: 8, text: '애티커스는 마을에서 (      )받는 사람이었습니다.', answer: '존경', initials: 'ㅈㄱ', aliases: ['존경'] },
-        { no: 9, text: '톰은 (      )한 판결에 절망했습니다.', answer: '억울', initials: 'ㅇㅇ', aliases: ['억울'] },
-        { no: 10, text: '부 래들리는 (      )한 사람이었습니다.', answer: '선량', initials: 'ㅅㄹ', aliases: ['선량', '선량한'] },
-        { no: 11, text: '톰은 (      )했다는 거짓 혐의를 받았습니다.', answer: '폭행', initials: 'ㅍㅎ', aliases: ['폭행'] },
-        { no: 12, text: '애티커스는 (      )적으로 톰의 무죄를 증명했습니다.', answer: '논리', initials: 'ㄴㄹ', aliases: ['논리'] },
-        { no: 13, text: '부는 아이들을 (      )하고 있었습니다.', answer: '보호', initials: 'ㅂㅎ', aliases: ['보호'] },
-        { no: 14, text: '피부색으로 사람을 (      )하면 안 됩니다.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
-        { no: 15, text: '(      )가 있어도 편견이 판결을 좌우했습니다.', answer: '증거', initials: 'ㅈㄱ', aliases: ['증거'] }
+      items: [        { no: 1, text: '배심원들은 증거보다 (      )을 따랐습니다.', answer: '편견', initials: 'ㅍㄱ', aliases: ['편견'] },
+        { no: 2, text: '톰 로빈슨은 (      ) 사람이었습니다.', answer: '무고한', initials: 'ㅁㄱㅎ', aliases: ['무고한'] },
+        { no: 3, text: '애티커스는 (      ) 재판을 위해 노력했습니다.', answer: '공정한', initials: 'ㄱㅈㅎ', aliases: ['공정한', '공정'] },
+        { no: 4, text: '애티커스는 (      )를 위해 싸웠습니다.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] },
+        { no: 5, text: '불리해도 옳은 일을 하는 (      )가 필요합니다.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] },
+        { no: 6, text: '상대방의 입장에서 (      )하려 노력해야 합니다.', answer: '이해', initials: 'ㅇㅎ', aliases: ['이해'] },
+        { no: 7, text: '애티커스는 마을에서 (      )받는 사람이었습니다.', answer: '존경', initials: 'ㅈㄱ', aliases: ['존경'] },
+        { no: 8, text: '톰은 (      )한 판결에 절망했습니다.', answer: '억울', initials: 'ㅇㅇ', aliases: ['억울'] },
+        { no: 9, text: '부 래들리는 (      )한 사람이었습니다.', answer: '선량', initials: 'ㅅㄹ', aliases: ['선량', '선량한'] },
+        { no: 10, text: '톰은 (      )했다는 거짓 혐의를 받았습니다.', answer: '폭행', initials: 'ㅍㅎ', aliases: ['폭행'] },
+        { no: 11, text: '애티커스는 (      )적으로 톰의 무죄를 증명했습니다.', answer: '논리', initials: 'ㄴㄹ', aliases: ['논리'] },
+        { no: 12, text: '부는 아이들을 (      )하고 있었습니다.', answer: '보호', initials: 'ㅂㅎ', aliases: ['보호'] },
+        { no: 13, text: '피부색으로 사람을 (      )하면 안 됩니다.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
+        { no: 14, text: '(      )가 있어도 편견이 판결을 좌우했습니다.', answer: '증거', initials: 'ㅈㄱ', aliases: ['증거'] }
       ]
     },
     quiz: {

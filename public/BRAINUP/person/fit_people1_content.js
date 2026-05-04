@@ -1715,14 +1715,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '',
       items: [
-        { no: 1, text: '황희는 조선 초기 최고의 (      )입니다.', answer: '재상', initials: 'ㅈㅅ', aliases: ['재상'] },        { no: 3, text: '황희는 열네 살에 과거에 (      )했습니다.', answer: '급제', initials: 'ㄱㅈ', aliases: ['급제'] },
-        { no: 4, text: '황희는 조선 (      ) 후에도 능력을 인정받았습니다.', answer: '건국', initials: 'ㄱㄱ', aliases: ['건국'] },
-        { no: 5, text: '황희는 조선에서 가장 높은 관직인 (       )을 지냈습니다.', answer: '영의정', initials: 'ㅇㅇㅈ', aliases: ['영의정'] },
-        { no: 6, text: '임금이 황희에게 쌀과 돈을 (      )했습니다.', answer: '하사', initials: 'ㅎㅅ', aliases: ['하사'] },
-        { no: 7, text: '황희는 사치하지 않고 (      )한 생활을 했습니다.', answer: '검소', initials: 'ㄱㅅ', aliases: ['검소'] },
-        { no: 8, text: '황희는 (      )을 주려는 사람들의 유혹에도 흔들리지 않았습니다.', answer: '뇌물', initials: 'ㄴㅁ', aliases: ['뇌물'] },
-        { no: 9, text: '황희는 사람들 사이의 (      )을 공정하게 조정했습니다.', answer: '분쟁', initials: 'ㅂㅈ', aliases: ['분쟁'] },
-        { no: 10, text: '황희는 넓은 마음으로 남을 (      )했습니다.', answer: '포용', initials: 'ㅍㅇ', aliases: ['포용'] }
+        { no: 1, text: '황희는 조선 초기 최고의 (      )입니다.', answer: '재상', initials: 'ㅈㅅ', aliases: ['재상'] },        { no: 2, text: '황희는 열네 살에 과거에 (      )했습니다.', answer: '급제', initials: 'ㄱㅈ', aliases: ['급제'] },
+        { no: 3, text: '황희는 조선 (      ) 후에도 능력을 인정받았습니다.', answer: '건국', initials: 'ㄱㄱ', aliases: ['건국'] },
+        { no: 4, text: '황희는 조선에서 가장 높은 관직인 (       )을 지냈습니다.', answer: '영의정', initials: 'ㅇㅇㅈ', aliases: ['영의정'] },
+        { no: 5, text: '임금이 황희에게 쌀과 돈을 (      )했습니다.', answer: '하사', initials: 'ㅎㅅ', aliases: ['하사'] },
+        { no: 6, text: '황희는 사치하지 않고 (      )한 생활을 했습니다.', answer: '검소', initials: 'ㄱㅅ', aliases: ['검소'] },
+        { no: 7, text: '황희는 (      )을 주려는 사람들의 유혹에도 흔들리지 않았습니다.', answer: '뇌물', initials: 'ㄴㅁ', aliases: ['뇌물'] },
+        { no: 8, text: '황희는 사람들 사이의 (      )을 공정하게 조정했습니다.', answer: '분쟁', initials: 'ㅂㅈ', aliases: ['분쟁'] },
+        { no: 9, text: '황희는 넓은 마음으로 남을 (      )했습니다.', answer: '포용', initials: 'ㅍㅇ', aliases: ['포용'] }
       ]
     },
     quiz: {
@@ -3478,14 +3478,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '',
       items: [
-        { no: 1, text: '최영은 나라에 대한 (      )으로 유명합니다.', answer: '충성', initials: 'ㅊㅅ', aliases: ['충성'] },        { no: 3, text: '최영의 아버지는 황금을 돌같이 보라는 (      )을 남겼습니다.', answer: '유언', initials: 'ㅇㅇ', aliases: ['유언'] },
-        { no: 4, text: '최영은 홍건적을 (      )하고 영웅으로 칭송받았습니다.', answer: '격퇴', initials: 'ㄱㅌ', aliases: ['격퇴'] },
-        { no: 5, text: '최영은 (      )을 거절하고 청렴하게 살았습니다.', answer: '뇌물', initials: 'ㄴㅁ', aliases: ['뇌물'] },
-        { no: 6, text: '최영은 중국 동북 지역인 (      ) 정벌을 주장했습니다.', answer: '요동', initials: 'ㅇㄷ', aliases: ['요동'] },
-        { no: 7, text: '이성계의 위화도 (      )으로 최영은 패배했습니다.', answer: '회군', initials: 'ㅎㄱ', aliases: ['회군'] },
-        { no: 8, text: '최영은 고려 (      )의 마지막 충신입니다.', answer: '왕조', initials: 'ㅇㅈ', aliases: ['왕조'] },
-        { no: 9, text: '최영의 청렴함은 오늘날에도 (      )이 됩니다.', answer: '귀감', initials: 'ㄱㄱ', aliases: ['귀감'] },
-        { no: 10, text: '최영은 새 시대에 (      )하지 못하고 비극적인 최후를 맞았습니다.', answer: '적응', initials: 'ㅈㅇ', aliases: ['적응'] }
+        { no: 1, text: '최영은 나라에 대한 (      )으로 유명합니다.', answer: '충성', initials: 'ㅊㅅ', aliases: ['충성'] },        { no: 2, text: '최영의 아버지는 황금을 돌같이 보라는 (      )을 남겼습니다.', answer: '유언', initials: 'ㅇㅇ', aliases: ['유언'] },
+        { no: 3, text: '최영은 홍건적을 (      )하고 영웅으로 칭송받았습니다.', answer: '격퇴', initials: 'ㄱㅌ', aliases: ['격퇴'] },
+        { no: 4, text: '최영은 (      )을 거절하고 청렴하게 살았습니다.', answer: '뇌물', initials: 'ㄴㅁ', aliases: ['뇌물'] },
+        { no: 5, text: '최영은 중국 동북 지역인 (      ) 정벌을 주장했습니다.', answer: '요동', initials: 'ㅇㄷ', aliases: ['요동'] },
+        { no: 6, text: '이성계의 위화도 (      )으로 최영은 패배했습니다.', answer: '회군', initials: 'ㅎㄱ', aliases: ['회군'] },
+        { no: 7, text: '최영은 고려 (      )의 마지막 충신입니다.', answer: '왕조', initials: 'ㅇㅈ', aliases: ['왕조'] },
+        { no: 8, text: '최영의 청렴함은 오늘날에도 (      )이 됩니다.', answer: '귀감', initials: 'ㄱㄱ', aliases: ['귀감'] },
+        { no: 9, text: '최영은 새 시대에 (      )하지 못하고 비극적인 최후를 맞았습니다.', answer: '적응', initials: 'ㅈㅇ', aliases: ['적응'] }
       ]
     },
     quiz: {

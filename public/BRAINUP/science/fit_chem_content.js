@@ -363,7 +363,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '일정한 모양이 없고 자유롭게 퍼지는 물질 상태를 (      )라고 한다.', answer: '기체', initials: 'ㄱㅊ', aliases: ['기체'] },
         { no: 2, text: '물체나 기체에 가해지는 힘을 (      )이라고 한다.', answer: '압력', initials: 'ㅇㄹ', aliases: ['압력'] },
-        { no: 3, text: '물질이 공간에서 차지하는 크기를 (      )라고 한다.', answer: '부피', initials: 'ㅂㅍ', aliases: ['부피'] },        { no: 5, text: '지구가 물질을 끌어당기는 힘의 크기를 (      )라고 한다.', answer: '무게', initials: 'ㅁㄱ', aliases: ['무게'] },        { no: 7, text: '양쪽 무게를 비교해 균형을 살피는 도구를 (        )이라고 한다.', answer: '양팔저울', initials: 'ㅇㅍㅈㅇ', aliases: ['양팔저울'] },        { no: 10, text: '공기가 지표면을 누르는 압력을 (      )이라고 한다.', answer: '대기압', initials: 'ㄷㄱㅇ', aliases: ['대기압'] }
+        { no: 3, text: '물질이 공간에서 차지하는 크기를 (      )라고 한다.', answer: '부피', initials: 'ㅂㅍ', aliases: ['부피'] },        { no: 4, text: '지구가 물질을 끌어당기는 힘의 크기를 (      )라고 한다.', answer: '무게', initials: 'ㅁㄱ', aliases: ['무게'] },        { no: 5, text: '양쪽 무게를 비교해 균형을 살피는 도구를 (        )이라고 한다.', answer: '양팔저울', initials: 'ㅇㅍㅈㅇ', aliases: ['양팔저울'] },        { no: 6, text: '공기가 지표면을 누르는 압력을 (      )이라고 한다.', answer: '대기압', initials: 'ㄷㄱㅇ', aliases: ['대기압'] }
       ]
     },
     quiz: {
@@ -454,11 +454,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '고체가 열을 받아 액체로 변하는 현상을 (      )라고 한다.', answer: '융해', initials: 'ㅇㅎ', aliases: ['융해'] },
         { no: 2, text: '액체가 열을 잃어 고체로 변하는 과정을 (      )라고 한다.', answer: '응고', initials: 'ㅇㄱ', aliases: ['응고'] },
-        { no: 3, text: '물질이 고체·액체·기체로 변하는 일을 (         )라고 한다.', answer: '상태 변화', initials: 'ㅅㅌㅂㅎ', aliases: ['상태 변화','상태변화'] },        { no: 6, text: '고정된 모양이 없고 자유롭게 퍼져 있는 상태를 (      )라고 한다.', answer: '기체', initials: 'ㄱㅊ', aliases: ['기체'] },
-        { no: 7, text: '흐를 수 있으며 담는 그릇에 따라 모양이 달라지는 상태를 (      )라고 한다.', answer: '액체', initials: 'ㅇㅊ', aliases: ['액체'] },
-        { no: 8, text: '모양과 부피가 일정한 물질의 상태를 (      )라고 한다.', answer: '고체', initials: 'ㄱㅊ', aliases: ['고체'] },
-        { no: 9, text: '액체가 기체로 변하는 현상을 (      )이라고 한다.', answer: '증발', initials: 'ㅈㅂ', aliases: ['증발'] },
-        { no: 10, text: '기체가 액체로 변하는 현상을 (      )라고 한다.', answer: '액화', initials: 'ㅇㅎ', aliases: ['액화'] }
+        { no: 3, text: '물질이 고체·액체·기체로 변하는 일을 (         )라고 한다.', answer: '상태 변화', initials: 'ㅅㅌㅂㅎ', aliases: ['상태 변화','상태변화'] },        { no: 4, text: '고정된 모양이 없고 자유롭게 퍼져 있는 상태를 (      )라고 한다.', answer: '기체', initials: 'ㄱㅊ', aliases: ['기체'] },
+        { no: 5, text: '흐를 수 있으며 담는 그릇에 따라 모양이 달라지는 상태를 (      )라고 한다.', answer: '액체', initials: 'ㅇㅊ', aliases: ['액체'] },
+        { no: 6, text: '모양과 부피가 일정한 물질의 상태를 (      )라고 한다.', answer: '고체', initials: 'ㄱㅊ', aliases: ['고체'] },
+        { no: 7, text: '액체가 기체로 변하는 현상을 (      )이라고 한다.', answer: '증발', initials: 'ㅈㅂ', aliases: ['증발'] },
+        { no: 8, text: '기체가 액체로 변하는 현상을 (      )라고 한다.', answer: '액화', initials: 'ㅇㅎ', aliases: ['액화'] }
       ]
     },
     quiz: {
@@ -859,7 +859,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '화학식 앞에 붙어 분자의 개수를 나타내는 숫자를 (      )라고 한다.', answer: '계수', initials: 'ㄱㅅ', aliases: ['계수'] },
         { no: 6, text: '반응 전후 각 원소의 원자 수를 같게 하는 것을 (        )라고 한다.', answer: '균형 맞추기', initials: 'ㄱㅎ ㅁㅊㄱ', aliases: ['균형맞추기', '균형 맞추기', '계수 맞추기', '계수맞추기'] },
         { no: 7, text: '화학 반응 전후 총 질량이 같다는 법칙을 (            )이라 한다.', answer: '질량 보존 법칙', initials: 'ㅈㄹ ㅂㅈ ㅂㅊ', aliases: ['질량보존법칙', '질량 보존 법칙'] },
-        { no: 8, text: '질량 보존 법칙을 발견한 프랑스 화학자는 (        )이다.', answer: '라부아지에', initials: 'ㄹㅂㅇㅈㅇ', aliases: ['라부아지에', '라부아지애'] },        { no: 10, text: '양이나 수치로 정확하게 나타내는 것을 (      )이라 한다.', answer: '정량적', initials: 'ㅈㄹㅈ', aliases: ['정량적'] }
+        { no: 8, text: '질량 보존 법칙을 발견한 프랑스 화학자는 (        )이다.', answer: '라부아지에', initials: 'ㄹㅂㅇㅈㅇ', aliases: ['라부아지에', '라부아지애'] },        { no: 9, text: '양이나 수치로 정확하게 나타내는 것을 (      )이라 한다.', answer: '정량적', initials: 'ㅈㄹㅈ', aliases: ['정량적'] }
       ]
     },
     quiz: {
@@ -1358,10 +1358,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '대기가 누르는 압력의 단위를 (      )이라 한다.', answer: '기압', initials: 'ㄱㅇ', aliases: ['기압', 'atm'] },
         { no: 3, text: '압력의 국제 표준 단위를 (      )이라 한다.', answer: '파스칼', initials: 'ㅍㅅㅋ', aliases: ['파스칼', 'Pa'] },
         { no: 4, text: '온도가 일정할 때 압력과 부피가 반비례한다는 법칙을 (        )이라 한다.', answer: '보일 법칙', initials: 'ㅂㅇ ㅂㅊ', aliases: ['보일법칙', '보일 법칙'] },
-        { no: 5, text: '압력이 일정할 때 온도와 부피가 비례한다는 법칙을 (        )이라 한다.', answer: '샤를 법칙', initials: 'ㅅㄹ ㅂㅊ', aliases: ['샤를법칙', '샤를 법칙'] },        { no: 7, text: '한쪽이 커지면 다른 쪽도 커지는 관계를 (      )라고 한다.', answer: '비례', initials: 'ㅂㄹ', aliases: ['비례'] },
-        { no: 8, text: '기체의 압력, 부피, 온도, 몰 수의 관계식을 (            )이라 한다.', answer: '이상 기체 법칙', initials: 'ㅇㅅ ㄱㅊ ㅂㅊ', aliases: ['이상기체법칙', '이상 기체 법칙'] },
-        { no: 9, text: '가열된 공기의 부력으로 뜨는 기구를 (      )라고 한다.', answer: '열기구', initials: 'ㅇㄱㄱ', aliases: ['열기구'] },
-        { no: 10, text: '기체의 부피를 줄이는 것을 (      )이라 한다.', answer: '압축', initials: 'ㅇㅊ', aliases: ['압축'] }
+        { no: 5, text: '압력이 일정할 때 온도와 부피가 비례한다는 법칙을 (        )이라 한다.', answer: '샤를 법칙', initials: 'ㅅㄹ ㅂㅊ', aliases: ['샤를법칙', '샤를 법칙'] },        { no: 6, text: '한쪽이 커지면 다른 쪽도 커지는 관계를 (      )라고 한다.', answer: '비례', initials: 'ㅂㄹ', aliases: ['비례'] },
+        { no: 7, text: '기체의 압력, 부피, 온도, 몰 수의 관계식을 (            )이라 한다.', answer: '이상 기체 법칙', initials: 'ㅇㅅ ㄱㅊ ㅂㅊ', aliases: ['이상기체법칙', '이상 기체 법칙'] },
+        { no: 8, text: '가열된 공기의 부력으로 뜨는 기구를 (      )라고 한다.', answer: '열기구', initials: 'ㅇㄱㄱ', aliases: ['열기구'] },
+        { no: 9, text: '기체의 부피를 줄이는 것을 (      )이라 한다.', answer: '압축', initials: 'ㅇㅊ', aliases: ['압축'] }
       ]
     },
     quiz: {

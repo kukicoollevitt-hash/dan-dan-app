@@ -1491,7 +1491,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '기체로 된 거대한 행성을 (        )이라 한다.', answer: '목성형 행성', initials: 'ㅁㅅㅎ ㅎㅅ', aliases: ['목성형행성', '목성형 행성'] },
         { no: 6, text: '행성 주위를 도는 천체를 (      )이라 한다.', answer: '위성', initials: 'ㅇㅅ', aliases: ['위성'] },
         { no: 7, text: '화성과 목성 사이의 암석 지대를 (      )라고 한다.', answer: '소행성대', initials: 'ㅅㅎㅅㄷ', aliases: ['소행성대'] },
-        { no: 8, text: '긴 꼬리를 가진 얼음과 먼지 덩어리를 (      )이라 한다.', answer: '혜성', initials: 'ㅎㅅ', aliases: ['혜성'] },        { no: 10, text: '생명이 살기 적합한 거리 범위를 (       )이라 한다.', answer: '골디락스 존', initials: 'ㄱㄷㄹㅅ ㅈ', aliases: ['골디락스존', '골디락스 존'] }
+        { no: 8, text: '긴 꼬리를 가진 얼음과 먼지 덩어리를 (      )이라 한다.', answer: '혜성', initials: 'ㅎㅅ', aliases: ['혜성'] },        { no: 9, text: '생명이 살기 적합한 거리 범위를 (       )이라 한다.', answer: '골디락스 존', initials: 'ㄱㄷㄹㅅ ㅈ', aliases: ['골디락스존', '골디락스 존'] }
       ]
     },
     quiz: {
