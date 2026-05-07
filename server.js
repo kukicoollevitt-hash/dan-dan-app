@@ -26871,11 +26871,43 @@ app.post('/api/user-progress/study-room', async (req, res) => {
     }
 
     // 학습실 데이터 업데이트 (assignedTasks 또는 studyRoomData 지원)
+    // 일반 과제(isAI=false)에서만 동일 키(id 또는 unitId) 중복 제거 — 최근 assignedAt 유지
+    // AI 과제는 그대로 통과 (서로 같은 unit이어도 각각 별도 항목으로 보존)
+    function dedupTasks(arr) {
+      if (!Array.isArray(arr)) return arr;
+      // 일반 과제 중복 그룹 식별 (인덱스 기반)
+      const normalGroups = new Map(); // key -> [indices]
+      arr.forEach((t, i) => {
+        if (!t || t.isAI) return;
+        const key = t.id || t.unitId;
+        if (!key) return;
+        if (!normalGroups.has(key)) normalGroups.set(key, []);
+        normalGroups.get(key).push(i);
+      });
+      // 각 그룹에서 가장 최근 항목만 남기고 나머지 인덱스는 제거 대상
+      const dropIdx = new Set();
+      for (const [, idxs] of normalGroups) {
+        if (idxs.length <= 1) continue;
+        let bestIdx = idxs[0];
+        let bestTime = new Date(arr[bestIdx].assignedAt || 0).getTime();
+        for (let k = 1; k < idxs.length; k++) {
+          const idx = idxs[k];
+          const t = new Date(arr[idx].assignedAt || 0).getTime();
+          if (t > bestTime || (t === bestTime && idx > bestIdx)) { bestIdx = idx; bestTime = t; }
+        }
+        for (const idx of idxs) if (idx !== bestIdx) dropIdx.add(idx);
+      }
+      return arr.filter((_, i) => !dropIdx.has(i));
+    }
+
     if (assignedTasks) {
       progress.studyRoom = {
-        assignedTasks: assignedTasks
+        assignedTasks: dedupTasks(assignedTasks)
       };
     } else if (studyRoomData) {
+      if (studyRoomData && Array.isArray(studyRoomData.assignedTasks)) {
+        studyRoomData.assignedTasks = dedupTasks(studyRoomData.assignedTasks);
+      }
       progress.studyRoom = studyRoomData;
     }
 
@@ -28571,6 +28603,15 @@ async function executeAutoTaskSchedules() {
                 user.studyRoom.assignedTasks = [];
               }
 
+              // 일반 과제 중복 방지: 같은 unitId가 이미 미완료 일반과제로 있으면 건너뜀
+              const dupExists = user.studyRoom.assignedTasks.some(t =>
+                !t.isAI && (t.id === unitId || t.unitId === unitId)
+              );
+              if (dupExists) {
+                console.log(`↩️  ${user.name}: ${unitId} 이미 부여됨 — 중복 부여 생략`);
+                continue;
+              }
+
               user.studyRoom.assignedTasks.push(newTask);
               tasksAssigned++;
             }
@@ -28817,6 +28858,56 @@ cron.schedule('0 0 1 * *', async () => {
   }
 }, { timezone: 'Asia/Seoul' });
 console.log('✅ 학원 월별 스냅샷 스케줄러 등록 완료 (매월 1일 00:00 KST)');
+
+// ========== 학습실 일반과제 중복 자동 청소 (안전망) ==========
+// 어떤 경로로든 일반과제 중복이 생기면 매일 03:00 KST에 정리
+async function runStudyRoomDedupSweep() {
+  try {
+    const docs = await UserProgress.find(
+      { 'studyRoom.assignedTasks': { $exists: true, $ne: [] } },
+      { grade: 1, name: 1, 'studyRoom.assignedTasks': 1 }
+    );
+    let usersChanged = 0;
+    let tasksRemoved = 0;
+    for (const d of docs) {
+      const tasks = d.studyRoom && Array.isArray(d.studyRoom.assignedTasks) ? d.studyRoom.assignedTasks : [];
+      if (tasks.length === 0) continue;
+      // 일반 과제(isAI=false)만 동일 키 중복 제거 — 가장 최근 assignedAt 유지
+      const normalGroups = new Map();
+      tasks.forEach((t, i) => {
+        if (!t || t.isAI) return;
+        const key = t.id || t.unitId;
+        if (!key) return;
+        if (!normalGroups.has(key)) normalGroups.set(key, []);
+        normalGroups.get(key).push(i);
+      });
+      const dropIdx = new Set();
+      for (const [, idxs] of normalGroups) {
+        if (idxs.length <= 1) continue;
+        let bestIdx = idxs[0];
+        let bestTime = new Date(tasks[bestIdx].assignedAt || 0).getTime();
+        for (let k = 1; k < idxs.length; k++) {
+          const idx = idxs[k];
+          const t = new Date(tasks[idx].assignedAt || 0).getTime();
+          if (t > bestTime || (t === bestTime && idx > bestIdx)) { bestIdx = idx; bestTime = t; }
+        }
+        for (const idx of idxs) if (idx !== bestIdx) dropIdx.add(idx);
+      }
+      if (dropIdx.size === 0) continue;
+      const deduped = tasks.filter((_, i) => !dropIdx.has(i));
+      d.studyRoom.assignedTasks = deduped;
+      d.markModified('studyRoom');
+      await d.save();
+      usersChanged++;
+      tasksRemoved += dropIdx.size;
+    }
+    console.log(`🧹 학습실 일반과제 중복 청소: ${usersChanged}명 정리, ${tasksRemoved}개 제거`);
+  } catch (err) {
+    console.error('❌ 학습실 중복 청소 cron 오류:', err);
+  }
+}
+cron.schedule('0 3 * * *', runStudyRoomDedupSweep, { timezone: 'Asia/Seoul' });
+console.log('✅ 학습실 일반과제 중복 청소 스케줄러 등록 완료 (매일 03:00 KST)');
 
 // ========== 독서 감상문 월간 리셋 ==========
 // 매월 1일 0시 0분에 실행 (월간 과제 리셋)

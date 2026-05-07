@@ -17074,11 +17074,15 @@ async function performLogout() {
     async function addTaskToStudyRoom(taskData) {
       const tasks = await getStudyRoomTasks();
 
-      // 중복 체크 (AI 과제는 id, 관리자 과제는 unitId 사용)
-      const isDuplicate = tasks.some(t =>
-        (t.id && t.id === taskData.unitId) ||
-        (t.unitId && t.unitId === taskData.unitId)
-      );
+      // 중복 체크 — 같은 카테고리(AI vs 일반) 안에서만 동일 키 비교
+      // (AI 과제와 일반 과제가 같은 단원이어도 별도 항목으로 허용)
+      const newKey = taskData.id || taskData.unitId;
+      const newIsAI = !!taskData.isAI;
+      const isDuplicate = !!newKey && tasks.some(t => {
+        if (!!t.isAI !== newIsAI) return false;
+        const existingKey = t.id || t.unitId;
+        return existingKey && existingKey === newKey;
+      });
       if (isDuplicate) {
         showMessage('⚠️', '중복된 과제입니다', '이미 학습실에 추가된 과제입니다.');
         return false;
