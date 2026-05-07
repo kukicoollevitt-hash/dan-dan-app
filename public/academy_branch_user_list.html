@@ -319,6 +319,27 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
     }
+    /* 학원 권한 외 잠금 시리즈 — 회색 톤 + 호버 효과 제거 */
+    .checkbox-item.series-locked {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+      opacity: 0.85;
+    }
+    .checkbox-item.series-locked:hover {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+      transform: none;
+      box-shadow: none;
+    }
+    .checkbox-item.series-locked input[type="checkbox"] {
+      cursor: not-allowed;
+    }
+    .checkbox-item.series-locked label {
+      cursor: not-allowed;
+      color: #6b7280;
+    }
+    .checkbox-item.series-locked .series-name { color: #6b7280; }
+    .lock-badge { font-size: 12px; opacity: 0.8; }
     .checkbox-item input[type="checkbox"] {
       width: 20px;
       height: 20px;
@@ -1434,42 +1455,39 @@
       currentUserId = null;
     }
 
-    // 🔹 승인된 시리즈만 체크박스로 렌더링
+    // 🔹 모든 시리즈를 표시하되, 학원 권한 외는 잠금(disabled) 처리
+    //    → 본사가 부여한 시리즈가 학원 모달 저장으로 사라지지 않게 (서버에서도 추가 보호)
     function renderSeriesCheckboxes() {
       const container = document.getElementById('series-checkbox-list');
 
-      // 빈 배열이면 모든 시리즈를 기본으로 사용 (기존 계정 호환)
-      const seriesToRender = (!approvedSeries || approvedSeries.length === 0)
-        ? ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal']
-        : approvedSeries;
+      const allSeriesKeys = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
+      // approvedSeries가 비어있으면 전체 허용 (기존 계정 호환)
+      const approved = (!approvedSeries || approvedSeries.length === 0)
+        ? new Set(allSeriesKeys)
+        : new Set(approvedSeries);
 
       let html = '';
-      // approvedSeries 배열에 있는 시리즈만 렌더링
-      seriesToRender.forEach(seriesKey => {
+      allSeriesKeys.forEach(seriesKey => {
         const series = SERIES_MAP[seriesKey];
-        if (series) {
-          html += `
-            <div class="checkbox-item">
-              <input type="checkbox" id="${series.id}" value="${series.value}" />
-              <label for="${series.id}">
-                <span class="series-name">${series.name}</span>
-                <span class="series-desc">${series.desc}</span>
-              </label>
-            </div>
-          `;
-        }
-      });
-
-      if (html === '') {
-        container.innerHTML = `
-          <div style="color: #dc2626; text-align: center; padding: 20px;">
-            승인된 시리즈가 없습니다.<br>
-            <span style="font-size: 13px; color: #999;">본사에 시리즈 승인을 요청해 주세요.</span>
+        if (!series) return;
+        const isAllowed = approved.has(seriesKey);
+        const disabledAttr = isAllowed ? '' : 'disabled';
+        const lockClass = isAllowed ? '' : 'series-locked';
+        const lockBadge = isAllowed
+          ? ''
+          : ' <span class="lock-badge" title="학원 권한 외 — 본사가 부여한 항목으로 학원에서 변경 불가">🔒</span>';
+        html += `
+          <div class="checkbox-item ${lockClass}">
+            <input type="checkbox" id="${series.id}" value="${series.value}" ${disabledAttr} />
+            <label for="${series.id}">
+              <span class="series-name">${series.name}${lockBadge}</span>
+              <span class="series-desc">${series.desc}</span>
+            </label>
           </div>
         `;
-      } else {
-        container.innerHTML = html;
-      }
+      });
+
+      container.innerHTML = html;
     }
 
     // ===== PIN 모달 관련 함수 =====

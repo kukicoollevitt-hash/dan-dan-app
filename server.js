@@ -10052,15 +10052,52 @@ app.post("/admin/assign-series", async (req, res) => {
       return res.status(404).json({ success: false, message: "사용자를 찾을 수 없습니다" });
     }
 
-    user.assignedSeries = series;
+    // 학원 단위 시리즈 권한 머지 — 학원이 권한 없는 시리즈는 보존
+    // (예: 본사가 학생에게 BRAIN답을 부여했는데 학원은 subscription이라 권한 없는 경우,
+    //  학원 관리자 모달 저장으로 BRAIN답이 사라지지 않게)
+    // 본사(HQ) 호출은 fromHQ:true를 보내면 머지 건너뛰고 직접 덮어쓰기
+    const fromHQ = req.body && req.body.fromHQ === true;
+
+    const KEY_TO_VALUE = {
+      brainon: 'BRAIN은',
+      brainup: 'BRAIN암',
+      brainfit: 'BRAIN빛',
+      braindeep: 'BRAIN답',
+      brainreal: 'BRAIN중등'
+    };
+
+    let academyAllowedValues = null; // null = 학원 매핑 없음 또는 HQ 호출 → 전체 허용
+    if (!fromHQ && user.academyName) {
+      const admins = await Admin.find({ academyName: user.academyName, deleted: { $ne: true } })
+        .select('approvedSeries').lean();
+      if (admins.length > 0) {
+        const allKeys = new Set();
+        admins.forEach(a => (a.approvedSeries || []).forEach(k => allKeys.add(k)));
+        if (allKeys.size > 0) {
+          academyAllowedValues = [...allKeys].map(k => KEY_TO_VALUE[k]).filter(Boolean);
+        }
+      }
+    }
+
+    let finalSeries;
+    if (!academyAllowedValues) {
+      finalSeries = series;
+    } else {
+      const preserved = (user.assignedSeries || []).filter(v => !academyAllowedValues.includes(v));
+      const newAllowed = (series || []).filter(v => academyAllowedValues.includes(v));
+      // 중복 제거
+      finalSeries = Array.from(new Set([...preserved, ...newAllowed]));
+    }
+
+    user.assignedSeries = finalSeries;
     await user.save();
 
-    console.log(`✅ 시리즈 부여 완료: ${user.name} (${user.id}) -> [${series.join(", ")}]`);
+    console.log(`✅ 시리즈 부여 완료: ${user.name} (${user.id}) -> [${finalSeries.join(", ")}]${academyAllowedValues ? ` | 학원허용: [${academyAllowedValues.join(", ")}]` : ' | 학원 권한 제약 없음'}`);
 
     return res.json({
       success: true,
       message: "시리즈 부여 완료",
-      assignedSeries: series
+      assignedSeries: finalSeries
     });
   } catch (err) {
     console.error("❌ /admin/assign-series 에러:", err);
