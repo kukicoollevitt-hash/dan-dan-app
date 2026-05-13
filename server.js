@@ -10069,12 +10069,18 @@ app.post("/admin/assign-series", async (req, res) => {
     let academyAllowedValues = null; // null = 학원 매핑 없음 또는 HQ 호출 → 전체 허용
     if (!fromHQ && user.academyName) {
       const admins = await Admin.find({ academyName: user.academyName, deleted: { $ne: true } })
-        .select('approvedSeries').lean();
+        .select('approvedSeries contractType').lean();
       if (admins.length > 0) {
-        const allKeys = new Set();
-        admins.forEach(a => (a.approvedSeries || []).forEach(k => allKeys.add(k)));
-        if (allKeys.size > 0) {
-          academyAllowedValues = [...allKeys].map(k => KEY_TO_VALUE[k]).filter(Boolean);
+        // 🔹 가맹형 admin이 하나라도 있으면 전체 시리즈 허용 (contractType이 source of truth)
+        const hasFranchise = admins.some(a => a.contractType === 'franchise');
+        if (hasFranchise) {
+          academyAllowedValues = Object.values(KEY_TO_VALUE);
+        } else {
+          const allKeys = new Set();
+          admins.forEach(a => (a.approvedSeries || []).forEach(k => allKeys.add(k)));
+          if (allKeys.size > 0) {
+            academyAllowedValues = [...allKeys].map(k => KEY_TO_VALUE[k]).filter(Boolean);
+          }
         }
       }
     }
@@ -25005,12 +25011,22 @@ app.get("/api/session", (req, res) => {
 });
 
 // ✅ 관리자(admin) 세션 정보 조회 API
+// 🔹 계약구분 기반 approvedSeries 보정: 가맹형이면 항상 모든 시리즈 열림으로 응답
+//    (DB의 stale approvedSeries 값 무시 — contractType이 source of truth)
+const ALL_SERIES_KEYS = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
+function resolveApprovedSeries(admin) {
+  if (!admin) return [];
+  if (admin.contractType === 'franchise') return ALL_SERIES_KEYS.slice();
+  return admin.approvedSeries || [];
+}
+
 app.get("/api/admin-session", async (req, res) => {
   // 🔹 슈퍼관리자 조회 모드인 경우
   if (req.session && req.session.viewingBranch) {
     const viewing = req.session.viewingBranch;
     try {
       const admin = await Admin.findById(viewing._id).lean();
+      const approvedSeries = resolveApprovedSeries(admin);
       return res.json({
         ok: true,
         admin: {
@@ -25019,8 +25035,9 @@ app.get("/api/admin-session", async (req, res) => {
           name: viewing.name,
           userType: "academy",
           viewMode: "super",
-          seriesApproved: admin ? admin.seriesApproved : false,
-          approvedSeries: admin ? (admin.approvedSeries || []) : [],
+          seriesApproved: admin ? (admin.contractType === 'franchise' ? true : admin.seriesApproved) : false,
+          approvedSeries,
+          contractType: admin ? (admin.contractType || null) : null,
           cumulativeStudentCount: admin ? (admin.cumulativeStudentCount || 0) : 0,
           overStudentCount: admin ? (admin.overStudentCount || 0) : 0,
           maxStudentLimit: admin ? (admin.maxStudentLimit || 120) : 120
@@ -25037,6 +25054,7 @@ app.get("/api/admin-session", async (req, res) => {
           viewMode: "super",
           seriesApproved: false,
           approvedSeries: viewing.approvedSeries || [],
+          contractType: null,
           cumulativeStudentCount: 0,
           overStudentCount: 0,
           maxStudentLimit: 120
@@ -25049,12 +25067,14 @@ app.get("/api/admin-session", async (req, res) => {
     // DB에서 최신 seriesApproved, approvedSeries, 누적 학생 수 정보 가져오기
     try {
       const admin = await Admin.findById(req.session.admin.id).lean();
+      const approvedSeries = resolveApprovedSeries(admin);
       return res.json({
         ok: true,
         admin: {
           ...req.session.admin,
-          seriesApproved: admin ? admin.seriesApproved : false,
-          approvedSeries: admin ? (admin.approvedSeries || []) : [],
+          seriesApproved: admin ? (admin.contractType === 'franchise' ? true : admin.seriesApproved) : false,
+          approvedSeries,
+          contractType: admin ? (admin.contractType || null) : null,
           cumulativeStudentCount: admin ? (admin.cumulativeStudentCount || 0) : 0,
           overStudentCount: admin ? (admin.overStudentCount || 0) : 0,
           maxStudentLimit: admin ? (admin.maxStudentLimit || 120) : 120
@@ -25067,6 +25087,7 @@ app.get("/api/admin-session", async (req, res) => {
           ...req.session.admin,
           seriesApproved: false,
           approvedSeries: [],
+          contractType: null,
           cumulativeStudentCount: 0,
           overStudentCount: 0,
           maxStudentLimit: 120
