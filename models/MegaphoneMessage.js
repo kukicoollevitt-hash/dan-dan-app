@@ -24,6 +24,18 @@ const megaphoneMessageSchema = new mongoose.Schema({
     default: '',
     index: true
   },
+  // 학원명 (학원 학생만 채워짐, 학교 학생은 빈 문자열) — LIVE 티커 학원별 격리용
+  senderAcademy: {
+    type: String,
+    default: '',
+    index: true
+  },
+  // 사용자 타입: school(학교용) / academy(학원용)
+  senderUserType: {
+    type: String,
+    enum: ['school', 'academy'],
+    default: 'school'
+  },
 
   // 메시지 내용
   message: {

@@ -36744,6 +36744,26 @@ app.get("/api/activity-feed", async (req, res) => {
   try {
     const feeds = [];
 
+    // 학원 학생인 경우 같은 학원 학생만, 아니면 학교 학생들만 노출 (학원 학생 활동은 격리)
+    const academy = (req.query.academy || '').trim();
+    let allowedKeys = null; // null = 필터 없음 / Set = "grade::name" 화이트리스트
+    if (academy) {
+      const academyUsers = await User.find({
+        userType: 'academy',
+        academyName: academy,
+        deleted: { $ne: true }
+      }).select('grade name').lean();
+      allowedKeys = new Set(academyUsers.map(u => `${u.grade}::${u.name}`));
+    } else {
+      // 학교 학생들만 (학원 학생 격리)
+      const schoolUsers = await User.find({
+        userType: { $ne: 'academy' },
+        deleted: { $ne: true }
+      }).select('grade name').lean();
+      allowedKeys = new Set(schoolUsers.map(u => `${u.grade}::${u.name}`));
+    }
+    const isAllowed = (grade, name) => allowedKeys.has(`${grade}::${name}`);
+
     // 1. GatePass에서 형성평가 관문 통과 기록 가져오기 (학생별 최신 1건만)
     const GatePassModel = mongoose.model("GatePass");
     const recentGatePasses = await GatePassModel.aggregate([
@@ -36757,6 +36777,7 @@ app.get("/api/activity-feed", async (req, res) => {
     ]);
 
     recentGatePasses.forEach(gp => {
+      if (!isAllowed(gp.grade, gp.name)) return;
       // 이름 마스킹 (예: 김민수 → 김○수)
       const maskedName = gp.name ?
         gp.name.charAt(0) + '○' + gp.name.slice(-1) : '학생';
@@ -36783,6 +36804,7 @@ app.get("/api/activity-feed", async (req, res) => {
     .lean();
 
     recentCoins.forEach(user => {
+      if (!isAllowed(user.grade, user.name)) return;
       const maskedName = user.name ?
         user.name.charAt(0) + '○' + user.name.slice(-1) : '학생';
       const coins = user.vocabularyQuiz?.totalCoins || 0;
@@ -37135,12 +37157,21 @@ app.post("/api/megaphone/send", async (req, res) => {
     // 24시간 후 만료 시간 계산
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+    // 발신자 학원 정보 조회 (User 테이블에서) — 학원별 LIVE 티커 격리용
+    const senderUserDoc = await User.findOne({ grade, name, deleted: { $ne: true } })
+      .select('academyName userType')
+      .lean();
+    const senderAcademy = senderUserDoc?.userType === 'academy' ? (senderUserDoc?.academyName || '') : '';
+    const senderUserType = senderUserDoc?.userType || 'school';
+
     // 확성기 메시지 저장
     const megaphoneMsg = new MegaphoneMessage({
       senderPhone: phone || '',
       senderName: name || '학생',
       senderSchool: school || user.school || '',
       senderGrade: grade || '',
+      senderAcademy: senderAcademy,
+      senderUserType: senderUserType,
       message: message,
       coinUsed: MEGAPHONE_COST,
       expiresAt: expiresAt
@@ -37171,9 +37202,16 @@ app.get("/api/megaphone/active", async (req, res) => {
   try {
     // 24시간 이내 생성된 메시지 조회 (최신 1개만)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const messages = await MegaphoneMessage.find({
-      createdAt: { $gt: oneDayAgo }
-    }).sort({ createdAt: -1 }).limit(1);
+
+    // 학원 학생인 경우: 같은 학원에서 보낸 메시지만 표시
+    // 학교 학생/비로그인: 학교 학생이 보낸 메시지만 표시 (학원 메시지는 격리)
+    const academy = (req.query.academy || '').trim();
+    const baseFilter = { createdAt: { $gt: oneDayAgo } };
+    const filter = academy
+      ? { ...baseFilter, senderUserType: 'academy', senderAcademy: academy }
+      : { ...baseFilter, $or: [{ senderUserType: { $ne: 'academy' } }, { senderUserType: { $exists: false } }] };
+
+    const messages = await MegaphoneMessage.find(filter).sort({ createdAt: -1 }).limit(1);
 
     const feeds = messages.map(msg => {
       // 이름 마스킹 (예: 박민수 → 박○수)
