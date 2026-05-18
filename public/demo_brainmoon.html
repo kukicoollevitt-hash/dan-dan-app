@@ -4729,7 +4729,7 @@ canvas[id^="confetti-canvas"] {
   <!-- 🎯 체험판 배너 -->
   <div class="demo-banner">
     <span class="demo-banner-icon">🎓</span>
-    <span class="demo-banner-text">체험판 - BRAIN온 시리즈 | 과학·사회 3단원, 한국문학·세계문학·인물 1단원 이용 가능</span>
+    <span class="demo-banner-text">체험판 - BRAIN온 시리즈 | 전 분야 각 세부과목 2단원씩 이용 가능</span>
   </div>
 
   <!-- 고래 도서관 아이콘 (좌측 하단, 학습실 옆) -->
@@ -4830,16 +4830,16 @@ canvas[id^="confetti-canvas"] {
     // 🎯 체험판 모드 플래그
     window.DEMO_MODE = true;
     window.DEMO_ALLOWED_SERIES = ['BRAINON'];
-    // 분야별 허용 단원 수 설정
+    // 분야별 허용 단원 수 설정 (각 세부 과목 안에서 1~N단원만 허용)
     window.DEMO_ALLOWED_UNITS_BY_DOMAIN = {
-      science: 3,   // 과학분야: 3단원
-      social: 3,    // 사회분야: 3단원
-      korlit: 1,    // 한국문학분야: 1단원
-      worldlit: 1,  // 세계문학분야: 1단원
-      person: 1     // 인물분야: 1단원
+      science: 2,   // 과학분야: 각 과목 2단원
+      social: 2,    // 사회분야: 각 과목 2단원
+      korlit: 2,    // 한국문학분야: 각 과목 2단원
+      worldlit: 2,  // 세계문학분야: 각 과목 2단원
+      person: 2     // 인물분야: 각 과목 2단원
     };
-    window.DEMO_ALLOWED_UNIT = 3; // 기본값 (과학/사회)
-    window.DEMO_DISABLED_FIELDS = ['science', 'social', 'korlit', 'worldlit', 'person']; // 모든 분야 비활성화
+    window.DEMO_ALLOWED_UNIT = 2; // 기본값 (분야 매핑 누락 시 fallback)
+    window.DEMO_DISABLED_FIELDS = []; // 분야는 모두 클릭 가능 (단원 수만 제한)
     window.DEMO_SESSION_DURATION = 60 * 60 * 1000; // 1시간 (밀리초)
 
     (function() {
@@ -13991,54 +13991,56 @@ async function performLogout() {
 
       list.appendChild(vocabItem);
 
-      // ========== 독서 감상문 월간 과제 섹션 ==========
-      const readingReportHeader = document.createElement('li');
-      readingReportHeader.className = 'study-room-divider';
-      readingReportHeader.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0;">
-          <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
-          <span style="color: #f59e0b; font-size: 13px; font-weight: 600; white-space: nowrap;">📝 독서 감상문 월간 과제</span>
-          <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
-        </div>
-      `;
-      list.appendChild(readingReportHeader);
-
-      // 독서 감상문 항목 (monthlyReportCount는 상단에서 병렬 로드됨)
-      const reportItem = document.createElement('li');
-      reportItem.className = 'study-room-item';
-      reportItem.style.cursor = 'pointer';
-      reportItem.dataset.isReadingReport = 'true';
-
-      const reportBadgeClass = monthlyReportCount > 0 ? 'status-done' : 'status-default';
-      const reportBadgeText = monthlyReportCount > 0 ? `🏆 이번 달 ${monthlyReportCount}개 제출완료` : '✏️ 미제출';
-
-      reportItem.innerHTML = `
-        <div class="task-info">
-          <div class="task-title" style="font-weight: 600;">고래 도서관 독서 감상문</div>
-          <div class="task-meta" style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-            신나는 고래도서관 이야기를 읽고 감상문을 제출해보세요!
+      // ========== 독서 감상문 월간 과제 섹션 (숨김 처리 — 필요 시 if(true)로 복원) ==========
+      if (false) {
+        const readingReportHeader = document.createElement('li');
+        readingReportHeader.className = 'study-room-divider';
+        readingReportHeader.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0;">
+            <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
+            <span style="color: #f59e0b; font-size: 13px; font-weight: 600; white-space: nowrap;">📝 독서 감상문 월간 과제</span>
+            <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
           </div>
-        </div>
-        <div class="task-status">
-          <span class="status-badge ${reportBadgeClass}">${reportBadgeText}</span>
-        </div>
-      `;
+        `;
+        list.appendChild(readingReportHeader);
 
-      // 클릭 시 학습실 모달 닫고 고래 이야기 독서 감상문 팝업 열기
-      reportItem.addEventListener('click', () => {
-        // 학습실 모달 닫기
-        const studyRoomModal = document.getElementById('studyRoomModal');
-        if (studyRoomModal) {
-          studyRoomModal.classList.remove('show');
-        }
-        // 고래 이야기 독서 감상문 팝업 열기
-        openReadingReportModal();
-      });
+        // 독서 감상문 항목 (monthlyReportCount는 상단에서 병렬 로드됨)
+        const reportItem = document.createElement('li');
+        reportItem.className = 'study-room-item';
+        reportItem.style.cursor = 'pointer';
+        reportItem.dataset.isReadingReport = 'true';
 
-      list.appendChild(reportItem);
+        const reportBadgeClass = monthlyReportCount > 0 ? 'status-done' : 'status-default';
+        const reportBadgeText = monthlyReportCount > 0 ? `🏆 이번 달 ${monthlyReportCount}개 제출완료` : '✏️ 미제출';
 
-      // ========== 이 달의 추천 도서 섹션 (completedStoryIds는 상단에서 병렬 로드됨) ==========
-      try {
+        reportItem.innerHTML = `
+          <div class="task-info">
+            <div class="task-title" style="font-weight: 600;">고래 도서관 독서 감상문</div>
+            <div class="task-meta" style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+              신나는 고래도서관 이야기를 읽고 감상문을 제출해보세요!
+            </div>
+          </div>
+          <div class="task-status">
+            <span class="status-badge ${reportBadgeClass}">${reportBadgeText}</span>
+          </div>
+        `;
+
+        // 클릭 시 학습실 모달 닫고 고래 이야기 독서 감상문 팝업 열기
+        reportItem.addEventListener('click', () => {
+          // 학습실 모달 닫기
+          const studyRoomModal = document.getElementById('studyRoomModal');
+          if (studyRoomModal) {
+            studyRoomModal.classList.remove('show');
+          }
+          // 고래 이야기 독서 감상문 팝업 열기
+          openReadingReportModal();
+        });
+
+        list.appendChild(reportItem);
+      }
+
+      // ========== 이 달의 추천 도서 섹션 (숨김 처리 — 필요 시 if(true)로 복원) ==========
+      if (false) try {
         const recommendedBooks = getMonthlyRecommendedBooks(completedStoryIds);
 
         if (recommendedBooks.length > 0) {
@@ -16794,7 +16796,7 @@ ${content}
           <div class="novel-category-badge">시즌1</div>
           <h3>교과기반 창작도서</h3>
           <p>3~4학년 추천</p>
-          <div class="novel-category-count">체험 <span>3개</span> / 104개</div>
+          <div class="novel-category-count">체험 <span>2개</span> / 104개</div>
         </div>
 
         <!-- 교과기반 창작도서 5-6학년 (시즌2) -->
@@ -16803,7 +16805,7 @@ ${content}
           <div class="novel-category-badge">시즌2</div>
           <h3>교과기반 창작도서</h3>
           <p>5~6학년 추천</p>
-          <div class="novel-category-count">체험 <span>3개</span> / 104개</div>
+          <div class="novel-category-count">체험 <span>2개</span> / 104개</div>
         </div>
 
         <!-- 교과기반 창작도서 중1,2학년 (시즌3) -->
@@ -16812,7 +16814,7 @@ ${content}
           <div class="novel-category-badge">시즌3</div>
           <h3>교과기반 창작도서</h3>
           <p>중1,2 추천</p>
-          <div class="novel-category-count">체험 <span>3개</span> / 104개</div>
+          <div class="novel-category-count">체험 <span>2개</span> / 104개</div>
         </div>
       </div>
 
@@ -16840,14 +16842,14 @@ ${content}
     </div>
   </div>
 
-  <!-- 3-4학년 교과기반 창작도서 모달 (시즌1 - 체험판: 3편) -->
+  <!-- 3-4학년 교과기반 창작도서 모달 (시즌1 - 체험판: 2편) -->
   <div class="whale-story-modal" id="grade34NovelModal">
     <div class="novel-category-content" style="max-width: 800px;">
       <button class="whale-story-modal-close" onclick="closeGrade34NovelModal()" type="button">&times;</button>
 
       <div class="novel-category-header">
         <h2>📖 교과기반 창작도서</h2>
-        <p>3-4학년 · 시즌1 <span style="color:#f5576c;">(체험판: 3편 열람 가능)</span></p>
+        <p>3-4학년 · 시즌1 <span style="color:#f5576c;">(체험판: 2편 열람 가능)</span></p>
       </div>
 
       <div class="novel-category-grid" style="flex-wrap: wrap; justify-content: center;">
@@ -16859,41 +16861,33 @@ ${content}
           <p>생물01</p>
         </div>
 
-        <!-- 생물02: 작은 씨앗의 큰 여행 -->
+        <!-- 생물02: 몸이 뒤바뀐 그날 -->
         <div class="novel-category-card grade34" onclick="window.location.href='/creative-book/bio02_season1_34.html'" style="width: 200px;">
-          <div class="novel-category-icon">🌿</div>
+          <div class="novel-category-icon">🦁</div>
           <div class="novel-category-badge">체험 가능</div>
-          <h3>작은 씨앗의 큰 여행</h3>
+          <h3>몸이 뒤바뀐 그날</h3>
           <p>생물02</p>
-        </div>
-
-        <!-- 생물03: 숲속 친구들의 비밀 -->
-        <div class="novel-category-card grade34" onclick="window.location.href='/creative-book/bio03_season1_34.html'" style="width: 200px;">
-          <div class="novel-category-icon">🌳</div>
-          <div class="novel-category-badge">체험 가능</div>
-          <h3>숲속 친구들의 비밀</h3>
-          <p>생물03</p>
         </div>
 
         <!-- 나머지는 잠금 -->
         <div class="novel-category-card grade34 demo-locked" style="width: 200px;">
           <div class="novel-category-icon">🔒</div>
           <div class="novel-category-badge">정식버전</div>
-          <h3>101개 도서</h3>
+          <h3>102개 도서</h3>
           <p>정식버전에서 이용 가능</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 5-6학년 교과기반 창작도서 모달 (시즌2 - 체험판: 3편) -->
+  <!-- 5-6학년 교과기반 창작도서 모달 (시즌2 - 체험판: 2편) -->
   <div class="whale-story-modal" id="grade56NovelModal">
     <div class="novel-category-content" style="max-width: 800px;">
       <button class="whale-story-modal-close" onclick="closeGrade56NovelModal()" type="button">&times;</button>
 
       <div class="novel-category-header">
         <h2>📕 교과기반 창작도서</h2>
-        <p>5-6학년 · 시즌2 <span style="color:#4facfe;">(체험판: 3편 열람 가능)</span></p>
+        <p>5-6학년 · 시즌2 <span style="color:#4facfe;">(체험판: 2편 열람 가능)</span></p>
       </div>
 
       <div class="novel-category-grid" style="flex-wrap: wrap; justify-content: center;">
@@ -16905,41 +16899,33 @@ ${content}
           <p>생물01</p>
         </div>
 
-        <!-- 생물02: 작은 씨앗의 큰 여행 -->
+        <!-- 생물02: 몸이 뒤바뀐 그날 -->
         <div class="novel-category-card grade56" onclick="window.location.href='/creative-book/bio02_season1.html'" style="width: 200px;">
-          <div class="novel-category-icon">🌿</div>
+          <div class="novel-category-icon">🦁</div>
           <div class="novel-category-badge">체험 가능</div>
-          <h3>작은 씨앗의 큰 여행</h3>
+          <h3>몸이 뒤바뀐 그날</h3>
           <p>생물02</p>
-        </div>
-
-        <!-- 생물03: 숲속 친구들의 비밀 -->
-        <div class="novel-category-card grade56" onclick="window.location.href='/creative-book/bio03_season1.html'" style="width: 200px;">
-          <div class="novel-category-icon">🌳</div>
-          <div class="novel-category-badge">체험 가능</div>
-          <h3>숲속 친구들의 비밀</h3>
-          <p>생물03</p>
         </div>
 
         <!-- 나머지는 잠금 -->
         <div class="novel-category-card grade56 demo-locked" style="width: 200px;">
           <div class="novel-category-icon">🔒</div>
           <div class="novel-category-badge">정식버전</div>
-          <h3>101개 도서</h3>
+          <h3>102개 도서</h3>
           <p>정식버전에서 이용 가능</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 중1,2학년 교과기반 창작도서 모달 (시즌3 - 체험판: 3편) -->
+  <!-- 중1,2학년 교과기반 창작도서 모달 (시즌3 - 체험판: 2편) -->
   <div class="whale-story-modal" id="grade78NovelModal">
     <div class="novel-category-content" style="max-width: 800px;">
       <button class="whale-story-modal-close" onclick="closeGrade78NovelModal()" type="button">&times;</button>
 
       <div class="novel-category-header">
         <h2>📘 교과기반 창작도서</h2>
-        <p>중1,2학년 · 시즌3 <span style="color:#38b2ac;">(체험판: 3편 열람 가능)</span></p>
+        <p>중1,2학년 · 시즌3 <span style="color:#38b2ac;">(체험판: 2편 열람 가능)</span></p>
       </div>
 
       <div class="novel-category-grid" style="flex-wrap: wrap; justify-content: center;">
@@ -16951,27 +16937,19 @@ ${content}
           <p>생물01</p>
         </div>
 
-        <!-- 생물02: 작은 씨앗의 큰 여행 -->
+        <!-- 생물02: 몸이 뒤바뀐 그날 -->
         <div class="novel-category-card grade78" onclick="window.location.href='/creative-book/bio02_season1_78.html'" style="width: 200px;">
-          <div class="novel-category-icon">🌿</div>
+          <div class="novel-category-icon">🦁</div>
           <div class="novel-category-badge">체험 가능</div>
-          <h3>작은 씨앗의 큰 여행</h3>
+          <h3>몸이 뒤바뀐 그날</h3>
           <p>생물02</p>
-        </div>
-
-        <!-- 생물03: 숲속 친구들의 비밀 -->
-        <div class="novel-category-card grade78" onclick="window.location.href='/creative-book/bio03_season1_78.html'" style="width: 200px;">
-          <div class="novel-category-icon">🌳</div>
-          <div class="novel-category-badge">체험 가능</div>
-          <h3>숲속 친구들의 비밀</h3>
-          <p>생물03</p>
         </div>
 
         <!-- 나머지는 잠금 -->
         <div class="novel-category-card grade78 demo-locked" style="width: 200px;">
           <div class="novel-category-icon">🔒</div>
           <div class="novel-category-badge">정식버전</div>
-          <h3>101개 도서</h3>
+          <h3>102개 도서</h3>
           <p>정식버전에서 이용 가능</p>
         </div>
       </div>
