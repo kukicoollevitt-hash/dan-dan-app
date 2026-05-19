@@ -13452,7 +13452,8 @@ app.get("/api/user-info", async (req, res) => {
       grade: user.grade,
       name: user.name,
       school: user.school,
-      assignedSeries: user.assignedSeries || []
+      assignedSeries: user.assignedSeries || [],
+      maxUnitsPerSubject: user.maxUnitsPerSubject || 0
     });
   } catch (err) {
     console.error("Error fetching user info:", err);
