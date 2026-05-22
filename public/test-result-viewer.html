@@ -2093,35 +2093,93 @@
 
       try {
         const { jsPDF } = window.jspdf;
-
-        // html2canvas로 화면 캡처 (품질 낮춤으로 용량 감소)
-        const canvas = await html2canvas(content, {
-          scale: 1.5, // 품질 낮춤 (기본 2)
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG로 변환하여 용량 감소
-        const imgWidth = 210; // A4 가로
-        const pageHeight = 297; // A4 세로
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-
         const pdf = new jsPDF('p', 'mm', 'a4');
 
-        let heightLeft = imgHeight;
-        let position = 0;
+        // A4 치수 및 여백
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 10;
+        const contentWidth = pageWidth - margin * 2;
+        const usablePageHeight = pageHeight - margin * 2;
+        let currentY = margin;
+        let isFirstSection = true;
 
-        // 첫 페이지
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
+        // 섹션 단위로 수집 (질문 목록은 개별 문항으로 펼침)
+        const sections = [];
+        for (const child of content.children) {
+          if (child.classList.contains('print-btn')) continue;
+          if (child.classList.contains('action-buttons')) continue;
+          if (child.id === 'loading' || child.id === 'error') continue;
+          if (window.getComputedStyle(child).display === 'none') continue;
 
-        // 다음 페이지들
-        while (heightLeft > 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-          heightLeft -= pageHeight;
+          if (child.id === 'questionList' || child.classList.contains('question-list')) {
+            // 문제 리스트는 문항별로 펼침
+            for (const q of child.children) {
+              if (window.getComputedStyle(q).display !== 'none') sections.push(q);
+            }
+          } else {
+            sections.push(child);
+          }
+        }
+
+        // 섹션별 렌더링 + 페이지 분할
+        for (const section of sections) {
+          const canvas = await html2canvas(section, {
+            scale: 1.5,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+          });
+
+          const imgData = canvas.toDataURL('image/jpeg', 0.7);
+          const sectionHeight = canvas.height * contentWidth / canvas.width;
+
+          // 현재 페이지에 안 들어가면 새 페이지로
+          if (!isFirstSection && currentY + sectionHeight > pageHeight - margin) {
+            pdf.addPage();
+            currentY = margin;
+          }
+          isFirstSection = false;
+
+          // 한 페이지를 넘는 큰 섹션은 캔버스를 잘라서 페이지에 나눠 배치
+          if (sectionHeight > usablePageHeight) {
+            let remainingHeight = sectionHeight;
+            let sourceY = 0;
+            const pxPerMm = canvas.width / contentWidth;
+
+            while (remainingHeight > 0) {
+              const availOnPage = pageHeight - margin - currentY;
+              const portionHeight = Math.min(remainingHeight, availOnPage);
+              const portionPxHeight = Math.round(portionHeight * pxPerMm);
+
+              const portionCanvas = document.createElement('canvas');
+              portionCanvas.width = canvas.width;
+              portionCanvas.height = portionPxHeight;
+              const ctx = portionCanvas.getContext('2d');
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, portionCanvas.width, portionCanvas.height);
+              ctx.drawImage(
+                canvas,
+                0, Math.round(sourceY * pxPerMm), canvas.width, portionPxHeight,
+                0, 0, canvas.width, portionPxHeight
+              );
+
+              const portionImg = portionCanvas.toDataURL('image/jpeg', 0.7);
+              pdf.addImage(portionImg, 'JPEG', margin, currentY, contentWidth, portionHeight, undefined, 'FAST');
+
+              sourceY += portionHeight;
+              currentY += portionHeight;
+              remainingHeight -= portionHeight;
+
+              if (remainingHeight > 0) {
+                pdf.addPage();
+                currentY = margin;
+              }
+            }
+          } else {
+            pdf.addImage(imgData, 'JPEG', margin, currentY, contentWidth, sectionHeight, undefined, 'FAST');
+            currentY += sectionHeight + 3; // 섹션 간 간격
+          }
         }
 
         // 학생 정보 기반 파일명
