@@ -253,6 +253,15 @@ async function sendHQAdminNotification(studentName, grade, type, additionalInfo 
       }
       message = `[본사알림] ${location} ${grade} ${studentName} "${unitTitle}" 완료`;
       break;
+    case 'snackOrder':
+      // CU 간식 응모. 상품명들과 총 뱃지 전달
+      const items = Array.isArray(additionalInfo.items) ? additionalInfo.items : [];
+      let itemSummary = items.map(i => i.name).join(', ');
+      // 너무 길면 줄임 (한글 기준 40자 정도)
+      if (itemSummary.length > 40) itemSummary = itemSummary.slice(0, 37) + '...';
+      const total = additionalInfo.totalBadges || 0;
+      message = `[본사알림] ${location} ${grade} ${studentName} CU 응모: ${itemSummary} (${total}뱃지)`;
+      break;
     default:
       message = `[본사알림] ${location} ${grade} ${studentName} 알림`;
   }
@@ -2362,6 +2371,23 @@ app.post("/api/snack-order", async (req, res) => {
     );
 
     console.log(`✅ 간식 주문 완료: ${grade} ${name} - ${items.map(i => i.name).join(', ')} (${totalBadges}뱃지)`);
+
+    // 📱 본사 관리자 SMS 알림 발송 (CU 응모) — 비동기로 응답은 먼저 보냄
+    (async () => {
+      try {
+        const userDoc = await User.findOne({ grade, name, deleted: { $ne: true } })
+          .select('academyName school').lean();
+        sendHQAdminNotification(name, grade, 'snackOrder', {
+          academyName: userDoc?.academyName || '',
+          school: userDoc?.school || school || '',
+          items,
+          totalBadges
+        });
+      } catch (err) {
+        console.error('CU 응모 본사알림 실패:', err);
+      }
+    })();
+
     res.json({ ok: true, orderId: order._id, remaining: remainingCoins - totalBadges });
   } catch (err) {
     console.error("❌ 간식 주문 오류:", err);
