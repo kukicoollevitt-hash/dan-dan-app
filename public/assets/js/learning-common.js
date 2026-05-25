@@ -3123,11 +3123,19 @@
           q4Valid = q4_1 && q4_2;
         }
 
-        // 서술형 체크 (q5)
-        const q5 = document.getElementById('q5')?.value?.trim();
+        // q5 체크 (객관식 우선 / 서술형 fallback)
+        let q5Valid;
+        if (document.querySelector('input[name="q5"]')) {
+          // 객관식: 라디오 선택 여부
+          q5Valid = document.querySelector('input[name="q5"]:checked') !== null;
+        } else {
+          // 서술형: 텍스트 입력 여부
+          const q5 = document.getElementById('q5')?.value?.trim();
+          q5Valid = !!q5;
+        }
 
         // 모든 문제가 입력되었는지 확인
-        if (!q1 || !q2 || !q3Valid || !q4Valid || !q5) {
+        if (!q1 || !q2 || !q3Valid || !q4Valid || !q5Valid) {
           e.stopImmediatePropagation();
           showCreativeAlert('모든 문제의 정답을 입력해주세요.');
           return false;

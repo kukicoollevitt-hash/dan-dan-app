@@ -6097,6 +6097,7 @@ canvas[id^="confetti-canvas"] {
   <script src="./BRAINUP/social/deep_geo_content.js"></script>
   <script src="./BRAINUP/social/deep_law_content.js"></script>
   <script src="./BRAINUP/social/deep_pol_content.js"></script>
+  <script src="./BRAINUP/korhistory/korhistory_content.js"></script>
   <script src="./BRAINUP/worldlit/deep_world1_content.js"></script>
   <script src="./BRAINUP/worldlit/deep_world2_content.js"></script>
   <script src="./BRAINUP/person/deep_people1_content.js"></script>
@@ -6556,8 +6557,9 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item" data-series="BRAINFIT"><span>BRAIN핏</span><span class="meta">확장문해</span></li>
         <li class="series-item" data-series="BRAINDEEP"><span>BRAIN딥</span><span class="meta">심화문해</span></li>
         <li class="series-item" data-series="BRAINM"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
-        <li class="series-item test-only" data-series="BRAINNAESIN" style="display:none;"><span>BRAIN문법</span><span class="meta">현대문법</span></li>
-        <li class="series-item test-only" data-series="BRAINSUNEUNG" style="display:none;"><span>BRAIN역사</span><span class="meta">한국사</span></li>
+        <li class="series-item summer-special kh-coming-soon" data-series="BRAINKORHIST"><span>BRAIN한국사</span><span class="meta">방학특강</span></li>
+        <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
+        <li class="series-item" data-series="BRAINSUNEUNG" style="display:none;"><span>🎯 BRAIN수능</span><span class="meta">수능대비</span></li>
       </ul>
     </div>
 
@@ -7433,9 +7435,10 @@ canvas[id^="confetti-canvas"] {
       BRAINUP: { name: "BRAIN업", desc: "성장문해" },
       BRAINFIT: { name: "BRAIN핏", desc: "확장문해" },
       BRAINDEEP: { name: "BRAIN딥", desc: "심화문해" },
-      BRAINNAESIN: { name: "BRAIN문법", desc: "현대문법" },
-      BRAINSUNEUNG: { name: "BRAIN역사", desc: "한국사" },
-      BRAINM: { name: "BRAIN실전", desc: "수능모고" }
+      BRAINNAESIN: { name: "BRAIN내신", desc: "내신대비" },
+      BRAINSUNEUNG: { name: "BRAIN수능", desc: "수능대비" },
+      BRAINM: { name: "BRAIN실전", desc: "수능모고" },
+      BRAINKORHIST: { name: "BRAIN한국사", desc: "방학특강" }
     };
 
     /* 1. 시리즈별 분야/과목 */
@@ -7527,7 +7530,6 @@ canvas[id^="confetti-canvas"] {
           ]
         }
       ],
-      // BRAIN내신 (초6 나교재 테스트용)
       BRAINNAESIN: [
         {
           id: "mid1",
@@ -7580,7 +7582,6 @@ canvas[id^="confetti-canvas"] {
           ]
         }
       ],
-      // BRAIN수능 (초6 나교재 테스트용)
       BRAINSUNEUNG: [
         {
           id: "hwajak",
@@ -10118,7 +10119,7 @@ if (logoutConfirmBtn) {
 
     /* 5. 시리즈 클릭 */
     // 오픈된 시리즈 목록
-    const openedSeries = ['BRAINON', 'BRAINUP', 'BRAINFIT', 'BRAINDEEP', 'BRAINSUP', 'BRAINNAESIN', 'BRAINSUNEUNG'];
+    const openedSeries = ['BRAINON', 'BRAINUP', 'BRAINFIT', 'BRAINDEEP', 'BRAINSUP', 'BRAINNAESIN', 'BRAINSUNEUNG', 'BRAINKORHIST'];
 
     // 딥블루 테마 적용 함수 (내신/수능/실전)
     function applyDeepBlueTheme(series) {
@@ -10135,6 +10136,14 @@ if (logoutConfirmBtn) {
     document.querySelectorAll("#seriesList .series-item").forEach(li => {
       li.addEventListener("click", async () => {
         const series = li.dataset.series;
+
+        // BRAINKORHIST(방학특강 한국사) 클릭 — 현재 오픈 예정 상태
+        if (series === 'BRAINKORHIST') {
+          if (typeof window.showKhComingSoonPopup === 'function') {
+            window.showKhComingSoonPopup();
+          }
+          return;
+        }
 
         // BRAINM(수능모고) 클릭 시 모의고사 대시보드로 이동
         if (series === 'BRAINM') {
@@ -12276,6 +12285,12 @@ async function performLogout() {
               restoreProgressOnRenderedList();
               console.log('⭐ [UNIT_COMPLETED] 단원 목록 다시 렌더링 (별표 반영)');
             }
+            // 한국사(방학특강) 팝업이 열려 있으면 카드 완료 표시 갱신
+            const khOv = document.getElementById('khModalOverlay');
+            if (khOv && khOv.classList.contains('show') && typeof renderKhGrid === 'function') {
+              renderKhGrid();
+              console.log('☀️ [UNIT_COMPLETED] 한국사 단원 카드 완료 표시 갱신');
+            }
           } catch (e) {
             console.warn('[UNIT_COMPLETED] 단원 목록 업데이트 오류:', e);
           }
@@ -12325,8 +12340,9 @@ async function performLogout() {
         document.querySelectorAll("#seriesList .series-item").forEach(li => {
           const seriesId = li.dataset.series;
 
-          // 테스트 시리즈는 showTestSeriesForTestUser에서 별도 처리
-          if (li.classList.contains('test-only')) {
+          // 방학특강(BRAINKORHIST)은 시리즈 배정과 무관하게 모든 학생에게 항상 활성
+          if (seriesId === 'BRAINKORHIST') {
+            li.classList.remove("disabled");
             return;
           }
 
@@ -12381,42 +12397,6 @@ async function performLogout() {
 
     // 시리즈 제한 적용
     applySeriesRestrictions();
-
-    // ===== 테스트용 시리즈 표시 (초6 나교재 전용) =====
-    function showTestSeriesForTestUser() {
-      const stu = getCurrentStudent();
-      if (!stu) return;
-
-      // 테스트 학생: 초6 나교재 - BRAIN문법/BRAIN역사 시리즈 표시 (잠금 상태)
-      const isTestUser = (stu.grade === '초6' && stu.name === '나교재');
-
-      if (isTestUser) {
-        console.log('🧪 테스트 사용자 감지: 초6 나교재 - BRAIN문법/BRAIN역사 시리즈 표시 (오픈 준비 중)');
-        document.querySelectorAll('.series-item.test-only').forEach(li => {
-          li.style.display = '';
-          li.classList.add('locked-series');
-          li.style.opacity = '0.6';
-          li.style.cursor = 'not-allowed';
-          li.style.position = 'relative';
-          // 오픈 준비 중 뱃지 추가
-          if (!li.querySelector('.preparing-badge')) {
-            const badge = document.createElement('span');
-            badge.className = 'preparing-badge';
-            badge.style.cssText = 'position:absolute;top:-8px;right:-8px;background:#ff6b6b;color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;';
-            badge.textContent = '방학특강';
-            li.appendChild(badge);
-          }
-          // 클릭 방지
-          li.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            alert('오픈 준비 중입니다. 곧 만나요!');
-            return false;
-          };
-        });
-      }
-    }
-    showTestSeriesForTestUser();
 
     // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
     restoreProgressOnRenderedList();
@@ -14116,6 +14096,26 @@ async function performLogout() {
       './BRAINUP/social/deep_soc_22.html': true,
       './BRAINUP/social/deep_soc_23.html': true,
       './BRAINUP/social/deep_soc_24.html': true,
+      './BRAINUP/korhistory/kh_01.html': true,
+      './BRAINUP/korhistory/kh_02.html': true,
+      './BRAINUP/korhistory/kh_03.html': true,
+      './BRAINUP/korhistory/kh_04.html': true,
+      './BRAINUP/korhistory/kh_05.html': true,
+      './BRAINUP/korhistory/kh_06.html': true,
+      './BRAINUP/korhistory/kh_07.html': true,
+      './BRAINUP/korhistory/kh_08.html': true,
+      './BRAINUP/korhistory/kh_09.html': true,
+      './BRAINUP/korhistory/kh_10.html': true,
+      './BRAINUP/korhistory/kh_11.html': true,
+      './BRAINUP/korhistory/kh_12.html': true,
+      './BRAINUP/korhistory/kh_13.html': true,
+      './BRAINUP/korhistory/kh_14.html': true,
+      './BRAINUP/korhistory/kh_15.html': true,
+      './BRAINUP/korhistory/kh_16.html': true,
+      './BRAINUP/korhistory/kh_17.html': true,
+      './BRAINUP/korhistory/kh_18.html': true,
+      './BRAINUP/korhistory/kh_19.html': true,
+      './BRAINUP/korhistory/kh_20.html': true,
       './BRAINUP/worldlit/deep_world1_01.html': true,
       './BRAINUP/worldlit/deep_world1_02.html': true,
       './BRAINUP/worldlit/deep_world1_03.html': true,
@@ -14975,6 +14975,14 @@ async function performLogout() {
         }
         // sessionStorage에서 현재 열린 단원 경로 제거
         sessionStorage.removeItem('currentOpenUnit');
+
+        // 한국사(방학특강) 팝업이 뒤로 밀려 있었으면 다시 위로 복원 (목차 유지)
+        const khOv = document.getElementById('khModalOverlay');
+        if (khOv && khOv.dataset.bgMode === '1') {
+          khOv.style.zIndex = ''; // CSS 기본값(1000100) 복원
+          delete khOv.dataset.bgMode;
+          if (typeof window.renderKhGrid === 'function') window.renderKhGrid();
+        }
 
         // 🎬 뒷배경 비디오 다시 재생
         const bgVideo = document.querySelector('#tablet-fixed-bg video, .background-video video');
@@ -31354,6 +31362,1110 @@ ${content}
           if (modal.classList.contains('show')) applyWhaleLibraryLimit();
         }).observe(modal, { attributes: true, attributeFilter: ['class'] });
       });
+    })();
+  </script>
+
+  <!-- ===== BRAIN한국사 (방학특강) 단원 선택 모달 ===== -->
+  <style>
+    /* 방학특강 시리즈 타일 배지 (라벨은 여름특강) */
+    .series-item.summer-special { position: relative; }
+    .series-item.summer-special::after {
+      content: '☀️ 여름특강';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, #ffb347 0%, #ff7e5f 100%);
+      color: #fff;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(255, 126, 95, 0.4);
+      letter-spacing: 0.3px;
+    }
+
+    /* 오픈 예정 상태 (BRAIN한국사) — 비활성 외관이지만 클릭은 가능 */
+    .series-item.kh-coming-soon {
+      opacity: 0.55;
+      filter: grayscale(0.6);
+      cursor: not-allowed !important;
+    }
+    .series-item.kh-coming-soon:hover {
+      opacity: 0.7;
+    }
+    .series-item.summer-special.kh-coming-soon::after {
+      content: '📅 6/15 오픈 예정';
+      background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+      box-shadow: 0 2px 6px rgba(100, 116, 139, 0.4);
+    }
+
+    /* 모달 오버레이 */
+    .kh-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .kh-modal-overlay.show { display: flex; }
+    .kh-modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    }
+    .kh-modal-header {
+      background: linear-gradient(135deg, #ffb347 0%, #ff7e5f 100%);
+      color: #fff;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kh-modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .kh-modal-header .kh-modal-sub {
+      font-size: 12px;
+      opacity: 0.95;
+      margin-top: 2px;
+    }
+    .kh-modal-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .kh-modal-close:hover { background: rgba(255,255,255,0.35); }
+    .kh-modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      background: #fffaf5;
+    }
+    .kh-unit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .kh-unit-card {
+      background: #fff;
+      border: 1.5px solid #ffe1cc;
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .kh-unit-card:hover {
+      border-color: #ff7e5f;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(255, 126, 95, 0.2);
+    }
+    .kh-unit-card .kh-unit-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #2a1a0a;
+      margin-bottom: 6px;
+    }
+    .kh-unit-card .kh-unit-sub {
+      font-size: 12px;
+      color: #7a6a55;
+      line-height: 1.5;
+    }
+    /* 완료된 카드 */
+    .kh-unit-card.kh-completed {
+      position: relative;
+      background: linear-gradient(135deg, #e7f7e1 0%, #c9efc0 100%);
+      border-color: #6cbf5a;
+      box-shadow: 0 2px 8px rgba(108, 191, 90, 0.18);
+    }
+    .kh-unit-card.kh-completed:hover {
+      border-color: #4ea63a;
+      box-shadow: 0 6px 14px rgba(78, 166, 58, 0.25);
+    }
+    .kh-unit-card.kh-completed .kh-unit-title { color: #1f4d12; }
+    .kh-unit-card.kh-completed .kh-unit-sub { color: #3f6a32; }
+    .kh-unit-card .kh-done-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #2e9b3f;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 11px;
+      box-shadow: 0 2px 6px rgba(46, 155, 63, 0.35);
+      letter-spacing: 0.3px;
+    }
+
+    /* 한국사 단원평가 카드 */
+    .kh-exam-card {
+      position: relative;
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      border: 1.5px solid;
+    }
+    .kh-exam-card.kh-exam-unlocked {
+      background: linear-gradient(135deg, #fff5e6 0%, #ffe2b8 100%);
+      border-color: #ff7e5f;
+      box-shadow: 0 4px 12px rgba(255, 126, 95, 0.28);
+    }
+    .kh-exam-card.kh-exam-unlocked:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(255, 126, 95, 0.35);
+      border-color: #ff5e3a;
+    }
+    .kh-exam-card.kh-exam-unlocked .kh-unit-title {
+      color: #8b3a17;
+      font-weight: 800;
+    }
+    .kh-exam-card.kh-exam-unlocked .kh-unit-sub {
+      color: #a85e2e;
+    }
+    .kh-exam-card .kh-exam-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: linear-gradient(135deg, #ff7e5f 0%, #ff4d2a 100%);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 11px;
+      box-shadow: 0 2px 6px rgba(255, 78, 42, 0.4);
+      letter-spacing: 0.3px;
+    }
+    .kh-exam-card.kh-exam-locked {
+      background: #f3f1ed;
+      border-color: #d8d4cd;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    .kh-exam-card.kh-exam-locked:hover {
+      background: #ebe7e0;
+      opacity: 0.8;
+    }
+    .kh-exam-card.kh-exam-locked .kh-unit-title {
+      color: #7a6f5e;
+    }
+    .kh-exam-card.kh-exam-locked .kh-unit-sub {
+      color: #9a8f7e;
+    }
+    .kh-exam-card .kh-exam-lock-icon {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 18px;
+    }
+
+    /* 잠금 팝업 */
+    .kh-lock-popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 1000200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .kh-lock-popup-box {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 360px;
+      width: 100%;
+      padding: 28px 24px 22px;
+      text-align: center;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    }
+    .kh-lock-popup-icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+    .kh-lock-popup-title {
+      margin: 6px 0 10px;
+      font-size: 17px;
+      color: #2a1a0a;
+      font-weight: 700;
+    }
+    .kh-lock-popup-msg {
+      font-size: 14px;
+      color: #5a4a3a;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .kh-lock-popup-sub {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #8a7a6a;
+    }
+    .kh-lock-popup-btn {
+      background: linear-gradient(135deg, #ffb347 0%, #ff7e5f 100%);
+      color: #fff;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 22px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255,126,95,0.3);
+    }
+    .kh-lock-popup-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(255,126,95,0.4);
+    }
+
+    /* ===== 한국사 단원평가 모달 ===== */
+    .kh-exam-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1000150;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .kh-exam-overlay.show { display: flex; }
+    .kh-exam-modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 14px 44px rgba(0,0,0,0.28);
+    }
+    .kh-exam-header {
+      background: linear-gradient(135deg, #ff7e5f 0%, #c0392b 100%);
+      color: #fff;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kh-exam-header-main h2 { margin: 0; font-size: 18px; font-weight: 800; }
+    .kh-exam-header-main .kh-exam-progress { font-size: 12px; opacity: 0.95; margin-top: 4px; }
+    .kh-exam-close {
+      background: rgba(255,255,255,0.22);
+      border: none;
+      color: #fff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .kh-exam-close:hover { background: rgba(255,255,255,0.35); }
+    .kh-exam-progress-bar {
+      height: 5px;
+      background: #f2e6df;
+      overflow: hidden;
+    }
+    .kh-exam-progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #ff7e5f, #ffb347);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .kh-exam-body {
+      padding: 22px 24px 24px;
+      overflow-y: auto;
+      flex: 1;
+      background: #fffbf7;
+    }
+    .kh-exam-meta {
+      display: flex;
+      gap: 8px;
+      font-size: 12px;
+      color: #8a5a3a;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .kh-exam-meta .kh-exam-meta-tag {
+      background: #ffe6d5;
+      color: #b04825;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+    .kh-exam-question {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2a1a0a;
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+    .kh-exam-options { display: flex; flex-direction: column; gap: 10px; }
+    .kh-exam-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1.5px solid #e8d5bf;
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      color: #3a2a1a;
+      transition: all 0.15s ease;
+      line-height: 1.55;
+    }
+    .kh-exam-option:hover { border-color: #ff7e5f; background: #fff5ee; }
+    .kh-exam-option.selected { border-color: #ff7e5f; background: #ffe9db; }
+    .kh-exam-option.correct {
+      border-color: #2e9b3f; background: #e7f7e1; color: #1f4d12;
+    }
+    .kh-exam-option.wrong {
+      border-color: #c0392b; background: #fde7e3; color: #6a1a12;
+    }
+    .kh-exam-option .kh-exam-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #fff5ee;
+      color: #b04825;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+    .kh-exam-option.selected .kh-exam-num,
+    .kh-exam-option.correct .kh-exam-num,
+    .kh-exam-option.wrong .kh-exam-num { background: #fff; }
+    .kh-exam-explain {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #fff8f0;
+      border-left: 4px solid #ff7e5f;
+      font-size: 13px;
+      color: #5a4030;
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+    .kh-exam-explain b { color: #b04825; }
+    .kh-exam-actions {
+      padding: 14px 24px;
+      border-top: 1px solid #f0e2d2;
+      background: #fffbf7;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .kh-exam-btn {
+      padding: 10px 22px;
+      border-radius: 22px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .kh-exam-btn-primary {
+      background: linear-gradient(135deg, #ff7e5f, #ff4d2a);
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(255,78,42,0.3);
+    }
+    .kh-exam-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(255,78,42,0.4); }
+    .kh-exam-btn-primary:disabled {
+      opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none;
+    }
+    .kh-exam-btn-secondary {
+      background: #f0e2d2;
+      color: #6a4a30;
+    }
+    .kh-exam-btn-secondary:hover { background: #e6d4bc; }
+
+    /* 결과 화면 */
+    .kh-exam-result-header {
+      text-align: center;
+      padding: 22px 20px 14px;
+    }
+    .kh-exam-result-score {
+      font-size: 48px;
+      font-weight: 900;
+      margin: 6px 0;
+      background: linear-gradient(135deg, #ff7e5f, #c0392b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .kh-exam-result-status {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .kh-exam-result-status.pass { color: #2e9b3f; }
+    .kh-exam-result-status.fail { color: #c0392b; }
+    .kh-exam-result-section {
+      margin-top: 18px;
+    }
+    .kh-exam-result-section h4 {
+      font-size: 14px;
+      margin: 0 0 10px;
+      color: #5a3a20;
+      border-bottom: 2px solid #ffe2c4;
+      padding-bottom: 6px;
+    }
+    .kh-exam-cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }
+    .kh-exam-cat-item {
+      background: #fff;
+      border: 1px solid #f0e2d2;
+      border-radius: 8px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .kh-exam-cat-item .kh-exam-cat-name {
+      font-size: 12px;
+      color: #8a5a3a;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    .kh-exam-cat-item .kh-exam-cat-score {
+      font-size: 16px;
+      color: #2a1a0a;
+      font-weight: 800;
+    }
+    .kh-exam-wrong-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .kh-exam-wrong-item {
+      background: #fff;
+      border: 1px solid #f4d8cc;
+      border-left: 4px solid #c0392b;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .kh-exam-wrong-meta {
+      font-size: 11px;
+      color: #b04825;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .kh-exam-wrong-q {
+      font-size: 13px;
+      color: #2a1a0a;
+      font-weight: 600;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+    .kh-exam-wrong-answers {
+      font-size: 12px;
+      color: #5a4030;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+    .kh-exam-wrong-answers .picked { color: #c0392b; font-weight: 700; }
+    .kh-exam-wrong-answers .correct { color: #2e9b3f; font-weight: 700; }
+    .kh-exam-wrong-explain {
+      font-size: 12px;
+      color: #5a4030;
+      background: #fff8f0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      line-height: 1.6;
+      white-space: pre-line;
+      margin-top: 6px;
+    }
+    .kh-exam-wrong-toggle {
+      margin-top: 8px;
+      background: none;
+      border: 1px solid #f0c0a8;
+      color: #b04825;
+      padding: 5px 12px;
+      border-radius: 14px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .kh-exam-wrong-toggle:hover { background: #fff0e6; }
+    .kh-exam-wrong-passage {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #4a3826;
+      line-height: 1.7;
+      background: #fffaf2;
+      padding: 10px;
+      border-radius: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-line;
+      display: none;
+    }
+    .kh-exam-wrong-passage.show { display: block; }
+    .kh-exam-wrong-passage b { color: #b04825; }
+    @media (max-width: 600px) {
+      .kh-exam-modal { max-height: 94vh; }
+      .kh-exam-body { padding: 16px 16px 18px; }
+      .kh-exam-question { font-size: 15px; }
+      .kh-exam-option { font-size: 13px; padding: 10px 12px; }
+    }
+    @media (max-width: 600px) {
+      .kh-unit-grid { grid-template-columns: 1fr; }
+      .kh-modal { max-height: 92vh; }
+    }
+  </style>
+
+  <div id="khModalOverlay" class="kh-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="khModalTitle">
+    <div class="kh-modal">
+      <div class="kh-modal-header">
+        <div>
+          <h2 id="khModalTitle">📜 BRAIN한국사</h2>
+          <div class="kh-modal-sub">☀️ 방학특강 · 20강 커리큘럼</div>
+        </div>
+        <button class="kh-modal-close" type="button" aria-label="닫기" onclick="closeKorHistoryModal()">×</button>
+      </div>
+      <div class="kh-modal-body">
+        <div id="khUnitGrid" class="kh-unit-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 한국사 단원평가 모달 -->
+  <div id="khExamOverlay" class="kh-exam-overlay" role="dialog" aria-modal="true" aria-labelledby="khExamTitle">
+    <div class="kh-exam-modal">
+      <div class="kh-exam-header">
+        <div class="kh-exam-header-main">
+          <h2 id="khExamTitle">📝 한국사 단원평가</h2>
+          <div class="kh-exam-progress" id="khExamProgress">문제를 준비하는 중…</div>
+        </div>
+        <button class="kh-exam-close" type="button" aria-label="닫기" onclick="closeKhExamModal()">×</button>
+      </div>
+      <div class="kh-exam-progress-bar"><div id="khExamProgressBar" class="kh-exam-progress-bar-inner"></div></div>
+      <div class="kh-exam-body" id="khExamBody"></div>
+      <div class="kh-exam-actions" id="khExamActions"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // 객관식 q1~q5 영역 라벨
+      const KH_Q_LABELS = {
+        q1: '중심내용',
+        q2: '문단순서',
+        q3: '본문일치',
+        q4: '어휘의미',
+        q5: '추론'
+      };
+
+      function shuffleInPlace(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      // 출제: 1~20강 각 1문제 랜덤(q1~q5 중) + 보기 셔플
+      function buildKhExamQuestions() {
+        const out = [];
+        for (let i = 1; i <= 20; i++) {
+          const no = String(i).padStart(2, '0');
+          const unitKey = `kh_${no}`;
+          const pack = (window.CONTENTS || {})[unitKey];
+          if (!pack || !pack.quiz) continue;
+          const qNum = Math.floor(Math.random() * 5) + 1;
+          const qKey = `q${qNum}`;
+          const text = pack.quiz[`${qKey}_text`];
+          const opts = pack.quiz[`${qKey}_opts`];
+          if (!text || !Array.isArray(opts) || !opts.length) continue;
+          const correctOriginal = parseInt(pack.answerKey?.[qKey], 10); // 1~4
+          if (!correctOriginal) continue;
+          // 보기 셔플 (원본 번호 기억)
+          const shuffled = shuffleInPlace(opts.map((o, idx) => ({ text: o, original: idx + 1 })));
+          out.push({
+            unitKey,
+            unitNo: no,
+            unitTitle: pack.title || `${i}강`,
+            qNum,
+            qKey,
+            category: KH_Q_LABELS[qKey] || qKey,
+            questionText: text,
+            options: shuffled, // [{text, original}]
+            correctOriginal,
+            explain: pack.explain?.[qKey] || '',
+            detail: pack.detail?.[qKey] || '',
+            passage: Array.isArray(pack.passage) ? pack.passage.join('\n\n') : ''
+          });
+        }
+        return out;
+      }
+
+      // 상태
+      let khExamQs = [];
+      let khExamIdx = 0;
+      let khExamPicked = null;       // 현재 문제 선택한 옵션 idx (셔플 후)
+      let khExamSubmitted = false;   // 현재 문제 제출 여부
+      let khExamAnswers = [];        // [{q, pickedOriginal, isCorrect}]
+
+      const $ = (id) => document.getElementById(id);
+
+      function escapeHTML(str) {
+        if (str == null) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+
+      function renderKhExamQuestion() {
+        const body = $('khExamBody');
+        const actions = $('khExamActions');
+        const progress = $('khExamProgress');
+        const bar = $('khExamProgressBar');
+        if (!body || !actions) return;
+
+        const q = khExamQs[khExamIdx];
+        const total = khExamQs.length;
+        progress.textContent = `${khExamIdx + 1} / ${total}문항`;
+        bar.style.width = `${((khExamIdx) / total) * 100}%`;
+
+        const unitNoLabel = parseInt(q.unitNo, 10);
+        body.innerHTML = `
+          <div class="kh-exam-meta">
+            <span class="kh-exam-meta-tag">${unitNoLabel}강</span>
+            <span class="kh-exam-meta-tag">${escapeHTML(q.category)}</span>
+          </div>
+          <div class="kh-exam-question">${q.questionText}</div>
+          <div class="kh-exam-options" id="khExamOptionList">
+            ${q.options.map((opt, i) => `
+              <div class="kh-exam-option" data-pick="${i}">
+                <span class="kh-exam-num">${i + 1}</span>
+                <span>${opt.text}</span>
+              </div>`).join('')}
+          </div>
+          <div id="khExamExplainSlot"></div>
+        `;
+        actions.innerHTML = `
+          <button class="kh-exam-btn kh-exam-btn-primary" id="khExamSubmitBtn" disabled>답안 제출</button>
+        `;
+
+        khExamPicked = null;
+        khExamSubmitted = false;
+
+        // 옵션 클릭 핸들러
+        body.querySelectorAll('.kh-exam-option').forEach(el => {
+          el.addEventListener('click', () => {
+            if (khExamSubmitted) return;
+            khExamPicked = parseInt(el.dataset.pick, 10);
+            body.querySelectorAll('.kh-exam-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            $('khExamSubmitBtn').disabled = false;
+          });
+        });
+
+        $('khExamSubmitBtn').addEventListener('click', submitKhExamAnswer);
+      }
+
+      function submitKhExamAnswer() {
+        if (khExamPicked == null || khExamSubmitted) return;
+        const q = khExamQs[khExamIdx];
+        const pickedOpt = q.options[khExamPicked];
+        const isCorrect = pickedOpt.original === q.correctOriginal;
+        khExamSubmitted = true;
+        khExamAnswers[khExamIdx] = {
+          q,
+          pickedOriginal: pickedOpt.original,
+          pickedShuffledIdx: khExamPicked,
+          isCorrect
+        };
+
+        // 정/오 강조
+        const body = $('khExamBody');
+        body.querySelectorAll('.kh-exam-option').forEach((el, i) => {
+          el.classList.remove('selected');
+          el.style.cursor = 'default';
+          const opt = q.options[i];
+          if (opt.original === q.correctOriginal) el.classList.add('correct');
+          if (i === khExamPicked && !isCorrect) el.classList.add('wrong');
+        });
+
+        // 해설 노출
+        const slot = $('khExamExplainSlot');
+        if (slot && (q.detail || q.explain)) {
+          slot.innerHTML = `
+            <div class="kh-exam-explain">
+              <b>${isCorrect ? '정답이에요 ✅' : '오답 ❌'}</b><br>
+              ${escapeHTML(q.detail || q.explain || '').replace(/\n/g, '<br>')}
+            </div>`;
+        }
+
+        // 액션 → 다음/결과 보기
+        const actions = $('khExamActions');
+        const isLast = khExamIdx >= khExamQs.length - 1;
+        actions.innerHTML = `
+          <button class="kh-exam-btn kh-exam-btn-primary" id="khExamNextBtn">${isLast ? '결과 보기' : '다음 문제 →'}</button>
+        `;
+        $('khExamNextBtn').addEventListener('click', () => {
+          if (isLast) {
+            showKhExamResult();
+          } else {
+            khExamIdx++;
+            renderKhExamQuestion();
+          }
+        });
+
+        // 진행바 갱신
+        const total = khExamQs.length;
+        $('khExamProgressBar').style.width = `${((khExamIdx + 1) / total) * 100}%`;
+      }
+
+      function showKhExamResult() {
+        const total = khExamQs.length;
+        const correctCount = khExamAnswers.filter(a => a && a.isCorrect).length;
+        const score100 = Math.round((correctCount / total) * 100);
+        const pass = score100 >= 90;
+
+        // 영역별 통계
+        const catStats = {}; // {category: {correct, total}}
+        khExamAnswers.forEach(a => {
+          if (!a) return;
+          const c = a.q.category;
+          if (!catStats[c]) catStats[c] = { correct: 0, total: 0 };
+          catStats[c].total++;
+          if (a.isCorrect) catStats[c].correct++;
+        });
+
+        // 틀린 문제 목록
+        const wrongs = khExamAnswers.filter(a => a && !a.isCorrect);
+
+        const progress = $('khExamProgress');
+        const bar = $('khExamProgressBar');
+        const body = $('khExamBody');
+        const actions = $('khExamActions');
+        progress.textContent = `결과 발표`;
+        bar.style.width = '100%';
+
+        const catHTML = Object.keys(catStats).map(cat => `
+          <div class="kh-exam-cat-item">
+            <div class="kh-exam-cat-name">${escapeHTML(cat)}</div>
+            <div class="kh-exam-cat-score">${catStats[cat].correct} / ${catStats[cat].total}</div>
+          </div>`).join('');
+
+        const wrongHTML = wrongs.length === 0 ? `
+          <div style="text-align:center;color:#2e9b3f;font-weight:700;padding:14px;">모든 문제를 맞혔어요! 🎉</div>
+        ` : wrongs.map((a, idx) => {
+          const q = a.q;
+          const correctText = (q.options.find(o => o.original === q.correctOriginal) || {}).text || '';
+          const pickedText = (q.options.find(o => o.original === a.pickedOriginal) || {}).text || '';
+          const pkey = `khWrongPassage_${idx}_${Date.now()}`;
+          return `
+            <div class="kh-exam-wrong-item">
+              <div class="kh-exam-wrong-meta">${parseInt(q.unitNo, 10)}강 · ${escapeHTML(q.category)} · ${escapeHTML((q.unitTitle || '').replace(/^[^a-zA-Z가-힣0-9]+/, ''))}</div>
+              <div class="kh-exam-wrong-q">${q.questionText}</div>
+              <div class="kh-exam-wrong-answers">
+                내가 고른 답: <span class="picked">${a.pickedOriginal}번. ${escapeHTML(pickedText)}</span><br>
+                정답: <span class="correct">${q.correctOriginal}번. ${escapeHTML(correctText)}</span>
+              </div>
+              ${q.detail ? `<div class="kh-exam-wrong-explain">${escapeHTML(q.detail).replace(/\n/g, '<br>')}</div>` : ''}
+              <button class="kh-exam-wrong-toggle" data-pkey="${pkey}">본문 다시 보기 ▼</button>
+              <div class="kh-exam-wrong-passage" id="${pkey}">${q.passage}</div>
+            </div>`;
+        }).join('');
+
+        body.innerHTML = `
+          <div class="kh-exam-result-header">
+            <div class="kh-exam-result-status ${pass ? 'pass' : 'fail'}">
+              ${pass ? '🎉 통과! 잘했어요!' : '📚 조금만 더 도전해 봐요'}
+            </div>
+            <div class="kh-exam-result-score">${score100}점</div>
+            <div style="color:#7a5a40;font-size:14px;">맞힌 문제: ${correctCount} / ${total}문항 (통과 기준 90점)</div>
+          </div>
+          <div class="kh-exam-result-section">
+            <h4>📊 영역별 정답률</h4>
+            <div class="kh-exam-cat-grid">${catHTML}</div>
+          </div>
+          <div class="kh-exam-result-section">
+            <h4>📝 틀린 문제 다시 보기 (${wrongs.length}문항)</h4>
+            <div class="kh-exam-wrong-list">${wrongHTML}</div>
+          </div>
+        `;
+        actions.innerHTML = `
+          <button class="kh-exam-btn kh-exam-btn-secondary" onclick="closeKhExamModal()">닫기</button>
+          <button class="kh-exam-btn kh-exam-btn-primary" id="khExamRetryBtn">🔄 다시 풀기</button>
+        `;
+        $('khExamRetryBtn').addEventListener('click', () => window.openKhExamModal());
+
+        // 본문 토글
+        body.querySelectorAll('.kh-exam-wrong-toggle').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const pkey = btn.dataset.pkey;
+            const p = document.getElementById(pkey);
+            if (!p) return;
+            const open = p.classList.toggle('show');
+            btn.textContent = open ? '본문 접기 ▲' : '본문 다시 보기 ▼';
+          });
+        });
+      }
+
+      window.openKhExamModal = function () {
+        khExamQs = buildKhExamQuestions();
+        if (khExamQs.length < 20) {
+          alert('한국사 콘텐츠를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+          return;
+        }
+        khExamIdx = 0;
+        khExamPicked = null;
+        khExamSubmitted = false;
+        khExamAnswers = [];
+        // 한국사 팝업이 떠 있으면 뒤로 보내기 (학습 모달 처리와 동일 패턴)
+        const khOv = document.getElementById('khModalOverlay');
+        if (khOv && khOv.classList.contains('show')) {
+          khOv.dataset.examBgMode = '1';
+          khOv.style.zIndex = '5000';
+        }
+        $('khExamOverlay').classList.add('show');
+        renderKhExamQuestion();
+      };
+
+      window.closeKhExamModal = function () {
+        const ov = $('khExamOverlay');
+        if (ov) ov.classList.remove('show');
+        // 한국사 팝업 복원
+        const khOv = document.getElementById('khModalOverlay');
+        if (khOv && khOv.dataset.examBgMode === '1') {
+          khOv.style.zIndex = '';
+          delete khOv.dataset.examBgMode;
+          if (typeof window.renderKhGrid === 'function') window.renderKhGrid();
+        }
+      };
+
+      // ESC로 닫기
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const ov = $('khExamOverlay');
+          if (ov && ov.classList.contains('show')) window.closeKhExamModal();
+        }
+      });
+      // 배경 클릭 닫기
+      document.addEventListener('click', (e) => {
+        const ov = $('khExamOverlay');
+        if (ov && e.target === ov) window.closeKhExamModal();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      // 단원 정의: 메인 제목 + 소제목 (korhistory_content.js와 동기 유지)
+      const KH_UNITS = [
+        { no: '01', title: '📜 1강. 역사는 왜 배워야 할까?',    subs: ['역사와 기록', '사료 읽기', '역사적 사고와 관점'] },
+        { no: '02', title: '🦴 2강. 선사 시대와 인류의 시작',   subs: ['구석기·신석기', '농경의 시작', '생활 모습 변화'] },
+        { no: '03', title: '⚔️ 3강. 청동기와 고조선',           subs: ['계급 발생', '국가의 형성', '단군과 고조선'] },
+        { no: '04', title: '🏯 4강. 여러 나라의 성장',           subs: ['부여', '고구려 초기', '옥저·동예', '삼한'] },
+        { no: '05', title: '🛡️ 5강. 삼국의 건국과 경쟁',        subs: ['고구려·백제·신라', '초기 성장', '왕권 강화'] },
+        { no: '06', title: '👑 6강. 삼국의 전성기',              subs: ['광개토대왕', '근초고왕', '진흥왕', '영토 확장'] },
+        { no: '07', title: '⚔️ 7강. 삼국 통일 전쟁',            subs: ['수·당 전쟁', '연개소문', '나당연합', '통일 과정'] },
+        { no: '08', title: '🌸 8강. 통일신라와 발해',            subs: ['신라 사회', '불교 문화', '발해의 성장', '남북국 시대'] },
+        { no: '09', title: '🏰 9강. 고려의 건국과 후삼국 통일',  subs: ['궁예', '견훤', '왕건', '고려 성립'] },
+        { no: '10', title: '🏛️ 10강. 고려의 정치와 대외 관계',  subs: ['문벌귀족', '거란·여진·몽골', '무신정변'] },
+        { no: '11', title: '📿 11강. 고려 문화와 과학',          subs: ['팔만대장경', '청자', '금속활자', '불교 문화'] },
+        { no: '12', title: '🏯 12강. 조선의 건국과 국가 체제',   subs: ['이성계', '정도전', '유교 국가', '중앙집권'] },
+        { no: '13', title: '📖 13강. 세종과 조선의 전성기',      subs: ['훈민정음', '과학 기술', '집현전', '문화 발전'] },
+        { no: '14', title: '🎭 14강. 사림과 붕당 정치',          subs: ['사화', '붕당 형성', '정치 갈등'] },
+        { no: '15', title: '🛶 15강. 임진왜란과 병자호란',       subs: ['왜란 발생', '이순신', '호란', '조선 사회 변화'] },
+        { no: '16', title: '🌾 16강. 조선 후기의 변화',          subs: ['영·정조', '실학', '농업·상업 발전', '서민 문화'] },
+        { no: '17', title: '🚢 17강. 개항과 근대화의 시작',      subs: ['흥선대원군', '강화도조약', '개화·위정척사'] },
+        { no: '18', title: '🇰🇷 18강. 대한제국과 국권 침탈',     subs: ['갑신정변', '동학농민운동', '을사늑약', '의병'] },
+        { no: '19', title: '🕊️ 19강. 일제강점기와 독립운동',    subs: ['3·1운동', '임시정부', '무장 독립운동', '문화·교육 탄압'] },
+        { no: '20', title: '🌟 20강. 광복과 대한민국의 성장',    subs: ['해방', '분단', '한국전쟁', '민주화와 현대 대한민국'] }
+      ];
+
+      // 단원 완료 여부 조회 (학습 페이지의 submitReport가 저장한 dan-progress 키 확인)
+      function isKhUnitCompleted(unitCode) {
+        try {
+          const stu = (typeof getCurrentStudent === 'function') ? getCurrentStudent() : null;
+          if (!stu) return false;
+          const stuKey = (typeof buildStudentKey === 'function')
+            ? buildStudentKey(stu)
+            : `${stu.grade || ''}_${stu.name || ''}_${stu.phone || ''}`;
+          const data = localStorage.getItem(`dan-progress:${stuKey}:${unitCode}`);
+          if (!data) return false;
+          if (data === '1' || data === '"1"') return true;
+          const parsed = JSON.parse(data);
+          return Array.isArray(parsed) && parsed.length > 0;
+        } catch (e) { return false; }
+      }
+
+      // 20강 모두 완료했는지 판정
+      function areAllKhUnitsCompleted() {
+        for (const u of KH_UNITS) {
+          if (!isKhUnitCompleted(`kh_${u.no}`)) return false;
+        }
+        return true;
+      }
+
+      function renderKhGrid() {
+        const grid = document.getElementById('khUnitGrid');
+        if (!grid) return;
+        const unitCards = KH_UNITS.map(u => {
+          const done = isKhUnitCompleted(`kh_${u.no}`);
+          return `
+          <div class="kh-unit-card${done ? ' kh-completed' : ''}" role="button" tabindex="0" data-kh-path="./BRAINUP/korhistory/kh_${u.no}.html" data-kh-unit="kh_${u.no}">
+            ${done ? '<span class="kh-done-badge">완료 ✓</span>' : ''}
+            <div class="kh-unit-title">${u.title}</div>
+            <div class="kh-unit-sub">${u.subs.join(' · ')}</div>
+          </div>`;
+        }).join('');
+        // 21번째 카드: 한국사 단원평가 (20강 모두 완료 시에만 활성)
+        const allDone = areAllKhUnitsCompleted();
+        const examCard = `
+          <div class="kh-exam-card${allDone ? ' kh-exam-unlocked' : ' kh-exam-locked'}" role="button" tabindex="0" data-kh-exam="1">
+            ${allDone ? '<span class="kh-exam-badge">응시 가능 ✦</span>' : '<span class="kh-exam-lock-icon">🔒</span>'}
+            <div class="kh-unit-title">📝 한국사 단원평가</div>
+            ${allDone ? '<div class="kh-unit-sub">1~20강 종합 · 20문항 랜덤 출제 · 90점 이상 통과</div>' : ''}
+          </div>`;
+        grid.innerHTML = unitCards + examCard;
+        // 단원 카드 클릭 → 학습 모달
+        grid.querySelectorAll('.kh-unit-card').forEach(card => {
+          const open = () => {
+            const path = card.dataset.khPath;
+            const ov = document.getElementById('khModalOverlay');
+            if (ov) {
+              ov.dataset.bgMode = '1';
+              ov.style.zIndex = '5000'; // 학습 모달(10001) 아래로 임시 이동
+            }
+            if (typeof openUnitModal === 'function') {
+              openUnitModal(path);
+            } else {
+              window.location.href = path;
+            }
+          };
+          card.addEventListener('click', open);
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+          });
+        });
+        // 단원평가 카드 클릭 → 잠금 알림 또는 평가 시작
+        const examCardEl = grid.querySelector('.kh-exam-card');
+        if (examCardEl) {
+          const onExamClick = () => {
+            if (examCardEl.classList.contains('kh-exam-locked')) {
+              showKhLockPopup();
+            } else if (typeof window.openKhExamModal === 'function') {
+              window.openKhExamModal();
+            }
+          };
+          examCardEl.addEventListener('click', onExamClick);
+          examCardEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onExamClick(); }
+          });
+        }
+      }
+
+      // 잠금 안내 팝업 (간단 토스트)
+      function showKhLockPopup() {
+        const existing = document.getElementById('khLockPopup');
+        if (existing) existing.remove();
+        const pop = document.createElement('div');
+        pop.id = 'khLockPopup';
+        pop.className = 'kh-lock-popup';
+        pop.innerHTML = `
+          <div class="kh-lock-popup-box">
+            <div class="kh-lock-popup-icon">🔒</div>
+            <h3 class="kh-lock-popup-title">단원평가는 아직 열리지 않았어요</h3>
+            <p class="kh-lock-popup-msg">20강을 모두 완료해 주세요!<br><span class="kh-lock-popup-sub">분석리포트 → "학습완료 및 제출하기"를 누르면 완료로 표시돼요</span></p>
+            <button class="kh-lock-popup-btn" type="button">확인</button>
+          </div>`;
+        document.body.appendChild(pop);
+        const close = () => pop.remove();
+        pop.querySelector('.kh-lock-popup-btn').addEventListener('click', close);
+        pop.addEventListener('click', (e) => { if (e.target === pop) close(); });
+      }
+      window.showKhLockPopup = showKhLockPopup;
+
+      // 오픈 예정 안내 팝업 (메인 메뉴 시리즈 타일 클릭 시)
+      function showKhComingSoonPopup() {
+        const existing = document.getElementById('khComingSoonPopup');
+        if (existing) existing.remove();
+        const pop = document.createElement('div');
+        pop.id = 'khComingSoonPopup';
+        pop.className = 'kh-lock-popup';
+        pop.innerHTML = `
+          <div class="kh-lock-popup-box">
+            <div class="kh-lock-popup-icon">📅</div>
+            <h3 class="kh-lock-popup-title">BRAIN한국사 방학특강</h3>
+            <p class="kh-lock-popup-msg"><strong style="color:#ff7e5f;font-size:18px;">6/15 오픈 예정</strong><br><span class="kh-lock-popup-sub">곧 만나요!</span></p>
+            <button class="kh-lock-popup-btn" type="button">확인</button>
+          </div>`;
+        document.body.appendChild(pop);
+        const close = () => pop.remove();
+        pop.querySelector('.kh-lock-popup-btn').addEventListener('click', close);
+        pop.addEventListener('click', (e) => { if (e.target === pop) close(); });
+      }
+      window.showKhComingSoonPopup = showKhComingSoonPopup;
+
+      const KH_OPEN_KEY = 'khModalOpen';
+
+      window.renderKhGrid = renderKhGrid;
+      window.openKorHistoryModal = function () {
+        renderKhGrid();
+        const ov = document.getElementById('khModalOverlay');
+        if (ov) ov.classList.add('show');
+        try { sessionStorage.setItem(KH_OPEN_KEY, '1'); } catch (e) {}
+      };
+      window.closeKorHistoryModal = function () {
+        const ov = document.getElementById('khModalOverlay');
+        if (ov) ov.classList.remove('show');
+        try { sessionStorage.removeItem(KH_OPEN_KEY); } catch (e) {}
+      };
+
+      // 오버레이 빈 영역 클릭 시 닫기
+      document.addEventListener('click', function (e) {
+        const ov = document.getElementById('khModalOverlay');
+        if (ov && e.target === ov) closeKorHistoryModal();
+      });
+      // ESC로 닫기
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeKorHistoryModal();
+      });
+
+      // 새로고침 후에도 한국사 팝업 상태 유지
+      function restoreKhModalIfNeeded() {
+        try {
+          if (sessionStorage.getItem(KH_OPEN_KEY) === '1') {
+            window.openKorHistoryModal();
+          }
+        } catch (e) {}
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', restoreKhModalIfNeeded);
+      } else {
+        restoreKhModalIfNeeded();
+      }
     })();
   </script>
 
