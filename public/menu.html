@@ -1840,6 +1840,111 @@ body {
   flex-shrink: 0;
 }
 
+/* 자동과제부여 시작 성공 팝업 */
+.auto-task-success-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 1000300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: autoTaskFadeIn 0.18s ease-out;
+}
+@keyframes autoTaskFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.auto-task-success-card {
+  background: #fff;
+  border-radius: 20px;
+  max-width: 380px;
+  width: 100%;
+  padding: 32px 28px 24px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+  animation: autoTaskPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes autoTaskPop {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.auto-task-success-icon {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(16, 185, 129, 0.35);
+}
+.auto-task-success-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #064e3b;
+  margin: 6px 0 12px;
+}
+.auto-task-success-msg {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+.auto-task-success-sub {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.55;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f0fdf4;
+  border-radius: 10px;
+  border-left: 3px solid #10b981;
+}
+.auto-task-success-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 38px;
+  border-radius: 24px;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.35);
+  transition: all 0.18s ease;
+}
+.auto-task-success-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 20px rgba(16, 185, 129, 0.45);
+}
+.auto-task-success-btn:active {
+  transform: translateY(0);
+}
+/* 중단(stop) 테마 — 빨강 그라데이션 */
+.auto-task-success-overlay.is-stop .auto-task-success-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  box-shadow: 0 8px 22px rgba(239, 68, 68, 0.35);
+}
+.auto-task-success-overlay.is-stop .auto-task-success-title {
+  color: #7f1d1d;
+}
+.auto-task-success-overlay.is-stop .auto-task-success-sub {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+  color: #7a3838;
+}
+.auto-task-success-overlay.is-stop .auto-task-success-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.35);
+}
+.auto-task-success-overlay.is-stop .auto-task-success-btn:hover {
+  box-shadow: 0 9px 20px rgba(239, 68, 68, 0.45);
+}
+
 /* 자동과제부여 드롭다운 스타일 */
 .auto-task-dropdown-wrapper {
   position: relative;
@@ -16283,6 +16388,55 @@ async function performLogout() {
       alert(`${icon} ${title}\n\n${message.replace(/<br>/g, '\n')}`);
     }
 
+    // 자동과제부여 액션 결과 팝업 (확인 → 자동 새로고침)
+    function showAutoTaskActionPopup({ type = 'start', icon, title, message, sub }) {
+      const existing = document.getElementById('autoTaskActionPopup');
+      if (existing) existing.remove();
+      const isStop = type === 'stop';
+      const pop = document.createElement('div');
+      pop.id = 'autoTaskActionPopup';
+      pop.className = `auto-task-success-overlay${isStop ? ' is-stop' : ''}`;
+      pop.innerHTML = `
+        <div class="auto-task-success-card">
+          <div class="auto-task-success-icon">${icon}</div>
+          <h3 class="auto-task-success-title">${title}</h3>
+          <p class="auto-task-success-msg">${message}</p>
+          <div class="auto-task-success-sub">${sub}</div>
+          <button class="auto-task-success-btn" type="button">확인</button>
+        </div>`;
+      document.body.appendChild(pop);
+      const closeAndReload = () => window.location.reload();
+      pop.querySelector('.auto-task-success-btn').addEventListener('click', closeAndReload);
+      pop.addEventListener('click', (e) => { if (e.target === pop) closeAndReload(); });
+      const escHandler = (e) => {
+        if (e.key === 'Escape') {
+          document.removeEventListener('keydown', escHandler);
+          closeAndReload();
+        }
+      };
+      document.addEventListener('keydown', escHandler);
+    }
+
+    function showAutoTaskStartSuccess() {
+      showAutoTaskActionPopup({
+        type: 'start',
+        icon: '✓',
+        title: '자동과제부여 시작!',
+        message: '매일 <b>00:00</b>에 설정한 과제가<br>학생들에게 자동으로 부여됩니다.',
+        sub: '🔄 확인을 누르면 화면을 새로고침해<br>학습실 목록에 즉시 반영합니다.'
+      });
+    }
+
+    function showAutoTaskStopSuccess() {
+      showAutoTaskActionPopup({
+        type: 'stop',
+        icon: '⏹',
+        title: '자동과제부여 중단',
+        message: '자동과제부여가 중단되고<br>설정이 모두 초기화되었습니다.',
+        sub: '🔄 확인을 누르면 화면을 새로고침해<br>학습실 상태를 갱신합니다.'
+      });
+    }
+
     // 시작 버튼
     async function startAutoTask() {
       // 유효성 검사
@@ -16303,7 +16457,7 @@ async function performLogout() {
       if (saved) {
         updateActionButtons();
         updateStatusDisplay();
-        showErrorMessage('자동과제부여가 시작되었습니다!<br>매일 00:00에 과제가 자동 부여됩니다.', '✅', '성공');
+        showAutoTaskStartSuccess(); // 확인 클릭 시 자동 새로고침
       } else {
         autoTaskSettings.status = 'stopped';
         showErrorMessage('설정 저장에 실패했습니다', '❌', '오류');
@@ -16335,7 +16489,7 @@ async function performLogout() {
 
       if (saved) {
         applySettingsToUI();
-        showErrorMessage('자동과제부여가 중단되고 설정이 초기화되었습니다', '⏹️', '알림');
+        showAutoTaskStopSuccess(); // 확인 클릭 시 자동 새로고침
       }
     }
 
@@ -22646,7 +22800,7 @@ ${content}
                   <button class="auto-task-action-btn start" id="autoTaskStartBtn" onclick="startAutoTask()">
                     시작
                   </button>
-                  <button class="auto-task-action-btn pause" id="autoTaskPauseBtn" onclick="pauseAutoTask()" disabled>
+                  <button class="auto-task-action-btn pause" id="autoTaskPauseBtn" onclick="pauseAutoTask()" disabled style="display:none;">
                     일시정지
                   </button>
                   <button class="auto-task-action-btn stop" id="autoTaskStopBtn" onclick="stopAutoTask()" disabled>
