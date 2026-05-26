@@ -4601,6 +4601,183 @@ canvas[id^="confetti-canvas"] {
   <script src="./BRAINUP/social/pol_content.js"></script>
 </head>
 <body>
+  <!-- 🔐 체험판 비밀번호 게이트 -->
+  <div id="demoPasswordGate" class="demo-password-overlay">
+    <div class="demo-password-box">
+      <div class="demo-password-icon">🔐</div>
+      <h2 class="demo-password-title">체험판 입장</h2>
+      <p class="demo-password-sub">관계자에게 발급받은 6자리 비밀번호를 입력해 주세요.</p>
+      <input id="demoPasswordInput" type="password" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="off" autofocus placeholder="● ● ● ● ● ●" />
+      <div id="demoPasswordError" class="demo-password-error"></div>
+      <button id="demoPasswordSubmit" type="button" class="demo-password-btn">입장하기</button>
+    </div>
+  </div>
+  <style>
+    .demo-password-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: demoPasswordFade 0.25s ease-out;
+    }
+    @keyframes demoPasswordFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .demo-password-overlay.hidden { display: none; }
+    .demo-password-box {
+      background: #fff;
+      border-radius: 24px;
+      max-width: 380px;
+      width: 100%;
+      padding: 40px 32px 28px;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+      animation: demoPasswordPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes demoPasswordPop {
+      from { opacity: 0; transform: scale(0.85) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .demo-password-box.shake { animation: demoPasswordShake 0.45s ease-in-out; }
+    @keyframes demoPasswordShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .demo-password-icon {
+      font-size: 42px;
+      margin-bottom: 8px;
+    }
+    .demo-password-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1e1b4b;
+      margin: 4px 0 8px;
+    }
+    .demo-password-sub {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+    #demoPasswordInput {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #e0e7ff;
+      border-radius: 12px;
+      font-size: 22px;
+      letter-spacing: 8px;
+      text-align: center;
+      font-weight: 700;
+      color: #312e81;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    #demoPasswordInput:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+    }
+    #demoPasswordInput.error {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18);
+    }
+    .demo-password-error {
+      min-height: 18px;
+      font-size: 12px;
+      color: #ef4444;
+      margin: 8px 0 14px;
+      font-weight: 600;
+    }
+    .demo-password-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(99, 102, 241, 0.35);
+      transition: all 0.18s ease;
+    }
+    .demo-password-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.45);
+    }
+    .demo-password-btn:active { transform: translateY(0); }
+  </style>
+  <script>
+    (function () {
+      const DEMO_PASSWORD = '284600';
+      const STORAGE_KEY = 'demoBrainmoonAuthed';
+
+      const gate = document.getElementById('demoPasswordGate');
+      // 이미 인증된 세션이면 즉시 통과
+      try {
+        if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+          gate.classList.add('hidden');
+          return;
+        }
+      } catch (e) {}
+
+      const input = document.getElementById('demoPasswordInput');
+      const err = document.getElementById('demoPasswordError');
+      const btn = document.getElementById('demoPasswordSubmit');
+      const box = gate.querySelector('.demo-password-box');
+
+      function setError(msg) {
+        err.textContent = msg || '';
+        if (msg) {
+          input.classList.add('error');
+          box.classList.remove('shake');
+          // reflow trick to restart animation
+          void box.offsetWidth;
+          box.classList.add('shake');
+        } else {
+          input.classList.remove('error');
+        }
+      }
+
+      function unlock() {
+        try { sessionStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        gate.classList.add('hidden');
+      }
+
+      function attempt() {
+        const v = (input.value || '').trim();
+        if (v.length !== 6) {
+          setError('6자리 숫자를 입력해 주세요.');
+          return;
+        }
+        if (v === DEMO_PASSWORD) {
+          setError('');
+          unlock();
+        } else {
+          setError('비밀번호가 일치하지 않습니다.');
+          input.value = '';
+          input.focus();
+        }
+      }
+
+      btn.addEventListener('click', attempt);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); attempt(); }
+      });
+      input.addEventListener('input', () => setError(''));
+
+      // 페이지 로드 후 입력란 포커스
+      setTimeout(() => input.focus(), 50);
+    })();
+  </script>
+
   <!-- 📢 활동 피드 롤링 배너 -->
   <div class="activity-ticker" id="activityTicker">
     <div class="activity-ticker-label">LIVE</div>
