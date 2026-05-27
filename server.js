@@ -2597,7 +2597,9 @@ app.post("/api/textbook-orders", async (req, res) => {
     `).join('');
 
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-    const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const subtotalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const vatAmount = Math.round(subtotalAmount * 0.1);
+    const totalAmount = subtotalAmount + vatAmount;
 
     const mailOptions = {
       from: process.env.NAVER_EMAIL,
@@ -2637,7 +2639,9 @@ app.post("/api/textbook-orders", async (req, res) => {
         </table>
 
         <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-          <strong>총 ${totalQuantity}권 / ${totalAmount.toLocaleString()}원</strong>
+          <div>공급가액: ${subtotalAmount.toLocaleString()}원</div>
+          <div>부가세(10%): ${vatAmount.toLocaleString()}원</div>
+          <div style="margin-top: 8px; font-size: 16px;"><strong>총 ${totalQuantity}권 / ${totalAmount.toLocaleString()}원 (VAT 포함)</strong></div>
         </div>
 
         <p style="color: #888; margin-top: 20px;">신청 시간: ${new Date().toLocaleString('ko-KR')}</p>
