@@ -288,6 +288,7 @@ const SpeedVocabKing = require("./models/SpeedVocabKing");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
 const BookOrder = require("./models/BookOrder");
 const TextbookOrder = require("./models/TextbookOrder");
+const PromotionOrder = require("./models/PromotionOrder");
 const CenterContract = require("./models/CenterContract");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
@@ -2700,6 +2701,156 @@ app.delete("/api/textbook-orders/:id", async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("❌ 교재 신청 삭제 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ===== 홍보몰 신청 API (PromotionOrder) =====
+
+// ✅ 홍보몰 신청 목록 조회
+app.get("/api/promotion-orders", async (req, res) => {
+  try {
+    const { branchName, phone } = req.query;
+    const query = {};
+    if (branchName) query.branchName = branchName;
+    if (phone) query.phone = phone;
+    const orders = await PromotionOrder.find(query).sort({ createdAt: -1 });
+    res.json({ ok: true, orders });
+  } catch (err) {
+    console.error("❌ 홍보몰 신청 목록 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 전체 홍보몰 신청 목록 (관리자용)
+app.get("/api/promotion-orders/all", async (req, res) => {
+  try {
+    const orders = await PromotionOrder.find().sort({ createdAt: -1 });
+    res.json({ ok: true, orders });
+  } catch (err) {
+    console.error("❌ 전체 홍보몰 신청 목록 조회 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 홍보몰 신청 등록
+app.post("/api/promotion-orders", async (req, res) => {
+  try {
+    const { applicantName, branchName, phone, items, memo } = req.body;
+
+    if (!applicantName || !branchName || !phone) {
+      return res.status(400).json({ ok: false, message: "필수 정보를 입력해주세요." });
+    }
+    if (!items || items.length === 0) {
+      return res.status(400).json({ ok: false, message: "홍보물을 선택해주세요." });
+    }
+
+    const order = new PromotionOrder({
+      applicantName,
+      branchName,
+      phone,
+      items,
+      memo: memo || ''
+    });
+    await order.save();
+
+    // 메일 발송
+    const itemsHtml = items.map(item => `
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.categoryName}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.itemName}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}개</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.unitPrice.toLocaleString()}원</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${(item.quantity * item.unitPrice).toLocaleString()}원</td>
+      </tr>
+    `).join('');
+
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const subtotalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const vatAmount = Math.round(subtotalAmount * 0.1);
+    const totalAmount = subtotalAmount + vatAmount;
+
+    const mailOptions = {
+      from: process.env.NAVER_EMAIL,
+      to: process.env.NAVER_EMAIL,
+      subject: `[홍보몰신청] ${branchName} - ${applicantName}님`,
+      html: `
+        <h2>🛍️ 홍보몰 신청</h2>
+        <table style="border-collapse: collapse; width: 100%; max-width: 500px; margin-bottom: 20px;">
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold; width: 100px;">지점명</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${branchName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">성함</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${applicantName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연락처</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
+          </tr>
+        </table>
+
+        <h3>📋 신청 홍보물 목록</h3>
+        <table style="border-collapse: collapse; width: 100%; max-width: 700px;">
+          <thead>
+            <tr style="background: #f5576c; color: white;">
+              <th style="padding: 10px; border: 1px solid #ddd;">분류</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">품목</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">수량</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">단가</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">금액</th>
+            </tr>
+          </thead>
+          <tbody>${itemsHtml}</tbody>
+        </table>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <div>공급가액: ${subtotalAmount.toLocaleString()}원</div>
+          <div>부가세(10%): ${vatAmount.toLocaleString()}원</div>
+          <div style="margin-top: 8px; font-size: 16px;"><strong>총 ${totalQuantity}개 / ${totalAmount.toLocaleString()}원 (VAT 포함)</strong></div>
+        </div>
+
+        <p style="color: #888; margin-top: 20px;">신청 시간: ${new Date().toLocaleString('ko-KR')}</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ 홍보몰 신청 완료 & 메일 발송: ${branchName} - ${applicantName}`);
+
+    res.json({ ok: true, order });
+  } catch (err) {
+    console.error("❌ 홍보몰 신청 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 홍보몰 신청 수정
+app.put("/api/promotion-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    const order = await PromotionOrder.findByIdAndUpdate(id, updateData, { new: true });
+    if (!order) {
+      return res.status(404).json({ ok: false, message: "신청 내역을 찾을 수 없습니다." });
+    }
+    console.log(`✅ 홍보몰 신청 수정: ${id}`);
+    res.json({ ok: true, order });
+  } catch (err) {
+    console.error("❌ 홍보몰 신청 수정 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 홍보몰 신청 삭제
+app.delete("/api/promotion-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await PromotionOrder.deleteOne({ _id: id });
+    console.log(`✅ 홍보몰 신청 삭제: ${id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ 홍보몰 신청 삭제 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
