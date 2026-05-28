@@ -21215,6 +21215,17 @@
       gap: 20px;
     }
 
+    .video-group-header {
+      grid-column: 1 / -1;
+      color: var(--primary);
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 8px 0 4px;
+      border-bottom: 1px solid rgba(var(--primary-rgb), 0.3);
+      margin-top: 8px;
+    }
+    .video-group-header:first-child { margin-top: 0; }
+
     .video-card {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 12px;
@@ -23008,39 +23019,25 @@
 
   <!-- 교육영상 기능 스크립트 -->
   <script>
-    // 교육영상 목록 데이터
-    const educationVideos = [
+    // 교육영상 목록 데이터 (그룹별)
+    const educationVideoGroups = [
       {
-        id: '1184740751',
-        title: '브레인문해력_프롤로그',
-        thumbnail: 'https://vumbnail.com/1184740751.jpg'
+        name: '설명회 영상',
+        videos: [
+          { id: '1184740751', title: '브레인문해력_프롤로그',          thumbnail: 'https://vumbnail.com/1184740751.jpg' },
+          { id: '1184728911', title: '브레인문해력_가치 및 성과',      thumbnail: 'https://vumbnail.com/1184728911.jpg' },
+          { id: '1184729474', title: '브레인문해력_문해력의 중요성',   thumbnail: 'https://vumbnail.com/1184729474.jpg' },
+          { id: '1184729755', title: '브레인문해력_문해파동학습법',    thumbnail: 'https://vumbnail.com/1184729755.jpg' },
+          { id: '1184730128', title: '브레인문해력_교과기반창작독서',  thumbnail: 'https://vumbnail.com/1184730128.jpg' },
+          { id: '1184730980', title: '브레인문해력_9단계 완전학습',    thumbnail: 'https://vumbnail.com/1184730980.jpg' }
+        ]
       },
       {
-        id: '1184728911',
-        title: '브레인문해력_가치 및 성과',
-        thumbnail: 'https://vumbnail.com/1184728911.jpg'
-      },
-      {
-        id: '1184729474',
-        title: '브레인문해력_문해력의 중요성',
-        thumbnail: 'https://vumbnail.com/1184729474.jpg'
-      },
-      {
-        id: '1184729755',
-        title: '브레인문해력_문해파동학습법',
-        thumbnail: 'https://vumbnail.com/1184729755.jpg'
-      },
-      {
-        id: '1184730128',
-        title: '브레인문해력_교과기반창작독서',
-        thumbnail: 'https://vumbnail.com/1184730128.jpg'
-      },
-      {
-        id: '1184730980',
-        title: '브레인문해력_9단계 완전학습',
-        thumbnail: 'https://vumbnail.com/1184730980.jpg'
+        name: '실습교육영상',
+        videos: [
+          { id: '1194586329', hash: 'f21bb1079d', title: '브레인문해력_실습교육', thumbnail: 'https://vumbnail.com/1194586329.jpg' }
+        ]
       }
-      // 여기에 영상 추가 가능
     ];
 
     // 비밀번호 모달 열기
@@ -23079,15 +23076,18 @@
       const overlay = document.getElementById('videoListOverlay');
       const grid = document.getElementById('videoListGrid');
 
-      // 그리드 내용 생성
-      grid.innerHTML = educationVideos.map(video => `
-        <div class="video-card" onclick="playVideo('${video.id}', '${video.title}')">
-          <div class="video-card-thumb">
-            <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='https://via.placeholder.com/320x180/1a1a2e/d4af37?text=Video'">
-            <div class="video-card-play">▶</div>
+      // 그리드 내용 생성 — 그룹별 헤더 + 카드
+      grid.innerHTML = educationVideoGroups.map(group => `
+        <div class="video-group-header">${group.name}</div>
+        ${group.videos.map(video => `
+          <div class="video-card" onclick="playVideo('${video.id}', '${video.title}', '${video.hash || ''}')">
+            <div class="video-card-thumb">
+              <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='https://via.placeholder.com/320x180/1a1a2e/d4af37?text=Video'">
+              <div class="video-card-play">▶</div>
+            </div>
+            <div class="video-card-title">${video.title}</div>
           </div>
-          <div class="video-card-title">${video.title}</div>
-        </div>
+        `).join('')}
       `).join('');
 
       overlay.style.display = 'flex';
@@ -23099,13 +23099,14 @@
     }
 
     // 영상 재생
-    function playVideo(videoId, title) {
+    function playVideo(videoId, title, hash) {
       const overlay = document.getElementById('videoPlayerOverlay');
       const titleEl = document.getElementById('videoPlayerTitle');
       const container = document.getElementById('videoPlayerContainer');
 
       titleEl.textContent = title;
-      container.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+      const hashParam = hash ? `&h=${hash}` : '';
+      container.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0${hashParam}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
 
       overlay.style.display = 'flex';
     }
