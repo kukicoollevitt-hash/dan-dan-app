@@ -23054,16 +23054,24 @@
     // 비밀번호 모달 닫기
     function closeVideoPasswordModal() {
       document.getElementById('videoPasswordOverlay').style.display = 'none';
+      _pendingDirectVideo = null;
     }
 
     // 비밀번호 확인
+    let _pendingDirectVideo = null;
     function checkVideoPassword() {
       const input = document.getElementById('videoPasswordInput');
       const error = document.getElementById('videoPasswordError');
 
       if (input.value === '1234') {
         closeVideoPasswordModal();
-        openVideoListModal();
+        if (_pendingDirectVideo) {
+          const v = _pendingDirectVideo;
+          _pendingDirectVideo = null;
+          playVideo(v.id, v.title, v.hash);
+        } else {
+          openVideoListModal();
+        }
       } else {
         error.style.display = 'block';
         input.value = '';
@@ -23140,20 +23148,23 @@
       if (e.target === this) closeVideoPlayerModal();
     });
 
-    // ── URL 쿼리 파라미터로 영상 바로 재생 (?video=<alias>) ──
-    // 비밀번호 게이트를 우회하고 지정 영상을 바로 재생합니다.
+    // ── URL 쿼리 파라미터로 영상 바로가기 (?video=<alias>) ──
+    // 비밀번호 입력 후 지정 영상을 바로 재생합니다.
     const VIDEO_ALIASES = {
       practical: { id: '1194586329', hash: 'f21bb1079d', title: '브레인문해력_실습교육' }
     };
-    (function autoPlayFromQuery() {
+    (function promptDirectVideoFromQuery() {
       const params = new URLSearchParams(window.location.search);
       const alias = params.get('video');
       if (!alias || !VIDEO_ALIASES[alias]) return;
-      const v = VIDEO_ALIASES[alias];
+      const run = () => {
+        _pendingDirectVideo = VIDEO_ALIASES[alias];
+        openVideoPasswordModal();
+      };
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => playVideo(v.id, v.title, v.hash));
+        document.addEventListener('DOMContentLoaded', run);
       } else {
-        playVideo(v.id, v.title, v.hash);
+        run();
       }
     })();
   </script>
