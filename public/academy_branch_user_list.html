@@ -668,6 +668,97 @@
     .delete-modal-btn.confirm:hover {
       background: #b91c1c;
     }
+
+    /* 학생 추가 성공 토스트 모달 */
+    .success-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+    }
+    .success-modal-overlay.show { display: flex; }
+    .success-modal-box {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 40px 28px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(16, 185, 129, 0.25), 0 8px 24px rgba(0,0,0,0.12);
+      border: 2px solid rgba(16, 185, 129, 0.25);
+      animation: successPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes successPopIn {
+      0%   { opacity: 0; transform: scale(0.7) translateY(20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .success-modal-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 18px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+      animation: successIconBounce 0.6s ease 0.1s both;
+    }
+    .success-modal-icon svg {
+      width: 36px;
+      height: 36px;
+      stroke: #fff;
+      stroke-width: 3.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 36;
+      stroke-dashoffset: 36;
+      animation: successCheckDraw 0.45s ease-out 0.35s forwards;
+    }
+    @keyframes successIconBounce {
+      0%   { transform: scale(0); }
+      60%  { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    @keyframes successCheckDraw {
+      to { stroke-dashoffset: 0; }
+    }
+    .success-modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #065f46;
+      margin-bottom: 8px;
+    }
+    .success-modal-message {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 22px;
+    }
+    .success-modal-btn {
+      padding: 12px 32px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none;
+      color: #fff;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+    .success-modal-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45);
+    }
   </style>
   <!-- 카카오 SDK -->
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
@@ -725,7 +816,10 @@
             <th class="col-id">학년반번호(ID)</th>
             <th class="col-parent">학부모 번호</th>
             <th class="col-study" style="cursor: pointer;" onclick="sortByPendingTasks()" title="클릭하면 미완료 과제순으로 정렬">
-              학습실 <span id="studyRoomSortIcon" style="font-size: 12px;">↕</span>
+              <div style="line-height: 1.3;">
+                학습실 상태 <span id="studyRoomSortIcon" style="font-size: 12px;">↕</span>
+                <div style="font-size: 11px; font-weight: 500; color: #ffffff; margin-top: 2px;">(자동과제부여)</div>
+              </div>
             </th>
             <th class="col-status">상태</th>
             <th class="col-series">시리즈</th>
@@ -760,6 +854,18 @@
         <button class="delete-modal-btn cancel" onclick="closeDeleteModal()">취소</button>
         <button class="delete-modal-btn confirm" id="confirm-delete-btn">삭제</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 공용 성공 토스트 모달 -->
+  <div id="success-modal" class="success-modal-overlay">
+    <div class="success-modal-box">
+      <div class="success-modal-icon">
+        <svg viewBox="0 0 24 24"><polyline points="4 12.5 10 18.5 20 6"></polyline></svg>
+      </div>
+      <div class="success-modal-title" id="success-modal-title">완료</div>
+      <div class="success-modal-message" id="success-modal-message"></div>
+      <button type="button" class="success-modal-btn" onclick="closeSuccessModal()">확인</button>
     </div>
   </div>
 
@@ -1177,16 +1283,26 @@
         }).length;
         const pendingTasks = totalTasks - completedTasks;
 
-        // 학습실 상태 표시 (완료/전체)
-        let studyRoomStatusHtml = '<span style="color: #9ca3af;">-</span>';
+        // 학습실 상태 표시 (완료/전체) — 과제 미부여 시에도 0/0 클릭 가능
+        const studyRoomHref = `/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openStudyRoom=true`;
+        let studyRoomStatusHtml;
         if (totalTasks > 0) {
           const statusColor = pendingTasks > 0 ? '#dc2626' : '#10b981';
           studyRoomStatusHtml = `
-            <a href="/menu?grade=${encodeURIComponent(u.grade || '')}&name=${encodeURIComponent(u.name || '')}&openStudyRoom=true"
+            <a href="${studyRoomHref}"
                target="_blank"
                style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); border-radius: 8px; text-decoration: none; font-weight: 600; color: ${statusColor}; border: 1px solid ${statusColor}20; transition: all 0.2s;"
                title="클릭하면 학습실로 이동">
               📚 ${completedTasks}/${totalTasks}
+            </a>
+          `;
+        } else {
+          studyRoomStatusHtml = `
+            <a href="${studyRoomHref}"
+               target="_blank"
+               style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #f3f4f6; border-radius: 8px; text-decoration: none; font-weight: 600; color: #9ca3af; border: 1px solid #e5e7eb; transition: all 0.2s;"
+               title="과제 미부여 - 클릭하면 학습실로 이동">
+              📚 0/0
             </a>
           `;
         }
@@ -1418,9 +1534,11 @@
 
     // ===== 시리즈 부여 모달 관련 =====
     let currentUserId = null;
+    let currentUserName = '';
 
     function openSeriesModal(userId, userName, assignedSeriesStr) {
       currentUserId = userId;
+      currentUserName = userName || '';
       document.getElementById("modal-student-name").textContent = "학생: " + userName;
 
       // 모든 체크박스 초기화
@@ -1583,11 +1701,15 @@
         const data = await res.json();
 
         if (data.success) {
-          alert("시리즈 부여 완료!");
           closeSeriesModal();
-          // 현재 검색어를 유지하면서 목록 새로고침
-          const currentSearch = document.getElementById("search-input").value.trim();
-          fetchBranchStudents(currentSearch);
+          const studentLabel = currentUserName ? `${currentUserName} 학생에게 ` : '';
+          const seriesText = selectedSeries.length > 0
+            ? `${studentLabel}${selectedSeries.length}개 시리즈가 부여됐어요.`
+            : `${studentLabel}부여된 시리즈가 모두 해제됐어요.`;
+          showSuccessModal('시리즈 부여 완료', seriesText, () => {
+            const currentSearch = document.getElementById("search-input").value.trim();
+            fetchBranchStudents(currentSearch);
+          });
         } else {
           alert("시리즈 부여 실패: " + (data.message || "알 수 없는 오류"));
         }
@@ -1980,9 +2102,12 @@
         const result = await response.json();
 
         if (result.success) {
-          alert('학생이 추가되었습니다.');
           closeAddStudentModal();
-          location.reload(); // 전체 페이지 새로고침 (누적 학생 수 반영)
+          showSuccessModal(
+            '학생이 추가되었습니다',
+            `${grade} ${name} 학생이 명단에 등록됐어요.`,
+            () => location.reload()
+          );
         } else {
           alert(result.message || '학생 추가에 실패했습니다.');
         }
@@ -1990,6 +2115,25 @@
         console.error('학생 추가 오류:', error);
         alert('학생 추가 중 오류가 발생했습니다.');
       }
+    }
+
+    // 공용 성공 토스트 모달
+    let _successModalOnClose = null;
+    function showSuccessModal(title, message, onClose) {
+      const overlay = document.getElementById('success-modal');
+      if (!overlay) return;
+      document.getElementById('success-modal-title').textContent = title || '완료';
+      document.getElementById('success-modal-message').textContent = message || '';
+      _successModalOnClose = typeof onClose === 'function' ? onClose : null;
+      overlay.classList.add('show');
+    }
+    function closeSuccessModal() {
+      const overlay = document.getElementById('success-modal');
+      if (!overlay) return;
+      overlay.classList.remove('show');
+      const cb = _successModalOnClose;
+      _successModalOnClose = null;
+      if (cb) cb();
     }
 
     // ===== 과제 알림 전송 기능 =====

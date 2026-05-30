@@ -3041,14 +3041,20 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
       users[i].completedUnits = Array.from(completedUnitsSet || new Set());
     }
 
-    // 승인대기 학생을 항상 맨 위로 정렬
-    users = users.sort((a, b) => {
-      const statusA = a.status || 'approved';
-      const statusB = b.status || 'approved';
-      if (statusA === 'pending' && statusB !== 'pending') return -1;
-      if (statusA !== 'pending' && statusB === 'pending') return 1;
-      return 0;
-    });
+    // 운영자 어텐션 우선순위로 그룹 정렬 (그룹 내에서는 기존 DB 정렬 순서 유지)
+    //   0: 승인대기 (status === 'pending')
+    //   1: 시리즈 미부여 (assignedSeries 비어있음)
+    //   2: 학습실 0/0 (assignedTasks 0개) — 중단했거나 처음부터 자동과제 안 켠 학생
+    //   3: 나머지 (정상 운영 중)
+    const priorityFor = (u) => {
+      if ((u.status || 'approved') === 'pending') return 0;
+      const hasSeries = Array.isArray(u.assignedSeries) && u.assignedSeries.length > 0;
+      if (!hasSeries) return 1;
+      const taskCount = u.studyRoom?.assignedTasks?.length || 0;
+      if (taskCount === 0) return 2;
+      return 3;
+    };
+    users = users.sort((a, b) => priorityFor(a) - priorityFor(b));
 
     return res.json({
       ok: true,
@@ -27631,13 +27637,17 @@ app.post('/api/auto-task-settings', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // "시작" 상태이면 바로 자동과제부여 실행
+    // "시작" 상태이면 자동과제부여를 완료까지 대기 후 응답
+    // (이전에는 fire-and-forget이라 새로고침 시 과제가 아직 DB에 안 들어가는 문제 있었음)
     if (settings.status === 'running') {
-      console.log(`▶️ [${grade} ${name}] 자동과제부여 즉시 실행`);
-      // 비동기로 자동과제 부여 실행 (응답은 먼저 보냄)
-      executeAutoTaskForStudent(grade, name, updatedSettings).catch(err => {
+      console.log(`▶️ [${grade} ${name}] 자동과제부여 즉시 실행 (await)`);
+      try {
+        await executeAutoTaskForStudent(grade, name, updatedSettings);
+      } catch (err) {
         console.error(`❌ [${grade} ${name}] 자동과제부여 실행 오류:`, err);
-      });
+        // 실행 실패해도 설정 저장은 성공이므로 응답에 경고만 포함
+        return res.json({ ok: true, settings: updatedSettings, executeWarning: err?.message || '자동과제 실행 중 오류' });
+      }
     }
 
     res.json({ ok: true, settings: updatedSettings });

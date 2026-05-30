@@ -2015,6 +2015,28 @@ body {
   overflow-y: auto;
 }
 
+.auto-task-reset-btn {
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 10px;
+  color: #6d28d9;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.auto-task-reset-btn:hover {
+  background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+}
+.auto-task-reset-btn:active {
+  transform: translateY(0);
+}
+
 .auto-task-section {
   margin-bottom: 20px;
 }
@@ -15954,9 +15976,13 @@ async function performLogout() {
           const tasks = result.data?.studyRoom?.assignedTasks || [];
           console.log('✅ 서버에서 학습실 데이터 로드:', tasks.length, '개');
 
-          // 서버 데이터로 localStorage 동기화 (빈 배열이어도 동기화)
+          // 값이 실제 바뀐 경우에만 localStorage 업데이트 (다중 탭 storage 이벤트 핑퐁 방지)
           const key = getStudyRoomKey();
-          localStorage.setItem(key, JSON.stringify(tasks));
+          const newValue = JSON.stringify(tasks);
+          const prevValue = localStorage.getItem(key);
+          if (prevValue !== newValue) {
+            localStorage.setItem(key, newValue);
+          }
 
           return tasks;
         }
@@ -16236,6 +16262,50 @@ async function performLogout() {
       autoTaskSettings.taskCount = parseInt(countInput?.value) || 1;
     }
 
+    // 학원에서 부여한 시리즈 → 자동과제부여 data-series 코드 매핑
+    function getAdminAssignedAutoTaskSeries() {
+      try {
+        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+        const assignedSeries = user.assignedSeries || [];
+        // 시리즈 이름(한글/영문) → 자동과제부여 코드 매핑
+        const seriesMap = {
+          'BRAIN은': 'on',  'BRAINON':   'on',
+          'BRAIN암': 'up',  'BRAINUP':   'up',
+          'BRAIN빛': 'fit', 'BRAINFIT':  'fit',
+          'BRAIN답': 'deep','BRAINDEEP': 'deep',
+          'BRAIN심화': 'deep' // 레거시 호환
+        };
+        const seen = new Set();
+        const result = [];
+        assignedSeries.forEach(name => {
+          const code = seriesMap[name];
+          if (code && !seen.has(code)) { seen.add(code); result.push(code); }
+        });
+        return result;
+      } catch (e) { return []; }
+    }
+
+    // 학원 부여 기본값 적용: 부여 시리즈 + 매일 + 전체 분야 + 1개
+    function applyAdminDefaultsToAutoTask() {
+      const adminSeries = getAdminAssignedAutoTaskSeries();
+      autoTaskSettings.series = adminSeries;
+      autoTaskSettings.days = ['everyday'];
+      autoTaskSettings.domains = ['all'];
+      autoTaskSettings.taskCount = 1;
+      applySettingsToUI();
+      console.log('🔧 자동과제부여 기본값 적용 (학원 부여 기준):', adminSeries);
+    }
+
+    // 학생이 "기본값으로 초기화" 버튼을 누른 경우
+    function resetAutoTaskToAdminDefaults() {
+      const adminSeries = getAdminAssignedAutoTaskSeries();
+      if (adminSeries.length === 0) {
+        showErrorMessage('학원에서 부여된 시리즈가 없어요', '⚠️', '알림');
+        return;
+      }
+      applyAdminDefaultsToAutoTask();
+    }
+
     // 서버에서 설정 불러오기
     async function loadAutoTaskSettings() {
       try {
@@ -16246,12 +16316,19 @@ async function performLogout() {
         const response = await fetch(`/api/auto-task-settings?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
         const result = await response.json();
 
-        if (result.ok && result.settings) {
+        const savedSeries = result?.settings?.series || [];
+        if (result.ok && result.settings && savedSeries.length > 0) {
+          // 저장된 설정 존중 (학생이 이전에 한 번이라도 ▶시작을 누른 적 있음)
           autoTaskSettings = { ...autoTaskSettings, ...result.settings };
           applySettingsToUI();
+        } else {
+          // 첫 진입(저장 이력 없음) → 학원 부여 기본값으로 자동 선택
+          applyAdminDefaultsToAutoTask();
         }
       } catch (error) {
         console.error('자동과제부여 설정 불러오기 실패:', error);
+        // 에러여도 기본값은 채워줌
+        applyAdminDefaultsToAutoTask();
       }
     }
 
@@ -16453,13 +16530,26 @@ async function performLogout() {
         return;
       }
 
+      // 서버에서 과제 생성까지 await하므로 1~3초 지연 발생 → 로딩 표시
+      const startBtn = document.getElementById('autoTaskStartBtn');
+      const prevText = startBtn ? startBtn.innerHTML : '';
+      if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.innerHTML = '⏳ 과제 부여 중...';
+      }
+
       autoTaskSettings.status = 'running';
       const saved = await saveAutoTaskSettings();
+
+      if (startBtn) {
+        startBtn.innerHTML = prevText;
+        // disabled 상태는 updateActionButtons()가 status 기반으로 다시 처리
+      }
 
       if (saved) {
         updateActionButtons();
         updateStatusDisplay();
-        showAutoTaskStartSuccess(); // 확인 클릭 시 자동 새로고침
+        showAutoTaskStartSuccess(); // 확인 클릭 시 자동 새로고침 (이 시점엔 이미 과제 DB 반영 완료)
       } else {
         autoTaskSettings.status = 'stopped';
         showErrorMessage('설정 저장에 실패했습니다', '❌', '오류');
@@ -18131,21 +18221,34 @@ async function performLogout() {
         });
       }
 
-      // storage 이벤트로 실시간 동기화
+      // storage 이벤트로 실시간 동기화 (600ms 디바운스 — 다중 탭 핑퐁 차단)
+      let _storageBadgeTimer = null;
+      let _storageListTimer = null;
+      const _debouncedBadgeUpdate = () => {
+        if (_storageBadgeTimer) clearTimeout(_storageBadgeTimer);
+        _storageBadgeTimer = setTimeout(() => {
+          _storageBadgeTimer = null;
+          updateStudyRoomBadge();
+        }, 600);
+      };
+      const _debouncedListRender = () => {
+        const modal = document.getElementById('studyRoomModal');
+        if (!modal || !modal.classList.contains('show')) return;
+        if (_storageListTimer) clearTimeout(_storageListTimer);
+        _storageListTimer = setTimeout(() => {
+          _storageListTimer = null;
+          renderStudyRoomList();
+        }, 600);
+      };
+
       window.addEventListener('storage', (e) => {
         if (e.key && e.key.startsWith('studyRoom_')) {
-          updateStudyRoomBadge();
-          const modal = document.getElementById('studyRoomModal');
-          if (modal && modal.classList.contains('show')) {
-            renderStudyRoomList();
-          }
+          _debouncedBadgeUpdate();
+          _debouncedListRender();
         }
         // 학습 완료 상태 변경 시에도 학습실 목록 업데이트
         if (e.key && (e.key.startsWith('completed_') || e.key.startsWith('dan-progress:'))) {
-          const modal = document.getElementById('studyRoomModal');
-          if (modal && modal.classList.contains('show')) {
-            renderStudyRoomList();
-          }
+          _debouncedListRender();
         }
       });
     });
@@ -22758,6 +22861,11 @@ ${content}
             <div class="auto-task-dropdown" id="autoTaskDropdown">
               <div class="auto-task-dropdown-header">🤖 자동과제부여 설정</div>
               <div class="auto-task-dropdown-body">
+                <!-- 학원 부여 기본값 초기화 -->
+                <button type="button" class="auto-task-reset-btn" onclick="resetAutoTaskToAdminDefaults()" title="학원에서 부여한 시리즈 + 매일 + 전체 분야 + 1개로 자동 선택">
+                  🔄 학원 부여 기본값으로 초기화
+                </button>
+
                 <!-- 시리즈 선택 -->
                 <div class="auto-task-section">
                   <div class="auto-task-section-title">📚 시리즈 선택</div>
