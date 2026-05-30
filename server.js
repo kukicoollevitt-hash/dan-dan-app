@@ -262,6 +262,11 @@ async function sendHQAdminNotification(studentName, grade, type, additionalInfo 
       const total = additionalInfo.totalBadges || 0;
       message = `[본사알림] ${location} ${grade} ${studentName} CU 응모: ${itemSummary} (${total}뱃지)`;
       break;
+    case 'studentAdded':
+      // 학원 브렌치 관리자가 학생 추가 — 현재 학원 active 학생 수 포함
+      const totalCount = additionalInfo.totalCount || 0;
+      message = `[본사알림] ${location} 신규 등록: ${grade} ${studentName} (현재 ${totalCount}명)`;
+      break;
     default:
       message = `[본사알림] ${location} ${grade} ${studentName} 알림`;
   }
@@ -30325,6 +30330,24 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
     // 누적 학생 수는 월말 cron이 갱신하므로 추가 시점에는 증감하지 않음
 
     console.log("✅ 학원 학생 추가 완료:", newUser.name, "ID:", phone, "학원:", adminAcademyName);
+
+    // 본사 SMS 알림 — 해당 학원의 현재 active 학생 수 포함 (비동기, 응답에 영향 X)
+    (async () => {
+      try {
+        const totalCount = await User.countDocuments({
+          userType: 'academy',
+          academyName: adminAcademyName,
+          status: 'approved',
+          deleted: { $ne: true }
+        });
+        await sendHQAdminNotification(newUser.name, newUser.grade, 'studentAdded', {
+          academyName: adminAcademyName,
+          totalCount
+        });
+      } catch (err) {
+        console.error('학생 추가 본사 알림 발송 실패:', err);
+      }
+    })();
 
     res.json({ success: true, message: "학생이 추가되었습니다. (ID: " + phone + ")", data: newUser });
   } catch (error) {
