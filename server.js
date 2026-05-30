@@ -175,9 +175,9 @@ async function sendParentNotification(studentName, parentPhone, type, additional
 
   switch (type) {
     case 'login':
-      // [브레인문해원] 홍길동 학생이 16:47에 학습 시작했어요!
+      // [브레인문해력] 홍길동 학생이 16:47에 학습 시작했어요!
       // 함께 응원해 주세요!
-      message = `[브레인문해원] ${studentName} 학생이 ${timeStr}에 학습 시작했어요!\n함께 응원해 주세요!`;
+      message = `[브레인문해력] ${studentName} 학생이 ${timeStr}에 학습 시작했어요!\n함께 응원해 주세요!`;
       break;
     case 'logout':
       // [브레인문해력] 홍길동 학생이 학습을 완료하였어요! 많이 칭찬 해주세요!
@@ -191,20 +191,20 @@ async function sendParentNotification(studentName, parentPhone, type, additional
       message = `\n\n[브레인문해력] ${studentName} 학생이 학습을 완료하였어요! 많이 칭찬 해주세요!\n링크를 클릭하면 학습 리포트를 볼 수 있어요!\n${reportUrl}`;
       break;
     case 'complete':
-      // [브레인문해원] 홍길동 학생 "미켈란젤로" 학습 완료!
+      // [브레인문해력] 홍길동 학생 "미켈란젤로" 학습 완료!
       let unitTitle = additionalInfo.unitTitle || additionalInfo.unitKey || '단원';
       // 기본 메시지 (단원명 제외) 바이트 계산
-      const baseMsg = `[브레인문해원] ${studentName} 학생 "" 학습 완료!`;
+      const baseMsg = `[브레인문해력] ${studentName} 학생 "" 학습 완료!`;
       const baseBytes = getByteLength(baseMsg);
       const availableBytes = 90 - baseBytes - 6; // 여유분 6바이트
       // 단원명이 길면 축약
       if (getByteLength(unitTitle) > availableBytes) {
         unitTitle = truncateUnitTitle(unitTitle, availableBytes - 6); // ... 포함
       }
-      message = `[브레인문해원] ${studentName} 학생 "${unitTitle}" 학습 완료!`;
+      message = `[브레인문해력] ${studentName} 학생 "${unitTitle}" 학습 완료!`;
       break;
     default:
-      message = `[브레인문해원] ${studentName} 학생 알림`;
+      message = `[브레인문해력] ${studentName} 학생 알림`;
   }
 
   return await sendSMS(parentPhone, message);
@@ -36416,7 +36416,7 @@ app.post("/api/consultation-inquiry", async (req, res) => {
       if (smsReceivers && smsReceivers.trim()) {
         const receivers = smsReceivers.split(',').map(r => r.trim()).filter(r => r);
         const sourceLabel = source === 'partner' ? '[파트너페이지]' : '[메인페이지]';
-        const smsMessage = `[브레인문해원 상담신청]${sourceLabel}
+        const smsMessage = `[브레인문해력 상담신청]${sourceLabel}
 지역: ${region}
 성함: ${name}
 연락처: ${phone}
