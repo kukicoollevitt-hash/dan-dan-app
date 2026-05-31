@@ -805,11 +805,9 @@ if (process.env.CDN_URL) {
 app.use(express.static(path.join(__dirname, "public"), {
   etag: true,
   setHeaders: (res, filePath) => {
-    // HTML 파일은 캐시 방지
+    // HTML 파일: 매 요청마다 서버 확인하되 etag로 304 활용 (변경 없으면 ~200 bytes 응답)
     if (filePath.endsWith('.html')) {
-      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
+      res.set('Cache-Control', 'no-cache, must-revalidate, private');
     }
     // 비디오/이미지 파일은 1일 캐시
     else if (filePath.match(/\.(mp4|webm|jpg|jpeg|png|gif|svg|webp)$/i)) {
