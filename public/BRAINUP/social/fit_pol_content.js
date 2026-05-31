@@ -142,7 +142,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_pol_02: {
     achievement: '[9사(일사)03-02] 민주주의의 발전 과정을 검토하고, 이를 토대로 민주주의의 이념과 기본 원리를 도출한다.',
     labelNo: '02',
-    title: '🏛️ 모두가 직접 투표한다면? 고대 아테네의 민주주의 실험',
+    title: '🗳️ 국민이 주인이 되는 나라, 민주주의의 모든 것',
     paragraphMain: [
       '민주주의의 정의: 국민이 주인, 정부 감시와 비판 가능',
       '직접 민주주의와 대의 민주주의의 차이',
@@ -457,7 +457,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_pol_05: {
     achievement: '[9사(일사)04-01] 선거의 기능과 기본 원칙을 검토하고, 선거 과정에서 유권자와 정당이 수행하는 활동을 조사한다.',
     labelNo: '05',
-    title: '🗳️ 단 한 표 차이로 뒤바뀐 역사적 선거들',
+    title: '🗳️ 모두의 한 표가 모여 만드는 민주주의 — 선거의 4원칙',
     paragraphMain: [
       '주권과 대표 민주주의: 국민이 대표를 선거로 선출',
       '보통 선거(만 18세 이상), 직접 선거, 평등 선거(1인 1표)',
@@ -1373,7 +1373,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_pol_14: {
     achievement: '[9사(일사)08-02] 일생 동안 이루어지는 경제생활을 분석하고, 안정적인 금융 생활을 위한 자산 및 신용 관리 방안을 계획한다.',
     labelNo: '14',
-    title: '💰 복리의 마법: 용돈 1만 원이 100만 원 되는 비결',
+    title: '💰 돈이 도는 길, 금융과 저축의 모든 것',
     paragraphMain: [
       '화폐의 역할: 교환의 수단, 가치의 척도, 가치의 저장',
       '금융: 은행(예금·대출·이자), 증권 회사, 보험 회사',
@@ -1475,7 +1475,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_pol_15: {
     achievement: '[9사(일사)08-01] 경제생활에서 합리적 선택의 필요성에 대해 검토하고, 비용과 편익을 고려한 합리적 선택 방안을 탐색한다.',
     labelNo: '15',
-    title: '🛒 "지금 안 사면 품절!" 광고 속 숨겨진 심리 트릭',
+    title: '🛒 신용카드와 합리적 소비, 똑똑하게 돈 쓰는 법',
     paragraphMain: [
       '신용: 약속을 지킬 것이라는 믿음, 신용 점수의 중요성',
       '신용카드: 나중에 갚아야 함, 연체 시 신용 하락, 계획적 사용',
@@ -1679,7 +1679,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_pol_17: {
     achievement: '[9사(일사)10-02] 물가 변동과 실업의 사례를 탐색하고 물가 변동과 실업이 우리 생활에 미치는 영향을 제시한다.',
     labelNo: '17',
-    title: '📉 불황이 오면 뜨는 의외의 인기 상품들',
+    title: '📉 호황과 불황, 경제의 흐름을 이해하다',
     paragraphMain: [
       'GDP(국내 총생산): 한 나라 경제 규모 측정 지표',
       '경기 변동: 호황(일자리↑, 물가↑), 불황(실업↑)',
@@ -1883,7 +1883,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
   fit_pol_19: {
     achievement: '[9사(일사)10-03] 세계화 시대에 국제 거래가 이루어지는 사례를 탐색하고, 환율 변동이 우리 생활에 미치는 영향을 조사한다.',
     labelNo: '19',
-    title: '🍫 초콜릿 한 조각 속에 담긴 세계 여행 이야기',
+    title: '🌐 세계가 하나로 연결된 시대, 무역과 세계화',
     paragraphMain: [
       '무역: 수출(외국에 판매), 수입(외국에서 구매), 상호 이익',
       '국제 협력: FTA(관세 인하), WTO(무역 규칙), 세계화',
