@@ -1546,7 +1546,10 @@
   function startTimer() {
     startTime = Date.now();
     timerInterval = setInterval(() => {
-      document.getElementById('timerEl').textContent = ((Date.now() - startTime) / 1000).toFixed(1);
+      // 이미 끝난 매치 수만큼 애니메이션 대기 시간(600ms씩) 차감해서 순수 결정 시간 표시
+      const raw = Date.now() - startTime;
+      const adjusted = Math.max(0, (raw - matchedCount * 600) / 1000);
+      document.getElementById('timerEl').textContent = adjusted.toFixed(1);
     }, 50);
   }
   function stopTimer() {
@@ -1556,7 +1559,11 @@
 
   async function finishGame() {
     stopTimer();
-    const elapsed = (Date.now() - startTime) / 1000;
+    // 매 매치마다 600ms 애니메이션 대기 시간이 누적되므로 차감 (순수 결정 시간만 측정)
+    const MATCH_ANIM_MS = 600;
+    const rawElapsed = (Date.now() - startTime);
+    const animDelayTotal = totalPairs * MATCH_ANIM_MS;
+    const elapsed = Math.max(0.1, (rawElapsed - animDelayTotal) / 1000);
 
     // 서버 저장
     let isNewBest = false;
