@@ -715,6 +715,49 @@
         </table>
       </div>
     </div>
+
+    <!-- 단어배틀 월드컵 학생 목록 -->
+    <div class="section">
+      <div class="section-title">
+        <span>⚡ 단어배틀 월드컵 학생 목록</span>
+        <span class="count-badge" id="wbStudentCount">총 0명</span>
+      </div>
+      <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
+        이번 달 단어배틀 누적 점수 순위 — 매월 1일 00:00 KST에 TOP 3 보너스 지급 + 자동 리셋
+        <span id="wbCurrentMonth" style="color:#2980b9; font-weight:700; margin-left:8px;"></span>
+      </p>
+
+      <!-- 필터 영역 -->
+      <div class="filter-section" style="margin-bottom: 15px;">
+        <input type="text" id="wbSearchInput" placeholder="학년·학원·이름 실시간 검색" style="width: 280px;">
+        <button class="search-btn" style="background: #95a5a6;" onclick="clearWbFilter()">초기화</button>
+        <button class="search-btn" onclick="loadWbStudents()">🔄 새로고침</button>
+      </div>
+
+      <div class="snack-order-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <table>
+          <thead style="position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="width: 60px;">순위</th>
+              <th style="width: 70px;">학년</th>
+              <th>학원/학교</th>
+              <th>이름</th>
+              <th style="width: 60px;">🥇</th>
+              <th style="width: 60px;">🥈</th>
+              <th style="width: 60px;">🥉</th>
+              <th style="width: 90px;">도전 단원</th>
+              <th style="width: 110px;">누적 점수</th>
+              <th style="width: 130px;">마지막 도전</th>
+            </tr>
+          </thead>
+          <tbody id="wbStudentTableBody">
+            <tr>
+              <td colspan="10" class="loading">데이터를 불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- 메시지 추가/수정 모달 -->
@@ -1963,7 +2006,76 @@
     // 페이지 로드 시 간식 주문도 함께 로드
     document.addEventListener('DOMContentLoaded', function() {
       loadSnackOrders();
+      loadWbStudents();
     });
+
+    // ============ 단어배틀 월드컵 학생 목록 ============
+    let allWbStudents = [];
+
+    async function loadWbStudents() {
+      const tbody = document.getElementById('wbStudentTableBody');
+      tbody.innerHTML = '<tr><td colspan="10" class="loading">불러오는 중...</td></tr>';
+      try {
+        const res = await fetch('/api/super/word-battle/students', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.message || '오류');
+        allWbStudents = data.students || [];
+        document.getElementById('wbStudentCount').textContent = `총 ${data.totalCount}명`;
+        document.getElementById('wbCurrentMonth').textContent = data.monthKey ? `(현재 ${data.monthKey})` : '';
+        renderWbStudents(allWbStudents);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="10" class="loading" style="color:#c00;">오류: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderWbStudents(list) {
+      const tbody = document.getElementById('wbStudentTableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="empty-message">표시할 학생이 없습니다.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map((s) => {
+        const rankBadge = s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉' : s.rank + '위';
+        const lastDate = s.lastPlayedAt ? new Date(s.lastPlayedAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+        return `
+          <tr>
+            <td style="text-align:center; font-weight:700; color:${s.rank <= 3 ? '#d4af37' : '#555'};">${rankBadge}</td>
+            <td style="text-align:center;">${escapeHtml(s.grade)}</td>
+            <td>${escapeHtml(s.academyName || '-')}</td>
+            <td style="font-weight:600;">${escapeHtml(s.name)}</td>
+            <td style="text-align:center;">${s.medalCounts.gold}</td>
+            <td style="text-align:center;">${s.medalCounts.silver}</td>
+            <td style="text-align:center;">${s.medalCounts.bronze}</td>
+            <td style="text-align:center;">${s.unitCount}단원</td>
+            <td style="text-align:right; font-weight:800; color:#2980b9;">⭐ ${s.totalPoints.toLocaleString()}점</td>
+            <td style="text-align:center; font-size:12px; color:#7f8c8d;">${lastDate}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+
+    // 실시간 검색 (학년·학원·이름 부분일치)
+    document.getElementById('wbSearchInput').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      if (!q) { renderWbStudents(allWbStudents); return; }
+      const filtered = allWbStudents.filter(s =>
+        (s.name || '').toLowerCase().includes(q) ||
+        (s.grade || '').toLowerCase().includes(q) ||
+        (s.academyName || '').toLowerCase().includes(q)
+      );
+      renderWbStudents(filtered);
+    });
+
+    function clearWbFilter() {
+      document.getElementById('wbSearchInput').value = '';
+      renderWbStudents(allWbStudents);
+    }
   </script>
 </body>
 </html>

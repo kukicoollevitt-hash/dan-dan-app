@@ -290,6 +290,8 @@ const Notice = require("./models/Notice");
 const SnackOrder = require("./models/SnackOrder");
 const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
+const WordBattleRecord = require("./models/WordBattleRecord");
+const WordBattleChampion = require("./models/WordBattleChampion");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
 const BookOrder = require("./models/BookOrder");
 const TextbookOrder = require("./models/TextbookOrder");
@@ -29204,6 +29206,166 @@ cron.schedule('0 0 1 * *', async () => {
   timezone: "Asia/Seoul"
 });
 
+// ========== 단어배틀 월별 챔피언 정산 + 리셋 ==========
+// 매월 1일 00:00 KST에 실행 — 지난 달 TOP 3 보너스 지급 + awardedPoints 리셋
+async function runWordBattleMonthlyDistribution() {
+  try {
+    // 지난 달 monthKey 계산 (KST)
+    const now = new Date();
+    const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    kst.setUTCDate(0); // 현재 달 1일에서 -1 = 지난 달 말일
+    const lastMonth = `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}`;
+    console.log(`🏆 [단어배틀] 월별 정산 시작 — 대상: ${lastMonth}`);
+
+    // 지난 달 기록만 모아서 학생별 합계
+    const records = await WordBattleRecord.find(
+      { monthKey: lastMonth },
+      { grade: 1, name: 1, academyName: 1, awardedPoints: 1 }
+    ).lean();
+
+    const studentPoints = {};
+    const studentMeta = {};
+    for (const r of records) {
+      const key = `${r.grade}|${r.name}`;
+      studentPoints[key] = (studentPoints[key] || 0) + (r.awardedPoints || 0);
+      if (!studentMeta[key]) {
+        studentMeta[key] = { grade: r.grade, name: r.name, academyName: r.academyName || '' };
+      }
+    }
+
+    const sorted = Object.entries(studentPoints)
+      .map(([key, totalPoints]) => ({ ...studentMeta[key], totalPoints }))
+      .sort((a, b) => b.totalPoints - a.totalPoints);
+
+    const REWARD = [
+      { rank: 1, title: '챔피언', badges: 3000 },
+      { rank: 2, title: '준우승', badges: 2000 },
+      { rank: 3, title: '동상',   badges: 1000 }
+    ];
+
+    // TOP 3 보너스 지급 + 챔피언 스냅샷
+    for (const rw of REWARD) {
+      const winner = sorted[rw.rank - 1];
+      if (!winner) continue;
+      await WordBattleChampion.create({
+        monthKey: lastMonth,
+        rank: rw.rank,
+        title: rw.title,
+        grade: winner.grade,
+        name: winner.name,
+        academyName: winner.academyName,
+        totalPoints: winner.totalPoints,
+        bonusBadges: rw.badges
+      });
+      await UserProgress.updateOne(
+        { grade: winner.grade, name: winner.name },
+        { $inc: { 'vocabularyQuiz.totalCoins': rw.badges } },
+        { upsert: true }
+      );
+      console.log(`  🥇 ${rw.rank}위 [${rw.title}] ${winner.grade} ${winner.name} — ${winner.totalPoints}점 → 보너스 ${rw.badges}뱃지`);
+    }
+
+    // 모든 단어배틀 기록의 awardedPoints 리셋 (새 달 시작)
+    const newMonth = getCurrentMonthKey();
+    const result = await WordBattleRecord.updateMany(
+      {},
+      { $set: { awardedPoints: 0, monthKey: newMonth } }
+    );
+    console.log(`✅ [단어배틀] 월별 정산 완료. ${result.modifiedCount}개 기록 리셋 → 새 월 ${newMonth} 시작`);
+  } catch (err) {
+    console.error('❌ [단어배틀] 월별 정산 오류:', err);
+  }
+}
+cron.schedule('0 0 1 * *', runWordBattleMonthlyDistribution, { timezone: 'Asia/Seoul' });
+console.log('✅ 단어배틀 월별 챔피언 정산 스케줄러 등록 (매월 1일 00:00 KST)');
+
+// 수동 트리거 — 슈퍼관리자가 즉시 정산 가능
+app.post('/api/super/word-battle/distribute-now', async (req, res) => {
+  // 간단 보호: 슈퍼관리자 키 또는 세션 검사 (기존 패턴 따름)
+  if (!req.session || !req.session.superAdmin) {
+    return res.status(401).json({ ok: false, message: '슈퍼관리자만 가능' });
+  }
+  await runWordBattleMonthlyDistribution();
+  res.json({ ok: true });
+});
+
+// 슈퍼관리자 — 단어배틀 전체 학생 목록 (이번 달 기준 누적점수·메달·단원수 등)
+app.get('/api/super/word-battle/students', requireSuperAdmin, async (req, res) => {
+  try {
+    const currentMonth = getCurrentMonthKey();
+    const records = await WordBattleRecord.find(
+      {},
+      { grade: 1, name: 1, academyName: 1, unitId: 1, bestTime: 1, attemptCount: 1, lastPlayedAt: 1 }
+    ).lean();
+
+    // 단원별 그룹화 → 등수 계산
+    const unitGroups = {};
+    for (const r of records) {
+      (unitGroups[r.unitId] = unitGroups[r.unitId] || []).push(r);
+    }
+    const unitRank = {}; // "unitId|grade|name" → rank
+    for (const unitId in unitGroups) {
+      const sorted = unitGroups[unitId].sort((a, b) => a.bestTime - b.bestTime);
+      sorted.forEach((rec, idx) => {
+        unitRank[`${unitId}|${rec.grade}|${rec.name}`] = idx + 1;
+      });
+    }
+
+    // 학생별 집계
+    const studentMap = {};
+    for (const r of records) {
+      const key = `${r.grade}|${r.name}`;
+      if (!studentMap[key]) {
+        studentMap[key] = {
+          grade: r.grade,
+          name: r.name,
+          academyName: r.academyName || '',
+          totalPoints: 0,
+          unitCount: 0,
+          medalCounts: { gold: 0, silver: 0, bronze: 0, other: 0 },
+          lastPlayedAt: r.lastPlayedAt
+        };
+      }
+      const s = studentMap[key];
+      const rank = unitRank[`${r.unitId}|${r.grade}|${r.name}`];
+      s.totalPoints += rankToPoints(rank);
+      s.unitCount += 1;
+      if (rank === 1) s.medalCounts.gold++;
+      else if (rank === 2) s.medalCounts.silver++;
+      else if (rank === 3) s.medalCounts.bronze++;
+      else s.medalCounts.other++;
+      if (!s.lastPlayedAt || (r.lastPlayedAt && r.lastPlayedAt > s.lastPlayedAt)) {
+        s.lastPlayedAt = r.lastPlayedAt;
+      }
+    }
+
+    // 누적점수 내림차순 정렬 + 순위 부여
+    const students = Object.values(studentMap)
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .map((s, idx) => ({ ...s, rank: idx + 1 }));
+
+    res.json({ ok: true, monthKey: currentMonth, students, totalCount: students.length });
+  } catch (err) {
+    console.error('단어배틀 슈퍼관리자 학생 목록 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 지난 달 TOP 3 챔피언 조회 (UI 표시용)
+app.get('/api/word-battle/last-champions', async (req, res) => {
+  try {
+    // 가장 최근 monthKey 찾기
+    const latest = await WordBattleChampion.findOne({}).sort({ monthKey: -1 }).lean();
+    if (!latest) return res.json({ ok: true, monthKey: null, champions: [] });
+    const champions = await WordBattleChampion.find({ monthKey: latest.monthKey })
+      .sort({ rank: 1 }).lean();
+    res.json({ ok: true, monthKey: latest.monthKey, champions });
+  } catch (err) {
+    console.error('지난 달 챔피언 조회 오류:', err);
+    res.status(500).json({ ok: false });
+  }
+});
+
 console.log('✅ 독서 감상문 월간 리셋 스케줄러 등록 완료 (매월 1일 0시 실행)');
 
 // ========== 자동과제부여 시스템 (학생별 설정 기반) ==========
@@ -36625,6 +36787,270 @@ app.get('/api/speed-vocab-king/ranking', async (req, res) => {
     res.json({ ok: true, ranking });
   } catch (err) {
     console.error('스피드 어휘왕 순위 조회 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// ===== 실시간 단어배틀 (카드매칭) API =====
+
+// 현재 월 키 헬퍼 (KST 기준)
+function getCurrentMonthKey() {
+  const now = new Date();
+  // KST = UTC+9
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+// 결과 저장 — best time 갱신 + 등수 향상 시 고래뱃지 적립 (월별 리셋 적용)
+app.post('/api/word-battle/save', async (req, res) => {
+  try {
+    const { grade, name, academyName, unitId, unitTitle, time } = req.body;
+    if (!grade || !name || !unitId || typeof time !== 'number') {
+      return res.status(400).json({ ok: false, message: '필수 정보가 누락되었습니다.' });
+    }
+
+    const currentMonth = getCurrentMonthKey();
+
+    // 기존 기록 조회 + best time 갱신
+    const existing = await WordBattleRecord.findOne({ grade, name, unitId });
+    let isNewBest = false;
+    let newBestTime;
+    let previousAwarded = 0;
+
+    if (!existing) {
+      await WordBattleRecord.create({
+        grade, name,
+        academyName: academyName || '',
+        unitId,
+        unitTitle: unitTitle || '',
+        bestTime: time,
+        attemptCount: 1,
+        awardedPoints: 0,
+        monthKey: currentMonth,
+        lastPlayedAt: new Date()
+      });
+      newBestTime = time;
+      isNewBest = true;
+    } else {
+      // 월이 바뀌었으면 awardedPoints 리셋 (이번 달부터 새로 부여)
+      const monthChanged = existing.monthKey !== currentMonth;
+      previousAwarded = monthChanged ? 0 : (existing.awardedPoints || 0);
+
+      const update = {
+        $inc: { attemptCount: 1 },
+        $set: { lastPlayedAt: new Date(), monthKey: currentMonth }
+      };
+      if (monthChanged) {
+        update.$set.awardedPoints = 0; // 월 시작 시 리셋
+      }
+      if (time < existing.bestTime) {
+        update.$set.bestTime = time;
+        if (unitTitle) update.$set.unitTitle = unitTitle;
+        if (academyName) update.$set.academyName = academyName;
+        isNewBest = true;
+      }
+      await WordBattleRecord.updateOne({ _id: existing._id }, update);
+      newBestTime = isNewBest ? time : existing.bestTime;
+    }
+
+    // 갱신된 best time 기준 현재 등수 계산
+    const betterCount = await WordBattleRecord.countDocuments({ unitId, bestTime: { $lt: newBestTime } });
+    const currentRank = betterCount + 1;
+    const currentPoints = (function(r){
+      if (r === 1) return 100;
+      if (r === 2) return 70;
+      if (r === 3) return 50;
+      if (r <= 10) return 30;
+      return 10;
+    })(currentRank);
+
+    // 정책 C — 단원당 최대 부여 포인트가 늘어났을 때만 차액 지급
+    let badgesAwarded = 0;
+    if (currentPoints > previousAwarded) {
+      badgesAwarded = currentPoints - previousAwarded;
+      await Promise.all([
+        WordBattleRecord.updateOne(
+          { grade, name, unitId },
+          { $set: { awardedPoints: currentPoints } }
+        ),
+        UserProgress.updateOne(
+          { grade, name },
+          {
+            $inc: { 'vocabularyQuiz.totalCoins': badgesAwarded },
+            $set: { 'vocabularyQuiz.lastRankUpdate': new Date() }
+          },
+          { upsert: true }
+        )
+      ]);
+      console.log(`🐋 [word-battle] ${grade} ${name} ${unitId} 등수 ${currentRank}위 → +${badgesAwarded}뱃지 (누적 ${currentPoints})`);
+    }
+
+    res.json({
+      ok: true,
+      isNewBest,
+      currentRank,
+      currentPoints,
+      badgesAwarded,
+      totalAwardedForUnit: Math.max(currentPoints, previousAwarded)
+    });
+  } catch (err) {
+    console.error('단어배틀 저장 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 단원별 순위 (top 100, 시간 빠른 순)
+app.get('/api/word-battle/ranking', async (req, res) => {
+  try {
+    const { unit } = req.query;
+    if (!unit) return res.status(400).json({ ok: false, message: '단원이 필요합니다.' });
+
+    const ranking = await WordBattleRecord.find({ unitId: unit })
+      .sort({ bestTime: 1 })
+      .limit(100)
+      .lean();
+
+    res.json({ ok: true, ranking });
+  } catch (err) {
+    console.error('단어배틀 순위 조회 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 등수 → 포인트 환산
+function rankToPoints(rank) {
+  if (rank === 1) return 100;
+  if (rank === 2) return 70;
+  if (rank === 3) return 50;
+  if (rank <= 10) return 30;
+  return 10;
+}
+
+// 내 통계 + 종합 순위 (메달 카운트·총 포인트·전체 순위 포함) — 월별 awardedPoints 기준
+app.get('/api/word-battle/my-stats', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) {
+      return res.status(400).json({ ok: false, message: '학생 정보가 필요합니다.' });
+    }
+
+    // 모든 기록 조회 — 점수는 현재 등수(bestTime) 기준 rankToPoints 합산
+    const allRecords = await WordBattleRecord.find({}, { grade: 1, name: 1, unitId: 1, bestTime: 1 }).lean();
+
+    const unitGroups = {};
+    for (const r of allRecords) {
+      (unitGroups[r.unitId] = unitGroups[r.unitId] || []).push(r);
+    }
+
+    const studentPoints = {};   // "grade|name" → 누적 포인트
+    const stats = {};            // 내 단원별 상세
+
+    for (const unitId in unitGroups) {
+      const sorted = unitGroups[unitId].sort((a, b) => a.bestTime - b.bestTime);
+      sorted.forEach((rec, idx) => {
+        const rank = idx + 1;
+        const points = rankToPoints(rank);
+        const key = `${rec.grade}|${rec.name}`;
+        studentPoints[key] = (studentPoints[key] || 0) + points;
+
+        if (rec.grade === grade && rec.name === name) {
+          stats[unitId] = {
+            bestTime: rec.bestTime,
+            rank,
+            total: sorted.length,
+            points
+          };
+        }
+      });
+    }
+
+    // 종합 순위 계산
+    const sortedStudents = Object.entries(studentPoints).sort((a, b) => b[1] - a[1]);
+    const myKey = `${grade}|${name}`;
+    const myTotalPoints = studentPoints[myKey] || 0;
+    const overallRank = sortedStudents.findIndex(([k]) => k === myKey);
+
+    // 메달 카운트
+    let gold = 0, silver = 0, bronze = 0, other = 0;
+    for (const unitId in stats) {
+      const r = stats[unitId].rank;
+      if (r === 1) gold++;
+      else if (r === 2) silver++;
+      else if (r === 3) bronze++;
+      else other++;
+    }
+
+    res.json({
+      ok: true,
+      stats,
+      overview: {
+        medalCounts: { gold, silver, bronze, other },
+        unitsAttempted: Object.keys(stats).length,
+        totalPoints: myTotalPoints,
+        overallRank: overallRank >= 0 ? overallRank + 1 : null,
+        totalStudents: sortedStudents.length
+      }
+    });
+  } catch (err) {
+    console.error('단어배틀 내 기록 조회 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 전체 종합 순위 (TOP 10 + 내 위치) — 현재 등수(bestTime) 기준 rankToPoints 합산
+app.get('/api/word-battle/overall-ranking', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    const allRecords = await WordBattleRecord.find(
+      {},
+      { grade: 1, name: 1, academyName: 1, unitId: 1, bestTime: 1 }
+    ).lean();
+
+    const unitGroups = {};
+    for (const r of allRecords) {
+      (unitGroups[r.unitId] = unitGroups[r.unitId] || []).push(r);
+    }
+
+    const studentPoints = {};
+    const studentMeta = {};
+
+    for (const unitId in unitGroups) {
+      const sorted = unitGroups[unitId].sort((a, b) => a.bestTime - b.bestTime);
+      sorted.forEach((rec, idx) => {
+        const rank = idx + 1;
+        const points = rankToPoints(rank);
+        const key = `${rec.grade}|${rec.name}`;
+        studentPoints[key] = (studentPoints[key] || 0) + points;
+        if (!studentMeta[key]) {
+          studentMeta[key] = { grade: rec.grade, name: rec.name, academyName: rec.academyName || '' };
+        }
+      });
+    }
+
+    const sortedStudents = Object.entries(studentPoints)
+      .map(([key, points]) => ({ ...studentMeta[key], totalPoints: points }))
+      .sort((a, b) => b.totalPoints - a.totalPoints);
+
+    const topRanking = sortedStudents.slice(0, 10);
+
+    let myRank = null, myPoints = 0;
+    if (grade && name) {
+      const myKey = `${grade}|${name}`;
+      const idx = sortedStudents.findIndex(s => s.grade === grade && s.name === name);
+      myRank = idx >= 0 ? idx + 1 : null;
+      myPoints = studentPoints[myKey] || 0;
+    }
+
+    res.json({
+      ok: true,
+      topRanking,
+      myRank,
+      myPoints,
+      totalStudents: sortedStudents.length
+    });
+  } catch (err) {
+    console.error('단어배틀 종합 순위 조회 오류:', err);
     res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
   }
 });
