@@ -6633,7 +6633,7 @@ canvas[id^="confetti-canvas"] {
           <span class="btn-icon">⚡</span>
           <span>실시간 단어 월드컵</span>
         </button>
-        <button class="badge-menu-btn literacy-king-option" onclick="openLiteracyKing()">
+        <button class="badge-menu-btn literacy-king-option" onclick="openLiteracyKingMenuEntry()">
           <span class="btn-icon">👑</span>
           <span>전국 문해왕 선발전</span>
         </button>
@@ -11321,17 +11321,20 @@ if (logoutConfirmBtn) {
           showAssignTaskModal(li.dataset.taskData);
         });
 
-        // 👑 문해왕 선발전 버튼 클릭
-        //   · 7월 1일 오픈 전: 안내 영상 팝업(openLiteracyKing)
-        //   · 정식 오픈 후: openLiteracyKingGame({ series, unitId }) 로 교체
+        // 👑 문해왕 선발전 버튼 클릭 — KST 7/1 0시 기준 자동 분기
+        //   · 오픈 전: 7월 1일 정식 오픈 안내 영상 팝업
+        //   · 오픈 후: 인트로 영상 → 👑 도전하기 또는 영상 종료 → 해당 단원 게임 직진
         const lkBadge = li.querySelector('.lk-challenge-badge');
         if (lkBadge) {
           lkBadge.addEventListener('click', (e) => {
             e.stopPropagation();
-            // const series = lkBadge.dataset.lkSeries;
-            // const unitId = lkBadge.dataset.lkUnit;
-            // openLiteracyKingGame({ series, unitId });  // ← 7월 1일 이후 활성화
-            openLiteracyKing();  // ← 현재: 7월 1일 오픈 안내 영상 팝업
+            const series = lkBadge.dataset.lkSeries;
+            const unitId = lkBadge.dataset.lkUnit;
+            if (typeof isLkLaunched === 'function' && isLkLaunched()) {
+              openLiteracyKingIntro({ series, unitId });
+            } else {
+              openLiteracyKing();
+            }
           });
         }
 
@@ -31162,6 +31165,129 @@ ${content}
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeBtn.click();
       });
+    }
+
+    // ===== 전국 문해왕 선발전 — 오픈 일자 + 진입 분기 =====
+    const LK_LAUNCH = new Date('2026-07-01T00:00:00+09:00');
+    function isLkLaunched() { return new Date() >= LK_LAUNCH; }
+
+    // 오픈 후 인트로 영상 팝업 → "도전하기" 버튼 또는 영상 종료 → 게임 진입
+    //   opts = { series, unitId } (단원 카드 진입) | undefined (이벤트 메뉴 진입 → 메인 페이지)
+    function openLiteracyKingIntro(opts) {
+      closeBadgeMenu();
+      const existing = document.getElementById('literacyKingIntroOverlay');
+      if (existing) existing.remove();
+
+      let entered = false;
+      const goToGame = () => {
+        if (entered) return;
+        entered = true;
+        try { video.pause(); } catch (e) {}
+        overlay.remove();
+        openLiteracyKingGame(opts);
+      };
+
+      const overlay = document.createElement('div');
+      overlay.id = 'literacyKingIntroOverlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+        z-index: 10005; backdrop-filter: blur(6px);
+      `;
+
+      const box = document.createElement('div');
+      box.style.cssText = `
+        position: relative;
+        background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #881337 100%);
+        border-radius: 20px;
+        padding: 28px 28px 24px;
+        max-width: 880px; width: 94%;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        border: 2px solid #fbbf24;
+        animation: lkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      `;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.style.cssText = `
+        position: absolute; top: 12px; right: 14px;
+        width: 36px; height: 36px;
+        border-radius: 50%; background: rgba(255,255,255,0.15);
+        color: white; border: 1px solid rgba(255,255,255,0.3);
+        font-size: 22px; font-weight: bold; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+      `;
+      closeBtn.onclick = () => { entered = true; overlay.remove(); };
+
+      const title = document.createElement('div');
+      title.innerHTML = '👑 전국 문해왕 선발전';
+      title.style.cssText = `
+        text-align: center;
+        font-size: 24px; font-weight: 900;
+        background: linear-gradient(135deg, #fcd34d, #fbbf24, #d4af37);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+      `;
+
+      const subtitle = document.createElement('div');
+      subtitle.textContent = '문해력 챔피언십에 도전해보세요!';
+      subtitle.style.cssText = `
+        text-align: center; color: #d4d4d8;
+        font-size: 13px; font-style: italic; margin-bottom: 14px;
+      `;
+
+      const video = document.createElement('video');
+      video.src = '/images/브레인문해력_전국문해왕선발전(영상최종).mp4';
+      video.controls = true;
+      video.autoplay = true;
+      video.muted = true;
+      video.setAttribute('playsinline', '');
+      video.style.cssText = `
+        width: 100%; max-height: 56vh;
+        border-radius: 12px; background: #000;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        display: block;
+      `;
+      video.addEventListener('ended', goToGame);
+
+      const startBtn = document.createElement('button');
+      startBtn.innerHTML = '👑 도전하기';
+      startBtn.style.cssText = `
+        margin-top: 18px;
+        background: linear-gradient(135deg, #fbbf24, #d4af37);
+        color: #1e1b4b;
+        padding: 12px 32px;
+        border: none;
+        border-radius: 30px;
+        font-size: 18px; font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(251,191,36,0.4);
+        animation: lkPulse 1.8s ease-in-out infinite;
+        transition: transform 0.15s ease;
+      `;
+      startBtn.onmouseenter = () => { startBtn.style.transform = 'translateY(-2px)'; };
+      startBtn.onmouseleave = () => { startBtn.style.transform = ''; };
+      startBtn.onclick = goToGame;
+
+      box.appendChild(closeBtn);
+      box.appendChild(title);
+      box.appendChild(subtitle);
+      box.appendChild(video);
+      box.appendChild(startBtn);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeBtn.click();
+      });
+    }
+
+    // 이벤트 메뉴 버튼용 진입점 — 오픈 전/후 자동 분기
+    function openLiteracyKingMenuEntry() {
+      if (isLkLaunched()) openLiteracyKingIntro();
+      else openLiteracyKing();
     }
 
     // ===== 단어 월드컵 — 트로피 런처 인트로 영상 ▶ 메인 =====
