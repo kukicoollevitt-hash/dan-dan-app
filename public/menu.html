@@ -982,6 +982,110 @@ body {
   .wb-live-banner { display: none; }
 }
 
+/* 월드컵 영상 팝업 오버레이 */
+.wb-video-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 10020;
+  align-items: center;
+  justify-content: center;
+}
+.wb-video-overlay.show { display: flex; }
+
+.wb-video-box {
+  background: linear-gradient(180deg, #ffffff 0%, #fef9c3 100%);
+  border-radius: 20px;
+  padding: 24px 24px 18px;
+  max-width: 720px;
+  width: 92%;
+  position: relative;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  animation: wbVideoPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 2px solid #fbbf24;
+}
+@keyframes wbVideoPop {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.wb-video-close {
+  position: absolute;
+  top: 12px; right: 14px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(120,53,15,0.1);
+  color: #78350f;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.wb-video-close:hover { background: rgba(120,53,15,0.2); }
+
+.wb-video-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #78350f;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.wb-video-player {
+  width: 100%;
+  max-height: 60vh;
+  border-radius: 12px;
+  background: #000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  display: block;
+}
+
+.wb-video-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.wb-video-btn {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.wb-video-btn-skip {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.wb-video-btn-skip:hover {
+  background: #e5e7eb;
+}
+.wb-video-btn-go {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+  flex: 1;
+  max-width: 280px;
+}
+.wb-video-btn-go:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(245,158,11,0.5);
+}
+
+@media (max-width: 600px) {
+  .wb-video-actions { flex-direction: column-reverse; }
+  .wb-video-btn-go { max-width: 100%; width: 100%; }
+  .wb-video-btn-skip { width: 100%; }
+}
+
 /* 실시간 월드컵 LIVE 알림 띠 (트로피 배지 바로 위) */
 .wb-live-banner {
   position: fixed;
@@ -6816,6 +6920,21 @@ canvas[id^="confetti-canvas"] {
     <div class="wb-launcher-info">
       <div class="wb-launcher-label">🏅 월드컵 종합</div>
       <div class="wb-launcher-rank" id="wbLauncherRank">불러오는 중...</div>
+    </div>
+  </div>
+
+  <!-- 월드컵 안내 영상 팝업 -->
+  <div class="wb-video-overlay" id="wbVideoOverlay" onclick="if(event.target===this)closeWbVideo()">
+    <div class="wb-video-box">
+      <button class="wb-video-close" onclick="closeWbVideo()" title="닫기">✕</button>
+      <div class="wb-video-title">🏆 어휘 월드컵 안내</div>
+      <video id="wbVideoPlayer" class="wb-video-player" controls autoplay muted playsinline preload="auto">
+        <source src="/images/브레인어휘월드컵영상(수정).mp4" type="video/mp4">
+      </video>
+      <div class="wb-video-actions">
+        <button class="wb-video-btn wb-video-btn-skip" onclick="hideTodayWbVideo()">오늘 하루 보지 않기</button>
+        <button class="wb-video-btn wb-video-btn-go" onclick="closeWbVideo(); openWordBattle({fromLauncher: true});">⚡ 월드컵 도전하러 가기</button>
+      </div>
     </div>
   </div>
 
@@ -30766,6 +30885,60 @@ ${content}
     };
 
     // 스피드 어휘왕 참가 모달 열기
+    // ===== 월드컵 안내 영상 팝업 (다듬어진 안 C) =====
+    // - 영상 끝까지 본 학생 → 영구 차단 (wbVideoCompleted)
+    // - "오늘 하루 보지 않기" 누른 학생 → 24시간 차단 (wbVideoHiddenUntil)
+    // - 그 외 학생 → 매 로그인마다 자동 표시
+    function shouldShowWbVideoAuto() {
+      if (localStorage.getItem('wbVideoCompleted') === 'true') return false;
+      const until = parseInt(localStorage.getItem('wbVideoHiddenUntil') || '0', 10);
+      if (until && Date.now() < until) return false;
+      return true;
+    }
+    function openWbVideoPopup() {
+      const overlay = document.getElementById('wbVideoOverlay');
+      if (!overlay) return;
+      overlay.classList.add('show');
+      const v = document.getElementById('wbVideoPlayer');
+      if (v) {
+        try {
+          v.currentTime = 0;
+          v.muted = true;          // 무음이므로 모든 브라우저에서 자동재생 허용
+          v.play().catch(() => {}); // 실패해도 무시 (사용자가 controls로 재생 가능)
+        } catch(e) {}
+      }
+    }
+    function closeWbVideo() {
+      const overlay = document.getElementById('wbVideoOverlay');
+      if (!overlay) return;
+      const v = document.getElementById('wbVideoPlayer');
+      if (v) { try { v.pause(); } catch(e) {} }
+      overlay.classList.remove('show');
+    }
+    function hideTodayWbVideo() {
+      localStorage.setItem('wbVideoHiddenUntil', String(Date.now() + 24 * 60 * 60 * 1000));
+      closeWbVideo();
+    }
+    // 영상 끝까지 본 학생 → 영구 차단
+    (function bindWbVideoEnded() {
+      const v = document.getElementById('wbVideoPlayer');
+      if (!v) return;
+      v.addEventListener('ended', () => {
+        localStorage.setItem('wbVideoCompleted', 'true');
+      });
+    })();
+    // 페이지 로드 시 자동 표시 (조건 통과 학생만)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        if (shouldShowWbVideoAuto()) openWbVideoPopup();
+      });
+    } else {
+      if (shouldShowWbVideoAuto()) openWbVideoPopup();
+    }
+    window.openWbVideoPopup = openWbVideoPopup;
+    window.closeWbVideo = closeWbVideo;
+    window.hideTodayWbVideo = hideTodayWbVideo;
+
     // ===== 월드컵 런처 — 좌측 하단 트로피 옆 순위 표시 =====
     async function loadWbLauncherRank() {
       try {
