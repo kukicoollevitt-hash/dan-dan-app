@@ -864,6 +864,36 @@
       return;
     }
     renderSeriesTabs();
+
+    // 🔗 sessionStorage 딥링크 처리 (메뉴 단원 카드에서 진입 → 바로 게임 시작)
+    const dlRaw = sessionStorage.getItem('lk_deeplink');
+    if (dlRaw) {
+      sessionStorage.removeItem('lk_deeplink');
+      try {
+        const dl = JSON.parse(dlRaw);
+        if (dl && dl.series && dl.unitId && allowedSeries.includes(dl.series)) {
+          // unitId 예: 'on_bio_01' → subject=bio, field=science
+          const stripped = dl.unitId.replace(/^(on|fit|deep)_/, '');
+          const m = stripped.match(/^([a-z]+\d*)_/);
+          const subject = m ? m[1] : null;
+          const field = subject ? SUBJECT_DIRS[subject] : null;
+          if (subject && field) {
+            currentSeries = dl.series;
+            selectSeries(dl.series);
+            selectField(field);
+            (async () => {
+              try {
+                await selectSubject(subject);
+                // 단원 콘텐츠 로드 완료 → 바로 게임 시작
+                if (typeof startGame === 'function') startGame(dl.unitId);
+              } catch (e) { console.warn('[lk-deeplink] 게임 진입 실패', e); }
+            })();
+            return;
+          }
+        }
+      } catch (e) { console.warn('[lk-deeplink] 파싱 실패', e); }
+    }
+
     currentSeries = allowedSeries[0];
     selectSeries(currentSeries);
   }

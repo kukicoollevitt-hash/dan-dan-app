@@ -434,6 +434,35 @@ body {
       color: #065f46;
     }
 
+    /* 👑 전국 문해왕 선발전 진입 버튼 (단원 카드 우측) */
+    .lk-challenge-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 3px 9px 4px;
+      border: none;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      background: linear-gradient(135deg, #1e3a8a, #1e40af);
+      color: #fbbf24;
+      box-shadow: 0 1px 3px rgba(30, 58, 138, 0.3);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    .lk-challenge-badge:hover {
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(30, 58, 138, 0.5);
+    }
+    .lk-challenge-badge.done {
+      background: linear-gradient(135deg, #fbbf24, #d4af37);
+      color: #1e3a8a;
+    }
+    .lk-challenge-badge.done:hover {
+      background: linear-gradient(135deg, #fcd34d, #f59e0b);
+    }
+
     /* 모달 (준비중) */
     .overlay {
       position: fixed;
@@ -11177,6 +11206,13 @@ if (logoutConfirmBtn) {
           console.log('⭐ [renderUnitList] 온시리즈 단원:', unitId, '등급정보:', gradeInfo ? gradeInfo.grade : '없음');
         }
 
+        // 👑 문해왕 선발전 진입 버튼 — 4시리즈 모든 단원에 적용
+        const showLkBadge = !isAppliedLocked && !isPreparing && !isUserUnitLocked;
+        const lkSeriesCode = unitId.startsWith('on_') ? 'on'
+                           : unitId.startsWith('fit_') ? 'fit'
+                           : unitId.startsWith('deep_') ? 'deep'
+                           : 'up';
+
         // 단원 렌더링 (잠금 표시는 클릭 시 체크)
         li.innerHTML = `
           <span>${u.label}</span>
@@ -11190,6 +11226,9 @@ if (logoutConfirmBtn) {
                   ? `<span class="status-badge status-preparing">🔒 정식버전</span>`
                   : `<span class="status-badge status-default" draggable="true">✏️ 미완료</span>`
             }
+            ${showLkBadge
+              ? `<button class="lk-challenge-badge" data-lk-unit="${unitId}" data-lk-series="${lkSeriesCode}" title="전국 문해왕 선발전 도전">👑 선발전</button>`
+              : ''}
           </span>
         `;
 
@@ -11197,6 +11236,10 @@ if (logoutConfirmBtn) {
         li.addEventListener("click", async (e) => {
           // 상태 뱃지 클릭 시에는 단원 열기 방지
           if (e.target.classList.contains('status-badge')) {
+            return;
+          }
+          // 👑 문해왕 선발전 버튼 클릭 시에는 단원 열기 방지
+          if (e.target.classList.contains('lk-challenge-badge')) {
             return;
           }
 
@@ -11278,11 +11321,62 @@ if (logoutConfirmBtn) {
           showAssignTaskModal(li.dataset.taskData);
         });
 
+        // 👑 문해왕 선발전 버튼 클릭
+        //   · 7월 1일 오픈 전: 안내 영상 팝업(openLiteracyKing)
+        //   · 정식 오픈 후: openLiteracyKingGame({ series, unitId }) 로 교체
+        const lkBadge = li.querySelector('.lk-challenge-badge');
+        if (lkBadge) {
+          lkBadge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // const series = lkBadge.dataset.lkSeries;
+            // const unitId = lkBadge.dataset.lkUnit;
+            // openLiteracyKingGame({ series, unitId });  // ← 7월 1일 이후 활성화
+            openLiteracyKing();  // ← 현재: 7월 1일 오픈 안내 영상 팝업
+          });
+        }
+
         unitList.appendChild(li);
       });
 
       // 목록 그릴 때마다 저장된 완료 상태 다시 반영
       restoreProgressOnRenderedList();
+
+      // 👑 문해왕 선발전 — 도전 이력 확인 후 "선발전" → "완료" 라벨 전환
+      updateLkChallengeBadges();
+    }
+
+    // 👑 문해왕 선발전 도전 이력 확인 (캐시 5분)
+    let _lkStatsCache = null;
+    let _lkStatsCacheTime = 0;
+    async function updateLkChallengeBadges() {
+      const lkBadges = document.querySelectorAll('.lk-challenge-badge');
+      if (lkBadges.length === 0) return;
+      try {
+        const saved = localStorage.getItem('currentStudent');
+        if (!saved) return;
+        const student = JSON.parse(saved);
+        if (!student.grade || !student.name) return;
+        const now = Date.now();
+        if (!_lkStatsCache || (now - _lkStatsCacheTime) > 5 * 60 * 1000) {
+          const res = await fetch(`/api/literacy-king/my-stats?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
+          const data = await res.json();
+          if (!data.ok) return;
+          _lkStatsCache = data.stats || {};
+          _lkStatsCacheTime = now;
+        }
+        lkBadges.forEach(badge => {
+          const series = badge.dataset.lkSeries;
+          const unit = badge.dataset.lkUnit;
+          const played = _lkStatsCache[series] && _lkStatsCache[series][unit];
+          if (played) {
+            badge.classList.add('done');
+            badge.textContent = '👑 완료';
+            badge.title = `최고 ${played.bestScore}점 · ${played.rank}위`;
+          }
+        });
+      } catch (err) {
+        console.warn('[lk-badge] 도전 이력 확인 실패:', err);
+      }
     }
 
     /* 10. 검색 */
@@ -31180,6 +31274,71 @@ ${content}
     }
 
     // ===== 실시간 단어배틀 =====
+    // 👑 전국 문해왕 선발전 — iframe 모달 진입 (단원 카드 버튼에서 호출)
+    function openLiteracyKingGame(opts) {
+      const existing = document.getElementById('literacyKingGameOverlay');
+      if (existing) existing.remove();
+
+      // 딥링크 정보가 들어오면 sessionStorage에 저장 (iframe이 init에서 읽음)
+      if (opts && opts.series && opts.unitId) {
+        sessionStorage.setItem('lk_deeplink', JSON.stringify({ series: opts.series, unitId: opts.unitId }));
+      }
+
+      const overlay = document.createElement('div');
+      overlay.id = 'literacyKingGameOverlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center;
+        z-index: 10005;
+      `;
+
+      const container = document.createElement('div');
+      container.style.cssText = `
+        position: relative; width: 1140px; height: 780px; max-width: 96%; max-height: 96%;
+      `;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.style.cssText = `
+        position: absolute; top: -15px; right: -15px; width: 40px; height: 40px;
+        border-radius: 50%; background: #ff4444; color: white; border: 3px solid white;
+        font-size: 28px; font-weight: bold; cursor: pointer; z-index: 10006;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+
+      const iframe = document.createElement('iframe');
+      iframe.src = '/literacy-king.html?v=' + Date.now();
+      iframe.style.cssText = `
+        width: 100%; height: 100%; border: none; border-radius: 14px;
+        background: white; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      `;
+
+      // 스마트 X — 게임 중이면 뒤로, 메인이면 닫기
+      closeBtn.onclick = () => {
+        try {
+          const win = iframe.contentWindow;
+          if (win && typeof win.canGoBack === 'function' && win.canGoBack()) {
+            win.goBack();
+            return;
+          }
+        } catch (e) {}
+        overlay.remove();
+        // 모달 닫힌 뒤 도전 이력 다시 가져와서 "선발전→완료" 라벨 갱신
+        _lkStatsCacheTime = 0;
+        if (typeof updateLkChallengeBadges === 'function') updateLkChallengeBadges();
+      };
+
+      container.appendChild(closeBtn);
+      container.appendChild(iframe);
+      overlay.appendChild(container);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeBtn.click();
+      });
+    }
+
     function openWordBattle(opts) {
       const reopenBadgeMenu = !(opts && opts.fromLauncher);
       closeBadgeMenu();
