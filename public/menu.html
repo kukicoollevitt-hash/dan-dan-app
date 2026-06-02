@@ -6934,7 +6934,7 @@ canvas[id^="confetti-canvas"] {
   </div>
 
   <!-- 고래 도서관 아이콘 (좌측 하단, 학습실 옆) -->
-  <div class="brand-rudolph-wrapper" id="whaleLibraryIcon" onclick="goToWhaleStory()">
+  <div class="brand-rudolph-wrapper" id="whaleLibraryIcon" onclick="openWhaleLibraryIntro()">
     <img src="/images/rudolph.png" alt="고래 도서관">
   </div>
 
@@ -31288,6 +31288,131 @@ ${content}
     function openLiteracyKingMenuEntry() {
       if (isLkLaunched()) openLiteracyKingIntro();
       else openLiteracyKing();
+    }
+
+    // ===== 고래도서관 — 인트로 영상 팝업 → 입장하기 →  goToWhaleStory =====
+    function openWhaleLibraryIntro() {
+      const existing = document.getElementById('whaleLibraryIntroOverlay');
+      if (existing) existing.remove();
+
+      let entered = false;
+      const enter = () => {
+        if (entered) return;
+        entered = true;
+        try { video.pause(); } catch (e) {}
+        overlay.remove();
+        if (typeof goToWhaleStory === 'function') goToWhaleStory();
+      };
+
+      const overlay = document.createElement('div');
+      overlay.id = 'whaleLibraryIntroOverlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+        z-index: 10005; backdrop-filter: blur(6px);
+      `;
+
+      const box = document.createElement('div');
+      box.style.cssText = `
+        position: relative;
+        background: linear-gradient(135deg, #082f49 0%, #0c4a6e 45%, #155e75 100%);
+        border-radius: 20px;
+        padding: 28px 28px 24px;
+        max-width: 880px; width: 94%;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        border: 2px solid #67e8f9;
+        animation: whalePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      `;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.style.cssText = `
+        position: absolute; top: 12px; right: 14px;
+        width: 36px; height: 36px;
+        border-radius: 50%; background: rgba(255,255,255,0.15);
+        color: white; border: 1px solid rgba(255,255,255,0.3);
+        font-size: 22px; font-weight: bold; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+      `;
+      closeBtn.onclick = () => { entered = true; overlay.remove(); };
+
+      const title = document.createElement('div');
+      title.innerHTML = '🐋 신나는 고래도서관';
+      title.style.cssText = `
+        text-align: center;
+        font-size: 24px; font-weight: 900;
+        background: linear-gradient(135deg, #a5f3fc, #67e8f9, #22d3ee);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+      `;
+
+      const subtitle = document.createElement('div');
+      subtitle.textContent = '빠져드는 독서의 바다로 입장!';
+      subtitle.style.cssText = `
+        text-align: center; color: #cffafe;
+        font-size: 13px; font-style: italic; margin-bottom: 14px;
+      `;
+
+      const video = document.createElement('video');
+      video.src = '/images/고래도서관_빠져드는콘텐츠.mp4';
+      video.controls = true;
+      video.autoplay = true;
+      video.muted = true;
+      video.setAttribute('playsinline', '');
+      video.style.cssText = `
+        width: 100%; max-height: 56vh;
+        border-radius: 12px; background: #000;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        display: block;
+      `;
+      // 자동 진입 제거 — 학생이 직접 "입장하기"를 눌러야 진입
+
+      const enterBtn = document.createElement('button');
+      enterBtn.innerHTML = '🐋 입장하기';
+      enterBtn.style.cssText = `
+        display: block;
+        margin: 18px auto 0;
+        background: linear-gradient(135deg, #22d3ee, #0891b2);
+        color: #082f49;
+        padding: 12px 32px;
+        border: none;
+        border-radius: 30px;
+        font-size: 18px; font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(34,211,238,0.4);
+        animation: whalePulse 1.8s ease-in-out infinite;
+        transition: transform 0.15s ease;
+      `;
+      enterBtn.onmouseenter = () => { enterBtn.style.transform = 'translateY(-2px)'; };
+      enterBtn.onmouseleave = () => { enterBtn.style.transform = ''; };
+      enterBtn.onclick = enter;
+
+      const styleTag = document.createElement('style');
+      styleTag.textContent = `
+        @keyframes whalePop {
+          from { opacity: 0; transform: scale(0.85); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes whalePulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 8px 24px rgba(34,211,238,0.4); }
+          50% { transform: scale(1.04); box-shadow: 0 12px 32px rgba(34,211,238,0.65); }
+        }
+      `;
+
+      box.appendChild(styleTag);
+      box.appendChild(closeBtn);
+      box.appendChild(title);
+      box.appendChild(subtitle);
+      box.appendChild(video);
+      box.appendChild(enterBtn);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeBtn.click();
+      });
     }
 
     // ===== 단어 월드컵 — 트로피 런처 인트로 영상 ▶ 메인 =====
