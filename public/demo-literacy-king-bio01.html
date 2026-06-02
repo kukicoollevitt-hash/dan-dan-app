@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>👑 전국 문해왕 선발전 — 데모 (on_bio_01)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<style>
+  :root {
+    --primary: #2d6a4f;
+    --primary-light: #52b788;
+    --accent: #d4af37;
+    --gold: #fbbf24;
+    --error: #ef4444;
+    --success: #10b981;
+    --muted: #6b7280;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
+      url('/images/learning-bg.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: 24px;
+    color: #1f2937;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .header { text-align: center; margin-bottom: 18px; }
+  .crown { font-size: 38px; line-height: 1; }
+  .title {
+    font-size: 26px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #d4af37, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 4px 0;
+  }
+  .subtitle { font-size: 13px; color: #6b7280; }
+  .unit-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(45, 106, 79, 0.1);
+    color: var(--primary);
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* 상태바 */
+  .status-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    background: white;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+  .status-item { text-align: center; }
+  .status-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .status-value { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .status-value.timer { color: var(--accent); }
+  .status-value.score { color: var(--success); }
+  .status-value.combo { color: var(--error); transition: transform 0.2s; }
+  .status-value.combo.bump { transform: scale(1.4); }
+  .status-value.progress { color: var(--primary); font-size: 18px; }
+
+  /* 지문 영역 */
+  .passage-area {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 32px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    margin-bottom: 16px;
+    min-height: 260px;
+  }
+  .paragraph { margin-bottom: 18px; line-height: 2; font-size: 16px; }
+  .paragraph:last-child { margin-bottom: 0; }
+  .sentence-text { display: inline; }
+  .blank-slot {
+    display: inline-block;
+    min-width: 220px;
+    min-height: 32px;
+    padding: 4px 12px;
+    margin: 0 4px;
+    background: rgba(45, 106, 79, 0.05);
+    border: 2px dashed #9ca3af;
+    border-radius: 8px;
+    vertical-align: middle;
+    font-size: 14px;
+    color: #9ca3af;
+    text-align: center;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    line-height: 1.4;
+  }
+  .blank-slot.drag-over {
+    background: rgba(212, 175, 55, 0.2);
+    border-color: var(--gold);
+    border-style: solid;
+    transform: scale(1.03);
+  }
+  .blank-slot.filled {
+    background: linear-gradient(120deg, rgba(251,191,36,0.3), rgba(245,158,11,0.4));
+    border: 2px solid var(--gold);
+    color: #78350f;
+    font-weight: 600;
+    text-align: left;
+    box-shadow: 0 0 0 4px rgba(251,191,36,0.2);
+    animation: slotFill 0.6s ease;
+  }
+  @keyframes slotFill {
+    0% { transform: scale(0.95); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  .blank-slot.shake {
+    animation: slotShake 0.4s ease;
+    border-color: var(--error);
+    background: rgba(239, 68, 68, 0.15);
+  }
+  @keyframes slotShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .blank-slot-num {
+    display: inline-block;
+    background: #6b7280;
+    color: white;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 22px;
+    margin-right: 8px;
+    transition: background 0.2s;
+  }
+  .blank-slot.filled .blank-slot-num {
+    background: var(--gold);
+  }
+
+  /* 카드 영역 */
+  .card-pool {
+    background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%);
+    border: 2px dashed #fbbf24;
+    border-radius: 14px;
+    padding: 18px;
+    min-height: 140px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+  .sentence-card {
+    flex: 1 1 220px;
+    max-width: 280px;
+    background: white;
+    border: 2px solid #d4af37;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.15s, box-shadow 0.2s;
+    color: #78350f;
+    font-weight: 500;
+  }
+  .sentence-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(245, 158, 11, 0.25);
+    border-color: #f59e0b;
+  }
+  .sentence-card:active, .sentence-card.dragging {
+    cursor: grabbing;
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  .card-pool-label {
+    width: 100%;
+    text-align: center;
+    color: #92400e;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  /* 알림 토스트 */
+  .toast {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 9999;
+    animation: toastSlide 2s ease forwards;
+    pointer-events: none;
+  }
+  @keyframes toastSlide {
+    0% { opacity: 0; transform: translate(-50%, -20px); }
+    15%, 85% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
+  }
+
+  /* 점수 팝업 */
+  .score-popup {
+    position: fixed;
+    font-size: 28px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 999;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: scorePop 1s ease forwards;
+  }
+  @keyframes scorePop {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -10px) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -80px) scale(1); }
+  }
+  .score-popup.positive { color: #10b981; }
+  .score-popup.negative { color: #ef4444; }
+
+  /* 컨트롤 */
+  .controls { text-align: center; margin-top: 14px; }
+  .btn {
+    padding: 12px 26px; border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 700; cursor: pointer; margin: 0 4px;
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    box-shadow: 0 4px 12px rgba(45,106,79,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-ghost { background: white; color: var(--primary); border: 2px solid var(--primary); }
+
+  /* 결과 모달 */
+  .result-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .result-overlay.show { display: flex; }
+  .result-box {
+    background: white; border-radius: 24px;
+    padding: 36px 40px;
+    max-width: 480px; width: 92%;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    animation: resultPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes resultPop {
+    0% { opacity: 0; transform: scale(0.7); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .result-emoji { font-size: 72px; margin-bottom: 8px; }
+  .result-title { font-size: 28px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+  .result-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 22px; }
+  .result-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    background: #f0fdf4;
+    padding: 18px; border-radius: 14px; margin-bottom: 22px;
+  }
+  .result-stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .result-stat-value { font-size: 22px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .result-stat-value.time { color: var(--accent); }
+  .result-stat-value.combo { color: var(--error); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="crown">👑</div>
+    <div class="title">전국 문해왕 선발전</div>
+    <div class="subtitle">각 문단의 빈칸에 알맞은 문장을 끌어다 놓으세요 — 틀리면 빈칸이 새로 바뀝니다!</div>
+    <div class="unit-badge">📘 생물 · on_bio_01 · 생물과 무생물</div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="status-label">⏱ 시간</div>
+      <div class="status-value timer" id="timerEl">0.0</div>
+    </div>
+    <div class="status-item">
+      <div class="status-label">⭐ 점수</div>
+      <div class="status-value score" id="scoreEl">0</div>
+    </div>
+    <div class="status-item">
+      <div class="status-label">🔥 콤보</div>
+      <div class="status-value combo" id="comboEl">0</div>
+    </div>
+    <div class="status-item">
+      <div class="status-label">✓ 완료</div>
+      <div class="status-value progress"><span id="solvedEl">0</span>/4</div>
+    </div>
+  </div>
+
+  <div class="passage-area" id="passageArea"></div>
+
+  <div class="card-pool" id="cardPool">
+    <div class="card-pool-label">⬇️ 아래 문장을 위 빈칸으로 끌어 놓으세요</div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" onclick="startGame()">🔄 다시 시작</button>
+  </div>
+</div>
+
+<!-- 결과 모달 -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box">
+    <div class="result-emoji" id="resultEmoji">👑</div>
+    <div class="result-title" id="resultTitle">문해왕 등극!</div>
+    <div class="result-subtitle">on_bio_01 · 생물과 무생물의 구분과 관계</div>
+    <div class="result-stats">
+      <div>
+        <div class="result-stat-label">⭐ 점수</div>
+        <div class="result-stat-value" id="finalScore">0</div>
+      </div>
+      <div>
+        <div class="result-stat-label">⏱ 시간</div>
+        <div class="result-stat-value time" id="finalTime">0초</div>
+      </div>
+      <div>
+        <div class="result-stat-label">🔥 최대 콤보</div>
+        <div class="result-stat-value combo" id="finalCombo">0</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="closeResult(); startGame();">🔄 다시 도전</button>
+    <button class="btn btn-ghost" onclick="closeResult()">닫기</button>
+  </div>
+</div>
+
+<script>
+  // ───── 단원 데이터 (on_bio_01) ─────
+  const UNIT = {
+    title: '생물과 무생물의 구분과 관계',
+    paragraphs: [
+      [
+        '우리 주변에는 다양한 존재가 있습니다.',
+        '살아 있는 것을 생물이라 하고, 살아 있지 않은 것을 무생물이라 합니다.',
+        '강아지, 꽃, 나무, 세균은 생물이고, 돌, 물, 공기, 책상은 무생물입니다.'
+      ],
+      [
+        '생물은 무생물과 달리 여러 가지 중요한 특징을 가지고 있습니다.',
+        '먼저, 생물은 스스로 영양분을 얻기 위해 먹이를 섭취합니다.',
+        '식물은 햇빛과 물, 이산화탄소를 이용해 광합성을 통해 스스로 양분을 만들어 냅니다.',
+        '동물은 다른 생물을 먹어서 에너지를 얻고, 세균은 주변의 유기물을 분해하여 영양분을 흡수합니다.',
+        '또한, 생물은 번식하는 특징이 있습니다.',
+        '번식이란 자손을 남기는 활동으로, 종족을 이어 나가기 위한 중요한 과정입니다.'
+      ],
+      [
+        '생물과 무생물은 자연 속에서 서로 밀접하게 영향을 주고받으며 연결되어 있습니다.',
+        '식물은 흙과 물이라는 무생물에서 뿌리를 내리고 자라며, 동물은 물을 마시고 공기를 들이마시며 살아갑니다.',
+        '죽은 생물은 세균이나 곰팡이에 의해 분해되어 흙 속의 양분이 되고, 이 양분은 다시 식물의 성장을 돕습니다.',
+        '이러한 연결이 환경의 균형을 유지하는 데 중요한 역할을 합니다.'
+      ],
+      [
+        '생물과 무생물의 관계를 이해하면, 자연이 어떻게 유지되는지 알 수 있습니다.',
+        '자연의 모든 것은 순환 속에서 연결되어 있습니다.',
+        '생물도 태어나고, 성장하고, 죽은 후 다시 자연으로 돌아갑니다.',
+        '이러한 순환 덕분에 지구의 생태계는 균형을 유지해 왔습니다.',
+        '우리가 자연을 소중히 여기고 보호해야 하는 이유도 바로 여기에 있습니다.',
+        '생물과 무생물이 조화롭게 어우러질 때, 건강한 지구 환경이 만들어집니다.'
+      ]
+    ]
+  };
+
+  // ───── 게임 상태 ─────
+  let blanks = [];   // [{ pIdx, sIdx, locked }] — 문단별 빈칸 위치
+  let cards = [];    // 셔플된 카드 배열 [{ pIdx, sIdx, sentence }]
+  let score = 0;
+  let combo = 0;
+  let maxCombo = 0;
+  let solved = 0;
+  let startTime = null;
+  let timerInterval = null;
+
+  // 점수 규칙
+  const POINTS_CORRECT = 100;
+  const POINTS_WRONG = -30;
+  const TIME_PENALTY_SEC = 3;
+
+  function rng(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ───── 빈칸 추출 ─────
+  // 각 문단에서 1문장씩 랜덤으로 빈칸 선정
+  // 첫 문장이나 너무 짧은 문장(15자 이하)은 피하기
+  function pickBlankSentence(pIdx, excludeSet) {
+    const sentences = UNIT.paragraphs[pIdx];
+    const candidates = sentences
+      .map((s, i) => ({ s, i }))
+      .filter(({ s, i }) =>
+        i > 0 &&                                     // 첫 문장 제외 (도입부)
+        s.length >= 16 &&                            // 너무 짧은 문장 제외
+        !excludeSet.has(`${pIdx}|${i}`)              // 이미 잠긴 위치 제외
+      );
+    if (candidates.length === 0) {
+      // 후보 없으면 그냥 두 번째 문장이라도
+      const fallback = sentences.map((s, i) => ({ s, i })).filter(({ i }) => i > 0);
+      return rng(fallback);
+    }
+    return rng(candidates);
+  }
+
+  // 4개 문단에서 빈칸 1개씩 추출
+  function generateBlanks(lockedBlanks) {
+    const result = [];
+    const lockedSet = new Set(lockedBlanks.map(b => `${b.pIdx}|${b.sIdx}`));
+    for (let p = 0; p < UNIT.paragraphs.length; p++) {
+      // 이 문단의 기존 잠긴 빈칸 유지
+      const existingLocked = lockedBlanks.find(b => b.pIdx === p);
+      if (existingLocked) {
+        result.push({ ...existingLocked });
+      } else {
+        const { i } = pickBlankSentence(p, lockedSet);
+        result.push({ pIdx: p, sIdx: i, locked: false });
+      }
+    }
+    return result;
+  }
+
+  // ───── 게임 시작 ─────
+  function startGame() {
+    score = 0; combo = 0; maxCombo = 0; solved = 0;
+    startTime = Date.now();
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 50);
+    document.getElementById('scoreEl').textContent = 0;
+    document.getElementById('comboEl').textContent = 0;
+    document.getElementById('solvedEl').textContent = 0;
+
+    blanks = generateBlanks([]);
+    renderAll();
+  }
+  function updateTimer() {
+    document.getElementById('timerEl').textContent = ((Date.now() - startTime) / 1000).toFixed(1);
+  }
+  function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
+
+  // ───── 렌더링 ─────
+  function renderAll() {
+    renderPassage();
+    renderCards();
+  }
+
+  function renderPassage() {
+    const area = document.getElementById('passageArea');
+    area.innerHTML = '';
+    UNIT.paragraphs.forEach((sentences, pIdx) => {
+      const pEl = document.createElement('div');
+      pEl.className = 'paragraph';
+      const blank = blanks.find(b => b.pIdx === pIdx);
+      sentences.forEach((sentence, sIdx) => {
+        if (blank && blank.sIdx === sIdx) {
+          // 빈칸 슬롯
+          const slot = document.createElement('span');
+          slot.className = 'blank-slot' + (blank.locked ? ' filled' : '');
+          slot.dataset.p = pIdx;
+          slot.dataset.s = sIdx;
+          if (blank.locked) {
+            slot.innerHTML = `<span class="blank-slot-num">${pIdx + 1}</span>${sentence}`;
+          } else {
+            slot.innerHTML = `<span class="blank-slot-num">${pIdx + 1}</span>여기에 문장을 끌어다 놓으세요`;
+            // 드롭존
+            slot.addEventListener('dragover', (e) => { e.preventDefault(); slot.classList.add('drag-over'); });
+            slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+            slot.addEventListener('drop', (e) => onDrop(e, pIdx, sIdx, slot));
+          }
+          pEl.appendChild(slot);
+        } else {
+          // 일반 문장
+          const txt = document.createElement('span');
+          txt.className = 'sentence-text';
+          txt.textContent = sentence + ' ';
+          pEl.appendChild(txt);
+        }
+      });
+      area.appendChild(pEl);
+    });
+  }
+
+  function renderCards() {
+    const pool = document.getElementById('cardPool');
+    pool.innerHTML = '<div class="card-pool-label">⬇️ 아래 문장을 위 빈칸으로 끌어 놓으세요</div>';
+    cards = shuffle(blanks.filter(b => !b.locked).map(b => ({
+      pIdx: b.pIdx, sIdx: b.sIdx, sentence: UNIT.paragraphs[b.pIdx][b.sIdx]
+    })));
+    cards.forEach((card, idx) => {
+      const cEl = document.createElement('div');
+      cEl.className = 'sentence-card';
+      cEl.draggable = true;
+      cEl.textContent = card.sentence;
+      cEl.dataset.cardIdx = idx;
+      cEl.addEventListener('dragstart', (e) => {
+        cEl.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', idx);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      cEl.addEventListener('dragend', () => cEl.classList.remove('dragging'));
+      pool.appendChild(cEl);
+    });
+  }
+
+  // ───── 드롭 처리 ─────
+  function onDrop(e, p, s, slot) {
+    e.preventDefault();
+    slot.classList.remove('drag-over');
+    const cardIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    const card = cards[cardIdx];
+    if (!card) return;
+
+    const isCorrect = (card.pIdx === p && card.sIdx === s);
+    const rect = slot.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    if (isCorrect) {
+      // 정답
+      const idx = blanks.findIndex(b => b.pIdx === p && b.sIdx === s);
+      if (idx >= 0) blanks[idx].locked = true;
+      solved++;
+      score += POINTS_CORRECT;
+      combo++;
+      if (combo > maxCombo) maxCombo = combo;
+      updateScoreUI();
+      bumpCombo();
+      document.getElementById('solvedEl').textContent = solved;
+      showScorePopup(cx, cy, '+' + POINTS_CORRECT, 'positive');
+      fireMatchConfetti(cx, cy);
+      // 슬롯에 정답 텍스트 채우기 (애니메이션 위해 잠깐 후 렌더)
+      setTimeout(() => {
+        if (solved === 4) {
+          finishGame();
+        } else {
+          renderAll();
+        }
+      }, 600);
+    } else {
+      // 오답 — B 안: 미해결 빈칸을 모두 새로 추출 + 카드 셔플
+      score = Math.max(0, score + POINTS_WRONG);
+      combo = 0;
+      startTime -= TIME_PENALTY_SEC * 1000;
+      updateScoreUI();
+      document.getElementById('comboEl').textContent = 0;
+      showScorePopup(cx, cy, POINTS_WRONG.toString(), 'negative');
+      slot.classList.add('shake');
+      showToast('❌ 오답! 미해결 빈칸이 새로 바뀝니다');
+      setTimeout(() => {
+        // 잠긴 빈칸만 유지, 미해결은 새로 추출
+        const lockedOnly = blanks.filter(b => b.locked);
+        blanks = generateBlanks(lockedOnly);
+        renderAll();
+      }, 700);
+    }
+  }
+
+  // ───── 결과 ─────
+  function finishGame() {
+    stopTimer();
+    const elapsed = (Date.now() - startTime) / 1000;
+    document.getElementById('finalScore').textContent = score.toLocaleString();
+    document.getElementById('finalTime').textContent = elapsed.toFixed(1) + '초';
+    document.getElementById('finalCombo').textContent = maxCombo;
+
+    let emoji = '🎉', title = '완료!';
+    if (maxCombo === 4 && elapsed < 60) { emoji = '👑'; title = '문해왕 등극!'; }
+    else if (maxCombo === 4) { emoji = '🏆'; title = '완벽한 정답!'; }
+    else if (score >= 300) { emoji = '🎉'; title = '잘했어요!'; }
+    else { emoji = '💪'; title = '다시 도전해보세요!'; }
+    document.getElementById('resultEmoji').textContent = emoji;
+    document.getElementById('resultTitle').textContent = title;
+
+    fireFinishConfetti();
+    setTimeout(() => document.getElementById('resultOverlay').classList.add('show'), 600);
+  }
+  function closeResult() {
+    document.getElementById('resultOverlay').classList.remove('show');
+  }
+
+  // ───── UI 헬퍼 ─────
+  function updateScoreUI() {
+    document.getElementById('scoreEl').textContent = score.toLocaleString();
+  }
+  function bumpCombo() {
+    const el = document.getElementById('comboEl');
+    el.textContent = combo;
+    el.classList.add('bump');
+    setTimeout(() => el.classList.remove('bump'), 250);
+  }
+  function showScorePopup(x, y, text, type) {
+    const pop = document.createElement('div');
+    pop.className = 'score-popup ' + type;
+    pop.style.left = x + 'px';
+    pop.style.top = y + 'px';
+    pop.textContent = text;
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 1100);
+  }
+  function showToast(text) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2000);
+  }
+
+  // ───── 폭죽 ─────
+  function fireMatchConfetti(cx, cy) {
+    if (typeof confetti === 'undefined') return;
+    const colors = ['#fbbf24', '#f59e0b', '#10b981', '#52b788', '#fb7185'];
+    const x = cx / window.innerWidth;
+    const y = cy / window.innerHeight;
+    confetti({ particleCount: 60, spread: 360, startVelocity: 30, origin: { x, y }, colors, shapes: ['square', 'circle'], scalar: 0.9 });
+    setTimeout(() => {
+      confetti({ particleCount: 20, spread: 360, startVelocity: 22, origin: { x, y }, colors: ['#fbbf24', '#fde047'], shapes: ['star'], scalar: 1.4 });
+    }, 80);
+  }
+  function fireFinishConfetti() {
+    if (typeof confetti === 'undefined') return;
+    const duration = 2500;
+    const animationEnd = Date.now() + duration;
+    const colors = ['#10b981', '#fbbf24', '#f59e0b', '#fb7185', '#a855f7', '#3b82f6'];
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+      const c = 50 * (timeLeft / duration);
+      confetti({ particleCount: c, angle: 60, spread: 70, origin: { x: 0, y: 0.8 }, colors, startVelocity: 60 });
+      confetti({ particleCount: c, angle: 120, spread: 70, origin: { x: 1, y: 0.8 }, colors, startVelocity: 60 });
+    }, 200);
+    setTimeout(() => {
+      confetti({ particleCount: 150, spread: 360, startVelocity: 45, origin: { x: 0.5, y: 0.5 }, colors, shapes: ['square', 'circle', 'star'], scalar: 1.3 });
+    }, 100);
+  }
+
+  // 시작
+  startGame();
+</script>
+</body>
+</html>

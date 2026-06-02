@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>전국 문해왕 선발전</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<style>
+  :root {
+    --primary: #4c1d95;        /* 로얄 퍼플 */
+    --primary-light: #7c3aed;
+    --accent: #d4af37;          /* 골드 액센트 유지 */
+    --wine: #881337;            /* 와인 레드 */
+    --wine-light: #be123c;
+    --gold: #fbbf24;
+    --error: #ef4444;
+    --success: #10b981;
+    --muted: #6b7280;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(124,58,237,0.25) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(190,18,60,0.18) 0%, transparent 50%),
+      linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: 22px;
+    color: #f3f4f6;
+  }
+  /* 무대 스포트라이트 */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 50%;
+    width: 80%; height: 100vh;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container { position: relative; z-index: 1; }
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  .header { text-align: center; margin-bottom: 16px; }
+  .crown {
+    font-size: 42px;
+    line-height: 1;
+    filter: drop-shadow(0 4px 16px rgba(251,191,36,0.5));
+    animation: crownFloat 3s ease-in-out infinite;
+  }
+  @keyframes crownFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.05); }
+  }
+  .title {
+    font-size: 28px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 30%, #d4af37 60%, #92400e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 4px 0;
+    letter-spacing: 0.5px;
+    text-shadow: 0 4px 24px rgba(251,191,36,0.3);
+  }
+  .title::before, .title::after {
+    content: '✦';
+    color: #fbbf24;
+    margin: 0 8px;
+    opacity: 0.6;
+    -webkit-text-fill-color: #fbbf24;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #d4d4d8;
+    font-style: italic;
+    letter-spacing: 0.3px;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; animation: viewFade 0.3s ease; }
+  @keyframes viewFade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* 시리즈 탭 */
+  .series-tabs {
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    padding: 8px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    border: 1px solid rgba(251,191,36,0.2);
+    overflow-x: auto;
+  }
+  .series-tab {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #d4d4d8;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .series-tab.active {
+    color: white;
+  }
+  .series-tab[data-series="on"].active { background: linear-gradient(135deg, #10b981, #059669); }
+  .series-tab[data-series="up"].active { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .series-tab[data-series="fit"].active { background: linear-gradient(135deg, #f97316, #c2410c); }
+  .series-tab[data-series="deep"].active { background: linear-gradient(135deg, #dc2626, #991b1b); }
+  .series-tab.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: #f3f4f6;
+    color: #d1d5db;
+  }
+  .series-tab .tab-label { display: block; font-size: 12px; opacity: 0.85; font-weight: 500; margin-top: 2px; }
+
+  /* 포디움 — 시상식 무대 느낌 */
+  .wb-podium-card {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.25) 0%, transparent 65%),
+      linear-gradient(135deg, #1e1b4b 0%, #4c1d95 40%, #581c87 70%, #881337 100%);
+    border-radius: 18px;
+    padding: 22px 24px 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 16px 40px rgba(76,29,149,0.45), 0 0 0 1px rgba(251,191,36,0.2);
+    border: 2px solid #fbbf24;
+    color: #fef3c7;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  /* 좌우 무대 커튼 효과 */
+  .wb-podium-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 18px;
+    background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 40%, transparent 100%);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .wb-podium-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 18px;
+    background: linear-gradient(-90deg, #7f1d1d 0%, #991b1b 40%, transparent 100%);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .wb-podium-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 50px rgba(76,29,149,0.6), 0 0 0 2px rgba(251,191,36,0.4);
+  }
+  .wb-podium-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px; position: relative; z-index: 2;
+  }
+  .wb-podium-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fde68a;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .wb-podium-title::before {
+    content: '👑 ';
+    filter: drop-shadow(0 2px 4px rgba(251,191,36,0.5));
+  }
+  .wb-podium-link {
+    font-size: 12px;
+    color: #fbbf24;
+    background: rgba(251,191,36,0.15);
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    border: 1px solid rgba(251,191,36,0.3);
+  }
+  .wb-podium-row {
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 8px; padding-top: 34px; position: relative; z-index: 2;
+  }
+  .wb-podium-place {
+    flex: 1; max-width: 32%;
+    border-radius: 10px 10px 2px 2px;
+    text-align: center;
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; padding: 12px 6px 10px;
+    box-shadow:
+      0 8px 18px rgba(0,0,0,0.4),
+      inset 0 2px 0 rgba(255,255,255,0.3),
+      inset 0 -2px 0 rgba(0,0,0,0.3);
+  }
+  /* 2위: 실버 */
+  .wb-place-2 {
+    height: 95px;
+    background: linear-gradient(180deg, #e5e7eb 0%, #9ca3af 100%);
+    border-top: 4px solid #d1d5db;
+  }
+  /* 1위: 골드 + 와인 광채 */
+  .wb-place-1 {
+    height: 125px;
+    background: linear-gradient(180deg, #fef3c7 0%, #fbbf24 40%, #d4af37 100%);
+    border-top: 6px solid #fcd34d;
+    box-shadow:
+      0 12px 28px rgba(251,191,36,0.5),
+      inset 0 2px 0 rgba(255,255,255,0.7),
+      inset 0 -2px 0 rgba(146,64,14,0.4),
+      0 0 0 2px rgba(251,191,36,0.5);
+  }
+  /* 3위: 청동 */
+  .wb-place-3 {
+    height: 78px;
+    background: linear-gradient(180deg, #fed7aa 0%, #c2410c 100%);
+    border-top: 4px solid #fdba74;
+  }
+  .wb-place-medal {
+    font-size: 30px; position: absolute; top: -28px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+  }
+  .wb-place-1 .wb-place-medal {
+    font-size: 44px; top: -38px;
+    animation: medalShine 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 6px 12px rgba(251,191,36,0.7));
+  }
+  @keyframes medalShine {
+    0%, 100% { transform: scale(1) rotate(0); }
+    25% { transform: scale(1.08) rotate(-3deg); }
+    75% { transform: scale(1.08) rotate(3deg); }
+  }
+  .wb-place-name { font-size: 13px; font-weight: 700; color: #1f2937; text-shadow: 0 1px 1px rgba(255,255,255,0.5); }
+  .wb-place-1 .wb-place-name { font-size: 16px; font-weight: 800; color: #78350f; text-shadow: 0 1px 2px rgba(255,255,255,0.6); }
+  .wb-place-points { font-size: 12px; font-weight: 800; color: #374151; }
+  .wb-place-1 .wb-place-points { font-size: 14px; color: #78350f; }
+  .wb-podium-place.empty .wb-place-name, .wb-podium-place.empty .wb-place-points { opacity: 0.4; }
+
+  .wb-prize-row {
+    margin-top: 16px; padding: 12px 16px;
+    background: rgba(0,0,0,0.25);
+    border: 1px dashed rgba(251,191,36,0.4);
+    border-radius: 10px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: 6px 14px; font-size: 12px; font-weight: 700; color: #fde68a;
+    position: relative; z-index: 2;
+  }
+  .wb-prize-title { font-size: 13px; font-weight: 800; margin-right: 4px; color: #fbbf24; }
+  .wb-prize-item {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(251,191,36,0.15);
+    padding: 4px 11px;
+    border-radius: 12px;
+    border: 1px solid rgba(251,191,36,0.25);
+  }
+  .wb-podium-my {
+    margin-top: 12px; padding: 10px 14px;
+    background: rgba(251,191,36,0.12);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: 10px;
+    font-size: 13px; font-weight: 700; text-align: center;
+    color: #fde68a;
+    position: relative; z-index: 2;
+  }
+
+  /* 내 통계 카드 — 와인/로얄 그라데이션 */
+  .hero-stats {
+    background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 35%, #be123c 75%, #d4af37 100%);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    color: white;
+    box-shadow: 0 10px 26px rgba(76,29,149,0.4);
+    border: 1px solid rgba(251,191,36,0.2);
+    position: relative; overflow: hidden;
+  }
+  .hero-stats::before {
+    content: ''; position: absolute; top: -50%; right: -10%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  }
+  .hero-rank-row {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 12px; position: relative; z-index: 1;
+  }
+  .hero-rank {
+    font-size: 22px; font-weight: 900;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-rank-label { font-size: 12px; font-weight: 600; opacity: 0.85; }
+  .hero-rank-num { font-size: 30px; font-weight: 900; color: #fffbeb; }
+  .hero-rank-total { font-size: 16px; opacity: 0.9; }
+  .hero-points {
+    background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 10px;
+    font-size: 16px; font-weight: 800; backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .hero-medals {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    position: relative; z-index: 1;
+  }
+  .medal-card {
+    background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+    border-radius: 10px; padding: 10px 6px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .medal-icon-big { font-size: 22px; line-height: 1; margin-bottom: 3px; }
+  .medal-count-big { font-size: 18px; font-weight: 900; line-height: 1; }
+  .medal-label-small { font-size: 10px; opacity: 0.85; margin-top: 2px; }
+  .hero-empty {
+    text-align: center; padding: 12px 0; font-size: 14px; opacity: 0.9;
+    position: relative; z-index: 1;
+  }
+
+  /* 분야/과목 탭 + 단원 목록 */
+  .tabs {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    padding: 10px; border-radius: 12px; margin-bottom: 8px;
+    border: 1px solid rgba(251,191,36,0.15);
+  }
+  .tab-btn {
+    padding: 7px 14px; border: none;
+    background: rgba(255,255,255,0.1);
+    border-radius: 7px; font-size: 13px; font-weight: 600;
+    color: #d4d4d8; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { background: rgba(251,191,36,0.2); color: #fef3c7; }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #d4af37, #fbbf24);
+    color: #1e1b4b;
+    box-shadow: 0 4px 12px rgba(251,191,36,0.4);
+  }
+  .tab-btn.subject.active {
+    background: linear-gradient(135deg, #be123c, #f43f5e);
+    color: white;
+    box-shadow: 0 4px 12px rgba(190,18,60,0.4);
+  }
+  .tab-btn.subject { font-size: 12px; padding: 6px 11px; }
+
+  .unit-list {
+    background: rgba(255,255,255,0.95); border-radius: 12px; padding: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    max-height: 380px; overflow-y: auto;
+    border: 1px solid rgba(251,191,36,0.2);
+  }
+  .unit-item {
+    display: grid; grid-template-columns: 36px 1fr auto auto; gap: 10px;
+    align-items: center; padding: 12px 14px;
+    border-bottom: 1px solid #f3f4f6; cursor: pointer; border-radius: 8px;
+    transition: background 0.15s;
+    color: #1f2937;
+  }
+  .unit-item:hover { background: linear-gradient(90deg, #f0fdf4 0%, #fefce8 100%); transform: translateX(2px); }
+  .unit-item:last-child { border-bottom: none; }
+  .unit-num { font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; }
+  .unit-title { font-size: 14px; font-weight: 600; color: #1f2937; }
+  .unit-status { font-size: 11px; color: var(--muted); text-align: right; min-width: 100px; }
+  .unit-status.played { color: var(--primary); }
+  .unit-medal { font-size: 18px; min-width: 36px; text-align: center; }
+  .unit-empty, .loading {
+    padding: 36px; text-align: center; color: var(--muted); font-size: 14px;
+  }
+
+  /* 권한 없음 안내 */
+  .no-access {
+    background: white; border-radius: 14px; padding: 48px 24px;
+    text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+  .no-access-emoji { font-size: 56px; margin-bottom: 12px; }
+  .no-access-title { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+  .no-access-msg { font-size: 13px; color: var(--muted); }
+
+  /* ===== 게임 뷰 (drag-drop) ===== */
+  .game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: white; padding: 12px 18px;
+    border-radius: 12px; margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    color: #1f2937;
+  }
+  .back-btn {
+    padding: 8px 14px; background: #f3f4f6; border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer;
+  }
+  .back-btn:hover { background: #e5e7eb; }
+  .game-unit { font-size: 15px; font-weight: 700; color: var(--primary); text-align: right; }
+  .game-series { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .status-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    background: white; border-radius: 12px; padding: 12px 16px;
+    margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    color: #1f2937;
+  }
+  .status-item { text-align: center; }
+  .status-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .status-value { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .status-value.timer { color: var(--accent); }
+  .status-value.score { color: var(--success); }
+  .status-value.combo { color: var(--error); transition: transform 0.2s; }
+  .status-value.combo.bump { transform: scale(1.4); }
+  .status-value.progress { color: var(--primary); font-size: 16px; }
+
+  .passage-area {
+    background: white; border-radius: 12px;
+    padding: 22px 26px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+    margin-bottom: 12px; min-height: 240px;
+    color: #1f2937;
+  }
+  .paragraph { margin-bottom: 14px; line-height: 1.9; font-size: 15px; color: #1f2937; }
+  .paragraph:last-child { margin-bottom: 0; }
+  .sentence-text { display: inline; }
+  .blank-slot {
+    display: inline-block; min-width: 200px; min-height: 28px;
+    padding: 3px 10px; margin: 0 4px;
+    background: rgba(45,106,79,0.05);
+    border: 2px dashed #9ca3af; border-radius: 7px;
+    vertical-align: middle;
+    font-size: 13px; color: #9ca3af; text-align: center;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    line-height: 1.4;
+  }
+  .blank-slot.drag-over {
+    background: rgba(212,175,55,0.2); border-color: var(--gold);
+    border-style: solid; transform: scale(1.02);
+  }
+  .blank-slot.filled {
+    background: linear-gradient(120deg, rgba(251,191,36,0.3), rgba(245,158,11,0.4));
+    border: 2px solid var(--gold); color: #78350f; font-weight: 600;
+    text-align: left;
+    animation: slotFill 0.5s ease;
+  }
+  @keyframes slotFill {
+    0% { transform: scale(0.95); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  .blank-slot.shake {
+    animation: slotShake 0.4s ease;
+    border-color: var(--error);
+    background: rgba(239,68,68,0.15);
+  }
+  @keyframes slotShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .blank-slot-num {
+    display: inline-block; background: #6b7280; color: white;
+    width: 20px; height: 20px; border-radius: 50%;
+    font-size: 11px; font-weight: 800; text-align: center; line-height: 20px;
+    margin-right: 6px;
+  }
+  .blank-slot.filled .blank-slot-num { background: var(--gold); }
+
+  .card-pool {
+    background: linear-gradient(135deg, #fef9c3, #fef3c7);
+    border: 2px dashed #fbbf24; border-radius: 12px;
+    padding: 14px; min-height: 110px;
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  }
+  .card-pool-label {
+    width: 100%; text-align: center; color: #92400e;
+    font-size: 12px; font-weight: 700; margin-bottom: 2px;
+  }
+  .sentence-card {
+    flex: 1 1 200px; max-width: 260px;
+    background: white; border: 2px solid #d4af37; border-radius: 9px;
+    padding: 10px 12px; font-size: 13px; line-height: 1.45;
+    cursor: grab; user-select: none;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    transition: transform 0.15s, box-shadow 0.2s;
+    color: #78350f; font-weight: 500;
+  }
+  .sentence-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 9px 18px rgba(245,158,11,0.25);
+  }
+  .sentence-card.dragging { cursor: grabbing; opacity: 0.5; transform: scale(0.95); }
+
+  /* 점수 팝업, 토스트 */
+  .score-popup {
+    position: fixed; font-size: 26px; font-weight: 900;
+    pointer-events: none; z-index: 999;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: scorePop 1s ease forwards;
+  }
+  @keyframes scorePop {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -10px) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -70px) scale(1); }
+  }
+  .score-popup.positive { color: #10b981; }
+  .score-popup.negative { color: #ef4444; }
+
+  .toast {
+    position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.85); color: white;
+    padding: 10px 20px; border-radius: 22px;
+    font-size: 13px; font-weight: 700; z-index: 9999;
+    animation: toastSlide 2s ease forwards; pointer-events: none;
+  }
+  @keyframes toastSlide {
+    0% { opacity: 0; transform: translate(-50%, -20px); }
+    15%, 85% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
+  }
+
+  /* 결과 뷰 */
+  .result-card {
+    background: white; border-radius: 18px; padding: 28px;
+    text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    margin-bottom: 12px;
+    color: #1f2937;
+  }
+  .result-emoji { font-size: 56px; margin-bottom: 8px; }
+  .result-title { font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+  .result-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .result-stats {
+    display: flex; justify-content: space-around;
+    background: #f0fdf4; border-radius: 14px;
+    padding: 16px; margin-bottom: 12px;
+  }
+  .result-stat-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .result-stat-value { font-size: 24px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .result-rank-value { color: var(--accent); }
+  .badge-notice {
+    margin-top: 14px; padding: 14px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #f59e0b; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 14px; font-weight: 700; color: #78350f;
+  }
+  .badge-notice strong { color: #d97706; font-size: 20px; }
+  .badge-notice-sub { font-size: 11px; opacity: 0.85; }
+
+  .ranking-table {
+    background: white; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05); margin-bottom: 12px;
+    color: #1f2937;
+  }
+  .ranking-table-title {
+    padding: 12px 18px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white; font-weight: 700; font-size: 14px;
+  }
+  .ranking-row {
+    display: grid; grid-template-columns: 50px 1fr 90px;
+    align-items: center; padding: 10px 18px;
+    border-bottom: 1px solid #f3f4f6; font-size: 13px;
+  }
+  .ranking-row:last-child { border-bottom: none; }
+  .ranking-row.me { background: #fefce8; font-weight: 700; }
+  .ranking-row.empty { grid-template-columns: 1fr; text-align: center; color: var(--muted); padding: 18px; }
+  .ranking-rank { text-align: center; font-weight: 800; color: var(--muted); }
+  .ranking-rank.gold { color: #f59e0b; font-size: 18px; }
+  .ranking-rank.silver { color: #9ca3af; font-size: 18px; }
+  .ranking-rank.bronze { color: #c2410c; font-size: 18px; }
+  .ranking-time { text-align: right; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .ranking-meta { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
+  .controls { text-align: center; }
+  .btn {
+    padding: 11px 24px; border: none; border-radius: 9px;
+    font-size: 14px; font-weight: 700; cursor: pointer; margin: 0 4px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white; box-shadow: 0 4px 12px rgba(45,106,79,0.3);
+  }
+  .btn-ghost { background: white; color: var(--primary); border: 2px solid var(--primary); }
+
+  /* TOP 10 모달 */
+  .wb-top-modal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); z-index: 10010;
+    align-items: center; justify-content: center;
+  }
+  .wb-top-modal.show { display: flex; }
+  .wb-top-box {
+    background: white; border-radius: 18px; padding: 24px;
+    max-width: 460px; width: 92%; max-height: 80vh; overflow-y: auto;
+    position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    animation: wbTopPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: #1f2937;
+  }
+  @keyframes wbTopPop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+  .wb-top-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #f3f4f6; border: none; cursor: pointer; font-size: 18px; color: #6b7280;
+  }
+  .wb-top-title { font-size: 18px; font-weight: 800; color: #1e3a8a; margin-bottom: 14px; text-align: center; }
+  .wb-top-list { display: flex; flex-direction: column; gap: 5px; }
+  .wb-top-item {
+    display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center;
+    padding: 10px 12px; background: #f9fafb; border-radius: 8px; font-size: 13px;
+  }
+  .wb-top-item.me {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #f59e0b; font-weight: 700;
+  }
+  .wb-top-item-rank { text-align: center; font-weight: 800; }
+  .wb-top-item-rank.gold { color: #f59e0b; font-size: 18px; }
+  .wb-top-item-rank.silver { color: #9ca3af; font-size: 18px; }
+  .wb-top-item-rank.bronze { color: #c2410c; font-size: 18px; }
+  .wb-top-item-points { font-weight: 800; color: #1e3a8a; }
+  .wb-top-item-meta { font-size: 11px; color: #6b7280; margin-left: 4px; }
+  .wb-top-my-row {
+    margin-top: 12px; padding: 12px; background: #fef9c3;
+    border-radius: 8px; font-size: 13px; font-weight: 700;
+    text-align: center; color: #78350f;
+  }
+  .wb-top-my-row.empty { display: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="crown">👑</div>
+    <div class="title">전국 문해왕 선발전</div>
+    <div class="subtitle">각 문단의 구조와 문맥을 파악해서 숨겨진 문장을 찾아보세요</div>
+  </div>
+
+  <!-- ───── 뷰 1: 선택 ───── -->
+  <div class="view active" id="selectView">
+    <!-- 시리즈 탭 -->
+    <div class="series-tabs" id="seriesTabs"></div>
+
+    <!-- 권한 없음 영역 -->
+    <div class="no-access" id="noAccessBox" style="display:none;">
+      <div class="no-access-emoji">🔒</div>
+      <div class="no-access-title">아직 부여된 시리즈가 없어요</div>
+      <div class="no-access-msg">학원에서 시리즈를 부여받으면 문해왕 선발전에 참여할 수 있어요.</div>
+    </div>
+
+    <div id="activeArea">
+      <!-- 시리즈별 포디움 -->
+      <div class="wb-podium-card" id="wbPodiumCard" style="display:none;" onclick="openWbTopModal()">
+        <div class="wb-podium-header">
+          <span class="wb-podium-title">🏆 <span id="podiumSeriesLabel">시리즈</span> 종합 순위</span>
+          <span class="wb-podium-link">TOP 10 전체 보기 →</span>
+        </div>
+        <div class="wb-podium-row">
+          <div class="wb-podium-place wb-place-2" id="wbPlace2">
+            <div class="wb-place-medal">🥈</div>
+            <div class="wb-place-name">--</div>
+            <div class="wb-place-points">--</div>
+          </div>
+          <div class="wb-podium-place wb-place-1" id="wbPlace1">
+            <div class="wb-place-medal">🥇</div>
+            <div class="wb-place-name">--</div>
+            <div class="wb-place-points">--</div>
+          </div>
+          <div class="wb-podium-place wb-place-3" id="wbPlace3">
+            <div class="wb-place-medal">🥉</div>
+            <div class="wb-place-name">--</div>
+            <div class="wb-place-points">--</div>
+          </div>
+        </div>
+        <div class="wb-prize-row">
+          <span class="wb-prize-title">🎁 이달의 보상</span>
+          <span class="wb-prize-item"><span>🥇</span>+5,000뱃지 · 챔피언</span>
+          <span class="wb-prize-item"><span>🥈</span>+3,000뱃지 · 준우승</span>
+          <span class="wb-prize-item"><span>🥉</span>+1,500뱃지 · 동상</span>
+        </div>
+        <div class="wb-podium-my" id="wbPodiumMy"></div>
+      </div>
+
+      <!-- 내 통계 -->
+      <div class="hero-stats" id="heroStats">
+        <div class="hero-empty">불러오는 중...</div>
+      </div>
+
+      <!-- 분야/과목/단원 -->
+      <div class="tabs" id="fieldTabs"></div>
+      <div class="tabs" id="subjectTabs"></div>
+      <div class="unit-list" id="unitList">
+        <div class="unit-empty">분야와 과목을 선택해주세요</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── 뷰 2: 게임 ───── -->
+  <div class="view" id="gameView">
+    <div class="game-header">
+      <button class="back-btn" onclick="backToSelect()">← 단원 목록</button>
+      <div>
+        <div class="game-unit" id="gameUnitName">단원명</div>
+        <div class="game-series" id="gameSeriesLabel">시리즈</div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-item">
+        <div class="status-label">⏱ 시간</div>
+        <div class="status-value timer" id="timerEl">0.0</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">⭐ 점수</div>
+        <div class="status-value score" id="scoreEl">0</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">🔥 콤보</div>
+        <div class="status-value combo" id="comboEl">0</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">✓ 완료</div>
+        <div class="status-value progress"><span id="solvedEl">0</span>/4</div>
+      </div>
+    </div>
+    <div class="passage-area" id="passageArea"></div>
+    <div class="card-pool" id="cardPool"></div>
+  </div>
+
+  <!-- ───── 뷰 3: 결과 ───── -->
+  <div class="view" id="resultView">
+    <div class="result-card">
+      <div class="result-emoji" id="resultEmoji">🏆</div>
+      <div class="result-title" id="resultTitle">완료!</div>
+      <div class="result-subtitle" id="resultSub"></div>
+      <div class="result-stats">
+        <div>
+          <div class="result-stat-label">⭐ 점수</div>
+          <div class="result-stat-value" id="finalScore">0</div>
+        </div>
+        <div>
+          <div class="result-stat-label">⏱ 시간</div>
+          <div class="result-stat-value" id="finalTime">0초</div>
+        </div>
+        <div>
+          <div class="result-stat-label">📊 순위</div>
+          <div class="result-stat-value result-rank-value" id="finalRank">--</div>
+        </div>
+      </div>
+      <div class="badge-notice" id="badgeNotice" style="display:none;"></div>
+    </div>
+
+    <div class="ranking-table">
+      <div class="ranking-table-title">🏅 단원 순위 TOP 10</div>
+      <div id="rankingRows"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-ghost" onclick="backToSelect()">📚 다른 단원</button>
+      <button class="btn btn-primary" onclick="startGameAgain()">🔄 다시 도전</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP 10 모달 -->
+<div class="wb-top-modal" id="wbTopModal" onclick="if(event.target===this)closeWbTopModal()">
+  <div class="wb-top-box">
+    <button class="wb-top-close" onclick="closeWbTopModal()">&times;</button>
+    <div class="wb-top-title">🏆 <span id="topSeriesLabel">시리즈</span> 종합 순위 TOP 10</div>
+    <div class="wb-top-list" id="wbTopList"></div>
+    <div class="wb-top-my-row" id="wbTopMyRow"></div>
+  </div>
+</div>
+
+<script>
+  // ───── 메타데이터 ─────
+  const SERIES_LIST = ['on', 'up', 'fit', 'deep'];
+  const SERIES_INFO = {
+    on:   { label: 'BRAIN ON',   tier: '기본문해' },
+    up:   { label: 'BRAIN UP',   tier: '성장문해' },
+    fit:  { label: 'BRAIN FIT',  tier: '확장문해' },
+    deep: { label: 'BRAIN DEEP', tier: '심화문해' }
+  };
+  const FIELDS = [
+    { id: 'science',  label: '🔬 과학',     subjects: ['bio', 'chem', 'earth', 'physics'] },
+    { id: 'social',   label: '🌏 사회',     subjects: ['geo', 'law', 'pol', 'soc'] },
+    { id: 'korlit',   label: '📜 국문학',   subjects: ['classic', 'modern'] },
+    { id: 'worldlit', label: '📚 세계문학', subjects: ['world1', 'world2'] },
+    { id: 'person',   label: '👤 인물',     subjects: ['people1', 'people2'] }
+  ];
+  const SUBJECT_NAMES = {
+    bio: '생물', chem: '화학', earth: '지구과학', physics: '물리',
+    geo: '지리', law: '법', pol: '정치경제', soc: '사회',
+    classic: '고전문학', modern: '현대문학',
+    world1: '세계문학1', world2: '세계문학2',
+    people1: '인물1', people2: '인물2'
+  };
+  const SUBJECT_DIRS = {
+    bio: 'science', chem: 'science', earth: 'science', physics: 'science',
+    geo: 'social', law: 'social', pol: 'social', soc: 'social',
+    classic: 'korlit', modern: 'korlit',
+    world1: 'worldlit', world2: 'worldlit',
+    people1: 'person', people2: 'person'
+  };
+  const SUBJECT_COUNTS = {
+    bio: 24, chem: 24, earth: 24, physics: 24,
+    geo: 24, law: 24, pol: 24, soc: 24,
+    classic: 40, modern: 40,
+    world1: 40, world2: 40,
+    people1: 40, people2: 40
+  };
+
+  // 학원 시리즈 부여 키 매핑 (assignedSeries에서 사용)
+  const SERIES_FROM_NAME = {
+    'BRAIN은': 'on',  'BRAINON': 'on',
+    'BRAIN암': 'up',  'BRAINUP': 'up',
+    'BRAIN빛': 'fit', 'BRAINFIT': 'fit',
+    'BRAIN답': 'deep','BRAINDEEP': 'deep', 'BRAIN심화': 'deep'
+  };
+
+  // ───── 상태 ─────
+  let user = null;
+  let allowedSeries = [];   // 학생이 접근 가능한 시리즈
+  let currentSeries = null;
+  let currentField = null;
+  let currentSubject = null;
+  let currentUnit = null;
+  let currentUnitData = null;
+  let myStats = { on: {}, up: {}, fit: {}, deep: {} };
+  let _overallCache = null;
+
+  // 게임 상태
+  let blanks = [];
+  let cards = [];
+  let score = 0;
+  let combo = 0;
+  let maxCombo = 0;
+  let solved = 0;
+  let startTime = null;
+  let timerInterval = null;
+  const POINTS_CORRECT = 100;
+  const POINTS_WRONG = -30;
+  const TIME_PENALTY_SEC = 3;
+
+  // ───── 초기화 ─────
+  function init() {
+    user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    if (!user.grade || !user.name) {
+      document.body.innerHTML = '<div style="text-align:center;padding:40px;font-size:16px;">로그인이 필요합니다.<br><br>학생 메인에서 접속해주세요.</div>';
+      return;
+    }
+    // 학생 시리즈 부여 매핑
+    const assigned = user.assignedSeries || [];
+    const seriesSet = new Set();
+    assigned.forEach(n => {
+      const code = SERIES_FROM_NAME[n];
+      if (code) seriesSet.add(code);
+    });
+    allowedSeries = SERIES_LIST.filter(s => seriesSet.has(s));
+
+    if (allowedSeries.length === 0) {
+      document.getElementById('seriesTabs').innerHTML = '';
+      document.getElementById('activeArea').style.display = 'none';
+      document.getElementById('noAccessBox').style.display = 'block';
+      return;
+    }
+    renderSeriesTabs();
+    currentSeries = allowedSeries[0];
+    selectSeries(currentSeries);
+  }
+
+  function renderSeriesTabs() {
+    const tabsEl = document.getElementById('seriesTabs');
+    tabsEl.innerHTML = SERIES_LIST.map(s => {
+      const info = SERIES_INFO[s];
+      const enabled = allowedSeries.includes(s);
+      const cls = enabled ? '' : 'disabled';
+      const onclick = enabled ? `selectSeries('${s}')` : '';
+      return `<button class="series-tab ${cls}" data-series="${s}" onclick="${onclick}">
+        ${info.label}<span class="tab-label">${info.tier}</span>
+      </button>`;
+    }).join('');
+  }
+
+  function selectSeries(series) {
+    if (!allowedSeries.includes(series)) return;
+    currentSeries = series;
+    document.querySelectorAll('.series-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.series === series);
+    });
+    document.getElementById('podiumSeriesLabel').textContent = SERIES_INFO[series].label;
+    document.getElementById('topSeriesLabel').textContent = SERIES_INFO[series].label;
+    renderFieldTabs();
+    document.getElementById('unitList').innerHTML = '<div class="unit-empty">분야와 과목을 선택해주세요</div>';
+    fetchMyStats();
+    fetchOverallTop();
+  }
+
+  function renderFieldTabs() {
+    const tabsEl = document.getElementById('fieldTabs');
+    tabsEl.innerHTML = FIELDS.map(f => `
+      <button class="tab-btn" data-field="${f.id}" onclick="selectField('${f.id}')">${f.label}</button>
+    `).join('');
+    document.getElementById('subjectTabs').innerHTML = '';
+  }
+  function selectField(fieldId) {
+    currentField = fieldId;
+    document.querySelectorAll('#fieldTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.field === fieldId));
+    const field = FIELDS.find(f => f.id === fieldId);
+    const tabsEl = document.getElementById('subjectTabs');
+    tabsEl.innerHTML = field.subjects.map(s => `
+      <button class="tab-btn subject" data-subject="${s}" onclick="selectSubject('${s}')">${SUBJECT_NAMES[s]}</button>
+    `).join('');
+    document.getElementById('unitList').innerHTML = '<div class="unit-empty">과목을 선택해주세요</div>';
+    currentSubject = null;
+  }
+  async function selectSubject(subject) {
+    currentSubject = subject;
+    document.querySelectorAll('#subjectTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.subject === subject));
+    const listEl = document.getElementById('unitList');
+    listEl.innerHTML = '<div class="loading">단원 정보를 불러오는 중...</div>';
+    try {
+      await loadSubjectContent(subject);
+      renderUnitList();
+    } catch (e) {
+      listEl.innerHTML = '<div class="unit-empty">단원 정보를 불러올 수 없습니다.</div>';
+      console.error(e);
+    }
+  }
+
+  async function loadSubjectContent(subject) {
+    const dir = SUBJECT_DIRS[subject];
+    const prefix = currentSeries === 'on' ? 'on_' : currentSeries === 'fit' ? 'fit_' : currentSeries === 'deep' ? 'deep_' : '';
+    // 'up' = BRAIN UP은 prefix 없음 (기본 단원)
+    const path = `/BRAINUP/${dir}/${prefix}${subject}_content.js`;
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[data-content-path="${path}"]`);
+      if (existing) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = path;
+      script.setAttribute('data-content-path', path);
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('load failed'));
+      document.head.appendChild(script);
+    });
+  }
+
+  function renderUnitList() {
+    const count = SUBJECT_COUNTS[currentSubject];
+    const listEl = document.getElementById('unitList');
+    const prefix = currentSeries === 'on' ? 'on_' : currentSeries === 'fit' ? 'fit_' : currentSeries === 'deep' ? 'deep_' : '';
+    const rows = [];
+    for (let i = 1; i <= count; i++) {
+      const unitId = `${prefix}${currentSubject}_${String(i).padStart(2, '0')}`;
+      const unit = (window.CONTENTS || {})[unitId];
+      if (!unit) continue;
+      const stat = (myStats[currentSeries] || {})[unitId];
+      let statusHtml = '<div class="unit-status">⚪ 미도전</div>';
+      let medalHtml = '<div></div>';
+      if (stat) {
+        let rankIcon = '', rankClass = '';
+        if (stat.rank === 1) { rankIcon = '🥇'; rankClass = 'gold'; }
+        else if (stat.rank === 2) { rankIcon = '🥈'; rankClass = 'silver'; }
+        else if (stat.rank === 3) { rankIcon = '🥉'; rankClass = 'bronze'; }
+        else { rankIcon = `${stat.rank}위`; }
+        medalHtml = `<div class="unit-medal ${rankClass}">${rankIcon}</div>`;
+        statusHtml = `<div class="unit-status played">✅ ${stat.rank}/${stat.total}명 · ${stat.bestScore}점 · ${stat.bestTime.toFixed(1)}초</div>`;
+      }
+      rows.push(`
+        <div class="unit-item" onclick="startGame('${unitId}')">
+          <div class="unit-num">${String(i).padStart(2, '0')}</div>
+          <div class="unit-title">${unit.title || unitId}</div>
+          ${statusHtml}
+          ${medalHtml}
+        </div>
+      `);
+    }
+    listEl.innerHTML = rows.join('') || '<div class="unit-empty">단원이 없습니다.</div>';
+  }
+
+  // ───── 통계/순위 ─────
+  async function fetchMyStats() {
+    try {
+      const res = await fetch(`/api/literacy-king/my-stats?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+      const data = await res.json();
+      if (!data.ok) return;
+      myStats = data.stats || { on: {}, up: {}, fit: {}, deep: {} };
+      renderHeroStats(data.overview && data.overview[currentSeries]);
+      if (currentSubject) renderUnitList();
+    } catch (err) { console.error(err); }
+  }
+  function renderHeroStats(ov) {
+    const el = document.getElementById('heroStats');
+    if (!ov || ov.unitsAttempted === 0) {
+      el.innerHTML = `<div class="hero-empty">🎯 첫 도전을 기다리고 있어요! 단원을 선택해서 시작해보세요</div>`;
+      return;
+    }
+    const { medalCounts, unitsAttempted, totalPoints, overallRank, totalStudents } = ov;
+    const rankDisplay = overallRank
+      ? `<span class="hero-rank-num">${overallRank}위</span> <span class="hero-rank-total">/ ${totalStudents}명</span>`
+      : `<span class="hero-rank-total">참여 학생 ${totalStudents}명</span>`;
+    el.innerHTML = `
+      <div class="hero-rank-row">
+        <div class="hero-rank"><span class="hero-rank-label">🏆 종합</span> ${rankDisplay}</div>
+        <div class="hero-points">⭐ ${totalPoints.toLocaleString()}점</div>
+      </div>
+      <div class="hero-medals">
+        <div class="medal-card"><div class="medal-icon-big">🥇</div><div class="medal-count-big">${medalCounts.gold}</div><div class="medal-label-small">1위</div></div>
+        <div class="medal-card"><div class="medal-icon-big">🥈</div><div class="medal-count-big">${medalCounts.silver}</div><div class="medal-label-small">2위</div></div>
+        <div class="medal-card"><div class="medal-icon-big">🥉</div><div class="medal-count-big">${medalCounts.bronze}</div><div class="medal-label-small">3위</div></div>
+        <div class="medal-card"><div class="medal-icon-big">📚</div><div class="medal-count-big">${unitsAttempted}</div><div class="medal-label-small">도전 단원</div></div>
+      </div>
+    `;
+  }
+
+  async function fetchOverallTop() {
+    try {
+      const res = await fetch(`/api/literacy-king/overall-ranking?series=${encodeURIComponent(currentSeries)}&grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+      const data = await res.json();
+      if (!data.ok) return;
+      _overallCache = data;
+      renderPodium(data);
+    } catch (err) { console.error(err); }
+  }
+  function maskName(n) { return n && n.length >= 2 ? n.charAt(0) + '○' + n.slice(-1) : (n || ''); }
+  function renderPodium(data) {
+    const card = document.getElementById('wbPodiumCard');
+    if (!data.topRanking || data.topRanking.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+    const top = data.topRanking;
+    function applyPlace(elId, idx) {
+      const el = document.getElementById(elId);
+      const item = top[idx];
+      if (!item) {
+        el.classList.add('empty');
+        el.querySelector('.wb-place-name').textContent = '미참여';
+        el.querySelector('.wb-place-points').textContent = '0점';
+        return;
+      }
+      el.classList.remove('empty');
+      const isMe = item.grade === user.grade && item.name === user.name;
+      el.querySelector('.wb-place-name').textContent = isMe ? item.name + ' (나)' : maskName(item.name);
+      el.querySelector('.wb-place-points').textContent = item.totalPoints.toLocaleString() + '점';
+    }
+    applyPlace('wbPlace1', 0); applyPlace('wbPlace2', 1); applyPlace('wbPlace3', 2);
+
+    const myEl = document.getElementById('wbPodiumMy');
+    if (data.myRank) {
+      const nextIdx = data.myRank - 2;
+      const nextTarget = nextIdx >= 0 ? top[nextIdx] : null;
+      const gap = nextTarget ? nextTarget.totalPoints - data.myPoints : 0;
+      myEl.innerHTML = `🏅 내 순위 <span style="color:#b45309;font-size:15px;">${data.myRank}위</span> / ${data.totalStudents}명 · ⭐ ${data.myPoints.toLocaleString()}점`
+        + (gap > 0 ? ` · <span style="opacity:0.8;">${data.myRank - 1}위까지 ${gap.toLocaleString()}점!</span>` : '');
+    } else {
+      myEl.innerHTML = '🎯 아직 도전 전이에요!';
+    }
+    card.style.display = 'block';
+  }
+
+  function openWbTopModal() {
+    const data = _overallCache;
+    if (!data) return;
+    const listEl = document.getElementById('wbTopList');
+    const myRowEl = document.getElementById('wbTopMyRow');
+    listEl.innerHTML = data.topRanking.map((item, idx) => {
+      const rank = idx + 1;
+      let cls = '', html;
+      if (rank === 1) { cls = 'gold'; html = '🥇'; }
+      else if (rank === 2) { cls = 'silver'; html = '🥈'; }
+      else if (rank === 3) { cls = 'bronze'; html = '🥉'; }
+      else html = `${rank}위`;
+      const isMe = item.grade === user.grade && item.name === user.name;
+      const displayName = isMe ? item.name : maskName(item.name);
+      return `<div class="wb-top-item ${isMe ? 'me' : ''}">
+        <div class="wb-top-item-rank ${cls}">${html}</div>
+        <div><strong>${item.grade}</strong> ${displayName}${item.academyName ? `<span class="wb-top-item-meta">${item.academyName}</span>` : ''}</div>
+        <div class="wb-top-item-points">⭐ ${item.totalPoints.toLocaleString()}</div>
+      </div>`;
+    }).join('');
+    if (data.myRank && data.myRank > 10) {
+      myRowEl.innerHTML = `👉 내 순위: <strong>${data.myRank}위</strong> / ${data.totalStudents}명 · ⭐ ${data.myPoints.toLocaleString()}점`;
+      myRowEl.classList.remove('empty');
+    } else { myRowEl.classList.add('empty'); myRowEl.innerHTML = ''; }
+    document.getElementById('wbTopModal').classList.add('show');
+  }
+  function closeWbTopModal() { document.getElementById('wbTopModal').classList.remove('show'); }
+  window.openWbTopModal = openWbTopModal;
+  window.closeWbTopModal = closeWbTopModal;
+
+  // ───── 게임 시작 ─────
+  function startGame(unitId) {
+    currentUnit = unitId;
+    const unit = (window.CONTENTS || {})[unitId];
+    if (!unit || !Array.isArray(unit.passage) || unit.passage.length < 2) {
+      alert('이 단원은 아직 지문 데이터가 부족해요.');
+      return;
+    }
+    // 지문 → 문장 배열로 분할
+    currentUnitData = {
+      unitId,
+      title: unit.title || unitId,
+      paragraphs: unit.passage.map(p => splitSentences(stripTags(p)))
+    };
+    if (currentUnitData.paragraphs.length < 4) {
+      alert('이 단원은 4문단 미만이라 게임 진행이 어려워요.');
+      return;
+    }
+    document.getElementById('gameUnitName').textContent = unit.title || unitId;
+    document.getElementById('gameSeriesLabel').textContent = SERIES_INFO[currentSeries].label + ' · ' + (FIELDS.find(f => f.id === currentField)?.label || '');
+    switchView('gameView');
+    newGame();
+  }
+  function startGameAgain() {
+    if (!currentUnit) { backToSelect(); return; }
+    startGame(currentUnit);
+  }
+  function stripTags(s) { return s.replace(/<[^>]+>/g, ''); }
+  function splitSentences(text) {
+    // 마침표/물음표/느낌표 기준 분할
+    return text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+  }
+
+  function newGame() {
+    score = 0; combo = 0; maxCombo = 0; solved = 0;
+    startTime = Date.now();
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 50);
+    document.getElementById('scoreEl').textContent = 0;
+    document.getElementById('comboEl').textContent = 0;
+    document.getElementById('solvedEl').textContent = 0;
+    blanks = generateBlanks([]);
+    renderAll();
+  }
+  function updateTimer() {
+    document.getElementById('timerEl').textContent = ((Date.now() - startTime) / 1000).toFixed(1);
+  }
+  function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
+
+  function pickBlank(pIdx, excludeSet) {
+    const sentences = currentUnitData.paragraphs[pIdx];
+    const candidates = sentences
+      .map((s, i) => ({ s, i }))
+      .filter(({ s, i }) => i > 0 && s.length >= 16 && !excludeSet.has(`${pIdx}|${i}`));
+    if (candidates.length === 0) {
+      const fallback = sentences.map((s, i) => ({ s, i })).filter(({ i }) => i > 0);
+      if (fallback.length === 0) return { i: 0, s: sentences[0] };
+      return fallback[Math.floor(Math.random() * fallback.length)];
+    }
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+  function generateBlanks(locked) {
+    const result = [];
+    const lockedSet = new Set(locked.map(b => `${b.pIdx}|${b.sIdx}`));
+    for (let p = 0; p < 4; p++) {
+      const exist = locked.find(b => b.pIdx === p);
+      if (exist) { result.push({ ...exist }); }
+      else {
+        const { i } = pickBlank(p, lockedSet);
+        result.push({ pIdx: p, sIdx: i, locked: false });
+      }
+    }
+    return result;
+  }
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function renderAll() { renderPassage(); renderCards(); }
+  function renderPassage() {
+    const area = document.getElementById('passageArea');
+    area.innerHTML = '';
+    currentUnitData.paragraphs.forEach((sentences, pIdx) => {
+      const pEl = document.createElement('div');
+      pEl.className = 'paragraph';
+      const blank = blanks.find(b => b.pIdx === pIdx);
+      sentences.forEach((sentence, sIdx) => {
+        if (blank && blank.sIdx === sIdx) {
+          const slot = document.createElement('span');
+          slot.className = 'blank-slot' + (blank.locked ? ' filled' : '');
+          slot.dataset.p = pIdx;
+          slot.dataset.s = sIdx;
+          if (blank.locked) {
+            slot.innerHTML = `<span class="blank-slot-num">${pIdx + 1}</span>${sentence}`;
+          } else {
+            slot.innerHTML = `<span class="blank-slot-num">${pIdx + 1}</span>여기에 문장을 끌어다 놓으세요`;
+            slot.addEventListener('dragover', (e) => { e.preventDefault(); slot.classList.add('drag-over'); });
+            slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+            slot.addEventListener('drop', (e) => onDrop(e, pIdx, sIdx, slot));
+          }
+          pEl.appendChild(slot);
+        } else {
+          const txt = document.createElement('span');
+          txt.className = 'sentence-text';
+          txt.textContent = sentence + ' ';
+          pEl.appendChild(txt);
+        }
+      });
+      area.appendChild(pEl);
+    });
+  }
+  function renderCards() {
+    const pool = document.getElementById('cardPool');
+    pool.innerHTML = '<div class="card-pool-label">⬇️ 아래 문장을 위 빈칸으로 끌어 놓으세요</div>';
+    cards = shuffle(blanks.filter(b => !b.locked).map(b => ({
+      pIdx: b.pIdx, sIdx: b.sIdx,
+      sentence: currentUnitData.paragraphs[b.pIdx][b.sIdx]
+    })));
+    cards.forEach((card, idx) => {
+      const c = document.createElement('div');
+      c.className = 'sentence-card';
+      c.draggable = true;
+      c.textContent = card.sentence;
+      c.dataset.cardIdx = idx;
+      c.addEventListener('dragstart', (e) => {
+        c.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', idx);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      c.addEventListener('dragend', () => c.classList.remove('dragging'));
+      pool.appendChild(c);
+    });
+  }
+  function onDrop(e, p, s, slot) {
+    e.preventDefault();
+    slot.classList.remove('drag-over');
+    const cardIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    const card = cards[cardIdx];
+    if (!card) return;
+    const correct = card.pIdx === p && card.sIdx === s;
+    const rect = slot.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    if (correct) {
+      const idx = blanks.findIndex(b => b.pIdx === p && b.sIdx === s);
+      if (idx >= 0) blanks[idx].locked = true;
+      solved++;
+      score += POINTS_CORRECT;
+      combo++;
+      if (combo > maxCombo) maxCombo = combo;
+      updateScoreUI(); bumpCombo();
+      document.getElementById('solvedEl').textContent = solved;
+      showScorePopup(cx, cy, '+' + POINTS_CORRECT, 'positive');
+      fireMatchConfetti(cx, cy);
+      setTimeout(() => {
+        if (solved === 4) finishGame();
+        else renderAll();
+      }, 600);
+    } else {
+      score = Math.max(0, score + POINTS_WRONG);
+      combo = 0;
+      startTime -= TIME_PENALTY_SEC * 1000;
+      updateScoreUI();
+      document.getElementById('comboEl').textContent = 0;
+      showScorePopup(cx, cy, POINTS_WRONG.toString(), 'negative');
+      slot.classList.add('shake');
+      showToast('❌ 오답! 미해결 빈칸이 새로 바뀝니다');
+      setTimeout(() => {
+        const lockedOnly = blanks.filter(b => b.locked);
+        blanks = generateBlanks(lockedOnly);
+        renderAll();
+      }, 700);
+    }
+  }
+
+  async function finishGame() {
+    stopTimer();
+    const elapsed = (Date.now() - startTime) / 1000;
+    // 서버 저장
+    let badgesAwarded = 0, totalAwardedForUnit = 0, isNewBest = false;
+    try {
+      const res = await fetch('/api/literacy-king/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          grade: user.grade, name: user.name,
+          academyName: user.academyName || '',
+          series: currentSeries, unitId: currentUnit,
+          unitTitle: currentUnitData.title,
+          score, time: elapsed, maxCombo
+        })
+      });
+      const data = await res.json();
+      isNewBest = !!data.isNewBest;
+      badgesAwarded = data.badgesAwarded || 0;
+      totalAwardedForUnit = data.totalAwardedForUnit || 0;
+    } catch (err) { console.error(err); }
+
+    // 순위 재조회
+    let ranking = [], myRank = null;
+    try {
+      const r = await fetch(`/api/literacy-king/ranking?series=${currentSeries}&unit=${encodeURIComponent(currentUnit)}`).then(x => x.json());
+      ranking = r.ranking || [];
+      const idx = ranking.findIndex(row => row.grade === user.grade && row.name === user.name);
+      if (idx >= 0) myRank = { rank: idx + 1, total: ranking.length };
+    } catch (err) { console.error(err); }
+
+    fireFinishConfetti();
+    setTimeout(() => {
+      renderResultView(elapsed, isNewBest, myRank, ranking, badgesAwarded, totalAwardedForUnit);
+      switchView('resultView');
+      fetchMyStats(); fetchOverallTop();
+    }, 600);
+  }
+  function renderResultView(elapsed, isNewBest, myRank, ranking, badges, total) {
+    document.getElementById('resultSub').textContent = SERIES_INFO[currentSeries].label + ' · ' + currentUnitData.title;
+    document.getElementById('finalScore').textContent = score.toLocaleString();
+    document.getElementById('finalTime').textContent = elapsed.toFixed(1) + '초';
+    document.getElementById('finalRank').textContent = myRank ? `${myRank.rank}위 / ${myRank.total}명` : '--';
+
+    let emoji = '🎉', title = '완료!';
+    if (maxCombo === 4 && elapsed < 60) { emoji = '👑'; title = '문해왕 등극!'; }
+    else if (maxCombo === 4) { emoji = '🏆'; title = '완벽한 정답!'; }
+    else if (score >= 300) { emoji = '🎉'; title = '잘했어요!'; }
+    else { emoji = '💪'; title = '다시 도전!'; }
+    document.getElementById('resultEmoji').textContent = emoji;
+    document.getElementById('resultTitle').textContent = title;
+
+    const badgeEl = document.getElementById('badgeNotice');
+    if (badges > 0) {
+      badgeEl.innerHTML = `<span style="font-size:30px;">🐋</span>고래뱃지 <strong>+${badges}개</strong> 획득! <span class="badge-notice-sub">이 단원 누적 ${total}점</span>`;
+      badgeEl.style.display = 'flex';
+    } else if (total > 0) {
+      badgeEl.innerHTML = `<span style="font-size:30px;">🐋</span>이 단원 최대 뱃지 보유 (${total}개) <span class="badge-notice-sub">더 빠르게/정확하게 도전하세요!</span>`;
+      badgeEl.style.display = 'flex';
+    } else { badgeEl.style.display = 'none'; }
+
+    const rowsEl = document.getElementById('rankingRows');
+    if (ranking.length === 0) {
+      rowsEl.innerHTML = '<div class="ranking-row empty">아직 기록이 없어요!</div>';
+    } else {
+      rowsEl.innerHTML = ranking.slice(0, 10).map((row, idx) => {
+        const isMe = row.grade === user.grade && row.name === user.name;
+        const rank = idx + 1;
+        let html;
+        if (rank === 1) html = '<span class="ranking-rank gold">🥇</span>';
+        else if (rank === 2) html = '<span class="ranking-rank silver">🥈</span>';
+        else if (rank === 3) html = '<span class="ranking-rank bronze">🥉</span>';
+        else html = `<span class="ranking-rank">${rank}위</span>`;
+        const nm = isMe ? row.name : maskName(row.name);
+        return `<div class="ranking-row ${isMe ? 'me' : ''}">
+          ${html}
+          <div><strong>${row.grade}</strong> ${nm}${row.academyName ? `<span class="ranking-meta">${row.academyName}</span>` : ''}</div>
+          <div class="ranking-time">${row.bestScore}점 · ${row.bestTime.toFixed(1)}초</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  function switchView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+  }
+  function backToSelect() {
+    switchView('selectView');
+    stopTimer();
+  }
+  window.canGoBack = function() {
+    return !document.getElementById('selectView').classList.contains('active');
+  };
+  window.goBack = backToSelect;
+
+  // ───── 헬퍼 ─────
+  function updateScoreUI() { document.getElementById('scoreEl').textContent = score.toLocaleString(); }
+  function bumpCombo() {
+    const el = document.getElementById('comboEl');
+    el.textContent = combo;
+    el.classList.add('bump');
+    setTimeout(() => el.classList.remove('bump'), 250);
+  }
+  function showScorePopup(x, y, t, type) {
+    const p = document.createElement('div');
+    p.className = 'score-popup ' + type;
+    p.style.left = x + 'px'; p.style.top = y + 'px';
+    p.textContent = t;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1000);
+  }
+  function showToast(t) {
+    const e = document.createElement('div');
+    e.className = 'toast';
+    e.textContent = t;
+    document.body.appendChild(e);
+    setTimeout(() => e.remove(), 2000);
+  }
+
+  function fireMatchConfetti(cx, cy) {
+    if (typeof confetti === 'undefined') return;
+    const colors = ['#fbbf24', '#f59e0b', '#10b981', '#52b788', '#fb7185'];
+    const x = cx / window.innerWidth, y = cy / window.innerHeight;
+    confetti({ particleCount: 60, spread: 360, startVelocity: 30, origin: { x, y }, colors, shapes: ['square', 'circle'], scalar: 0.9 });
+    setTimeout(() => {
+      confetti({ particleCount: 20, spread: 360, startVelocity: 22, origin: { x, y }, colors: ['#fbbf24', '#fde047'], shapes: ['star'], scalar: 1.4 });
+    }, 80);
+  }
+  function fireFinishConfetti() {
+    if (typeof confetti === 'undefined') return;
+    const duration = 2500;
+    const animationEnd = Date.now() + duration;
+    const colors = ['#10b981', '#fbbf24', '#f59e0b', '#fb7185', '#a855f7', '#3b82f6'];
+    const interval = setInterval(() => {
+      const t = animationEnd - Date.now();
+      if (t <= 0) return clearInterval(interval);
+      const c = 50 * (t / duration);
+      confetti({ particleCount: c, angle: 60, spread: 70, origin: { x: 0, y: 0.8 }, colors, startVelocity: 60 });
+      confetti({ particleCount: c, angle: 120, spread: 70, origin: { x: 1, y: 0.8 }, colors, startVelocity: 60 });
+    }, 200);
+    setTimeout(() => {
+      confetti({ particleCount: 150, spread: 360, startVelocity: 45, origin: { x: 0.5, y: 0.5 }, colors, shapes: ['square', 'circle', 'star'], scalar: 1.3 });
+    }, 100);
+  }
+
+  init();
+</script>
+</body>
+</html>

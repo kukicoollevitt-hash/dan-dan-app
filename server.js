@@ -292,6 +292,8 @@ const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
 const WordBattleRecord = require("./models/WordBattleRecord");
 const WordBattleChampion = require("./models/WordBattleChampion");
+const LiteracyKingRecord = require("./models/LiteracyKingRecord");
+const LiteracyKingChampion = require("./models/LiteracyKingChampion");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
 const BookOrder = require("./models/BookOrder");
 const TextbookOrder = require("./models/TextbookOrder");
@@ -29365,6 +29367,383 @@ app.get('/api/word-battle/last-champions', async (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
+
+// ============================================
+// 👑 전국 문해왕 선발전 API (시리즈별 별도 경쟁)
+// ============================================
+
+const LK_SERIES_LIST = ['on', 'up', 'fit', 'deep'];
+const LK_SERIES_LABEL = { on: 'BRAIN ON', up: 'BRAIN UP', fit: 'BRAIN FIT', deep: 'BRAIN DEEP' };
+
+// 결과 저장 — 시리즈별 best 점수 갱신 + 등수 향상 시 뱃지 지급
+app.post('/api/literacy-king/save', async (req, res) => {
+  try {
+    const { grade, name, academyName, series, unitId, unitTitle, score, time, maxCombo } = req.body;
+    if (!grade || !name || !series || !unitId || typeof score !== 'number') {
+      return res.status(400).json({ ok: false, message: '필수 정보가 누락되었습니다.' });
+    }
+    if (!LK_SERIES_LIST.includes(series)) {
+      return res.status(400).json({ ok: false, message: '잘못된 시리즈입니다.' });
+    }
+    const currentMonth = getCurrentMonthKey();
+
+    const existing = await LiteracyKingRecord.findOne({ grade, name, unitId });
+    let isNewBest = false;
+    let previousAwarded = 0;
+    let finalScore, finalTime;
+
+    if (!existing) {
+      await LiteracyKingRecord.create({
+        grade, name,
+        academyName: academyName || '',
+        series, unitId,
+        unitTitle: unitTitle || '',
+        bestScore: score,
+        bestTime: time || 0,
+        maxCombo: maxCombo || 0,
+        attemptCount: 1,
+        awardedPoints: 0,
+        monthKey: currentMonth,
+        lastPlayedAt: new Date()
+      });
+      finalScore = score; finalTime = time || 0;
+      isNewBest = true;
+    } else {
+      const monthChanged = existing.monthKey !== currentMonth;
+      previousAwarded = monthChanged ? 0 : (existing.awardedPoints || 0);
+      const update = {
+        $inc: { attemptCount: 1 },
+        $set: { lastPlayedAt: new Date(), monthKey: currentMonth }
+      };
+      if (monthChanged) update.$set.awardedPoints = 0;
+      const betterScore = score > existing.bestScore;
+      const sameScoreFasterTime = score === existing.bestScore && time < existing.bestTime;
+      if (betterScore || sameScoreFasterTime) {
+        update.$set.bestScore = score;
+        update.$set.bestTime = time || 0;
+        if (unitTitle) update.$set.unitTitle = unitTitle;
+        if (academyName) update.$set.academyName = academyName;
+        if (typeof maxCombo === 'number' && maxCombo > (existing.maxCombo || 0)) update.$set.maxCombo = maxCombo;
+        isNewBest = true;
+        finalScore = score; finalTime = time || 0;
+      } else {
+        finalScore = existing.bestScore; finalTime = existing.bestTime;
+      }
+      await LiteracyKingRecord.updateOne({ _id: existing._id }, update);
+    }
+
+    // 갱신된 best 기준 시리즈 내 등수 계산
+    const betterCount = await LiteracyKingRecord.countDocuments({
+      series, unitId,
+      $or: [
+        { bestScore: { $gt: finalScore } },
+        { bestScore: finalScore, bestTime: { $lt: finalTime } }
+      ]
+    });
+    const currentRank = betterCount + 1;
+    const currentPoints = (function(r){
+      if (r === 1) return 100;
+      if (r === 2) return 70;
+      if (r === 3) return 50;
+      if (r <= 10) return 30;
+      return 10;
+    })(currentRank);
+
+    // 정책 C — 누적 최대 포인트가 늘어났을 때만 차액 뱃지 지급
+    let badgesAwarded = 0;
+    if (currentPoints > previousAwarded) {
+      badgesAwarded = currentPoints - previousAwarded;
+      await Promise.all([
+        LiteracyKingRecord.updateOne(
+          { grade, name, unitId },
+          { $set: { awardedPoints: currentPoints } }
+        ),
+        UserProgress.updateOne(
+          { grade, name },
+          {
+            $inc: { 'vocabularyQuiz.totalCoins': badgesAwarded },
+            $set: { 'vocabularyQuiz.lastRankUpdate': new Date() }
+          },
+          { upsert: true }
+        )
+      ]);
+      console.log(`🐋 [문해왕] ${grade} ${name} ${series}/${unitId} 등수 ${currentRank}위 → +${badgesAwarded}뱃지`);
+    }
+
+    res.json({
+      ok: true, isNewBest, currentRank, currentPoints, badgesAwarded,
+      totalAwardedForUnit: Math.max(currentPoints, previousAwarded)
+    });
+  } catch (err) {
+    console.error('문해왕 저장 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 시리즈+단원별 순위 TOP 100 (점수 ↓, 시간 ↑)
+app.get('/api/literacy-king/ranking', async (req, res) => {
+  try {
+    const { series, unit } = req.query;
+    if (!series || !unit) return res.status(400).json({ ok: false, message: 'series, unit 필요' });
+    const ranking = await LiteracyKingRecord.find({ series, unitId: unit })
+      .sort({ bestScore: -1, bestTime: 1 })
+      .limit(100)
+      .lean();
+    res.json({ ok: true, ranking });
+  } catch (err) {
+    console.error('문해왕 순위 조회 오류:', err);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 내 통계 (시리즈별 단원 stats + 시리즈별 종합 순위·포인트·메달)
+app.get('/api/literacy-king/my-stats', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+
+    const allRecords = await LiteracyKingRecord.find({}, { grade: 1, name: 1, series: 1, unitId: 1, bestScore: 1, bestTime: 1 }).lean();
+
+    // 시리즈+단원 그룹화
+    const groups = {};
+    for (const r of allRecords) {
+      const k = `${r.series}|${r.unitId}`;
+      (groups[k] = groups[k] || []).push(r);
+    }
+
+    // 시리즈별 학생 포인트 합산용
+    const seriesStudentPoints = {}; // series -> { "grade|name": points }
+    const stats = { on: {}, up: {}, fit: {}, deep: {} }; // 내 단원별 stats
+
+    for (const k in groups) {
+      const [series, unitId] = k.split('|');
+      const sorted = groups[k].sort((a, b) => (b.bestScore - a.bestScore) || (a.bestTime - b.bestTime));
+      sorted.forEach((rec, idx) => {
+        const rank = idx + 1;
+        const points = rankToPoints(rank);
+        const sk = `${rec.grade}|${rec.name}`;
+        seriesStudentPoints[series] = seriesStudentPoints[series] || {};
+        seriesStudentPoints[series][sk] = (seriesStudentPoints[series][sk] || 0) + points;
+        if (rec.grade === grade && rec.name === name) {
+          stats[series][unitId] = {
+            bestScore: rec.bestScore,
+            bestTime: rec.bestTime,
+            rank, total: sorted.length, points
+          };
+        }
+      });
+    }
+
+    // 시리즈별 종합 순위 계산 (내 위치)
+    const overview = {};
+    for (const series of LK_SERIES_LIST) {
+      const pts = seriesStudentPoints[series] || {};
+      const sorted = Object.entries(pts).sort((a, b) => b[1] - a[1]);
+      const myKey = `${grade}|${name}`;
+      const idx = sorted.findIndex(([k]) => k === myKey);
+      const myUnits = stats[series];
+      let gold = 0, silver = 0, bronze = 0, other = 0;
+      for (const u in myUnits) {
+        const r = myUnits[u].rank;
+        if (r === 1) gold++;
+        else if (r === 2) silver++;
+        else if (r === 3) bronze++;
+        else other++;
+      }
+      overview[series] = {
+        medalCounts: { gold, silver, bronze, other },
+        unitsAttempted: Object.keys(myUnits).length,
+        totalPoints: pts[myKey] || 0,
+        overallRank: idx >= 0 ? idx + 1 : null,
+        totalStudents: sorted.length
+      };
+    }
+    res.json({ ok: true, stats, overview });
+  } catch (err) {
+    console.error('문해왕 내 기록 조회 오류:', err);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 시리즈별 종합 순위 TOP 10
+app.get('/api/literacy-king/overall-ranking', async (req, res) => {
+  try {
+    const { series, grade, name } = req.query;
+    if (!series || !LK_SERIES_LIST.includes(series)) {
+      return res.status(400).json({ ok: false, message: 'series 필요' });
+    }
+    const records = await LiteracyKingRecord.find({ series }, { grade: 1, name: 1, academyName: 1, unitId: 1, bestScore: 1, bestTime: 1 }).lean();
+
+    const unitGroups = {};
+    for (const r of records) {
+      (unitGroups[r.unitId] = unitGroups[r.unitId] || []).push(r);
+    }
+    const studentPoints = {};
+    const studentMeta = {};
+    for (const unitId in unitGroups) {
+      const sorted = unitGroups[unitId].sort((a, b) => (b.bestScore - a.bestScore) || (a.bestTime - b.bestTime));
+      sorted.forEach((rec, idx) => {
+        const rank = idx + 1;
+        const points = rankToPoints(rank);
+        const key = `${rec.grade}|${rec.name}`;
+        studentPoints[key] = (studentPoints[key] || 0) + points;
+        if (!studentMeta[key]) studentMeta[key] = { grade: rec.grade, name: rec.name, academyName: rec.academyName || '' };
+      });
+    }
+    const sorted = Object.entries(studentPoints)
+      .map(([k, p]) => ({ ...studentMeta[k], totalPoints: p }))
+      .sort((a, b) => b.totalPoints - a.totalPoints);
+    const topRanking = sorted.slice(0, 10);
+    let myRank = null, myPoints = 0;
+    if (grade && name) {
+      const idx = sorted.findIndex(s => s.grade === grade && s.name === name);
+      myRank = idx >= 0 ? idx + 1 : null;
+      myPoints = studentPoints[`${grade}|${name}`] || 0;
+    }
+    res.json({ ok: true, series, topRanking, myRank, myPoints, totalStudents: sorted.length });
+  } catch (err) {
+    console.error('문해왕 종합 순위 오류:', err);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 슈퍼관리자 — 시리즈별 학생 목록
+app.get('/api/super/literacy-king/students', requireSuperAdmin, async (req, res) => {
+  try {
+    const records = await LiteracyKingRecord.find(
+      {},
+      { grade: 1, name: 1, academyName: 1, series: 1, unitId: 1, bestScore: 1, bestTime: 1, lastPlayedAt: 1 }
+    ).lean();
+
+    // 시리즈+단원별 그룹화 → 등수
+    const unitRank = {}; // series|unit|grade|name -> rank
+    const seriesGroups = {};
+    for (const r of records) {
+      const k = `${r.series}|${r.unitId}`;
+      (seriesGroups[k] = seriesGroups[k] || []).push(r);
+    }
+    for (const k in seriesGroups) {
+      const sorted = seriesGroups[k].sort((a, b) => (b.bestScore - a.bestScore) || (a.bestTime - b.bestTime));
+      sorted.forEach((rec, idx) => {
+        unitRank[`${rec.series}|${rec.unitId}|${rec.grade}|${rec.name}`] = idx + 1;
+      });
+    }
+
+    // 학생 + 시리즈별 집계
+    const studentMap = {};
+    for (const r of records) {
+      const key = `${r.grade}|${r.name}|${r.series}`;
+      if (!studentMap[key]) {
+        studentMap[key] = {
+          grade: r.grade, name: r.name, academyName: r.academyName || '',
+          series: r.series, seriesLabel: LK_SERIES_LABEL[r.series],
+          totalPoints: 0, unitCount: 0,
+          medalCounts: { gold: 0, silver: 0, bronze: 0, other: 0 },
+          lastPlayedAt: r.lastPlayedAt
+        };
+      }
+      const s = studentMap[key];
+      const rank = unitRank[`${r.series}|${r.unitId}|${r.grade}|${r.name}`];
+      s.totalPoints += rankToPoints(rank);
+      s.unitCount += 1;
+      if (rank === 1) s.medalCounts.gold++;
+      else if (rank === 2) s.medalCounts.silver++;
+      else if (rank === 3) s.medalCounts.bronze++;
+      else s.medalCounts.other++;
+      if (!s.lastPlayedAt || (r.lastPlayedAt && r.lastPlayedAt > s.lastPlayedAt)) s.lastPlayedAt = r.lastPlayedAt;
+    }
+    const students = Object.values(studentMap).sort((a, b) => {
+      // 시리즈별로 묶고 점수 내림차순
+      if (a.series !== b.series) return LK_SERIES_LIST.indexOf(a.series) - LK_SERIES_LIST.indexOf(b.series);
+      return b.totalPoints - a.totalPoints;
+    });
+    // 시리즈별 순위 부여
+    const rankBySeries = {};
+    students.forEach(s => {
+      rankBySeries[s.series] = (rankBySeries[s.series] || 0) + 1;
+      s.rank = rankBySeries[s.series];
+    });
+    res.json({ ok: true, students, totalCount: students.length });
+  } catch (err) {
+    console.error('문해왕 슈퍼관리자 학생 목록 오류:', err);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 지난 달 시리즈별 챔피언 조회
+app.get('/api/literacy-king/last-champions', async (req, res) => {
+  try {
+    const latest = await LiteracyKingChampion.findOne({}).sort({ monthKey: -1 }).lean();
+    if (!latest) return res.json({ ok: true, monthKey: null, champions: [] });
+    const champions = await LiteracyKingChampion.find({ monthKey: latest.monthKey }).sort({ series: 1, rank: 1 }).lean();
+    res.json({ ok: true, monthKey: latest.monthKey, champions });
+  } catch (err) {
+    console.error('문해왕 지난 달 챔피언 오류:', err);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 월별 챔피언 정산 + 리셋 (시리즈별 TOP 3 각각)
+async function runLiteracyKingMonthlyDistribution() {
+  try {
+    const now = new Date();
+    const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    kst.setUTCDate(0);
+    const lastMonth = `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}`;
+    console.log(`👑 [문해왕] 월별 정산 시작 — 대상: ${lastMonth}`);
+
+    const REWARD = [
+      { rank: 1, title: '챔피언', badges: 5000 },
+      { rank: 2, title: '준우승', badges: 3000 },
+      { rank: 3, title: '동상',   badges: 1500 }
+    ];
+
+    // 시리즈별 종합 순위 계산
+    for (const series of LK_SERIES_LIST) {
+      const records = await LiteracyKingRecord.find(
+        { monthKey: lastMonth, series },
+        { grade: 1, name: 1, academyName: 1, unitId: 1, bestScore: 1, bestTime: 1, awardedPoints: 1 }
+      ).lean();
+      const studentPoints = {};
+      const studentMeta = {};
+      for (const r of records) {
+        const key = `${r.grade}|${r.name}`;
+        studentPoints[key] = (studentPoints[key] || 0) + (r.awardedPoints || 0);
+        if (!studentMeta[key]) studentMeta[key] = { grade: r.grade, name: r.name, academyName: r.academyName || '' };
+      }
+      const sorted = Object.entries(studentPoints)
+        .map(([k, p]) => ({ ...studentMeta[k], totalPoints: p }))
+        .sort((a, b) => b.totalPoints - a.totalPoints);
+
+      for (const rw of REWARD) {
+        const winner = sorted[rw.rank - 1];
+        if (!winner) continue;
+        await LiteracyKingChampion.create({
+          monthKey: lastMonth, series, rank: rw.rank, title: rw.title,
+          grade: winner.grade, name: winner.name, academyName: winner.academyName,
+          totalPoints: winner.totalPoints, bonusBadges: rw.badges
+        });
+        await UserProgress.updateOne(
+          { grade: winner.grade, name: winner.name },
+          { $inc: { 'vocabularyQuiz.totalCoins': rw.badges } },
+          { upsert: true }
+        );
+        console.log(`  👑 [${LK_SERIES_LABEL[series]}] ${rw.rank}위 ${rw.title} ${winner.grade} ${winner.name} (${winner.totalPoints}점) → +${rw.badges}뱃지`);
+      }
+    }
+
+    // 새 달 시작 — 모든 awardedPoints 리셋
+    const newMonth = getCurrentMonthKey();
+    const result = await LiteracyKingRecord.updateMany(
+      {}, { $set: { awardedPoints: 0, monthKey: newMonth } }
+    );
+    console.log(`✅ [문해왕] 월별 정산 완료. ${result.modifiedCount}개 기록 리셋 → 새 월 ${newMonth}`);
+  } catch (err) {
+    console.error('❌ [문해왕] 월별 정산 오류:', err);
+  }
+}
+cron.schedule('0 0 1 * *', runLiteracyKingMonthlyDistribution, { timezone: 'Asia/Seoul' });
+console.log('✅ 문해왕 월별 챔피언 정산 스케줄러 등록 (매월 1일 00:00 KST)');
 
 console.log('✅ 독서 감상문 월간 리셋 스케줄러 등록 완료 (매월 1일 0시 실행)');
 
