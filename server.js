@@ -29462,9 +29462,9 @@ app.post('/api/literacy-king/save', async (req, res) => {
     const currentRank = betterCount + 1;
     const currentPoints = (function(r){
       if (r === 1) return 100;
-      if (r === 2) return 70;
-      if (r === 3) return 50;
-      if (r <= 10) return 30;
+      if (r === 2) return 50;
+      if (r === 3) return 30;
+      if (r <= 10) return 20;
       return 10;
     })(currentRank);
 
@@ -37322,9 +37322,9 @@ app.post('/api/word-battle/save', async (req, res) => {
     const currentRank = betterCount + 1;
     const currentPoints = (function(r){
       if (r === 1) return 100;
-      if (r === 2) return 70;
-      if (r === 3) return 50;
-      if (r <= 10) return 30;
+      if (r === 2) return 50;
+      if (r === 3) return 30;
+      if (r <= 10) return 20;
       return 10;
     })(currentRank);
 
@@ -37440,12 +37440,12 @@ app.get('/api/word-battle/ranking', async (req, res) => {
   }
 });
 
-// 등수 → 포인트 환산
+// 등수 → 포인트 환산 (1→2 격차 -50, 추격 강화)
 function rankToPoints(rank) {
   if (rank === 1) return 100;
-  if (rank === 2) return 70;
-  if (rank === 3) return 50;
-  if (rank <= 10) return 30;
+  if (rank === 2) return 50;
+  if (rank === 3) return 30;
+  if (rank <= 10) return 20;
   return 10;
 }
 
