@@ -305,7 +305,9 @@ const wordBattleDailySchema = new mongoose.Schema({
 wordBattleDailySchema.index({ grade: 1, name: 1, dayKey: 1 }, { unique: true });
 const WordBattleDaily = mongoose.model('WordBattleDaily', wordBattleDailySchema);
 
-const WB_DAILY_CAP = 6000;
+// 누적 랭킹 점수 상한 (월 단위 — awardedPoints 합산 기준)
+// 매월 1일 cron 으로 awardedPoints 가 0으로 리셋되므로 자동으로 월별 리셋
+const WB_CUMULATIVE_CAP = 5000;
 function getKstDayKey(d) {
   const t = d || new Date();
   const kst = new Date(t.getTime() + 9 * 3600 * 1000);
@@ -37328,19 +37330,19 @@ app.post('/api/word-battle/save', async (req, res) => {
       return 10;
     })(currentRank);
 
-    // 일일 캡 체크 — 오늘 누적 랭킹 점수가 WB_DAILY_CAP 도달 시 추가 점수 적립 X
-    const dayKey = getKstDayKey();
-    let daily = await WordBattleDaily.findOne({ grade, name, dayKey });
-    if (!daily) {
-      daily = await WordBattleDaily.create({ grade, name, dayKey, rankingPoints: 0, attempts: 0 });
-    }
+    // 누적 캡 체크 — 학생의 이번 달 누적 랭킹 점수 합이 WB_CUMULATIVE_CAP 도달 시 추가 점수 미적립
+    const allRecords = await WordBattleRecord.find(
+      { grade, name },
+      { unitId: 1, awardedPoints: 1 }
+    ).lean();
+    const cumulative = allRecords.reduce((s, r) => s + (r.awardedPoints || 0), 0);
 
     // 정책 C — 단원당 최대 부여 포인트가 늘어났을 때만 차액 지급
-    // + 일일 캡 적용: 캡 도달 후엔 차액을 0으로 (bestTime은 갱신, 포인트만 미적립)
+    // + 누적 캡 적용: 캡 도달 후엔 추가 점수 미적립 (bestTime은 갱신)
     let badgesAwarded = 0;
     const potentialDelta = Math.max(0, currentPoints - previousAwarded);
-    const dailyRemaining = Math.max(0, WB_DAILY_CAP - daily.rankingPoints);
-    const effectiveDelta = Math.min(potentialDelta, dailyRemaining);
+    const cumulativeRemaining = Math.max(0, WB_CUMULATIVE_CAP - cumulative);
+    const effectiveDelta = Math.min(potentialDelta, cumulativeRemaining);
     const capReached = potentialDelta > 0 && effectiveDelta < potentialDelta;
 
     if (effectiveDelta > 0) {
@@ -37357,28 +37359,14 @@ app.post('/api/word-battle/save', async (req, res) => {
             $set: { 'vocabularyQuiz.lastRankUpdate': new Date() }
           },
           { upsert: true }
-        ),
-        WordBattleDaily.updateOne(
-          { _id: daily._id },
-          {
-            $inc: { rankingPoints: effectiveDelta, attempts: 1 },
-            $set: { lastPlayedAt: new Date() }
-          }
         )
       ]);
-      console.log(`🐋 [word-battle] ${grade} ${name} ${unitId} 등수 ${currentRank}위 → +${badgesAwarded}뱃지 (일일 ${daily.rankingPoints + effectiveDelta}/${WB_DAILY_CAP})`);
-    } else {
-      // 캡 도달 또는 등수 향상 없음 — 시도 횟수만 카운트
-      await WordBattleDaily.updateOne(
-        { _id: daily._id },
-        { $inc: { attempts: 1 }, $set: { lastPlayedAt: new Date() } }
-      );
-      if (capReached) {
-        console.log(`🚧 [word-battle] ${grade} ${name} 일일 캡 도달 — 추가 ${potentialDelta}점 미적립`);
-      }
+      console.log(`🐋 [word-battle] ${grade} ${name} ${unitId} 등수 ${currentRank}위 → +${badgesAwarded}뱃지 (누적 ${cumulative + effectiveDelta}/${WB_CUMULATIVE_CAP})`);
+    } else if (capReached) {
+      console.log(`🚧 [word-battle] ${grade} ${name} 누적 캡 도달 — 추가 ${potentialDelta}점 미적립 (현재 ${cumulative}/${WB_CUMULATIVE_CAP})`);
     }
 
-    const newDailyPoints = daily.rankingPoints + effectiveDelta;
+    const newCumulative = cumulative + effectiveDelta;
     res.json({
       ok: true,
       isNewBest,
@@ -37387,11 +37375,11 @@ app.post('/api/word-battle/save', async (req, res) => {
       badgesAwarded,
       totalAwardedForUnit: Math.max(currentPoints, previousAwarded),
       daily: {
-        rankingPoints: newDailyPoints,
-        cap: WB_DAILY_CAP,
-        remaining: Math.max(0, WB_DAILY_CAP - newDailyPoints),
-        capReached: newDailyPoints >= WB_DAILY_CAP,
-        dayKey
+        rankingPoints: newCumulative,
+        cap: WB_CUMULATIVE_CAP,
+        remaining: Math.max(0, WB_CUMULATIVE_CAP - newCumulative),
+        capReached: newCumulative >= WB_CUMULATIVE_CAP,
+        type: 'cumulative'
       }
     });
   } catch (err) {
@@ -37400,24 +37388,27 @@ app.post('/api/word-battle/save', async (req, res) => {
   }
 });
 
-// 일일 캡 상태 조회 — 게임 시작 전 캡 도달 여부 확인
+// 누적 캡 상태 조회 — 게임 시작 전 캡 도달 여부 확인
+// (구 엔드포인트명 daily-status 유지 — 프론트엔드 호환)
 app.get('/api/word-battle/daily-status', async (req, res) => {
   try {
     const { grade, name } = req.query;
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
-    const dayKey = getKstDayKey();
-    const daily = await WordBattleDaily.findOne({ grade, name, dayKey }).lean();
-    const points = daily ? daily.rankingPoints : 0;
+    const allRecords = await WordBattleRecord.find(
+      { grade, name },
+      { awardedPoints: 1 }
+    ).lean();
+    const cumulative = allRecords.reduce((s, r) => s + (r.awardedPoints || 0), 0);
     res.json({
       ok: true,
-      dayKey,
-      rankingPoints: points,
-      cap: WB_DAILY_CAP,
-      remaining: Math.max(0, WB_DAILY_CAP - points),
-      capReached: points >= WB_DAILY_CAP
+      rankingPoints: cumulative,
+      cap: WB_CUMULATIVE_CAP,
+      remaining: Math.max(0, WB_CUMULATIVE_CAP - cumulative),
+      capReached: cumulative >= WB_CUMULATIVE_CAP,
+      type: 'cumulative'
     });
   } catch (err) {
-    console.error('단어배틀 일일 상태 조회 오류:', err);
+    console.error('단어배틀 누적 상태 조회 오류:', err);
     res.status(500).json({ ok: false, message: '서버 오류' });
   }
 });
