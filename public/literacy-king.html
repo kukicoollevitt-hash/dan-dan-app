@@ -399,19 +399,20 @@
   .game-series { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
   .status-bar {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-    background: white; border-radius: 12px; padding: 12px 16px;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    background: white; border-radius: 12px; padding: 10px 12px;
     margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     color: #1f2937;
   }
-  .status-item { text-align: center; }
-  .status-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
-  .status-value { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .status-item { text-align: center; min-width: 0; }
+  .status-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; white-space: nowrap; }
+  .status-value { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .status-value.timer { color: var(--accent); }
   .status-value.score { color: var(--success); }
   .status-value.combo { color: var(--error); transition: transform 0.2s; }
   .status-value.combo.bump { transform: scale(1.4); }
-  .status-value.progress { color: var(--primary); font-size: 16px; }
+  .status-value.progress { color: var(--primary); font-size: 15px; }
+  .status-value.total { color: #d97706; font-size: 15px; }  /* 🏆 총점 — 골드 */
 
   .passage-area {
     background: white; border-radius: 12px;
@@ -517,6 +518,48 @@
     0% { opacity: 0; transform: translate(-50%, -20px); }
     15%, 85% { opacity: 1; transform: translate(-50%, 0); }
     100% { opacity: 0; transform: translate(-50%, -20px); }
+  }
+
+  /* 오답 후 3초 성찰 오버레이 (카드풀만 가림) */
+  .lk-reflect-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+    border-radius: 12px;
+    animation: lkReflectFade 0.2s ease-out;
+  }
+  .lk-reflect-box {
+    background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
+    border-radius: 16px;
+    padding: 22px 30px;
+    text-align: center;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+    border: 2px solid #fbbf24;
+    animation: lkReflectIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-width: 90%;
+  }
+  .lk-reflect-msg {
+    font-size: 15px; font-weight: 700;
+    color: #78350f;
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+  }
+  .lk-reflect-count {
+    font-size: 44px; font-weight: 900;
+    color: #d97706;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-shadow: 0 2px 0 rgba(217, 119, 6, 0.15);
+  }
+  @keyframes lkReflectFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes lkReflectIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   /* 결과 뷰 */
@@ -721,6 +764,10 @@
         <div class="status-label">✓ 완료</div>
         <div class="status-value progress"><span id="solvedEl">0</span>/4</div>
       </div>
+      <div class="status-item">
+        <div class="status-label">🏆 총점</div>
+        <div class="status-value total" id="totalPointsEl">0</div>
+      </div>
     </div>
     <div class="passage-area" id="passageArea"></div>
     <div class="card-pool" id="cardPool"></div>
@@ -835,11 +882,14 @@
   let combo = 0;
   let maxCombo = 0;
   let solved = 0;
+  let wrongCount = 0;
+  let displayTotalPoints = 0;   // 🏆 총점 — status-bar 시각 표시용 (오답 -30 즉시 반영)
   let startTime = null;
   let timerInterval = null;
   const POINTS_CORRECT = 100;
   const POINTS_WRONG = -30;
   const TIME_PENALTY_SEC = 3;
+  const REFLECT_SECONDS = [3, 5, 7, 9, 12]; // 누적 오답에 따른 성찰 시간(초). 5회 이후 12초 캡
 
   // ───── 초기화 ─────
   function init() {
@@ -864,6 +914,14 @@
       return;
     }
     renderSeriesTabs();
+
+    // 🔗 URL 파라미터 딥링크 지원 (?series=on&unit=on_bio_01) — 7/1 오픈 전 테스트용
+    const _urlParams = new URLSearchParams(location.search);
+    const _urlSeries = _urlParams.get('series');
+    const _urlUnit = _urlParams.get('unit');
+    if (_urlSeries && _urlUnit) {
+      sessionStorage.setItem('lk_deeplink', JSON.stringify({ series: _urlSeries, unitId: _urlUnit }));
+    }
 
     // 🔗 sessionStorage 딥링크 처리 (메뉴 단원 카드에서 진입 → 바로 게임 시작)
     const dlRaw = sessionStorage.getItem('lk_deeplink');
@@ -1014,6 +1072,9 @@
       const data = await res.json();
       if (!data.ok) return;
       myStats = data.stats || { on: {}, up: {}, fit: {}, deep: {} };
+      // 🏆 총점(status-bar) 시드값 — 시리즈 종합 누적 포인트
+      displayTotalPoints = (data.overview && data.overview[currentSeries] && data.overview[currentSeries].totalPoints) || 0;
+      updateTotalPointsUI();
       renderHeroStats(data.overview && data.overview[currentSeries]);
       if (currentSubject) renderUnitList();
     } catch (err) { console.error(err); }
@@ -1152,15 +1213,20 @@
   }
 
   function newGame() {
-    score = 0; combo = 0; maxCombo = 0; solved = 0;
+    score = 0; combo = 0; maxCombo = 0; solved = 0; wrongCount = 0;
     startTime = Date.now();
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(updateTimer, 50);
     document.getElementById('scoreEl').textContent = 0;
     document.getElementById('comboEl').textContent = 0;
     document.getElementById('solvedEl').textContent = 0;
+    updateTotalPointsUI();
     blanks = generateBlanks([]);
     renderAll();
+  }
+  function updateTotalPointsUI() {
+    const el = document.getElementById('totalPointsEl');
+    if (el) el.textContent = displayTotalPoints.toLocaleString();
   }
   function updateTimer() {
     document.getElementById('timerEl').textContent = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -1288,13 +1354,55 @@
       document.getElementById('comboEl').textContent = 0;
       showScorePopup(cx, cy, POINTS_WRONG.toString(), 'negative');
       slot.classList.add('shake');
-      showToast('❌ 오답! 미해결 빈칸이 새로 바뀝니다');
-      setTimeout(() => {
+      showToast('❌ 오답!');
+      // 🏆 총점에서도 즉시 -30점 (0 이하 안 내려감)
+      displayTotalPoints = Math.max(0, displayTotalPoints - 30);
+      updateTotalPointsUI();
+      // 누적 오답에 따른 점진적 성찰 시간 (3 → 5 → 7 → 9 → 12초 캡)
+      wrongCount++;
+      const reflectSec = REFLECT_SECONDS[Math.min(wrongCount - 1, REFLECT_SECONDS.length - 1)];
+      showReflectionOverlay(reflectSec, () => {
         const lockedOnly = blanks.filter(b => b.locked);
         blanks = generateBlanks(lockedOnly);
         renderAll();
-      }, 700);
+      });
     }
+  }
+
+  // 오답 후 카드풀 위에 N초 카운트다운 오버레이 띄우기
+  function showReflectionOverlay(seconds, onDone) {
+    const pool = document.getElementById('cardPool');
+    if (!pool) { if (onDone) onDone(); return; }
+    // 부모가 absolute 컨테이너가 되도록
+    if (getComputedStyle(pool).position === 'static') {
+      pool.style.position = 'relative';
+    }
+    const existing = document.getElementById('lkReflectOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'lkReflectOverlay';
+    overlay.className = 'lk-reflect-overlay';
+    overlay.innerHTML = `
+      <div class="lk-reflect-box">
+        <div class="lk-reflect-msg">📖 한 번 더 신중히 지문을 읽어보세요</div>
+        <div class="lk-reflect-count" id="lkReflectCount">${seconds}</div>
+      </div>
+    `;
+    pool.appendChild(overlay);
+
+    let n = seconds;
+    const tick = setInterval(() => {
+      n--;
+      if (n > 0) {
+        const el = document.getElementById('lkReflectCount');
+        if (el) el.textContent = n;
+      } else {
+        clearInterval(tick);
+        overlay.remove();
+        if (onDone) onDone();
+      }
+    }, 1000);
   }
 
   async function finishGame() {

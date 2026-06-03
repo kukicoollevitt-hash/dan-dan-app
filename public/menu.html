@@ -18089,6 +18089,13 @@ async function performLogout() {
           displayTitle = convertedTitle;
         }
 
+        // 👑 문해왕 선발전 배지 — 일반 과제 + 유효한 단원 ID 형식만 노출
+        const showLkBadge = !task.isAI && /^(on_|fit_|deep_)?[a-z]+\d*_\d{2}$/.test(unitCode);
+        const lkSeriesCode = unitCode.startsWith('on_') ? 'on'
+                           : unitCode.startsWith('fit_') ? 'fit'
+                           : unitCode.startsWith('deep_') ? 'deep'
+                           : 'up';
+
         li.innerHTML = `
           <div class="study-room-item-left">
             <div class="study-room-item-title">
@@ -18100,14 +18107,40 @@ async function performLogout() {
           <div class="study-room-item-right">
             ${stars ? `<span class="unit-stars">${stars}</span>` : ''}
             <span class="status-badge ${badgeClass}">${badgeText}</span>
+            ${showLkBadge
+              ? `<button class="lk-challenge-badge" data-lk-unit="${unitCode}" data-lk-series="${lkSeriesCode}" title="전국 문해왕 선발전 도전">👑 선발전</button>`
+              : ''}
             <button class="trash-btn" data-task-id="${task.id || task.unitId || task.taskId}" title="삭제">🗑️</button>
           </div>
         `;
+
+        // 👑 문해왕 선발전 배지 클릭 — KST 7/1 기준 자동 분기
+        const lkBadge = li.querySelector('.lk-challenge-badge');
+        if (lkBadge) {
+          lkBadge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const series = lkBadge.dataset.lkSeries;
+            const unitId = lkBadge.dataset.lkUnit;
+            // 학습실 모달 먼저 닫고 영상 팝업 띄움
+            closeStudyRoomModal();
+            setTimeout(() => {
+              if (typeof isLkLaunched === 'function' && isLkLaunched()) {
+                openLiteracyKingIntro({ series, unitId });
+              } else {
+                openLiteracyKing();
+              }
+            }, 200);
+          });
+        }
 
         // 과제 클릭 시 학습 페이지 열기
         li.addEventListener('click', (e) => {
           // 휴지통 버튼 클릭 시에는 열리지 않도록
           if (e.target.classList.contains('trash-btn') || e.target.closest('.trash-btn')) {
+            return;
+          }
+          // 👑 문해왕 선발전 배지 클릭 시에는 단원 열기 방지
+          if (e.target.classList.contains('lk-challenge-badge')) {
             return;
           }
           // 학습실 모달 먼저 닫기
@@ -18133,6 +18166,9 @@ async function performLogout() {
           showAdminPasswordModal(taskId);
         });
       });
+
+      // 👑 문해왕 선발전 — 학습실 일반 과제 배지의 도전 이력 라벨 갱신
+      if (typeof updateLkChallengeBadges === 'function') updateLkChallengeBadges();
     }
 
     // 과제 추가
@@ -31169,7 +31205,17 @@ ${content}
 
     // ===== 전국 문해왕 선발전 — 오픈 일자 + 진입 분기 =====
     const LK_LAUNCH = new Date('2026-07-01T00:00:00+09:00');
-    function isLkLaunched() { return new Date() >= LK_LAUNCH; }
+    // 얼리 액세스 화이트리스트 — 오픈 전이라도 이 학생들은 바로 진입 가능
+    const LK_EARLY_ACCESS = [
+      { grade: '초6', name: '나교재' }
+    ];
+    function isLkLaunched() {
+      if (new Date() >= LK_LAUNCH) return true;
+      try {
+        const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+        return LK_EARLY_ACCESS.some(e => e.grade === u.grade && e.name === u.name);
+      } catch { return false; }
+    }
 
     // 오픈 후 인트로 영상 팝업 → "도전하기" 버튼 또는 영상 종료 → 게임 진입
     //   opts = { series, unitId } (단원 카드 진입) | undefined (이벤트 메뉴 진입 → 메인 페이지)
@@ -31255,7 +31301,8 @@ ${content}
       const startBtn = document.createElement('button');
       startBtn.innerHTML = '👑 도전하기';
       startBtn.style.cssText = `
-        margin-top: 18px;
+        display: block;
+        margin: 18px auto 0;
         background: linear-gradient(135deg, #fbbf24, #d4af37);
         color: #1e1b4b;
         padding: 12px 32px;
@@ -31360,6 +31407,7 @@ ${content}
       video.controls = true;
       video.autoplay = true;
       video.muted = true;
+      video.loop = true;
       video.setAttribute('playsinline', '');
       video.style.cssText = `
         width: 100%; max-height: 56vh;
