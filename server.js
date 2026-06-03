@@ -293,11 +293,11 @@ const SpeedVocabKing = require("./models/SpeedVocabKing");
 const WordBattleRecord = require("./models/WordBattleRecord");
 const WordBattleChampion = require("./models/WordBattleChampion");
 
-// 단어월드컵 일일 랭킹 점수 누적 (KST 0시 리셋)
+// 단어월드컵 일일 랭킹 점수 누적 (구버전 — 호환 위해 유지)
 const wordBattleDailySchema = new mongoose.Schema({
   grade: { type: String, required: true },
   name: { type: String, required: true },
-  dayKey: { type: String, required: true },  // 'YYYY-MM-DD' KST
+  dayKey: { type: String, required: true },
   rankingPoints: { type: Number, default: 0 },
   attempts: { type: Number, default: 0 },
   lastPlayedAt: { type: Date, default: Date.now }
@@ -305,9 +305,21 @@ const wordBattleDailySchema = new mongoose.Schema({
 wordBattleDailySchema.index({ grade: 1, name: 1, dayKey: 1 }, { unique: true });
 const WordBattleDaily = mongoose.model('WordBattleDaily', wordBattleDailySchema);
 
-// 누적 랭킹 점수 상한 (월 단위 — awardedPoints 합산 기준)
-// 매월 1일 cron 으로 awardedPoints 가 0으로 리셋되므로 자동으로 월별 리셋
+// 누적 점수 캡 상태 — 학생별로 effectiveCapTarget(현재 상한) + cappedAt(차단 시작) 트래킹
+// 캡 도달 시 24시간 차단, 24시간 경과 후 자동으로 +5000 추가 도전 허용
+const wordBattleCapStateSchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  effectiveCapTarget: { type: Number, default: 5000 },  // 현재 적용되는 누적 상한
+  cappedAt: { type: Date, default: null },              // 차단 시작 시각 (null이면 차단 X)
+  updatedAt: { type: Date, default: Date.now }
+});
+wordBattleCapStateSchema.index({ grade: 1, name: 1 }, { unique: true });
+const WordBattleCapState = mongoose.model('WordBattleCapState', wordBattleCapStateSchema);
+
+// 누적 랭킹 점수 상한 + 차단 시간
 const WB_CUMULATIVE_CAP = 5000;
+const WB_BLOCK_DURATION_MS = 24 * 60 * 60 * 1000;  // 24시간
 function getKstDayKey(d) {
   const t = d || new Date();
   const kst = new Date(t.getTime() + 9 * 3600 * 1000);
@@ -37330,20 +37342,40 @@ app.post('/api/word-battle/save', async (req, res) => {
       return 10;
     })(currentRank);
 
-    // 누적 캡 체크 — 학생의 이번 달 누적 랭킹 점수 합이 WB_CUMULATIVE_CAP 도달 시 추가 점수 미적립
+    // 누적 캡 체크 (24시간 차단형) — 학생의 awardedPoints 합산 + 캡 상태 트래킹
     const allRecords = await WordBattleRecord.find(
       { grade, name },
       { unitId: 1, awardedPoints: 1 }
     ).lean();
     const cumulative = allRecords.reduce((s, r) => s + (r.awardedPoints || 0), 0);
 
-    // 정책 C — 단원당 최대 부여 포인트가 늘어났을 때만 차액 지급
-    // + 누적 캡 적용: 캡 도달 후엔 추가 점수 미적립 (bestTime은 갱신)
+    // 캡 상태 조회 (없으면 기본값 — 상한 5000)
+    let capState = await WordBattleCapState.findOne({ grade, name });
+    if (!capState) {
+      capState = await WordBattleCapState.create({
+        grade, name,
+        effectiveCapTarget: WB_CUMULATIVE_CAP
+      });
+    }
+
+    // 차단 만료 체크: 24h 경과 시 상한을 (현재 누적 + 5000) 으로 갱신 + 차단 해제
+    const now = Date.now();
+    if (capState.cappedAt && (now - capState.cappedAt.getTime() >= WB_BLOCK_DURATION_MS)) {
+      capState.effectiveCapTarget = cumulative + WB_CUMULATIVE_CAP;
+      capState.cappedAt = null;
+      capState.updatedAt = new Date();
+      await capState.save();
+      console.log(`🔓 [word-battle] ${grade} ${name} 24h 경과 — 새 상한 ${capState.effectiveCapTarget}`);
+    }
+
+    // 차단 중이면 점수 적립 X (bestTime 만 갱신)
+    const isBlocked = capState.cappedAt && (now - capState.cappedAt.getTime() < WB_BLOCK_DURATION_MS);
+
     let badgesAwarded = 0;
     const potentialDelta = Math.max(0, currentPoints - previousAwarded);
-    const cumulativeRemaining = Math.max(0, WB_CUMULATIVE_CAP - cumulative);
-    const effectiveDelta = Math.min(potentialDelta, cumulativeRemaining);
-    const capReached = potentialDelta > 0 && effectiveDelta < potentialDelta;
+    const targetRemaining = Math.max(0, capState.effectiveCapTarget - cumulative);
+    const effectiveDelta = isBlocked ? 0 : Math.min(potentialDelta, targetRemaining);
+    const justHitCap = !isBlocked && potentialDelta > 0 && effectiveDelta < potentialDelta;
 
     if (effectiveDelta > 0) {
       badgesAwarded = effectiveDelta;
@@ -37361,12 +37393,25 @@ app.post('/api/word-battle/save', async (req, res) => {
           { upsert: true }
         )
       ]);
-      console.log(`🐋 [word-battle] ${grade} ${name} ${unitId} 등수 ${currentRank}위 → +${badgesAwarded}뱃지 (누적 ${cumulative + effectiveDelta}/${WB_CUMULATIVE_CAP})`);
-    } else if (capReached) {
-      console.log(`🚧 [word-battle] ${grade} ${name} 누적 캡 도달 — 추가 ${potentialDelta}점 미적립 (현재 ${cumulative}/${WB_CUMULATIVE_CAP})`);
+      console.log(`🐋 [word-battle] ${grade} ${name} ${unitId} 등수 ${currentRank}위 → +${badgesAwarded}뱃지 (누적 ${cumulative + effectiveDelta}/${capState.effectiveCapTarget})`);
+    } else if (isBlocked) {
+      console.log(`🚧 [word-battle] ${grade} ${name} 24h 차단 중 — 점수 미적립 (현재 ${cumulative})`);
     }
 
     const newCumulative = cumulative + effectiveDelta;
+
+    // 캡 도달 시 차단 시작 (첫 도달 + 이전 차단 만료 후 재도달 모두 포함)
+    if (justHitCap || (newCumulative >= capState.effectiveCapTarget && !capState.cappedAt)) {
+      capState.cappedAt = new Date();
+      capState.updatedAt = new Date();
+      await capState.save();
+      console.log(`🚧 [word-battle] ${grade} ${name} 캡 도달 — 24h 차단 시작`);
+    }
+
+    // 응답: 캡 상태
+    const capReachedNow = !!(capState.cappedAt && (now - capState.cappedAt.getTime() < WB_BLOCK_DURATION_MS));
+    const unlockAt = capState.cappedAt ? new Date(capState.cappedAt.getTime() + WB_BLOCK_DURATION_MS) : null;
+
     res.json({
       ok: true,
       isNewBest,
@@ -37376,10 +37421,11 @@ app.post('/api/word-battle/save', async (req, res) => {
       totalAwardedForUnit: Math.max(currentPoints, previousAwarded),
       daily: {
         rankingPoints: newCumulative,
-        cap: WB_CUMULATIVE_CAP,
-        remaining: Math.max(0, WB_CUMULATIVE_CAP - newCumulative),
-        capReached: newCumulative >= WB_CUMULATIVE_CAP,
-        type: 'cumulative'
+        cap: capState.effectiveCapTarget,
+        remaining: Math.max(0, capState.effectiveCapTarget - newCumulative),
+        capReached: capReachedNow,
+        unlockAt,
+        type: 'cumulative-24h'
       }
     });
   } catch (err) {
@@ -37388,24 +37434,52 @@ app.post('/api/word-battle/save', async (req, res) => {
   }
 });
 
-// 누적 캡 상태 조회 — 게임 시작 전 캡 도달 여부 확인
-// (구 엔드포인트명 daily-status 유지 — 프론트엔드 호환)
+// 누적 캡 상태 조회 (24h 차단형) — 게임 시작 전 캡 도달 여부 확인
 app.get('/api/word-battle/daily-status', async (req, res) => {
   try {
     const { grade, name } = req.query;
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+
     const allRecords = await WordBattleRecord.find(
       { grade, name },
       { awardedPoints: 1 }
     ).lean();
     const cumulative = allRecords.reduce((s, r) => s + (r.awardedPoints || 0), 0);
+
+    let capState = await WordBattleCapState.findOne({ grade, name });
+    if (!capState) {
+      // 캡 상태 없음 + 누적이 이미 상한 초과면 즉시 차단 (정유진 케이스)
+      if (cumulative >= WB_CUMULATIVE_CAP) {
+        capState = await WordBattleCapState.create({
+          grade, name,
+          effectiveCapTarget: WB_CUMULATIVE_CAP,
+          cappedAt: new Date()
+        });
+      } else {
+        capState = { effectiveCapTarget: WB_CUMULATIVE_CAP, cappedAt: null };
+      }
+    }
+
+    const now = Date.now();
+    // 24h 경과 자동 해제
+    if (capState.cappedAt && (now - capState.cappedAt.getTime() >= WB_BLOCK_DURATION_MS)) {
+      capState.effectiveCapTarget = cumulative + WB_CUMULATIVE_CAP;
+      capState.cappedAt = null;
+      capState.updatedAt = new Date();
+      if (typeof capState.save === 'function') await capState.save();
+    }
+
+    const blocked = !!(capState.cappedAt && (now - capState.cappedAt.getTime() < WB_BLOCK_DURATION_MS));
+    const unlockAt = capState.cappedAt ? new Date(capState.cappedAt.getTime() + WB_BLOCK_DURATION_MS) : null;
+
     res.json({
       ok: true,
       rankingPoints: cumulative,
-      cap: WB_CUMULATIVE_CAP,
-      remaining: Math.max(0, WB_CUMULATIVE_CAP - cumulative),
-      capReached: cumulative >= WB_CUMULATIVE_CAP,
-      type: 'cumulative'
+      cap: capState.effectiveCapTarget,
+      remaining: Math.max(0, capState.effectiveCapTarget - cumulative),
+      capReached: blocked,
+      unlockAt,
+      type: 'cumulative-24h'
     });
   } catch (err) {
     console.error('단어배틀 누적 상태 조회 오류:', err);
