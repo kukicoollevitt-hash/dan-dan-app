@@ -29520,15 +29520,17 @@ app.get('/api/literacy-king/my-stats', async (req, res) => {
       const sorted = groups[k].sort((a, b) => (b.bestScore - a.bestScore) || (a.bestTime - b.bestTime));
       sorted.forEach((rec, idx) => {
         const rank = idx + 1;
-        const points = rankToPoints(rank);
         const sk = `${rec.grade}|${rec.name}`;
+        // 단원 기여 = bestScore + 순위 보너스(rankToPoints)
+        const unitContribution = (rec.bestScore || 0) + rankToPoints(rank);
         seriesStudentPoints[series] = seriesStudentPoints[series] || {};
-        seriesStudentPoints[series][sk] = (seriesStudentPoints[series][sk] || 0) + points;
+        seriesStudentPoints[series][sk] = (seriesStudentPoints[series][sk] || 0) + unitContribution;
         if (rec.grade === grade && rec.name === name) {
           stats[series][unitId] = {
             bestScore: rec.bestScore,
             bestTime: rec.bestTime,
-            rank, total: sorted.length, points
+            rank, total: sorted.length,
+            points: unitContribution  // 단원 기여 점수 = bestScore + 순위 보너스
           };
         }
       });
@@ -29584,9 +29586,9 @@ app.get('/api/literacy-king/overall-ranking', async (req, res) => {
       const sorted = unitGroups[unitId].sort((a, b) => (b.bestScore - a.bestScore) || (a.bestTime - b.bestTime));
       sorted.forEach((rec, idx) => {
         const rank = idx + 1;
-        const points = rankToPoints(rank);
         const key = `${rec.grade}|${rec.name}`;
-        studentPoints[key] = (studentPoints[key] || 0) + points;
+        // 단원 기여 = bestScore + 순위 보너스(rankToPoints)
+        studentPoints[key] = (studentPoints[key] || 0) + (rec.bestScore || 0) + rankToPoints(rank);
         if (!studentMeta[key]) studentMeta[key] = { grade: rec.grade, name: rec.name, academyName: rec.academyName || '' };
       });
     }
@@ -29644,7 +29646,8 @@ app.get('/api/super/literacy-king/students', requireSuperAdmin, async (req, res)
       }
       const s = studentMap[key];
       const rank = unitRank[`${r.series}|${r.unitId}|${r.grade}|${r.name}`];
-      s.totalPoints += rankToPoints(rank);
+      // 단원 기여 = bestScore + 순위 보너스(rankToPoints)
+      s.totalPoints += (r.bestScore || 0) + rankToPoints(rank);
       s.unitCount += 1;
       if (rank === 1) s.medalCounts.gold++;
       else if (rank === 2) s.medalCounts.silver++;
