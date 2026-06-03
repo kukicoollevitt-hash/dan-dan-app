@@ -981,6 +981,7 @@
     document.getElementById('unitList').innerHTML = '<div class="unit-empty">분야와 과목을 선택해주세요</div>';
     fetchMyStats();
     fetchOverallTop();
+    fetchLkDailyStatus();
   }
 
   function renderFieldTabs() {
@@ -1075,14 +1076,20 @@
       // 🏆 총점(status-bar) 시드값 — 시리즈 종합 누적 포인트
       displayTotalPoints = (data.overview && data.overview[currentSeries] && data.overview[currentSeries].totalPoints) || 0;
       updateTotalPointsUI();
-      renderHeroStats(data.overview && data.overview[currentSeries]);
+      _lkMyOverview = data.overview && data.overview[currentSeries];
+      renderHeroStats(_lkMyOverview);
       if (currentSubject) renderUnitList();
     } catch (err) { console.error(err); }
   }
   function renderHeroStats(ov) {
     const el = document.getElementById('heroStats');
+    // 도전 횟수 배지
+    const att = _lkDaily?.attempts ?? 0;
+    const attCap = _lkDaily?.attemptsCap ?? 10;
+    const attColor = att >= attCap ? '#dc2626' : att >= attCap * 0.7 ? '#d97706' : '#10b981';
+    const attHeader = `<div style="text-align:right; padding:0 6px 6px;"><span style="display:inline-block; padding:4px 12px; border-radius:14px; background:${attColor}; color:white; font-size:12px; font-weight:700;">👑 오늘 ${att}/${attCap}회</span></div>`;
     if (!ov || ov.unitsAttempted === 0) {
-      el.innerHTML = `<div class="hero-empty">🎯 첫 도전을 기다리고 있어요! 단원을 선택해서 시작해보세요</div>`;
+      el.innerHTML = `${attHeader}<div class="hero-empty">🎯 첫 도전을 기다리고 있어요! 단원을 선택해서 시작해보세요</div>`;
       return;
     }
     const { medalCounts, unitsAttempted, totalPoints, overallRank, totalStudents } = ov;
@@ -1090,6 +1097,7 @@
       ? `<span class="hero-rank-num">${overallRank}위</span> <span class="hero-rank-total">/ ${totalStudents}명</span>`
       : `<span class="hero-rank-total">참여 학생 ${totalStudents}명</span>`;
     el.innerHTML = `
+      ${attHeader}
       <div class="hero-rank-row">
         <div class="hero-rank"><span class="hero-rank-label">🏆 종합</span> ${rankDisplay}</div>
         <div class="hero-points">⭐ ${totalPoints.toLocaleString()}점</div>
@@ -1179,8 +1187,65 @@
   window.openWbTopModal = openWbTopModal;
   window.closeWbTopModal = closeWbTopModal;
 
+  // ───── 일일 도전 횟수 캐시 ─────
+  let _lkDaily = null;  // { attempts, attemptsCap, attemptsLimitReached }
+  let _lkMyOverview = null;  // 마지막 overview 캐시 (hero stats 재렌더용)
+  async function fetchLkDailyStatus() {
+    try {
+      const res = await fetch(`/api/literacy-king/daily-status?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+      const data = await res.json();
+      if (data.ok) {
+        _lkDaily = data;
+        // overview 캐시가 있으면 hero stats 다시 그려서 도전 횟수 반영
+        if (_lkMyOverview) renderHeroStats(_lkMyOverview);
+      }
+    } catch (e) { console.warn('lk daily-status 조회 실패', e); }
+  }
+
+  function showLkLimitPopup() {
+    let overlay = document.getElementById('lkLimitOverlay');
+    if (overlay) { overlay.classList.add('show'); return; }
+    const att = _lkDaily?.attempts ?? 10;
+    const cap = _lkDaily?.attemptsCap ?? 10;
+    overlay = document.createElement('div');
+    overlay.id = 'lkLimitOverlay';
+    overlay.style.cssText = `
+      position: fixed; inset: 0;
+      background: linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.55) 100%);
+      z-index: 10005;
+      display: flex; align-items: flex-end; justify-content: center;
+      backdrop-filter: blur(2px);
+    `;
+    overlay.innerHTML = `
+      <div style="position:relative; background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 35%, #fde68a 70%, #fbbf24 100%); border-radius: 28px 28px 0 0; padding: 38px 32px 30px; max-width: 460px; width: 100%; box-shadow: 0 -16px 50px rgba(217,119,6,0.35); border-top: 4px solid #f59e0b; text-align: center; color: #422006;">
+        <div style="font-size:56px; line-height:1; margin-bottom:8px;">👑</div>
+        <div style="font-size:20px; font-weight:900; margin-bottom:14px; background: linear-gradient(135deg, #b45309, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">오늘의 도전 횟수를 모두 사용했어요!</div>
+        <div style="font-size:24px; font-weight:900; color:#b45309; margin-bottom:8px;">🔥 정말 잘했어요!</div>
+        <div style="font-size:14px; color:#78350f; margin-bottom:20px;">오늘 충분히 실력을 보여줬어요 😊</div>
+        <div style="height:1px; background: linear-gradient(to right, transparent, rgba(180,83,9,0.3), transparent); margin: 16px 0;"></div>
+        <div style="background: rgba(255,255,255,0.55); border-radius:14px; padding:14px 18px; margin-bottom:12px; font-size:14px; font-weight:700; color:#78350f; border:1.5px solid rgba(245,158,11,0.3);">오늘 도전 <span style="color:#b45309;">${att}</span> / ${cap}회</div>
+        <div style="font-size:13px; font-weight:700; color:#92400e; margin-bottom:18px;">⏳ 자정(00:00) 이후 새로 시작돼요</div>
+        <button style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 13px 36px; border-radius: 28px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 20px rgba(217,119,6,0.4);" onclick="closeLkLimitPopup()">확인</button>
+      </div>
+    `;
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeLkLimitPopup();
+    });
+    document.body.appendChild(overlay);
+  }
+  function closeLkLimitPopup() {
+    const overlay = document.getElementById('lkLimitOverlay');
+    if (overlay) overlay.remove();
+  }
+  window.closeLkLimitPopup = closeLkLimitPopup;
+
   // ───── 게임 시작 ─────
   function startGame(unitId) {
+    // 일일 도전 횟수 10회 초과 시 차단
+    if (_lkDaily && _lkDaily.attemptsLimitReached) {
+      showLkLimitPopup();
+      return;
+    }
     currentUnit = unitId;
     const unit = (window.CONTENTS || {})[unitId];
     if (!unit || !Array.isArray(unit.passage) || unit.passage.length < 2) {
@@ -1426,6 +1491,7 @@
       isNewBest = !!data.isNewBest;
       badgesAwarded = data.badgesAwarded || 0;
       totalAwardedForUnit = data.totalAwardedForUnit || 0;
+      if (data.daily) _lkDaily = data.daily;
     } catch (err) { console.error(err); }
 
     // 순위 재조회

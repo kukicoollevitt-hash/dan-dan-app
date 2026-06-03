@@ -1275,7 +1275,11 @@
     try {
       const res = await fetch(`/api/word-battle/daily-status?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
       const data = await res.json();
-      if (data.ok) _wbDaily = data;
+      if (data.ok) {
+        _wbDaily = data;
+        // overview 캐시가 있으면 hero stats 다시 그려서 도전 횟수 즉시 반영
+        if (_wbMyOverview) renderHeroStats(_wbMyOverview);
+      }
     } catch (e) { console.warn('daily-status 조회 실패', e); }
   }
 
@@ -1287,26 +1291,69 @@
     overlay.className = 'wb-cap-overlay';
     const pts = _wbDaily?.rankingPoints?.toLocaleString() || '0';
     const cap = _wbDaily?.cap?.toLocaleString() || '5,000';
-    // 잠금 해제 시각 — KST 기준 표시
-    let unlockText = '⏳ 24시간 후 재도전이 열립니다';
-    if (_wbDaily?.unlockAt) {
-      try {
-        const dt = new Date(_wbDaily.unlockAt);
-        const opts = { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
-        unlockText = `⏳ ${dt.toLocaleString('ko-KR', opts).replace(/\.\s*$/, '')} 에 재도전이 열려요`;
-      } catch (e) {}
+    const used = _wbDaily?.attempts ?? 0;
+    const dailyTotalCap = _wbDaily?.dailyTotalCap ?? 50;
+
+    // 어떤 차단인지 판단 (우선순위: 누적 캡 > 일일 50회 > 잔액 0)
+    const isCapReached = _wbDaily?.capReached;
+    const isDailyTotalLimit = _wbDaily?.dailyTotalLimitReached;
+    const isBalanceOut = !isCapReached && !isDailyTotalLimit && ((_wbDaily?.balance ?? 1) <= 0);
+
+    let title, info, refillHint, timeText, extraBtn;
+    if (isCapReached) {
+      // 누적 5000점 캡 도달
+      title = '오늘의 랭킹 반영 상한에 도달했어요!';
+      info = `누적 적립 <span style="color:#b45309;">${pts}</span> / ${cap}점`;
+      refillHint = '';
+      timeText = '⏳ 24시간 후 재도전이 열립니다';
+      if (_wbDaily?.unlockAt) {
+        try {
+          const dt = new Date(_wbDaily.unlockAt);
+          const opts = { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+          timeText = `⏳ ${dt.toLocaleString('ko-KR', opts).replace(/\.\s*$/, '')} 에 재도전이 열려요`;
+        } catch (e) {}
+      }
+      extraBtn = '';
+    } else if (isDailyTotalLimit) {
+      // 일일 누적 50회 한도 도달 (절대 한도, 자정까지)
+      title = '오늘 도전을 충분히 했어요!';
+      info = `오늘 누적 <span style="color:#b45309;">${used}</span> / ${dailyTotalCap}회`;
+      refillHint = `
+        <div style="background: rgba(255,255,255,0.55); border-radius:14px; padding:14px 16px; margin-bottom:12px; font-size:13px; font-weight:600; color:#78350f; border:1.5px solid rgba(245,158,11,0.3); line-height:1.6;">
+          🎯 <strong>오늘 게임 50판으로 한도 도달!</strong><br>
+          내일 자정에 새 도전이 시작돼요
+        </div>
+      `;
+      timeText = '⏳ 자정(00:00) 이후 새로 시작돼요';
+      extraBtn = '';
+    } else {
+      // 도전권 잔액 소진 — 학습 충전 안내
+      title = '도전권을 모두 사용했어요!';
+      info = `오늘 사용 <span style="color:#b45309;">${used}</span>회`;
+      refillHint = `
+        <div style="background: rgba(255,255,255,0.55); border-radius:14px; padding:14px 16px; margin-bottom:12px; font-size:13px; font-weight:600; color:#78350f; border:1.5px solid rgba(245,158,11,0.3); line-height:1.6;">
+          📚 <strong>단원 학습을 끝내면 +10회 충전!</strong><br>
+          본문 → 어휘 → 창의활동까지 완료하면<br>자동으로 도전권이 채워져요
+        </div>
+      `;
+      timeText = '⏳ 또는 자정(00:00) 이후 새로 시작돼요';
+      extraBtn = `<button class="wb-cap-btn" style="background: linear-gradient(135deg, #10b981, #059669); margin-right:8px; box-shadow: 0 6px 20px rgba(16,185,129,0.4);" onclick="goToLearning()">📖 학습하러 가기</button>`;
     }
+
     overlay.innerHTML = `
       <div class="wb-cap-box" onclick="event.stopPropagation()">
         <div class="wb-cap-icon">🏅</div>
-        <div class="wb-cap-title">오늘의 랭킹 반영 상한에 도달했어요!</div>
-        <div class="wb-cap-msg-strong">🔥 정말 대단해요!</div>
-        <div class="wb-cap-msg-sub">충분히 실력을 보여줬어요 😊</div>
+        <div class="wb-cap-title">${title}</div>
+        <div class="wb-cap-msg-strong">🔥 정말 잘했어요!</div>
+        <div class="wb-cap-msg-sub">오늘 충분히 실력을 보여줬어요 😊</div>
         <div class="wb-cap-divider"></div>
-        <div class="wb-cap-info">누적 적립 <span style="color:#b45309;">${pts}</span> / ${cap}점</div>
-        <div class="wb-cap-tomorrow">${unlockText}</div>
-        <div class="wb-cap-tomorrow" style="margin-bottom:18px;">내일 더 높은 순위를 노려보세요 🚀</div>
-        <button class="wb-cap-btn" onclick="closeWbCapPopup()">확인</button>
+        <div class="wb-cap-info">${info}</div>
+        ${refillHint}
+        <div class="wb-cap-tomorrow" style="margin-bottom:18px;">${timeText}</div>
+        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+          ${extraBtn}
+          <button class="wb-cap-btn" onclick="closeWbCapPopup()">확인</button>
+        </div>
       </div>
     `;
     overlay.onclick = (e) => { if (e.target === overlay) closeWbCapPopup(); };
@@ -1319,6 +1366,20 @@
     if (overlay) overlay.classList.remove('show');
   }
   window.closeWbCapPopup = closeWbCapPopup;
+
+  // 학습하러 가기 — 부모 창(menu.html iframe 컨테이너) 닫고 메뉴로 복귀
+  function goToLearning() {
+    // iframe 안에서 실행 중이면 부모에 신호. 아니면 직접 이동.
+    try {
+      if (window.parent && window.parent !== window) {
+        // 부모(menu.html)의 모달 닫기 신호 — 가장 안전한 방식
+        window.parent.postMessage({ type: 'closeWordBattleModal', goLearning: true }, '*');
+        return;
+      }
+    } catch (e) {}
+    location.href = '/menu';
+  }
+  window.goToLearning = goToLearning;
 
   // ───── 종합 TOP 10 (포디움 + 모달용) ─────
   let _wbOverallRanking = null;
@@ -1398,7 +1459,7 @@
           <div class="wb-top-item-rank ${rankClass}">${rankHtml}</div>
           <div>
             ${displayName}
-            <span class="wb-top-item-meta">${item.grade}${item.academyName ? ' · ' + item.academyName : ''}</span>
+            <span class="wb-top-item-meta">${item.grade}</span>
           </div>
           <div class="wb-top-item-points">⭐ ${item.totalPoints.toLocaleString()}</div>
         </div>
@@ -1513,12 +1574,14 @@
     listEl.innerHTML = rows.join('') || '<div class="unit-empty">단원이 없습니다.</div>';
   }
 
+  let _wbMyOverview = null;
   async function fetchMyStats() {
     try {
       const res = await fetch(`/api/word-battle/my-stats?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
       const data = await res.json();
       if (data.ok) {
         myStats = data.stats || {};
+        _wbMyOverview = data.overview;
         renderHeroStats(data.overview);
         // 현재 보고 있는 과목이 있으면 리렌더
         if (currentSubject) renderUnitList();
@@ -1528,8 +1591,14 @@
 
   function renderHeroStats(overview) {
     const heroEl = document.getElementById('heroStats');
+    // 도전권 잔액 헤더 (어디서든 표시)
+    const balance = _wbDaily?.balance ?? 10;
+    const balCap = _wbDaily?.balanceCap ?? 50;
+    const balColor = balance <= 0 ? '#dc2626' : balance <= 3 ? '#d97706' : '#10b981';
+    const attHeader = `<div style="text-align:right; padding:0 6px 6px;"><span style="display:inline-block; padding:4px 12px; border-radius:14px; background:${balColor}; color:white; font-size:12px; font-weight:700;">🎮 도전권 ${balance}/${balCap}회</span></div>`;
     if (!overview || overview.unitsAttempted === 0) {
       heroEl.innerHTML = `
+        ${attHeader}
         <div class="hero-empty">
           🎯 첫 도전을 기다리고 있어요!<br>
           <span style="font-size:13px; opacity:0.85;">단원을 선택해서 단어배틀을 시작해보세요</span>
@@ -1543,6 +1612,7 @@
       : `<span class="hero-rank-total">참여 학생 ${totalStudents}명</span>`;
 
     heroEl.innerHTML = `
+      ${attHeader}
       <div class="hero-rank-row">
         <div class="hero-rank">
           <span class="hero-rank-label">🏆 종합</span>
@@ -1577,8 +1647,8 @@
 
   // ───── 게임 시작 ─────
   async function startGame(unitId) {
-    // 일일 상한 도달 시 게임 진입 차단 + 안내 팝업
-    if (_wbDaily && _wbDaily.capReached) {
+    // 차단 사유: ① 누적 점수 캡 ② 일일 누적 50회 한도 ③ 도전권 잔액 0
+    if (_wbDaily && (_wbDaily.capReached || _wbDaily.dailyTotalLimitReached || _wbDaily.balance <= 0)) {
       showWbCapPopup();
       return;
     }
@@ -1838,7 +1908,7 @@
         return `
           <div class="ranking-row ${isMe ? 'me' : ''}">
             ${rankHtml}
-            <div>${nameMasked}<span class="ranking-name-grade">${row.grade}${row.academyName ? ' · ' + row.academyName : ''}</span></div>
+            <div>${nameMasked}<span class="ranking-name-grade">${row.grade}</span></div>
             <div class="ranking-time">${row.bestTime.toFixed(1)}초</div>
           </div>
         `;

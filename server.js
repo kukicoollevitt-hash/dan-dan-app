@@ -320,6 +320,48 @@ const WordBattleCapState = mongoose.model('WordBattleCapState', wordBattleCapSta
 // 누적 랭킹 점수 상한 + 차단 시간
 const WB_CUMULATIVE_CAP = 5000;
 const WB_BLOCK_DURATION_MS = 24 * 60 * 60 * 1000;  // 24시간
+
+// 도전권 시스템 (잔액 기반 + 학습 완료 충전)
+const WB_DAILY_BASELINE = 10;      // 매일 0시 잔액 보충 (이 값까지 채움)
+const WB_BALANCE_CAP = 10;         // 잔액 최대치 (그 이상 안 모임)
+const WB_REFILL_PER_UNIT = 10;     // 단원 첫 완료 시 충전량 (최대 잔액 10까지)
+const WB_DAILY_TOTAL_ATTEMPTS_CAP = 50;  // 오늘 누적 게임 횟수 한도 (절대 한도)
+
+// 도전권 잔액 상태
+const wordBattleStudentStateSchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  balance: { type: Number, default: WB_DAILY_BASELINE },        // 사용 가능 도전권
+  attemptsUsedToday: { type: Number, default: 0 },              // 오늘 사용한 횟수
+  lastResetDayKey: { type: String, default: '' },               // 마지막 일일 리셋 날짜
+  updatedAt: { type: Date, default: Date.now }
+});
+wordBattleStudentStateSchema.index({ grade: 1, name: 1 }, { unique: true });
+const WordBattleStudentState = mongoose.model('WordBattleStudentState', wordBattleStudentStateSchema);
+
+// 학생 상태 조회 + 일일 보충 (오늘 첫 접근이면 잔액을 최소 10으로 보충)
+async function getOrInitWbState(grade, name) {
+  let state = await WordBattleStudentState.findOne({ grade, name });
+  const todayKey = getKstDayKey();
+  if (!state) {
+    state = await WordBattleStudentState.create({
+      grade, name,
+      balance: WB_DAILY_BASELINE,
+      attemptsUsedToday: 0,
+      lastResetDayKey: todayKey
+    });
+    return state;
+  }
+  if (state.lastResetDayKey !== todayKey) {
+    // 일일 0시 보충: 잔액 무조건 baseline(10)으로, 누적 카운터 리셋
+    state.balance = WB_DAILY_BASELINE;
+    state.attemptsUsedToday = 0;
+    state.lastResetDayKey = todayKey;
+    state.updatedAt = new Date();
+    await state.save();
+  }
+  return state;
+}
 function getKstDayKey(d) {
   const t = d || new Date();
   const kst = new Date(t.getTime() + 9 * 3600 * 1000);
@@ -13427,8 +13469,10 @@ app.post("/api/log", async (req, res) => {
     );
     console.log("[/api/log] 저장 완료:", savedLog._id, "completed:", savedLog.completed);
 
-    // 🐋 최초 학습 완료 시 고래 배지 10개 지급
+    // 🐋 최초 학습 완료 시 고래 배지 10개 지급 + 🎮 단어월드컵 도전권 +10 충전
     let badgesAwarded = 0;
+    let wbAttemptsAdded = 0;
+    let wbBalanceAfter = null;
     if (isFirstCompletion) {
       try {
         const badgeResult = await UserProgress.findOneAndUpdate(
@@ -13444,6 +13488,20 @@ app.post("/api/log", async (req, res) => {
         console.log(`🐋 [/api/log] 현재 총 배지: ${badgeResult.vocabularyQuiz?.totalCoins || 10}개`);
       } catch (badgeErr) {
         console.error("⚠️ [/api/log] 고래 배지 지급 실패:", badgeErr.message);
+      }
+
+      // 🎮 단어월드컵 도전권 충전 (최대 50까지)
+      try {
+        const wbState = await getOrInitWbState(grade, name);
+        const oldBalance = wbState.balance;
+        wbState.balance = Math.min(wbState.balance + WB_REFILL_PER_UNIT, WB_BALANCE_CAP);
+        wbAttemptsAdded = wbState.balance - oldBalance;
+        wbState.updatedAt = new Date();
+        await wbState.save();
+        wbBalanceAfter = wbState.balance;
+        console.log(`🎮 [/api/log] 도전권 +${wbAttemptsAdded} 충전 → 잔액 ${wbBalanceAfter}/${WB_BALANCE_CAP}`);
+      } catch (wbErr) {
+        console.error("⚠️ [/api/log] 도전권 충전 실패:", wbErr.message);
       }
     }
 
@@ -13607,11 +13665,16 @@ app.post("/api/log", async (req, res) => {
       }
     }
 
-    // 🐋 응답에 최초 완료 여부와 배지 지급 정보 포함
+    // 🐋 응답에 최초 완료 여부와 배지 지급 정보 포함 + 🎮 도전권 충전 정보
     return res.json({
       ok: true,
       firstCompletion: isFirstCompletion,
-      badgesAwarded: badgesAwarded
+      badgesAwarded: badgesAwarded,
+      wordBattle: {
+        attemptsAdded: wbAttemptsAdded,
+        balance: wbBalanceAfter,
+        balanceCap: WB_BALANCE_CAP
+      }
     });
   } catch (err) {
     console.error("[/api/log] error:", err);
@@ -29406,6 +29469,18 @@ app.get('/api/word-battle/last-champions', async (req, res) => {
 // ============================================
 
 const LK_SERIES_LIST = ['on', 'up', 'fit', 'deep'];
+
+// 문해왕 일일 도전 횟수 제한 (단순 — KST 0시 자동 리셋)
+const LK_DAILY_ATTEMPTS_CAP = 10;
+const literacyKingDailySchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  dayKey: { type: String, required: true },  // 'YYYY-MM-DD' KST
+  attempts: { type: Number, default: 0 },
+  lastPlayedAt: { type: Date, default: Date.now }
+});
+literacyKingDailySchema.index({ grade: 1, name: 1, dayKey: 1 }, { unique: true });
+const LiteracyKingDaily = mongoose.model('LiteracyKingDaily', literacyKingDailySchema);
 const LK_SERIES_LABEL = { on: 'BRAIN ON', up: 'BRAIN UP', fit: 'BRAIN FIT', deep: 'BRAIN DEEP' };
 
 // 결과 저장 — 시리즈별 best 점수 갱신 + 등수 향상 시 뱃지 지급
@@ -29419,6 +29494,19 @@ app.post('/api/literacy-king/save', async (req, res) => {
       return res.status(400).json({ ok: false, message: '잘못된 시리즈입니다.' });
     }
     const currentMonth = getCurrentMonthKey();
+
+    // 일일 도전 횟수 카운트 + 10회 한도 체크
+    const dayKey = getKstDayKey();
+    let lkDaily = await LiteracyKingDaily.findOne({ grade, name, dayKey });
+    if (!lkDaily) {
+      lkDaily = await LiteracyKingDaily.create({ grade, name, dayKey, attempts: 0 });
+    }
+    await LiteracyKingDaily.updateOne(
+      { _id: lkDaily._id },
+      { $inc: { attempts: 1 }, $set: { lastPlayedAt: new Date() } }
+    );
+    const attemptsAfterSave = (lkDaily.attempts || 0) + 1;
+    const attemptsLimitReached = attemptsAfterSave >= LK_DAILY_ATTEMPTS_CAP;
 
     const existing = await LiteracyKingRecord.findOne({ grade, name, unitId });
     let isNewBest = false;
@@ -29505,10 +29593,37 @@ app.post('/api/literacy-king/save', async (req, res) => {
 
     res.json({
       ok: true, isNewBest, currentRank, currentPoints, badgesAwarded,
-      totalAwardedForUnit: Math.max(currentPoints, previousAwarded)
+      totalAwardedForUnit: Math.max(currentPoints, previousAwarded),
+      daily: {
+        attempts: attemptsAfterSave,
+        attemptsCap: LK_DAILY_ATTEMPTS_CAP,
+        attemptsLimitReached,
+        dayKey
+      }
     });
   } catch (err) {
     console.error('문해왕 저장 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 문해왕 일일 도전 횟수 상태 조회
+app.get('/api/literacy-king/daily-status', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    const dayKey = getKstDayKey();
+    const daily = await LiteracyKingDaily.findOne({ grade, name, dayKey }).lean();
+    const attempts = daily?.attempts || 0;
+    res.json({
+      ok: true,
+      attempts,
+      attemptsCap: LK_DAILY_ATTEMPTS_CAP,
+      attemptsLimitReached: attempts >= LK_DAILY_ATTEMPTS_CAP,
+      dayKey
+    });
+  } catch (err) {
+    console.error('문해왕 일일 상태 조회 오류:', err);
     res.status(500).json({ ok: false, message: '서버 오류' });
   }
 });
@@ -37342,6 +37457,18 @@ app.post('/api/word-battle/save', async (req, res) => {
       return 10;
     })(currentRank);
 
+    // 도전권 잔액 차감 (일일 보충 + 학습 충전 + 누적 50회 한도)
+    const dayKey = getKstDayKey();
+    const wbState = await getOrInitWbState(grade, name);
+    // 게임 1판 = -1 도전권 + 오늘 사용 카운트 +1
+    wbState.balance = Math.max(0, wbState.balance - 1);
+    wbState.attemptsUsedToday = (wbState.attemptsUsedToday || 0) + 1;
+    wbState.updatedAt = new Date();
+    await wbState.save();
+    const attemptsAfterSave = wbState.attemptsUsedToday;
+    const dailyTotalLimitReached = attemptsAfterSave >= WB_DAILY_TOTAL_ATTEMPTS_CAP;
+    const balanceExhausted = wbState.balance <= 0;
+
     // 누적 캡 체크 (24시간 차단형) — 학생의 awardedPoints 합산 + 캡 상태 트래킹
     const allRecords = await WordBattleRecord.find(
       { grade, name },
@@ -37425,7 +37552,15 @@ app.post('/api/word-battle/save', async (req, res) => {
         remaining: Math.max(0, capState.effectiveCapTarget - newCumulative),
         capReached: capReachedNow,
         unlockAt,
-        type: 'cumulative-24h'
+        // 도전권 시스템 (해석 A: 잔액 max 10, 누적 50회 절대 한도)
+        balance: wbState.balance,
+        balanceCap: WB_BALANCE_CAP,             // 10
+        attempts: attemptsAfterSave,
+        dailyTotalCap: WB_DAILY_TOTAL_ATTEMPTS_CAP,  // 50
+        balanceExhausted,
+        dailyTotalLimitReached,
+        dayKey,
+        type: 'balance-refill'
       }
     });
   } catch (err) {
@@ -37472,6 +37607,9 @@ app.get('/api/word-battle/daily-status', async (req, res) => {
     const blocked = !!(capState.cappedAt && (now - capState.cappedAt.getTime() < WB_BLOCK_DURATION_MS));
     const unlockAt = capState.cappedAt ? new Date(capState.cappedAt.getTime() + WB_BLOCK_DURATION_MS) : null;
 
+    // 도전권 잔액 상태 (일일 보충 적용 후)
+    const wbState = await getOrInitWbState(grade, name);
+
     res.json({
       ok: true,
       rankingPoints: cumulative,
@@ -37479,7 +37617,15 @@ app.get('/api/word-battle/daily-status', async (req, res) => {
       remaining: Math.max(0, capState.effectiveCapTarget - cumulative),
       capReached: blocked,
       unlockAt,
-      type: 'cumulative-24h'
+      // 도전권 시스템 (해석 A)
+      balance: wbState.balance,
+      balanceCap: WB_BALANCE_CAP,             // 10
+      attempts: wbState.attemptsUsedToday,
+      dailyTotalCap: WB_DAILY_TOTAL_ATTEMPTS_CAP,  // 50
+      balanceExhausted: wbState.balance <= 0,
+      dailyTotalLimitReached: (wbState.attemptsUsedToday || 0) >= WB_DAILY_TOTAL_ATTEMPTS_CAP,
+      dayKey: wbState.lastResetDayKey,
+      type: 'balance-refill'
     });
   } catch (err) {
     console.error('단어배틀 누적 상태 조회 오류:', err);
