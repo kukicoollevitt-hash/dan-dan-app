@@ -758,6 +758,56 @@
         </table>
       </div>
     </div>
+
+    <!-- 문해왕 선발전 학생 목록 -->
+    <div class="section">
+      <div class="section-title">
+        <span>👑 문해왕 선발전 학생 목록</span>
+        <span class="count-badge" id="lkStudentCount">총 0명</span>
+      </div>
+      <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
+        시리즈별 누적 점수 순위(bestScore + 순위 보너스) — 매월 1일 00:00 KST에 시리즈별 TOP 3 보너스 지급 + 자동 리셋
+      </p>
+
+      <!-- 필터 영역 -->
+      <div class="filter-section" style="margin-bottom: 15px;">
+        <input type="text" id="lkSearchInput" placeholder="학년·학원·이름·시리즈 실시간 검색" style="width: 300px;">
+        <select id="lkSeriesFilter" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px;">
+          <option value="">전체 시리즈</option>
+          <option value="on">BRAIN ON</option>
+          <option value="up">BRAIN UP</option>
+          <option value="fit">BRAIN FIT</option>
+          <option value="deep">BRAIN DEEP</option>
+        </select>
+        <button class="search-btn" style="background: #95a5a6;" onclick="clearLkFilter()">초기화</button>
+        <button class="search-btn" onclick="loadLkStudents()">🔄 새로고침</button>
+      </div>
+
+      <div class="snack-order-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <table>
+          <thead style="position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="width: 60px;">순위</th>
+              <th style="width: 100px;">시리즈</th>
+              <th style="width: 70px;">학년</th>
+              <th>학원/학교</th>
+              <th>이름</th>
+              <th style="width: 60px;">🥇</th>
+              <th style="width: 60px;">🥈</th>
+              <th style="width: 60px;">🥉</th>
+              <th style="width: 90px;">도전 단원</th>
+              <th style="width: 110px;">누적 점수</th>
+              <th style="width: 130px;">마지막 도전</th>
+            </tr>
+          </thead>
+          <tbody id="lkStudentTableBody">
+            <tr>
+              <td colspan="11" class="loading">데이터를 불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- 메시지 추가/수정 모달 -->
@@ -2076,6 +2126,87 @@
       document.getElementById('wbSearchInput').value = '';
       renderWbStudents(allWbStudents);
     }
+
+    // ============ 문해왕 선발전 학생 목록 ============
+    let allLkStudents = [];
+    const LK_SERIES_LABEL = { on: 'BRAIN ON', up: 'BRAIN UP', fit: 'BRAIN FIT', deep: 'BRAIN DEEP' };
+    const LK_SERIES_COLOR = {
+      on:   { bg: '#dcfce7', fg: '#166534' },
+      up:   { bg: '#fef3c7', fg: '#92400e' },
+      fit:  { bg: '#ffedd5', fg: '#9a3412' },
+      deep: { bg: '#fee2e2', fg: '#991b1b' }
+    };
+
+    async function loadLkStudents() {
+      const tbody = document.getElementById('lkStudentTableBody');
+      tbody.innerHTML = '<tr><td colspan="11" class="loading">불러오는 중...</td></tr>';
+      try {
+        const res = await fetch('/api/super/literacy-king/students', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.message || '오류');
+        allLkStudents = data.students || [];
+        document.getElementById('lkStudentCount').textContent = `총 ${data.totalCount}명`;
+        applyLkFilter();
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="11" class="loading" style="color:#c00;">오류: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderLkStudents(list) {
+      const tbody = document.getElementById('lkStudentTableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="empty-message">표시할 학생이 없습니다.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map((s) => {
+        const rankBadge = s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉' : s.rank + '위';
+        const lastDate = s.lastPlayedAt ? new Date(s.lastPlayedAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+        const seriesLabel = s.seriesLabel || LK_SERIES_LABEL[s.series] || s.series || '-';
+        const c = LK_SERIES_COLOR[s.series] || { bg: '#f3f4f6', fg: '#374151' };
+        const seriesBadge = `<span style="display:inline-block; padding:3px 9px; border-radius:10px; background:${c.bg}; color:${c.fg}; font-size:11px; font-weight:700;">${escapeHtml(seriesLabel)}</span>`;
+        return `
+          <tr>
+            <td style="text-align:center; font-weight:700; color:${s.rank <= 3 ? '#d4af37' : '#555'};">${rankBadge}</td>
+            <td style="text-align:center;">${seriesBadge}</td>
+            <td style="text-align:center;">${escapeHtml(s.grade)}</td>
+            <td>${escapeHtml(s.academyName || '-')}</td>
+            <td style="font-weight:600;">${escapeHtml(s.name)}</td>
+            <td style="text-align:center;">${s.medalCounts.gold}</td>
+            <td style="text-align:center;">${s.medalCounts.silver}</td>
+            <td style="text-align:center;">${s.medalCounts.bronze}</td>
+            <td style="text-align:center;">${s.unitCount}단원</td>
+            <td style="text-align:right; font-weight:800; color:#7c3aed;">👑 ${s.totalPoints.toLocaleString()}점</td>
+            <td style="text-align:center; font-size:12px; color:#7f8c8d;">${lastDate}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function applyLkFilter() {
+      const q = (document.getElementById('lkSearchInput').value || '').trim().toLowerCase();
+      const series = document.getElementById('lkSeriesFilter').value;
+      let list = allLkStudents;
+      if (series) list = list.filter(s => s.series === series);
+      if (q) list = list.filter(s =>
+        (s.name || '').toLowerCase().includes(q) ||
+        (s.grade || '').toLowerCase().includes(q) ||
+        (s.academyName || '').toLowerCase().includes(q) ||
+        (s.seriesLabel || LK_SERIES_LABEL[s.series] || '').toLowerCase().includes(q)
+      );
+      renderLkStudents(list);
+    }
+
+    document.getElementById('lkSearchInput').addEventListener('input', applyLkFilter);
+    document.getElementById('lkSeriesFilter').addEventListener('change', applyLkFilter);
+
+    function clearLkFilter() {
+      document.getElementById('lkSearchInput').value = '';
+      document.getElementById('lkSeriesFilter').value = '';
+      renderLkStudents(allLkStudents);
+    }
+
+    // 페이지 진입 시 문해왕 목록도 로드
+    loadLkStudents();
   </script>
 </body>
 </html>
