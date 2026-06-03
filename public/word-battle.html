@@ -942,6 +942,136 @@
     .title { font-size: 22px; }
     .status-value { font-size: 20px; }
   }
+
+  /* 일일 상한 도달 팝업 — 하단에서 슬라이드 업 */
+  .wb-cap-overlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.55) 100%);
+    z-index: 10005;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+    animation: wbCapBgFade 0.35s ease;
+  }
+  .wb-cap-overlay.show { display: flex; }
+  @keyframes wbCapBgFade { from { opacity: 0; } to { opacity: 1; } }
+
+  .wb-cap-box {
+    position: relative;
+    background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 35%, #fde68a 70%, #fbbf24 100%);
+    border-radius: 28px 28px 0 0;
+    padding: 38px 32px 30px;
+    max-width: 460px; width: 100%;
+    box-shadow: 0 -16px 50px rgba(217, 119, 6, 0.35), 0 -2px 0 #fde68a inset;
+    border-top: 4px solid #f59e0b;
+    text-align: center;
+    color: #422006;
+    animation: wbCapSlideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+  }
+  @keyframes wbCapSlideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* 반짝이 배경 효과 */
+  .wb-cap-box::before, .wb-cap-box::after {
+    content: '';
+    position: absolute;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.6), transparent 60%);
+    pointer-events: none;
+  }
+  .wb-cap-box::before { top: -60px; left: -50px; }
+  .wb-cap-box::after { bottom: -80px; right: -40px; opacity: 0.7; }
+
+  .wb-cap-icon {
+    font-size: 56px;
+    line-height: 1;
+    margin-bottom: 8px;
+    animation: wbCapBounce 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(217, 119, 6, 0.4));
+    position: relative;
+  }
+  @keyframes wbCapBounce {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-6px) rotate(3deg); }
+  }
+
+  .wb-cap-title {
+    font-size: 20px;
+    font-weight: 900;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, #b45309, #d97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.4px;
+    position: relative;
+  }
+
+  .wb-cap-msg-strong {
+    font-size: 24px;
+    font-weight: 900;
+    color: #b45309;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .wb-cap-msg-sub {
+    font-size: 14px;
+    color: #78350f;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .wb-cap-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(180, 83, 9, 0.3), transparent);
+    margin: 16px 0;
+    position: relative;
+  }
+
+  .wb-cap-info {
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #78350f;
+    position: relative;
+    border: 1.5px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .wb-cap-tomorrow {
+    font-size: 13px;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  .wb-cap-btn {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+    padding: 13px 36px;
+    border-radius: 28px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+    letter-spacing: 0.3px;
+  }
+  .wb-cap-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(217, 119, 6, 0.55);
+  }
 </style>
 </head>
 <body>
@@ -1136,7 +1266,50 @@
     renderFieldTabs();
     fetchMyStats();
     fetchOverallTop();
+    fetchDailyStatus();
   }
+
+  // ───── 일일 랭킹 상한 캐시 ─────
+  let _wbDaily = null;  // { rankingPoints, cap, remaining, capReached, dayKey }
+  async function fetchDailyStatus() {
+    try {
+      const res = await fetch(`/api/word-battle/daily-status?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
+      const data = await res.json();
+      if (data.ok) _wbDaily = data;
+    } catch (e) { console.warn('daily-status 조회 실패', e); }
+  }
+
+  function showWbCapPopup() {
+    let overlay = document.getElementById('wbCapOverlay');
+    if (overlay) { overlay.classList.add('show'); return; }
+    overlay = document.createElement('div');
+    overlay.id = 'wbCapOverlay';
+    overlay.className = 'wb-cap-overlay';
+    const pts = _wbDaily?.rankingPoints?.toLocaleString() || '0';
+    const cap = _wbDaily?.cap?.toLocaleString() || '6,000';
+    overlay.innerHTML = `
+      <div class="wb-cap-box" onclick="event.stopPropagation()">
+        <div class="wb-cap-icon">🏅</div>
+        <div class="wb-cap-title">오늘의 랭킹 반영 상한에 도달했어요!</div>
+        <div class="wb-cap-msg-strong">🔥 정말 대단해요!</div>
+        <div class="wb-cap-msg-sub">충분히 실력을 보여줬어요 😊</div>
+        <div class="wb-cap-divider"></div>
+        <div class="wb-cap-info">오늘 적립 <span style="color:#b45309;">${pts}</span> / ${cap}점</div>
+        <div class="wb-cap-tomorrow">⏳ 24시간 후 재도전이 열립니다</div>
+        <div class="wb-cap-tomorrow" style="margin-bottom:18px;">내일 더 높은 순위를 노려보세요 🚀</div>
+        <button class="wb-cap-btn" onclick="closeWbCapPopup()">확인</button>
+      </div>
+    `;
+    overlay.onclick = (e) => { if (e.target === overlay) closeWbCapPopup(); };
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('show'));
+  }
+
+  function closeWbCapPopup() {
+    const overlay = document.getElementById('wbCapOverlay');
+    if (overlay) overlay.classList.remove('show');
+  }
+  window.closeWbCapPopup = closeWbCapPopup;
 
   // ───── 종합 TOP 10 (포디움 + 모달용) ─────
   let _wbOverallRanking = null;
@@ -1395,6 +1568,11 @@
 
   // ───── 게임 시작 ─────
   async function startGame(unitId) {
+    // 일일 상한 도달 시 게임 진입 차단 + 안내 팝업
+    if (_wbDaily && _wbDaily.capReached) {
+      showWbCapPopup();
+      return;
+    }
     currentUnit = unitId;
     const unit = (window.CONTENTS || {})[unitId];
     if (!unit || !Array.isArray(unit.vocab) || unit.vocab.length === 0) {
@@ -1582,6 +1760,7 @@
       isNewBest = !!data.isNewBest;
       badgesAwarded = data.badgesAwarded || 0;
       totalAwardedForUnit = data.totalAwardedForUnit || 0;
+      if (data.daily) _wbDaily = data.daily;
     } catch (err) { console.error('저장 실패:', err); }
 
     // 순위 재조회

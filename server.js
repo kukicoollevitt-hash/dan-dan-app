@@ -292,6 +292,25 @@ const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
 const WordBattleRecord = require("./models/WordBattleRecord");
 const WordBattleChampion = require("./models/WordBattleChampion");
+
+// 단어월드컵 일일 랭킹 점수 누적 (KST 0시 리셋)
+const wordBattleDailySchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  dayKey: { type: String, required: true },  // 'YYYY-MM-DD' KST
+  rankingPoints: { type: Number, default: 0 },
+  attempts: { type: Number, default: 0 },
+  lastPlayedAt: { type: Date, default: Date.now }
+});
+wordBattleDailySchema.index({ grade: 1, name: 1, dayKey: 1 }, { unique: true });
+const WordBattleDaily = mongoose.model('WordBattleDaily', wordBattleDailySchema);
+
+const WB_DAILY_CAP = 6000;
+function getKstDayKey(d) {
+  const t = d || new Date();
+  const kst = new Date(t.getTime() + 9 * 3600 * 1000);
+  return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}-${String(kst.getUTCDate()).padStart(2, '0')}`;
+}
 const LiteracyKingRecord = require("./models/LiteracyKingRecord");
 const LiteracyKingChampion = require("./models/LiteracyKingChampion");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
@@ -33505,6 +33524,8 @@ app.get("/api/midterm/generate", async (req, res) => {
       attempts.forEach(attempt => {
         if (attempt.questionDetails && Array.isArray(attempt.questionDetails)) {
           attempt.questionDetails.forEach(q => {
+            // unitCode 또는 questionNo 누락된 옛 포맷은 fallback에서 처리 (스킵)
+            if (!q.unitCode || q.questionNo == null) return;
             const key = q.questionNo;
             if (!questionMap.has(key)) {
               questionMap.set(key, {
@@ -33542,6 +33563,62 @@ app.get("/api/midterm/generate", async (req, res) => {
 
     console.log(`[midterm/generate] 추출된 미흡 문항: ${weakQuestions.length}개`);
 
+    // 미흡 문항이 20개 미만이면 fallback 보충
+    // (옛 포맷 GateAttempt 에 questionDetails 누락 또는 시도 부족 케이스 대응)
+    if (weakQuestions.length < 20) {
+      const existing = new Set(weakQuestions.map(w => `${w.unitCode}|${w.qType}`));
+
+      // 1차 fallback: GatePass.units (정상 데이터)
+      const passes = await GatePass.find({
+        grade, name,
+        gate: { $gte: startGate, $lte: endGate }
+      }).lean();
+      gateLoop: for (const pass of passes) {
+        if (!Array.isArray(pass.units)) continue;
+        for (const unitCode of pass.units) {
+          for (const qType of ['q1', 'q2']) {
+            const key = `${unitCode}|${qType}`;
+            if (existing.has(key)) continue;
+            existing.add(key);
+            weakQuestions.push({
+              questionNo: null, unitCode, unitTitle: '', qType,
+              cumulativeTime: 0, cumulativeWrongClicks: 0,
+              fromGate: pass.gate, fallback: true
+            });
+            if (weakQuestions.length >= 20) break gateLoop;
+          }
+        }
+      }
+
+      // 2차 fallback: 학생이 완료한 LearningLog 단원
+      // (옛 GatePass에 units가 비어있는 경우 대비)
+      if (weakQuestions.length < 20) {
+        console.log(`[midterm/generate] GatePass 부족 — LearningLog fallback`);
+        const completedLogs = await LearningLog.find(
+          { grade, name, completed: true, deleted: { $ne: true } },
+          { unit: 1 }
+        ).lean();
+        const seenUnits = new Set();
+        logLoop: for (const log of completedLogs) {
+          if (!log.unit || seenUnits.has(log.unit)) continue;
+          seenUnits.add(log.unit);
+          for (const qType of ['q1', 'q2']) {
+            const key = `${log.unit}|${qType}`;
+            if (existing.has(key)) continue;
+            existing.add(key);
+            weakQuestions.push({
+              questionNo: null, unitCode: log.unit, unitTitle: '', qType,
+              cumulativeTime: 0, cumulativeWrongClicks: 0,
+              fromGate: 0, fallback: true
+            });
+            if (weakQuestions.length >= 20) break logLoop;
+          }
+        }
+      }
+
+      console.log(`[midterm/generate] fallback 후 총 ${weakQuestions.length}개 (그 중 fallback ${weakQuestions.filter(w => w.fallback).length}개)`);
+    }
+
     if (weakQuestions.length < 20) {
       return res.json({
         ok: false,
@@ -33558,6 +33635,11 @@ app.get("/api/midterm/generate", async (req, res) => {
       const wq = weakQuestions[i];
       const unitCode = wq.unitCode;
       const qType = wq.qType || 'q1';
+
+      if (!unitCode) {
+        console.log(`[midterm/generate] unitCode 누락 항목 스킵 (idx=${i})`);
+        continue;
+      }
 
       // 콘텐츠 파일 경로 결정
       const isFit = unitCode.startsWith('fit_');
@@ -37246,14 +37328,27 @@ app.post('/api/word-battle/save', async (req, res) => {
       return 10;
     })(currentRank);
 
+    // 일일 캡 체크 — 오늘 누적 랭킹 점수가 WB_DAILY_CAP 도달 시 추가 점수 적립 X
+    const dayKey = getKstDayKey();
+    let daily = await WordBattleDaily.findOne({ grade, name, dayKey });
+    if (!daily) {
+      daily = await WordBattleDaily.create({ grade, name, dayKey, rankingPoints: 0, attempts: 0 });
+    }
+
     // 정책 C — 단원당 최대 부여 포인트가 늘어났을 때만 차액 지급
+    // + 일일 캡 적용: 캡 도달 후엔 차액을 0으로 (bestTime은 갱신, 포인트만 미적립)
     let badgesAwarded = 0;
-    if (currentPoints > previousAwarded) {
-      badgesAwarded = currentPoints - previousAwarded;
+    const potentialDelta = Math.max(0, currentPoints - previousAwarded);
+    const dailyRemaining = Math.max(0, WB_DAILY_CAP - daily.rankingPoints);
+    const effectiveDelta = Math.min(potentialDelta, dailyRemaining);
+    const capReached = potentialDelta > 0 && effectiveDelta < potentialDelta;
+
+    if (effectiveDelta > 0) {
+      badgesAwarded = effectiveDelta;
       await Promise.all([
         WordBattleRecord.updateOne(
           { grade, name, unitId },
-          { $set: { awardedPoints: currentPoints } }
+          { $set: { awardedPoints: previousAwarded + effectiveDelta } }
         ),
         UserProgress.updateOne(
           { grade, name },
@@ -37262,22 +37357,68 @@ app.post('/api/word-battle/save', async (req, res) => {
             $set: { 'vocabularyQuiz.lastRankUpdate': new Date() }
           },
           { upsert: true }
+        ),
+        WordBattleDaily.updateOne(
+          { _id: daily._id },
+          {
+            $inc: { rankingPoints: effectiveDelta, attempts: 1 },
+            $set: { lastPlayedAt: new Date() }
+          }
         )
       ]);
-      console.log(`🐋 [word-battle] ${grade} ${name} ${unitId} 등수 ${currentRank}위 → +${badgesAwarded}뱃지 (누적 ${currentPoints})`);
+      console.log(`🐋 [word-battle] ${grade} ${name} ${unitId} 등수 ${currentRank}위 → +${badgesAwarded}뱃지 (일일 ${daily.rankingPoints + effectiveDelta}/${WB_DAILY_CAP})`);
+    } else {
+      // 캡 도달 또는 등수 향상 없음 — 시도 횟수만 카운트
+      await WordBattleDaily.updateOne(
+        { _id: daily._id },
+        { $inc: { attempts: 1 }, $set: { lastPlayedAt: new Date() } }
+      );
+      if (capReached) {
+        console.log(`🚧 [word-battle] ${grade} ${name} 일일 캡 도달 — 추가 ${potentialDelta}점 미적립`);
+      }
     }
 
+    const newDailyPoints = daily.rankingPoints + effectiveDelta;
     res.json({
       ok: true,
       isNewBest,
       currentRank,
       currentPoints,
       badgesAwarded,
-      totalAwardedForUnit: Math.max(currentPoints, previousAwarded)
+      totalAwardedForUnit: Math.max(currentPoints, previousAwarded),
+      daily: {
+        rankingPoints: newDailyPoints,
+        cap: WB_DAILY_CAP,
+        remaining: Math.max(0, WB_DAILY_CAP - newDailyPoints),
+        capReached: newDailyPoints >= WB_DAILY_CAP,
+        dayKey
+      }
     });
   } catch (err) {
     console.error('단어배틀 저장 오류:', err);
     res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 일일 캡 상태 조회 — 게임 시작 전 캡 도달 여부 확인
+app.get('/api/word-battle/daily-status', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    const dayKey = getKstDayKey();
+    const daily = await WordBattleDaily.findOne({ grade, name, dayKey }).lean();
+    const points = daily ? daily.rankingPoints : 0;
+    res.json({
+      ok: true,
+      dayKey,
+      rankingPoints: points,
+      cap: WB_DAILY_CAP,
+      remaining: Math.max(0, WB_DAILY_CAP - points),
+      capReached: points >= WB_DAILY_CAP
+    });
+  } catch (err) {
+    console.error('단어배틀 일일 상태 조회 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
   }
 });
 
