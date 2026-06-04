@@ -15650,7 +15650,7 @@ app.get("/my-learning", async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <meta name="viewport" content="width=1200, initial-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>나의 AI 학습 분석 - ${grade} ${name}</title>
 
       <!-- Open Graph 메타태그 (링크 프리뷰용) -->
@@ -17536,6 +17536,53 @@ app.get("/my-learning", async (req, res) => {
         .nav-arrow-btn:disabled {
           opacity: 0.3;
           cursor: not-allowed;
+        }
+
+        /* ==================================================
+           📱 모바일 600px 이하 — 학습분석 페이지 최적화
+           ================================================== */
+        @media (max-width: 600px) {
+          body { padding: 12px 8px !important; }
+          .container {
+            padding: 16px 12px !important;
+            border-radius: 12px !important;
+          }
+          /* 헤더 */
+          .header {
+            margin-bottom: 18px !important;
+            padding-bottom: 14px !important;
+          }
+          h1 { font-size: 18px !important; line-height: 1.3 !important; word-break: keep-all !important; }
+          .subtitle { font-size: 12px !important; margin-top: 6px !important; }
+          .stats-badge { font-size: 11px !important; padding: 6px 12px !important; }
+          h2 { font-size: 15px !important; }
+          h3 { font-size: 13px !important; }
+          /* 섹션 */
+          .section-title { font-size: 14px !important; padding-left: 8px !important; border-left-width: 3px !important; }
+          .section-description { font-size: 11px !important; line-height: 1.5 !important; word-break: keep-all !important; }
+          .section-header { flex-wrap: wrap !important; gap: 6px !important; margin-bottom: 12px !important; }
+          /* 모든 박스/카드 */
+          .container > div,
+          .container .card,
+          .container .box,
+          .container [class*="-box"],
+          .container [class*="-card"],
+          .container [class*="-section"] {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            word-break: keep-all !important;
+            overflow-wrap: break-word !important;
+          }
+          /* 텍스트 일반 */
+          p, li, span, div { word-break: keep-all !important; overflow-wrap: break-word !important; }
+          /* 검색 박스, 입력, 버튼 */
+          .search-box { font-size: 12px !important; padding: 6px 10px !important; }
+          /* 표 — 가로 스크롤 허용 */
+          table { font-size: 11px !important; }
+          /* 차트 영역 */
+          canvas { max-width: 100% !important; height: auto !important; }
+          /* 주간 네비 */
+          .nav-arrow-btn { padding: 4px 8px !important; font-size: 12px !important; }
         }
       </style>
     </head>
