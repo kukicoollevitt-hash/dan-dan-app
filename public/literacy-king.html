@@ -385,6 +385,12 @@
     position: relative; z-index: 2;
   }
 
+  /* 일일 캡 12h 카운트다운 배지 pulse */
+  @keyframes lkCapPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 2px 6px rgba(124,58,237,0.4); }
+    50%      { transform: scale(1.05); box-shadow: 0 4px 12px rgba(236,72,153,0.6); }
+  }
+
   /* 내 통계 카드 — 와인/로얄 그라데이션 */
   .hero-stats {
     background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 35%, #be123c 75%, #d4af37 100%);
@@ -967,6 +973,12 @@
         <div class="hero-empty">불러오는 중...</div>
       </div>
 
+      <!-- 일일 캡 12h 차단 안내 띠 (캡 도달 학생만 표시) -->
+      <div id="lkCapBanner" style="display:none; background: linear-gradient(135deg, #ede9fe 0%, #fce7f3 100%); border: 2px solid #a855f7; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; text-align: center; box-shadow: 0 2px 8px rgba(168,85,247,0.2);">
+        <div style="font-size: 13px; font-weight: 700; color: #6b21a8; margin-bottom: 4px;">👑 오늘의 도전 횟수를 모두 사용했어요!</div>
+        <div style="font-size: 14px; font-weight: 800; color: #7c3aed;">⏳ <span id="lkCapBannerCountdown">--시간 --분 --초</span> 후 재도전이 열려요</div>
+      </div>
+
       <!-- 분야/과목/단원 -->
       <div class="tabs" id="fieldTabs"></div>
       <div class="tabs" id="subjectTabs"></div>
@@ -1325,7 +1337,11 @@
     const att = _lkDaily?.attempts ?? 0;
     const attCap = _lkDaily?.attemptsCap ?? 10;
     const attColor = att >= attCap ? '#dc2626' : att >= attCap * 0.7 ? '#d97706' : '#10b981';
-    const attHeader = `<div style="text-align:right; padding:0 6px 6px;"><span style="display:inline-block; padding:4px 12px; border-radius:14px; background:${attColor}; color:white; font-size:12px; font-weight:700;">👑 오늘 ${att}/${attCap}회</span></div>`;
+    // 12h 차단 카운트다운 (한도 도달 학생만 표시)
+    const capCountdown = _lkDaily?.attemptsLimitReached && _lkDaily?.unlockAt
+      ? `<span id="lkCapCountdown" data-unlock="${_lkDaily.unlockAt}" style="display:inline-block; padding:4px 12px; border-radius:14px; background: linear-gradient(135deg, #7c3aed, #ec4899); color:white; font-size:12px; font-weight:700; margin-right:6px; animation: lkCapPulse 1.5s ease-in-out infinite;">⏳ --:--:--</span>`
+      : '';
+    const attHeader = `<div style="text-align:right; padding:0 6px 6px;">${capCountdown}<span style="display:inline-block; padding:4px 12px; border-radius:14px; background:${attColor}; color:white; font-size:12px; font-weight:700;">👑 오늘 ${att}/${attCap}회</span></div>`;
     if (!ov || ov.unitsAttempted === 0) {
       el.innerHTML = `${attHeader}<div class="hero-empty">🎯 첫 도전을 기다리고 있어요! 단원을 선택해서 시작해보세요</div>`;
       return;
@@ -1436,6 +1452,10 @@
         _lkDaily = data;
         // overview 캐시가 있으면 hero stats 다시 그려서 도전 횟수 반영
         if (_lkMyOverview) renderHeroStats(_lkMyOverview);
+        // 12h 차단 카운트다운 ticker on/off
+        if (_lkDaily.attemptsLimitReached && _lkDaily.unlockAt) startLkCapCountdownTicker();
+        else stopLkCapCountdownTicker();
+        updateLkCapCountdown();
       }
     } catch (e) { console.warn('lk daily-status 조회 실패', e); }
   }
@@ -1445,6 +1465,18 @@
     if (overlay) { overlay.classList.add('show'); return; }
     const att = _lkDaily?.attempts ?? 10;
     const cap = _lkDaily?.attemptsCap ?? 10;
+    // 12h 쿨다운 남은 시간 계산
+    let remainText = '12시간';
+    if (_lkDaily?.unlockAt) {
+      const remain = new Date(_lkDaily.unlockAt).getTime() - Date.now();
+      if (remain > 0) {
+        const h = Math.floor(remain / 3600000);
+        const m = Math.floor((remain % 3600000) / 60000);
+        remainText = `${h}시간 ${m}분`;
+      } else {
+        remainText = '곧';
+      }
+    }
     overlay = document.createElement('div');
     overlay.id = 'lkLimitOverlay';
     overlay.style.cssText = `
@@ -1462,7 +1494,7 @@
         <div style="font-size:14px; color:#78350f; margin-bottom:20px;">오늘 충분히 실력을 보여줬어요 😊</div>
         <div style="height:1px; background: linear-gradient(to right, transparent, rgba(180,83,9,0.3), transparent); margin: 16px 0;"></div>
         <div style="background: rgba(255,255,255,0.55); border-radius:14px; padding:14px 18px; margin-bottom:12px; font-size:14px; font-weight:700; color:#78350f; border:1.5px solid rgba(245,158,11,0.3);">오늘 도전 <span style="color:#b45309;">${att}</span> / ${cap}회</div>
-        <div style="font-size:13px; font-weight:700; color:#92400e; margin-bottom:18px;">⏳ 자정(00:00) 이후 새로 시작돼요</div>
+        <div style="font-size:13px; font-weight:700; color:#92400e; margin-bottom:18px;">⏳ <span style="color:#7c2d12;">${remainText}</span> 후 재도전이 열려요</div>
         <button style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 13px 36px; border-radius: 28px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 20px rgba(217,119,6,0.4);" onclick="closeLkLimitPopup()">확인</button>
       </div>
     `;
@@ -1476,6 +1508,50 @@
     if (overlay) overlay.remove();
   }
   window.closeLkLimitPopup = closeLkLimitPopup;
+
+  // ───── 일일 캡 12h 카운트다운 (헤더 배지 + 단원 위 띠) ─────
+  let _lkCapTickInterval = null;
+  function updateLkCapCountdown() {
+    if (!_lkDaily?.attemptsLimitReached || !_lkDaily?.unlockAt) {
+      const banner = document.getElementById('lkCapBanner');
+      if (banner) banner.style.display = 'none';
+      const headerBadge = document.getElementById('lkCapCountdown');
+      if (headerBadge) headerBadge.style.display = 'none';
+      stopLkCapCountdownTicker();
+      return;
+    }
+    const unlockMs = new Date(_lkDaily.unlockAt).getTime();
+    const now = Date.now();
+    const remain = unlockMs - now;
+    if (remain <= 0) {
+      stopLkCapCountdownTicker();
+      fetchLkDailyStatus();
+      return;
+    }
+    const h = Math.floor(remain / 3600000);
+    const m = Math.floor((remain % 3600000) / 60000);
+    const s = Math.floor((remain % 60000) / 1000);
+    const pad = n => String(n).padStart(2, '0');
+    const headerBadge = document.getElementById('lkCapCountdown');
+    if (headerBadge) {
+      headerBadge.style.display = 'inline-block';
+      headerBadge.textContent = `⏳ ${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+    const bannerEl = document.getElementById('lkCapBanner');
+    const bannerCount = document.getElementById('lkCapBannerCountdown');
+    if (bannerEl && bannerCount) {
+      bannerEl.style.display = 'block';
+      bannerCount.textContent = `${h}시간 ${m}분 ${s}초`;
+    }
+  }
+  function startLkCapCountdownTicker() {
+    stopLkCapCountdownTicker();
+    updateLkCapCountdown();
+    _lkCapTickInterval = setInterval(updateLkCapCountdown, 1000);
+  }
+  function stopLkCapCountdownTicker() {
+    if (_lkCapTickInterval) { clearInterval(_lkCapTickInterval); _lkCapTickInterval = null; }
+  }
 
   // 점수규정 모달
   function openLkRulesModal() {
@@ -1741,7 +1817,13 @@
       isNewBest = !!data.isNewBest;
       badgesAwarded = data.badgesAwarded || 0;
       totalAwardedForUnit = data.totalAwardedForUnit || 0;
-      if (data.daily) _lkDaily = data.daily;
+      if (data.daily) {
+        _lkDaily = data.daily;
+        if (_lkMyOverview) renderHeroStats(_lkMyOverview);
+        if (_lkDaily.attemptsLimitReached && _lkDaily.unlockAt) startLkCapCountdownTicker();
+        else stopLkCapCountdownTicker();
+        updateLkCapCountdown();
+      }
     } catch (err) { console.error(err); }
 
     // 순위 재조회

@@ -29517,17 +29517,41 @@ app.get('/api/word-battle/last-champions', async (req, res) => {
 
 const LK_SERIES_LIST = ['on', 'up', 'fit', 'deep'];
 
-// 문해왕 일일 도전 횟수 제한 (단순 — KST 0시 자동 리셋)
+// 문해왕 일일 도전 횟수 제한 + 12시간 쿨다운
 const LK_DAILY_ATTEMPTS_CAP = 10;
+const LK_BLOCK_DURATION_MS = 12 * 60 * 60 * 1000;  // 12시간
 const literacyKingDailySchema = new mongoose.Schema({
   grade: { type: String, required: true },
   name: { type: String, required: true },
   dayKey: { type: String, required: true },  // 'YYYY-MM-DD' KST
   attempts: { type: Number, default: 0 },
+  cappedAt: { type: Date, default: null },   // 10회 도달 시각 (12h 카운트 시작점)
   lastPlayedAt: { type: Date, default: Date.now }
 });
 literacyKingDailySchema.index({ grade: 1, name: 1, dayKey: 1 }, { unique: true });
 const LiteracyKingDaily = mongoose.model('LiteracyKingDaily', literacyKingDailySchema);
+
+// 문해왕 일일 상태 확인 + 12h 만료 시 자동 리셋 헬퍼
+async function getOrInitLkDaily(grade, name) {
+  const todayKey = getKstDayKey();
+  let daily = await LiteracyKingDaily.findOne({ grade, name, dayKey: todayKey });
+  if (!daily) {
+    // 다른 날짜 기록 있는지 확인 — 있고 12h 지났으면 정리하고 새로 시작
+    const oldDaily = await LiteracyKingDaily.findOne({ grade, name }).sort({ dayKey: -1 });
+    if (oldDaily && oldDaily.cappedAt && (Date.now() - oldDaily.cappedAt.getTime() >= LK_BLOCK_DURATION_MS)) {
+      // 만료된 차단 — 새 일자로 ride
+    }
+    daily = await LiteracyKingDaily.create({ grade, name, dayKey: todayKey, attempts: 0, cappedAt: null });
+    return daily;
+  }
+  // 12h 만료 체크: cappedAt 후 12h 경과 시 자동 리셋
+  if (daily.cappedAt && (Date.now() - daily.cappedAt.getTime() >= LK_BLOCK_DURATION_MS)) {
+    daily.attempts = 0;
+    daily.cappedAt = null;
+    await daily.save();
+  }
+  return daily;
+}
 const LK_SERIES_LABEL = { on: 'BRAIN ON', up: 'BRAIN UP', fit: 'BRAIN FIT', deep: 'BRAIN DEEP' };
 
 // 결과 저장 — 시리즈별 best 점수 갱신 + 등수 향상 시 뱃지 지급
@@ -29542,18 +29566,21 @@ app.post('/api/literacy-king/save', async (req, res) => {
     }
     const currentMonth = getCurrentMonthKey();
 
-    // 일일 도전 횟수 카운트 + 10회 한도 체크
-    const dayKey = getKstDayKey();
-    let lkDaily = await LiteracyKingDaily.findOne({ grade, name, dayKey });
-    if (!lkDaily) {
-      lkDaily = await LiteracyKingDaily.create({ grade, name, dayKey, attempts: 0 });
-    }
-    await LiteracyKingDaily.updateOne(
-      { _id: lkDaily._id },
-      { $inc: { attempts: 1 }, $set: { lastPlayedAt: new Date() } }
-    );
+    // 일일 도전 횟수 카운트 + 10회 한도 체크 + 12h 쿨다운
+    const lkDaily = await getOrInitLkDaily(grade, name);
     const attemptsAfterSave = (lkDaily.attempts || 0) + 1;
     const attemptsLimitReached = attemptsAfterSave >= LK_DAILY_ATTEMPTS_CAP;
+    const updateOps = {
+      $inc: { attempts: 1 },
+      $set: { lastPlayedAt: new Date() }
+    };
+    // 10회 도달 시 cappedAt 기록 (12h 카운트 시작)
+    if (attemptsLimitReached && !lkDaily.cappedAt) {
+      updateOps.$set.cappedAt = new Date();
+    }
+    await LiteracyKingDaily.updateOne({ _id: lkDaily._id }, updateOps);
+    const cappedAtForResp = lkDaily.cappedAt || (attemptsLimitReached ? new Date() : null);
+    const unlockAt = cappedAtForResp ? new Date(cappedAtForResp.getTime() + LK_BLOCK_DURATION_MS) : null;
 
     const existing = await LiteracyKingRecord.findOne({ grade, name, unitId });
     let isNewBest = false;
@@ -29645,7 +29672,8 @@ app.post('/api/literacy-king/save', async (req, res) => {
         attempts: attemptsAfterSave,
         attemptsCap: LK_DAILY_ATTEMPTS_CAP,
         attemptsLimitReached,
-        dayKey
+        unlockAt,
+        dayKey: lkDaily.dayKey
       }
     });
   } catch (err) {
@@ -29654,20 +29682,22 @@ app.post('/api/literacy-king/save', async (req, res) => {
   }
 });
 
-// 문해왕 일일 도전 횟수 상태 조회
+// 문해왕 일일 도전 횟수 상태 조회 (12h 쿨다운 자동 만료 처리)
 app.get('/api/literacy-king/daily-status', async (req, res) => {
   try {
     const { grade, name } = req.query;
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
-    const dayKey = getKstDayKey();
-    const daily = await LiteracyKingDaily.findOne({ grade, name, dayKey }).lean();
-    const attempts = daily?.attempts || 0;
+    const daily = await getOrInitLkDaily(grade, name);
+    const attempts = daily.attempts || 0;
+    const limitReached = attempts >= LK_DAILY_ATTEMPTS_CAP;
+    const unlockAt = daily.cappedAt ? new Date(daily.cappedAt.getTime() + LK_BLOCK_DURATION_MS) : null;
     res.json({
       ok: true,
       attempts,
       attemptsCap: LK_DAILY_ATTEMPTS_CAP,
-      attemptsLimitReached: attempts >= LK_DAILY_ATTEMPTS_CAP,
-      dayKey
+      attemptsLimitReached: limitReached,
+      unlockAt,
+      dayKey: daily.dayKey
     });
   } catch (err) {
     console.error('문해왕 일일 상태 조회 오류:', err);
