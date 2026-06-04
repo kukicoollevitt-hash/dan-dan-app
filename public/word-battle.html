@@ -1048,6 +1048,12 @@
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
 
+  /* 누적 캡 24h 카운트다운 배지 pulse */
+  @keyframes capPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 2px 6px rgba(220,38,38,0.4); }
+    50%      { transform: scale(1.05); box-shadow: 0 4px 12px rgba(220,38,38,0.6); }
+  }
+
   @media (max-width: 600px) {
     .board { gap: 8px; }
     .card.word { font-size: 18px; }
@@ -1346,6 +1352,12 @@
       <div class="hero-empty">통계를 불러오는 중...</div>
     </div>
 
+    <!-- 누적 캡 24h 차단 안내 띠 (캡 도달 학생만 표시) -->
+    <div id="wbCapBanner" style="display:none; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; text-align: center; box-shadow: 0 2px 8px rgba(245,158,11,0.2);">
+      <div style="font-size: 13px; font-weight: 700; color: #78350f; margin-bottom: 4px;">🏆 오늘의 랭킹 상한 도달!</div>
+      <div style="font-size: 14px; font-weight: 800; color: #b45309;">⏳ <span id="wbCapBannerCountdown">--시간 --분 --초</span> 후 재도전이 열려요</div>
+    </div>
+
     <div class="tabs" id="fieldTabs"></div>
     <div class="tabs" id="subjectTabs"></div>
     <div class="unit-list" id="unitList">
@@ -1504,6 +1516,11 @@
         _wbDaily = data;
         // overview 캐시가 있으면 hero stats 다시 그려서 도전 횟수 즉시 반영
         if (_wbMyOverview) renderHeroStats(_wbMyOverview);
+        // 캡 도달 학생만 카운트다운 시작
+        if (_wbDaily.capReached) startCapCountdownTicker();
+        else stopCapCountdownTicker();
+        // 즉시 1회 갱신
+        updateCapCountdown();
       }
     } catch (e) { console.warn('daily-status 조회 실패', e); }
   }
@@ -1591,6 +1608,54 @@
     if (overlay) overlay.classList.remove('show');
   }
   window.closeWbCapPopup = closeWbCapPopup;
+
+  // ───── 누적 캡 24h 카운트다운 (헤더 배지 + 단원 위 띠) ─────
+  let _wbCapTickInterval = null;
+  function updateCapCountdown() {
+    if (!_wbDaily?.capReached || !_wbDaily?.unlockAt) {
+      // 차단 아니면 띠 숨김
+      const banner = document.getElementById('wbCapBanner');
+      if (banner) banner.style.display = 'none';
+      const headerBadge = document.getElementById('wbCapCountdown');
+      if (headerBadge) headerBadge.style.display = 'none';
+      stopCapCountdownTicker();
+      return;
+    }
+    const unlockMs = new Date(_wbDaily.unlockAt).getTime();
+    const now = Date.now();
+    const remain = unlockMs - now;
+    if (remain <= 0) {
+      // 만료 — 화면 새로고침으로 상태 갱신
+      stopCapCountdownTicker();
+      fetchDailyStatus();
+      return;
+    }
+    const h = Math.floor(remain / 3600000);
+    const m = Math.floor((remain % 3600000) / 60000);
+    const s = Math.floor((remain % 60000) / 1000);
+    const pad = n => String(n).padStart(2, '0');
+    // 헤더 배지 (HH:MM:SS)
+    const headerBadge = document.getElementById('wbCapCountdown');
+    if (headerBadge) {
+      headerBadge.style.display = 'inline-block';
+      headerBadge.textContent = `⏳ ${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+    // 단원 위 띠 (X시간 Y분 Z초)
+    const bannerEl = document.getElementById('wbCapBanner');
+    const bannerCount = document.getElementById('wbCapBannerCountdown');
+    if (bannerEl && bannerCount) {
+      bannerEl.style.display = 'block';
+      bannerCount.textContent = `${h}시간 ${m}분 ${s}초`;
+    }
+  }
+  function startCapCountdownTicker() {
+    stopCapCountdownTicker();
+    updateCapCountdown();
+    _wbCapTickInterval = setInterval(updateCapCountdown, 1000);
+  }
+  function stopCapCountdownTicker() {
+    if (_wbCapTickInterval) { clearInterval(_wbCapTickInterval); _wbCapTickInterval = null; }
+  }
 
   // 점수규정 모달
   function openWbRulesModal() {
@@ -1832,7 +1897,11 @@
     const balance = _wbDaily?.balance ?? 10;
     const balCap = _wbDaily?.balanceCap ?? 50;
     const balColor = balance <= 0 ? '#dc2626' : balance <= 3 ? '#d97706' : '#10b981';
-    const attHeader = `<div style="text-align:right; padding:0 6px 6px;"><span style="display:inline-block; padding:4px 12px; border-radius:14px; background:${balColor}; color:white; font-size:12px; font-weight:700;">🎮 도전권 ${balance}/${balCap}회</span></div>`;
+    // 누적 캡 24h 차단 카운트다운 (해당 학생만 표시)
+    const capCountdown = _wbDaily?.capReached && _wbDaily?.unlockAt
+      ? `<span id="wbCapCountdown" data-unlock="${_wbDaily.unlockAt}" style="display:inline-block; padding:4px 12px; border-radius:14px; background: linear-gradient(135deg, #dc2626, #ea580c); color:white; font-size:12px; font-weight:700; margin-right:6px; animation: capPulse 1.5s ease-in-out infinite;">⏳ --:--:--</span>`
+      : '';
+    const attHeader = `<div style="text-align:right; padding:0 6px 6px;">${capCountdown}<span style="display:inline-block; padding:4px 12px; border-radius:14px; background:${balColor}; color:white; font-size:12px; font-weight:700;">🎮 도전권 ${balance}/${balCap}회</span></div>`;
     if (!overview || overview.unitsAttempted === 0) {
       heroEl.innerHTML = `
         ${attHeader}
