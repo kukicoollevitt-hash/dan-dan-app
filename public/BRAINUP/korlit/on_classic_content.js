@@ -1496,7 +1496,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '양소유는 어린 나이에 (          )했어요.', answer: '장원급제', initials: 'ㅈㅇㄱㅈ', aliases: ['장원급제'] },
         { no: 4, text: '양소유는 (      )의 자리에 올랐어요.', answer: '재상', initials: 'ㅈㅅ', aliases: ['재상'] },
         { no: 5, text: '양소유는 (          )를 모두 누렸어요.', answer: '부귀영화', initials: 'ㅂㄱㅇㅎ', aliases: ['부귀영화'] },
-        { no: 6, text: '세상의 영화는 꿈처럼 (        )해요.', answer: '덧없', initials: 'ㄷㅇ', aliases: ['덧없', '덧없다'] },
+        { no: 6, text: '세상의 영화는 꿈처럼 (        ) 것이에요.', answer: '덧없는', initials: 'ㄷㅇㄴ', aliases: ['덧없는'] },
         { no: 7, text: '성진은 참된 (        )을 얻었어요.', answer: '깨달음', initials: 'ㄲㄷㅇ', aliases: ['깨달음'] },
         { no: 8, text: '육관대사는 성진을 (        )고 인간 세상으로 보냈어요.', answer: '꾸짖', initials: 'ㄲㅈ', aliases: ['꾸짖', '꾸짖고'] },
         { no: 9, text: '성진의 마음속 (      )가 사라져야 했어요.', answer: '번뇌', initials: 'ㅂㄴ', aliases: ['번뇌'] },
