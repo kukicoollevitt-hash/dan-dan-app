@@ -72,91 +72,62 @@
             border-radius: 0;
         }
 
-        /* 메인 히어로 섹션 — 풀스크린 + 하단 "더보기" 버튼
-           ※ iOS Safari 주소창 이슈 때문에 100svh(또는 100dvh) 우선, 폴백으로 100vh */
+        /* 메인 히어로 섹션 — 데스크톱/태블릿: 16:9 비율로 잘림 0%, 모바일은 풀스크린(별도 영상) */
         .video-section.hero {
-            min-height: 100vh;
-            min-height: 100svh;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
             margin-bottom: 0;
+            aspect-ratio: 16 / 9;
         }
         .video-section.hero video {
             width: 100%;
-            height: 100vh;
-            height: 100svh;
+            height: 100%;
             max-width: none;
             object-fit: cover;
         }
-        .hero-scroll-cue {
-            position: absolute;
-            left: 50%;
-            bottom: 36px;
-            transform: translateX(-50%);
+        /* 더보기 버튼 — 2번째 이미지 아래, 누르면 하단 콘텐츠 펼침 */
+        .more-section {
+            padding: 28px 16px;
+            margin-bottom: 0;
+        }
+        .more-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 22px;
-            font-size: 15px;
-            font-weight: 700;
-            color: #0b3d91;
-            background: rgba(255, 255, 255, 0.78);
-            backdrop-filter: blur(6px);
-            border: 1.5px solid rgba(255, 255, 255, 0.9);
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+            border: none;
             border-radius: 999px;
-            box-shadow:
-                0 6px 24px rgba(13, 71, 161, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.45);
             cursor: pointer;
-            animation: heroCueBob 2s ease-in-out infinite;
             text-decoration: none;
-            z-index: 5;
-            transition: background 0.2s ease, transform 0.2s ease;
+            animation: moreBtnBob 2s ease-in-out infinite;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .hero-scroll-cue:hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: translateX(-50%) translateY(-2px);
+        .more-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(33, 150, 243, 0.55);
+            animation: none;
         }
-        .hero-scroll-cue .cue-arrow {
+        .more-btn .more-arrow {
             display: inline-block;
             font-size: 18px;
-            line-height: 1;
-            animation: heroCueArrow 1.4s ease-in-out infinite;
+            animation: moreBtnArrow 1.4s ease-in-out infinite;
         }
-        @keyframes heroCueBob {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50%      { transform: translateX(-50%) translateY(-6px); }
+        @keyframes moreBtnBob {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-6px); }
         }
-        @keyframes heroCueArrow {
+        @keyframes moreBtnArrow {
             0%, 100% { transform: translateY(0); opacity: 1; }
             50%      { transform: translateY(4px); opacity: 0.6; }
         }
-        /* 태블릿(아이패드 등 화면 비율이 4:3~3:2): 16:9 영상 비율 유지해서 잘림 0% */
-        @media (min-width: 769px) and (max-width: 1366px) {
-            .video-section.hero {
-                min-height: 0;
-                aspect-ratio: 16 / 9;
-            }
-            .video-section.hero video {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .video-section.hero { min-height: 100vh; min-height: 100svh; }
-            .video-section.hero video { height: 100vh; height: 100svh; object-fit: cover; }
-            .hero-scroll-cue {
-                bottom: 28px;
-                padding: 10px 18px;
-                font-size: 13px;
-            }
-        }
-
-        /* 더보기 펼침 영역 — 클릭 전엔 숨김, 클릭 시 부드럽게 펼쳐짐 */
+        /* 더보기 클릭 시 펼침 영역 */
         #heroReveal {
             display: none;
             opacity: 0;
@@ -170,11 +141,20 @@
             from { opacity: 0; transform: translateY(24px); }
             to   { opacity: 1; transform: translateY(0); }
         }
-        /* 펼친 뒤엔 더보기 버튼 숨김 */
-        .video-section.hero.opened .hero-scroll-cue {
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+        .more-section.opened { display: none; }
+
+        /* 모바일(≤768px): 풀스크린 + 모바일 전용 영상 (세로형) */
+        @media (max-width: 768px) {
+            .video-section.hero {
+                aspect-ratio: auto;
+                min-height: 100vh;
+                min-height: 100svh;
+            }
+            .video-section.hero video {
+                height: 100vh;
+                height: 100svh;
+                object-fit: cover;
+            }
         }
 
         /* 데스크톱/태블릿/모바일 영상 분기 */
@@ -1346,18 +1326,23 @@
         <!-- 메인 영상 (반응형: JS가 viewport에 따라 src 설정) -->
         <section class="section video-section hero" id="heroSection">
             <video id="mainHeroVideo" autoplay muted loop playsinline preload="auto"></video>
-            <a href="#contentStart" class="hero-scroll-cue" id="heroScrollCue" aria-label="더보기 — 아래로 스크롤">
-                더보기 <span class="cue-arrow">↓</span>
+        </section>
+
+        <!-- 메인 영상 바로 아래 콘텐츠 (항상 노출) -->
+        <section class="section" id="contentStart">
+            <img src="images/메인2번째.jpg?v=20260605" alt="브레인문해력 소개">
+        </section>
+
+        <!-- 더보기 버튼 — 3번째 콘텐츠부터 펼침 -->
+        <section class="section more-section" id="moreSection">
+            <a href="#revealStart" class="more-btn" id="moreBtn" aria-label="더보기 — 아래 콘텐츠 펼치기">
+                더보기 <span class="more-arrow">↓</span>
             </a>
         </section>
 
         <!-- 더보기 클릭 시 펼쳐지는 영역 -->
         <div id="heroReveal" aria-hidden="true">
-
-        <!-- 추가 영상 섹션 -->
-        <section class="section video-section" id="contentStart">
-            <video src="images/brain/brain01.mp4" autoplay muted loop playsinline></video>
-        </section>
+        <span id="revealStart" aria-hidden="true"></span>
 
         <section class="section video-section">
             <video src="images/brain/brain02.mp4" autoplay muted loop playsinline></video>
@@ -2337,23 +2322,19 @@
             window.addEventListener('orientationchange', applySrc);
         })();
 
-        // 메인 히어로 "더보기" 버튼 — 클릭 시 하단 콘텐츠 펼침 + 스크롤
-        (function setupHeroReveal() {
-            const cue = document.getElementById('heroScrollCue');
+        // 더보기 버튼 — 3번째 콘텐츠부터 펼치고 자연스럽게 스크롤
+        (function setupMoreBtn() {
+            const btn = document.getElementById('moreBtn');
             const reveal = document.getElementById('heroReveal');
-            const hero = document.getElementById('heroSection');
-            const target = document.getElementById('contentStart');
-            if (!cue || !reveal || !hero || !target) return;
-            cue.addEventListener('click', (e) => {
+            const moreSec = document.getElementById('moreSection');
+            const target = document.getElementById('revealStart');
+            if (!btn || !reveal || !target) return;
+            btn.addEventListener('click', (e) => {
                 e.preventDefault();
-                if (reveal.classList.contains('expanded')) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    return;
-                }
                 reveal.classList.add('expanded');
                 reveal.setAttribute('aria-hidden', 'false');
-                hero.classList.add('opened');
-                // 펼침 애니메이션 시작 후 살짝 뒤에 스크롤
+                if (moreSec) moreSec.classList.add('opened');
+                // 펼친 새 콘텐츠 시작점이 화면에 들어오도록 살짝 뒤에 스크롤
                 setTimeout(() => {
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 220);
