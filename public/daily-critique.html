@@ -1698,11 +1698,11 @@
       goBtn.disabled = true;
       goBtn.textContent = '생성 중...';
       progressBox.style.display = 'block';
-      updateWorkbookProgress(0, validDates.length + 2, '표지 생성 중...');
+      updateWorkbookProgress(0, validDates.length + 3, '표지 생성 중...');
 
       try {
         await generateWorkbookPDF(grade, month, validDates);
-        updateWorkbookProgress(validDates.length + 2, validDates.length + 2, '✅ 완료! 다운로드 시작됨');
+        updateWorkbookProgress(validDates.length + 3, validDates.length + 3, '✅ 완료! 다운로드 시작됨');
         setTimeout(() => { closeWorkbookModal(); }, 1500);
       } catch (err) {
         console.error('워크북 생성 실패:', err);
@@ -1733,22 +1733,30 @@
         updateWorkbookProgress(0, validDates.length + 2, '표지 생성 중...');
         pdf.addImage(await renderWorkbookCover(grade, month), 'JPEG', 0, 0, W, H);
 
-        // === 목차 ===
-        pdf.addPage();
-        updateWorkbookProgress(1, validDates.length + 2, '목차 생성 중...');
-        pdf.addImage(await renderWorkbookTOC(grade, month, validDates), 'JPEG', 0, 0, W, H);
+        // === 목차 (필요시 2페이지) ===
+        updateWorkbookProgress(1, validDates.length + 3, '목차 생성 중...');
+        const tocImages = await renderWorkbookTOC(grade, month, validDates);
+        for (const tocImg of tocImages) {
+          pdf.addPage();
+          pdf.addImage(tocImg, 'JPEG', 0, 0, W, H);
+        }
 
         // === 일별 콘텐츠 ===
         for (let i = 0; i < validDates.length; i++) {
           const date = validDates[i];
           const d = new Date(date);
-          updateWorkbookProgress(i + 2, validDates.length + 2, `${d.getMonth()+1}월 ${d.getDate()}일 처리 중... (${i+1}/${validDates.length})`);
+          updateWorkbookProgress(i + 2, validDates.length + 3, `${d.getMonth()+1}월 ${d.getDate()}일 처리 중... (${i+1}/${validDates.length})`);
           document.getElementById('dateSelect').value = date;
           loadArticleByDate();
           await new Promise(r => setTimeout(r, 150));
           await renderDayPagesForWorkbook(pdf);
           await new Promise(r => setTimeout(r, 30));
         }
+
+        // === 마무리 페이지 ===
+        updateWorkbookProgress(validDates.length + 2, validDates.length + 3, '마무리 페이지 생성 중...');
+        pdf.addPage();
+        pdf.addImage(await renderWorkbookClosing(grade, month, validDates.length), 'JPEG', 0, 0, W, H);
       } finally {
         // 상태 복원
         currentGrade = savedGrade;
@@ -1766,7 +1774,7 @@
     async function renderWorkbookCover(grade, month) {
       const [y, mm] = month.split('-');
       const cover = document.createElement('div');
-      cover.style.cssText = `width:210mm;height:297mm;background:linear-gradient(135deg,#0d47a1 0%,#2196f3 50%,#4facfe 100%);position:fixed;top:0;left:0;z-index:99999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;box-sizing:border-box;padding:40mm;`;
+      cover.style.cssText = `width:210mm;height:297mm;background:linear-gradient(135deg,#0d47a1 0%,#2196f3 50%,#4facfe 100%);position:fixed;top:-99999px;left:0;z-index:-1;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;box-sizing:border-box;padding:40mm;`;
       cover.innerHTML = `
         <div style="text-align:center;width:100%;">
           <div style="font-size:28px;letter-spacing:8px;opacity:0.85;margin-bottom:18mm;">BRAIN LITERACY WORKBOOK</div>
@@ -1787,34 +1795,80 @@
       return canvas.toDataURL('image/jpeg', 0.92);
     }
     async function renderWorkbookTOC(grade, month, validDates) {
+      // 30일이면 2페이지로 분할 (페이지당 16개)
+      const PER_PAGE = 16;
+      const tocPagesCount = Math.ceil(validDates.length / PER_PAGE);
+      const FIRST_DAY_PAGE = 1 /*표지*/ + tocPagesCount /*목차*/ + 1; // 첫 일자 시작 페이지
+      const pages = [];
+      for (let p = 0; p < tocPagesCount; p++) {
+        const startIdx = p * PER_PAGE;
+        const chunk = validDates.slice(startIdx, startIdx + PER_PAGE);
+        pages.push(await renderWorkbookTOCPage(grade, month, chunk, startIdx, FIRST_DAY_PAGE, validDates.length, p + 1, tocPagesCount));
+      }
+      return pages;
+    }
+    async function renderWorkbookTOCPage(grade, month, chunk, startIdx, firstDayPage, totalDays, pageNo, totalTocPages) {
       const [y, mm] = month.split('-');
-      const itemsHtml = validDates.map((d, i) => {
+      const itemsHtml = chunk.map((d, i) => {
+        const globalIdx = startIdx + i;
         const art = articlesData.articles[d];
         const dt = new Date(d);
         const dateLabel = `${dt.getMonth()+1}/${dt.getDate()}(${['일','월','화','수','목','금','토'][dt.getDay()]})`;
-        const pageNum = 3 + (i * 4);
+        const pageNum = firstDayPage + (globalIdx * 4);
         return `
-          <div style="display:flex;align-items:baseline;padding:6px 0;border-bottom:1px dashed #ddd;gap:10px;font-size:11px;">
+          <div style="display:flex;align-items:baseline;padding:8px 0;border-bottom:1px dashed #ddd;gap:10px;font-size:12px;">
             <div style="width:18mm;color:#0d47a1;font-weight:700;">${dateLabel}</div>
-            <div style="width:22mm;color:#2196f3;font-size:9px;font-weight:600;">[${art.category || '-'}]</div>
+            <div style="width:24mm;color:#2196f3;font-size:9.5px;font-weight:600;">[${art.category || '-'}]</div>
             <div style="flex:1;color:#333;line-height:1.4;">${art.title}</div>
-            <div style="width:12mm;text-align:right;color:#888;font-size:10px;">p.${pageNum}</div>
+            <div style="width:14mm;text-align:right;color:#888;font-size:10.5px;">p.${pageNum}</div>
           </div>
         `;
       }).join('');
+      const pageLabel = totalTocPages > 1 ? `(${pageNo}/${totalTocPages})` : '';
       const toc = document.createElement('div');
-      toc.style.cssText = `width:210mm;height:297mm;background:#fffef9;position:fixed;top:0;left:0;z-index:99999;box-sizing:border-box;padding:25mm 22mm 20mm;font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;overflow:hidden;`;
+      toc.style.cssText = `width:210mm;height:297mm;background:#fffef9;position:fixed;top:-99999px;left:0;z-index:-1;box-sizing:border-box;padding:25mm 22mm 20mm;font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;overflow:hidden;`;
       toc.innerHTML = `
         <div style="text-align:center;margin-bottom:14mm;border-bottom:3px double #0d47a1;padding-bottom:8mm;">
-          <div style="font-size:12px;color:#2196f3;letter-spacing:4px;margin-bottom:6px;">TABLE OF CONTENTS</div>
+          <div style="font-size:12px;color:#2196f3;letter-spacing:4px;margin-bottom:6px;">TABLE OF CONTENTS ${pageLabel}</div>
           <h1 style="font-family:'Noto Serif KR',serif;margin:0;font-size:34px;font-weight:800;color:#0d47a1;">목차</h1>
-          <div style="margin-top:8px;font-size:13px;color:#555;">${y}년 ${parseInt(mm)}월 · ${GRADE_LABELS[grade]}학년 · 총 ${validDates.length}일</div>
+          <div style="margin-top:8px;font-size:13px;color:#555;">${y}년 ${parseInt(mm)}월 · ${GRADE_LABELS[grade]}학년 · 총 ${totalDays}일</div>
         </div>
         <div>${itemsHtml}</div>
       `;
       document.body.appendChild(toc);
       const canvas = await html2canvas(toc, { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#fffef9' });
       document.body.removeChild(toc);
+      return canvas.toDataURL('image/jpeg', 0.92);
+    }
+    async function renderWorkbookClosing(grade, month, totalDays) {
+      const [y, mm] = month.split('-');
+      const div = document.createElement('div');
+      div.style.cssText = `width:210mm;height:297mm;background:linear-gradient(135deg,#4facfe 0%,#2196f3 50%,#0d47a1 100%);position:fixed;top:-99999px;left:0;z-index:-1;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;box-sizing:border-box;padding:35mm;`;
+      div.innerHTML = `
+        <div style="text-align:center;width:100%;">
+          <div style="font-size:90px;margin-bottom:10mm;">🎉</div>
+          <div style="font-family:'Noto Serif KR',serif;font-size:48px;font-weight:800;letter-spacing:6px;margin-bottom:6mm;">한 달, 수고했어요!</div>
+          <div style="width:60mm;border-top:2px solid rgba(255,255,255,0.7);margin:8mm auto;"></div>
+          <div style="font-size:18px;line-height:1.85;opacity:0.95;margin-bottom:18mm;letter-spacing:1px;">
+            ${y}년 ${parseInt(mm)}월,<br>
+            <strong>${totalDays}편의 기사</strong>를 읽고<br>
+            <strong>나만의 생각</strong>을 정리했어요.
+          </div>
+          <div style="display:inline-block;padding:8mm 14mm;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.5);border-radius:10mm;backdrop-filter:blur(8px);">
+            <div style="font-size:15px;font-weight:600;letter-spacing:2px;margin-bottom:8px;opacity:0.9;">${GRADE_LABELS[grade]}학년 워크북 완주</div>
+            <div style="font-size:22px;font-weight:800;letter-spacing:3px;">📚 ${totalDays}일 × 4페이지</div>
+          </div>
+          <div style="margin-top:22mm;font-size:16px;font-style:italic;opacity:0.85;line-height:1.6;">
+            "오늘의 한 줄이,<br>내일의 한 권을 만든다."
+          </div>
+          <div style="position:absolute;bottom:25mm;left:0;right:0;text-align:center;font-size:12px;letter-spacing:4px;opacity:0.7;">
+            © 2026 BRAIN LITERACY · 생각하는 힘을 키우는 매일 비평
+          </div>
+        </div>
+      `;
+      document.body.appendChild(div);
+      const canvas = await html2canvas(div, { scale: 1.5, useCORS: true, logging: false });
+      document.body.removeChild(div);
       return canvas.toDataURL('image/jpeg', 0.92);
     }
     async function renderDayPagesForWorkbook(pdf) {
@@ -1848,7 +1902,7 @@
         const dailyQuote = document.getElementById('dailyQuote').textContent;
         const articleTitle = currentArticle ? currentArticle.title : '';
         const coverPage = document.createElement('div');
-        coverPage.style.cssText = `width:210mm;height:297mm;background:#fffef9;display:flex;flex-direction:column;align-items:center;justify-content:center;position:fixed;top:0;left:0;z-index:99999;box-sizing:border-box;padding:40px;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;`;
+        coverPage.style.cssText = `width:210mm;height:297mm;background:#fffef9;display:flex;flex-direction:column;align-items:center;justify-content:center;position:fixed;top:-99999px;left:0;z-index:-1;box-sizing:border-box;padding:40px;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;`;
         coverPage.innerHTML = `
           <div style="width:100%;text-align:center;">
             <div style="margin:0 auto 40px;width:80%;"><div style="border-top:2px solid #d4af37;margin-bottom:3px;"></div><div style="border-top:2px solid #d4af37;"></div></div>
