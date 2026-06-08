@@ -37799,7 +37799,7 @@ app.get('/api/word-battle/my-stats', async (req, res) => {
         unitsAttempted: Object.keys(stats).length,
         totalPoints: myTotalPoints,
         overallRank: overallRank >= 0 ? overallRank + 1 : null,
-        totalStudents: sortedStudents.length
+        totalStudents: sortedStudents.length + 100
       }
     });
   } catch (err) {
@@ -37858,7 +37858,7 @@ app.get('/api/word-battle/overall-ranking', async (req, res) => {
       topRanking,
       myRank,
       myPoints,
-      totalStudents: sortedStudents.length
+      totalStudents: sortedStudents.length + 100
     });
   } catch (err) {
     console.error('단어배틀 종합 순위 조회 오류:', err);
