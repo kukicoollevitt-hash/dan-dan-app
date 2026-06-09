@@ -2473,8 +2473,14 @@ function applyContentPack(unitKey) {
     // 문단 중심 내용 팝업 함수
     function showParagraphPopup(paragraphIndex, onComplete, onWrong) {
       if (!pack.paragraphMain || !pack.paragraphMain[paragraphIndex]) { onComplete(); return; }
-      const correctAnswer = pack.paragraphMain[paragraphIndex];
-      const allOptions = [...pack.paragraphMain];
+      // ✅ "제목: 설명" 형식에서 학생이 너무 쉽게 답을 매칭하지 않도록 제목 부분 제거
+      const _stripParaTitle = (s) => {
+        if (!s) return s;
+        const i = s.indexOf(':');
+        return i > -1 ? s.slice(i + 1).trim() : s;
+      };
+      const correctAnswer = _stripParaTitle(pack.paragraphMain[paragraphIndex]);
+      const allOptions = [...pack.paragraphMain].map(_stripParaTitle);
       for (let i = allOptions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]]; }
       const overlay = document.createElement('div'); overlay.className = 'paragraph-popup-overlay';
       const popup = document.createElement('div'); popup.className = 'paragraph-popup';
@@ -2755,21 +2761,26 @@ function saveReadingState() {
 
     const q1   = document.querySelector('input[name="q1"]:checked');
     const q2   = document.querySelector('input[name="q2"]:checked');
+    const q3R  = document.querySelector('input[name="q3"]:checked');  // ✅ kh: q3 라디오
+    const q4R  = document.querySelector('input[name="q4"]:checked');  // ✅ kh: q4 라디오
+    const q5R  = document.querySelector('input[name="q5"]:checked');  // ✅ kh: q5 라디오
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
     const q4_1 = document.getElementById('q4-1');
     const q4_2 = document.getElementById('q4-2');
-    const q5   = document.getElementById('q5');
+    const q5T  = document.getElementById('q5');  // textarea 호환
 
     const state = {
       graded: true,
       q1:   q1   ? q1.value   : '',
       q2:   q2   ? q2.value   : '',
+      q3:   q3R  ? q3R.value  : '',
+      q4:   q4R  ? q4R.value  : '',
       q3_1: q3_1 ? q3_1.value : '',
       q3_2: q3_2 ? q3_2.value : '',
       q4_1: q4_1 ? q4_1.value : '',
       q4_2: q4_2 ? q4_2.value : '',
-      q5:   q5   ? q5.value   : ''
+      q5:   q5R  ? q5R.value  : (q5T ? q5T.value : '')
     };
 
     localStorage.setItem(key, JSON.stringify(state));
@@ -2796,18 +2807,31 @@ function loadReadingState() {
       const r2 = document.querySelector(`input[name="q2"][value="${state.q2}"]`);
       if (r2) r2.checked = true;
   }
+    // ✅ kh: q3/q4/q5도 라디오 — 라디오 존재 시 복원
+    if (state.q3) {
+      const r3 = document.querySelector(`input[name="q3"][value="${state.q3}"]`);
+      if (r3) r3.checked = true;
+    }
+    if (state.q4) {
+      const r4 = document.querySelector(`input[name="q4"][value="${state.q4}"]`);
+      if (r4) r4.checked = true;
+    }
+    if (state.q5 && document.querySelector('input[name="q5"]')) {
+      const r5 = document.querySelector(`input[name="q5"][value="${state.q5}"]`);
+      if (r5) r5.checked = true;
+    }
 
     const q3_1 = document.getElementById('q3-1');
     const q3_2 = document.getElementById('q3-2');
     const q4_1 = document.getElementById('q4-1');
     const q4_2 = document.getElementById('q4-2');
-    const q5   = document.getElementById('q5');
+    const q5T  = document.getElementById('q5'); // textarea
 
     if (q3_1 && state.q3_1 !== undefined) q3_1.value = state.q3_1;
     if (q3_2 && state.q3_2 !== undefined) q3_2.value = state.q3_2;
     if (q4_1 && state.q4_1 !== undefined) q4_1.value = state.q4_1;
     if (q4_2 && state.q4_2 !== undefined) q4_2.value = state.q4_2;
-    if (q5   && state.q5   !== undefined) q5.value   = state.q5;
+    if (q5T  && state.q5   !== undefined && !document.querySelector('input[name="q5"]')) q5T.value = state.q5;
 
     if (state.graded && typeof window.gradeQuiz === 'function') {
       setTimeout(() => {
@@ -2845,7 +2869,9 @@ window.gradeQuiz = function () {
   });
 
   let score = 0;
-  const totalAuto = 4;
+  // ✅ q5가 라디오(객관식)면 5문제 자동채점, textarea(서술형)면 4문제 자동채점
+  const _q5IsMC = !!document.querySelector('input[name="q5"]');
+  const totalAuto = _q5IsMC ? 5 : 4;
   const shortMsgs = [];
   const fullMsgs = [];
 
@@ -2915,15 +2941,23 @@ window.gradeQuiz = function () {
   }
   mark(3, q4ok, '④', EX.q4);
 
-  // 5 (서술형)
-  const essay = (document.getElementById('q5')?.value || '').trim().toLowerCase();
-  const keys = (pack.essayKeywords && Array.isArray(pack.essayKeywords) && pack.essayKeywords.length)
-    ? pack.essayKeywords
-    : ["등고선","간격","좁","넓","급경사","완만","경사"];
-  let hit = 0;
-  keys.forEach(k => { if (essay.includes(k)) hit++; });
-  const q5ok = essay.length && hit >= 2;
-  mark(4, q5ok, '⑤', EX.q5, true);
+  // 5 (객관식 우선 / 서술형 fallback) — kh는 라디오
+  let q5ok = false;
+  let _q5IsEssay = false;
+  if (_q5IsMC && A.q5 && typeof A.q5 === 'string') {
+    const q5Radio = document.querySelector('input[name="q5"]:checked');
+    q5ok = !!(q5Radio && q5Radio.value === A.q5);
+  } else {
+    _q5IsEssay = true;
+    const essay = (document.getElementById('q5')?.value || '').trim().toLowerCase();
+    const keys = (pack.essayKeywords && Array.isArray(pack.essayKeywords) && pack.essayKeywords.length)
+      ? pack.essayKeywords
+      : ["등고선","간격","좁","넓","급경사","완만","경사"];
+    let hit = 0;
+    keys.forEach(k => { if (essay.includes(k)) hit++; });
+    q5ok = !!(essay.length && hit >= 2);
+  }
+  mark(4, q5ok, '⑤', EX.q5, _q5IsEssay);
 
   const box = document.getElementById('grade-result');
   if (box) {

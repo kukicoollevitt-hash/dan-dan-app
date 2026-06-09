@@ -187,6 +187,50 @@
         } else {
           console.error('[saveUnitProgressToServer] 저장 실패:', result.message);
         }
+
+        // 🇰🇷 BRAIN한국사(kh_*) — 어휘/창의를 전용 KhSubmission에도 저장
+        if (typeof unit === 'string' && unit.startsWith('kh_')) {
+          // 어휘
+          if (data && data.vocabState) {
+            const vs = data.vocabState;
+            const answers = Array.isArray(vs.vocabData)
+              ? vs.vocabData.map(d => (d && typeof d.value === 'string') ? d.value : '')
+              : [];
+            fetch('/api/kh/save-vocab', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                grade: stu.grade,
+                name: stu.name,
+                phone: stu.phone || '',
+                unit,
+                answers,
+                score: typeof vs.correctCount === 'number' ? vs.correctCount : null,
+                total: typeof vs.totalCount === 'number' ? vs.totalCount : null
+              })
+            }).then(r => r.json()).then(d => console.log(`[한국사] ${unit} 어휘학습 저장:`, d.ok ? 'OK' : d.message))
+              .catch(e => console.warn('[한국사] save-vocab(kh-direct) 실패:', e));
+          }
+          // 창의
+          if (data && data.creativeState) {
+            const cs = data.creativeState;
+            if (cs.text && cs.isSubmitted) {
+              fetch('/api/kh/save-creative', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  grade: stu.grade,
+                  name: stu.name,
+                  phone: stu.phone || '',
+                  unit,
+                  question: cs.topic || '',
+                  answer: cs.text
+                })
+              }).then(r => r.json()).then(d => console.log(`[한국사] ${unit} 창의활동 저장:`, d.ok ? 'OK' : d.message))
+                .catch(e => console.warn('[한국사] save-creative(kh-direct) 실패:', e));
+            }
+          }
+        }
       } catch (err) {
         console.error('[saveUnitProgressToServer] 네트워크 오류:', err);
       }
@@ -255,6 +299,28 @@
           })
         });
         const result = await res.json();
+
+        // 🇰🇷 BRAIN한국사(kh_*) 본문학습 — 전용 KhSubmission에도 저장
+        if (typeof unit === 'string' && unit.startsWith('kh_')) {
+          try {
+            await fetch('/api/kh/save-passage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                grade: stu.grade,
+                name: stu.name,
+                phone: stu.phone || '',
+                unit: unit,
+                radar: radar,
+                readingTime: readingTimeSeconds
+              })
+            });
+            console.log(`[한국사] ${unit} 본문학습 저장 완료`);
+          } catch (e) {
+            console.warn('[한국사] save-passage 실패:', e);
+          }
+        }
+
         if (result.ok || result.success || result._id) {
           console.log(`[sendLearningLog] ${unit} 학습 로그 전송 완료`, radar);
 
@@ -660,6 +726,16 @@
       if (inputs.q4 && !inputs.q4_1) {
         const q4Radio = document.querySelector(`input[name="q4"][value="${inputs.q4}"]`);
         if (q4Radio) q4Radio.checked = true;
+      }
+      // 5번 - 라디오 버튼 복원 (한국사 kh_ 시리즈: q5 객관식)
+      // inputs.q5가 숫자 문자열이면서 textarea(#q5)가 없으면 라디오로 판단
+      if (inputs.q5) {
+        const q5Textarea = document.getElementById('q5');
+        const q5IsRadioOnly = !q5Textarea && /^[1-9]$/.test(String(inputs.q5));
+        if (q5IsRadioOnly) {
+          const q5Radio = document.querySelector(`input[name="q5"][value="${inputs.q5}"]`);
+          if (q5Radio) q5Radio.checked = true;
+        }
       }
 
       // 3번, 4번 - 텍스트 입력 복원 (q3_1 또는 q3-1 형식 모두 지원)
@@ -2816,6 +2892,32 @@
       // ✅ 어휘학습 채점 완료 플래그 설정
       window.isVocabGraded = true;
 
+      // 🇰🇷 BRAIN한국사(kh_*) 어휘학습 — 전용 KhSubmission에 저장
+      try {
+        const _khUnit = window.CUR_UNIT || '';
+        if (typeof _khUnit === 'string' && _khUnit.startsWith('kh_')) {
+          const _khStu = getCurrentStudent();
+          if (_khStu) {
+            const answers = Array.from(blanks).map(bw => (bw.querySelector('.blank-input').value || '').trim());
+            fetch('/api/kh/save-vocab', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                grade: _khStu.grade,
+                name: _khStu.name,
+                phone: _khStu.phone || '',
+                unit: _khUnit,
+                answers,
+                score: correctCnt,
+                total
+              })
+            }).then(r => r.json()).then(d => {
+              console.log(`[한국사] ${_khUnit} 어휘학습 저장:`, d.ok ? 'OK' : d.message);
+            }).catch(e => console.warn('[한국사] save-vocab 실패:', e));
+          }
+        }
+      } catch (e) { console.warn('[한국사] save-vocab 훅 오류:', e); }
+
       const lexicalScore = Math.round((window.reportState.vocabScoreRatio || 0) * 10);
 
       drawRadarChart({
@@ -3371,6 +3473,36 @@
 
         // ✅ 창의활동 제출 완료 플래그 설정
         window.isCreativeSubmitted = true;
+
+        // 🇰🇷 BRAIN한국사(kh_*) 창의활동 — 전용 KhSubmission에 저장
+        try {
+          const _khUnit = window.CUR_UNIT || '';
+          if (typeof _khUnit === 'string' && _khUnit.startsWith('kh_')) {
+            const _khStu = getCurrentStudent();
+            if (_khStu) {
+              // 주제(질문) 추출
+              let _khQuestion = '';
+              const topicBox = document.querySelector('.creative-topic-box');
+              if (topicBox) {
+                const t = topicBox.querySelector('div:first-child');
+                if (t) _khQuestion = t.textContent.replace(/주제[:\s]*/i, '').trim();
+              }
+              await fetch('/api/kh/save-creative', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  grade: _khStu.grade,
+                  name: _khStu.name,
+                  phone: _khStu.phone || '',
+                  unit: _khUnit,
+                  question: _khQuestion,
+                  answer: text
+                })
+              });
+              console.log(`[한국사] ${_khUnit} 창의활동 저장 완료`);
+            }
+          }
+        } catch (e) { console.warn('[한국사] save-creative 실패:', e); }
 
         showSubmitSuccess('창의활동');
       });

@@ -11,6 +11,14 @@
   <!-- 공통 CSS -->
   <link rel="stylesheet" href="/assets/css/learning-common.css">
 
+
+  <!-- BRAIN한국사 전용 — 한반도지도 배경 (정식 오픈 시 유지 또는 제거) -->
+  <style>
+    body {
+      background: url("/images/한반도지도.jpg") center center / cover no-repeat fixed,
+                  #fffaf5 !important;
+    }
+  </style>
   <style>
 /* === 어휘학습 주황색 메모지 스타일 === */
 .vocab-input::placeholder { color: #333; }
@@ -499,6 +507,9 @@
         });
 
         const score = total > 0 ? Math.round((correctCnt / total) * 100) : 0;
+        // ✅ 어휘 정답 비율을 window.reportState에 반영 (본문 q3 틀렸을 때 어휘점수 fallback용)
+        window.reportState = window.reportState || {};
+        window.reportState.vocabScoreRatio = total > 0 ? (correctCnt / total) : 0;
         vocabResultBox.innerHTML = `<p><strong>점수: ${correctCnt} / ${total} (${score}점)</strong></p><p>${msgs.join('<br>')}</p>`;
         vocabResultBox.style.display = 'block';
 
@@ -670,7 +681,7 @@
 
       <!-- ✅ 제출하기 버튼 -->
       <div class="report-actions">
-        <button class="report-btn-remedial" onclick="openRemedial()">
+        <button class="report-btn-remedial" style="display:none;" onclick="openRemedial()">
           보완학습 하기
         </button>
         <button class="report-btn-submit" onclick="submitReport()">
@@ -1008,22 +1019,10 @@
     /* ===== 본문 채점 ===== */
     let readingResultHTML = "";
     function gradeQuiz() {
-      const answerKey = {
-        q1: "2",
-        q2: "3",
-        q3_1: ["경계"],
-        q3_2: ["일반도"],
-        q4_1: ["디지털", "디지털지도", "디지털 지도"],
-        q4_2: ["실시간"]
-      };
-      const explain = {
-        q1: "해설: 지도에는 단순 길 안내를 넘어 지역의 생활 모습과 자연환경 정보가 들어 있어 세상을 이해하는 창이 됨.",
-        q2: "해설: 주제도는 교통·관광·기후처럼 한 주제에 집중해 정보를 표현하는 지도.",
-        q3: "해설: 산과 강, 도시와 나라의 경계를 보여 주는 지도는 '일반도'라고 합니다.",
-        q4: "해설: 디지털 지도는 전자기기에서 실시간으로 정보를 확인할 수 있는 지도입니다.",
-        q5: "서술형 예시: 지도를 통해 지역의 구조, 사람들의 생활, 자연환경을 함께 읽어내는 사람이라는 뜻."
-      };
-
+      // ✅ 한국사 정답키/해설은 CONTENTS[CUR_UNIT]에서 동적으로 읽음 (단원별 다름)
+      const _khContent = (window.CONTENTS && window.CONTENTS[window.CUR_UNIT]) || {};
+      const answerKey = _khContent.answerKey || { q1: '1', q2: '1', q3: '1', q4: '1', q5: '1' };
+      const explain = _khContent.explain || { q1: '', q2: '', q3: '', q4: '', q5: '' };
       const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
       const numLabels = ["01","02","03","04","05"];
       quizBlocks.forEach((block, idx) => {
@@ -1269,14 +1268,21 @@
 
       const q1 = document.querySelector('input[name="q1"]:checked');
       const q2 = document.querySelector('input[name="q2"]:checked');
+      // ✅ kh는 q3/q4/q5도 라디오 — 라디오 값 우선 캡처, 텍스트 필드는 호환용
+      const q3R = document.querySelector('input[name="q3"]:checked');
+      const q4R = document.querySelector('input[name="q4"]:checked');
+      const q5R = document.querySelector('input[name="q5"]:checked');
+      const q5Text = document.getElementById('q5');
       const inputs = {
         q1: q1 ? q1.value : '',
         q2: q2 ? q2.value : '',
+        q3: q3R ? q3R.value : '',
+        q4: q4R ? q4R.value : '',
+        q5: q5R ? q5R.value : (q5Text ? q5Text.value : ''),
         q3_1: document.getElementById('q3-1')?.value || '',
         q3_2: document.getElementById('q3-2')?.value || '',
         q4_1: document.getElementById('q4-1')?.value || '',
-        q4_2: document.getElementById('q4-2')?.value || '',
-        q5: document.getElementById('q5')?.value || ''
+        q4_2: document.getElementById('q4-2')?.value || ''
       };
 
       const quizBlocks = document.querySelectorAll('#tab-reading .quiz-block');
@@ -1458,6 +1464,51 @@
         }, window.location.origin);
         console.log('[study page] Sent UNIT_COMPLETED to parent');
       }
+
+      // 🇰🇷 BRAIN한국사 — 본문학습(radar+readingTime)을 전용 KhSubmission에 저장
+      try {
+        // localStorage가 source of truth (분석리포트 새로고침 시 reportState 메모리값은 초기화될 수 있음)
+        const _khLsKey = `dan-kh-report-state:${window.CUR_UNIT}`;
+        let _ls = null;
+        try { _ls = JSON.parse(localStorage.getItem(_khLsKey) || 'null'); } catch (e) {}
+        // window.reportState가 채점 결과를 담고 있음 (content.js gradeQuiz가 여기 씀)
+        // 로컬 let reportState는 초기값 그대로일 수 있어서 window 쪽 우선
+        const _wrs = window.reportState || {};
+        const _lrs = (typeof reportState !== 'undefined') ? reportState : {};
+        const _hasWrs = _wrs && ('q1ok' in _wrs || 'q5ok' in _wrs);
+        const _rs = _hasWrs ? _wrs : _lrs;
+        // 우선순위: localStorage(있고 q*ok 키 존재) > reportState(메모리)
+        const _src = (_ls && ('q1ok' in _ls || 'q5ok' in _ls)) ? _ls : _rs;
+        const _lexicalRatio = (typeof _src.vocabScoreRatio === 'number') ? _src.vocabScoreRatio : 0;
+        // 어휘 점수 = 본문 q3(어휘 맥락력) 5점 + 어휘학습 비율 5점 (반반 반영)
+        const _lexicalScore = (_src.q3ok ? 5 : 0) + Math.round(_lexicalRatio * 5);
+        const _radar = {
+          literal:     _src.q1ok ? 10 : 6,
+          structural:  _src.q2ok ? 10 : 6,
+          lexical:     _lexicalScore,
+          inferential: _src.q4ok ? 10 : 6,
+          critical:    _src.q5ok ? 10 : 6
+        };
+        const _minInput = document.getElementById('minute-input');
+        const _secInput = document.getElementById('second-input');
+        let _readingTime = 0;
+        if (_minInput && _secInput) {
+          _readingTime = (parseInt(_minInput.value) || 0) * 60 + (parseInt(_secInput.value) || 0);
+        }
+        await fetch('/api/kh/save-passage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: stu.grade,
+            name: stu.name,
+            phone: stu.phone || '',
+            unit: window.CUR_UNIT || cur,
+            radar: _radar,
+            readingTime: _readingTime
+          })
+        });
+        console.log('[한국사] 본문학습 저장 완료', window.CUR_UNIT, _radar);
+      } catch (e) { console.warn('[한국사] save-passage 실패:', e); }
 
       // 7) 완료 표시
       showSubmitSuccess('분석리포트');
@@ -1718,14 +1769,13 @@ function highlightEvidence() {
   const qLabels = { q1: '1번', q2: '2번', q3: '3번', q4: '4번', q5: '5번' };
   const areas = [document.querySelector('.passage-text'), document.getElementById('vocab-result')];
 
-  ['q1', 'q2', 'q3', 'q4'].forEach(qKey => {
-    const evidenceText = pack.explain[qKey];
-    if (!evidenceText || evidenceText.length < 2) return;
-
-    const chars = Array.from(evidenceText);
+  // ✅ 한국사: 1~5번 모두 객관식이므로 q5도 포함, 다중 구간(/, →, …)은 분할 시도
+  const _tryHL = (text, qKey) => {
+    if (!text || text.length < 2) return false;
+    const chars = Array.from(text);
     const escapedChars = chars.map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     const flexPattern = escapedChars.join('(?:<[^>]*>)*');
-
+    let matched = false;
     areas.forEach(area => {
       if (!area) return;
       try {
@@ -1735,11 +1785,41 @@ function highlightEvidence() {
           `<span class="evidence-highlight evidence-${qKey}">$1<span class="evidence-tag">${qLabels[qKey]}</span></span>`);
         if (newHtml !== html) {
           area.innerHTML = newHtml;
+          matched = true;
         }
       } catch (e) {
         console.warn(`[highlightEvidence] ${qKey} 패턴 오류:`, e);
       }
     });
+    return matched;
+  };
+
+  // ✅ 후보 텍스트 우선순위: explain 통째 → explain 분할 → detail의 인용("..." 또는 '...')
+  const _collectCands = (qKey) => {
+    const cands = [];
+    const explain = pack.explain && pack.explain[qKey];
+    if (explain && explain.length >= 2) {
+      cands.push(explain);
+      explain.split(/[\/→…]/).map(s => s.trim()).filter(s => s.length >= 4).forEach(p => cands.push(p));
+    }
+    const detail = pack.detail && pack.detail[qKey];
+    if (detail) {
+      // 한·일 따옴표·작은따옴표 안의 4자 이상 텍스트 추출
+      const qre = /[\u201C\u201D\u300C\u300D\u300E\u300F"'\u2018\u2019]([^\u201C\u201D\u300C\u300D\u300E\u300F"'\u2018\u2019]{4,}?)[\u201C\u201D\u300C\u300D\u300E\u300F"'\u2018\u2019]/g;
+      let m;
+      while ((m = qre.exec(detail)) !== null) {
+        const t = (m[1] || '').trim();
+        if (t.length >= 4) cands.push(t);
+      }
+    }
+    return cands;
+  };
+
+  ['q1', 'q2', 'q3', 'q4', 'q5'].forEach(qKey => {
+    const cands = _collectCands(qKey);
+    for (const cand of cands) {
+      if (_tryHL(cand, qKey)) break;
+    }
   });
 }
 window.highlightEvidence = highlightEvidence;

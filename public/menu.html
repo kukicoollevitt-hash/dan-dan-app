@@ -10900,10 +10900,11 @@ if (logoutConfirmBtn) {
       li.addEventListener("click", async () => {
         const series = li.dataset.series;
 
-        // BRAINKORHIST(방학특강 한국사) 클릭 — 현재 오픈 예정 상태
+        // BRAINKORHIST(방학특강 한국사) — 영상 인트로 팝업
+        // 정식 오픈일(2026-06-15) 또는 베타 테스터 → "학습하기" 버튼 활성, 그 외 → "오픈 예정"
         if (series === 'BRAINKORHIST') {
-          if (typeof window.showKhComingSoonPopup === 'function') {
-            window.showKhComingSoonPopup();
+          if (typeof window.showKhSeriesPopup === 'function') {
+            window.showKhSeriesPopup();
           }
           return;
         }
@@ -13199,6 +13200,16 @@ async function performLogout() {
           // 방학특강(BRAINKORHIST)은 시리즈 배정과 무관하게 모든 학생에게 항상 활성
           if (seriesId === 'BRAINKORHIST') {
             li.classList.remove("disabled");
+            // 베타 테스터 또는 정식 오픈일(2026-06-15) 이후 → 회색 "오픈 예정" 외관 제거
+            const KH_OPEN_DATE = new Date('2026-06-15T00:00:00');
+            const KH_BETA_TESTERS = [{ grade: '초3', name: '김윤슬' }];
+            let isBeta = false;
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              isBeta = KH_BETA_TESTERS.some(t => t.grade === cs.grade && t.name === cs.name);
+            } catch {}
+            const isOpen = new Date() >= KH_OPEN_DATE;
+            if (isBeta || isOpen) li.classList.remove("kh-coming-soon");
             return;
           }
 
@@ -33173,7 +33184,7 @@ ${content}
       box-shadow: 0 12px 40px rgba(0,0,0,0.25);
     }
     .kh-modal-header {
-      background: linear-gradient(135deg, #ffb347 0%, #ff7e5f 100%);
+      background: linear-gradient(135deg, #6cbf5a 0%, #2e9b3f 100%);
       color: #fff;
       padding: 18px 24px;
       display: flex;
@@ -33208,7 +33219,9 @@ ${content}
       padding: 20px;
       overflow-y: auto;
       flex: 1;
-      background: #fffaf5;
+      background:
+        url('/images/한반도지도.jpg') center center / contain no-repeat fixed,
+        #fffaf5;
     }
     .kh-unit-grid {
       display: grid;
@@ -33687,6 +33700,297 @@ ${content}
       .kh-unit-grid { grid-template-columns: 1fr; }
       .kh-modal { max-height: 92vh; }
     }
+
+    /* ===== 나의 한국사 리포트 배지 버튼 ===== */
+    .kh-report-btn {
+      background: rgba(255,255,255,0.95);
+      color: #1f4d12;
+      border: 1.5px solid rgba(255,255,255,0.6);
+      padding: 7px 14px;
+      border-radius: 22px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .kh-report-btn:hover {
+      background: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    @media (max-width: 600px) {
+      .kh-report-btn { font-size: 11px; padding: 6px 10px; }
+    }
+
+    /* ===== 나의 한국사 리포트 모달 ===== */
+    .kh-report-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000200; /* kh-modal-overlay(1000100) 위에 */
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .kh-report-overlay.show { display: flex; }
+    .kh-report-modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 980px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 16px 50px rgba(0,0,0,0.35);
+    }
+    .kh-report-header {
+      background: linear-gradient(135deg, #6cbf5a 0%, #2e9b3f 100%);
+      color: #fff;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kh-report-header h2 { margin: 0; font-size: 20px; font-weight: 800; }
+    .kh-report-sub { font-size: 12px; opacity: 0.95; margin-top: 2px; }
+    .kh-report-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      background: #f9fbf7;
+    }
+    /* 커버 */
+    .kh-report-cover {
+      background: linear-gradient(135deg, #eaf6e3 0%, #d9eecf 100%);
+      border: 1px solid #b6daa1;
+      border-radius: 14px;
+      padding: 20px 24px;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .kh-report-cover .student-label { font-size: 11px; letter-spacing: 3px; color: #1f4d12; margin-bottom: 4px; }
+    .kh-report-cover .student-name { font-size: 22px; font-weight: 800; color: #143809; }
+    .kh-report-cover .month { font-size: 12px; color: #3f6a32; margin-top: 4px; }
+    /* 통계 카드 */
+    .kh-stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .kh-stat-card {
+      background: #fff;
+      border: 1px solid #e2eedd;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .kh-stat-card .label { font-size: 11px; color: #4a6b3e; letter-spacing: 1px; }
+    .kh-stat-card .value { font-size: 22px; font-weight: 800; color: #1f4d12; margin-top: 4px; }
+    .kh-stat-card .unit { font-size: 12px; color: #5a7c4a; }
+    @media (max-width: 600px) {
+      .kh-stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    /* 차트 */
+    .kh-report-chart {
+      background: #fff;
+      border: 1px solid #e2eedd;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+    .kh-report-chart h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f4d12;
+    }
+    .kh-chart-svg { width: 100%; height: 220px; }
+    /* 강별 카드 그리드 */
+    .kh-report-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .kh-report-card {
+      background: #fff;
+      border: 1px solid #e2eedd;
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .kh-report-card:hover {
+      border-color: #6cbf5a;
+      box-shadow: 0 4px 12px rgba(108,191,90,0.18);
+    }
+    /* 기록이 하나라도 있는 카드 — 연녹색 톤 */
+    .kh-report-card.kh-has-record {
+      background: linear-gradient(135deg, #f0faea 0%, #e3f4d6 100%);
+      border-color: #b6daa1;
+    }
+    .kh-report-card.kh-has-record:hover {
+      border-color: #6cbf5a;
+      box-shadow: 0 4px 14px rgba(108,191,90,0.25);
+    }
+    .kh-report-card .card-title { font-weight: 700; font-size: 14px; color: #1f4d12; margin-bottom: 8px; }
+    .kh-report-card .card-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .kh-report-card .kh-row {
+      display: grid;
+      grid-template-columns: 14px 40px 1fr;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #999;
+    }
+    .kh-report-card .kh-row.done {
+      color: #2e9b3f;
+    }
+    .kh-report-card .kh-row-mark {
+      text-align: center;
+      font-weight: 700;
+    }
+    .kh-report-card .kh-row.done .kh-row-mark { color: #2e9b3f; }
+    .kh-report-card .kh-row-label {
+      font-weight: 700;
+    }
+    .kh-report-card .kh-row-value {
+      font-weight: 600;
+      color: #1f4d12;
+    }
+    .kh-report-card .kh-row:not(.done) .kh-row-value {
+      color: #bbb;
+    }
+    .kh-report-card .kh-stars {
+      color: #f6b73c;
+      letter-spacing: 1px;
+      font-size: 13px;
+    }
+    /* 상세 모달 (강별 카드 클릭) */
+    .kh-report-detail {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1000300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .kh-report-detail.show { display: flex; }
+    .kh-report-detail-modal {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 720px;
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .kh-report-detail-header {
+      background: linear-gradient(135deg, #6cbf5a 0%, #2e9b3f 100%);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kh-report-detail-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .kh-detail-section { margin-bottom: 18px; }
+    .kh-detail-section h4 { margin: 0 0 8px; font-size: 14px; color: #1f4d12; }
+    .kh-detail-section .empty { font-size: 12px; color: #999; }
+    .kh-detail-radar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .kh-radar-item {
+      background: #f9fbf7;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+      font-size: 11px;
+    }
+    .kh-radar-item .num { font-size: 16px; font-weight: 800; color: #1f4d12; }
+    .kh-creative-text {
+      background: #fffbe6;
+      border: 1px solid #ffe9a8;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    /* 리포트 하단 인쇄·PDF 버튼 */
+    .kh-report-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px dashed #c8d8be;
+    }
+    .kh-report-action-btn {
+      border: none;
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: #fff;
+    }
+    .kh-report-action-btn.print {
+      background: linear-gradient(135deg, #6cbf5a 0%, #2e9b3f 100%);
+    }
+    .kh-report-action-btn.pdf {
+      background: linear-gradient(135deg, #2e9b3f 0%, #1f6b2a 100%);
+    }
+    .kh-report-action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(46, 155, 63, 0.3);
+    }
+    .kh-report-action-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    /* 인쇄용 — 리포트만 보이게 */
+    @media print {
+      body * { visibility: hidden !important; }
+      #khReportOverlay, #khReportOverlay * { visibility: visible !important; }
+      #khReportOverlay {
+        position: absolute !important;
+        inset: 0 !important;
+        background: #fff !important;
+        padding: 0 !important;
+        display: block !important;
+      }
+      .kh-report-modal {
+        box-shadow: none !important;
+        max-height: none !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+      }
+      .kh-report-body { overflow: visible !important; max-height: none !important; }
+      .kh-modal-close, .kh-report-actions { display: none !important; }
+      .kh-report-card { break-inside: avoid; page-break-inside: avoid; }
+      .kh-report-chart { break-inside: avoid; page-break-inside: avoid; }
+    }
   </style>
 
   <div id="khModalOverlay" class="kh-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="khModalTitle">
@@ -33696,10 +34000,29 @@ ${content}
           <h2 id="khModalTitle">📜 BRAIN한국사</h2>
           <div class="kh-modal-sub">☀️ 방학특강 · 20강 커리큘럼</div>
         </div>
-        <button class="kh-modal-close" type="button" aria-label="닫기" onclick="closeKorHistoryModal()">×</button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button id="khReportBtn" class="kh-report-btn" type="button" onclick="openKhReportModal()">📋 나의 한국사 리포트</button>
+          <button class="kh-modal-close" type="button" aria-label="닫기" onclick="closeKorHistoryModal()">×</button>
+        </div>
       </div>
       <div class="kh-modal-body">
         <div id="khUnitGrid" class="kh-unit-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 나의 한국사 리포트 모달 -->
+  <div id="khReportOverlay" class="kh-report-overlay" role="dialog" aria-modal="true" aria-labelledby="khReportTitle">
+    <div class="kh-report-modal">
+      <div class="kh-report-header">
+        <div>
+          <h2 id="khReportTitle">📋 나의 한국사 리포트</h2>
+          <div class="kh-report-sub" id="khReportSub">학생별 학습 진도 및 점수</div>
+        </div>
+        <button class="kh-modal-close" type="button" aria-label="닫기" onclick="closeKhReportModal()">×</button>
+      </div>
+      <div class="kh-report-body" id="khReportBody">
+        <div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>
       </div>
     </div>
   </div>
@@ -34158,25 +34481,159 @@ ${content}
       window.showKhLockPopup = showKhLockPopup;
 
       // 오픈 예정 안내 팝업 (메인 메뉴 시리즈 타일 클릭 시)
-      function showKhComingSoonPopup() {
-        const existing = document.getElementById('khComingSoonPopup');
+      // BRAIN한국사 시리즈 인트로 팝업 (영상 자동반복 + 학습하기/오픈예정 분기)
+      // 정식 오픈일 도래 시 KH_OPEN_DATE만 두고 KH_BETA_TESTERS 분기는 자동으로 모두 통과
+      function showKhSeriesPopup() {
+        const existing = document.getElementById('khSeriesIntroOverlay');
         if (existing) existing.remove();
-        const pop = document.createElement('div');
-        pop.id = 'khComingSoonPopup';
-        pop.className = 'kh-lock-popup';
-        pop.innerHTML = `
-          <div class="kh-lock-popup-box">
-            <div class="kh-lock-popup-icon">📅</div>
-            <h3 class="kh-lock-popup-title">BRAIN한국사 방학특강</h3>
-            <p class="kh-lock-popup-msg"><strong style="color:#ff7e5f;font-size:18px;">6/15 오픈 예정</strong><br><span class="kh-lock-popup-sub">곧 만나요!</span></p>
-            <button class="kh-lock-popup-btn" type="button">확인</button>
-          </div>`;
-        document.body.appendChild(pop);
-        const close = () => pop.remove();
-        pop.querySelector('.kh-lock-popup-btn').addEventListener('click', close);
-        pop.addEventListener('click', (e) => { if (e.target === pop) close(); });
+
+        // === 오픈 조건 판정 ===
+        const KH_OPEN_DATE = new Date('2026-06-15T00:00:00');
+        const KH_BETA_TESTERS = [{ grade: '초3', name: '김윤슬' }];
+        let isBeta = false;
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          isBeta = KH_BETA_TESTERS.some(t => t.grade === cs.grade && t.name === cs.name);
+        } catch {}
+        const isOpen = new Date() >= KH_OPEN_DATE;
+        const canEnter = isBeta || isOpen;
+
+        // === 오버레이 ===
+        const overlay = document.createElement('div');
+        overlay.id = 'khSeriesIntroOverlay';
+        overlay.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+          z-index: 10005; backdrop-filter: blur(6px);
+        `;
+
+        // 영상 크기에 맞춰 팝업 사이즈 자동 조절 — 카드 padding 없이 영상 자체가 팝업
+        const box = document.createElement('div');
+        box.style.cssText = `
+          position: relative;
+          display: inline-block;
+          background: #000;
+          border: 2px solid #6cbf5a;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+          animation: khIntroPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          line-height: 0;
+        `;
+
+        const styleTag = document.createElement('style');
+        styleTag.textContent = `@keyframes khIntroPop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }`;
+        box.appendChild(styleTag);
+
+        // 닫기 (영상 우상단 오버레이)
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.title = '닫기';
+        closeBtn.style.cssText = `
+          position: absolute; top: 10px; right: 12px; z-index: 3;
+          width: 36px; height: 36px; border-radius: 50%;
+          background: rgba(0,0,0,0.55); color: #fff; border: none;
+          font-size: 22px; font-weight: 700; cursor: pointer; line-height: 1;
+          backdrop-filter: blur(6px);
+        `;
+        closeBtn.onclick = () => overlay.remove();
+
+        // 영상 (자동재생 + 무한반복 + 음소거) — 가로/세로 화면에 맞춰 자동 조절
+        const video = document.createElement('video');
+        video.src = '/images/한국의역사영상.mov';
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.setAttribute('playsinline', '');
+        video.style.cssText = `
+          display: block;
+          max-width: 90vw; max-height: 86vh;
+          height: auto; width: auto;
+          background: #000;
+        `;
+
+        // 하단 액션 영역 (영상 하단 오버레이)
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+          position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+          padding: 18px 16px 16px;
+          display: flex; gap: 10px; justify-content: center; align-items: center;
+          flex-wrap: wrap; line-height: 1.2;
+          background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+        `;
+
+        if (canEnter) {
+          // 🚀 학습하기 버튼
+          const enterBtn = document.createElement('button');
+          enterBtn.innerHTML = '⚔️ 학습하기';
+          enterBtn.style.cssText = `
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #6cbf5a 0%, #2e9b3f 100%);
+            color: white; border: none; border-radius: 14px;
+            font-size: 16px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 6px 16px rgba(46,155,63,0.4);
+            transition: transform 0.15s ease;
+          `;
+          enterBtn.onmouseover = () => enterBtn.style.transform = 'translateY(-2px)';
+          enterBtn.onmouseout = () => enterBtn.style.transform = '';
+          enterBtn.onclick = () => {
+            try { video.pause(); } catch {}
+            overlay.remove();
+            if (typeof window.openKorHistoryModal === 'function') {
+              window.openKorHistoryModal();
+            }
+          };
+          actions.appendChild(enterBtn);
+        } else {
+          // 📅 오픈 예정 안내 (버튼 모양이지만 비활성)
+          const lockedBox = document.createElement('div');
+          lockedBox.style.cssText = `
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            color: white; border-radius: 14px;
+            font-size: 15px; font-weight: 700; letter-spacing: 1px;
+            cursor: not-allowed;
+            box-shadow: 0 4px 12px rgba(100,116,139,0.3);
+            display: inline-flex; align-items: center; gap: 8px;
+          `;
+          lockedBox.innerHTML = '📅 <span>6월 15일 오픈 예정</span>';
+          actions.appendChild(lockedBox);
+
+          const subMsg = document.createElement('div');
+          subMsg.textContent = '곧 만나요!';
+          subMsg.style.cssText = `
+            width: 100%; text-align: center; font-size: 12px; color: #5a7c4a;
+            margin-top: 2px; letter-spacing: 1px;
+          `;
+          actions.appendChild(subMsg);
+        }
+
+        box.appendChild(closeBtn);
+        box.appendChild(video);
+        box.appendChild(actions);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        // 배경 클릭으로 닫기
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            try { video.pause(); } catch {}
+            overlay.remove();
+          }
+        });
+        // ESC 닫기
+        const escHandler = (e) => {
+          if (e.key === 'Escape') {
+            try { video.pause(); } catch {}
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+          }
+        };
+        document.addEventListener('keydown', escHandler);
       }
-      window.showKhComingSoonPopup = showKhComingSoonPopup;
+      window.showKhSeriesPopup = showKhSeriesPopup;
+      // 호환 alias — 기존 호출처 동작 유지
+      window.showKhComingSoonPopup = showKhSeriesPopup;
 
       const KH_OPEN_KEY = 'khModalOpen';
 
@@ -34202,6 +34659,356 @@ ${content}
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeKorHistoryModal();
       });
+
+      // ===== 나의 한국사 리포트 모달 =====
+      const KH_UNIT_TITLES = {
+        kh_01: '역사는 왜 배워야 할까?', kh_02: '선사 시대와 인류의 시작',
+        kh_03: '청동기와 고조선',       kh_04: '여러 나라의 성장',
+        kh_05: '삼국의 건국과 경쟁',    kh_06: '삼국의 전성기',
+        kh_07: '삼국 통일 전쟁',        kh_08: '통일신라와 발해',
+        kh_09: '고려의 건국과 후삼국 통일', kh_10: '고려의 정치와 대외 관계',
+        kh_11: '고려 문화와 과학',      kh_12: '조선의 건국과 국가 체제',
+        kh_13: '세종과 조선의 전성기',  kh_14: '사림과 붕당 정치',
+        kh_15: '임진왜란과 병자호란',   kh_16: '조선 후기의 변화',
+        kh_17: '개항과 근대화의 시작',  kh_18: '대한제국과 국권 침탈',
+        kh_19: '일제강점기와 독립운동', kh_20: '광복과 대한민국의 성장'
+      };
+
+      function getKhCurrentStudent() {
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (cs.grade && cs.name) return cs;
+        } catch {}
+        try {
+          const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+          if (u.grade && u.name) return u;
+        } catch {}
+        return null;
+      }
+
+      function escKh(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+
+      window.openKhReportModal = async function () {
+        const ov = document.getElementById('khReportOverlay');
+        const body = document.getElementById('khReportBody');
+        const sub = document.getElementById('khReportSub');
+        if (!ov || !body) return;
+        body.innerHTML = '<div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>';
+        ov.classList.add('show');
+
+        const stu = getKhCurrentStudent();
+        if (!stu) {
+          body.innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;">학생 정보가 없습니다. 다시 로그인해 주세요.</div>';
+          return;
+        }
+        sub.textContent = `${stu.grade} ${stu.name} 학생`;
+
+        try {
+          const res = await fetch(`/api/kh/report?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+          const data = await res.json();
+          if (!data.ok) {
+            body.innerHTML = `<div style="padding:40px;text-align:center;color:#c0392b;">${escKh(data.message || '불러오기 실패')}</div>`;
+            return;
+          }
+          renderKhReport(body, stu, data.submissions || [], data.stats || {});
+        } catch (err) {
+          console.error('[한국사 리포트] 불러오기 오류:', err);
+          body.innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;">네트워크 오류가 발생했습니다.</div>';
+        }
+      };
+
+      window.closeKhReportModal = function () {
+        const ov = document.getElementById('khReportOverlay');
+        if (ov) ov.classList.remove('show');
+      };
+
+      // 오버레이 빈 영역 / ESC 닫기
+      document.addEventListener('click', function (e) {
+        const ov = document.getElementById('khReportOverlay');
+        if (ov && e.target === ov) closeKhReportModal();
+      });
+
+      function renderKhReport(body, stu, submissions, stats) {
+        // submissions: [{unit, passage, vocab, creative}]
+        const byUnit = {};
+        submissions.forEach(s => { byUnit[s.unit] = s; });
+        const allUnits = Array.from({length: 20}, (_, i) => `kh_${String(i+1).padStart(2,'0')}`);
+
+        // ---- 커버 ----
+        const now = new Date();
+        const ym = `${now.getFullYear()}년 ${now.getMonth()+1}월`;
+        const cover = `
+          <div class="kh-report-cover">
+            <div class="student-label">WRITTEN BY</div>
+            <div class="student-name">${escKh(stu.grade)} ${escKh(stu.name)}</div>
+            <div class="month">${ym} · BRAIN한국사 학습 리포트</div>
+          </div>
+        `;
+
+        // ---- 통계 카드 ----
+        const statsHtml = `
+          <div class="kh-stats-row">
+            <div class="kh-stat-card"><div class="label">완료 강의</div><div class="value">${stats.total || 0}<span class="unit"> / 20</span></div></div>
+            <div class="kh-stat-card"><div class="label">본문 평균</div><div class="value">${stats.passageAvg !== null ? stats.passageAvg : '-'}<span class="unit"> / 10</span></div></div>
+            <div class="kh-stat-card"><div class="label">어휘 정답률</div><div class="value">${stats.vocabAvgRate !== null ? stats.vocabAvgRate : '-'}<span class="unit"> %</span></div></div>
+            <div class="kh-stat-card"><div class="label">창의활동</div><div class="value">${stats.creativeDone || 0}<span class="unit"> 회 제출</span></div></div>
+          </div>
+        `;
+
+        // ---- 차트 (강별 본문 평균 점수 라인) ----
+        const chartHtml = `
+          <div class="kh-report-chart">
+            <h3>📈 각 단원별 평균 점수 변화</h3>
+            <svg class="kh-chart-svg" viewBox="0 0 800 220" preserveAspectRatio="none">
+              ${renderKhChart(allUnits, byUnit)}
+            </svg>
+          </div>
+        `;
+
+        // ---- 강별 카드 그리드 ----
+        const cards = allUnits.map((u, i) => {
+          const s = byUnit[u];
+          const passDone = s && s.passage && s.passage.completed;
+          const vocDone  = s && s.vocab && s.vocab.completed;
+          const creDone  = s && s.creative && s.creative.submitted;
+          const title = KH_UNIT_TITLES[u] || u;
+
+          // 📖 본문: radar 5개 평균 → 5점 만점 별 (반쪽 별 포함)
+          let passValue = '';
+          if (passDone && s.passage.radar) {
+            const r = s.passage.radar;
+            const vals = ['literal','structural','lexical','inferential','critical']
+              .map(k => r[k]).filter(v => typeof v === 'number');
+            const avg = vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+            const score5 = Math.max(0, Math.min(5, avg / 2));
+            const full = Math.floor(score5);
+            const hasHalf = (score5 - full) >= 0.25 && (score5 - full) < 0.75;
+            const fullCount = (score5 - full) >= 0.75 ? full + 1 : full;
+            let stars = '';
+            for (let k = 0; k < fullCount; k++) stars += '★';
+            if (hasHalf) stars += '½';
+            const usedSlots = fullCount + (hasHalf ? 1 : 0);
+            for (let k = usedSlots; k < 5; k++) stars += '☆';
+            passValue = `<span class="kh-stars">${stars}</span>`;
+          }
+
+          // 📝 어휘: score/total점
+          const vocValue = (vocDone && typeof s.vocab.total === 'number')
+            ? `${s.vocab.score ?? 0}/${s.vocab.total}점` : '';
+
+          // 🎨 창의: 글자수
+          const creValue = (creDone && s.creative.answer)
+            ? `${Array.from(s.creative.answer).length}자` : '';
+
+          const row = (done, label, value) => `
+            <div class="kh-row ${done ? 'done' : ''}">
+              <span class="kh-row-mark">${done ? '✓' : '·'}</span>
+              <span class="kh-row-label">${label}</span>
+              <span class="kh-row-value">${value}</span>
+            </div>`;
+
+          const hasAny = passDone || vocDone || creDone;
+          return `
+            <div class="kh-report-card ${hasAny ? 'kh-has-record' : ''}" onclick="openKhReportDetail('${u}')">
+              <div class="card-title">${i+1}강. ${escKh(title)}</div>
+              <div class="card-rows">
+                ${row(passDone, '본문', passValue)}
+                ${row(vocDone,  '어휘', vocValue)}
+                ${row(creDone,  '창의', creValue)}
+              </div>
+            </div>
+          `;
+        }).join('');
+        const grid = `<div class="kh-report-grid">${cards}</div>`;
+
+        const actions = `
+          <div class="kh-report-actions" id="khReportActions">
+            <button class="kh-report-action-btn print" type="button" onclick="window.khReportPrint()">🖨️ 인쇄하기</button>
+            <button class="kh-report-action-btn pdf" type="button" onclick="window.khReportPdf(this)">📥 PDF 다운로드</button>
+          </div>
+        `;
+        body.innerHTML = `<div id="khReportContent">${cover + statsHtml + chartHtml + grid}</div>${actions}`;
+        // 상세 모달용으로 데이터 보관
+        window.__khReportData = byUnit;
+      }
+
+      function renderKhChart(allUnits, byUnit) {
+        const W = 800, H = 220, PAD_L = 40, PAD_R = 20, PAD_T = 20, PAD_B = 30;
+        const innerW = W - PAD_L - PAD_R;
+        const innerH = H - PAD_T - PAD_B;
+
+        // 데이터 포인트
+        const points = allUnits.map((u, i) => {
+          const s = byUnit[u];
+          let avg = null;
+          if (s && s.passage && s.passage.completed && s.passage.radar) {
+            const r = s.passage.radar;
+            const vals = ['literal','structural','lexical','inferential','critical']
+              .map(k => r[k]).filter(v => typeof v === 'number');
+            if (vals.length) avg = vals.reduce((a,b) => a+b, 0) / vals.length;
+          }
+          const x = PAD_L + (i / (allUnits.length - 1)) * innerW;
+          const y = avg === null ? null : PAD_T + (1 - avg/10) * innerH;
+          return { x, y, label: i+1, val: avg };
+        });
+
+        // 격자선
+        let gridLines = '';
+        for (let i = 0; i <= 5; i++) {
+          const y = PAD_T + (i / 5) * innerH;
+          gridLines += `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="#e8efe2" stroke-width="1"/>`;
+          gridLines += `<text x="${PAD_L-6}" y="${y+4}" text-anchor="end" font-size="10" fill="#7a8c6f">${10 - i*2}</text>`;
+        }
+        // X축 라벨 (5개씩)
+        let xLabels = '';
+        points.forEach((p, i) => {
+          if ((i+1) % 5 === 0 || i === 0) {
+            xLabels += `<text x="${p.x}" y="${H-10}" text-anchor="middle" font-size="10" fill="#5a7c4a">${p.label}강</text>`;
+          }
+        });
+
+        // 라인 + 점
+        const valid = points.filter(p => p.y !== null);
+        let line = '';
+        if (valid.length >= 2) {
+          const path = 'M ' + valid.map(p => `${p.x},${p.y}`).join(' L ');
+          line = `<path d="${path}" fill="none" stroke="#2e9b3f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+        }
+        const dots = points.map(p => p.y === null
+          ? `<circle cx="${p.x}" cy="${H-PAD_B}" r="2.5" fill="#cfd9c8"/>`
+          : `<circle cx="${p.x}" cy="${p.y}" r="4" fill="#2e9b3f" stroke="#fff" stroke-width="1.5"/>`
+        ).join('');
+
+        return gridLines + line + dots + xLabels;
+      }
+
+      window.openKhReportDetail = function (unit) {
+        const data = window.__khReportData || {};
+        const s = data[unit];
+        const title = KH_UNIT_TITLES[unit] || unit;
+        const i = parseInt(unit.split('_')[1]);
+
+        let existing = document.getElementById('khReportDetailOverlay');
+        if (existing) existing.remove();
+
+        const passage = s && s.passage;
+        const vocab = s && s.vocab;
+        const creative = s && s.creative;
+
+        const radarHtml = (passage && passage.completed && passage.radar) ? `
+          <div class="kh-detail-radar">
+            ${['literal','structural','lexical','inferential','critical'].map(k => {
+              const labels = {literal:'사실', structural:'구조', lexical:'어휘', inferential:'추론', critical:'비판'};
+              const v = passage.radar[k];
+              return `<div class="kh-radar-item"><div class="num">${typeof v === 'number' ? v : '-'}</div>${labels[k]}</div>`;
+            }).join('')}
+          </div>
+        ` : '<div class="empty">아직 본문학습을 완료하지 않았어요.</div>';
+
+        const vocabHtml = (vocab && vocab.completed)
+          ? `<div>점수: <b>${vocab.score ?? '-'} / ${vocab.total ?? '-'}</b></div>
+             ${vocab.answers && vocab.answers.length ? `<div style="margin-top:6px;font-size:12px;color:#5a7c4a;">답안: ${vocab.answers.map(a => escKh(a)).join(', ')}</div>` : ''}`
+          : '<div class="empty">아직 어휘학습을 완료하지 않았어요.</div>';
+
+        const creativeHtml = (creative && creative.submitted && creative.answer)
+          ? `<div class="kh-creative-text">${escKh(creative.answer)}</div>
+             <div style="margin-top:6px;font-size:11px;color:#888;">제출일: ${new Date(creative.submittedAt).toLocaleString()}</div>`
+          : '<div class="empty">아직 창의활동을 제출하지 않았어요.</div>';
+
+        const html = `
+          <div id="khReportDetailOverlay" class="kh-report-detail show">
+            <div class="kh-report-detail-modal">
+              <div class="kh-report-detail-header">
+                <div><h2 style="margin:0;font-size:16px;font-weight:800;">${i}강. ${escKh(title)}</h2></div>
+                <button class="kh-modal-close" type="button" onclick="document.getElementById('khReportDetailOverlay').remove()">×</button>
+              </div>
+              <div class="kh-report-detail-body">
+                <div class="kh-detail-section">
+                  <h4>📖 본문학습</h4>
+                  ${radarHtml}
+                </div>
+                <div class="kh-detail-section">
+                  <h4>📝 어휘학습</h4>
+                  ${vocabHtml}
+                </div>
+                <div class="kh-detail-section">
+                  <h4>🎨 창의활동</h4>
+                  ${creativeHtml}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', html);
+        const ov = document.getElementById('khReportDetailOverlay');
+        ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+      };
+
+      // 🖨️ 인쇄 — @media print CSS로 리포트만 노출
+      window.khReportPrint = function () {
+        window.print();
+      };
+
+      // 📥 PDF 다운로드 — html2canvas + jsPDF, 여러 페이지 슬라이싱
+      window.khReportPdf = async function (btn) {
+        const content = document.getElementById('khReportContent');
+        if (!content) return;
+        if (!window.html2canvas || !window.jspdf) {
+          alert('PDF 라이브러리가 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
+          return;
+        }
+        const actions = document.getElementById('khReportActions');
+        const stu = getKhCurrentStudent() || {};
+        const orig = btn ? btn.textContent : '';
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ 생성 중…'; }
+        if (actions) actions.style.display = 'none';
+
+        try {
+          await new Promise(r => setTimeout(r, 60));
+          const canvas = await html2canvas(content, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#f9fbf7'
+          });
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const W = 210, H = 297, M = 10;
+          const CW = W - 2 * M;
+          const totalH = (canvas.height / canvas.width) * CW;
+
+          if (totalH <= H - 2 * M) {
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.94), 'JPEG', M, M, CW, totalH);
+          } else {
+            // 슬라이싱
+            const pageHpx = ((H - 2 * M) / CW) * canvas.width;
+            let off = 0, pc = 0;
+            while (off < canvas.height) {
+              if (pc > 0) pdf.addPage();
+              const slice = Math.min(pageHpx, canvas.height - off);
+              const tc = document.createElement('canvas');
+              tc.width = canvas.width; tc.height = slice;
+              tc.getContext('2d', { willReadFrequently: true })
+                .drawImage(canvas, 0, off, canvas.width, slice, 0, 0, canvas.width, slice);
+              pdf.addImage(tc.toDataURL('image/jpeg', 0.94), 'JPEG', M, M, CW, (slice / canvas.width) * CW);
+              off += slice; pc++;
+            }
+          }
+          const safeName = `${stu.grade || ''}_${stu.name || 'student'}`.replace(/[\\/:*?"<>|]/g, '_');
+          const now = new Date();
+          const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+          pdf.save(`BRAIN한국사_리포트_${safeName}_${ts}.pdf`);
+        } catch (err) {
+          console.error('[한국사 리포트 PDF] 실패:', err);
+          alert('PDF 생성 중 오류가 발생했습니다.');
+        } finally {
+          if (actions) actions.style.display = '';
+          if (btn) { btn.disabled = false; btn.textContent = orig || '📥 PDF 다운로드'; }
+        }
+      };
 
       // 새로고침 후에도 한국사 팝업 상태 유지
       function restoreKhModalIfNeeded() {

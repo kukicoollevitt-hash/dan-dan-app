@@ -17,9 +17,12 @@ const cookieParser = require("cookie-parser");
 
 // ===== 형성평가 대상 단원 필터링 헬퍼 함수 =====
 // 교과기반 창작도서(grade3_, grade4_ 등)는 형성평가 대상에서 제외
+// 방학특강 BRAIN한국사(kh_01 ~ kh_20)도 형성평가 대상에서 제외 (별도 단원평가로 관리)
 function isGateQuizTargetUnit(unitCode) {
   // 창작도서 시리즈는 'grade'로 시작 (예: grade3_social_01, grade4_science_02)
   if (unitCode.startsWith('grade')) return false;
+  // 한국사 방학특강은 'kh_'로 시작 (예: kh_01 ~ kh_20)
+  if (unitCode.startsWith('kh_')) return false;
   return true;
 }
 
@@ -375,6 +378,7 @@ const TextbookOrder = require("./models/TextbookOrder");
 const PromotionOrder = require("./models/PromotionOrder");
 const CenterContract = require("./models/CenterContract");
 const CritiqueSubmission = require("./models/CritiqueSubmission");
+const KhSubmission = require("./models/KhSubmission");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -38234,6 +38238,157 @@ app.get('/api/critique/load', async (req, res) => {
     res.status(500).json({ ok: false, message: '서버 오류' });
   }
 });
+
+// ===================== BRAIN한국사 API =====================
+// 본문학습 저장 (radar + readingTime)
+app.post('/api/kh/save-passage', async (req, res) => {
+  try {
+    const { grade, name, phone, unit, radar, readingTime } = req.body;
+    if (!grade || !name || !unit) {
+      return res.status(400).json({ ok: false, message: '학생/강의 정보 필요' });
+    }
+    const update = {
+      $set: {
+        grade, name, phone: phone || '',
+        unit,
+        'passage.radar': radar || {},
+        'passage.readingTime': readingTime || 0,
+        'passage.completed': true,
+        'passage.completedAt': new Date(),
+        updatedAt: new Date()
+      },
+      $setOnInsert: { createdAt: new Date() }
+    };
+    const doc = await KhSubmission.findOneAndUpdate(
+      { grade, name, unit },
+      update,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    res.json({ ok: true, submission: doc });
+  } catch (err) {
+    console.error('[한국사] save-passage 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 어휘학습 저장 (answers + score)
+app.post('/api/kh/save-vocab', async (req, res) => {
+  try {
+    const { grade, name, phone, unit, answers, score, total } = req.body;
+    if (!grade || !name || !unit) {
+      return res.status(400).json({ ok: false, message: '학생/강의 정보 필요' });
+    }
+    const update = {
+      $set: {
+        grade, name, phone: phone || '',
+        unit,
+        'vocab.answers': Array.isArray(answers) ? answers : [],
+        'vocab.score': typeof score === 'number' ? score : null,
+        'vocab.total': typeof total === 'number' ? total : null,
+        'vocab.completed': true,
+        'vocab.completedAt': new Date(),
+        updatedAt: new Date()
+      },
+      $setOnInsert: { createdAt: new Date() }
+    };
+    const doc = await KhSubmission.findOneAndUpdate(
+      { grade, name, unit },
+      update,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    res.json({ ok: true, submission: doc });
+  } catch (err) {
+    console.error('[한국사] save-vocab 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 창의활동 저장 (제출 버튼)
+app.post('/api/kh/save-creative', async (req, res) => {
+  try {
+    const { grade, name, phone, unit, question, answer } = req.body;
+    if (!grade || !name || !unit) {
+      return res.status(400).json({ ok: false, message: '학생/강의 정보 필요' });
+    }
+    if (!answer || !String(answer).trim()) {
+      return res.status(400).json({ ok: false, message: '답안을 입력해 주세요.' });
+    }
+    const update = {
+      $set: {
+        grade, name, phone: phone || '',
+        unit,
+        'creative.question': question || '',
+        'creative.answer': String(answer).trim(),
+        'creative.submitted': true,
+        'creative.submittedAt': new Date(),
+        updatedAt: new Date()
+      },
+      $setOnInsert: { createdAt: new Date() }
+    };
+    const doc = await KhSubmission.findOneAndUpdate(
+      { grade, name, unit },
+      update,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    res.json({ ok: true, submission: doc });
+  } catch (err) {
+    console.error('[한국사] save-creative 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 리포트 조회 (해당 학생의 전체 강의 기록)
+app.get('/api/kh/report', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) {
+      return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    }
+    const submissions = await KhSubmission.find(
+      { grade, name },
+      { _id: 0, __v: 0 }
+    ).sort({ unit: 1 }).lean();
+
+    // 통계 산출
+    const total = submissions.length;
+    const passageDone = submissions.filter(s => s.passage && s.passage.completed).length;
+    const vocabDone = submissions.filter(s => s.vocab && s.vocab.completed).length;
+    const creativeDone = submissions.filter(s => s.creative && s.creative.submitted).length;
+    // 본문 평균 점수 (radar 5개 평균)
+    let radarAvgSum = 0, radarAvgCount = 0;
+    for (const s of submissions) {
+      if (s.passage && s.passage.completed && s.passage.radar) {
+        const r = s.passage.radar;
+        const vals = ['literal','structural','lexical','inferential','critical']
+          .map(k => r[k]).filter(v => typeof v === 'number');
+        if (vals.length) {
+          radarAvgSum += vals.reduce((a,b) => a+b, 0) / vals.length;
+          radarAvgCount++;
+        }
+      }
+    }
+    const passageAvg = radarAvgCount ? Math.round((radarAvgSum / radarAvgCount) * 10) / 10 : null;
+    // 어휘 평균 정답률
+    let vocabRateSum = 0, vocabRateCount = 0;
+    for (const s of submissions) {
+      if (s.vocab && s.vocab.completed && s.vocab.total) {
+        vocabRateSum += s.vocab.score / s.vocab.total;
+        vocabRateCount++;
+      }
+    }
+    const vocabAvgRate = vocabRateCount ? Math.round((vocabRateSum / vocabRateCount) * 1000) / 10 : null;
+
+    res.json({
+      ok: true,
+      submissions,
+      stats: { total, passageDone, vocabDone, creativeDone, passageAvg, vocabAvgRate }
+    });
+  } catch (err) {
+    console.error('[한국사] report 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+// ===================== /BRAIN한국사 API =====================
 
 // 누적 캡 상태 조회 (24h 차단형) — 게임 시작 전 캡 도달 여부 확인
 app.get('/api/word-battle/daily-status', async (req, res) => {
