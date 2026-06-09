@@ -35382,8 +35382,10 @@ ${content}
               </thead>
               <tbody>${sixWRows}</tbody>
             </table>
-            <!-- 생각쓰기 -->
-            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:6mm 0 3mm;letter-spacing:1px;">생각쓰기 비교</div>
+            <!-- 생각쓰기 — 헤더+첫 문항 함께 묶어 고아 헤더 방지 -->
+            <div style="page-break-inside:avoid;break-inside:avoid;">
+              <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:6mm 0 3mm;letter-spacing:1px;">생각쓰기 비교</div>
+            </div>
             ${thinkingHtml}
             <!-- 푸터 -->
             <div style="margin-top:8mm;font-size:9.5px;color:#999;text-align:center;letter-spacing:3px;border-top:1px solid #999;padding-top:3mm;">© 2026 BRAIN LITERACY · 생각하는 힘을 키우는 매일 비평</div>
@@ -35516,21 +35518,20 @@ ${content}
             </table>
           </div>
         `);
-        // 4) 생각쓰기 헤더
-        sections.push(`
-          <div style="padding:0 4mm 2mm;">
-            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:2mm 0 1mm;letter-spacing:1px;">생각쓰기 비교</div>
-          </div>
-        `);
-        // 5~7) 생각쓰기 q1/q2/q3 — 각각 atomic section (질문 라벨 포함)
+        // 4~6) 생각쓰기 q1/q2/q3 — 각각 atomic section (질문 라벨 포함)
+        // ※ "생각쓰기 비교" 섹션 헤더는 q1에 통합 → 헤더 고아(orphan) 방지
         const THINKING_QUESTIONS_PDF = [
           '이 기사에서 가장 중요하다고 생각한 내용은 무엇인가요?',
           '나는 이 문제에 대해 어떻게 생각하나요?',
           '이 문제를 해결하려면 어떤 방법이 필요할까요?'
         ];
         ['q1','q2','q3'].forEach((k, i) => {
+          const groupHeader = (i === 0)
+            ? `<div style="font-size:13px;font-weight:700;color:#0d47a1;margin:2mm 0 4mm;letter-spacing:1px;">생각쓰기 비교</div>`
+            : '';
           sections.push(`
             <div style="padding:0 4mm 5mm;">
+              ${groupHeader}
               <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:2px;letter-spacing:1px;">생각쓰기 ${i+1}</div>
               <div style="font-size:11.5px;color:#444;line-height:1.5;margin-bottom:5px;font-style:italic;">${escapeHtml(THINKING_QUESTIONS_PDF[i])}</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
@@ -35660,7 +35661,73 @@ ${content}
           const CW = W - 2 * M;
           const CH = H - 2 * M;
 
-          // === 페이지 1: 커버 (학생 정보 + 월 + 차트 + 통계) ===
+          // === 표지 배경 이미지 사전 로드 (html2canvas 캡처 전 보장) ===
+          const personalBgUrl = '/images/매일비평표지배경.jpg';
+          await new Promise((resolve) => {
+            const img = new Image();
+            img.onload = resolve;
+            img.onerror = resolve;
+            img.src = personalBgUrl;
+          });
+
+          // === 페이지 1: 빈티지 노트북 표지 (나만의 N월 비평 노트) — 풀블리드 (배경 여백까지 채움) ===
+          const monthInt = parseInt(mm);
+          const personalCoverHTML = `
+            <div style="width:210mm;height:297mm;background:linear-gradient(rgba(255,253,247,0.6),rgba(255,253,247,0.6)),url('${personalBgUrl}') center/cover no-repeat;position:relative;padding:32mm 28mm 36mm;box-sizing:border-box;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;text-align:center;color:#1a1a1a;">
+              <!-- 상단 브랜드 -->
+              <div style="font-size:11px;letter-spacing:7px;color:#92400e;font-weight:700;">BRAIN LITERACY · NOTE</div>
+              <!-- 상단 장식 라인 (이중) -->
+              <div style="margin:8mm auto 2mm;width:62mm;">
+                <div style="border-top:2px solid #1a1a1a;margin-bottom:1.5mm;"></div>
+                <div style="border-top:1px solid #1a1a1a;"></div>
+              </div>
+              <!-- 메인 제목 -->
+              <div style="margin:12mm 0 4mm;">
+                <div style="font-family:'Noto Serif KR',serif;font-size:32px;font-weight:900;letter-spacing:14px;color:#0d47a1;text-shadow:0 1px 0 rgba(255,255,255,0.5);">나만의</div>
+                <div style="font-family:'Noto Serif KR',serif;font-size:88px;font-weight:900;letter-spacing:6px;color:#c0392b;line-height:1;margin:6mm 0 4mm;text-shadow:0 2px 0 rgba(255,255,255,0.4);">${monthInt}월</div>
+                <div style="font-family:'Noto Serif KR',serif;font-size:34px;font-weight:900;letter-spacing:12px;color:#0d47a1;text-shadow:0 1px 0 rgba(255,255,255,0.5);">비평 노트</div>
+              </div>
+              <!-- 중간 장식 라인 (이중) -->
+              <div style="margin:9mm auto 0;width:62mm;">
+                <div style="border-top:1px solid #1a1a1a;margin-bottom:1.5mm;"></div>
+                <div style="border-top:2px solid #1a1a1a;"></div>
+              </div>
+              <!-- 학생 정보 (table 사용 — html2canvas에서 inline-block 학생명 누락 이슈 회피) -->
+              ${(userGrade || userName) ? `
+                <table style="margin:10mm auto 6mm;border-collapse:separate;background:#ffffff;border:2px solid #d97706;border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(217,119,6,0.25);">
+                  <tr>
+                    <td style="padding:7mm 18mm;text-align:center;">
+                      <div style="font-size:11px;letter-spacing:4px;color:#92400e;margin-bottom:3.5mm;font-weight:700;">WRITTEN BY</div>
+                      <div style="font-family:'Noto Serif KR',serif;font-size:32px;font-weight:900;color:#0d47a1;line-height:1.1;letter-spacing:2px;white-space:nowrap;">${escapeHtml(userGrade)} ${escapeHtml(userName)}</div>
+                    </td>
+                  </tr>
+                </table>
+              ` : ''}
+              <!-- 호수 배지 -->
+              <div style="font-size:11px;letter-spacing:5px;color:#a16207;font-weight:600;margin-top:3mm;">Vol. ${String(monthInt).padStart(2,'0')} · ${yy}</div>
+              <!-- 하단 인용구 -->
+              <div style="position:absolute;bottom:32mm;left:28mm;right:28mm;text-align:center;">
+                <div style="margin:0 auto 4mm;width:40mm;border-top:1px solid rgba(26,26,26,0.4);"></div>
+                <div style="font-family:'Noto Serif KR',serif;font-size:15px;font-style:italic;color:#444;line-height:1.7;letter-spacing:1.5px;">
+                  &ldquo;오늘의 한 줄이,<br>내일 문해력을 만든다.&rdquo;
+                </div>
+                <div style="margin:4mm auto 0;width:40mm;border-top:1px solid rgba(26,26,26,0.4);"></div>
+              </div>
+            </div>
+          `;
+          // 풀블리드 캡처용으로 wrap 폭을 일시적으로 A4 폭(210mm)에 맞춤
+          const _prevWrapWidth = wrap.style.width;
+          wrap.style.width = '210mm';
+          wrap.innerHTML = personalCoverHTML;
+          await new Promise(r => setTimeout(r, 80));
+          const personalCanvas = await html2canvas(wrap, { scale: 2, useCORS: true, logging: false, backgroundColor: '#fffdf7' });
+          // 풀블리드 — A4 전체에 배경 깔기 (여백 없음)
+          pdf.addImage(personalCanvas.toDataURL('image/jpeg', 0.94), 'JPEG', 0, 0, W, H);
+          // wrap 폭 원복 (이후 콘텐츠는 본문 폭으로 캡처)
+          wrap.style.width = _prevWrapWidth || '186mm';
+          pdf.addPage();
+
+          // === 페이지 2: 기존 커버 (학생 정보 + 월 + 차트 + 통계) ===
           // 학생 정보가 있을 때만 박스 표시, 없으면 박스 자체를 생략
           const studentBox = (userGrade || userName) ? `
             <table style="margin:6mm auto 0;border-collapse:separate;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #f5d27e;border-radius:14px;overflow:hidden;">
