@@ -35375,39 +35375,90 @@ app.post("/api/mock-exam/login", async (req, res) => {
 });
 
 // 브레인 문해력 → 모의고사 자동 로그인 (세션 연동)
+// 권한 분기 (우선순위 순):
+//  ① 세션 admin + viewAs 있음 → 관리자 view-as (학원 권한 검증)
+//     ※ 학생 세션 잔재가 있어도 관리자 의도 우선
+//  ② 세션 user → 학생 본인만 (viewAs 있고 본인과 다르면 403)
+//  ③ 둘 다 없음 → 401
 app.post("/api/mock-exam/auto-login", async (req, res) => {
   try {
+    const { viewAsGrade, viewAsName } = req.body || {};
+    const hasViewAs = !!(viewAsGrade && viewAsName);
+
     console.log('🔍 [auto-login] 세션 확인:', {
       hasSession: !!req.session,
       hasUser: !!(req.session && req.session.user),
-      sessionUser: req.session?.user,
-      sessionAdmin: req.session?.admin
+      hasAdmin: !!(req.session && req.session.admin),
+      viewAs: hasViewAs ? `${viewAsGrade}/${viewAsName}` : 'none'
     });
 
-    // 브레인 문해력 세션 확인
-    if (!req.session || !req.session.user) {
+    let targetUser = null;
+
+    // ===== Case A: 관리자 세션 + view-as (최우선) =====
+    if (req.session && req.session.admin && hasViewAs) {
+      const admin = req.session.admin;
+      const isSuperAdmin = admin.role === "super" || admin.isSuper === true;
+
+      targetUser = await User.findOne({ grade: viewAsGrade, name: viewAsName });
+      if (!targetUser) {
+        return res.status(404).json({ ok: false, message: "해당 학생을 찾을 수 없습니다." });
+      }
+
+      // 권한 검증
+      if (isSuperAdmin) {
+        // 슈퍼관리자: viewingBranch 있으면 그 학원 학생만, 없으면 전체 허용
+        if (req.session.viewingBranch &&
+            req.session.viewingBranch.academyName !== targetUser.academyName) {
+          console.warn(`⚠️ [auto-login] 슈퍼관리자 조회 학원 불일치: viewing=${req.session.viewingBranch.academyName} vs target=${targetUser.academyName}`);
+          return res.status(403).json({
+            ok: false,
+            message: "조회 중인 학원의 학생이 아닙니다."
+          });
+        }
+      } else {
+        // 일반 브랜치 관리자: 자기 academyName 학생만 허용
+        if (admin.academyName !== targetUser.academyName) {
+          console.warn(`⚠️ [auto-login] 브랜치 관리자 권한 초과: admin=${admin.academyName} vs target=${targetUser.academyName}`);
+          return res.status(403).json({
+            ok: false,
+            message: "해당 학생에 대한 권한이 없습니다."
+          });
+        }
+      }
+      console.log(`📋 [auto-login] 관리자 view-as: admin=${admin.name}/${admin.academyName} → student=${targetUser.name}/${targetUser.academyName}`);
+    }
+    // ===== Case B: 학생 세션 =====
+    else if (req.session && req.session.user) {
+      const sessionUser = req.session.user;
+      // URL 조작으로 다른 학생 모고에 진입하는 것 차단
+      if (hasViewAs &&
+          (viewAsGrade !== sessionUser.grade || viewAsName !== sessionUser.name)) {
+        console.warn(`⚠️ [auto-login] 세션 불일치 차단: session=${sessionUser.grade}/${sessionUser.name} vs viewAs=${viewAsGrade}/${viewAsName}`);
+        return res.status(403).json({
+          ok: false,
+          message: "현재 로그인된 학생과 메뉴 학생이 다릅니다. 본인 계정으로 다시 로그인해 주세요."
+        });
+      }
+      targetUser = await User.findById(sessionUser._id);
+      if (!targetUser) {
+        return res.status(404).json({ ok: false, message: "사용자 정보를 찾을 수 없습니다." });
+      }
+    }
+    // ===== Case C: 인증 정보 없음 =====
+    else {
       return res.status(401).json({ ok: false, message: "브레인 문해력에 먼저 로그인해주세요." });
     }
 
-    const sessionUser = req.session.user;
-    const { _id, name, grade, school } = sessionUser;
+    // ===== 모의고사 계정 조회/생성 (phone 기준) =====
+    const { _id, name, grade, school, academyName } = targetUser;
+    const phone = targetUser.phone;
+    const userSchool = school || academyName || '';
 
-    // User DB에서 phone 정보 가져오기 (세션에는 phone이 없음)
-    const brainUser = await User.findById(_id);
-    if (!brainUser) {
-      return res.status(404).json({ ok: false, message: "사용자 정보를 찾을 수 없습니다." });
-    }
-
-    const phone = brainUser.phone;
-    const userSchool = school || brainUser.school || brainUser.academyName || '';
-
-    // MockExamUser에서 기존 계정 찾기 (phone으로 매칭)
     let mockUser = await MockExamUser.findOne({
       phone,
       deleted: { $ne: true }
     });
 
-    // 기존 계정이 없으면 자동 생성
     if (!mockUser) {
       mockUser = new MockExamUser({
         phone,
@@ -35422,7 +35473,6 @@ app.post("/api/mock-exam/auto-login", async (req, res) => {
       await mockUser.save();
       console.log(`✅ [모의고사] 자동 계정 생성: ${name} (${phone})`);
     } else {
-      // 기존 계정이 있으면 정보 업데이트
       mockUser.name = name;
       mockUser.school = userSchool;
       mockUser.grade = grade;
@@ -35431,7 +35481,6 @@ app.post("/api/mock-exam/auto-login", async (req, res) => {
       console.log(`✅ [모의고사] 자동 로그인: ${name} (${phone})`);
     }
 
-    // 사용자 정보 반환 (브레인 문해력 연동 표시 포함)
     const userInfo = {
       _id: mockUser._id,
       name: mockUser.name,
@@ -35439,7 +35488,7 @@ app.post("/api/mock-exam/auto-login", async (req, res) => {
       grade: mockUser.grade,
       phone: mockUser.phone,
       examProgress: mockUser.examProgress,
-      fromBrainLiteracy: true  // 브레인 문해력에서 연동된 회원 표시
+      fromBrainLiteracy: true
     };
 
     res.json({ ok: true, user: userInfo });

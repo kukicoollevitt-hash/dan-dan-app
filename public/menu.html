@@ -10919,16 +10919,28 @@ if (logoutConfirmBtn) {
         // BRAINM(수능모고) 클릭 시 모의고사 대시보드로 이동
         if (series === 'BRAINM') {
           try {
-            // 브레인 문해력 로그인 상태 확인 및 모의고사 자동 로그인
+            // 현재 화면이 보여주는 학생(localStorage.currentStudent 또는 URL 파라미터)
+            // 을 서버에 함께 전달 → 세션과 대조해 정확한 학생으로 모고 진입
+            let viewAsGrade = '', viewAsName = '';
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              if (cs.grade && cs.name) { viewAsGrade = cs.grade; viewAsName = cs.name; }
+            } catch {}
             const res = await fetch('/api/mock-exam/auto-login', {
               method: 'POST',
-              credentials: 'include'
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ viewAsGrade, viewAsName })
             });
             const data = await res.json();
             if (data.ok) {
               // 모의고사 사용자 정보를 localStorage에 저장
               localStorage.setItem('mockExamUser', JSON.stringify(data.user));
               window.location.href = '/mock_exam_dashboard.html';
+            } else if (res.status === 403) {
+              alert(data.message || '권한이 없습니다.');
+            } else if (res.status === 401) {
+              alert(data.message || '브레인 문해력에 먼저 로그인해주세요.');
             } else {
               alert(data.message || '모의고사 연동에 실패했습니다. 다시 로그인해주세요.');
             }
