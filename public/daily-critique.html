@@ -1713,10 +1713,52 @@
         setTimeout(() => { progressBox.style.display = 'none'; }, 1500);
       }
     }
+    // 워크북 인쇄 여백 (mm) — 모든 페이지 좌우상하 동일
+    const WORKBOOK_MARGIN = 12;
+    const WORKBOOK_BG_URL = '/images/매일비평표지배경.jpg';
+    const WORKBOOK_BG_OVERLAY = 0.72; // 비표지 페이지 흰색 오버레이 (0=원본, 1=완전 흰색)
+    let _wbBgFullDataUrl = null;
+    let _wbBgDimmedDataUrl = null;
+    // 배경 이미지 원본 + 흐리게 처리한 버전 사전 생성
+    async function loadWorkbookBackgrounds() {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          // 원본
+          const c1 = document.createElement('canvas');
+          c1.width = img.naturalWidth; c1.height = img.naturalHeight;
+          c1.getContext('2d').drawImage(img, 0, 0);
+          _wbBgFullDataUrl = c1.toDataURL('image/jpeg', 0.88);
+          // 흰색 오버레이로 흐리게
+          const c2 = document.createElement('canvas');
+          c2.width = img.naturalWidth; c2.height = img.naturalHeight;
+          const ctx2 = c2.getContext('2d');
+          ctx2.drawImage(img, 0, 0);
+          ctx2.fillStyle = `rgba(255,255,255,${WORKBOOK_BG_OVERLAY})`;
+          ctx2.fillRect(0, 0, c2.width, c2.height);
+          _wbBgDimmedDataUrl = c2.toDataURL('image/jpeg', 0.88);
+          resolve();
+        };
+        img.onerror = () => { _wbBgFullDataUrl = null; _wbBgDimmedDataUrl = null; resolve(); };
+        img.src = WORKBOOK_BG_URL;
+      });
+    }
+    // 페이지에 배경 깔기 헬퍼 (모든 워크북 페이지에서 사용)
+    function drawWorkbookBgFullPage(pdf, dimmed = true) {
+      const W = 210, H = 297;
+      const bg = dimmed ? _wbBgDimmedDataUrl : _wbBgFullDataUrl;
+      if (bg) pdf.addImage(bg, 'JPEG', 0, 0, W, H);
+    }
     async function generateWorkbookPDF(grade, month, validDates) {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF('p', 'mm', 'a4');
       const W = 210, H = 297;
+      const M = WORKBOOK_MARGIN;
+      const CW = W - 2 * M;  // content width
+      const CH = H - 2 * M;  // content height
+      // 배경 이미지 사전 로드 (원본 + 흐림 버전)
+      await loadWorkbookBackgrounds();
+      const drawBgFullPage = (dimmed) => drawWorkbookBgFullPage(pdf, dimmed);
 
       // 현재 상태 저장
       const savedGrade = currentGrade;
@@ -1729,16 +1771,18 @@
       if (targetBadge) targetBadge.classList.add('active');
 
       try {
-        // === 표지 ===
-        updateWorkbookProgress(0, validDates.length + 2, '표지 생성 중...');
-        pdf.addImage(await renderWorkbookCover(grade, month), 'JPEG', 0, 0, W, H);
+        // === 표지 (배경 원본 풀강도) ===
+        updateWorkbookProgress(0, validDates.length + 3, '표지 생성 중...');
+        drawBgFullPage(false);
+        pdf.addImage(await renderWorkbookCover(grade, month), 'PNG', M, M, CW, CH);
 
-        // === 목차 (필요시 2페이지) ===
+        // === 목차 (필요시 2페이지, 배경 흐리게) ===
         updateWorkbookProgress(1, validDates.length + 3, '목차 생성 중...');
         const tocImages = await renderWorkbookTOC(grade, month, validDates);
         for (const tocImg of tocImages) {
           pdf.addPage();
-          pdf.addImage(tocImg, 'JPEG', 0, 0, W, H);
+          drawBgFullPage(true);
+          pdf.addImage(tocImg, 'PNG', M, M, CW, CH);
         }
 
         // === 일별 콘텐츠 ===
@@ -1753,10 +1797,11 @@
           await new Promise(r => setTimeout(r, 30));
         }
 
-        // === 마무리 페이지 ===
+        // === 마무리 페이지 (배경 흐리게) ===
         updateWorkbookProgress(validDates.length + 2, validDates.length + 3, '마무리 페이지 생성 중...');
         pdf.addPage();
-        pdf.addImage(await renderWorkbookClosing(grade, month, validDates.length), 'JPEG', 0, 0, W, H);
+        drawBgFullPage(true);
+        pdf.addImage(await renderWorkbookClosing(grade, month, validDates.length), 'PNG', M, M, CW, CH);
       } finally {
         // 상태 복원
         currentGrade = savedGrade;
@@ -1773,26 +1818,89 @@
     }
     async function renderWorkbookCover(grade, month) {
       const [y, mm] = month.split('-');
+      const issueNo = String(parseInt(mm)).padStart(2, '0');
+      // 배경은 PDF에 별도 추가됨 → 여기선 투명 배경
       const cover = document.createElement('div');
-      cover.style.cssText = `width:210mm;height:297mm;background:linear-gradient(135deg,#0d47a1 0%,#2196f3 50%,#4facfe 100%);position:fixed;top:-99999px;left:0;z-index:-1;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;box-sizing:border-box;padding:40mm;`;
+      cover.style.cssText = `width:186mm;height:273mm;background:transparent;position:fixed;top:-99999px;left:0;z-index:-1;color:#1a1a1a;font-family:'Noto Sans KR','Noto Serif KR',serif;box-sizing:border-box;padding:14mm 14mm 10mm;`;
       cover.innerHTML = `
-        <div style="text-align:center;width:100%;">
-          <div style="font-size:28px;letter-spacing:8px;opacity:0.85;margin-bottom:18mm;">BRAIN LITERACY WORKBOOK</div>
-          <div style="border-top:2px solid rgba(255,255,255,0.7);border-bottom:2px solid rgba(255,255,255,0.7);padding:16mm 0;margin-bottom:22mm;">
-            <div style="font-family:'Noto Serif KR',serif;font-size:56px;font-weight:800;line-height:1.25;letter-spacing:8px;margin-bottom:12px;">매일 비평</div>
-            <div style="font-size:20px;opacity:0.9;letter-spacing:4px;">매일 한 편의 기사, 매일 자라는 생각</div>
+        <!-- 상단 발행정보 라인 -->
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:3px;color:#333;padding-bottom:6mm;border-bottom:1px solid #444;">
+          <span>VOL. ${y} · NO. ${issueNo}</span>
+          <span>BRAIN LITERACY DAILY CRITIQUE</span>
+          <span>${y}. ${parseInt(mm)}월호</span>
+        </div>
+        <!-- 마스트헤드 (신문 제호) -->
+        <div style="text-align:center;padding:18mm 0 14mm;border-bottom:4px double #1a1a1a;">
+          <div style="font-size:14px;letter-spacing:8px;color:#666;margin-bottom:8mm;">━ 어린이·청소년 시사 비평 ━</div>
+          <h1 style="font-family:'Noto Serif KR',serif;margin:0;font-size:62px;font-weight:900;letter-spacing:8px;line-height:1;color:#1a1a1a;">브레인 매일비평</h1>
+          <div style="margin-top:7mm;font-family:'Noto Serif KR',serif;font-style:italic;font-size:17px;color:#444;letter-spacing:1px;">"매일 한 편의 기사, 매일 자라는 생각"</div>
+        </div>
+        <!-- 발행정보 표 (신문 인덱스 박스) -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:10mm 0 12mm;font-size:11px;color:#444;letter-spacing:2px;">
+          <div style="flex:1;text-align:center;border-right:1px solid #aaa;padding:0 6mm;">
+            <div style="opacity:0.6;margin-bottom:3mm;">SECTION</div>
+            <div style="font-size:14px;font-weight:700;letter-spacing:3px;color:#1a1a1a;">비평·시사</div>
           </div>
-          <div style="display:inline-block;padding:10mm 16mm;background:rgba(255,255,255,0.18);border:2px solid rgba(255,255,255,0.5);border-radius:14mm;">
-            <div style="font-size:22px;font-weight:700;letter-spacing:3px;margin-bottom:6px;">${y}년 ${parseInt(mm)}월</div>
-            <div style="font-size:36px;font-weight:800;">${GRADE_LABELS[grade]}학년</div>
+          <div style="flex:1;text-align:center;border-right:1px solid #aaa;padding:0 6mm;">
+            <div style="opacity:0.6;margin-bottom:3mm;">GRADE</div>
+            <div style="font-size:14px;font-weight:700;letter-spacing:3px;color:#1a1a1a;">${GRADE_LABELS[grade]}학년</div>
           </div>
-          <div style="margin-top:22mm;font-size:13px;letter-spacing:4px;opacity:0.7;">© 2026 BRAIN LITERACY · 생각하는 힘을 키우는 매일 비평</div>
+          <div style="flex:1;text-align:center;padding:0 6mm;">
+            <div style="opacity:0.6;margin-bottom:3mm;">FORMAT</div>
+            <div style="font-size:14px;font-weight:700;letter-spacing:3px;color:#1a1a1a;">월간 워크북</div>
+          </div>
+        </div>
+        <!-- 헤드라인 박스 (신문 1면 톱 기사 + 인포그래픽) -->
+        <div style="margin-top:8mm;border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;padding:10mm 4mm;text-align:center;">
+          <div style="font-size:11px;letter-spacing:5px;color:#999;margin-bottom:5mm;">TODAY'S HEADLINES</div>
+          <div style="font-family:'Noto Serif KR',serif;font-size:30px;font-weight:800;line-height:1.35;color:#1a1a1a;margin-bottom:4mm;">
+            매일 한 편의 기사를<br>읽고, 쓰고, 생각하다
+          </div>
+          <div style="width:18mm;border-top:1px solid #888;margin:5mm auto 7mm;"></div>
+
+          <!-- 3단계 비평 학습 인포그래픽 -->
+          <div style="display:flex;align-items:stretch;justify-content:center;gap:0;margin:2mm 0 4mm;">
+            <!-- STEP 1 -->
+            <div style="flex:1;text-align:center;padding:0 3mm;">
+              <div style="display:inline-block;width:14mm;height:14mm;border:1.5px solid #1a1a1a;border-radius:50%;line-height:14mm;font-family:'Noto Serif KR',serif;font-size:18px;font-weight:900;color:#1a1a1a;margin-bottom:3mm;">01</div>
+              <div style="font-size:24px;margin-bottom:1mm;">📖</div>
+              <div style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:800;color:#1a1a1a;letter-spacing:2px;margin-bottom:2mm;">읽 기</div>
+              <div style="font-size:10.5px;color:#555;letter-spacing:1px;line-height:1.5;">오늘의 시사 기사<br>학년 맞춤 본문</div>
+            </div>
+            <!-- arrow -->
+            <div style="display:flex;align-items:center;justify-content:center;padding-top:4mm;font-size:18px;color:#888;font-weight:700;">▶</div>
+            <!-- STEP 2 -->
+            <div style="flex:1;text-align:center;padding:0 3mm;">
+              <div style="display:inline-block;width:14mm;height:14mm;border:1.5px solid #1a1a1a;border-radius:50%;line-height:14mm;font-family:'Noto Serif KR',serif;font-size:18px;font-weight:900;color:#1a1a1a;margin-bottom:3mm;">02</div>
+              <div style="font-size:24px;margin-bottom:1mm;">🔍</div>
+              <div style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:800;color:#1a1a1a;letter-spacing:2px;margin-bottom:2mm;">분 석</div>
+              <div style="font-size:10.5px;color:#555;letter-spacing:1px;line-height:1.5;">육하원칙으로<br>핵심 정리</div>
+            </div>
+            <!-- arrow -->
+            <div style="display:flex;align-items:center;justify-content:center;padding-top:4mm;font-size:18px;color:#888;font-weight:700;">▶</div>
+            <!-- STEP 3 -->
+            <div style="flex:1;text-align:center;padding:0 3mm;">
+              <div style="display:inline-block;width:14mm;height:14mm;border:1.5px solid #1a1a1a;border-radius:50%;line-height:14mm;font-family:'Noto Serif KR',serif;font-size:18px;font-weight:900;color:#1a1a1a;margin-bottom:3mm;">03</div>
+              <div style="font-size:24px;margin-bottom:1mm;">✍️</div>
+              <div style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:800;color:#1a1a1a;letter-spacing:2px;margin-bottom:2mm;">쓰 기</div>
+              <div style="font-size:10.5px;color:#555;letter-spacing:1px;line-height:1.5;">생각 쓰기로<br>나만의 비평</div>
+            </div>
+          </div>
+
+          <!-- 하단 데이터 라인 -->
+          <div style="display:flex;justify-content:center;align-items:center;gap:6mm;padding-top:6mm;border-top:1px dotted #aaa;font-size:11px;color:#444;letter-spacing:2px;">
+            <span><strong style="font-family:'Noto Serif KR',serif;font-size:14px;color:#1a1a1a;">30</strong> 일 매일 발행</span>
+            <span style="color:#bbb;">·</span>
+            <span><strong style="font-family:'Noto Serif KR',serif;font-size:14px;color:#1a1a1a;">4</strong> 단계 학습 흐름</span>
+            <span style="color:#bbb;">·</span>
+            <span>학년별 <strong style="font-family:'Noto Serif KR',serif;font-size:14px;color:#1a1a1a;">맞춤 본문</strong></span>
+          </div>
         </div>
       `;
       document.body.appendChild(cover);
-      const canvas = await html2canvas(cover, { scale: 1.5, useCORS: true, logging: false });
+      const canvas = await html2canvas(cover, { scale: 1.5, useCORS: true, logging: false, backgroundColor: null });
       document.body.removeChild(cover);
-      return canvas.toDataURL('image/jpeg', 0.92);
+      return canvas.toDataURL('image/png');
     }
     async function renderWorkbookTOC(grade, month, validDates) {
       // 30일이면 2페이지로 분할 (페이지당 16개)
@@ -1826,7 +1934,7 @@
       }).join('');
       const pageLabel = totalTocPages > 1 ? `(${pageNo}/${totalTocPages})` : '';
       const toc = document.createElement('div');
-      toc.style.cssText = `width:210mm;height:297mm;background:#fffef9;position:fixed;top:-99999px;left:0;z-index:-1;box-sizing:border-box;padding:25mm 22mm 20mm;font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;overflow:hidden;`;
+      toc.style.cssText = `width:186mm;height:273mm;background:transparent;position:fixed;top:-99999px;left:0;z-index:-1;box-sizing:border-box;padding:17mm 14mm 12mm;font-family:'Noto Sans KR',sans-serif;color:#1a1a1a;overflow:hidden;`;
       toc.innerHTML = `
         <div style="text-align:center;margin-bottom:14mm;border-bottom:3px double #0d47a1;padding-bottom:8mm;">
           <div style="font-size:12px;color:#2196f3;letter-spacing:4px;margin-bottom:6px;">TABLE OF CONTENTS ${pageLabel}</div>
@@ -1836,43 +1944,83 @@
         <div>${itemsHtml}</div>
       `;
       document.body.appendChild(toc);
-      const canvas = await html2canvas(toc, { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#fffef9' });
+      const canvas = await html2canvas(toc, { scale: 1.5, useCORS: true, logging: false, backgroundColor: null });
       document.body.removeChild(toc);
-      return canvas.toDataURL('image/jpeg', 0.92);
+      return canvas.toDataURL('image/png');
     }
     async function renderWorkbookClosing(grade, month, totalDays) {
       const [y, mm] = month.split('-');
+      const issueNo = String(parseInt(mm)).padStart(2, '0');
       const div = document.createElement('div');
-      div.style.cssText = `width:210mm;height:297mm;background:linear-gradient(135deg,#4facfe 0%,#2196f3 50%,#0d47a1 100%);position:fixed;top:-99999px;left:0;z-index:-1;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;box-sizing:border-box;padding:35mm;`;
+      div.style.cssText = `width:186mm;height:273mm;background:transparent;position:fixed;top:-99999px;left:0;z-index:-1;color:#1a1a1a;font-family:'Noto Sans KR','Noto Serif KR',serif;box-sizing:border-box;padding:14mm 14mm 10mm;`;
       div.innerHTML = `
-        <div style="text-align:center;width:100%;">
-          <div style="font-size:90px;margin-bottom:10mm;">🎉</div>
-          <div style="font-family:'Noto Serif KR',serif;font-size:48px;font-weight:800;letter-spacing:6px;margin-bottom:6mm;">한 달, 수고했어요!</div>
-          <div style="width:60mm;border-top:2px solid rgba(255,255,255,0.7);margin:8mm auto;"></div>
-          <div style="font-size:18px;line-height:1.85;opacity:0.95;margin-bottom:18mm;letter-spacing:1px;">
-            ${y}년 ${parseInt(mm)}월,<br>
-            <strong>${totalDays}편의 기사</strong>를 읽고<br>
-            <strong>나만의 생각</strong>을 정리했어요.
+        <!-- 상단 발행 정보 라인 -->
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:3px;color:#333;padding-bottom:6mm;border-bottom:1px solid #444;">
+          <span>VOL. ${y} · NO. ${issueNo}</span>
+          <span>BRAIN LITERACY DAILY CRITIQUE — CLOSING</span>
+          <span>${y}. ${parseInt(mm)}월호</span>
+        </div>
+        <!-- 마스트헤드 (종간호) -->
+        <div style="text-align:center;padding:12mm 0 10mm;border-bottom:4px double #1a1a1a;">
+          <div style="font-size:13px;letter-spacing:8px;color:#888;margin-bottom:6mm;">━ 발 행 종 료 ━</div>
+          <h1 style="font-family:'Noto Serif KR',serif;margin:0;font-size:70px;font-weight:900;letter-spacing:10px;line-height:1;color:#1a1a1a;">완간호</h1>
+          <div style="margin-top:6mm;font-family:'Noto Serif KR',serif;font-style:italic;font-size:16px;color:#444;letter-spacing:1px;">"한 달의 비평을 닫으며"</div>
+        </div>
+        <!-- 발행 통계 표 -->
+        <div style="display:flex;margin:9mm 0 8mm;font-size:11px;color:#444;letter-spacing:2px;border-top:1px solid #aaa;border-bottom:1px solid #aaa;padding:6mm 0;">
+          <div style="flex:1;text-align:center;border-right:1px solid #aaa;padding:0 4mm;">
+            <div style="opacity:0.6;margin-bottom:3mm;">총 발행 호수</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:#1a1a1a;">${totalDays}호</div>
           </div>
-          <div style="display:inline-block;padding:8mm 14mm;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.5);border-radius:10mm;backdrop-filter:blur(8px);">
-            <div style="font-size:15px;font-weight:600;letter-spacing:2px;margin-bottom:8px;opacity:0.9;">${GRADE_LABELS[grade]}학년 워크북 완주</div>
-            <div style="font-size:22px;font-weight:800;letter-spacing:3px;">📚 ${totalDays}일 × 4페이지</div>
+          <div style="flex:1;text-align:center;border-right:1px solid #aaa;padding:0 4mm;">
+            <div style="opacity:0.6;margin-bottom:3mm;">독자 학년</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:#1a1a1a;">${GRADE_LABELS[grade]}</div>
           </div>
-          <div style="margin-top:22mm;font-size:16px;font-style:italic;opacity:0.85;line-height:1.6;">
-            "오늘의 한 줄이,<br>내일의 한 권을 만든다."
+          <div style="flex:1;text-align:center;padding:0 4mm;">
+            <div style="opacity:0.6;margin-bottom:3mm;">학습 영역</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:#1a1a1a;">기사·논리·작문</div>
           </div>
-          <div style="position:absolute;bottom:25mm;left:0;right:0;text-align:center;font-size:12px;letter-spacing:4px;opacity:0.7;">
-            © 2026 BRAIN LITERACY · 생각하는 힘을 키우는 매일 비평
+        </div>
+        <!-- 편집자의 글 -->
+        <div style="margin-top:8mm;padding:8mm 4mm;">
+          <div style="font-size:11px;letter-spacing:5px;color:#999;margin-bottom:5mm;">EDITOR'S NOTE</div>
+          <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;line-height:1.45;color:#1a1a1a;margin-bottom:7mm;">
+            한 달, 정말 수고하셨습니다.
           </div>
+          <div style="font-size:13.5px;line-height:1.85;color:#333;text-align:justify;">
+            ${y}년 ${parseInt(mm)}월 한 달 동안 <strong>${totalDays}편의 시사 기사</strong>를 읽고,
+            육하원칙으로 정리하며, 자기만의 생각을 글로 풀어내셨습니다.
+            기사 한 편 한 편에 담긴 세상의 이야기를, 여러분의 언어로 다시 쓴 시간이었어요.
+            <br><br>
+            오늘의 한 줄이 내일의 한 권이 되고, 한 달의 비평이 한 사람의 시선을 만듭니다.
+            여러분이 매일 채워낸 빈 칸은 단순한 답이 아니라, <strong>스스로 사고하는 힘</strong>이었습니다.
+            <br><br>
+            다음 호에서 또 만나요. — <em>편집부 일동</em>
+          </div>
+        </div>
+        <!-- 발행 종료 도장 + 푸터 -->
+        <div style="position:absolute;bottom:38mm;right:30mm;width:32mm;height:32mm;border:2.5px solid #c0392b;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif KR',serif;font-size:14px;font-weight:900;color:#c0392b;letter-spacing:2px;transform:rotate(-12deg);opacity:0.85;">
+          <div style="text-align:center;">
+            <div style="font-size:9px;letter-spacing:3px;margin-bottom:1mm;">CLOSED</div>
+            <div style="font-size:16px;">${y}.${parseInt(mm)}</div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:18mm;left:24mm;right:24mm;display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#666;letter-spacing:2px;border-top:1px solid #aaa;padding-top:5mm;">
+          <span>편집: BRAIN LITERACY 편집부</span>
+          <span style="font-family:'Noto Serif KR',serif;font-style:italic;font-size:12px;color:#1a1a1a;">— 다음 호에서 만나요 —</span>
+          <span>© ${y} 브레인문해력</span>
         </div>
       `;
       document.body.appendChild(div);
-      const canvas = await html2canvas(div, { scale: 1.5, useCORS: true, logging: false });
+      const canvas = await html2canvas(div, { scale: 1.5, useCORS: true, logging: false, backgroundColor: null });
       document.body.removeChild(div);
-      return canvas.toDataURL('image/jpeg', 0.92);
+      return canvas.toDataURL('image/png');
     }
     async function renderDayPagesForWorkbook(pdf) {
       const W = 210, H = 297;
+      const M = WORKBOOK_MARGIN;
+      const CW = W - 2 * M;
+      const CH = H - 2 * M;
       const converted = convertInputsToWorkbookBox();
 
       const container = document.getElementById('newspaperContainer');
@@ -1896,13 +2044,14 @@
       container.style.maxWidth = '210mm';
 
       try {
-        // 페이지 1: 일별 표지
+        // 페이지 1: 일별 표지 (배경 흐리게)
         pdf.addPage();
+        drawWorkbookBgFullPage(pdf, true);
         const currentDate = document.getElementById('currentDate').textContent;
         const dailyQuote = document.getElementById('dailyQuote').textContent;
         const articleTitle = currentArticle ? currentArticle.title : '';
         const coverPage = document.createElement('div');
-        coverPage.style.cssText = `width:210mm;height:297mm;background:#fffef9;display:flex;flex-direction:column;align-items:center;justify-content:center;position:fixed;top:-99999px;left:0;z-index:-1;box-sizing:border-box;padding:40px;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;`;
+        coverPage.style.cssText = `width:186mm;height:273mm;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;position:fixed;top:-99999px;left:0;z-index:-1;box-sizing:border-box;padding:30px;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;`;
         coverPage.innerHTML = `
           <div style="width:100%;text-align:center;">
             <div style="margin:0 auto 40px;width:80%;"><div style="border-top:2px solid #d4af37;margin-bottom:3px;"></div><div style="border-top:2px solid #d4af37;"></div></div>
@@ -1917,12 +2066,13 @@
           </div>
         `;
         document.body.appendChild(coverPage);
-        const cov = await html2canvas(coverPage, { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#fffef9' });
+        const cov = await html2canvas(coverPage, { scale: 1.5, useCORS: true, logging: false, backgroundColor: null });
         document.body.removeChild(coverPage);
-        pdf.addImage(cov.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, W, H);
+        pdf.addImage(cov.toDataURL('image/png'), 'PNG', M, M, CW, CH);
 
-        // 페이지 2: 기사 본문 + 핵심어휘
+        // 페이지 2: 기사 본문 + 핵심어휘 (배경 흐리게)
         pdf.addPage();
+        drawWorkbookBgFullPage(pdf, true);
         thinkingSection.style.display = 'none';
         analysisSection.style.display = 'none';
         page1.style.minHeight = 'auto';
@@ -1932,46 +2082,48 @@
         dateBar.style.display = '';
 
         const c1 = await html2canvas(container, { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#fffef9' });
-        const s1 = W / (c1.width / 1.5);
+        const s1 = CW / (c1.width / 1.5);
         const h1 = (c1.height / 1.5) * s1;
-        if (h1 <= H * 1.15) {
-          pdf.addImage(c1.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, W, Math.min(h1, H));
+        if (h1 <= CH * 1.15) {
+          pdf.addImage(c1.toDataURL('image/jpeg', 0.9), 'JPEG', M, M, CW, Math.min(h1, CH));
         } else {
-          const pageH = (H / s1) * 1.5;
+          const pageH = (CH / s1) * 1.5;
           let off = 0, pc = 0;
           while (off < c1.height) {
-            if (pc > 0) pdf.addPage();
+            if (pc > 0) { pdf.addPage(); drawWorkbookBgFullPage(pdf, true); }
             const sh = Math.min(pageH, c1.height - off);
             const tc = document.createElement('canvas');
             tc.width = c1.width; tc.height = sh;
             tc.getContext('2d').drawImage(c1, 0, off, c1.width, sh, 0, 0, c1.width, sh);
-            pdf.addImage(tc.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, W, (sh / 1.5) * s1);
+            pdf.addImage(tc.toDataURL('image/jpeg', 0.9), 'JPEG', M, M, CW, (sh / 1.5) * s1);
             off += sh; pc++;
           }
         }
 
-        // 페이지 3: 육하원칙
+        // 페이지 3: 육하원칙 (배경 흐리게)
         pdf.addPage();
+        drawWorkbookBgFullPage(pdf, true);
         header.style.display = 'none';
         dateBar.style.display = 'none';
         page1.style.display = 'none';
         analysisSection.style.display = 'block';
         analysisSection.style.paddingTop = '30px';
         const c2 = await html2canvas(container, { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#fffef9' });
-        const s2 = W / (c2.width / 1.5);
+        const s2 = CW / (c2.width / 1.5);
         const h2 = (c2.height / 1.5) * s2;
-        pdf.addImage(c2.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, W, h2);
+        pdf.addImage(c2.toDataURL('image/jpeg', 0.9), 'JPEG', M, M, CW, h2);
 
-        // 페이지 4: 생각쓰기
+        // 페이지 4: 생각쓰기 (배경 흐리게)
         pdf.addPage();
+        drawWorkbookBgFullPage(pdf, true);
         analysisSection.style.display = 'none';
         thinkingSection.style.display = 'block';
         thinkingSection.style.minHeight = 'auto';
         thinkingSection.style.paddingTop = '30px';
         const c3 = await html2canvas(container, { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-        const s3 = W / (c3.width / 1.5);
+        const s3 = CW / (c3.width / 1.5);
         const h3 = (c3.height / 1.5) * s3;
-        pdf.addImage(c3.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, W, h3);
+        pdf.addImage(c3.toDataURL('image/jpeg', 0.9), 'JPEG', M, M, CW, h3);
 
       } finally {
         header.style.display = '';
