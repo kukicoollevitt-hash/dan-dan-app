@@ -1047,7 +1047,7 @@
       </div>
 
       <div class="workbook-info">
-        ⏱ 예상 소요 시간: 3~5분 · 예상 페이지 수: 약 122페이지
+        ⏱ 예상 소요 시간: 30~1분 · 예상 페이지 수: 약 122페이지
       </div>
 
       <div class="workbook-modal-actions">
@@ -1096,17 +1096,61 @@
       6: { name: '랜덤', icon: '🎲', class: '랜덤' }            // 토
     };
 
+    // URL 파라미터 — 메뉴에서 진입한 경우 자동 인식
+    const URL_PARAMS = new URLSearchParams(window.location.search);
+    const FROM_MENU = URL_PARAMS.get('fromMenu') === '1';
+    const URL_DATE = URL_PARAMS.get('date');     // YYYY-MM-DD
+    const URL_GRADE = URL_PARAMS.get('grade');   // elem34 | elem56 | mid12 | mid3high1
+
+    // 메뉴 진입 모드 = 학생 정보 + 등급 강제 + 토글 숨김
+    let CRIT_STUDENT = null;
+    function getCritStudent() {
+      if (CRIT_STUDENT) return CRIT_STUDENT;
+      try {
+        // iframe 안에서는 parent window의 sessionStorage 접근
+        const ss = window.parent && window.parent !== window
+          ? window.parent.sessionStorage
+          : sessionStorage;
+        const u = JSON.parse(ss.getItem('user') || '{}');
+        if (u.grade && u.name) { CRIT_STUDENT = u; return u; }
+      } catch (e) {}
+      return null;
+    }
+
     // 초기화
     async function init() {
-      // 오늘 날짜 설정
+      // 메뉴 진입 시 URL params 우선
       const today = new Date();
-      document.getElementById('dateSelect').value = formatDateKey(today);
+      const dateToUse = (FROM_MENU && URL_DATE) ? URL_DATE : formatDateKey(today);
+      document.getElementById('dateSelect').value = dateToUse;
+
+      // 등급 강제 (메뉴 진입 시)
+      if (FROM_MENU && URL_GRADE && ['elem34','elem56','mid12','mid3high1'].includes(URL_GRADE)) {
+        currentGrade = URL_GRADE;
+      }
+
+      // 메뉴 진입 시 UI 조정: 학년 토글 + 날짜 선택바 + 교사용 배지 숨김
+      if (FROM_MENU) {
+        const gs = document.getElementById('gradeSelector');
+        if (gs) gs.style.display = 'none';
+        const ds = document.getElementById('dateSelectorBar');
+        if (ds) ds.style.display = 'none';
+        // 🔒 교사용 해설 배지(topicBadge) 숨김 — 학생은 정답 노출 X
+        const tb = document.getElementById('topicBadge');
+        if (tb) tb.style.display = 'none';
+      }
 
       // 기사 데이터 로드
       try {
         const response = await fetch('/data/critique-articles.json');
         articlesData = await response.json();
         loadArticleByDate();
+
+        // 메뉴 진입 모드: 기존 제출본 자동 로드 + 제출 버튼 표시
+        if (FROM_MENU) {
+          await loadExistingSubmission();
+          showSubmitButton();
+        }
       } catch (error) {
         console.error('기사 로드 실패:', error);
         showNoArticle();
@@ -2196,6 +2240,11 @@
 
     // 교사용 해설 토글 (배지 클릭 시)
     function toggleTeacherGuide() {
+      // 🔒 학생 진입 모드(FROM_MENU=1)에서는 교사용 해설 호출 차단
+      if (FROM_MENU) {
+        console.log('[비평] 학생 진입 모드 — 교사용 해설 비활성');
+        return;
+      }
       if (!currentArticle || !currentArticle.teacherGuide) {
         alert('현재 기사에 교사용 해설이 없습니다.');
         return;
@@ -2300,6 +2349,312 @@
       const dateNum = dateStr.replace(/-/g, '');
       const index = parseInt(dateNum) % DAILY_QUOTES.length;
       document.getElementById('dailyQuote').textContent = DAILY_QUOTES[index];
+    }
+
+    // ===== 메뉴 진입 모드: 제출/검증/축하/모범답안 비교 =====
+
+    function showSubmitButton() {
+      const bar = document.getElementById('actionBar');
+      if (!bar || document.getElementById('btnCritSubmit')) return;
+      // 기존 버튼들 숨김 (메뉴 진입 모드에선 제출/다시쓰기만)
+      ['btn-print','btn-pdf','btn-workbook'].forEach(cls => {
+        const b = bar.querySelector('.' + cls);
+        if (b) b.style.display = 'none';
+      });
+      const btn = document.createElement('button');
+      btn.id = 'btnCritSubmit';
+      btn.className = 'btn';
+      btn.style.cssText = `
+        background: linear-gradient(135deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+        color: #fff; font-weight: 700; padding: 12px 28px;
+        border: none; border-radius: 10px; cursor: pointer;
+        font-size: 15px; box-shadow: 0 6px 16px rgba(33,150,243,0.3);
+      `;
+      btn.textContent = '✍️ 제출하기';
+      btn.addEventListener('click', submitCritique);
+      bar.appendChild(btn);
+    }
+
+    function collectAnswers() {
+      const sixWFields = ['who','when','where','what','why','how'];
+      const sixWLabel = { who:'누가', when:'언제', where:'어디서', what:'무엇을', why:'왜', how:'어떻게' };
+      const sixW = {};
+      const empty = [];
+      // 6하원칙 (input 4개 + textarea 2개를 모두 .six-w-input/.six-w-textarea로 매칭)
+      const sixWNodes = document.querySelectorAll('[data-six-w]');
+      sixWNodes.forEach(node => {
+        const key = node.dataset.sixW;
+        const val = (node.value || '').trim();
+        sixW[key] = val;
+        if (!val) empty.push(`육하원칙 — ${sixWLabel[key] || key}`);
+      });
+      // fallback: 기존 element list 순서 사용 (six-w-input + six-w-textarea)
+      if (Object.keys(sixW).length === 0) {
+        const inputs = document.querySelectorAll('.six-w-input');
+        const textareas = document.querySelectorAll('.six-w-textarea');
+        const all = [...inputs, ...textareas];
+        sixWFields.forEach((k, i) => {
+          const node = all[i];
+          const val = node ? (node.value || '').trim() : '';
+          sixW[k] = val;
+          if (!val) empty.push(`육하원칙 — ${sixWLabel[k]}`);
+        });
+      }
+      // 생각쓰기
+      const thinking = { q1:'', q2:'', q3:'' };
+      const thNodes = document.querySelectorAll('.thinking-textarea');
+      thNodes.forEach((node, i) => {
+        const key = `q${i+1}`;
+        const val = (node.value || '').trim();
+        thinking[key] = val;
+        if (!val) empty.push(`생각쓰기 — ${i+1}번 문항`);
+      });
+      return { sixW, thinking, empty };
+    }
+
+    function showEmptyPopup(emptyList) {
+      // 오션블루 톤 모달
+      const ov = document.createElement('div');
+      ov.style.cssText = `
+        position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+        z-index: 99999; display: flex; align-items: center; justify-content: center;
+        padding: 16px;
+      `;
+      const top5 = emptyList.slice(0, 5);
+      const more = emptyList.length > 5 ? `<div style="margin-top:6px;font-size:11px;color:#888;">외 ${emptyList.length - 5}곳</div>` : '';
+      ov.innerHTML = `
+        <div style="background:linear-gradient(180deg,#fff,#f0f9ff);border-radius:18px;padding:26px 24px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(13,71,161,0.32);border:2px solid #bae6fd;animation:critPopIn 0.25s ease-out;">
+          <div style="font-size:50px;margin-bottom:8px;">✍️</div>
+          <div style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:800;color:#0d47a1;margin-bottom:8px;">아직 비어있는 칸이 있어요!</div>
+          <div style="font-size:13px;color:#444;margin-bottom:14px;line-height:1.5;">모든 칸을 채워야 제출할 수 있어요.<br>아래 항목을 마저 작성해주세요.</div>
+          <div style="background:#fff;border:1px solid #bae6fd;border-radius:10px;padding:10px 12px;text-align:left;font-size:12.5px;color:#1e40af;line-height:1.8;margin-bottom:16px;">
+            ${top5.map(t => `<div>• ${t}</div>`).join('')}
+            ${more}
+          </div>
+          <button id="critEmptyOk" style="width:100%;padding:11px;background:linear-gradient(135deg,#4facfe 0%,#2196f3 50%,#0d47a1 100%);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(33,150,243,0.3);">확인</button>
+        </div>
+        <style>@keyframes critPopIn { from {opacity:0;transform:scale(0.92);} to {opacity:1;transform:scale(1);} }</style>
+      `;
+      document.body.appendChild(ov);
+      ov.querySelector('#critEmptyOk').addEventListener('click', () => ov.remove());
+      ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    }
+
+    function showGradingLoader() {
+      if (document.getElementById('critGradingLoader')) return;
+      const ov = document.createElement('div');
+      ov.id = 'critGradingLoader';
+      ov.style.cssText = `position:fixed;inset:0;background:rgba(15,23,42,0.7);z-index:99997;display:flex;align-items:center;justify-content:center;padding:16px;`;
+      ov.innerHTML = `
+        <div style="background:linear-gradient(180deg,#fff,#f0f9ff);border-radius:20px;padding:36px 30px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(13,71,161,0.4);border:2px solid #bae6fd;">
+          <div style="font-size:60px;margin-bottom:12px;animation:critPulse 1.4s ease-in-out infinite;">🤖</div>
+          <div style="font-family:'Noto Serif KR',serif;font-size:22px;font-weight:800;color:#0d47a1;margin-bottom:6px;">AI 채점 중...</div>
+          <div style="font-size:13px;color:#555;line-height:1.6;">잠시만 기다려 주세요.<br>여러분의 답안을 꼼꼼히 읽고 있어요.</div>
+          <div style="margin-top:18px;height:5px;background:#e0e7ff;border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:30%;background:linear-gradient(90deg,#4facfe,#2196f3,#0d47a1);animation:critBar 1.4s ease-in-out infinite;"></div>
+          </div>
+        </div>
+        <style>
+          @keyframes critPulse { 0%,100% { transform: scale(1);} 50% { transform: scale(1.12);} }
+          @keyframes critBar { 0% { margin-left:-30%;} 100% { margin-left:100%;} }
+        </style>
+      `;
+      document.body.appendChild(ov);
+    }
+    function hideGradingLoader() {
+      const el = document.getElementById('critGradingLoader');
+      if (el) el.remove();
+    }
+    function starsToHTML(value) {
+      if (typeof value !== 'number') return '';
+      const v = Math.max(0, Math.min(5, Math.round(value * 2) / 2));
+      const pct = (v / 5) * 100;
+      return `<span style="position:relative;display:inline-block;letter-spacing:3px;line-height:1;font-family:sans-serif;"><span style="color:#d4d4d4;">★★★★★</span><span style="position:absolute;top:0;left:0;overflow:hidden;white-space:nowrap;color:#f5b800;width:${pct}%;">★★★★★</span></span>`;
+    }
+
+    async function submitCritique() {
+      if (!currentArticle) { alert('기사가 로드되지 않았어요.'); return; }
+      const { sixW, thinking, empty } = collectAnswers();
+      if (empty.length > 0) {
+        showEmptyPopup(empty);
+        return;
+      }
+      const student = getCritStudent();
+      if (!student) { alert('학생 정보가 필요해요. 메뉴에서 다시 진입해주세요.'); return; }
+      const dateKey = document.getElementById('dateSelect').value;
+      const btn = document.getElementById('btnCritSubmit');
+      if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
+      showGradingLoader();
+      try {
+        const res = await fetch('/api/critique/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: student.grade, name: student.name,
+            phone: student.phone || '', academyName: student.academyName || '',
+            date: dateKey, contentGrade: currentGrade,
+            category: currentArticle.category || '', title: currentArticle.title || '',
+            sixW, thinking
+          })
+        });
+        const data = await res.json();
+        hideGradingLoader();
+        if (!data.ok) {
+          alert(data.message || '제출에 실패했어요.');
+          if (btn) { btn.disabled = false; btn.textContent = '✍️ 제출하기'; }
+          return;
+        }
+        const grading = data.submission && data.submission.grading;
+        showSuccessAndAnalysis(sixW, thinking, grading);
+      } catch (err) {
+        console.error('[비평] 제출 오류:', err);
+        hideGradingLoader();
+        alert('제출 중 오류가 발생했어요. 다시 시도해주세요.');
+        if (btn) { btn.disabled = false; btn.textContent = '✍️ 제출하기'; }
+      }
+    }
+
+    function showSuccessAndAnalysis(mySixW, myThinking, grading) {
+      const tg = currentArticle?.teacherGuide || {};
+      const sixWLabel = { who:'누가', when:'언제', where:'어디서', what:'무엇을', why:'왜', how:'어떻게' };
+      // 채점 결과 블록
+      let gradingBlock = '';
+      if (grading && typeof grading.stars === 'number') {
+        const starsHtml = starsToHTML(grading.stars);
+        const fb = grading.fallback ? `<div style="margin-top:6px;font-size:11px;color:#888;font-style:italic;">※ AI 일시 불안정으로 임시 평가</div>` : '';
+        gradingBlock = `
+          <div style="background:linear-gradient(135deg,#fff7e6,#fff3d6);border:2px solid #f5d27e;border-radius:14px;padding:18px 20px;margin-bottom:18px;text-align:center;">
+            <div style="font-size:11px;letter-spacing:4px;color:#a16207;margin-bottom:6px;">AI 평가 결과</div>
+            <div style="font-size:36px;color:#f5b800;letter-spacing:-2px;margin-bottom:4px;">${starsHtml}</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:32px;font-weight:800;color:#d97706;line-height:1;margin-bottom:10px;">${grading.stars.toFixed(1)} <span style="font-size:14px;color:#a16207;">/ 5.0</span></div>
+            <div style="background:#fff;border-radius:10px;padding:10px 14px;margin-top:8px;text-align:left;">
+              <div style="font-size:12px;color:#a16207;font-weight:700;letter-spacing:1px;margin-bottom:4px;">💛 칭찬</div>
+              <div style="font-size:13px;color:#333;line-height:1.6;">${escapeHtml(grading.encouragement || '')}</div>
+            </div>
+            ${grading.improvement ? `
+            <div style="background:#fff;border-radius:10px;padding:10px 14px;margin-top:8px;text-align:left;">
+              <div style="font-size:12px;color:#0d47a1;font-weight:700;letter-spacing:1px;margin-bottom:4px;">💡 다음엔 이렇게</div>
+              <div style="font-size:13px;color:#333;line-height:1.6;">${escapeHtml(grading.improvement)}</div>
+            </div>` : ''}
+            ${fb}
+          </div>
+        `;
+      }
+      const ov = document.createElement('div');
+      ov.style.cssText = `
+        position: fixed; inset: 0; background: rgba(15,23,42,0.7);
+        z-index: 99998; display: flex; align-items: flex-start; justify-content: center;
+        padding: 24px 16px; overflow-y: auto;
+      `;
+      const sixWRows = Object.keys(sixWLabel).map(k => `
+        <tr>
+          <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#fbf7ec;font-weight:700;color:#0d47a1;width:18%;vertical-align:top;font-size:12px;">${sixWLabel[k]}</td>
+          <td style="padding:8px 10px;border:1px solid #e5d9c5;font-size:12.5px;line-height:1.55;color:#222;vertical-align:top;">${escapeHtml(mySixW[k] || '-')}</td>
+          <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#f0f9ff;font-size:12.5px;line-height:1.55;color:#0d47a1;vertical-align:top;">${escapeHtml((tg.sixW && tg.sixW[k]) || '-')}</td>
+        </tr>
+      `).join('');
+      const THINKING_QUESTIONS = [
+        '이 기사에서 가장 중요하다고 생각한 내용은 무엇인가요?',
+        '나는 이 문제에 대해 어떻게 생각하나요?',
+        '이 문제를 해결하려면 어떤 방법이 필요할까요?'
+      ];
+      const thRows = ['q1','q2','q3'].map((k, i) => `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:2px;letter-spacing:1px;">생각쓰기 ${i+1}</div>
+          <div style="font-size:12.5px;color:#444;line-height:1.5;margin-bottom:8px;font-style:italic;">${escapeHtml(THINKING_QUESTIONS[i])}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="background:#fff;border:1px solid #e5d9c5;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:10px;color:#888;letter-spacing:2px;margin-bottom:4px;">내 답안</div>
+              <div style="font-size:12.5px;line-height:1.65;color:#222;white-space:pre-wrap;">${escapeHtml(myThinking[k] || '-')}</div>
+            </div>
+            <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:10px;color:#0d47a1;letter-spacing:2px;margin-bottom:4px;">모범 답안</div>
+              <div style="font-size:12.5px;line-height:1.65;color:#0d47a1;white-space:pre-wrap;">${escapeHtml((tg.thinking && tg.thinking[k]) || '-')}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      ov.innerHTML = `
+        <div style="background:linear-gradient(180deg,#fdfaf4,#fffefb);border-radius:18px;max-width:760px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.4);overflow:hidden;animation:critPopIn 0.3s ease-out;margin:auto;">
+          <div style="padding:18px 22px 14px;background:linear-gradient(135deg,#4facfe 0%,#2196f3 50%,#0d47a1 100%);color:#fff;text-align:center;position:relative;">
+            <div style="font-size:42px;margin-bottom:4px;">🎉</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:22px;font-weight:800;letter-spacing:2px;">오늘의 비평 완료!</div>
+            <div style="font-size:12px;opacity:0.92;margin-top:4px;letter-spacing:1px;">잘 정리했어요. 아래에서 모범답안과 비교해 보세요.</div>
+            <button id="critSuccessClose" style="position:absolute;top:14px;right:16px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:#fff;font-size:20px;cursor:pointer;">×</button>
+          </div>
+          <div style="padding:20px 22px;max-height:65vh;overflow-y:auto;">
+            <div style="font-size:11px;letter-spacing:4px;color:#999;margin-bottom:8px;">📰 ${escapeHtml(currentArticle?.title || '')}</div>
+            ${gradingBlock}
+            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:10px 0 6px;letter-spacing:1px;">육하원칙 비교</div>
+            <table style="width:100%;border-collapse:collapse;border:1px solid #e5d9c5;margin-bottom:18px;">
+              <thead>
+                <tr>
+                  <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">항목</th>
+                  <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">내 답안</th>
+                  <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">모범 답안</th>
+                </tr>
+              </thead>
+              <tbody>${sixWRows}</tbody>
+            </table>
+
+            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:12px 0 8px;letter-spacing:1px;">생각쓰기 비교</div>
+            ${thRows}
+          </div>
+          <div style="padding:14px 22px;border-top:1px solid #e5d9c5;background:#fbf7ec;text-align:right;">
+            <button id="critSuccessOk" style="padding:10px 24px;background:linear-gradient(135deg,#4facfe,#0d47a1);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;">확인 — 메뉴로 돌아가기</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(ov);
+      const finish = () => {
+        ov.remove();
+        // iframe인 경우 parent에서 모달 닫음 — 비평 전용 close 우선 (메뉴 새로고침 X)
+        if (window.parent && window.parent !== window) {
+          if (typeof window.parent.closeCritiqueUnitModal === 'function') {
+            window.parent.closeCritiqueUnitModal();
+          } else if (typeof window.parent.closeUnitModal === 'function') {
+            window.parent.closeUnitModal();
+          }
+        }
+      };
+      ov.querySelector('#critSuccessOk').addEventListener('click', finish);
+      ov.querySelector('#critSuccessClose').addEventListener('click', finish);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    async function loadExistingSubmission() {
+      const student = getCritStudent();
+      if (!student) return;
+      const dateKey = document.getElementById('dateSelect').value;
+      try {
+        const res = await fetch(`/api/critique/load?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}&date=${encodeURIComponent(dateKey)}`);
+        const data = await res.json();
+        if (!data.ok || !data.submission) return;
+        const sub = data.submission;
+        // 답안 채우기
+        const sixWFields = ['who','when','where','what','why','how'];
+        const sixWInputs = document.querySelectorAll('.six-w-input');
+        const sixWTextareas = document.querySelectorAll('.six-w-textarea');
+        const allSixW = [...sixWInputs, ...sixWTextareas];
+        sixWFields.forEach((k, i) => {
+          if (allSixW[i] && sub.sixW && sub.sixW[k]) allSixW[i].value = sub.sixW[k];
+        });
+        document.querySelectorAll('.thinking-textarea').forEach((node, i) => {
+          const key = `q${i+1}`;
+          if (sub.thinking && sub.thinking[key]) node.value = sub.thinking[key];
+        });
+        // 제출 버튼 텍스트 변경
+        const btn = document.getElementById('btnCritSubmit');
+        if (btn) btn.textContent = '✍️ 다시 제출하기';
+      } catch (e) {
+        console.error('[비평] load 오류:', e);
+      }
     }
 
     // 페이지 로드 시 실행

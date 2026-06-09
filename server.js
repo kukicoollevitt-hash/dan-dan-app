@@ -374,6 +374,7 @@ const BookOrder = require("./models/BookOrder");
 const TextbookOrder = require("./models/TextbookOrder");
 const PromotionOrder = require("./models/PromotionOrder");
 const CenterContract = require("./models/CenterContract");
+const CritiqueSubmission = require("./models/CritiqueSubmission");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -10343,6 +10344,16 @@ app.post("/admin/assign-series", async (req, res) => {
       brainreal: 'BRAIN중등'
     };
 
+    // 🔧 레거시 값 정규화 — 과거 'BRAIN심화'로 저장된 값을 'BRAIN답'으로 통일
+    const VALUE_NORMALIZE = { 'BRAIN심화': 'BRAIN답' };
+    const normalizeSeriesValue = v => VALUE_NORMALIZE[v] || v;
+    // 기존 user.assignedSeries에 BRAIN심화가 있으면 BRAIN답으로 정규화 (이후 처리에서 일관 적용)
+    if (Array.isArray(user.assignedSeries)) {
+      user.assignedSeries = user.assignedSeries.map(normalizeSeriesValue);
+    }
+    // 요청으로 들어온 series 값도 정규화
+    const normalizedSeries = (series || []).map(normalizeSeriesValue);
+
     let academyAllowedValues = null; // null = 학원 매핑 없음 또는 HQ 호출 → 전체 허용
     if (!fromHQ && user.academyName) {
       const admins = await Admin.find({ academyName: user.academyName, deleted: { $ne: true } })
@@ -10364,10 +10375,10 @@ app.post("/admin/assign-series", async (req, res) => {
 
     let finalSeries;
     if (!academyAllowedValues) {
-      finalSeries = series;
+      finalSeries = normalizedSeries;
     } else {
       const preserved = (user.assignedSeries || []).filter(v => !academyAllowedValues.includes(v));
-      const newAllowed = (series || []).filter(v => academyAllowedValues.includes(v));
+      const newAllowed = normalizedSeries.filter(v => academyAllowedValues.includes(v));
       // 중복 제거
       finalSeries = Array.from(new Set([...preserved, ...newAllowed]));
     }
@@ -37643,6 +37654,535 @@ app.post('/api/word-battle/save', async (req, res) => {
   } catch (err) {
     console.error('단어배틀 저장 오류:', err);
     res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// ============================================================
+// 📰 BRAIN비평 시사문해 — 매일비평 답안 제출/조회 API
+// ============================================================
+
+// ===== AI 채점 헬퍼 =====
+const CRITIQUE_GRADE_DAILY_BUDGET_KRW = 150000; // 월 ₩150,000 가드레일 (대략)
+const CRITIQUE_GRADE_PER_CALL_KRW = 1.5;        // gpt-4o-mini 1회 약 ₩1~2
+const CRITIQUE_GRADE_DAILY_CAP = Math.floor((CRITIQUE_GRADE_DAILY_BUDGET_KRW / 30) / CRITIQUE_GRADE_PER_CALL_KRW); // 약 3,300건/일
+let _critGradeCountToday = 0;
+let _critGradeCountDay = '';
+function _critGradeQuotaCheck() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (_critGradeCountDay !== today) { _critGradeCountDay = today; _critGradeCountToday = 0; }
+  if (_critGradeCountToday >= CRITIQUE_GRADE_DAILY_CAP) return false;
+  _critGradeCountToday++;
+  return true;
+}
+
+// 비속어 간단 필터 (확장 가능)
+const BAD_WORD_PATTERNS = [/씨발|시발|좆|좇|꺼져|개새끼|병신|미친놈|미친년/i];
+function hasBadWords(text) {
+  if (!text) return false;
+  return BAD_WORD_PATTERNS.some(p => p.test(text));
+}
+
+// 학년 라벨
+const CRITIQUE_GRADE_LABEL = {
+  elem34: '초3~4학년',
+  elem56: '초5~6학년',
+  mid12: '중1~2학년',
+  mid3high1: '중3~고1학년'
+};
+
+// 별점 라운딩 (0.5 단위)
+function roundToHalf(n) {
+  if (typeof n !== 'number' || isNaN(n)) return null;
+  return Math.max(0, Math.min(5, Math.round(n * 2) / 2));
+}
+
+// 답안 의미성(meaningful content) 검증 — 단일 자모/기호/반복문자 등 무의미 답안 사전 차단
+// 반환: { meaningful: boolean, score: 0~100, reason: '...' }
+function checkAnswerMeaningfulness(sixW, thinking) {
+  const sixWVals = Object.values(sixW || {}).map(v => String(v || '').trim());
+  const thinkingVals = Object.values(thinking || {}).map(v => String(v || '').trim());
+  const allFields = [...sixWVals, ...thinkingVals];
+  const FIELD_COUNT = allFields.length; // 9개 (6하원칙 6 + 생각쓰기 3)
+
+  // 의미 있는 글자 카운트 (완성형 한글 음절 / 영문 단어 2자 이상 / 숫자 2자 이상)
+  function meaningfulCharCount(str) {
+    if (!str) return 0;
+    // 1) 완성형 한글 음절 (가~힣)
+    const koreanSyllables = (str.match(/[가-힣]/g) || []).length;
+    // 2) 영문 단어 (2자 이상 연속)
+    const englishWords = (str.match(/[a-zA-Z]{2,}/g) || []).reduce((s, w) => s + w.length, 0);
+    // 3) 숫자 (2자 이상 연속)
+    const numbers = (str.match(/[0-9]{2,}/g) || []).reduce((s, w) => s + w.length, 0);
+    return koreanSyllables + englishWords + numbers;
+    // ※ 단일 자모(ㅇ,ㅋ,ㅁ), 기호(.,-,*), 단일숫자(1,2)는 카운트 X
+  }
+
+  let lowQualityFields = 0;  // 의미 글자 0~1자 필드 수
+  let veryShortFields = 0;   // 5자 미만 필드 수
+  let totalMeaningful = 0;
+  allFields.forEach(v => {
+    const mc = meaningfulCharCount(v);
+    totalMeaningful += mc;
+    if (mc <= 1) lowQualityFields++;
+    if (v.length < 5) veryShortFields++;
+  });
+
+  // 판정 기준
+  // 1) 의미 있는 글자가 전혀 없는 필드가 절반 이상 → 무의미 답안
+  if (lowQualityFields >= Math.ceil(FIELD_COUNT * 0.5)) {
+    return {
+      meaningful: false,
+      starsHint: 1.0,
+      reason: `의미 있는 글자가 부족한 칸이 ${lowQualityFields}개 입니다.`,
+      encouragement: '답안 작성을 시작한 것은 좋아요!',
+      improvement: '각 칸에 자기 생각을 한 문장 이상 적어보세요. 짧은 자모(ㅇ, ㅁ)만으로는 평가가 어렵습니다.'
+    };
+  }
+  // 2) 전체 의미 글자 수가 절대적으로 너무 적음
+  if (totalMeaningful < 20) {
+    return {
+      meaningful: false,
+      starsHint: 1.5,
+      reason: `전체 의미 있는 글자 수가 ${totalMeaningful}자에 그칩니다.`,
+      encouragement: '꾸준히 도전해 주세요!',
+      improvement: '각 칸에 완전한 문장으로 답해보세요. 본문에서 찾은 단서를 넣으면 더 좋아요.'
+    };
+  }
+  return { meaningful: true, totalMeaningful };
+}
+
+// 폴백 규칙 기반 채점 (AI 실패 시)
+function fallbackGrade(sixW, thinking, teacherGuide) {
+  // 글자수 + 빈칸 여부만 체크
+  const sixWVals = Object.values(sixW || {}).map(v => (v || '').trim());
+  const thinkingVals = Object.values(thinking || {}).map(v => (v || '').trim());
+  const totalChars = [...sixWVals, ...thinkingVals].reduce((s, v) => s + v.length, 0);
+  // 학생이 노력은 했다는 가정 → 기본 3점, 글자수에 따라 조정
+  let stars = 3;
+  if (totalChars >= 600) stars = 4;
+  if (totalChars >= 1000) stars = 4.5;
+  const score = Math.round((stars / 5) * 100);
+  return {
+    stars,
+    totalScore: score,
+    sixWScore: score,
+    thinkingScore: score,
+    criteria: { accuracy: score, logic: score, creativity: score },
+    encouragement: '꾸준히 작성해 주셔서 좋아요!',
+    improvement: 'AI 채점이 일시적으로 불안정해 임시 점수로 표시됩니다. 잠시 후 다시 제출해 보세요.',
+    fallback: true
+  };
+}
+
+// GPT-4o-mini 채점 — Structured Output으로 JSON 강제
+async function aiGradeCritique({ article, sixW, thinking, teacherGuide, gradeLabel }) {
+  // 사전 검증: 의미 있는 답안인지 (단일 자모/기호 차단)
+  const mfCheck = checkAnswerMeaningfulness(sixW, thinking);
+  if (!mfCheck.meaningful) {
+    console.log(`[비평] 의미 없는 답안 차단: ${mfCheck.reason}`);
+    const score = Math.round((mfCheck.starsHint / 5) * 100);
+    return {
+      stars: mfCheck.starsHint,
+      totalScore: score,
+      sixWScore: score,
+      thinkingScore: score,
+      criteria: { accuracy: score, logic: score, creativity: score },
+      encouragement: mfCheck.encouragement,
+      improvement: mfCheck.improvement,
+      fallback: false
+    };
+  }
+  if (!_critGradeQuotaCheck()) {
+    console.warn('[비평] 일일 채점 한도 도달 — 폴백 사용');
+    return fallbackGrade(sixW, thinking, teacherGuide);
+  }
+
+  // PII 익명화: 답안 본문만 전송 (학생 이름/전화는 안 보냄)
+  const sixWLabels = { who:'누가', when:'언제', where:'어디서', what:'무엇을', why:'왜', how:'어떻게' };
+  const myAnswers = Object.keys(sixWLabels).map(k => `[${sixWLabels[k]}] ${(sixW[k] || '').trim()}`).join('\n');
+  const tgAnswers = teacherGuide?.sixW
+    ? Object.keys(sixWLabels).map(k => `[${sixWLabels[k]}] ${(teacherGuide.sixW[k] || '').trim()}`).join('\n')
+    : '';
+  const myThinking = ['q1','q2','q3'].map(k => `${k}: ${(thinking[k] || '').trim()}`).join('\n');
+  const tgThinking = teacherGuide?.thinking
+    ? ['q1','q2','q3'].map(k => `${k}: ${(teacherGuide.thinking[k] || '').trim()}`).join('\n')
+    : '';
+
+  const systemPrompt = `당신은 어린이·청소년 시사 비평 학습을 평가하는 한국어 선생님입니다.
+대상: ${gradeLabel} 학생.
+
+**핵심 원칙: 격려는 따뜻하게 하되, 점수는 정직하게 평가합니다.**
+
+== 가장 중요한 절대 규칙 ==
+1. **무의미한 답안 = 1점**
+   - 단일 자모(ㅇ, ㅋ, ㅁ, ㅎ 등), 기호(.,-,*), 의미 없는 반복 글자만 적은 칸은 빈칸과 같습니다.
+   - 이런 답안이 절반 이상이면 무조건 **1.0~1.5점**입니다. 절대 3점 이상 주지 마세요.
+2. **5자 미만의 단답** = 시도는 인정하나 점수는 **1.5~2.0점**
+3. **모범답안의 핵심 개념이 빠지면** → 점수 감점
+4. **본문과 무관한 동문서답** → 1.5~2.5점
+
+== 평가 절차 ==
+1. 각 답안의 의미 있는 글자(완성형 한글 음절·영문 단어 2자 이상) 수를 먼저 셉니다.
+2. 의미가 있는 답안만 모범답안과 비교 평가합니다.
+3. 표현은 달라도 의미가 맞으면 인정합니다.
+
+== 점수 척도 (엄격히 적용) ==
+- ★5 (4.5~5.0): 모범답안 수준에 가까움 + 학생 자기 생각 추가
+- ★4 (3.5~4.5): 6하원칙·생각쓰기 모두 의미 있게 작성, 일부 보완점
+- ★3 (2.5~3.5): 절반 정도 의미 있는 답안 작성, 깊이 부족
+- ★2 (1.5~2.5): 노력은 보이나 빈약 (단답 위주)
+- ★1 (1.0~1.5): **무의미 답안, 빈칸과 다름없음, 동문서답**
+
+== 톤 ==
+- encouragement: 1~2문장 따뜻하게. 점수가 낮더라도 시도 자체는 인정.
+- improvement: 1문장 부드럽고 구체적으로. 점수가 낮으면 "다음엔 완전한 문장으로 답해보세요" 같은 명확한 안내.
+- 호칭 없이 ("여러분" 사용).
+
+stars는 반드시 0.5 단위 (1.0, 1.5, 2.0, ..., 5.0).`;
+
+  const userPrompt = `기사 제목: ${article.title || '-'}
+기사 카테고리: ${article.category || '-'}
+
+[기사 본문]
+${(article.content || '').slice(0, 2000)}
+
+[학생 답안 — 6하원칙]
+${myAnswers}
+
+[모범 답안 — 6하원칙]
+${tgAnswers || '(없음)'}
+
+[학생 답안 — 생각쓰기]
+${myThinking}
+
+[모범 답안 — 생각쓰기]
+${tgThinking || '(없음)'}
+
+위 답안을 평가해서 정해진 JSON 형식으로만 응답하세요.`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.3,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "critique_grading",
+          strict: true,
+          schema: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              stars: { type: "number", description: "별점 (1.0~5.0, 0.5 단위)" },
+              totalScore: { type: "integer", description: "종합 점수 0~100" },
+              sixWScore: { type: "integer", description: "6하원칙 점수 0~100" },
+              thinkingScore: { type: "integer", description: "생각쓰기 점수 0~100" },
+              criteria: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  accuracy: { type: "integer", description: "정확도 0~100" },
+                  logic: { type: "integer", description: "논리성 0~100" },
+                  creativity: { type: "integer", description: "구체성/표현력 0~100" }
+                },
+                required: ["accuracy", "logic", "creativity"]
+              },
+              encouragement: { type: "string", description: "1~2문장 칭찬" },
+              improvement: { type: "string", description: "1문장 부드러운 조언" }
+            },
+            required: ["stars", "totalScore", "sixWScore", "thinkingScore", "criteria", "encouragement", "improvement"]
+          }
+        }
+      }
+    });
+
+    const raw = response.choices?.[0]?.message?.content;
+    if (!raw) throw new Error('빈 응답');
+    const parsed = JSON.parse(raw);
+    // 안전 검증
+    const stars = roundToHalf(parsed.stars);
+    const cap = v => Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+    return {
+      stars: stars == null ? 3 : stars,
+      totalScore: cap(parsed.totalScore),
+      sixWScore: cap(parsed.sixWScore),
+      thinkingScore: cap(parsed.thinkingScore),
+      criteria: {
+        accuracy:   cap(parsed.criteria?.accuracy),
+        logic:      cap(parsed.criteria?.logic),
+        creativity: cap(parsed.criteria?.creativity)
+      },
+      encouragement: String(parsed.encouragement || '').slice(0, 200),
+      improvement:   String(parsed.improvement || '').slice(0, 200),
+      fallback: false
+    };
+  } catch (err) {
+    console.error('[비평] AI 채점 실패:', err.message);
+    return fallbackGrade(sixW, thinking, teacherGuide);
+  }
+}
+
+// 기사 본문 + teacherGuide 로드 (file system에서)
+let _critArticlesCache = null;
+async function loadCritiqueArticles() {
+  if (_critArticlesCache) return _critArticlesCache;
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const file = path.join(__dirname, 'public', 'data', 'critique-articles.json');
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    _critArticlesCache = data;
+    return data;
+  } catch (e) {
+    console.error('[비평] 기사 로드 실패:', e.message);
+    return { articles: {} };
+  }
+}
+function getCritiqueArticleByDateGrade(articlesData, date, contentGrade) {
+  const art = articlesData?.articles?.[date];
+  if (!art) return null;
+  // 학년별 본문
+  let content = art.content; // 기본 = elem34
+  if (contentGrade !== 'elem34' && art[contentGrade]) content = art[contentGrade];
+  return {
+    title: art.title || '',
+    category: art.category || '',
+    content,
+    teacherGuide: art.teacherGuide || null
+  };
+}
+
+// 시리즈 한글 별칭 → 비평 콘텐츠 학년 매핑
+// ⚠️ DB 레거시 호환: DEEP은 'BRAIN답' (신규 체크박스 value) / 'BRAIN심화' (과거 저장값) 둘 다 인식
+const CRITIQUE_SERIES_MAP = {
+  'BRAIN은':   'elem34',      // ON → 초3~4
+  'BRAIN암':   'elem56',      // UP → 초5~6
+  'BRAIN빛':   'mid12',       // FIT → 중1~2
+  'BRAIN답':   'mid3high1',   // DEEP → 중3~고1 (신규)
+  'BRAIN심화': 'mid3high1'    // DEEP → 중3~고1 (레거시 — 120명 잔존)
+};
+
+// 학생 학년 → 비평 콘텐츠 학년 (다중 등급 시 기본값 매핑용)
+function critiqueGradeFromStudentGrade(studentGrade) {
+  if (!studentGrade) return null;
+  const g = String(studentGrade);
+  // 초3~4
+  if (/^3학년|^4학년|^초3|^초4/.test(g)) return 'elem34';
+  // 초5~6
+  if (/^5학년|^6학년|^초5|^초6/.test(g)) return 'elem56';
+  // 중1~2
+  if (/^중1|^중2|^7학년|^8학년/.test(g)) return 'mid12';
+  // 중3~고1
+  if (/^중3|^고1|^9학년|^10학년/.test(g)) return 'mid3high1';
+  return null;
+}
+
+// (1) 비평 모달 진입 — 학생 등급 + 완료 목록 한 번에 반환
+app.get('/api/critique/init', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) {
+      return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    }
+    // 1) 학생 정보 조회 → assignedSeries
+    const user = await User.findOne({ grade, name }).lean();
+    if (!user) {
+      return res.status(404).json({ ok: false, message: '학생 정보를 찾을 수 없습니다.' });
+    }
+    // 2) 부여된 시리즈 → 비평 학년 매핑
+    const assignedSeries = Array.isArray(user.assignedSeries) ? user.assignedSeries : [];
+    const allowedGrades = [];
+    for (const s of assignedSeries) {
+      const cg = CRITIQUE_SERIES_MAP[s];
+      if (cg && !allowedGrades.includes(cg)) allowedGrades.push(cg);
+    }
+    // 3) 기본 학년 = 학생 학년 매핑 → allowedGrades에 있으면 사용, 없으면 폴백
+    const ORDER = ['elem34', 'elem56', 'mid12', 'mid3high1'];
+    let defaultGrade = critiqueGradeFromStudentGrade(grade);
+    if (!allowedGrades.includes(defaultGrade)) {
+      // 학생 학년 매핑이 부여된 등급에 없으면 → 가장 높은 등급 폴백
+      defaultGrade = null;
+      for (let i = ORDER.length - 1; i >= 0; i--) {
+        if (allowedGrades.includes(ORDER[i])) { defaultGrade = ORDER[i]; break; }
+      }
+    }
+    // 4) 학생 완료 목록 + 채점 결과 함께 반환
+    const submissions = await CritiqueSubmission.find(
+      { grade, name },
+      { date: 1, contentGrade: 1, submittedAt: 1, 'grading.stars': 1, 'grading.totalScore': 1, _id: 0 }
+    ).sort({ date: 1 }).lean();
+
+    // 5) 이번 달 평균 별점 (학년 무관, 별점 있는 것만)
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthSubs = submissions.filter(s => s.date && s.date.startsWith(monthKey) && s.grading && typeof s.grading.stars === 'number');
+    const monthlyAvgStars = monthSubs.length > 0
+      ? Math.round((monthSubs.reduce((sum, s) => sum + s.grading.stars, 0) / monthSubs.length) * 10) / 10
+      : null;
+
+    res.json({
+      ok: true,
+      user: {
+        grade: user.grade,
+        name: user.name,
+        phone: user.phone || '',
+        academyName: user.academyName || '',
+        assignedSeries
+      },
+      allowedGrades,        // ["elem34","elem56"] 등
+      defaultGrade,         // 기본 선택할 학년 (null이면 시리즈 미부여)
+      completed: submissions, // [{date, contentGrade, submittedAt, grading.stars, ...}, ...]
+      monthlyAvgStars,        // 이번 달 평균 별점 (소수점 1자리)
+      monthlyCount: monthSubs.length
+    });
+  } catch (err) {
+    console.error('[비평] init 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// (2) 답안 제출/덮어쓰기 (upsert)
+app.post('/api/critique/submit', async (req, res) => {
+  try {
+    const { grade, name, phone, academyName, date, contentGrade, category, title, sixW, thinking } = req.body;
+    if (!grade || !name || !date || !contentGrade) {
+      return res.status(400).json({ ok: false, message: '필수 정보가 누락되었습니다.' });
+    }
+    // 백엔드 검증: 학생 등급 ≠ 요청 grade 차단 (Q27)
+    const user = await User.findOne({ grade, name }).lean();
+    if (!user) {
+      return res.status(404).json({ ok: false, message: '학생 정보를 찾을 수 없습니다.' });
+    }
+    const assignedSeries = Array.isArray(user.assignedSeries) ? user.assignedSeries : [];
+    const allowedGrades = assignedSeries
+      .map(s => CRITIQUE_SERIES_MAP[s])
+      .filter(Boolean);
+    if (!allowedGrades.includes(contentGrade)) {
+      return res.status(403).json({ ok: false, message: '본인 등급 외 콘텐츠는 제출할 수 없습니다.' });
+    }
+    // 비속어 필터 (간단)
+    const allText = [
+      ...(Object.values(sixW || {})),
+      ...(Object.values(thinking || {}))
+    ].join(' ');
+    if (hasBadWords(allText)) {
+      return res.status(400).json({ ok: false, message: '부적절한 표현이 포함돼 있어요. 다듬어서 다시 제출해 주세요.' });
+    }
+
+    // 1) 답안 우선 저장
+    const now = new Date();
+    const doc = await CritiqueSubmission.findOneAndUpdate(
+      { grade, name, date },
+      {
+        $set: {
+          grade, name,
+          phone: phone || user.phone || '',
+          academyName: academyName || user.academyName || '',
+          date, contentGrade,
+          category: category || '',
+          title: title || '',
+          sixW: sixW || {},
+          thinking: thinking || {},
+          updatedAt: now
+        },
+        $setOnInsert: { submittedAt: now }
+      },
+      { upsert: true, new: true }
+    );
+
+    // 2) AI 채점 (동기) — 기사 + 모범답안 로드 후 채점
+    let grading = null;
+    try {
+      const articlesData = await loadCritiqueArticles();
+      const article = getCritiqueArticleByDateGrade(articlesData, date, contentGrade);
+      if (article) {
+        const ai = await aiGradeCritique({
+          article,
+          sixW: sixW || {},
+          thinking: thinking || {},
+          teacherGuide: article.teacherGuide,
+          gradeLabel: CRITIQUE_GRADE_LABEL[contentGrade] || ''
+        });
+        grading = {
+          ...ai,
+          gradedAt: new Date(),
+          gradedModel: 'gpt-4o-mini'
+        };
+        // DB에 채점 결과 저장
+        await CritiqueSubmission.updateOne(
+          { _id: doc._id },
+          { $set: { grading } }
+        );
+      }
+    } catch (gradeErr) {
+      console.error('[비평] 채점 실패(저장 후 처리):', gradeErr.message);
+    }
+
+    res.json({ ok: true, submission: { ...doc.toObject(), grading } });
+  } catch (err) {
+    console.error('[비평] submit 오류:', err);
+    if (err.code === 11000) {
+      return res.status(409).json({ ok: false, message: '중복 제출 — 다시 시도해 주세요.' });
+    }
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// (3.5) 특정 월의 학생 전체 제출본 + 기사 메타 + 모범답안 한 번에 (이번 달 비평 모음)
+app.get('/api/critique/history', async (req, res) => {
+  try {
+    const { grade, name, month } = req.query;
+    if (!grade || !name || !month) {
+      return res.status(400).json({ ok: false, message: '필수 정보 누락' });
+    }
+    // month: "2026-06" 형식
+    const subs = await CritiqueSubmission.find(
+      { grade, name, date: { $regex: `^${month}` } },
+      { _id: 0, __v: 0 }
+    ).sort({ date: 1 }).lean();
+
+    // 각 제출본에 기사 본문/모범답안 함께 첨부
+    const articlesData = await loadCritiqueArticles();
+    const entries = subs.map(s => {
+      const art = getCritiqueArticleByDateGrade(articlesData, s.date, s.contentGrade) || {};
+      return {
+        date: s.date,
+        contentGrade: s.contentGrade,
+        category: s.category || art.category || '',
+        title: s.title || art.title || '',
+        submittedAt: s.submittedAt,
+        sixW: s.sixW || {},
+        thinking: s.thinking || {},
+        teacherGuide: art.teacherGuide || null,
+        grading: s.grading || null
+      };
+    });
+    res.json({ ok: true, month, count: entries.length, entries });
+  } catch (err) {
+    console.error('[비평] history 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// (3) 특정 날짜 제출본 조회 (편집/재제출 모드)
+app.get('/api/critique/load', async (req, res) => {
+  try {
+    const { grade, name, date } = req.query;
+    if (!grade || !name || !date) {
+      return res.status(400).json({ ok: false, message: '필수 정보 누락' });
+    }
+    const doc = await CritiqueSubmission.findOne(
+      { grade, name, date },
+      { _id: 0, __v: 0 }
+    ).lean();
+    res.json({ ok: true, submission: doc || null });
+  } catch (err) {
+    console.error('[비평] load 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
   }
 });
 

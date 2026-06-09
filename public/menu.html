@@ -7316,6 +7316,7 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item active" data-series="BRAINUP"><span>BRAIN업</span><span class="meta">성장문해</span></li>
         <li class="series-item" data-series="BRAINFIT"><span>BRAIN핏</span><span class="meta">확장문해</span></li>
         <li class="series-item" data-series="BRAINDEEP"><span>BRAIN딥</span><span class="meta">심화문해</span></li>
+        <li class="series-item" data-series="BRAINCRITIQUE"><span>BRAIN비평</span><span class="meta">시사문해</span></li>
         <li class="series-item" data-series="BRAINM"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
         <li class="series-item summer-special kh-coming-soon" data-series="BRAINKORHIST"><span>BRAIN한국사</span><span class="meta">방학특강</span></li>
         <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
@@ -10881,7 +10882,7 @@ if (logoutConfirmBtn) {
 
     /* 5. 시리즈 클릭 */
     // 오픈된 시리즈 목록
-    const openedSeries = ['BRAINON', 'BRAINUP', 'BRAINFIT', 'BRAINDEEP', 'BRAINSUP', 'BRAINNAESIN', 'BRAINSUNEUNG', 'BRAINKORHIST'];
+    const openedSeries = ['BRAINON', 'BRAINUP', 'BRAINFIT', 'BRAINDEEP', 'BRAINSUP', 'BRAINNAESIN', 'BRAINSUNEUNG', 'BRAINKORHIST', 'BRAINCRITIQUE'];
 
     // 딥블루 테마 적용 함수 (내신/수능/실전)
     function applyDeepBlueTheme(series) {
@@ -10903,6 +10904,14 @@ if (logoutConfirmBtn) {
         if (series === 'BRAINKORHIST') {
           if (typeof window.showKhComingSoonPopup === 'function') {
             window.showKhComingSoonPopup();
+          }
+          return;
+        }
+
+        // BRAINCRITIQUE(매일비평 시사문해) 클릭 — 비평 달력 모달 열기
+        if (series === 'BRAINCRITIQUE') {
+          if (typeof window.openCritiqueModal === 'function') {
+            window.openCritiqueModal();
           }
           return;
         }
@@ -13177,6 +13186,12 @@ async function performLogout() {
 
           // 방학특강(BRAINKORHIST)은 시리즈 배정과 무관하게 모든 학생에게 항상 활성
           if (seriesId === 'BRAINKORHIST') {
+            li.classList.remove("disabled");
+            return;
+          }
+
+          // 매일비평(BRAINCRITIQUE)도 항상 활성 — 클릭 시 init API에서 등급 부여 여부 확인
+          if (seriesId === 'BRAINCRITIQUE') {
             li.classList.remove("disabled");
             return;
           }
@@ -15798,9 +15813,31 @@ async function performLogout() {
     }
 
     // iframe 내부에서 호출할 수 있도록 window 객체에 노출
+    // 비평 전용 — unitModal만 닫고 메뉴 새로고침 안 함 (비평 모달 유지)
+    window.closeCritiqueUnitModal = function() {
+      const unitModal = document.getElementById('unitModal');
+      const unitIframe = document.getElementById('unitIframe');
+      if (unitModal) {
+        unitModal.classList.remove('show');
+        if (unitIframe) unitIframe.src = '';
+        // 비평 모달 z-index 복원 (watchUnitModalClose가 캘린더 갱신을 자동 처리)
+        const cm = document.getElementById('critModalOverlay');
+        if (cm) cm.style.zIndex = '';
+      }
+    };
+
     window.closeUnitModal = function() {
       const unitModal = document.getElementById('unitModal');
       const unitIframe = document.getElementById('unitIframe');
+
+      // 비평 모달에서 진입한 경우 — 메뉴 새로고침 없이 비평 전용 close로 위임
+      if (unitModal && unitModal.dataset.fromCritique === '1') {
+        delete unitModal.dataset.fromCritique;
+        if (typeof window.closeCritiqueUnitModal === 'function') {
+          window.closeCritiqueUnitModal();
+        }
+        return;
+      }
 
       if (unitModal) {
         // 축하 효과 먼저 실행!
@@ -34167,6 +34204,1751 @@ ${content}
       } else {
         restoreKhModalIfNeeded();
       }
+    })();
+  </script>
+
+  <!-- ===================================================================== -->
+  <!-- 📰 BRAIN비평 시사문해 — 달력 모달 + 미부여 안내 팝업                  -->
+  <!-- ===================================================================== -->
+  <style>
+    .crit-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.6);
+      z-index: 10005; /* 페넌트 깃발(10002) 위, 단원 본문학습 모달(10010)보다는 아래 */
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .crit-modal-overlay.show { display: flex; }
+    .crit-modal-card {
+      background: linear-gradient(180deg, #fdfaf4 0%, #fffefb 100%);
+      border-radius: 18px; width: 100%; max-width: 880px;
+      max-height: 92vh; overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+      display: flex; flex-direction: column;
+      position: relative;
+    }
+    .crit-modal-header {
+      padding: 18px 24px 14px; border-bottom: 1px solid #e5d9c5;
+      background: #fbf7ec; position: relative;
+    }
+    .crit-modal-header h2 {
+      margin: 0 0 4px; font-family: 'Noto Serif KR', serif;
+      font-size: 22px; font-weight: 800; color: #1a1a1a;
+      letter-spacing: 1px;
+    }
+    .crit-modal-header h2 .crit-month {
+      font-size: 14px; color: #2196f3; font-weight: 600;
+      margin-left: 8px; letter-spacing: 2px;
+    }
+    .crit-modal-sub {
+      font-size: 12px; color: #666; letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .crit-close-btn {
+      position: absolute; top: 12px; right: 14px;
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1.5px solid #d4c4a8;
+      background: #fff;
+      color: #444; font-size: 24px; font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      line-height: 1;
+      z-index: 2; /* 헤더 텍스트 위로 항상 노출 */
+    }
+    .crit-close-btn:hover {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #b91c1c; border-color: #fca5a5;
+      transform: rotate(90deg) scale(1.05);
+      box-shadow: 0 4px 12px rgba(220,38,38,0.25);
+    }
+    .crit-close-btn:active { transform: rotate(90deg) scale(0.95); }
+    .crit-level-toggle {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .crit-level-btn {
+      padding: 6px 14px; border-radius: 999px;
+      border: 1.5px solid #d4c4a8; background: #fff;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      color: #6b4a23; transition: all 0.15s;
+      font-family: inherit;
+    }
+    .crit-level-btn:hover:not(:disabled) {
+      border-color: #2196f3; color: #0d47a1;
+    }
+    .crit-level-btn.active {
+      background: linear-gradient(135deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+      color: #fff; border-color: #2196f3;
+      box-shadow: 0 3px 10px rgba(33,150,243,0.32);
+    }
+    .crit-level-btn:disabled {
+      opacity: 0.35; cursor: not-allowed;
+      background: #f3f3f3;
+    }
+    .crit-progress {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fff; border: 1px solid #d4c4a8;
+      border-radius: 999px; padding: 4px 12px;
+      font-size: 12px; color: #6b4a23; font-weight: 700;
+      margin-left: auto;
+    }
+    .crit-progress strong { color: #0d47a1; font-size: 14px; }
+
+    /* 월간 평균 별점 */
+    .crit-avg-stars {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, #fff7e6, #fff3d6);
+      border: 1px solid #f5d27e;
+      border-radius: 999px; padding: 4px 12px;
+      font-size: 12px; font-weight: 700;
+      color: #a16207;
+    }
+    .crit-avg-stars .crit-avg-num {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 16px; color: #d97706;
+    }
+    .crit-avg-stars .crit-avg-empty {
+      font-size: 11px; color: #999; font-weight: 600;
+    }
+    /* CSS 두 겹 오버레이 별점 (반쪽 별 정확히 표현) */
+    .crit-stars {
+      position: relative; display: inline-block;
+      letter-spacing: 1px; line-height: 1;
+      font-family: sans-serif; /* 별 글리프 안정 */
+      vertical-align: middle;
+    }
+    .crit-stars-bg { color: #d4d4d4; }
+    .crit-stars-fg {
+      position: absolute; top: 0; left: 0;
+      overflow: hidden; white-space: nowrap;
+      color: #f5b800;
+      pointer-events: none;
+    }
+    .crit-stars-row .crit-stars { font-size: 13px; }
+    /* 헤더의 큰 별점 */
+    .crit-avg-stars .crit-stars { font-size: 14px; }
+    /* 셀 안 별점 */
+    .crit-day-cell .crit-cell-stars {
+      position: absolute; bottom: 4px; left: 5px; right: 5px;
+      display: flex; justify-content: center;
+      text-shadow: 0 0 2px rgba(255,255,255,0.7);
+      pointer-events: none;
+    }
+    .crit-day-cell .crit-cell-stars .crit-stars { font-size: 16px; letter-spacing: 1.5px; }
+
+    /* === 이번 달 비평 모음 — 차트 + 통계 카드 === */
+    .crit-history-overview {
+      background: linear-gradient(180deg, #fffbeb, #fef3c7);
+      border: 1.5px solid #f5d27e;
+      border-radius: 14px;
+      padding: 14px 16px 12px;
+      margin-bottom: 16px;
+    }
+    .crit-history-overview-title {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; letter-spacing: 3px;
+      color: #92400e; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .crit-history-chart-wrap {
+      background: #fff; border-radius: 10px;
+      padding: 8px 6px 4px;
+      border: 1px solid #f5d27e;
+    }
+    .crit-history-chart-wrap svg {
+      width: 100%; height: auto; display: block;
+    }
+    .crit-history-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .crit-stat-card {
+      background: #fff; border: 1.5px solid #f5d27e;
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .crit-stat-icon { font-size: 22px; line-height: 1; }
+    .crit-stat-label {
+      font-size: 10.5px; letter-spacing: 2px;
+      color: #a16207; font-weight: 700;
+      margin: 4px 0 3px;
+    }
+    .crit-stat-value {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 20px; font-weight: 800;
+      color: #d97706; line-height: 1;
+    }
+    .crit-stat-value span {
+      font-size: 11px; color: #92400e; font-weight: 600;
+      margin-left: 2px;
+    }
+    .crit-stat-trend-up { color: #16a34a !important; }
+    .crit-stat-trend-down { color: #dc2626 !important; }
+    .crit-stat-trend-flat { color: #6b7280 !important; }
+    .crit-history-allpdf-btn {
+      position: absolute; top: 14px; right: 60px;
+      padding: 7px 14px;
+      background: linear-gradient(135deg, #c62828, #e53935);
+      color: #fff; border: none; border-radius: 8px;
+      font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: all 0.15s;
+    }
+    .crit-history-allpdf-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(198,40,40,0.3);
+    }
+    .crit-history-allpdf-btn:disabled {
+      opacity: 0.6; cursor: not-allowed;
+    }
+    @media (max-width: 600px) {
+      .crit-history-stats { grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+      .crit-stat-card { padding: 8px 6px; }
+      .crit-stat-value { font-size: 16px; }
+      .crit-stat-label { font-size: 9px; }
+      .crit-history-allpdf-btn { position: static; margin-top: 8px; display: block; }
+    }
+
+    /* 평균 배지 — 클릭 가능 강조 */
+    .crit-avg-stars { cursor: pointer; transition: all 0.15s; }
+    .crit-avg-stars:hover {
+      background: linear-gradient(135deg, #fff3d6, #fde68a);
+      border-color: #d97706;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+    .crit-avg-stars[data-empty="1"] { cursor: default; }
+    .crit-avg-stars[data-empty="1"]:hover { background: linear-gradient(135deg, #fff7e6, #fff3d6); transform: none; box-shadow: none; border-color: #f5d27e; }
+
+    /* 이번 달 비평 모음 모달 */
+    .crit-history-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.65);
+      z-index: 10015; /* 비평 모달(10005) 위, 단원학습(10010) 위 */
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding: 24px 16px;
+      overflow-y: auto;
+    }
+    .crit-history-overlay.show { display: flex; }
+    .crit-history-card {
+      background: linear-gradient(180deg,#fdfaf4,#fffefb);
+      border-radius: 18px; max-width: 760px; width: 100%;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+      overflow: hidden; margin: auto;
+    }
+    .crit-history-header {
+      padding: 18px 22px 14px;
+      background: linear-gradient(135deg, #fff7e6, #fde68a);
+      color: #a16207; position: relative;
+      border-bottom: 2px solid #f5d27e;
+    }
+    .crit-history-header h3 {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 22px; font-weight: 800; margin: 0 0 6px;
+      color: #92400e; letter-spacing: 1px;
+    }
+    .crit-history-meta {
+      font-size: 12px; color: #a16207; letter-spacing: 1px;
+    }
+    .crit-history-meta strong { color: #d97706; font-size: 14px; }
+    .crit-history-close {
+      position: absolute; top: 14px; right: 14px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #fff; border: 1.5px solid #d97706;
+      color: #92400e; font-size: 22px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .crit-history-close:hover {
+      background: #fee2e2; color: #b91c1c; border-color: #fca5a5;
+      transform: rotate(90deg);
+    }
+    .crit-history-body {
+      padding: 14px 18px 20px;
+      max-height: 72vh; overflow-y: auto;
+      background: #fdfaf4;
+    }
+    .crit-history-empty {
+      text-align: center; padding: 40px 20px;
+      color: #888; font-size: 14px;
+    }
+    .crit-history-entry {
+      background: #fff; border: 1px solid #e5d9c5;
+      border-radius: 12px; margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .crit-history-entry-header {
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; user-select: none;
+      transition: background 0.12s;
+    }
+    .crit-history-entry-header:hover { background: #fffbea; }
+    .crit-history-entry-date {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 18px; font-weight: 800;
+      color: #0d47a1; min-width: 52px;
+    }
+    .crit-history-entry-emoji { font-size: 22px; }
+    .crit-history-entry-info { flex: 1; min-width: 0; }
+    .crit-history-entry-cat {
+      font-size: 10px; letter-spacing: 2px; color: #2196f3;
+      font-weight: 600; margin-bottom: 2px;
+    }
+    .crit-history-entry-title {
+      font-size: 13px; color: #222; font-weight: 600;
+      line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+      overflow: hidden; word-break: keep-all;
+    }
+    .crit-history-entry-stars { flex-shrink: 0; }
+    .crit-history-entry-arrow {
+      font-size: 14px; color: #999; transition: transform 0.2s;
+      margin-left: 4px;
+    }
+    .crit-history-entry.expanded .crit-history-entry-arrow {
+      transform: rotate(180deg);
+    }
+    .crit-history-entry-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px dashed #e5d9c5;
+    }
+    .crit-history-entry.expanded .crit-history-entry-body { display: block; }
+    .crit-history-entry-actions {
+      display: flex; gap: 10px; justify-content: center;
+      padding: 16px 0 6px;
+      margin-top: 14px;
+      border-top: 1px dashed #e5d9c5;
+    }
+    .crit-history-print-btn,
+    .crit-history-pdf-btn {
+      padding: 10px 22px;
+      border-radius: 10px;
+      border: none; cursor: pointer;
+      font-size: 13px; font-weight: 700;
+      font-family: inherit;
+      transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .crit-history-print-btn {
+      background: #1a1a1a; color: #fff;
+    }
+    .crit-history-print-btn:hover {
+      background: #000; transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .crit-history-pdf-btn {
+      background: linear-gradient(135deg, #c62828, #e53935);
+      color: #fff;
+    }
+    .crit-history-pdf-btn:hover {
+      background: linear-gradient(135deg, #b71c1c, #c62828);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(198,40,40,0.3);
+    }
+    .crit-history-print-btn:disabled,
+    .crit-history-pdf-btn:disabled {
+      opacity: 0.6; cursor: not-allowed;
+    }
+    .crit-history-entry-grading {
+      background: linear-gradient(135deg, #fff7e6, #fff3d6);
+      border: 1.5px solid #f5d27e; border-radius: 10px;
+      padding: 12px 14px; margin: 12px 0;
+    }
+    .crit-history-entry-grading .crit-stars { font-size: 22px; letter-spacing: 2px; }
+    .crit-history-entry-grading-num {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 22px; font-weight: 800; color: #d97706;
+      margin-left: 6px;
+    }
+    .crit-history-comment {
+      background: #fff; border-radius: 8px; padding: 8px 12px;
+      font-size: 12px; line-height: 1.5; margin-top: 6px;
+      color: #333; text-align: left;
+    }
+    .crit-history-comment-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+    .crit-history-table {
+      width: 100%; border-collapse: collapse;
+      border: 1px solid #e5d9c5; margin: 10px 0 14px;
+      font-size: 11.5px;
+    }
+    .crit-history-table th {
+      padding: 5px 8px; background: #1a1a1a; color: #fff;
+      font-size: 10px; letter-spacing: 2px;
+      border: 1px solid #1a1a1a;
+    }
+    .crit-history-table td {
+      padding: 7px 9px; border: 1px solid #e5d9c5;
+      font-size: 11.5px; line-height: 1.5;
+      vertical-align: top;
+    }
+    .crit-history-table td.label-cell {
+      background: #fbf7ec; color: #0d47a1;
+      font-weight: 700; width: 16%;
+    }
+    .crit-history-table td.tg-cell { background: #f0f9ff; color: #0d47a1; }
+    .crit-history-section-label {
+      font-size: 11px; font-weight: 700; color: #0d47a1;
+      letter-spacing: 1px; margin: 10px 0 4px;
+    }
+    .crit-history-thinking-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .crit-history-thinking-box {
+      background: #fff; border: 1px solid #e5d9c5;
+      border-radius: 6px; padding: 6px 8px;
+    }
+    .crit-history-thinking-box.tg { background: #f0f9ff; border-color: #bae6fd; color: #0d47a1; }
+    .crit-history-thinking-mini-label {
+      font-size: 9px; letter-spacing: 2px; opacity: 0.7;
+      margin-bottom: 3px;
+    }
+    .crit-history-thinking-text {
+      font-size: 11.5px; line-height: 1.5; color: #222;
+      white-space: pre-wrap;
+    }
+    .crit-history-thinking-box.tg .crit-history-thinking-text { color: #0d47a1; }
+
+    @media (max-width: 600px) {
+      .crit-history-card { max-width: 100%; }
+      .crit-history-entry-date { font-size: 15px; min-width: 44px; }
+      .crit-history-entry-title { font-size: 12px; }
+      .crit-history-thinking-grid { grid-template-columns: 1fr; }
+    }
+    .crit-modal-body {
+      padding: 18px 24px 22px; overflow-y: auto;
+      background: #fdfaf4;
+    }
+    .crit-calendar-weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 6px; margin-bottom: 8px;
+    }
+    .crit-weekday {
+      text-align: center; font-size: 11px; font-weight: 700;
+      color: #6b4a23; letter-spacing: 2px;
+      padding: 4px 0;
+    }
+    .crit-weekday.sun { color: #c0392b; }
+    .crit-weekday.sat { color: #2980b9; }
+    .crit-calendar {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .crit-day-cell {
+      aspect-ratio: 1 / 1.2; border-radius: 10px;
+      background: #fff; border: 1.5px solid #e5d9c5;
+      padding: 8px 7px; display: flex; flex-direction: column;
+      position: relative; cursor: pointer;
+      transition: all 0.15s; overflow: hidden;
+    }
+    .crit-day-cell:hover:not(.locked):not(.empty) {
+      border-color: #2196f3; transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(33,150,243,0.18);
+    }
+    .crit-day-cell .crit-day-num {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 20px; font-weight: 800; color: #1a1a1a;
+      line-height: 1; margin-bottom: 4px;
+    }
+    .crit-day-cell.sun .crit-day-num { color: #c0392b; }
+    .crit-day-cell.sat .crit-day-num { color: #2980b9; }
+    .crit-day-cell .crit-day-cat {
+      font-size: 18px; line-height: 1; margin-bottom: 3px;
+    }
+    .crit-day-cell .crit-day-title {
+      font-size: 12px; line-height: 1.35; color: #333;
+      font-weight: 500;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden; text-overflow: ellipsis;
+      word-break: keep-all;
+    }
+    .crit-day-cell.empty {
+      background: transparent; border: 1.5px dashed #e5d9c5;
+      cursor: default; opacity: 0.4;
+    }
+    .crit-day-cell.locked {
+      background: #f7f3eb; cursor: not-allowed;
+      opacity: 0.55;
+    }
+    .crit-day-cell.locked::before {
+      content: '🔒'; position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 28px; opacity: 0.6;
+    }
+    .crit-day-cell.locked .crit-day-num,
+    .crit-day-cell.locked .crit-day-cat,
+    .crit-day-cell.locked .crit-day-title { opacity: 0.4; }
+    .crit-day-cell.completed {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-color: #10b981;
+    }
+    .crit-day-cell.completed::after {
+      content: '✓'; position: absolute;
+      top: 4px; right: 5px;
+      background: #10b981; color: #fff;
+      width: 16px; height: 16px; border-radius: 50%;
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .crit-day-cell.today {
+      box-shadow: 0 0 0 2px #2196f3, 0 4px 14px rgba(33,150,243,0.28);
+    }
+
+    /* 시리즈 미부여 안내 팝업 */
+    .crit-no-series-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.65);
+      z-index: 10002; display: none;
+      align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .crit-no-series-overlay.show { display: flex; animation: critPop 0.25s ease-out; }
+    @keyframes critPop {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .crit-no-series-card {
+      background: linear-gradient(180deg, #fff 0%, #f0f9ff 100%);
+      border-radius: 20px; padding: 28px 26px 22px;
+      max-width: 380px; width: 100%; text-align: center;
+      box-shadow: 0 20px 60px rgba(13,71,161,0.3);
+      border: 2px solid #bae6fd;
+    }
+    .crit-no-series-icon {
+      font-size: 56px; margin-bottom: 10px;
+      display: inline-block; animation: critWave 1.8s ease-in-out infinite;
+    }
+    @keyframes critWave {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+    .crit-no-series-title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 22px; font-weight: 800; color: #0d47a1;
+      margin: 4px 0 12px;
+    }
+    .crit-no-series-msg {
+      font-size: 14px; color: #444; line-height: 1.7;
+      margin-bottom: 6px;
+    }
+    .crit-no-series-msg strong { color: #c0392b; }
+    .crit-no-series-levels {
+      display: flex; justify-content: center; gap: 6px;
+      margin: 14px 0; flex-wrap: wrap;
+    }
+    .crit-no-series-levels span {
+      background: linear-gradient(135deg, #4facfe 0%, #2196f3 100%);
+      color: #fff; padding: 4px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    }
+    .crit-no-series-hint {
+      font-size: 12px; color: #777; line-height: 1.5;
+      margin: 6px 0 18px;
+    }
+    .crit-no-series-btn {
+      width: 100%; padding: 12px;
+      background: linear-gradient(135deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 16px rgba(33,150,243,0.3);
+      transition: transform 0.12s;
+    }
+    .crit-no-series-btn:hover { transform: translateY(-1px); }
+
+    /* 모바일 대응 */
+    @media (max-width: 600px) {
+      .crit-modal-card { max-height: 96vh; }
+      .crit-day-cell { padding: 5px 4px; aspect-ratio: 1 / 1.25; }
+      .crit-day-cell .crit-day-num { font-size: 15px; }
+      .crit-day-cell .crit-day-cat { font-size: 14px; }
+      .crit-day-cell .crit-day-title { font-size: 9.5px; -webkit-line-clamp: 2; }
+      .crit-modal-header h2 { font-size: 18px; }
+      .crit-level-btn { padding: 5px 10px; font-size: 11px; }
+    }
+  </style>
+
+  <!-- 비평 달력 모달 -->
+  <div id="critModalOverlay" class="crit-modal-overlay" role="dialog" aria-modal="true">
+    <div class="crit-modal-card">
+      <button class="crit-close-btn" onclick="closeCritiqueModal()" aria-label="닫기">×</button>
+      <div class="crit-modal-header">
+        <h2>📰 BRAIN비평 시사문해 <span class="crit-month" id="critMonthLabel">2026. 6월</span></h2>
+        <div class="crit-modal-sub">매일 한 편의 시사 기사, 매일 자라는 비평력</div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div class="crit-level-toggle" id="critLevelToggle">
+            <!-- 등급 버튼 동적 렌더 -->
+          </div>
+          <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+            <div class="crit-avg-stars" id="critAvgStars" title="이번 달 비평 모음 보기" data-empty="1">
+              <span class="crit-avg-empty">평균 평가 없음</span>
+            </div>
+            <div class="crit-progress" id="critProgress">완료 <strong>0/0</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="crit-modal-body">
+        <div class="crit-calendar-weekdays">
+          <div class="crit-weekday sun">SUN</div>
+          <div class="crit-weekday">MON</div>
+          <div class="crit-weekday">TUE</div>
+          <div class="crit-weekday">WED</div>
+          <div class="crit-weekday">THU</div>
+          <div class="crit-weekday">FRI</div>
+          <div class="crit-weekday sat">SAT</div>
+        </div>
+        <div class="crit-calendar" id="critCalendar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이번 달 비평 모음 모달 -->
+  <div id="critHistoryOverlay" class="crit-history-overlay" role="dialog" aria-modal="true">
+    <div class="crit-history-card">
+      <div class="crit-history-header">
+        <button class="crit-history-close" onclick="document.getElementById('critHistoryOverlay').classList.remove('show');">×</button>
+        <button class="crit-history-allpdf-btn" id="critHistoryAllPdfBtn" style="display:none;" onclick="window.__critAllPdf()">📥 월간 종합 PDF</button>
+        <h3>📰 이번 달 비평 모음</h3>
+        <div class="crit-history-meta" id="critHistoryMeta">불러오는 중...</div>
+      </div>
+      <div class="crit-history-body" id="critHistoryBody">
+        <div class="crit-history-empty">불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 시리즈 미부여 안내 팝업 -->
+  <div id="critNoSeriesPopup" class="crit-no-series-overlay" role="dialog" aria-modal="true">
+    <div class="crit-no-series-card">
+      <div class="crit-no-series-icon">📚</div>
+      <div class="crit-no-series-title">BRAIN비평 시사문해</div>
+      <p class="crit-no-series-msg">
+        아직 <strong>학습 등급</strong>이 배정되지 않았어요!
+      </p>
+      <div class="crit-no-series-levels">
+        <span>ON</span><span>UP</span><span>FIT</span><span>DEEP</span>
+      </div>
+      <p class="crit-no-series-hint">
+        학원 선생님께<br>위 등급 중 하나를 받아주세요.
+      </p>
+      <button class="crit-no-series-btn" onclick="document.getElementById('critNoSeriesPopup').classList.remove('show');">확인</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // ===== 비평 모달 모듈 =====
+      const SERIES_TO_LEVEL = {
+        'BRAIN은':   { code: 'elem34',   label: 'ON',   desc: '초3~4' },
+        'BRAIN암':   { code: 'elem56',   label: 'UP',   desc: '초5~6' },
+        'BRAIN빛':   { code: 'mid12',    label: 'FIT',  desc: '중1~2' },
+        'BRAIN답':   { code: 'mid3high1', label: 'DEEP', desc: '중3~고1' },  // 신규
+        'BRAIN심화': { code: 'mid3high1', label: 'DEEP', desc: '중3~고1' }   // 레거시 호환
+      };
+      const LEVEL_ORDER = ['elem34', 'elem56', 'mid12', 'mid3high1'];
+      const LEVEL_LABELS = { elem34: 'ON', elem56: 'UP', mid12: 'FIT', mid3high1: 'DEEP' };
+
+      let _critState = {
+        user: null,
+        allowedGrades: [],
+        defaultGrade: null,
+        completed: [],         // [{date, contentGrade, grading:{stars,...}}, ...]
+        articles: null,        // 캐시: 전체 기사 데이터
+        currentLevel: null,    // 현재 선택된 등급
+        currentMonth: null,    // "2026-06"
+        monthlyAvgStars: null, // 이번 달 평균 별점
+        monthlyCount: 0,       // 이번 달 채점 완료 건수
+        historyEntries: {}     // 캐시: 누적 모달용 — date → entry (인쇄/PDF용)
+      };
+
+      // 별점 1~5 → CSS 두 겹 오버레이 HTML (반쪽 별 정확히 표현, 0.5 단위)
+      function starsString(value) {
+        if (typeof value !== 'number') return '';
+        const v = Math.max(0, Math.min(5, Math.round(value * 2) / 2));
+        const pct = (v / 5) * 100;
+        return `<span class="crit-stars" aria-label="${v}점"><span class="crit-stars-bg">★★★★★</span><span class="crit-stars-fg" style="width:${pct}%;">★★★★★</span></span>`;
+      }
+
+      // 현재 월 (KST) 키
+      function currentMonthKey() {
+        const now = new Date();
+        const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+        return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2,'0')}`;
+      }
+      function todayKey() {
+        const now = new Date();
+        const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+        return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2,'0')}-${String(kst.getUTCDate()).padStart(2,'0')}`;
+      }
+
+      async function fetchArticles() {
+        if (_critState.articles) return _critState.articles;
+        try {
+          const res = await fetch('/data/critique-articles.json');
+          const data = await res.json();
+          _critState.articles = data;
+          return data;
+        } catch (e) {
+          console.error('[비평] articles 로드 실패:', e);
+          return { articles: {} };
+        }
+      }
+
+      // 세션에서 학생 정보 추출
+      function getStudent() {
+        try {
+          const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+          return (u.grade && u.name) ? u : null;
+        } catch { return null; }
+      }
+
+      async function openCritiqueModal() {
+        const student = getStudent();
+        if (!student) {
+          alert('학생 정보가 필요해요. 로그인 후 다시 시도해 주세요.');
+          return;
+        }
+        try {
+          const res = await fetch(`/api/critique/init?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
+          const data = await res.json();
+          if (!data.ok) {
+            alert(data.message || '비평 정보를 불러올 수 없습니다.');
+            return;
+          }
+          // 시리즈 미부여 학생 → 안내 팝업
+          if (!data.allowedGrades || data.allowedGrades.length === 0) {
+            document.getElementById('critNoSeriesPopup').classList.add('show');
+            return;
+          }
+          _critState.user = data.user;
+          _critState.allowedGrades = data.allowedGrades;
+          _critState.defaultGrade = data.defaultGrade;
+          _critState.completed = data.completed || [];
+          _critState.currentLevel = data.defaultGrade;
+          _critState.currentMonth = currentMonthKey();
+          _critState.monthlyAvgStars = (typeof data.monthlyAvgStars === 'number') ? data.monthlyAvgStars : null;
+          _critState.monthlyCount = data.monthlyCount || 0;
+          await fetchArticles();
+          renderLevelToggle();
+          renderMonthlyAvg();
+          renderCalendar();
+          document.getElementById('critModalOverlay').classList.add('show');
+        } catch (e) {
+          console.error('[비평] init 호출 실패:', e);
+          alert('비평 정보를 불러오는 중 오류가 발생했어요.');
+        }
+      }
+      function closeCritiqueModal() {
+        document.getElementById('critModalOverlay').classList.remove('show');
+      }
+      window.openCritiqueModal = openCritiqueModal;
+      window.closeCritiqueModal = closeCritiqueModal;
+
+      function renderMonthlyAvg() {
+        const el = document.getElementById('critAvgStars');
+        if (!el) return;
+        const avg = _critState.monthlyAvgStars;
+        const cnt = _critState.monthlyCount;
+        if (typeof avg !== 'number' || cnt === 0) {
+          el.innerHTML = `<span class="crit-avg-empty">평균 평가 없음</span>`;
+          el.dataset.empty = '1';
+          el.onclick = null;
+          return;
+        }
+        const stars = starsString(avg);
+        el.innerHTML = `${stars}<span class="crit-avg-num">${avg.toFixed(1)}</span><span style="font-size:10.5px;color:#a16207;font-weight:600;">(${cnt}건)</span>`;
+        el.dataset.empty = '0';
+        el.onclick = openHistoryModal;
+      }
+
+      // === 이번 달 통계 계산 ===
+      function calcCritMonthStats(entries, articlesData, month) {
+        const graded = entries.filter(e => e.grading && typeof e.grading.stars === 'number');
+        const count = graded.length;
+        const avg = count > 0 ? graded.reduce((s, e) => s + e.grading.stars, 0) / count : 0;
+        // 해당 월에 기사 있는 날 수
+        const articleDates = Object.keys((articlesData && articlesData.articles) || {})
+          .filter(k => k.startsWith(month));
+        const totalDays = articleDates.length;
+        // 추이: 시간순으로 절반 나눠 비교
+        let trend = 'flat'; // 'up' | 'down' | 'flat'
+        let trendDiff = 0;
+        if (count >= 4) {
+          const sorted = [...graded].sort((a, b) => a.date.localeCompare(b.date));
+          const half = Math.floor(sorted.length / 2);
+          const oldAvg = sorted.slice(0, half).reduce((s, e) => s + e.grading.stars, 0) / half;
+          const newAvg = sorted.slice(half).reduce((s, e) => s + e.grading.stars, 0) / (sorted.length - half);
+          trendDiff = newAvg - oldAvg;
+          if (trendDiff >= 0.3) trend = 'up';
+          else if (trendDiff <= -0.3) trend = 'down';
+        }
+        return { count, totalDays, avg, trend, trendDiff };
+      }
+
+      // === 차트 SVG 빌더 (꺾은선 + 막대 + 영역, 제출한 날만 연결) ===
+      function buildCritChartSVG(submittedEntries, options) {
+        options = options || {};
+        const W = 600;
+        const H = 180;
+        const PL = 36, PR = 16, PT = 16, PB = 36;
+        const chartW = W - PL - PR;
+        const chartH = H - PT - PB;
+        const n = submittedEntries.length;
+        if (n === 0) {
+          return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="14" fill="#a16207" font-family="sans-serif">아직 제출한 비평이 없어요</text></svg>`;
+        }
+
+        // X좌표 (제출한 날 균등 분포)
+        const xPos = (i) => n === 1 ? PL + chartW / 2 : PL + (i / (n - 1)) * chartW;
+        const yToPx = (v) => PT + chartH - (v / 5) * chartH;
+
+        // 그리드 + Y라벨
+        let grid = '';
+        for (let v = 1; v <= 5; v++) {
+          const y = yToPx(v);
+          const isMain = (v === 3 || v === 4);
+          grid += `<line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}" stroke="${isMain ? '#d4af6f' : '#e5d9c5'}" stroke-width="${isMain ? 1 : 0.6}" stroke-dasharray="${isMain ? '4,3' : '2,2'}" />`;
+          grid += `<text x="${PL - 6}" y="${y + 3}" text-anchor="end" font-size="9.5" fill="#888" font-family="sans-serif">${v}.0</text>`;
+        }
+        // 보조 라벨: 보통/잘함 텍스트
+        grid += `<text x="${W - PR - 2}" y="${yToPx(3) - 3}" text-anchor="end" font-size="8.5" fill="#a16207" font-family="sans-serif" font-style="italic">보통</text>`;
+        grid += `<text x="${W - PR - 2}" y="${yToPx(4) - 3}" text-anchor="end" font-size="8.5" fill="#16a34a" font-family="sans-serif" font-style="italic">잘함</text>`;
+
+        // 막대
+        const barWidth = Math.min(28, Math.max(8, chartW / n * 0.55));
+        let bars = '';
+        submittedEntries.forEach((e, i) => {
+          const x = xPos(i);
+          const y = yToPx(e.grading.stars);
+          const h = PT + chartH - y;
+          bars += `<rect x="${x - barWidth/2}" y="${y}" width="${barWidth}" height="${h}" fill="url(#critBarGrad)" rx="3" opacity="0.75" />`;
+        });
+
+        // 영역 (영역 채움 — 꺾은선 아래)
+        let areaPath = '';
+        if (n >= 2) {
+          let path = `M ${xPos(0)} ${PT + chartH}`;
+          for (let i = 0; i < n; i++) {
+            path += ` L ${xPos(i)} ${yToPx(submittedEntries[i].grading.stars)}`;
+          }
+          path += ` L ${xPos(n - 1)} ${PT + chartH} Z`;
+          areaPath = `<path d="${path}" fill="url(#critAreaGrad)" />`;
+        }
+
+        // 꺾은선
+        let line = '';
+        for (let i = 1; i < n; i++) {
+          const x1 = xPos(i - 1), y1 = yToPx(submittedEntries[i - 1].grading.stars);
+          const x2 = xPos(i), y2 = yToPx(submittedEntries[i].grading.stars);
+          line += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" />`;
+        }
+
+        // 도트 + X축 라벨 + 점수 라벨
+        let dots = '', xlabels = '', valueLabels = '';
+        const showAllValues = n <= 8; // 데이터 적을 땐 모든 점수 표시
+        submittedEntries.forEach((e, i) => {
+          const x = xPos(i);
+          const stars = e.grading.stars;
+          const y = yToPx(stars);
+          const isHi = options.highlightDate === e.date;
+          const r = isHi ? 7 : 5;
+          const color = isHi ? '#dc2626' : '#d97706';
+          dots += `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" stroke="#fff" stroke-width="2" />`;
+
+          // 데이터 포인트 위 점수
+          if (isHi || showAllValues) {
+            const fontSize = isHi ? 12 : 10;
+            const fontColor = isHi ? '#dc2626' : '#a16207';
+            const weight = isHi ? 800 : 700;
+            valueLabels += `<text x="${x}" y="${y - r - 3}" text-anchor="middle" font-size="${fontSize}" fill="${fontColor}" font-weight="${weight}" font-family="serif">${stars.toFixed(1)}</text>`;
+          }
+          // X축 라벨 (날짜)
+          const dt = new Date(e.date);
+          const md = `${dt.getMonth() + 1}/${dt.getDate()}`;
+          const labelColor = isHi ? '#dc2626' : '#92400e';
+          const labelWeight = isHi ? 800 : 600;
+          xlabels += `<text x="${x}" y="${H - 14}" text-anchor="middle" font-size="10" fill="${labelColor}" font-weight="${labelWeight}" font-family="sans-serif">${md}</text>`;
+        });
+
+        // X축
+        const axisX = `<line x1="${PL}" y1="${PT + chartH}" x2="${W - PR}" y2="${PT + chartH}" stroke="#92400e" stroke-width="1" />`;
+
+        return `
+          <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="display:block;">
+            <defs>
+              <linearGradient id="critBarGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#fde68a" stop-opacity="0.45"/>
+              </linearGradient>
+              <linearGradient id="critAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.22"/>
+                <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            ${grid}
+            ${bars}
+            ${areaPath}
+            ${line}
+            ${dots}
+            ${valueLabels}
+            ${axisX}
+            ${xlabels}
+          </svg>
+        `;
+      }
+
+      // === 차트 + 통계 카드 영역 HTML ===
+      function buildCritOverviewHTML(submittedEntries, stats, options) {
+        options = options || {};
+        const trendCfg = {
+          up:   { icon: '↗', text: '상승 중', cls: 'crit-stat-trend-up' },
+          down: { icon: '↘', text: '하락 중', cls: 'crit-stat-trend-down' },
+          flat: { icon: '─', text: '안정',   cls: 'crit-stat-trend-flat' }
+        }[stats.trend] || { icon: '─', text: '안정', cls: 'crit-stat-trend-flat' };
+        const avgDisplay = stats.count > 0 ? stats.avg.toFixed(1) : '-';
+        return `
+          <div class="crit-history-overview">
+            <div class="crit-history-overview-title">📈 이번 달 별점 흐름</div>
+            <div class="crit-history-chart-wrap">${buildCritChartSVG(submittedEntries, options)}</div>
+            <div class="crit-history-stats">
+              <div class="crit-stat-card">
+                <div class="crit-stat-icon">📅</div>
+                <div class="crit-stat-label">작성한 날</div>
+                <div class="crit-stat-value">${stats.count}<span>/ ${stats.totalDays}일</span></div>
+              </div>
+              <div class="crit-stat-card">
+                <div class="crit-stat-icon">⭐</div>
+                <div class="crit-stat-label">평균 별점</div>
+                <div class="crit-stat-value">★ ${avgDisplay}</div>
+              </div>
+              <div class="crit-stat-card">
+                <div class="crit-stat-icon">📈</div>
+                <div class="crit-stat-label">이번 달 추이</div>
+                <div class="crit-stat-value ${trendCfg.cls}">${trendCfg.text} ${trendCfg.icon}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // === 이번 달 비평 모음 모달 ===
+      async function openHistoryModal() {
+        const student = getStudent();
+        if (!student) return;
+        const overlay = document.getElementById('critHistoryOverlay');
+        const body = document.getElementById('critHistoryBody');
+        const meta = document.getElementById('critHistoryMeta');
+        overlay.classList.add('show');
+        body.innerHTML = '<div class="crit-history-empty">불러오는 중...</div>';
+        meta.textContent = '불러오는 중...';
+        try {
+          const month = _critState.currentMonth;
+          const res = await fetch(`/api/critique/history?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}&month=${encodeURIComponent(month)}`);
+          const data = await res.json();
+          if (!data.ok) {
+            body.innerHTML = `<div class="crit-history-empty">불러오기 실패</div>`;
+            return;
+          }
+          const entries = data.entries || [];
+          if (entries.length === 0) {
+            body.innerHTML = `<div class="crit-history-empty">아직 완료한 비평이 없어요.</div>`;
+            meta.innerHTML = `${_critState.currentMonth} · 총 <strong>0</strong>건`;
+            return;
+          }
+          const avg = _critState.monthlyAvgStars;
+          const avgHtml = (typeof avg === 'number') ? `${starsString(avg)} <strong>${avg.toFixed(1)}</strong>` : '';
+          meta.innerHTML = `${_critState.currentMonth} · 총 <strong>${entries.length}</strong>건 · 평균 ${avgHtml}`;
+          // 최신순 정렬
+          entries.sort((a, b) => b.date.localeCompare(a.date));
+          // 캐시 (인쇄/PDF에서 사용)
+          _critState.historyEntries = {};
+          entries.forEach(e => { _critState.historyEntries[e.date] = e; });
+          // 차트용은 날짜순(과거→현재) + 채점된 것만
+          const submittedSorted = [...entries]
+            .filter(e => e.grading && typeof e.grading.stars === 'number')
+            .sort((a, b) => a.date.localeCompare(b.date));
+          const stats = calcCritMonthStats(entries, _critState.articles, _critState.currentMonth);
+          const overviewHTML = buildCritOverviewHTML(submittedSorted, stats);
+          body.innerHTML = overviewHTML + entries.map((e, i) => renderHistoryEntry(e, i === 0)).join('');
+          // 종합 PDF 버튼 노출
+          const allBtn = document.getElementById('critHistoryAllPdfBtn');
+          if (allBtn) allBtn.style.display = entries.length > 0 ? '' : 'none';
+          // 아코디언 토글
+          body.querySelectorAll('.crit-history-entry-header').forEach(h => {
+            h.addEventListener('click', () => {
+              h.parentElement.classList.toggle('expanded');
+            });
+          });
+        } catch (err) {
+          console.error('[비평] history 로드 실패:', err);
+          body.innerHTML = `<div class="crit-history-empty">오류가 발생했어요.</div>`;
+        }
+      }
+
+      function renderHistoryEntry(e, defaultOpen) {
+        const dt = new Date(e.date);
+        const md = `${dt.getMonth() + 1}/${dt.getDate()}`;
+        const wk = ['일','월','화','수','목','금','토'][dt.getDay()];
+        const cat = pickCategoryEmoji(e.category);
+        const stars = (e.grading && typeof e.grading.stars === 'number') ? starsString(e.grading.stars) : '';
+        const starsNum = (e.grading && typeof e.grading.stars === 'number') ? `<span class="crit-history-entry-num" style="font-family:'Noto Serif KR',serif;font-size:14px;font-weight:800;color:#d97706;margin-left:6px;">${e.grading.stars.toFixed(1)}</span>` : '';
+
+        // 6하원칙 표
+        const sixWLabels = { who:'누가', when:'언제', where:'어디서', what:'무엇을', why:'왜', how:'어떻게' };
+        const sixWRows = Object.keys(sixWLabels).map(k => `
+          <tr>
+            <td class="label-cell">${sixWLabels[k]}</td>
+            <td>${escapeHtml((e.sixW || {})[k] || '-')}</td>
+            <td class="tg-cell">${escapeHtml(((e.teacherGuide || {}).sixW || {})[k] || '-')}</td>
+          </tr>
+        `).join('');
+        // 생각쓰기 3문항 (실제 질문 포함)
+        const THINKING_QUESTIONS = [
+          '이 기사에서 가장 중요하다고 생각한 내용은 무엇인가요?',
+          '나는 이 문제에 대해 어떻게 생각하나요?',
+          '이 문제를 해결하려면 어떤 방법이 필요할까요?'
+        ];
+        const thRows = ['q1','q2','q3'].map((k, i) => `
+          <div style="margin-bottom:10px;">
+            <div class="crit-history-section-label" style="color:#0d47a1;font-size:11px;margin-bottom:2px;">생각쓰기 ${i+1}</div>
+            <div style="font-size:12px;color:#444;line-height:1.45;margin-bottom:5px;padding-left:2px;font-style:italic;">${escapeHtml(THINKING_QUESTIONS[i])}</div>
+            <div class="crit-history-thinking-grid">
+              <div class="crit-history-thinking-box">
+                <div class="crit-history-thinking-mini-label">내 답안</div>
+                <div class="crit-history-thinking-text">${escapeHtml((e.thinking || {})[k] || '-')}</div>
+              </div>
+              <div class="crit-history-thinking-box tg">
+                <div class="crit-history-thinking-mini-label">모범 답안</div>
+                <div class="crit-history-thinking-text">${escapeHtml(((e.teacherGuide || {}).thinking || {})[k] || '-')}</div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        const gradingBlock = (e.grading && typeof e.grading.stars === 'number') ? `
+          <div class="crit-history-entry-grading">
+            <div style="text-align:center;">${stars}<span class="crit-history-entry-grading-num">${e.grading.stars.toFixed(1)} <span style="font-size:11px;color:#a16207;">/ 5.0</span></span></div>
+            ${e.grading.encouragement ? `<div class="crit-history-comment"><div class="crit-history-comment-label" style="color:#a16207;">💛 칭찬</div>${escapeHtml(e.grading.encouragement)}</div>` : ''}
+            ${e.grading.improvement ? `<div class="crit-history-comment"><div class="crit-history-comment-label" style="color:#0d47a1;">💡 다음엔 이렇게</div>${escapeHtml(e.grading.improvement)}</div>` : ''}
+          </div>
+        ` : '';
+
+        return `
+          <div class="crit-history-entry${defaultOpen ? ' expanded' : ''}" data-date="${e.date}">
+            <div class="crit-history-entry-header">
+              <div class="crit-history-entry-date">${md}<span style="font-size:11px;color:#888;margin-left:2px;">${wk}</span></div>
+              <div class="crit-history-entry-emoji">${cat}</div>
+              <div class="crit-history-entry-info">
+                <div class="crit-history-entry-cat">[${escapeHtml(e.category || '-')}]</div>
+                <div class="crit-history-entry-title">${escapeHtml(e.title || '')}</div>
+              </div>
+              <div class="crit-history-entry-stars">${stars}${starsNum}</div>
+              <div class="crit-history-entry-arrow">▼</div>
+            </div>
+            <div class="crit-history-entry-body">
+              ${gradingBlock}
+              <div class="crit-history-section-label">육하원칙 비교</div>
+              <table class="crit-history-table">
+                <thead><tr><th>항목</th><th>내 답안</th><th>모범 답안</th></tr></thead>
+                <tbody>${sixWRows}</tbody>
+              </table>
+              <div class="crit-history-section-label">생각쓰기 비교</div>
+              ${thRows}
+              <div class="crit-history-entry-actions">
+                <button class="crit-history-print-btn" data-date="${e.date}" onclick="event.stopPropagation();window.__critPrintEntry('${e.date}')">🖨️ 인쇄하기</button>
+                <button class="crit-history-pdf-btn" data-date="${e.date}" onclick="event.stopPropagation();window.__critPdfEntry('${e.date}')">📥 PDF 다운로드</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      window.__critOpenHistory = openHistoryModal;
+
+      // === 인쇄용 HTML 생성 (공통) — 차트 + 항목 본문 ===
+      function buildEntryPrintHTML(entry) {
+        // 차트 + 통계 영역 (highlightDate 적용)
+        const allEntries = Object.values(_critState.historyEntries || {});
+        let chartBlock = '';
+        if (allEntries.length > 0) {
+          const submittedSorted = allEntries
+            .filter(x => x.grading && typeof x.grading.stars === 'number')
+            .sort((a, b) => a.date.localeCompare(b.date));
+          const stats = calcCritMonthStats(allEntries, _critState.articles, _critState.currentMonth);
+          chartBlock = buildCritOverviewHTML(submittedSorted, stats, { highlightDate: entry.date });
+        }
+        return _buildEntryPrintHTMLInner(entry, chartBlock);
+      }
+      function _buildEntryPrintHTMLInner(entry, chartBlock) {
+        const sixWLabels = { who:'누가', when:'언제', where:'어디서', what:'무엇을', why:'왜', how:'어떻게' };
+        const stateUser = _critState.user || {};
+        const sessionStudent = (typeof getStudent === 'function' ? getStudent() : null) || {};
+        const userGrade = stateUser.grade || sessionStudent.grade || '';
+        const userName  = stateUser.name  || sessionStudent.name  || '';
+        const user = { grade: userGrade, name: userName };
+        const dt = new Date(entry.date);
+        const dateStr = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일`;
+        const stars = (entry.grading && typeof entry.grading.stars === 'number') ? starsString(entry.grading.stars) : '';
+        const starsScore = (entry.grading && typeof entry.grading.stars === 'number') ? entry.grading.stars.toFixed(1) : '-';
+
+        const sixWRows = Object.keys(sixWLabels).map(k => `
+          <tr>
+            <td style="padding:8px 10px;border:1px solid #999;background:#fbf7ec;color:#0d47a1;font-weight:700;width:14%;font-size:12px;vertical-align:top;">${sixWLabels[k]}</td>
+            <td style="padding:8px 10px;border:1px solid #999;font-size:12px;line-height:1.55;color:#222;vertical-align:top;width:43%;">${escapeHtml((entry.sixW || {})[k] || '-')}</td>
+            <td style="padding:8px 10px;border:1px solid #999;background:#f0f9ff;color:#0d47a1;font-size:12px;line-height:1.55;vertical-align:top;width:43%;">${escapeHtml(((entry.teacherGuide || {}).sixW || {})[k] || '-')}</td>
+          </tr>
+        `).join('');
+
+        const THINKING_QUESTIONS_PRINT = [
+          '이 기사에서 가장 중요하다고 생각한 내용은 무엇인가요?',
+          '나는 이 문제에 대해 어떻게 생각하나요?',
+          '이 문제를 해결하려면 어떤 방법이 필요할까요?'
+        ];
+        const thinkingHtml = ['q1','q2','q3'].map((k, i) => `
+          <div style="margin-bottom:14px;page-break-inside:avoid;">
+            <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:2px;letter-spacing:1px;">생각쓰기 ${i+1}</div>
+            <div style="font-size:11.5px;color:#444;line-height:1.5;margin-bottom:6px;font-style:italic;">${escapeHtml(THINKING_QUESTIONS_PRINT[i])}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div style="background:#fff;border:1px solid #ccc;border-radius:6px;padding:8px 10px;">
+                <div style="font-size:10px;color:#888;letter-spacing:2px;margin-bottom:4px;">내 답안</div>
+                <div style="font-size:11.5px;line-height:1.6;color:#222;white-space:pre-wrap;">${escapeHtml((entry.thinking || {})[k] || '-')}</div>
+              </div>
+              <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:8px 10px;">
+                <div style="font-size:10px;color:#0d47a1;letter-spacing:2px;margin-bottom:4px;">모범 답안</div>
+                <div style="font-size:11.5px;line-height:1.6;color:#0d47a1;white-space:pre-wrap;">${escapeHtml(((entry.teacherGuide || {}).thinking || {})[k] || '-')}</div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        const gradingBlock = (entry.grading && typeof entry.grading.stars === 'number') ? `
+          <div style="background:linear-gradient(135deg,#fff7e6,#fff3d6);border:2px solid #f5d27e;border-radius:12px;padding:14px 16px;margin:14px 0;page-break-inside:avoid;">
+            <div style="text-align:center;">
+              <div style="font-size:11px;letter-spacing:4px;color:#a16207;margin-bottom:4px;">AI 평가 결과</div>
+              <div style="font-size:28px;color:#f5b800;letter-spacing:-1px;margin-bottom:2px;">${stars}</div>
+              <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:#d97706;">${starsScore} <span style="font-size:12px;color:#a16207;">/ 5.0</span></div>
+            </div>
+            ${entry.grading.encouragement ? `<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;"><div style="font-size:10px;font-weight:700;color:#a16207;letter-spacing:1px;margin-bottom:3px;">💛 칭찬</div><div style="font-size:12px;color:#333;line-height:1.55;">${escapeHtml(entry.grading.encouragement)}</div></div>` : ''}
+            ${entry.grading.improvement ? `<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-top:6px;"><div style="font-size:10px;font-weight:700;color:#0d47a1;letter-spacing:1px;margin-bottom:3px;">💡 다음엔 이렇게</div><div style="font-size:12px;color:#333;line-height:1.55;">${escapeHtml(entry.grading.improvement)}</div></div>` : ''}
+          </div>
+        ` : '';
+
+        const printStudentBox = (userGrade || userName) ? `
+          <table style="margin:5mm auto 0;border-collapse:separate;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #f5d27e;border-radius:14px;overflow:hidden;">
+            <tr>
+              <td style="padding:6mm 14mm;text-align:center;">
+                <div style="font-size:10.5px;color:#92400e;letter-spacing:3px;margin-bottom:2.5mm;">학생 정보</div>
+                <div style="font-family:'Noto Serif KR',serif;font-size:22px;font-weight:800;color:#0d47a1;line-height:1.1;">${escapeHtml(userGrade)} ${escapeHtml(userName)}</div>
+              </td>
+            </tr>
+          </table>
+        ` : '';
+        return `
+          <div id="critPrintRoot" style="width:186mm;padding:0;margin:0 auto;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;color:#1a1a1a;background:#fffefb;box-sizing:border-box;">
+            <!-- 커버 헤더 (최상단) -->
+            <div style="padding:4mm 4mm 5mm;text-align:center;">
+              <div style="font-size:10.5px;letter-spacing:5px;color:#92400e;">BRAIN LITERACY · MONTHLY CRITIQUE</div>
+              <h1 style="font-family:'Noto Serif KR',serif;font-size:28px;font-weight:900;letter-spacing:4px;margin:5mm 0 2mm;color:#0d47a1;line-height:1.15;">이번 달 비평 모음</h1>
+              <div style="font-size:13px;color:#a16207;letter-spacing:3px;">${dateStr}</div>
+              ${printStudentBox}
+            </div>
+            <!-- 차트 (헤더 아래) -->
+            ${chartBlock || ''}
+            <!-- 기사 카테고리 + 제목 -->
+            <div style="margin-top:6mm;text-align:center;">
+              <div style="font-size:11px;color:#2196f3;font-weight:700;letter-spacing:2px;">[${escapeHtml(entry.category || '-')}]</div>
+              <h2 style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:800;line-height:1.4;margin:3mm 0 0;color:#0d47a1;">${escapeHtml(entry.title || '')}</h2>
+            </div>
+            ${gradingBlock}
+            <!-- 6하원칙 -->
+            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:6mm 0 3mm;letter-spacing:1px;">육하원칙 비교</div>
+            <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+              <thead>
+                <tr>
+                  <th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">항목</th>
+                  <th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">내 답안</th>
+                  <th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">모범 답안</th>
+                </tr>
+              </thead>
+              <tbody>${sixWRows}</tbody>
+            </table>
+            <!-- 생각쓰기 -->
+            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:6mm 0 3mm;letter-spacing:1px;">생각쓰기 비교</div>
+            ${thinkingHtml}
+            <!-- 푸터 -->
+            <div style="margin-top:8mm;font-size:9.5px;color:#999;text-align:center;letter-spacing:3px;border-top:1px solid #999;padding-top:3mm;">© 2026 BRAIN LITERACY · 생각하는 힘을 키우는 매일 비평</div>
+          </div>
+        `;
+      }
+
+      // === 인쇄하기 ===
+      function critPrintEntry(date) {
+        const entry = _critState.historyEntries[date];
+        if (!entry) { alert('데이터를 찾을 수 없어요.'); return; }
+        const html = buildEntryPrintHTML(entry);
+        const w = window.open('', '_blank', 'width=900,height=950,scrollbars=yes');
+        if (!w) { alert('팝업이 차단됐어요. 브라우저 설정을 확인해주세요.'); return; }
+        w.document.open();
+        w.document.write(`
+          <!DOCTYPE html><html lang="ko"><head>
+          <meta charset="UTF-8"><title>매일비평 인쇄</title>
+          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+          <style>
+            html,body { margin:0; padding:0; background:#fff; }
+            body { padding: 16mm; }
+            @page { size: A4; margin: 12mm; }
+            @media print { body { padding:0; } }
+          </style>
+          </head><body>${html}
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 400);
+              window.onafterprint = function() { setTimeout(function() { window.close(); }, 300); };
+            };
+          <\/script>
+          </body></html>
+        `);
+        w.document.close();
+      }
+
+      // === PDF용 — 섹션 단위로 분할 (중간 잘림 방지) ===
+      // options.includeChart: 기본 true. 월간 종합 PDF에서는 false로 호출 (커버에 차트 한 번만)
+      function buildEntrySections(entry, options) {
+        options = options || {};
+        const includeChart = options.includeChart !== false;
+        const sixWLabels = { who:'누가', when:'언제', where:'어디서', what:'무엇을', why:'왜', how:'어떻게' };
+        const stateUser = _critState.user || {};
+        const sessionStudent = (typeof getStudent === 'function' ? getStudent() : null) || {};
+        const userGrade = stateUser.grade || sessionStudent.grade || '';
+        const userName  = stateUser.name  || sessionStudent.name  || '';
+        const user = { grade: userGrade, name: userName };
+        const dt = new Date(entry.date);
+        const dateStr = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일`;
+        const stars = (entry.grading && typeof entry.grading.stars === 'number') ? starsString(entry.grading.stars) : '';
+        const starsScore = (entry.grading && typeof entry.grading.stars === 'number') ? entry.grading.stars.toFixed(1) : '-';
+        const sections = [];
+
+        // 1) 커버 헤더 (BRAIN LITERACY · MONTHLY CRITIQUE — 이번 달 비평 모음 — 날짜 — 학생정보) — 최상단
+        const studentBox = (userGrade || userName) ? `
+          <table style="margin:5mm auto 0;border-collapse:separate;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #f5d27e;border-radius:14px;overflow:hidden;">
+            <tr>
+              <td style="padding:6mm 14mm;text-align:center;">
+                <div style="font-size:10.5px;color:#92400e;letter-spacing:3px;margin-bottom:2.5mm;">학생 정보</div>
+                <div style="font-family:'Noto Serif KR',serif;font-size:22px;font-weight:800;color:#0d47a1;line-height:1.1;">${escapeHtml(userGrade)} ${escapeHtml(userName)}</div>
+              </td>
+            </tr>
+          </table>
+        ` : '';
+        sections.push(`
+          <div style="padding:4mm 4mm 5mm;text-align:center;">
+            <div style="font-size:10.5px;letter-spacing:5px;color:#92400e;">BRAIN LITERACY · MONTHLY CRITIQUE</div>
+            <h1 style="font-family:'Noto Serif KR',serif;font-size:28px;font-weight:900;letter-spacing:4px;margin:5mm 0 2mm;color:#0d47a1;line-height:1.15;">이번 달 비평 모음</h1>
+            <div style="font-size:13px;color:#a16207;letter-spacing:3px;">${dateStr}</div>
+            ${studentBox}
+          </div>
+        `);
+
+        // 2) 월간 차트 + 통계 (이번 항목 날짜 강조) — 커버 헤더 아래, 개별 PDF에만
+        if (includeChart) {
+          const allEntries = Object.values(_critState.historyEntries || {});
+          if (allEntries.length > 0) {
+            const submittedSorted = allEntries
+              .filter(x => x.grading && typeof x.grading.stars === 'number')
+              .sort((a, b) => a.date.localeCompare(b.date));
+            const stats = calcCritMonthStats(allEntries, _critState.articles, _critState.currentMonth);
+            const chartHTML = buildCritOverviewHTML(submittedSorted, stats, { highlightDate: entry.date });
+            sections.push(`<div style="padding:0 4mm 5mm;">${chartHTML}</div>`);
+          }
+        }
+        // 1.5) 기사 카테고리 + 제목
+        sections.push(`
+          <div style="padding:0 4mm 5mm;text-align:center;">
+            <div style="font-size:11px;color:#2196f3;font-weight:700;letter-spacing:2px;">[${escapeHtml(entry.category || '-')}]</div>
+            <h2 style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:800;line-height:1.4;margin:3mm 0 0;color:#0d47a1;">${escapeHtml(entry.title || '')}</h2>
+          </div>
+        `);
+        // 2) AI 평가 박스
+        if (entry.grading && typeof entry.grading.stars === 'number') {
+          sections.push(`
+            <div style="padding:0 4mm 5mm;">
+              <div style="background:linear-gradient(135deg,#fff7e6,#fff3d6);border:2px solid #f5d27e;border-radius:12px;padding:14px 16px;">
+                <div style="text-align:center;">
+                  <div style="font-size:11px;letter-spacing:4px;color:#a16207;margin-bottom:4px;">AI 평가 결과</div>
+                  <div style="font-size:28px;color:#f5b800;letter-spacing:-1px;margin-bottom:2px;">${stars}</div>
+                  <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:#d97706;">${starsScore} <span style="font-size:12px;color:#a16207;">/ 5.0</span></div>
+                </div>
+                ${entry.grading.encouragement ? `<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;"><div style="font-size:10px;font-weight:700;color:#a16207;letter-spacing:1px;margin-bottom:3px;">💛 칭찬</div><div style="font-size:12px;color:#333;line-height:1.55;">${escapeHtml(entry.grading.encouragement)}</div></div>` : ''}
+                ${entry.grading.improvement ? `<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-top:6px;"><div style="font-size:10px;font-weight:700;color:#0d47a1;letter-spacing:1px;margin-bottom:3px;">💡 다음엔 이렇게</div><div style="font-size:12px;color:#333;line-height:1.55;">${escapeHtml(entry.grading.improvement)}</div></div>` : ''}
+              </div>
+            </div>
+          `);
+        }
+        // 3) 육하원칙 표 (atomic)
+        const sixWRows = Object.keys(sixWLabels).map(k => `
+          <tr>
+            <td style="padding:7px 10px;border:1px solid #999;background:#fbf7ec;color:#0d47a1;font-weight:700;width:14%;font-size:12px;vertical-align:top;">${sixWLabels[k]}</td>
+            <td style="padding:7px 10px;border:1px solid #999;font-size:12px;line-height:1.55;color:#222;vertical-align:top;width:43%;">${escapeHtml((entry.sixW || {})[k] || '-')}</td>
+            <td style="padding:7px 10px;border:1px solid #999;background:#f0f9ff;color:#0d47a1;font-size:12px;line-height:1.55;vertical-align:top;width:43%;">${escapeHtml(((entry.teacherGuide || {}).sixW || {})[k] || '-')}</td>
+          </tr>
+        `).join('');
+        sections.push(`
+          <div style="padding:0 4mm 5mm;">
+            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:0 0 3mm;letter-spacing:1px;">육하원칙 비교</div>
+            <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+              <thead>
+                <tr>
+                  <th style="padding:5px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">항목</th>
+                  <th style="padding:5px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">내 답안</th>
+                  <th style="padding:5px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">모범 답안</th>
+                </tr>
+              </thead>
+              <tbody>${sixWRows}</tbody>
+            </table>
+          </div>
+        `);
+        // 4) 생각쓰기 헤더
+        sections.push(`
+          <div style="padding:0 4mm 2mm;">
+            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:2mm 0 1mm;letter-spacing:1px;">생각쓰기 비교</div>
+          </div>
+        `);
+        // 5~7) 생각쓰기 q1/q2/q3 — 각각 atomic section (질문 라벨 포함)
+        const THINKING_QUESTIONS_PDF = [
+          '이 기사에서 가장 중요하다고 생각한 내용은 무엇인가요?',
+          '나는 이 문제에 대해 어떻게 생각하나요?',
+          '이 문제를 해결하려면 어떤 방법이 필요할까요?'
+        ];
+        ['q1','q2','q3'].forEach((k, i) => {
+          sections.push(`
+            <div style="padding:0 4mm 5mm;">
+              <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:2px;letter-spacing:1px;">생각쓰기 ${i+1}</div>
+              <div style="font-size:11.5px;color:#444;line-height:1.5;margin-bottom:5px;font-style:italic;">${escapeHtml(THINKING_QUESTIONS_PDF[i])}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <div style="background:#fff;border:1px solid #ccc;border-radius:6px;padding:8px 10px;">
+                  <div style="font-size:10px;color:#888;letter-spacing:2px;margin-bottom:4px;">내 답안</div>
+                  <div style="font-size:11.5px;line-height:1.6;color:#222;white-space:pre-wrap;">${escapeHtml((entry.thinking || {})[k] || '-')}</div>
+                </div>
+                <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:8px 10px;">
+                  <div style="font-size:10px;color:#0d47a1;letter-spacing:2px;margin-bottom:4px;">모범 답안</div>
+                  <div style="font-size:11.5px;line-height:1.6;color:#0d47a1;white-space:pre-wrap;">${escapeHtml(((entry.teacherGuide || {}).thinking || {})[k] || '-')}</div>
+                </div>
+              </div>
+            </div>
+          `);
+        });
+        // 8) 푸터
+        sections.push(`
+          <div style="padding:3mm 4mm 4mm;">
+            <div style="font-size:9.5px;color:#999;text-align:center;letter-spacing:3px;border-top:1px solid #999;padding-top:3mm;">© 2026 BRAIN LITERACY · 생각하는 힘을 키우는 매일 비평</div>
+          </div>
+        `);
+        return sections;
+      }
+
+      // === PDF 다운로드 (섹션 단위, 중간 잘림 방지) ===
+      async function critPdfEntry(date) {
+        const entry = _critState.historyEntries[date];
+        if (!entry) { alert('데이터를 찾을 수 없어요.'); return; }
+        const btn = document.querySelector(`.crit-history-pdf-btn[data-date="${date}"]`);
+        if (btn) { btn.disabled = true; btn.textContent = '생성 중...'; }
+
+        const sections = buildEntrySections(entry);
+        const wrap = document.createElement('div');
+        wrap.style.cssText = `position:fixed;left:-99999px;top:0;width:186mm;background:#fff;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;`;
+        document.body.appendChild(wrap);
+
+        try {
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const W = 210, H = 297;
+          const M = 12;
+          const CW = W - 2 * M;
+          const CH = H - 2 * M;
+          let currentY = M;
+          let isFirst = true;
+
+          for (let i = 0; i < sections.length; i++) {
+            wrap.innerHTML = sections[i];
+            // 짧은 대기 — 레이아웃·폰트 적용
+            await new Promise(r => setTimeout(r, 30));
+            const canvas = await html2canvas(wrap, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+            const sectionH = (canvas.height / canvas.width) * CW;
+
+            // 단일 섹션이 한 페이지 내용 영역보다 큰 경우 — 어쩔 수 없이 슬라이싱 (드물게 매우 긴 답안)
+            if (sectionH > CH) {
+              if (!isFirst) { pdf.addPage(); currentY = M; }
+              const pageHpx = (CH / CW) * canvas.width;
+              let off = 0, pc = 0;
+              while (off < canvas.height) {
+                if (pc > 0) { pdf.addPage(); currentY = M; }
+                const slice = Math.min(pageHpx, canvas.height - off);
+                const tc = document.createElement('canvas');
+                tc.width = canvas.width; tc.height = slice;
+                tc.getContext('2d', { willReadFrequently: true }).drawImage(canvas, 0, off, canvas.width, slice, 0, 0, canvas.width, slice);
+                const sliceMm = (slice / canvas.width) * CW;
+                pdf.addImage(tc.toDataURL('image/jpeg', 0.94), 'JPEG', M, M, CW, sliceMm);
+                off += slice; pc++;
+              }
+              currentY = M + ((canvas.height % ((CH / CW) * canvas.width)) / canvas.width) * CW;
+              isFirst = false;
+              continue;
+            }
+
+            // 현재 페이지에 안 들어가면 새 페이지
+            if (!isFirst && currentY + sectionH > H - M) {
+              pdf.addPage();
+              currentY = M;
+            }
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.94), 'JPEG', M, currentY, CW, sectionH);
+            currentY += sectionH;
+            isFirst = false;
+          }
+
+          const user = _critState.user || {};
+          const safeName = (user.name || 'student').replace(/[\\/:*?"<>|]/g, '_');
+          const fname = `매일비평_${safeName}_${entry.date}.pdf`;
+          pdf.save(fname);
+        } catch (err) {
+          console.error('[비평] PDF 생성 실패:', err);
+          alert('PDF 생성에 실패했어요. 다시 시도해주세요.');
+        } finally {
+          document.body.removeChild(wrap);
+          if (btn) { btn.disabled = false; btn.textContent = '📥 PDF 다운로드'; }
+        }
+      }
+
+      window.__critPrintEntry = critPrintEntry;
+      window.__critPdfEntry = critPdfEntry;
+
+      // === 월간 종합 PDF (커버 + 차트/통계 + 모든 항목) ===
+      async function critAllPdf() {
+        const allEntries = Object.values(_critState.historyEntries || {});
+        if (allEntries.length === 0) { alert('이번 달 비평 기록이 없어요.'); return; }
+        const btn = document.getElementById('critHistoryAllPdfBtn');
+        if (btn) { btn.disabled = true; btn.textContent = '생성 중...'; }
+
+        const submittedSorted = allEntries
+          .filter(x => x.grading && typeof x.grading.stars === 'number')
+          .sort((a, b) => a.date.localeCompare(b.date));
+        const stats = calcCritMonthStats(allEntries, _critState.articles, _critState.currentMonth);
+        // 학생 정보: _critState.user 우선, 없으면 sessionStorage 폴백
+        const stateUser = _critState.user || {};
+        const sessionStudent = getStudent() || {};
+        const userGrade = stateUser.grade || sessionStudent.grade || '';
+        const userName = stateUser.name || sessionStudent.name || '';
+        const [yy, mm] = _critState.currentMonth.split('-');
+
+        const wrap = document.createElement('div');
+        wrap.style.cssText = `position:fixed;left:-99999px;top:0;width:186mm;background:#fff;font-family:'Noto Sans KR','Noto Serif KR',sans-serif;`;
+        document.body.appendChild(wrap);
+
+        try {
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const W = 210, H = 297;
+          const M = 12;
+          const CW = W - 2 * M;
+          const CH = H - 2 * M;
+
+          // === 페이지 1: 커버 (학생 정보 + 월 + 차트 + 통계) ===
+          // 학생 정보가 있을 때만 박스 표시, 없으면 박스 자체를 생략
+          const studentBox = (userGrade || userName) ? `
+            <table style="margin:6mm auto 0;border-collapse:separate;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #f5d27e;border-radius:14px;overflow:hidden;">
+              <tr>
+                <td style="padding:7mm 14mm;text-align:center;">
+                  <div style="font-size:11px;color:#92400e;letter-spacing:3px;margin-bottom:3mm;">학생 정보</div>
+                  <div style="font-family:'Noto Serif KR',serif;font-size:26px;font-weight:800;color:#0d47a1;line-height:1.1;">${escapeHtml(userGrade)} ${escapeHtml(userName)}</div>
+                </td>
+              </tr>
+            </table>
+          ` : '';
+          const coverHTML = `
+            <div style="padding:6mm 4mm;text-align:center;">
+              <div style="font-size:11px;letter-spacing:5px;color:#92400e;">BRAIN LITERACY · MONTHLY CRITIQUE</div>
+              <h1 style="font-family:'Noto Serif KR',serif;font-size:34px;font-weight:900;letter-spacing:4px;margin:6mm 0 3mm;color:#0d47a1;">이번 달 비평 모음</h1>
+              <div style="font-size:14px;color:#a16207;letter-spacing:3px;margin-bottom:2mm;">${yy}년 ${parseInt(mm)}월</div>
+              ${studentBox}
+            </div>
+            ${buildCritOverviewHTML(submittedSorted, stats)}
+          `;
+          wrap.innerHTML = coverHTML;
+          await new Promise(r => setTimeout(r, 40));
+          const coverCanvas = await html2canvas(wrap, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+          const coverH = (coverCanvas.height / coverCanvas.width) * CW;
+          if (coverH <= CH) {
+            pdf.addImage(coverCanvas.toDataURL('image/jpeg', 0.94), 'JPEG', M, M, CW, coverH);
+          } else {
+            // 커버가 페이지보다 크면 슬라이싱
+            const pageHpx = (CH / CW) * coverCanvas.width;
+            let off = 0, pc = 0;
+            while (off < coverCanvas.height) {
+              if (pc > 0) pdf.addPage();
+              const slice = Math.min(pageHpx, coverCanvas.height - off);
+              const tc = document.createElement('canvas');
+              tc.width = coverCanvas.width; tc.height = slice;
+              tc.getContext('2d', { willReadFrequently: true }).drawImage(coverCanvas, 0, off, coverCanvas.width, slice, 0, 0, coverCanvas.width, slice);
+              pdf.addImage(tc.toDataURL('image/jpeg', 0.94), 'JPEG', M, M, CW, (slice / coverCanvas.width) * CW);
+              off += slice; pc++;
+            }
+          }
+
+          // === 각 항목 페이지 추가 ===
+          // 최신순으로 정렬 (커버 아래는 시간 흐름 따라 보여주려면 과거→현재가 더 자연스러움)
+          const sortedEntries = [...allEntries].sort((a, b) => a.date.localeCompare(b.date));
+          for (const entry of sortedEntries) {
+            pdf.addPage();
+            const sections = buildEntrySections(entry, { includeChart: false }); // 차트는 커버에 1회만
+            let currentY = M;
+            let isFirst = true;
+            for (let i = 0; i < sections.length; i++) {
+              wrap.innerHTML = sections[i];
+              await new Promise(r => setTimeout(r, 25));
+              const canvas = await html2canvas(wrap, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+              const sectionH = (canvas.height / canvas.width) * CW;
+              if (sectionH > CH) {
+                if (!isFirst) { pdf.addPage(); currentY = M; }
+                const pageHpx = (CH / CW) * canvas.width;
+                let off = 0, pc = 0;
+                while (off < canvas.height) {
+                  if (pc > 0) { pdf.addPage(); currentY = M; }
+                  const slice = Math.min(pageHpx, canvas.height - off);
+                  const tc = document.createElement('canvas');
+                  tc.width = canvas.width; tc.height = slice;
+                  tc.getContext('2d', { willReadFrequently: true }).drawImage(canvas, 0, off, canvas.width, slice, 0, 0, canvas.width, slice);
+                  pdf.addImage(tc.toDataURL('image/jpeg', 0.94), 'JPEG', M, M, CW, (slice / canvas.width) * CW);
+                  off += slice; pc++;
+                }
+                isFirst = false;
+                continue;
+              }
+              if (!isFirst && currentY + sectionH > H - M) {
+                pdf.addPage();
+                currentY = M;
+              }
+              pdf.addImage(canvas.toDataURL('image/jpeg', 0.94), 'JPEG', M, currentY, CW, sectionH);
+              currentY += sectionH;
+              isFirst = false;
+            }
+          }
+
+          const safeName = (userName || 'student').replace(/[\\/:*?"<>|]/g, '_');
+          pdf.save(`매일비평_월간종합_${safeName}_${yy}년${parseInt(mm)}월.pdf`);
+        } catch (err) {
+          console.error('[비평] 월간 종합 PDF 실패:', err);
+          alert('PDF 생성에 실패했어요. 다시 시도해주세요.');
+        } finally {
+          document.body.removeChild(wrap);
+          if (btn) { btn.disabled = false; btn.textContent = '📥 월간 종합 PDF'; }
+        }
+      }
+      window.__critAllPdf = critAllPdf;
+
+      function renderLevelToggle() {
+        const wrap = document.getElementById('critLevelToggle');
+        wrap.innerHTML = LEVEL_ORDER.map(code => {
+          const enabled = _critState.allowedGrades.includes(code);
+          const active = code === _critState.currentLevel;
+          return `<button class="crit-level-btn${active ? ' active' : ''}" data-level="${code}" ${enabled ? '' : 'disabled'}>${LEVEL_LABELS[code]}</button>`;
+        }).join('');
+        wrap.querySelectorAll('.crit-level-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            _critState.currentLevel = btn.dataset.level;
+            renderLevelToggle();
+            renderCalendar();
+          });
+        });
+
+        // 월 라벨
+        const [y, mm] = _critState.currentMonth.split('-');
+        document.getElementById('critMonthLabel').textContent = `${y}. ${parseInt(mm)}월`;
+      }
+
+      function renderCalendar() {
+        const cal = document.getElementById('critCalendar');
+        const articles = _critState.articles?.articles || {};
+        const [y, mm] = _critState.currentMonth.split('-');
+        const year = parseInt(y);
+        const month = parseInt(mm);
+        const firstDay = new Date(year, month - 1, 1);
+        const startWeekday = firstDay.getDay(); // 0=일
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const today = todayKey();
+
+        const completedForLevel = _critState.completed
+          .filter(c => c.contentGrade === _critState.currentLevel);
+        const completedDatesForLevel = new Set(completedForLevel.map(c => c.date));
+        const starsByDate = {};
+        completedForLevel.forEach(c => {
+          if (c.grading && typeof c.grading.stars === 'number') {
+            starsByDate[c.date] = c.grading.stars;
+          }
+        });
+
+        let cells = [];
+        // 앞 빈칸
+        for (let i = 0; i < startWeekday; i++) {
+          cells.push(`<div class="crit-day-cell empty"></div>`);
+        }
+        // 1~월말
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateKey = `${y}-${mm}-${String(d).padStart(2,'0')}`;
+          const art = articles[dateKey];
+          const weekday = (startWeekday + d - 1) % 7;
+          const wkCls = weekday === 0 ? ' sun' : (weekday === 6 ? ' sat' : '');
+          const isToday = dateKey === today;
+          const isFuture = dateKey > today;
+          const isCompleted = completedDatesForLevel.has(dateKey);
+          let classes = 'crit-day-cell' + wkCls;
+          if (isFuture) classes += ' locked';
+          else if (isCompleted) classes += ' completed';
+          if (isToday) classes += ' today';
+          const catEmoji = pickCategoryEmoji(art?.category);
+          const title = art?.title ? escapeHtml(art.title) : '';
+          const starsHtml = (isCompleted && typeof starsByDate[dateKey] === 'number')
+            ? `<div class="crit-cell-stars">${starsString(starsByDate[dateKey])}</div>`
+            : '';
+          cells.push(`
+            <div class="${classes}" data-date="${dateKey}" role="button" tabindex="0">
+              <div class="crit-day-num">${d}</div>
+              ${art ? `<div class="crit-day-cat">${catEmoji}</div><div class="crit-day-title">${title}</div>` : ''}
+              ${starsHtml}
+            </div>
+          `);
+        }
+        cal.innerHTML = cells.join('');
+        // 클릭 핸들러
+        cal.querySelectorAll('.crit-day-cell').forEach(cell => {
+          if (cell.classList.contains('empty') || cell.classList.contains('locked')) return;
+          if (!cell.dataset.date) return;
+          const onOpen = () => {
+            const date = cell.dataset.date;
+            openCritiqueDay(date, _critState.currentLevel);
+          };
+          cell.addEventListener('click', onOpen);
+          cell.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); }
+          });
+        });
+
+        // 진행률
+        const totalForLevel = Object.keys(articles).filter(k => k.startsWith(_critState.currentMonth)).length;
+        const doneForLevel = completedDatesForLevel.size;
+        document.getElementById('critProgress').innerHTML = `완료 <strong>${doneForLevel}/${totalForLevel}</strong>`;
+      }
+
+      function openCritiqueDay(date, contentGrade) {
+        // /daily-critique.html을 unitModal iframe에 직접 띄움 (openUnitModal 우회 — availableUnits 검증 회피)
+        const url = `/daily-critique.html?date=${encodeURIComponent(date)}&grade=${encodeURIComponent(contentGrade)}&fromMenu=1&_t=${Date.now()}`;
+        const cm = document.getElementById('critModalOverlay');
+        if (cm) cm.style.zIndex = '5000';
+        const unitModal = document.getElementById('unitModal');
+        const unitIframe = document.getElementById('unitIframe');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (unitModal && unitIframe) {
+          unitModal.dataset.fromCritique = '1'; // 비평 진입 플래그 — X 버튼/ESC 시 reload 우회
+          unitIframe.style.opacity = '0';
+          unitModal.classList.add('show');
+          if (loadingOverlay) {
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.classList.remove('fade-out');
+          }
+          unitIframe.onload = function() {
+            unitIframe.style.transition = 'opacity 0.3s ease';
+            unitIframe.style.opacity = '1';
+            if (loadingOverlay) {
+              loadingOverlay.classList.add('fade-out');
+              setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
+            }
+          };
+          unitIframe.src = url;
+          watchUnitModalClose();
+        } else {
+          window.location.href = url;
+        }
+      }
+
+      function watchUnitModalClose() {
+        const unitModal = document.getElementById('unitModal');
+        if (!unitModal) return;
+        const observer = new MutationObserver(() => {
+          if (!unitModal.classList.contains('show')) {
+            const cm = document.getElementById('critModalOverlay');
+            if (cm) cm.style.zIndex = '';
+            observer.disconnect();
+            // 완료 목록 다시 동기화 + 캘린더 갱신
+            refreshCompletedList();
+          }
+        });
+        observer.observe(unitModal, { attributes: true, attributeFilter: ['class'] });
+      }
+
+      async function refreshCompletedList() {
+        const student = getStudent();
+        if (!student) return;
+        try {
+          const res = await fetch(`/api/critique/init?grade=${encodeURIComponent(student.grade)}&name=${encodeURIComponent(student.name)}`);
+          const data = await res.json();
+          if (data.ok) {
+            _critState.completed = data.completed || [];
+            _critState.monthlyAvgStars = (typeof data.monthlyAvgStars === 'number') ? data.monthlyAvgStars : null;
+            _critState.monthlyCount = data.monthlyCount || 0;
+            renderMonthlyAvg();
+            renderCalendar();
+          }
+        } catch (e) {}
+      }
+
+      function pickCategoryEmoji(category) {
+        if (!category) return '📰';
+        const c = String(category);
+        if (/환경|기후|생물|자연|해양|동물/.test(c)) return '🌱';
+        if (/과학|우주|기술|AI/.test(c)) return '🔬';
+        if (/건강|체육|스포츠|의료/.test(c)) return '⚕️';
+        if (/역사|민주주의|평화|통일/.test(c)) return '🏛️';
+        if (/사회|인권|다양성|문화/.test(c)) return '🤝';
+        if (/교육/.test(c)) return '📚';
+        if (/식량|농업/.test(c)) return '🌾';
+        if (/글로벌|시민/.test(c)) return '🌐';
+        if (/안전|교통/.test(c)) return '🚦';
+        if (/미래|진로/.test(c)) return '🚀';
+        if (/한류/.test(c)) return '🎬';
+        return '📰';
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      // ESC로 모달 닫기 (히스토리 모달 우선)
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const hov = document.getElementById('critHistoryOverlay');
+          if (hov && hov.classList.contains('show')) { hov.classList.remove('show'); return; }
+          const cm = document.getElementById('critModalOverlay');
+          if (cm && cm.classList.contains('show')) closeCritiqueModal();
+        }
+      });
+      // 바깥 클릭 닫기
+      document.getElementById('critModalOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'critModalOverlay') closeCritiqueModal();
+      });
+      document.getElementById('critHistoryOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'critHistoryOverlay') e.target.classList.remove('show');
+      });
     })();
   </script>
 
