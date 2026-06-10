@@ -13274,6 +13274,13 @@ async function performLogout() {
     // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
     restoreProgressOnRenderedList();
 
+    // 🇰🇷 한국사 완료 상태 백그라운드 동기화 (첫 진입 시 카드 미완료 표시 방지)
+    setTimeout(() => {
+      if (typeof window.syncKhCompletionFromServer === 'function') {
+        window.syncKhCompletionFromServer();
+      }
+    }, 500);
+
     // 🆕 관리자 view-as 자동 리포트 열기 (URL 파라미터)
     // 예: /menu?grade=초3&name=김윤슬&autoOpen=khReport
     (function autoOpenReportFromUrl() {
@@ -34374,6 +34381,7 @@ ${content}
         // 연속 공백 정리
         return t.replace(/\s{2,}/g, ' ').trim();
       }
+      window.sanitizeKhDetail = sanitizeKhDetail;
 
       function renderKhExamQuestion() {
         const body = $('khExamBody');
@@ -35296,11 +35304,47 @@ ${content}
       const KH_OPEN_KEY = 'khModalOpen';
 
       window.renderKhGrid = renderKhGrid;
-      window.openKorHistoryModal = function () {
-        renderKhGrid();
+
+      // 🔁 한국사(kh_*) 완료 상태 서버 동기화 — KhSubmission.passage.completed=true 단원을 localStorage에 반영
+      async function syncKhCompletionFromServer() {
+        try {
+          const stu = (typeof getCurrentStudent === 'function') ? getCurrentStudent() : null;
+          if (!stu || !stu.grade || !stu.name) return;
+          const stuKey = (typeof buildStudentKey === 'function')
+            ? buildStudentKey(stu)
+            : `${stu.grade || ''}_${stu.name || ''}_${stu.phone || ''}`;
+          const res = await fetch(`/api/kh/report?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+          const data = await res.json();
+          if (!data.ok || !Array.isArray(data.submissions)) return;
+          let wroteAny = false;
+          for (const s of data.submissions) {
+            if (!s || !s.unit || !s.passage || !s.passage.completed) continue;
+            const key = `dan-progress:${stuKey}:${s.unit}`;
+            const existing = localStorage.getItem(key);
+            if (existing) continue; // 이미 있음 → 건드리지 않음
+            const pageIds = [
+              `BRAINUP_korhistory_${s.unit}`,
+              `./BRAINUP/korhistory/${s.unit}.html`
+            ];
+            localStorage.setItem(key, JSON.stringify(pageIds));
+            wroteAny = true;
+          }
+          if (wroteAny) console.log('[syncKhCompletion] 서버 데이터로 localStorage 동기화 완료');
+        } catch (e) { console.warn('[syncKhCompletion] 실패:', e); }
+      }
+      window.syncKhCompletionFromServer = syncKhCompletionFromServer;
+
+      window.openKorHistoryModal = async function () {
         const ov = document.getElementById('khModalOverlay');
         if (ov) ov.classList.add('show');
         try { sessionStorage.setItem(KH_OPEN_KEY, '1'); } catch (e) {}
+        // 1) 캐시된 상태로 즉시 렌더
+        renderKhGrid();
+        // 2) 서버에서 최신 완료 상태 동기화 후 재렌더 (첫 진입 시 누락 방지)
+        try {
+          await syncKhCompletionFromServer();
+          renderKhGrid();
+        } catch (e) {}
       };
       window.closeKorHistoryModal = function () {
         const ov = document.getElementById('khModalOverlay');
@@ -35848,7 +35892,7 @@ ${content}
             <div style="font-size:14px;color:#1f2937;font-weight:700;margin-bottom:8px;line-height:1.5;">${escKh(q.questionText)}</div>
             <div style="font-size:12px;color:#555;margin-bottom:4px;"><b>내가 고른 답:</b> <span style="color:${color};">${escKh(pickedText)}</span></div>
             ${!q.isCorrect ? `<div style="font-size:12px;color:#555;"><b>정답:</b> <span style="color:#2e9b3f;">${escKh(correctText)}</span></div>` : ''}
-            ${q.detail ? `<div style="margin-top:6px;padding:8px 10px;background:#f0faea;border-radius:6px;font-size:12px;color:#3f6a32;line-height:1.55;">${escKh(sanitizeKhDetail(q.detail)).replace(/\n/g,'<br>')}</div>` : ''}
+            ${q.detail ? `<div style="margin-top:6px;padding:8px 10px;background:#f0faea;border-radius:6px;font-size:12px;color:#3f6a32;line-height:1.55;">${escKh((typeof window.sanitizeKhDetail==='function'?window.sanitizeKhDetail(q.detail):q.detail)).replace(/\n/g,'<br>')}</div>` : ''}
           </div>`;
         }).join('');
         body.innerHTML = `<div id="khExamViewerContent">${cover}${catSection}

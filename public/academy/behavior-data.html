@@ -427,6 +427,37 @@
       .search-box input { width: 100%; }
       th, td { padding: 10px 8px; font-size: 13px; }
     }
+    /* 🖨️ 인쇄 — 관문 상세 모달만 출력 (사이드바/헤더 등 숨김) */
+    @media print {
+      body * { visibility: hidden !important; }
+      #gateModal.show, #gateModal.show * { visibility: visible !important; }
+      #gateModal.show {
+        position: absolute !important;
+        inset: 0 !important;
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+        z-index: 99999 !important;
+      }
+      #gateModal .modal-content {
+        box-shadow: none !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+      }
+      #gateModal .modal-body {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      #gateModal .modal-close,
+      #gateModal #gateModalFooter { display: none !important; }
+      #gateModal .modal-header {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
   </style>
 </head>
 <body>
@@ -606,6 +637,11 @@
       </div>
       <div class="modal-body" id="gateModalBody">
         <div class="loading">데이터를 불러오는 중...</div>
+      </div>
+      <div class="modal-footer" id="gateModalFooter" style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;background:#fafafa;">
+        <button onclick="gateDetailPrint()" style="padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#5a67d8);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">🖨️ 인쇄</button>
+        <button onclick="gateDetailPdf(this)" style="padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">📥 PDF 다운</button>
+        <button onclick="gateDetailKakao()" style="padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#fee500,#fde047);color:#3c2c00;font-weight:700;font-size:13px;cursor:pointer;">💬 카카오톡 공유</button>
       </div>
     </div>
   </div>
@@ -1067,6 +1103,7 @@
         'world2': '세계문학2',
         'kor1': '한국사1',
         'kor2': '한국사2',
+        'kh': '한국사',
         'classic': '고전문학',
         'modern': '현대문학',
         'people1': '인물1',
@@ -1236,16 +1273,113 @@
       document.getElementById('gateModal').classList.remove('show');
     }
 
+    // ===== 인쇄 / PDF / 카카오톡 공유 (관문 상세) =====
+    let _gateDetailCtx = { grade: '', name: '', gate: '' };
+    window.gateDetailPrint = function () { window.print(); };
+    window.gateDetailPdf = async function (btn) {
+      if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중'); return; }
+      const content = document.getElementById('gateModalBody');
+      if (!content) return;
+      const orig = btn.textContent; btn.disabled = true; btn.textContent = '⏳ 생성 중…';
+      // 캡처용 임시 컨테이너: 학생 정보 헤더 + 본문
+      const c = _gateDetailCtx;
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position:fixed;left:-99999px;top:0;width:794px;background:#fff;font-family:"Apple SD Gothic Neo","Noto Sans KR",sans-serif;';
+      wrapper.innerHTML = `
+        <div style="padding:24px 30px 18px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-bottom:3px solid #4c51bf;">
+          <div style="font-size:11px;letter-spacing:3px;opacity:0.85;margin-bottom:4px;">BRAIN LITERACY · 형성평가 관문 통과 상세</div>
+          <div style="font-size:24px;font-weight:800;letter-spacing:1px;">${(c.grade||'')} ${(c.name||'')} 학생 · 관문 ${(c.gate||'')}</div>
+          <div style="font-size:12px;opacity:0.9;margin-top:4px;">생성일: ${new Date().toLocaleString('ko-KR')}</div>
+        </div>
+        <div id="pdfSlotInner" style="padding:20px 24px;background:#fff;color:#1a1a1a;"></div>
+      `;
+      const slot = wrapper.querySelector('#pdfSlotInner');
+      slot.innerHTML = content.innerHTML;
+      slot.querySelectorAll('*').forEach(el => {
+        const cs = window.getComputedStyle(el);
+        const cur = cs.color;
+        if (cur && (cur === 'rgb(73, 80, 87)' || cur === 'rgb(108, 117, 125)' || cur === 'rgb(33, 37, 41)' || cur === 'rgb(134, 142, 150)')) {
+          el.style.color = '#0f172a';
+        }
+      });
+      slot.querySelectorAll('th').forEach(el => {
+        el.style.background = '#e9ecef';
+        el.style.color = '#0f172a';
+        el.style.fontWeight = '700';
+      });
+      slot.querySelectorAll('tbody tr').forEach((tr, idx) => {
+        if (!tr.getAttribute('style') || !tr.getAttribute('style').includes('background')) {
+          tr.style.background = idx % 2 === 0 ? '#fafafa' : '#ffffff';
+        }
+      });
+      document.body.appendChild(wrapper);
+      try {
+        await new Promise(r => setTimeout(r, 60));
+        const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        const { jsPDF } = window.jspdf; const pdf = new jsPDF('p','mm','a4');
+        const W=210,H=297,M=10,CW=W-2*M; const totalH = canvas.height/canvas.width*CW;
+        if (totalH <= H-2*M) pdf.addImage(canvas.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,totalH);
+        else {
+          const pageHpx = ((H-2*M)/CW)*canvas.width; let off=0,pc=0;
+          while (off<canvas.height) {
+            if (pc>0) pdf.addPage();
+            const slice = Math.min(pageHpx, canvas.height-off);
+            const tc = document.createElement('canvas'); tc.width=canvas.width; tc.height=slice;
+            tc.getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,off,canvas.width,slice,0,0,canvas.width,slice);
+            pdf.addImage(tc.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,(slice/canvas.width)*CW);
+            off+=slice; pc++;
+          }
+        }
+        const safe = `${c.grade || ''}_${c.name || 'student'}_관문${c.gate || ''}`.replace(/[\\/:*?"<>|]/g, '_');
+        const now = new Date();
+        const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+        pdf.save(`관문통과상세_${safe}_${ts}.pdf`);
+      } catch (err) { console.error(err); alert('PDF 생성 실패'); }
+      finally {
+        try { document.body.removeChild(wrapper); } catch {}
+        btn.disabled=false; btn.textContent=orig;
+      }
+    };
+    window.gateDetailKakao = function () {
+      if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+        alert('카카오톡 공유 기능을 사용할 수 없습니다.\n페이지를 새로고침 후 다시 시도해주세요.');
+        return;
+      }
+      const c = _gateDetailCtx;
+      const baseUrl = window.location.hostname === 'localhost'
+        ? window.location.origin
+        : 'https://brainmoon.kr';
+      const shareUrl = `${baseUrl}/academy/behavior-data?grade=${encodeURIComponent(c.grade || '')}&name=${encodeURIComponent(c.name || '')}&gate=${encodeURIComponent(c.gate || '')}`;
+      try {
+        Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `🎯 ${c.grade || ''} ${c.name || ''} - 관문 ${c.gate || ''} 통과 상세`,
+            description: '단단국어 형성평가 관문 통과 상세 기록을 확인하세요!\n\n📊 통과한 단원과 응시 결과\n📝 정답·오답 상세',
+            imageUrl: 'https://cdn.jsdelivr.net/gh/kukicoollevitt-hash/dan-dan-app@main/public/images/report-share-thumbnail.png',
+            link: { mobileWebUrl: shareUrl, webUrl: shareUrl }
+          },
+          buttons: [{ title: '관문 상세 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }]
+        });
+      } catch (e) {
+        console.error('[gateDetailKakao] 오류:', e);
+        alert('카카오톡 공유 중 오류가 발생했습니다.');
+      }
+    };
+
     // 관문 상세 모달 열기
     async function openGateModal(itemId) {
       const item = gateAllData.find(d => d._id === itemId);
       if (!item) return;
 
+      // 인쇄/PDF/카카오톡 컨텍스트 저장
+      _gateDetailCtx = { grade: item.grade, name: item.name, gate: item.gate };
+
       const modal = document.getElementById('gateModal');
       const modalTitle = document.getElementById('gateModalTitle');
       const modalBody = document.getElementById('gateModalBody');
 
-      modalTitle.textContent = `${item.name} - 관문 ${item.gate} 상세 정보`;
+      modalTitle.textContent = `${item.grade} ${item.name} - 관문 ${item.gate} 상세 정보`;
       modalBody.innerHTML = '<div class="loading-modal">데이터를 불러오는 중...</div>';
       modal.classList.add('show');
 
@@ -1367,6 +1501,7 @@
               <thead>
                 <tr>
                   <th>문항</th>
+                  <th>과목</th>
                   <th>단원명</th>
                   <th>지수</th>
                   <th>누적 시간</th>
@@ -1379,6 +1514,7 @@
                   .map(q => `
                   <tr style="${weakestQuestionNos.has(q.questionNo) ? 'background:#fff8f8;' : ''}">
                     <td style="${weakestQuestionNos.has(q.questionNo) ? 'color:#c62828; font-weight:600;' : ''}">문항 ${q.questionNo}</td>
+                    <td style="font-size:12px; font-weight:600; color:#495057;">${getSubjectName(q.unitCode || q.unitTitle || '')}</td>
                     <td style="font-size:11px; max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${q.unitTitle || q.unitCode || '-'}">${q.unitTitle || q.unitCode || '-'}</td>
                     <td><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:${q.qType === 'q2' ? '#e3f2fd' : '#fff3e0'}; color:${q.qType === 'q2' ? '#1565c0' : '#e65100'};">${getIndexName(q.qType)}</span></td>
                     <td>${formatTime(q.cumulativeTime)}</td>
@@ -1543,6 +1679,16 @@
     function closeMidtermModal(event) {
       if (event && event.target !== event.currentTarget) return;
       document.getElementById('midtermResultModal').classList.remove('show');
+    }
+  </script>
+
+  <!-- 인쇄/PDF/카카오톡 공유용 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" crossorigin="anonymous"></script>
+  <script>
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+      Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
     }
   </script>
 </body>
