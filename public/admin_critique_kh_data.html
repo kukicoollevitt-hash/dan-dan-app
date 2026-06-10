@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>비평 및 특강 데이터 — 관리자</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0fdfa; color: #1f2937; }
+  .topbar { background: linear-gradient(135deg, #0d9488, #14b8a6); color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(13,148,136,0.25); }
+  .topbar h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.3px; }
+  .topbar .back { color: #fff; text-decoration: none; background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: 16px; font-size: 13px; font-weight: 700; border: 1px solid rgba(255,255,255,0.3); }
+  .container { max-width: 1480px; margin: 0 auto; padding: 22px 24px 60px; }
+  .section { background: #fff; border-radius: 16px; padding: 18px 20px; margin-bottom: 22px; box-shadow: 0 4px 18px rgba(13,148,136,0.07); border: 1px solid #ccfbf1; }
+  .section-title { font-size: 18px; font-weight: 800; color: #0d9488; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .section-title .count { background: #ccfbf1; color: #0d9488; font-size: 13px; padding: 3px 10px; border-radius: 12px; font-weight: 700; }
+  .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-row input, .filter-row select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; outline: none; min-width: 140px; }
+  .filter-row input:focus, .filter-row select:focus { border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20,184,166,0.15); }
+  .filter-row .reset-btn { padding: 8px 14px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; }
+  .filter-row .reset-btn:hover { background: #e5e7eb; }
+  .table-wrap { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+  thead th { background: #0d9488; color: #fff; padding: 10px 8px; text-align: left; font-weight: 700; font-size: 12px; letter-spacing: 0.3px; }
+  thead th[data-sort] { cursor: pointer; user-select: none; }
+  thead th[data-sort]:hover { background: #0f766e; }
+  thead th.sorted-asc::after { content: ' ▲'; }
+  thead th.sorted-desc::after { content: ' ▼'; }
+  tbody td { padding: 9px 8px; border-bottom: 1px solid #f1f5f9; }
+  tbody tr:hover { background: #f0fdfa; }
+  tbody .num { color: #94a3b8; font-weight: 600; }
+  .empty { padding: 40px; text-align: center; color: #94a3b8; font-size: 14px; }
+  .more-bar { text-align: center; padding: 14px 0 0; }
+  .more-btn { padding: 9px 24px; background: #fff; border: 2px solid #0d9488; color: #0d9488; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; }
+  .more-btn:hover { background: #0d9488; color: #fff; }
+  .more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .report-btn { padding: 6px 12px; background: linear-gradient(135deg, #14b8a6, #0d9488); color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .report-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(20,184,166,0.35); }
+  .stars { color: #f59e0b; letter-spacing: 1px; font-size: 14px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .badge.kh { background: #dcfce7; color: #166534; }
+  .badge.done { background: #d4f1c7; color: #2e9b3f; }
+  .badge.miss { background: #f1f5f9; color: #94a3b8; }
+  .info-line { font-size: 12px; color: #64748b; margin: 8px 4px 0; }
+  /* 상단 탭바 */
+  .tab-bar {
+    display: flex; gap: 10px;
+    background: #fff; border-radius: 14px; padding: 6px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 18px rgba(13,148,136,0.07);
+    border: 1px solid #ccfbf1;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px 18px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+  }
+  .tab-btn:hover { background: #f0fdfa; color: #0d9488; }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(13,148,136,0.3);
+  }
+  .tab-btn .badge-count {
+    background: rgba(255,255,255,0.25);
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+  .tab-btn:not(.active) .badge-count {
+    background: #ccfbf1; color: #0d9488;
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+  @media print {
+    .topbar, .filter-row, .report-btn, .more-bar { display: none !important; }
+    .section { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>📚 비평 및 특강 데이터 관리</h1>
+  <a class="back" href="javascript:history.back()">← 뒤로</a>
+</div>
+
+<div class="container">
+  <!-- 상단 탭 -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="crit">📰 BRAIN비평 <span class="badge-count" id="tabCritCount">0</span></button>
+    <button class="tab-btn" data-tab="kh">🇰🇷 BRAIN한국사 <span class="badge-count" id="tabKhCount">0</span></button>
+  </div>
+  <!-- 비평 섹션 -->
+  <div class="section active" id="sectionCrit">
+    <h2 class="section-title">
+      📰 BRAIN비평 (매일 시사문해) 제출 기록
+      <span class="count" id="critCount">0건</span>
+    </h2>
+    <div class="filter-row">
+      <input type="text" id="critSearchName" placeholder="👤 학생 이름 검색" />
+      <input type="text" id="critGrade" placeholder="🎓 학년 검색 (예: 초3)" />
+      <input type="text" id="critAcademy" placeholder="🏫 센터(학원) 검색" />
+      <select id="critSort">
+        <option value="date-desc">최근 날짜 순</option>
+        <option value="date-asc">오래된 날짜 순</option>
+        <option value="grade-asc">학년 오름차순</option>
+        <option value="name-asc">이름 가나다순</option>
+      </select>
+      <button class="reset-btn" onclick="resetCritFilter()">초기화</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px;">#</th>
+            <th data-sort-section="crit" data-sort="grade" style="width:80px;">학년</th>
+            <th data-sort-section="crit" data-sort="name" style="width:110px;">학생명</th>
+            <th style="width:140px;">학교</th>
+            <th data-sort-section="crit" data-sort="academy">센터(학원)</th>
+            <th data-sort-section="crit" data-sort="date" style="width:110px;">날짜</th>
+            <th style="width:100px;">분류</th>
+            <th>기사 제목</th>
+            <th style="width:90px;">별점</th>
+            <th style="width:100px;">리포트</th>
+          </tr>
+        </thead>
+        <tbody id="critTbody">
+          <tr><td colspan="10" class="empty">불러오는 중…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-line" id="critInfo"></div>
+    <div class="more-bar"><button class="more-btn" id="critMoreBtn" style="display:none;">더보기 (+10)</button></div>
+  </div>
+
+  <!-- 한국사 섹션 -->
+  <div class="section" id="sectionKh">
+    <h2 class="section-title">
+      🇰🇷 BRAIN한국사 (방학특강) 단원 완료 기록
+      <span class="count" id="khCount">0건</span>
+    </h2>
+    <div class="filter-row">
+      <input type="text" id="khSearchName" placeholder="👤 학생 이름 검색" />
+      <input type="text" id="khGrade" placeholder="🎓 학년 검색 (예: 초3)" />
+      <input type="text" id="khAcademy" placeholder="🏫 센터(학원) 검색" />
+      <select id="khSort">
+        <option value="date-desc">최근 완료 순</option>
+        <option value="date-asc">오래된 순</option>
+        <option value="unit-asc">단원 오름차순</option>
+        <option value="grade-asc">학년 오름차순</option>
+        <option value="name-asc">이름 가나다순</option>
+      </select>
+      <button class="reset-btn" onclick="resetKhFilter()">초기화</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px;">#</th>
+            <th data-sort-section="kh" data-sort="grade" style="width:80px;">학년</th>
+            <th data-sort-section="kh" data-sort="name" style="width:110px;">학생명</th>
+            <th style="width:140px;">학교</th>
+            <th data-sort-section="kh" data-sort="academy">센터(학원)</th>
+            <th data-sort-section="kh" data-sort="unit" style="width:80px;">단원</th>
+            <th>단원명</th>
+            <th style="width:220px;">완료 여부</th>
+            <th data-sort-section="kh" data-sort="date" style="width:150px;">완료일</th>
+            <th style="width:100px;">리포트</th>
+          </tr>
+        </thead>
+        <tbody id="khTbody">
+          <tr><td colspan="10" class="empty">불러오는 중…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-line" id="khInfo"></div>
+    <div class="more-bar"><button class="more-btn" id="khMoreBtn" style="display:none;">더보기 (+10)</button></div>
+
+    <!-- ===== 한국사 단원평가 기록 (시도별) ===== -->
+    <h2 class="section-title" style="margin-top:30px;">
+      📝 BRAIN한국사 단원평가 시도 기록
+      <span class="count" id="khExamCount">0건</span>
+    </h2>
+    <div class="filter-row">
+      <input type="text" id="khExamSearchName" placeholder="👤 학생 이름 검색" />
+      <input type="text" id="khExamGrade" placeholder="🎓 학년 검색 (예: 초3)" />
+      <input type="text" id="khExamAcademy" placeholder="🏫 센터(학원) 검색" />
+      <select id="khExamSort">
+        <option value="date-desc">최근 응시 순</option>
+        <option value="date-asc">오래된 순</option>
+        <option value="score-desc">점수 높은 순</option>
+        <option value="score-asc">점수 낮은 순</option>
+        <option value="name-asc">이름 가나다순</option>
+      </select>
+      <button class="reset-btn" onclick="resetKhExamFilter()">초기화</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th data-sort-section="khExam" data-sort="grade" style="width:70px;">학년</th>
+            <th data-sort-section="khExam" data-sort="name" style="width:90px;">학생명</th>
+            <th style="width:120px;">학교</th>
+            <th data-sort-section="khExam" data-sort="academy">센터(학원)</th>
+            <th data-sort-section="khExam" data-sort="score" style="width:60px;text-align:center;">점수</th>
+            <th style="width:70px;">정답</th>
+            <th style="width:90px;">결과</th>
+            <th data-sort-section="khExam" data-sort="date" style="width:140px;">응시일</th>
+            <th style="width:130px;white-space:nowrap;">시험지</th>
+          </tr>
+        </thead>
+        <tbody id="khExamTbody"><tr><td colspan="10" class="empty">불러오는 중…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="info-line" id="khExamInfo"></div>
+    <div class="more-bar"><button class="more-btn" id="khExamMoreBtn" style="display:none;">더보기 (+10)</button></div>
+  </div>
+</div>
+
+<script>
+  const PAGE_SIZE = 10;
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmtDate(d) { if (!d) return '-'; const x = new Date(d); return isNaN(x) ? '-' : x.toLocaleDateString('ko-KR') + ' ' + x.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }); }
+  function fmtStars(n) { if (n == null) return '-'; const f = Math.floor(n), h = (n - f) >= 0.5 ? 1 : 0; let s = ''; for (let i=0;i<f;i++) s+='★'; if (h) s+='½'; for (let i=f+h;i<5;i++) s+='☆'; return `<span class="stars">${s}</span>`; }
+
+  // ===== 섹션별 상태 =====
+  const state = {
+    crit:   { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null },
+    kh:     { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null },
+    khExam: { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null }
+  };
+
+  // ===== 헤더 정렬 클릭 =====
+  document.querySelectorAll('th[data-sort-section]').forEach(th => {
+    th.onclick = () => {
+      const sec = th.dataset.sortSection;
+      const key = th.dataset.sort;
+      const st = state[sec];
+      if (st.sort === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+      else { st.sort = key; st.dir = 'desc'; }
+      st.offset = 0;
+      if (sec === 'crit') loadCrit(true); else loadKh(true);
+    };
+  });
+
+  function updateHeaderSort(sec) {
+    document.querySelectorAll(`th[data-sort-section="${sec}"]`).forEach(th => {
+      th.classList.remove('sorted-asc', 'sorted-desc');
+      if (th.dataset.sort === state[sec].sort) {
+        th.classList.add(state[sec].dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      }
+    });
+  }
+
+  // ===== 비평 로드 =====
+  async function loadCrit(reset) {
+    const st = state.crit;
+    if (reset) { st.offset = 0; $('critTbody').innerHTML = ''; }
+    updateHeaderSort('crit');
+    const params = new URLSearchParams({
+      search: $('critSearchName').value.trim(),
+      grade: $('critGrade').value,
+      academy: $('critAcademy').value,
+      sort: st.sort,
+      dir: st.dir,
+      limit: PAGE_SIZE,
+      offset: st.offset
+    });
+    try {
+      const res = await fetch(`/api/admin/critique-list?${params}`);
+      const data = await res.json();
+      if (!data.ok) {
+        $('critTbody').innerHTML = `<tr><td colspan="10" class="empty" style="color:#c00;">${esc(data.message || '오류')}</td></tr>`;
+        return;
+      }
+      st.total = data.total;
+      $('critCount').textContent = `${data.total}건`;
+      $('critInfo').textContent = `총 ${data.total}건 중 ${st.offset + data.items.length}건 표시`;
+
+      renderCritRows(data.items);
+      st.offset += data.items.length;
+      $('critMoreBtn').style.display = st.offset < st.total ? 'inline-block' : 'none';
+    } catch (err) {
+      console.error(err);
+      $('critTbody').innerHTML = '<tr><td colspan="10" class="empty" style="color:#c00;">네트워크 오류</td></tr>';
+    }
+  }
+
+  function renderCritRows(items) {
+    const tbody = $('critTbody');
+    if (state.crit.offset === 0 && items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">데이터 없음</td></tr>';
+      return;
+    }
+    const html = items.map((it, idx) => `
+      <tr>
+        <td class="num">${state.crit.offset + idx + 1}</td>
+        <td>${esc(it.grade)}</td>
+        <td><b>${esc(it.name)}</b></td>
+        <td>${esc(it.school || '-')}</td>
+        <td>${esc(it.academyName || '-')}</td>
+        <td>${esc(it.date || '-')}</td>
+        <td>${esc(it.category || '-')}</td>
+        <td>${esc(it.title || '-')}</td>
+        <td>${fmtStars(it.stars)}</td>
+        <td><button class="report-btn" onclick="openReport('crit','${esc(it.grade)}','${esc(it.name)}')">📋 리포트</button></td>
+      </tr>`).join('');
+    if (state.crit.offset === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+  }
+
+  // ===== 한국사 로드 =====
+  async function loadKh(reset) {
+    const st = state.kh;
+    if (reset) { st.offset = 0; $('khTbody').innerHTML = ''; }
+    updateHeaderSort('kh');
+    const params = new URLSearchParams({
+      search: $('khSearchName').value.trim(),
+      grade: $('khGrade').value,
+      academy: $('khAcademy').value,
+      sort: st.sort,
+      dir: st.dir,
+      limit: PAGE_SIZE,
+      offset: st.offset
+    });
+    try {
+      const res = await fetch(`/api/admin/kh-list?${params}`);
+      const data = await res.json();
+      if (!data.ok) {
+        $('khTbody').innerHTML = `<tr><td colspan="10" class="empty" style="color:#c00;">${esc(data.message || '오류')}</td></tr>`;
+        return;
+      }
+      st.total = data.total;
+      $('khCount').textContent = `${data.total}건`;
+      $('khInfo').textContent = `총 ${data.total}건 중 ${st.offset + data.items.length}건 표시`;
+
+      renderKhRows(data.items);
+      st.offset += data.items.length;
+      $('khMoreBtn').style.display = st.offset < st.total ? 'inline-block' : 'none';
+    } catch (err) {
+      console.error(err);
+      $('khTbody').innerHTML = '<tr><td colspan="10" class="empty" style="color:#c00;">네트워크 오류</td></tr>';
+    }
+  }
+
+  function renderKhRows(items) {
+    const tbody = $('khTbody');
+    if (state.kh.offset === 0 && items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">데이터 없음</td></tr>';
+      return;
+    }
+    const html = items.map((it, idx) => {
+      const status = `
+        <span class="badge ${it.passageDone ? 'done' : 'miss'}">${it.passageDone ? '✓' : '·'} 본문</span>
+        <span class="badge ${it.vocabDone ? 'done' : 'miss'}">${it.vocabDone ? '✓' : '·'} 어휘</span>
+        <span class="badge ${it.creativeDone ? 'done' : 'miss'}">${it.creativeDone ? '✓' : '·'} 창의</span>`;
+      const unitKor = (() => {
+        const m = String(it.unit).match(/^kh_(\d{1,2})$/);
+        return m ? `<span class="badge kh">${parseInt(m[1])}강</span>` : esc(it.unit);
+      })();
+      return `
+        <tr>
+          <td class="num">${state.kh.offset + idx + 1}</td>
+          <td>${esc(it.grade)}</td>
+          <td><b>${esc(it.name)}</b></td>
+          <td>${esc(it.school || '-')}</td>
+          <td>${esc(it.academyName || '-')}</td>
+          <td>${unitKor}</td>
+          <td>${esc(it.unitTitle)}</td>
+          <td>${status}</td>
+          <td style="font-size:12px;color:#6b7280;">${fmtDate(it.completedAt)}</td>
+          <td><button class="report-btn" onclick="openReport('kh','${esc(it.grade)}','${esc(it.name)}')">📋 리포트</button></td>
+        </tr>`;
+    }).join('');
+    if (state.kh.offset === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+  }
+
+  // ===== 검색·필터·정렬 핸들러 =====
+  function debounce(sec, fn) {
+    return () => {
+      clearTimeout(state[sec].searchTimer);
+      state[sec].searchTimer = setTimeout(fn, 300);
+    };
+  }
+  function bindCritControls() {
+    $('critSearchName').oninput = debounce('crit', () => loadCrit(true));
+    $('critGrade').oninput     = debounce('crit', () => loadCrit(true));
+    $('critAcademy').oninput   = debounce('crit', () => loadCrit(true));
+    $('critSort').onchange = () => {
+      const [s, d] = $('critSort').value.split('-');
+      state.crit.sort = s; state.crit.dir = d;
+      loadCrit(true);
+    };
+    $('critMoreBtn').onclick = () => loadCrit(false);
+  }
+  function bindKhControls() {
+    $('khSearchName').oninput = debounce('kh', () => loadKh(true));
+    $('khGrade').oninput      = debounce('kh', () => loadKh(true));
+    $('khAcademy').oninput    = debounce('kh', () => loadKh(true));
+    $('khSort').onchange = () => {
+      const [s, d] = $('khSort').value.split('-');
+      state.kh.sort = s; state.kh.dir = d;
+      loadKh(true);
+    };
+    $('khMoreBtn').onclick = () => loadKh(false);
+  }
+  window.resetCritFilter = function() {
+    $('critSearchName').value = ''; $('critGrade').value = ''; $('critAcademy').value = ''; $('critSort').value = 'date-desc';
+    state.crit.sort = 'date'; state.crit.dir = 'desc';
+    loadCrit(true);
+  };
+  window.resetKhFilter = function() {
+    $('khSearchName').value = ''; $('khGrade').value = ''; $('khAcademy').value = ''; $('khSort').value = 'date-desc';
+    state.kh.sort = 'date'; state.kh.dir = 'desc';
+    loadKh(true);
+  };
+
+  // ===== 리포트 열기 (학생 메인 새 탭) =====
+  window.openReport = function(type, grade, name) {
+    const auto = type === 'kh' ? 'khReport' : 'critReport';
+    window.open(`/menu?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&autoOpen=${auto}`, '_blank');
+  };
+
+  // ===== 한국사 단원평가 시도 기록 =====
+  async function loadKhExam(reset) {
+    const st = state.khExam;
+    if (reset) { st.offset = 0; $('khExamTbody').innerHTML = ''; }
+    document.querySelectorAll(`th[data-sort-section="khExam"]`).forEach(th => {
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.sort === st.sort) th.classList.add(st.dir==='asc'?'sorted-asc':'sorted-desc');
+    });
+    const params = new URLSearchParams({
+      search: $('khExamSearchName').value.trim(),
+      grade: $('khExamGrade').value.trim(),
+      academy: $('khExamAcademy').value.trim(),
+      sort: st.sort, dir: st.dir, limit: PAGE_SIZE, offset: st.offset
+    });
+    try {
+      const res = await fetch(`/api/admin/kh-exam-list?${params}`);
+      const data = await res.json();
+      if (!data.ok) {
+        $('khExamTbody').innerHTML = `<tr><td colspan="10" class="empty" style="color:#c00;">${esc(data.message||'오류')}</td></tr>`;
+        return;
+      }
+      st.total = data.total;
+      $('khExamCount').textContent = `${data.total}건`;
+      $('khExamInfo').textContent = `총 ${data.total}건 중 ${st.offset + data.items.length}건 표시`;
+      renderKhExamRows(data.items);
+      st.offset += data.items.length;
+      $('khExamMoreBtn').style.display = st.offset < st.total ? 'inline-block' : 'none';
+    } catch (err) {
+      console.error(err);
+      $('khExamTbody').innerHTML = '<tr><td colspan="10" class="empty" style="color:#c00;">네트워크 오류</td></tr>';
+    }
+  }
+
+  function renderKhExamRows(items) {
+    const tbody = $('khExamTbody');
+    if (state.khExam.offset === 0 && items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">단원평가 응시 기록이 없습니다.</td></tr>';
+      return;
+    }
+    const html = items.map((it, idx) => {
+      const dt = new Date(it.attemptedAt);
+      const dtStr = dt.toLocaleDateString('ko-KR') + ' ' + dt.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+      const badge = it.passed
+        ? `<span class="badge" style="background:linear-gradient(135deg,#facc15,#d97706);color:#fff;">🏆 합격</span>`
+        : `<span class="badge" style="background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;">📚 재도전</span>`;
+      return `<tr>
+        <td class="num">${state.khExam.offset + idx + 1}</td>
+        <td>${esc(it.grade)}</td>
+        <td><b>${esc(it.name)}</b></td>
+        <td>${esc(it.school || '-')}</td>
+        <td>${esc(it.academyName || '-')}</td>
+        <td style="font-weight:800;color:${it.passed?'#d97706':'#64748b'};font-size:15px;text-align:center;padding-left:4px;padding-right:4px;">${it.score100}점</td>
+        <td>${it.correctCount}/${it.total}</td>
+        <td>${badge}</td>
+        <td style="font-size:12px;color:#6b7280;">${dtStr}</td>
+        <td style="white-space:nowrap;"><button class="report-btn" style="background:linear-gradient(135deg,#d97706,#92400e);white-space:nowrap;" onclick="openExamViewer('${esc(it.grade)}','${esc(it.name)}','${esc(it.id)}')">🧾 시험지 보기</button></td>
+      </tr>`;
+    }).join('');
+    if (state.khExam.offset === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+  }
+
+  function bindKhExamControls() {
+    $('khExamSearchName').oninput = debounce('khExam', () => loadKhExam(true));
+    $('khExamGrade').oninput      = debounce('khExam', () => loadKhExam(true));
+    $('khExamAcademy').oninput    = debounce('khExam', () => loadKhExam(true));
+    $('khExamSort').onchange = () => {
+      const [s, d] = $('khExamSort').value.split('-');
+      state.khExam.sort = s; state.khExam.dir = d;
+      loadKhExam(true);
+    };
+    $('khExamMoreBtn').onclick = () => loadKhExam(false);
+    document.querySelectorAll('th[data-sort-section="khExam"]').forEach(th => {
+      th.onclick = () => {
+        const key = th.dataset.sort;
+        const st = state.khExam;
+        if (st.sort === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+        else { st.sort = key; st.dir = 'desc'; }
+        st.offset = 0;
+        loadKhExam(true);
+      };
+    });
+  }
+  window.resetKhExamFilter = function() {
+    $('khExamSearchName').value = ''; $('khExamGrade').value = ''; $('khExamAcademy').value = ''; $('khExamSort').value = 'date-desc';
+    state.khExam.sort = 'date'; state.khExam.dir = 'desc';
+    loadKhExam(true);
+  };
+  // 시험지 보기 — 학생 메인을 새 탭으로 열어 자동 표시
+  window.openExamViewer = function(grade, name, examId) {
+    window.open(`/menu?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&autoOpen=khReport&khExamId=${encodeURIComponent(examId)}`, '_blank');
+  };
+
+  // 탭 전환
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      const t = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(t === 'crit' ? 'sectionCrit' : 'sectionKh').classList.add('active');
+    };
+  });
+
+  // 카운트 동기화 — 섹션 count → 탭 배지
+  const _origCritCount = document.getElementById('critCount');
+  const _origKhCount = document.getElementById('khCount');
+  const _critObs = new MutationObserver(() => { document.getElementById('tabCritCount').textContent = _origCritCount.textContent.replace('건','').trim() || '0'; });
+  const _khObs = new MutationObserver(() => { document.getElementById('tabKhCount').textContent = _origKhCount.textContent.replace('건','').trim() || '0'; });
+  _critObs.observe(_origCritCount, { childList: true, characterData: true, subtree: true });
+  _khObs.observe(_origKhCount, { childList: true, characterData: true, subtree: true });
+
+  // 초기 로드
+  bindCritControls();
+  bindKhControls();
+  bindKhExamControls();
+  loadCrit(true);
+  loadKh(true);
+  loadKhExam(true);
+</script>
+</body>
+</html>

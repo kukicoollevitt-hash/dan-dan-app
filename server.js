@@ -379,6 +379,7 @@ const PromotionOrder = require("./models/PromotionOrder");
 const CenterContract = require("./models/CenterContract");
 const CritiqueSubmission = require("./models/CritiqueSubmission");
 const KhSubmission = require("./models/KhSubmission");
+const KhExamResult = require("./models/KhExamResult");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -38247,9 +38248,13 @@ app.post('/api/kh/save-passage', async (req, res) => {
     if (!grade || !name || !unit) {
       return res.status(400).json({ ok: false, message: '학생/강의 정보 필요' });
     }
+    // 🇰🇷 academyName 자동 채움 (User에서 조회)
+    const _user = await User.findOne({ grade, name }, { academyName: 1 }).lean();
+    const _academyName = _user?.academyName || '';
     const update = {
       $set: {
         grade, name, phone: phone || '',
+        academyName: _academyName,
         unit,
         'passage.radar': radar || {},
         'passage.readingTime': readingTime || 0,
@@ -38278,9 +38283,12 @@ app.post('/api/kh/save-vocab', async (req, res) => {
     if (!grade || !name || !unit) {
       return res.status(400).json({ ok: false, message: '학생/강의 정보 필요' });
     }
+    const _user = await User.findOne({ grade, name }, { academyName: 1 }).lean();
+    const _academyName = _user?.academyName || '';
     const update = {
       $set: {
         grade, name, phone: phone || '',
+        academyName: _academyName,
         unit,
         'vocab.answers': Array.isArray(answers) ? answers : [],
         'vocab.score': typeof score === 'number' ? score : null,
@@ -38313,9 +38321,12 @@ app.post('/api/kh/save-creative', async (req, res) => {
     if (!answer || !String(answer).trim()) {
       return res.status(400).json({ ok: false, message: '답안을 입력해 주세요.' });
     }
+    const _user = await User.findOne({ grade, name }, { academyName: 1 }).lean();
+    const _academyName = _user?.academyName || '';
     const update = {
       $set: {
         grade, name, phone: phone || '',
+        academyName: _academyName,
         unit,
         'creative.question': question || '',
         'creative.answer': String(answer).trim(),
@@ -38389,6 +38400,309 @@ app.get('/api/kh/report', async (req, res) => {
   }
 });
 // ===================== /BRAIN한국사 API =====================
+
+// ===================== 비평 및 특강 데이터 (관리자용) =====================
+// 학원 관리자: 자기 학원만 / 슈퍼관리자: 전체 (또는 viewingBranch 학원만)
+// 권한 헬퍼
+function getAdminAcademyFilter(req) {
+  // 슈퍼관리자 조회 모드
+  if (req.session && req.session.viewingBranch) {
+    return { academyName: req.session.viewingBranch.academyName };
+  }
+  if (req.session && req.session.admin) {
+    const admin = req.session.admin;
+    const isSuper = admin.role === 'super' || admin.isSuper === true;
+    if (isSuper) return null; // 전체 허용
+    if (admin.academyName) return { academyName: admin.academyName };
+  }
+  return undefined; // 미인증
+}
+
+// 행 단위: 비평 1건 = 1행 (학생이 N일치 제출했으면 N행)
+app.get('/api/admin/critique-list', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+
+    const { search, grade, academy, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
+    const query = {};
+    if (acFilter) query.academyName = acFilter.academyName;
+    else if (academy && academy.trim()) query.academyName = { $regex: academy.trim(), $options: 'i' };
+    if (grade && grade.trim()) query.grade = { $regex: grade.trim(), $options: 'i' };
+    if (search) query.name = { $regex: search.trim(), $options: 'i' };
+
+    const sortObj = {};
+    if (sort === 'date') sortObj.date = dir === 'asc' ? 1 : -1;
+    else if (sort === 'grade') sortObj.grade = dir === 'asc' ? 1 : -1;
+    else if (sort === 'academy') sortObj.academyName = dir === 'asc' ? 1 : -1;
+    else if (sort === 'name') sortObj.name = dir === 'asc' ? 1 : -1;
+    else sortObj.submittedAt = -1;
+
+    const lim = Math.min(parseInt(limit) || 10, 200);
+    const off = Math.max(parseInt(offset) || 0, 0);
+
+    const total = await CritiqueSubmission.countDocuments(query);
+    const items = await CritiqueSubmission.find(query, {
+      grade: 1, name: 1, academyName: 1, date: 1, contentGrade: 1, title: 1, category: 1,
+      submittedAt: 1, 'grading.stars': 1, 'grading.totalScore': 1
+    }).sort(sortObj).skip(off).limit(lim).lean();
+
+    // 학생들의 학교 정보 (User 컬렉션에서 가져옴) — name+grade로 join
+    const keys = [...new Set(items.map(i => `${i.grade}|${i.name}`))];
+    const users = await User.find({
+      $or: keys.map(k => { const [g, n] = k.split('|'); return { grade: g, name: n }; })
+    }, { grade: 1, name: 1, school: 1 }).lean();
+    const schoolMap = {};
+    users.forEach(u => { schoolMap[`${u.grade}|${u.name}`] = u.school || ''; });
+
+    // 학원/학년 필터 옵션 (검색 결과 한정 X — 전체 옵션)
+    const baseForFilters = acFilter ? { academyName: acFilter.academyName } : {};
+    const academies = acFilter ? [acFilter.academyName] :
+      (await CritiqueSubmission.distinct('academyName', baseForFilters)).filter(Boolean).sort();
+    const grades = (await CritiqueSubmission.distinct('grade', baseForFilters)).filter(Boolean).sort();
+
+    res.json({
+      ok: true,
+      items: items.map(i => ({
+        grade: i.grade, name: i.name,
+        school: schoolMap[`${i.grade}|${i.name}`] || '',
+        academyName: i.academyName || '',
+        date: i.date, contentGrade: i.contentGrade,
+        title: i.title || '', category: i.category || '',
+        submittedAt: i.submittedAt,
+        stars: i.grading?.stars ?? null,
+        totalScore: i.grading?.totalScore ?? null
+      })),
+      total,
+      filters: { academies, grades }
+    });
+  } catch (err) {
+    console.error('[admin/critique-list] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 행 단위: 한국사 1단원 = 1행 (한 학생이 N단원 완료면 N행)
+app.get('/api/admin/kh-list', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+
+    const { search, grade, academy, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
+    const query = {};
+    if (acFilter) query.academyName = acFilter.academyName;
+    else if (academy && academy.trim()) query.academyName = { $regex: academy.trim(), $options: 'i' };
+    if (grade && grade.trim()) query.grade = { $regex: grade.trim(), $options: 'i' };
+    if (search) query.name = { $regex: search.trim(), $options: 'i' };
+
+    const sortObj = {};
+    if (sort === 'date') sortObj.updatedAt = dir === 'asc' ? 1 : -1;
+    else if (sort === 'grade') sortObj.grade = dir === 'asc' ? 1 : -1;
+    else if (sort === 'academy') sortObj.academyName = dir === 'asc' ? 1 : -1;
+    else if (sort === 'name') sortObj.name = dir === 'asc' ? 1 : -1;
+    else if (sort === 'unit') sortObj.unit = dir === 'asc' ? 1 : -1;
+    else sortObj.updatedAt = -1;
+
+    const lim = Math.min(parseInt(limit) || 10, 200);
+    const off = Math.max(parseInt(offset) || 0, 0);
+
+    const total = await KhSubmission.countDocuments(query);
+    const items = await KhSubmission.find(query, {
+      grade: 1, name: 1, academyName: 1, unit: 1, updatedAt: 1,
+      'passage.completed': 1, 'passage.completedAt': 1,
+      'vocab.completed': 1, 'vocab.completedAt': 1, 'vocab.score': 1, 'vocab.total': 1,
+      'creative.submitted': 1, 'creative.submittedAt': 1
+    }).sort(sortObj).skip(off).limit(lim).lean();
+
+    const keys = [...new Set(items.map(i => `${i.grade}|${i.name}`))];
+    const users = await User.find({
+      $or: keys.map(k => { const [g, n] = k.split('|'); return { grade: g, name: n }; })
+    }, { grade: 1, name: 1, school: 1 }).lean();
+    const schoolMap = {};
+    users.forEach(u => { schoolMap[`${u.grade}|${u.name}`] = u.school || ''; });
+
+    // 단원 제목 매핑 (서버 측 상수)
+    const KH_TITLES = {
+      kh_01: '역사는 왜 배워야 할까?', kh_02: '선사 시대와 인류의 시작',
+      kh_03: '청동기와 고조선',       kh_04: '여러 나라의 성장',
+      kh_05: '삼국의 건국과 경쟁',    kh_06: '삼국의 전성기',
+      kh_07: '삼국 통일 전쟁',        kh_08: '통일신라와 발해',
+      kh_09: '고려의 건국과 후삼국 통일', kh_10: '고려의 정치와 대외 관계',
+      kh_11: '고려 문화와 과학',      kh_12: '조선의 건국과 국가 체제',
+      kh_13: '세종과 조선의 전성기',  kh_14: '사림과 붕당 정치',
+      kh_15: '임진왜란과 병자호란',   kh_16: '조선 후기의 변화',
+      kh_17: '개항과 근대화의 시작',  kh_18: '대한제국과 국권 침탈',
+      kh_19: '일제강점기와 독립운동', kh_20: '광복과 대한민국의 성장'
+    };
+
+    const baseForFilters = acFilter ? { academyName: acFilter.academyName } : {};
+    const academies = acFilter ? [acFilter.academyName] :
+      (await KhSubmission.distinct('academyName', baseForFilters)).filter(Boolean).sort();
+    const grades = (await KhSubmission.distinct('grade', baseForFilters)).filter(Boolean).sort();
+
+    res.json({
+      ok: true,
+      items: items.map(i => ({
+        grade: i.grade, name: i.name,
+        school: schoolMap[`${i.grade}|${i.name}`] || '',
+        academyName: i.academyName || '',
+        unit: i.unit,
+        unitTitle: KH_TITLES[i.unit] || i.unit,
+        completedAt: i.updatedAt,
+        passageDone: !!(i.passage && i.passage.completed),
+        vocabDone: !!(i.vocab && i.vocab.completed),
+        creativeDone: !!(i.creative && i.creative.submitted),
+        vocabScore: i.vocab?.score ?? null,
+        vocabTotal: i.vocab?.total ?? null
+      })),
+      total,
+      filters: { academies, grades }
+    });
+  } catch (err) {
+    console.error('[admin/kh-list] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 관리자: 특정 학생의 비평 제출 내역 전체 (월 무관)
+app.get('/api/admin/critique-student-detail', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+
+    const query = { grade, name };
+    if (acFilter) query.academyName = acFilter.academyName;
+
+    const subs = await CritiqueSubmission.find(query, { _id: 0, __v: 0 })
+      .sort({ date: -1 }).lean();
+    res.json({ ok: true, submissions: subs });
+  } catch (err) {
+    console.error('[admin/critique-student-detail] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// ===== BRAIN한국사 단원평가 결과 (학생 시도별 영구 보존) =====
+// 시험 결과 저장
+app.post('/api/kh/exam/save', async (req, res) => {
+  try {
+    const { grade, name, phone, score100, correctCount, total, passed, durationSeconds, catStats, questions } = req.body;
+    if (!grade || !name || typeof score100 !== 'number') {
+      return res.status(400).json({ ok: false, message: '학생/점수 정보 필요' });
+    }
+    const _user = await User.findOne({ grade, name }, { academyName: 1 }).lean();
+    const _academyName = _user?.academyName || '';
+    const doc = await KhExamResult.create({
+      grade, name, phone: phone || '',
+      academyName: _academyName,
+      score100, correctCount, total,
+      passed: !!passed,
+      durationSeconds: durationSeconds || 0,
+      catStats: catStats || {},
+      questions: Array.isArray(questions) ? questions : [],
+      attemptedAt: new Date()
+    });
+    res.json({ ok: true, id: doc._id, attemptedAt: doc.attemptedAt });
+  } catch (err) {
+    console.error('[한국사 시험] save 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 학생 본인 시도 이력
+app.get('/api/kh/exam/my-results', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    const results = await KhExamResult.find({ grade, name }, { __v: 0 })
+      .sort({ attemptedAt: -1 }).lean();
+    res.json({ ok: true, results });
+  } catch (err) {
+    console.error('[한국사 시험] my-results 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 시험 1건 상세 (시험지 보기)
+app.get('/api/kh/exam/detail', async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ ok: false, message: 'id 필요' });
+    const doc = await KhExamResult.findById(id, { __v: 0 }).lean();
+    if (!doc) return res.status(404).json({ ok: false, message: '기록 없음' });
+    res.json({ ok: true, result: doc });
+  } catch (err) {
+    console.error('[한국사 시험] detail 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 관리자: 시험 기록 목록 (학원 필터 자동)
+app.get('/api/admin/kh-exam-list', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+
+    const { search, grade, academy, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
+    const query = {};
+    if (acFilter) query.academyName = acFilter.academyName;
+    else if (academy && academy.trim()) query.academyName = { $regex: academy.trim(), $options: 'i' };
+    if (grade && grade.trim()) query.grade = { $regex: grade.trim(), $options: 'i' };
+    if (search) query.name = { $regex: search.trim(), $options: 'i' };
+
+    const sortObj = {};
+    if (sort === 'date') sortObj.attemptedAt = dir === 'asc' ? 1 : -1;
+    else if (sort === 'score') sortObj.score100 = dir === 'asc' ? 1 : -1;
+    else if (sort === 'name') sortObj.name = dir === 'asc' ? 1 : -1;
+    else if (sort === 'grade') sortObj.grade = dir === 'asc' ? 1 : -1;
+    else sortObj.attemptedAt = -1;
+
+    const lim = Math.min(parseInt(limit) || 10, 200);
+    const off = Math.max(parseInt(offset) || 0, 0);
+
+    const total = await KhExamResult.countDocuments(query);
+    const items = await KhExamResult.find(query, {
+      grade: 1, name: 1, academyName: 1, score100: 1, correctCount: 1,
+      total: 1, passed: 1, attemptedAt: 1, durationSeconds: 1, catStats: 1
+    }).sort(sortObj).skip(off).limit(lim).lean();
+
+    // 학교 정보 join
+    const keys = [...new Set(items.map(i => `${i.grade}|${i.name}`))];
+    const users = await User.find({
+      $or: keys.map(k => { const [g, n] = k.split('|'); return { grade: g, name: n }; })
+    }, { grade: 1, name: 1, school: 1 }).lean();
+    const schoolMap = {};
+    users.forEach(u => { schoolMap[`${u.grade}|${u.name}`] = u.school || ''; });
+
+    res.json({
+      ok: true,
+      items: items.map(i => ({
+        id: i._id,
+        grade: i.grade, name: i.name,
+        school: schoolMap[`${i.grade}|${i.name}`] || '',
+        academyName: i.academyName || '',
+        score100: i.score100,
+        correctCount: i.correctCount,
+        total: i.total,
+        passed: i.passed,
+        attemptedAt: i.attemptedAt
+      })),
+      total
+    });
+  } catch (err) {
+    console.error('[admin/kh-exam-list] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+// ===== /한국사 단원평가 결과 =====
+
+// 페이지 라우트 — 관리자 전용
+app.get('/admin/critique-kh-data', requireAdminLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin_critique_kh_data.html'));
+});
+// ===================== /비평 및 특강 데이터 API =====================
 
 // 누적 캡 상태 조회 (24h 차단형) — 게임 시작 전 캡 도달 여부 확인
 app.get('/api/word-battle/daily-status', async (req, res) => {

@@ -13274,6 +13274,29 @@ async function performLogout() {
     // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
     restoreProgressOnRenderedList();
 
+    // 🆕 관리자 view-as 자동 리포트 열기 (URL 파라미터)
+    // 예: /menu?grade=초3&name=김윤슬&autoOpen=khReport
+    (function autoOpenReportFromUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ao = params.get('autoOpen');
+        if (!ao) return;
+        // 1초 지연으로 모든 init 후 열기
+        setTimeout(() => {
+          if (ao === 'khReport' && typeof window.openKhReportModal === 'function') {
+            window.openKhReportModal();
+          } else if (ao === 'critReport' && typeof window.openCritiqueModal === 'function') {
+            // 비평 달력 모달 열고, 평균 별점 배지 자동 클릭 → 이번 달 비평 모음
+            window.openCritiqueModal();
+            setTimeout(() => {
+              const avgBadge = document.getElementById('critAvgStars');
+              if (avgBadge) avgBadge.click();
+            }, 600);
+          }
+        }, 1000);
+      } catch (e) { console.warn('[autoOpen] 실패:', e); }
+    })();
+
     window.addEventListener("pageshow", async function (event) {
       // 뒤로가기 캐시에서 돌아올 때 로딩 가리기
       document.getElementById("loadingOverlay")?.classList.remove("show");
@@ -33282,6 +33305,38 @@ ${content}
       letter-spacing: 0.3px;
     }
 
+    /* 🔁 재학습 카드 — 단원평가 재도전 시 틀린 단원 */
+    .kh-unit-card.kh-relearn {
+      position: relative;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-color: #f59e0b;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.18);
+      animation: kh-relearn-pulse 2.4s ease-in-out infinite;
+    }
+    .kh-unit-card.kh-relearn:hover {
+      border-color: #d97706;
+      box-shadow: 0 6px 14px rgba(217, 119, 6, 0.28);
+    }
+    .kh-unit-card.kh-relearn .kh-unit-title { color: #78350f; }
+    .kh-unit-card.kh-relearn .kh-unit-sub { color: #92400e; }
+    .kh-unit-card .kh-relearn-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 11px;
+      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.45);
+      letter-spacing: 0.3px;
+    }
+    @keyframes kh-relearn-pulse {
+      0%, 100% { box-shadow: 0 2px 8px rgba(245, 158, 11, 0.18); }
+      50% { box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45); }
+    }
+
     /* 한국사 단원평가 카드 */
     .kh-exam-card {
       position: relative;
@@ -33304,6 +33359,17 @@ ${content}
       box-shadow: 0 8px 18px rgba(255, 126, 95, 0.35);
       border-color: #ff5e3a;
     }
+    .kh-exam-card .kh-unit-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #2a1a0a;
+      margin-bottom: 6px;
+    }
+    .kh-exam-card .kh-unit-sub {
+      font-size: 12px;
+      color: #7a6a55;
+      line-height: 1.5;
+    }
     .kh-exam-card.kh-exam-unlocked .kh-unit-title {
       color: #8b3a17;
       font-weight: 800;
@@ -33324,6 +33390,28 @@ ${content}
       box-shadow: 0 2px 6px rgba(255, 78, 42, 0.4);
       letter-spacing: 0.3px;
     }
+    /* 🏆 합격 배지 — 금색 */
+    .kh-exam-card .kh-exam-badge.kh-exam-badge-pass {
+      background: linear-gradient(135deg, #facc15 0%, #d97706 100%);
+      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.45);
+      padding: 4px 11px;
+      font-size: 12px;
+    }
+    /* 📚 불합격(재도전) 배지 — 회색 */
+    .kh-exam-card .kh-exam-badge.kh-exam-badge-fail {
+      background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+      box-shadow: 0 2px 6px rgba(100, 116, 139, 0.4);
+      padding: 4px 11px;
+      font-size: 12px;
+    }
+    /* 합격한 카드는 카드 자체도 금색 톤 강조 */
+    .kh-exam-card.kh-exam-passed {
+      background: linear-gradient(135deg, #fffbeb 0%, #fde68a 100%) !important;
+      border-color: #d97706 !important;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3) !important;
+    }
+    .kh-exam-card.kh-exam-passed .kh-unit-title { color: #78350f !important; }
+    .kh-exam-card.kh-exam-passed .kh-unit-sub { color: #92400e !important; }
     .kh-exam-card.kh-exam-locked {
       background: #f3f1ed;
       border-color: #d8d4cd;
@@ -33486,6 +33574,99 @@ ${content}
       color: #2a1a0a;
       line-height: 1.55;
       margin-bottom: 18px;
+    }
+    /* 본문 토글 (단원평가) */
+    .kh-exam-passage-wrap { margin-bottom: 14px; }
+    .kh-exam-passage-toggle {
+      background: linear-gradient(135deg, #fff7e6 0%, #ffe9c4 100%);
+      color: #6b3a1a;
+      border: 1.5px solid #e8c074;
+      padding: 7px 14px;
+      border-radius: 22px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .kh-exam-passage-toggle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(232, 192, 116, 0.4);
+    }
+    .kh-exam-passage {
+      margin-top: 8px;
+      padding: 14px 16px;
+      background: #fffaf0;
+      border: 1px solid #f1d9a0;
+      border-radius: 10px;
+      max-height: 280px;
+      overflow-y: auto;
+      font-size: 13.5px;
+      line-height: 1.75;
+      color: #4a3320;
+      white-space: pre-wrap;
+    }
+    /* 단원평가 결과 — 레이더 그래프 래퍼 */
+    .kh-exam-radar-wrap {
+      background: #fff;
+      border: 1px solid #e2eedd;
+      border-radius: 12px;
+      padding: 14px 10px;
+      margin-bottom: 12px;
+    }
+    /* 단원평가 결과 인쇄용 — .show 클래스가 있을 때만 인쇄 */
+    @media print {
+      html, body { height: auto !important; }
+      body * { visibility: hidden !important; }
+      #khExamOverlay.show, #khExamOverlay.show * { visibility: visible !important; }
+      #khExamOverlay.show {
+        position: absolute !important;
+        left: 0 !important; top: 0 !important; right: 0 !important; bottom: auto !important;
+        background: #fff !important;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: auto !important;
+        z-index: 99999 !important;
+      }
+      .kh-exam-modal {
+        box-shadow: none !important;
+        max-height: none !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        display: block !important;
+      }
+      .kh-exam-header {
+        background: #fff !important;
+        color: #1a1a1a !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        border-bottom: 2px solid #d97706 !important;
+      }
+      .kh-exam-body {
+        overflow: visible !important;
+        max-height: none !important;
+        height: auto !important;
+        padding: 14px 20px !important;
+      }
+      .kh-exam-close, .kh-exam-actions, .kh-exam-progress-bar { display: none !important; }
+      /* 페이지 깔끔하게 끊기 */
+      .kh-exam-result-header,
+      .kh-exam-radar-wrap,
+      .kh-exam-cat-grid,
+      .kh-exam-wrong-item {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .kh-exam-result-section { margin-bottom: 16px !important; }
+      /* 모든 배경색·테두리 인쇄에 노출 */
+      .kh-exam-result-status, .kh-exam-result-score, .kh-exam-radar-wrap,
+      .kh-exam-cat-item, .kh-exam-wrong-item {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
     .kh-exam-options { display: flex; flex-direction: column; gap: 10px; }
     .kh-exam-option {
@@ -33969,16 +34150,21 @@ ${content}
       transform: none;
       box-shadow: none;
     }
-    /* 인쇄용 — 리포트만 보이게 */
+    /* 인쇄용 — .show 클래스가 붙어 실제 열려있는 리포트/시험지/이력 만 인쇄 */
     @media print {
       body * { visibility: hidden !important; }
-      #khReportOverlay, #khReportOverlay * { visibility: visible !important; }
-      #khReportOverlay {
+      #khReportOverlay.show, #khReportOverlay.show *,
+      #khExamViewerOverlay.show, #khExamViewerOverlay.show *,
+      #khExamHistoryOverlay.show, #khExamHistoryOverlay.show * { visibility: visible !important; }
+      #khReportOverlay.show,
+      #khExamViewerOverlay.show,
+      #khExamHistoryOverlay.show {
         position: absolute !important;
         inset: 0 !important;
         background: #fff !important;
         padding: 0 !important;
         display: block !important;
+        z-index: 99999 !important;
       }
       .kh-report-modal {
         box-shadow: none !important;
@@ -33987,9 +34173,15 @@ ${content}
         border-radius: 0 !important;
       }
       .kh-report-body { overflow: visible !important; max-height: none !important; }
-      .kh-modal-close, .kh-report-actions { display: none !important; }
+      .kh-modal-close, .kh-report-actions, .kh-report-header button { display: none !important; }
       .kh-report-card { break-inside: avoid; page-break-inside: avoid; }
       .kh-report-chart { break-inside: avoid; page-break-inside: avoid; }
+      /* 시험지 — 문제별 카드 페이지 경계에서 잘리지 않게 */
+      #khExamViewerContent > div { break-inside: avoid; page-break-inside: avoid; }
+      .kh-report-header {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
   </style>
 
@@ -34002,6 +34194,7 @@ ${content}
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <button id="khReportBtn" class="kh-report-btn" type="button" onclick="openKhReportModal()">📋 나의 한국사 리포트</button>
+          <button id="khExamHistoryBtn" class="kh-report-btn" type="button" onclick="openKhExamHistoryModal()">📝 단원평가기록</button>
           <button class="kh-modal-close" type="button" aria-label="닫기" onclick="closeKorHistoryModal()">×</button>
         </div>
       </div>
@@ -34022,6 +34215,42 @@ ${content}
         <button class="kh-modal-close" type="button" aria-label="닫기" onclick="closeKhReportModal()">×</button>
       </div>
       <div class="kh-report-body" id="khReportBody">
+        <div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 한국사 단원평가 기록(시도 이력) 모달 -->
+  <div id="khExamHistoryOverlay" class="kh-report-overlay" role="dialog" aria-modal="true">
+    <div class="kh-report-modal" style="max-width:920px;">
+      <div class="kh-report-header">
+        <div>
+          <h2>📝 단원평가기록</h2>
+          <div class="kh-report-sub" id="khExamHistorySub">시도별 시험지 보관함</div>
+        </div>
+        <button class="kh-modal-close" type="button" onclick="closeKhExamHistoryModal()">×</button>
+      </div>
+      <div class="kh-report-body" id="khExamHistoryBody">
+        <div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 한국사 시험지 보기 모달 (저장된 시험 1건 상세) -->
+  <div id="khExamViewerOverlay" class="kh-report-overlay" role="dialog" aria-modal="true">
+    <div class="kh-report-modal" style="max-width:980px;">
+      <div class="kh-report-header">
+        <div>
+          <h2>🧾 시험지 보기</h2>
+          <div class="kh-report-sub" id="khExamViewerSub">저장된 시험 결과</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="khExamViewerPrint()" style="background:#fff;color:#1f4d12;border:none;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">🖨️ 인쇄</button>
+          <button onclick="khExamViewerPdf(this)" style="background:#fff;color:#1f4d12;border:none;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">📥 PDF</button>
+          <button class="kh-modal-close" type="button" onclick="closeKhExamViewer()">×</button>
+        </div>
+      </div>
+      <div class="kh-report-body" id="khExamViewerBody">
         <div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>
       </div>
     </div>
@@ -34062,39 +34291,58 @@ ${content}
         return arr;
       }
 
-      // 출제: 1~20강 각 1문제 랜덤(q1~q5 중) + 보기 셔플
+      // 출제: 영역별(q1~q5) 골고루 4문제씩 = 20문제
+      // 각 영역마다 20강 중에서 무작위 4강 선택, 그 강의 해당 영역 문제 출제
       function buildKhExamQuestions() {
         const out = [];
-        for (let i = 1; i <= 20; i++) {
-          const no = String(i).padStart(2, '0');
-          const unitKey = `kh_${no}`;
-          const pack = (window.CONTENTS || {})[unitKey];
-          if (!pack || !pack.quiz) continue;
-          const qNum = Math.floor(Math.random() * 5) + 1;
-          const qKey = `q${qNum}`;
-          const text = pack.quiz[`${qKey}_text`];
-          const opts = pack.quiz[`${qKey}_opts`];
-          if (!text || !Array.isArray(opts) || !opts.length) continue;
-          const correctOriginal = parseInt(pack.answerKey?.[qKey], 10); // 1~4
-          if (!correctOriginal) continue;
-          // 보기 셔플 (원본 번호 기억)
-          const shuffled = shuffleInPlace(opts.map((o, idx) => ({ text: o, original: idx + 1 })));
-          out.push({
-            unitKey,
-            unitNo: no,
-            unitTitle: pack.title || `${i}강`,
-            qNum,
-            qKey,
-            category: KH_Q_LABELS[qKey] || qKey,
-            questionText: text,
-            options: shuffled, // [{text, original}]
-            correctOriginal,
-            explain: pack.explain?.[qKey] || '',
-            detail: pack.detail?.[qKey] || '',
-            passage: Array.isArray(pack.passage) ? pack.passage.join('\n\n') : ''
-          });
+        const Q_KEYS = ['q1', 'q2', 'q3', 'q4', 'q5']; // 중심내용 / 문단순서 / 본문일치 / 어휘의미 / 추론
+        const PER_CATEGORY = 4;
+
+        // 유효한 강 목록 (해당 영역 문제·정답이 있는 강만)
+        function pickUnitsForQ(qKey) {
+          const pool = [];
+          for (let i = 1; i <= 20; i++) {
+            const no = String(i).padStart(2, '0');
+            const unitKey = `kh_${no}`;
+            const pack = (window.CONTENTS || {})[unitKey];
+            if (!pack || !pack.quiz) continue;
+            const text = pack.quiz[`${qKey}_text`];
+            const opts = pack.quiz[`${qKey}_opts`];
+            const ans = parseInt(pack.answerKey?.[qKey], 10);
+            if (text && Array.isArray(opts) && opts.length && ans) {
+              pool.push({ no, unitKey, pack });
+            }
+          }
+          shuffleInPlace(pool);
+          return pool.slice(0, PER_CATEGORY);
         }
-        return out;
+
+        for (const qKey of Q_KEYS) {
+          const picks = pickUnitsForQ(qKey);
+          for (const { no, unitKey, pack } of picks) {
+            const text = pack.quiz[`${qKey}_text`];
+            const opts = pack.quiz[`${qKey}_opts`];
+            const correctOriginal = parseInt(pack.answerKey?.[qKey], 10);
+            const shuffled = shuffleInPlace(opts.map((o, idx) => ({ text: o, original: idx + 1 })));
+            out.push({
+              unitKey,
+              unitNo: no,
+              unitTitle: pack.title || `${parseInt(no)}강`,
+              qNum: parseInt(qKey.substring(1)),
+              qKey,
+              category: KH_Q_LABELS[qKey] || qKey,
+              questionText: text,
+              options: shuffled,
+              correctOriginal,
+              explain: pack.explain?.[qKey] || '',
+              detail: pack.detail?.[qKey] || '',
+              passage: Array.isArray(pack.passage) ? pack.passage.join('\n\n') : ''
+            });
+          }
+        }
+
+        // 전체 순서 셔플 (영역별 출제했지만 학생에겐 섞어 보여줌)
+        return shuffleInPlace(out);
       }
 
       // 상태
@@ -34113,6 +34361,19 @@ ${content}
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
       }
+      // 해설 텍스트에서 원본 보기 번호(①②③④) 제거 — 셔플 후 번호와 불일치 방지
+      function sanitizeKhDetail(text) {
+        if (!text) return '';
+        let t = String(text);
+        // "①번. " / "②번. " / 등 leading 번호 제거
+        t = t.replace(/\s*[①②③④]번\.?\s*/g, ' ');
+        // "①③④ 모두" 같은 다중 번호 → "다른 보기 모두"
+        t = t.replace(/[①②③④]+(\s*모두)/g, '다른 보기$1');
+        // 남은 단독 ①②③④ 도 제거
+        t = t.replace(/[①②③④]/g, '');
+        // 연속 공백 정리
+        return t.replace(/\s{2,}/g, ' ').trim();
+      }
 
       function renderKhExamQuestion() {
         const body = $('khExamBody');
@@ -34127,11 +34388,19 @@ ${content}
         bar.style.width = `${((khExamIdx) / total) * 100}%`;
 
         const unitNoLabel = parseInt(q.unitNo, 10);
+        // 본문 토글 (각 문제의 출처 단원 본문을 펼쳐볼 수 있게)
+        const passageHtml = q.passage
+          ? `<div class="kh-exam-passage-wrap">
+               <button type="button" class="kh-exam-passage-toggle" id="khExamPassageBtn">📜 본문 보기</button>
+               <div class="kh-exam-passage" id="khExamPassage" style="display:none;">${q.passage.replace(/\n/g, '<br>')}</div>
+             </div>`
+          : '';
         body.innerHTML = `
           <div class="kh-exam-meta">
             <span class="kh-exam-meta-tag">${unitNoLabel}강</span>
             <span class="kh-exam-meta-tag">${escapeHTML(q.category)}</span>
           </div>
+          ${passageHtml}
           <div class="kh-exam-question">${q.questionText}</div>
           <div class="kh-exam-options" id="khExamOptionList">
             ${q.options.map((opt, i) => `
@@ -34142,6 +34411,16 @@ ${content}
           </div>
           <div id="khExamExplainSlot"></div>
         `;
+        // 본문 토글 이벤트
+        const passBtn = document.getElementById('khExamPassageBtn');
+        const passEl = document.getElementById('khExamPassage');
+        if (passBtn && passEl) {
+          passBtn.addEventListener('click', () => {
+            const isShown = passEl.style.display !== 'none';
+            passEl.style.display = isShown ? 'none' : 'block';
+            passBtn.textContent = isShown ? '📜 본문 보기' : '📕 본문 숨기기';
+          });
+        }
         actions.innerHTML = `
           <button class="kh-exam-btn kh-exam-btn-primary" id="khExamSubmitBtn" disabled>답안 제출</button>
         `;
@@ -34192,7 +34471,7 @@ ${content}
           slot.innerHTML = `
             <div class="kh-exam-explain">
               <b>${isCorrect ? '정답이에요 ✅' : '오답 ❌'}</b><br>
-              ${escapeHTML(q.detail || q.explain || '').replace(/\n/g, '<br>')}
+              ${escapeHTML(sanitizeKhDetail(q.detail || q.explain || '')).replace(/\n/g, '<br>')}
             </div>`;
         }
 
@@ -34222,6 +34501,56 @@ ${content}
         const score100 = Math.round((correctCount / total) * 100);
         const pass = score100 >= 90;
 
+        // 🏆 결과 localStorage 저장 (카드 배지용 — 최고점/합격 유지)
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (cs.grade && cs.name) {
+            const key = `kh-exam-result:${cs.grade}_${cs.name}`;
+            let prev = null;
+            try { prev = JSON.parse(localStorage.getItem(key) || 'null'); } catch {}
+            const prevPassed = prev && prev.passed;
+            const prevBest = prev && typeof prev.bestScore === 'number' ? prev.bestScore : 0;
+            const next = {
+              bestScore: Math.max(prevBest, score100),
+              lastScore: score100,
+              passed: prevPassed || pass,
+              attemptCount: (prev && prev.attemptCount ? prev.attemptCount : 0) + 1,
+              lastAttemptAt: new Date().toISOString()
+            };
+            localStorage.setItem(key, JSON.stringify(next));
+          }
+        } catch (e) { console.warn('[kh exam] 결과 저장 실패:', e); }
+
+        // 🔁 재도전(불합격) 시 — 틀린 문제의 단원을 "재학습" 마킹 + 진도 초기화
+        // 합격(한 번이라도 합격 누적)인 경우는 재학습 강제 안 함
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (cs.grade && cs.name) {
+            const rk = `kh-exam-result:${cs.grade}_${cs.name}`;
+            let storedResult = null;
+            try { storedResult = JSON.parse(localStorage.getItem(rk) || 'null'); } catch {}
+            const hasPassedEver = storedResult && storedResult.passed;
+            // 이번에 떨어졌고 한 번도 합격한 적 없는 경우만 재학습 마킹
+            if (!pass && !hasPassedEver) {
+              // 틀린 문제들의 unit 추출 (중복 제거)
+              const wrongUnitSet = new Set();
+              khExamAnswers.forEach(a => {
+                if (a && !a.isCorrect && a.q && a.q.unitKey) wrongUnitSet.add(a.q.unitKey);
+              });
+              const wrongUnits = Array.from(wrongUnitSet).sort();
+              // 각 단원 진도 초기화 (window 노출 함수 호출)
+              if (typeof window.resetKhUnitProgress === 'function') {
+                wrongUnits.forEach(u => window.resetKhUnitProgress(u));
+              }
+              // 재학습 목록 저장 (기존 목록과 합쳐서)
+              const prevList = (typeof window.getKhRelearnList === 'function') ? window.getKhRelearnList() : [];
+              const merged = Array.from(new Set([...prevList, ...wrongUnits])).sort();
+              if (typeof window.setKhRelearnList === 'function') window.setKhRelearnList(merged);
+              console.log('[재학습] 마킹된 단원:', merged);
+            }
+          }
+        } catch (e) { console.warn('[재학습] 마킹 실패:', e); }
+
         // 영역별 통계
         const catStats = {}; // {category: {correct, total}}
         khExamAnswers.forEach(a => {
@@ -34231,6 +34560,37 @@ ${content}
           catStats[c].total++;
           if (a.isCorrect) catStats[c].correct++;
         });
+
+        // 🗄️ 서버에 시도별 영구 저장 (시험지 보기용) — catStats 계산 후 수행
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (cs.grade && cs.name) {
+            const questionsForSave = khExamQs.map((q, idx) => {
+              const ans = khExamAnswers[idx] || {};
+              return {
+                unitKey: q.unitKey, unitNo: q.unitNo, unitTitle: q.unitTitle,
+                qKey: q.qKey, category: q.category,
+                questionText: q.questionText, options: q.options,
+                correctOriginal: q.correctOriginal,
+                pickedOriginal: ans.pickedOriginal ?? null,
+                isCorrect: !!ans.isCorrect,
+                explain: q.explain, detail: q.detail, passage: q.passage
+              };
+            });
+            const catStatsObj = {};
+            Object.keys(catStats).forEach(k => { catStatsObj[k] = { correct: catStats[k].correct, total: catStats[k].total }; });
+            fetch('/api/kh/exam/save', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                grade: cs.grade, name: cs.name, phone: cs.phone || '',
+                score100, correctCount, total,
+                passed: pass, catStats: catStatsObj, questions: questionsForSave
+              })
+            }).then(r => r.json()).then(d => console.log('[kh exam] 서버 저장:', d.ok ? 'OK ' + d.id : d.message))
+              .catch(e => console.warn('[kh exam] 서버 저장 실패:', e));
+          }
+        } catch (e) { console.warn('[kh exam] 서버 저장 훅 오류:', e); }
 
         // 틀린 문제 목록
         const wrongs = khExamAnswers.filter(a => a && !a.isCorrect);
@@ -34242,11 +34602,74 @@ ${content}
         progress.textContent = `결과 발표`;
         bar.style.width = '100%';
 
-        const catHTML = Object.keys(catStats).map(cat => `
+        // 영역 표시 순서 고정 (q1~q5 라벨)
+        const CAT_ORDER = ['중심내용', '문단순서', '본문일치', '어휘의미', '추론'];
+        const catHTML = CAT_ORDER.filter(c => catStats[c]).map(cat => `
           <div class="kh-exam-cat-item">
             <div class="kh-exam-cat-name">${escapeHTML(cat)}</div>
             <div class="kh-exam-cat-score">${catStats[cat].correct} / ${catStats[cat].total}</div>
           </div>`).join('');
+
+        // 🔷 5각형 레이더 그래프 (정중앙·정오각형)
+        function buildKhExamRadarSVG() {
+          const labels = CAT_ORDER.filter(c => catStats[c]);
+          if (labels.length < 3) return '';
+          // 라벨 공간 충분히 확보된 정사각형 viewBox
+          const W = 400, H = 360;
+          const cx = W / 2, cy = H / 2;
+          const R = 110;
+          const N = labels.length;
+          const angle = (i) => -Math.PI / 2 + (2 * Math.PI * i) / N;
+          const vertex = (i, r) => ({ x: cx + r * Math.cos(angle(i)), y: cy + r * Math.sin(angle(i)) });
+          // 배경 그리드 (4단계)
+          let grid = '';
+          for (let s = 1; s <= 4; s++) {
+            const pts = labels.map((_, i) => { const p = vertex(i, R * s / 4); return `${p.x.toFixed(2)},${p.y.toFixed(2)}`; }).join(' ');
+            grid += `<polygon points="${pts}" fill="${s===4?'rgba(226,238,221,0.18)':'none'}" stroke="#d8e6d2" stroke-width="1"/>`;
+          }
+          // 축선 (중심 → 꼭짓점)
+          let axes = '';
+          labels.forEach((_, i) => {
+            const p = vertex(i, R);
+            axes += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(2)}" y2="${p.y.toFixed(2)}" stroke="#d8e6d2" stroke-width="1"/>`;
+          });
+          // 데이터 다각형
+          const dataPts = labels.map((c, i) => {
+            const ratio = catStats[c].total ? catStats[c].correct / catStats[c].total : 0;
+            const p = vertex(i, R * ratio);
+            return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+          }).join(' ');
+          // 데이터 점
+          let dots = '';
+          labels.forEach((c, i) => {
+            const ratio = catStats[c].total ? catStats[c].correct / catStats[c].total : 0;
+            const p = vertex(i, R * ratio);
+            dots += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="4.5" fill="#2e9b3f" stroke="#fff" stroke-width="2"/>`;
+          });
+          // 라벨 (꼭짓점 바깥쪽)
+          let labelHTML = '';
+          labels.forEach((c, i) => {
+            const a = angle(i);
+            const lp = vertex(i, R + 26);
+            const pct = catStats[c].total ? Math.round((catStats[c].correct / catStats[c].total) * 100) : 0;
+            // 좌/우/상/하 위치에 따라 text-anchor 동적 조정
+            const cosA = Math.cos(a), sinA = Math.sin(a);
+            let anchor = 'middle';
+            if (cosA > 0.3) anchor = 'start';
+            else if (cosA < -0.3) anchor = 'end';
+            labelHTML += `<text x="${lp.x.toFixed(2)}" y="${lp.y.toFixed(2)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="13" font-weight="700" fill="#1f4d12">${escapeHTML(c)}</text>`;
+            labelHTML += `<text x="${lp.x.toFixed(2)}" y="${(lp.y + 16).toFixed(2)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="11" fill="#5a7c4a">${pct}%</text>`;
+          });
+          // 명시 px 크기 + viewBox + 가운데 정렬
+          return `<div style="text-align:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="400" height="360" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="max-width:100%;height:auto;display:inline-block;">
+              ${grid}${axes}
+              <polygon points="${dataPts}" fill="rgba(108,191,90,0.35)" stroke="#2e9b3f" stroke-width="2.5" stroke-linejoin="round"/>
+              ${dots}${labelHTML}
+            </svg>
+          </div>`;
+        }
+        const radarSVG = buildKhExamRadarSVG();
 
         const wrongHTML = wrongs.length === 0 ? `
           <div style="text-align:center;color:#2e9b3f;font-weight:700;padding:14px;">모든 문제를 맞혔어요! 🎉</div>
@@ -34263,7 +34686,7 @@ ${content}
                 내가 고른 답: <span class="picked">${a.pickedOriginal}번. ${escapeHTML(pickedText)}</span><br>
                 정답: <span class="correct">${q.correctOriginal}번. ${escapeHTML(correctText)}</span>
               </div>
-              ${q.detail ? `<div class="kh-exam-wrong-explain">${escapeHTML(q.detail).replace(/\n/g, '<br>')}</div>` : ''}
+              ${q.detail ? `<div class="kh-exam-wrong-explain">${escapeHTML(sanitizeKhDetail(q.detail)).replace(/\n/g, '<br>')}</div>` : ''}
               <button class="kh-exam-wrong-toggle" data-pkey="${pkey}">본문 다시 보기 ▼</button>
               <div class="kh-exam-wrong-passage" id="${pkey}">${q.passage}</div>
             </div>`;
@@ -34279,18 +34702,106 @@ ${content}
           </div>
           <div class="kh-exam-result-section">
             <h4>📊 영역별 정답률</h4>
+            ${radarSVG ? `<div class="kh-exam-radar-wrap">${radarSVG}</div>` : ''}
             <div class="kh-exam-cat-grid">${catHTML}</div>
           </div>
           <div class="kh-exam-result-section">
             <h4>📝 틀린 문제 다시 보기 (${wrongs.length}문항)</h4>
             <div class="kh-exam-wrong-list">${wrongHTML}</div>
           </div>
+          ${(!pass && wrongs.length > 0 && !(function(){
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              const r = JSON.parse(localStorage.getItem(`kh-exam-result:${cs.grade}_${cs.name}`) || 'null');
+              return r && r.passed;
+            } catch { return false; }
+          })()) ? `
+            <div style="margin-top:14px;padding:16px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:14px;">
+              <div style="font-size:14px;font-weight:800;color:#78350f;margin-bottom:6px;">🔁 재학습 안내</div>
+              <div style="font-size:13px;color:#92400e;line-height:1.7;">
+                틀린 문제에 해당하는 단원이 <b style="color:#d97706;">"재학습"</b> 카드로 바뀌었어요.<br>
+                해당 단원을 다시 학습하고 분석리포트 제출까지 완료해야 단원평가를 재응시할 수 있어요.
+              </div>
+            </div>
+          ` : ''}
         `;
         actions.innerHTML = `
+          <button class="kh-exam-btn kh-exam-btn-secondary" onclick="khExamPrint()">🖨️ 인쇄</button>
+          <button class="kh-exam-btn kh-exam-btn-secondary" onclick="khExamPdf(this)" style="margin-right:auto;">📥 PDF</button>
           <button class="kh-exam-btn kh-exam-btn-secondary" onclick="closeKhExamModal()">닫기</button>
           <button class="kh-exam-btn kh-exam-btn-primary" id="khExamRetryBtn">🔄 다시 풀기</button>
         `;
         $('khExamRetryBtn').addEventListener('click', () => window.openKhExamModal());
+
+        // 🖨️ 인쇄 — 결과 화면만 노출
+        window.khExamPrint = function () { window.print(); };
+        // 📥 PDF — html2canvas + jsPDF (스크롤 해제 + 섹션별 슬라이싱)
+        window.khExamPdf = async function (btn) {
+          if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중입니다.'); return; }
+          const content = document.getElementById('khExamBody');
+          if (!content) return;
+          const origLabel = btn ? btn.textContent : '';
+          if (btn) { btn.disabled = true; btn.textContent = '⏳ 생성 중…'; }
+
+          // 캡처 전: 스크롤 잠금 해제로 전체 콘텐츠가 보이도록
+          const prev = {
+            overflow: content.style.overflow,
+            maxHeight: content.style.maxHeight,
+            height: content.style.height
+          };
+          content.style.overflow = 'visible';
+          content.style.maxHeight = 'none';
+          content.style.height = 'auto';
+
+          try {
+            await new Promise(r => setTimeout(r, 120));
+            const canvas = await html2canvas(content, {
+              scale: 2,
+              useCORS: true,
+              backgroundColor: '#fffbf7',
+              windowWidth: content.scrollWidth,
+              windowHeight: content.scrollHeight
+            });
+            const { jsPDF } = window.jspdf; const pdf = new jsPDF('p','mm','a4');
+            const W=210,H=297,M=10,CW=W-2*M; const PH = H-2*M;
+            const ratio = CW / canvas.width;
+            const totalH = canvas.height * ratio;
+
+            if (totalH <= PH) {
+              pdf.addImage(canvas.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,totalH);
+            } else {
+              // A4 1쪽당 픽셀 높이
+              const pageHpx = PH / ratio;
+              let off = 0, pc = 0;
+              while (off < canvas.height) {
+                if (pc > 0) pdf.addPage();
+                const slice = Math.min(pageHpx, canvas.height - off);
+                const tc = document.createElement('canvas');
+                tc.width = canvas.width; tc.height = slice;
+                tc.getContext('2d', { willReadFrequently: true })
+                  .drawImage(canvas, 0, off, canvas.width, slice, 0, 0, canvas.width, slice);
+                pdf.addImage(tc.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW, slice * ratio);
+                off += slice; pc++;
+              }
+            }
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              const safe = `${cs.grade || ''}_${cs.name || 'student'}`.replace(/[\\/:*?"<>|]/g,'_');
+              const now = new Date();
+              const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+              pdf.save(`BRAIN한국사_단원평가결과_${safe}_${ts}.pdf`);
+            } catch { pdf.save(`BRAIN한국사_단원평가결과_${Date.now()}.pdf`); }
+          } catch (err) {
+            console.error('[kh exam pdf] 오류:', err);
+            alert('PDF 생성 실패');
+          } finally {
+            // 캡처 후: 스크롤 원복
+            content.style.overflow = prev.overflow;
+            content.style.maxHeight = prev.maxHeight;
+            content.style.height = prev.height;
+            if (btn) { btn.disabled = false; btn.textContent = origLabel || '📥 PDF'; }
+          }
+        };
 
         // 본문 토글
         body.querySelectorAll('.kh-exam-wrong-toggle').forEach(btn => {
@@ -34332,22 +34843,50 @@ ${content}
         if (khOv && khOv.dataset.examBgMode === '1') {
           khOv.style.zIndex = '';
           delete khOv.dataset.examBgMode;
-          if (typeof window.renderKhGrid === 'function') window.renderKhGrid();
+        }
+        // ✅ 단원평가 닫을 때 항상 단원 그리드 다시 그림 (재학습 배지 즉시 반영)
+        if (typeof window.renderKhGrid === 'function') {
+          try { window.renderKhGrid(); } catch (e) {}
         }
       };
 
-      // ESC로 닫기
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          const ov = $('khExamOverlay');
-          if (ov && ov.classList.contains('show')) window.closeKhExamModal();
+      // ESC로 닫기 (시험 중 실수 방지 — ESC도 막음)
+      // 닫으려면 우상단 × 또는 "닫기" 버튼 명시 클릭 필요
+      // 배경 클릭으로 닫기 비활성화 — 시험 중 실수로 꺼지는 것 방지
+      //
+      // ⚠️ 명시적 차단: capture 단계에서 가로채 다른 핸들러로 전파 방지
+      (function _khExamBackdropGuard() {
+        const setup = () => {
+          const ov = document.getElementById('khExamOverlay');
+          if (!ov) return;
+          ov.addEventListener('click', function (e) {
+            // 모달 내부 클릭은 통과, 배경(.kh-exam-overlay 자체) 클릭만 차단
+            if (e.target === ov) {
+              e.stopPropagation();
+              e.preventDefault();
+              // 살짝 흔들림 피드백
+              const modal = ov.querySelector('.kh-exam-modal');
+              if (modal) {
+                modal.style.transition = 'transform 0.13s ease';
+                modal.style.transform = 'scale(0.98)';
+                setTimeout(() => { modal.style.transform = ''; }, 130);
+              }
+            }
+          }, true);
+          // ESC도 시험 중엔 차단
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && ov.classList.contains('show')) {
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }, true);
+        };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', setup);
+        } else {
+          setup();
         }
-      });
-      // 배경 클릭 닫기
-      document.addEventListener('click', (e) => {
-        const ov = $('khExamOverlay');
-        if (ov && e.target === ov) window.closeKhExamModal();
-      });
+      })();
     })();
   </script>
 
@@ -34393,8 +34932,79 @@ ${content}
         } catch (e) { return false; }
       }
 
-      // 20강 모두 완료했는지 판정
+      // 🔁 재학습 목록 헬퍼 (재도전 시 틀린 단원들)
+      function getKhRelearnList() {
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (!cs.grade || !cs.name) return [];
+          const raw = localStorage.getItem(`kh-relearn:${cs.grade}_${cs.name}`);
+          return raw ? JSON.parse(raw) : [];
+        } catch { return []; }
+      }
+      function setKhRelearnList(list) {
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (!cs.grade || !cs.name) return;
+          const key = `kh-relearn:${cs.grade}_${cs.name}`;
+          if (Array.isArray(list) && list.length) localStorage.setItem(key, JSON.stringify(list));
+          else localStorage.removeItem(key);
+        } catch {}
+      }
+      function isKhRelearnUnit(unitCode) {
+        return getKhRelearnList().includes(unitCode);
+      }
+      // 단원 진도 초기화 (재학습으로 마킹할 때 호출)
+      function resetKhUnitProgress(unitCode) {
+        try {
+          const stu = (typeof getCurrentStudent === 'function') ? getCurrentStudent() : null;
+          if (!stu) return;
+          const stuKey = (typeof buildStudentKey === 'function')
+            ? buildStudentKey(stu)
+            : `${stu.grade || ''}_${stu.name || ''}_${stu.phone || ''}`;
+          // 1) 완료 플래그 (dan-progress) 삭제
+          localStorage.removeItem(`dan-progress:${stuKey}:${unitCode}`);
+          // 2) 본문학습 상태 (dan-kh-report-state) 삭제
+          localStorage.removeItem(`dan-kh-report-state:${unitCode}`);
+          // 3) 어휘·창의 상태도 초기화 (학생이 새로 풀게)
+          localStorage.removeItem(`vocab-state:${stuKey}:${unitCode}`);
+          localStorage.removeItem(`creative-state:${stuKey}:${unitCode}`);
+          // 4) 단원 마지막 탭 초기화
+          localStorage.removeItem(`current-kh-tab:${unitCode}`);
+          console.log('[재학습] 진도 초기화:', unitCode);
+        } catch (e) { console.warn('[재학습] 초기화 실패:', e); }
+      }
+      // 재학습 단원이 재완료되면 list에서 제거
+      function checkKhRelearnDone() {
+        const list = getKhRelearnList();
+        if (!list.length) return;
+        const remaining = list.filter(u => !isKhUnitCompleted(u));
+        if (remaining.length !== list.length) {
+          setKhRelearnList(remaining);
+          console.log('[재학습] 완료된 단원 제거 → 남은 단원:', remaining);
+        }
+      }
+
+      // 다른 IIFE(단원평가 스크립트)에서도 호출할 수 있도록 window에 노출
+      window.getKhRelearnList = getKhRelearnList;
+      window.setKhRelearnList = setKhRelearnList;
+      window.isKhRelearnUnit = isKhRelearnUnit;
+      window.resetKhUnitProgress = resetKhUnitProgress;
+      window.checkKhRelearnDone = checkKhRelearnDone;
+
+      // 20강 모두 완료 + 재학습 목록 없음 → 단원평가 응시 가능
       function areAllKhUnitsCompleted() {
+        // 🔁 재학습은 누구에게나 우선 적용 (베타테스터도 시험 후 재학습 의무는 동일)
+        checkKhRelearnDone(); // 자동 정리
+        if (getKhRelearnList().length > 0) return false;
+
+        // 🇰🇷 본사 점검용 베타 테스터는 "20강 완료" 요건만 우회 (초기 잠금 풀기)
+        const KH_EXAM_BETA_TESTERS = [{ grade: '초3', name: '김윤슬' }];
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (KH_EXAM_BETA_TESTERS.some(t => t.grade === cs.grade && t.name === cs.name)) return true;
+        } catch {}
+
+        // 전 단원 완료 체크
         for (const u of KH_UNITS) {
           if (!isKhUnitCompleted(`kh_${u.no}`)) return false;
         }
@@ -34404,20 +35014,52 @@ ${content}
       function renderKhGrid() {
         const grid = document.getElementById('khUnitGrid');
         if (!grid) return;
+        // 재학습 자동 정리 (완료된 것 제거)
+        checkKhRelearnDone();
+        const relearnList = getKhRelearnList();
         const unitCards = KH_UNITS.map(u => {
-          const done = isKhUnitCompleted(`kh_${u.no}`);
+          const code = `kh_${u.no}`;
+          const done = isKhUnitCompleted(code);
+          const relearn = relearnList.includes(code);
+          let badge = '';
+          let extraClass = '';
+          if (relearn) {
+            badge = '<span class="kh-relearn-badge">재학습</span>';
+            extraClass = ' kh-relearn';
+          } else if (done) {
+            badge = '<span class="kh-done-badge">완료 ✓</span>';
+            extraClass = ' kh-completed';
+          }
           return `
-          <div class="kh-unit-card${done ? ' kh-completed' : ''}" role="button" tabindex="0" data-kh-path="./BRAINUP/korhistory/kh_${u.no}.html" data-kh-unit="kh_${u.no}">
-            ${done ? '<span class="kh-done-badge">완료 ✓</span>' : ''}
+          <div class="kh-unit-card${extraClass}" role="button" tabindex="0" data-kh-path="./BRAINUP/korhistory/kh_${u.no}.html" data-kh-unit="${code}">
+            ${badge}
             <div class="kh-unit-title">${u.title}</div>
             <div class="kh-unit-sub">${u.subs.join(' · ')}</div>
           </div>`;
         }).join('');
         // 21번째 카드: 한국사 단원평가 (20강 모두 완료 시에만 활성)
         const allDone = areAllKhUnitsCompleted();
+        // 학생 결과 조회 (있으면 합격/불합격 배지로 교체)
+        let examResult = null;
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (cs.grade && cs.name) {
+            examResult = JSON.parse(localStorage.getItem(`kh-exam-result:${cs.grade}_${cs.name}`) || 'null');
+          }
+        } catch {}
+        let badgeHTML;
+        if (!allDone) {
+          badgeHTML = '<span class="kh-exam-lock-icon">🔒</span>';
+        } else if (examResult && examResult.passed) {
+          badgeHTML = `<span class="kh-exam-badge kh-exam-badge-pass">🏆 합격 ${examResult.bestScore}점</span>`;
+        } else if (examResult && typeof examResult.lastScore === 'number') {
+          badgeHTML = `<span class="kh-exam-badge kh-exam-badge-fail">📚 재도전 (${examResult.lastScore}점)</span>`;
+        } else {
+          badgeHTML = '<span class="kh-exam-badge">응시 가능 ✦</span>';
+        }
         const examCard = `
-          <div class="kh-exam-card${allDone ? ' kh-exam-unlocked' : ' kh-exam-locked'}" role="button" tabindex="0" data-kh-exam="1">
-            ${allDone ? '<span class="kh-exam-badge">응시 가능 ✦</span>' : '<span class="kh-exam-lock-icon">🔒</span>'}
+          <div class="kh-exam-card${allDone ? ' kh-exam-unlocked' : ' kh-exam-locked'}${examResult && examResult.passed ? ' kh-exam-passed' : ''}" role="button" tabindex="0" data-kh-exam="1">
+            ${badgeHTML}
             <div class="kh-unit-title">📝 한국사 단원평가</div>
             ${allDone ? '<div class="kh-unit-sub">1~20강 종합 · 20문항 랜덤 출제 · 90점 이상 통과</div>' : ''}
           </div>`;
@@ -34463,14 +35105,30 @@ ${content}
       function showKhLockPopup() {
         const existing = document.getElementById('khLockPopup');
         if (existing) existing.remove();
+        // 재학습이 남아있는지 확인 → 잠금 사유 분기
+        let relearnList = [];
+        try {
+          if (typeof window.getKhRelearnList === 'function') relearnList = window.getKhRelearnList();
+        } catch {}
+        const hasRelearn = relearnList.length > 0;
+        const titleText = hasRelearn ? '재학습이 남아 있어요' : '단원평가는 아직 열리지 않았어요';
+        const iconEmoji = hasRelearn ? '🔁' : '🔒';
+        // 재학습 단원 라벨 ('3강 · 11강 ...') — 숫자만 추출
+        const relearnLabels = relearnList.map(u => {
+          const m = u.match(/kh_(\d{1,2})/);
+          return m ? `${parseInt(m[1])}강` : u;
+        }).join(' · ');
+        const msgText = hasRelearn
+          ? `<b style="color:#d97706;">재학습 단원 (${relearnList.length}개)</b>을 모두 완료해야 다시 응시할 수 있어요.<br><span class="kh-lock-popup-sub">${relearnLabels}</span>`
+          : `20강을 모두 완료해 주세요!<br><span class="kh-lock-popup-sub">분석리포트 → "학습완료 및 제출하기"를 누르면 완료로 표시돼요</span>`;
         const pop = document.createElement('div');
         pop.id = 'khLockPopup';
         pop.className = 'kh-lock-popup';
         pop.innerHTML = `
           <div class="kh-lock-popup-box">
-            <div class="kh-lock-popup-icon">🔒</div>
-            <h3 class="kh-lock-popup-title">단원평가는 아직 열리지 않았어요</h3>
-            <p class="kh-lock-popup-msg">20강을 모두 완료해 주세요!<br><span class="kh-lock-popup-sub">분석리포트 → "학습완료 및 제출하기"를 누르면 완료로 표시돼요</span></p>
+            <div class="kh-lock-popup-icon">${iconEmoji}</div>
+            <h3 class="kh-lock-popup-title">${titleText}</h3>
+            <p class="kh-lock-popup-msg">${msgText}</p>
             <button class="kh-lock-popup-btn" type="button">확인</button>
           </div>`;
         document.body.appendChild(pop);
@@ -35010,6 +35668,232 @@ ${content}
         }
       };
 
+      // ===== 단원평가기록 (시도 이력) 모달 =====
+      window.openKhExamHistoryModal = async function () {
+        const ov = document.getElementById('khExamHistoryOverlay');
+        const body = document.getElementById('khExamHistoryBody');
+        const sub = document.getElementById('khExamHistorySub');
+        if (!ov || !body) return;
+        body.innerHTML = '<div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>';
+        ov.classList.add('show');
+        const stu = getKhCurrentStudent();
+        if (!stu) { body.innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;">학생 정보가 없습니다.</div>'; return; }
+        sub.textContent = `${stu.grade} ${stu.name} 학생 — 시도별 시험지`;
+        try {
+          const res = await fetch(`/api/kh/exam/my-results?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+          const data = await res.json();
+          if (!data.ok) { body.innerHTML = `<div style="padding:40px;text-align:center;color:#c0392b;">${escKh(data.message || '실패')}</div>`; return; }
+          renderKhExamHistory(body, data.results || []);
+        } catch (err) {
+          console.error(err);
+          body.innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;">네트워크 오류</div>';
+        }
+      };
+      window.closeKhExamHistoryModal = function () { document.getElementById('khExamHistoryOverlay')?.classList.remove('show'); };
+      document.addEventListener('click', function (e) {
+        const ov = document.getElementById('khExamHistoryOverlay');
+        if (ov && e.target === ov) closeKhExamHistoryModal();
+      });
+
+      function renderKhExamHistory(body, results) {
+        if (!results.length) {
+          body.innerHTML = '<div style="padding:60px;text-align:center;color:#999;">아직 단원평가 기록이 없어요.<br>한국사 단원 페이지 맨 아래의 "단원평가" 카드에서 응시할 수 있어요.</div>';
+          return;
+        }
+        // 통계 카드
+        const passed = results.filter(r => r.passed).length;
+        const best = Math.max(...results.map(r => r.score100));
+        const avg = Math.round(results.reduce((s, r) => s + r.score100, 0) / results.length);
+        const sCard = (lbl, v, u) => `<div style="background:#fff;border:1px solid #b6daa1;border-radius:12px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:#2e9b3f;letter-spacing:1px;">${lbl}</div>
+          <div style="font-size:22px;font-weight:800;color:#1f4d12;">${v}<span style="font-size:12px;color:#5a7c4a;">${u}</span></div>
+        </div>`;
+        const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
+          ${sCard('총 시도', results.length, ' 회')}
+          ${sCard('합격', passed, ' 회')}
+          ${sCard('최고점', best, ' 점')}
+          ${sCard('평균', avg, ' 점')}
+        </div>`;
+
+        const rows = results.map((r, i) => {
+          const dt = new Date(r.attemptedAt);
+          const dtStr = dt.toLocaleDateString('ko-KR') + ' ' + dt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+          const badge = r.passed
+            ? `<span style="background:linear-gradient(135deg,#6cbf5a,#2e9b3f);color:#fff;padding:3px 10px;border-radius:11px;font-size:11px;font-weight:800;">🏆 합격</span>`
+            : `<span style="background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;padding:3px 10px;border-radius:11px;font-size:11px;font-weight:800;">📚 재도전</span>`;
+          return `<tr style="border-bottom:1px solid #e2eedd;">
+            <td style="padding:10px 8px;color:#888;font-weight:600;">${results.length - i}</td>
+            <td style="padding:10px 8px;font-size:13px;color:#555;">${dtStr}</td>
+            <td style="padding:10px 8px;text-align:center;font-weight:800;color:${r.passed?'#1f4d12':'#64748b'};font-size:18px;">${r.score100}점</td>
+            <td style="padding:10px 8px;color:#666;font-size:13px;">${r.correctCount}/${r.total}</td>
+            <td style="padding:10px 8px;">${badge}</td>
+            <td style="padding:10px 8px;text-align:right;">
+              <button onclick="openKhExamViewer('${r._id}')" style="background:linear-gradient(135deg,#6cbf5a,#2e9b3f);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🧾 시험지 보기</button>
+            </td>
+          </tr>`;
+        }).join('');
+
+        body.innerHTML = statsHtml + `<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #b6daa1;">
+          <thead><tr style="background:#eaf6e3;">
+            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:50px;">#</th>
+            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;">시도일시</th>
+            <th style="padding:10px 8px;text-align:center;font-size:12px;color:#1f4d12;width:80px;">점수</th>
+            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:80px;">정답</th>
+            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:90px;">결과</th>
+            <th style="padding:10px 8px;text-align:right;font-size:12px;color:#1f4d12;width:120px;">시험지</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      }
+
+      // ===== 시험지 보기 모달 =====
+      window.openKhExamViewer = async function (id) {
+        const ov = document.getElementById('khExamViewerOverlay');
+        const body = document.getElementById('khExamViewerBody');
+        const sub = document.getElementById('khExamViewerSub');
+        if (!ov || !body) return;
+        body.innerHTML = '<div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>';
+        ov.classList.add('show');
+        try {
+          const res = await fetch(`/api/kh/exam/detail?id=${encodeURIComponent(id)}`);
+          const data = await res.json();
+          if (!data.ok) { body.innerHTML = `<div style="padding:40px;text-align:center;color:#c0392b;">${escKh(data.message || '실패')}</div>`; return; }
+          renderKhExamViewer(body, sub, data.result);
+        } catch (err) {
+          console.error(err);
+          body.innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;">네트워크 오류</div>';
+        }
+      };
+      window.closeKhExamViewer = function () { document.getElementById('khExamViewerOverlay')?.classList.remove('show'); };
+
+      function renderKhExamViewer(body, subEl, r) {
+        const dt = new Date(r.attemptedAt);
+        subEl.textContent = `${r.grade} ${r.name} · ${dt.toLocaleDateString('ko-KR')} ${dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`;
+        // 헤더: 점수
+        const cover = `<div style="background:${r.passed ? 'linear-gradient(135deg,#eaf6e3,#d9eecf)' : 'linear-gradient(135deg,#f1f5f9,#e2e8f0)'};border:2px solid ${r.passed?'#2e9b3f':'#94a3b8'};border-radius:14px;padding:18px;text-align:center;margin-bottom:18px;">
+          <div style="font-size:14px;color:${r.passed?'#1f4d12':'#475569'};font-weight:700;">${r.passed ? '🎉 통과! 잘했어요!' : '📚 조금만 더 도전해 봐요'}</div>
+          <div style="font-size:42px;font-weight:900;color:${r.passed?'#1f4d12':'#475569'};line-height:1;margin:8px 0;">${r.score100}점</div>
+          <div style="font-size:13px;color:${r.passed?'#2e9b3f':'#64748b'};">맞힌 문제: ${r.correctCount} / ${r.total}문항 (통과 기준 90점)</div>
+        </div>`;
+        // 영역별
+        const CAT_ORDER = ['중심내용','문단순서','본문일치','어휘의미','추론'];
+        // 🔷 5각형 레이더 SVG (저장된 catStats 기반)
+        const radarSVG = (() => {
+          const cs = r.catStats || {};
+          const labels = CAT_ORDER.filter(c => cs[c]);
+          if (labels.length < 3) return '';
+          const W = 400, H = 360, cx = W/2, cy = H/2, R = 110;
+          const N = labels.length;
+          const ang = (i) => -Math.PI/2 + (2*Math.PI*i)/N;
+          const v = (i, rad) => ({ x: cx + rad*Math.cos(ang(i)), y: cy + rad*Math.sin(ang(i)) });
+          let grid = '';
+          for (let s = 1; s <= 4; s++) {
+            const pts = labels.map((_, i) => { const p = v(i, R*s/4); return `${p.x.toFixed(2)},${p.y.toFixed(2)}`; }).join(' ');
+            grid += `<polygon points="${pts}" fill="${s===4?'rgba(226,238,221,0.18)':'none'}" stroke="#d8e6d2" stroke-width="1"/>`;
+          }
+          let axes = '';
+          labels.forEach((_, i) => { const p = v(i, R); axes += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(2)}" y2="${p.y.toFixed(2)}" stroke="#d8e6d2" stroke-width="1"/>`; });
+          const dataPts = labels.map((c, i) => {
+            const ratio = cs[c].total ? cs[c].correct / cs[c].total : 0;
+            const p = v(i, R*ratio);
+            return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+          }).join(' ');
+          let dots = '';
+          labels.forEach((c, i) => {
+            const ratio = cs[c].total ? cs[c].correct / cs[c].total : 0;
+            const p = v(i, R*ratio);
+            dots += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="4.5" fill="#2e9b3f" stroke="#fff" stroke-width="2"/>`;
+          });
+          let lab = '';
+          labels.forEach((c, i) => {
+            const a = ang(i);
+            const lp = v(i, R + 26);
+            const pct = cs[c].total ? Math.round((cs[c].correct / cs[c].total) * 100) : 0;
+            const ca = Math.cos(a);
+            const anchor = ca > 0.3 ? 'start' : ca < -0.3 ? 'end' : 'middle';
+            lab += `<text x="${lp.x.toFixed(2)}" y="${lp.y.toFixed(2)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="13" font-weight="700" fill="#1f4d12">${escKh(c)}</text>`;
+            lab += `<text x="${lp.x.toFixed(2)}" y="${(lp.y+16).toFixed(2)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="11" fill="#5a7c4a">${pct}%</text>`;
+          });
+          return `<div style="background:#fff;border:1px solid #b6daa1;border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="400" height="360" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="max-width:100%;height:auto;display:inline-block;">
+              ${grid}${axes}
+              <polygon points="${dataPts}" fill="rgba(108,191,90,0.35)" stroke="#2e9b3f" stroke-width="2.5" stroke-linejoin="round"/>
+              ${dots}${lab}
+            </svg>
+          </div>`;
+        })();
+        const catHtml = CAT_ORDER.filter(c => r.catStats && r.catStats[c]).map(c => {
+          const s = r.catStats[c];
+          return `<div style="background:#fff;border:1px solid #b6daa1;border-radius:10px;padding:10px;text-align:center;">
+            <div style="font-size:11px;color:#2e9b3f;">${escKh(c)}</div>
+            <div style="font-size:16px;font-weight:800;color:#1f4d12;margin-top:4px;">${s.correct} / ${s.total}</div>
+          </div>`;
+        }).join('');
+        const catSection = catHtml ? `<div style="margin-bottom:18px;">
+          ${radarSVG}
+          <h4 style="margin:0 0 10px;font-size:14px;color:#1f4d12;">📊 영역별 정답률</h4>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">${catHtml}</div>
+        </div>` : '';
+        // 전체 문제 풀이
+        const qHtml = (r.questions || []).map((q, i) => {
+          const pickedText = (q.options && q.options.find && q.options.find(o => o.original === q.pickedOriginal) || {}).text || '(미응답)';
+          const correctText = (q.options && q.options.find && q.options.find(o => o.original === q.correctOriginal) || {}).text || '';
+          const mark = q.isCorrect ? '⭕' : '✖';
+          const color = q.isCorrect ? '#2e9b3f' : '#c0392b';
+          return `<div style="background:#fff;border:1px solid #b6daa1;border-radius:10px;padding:14px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">
+              <div style="font-size:11px;color:#2e9b3f;font-weight:700;">${i+1}번 · ${parseInt(q.unitNo,10)}강 · ${escKh(q.category||'')}</div>
+              <div style="font-size:16px;color:${color};font-weight:800;">${mark}</div>
+            </div>
+            <div style="font-size:14px;color:#1f2937;font-weight:700;margin-bottom:8px;line-height:1.5;">${escKh(q.questionText)}</div>
+            <div style="font-size:12px;color:#555;margin-bottom:4px;"><b>내가 고른 답:</b> <span style="color:${color};">${escKh(pickedText)}</span></div>
+            ${!q.isCorrect ? `<div style="font-size:12px;color:#555;"><b>정답:</b> <span style="color:#2e9b3f;">${escKh(correctText)}</span></div>` : ''}
+            ${q.detail ? `<div style="margin-top:6px;padding:8px 10px;background:#f0faea;border-radius:6px;font-size:12px;color:#3f6a32;line-height:1.55;">${escKh(sanitizeKhDetail(q.detail)).replace(/\n/g,'<br>')}</div>` : ''}
+          </div>`;
+        }).join('');
+        body.innerHTML = `<div id="khExamViewerContent">${cover}${catSection}
+          <h4 style="margin:0 0 10px;font-size:14px;color:#1f4d12;">📝 문제 전체</h4>
+          ${qHtml}
+        </div>`;
+      }
+
+      window.khExamViewerPrint = function () { window.print(); };
+      window.khExamViewerPdf = async function (btn) {
+        if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중'); return; }
+        const content = document.getElementById('khExamViewerContent'); if (!content) return;
+        const orig = btn.textContent; btn.disabled = true; btn.textContent = '⏳ 생성 중…';
+        try {
+          const canvas = await html2canvas(content, { scale: 2, useCORS: true, backgroundColor: '#f9fbf7' });
+          const { jsPDF } = window.jspdf; const pdf = new jsPDF('p','mm','a4');
+          const W=210,H=297,M=10,CW=W-2*M; const totalH = canvas.height/canvas.width*CW;
+          if (totalH <= H-2*M) pdf.addImage(canvas.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,totalH);
+          else {
+            const pageHpx = ((H-2*M)/CW)*canvas.width; let off=0,pc=0;
+            while (off<canvas.height) {
+              if (pc>0) pdf.addPage();
+              const slice = Math.min(pageHpx, canvas.height-off);
+              const tc = document.createElement('canvas'); tc.width=canvas.width; tc.height=slice;
+              tc.getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,off,canvas.width,slice,0,0,canvas.width,slice);
+              pdf.addImage(tc.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,(slice/canvas.width)*CW);
+              off+=slice; pc++;
+            }
+          }
+          pdf.save(`BRAIN한국사_시험지_${Date.now()}.pdf`);
+        } catch (err) { alert('PDF 생성 실패'); console.error(err); }
+        finally { btn.disabled=false; btn.textContent=orig; }
+      };
+
+      // 자동 오픈 (admin 페이지에서 시험지 보기 클릭 시)
+      (function autoOpenKhExamViewerFromUrl() {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const id = params.get('khExamId');
+          if (id) {
+            setTimeout(() => window.openKhExamViewer(id), 800);
+          }
+        } catch {}
+      })();
+
       // 새로고침 후에도 한국사 팝업 상태 유지
       function restoreKhModalIfNeeded() {
         try {
@@ -35487,6 +36371,32 @@ ${content}
     .crit-day-cell .crit-day-cat {
       font-size: 18px; line-height: 1; margin-bottom: 3px;
     }
+    /* 카테고리 배지 (라벨 + 이모지) */
+    .crit-day-cell .crit-day-cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      border: 1px solid;
+      font-size: 10.5px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 4px;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.2px;
+    }
+    .crit-day-cell .crit-day-cat-badge .crit-cat-emoji {
+      font-size: 11px;
+      line-height: 1;
+    }
+    .crit-day-cell .crit-day-cat-badge .crit-cat-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .crit-day-cell .crit-day-title {
       font-size: 12px; line-height: 1.35; color: #333;
       font-weight: 500;
@@ -35509,6 +36419,7 @@ ${content}
     }
     .crit-day-cell.locked .crit-day-num,
     .crit-day-cell.locked .crit-day-cat,
+    .crit-day-cell.locked .crit-day-cat-badge,
     .crit-day-cell.locked .crit-day-title { opacity: 0.4; }
     .crit-day-cell.completed {
       background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
@@ -36699,15 +37610,18 @@ ${content}
           if (isFuture) classes += ' locked';
           else if (isCompleted) classes += ' completed';
           if (isToday) classes += ' today';
-          const catEmoji = pickCategoryEmoji(art?.category);
+          const catBadge = art?.category ? pickCategoryBadge(art.category) : null;
           const title = art?.title ? escapeHtml(art.title) : '';
           const starsHtml = (isCompleted && typeof starsByDate[dateKey] === 'number')
             ? `<div class="crit-cell-stars">${starsString(starsByDate[dateKey])}</div>`
             : '';
+          const badgeHtml = catBadge
+            ? `<div class="crit-day-cat-badge" style="background:${catBadge.bg};color:${catBadge.color};border-color:${catBadge.border};"><span class="crit-cat-emoji">${catBadge.emoji}</span><span class="crit-cat-label">${escapeHtml(catBadge.label)}</span></div>`
+            : '';
           cells.push(`
             <div class="${classes}" data-date="${dateKey}" role="button" tabindex="0">
               <div class="crit-day-num">${d}</div>
-              ${art ? `<div class="crit-day-cat">${catEmoji}</div><div class="crit-day-title">${title}</div>` : ''}
+              ${art ? `${badgeHtml}<div class="crit-day-title">${title}</div>` : ''}
               ${starsHtml}
             </div>
           `);
@@ -36810,6 +37724,37 @@ ${content}
         if (/미래|진로/.test(c)) return '🚀';
         if (/한류/.test(c)) return '🎬';
         return '📰';
+      }
+
+      // 카테고리 → 배지 색상 + 짧은 라벨
+      function pickCategoryBadge(category) {
+        const emoji = pickCategoryEmoji(category);
+        if (!category) return { emoji, label: '뉴스', bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' };
+        const c = String(category);
+        if (/환경|기후|생물|자연|해양|동물/.test(c))
+          return { emoji, label: c, bg: '#dcfce7', color: '#166534', border: '#86efac' };
+        if (/과학|우주|기술|AI/.test(c))
+          return { emoji, label: c, bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' };
+        if (/건강|체육|스포츠|의료/.test(c))
+          return { emoji, label: c, bg: '#fee2e2', color: '#991b1b', border: '#fca5a5' };
+        if (/역사|민주주의|평화|통일/.test(c))
+          return { emoji, label: c, bg: '#f3e8ff', color: '#6b21a8', border: '#d8b4fe' };
+        if (/사회|인권|다양성|문화/.test(c))
+          return { emoji, label: c, bg: '#ffedd5', color: '#9a3412', border: '#fdba74' };
+        if (/교육/.test(c))
+          return { emoji, label: c, bg: '#e0e7ff', color: '#3730a3', border: '#a5b4fc' };
+        if (/식량|농업/.test(c))
+          return { emoji, label: c, bg: '#fef3c7', color: '#854d0e', border: '#fde047' };
+        if (/글로벌|시민/.test(c))
+          return { emoji, label: c, bg: '#ccfbf1', color: '#115e59', border: '#5eead4' };
+        if (/안전|교통/.test(c))
+          return { emoji, label: c, bg: '#fee2e2', color: '#7f1d1d', border: '#fca5a5' };
+        if (/미래|진로/.test(c))
+          return { emoji, label: c, bg: '#fae8ff', color: '#86198f', border: '#f0abfc' };
+        if (/한류/.test(c))
+          return { emoji, label: c, bg: '#fce7f3', color: '#9d174d', border: '#f9a8d4' };
+        // 기본 (분류되지 않은 카테고리도 그대로 표시)
+        return { emoji, label: c, bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' };
       }
 
       function escapeHtml(str) {
